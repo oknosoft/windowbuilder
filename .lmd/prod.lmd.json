@@ -1,0 +1,21 @@
+{
+  "name": "windowbuilder prod build",
+  "root": "../",
+  "www_root": "../",
+  "output": "lib/windowbuilder.min.js",
+  "modules": {
+    "builder":   [
+      "src/settings.js",
+      "src/element.js",
+      "src/scheme.js",
+      "src/contour.js",
+      "src/profile.js",
+      "src/filling.js",
+      "src/sectional.js",
+      "src/editor.js",
+      "src/main.js"]
+  },
+  "optimize": true,
+  "pack": true,
+  "ie": false
+}
