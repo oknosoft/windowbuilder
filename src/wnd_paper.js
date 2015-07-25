@@ -122,7 +122,7 @@ $p.iface.oninit = function() {
 		parent: document.body,
 		pattern: "1C"
 	});
-	// приклеиваем к layout-у таблицу для вывода сообщений
+	// приклеиваем к layout-у div рисовалки
 	$p.iface.main = $p.iface.docs.cells("a");
 	$p.iface.main.attachHTMLString("<div id=" + eid + " style='width: 100%; height: 100%;'></div>");
 
@@ -136,7 +136,13 @@ $p.iface.oninit = function() {
 
 			$p.iface.main.hideHeader();
 			$p.scheme = new $p.Scheme(eid, $p.iface.main);
-			$p.scheme.load("");
+
+			/**
+			 для целей отледки, заполняем __ox__ простыми данными
+			 */
+			$p.cat.characteristics._cachable = true;
+			$p.cat.characteristics.get($p.job_prm.demo.production, true, true)
+				.then($p.scheme.load);
 
 		})
 

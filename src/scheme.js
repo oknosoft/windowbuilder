@@ -78,11 +78,6 @@ function Scheme(eid, pwnd){
 		resize_canvas(pwnd.getWidth(), pwnd.getHeight());
 	}
 
-	function resize_canvas(w, h){
-		_view.viewSize.width = (w > 1200 ? 1200 : w);
-		_view.viewSize.height = (h - 80);
-	}
-
 	/**
 	 * Габариты изделия. Рассчитываются, как объединение габаритов всех слоёв типа Contour
 	 * @property bounds
@@ -183,7 +178,7 @@ function Scheme(eid, pwnd){
 	/**
 	 * Читает изделие по ссылке или объекту продукции
 	 * @method load
-	 * @param id {Guid|CatObj}
+	 * @param id {String|CatObj} - идентификатор или объект продукции
 	 */
 	this.load = function(id){
 
@@ -229,20 +224,44 @@ function Scheme(eid, pwnd){
 			_scheme.dg_layers.attache();
 		}
 
-		this.clear();
+		_scheme.clear();
 
-		if(id && $p.is_guid(id.ref))
+		if($p.is_data_obj(id))
 			load_object(id);
+		else if($p.is_guid(id))
+			$p.cat.characteristics.get(id, true, true)
+				.then(load_object);
+	};
 
-		else{
+	this.load_stamp = function(id){
 
-			/**
-			 для целей отледки, заполняем __ox__ простыми данными
-			 */
-			$p.cat.characteristics._cachable = true;
-			$p.cat.characteristics.get( "8756eecf-f577-402c-86ce-74608d062a32", load_object);
+		function do_load(bb){
+			// переприсваиваем систему
+			_scheme.osys = bb.sys;
+			_scheme.ox.owner = bb.sys.nom;
 
+			// очищаем табчасти, перезаполняем контуры и координаты
+			_scheme.ox.specification.clear();
+			_scheme.ox.glasses.clear();
+			_scheme.ox.glass_coordinates.clear();
+			_scheme.ox.glass_specification.clear();
+			_scheme.ox.mosquito.clear();
+
+			_scheme.ox.constructions.load(bb.constructions);
+			_scheme.ox.coordinates.load(bb.coordinates);
+			_scheme.ox.params.load(bb.params);
+			_scheme.ox.cnn_elmnts.load(bb.cnn_elmnts);
+			_scheme.ox.visualization.load(bb.visualization);
+
+			_scheme.load(_scheme.ox);
 		}
+
+		if($p.is_data_obj(id))
+			do_load(id);
+		else if($p.is_guid(id))
+			$p.cat.base_blocks.get(id, true, true)
+				.then(do_load);
+
 	};
 
 	/**
@@ -251,37 +270,6 @@ function Scheme(eid, pwnd){
 	this.register_change = function () {
 		_changes.push(Date.now());
 	};
-
-	/**
-	 * Перерисовывает все контуры изделия. Не занимается биндингом.
-	 * Предполагается, что взаимное перемещение профилей уже обработано
-	 */
-
-	function redraw () {
-
-		function process_redraw(){
-			if(_changes.length){
-				console.log(_changes.length);
-				_changes.length = 0;
-				_scheme.layers.forEach(function(l){
-					if(l instanceof Contour){
-						l.redraw();
-					}
-				});
-				_view.update();
-			}
-		}
-
-		setTimeout(function() {
-			requestAnimationFrame(redraw);
-			process_redraw();
-		}, 40);
-
-		//requestAnimationFrame(redraw);
-		//setTimeout(process_redraw, 20);
-
-	}
-	redraw();
 
 	/**
 	 * Выделяет начало или конец профиля
@@ -376,5 +364,40 @@ function Scheme(eid, pwnd){
 		this.clear();
 		this.remove();
 	};
+
+	function resize_canvas(w, h){
+		_view.viewSize.width = (w > 1200 ? 1200 : w);
+		_view.viewSize.height = (h - 80);
+	}
+
+	/**
+	 * Перерисовывает все контуры изделия. Не занимается биндингом.
+	 * Предполагается, что взаимное перемещение профилей уже обработано
+	 */
+	function redraw () {
+
+		function process_redraw(){
+			if(_changes.length){
+				console.log(_changes.length);
+				_changes.length = 0;
+				_scheme.layers.forEach(function(l){
+					if(l instanceof Contour){
+						l.redraw();
+					}
+				});
+				_view.update();
+			}
+		}
+
+		setTimeout(function() {
+			requestAnimationFrame(redraw);
+			process_redraw();
+		}, 40);
+
+		//requestAnimationFrame(redraw);
+		//setTimeout(process_redraw, 20);
+
+	}
+	redraw();
 }
 Scheme._extend(paper.Project);

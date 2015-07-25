@@ -195,7 +195,7 @@ function BuilderElement(attr){
 		// ширина
 		this._define("width", {
 			get : function(){
-				return this.data.nom && !this.data.nom.empty() ? this.data.nom.get_obj().width || 80 : 80;
+				return this.nom.width || 80;
 			},
 			enumerable : false,
 			configurable : false
@@ -204,7 +204,7 @@ function BuilderElement(attr){
 		// толщина (для заполнений и, возможно, профилей в 3D)
 		this._define("thickness", {
 			get : function(){
-				return this.data.nom && !this.data.nom.empty() ? this.data.nom.get_obj().thickness || 0 : 24;
+				return this.nom.thickness || 0;
 			},
 			enumerable : false,
 			configurable : false
@@ -213,7 +213,7 @@ function BuilderElement(attr){
 		// опорный размер (0 для рам и створок, 1/2 ширины для импостов)
 		this._define("sizeb", {
 			get : function(){
-				return this.data.nom && !this.data.nom.empty() ? this.data.nom.get_obj().sizeb || 0 : 0;
+				return this.nom.sizeb || 0;
 			},
 			enumerable : false,
 			configurable : false
@@ -222,7 +222,7 @@ function BuilderElement(attr){
 		// размер до фурнитурного паза
 		this._define("sizefurn", {
 			get : function(){
-				return this.data.nom && !this.data.nom.empty() ? this.data.nom.get_obj().sizefurn || 20 : 20;
+				return this.nom.sizefurn || 20;
 			},
 			enumerable : false,
 			configurable : false

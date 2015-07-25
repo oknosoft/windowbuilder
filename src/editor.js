@@ -81,43 +81,43 @@ function Editor(_scheme){
 			], onclick: function (name) {
 				switch(name) {
 					case 'save_close':
-						$p.msg.show_msg(name)
+						$p.msg.show_msg(name);
 						break;
 
 					case 'calck':
-						$p.msg.show_msg(name)
+						$p.msg.show_msg(name);
 						break;
 
 					case 'stamp':
-						$p.msg.show_msg(name)
+						load_stamp();
 						break;
 
 					case 'back':
-						$p.msg.show_msg(name)
+						$p.msg.show_msg(name);
 						break;
 
 					case 'rewind':
-						$p.msg.show_msg(name)
+						$p.msg.show_msg(name);
 						break;
 
 					case 'square':
-						$p.msg.show_msg(name)
+						$p.msg.show_msg(name);
 						break;
 
 					case 'triangle1':
-						$p.msg.show_msg(name)
+						$p.msg.show_msg(name);
 						break;
 
 					case 'triangle3':
-						$p.msg.show_msg(name)
+						$p.msg.show_msg(name);
 						break;
 
 					case 'triangle3':
-						$p.msg.show_msg(name)
+						$p.msg.show_msg(name);
 						break;
 
 					default:
-						$p.msg.show_msg(name)
+						$p.msg.show_msg(name);
 						break;
 				}
 			}}),
@@ -2156,8 +2156,33 @@ function Editor(_scheme){
 		return new paper.Point(dirx*d, diry*d);
 	}
 
+	/**
+	 * Вызывает диалог выбора типового блока и перезаполняет продукцию данными выбора
+	 */
+	function load_stamp(confirmed){
 
+		if(_scheme.ox.elm_str && !confirmed){
+			dhtmlx.confirm({
+				title: $p.msg.bld_from_blocks_title,
+				text: $p.msg.bld_from_blocks,
+				cancel: "Отмена",
+				callback: function(btn) {
+					if(btn)
+						load_stamp(true);
+				}
+			});
+			return;
+		}
 
-
+		$p.cat.base_blocks.form_selection({
+			o: _scheme.ox,
+			wnd: _scheme._pwnd,
+			on_select: _scheme.load_stamp
+		}, {
+			initial_value: null, // TODO: возможно, надо запоминать типовой блок в изделии?
+			parent: $p.wsql.get_user_param("base_blocks_folder") ? $p.wsql.get_user_param("base_blocks_folder") : null,
+			owner: _scheme.ox.calc_order.base
+		});
+	}
 
 }
