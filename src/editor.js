@@ -202,7 +202,17 @@ function Editor(_scheme){
 	 */
 	(function(){
 
-		var dg = _scheme.dg_layers = $p.iface.dat_tree(_scheme._dxw, {top: 230, left: 920, width: 250}),
+		var options = {
+			name: 'layers',
+			wnd: {
+				caption: "Свойства изделия",
+				top: 230,
+				left: 920,
+				width: 250,
+				height: 380
+			}};
+		$p.wsql.restore_options("editor", options);
+		var dg = _scheme.dg_layers = $p.iface.dat_tree(_scheme._dxw, options.wnd),
 			tb_bottom = dg.bottom_toolbar({wrapper: dg.cell, width: '100%', height: '28px', bottom: '0px', left: '0px', name: 'layers_bottom',
 				buttons: [
 					{name: 'new', img: 'drafts.gif', title: 'Новый контур', clear: 'left', float: 'left'},
@@ -210,8 +220,19 @@ function Editor(_scheme){
 				onclick: function (name) {
 					if(name == 'new')
 						$p.msg.show_not_implemented();
-					else
-						$p.msg.show_not_implemented();
+					else{
+						var cns_no = dg.tree.getSelectedItemId(), l;
+						if(cns_no){
+							l = _scheme.getItem({cns_no: Number(cns_no)});
+						}else if(l = _scheme.activeLayer){
+							cns_no = l.cns_no;
+						}
+						if(cns_no && l){
+							dg.tree.deleteItem(cns_no);
+							l.remove();
+							setTimeout(_scheme.zoom_fit, 100);
+						}
+					}
 					return false;
 				},
 				image_path: dhtmlx.image_path + 'dhxtree_web/'
@@ -250,6 +271,12 @@ function Editor(_scheme){
 			});
 
 		};
+
+		// Запоминаем положение окна
+		dg.attachEvent("onMoveFinish", function(wnd){
+			wnd.wnd_options(options.wnd);
+			$p.wsql.save_options("editor", options);
+		});
 
 		// комбобоксы системы и цвета
 		dg.cb_sys = new dhtmlXCombo(dg.cell_a);
@@ -1176,8 +1203,6 @@ function Editor(_scheme){
 
 		tool.options = {
 			name: 'pen',
-			nom: $p.cat.nom.get(),
-			clr: $p.cat.clrs.predefined("white", true),
 			bind_generatrix: true,
 			bind_node: false,
 			wnd: {
@@ -1188,13 +1213,20 @@ function Editor(_scheme){
 
 		function tool_wnd(){
 
-			var folder, opened = false, profile = tool.options;
+			var folder, opened = false,
+				profile = tool.options;
 
-			$p.wsql.restore_options("editor", tool.options);
+			$p.wsql.restore_options("editor", profile);
 
-			if(tool.options.nom.empty()){
+			if(profile.nom)
+				profile.nom = $p.cat.nom.get(profile.nom);
+			else
+				profile.nom = $p.cat.nom.get();
 
-			}
+			if(profile.clr)
+				profile.clr = $p.cat.clrs.get(profile.clr);
+			else
+				profile.clr = $p.cat.clrs.predefined("white");
 
 			tool.wnd = $p.iface.dat_gui(_scheme._dxw, tool.options.wnd);
 
@@ -1262,7 +1294,7 @@ function Editor(_scheme){
 				if(change.name == "_activeLayer")
 					decorate_layers();
 			});
-		};
+		}
 
 		tool.update = function () {
 			tool.wnd.lazy_update();
@@ -1315,6 +1347,8 @@ function Editor(_scheme){
 
 				if(tool.wnd){
 					tool.wnd.wnd_options(tool.options.wnd);
+					tool.options.clr = tool.options.clr.ref;
+					tool.options.nom = tool.options.nom.ref;
 					$p.wsql.save_options("editor", tool.options);
 					tool.wnd.close();
 					tool.wnd = null;

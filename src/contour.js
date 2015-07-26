@@ -29,7 +29,7 @@ function Contour(attr){
 
 	var _contour = this,
 		_parent = attr.parent,
-		_row = attr.row,
+		_row,
 		_glasses = [],
 		_notifier = Object.getNotifier(this._noti);
 
@@ -37,9 +37,33 @@ function Contour(attr){
 	if(_parent)
 		this.parent = _parent;
 
-	this.cns_no = $p.fix_number(_row.cns_no, true);
+	// строка в таблице конструкций
+	if(attr.row)
+		_row = attr.row;
+	else
+		_row = this.project.ox.constructions.add();
 
-	this.glass_no = $p.fix_number(_row.glassno, true);
+	this._define('cns_no', {
+		get : function(){
+			return _row.cns_no;
+		},
+		set : function(v){
+			_row.cns_no = v;
+		},
+		enumerable : false,
+		configurable : false
+	});
+
+	this._define('glassno', {
+		get : function(){
+			return _row.glassno;
+		},
+		set : function(v){
+			_row.glassno = v;
+		},
+		enumerable : false,
+		configurable : false
+	});
 
 	if(this.cns_no)
 		this.project.ox.coordinates.find_rows({cns_no: this.cns_no}, function(row){
@@ -177,6 +201,21 @@ function Contour(attr){
 		enumerable : true,
 		configurable : false
 	});
+
+
+	/**
+	 * Удаляет контур из иерархии проекта
+	 * Одновлеменно, удаляет строку из табчасти _Конструкции_ и подчиненные строки из табчасти _Координаты_
+	 * @method remove
+	 */
+	this.remove = function () {
+		this.children.forEach(function (elm) {
+			elm.remove();
+		});
+		_row._owner.del(_row);
+		_row = null;
+		Contour.superclass.remove.call(this);
+	};
 
 
 	/**

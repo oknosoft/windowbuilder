@@ -102,12 +102,19 @@ function Scheme(eid, pwnd){
 
 	/**
 	 * Менеджер соединений изделия
-	 * Хранит информацию о соединениях элементов и предоставляет методв для поиска-манипуляции
+	 * Хранит информацию о соединениях элементов и предоставляет методы для поиска-манипуляции
 	 * @property connections
 	 * @type Connections
 	 */
 	this.connections = new function Connections() {
-		var _cache = [];
+
+		this._define("cnns", {
+			get : function(){
+				return _scheme.ox.cnn_elmnts;
+			},
+			enumerable : false,
+			configurable : false
+		});
 
 	};
 
@@ -171,8 +178,10 @@ function Scheme(eid, pwnd){
 			else
 				bounds = bounds.unite(l.bounds);
 		});
-		_view.zoom = Math.min(_view.viewSize.height / (bounds.height + 200), _view.viewSize.width / (bounds.width + 200));
-		_view.center = bounds.center.add([300, 0]);
+		if(bounds){
+			_view.zoom = Math.min(_view.viewSize.height / (bounds.height + 200), _view.viewSize.width / (bounds.width + 200));
+			_view.center = bounds.center.add([300, 0]);
+		}
 	};
 
 	/**
@@ -233,9 +242,17 @@ function Scheme(eid, pwnd){
 				.then(load_object);
 	};
 
+	/**
+	 * Перезаполняет изделие данными типового блока
+	 * @param id {String|CatObj} - идентификатор или объект - основание (типовой блок или характеристика продукции)
+	 */
 	this.load_stamp = function(id){
 
 		function do_load(bb){
+
+			// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
+			_scheme.clear();
+
 			// переприсваиваем систему
 			_scheme.osys = bb.sys;
 			_scheme.ox.owner = bb.sys.nom;
@@ -254,6 +271,8 @@ function Scheme(eid, pwnd){
 			_scheme.ox.visualization.load(bb.visualization);
 
 			_scheme.load(_scheme.ox);
+			setTimeout(_scheme.zoom_fit, 100);
+
 		}
 
 		if($p.is_data_obj(id))

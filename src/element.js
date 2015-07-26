@@ -7,7 +7,7 @@
 
 /**
  * Базовый класс элементов построителя. его свойства и методы присущи всем элементам построителя,
- * но не характерны для классов Path и Group фреймворка paper.opwb
+ * но не характерны для классов Path и Group фреймворка paper.js
  * @class BuilderElement
  * @param attr {Object} - объект со свойствами создаваемого элемента
  *  @param attr.b {paper.Point} - координата узла начала элемента - не путать с координатами вершин пути элемента
@@ -23,7 +23,38 @@
  */
 function BuilderElement(attr){
 
+	var _row;
+
 	BuilderElement.superclass.constructor.call(this);
+
+	if(attr.row)
+		_row = attr.row;
+	else
+		_row = this.project.ox.coordinates.add();
+
+	// номенклатура
+	this._define("nom", {
+		get : function(){
+			return _row.nom;
+		},
+		set : function(v){
+			_row.nom = v;
+		},
+		enumerable : false,
+		configurable : false
+	});
+
+	// цвет
+	this._define("clr", {
+		get : function(){
+			return _row.clr;
+		},
+		set : function(v){
+			_row.clr = v;
+		},
+		enumerable : false,
+		configurable : false
+	});
 
 	if(attr.proto){
 
@@ -38,12 +69,11 @@ function BuilderElement(attr){
 
 	}else if(attr.row){
 
-		this.nom = attr.row.nom;
-		this.clr = attr.row.clr;
-
 		if(attr.parent)
 			this.parent = attr.parent;
 	}
+
+
 
 	this.project.register_change();
 
@@ -53,6 +83,17 @@ function BuilderElement(attr){
 	 */
 	this.redraw = function(){
 
+	};
+
+	/**
+	 * Удаляет элемент из контура и иерархии проекта
+	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
+	 * @method remove
+	 */
+	this.remove = function () {
+		_row._owner.del(_row);
+		_row = null;
+		BuilderElement.superclass.remove.call(this);
 	};
 
 }
@@ -161,36 +202,6 @@ function BuilderElement(attr){
 	 * @static
 	 */
 	function NomenclatureProperties(){
-
-		// номенклатура
-		this._define("nom", {
-			get : function(){
-				if(!this.data.nom)
-					this.data.nom = $p.cat.nom.get();
-				return this.data.nom;
-			},
-			set : function(v){
-				if(v && v._manager)
-					this.data.nom = v;
-			},
-			enumerable : true,
-			configurable : false
-		});
-
-		// цвет
-		this._define("clr", {
-			get : function(){
-				if(!this.data.clr)
-					this.data.clr = $p.cat.clrs.get();
-				return this.data.clr;
-			},
-			set : function(v){
-				if(v && v._manager)
-					this.data.clr = v;
-			},
-			enumerable : true,
-			configurable : false
-		});
 
 		// ширина
 		this._define("width", {
