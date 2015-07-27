@@ -85,7 +85,6 @@ function Profile(attr){
 
 				var d1 = _profile.d1, d2 = _profile.d2,
 					ds = 3 * _profile.width, step = len * 0.02,
-					is_linear = path.curves.length == 1 && path.firstCurve.isLinear(),
 					point_b, tangent_b, normal_b,
 					point_e, tangent_e, normal_e;
 
@@ -99,7 +98,7 @@ function Profile(attr){
 				point_e = path.lastSegment.point;
 
 				// для прямого пути, чуть наклоняем нормаль
-				if(is_linear){
+				if(path.is_linear()){
 
 					tangent_e = tangent_b.clone();
 
@@ -188,7 +187,7 @@ function Profile(attr){
 		this.addChild(this.data.generatrix);
 
 		/**
-		 * Подключает наблюдателя за событиями контура
+		 * Подключает наблюдателя за событиями контура с именем _consts.move_points_
 		 */
 		if(this.parent){
 			Object.observe(this.parent._noti, function (an) {
@@ -203,34 +202,24 @@ function Profile(attr){
 					moved.profiles.forEach(function (p) {
 						if(bcnn.cnn && bcnn.profile == p){
 							if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-								for(var i in moved.points){
-									mpoint = moved.points[i];
-									if(mpoint.old.getDistance(_profile[bcnn.profile_point]) < consts.sticking){
-										_profile[bcnn.profile_point] = mpoint.new;
-										break;
-									}
-								}
+								if(!_profile.b.is_nearest(p.e))
+									_profile.b = p.e;
 							}
 							else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-								mpoint = p.generatrix.getNearestPoint(_profile["b"]);
-								if(!mpoint.is_nearest(_profile["b"]))
-									_profile["b"] = mpoint;
+								mpoint = p.generatrix.getNearestPoint(_profile.b);
+								if(!mpoint.is_nearest(_profile.b))
+									_profile.b = mpoint;
 							}
 						}
-						if(ecnn.profile == p){
+						if(ecnn.cnn && ecnn.profile == p){
 							if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-								for(var i in moved.points){
-									mpoint = moved.points[i];
-									if(mpoint.old.getDistance(_profile[ecnn.profile_point]) < consts.sticking){
-										_profile[ecnn.profile_point] = mpoint.new;
-										break;
-									}
-								}
+								if(!_profile.e.is_nearest(p.b))
+									_profile.e = p.b;
 							}
 							else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-								mpoint = p.generatrix.getNearestPoint(_profile["e"]);
-								if(!mpoint.is_nearest(_profile["e"]))
-									_profile["e"] = mpoint;
+								mpoint = p.generatrix.getNearestPoint(_profile.e);
+								if(!mpoint.is_nearest(_profile.e))
+									_profile.e = mpoint;
 							}
 						}
 					});
@@ -573,8 +562,9 @@ function Profile(attr){
 	 * Обрабатывает смещение выделенных сегментов образующей профиля
 	 * @param delta {paper.Point} - куда и насколько смещать
 	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
+	 * @param [start_point] {paper.Point} - откуда началось движение
 	 */
-	this.move_points = function(delta, all_points){
+	this.move_points = function(delta, all_points, start_point){
 		var segments = _profile.generatrix.segments,
 			changed = false, cnn_point, free_point, j,
 			noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;
@@ -601,8 +591,9 @@ function Profile(attr){
 
 				// накапливаем точки в нотификаторе
 				noti_points.new = segments[j].point;
+				if(start_point)
+					noti_points.start = start_point;
 				noti.points.push(noti_points);
-
 
 				// тянем примыкающий в узле соседний профиль
 				//if(cnn_point && cnn_point.profile_point){
@@ -796,7 +787,7 @@ function Profile(attr){
 		path.removeSegments();
 
 		// TODO отказаться повторного пересчета и заействовать клоны rays-ов
-		if(gpath.curves.length == 1 && gpath.curves[0].isLinear()){
+		if(gpath.is_linear()){
 			path.add(_corns[1], _corns[2], _corns[3]);
 
 		}else{

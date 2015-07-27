@@ -411,10 +411,12 @@ function Scheme(eid, pwnd){
 		setTimeout(function() {
 			requestAnimationFrame(redraw);
 			process_redraw();
-		}, 40);
+		}, 50);
 
 		//requestAnimationFrame(redraw);
 		//setTimeout(process_redraw, 20);
+
+		//process_redraw();
 
 	}
 	redraw();

@@ -16,10 +16,10 @@
  */
 function Filling(attr){
 
+	Filling.superclass.constructor.call(this, attr);
+
 	var _row = attr.row,
 		_filling = this;
-
-	Filling.superclass.constructor.call(this, attr);
 
 	// initialize
 	(function(){
@@ -30,7 +30,13 @@ function Filling(attr){
 
 		if(_row.path_data)
 			this.data.path = new paper.Path(_row.path_data);
-		else
+
+		else if(attr.path){
+
+			this.data.path = new paper.Path();
+			this.data.path.addSegments(attr.path.segments);
+
+		}else
 			this.data.path = new paper.Path([
 				[_row.cornx1, h - _row.corny1],
 				[_row.cornx2, h - _row.corny2],

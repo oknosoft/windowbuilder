@@ -554,11 +554,11 @@ function Contour(attr){
 						break;
 
 				}
-				if(сrating > rating){
+				if(сrating > rating || !сglass){
 					rating = сrating;
 					сglass = glass;
 				}
-				if(сrating == rating){
+				if(сrating == rating && сglass != glass){
 					if(!glass_path_center)
 						glass_path_center = glass_path.bounds.center;
 					if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(сglass.bounds.center, true))
@@ -566,14 +566,27 @@ function Contour(attr){
 				}
 			}
 			// TODO реализовать настоящее ранжирование
-			if(rating > 0){
+			if(сglass || (сglass = _contour.getItem({class: Filling, visible: false}))) {
 				сglass.path = glass_path;
 				сglass.visible = true;
-				if(сglass instanceof Filling){
+				if (сglass instanceof Filling) {
 					сglass.path.sendToBack();
 					сglass.path.visible = true;
 				}
+			}else{
+				// добавляем заполнение
+				// 1. ищем в изделии любое заполнение
+				// 2. если не находим, используем умолчание системы
+				if(glass = _contour.getItem({class: Filling})){
 
+				}else if(glass = _contour.project.getItem({class: Filling})){
+
+				}else{
+
+				}
+				сglass = new Filling({proto: glass, parent: _contour, path: glass_path});
+				сglass.path.sendToBack();
+				сglass.path.visible = true;
 			}
 		}
 
@@ -598,19 +611,25 @@ function Contour(attr){
 		// TODO вместо середины образующей задействовать точки внутри пути
 		if(original_bounds instanceof paper.CompoundPath){
 			original_bounds.children.forEach(function(p){
-				if(p.segments.length > 18)
-					to_remove.push(p);
-				else
-					for(var i in profiles){
-						children = profiles[i].path;
-						//interior = children.firstSegment.getPointAt(0.5, true);
-						interior = children.lastCurve.getPointAt(0.5, true).add(children.firstCurve.getPointAt(0.1, true)).divide(2);
-						//interior = profiles[i].path.interiorPoint;
-						if(p.contains(interior)){
-							to_remove.push(p);
-							break;
-						}
+				for(var i in profiles){
+					children = profiles[i];
+					if(children.generatrix.is_linear())
+						interior = children.path.interiorPoint;
+					else{
+						if(children.generatrix.curves.length == 1)
+							interior = children.generatrix.firstCurve.getPointAt(0.5, true);
+						else if (children.generatrix.curves.length == 2)
+							interior = children.generatrix.firstCurve.point2;
+						else
+							interior = children.generatrix.curves[1].point2;
 					}
+					//interior = children.lastCurve.getPointAt(0.5, true).add(children.firstCurve.getPointAt(0.1, true)).divide(2);
+					//interior = children.path.interiorPoint.add(children.generatrix.getPointAt(0.5, true)).divide(2);
+					if(p.contains(interior)){
+						to_remove.push(p);
+						break;
+					}
+				}
 			});
 			to_remove.forEach(function(p){
 				p.remove();

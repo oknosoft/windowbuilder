@@ -589,6 +589,7 @@ function Editor(_scheme){
 		tool.originalHandleIn = null;
 		tool.originalHandleOut = null;
 		tool.changed = false;
+		tool.minDistance = 10;
 
 		tool.options = {
 			name: 'select_elm',
@@ -1793,12 +1794,14 @@ function Editor(_scheme){
 		$p.wsql.restore_options("editor", tool.options);
 		tool.wnd = $p.iface.dat_gui(_scheme._dxw, tool.options.wnd);
 		var dg = tool.wnd.wnd, minmax = {min: {}, max: {}}, profile;
-		dg.buttons = dg.bottom_toolbar({wrapper: dg.cell, width: '100%', height: '28px', bottom: '0px', left: '0px', name: 'aling_bottom',
+		dg.buttons = dg.bottom_toolbar({
+			wrapper: dg.cell, width: '100%', height: '28px', bottom: '0px', left: '0px', name: 'aling_bottom',
 			buttons: [
 				{name: 'left', img: 'align_left.png', title: $p.msg.align_node_left, float: 'left'},
 				{name: 'bottom', img: 'align_bottom.png', title: $p.msg.align_node_bottom, float: 'left'},
 				{name: 'top', img: 'align_top.png', title: $p.msg.align_node_top, float: 'left'},
-				{name: 'right', img: 'align_right.png', title: $p.msg.align_node_right, float: 'left'}
+				{name: 'right', img: 'align_right.png', title: $p.msg.align_node_right, float: 'left'},
+				{name: 'delete', img: 'trash.gif', title: 'Удалить элемент', clear: 'right', float: 'right'}
 			],
 			onclick: function (name) {
 				if(!(profile = tool.wnd.first_obj(Profile)))
@@ -1816,21 +1819,29 @@ function Editor(_scheme){
 						profile.x1 = minmax.min.x;
 					if(profile.x2 - minmax.min.x > 0)
 						profile.x2 = minmax.min.x;
+
 				}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
 					if(profile.x1 - minmax.max.x < 0)
 						profile.x1 = minmax.max.x;
 					if(profile.x2 - minmax.max.x < 0)
 						profile.x2 = minmax.max.x;
+
 				}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
 					if(profile.y1 - minmax.max.y < 0)
 						profile.y1 = minmax.max.y;
 					if(profile.y2 - minmax.max.y < 0)
 						profile.y2 = minmax.max.y;
+
 				}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
 					if (profile.y1 - minmax.min.y > 0)
 						profile.y1 = minmax.min.y;
 					if (profile.y2 - minmax.min.y > 0)
 						profile.y2 = minmax.min.y;
+
+				}else if(name == 'delete') {
+					profile.removeChildren();
+					profile.remove();
+
 				}else
 					$p.msg.show_msg({type: "alert-warning",
 						text: $p.msg.align_invalid_direction,

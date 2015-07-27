@@ -42,6 +42,14 @@ paper.Path.prototype.getDirectedAngle = function (point) {
 };
 
 /**
+ * Выясняет, является ли путь прямым
+ * @return {Boolean}
+ */
+paper.Path.prototype.is_linear = function () {
+	return this.curves.length == 1 && this.firstCurve.isLinear();
+};
+
+/**
  * Выясняет, расположена ли точка в окрестности точки
  * @param point {paper.Point}
  * @param [sticking] {Boolean}

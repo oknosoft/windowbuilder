@@ -30,7 +30,7 @@ function BuilderElement(attr){
 	if(attr.row)
 		_row = attr.row;
 	else
-		_row = this.project.ox.coordinates.add();
+		_row = attr.row = this.project.ox.coordinates.add();
 
 	// номенклатура
 	this._define("nom", {
@@ -61,18 +61,16 @@ function BuilderElement(attr){
 		this.nom = attr.proto.nom;
 		this.clr = attr.proto.clr;
 
-		if(attr.proto.parent)
+		if(attr.parent)
+			this.parent = attr.parent;
+		else if(attr.proto.parent)
 			this.parent = attr.proto.parent;
 
 		if(attr.proto instanceof Profile)
 			this.insertBelow(attr.proto);
 
-	}else if(attr.row){
-
-		if(attr.parent)
-			this.parent = attr.parent;
-	}
-
+	}else if(attr.parent)
+		this.parent = attr.parent;
 
 
 	this.project.register_change();
