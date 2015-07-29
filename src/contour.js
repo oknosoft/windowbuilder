@@ -69,11 +69,11 @@ function Contour(attr){
 		this.project.ox.coordinates.find_rows({cns_no: this.cns_no}, function(row){
 
 			// добавляем профили
-			if($p.enm.elm_types.groups.profiles.indexOf(row.elm_type) != -1)
+			if($p.enm.elm_types.profiles.indexOf(row.elm_type) != -1)
 				new Profile({row: row,	parent: _contour});
 
 			// добавляем заполнения
-			else if($p.enm.elm_types.groups.glasses.indexOf(row.elm_type) != -1)
+			else if($p.enm.elm_types.glasses.indexOf(row.elm_type) != -1)
 				new Filling({row: row,	parent: _contour});
 
 			// добавляем раскладки

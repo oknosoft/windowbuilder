@@ -260,7 +260,6 @@ function Scheme(eid, pwnd){
 			// очищаем табчасти, перезаполняем контуры и координаты
 			_scheme.ox.specification.clear();
 			_scheme.ox.glasses.clear();
-			_scheme.ox.glass_coordinates.clear();
 			_scheme.ox.glass_specification.clear();
 			_scheme.ox.mosquito.clear();
 
