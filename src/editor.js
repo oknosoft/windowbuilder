@@ -31,7 +31,7 @@ function Editor(_scheme){
 		 */
 		tb_left = new $p.iface.OTooolBar({wrapper: _scheme._wrapper, top: '16px', left: '3px', name: 'left', height: '250px',
 			buttons: [
-				{name: 'select_elm', img: 'icon-arrow-black.png', title: 'Свойства и перемещение элемента'},
+				{name: 'select_elm', img: 'icon-arrow-black.png', title: '<div style="width: 400px">Инструмент <b>Свойства и перемещение элемента</b></div>'},
 				{name: 'select_node', img: 'icon-arrow-white.png', title: 'Свойства и перемещение узла'},
 				{name: 'pan', img: 'icon-hand.png', title: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
 				{name: 'zoom_fit', img: 'cursor-zoom.png', title: 'Вписать в окно'},

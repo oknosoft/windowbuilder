@@ -4,7 +4,7 @@
   "www_root": "../",
   "output": "lib/windowbuilder.min.js",
   "modules": {
-    "builder":   [
+    "builder": [
       "src/settings.js",
       "src/element.js",
       "src/scheme.js",
@@ -13,8 +13,10 @@
       "src/filling.js",
       "src/sectional.js",
       "src/editor.js",
-      "src/main.js"]
+      "src/main.js"],
+    "<%= file %>": "src/tooltips/*.html"
   },
+  "main": "builder",
   "optimize": true,
   "pack": true,
   "ie": false
