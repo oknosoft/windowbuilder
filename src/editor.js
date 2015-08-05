@@ -31,8 +31,8 @@ function Editor(_scheme){
 		 */
 		tb_left = new $p.iface.OTooolBar({wrapper: _scheme._wrapper, top: '16px', left: '3px', name: 'left', height: '250px',
 			buttons: [
-				{name: 'select_elm', img: 'icon-arrow-black.png', title: '<div style="width: 400px">Инструмент <b>Свойства и перемещение элемента</b></div>'},
-				{name: 'select_node', img: 'icon-arrow-white.png', title: 'Свойства и перемещение узла'},
+				{name: 'select_elm', img: 'icon-arrow-black.png', title: require('select_elm')},
+				{name: 'select_node', img: 'icon-arrow-white.png', title: require('select_node')},
 				{name: 'pan', img: 'icon-hand.png', title: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
 				{name: 'zoom_fit', img: 'cursor-zoom.png', title: 'Вписать в окно'},
 				{name: 'pen', img: 'cursor-pen-freehand.png', title: 'Добавить профиль'},
@@ -279,26 +279,19 @@ function Editor(_scheme){
 		});
 
 		// комбобоксы системы и цвета
-		dg.cb_sys = new dhtmlXCombo(dg.cell_a);
-		dg.cb_sys.DOMelem.style.marginBottom = "4px";
-		//dg.cb_sys.DOMelem_input.style.backgroundColor = "transparent";
-		dg.cb_sys.addOption($p.cat.production_params.get_option_list(_scheme.osys, {is_folder: false}));
-		dg.cb_sys.enableFilteringMode('between');
-		dg.cb_sys.allowFreeText(false);
-		dg.cb_sys.attachEvent("onChange", function(){
-
+		dg.cb_sys = new $p.iface.OCombo({
+			parent: dg.cell_a,
+			obj: _scheme,
+			field: "osys",
+			meta: $p.dp.buyers_order.metadata("sys")
 		});
 
-		dg.cb_clr = new dhtmlXCombo(dg.cell_a);
-		dg.cb_clr.DOMelem.style.marginBottom = "4px";
-		//dg.cb_clr.DOMelem_input.style.backgroundColor = "transparent";
-		dg.cb_clr.addOption($p.cat.clrs.get_option_list($p.cat.clrs.predefined("white", true), {is_folder: false}));
-		dg.cb_clr.enableFilteringMode('between');
-		dg.cb_clr.allowFreeText(false);
-		dg.cb_clr.attachEvent("onChange", function(){
-
+		dg.cb_clr = new $p.iface.OCombo({
+			parent: dg.cell_a,
+			obj: _scheme,
+			field: "clr",
+			meta: $p.dp.buyers_order.metadata("clr")
 		});
-
 
 		// рисуем дерево слоёв
 		dg.tree.attachEvent("onCheck", function(id, state){

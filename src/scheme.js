@@ -42,13 +42,12 @@ function Scheme(eid, pwnd){
 	 * @param obj
 	 */
 	this.notify = function (obj) {
-		_notifier.notify(obj);
+		Object.getNotifier(_scheme._noti).notify(obj);
 	};
 
 	var _scheme = this,
 		_view = this.view,
-		_bounds,
-		_notifier = Object.getNotifier(this._noti),
+		_bounds, _ox, _osys,
 		_changes = [];
 
 	/**
@@ -119,25 +118,63 @@ function Scheme(eid, pwnd){
 	};
 
 	/**
-	 * Редактор чертежа изделия - набор инструментов
-	 * @property editor
-	 * @type {Editor}
-	 */
-	(this.editor = new Editor(this)).tools.select_node.activate();
-
-	/**
 	 * ХарактеристикаОбъект текущего изделия
 	 * @property ox
 	 * @type _cat.characteristics
 	 */
-	this.ox = null;
+	this._define("ox", {
+		get: function () {
+			return _ox;
+		},
+		set: function (v) {
+			_ox = v;
+		},
+		enumerable: false
+	});
 
 	/**
 	 * СистемаОбъект текущего изделия
 	 * @property osys
 	 * @type _cat.production_params
 	 */
-	this.osys = null;
+	this._define("osys", {
+		get: function () {
+			return _osys;
+		},
+		set: function (v) {
+
+			if(_osys == v)
+				return;
+
+			if(!$p.is_data_obj(v))
+				v = $p.cat.production_params.get(v, false, true);
+
+			Object.getNotifier(this).notify({
+				type: 'update',
+				name: 'osys',
+				oldValue: _osys
+			});
+
+			_osys = v;
+
+		},
+		enumerable: false
+	});
+
+	/**
+	 * Цвет текущего изделия
+	 * @property clr
+	 * @type _cat.production_params
+	 */
+	this._define("clr", {
+		get: function () {
+			return _ox ? _ox.clr : $p.cat.clrs.predefined("white");
+		},
+		set: function (v) {
+			_ox.clr = v;
+		},
+		enumerable: false
+	});
 
 	/**
 	 * Ищет точки в выделенных элементах. Если не находит, то во всём проекте
@@ -253,9 +290,8 @@ function Scheme(eid, pwnd){
 			// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
 			_scheme.clear();
 
-			// переприсваиваем систему
-			_scheme.osys = bb.sys;
-			_scheme.ox.owner = bb.sys.nom;
+			// переприсваиваем систему через номенклатуру характеристики
+			_scheme.ox.owner = bb.production.owner;
 
 			// очищаем табчасти, перезаполняем контуры и координаты
 			_scheme.ox.specification.clear();
@@ -418,6 +454,15 @@ function Scheme(eid, pwnd){
 		//process_redraw();
 
 	}
+
+	/**
+	 * Редактор чертежа изделия - набор инструментов
+	 * @property editor
+	 * @type {Editor}
+	 */
+	this.editor = new Editor(this);
+	this.editor.tools.select_node.activate();
+
 	redraw();
 }
 Scheme._extend(paper.Project);
