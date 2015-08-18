@@ -55,8 +55,7 @@ $p.settings = function (prm, modifiers) {
  */
 $p.iface.oninit = function() {
 
-	// Создаём контейнер div, в котором расположим элементы построителя
-	var eid = 'paper_builder' + dhx4.newId(), prm, v;
+	var prm, v, _cell;
 
 	function on_log_in_step(step){
 
@@ -64,20 +63,20 @@ $p.iface.oninit = function() {
 
 			case $p.eve.steps.authorization:
 
-				$p.iface.main.setText("Авторизация");
+				_cell.setText("Авторизация");
 
 				break;
 
 			case $p.eve.steps.load_meta:
 
 				// индикатор прогресса и малое всплывающее сообщение
-				$p.iface.main.setText($p.msg.init_catalogues + $p.msg.init_catalogues_meta);
+				_cell.setText($p.msg.init_catalogues + $p.msg.init_catalogues_meta);
 
 				break;
 
 			case $p.eve.steps.create_managers:
 
-				$p.iface.main.setText("Создаём объекты менеджеров данных...");
+				_cell.setText("Создаём объекты менеджеров данных...");
 
 				break;
 
@@ -87,13 +86,13 @@ $p.iface.oninit = function() {
 
 			case $p.eve.steps.load_data_files:
 
-				$p.iface.main.setText("Читаем файлы данных зоны...");
+				_cell.setText("Читаем файлы данных зоны...");
 
 				break;
 
 			case $p.eve.steps.load_data_db:
 
-				$p.iface.main.setText("Читаем изменённые справочники из 1С...");
+				_cell.setText("Читаем изменённые справочники из 1С...");
 
 				break;
 
@@ -103,7 +102,7 @@ $p.iface.oninit = function() {
 
 			case $p.eve.steps.save_data_wsql:
 
-				$p.iface.main.setText("Сохраняем таблицы в локальном SQL...");
+				_cell.setText("Сохраняем таблицы в локальном SQL...");
 
 				break;
 
@@ -122,9 +121,7 @@ $p.iface.oninit = function() {
 		parent: document.body,
 		pattern: "1C"
 	});
-	// приклеиваем к layout-у div рисовалки
-	$p.iface.main = $p.iface.docs.cells("a");
-	$p.iface.main.attachHTMLString("<div id=" + eid + " style='width: 100%; height: 100%;'></div>");
+	_cell = $p.iface.docs.cells("a");
 
 	setTimeout($p.cat.load_catalogues, 0);
 
@@ -134,8 +131,8 @@ $p.iface.oninit = function() {
 
 		.then(function () {
 
-			$p.iface.main.hideHeader();
-			$p.scheme = new $p.Scheme(eid, $p.iface.main);
+			_cell.hideHeader();
+			$p.scheme = new $p.Scheme(_cell);
 
 			/**
 			 для целей отледки, заполняем __ox__ простыми данными

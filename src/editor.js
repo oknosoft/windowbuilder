@@ -212,7 +212,7 @@ function Editor(_scheme){
 				height: 380
 			}};
 		$p.wsql.restore_options("editor", options);
-		var dg = _scheme.dg_layers = $p.iface.dat_tree(_scheme._dxw, options.wnd),
+		var dg = _scheme.dg_layers = $p.iface.dat_tree(_scheme._acc, options.wnd),
 			tb_bottom = dg.bottom_toolbar({wrapper: dg.cell, width: '100%', height: '28px', bottom: '0px', left: '0px', name: 'layers_bottom',
 				buttons: [
 					{name: 'new', img: 'drafts.gif', title: 'Новый контур', clear: 'left', float: 'left'},

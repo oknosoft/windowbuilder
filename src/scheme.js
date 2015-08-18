@@ -5,27 +5,49 @@
  */
 
 /**
- * Изделие - расширение Paper.Project
- * стандартные слои (layers) это контуры изделия
+ * ### Изделие
+ * Расширение Paper.Project. Стандартные слои (layers) - это контуры изделия<br />
  * размерные линии, фурнитуру и визуализацию располагаем в отдельных слоях
  * @class Scheme
  * @constructor
  * @extends paper.Project
- * @param eid {String} - id элемента, в котором будет размещео изделие
- * @param [pwnd] {dhtmlXWindowsCell|dhtmlXLayoutCell} - id элемента, в котором будет размещео изделие
+ * @param pwnd {dhtmlXWindowsCell|dhtmlXLayoutCell} - ячейка dhtml, в которой будет размещено изделие с редактором
  */
-function Scheme(eid, pwnd){
+function Scheme(pwnd){
 
 	this.toString = function(){ return $p.msg.bld_constructor; };
 
 	this._pwnd = pwnd;
-	this._wrapper = document.getElementById(eid);
+	this._layout = this._pwnd.attachLayout({
+		pattern: "2U",
+		cells: [{
+			id: "a",
+			text: "Изделие",
+			header: false
+		}, {
+			id: "b",
+			text: "Инструменты",
+			collapsed_text: "Инструменты",
+			width: pwnd.getWidth() > 1200 ? 360 : 240
+		}],
+		offsets: { top: 2, right: 2, bottom: 2, left: 2}
+	});
+	this._wrapper = document.createElement('div');
+	this._layout.cells("a").attachObject(this._wrapper);
 	this._canvas = document.createElement('canvas');
 	this._wrapper.appendChild(this._canvas);
+	this._dxw = this._layout.dhxWins;
+	//this._dxw.setSkin(dhtmlx.skin);
 
-	this._dxw = new dhtmlXWindows();
-	this._dxw.setSkin(dhtmlx.skin);
-	this._dxw.attachViewportTo(eid);
+	this._acc = this._layout.cells("b").attachAccordion({
+		icons_path: dhtmlx.image_path,
+		multi_mode: true,
+		dnd:        true,
+		items: [
+			{ id: "a3", text: "Feedback", height: "*" }
+		]
+	});
+
 
 	Scheme.superclass.constructor.call(this, this._canvas);
 	if(!paper.project)
