@@ -233,6 +233,7 @@ function Editor(_scheme){
 
 						synced = true;
 
+						// добавляем слои изделия
 						tree.deleteChildItems(0);
 						_scheme.layers.forEach(function (l) {
 							if(l instanceof Contour){
@@ -241,6 +242,16 @@ function Editor(_scheme){
 							}
 
 						});
+
+						// служебный слой размеров
+						tree.insertNewItem(0, "sizes", "Размерные линии");
+
+						// служебный слой визуализации
+						tree.insertNewItem(0, "visualization", "Визуализация доп. элементов");
+
+						// служебный слой текстовых комментариев
+						tree.insertNewItem(0, "text", "Комментарии");
+
 					}
 				});
 			}

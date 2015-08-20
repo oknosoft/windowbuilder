@@ -37,6 +37,7 @@ function Scheme(pwnd){
 	this._canvas = document.createElement('canvas');                // собственно, канвас
 	this._wrapper.appendChild(this._canvas);
 	this._dxw = this._layout.dhxWins;                               // указатель на dhtmlXWindows
+
 	//this._dxw.attachViewportTo(eid);
 	//this._dxw.setSkin(dhtmlx.skin);
 
@@ -80,7 +81,7 @@ function Scheme(pwnd){
 		_changes = [];
 
 	/**
-	 * Если передали указаткель на родителя, подписываемся на события изменения размеров
+	 * Подписываемся на события изменения размеров
 	 */
 	if(pwnd instanceof  dhtmlXWindowsCell){
 
@@ -449,8 +450,8 @@ function Scheme(pwnd){
 	};
 
 	function resize_canvas(w, h){
-		_view.viewSize.width = (w > 1200 ? 1200 : w);
-		_view.viewSize.height = (h - 80);
+		_view.viewSize.width = w;
+		_view.viewSize.height = h;
 	}
 
 	/**

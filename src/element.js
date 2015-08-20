@@ -32,33 +32,18 @@ function BuilderElement(attr){
 	else
 		_row = attr.row = this.project.ox.coordinates.add();
 
-	// номенклатура
-	this._define("nom", {
-		get : function(){
-			return _row.inset.nom;
-		},
-		set : function(v){
-			_row.nom = v;
-		},
-		enumerable : false,
-		configurable : false
-	});
-
-	// цвет
-	this._define("clr", {
-		get : function(){
-			return _row.clr;
-		},
-		set : function(v){
-			_row.clr = v;
-		},
-		enumerable : false,
-		configurable : false
+	this._define({
+		_row: {
+			get: function () {
+				return _row;
+			},
+			enumerable: false
+		}
 	});
 
 	if(attr.proto){
 
-		this.nom = attr.proto.nom;
+		this.inset = attr.proto.inset;
 		this.clr = attr.proto.clr;
 
 		if(attr.parent)
@@ -79,9 +64,7 @@ function BuilderElement(attr){
 	 * Формирует путь элемента и перерисовывает его. Переопределяется в наследниках
 	 * @method redraw
 	 */
-	this.redraw = function(){
-
-	};
+	this.redraw = function(){};
 
 	/**
 	 * Удаляет элемент из контура и иерархии проекта
@@ -95,149 +78,167 @@ function BuilderElement(attr){
 	};
 
 }
-(function(){
 
-	BuilderElement._extend(paper.Group);                     // BuilderElement наследует свойства класса Path
-	NomenclatureProperties.call(BuilderElement.prototype);      // а еще, привязываем свойства класса NomenclatureProperties
-	BuilderElementProperties.call(BuilderElement.prototype);    // новые свойства привязываем к прототипу, а не к самому BuilderElement-у
+// BuilderElement наследует свойства класса Group
+BuilderElement._extend(paper.Group);
 
-	/**
-	 * Cвойства элемента, не зависящие от номенклатуры
-	 * @class BuilderElementProperties
-	 * @static
-	 */
-	function BuilderElementProperties(){
+// Привязываем свойства номенклатуры, вставки и цвета
+BuilderElement.prototype._define({
+	_metadata: {
+		get : function(){
+			return {
+				nom: {}
+			};
+		},
+		enumerable : false
+	},
 
-		/**
-		 * Элемент - владелец. имеет смысл для раскладок и рёбер заполнения
-		 * @property owner
-		 * @type BuilderElement
-		 */
-		this._define('owner', {
-			get : function(){ return this.data.owner; },
-			set : function(newValue){ this.data.owner = newValue; },
-			enumerable : false,
-			configurable : false
-		});
+	// номенклатура - свойство только для чтения, т.к. вычисляется во вставке
+	nom:{
+		get : function(){
+			return this._row.inset.nom;
+		},
+		enumerable : false
+	},
 
-		/**
-		 * прочитать - установить путь образующей. здесь может быть линия, простая дуга или безье
-		 * по ней будут пересчитаны pathData и прочие свойства
-		 * @property generatrix
-		 * @type paper.Path
-		 */
-		this._define('generatrix', {
-			get : function(){ return this.data.generatrix; },
-			set : function(attr){
+	// вставка
+	inset: {
+		get : function(){
+			return this._row.inset;
+		},
+		enumerable : false
+	},
 
-				this.data.generatrix.removeSegments();
+	// цвет элемента
+	clr: {
+		get : function(){
+			return this._row.clr;
+		},
+		set : function(v){
+			this._row.clr = v;
+		},
+		enumerable : false
+	},
 
-				if(this.hasOwnProperty('rays'))
-					this.rays.clear();
+	// ширина
+	width: {
+		get : function(){
+			return this.nom.width || 80;
+		},
+		enumerable : false
+	},
 
-				if(Array.isArray(attr))
-					this.data.generatrix.addSegments(attr);
+	// толщина (для заполнений и, возможно, профилей в 3D)
+	thickness: {
+		get : function(){
+			return this.nom.thickness || 0;
+		},
+		enumerable : false
+	},
 
-				else if(attr.proto &&  attr.p1 &&  attr.p2){
+	// опорный размер (0 для рам и створок, 1/2 ширины для импостов)
+	sizeb: {
+		get : function(){
+			return this.nom.sizeb || 0;
+		},
+		enumerable : false
+	},
 
-					// сначала, выясняем направление пути
-					var tpath = attr.proto;
-					if(tpath.getDirectedAngle(attr.ipoint) < 0)
-						tpath.reverse();
-
-					// далее, уточняем порядок p1, p2
-					var d1 = tpath.getOffsetOf(attr.p1),
-						d2 = tpath.getOffsetOf(attr.p2), d3;
-					if(d1 > d2){
-						d3 = d2;
-						d2 = d1;
-						d1 = d3;
-					}
-					if(d1 > 0){
-						tpath = tpath.split(d1);
-						d2 = tpath.getOffsetOf(attr.p2);
-					}
-					if(d2 < tpath.length)
-						tpath.split(d2);
-
-					this.data.generatrix.remove();
-					this.data.generatrix = tpath;
-					this.data.generatrix.parent = this;
-
-					if(this.parent.parent)
-						this.data.generatrix.guide = true;
-				}
-			},
-			enumerable : true,
-			configurable : false
-		});
-
-		/**
-		 * путь элемента - состоит из кривых, соединяющих вершины элемента
-		 * для профиля, вершин всегда 4, для заполнений может быть <> 4
-		 * @property path
-		 * @type paper.Path
-		 */
-		this._define('path', {
-			get : function(){ return this.data.path; },
-			set : function(attr){
-				if(attr instanceof paper.Path){
-					this.data.path.removeSegments();
-					this.data.path.addSegments(attr.segments);
-					if(!this.data.path.closed)
-						this.data.path.closePath(true);
-				}
-			},
-			enumerable : true,
-			configurable : false
-		});
-
+	// размер до фурнитурного паза
+	sizefurn: {
+		get : function(){
+			return this.nom.sizefurn || 20;
+		},
+		enumerable : false
 	}
 
+});
+
+// Привязываем свойства геометрии
+BuilderElement.prototype._define({
+
 	/**
-	 * Cвойства элемента, определяемые номенклатурой
-	 * @class NomenclatureProperties
-	 * @static
+	 * ### Элемент - владелец
+	 * имеет смысл для раскладок и рёбер заполнения
+	 * @property owner
+	 * @type BuilderElement
 	 */
-	function NomenclatureProperties(){
+	owner: {
+		get : function(){ return this.data.owner; },
+		set : function(newValue){ this.data.owner = newValue; },
+		enumerable : false
+	},
 
-		// ширина
-		this._define("width", {
-			get : function(){
-				return this.nom.width || 80;
-			},
-			enumerable : false,
-			configurable : false
-		});
+	/**
+	 * ### Образующая
+	 * прочитать - установить путь образующей. здесь может быть линия, простая дуга или безье
+	 * по ней будут пересчитаны pathData и прочие свойства
+	 * @property generatrix
+	 * @type paper.Path
+	 */
+	generatrix: {
+		get : function(){ return this.data.generatrix; },
+		set : function(attr){
 
-		// толщина (для заполнений и, возможно, профилей в 3D)
-		this._define("thickness", {
-			get : function(){
-				return this.nom.thickness || 0;
-			},
-			enumerable : false,
-			configurable : false
-		});
+			this.data.generatrix.removeSegments();
 
-		// опорный размер (0 для рам и створок, 1/2 ширины для импостов)
-		this._define("sizeb", {
-			get : function(){
-				return this.nom.sizeb || 0;
-			},
-			enumerable : false,
-			configurable : false
-		});
+			if(this.hasOwnProperty('rays'))
+				this.rays.clear();
 
-		// размер до фурнитурного паза
-		this._define("sizefurn", {
-			get : function(){
-				return this.nom.sizefurn || 20;
-			},
-			enumerable : false,
-			configurable : false
-		});
+			if(Array.isArray(attr))
+				this.data.generatrix.addSegments(attr);
 
+			else if(attr.proto &&  attr.p1 &&  attr.p2){
+
+				// сначала, выясняем направление пути
+				var tpath = attr.proto;
+				if(tpath.getDirectedAngle(attr.ipoint) < 0)
+					tpath.reverse();
+
+				// далее, уточняем порядок p1, p2
+				var d1 = tpath.getOffsetOf(attr.p1),
+					d2 = tpath.getOffsetOf(attr.p2), d3;
+				if(d1 > d2){
+					d3 = d2;
+					d2 = d1;
+					d1 = d3;
+				}
+				if(d1 > 0){
+					tpath = tpath.split(d1);
+					d2 = tpath.getOffsetOf(attr.p2);
+				}
+				if(d2 < tpath.length)
+					tpath.split(d2);
+
+				this.data.generatrix.remove();
+				this.data.generatrix = tpath;
+				this.data.generatrix.parent = this;
+
+				if(this.parent.parent)
+					this.data.generatrix.guide = true;
+			}
+		},
+		enumerable : true
+	},
+
+	/**
+	 * путь элемента - состоит из кривых, соединяющих вершины элемента
+	 * для профиля, вершин всегда 4, для заполнений может быть <> 4
+	 * @property path
+	 * @type paper.Path
+	 */
+	path: {
+		get : function(){ return this.data.path; },
+		set : function(attr){
+			if(attr instanceof paper.Path){
+				this.data.path.removeSegments();
+				this.data.path.addSegments(attr.segments);
+				if(!this.data.path.closed)
+					this.data.path.closePath(true);
+			}
+		},
+		enumerable : true
 	}
 
-})();
+});
 
