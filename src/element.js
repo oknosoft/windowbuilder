@@ -84,11 +84,30 @@ BuilderElement._extend(paper.Group);
 
 // Привязываем свойства номенклатуры, вставки и цвета
 BuilderElement.prototype._define({
+
+	// виртуальные метаданные для автоформ
 	_metadata: {
 		get : function(){
+			var _xfields = this.project.ox._metadata.tabular_sections.coordinates.fields;
+			//_dgfields = this.project._dp._metadata.fields
 			return {
-				nom: {}
+				fields: {
+					inset: _xfields.inset,
+					clr: _xfields.clr,
+					x1: _xfields.x1,
+					x2: _xfields.x2,
+					y1: _xfields.y1,
+					y2: _xfields.y2
+				}
 			};
+		},
+		enumerable : false
+	},
+
+	// виртуальный датаменеджер для автоформ
+	_manager: {
+		get: function () {
+			return this.project._dp._manager;
 		},
 		enumerable : false
 	},
@@ -105,6 +124,9 @@ BuilderElement.prototype._define({
 	inset: {
 		get : function(){
 			return this._row.inset;
+		},
+		set : function(v){
+			this._row.inset = v;
 		},
 		enumerable : false
 	},

@@ -249,7 +249,7 @@ function Scheme(pwnd){
 	 * Изменяет центр и масштаб, чтобы изделие вписалось в размер окна
 	 */
 	this.zoom_fit = function(){
-		var bounds;
+		var bounds, shift;
 		_scheme.layers.forEach(function(l){
 			if(!bounds)
 				bounds = l.bounds;
@@ -257,8 +257,12 @@ function Scheme(pwnd){
 				bounds = bounds.unite(l.bounds);
 		});
 		if(bounds){
-			_view.zoom = Math.min(_view.viewSize.height / (bounds.height + 200), _view.viewSize.width / (bounds.width + 200));
-			_view.center = bounds.center.add([300, 0]);
+			_view.zoom = Math.min(_view.viewSize.height / (bounds.height+200), _view.viewSize.width / (bounds.width+200));
+			shift = (_view.viewSize.width - bounds.width * _view.zoom) / 2;
+			if(shift < 200)
+				shift = 0;
+			_view.center = bounds.center.add([shift, 0]);
+			//_view.center = bounds.center;
 		}
 	};
 
@@ -321,7 +325,10 @@ function Scheme(pwnd){
 			_scheme.clear();
 
 			// переприсваиваем систему через номенклатуру характеристики
-			_scheme.ox.owner = bb.production.owner;
+			if(!bb.production.owner.empty())
+				_scheme.ox.owner = bb.production.owner;
+			else if(!bb.sys.nom.empty())
+				_scheme.ox.owner = bb.sys.nom;
 
 			// очищаем табчасти, перезаполняем контуры и координаты
 			_scheme.ox.specification.clear();
@@ -342,6 +349,7 @@ function Scheme(pwnd){
 
 		if($p.is_data_obj(id))
 			do_load(id);
+
 		else if($p.is_guid(id))
 			$p.cat.base_blocks.get(id, true, true)
 				.then(do_load);

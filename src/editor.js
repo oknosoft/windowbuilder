@@ -442,9 +442,6 @@ function Editor(_scheme){
 				height: 380
 			}};
 
-		tool.update = function () {
-			tool.wnd.lazy_update();
-		};
 		tool.resetHot = function(type, event, mode) {
 		};
 		tool.testHot = function(type, event, mode) {
@@ -480,24 +477,18 @@ function Editor(_scheme){
 		};
 		tool.on({
 			activate: function() {
+
 				tb_left.select(tool.options.name);
 
 				setCanvasCursor('cursor-arrow-black');
 				updateSelectionState();
 				showSelectionBounds();
 
-				profile_dg_wnd(tool);
-
 			},
 			deactivate: function() {
 				hideSelectionBounds();
+				profile_dg_detache(tool);
 
-				if(tool.wnd){
-					tool.wnd.wnd_options(tool.options.wnd);
-					$p.wsql.save_options("editor", tool.options);
-					tool.wnd.close();
-					tool.wnd = null;
-				}
 			},
 			mousedown: function(event) {
 				this.mode = null;
@@ -521,7 +512,7 @@ function Editor(_scheme){
 						}
 					}
 					if(is_profile)
-						profile_dg_attache(this.hitItem.item.parent, tool.wnd);
+						profile_dg_attache(tool, this.hitItem.item.parent);
 
 					//updateSelectionState();
 					clearSelectionBounds();
@@ -532,7 +523,7 @@ function Editor(_scheme){
 					this.mode = 'box-select';
 
 					if (!event.modifiers.shift)
-						tool.wnd.clear();
+						profile_dg_detache(tool);
 
 				}
 			},
@@ -665,9 +656,6 @@ function Editor(_scheme){
 				height: 380
 			}};
 
-		tool.update = function () {
-			tool.wnd.lazy_update();
-		};
 		tool.resetHot = function(type, event, mode) {
 		};
 		tool.testHot = function(type, event, mode) {
@@ -732,17 +720,10 @@ function Editor(_scheme){
 
 				setCanvasCursor('cursor-arrow-white');
 
-				profile_dg_wnd(tool);
 			},
 			deactivate: function() {
 				clearSelectionBounds();
-
-				if(tool.wnd){
-					tool.wnd.wnd_options(tool.options.wnd);
-					$p.wsql.save_options("editor", tool.options);
-					tool.wnd.close();
-					tool.wnd = null;
-				}
+				profile_dg_detache(tool);
 			},
 			mousedown: function(event) {
 				this.mode = null;
@@ -796,7 +777,7 @@ function Editor(_scheme){
 					}
 
 					if(is_profile)
-						profile_dg_attache(this.hitItem.item.parent, tool.wnd);
+						profile_dg_attache(tool, this.hitItem.item.parent);
 
 					//updateSelectionState();
 					clearSelectionBounds();
@@ -807,7 +788,7 @@ function Editor(_scheme){
 					this.mode = 'box-select';
 
 					if (!event.modifiers.shift)
-						tool.wnd.clear();
+						profile_dg_detache(tool);
 				}
 			},
 			mouseup: function(event) {
@@ -1132,9 +1113,6 @@ function Editor(_scheme){
 			element.parent.parent.notify({type: consts.move_points, profiles: [element.parent], points: []});
 		}
 
-		tool.update = function () {
-			//tool.wnd.lazy_update();
-		};
 		tool.resetHot = function(type, event, mode) {
 		};
 		tool.testHot = function(type, event, mode) {
@@ -1221,7 +1199,7 @@ function Editor(_scheme){
 					//attache_dg(this.hitItem.item.parent, tool.wnd);
 
 				}else{
-					//tool.wnd.clear();
+					//profile_dg_detache(tool);
 					_scheme.deselectAll();
 				}
 			},
@@ -1258,7 +1236,7 @@ function Editor(_scheme){
 	};
 
 	/**
-	 * Добавление профилей
+	 * Добавление (рисование) профилей
 	 */
 	this.tools.pen = new function(){
 
@@ -1308,7 +1286,6 @@ function Editor(_scheme){
 					on_select: function (v) {
 						if(v!==undefined)
 							profile.nom = v;
-						tool.update();
 						opened = false;
 					},
 					on_unload: function () {
@@ -1330,7 +1307,6 @@ function Editor(_scheme){
 					on_select: function (v) {
 						if(v!==undefined)
 							profile.clr = v;
-						tool.update();
 						opened = false;
 					},
 					on_unload: function () {
@@ -1364,9 +1340,6 @@ function Editor(_scheme){
 			});
 		}
 
-		tool.update = function () {
-			tool.wnd.lazy_update();
-		};
 		tool.resetHot = function(type, event, mode) {
 		};
 		tool.testHot = function(type, event, mode) {
@@ -1413,14 +1386,8 @@ function Editor(_scheme){
 
 				decorate_layers(true);
 
-				if(tool.wnd){
-					tool.wnd.wnd_options(tool.options.wnd);
-					tool.options.clr = tool.options.clr.ref;
-					tool.options.nom = tool.options.nom.ref;
-					$p.wsql.save_options("editor", tool.options);
-					tool.wnd.close();
-					tool.wnd = null;
-				}
+				profile_dg_detache(tool);
+
 			},
 			mousedown: function(event) {
 
@@ -1653,7 +1620,7 @@ function Editor(_scheme){
 					//attache_dg(this.hitItem.item.parent, tool.wnd);
 
 				}else{
-					//tool.wnd.clear();
+					//profile_dg_detache(tool);
 					_scheme.deselectAll();
 				}
 			},
@@ -1794,12 +1761,7 @@ function Editor(_scheme){
 			},
 			deactivate: function() {
 
-				if(tool.wnd){
-					tool.wnd.wnd_options(tool.options.wnd);
-					$p.wsql.save_options("editor", tool.options);
-					tool.wnd.close();
-					tool.wnd = null;
-				}
+				profile_dg_detache(tool);
 
 			},
 			mousedown: function(event) {
@@ -1832,7 +1794,7 @@ function Editor(_scheme){
 					this.mode = 'box-select';
 
 					//if (!event.modifiers.shift)
-					//	tool.wnd.clear();
+					//	profile_dg_detache(tool);
 
 				}
 
@@ -1854,159 +1816,100 @@ function Editor(_scheme){
 	};
 
 	/**
-	 * Инициализация окна свойств профиля
-	 * @param tool
-	 */
-	function profile_dg_wnd(tool){
-		$p.wsql.restore_options("editor", tool.options);
-		tool.wnd = $p.iface.dat_gui(_scheme._dxw, tool.options.wnd);
-		var dg = tool.wnd.wnd, minmax = {min: {}, max: {}}, profile;
-		dg.buttons = dg.bottom_toolbar({
-			wrapper: dg.cell, width: '100%', height: '28px', bottom: '0px', left: '0px', name: 'aling_bottom',
-			buttons: [
-				{name: 'left', img: 'align_left.png', title: $p.msg.align_node_left, float: 'left'},
-				{name: 'bottom', img: 'align_bottom.png', title: $p.msg.align_node_bottom, float: 'left'},
-				{name: 'top', img: 'align_top.png', title: $p.msg.align_node_top, float: 'left'},
-				{name: 'right', img: 'align_right.png', title: $p.msg.align_node_right, float: 'left'},
-				{name: 'delete', img: 'trash.gif', title: 'Удалить элемент', clear: 'right', float: 'right'}
-			],
-			onclick: function (name) {
-				if(!(profile = tool.wnd.first_obj(Profile)))
-					return;
-
-				minmax.min.x = Math.min(profile.x1, profile.x2);
-				minmax.min.y = Math.min(profile.y1, profile.y2);
-				minmax.max.x = Math.max(profile.x1, profile.x2);
-				minmax.max.y = Math.max(profile.y1, profile.y2);
-				minmax.max.dx = minmax.max.x - minmax.min.x;
-				minmax.max.dy = minmax.max.y - minmax.min.y;
-
-				if(name == 'left' && minmax.max.dx < minmax.max.dy){
-					if(profile.x1 - minmax.min.x > 0)
-						profile.x1 = minmax.min.x;
-					if(profile.x2 - minmax.min.x > 0)
-						profile.x2 = minmax.min.x;
-
-				}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
-					if(profile.x1 - minmax.max.x < 0)
-						profile.x1 = minmax.max.x;
-					if(profile.x2 - minmax.max.x < 0)
-						profile.x2 = minmax.max.x;
-
-				}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
-					if(profile.y1 - minmax.max.y < 0)
-						profile.y1 = minmax.max.y;
-					if(profile.y2 - minmax.max.y < 0)
-						profile.y2 = minmax.max.y;
-
-				}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
-					if (profile.y1 - minmax.min.y > 0)
-						profile.y1 = minmax.min.y;
-					if (profile.y2 - minmax.min.y > 0)
-						profile.y2 = minmax.min.y;
-
-				}else if(name == 'delete') {
-					profile.removeChildren();
-					profile.remove();
-
-				}else
-					$p.msg.show_msg({type: "alert-warning",
-						text: $p.msg.align_invalid_direction,
-						title: $p.msg.main_title});
-
-				_view.update();
-				return false;
-			}
-		});
-	}
-
-	/**
 	 * Подключает редактор свойств профиля
 	 */
-	function profile_dg_attache(profile, dg){
+	function profile_dg_attache(tool, profile){
 
-		function onfocus(e){
-			if(this.property == "x1" || this.property == "y1")
-				_scheme.select_node(profile, "b");
-			else if(this.property == "x2" || this.property == "y2")
-				_scheme.select_node(profile, "e");
+		if(!tool.wnd || !tool._grid){
+			$p.wsql.restore_options("editor", tool.options);
+			tool.wnd = $p.iface.dat_blank(_scheme._dxw, tool.options.wnd);
+			tool.wnd.buttons = tool.wnd.bottom_toolbar({
+				wrapper: tool.wnd.cell, width: '100%', height: '28px', bottom: '0px', left: '0px', name: 'aling_bottom',
+				buttons: [
+					{name: 'left', img: 'align_left.png', title: $p.msg.align_node_left, float: 'left'},
+					{name: 'bottom', img: 'align_bottom.png', title: $p.msg.align_node_bottom, float: 'left'},
+					{name: 'top', img: 'align_top.png', title: $p.msg.align_node_top, float: 'left'},
+					{name: 'right', img: 'align_right.png', title: $p.msg.align_node_right, float: 'left'},
+					{name: 'delete', img: 'trash.gif', title: 'Удалить элемент', clear: 'right', float: 'right'}
+				],
+				onclick: function (name) {
+					if(!(profile = tool.wnd.first_obj(Profile)))
+						return;
+
+					minmax.min.x = Math.min(profile.x1, profile.x2);
+					minmax.min.y = Math.min(profile.y1, profile.y2);
+					minmax.max.x = Math.max(profile.x1, profile.x2);
+					minmax.max.y = Math.max(profile.y1, profile.y2);
+					minmax.max.dx = minmax.max.x - minmax.min.x;
+					minmax.max.dy = minmax.max.y - minmax.min.y;
+
+					if(name == 'left' && minmax.max.dx < minmax.max.dy){
+						if(profile.x1 - minmax.min.x > 0)
+							profile.x1 = minmax.min.x;
+						if(profile.x2 - minmax.min.x > 0)
+							profile.x2 = minmax.min.x;
+
+					}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
+						if(profile.x1 - minmax.max.x < 0)
+							profile.x1 = minmax.max.x;
+						if(profile.x2 - minmax.max.x < 0)
+							profile.x2 = minmax.max.x;
+
+					}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
+						if(profile.y1 - minmax.max.y < 0)
+							profile.y1 = minmax.max.y;
+						if(profile.y2 - minmax.max.y < 0)
+							profile.y2 = minmax.max.y;
+
+					}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
+						if (profile.y1 - minmax.min.y > 0)
+							profile.y1 = minmax.min.y;
+						if (profile.y2 - minmax.min.y > 0)
+							profile.y2 = minmax.min.y;
+
+					}else if(name == 'delete') {
+						profile.removeChildren();
+						profile.remove();
+
+					}else
+						$p.msg.show_msg({type: "alert-warning",
+							text: $p.msg.align_invalid_direction,
+							title: $p.msg.main_title});
+
+					_view.update();
+					return false;
+				}
+			});
+
+			tool._grid = tool.wnd.attachHeadFields({
+				obj: profile,
+				oxml: {
+					" ": ["inset", "clr"],
+					"Начало": ["x1", "y1"],
+					"Конец": ["x2", "y2"]
+
+				}
+			});
+			tool._grid.attachEvent("onRowSelect", function(id,ind){
+				if(id == "x1" || id == "y1")
+					_scheme.select_node(profile, "b");
+				else if(id == "x2" || id == "y2")
+					_scheme.select_node(profile, "e");
+			});
+		}else{
+			tool._grid.attach({obj: profile})
 		}
 
-		// удаляем ранее созданные контролы
-		var folder, opened = false;
-
-		// если уже подключено, не перезаполняем
-		if(dg.__folders["Начало"] && dg.__folders["Начало"].__controllers[0] && dg.__folders["Начало"].__controllers[0].object === profile)
-			return;
-
-		dg.clear();
-
-		dg.add(profile, 'nom', {pos: "hidden", title: "Материал профиля"}).onChange(function(c){
-			if(opened)
-				return;
-			opened = true;
-			$p.cat.nom.form_selection({
-				o: profile,
-				wnd: _scheme._pwnd,
-				on_select: function (v) {
-					opened = false;
-				},
-				on_unload: function () {
-					opened = false;
-				}
-
-			}, {
-				initial_value: profile.nom.ref
-			});
-		});
-
-		dg.add(profile, 'clr', {pos: "hidden", title: "Цвет профиля"}).onChange(function(c){
-			if(opened)
-				return;
-			opened = true;
-			$p.cat.clrs.form_selection({
-				o: profile,
-				wnd: _scheme._pwnd,
-				on_select: function (v) {
-					if(v!==undefined)
-						profile.clr = v;
-					opened = false;
-				},
-				on_unload: function () {
-					opened = false;
-				}
-
-			}, {
-				initial_value: profile.nom.ref
-			});
-		});
-
-		folder = dg.addFolder("Начало");
-		folder.add(profile, 'x1').onChange(profile.project.redraw).onFocus(onfocus);
-		folder.add(profile, 'y1').onChange(profile.project.redraw).onFocus(onfocus);
-		folder.open();
-		folder = dg.addFolder("Конец");
-		folder.add(profile, 'x2').onChange(profile.project.redraw).onFocus(onfocus);
-		folder.add(profile, 'y2').onChange(profile.project.redraw).onFocus(onfocus);
-		folder.open();
-
-		dg.after_update = function () {
-			for(var b in dg.wnd.buttons.buttons){
-				var btn = dg.wnd.buttons.buttons[b];
-				if(b == "right")
-					btn.title = $p.msg.align_node_right + " (" + Math.max(profile.x1, profile.x2) + ")";
-				else if(b == "left")
-					btn.title = $p.msg.align_node_left + " (" + Math.min(profile.x1, profile.x2) + ")";
-				else if(b == "top")
-					btn.title = $p.msg.align_node_top + " (" + Math.max(profile.y1, profile.y2) + ")";
-				else if(b == "bottom")
-					btn.title = $p.msg.align_node_bottom + " (" + Math.min(profile.y1, profile.y2) + ")";
-			}
-		};
-
-		dg.after_update();
-
 	};
+
+	function profile_dg_detache(tool){
+		if(tool.wnd){
+			tool.wnd.wnd_options(tool.options.wnd);
+			$p.wsql.save_options("editor", tool.options);
+			tool.wnd.close();
+			tool.wnd = null;
+		}
+	}
 
 	function clearSelectionBounds() {
 		if (selectionBoundsShape)

@@ -31,7 +31,10 @@ function Contour(attr){
 		_parent = attr.parent,
 		_row,
 		_glasses = [],
-		_notifier = Object.getNotifier(this._noti);
+		_notifier = Object.getNotifier(this._noti),
+		_text,
+		_visualization,
+		_sizes;
 
 	Contour.superclass.constructor.call(this);
 	if(_parent)
@@ -50,8 +53,7 @@ function Contour(attr){
 		set : function(v){
 			_row.cns_no = v;
 		},
-		enumerable : false,
-		configurable : false
+		enumerable : false
 	});
 
 	this._define('glassno', {
@@ -61,8 +63,7 @@ function Contour(attr){
 		set : function(v){
 			_row.glassno = v;
 		},
-		enumerable : false,
-		configurable : false
+		enumerable : false
 	});
 
 	if(this.cns_no)
@@ -195,11 +196,36 @@ function Contour(attr){
 					}
 				}
 
-
 			}
 		},
-		enumerable : true,
-		configurable : false
+		enumerable : true
+	});
+
+	this._define({
+
+		// служебная группа текстовых комментариев
+		_text: {
+			get: function () {
+
+			},
+			enumerable: false
+		},
+
+		// служебная группа визуализации допов
+		_visualization: {
+			get: function () {
+
+			},
+			enumerable: false
+		},
+
+		// служебная группа размерных линий
+		_sizes: {
+			get: function () {
+
+			},
+			enumerable: false
+		}
 	});
 
 
@@ -216,7 +242,6 @@ function Contour(attr){
 		_row = null;
 		Contour.superclass.remove.call(this);
 	};
-
 
 	/**
 	 * Возвращает массив узлов текущего контура
@@ -427,10 +452,6 @@ function Contour(attr){
 				}
 			}
 		});
-
-		// обновляем свойства
-		if(paper.tool.update)
-			paper.tool.update();
 
 	};
 
