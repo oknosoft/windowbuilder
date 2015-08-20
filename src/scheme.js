@@ -17,7 +17,7 @@ function Scheme(pwnd){
 
 	this.toString = function(){ return $p.msg.bld_constructor; };
 
-	this._pwnd = pwnd;
+	this._pwnd = pwnd;                                              // родительская ячейка
 	this._layout = this._pwnd.attachLayout({
 		pattern: "2U",
 		cells: [{
@@ -31,25 +31,23 @@ function Scheme(pwnd){
 			width: pwnd.getWidth() > 1200 ? 360 : 240
 		}],
 		offsets: { top: 2, right: 2, bottom: 2, left: 2}
-	});
-	this._wrapper = document.createElement('div');
+	});   // разбивка на канвас и аккордион
+	this._wrapper = document.createElement('div');                  // контейнер канваса
 	this._layout.cells("a").attachObject(this._wrapper);
-	this._canvas = document.createElement('canvas');
+	this._canvas = document.createElement('canvas');                // собственно, канвас
 	this._wrapper.appendChild(this._canvas);
-	this._dxw = this._layout.dhxWins;
+	this._dxw = this._layout.dhxWins;                               // указатель на dhtmlXWindows
+	//this._dxw.attachViewportTo(eid);
 	//this._dxw.setSkin(dhtmlx.skin);
 
-	this._acc = this._layout.cells("b").attachAccordion({
+	this._acc = this._layout.cells("b").attachAccordion({           // аккордион со свойствами
 		icons_path: dhtmlx.image_path,
 		multi_mode: true,
-		dnd:        true,
-		items: [
-			{ id: "a3", text: "Feedback", height: "*" }
-		]
+		dnd:        true
 	});
 
 
-	Scheme.superclass.constructor.call(this, this._canvas);
+	Scheme.superclass.constructor.call(this, this._canvas);         // создаём объект проекта paperjs
 	if(!paper.project)
 		paper.project = this;
 
@@ -67,9 +65,18 @@ function Scheme(pwnd){
 		Object.getNotifier(_scheme._noti).notify(obj);
 	};
 
+	this._dp = $p.dp.buyers_order.create();
+
+	this._dp._define("extra_fields", {
+		get: function(){
+			return _scheme.ox.params;
+		}
+	});
+
+
 	var _scheme = this,
 		_view = this.view,
-		_bounds, _ox, _osys,
+		_bounds,
 		_changes = [];
 
 	/**
@@ -115,9 +122,6 @@ function Scheme(pwnd){
 				});
 			return _bounds;
 		},
-		set : function(newValue){
-
-		},
 		enumerable : false,
 		configurable : false});
 
@@ -146,38 +150,52 @@ function Scheme(pwnd){
 	 */
 	this._define("ox", {
 		get: function () {
-			return _ox;
+			return _scheme._dp.characteristic;
 		},
 		set: function (v) {
-			_ox = v;
+
+			_scheme._dp.characteristic = v;
+			_scheme._dp.clr = _scheme._dp.characteristic.clr;
+
+			// оповещаем о новых слоях
+			Object.getNotifier(_scheme._noti).notify({
+				type: 'rows',
+				tabular: "constructions"
+			});
+
+			var setted;
+			$p.cat.production_params.find_rows({nom: _scheme._dp.characteristic.owner}, function(o){
+				_scheme._dp.sys = o;
+				setted = true;
+				Object.getNotifier(_scheme._dp).notify({
+					type: 'row',
+					tabular: "extra_fields"
+				});
+				return false;
+			});
+			if(!setted)
+				_scheme._dp.sys = "";
 		},
 		enumerable: false
 	});
 
 	/**
 	 * СистемаОбъект текущего изделия
-	 * @property osys
+	 * @property sys
 	 * @type _cat.production_params
 	 */
-	this._define("osys", {
+	this._define("sys", {
 		get: function () {
-			return _osys;
+			return _scheme._dp.sys;
 		},
 		set: function (v) {
 
-			if(_osys == v)
+			if(_scheme._dp.sys == v)
 				return;
 
-			if(!$p.is_data_obj(v))
-				v = $p.cat.production_params.get(v, false, true);
+			_scheme._dp.sys = v;
 
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: 'osys',
-				oldValue: _osys
-			});
-
-			_osys = v;
+			//TODO: установить номенклатуру и (???) цвет по умолчанию в продукции
 
 		},
 		enumerable: false
@@ -190,10 +208,10 @@ function Scheme(pwnd){
 	 */
 	this._define("clr", {
 		get: function () {
-			return _ox ? _ox.clr : $p.cat.clrs.predefined("white");
+			return _scheme._dp.characteristic.clr;
 		},
 		set: function (v) {
-			_ox.clr = v;
+			_scheme._dp.characteristic.clr = v;
 		},
 		enumerable: false
 	});
@@ -274,22 +292,11 @@ function Scheme(pwnd){
 			_scheme.ox = o;
 			o = null;
 
-			$p.cat.production_params.find_rows({nom: _scheme.ox.owner}, function(o){
-				_scheme.osys = o;
-				o = null;
-
-				_scheme.dg_layers.cb_sys.setComboValue(_scheme.osys.ref);
-				_scheme.dg_layers.cb_clr.setComboValue(_scheme.ox.clr.ref);
-
-				return false;
-			});
-
 			// создаём семейство конструкций
 			load_contour(null);
 
 			_scheme.zoom_fit();
 
-			_scheme.dg_layers.attache();
 		}
 
 		_scheme.clear();

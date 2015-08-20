@@ -122,6 +122,205 @@ function Editor(_scheme){
 				}
 			}}),
 
+		tb_right = new $p.iface.OTooolBar({wrapper: _scheme._wrapper, width: '200px', height: '28px', top: '3px', right: '3px', name: 'right',
+			buttons: [
+				{name: 'layers', img: 'layers.png', text: 'Слои', float: 'left', width: '90px',
+					sub: {
+						width: '190px',
+						height: '90px',
+						buttons: [
+							{name: 'new_layer', img: 'new_layer.png', width: '182px', text: 'Добавить конструкцию'},
+							{name: 'new_stv', img: 'triangle1.png', width: '182px', text: 'Добавить створку'},
+							{name: 'drop_layer', img: 'trash.gif', width: '182px', text: 'Удалить слой'}
+							]
+					}
+				},
+				{name: 'elm', img: 'icon-arrow-black.png', text: 'Элементы', float: 'left', width: '90px',
+					sub: {
+						width: '230px',
+						height: '160px',
+						align: 'right',
+						buttons: [
+							{name: 'left', img: 'align_left.png', width: '222px', text: $p.msg.align_node_left},
+							{name: 'bottom', img: 'align_bottom.png', width: '222px', text: $p.msg.align_node_bottom},
+							{name: 'top', img: 'align_top.png', width: '222px', text: $p.msg.align_node_top},
+							{name: 'right', img: 'align_right.png', width: '222px', text: $p.msg.align_node_right},
+							{name: 'delete', img: 'trash.gif', width: '222px', text: 'Удалить элемент'}
+						]
+					}
+				}
+			], onclick: function (name) {
+				if(name == 'new_layer')
+					$p.msg.show_not_implemented();
+
+				else if(name == 'drop_layer')
+					tree_layers.drop_layer();
+
+				return false;
+			}
+		}),
+
+		/**
+		 * свойства в аккордионе
+		 */
+		props = function () {
+			var wid = 'wnd_dat_' + dhx4.newId(),
+				acc_cell, wnd;
+
+			_scheme._acc.addItem(
+				wid,
+				"Изделие",
+				true,
+				"*");
+			acc_cell = _scheme._acc.cells(wid);
+			acc_cell.attachHeadFields({
+				obj: _scheme._dp,
+				oxml: {
+					"Свойства": ["sys", "clr", "len", "height", "s"],
+					"Строка заказа": ["quantity", "price_internal", "discount_percent_internal", "discount_percent", "price", "amount"]
+
+				},
+				ts: "extra_fields",
+				ts_title: "Свойства",
+				selection: {cns_no: 0, hide: {not: true}}
+			});
+
+			return {
+				unload: function () {
+					acc_cell.unload();
+				}
+			}
+		}(),
+
+		/**
+		 * слои в аккордионе
+		 */
+		tree_layers = function () {
+
+			var wid = 'wnd_dat_' + dhx4.newId(),
+				acc_cell, wnd, tree, lid;
+
+			_scheme._acc.addItem(
+				wid,
+				"Слои",
+				true,
+				"*");
+			acc_cell = _scheme._acc.cells(wid);
+
+			function load_layer(layer){
+				lid = (layer.parent ? "Створка №" : "Рама №") + layer.cns_no + " " + layer.bounds.width.toFixed() + "х" + layer.bounds.height.toFixed();
+
+				tree.insertNewItem(
+					layer.parent ? layer.parent.cns_no : 0,
+					layer.cns_no,
+					lid);
+
+
+				layer.children.forEach(function (l) {
+					if(l instanceof Contour)
+						load_layer(l);
+
+				});
+
+			}
+
+			function observer(changes){
+
+				var synced;
+
+				changes.forEach(function(change){
+					if ("constructions" == change.tabular){
+
+						synced = true;
+
+						tree.deleteChildItems(0);
+						_scheme.layers.forEach(function (l) {
+							if(l instanceof Contour){
+								load_layer(l);
+								tree.setSubChecked(l.cns_no, true);
+							}
+
+						});
+					}
+				});
+			}
+
+			tree = acc_cell.attachTree();
+			tree.setImagePath(dhtmlx.image_path + 'dhxtree_web/');
+			tree.setIconsPath(dhtmlx.image_path + 'dhxtree_web/');
+			tree.enableCheckBoxes(true, true);
+			tree.enableTreeImages(false);
+
+			// Гасим-включаем слой по чекбоксу
+			tree.attachEvent("onCheck", function(id, state){
+				var l = _scheme.getItem({cns_no: Number(id)}),
+					sub = tree.getAllSubItems(id);
+
+				if(l)
+					l.visible = !!state;
+
+				if(typeof sub == "string")
+					tree.setCheck(sub, state);
+				else
+					sub.forEach(function (id) {
+						tree.setCheck(id, state);
+					});
+
+			});
+
+			// делаем выделенный слой активным
+			tree.attachEvent("onSelect", function(id){
+				var l = _scheme.getItem({cns_no: Number(id)});
+				if(l)
+					l.activate();
+			});
+
+			//tree.enableDragAndDrop(true, false);
+			//tree.setDragHandler(function(){ return false; });
+			//tree.dragger.addDragLanding(tb_bottom.cell, {
+			//	_drag : function(sourceHtmlObject, dhtmlObject, targetHtmlObject){
+			//		tb_bottom.buttons["delete"].style.backgroundColor="";
+			//		$p.msg.show_msg({type: "alert-warning",
+			//			text: sourceHtmlObject.parentObject.id,
+			//			title: $p.msg.main_title});
+			//	},
+			//	_dragIn : function(dst, src, x, y, ev){
+			//		if(tb_bottom.buttons["delete"] == ev.target || tb_bottom.buttons["delete"] == ev.target.parentElement){
+			//			tb_bottom.buttons["delete"].style.backgroundColor="#fffacd";
+			//			return dst;
+			//		}
+			//	},
+			//	_dragOut : function(htmlObject){
+			//		tb_bottom.buttons["delete"].style.backgroundColor="";
+			//		return this;
+			//	}
+			//});
+
+			// начинаем следить за объектом
+			Object.observe(_scheme._noti, observer, ["rows"]);
+
+			return {
+
+				drop_layer: function () {
+					var cns_no = tree.getSelectedItemId(), l;
+					if(cns_no){
+						l = _scheme.getItem({cns_no: Number(cns_no)});
+					}else if(l = _scheme.activeLayer){
+						cns_no = l.cns_no;
+					}
+					if(cns_no && l){
+						tree.deleteItem(cns_no);
+						l.remove();
+						setTimeout(_scheme.zoom_fit, 100);
+					}
+				},
+
+				unload: function () {
+					Object.unobserve(_scheme._noti, observer);
+				}
+			}
+		}(),
+
 		/**
 		 * Объект для реализации функций масштабирования
 		 * @type {StableZoom}
@@ -183,159 +382,23 @@ function Editor(_scheme){
 	 * Деструктор
 	 */
 	this.unload = function () {
-		if(paper.tool && paper.tool._callbacks.deactivate.length){
+
+		if(paper.tool && paper.tool._callbacks.deactivate.length)
 			paper.tool._callbacks.deactivate[0].call(paper.tool);
-		}
+
 		for(var t in this.tools){
 			if(this.tools[t].remove)
 				this.tools[t].remove();
 			this.tools[t] = null;
-
 		}
+
 		tb_left.unload();
 		tb_top.unload();
-		_scheme.dg_layers.close();
+		tb_right.unload();
+		tree_layers.unload();
+		props.unload();
 	};
 
-	/**
-	 * Окно управления слоями dhtmlxTree
-	 */
-	(function(){
-
-		var options = {
-			name: 'layers',
-			wnd: {
-				caption: "Свойства изделия",
-				top: 230,
-				left: 920,
-				width: 250,
-				height: 380
-			}};
-		$p.wsql.restore_options("editor", options);
-		var dg = _scheme.dg_layers = $p.iface.dat_tree(_scheme._acc, options.wnd),
-			tb_bottom = dg.bottom_toolbar({wrapper: dg.cell, width: '100%', height: '28px', bottom: '0px', left: '0px', name: 'layers_bottom',
-				buttons: [
-					{name: 'new', img: 'drafts.gif', title: 'Новый контур', clear: 'left', float: 'left'},
-					{name: 'delete', img: 'trash.gif', title: 'Удалить контур', clear: 'right', float: 'right'}],
-				onclick: function (name) {
-					if(name == 'new')
-						$p.msg.show_not_implemented();
-					else{
-						var cns_no = dg.tree.getSelectedItemId(), l;
-						if(cns_no){
-							l = _scheme.getItem({cns_no: Number(cns_no)});
-						}else if(l = _scheme.activeLayer){
-							cns_no = l.cns_no;
-						}
-						if(cns_no && l){
-							dg.tree.deleteItem(cns_no);
-							l.remove();
-							setTimeout(_scheme.zoom_fit, 100);
-						}
-					}
-					return false;
-				},
-				image_path: dhtmlx.image_path + 'dhxtree_web/'
-			});
-
-		dg.attache = function(){
-
-			var lid;
-
-			dg.setText(_scheme.ox.number_str);
-
-			function load_layer(layer){
-				lid = (layer.parent ? "Створка №" : "Рама №") + layer.cns_no + " " + layer.bounds.width.toFixed() + "х" + layer.bounds.height.toFixed();
-
-				dg.tree.insertNewItem(
-					layer.parent ? layer.parent.cns_no : 0,
-					layer.cns_no,
-					lid);
-
-
-				layer.children.forEach(function (l) {
-					if(l instanceof Contour)
-						load_layer(l);
-
-				});
-
-			}
-
-			dg.tree.deleteChildItems(0);
-			_scheme.layers.forEach(function (l) {
-				if(l instanceof Contour){
-					load_layer(l);
-					dg.tree.setSubChecked(l.cns_no, true);
-				}
-
-			});
-
-		};
-
-		// Запоминаем положение окна
-		dg.attachEvent("onMoveFinish", function(wnd){
-			wnd.wnd_options(options.wnd);
-			$p.wsql.save_options("editor", options);
-		});
-
-		// комбобоксы системы и цвета
-		dg.cb_sys = new $p.iface.OCombo({
-			parent: dg.cell_a,
-			obj: _scheme,
-			field: "osys",
-			meta: $p.dp.buyers_order.metadata("sys")
-		});
-
-		dg.cb_clr = new $p.iface.OCombo({
-			parent: dg.cell_a,
-			obj: _scheme,
-			field: "clr",
-			meta: $p.dp.buyers_order.metadata("clr")
-		});
-
-		// рисуем дерево слоёв
-		dg.tree.attachEvent("onCheck", function(id, state){
-			var l = _scheme.getItem({cns_no: Number(id)}),
-				sub = dg.tree.getAllSubItems(id);
-
-			if(l)
-				l.visible = !!state;
-
-			if(typeof sub == "string")
-				dg.tree.setCheck(sub, state);
-			else
-				sub.forEach(function (id) {
-					dg.tree.setCheck(id, state);
-				});
-
-		});
-		dg.tree.attachEvent("onSelect", function(id){
-			var l = _scheme.getItem({cns_no: Number(id)});
-			if(l)
-				l.activate();
-		});
-		dg.tree.enableDragAndDrop(true, false);
-		dg.tree.setDragHandler(function(){ return false; });
-		dg.tree.dragger.addDragLanding(tb_bottom.cell, {
-			_drag : function(sourceHtmlObject, dhtmlObject, targetHtmlObject){
-				tb_bottom.buttons["delete"].style.backgroundColor="";
-				$p.msg.show_msg({type: "alert-warning",
-					text: sourceHtmlObject.parentObject.id,
-					title: $p.msg.main_title});
-			},
-			_dragIn : function(dst, src, x, y, ev){
-				if(tb_bottom.buttons["delete"] == ev.target || tb_bottom.buttons["delete"] == ev.target.parentElement){
-					tb_bottom.buttons["delete"].style.backgroundColor="#fffacd";
-					return dst;
-				}
-			},
-			_dragOut : function(htmlObject){
-				tb_bottom.buttons["delete"].style.backgroundColor="";
-				return this;
-			}
-		});
-
-	})();
 
 	this.tools = {};
 
