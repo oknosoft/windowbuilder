@@ -1,6 +1,7 @@
 /**
- * <br />&copy; http://www.oknosoft.ru 2009-2015
- * Created 24.07.2015
+ * Created 24.07.2015<br />
+ * &copy; http://www.oknosoft.ru 2014-2015
+ * @author	Evgeniy Malyarov
  * @module  contour
  */
 
@@ -32,9 +33,7 @@ function Contour(attr){
 		_row,
 		_glasses = [],
 		_notifier = Object.getNotifier(this._noti),
-		_text,
-		_visualization,
-		_sizes;
+		_layers = {};
 
 	Contour.superclass.constructor.call(this);
 	if(_parent)
@@ -65,22 +64,6 @@ function Contour(attr){
 		},
 		enumerable : false
 	});
-
-	if(this.cns_no)
-		this.project.ox.coordinates.find_rows({cns_no: this.cns_no}, function(row){
-
-			// добавляем профили
-			if($p.enm.elm_types.profiles.indexOf(row.elm_type) != -1)
-				new Profile({row: row,	parent: _contour});
-
-			// добавляем заполнения
-			else if($p.enm.elm_types.glasses.indexOf(row.elm_type) != -1)
-				new Filling({row: row,	parent: _contour});
-
-			// добавляем раскладки
-
-		});
-
 
 	/**
 	 * путь контура - при чтении похож на bounds
@@ -204,15 +187,19 @@ function Contour(attr){
 	this._define({
 
 		// служебная группа текстовых комментариев
-		_text: {
+		l_text: {
 			get: function () {
-
+				if(!_layers.text)
+					_layers.text = new paper.Group({
+						parent: _contour
+					});
+				return _layers.text;
 			},
 			enumerable: false
 		},
 
 		// служебная группа визуализации допов
-		_visualization: {
+		l_visualization: {
 			get: function () {
 
 			},
@@ -220,14 +207,30 @@ function Contour(attr){
 		},
 
 		// служебная группа размерных линий
-		_sizes: {
+		l_sizes: {
+			get: function () {
+
+			},
+			enumerable: false
+		},
+
+		// служебная группа петель и ручек
+		l_furn: {
+			get: function () {
+
+			},
+			enumerable: false
+		},
+
+		// служебная группа номеров элементов
+		l_elm_no: {
 			get: function () {
 
 			},
 			enumerable: false
 		}
-	});
 
+	});
 
 	/**
 	 * Удаляет контур из иерархии проекта
@@ -670,6 +673,40 @@ function Contour(attr){
 		}
 
 	};
+
+	// добавляем элементы контура
+	if(this.cns_no){
+
+		// профили
+		this.project.ox.coordinates.find_rows({cns_no: this.cns_no, elm_type: {in: $p.enm.elm_types.profiles}}, function(row){
+			new Profile({row: row,	parent: _contour});
+		});
+
+		// заполнения
+		this.project.ox.coordinates.find_rows({cns_no: this.cns_no, elm_type: {in: $p.enm.elm_types.glasses}}, function(row){
+			new Filling({row: row,	parent: _contour});
+		});
+
+		// все остальные элементы
+		this.project.ox.coordinates.find_rows({cns_no: this.cns_no}, function(row){
+
+			// раскладки
+			if(row.elm_type == $p.enm.elm_types.Раскладка){
+
+
+			}else if(row.elm_type == $p.enm.elm_types.Текст){
+				new FreeText({
+					row: row,
+					parent: _contour.l_text,
+					point: [400, 500],
+					content: 'The contents of the point text',
+					fontSize: 60
+				});
+			}
+
+		});
+	}
+
 
 }
 Contour._extend(paper.Layer);

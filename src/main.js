@@ -1,7 +1,10 @@
 ﻿/**
- * Классы объектов построителя на базе paper.js <br />&copy; http://www.oknosoft.ru 2009-2015
- * @module  paper_ex
+ * Классы объектов построителя на базе paper.js
+ *
+ * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
+ *
+ * @module  paper_ex
  */
 
 

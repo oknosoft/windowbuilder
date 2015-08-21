@@ -1,6 +1,8 @@
 /**
- * <br />&copy; http://www.oknosoft.ru 2009-2015
- * Created 24.07.2015
+ * Created 24.07.2015<br />
+ * &copy; http://www.oknosoft.ru 2014-2015
+ * @author	Evgeniy Malyarov
+ *
  * @module  editor
  */
 
@@ -846,9 +848,9 @@ function Editor(_scheme){
 					setCanvasCursor('cursor-arrow-small');
 
 					var delta = event.point.subtract(this.mouseStartPos);
-					if (event.modifiers.shift) {
+					if (event.modifiers.shift)
 						delta = snapDeltaToAngle(delta, Math.PI*2/8);
-					}
+
 					restoreSelectionState(this.originalContent);
 
 					var selected = _scheme.selectedItems;
@@ -1646,6 +1648,90 @@ function Editor(_scheme){
 
 
 				}
+			},
+			mousemove: function(event) {
+				this.hitTest(event);
+			}
+		});
+
+		return tool;
+
+	};
+
+	this.tools.text = new function(){
+
+		var tool = new paper.Tool();
+		tool.mouseStartPos = new paper.Point();
+		tool.mode = null;
+		tool.hitItem = null;
+		tool.originalContent = null;
+		tool.changed = false;
+
+		tool.options = {
+			name: 'text'
+		};
+
+		tool.resetHot = function(type, event, mode) {
+		};
+		tool.testHot = function(type, event, mode) {
+			/*	if (mode != 'tool-select')
+			 return false;*/
+			return this.hitTest(event);
+		};
+		tool.hitTest = function(event) {
+			var hitSize = 8;
+
+			// хит над текстом обрабатываем особо
+			this.hitItem = _scheme.hitTest(event.point, { class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize });
+
+			if (this.hitItem)
+				setCanvasCursor('cursor-lay-impost');
+			else
+				setCanvasCursor('cursor-arrow-lay');
+
+			return true;
+		};
+		tool.on({
+			activate: function() {
+				tb_left.select(tool.options.name);
+				setCanvasCursor('cursor-arrow-lay');
+			},
+			deactivate: function() {
+				hideSelectionBounds();
+			},
+			mousedown: function(event) {
+				this.text = null;
+				this.changed = false;
+
+				_scheme.deselectAll();
+				this.mouseStartPos = event.point.clone();
+
+				if (this.hitItem) {
+					this.text = this.hitItem.item;
+					this.text.selected = true;
+					this.textStartPos = this.text.point;
+					// включить диалог свойст текстового элемента
+				}
+			},
+			mouseup: function(event) {
+
+				if (this.mode && this.changed) {
+					//undo.snapshot("Move Shapes");
+				}
+
+				setCanvasCursor('cursor-arrow-lay');
+
+			},
+			mousedrag: function(event) {
+
+				if (this.text) {
+					var delta = event.point.subtract(this.mouseStartPos);
+					if (event.modifiers.shift)
+						delta = snapDeltaToAngle(delta, Math.PI*2/8);
+
+					this.text.point = this.textStartPos.add(delta);
+				}
+
 			},
 			mousemove: function(event) {
 				this.hitTest(event);
