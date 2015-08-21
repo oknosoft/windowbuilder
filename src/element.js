@@ -88,11 +88,35 @@ BuilderElement.prototype._define({
 	// виртуальные метаданные для автоформ
 	_metadata: {
 		get : function(){
-			var _xfields = this.project.ox._metadata.tabular_sections.coordinates.fields;
-			//_dgfields = this.project._dp._metadata.fields
+			var t = this,
+				_xfields = t.project.ox._metadata.tabular_sections.coordinates.fields, //_dgfields = this.project._dp._metadata.fields
+				inset = _xfields.inset._clone();
+			inset.choice_links = [{
+				name: ["selection",	"ref"],
+				path: [
+					function(o, f){
+						if($p.is_data_obj(o)){
+							var ok = false;
+							t.project.sys.elmnts.find_rows({elm_type: t.nom.elm_type, nom: o}, function (row) {
+								ok = true;
+								return false;
+							});
+							return ok;
+						}else{
+							var refs = "";
+							t.project.sys.elmnts.find_rows({elm_type: t.nom.elm_type}, function (row) {
+								if(refs)
+									refs += ", ";
+								refs += "'" + row.nom.ref + "'";
+							});
+							return "_t_.ref in (" + refs + ")";
+						}
+				}]}
+			];
+
 			return {
 				fields: {
-					inset: _xfields.inset,
+					inset: inset,
 					clr: _xfields.clr,
 					x1: _xfields.x1,
 					x2: _xfields.x2,

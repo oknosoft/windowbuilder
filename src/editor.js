@@ -156,6 +156,9 @@ function Editor(_scheme){
 				else if(name == 'drop_layer')
 					tree_layers.drop_layer();
 
+				else if(['left', 'bottom', 'top', 'right'].indexOf(name) != -1)
+					profile_align(name);
+
 				return false;
 			}
 		}),
@@ -1815,10 +1818,63 @@ function Editor(_scheme){
 
 	};
 
+	function profile_align(name){
+		var minmax = {min: {}, max: {}},
+			profile = paper.tool.profile;
+
+		if(!profile)
+			return;
+
+		minmax.min.x = Math.min(profile.x1, profile.x2);
+		minmax.min.y = Math.min(profile.y1, profile.y2);
+		minmax.max.x = Math.max(profile.x1, profile.x2);
+		minmax.max.y = Math.max(profile.y1, profile.y2);
+		minmax.max.dx = minmax.max.x - minmax.min.x;
+		minmax.max.dy = minmax.max.y - minmax.min.y;
+
+		if(name == 'left' && minmax.max.dx < minmax.max.dy){
+			if(profile.x1 - minmax.min.x > 0)
+				profile.x1 = minmax.min.x;
+			if(profile.x2 - minmax.min.x > 0)
+				profile.x2 = minmax.min.x;
+
+		}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
+			if(profile.x1 - minmax.max.x < 0)
+				profile.x1 = minmax.max.x;
+			if(profile.x2 - minmax.max.x < 0)
+				profile.x2 = minmax.max.x;
+
+		}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
+			if(profile.y1 - minmax.max.y < 0)
+				profile.y1 = minmax.max.y;
+			if(profile.y2 - minmax.max.y < 0)
+				profile.y2 = minmax.max.y;
+
+		}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
+			if (profile.y1 - minmax.min.y > 0)
+				profile.y1 = minmax.min.y;
+			if (profile.y2 - minmax.min.y > 0)
+				profile.y2 = minmax.min.y;
+
+		}else if(name == 'delete') {
+			profile.removeChildren();
+			profile.remove();
+
+		}else
+			$p.msg.show_msg({type: "alert-warning",
+				text: $p.msg.align_invalid_direction,
+				title: $p.msg.main_title});
+
+		_view.update();
+		return false;
+	}
+
 	/**
 	 * Подключает редактор свойств профиля
 	 */
 	function profile_dg_attache(tool, profile){
+
+		tool.profile = profile;
 
 		if(!tool.wnd || !tool._grid){
 			$p.wsql.restore_options("editor", tool.options);
@@ -1833,51 +1889,7 @@ function Editor(_scheme){
 					{name: 'delete', img: 'trash.gif', title: 'Удалить элемент', clear: 'right', float: 'right'}
 				],
 				onclick: function (name) {
-					if(!(profile = tool.wnd.first_obj(Profile)))
-						return;
-
-					minmax.min.x = Math.min(profile.x1, profile.x2);
-					minmax.min.y = Math.min(profile.y1, profile.y2);
-					minmax.max.x = Math.max(profile.x1, profile.x2);
-					minmax.max.y = Math.max(profile.y1, profile.y2);
-					minmax.max.dx = minmax.max.x - minmax.min.x;
-					minmax.max.dy = minmax.max.y - minmax.min.y;
-
-					if(name == 'left' && minmax.max.dx < minmax.max.dy){
-						if(profile.x1 - minmax.min.x > 0)
-							profile.x1 = minmax.min.x;
-						if(profile.x2 - minmax.min.x > 0)
-							profile.x2 = minmax.min.x;
-
-					}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
-						if(profile.x1 - minmax.max.x < 0)
-							profile.x1 = minmax.max.x;
-						if(profile.x2 - minmax.max.x < 0)
-							profile.x2 = minmax.max.x;
-
-					}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
-						if(profile.y1 - minmax.max.y < 0)
-							profile.y1 = minmax.max.y;
-						if(profile.y2 - minmax.max.y < 0)
-							profile.y2 = minmax.max.y;
-
-					}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
-						if (profile.y1 - minmax.min.y > 0)
-							profile.y1 = minmax.min.y;
-						if (profile.y2 - minmax.min.y > 0)
-							profile.y2 = minmax.min.y;
-
-					}else if(name == 'delete') {
-						profile.removeChildren();
-						profile.remove();
-
-					}else
-						$p.msg.show_msg({type: "alert-warning",
-							text: $p.msg.align_invalid_direction,
-							title: $p.msg.main_title});
-
-					_view.update();
-					return false;
+					return profile_align(name);
 				}
 			});
 
@@ -1908,6 +1920,7 @@ function Editor(_scheme){
 			$p.wsql.save_options("editor", tool.options);
 			tool.wnd.close();
 			tool.wnd = null;
+			tool.profile = null;
 		}
 	}
 
