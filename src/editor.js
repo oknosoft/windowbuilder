@@ -615,7 +615,7 @@ function Editor(_scheme){
 
 				} else if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
-					if(event.event && event.event.target && event.event.target.tagName.toLowerCase() == "input")
+					if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
 						return;
 
 					selected = _scheme.selectedItems;
@@ -956,7 +956,7 @@ function Editor(_scheme){
 
 				} else if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
-					if(event.event && event.event.target && event.event.target.tagName.toLowerCase() == "input")
+					if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
 						return;
 
 					selected = _scheme.selectedItems;
@@ -1676,7 +1676,8 @@ function Editor(_scheme){
 			name: 'text',
 			wnd: {
 				caption: "Произаольный текст",
-				height: 280
+				width: 260,
+				height: 260
 			}
 		};
 
@@ -1729,7 +1730,7 @@ function Editor(_scheme){
 
 					}else {
 						this.text = new FreeText({
-							parent: this.hitItem.item instanceof Filling ? this.hitItem.item : this.hitItem.item.parent,
+							parent: this.hitItem.item,
 							point: this.mouseStartPos,
 							content: '...',
 							selected: true
@@ -1781,7 +1782,7 @@ function Editor(_scheme){
 				var selected, i, text;
 				if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
-					if(event.event && event.event.target && event.event.target.tagName.toLowerCase() == "input")
+					if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
 						return;
 
 					selected = _scheme.selectedItems;

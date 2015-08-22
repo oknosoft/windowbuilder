@@ -36,6 +36,14 @@ function FreeText(attr){
 	}else
 		attr.point = [_row.x1, _row.y1];
 
+	// разберёмся с родителем
+	if(!(attr.parent.parent instanceof Contour)){
+		while(!(attr.parent instanceof Contour))
+			attr.parent = attr.parent.parent;
+		attr.parent = attr.parent.l_text;
+	}else
+		attr.parent = attr.parent.parent.l_text;
+
 	FreeText.superclass.constructor.call(t, attr);
 
 	t.bringToFront();
@@ -85,10 +93,13 @@ FreeText.prototype._define({
 	// транслирует цвет из справочника в строку и обратно
 	clr: {
 		get: function () {
-			return this._row.clr;
+			return this._row ? this._row.clr : $p.cat.clrs.get();
 		},
 		set: function (v) {
-			this._row.color = v;
+			this._row.clr = v;
+			if(this._row.clr.clr_str.length == 6)
+				this.fillColor = "#" + this._row.clr.clr_str;
+			setTimeout(this.view.update(), 50);
 		},
 		enumerable: false
 	},
@@ -100,6 +111,7 @@ FreeText.prototype._define({
 		},
 		set: function (v) {
 			this.fontFamily = v;
+			setTimeout(this.view.update(), 50);
 		},
 		enumerable: false
 	},
@@ -111,6 +123,7 @@ FreeText.prototype._define({
 		},
 		set: function (v) {
 			this.fontSize = v;
+			setTimeout(this.view.update(), 50);
 		},
 		enumerable: false
 	},
@@ -156,8 +169,10 @@ FreeText.prototype._define({
 			return this.content;
 		},
 		set: function (v) {
-			if(v)
+			if(v){
 				this.content = v;
+				setTimeout(this.view.update(), 50);
+			}
 			else{
 				Object.getNotifier(this).notify({
 					type: 'unload'
