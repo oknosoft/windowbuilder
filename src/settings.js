@@ -21,6 +21,7 @@ var acn,
 	 */
 	this.sticking = 90;
 	this.sticking2 = this.sticking * this.sticking;
+	this.font_size = 60;
 
 	this.lgray = new paper.Color(0.96, 0.98, 0.94, 0.96);
 

@@ -16,6 +16,9 @@ function FreeText(attr){
 
 	var _row;
 
+	if(!attr.fontSize)
+		attr.fontSize = consts.font_size;
+
 	FreeText.superclass.constructor.call(this, attr);
 
 	if(attr.row)
@@ -52,18 +55,7 @@ FreeText.prototype._define({
 	// виртуальные метаданные для автоформ
 	_metadata: {
 		get: function () {
-			return {
-				fields: {
-					text: {},
-					rotation: {},
-					fontFamily: {},
-					fontWeight: {},
-					fontSize: {},
-					color: {},
-					x: {},
-					y: {}
-				}
-			};
+			return $p.dp.builder_text.metadata();
 		},
 		enumerable: false
 	},
@@ -71,18 +63,49 @@ FreeText.prototype._define({
 	// виртуальный датаменеджер для автоформ
 	_manager: {
 		get: function () {
-			return this.project._dp._manager;
+			return $p.dp.builder_text;
 		},
 		enumerable: false
 	},
 
 	// транслирует цвет из справочника в строку и обратно
-	color: {
+	clr: {
 		get: function () {
-			return this._row.color;
+			return this._row.clr;
 		},
 		set: function (v) {
 			this._row.color = v;
+		},
+		enumerable: false
+	},
+
+	font_family: {
+		get: function () {
+			return this.fontFamily || "";
+		},
+		set: function (v) {
+			this.fontFamily = v;
+		},
+		enumerable: false
+	},
+
+	font_size: {
+		get: function () {
+			return this.fontSize || consts.font_size;
+		},
+		set: function (v) {
+			this.fontSize = v;
+		},
+		enumerable: false
+	},
+
+	// жирность шрифта
+	bold: {
+		get: function () {
+			return this.fontWeight != 'normal';
+		},
+		set: function (v) {
+			this.fontWeight = v ? 'bold' : 'normal';
 		},
 		enumerable: false
 	},

@@ -699,8 +699,7 @@ function Contour(attr){
 					row: row,
 					parent: _contour.l_text,
 					point: [400, 500],
-					content: 'The contents of the point text',
-					fontSize: 60
+					content: 'The contents of the point text'
 				});
 			}
 

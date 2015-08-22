@@ -1541,7 +1541,12 @@ function Editor(_scheme){
 		tool.options = {
 			name: 'lay_impost',
 			nom: $p.cat.nom.get(),
-			clr: $p.cat.clrs.get()};
+			clr: $p.cat.clrs.get(),
+			wnd: {
+				caption: "Импосты и раскладки",
+				height: 280
+			}
+		};
 
 		tool.resetHot = function(type, event, mode) {
 		};
@@ -1668,7 +1673,11 @@ function Editor(_scheme){
 		tool.changed = false;
 
 		tool.options = {
-			name: 'text'
+			name: 'text',
+			wnd: {
+				caption: "Произаольный текст",
+				height: 280
+			}
 		};
 
 		tool.resetHot = function(type, event, mode) {
@@ -1679,25 +1688,31 @@ function Editor(_scheme){
 			return this.hitTest(event);
 		};
 		tool.hitTest = function(event) {
-			var hitSize = 8;
+			var hitSize = 4;
 
 			// хит над текстом обрабатываем особо
 			this.hitItem = _scheme.hitTest(event.point, { class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize });
+			if(!this.hitItem)
+				this.hitItem = _scheme.hitTest(event.point, { fill: true, stroke: false, tolerance: hitSize });
 
-			if (this.hitItem)
-				setCanvasCursor('cursor-lay-impost');
-			else
-				setCanvasCursor('cursor-arrow-lay');
+			if (this.hitItem){
+				if(this.hitItem.item instanceof paper.PointText)
+					setCanvasCursor('cursor-text');     // указатель с черным Т
+				else
+					setCanvasCursor('cursor-text-add'); // указатель с серым Т
+			} else
+				setCanvasCursor('cursor-text-select');  // указатель с вопросом
 
 			return true;
 		};
 		tool.on({
 			activate: function() {
 				tb_left.select(tool.options.name);
-				setCanvasCursor('cursor-arrow-lay');
+				setCanvasCursor('cursor-text-select');
 			},
 			deactivate: function() {
 				hideSelectionBounds();
+				profile_dg_detache(tool);
 			},
 			mousedown: function(event) {
 				this.text = null;
@@ -1707,11 +1722,36 @@ function Editor(_scheme){
 				this.mouseStartPos = event.point.clone();
 
 				if (this.hitItem) {
-					this.text = this.hitItem.item;
-					this.text.selected = true;
+
+					if(this.hitItem.item instanceof paper.PointText){
+						this.text = this.hitItem.item;
+						this.text.selected = true;
+
+					}else {
+						this.text = new FreeText({
+							parent: this.hitItem.item.parent,
+							point: this.mouseStartPos,
+							content: '<...>',
+							selected: true
+						});
+					}
+
 					this.textStartPos = this.text.point;
+
 					// включить диалог свойст текстового элемента
-				}
+					if(!tool.wnd || !tool._grid){
+						$p.wsql.restore_options("editor", tool.options);
+						tool.wnd = $p.iface.dat_blank(_scheme._dxw, tool.options.wnd);
+						tool._grid = tool.wnd.attachHeadFields({
+							obj: this.text
+						});
+					}else{
+						tool._grid.attach({obj: this.text})
+					}
+
+				}else
+					profile_dg_detache(tool);
+
 			},
 			mouseup: function(event) {
 
