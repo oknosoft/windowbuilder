@@ -1729,9 +1729,9 @@ function Editor(_scheme){
 
 					}else {
 						this.text = new FreeText({
-							parent: this.hitItem.item.parent,
+							parent: this.hitItem.item instanceof Filling ? this.hitItem.item : this.hitItem.item.parent,
 							point: this.mouseStartPos,
-							content: '<...>',
+							content: '...',
 							selected: true
 						});
 					}
@@ -1739,7 +1739,7 @@ function Editor(_scheme){
 					this.textStartPos = this.text.point;
 
 					// включить диалог свойст текстового элемента
-					if(!tool.wnd || !tool._grid){
+					if(!tool.wnd || !tool.wnd.elmnts){
 						$p.wsql.restore_options("editor", tool.options);
 						tool.wnd = $p.iface.dat_blank(_scheme._dxw, tool.options.wnd);
 						tool._grid = tool.wnd.attachHeadFields({
@@ -1770,11 +1770,34 @@ function Editor(_scheme){
 						delta = snapDeltaToAngle(delta, Math.PI*2/8);
 
 					this.text.point = this.textStartPos.add(delta);
+					this.text.refresh_pos();
 				}
 
 			},
 			mousemove: function(event) {
 				this.hitTest(event);
+			},
+			keydown: function(event) {
+				var selected, i, text;
+				if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+
+					if(event.event && event.event.target && event.event.target.tagName.toLowerCase() == "input")
+						return;
+
+					selected = _scheme.selectedItems;
+					for (i = 0; i < selected.length; i++) {
+						text = selected[i];
+						if(text instanceof FreeText){
+							text.text = "";
+							setTimeout(function () {
+								_view.update();
+							}, 100);
+						}
+					}
+
+					event.preventDefault();
+					return false;
+				}
 			}
 		});
 
@@ -2041,13 +2064,13 @@ function Editor(_scheme){
 	};
 
 	function profile_dg_detache(tool){
-		if(tool.wnd){
+		if(tool.wnd && tool.wnd.wnd_options){
 			tool.wnd.wnd_options(tool.options.wnd);
 			$p.wsql.save_options("editor", tool.options);
 			tool.wnd.close();
-			tool.wnd = null;
-			tool.profile = null;
 		}
+		tool.wnd = null;
+		tool.profile = null;
 	}
 
 	function clearSelectionBounds() {
