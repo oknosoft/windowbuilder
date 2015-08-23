@@ -45,12 +45,12 @@ function Contour(attr){
 	else
 		_row = this.project.ox.constructions.add();
 
-	this._define('cns_no', {
+	this._define('cnstr', {
 		get : function(){
-			return _row.cns_no;
+			return _row.cnstr;
 		},
 		set : function(v){
-			_row.cns_no = v;
+			_row.cnstr = v;
 		},
 		enumerable : false
 	});
@@ -675,20 +675,20 @@ function Contour(attr){
 	};
 
 	// добавляем элементы контура
-	if(this.cns_no){
+	if(this.cnstr){
 
 		// профили
-		this.project.ox.coordinates.find_rows({cns_no: this.cns_no, elm_type: {in: $p.enm.elm_types.profiles}}, function(row){
+		this.project.ox.coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, function(row){
 			new Profile({row: row,	parent: _contour});
 		});
 
 		// заполнения
-		this.project.ox.coordinates.find_rows({cns_no: this.cns_no, elm_type: {in: $p.enm.elm_types.glasses}}, function(row){
+		this.project.ox.coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.glasses}}, function(row){
 			new Filling({row: row,	parent: _contour});
 		});
 
 		// все остальные элементы
-		this.project.ox.coordinates.find_rows({cns_no: this.cns_no}, function(row){
+		this.project.ox.coordinates.find_rows({cnstr: this.cnstr}, function(row){
 
 			// раскладки
 			if(row.elm_type == $p.enm.elm_types.Раскладка){

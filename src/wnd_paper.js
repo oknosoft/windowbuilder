@@ -138,8 +138,13 @@ $p.iface.oninit = function() {
 			 для целей отледки, заполняем __ox__ простыми данными
 			 */
 			$p.cat.characteristics._cachable = true;
-			$p.cat.characteristics.get($p.job_prm.demo.production, true, true)
-				.then($p.scheme.load);
+
+			$p.cat.characteristics.form_selection({
+				initial_value: $p.job_prm.demo.production,
+				on_select: function (sval) {
+					$p.scheme.load(sval);
+				}
+			});
 
 		})
 

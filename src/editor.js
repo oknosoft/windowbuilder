@@ -187,7 +187,7 @@ function Editor(_scheme){
 				},
 				ts: "extra_fields",
 				ts_title: "Свойства",
-				selection: {cns_no: 0, hide: {not: true}}
+				selection: {cnstr: 0, hide: {not: true}}
 			});
 
 			return {
@@ -213,11 +213,11 @@ function Editor(_scheme){
 			acc_cell = _scheme._acc.cells(wid);
 
 			function load_layer(layer){
-				lid = (layer.parent ? "Створка №" : "Рама №") + layer.cns_no + " " + layer.bounds.width.toFixed() + "х" + layer.bounds.height.toFixed();
+				lid = (layer.parent ? "Створка №" : "Рама №") + layer.cnstr + " " + layer.bounds.width.toFixed() + "х" + layer.bounds.height.toFixed();
 
 				tree.insertNewItem(
-					layer.parent ? layer.parent.cns_no : 0,
-					layer.cns_no,
+					layer.parent ? layer.parent.cnstr : 0,
+					layer.cnstr,
 					lid);
 
 
@@ -243,7 +243,7 @@ function Editor(_scheme){
 						_scheme.layers.forEach(function (l) {
 							if(l instanceof Contour){
 								load_layer(l);
-								tree.setSubChecked(l.cns_no, true);
+								tree.setSubChecked(l.cnstr, true);
 							}
 
 						});
@@ -269,7 +269,7 @@ function Editor(_scheme){
 
 			// Гасим-включаем слой по чекбоксу
 			tree.attachEvent("onCheck", function(id, state){
-				var l = _scheme.getItem({cns_no: Number(id)}),
+				var l = _scheme.getItem({cnstr: Number(id)}),
 					sub = tree.getAllSubItems(id);
 
 				if(l)
@@ -286,7 +286,7 @@ function Editor(_scheme){
 
 			// делаем выделенный слой активным
 			tree.attachEvent("onSelect", function(id){
-				var l = _scheme.getItem({cns_no: Number(id)});
+				var l = _scheme.getItem({cnstr: Number(id)});
 				if(l)
 					l.activate();
 			});
@@ -318,14 +318,14 @@ function Editor(_scheme){
 			return {
 
 				drop_layer: function () {
-					var cns_no = tree.getSelectedItemId(), l;
-					if(cns_no){
-						l = _scheme.getItem({cns_no: Number(cns_no)});
+					var cnstr = tree.getSelectedItemId(), l;
+					if(cnstr){
+						l = _scheme.getItem({cnstr: Number(cnstr)});
 					}else if(l = _scheme.activeLayer){
-						cns_no = l.cns_no;
+						cnstr = l.cnstr;
 					}
-					if(cns_no && l){
-						tree.deleteItem(cns_no);
+					if(cnstr && l){
+						tree.deleteItem(cnstr);
 						l.remove();
 						setTimeout(_scheme.zoom_fit, 100);
 					}

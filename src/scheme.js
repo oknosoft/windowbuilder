@@ -283,8 +283,8 @@ function Scheme(pwnd){
 		 */
 		function load_contour(parent){
 			// создаём семейство конструкций
-			var out_cns = parent ? parent.cns_no : 0;
-			_scheme.ox.constructions.find_rows({out_cns: out_cns}, function(row){
+			var out_cns = parent ? parent.cnstr : 0;
+			_scheme.ox.constructions.find_rows({parent: out_cns}, function(row){
 
 				var contour = new Contour( {parent: parent, row: row});
 
