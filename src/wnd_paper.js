@@ -23,6 +23,7 @@ $p.settings = function (prm, modifiers) {
 		localStorage.setItem("offline", "true");
 		localStorage.setItem("base_blocks_folder", "20c5524b-7eab-11e2-be96-206a8a1a5bb0");// типовой блок по умолчанию
 	}
+	prm.ws_url = "ws://builder.local:8001";
 
 	/**
 	 * по умолчанию, обращаемся к зоне 1
@@ -48,7 +49,9 @@ $p.settings = function (prm, modifiers) {
 
 };
 
-
+function socket_msg(data){
+	console.log(data);
+}
 
 /**
  * инициализация dhtmlXWindows и анализ WebSQL при готовности документа
@@ -123,7 +126,7 @@ $p.iface.oninit = function() {
 	});
 	_cell = $p.iface.docs.cells("a");
 
-	setTimeout($p.cat.load_catalogues, 0);
+	$p.eve.socket.handlers.push(socket_msg);
 
 	// прочитаем данные из json
 	// подключение к 1С на этапе отладки не требуется
