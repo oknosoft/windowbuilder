@@ -40,10 +40,10 @@ function Filling(attr){
 
 		}else
 			this.data.path = new paper.Path([
-				[_row.cornx1, h - _row.corny1],
-				[_row.cornx2, h - _row.corny2],
-				[_row.cornx3, h - _row.corny3],
-				[_row.cornx4, h - _row.corny4]
+				[_row.x1, h - _row.y1],
+				[_row.x1, h - _row.y2],
+				[_row.x2, h - _row.y2],
+				[_row.x2, h - _row.y1]
 			]);
 		this.data.path.closePath(true);
 		this.data.path.guide = true;

@@ -99,7 +99,7 @@ FreeText.prototype._define({
 			this._row.clr = v;
 			if(this._row.clr.clr_str.length == 6)
 				this.fillColor = "#" + this._row.clr.clr_str;
-			setTimeout(this.view.update(), 50);
+			this.project.register_update();
 		},
 		enumerable: false
 	},
@@ -111,7 +111,7 @@ FreeText.prototype._define({
 		},
 		set: function (v) {
 			this.fontFamily = v;
-			setTimeout(this.view.update(), 50);
+			this.project.register_update();
 		},
 		enumerable: false
 	},
@@ -123,7 +123,7 @@ FreeText.prototype._define({
 		},
 		set: function (v) {
 			this.fontSize = v;
-			setTimeout(this.view.update(), 50);
+			this.project.register_update();
 		},
 		enumerable: false
 	},
@@ -147,6 +147,7 @@ FreeText.prototype._define({
 		set: function (v) {
 			this._row.x1 = v;
 			this.point.x = v;
+			this.project.register_update();
 		},
 		enumerable: false
 	},
@@ -159,6 +160,7 @@ FreeText.prototype._define({
 		set: function (v) {
 			this._row.y1 = v;
 			this.point.y = v;
+			this.project.register_update();
 		},
 		enumerable: false
 	},
@@ -171,7 +173,7 @@ FreeText.prototype._define({
 		set: function (v) {
 			if(v){
 				this.content = v;
-				setTimeout(this.view.update(), 50);
+				this.project.register_update();
 			}
 			else{
 				Object.getNotifier(this).notify({

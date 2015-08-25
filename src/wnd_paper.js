@@ -135,19 +135,13 @@ $p.iface.oninit = function() {
 		.then(function () {
 
 			_cell.hideHeader();
-			$p.scheme = new $p.Scheme(_cell);
+			$p._editor = new $p.Editor(_cell);
 
 			/**
 			 для целей отледки, заполняем __ox__ простыми данными
 			 */
 			$p.cat.characteristics._cachable = true;
 
-			$p.cat.characteristics.form_selection({
-				initial_value: $p.job_prm.demo.production,
-				on_select: function (sval) {
-					$p.scheme.load(sval);
-				}
-			});
 
 		})
 

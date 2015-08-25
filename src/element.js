@@ -141,7 +141,7 @@ BuilderElement.prototype._define({
 	// номенклатура - свойство только для чтения, т.к. вычисляется во вставке
 	nom:{
 		get : function(){
-			return this._row.inset.nom;
+			return this.inset.nom;
 		},
 		enumerable : false
 	},
@@ -149,7 +149,7 @@ BuilderElement.prototype._define({
 	// вставка
 	inset: {
 		get : function(){
-			return this._row.inset;
+			return this._row.inset || $p.cat.inserts.get();
 		},
 		set : function(v){
 			this._row.inset = v;

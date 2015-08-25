@@ -13,47 +13,17 @@
  * @class Scheme
  * @constructor
  * @extends paper.Project
- * @param pwnd {dhtmlXWindowsCell|dhtmlXLayoutCell} - ячейка dhtml, в которой будет размещено изделие с редактором
+ * @param _canvas {HTMLCanvasElement} - канвас, в котором будет размещено изделие
  */
-function Scheme(pwnd){
+function Scheme(_canvas){
 
-	this.toString = function(){ return $p.msg.bld_constructor; };
+	// создаём объект проекта paperjs
+	Scheme.superclass.constructor.call(this, _canvas);
 
-	this._pwnd = pwnd;                                              // родительская ячейка
-	this._layout = this._pwnd.attachLayout({
-		pattern: "2U",
-		cells: [{
-			id: "a",
-			text: "Изделие",
-			header: false
-		}, {
-			id: "b",
-			text: "Инструменты",
-			collapsed_text: "Инструменты",
-			width: pwnd.getWidth() > 1200 ? 360 : 240
-		}],
-		offsets: { top: 2, right: 2, bottom: 2, left: 2}
-	});   // разбивка на канвас и аккордион
-	this._wrapper = document.createElement('div');                  // контейнер канваса
-	this._layout.cells("a").attachObject(this._wrapper);
-	this._canvas = document.createElement('canvas');                // собственно, канвас
-	this._wrapper.appendChild(this._canvas);
-	this._dxw = this._layout.dhxWins;                               // указатель на dhtmlXWindows
-
-	//this._dxw.attachViewportTo(eid);
-	//this._dxw.setSkin(dhtmlx.skin);
-
-	this._acc = this._layout.cells("b").attachAccordion({           // аккордион со свойствами
-		icons_path: dhtmlx.image_path,
-		multi_mode: true,
-		dnd:        true
-	});
-
-
-	Scheme.superclass.constructor.call(this, this._canvas);         // создаём объект проекта paperjs
-	if(!paper.project)
-		paper.project = this;
-
+	var _scheme = paper.project = this,
+		_bounds,
+		_changes = [],
+		update_timer = false;
 
 	/**
 	 * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
@@ -76,38 +46,6 @@ function Scheme(pwnd){
 		}
 	});
 
-
-	var _scheme = this,
-		_view = this.view,
-		_bounds,
-		_changes = [];
-
-	/**
-	 * Подписываемся на события изменения размеров
-	 */
-	if(pwnd instanceof  dhtmlXWindowsCell){
-
-		function pwnd_resize_finish(){
-			var dimension = pwnd.getDimension();
-			resize_canvas(dimension[0], dimension[1]);
-		}
-
-		pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
-
-		pwnd_resize_finish();
-
-	}else if(pwnd instanceof  dhtmlXLayoutCell){
-
-		pwnd.layout.attachEvent("onResizeFinish", function(){
-			resize_canvas(pwnd.getWidth(), pwnd.getHeight());
-		});
-
-		pwnd.layout.attachEvent("onPanelResizeFinish", function(names){
-			resize_canvas(pwnd.getWidth(), pwnd.getHeight());
-		});
-
-		resize_canvas(pwnd.getWidth(), pwnd.getHeight());
-	}
 
 	/**
 	 * Габариты изделия. Рассчитываются, как объединение габаритов всех слоёв типа Contour
@@ -259,13 +197,23 @@ function Scheme(pwnd){
 				bounds = bounds.unite(l.bounds);
 		});
 		if(bounds){
-			_view.zoom = Math.min(_view.viewSize.height / (bounds.height+200), _view.viewSize.width / (bounds.width+200));
-			shift = (_view.viewSize.width - bounds.width * _view.zoom) / 2;
+			this.view.zoom = Math.min(this.view.viewSize.height / (bounds.height+200), this.view.viewSize.width / (bounds.width+200));
+			shift = (this.view.viewSize.width - bounds.width * this.view.zoom) / 2;
 			if(shift < 200)
 				shift = 0;
-			_view.center = bounds.center.add([shift, 0]);
-			//_view.center = bounds.center;
+			this.view.center = bounds.center.add([shift, 0]);
+			//this.view.center = bounds.center;
 		}
+	};
+
+	/**
+	 * Вписывает канвас в указанные размеры
+	 * @param w
+	 * @param h
+	 */
+	this.resize_canvas = function(w, h){
+		this.view.viewSize.width = w;
+		this.view.viewSize.height = h;
 	};
 
 	/**
@@ -365,6 +313,16 @@ function Scheme(pwnd){
 		_changes.push(Date.now());
 	};
 
+	this.register_update = function () {
+		if(!update_timer){
+			update_timer = true;
+			setTimeout(function () {
+				_scheme.view.update();
+				update_timer = false;
+			}, 50);
+		}
+	};
+
 	/**
 	 * Выделяет начало или конец профиля
 	 * @param profile
@@ -453,16 +411,9 @@ function Scheme(pwnd){
 	 * Деструктор
 	 */
 	this.unload = function () {
-		this.editor.unload();
-		this._dxw.unload();
 		this.clear();
 		this.remove();
 	};
-
-	function resize_canvas(w, h){
-		_view.viewSize.width = w;
-		_view.viewSize.height = h;
-	}
 
 	/**
 	 * Перерисовывает все контуры изделия. Не занимается биндингом.
@@ -479,7 +430,7 @@ function Scheme(pwnd){
 						l.redraw();
 					}
 				});
-				_view.update();
+				_scheme.view.update();
 			}
 		}
 
@@ -495,13 +446,7 @@ function Scheme(pwnd){
 
 	}
 
-	/**
-	 * Редактор чертежа изделия - набор инструментов
-	 * @property editor
-	 * @type {Editor}
-	 */
-	this.editor = new Editor(this);
-	this.editor.tools.select_node.activate();
+
 
 	redraw();
 }
