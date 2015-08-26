@@ -15,6 +15,8 @@
  */
 function Editor(pwnd){
 
+	acn = $p.enm.cnn_types.acn;
+
 	var _editor = this,
 
 		/**
@@ -34,6 +36,8 @@ function Editor(pwnd){
 
 	Editor.superclass.constructor.call(_editor);
 	_editor.activate();
+
+	consts.tune_paper(_editor.settings);
 
 	_editor._pwnd = pwnd;
 	_editor._layout = pwnd.attachLayout({

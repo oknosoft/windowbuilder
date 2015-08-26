@@ -25,12 +25,16 @@ var acn,
 
 	this.lgray = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
-	/**
-	 * Размер визуализации узла пути
-	 * @property handleSize
-	 * @type {number}
-	 */
-	paper.settings.handleSize = 8;
+	this.tune_paper = function (settings) {
+		/**
+		 * Размер визуализации узла пути
+		 * @property handleSize
+		 * @type {number}
+		 */
+		settings.handleSize = 8;
+	};
+
+
 
 	this.move_points = 'move_points';
 	this.move_handle = 'move_handle';

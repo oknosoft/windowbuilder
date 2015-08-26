@@ -23,8 +23,8 @@ function ToolText(){
 		name: 'text',
 		wnd: {
 			caption: "Произаольный текст",
-			width: 260,
-			height: 260
+			width: 290,
+			height: 290
 		}
 	};
 

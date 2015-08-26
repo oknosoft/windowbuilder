@@ -223,8 +223,6 @@ function Scheme(_canvas){
 	 */
 	this.load = function(id){
 
-		acn = $p.enm.cnn_types.acn;
-
 		/**
 		 * Рекурсивно создаёт контуры изделия
 		 * @param [parent] {Contour}

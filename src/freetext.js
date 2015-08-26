@@ -186,6 +186,32 @@ FreeText.prototype._define({
 		enumerable: false
 	},
 
+	// угол к горизонту
+	angle: {
+		get: function () {
+			return Math.round(this.rotation);
+		},
+		set: function (v) {
+			this._row.alp = v;
+			this.rotation = v;
+			this.project.register_update();
+		},
+		enumerable: false
+	},
+
+	align: {
+		get: function () {
+			return $p.enm.text_aligns.get(this.justification);
+		},
+		set: function (v) {
+			this.justification = $p.is_data_obj(v) ? v.ref : v;
+			this.project.register_update();
+		},
+		enumerable: false
+	},
+
+
+
 	// обновляет координаты
 	refresh_pos: {
 		value: function () {
