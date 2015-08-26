@@ -100,6 +100,10 @@ function ToolSelectNode(){
 			this.mode = null;
 			this.changed = false;
 
+			if(event.event.which == 3){
+
+			}
+
 			if (tool.hitItem) {
 				var is_profile = tool.hitItem.item.parent instanceof Profile,
 					item = is_profile ? tool.hitItem.item.parent.generatrix : tool.hitItem.item;

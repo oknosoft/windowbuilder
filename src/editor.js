@@ -58,6 +58,11 @@ function Editor(pwnd){
 	_editor._layout.cells("a").attachObject(this._wrapper);
 	_editor._dxw = this._layout.dhxWins;                               // указатель на dhtmlXWindows
 
+	_editor._wrapper.oncontextmenu = function (event) {
+		event.preventDefault();
+		return $p.cancel_bubble(event);
+	};
+
 	//_editor._dxw.attachViewportTo(eid);
 	//_editor._dxw.setSkin(dhtmlx.skin);
 	_editor._acc = this._layout.cells("b").attachAccordion({           // аккордион со свойствами
@@ -73,7 +78,7 @@ function Editor(pwnd){
 	 * Панель выбора инструментов рисовалки
 	 * @type OTooolBar
 	 */
-	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '250px',
+	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '24px', left: '3px', name: 'left', height: '310px',
 		buttons: [
 			{name: 'select_elm', img: 'icon-arrow-black.png', title: require('select_elm')},
 			{name: 'select_node', img: 'icon-arrow-white.png', title: require('select_node')},
@@ -83,6 +88,8 @@ function Editor(pwnd){
 			{name: 'lay_impost', img: 'cursor-lay-impost.png', title: 'Вставить раскладку или импосты'},
 			{name: 'arc', img: 'cursor-arc-r.png', title: 'Арка {Crtl}, {Alt}, {Пробел}'},
 			{name: 'ruler', img: 'ruler_ui.png', title: 'Позиционирование и сдвиг'},
+			{name: 'grid', img: 'grid.png', title: 'Таблица координат'},
+			{name: 'line', img: 'line.png', title: 'Произвольная линия'},
 			{name: 'text', img: 'text.png', title: 'Произвольный текст'}
 		], onclick: function (name) {
 			for(var t in _editor.tools){
@@ -96,7 +103,7 @@ function Editor(pwnd){
 	 * Верхняя панель инструментов
 	 * @type {OTooolBar}
 	 */
-	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '270px', height: '28px', top: '3px', left: '50px', name: 'top',
+	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '250px', height: '28px', top: '3px', left: '50px', name: 'top',
 		buttons: [
 			{name: 'open', img: 'open.png', title: 'Открыть изделие', float: 'left'},
 			{name: 'save_close', img: 'save.png', title: 'Рассчитать, записать и закрыть', float: 'left'},
