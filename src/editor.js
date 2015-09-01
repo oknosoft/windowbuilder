@@ -140,11 +140,12 @@ function Editor(pwnd){
 					break;
 
 				case 'save_close':
-					_editor.save(true);
+					if(_editor.project)
+						_editor.project.save_coordinates(true);
 					break;
 
 				case 'calck':
-					_editor.save(false);
+					_editor.project.save_coordinates(false);
 					break;
 
 				case 'stamp':

@@ -74,7 +74,8 @@ function BuilderElement(attr){
 	 * @method remove
 	 */
 	this.remove = function () {
-		_row._owner.del(_row);
+		if(this.project.ox === _row._owner._owner)
+			_row._owner.del(_row);
 		_row = null;
 		BuilderElement.superclass.remove.call(this);
 	};

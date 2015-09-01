@@ -89,7 +89,7 @@ function ToolArc(){
 
 					b = this.mode.firstSegment.point;
 					e = this.mode.lastSegment.point;
-					r = (b.getDistance(e) / 2) + 0.01;
+					r = (b.getDistance(e) / 2) + 0.001;
 					contour = this.mode.parent.parent;
 
 					do_arc(this.mode, $p.m.arc_point(b.x, b.y, e.x, e.y, r, event.modifiers.option, false));

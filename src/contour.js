@@ -43,7 +43,7 @@ function Contour(attr){
 	if(attr.row)
 		_row = attr.row;
 	else
-		_row = this.project.ox.constructions.add();
+		_row = _contour.project.ox.constructions.add();
 
 	this._define('cnstr', {
 		get : function(){
@@ -238,10 +238,11 @@ function Contour(attr){
 	 * @method remove
 	 */
 	this.remove = function () {
-		this.children.forEach(function (elm) {
+		_contour.children.forEach(function (elm) {
 			elm.remove();
 		});
-		_row._owner.del(_row);
+		if(_contour.project.ox === _row._owner._owner)
+			_row._owner.del(_row);
 		_row = null;
 		Contour.superclass.remove.call(this);
 	};

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta http-equiv=X-UA-Compatible content="IE=10">
+    <meta charset="UTF-8">
+    <style>
+        body, html { overflow: hidden; margin: 0px; padding: 0px; width: 100%; height: 100%; }
+    </style>
+    <script>
+
+        var attempt = 0;
+
+        function do_click(data){
+            var evt;
+            if(typeof data != "string")
+                data = JSON.stringify(data);
+
+            // dispatch for IE
+            if (document.createEventObject){
+                evt = document.createEventObject();
+                evt.data = data;
+                document.body.fireEvent('onclick', evt);
+            }else{
+                document.body.dispatchEvent(new MouseEvent("click"), {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    data: data
+                });
+            }
+        }
+
+        function body_on_load(){
+            //var socket_uid='%sid', ws_url ='%ws_url', ws;
+            var socket_uid='4e8b16b6-89b0-11e2-9c06-da48b440c859', ws_url ='ws://light.oknosoft.local:8001', ws;
+
+            do_click('load');
+
+            try{
+
+                attempt++;
+
+                ws = new WebSocket(ws_url);
+
+                ws.onopen = function() {
+                    ws._side = "1c";
+                    ws.socket_uid = socket_uid;
+                    ws.send(JSON.stringify({
+                        _mirror: true,
+                        _side: "1c",
+                        socket_uid: socket_uid
+                    }));
+                };
+
+                ws.onclose = function() {
+                    attempt = 0;
+                    setTimeout(body_on_load, 30000);
+                    do_click('close');
+                };
+
+                ws.onmessage = function(event) {
+                    do_click(event.data);
+                };
+
+                ws.onerror = function(err) {
+                    do_click(err);
+                };
+
+            }catch(err){
+                if(attempt < 3)
+                    setTimeout(body_on_load, 30000);
+                do_click(err);
+            }
+        }
+
+    </script>
+</head>
+<body onload='body_on_load();'>
+</body>
+</html>

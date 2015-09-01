@@ -161,16 +161,16 @@ function Profile(attr){
 
 		} else {
 
-			_r = $p.fix_number(_row.r, true);
+			_r = $p.fix_number(_row.r || attr.r, true);
 
 			if(_row.path_data) {
 				this.data.generatrix = new paper.Path(attr.path_data);
 
 			}else{
 				this.data.generatrix = new paper.Path([_row.x1, h - _row.y1]);
-				if(attr.r){
+				if(_r){
 					this.data.generatrix.arcTo(
-						$p.m.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2, _r, _row.arc_ccw, _row.more_180), [_row.x2, h - _row.y2]);
+						$p.m.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2, _r + 0.001, _row.arc_ccw, _row.more_180), [_row.x2, h - _row.y2]);
 				}else{
 					this.data.generatrix.lineTo([_row.x2, h - _row.y2]);
 				}
@@ -326,10 +326,10 @@ function Profile(attr){
 			if(this.data.generatrix)
 				return this.data.generatrix.firstSegment.point;
 		},
-		set : function(newValue){
+		set : function(v){
 			_rays.clear();
 			if(this.data.generatrix)
-				this.data.generatrix.firstSegment.point = newValue;
+				this.data.generatrix.firstSegment.point = v;
 		},
 		enumerable : true,
 		configurable : false
@@ -345,10 +345,10 @@ function Profile(attr){
 			if(this.data.generatrix)
 				return this.data.generatrix.lastSegment.point;
 		},
-		set : function(newValue){
+		set : function(v){
 			_rays.clear();
 			if(this.data.generatrix)
-				this.data.generatrix.lastSegment.point = newValue;
+				this.data.generatrix.lastSegment.point = v;
 		},
 		enumerable : true,
 		configurable : false
@@ -597,43 +597,23 @@ function Profile(attr){
 					noti_points.start = start_point;
 				noti.points.push(noti_points);
 
-				// тянем примыкающий в узле соседний профиль
-				//if(cnn_point && cnn_point.profile_point){
-				//	if(cnn_point.cnn && acn.a.indexOf(cnn_point.cnn.cnn_type)!=-1 )
-				//		cnn_point.profile[cnn_point.profile_point] = segments[j].point;
-				//	else{
-				//		cnn_point.cnn_types = acn.i;
-				//		cnn_point.profile = null;
-				//		//cnn_point.cnn = null;
-				//	}
-				//
-				//}
-
 				changed = true;
 			}
 		}
 		if(changed){
 
-
-			//// тянем профили, примыкающие к нашему по Т
-			//this.parent.children.forEach(function(element) {
-			//	if (element === _profile || !(element instanceof Profile))
-			//		return;
-			//
-			//	if(element.rays.b.profile == _profile && element.rays.b.cnn_types == acn.t){
-			//		element.b = _profile.generatrix.getNearestPoint(element.b);
-			//
-			//	}else if(element.rays.e.profile == _profile && element.rays.e.cnn_types == acn.t){
-			//		element.e = _profile.generatrix.getNearestPoint(element.e);
-			//
-			//	}
-			//
-			//});
-
 			_rays.clear();
 
 			// информируем систему об изменениях
 			_profile.parent.notify(noti);
+
+			if(_profile.data.generatrix){
+				var h = _profile.project.bounds.height;
+				_profile._row.x1 = _profile.b.x;
+				_profile._row.y1 = h -_profile.b.y;
+				_profile._row.x2 = _profile.e.x;
+				_profile._row.y2 = h - _profile.e.y;
+			}
 
 		}
 	};

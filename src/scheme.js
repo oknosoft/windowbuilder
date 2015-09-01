@@ -202,7 +202,6 @@ function Scheme(_canvas){
 			if(shift < 200)
 				shift = 0;
 			this.view.center = bounds.center.add([shift, 0]);
-			//this.view.center = bounds.center;
 		}
 	};
 
@@ -252,6 +251,7 @@ function Scheme(_canvas){
 
 		}
 
+		_scheme.ox = null;
 		_scheme.clear();
 
 		if($p.is_data_obj(id))
@@ -301,6 +301,26 @@ function Scheme(_canvas){
 		else if($p.is_guid(id))
 			$p.cat.base_blocks.get(id, true, true)
 				.then(do_load);
+
+	};
+
+	/**
+	 * Сохраняет координаты и пути элементов в табличных частях характеристики
+	 */
+	this.save_coordinates = function () {
+
+		_scheme.getItems({class: Contour}).forEach(function (contour) {
+				contour.children.forEach(function (elm) {
+					//elm.remove();
+				});
+			}
+		);
+	};
+
+	/**
+	 * Рассчитывает спецификацию изделия
+	 */
+	this.calculate_spec = function () {
 
 	};
 
