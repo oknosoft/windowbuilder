@@ -16,8 +16,7 @@
  */
 function Profile(attr){
 
-	var _row = attr.row,
-		_profile = this, _corns = [], _r,
+	var _profile = this, _corns = [],
 
 
 	// кеш лучей в узлах профиля
@@ -154,28 +153,34 @@ function Profile(attr){
 	// initialize
 	(function(){
 
-		var h = _profile.project.bounds.height;
+		var h = _profile.project.bounds.height,
+			_row = _profile._row;
+
+		if(attr.r)
+			_row.r = attr.r;
 
 		if(attr.generatrix) {
 			this.data.generatrix = attr.generatrix;
 
 		} else {
 
-			_r = $p.fix_number(_row.r || attr.r, true);
-
 			if(_row.path_data) {
 				this.data.generatrix = new paper.Path(attr.path_data);
 
 			}else{
 				this.data.generatrix = new paper.Path([_row.x1, h - _row.y1]);
-				if(_r){
+				if(_row.r){
 					this.data.generatrix.arcTo(
-						$p.m.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2, _r + 0.001, _row.arc_ccw, _row.more_180), [_row.x2, h - _row.y2]);
+						$p.m.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2,
+							_row.r + 0.001, _row.arc_ccw, _row.more_180), [_row.x2, h - _row.y2]);
 				}else{
 					this.data.generatrix.lineTo([_row.x2, h - _row.y2]);
 				}
 			}
 		}
+
+		h = null;
+		_row = null;
 
 		this.data.generatrix.strokeColor = 'gray';
 
@@ -354,69 +359,76 @@ function Profile(attr){
 		configurable : false
 	});
 
-	/**
-	 * Опорные точки и лучи
-	 * @property rays
-	 * @type {Object}
-	 */
-	this._define("rays", {
-		get : function(){
-			if(!_rays.inner || !_rays.outer)
-				_rays.recalc();
 
-			return _rays;
+	this._define({
+
+		/**
+		 * Опорные точки и лучи
+		 * @property rays
+		 * @type {Object}
+		 */
+		rays: {
+			get : function(){
+				if(!_rays.inner || !_rays.outer)
+					_rays.recalc();
+					return _rays;
+			},
+			enumerable : false,
+			configurable : false
 		},
-		enumerable : false,
-		configurable : false
+
+		/**
+		 * Радиус сегмента профиля
+		 * @property r
+		 * @type {Number}
+		 */
+		r: {
+			get : function(){
+				return this._row.r;
+			},
+			set: function(v){
+				_rays.clear();
+				this._row.r = v;
+			},
+			enumerable : true,
+			configurable : false
+		},
+
+		/**
+		 * Направление дуги сегмента профиля против часовой стрелки
+		 * @property arc_ccw
+		 * @type {Boolean}
+		 */
+		arc_ccw: {
+			get : function(){
+
+			},
+			set: function(v){
+				_rays.clear();
+			},
+			enumerable : true,
+			configurable : false
+		},
+
+		/**
+		 * Дуга сегмента профиля > 180
+		 * @property arc_ccw
+		 * @type {Boolean}
+		 */
+		more_180: {
+			get : function(){
+
+			},
+			set: function(v){
+				_rays.clear();
+			},
+			enumerable : true,
+			configurable : false
+		}
+
 	});
 
-	/**
-	 * Радиус сегмента профиля
-	 * @property r
-	 * @type {Number}
-	 */
-	this._define("r", {
-		get : function(){
-			return _r;
-		},
-		set: function(v){
-			_rays.clear();
-		},
-		enumerable : true,
-		configurable : false
-	});
 
-	/**
-	 * Направление дуги сегмента профиля против часовой стрелки
-	 * @property arc_ccw
-	 * @type {Boolean}
-	 */
-	this._define("arc_ccw", {
-		get : function(){
-
-		},
-		set: function(v){
-			_rays.clear();
-		},
-		enumerable : true,
-		configurable : false
-	});
-
-	/**
-	 * Дуга сегмента профиля > 180
-	 * @property arc_ccw
-	 * @type {Boolean}
-	 */
-	this._define("more_180", {
-		get : function(){
-
-		},
-		set: function(v){
-			_rays.clear();
-		},
-		enumerable : true,
-		configurable : false
-	});
 
 	/**
 	 * Координата начала профиля
@@ -536,29 +548,6 @@ function Profile(attr){
 		return res;
 	};
 
-	/**
-	 * Дополняет cnn_point свойствами соединения
-	 * @param cnn_point {CnnPoint}
-	 */
-	this.postcalc_cnn = function(cnn_point){
-
-		// если установленное ранее соединение проходит проходит по типу, нового не ищем
-		if(cnn_point.cnn && (cnn_point.cnn_types.indexOf(cnn_point.cnn.cnn_type)!=-1))
-			return cnn_point;
-
-		// список доступных соединений сразу ограничиваем типом соединения
-		var cnns = [];
-		$p.cat.cnns.nom_cnn(this.nom, cnn_point.profile ? cnn_point.profile.nom : null).forEach(function(o){
-			if(cnn_point.cnn_types.indexOf(o.cnn_type)!=-1)
-				cnns.push(o);
-		});
-
-		// для примера подставляем первое попавшееся соединение
-		if(cnns.length)
-			cnn_point.cnn = cnns[0];
-
-		return cnn_point;
-	};
 
 	/**
 	 * Обрабатывает смещение выделенных сегментов образующей профиля
@@ -606,14 +595,6 @@ function Profile(attr){
 
 			// информируем систему об изменениях
 			_profile.parent.notify(noti);
-
-			if(_profile.data.generatrix){
-				var h = _profile.project.bounds.height;
-				_profile._row.x1 = _profile.b.x;
-				_profile._row.y1 = h -_profile.b.y;
-				_profile._row.x2 = _profile.e.x;
-				_profile._row.y2 = h - _profile.e.y;
-			}
 
 		}
 	};
@@ -807,3 +788,56 @@ function Profile(attr){
 
 }
 Profile._extend(BuilderElement);
+
+Profile.prototype._define({
+
+	/**
+	 * Вычисляемые поля в таблице координат
+	 */
+	save_coordinates: {
+		value: function () {
+			if(this.data.generatrix){
+				var h = this.project.bounds.height,
+					_row = this._row;
+				_row.x1 = Math.round(this.b.x * 1000) / 1000;
+				_row.y1 = Math.round((h - this.b.y) * 1000) / 1000;
+				_row.x2 = Math.round(this.e.x * 1000) / 1000;
+				_row.y2 = Math.round((h - this.e.y) * 1000) / 1000;
+				_row.path_data = this.generatrix.pathData;
+				//TODO: Пересчитать длину с учетом
+				_row.len = this.generatrix.length;
+				_row.alp = 0;
+				_row.alp1 = 0;
+				_row.alp2 = 0;
+			}
+		}
+	},
+
+	/**
+	 * Дополняет cnn_point свойствами соединения
+	 * @param cnn_point {CnnPoint}
+	 */
+	postcalc_cnn: {
+
+		value: function(cnn_point){
+
+			// если установленное ранее соединение проходит по типу, нового не ищем
+			if(cnn_point.cnn && (cnn_point.cnn_types.indexOf(cnn_point.cnn.cnn_type)!=-1))
+				return cnn_point;
+
+			// список доступных соединений сразу ограничиваем типом соединения
+			var cnns = [];
+			$p.cat.cnns.nom_cnn(this.nom, cnn_point.profile ? cnn_point.profile.nom : null).forEach(function(o){
+				if(cnn_point.cnn_types.indexOf(o.cnn_type)!=-1)
+					cnns.push(o);
+			});
+
+			// для примера подставляем первое попавшееся соединение
+			if(cnns.length)
+				cnn_point.cnn = cnns[0];
+
+			return cnn_point;
+		}
+	}
+
+});

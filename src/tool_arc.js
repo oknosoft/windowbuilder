@@ -106,7 +106,8 @@ function ToolArc(){
 					contour = this.mode.parent.parent;
 
 					this.mode.removeSegments(1);
-					this.mode.firstSegment.linear = true;
+					this.mode.firstSegment.handleIn = null;
+					this.mode.firstSegment.handleOut = null;
 					this.mode.lineTo(e);
 					this.mode.parent.rays.clear();
 					this.mode.selected = true;

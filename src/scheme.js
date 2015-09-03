@@ -174,7 +174,13 @@ function Scheme(_canvas){
 			hit = _scheme.hitTest(point, { segments: true, tolerance: 4 });
 		if(hit && hit.item.layer.parent){
 			item = hit.item;
-			items = hit.item.layer.parent.profiles();
+			// если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
+			if(
+				(item.parent.b.is_nearest(hit.point) && item.parent.rays.b && item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1)
+					|| (item.parent.e.is_nearest(hit.point) && item.parent.rays.e && item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1))
+				return hit;
+
+			items = item.layer.parent.profiles();
 			for(var i in items){
 				hit = items[i].hitTest(point, { segments: true, tolerance: 6 });
 				if(hit)
@@ -311,7 +317,8 @@ function Scheme(_canvas){
 
 		_scheme.getItems({class: Contour}).forEach(function (contour) {
 				contour.children.forEach(function (elm) {
-					//elm.remove();
+					if(elm.save_coordinates)
+						elm.save_coordinates();
 				});
 			}
 		);
