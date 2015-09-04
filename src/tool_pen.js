@@ -25,83 +25,44 @@ function ToolPen(){
 		bind_node: false,
 		wnd: {
 			caption: "Новый сегмент профиля",
-			height: 280
+			width: 320,
+			height: 240
 		}
 	};
 
+	// подключает окно редактора
 	function tool_wnd(){
 
-		var folder, opened = false,
-			profile = tool.options;
+		// создаём экземпляр обработки
+		tool.profile = $p.dp.builder_pen.create();
 
-		$p.wsql.restore_options("editor", profile);
+		// восстанавливаем сохранённые параметры
+		$p.wsql.restore_options("editor", tool.options);
+		tool.profile._mixin(tool.options, ["inset", "clr", "bind_generatrix", "bind_node"]);
 
-		if(profile.nom)
-			profile.nom = $p.cat.nom.get(profile.nom);
-		else
-			profile.nom = $p.cat.nom.get();
+		if(tool.profile.inset.empty()){
+			var profiles = _editor.project.sys.inserts($p.enm.elm_types.rama_impost);
+			if(profiles.length)
+				tool.profile.inset = profiles[0];
+		}
 
-		if(profile.clr)
-			profile.clr = $p.cat.clrs.get(profile.clr);
-		else
-			profile.clr = $p.cat.clrs.predefined("white");
+		if(tool.profile.clr.empty())
+			tool.profile.clr = $p.cat.clrs.predefined("white");
 
-		tool.wnd = $p.iface.dat_gui(_editor._dxw, tool.options.wnd);
-
-		tool.wnd.add(profile, 'nom', {pos: "hidden", title: "Материал профиля"}).onChange(function(c){
-			if(opened)
-				return;
-			opened = true;
-			$p.cat.nom.form_selection({
-				o: profile,
-				wnd: _editor._pwnd,
-				on_select: function (v) {
-					if(v!==undefined)
-						profile.nom = v;
-					opened = false;
-				},
-				on_unload: function () {
-					opened = false;
-				}
-
-			}, {
-				initial_value: profile.nom.ref
-			});
+		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
+		tool.wnd.attachHeadFields({
+			obj: tool.profile
 		});
 
-		tool.wnd.add(profile, 'clr', {pos: "hidden", title: "Цвет профиля"}).onChange(function(c){
-			if(opened)
-				return;
-			opened = true;
-			$p.cat.clrs.form_selection({
-				o: profile,
-				wnd: _editor._pwnd,
-				on_select: function (v) {
-					if(v!==undefined)
-						profile.clr = v;
-					opened = false;
-				},
-				on_unload: function () {
-					opened = false;
-				}
-
-			}, {
-				initial_value: profile.nom.ref
-			});
-		});
-
-		tool.wnd.add(profile, 'bind_generatrix', {caption: "Магнит к профилю", pos: "before"});
-
-		tool.wnd.add(profile, 'bind_node', {caption: "Магнит к узлам", pos: "before"});
 	}
 
 	function decorate_layers(reset){
 		var al = _editor.project.activeLayer;
-		_editor.project.layers.forEach(function (l) {
+		_editor.project.getItems({class: Contour}).forEach(function (l) {
 			if(l == al)
 				l.opacity = 1;
 			else
-				l.opacity = reset ? 1 : 0.3;
+				l.opacity = reset ? 1 : 0.5;
 		})
 	}
 
@@ -174,7 +135,7 @@ function ToolPen(){
 			_editor.canvas_cursor('cursor-pen-freehand');
 
 			if (this.mode && this.path) {
-				new Profile({generatrix: this.path, proto: tool.options});
+				new Profile({generatrix: this.path, proto: tool.profile});
 				this.mode = null;
 				this.path = null;
 			}
@@ -221,9 +182,9 @@ function ToolPen(){
 			}
 
 			if (dragIn || dragOut) {
-				var i, res, element, bind = this.options.bind_node ? "node_" : "";
+				var i, res, element, bind = this.profile.bind_node ? "node_" : "";
 
-				if(this.options.bind_generatrix)
+				if(this.profile.bind_generatrix)
 					bind += "generatrix";
 
 				if (invert)

@@ -165,14 +165,14 @@ function Profile(attr){
 		} else {
 
 			if(_row.path_data) {
-				this.data.generatrix = new paper.Path(attr.path_data);
+				this.data.generatrix = new paper.Path(_row.path_data);
 
 			}else{
 				this.data.generatrix = new paper.Path([_row.x1, h - _row.y1]);
 				if(_row.r){
 					this.data.generatrix.arcTo(
 						$p.m.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2,
-							_row.r + 0.001, _row.arc_ccw, _row.more_180), [_row.x2, h - _row.y2]);
+							_row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
 				}else{
 					this.data.generatrix.lineTo([_row.x2, h - _row.y2]);
 				}
@@ -400,22 +400,6 @@ function Profile(attr){
 		 * @type {Boolean}
 		 */
 		arc_ccw: {
-			get : function(){
-
-			},
-			set: function(v){
-				_rays.clear();
-			},
-			enumerable : true,
-			configurable : false
-		},
-
-		/**
-		 * Дуга сегмента профиля > 180
-		 * @property arc_ccw
-		 * @type {Boolean}
-		 */
-		more_180: {
 			get : function(){
 
 			},
