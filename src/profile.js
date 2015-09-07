@@ -16,10 +16,12 @@
  */
 function Profile(attr){
 
-	var _profile = this, _corns = [],
+	var _profile = this,
 
+		// точки пересечения профиля с соседями с внутренней стороны
+		_corns = [],
 
-	// кеш лучей в узлах профиля
+		// кеш лучей в узлах профиля
 		_rays = new function ProfileRays(){
 
 			/**
@@ -54,6 +56,10 @@ function Profile(attr){
 				 * @type {_cat.cnns}
 				 */
 				this.cnn = null;
+
+				// путь в области соединения профиля с соседом
+				// заполняем только для кривого соседа???
+				this.sub_path = null;
 			}
 
 			this.b = new CnnPoint();
@@ -69,6 +75,8 @@ function Profile(attr){
 					this.e.profile = null;
 					this.b.cnn = null;
 					this.e.cnn = null;
+					this.b.sub_path = null;
+					this.b.sub_path = null;
 				}
 			};
 
@@ -412,8 +420,6 @@ function Profile(attr){
 
 	});
 
-
-
 	/**
 	 * Координата начала профиля
 	 * @property x1
@@ -634,6 +640,12 @@ function Profile(attr){
 				return 1;
 		}
 
+		function sub_path(path, point1, point2, cnn_point){
+			if(path.curves.length > 3 || !path.curves[1].isLinear()){
+				cnn_point.sub_path = path.get_subpath(point1, point2);
+			}
+		}
+
 		// если пересечение в узлах, используем лучи профиля
 		if(cnn_point.profile){
 			prays = cnn_point.profile.rays;
@@ -650,20 +662,23 @@ function Profile(attr){
 				if(detect_side() < 0){
 					intersect_point(prays.outer, rays.outer, 1);
 					intersect_point(prays.outer, rays.inner, 4);
+					sub_path(prays.outer, _corns[4], _corns[1], rays.b);
 				}else{
 					intersect_point(prays.inner, rays.outer, 1);
 					intersect_point(prays.inner, rays.inner, 4);
+					sub_path(prays.inner, _corns[4], _corns[1], rays.b);
 				}
-
 
 			}else if(profile_point == "e"){
 				// в зависимости от стороны соединения
 				if(detect_side() < 0){
 					intersect_point(prays.outer, rays.outer, 2);
 					intersect_point(prays.outer, rays.inner, 3);
+					sub_path(prays.outer, _corns[2], _corns[3], rays.e);
 				}else{
 					intersect_point(prays.inner, rays.outer, 2);
 					intersect_point(prays.inner, rays.inner, 3);
+					sub_path(prays.inner, _corns[2], _corns[3], rays.e);
 				}
 			}
 
@@ -734,11 +749,17 @@ function Profile(attr){
 		path.removeSegments();
 
 		// TODO отказаться повторного пересчета и заействовать клоны rays-ов
+		path.add(_corns[1]);
+
 		if(gpath.is_linear()){
-			path.add(_corns[1], _corns[2], _corns[3]);
+			if(rays.e.sub_path){
+				path.add(_corns[2]);
+				//path.join(rays.e.sub_path);
+				path.add(_corns[3]);
+			}else
+				path.add(_corns[2], _corns[3]);
 
 		}else{
-			path.add(_corns[1]);
 
 			tpath = new paper.Path({insert: false});
 			offset1 = rays.outer.getNearestLocation(_corns[1]).offset;
@@ -762,6 +783,9 @@ function Profile(attr){
 			path.join(tpath);
 
 		}
+
+		//if(rays.b.sub_path)
+		//	path.join(rays.b.sub_path);
 
 		path.add(_corns[4]);
 		path.closePath();
@@ -790,9 +814,10 @@ Profile.prototype._define({
 				_row.path_data = this.generatrix.pathData;
 				//TODO: Пересчитать длину с учетом
 				_row.len = this.generatrix.length;
-				_row.alp = 0;
+				_row.angle_hor = 0;
 				_row.alp1 = 0;
 				_row.alp2 = 0;
+				//TODO: Рассчитать тип элемента рама-импост-створка
 			}
 		}
 	},
@@ -821,6 +846,19 @@ Profile.prototype._define({
 				cnn_point.cnn = cnns[0];
 
 			return cnn_point;
+		}
+	},
+
+	interiorPoint: {
+		value: function () {
+			var gen = this.generatrix, igen;
+			if(gen.curves.length == 1)
+				igen = gen.firstCurve.getPointAt(0.5, true);
+			else if (gen.curves.length == 2)
+				igen = gen.firstCurve.point2;
+			else
+				igen = gen.curves[1].point2;
+			return this.rays.inner.getNearestPoint(igen).add(this.rays.outer.getNearestPoint(igen)).divide(2)
 		}
 	}
 

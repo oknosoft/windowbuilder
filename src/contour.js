@@ -373,7 +373,7 @@ function Contour(attr){
 			res.push(elm);
 		}
 		return res;
-	}
+	};
 
 	/**
 	 * Возвращает массив заполнений + створок текущего контура
@@ -404,7 +404,7 @@ function Contour(attr){
 			}
 		});
 		return res;
-	}
+	};
 
 	/**
 	 * Возвращает ребро текущего контура по узлам
@@ -621,40 +621,34 @@ function Contour(attr){
 
 		// TODO ждём устранения ограничений от авторов paper.js
 		_contour.rotate(0.004);
-		for(var i in profiles){
-			path = profiles[i].path.clone(false);
-			path.scale(1.004);
+		profiles.forEach(function (profile) {
+			path = profile.path.clone(false);
+			if(profile.generatrix.is_linear())
+				path.scale(1.004);
+			else{
+				path.scale(1.004, profile.generatrix.getPointAt(profile.generatrix.length/2));
+			}
+
 
 			if(!original_bounds)
 				original_bounds = path;
 			else
 				original_bounds = original_bounds.unite(path);
-		}
+		});
 		_contour.rotate(-0.004);
-
 
 		// TODO вместо середины образующей задействовать точки внутри пути
 		if(original_bounds instanceof paper.CompoundPath){
 			original_bounds.children.forEach(function(p){
-				for(var i in profiles){
-					children = profiles[i];
-					if(children.generatrix.is_linear())
-						interior = children.path.interiorPoint;
-					else{
-						if(children.generatrix.curves.length == 1)
-							interior = children.generatrix.firstCurve.getPointAt(0.5, true);
-						else if (children.generatrix.curves.length == 2)
-							interior = children.generatrix.firstCurve.point2;
-						else
-							interior = children.generatrix.curves[1].point2;
+				if(p.length < 240)
+					to_remove.push(p);
+				else
+					for(var i in profiles){
+						if(p.contains(profiles[i].interiorPoint())){
+							to_remove.push(p);
+							break;
+						}
 					}
-					//interior = children.lastCurve.getPointAt(0.5, true).add(children.firstCurve.getPointAt(0.1, true)).divide(2);
-					//interior = children.path.interiorPoint.add(children.generatrix.getPointAt(0.5, true)).divide(2);
-					if(p.contains(interior)){
-						to_remove.push(p);
-						break;
-					}
-				}
 			});
 			to_remove.forEach(function(p){
 				p.remove();
@@ -663,9 +657,9 @@ function Contour(attr){
 		}else
 			return _glasses;
 
-		/*
-		 имеем массив полигонов в original_bounds.children и текущие заполнения
-		 попытаемся привязать заполнения к полигонам
+		/**
+		 * имеем массив полигонов в original_bounds.children и текущие заполнения
+		 * попытаемся привязать заполнения к полигонам
 		 */
 		for(var g in original_bounds.children){
 			var glass_path = original_bounds.children[g];

@@ -59,6 +59,14 @@ function BuilderElement(attr){
 	}else if(attr.parent)
 		this.parent = attr.parent;
 
+	if(!_row.cnstr)
+		_row.cnstr = this.parent.cnstr;
+
+	if(!_row.elm)
+		_row.elm = this.id;
+
+	if(_row.elm_type.empty() && !this.inset.empty())
+		_row.elm_type = this.inset.nom.elm_type;
 
 	this.project.register_change();
 
@@ -150,7 +158,7 @@ BuilderElement.prototype._define({
 	// вставка
 	inset: {
 		get : function(){
-			return this._row.inset || $p.cat.inserts.get();
+			return (this._row ? this._row.inset : null) || $p.cat.inserts.get();
 		},
 		set : function(v){
 			this._row.inset = v;

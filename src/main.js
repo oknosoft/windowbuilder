@@ -59,6 +59,32 @@ paper.Path.prototype._define({
 		value: function () {
 			return this.curves.length == 1 && this.firstCurve.isLinear();
 		}
+	},
+
+	/**
+	 * возвращает фрагмент пути между точками
+	 */
+	get_subpath: {
+		value: function (point1, point2) {
+			var path = this.clone(), tmp,
+				loc1 = path.getLocationOf(point1),
+				loc2 = path.getLocationOf(point2);
+			if(loc1.offset > loc2.offset){
+				tmp = path.split(loc1.index, loc1.parameter);
+				tmp.remove();
+				loc2 = path.getLocationOf(point2);
+				tmp = path.split(loc2.index, loc2.parameter);
+				path.remove();
+				tmp.reverse();
+			}else{
+				tmp = path.split(loc2.index, loc2.parameter);
+				tmp.remove();
+				loc1 = path.getLocationOf(point1);
+				tmp = path.split(loc1.index, loc1.parameter);
+				path.remove();
+			}
+			return tmp;
+		}
 	}
 });
 

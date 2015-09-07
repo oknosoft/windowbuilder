@@ -192,7 +192,7 @@ FreeText.prototype._define({
 			return Math.round(this.rotation);
 		},
 		set: function (v) {
-			this._row.alp = v;
+			this._row.angle_hor = v;
 			this.rotation = v;
 			this.project.register_update();
 		},

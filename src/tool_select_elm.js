@@ -107,9 +107,6 @@ function ToolSelectElm(){
 				this.mouseStartPos = event.point.clone();
 				this.mode = 'box-select';
 
-				if (!event.modifiers.shift)
-					tool.attache_wnd(tool.hitItem.item.parent, _editor);
-
 			}
 		},
 		mouseup: function(event) {

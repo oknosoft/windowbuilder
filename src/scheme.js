@@ -176,8 +176,10 @@ function Scheme(_canvas){
 			item = hit.item;
 			// если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
 			if(
-				(item.parent.b.is_nearest(hit.point) && item.parent.rays.b && item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1)
-					|| (item.parent.e.is_nearest(hit.point) && item.parent.rays.e && item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1))
+				(item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
+					(item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1))
+					|| (item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
+					(item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1)))
 				return hit;
 
 			items = item.layer.parent.profiles();
@@ -203,11 +205,11 @@ function Scheme(_canvas){
 				bounds = bounds.unite(l.bounds);
 		});
 		if(bounds){
-			this.view.zoom = Math.min(this.view.viewSize.height / (bounds.height+200), this.view.viewSize.width / (bounds.width+200));
-			shift = (this.view.viewSize.width - bounds.width * this.view.zoom) / 2;
+			_scheme.view.zoom = Math.min(_scheme.view.viewSize.height / (bounds.height+200), _scheme.view.viewSize.width / (bounds.width+200));
+			shift = (_scheme.view.viewSize.width - bounds.width * _scheme.view.zoom) / 2;
 			if(shift < 200)
 				shift = 0;
-			this.view.center = bounds.center.add([shift, 0]);
+			_scheme.view.center = bounds.center.add([shift, 0]);
 		}
 	};
 
@@ -217,8 +219,8 @@ function Scheme(_canvas){
 	 * @param h
 	 */
 	this.resize_canvas = function(w, h){
-		this.view.viewSize.width = w;
-		this.view.viewSize.height = h;
+		_scheme.view.viewSize.width = w;
+		_scheme.view.viewSize.height = h;
 	};
 
 	/**
@@ -294,7 +296,6 @@ function Scheme(_canvas){
 			_scheme.ox.coordinates.load(bb.coordinates);
 			_scheme.ox.params.load(bb.params);
 			_scheme.ox.cnn_elmnts.load(bb.cnn_elmnts);
-			_scheme.ox.visualization.load(bb.visualization);
 
 			_scheme.load(_scheme.ox);
 			setTimeout(_scheme.zoom_fit, 100);
@@ -421,8 +422,14 @@ function Scheme(_canvas){
 			gp = element.generatrix.getNearestPoint(point);
 			if(gp && (distance = gp.getDistance(point)) < consts.sticking){
 				if(distance < res.distance || bind_generatrix){
-					res.point = gp;
-					res.distance = distance;
+					if(element.d0 != 0 && element.rays.outer){
+						// для вложенных створок учтём смещение
+						res.point = element.rays.outer.getNearestPoint(point);
+						res.distance = 0;
+					}else{
+						res.point = gp;
+						res.distance = distance;
+					}
 					res.profile = element;
 					res.cnn_types = acn.t;
 				}

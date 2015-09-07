@@ -221,7 +221,7 @@ function Editor(pwnd){
 					_editor.tree_layers.drop_layer();
 
 				else if(['left', 'bottom', 'top', 'right'].indexOf(name) != -1)
-					profile_align(name);
+					_editor.profile_align(name);
 
 				return false;
 			}
@@ -596,56 +596,7 @@ function Editor(pwnd){
 	new ToolRuler();
 
 
-	function profile_align(name){
-		var minmax = {min: {}, max: {}},
-			profile = paper.tool.profile;
 
-		if(!profile)
-			return;
-
-		minmax.min.x = Math.min(profile.x1, profile.x2);
-		minmax.min.y = Math.min(profile.y1, profile.y2);
-		minmax.max.x = Math.max(profile.x1, profile.x2);
-		minmax.max.y = Math.max(profile.y1, profile.y2);
-		minmax.max.dx = minmax.max.x - minmax.min.x;
-		minmax.max.dy = minmax.max.y - minmax.min.y;
-
-		if(name == 'left' && minmax.max.dx < minmax.max.dy){
-			if(profile.x1 - minmax.min.x > 0)
-				profile.x1 = minmax.min.x;
-			if(profile.x2 - minmax.min.x > 0)
-				profile.x2 = minmax.min.x;
-
-		}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
-			if(profile.x1 - minmax.max.x < 0)
-				profile.x1 = minmax.max.x;
-			if(profile.x2 - minmax.max.x < 0)
-				profile.x2 = minmax.max.x;
-
-		}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
-			if(profile.y1 - minmax.max.y < 0)
-				profile.y1 = minmax.max.y;
-			if(profile.y2 - minmax.max.y < 0)
-				profile.y2 = minmax.max.y;
-
-		}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
-			if (profile.y1 - minmax.min.y > 0)
-				profile.y1 = minmax.min.y;
-			if (profile.y2 - minmax.min.y > 0)
-				profile.y2 = minmax.min.y;
-
-		}else if(name == 'delete') {
-			profile.removeChildren();
-			profile.remove();
-
-		}else
-			$p.msg.show_msg({type: "alert-warning",
-				text: $p.msg.align_invalid_direction,
-				title: $p.msg.main_title});
-
-		_editor.view.update();
-		return false;
-	}
 
 	this.tools[2].activate();
 
@@ -872,6 +823,59 @@ Editor.prototype._define({
 			}
 			while(selected = deselect.pop())
 				selected.selected = false;
+		}
+	},
+
+	profile_align: {
+		value: 	function(name){
+			var minmax = {min: {}, max: {}},
+				profile = paper.tool.profile;
+
+			if(!profile)
+				return;
+
+			minmax.min.x = Math.min(profile.x1, profile.x2);
+			minmax.min.y = Math.min(profile.y1, profile.y2);
+			minmax.max.x = Math.max(profile.x1, profile.x2);
+			minmax.max.y = Math.max(profile.y1, profile.y2);
+			minmax.max.dx = minmax.max.x - minmax.min.x;
+			minmax.max.dy = minmax.max.y - minmax.min.y;
+
+			if(name == 'left' && minmax.max.dx < minmax.max.dy){
+				if(profile.x1 - minmax.min.x > 0)
+					profile.x1 = minmax.min.x;
+				if(profile.x2 - minmax.min.x > 0)
+					profile.x2 = minmax.min.x;
+
+			}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
+				if(profile.x1 - minmax.max.x < 0)
+					profile.x1 = minmax.max.x;
+				if(profile.x2 - minmax.max.x < 0)
+					profile.x2 = minmax.max.x;
+
+			}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
+				if(profile.y1 - minmax.max.y < 0)
+					profile.y1 = minmax.max.y;
+				if(profile.y2 - minmax.max.y < 0)
+					profile.y2 = minmax.max.y;
+
+			}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
+				if (profile.y1 - minmax.min.y > 0)
+					profile.y1 = minmax.min.y;
+				if (profile.y2 - minmax.min.y > 0)
+					profile.y2 = minmax.min.y;
+
+			}else if(name == 'delete') {
+				profile.removeChildren();
+				profile.remove();
+
+			}else
+				$p.msg.show_msg({type: "alert-warning",
+					text: $p.msg.align_invalid_direction,
+					title: $p.msg.main_title});
+
+			this.view.update();
+			return false;
 		}
 	},
 

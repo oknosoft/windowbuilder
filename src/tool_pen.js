@@ -21,12 +21,14 @@ function ToolPen(){
 
 	tool.options = {
 		name: 'pen',
-		bind_generatrix: true,
-		bind_node: false,
 		wnd: {
 			caption: "Новый сегмент профиля",
 			width: 320,
-			height: 240
+			height: 240,
+			bind_generatrix: true,
+			bind_node: false,
+			inset: "",
+			clr: ""
 		}
 	};
 
@@ -38,7 +40,7 @@ function ToolPen(){
 
 		// восстанавливаем сохранённые параметры
 		$p.wsql.restore_options("editor", tool.options);
-		tool.profile._mixin(tool.options, ["inset", "clr", "bind_generatrix", "bind_node"]);
+		tool.profile._mixin(tool.options.wnd, ["inset", "clr", "bind_generatrix", "bind_node"]);
 
 		if(tool.profile.inset.empty()){
 			var profiles = _editor.project.sys.inserts($p.enm.elm_types.rama_impost);
@@ -53,6 +55,15 @@ function ToolPen(){
 		tool.wnd.attachHeadFields({
 			obj: tool.profile
 		});
+
+		var wnd_options = tool.wnd.wnd_options;
+		tool.wnd.wnd_options = function (opt) {
+			wnd_options.call(tool.wnd, opt);
+			opt.inset = tool.profile.inset.ref;
+			opt.clr = tool.profile.clr.ref;
+			opt.bind_generatrix = tool.profile.bind_generatrix;
+			opt.bind_node = tool.profile.bind_node;
+		}
 
 	}
 

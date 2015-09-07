@@ -259,25 +259,30 @@ function ToolSelectNode(){
 
 			} else if (this.mode == consts.move_handle) {
 
-				var delta = event.point.subtract(this.mouseStartPos);
+				var delta = event.point.subtract(this.mouseStartPos),
+					noti = {
+						type: consts.move_handle,
+						profiles: [tool.hitItem.item.parent],
+						points: []};
 
 				if (tool.hitItem.type == 'handle-out') {
 					var handlePos = this.originalHandleOut.add(delta);
-					if (event.modifiers.shift) {
+					if (event.modifiers.shift)
 						handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
-					}
+
 					tool.hitItem.segment.handleOut = handlePos;
 					tool.hitItem.segment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
 				} else {
 					var handlePos = this.originalHandleIn.add(delta);
-					if (event.modifiers.shift) {
+					if (event.modifiers.shift)
 						handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
-					}
+
 					tool.hitItem.segment.handleIn = handlePos;
 					tool.hitItem.segment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
 				}
 
-				tool.hitItem.item.parent.rays.clear();
+				noti.profiles[0].rays.clear();
+				noti.profiles[0].parent.notify(noti);
 
 				_editor.purge_selection();
 
