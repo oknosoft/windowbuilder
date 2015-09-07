@@ -86,6 +86,7 @@ function BuilderElement(attr){
 			_row._owner.del(_row);
 		_row = null;
 		BuilderElement.superclass.remove.call(this);
+		this.project.register_change();
 	};
 
 }

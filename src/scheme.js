@@ -483,3 +483,21 @@ function Scheme(_canvas){
 	redraw();
 }
 Scheme._extend(paper.Project);
+
+Scheme.prototype._define({
+
+	move_points: {
+		value: function (delta, all_points) {
+
+			var selected = this.selectedItems;
+			for (var i = 0; i < selected.length; i++) {
+				var path = selected[i];
+				if(path.parent instanceof Profile){
+					if(!path.layer.parent || (path.parent._row.elm_type == $p.enm.elm_types.Импост))
+						path.parent.move_points(delta, all_points);
+				}else
+					path.position = path.position.add(delta);
+			}
+		}
+	}
+});

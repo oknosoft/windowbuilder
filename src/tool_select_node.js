@@ -220,16 +220,7 @@ function ToolSelectNode(){
 					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
 
 				_editor.restore_selection_state(this.originalContent);
-
-				var selected = _editor.project.selectedItems;
-				for (var i = 0; i < selected.length; i++) {
-					var path = selected[i];
-					if(path.parent instanceof Profile){
-						if(!path.layer.parent)
-							path.parent.move_points(delta, true);
-					}else
-						path.position = path.position.add(delta);
-				}
+				_editor.project.move_points(delta, true);
 				_editor.clear_selection_bounds();
 
 			} else if (this.mode == consts.move_points) {
@@ -240,20 +231,7 @@ function ToolSelectNode(){
 					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
 				}
 				_editor.restore_selection_state(this.originalContent);
-
-				var selected = _editor.project.selectedItems;
-				for (var i = 0; i < selected.length; i++) {
-					var path = selected[i];
-
-					if(path.parent instanceof Profile)
-						path.parent.move_points(delta);
-					else
-						for (var j = 0; j < path.segments.length; j++) {
-							if (path.segments[j].selected)
-								path.segments[j].point = path.segments[j].point.add(delta);
-						}
-				}
-
+				_editor.project.move_points(delta);
 				_editor.purge_selection();
 
 
@@ -324,8 +302,10 @@ function ToolSelectNode(){
 				}
 
 				// Prevent the key event from bubbling
+				event.event.preventDefault();
 				return false;
 
+				// удаление сегмента или элемента
 			} else if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
 				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
@@ -334,22 +314,43 @@ function ToolSelectNode(){
 				selected = _editor.project.selectedItems;
 				for (i = 0; i < selected.length; i++) {
 					path = selected[i];
+					do_select = false;
 					if(path.parent instanceof Profile){
 						for (j = 0; j < path.segments.length; j++) {
 							segment = path.segments[j];
+							do_select = do_select || segment.selected;
 							if (segment.selected && segment != path.firstSegment && segment != path.lastSegment ){
 								path.removeSegment(j);
 
 								// пересчитываем
 								path.parent.x1 = path.parent.x1;
-
 								break;
 							}
+						}
+						// если не было обработки узлов - удаляем элемент
+						if(!do_select){
+							path = path.parent;
+							path.removeChildren();
+							path.remove();
 						}
 					}
 				}
 				// Prevent the key event from bubbling
+				event.event.preventDefault();
 				return false;
+
+			} else if (event.key == 'left') {
+				_editor.project.move_points(new paper.Point(-10, 0));
+
+			} else if (event.key == 'right') {
+				_editor.project.move_points(new paper.Point(10, 0));
+
+			} else if (event.key == 'up') {
+				_editor.project.move_points(new paper.Point(0, -10));
+
+			} else if (event.key == 'down') {
+				_editor.project.move_points(new paper.Point(0, 10));
+
 			}
 		}
 	});

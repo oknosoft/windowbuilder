@@ -145,20 +145,11 @@ function ToolSelectElm(){
 				_editor.canvas_cursor('cursor-arrow-small');
 
 				var delta = event.point.subtract(this.mouseStartPos);
-				if (event.modifiers.shift) {
+				if (event.modifiers.shift)
 					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
-				}
 
 				_editor.restore_selection_state(this.originalContent);
-
-				var selected = _editor.project.selectedItems;
-				for (var i = 0; i < selected.length; i++) {
-					var path = selected[i];
-					if(path.parent instanceof Profile)
-						path.parent.move_points(delta, true);
-					else
-						path.position = path.position.add(delta);
-				}
+				_editor.project.move_points(delta, true);
 				_editor.clear_selection_bounds();
 
 			} else if (this.mode == 'box-select') {
@@ -182,12 +173,11 @@ function ToolSelectElm(){
 						path.parent.rays.clear();
 						newpath = path.split(path.length * 0.5);
 						new Profile({generatrix: newpath, proto: path.parent});
-
 					}
-
 				}
 
 				// Prevent the key event from bubbling
+				event.event.preventDefault();
 				return false;
 
 			} else if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
@@ -208,7 +198,21 @@ function ToolSelectElm(){
 				}
 
 				// Prevent the key event from bubbling
+				event.event.preventDefault();
 				return false;
+
+			} else if (event.key == 'left') {
+				_editor.project.move_points(new paper.Point(-10, 0), true);
+
+			} else if (event.key == 'right') {
+				_editor.project.move_points(new paper.Point(10, 0), true);
+
+			} else if (event.key == 'up') {
+				_editor.project.move_points(new paper.Point(0, -10), true);
+
+			} else if (event.key == 'down') {
+				_editor.project.move_points(new paper.Point(0, 10), true);
+
 			}
 		}
 	});
