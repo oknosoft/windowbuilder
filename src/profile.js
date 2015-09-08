@@ -22,139 +22,7 @@ function Profile(attr){
 		_corns = [],
 
 		// кеш лучей в узлах профиля
-		_rays = new function ProfileRays(){
-
-			/**
-			 * Объект, описывающий геометрию соединения
-			 * @class CnnPoint
-			 * @constructor
-			 */
-			function CnnPoint(){
-
-				/**
-				 * Расстояние до ближайшего профиля
-				 * @type {number}
-				 */
-				this.distance = 10e9;
-
-				/**
-				 * Массив допустимых типов соединений
-				 * По умолчанию - соединение с пустотой
-				 * @type {Array}
-				 */
-				this.cnn_types = acn.i;
-
-				/**
-				 * Профиль, с которым пересекается наш элемент
-				 * @property profile
-				 * @type {Profile}
-				 */
-				this.profile = null;
-
-				/**
-				 * Текущее соединение - объект справочника соединения
-				 * @type {_cat.cnns}
-				 */
-				this.cnn = null;
-
-				// путь в области соединения профиля с соседом
-				// заполняем только для кривого соседа???
-				this.sub_path = null;
-			}
-
-			this.b = new CnnPoint();
-			this.e = new CnnPoint();
-
-			this.clear = function(with_cnn){
-				if(this.inner)
-					delete this.inner;
-				if(this.outer)
-					delete this.outer;
-				if(with_cnn){
-					this.b.profile = null;
-					this.e.profile = null;
-					this.b.cnn = null;
-					this.e.cnn = null;
-					this.b.sub_path = null;
-					this.b.sub_path = null;
-				}
-			};
-
-			this.recalc = function(){
-
-				var path = _profile.generatrix,
-					len = path.length;
-
-				this.outer = new paper.Path({ insert: false });
-				this.inner = new paper.Path({ insert: false });
-
-				if(len == 0){
-					return;
-				}
-
-				var d1 = _profile.d1, d2 = _profile.d2,
-					ds = 3 * _profile.width, step = len * 0.02,
-					point_b, tangent_b, normal_b,
-					point_e, tangent_e, normal_e;
-
-
-				// первая точка эквидистанты. аппроксимируется касательной на участке (from < начала пути)
-				point_b = path.firstSegment.point;
-				tangent_b = path.getTangentAt(0).normalize();
-				normal_b = path.getNormalAt(0).normalize();
-
-				// последняя точка эквидистанты. аппроксимируется прямой , если to > конца пути
-				point_e = path.lastSegment.point;
-
-				// для прямого пути, чуть наклоняем нормаль
-				if(path.is_linear()){
-
-					tangent_e = tangent_b.clone();
-
-					tangent_b.angle += 0.0001;
-					tangent_e.angle -= 0.0001;
-
-					this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
-					this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_e.multiply(-ds)));
-					this.outer.add(point_b.add(normal_b.multiply(d1)));
-					this.inner.add(point_b.add(normal_b.multiply(d2)));
-					this.outer.add(point_e.add(normal_b.multiply(d1)));
-					this.inner.add(point_e.add(normal_b.multiply(d2)));
-					this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_e.multiply(ds)));
-					this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
-
-				}else{
-
-					this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
-					this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
-					this.outer.add(point_b.add(normal_b.multiply(d1)));
-					this.inner.add(point_b.add(normal_b.multiply(d2)));
-
-					for(var i = step; i<=len; i+=step) {
-						point_b = path.getPointAt(i);
-						if(!point_b)
-							continue;
-						normal_b = path.getNormalAt(i);
-						this.outer.add(point_b.add(normal_b.normalize(d1)));
-						this.inner.add(point_b.add(normal_b.normalize(d2)));
-					}
-
-					normal_e = path.getNormalAt(len).normalize();
-					this.outer.add(point_e.add(normal_e.multiply(d1)));
-					this.inner.add(point_e.add(normal_e.multiply(d2)));
-
-					tangent_e = path.getTangentAt(len).normalize();
-					this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
-					this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
-
-					this.outer.simplify(0.8);
-					this.inner.simplify(0.8);
-				}
-
-				this.inner.reverse();
-			}
-
-		};
+		_rays = new ProfileRays();
 
 	Profile.superclass.constructor.call(this, attr);
 
@@ -378,7 +246,7 @@ function Profile(attr){
 		rays: {
 			get : function(){
 				if(!_rays.inner || !_rays.outer)
-					_rays.recalc();
+					_rays.recalc(_profile);
 					return _rays;
 			},
 			enumerable : false,
@@ -510,8 +378,9 @@ function Profile(attr){
 		if(!point)
 			point = this[node];
 
+
 		// Если привязка не нарушена, возвращаем предыдущее значение
-		if(res.profile){
+		if(res.profile && res.profile.children.length){
 			if(res.profile_point == "b" || res.profile_point == "e")
 				return res;
 			else if(c_d(res.profile, _profile, res, point, true) === false)
@@ -548,7 +417,7 @@ function Profile(attr){
 	this.move_points = function(delta, all_points, start_point){
 		var segments = _profile.generatrix.segments,
 			changed = false, cnn_point, free_point, j,
-			noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;
+			noti = {type: consts.move_points, profiles: [this], points: []}, noti_points, notifier;
 
 		for (j = 0; j < segments.length; j++) {
 			if (segments[j].selected || all_points){
@@ -579,12 +448,19 @@ function Profile(attr){
 				changed = true;
 			}
 		}
+
 		if(changed){
 
 			_rays.clear();
 
 			// информируем систему об изменениях
 			_profile.parent.notify(noti);
+
+			notifier = Object.getNotifier(this);
+			notifier.notify({ type: 'update', name: "x1" });
+			notifier.notify({ type: 'update', name: "y1" });
+			notifier.notify({ type: 'update', name: "x2" });
+			notifier.notify({ type: 'update', name: "y2" });
 
 		}
 	};
@@ -640,12 +516,6 @@ function Profile(attr){
 				return 1;
 		}
 
-		function sub_path(path, point1, point2, cnn_point){
-			if(path.curves.length > 3 || !path.curves[1].isLinear()){
-				cnn_point.sub_path = path.get_subpath(point1, point2);
-			}
-		}
-
 		// если пересечение в узлах, используем лучи профиля
 		if(cnn_point.profile){
 			prays = cnn_point.profile.rays;
@@ -662,11 +532,11 @@ function Profile(attr){
 				if(detect_side() < 0){
 					intersect_point(prays.outer, rays.outer, 1);
 					intersect_point(prays.outer, rays.inner, 4);
-					sub_path(prays.outer, _corns[4], _corns[1], rays.b);
+
 				}else{
 					intersect_point(prays.inner, rays.outer, 1);
 					intersect_point(prays.inner, rays.inner, 4);
-					sub_path(prays.inner, _corns[4], _corns[1], rays.b);
+
 				}
 
 			}else if(profile_point == "e"){
@@ -674,11 +544,11 @@ function Profile(attr){
 				if(detect_side() < 0){
 					intersect_point(prays.outer, rays.outer, 2);
 					intersect_point(prays.outer, rays.inner, 3);
-					sub_path(prays.outer, _corns[2], _corns[3], rays.e);
+
 				}else{
 					intersect_point(prays.inner, rays.outer, 2);
 					intersect_point(prays.inner, rays.inner, 3);
-					sub_path(prays.inner, _corns[2], _corns[3], rays.e);
+
 				}
 			}
 
@@ -724,76 +594,6 @@ function Profile(attr){
 		return cnn_point;
 	};
 
-	/**
-	 * Формирует путь сегмента профиля на основании пути образующей
-	 * @method redraw
-	 */
-	this.redraw = function(){
-
-		// получаем узлы
-		var bcnn = this.cnn_point("b"),
-			ecnn = this.cnn_point("e"),
-			path = this.data.path,
-			gpath = this.generatrix,
-			glength = gpath.length,
-			rays = this.rays,
-			offset1, offset2, tpath, step;
-
-
-		// получаем соединения концов профиля и точки пересечения с соседями
-		this.path_points(this.postcalc_cnn(bcnn), "b");
-		this.path_points(this.postcalc_cnn(ecnn), "e");
-
-
-		// очищаем существующий путь
-		path.removeSegments();
-
-		// TODO отказаться повторного пересчета и заействовать клоны rays-ов
-		path.add(_corns[1]);
-
-		if(gpath.is_linear()){
-			if(rays.e.sub_path){
-				path.add(_corns[2]);
-				//path.join(rays.e.sub_path);
-				path.add(_corns[3]);
-			}else
-				path.add(_corns[2], _corns[3]);
-
-		}else{
-
-			tpath = new paper.Path({insert: false});
-			offset1 = rays.outer.getNearestLocation(_corns[1]).offset;
-			offset2 = rays.outer.getNearestLocation(_corns[2]).offset;
-			step = (offset2 - offset1) / 50;
-			for(var i = offset1 + step; i<offset2; i+=step)
-				tpath.add(rays.outer.getPointAt(i));
-			tpath.simplify(0.8);
-			path.join(tpath);
-			path.add(_corns[2]);
-
-			path.add(_corns[3]);
-
-			tpath = new paper.Path({insert: false});
-			offset1 = rays.inner.getNearestLocation(_corns[3]).offset;
-			offset2 = rays.inner.getNearestLocation(_corns[4]).offset;
-			step = (offset2 - offset1) / 50;
-			for(var i = offset1 + step; i<offset2; i+=step)
-				tpath.add(rays.inner.getPointAt(i));
-			tpath.simplify(0.8);
-			path.join(tpath);
-
-		}
-
-		//if(rays.b.sub_path)
-		//	path.join(rays.b.sub_path);
-
-		path.add(_corns[4]);
-		path.closePath();
-		path.reduce();
-
-		return this;
-	};
-
 }
 Profile._extend(BuilderElement);
 
@@ -819,7 +619,8 @@ Profile.prototype._define({
 				_row.alp2 = 0;
 				//TODO: Рассчитать тип элемента рама-импост-створка
 			}
-		}
+		},
+		enumerable : false
 	},
 
 	/**
@@ -846,7 +647,74 @@ Profile.prototype._define({
 				cnn_point.cnn = cnns[0];
 
 			return cnn_point;
-		}
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Формирует путь сегмента профиля на основании пути образующей
+	 * @method redraw
+	 */
+	redraw: {
+		value: function () {
+
+			// получаем узлы
+			var bcnn = this.cnn_point("b"),
+				ecnn = this.cnn_point("e"),
+				path = this.data.path,
+				gpath = this.generatrix,
+				glength = gpath.length,
+				rays = this.rays,
+				offset1, offset2, tpath, step;
+
+
+			// получаем соединения концов профиля и точки пересечения с соседями
+			this.path_points(this.postcalc_cnn(bcnn), "b");
+			this.path_points(this.postcalc_cnn(ecnn), "e");
+
+
+			// очищаем существующий путь
+			path.removeSegments();
+
+			// TODO отказаться повторного пересчета и заействовать клоны rays-ов
+			path.add(this.corns(1));
+
+			if(gpath.is_linear()){
+				path.add(this.corns(2), this.corns(3));
+
+			}else{
+
+				tpath = new paper.Path({insert: false});
+				offset1 = rays.outer.getNearestLocation(this.corns(1)).offset;
+				offset2 = rays.outer.getNearestLocation(this.corns(2)).offset;
+				step = (offset2 - offset1) / 50;
+				for(var i = offset1 + step; i<offset2; i+=step)
+					tpath.add(rays.outer.getPointAt(i));
+				tpath.simplify(0.8);
+				path.join(tpath);
+				path.add(this.corns(2));
+
+				path.add(this.corns(3));
+
+				tpath = new paper.Path({insert: false});
+				offset1 = rays.inner.getNearestLocation(this.corns(3)).offset;
+				offset2 = rays.inner.getNearestLocation(this.corns(4)).offset;
+				step = (offset2 - offset1) / 50;
+				for(var i = offset1 + step; i<offset2; i+=step)
+					tpath.add(rays.inner.getPointAt(i));
+				tpath.simplify(0.8);
+				path.join(tpath);
+
+			}
+
+
+			path.add(this.corns(4));
+			path.closePath();
+			path.reduce();
+
+			return this;
+		},
+		enumerable : false
 	},
 
 	interiorPoint: {
@@ -859,7 +727,136 @@ Profile.prototype._define({
 			else
 				igen = gen.curves[1].point2;
 			return this.rays.inner.getNearestPoint(igen).add(this.rays.outer.getNearestPoint(igen)).divide(2)
-		}
+		},
+		enumerable : false
 	}
 
 });
+
+/**
+ * Объект, описывающий геометрию соединения
+ * @class CnnPoint
+ * @constructor
+ */
+function CnnPoint(){
+
+	/**
+	 * Расстояние до ближайшего профиля
+	 * @type {number}
+	 */
+	this.distance = 10e9;
+
+	/**
+	 * Массив допустимых типов соединений
+	 * По умолчанию - соединение с пустотой
+	 * @type {Array}
+	 */
+	this.cnn_types = acn.i;
+
+	/**
+	 * Профиль, с которым пересекается наш элемент
+	 * @property profile
+	 * @type {Profile}
+	 */
+	this.profile = null;
+
+	/**
+	 * Текущее соединение - объект справочника соединения
+	 * @type {_cat.cnns}
+	 */
+	this.cnn = null;
+}
+
+function ProfileRays(){
+
+	this.b = new CnnPoint();
+	this.e = new CnnPoint();
+
+	this.clear = function(with_cnn){
+		if(this.inner)
+			delete this.inner;
+		if(this.outer)
+			delete this.outer;
+		if(with_cnn){
+			this.b.profile = null;
+			this.e.profile = null;
+			this.b.cnn = null;
+			this.e.cnn = null;
+		}
+	};
+
+	this.recalc = function(_profile){
+
+		var path = _profile.generatrix,
+			len = path.length;
+
+		this.outer = new paper.Path({ insert: false });
+		this.inner = new paper.Path({ insert: false });
+
+		if(len == 0){
+			return;
+		}
+
+		var d1 = _profile.d1, d2 = _profile.d2,
+			ds = 3 * _profile.width, step = len * 0.02,
+			point_b, tangent_b, normal_b,
+			point_e, tangent_e, normal_e;
+
+
+		// первая точка эквидистанты. аппроксимируется касательной на участке (from < начала пути)
+		point_b = path.firstSegment.point;
+		tangent_b = path.getTangentAt(0).normalize();
+		normal_b = path.getNormalAt(0).normalize();
+
+		// последняя точка эквидистанты. аппроксимируется прямой , если to > конца пути
+		point_e = path.lastSegment.point;
+
+		// для прямого пути, чуть наклоняем нормаль
+		if(path.is_linear()){
+
+			tangent_e = tangent_b.clone();
+
+			tangent_b.angle += 0.0001;
+			tangent_e.angle -= 0.0001;
+
+			this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
+			this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_e.multiply(-ds)));
+			this.outer.add(point_b.add(normal_b.multiply(d1)));
+			this.inner.add(point_b.add(normal_b.multiply(d2)));
+			this.outer.add(point_e.add(normal_b.multiply(d1)));
+			this.inner.add(point_e.add(normal_b.multiply(d2)));
+			this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_e.multiply(ds)));
+			this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
+
+		}else{
+
+			this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
+			this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
+			this.outer.add(point_b.add(normal_b.multiply(d1)));
+			this.inner.add(point_b.add(normal_b.multiply(d2)));
+
+			for(var i = step; i<=len; i+=step) {
+				point_b = path.getPointAt(i);
+				if(!point_b)
+					continue;
+				normal_b = path.getNormalAt(i);
+				this.outer.add(point_b.add(normal_b.normalize(d1)));
+				this.inner.add(point_b.add(normal_b.normalize(d2)));
+			}
+
+			normal_e = path.getNormalAt(len).normalize();
+			this.outer.add(point_e.add(normal_e.multiply(d1)));
+			this.inner.add(point_e.add(normal_e.multiply(d2)));
+
+			tangent_e = path.getTangentAt(len).normalize();
+			this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
+			this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
+
+			this.outer.simplify(0.8);
+			this.inner.simplify(0.8);
+		}
+
+		this.inner.reverse();
+	}
+
+}

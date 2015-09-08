@@ -92,10 +92,7 @@ function Editor(pwnd){
 			{name: 'line', img: 'line.png', title: 'Произвольная линия'},
 			{name: 'text', img: 'text.png', title: 'Произвольный текст'}
 		], onclick: function (name) {
-			for(var t in _editor.tools){
-				if(_editor.tools[t].options.name == name)
-					return _editor.tools[t].activate();
-			}
+			return _editor.select_tool(name);
 		}
 	});
 
@@ -528,15 +525,6 @@ function Editor(pwnd){
 		return rect;
 	};
 
-	_editor.snap_to_angle = function(delta, snapAngle) {
-		var angle = Math.atan2(delta.y, delta.x);
-		angle = Math.round(angle/snapAngle) * snapAngle;
-		var dirx = Math.cos(angle);
-		var diry = Math.sin(angle);
-		var d = dirx*delta.x + diry*delta.y;
-		return new paper.Point(dirx*d, diry*d);
-	};
-
 
 
 	/**
@@ -549,6 +537,11 @@ function Editor(pwnd){
 		tool.on({
 			activate: function () {
 				_editor.project.zoom_fit();
+
+				var previous = _editor.tb_left.get_selected();
+
+				if(previous)
+					return _editor.select_tool(previous.replace("left_", ""));
 			}
 		});
 
@@ -596,10 +589,7 @@ function Editor(pwnd){
 	new ToolRuler();
 
 
-
-
 	this.tools[2].activate();
-
 
 }
 Editor._extend(paper.PaperScope);
@@ -622,6 +612,15 @@ Editor.prototype._define({
 						_scheme.view.element.classList.remove(class_name);
 				}
 				_scheme.view.element.classList.add(name);
+			}
+		}
+	},
+
+	select_tool: {
+		value: function (name) {
+			for(var t in this.tools){
+				if(this.tools[t].options.name == name)
+					return this.tools[t].activate();
 			}
 		}
 	},
@@ -876,6 +875,17 @@ Editor.prototype._define({
 
 			this.view.update();
 			return false;
+		}
+	},
+
+	snap_to_angle: {
+		value: function(delta, snapAngle) {
+			var angle = Math.atan2(delta.y, delta.x);
+			angle = Math.round(angle/snapAngle) * snapAngle;
+			var dirx = Math.cos(angle),
+				diry = Math.sin(angle),
+				d = dirx*delta.x + diry*delta.y;
+			return new paper.Point(dirx*d, diry*d);
 		}
 	},
 

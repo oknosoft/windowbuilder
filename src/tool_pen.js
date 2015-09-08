@@ -68,12 +68,12 @@ function ToolPen(){
 	}
 
 	function decorate_layers(reset){
-		var al = _editor.project.activeLayer;
+		var active = _editor.project.activeLayer;
 		_editor.project.getItems({class: Contour}).forEach(function (l) {
-			if(l == al)
-				l.opacity = 1;
-			else
-				l.opacity = reset ? 1 : 0.5;
+			l.children.forEach(function(elm){
+				if(!(elm instanceof Contour))
+					elm.opacity = (l == active || reset) ? 1 : 0.5;
+			});
 		})
 	}
 

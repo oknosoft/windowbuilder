@@ -71,12 +71,6 @@ function BuilderElement(attr){
 	this.project.register_change();
 
 	/**
-	 * Формирует путь элемента и перерисовывает его. Переопределяется в наследниках
-	 * @method redraw
-	 */
-	this.redraw = function(){};
-
-	/**
 	 * Удаляет элемент из контура и иерархии проекта
 	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
 	 * @method remove
