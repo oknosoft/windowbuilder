@@ -86,15 +86,15 @@ function msg_1c(request, response) {
 
 function ws_send(data, ws) {
 	var str_data = typeof data == "object" ? JSON.stringify(data) : data;
+
 	ws_md.clients.forEach(function each(client) {
 
 		var current_uid = uid_cache[client.upgradeReq.headers["sec-websocket-key"]];
 
-		console.log(client.upgradeReq.headers["sec-websocket-key"] + ": " + JSON.stringify(current_uid || {}, 4));
-		if(current_uid)
-			console.log(current_uid.socket_uid + " " + data.socket_uid);
+		if(!current_uid){
+			client.close();
 
-		if(current_uid && (current_uid.socket_uid == data.socket_uid || current_uid.browser_uid == data.browser_uid)){
+		}else if((current_uid.socket_uid == data.socket_uid || current_uid.browser_uid == data.browser_uid)){
 
 			console.log(current_uid._side  + " " + data._side);
 

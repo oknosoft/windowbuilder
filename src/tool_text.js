@@ -22,7 +22,7 @@ function ToolText(){
 	tool.options = {
 		name: 'text',
 		wnd: {
-			caption: "Произаольный текст",
+			caption: "Произвольный текст",
 			width: 290,
 			height: 290
 		}

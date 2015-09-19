@@ -23,7 +23,7 @@ $p.settings = function (prm, modifiers) {
 		localStorage.setItem("offline", "true");
 		localStorage.setItem("base_blocks_folder", "20c5524b-7eab-11e2-be96-206a8a1a5bb0");// типовой блок по умолчанию
 	}
-	//prm.ws_url = "ws://builder.local:8001";
+	prm.ws_url = "ws://builder.local:8001";
 
 	/**
 	 * по умолчанию, обращаемся к зоне 1
@@ -50,7 +50,10 @@ $p.settings = function (prm, modifiers) {
 };
 
 function socket_msg(data){
-	console.log(data);
+	if(data.ping)
+		$p.eve.socket.send({ping: data.ping});
+	else
+		console.log(data);
 }
 
 /**
@@ -142,6 +145,7 @@ $p.iface.oninit = function() {
 			 */
 			$p.cat.characteristics._cachable = true;
 
+			$p.eve.socket.send({ping: 0});
 
 		})
 

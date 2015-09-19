@@ -199,6 +199,7 @@ FreeText.prototype._define({
 		enumerable: false
 	},
 
+	// выравнивание текста
 	align: {
 		get: function () {
 			return $p.enm.text_aligns.get(this.justification);
@@ -209,8 +210,6 @@ FreeText.prototype._define({
 		},
 		enumerable: false
 	},
-
-
 
 	// обновляет координаты
 	refresh_pos: {
