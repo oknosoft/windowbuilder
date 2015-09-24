@@ -255,7 +255,7 @@ function Scheme(_canvas){
 			// создаём семейство конструкций
 			load_contour(null);
 
-			_scheme.zoom_fit();
+			setTimeout(_scheme.zoom_fit, 100);
 
 		}
 

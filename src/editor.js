@@ -734,7 +734,8 @@ Editor.prototype._define({
 						_editor.project.load(sval);
 					}
 				});
-			}
+			}else
+				_editor.project.load(ox);
 		}
 	},
 
