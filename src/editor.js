@@ -764,6 +764,7 @@ Editor.prototype._define({
 			$p.cat.base_blocks.form_selection({
 				o: this.project.ox,
 				wnd: this.project._pwnd,
+				_scheme: this.project,
 				on_select: this.project.load_stamp
 			}, {
 				initial_value: null, // TODO: возможно, надо запоминать типовой блок в изделии?

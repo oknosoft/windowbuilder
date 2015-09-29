@@ -69,19 +69,32 @@ paper.Path.prototype._define({
 			var path = this.clone(), tmp,
 				loc1 = path.getLocationOf(point1),
 				loc2 = path.getLocationOf(point2);
+			if(!loc1)
+				loc1 = path.getNearestLocation(point1);
+			if(!loc2)
+				loc2 = path.getNearestLocation(point2);
 			if(loc1.offset > loc2.offset){
 				tmp = path.split(loc1.index, loc1.parameter);
-				tmp.remove();
+				if(tmp)
+					tmp.remove();
 				loc2 = path.getLocationOf(point2);
+				if(!loc2)
+					loc2 = path.getNearestLocation(point2);
 				tmp = path.split(loc2.index, loc2.parameter);
-				path.remove();
-				tmp.reverse();
+				if(path)
+					path.remove();
+				if(tmp)
+					tmp.reverse();
 			}else{
 				tmp = path.split(loc2.index, loc2.parameter);
-				tmp.remove();
+				if(tmp)
+					tmp.remove();
 				loc1 = path.getLocationOf(point1);
+				if(!loc1)
+					loc1 = path.getNearestLocation(point1);
 				tmp = path.split(loc1.index, loc1.parameter);
-				path.remove();
+				if(path)
+					path.remove();
 			}
 			return tmp;
 		}
@@ -89,15 +102,21 @@ paper.Path.prototype._define({
 });
 
 
-/**
- * Выясняет, расположена ли точка в окрестности точки
- * @param point {paper.Point}
- * @param [sticking] {Boolean}
- * @returns {Boolean}
- */
-paper.Point.prototype.is_nearest = function (point, sticking) {
-	return this.getDistance(point, true) < (sticking ? consts.sticking2 : 10);
-};
+paper.Point.prototype._define({
+
+	/**
+	 * Выясняет, расположена ли точка в окрестности точки
+	 * @param point {paper.Point}
+	 * @param [sticking] {Boolean}
+	 * @returns {Boolean}
+	 */
+	is_nearest: {
+		value: function (point, sticking) {
+			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 10);
+		}
+	}
+
+});
 
 /**
  * Расширение класса Tool
@@ -156,9 +175,9 @@ paper.Tool.prototype._define({
 				});
 				this._grid.attachEvent("onRowSelect", function(id,ind){
 					if(id == "x1" || id == "y1")
-						_editor.project.select_node(profile, "b");
+						profile.select_node("b");
 					else if(id == "x2" || id == "y2")
-						_editor.project.select_node(profile, "e");
+						profile.select_node("e");
 				});
 			}else{
 				this._grid.attach({obj: profile})

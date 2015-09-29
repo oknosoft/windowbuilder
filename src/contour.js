@@ -703,3 +703,26 @@ function Contour(attr){
 
 }
 Contour._extend(paper.Layer);
+
+Contour.prototype._define({
+
+	/**
+	 * Вычисляемые поля в таблицах конструкций и координат
+	 * @method save_coordinates
+	 * @for Contour
+	 */
+	save_coordinates: {
+		value: function () {
+
+			// ответственность за строку в таблице конструкций лежит на контуре
+
+			// запись в таблице координат, каждый элемент пересчитывает самостоятельно
+			this.children.forEach(function (elm) {
+				if(elm.save_coordinates)
+					elm.save_coordinates();
+			});
+
+		},
+		enumerable : false
+	}
+});

@@ -296,7 +296,7 @@ function Profile(attr){
 	this._define("x1", {
 		get : function(){ return Math.round(this.b.x*10)/10; },
 		set: function(v){
-			_profile.project.select_node(_profile, "b");
+			_profile.select_node("b");
 			_profile.move_points(new paper.Point(v - this.b.x, 0));	},
 		enumerable : false,
 		configurable : false
@@ -312,7 +312,7 @@ function Profile(attr){
 			return Math.round((_profile.project.bounds.height-this.b.y)*10)/10; },
 		set: function(v){
 			v = _profile.project.bounds.height-v;
-			_profile.project.select_node(_profile, "b");
+			_profile.select_node("b");
 			_profile.move_points(new paper.Point(0, v - this.b.y)); },
 		enumerable : false,
 		configurable : false
@@ -326,7 +326,7 @@ function Profile(attr){
 	this._define("x2", {
 		get : function(){ return Math.round(this.e.x*10)/10; },
 		set: function(v){
-			_profile.project.select_node(_profile, "e");
+			_profile.select_node("e");
 			_profile.move_points(new paper.Point(v - this.e.x, 0)); },
 		enumerable : false,
 		configurable : false
@@ -342,7 +342,7 @@ function Profile(attr){
 			return Math.round((_profile.project.bounds.height-this.e.y)*10)/10; },
 		set: function(v){
 			v = _profile.project.bounds.height-v;
-			_profile.project.select_node(_profile, "e");
+			_profile.select_node("e");
 			_profile.move_points(new paper.Point(0, v - this.e.y));},
 		enumerable : false,
 		configurable : false
@@ -601,22 +601,55 @@ Profile.prototype._define({
 
 	/**
 	 * Вычисляемые поля в таблице координат
+	 * @method save_coordinates
+	 * @for Profile
 	 */
 	save_coordinates: {
 		value: function () {
 			if(this.data.generatrix){
 				var h = this.project.bounds.height,
-					_row = this._row;
+					_row = this._row,
+					gen = this.generatrix,
+					sub_gen,
+					ppoints = {};
+
 				_row.x1 = Math.round(this.b.x * 1000) / 1000;
 				_row.y1 = Math.round((h - this.b.y) * 1000) / 1000;
 				_row.x2 = Math.round(this.e.x * 1000) / 1000;
 				_row.y2 = Math.round((h - this.e.y) * 1000) / 1000;
-				_row.path_data = this.generatrix.pathData;
+				_row.path_data = gen.pathData;
+
 				//TODO: Пересчитать длину с учетом
-				_row.len = this.generatrix.length;
-				_row.angle_hor = 0;
-				_row.alp1 = 0;
-				_row.alp2 = 0;
+
+				// находим проекции четырёх вершин на образующую
+				for(var i = 1; i<=4; i++)
+					ppoints[i] = gen.getNearestPoint(this.corns(i));
+
+				// находим точки, расположенные ближе к концам образующей
+				ppoints.b = ppoints[1].getDistance(gen.firstSegment.point, true) < ppoints[4].getDistance(gen.firstSegment.point, true) ? ppoints[1] : ppoints[4];
+				ppoints.e = ppoints[2].getDistance(gen.lastSegment.point, true) < ppoints[3].getDistance(gen.lastSegment.point, true) ? ppoints[2] : ppoints[3];
+
+				// получаем фрагмент образующей
+				sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
+
+				// добавляем припуски соединений
+				_row.len = sub_gen.length +
+					(this.rays.b.cnn && !this.rays.b.cnn.empty() ? this.rays.b.cnn.sz : 0) +
+					(this.rays.e.cnn && !this.rays.e.cnn.empty() ? this.rays.e.cnn.sz : 0);
+				sub_gen.remove();
+
+				_row.angle_hor = Math.round((new paper.Point(_row.x2 -_row.x1, _row.y2 - _row.y1)).angle * 10) / 10;
+				if(_row.angle_hor < 0)
+					_row.angle_hor = _row.angle_hor + 360;
+
+				_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - sub_gen.getTangentAt(0).angle) * 10) / 10;
+				if(_row.alp1 < 0)
+					_row.alp1 = _row.alp1 + 360;
+
+				_row.alp2 = Math.round((sub_gen.getTangentAt(sub_gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
+				if(_row.alp2 < 0)
+					_row.alp2 = _row.alp2 + 360;
+
 				//TODO: Рассчитать тип элемента рама-импост-створка
 			}
 		},
@@ -628,7 +661,6 @@ Profile.prototype._define({
 	 * @param cnn_point {CnnPoint}
 	 */
 	postcalc_cnn: {
-
 		value: function(cnn_point){
 
 			// если установленное ранее соединение проходит по типу, нового не ищем
@@ -727,6 +759,25 @@ Profile.prototype._define({
 			else
 				igen = gen.curves[1].point2;
 			return this.rays.inner.getNearestPoint(igen).add(this.rays.outer.getNearestPoint(igen)).divide(2)
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Выделяет начало или конец профиля
+	 * @param profile
+	 * @param node
+	 */
+	select_node: {
+		value:  function(node){
+			var gen = this.generatrix;
+			this.project.deselect_all_points();
+			this.data.path.selected = false;
+			if(node == "b")
+				gen.firstSegment.selected = true;
+			else
+				gen.lastSegment.selected = true;
+			this.view.update();
 		},
 		enumerable : false
 	}

@@ -214,16 +214,6 @@ function Scheme(_canvas){
 	};
 
 	/**
-	 * Вписывает канвас в указанные размеры
-	 * @param w
-	 * @param h
-	 */
-	this.resize_canvas = function(w, h){
-		_scheme.view.viewSize.width = w;
-		_scheme.view.viewSize.height = h;
-	};
-
-	/**
 	 * Читает изделие по ссылке или объекту продукции
 	 * @method load
 	 * @param id {String|CatObj} - идентификатор или объект продукции
@@ -270,75 +260,15 @@ function Scheme(_canvas){
 	};
 
 	/**
-	 * Перезаполняет изделие данными типового блока
-	 * @param id {String|CatObj} - идентификатор или объект - основание (типовой блок или характеристика продукции)
-	 */
-	this.load_stamp = function(id){
-
-		function do_load(bb){
-
-			// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
-			_scheme.clear();
-
-			// переприсваиваем систему через номенклатуру характеристики
-			if(!bb.production.owner.empty())
-				_scheme.ox.owner = bb.production.owner;
-			else if(!bb.sys.nom.empty())
-				_scheme.ox.owner = bb.sys.nom;
-
-			// очищаем табчасти, перезаполняем контуры и координаты
-			_scheme.ox.specification.clear();
-			_scheme.ox.glasses.clear();
-			_scheme.ox.glass_specification.clear();
-			_scheme.ox.mosquito.clear();
-
-			_scheme.ox.constructions.load(bb.constructions);
-			_scheme.ox.coordinates.load(bb.coordinates);
-			_scheme.ox.params.load(bb.params);
-			_scheme.ox.cnn_elmnts.load(bb.cnn_elmnts);
-
-			_scheme.load(_scheme.ox);
-			setTimeout(_scheme.zoom_fit, 100);
-
-		}
-
-		if($p.is_data_obj(id))
-			do_load(id);
-
-		else if($p.is_guid(id))
-			$p.cat.base_blocks.get(id, true, true)
-				.then(do_load);
-
-	};
-
-	/**
-	 * Сохраняет координаты и пути элементов в табличных частях характеристики
-	 */
-	this.save_coordinates = function () {
-
-		_scheme.getItems({class: Contour}).forEach(function (contour) {
-				contour.children.forEach(function (elm) {
-					if(elm.save_coordinates)
-						elm.save_coordinates();
-				});
-			}
-		);
-	};
-
-	/**
-	 * Рассчитывает спецификацию изделия
-	 */
-	this.calculate_spec = function () {
-
-	};
-
-	/**
 	 * Регистрирует факты изменения элемнтов
 	 */
 	this.register_change = function () {
 		_changes.push(Date.now());
 	};
 
+	/**
+	 * Регистрирует необходимость обновить изображение
+ 	 */
 	this.register_update = function () {
 		if(!update_timer){
 			update_timer = true;
@@ -347,21 +277,6 @@ function Scheme(_canvas){
 				update_timer = false;
 			}, 50);
 		}
-	};
-
-	/**
-	 * Выделяет начало или конец профиля
-	 * @param profile
-	 * @param node
-	 */
-	this.select_node = function(profile, node){
-		this.deselect_all_points();
-		profile.data.path.selected = false;
-		if(node == "b")
-			profile.generatrix.firstSegment.selected = true;
-		else
-			profile.generatrix.lastSegment.selected = true;
-		profile.view.update();
 	};
 
 	/**
@@ -479,13 +394,17 @@ function Scheme(_canvas){
 	}
 
 
-
 	redraw();
 }
 Scheme._extend(paper.Project);
 
 Scheme.prototype._define({
 
+	/**
+	 * Двигает выделенные точки путей либо все точки выделенных элементов
+	 * @method move_points
+	 * @for Scheme
+	 */
 	move_points: {
 		value: function (delta, all_points) {
 
@@ -498,6 +417,95 @@ Scheme.prototype._define({
 				}else
 					path.position = path.position.add(delta);
 			}
+		}
+	},
+
+	/**
+	 * Сохраняет координаты и пути элементов в табличных частях характеристики
+	 * @method save_coordinates
+	 * @for Scheme
+	 */
+	save_coordinates: {
+		value: function () {
+			this.getItems({class: Contour, parent: undefined}).forEach(function (contour) {
+					contour.save_coordinates();
+				}
+			);
+		}
+	},
+
+	/**
+	 * Рассчитывает спецификацию изделия
+	 * @method calculate_spec
+	 * @for Scheme
+	 */
+	calculate_spec: {
+		value: function () {
+
+		}
+	},
+
+	/**
+	 * Перезаполняет изделие данными типового блока
+	 * @method load_stamp
+	 * @for Scheme
+	 * @param id {String|CatObj} - идентификатор или объект - основание (типовой блок или характеристика продукции)
+	 */
+	load_stamp: {
+		value: function(id){
+
+			var _scheme = this._scheme || this;
+
+			function do_load(base_block){
+
+				var ox = _scheme.ox;
+
+				// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
+				_scheme.clear();
+
+				// переприсваиваем систему через номенклатуру характеристики
+				if(!base_block.production.owner.empty())
+					ox.owner = base_block.production.owner;
+				else if(!base_block.sys.nom.empty())
+					ox.owner = base_block.sys.nom;
+
+				// очищаем табчасти, перезаполняем контуры и координаты
+				ox.specification.clear();
+				ox.glasses.clear();
+				ox.glass_specification.clear();
+				ox.mosquito.clear();
+
+				ox.constructions.load(base_block.constructions);
+				ox.coordinates.load(base_block.coordinates);
+				ox.params.load(base_block.params);
+				ox.cnn_elmnts.load(base_block.cnn_elmnts);
+
+				_scheme.load(ox);
+				setTimeout(_scheme.zoom_fit, 100);
+
+			}
+
+			if($p.is_data_obj(id))
+				do_load(id);
+
+			else if($p.is_guid(id))
+				$p.cat.base_blocks.get(id, true, true)
+					.then(do_load);
+
+		}
+	},
+
+	/**
+	 * Вписывает канвас в указанные размеры
+	 * @method resize_canvas
+	 * @for Scheme
+	 * @param w {Number} - ширина, в которую будет вписан канвас
+	 * @param h {Number} - высота, в которую будет вписан канвас
+	 */
+	resize_canvas: {
+		value: function(w, h){
+			this.view.viewSize.width = w;
+			this.view.viewSize.height = h;
 		}
 	}
 });
