@@ -34,7 +34,7 @@ function BuilderElement(attr){
 	else
 		_row = attr.row = this.project.ox.coordinates.add();
 
-	this._define({
+	this.__define({
 		_row: {
 			get: function () {
 				return _row;
@@ -89,7 +89,7 @@ function BuilderElement(attr){
 BuilderElement._extend(paper.Group);
 
 // Привязываем свойства номенклатуры, вставки и цвета
-BuilderElement.prototype._define({
+BuilderElement.prototype.__define({
 
 	// виртуальные метаданные для автоформ
 	_metadata: {
@@ -207,7 +207,7 @@ BuilderElement.prototype._define({
 });
 
 // Привязываем свойства геометрии
-BuilderElement.prototype._define({
+BuilderElement.prototype.__define({
 
 	/**
 	 * ### Элемент - владелец

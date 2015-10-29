@@ -48,7 +48,7 @@ function FreeText(attr){
 
 	t.bringToFront();
 
-	t._define({
+	t.__define({
 		_row: {
 			get: function () {
 				return _row;
@@ -72,7 +72,7 @@ function FreeText(attr){
 }
 FreeText._extend(paper.PointText);
 
-FreeText.prototype._define({
+FreeText.prototype.__define({
 
 	// виртуальные метаданные для автоформ
 	_metadata: {

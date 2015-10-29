@@ -594,7 +594,7 @@ function Editor(pwnd){
 }
 Editor._extend(paper.PaperScope);
 
-Editor.prototype._define({
+Editor.prototype.__define({
 
 	/**
 	 * Устанавливает икну курсора для всех канвасов редактора

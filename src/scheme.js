@@ -40,7 +40,7 @@ function Scheme(_canvas){
 
 	this._dp = $p.dp.buyers_order.create();
 
-	this._dp._define("extra_fields", {
+	this._dp.__define("extra_fields", {
 		get: function(){
 			return _scheme.ox.params;
 		}
@@ -52,7 +52,7 @@ function Scheme(_canvas){
 	 * @property bounds
 	 * @type Rectangle
 	 */
-	this._define("bounds", {
+	this.__define("bounds", {
 		get : function(){
 
 			if(!_bounds)
@@ -74,7 +74,7 @@ function Scheme(_canvas){
 	 */
 	this.connections = new function Connections() {
 
-		this._define("cnns", {
+		this.__define("cnns", {
 			get : function(){
 				return _scheme.ox.cnn_elmnts;
 			},
@@ -89,7 +89,7 @@ function Scheme(_canvas){
 	 * @property ox
 	 * @type _cat.characteristics
 	 */
-	this._define("ox", {
+	this.__define("ox", {
 		get: function () {
 			return _scheme._dp.characteristic;
 		},
@@ -125,7 +125,7 @@ function Scheme(_canvas){
 	 * @property sys
 	 * @type _cat.production_params
 	 */
-	this._define("sys", {
+	this.__define("sys", {
 		get: function () {
 			return _scheme._dp.sys;
 		},
@@ -147,7 +147,7 @@ function Scheme(_canvas){
 	 * @property clr
 	 * @type _cat.production_params
 	 */
-	this._define("clr", {
+	this.__define("clr", {
 		get: function () {
 			return _scheme._dp.characteristic.clr;
 		},
@@ -398,7 +398,7 @@ function Scheme(_canvas){
 }
 Scheme._extend(paper.Project);
 
-Scheme.prototype._define({
+Scheme.prototype.__define({
 
 	/**
 	 * Двигает выделенные точки путей либо все точки выделенных элементов

@@ -159,7 +159,7 @@ function Profile(attr){
 	 * @property d0
 	 * @type Number
 	 */
-	this._define('d0', {
+	this.__define('d0', {
 		get : function(){
 			var res = 0, nearest = _profile.nearest();
 			while(nearest){
@@ -179,7 +179,7 @@ function Profile(attr){
 	 * @property d1
 	 * @type Number
 	 */
-	this._define('d1', {
+	this.__define('d1', {
 		get : function(){ return -(_profile.d0 - _profile.sizeb); },
 		enumerable : true,
 		configurable : false
@@ -191,7 +191,7 @@ function Profile(attr){
 	 * @property d2
 	 * @type Number
 	 */
-	this._define('d2', {
+	this.__define('d2', {
 		get : function(){ return this.d1 - this.width; },
 		enumerable : true,
 		configurable : false
@@ -202,7 +202,7 @@ function Profile(attr){
 	 * @property b
 	 * @type Point
 	 */
-	this._define('b', {
+	this.__define('b', {
 		get : function(){
 			if(this.data.generatrix)
 				return this.data.generatrix.firstSegment.point;
@@ -221,7 +221,7 @@ function Profile(attr){
 	 * @property e
 	 * @type Point
 	 */
-	this._define('e', {
+	this.__define('e', {
 		get : function(){
 			if(this.data.generatrix)
 				return this.data.generatrix.lastSegment.point;
@@ -236,7 +236,7 @@ function Profile(attr){
 	});
 
 
-	this._define({
+	this.__define({
 
 		/**
 		 * Опорные точки и лучи
@@ -293,7 +293,7 @@ function Profile(attr){
 	 * @property x1
 	 * @type {Number}
 	 */
-	this._define("x1", {
+	this.__define("x1", {
 		get : function(){ return Math.round(this.b.x*10)/10; },
 		set: function(v){
 			_profile.select_node("b");
@@ -307,7 +307,7 @@ function Profile(attr){
 	 * @property y1
 	 * @type {Number}
 	 */
-	this._define("y1", {
+	this.__define("y1", {
 		get : function(){
 			return Math.round((_profile.project.bounds.height-this.b.y)*10)/10; },
 		set: function(v){
@@ -323,7 +323,7 @@ function Profile(attr){
 	 * @property x2
 	 * @type {Number}
 	 */
-	this._define("x2", {
+	this.__define("x2", {
 		get : function(){ return Math.round(this.e.x*10)/10; },
 		set: function(v){
 			_profile.select_node("e");
@@ -337,7 +337,7 @@ function Profile(attr){
 	 * @property y2
 	 * @type {Number}
 	 */
-	this._define("y2", {
+	this.__define("y2", {
 		get : function(){
 			return Math.round((_profile.project.bounds.height-this.e.y)*10)/10; },
 		set: function(v){
@@ -597,7 +597,7 @@ function Profile(attr){
 }
 Profile._extend(BuilderElement);
 
-Profile.prototype._define({
+Profile.prototype.__define({
 
 	/**
 	 * Вычисляемые поля в таблице координат

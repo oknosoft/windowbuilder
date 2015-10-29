@@ -36,7 +36,7 @@ if (typeof define === 'function' && define.amd) {
 /**
  * Расширение класса Path
  */
-paper.Path.prototype._define({
+paper.Path.prototype.__define({
 
 	/**
 	 * Вычисляет направленный угол в точке пути
@@ -102,7 +102,7 @@ paper.Path.prototype._define({
 });
 
 
-paper.Point.prototype._define({
+paper.Point.prototype.__define({
 
 	/**
 	 * Выясняет, расположена ли точка в окрестности точки
@@ -121,7 +121,7 @@ paper.Point.prototype._define({
 /**
  * Расширение класса Tool
  */
-paper.Tool.prototype._define({
+paper.Tool.prototype.__define({
 
 	/**
 	 * Отключает и выгружает из памяти окно свойств инструмента

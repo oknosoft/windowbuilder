@@ -45,7 +45,7 @@ function Contour(attr){
 	else
 		_row = _contour.project.ox.constructions.add();
 
-	this._define('cnstr', {
+	this.__define('cnstr', {
 		get : function(){
 			return _row.cnstr;
 		},
@@ -55,7 +55,7 @@ function Contour(attr){
 		enumerable : false
 	});
 
-	this._define('glassno', {
+	this.__define('glassno', {
 		get : function(){
 			return _row.glassno;
 		},
@@ -71,7 +71,7 @@ function Contour(attr){
 	 * @property path
 	 * @type paper.Path
 	 */
-	this._define('path', {
+	this.__define('path', {
 		get : function(){
 			return this.bounds;
 		},
@@ -184,7 +184,7 @@ function Contour(attr){
 		enumerable : true
 	});
 
-	this._define({
+	this.__define({
 
 		// служебная группа текстовых комментариев
 		l_text: {
@@ -704,7 +704,7 @@ function Contour(attr){
 }
 Contour._extend(paper.Layer);
 
-Contour.prototype._define({
+Contour.prototype.__define({
 
 	/**
 	 * Вычисляемые поля в таблицах конструкций и координат
