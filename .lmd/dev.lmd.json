@@ -2,7 +2,7 @@
   "name": "windowbuilder dev build",
   "root": "../",
   "www_root": "../",
-  "output": "lib/windowbuilder.js",
+  "output": "src/windowbuilder.js",
   "modules": {
     "builder": [
       "src/settings.js",

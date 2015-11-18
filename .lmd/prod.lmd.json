@@ -2,7 +2,7 @@
   "name": "windowbuilder prod build",
   "root": "../",
   "www_root": "../",
-  "output": "lib/windowbuilder.min.js",
+  "output": "dist/windowbuilder.min.js",
   "modules": {
     "builder": [
       "src/settings.js",

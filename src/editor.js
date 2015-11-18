@@ -56,7 +56,7 @@ function Editor(pwnd){
 	});         // разбивка на канвас и аккордион
 	_editor._wrapper = document.createElement('div');                  // контейнер канваса
 	_editor._layout.cells("a").attachObject(this._wrapper);
-	_editor._dxw = this._layout.dhxWins;                               // указатель на dhtmlXWindows
+	_editor._dxw = this._layout.pwnd;                               // указатель на dhtmlXWindows
 
 	_editor._wrapper.oncontextmenu = function (event) {
 		event.preventDefault();
