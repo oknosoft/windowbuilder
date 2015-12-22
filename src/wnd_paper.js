@@ -9,26 +9,27 @@
  */
 $p.settings = function (prm, modifiers) {
 
+	// разделитель для localStorage
+	prm.local_storage_prefix = "wb_";
 
-	prm.use_builder =  false;           // используем построитель Raphael
-	prm.builder_paper = true;           // используем старый построитель
-	prm.check_app_installed = false;    // установленность приложения в ChromeStore не проверяем
-	prm.use_google_geo = false;			// геолокатор не используем
+	// скин по умолчанию
+	prm.skin = "dhx_terrace";
+
 	prm.offline = true;                 // автономная работа. запросы к 1С запрещены
 	prm.demo = {
 		calc_order: "f0e9b97d-8396-408a-af14-b3b1c5849def",
 		production: "8756eecf-f577-402c-86ce-74608d062a32"
 	};
 	if(localStorage){
-		localStorage.setItem("offline", "true");
-		localStorage.setItem("base_blocks_folder", "20c5524b-7eab-11e2-be96-206a8a1a5bb0");// типовой блок по умолчанию
+		localStorage.setItem("wb_offline", "true");
+		localStorage.setItem("wb_base_blocks_folder", "20c5524b-7eab-11e2-be96-206a8a1a5bb0");// типовой блок по умолчанию
 	}
-	//prm.ws_url = "ws://builder.local:8001";
+	prm.ws_url = "ws://builder.oknosoft.local:8001";
 
 	/**
-	 * по умолчанию, обращаемся к зоне 1
+	 * по умолчанию, обращаемся к зоне 0
 	 */
-	prm.zone = 1;
+	prm.zone = 0;
 
 	/**
 	 * расположение файлов данных
@@ -39,13 +40,8 @@ $p.settings = function (prm, modifiers) {
 	 * расположение файла инициализации базы sql
 	 */
 	prm.create_tables = true;
-	prm.create_tables_sql = require("create_tables");
+	//prm.create_tables_sql = $p.injected_data["create_tables.sql"];
 
-	/**
-	 * подключаем модификаторы
-	 */
-	modifiers.push(require("modifiers/catalogs"));
-	modifiers.push(require("modifiers/enumerations"));
 
 };
 
@@ -135,7 +131,8 @@ $p.iface.oninit = function() {
 	});
 	_cell = $p.iface.docs.cells("a");
 
-	$p.eve.socket.handlers.push(socket_msg);
+	// Слушаем сообщения сокета
+	dhx4.attachEvent("socket_msg", socket_msg);
 
 	// прочитаем данные из json
 	// подключение к 1С на этапе отладки не требуется

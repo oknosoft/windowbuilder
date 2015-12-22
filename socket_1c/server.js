@@ -62,7 +62,7 @@ var
 	http_1c = http.createServer(msg_1c).listen(8003),
 
 	// metadata.js
-	$p = require('../lib/metadata.node.js');
+	$p = require('../lib/metadata.core.js');
 
 // принимает post по http и перенаправляет странице по сокету
 function msg_1c(request, response) {

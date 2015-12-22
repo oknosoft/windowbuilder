@@ -52,7 +52,7 @@ function Editor(pwnd){
 			collapsed_text: "Инструменты",
 			width: pwnd.getWidth() > 1200 ? 360 : 240
 		}],
-		offsets: { top: 2, right: 2, bottom: 2, left: 2}
+		offsets: { top: 0, right: 0, bottom: 0, left: 0}
 	});         // разбивка на канвас и аккордион
 	_editor._wrapper = document.createElement('div');                  // контейнер канваса
 	_editor._layout.cells("a").attachObject(this._wrapper);
@@ -80,8 +80,8 @@ function Editor(pwnd){
 	 */
 	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '24px', left: '3px', name: 'left', height: '310px',
 		buttons: [
-			{name: 'select_elm', img: 'icon-arrow-black.png', title: require('select_elm')},
-			{name: 'select_node', img: 'icon-arrow-white.png', title: require('select_node')},
+			{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['select_elm.html']},
+			{name: 'select_node', img: 'icon-arrow-white.png', title: $p.injected_data['select_node.html']},
 			{name: 'pan', img: 'icon-hand.png', title: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
 			{name: 'zoom_fit', img: 'cursor-zoom.png', title: 'Вписать в окно'},
 			{name: 'pen', img: 'cursor-pen-freehand.png', title: 'Добавить профиль'},
@@ -126,8 +126,8 @@ function Editor(pwnd){
 				}
 			},
 			{name: 'stamp', img: 'stamp.png', title: 'Загрузить из типового блока', float: 'left'},
-			{name: 'back', img: 'tb_undo_dis.png', title: 'Шаг назад', float: 'left'},
-			{name: 'rewind', img: 'tb_redo_dis.png', title: 'Шаг вперед', float: 'left'}
+			{name: 'back', text: '<i class="fa fa-undo fa-lg"></i>', title: 'Шаг назад', float: 'left'},
+			{name: 'rewind', text: '<i class="fa fa-repeat fa-lg"></i>', title: 'Шаг вперед', float: 'left'}
 
 
 		], onclick: function (name) {

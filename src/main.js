@@ -16,18 +16,6 @@
 if(typeof $p !== "undefined")
 	$p.Editor = Editor;
 
-/**
- * Обёртка для подключения через AMD или CommonJS
- * https://github.com/umdjs/umd
- */
-if (typeof define === 'function' && define.amd) {
-	// Support AMD (e.g. require.js)
-	define('Editor', Editor);
-} else if (typeof module === 'object' && module) { // could be `null`
-	// Support CommonJS module
-	module.exports = Editor;
-}
-
 
 /**
  * Здесь делаем mixin и расширения классам paper.js
