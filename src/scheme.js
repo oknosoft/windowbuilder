@@ -431,6 +431,7 @@ Scheme.prototype.__define({
 					contour.save_coordinates();
 				}
 			);
+			this.ox.save();
 		}
 	},
 

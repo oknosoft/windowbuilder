@@ -80,9 +80,12 @@ paper.Path.prototype.__define({
 				loc1 = path.getLocationOf(point1);
 				if(!loc1)
 					loc1 = path.getNearestLocation(point1);
-				tmp = path.split(loc1.index, loc1.parameter);
-				if(path)
-					path.remove();
+				if(loc1.index || loc1.parameter){
+					tmp = path.split(loc1.index, loc1.parameter);
+					if(path)
+						path.remove();
+				}else
+					tmp = path;
 			}
 			return tmp;
 		}

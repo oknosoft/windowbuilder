@@ -77,8 +77,7 @@ gulp.task('windowbuilder', function(){
 // Cборка отладочного проекта
 gulp.task('debug', function(){
 	gulp.src([
-		'./src/modifiers/catalogs.js',
-		'./src/modifiers/enumerations.js',
+		'./src/modifiers/*.js',
 		'./data/merged_wb_create_tables.js',
 		'./src/wnd_paper.js',
 	])

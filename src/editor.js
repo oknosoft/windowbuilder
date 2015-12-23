@@ -142,7 +142,8 @@ function Editor(pwnd){
 					break;
 
 				case 'calck':
-					_editor.project.save_coordinates(false);
+					if(_editor.project)
+						_editor.project.save_coordinates(true);
 					break;
 
 				case 'stamp':
