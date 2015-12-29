@@ -1,0 +1,5 @@
+[class*="tb_"] {
+	background-repeat: no-repeat;
+	background-position: 4px;
+}
+.tb_open { background-image: url(../../lib/imgs/custom_web/open.png);}

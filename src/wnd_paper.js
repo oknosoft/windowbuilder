@@ -20,11 +20,10 @@ $p.settings = function (prm, modifiers) {
 		calc_order: "f0e9b97d-8396-408a-af14-b3b1c5849def",
 		production: "8756eecf-f577-402c-86ce-74608d062a32"
 	};
-	if(localStorage){
-		localStorage.setItem("wb_offline", "true");
-		localStorage.setItem("wb_base_blocks_folder", "20c5524b-7eab-11e2-be96-206a8a1a5bb0");// типовой блок по умолчанию
-	}
-	prm.ws_url = "ws://builder.oknosoft.local:8001";
+	localStorage.setItem("wb_offline", "true");
+	localStorage.setItem("wb_base_blocks_folder", "20c5524b-7eab-11e2-be96-206a8a1a5bb0");// типовой блок по умолчанию
+
+	//prm.ws_url = "ws://builder.oknosoft.local:8001";
 
 	/**
 	 * по умолчанию, обращаемся к зоне 0
@@ -36,27 +35,11 @@ $p.settings = function (prm, modifiers) {
 	 */
 	prm.data_url = "data/";
 
-	/**
-	 * расположение файла инициализации базы sql
-	 */
-	prm.create_tables = true;
-	//prm.create_tables_sql = $p.injected_data["create_tables.sql"];
-
-
+	// разрешаем покидать страницу без лишних вопросов
+	$p.eve.redirect = true;
 };
 
-function socket_msg(data){
-	if(data.ping)
-		$p.eve.socket.send({ping: data.ping});
-	else if(data.action == "open" ){
-		var ox = JSON.parse(data.obj);
-		$p.cat.characteristics.load_array([ox]);
-		ox = $p.cat.characteristics.get(ox.ref);
-		$p._editor.open(ox);
-	}
-	else
-		console.log(data);
-}
+
 
 /**
  * инициализация dhtmlXWindows и анализ WebSQL при готовности документа
@@ -121,18 +104,12 @@ $p.iface.oninit = function() {
 
 	}
 
-
-	$p.eve.redirect = true;
-
 	// при первой возможности создаём layout
 	$p.iface.docs = new dhtmlXLayoutObject({
 		parent: document.body,
 		pattern: "1C"
 	});
 	_cell = $p.iface.docs.cells("a");
-
-	// Слушаем сообщения сокета
-	dhx4.attachEvent("socket_msg", socket_msg);
 
 	// прочитаем данные из json
 	// подключение к 1С на этапе отладки не требуется

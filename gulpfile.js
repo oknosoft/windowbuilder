@@ -8,7 +8,7 @@
 var gulp = require('gulp');
 module.exports = gulp;
 //var changed = require('gulp-changed');
-//var concat = require('gulp-concat-sourcemap');
+var base64 = require('gulp-base64');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 //var shell = require('gulp-shell');
@@ -18,29 +18,42 @@ var path = require('path');
 var umd = require('gulp-umd');
 
 // Сборка ресурсов
-gulp.task('injected-tooltips', function(){
+gulp.task('injected-tips', function(){
 	gulp.src([
-		'./src/tooltips/*.html'
+		'./src/templates/tip_*.html'
 	])
-		.pipe(resources('merged_wb_tooltips.js', function (data) {
+		.pipe(resources('merged_wb_tips.js', function (data) {
 			return new Buffer('$p.injected_data._mixin(' + JSON.stringify(data) + ');');
 		}))
 		.pipe(gulp.dest('./data'));
 });
 
 // Сборка ресурсов
-gulp.task('injected-create-tables', function(){
+gulp.task('injected-templates', function(){
 	gulp.src([
-		'./data/create_tables.sql'
+		'./data/create_tables.sql',
+		'./src/templates/view_*.html'
 	])
-		.pipe(resources('merged_wb_create_tables.js', function (data) {
+		.pipe(resources('merged_wb_templates.js', function (data) {
 			return new Buffer('$p.injected_data._mixin(' + JSON.stringify(data) + ');');
 		}))
 		.pipe(gulp.dest('./data'));
 });
 
+// Сборка css
+gulp.task('css-base64', function () {
+	return gulp.src([
+		'./src/templates/cursors/cursors.css',
+		'./src/templates/buttons20.css',
+		'./src/templates/iface.css'
+	])
+		.pipe(base64())
+		.pipe(concat('windowbuilder.min.css'))
+		.pipe(gulp.dest('./dist'));
+});
+
 // Cборка библиотеки рисовалки
-gulp.task('windowbuilder', function(){
+gulp.task('build-lib', function(){
 	gulp.src([
 			'./src/settings.js',
 			'./src/element.js',
@@ -60,7 +73,7 @@ gulp.task('windowbuilder', function(){
 			'./src/tool_text.js',
 			'./src/editor.js',
 			'./src/main.js',
-			'./data/merged_wb_tooltips.js'
+			'./data/merged_wb_tips.js'
 		])
 		.pipe(concat('windowbuilder.js'))
 		.pipe(umd({
@@ -69,17 +82,19 @@ gulp.task('windowbuilder', function(){
 			}
 		}))
 		.pipe(gulp.dest('./dist'))
-		.pipe(rename('windowbuilder.min.js'))
-		.pipe(uglify())
-		.pipe(gulp.dest('./dist'));
+		//.pipe(rename('windowbuilder.min.js'))
+		//.pipe(uglify())
+		//.pipe(gulp.dest('./dist'));
 });
 
 // Cборка отладочного проекта
-gulp.task('debug', function(){
+gulp.task('build-iface', function(){
 	gulp.src([
 		'./src/modifiers/*.js',
-		'./data/merged_wb_create_tables.js',
-		'./src/wnd_paper.js',
+		'./data/merged_wb_templates.js',
+		//'./src/wnd_paper.js',
+		'./src/wnd_main.js',
+		'./src/view_*.js'
 	])
 		.pipe(concat('wnd_debug.js'))
 		.pipe(umd({
@@ -93,9 +108,3 @@ gulp.task('debug', function(){
 		//.pipe(gulp.dest('./dist'))
 	;
 });
-
-
-var toRun = ['injected-tooltips', 'windowbuilder'];
-
-// Главная задача
-gulp.task('default', toRun, function(){});
