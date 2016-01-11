@@ -90,6 +90,11 @@ $p.iface.oninit = function() {
 	} else
 		setTimeout($p.iface.hash_route, 10);
 
+	var dt = Date.now();
+	dhx4.attachEvent("meta", function () {
+		console.log(Date.now() - dt);
+	});
+
 
 	//// при первой возможности создаём layout
 	//	var prm, v, _cell;
