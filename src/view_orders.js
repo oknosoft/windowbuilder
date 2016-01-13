@@ -101,16 +101,15 @@ $p.iface.view_orders = function (cell) {
 	 */
 	$p.eve.hash_route.push(function (hprm) {
 
-		if(hprm.view != "orders" || !$p.iface._orders)
+		if(hprm.view == "orders" && $p.iface._orders){
+			if(hprm.obj == "doc.calc_order" && !$p.is_empty_guid(hprm.ref))
+				show_doc(hprm.ref);
+
+			else if($p.is_empty_guid(hprm.ref) || hprm.frm == "list")
+				show_list();
+
 			return false;
-
-		if(hprm.obj == "doc.calc_order" && !$p.is_empty_guid(hprm.ref))
-			show_doc(hprm.ref);
-
-		else if($p.is_empty_guid(hprm.ref) || hprm.frm == "list")
-			show_list();
-
-
+		}
 
 	});
 

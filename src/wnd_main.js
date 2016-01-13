@@ -17,6 +17,12 @@ $p.settings = function (prm, modifiers) {
 	// разделитель для localStorage
 	prm.local_storage_prefix = "wb_";
 
+	//prm.rest = true;
+	prm.irest_enabled = true;
+
+	// расположение rest-сервиса ut
+	prm.rest_path = "/a/zd/%1/odata/standard.odata/";
+
 	// скин по умолчанию
 	prm.skin = "dhx_terrace";
 
