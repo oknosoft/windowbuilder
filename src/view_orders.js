@@ -9,13 +9,17 @@
 $p.iface.view_orders = function (cell) {
 
 
-	function show_list(){
+	function show_list(on_create){
 
-		if(!$p.iface._orders.list){
+		if(on_create === true)
+			return;
+
+		else if(!$p.iface._orders.list){
 			$p.iface._orders.carousel.cells("list").detachObject(true);
 			$p.iface._orders.list = $p.doc.calc_order.form_list($p.iface._orders.carousel.cells("list"), {
 				hide_header: true
 			});
+
 		}else
 			$p.iface._orders.carousel.cells("list").setActive();
 
@@ -29,7 +33,10 @@ $p.iface.view_orders = function (cell) {
 			ref: ref,
 			bind_pwnd: true,
 			on_close: show_list
-		});
+		})
+			.then(function (wnd) {
+				$p.iface._orders.doc = wnd;
+			});
 	}
 
 	function show_builder(){
