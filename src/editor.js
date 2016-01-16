@@ -50,13 +50,13 @@ function Editor(pwnd){
 			id: "b",
 			text: "Инструменты",
 			collapsed_text: "Инструменты",
-			width: pwnd.getWidth() > 1200 ? 360 : 240
+			width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 360 : 240
 		}],
 		offsets: { top: 0, right: 0, bottom: 0, left: 0}
 	});         // разбивка на канвас и аккордион
 	_editor._wrapper = document.createElement('div');                  // контейнер канваса
-	_editor._layout.cells("a").attachObject(this._wrapper);
-	_editor._dxw = this._layout.pwnd;                               // указатель на dhtmlXWindows
+	_editor._layout.cells("a").attachObject(_editor._wrapper);
+	_editor._dxw = _editor._layout.pwnd;                               // указатель на dhtmlXWindows
 
 	_editor._wrapper.oncontextmenu = function (event) {
 		event.preventDefault();
@@ -106,7 +106,6 @@ function Editor(pwnd){
 		buttons: [
 			{name: 'open', text: '<i class="fa fa-file-o fa-lg"></i>', title: 'Открыть изделие', float: 'left'},
 			{name: 'save_close', text: '<i class="fa fa-floppy-o fa-lg"></i>', title: 'Рассчитать, записать и закрыть', float: 'left'},
-			{name: 'close', img: 'close.png', title: 'Закрыть без сохранения', float: 'left'},
 			{name: 'calck', img: 'calculate.png', title: 'Рассчитать и записать данные', float: 'left'},
 			{name: 'standard_form', img: 'standard_form.png', title: 'Добавить типовую форму', float: 'left',
 				sub: {
@@ -129,7 +128,8 @@ function Editor(pwnd){
 			},
 			{name: 'stamp', img: 'stamp.png', title: 'Загрузить из типового блока', float: 'left'},
 			{name: 'back', text: '<i class="fa fa-undo fa-lg"></i>', title: 'Шаг назад', float: 'left'},
-			{name: 'rewind', text: '<i class="fa fa-repeat fa-lg"></i>', title: 'Шаг вперед', float: 'left'}
+			{name: 'rewind', text: '<i class="fa fa-repeat fa-lg"></i>', title: 'Шаг вперед', float: 'left'},
+			{name: 'close', text: '<i class="fa fa-times fa-lg"></i>', title: 'Закрыть без сохранения', float: 'right'}
 
 
 		], onclick: function (name) {
@@ -141,6 +141,11 @@ function Editor(pwnd){
 				case 'save_close':
 					if(_editor.project)
 						_editor.project.save_coordinates(true);
+					break;
+
+				case 'close':
+					if(_editor._pwnd._on_close)
+						_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
 					break;
 
 				case 'calck':
@@ -649,29 +654,19 @@ Editor.prototype.__define({
 				/**
 				 * Подписываемся на события изменения размеров
 				 */
-				if(_editor._pwnd instanceof  dhtmlXWindowsCell){
+				function pwnd_resize_finish(){
+					_editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
+				}
 
-					function pwnd_resize_finish(){
-						var dimension = _editor._pwnd.getDimension();
-						_editor.project.resize_canvas(dimension[0], dimension[1]);
-					}
+				_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
 
+				_editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
+
+				if(_editor._pwnd instanceof  dhtmlXWindowsCell)
 					_editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
 
-					pwnd_resize_finish();
+				pwnd_resize_finish();
 
-				}else if(_editor._pwnd instanceof  dhtmlXLayoutCell){
-
-					_editor._pwnd.layout.attachEvent("onResizeFinish", function(){
-						_editor.project.resize_canvas(_editor._pwnd.getWidth(), _editor._pwnd.getHeight());
-					});
-
-					_editor._pwnd.layout.attachEvent("onPanelResizeFinish", function(names){
-						_editor.project.resize_canvas(_editor._pwnd.getWidth(), _editor._pwnd.getHeight());
-					});
-
-					_editor.project.resize_canvas(_editor._pwnd.getWidth(), _editor._pwnd.getHeight());
-				}
 
 				/**
 				 * Объект для реализации функций масштабирования

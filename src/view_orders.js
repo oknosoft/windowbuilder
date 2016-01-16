@@ -8,46 +8,121 @@
 
 $p.iface.view_orders = function (cell) {
 
-
-	function show_list(on_create){
-
-		if(on_create === true)
-			return;
-
-		else if(!$p.iface._orders.list){
-			$p.iface._orders.carousel.cells("list").detachObject(true);
-			$p.iface._orders.list = $p.doc.calc_order.form_list($p.iface._orders.carousel.cells("list"), {
-				hide_header: true
-			});
-
-		}else
-			$p.iface._orders.carousel.cells("list").setActive();
-
-	}
-
-	function show_doc(ref){
-
-		$p.iface._orders.carousel.cells("doc").setActive();
-
-		$p.doc.calc_order.form_obj($p.iface._orders.carousel.cells("doc"), {
-			ref: ref,
-			bind_pwnd: true,
-			on_close: show_list
-		})
-			.then(function (wnd) {
-				$p.iface._orders.doc = wnd;
-			});
-	}
-
-	function show_builder(){
-
-	}
-
-
 	function OViewOrders(){
 
+		var t = this;
+
+		function show_list(on_create){
+
+			if(on_create === true)
+				return;
+
+			else if(!$p.iface._orders.list){
+				t.carousel.cells("list").detachObject(true);
+				$p.iface._orders.list = $p.doc.calc_order.form_list(t.carousel.cells("list"), {
+					hide_header: true,
+					date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
+					date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31")
+				});
+
+			}else
+				t.carousel.cells("list").setActive();
+
+		}
+
+		function show_doc(ref){
+
+			var _cell = t.carousel.cells("doc");
+
+			if(t.carousel.getActiveCell() != _cell)
+				_cell.setActive();
+
+			if(!_cell.ref || _cell.ref != ref)
+				$p.doc.calc_order.form_obj(_cell, {
+						ref: ref,
+						bind_pwnd: true,
+						on_close: function (on_create) {
+							if(!on_create)
+								$p.iface.set_hash(undefined, "", "list", undefined);
+						}
+					})
+					.then(function (wnd) {
+						$p.iface._orders.doc = wnd;
+					});
+		}
+
+		function show_builder(ref){
+
+			var _cell = t.carousel.cells("builder");
+
+			if(t.carousel.getActiveCell() != _cell)
+				_cell.setActive();
+
+			t.editor.open(ref);
+
+		}
+
+		function hash_route(hprm) {
+
+			if(hprm.view == "orders"){
+
+				if(hprm.obj == "doc.calc_order" && !$p.is_empty_guid(hprm.ref)){
+
+					if(hprm.frm != "doc")
+						setTimeout(function () {
+							$p.iface.set_hash(undefined, undefined, "doc");
+						});
+					else
+						show_doc(hprm.ref);
+
+
+				} if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
+
+					if(hprm.frm != "builder")
+						setTimeout(function () {
+							$p.iface.set_hash(undefined, undefined, "builder");
+						});
+					else
+						show_builder(hprm.ref);
+
+
+				}else if($p.is_empty_guid(hprm.ref) || hprm.frm == "list"){
+
+					if(hprm.obj != "doc.calc_order")
+						setTimeout(function () {
+							$p.iface.set_hash("doc.calc_order");
+						});
+					else
+						show_list();
+				}
+
+				return false;
+			}
+
+		}
+
+		function on_log_in(){
+
+			// создадим экземпляр графического редактора
+			var _cell = t.carousel.cells("builder");
+
+			_cell._on_close = function () {
+				var _cell = t.carousel.cells("doc");
+				if(!$p.is_empty_guid(_cell.ref))
+					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");
+				else
+					$p.iface.set_hash("doc.calc_order", "", "list");
+			}
+
+			t.editor = new $p.Editor(_cell);
+
+			setTimeout(function () {
+				$p.iface.set_hash("doc.calc_order");
+			});
+		}
+
 		// Рисуем дополнительные элементы навигации
-		this.tb_nav = new $p.iface.OTooolBar({
+		t.tb_nav = new $p.iface.OTooolBar({
 			wrapper: cell.cell.querySelector(".dhx_cell_sidebar_hdr"),
 			class_name: 'md_otbnav',
 			width: '220px', height: '28px', top: '3px', right: '3px', name: 'right',
@@ -70,55 +145,42 @@ $p.iface.view_orders = function (cell) {
 		});
 
 		// страницы карусели
-		this.carousel = cell.attachCarousel({
+		t.carousel = cell.attachCarousel({
 			keys:           false,
 			touch_scroll:   false,
 			offset_left:    0,
 			offset_top:     4,
 			offset_item:    0
 		});
-		this.carousel.hideControls();
-		this.carousel.addCell("list");
-		this.carousel.addCell("doc");
-		this.carousel.addCell("builder");
+		t.carousel.hideControls();
+		t.carousel.addCell("list");
+		t.carousel.addCell("doc");
+		t.carousel.addCell("builder");
+
 
 		// Рисуем стандартную форму аутентификации. К ней уже привязан алгоритм входа по умолчанию
 		// При необходимости, можно реализовать клиентские сертификаты, двухфакторную авторизацию с одноразовыми sms и т.д.
 		if($p.eve.logged_in)
-			setTimeout(show_list);
+			setTimeout(on_log_in);
 		else
-			$p.iface.frm_auth({	cell: this.carousel.cells("list") },	null, $p.record_log	);
+			$p.iface.frm_auth({	cell: t.carousel.cells("list") }, null, $p.record_log );
+
+
+		/**
+		 * Обработчик маршрутизации
+		 * @param hprm
+		 * @return {boolean}
+		 */
+		$p.eve.hash_route.push(hash_route);
+
+
+		// слушаем событие online-offline
+
+
+		// слушаем событие авторизации и входа в систему
+		$p.eve.attachEvent("log_in", on_log_in);
 
 	}
-
-	// слушаем событие online-offline
-
-
-	// слушаем событие авторизации и входа в систему
-	dhx4.attachEvent("log_in", function () {
-		if($p.iface._orders)
-			show_list();
-	});
-
-
-	/**
-	 * Обработчик маршрутизации
-	 * @param hprm
-	 * @return {boolean}
-	 */
-	$p.eve.hash_route.push(function (hprm) {
-
-		if(hprm.view == "orders" && $p.iface._orders){
-			if(hprm.obj == "doc.calc_order" && !$p.is_empty_guid(hprm.ref))
-				show_doc(hprm.ref);
-
-			else if($p.is_empty_guid(hprm.ref) || hprm.frm == "list")
-				show_list();
-
-			return false;
-		}
-
-	});
 
 	if(!$p.iface._orders)
 		$p.iface._orders = new OViewOrders();

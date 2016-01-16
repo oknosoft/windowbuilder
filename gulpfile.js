@@ -33,6 +33,7 @@ gulp.task('injected-templates', function(){
 	gulp.src([
 		'./data/create_tables.sql',
 		'./data/toolbar_calc_order_production.xml',
+		'./data/toolbar_calc_order_obj.xml',
 		'./src/templates/view_*.html'
 	])
 		.pipe(resources('merged_wb_templates.js', function (data) {

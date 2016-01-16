@@ -101,39 +101,6 @@ $p.iface.oninit = function() {
 		console.log(Date.now() - dt);
 	});
 
-
-	//// при первой возможности создаём layout
-	//	var prm, v, _cell;
-	//$p.iface.docs = new dhtmlXLayoutObject({
-	//	parent: document.body,
-	//	pattern: "1C"
-	//});
-	//_cell = $p.iface.docs.cells("a");
-	//
-	//// прочитаем данные из json
-	//// подключение к 1С на этапе отладки не требуется
-	//$p.eve.log_in(on_log_in_step)
-	//
-	//	.then(function () {
-	//
-	//		_cell.hideHeader();
-	//		$p._editor = new $p.Editor(_cell);
-	//
-	//		/**
-	//		 для целей отледки, заполняем __ox__ простыми данными
-	//		 */
-	//		$p.cat.characteristics._cachable = true;
-	//
-	//		$p.eve.socket.send({ping: 0});
-	//
-	//	})
-	//
-	//	.catch(function (err) {
-	//		console.log(err);
-	//	});
-
-
-
 };
 
 /**
