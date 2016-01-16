@@ -12,21 +12,21 @@ $p.iface.view_orders = function (cell) {
 
 		var t = this;
 
-		function show_list(on_create){
+		function show_list(){
 
-			if(on_create === true)
-				return;
+			var _cell = t.carousel.cells("list");
 
-			else if(!$p.iface._orders.list){
+			if(t.carousel.getActiveCell() != _cell)
+				_cell.setActive();
+
+			if(!t.list){
 				t.carousel.cells("list").detachObject(true);
-				$p.iface._orders.list = $p.doc.calc_order.form_list(t.carousel.cells("list"), {
+				t.list = $p.doc.calc_order.form_list(t.carousel.cells("list"), {
 					hide_header: true,
 					date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
 					date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31")
 				});
-
-			}else
-				t.carousel.cells("list").setActive();
+			}
 
 		}
 
@@ -41,13 +41,14 @@ $p.iface.view_orders = function (cell) {
 				$p.doc.calc_order.form_obj(_cell, {
 						ref: ref,
 						bind_pwnd: true,
-						on_close: function (on_create) {
-							if(!on_create)
-								$p.iface.set_hash(undefined, "", "list", undefined);
+						on_close: function () {
+							setTimeout(function () {
+								$p.iface.set_hash(undefined, "", "list");
+							});
 						}
 					})
 					.then(function (wnd) {
-						$p.iface._orders.doc = wnd;
+						t.doc = wnd;
 					});
 		}
 
@@ -104,20 +105,32 @@ $p.iface.view_orders = function (cell) {
 		function on_log_in(){
 
 			// создадим экземпляр графического редактора
-			var _cell = t.carousel.cells("builder");
+			var _cell = t.carousel.cells("builder"),
+				hprm = $p.job_prm.parse_url(),
+				obj = hprm.obj || "doc.calc_order";
 
 			_cell._on_close = function () {
-				var _cell = t.carousel.cells("doc");
+
+				_cell = t.carousel.cells("doc");
+
 				if(!$p.is_empty_guid(_cell.ref))
 					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");
-				else
-					$p.iface.set_hash("doc.calc_order", "", "list");
+
+				else{
+					hprm = $p.job_prm.parse_url();
+					obj = $p.cat.characteristics.get(hprm.ref, false, true);
+					if(obj && !$p.is_empty_guid(obj.calc_order.ref))
+						$p.iface.set_hash("doc.calc_order", obj.calc_order.ref, "doc");
+					else
+						$p.iface.set_hash("doc.calc_order", "", "list");
+				}
+
 			}
 
 			t.editor = new $p.Editor(_cell);
 
 			setTimeout(function () {
-				$p.iface.set_hash("doc.calc_order");
+				$p.iface.set_hash(obj);
 			});
 		}
 
