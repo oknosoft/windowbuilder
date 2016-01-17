@@ -29,6 +29,27 @@ $p.modifiers.push(
 
 			}
 
+			$p.eve.attachEvent("save_coordinates", function (dp) {
+
+				var attr = {url: ""};
+
+				$p.rest.build_select(attr, {
+					rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",
+					class_name: "cat.characteristics"
+				});
+
+				return $p.ajax.post_ex(attr.url,
+					JSON.stringify({
+						ox: dp.characteristic._obj,
+						dp: dp._obj,
+						doc: dp.characteristic.calc_order._obj
+					}), attr)
+					.then(function (req) {
+						return JSON.parse(req.response);
+					});
+
+			});
+
 		}
 
 	}

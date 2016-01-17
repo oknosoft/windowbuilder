@@ -32,43 +32,6 @@ $p.modifiers.push(
 	}
 );
 /**
- * Дополнительные методы справочника Характеристики номенклатуры
- *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_characteristics
- */
-
-$p.modifiers.push(
-	function($p) {
-
-		var _mgr = $p.cat.characteristics;
-
-		_mgr.attache_event("before_save", function (attr) {
-			var obj = this,
-				data = {
-					action: "save",
-					obj: obj
-				};
-
-			// возможно, надо что-то дорассчитать-дозаполнить на клиенте
-			// todo габариты изделия и цыфры в конструкциях
-			// todo номера соединяемых элементов
-
-			// записываем характеристику через форму 1С
-			$p.eve.socket.send(data);
-
-
-			return false;
-
-		});
-
-
-	}
-);
-
-/**
  * Дополнительные методы справочника Соединения
  *
  * Created 23.12.2015<br />
@@ -169,100 +132,6 @@ $p.modifiers.push(
 
 		};
 
-		/**
-		 * Формирует строки соединений для построителя и конструирует $p.CN
-		 * @param osys {CatObj} - объект справочника "системы"
-		 * @param o {CatObj} - объект справочника "характеристики"
-		 */
-		_mgr.make_istr = function(osys, o){
-
-			var iCn = "", iCnn = "", iC = "",
-				aNom = osys.noms, aCnn = [], оCnn, tStr;
-
-			// бежим по соединениям и накапливам те, в которых есть номенклатура системы
-			_mgr.alatable.forEach(function(оCnn){
-				if(оCnn["cnn_elmnts"] && оCnn["cnn_elmnts"].some(function(row){
-						return aNom.indexOf(row.nom1) != -1 || aNom.indexOf(row.nom2) != -1
-					}))
-					aCnn.push(оCnn);
-			});
-
-			// фильтруем соединения и дополняем строки
-			for(var i in aCnn){
-				оCnn = aCnn[i];
-
-				if(iCn) iCn = iCn + "¶";
-				tStr = оCnn.id + ";" +
-					оCnn.cnn_type + ";" +
-					оCnn.sz + ";" +
-					оCnn.sd1 + ";" +
-					оCnn.sd2 + ";" +
-					оCnn.amin + ";" +
-					оCnn.amax + ";" +
-					оCnn.rmin + ";" +
-					оCnn.rmax + ";" +
-					оCnn.lmin + ";" +
-					оCnn.lmax + ";" +
-					оCnn.tmin + ";" +
-					оCnn.tmax + ";" +
-					(оCnn.var_layers ? 1 : "") + ";" +
-					оCnn.priority + ";" +
-					(оCnn.art1vert ? 1 : "") + ";" +
-					(оCnn.art1glass ? 1 : "") + ";" +
-					оCnn.ahmin + ";" +
-					оCnn.ahmax + ";" +
-					(оCnn.art2glass ? 1 : "");
-				iCn = iCn + tStr;
-
-				оCnn["cnn_elmnts"].forEach(function(row1){
-					if($p.is_empty_guid(row1.nom1)){
-						оCnn["cnn_elmnts"].forEach(function(row2){
-							if(row1==row2){
-								return;
-
-							}else if(
-								$p.is_empty_guid(row2.nom1) ||
-								!$p.is_empty_guid(row2.nom2) ||
-								(aNom.indexOf(row2.nom1) == -1 && !оCnn.art1glass )||
-								(aNom.indexOf(row1.nom2) == -1 && !оCnn.art2glass)
-							){
-								;
-
-							}else{
-								tStr = оCnn.id + ";" +
-									$p.cat.nom.get(row2.nom1).id + ";" +
-									$p.cat.nom.get(row1.nom2).id + ";" +
-									($p.is_empty_guid(row2.clr1) ? 0 : $p.cat["clrs"].get(row2.clr1).id) + ";" +
-									($p.is_empty_guid(row1.clr2) ? 0 : $p.cat["clrs"].get(row1.clr2).id) + ";" +
-									(row1.varclr || row2.varclr ? 1 : "");
-								if(iCnn) iCnn = iCnn + "¶";
-								iCnn = iCnn + tStr;
-							}
-						});
-					}else if(!(aNom.indexOf(row1.nom1) != -1 || $p.is_empty_guid(row1.nom1)) || !(aNom.indexOf(row1.nom2) != -1 || $p.is_empty_guid(row1.nom2))){
-						;
-
-					}else{
-						tStr = оCnn.id + ";" +
-							($p.is_empty_guid(row1.nom1) ? "0" : $p.cat.nom.get(row1.nom1).id) + ";" +
-							($p.is_empty_guid(row1.nom2) ? "0" : $p.cat.nom.get(row1.nom2).id) + ";" +
-							($p.is_empty_guid(row1.clr1) ? 0 : $p.cat["clrs"].get(row1.clr1).id) + ";" +
-							($p.is_empty_guid(row1.clr2) ? 0 : $p.cat["clrs"].get(row1.clr2).id) + ";" +
-							(row1.varclr ? 1 : "");
-						if(iCnn) iCnn = iCnn + "¶";
-						iCnn = iCnn + tStr;
-					}
-				});
-			}
-
-			// формируем строку соединений текущей продукции
-			o["cnn_elmnts"]._obj.forEach(function(row){
-				if(iC) iC = iC + "¶";
-				iC = iC + row.elm1 + ";" + row.elm2 + ";" + _mgr.get(row["cnn"]).id;
-			});
-
-			$p.CN = new $p.ex.RCnn(iCn, iCnn, iC, osys["allow_open_cnn"]);
-		}
 
 	}
 );
@@ -456,60 +325,6 @@ $p.modifiers.push(
 
 
 		// публичные поля и методы
-
-		/**
-		 *	@desc: 	формирует строку описания номенклатуры для построителя
-		 *	@param: 	oNom	- справочникОбъект Номенклатура
-		 *	@param: 	row	(необязательный) - строка элеметов пзПараметрыПродукции
-		 *	@type:	public
-		 *	@topic: 0
-		 */
-		_mgr.istr_by_obj = function(oNom, row){
-			var cClr = row ? row.clr : oNom.clr,
-				oClr = $p.is_empty_guid(cClr) ? {id: 0} : $p.cat["clrs"].get(cClr),
-				elm_type = row ? $p.enm["elm_types"].get(row.elm_type).name : $p.enm["elm_types"].get(oNom.elm_type).name,
-				by_default = row ? (row["by_default"] ? 1 : "") : "",
-				pos = row ? $p.enm["positions"].get(row.pos).name : "";
-
-			return oNom.id + ";" +
-				elm_type + ";" +
-				by_default + ";" +
-				pos + ";" +
-				oNom.article + ";" +
-				oClr.id + ";" +
-				oNom.width + ";" +
-				oNom.sizeb + ";" +
-				oNom.sizefurn + ";" +
-				oNom.thickness
-		};
-
-		/**
-		 *	@desc: 	формирует номенклатуры для построителя и конструирует $p.N
-		 *	@param: 	osys	- справочникОбъект пзПараметрыПродукции
-		 *	@param: 	o		- справочникОбъект ХарактеристикиНоменлктауры
-		 *	@type:	public
-		 *	@topic: 0
-		 */
-		_mgr.make_istr = function(osys, o, sys_changed){
-			var iStr = "", oNom, aIds = {};
-			osys.elmnts._obj.forEach(function(row){
-				if(iStr)
-					iStr = iStr + "¶";
-				oNom = _mgr.get(row.nom, false);
-				iStr = iStr + _mgr.istr_by_obj(oNom._obj, row);
-				aIds[oNom.id] = "";
-			});
-			o["coordinates"]._obj.forEach(function(row){
-				if(!$p.is_empty_guid(row.nom)){
-					oNom = _mgr.get(row.nom, false);
-					if(oNom.id && !sys_changed && !(oNom.id in aIds)){
-						iStr = iStr + "¶" + _mgr.istr_by_obj(oNom._obj);
-						aIds[oNom.id] = "";
-					}
-				}
-			});
-			$p.N = new $p.ex.RNom(iStr);
-		}
 
 	}
 );
@@ -1677,6 +1492,27 @@ $p.modifiers.push(
 			this.before_save = function (o, row, prm, cancel) {
 
 			}
+
+			$p.eve.attachEvent("save_coordinates", function (dp) {
+
+				var attr = {url: ""};
+
+				$p.rest.build_select(attr, {
+					rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",
+					class_name: "cat.characteristics"
+				});
+
+				return $p.ajax.post_ex(attr.url,
+					JSON.stringify({
+						ox: dp.characteristic._obj,
+						dp: dp._obj,
+						doc: dp.characteristic.calc_order._obj
+					}), attr)
+					.then(function (req) {
+						return JSON.parse(req.response);
+					});
+
+			});
 
 		}
 

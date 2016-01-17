@@ -609,6 +609,24 @@ Profile.prototype.__define({
 			if(this.data.generatrix){
 				var h = this.project.bounds.height,
 					_row = this._row,
+
+					cnns = this.project.connections,
+					b = this.rays.b,
+					e = this.rays.e,
+					row_b = cnns.add({
+						elm1: _row.elm,
+						node1: "b",
+						cnn: b.cnn.ref,
+						aperture_len: this.corns(1).getDistance(this.corns(4))
+					}),
+					row_e = cnns.add({
+						elm1: _row.elm,
+						node1: "e",
+						cnn: e.cnn.ref,
+						aperture_len: this.corns(2).getDistance(this.corns(3))
+					}),
+
+
 					gen = this.generatrix,
 					sub_gen,
 					ppoints = {};
@@ -634,10 +652,31 @@ Profile.prototype.__define({
 
 				// добавляем припуски соединений
 				_row.len = sub_gen.length +
-					(this.rays.b.cnn && !this.rays.b.cnn.empty() ? this.rays.b.cnn.sz : 0) +
-					(this.rays.e.cnn && !this.rays.e.cnn.empty() ? this.rays.e.cnn.sz : 0);
+					(b.cnn && !b.cnn.empty() ? b.cnn.sz : 0) +
+					(e.cnn && !e.cnn.empty() ? e.cnn.sz : 0);
 				sub_gen.remove();
 
+				// сохраняем информацию о соединениях
+				if(b.profile){
+					row_b.elm2 = b.profile._row.elm;
+					if(b.profile.e.is_nearest(b.point))
+						row_b.node2 = "e";
+					else if(b.profile.b.is_nearest(b.point))
+						row_b.node2 = "b";
+					else
+						row_b.node2 = "t";
+				}
+				if(e.profile){
+					row_e.elm2 = e.profile._row.elm;
+					if(e.profile.b.is_nearest(e.point))
+						row_e.node2 = "b";
+					else if(e.profile.e.is_nearest(e.point))
+						row_e.node2 = "b";
+					else
+						row_e.node2 = "t";
+				}
+
+				// получаем углы между элементами и к горизонту
 				_row.angle_hor = Math.round((new paper.Point(_row.x2 -_row.x1, _row.y2 - _row.y1)).angle * 10) / 10;
 				if(_row.angle_hor < 0)
 					_row.angle_hor = _row.angle_hor + 360;

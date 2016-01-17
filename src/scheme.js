@@ -74,12 +74,13 @@ function Scheme(_canvas){
 	 */
 	this.connections = new function Connections() {
 
-		this.__define("cnns", {
-			get : function(){
-				return _scheme.ox.cnn_elmnts;
-			},
-			enumerable : false,
-			configurable : false
+		this.__define({
+
+			cnns: {
+				get : function(){
+					return _scheme.ox.cnn_elmnts;
+				}
+			}
 		});
 
 	};
@@ -254,6 +255,7 @@ function Scheme(_canvas){
 
 		if($p.is_data_obj(id))
 			load_object(id);
+
 		else if($p.is_guid(id))
 			$p.cat.characteristics.get(id, true, true)
 				.then(load_object);
@@ -427,11 +429,14 @@ Scheme.prototype.__define({
 	 */
 	save_coordinates: {
 		value: function () {
+
+			this.connections.cnns.clear();
+
 			this.getItems({class: Contour, parent: undefined}).forEach(function (contour) {
 					contour.save_coordinates();
 				}
 			);
-			this.ox.save();
+			$p.eve.callEvent("save_coordinates", [this._dp]);
 		}
 	},
 

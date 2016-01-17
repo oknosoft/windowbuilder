@@ -27,59 +27,5 @@ $p.modifiers.push(
 
 		// публичные поля и методы
 
-		/**
-		 *	@desc: 	формирует строку описания номенклатуры для построителя
-		 *	@param: 	oNom	- справочникОбъект Номенклатура
-		 *	@param: 	row	(необязательный) - строка элеметов пзПараметрыПродукции
-		 *	@type:	public
-		 *	@topic: 0
-		 */
-		_mgr.istr_by_obj = function(oNom, row){
-			var cClr = row ? row.clr : oNom.clr,
-				oClr = $p.is_empty_guid(cClr) ? {id: 0} : $p.cat["clrs"].get(cClr),
-				elm_type = row ? $p.enm["elm_types"].get(row.elm_type).name : $p.enm["elm_types"].get(oNom.elm_type).name,
-				by_default = row ? (row["by_default"] ? 1 : "") : "",
-				pos = row ? $p.enm["positions"].get(row.pos).name : "";
-
-			return oNom.id + ";" +
-				elm_type + ";" +
-				by_default + ";" +
-				pos + ";" +
-				oNom.article + ";" +
-				oClr.id + ";" +
-				oNom.width + ";" +
-				oNom.sizeb + ";" +
-				oNom.sizefurn + ";" +
-				oNom.thickness
-		};
-
-		/**
-		 *	@desc: 	формирует номенклатуры для построителя и конструирует $p.N
-		 *	@param: 	osys	- справочникОбъект пзПараметрыПродукции
-		 *	@param: 	o		- справочникОбъект ХарактеристикиНоменлктауры
-		 *	@type:	public
-		 *	@topic: 0
-		 */
-		_mgr.make_istr = function(osys, o, sys_changed){
-			var iStr = "", oNom, aIds = {};
-			osys.elmnts._obj.forEach(function(row){
-				if(iStr)
-					iStr = iStr + "¶";
-				oNom = _mgr.get(row.nom, false);
-				iStr = iStr + _mgr.istr_by_obj(oNom._obj, row);
-				aIds[oNom.id] = "";
-			});
-			o["coordinates"]._obj.forEach(function(row){
-				if(!$p.is_empty_guid(row.nom)){
-					oNom = _mgr.get(row.nom, false);
-					if(oNom.id && !sys_changed && !(oNom.id in aIds)){
-						iStr = iStr + "¶" + _mgr.istr_by_obj(oNom._obj);
-						aIds[oNom.id] = "";
-					}
-				}
-			});
-			$p.N = new $p.ex.RNom(iStr);
-		}
-
 	}
 );
