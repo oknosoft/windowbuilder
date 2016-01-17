@@ -67,34 +67,37 @@ $p.iface.view_orders = function (cell) {
 
 			if(hprm.view == "orders"){
 
-				if(hprm.obj == "doc.calc_order" && !$p.is_empty_guid(hprm.ref)){
+				if($p.eve.logged_in){
 
-					if(hprm.frm != "doc")
-						setTimeout(function () {
-							$p.iface.set_hash(undefined, undefined, "doc");
-						});
-					else
-						show_doc(hprm.ref);
+					if(hprm.obj == "doc.calc_order" && !$p.is_empty_guid(hprm.ref)){
 
-
-				} if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
-
-					if(hprm.frm != "builder")
-						setTimeout(function () {
-							$p.iface.set_hash(undefined, undefined, "builder");
-						});
-					else
-						show_builder(hprm.ref);
+						if(hprm.frm != "doc")
+							setTimeout(function () {
+								$p.iface.set_hash(undefined, undefined, "doc");
+							});
+						else
+							show_doc(hprm.ref);
 
 
-				}else if($p.is_empty_guid(hprm.ref) || hprm.frm == "list"){
+					} if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
 
-					if(hprm.obj != "doc.calc_order")
-						setTimeout(function () {
-							$p.iface.set_hash("doc.calc_order");
-						});
-					else
-						show_list();
+						if(hprm.frm != "builder")
+							setTimeout(function () {
+								$p.iface.set_hash(undefined, undefined, "builder");
+							});
+						else
+							show_builder(hprm.ref);
+
+
+					}else if($p.is_empty_guid(hprm.ref) || hprm.frm == "list"){
+
+						if(hprm.obj != "doc.calc_order")
+							setTimeout(function () {
+								$p.iface.set_hash("doc.calc_order");
+							});
+						else
+							show_list();
+					}
 				}
 
 				return false;
