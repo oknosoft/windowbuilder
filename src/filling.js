@@ -70,3 +70,78 @@ function Filling(attr){
 
 }
 Filling._extend(BuilderElement);
+
+Filling.prototype.__define({
+
+	/**
+	 * Вычисляемые поля в таблице координат
+	 * @method save_coordinates
+	 * @for Profile
+	 */
+	save_coordinates: {
+		value: function () {
+
+			this.purge_path();
+
+			var h = this.project.bounds.height,
+				_row = this._row,
+				glass = this.project.ox.glasses.add({
+					elm: _row.elm
+				});
+
+			_row.path_data = this.path.pathData;
+		}
+	},
+
+	purge_path: {
+		value: function () {
+
+			var curves = this.path.curves,
+				prev, curr, dangle, i;
+
+			// убираем малые искривления
+			for(i = 0; i < curves.length; i++){
+				prev = curves[i];
+				curr = prev.getCurvatureAt(0.5, true);
+				if(prev.hasHandles() && curr < 1e-6 && curr > -1e-6)
+					prev.clearHandles();
+			}
+
+			// убираем лишние сегменты
+			prev = curves[0];
+			i = 1;
+			while (i < curves.length){
+
+				if(prev.length < consts.filling_min_length)
+					this.path.removeSegment(i);
+				else{
+					curr = curves[i];
+					if(!curr.hasHandles() && !prev.hasHandles()){
+						dangle = Math.abs(curr.getTangentAt(0).angle - prev.getTangentAt(0).angle);
+						if(dangle < 0.01 || Math.abs(dangle - 180) < 0.01)
+							this.path.removeSegment(i);
+						else{
+							prev = curr;
+							i++;
+						}
+					}else{
+						prev = curr;
+						i++;
+					}
+				}
+			}
+
+			// выравниваем горизонт
+			if(curves.length == 4 && !this.path.hasHandles()){
+				for(i = 0; i < curves.length; i++){
+					prev = curves[i];
+					if(!prev.hasHandles()){
+						dangle = curr.getTangentAt(0).angle;
+						// todo: выравниваем горизонт
+					}
+				}
+			}
+		}
+	}
+
+});

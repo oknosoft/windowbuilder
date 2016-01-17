@@ -430,7 +430,8 @@ Scheme.prototype.__define({
 	save_coordinates: {
 		value: function () {
 
-			this.connections.cnns.clear();
+			this.ox.cnn_elmnts.clear();
+			this.ox.glasses.clear();
 
 			this.getItems({class: Contour, parent: undefined}).forEach(function (contour) {
 					contour.save_coordinates();

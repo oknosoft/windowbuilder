@@ -610,7 +610,7 @@ Profile.prototype.__define({
 				var h = this.project.bounds.height,
 					_row = this._row,
 
-					cnns = this.project.connections,
+					cnns = this.project.connections.cnns,
 					b = this.rays.b,
 					e = this.rays.e,
 					row_b = cnns.add({

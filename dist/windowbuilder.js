@@ -34,6 +34,9 @@ var acn,
 
 	this.lgray = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
+	// минимальная длина сегмента заполнения
+	this.filling_min_length = 4;
+
 	this.tune_paper = function (settings) {
 		/**
 		 * Размер визуализации узла пути
@@ -778,7 +781,8 @@ Scheme.prototype.__define({
 	save_coordinates: {
 		value: function () {
 
-			this.connections.cnns.clear();
+			this.ox.cnn_elmnts.clear();
+			this.ox.glasses.clear();
 
 			this.getItems({class: Contour, parent: undefined}).forEach(function (contour) {
 					contour.save_coordinates();
@@ -2203,7 +2207,7 @@ Profile.prototype.__define({
 				var h = this.project.bounds.height,
 					_row = this._row,
 
-					cnns = this.project.connections,
+					cnns = this.project.connections.cnns,
 					b = this.rays.b,
 					e = this.rays.e,
 					row_b = cnns.add({
@@ -2616,6 +2620,81 @@ function Filling(attr){
 
 }
 Filling._extend(BuilderElement);
+
+Filling.prototype.__define({
+
+	/**
+	 * Вычисляемые поля в таблице координат
+	 * @method save_coordinates
+	 * @for Profile
+	 */
+	save_coordinates: {
+		value: function () {
+
+			this.purge_path();
+
+			var h = this.project.bounds.height,
+				_row = this._row,
+				glass = this.project.ox.glasses.add({
+					elm: _row.elm
+				});
+
+			_row.path_data = this.path.pathData;
+		}
+	},
+
+	purge_path: {
+		value: function () {
+
+			var curves = this.path.curves,
+				prev, curr, dangle, i;
+
+			// убираем малые искривления
+			for(i = 0; i < curves.length; i++){
+				prev = curves[i];
+				curr = prev.getCurvatureAt(0.5, true);
+				if(prev.hasHandles() && curr < 1e-6 && curr > -1e-6)
+					prev.clearHandles();
+			}
+
+			// убираем лишние сегменты
+			prev = curves[0];
+			i = 1;
+			while (i < curves.length){
+
+				if(prev.length < consts.filling_min_length)
+					this.path.removeSegment(i);
+				else{
+					curr = curves[i];
+					if(!curr.hasHandles() && !prev.hasHandles()){
+						dangle = Math.abs(curr.getTangentAt(0).angle - prev.getTangentAt(0).angle);
+						if(dangle < 0.01 || Math.abs(dangle - 180) < 0.01)
+							this.path.removeSegment(i);
+						else{
+							prev = curr;
+							i++;
+						}
+					}else{
+						prev = curr;
+						i++;
+					}
+				}
+			}
+
+			// выравниваем горизонт
+			if(curves.length == 4 && !this.path.hasHandles()){
+				for(i = 0; i < curves.length; i++){
+					prev = curves[i];
+					if(!prev.hasHandles()){
+						dangle = curr.getTangentAt(0).angle;
+						// todo: выравниваем горизонт
+					}
+				}
+			}
+		}
+	}
+
+});
 /**
  * Created 24.07.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015

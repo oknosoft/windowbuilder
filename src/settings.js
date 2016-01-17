@@ -25,6 +25,9 @@ var acn,
 
 	this.lgray = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
+	// минимальная длина сегмента заполнения
+	this.filling_min_length = 4;
+
 	this.tune_paper = function (settings) {
 		/**
 		 * Размер визуализации узла пути
