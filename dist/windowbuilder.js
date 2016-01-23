@@ -951,8 +951,9 @@ function Contour(attr){
 				if(need_bind > 6)
 					return;
 
-				var outer_nodes = _contour.outer_nodes(), elm, curve_nodes,
-					available_bind = outer_nodes.length;
+				var outer_nodes = _contour.outer_nodes,
+					available_bind = outer_nodes.length,
+					elm, curve_nodes;
 
 				// первый проход: по двум узлам
 				for(var i in attr.data.curve_nodes){
@@ -1116,133 +1117,6 @@ function Contour(attr){
 		Contour.superclass.remove.call(this);
 	};
 
-	/**
-	 * Возвращает массив узлов текущего контура
-	 * @param [path] {paper.Path} - если указано, массив ограничивается узлами, примыкающими к пути
-	 * @param [nodes] {Array} - если указано, позволяет не вычислять исходный массив узлов контура, а использовать переданный
-	 * @param [bind] {Boolean} - если указано, сохраняет пары узлов в path.data.curve_nodes
-	 * @returns {Array}
-	 */
-	this.nodes = function(path, nodes, bind){
-		var i, curve, findedb, findede;
-
-		if(!path){
-			if(!nodes)
-				nodes = [];
-			_contour.children.forEach(function (p) {
-				if(p instanceof Profile){
-					findedb = false;
-					findede = false;
-					nodes.forEach(function (n) {
-						if(p.b.is_nearest(n))
-							findedb = true;
-						if(p.e.is_nearest(n))
-							findede = true;
-					});
-					if(!findedb)
-						nodes.push(p.b.clone());
-					if(!findede)
-						nodes.push(p.e.clone());
-				}
-			});
-
-		} else{
-
-			var curve_nodes = [], path_nodes = [],
-				d, d1, d2, node1, node2, ipoint = path.interiorPoint.negate();
-
-			if(!nodes)
-				nodes = _contour.nodes();
-
-			if(bind){
-				path.data.curve_nodes = curve_nodes;
-				path.data.path_nodes = path_nodes;
-			}
-
-
-			// имеем путь и контур.
-			for(i in path.curves){
-				curve = path.curves[i];
-				d1 = 10e12; d2 = 10e12;
-				nodes.forEach(function (n) {
-					if((d = n.getDistance(curve.point1, true)) < d1){
-						d1 = d;
-						node1 = n;
-					}
-					if((d = n.getDistance(curve.point2, true)) < d2){
-						d2 = d;
-						node2 = n;
-					}
-				});
-
-				if(path_nodes.indexOf(node1) == -1)
-					path_nodes.push(node1);
-				if(path_nodes.indexOf(node2) == -1)
-					path_nodes.push(node2);
-				if(!bind)
-					continue;
-
-				// заполнение может иметь больше курв, чем профиль
-				if(node1 == node2)
-					continue;
-				findedb = false;
-				for(var n in curve_nodes){
-					if(curve_nodes[n].node1 == node1 && curve_nodes[n].node2 == node2){
-						findedb = true;
-						break;
-					}
-				}
-				if(!findedb){
-					// уточняем порядок нод
-
-					if(node1.add(ipoint).getDirectedAngle(node2.add(ipoint)) < 0)
-						curve_nodes.push({node1: node2, node2: node1});
-					else
-						curve_nodes.push({node1: node1, node2: node2});
-				}
-
-			}
-			nodes = path_nodes;
-		}
-
-		return nodes;
-	};
-
-	/**
-	 * Возвращаем массив внешних узлов текущего контура. Ососбо актуально для створок, т.к. они всегда замкнуты
-	 */
-	this.outer_nodes = function(){
-		// сначала получим все профили
-		var res_profiles = _contour.profiles(),
-			to_remove = [], res = [], elm, findedb, findede;
-
-		// прочищаем, выкидывая такие, начало или конец которых соединениы не в узле
-		for(var i in res_profiles){
-			elm = res_profiles[i];
-			if(elm.data.simulated)
-				continue;
-			findedb = false;
-			findede = false;
-			for(var j in res_profiles){
-				if(res_profiles[j] == elm)
-					continue;
-				if(!findedb && elm.b.is_nearest(res_profiles[j].e))
-					findedb = true;
-				if(!findede && elm.e.is_nearest(res_profiles[j].b))
-					findede = true;
-			}
-			if(!findedb || !findede)
-				to_remove.push(elm);
-		}
-		for(var i in res_profiles){
-			elm = res_profiles[i];
-			if(to_remove.indexOf(elm) != -1)
-				continue;
-			elm.data.binded = false;
-			res.push(elm);
-		}
-		return res;
-	};
 
 	/**
 	 * Возвращает массив заполнений + створок текущего контура
@@ -1277,9 +1151,9 @@ function Contour(attr){
 
 	/**
 	 * Возвращает ребро текущего контура по узлам
-	 * @param n1 {paper.Point}
-	 * @param n2 {paper.Point}
-	 * @param [point]
+	 * @param n1 {paper.Point} - первый узел
+	 * @param n2 {paper.Point} - второй узел
+	 * @param [point] {paper.Point} - дополнительная проверочная точка
 	 * @returns {Profile}
 	 */
 	this.profile_by_nodes = function (n1, n2, point) {
@@ -1337,7 +1211,7 @@ function Contour(attr){
 	 */
 	this.find_glasses = function(profiles){
 
-		var nodes = _contour.nodes(),
+		var nodes = _contour.nodes,
 			glasses = _contour.glasses(true);
 
 		if(!profiles.length)
@@ -1424,6 +1298,7 @@ function Contour(attr){
 		 */
 		function bind_glass(glass_path){
 			var rating = 0, glass, сrating, сglass, glass_nodes, glass_path_center;
+
 			for(var g in glasses){
 
 				if((glass = glasses[g]).visible){
@@ -1431,9 +1306,9 @@ function Contour(attr){
 				}
 
 				if(glass instanceof Contour)
-					glass_nodes = glass.nodes();
+					glass_nodes = glass.nodes;
 				else
-					glass_nodes = _contour.nodes(glass.path, nodes);
+					glass_nodes = _contour.glass_nodes(glass.path, nodes);
 
 				// вычисляем рейтинг
 				сrating = 0;
@@ -1489,7 +1364,7 @@ function Contour(attr){
 
 
 		// TODO ждём устранения ограничений от авторов paper.js
-		_contour.rotate(0.004);
+		//_contour.rotate(0.004);
 		profiles.forEach(function (profile) {
 			path = profile.path.clone(false);
 			if(profile.generatrix.is_linear())
@@ -1498,13 +1373,12 @@ function Contour(attr){
 				path.scale(1.004, profile.generatrix.getPointAt(profile.generatrix.length/2));
 			}
 
-
 			if(!original_bounds)
 				original_bounds = path;
 			else
 				original_bounds = original_bounds.unite(path);
 		});
-		_contour.rotate(-0.004);
+		//_contour.rotate(-0.004);
 
 		// TODO вместо середины образующей задействовать точки внутри пути
 		if(original_bounds instanceof paper.CompoundPath){
@@ -1532,7 +1406,7 @@ function Contour(attr){
 		 */
 		for(var g in original_bounds.children){
 			var glass_path = original_bounds.children[g];
-			_contour.nodes(glass_path, nodes, true);
+			_contour.glass_nodes(glass_path, nodes, true);
 			bind_glass(glass_path);
 		}
 
@@ -1591,6 +1465,194 @@ Contour.prototype.__define({
 					elm.save_coordinates();
 			});
 
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает массив внешних узлов текущего контура. Ососбо актуально для створок, т.к. они всегда замкнут
+	 * @property outer_nodes
+	 * @for Contour
+	 * @type {Array}
+	 */
+	outer_nodes: {
+		get: function(){
+			// сначала получим все профили
+			var res_profiles = this.profiles(),
+				to_remove = [], res = [], elm, findedb, findede;
+
+			// прочищаем, выкидывая такие, начало или конец которых соединениы не в узле
+			for(var i in res_profiles){
+				elm = res_profiles[i];
+				if(elm.data.simulated)
+					continue;
+				findedb = false;
+				findede = false;
+				for(var j in res_profiles){
+					if(res_profiles[j] == elm)
+						continue;
+					if(!findedb && elm.b.is_nearest(res_profiles[j].e))
+						findedb = true;
+					if(!findede && elm.e.is_nearest(res_profiles[j].b))
+						findede = true;
+				}
+				if(!findedb || !findede)
+					to_remove.push(elm);
+			}
+			for(var i in res_profiles){
+				elm = res_profiles[i];
+				if(to_remove.indexOf(elm) != -1)
+					continue;
+				elm.data.binded = false;
+				res.push(elm);
+			}
+			return res;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает массив узлов текущего контура
+	 * @property nodes
+	 * @for Contour
+	 * @type {Array}
+	 */
+	nodes: {
+		get: function(){
+			var i, curve, findedb, findede, nodes = [];
+
+			this.children.forEach(function (p) {
+				if(p instanceof Profile){
+					findedb = false;
+					findede = false;
+					nodes.forEach(function (n) {
+						if(p.b.is_nearest(n))
+							findedb = true;
+						if(p.e.is_nearest(n))
+							findede = true;
+					});
+					if(!findedb)
+						nodes.push(p.b.clone());
+					if(!findede)
+						nodes.push(p.e.clone());
+				}
+			});
+
+			return nodes;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Ищет и привязывает узлы профилей к пути заполнения
+	 * @method glass_nodes
+	 * @for Contour
+	 * @param path {paper.Path} - массив ограничивается узлами, примыкающими к пути
+	 * @param [nodes] {Array} - если указано, позволяет не вычислять исходный массив узлов контура, а использовать переданный
+	 * @param [bind] {Boolean} - если указано, сохраняет пары узлов в path.data.curve_nodes
+	 * @returns {Array}
+	 */
+	glass_nodes: {
+		value: function (path, nodes, bind) {
+
+			var curve_nodes = [], path_nodes = [],
+				ipoint = path.interiorPoint.negate(),
+				i, curve, findedb, findede,
+				d, d1, d2, node1, node2;
+
+			if(!nodes)
+				nodes = _contour.nodes;
+
+			if(bind){
+				path.data.curve_nodes = curve_nodes;
+				path.data.path_nodes = path_nodes;
+			}
+
+			// имеем путь и контур.
+			for(i in path.curves){
+				curve = path.curves[i];
+
+				// в node1 и node2 получаем ближайший узел контура к узлам текущего сегмента
+				d1 = 10e12; d2 = 10e12;
+				nodes.forEach(function (n) {
+					if((d = n.getDistance(curve.point1, true)) < d1){
+						d1 = d;
+						node1 = n;
+					}
+					if((d = n.getDistance(curve.point2, true)) < d2){
+						d2 = d;
+						node2 = n;
+					}
+				});
+
+				// в path_nodes просто накапливаем узлы. наверное, позже они будут упорядочены
+				if(path_nodes.indexOf(node1) == -1)
+					path_nodes.push(node1);
+				if(path_nodes.indexOf(node2) == -1)
+					path_nodes.push(node2);
+
+				if(!bind)
+					continue;
+
+				// заполнение может иметь больше курв, чем профиль
+				if(node1 == node2)
+					continue;
+				findedb = false;
+				for(var n in curve_nodes){
+					if(curve_nodes[n].node1 == node1 && curve_nodes[n].node2 == node2){
+						findedb = true;
+						break;
+					}
+				}
+				if(!findedb){
+					findedb = this.profile_by_nodes(node1, node2);
+					var loc1 = findedb.generatrix.getNearestLocation(node1),
+						loc2 = findedb.generatrix.getNearestLocation(node2);
+					// уточняем порядок нод
+					if(node1.add(ipoint).getDirectedAngle(node2.add(ipoint)) < 0)
+						curve_nodes.push({node1: node2, node2: node1, profile: findedb, out: loc2.index == loc1.index ? loc2.parameter > loc1.parameter : loc2.index > loc1.index});
+					else
+						curve_nodes.push({node1: node1, node2: node2, profile: findedb, out: loc1.index == loc2.index ? loc1.parameter > loc2.parameter : loc1.index > loc2.index});
+				}
+			}
+
+			this.sort_nodes(curve_nodes);
+
+			return path_nodes;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Упорядочивает узлы, чтобы по ним можно было построить путь заполнения
+	 * @method sort_nodes
+	 * @for Contour
+	 * @param [nodes] {Array}
+	 */
+	sort_nodes: {
+		value: function (nodes) {
+			if(!nodes.length)
+				return nodes;
+			var prev = nodes[0], res = [prev], curr, couner = nodes.length + 1;
+			while (res.length < nodes.length && couner){
+				couner--;
+				for(var i = 0; i < nodes.length; i++){
+					curr = nodes[i];
+					if(res.indexOf(curr) != -1)
+						continue;
+					if(prev.node2 == curr.node1){
+						res.push(curr);
+						prev = curr;
+						break;
+					}
+				}
+			}
+			if(couner){
+				nodes.length = 0;
+				for(var i = 0; i < res.length; i++)
+					nodes.push(res[i]);
+				res.length = 0;
+			}
 		},
 		enumerable : false
 	}
@@ -2586,7 +2648,7 @@ function Filling(attr){
 		else if(attr.path){
 
 			this.data.path = new paper.Path();
-			this.data.path.addSegments(attr.path.segments);
+			this.path = attr.path;
 
 		}else
 			this.data.path = new paper.Path([
@@ -2641,6 +2703,32 @@ Filling.prototype.__define({
 
 			_row.path_data = this.path.pathData;
 		}
+	},
+
+	/**
+	 * путь элемента - состоит из кривых, соединяющих вершины элемента
+	 * @property path
+	 * @type paper.Path
+	 */
+	path: {
+		get : function(){ return this.data.path; },
+		set : function(glass_path){
+			if(glass_path instanceof paper.Path){
+				this.data.path.removeSegments();
+
+				// Если в передаваемом пути есть привязка к профилям контура - используем
+				if(glass_path.data.curve_nodes){
+
+					this.data.path.addSegments(glass_path.segments);
+				}else{
+					this.data.path.addSegments(glass_path.segments);
+				}
+
+				if(!this.data.path.closed)
+					this.data.path.closePath(true);
+			}
+		},
+		enumerable : true
 	},
 
 	purge_path: {
@@ -4617,7 +4705,8 @@ function Editor(pwnd){
 	});         // разбивка на канвас и аккордион
 	_editor._wrapper = document.createElement('div');                  // контейнер канваса
 	_editor._layout.cells("a").attachObject(_editor._wrapper);
-	_editor._dxw = _editor._layout.pwnd;                               // указатель на dhtmlXWindows
+	_editor._dxw = _editor._layout.dhxWins;                             // указатель на dhtmlXWindows
+	_editor._dxw.attachViewportTo(_editor._wrapper);
 
 	_editor._wrapper.oncontextmenu = function (event) {
 		event.preventDefault();
@@ -4640,7 +4729,7 @@ function Editor(pwnd){
 	 * @type OTooolBar
 	 */
 	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '24px', left: '3px', name: 'left', height: '310px',
-		image_path: 'lib/imgs/custom_web/',
+		image_path: 'dist/imgs/',
 		buttons: [
 			{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['select_elm.html']},
 			{name: 'select_node', img: 'icon-arrow-white.png', title: $p.injected_data['select_node.html']},
@@ -4663,7 +4752,7 @@ function Editor(pwnd){
 	 * @type {OTooolBar}
 	 */
 	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '250px', height: '28px', top: '3px', left: '50px', name: 'top',
-		image_path: 'lib/imgs/custom_web/',
+		image_path: 'dist/imgs/',
 		buttons: [
 			{name: 'open', text: '<i class="fa fa-file-o fa-lg"></i>', title: 'Открыть изделие', float: 'left'},
 			{name: 'save_close', text: '<i class="fa fa-floppy-o fa-lg"></i>', title: 'Рассчитать, записать и закрыть', float: 'left'},
@@ -4753,7 +4842,7 @@ function Editor(pwnd){
 	 * @type {*|OTooolBar}
 	 */
 	_editor.tb_right = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '200px', height: '28px', top: '3px', right: '3px', name: 'right',
-		image_path: 'lib/imgs/custom_web/',
+		image_path: 'dist/imgs/',
 		buttons: [
 				{name: 'layers', img: 'layers.png', text: 'Слои', float: 'left', width: '90px',
 					sub: {
@@ -5630,6 +5719,7 @@ paper.Tool.prototype.__define({
 						{name: 'right', img: 'align_right.png', title: $p.msg.align_node_right, float: 'left'},
 						{name: 'delete', img: 'trash.gif', title: 'Удалить элемент', clear: 'right', float: 'right'}
 					],
+					image_path: "dist/imgs/",
 					onclick: function (name) {
 						return _editor.profile_align(name);
 					}

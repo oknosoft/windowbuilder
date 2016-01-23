@@ -150,6 +150,7 @@ paper.Tool.prototype.__define({
 						{name: 'right', img: 'align_right.png', title: $p.msg.align_node_right, float: 'left'},
 						{name: 'delete', img: 'trash.gif', title: 'Удалить элемент', clear: 'right', float: 'right'}
 					],
+					image_path: "dist/imgs/",
 					onclick: function (name) {
 						return _editor.profile_align(name);
 					}

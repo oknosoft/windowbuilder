@@ -36,7 +36,7 @@ function Filling(attr){
 		else if(attr.path){
 
 			this.data.path = new paper.Path();
-			this.data.path.addSegments(attr.path.segments);
+			this.path = attr.path;
 
 		}else
 			this.data.path = new paper.Path([
@@ -91,6 +91,32 @@ Filling.prototype.__define({
 
 			_row.path_data = this.path.pathData;
 		}
+	},
+
+	/**
+	 * путь элемента - состоит из кривых, соединяющих вершины элемента
+	 * @property path
+	 * @type paper.Path
+	 */
+	path: {
+		get : function(){ return this.data.path; },
+		set : function(glass_path){
+			if(glass_path instanceof paper.Path){
+				this.data.path.removeSegments();
+
+				// Если в передаваемом пути есть привязка к профилям контура - используем
+				if(glass_path.data.curve_nodes){
+
+					this.data.path.addSegments(glass_path.segments);
+				}else{
+					this.data.path.addSegments(glass_path.segments);
+				}
+
+				if(!this.data.path.closed)
+					this.data.path.closePath(true);
+			}
+		},
+		enumerable : true
 	},
 
 	purge_path: {

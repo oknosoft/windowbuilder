@@ -7,7 +7,7 @@ $p.modifiers.push(
 
 	function($p) {
 
-		var _mngr = $p.doc.calc_order;
+		var _mgr = $p.doc.calc_order;
 
 		/**
 		 * структура заголовков табчасти продукции
@@ -16,17 +16,17 @@ $p.modifiers.push(
 		(function(source){
 
 			if($p.wsql.get_user_param("hide_price_dealer")){
-				source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка дилера,Цена дилера,Сумма дилера";
+				source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил";
 				source.widths = "40,200,*,220,0,70,70,70,70,40,70,70,70,0,0,0";
 				source.min_widths = "30,200,220,150,0,70,40,70,70,70,70,70,70,0,0,0";
 
 			}else if($p.wsql.get_user_param("hide_price_manufacturer")){
-				source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка постав.,Цена постав.,Сумма постав.,Скидка,Цена,Сумма";
+				source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма";
 				source.widths = "40,200,*,220,0,70,70,70,70,40,0,0,0,70,70,70";
 				source.min_widths = "30,200,220,150,0,70,40,70,70,70,0,0,0,70,70,70";
 
 			}else{
-				source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка постав.,Цена постав.,Сумма постав.,Скидка,Цена,Сумма";
+				source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма";
 				source.widths = "40,200,*,220,0,70,70,70,70,40,70,70,70,70,70,70";
 				source.min_widths = "30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70";
 			}
@@ -38,7 +38,7 @@ $p.modifiers.push(
 
 		})($p.doc.calc_order.metadata().form.obj.tabular_sections.production);
 
-		_mngr.form_obj = function(pwnd, attr){
+		_mgr.form_obj = function(pwnd, attr){
 
 			var o, wnd;
 
@@ -247,7 +247,7 @@ $p.modifiers.push(
 					wnd.elmnts.discount.setItemValue("services", 0);
 					wnd.elmnts.discount.attachEvent("onButtonClick", function(name){
 						wnd.progressOn();
-						_mngr.save({
+						_mgr.save({
 							ref: o.ref,
 							discounts: {
 								production: $p.fix_number(wnd.elmnts.discount.getItemValue("production"), true),
@@ -284,7 +284,7 @@ $p.modifiers.push(
 			function production_on_value_change(rId){
 
 				wnd.progressOn();
-				_mngr.save({
+				_mgr.save({
 					ref: o.ref,
 					row: rId!=undefined ? rId : production_get_sel_index(),
 					o: o._obj,
@@ -435,7 +435,7 @@ $p.modifiers.push(
 					return Number(selId)-1;
 				$p.msg.show_msg({type: "alert-warning",
 					text: $p.msg.no_selected_row.replace("%1", "Продукция"),
-					title: _mngr.metadata()["obj_presentation"] + ' №' + o.number_str});
+					title: _mgr.metadata()["obj_presentation"] + ' №' + o.number_str});
 			}
 
 			function production_del_row(){
@@ -466,7 +466,7 @@ $p.modifiers.push(
 				}
 
 				wnd.progressOn();
-				_mngr.save({
+				_mgr.save({
 					ref: o.ref,
 					del_row: rId,
 					o: o._obj,
@@ -485,7 +485,7 @@ $p.modifiers.push(
 
 					wnd.progressOn();
 					o.note = wnd.elmnts.note_editor.getContent();
-					_mngr.save({
+					_mgr.save({
 						ref: o.ref,
 						o: o._obj,
 						action: "calc"
@@ -636,7 +636,7 @@ $p.modifiers.push(
 			function process_add_product(new_rows){
 
 				wnd.progressOn();
-				_mngr.save({
+				_mgr.save({
 					ref: o.ref,
 					row: 0,
 					o: o._obj,

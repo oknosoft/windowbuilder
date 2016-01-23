@@ -26,12 +26,6 @@ $p.settings = function (prm, modifiers) {
 	// скин по умолчанию
 	prm.skin = "dhx_terrace";
 
-	prm.demo = {
-		calc_order: "f0e9b97d-8396-408a-af14-b3b1c5849def",
-		production: "8756eecf-f577-402c-86ce-74608d062a32"
-	};
-	localStorage.setItem("wb_base_blocks_folder", "20c5524b-7eab-11e2-be96-206a8a1a5bb0");// типовой блок по умолчанию
-
 	// сокет временно отключаем
 	// prm.ws_url = "ws://builder.oknosoft.local:8001";
 
@@ -56,7 +50,7 @@ $p.iface.oninit = function() {
 
 	$p.iface.sidebar_items = [
 		{id: "orders", text: "Заказы", icon: "projects_48.png"},
-		{id: "events", text: "Календарь", icon: "events_48.png"},
+		{id: "events", text: "Планирование", icon: "events_48.png"},
 		{id: "settings", text: "Настройки", icon: "settings_48.png"},
 		{id: "about", text: "О программе", icon: "about_48.png"}
 	];

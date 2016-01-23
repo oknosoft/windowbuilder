@@ -56,7 +56,8 @@ function Editor(pwnd){
 	});         // разбивка на канвас и аккордион
 	_editor._wrapper = document.createElement('div');                  // контейнер канваса
 	_editor._layout.cells("a").attachObject(_editor._wrapper);
-	_editor._dxw = _editor._layout.pwnd;                               // указатель на dhtmlXWindows
+	_editor._dxw = _editor._layout.dhxWins;                             // указатель на dhtmlXWindows
+	_editor._dxw.attachViewportTo(_editor._wrapper);
 
 	_editor._wrapper.oncontextmenu = function (event) {
 		event.preventDefault();
@@ -79,7 +80,7 @@ function Editor(pwnd){
 	 * @type OTooolBar
 	 */
 	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '24px', left: '3px', name: 'left', height: '310px',
-		image_path: 'lib/imgs/custom_web/',
+		image_path: 'dist/imgs/',
 		buttons: [
 			{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['select_elm.html']},
 			{name: 'select_node', img: 'icon-arrow-white.png', title: $p.injected_data['select_node.html']},
@@ -102,7 +103,7 @@ function Editor(pwnd){
 	 * @type {OTooolBar}
 	 */
 	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '250px', height: '28px', top: '3px', left: '50px', name: 'top',
-		image_path: 'lib/imgs/custom_web/',
+		image_path: 'dist/imgs/',
 		buttons: [
 			{name: 'open', text: '<i class="fa fa-file-o fa-lg"></i>', title: 'Открыть изделие', float: 'left'},
 			{name: 'save_close', text: '<i class="fa fa-floppy-o fa-lg"></i>', title: 'Рассчитать, записать и закрыть', float: 'left'},
@@ -192,7 +193,7 @@ function Editor(pwnd){
 	 * @type {*|OTooolBar}
 	 */
 	_editor.tb_right = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '200px', height: '28px', top: '3px', right: '3px', name: 'right',
-		image_path: 'lib/imgs/custom_web/',
+		image_path: 'dist/imgs/',
 		buttons: [
 				{name: 'layers', img: 'layers.png', text: 'Слои', float: 'left', width: '90px',
 					sub: {
