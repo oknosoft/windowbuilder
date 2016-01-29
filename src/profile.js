@@ -911,10 +911,10 @@ function ProfileRays(){
 
 			this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
 			this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_e.multiply(-ds)));
-			this.outer.add(point_b.add(normal_b.multiply(d1)));
-			this.inner.add(point_b.add(normal_b.multiply(d2)));
-			this.outer.add(point_e.add(normal_b.multiply(d1)));
-			this.inner.add(point_e.add(normal_b.multiply(d2)));
+			//this.outer.add(point_b.add(normal_b.multiply(d1)));
+			//this.inner.add(point_b.add(normal_b.multiply(d2)));
+			//this.outer.add(point_e.add(normal_b.multiply(d1)));
+			//this.inner.add(point_e.add(normal_b.multiply(d2)));
 			this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_e.multiply(ds)));
 			this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
 

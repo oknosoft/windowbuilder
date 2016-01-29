@@ -57,6 +57,7 @@ gulp.task('css-base64', function () {
 // Cборка библиотеки рисовалки
 gulp.task('build-lib', function(){
 	gulp.src([
+			'./src/paper_ex.js',
 			'./src/settings.js',
 			'./src/element.js',
 			'./src/scheme.js',
@@ -74,7 +75,6 @@ gulp.task('build-lib', function(){
 			'./src/tool_select_node.js',
 			'./src/tool_text.js',
 			'./src/editor.js',
-			'./src/main.js',
 			'./data/merged_wb_tips.js'
 		])
 		.pipe(concat('windowbuilder.js'))

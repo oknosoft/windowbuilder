@@ -267,20 +267,6 @@ function Contour(attr){
 	};
 
 	/**
-	 * Возвращает массив профилей текущего контура
-	 * @returns {Array}
-	 */
-	this.profiles = function(){
-		var res = [];
-		_contour.children.forEach(function(elm) {
-			if (elm instanceof Profile){
-				res.push(elm);
-			}
-		});
-		return res;
-	};
-
-	/**
 	 * Возвращает ребро текущего контура по узлам
 	 * @param n1 {paper.Point} - первый узел
 	 * @param n2 {paper.Point} - второй узел
@@ -581,6 +567,24 @@ Contour._extend(paper.Layer);
 Contour.prototype.__define({
 
 	/**
+	 * Возвращает массив профилей текущего контура
+	 * @property profiles
+	 * @returns {Array.<Profile>}
+	 */
+	profiles: {
+		get: function(){
+			var res = [];
+			this.children.forEach(function(elm) {
+				if (elm instanceof Profile){
+					res.push(elm);
+				}
+			});
+			return res;
+		},
+		enumerable : false
+	},
+
+	/**
 	 * Вычисляемые поля в таблицах конструкций и координат
 	 * @method save_coordinates
 	 * @for Contour
@@ -650,26 +654,65 @@ Contour.prototype.__define({
 	 */
 	nodes: {
 		get: function(){
-			var i, curve, findedb, findede, nodes = [];
+			var findedb, findede, nodes = [];
 
-			this.children.forEach(function (p) {
-				if(p instanceof Profile){
-					findedb = false;
-					findede = false;
-					nodes.forEach(function (n) {
-						if(p.b.is_nearest(n))
-							findedb = true;
-						if(p.e.is_nearest(n))
-							findede = true;
-					});
-					if(!findedb)
-						nodes.push(p.b.clone());
-					if(!findede)
-						nodes.push(p.e.clone());
-				}
+			this.profiles.forEach(function (p) {
+				findedb = false;
+				findede = false;
+				nodes.forEach(function (n) {
+					if(p.b.is_nearest(n))
+						findedb = true;
+					if(p.e.is_nearest(n))
+						findede = true;
+				});
+				if(!findedb)
+					nodes.push(p.b.clone());
+				if(!findede)
+					nodes.push(p.e.clone());
 			});
 
 			return nodes;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает массив узлов, которые потенциально могут образовывать заполнения
+	 * (соединения с пустотой отбрасываются)
+	 * @property gnodes
+	 * @for Contour
+	 * @type {Array}
+	 */
+	gnodes: {
+		get: function(){
+			var findedb, findede, nodes = [], res = [];
+
+			this.profiles.forEach(function (p) {
+				findedb = false;
+				findede = false;
+				// добавляем, если соединение угловое или т-образное
+				nodes.forEach(function (n) {
+					if(p.b.is_nearest(n.point)){
+						findedb = true;
+						n.profiles.push(p);
+					}
+					if(p.e.is_nearest(n.point)){
+						findede = true;
+						n.profiles.push(p);
+					}
+				});
+				if(!findedb)
+					nodes.push({point: p.b.clone(), profiles: [p]});
+				if(!findede)
+					nodes.push({point: p.e.clone(), profiles: [p]});
+			});
+
+			nodes.forEach(function (n) {
+				if(n.profiles.length > 1)
+					res.push(n);
+			});
+			nodes = null;
+			return res;
 		},
 		enumerable : false
 	},

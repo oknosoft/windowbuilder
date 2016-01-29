@@ -1,24 +1,9 @@
 ﻿/**
- * Классы объектов построителя на базе paper.js
+ * Расширения объектов paper.js
  *
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
  * @module  paper_ex
- */
-
-
-/**
- * Экспортируем конструктор Scheme, чтобы экземпляры построителя можно было создать снаружи
- * @property Scheme
- * @for $p
- * @type {Scheme}
- */
-if(typeof $p !== "undefined")
-	$p.Editor = Editor;
-
-
-/**
- * Здесь делаем mixin и расширения классам paper.js
  */
 
 /**
@@ -29,14 +14,15 @@ paper.Path.prototype.__define({
 	/**
 	 * Вычисляет направленный угол в точке пути
 	 * @param point
-	 * @return {*}
+	 * @return {number}
 	 */
 	getDirectedAngle: {
 		value: function (point) {
 			var np = this.getNearestPoint(point),
 				offset = this.getOffsetOf(np);
 			return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
-		}
+		},
+		enumerable: false
 	},
 
 	/**
@@ -45,12 +31,32 @@ paper.Path.prototype.__define({
 	 */
 	is_linear: {
 		value: function () {
-			return this.curves.length == 1 && this.firstCurve.isLinear();
-		}
+			// если в пути единственная кривая и она прямая - путь прямой
+			if(this.curves.length == 1 && this.firstCurve.isLinear())
+				return true;
+			// если в пути есть искривления, путь кривой
+			else if(this.hasHandles())
+				return false;
+			else{
+				// если у всех кривых пути одинаковые направленные углы - путь прямой
+				var curves = this.curves,
+					da = curves[0].point1.getDirectedAngle(curves[0].point2), dc;
+				for(var i = 1; i < curves.lenght; i++){
+					dc = curves[i].point1.getDirectedAngle(curves[i].point2);
+					if(Math.abs(dc - da) > 0.01)
+						return false;
+				}
+			}
+			return true;
+		},
+		enumerable: false
 	},
 
 	/**
 	 * возвращает фрагмент пути между точками
+	 * @param point1 {paper.Point}
+	 * @param point2 {paper.Point}
+	 * @return {paper.Path}
 	 */
 	get_subpath: {
 		value: function (point1, point2) {
@@ -88,8 +94,39 @@ paper.Path.prototype.__define({
 					tmp = path;
 			}
 			return tmp;
-		}
+		},
+		enumerable: false
+	},
+
+	/**
+	 * возвращает путь, равноотстоящий от текущего пути
+	 * @param delta {number}
+	 * @return {paper.Path}
+	 */
+	equidistant: {
+		value: function (delta) {
+			var res = new paper.Path({insert: false});
+			// если исходный путь прямой, эквидистанту строим по начальной и конечной точкам
+			if(this.is_linear()){
+				this.outer.add(point_b.add(normal_b.multiply(d1)));
+				this.inner.add(point_b.add(normal_b.multiply(d2)));
+				this.outer.add(point_e.add(normal_b.multiply(d1)));
+				this.inner.add(point_e.add(normal_b.multiply(d2)));
+			}else{
+
+			}
+			return res;
+		},
+		enumerable: false
+	},
+
+	elongation: {
+		value: function (delta1, delta2) {
+
+		},
+		enumerable: false
 	}
+
 });
 
 
@@ -104,7 +141,8 @@ paper.Point.prototype.__define({
 	is_nearest: {
 		value: function (point, sticking) {
 			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 10);
-		}
+		},
+		enumerable: false
 	}
 
 });
@@ -127,7 +165,8 @@ paper.Tool.prototype.__define({
 			}
 			this.wnd = null;
 			this.profile = null;
-		}
+		},
+		enumerable: false
 	},
 
 	/**
@@ -174,7 +213,8 @@ paper.Tool.prototype.__define({
 			}else{
 				this._grid.attach({obj: profile})
 			}
-		}
+		},
+		enumerable: false
 	}
 
 });
