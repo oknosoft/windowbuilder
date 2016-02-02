@@ -183,7 +183,7 @@ function Scheme(_canvas){
 					(item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1)))
 				return hit;
 
-			items = item.layer.parent.profiles();
+			items = item.layer.parent.profiles;
 			for(var i in items){
 				hit = items[i].hitTest(point, { segments: true, tolerance: 6 });
 				if(hit)
@@ -372,7 +372,7 @@ function Scheme(_canvas){
 
 		function process_redraw(){
 			if(_changes.length){
-				console.log(_changes.length);
+				//console.log(_changes.length);
 				_changes.length = 0;
 				_scheme.layers.forEach(function(l){
 					if(l instanceof Contour){
@@ -416,8 +416,11 @@ Scheme.prototype.__define({
 				if(path.parent instanceof Profile){
 					if(!path.layer.parent || (path.parent._row.elm_type == $p.enm.elm_types.Импост))
 						path.parent.move_points(delta, all_points);
-				}else
+				}else if(path instanceof Filling){
 					path.position = path.position.add(delta);
+					while (path.children.length > 1)
+						path.children[1].remove();
+				}
 			}
 		}
 	},

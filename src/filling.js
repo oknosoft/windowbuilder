@@ -81,8 +81,6 @@ Filling.prototype.__define({
 	save_coordinates: {
 		value: function () {
 
-			this.purge_path();
-
 			var h = this.project.bounds.height,
 				_row = this._row,
 				glass = this.project.ox.glasses.add({
@@ -90,7 +88,8 @@ Filling.prototype.__define({
 				});
 
 			_row.path_data = this.path.pathData;
-		}
+		},
+		enumerable : true
 	},
 
 	/**
@@ -101,73 +100,73 @@ Filling.prototype.__define({
 	path: {
 		get : function(){ return this.data.path; },
 		set : function(glass_path){
+
+			var data = this.data;
+			data.path.removeSegments();
+			data._profiles = [];
+
 			if(glass_path instanceof paper.Path){
-				this.data.path.removeSegments();
 
 				// Если в передаваемом пути есть привязка к профилям контура - используем
 				if(glass_path.data.curve_nodes){
 
-					this.data.path.addSegments(glass_path.segments);
+					data.path.addSegments(glass_path.segments);
 				}else{
-					this.data.path.addSegments(glass_path.segments);
+					data.path.addSegments(glass_path.segments);
 				}
 
-				if(!this.data.path.closed)
-					this.data.path.closePath(true);
+
+			}else if(Array.isArray(glass_path)){
+				var length = glass_path.length, prev, curr, next, cnn;
+				// получам эквидистанты сегментов, смещенные на размер соединения
+				for(var i=0; i<length; i++ ){
+					curr = glass_path[i];
+					cnn = undefined;
+					curr.sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e).equidistant(-30);
+				}
+				// получам пересечения
+				for(var i=0; i<length; i++ ){
+					prev = i==0 ? glass_path[length-1] : glass_path[i-1];
+					curr = glass_path[i];
+					next = i==length-1 ? glass_path[0] : glass_path[i+1];
+					if(!curr.pb)
+						curr.pb = prev.pe = curr.sub_path.intersect_point(prev.sub_path, curr.b, true);
+					if(!curr.pe)
+						curr.pe = next.pb = curr.sub_path.intersect_point(next.sub_path, curr.e, true);
+					curr.sub_path = curr.sub_path.get_subpath(curr.pb, curr.pe);
+				}
+				// формируем путь
+				for(var i=0; i<length; i++ ){
+					curr = glass_path[i];
+					data.path.addSegments(curr.sub_path.segments);
+					["anext","pb","pe","sub_path"].forEach(function (prop) {
+						delete curr[prop];
+						data._profiles.push(curr);
+					})
+				}
 			}
+
+			if(data.path.segments.length && !data.path.closed)
+				data.path.closePath(true);
+			data = glass_path = null;
 		},
 		enumerable : true
 	},
 
-	purge_path: {
-		value: function () {
-
-			var curves = this.path.curves,
-				prev, curr, dangle, i;
-
-			// убираем малые искривления
-			for(i = 0; i < curves.length; i++){
-				prev = curves[i];
-				curr = prev.getCurvatureAt(0.5, true);
-				if(prev.hasHandles() && curr < 1e-6 && curr > -1e-6)
-					prev.clearHandles();
+	// возвращает текущие (ранее установленные) узлы заполнения
+	nodes: {
+		get: function () {
+			var res = [];
+			if(this.data._profiles.length){
+				this.data._profiles.forEach(function (curr) {
+					res.push(curr.b);
+				});
+			}else{
+				res = this.parent.glass_nodes(this.path);
 			}
-
-			// убираем лишние сегменты
-			prev = curves[0];
-			i = 1;
-			while (i < curves.length){
-
-				if(prev.length < consts.filling_min_length)
-					this.path.removeSegment(i);
-				else{
-					curr = curves[i];
-					if(!curr.hasHandles() && !prev.hasHandles()){
-						dangle = Math.abs(curr.getTangentAt(0).angle - prev.getTangentAt(0).angle);
-						if(dangle < 0.01 || Math.abs(dangle - 180) < 0.01)
-							this.path.removeSegment(i);
-						else{
-							prev = curr;
-							i++;
-						}
-					}else{
-						prev = curr;
-						i++;
-					}
-				}
-			}
-
-			// выравниваем горизонт
-			if(curves.length == 4 && !this.path.hasHandles()){
-				for(i = 0; i < curves.length; i++){
-					prev = curves[i];
-					if(!prev.hasHandles()){
-						dangle = curr.getTangentAt(0).angle;
-						// todo: выравниваем горизонт
-					}
-				}
-			}
-		}
+			return res;
+		},
+		enumerable : true
 	}
 
 });

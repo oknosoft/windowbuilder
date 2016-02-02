@@ -395,12 +395,10 @@ function Profile(attr){
 
 		// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 		if(this.parent){
-			for(var i in this.parent.children){
-				var element = this.parent.children[i];
-				if (element instanceof Profile){
-					if(c_d(element, _profile, res, point, false) === false)
-						return res;
-				}
+			var profiles = this.parent.profiles;
+			for(var i in profiles){
+				if(c_d(profiles[i], _profile, res, point, false) === false)
+					return res;
 			}
 		}
 
@@ -895,8 +893,8 @@ function ProfileRays(){
 
 		// первая точка эквидистанты. аппроксимируется касательной на участке (from < начала пути)
 		point_b = path.firstSegment.point;
-		tangent_b = path.getTangentAt(0).normalize();
-		normal_b = path.getNormalAt(0).normalize();
+		tangent_b = path.getTangentAt(0);
+		normal_b = path.getNormalAt(0);
 
 		// последняя точка эквидистанты. аппроксимируется прямой , если to > конца пути
 		point_e = path.lastSegment.point;
@@ -906,8 +904,8 @@ function ProfileRays(){
 
 			tangent_e = tangent_b.clone();
 
-			tangent_b.angle += 0.0001;
-			tangent_e.angle -= 0.0001;
+			//tangent_b.angle += 0.0001;
+			//tangent_e.angle -= 0.0001;
 
 			this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
 			this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_e.multiply(-ds)));
@@ -934,11 +932,11 @@ function ProfileRays(){
 				this.inner.add(point_b.add(normal_b.normalize(d2)));
 			}
 
-			normal_e = path.getNormalAt(len).normalize();
+			normal_e = path.getNormalAt(len);
 			this.outer.add(point_e.add(normal_e.multiply(d1)));
 			this.inner.add(point_e.add(normal_e.multiply(d2)));
 
-			tangent_e = path.getTangentAt(len).normalize();
+			tangent_e = path.getTangentAt(len);
 			this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
 			this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
 

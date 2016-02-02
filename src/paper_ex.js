@@ -60,39 +60,53 @@ paper.Path.prototype.__define({
 	 */
 	get_subpath: {
 		value: function (point1, point2) {
-			var path = this.clone(), tmp,
-				loc1 = path.getLocationOf(point1),
-				loc2 = path.getLocationOf(point2);
-			if(!loc1)
-				loc1 = path.getNearestLocation(point1);
-			if(!loc2)
-				loc2 = path.getNearestLocation(point2);
-			if(loc1.offset > loc2.offset){
-				tmp = path.split(loc1.index, loc1.parameter);
-				if(tmp)
-					tmp.remove();
-				loc2 = path.getLocationOf(point2);
-				if(!loc2)
-					loc2 = path.getNearestLocation(point2);
-				tmp = path.split(loc2.index, loc2.parameter);
-				if(path)
-					path.remove();
-				if(tmp)
-					tmp.reverse();
-			}else{
-				tmp = path.split(loc2.index, loc2.parameter);
-				if(tmp)
-					tmp.remove();
-				loc1 = path.getLocationOf(point1);
+			var tmp;
+
+			if(point1.is_nearest(this.firstSegment.point) && point2.is_nearest(this.lastSegment.point)){
+				tmp = this.clone(false);
+
+			}else if(point2.is_nearest(this.firstSegment.point) && point1.is_nearest(this.lastSegment.point)){
+				tmp = this.clone(false);
+				tmp.reverse();
+
+			} else{
+
+				var loc1 = this.getLocationOf(point1),
+					loc2 = this.getLocationOf(point2);
 				if(!loc1)
-					loc1 = path.getNearestLocation(point1);
-				if(loc1.index || loc1.parameter){
-					tmp = path.split(loc1.index, loc1.parameter);
-					if(path)
-						path.remove();
-				}else
-					tmp = path;
+					loc1 = this.getNearestLocation(point1);
+				if(!loc2)
+					loc2 = this.getNearestLocation(point2);
+
+				if(this.is_linear()){
+					// для прямого формируем новый путь из двух точек
+					tmp = new paper.Path({
+						segments: [loc1.point, loc2.point],
+						insert: false
+					});
+
+				}else{
+					// для кривого строим по точкам, наподобие эквидистанты
+					var step = (loc2.offset - loc1.offset) * 0.02,
+						tmp = new paper.Path({
+							segments: [point1],
+							insert: false
+						});
+
+					if(step < 0){
+						for(var i = loc2.offset; i>=loc1.offset; i+=step) {
+							tmp.add(this.getPointAt(i));
+						}
+					}else{
+						for(var i = loc1.offset; i<=loc2.offset; i+=step) {
+							tmp.add(this.getPointAt(i));
+						}
+					}
+					tmp.add(point2);
+					tmp.simplify(0.8);
+				}
 			}
+
 			return tmp;
 		},
 		enumerable: false
@@ -105,24 +119,82 @@ paper.Path.prototype.__define({
 	 */
 	equidistant: {
 		value: function (delta) {
-			var res = new paper.Path({insert: false});
-			// если исходный путь прямой, эквидистанту строим по начальной и конечной точкам
-			if(this.is_linear()){
-				this.outer.add(point_b.add(normal_b.multiply(d1)));
-				this.inner.add(point_b.add(normal_b.multiply(d2)));
-				this.outer.add(point_e.add(normal_b.multiply(d1)));
-				this.inner.add(point_e.add(normal_b.multiply(d2)));
+
+			var normal = this.getNormalAt(0),
+				res = new paper.Path({
+					segments: [this.firstSegment.point.add(normal.multiply(delta))],
+					insert: false
+				});
+
+			if(this.is_linear()) {
+				// добавляем последнюю точку
+				res.add(this.lastSegment.point.add(normal.multiply(delta)));
+
 			}else{
 
-			}
+				// для кривого бежим по точкам
+				var len = this.length, step = len * 0.02, point;
+
+				for(var i = step; i<=len; i+=step) {
+					point = this.getPointAt(i);
+					if(!point)
+						continue;
+					normal = this.getNormalAt(i);
+					res.add(point.add(normal.multiply(delta)));
+				}
+
+				// добавляем последнюю точку
+				normal = this.getNormalAt(len);
+				res.add(this.lastSegment.point.add(normal.multiply(delta)));
+
+				res.simplify(0.8);
+			};
+
 			return res;
 		},
 		enumerable: false
 	},
 
+	/**
+	 * Удлиняет путь касательными в начальной и конечной точках
+	 */
 	elongation: {
 		value: function (delta1, delta2) {
 
+		},
+		enumerable: false
+	},
+
+	/**
+	 * Находит координату пересечения путей в окрестности точки
+	 * @method intersect_point
+	 * @for Path
+	 * @param path {paper.Path}
+	 * @param point {paper.Point}
+	 * @param elongate {Boolean} - если истина, пути будут продолжены до пересечения
+	 * @return point {paper.Point}
+	 */
+	intersect_point: {
+		value: function (path, point, elongate) {
+			var intersections = this.getIntersections(path),
+				delta = 10e9, tdelta, tpoint, tpoint;
+
+			if(intersections.length == 1)
+				return intersections[0].point
+
+			else if(intersections.length > 1){
+				intersections.forEach(function(o){
+					tdelta = o.point.getDistance(point, true);
+					if(tdelta < delta){
+						delta = tdelta;
+						tpoint = o.point;
+					}
+				});
+				return tpoint;
+
+			}else if(elongate){
+
+			}
 		},
 		enumerable: false
 	}
@@ -136,7 +208,7 @@ paper.Point.prototype.__define({
 	 * Выясняет, расположена ли точка в окрестности точки
 	 * @param point {paper.Point}
 	 * @param [sticking] {Boolean}
-	 * @returns {Boolean}
+	 * @return {Boolean}
 	 */
 	is_nearest: {
 		value: function (point, sticking) {

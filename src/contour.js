@@ -248,24 +248,6 @@ function Contour(attr){
 		Contour.superclass.remove.call(this);
 	};
 
-
-	/**
-	 * Возвращает массив заполнений + створок текущего контура
-	 * @param [hide] {Boolean} - если истина, устанавливает для заполнений visible=false
-	 * @returns {Array}
-	 */
-	this.glasses = function (hide) {
-		var res = [];
-		_contour.children.forEach(function(elm) {
-			if (elm instanceof Contour || elm instanceof Filling){
-				res.push(elm);
-				if(hide)
-					elm.visible = false;
-			}
-		});
-		return res;
-	};
-
 	/**
 	 * Возвращает ребро текущего контура по узлам
 	 * @param n1 {paper.Point} - первый узел
@@ -287,37 +269,6 @@ function Contour(attr){
 		}
 	};
 
-	/**
-	 * Перерисовывает элементы контура
-	 * @method redraw
-	 */
-	this.redraw = function(){
-
-		if(!_contour.visible)
-			return;
-
-		// сначала перерисовываем все профили контура
-		var profiles = [];
-		_contour.children.forEach(function(element) {
-			if (element instanceof Profile)
-				profiles.push(element.redraw());
-		});
-
-		// создаём и перерисовываем заполнения
-		_contour.find_glasses(profiles);
-
-		// перерисовываем вложенные контуры
-		_contour.children.forEach(function(element) {
-			if (element instanceof Contour){
-				try{
-					element.redraw();
-				}catch(e){
-
-				}
-			}
-		});
-
-	};
 
 	/**
 	 * Проверяет корректность ранее созданных заполнений + создаёт новые заполнения
@@ -328,7 +279,8 @@ function Contour(attr){
 	 */
 	this.find_glasses = function(profiles){
 
-		var nodes = _contour.nodes,
+		var start = Date.now(),
+			nodes = _contour.nodes,
 			glasses = _contour.glasses(true);
 
 		if(!profiles.length)
@@ -527,6 +479,8 @@ function Contour(attr){
 			bind_glass(glass_path);
 		}
 
+		console.log(Date.now() - start);
+
 	};
 
 	// добавляем элементы контура
@@ -569,6 +523,7 @@ Contour.prototype.__define({
 	/**
 	 * Возвращает массив профилей текущего контура
 	 * @property profiles
+	 * @for Contour
 	 * @returns {Array.<Profile>}
 	 */
 	profiles: {
@@ -580,6 +535,62 @@ Contour.prototype.__define({
 				}
 			});
 			return res;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает массив заполнений + створок текущего контура
+	 * @property glasses
+	 * @for Contour
+	 * @param [hide] {Boolean} - если истина, устанавливает для заполнений visible=false
+	 * @returns {Array}
+	 */
+	glasses: {
+		value: function (hide) {
+			var res = [];
+			this.children.forEach(function(elm) {
+				if (elm instanceof Contour || elm instanceof Filling){
+					res.push(elm);
+					if(hide)
+						elm.visible = false;
+				}
+			});
+			return res;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Перерисовывает элементы контура
+	 * @method redraw
+	 * @for Contour
+	 */
+	redraw: {
+		value: function(){
+
+			if(!this.visible)
+				return;
+
+			// сначала перерисовываем все профили контура
+			var profiles = this.profiles;
+			profiles.forEach(function(element) {
+				element.redraw();
+			});
+
+			// создаём и перерисовываем заполнения
+			this.find_glasses(profiles);
+
+			// перерисовываем вложенные контуры
+			this.children.forEach(function(contour) {
+				if (contour instanceof Contour){
+					try{
+						contour.redraw();
+					}catch(e){
+
+					}
+				}
+			});
 		},
 		enumerable : false
 	},
@@ -613,7 +624,7 @@ Contour.prototype.__define({
 	outer_nodes: {
 		get: function(){
 			// сначала получим все профили
-			var res_profiles = this.profiles(),
+			var res_profiles = this.profiles,
 				to_remove = [], res = [], elm, findedb, findede;
 
 			// прочищаем, выкидывая такие, начало или конец которых соединениы не в узле
@@ -677,42 +688,235 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Возвращает массив узлов, которые потенциально могут образовывать заполнения
+	 * Возвращает массив отрезков, которые потенциально могут образовывать заполнения
 	 * (соединения с пустотой отбрасываются)
-	 * @property gnodes
+	 * @property glass_segments
 	 * @for Contour
 	 * @type {Array}
 	 */
-	gnodes: {
+	glass_segments: {
 		get: function(){
-			var findedb, findede, nodes = [], res = [];
+			var profiles = this.profiles, findedb, findede, nodes = [];
 
-			this.profiles.forEach(function (p) {
-				findedb = false;
-				findede = false;
-				// добавляем, если соединение угловое или т-образное
-				nodes.forEach(function (n) {
-					if(p.b.is_nearest(n.point)){
-						findedb = true;
-						n.profiles.push(p);
+			// для всех профилей контура
+			profiles.forEach(function (p) {
+
+				// ищем примыкания T
+				var tinner = [], touter = [], pb, pe, ip;
+				profiles.forEach(function (i) {
+					if(i == p)
+						return;
+					pb = i.cnn_point("b");
+					if(pb.profile == p && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
+						// выясним, с какой стороны примыкающий профиль
+						ip = i.corns(1);
+						if(p.rays.inner.getNearestPoint(ip).getDistance(ip, true) < p.rays.outer.getNearestPoint(ip).getDistance(ip, true))
+							tinner.push({point: pb.point.clone(), profile: i});
+						else
+							touter.push({point: pb.point.clone(), profile: i});
 					}
-					if(p.e.is_nearest(n.point)){
-						findede = true;
-						n.profiles.push(p);
+					pe = i.cnn_point("e");
+					if(pe.profile == p && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
+						ip = i.corns(2);
+						if(p.rays.inner.getNearestPoint(ip).getDistance(ip, true) < p.rays.outer.getNearestPoint(ip).getDistance(ip, true))
+							tinner.push({point: pe.point.clone(), profile: i});
+						else
+							touter.push({point: pe.point.clone(), profile: i});
 					}
 				});
-				if(!findedb)
-					nodes.push({point: p.b.clone(), profiles: [p]});
-				if(!findede)
-					nodes.push({point: p.e.clone(), profiles: [p]});
+
+				// если есть примыкания T, добавляем сегменты, исключая соединения с пустотой
+				pb = p.cnn_point("b");
+				pe = p.cnn_point("e");
+				if(tinner.length){
+					tinner.sort(function (a, b) {
+						var g = p.generatrix, da = g.getOffsetOf(a.point) , db = g.getOffsetOf(b.point);
+						if (da < db)
+							return -1;
+						else if (da > db)
+							return 1;
+						return 0;
+					});
+					if(pb.profile)
+						nodes.push({b: p.b.clone(), e: tinner[0].point.clone(), profile: p});
+					for(var i = 1; i < tinner.length; i++)
+						nodes.push({b: tinner[i-1].point.clone(), e: tinner[i].point.clone(), profile: p});
+					if(pe.profile)
+						nodes.push({b: tinner[tinner.length-1].point.clone(), e: p.e.clone(), profile: p});
+				}
+				if(touter.length){
+					touter.sort(function (a, b) {
+						var g = p.generatrix, da = g.getOffsetOf(a.point) , db = g.getOffsetOf(b.point);
+						if (da < db)
+							return -1;
+						else if (da > db)
+							return 1;
+						return 0;
+					});
+					if(pb.profile)
+						nodes.push({b: touter[0].point.clone(), e: p.b.clone(), profile: p, outer: true});
+					for(var i = 1; i < touter.length; i++)
+						nodes.push({b: touter[i].point.clone(), e: touter[i-1].point.clone(), profile: p, outer: true});
+					if(pe.profile)
+						nodes.push({b: p.e.clone(), e: touter[touter.length-1].point.clone(), profile: p, outer: true});
+				}
+				if(!tinner.length){
+					// добавляем, если нет соединений с пустотой
+					if(pb.profile && pe.profile)
+						nodes.push({b: p.b.clone(), e: p.e.clone(), profile: p});
+				}
+				if(!touter.length && ((pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное) || (pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное))){
+					// добавляем, если нет соединений с пустотой
+					if(pb.profile && pe.profile)
+						nodes.push({b: p.e.clone(), e: p.b.clone(), profile: p, outer: true});
+				}
 			});
 
-			nodes.forEach(function (n) {
-				if(n.profiles.length > 1)
-					res.push(n);
-			});
-			nodes = null;
+			return nodes;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает массив массивов сегментов - база для построения пути заполнений
+	 * @property glass_contours
+	 * @for Contour
+	 * @type {Array}
+	 */
+	glass_contours: {
+		get: function(){
+			var segments = this.glass_segments,
+				curr, acurr, res = [];
+
+			// возвращает массив сегментов, которые могут следовать за текущим
+			function find_next(curr){
+				if(!curr.anext){
+					curr.anext = [];
+					segments.forEach(function (segm) {
+						if(segm == curr || segm.profile == curr.profile)
+							return;
+						if(curr.e.is_nearest(segm.b))
+							curr.anext.push(segm);
+					});
+				}
+				return curr.anext;
+			}
+
+			// рекурсивно получает следующий сегмент, пока не уткнётся в текущий
+			function go_go(segm){
+				var anext = find_next(segm);
+				for(var i in anext){
+					if(anext[i] == curr)
+						return anext;
+					else if(acurr.every(function (el) {	return el != anext[i]; })){
+						acurr.push(anext[i]);
+						return go_go(anext[i]);
+					}
+				}
+			}
+
+			while(segments.length){
+				if(curr == segments[0])
+					break;
+				curr = segments[0];
+				acurr = [curr];
+				if(go_go(curr) && acurr.length > 1){
+					res.push(acurr);
+					acurr.forEach(function (el) {
+						var ind = segments.indexOf(el);
+						if(ind != -1)
+							segments.splice(ind, 1);
+					});
+				}
+			};
+
 			return res;
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Получает замкнутые контуры, ищет подходящие створки или заполнения, при необходимости создаёт новые
+	 * @method glass_recalc
+	 * @for Contour
+	 */
+	glass_recalc: {
+		value: function () {
+			var _contour = this,
+				contours = _contour.glass_contours,
+				nodes = _contour.nodes,
+				glasses = _contour.glasses(true);
+
+			/**
+			 * Привязывает к пути найденной замкнутой области заполнение или вложенный контур текущего контура
+			 * @param glass_contour {Array}
+			 */
+			function bind_glass(glass_contour){
+				var rating = 0, glass, сrating, сglass, glass_nodes, glass_path_center;
+
+				for(var g in glasses){
+
+					if((glass = glasses[g]).visible)
+						continue;
+
+					glass_nodes = glass.nodes;
+
+					// вычисляем рейтинг
+					сrating = 0;
+					for(var j in glass_contour){
+						for(var i in glass_nodes){
+							if(glass_contour[j].b.is_nearest(glass_nodes[i])){
+								сrating++;
+								break;
+							}
+						}
+						if(сrating > 2)
+							break;
+
+					}
+					if(сrating > rating || !сglass){
+						rating = сrating;
+						сglass = glass;
+					}
+					if(сrating == rating && сglass != glass){
+						if(!glass_path_center)
+							glass_path_center = glass_contour.bounds.center;
+						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(сglass.bounds.center, true))
+							сglass = glass;
+					}
+				}
+
+				// TODO реализовать настоящее ранжирование
+				if(сglass || (сglass = _contour.getItem({class: Filling, visible: false}))) {
+					сglass.path = glass_contour;
+					сglass.visible = true;
+					if (сglass instanceof Filling) {
+						сglass.sendToBack();
+						сglass.path.visible = true;
+					}
+				}else{
+					// добавляем заполнение
+					// 1. ищем в изделии любое заполнение
+					// 2. если не находим, используем умолчание системы
+					if(glass = _contour.getItem({class: Filling})){
+
+					}else if(glass = _contour.project.getItem({class: Filling})){
+
+					}else{
+
+					}
+					сglass = new Filling({proto: glass, parent: _contour, path: glass_contour});
+					сglass.sendToBack();
+					сglass.path.visible = true;
+				}
+			}
+
+			/**
+			 * Бежим по найденным контурам заполнений и выполняем привязку
+			 */
+			contours.forEach(bind_glass);
+
 		},
 		enumerable : false
 	},
@@ -735,7 +939,7 @@ Contour.prototype.__define({
 				d, d1, d2, node1, node2;
 
 			if(!nodes)
-				nodes = _contour.nodes;
+				nodes = this.nodes;
 
 			if(bind){
 				path.data.curve_nodes = curve_nodes;
