@@ -153,51 +153,6 @@ function Profile(attr){
 
 
 	/**
-	 * Расстояние от узла до опорной линии
-	 * для створок и вложенных элементов зависит от ширины элементов и свойств примыкающих соединений
-	 * не имеет смысла для заполнения, но нужно для рёбер заполнений
-	 * @property d0
-	 * @type Number
-	 */
-	this.__define('d0', {
-		get : function(){
-			var res = 0, nearest = _profile.nearest();
-			while(nearest){
-				res -= nearest.d2 + 20;
-				nearest = nearest.nearest();
-			}
-			return res;
-		},
-		enumerable : true,
-		configurable : false
-	});
-
-	/**
-	 * Расстояние от узла до внешнего ребра элемента
-	 * для рамы, обычно = 0, для импоста 1/2 ширины
-	 * зависит от ширины элементов и свойств примыкающих соединений
-	 * @property d1
-	 * @type Number
-	 */
-	this.__define('d1', {
-		get : function(){ return -(_profile.d0 - _profile.sizeb); },
-		enumerable : true,
-		configurable : false
-	});
-
-	/**
-	 * Расстояние от узла до внутреннего ребра элемента
-	 * зависит от ширины элементов и свойств примыкающих соединений
-	 * @property d2
-	 * @type Number
-	 */
-	this.__define('d2', {
-		get : function(){ return this.d1 - this.width; },
-		enumerable : true,
-		configurable : false
-	});
-
-	/**
 	 * Координаты начала элемента
 	 * @property b
 	 * @type Point
@@ -700,20 +655,7 @@ Profile.prototype.__define({
 	postcalc_cnn: {
 		value: function(cnn_point){
 
-			// если установленное ранее соединение проходит по типу, нового не ищем
-			if(cnn_point.cnn && (cnn_point.cnn_types.indexOf(cnn_point.cnn.cnn_type)!=-1))
-				return cnn_point;
-
-			// список доступных соединений сразу ограничиваем типом соединения
-			var cnns = [];
-			$p.cat.cnns.nom_cnn(this.nom, cnn_point.profile ? cnn_point.profile.nom : null).forEach(function(o){
-				if(cnn_point.cnn_types.indexOf(o.cnn_type)!=-1)
-					cnns.push(o);
-			});
-
-			// для примера подставляем первое попавшееся соединение
-			if(cnns.length)
-				cnn_point.cnn = cnns[0];
+			cnn_point.cnn = $p.cat.cnns.elm_cnn(this, cnn_point.profile, cnn_point.cnn_types, cnn_point.cnn);
 
 			return cnn_point;
 		},
@@ -786,6 +728,9 @@ Profile.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Возвращает точку, расположенную гарантированно внутри профиля
+	 */
 	interiorPoint: {
 		value: function () {
 			var gen = this.generatrix, igen;
@@ -817,6 +762,49 @@ Profile.prototype.__define({
 			this.view.update();
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Расстояние от узла до опорной линии
+	 * для створок и вложенных элементов зависит от ширины элементов и свойств примыкающих соединений
+	 * не имеет смысла для заполнения, но нужно для рёбер заполнений
+	 * @property d0
+	 * @type Number
+	 */
+	d0: {
+		get : function(){
+			var res = 0,
+				nearest = this.nearest();
+			while(nearest){
+				res -= nearest.d2 + 20;
+				nearest = nearest.nearest();
+			}
+			return res;
+		},
+		enumerable : true
+	},
+
+	/**
+	 * Расстояние от узла до внешнего ребра элемента
+	 * для рамы, обычно = 0, для импоста 1/2 ширины
+	 * зависит от ширины элементов и свойств примыкающих соединений
+	 * @property d1
+	 * @type Number
+	 */
+	d1: {
+		get : function(){ return -(this.d0 - this.sizeb); },
+		enumerable : true
+	},
+
+	/**
+	 * Расстояние от узла до внутреннего ребра элемента
+	 * зависит от ширины элементов и свойств примыкающих соединений
+	 * @property d2
+	 * @type Number
+	 */
+	d2: {
+		get : function(){ return this.d1 - this.width; },
+		enumerable : true
 	}
 
 });
@@ -896,30 +884,19 @@ function ProfileRays(){
 		tangent_b = path.getTangentAt(0);
 		normal_b = path.getNormalAt(0);
 
-		// последняя точка эквидистанты. аппроксимируется прямой , если to > конца пути
+		// добавляем первые точки путей
+		this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
+		this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
 		point_e = path.lastSegment.point;
 
 		// для прямого пути, чуть наклоняем нормаль
 		if(path.is_linear()){
 
-			tangent_e = tangent_b.clone();
-
-			//tangent_b.angle += 0.0001;
-			//tangent_e.angle -= 0.0001;
-
-			this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
-			this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_e.multiply(-ds)));
-			//this.outer.add(point_b.add(normal_b.multiply(d1)));
-			//this.inner.add(point_b.add(normal_b.multiply(d2)));
-			//this.outer.add(point_e.add(normal_b.multiply(d1)));
-			//this.inner.add(point_e.add(normal_b.multiply(d2)));
-			this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_e.multiply(ds)));
+			this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
 			this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
 
 		}else{
 
-			this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
-			this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
 			this.outer.add(point_b.add(normal_b.multiply(d1)));
 			this.inner.add(point_b.add(normal_b.multiply(d2)));
 

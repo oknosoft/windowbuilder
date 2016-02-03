@@ -170,16 +170,14 @@ function Contour(attr){
 
 				// удаляем лишнее
 				if(available_bind){
-					for(var j in outer_nodes){
-						elm = outer_nodes[j];
-						if(elm.data.binded)
-							continue;
-						elm.rays.clear(true);
-						elm.remove();
-						available_bind--;
-					}
+					outer_nodes.forEach(function (elm) {
+						if(!elm.data.binded){
+							elm.rays.clear(true);
+							elm.remove();
+							available_bind--;
+						}
+					});
 				}
-
 			}
 		},
 		enumerable : true
@@ -579,7 +577,8 @@ Contour.prototype.__define({
 			});
 
 			// создаём и перерисовываем заполнения
-			this.find_glasses(profiles);
+			//this.find_glasses(profiles);
+			this.glass_recalc();
 
 			// перерисовываем вложенные контуры
 			this.children.forEach(function(contour) {
@@ -880,8 +879,12 @@ Contour.prototype.__define({
 						сglass = glass;
 					}
 					if(сrating == rating && сglass != glass){
-						if(!glass_path_center)
-							glass_path_center = glass_contour.bounds.center;
+						if(!glass_path_center){
+							glass_path_center = glass_nodes[0];
+							for(var i=1; i<glass_nodes.length; i++)
+								glass_path_center = glass_path_center.add(glass_nodes[i]);
+							glass_path_center = glass_path_center.divide(glass_nodes.length);
+						}
 						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(сglass.bounds.center, true))
 							сglass = glass;
 					}

@@ -145,7 +145,7 @@ BuilderElement.prototype.__define({
 	// номенклатура - свойство только для чтения, т.к. вычисляется во вставке
 	nom:{
 		get : function(){
-			return this.inset.nom;
+			return this.inset.nom(this);
 		},
 		enumerable : false
 	},
@@ -191,7 +191,7 @@ BuilderElement.prototype.__define({
 	// опорный размер (0 для рам и створок, 1/2 ширины для импостов)
 	sizeb: {
 		get : function(){
-			return this.nom.sizeb || 0;
+			return this.inset.sizeb || this.nom.sizeb || 0;
 		},
 		enumerable : false
 	},

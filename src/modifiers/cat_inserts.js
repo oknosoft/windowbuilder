@@ -9,9 +9,21 @@
 
 $p.modifiers.push(
 	function($p){
-		$p.cat.inserts._obj_сonstructor.prototype.__define("nom", {
-			get: function () {
-				return this.specification.count() ? this.specification.get(0).nom : $p.cat.nom.get();
+
+		var _mgr = $p.cat.inserts
+
+		_mgr._obj_сonstructor.prototype.__define("nom", {
+			value: function (elm) {
+
+				var main_row = this.specification.find({is_main_elm: true});
+				if(!main_row && this.specification.count())
+					main_row = this.specification.get(0);
+				if(main_row && main_row.nom instanceof _mgr._obj_сonstructor)
+					return main_row.nom.nom();
+				else if(main_row)
+					return main_row.nom;
+				else
+					return $p.cat.nom.get();
 			},
 			enumerable: false
 		});

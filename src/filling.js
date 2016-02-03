@@ -117,12 +117,19 @@ Filling.prototype.__define({
 
 
 			}else if(Array.isArray(glass_path)){
-				var length = glass_path.length, prev, curr, next, cnn;
+				var length = glass_path.length, prev, curr, next, cnn, sub_path;
 				// получам эквидистанты сегментов, смещенные на размер соединения
 				for(var i=0; i<length; i++ ){
 					curr = glass_path[i];
-					cnn = undefined;
-					curr.sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e).equidistant(-30);
+					next = i==length-1 ? glass_path[0] : glass_path[i+1];
+					cnn = $p.cat.cnns.elm_cnn(this, curr.profile);
+					sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e);
+
+					//sub_path.data.reversed = curr.profile.generatrix.getDirectedAngle(next.e) < 0;
+					//if(sub_path.data.reversed)
+					//	curr.outer = !curr.outer;
+					curr.sub_path = sub_path.equidistant(
+						(sub_path.data.reversed ? -curr.profile.d1 : curr.profile.d2) + (cnn ? cnn.sz : 20), consts.sticking);
 				}
 				// получам пересечения
 				for(var i=0; i<length; i++ ){
@@ -157,7 +164,7 @@ Filling.prototype.__define({
 	nodes: {
 		get: function () {
 			var res = [];
-			if(this.data._profiles.length){
+			if(this.data._profiles && this.data._profiles.length){
 				this.data._profiles.forEach(function (curr) {
 					res.push(curr.b);
 				});

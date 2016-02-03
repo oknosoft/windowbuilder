@@ -32,9 +32,10 @@ $p.modifiers.push(
 		 * Для соединений с заполнениями учитывается толщина. Контроль остальных геометрических особенностей выполняется на стороне рисовалки
 		 * @param nom1 {_cat.nom}
 		 * @param nom2 {_cat.nom}
+		 * @param [cnn_type] {_enm.cnns}
 		 * @return {Array}
 		 */
-		_mgr.nom_cnn = function(nom1, nom2){
+		_mgr.nom_cnn = function(nom1, nom2, cnn_type){
 
 			if(!nom1 || nom1.empty())
 				return [];
@@ -80,25 +81,50 @@ $p.modifiers.push(
 				});
 			}
 
+			if(cnn_type){
+				var tmp = a1[nom2.ref], res = [], types;
+
+				if(Array.isArray(cnn_type))
+					types = cnn_type;
+				else if($p.enm.cnn_types.acn.a.indexOf(cnn_type) != -1)
+					types = $p.enm.cnn_types.acn.a;
+				else
+					types = [cnn_type];
+
+				tmp.forEach(function (c) {
+					if(types.indexOf(c.cnn_type) != -1)
+						res.push(c);
+				});
+				return res;
+			}
+
 			return a1[nom2.ref];
 		};
 
-		_mgr.nom_cnn_type = function (nom1, nom2, cnn_type) {
-			var tmp = _mgr.nom_cnn(nom1, nom2),
-				res = [], types;
-			if($p.enm.cnn_types.acn.a.indexOf(cnn_type) != -1)
-				types = $p.enm.cnn_types.acn.a;
-			else
-				types = [cnn_type];
+		/**
+		 * Возвращает соединение между элементами
+		 * @param elm1
+		 * @param elm2
+		 * @param [cnn_types] {Array}
+		 * @param [curr_cnn] {_cat.cnns}
+		 */
+		_mgr.elm_cnn = function(elm1, elm2, cnn_types, curr_cnn){
 
-			tmp.forEach(function (c) {
-				if(types.indexOf(c.cnn_type) != -1)
-					res.push(c);
-			});
-			return res;
+			if(curr_cnn && cnn_types && (cnn_types.indexOf(curr_cnn.cnn_type)!=-1)){
+				// если установленное ранее соединение проходит по типу, нового не ищем
+				// TODO: проверить геометрию
+				return curr_cnn;
+			}
 
-		};
+			var cnns = _mgr.nom_cnn(elm1 ? elm1.nom : null, elm2 ? elm2.nom : null, cnn_types);
 
+			// для примера подставляем первое попавшееся соединение
+			if(cnns.length)
+				return cnns[0];
+			else{
+				// TODO: возможно, надо вернуть соединение с пустотой
+			}
+		}
 
 	}
 );

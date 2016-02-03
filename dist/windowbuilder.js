@@ -77,6 +77,7 @@ paper.Path.prototype.__define({
 			}else if(point2.is_nearest(this.firstSegment.point) && point1.is_nearest(this.lastSegment.point)){
 				tmp = this.clone(false);
 				tmp.reverse();
+				tmp.data.reversed = true;
 
 			} else{
 
@@ -103,17 +104,19 @@ paper.Path.prototype.__define({
 						});
 
 					if(step < 0){
-						for(var i = loc2.offset; i>=loc1.offset; i+=step) {
+						tmp.data.reversed = true;
+						for(var i = loc1.offset; i>=loc2.offset; i+=step)
 							tmp.add(this.getPointAt(i));
-						}
 					}else{
-						for(var i = loc1.offset; i<=loc2.offset; i+=step) {
+						for(var i = loc1.offset; i<=loc2.offset; i+=step)
 							tmp.add(this.getPointAt(i));
-						}
 					}
 					tmp.add(point2);
 					tmp.simplify(0.8);
 				}
+
+				if(loc1.offset > loc2.offset)
+					tmp.data.reversed = true;
 			}
 
 			return tmp;
@@ -123,11 +126,12 @@ paper.Path.prototype.__define({
 
 	/**
 	 * возвращает путь, равноотстоящий от текущего пути
-	 * @param delta {number}
+	 * @param delta {number} - расстояние, на которое будет смещен новый путь
+	 * @param elong {number} - удлинение нового пути с каждого конца
 	 * @return {paper.Path}
 	 */
 	equidistant: {
-		value: function (delta) {
+		value: function (delta, elong) {
 
 			var normal = this.getNormalAt(0),
 				res = new paper.Path({
@@ -159,7 +163,7 @@ paper.Path.prototype.__define({
 				res.simplify(0.8);
 			};
 
-			return res;
+			return res.elongation(elong);
 		},
 		enumerable: false
 	},
@@ -168,7 +172,21 @@ paper.Path.prototype.__define({
 	 * Удлиняет путь касательными в начальной и конечной точках
 	 */
 	elongation: {
-		value: function (delta1, delta2) {
+		value: function (delta) {
+
+			if(delta){
+				var tangent = this.getTangentAt(0);
+				if(this.is_linear()) {
+					this.firstSegment.point = this.firstSegment.point.add(tangent.multiply(-delta));
+					this.lastSegment.point = this.lastSegment.point.add(tangent.multiply(delta));
+				}else{
+					this.insert(0, this.firstSegment.point.add(tangent.multiply(-delta)));
+					tangent = this.getTangentAt(this.length);
+					this.add(this.lastSegment.point.add(tangent.multiply(delta)));
+				}
+			}
+
+			return this;
 
 		},
 		enumerable: false
@@ -496,7 +514,7 @@ BuilderElement.prototype.__define({
 	// номенклатура - свойство только для чтения, т.к. вычисляется во вставке
 	nom:{
 		get : function(){
-			return this.inset.nom;
+			return this.inset.nom(this);
 		},
 		enumerable : false
 	},
@@ -542,7 +560,7 @@ BuilderElement.prototype.__define({
 	// опорный размер (0 для рам и створок, 1/2 ширины для импостов)
 	sizeb: {
 		get : function(){
-			return this.nom.sizeb || 0;
+			return this.inset.sizeb || this.nom.sizeb || 0;
 		},
 		enumerable : false
 	},
@@ -1339,16 +1357,14 @@ function Contour(attr){
 
 				// удаляем лишнее
 				if(available_bind){
-					for(var j in outer_nodes){
-						elm = outer_nodes[j];
-						if(elm.data.binded)
-							continue;
-						elm.rays.clear(true);
-						elm.remove();
-						available_bind--;
-					}
+					outer_nodes.forEach(function (elm) {
+						if(!elm.data.binded){
+							elm.rays.clear(true);
+							elm.remove();
+							available_bind--;
+						}
+					});
 				}
-
 			}
 		},
 		enumerable : true
@@ -1748,7 +1764,8 @@ Contour.prototype.__define({
 			});
 
 			// создаём и перерисовываем заполнения
-			this.find_glasses(profiles);
+			//this.find_glasses(profiles);
+			this.glass_recalc();
 
 			// перерисовываем вложенные контуры
 			this.children.forEach(function(contour) {
@@ -2049,8 +2066,12 @@ Contour.prototype.__define({
 						сglass = glass;
 					}
 					if(сrating == rating && сglass != glass){
-						if(!glass_path_center)
-							glass_path_center = glass_contour.bounds.center;
+						if(!glass_path_center){
+							glass_path_center = glass_nodes[0];
+							for(var i=1; i<glass_nodes.length; i++)
+								glass_path_center = glass_path_center.add(glass_nodes[i]);
+							glass_path_center = glass_path_center.divide(glass_nodes.length);
+						}
 						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(сglass.bounds.center, true))
 							сglass = glass;
 					}
@@ -2357,51 +2378,6 @@ function Profile(attr){
 		return _nearest;
 	};
 
-
-	/**
-	 * Расстояние от узла до опорной линии
-	 * для створок и вложенных элементов зависит от ширины элементов и свойств примыкающих соединений
-	 * не имеет смысла для заполнения, но нужно для рёбер заполнений
-	 * @property d0
-	 * @type Number
-	 */
-	this.__define('d0', {
-		get : function(){
-			var res = 0, nearest = _profile.nearest();
-			while(nearest){
-				res -= nearest.d2 + 20;
-				nearest = nearest.nearest();
-			}
-			return res;
-		},
-		enumerable : true,
-		configurable : false
-	});
-
-	/**
-	 * Расстояние от узла до внешнего ребра элемента
-	 * для рамы, обычно = 0, для импоста 1/2 ширины
-	 * зависит от ширины элементов и свойств примыкающих соединений
-	 * @property d1
-	 * @type Number
-	 */
-	this.__define('d1', {
-		get : function(){ return -(_profile.d0 - _profile.sizeb); },
-		enumerable : true,
-		configurable : false
-	});
-
-	/**
-	 * Расстояние от узла до внутреннего ребра элемента
-	 * зависит от ширины элементов и свойств примыкающих соединений
-	 * @property d2
-	 * @type Number
-	 */
-	this.__define('d2', {
-		get : function(){ return this.d1 - this.width; },
-		enumerable : true,
-		configurable : false
-	});
 
 	/**
 	 * Координаты начала элемента
@@ -2906,20 +2882,7 @@ Profile.prototype.__define({
 	postcalc_cnn: {
 		value: function(cnn_point){
 
-			// если установленное ранее соединение проходит по типу, нового не ищем
-			if(cnn_point.cnn && (cnn_point.cnn_types.indexOf(cnn_point.cnn.cnn_type)!=-1))
-				return cnn_point;
-
-			// список доступных соединений сразу ограничиваем типом соединения
-			var cnns = [];
-			$p.cat.cnns.nom_cnn(this.nom, cnn_point.profile ? cnn_point.profile.nom : null).forEach(function(o){
-				if(cnn_point.cnn_types.indexOf(o.cnn_type)!=-1)
-					cnns.push(o);
-			});
-
-			// для примера подставляем первое попавшееся соединение
-			if(cnns.length)
-				cnn_point.cnn = cnns[0];
+			cnn_point.cnn = $p.cat.cnns.elm_cnn(this, cnn_point.profile, cnn_point.cnn_types, cnn_point.cnn);
 
 			return cnn_point;
 		},
@@ -2992,6 +2955,9 @@ Profile.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Возвращает точку, расположенную гарантированно внутри профиля
+	 */
 	interiorPoint: {
 		value: function () {
 			var gen = this.generatrix, igen;
@@ -3023,6 +2989,49 @@ Profile.prototype.__define({
 			this.view.update();
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Расстояние от узла до опорной линии
+	 * для створок и вложенных элементов зависит от ширины элементов и свойств примыкающих соединений
+	 * не имеет смысла для заполнения, но нужно для рёбер заполнений
+	 * @property d0
+	 * @type Number
+	 */
+	d0: {
+		get : function(){
+			var res = 0,
+				nearest = this.nearest();
+			while(nearest){
+				res -= nearest.d2 + 20;
+				nearest = nearest.nearest();
+			}
+			return res;
+		},
+		enumerable : true
+	},
+
+	/**
+	 * Расстояние от узла до внешнего ребра элемента
+	 * для рамы, обычно = 0, для импоста 1/2 ширины
+	 * зависит от ширины элементов и свойств примыкающих соединений
+	 * @property d1
+	 * @type Number
+	 */
+	d1: {
+		get : function(){ return -(this.d0 - this.sizeb); },
+		enumerable : true
+	},
+
+	/**
+	 * Расстояние от узла до внутреннего ребра элемента
+	 * зависит от ширины элементов и свойств примыкающих соединений
+	 * @property d2
+	 * @type Number
+	 */
+	d2: {
+		get : function(){ return this.d1 - this.width; },
+		enumerable : true
 	}
 
 });
@@ -3102,30 +3111,19 @@ function ProfileRays(){
 		tangent_b = path.getTangentAt(0);
 		normal_b = path.getNormalAt(0);
 
-		// последняя точка эквидистанты. аппроксимируется прямой , если to > конца пути
+		// добавляем первые точки путей
+		this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
+		this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
 		point_e = path.lastSegment.point;
 
 		// для прямого пути, чуть наклоняем нормаль
 		if(path.is_linear()){
 
-			tangent_e = tangent_b.clone();
-
-			//tangent_b.angle += 0.0001;
-			//tangent_e.angle -= 0.0001;
-
-			this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
-			this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_e.multiply(-ds)));
-			//this.outer.add(point_b.add(normal_b.multiply(d1)));
-			//this.inner.add(point_b.add(normal_b.multiply(d2)));
-			//this.outer.add(point_e.add(normal_b.multiply(d1)));
-			//this.inner.add(point_e.add(normal_b.multiply(d2)));
-			this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_e.multiply(ds)));
+			this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
 			this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
 
 		}else{
 
-			this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
-			this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
 			this.outer.add(point_b.add(normal_b.multiply(d1)));
 			this.inner.add(point_b.add(normal_b.multiply(d2)));
 
@@ -3274,12 +3272,19 @@ Filling.prototype.__define({
 
 
 			}else if(Array.isArray(glass_path)){
-				var length = glass_path.length, prev, curr, next, cnn;
+				var length = glass_path.length, prev, curr, next, cnn, sub_path;
 				// получам эквидистанты сегментов, смещенные на размер соединения
 				for(var i=0; i<length; i++ ){
 					curr = glass_path[i];
-					cnn = undefined;
-					curr.sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e).equidistant(-30);
+					next = i==length-1 ? glass_path[0] : glass_path[i+1];
+					cnn = $p.cat.cnns.elm_cnn(this, curr.profile);
+					sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e);
+
+					//sub_path.data.reversed = curr.profile.generatrix.getDirectedAngle(next.e) < 0;
+					//if(sub_path.data.reversed)
+					//	curr.outer = !curr.outer;
+					curr.sub_path = sub_path.equidistant(
+						(sub_path.data.reversed ? -curr.profile.d1 : curr.profile.d2) + (cnn ? cnn.sz : 20), consts.sticking);
 				}
 				// получам пересечения
 				for(var i=0; i<length; i++ ){
@@ -3314,7 +3319,7 @@ Filling.prototype.__define({
 	nodes: {
 		get: function () {
 			var res = [];
-			if(this.data._profiles.length){
+			if(this.data._profiles && this.data._profiles.length){
 				this.data._profiles.forEach(function (curr) {
 					res.push(curr.b);
 				});

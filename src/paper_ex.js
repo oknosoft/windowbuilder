@@ -68,6 +68,7 @@ paper.Path.prototype.__define({
 			}else if(point2.is_nearest(this.firstSegment.point) && point1.is_nearest(this.lastSegment.point)){
 				tmp = this.clone(false);
 				tmp.reverse();
+				tmp.data.reversed = true;
 
 			} else{
 
@@ -94,17 +95,19 @@ paper.Path.prototype.__define({
 						});
 
 					if(step < 0){
-						for(var i = loc2.offset; i>=loc1.offset; i+=step) {
+						tmp.data.reversed = true;
+						for(var i = loc1.offset; i>=loc2.offset; i+=step)
 							tmp.add(this.getPointAt(i));
-						}
 					}else{
-						for(var i = loc1.offset; i<=loc2.offset; i+=step) {
+						for(var i = loc1.offset; i<=loc2.offset; i+=step)
 							tmp.add(this.getPointAt(i));
-						}
 					}
 					tmp.add(point2);
 					tmp.simplify(0.8);
 				}
+
+				if(loc1.offset > loc2.offset)
+					tmp.data.reversed = true;
 			}
 
 			return tmp;
@@ -114,11 +117,12 @@ paper.Path.prototype.__define({
 
 	/**
 	 * возвращает путь, равноотстоящий от текущего пути
-	 * @param delta {number}
+	 * @param delta {number} - расстояние, на которое будет смещен новый путь
+	 * @param elong {number} - удлинение нового пути с каждого конца
 	 * @return {paper.Path}
 	 */
 	equidistant: {
-		value: function (delta) {
+		value: function (delta, elong) {
 
 			var normal = this.getNormalAt(0),
 				res = new paper.Path({
@@ -150,7 +154,7 @@ paper.Path.prototype.__define({
 				res.simplify(0.8);
 			};
 
-			return res;
+			return res.elongation(elong);
 		},
 		enumerable: false
 	},
@@ -159,7 +163,21 @@ paper.Path.prototype.__define({
 	 * Удлиняет путь касательными в начальной и конечной точках
 	 */
 	elongation: {
-		value: function (delta1, delta2) {
+		value: function (delta) {
+
+			if(delta){
+				var tangent = this.getTangentAt(0);
+				if(this.is_linear()) {
+					this.firstSegment.point = this.firstSegment.point.add(tangent.multiply(-delta));
+					this.lastSegment.point = this.lastSegment.point.add(tangent.multiply(delta));
+				}else{
+					this.insert(0, this.firstSegment.point.add(tangent.multiply(-delta)));
+					tangent = this.getTangentAt(this.length);
+					this.add(this.lastSegment.point.add(tangent.multiply(delta)));
+				}
+			}
+
+			return this;
 
 		},
 		enumerable: false
