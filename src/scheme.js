@@ -269,6 +269,13 @@ function Scheme(_canvas){
 	};
 
 	/**
+	 * информирует о наличии изменений
+	 */
+	this.has_changes = function () {
+		return _changes.length > 0;
+	};
+
+	/**
 	 * Регистрирует необходимость обновить изображение
  	 */
 	this.register_update = function () {
@@ -277,7 +284,7 @@ function Scheme(_canvas){
 			setTimeout(function () {
 				_scheme.view.update();
 				update_timer = false;
-			}, 50);
+			}, 100);
 		}
 	};
 
@@ -371,22 +378,35 @@ function Scheme(_canvas){
 	function redraw () {
 
 		function process_redraw(){
+
+			var llength = 0;
+
+			function on_contour_redrawed(){
+				if(!_changes.length){
+					llength--;
+					if(!llength)
+						_scheme.view.update();
+				}
+			}
+
 			if(_changes.length){
 				//console.log(_changes.length);
 				_changes.length = 0;
+
 				_scheme.layers.forEach(function(l){
 					if(l instanceof Contour){
-						l.redraw();
+						llength++;
+						l.redraw(on_contour_redrawed);
 					}
 				});
-				_scheme.view.update();
+
 			}
 		}
 
 		setTimeout(function() {
 			requestAnimationFrame(redraw);
 			process_redraw();
-		}, 50);
+		}, 30);
 
 		//requestAnimationFrame(redraw);
 		//setTimeout(process_redraw, 20);

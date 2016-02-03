@@ -565,31 +565,45 @@ Contour.prototype.__define({
 	 * @for Contour
 	 */
 	redraw: {
-		value: function(){
+		value: function(on_contour_redrawed){
 
 			if(!this.visible)
-				return;
+				return on_contour_redrawed();
+
+			var _contour = this,
+				profiles = this.profiles,
+				llength = 0;
+
+			function on_child_contour_redrawed(){
+				llength--;
+				if(!llength)
+					on_contour_redrawed();
+			}
 
 			// сначала перерисовываем все профили контура
-			var profiles = this.profiles;
 			profiles.forEach(function(element) {
 				element.redraw();
 			});
 
 			// создаём и перерисовываем заполнения
-			//this.find_glasses(profiles);
-			this.glass_recalc();
+			//_contour.find_glasses(profiles);
+			_contour.glass_recalc();
 
 			// перерисовываем вложенные контуры
-			this.children.forEach(function(contour) {
-				if (contour instanceof Contour){
-					try{
-						contour.redraw();
-					}catch(e){
-
-					}
+			_contour.children.forEach(function(child_contour) {
+				if (child_contour instanceof Contour){
+					llength++;
+					setTimeout(function () {
+						if(!_contour.project.has_changes())
+							child_contour.redraw(on_child_contour_redrawed);
+					})
 				}
 			});
+
+			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
+			if(!llength)
+				on_contour_redrawed();
+
 		},
 		enumerable : false
 	},
