@@ -1554,9 +1554,9 @@ $p.modifiers.push(
 $p.modifiers.push(
 	function($p){
 
-		$p.products_building = new ProductsBuilding($p);
+		$p.products_building = new ProductsBuilding();
 
-		function ProductsBuilding($p){
+		function ProductsBuilding(){
 
 			/**
 			 * Перед записью изделия построителя
@@ -1568,13 +1568,65 @@ $p.modifiers.push(
 			 * @param prm
 			 * @param cancel
 			 */
-			this.before_save = function (o, row, prm, cancel) {
+			function before_save(o, row, prm, cancel) {
 
 			}
 
-			$p.eve.attachEvent("save_coordinates", function (dp) {
+			/**
+			 * Спецификации фурнитуры
+			 */
+			function spec_furn(scheme, spec) {
 
-				var attr = {url: ""};
+			}
+
+			/**
+			 * Спецификации соединений
+			 */
+			function spec_cnns(scheme, spec) {
+
+			}
+
+			/**
+			 * Спецификации вставок
+			 */
+			function spec_insets(scheme, spec) {
+
+			}
+
+			/**
+			 * Базовая cпецификация по соединениям и вставкам таблицы координат
+			 */
+			function spec_base(scheme, spec) {
+
+				// для всех контуров изделия
+				scheme.contours.forEach(function (contour) {
+
+					// для всех профилей контура
+					contour.profiles.forEach(function (profile) {
+
+					});
+
+					// для всех заполнений контура
+					contour.glasses(false, true).forEach(function (profile) {
+
+					});
+				});
+
+			}
+
+			/**
+			 * Пересчет спецификации при записи изделия
+			 */
+			$p.eve.attachEvent("save_coordinates", function (scheme) {
+
+				var attr = {url: ""},
+					spec = scheme.ox.specification;
+
+				// чистим спецификацию
+				spec.clear();
+
+				// рассчитываем базовую сецификацию
+				spec_base(scheme, spec);
 
 				$p.rest.build_select(attr, {
 					rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",
@@ -1583,9 +1635,9 @@ $p.modifiers.push(
 
 				return $p.ajax.post_ex(attr.url,
 					JSON.stringify({
-						ox: dp.characteristic._obj,
-						dp: dp._obj,
-						doc: dp.characteristic.calc_order._obj
+						dp: scheme._dp._obj,
+						ox: scheme.ox._obj,
+						doc: scheme.ox.calc_order._obj
 					}), attr)
 					.then(function (req) {
 						return JSON.parse(req.response);

@@ -954,24 +954,32 @@ function Scheme(_canvas){
 		}
 	};
 
+
+
 	/**
 	 * Снимает выделение со всех узлов всех путей
 	 * В отличии от deselectAll() сами пути могут оставаться выделенными
 	 * учитываются узлы всех путей, в том числе и не выделенных
 	 */
 	this.deselect_all_points = function() {
-		this.layers.forEach(function (l) {
-			if (l instanceof Contour) {
-				var selected = l.getItems({class: paper.Path});
-				for (var i = 0; i < selected.length; i++) {
-					var item = selected[i];
-					item.segments.forEach(function (s) {
-						if (s.selected)
-							s.selected = false;
-					});
-				}
-			}
-		});
+		this.getItems({class: paper.Path}).forEach(function (item) {
+			item.segments.forEach(function (s) {
+				if (s.selected)
+					s.selected = false;
+			});
+		})
+		//this.layers.forEach(function (l) {
+		//	if (l instanceof Contour) {
+		//		var selected = l.getItems({class: paper.Path});
+		//		for (var i = 0; i < selected.length; i++) {
+		//			var item = selected[i];
+		//			item.segments.forEach(function (s) {
+		//				if (s.selected)
+		//					s.selected = false;
+		//			});
+		//		}
+		//	}
+		//});
 	};
 
 	/**
@@ -1072,7 +1080,7 @@ function Scheme(_canvas){
 		setTimeout(function() {
 			requestAnimationFrame(redraw);
 			process_redraw();
-		}, 30);
+		}, 20);
 
 		//requestAnimationFrame(redraw);
 		//setTimeout(process_redraw, 20);
@@ -1126,18 +1134,7 @@ Scheme.prototype.__define({
 					contour.save_coordinates();
 				}
 			);
-			$p.eve.callEvent("save_coordinates", [this._dp]);
-		}
-	},
-
-	/**
-	 * Рассчитывает спецификацию изделия
-	 * @method calculate_spec
-	 * @for Scheme
-	 */
-	calculate_spec: {
-		value: function () {
-
+			$p.eve.callEvent("save_coordinates", [this]);
 		}
 	},
 
@@ -1202,6 +1199,12 @@ Scheme.prototype.__define({
 		value: function(w, h){
 			this.view.viewSize.width = w;
 			this.view.viewSize.height = h;
+		}
+	},
+
+	contours: {
+		get: function () {
+			return this.getItems({class: Contour});
 		}
 	}
 });
@@ -1283,6 +1286,7 @@ function Contour(attr){
 			return this.bounds;
 		},
 		set : function(attr){
+
 			if(attr instanceof paper.Path){
 
 				var need_bind = attr.data.curve_nodes.length;
@@ -1385,7 +1389,109 @@ function Contour(attr){
 						}
 					});
 				}
+
+			}else if(Array.isArray(attr)){
+
+				var need_bind = attr.length,
+					outer_nodes = this.outer_nodes,
+					available_bind = outer_nodes.length,
+					elm, curr;
+
+				// первый проход: по двум узлам
+				for(var i in attr){
+					curr = attr[i];
+					for(var j in outer_nodes){
+						elm = outer_nodes[j];
+						if(elm.data.binded)
+							continue;
+						if(curr.b.is_nearest(elm.b, true) && curr.e.is_nearest(elm.e, true)){
+							elm.data.binded = true;
+							curr.binded = true;
+							need_bind--;
+							available_bind--;
+							if(!curr.b.is_nearest(elm.b))
+								elm.b = curr.b;
+							if(!curr.e.is_nearest(elm.e))
+								elm.e = curr.e;
+							break;
+						}
+					}
+				}
+
+				// второй проход: по одному узлу
+				if(need_bind){
+					for(var i in attr){
+						curr = attr[i];
+						if(curr.binded)
+							continue;
+						for(var j in outer_nodes){
+							elm = outer_nodes[j];
+							if(elm.data.binded)
+								continue;
+							if(curr.b.is_nearest(elm.b, true) || curr.e.is_nearest(elm.e, true)){
+								elm.data.binded = true;
+								curr.binded = true;
+								need_bind--;
+								available_bind--;
+								elm.rays.clear(true);
+								elm.b = curr.b;
+								elm.e = curr.e;
+								break;
+							}
+						}
+					}
+				}
+
+				// третий проход - из оставшихся
+				if(need_bind && available_bind){
+					for(var i in attr){
+						curr = attr[i];
+						if(curr.binded)
+							continue;
+						for(var j in outer_nodes){
+							elm = outer_nodes[j];
+							if(elm.data.binded)
+								continue;
+							elm.data.binded = true;
+							curr.binded = true;
+							need_bind--;
+							available_bind--;
+							// TODO заменить на клонирование образующей
+							elm.rays.clear(true);
+							elm.b = curr.b;
+							elm.e = curr.e;
+							break;
+						}
+					}
+				}
+
+				// четвертый проход - добавляем
+				if(need_bind && outer_nodes.length){
+					for(var i in attr){
+						curr = attr[i];
+						if(curr.binded)
+							continue;
+						elm = new Profile({generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e), proto: outer_nodes[0]});
+						elm.data.binded = true;
+						elm.data.simulated = true;
+						curr.binded = true;
+						need_bind--;
+					}
+				}
+
+				// удаляем лишнее
+				if(available_bind){
+					outer_nodes.forEach(function (elm) {
+						if(!elm.data.binded){
+							elm.rays.clear(true);
+							elm.remove();
+							available_bind--;
+						}
+					});
+				}
+
 			}
+
 		},
 		enumerable : true
 	});
@@ -1749,13 +1855,14 @@ Contour.prototype.__define({
 	 * @property glasses
 	 * @for Contour
 	 * @param [hide] {Boolean} - если истина, устанавливает для заполнений visible=false
+	 * @param [glass_only] {Boolean} - если истина, возвращает только заполнения
 	 * @returns {Array}
 	 */
 	glasses: {
-		value: function (hide) {
+		value: function (hide, glass_only) {
 			var res = [];
 			this.children.forEach(function(elm) {
-				if (elm instanceof Contour || elm instanceof Filling){
+				if ((!glass_only && elm instanceof Contour) || elm instanceof Filling){
 					res.push(elm);
 					if(hide)
 						elm.visible = false;
@@ -3272,13 +3379,63 @@ Filling.prototype.__define({
 
 			var h = this.project.bounds.height,
 				_row = this._row,
+				bounds = this.bounds,
+				cnns = this.project.connections.cnns,
 				glass = this.project.ox.glasses.add({
-					elm: _row.elm
+					elm: _row.elm,
+					nom: this.nom,
+					width: bounds.width,
+					height: bounds.height,
+					s: this.s,
+					is_rectangular: this.is_rectangular,
+					thickness: this.thickness
 				});
 
+			_row.x1 = Math.round(bounds.bottomLeft.x * 1000) / 1000;
+			_row.y1 = Math.round((h - bounds.bottomLeft.y) * 1000) / 1000;
+			_row.x2 = Math.round(bounds.topRight.x * 1000) / 1000;
+			_row.y2 = Math.round((h - bounds.topRight.y) * 1000) / 1000;
 			_row.path_data = this.path.pathData;
+
+			if(this.data._profiles){
+				this.data._profiles.forEach(function (curr) {
+					cnns.add({
+						elm1: _row.elm,
+						elm2: curr.profile._row.elm,
+						node1: "",
+						node2: "",
+						cnn: curr.cnn.ref,
+						aperture_len: curr.sub_path.length
+					});
+				});
+			}
+
+		},
+		enumerable : false
+	},
+
+	s: {
+		get : function(){
+			return this.bounds.width * this.bounds.height / 1000000;
 		},
 		enumerable : true
+	},
+
+	is_rectangular: {
+		get : function(){
+			if(this.data._profiles){
+				return this.data._profiles.length == 4 && !this.data.path.hasHandles();
+			}else
+				return true;
+		},
+		enumerable : false
+	},
+
+	is_sandwich: {
+		get : function(){
+			return false;
+		},
+		enumerable : false
 	},
 
 	/**
@@ -3288,43 +3445,43 @@ Filling.prototype.__define({
 	 */
 	path: {
 		get : function(){ return this.data.path; },
-		set : function(glass_path){
+		set : function(attr){
 
 			var data = this.data;
 			data.path.removeSegments();
 			data._profiles = [];
 
-			if(glass_path instanceof paper.Path){
+			if(attr instanceof paper.Path){
 
 				// Если в передаваемом пути есть привязка к профилям контура - используем
-				if(glass_path.data.curve_nodes){
+				if(attr.data.curve_nodes){
 
-					data.path.addSegments(glass_path.segments);
+					data.path.addSegments(attr.segments);
 				}else{
-					data.path.addSegments(glass_path.segments);
+					data.path.addSegments(attr.segments);
 				}
 
 
-			}else if(Array.isArray(glass_path)){
-				var length = glass_path.length, prev, curr, next, cnn, sub_path;
+			}else if(Array.isArray(attr)){
+				var length = attr.length, prev, curr, next, sub_path;
 				// получам эквидистанты сегментов, смещенные на размер соединения
 				for(var i=0; i<length; i++ ){
-					curr = glass_path[i];
-					next = i==length-1 ? glass_path[0] : glass_path[i+1];
-					cnn = $p.cat.cnns.elm_cnn(this, curr.profile);
+					curr = attr[i];
+					next = i==length-1 ? attr[0] : attr[i+1];
+					curr.cnn = $p.cat.cnns.elm_cnn(this, curr.profile);
 					sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e);
 
 					//sub_path.data.reversed = curr.profile.generatrix.getDirectedAngle(next.e) < 0;
 					//if(sub_path.data.reversed)
 					//	curr.outer = !curr.outer;
 					curr.sub_path = sub_path.equidistant(
-						(sub_path.data.reversed ? -curr.profile.d1 : curr.profile.d2) + (cnn ? cnn.sz : 20), consts.sticking);
+						(sub_path.data.reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
 				}
 				// получам пересечения
 				for(var i=0; i<length; i++ ){
-					prev = i==0 ? glass_path[length-1] : glass_path[i-1];
-					curr = glass_path[i];
-					next = i==length-1 ? glass_path[0] : glass_path[i+1];
+					prev = i==0 ? attr[length-1] : attr[i-1];
+					curr = attr[i];
+					next = i==length-1 ? attr[0] : attr[i+1];
 					if(!curr.pb)
 						curr.pb = prev.pe = curr.sub_path.intersect_point(prev.sub_path, curr.b, true);
 					if(!curr.pe)
@@ -3333,18 +3490,18 @@ Filling.prototype.__define({
 				}
 				// формируем путь
 				for(var i=0; i<length; i++ ){
-					curr = glass_path[i];
+					curr = attr[i];
 					data.path.addSegments(curr.sub_path.segments);
-					["anext","pb","pe","sub_path"].forEach(function (prop) {
+					["anext","pb","pe"].forEach(function (prop) {
 						delete curr[prop];
-						data._profiles.push(curr);
-					})
+					});
+					data._profiles.push(curr);
 				}
 			}
 
 			if(data.path.segments.length && !data.path.closed)
 				data.path.closePath(true);
-			data = glass_path = null;
+			data = attr = null;
 		},
 		enumerable : true
 	},

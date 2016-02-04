@@ -288,24 +288,32 @@ function Scheme(_canvas){
 		}
 	};
 
+
+
 	/**
 	 * Снимает выделение со всех узлов всех путей
 	 * В отличии от deselectAll() сами пути могут оставаться выделенными
 	 * учитываются узлы всех путей, в том числе и не выделенных
 	 */
 	this.deselect_all_points = function() {
-		this.layers.forEach(function (l) {
-			if (l instanceof Contour) {
-				var selected = l.getItems({class: paper.Path});
-				for (var i = 0; i < selected.length; i++) {
-					var item = selected[i];
-					item.segments.forEach(function (s) {
-						if (s.selected)
-							s.selected = false;
-					});
-				}
-			}
-		});
+		this.getItems({class: paper.Path}).forEach(function (item) {
+			item.segments.forEach(function (s) {
+				if (s.selected)
+					s.selected = false;
+			});
+		})
+		//this.layers.forEach(function (l) {
+		//	if (l instanceof Contour) {
+		//		var selected = l.getItems({class: paper.Path});
+		//		for (var i = 0; i < selected.length; i++) {
+		//			var item = selected[i];
+		//			item.segments.forEach(function (s) {
+		//				if (s.selected)
+		//					s.selected = false;
+		//			});
+		//		}
+		//	}
+		//});
 	};
 
 	/**
@@ -406,7 +414,7 @@ function Scheme(_canvas){
 		setTimeout(function() {
 			requestAnimationFrame(redraw);
 			process_redraw();
-		}, 30);
+		}, 20);
 
 		//requestAnimationFrame(redraw);
 		//setTimeout(process_redraw, 20);
@@ -460,18 +468,7 @@ Scheme.prototype.__define({
 					contour.save_coordinates();
 				}
 			);
-			$p.eve.callEvent("save_coordinates", [this._dp]);
-		}
-	},
-
-	/**
-	 * Рассчитывает спецификацию изделия
-	 * @method calculate_spec
-	 * @for Scheme
-	 */
-	calculate_spec: {
-		value: function () {
-
+			$p.eve.callEvent("save_coordinates", [this]);
 		}
 	},
 
@@ -536,6 +533,12 @@ Scheme.prototype.__define({
 		value: function(w, h){
 			this.view.viewSize.width = w;
 			this.view.viewSize.height = h;
+		}
+	},
+
+	contours: {
+		get: function () {
+			return this.getItems({class: Contour});
 		}
 	}
 });

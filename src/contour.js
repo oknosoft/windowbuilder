@@ -76,6 +76,7 @@ function Contour(attr){
 			return this.bounds;
 		},
 		set : function(attr){
+
 			if(attr instanceof paper.Path){
 
 				var need_bind = attr.data.curve_nodes.length;
@@ -178,7 +179,109 @@ function Contour(attr){
 						}
 					});
 				}
+
+			}else if(Array.isArray(attr)){
+
+				var need_bind = attr.length,
+					outer_nodes = this.outer_nodes,
+					available_bind = outer_nodes.length,
+					elm, curr;
+
+				// первый проход: по двум узлам
+				for(var i in attr){
+					curr = attr[i];
+					for(var j in outer_nodes){
+						elm = outer_nodes[j];
+						if(elm.data.binded)
+							continue;
+						if(curr.b.is_nearest(elm.b, true) && curr.e.is_nearest(elm.e, true)){
+							elm.data.binded = true;
+							curr.binded = true;
+							need_bind--;
+							available_bind--;
+							if(!curr.b.is_nearest(elm.b))
+								elm.b = curr.b;
+							if(!curr.e.is_nearest(elm.e))
+								elm.e = curr.e;
+							break;
+						}
+					}
+				}
+
+				// второй проход: по одному узлу
+				if(need_bind){
+					for(var i in attr){
+						curr = attr[i];
+						if(curr.binded)
+							continue;
+						for(var j in outer_nodes){
+							elm = outer_nodes[j];
+							if(elm.data.binded)
+								continue;
+							if(curr.b.is_nearest(elm.b, true) || curr.e.is_nearest(elm.e, true)){
+								elm.data.binded = true;
+								curr.binded = true;
+								need_bind--;
+								available_bind--;
+								elm.rays.clear(true);
+								elm.b = curr.b;
+								elm.e = curr.e;
+								break;
+							}
+						}
+					}
+				}
+
+				// третий проход - из оставшихся
+				if(need_bind && available_bind){
+					for(var i in attr){
+						curr = attr[i];
+						if(curr.binded)
+							continue;
+						for(var j in outer_nodes){
+							elm = outer_nodes[j];
+							if(elm.data.binded)
+								continue;
+							elm.data.binded = true;
+							curr.binded = true;
+							need_bind--;
+							available_bind--;
+							// TODO заменить на клонирование образующей
+							elm.rays.clear(true);
+							elm.b = curr.b;
+							elm.e = curr.e;
+							break;
+						}
+					}
+				}
+
+				// четвертый проход - добавляем
+				if(need_bind && outer_nodes.length){
+					for(var i in attr){
+						curr = attr[i];
+						if(curr.binded)
+							continue;
+						elm = new Profile({generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e), proto: outer_nodes[0]});
+						elm.data.binded = true;
+						elm.data.simulated = true;
+						curr.binded = true;
+						need_bind--;
+					}
+				}
+
+				// удаляем лишнее
+				if(available_bind){
+					outer_nodes.forEach(function (elm) {
+						if(!elm.data.binded){
+							elm.rays.clear(true);
+							elm.remove();
+							available_bind--;
+						}
+					});
+				}
+
 			}
+
 		},
 		enumerable : true
 	});
@@ -542,13 +645,14 @@ Contour.prototype.__define({
 	 * @property glasses
 	 * @for Contour
 	 * @param [hide] {Boolean} - если истина, устанавливает для заполнений visible=false
+	 * @param [glass_only] {Boolean} - если истина, возвращает только заполнения
 	 * @returns {Array}
 	 */
 	glasses: {
-		value: function (hide) {
+		value: function (hide, glass_only) {
 			var res = [];
 			this.children.forEach(function(elm) {
-				if (elm instanceof Contour || elm instanceof Filling){
+				if ((!glass_only && elm instanceof Contour) || elm instanceof Filling){
 					res.push(elm);
 					if(hide)
 						elm.visible = false;
