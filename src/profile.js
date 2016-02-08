@@ -589,6 +589,7 @@ Profile.prototype.__define({
 				_row.x2 = Math.round(this.e.x * 1000) / 1000;
 				_row.y2 = Math.round((h - this.e.y) * 1000) / 1000;
 				_row.path_data = gen.pathData;
+				_row.nom = this.nom;
 
 				//TODO: Пересчитать длину с учетом
 
@@ -630,9 +631,7 @@ Profile.prototype.__define({
 				}
 
 				// получаем углы между элементами и к горизонту
-				_row.angle_hor = Math.round((new paper.Point(_row.x2 -_row.x1, _row.y2 - _row.y1)).angle * 10) / 10;
-				if(_row.angle_hor < 0)
-					_row.angle_hor = _row.angle_hor + 360;
+				_row.angle_hor = this.angle_hor;
 
 				_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - sub_gen.getTangentAt(0).angle) * 10) / 10;
 				if(_row.alp1 < 0)
@@ -642,7 +641,7 @@ Profile.prototype.__define({
 				if(_row.alp2 < 0)
 					_row.alp2 = _row.alp2 + 360;
 
-				//TODO: Рассчитать тип элемента рама-импост-створка
+				//TODO: Рассчитать тип элемента рама-импост-створка, положение и ориентацию
 			}
 		},
 		enumerable : false
@@ -805,6 +804,28 @@ Profile.prototype.__define({
 	d2: {
 		get : function(){ return this.d1 - this.width; },
 		enumerable : true
+	},
+
+	angle_hor: {
+		get : function(){
+			var res = Math.round((new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle * 10) / 10;
+			return res < 0 ? res + 360 : res;
+		},
+		enumerable : false
+	},
+
+	orientation: {
+		get : function(){
+			var angle_hor = this.angle_hor;
+			if((angle_hor > -consts.orientation_delts && angle_hor < consts.orientation_delts) ||
+				(angle_hor > 180-consts.orientation_delts && angle_hor < 180+consts.orientation_delts))
+				return $p.enm.orientations.Горизонтальная;
+			if((angle_hor > 90-consts.orientation_delts && angle_hor < 90+consts.orientation_delts) ||
+				(angle_hor > 270-consts.orientation_delts && angle_hor < 270+consts.orientation_delts))
+				return $p.enm.orientations.Вертикальная;
+			return $p.enm.orientations.Наклонная;
+		},
+		enumerable : false
 	}
 
 });

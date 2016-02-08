@@ -25,7 +25,7 @@ $p.modifiers.push(
 		};
 
 
-		// публичные поля и методы
+		// публичные методы менеджера
 
 		/**
 		 * Возвращает массив соединений, доступный для сочетания номенклатур.
@@ -124,7 +124,54 @@ $p.modifiers.push(
 			else{
 				// TODO: возможно, надо вернуть соединение с пустотой
 			}
-		}
+		};
+
+
+
+		// публичные методы объекта
+
+		_mgr._obj_сonstructor.prototype.__define({
+
+			/**
+			 * Возвращает основную строку спецификации соединения между элементами
+			 */
+			main_row: {
+				value: function (elm) {
+
+					var ares, nom = elm.nom;
+
+					// если тип соединения угловой, то арт-1-2 определяем по ориентации элемента
+					if($p.enm.cnn_types.acn.a.indexOf(this.cnn_type) != -1){
+						var art12;
+						if(elm.orientation == $p.enm.orientations.Вертикальная)
+							art12 = $p.cat.predefined_elmnts.predefined("Номенклатура_Артикул1");
+						else
+							art12 = $p.cat.predefined_elmnts.predefined("Номенклатура_Артикул2");
+
+						ares = this.specification.find_rows({nom: art12});
+						if(ares.length)
+							return ares[0]._row;
+					}
+
+					// в прочих случаях, принадлежность к арт-1-2 определяем по табчасти СоединяемыеЭлементы
+					if(this.cnn_elmnts.find_rows({nom1: nom}).length){
+						ares = this.specification.find_rows({nom: $p.cat.predefined_elmnts.predefined("Номенклатура_Артикул1")});
+						if(ares.length)
+							return ares[0]._row;
+					}
+					if(this.cnn_elmnts.find_rows({nom2: nom}).length){
+						ares = this.specification.find_rows({nom: $p.cat.predefined_elmnts.predefined("Номенклатура_Артикул2")});
+						if(ares.length)
+							return ares[0]._row;
+					}
+					ares = this.specification.find_rows({nom: nom});
+					if(ares.length)
+						return ares[0]._row;
+
+				},
+				enumerable: false
+			}
+		});
 
 	}
 );

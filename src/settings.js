@@ -28,6 +28,9 @@ var acn,
 	// минимальная длина сегмента заполнения
 	this.filling_min_length = 4;
 
+	// в пределах этого угла, считаем элемент вертикальным или горизонтальным
+	this.orientation_delts = 5;
+
 	this.tune_paper = function (settings) {
 		/**
 		 * Размер визуализации узла пути
@@ -41,5 +44,7 @@ var acn,
 
 	this.move_points = 'move_points';
 	this.move_handle = 'move_handle';
+
+
 
 };

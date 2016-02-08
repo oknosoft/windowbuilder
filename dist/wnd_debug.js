@@ -73,6 +73,43 @@ $p.modifiers.push(
 );
 
 /**
+ * Дополнительные методы справочника Цвета
+ *
+ * Created 23.12.2015<br />
+ * &copy; http://www.oknosoft.ru 2014-2015
+ * @author Evgeniy Malyarov
+ * @module cat_cnns
+ */
+
+
+$p.modifiers.push(
+	function($p) {
+
+		var _mgr = $p.cat.clrs;
+
+
+		// публичные методы менеджера
+
+		/**
+		 * ПолучитьЦветПоПредопределенномуЦвету
+		 * @param clr
+		 * @param clr_elm
+		 * @param clr_sch
+		 * @return {*}
+		 */
+		_mgr.by_predefined = function(clr, clr_elm, clr_sch){
+			if(clr.predefined_name){
+				return clr_elm;
+			}else if(clr.empty())
+				return clr_elm;
+			else
+				return clr;
+		};
+
+	}
+);
+
+/**
  * Дополнительные методы справочника Соединения
  *
  * Created 23.12.2015<br />
@@ -99,7 +136,7 @@ $p.modifiers.push(
 		};
 
 
-		// публичные поля и методы
+		// публичные методы менеджера
 
 		/**
 		 * Возвращает массив соединений, доступный для сочетания номенклатур.
@@ -198,7 +235,54 @@ $p.modifiers.push(
 			else{
 				// TODO: возможно, надо вернуть соединение с пустотой
 			}
-		}
+		};
+
+
+
+		// публичные методы объекта
+
+		_mgr._obj_сonstructor.prototype.__define({
+
+			/**
+			 * Возвращает основную строку спецификации соединения между элементами
+			 */
+			main_row: {
+				value: function (elm) {
+
+					var ares, nom = elm.nom;
+
+					// если тип соединения угловой, то арт-1-2 определяем по ориентации элемента
+					if($p.enm.cnn_types.acn.a.indexOf(this.cnn_type) != -1){
+						var art12;
+						if(elm.orientation == $p.enm.orientations.Вертикальная)
+							art12 = $p.cat.predefined_elmnts.predefined("Номенклатура_Артикул1");
+						else
+							art12 = $p.cat.predefined_elmnts.predefined("Номенклатура_Артикул2");
+
+						ares = this.specification.find_rows({nom: art12});
+						if(ares.length)
+							return ares[0]._row;
+					}
+
+					// в прочих случаях, принадлежность к арт-1-2 определяем по табчасти СоединяемыеЭлементы
+					if(this.cnn_elmnts.find_rows({nom1: nom}).length){
+						ares = this.specification.find_rows({nom: $p.cat.predefined_elmnts.predefined("Номенклатура_Артикул1")});
+						if(ares.length)
+							return ares[0]._row;
+					}
+					if(this.cnn_elmnts.find_rows({nom2: nom}).length){
+						ares = this.specification.find_rows({nom: $p.cat.predefined_elmnts.predefined("Номенклатура_Артикул2")});
+						if(ares.length)
+							return ares[0]._row;
+					}
+					ares = this.specification.find_rows({nom: nom});
+					if(ares.length)
+						return ares[0]._row;
+
+				},
+				enumerable: false
+			}
+		});
 
 	}
 );
@@ -358,20 +442,26 @@ $p.modifiers.push(
 
 		var _mgr = $p.cat.inserts
 
-		_mgr._obj_сonstructor.prototype.__define("nom", {
-			value: function (elm) {
+		_mgr._obj_сonstructor.prototype.__define({
 
-				var main_row = this.specification.find({is_main_elm: true});
-				if(!main_row && this.specification.count())
-					main_row = this.specification.get(0);
-				if(main_row && main_row.nom instanceof _mgr._obj_сonstructor)
-					return main_row.nom.nom();
-				else if(main_row)
-					return main_row.nom;
-				else
-					return $p.cat.nom.get();
-			},
-			enumerable: false
+			/**
+			 * Возвращает номенклатуру вставки в завсисмости от свойств элемента
+			 */
+			nom: {
+				value: function (elm) {
+
+					var main_row = this.specification.find({is_main_elm: true});
+					if(!main_row && this.specification.count())
+						main_row = this.specification.get(0);
+					if(main_row && main_row.nom instanceof _mgr._obj_сonstructor)
+						return main_row.nom.nom();
+					else if(main_row)
+						return main_row.nom;
+					else
+						return $p.cat.nom.get();
+				},
+				enumerable: false
+			}
 		});
 	}
 );
@@ -423,6 +513,39 @@ $p.modifiers.push(
 
 		_mgr.sql_selection_where_flds = function(filter){
 			return " OR inn LIKE '" + filter + "' OR name_full LIKE '" + filter + "' OR name LIKE '" + filter + "'";
+		};
+
+	}
+);
+/**
+ * Дополнительные методы справочника Контрагенты
+ *
+ * Created 23.12.2015<br />
+ * &copy; http://www.oknosoft.ru 2014-2015
+ * @author Evgeniy Malyarov
+ * @module cat_partners
+ */
+
+$p.modifiers.push(
+	function($p){
+
+		var _mgr = $p.cat.predefined_elmnts,
+			_predefined = {};
+
+		_mgr.predefined = function(name){
+
+			if(_predefined[name])
+				return _predefined[name];
+
+			var res;
+			_mgr.find_rows({name: name}, function (o) {
+				res = o;
+				return false;
+			});
+			if(res){
+				_predefined[name] = res.elm;
+				return res.elm;
+			}
 		};
 
 	}
@@ -1575,34 +1698,84 @@ $p.modifiers.push(
 			/**
 			 * Спецификации фурнитуры
 			 */
-			function spec_furn(scheme, spec) {
+			function spec_furn(scheme) {
 
 			}
 
 			/**
 			 * Спецификации соединений
 			 */
-			function spec_cnns(scheme, spec) {
+			function spec_cnns(scheme) {
 
 			}
 
 			/**
 			 * Спецификации вставок
 			 */
-			function spec_insets(scheme, spec) {
+			function spec_insets(scheme) {
 
 			}
 
 			/**
 			 * Базовая cпецификация по соединениям и вставкам таблицы координат
 			 */
-			function spec_base(scheme, spec) {
+			function spec_base(scheme) {
+
+				var ox = scheme.ox,
+					spec = ox.specification,
+					constructions = ox.constructions,
+					coordinates = ox.coordinates,
+					cnn_elmnts = ox.cnn_elmnts,
+					_row, row_constr,
+					b, e, prev, next, row_cnn_prev, row_cnn_next, row_spec;
 
 				// для всех контуров изделия
 				scheme.contours.forEach(function (contour) {
 
 					// для всех профилей контура
 					contour.profiles.forEach(function (profile) {
+						_row = profile._row;
+						b = profile.rays.b;
+						e = profile.rays.e;
+						prev = b.profile;
+						next = e.profile;
+						row_cnn_prev = b.cnn.main_row(profile);
+						row_cnn_next = e.cnn.main_row(profile);
+
+						// добавляем строку спецификации
+						row_spec = spec.add({
+							nom: _row.nom,
+							elm: _row.elm,
+							clr: _row.clr
+						});
+
+						// уточняем цвет
+						if(row_cnn_prev && row_cnn_next && row_cnn_prev.clr == row_cnn_next.clr)
+							row_spec.clr = $p.cat.clrs.by_predefined(row_cnn_next.clr, profile.clr, ox.clr);
+
+						// уточняем размер
+						row_spec.len = (_row.len - (row_cnn_prev ? row_cnn_prev.sz : 0) - (row_cnn_next ? row_cnn_next.sz : 0))
+							* ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
+
+						// profile.Длина - то, что получится после обработки
+						// row_spec.Длина - сколько взять (отрезать)
+						_row.len = (_row.len
+							- (!row_cnn_prev || row_cnn_prev.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_prev.sz)
+							- (!row_cnn_next || row_cnn_next.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_next.sz))
+							* 1000 * ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
+
+						// припуск для гнутых элементов
+						if(!profile.generatrix.is_linear())
+							row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
+						else if((row_cnn_prev && row_cnn_prev.formula) || (row_cnn_next && row_cnn_next.formula)){
+							// TODO: дополнительная корректировка длины формулой
+
+						}
+
+						// РассчитатьКоличествоПлощадьМассу
+
+						// НадоДобавитьСпецификациюСоединения
+
 
 					});
 
@@ -1620,13 +1793,13 @@ $p.modifiers.push(
 			$p.eve.attachEvent("save_coordinates", function (scheme) {
 
 				var attr = {url: ""},
-					spec = scheme.ox.specification;
+					ox = scheme.ox;
 
 				// чистим спецификацию
-				spec.clear();
+				ox.specification.clear();
 
 				// рассчитываем базовую сецификацию
-				spec_base(scheme, spec);
+				spec_base(scheme);
 
 				$p.rest.build_select(attr, {
 					rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",
@@ -1636,8 +1809,8 @@ $p.modifiers.push(
 				return $p.ajax.post_ex(attr.url,
 					JSON.stringify({
 						dp: scheme._dp._obj,
-						ox: scheme.ox._obj,
-						doc: scheme.ox.calc_order._obj
+						ox: ox._obj,
+						doc: ox.calc_order._obj
 					}), attr)
 					.then(function (req) {
 						return JSON.parse(req.response);
