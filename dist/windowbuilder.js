@@ -524,6 +524,14 @@ BuilderElement.prototype.__define({
 		enumerable : false
 	},
 
+	// номер элемента - свойство только для чтения
+	elm: {
+		get : function(){
+			return this._row.elm;
+		},
+		enumerable : false
+	},
+
 	// вставка
 	inset: {
 		get : function(){
@@ -1752,7 +1760,7 @@ function Contour(attr){
 		//_contour.rotate(0.004);
 		profiles.forEach(function (profile) {
 			path = profile.path.clone(false);
-			if(profile.generatrix.is_linear())
+			if(profile.is_linear())
 				path.scale(1.004);
 			else{
 				path.scale(1.004, profile.generatrix.getPointAt(profile.generatrix.length/2));
@@ -2964,8 +2972,6 @@ Profile.prototype.__define({
 				_row.path_data = gen.pathData;
 				_row.nom = this.nom;
 
-				//TODO: Пересчитать длину с учетом
-
 				// находим проекции четырёх вершин на образующую
 				for(var i = 1; i<=4; i++)
 					ppoints[i] = gen.getNearestPoint(this.corns(i));
@@ -3014,7 +3020,8 @@ Profile.prototype.__define({
 				if(_row.alp2 < 0)
 					_row.alp2 = _row.alp2 + 360;
 
-				//TODO: Рассчитать тип элемента рама-импост-створка, положение и ориентацию
+				// TODO: Рассчитать тип элемента рама-импост-створка, положение и ориентацию
+				// вероятно, импост, всегда занимает положение "центр"
 			}
 		},
 		enumerable : false
@@ -3197,6 +3204,13 @@ Profile.prototype.__define({
 				(angle_hor > 270-consts.orientation_delts && angle_hor < 270+consts.orientation_delts))
 				return $p.enm.orientations.Вертикальная;
 			return $p.enm.orientations.Наклонная;
+		},
+		enumerable : false
+	},
+
+	is_linear: {
+		value : function(){
+			return this.generatrix.is_linear();
 		},
 		enumerable : false
 	}

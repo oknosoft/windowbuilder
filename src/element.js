@@ -150,6 +150,14 @@ BuilderElement.prototype.__define({
 		enumerable : false
 	},
 
+	// номер элемента - свойство только для чтения
+	elm: {
+		get : function(){
+			return this._row.elm;
+		},
+		enumerable : false
+	},
+
 	// вставка
 	inset: {
 		get : function(){

@@ -537,7 +537,7 @@ function Contour(attr){
 		//_contour.rotate(0.004);
 		profiles.forEach(function (profile) {
 			path = profile.path.clone(false);
-			if(profile.generatrix.is_linear())
+			if(profile.is_linear())
 				path.scale(1.004);
 			else{
 				path.scale(1.004, profile.generatrix.getPointAt(profile.generatrix.length/2));

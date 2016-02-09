@@ -591,8 +591,6 @@ Profile.prototype.__define({
 				_row.path_data = gen.pathData;
 				_row.nom = this.nom;
 
-				//TODO: Пересчитать длину с учетом
-
 				// находим проекции четырёх вершин на образующую
 				for(var i = 1; i<=4; i++)
 					ppoints[i] = gen.getNearestPoint(this.corns(i));
@@ -641,7 +639,8 @@ Profile.prototype.__define({
 				if(_row.alp2 < 0)
 					_row.alp2 = _row.alp2 + 360;
 
-				//TODO: Рассчитать тип элемента рама-импост-створка, положение и ориентацию
+				// TODO: Рассчитать тип элемента рама-импост-створка, положение и ориентацию
+				// вероятно, импост, всегда занимает положение "центр"
 			}
 		},
 		enumerable : false
@@ -824,6 +823,13 @@ Profile.prototype.__define({
 				(angle_hor > 270-consts.orientation_delts && angle_hor < 270+consts.orientation_delts))
 				return $p.enm.orientations.Вертикальная;
 			return $p.enm.orientations.Наклонная;
+		},
+		enumerable : false
+	},
+
+	is_linear: {
+		value : function(){
+			return this.generatrix.is_linear();
 		},
 		enumerable : false
 	}
