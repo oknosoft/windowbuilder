@@ -35,6 +35,25 @@ paper.Path.prototype.__define({
 	},
 
 	/**
+	 * Угол по отношению к соседнему пути _other_ в точке _point_
+	 */
+	angle_to: {
+		value : function(other, point, interior){
+			var p1 = this.getNearestPoint(point),
+				p2 = other.getNearestPoint(point),
+				t1 = this.getTangentAt(this.getOffsetOf(p1)),
+				t2 = other.getTangentAt(other.getOffsetOf(p2)),
+				res = t2.angle - t1.angle;
+			if(res < 0)
+				res += 360;
+			if(interior && res > 180)
+				res = 180 - (res - 180);
+			return res;
+		},
+		enumerable : false
+	},
+
+	/**
 	 * Выясняет, является ли путь прямым
 	 * @return {Boolean}
 	 */
@@ -3186,6 +3205,9 @@ Profile.prototype.__define({
 		enumerable : true
 	},
 
+	/**
+	 * Угол к горизонту
+	 */
 	angle_hor: {
 		get : function(){
 			var res = Math.round((new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle * 10) / 10;
@@ -3194,6 +3216,9 @@ Profile.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Ориентация профиля
+	 */
 	orientation: {
 		get : function(){
 			var angle_hor = this.angle_hor;
@@ -3208,6 +3233,9 @@ Profile.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Признак прямолинейности
+	 */
 	is_linear: {
 		value : function(){
 			return this.generatrix.is_linear();
@@ -3409,6 +3437,13 @@ Filling._extend(BuilderElement);
 
 Filling.prototype.__define({
 
+	profiles: {
+		get : function(){
+			return this.data._profiles || [];
+		},
+		enumerable : false
+	},
+
 	/**
 	 * Вычисляемые поля в таблице координат
 	 * @method save_coordinates
@@ -3437,18 +3472,16 @@ Filling.prototype.__define({
 			_row.y2 = Math.round((h - bounds.topRight.y) * 1000) / 1000;
 			_row.path_data = this.path.pathData;
 
-			if(this.data._profiles){
-				this.data._profiles.forEach(function (curr) {
-					cnns.add({
-						elm1: _row.elm,
-						elm2: curr.profile._row.elm,
-						node1: "",
-						node2: "",
-						cnn: curr.cnn.ref,
-						aperture_len: curr.sub_path.length
-					});
+			this.profiles.forEach(function (curr) {
+				cnns.add({
+					elm1: _row.elm,
+					elm2: curr.profile._row.elm,
+					node1: "",
+					node2: "",
+					cnn: curr.cnn.ref,
+					aperture_len: curr.sub_path.length
 				});
-			}
+			});
 
 		},
 		enumerable : false
@@ -3463,10 +3496,7 @@ Filling.prototype.__define({
 
 	is_rectangular: {
 		get : function(){
-			if(this.data._profiles){
-				return this.data._profiles.length == 4 && !this.data.path.hasHandles();
-			}else
-				return true;
+			return this.profiles.length == 4 && !this.data.path.hasHandles();
 		},
 		enumerable : false
 	},
@@ -3550,8 +3580,8 @@ Filling.prototype.__define({
 	nodes: {
 		get: function () {
 			var res = [];
-			if(this.data._profiles && this.data._profiles.length){
-				this.data._profiles.forEach(function (curr) {
+			if(this.profiles.length){
+				this.profiles.forEach(function (curr) {
 					res.push(curr.b);
 				});
 			}else{

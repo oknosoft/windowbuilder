@@ -805,6 +805,9 @@ Profile.prototype.__define({
 		enumerable : true
 	},
 
+	/**
+	 * Угол к горизонту
+	 */
 	angle_hor: {
 		get : function(){
 			var res = Math.round((new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle * 10) / 10;
@@ -813,6 +816,9 @@ Profile.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Ориентация профиля
+	 */
 	orientation: {
 		get : function(){
 			var angle_hor = this.angle_hor;
@@ -827,6 +833,9 @@ Profile.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Признак прямолинейности
+	 */
 	is_linear: {
 		value : function(){
 			return this.generatrix.is_linear();

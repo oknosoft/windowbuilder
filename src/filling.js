@@ -73,6 +73,13 @@ Filling._extend(BuilderElement);
 
 Filling.prototype.__define({
 
+	profiles: {
+		get : function(){
+			return this.data._profiles || [];
+		},
+		enumerable : false
+	},
+
 	/**
 	 * Вычисляемые поля в таблице координат
 	 * @method save_coordinates
@@ -101,18 +108,16 @@ Filling.prototype.__define({
 			_row.y2 = Math.round((h - bounds.topRight.y) * 1000) / 1000;
 			_row.path_data = this.path.pathData;
 
-			if(this.data._profiles){
-				this.data._profiles.forEach(function (curr) {
-					cnns.add({
-						elm1: _row.elm,
-						elm2: curr.profile._row.elm,
-						node1: "",
-						node2: "",
-						cnn: curr.cnn.ref,
-						aperture_len: curr.sub_path.length
-					});
+			this.profiles.forEach(function (curr) {
+				cnns.add({
+					elm1: _row.elm,
+					elm2: curr.profile._row.elm,
+					node1: "",
+					node2: "",
+					cnn: curr.cnn.ref,
+					aperture_len: curr.sub_path.length
 				});
-			}
+			});
 
 		},
 		enumerable : false
@@ -127,10 +132,7 @@ Filling.prototype.__define({
 
 	is_rectangular: {
 		get : function(){
-			if(this.data._profiles){
-				return this.data._profiles.length == 4 && !this.data.path.hasHandles();
-			}else
-				return true;
+			return this.profiles.length == 4 && !this.data.path.hasHandles();
 		},
 		enumerable : false
 	},
@@ -214,8 +216,8 @@ Filling.prototype.__define({
 	nodes: {
 		get: function () {
 			var res = [];
-			if(this.data._profiles && this.data._profiles.length){
-				this.data._profiles.forEach(function (curr) {
+			if(this.profiles.length){
+				this.profiles.forEach(function (curr) {
 					res.push(curr.b);
 				});
 			}else{

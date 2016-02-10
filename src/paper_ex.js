@@ -26,6 +26,25 @@ paper.Path.prototype.__define({
 	},
 
 	/**
+	 * Угол по отношению к соседнему пути _other_ в точке _point_
+	 */
+	angle_to: {
+		value : function(other, point, interior){
+			var p1 = this.getNearestPoint(point),
+				p2 = other.getNearestPoint(point),
+				t1 = this.getTangentAt(this.getOffsetOf(p1)),
+				t2 = other.getTangentAt(other.getOffsetOf(p2)),
+				res = t2.angle - t1.angle;
+			if(res < 0)
+				res += 360;
+			if(interior && res > 180)
+				res = 180 - (res - 180);
+			return res;
+		},
+		enumerable : false
+	},
+
+	/**
 	 * Выясняет, является ли путь прямым
 	 * @return {Boolean}
 	 */
