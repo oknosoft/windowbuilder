@@ -1687,6 +1687,8 @@ $p.modifiers.push(
 				constructions,
 				coordinates,
 				cnn_elmnts,
+				glass_specification,
+				glass_formulas,
 				params;
 
 			/**
@@ -1708,25 +1710,39 @@ $p.modifiers.push(
 			 * @param row_cpec
 			 * @param row_coord
 			 */
-			function calc_count_area_mass(row_cpec, row_coord, angle_calc_method){
+			function calc_count_area_mass(row_cpec, row_coord, angle_calc_method_prev, angle_calc_method_next){
 
 				//TODO: учесть angle_calc_method
-				if(angle_calc_method && row_cpec.nom.is_pieces){
-					if((angle_calc_method == $p.enm.angle_calculating_ways.Основной) ||
-						(angle_calc_method = $p.enm.angle_calculating_ways.СварнойШов)){
+				if(!angle_calc_method_next)
+					angle_calc_method_next = angle_calc_method_prev;
+
+				if(angle_calc_method_prev && !row_cpec.nom.is_pieces){
+
+					if((angle_calc_method_prev == $p.enm.angle_calculating_ways.Основной) ||
+						(angle_calc_method_prev == $p.enm.angle_calculating_ways.СварнойШов)){
 						row_cpec.alp1 = row_coord.alp1;
+
+					}else if(angle_calc_method_prev == $p.enm.angle_calculating_ways._90){
+						row_cpec.alp1 = 90;
+
+					}else if(angle_calc_method_prev == $p.enm.angle_calculating_ways.СоединениеПополам){
+						row_cpec.alp1 = row_coord.alp1 / 2;
+
+					}else if(angle_calc_method_prev == $p.enm.angle_calculating_ways.Соединение){
+						row_cpec.alp1 = row_coord.alp1;
+					}
+
+					if((angle_calc_method_next == $p.enm.angle_calculating_ways.Основной) ||
+						(angle_calc_method_next == $p.enm.angle_calculating_ways.СварнойШов)){
 						row_cpec.alp2 = row_coord.alp2;
 
-					}else if(angle_calc_method == $p.enm.angle_calculating_ways._90){
-						row_cpec.alp1 = 90;
+					}else if(angle_calc_method_next == $p.enm.angle_calculating_ways._90){
 						row_cpec.alp2 = 90;
 
-					}else if(angle_calc_method == $p.enm.angle_calculating_ways.СоединениеПополам){
-						row_cpec.alp1 = row_coord.alp1 / 2;
+					}else if(angle_calc_method_next == $p.enm.angle_calculating_ways.СоединениеПополам){
 						row_cpec.alp2 = row_coord.alp2 / 2;
 
-					}else if(angle_calc_method == $p.enm.angle_calculating_ways.Соединение){
-						row_cpec.alp1 = row_coord.alp1;
+					}else if(angle_calc_method_next == $p.enm.angle_calculating_ways.Соединение){
 						row_cpec.alp2 = row_coord.alp2;
 
 					}
@@ -1751,6 +1767,45 @@ $p.modifiers.push(
 					row_cpec.totqty = row_cpec.qty;
 
 				row_cpec.totqty1 = row_cpec.totqty * row_cpec.nom.loss_factor;
+			}
+
+			/**
+			 * РассчитатьQtyLen
+			 * @param row_spec
+			 * @param row_base
+			 * @param len
+			 */
+			function calc_qty_len(row_spec, row_base, len){
+
+				var nom = row_spec.nom;
+
+				if(nom.cutting_optimization_type == $p.enm.cutting_optimization_types.Нет ||
+						nom.cutting_optimization_type.empty() || nom.is_pieces){
+
+					if(!row_base.coefficient || !len)
+						row_spec.qty = row_base.quantity;
+
+					else{
+						if(!nom.is_pieces){
+							row_spec.qty = row_base.quantity;
+							row_spec.len = (len - row_base.sz) * (row_base.coefficient || 1);
+							if(nom.rounding_quantity){
+								row_spec.qty = Окр(row_spec.qty * row_spec.len, nom.rounding_quantity);
+								row_spec.len = 0;
+							};
+
+						}else if(!nom.rounding_quantity){
+							row_spec.qty = Math.round((len - row_base.sz) * row_base.coefficient * row_base.quantity - 0.5);
+
+						}else{
+							row_spec.qty = ((len - row_base.sz) * row_base.coefficient * row_base.quantity).round(nom.rounding_quantity);
+						}
+					}
+
+				}else{
+					row_spec.qty = row_base.quantity;
+					row_spec.len = (len - row_base.sz) * (row_base.coefficient || 1);
+				}
 			}
 
 			/**
@@ -1789,6 +1844,26 @@ $p.modifiers.push(
 			}
 
 			/**
+			 * Добавляет или заполняет строку спецификации
+			 * @param row_spec
+			 * @param elm
+			 * @param row_base
+			 * @param [nom]
+			 * @param [origin]
+			 * @return {TabularSectionRow.<cat.characteristics.specification>}
+			 */
+			function new_spec_row(row_spec, elm, row_base, nom, origin){
+				if(!row_spec)
+					row_spec = spec.add();
+				row_spec.nom = nom || row_base.nom;
+				row_spec.clr = $p.cat.clrs.by_predefined(row_base.clr, elm.clr, ox.clr);
+				row_spec.elm = elm.elm;
+				if(origin)
+					row_spec.origin = origin;
+				return row_spec;
+			}
+
+			/**
 			 * ДополнитьСпецификациюСпецификациейСоединения
 			 * @param cnn
 			 * @param elm
@@ -1800,13 +1875,8 @@ $p.modifiers.push(
 
 				filter_cnn_spec(cnn, elm, len_angl).forEach(function (row_cnn_spec) {
 					var nom = row_cnn_spec.nom;
-					// TODO: nom млжет быть вставкой - в этом случае надо разузловать
-					var row_spec = spec.add({
-						nom: nom,
-						clr: $p.cat.clrs.by_predefined(row_cnn_spec.clr, elm.clr, ox.clr),
-						origin: len_angl.origin,
-						elm: elm.elm
-					});
+					// TODO: nom может быть вставкой - в этом случае надо разузловать
+					var row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin);
 
 					// В простейшем случае, формула = "ДобавитьКомандуСоединения(Парам);"
 					if(!row_cnn_spec.formula) {
@@ -1821,7 +1891,7 @@ $p.modifiers.push(
 							row_spec.qty = row_cnn_spec.quantity;
 							if(row_cnn_spec.sz || row_cnn_spec.coefficient)
 								row_spec.len = (len_angl.len - (sign < 0 ? cnn.sz * 2 : 0) - sign * 2 * row_cnn_spec.sz) *
-									(row_cnn_spec.coefficient == 0 ? 1 : row_cnn_spec.coefficient);
+									(row_cnn_spec.coefficient || 1);
 						}
 
 					}else {
@@ -1836,7 +1906,7 @@ $p.modifiers.push(
 					if(!row_spec.qty)
 						spec.del(row_spec.row-1);
 					else
-						calc_count_area_mass(row_spec, len_angl);
+						calc_count_area_mass(row_spec, len_angl, row_cnn_spec.angle_calc_method);
 				});
 			}
 
@@ -1848,7 +1918,7 @@ $p.modifiers.push(
 			 */
 			function filter_cnn_spec(cnn, elm, len_angl){
 
-				var res = [], nom, ok, angle_hor = elm.angle_hor;
+				var res = [], nom, angle_hor = elm.angle_hor;
 
 				cnn.specification.each(function (row) {
 					nom = row.nom;
@@ -1874,24 +1944,149 @@ $p.modifiers.push(
 					// "Устанавливать с" проверяем только для соединений профиля
 					if(($p.enm.cnn_types.acn.a.indexOf(cnn.cnn_type) != -1) && (
 							(row.set_specification == $p.enm.specification_installation_methods.САртикулом1 && !len_angl.art1) ||
-							(row.set_specification = $p.enm.specification_installation_methods.САртикулом2 && !len_angl.art2)
+							(row.set_specification == $p.enm.specification_installation_methods.САртикулом2 && !len_angl.art2)
 						))
 						return;
 
-					// Проверяем параметры изделия
-					ok = true;
-					cnn.selection_params.find_rows({elm: row.elm}, function (prm) {
-						ok = false;
-						params.find_rows({cnstr: 0, param: prm.param, value: prm.value}, function () {
-							ok = true;
-							return false;
-						});
-						return ok;
-					});
-					if(ok)
+					// Проверяем параметры изделия и добавляем, если проходит по ограничениям
+					if(check_params(cnn.selection_params, row.elm))
 						res.push(row);
 
 				});
+				return res;
+			}
+
+			/**
+			 * Проверяет соответствие параметров отбора параметрам изделия
+			 * @param selection_params
+			 * @param elm
+			 * @param [cnstr]
+			 * @return {boolean}
+			 */
+			function check_params(selection_params, elm, cnstr){
+				var ok = true;
+				selection_params.find_rows({elm: elm}, function (prm) {
+					ok = false;
+					params.find_rows({cnstr: cnstr || 0, param: prm.param, value: prm.value}, function () {
+						ok = true;
+						return false;
+					});
+					return ok;
+				});
+				return ok;
+			}
+
+			/**
+			 * ПроверитьОграниченияВставки
+			 * TODO: перенести в прототип объекта вставки
+			 * @param inset
+			 * @param elm
+			 * @param by_perimetr
+			 * @return {boolean}
+			 */
+			function check_inset(inset, elm, by_perimetr){
+
+				var is_tabular = true,
+					_row = elm._row,
+					joined_imposts;
+
+				// проверяем площадь
+				if(inset.smin > _row.s || (_row.s && inset.smax && inset.smax < _row.s))
+					return false;
+
+				if($p.is_data_obj(inset)){
+
+					// только для прямых или только для кривых профилей
+					if((inset.for_direct_profile_only > 0 && !elm.profile.is_linear()) ||
+						(inset.for_direct_profile_only < 0 &&elm.profile.is_linear()))
+						return false;
+
+					if(inset.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
+						joined_imposts = elm.joined_imposts;
+						if(joined_imposts && !joined_imposts.length)
+							return false;
+
+					}else if(inset.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
+						joined_imposts = elm.joined_imposts;
+						if(joined_imposts && joined_imposts.length)
+							return false;
+					}
+					is_tabular = false;
+				}
+
+				if(!is_tabular || by_perimetr || inset.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
+					if(inset.lmin > _row.len || (inset.lmax < _row.len && inset.lmax > 0))
+						return false;
+					if(inset.ahmin > _row.angle_hor || inset.ahmax < _row.angle_hor)
+						return false;
+				}
+
+				//// Включить проверку размеров и углов, поля "Устанавливать с..." и т.д.
+
+				return true;
+			}
+
+			/**
+			 * ПолучитьСпецификациюВставкиСФильтром
+			 * @param inset
+			 * @param elm
+			 * @param [is_high_level_call]
+			 */
+			function filter_inset_spec(inset, elm, is_high_level_call){
+
+				var res = [], glass_rows;
+				if(!inset || inset.empty())
+					return res;
+
+				if(is_high_level_call && inset.insert_type == $p.enm.inserts_types.Стеклопакет){
+					glass_rows = glass_specification.find_rows({elm: elm.elm});
+					if(!glass_rows.length){
+						// заполняем спецификацию заполнений по умолчанию, чтобы склеить формулу
+						inset.specification.each(function (row) {
+							glass_rows.push(
+								glass_specification.add({
+									elm: elm.elm,
+									gno: 0,
+									inset: row.nom,
+									clr: row.clr
+								})
+							);
+						});
+					};
+					if(glass_rows.length){
+						glass_formulas[elm.elm] = "";
+						glass_rows.forEach(function (row) {
+							filter_inset_spec(row.inset, elm).forEach(function (row) {
+								res.push(row);
+							});
+							if(!glass_formulas[elm.elm])
+								glass_formulas[elm.elm] = row.inset.name;
+							else
+								glass_formulas[elm.elm] += "x" + row.inset.name;
+						});
+						return res;
+					};
+				};
+
+				inset.specification.each(function (row) {
+
+					// Проверяем ограничения строки вставки
+					if(!check_inset(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль))
+						return;
+
+					// Проверяем параметры изделия
+					if(!check_params(inset.selection_params, row.elm))
+						return;
+
+					// Добавляем или разузловываем дальше
+					if(row.nom._manager.class_name == "cat.nom")
+						res.push(row);
+					else
+						filter_inset_spec(row.nom, elm).forEach(function (row) {
+							res.push(row);
+						});
+				});
+
 				return res;
 			}
 
@@ -1910,10 +2105,39 @@ $p.modifiers.push(
 			}
 
 			/**
-			 * Спецификации вставок
+			 * Спецификация вставки элемента
 			 */
-			function spec_insets(scheme) {
+			function spec_insets(elm) {
 
+				filter_inset_spec(elm.inset, elm, true).forEach(function (row_ins_spec) {
+
+					var row_spec;
+
+					// добавляем строку спецификации, если профиль или не про шагам
+					if((row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру
+						&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
+							$p.enm.elm_types.profiles(elm._row.elm_type) != -1)
+						row_spec = new_spec_row(null, elm, row_ins_spec, null, elm.inset);
+
+					if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && row_ins_spec.formula){
+						try{
+							row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, elm.inset);
+							if(eval(row_ins_spec.formula) === false)
+								return;
+						}catch(err){
+							$p.record_log(err);
+						}
+
+					}else if($p.enm.elm_types.profiles(elm._row.elm_type) != -1){
+						// Для вставок в профиль способ расчета количество не учитывается
+						//РассчитатьQtyLen(СтрСп, СтрК.Длина, СтрСп0, СвойстваНоменклатуры);
+
+					}else{
+
+					}
+
+
+				});
 			}
 
 			/**
@@ -1940,15 +2164,7 @@ $p.modifiers.push(
 						row_cnn_next = e.cnn.main_row(curr);
 
 						// добавляем строку спецификации
-						row_spec = spec.add({
-							nom: _row.nom,
-							elm: _row.elm,
-							clr: _row.clr
-						});
-
-						// уточняем цвет
-						if(row_cnn_prev && row_cnn_next && row_cnn_prev.clr == row_cnn_next.clr)
-							row_spec.clr = $p.cat.clrs.by_predefined(row_cnn_next.clr, curr.clr, ox.clr);
+						row_spec = new_spec_row(null, curr, row_cnn_prev, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0))
 
 						// уточняем размер
 						row_spec.len = (_row.len - (row_cnn_prev ? row_cnn_prev.sz : 0) - (row_cnn_next ? row_cnn_next.sz : 0))
@@ -1970,7 +2186,7 @@ $p.modifiers.push(
 						}
 
 						// РассчитатьКоличествоПлощадьМассу
-						calc_count_area_mass(row_spec, _row);
+						calc_count_area_mass(row_spec, _row, row_cnn_prev.angle_calc_method, row_cnn_next.angle_calc_method);
 
 						// НадоДобавитьСпецификациюСоединения
 						if(need_add_cnn_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
@@ -1992,7 +2208,7 @@ $p.modifiers.push(
 							}
 
 							// для раскладок доппроверка
-							//Если СтрК.ТипЭлемента = Перечисления.пзТипыЭлементов.Раскладка И (СоедСлед <> Неопределено)
+							//Если СтрК.ТипЭлемента = Перечисления.пзТипыЭлементов.Раскладка И (СоедСлед != Неопределено)
 							//	И (СоедСлед.ТипСоединения = Перечисления.пзТипыСоединений.ТОбразное
 							//	Или СоедСлед.ТипСоединения = Перечисления.пзТипыСоединений.НезамкнутыйКонтур) Тогда
 							//	Если НадоДобавитьСпецификациюСоединения(СтруктураПараметров, СоедСлед, СтрК, След) Тогда
@@ -2002,11 +2218,13 @@ $p.modifiers.push(
 							//КонецЕсли;
 
 							// спецификацию с предыдущей стороны рассчитваем всегда
-							row_spec.origin = cnn_row(_row.elm, prev ? prev.elm : 0);
 							add_cnn_spec(b.cnn, curr, len_angle);
 
 						}
 
+
+						// Спецификация вставки
+						spec_insets(curr);
 
 					});
 
@@ -2035,10 +2253,19 @@ $p.modifiers.push(
 
 							};
 
+							// добавляем спецификацию соединения рёбер заполнения с профилем
 							add_cnn_spec(curr.cnn, curr.profile, len_angle);
+
 						}
 
+						// добавляем спецификацию вставки в заполнение
+						spec_insets(glass);
+
+						// TODO: для всех раскладок заполнения
+
 					});
+
+
 
 
 				});
@@ -2057,6 +2284,8 @@ $p.modifiers.push(
 				constructions = ox.constructions;
 				coordinates = ox.coordinates;
 				cnn_elmnts = ox.cnn_elmnts;
+				glass_specification = ox.glass_specification;
+				glass_formulas = {};
 				params = ox.params;
 
 				// чистим спецификацию
@@ -2122,7 +2351,7 @@ $p.modifiers.push(
 
 
 
-$p.injected_data._mixin({"create_tables.sql":"USE md;\nCREATE TABLE IF NOT EXISTS `areg_РасчетыСКонтрагентами` (`Сделка` CHAR, `partner` CHAR, `organization` CHAR, `amount_mutual` FLOAT, `amount_operation` FLOAT, PRIMARY KEY (`Сделка`, `partner`, `organization`));\nCREATE TABLE IF NOT EXISTS `areg_planning` (`phase` CHAR, `date` Date, `work_shift` CHAR, `work_center` CHAR, `work_center_T` CHAR, `obj` CHAR, `obj_T` CHAR, `elm` CHAR, `elm_T` CHAR, `specimen` INT, `quantity` FLOAT, `cost` FLOAT, PRIMARY KEY (`phase`, `date`, `work_shift`, `work_center`, `obj`, `elm`, `specimen`));\nCREATE TABLE IF NOT EXISTS `areg_ВзаиморасчетыСКонтрагентами` (`Сделка` CHAR, `partner` CHAR, `organization` CHAR, `amount_mutual` FLOAT, `amount_operation` FLOAT, PRIMARY KEY (`Сделка`, `partner`, `organization`));\nCREATE TABLE IF NOT EXISTS `ireg_$log` (`date` INT, `sequence` INT, `class` CHAR, `note` CHAR, `obj` CHAR, PRIMARY KEY (`date`, `sequence`));\nCREATE TABLE IF NOT EXISTS `ireg_workers_schedules` (`begin_time` Date, `individual_person` CHAR, `department` CHAR, `end_time` Date, PRIMARY KEY (`begin_time`, `individual_person`, `department`));\nCREATE TABLE IF NOT EXISTS `ireg_nom_prices` (`price_type` CHAR, `nom` CHAR, `nom_characteristic` CHAR, `currency` CHAR, `price` FLOAT, `discount_percent` FLOAT, PRIMARY KEY (`price_type`, `nom`, `nom_characteristic`));\nCREATE TABLE IF NOT EXISTS `ireg_margin_coefficients` (`price_group` CHAR, `parameters_key` CHAR, `condition_formula` CHAR, `marginality` FLOAT, `marginality_min` FLOAT, `marginality_internal` FLOAT, `price_type_first_cost` CHAR, `price_type_sale` CHAR, `price_type_internal` CHAR, `formula` CHAR, `sale_formula` CHAR, `internal_formula` CHAR, `external_formula` CHAR, `extra_charge_external` FLOAT, `discount_external` FLOAT, `discount` FLOAT, PRIMARY KEY (`price_group`, `parameters_key`, `condition_formula`));\nCREATE TABLE IF NOT EXISTS `ireg_specification_adjustment` (`area` CHAR, `area_T` CHAR, `icounter` INT, `production` CHAR, `material_operation` CHAR, `characteristic` CHAR, `parameters_key` CHAR, `formula` CHAR, `condition_formula` CHAR, `is_order_row` BOOLEAN, PRIMARY KEY (`area`, `icounter`, `production`, `material_operation`, `characteristic`, `parameters_key`));\nCREATE TABLE IF NOT EXISTS `ireg_integration_links_cache` (`identifier` CHAR, `conformity` CHAR, `conformity_T` CHAR, `identifier_presentation` CHAR, PRIMARY KEY (`identifier`));\nCREATE TABLE IF NOT EXISTS `doc_planning_event` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `phase` CHAR, `work_shift` CHAR, `department` CHAR, `work_center` CHAR, `obj` CHAR, `obj_T` CHAR, `ts_executors` JSON, `ts_planning` JSON);\nCREATE TABLE IF NOT EXISTS `doc_nom_prices_setup` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `note` CHAR, `responsible` CHAR, `change_time` INT, `ts_goods` JSON);\nCREATE TABLE IF NOT EXISTS `doc_selling` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `department` CHAR, `warehouse` CHAR, `partner` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR, `ts_goods` JSON, `ts_services` JSON);\nCREATE TABLE IF NOT EXISTS `doc_credit_cash_order` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `partner_T` CHAR, `department` CHAR, `cashbox` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR);\nCREATE TABLE IF NOT EXISTS `doc_debit_cash_order` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `partner_T` CHAR, `department` CHAR, `cashbox` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR);\nCREATE TABLE IF NOT EXISTS `doc_credit_bank_order` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR);\nCREATE TABLE IF NOT EXISTS `doc_debit_bank_order` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR);\nCREATE TABLE IF NOT EXISTS `doc_calc_order` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `number_internal` CHAR, `project` CHAR, `organization` CHAR, `partner` CHAR, `client_of_dealer` CHAR, `contract` CHAR, `invoice` CHAR, `organizational_unit` CHAR, `note` CHAR, `manager` CHAR, `leading_manager` CHAR, `department` CHAR, `doc_amount` FLOAT, `amount_operation` FLOAT, `amount_internal` FLOAT, `accessory_characteristic` CHAR, `doc_currency` CHAR, `sys_profile` CHAR, `sys_furn` CHAR, `phone` CHAR, `delivery_area` CHAR, `shipping_address` CHAR, `coordinates` CHAR, `address_fields` CHAR, `invoice_state` CHAR, `difficult` BOOLEAN, `vat_consider` BOOLEAN, `vat_included` BOOLEAN, `settlements_course` FLOAT, `settlements_multiplicity` INT, `obj_delivery_state` CHAR, `change_time` INT, `changed_here` BOOLEAN, `ts_production` JSON, `ts_extra_fields` JSON, `ts_contact_information` JSON);\nCREATE TABLE IF NOT EXISTS `doc_purchase` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `warehouse` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR, `ts_goods` JSON, `ts_services` JSON);\nCREATE TABLE IF NOT EXISTS `doc_registers_correction` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `note` CHAR, `responsible` CHAR, `original_doc_type` CHAR, `ts_registers_table` JSON);\nCREATE TABLE IF NOT EXISTS `tsk_ЗадачаИсполнителя` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `author` CHAR, `author_T` CHAR, `Важность` CHAR, `ГруппаИсполнителейЗадач` CHAR, `ДатаИсполнения` Date, `start_date` Date, `ДатаПринятияКИсполнению` Date, `definition` CHAR, `Предмет` CHAR, `Предмет_T` CHAR, `ПредметСтрокой` CHAR, `ПринятаКИсполнению` BOOLEAN, `РезультатВыполнения` CHAR, `СостояниеБизнесПроцесса` CHAR, `СрокИсполнения` Date, `АвторСтрокой` CHAR, `completed` BOOLEAN, `buisness_process` CHAR, `ДополнительныйОбъектАдресации` CHAR, `executor` CHAR, `executor_T` CHAR, `ОсновнойОбъектАдресации` CHAR, `РольИсполнителя` CHAR);\nCREATE TABLE IF NOT EXISTS `bp_Задание` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `author` CHAR, `author_T` CHAR, `Важность` CHAR, `Выполнено` BOOLEAN, `ГлавнаяЗадача` CHAR, `ДатаЗавершения` Date, `executor` CHAR, `executor_T` CHAR, `name` CHAR, `НаПроверке` BOOLEAN, `НомерИтерации` INT, `Подтверждено` BOOLEAN, `Предмет` CHAR, `Предмет_T` CHAR, `Проверяющий` CHAR, `Проверяющий_T` CHAR, `РезультатВыполнения` CHAR, `content` CHAR, `Состояние` CHAR, `СрокИсполнения` Date, `СрокПроверки` Date, `АвторСтрокой` CHAR, `ВнешнееЗадание` BOOLEAN, `ЗадачаИсточник` CHAR, `СодержаниеПредмета` CHAR, `ОсновнойОбъектАдресации` CHAR, `ОсновнойОбъектАдресацииПроверяющий` CHAR, `ДополнительныйОбъектАдресации` CHAR, `ДополнительныйОбъектАдресацииПроверяющий` CHAR, `ГруппаИсполнителейЗадач` CHAR, `ГруппаИсполнителейЗадач_T` CHAR, `ГруппаИсполнителейЗадачПроверяющий` CHAR, `ГруппаИсполнителейЗадачПровер_T` CHAR, `started` BOOLEAN, `leading_task` CHAR, `finished` BOOLEAN);\nCREATE TABLE IF NOT EXISTS `cat_price_groups` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `definition` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_characteristics` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `x` FLOAT, `y` FLOAT, `z` FLOAT, `s` FLOAT, `clr` CHAR, `weight` FLOAT, `condition_products` FLOAT, `calc_order` CHAR, `product` INT, `leading_product` CHAR, `leading_elm` INT, `note` CHAR, `number_str` CHAR, `owner` CHAR, `ts_constructions` JSON, `ts_coordinates` JSON, `ts_cnn_elmnts` JSON, `ts_params` JSON, `ts_glass_specification` JSON, `ts_extra_fields` JSON, `ts_glasses` JSON, `ts_mosquito` JSON, `ts_specification` JSON);\nCREATE TABLE IF NOT EXISTS `cat_individuals` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `birth_date` Date, `inn` CHAR, `imns_code` CHAR, `note` CHAR, `pfr_number` CHAR, `sex` CHAR, `birth_place` CHAR, `ОсновноеИзображение` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_nom_prices_types` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `price_currency` CHAR, `discount_percent` FLOAT, `vat_price_included` BOOLEAN, `rounding_order` CHAR, `rounding_in_a_big_way` BOOLEAN, `note` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_cost_items` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `cost_kind` CHAR, `costs_material_feed` CHAR, `costs_character` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_cash_flow_articles` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `definition` CHAR, `РеквизитДопУпорядочивания` INT, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_stores` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `note` CHAR, `department` CHAR, `parent` CHAR, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_projects` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `start` Date, `finish` Date, `launch` Date, `readiness` Date, `finished` BOOLEAN, `responsible` CHAR, `note` CHAR, `parent` CHAR, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_users` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `invalid` BOOLEAN, `department` CHAR, `ФизическоеЛицо` CHAR, `note` CHAR, `ancillary` BOOLEAN, `Подготовлен` BOOLEAN, `ИдентификаторПользователяСервиса` CHAR, `СвойстваПользователяИБ` CHAR, `ts_extra_fields` JSON, `ts_contact_information` JSON);\nCREATE TABLE IF NOT EXISTS `cat_divisions` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `main_project` CHAR, `sorting` INT, `parent` CHAR, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_color_price_groups` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `for_pricing_only` CHAR, `for_pricing_only_T` CHAR, `ts_price_groups` JSON, `ts_clr_conformity` JSON);\nCREATE TABLE IF NOT EXISTS `cat_clrs` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `ral` CHAR, `machine_tools_clr` CHAR, `clr_str` CHAR, `clr_out` CHAR, `clr_in` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_furns` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `furn_no` INT, `flap_weight_max` INT, `left_right` BOOLEAN, `is_set` BOOLEAN, `is_sliding` BOOLEAN, `furn_set` CHAR, `side_count` INT, `handle_side` INT, `open_type` CHAR, `name_short` CHAR, `parent` CHAR, `ts_open_tunes` JSON, `ts_specification` JSON, `ts_selection_params` JSON, `ts_specification_restrictions` JSON);\nCREATE TABLE IF NOT EXISTS `cat_base_blocks` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `production` CHAR, `svg` CHAR, `sys` CHAR, `parent` CHAR, `ts_proportions` JSON, `ts_bindings` JSON, `ts_coordinates` JSON, `ts_constructions` JSON, `ts_params` JSON, `ts_cnn_elmnts` JSON);\nCREATE TABLE IF NOT EXISTS `cat_invoice_states` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `clr` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_cnns` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `priority` INT, `amin` INT, `amax` INT, `sd1` CHAR, `sd2` CHAR, `sz` FLOAT, `cnn_type` CHAR, `ahmin` INT, `ahmax` INT, `lmin` INT, `lmax` INT, `tmin` INT, `tmax` INT, `var_layers` BOOLEAN, `for_direct_profile_only` INT, `art1vert` BOOLEAN, `art1glass` BOOLEAN, `art2glass` BOOLEAN, `ts_specification` JSON, `ts_cnn_elmnts` JSON, `ts_selection_params` JSON);\nCREATE TABLE IF NOT EXISTS `cat_delivery_areas` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `country` CHAR, `region` CHAR, `city` CHAR, `latitude` FLOAT, `longitude` FLOAT, `ind` CHAR, `delivery_area` CHAR, `specify_area_by_geocoder` BOOLEAN);\nCREATE TABLE IF NOT EXISTS `cat_predefined_elmnts` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `elm` CHAR, `elm_T` CHAR, `ts_elmnts` JSON);\nCREATE TABLE IF NOT EXISTS `cat_production_params` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `nom` CHAR, `default_clr` CHAR, `auto_align` BOOLEAN, `allow_open_cnn` BOOLEAN, `sz_lines` CHAR, `clr_group` CHAR, `is_drainage` BOOLEAN, `active` BOOLEAN, `tmin` INT, `tmax` INT, `lay_split_type` CHAR, `parent` CHAR, `ts_elmnts` JSON, `ts_product_params` JSON, `ts_furn` JSON, `ts_furn_params` JSON, `ts_colors` JSON);\nCREATE TABLE IF NOT EXISTS `cat_parameters_keys` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `КоличествоПараметров` INT, `ts_params` JSON);\nCREATE TABLE IF NOT EXISTS `cat_inserts` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `insert_type` CHAR, `clr` CHAR, `priority` INT, `lmin` INT, `lmax` INT, `hmin` INT, `hmax` INT, `smin` FLOAT, `smax` FLOAT, `for_direct_profile_only` INT, `ahmin` INT, `ahmax` INT, `mmin` INT, `mmax` INT, `insert_glass_type` CHAR, `impost_fixation` CHAR, `shtulp_fixation` BOOLEAN, `can_rotate` BOOLEAN, `sizeb` FLOAT, `ts_specification` JSON, `ts_selection_params` JSON);\nCREATE TABLE IF NOT EXISTS `cat_organizations` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `prefix` CHAR, `inn` CHAR, `individual_legal` CHAR, `main_bank_account` CHAR, `kpp` CHAR, `certificate_series_number` CHAR, `certificate_date_issue` Date, `certificate_authority_name` CHAR, `certificate_authority_code` CHAR, `individual_entrepreneur` CHAR, `ts_contact_information` JSON, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_nom_groups` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `storage_unit` CHAR, `base_unit` CHAR, `vat_rate` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_nom` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `article` CHAR, `name_full` CHAR, `base_unit` CHAR, `storage_unit` CHAR, `nom_kind` CHAR, `cost_item` CHAR, `nom_group` CHAR, `vat_rate` CHAR, `note` CHAR, `price_group` CHAR, `elm_type` CHAR, `len` FLOAT, `width` FLOAT, `thickness` FLOAT, `sizeb` FLOAT, `sizefurn` FLOAT, `density` FLOAT, `volume` FLOAT, `arc_elongation` FLOAT, `loss_factor` FLOAT, `rounding_quantity` INT, `clr` CHAR, `is_accessory` BOOLEAN, `is_procedure` BOOLEAN, `is_service` BOOLEAN, `is_pieces` BOOLEAN, `parent` CHAR, `ts_extra_fields` JSON, `ts_nom_units` JSON);\nCREATE TABLE IF NOT EXISTS `cat_partners` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `main_bank_account` CHAR, `note` CHAR, `kpp` CHAR, `okpo` CHAR, `inn` CHAR, `individual_legal` CHAR, `main_contract` CHAR, `identification_document` CHAR, `buyer_main_manager` CHAR, `is_buyer` BOOLEAN, `is_supplier` BOOLEAN, `primary_contact` CHAR, `parent` CHAR, `ts_contact_information` JSON, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_units` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `international_short` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_cashboxes` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `funds_currency` CHAR, `department` CHAR, `current_account` CHAR, `owner` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_property_values` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `heft` FLOAT, `owner` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_nom_units` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `qualifier_unit` CHAR, `heft` FLOAT, `volume` FLOAT, `coefficient` FLOAT, `rounding_threshold` INT, `ПредупреждатьОНецелыхМестах` BOOLEAN, `owner` CHAR, `owner_T` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_contracts` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `settlements_currency` CHAR, `mutual_settlements` CHAR, `contract_kind` CHAR, `date` Date, `check_days_without_pay` BOOLEAN, `allowable_debts_amount` FLOAT, `allowable_debts_days` INT, `note` CHAR, `check_debts_amount` BOOLEAN, `check_debts_days` BOOLEAN, `number_doc` CHAR, `organization` CHAR, `main_cash_flow_article` CHAR, `main_project` CHAR, `accounting_reflect` BOOLEAN, `tax_accounting_reflect` BOOLEAN, `prepayment_percent` FLOAT, `validity` Date, `vat_included` BOOLEAN, `price_type` CHAR, `vat_consider` BOOLEAN, `days_without_pay` INT, `owner` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_nom_kinds` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `nom_type` CHAR, `НаборСвойствНоменклатура` CHAR, `НаборСвойствХарактеристика` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_contact_information_kinds` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `АдресТолькоРоссийский` BOOLEAN, `ВключатьСтрануВПредставление` BOOLEAN, `ЗапретитьРедактированиеПользователем` BOOLEAN, `Используется` BOOLEAN, `МожноИзменятьСпособРедактирования` BOOLEAN, `mandatory_fields` BOOLEAN, `tooltip` CHAR, `ПроверятьКорректность` BOOLEAN, `ПроверятьПоФИАС` BOOLEAN, `РазрешитьВводНесколькихЗначений` BOOLEAN, `РедактированиеТолькоВДиалоге` BOOLEAN, `РеквизитДопУпорядочивания` INT, `СкрыватьНеактуальныеАдреса` BOOLEAN, `ТелефонCДобавочнымНомером` BOOLEAN, `type` CHAR, `УказыватьОКТМО` BOOLEAN, `МногострочноеПоле` BOOLEAN, `ХранитьИсториюИзменений` BOOLEAN, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_currencies` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `ЗагружаетсяИзИнтернета` BOOLEAN, `name_full` CHAR, `extra_charge` FLOAT, `main_currency` CHAR, `parameters_russian_recipe` CHAR, `ФормулаРасчетаКурса` CHAR, `СпособУстановкиКурса` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_elm_visualization` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `article` CHAR, `svg_path` CHAR, `is_handle` BOOLEAN, `offset` INT, `side` CHAR, `elm_side` BOOLEAN, `attributes` CHAR, `cx` INT, `cy` INT);\nCREATE TABLE IF NOT EXISTS `cat_countries` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `alpha2` CHAR, `alpha3` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_destinations` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `КоличествоРеквизитов` CHAR, `КоличествоСведений` CHAR, `Используется` BOOLEAN, `parent` CHAR, `ts_extra_fields` JSON, `ts_extra_properties` JSON);\nCREATE TABLE IF NOT EXISTS `cat_banks_qualifier` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `correspondent_account` CHAR, `city` CHAR, `address` CHAR, `phone_numbers` CHAR, `activity_ceased` BOOLEAN, `СВИФТБИК` CHAR, `inn` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_property_values_hierarchy` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `heft` FLOAT, `owner` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_organization_bank_accounts` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `bank` CHAR, `funds_currency` CHAR, `account_number` CHAR, `СрокИсполненияПлатежа` INT, `settlements_bank` CHAR, `department` CHAR, `owner` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_partner_bank_accounts` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `account_number` CHAR, `bank` CHAR, `settlements_bank` CHAR, `correspondent_text` CHAR, `appointments_text` CHAR, `funds_currency` CHAR, `bank_bic` CHAR, `РучноеИзменениеРеквизитовБанка` BOOLEAN, `bank_name` CHAR, `bank_correspondent_account` CHAR, `bank_city` CHAR, `bank_address` CHAR, `bank_phone_numbers` CHAR, `settlements_bank_bic` CHAR, `РучноеИзменениеРеквизитовБанкаДляРасчетов` BOOLEAN, `НаименованиеБанкаДляРасчетов` CHAR, `settlements_bank_correspondent_account` CHAR, `settlements_bank_city` CHAR, `АдресБанкаДляРасчетов` CHAR, `ТелефоныБанкаДляРасчетов` CHAR, `owner` CHAR, `owner_T` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_params_links` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `master` CHAR, `slave` CHAR, `ts_values` JSON);\nCREATE TABLE IF NOT EXISTS `cch_properties` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `Виден` BOOLEAN, `ВладелецДополнительныхЗначений` CHAR, `ДополнительныеЗначенияИспользуются` BOOLEAN, `ДополнительныеЗначенияСВесом` BOOLEAN, `Доступен` BOOLEAN, `caption` CHAR, `ЗаголовокФормыВыбораЗначения` CHAR, `ЗаголовокФормыЗначения` CHAR, `mandatory` BOOLEAN, `note` CHAR, `МногострочноеПолеВвода` INT, `destination` CHAR, `tooltip` CHAR, `ФорматСвойства` CHAR, `ЭтоДополнительноеСведение` BOOLEAN, `type` JSON, `ts_ЗависимостиДополнительныхРеквизитов` JSON);\nCREATE TABLE IF NOT EXISTS `enm_outline_formation` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_elm_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_cnn_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_sz_line_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_open_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_cutting_optimization_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_lay_split_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_inserts_glass_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_inserts_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_cnn_sides` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_specification_installation_methods` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_angle_calculating_ways` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_count_calculating_ways` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_simple_complex_all` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_positions` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_orientations` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_plan_limit` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_specification_adjustment_areas` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_open_directions` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_color_groups_destination` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_control_during` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_planning_detailing` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_text_aligns` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_contraction_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_offset_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_transfer_operations_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_impost_mount_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_inset_attrs_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_registration_type` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_caching_type` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_gender` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_individual_legal` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_contract_kinds` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_mutual_contract_settlements` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_obj_delivery_states` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_contact_information_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_nom_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_costs_character` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_costs_material_feeds` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_costs_kinds` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_vat_rates` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\n","toolbar_calc_order_production.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_grp_add\" text=\"&lt;i class='fa fa-plus-circle fa-lg'&gt;&lt;/i&gt;\" title=\"Добавить строку заказа\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_add_builder\" text=\"&lt;i class='fa fa-object-ungroup fa-lg'&gt;&lt;/i&gt; Изделие построителя\" />\r\n        <item type=\"button\" id=\"btn_add_product\" text=\"&lt;i class='fa fa-gavel fa-lg'&gt;&lt;/i&gt; Продукцию или услугу\" />\r\n        <item type=\"button\" id=\"btn_add_material\" text=\"&lt;i class='fa fa-cube fa-lg'&gt;&lt;/i&gt; Материал\" />\r\n    </item>\r\n\r\n    <item type=\"button\" id=\"btn_edit\" text=\"&lt;i class='fa fa-object-ungroup fa-lg'&gt;&lt;/i&gt;\" title=\"Редактировать изделие построителя\" />\r\n    <item type=\"button\" id=\"btn_spec\" text=\"&lt;i class='fa fa-table fa-lg'&gt;&lt;/i&gt;\" title=\"Открыть спецификацию изделия\" />\r\n    <item type=\"button\" id=\"btn_delete\" text=\"&lt;i class='fa fa-times fa-lg'&gt;&lt;/i&gt;\" title=\"Удалить строку заказа\" />\r\n\r\n    <item type=\"button\" id=\"btn_discount\" text=\"&lt;i class='fa fa-percent fa-lg'&gt;&lt;/i&gt;\" title=\"Скидки по типам строк заказа\"/>\r\n\r\n    <item id=\"sep1\" type=\"separator\"/>\r\n\r\n</toolbar>","toolbar_calc_order_obj.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_sent\" text=\"&lt;i class='fa fa-paper-plane-o fa-lg fa-fw'&gt;&lt;/i&gt; Отправить\" title=\"Отправить заказ\" />\r\n    <item type=\"button\" id=\"btn_save\" text=\"&lt;i class='fa fa-floppy-o fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Рассчитать и записать данные\"/>\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"&lt;i class='fa fa-check-square-o fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Провести документ\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"&lt;i class='fa fa-square-o fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Отмена проведения\" />\r\n\r\n    <item type=\"button\" id=\"btn_files\" text=\"&lt;i class='fa fa-paperclip fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Присоединенные файлы\"/>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Печать\" openAll=\"true\">\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_message\" enabled=\"false\" text=\"Сообщение\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-th-large fa-lg fa-fw'&gt;&lt;/i&gt;\"  title=\"Дополнительно\" openAll=\"true\">\r\n        <item type=\"button\"     id=\"btn_retrieve\"    text=\"&lt;i class='fa fa-undo fa-lg fa-fw'&gt;&lt;/i&gt; Отозвать\" title=\"Отозвать заказ\" />\r\n        <item type=\"separator\"  id=\"sep_export\" />\r\n        <item type=\"button\" id=\"btn_import\" text=\"&lt;i class='fa fa-upload fa-lg fa-fw'&gt;&lt;/i&gt; Загрузить из файла\" />\r\n        <item type=\"button\" id=\"btn_export\" text=\"&lt;i class='fa fa-download fa-lg fa-fw'&gt;&lt;/i&gt; Выгрузить в файл\" />\r\n    </item>\r\n\r\n    <item id=\"sep_close_1\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_close\" text=\"&lt;i class='fa fa-times fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Закрыть форму\"/>\r\n    <item id=\"sep_close_2\" type=\"separator\"/>\r\n\r\n</toolbar>","view_about.html":"<div class=\"md_column1300\">\r\n    <h1><i class=\"fa fa-info-circle\"></i> Интернет-магазин MetaStore</h1>\r\n    <p>Метамагазин - это веб-приложение с открытым исходным кодом, разработанное компанией <a href=\"http://www.oknosoft.ru/\" target=\"_blank\">Окнософт</a> на базе фреймворка <a href=\"http://www.oknosoft.ru/metadata/\" target=\"_blank\">Metadata.js</a> и распространяемое под <a href=\"http://www.oknosoft.ru/programmi-oknosoft/metadata.html\" target=\"_blank\">коммерческой лицензией Окнософт</a>.<br />\r\n        Исходный код и документация доступны на <a href=\"https://github.com/oknosoft/metastore\" target=\"_blank\">GitHub <i class=\"fa fa-github-alt\"></i></a>.<br />\r\n        Приложение является веб-интерфейсом к типовым конфигурациям 1С (Управление торговлей 11.2, Комплексная автоматизация 2.0, ERP Управление предприятием 2.1) и реализует функциональность интернет-магазина для информационной базы 1С\r\n    </p>\r\n    <p>Использованы следующие библиотеки и инструменты:</p>\r\n\r\n    <h3>Серверная часть</h3>\r\n    <ul>\r\n        <li><a href=\"http://1c-dn.com/1c_enterprise/\" target=\"_blank\">1c_enterprise</a><span class=\"md_muted_color\">, ORM сервер 1С:Предприятие</span></li>\r\n        <li><a href=\"http://www.postgresql.org/\" target=\"_blank\">postgreSQL</a><span class=\"md_muted_color\">, мощная объектно-раляционная база данных</span></li>\r\n        <li><a href=\"https://nodejs.org/\" target=\"_blank\">node.js</a><span class=\"md_muted_color\">, серверная программная платформа, основанная на движке V8 javascript</span></li>\r\n        <li><a href=\"http://nginx.org/ru/\" target=\"_blank\">nginx</a><span class=\"md_muted_color\">, высокопроизводительный HTTP-сервер</span></li>\r\n    </ul>\r\n\r\n    <h3>Управление данными в памяти браузера</h3>\r\n    <ul>\r\n        <li><a href=\"https://github.com/agershun/alasql\" target=\"_blank\">alaSQL</a><span class=\"md_muted_color\">, база данных SQL для браузера и Node.js с поддержкой как традиционных реляционных таблиц, так и вложенных JSON данных (NoSQL)</span></li>\r\n        <li><a href=\"https://github.com/metatribal/xmlToJSON\" target=\"_blank\">xmlToJSON</a><span class=\"md_muted_color\">, компактный javascript модуль для преобразования XML в JSON</span></li>\r\n        <li><a href=\"https://github.com/SheetJS/js-xlsx\" target=\"_blank\">xlsx</a><span class=\"md_muted_color\">, библиотека для чтения и записи XLSX / XLSM / XLSB / XLS / ODS в браузере</span></li>\r\n    </ul>\r\n\r\n    <h3>UI библиотеки и компоненты интерфейса</h3>\r\n    <ul>\r\n        <li><a href=\"http://dhtmlx.com/\" target=\"_blank\">dhtmlx</a><span class=\"md_muted_color\">, кроссбраузерная библиотека javascript для построения современных веб и мобильных приложений</span></li>\r\n        <li><a href=\"https://github.com/leongersen/noUiSlider\" target=\"_blank\">noUiSlider</a><span class=\"md_muted_color\">, легковесный javascript компонент регулирования пары (min-max) значений </span></li>\r\n        <li><a href=\"https://github.com/eligrey/FileSaver.js\" target=\"_blank\">filesaver.js</a><span class=\"md_muted_color\">, HTML5 реализация метода saveAs</span></li>\r\n        <li><a href=\"https://github.com/Diokuz/baron\" target=\"_blank\">baron</a><span class=\"md_muted_color\">, компонент управления полосами прокрутки</span></li>\r\n        <li><a href=\"https://github.com/ded/qwery\" target=\"_blank\">qwery</a><span class=\"md_muted_color\">, движок селекторов</span></li>\r\n        <li><a href=\"https://github.com/ded/bonzo\" target=\"_blank\">bonzo</a><span class=\"md_muted_color\">, утилиты DOM</span></li>\r\n        <li><a href=\"https://github.com/fat/bean\" target=\"_blank\">bean</a><span class=\"md_muted_color\">, библиотека событий для javascript</span></li>\r\n    </ul>\r\n\r\n    <h3>Графика</h3>\r\n    <ul>\r\n        <li><a href=\"https://fortawesome.github.io/Font-Awesome/\" target=\"_blank\">fontawesome</a><span class=\"md_muted_color\">, набор иконок и стилей CSS</span></li>\r\n        <li><a href=\"http://fontastic.me/\" target=\"_blank\">fontastic</a><span class=\"md_muted_color\">, еще один набор иконок и стилей</span></li>\r\n    </ul>\r\n\r\n    <p>&nbsp;</p>\r\n    <h2><i class=\"fa fa-question-circle\"></i> Вопросы</h2>\r\n    <p>Если обнаружили ошибку, пожалуйста,\r\n        <a href=\"https://github.com/oknosoft/metastore/issues/new\" target=\"_blank\">зарегистрируйте вопрос в GitHub</a> или\r\n        <a href=\"http://www.oknosoft.ru/metadata/#page-118\" target=\"_blank\">свяжитесь с разработчиком</a> напрямую<br />&nbsp;</p>\r\n\r\n</div>"});
+$p.injected_data._mixin({"create_tables.sql":"USE md;\nCREATE TABLE IF NOT EXISTS `areg_РасчетыСКонтрагентами` (`Сделка` CHAR, `partner` CHAR, `organization` CHAR, `amount_mutual` FLOAT, `amount_operation` FLOAT, PRIMARY KEY (`Сделка`, `partner`, `organization`));\nCREATE TABLE IF NOT EXISTS `areg_planning` (`phase` CHAR, `date` Date, `work_shift` CHAR, `work_center` CHAR, `work_center_T` CHAR, `obj` CHAR, `obj_T` CHAR, `elm` CHAR, `elm_T` CHAR, `specimen` INT, `quantity` FLOAT, `cost` FLOAT, PRIMARY KEY (`phase`, `date`, `work_shift`, `work_center`, `obj`, `elm`, `specimen`));\nCREATE TABLE IF NOT EXISTS `areg_ВзаиморасчетыСКонтрагентами` (`Сделка` CHAR, `partner` CHAR, `organization` CHAR, `amount_mutual` FLOAT, `amount_operation` FLOAT, PRIMARY KEY (`Сделка`, `partner`, `organization`));\nCREATE TABLE IF NOT EXISTS `ireg_$log` (`date` INT, `sequence` INT, `class` CHAR, `note` CHAR, `obj` CHAR, PRIMARY KEY (`date`, `sequence`));\nCREATE TABLE IF NOT EXISTS `ireg_workers_schedules` (`begin_time` Date, `individual_person` CHAR, `department` CHAR, `end_time` Date, PRIMARY KEY (`begin_time`, `individual_person`, `department`));\nCREATE TABLE IF NOT EXISTS `ireg_nom_prices` (`price_type` CHAR, `nom` CHAR, `nom_characteristic` CHAR, `currency` CHAR, `price` FLOAT, `discount_percent` FLOAT, PRIMARY KEY (`price_type`, `nom`, `nom_characteristic`));\nCREATE TABLE IF NOT EXISTS `ireg_margin_coefficients` (`price_group` CHAR, `parameters_key` CHAR, `condition_formula` CHAR, `marginality` FLOAT, `marginality_min` FLOAT, `marginality_internal` FLOAT, `price_type_first_cost` CHAR, `price_type_sale` CHAR, `price_type_internal` CHAR, `formula` CHAR, `sale_formula` CHAR, `internal_formula` CHAR, `external_formula` CHAR, `extra_charge_external` FLOAT, `discount_external` FLOAT, `discount` FLOAT, PRIMARY KEY (`price_group`, `parameters_key`, `condition_formula`));\nCREATE TABLE IF NOT EXISTS `ireg_specification_adjustment` (`area` CHAR, `area_T` CHAR, `icounter` INT, `production` CHAR, `material_operation` CHAR, `characteristic` CHAR, `parameters_key` CHAR, `formula` CHAR, `condition_formula` CHAR, `is_order_row` BOOLEAN, PRIMARY KEY (`area`, `icounter`, `production`, `material_operation`, `characteristic`, `parameters_key`));\nCREATE TABLE IF NOT EXISTS `ireg_integration_links_cache` (`identifier` CHAR, `conformity` CHAR, `conformity_T` CHAR, `identifier_presentation` CHAR, PRIMARY KEY (`identifier`));\nCREATE TABLE IF NOT EXISTS `doc_planning_event` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `phase` CHAR, `work_shift` CHAR, `department` CHAR, `work_center` CHAR, `obj` CHAR, `obj_T` CHAR, `ts_executors` JSON, `ts_planning` JSON);\nCREATE TABLE IF NOT EXISTS `doc_nom_prices_setup` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `note` CHAR, `responsible` CHAR, `change_time` INT, `ts_goods` JSON);\nCREATE TABLE IF NOT EXISTS `doc_selling` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `department` CHAR, `warehouse` CHAR, `partner` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR, `ts_goods` JSON, `ts_services` JSON);\nCREATE TABLE IF NOT EXISTS `doc_credit_cash_order` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `partner_T` CHAR, `department` CHAR, `cashbox` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR);\nCREATE TABLE IF NOT EXISTS `doc_debit_cash_order` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `partner_T` CHAR, `department` CHAR, `cashbox` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR);\nCREATE TABLE IF NOT EXISTS `doc_credit_bank_order` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR);\nCREATE TABLE IF NOT EXISTS `doc_debit_bank_order` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR);\nCREATE TABLE IF NOT EXISTS `doc_calc_order` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `number_internal` CHAR, `project` CHAR, `organization` CHAR, `partner` CHAR, `client_of_dealer` CHAR, `contract` CHAR, `invoice` CHAR, `organizational_unit` CHAR, `note` CHAR, `manager` CHAR, `leading_manager` CHAR, `department` CHAR, `doc_amount` FLOAT, `amount_operation` FLOAT, `amount_internal` FLOAT, `accessory_characteristic` CHAR, `doc_currency` CHAR, `sys_profile` CHAR, `sys_furn` CHAR, `phone` CHAR, `delivery_area` CHAR, `shipping_address` CHAR, `coordinates` CHAR, `address_fields` CHAR, `invoice_state` CHAR, `difficult` BOOLEAN, `vat_consider` BOOLEAN, `vat_included` BOOLEAN, `settlements_course` FLOAT, `settlements_multiplicity` INT, `obj_delivery_state` CHAR, `change_time` INT, `changed_here` BOOLEAN, `ts_production` JSON, `ts_extra_fields` JSON, `ts_contact_information` JSON);\nCREATE TABLE IF NOT EXISTS `doc_purchase` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `warehouse` CHAR, `doc_amount` FLOAT, `note` CHAR, `responsible` CHAR, `ts_goods` JSON, `ts_services` JSON);\nCREATE TABLE IF NOT EXISTS `doc_registers_correction` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, posted boolean, date Date, number_doc CHAR, `note` CHAR, `responsible` CHAR, `original_doc_type` CHAR, `ts_registers_table` JSON);\nCREATE TABLE IF NOT EXISTS `tsk_ЗадачаИсполнителя` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `author` CHAR, `author_T` CHAR, `Важность` CHAR, `ГруппаИсполнителейЗадач` CHAR, `ДатаИсполнения` Date, `start_date` Date, `ДатаПринятияКИсполнению` Date, `definition` CHAR, `Предмет` CHAR, `Предмет_T` CHAR, `ПредметСтрокой` CHAR, `ПринятаКИсполнению` BOOLEAN, `РезультатВыполнения` CHAR, `СостояниеБизнесПроцесса` CHAR, `СрокИсполнения` Date, `АвторСтрокой` CHAR, `completed` BOOLEAN, `buisness_process` CHAR, `ДополнительныйОбъектАдресации` CHAR, `executor` CHAR, `executor_T` CHAR, `ОсновнойОбъектАдресации` CHAR, `РольИсполнителя` CHAR);\nCREATE TABLE IF NOT EXISTS `bp_Задание` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `author` CHAR, `author_T` CHAR, `Важность` CHAR, `Выполнено` BOOLEAN, `ГлавнаяЗадача` CHAR, `ДатаЗавершения` Date, `executor` CHAR, `executor_T` CHAR, `name` CHAR, `НаПроверке` BOOLEAN, `НомерИтерации` INT, `Подтверждено` BOOLEAN, `Предмет` CHAR, `Предмет_T` CHAR, `Проверяющий` CHAR, `Проверяющий_T` CHAR, `РезультатВыполнения` CHAR, `content` CHAR, `Состояние` CHAR, `СрокИсполнения` Date, `СрокПроверки` Date, `АвторСтрокой` CHAR, `ВнешнееЗадание` BOOLEAN, `ЗадачаИсточник` CHAR, `СодержаниеПредмета` CHAR, `ОсновнойОбъектАдресации` CHAR, `ОсновнойОбъектАдресацииПроверяющий` CHAR, `ДополнительныйОбъектАдресации` CHAR, `ДополнительныйОбъектАдресацииПроверяющий` CHAR, `ГруппаИсполнителейЗадач` CHAR, `ГруппаИсполнителейЗадач_T` CHAR, `ГруппаИсполнителейЗадачПроверяющий` CHAR, `ГруппаИсполнителейЗадачПровер_T` CHAR, `started` BOOLEAN, `leading_task` CHAR, `finished` BOOLEAN);\nCREATE TABLE IF NOT EXISTS `cat_price_groups` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `definition` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_characteristics` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `x` FLOAT, `y` FLOAT, `z` FLOAT, `s` FLOAT, `clr` CHAR, `weight` FLOAT, `condition_products` FLOAT, `calc_order` CHAR, `product` INT, `leading_product` CHAR, `leading_elm` INT, `note` CHAR, `number_str` CHAR, `owner` CHAR, `ts_constructions` JSON, `ts_coordinates` JSON, `ts_cnn_elmnts` JSON, `ts_params` JSON, `ts_glass_specification` JSON, `ts_extra_fields` JSON, `ts_glasses` JSON, `ts_mosquito` JSON, `ts_specification` JSON);\nCREATE TABLE IF NOT EXISTS `cat_individuals` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `birth_date` Date, `inn` CHAR, `imns_code` CHAR, `note` CHAR, `pfr_number` CHAR, `sex` CHAR, `birth_place` CHAR, `ОсновноеИзображение` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_nom_prices_types` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `price_currency` CHAR, `discount_percent` FLOAT, `vat_price_included` BOOLEAN, `rounding_order` CHAR, `rounding_in_a_big_way` BOOLEAN, `note` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_cost_items` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `cost_kind` CHAR, `costs_material_feed` CHAR, `costs_character` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_cash_flow_articles` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `definition` CHAR, `РеквизитДопУпорядочивания` INT, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_stores` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `note` CHAR, `department` CHAR, `parent` CHAR, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_projects` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `start` Date, `finish` Date, `launch` Date, `readiness` Date, `finished` BOOLEAN, `responsible` CHAR, `note` CHAR, `parent` CHAR, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_users` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `invalid` BOOLEAN, `department` CHAR, `ФизическоеЛицо` CHAR, `note` CHAR, `ancillary` BOOLEAN, `Подготовлен` BOOLEAN, `ИдентификаторПользователяСервиса` CHAR, `СвойстваПользователяИБ` CHAR, `ts_extra_fields` JSON, `ts_contact_information` JSON);\nCREATE TABLE IF NOT EXISTS `cat_divisions` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `main_project` CHAR, `sorting` INT, `parent` CHAR, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_color_price_groups` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `for_pricing_only` CHAR, `for_pricing_only_T` CHAR, `ts_price_groups` JSON, `ts_clr_conformity` JSON);\nCREATE TABLE IF NOT EXISTS `cat_clrs` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `ral` CHAR, `machine_tools_clr` CHAR, `clr_str` CHAR, `clr_out` CHAR, `clr_in` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_furns` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `furn_no` INT, `flap_weight_max` INT, `left_right` BOOLEAN, `is_set` BOOLEAN, `is_sliding` BOOLEAN, `furn_set` CHAR, `side_count` INT, `handle_side` INT, `open_type` CHAR, `name_short` CHAR, `parent` CHAR, `ts_open_tunes` JSON, `ts_specification` JSON, `ts_selection_params` JSON, `ts_specification_restrictions` JSON);\nCREATE TABLE IF NOT EXISTS `cat_base_blocks` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `production` CHAR, `svg` CHAR, `sys` CHAR, `parent` CHAR, `ts_proportions` JSON, `ts_bindings` JSON, `ts_coordinates` JSON, `ts_constructions` JSON, `ts_params` JSON, `ts_cnn_elmnts` JSON);\nCREATE TABLE IF NOT EXISTS `cat_invoice_states` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `clr` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_cnns` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `priority` INT, `amin` INT, `amax` INT, `sd1` CHAR, `sd2` CHAR, `sz` FLOAT, `cnn_type` CHAR, `ahmin` INT, `ahmax` INT, `lmin` INT, `lmax` INT, `tmin` INT, `tmax` INT, `var_layers` BOOLEAN, `for_direct_profile_only` INT, `art1vert` BOOLEAN, `art1glass` BOOLEAN, `art2glass` BOOLEAN, `ts_specification` JSON, `ts_cnn_elmnts` JSON, `ts_selection_params` JSON);\nCREATE TABLE IF NOT EXISTS `cat_delivery_areas` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `country` CHAR, `region` CHAR, `city` CHAR, `latitude` FLOAT, `longitude` FLOAT, `ind` CHAR, `delivery_area` CHAR, `specify_area_by_geocoder` BOOLEAN);\nCREATE TABLE IF NOT EXISTS `cat_predefined_elmnts` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `elm` CHAR, `elm_T` CHAR, `ts_elmnts` JSON);\nCREATE TABLE IF NOT EXISTS `cat_production_params` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `nom` CHAR, `default_clr` CHAR, `auto_align` BOOLEAN, `allow_open_cnn` BOOLEAN, `sz_lines` CHAR, `clr_group` CHAR, `is_drainage` BOOLEAN, `active` BOOLEAN, `tmin` INT, `tmax` INT, `lay_split_type` CHAR, `parent` CHAR, `ts_elmnts` JSON, `ts_product_params` JSON, `ts_furn` JSON, `ts_furn_params` JSON, `ts_colors` JSON);\nCREATE TABLE IF NOT EXISTS `cat_parameters_keys` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `КоличествоПараметров` INT, `ts_params` JSON);\nCREATE TABLE IF NOT EXISTS `cat_inserts` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `insert_type` CHAR, `clr` CHAR, `priority` INT, `lmin` INT, `lmax` INT, `hmin` INT, `hmax` INT, `smin` FLOAT, `smax` FLOAT, `for_direct_profile_only` INT, `ahmin` INT, `ahmax` INT, `mmin` INT, `mmax` INT, `insert_glass_type` CHAR, `impost_fixation` CHAR, `shtulp_fixation` BOOLEAN, `can_rotate` BOOLEAN, `sizeb` FLOAT, `ts_specification` JSON, `ts_selection_params` JSON);\nCREATE TABLE IF NOT EXISTS `cat_organizations` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `prefix` CHAR, `inn` CHAR, `individual_legal` CHAR, `main_bank_account` CHAR, `kpp` CHAR, `certificate_series_number` CHAR, `certificate_date_issue` Date, `certificate_authority_name` CHAR, `certificate_authority_code` CHAR, `individual_entrepreneur` CHAR, `ts_contact_information` JSON, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_nom_groups` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `storage_unit` CHAR, `base_unit` CHAR, `vat_rate` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_nom` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `article` CHAR, `name_full` CHAR, `base_unit` CHAR, `storage_unit` CHAR, `nom_kind` CHAR, `cost_item` CHAR, `nom_group` CHAR, `vat_rate` CHAR, `note` CHAR, `price_group` CHAR, `elm_type` CHAR, `len` FLOAT, `width` FLOAT, `thickness` FLOAT, `sizeb` FLOAT, `sizefurn` FLOAT, `density` FLOAT, `volume` FLOAT, `arc_elongation` FLOAT, `loss_factor` FLOAT, `rounding_quantity` INT, `clr` CHAR, `cutting_optimization_type` CHAR, `coloration_area` FLOAT, `pricing` CHAR, `complete_list_sorting` INT, `is_accessory` BOOLEAN, `is_procedure` BOOLEAN, `is_service` BOOLEAN, `is_pieces` BOOLEAN, `parent` CHAR, `ts_extra_fields` JSON, `ts_nom_units` JSON);\nCREATE TABLE IF NOT EXISTS `cat_partners` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `main_bank_account` CHAR, `note` CHAR, `kpp` CHAR, `okpo` CHAR, `inn` CHAR, `individual_legal` CHAR, `main_contract` CHAR, `identification_document` CHAR, `buyer_main_manager` CHAR, `is_buyer` BOOLEAN, `is_supplier` BOOLEAN, `primary_contact` CHAR, `parent` CHAR, `ts_contact_information` JSON, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_units` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `international_short` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_cashboxes` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `funds_currency` CHAR, `department` CHAR, `current_account` CHAR, `owner` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_property_values` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `heft` FLOAT, `owner` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_nom_units` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `qualifier_unit` CHAR, `heft` FLOAT, `volume` FLOAT, `coefficient` FLOAT, `rounding_threshold` INT, `ПредупреждатьОНецелыхМестах` BOOLEAN, `owner` CHAR, `owner_T` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_contracts` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `settlements_currency` CHAR, `mutual_settlements` CHAR, `contract_kind` CHAR, `date` Date, `check_days_without_pay` BOOLEAN, `allowable_debts_amount` FLOAT, `allowable_debts_days` INT, `note` CHAR, `check_debts_amount` BOOLEAN, `check_debts_days` BOOLEAN, `number_doc` CHAR, `organization` CHAR, `main_cash_flow_article` CHAR, `main_project` CHAR, `accounting_reflect` BOOLEAN, `tax_accounting_reflect` BOOLEAN, `prepayment_percent` FLOAT, `validity` Date, `vat_included` BOOLEAN, `price_type` CHAR, `vat_consider` BOOLEAN, `days_without_pay` INT, `owner` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_nom_kinds` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `nom_type` CHAR, `НаборСвойствНоменклатура` CHAR, `НаборСвойствХарактеристика` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_contact_information_kinds` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `АдресТолькоРоссийский` BOOLEAN, `ВключатьСтрануВПредставление` BOOLEAN, `ЗапретитьРедактированиеПользователем` BOOLEAN, `Используется` BOOLEAN, `МожноИзменятьСпособРедактирования` BOOLEAN, `mandatory_fields` BOOLEAN, `tooltip` CHAR, `ПроверятьКорректность` BOOLEAN, `ПроверятьПоФИАС` BOOLEAN, `РазрешитьВводНесколькихЗначений` BOOLEAN, `РедактированиеТолькоВДиалоге` BOOLEAN, `РеквизитДопУпорядочивания` INT, `СкрыватьНеактуальныеАдреса` BOOLEAN, `ТелефонCДобавочнымНомером` BOOLEAN, `type` CHAR, `УказыватьОКТМО` BOOLEAN, `МногострочноеПоле` BOOLEAN, `ХранитьИсториюИзменений` BOOLEAN, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_currencies` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `ЗагружаетсяИзИнтернета` BOOLEAN, `name_full` CHAR, `extra_charge` FLOAT, `main_currency` CHAR, `parameters_russian_recipe` CHAR, `ФормулаРасчетаКурса` CHAR, `СпособУстановкиКурса` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_elm_visualization` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `article` CHAR, `svg_path` CHAR, `is_handle` BOOLEAN, `offset` INT, `side` CHAR, `elm_side` BOOLEAN, `attributes` CHAR, `cx` INT, `cy` INT);\nCREATE TABLE IF NOT EXISTS `cat_countries` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `alpha2` CHAR, `alpha3` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_destinations` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `КоличествоРеквизитов` CHAR, `КоличествоСведений` CHAR, `Используется` BOOLEAN, `parent` CHAR, `ts_extra_fields` JSON, `ts_extra_properties` JSON);\nCREATE TABLE IF NOT EXISTS `cat_banks_qualifier` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `correspondent_account` CHAR, `city` CHAR, `address` CHAR, `phone_numbers` CHAR, `activity_ceased` BOOLEAN, `СВИФТБИК` CHAR, `inn` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_property_values_hierarchy` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `heft` FLOAT, `owner` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_organization_bank_accounts` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `bank` CHAR, `funds_currency` CHAR, `account_number` CHAR, `СрокИсполненияПлатежа` INT, `settlements_bank` CHAR, `department` CHAR, `owner` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_partner_bank_accounts` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `account_number` CHAR, `bank` CHAR, `settlements_bank` CHAR, `correspondent_text` CHAR, `appointments_text` CHAR, `funds_currency` CHAR, `bank_bic` CHAR, `РучноеИзменениеРеквизитовБанка` BOOLEAN, `bank_name` CHAR, `bank_correspondent_account` CHAR, `bank_city` CHAR, `bank_address` CHAR, `bank_phone_numbers` CHAR, `settlements_bank_bic` CHAR, `РучноеИзменениеРеквизитовБанкаДляРасчетов` BOOLEAN, `НаименованиеБанкаДляРасчетов` CHAR, `settlements_bank_correspondent_account` CHAR, `settlements_bank_city` CHAR, `АдресБанкаДляРасчетов` CHAR, `ТелефоныБанкаДляРасчетов` CHAR, `owner` CHAR, `owner_T` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_params_links` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `master` CHAR, `slave` CHAR, `ts_values` JSON);\nCREATE TABLE IF NOT EXISTS `cch_properties` (ref CHAR PRIMARY KEY NOT NULL, `deleted` BOOLEAN, lc_changed INT, id CHAR, name CHAR, is_folder BOOLEAN, `Виден` BOOLEAN, `ВладелецДополнительныхЗначений` CHAR, `ДополнительныеЗначенияИспользуются` BOOLEAN, `ДополнительныеЗначенияСВесом` BOOLEAN, `Доступен` BOOLEAN, `caption` CHAR, `ЗаголовокФормыВыбораЗначения` CHAR, `ЗаголовокФормыЗначения` CHAR, `mandatory` BOOLEAN, `note` CHAR, `МногострочноеПолеВвода` INT, `destination` CHAR, `tooltip` CHAR, `ФорматСвойства` CHAR, `ЭтоДополнительноеСведение` BOOLEAN, `type` JSON, `ts_ЗависимостиДополнительныхРеквизитов` JSON);\nCREATE TABLE IF NOT EXISTS `enm_outline_formation` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_elm_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_cnn_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_sz_line_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_open_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_cutting_optimization_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_lay_split_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_inserts_glass_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_inserts_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_cnn_sides` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_specification_installation_methods` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_angle_calculating_ways` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_count_calculating_ways` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_simple_complex_all` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_positions` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_orientations` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_plan_limit` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_specification_adjustment_areas` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_open_directions` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_color_groups_destination` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_control_during` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_planning_detailing` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_text_aligns` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_contraction_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_offset_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_transfer_operations_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_impost_mount_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_inset_attrs_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_registration_type` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_caching_type` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_gender` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_individual_legal` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_contract_kinds` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_mutual_contract_settlements` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_obj_delivery_states` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_contact_information_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_nom_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_costs_character` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_costs_material_feeds` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_costs_kinds` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\nCREATE TABLE IF NOT EXISTS `enm_vat_rates` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);\n","toolbar_calc_order_production.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_grp_add\" text=\"&lt;i class='fa fa-plus-circle fa-lg'&gt;&lt;/i&gt;\" title=\"Добавить строку заказа\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_add_builder\" text=\"&lt;i class='fa fa-object-ungroup fa-lg'&gt;&lt;/i&gt; Изделие построителя\" />\r\n        <item type=\"button\" id=\"btn_add_product\" text=\"&lt;i class='fa fa-gavel fa-lg'&gt;&lt;/i&gt; Продукцию или услугу\" />\r\n        <item type=\"button\" id=\"btn_add_material\" text=\"&lt;i class='fa fa-cube fa-lg'&gt;&lt;/i&gt; Материал\" />\r\n    </item>\r\n\r\n    <item type=\"button\" id=\"btn_edit\" text=\"&lt;i class='fa fa-object-ungroup fa-lg'&gt;&lt;/i&gt;\" title=\"Редактировать изделие построителя\" />\r\n    <item type=\"button\" id=\"btn_spec\" text=\"&lt;i class='fa fa-table fa-lg'&gt;&lt;/i&gt;\" title=\"Открыть спецификацию изделия\" />\r\n    <item type=\"button\" id=\"btn_delete\" text=\"&lt;i class='fa fa-times fa-lg'&gt;&lt;/i&gt;\" title=\"Удалить строку заказа\" />\r\n\r\n    <item type=\"button\" id=\"btn_discount\" text=\"&lt;i class='fa fa-percent fa-lg'&gt;&lt;/i&gt;\" title=\"Скидки по типам строк заказа\"/>\r\n\r\n    <item id=\"sep1\" type=\"separator\"/>\r\n\r\n</toolbar>","toolbar_calc_order_obj.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_sent\" text=\"&lt;i class='fa fa-paper-plane-o fa-lg fa-fw'&gt;&lt;/i&gt; Отправить\" title=\"Отправить заказ\" />\r\n    <item type=\"button\" id=\"btn_save\" text=\"&lt;i class='fa fa-floppy-o fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Рассчитать и записать данные\"/>\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"&lt;i class='fa fa-check-square-o fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Провести документ\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"&lt;i class='fa fa-square-o fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Отмена проведения\" />\r\n\r\n    <item type=\"button\" id=\"btn_files\" text=\"&lt;i class='fa fa-paperclip fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Присоединенные файлы\"/>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Печать\" openAll=\"true\">\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_message\" enabled=\"false\" text=\"Сообщение\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-th-large fa-lg fa-fw'&gt;&lt;/i&gt;\"  title=\"Дополнительно\" openAll=\"true\">\r\n        <item type=\"button\"     id=\"btn_retrieve\"    text=\"&lt;i class='fa fa-undo fa-lg fa-fw'&gt;&lt;/i&gt; Отозвать\" title=\"Отозвать заказ\" />\r\n        <item type=\"separator\"  id=\"sep_export\" />\r\n        <item type=\"button\" id=\"btn_import\" text=\"&lt;i class='fa fa-upload fa-lg fa-fw'&gt;&lt;/i&gt; Загрузить из файла\" />\r\n        <item type=\"button\" id=\"btn_export\" text=\"&lt;i class='fa fa-download fa-lg fa-fw'&gt;&lt;/i&gt; Выгрузить в файл\" />\r\n    </item>\r\n\r\n    <item id=\"sep_close_1\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_close\" text=\"&lt;i class='fa fa-times fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Закрыть форму\"/>\r\n    <item id=\"sep_close_2\" type=\"separator\"/>\r\n\r\n</toolbar>","view_about.html":"<div class=\"md_column1300\">\r\n    <h1><i class=\"fa fa-info-circle\"></i> Интернет-магазин MetaStore</h1>\r\n    <p>Метамагазин - это веб-приложение с открытым исходным кодом, разработанное компанией <a href=\"http://www.oknosoft.ru/\" target=\"_blank\">Окнософт</a> на базе фреймворка <a href=\"http://www.oknosoft.ru/metadata/\" target=\"_blank\">Metadata.js</a> и распространяемое под <a href=\"http://www.oknosoft.ru/programmi-oknosoft/metadata.html\" target=\"_blank\">коммерческой лицензией Окнософт</a>.<br />\r\n        Исходный код и документация доступны на <a href=\"https://github.com/oknosoft/metastore\" target=\"_blank\">GitHub <i class=\"fa fa-github-alt\"></i></a>.<br />\r\n        Приложение является веб-интерфейсом к типовым конфигурациям 1С (Управление торговлей 11.2, Комплексная автоматизация 2.0, ERP Управление предприятием 2.1) и реализует функциональность интернет-магазина для информационной базы 1С\r\n    </p>\r\n    <p>Использованы следующие библиотеки и инструменты:</p>\r\n\r\n    <h3>Серверная часть</h3>\r\n    <ul>\r\n        <li><a href=\"http://1c-dn.com/1c_enterprise/\" target=\"_blank\">1c_enterprise</a><span class=\"md_muted_color\">, ORM сервер 1С:Предприятие</span></li>\r\n        <li><a href=\"http://www.postgresql.org/\" target=\"_blank\">postgreSQL</a><span class=\"md_muted_color\">, мощная объектно-раляционная база данных</span></li>\r\n        <li><a href=\"https://nodejs.org/\" target=\"_blank\">node.js</a><span class=\"md_muted_color\">, серверная программная платформа, основанная на движке V8 javascript</span></li>\r\n        <li><a href=\"http://nginx.org/ru/\" target=\"_blank\">nginx</a><span class=\"md_muted_color\">, высокопроизводительный HTTP-сервер</span></li>\r\n    </ul>\r\n\r\n    <h3>Управление данными в памяти браузера</h3>\r\n    <ul>\r\n        <li><a href=\"https://github.com/agershun/alasql\" target=\"_blank\">alaSQL</a><span class=\"md_muted_color\">, база данных SQL для браузера и Node.js с поддержкой как традиционных реляционных таблиц, так и вложенных JSON данных (NoSQL)</span></li>\r\n        <li><a href=\"https://github.com/metatribal/xmlToJSON\" target=\"_blank\">xmlToJSON</a><span class=\"md_muted_color\">, компактный javascript модуль для преобразования XML в JSON</span></li>\r\n        <li><a href=\"https://github.com/SheetJS/js-xlsx\" target=\"_blank\">xlsx</a><span class=\"md_muted_color\">, библиотека для чтения и записи XLSX / XLSM / XLSB / XLS / ODS в браузере</span></li>\r\n    </ul>\r\n\r\n    <h3>UI библиотеки и компоненты интерфейса</h3>\r\n    <ul>\r\n        <li><a href=\"http://dhtmlx.com/\" target=\"_blank\">dhtmlx</a><span class=\"md_muted_color\">, кроссбраузерная библиотека javascript для построения современных веб и мобильных приложений</span></li>\r\n        <li><a href=\"https://github.com/leongersen/noUiSlider\" target=\"_blank\">noUiSlider</a><span class=\"md_muted_color\">, легковесный javascript компонент регулирования пары (min-max) значений </span></li>\r\n        <li><a href=\"https://github.com/eligrey/FileSaver.js\" target=\"_blank\">filesaver.js</a><span class=\"md_muted_color\">, HTML5 реализация метода saveAs</span></li>\r\n        <li><a href=\"https://github.com/Diokuz/baron\" target=\"_blank\">baron</a><span class=\"md_muted_color\">, компонент управления полосами прокрутки</span></li>\r\n        <li><a href=\"https://github.com/ded/qwery\" target=\"_blank\">qwery</a><span class=\"md_muted_color\">, движок селекторов</span></li>\r\n        <li><a href=\"https://github.com/ded/bonzo\" target=\"_blank\">bonzo</a><span class=\"md_muted_color\">, утилиты DOM</span></li>\r\n        <li><a href=\"https://github.com/fat/bean\" target=\"_blank\">bean</a><span class=\"md_muted_color\">, библиотека событий для javascript</span></li>\r\n    </ul>\r\n\r\n    <h3>Графика</h3>\r\n    <ul>\r\n        <li><a href=\"https://fortawesome.github.io/Font-Awesome/\" target=\"_blank\">fontawesome</a><span class=\"md_muted_color\">, набор иконок и стилей CSS</span></li>\r\n        <li><a href=\"http://fontastic.me/\" target=\"_blank\">fontastic</a><span class=\"md_muted_color\">, еще один набор иконок и стилей</span></li>\r\n    </ul>\r\n\r\n    <p>&nbsp;</p>\r\n    <h2><i class=\"fa fa-question-circle\"></i> Вопросы</h2>\r\n    <p>Если обнаружили ошибку, пожалуйста,\r\n        <a href=\"https://github.com/oknosoft/metastore/issues/new\" target=\"_blank\">зарегистрируйте вопрос в GitHub</a> или\r\n        <a href=\"http://www.oknosoft.ru/metadata/#page-118\" target=\"_blank\">свяжитесь с разработчиком</a> напрямую<br />&nbsp;</p>\r\n\r\n</div>"});
 /**
  * Ячейка грида для отображения картинки svg и компонент,
  * получающий и отображающий галерею эскизов объекта данных

@@ -841,6 +841,19 @@ Profile.prototype.__define({
 			return this.generatrix.is_linear();
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Возвращает массив примыкающих ипостов
+	 * TODO: реализовать
+	 */
+	joined_imposts: {
+		get : function(){
+			var res = [];
+
+			return res;
+		},
+		enumerable : false
 	}
 
 });

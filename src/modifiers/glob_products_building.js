@@ -21,6 +21,8 @@ $p.modifiers.push(
 				constructions,
 				coordinates,
 				cnn_elmnts,
+				glass_specification,
+				glass_formulas,
 				params;
 
 			/**
@@ -42,25 +44,39 @@ $p.modifiers.push(
 			 * @param row_cpec
 			 * @param row_coord
 			 */
-			function calc_count_area_mass(row_cpec, row_coord, angle_calc_method){
+			function calc_count_area_mass(row_cpec, row_coord, angle_calc_method_prev, angle_calc_method_next){
 
 				//TODO: учесть angle_calc_method
-				if(angle_calc_method && row_cpec.nom.is_pieces){
-					if((angle_calc_method == $p.enm.angle_calculating_ways.Основной) ||
-						(angle_calc_method = $p.enm.angle_calculating_ways.СварнойШов)){
+				if(!angle_calc_method_next)
+					angle_calc_method_next = angle_calc_method_prev;
+
+				if(angle_calc_method_prev && !row_cpec.nom.is_pieces){
+
+					if((angle_calc_method_prev == $p.enm.angle_calculating_ways.Основной) ||
+						(angle_calc_method_prev == $p.enm.angle_calculating_ways.СварнойШов)){
 						row_cpec.alp1 = row_coord.alp1;
+
+					}else if(angle_calc_method_prev == $p.enm.angle_calculating_ways._90){
+						row_cpec.alp1 = 90;
+
+					}else if(angle_calc_method_prev == $p.enm.angle_calculating_ways.СоединениеПополам){
+						row_cpec.alp1 = row_coord.alp1 / 2;
+
+					}else if(angle_calc_method_prev == $p.enm.angle_calculating_ways.Соединение){
+						row_cpec.alp1 = row_coord.alp1;
+					}
+
+					if((angle_calc_method_next == $p.enm.angle_calculating_ways.Основной) ||
+						(angle_calc_method_next == $p.enm.angle_calculating_ways.СварнойШов)){
 						row_cpec.alp2 = row_coord.alp2;
 
-					}else if(angle_calc_method == $p.enm.angle_calculating_ways._90){
-						row_cpec.alp1 = 90;
+					}else if(angle_calc_method_next == $p.enm.angle_calculating_ways._90){
 						row_cpec.alp2 = 90;
 
-					}else if(angle_calc_method == $p.enm.angle_calculating_ways.СоединениеПополам){
-						row_cpec.alp1 = row_coord.alp1 / 2;
+					}else if(angle_calc_method_next == $p.enm.angle_calculating_ways.СоединениеПополам){
 						row_cpec.alp2 = row_coord.alp2 / 2;
 
-					}else if(angle_calc_method == $p.enm.angle_calculating_ways.Соединение){
-						row_cpec.alp1 = row_coord.alp1;
+					}else if(angle_calc_method_next == $p.enm.angle_calculating_ways.Соединение){
 						row_cpec.alp2 = row_coord.alp2;
 
 					}
@@ -85,6 +101,45 @@ $p.modifiers.push(
 					row_cpec.totqty = row_cpec.qty;
 
 				row_cpec.totqty1 = row_cpec.totqty * row_cpec.nom.loss_factor;
+			}
+
+			/**
+			 * РассчитатьQtyLen
+			 * @param row_spec
+			 * @param row_base
+			 * @param len
+			 */
+			function calc_qty_len(row_spec, row_base, len){
+
+				var nom = row_spec.nom;
+
+				if(nom.cutting_optimization_type == $p.enm.cutting_optimization_types.Нет ||
+						nom.cutting_optimization_type.empty() || nom.is_pieces){
+
+					if(!row_base.coefficient || !len)
+						row_spec.qty = row_base.quantity;
+
+					else{
+						if(!nom.is_pieces){
+							row_spec.qty = row_base.quantity;
+							row_spec.len = (len - row_base.sz) * (row_base.coefficient || 1);
+							if(nom.rounding_quantity){
+								row_spec.qty = Окр(row_spec.qty * row_spec.len, nom.rounding_quantity);
+								row_spec.len = 0;
+							};
+
+						}else if(!nom.rounding_quantity){
+							row_spec.qty = Math.round((len - row_base.sz) * row_base.coefficient * row_base.quantity - 0.5);
+
+						}else{
+							row_spec.qty = ((len - row_base.sz) * row_base.coefficient * row_base.quantity).round(nom.rounding_quantity);
+						}
+					}
+
+				}else{
+					row_spec.qty = row_base.quantity;
+					row_spec.len = (len - row_base.sz) * (row_base.coefficient || 1);
+				}
 			}
 
 			/**
@@ -123,6 +178,26 @@ $p.modifiers.push(
 			}
 
 			/**
+			 * Добавляет или заполняет строку спецификации
+			 * @param row_spec
+			 * @param elm
+			 * @param row_base
+			 * @param [nom]
+			 * @param [origin]
+			 * @return {TabularSectionRow.<cat.characteristics.specification>}
+			 */
+			function new_spec_row(row_spec, elm, row_base, nom, origin){
+				if(!row_spec)
+					row_spec = spec.add();
+				row_spec.nom = nom || row_base.nom;
+				row_spec.clr = $p.cat.clrs.by_predefined(row_base.clr, elm.clr, ox.clr);
+				row_spec.elm = elm.elm;
+				if(origin)
+					row_spec.origin = origin;
+				return row_spec;
+			}
+
+			/**
 			 * ДополнитьСпецификациюСпецификациейСоединения
 			 * @param cnn
 			 * @param elm
@@ -134,13 +209,8 @@ $p.modifiers.push(
 
 				filter_cnn_spec(cnn, elm, len_angl).forEach(function (row_cnn_spec) {
 					var nom = row_cnn_spec.nom;
-					// TODO: nom млжет быть вставкой - в этом случае надо разузловать
-					var row_spec = spec.add({
-						nom: nom,
-						clr: $p.cat.clrs.by_predefined(row_cnn_spec.clr, elm.clr, ox.clr),
-						origin: len_angl.origin,
-						elm: elm.elm
-					});
+					// TODO: nom может быть вставкой - в этом случае надо разузловать
+					var row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin);
 
 					// В простейшем случае, формула = "ДобавитьКомандуСоединения(Парам);"
 					if(!row_cnn_spec.formula) {
@@ -155,7 +225,7 @@ $p.modifiers.push(
 							row_spec.qty = row_cnn_spec.quantity;
 							if(row_cnn_spec.sz || row_cnn_spec.coefficient)
 								row_spec.len = (len_angl.len - (sign < 0 ? cnn.sz * 2 : 0) - sign * 2 * row_cnn_spec.sz) *
-									(row_cnn_spec.coefficient == 0 ? 1 : row_cnn_spec.coefficient);
+									(row_cnn_spec.coefficient || 1);
 						}
 
 					}else {
@@ -170,7 +240,7 @@ $p.modifiers.push(
 					if(!row_spec.qty)
 						spec.del(row_spec.row-1);
 					else
-						calc_count_area_mass(row_spec, len_angl);
+						calc_count_area_mass(row_spec, len_angl, row_cnn_spec.angle_calc_method);
 				});
 			}
 
@@ -182,7 +252,7 @@ $p.modifiers.push(
 			 */
 			function filter_cnn_spec(cnn, elm, len_angl){
 
-				var res = [], nom, ok, angle_hor = elm.angle_hor;
+				var res = [], nom, angle_hor = elm.angle_hor;
 
 				cnn.specification.each(function (row) {
 					nom = row.nom;
@@ -208,24 +278,149 @@ $p.modifiers.push(
 					// "Устанавливать с" проверяем только для соединений профиля
 					if(($p.enm.cnn_types.acn.a.indexOf(cnn.cnn_type) != -1) && (
 							(row.set_specification == $p.enm.specification_installation_methods.САртикулом1 && !len_angl.art1) ||
-							(row.set_specification = $p.enm.specification_installation_methods.САртикулом2 && !len_angl.art2)
+							(row.set_specification == $p.enm.specification_installation_methods.САртикулом2 && !len_angl.art2)
 						))
 						return;
 
-					// Проверяем параметры изделия
-					ok = true;
-					cnn.selection_params.find_rows({elm: row.elm}, function (prm) {
-						ok = false;
-						params.find_rows({cnstr: 0, param: prm.param, value: prm.value}, function () {
-							ok = true;
-							return false;
-						});
-						return ok;
-					});
-					if(ok)
+					// Проверяем параметры изделия и добавляем, если проходит по ограничениям
+					if(check_params(cnn.selection_params, row.elm))
 						res.push(row);
 
 				});
+				return res;
+			}
+
+			/**
+			 * Проверяет соответствие параметров отбора параметрам изделия
+			 * @param selection_params
+			 * @param elm
+			 * @param [cnstr]
+			 * @return {boolean}
+			 */
+			function check_params(selection_params, elm, cnstr){
+				var ok = true;
+				selection_params.find_rows({elm: elm}, function (prm) {
+					ok = false;
+					params.find_rows({cnstr: cnstr || 0, param: prm.param, value: prm.value}, function () {
+						ok = true;
+						return false;
+					});
+					return ok;
+				});
+				return ok;
+			}
+
+			/**
+			 * ПроверитьОграниченияВставки
+			 * TODO: перенести в прототип объекта вставки
+			 * @param inset
+			 * @param elm
+			 * @param by_perimetr
+			 * @return {boolean}
+			 */
+			function check_inset(inset, elm, by_perimetr){
+
+				var is_tabular = true,
+					_row = elm._row,
+					joined_imposts;
+
+				// проверяем площадь
+				if(inset.smin > _row.s || (_row.s && inset.smax && inset.smax < _row.s))
+					return false;
+
+				if($p.is_data_obj(inset)){
+
+					// только для прямых или только для кривых профилей
+					if((inset.for_direct_profile_only > 0 && !elm.profile.is_linear()) ||
+						(inset.for_direct_profile_only < 0 &&elm.profile.is_linear()))
+						return false;
+
+					if(inset.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
+						joined_imposts = elm.joined_imposts;
+						if(joined_imposts && !joined_imposts.length)
+							return false;
+
+					}else if(inset.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
+						joined_imposts = elm.joined_imposts;
+						if(joined_imposts && joined_imposts.length)
+							return false;
+					}
+					is_tabular = false;
+				}
+
+				if(!is_tabular || by_perimetr || inset.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
+					if(inset.lmin > _row.len || (inset.lmax < _row.len && inset.lmax > 0))
+						return false;
+					if(inset.ahmin > _row.angle_hor || inset.ahmax < _row.angle_hor)
+						return false;
+				}
+
+				//// Включить проверку размеров и углов, поля "Устанавливать с..." и т.д.
+
+				return true;
+			}
+
+			/**
+			 * ПолучитьСпецификациюВставкиСФильтром
+			 * @param inset
+			 * @param elm
+			 * @param [is_high_level_call]
+			 */
+			function filter_inset_spec(inset, elm, is_high_level_call){
+
+				var res = [], glass_rows;
+				if(!inset || inset.empty())
+					return res;
+
+				if(is_high_level_call && inset.insert_type == $p.enm.inserts_types.Стеклопакет){
+					glass_rows = glass_specification.find_rows({elm: elm.elm});
+					if(!glass_rows.length){
+						// заполняем спецификацию заполнений по умолчанию, чтобы склеить формулу
+						inset.specification.each(function (row) {
+							glass_rows.push(
+								glass_specification.add({
+									elm: elm.elm,
+									gno: 0,
+									inset: row.nom,
+									clr: row.clr
+								})
+							);
+						});
+					};
+					if(glass_rows.length){
+						glass_formulas[elm.elm] = "";
+						glass_rows.forEach(function (row) {
+							filter_inset_spec(row.inset, elm).forEach(function (row) {
+								res.push(row);
+							});
+							if(!glass_formulas[elm.elm])
+								glass_formulas[elm.elm] = row.inset.name;
+							else
+								glass_formulas[elm.elm] += "x" + row.inset.name;
+						});
+						return res;
+					};
+				};
+
+				inset.specification.each(function (row) {
+
+					// Проверяем ограничения строки вставки
+					if(!check_inset(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль))
+						return;
+
+					// Проверяем параметры изделия
+					if(!check_params(inset.selection_params, row.elm))
+						return;
+
+					// Добавляем или разузловываем дальше
+					if(row.nom._manager.class_name == "cat.nom")
+						res.push(row);
+					else
+						filter_inset_spec(row.nom, elm).forEach(function (row) {
+							res.push(row);
+						});
+				});
+
 				return res;
 			}
 
@@ -244,10 +439,39 @@ $p.modifiers.push(
 			}
 
 			/**
-			 * Спецификации вставок
+			 * Спецификация вставки элемента
 			 */
-			function spec_insets(scheme) {
+			function spec_insets(elm) {
 
+				filter_inset_spec(elm.inset, elm, true).forEach(function (row_ins_spec) {
+
+					var row_spec;
+
+					// добавляем строку спецификации, если профиль или не про шагам
+					if((row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру
+						&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
+							$p.enm.elm_types.profiles(elm._row.elm_type) != -1)
+						row_spec = new_spec_row(null, elm, row_ins_spec, null, elm.inset);
+
+					if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && row_ins_spec.formula){
+						try{
+							row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, elm.inset);
+							if(eval(row_ins_spec.formula) === false)
+								return;
+						}catch(err){
+							$p.record_log(err);
+						}
+
+					}else if($p.enm.elm_types.profiles(elm._row.elm_type) != -1){
+						// Для вставок в профиль способ расчета количество не учитывается
+						//РассчитатьQtyLen(СтрСп, СтрК.Длина, СтрСп0, СвойстваНоменклатуры);
+
+					}else{
+
+					}
+
+
+				});
 			}
 
 			/**
@@ -274,15 +498,7 @@ $p.modifiers.push(
 						row_cnn_next = e.cnn.main_row(curr);
 
 						// добавляем строку спецификации
-						row_spec = spec.add({
-							nom: _row.nom,
-							elm: _row.elm,
-							clr: _row.clr
-						});
-
-						// уточняем цвет
-						if(row_cnn_prev && row_cnn_next && row_cnn_prev.clr == row_cnn_next.clr)
-							row_spec.clr = $p.cat.clrs.by_predefined(row_cnn_next.clr, curr.clr, ox.clr);
+						row_spec = new_spec_row(null, curr, row_cnn_prev, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0))
 
 						// уточняем размер
 						row_spec.len = (_row.len - (row_cnn_prev ? row_cnn_prev.sz : 0) - (row_cnn_next ? row_cnn_next.sz : 0))
@@ -304,7 +520,7 @@ $p.modifiers.push(
 						}
 
 						// РассчитатьКоличествоПлощадьМассу
-						calc_count_area_mass(row_spec, _row);
+						calc_count_area_mass(row_spec, _row, row_cnn_prev.angle_calc_method, row_cnn_next.angle_calc_method);
 
 						// НадоДобавитьСпецификациюСоединения
 						if(need_add_cnn_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
@@ -326,7 +542,7 @@ $p.modifiers.push(
 							}
 
 							// для раскладок доппроверка
-							//Если СтрК.ТипЭлемента = Перечисления.пзТипыЭлементов.Раскладка И (СоедСлед <> Неопределено)
+							//Если СтрК.ТипЭлемента = Перечисления.пзТипыЭлементов.Раскладка И (СоедСлед != Неопределено)
 							//	И (СоедСлед.ТипСоединения = Перечисления.пзТипыСоединений.ТОбразное
 							//	Или СоедСлед.ТипСоединения = Перечисления.пзТипыСоединений.НезамкнутыйКонтур) Тогда
 							//	Если НадоДобавитьСпецификациюСоединения(СтруктураПараметров, СоедСлед, СтрК, След) Тогда
@@ -336,11 +552,13 @@ $p.modifiers.push(
 							//КонецЕсли;
 
 							// спецификацию с предыдущей стороны рассчитваем всегда
-							row_spec.origin = cnn_row(_row.elm, prev ? prev.elm : 0);
 							add_cnn_spec(b.cnn, curr, len_angle);
 
 						}
 
+
+						// Спецификация вставки
+						spec_insets(curr);
 
 					});
 
@@ -369,10 +587,19 @@ $p.modifiers.push(
 
 							};
 
+							// добавляем спецификацию соединения рёбер заполнения с профилем
 							add_cnn_spec(curr.cnn, curr.profile, len_angle);
+
 						}
 
+						// добавляем спецификацию вставки в заполнение
+						spec_insets(glass);
+
+						// TODO: для всех раскладок заполнения
+
 					});
+
+
 
 
 				});
@@ -391,6 +618,8 @@ $p.modifiers.push(
 				constructions = ox.constructions;
 				coordinates = ox.coordinates;
 				cnn_elmnts = ox.cnn_elmnts;
+				glass_specification = ox.glass_specification;
+				glass_formulas = {};
 				params = ox.params;
 
 				// чистим спецификацию

@@ -130,6 +130,9 @@ Filling.prototype.__define({
 		enumerable : true
 	},
 
+	/**
+	 * Признак прямоугольности
+	 */
 	is_rectangular: {
 		get : function(){
 			return this.profiles.length == 4 && !this.data.path.hasHandles();
