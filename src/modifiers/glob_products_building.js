@@ -321,11 +321,14 @@ $p.modifiers.push(
 			function check_inset(inset, elm, by_perimetr){
 
 				var is_tabular = true,
-					_row = elm._row,
-					joined_imposts;
+					_row = elm._row;
 
 				// проверяем площадь
 				if(inset.smin > _row.s || (_row.s && inset.smax && inset.smax < _row.s))
+					return false;
+
+				// Главный элемент с нулевым количеством не включаем
+				if(inset.is_main_elm && !inset.quantity)
 					return false;
 
 				if($p.is_data_obj(inset)){
@@ -336,17 +339,16 @@ $p.modifiers.push(
 						return false;
 
 					if(inset.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
-						joined_imposts = elm.joined_imposts;
-						if(joined_imposts && !joined_imposts.length)
+						if(!elm.joined_imposts(true))
 							return false;
 
 					}else if(inset.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
-						joined_imposts = elm.joined_imposts;
-						if(joined_imposts && joined_imposts.length)
+						if(elm.joined_imposts(true))
 							return false;
 					}
 					is_tabular = false;
 				}
+
 
 				if(!is_tabular || by_perimetr || inset.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
 					if(inset.lmin > _row.len || (inset.lmax < _row.len && inset.lmax > 0))
@@ -443,6 +445,8 @@ $p.modifiers.push(
 			 */
 			function spec_insets(elm) {
 
+				var _row = elm._row;
+
 				filter_inset_spec(elm.inset, elm, true).forEach(function (row_ins_spec) {
 
 					var row_spec;
@@ -450,7 +454,7 @@ $p.modifiers.push(
 					// добавляем строку спецификации, если профиль или не про шагам
 					if((row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру
 						&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
-							$p.enm.elm_types.profiles(elm._row.elm_type) != -1)
+						$p.enm.elm_types.profiles.indexOf(_row.elm_type) != -1)
 						row_spec = new_spec_row(null, elm, row_ins_spec, null, elm.inset);
 
 					if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && row_ins_spec.formula){
@@ -462,14 +466,52 @@ $p.modifiers.push(
 							$p.record_log(err);
 						}
 
-					}else if($p.enm.elm_types.profiles(elm._row.elm_type) != -1){
+					}else if($p.enm.elm_types.profiles.indexOf(_row.elm_type) != -1 ||
+								row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ДляЭлемента){
 						// Для вставок в профиль способ расчета количество не учитывается
-						//РассчитатьQtyLen(СтрСп, СтрК.Длина, СтрСп0, СвойстваНоменклатуры);
+						calc_qty_len(row_spec, row_ins_spec, _row.len);
 
 					}else{
 
+						if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПлощади){
+							row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz)/1000;
+							row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz)/1000;
+							row_spec.s = _row.s;
+
+						}else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру){
+							var row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
+							elm.perimeter.forEach(function (rib) {
+								row_prm._row._mixin(rib);
+								if(check_inset(row_ins_spec, row_prm, true)){
+									row_spec = new_spec_row(null, elm, row_ins_spec, null, elm.inset);
+									calc_qty_len(row_spec, row_ins_spec, rib.len);
+									calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
+								}
+								row_spec = null;
+							});
+
+						}else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоШагам){
+
+							var h = _row.y2 - _row.y1, w = _row.x2 - _row.x1;
+							if((row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьШагиВторогоНаправления ||
+								row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление) && row_ins_spec.step){
+
+								for(var i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
+									row_spec = new_spec_row(null, elm, row_ins_spec, null, elm.inset);
+									calc_qty_len(row_spec, row_ins_spec, w);
+									calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
+								}
+								row_spec = null;
+							}
+
+						}else{
+							throw new Error("count_calc_method: " + row_ins_spec.count_calc_method);
+						}
+
 					}
 
+					if(row_spec)
+						calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
 
 				});
 			}
@@ -627,6 +669,9 @@ $p.modifiers.push(
 
 				// рассчитываем базовую сецификацию
 				spec_base(scheme);
+
+				// сворачиваем
+				spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin", "qty,totqty,totqty1");
 
 				$p.rest.build_select(attr, {
 					rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",

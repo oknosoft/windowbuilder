@@ -212,7 +212,7 @@ Filling.prototype.__define({
 				data.path.closePath(true);
 			data = attr = null;
 		},
-		enumerable : true
+		enumerable : false
 	},
 
 	// возвращает текущие (ранее установленные) узлы заполнения
@@ -228,7 +228,26 @@ Filling.prototype.__define({
 			}
 			return res;
 		},
-		enumerable : true
+		enumerable : false
+	},
+
+	/**
+	 * Массив с рёбрами периметра
+	 */
+	perimeter: {
+		get: function () {
+			var res = [], tmp;
+			this.profiles.forEach(function (curr) {
+				res.push(tmp = {
+					len: curr.sub_path.length,
+					angle: curr.e.subtract(curr.b).angle
+				});
+				if(tmp.angle < 0)
+					tmp.angle += 360;
+			});
+			return res;
+		},
+		enumerable : false
 	}
 
 });

@@ -639,7 +639,10 @@ Profile.prototype.__define({
 				if(_row.alp2 < 0)
 					_row.alp2 = _row.alp2 + 360;
 
-				// TODO: Рассчитать тип элемента рама-импост-створка, положение и ориентацию
+				// устанавливаем тип элемента
+				_row.elm_type = this.elm_type;
+
+				// TODO: Рассчитать положение и ориентацию
 				// вероятно, импост, всегда занимает положение "центр"
 			}
 		},
@@ -845,13 +848,76 @@ Profile.prototype.__define({
 
 	/**
 	 * Возвращает массив примыкающих ипостов
-	 * TODO: реализовать
 	 */
 	joined_imposts: {
-		get : function(){
-			var res = [];
 
-			return res;
+		value : function(check_only){
+
+			var t = this,
+				profiles = t.parent.profiles,
+				tinner = [], touter = [], curr, pb, pe, ip;
+
+			for(var i = 0; i<profiles.length; i++){
+
+				if((curr = profiles[i]) == t)
+					continue;
+
+				pb = curr.cnn_point("b");
+				if(pb.profile == t && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
+
+					if(check_only)
+						return check_only;
+
+					// выясним, с какой стороны примыкающий профиль
+					ip = curr.corns(1);
+					if(t.rays.inner.getNearestPoint(ip).getDistance(ip, true) < t.rays.outer.getNearestPoint(ip).getDistance(ip, true))
+						tinner.push({point: pb.point.clone(), profile: curr});
+					else
+						touter.push({point: pb.point.clone(), profile: curr});
+				}
+				pe = curr.cnn_point("e");
+				if(pe.profile == t && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
+
+					if(check_only)
+						return check_only;
+
+					ip = curr.corns(2);
+					if(t.rays.inner.getNearestPoint(ip).getDistance(ip, true) < t.rays.outer.getNearestPoint(ip).getDistance(ip, true))
+						tinner.push({point: pe.point.clone(), profile: curr});
+					else
+						touter.push({point: pe.point.clone(), profile: curr});
+				}
+
+			}
+
+			if(check_only)
+				return false;
+			else
+				return {inner: tinner, outer: touter};
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает тип элемента (рама, створка, импост)
+	 */
+	elm_type: {
+		get : function(){
+
+			// если начало или конец элемента соединены с соседями по Т, значит это импост
+			var cnn_point = this.cnn_point("b");
+			if(cnn_point.profile != this && cnn_point.cnn && cnn_point.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+				return $p.enm.elm_types.Импост;
+			cnn_point = this.cnn_point("e");
+			if(cnn_point.profile != this && cnn_point.cnn && cnn_point.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+				return $p.enm.elm_types.Импост;
+
+			// Если вложенный контур, значит это створка
+			if(this.parent.parent instanceof Contour)
+				return $p.enm.elm_types.Створка;
+
+			return $p.enm.elm_types.Рама;
+
 		},
 		enumerable : false
 	}

@@ -818,35 +818,14 @@ Contour.prototype.__define({
 			// для всех профилей контура
 			profiles.forEach(function (p) {
 
-				// ищем примыкания T
-				var tinner = [], touter = [], pb, pe, ip;
-				profiles.forEach(function (i) {
-					if(i == p)
-						return;
-					pb = i.cnn_point("b");
-					if(pb.profile == p && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
-						// выясним, с какой стороны примыкающий профиль
-						ip = i.corns(1);
-						if(p.rays.inner.getNearestPoint(ip).getDistance(ip, true) < p.rays.outer.getNearestPoint(ip).getDistance(ip, true))
-							tinner.push({point: pb.point.clone(), profile: i});
-						else
-							touter.push({point: pb.point.clone(), profile: i});
-					}
-					pe = i.cnn_point("e");
-					if(pe.profile == p && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
-						ip = i.corns(2);
-						if(p.rays.inner.getNearestPoint(ip).getDistance(ip, true) < p.rays.outer.getNearestPoint(ip).getDistance(ip, true))
-							tinner.push({point: pe.point.clone(), profile: i});
-						else
-							touter.push({point: pe.point.clone(), profile: i});
-					}
-				});
+				// ищем примыкания T к текущему профилю
+				var ip = p.joined_imposts(), pb, pe;
 
 				// если есть примыкания T, добавляем сегменты, исключая соединения с пустотой
 				pb = p.cnn_point("b");
 				pe = p.cnn_point("e");
-				if(tinner.length){
-					tinner.sort(function (a, b) {
+				if(ip.inner.length){
+					ip.inner.sort(function (a, b) {
 						var g = p.generatrix, da = g.getOffsetOf(a.point) , db = g.getOffsetOf(b.point);
 						if (da < db)
 							return -1;
@@ -855,14 +834,14 @@ Contour.prototype.__define({
 						return 0;
 					});
 					if(pb.profile)
-						nodes.push({b: p.b.clone(), e: tinner[0].point.clone(), profile: p});
-					for(var i = 1; i < tinner.length; i++)
-						nodes.push({b: tinner[i-1].point.clone(), e: tinner[i].point.clone(), profile: p});
+						nodes.push({b: p.b.clone(), e: ip.inner[0].point.clone(), profile: p});
+					for(var i = 1; i < ip.inner.length; i++)
+						nodes.push({b: ip.inner[i-1].point.clone(), e: ip.inner[i].point.clone(), profile: p});
 					if(pe.profile)
-						nodes.push({b: tinner[tinner.length-1].point.clone(), e: p.e.clone(), profile: p});
+						nodes.push({b: ip.inner[ip.inner.length-1].point.clone(), e: p.e.clone(), profile: p});
 				}
-				if(touter.length){
-					touter.sort(function (a, b) {
+				if(ip.outer.length){
+					ip.outer.sort(function (a, b) {
 						var g = p.generatrix, da = g.getOffsetOf(a.point) , db = g.getOffsetOf(b.point);
 						if (da < db)
 							return -1;
@@ -871,18 +850,18 @@ Contour.prototype.__define({
 						return 0;
 					});
 					if(pb.profile)
-						nodes.push({b: touter[0].point.clone(), e: p.b.clone(), profile: p, outer: true});
-					for(var i = 1; i < touter.length; i++)
-						nodes.push({b: touter[i].point.clone(), e: touter[i-1].point.clone(), profile: p, outer: true});
+						nodes.push({b: ip.outer[0].point.clone(), e: p.b.clone(), profile: p, outer: true});
+					for(var i = 1; i < ip.outer.length; i++)
+						nodes.push({b: ip.outer[i].point.clone(), e: ip.outer[i-1].point.clone(), profile: p, outer: true});
 					if(pe.profile)
-						nodes.push({b: p.e.clone(), e: touter[touter.length-1].point.clone(), profile: p, outer: true});
+						nodes.push({b: p.e.clone(), e: ip.outer[ip.outer.length-1].point.clone(), profile: p, outer: true});
 				}
-				if(!tinner.length){
+				if(!ip.inner.length){
 					// добавляем, если нет соединений с пустотой
 					if(pb.profile && pe.profile)
 						nodes.push({b: p.b.clone(), e: p.e.clone(), profile: p});
 				}
-				if(!touter.length && ((pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное) || (pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное))){
+				if(!ip.outer.length && ((pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное) || (pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное))){
 					// добавляем, если нет соединений с пустотой
 					if(pb.profile && pe.profile)
 						nodes.push({b: p.e.clone(), e: p.b.clone(), profile: p, outer: true});
