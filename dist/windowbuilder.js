@@ -1121,7 +1121,6 @@ function Scheme(_canvas){
 
 	}
 
-
 	redraw();
 }
 Scheme._extend(paper.Project);
@@ -1234,11 +1233,31 @@ Scheme.prototype.__define({
 		}
 	},
 
+	/**
+	 * Возвращает массив контуров текущего изделия
+	 */
 	contours: {
 		get: function () {
 			return this.getItems({class: Contour});
-		}
+		},
+		enumerable: false
+	},
+
+	default_inset: {
+		value: function (attr) {
+			return this.sys.inserts(attr.elm_type)[0];
+		},
+		enumerable: false
+	},
+
+	default_clr: {
+		value: function (attr) {
+			return this.ox.clr;
+		},
+		enumerable: false
 	}
+
+
 });
 /**
  * Created 24.07.2015<br />
@@ -1498,12 +1517,19 @@ function Contour(attr){
 				}
 
 				// четвертый проход - добавляем
-				if(need_bind && outer_nodes.length){
+				if(need_bind){
 					for(var i in attr){
 						curr = attr[i];
 						if(curr.binded)
 							continue;
-						elm = new Profile({generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e), proto: outer_nodes[0]});
+						elm = new Profile({
+							generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e),
+							proto: outer_nodes.length ? outer_nodes[0] : {
+								parent: this,
+								inset: _contour.project.default_inset({elm_type: $p.enm.elm_types.Створка}),
+								clr: _contour.project.default_clr()
+							}
+						});
 						elm.data.binded = true;
 						elm.data.simulated = true;
 						curr.binded = true;
@@ -1975,7 +2001,7 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Возвращает массив внешних узлов текущего контура. Ососбо актуально для створок, т.к. они всегда замкнут
+	 * Возвращает массив внешних узлов текущего контура. Ососбо актуально для створок, т.к. они всегда замкнуты
 	 * @property outer_nodes
 	 * @for Contour
 	 * @type {Array}
@@ -2628,7 +2654,7 @@ function Profile(attr){
 	 * @type {Number}
 	 */
 	this.__define("x1", {
-		get : function(){ return Math.round(this.b.x*10)/10; },
+		get : function(){ return this.b.x.round(1); },
 		set: function(v){
 			_profile.select_node("b");
 			_profile.move_points(new paper.Point(v - this.b.x, 0));	},
@@ -2658,7 +2684,7 @@ function Profile(attr){
 	 * @type {Number}
 	 */
 	this.__define("x2", {
-		get : function(){ return Math.round(this.e.x*10)/10; },
+		get : function(){ return this.e.x.round(1); },
 		set: function(v){
 			_profile.select_node("e");
 			_profile.move_points(new paper.Point(v - this.e.x, 0)); },
@@ -2958,15 +2984,14 @@ Profile.prototype.__define({
 						aperture_len: this.corns(2).getDistance(this.corns(3))
 					}),
 
-
 					gen = this.generatrix,
 					sub_gen,
 					ppoints = {};
 
-				_row.x1 = Math.round(this.b.x * 1000) / 1000;
-				_row.y1 = Math.round((h - this.b.y) * 1000) / 1000;
-				_row.x2 = Math.round(this.e.x * 1000) / 1000;
-				_row.y2 = Math.round((h - this.e.y) * 1000) / 1000;
+				_row.x1 = this.b.x.round(3);
+				_row.y1 = (h - this.b.y).round(3);
+				_row.x2 = this.e.x.round(3);
+				_row.y2 = (h - this.e.y).round(3);
 				_row.path_data = gen.pathData;
 				_row.nom = this.nom;
 
@@ -3540,6 +3565,22 @@ Filling.prototype.__define({
 					aperture_len: curr.sub_path.length
 				});
 			});
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Создаёт створку в текущем заполнении
+	 */
+	create_leaf: {
+		value: function () {
+
+			var contour = new Contour( {parent: this.parent});
+
+			contour.path = this.profiles;
+
+			this.parent = contour;
 
 		},
 		enumerable : false
@@ -4393,6 +4434,8 @@ function ToolPen(){
 	// подключает окно редактора
 	function tool_wnd(){
 
+		var rama_impost = _editor.project.sys.inserts();
+
 		// создаём экземпляр обработки
 		tool.profile = $p.dp.builder_pen.create();
 
@@ -4401,13 +4444,32 @@ function ToolPen(){
 		tool.profile._mixin(tool.options.wnd, ["inset", "clr", "bind_generatrix", "bind_node"]);
 
 		if(tool.profile.inset.empty()){
-			var profiles = _editor.project.sys.inserts($p.enm.elm_types.rama_impost);
-			if(profiles.length)
-				tool.profile.inset = profiles[0];
+			if(rama_impost.length)
+				tool.profile.inset = rama_impost[0];
 		}
 
 		if(tool.profile.clr.empty())
 			tool.profile.clr = $p.cat.clrs.predefined("white");
+
+		if(!tool.profile._metadata.fields.inset.choice_links)
+			tool.profile._metadata.fields.inset.choice_links = [{
+				name: ["selection",	"ref"],
+				path: [
+					function(o, f){
+						if($p.is_data_obj(o)){
+							return rama_impost.indexOf(o) != -1;
+
+						}else{
+							var refs = "";
+							rama_impost.forEach(function (o) {
+								if(refs)
+									refs += ", ";
+								refs += "'" + o.ref + "'";
+							});
+							return "_t_.ref in (" + refs + ")";
+						}
+					}]
+			}];
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
 		tool.wnd.attachHeadFields({
@@ -5603,13 +5665,52 @@ function Editor(pwnd){
 		return $p.cancel_bubble(event);
 	};
 
-	//_editor._dxw.attachViewportTo(eid);
-	//_editor._dxw.setSkin(dhtmlx.skin);
-	_editor._acc = this._layout.cells("b").attachAccordion({           // аккордион со свойствами
-		icons_path: dhtmlx.image_path,
-		multi_mode: true,
-		dnd:        true
-	});
+
+	// аккордион со свойствами
+	_editor._acc = new (function Accordion(cell, template) {
+
+		cell.attachHTMLString(template);
+
+		var _cell = cell.cell;
+		this.cont = _cell.querySelector(".editor_accordion");
+		this.layers = this.cont.querySelector("[name=content_layers]");
+		this.header_layers = this.cont.querySelector("[name=header_layers]");
+		this.header_props = this.cont.querySelector("[name=header_props]");
+
+		this.props = new dhtmlXLayoutObject({
+			parent:     this.cont.querySelector("[name=content_props]"),
+			pattern:    "1C",
+			offsets: {
+				top:    0,
+				right:  0,
+				bottom: 0,
+				left:   0
+			},
+			cells: [
+				{
+					id:             "a",
+					header:         false,
+					height:         300
+				}
+			]
+		});
+
+		baron({
+			cssGuru: true,
+			root: this.cont,
+			scroller: '.scroller',
+			bar: '.scroller__bar',
+			barOnCls: 'baron'
+		}).fix({
+			elements: '.header__title',
+			outside: 'header__title_state_fixed',
+			before: 'header__title_position_top',
+			after: 'header__title_position_bottom',
+			clickable: true
+		});
+
+	})(this._layout.cells("b"), $p.injected_data['tip_editor_right.html']) ;
+
 
 	_editor.toString = function(){ return $p.msg.bld_constructor; };
 
@@ -5641,12 +5742,13 @@ function Editor(pwnd){
 	 * Верхняя панель инструментов
 	 * @type {OTooolBar}
 	 */
-	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '250px', height: '28px', top: '3px', left: '50px', name: 'top',
+	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '220px', height: '28px', top: '3px', left: '50px', name: 'top',
 		image_path: 'dist/imgs/',
 		buttons: [
-			{name: 'open', text: '<i class="fa fa-file-o fa-lg"></i>', title: 'Открыть изделие', float: 'left'},
+			//{name: 'open', text: '<i class="fa fa-file-o fa-lg"></i>', title: 'Открыть изделие', float: 'left'},
 			{name: 'save_close', text: '<i class="fa fa-floppy-o fa-lg"></i>', title: 'Рассчитать, записать и закрыть', float: 'left'},
 			{name: 'calck', img: 'calculate.png', title: 'Рассчитать и записать данные', float: 'left'},
+
 			{name: 'standard_form', img: 'standard_form.png', title: 'Добавить типовую форму', float: 'left',
 				sub: {
 					buttons: [
@@ -5666,6 +5768,7 @@ function Editor(pwnd){
 						{name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]
 				}
 			},
+
 			{name: 'stamp', img: 'stamp.png', title: 'Загрузить из типового блока', float: 'left'},
 			{name: 'back', text: '<i class="fa fa-undo fa-lg"></i>', title: 'Шаг назад', float: 'left'},
 			{name: 'rewind', text: '<i class="fa fa-repeat fa-lg"></i>', title: 'Шаг вперед', float: 'left'},
@@ -5731,43 +5834,38 @@ function Editor(pwnd){
 	 * Правая панель инструментов
 	 * @type {*|OTooolBar}
 	 */
-	_editor.tb_right = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '200px', height: '28px', top: '3px', right: '3px', name: 'right',
+	_editor.tb_right = new $p.iface.OTooolBar({
+		wrapper: _editor._acc.header_layers,
+		width: '200px',
+		height: '28px',
+		top: '-4px',
+		left: '4px',
+		class_name: "",
+		name: 'right',
 		image_path: 'dist/imgs/',
 		buttons: [
-				{name: 'layers', img: 'layers.png', text: 'Слои', float: 'left', width: '90px',
+				{name: 'layers', img: 'layers.png', text: 'Слои', float: 'left', width: '80px',
 					sub: {
 						width: '190px',
 						height: '90px',
 						buttons: [
-							{name: 'new_layer', img: 'new_layer.png', width: '182px', text: 'Добавить конструкцию'},
-							{name: 'new_stv', img: 'triangle1.png', width: '182px', text: 'Добавить створку'},
+							{name: 'new_layer', width: '182px', text: '<i class="fa fa-file-o fa-fw"></i> Добавить конструкцию'},
+							{name: 'new_stv', width: '182px', text: '<i class="fa fa-file-excel-o fa-fw"></i> Добавить створку'},
 							{name: 'drop_layer', img: 'trash.gif', width: '182px', text: 'Удалить слой'}
-						]
-					}
-				},
-				{name: 'elm', img: 'icon-arrow-black.png', text: 'Элементы', float: 'left', width: '90px',
-					sub: {
-						width: '230px',
-						height: '160px',
-						align: 'right',
-						buttons: [
-							{name: 'left', img: 'align_left.png', width: '222px', text: $p.msg.align_node_left},
-							{name: 'bottom', img: 'align_bottom.png', width: '222px', text: $p.msg.align_node_bottom},
-							{name: 'top', img: 'align_top.png', width: '222px', text: $p.msg.align_node_top},
-							{name: 'right', img: 'align_right.png', width: '222px', text: $p.msg.align_node_right},
-							{name: 'delete', img: 'trash.gif', width: '222px', text: 'Удалить элемент'}
 						]
 					}
 				}
 			], onclick: function (name) {
-				if(name == 'new_layer')
-					$p.msg.show_not_implemented();
+				if(name == 'new_stv'){
+					var fillings = _editor.project.getItems({class: Filling, selected: true});
+					if(fillings.length)
+						fillings[0].create_leaf();
 
-				else if(name == 'drop_layer')
+				}else if(name == 'drop_layer')
 					_editor.tree_layers.drop_layer();
 
-				else if(['left', 'bottom', 'top', 'right'].indexOf(name) != -1)
-					_editor.profile_align(name);
+				else if(name == 'new_layer')
+					$p.msg.show_msg(name);
 
 				return false;
 			}
@@ -5778,15 +5876,14 @@ function Editor(pwnd){
 	 */
 	_editor.tree_layers = function () {
 
-		var wid = 'wnd_dat_' + dhx4.newId(),
-			acc_cell, wnd, tree, lid;
+		var lid,
+			tree = new dhtmlXTreeObject({
+				parent: _editor._acc.layers,
+				checkbox: true,
+				//image_path: dhtmlx.image_path + 'dhxtree_web/',
+				//icons_path: dhtmlx.image_path + 'dhxtree_web/',
+			});
 
-		_editor._acc.addItem(
-			wid,
-			"Слои",
-			true,
-			"*");
-		acc_cell = _editor._acc.cells(wid);
 
 		function load_layer(layer){
 			lid = (layer.parent ? "Створка №" : "Рама №") + layer.cnstr + " " + layer.bounds.width.toFixed() + "х" + layer.bounds.height.toFixed();
@@ -5837,10 +5934,9 @@ function Editor(pwnd){
 			});
 		}
 
-		tree = acc_cell.attachTree();
-		tree.setImagePath(dhtmlx.image_path + 'dhxtree_web/');
-		tree.setIconsPath(dhtmlx.image_path + 'dhxtree_web/');
-		tree.enableCheckBoxes(true, true);
+		//tree.setImagePath(dhtmlx.image_path + 'dhxtree_web/');
+		//tree.setIconsPath(dhtmlx.image_path + 'dhxtree_web/');
+		//tree.enableCheckBoxes(true, true);
 		tree.enableTreeImages(false);
 
 		// Гасим-включаем слой по чекбоксу
@@ -5852,11 +5948,12 @@ function Editor(pwnd){
 				l.visible = !!state;
 
 			if(typeof sub == "string")
-				tree.setCheck(sub, state);
-			else
-				sub.forEach(function (id) {
+				sub = sub.split(",");
+			sub.forEach(function (id) {
 					tree.setCheck(id, state);
 				});
+
+			_editor.project.register_update();
 
 		});
 
@@ -5865,6 +5962,7 @@ function Editor(pwnd){
 			var l = _editor.project.getItem({cnstr: Number(id)});
 			if(l)
 				l.activate();
+			_editor.project.register_update();
 		});
 
 		//tree.enableDragAndDrop(true, false);
@@ -5914,26 +6012,18 @@ function Editor(pwnd){
 				Object.unobserve(_editor.project._noti, observer);
 			}
 		}
+
 	}();
 
 	/**
 	 * свойства в аккордионе
 	 */
 	_editor.props = function () {
-		var wid = 'wnd_dat_' + dhx4.newId(),
-			acc_cell, wnd;
-
-		_editor._acc.addItem(
-			wid,
-			"Изделие",
-			true,
-			"*");
-		acc_cell = _editor._acc.cells(wid);
 
 		return {
 
 			attache: function () {
-				acc_cell.attachHeadFields({
+				_editor._acc.props.cells("a").attachHeadFields({
 					obj: _editor.project._dp,
 					oxml: {
 						"Свойства": ["sys", "clr", "len", "height", "s"],
@@ -5947,7 +6037,7 @@ function Editor(pwnd){
 			},
 
 			unload: function () {
-				acc_cell.unload();
+				_editor._acc.props.unload();
 			}
 		}
 	}();
@@ -6465,6 +6555,6 @@ if(typeof $p !== "undefined")
 	$p.Editor = Editor;
 
 
-$p.injected_data._mixin({"tip_select_elm.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Свойства элемента</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент целиком<br />для изменения его свойств или перемещения</li>\r\n        <li>Добавить новый элемент делением текущего<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class=\"fa fa-question-circle fa-lg\"></i> Справка в wiki</a>\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Свойства узла</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и лучи узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
+$p.injected_data._mixin({"tip_editor_right.html":"<div class=\"clipper editor_accordion\">\r\n\r\n    <div class=\"scroller\">\r\n        <div class=\"container\">\r\n\r\n            <!-- РАЗДЕЛ 1 - дерево слоёв -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_layers\" style=\"font-weight: normal;\"></div>\r\n            </div>\r\n            <!-- Здесь содержимое ячейки -->\r\n            <div name=\"content_layers\">\r\n\r\n            </div>\r\n\r\n            <!-- РАЗДЕЛ 2 - реквизиты изделия -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_props\">\r\n                    <span name=\"title\">Изделие</span>\r\n                </div>\r\n            </div>\r\n            <!-- Здесь содержимое ячейки -->\r\n            <div name=\"content_props\" style=\"height: 100%; min-height: 300px;\">\r\n\r\n            </div>\r\n\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"scroller__track\">\r\n        <div class=\"scroller__bar\" style=\"height: 26px; top: 0px;\"></div>\r\n    </div>\r\n\r\n</div>","tip_select_elm.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Свойства элемента</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент целиком<br />для изменения его свойств или перемещения</li>\r\n        <li>Добавить новый элемент делением текущего<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class=\"fa fa-question-circle fa-lg\"></i> Справка в wiki</a>\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Свойства узла</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и лучи узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
 return Editor;
 }));

@@ -256,12 +256,19 @@ function Contour(attr){
 				}
 
 				// четвертый проход - добавляем
-				if(need_bind && outer_nodes.length){
+				if(need_bind){
 					for(var i in attr){
 						curr = attr[i];
 						if(curr.binded)
 							continue;
-						elm = new Profile({generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e), proto: outer_nodes[0]});
+						elm = new Profile({
+							generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e),
+							proto: outer_nodes.length ? outer_nodes[0] : {
+								parent: this,
+								inset: _contour.project.default_inset({elm_type: $p.enm.elm_types.Створка}),
+								clr: _contour.project.default_clr()
+							}
+						});
 						elm.data.binded = true;
 						elm.data.simulated = true;
 						curr.binded = true;
@@ -733,7 +740,7 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Возвращает массив внешних узлов текущего контура. Ососбо актуально для створок, т.к. они всегда замкнут
+	 * Возвращает массив внешних узлов текущего контура. Ососбо актуально для створок, т.к. они всегда замкнуты
 	 * @property outer_nodes
 	 * @for Contour
 	 * @type {Array}

@@ -26,7 +26,171 @@
 	background-repeat: no-repeat;
 	background-position: 4px;
 }
-.tb_open { background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAStJREFUeNpi/P//PwM1AQsyJ0BH5P/Gq2+J0hhrJMZQ5yrHCOOrdJzGNBBkmIe6IMP5Z18ZkkzFQZgRl4GqnWf+Aw3EEGdCF5gcoMw4yV+JYf3lNwwaXWf/zzv9kqQwYcImaCTNw7g5SZtxWbQ6w6lHnxky1t75T5GByAbPCFZh1JbgYvCce/U/xQbCQK61FOOdN98ZqGYgLrDl2rv/VDOw31eJoXDzPQxDWcg10EdLCJSk/oMMBdEFDAyMFBmIbmgBNcIQyVDqRArVY5kuBqJECqhgsJl26T+ugmHy0Wf/Jx15hrXkwWogqGA49/TL//qdDxm69j/5X+Yog2IwKMcAMfEuRCoYGEAGzzrxAlQ4/C8HGkxxGCIXDImrbjOI87IRZSAjtasAgAADACU5bNReYaUGAAAAAElFTkSuQmCC);}
+.tb_open { background-image: url(../../lib/imgs/custom_web/open.png);}
+
+
+/* node that hides system scrollbar by overflow: hidden; */
+.clipper {
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border: none;
+    box-shadow:
+        0 5px 15px -3px rgba(0, 0, 0, .7),
+        0 0 0 1px rgba(0, 0, 0, .05);
+    text-align: left;
+}
+.scroller {
+    height: 100%;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* html-node for track */
+.scroller__track {
+    opacity: 0;
+    position: absolute;
+    z-index: 3;
+    top: 10px;
+    bottom: 10px;
+    right: 5px;
+    width: 8px;
+    border-radius: 5px;
+	background: rgba(0, 0, 0, .1);
+    pointer-events: none;
+}
+.baron .scroller__track {
+    opacity: 1;
+}
+.scroller__track._h {
+    opacity: 0;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: auto;
+    width: auto;
+    height: 8px;
+}
+.baron_h .scroller__track._h {
+    opacity: 1;
+}
+
+/* bar â€“ thing that slides up and down when you scroll */
+.scroller__bar {
+    position: absolute;
+    z-index: 1;
+    width: 8px;
+    border-radius: 3px;
+    background: #999;
+    opacity: 0;
+    -webkit-transition: opacity .2s linear;
+    transition: opacity .2s linear;
+    pointer-events: auto;
+}
+.scroller__bar:hover {
+    opacity: .8;
+}
+.baron .scroller__bar {
+    opacity: .6;
+}
+.baron_h .scroller__bar._h {
+    opacity: .6;
+    width: auto;
+    height: 8px;
+}
+
+.header {
+	clear: both
+}
+
+/* fixable headers */
+.header__title {
+    position: relative;
+    z-index: 2;
+	height: 30px;
+	line-height: 28px;
+    width: 100%;
+    margin: 0;
+	padding-left: 8px;
+
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+	background-color: #f5f5f5;
+	border: 1px solid #cccccc;
+
+	color: #333333;
+	font-family: Arial;
+	font-size: 13px;
+	font-weight: bold;
+
+    opacity: 1;
+    cursor: pointer;
+	overflow: hidden;
+
+}
+.header__title_state_fixed {
+    position: absolute;
+    z-index: 1;
+	/*
+    background-color: rgba(220, 209, 250, .95);
+    text-shadow: 0 0 5px #fff;
+    */
+}
+.header__title_position_top {
+/*
+background-color: rgba(200, 250, 200, .8);
+*/
+}
+.header__title_position_top:after {
+	content: '';
+	position: absolute;
+	left: 0;
+	bottom: -30px;
+	width: 100%;
+	height: 30px;
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+	pointer-events: none;
+}
+.header__title_position_bottom {
+	/*
+	background-color: rgba(250, 200, 200, .8);
+	*/
+}
+.header__title_position_bottom:after {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: -30px;
+	width: 100%;
+	height: 30px;
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
+	pointer-events: none;
+}
+
+.text {
+	overflow: hidden;
+	margin: 10px;
+}
+
+.clipper_iphone .header__title_state_fixed {
+	position: relative;
+}
+.clipper_iphone .header__title_position_top {
+	position: absolute;
+	top: 0;
+}
+.clipper_iphone .header__title_position_bottom {
+	position: absolute;
+	bottom: 0;
+}
+
+
 .md_column320 {
 	width: 48%;
 	min-width: 320px;

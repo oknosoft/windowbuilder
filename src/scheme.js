@@ -423,7 +423,6 @@ function Scheme(_canvas){
 
 	}
 
-
 	redraw();
 }
 Scheme._extend(paper.Project);
@@ -536,9 +535,29 @@ Scheme.prototype.__define({
 		}
 	},
 
+	/**
+	 * Возвращает массив контуров текущего изделия
+	 */
 	contours: {
 		get: function () {
 			return this.getItems({class: Contour});
-		}
+		},
+		enumerable: false
+	},
+
+	default_inset: {
+		value: function (attr) {
+			return this.sys.inserts(attr.elm_type)[0];
+		},
+		enumerable: false
+	},
+
+	default_clr: {
+		value: function (attr) {
+			return this.ox.clr;
+		},
+		enumerable: false
 	}
+
+
 });

@@ -64,13 +64,52 @@ function Editor(pwnd){
 		return $p.cancel_bubble(event);
 	};
 
-	//_editor._dxw.attachViewportTo(eid);
-	//_editor._dxw.setSkin(dhtmlx.skin);
-	_editor._acc = this._layout.cells("b").attachAccordion({           // аккордион со свойствами
-		icons_path: dhtmlx.image_path,
-		multi_mode: true,
-		dnd:        true
-	});
+
+	// аккордион со свойствами
+	_editor._acc = new (function Accordion(cell, template) {
+
+		cell.attachHTMLString(template);
+
+		var _cell = cell.cell;
+		this.cont = _cell.querySelector(".editor_accordion");
+		this.layers = this.cont.querySelector("[name=content_layers]");
+		this.header_layers = this.cont.querySelector("[name=header_layers]");
+		this.header_props = this.cont.querySelector("[name=header_props]");
+
+		this.props = new dhtmlXLayoutObject({
+			parent:     this.cont.querySelector("[name=content_props]"),
+			pattern:    "1C",
+			offsets: {
+				top:    0,
+				right:  0,
+				bottom: 0,
+				left:   0
+			},
+			cells: [
+				{
+					id:             "a",
+					header:         false,
+					height:         300
+				}
+			]
+		});
+
+		baron({
+			cssGuru: true,
+			root: this.cont,
+			scroller: '.scroller',
+			bar: '.scroller__bar',
+			barOnCls: 'baron'
+		}).fix({
+			elements: '.header__title',
+			outside: 'header__title_state_fixed',
+			before: 'header__title_position_top',
+			after: 'header__title_position_bottom',
+			clickable: true
+		});
+
+	})(this._layout.cells("b"), $p.injected_data['tip_editor_right.html']) ;
+
 
 	_editor.toString = function(){ return $p.msg.bld_constructor; };
 
@@ -102,12 +141,13 @@ function Editor(pwnd){
 	 * Верхняя панель инструментов
 	 * @type {OTooolBar}
 	 */
-	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '250px', height: '28px', top: '3px', left: '50px', name: 'top',
+	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '220px', height: '28px', top: '3px', left: '50px', name: 'top',
 		image_path: 'dist/imgs/',
 		buttons: [
-			{name: 'open', text: '<i class="fa fa-file-o fa-lg"></i>', title: 'Открыть изделие', float: 'left'},
+			//{name: 'open', text: '<i class="fa fa-file-o fa-lg"></i>', title: 'Открыть изделие', float: 'left'},
 			{name: 'save_close', text: '<i class="fa fa-floppy-o fa-lg"></i>', title: 'Рассчитать, записать и закрыть', float: 'left'},
 			{name: 'calck', img: 'calculate.png', title: 'Рассчитать и записать данные', float: 'left'},
+
 			{name: 'standard_form', img: 'standard_form.png', title: 'Добавить типовую форму', float: 'left',
 				sub: {
 					buttons: [
@@ -127,6 +167,7 @@ function Editor(pwnd){
 						{name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]
 				}
 			},
+
 			{name: 'stamp', img: 'stamp.png', title: 'Загрузить из типового блока', float: 'left'},
 			{name: 'back', text: '<i class="fa fa-undo fa-lg"></i>', title: 'Шаг назад', float: 'left'},
 			{name: 'rewind', text: '<i class="fa fa-repeat fa-lg"></i>', title: 'Шаг вперед', float: 'left'},
@@ -192,43 +233,38 @@ function Editor(pwnd){
 	 * Правая панель инструментов
 	 * @type {*|OTooolBar}
 	 */
-	_editor.tb_right = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '200px', height: '28px', top: '3px', right: '3px', name: 'right',
+	_editor.tb_right = new $p.iface.OTooolBar({
+		wrapper: _editor._acc.header_layers,
+		width: '200px',
+		height: '28px',
+		top: '-4px',
+		left: '4px',
+		class_name: "",
+		name: 'right',
 		image_path: 'dist/imgs/',
 		buttons: [
-				{name: 'layers', img: 'layers.png', text: 'Слои', float: 'left', width: '90px',
+				{name: 'layers', img: 'layers.png', text: 'Слои', float: 'left', width: '80px',
 					sub: {
 						width: '190px',
 						height: '90px',
 						buttons: [
-							{name: 'new_layer', img: 'new_layer.png', width: '182px', text: 'Добавить конструкцию'},
-							{name: 'new_stv', img: 'triangle1.png', width: '182px', text: 'Добавить створку'},
+							{name: 'new_layer', width: '182px', text: '<i class="fa fa-file-o fa-fw"></i> Добавить конструкцию'},
+							{name: 'new_stv', width: '182px', text: '<i class="fa fa-file-excel-o fa-fw"></i> Добавить створку'},
 							{name: 'drop_layer', img: 'trash.gif', width: '182px', text: 'Удалить слой'}
-						]
-					}
-				},
-				{name: 'elm', img: 'icon-arrow-black.png', text: 'Элементы', float: 'left', width: '90px',
-					sub: {
-						width: '230px',
-						height: '160px',
-						align: 'right',
-						buttons: [
-							{name: 'left', img: 'align_left.png', width: '222px', text: $p.msg.align_node_left},
-							{name: 'bottom', img: 'align_bottom.png', width: '222px', text: $p.msg.align_node_bottom},
-							{name: 'top', img: 'align_top.png', width: '222px', text: $p.msg.align_node_top},
-							{name: 'right', img: 'align_right.png', width: '222px', text: $p.msg.align_node_right},
-							{name: 'delete', img: 'trash.gif', width: '222px', text: 'Удалить элемент'}
 						]
 					}
 				}
 			], onclick: function (name) {
-				if(name == 'new_layer')
-					$p.msg.show_not_implemented();
+				if(name == 'new_stv'){
+					var fillings = _editor.project.getItems({class: Filling, selected: true});
+					if(fillings.length)
+						fillings[0].create_leaf();
 
-				else if(name == 'drop_layer')
+				}else if(name == 'drop_layer')
 					_editor.tree_layers.drop_layer();
 
-				else if(['left', 'bottom', 'top', 'right'].indexOf(name) != -1)
-					_editor.profile_align(name);
+				else if(name == 'new_layer')
+					$p.msg.show_msg(name);
 
 				return false;
 			}
@@ -239,15 +275,14 @@ function Editor(pwnd){
 	 */
 	_editor.tree_layers = function () {
 
-		var wid = 'wnd_dat_' + dhx4.newId(),
-			acc_cell, wnd, tree, lid;
+		var lid,
+			tree = new dhtmlXTreeObject({
+				parent: _editor._acc.layers,
+				checkbox: true,
+				//image_path: dhtmlx.image_path + 'dhxtree_web/',
+				//icons_path: dhtmlx.image_path + 'dhxtree_web/',
+			});
 
-		_editor._acc.addItem(
-			wid,
-			"Слои",
-			true,
-			"*");
-		acc_cell = _editor._acc.cells(wid);
 
 		function load_layer(layer){
 			lid = (layer.parent ? "Створка №" : "Рама №") + layer.cnstr + " " + layer.bounds.width.toFixed() + "х" + layer.bounds.height.toFixed();
@@ -298,10 +333,9 @@ function Editor(pwnd){
 			});
 		}
 
-		tree = acc_cell.attachTree();
-		tree.setImagePath(dhtmlx.image_path + 'dhxtree_web/');
-		tree.setIconsPath(dhtmlx.image_path + 'dhxtree_web/');
-		tree.enableCheckBoxes(true, true);
+		//tree.setImagePath(dhtmlx.image_path + 'dhxtree_web/');
+		//tree.setIconsPath(dhtmlx.image_path + 'dhxtree_web/');
+		//tree.enableCheckBoxes(true, true);
 		tree.enableTreeImages(false);
 
 		// Гасим-включаем слой по чекбоксу
@@ -313,11 +347,12 @@ function Editor(pwnd){
 				l.visible = !!state;
 
 			if(typeof sub == "string")
-				tree.setCheck(sub, state);
-			else
-				sub.forEach(function (id) {
+				sub = sub.split(",");
+			sub.forEach(function (id) {
 					tree.setCheck(id, state);
 				});
+
+			_editor.project.register_update();
 
 		});
 
@@ -326,6 +361,7 @@ function Editor(pwnd){
 			var l = _editor.project.getItem({cnstr: Number(id)});
 			if(l)
 				l.activate();
+			_editor.project.register_update();
 		});
 
 		//tree.enableDragAndDrop(true, false);
@@ -375,26 +411,18 @@ function Editor(pwnd){
 				Object.unobserve(_editor.project._noti, observer);
 			}
 		}
+
 	}();
 
 	/**
 	 * свойства в аккордионе
 	 */
 	_editor.props = function () {
-		var wid = 'wnd_dat_' + dhx4.newId(),
-			acc_cell, wnd;
-
-		_editor._acc.addItem(
-			wid,
-			"Изделие",
-			true,
-			"*");
-		acc_cell = _editor._acc.cells(wid);
 
 		return {
 
 			attache: function () {
-				acc_cell.attachHeadFields({
+				_editor._acc.props.cells("a").attachHeadFields({
 					obj: _editor.project._dp,
 					oxml: {
 						"Свойства": ["sys", "clr", "len", "height", "s"],
@@ -408,7 +436,7 @@ function Editor(pwnd){
 			},
 
 			unload: function () {
-				acc_cell.unload();
+				_editor._acc.props.unload();
 			}
 		}
 	}();

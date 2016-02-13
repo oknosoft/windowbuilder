@@ -582,15 +582,22 @@ $p.modifiers.push(
 		});
 
 		/**
-		 * возвращает доступные в данной системе элементы
+		 * возвращает доступные в данной системе элементы (вставки)
 		 * @property inserts
+		 * @param elm_types - допустимые типы элементов
 		 * @for Production_params
 		 */
 		_mgr._obj_сonstructor.prototype.__define("inserts", {
 			value: function(elm_types){
 				var __noms = [];
-				if(typeof elm_types == "string")
+				if(!elm_types)
+					elm_types = $p.enm.elm_types.rama_impost;
+
+				else if(typeof elm_types == "string")
 					elm_types = $p.enm.elm_types[elm_types];
+
+				else(!Array.isArray(elm_types))
+					elm_types = [elm_types];
 
 				this.elmnts.each(function(row){
 					if(!row.nom.empty() && __noms.indexOf(row.nom) == -1 && elm_types.indexOf(row.elm_type) != -1)
@@ -1553,9 +1560,7 @@ $p.modifiers.push(
 			rama_impost: {
 				get : function(){
 					return cache.rama_impost
-						|| ( cache.rama_impost = [
-							_mgr.Рама,
-							_mgr.Импост] );
+						|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
 				},
 				enumerable : false,
 				configurable : false
@@ -1563,9 +1568,7 @@ $p.modifiers.push(
 
 			stvs: {
 				get : function(){
-					return cache.stvs
-						|| ( cache.stvs = [
-							_mgr.Створка] );
+					return cache.stvs || ( cache.stvs = [_mgr.Створка] );
 				},
 				enumerable : false,
 				configurable : false
@@ -1574,9 +1577,7 @@ $p.modifiers.push(
 			glasses: {
 				get : function(){
 					return cache.glasses
-						|| ( cache.glasses = [
-							_mgr.Стекло,
-							_mgr.Заполнение] );
+						|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
 				},
 				enumerable : false,
 				configurable : false
@@ -1790,7 +1791,7 @@ $p.modifiers.push(
 							row_spec.qty = row_base.quantity;
 							row_spec.len = (len - row_base.sz) * (row_base.coefficient || 1);
 							if(nom.rounding_quantity){
-								row_spec.qty = Окр(row_spec.qty * row_spec.len, nom.rounding_quantity);
+								row_spec.qty = (row_spec.qty * row_spec.len).round(nom.rounding_quantity);
 								row_spec.len = 0;
 							};
 

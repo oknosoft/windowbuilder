@@ -249,7 +249,7 @@ function Profile(attr){
 	 * @type {Number}
 	 */
 	this.__define("x1", {
-		get : function(){ return Math.round(this.b.x*10)/10; },
+		get : function(){ return this.b.x.round(1); },
 		set: function(v){
 			_profile.select_node("b");
 			_profile.move_points(new paper.Point(v - this.b.x, 0));	},
@@ -279,7 +279,7 @@ function Profile(attr){
 	 * @type {Number}
 	 */
 	this.__define("x2", {
-		get : function(){ return Math.round(this.e.x*10)/10; },
+		get : function(){ return this.e.x.round(1); },
 		set: function(v){
 			_profile.select_node("e");
 			_profile.move_points(new paper.Point(v - this.e.x, 0)); },
@@ -579,15 +579,14 @@ Profile.prototype.__define({
 						aperture_len: this.corns(2).getDistance(this.corns(3))
 					}),
 
-
 					gen = this.generatrix,
 					sub_gen,
 					ppoints = {};
 
-				_row.x1 = Math.round(this.b.x * 1000) / 1000;
-				_row.y1 = Math.round((h - this.b.y) * 1000) / 1000;
-				_row.x2 = Math.round(this.e.x * 1000) / 1000;
-				_row.y2 = Math.round((h - this.e.y) * 1000) / 1000;
+				_row.x1 = this.b.x.round(3);
+				_row.y1 = (h - this.b.y).round(3);
+				_row.x2 = this.e.x.round(3);
+				_row.y2 = (h - this.e.y).round(3);
 				_row.path_data = gen.pathData;
 				_row.nom = this.nom;
 

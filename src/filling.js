@@ -123,6 +123,22 @@ Filling.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Создаёт створку в текущем заполнении
+	 */
+	create_leaf: {
+		value: function () {
+
+			var contour = new Contour( {parent: this.parent});
+
+			contour.path = this.profiles;
+
+			this.parent = contour;
+
+		},
+		enumerable : false
+	},
+
 	s: {
 		get : function(){
 			return this.bounds.width * this.bounds.height / 1000000;

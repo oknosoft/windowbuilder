@@ -124,7 +124,7 @@ $p.modifiers.push(
 							row_spec.qty = row_base.quantity;
 							row_spec.len = (len - row_base.sz) * (row_base.coefficient || 1);
 							if(nom.rounding_quantity){
-								row_spec.qty = Окр(row_spec.qty * row_spec.len, nom.rounding_quantity);
+								row_spec.qty = (row_spec.qty * row_spec.len).round(nom.rounding_quantity);
 								row_spec.len = 0;
 							};
 

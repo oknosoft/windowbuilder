@@ -37,9 +37,7 @@ $p.modifiers.push(
 			rama_impost: {
 				get : function(){
 					return cache.rama_impost
-						|| ( cache.rama_impost = [
-							_mgr.Рама,
-							_mgr.Импост] );
+						|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
 				},
 				enumerable : false,
 				configurable : false
@@ -47,9 +45,7 @@ $p.modifiers.push(
 
 			stvs: {
 				get : function(){
-					return cache.stvs
-						|| ( cache.stvs = [
-							_mgr.Створка] );
+					return cache.stvs || ( cache.stvs = [_mgr.Створка] );
 				},
 				enumerable : false,
 				configurable : false
@@ -58,9 +54,7 @@ $p.modifiers.push(
 			glasses: {
 				get : function(){
 					return cache.glasses
-						|| ( cache.glasses = [
-							_mgr.Стекло,
-							_mgr.Заполнение] );
+						|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
 				},
 				enumerable : false,
 				configurable : false

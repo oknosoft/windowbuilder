@@ -35,6 +35,8 @@ function ToolPen(){
 	// подключает окно редактора
 	function tool_wnd(){
 
+		var rama_impost = _editor.project.sys.inserts();
+
 		// создаём экземпляр обработки
 		tool.profile = $p.dp.builder_pen.create();
 
@@ -43,13 +45,32 @@ function ToolPen(){
 		tool.profile._mixin(tool.options.wnd, ["inset", "clr", "bind_generatrix", "bind_node"]);
 
 		if(tool.profile.inset.empty()){
-			var profiles = _editor.project.sys.inserts($p.enm.elm_types.rama_impost);
-			if(profiles.length)
-				tool.profile.inset = profiles[0];
+			if(rama_impost.length)
+				tool.profile.inset = rama_impost[0];
 		}
 
 		if(tool.profile.clr.empty())
 			tool.profile.clr = $p.cat.clrs.predefined("white");
+
+		if(!tool.profile._metadata.fields.inset.choice_links)
+			tool.profile._metadata.fields.inset.choice_links = [{
+				name: ["selection",	"ref"],
+				path: [
+					function(o, f){
+						if($p.is_data_obj(o)){
+							return rama_impost.indexOf(o) != -1;
+
+						}else{
+							var refs = "";
+							rama_impost.forEach(function (o) {
+								if(refs)
+									refs += ", ";
+								refs += "'" + o.ref + "'";
+							});
+							return "_t_.ref in (" + refs + ")";
+						}
+					}]
+			}];
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
 		tool.wnd.attachHeadFields({

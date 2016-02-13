@@ -30,15 +30,22 @@ $p.modifiers.push(
 		});
 
 		/**
-		 * возвращает доступные в данной системе элементы
+		 * возвращает доступные в данной системе элементы (вставки)
 		 * @property inserts
+		 * @param elm_types - допустимые типы элементов
 		 * @for Production_params
 		 */
 		_mgr._obj_сonstructor.prototype.__define("inserts", {
 			value: function(elm_types){
 				var __noms = [];
-				if(typeof elm_types == "string")
+				if(!elm_types)
+					elm_types = $p.enm.elm_types.rama_impost;
+
+				else if(typeof elm_types == "string")
 					elm_types = $p.enm.elm_types[elm_types];
+
+				else(!Array.isArray(elm_types))
+					elm_types = [elm_types];
 
 				this.elmnts.each(function(row){
 					if(!row.nom.empty() && __noms.indexOf(row.nom) == -1 && elm_types.indexOf(row.elm_type) != -1)

@@ -47,6 +47,7 @@ gulp.task('css-base64', function () {
 	return gulp.src([
 		'./src/templates/cursors/cursors.css',
 		'./src/templates/buttons20.css',
+		'./src/templates/baron.css',
 		'./src/templates/iface.css'
 	])
 		.pipe(base64())
