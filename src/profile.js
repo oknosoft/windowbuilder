@@ -37,6 +37,8 @@ function Profile(attr){
 
 		if(attr.generatrix) {
 			this.data.generatrix = attr.generatrix;
+			if(this.data.generatrix.data.reversed)
+				delete this.data.generatrix.data.reversed;
 
 		} else {
 

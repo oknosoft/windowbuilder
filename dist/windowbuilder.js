@@ -1303,8 +1303,11 @@ function Contour(attr){
 	// строка в таблице конструкций
 	if(attr.row)
 		_row = attr.row;
-	else
-		_row = _contour.project.ox.constructions.add();
+	else{
+		_row = _contour.project.ox.constructions.add({ parent: this.parent ? this.parent.cnstr : 0 });
+		_row.cnstr = _contour.project.ox.constructions.aggregate([], ["cnstr"], "MAX") + 1;
+	}
+
 
 	this.__define('cnstr', {
 		get : function(){
@@ -1530,6 +1533,9 @@ function Contour(attr){
 								clr: _contour.project.default_clr()
 							}
 						});
+						curr.profile = elm;
+						if(curr.outer)
+							delete curr.outer;
 						elm.data.binded = true;
 						elm.data.simulated = true;
 						curr.binded = true;
@@ -2442,6 +2448,8 @@ function Profile(attr){
 
 		if(attr.generatrix) {
 			this.data.generatrix = attr.generatrix;
+			if(this.data.generatrix.data.reversed)
+				delete this.data.generatrix.data.reversed;
 
 		} else {
 
@@ -3576,11 +3584,21 @@ Filling.prototype.__define({
 	create_leaf: {
 		value: function () {
 
+			// создаём пустой новый слой
 			var contour = new Contour( {parent: this.parent});
 
+			// задаём его путь - внутри будут созданы профили
 			contour.path = this.profiles;
 
+			// помещаем себя вовнутрь нового слоя
 			this.parent = contour;
+			this._row.cnstr = contour.cnstr;
+
+			// оповещаем мир о новых слоях
+			Object.getNotifier(this.project._noti).notify({
+				type: 'rows',
+				tabular: "constructions"
+			});
 
 		},
 		enumerable : false

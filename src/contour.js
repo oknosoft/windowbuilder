@@ -42,8 +42,11 @@ function Contour(attr){
 	// строка в таблице конструкций
 	if(attr.row)
 		_row = attr.row;
-	else
-		_row = _contour.project.ox.constructions.add();
+	else{
+		_row = _contour.project.ox.constructions.add({ parent: this.parent ? this.parent.cnstr : 0 });
+		_row.cnstr = _contour.project.ox.constructions.aggregate([], ["cnstr"], "MAX") + 1;
+	}
+
 
 	this.__define('cnstr', {
 		get : function(){
@@ -269,6 +272,9 @@ function Contour(attr){
 								clr: _contour.project.default_clr()
 							}
 						});
+						curr.profile = elm;
+						if(curr.outer)
+							delete curr.outer;
 						elm.data.binded = true;
 						elm.data.simulated = true;
 						curr.binded = true;

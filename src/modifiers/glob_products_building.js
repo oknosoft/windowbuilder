@@ -673,20 +673,20 @@ $p.modifiers.push(
 				// сворачиваем
 				spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin", "qty,totqty,totqty1");
 
-				$p.rest.build_select(attr, {
-					rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",
-					class_name: "cat.characteristics"
-				});
-
-				return $p.ajax.post_ex(attr.url,
-					JSON.stringify({
-						dp: scheme._dp._obj,
-						ox: ox._obj,
-						doc: ox.calc_order._obj
-					}), attr)
-					.then(function (req) {
-						return JSON.parse(req.response);
-					});
+				//$p.rest.build_select(attr, {
+				//	rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",
+				//	class_name: "cat.characteristics"
+				//});
+				//
+				//return $p.ajax.post_ex(attr.url,
+				//	JSON.stringify({
+				//		dp: scheme._dp._obj,
+				//		ox: ox._obj,
+				//		doc: ox.calc_order._obj
+				//	}), attr)
+				//	.then(function (req) {
+				//		return JSON.parse(req.response);
+				//	});
 
 			});
 

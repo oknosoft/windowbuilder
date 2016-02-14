@@ -129,11 +129,21 @@ Filling.prototype.__define({
 	create_leaf: {
 		value: function () {
 
+			// создаём пустой новый слой
 			var contour = new Contour( {parent: this.parent});
 
+			// задаём его путь - внутри будут созданы профили
 			contour.path = this.profiles;
 
+			// помещаем себя вовнутрь нового слоя
 			this.parent = contour;
+			this._row.cnstr = contour.cnstr;
+
+			// оповещаем мир о новых слоях
+			Object.getNotifier(this.project._noti).notify({
+				type: 'rows',
+				tabular: "constructions"
+			});
 
 		},
 		enumerable : false
