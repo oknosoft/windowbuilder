@@ -122,35 +122,36 @@ function Profile(attr){
 	 * @property nearest
 	 * @type Profile
 	 */
-	var _nearest;
 	this.nearest = function(){
-		var ngeneratrix, nb, ne, children,
+		var ngeneratrix, children,
 			b = _profile.b, e = _profile.e;
 
 		function check_nearest(){
-			if(_nearest){
-				ngeneratrix = _nearest.generatrix;
-				if( ngeneratrix.getNearestPoint(b).is_nearest(b) && ngeneratrix.getNearestPoint(e).is_nearest(e))
+			if(_profile.data._nearest){
+				ngeneratrix = _profile.data._nearest.generatrix;
+				if( ngeneratrix.getNearestPoint(b).is_nearest(b) && ngeneratrix.getNearestPoint(e).is_nearest(e)){
+					_profile.data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, _profile.data._nearest, acn.ii, _profile.data._nearest_cnn);
 					return true;
+				}
 			}
-			_nearest = null;
+			_profile.data._nearest = null;
+			_profile.data._nearest_cnn = null;
 		}
 
 		if(_profile.parent && _profile.parent.parent){
 			if(!check_nearest()){
 				children = _profile.parent.parent.children;
 				for(var p in children){
-					_nearest = children[p];
-					if(_nearest instanceof Profile && check_nearest())
-						return _nearest;
+					if((_profile.data._nearest = children[p]) instanceof Profile && check_nearest())
+						return _profile.data._nearest;
 					else
-						_nearest = null;
+						_profile.data._nearest = null;
 				}
 			}
 		}else
-			_nearest = null;
+			_profile.data._nearest = null;
 
-		return _nearest;
+		return _profile.data._nearest;
 	};
 
 
@@ -561,91 +562,104 @@ Profile.prototype.__define({
 	 */
 	save_coordinates: {
 		value: function () {
-			if(this.data.generatrix){
-				var h = this.project.bounds.height,
-					_row = this._row,
 
-					cnns = this.project.connections.cnns,
-					b = this.rays.b,
-					e = this.rays.e,
-					row_b = cnns.add({
-						elm1: _row.elm,
-						node1: "b",
-						cnn: b.cnn.ref,
-						aperture_len: this.corns(1).getDistance(this.corns(4))
-					}),
-					row_e = cnns.add({
-						elm1: _row.elm,
-						node1: "e",
-						cnn: e.cnn.ref,
-						aperture_len: this.corns(2).getDistance(this.corns(3))
-					}),
+			if(!this.data.generatrix)
+				return;
 
-					gen = this.generatrix,
-					sub_gen,
-					ppoints = {};
+			var h = this.project.bounds.height,
+				_row = this._row,
 
-				_row.x1 = this.b.x.round(3);
-				_row.y1 = (h - this.b.y).round(3);
-				_row.x2 = this.e.x.round(3);
-				_row.y2 = (h - this.e.y).round(3);
-				_row.path_data = gen.pathData;
-				_row.nom = this.nom;
+				cnns = this.project.connections.cnns,
+				b = this.rays.b,
+				e = this.rays.e,
+				row_b = cnns.add({
+					elm1: _row.elm,
+					node1: "b",
+					cnn: b.cnn.ref,
+					aperture_len: this.corns(1).getDistance(this.corns(4))
+				}),
+				row_e = cnns.add({
+					elm1: _row.elm,
+					node1: "e",
+					cnn: e.cnn.ref,
+					aperture_len: this.corns(2).getDistance(this.corns(3))
+				}),
 
-				// находим проекции четырёх вершин на образующую
-				for(var i = 1; i<=4; i++)
-					ppoints[i] = gen.getNearestPoint(this.corns(i));
+				gen = this.generatrix,
+				sub_gen,
+				ppoints = {};
 
-				// находим точки, расположенные ближе к концам образующей
-				ppoints.b = ppoints[1].getDistance(gen.firstSegment.point, true) < ppoints[4].getDistance(gen.firstSegment.point, true) ? ppoints[1] : ppoints[4];
-				ppoints.e = ppoints[2].getDistance(gen.lastSegment.point, true) < ppoints[3].getDistance(gen.lastSegment.point, true) ? ppoints[2] : ppoints[3];
+			_row.x1 = this.b.x.round(3);
+			_row.y1 = (h - this.b.y).round(3);
+			_row.x2 = this.e.x.round(3);
+			_row.y2 = (h - this.e.y).round(3);
+			_row.path_data = gen.pathData;
+			_row.nom = this.nom;
 
-				// получаем фрагмент образующей
-				sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
+			// находим проекции четырёх вершин на образующую
+			for(var i = 1; i<=4; i++)
+				ppoints[i] = gen.getNearestPoint(this.corns(i));
 
-				// добавляем припуски соединений
-				_row.len = sub_gen.length +
-					(b.cnn && !b.cnn.empty() ? b.cnn.sz : 0) +
-					(e.cnn && !e.cnn.empty() ? e.cnn.sz : 0);
-				sub_gen.remove();
+			// находим точки, расположенные ближе к концам образующей
+			ppoints.b = ppoints[1].getDistance(gen.firstSegment.point, true) < ppoints[4].getDistance(gen.firstSegment.point, true) ? ppoints[1] : ppoints[4];
+			ppoints.e = ppoints[2].getDistance(gen.lastSegment.point, true) < ppoints[3].getDistance(gen.lastSegment.point, true) ? ppoints[2] : ppoints[3];
 
-				// сохраняем информацию о соединениях
-				if(b.profile){
-					row_b.elm2 = b.profile._row.elm;
-					if(b.profile.e.is_nearest(b.point))
-						row_b.node2 = "e";
-					else if(b.profile.b.is_nearest(b.point))
-						row_b.node2 = "b";
-					else
-						row_b.node2 = "t";
-				}
-				if(e.profile){
-					row_e.elm2 = e.profile._row.elm;
-					if(e.profile.b.is_nearest(e.point))
-						row_e.node2 = "b";
-					else if(e.profile.e.is_nearest(e.point))
-						row_e.node2 = "b";
-					else
-						row_e.node2 = "t";
-				}
+			// получаем фрагмент образующей
+			sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
 
-				// получаем углы между элементами и к горизонту
-				_row.angle_hor = this.angle_hor;
+			// добавляем припуски соединений
+			_row.len = sub_gen.length +
+				(b.cnn && !b.cnn.empty() ? b.cnn.sz : 0) +
+				(e.cnn && !e.cnn.empty() ? e.cnn.sz : 0);
+			sub_gen.remove();
 
-				_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - sub_gen.getTangentAt(0).angle) * 10) / 10;
-				if(_row.alp1 < 0)
-					_row.alp1 = _row.alp1 + 360;
-
-				_row.alp2 = Math.round((sub_gen.getTangentAt(sub_gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
-				if(_row.alp2 < 0)
-					_row.alp2 = _row.alp2 + 360;
-
-				// устанавливаем тип элемента
-				_row.elm_type = this.elm_type;
-
-				// TODO: Рассчитать положение и ориентацию
-				// вероятно, импост, всегда занимает положение "центр"
+			// сохраняем информацию о соединениях
+			if(b.profile){
+				row_b.elm2 = b.profile._row.elm;
+				if(b.profile.e.is_nearest(b.point))
+					row_b.node2 = "e";
+				else if(b.profile.b.is_nearest(b.point))
+					row_b.node2 = "b";
+				else
+					row_b.node2 = "t";
 			}
+			if(e.profile){
+				row_e.elm2 = e.profile._row.elm;
+				if(e.profile.b.is_nearest(e.point))
+					row_e.node2 = "b";
+				else if(e.profile.e.is_nearest(e.point))
+					row_e.node2 = "b";
+				else
+					row_e.node2 = "t";
+			}
+
+			// для створочных профилей добавляем соединения с внешними элементами
+			if(row_b = this.nearest()){
+				cnns.add({
+					elm1: _row.elm,
+					elm2: row_b.elm,
+					cnn: this.data._nearest_cnn,
+					aperture_len: _row.len
+				});
+			}
+
+			// получаем углы между элементами и к горизонту
+			_row.angle_hor = this.angle_hor;
+
+			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - sub_gen.getTangentAt(0).angle) * 10) / 10;
+			if(_row.alp1 < 0)
+				_row.alp1 = _row.alp1 + 360;
+
+			_row.alp2 = Math.round((sub_gen.getTangentAt(sub_gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
+			if(_row.alp2 < 0)
+				_row.alp2 = _row.alp2 + 360;
+
+			// устанавливаем тип элемента
+			_row.elm_type = this.elm_type;
+
+			// TODO: Рассчитать положение и ориентацию
+			// вероятно, импост, всегда занимает положение "центр"
+
 		},
 		enumerable : false
 	},
@@ -775,11 +789,11 @@ Profile.prototype.__define({
 	 */
 	d0: {
 		get : function(){
-			var res = 0,
-				nearest = this.nearest();
-			while(nearest){
-				res -= nearest.d2 + 20;
-				nearest = nearest.nearest();
+			var res = 0, curr = this, nearest;
+
+			while(nearest = curr.nearest()){
+				res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
+				curr = nearest;
 			}
 			return res;
 		},
