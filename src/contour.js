@@ -48,25 +48,71 @@ function Contour(attr){
 	}
 
 
-	this.__define('cnstr', {
-		get : function(){
-			return _row.cnstr;
+	this.__define({
+
+		_row: {
+			get : function(){
+				return _row;
+			},
+			enumerable : false
 		},
-		set : function(v){
-			_row.cnstr = v;
+
+		cnstr: {
+			get : function(){
+				return _row.cnstr;
+			},
+			set : function(v){
+				_row.cnstr = v;
+			},
+			enumerable : false
 		},
-		enumerable : false
+
+		// служебная группа текстовых комментариев
+		l_text: {
+			get: function () {
+				if(!_layers.text)
+					_layers.text = new paper.Group({
+						parent: _contour
+					});
+				return _layers.text;
+			},
+			enumerable: false
+		},
+
+		// служебная группа визуализации допов
+		l_visualization: {
+			get: function () {
+
+			},
+			enumerable: false
+		},
+
+		// служебная группа размерных линий
+		l_sizes: {
+			get: function () {
+
+			},
+			enumerable: false
+		},
+
+		// служебная группа петель и ручек
+		l_furn: {
+			get: function () {
+
+			},
+			enumerable: false
+		},
+
+		// служебная группа номеров элементов
+		l_elm_no: {
+			get: function () {
+
+			},
+			enumerable: false
+		}
+
 	});
 
-	this.__define('glassno', {
-		get : function(){
-			return _row.glassno;
-		},
-		set : function(v){
-			_row.glassno = v;
-		},
-		enumerable : false
-	});
 
 	/**
 	 * путь контура - при чтении похож на bounds
@@ -299,53 +345,6 @@ function Contour(attr){
 		enumerable : true
 	});
 
-	this.__define({
-
-		// служебная группа текстовых комментариев
-		l_text: {
-			get: function () {
-				if(!_layers.text)
-					_layers.text = new paper.Group({
-						parent: _contour
-					});
-				return _layers.text;
-			},
-			enumerable: false
-		},
-
-		// служебная группа визуализации допов
-		l_visualization: {
-			get: function () {
-
-			},
-			enumerable: false
-		},
-
-		// служебная группа размерных линий
-		l_sizes: {
-			get: function () {
-
-			},
-			enumerable: false
-		},
-
-		// служебная группа петель и ручек
-		l_furn: {
-			get: function () {
-
-			},
-			enumerable: false
-		},
-
-		// служебная группа номеров элементов
-		l_elm_no: {
-			get: function () {
-
-			},
-			enumerable: false
-		}
-
-	});
 
 	/**
 	 * Удаляет контур из иерархии проекта
@@ -633,6 +632,18 @@ function Contour(attr){
 Contour._extend(paper.Layer);
 
 Contour.prototype.__define({
+
+	/**
+	 * Врезаем оповещение при активации слоя
+	 */
+	activate: {
+		value: function() {
+			this.project._activeLayer = this;
+			$p.eve.callEvent("layer_activated", [this]);
+			this.project.register_update();
+		},
+		enumerable : false
+	},
 
 	/**
 	 * Возвращает массив профилей текущего контура
@@ -1144,6 +1155,135 @@ Contour.prototype.__define({
 					nodes.push(res[i]);
 				res.length = 0;
 			}
+		},
+		enumerable : false
+	},
+
+	// виртуальные метаданные для автоформ
+	_metadata: {
+		get : function(){
+			var t = this,
+				_xfields = t.project.ox._metadata.tabular_sections.constructions.fields, //_dgfields = this.project._dp._metadata.fields
+				furn = _xfields.furn._clone();
+			furn.choice_links = [{
+				name: ["selection",	"ref"],
+				path: [
+					function(o, f){
+						if($p.is_data_obj(o)){
+							var ok = false;
+							t.project.sys.furn.find_rows({furn: o}, function (row) {
+								ok = true;
+								return false;
+							});
+							return ok;
+						}else{
+							var refs = "";
+							t.project.sys.furn.each(function (row) {
+								if(refs)
+									refs += ", ";
+								refs += "'" + row.furn.ref + "'";
+							});
+							return "_t_.ref in (" + refs + ")";
+						}
+					}]}
+			];
+
+			return {
+				fields: {
+					furn: furn,
+					clr_furn: _xfields.clr_furn,
+					direction: _xfields.direction,
+					h_ruch: _xfields.h_ruch,
+					mskt: _xfields.mskt,
+					clr_mskt: _xfields.clr_mskt
+				},
+				tabular_sections: {
+					params: t.project.ox._metadata.tabular_sections.params
+				}
+			};
+		},
+		enumerable : false
+	},
+
+	/**
+	 * виртуальный датаменеджер для автоформ
+	 */
+	_manager: {
+		get: function () {
+			return this.project._dp._manager;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * виртуальная табличная часть параметров фурнитуры
+	 */
+	params: {
+		get: function () {
+			return this.project.ox.params;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * указатель на фурнитуру
+	 */
+	furn: {
+		get: function () {
+			return this._row.furn;
+		},
+		set: function (v) {
+			this._row.furn = v;
+		},
+		enumerable : false
+	},
+
+	clr_furn: {
+		get: function () {
+			return this._row.clr_furn;
+		},
+		set: function (v) {
+			this._row.clr_furn = v;
+		},
+		enumerable : false
+	},
+
+	direction: {
+		get: function () {
+			return this._row.direction;
+		},
+		set: function (v) {
+			this._row.direction = v;
+		},
+		enumerable : false
+	},
+
+	h_ruch: {
+		get: function () {
+			return this._row.h_ruch;
+		},
+		set: function (v) {
+			this._row.h_ruch = v;
+		},
+		enumerable : false
+	},
+
+	mskt: {
+		get: function () {
+			return this._row.mskt;
+		},
+		set: function (v) {
+			this._row.mskt = v;
+		},
+		enumerable : false
+	},
+
+	clr_mskt: {
+		get: function () {
+			return this._row.clr_mskt;
+		},
+		set: function (v) {
+			this._row.clr_mskt = v;
 		},
 		enumerable : false
 	}

@@ -287,22 +287,18 @@ paper.Tool.prototype.__define({
 			this.profile = profile;
 
 			if(!this.wnd || !this._grid){
-				$p.wsql.restore_options("editor", this.options);
-				this.wnd = $p.iface.dat_blank(_editor._dxw, this.options.wnd);
-				this.wnd.buttons = this.wnd.bottom_toolbar({
-					wrapper: this.wnd.cell, width: '100%', height: '28px', bottom: '0px', left: '0px', name: 'aling_bottom',
-					buttons: [
-						{name: 'left', img: 'align_left.png', title: $p.msg.align_node_left, float: 'left'},
-						{name: 'bottom', img: 'align_bottom.png', title: $p.msg.align_node_bottom, float: 'left'},
-						{name: 'top', img: 'align_top.png', title: $p.msg.align_node_top, float: 'left'},
-						{name: 'right', img: 'align_right.png', title: $p.msg.align_node_right, float: 'left'},
-						{name: 'delete', img: 'trash.gif', title: 'Удалить элемент', clear: 'right', float: 'right'}
-					],
-					image_path: "dist/imgs/",
-					onclick: function (name) {
-						return _editor.profile_align(name);
-					}
-				});
+
+				//$p.wsql.restore_options("editor", this.options);
+				//this.wnd = $p.iface.dat_blank(_editor._dxw, this.options.wnd);
+
+				this.wnd = _editor._acc.elm.cells("a");
+
+
+				//var sbar = this.wnd.attachStatusBar({height: 12});
+				//sbar.style.zIndex = -1000;
+				//sbar.firstChild.style.backgroundColor = "transparent";
+				//sbar.firstChild.style.border = "none";
+				//sbar = null;
 
 				this._grid = this.wnd.attachHeadFields({
 					obj: profile,
@@ -315,9 +311,9 @@ paper.Tool.prototype.__define({
 				});
 				this._grid.attachEvent("onRowSelect", function(id,ind){
 					if(id == "x1" || id == "y1")
-						profile.select_node("b");
+						this._obj.select_node("b");
 					else if(id == "x2" || id == "y2")
-						profile.select_node("e");
+						this._obj.select_node("e");
 				});
 			}else{
 				this._grid.attach({obj: profile})

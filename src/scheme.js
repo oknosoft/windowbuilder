@@ -173,7 +173,7 @@ function Scheme(_canvas){
 		}
 		if(!hit)
 			hit = _scheme.hitTest(point, { segments: true, tolerance: 4 });
-		if(hit && hit.item.layer.parent){
+		if(hit && hit.item.layer && hit.item.layer.parent){
 			item = hit.item;
 			// если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
 			if(
