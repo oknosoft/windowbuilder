@@ -75,6 +75,7 @@ gulp.task('build-lib', function(){
 			'./src/tool_select_elm.js',
 			'./src/tool_select_node.js',
 			'./src/tool_text.js',
+			'./src/editor_accordion.js',
 			'./src/editor.js',
 			'./data/merged_wb_tips.js'
 		])

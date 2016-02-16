@@ -224,8 +224,8 @@ $p.modifiers.push(
 							// TODO: Строго говоря, нужно брать не размер соединения, а размеры предыдущего и последующего
 							row_spec.qty = row_cnn_spec.quantity;
 							if(row_cnn_spec.sz || row_cnn_spec.coefficient)
-								row_spec.len = (len_angl.len - (sign < 0 ? cnn.sz * 2 : 0) - sign * 2 * row_cnn_spec.sz) *
-									(row_cnn_spec.coefficient || 1);
+								row_spec.len = (len_angl.len - (len_angl.glass ? cnn.sz * 2 : 0) - sign * 2 * row_cnn_spec.sz) *
+									(row_cnn_spec.coefficient || 0.001);
 						}
 
 					}else {
@@ -436,8 +436,16 @@ $p.modifiers.push(
 			/**
 			 * Спецификации соединений
 			 */
-			function spec_cnns(scheme) {
-
+			function spec_nearest_cnn(elm) {
+				var nearest = elm.nearest();
+				if(nearest && elm.data._nearest_cnn)
+					add_cnn_spec(elm.data._nearest_cnn, elm, {
+						angle:  0,
+						alp1:   0,
+						alp2:   0,
+						len:    elm.data._len,
+						origin: cnn_row(elm.elm, nearest.elm)
+					});
 			}
 
 			/**
@@ -548,6 +556,7 @@ $p.modifiers.push(
 
 						// profile.Длина - то, что получится после обработки
 						// row_spec.Длина - сколько взять (отрезать)
+						curr.data._len = _row.len;
 						_row.len = (_row.len
 							- (!row_cnn_prev || row_cnn_prev.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_prev.sz)
 							- (!row_cnn_next || row_cnn_next.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_next.sz))
@@ -579,7 +588,7 @@ $p.modifiers.push(
 
 								// для него надо рассчитать еще и с другой стороны
 								if(need_add_cnn_spec(e.cnn, next ? next.elm : 0, _row.elm)){
-								//	ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
+								//	TODO: ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
 								}
 							}
 
@@ -601,6 +610,10 @@ $p.modifiers.push(
 
 						// Спецификация вставки
 						spec_insets(curr);
+
+						// Если у профиля есть примыкающий элемент, добавим спецификацию соединения
+						if(contour.parent)
+							spec_nearest_cnn(curr);
 
 					});
 
@@ -625,7 +638,8 @@ $p.modifiers.push(
 								alp1: prev.generatrix.angle_to(curr.profile.generatrix, curr.b, true),
 								alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
 								len: row_cnn.length ? row_cnn[0].aperture_len : 0,
-								origin: cnn_row(_row.elm, curr.profile.elm)
+								origin: cnn_row(_row.elm, curr.profile.elm),
+								glass: true
 
 							};
 
