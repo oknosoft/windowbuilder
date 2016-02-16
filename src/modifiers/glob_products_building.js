@@ -122,7 +122,7 @@ $p.modifiers.push(
 					else{
 						if(!nom.is_pieces){
 							row_spec.qty = row_base.quantity;
-							row_spec.len = (len - row_base.sz) * (row_base.coefficient || 1);
+							row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
 							if(nom.rounding_quantity){
 								row_spec.qty = (row_spec.qty * row_spec.len).round(nom.rounding_quantity);
 								row_spec.len = 0;
@@ -138,7 +138,7 @@ $p.modifiers.push(
 
 				}else{
 					row_spec.qty = row_base.quantity;
-					row_spec.len = (len - row_base.sz) * (row_base.coefficient || 1);
+					row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
 				}
 			}
 
