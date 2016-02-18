@@ -20,8 +20,18 @@ $p.settings = function (prm, modifiers) {
 	//prm.rest = true;
 	prm.irest_enabled = true;
 
-	// расположение rest-сервиса ut
+	// расположение rest-сервиса 1c
 	prm.rest_path = "/a/zd/%1/odata/standard.odata/";
+
+	// расположение couchdb
+	prm.couchdb = "http://localhost:89/couchdb/wb_";
+	//prm.couchdb = "http://192.168.9.136:5984/wb_";
+
+	// логин гостевого пользователя
+	prm.guest_name = "adm01";
+
+	// пароль гостевого пользователя
+	prm.guest_pwd = "13 _Morte";
 
 	// скин по умолчанию
 	prm.skin = "dhx_terrace";

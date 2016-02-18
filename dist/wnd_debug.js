@@ -1789,7 +1789,7 @@ $p.modifiers.push(
 					else{
 						if(!nom.is_pieces){
 							row_spec.qty = row_base.quantity;
-							row_spec.len = (len - row_base.sz) * (row_base.coefficient || 1);
+							row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
 							if(nom.rounding_quantity){
 								row_spec.qty = (row_spec.qty * row_spec.len).round(nom.rounding_quantity);
 								row_spec.len = 0;
@@ -1805,7 +1805,7 @@ $p.modifiers.push(
 
 				}else{
 					row_spec.qty = row_base.quantity;
-					row_spec.len = (len - row_base.sz) * (row_base.coefficient || 1);
+					row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
 				}
 			}
 
@@ -2567,8 +2567,18 @@ $p.settings = function (prm, modifiers) {
 	//prm.rest = true;
 	prm.irest_enabled = true;
 
-	// расположение rest-сервиса ut
+	// расположение rest-сервиса 1c
 	prm.rest_path = "/a/zd/%1/odata/standard.odata/";
+
+	// расположение couchdb
+	prm.couchdb = "http://localhost:89/couchdb/wb_";
+	//prm.couchdb = "http://192.168.9.136:5984/wb_";
+
+	// логин гостевого пользователя
+	prm.guest_name = "adm01";
+
+	// пароль гостевого пользователя
+	prm.guest_pwd = "13 _Morte";
 
 	// скин по умолчанию
 	prm.skin = "dhx_terrace";
