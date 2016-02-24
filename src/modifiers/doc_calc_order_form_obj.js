@@ -247,22 +247,23 @@ $p.modifiers.push(
 					wnd.elmnts.discount.setItemValue("services", 0);
 					wnd.elmnts.discount.attachEvent("onButtonClick", function(name){
 						wnd.progressOn();
-						_mgr.save({
-							ref: o.ref,
-							discounts: {
-								production: $p.fix_number(wnd.elmnts.discount.getItemValue("production"), true),
-								accessories: $p.fix_number(wnd.elmnts.discount.getItemValue("accessories"), true),
-								services: $p.fix_number(wnd.elmnts.discount.getItemValue("services"), true)
-							},
-							o: o._obj,
-							action: "calc",
-							specify: "discounts"
-						}).then(function(res){
-							if(!$p.msg.check_soap_result(res))
-								wnd.reflect_characteristic_change(res); // - перезаполнить шапку и табчасть
-							wnd.progressOff();
-							wnd.elmnts.discount_pop.hide();
-						});
+						// TODO: _mgr.save
+						//_mgr.save({
+						//	ref: o.ref,
+						//	discounts: {
+						//		production: $p.fix_number(wnd.elmnts.discount.getItemValue("production"), true),
+						//		accessories: $p.fix_number(wnd.elmnts.discount.getItemValue("accessories"), true),
+						//		services: $p.fix_number(wnd.elmnts.discount.getItemValue("services"), true)
+						//	},
+						//	o: o._obj,
+						//	action: "calc",
+						//	specify: "discounts"
+						//}).then(function(res){
+						//	if(!$p.msg.check_soap_result(res))
+						//		wnd.reflect_characteristic_change(res); // - перезаполнить шапку и табчасть
+						//	wnd.progressOff();
+						//	wnd.elmnts.discount_pop.hide();
+						//});
 					});
 				}
 			}
@@ -284,17 +285,18 @@ $p.modifiers.push(
 			function production_on_value_change(rId){
 
 				wnd.progressOn();
-				_mgr.save({
-					ref: o.ref,
-					row: rId!=undefined ? rId : production_get_sel_index(),
-					o: o._obj,
-					action: "calc",
-					specify: "production"
-				}).then(function(res){
-					if(!$p.msg.check_soap_result(res))
-						wnd.reflect_characteristic_change(res); // - перезаполнить шапку и табчасть
-					wnd.progressOff();
-				});
+				// TODO: _mgr.save
+				//_mgr.save({
+				//	ref: o.ref,
+				//	row: rId!=undefined ? rId : production_get_sel_index(),
+				//	o: o._obj,
+				//	action: "calc",
+				//	specify: "production"
+				//}).then(function(res){
+				//	if(!$p.msg.check_soap_result(res))
+				//		wnd.reflect_characteristic_change(res); // - перезаполнить шапку и табчасть
+				//	wnd.progressOff();
+				//});
 			}
 
 			/**
@@ -466,17 +468,18 @@ $p.modifiers.push(
 				}
 
 				wnd.progressOn();
-				_mgr.save({
-					ref: o.ref,
-					del_row: rId,
-					o: o._obj,
-					action: "calc",
-					specify: "production"
-				}).then(function(res){
-					if(!$p.msg.check_soap_result(res))			// сервер об ошибках не сообщил. считаем, что данные записались
-						wnd.reflect_characteristic_change(res); // - перезаполнить шапку и табчасть
-					wnd.progressOff();
-				});
+				// TODO: _mgr.save
+				//_mgr.save({
+				//	ref: o.ref,
+				//	del_row: rId,
+				//	o: o._obj,
+				//	action: "calc",
+				//	specify: "production"
+				//}).then(function(res){
+				//	if(!$p.msg.check_soap_result(res))			// сервер об ошибках не сообщил. считаем, что данные записались
+				//		wnd.reflect_characteristic_change(res); // - перезаполнить шапку и табчасть
+				//	wnd.progressOff();
+				//});
 			}
 
 			function save(action){
@@ -485,22 +488,23 @@ $p.modifiers.push(
 
 					wnd.progressOn();
 					o.note = wnd.elmnts.note_editor.getContent();
-					_mgr.save({
-						ref: o.ref,
-						o: o._obj,
-						action: "calc"
-					}).then(function(res){
-						if(!$p.msg.check_soap_result(res)) {
-							o._mixin(res.calc_order);
-							production_refresh();
-							header_refresh();
-							set_editable();
-							setTimeout(function(){
-								$p.iface.grid_calc_order.reload(undefined, true);
-							}, 200);
-						}
-						wnd.progressOff();
-					});
+					// TODO: _mgr.save
+					//_mgr.save({
+					//	ref: o.ref,
+					//	o: o._obj,
+					//	action: "calc"
+					//}).then(function(res){
+					//	if(!$p.msg.check_soap_result(res)) {
+					//		o._mixin(res.calc_order);
+					//		production_refresh();
+					//		header_refresh();
+					//		set_editable();
+					//		setTimeout(function(){
+					//			$p.iface.grid_calc_order.reload(undefined, true);
+					//		}, 200);
+					//	}
+					//	wnd.progressOff();
+					//});
 				}
 
 				if(action == "sent"){
@@ -555,11 +559,11 @@ $p.modifiers.push(
 				wnd.elmnts.pg_right.cells("vat_consider", 1).setDisabled(true);
 				wnd.elmnts.pg_right.cells("vat_included", 1).setDisabled(true);
 
-				wnd.elmnts.ro = o["posted"] || o["deleted"];
+				wnd.elmnts.ro = o["posted"] || o["_deleted"];
 				if(!wnd.elmnts.ro && !o["obj_delivery_state"].empty())
 					wnd.elmnts.ro = !($p.is_equal(o["obj_delivery_state"], st_draft) || $p.is_equal(o["obj_delivery_state"], st_retrieve));
 
-				retrieve_enabed = !o["deleted"] &&
+				retrieve_enabed = !o["_deleted"] &&
 					($p.is_equal(o["obj_delivery_state"], st_sent) || $p.is_equal(o["obj_delivery_state"], st_rejected));
 
 				wnd.elmnts.grids.production.setEditable(!wnd.elmnts.ro);
@@ -636,18 +640,19 @@ $p.modifiers.push(
 			function process_add_product(new_rows){
 
 				wnd.progressOn();
-				_mgr.save({
-					ref: o.ref,
-					row: 0,
-					o: o._obj,
-					action: "calc",
-					specify: "product_list",
-					new_rows: new_rows
-				}).then(function(res){
-					if(!$p.msg.check_soap_result(res))
-						wnd.reflect_characteristic_change(res);
-					wnd.progressOff();
-				});
+				// TODO: _mgr.save
+				//_mgr.save({
+				//	ref: o.ref,
+				//	row: 0,
+				//	o: o._obj,
+				//	action: "calc",
+				//	specify: "product_list",
+				//	new_rows: new_rows
+				//}).then(function(res){
+				//	if(!$p.msg.check_soap_result(res))
+				//		wnd.reflect_characteristic_change(res);
+				//	wnd.progressOff();
+				//});
 			}
 
 		}

@@ -117,15 +117,15 @@ $p.iface.OSvgs = function (manager, layout, area) {
 		if(!area_hidden)
 			setTimeout(function(){
 				if(stack.length){
-					manager.save({
-							ref: stack.pop(),
-							specify: "order_pics",
-							action: "calc",
-							async: true
-						})
-						.then(draw_svgs)
-						.catch($p.record_log);
-					stack.length = 0;
+					//manager.save({
+					//		ref: stack.pop(),
+					//		specify: "order_pics",
+					//		action: "calc",
+					//		async: true
+					//	})
+					//	.then(draw_svgs)
+					//	.catch($p.record_log);
+					//stack.length = 0;
 				}
 			}, 300);
 	}
