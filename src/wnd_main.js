@@ -23,15 +23,24 @@ $p.settings = function (prm, modifiers) {
 	// расположение rest-сервиса 1c
 	prm.rest_path = "/a/zd/%1/odata/standard.odata/";
 
+	// по умолчанию, обращаемся к зоне 0
+	prm.zone = 0;
+
 	// расположение couchdb
-	prm.couchdb = "http://localhost:89/couchdb/wb_";
+	prm.couch_path = "/couchdb/wb_";
 	//prm.couchdb = "http://192.168.9.136:5984/wb_";
 
-	// логин гостевого пользователя
-	prm.guest_name = "adm01";
+	// логин гостевого пользователя couchdb
+	prm.guest_name = "guest";
 
-	// пароль гостевого пользователя
-	prm.guest_pwd = "13 _Morte";
+	// пароль гостевого пользователя couchdb
+	prm.guest_pwd = "meta";
+
+	// гостевые пользователи для демо-режима
+	prm.guests = [{
+		username: "Дилер",
+		password: "2"
+	}];
 
 	// скин по умолчанию
 	prm.skin = "dhx_terrace";
@@ -39,20 +48,14 @@ $p.settings = function (prm, modifiers) {
 	// сокет временно отключаем
 	// prm.ws_url = "ws://builder.oknosoft.local:8001";
 
-	// по умолчанию, обращаемся к зоне 0
-	prm.zone = 0;
-
-	// расположение файлов данных
+	// TODO: удалить расположение файлов данных
 	prm.data_url = "data/";
 
 	// используем геокодер
 	prm.use_ip_geo = true;
 
-	// полноэкранный режим на мобильных
-	prm.request_full_screen = true;
-
 	// разрешаем покидать страницу без лишних вопросов
-	$p.eve.redirect = true;
+	// $p.eve.redirect = true;
 
 };
 
@@ -93,17 +96,54 @@ $p.iface.oninit = function() {
 
 	});
 
-	// активируем страницу
-	hprm = $p.job_prm.parse_url();
-	if(!hprm.view || $p.iface.main.getAllItems().indexOf(hprm.view) == -1){
-		$p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, "orders");
-	} else
-		setTimeout($p.iface.hash_route, 10);
-
+	// подписываемся на событие готовности метаданных
 	var dt = Date.now();
-	dhx4.attachEvent("meta", function () {
+	$p.eve.attachEvent("meta", function () {
 		console.log(Date.now() - dt);
+
+		$p.iface.main.progressOn();
+
+		// активируем страницу
+		hprm = $p.job_prm.parse_url();
+		if(!hprm.view || $p.iface.main.getAllItems().indexOf(hprm.view) == -1){
+			$p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, "orders");
+		} else
+			setTimeout($p.iface.hash_route);
+
 	});
+
+	// Подписываемся на событие окончания загрузки локальных данных
+	var data_loaded = $p.eve.attachEvent("pouch_load_data_loaded", function () {
+
+		$p.iface.main.progressOff();
+
+		// если разрешено сохранение пароля - сразу пытаемся залогиниться
+		if(navigator.onLine &&
+			$p.wsql.get_user_param("enable_save_pwd") &&
+			$p.wsql.get_user_param("user_name") &&
+			$p.wsql.get_user_param("user_pwd")){
+
+			setTimeout(function () {
+				$p.iface.frm_auth({
+					modal_dialog: true,
+					try_auto: true
+				});
+			}, 100);
+		}
+
+		$p.eve.detachEvent(data_loaded);
+
+	});
+
+	// Подписываемся на событие окончания загрузки локальных данных
+	var data_loaded = $p.eve.attachEvent("pouch_load_data_error", function (err) {
+
+		$p.iface.main.progressOff();
+
+	});
+
+
+
 
 };
 

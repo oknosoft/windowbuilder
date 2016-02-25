@@ -67,37 +67,34 @@ $p.iface.view_orders = function (cell) {
 
 			if(hprm.view == "orders"){
 
-				if($p.eve.logged_in){
+				if(hprm.obj == "doc.calc_order" && !$p.is_empty_guid(hprm.ref)){
 
-					if(hprm.obj == "doc.calc_order" && !$p.is_empty_guid(hprm.ref)){
-
-						if(hprm.frm != "doc")
-							setTimeout(function () {
-								$p.iface.set_hash(undefined, undefined, "doc");
-							});
-						else
-							show_doc(hprm.ref);
+					if(hprm.frm != "doc")
+						setTimeout(function () {
+							$p.iface.set_hash(undefined, undefined, "doc");
+						});
+					else
+						show_doc(hprm.ref);
 
 
-					} if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
+				} if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
 
-						if(hprm.frm != "builder")
-							setTimeout(function () {
-								$p.iface.set_hash(undefined, undefined, "builder");
-							});
-						else
-							show_builder(hprm.ref);
+					if(hprm.frm != "builder")
+						setTimeout(function () {
+							$p.iface.set_hash(undefined, undefined, "builder");
+						});
+					else
+						show_builder(hprm.ref);
 
 
-					}else if($p.is_empty_guid(hprm.ref) || hprm.frm == "list"){
+				}else{
 
-						if(hprm.obj != "doc.calc_order")
-							setTimeout(function () {
-								$p.iface.set_hash("doc.calc_order");
-							});
-						else
-							show_list();
-					}
+					if(hprm.obj != "doc.calc_order")
+						setTimeout(function () {
+							$p.iface.set_hash("doc.calc_order", "", "list");
+						});
+					else
+						show_list();
 				}
 
 				return false;
@@ -105,7 +102,7 @@ $p.iface.view_orders = function (cell) {
 
 		}
 
-		function on_log_in(){
+		function create_elmnts(){
 
 			// создадим экземпляр графического редактора
 			var _cell = t.carousel.cells("builder"),
@@ -141,24 +138,32 @@ $p.iface.view_orders = function (cell) {
 		t.tb_nav = new $p.iface.OTooolBar({
 			wrapper: cell.cell.querySelector(".dhx_cell_sidebar_hdr"),
 			class_name: 'md_otbnav',
-			width: '220px', height: '28px', top: '3px', right: '3px', name: 'right',
+			width: '200px', height: '28px', top: '3px', right: '3px', name: 'right',
 			buttons: [
 				{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', title: 'О&nbsp;программе', float: 'right'},
 				{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', title: 'Настройки', float: 'right'},
 				{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', title: 'Планирование', float: 'right'},
-				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', title: 'Заказы', float: 'right'}
+				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', title: 'Заказы', float: 'right'},
+				{name: 'auth', text: '<i class="fa fa-sign-in md-fa-lg"></i>', title: 'Авторизация', float: 'left'},
+				{name: 'bell', text: '<i class="fa fa-bell-o md-fa-lg"></i>', float: 'left'}
 
 				//{name: 'filter', text: '<i class="fa fa-filter md-fa-lg"></i>', title: 'Фильтр', float: 'left'}
 
 			], onclick: function (name) {
+
 				if(['settings', 'about', 'events'].indexOf(name) != -1)
 					$p.iface.main.cells(name).setActive(true);
-				else {
 
+				else if(name == 'auth') {
+					$p.iface.frm_auth({
+						modal_dialog: true
+						//, try_auto: true
+					});
 				}
 				return false;
 			}
 		});
+		$(t.tb_nav.buttons.bell).addClass("disabledbutton");
 
 		// страницы карусели
 		t.carousel = cell.attachCarousel({
@@ -174,12 +179,12 @@ $p.iface.view_orders = function (cell) {
 		t.carousel.addCell("builder");
 
 
-		// Рисуем стандартную форму аутентификации. К ней уже привязан алгоритм входа по умолчанию
-		// При необходимости, можно реализовать клиентские сертификаты, двухфакторную авторизацию с одноразовыми sms и т.д.
-		if($p.eve.logged_in)
-			setTimeout(on_log_in);
+		// Подписываемся на событие окончания загрузки локальных данных
+		// и рисум список заказов и заготовку графического редактора
+		if($p.wsql.pouch._data_loaded)
+			setTimeout(create_elmnts);
 		else
-			$p.iface.frm_auth({	cell: t.carousel.cells("list") }, null, $p.record_log );
+			$p.eve.attachEvent("pouch_load_data_loaded", create_elmnts);
 
 
 		/**
@@ -188,13 +193,6 @@ $p.iface.view_orders = function (cell) {
 		 * @return {boolean}
 		 */
 		$p.eve.hash_route.push(hash_route);
-
-
-		// слушаем событие online-offline
-
-
-		// слушаем событие авторизации и входа в систему
-		$p.eve.attachEvent("log_in", on_log_in);
 
 	}
 

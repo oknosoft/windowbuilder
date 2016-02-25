@@ -45,27 +45,43 @@ $p.modifiers.push(
 			attr.draw_tabular_sections = function (o, wnd, tabular_init) {
 
 				/**
+				 * получим задействованные в заказе объекты характеристик
+				 */
+				var refs = [];
+				o.production.each(function (row) {
+					if(!$p.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new())
+						refs.push(row._obj.characteristic);
+				});
+				$p.cat.characteristics.pouch_load_array(refs)
+					.then(function () {
+
+						/**
+						 * табчасть продукции
+						 */
+						tabular_init("production", $p.injected_data["toolbar_calc_order_production.xml"]);
+
+						var toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
+						toolbar.addSpacer("btn_delete");
+						toolbar.attachEvent("onclick", toolbar_click);
+
+						// попап для присоединенных файлов
+						wnd.elmnts.discount_pop = new dhtmlXPopup({
+							toolbar: toolbar,
+							id: "btn_discount"
+						});
+						wnd.elmnts.discount_pop.attachEvent("onShow", show_discount);
+
+						// в зависимости от статуса
+						setTimeout(set_editable, 50);
+
+					})
+
+				/**
 				 *	статусбар с картинками
 				 */
 				wnd.elmnts.statusbar = wnd.attachStatusBar({text: "<div></div>"});
 				wnd.elmnts.svgs = new $p.iface.OSvgs($p.doc.calc_order, wnd, wnd.elmnts.statusbar);
 				wnd.elmnts.svgs.reload(o.ref);
-
-				/**
-				 * табчасть продукции
-				 */
-				tabular_init("production", $p.injected_data["toolbar_calc_order_production.xml"]);
-
-				var toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
-				toolbar.addSpacer("btn_delete");
-				toolbar.attachEvent("onclick", toolbar_click);
-
-				// попап для присоединенных файлов
-				wnd.elmnts.discount_pop = new dhtmlXPopup({
-					toolbar: toolbar,
-					id: "btn_discount"
-				});
-				wnd.elmnts.discount_pop.attachEvent("onShow", show_discount);
 
 			};
 
@@ -154,9 +170,6 @@ $p.modifiers.push(
 
 					o = res.o;
 					wnd = res.wnd;
-
-					// в зависимости от статуса
-					setTimeout(set_editable, 50);
 
 					return res;
 				});

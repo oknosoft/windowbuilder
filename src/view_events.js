@@ -9,8 +9,75 @@
 $p.iface.view_events = function (cell) {
 
 	function OViewEvents(){
-		cell.attachHTMLString($p.injected_data['view_about.html']);
-		cell.cell.querySelector(".dhx_cell_cont_sidebar").style.overflow = "auto";
+
+		var t = this;
+
+		function create_scheduler(){
+			//scheduler.config.xml_date="%Y-%m-%d %H:%i";
+			scheduler.config.first_hour = 8;
+			scheduler.config.last_hour = 22;
+
+			var sTabs = '<div class="dhx_cal_tab" name="day_tab" style="right:204px;"></div>'+
+				'<div class="dhx_cal_tab" name="week_tab" style="right:140px;"></div>'+
+				'<div class="dhx_cal_tab" name="month_tab" style="right:280px;"></div>'+
+				'<div class="dhx_cal_date"></div><div class="dhx_minical_icon">&nbsp;</div>';
+			//'<div class="dhx_cal_tab" name="timeline_tab" style="right:76px;"></div>';
+
+			t._scheduler = cell.attachScheduler(null, "week", sTabs);
+
+			t._scheduler.attachEvent("onBeforeViewChange", function(old_mode, old_date, mode, date){
+				//if(mode == "timeline"){
+				//	$p.msg.show_not_implemented();
+				//	return false;
+				//}
+				return true;
+			});
+		}
+
+		function show_doc(){
+
+		}
+		function show_list(){
+
+		}
+
+		function hash_route(hprm) {
+
+			if(hprm.view == "events"){
+
+				if(hprm.obj != "doc.planning_event")
+					setTimeout(function () {
+						$p.iface.set_hash("doc.planning_event");
+					});
+				else{
+
+					if(!$p.is_empty_guid(hprm.ref)){
+
+						//if(hprm.frm != "doc")
+						//	setTimeout(function () {
+						//		$p.iface.set_hash(undefined, undefined, "doc");
+						//	});
+						//else
+						//	show_doc(hprm.ref);
+
+
+					} else if($p.is_empty_guid(hprm.ref) || hprm.frm == "list"){
+
+						show_list();
+					}
+				}
+
+				return false;
+			}
+
+		}
+
+		if(!window.dhtmlXScheduler){
+			$p.load_script("//oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.min.js", "script", create_scheduler);
+			$p.load_script("//oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.css", "link");
+		}else
+			create_scheduler();
+
 
 		this.tb_nav = new $p.iface.OTooolBar({
 			wrapper: cell.cell.querySelector(".dhx_cell_sidebar_hdr"),
@@ -27,6 +94,13 @@ $p.iface.view_events = function (cell) {
 				return false;
 			}
 		});
+
+		/**
+		 * Обработчик маршрутизации
+		 * @param hprm
+		 * @return {boolean}
+		 */
+		$p.eve.hash_route.push(hash_route);
 
 	}
 

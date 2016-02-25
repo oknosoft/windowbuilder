@@ -1,0 +1,48 @@
+CACHE MANIFEST
+# 000000000004
+
+# Additional resources to cache
+CACHE:
+
+# Заголовок и библиотеки
+index.html
+
+
+# Эти позиции включаем только в продакшене
+#
+
+# А эти - только в дебагере
+lib/dhtmlx_debug.js
+lib/alasql/alasql.js
+lib/paper-core.js
+lib/jquery-2.2.0.min.js
+lib/baron/baron.min.js
+lib/pouchdb/pouchdb.js
+lib/metadata.js
+dist/windowbuilder.js
+dist/wnd_debug.js
+
+
+# css и картинки
+
+lib/font-awesome-4.5.0/css/font-awesome.min.css
+lib/font-awesome-4.5.0/fonts/fontawesome-webfont.woff2?v=4.5.0
+dist_md/dhx_terrace.css
+lib/metadata.css
+dist/windowbuilder.min.css
+lib/baron/baron.css
+
+dist/imgs/fav-wnd.ico
+dist/imgs/fav-md144.png
+
+
+# offline.html will be displayed if the user is offline
+# FALLBACK:
+# / offline.html
+
+# All other resources (e.g. sites) require the user to be online.
+NETWORK:
+
+# данные - xml-ки форм, панелей и менюшек
+
+*

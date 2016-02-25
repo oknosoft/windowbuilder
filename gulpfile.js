@@ -1,5 +1,5 @@
 /**
- * gulpfile.js for metastore.js
+ * gulpfile.js for windowbuilder.js
  *
  * Created 12.12.2015<br />
  * @author  Evgeniy Malyarov
