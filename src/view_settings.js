@@ -25,12 +25,12 @@ $p.iface.view_settings = function (cell) {
 		t.tb_nav = new $p.iface.OTooolBar({
 			wrapper: cell.cell.querySelector(".dhx_cell_sidebar_hdr"),
 			class_name: 'md_otbnav',
-			width: '200px', height: '28px', top: '3px', right: '3px', name: 'right',
+			width: '180px', height: '28px', top: '3px', right: '3px', name: 'right',
 			buttons: [
-				{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', title: 'О&nbsp;программе', float: 'right'},
-				{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', title: 'Настройки', float: 'right'},
-				{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', title: 'Планирование', float: 'right'},
-				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', title: 'Заказы', float: 'right'}
+				{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
+				{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
+				{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
+				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'}
 
 
 			], onclick: function (name) {

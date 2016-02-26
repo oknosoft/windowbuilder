@@ -5,8 +5,8 @@
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
  *
- * @module  wdg_rsvg
- * @requires common
+ * @module  widgets
+ * @submodule rsvg
  */
 
 /**

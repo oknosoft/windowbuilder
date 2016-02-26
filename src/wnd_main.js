@@ -96,6 +96,8 @@ $p.iface.oninit = function() {
 
 	});
 
+	$p.iface.btn_auth_sync = new OBtnAuthSync();
+
 	// подписываемся на событие готовности метаданных
 	var dt = Date.now();
 	$p.eve.attachEvent("meta", function () {
@@ -113,12 +115,12 @@ $p.iface.oninit = function() {
 	});
 
 	// Подписываемся на событие окончания загрузки локальных данных
-	var data_loaded = $p.eve.attachEvent("pouch_load_data_loaded", function () {
+	var pouch_data_loaded = $p.eve.attachEvent("pouch_load_data_loaded", function () {
 
 		$p.iface.main.progressOff();
 
 		// если разрешено сохранение пароля - сразу пытаемся залогиниться
-		if(navigator.onLine &&
+		if(!$p.wsql.pouch.authorized && navigator.onLine &&
 			$p.wsql.get_user_param("enable_save_pwd") &&
 			$p.wsql.get_user_param("user_name") &&
 			$p.wsql.get_user_param("user_pwd")){
@@ -131,13 +133,19 @@ $p.iface.oninit = function() {
 			}, 100);
 		}
 
-		$p.eve.detachEvent(data_loaded);
+		$p.eve.detachEvent(pouch_data_loaded);
 
 	});
 
 	// Подписываемся на событие окончания загрузки локальных данных
-	var data_loaded = $p.eve.attachEvent("pouch_load_data_error", function (err) {
+	var pouch_load_data_error = $p.eve.attachEvent("pouch_load_data_error", function (err) {
 
+		// если это первый запуск, показываем диалог авторизации
+		if(err.db_name && err.hasOwnProperty("doc_count") && err.doc_count < 10){
+			$p.iface.frm_auth({
+				modal_dialog: true
+			});
+		}
 		$p.iface.main.progressOff();
 
 	});

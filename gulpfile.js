@@ -96,7 +96,7 @@ gulp.task('build-iface', function(){
 	gulp.src([
 		'./src/modifiers/*.js',
 		'./data/merged_wb_templates.js',
-		'./src/wdg_*.js',
+		'./src/widgets/*.js',
 		'./src/wnd_main.js',
 		'./src/view_*.js'
 	])

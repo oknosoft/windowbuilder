@@ -138,32 +138,26 @@ $p.iface.view_orders = function (cell) {
 		t.tb_nav = new $p.iface.OTooolBar({
 			wrapper: cell.cell.querySelector(".dhx_cell_sidebar_hdr"),
 			class_name: 'md_otbnav',
-			width: '200px', height: '28px', top: '3px', right: '3px', name: 'right',
+			width: '180px', height: '28px', top: '3px', right: '3px', name: 'right',
 			buttons: [
-				{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', title: 'О&nbsp;программе', float: 'right'},
-				{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', title: 'Настройки', float: 'right'},
-				{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', title: 'Планирование', float: 'right'},
-				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', title: 'Заказы', float: 'right'},
-				{name: 'auth', text: '<i class="fa fa-sign-in md-fa-lg"></i>', title: 'Авторизация', float: 'left'},
-				{name: 'bell', text: '<i class="fa fa-bell-o md-fa-lg"></i>', float: 'left'}
+				{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
+				{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
+				{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
+				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
+				{name: 'auth', text: '', float: 'left'},
+				{name: 'sync', text: '', float: 'left'}
 
-				//{name: 'filter', text: '<i class="fa fa-filter md-fa-lg"></i>', title: 'Фильтр', float: 'left'}
+				//{name: 'filter', text: '<i class="fa fa-filter md-fa-lg"></i>', tooltip: 'Фильтр', float: 'left'}
 
 			], onclick: function (name) {
 
 				if(['settings', 'about', 'events'].indexOf(name) != -1)
 					$p.iface.main.cells(name).setActive(true);
 
-				else if(name == 'auth') {
-					$p.iface.frm_auth({
-						modal_dialog: true
-						//, try_auto: true
-					});
-				}
 				return false;
 			}
 		});
-		$(t.tb_nav.buttons.bell).addClass("disabledbutton");
+		$p.iface.btn_auth_sync.bind(t.tb_nav);
 
 		// страницы карусели
 		t.carousel = cell.attachCarousel({
