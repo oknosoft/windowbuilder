@@ -106,23 +106,40 @@ function OBtnAuthSync() {
 	};
 
 	$p.eve.attachEvent("pouch_load_data_start", function (page) {
+
+		if(page.hasOwnProperty("local_rows") && page.local_rows < 10){
+			if(!$p.iface.sync)
+				$p.iface.wnd_sync();
+			$p.iface.sync.create($p.eve.stepper);
+
+			$p.eve.stepper.frm_sync.setItemValue("text_processed", "Загрузка начального образа");
+			$p.eve.stepper.frm_sync.setItemValue("text_bottom", "Читаем справочники");
+		}
+
 		set_spin(true);
 	});
 
 	$p.eve.attachEvent("pouch_load_data_page", function (page) {
 		set_spin(true);
+		if($p.eve.stepper.wnd_sync){
+			$p.eve.stepper.frm_sync.setItemValue("text_current", "Обработано элементов: " + page.docs_written + " из " + page.total_rows);
+			$p.eve.stepper.frm_sync.setItemValue("text_bottom", "Текущий запрос: " + page.page + " (" + (100 * page.docs_written/page.total_rows).toFixed(0) + "%)");
+		}
 	});
 
-	$p.eve.attachEvent("pouch_change", function (page) {
+	$p.eve.attachEvent("pouch_change", function (id, page) {
 		set_spin(true);
 	});
 
 	$p.eve.attachEvent("pouch_load_data_loaded", function (page) {
-
+		if($p.eve.stepper.wnd_sync)
+			$p.iface.sync.close();
 	});
 
 	$p.eve.attachEvent("pouch_load_data_error", function (err) {
 		set_spin();
+		if($p.eve.stepper.wnd_sync)
+			$p.iface.sync.close();
 	});
 
 	$p.eve.attachEvent("log_in", function (username) {

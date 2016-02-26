@@ -61,6 +61,7 @@ $p.settings = function (prm, modifiers) {
 
 $p.iface.oninit = function() {
 
+	// разделы интерфейса
 	$p.iface.sidebar_items = [
 		{id: "orders", text: "Заказы", icon: "projects_48.png"},
 		{id: "events", text: "Планирование", icon: "events_48.png"},
@@ -68,41 +69,47 @@ $p.iface.oninit = function() {
 		{id: "about", text: "О программе", icon: "about_48.png"}
 	];
 
-	$p.iface.main = new dhtmlXSideBar({
-		parent: document.body,
-		icons_path: "dist/imgs/",
-		width: 180,
-		header: true,
-		template: "tiles",
-		autohide: true,
-		items: $p.iface.sidebar_items,
-		offsets: {
-			top: 0,
-			right: 0,
-			bottom: 0,
-			left: 0
-		}
-	});
 
-
-	// подписываемся на событие навигации по сайдбару
-	$p.iface.main.attachEvent("onSelect", function(id){
-
-		var hprm = $p.job_prm.parse_url();
-		if(hprm.view != id)
-			$p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, id);
-
-		$p.iface["view_" + id]($p.iface.main.cells(id));
-
-	});
-
+	// наблюдатель за событиями авторизации и синхронизации
 	$p.iface.btn_auth_sync = new OBtnAuthSync();
 
-	// подписываемся на событие готовности метаданных
+	// подписываемся на событие готовности метаданных, после которого рисуем интерфейс
 	var dt = Date.now();
 	$p.eve.attachEvent("meta", function () {
 		console.log(Date.now() - dt);
 
+		// гасим заставку
+		document.body.removeChild(document.querySelector("#builder_splash"));
+
+		// основной сайдбар
+		$p.iface.main = new dhtmlXSideBar({
+			parent: document.body,
+			icons_path: "dist/imgs/",
+			width: 180,
+			header: true,
+			template: "tiles",
+			autohide: true,
+			items: $p.iface.sidebar_items,
+			offsets: {
+				top: 0,
+				right: 0,
+				bottom: 0,
+				left: 0
+			}
+		});
+
+		// подписываемся на событие навигации по сайдбару
+		$p.iface.main.attachEvent("onSelect", function(id){
+
+			var hprm = $p.job_prm.parse_url();
+			if(hprm.view != id)
+				$p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, id);
+
+			$p.iface["view_" + id]($p.iface.main.cells(id));
+
+		});
+
+		// включаем индикатор загрузки
 		$p.iface.main.progressOn();
 
 		// активируем страницу
@@ -149,8 +156,6 @@ $p.iface.oninit = function() {
 		$p.iface.main.progressOff();
 
 	});
-
-
 
 
 };
