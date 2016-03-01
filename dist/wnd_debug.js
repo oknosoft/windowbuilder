@@ -942,6 +942,10 @@ $p.modifiers.push(
 						open_builder();
 						break;
 
+					case 'btn_spec':
+						open_spec();
+						break;
+
 					case 'btn_discount':
 
 						break;
@@ -1362,6 +1366,20 @@ $p.modifiers.push(
 					row = o.production.get(selId);
 					if(row && !$p.is_empty_guid(row.characteristic.ref))
 						$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+				}
+			}
+
+			function open_spec(){
+				var selId, row;
+
+				if((selId = production_get_sel_index()) != undefined){
+					row = o.production.get(selId);
+					if(row && !$p.is_empty_guid(row.characteristic.ref)){
+						row.characteristic.form_obj()
+							.then(function (w) {
+								w.wnd.maximize();
+							});
+					}
 				}
 			}
 

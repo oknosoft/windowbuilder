@@ -23,7 +23,7 @@ function EditorAccordion(_editor, cell_acc) {
 	this.attache = function (obj) {
 		tree_layers.attache();
 		props.attache(obj);
-	}
+	};
 
 
 	// панели инструментов
@@ -78,17 +78,13 @@ function EditorAccordion(_editor, cell_acc) {
 					//}
 				},
 				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-lg"></i>', title: 'Добавить створку', float: 'left'},
-				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-lg"></i>', title: 'Удалить слой', float: 'left'},
+				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-lg"></i>', title: 'Удалить слой', float: 'left'}
 
-				{name: 'close', text: '<i class="fa fa-times fa-lg"></i>', title: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
+				//{name: 'close', text: '<i class="fa fa-times fa-lg"></i>', title: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
 
 			], onclick: function (name) {
 
 				switch(name) {
-					case 'close':
-						if (_editor._pwnd._on_close)
-							_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
-						break;
 
 					case 'new_stv':
 						var fillings = _editor.project.getItems({class: Filling, selected: true});

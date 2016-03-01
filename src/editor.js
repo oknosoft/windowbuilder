@@ -74,7 +74,7 @@ function Editor(pwnd){
 	 * Панель выбора инструментов рисовалки
 	 * @type OTooolBar
 	 */
-	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '24px', left: '3px', name: 'left', height: '310px',
+	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '36px', left: '3px', name: 'left', height: '310px',
 		image_path: 'dist/imgs/',
 		buttons: [
 			{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['select_elm.html']},
@@ -97,19 +97,25 @@ function Editor(pwnd){
 	 * Верхняя панель инструментов
 	 * @type {OTooolBar}
 	 */
-	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '200px', height: '28px', top: '3px', left: '50px', name: 'top',
+	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
 		image_path: 'dist/imgs/',
 		buttons: [
 
-			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-lg"></i>', title: 'Рассчитать, записать и закрыть', float: 'left'},
-			{name: 'calck', text: '<i class="fa fa-calculator fa-lg"></i>&nbsp;', title: 'Рассчитать и записать данные', float: 'left'},
+			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-lg"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left'},
+			{name: 'calck', text: '<i class="fa fa-calculator fa-lg"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
-			{name: 'stamp', img: 'stamp.png', title: 'Загрузить из типового блока', float: 'left'},
-			{name: 'open', text: '<i class="fa fa-briefcase fa-lg"></i>', title: 'Загрузить из другого заказа', float: 'left'},
+			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока', float: 'left'},
+			{name: 'open', text: '<i class="fa fa-briefcase fa-lg"></i>', tooltip: 'Загрузить из другого заказа', float: 'left'},
 
-			{name: 'rewind', text: '<i class="fa fa-repeat fa-lg"></i>', title: 'Шаг вперед', float: 'right'},
-			{name: 'back', text: '<i class="fa fa-undo fa-lg"></i>', title: 'Шаг назад', float: 'right'}
-			//{name: 'close', text: '<i class="fa fa-times fa-lg"></i>', title: 'Закрыть без сохранения', float: 'right'}
+			{name: 'sep_1', text: '', float: 'left'},
+			{name: 'back', text: '<i class="fa fa-undo fa-lg"></i>', tooltip: 'Шаг назад', float: 'left'},
+			{name: 'rewind', text: '<i class="fa fa-repeat fa-lg"></i>', tooltip: 'Шаг вперед', float: 'left'},
+
+			{name: 'sep_2', text: '', float: 'left'},
+			{name: 'open_spec', text: '<i class="fa fa-table fa-lg"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
+
+			{name: 'close', text: '<i class="fa fa-times fa-lg"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
+
 
 		], onclick: function (name) {
 			switch(name) {
@@ -148,6 +154,13 @@ function Editor(pwnd){
 
 				case 'rewind':
 					$p.msg.show_msg(name);
+					break;
+
+				case 'open_spec':
+					_editor.project.ox.form_obj()
+						.then(function (w) {
+							w.wnd.maximize();
+						});
 					break;
 
 				case 'square':
@@ -448,6 +461,7 @@ Editor.prototype.__define({
 
 				var _canvas = document.createElement('canvas'); // собственно, канвас
 				_editor._wrapper.appendChild(_canvas);
+				_canvas.style.paddingTop = "24px";
 
 				var _scheme = new Scheme(_canvas);
 
