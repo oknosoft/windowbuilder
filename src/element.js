@@ -191,7 +191,7 @@ BuilderElement.prototype.__define({
 	// толщина (для заполнений и, возможно, профилей в 3D)
 	thickness: {
 		get : function(){
-			return this.nom.thickness || 0;
+			return this.inset.thickness;
 		},
 		enumerable : false
 	},
@@ -199,7 +199,7 @@ BuilderElement.prototype.__define({
 	// опорный размер (0 для рам и створок, 1/2 ширины для импостов)
 	sizeb: {
 		get : function(){
-			return this.inset.sizeb || this.nom.sizeb || 0;
+			return this.inset.sizeb || 0;
 		},
 		enumerable : false
 	},
@@ -301,4 +301,6 @@ BuilderElement.prototype.__define({
 	}
 
 });
+
+Editor.BuilderElement = BuilderElement;
 

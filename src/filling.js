@@ -277,3 +277,5 @@ Filling.prototype.__define({
 	}
 
 });
+
+Editor.Filling = Filling;

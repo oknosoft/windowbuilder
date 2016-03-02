@@ -939,6 +939,8 @@ Profile.prototype.__define({
 
 });
 
+Editor.Profile = Profile;
+
 /**
  * Объект, описывающий геометрию соединения
  * @class CnnPoint

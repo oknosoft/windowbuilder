@@ -580,7 +580,7 @@ BuilderElement.prototype.__define({
 	// толщина (для заполнений и, возможно, профилей в 3D)
 	thickness: {
 		get : function(){
-			return this.nom.thickness || 0;
+			return this.inset.thickness;
 		},
 		enumerable : false
 	},
@@ -588,7 +588,7 @@ BuilderElement.prototype.__define({
 	// опорный размер (0 для рам и створок, 1/2 ширины для импостов)
 	sizeb: {
 		get : function(){
-			return this.inset.sizeb || this.nom.sizeb || 0;
+			return this.inset.sizeb || 0;
 		},
 		enumerable : false
 	},
@@ -690,6 +690,8 @@ BuilderElement.prototype.__define({
 	}
 
 });
+
+Editor.BuilderElement = BuilderElement;
 
 
 /**
@@ -900,11 +902,11 @@ function Scheme(_canvas){
 				bounds = bounds.unite(l.bounds);
 		});
 		if(bounds){
-			_scheme.view.zoom = Math.min(_scheme.view.viewSize.height / (bounds.height+200), _scheme.view.viewSize.width / (bounds.width+200));
+			_scheme.view.zoom = Math.min(_scheme.view.viewSize.height / (bounds.height+220), _scheme.view.viewSize.width / (bounds.width+220));
 			shift = (_scheme.view.viewSize.width - bounds.width * _scheme.view.zoom) / 2;
 			if(shift < 200)
 				shift = 0;
-			_scheme.view.center = bounds.center.add([shift, 0]);
+			_scheme.view.center = bounds.center.add([shift, 60]);
 		}
 	};
 
@@ -1152,7 +1154,7 @@ Scheme.prototype.__define({
 	 * @for Scheme
 	 */
 	save_coordinates: {
-		value: function () {
+		value: function (attr) {
 
 			this.ox.cnn_elmnts.clear();
 			this.ox.glasses.clear();
@@ -1161,7 +1163,7 @@ Scheme.prototype.__define({
 					contour.save_coordinates();
 				}
 			);
-			$p.eve.callEvent("save_coordinates", [this]);
+			$p.eve.callEvent("save_coordinates", [this, attr]);
 		}
 	},
 
@@ -3171,6 +3173,8 @@ Profile.prototype.__define({
 
 });
 
+Editor.Profile = Profile;
+
 /**
  * Объект, описывающий геометрию соединения
  * @class CnnPoint
@@ -3567,6 +3571,8 @@ Filling.prototype.__define({
 	}
 
 });
+
+Editor.Filling = Filling;
 /**
  * Created 24.07.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015
@@ -5884,17 +5890,17 @@ function Editor(pwnd){
 	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '36px', left: '3px', name: 'left', height: '310px',
 		image_path: 'dist/imgs/',
 		buttons: [
-			{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['select_elm.html']},
-			{name: 'select_node', img: 'icon-arrow-white.png', title: $p.injected_data['select_node.html']},
-			{name: 'pan', img: 'icon-hand.png', title: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
-			{name: 'zoom_fit', img: 'cursor-zoom.png', title: 'Вписать в окно'},
-			{name: 'pen', img: 'cursor-pen-freehand.png', title: 'Добавить профиль'},
-			{name: 'lay_impost', img: 'cursor-lay-impost.png', title: 'Вставить раскладку или импосты'},
-			{name: 'arc', img: 'cursor-arc-r.png', title: 'Арка {Crtl}, {Alt}, {Пробел}'},
-			{name: 'ruler', img: 'ruler_ui.png', title: 'Позиционирование и сдвиг'},
-			{name: 'grid', img: 'grid.png', title: 'Таблица координат'},
-			{name: 'line', img: 'line.png', title: 'Произвольная линия'},
-			{name: 'text', img: 'text.png', title: 'Произвольный текст'}
+			{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['tip_select_elm.html']},
+			{name: 'select_node', img: 'icon-arrow-white.png', title: $p.injected_data['tip_select_node.html']},
+			{name: 'pan', img: 'icon-hand.png', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
+			{name: 'zoom_fit', img: 'cursor-zoom.png', tooltip: 'Вписать в окно'},
+			{name: 'pen', img: 'cursor-pen-freehand.png', tooltip: 'Добавить профиль'},
+			{name: 'lay_impost', img: 'cursor-lay-impost.png', tooltip: 'Вставить раскладку или импосты'},
+			{name: 'arc', img: 'cursor-arc-r.png', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
+			{name: 'ruler', img: 'ruler_ui.png', tooltip: 'Позиционирование и сдвиг'},
+			{name: 'grid', img: 'grid.png', tooltip: 'Таблица координат'},
+			{name: 'line', img: 'line.png', tooltip: 'Произвольная линия'},
+			{name: 'text', img: 'text.png', tooltip: 'Произвольный текст'}
 		], onclick: function (name) {
 			return _editor.select_tool(name);
 		}
@@ -5932,7 +5938,7 @@ function Editor(pwnd){
 
 				case 'save_close':
 					if(_editor.project)
-						_editor.project.save_coordinates(true);
+						_editor.project.save_coordinates({close: true});
 					break;
 
 				case 'close':
@@ -5942,7 +5948,7 @@ function Editor(pwnd){
 
 				case 'calck':
 					if(_editor.project)
-						_editor.project.save_coordinates(true);
+						_editor.project.save_coordinates();
 					break;
 
 				case 'stamp':
@@ -6268,7 +6274,7 @@ Editor.prototype.__define({
 
 				var _canvas = document.createElement('canvas'); // собственно, канвас
 				_editor._wrapper.appendChild(_canvas);
-				_canvas.style.paddingTop = "24px";
+				_canvas.style.marginTop = "24px";
 
 				var _scheme = new Scheme(_canvas);
 

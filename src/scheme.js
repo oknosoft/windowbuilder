@@ -206,11 +206,11 @@ function Scheme(_canvas){
 				bounds = bounds.unite(l.bounds);
 		});
 		if(bounds){
-			_scheme.view.zoom = Math.min(_scheme.view.viewSize.height / (bounds.height+200), _scheme.view.viewSize.width / (bounds.width+200));
+			_scheme.view.zoom = Math.min(_scheme.view.viewSize.height / (bounds.height+220), _scheme.view.viewSize.width / (bounds.width+220));
 			shift = (_scheme.view.viewSize.width - bounds.width * _scheme.view.zoom) / 2;
 			if(shift < 200)
 				shift = 0;
-			_scheme.view.center = bounds.center.add([shift, 0]);
+			_scheme.view.center = bounds.center.add([shift, 60]);
 		}
 	};
 
@@ -458,7 +458,7 @@ Scheme.prototype.__define({
 	 * @for Scheme
 	 */
 	save_coordinates: {
-		value: function () {
+		value: function (attr) {
 
 			this.ox.cnn_elmnts.clear();
 			this.ox.glasses.clear();
@@ -467,7 +467,7 @@ Scheme.prototype.__define({
 					contour.save_coordinates();
 				}
 			);
-			$p.eve.callEvent("save_coordinates", [this]);
+			$p.eve.callEvent("save_coordinates", [this, attr]);
 		}
 	},
 

@@ -388,7 +388,8 @@ $p.modifiers.push(
 								})
 							);
 						});
-					};
+					}
+
 					if(glass_rows.length){
 						glass_formulas[elm.elm] = "";
 						glass_rows.forEach(function (row) {
@@ -401,8 +402,8 @@ $p.modifiers.push(
 								glass_formulas[elm.elm] += "x" + row.inset.name;
 						});
 						return res;
-					};
-				};
+					}
+				}
 
 				inset.specification.each(function (row) {
 
@@ -665,9 +666,7 @@ $p.modifiers.push(
 			/**
 			 * Пересчет спецификации при записи изделия
 			 */
-			$p.eve.attachEvent("save_coordinates", function (scheme) {
-
-				var attr = {url: ""};
+			$p.eve.attachEvent("save_coordinates", function (scheme, attr) {
 
 				ox = scheme.ox;
 				spec = ox.specification;
@@ -686,6 +685,12 @@ $p.modifiers.push(
 
 				// сворачиваем
 				spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin", "qty,totqty,totqty1");
+
+				// информируем мир об окончании расчета координат
+				ox.save()
+					.then(function () {
+						$p.eve.callEvent("coordinates_saved", [scheme, attr]);
+					});
 
 				//$p.rest.build_select(attr, {
 				//	rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",

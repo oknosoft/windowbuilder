@@ -148,43 +148,74 @@ $p.modifiers.push(
 		 */
 		_mgr.nom_cnn = function(nom1, nom2, cnn_type){
 
-			if(!nom1 || nom1.empty())
-				return [];
-
-			var onom1 = $p.is_data_obj(nom1) ? nom1 : $p.cat.nom.get(nom1), onom2,
+			var onom1, onom2,
 				is_i = false, art1glass = false, art2glass = false,
-				a1, a2;
+				a1, a2, ref1,
+				thickness1, thickness2;
 
-			if(!nom2 || nom2.empty()){
-				is_i = true;
-				nom2 = {val: "i"};
+			if(nom1 instanceof $p.Editor.BuilderElement){
+				onom1 = nom1.nom;
+
+			}else if($p.is_data_obj(nom1)){
+				onom1 = nom1;
+
+			}else{
+				onom1 = $p.cat.nom.get(nom1);
+
 			}
+
+			if(!onom1 || onom1.empty())
+				ref1 = nom1.ref;
 			else
-				onom2 = $p.is_data_obj(nom2) ? nom2 : $p.cat.nom.get(nom2);
+				ref1 = onom1.ref;
+
+
+			if(!nom2 || ($p.is_data_obj(nom2) && nom2.empty())){
+				is_i = true;
+				onom2 = nom2 = {val: "i", ref: $p.blank.guid};
+
+			}else{
+
+				if(nom2 instanceof $p.Editor.BuilderElement){
+					onom2 = nom2.nom;
+
+				}else if($p.is_data_obj(nom2)){
+					onom2 = nom2;
+
+				}else{
+					onom2 = $p.cat.nom.get(nom2);
+
+				}
+			}
 
 			if(!is_i){
-				if($p.enm.elm_types.glasses.indexOf(onom1.elm_type) != -1)
+				if(nom1 instanceof $p.Editor.Filling){
 					art1glass = true;
-				else if($p.enm.elm_types.glasses.indexOf(onom2.elm_type) != -1)
+					thickness1 = nom1.thickness;
+
+				}else if(nom2 instanceof $p.Editor.Filling){
 					art2glass = true;
+					thickness2 = nom2.thickness;
+				}
+
 			}
 
-			if(!_nomcache[nom1.ref])
-				_nomcache[nom1.ref] = {};
-			a1 = _nomcache[nom1.ref];
-			if(!a1[nom2.ref]){
-				a2 = (a1[nom2.ref] = []);
+			if(!_nomcache[ref1])
+				_nomcache[ref1] = {};
+			a1 = _nomcache[ref1];
+			if(!a1[onom2.ref]){
+				a2 = (a1[onom2.ref] = []);
 				// для всех элементов справочника соединения
 				_mgr.each(function(оCnn){
 					// если в строках соединяемых элементов есть наша - добавляем
-					var is_nom1 = art1glass ? (оCnn.art1glass && onom1.thickness >= Number(оCnn.tmin) && onom1.thickness <= Number(оCnn.tmax)) : false,
-						is_nom2 = art2glass ? (оCnn.art2glass && onom2.thickness >= Number(оCnn.tmin) && onom2.thickness <= Number(оCnn.tmax)) : false;
+					var is_nom1 = art1glass ? (оCnn.art1glass && thickness1 >= Number(оCnn.tmin) && thickness1 <= Number(оCnn.tmax)) : false,
+						is_nom2 = art2glass ? (оCnn.art2glass && thickness2 >= Number(оCnn.tmin) && thickness2 <= Number(оCnn.tmax)) : false;
 
 					оCnn["cnn_elmnts"].each(function(row){
 						if(is_nom1 && is_nom2)
 							return false;
-						is_nom1 = is_nom1 || $p.is_equal(row.nom1, nom1);
-						is_nom2 = is_nom2 || $p.is_equal(row.nom2, nom2);
+						is_nom1 = is_nom1 || $p.is_equal(row.nom1, onom1);
+						is_nom2 = is_nom2 || $p.is_equal(row.nom2, onom2);
 					});
 					if(is_nom1 && is_nom2){
 						a2.push(оCnn);
@@ -193,7 +224,7 @@ $p.modifiers.push(
 			}
 
 			if(cnn_type){
-				var tmp = a1[nom2.ref], res = [], types;
+				var tmp = a1[onom2.ref], res = [], types;
 
 				if(Array.isArray(cnn_type))
 					types = cnn_type;
@@ -209,7 +240,7 @@ $p.modifiers.push(
 				return res;
 			}
 
-			return a1[nom2.ref];
+			return a1[onom2.ref];
 		};
 
 		/**
@@ -227,7 +258,17 @@ $p.modifiers.push(
 				return curr_cnn;
 			}
 
-			var cnns = _mgr.nom_cnn(elm1 ? elm1.nom : null, elm2 ? elm2.nom : null, cnn_types);
+			var cnns;
+
+			// если второй элемент вертикальный - меняем местами эл 1-2 при поиске
+			if(elm1 instanceof $p.Editor.Profile &&
+					elm2 instanceof $p.Editor.Profile &&
+					cnn_types && cnn_types.indexOf($p.enm.cnn_types.УгловоеДиагональное) != -1 &&
+					elm2.orientation == $p.enm.orientations.Вертикальная ){
+				cnns = _mgr.nom_cnn(elm2, elm1, cnn_types);
+
+			}else
+				cnns = _mgr.nom_cnn(elm1, elm2, cnn_types);
 
 			// для примера подставляем первое попавшееся соединение
 			if(cnns.length)
@@ -440,7 +481,7 @@ $p.modifiers.push(
 $p.modifiers.push(
 	function($p){
 
-		var _mgr = $p.cat.inserts
+		var _mgr = $p.cat.inserts;
 
 		_mgr._obj_сonstructor.prototype.__define({
 
@@ -450,15 +491,67 @@ $p.modifiers.push(
 			nom: {
 				value: function (elm) {
 
-					var main_row = this.specification.find({is_main_elm: true});
-					if(!main_row && this.specification.count())
-						main_row = this.specification.get(0);
-					if(main_row && main_row.nom instanceof _mgr._obj_сonstructor)
-						return main_row.nom.nom();
-					else if(main_row)
-						return main_row.nom;
+					var main_rows = [], _nom;
+
+					this.specification.find_rows({is_main_elm: true}, function (row) {
+						main_rows.push(row);
+					});
+
+					if(!this._cache)
+						this._cache = {};
+
+					if(this._cache.nom)
+						return this._cache.nom;
+
+					if(!main_rows.length && this.specification.count())
+						main_rows.push(this.specification.get(0));
+
+					if(main_rows.length && main_rows[0].nom instanceof _mgr._obj_сonstructor)
+						_nom = main_rows[0].nom.nom();
+
+					else if(main_rows.length)
+						_nom = main_rows[0].nom;
+
 					else
-						return $p.cat.nom.get();
+						_nom = $p.cat.nom.get();
+
+					if(main_rows.length < 2)
+						this._cache.nom = _nom;
+
+					return _nom;
+
+				},
+				enumerable: false
+			},
+
+			/**
+			 * Возвращает толщину вставки
+			 */
+			thickness: {
+				get: function () {
+
+					if(!this._cache)
+						this._cache = {};
+
+					var _cache = this._cache;
+
+					if(!_cache.hasOwnProperty("thickness")){
+						_cache.thickness = 0;
+						if(this.insert_type == $p.enm.inserts_types.ТиповойСтеклопакет || this.insert_type == $p.enm.inserts_types.Стеклопакет){
+
+							if(this.insert_glass_type == $p.enm.inserts_glass_types.Рамка)
+								_cache.thickness += this.nom().thickness;
+
+							else if(this.insert_glass_type == $p.enm.inserts_glass_types.Стекло)
+								this.specification.each(function (row) {
+									_cache.thickness += row.nom.thickness;
+								});
+						}else
+							_cache.thickness = this.nom().thickness;
+					}
+
+					return _cache.thickness;
+
 				},
 				enumerable: false
 			}
@@ -2091,7 +2184,8 @@ $p.modifiers.push(
 								})
 							);
 						});
-					};
+					}
+
 					if(glass_rows.length){
 						glass_formulas[elm.elm] = "";
 						glass_rows.forEach(function (row) {
@@ -2104,8 +2198,8 @@ $p.modifiers.push(
 								glass_formulas[elm.elm] += "x" + row.inset.name;
 						});
 						return res;
-					};
-				};
+					}
+				}
 
 				inset.specification.each(function (row) {
 
@@ -2368,9 +2462,7 @@ $p.modifiers.push(
 			/**
 			 * Пересчет спецификации при записи изделия
 			 */
-			$p.eve.attachEvent("save_coordinates", function (scheme) {
-
-				var attr = {url: ""};
+			$p.eve.attachEvent("save_coordinates", function (scheme, attr) {
 
 				ox = scheme.ox;
 				spec = ox.specification;
@@ -2389,6 +2481,12 @@ $p.modifiers.push(
 
 				// сворачиваем
 				spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin", "qty,totqty,totqty1");
+
+				// информируем мир об окончании расчета координат
+				ox.save()
+					.then(function () {
+						$p.eve.callEvent("coordinates_saved", [scheme, attr]);
+					});
 
 				//$p.rest.build_select(attr, {
 				//	rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",
@@ -2562,6 +2660,8 @@ function OBtnAuthSync() {
 				$p.iface.wnd_sync();
 			$p.iface.sync.create($p.eve.stepper);
 
+			$p.eve.stepper.wnd_sync.setText("Первый запуск - подготовка данных");
+
 			$p.eve.stepper.frm_sync.setItemValue("text_processed", "Загрузка начального образа");
 			$p.eve.stepper.frm_sync.setItemValue("text_bottom", "Читаем справочники");
 		}
@@ -2582,8 +2682,13 @@ function OBtnAuthSync() {
 	});
 
 	$p.eve.attachEvent("pouch_load_data_loaded", function (page) {
-		if($p.eve.stepper.wnd_sync)
-			$p.iface.sync.close();
+		if($p.eve.stepper.wnd_sync){
+			setTimeout(function () {
+				$p.iface.sync.close();
+				$p.eve.redirect = true;
+				location.reload(true);
+			}, 1000);
+		}
 	});
 
 	$p.eve.attachEvent("pouch_load_data_error", function (err) {

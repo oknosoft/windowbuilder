@@ -112,6 +112,8 @@ function OBtnAuthSync() {
 				$p.iface.wnd_sync();
 			$p.iface.sync.create($p.eve.stepper);
 
+			$p.eve.stepper.wnd_sync.setText("Первый запуск - подготовка данных");
+
 			$p.eve.stepper.frm_sync.setItemValue("text_processed", "Загрузка начального образа");
 			$p.eve.stepper.frm_sync.setItemValue("text_bottom", "Читаем справочники");
 		}
@@ -132,8 +134,13 @@ function OBtnAuthSync() {
 	});
 
 	$p.eve.attachEvent("pouch_load_data_loaded", function (page) {
-		if($p.eve.stepper.wnd_sync)
-			$p.iface.sync.close();
+		if($p.eve.stepper.wnd_sync){
+			setTimeout(function () {
+				$p.iface.sync.close();
+				$p.eve.redirect = true;
+				location.reload(true);
+			}, 1000);
+		}
 	});
 
 	$p.eve.attachEvent("pouch_load_data_error", function (err) {

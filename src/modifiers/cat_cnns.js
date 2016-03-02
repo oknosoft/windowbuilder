@@ -37,43 +37,74 @@ $p.modifiers.push(
 		 */
 		_mgr.nom_cnn = function(nom1, nom2, cnn_type){
 
-			if(!nom1 || nom1.empty())
-				return [];
-
-			var onom1 = $p.is_data_obj(nom1) ? nom1 : $p.cat.nom.get(nom1), onom2,
+			var onom1, onom2,
 				is_i = false, art1glass = false, art2glass = false,
-				a1, a2;
+				a1, a2, ref1,
+				thickness1, thickness2;
 
-			if(!nom2 || nom2.empty()){
-				is_i = true;
-				nom2 = {val: "i"};
+			if(nom1 instanceof $p.Editor.BuilderElement){
+				onom1 = nom1.nom;
+
+			}else if($p.is_data_obj(nom1)){
+				onom1 = nom1;
+
+			}else{
+				onom1 = $p.cat.nom.get(nom1);
+
 			}
+
+			if(!onom1 || onom1.empty())
+				ref1 = nom1.ref;
 			else
-				onom2 = $p.is_data_obj(nom2) ? nom2 : $p.cat.nom.get(nom2);
+				ref1 = onom1.ref;
+
+
+			if(!nom2 || ($p.is_data_obj(nom2) && nom2.empty())){
+				is_i = true;
+				onom2 = nom2 = {val: "i", ref: $p.blank.guid};
+
+			}else{
+
+				if(nom2 instanceof $p.Editor.BuilderElement){
+					onom2 = nom2.nom;
+
+				}else if($p.is_data_obj(nom2)){
+					onom2 = nom2;
+
+				}else{
+					onom2 = $p.cat.nom.get(nom2);
+
+				}
+			}
 
 			if(!is_i){
-				if($p.enm.elm_types.glasses.indexOf(onom1.elm_type) != -1)
+				if(nom1 instanceof $p.Editor.Filling){
 					art1glass = true;
-				else if($p.enm.elm_types.glasses.indexOf(onom2.elm_type) != -1)
+					thickness1 = nom1.thickness;
+
+				}else if(nom2 instanceof $p.Editor.Filling){
 					art2glass = true;
+					thickness2 = nom2.thickness;
+				}
+
 			}
 
-			if(!_nomcache[nom1.ref])
-				_nomcache[nom1.ref] = {};
-			a1 = _nomcache[nom1.ref];
-			if(!a1[nom2.ref]){
-				a2 = (a1[nom2.ref] = []);
+			if(!_nomcache[ref1])
+				_nomcache[ref1] = {};
+			a1 = _nomcache[ref1];
+			if(!a1[onom2.ref]){
+				a2 = (a1[onom2.ref] = []);
 				// для всех элементов справочника соединения
 				_mgr.each(function(оCnn){
 					// если в строках соединяемых элементов есть наша - добавляем
-					var is_nom1 = art1glass ? (оCnn.art1glass && onom1.thickness >= Number(оCnn.tmin) && onom1.thickness <= Number(оCnn.tmax)) : false,
-						is_nom2 = art2glass ? (оCnn.art2glass && onom2.thickness >= Number(оCnn.tmin) && onom2.thickness <= Number(оCnn.tmax)) : false;
+					var is_nom1 = art1glass ? (оCnn.art1glass && thickness1 >= Number(оCnn.tmin) && thickness1 <= Number(оCnn.tmax)) : false,
+						is_nom2 = art2glass ? (оCnn.art2glass && thickness2 >= Number(оCnn.tmin) && thickness2 <= Number(оCnn.tmax)) : false;
 
 					оCnn["cnn_elmnts"].each(function(row){
 						if(is_nom1 && is_nom2)
 							return false;
-						is_nom1 = is_nom1 || $p.is_equal(row.nom1, nom1);
-						is_nom2 = is_nom2 || $p.is_equal(row.nom2, nom2);
+						is_nom1 = is_nom1 || $p.is_equal(row.nom1, onom1);
+						is_nom2 = is_nom2 || $p.is_equal(row.nom2, onom2);
 					});
 					if(is_nom1 && is_nom2){
 						a2.push(оCnn);
@@ -82,7 +113,7 @@ $p.modifiers.push(
 			}
 
 			if(cnn_type){
-				var tmp = a1[nom2.ref], res = [], types;
+				var tmp = a1[onom2.ref], res = [], types;
 
 				if(Array.isArray(cnn_type))
 					types = cnn_type;
@@ -98,7 +129,7 @@ $p.modifiers.push(
 				return res;
 			}
 
-			return a1[nom2.ref];
+			return a1[onom2.ref];
 		};
 
 		/**
@@ -116,7 +147,17 @@ $p.modifiers.push(
 				return curr_cnn;
 			}
 
-			var cnns = _mgr.nom_cnn(elm1 ? elm1.nom : null, elm2 ? elm2.nom : null, cnn_types);
+			var cnns;
+
+			// если второй элемент вертикальный - меняем местами эл 1-2 при поиске
+			if(elm1 instanceof $p.Editor.Profile &&
+					elm2 instanceof $p.Editor.Profile &&
+					cnn_types && cnn_types.indexOf($p.enm.cnn_types.УгловоеДиагональное) != -1 &&
+					elm2.orientation == $p.enm.orientations.Вертикальная ){
+				cnns = _mgr.nom_cnn(elm2, elm1, cnn_types);
+
+			}else
+				cnns = _mgr.nom_cnn(elm1, elm2, cnn_types);
 
 			// для примера подставляем первое попавшееся соединение
 			if(cnns.length)
