@@ -50,7 +50,7 @@ function ToolPen(){
 		}
 
 		if(tool.profile.clr.empty())
-			tool.profile.clr = $p.cat.clrs.predefined("white");
+			tool.profile.clr = $p.cat.predefined_elmnts.predefined("Цвет_Основной");
 
 		if(!tool.profile._metadata.fields.inset.choice_links)
 			tool.profile._metadata.fields.inset.choice_links = [{

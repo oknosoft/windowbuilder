@@ -564,7 +564,7 @@ Editor.prototype.__define({
 				dhtmlx.confirm({
 					title: $p.msg.bld_from_blocks_title,
 					text: $p.msg.bld_from_blocks,
-					cancel: "Отмена",
+					cancel: $p.msg.cancel,
 					callback: function(btn) {
 						if(btn)
 							load_stamp(true);

@@ -58,7 +58,7 @@ $p.iface.view_settings = function (cell) {
 			{ type:"settings", labelWidth:80, position:"label-left"  },
 
 			{type: "label", labelWidth:320, label: "Тип устройства", className: "label_options"},
-			{ type:"block" , name:"form_block_2", list:[
+			{ type:"block", blockOffset: 0, name:"block_device_type", list:[
 				{ type:"settings", labelAlign:"left", position:"label-right"  },
 				{ type:"radio" , name:"device_type", labelWidth:120, label:'<i class="fa fa-desktop"></i> Компьютер', value:"desktop"},
 				{ type:"newcolumn"   },
@@ -91,7 +91,11 @@ $p.iface.view_settings = function (cell) {
 			{type:"template", label:"",value:"", note: {text: "Не рекомендуется, если к компьютеру имеют доступ посторонние лица", width: 320}},
 			{type:"template", label:"",value:"", note: {text: "", width: 320}},
 
-			{type: "button", name: "save", value: "Применить настройки"}
+			{ type:"block", blockOffset: 0, name:"block_buttons", list:[
+				{type: "button", name: "save", value: "Применить", tooltip: "Применить настройки и перезагрузить программу"},
+				{type:"newcolumn"},
+				{type: "button", offsetLeft: 20, name: "reset", value: "Сброс данных", tooltip: "Стереть справочники и перезаполнить данными сервера"}
+			]  }
 
 			]
 		);
@@ -109,7 +113,28 @@ $p.iface.view_settings = function (cell) {
 		});
 
 		t.form.attachEvent("onButtonClick", function(name){
-			location.reload();
+			if(name == "save")
+				location.reload();
+
+			else if(name == "reset"){
+				dhtmlx.confirm({
+					title: "Сброс данных",
+					text: "Стереть справочники и перезаполнить данными сервера?",
+					cancel: $p.msg.cancel,
+					callback: function(btn) {
+						if(btn){
+
+							setTimeout($p.wsql.pouch.local.ram.destroy);
+							setTimeout($p.wsql.pouch.local.doc.destroy);
+							setTimeout($p.wsql.pouch.log_out, 1000);
+							setTimeout(function () {
+								$p.eve.redirect = true;
+								location.reload(true);
+							}, 2000);
+						}
+					}
+				});
+			}
 		});
 
 

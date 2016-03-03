@@ -139,7 +139,7 @@ function OBtnAuthSync() {
 				$p.iface.sync.close();
 				$p.eve.redirect = true;
 				location.reload(true);
-			}, 1000);
+			}, 3000);
 		}
 	});
 

@@ -532,6 +532,50 @@ function Profile(attr){
 				intersect_point(prays.inner, rays.inner, 3);
 			}
 
+		}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.av){
+			// угловое к вертикальной
+			if(this.orientation == $p.enm.orientations.Вертикальная){
+				if(profile_point == "b"){
+					intersect_point(prays.outer, rays.outer, 1);
+					intersect_point(prays.outer, rays.inner, 4);
+
+				}else if(profile_point == "e"){
+					intersect_point(prays.outer, rays.outer, 2);
+					intersect_point(prays.outer, rays.inner, 3);
+				}
+			}else if(this.orientation == $p.enm.orientations.Горизонтальная){
+				if(profile_point == "b"){
+					intersect_point(prays.inner, rays.outer, 1);
+					intersect_point(prays.inner, rays.inner, 4);
+
+				}else if(profile_point == "e"){
+					intersect_point(prays.inner, rays.outer, 2);
+					intersect_point(prays.inner, rays.inner, 3);
+				}
+			}
+
+		}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
+			// угловое к горизонтальной
+			if(this.orientation == $p.enm.orientations.Вертикальная){
+				if(profile_point == "b"){
+					intersect_point(prays.inner, rays.outer, 1);
+					intersect_point(prays.inner, rays.inner, 4);
+
+				}else if(profile_point == "e"){
+					intersect_point(prays.inner, rays.outer, 2);
+					intersect_point(prays.inner, rays.inner, 3);
+				}
+			}else if(this.orientation == $p.enm.orientations.Горизонтальная){
+				if(profile_point == "b"){
+					intersect_point(prays.outer, rays.outer, 1);
+					intersect_point(prays.outer, rays.inner, 4);
+
+				}else if(profile_point == "e"){
+					intersect_point(prays.outer, rays.outer, 2);
+					intersect_point(prays.outer, rays.inner, 3);
+				}
+			}
+
 		}
 
 		// если точка не рассчиталась - рассчитываем по умолчанию - как с пустотой
@@ -840,11 +884,11 @@ Profile.prototype.__define({
 	orientation: {
 		get : function(){
 			var angle_hor = this.angle_hor;
-			if((angle_hor > -consts.orientation_delts && angle_hor < consts.orientation_delts) ||
-				(angle_hor > 180-consts.orientation_delts && angle_hor < 180+consts.orientation_delts))
+			if((angle_hor > -consts.orientation_delta && angle_hor < consts.orientation_delta) ||
+				(angle_hor > 180-consts.orientation_delta && angle_hor < 180+consts.orientation_delta))
 				return $p.enm.orientations.Горизонтальная;
-			if((angle_hor > 90-consts.orientation_delts && angle_hor < 90+consts.orientation_delts) ||
-				(angle_hor > 270-consts.orientation_delts && angle_hor < 270+consts.orientation_delts))
+			if((angle_hor > 90-consts.orientation_delta && angle_hor < 90+consts.orientation_delta) ||
+				(angle_hor > 270-consts.orientation_delta && angle_hor < 270+consts.orientation_delta))
 				return $p.enm.orientations.Вертикальная;
 			return $p.enm.orientations.Наклонная;
 		},
@@ -998,12 +1042,17 @@ function ProfileRays(){
 		var path = _profile.generatrix,
 			len = path.length;
 
-		this.outer = new paper.Path({ insert: false });
-		this.inner = new paper.Path({ insert: false });
+		if(!this.outer)
+			this.outer = new paper.Path({ insert: false });
+		else
+			this.outer.removeSegments();
+		if(!this.inner)
+			this.inner = new paper.Path({ insert: false });
+		else
+			this.inner.removeSegments();
 
-		if(len == 0){
+		if(!len)
 			return;
-		}
 
 		var d1 = _profile.d1, d2 = _profile.d2,
 			ds = 3 * _profile.width, step = len * 0.02,

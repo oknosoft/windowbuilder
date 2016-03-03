@@ -540,7 +540,11 @@ $p.modifiers.push(
 
 					// для всех профилей контура
 					contour.profiles.forEach(function (curr) {
+
 						_row = curr._row;
+						if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure)
+							return;
+
 						b = curr.rays.b;
 						e = curr.rays.e;
 						prev = b.profile;
@@ -689,6 +693,7 @@ $p.modifiers.push(
 				// информируем мир об окончании расчета координат
 				ox.save()
 					.then(function () {
+						$p.msg.show_msg("Спецификация рассчитана");
 						$p.eve.callEvent("coordinates_saved", [scheme, attr]);
 					});
 

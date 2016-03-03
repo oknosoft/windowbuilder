@@ -29,7 +29,7 @@ var acn,
 	this.filling_min_length = 4;
 
 	// в пределах этого угла, считаем элемент вертикальным или горизонтальным
-	this.orientation_delts = 5;
+	this.orientation_delta = 6;
 
 	this.tune_paper = function (settings) {
 		/**

@@ -529,7 +529,7 @@ $p.modifiers.push(
 					dhtmlx.confirm({
 						title: $p.msg.order_sent_title,
 						text: $p.msg.order_sent_message,
-						cancel: "Отмена",
+						cancel: $p.msg.cancel,
 						callback: function(btn) {
 							if(btn){
 								// установить транспорт в "отправлено" и записать
