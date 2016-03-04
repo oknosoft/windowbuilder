@@ -44,7 +44,7 @@ $p.modifiers.push(
 				else if(typeof elm_types == "string")
 					elm_types = $p.enm.elm_types[elm_types];
 
-				else(!Array.isArray(elm_types))
+				else if(!Array.isArray(elm_types))
 					elm_types = [elm_types];
 
 				this.elmnts.each(function(row){

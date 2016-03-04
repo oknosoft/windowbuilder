@@ -288,17 +288,7 @@ paper.Tool.prototype.__define({
 
 			if(!this.wnd || !this._grid){
 
-				//$p.wsql.restore_options("editor", this.options);
-				//this.wnd = $p.iface.dat_blank(_editor._dxw, this.options.wnd);
-
 				this.wnd = _editor._acc.elm.cells("a");
-
-
-				//var sbar = this.wnd.attachStatusBar({height: 12});
-				//sbar.style.zIndex = -1000;
-				//sbar.firstChild.style.backgroundColor = "transparent";
-				//sbar.firstChild.style.border = "none";
-				//sbar = null;
 
 				this._grid = this.wnd.attachHeadFields({
 					obj: profile,

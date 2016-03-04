@@ -346,18 +346,77 @@ function Profile(attr){
 		}
 
 		delete res.profile_point;
+		delete res.is_cut;
+		delete res.to_cut;
 		res.profile = null;
 		res.cnn = null;
 		res.distance = 10e9;
 		res.cnn_types = acn.i;
 
 		// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
+		// TODO нужно свойство системы искать ли сложные L_I_I соединения
 		if(this.parent){
-			var profiles = this.parent.profiles;
+			var profiles = this.parent.profiles, ares = [], angl;
 			for(var i in profiles){
-				if(c_d(profiles[i], _profile, res, point, false) === false)
-					return res;
+				if(c_d(profiles[i], _profile, res, point, false) === false){
+					ares.push({
+						profile_point: res.profile_point,
+						profile: res.profile,
+						cnn_types: res.cnn_types,
+						point: res.point});
+				}
 			}
+			if(ares.length == 1){
+				res._mixin(ares[0]);
+
+
+			}else if(ares.length == 2){
+
+				// если в точке сходятся 3 профиля...
+				if(node == "b"){
+					if(ares[0].profile_point == "e")
+						ares[0].angl = ares[0].profile.e.subtract(ares[0].profile.b).getDirectedAngle(this.e.subtract(this.b));
+					else
+						ares[0].angl = ares[0].profile.b.subtract(ares[0].profile.e).getDirectedAngle(this.e.subtract(this.b));
+
+					if(ares[1].profile_point == "e")
+						ares[1].angl = ares[1].profile.e.subtract(ares[1].profile.b).getDirectedAngle(this.e.subtract(this.b));
+					else
+						ares[1].angl = ares[1].profile.b.subtract(ares[1].profile.e).getDirectedAngle(this.e.subtract(this.b));
+
+				}else{
+					if(ares[0].profile_point == "e")
+						ares[0].angl = ares[0].profile.e.subtract(ares[0].profile.b).getDirectedAngle(this.b.subtract(this.e));
+					else
+						ares[0].angl = ares[0].profile.b.subtract(ares[0].profile.e).getDirectedAngle(this.b.subtract(this.e));
+
+					if(ares[1].profile_point == "e")
+						ares[1].angl = ares[1].profile.e.subtract(ares[1].profile.b).getDirectedAngle(this.b.subtract(this.e));
+					else
+						ares[1].angl = ares[1].profile.b.subtract(ares[1].profile.e).getDirectedAngle(this.b.subtract(this.e));
+
+				}
+
+				if(ares[0].angl < 0)
+					ares[0].angl += 180;
+				if(ares[1].angl < 0)
+					ares[1].angl += 180;
+
+				if(Math.abs(ares[1].angl - ares[0].angl) < consts.orientation_delta){
+					// вероятно, мы находимся в разрыве - выбираем любой
+					res._mixin(ares[0]);
+					res.is_cut = true;
+
+				}else {
+					// скорее всего, к нам примыкает разрыв - выбираем с наибольшим углом к нашему
+					res._mixin(ares[0].angl > ares[1].angl ? ares[0] : ares[1]);
+					res.to_cut = true;
+
+				}
+
+				ares = null;
+			}
+
 		}
 
 		return res;
@@ -464,9 +523,9 @@ function Profile(attr){
 		function detect_side(){
 			var isinner = intersect_point(prays.inner, _profile.generatrix),
 				isouter = intersect_point(prays.outer, _profile.generatrix);
-			if(isinner && !isouter)
+			if(isinner != undefined && isouter == undefined)
 				return 1;
-			else if(!isinner && isouter)
+			else if(isinner == undefined && isouter != undefined)
 				return -1;
 			else
 				return 1;
@@ -477,7 +536,7 @@ function Profile(attr){
 			prays = cnn_point.profile.rays;
 		}
 
-		if(cnn_point.cnn && cnn_point.cnn_types == $p.enm.cnn_types.acn.t){
+		if(cnn_point.cnn && (cnn_point.cnn_types == $p.enm.cnn_types.acn.t || cnn_point.to_cut)){
 
 			// для Т-соединений сначала определяем, изнутри или снаружи находится наш профиль
 			if(!cnn_point.profile.path.segments.length)
