@@ -14,16 +14,39 @@
  */
 function DimensionLine(attr){
 
-	var _row, t = this;
 
-	DimensionLine.superclass.constructor.call(t, attr);
+	DimensionLine.superclass.constructor.call(this, attr);
 
-	t.bringToFront();
+	// strokeColor: consts.lgray
 
-	t.__define({
+	var _row,
+		_nodes = {
+			elm1: attr.elm1,
+			elm2: attr.elm2 || attr.elm1,
+			p1: attr.p1 || "b",
+			p2: attr.p2 || "e",
+
+			callout1: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
+			callout2: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
+			scale: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
+			text: new paper.PointText({
+				parent: this,
+				justification: 'center',
+				fillColor: 'black',
+				fontSize: 60})
+		};
+
+	this.__define({
 		_row: {
 			get: function () {
 				return _row;
+			},
+			enumerable: false
+		},
+
+		_nodes: {
+			get: function () {
+				return _nodes;
 			},
 			enumerable: false
 		}
@@ -35,16 +58,16 @@ function DimensionLine(attr){
 	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
 	 * @method remove
 	 */
-	t.remove = function () {
+	this.remove = function () {
 		if(_row){
 			_row._owner.del(_row);
 			_row = null;
 		}
-		DimensionLine.superclass.remove.call(t);
+		DimensionLine.superclass.remove.call(this);
 	};
 
 }
-DimensionLine._extend(paper.PointText);
+DimensionLine._extend(paper.Group);
 
 DimensionLine.prototype.__define({
 
@@ -64,58 +87,83 @@ DimensionLine.prototype.__define({
 		enumerable: false
 	},
 
+	redraw: {
+		value: function () {
+
+			var b = this._nodes.elm1[this._nodes.p1],
+				e = this._nodes.elm2[this._nodes.p2],
+				tmp = new paper.Path({
+					insert: false,
+					segments: [b, e]
+				}),
+				normal = tmp.getNormalAt(0).multiply(100),
+				length = tmp.length,
+				bs = b.add(normal.multiply(0.8)),
+				es = e.add(normal.multiply(0.8));
+
+			this._nodes.callout1.removeSegments();
+			this._nodes.callout2.removeSegments();
+			this._nodes.scale.removeSegments();
+
+			// выяснить ориентацию
+			this._nodes.callout1.addSegments([b, b.add(normal)]);
+			this._nodes.callout2.addSegments([e, e.add(normal)]);
+
+			this._nodes.scale.addSegments([bs, es]);
+
+			this._nodes.text.content = length.toFixed(0);
+			this._nodes.text.rotation = e.subtract(b).angle;
+			this._nodes.text.point = bs.add(es).divide(2);
+
+			// сместить
+
+			// нарисовать
 
 
+		},
+		enumerable : false
+	},
 
-	// координата x
-	x: {
+	// размер
+	size: {
 		get: function () {
-			return Math.round(this._row.x1);
+			return 0;
 		},
 		set: function (v) {
-			this._row.x1 = v;
-			this.point.x = v;
-			this.project.register_update();
+
 		},
 		enumerable: false
 	},
 
-	// координата y
-	y: {
-		get: function () {
-			return Math.round(this._row.y1);
-		},
-		set: function (v) {
-			this._row.y1 = v;
-			this.point.y = v;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-
-
-	// угол к горизонту
+	// угол к горизонту в направлении размера
 	angle: {
 		get: function () {
-			return Math.round(this.rotation);
+			return 0;
 		},
 		set: function (v) {
-			this._row.angle_hor = v;
-			this.rotation = v;
-			this.project.register_update();
+
 		},
 		enumerable: false
 	},
 
-	// выравнивание текста
-	align: {
+	// расположение относительно контура $p.enm.pos
+	pos: {
 		get: function () {
-			return $p.enm.text_aligns.get(this.justification);
+			return 0;
 		},
 		set: function (v) {
-			this.justification = $p.is_data_obj(v) ? v.ref : v;
-			this.project.register_update();
+
+		},
+		enumerable: false
+	},
+
+	// отступ от внешней границы изделия
+	offset: {
+		get: function () {
+			return 100;
+		},
+		set: function (v) {
+
 		},
 		enumerable: false
 	}

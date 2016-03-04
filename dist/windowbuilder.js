@@ -470,6 +470,89 @@ BuilderElement._extend(paper.Group);
 // Привязываем свойства номенклатуры, вставки и цвета
 BuilderElement.prototype.__define({
 
+	/**
+	 * ### Элемент - владелец
+	 * имеет смысл для раскладок и рёбер заполнения
+	 * @property owner
+	 * @type BuilderElement
+	 */
+	owner: {
+		get : function(){ return this.data.owner; },
+		set : function(newValue){ this.data.owner = newValue; },
+		enumerable : false
+	},
+
+	/**
+	 * ### Образующая
+	 * прочитать - установить путь образующей. здесь может быть линия, простая дуга или безье
+	 * по ней будут пересчитаны pathData и прочие свойства
+	 * @property generatrix
+	 * @type paper.Path
+	 */
+	generatrix: {
+		get : function(){ return this.data.generatrix; },
+		set : function(attr){
+
+			this.data.generatrix.removeSegments();
+
+			if(this.hasOwnProperty('rays'))
+				this.rays.clear();
+
+			if(Array.isArray(attr))
+				this.data.generatrix.addSegments(attr);
+
+			else if(attr.proto &&  attr.p1 &&  attr.p2){
+
+				// сначала, выясняем направление пути
+				var tpath = attr.proto;
+				if(tpath.getDirectedAngle(attr.ipoint) < 0)
+					tpath.reverse();
+
+				// далее, уточняем порядок p1, p2
+				var d1 = tpath.getOffsetOf(attr.p1),
+					d2 = tpath.getOffsetOf(attr.p2), d3;
+				if(d1 > d2){
+					d3 = d2;
+					d2 = d1;
+					d1 = d3;
+				}
+				if(d1 > 0){
+					tpath = tpath.split(d1);
+					d2 = tpath.getOffsetOf(attr.p2);
+				}
+				if(d2 < tpath.length)
+					tpath.split(d2);
+
+				this.data.generatrix.remove();
+				this.data.generatrix = tpath;
+				this.data.generatrix.parent = this;
+
+				if(this.parent.parent)
+					this.data.generatrix.guide = true;
+			}
+		},
+		enumerable : true
+	},
+
+	/**
+	 * путь элемента - состоит из кривых, соединяющих вершины элемента
+	 * для профиля, вершин всегда 4, для заполнений может быть <> 4
+	 * @property path
+	 * @type paper.Path
+	 */
+	path: {
+		get : function(){ return this.data.path; },
+		set : function(attr){
+			if(attr instanceof paper.Path){
+				this.data.path.removeSegments();
+				this.data.path.addSegments(attr.segments);
+				if(!this.data.path.closed)
+					this.data.path.closePath(true);
+			}
+		},
+		enumerable : true
+	},
+
 	// виртуальные метаданные для автоформ
 	_metadata: {
 		get : function(){
@@ -593,93 +676,6 @@ BuilderElement.prototype.__define({
 
 });
 
-// Привязываем свойства геометрии
-BuilderElement.prototype.__define({
-
-	/**
-	 * ### Элемент - владелец
-	 * имеет смысл для раскладок и рёбер заполнения
-	 * @property owner
-	 * @type BuilderElement
-	 */
-	owner: {
-		get : function(){ return this.data.owner; },
-		set : function(newValue){ this.data.owner = newValue; },
-		enumerable : false
-	},
-
-	/**
-	 * ### Образующая
-	 * прочитать - установить путь образующей. здесь может быть линия, простая дуга или безье
-	 * по ней будут пересчитаны pathData и прочие свойства
-	 * @property generatrix
-	 * @type paper.Path
-	 */
-	generatrix: {
-		get : function(){ return this.data.generatrix; },
-		set : function(attr){
-
-			this.data.generatrix.removeSegments();
-
-			if(this.hasOwnProperty('rays'))
-				this.rays.clear();
-
-			if(Array.isArray(attr))
-				this.data.generatrix.addSegments(attr);
-
-			else if(attr.proto &&  attr.p1 &&  attr.p2){
-
-				// сначала, выясняем направление пути
-				var tpath = attr.proto;
-				if(tpath.getDirectedAngle(attr.ipoint) < 0)
-					tpath.reverse();
-
-				// далее, уточняем порядок p1, p2
-				var d1 = tpath.getOffsetOf(attr.p1),
-					d2 = tpath.getOffsetOf(attr.p2), d3;
-				if(d1 > d2){
-					d3 = d2;
-					d2 = d1;
-					d1 = d3;
-				}
-				if(d1 > 0){
-					tpath = tpath.split(d1);
-					d2 = tpath.getOffsetOf(attr.p2);
-				}
-				if(d2 < tpath.length)
-					tpath.split(d2);
-
-				this.data.generatrix.remove();
-				this.data.generatrix = tpath;
-				this.data.generatrix.parent = this;
-
-				if(this.parent.parent)
-					this.data.generatrix.guide = true;
-			}
-		},
-		enumerable : true
-	},
-
-	/**
-	 * путь элемента - состоит из кривых, соединяющих вершины элемента
-	 * для профиля, вершин всегда 4, для заполнений может быть <> 4
-	 * @property path
-	 * @type paper.Path
-	 */
-	path: {
-		get : function(){ return this.data.path; },
-		set : function(attr){
-			if(attr instanceof paper.Path){
-				this.data.path.removeSegments();
-				this.data.path.addSegments(attr.segments);
-				if(!this.data.path.closed)
-					this.data.path.closePath(true);
-			}
-		},
-		enumerable : true
-	}
-
-});
 
 Editor.BuilderElement = BuilderElement;
 
@@ -1194,7 +1190,6 @@ Scheme.prototype.__define({
 				ox.cnn_elmnts.load(base_block.cnn_elmnts);
 
 				_scheme.load(ox);
-				setTimeout(_scheme.zoom_fit, 100);
 
 			}
 
@@ -1338,9 +1333,13 @@ function Contour(attr){
 		},
 
 		// служебная группа размерных линий
-		l_sizes: {
+		l_dimensions: {
 			get: function () {
-
+				if(!_layers.dimensions)
+					_layers.dimensions = new paper.Group({
+						parent: _contour
+					});
+				return _layers.dimensions;
 			},
 			enumerable: false
 		},
@@ -1538,6 +1537,12 @@ function Contour(attr){
 			}
 
 		});
+
+		// TODO отладка добавляем размерные линиии
+		new DimensionLine({
+			elm1: this.profiles[1],
+			parent: _contour.l_dimensions
+		});
 	}
 
 
@@ -1627,7 +1632,6 @@ Contour.prototype.__define({
 			});
 
 			// создаём и перерисовываем заполнения
-			//_contour.find_glasses(profiles);
 			_contour.glass_recalc();
 
 			// перерисовываем вложенные контуры
@@ -1640,6 +1644,11 @@ Contour.prototype.__define({
 					//});
 					child_contour.redraw(on_child_contour_redrawed);
 				}
+			});
+
+			// перерисовываем размерные линии
+			_contour.getItems({class: DimensionLine}).forEach(function(dimension_line) {
+				dimension_line.redraw();
 			});
 
 			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
@@ -2285,7 +2294,7 @@ function Profile(attr){
 		h = null;
 		_row = null;
 
-		this.data.generatrix.strokeColor = 'gray';
+		this.data.generatrix.strokeColor = 'grey';
 
 		this.data.path = new paper.Path();
 		this.data.path.strokeColor = 'black';
@@ -3917,6 +3926,178 @@ FreeText.prototype.__define({
 				name: "y"
 			});
 		}
+	}
+
+});
+
+/**
+ *
+ * Created 21.08.2015<br />
+ * &copy; http://www.oknosoft.ru 2014-2015
+ * @author    Evgeniy Malyarov
+ * @module  dimension_line
+ */
+
+/**
+ * Произвольный текст на эскизе
+ * @param attr {Object} - объект с указанием на строку координат и родительского слоя
+ * @constructor
+ * @extends paper.Group
+ */
+function DimensionLine(attr){
+
+
+	DimensionLine.superclass.constructor.call(this, attr);
+
+	// strokeColor: consts.lgray
+
+	var _row,
+		_nodes = {
+			elm1: attr.elm1,
+			elm2: attr.elm2 || attr.elm1,
+			p1: attr.p1 || "b",
+			p2: attr.p2 || "e",
+
+			callout1: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
+			callout2: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
+			scale: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
+			text: new paper.PointText({
+				parent: this,
+				justification: 'center',
+				fillColor: 'black',
+				fontSize: 60})
+		};
+
+	this.__define({
+		_row: {
+			get: function () {
+				return _row;
+			},
+			enumerable: false
+		},
+
+		_nodes: {
+			get: function () {
+				return _nodes;
+			},
+			enumerable: false
+		}
+	});
+
+
+	/**
+	 * Удаляет элемент из контура и иерархии проекта
+	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
+	 * @method remove
+	 */
+	this.remove = function () {
+		if(_row){
+			_row._owner.del(_row);
+			_row = null;
+		}
+		DimensionLine.superclass.remove.call(this);
+	};
+
+}
+DimensionLine._extend(paper.Group);
+
+DimensionLine.prototype.__define({
+
+	// виртуальные метаданные для автоформ
+	_metadata: {
+		get: function () {
+			return $p.dp.builder_text.metadata();
+		},
+		enumerable: false
+	},
+
+	// виртуальный датаменеджер для автоформ
+	_manager: {
+		get: function () {
+			return $p.dp.builder_text;
+		},
+		enumerable: false
+	},
+
+	redraw: {
+		value: function () {
+
+			var b = this._nodes.elm1[this._nodes.p1],
+				e = this._nodes.elm2[this._nodes.p2],
+				tmp = new paper.Path({
+					insert: false,
+					segments: [b, e]
+				}),
+				normal = tmp.getNormalAt(0).multiply(100),
+				length = tmp.length,
+				bs = b.add(normal.multiply(0.8)),
+				es = e.add(normal.multiply(0.8));
+
+			this._nodes.callout1.removeSegments();
+			this._nodes.callout2.removeSegments();
+			this._nodes.scale.removeSegments();
+
+			// выяснить ориентацию
+			this._nodes.callout1.addSegments([b, b.add(normal)]);
+			this._nodes.callout2.addSegments([e, e.add(normal)]);
+
+			this._nodes.scale.addSegments([bs, es]);
+
+			this._nodes.text.content = length.toFixed(0);
+			this._nodes.text.rotation = e.subtract(b).angle;
+			this._nodes.text.point = bs.add(es).divide(2);
+
+			// сместить
+
+			// нарисовать
+
+
+		},
+		enumerable : false
+	},
+
+	// размер
+	size: {
+		get: function () {
+			return 0;
+		},
+		set: function (v) {
+
+		},
+		enumerable: false
+	},
+
+	// угол к горизонту в направлении размера
+	angle: {
+		get: function () {
+			return 0;
+		},
+		set: function (v) {
+
+		},
+		enumerable: false
+	},
+
+	// расположение относительно контура $p.enm.pos
+	pos: {
+		get: function () {
+			return 0;
+		},
+		set: function (v) {
+
+		},
+		enumerable: false
+	},
+
+	// отступ от внешней границы изделия
+	offset: {
+		get: function () {
+			return 100;
+		},
+		set: function (v) {
+
+		},
+		enumerable: false
 	}
 
 });

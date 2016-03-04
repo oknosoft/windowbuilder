@@ -508,7 +508,6 @@ Scheme.prototype.__define({
 				ox.cnn_elmnts.load(base_block.cnn_elmnts);
 
 				_scheme.load(ox);
-				setTimeout(_scheme.zoom_fit, 100);
 
 			}
 

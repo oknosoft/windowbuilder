@@ -60,7 +60,7 @@ function Profile(attr){
 		h = null;
 		_row = null;
 
-		this.data.generatrix.strokeColor = 'gray';
+		this.data.generatrix.strokeColor = 'grey';
 
 		this.data.path = new paper.Path();
 		this.data.path.strokeColor = 'black';

@@ -67,6 +67,7 @@ gulp.task('build-lib', function(){
 			'./src/filling.js',
 			'./src/sectional.js',
 			'./src/freetext.js',
+			'./src/dimension_line.js',
 			'./src/tool_arc.js',
 			'./src/tool_lay_impost.js',
 			'./src/tool_pan.js',

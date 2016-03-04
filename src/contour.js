@@ -88,9 +88,13 @@ function Contour(attr){
 		},
 
 		// служебная группа размерных линий
-		l_sizes: {
+		l_dimensions: {
 			get: function () {
-
+				if(!_layers.dimensions)
+					_layers.dimensions = new paper.Group({
+						parent: _contour
+					});
+				return _layers.dimensions;
 			},
 			enumerable: false
 		},
@@ -288,6 +292,12 @@ function Contour(attr){
 			}
 
 		});
+
+		// TODO отладка добавляем размерные линиии
+		new DimensionLine({
+			elm1: this.profiles[1],
+			parent: _contour.l_dimensions
+		});
 	}
 
 
@@ -377,7 +387,6 @@ Contour.prototype.__define({
 			});
 
 			// создаём и перерисовываем заполнения
-			//_contour.find_glasses(profiles);
 			_contour.glass_recalc();
 
 			// перерисовываем вложенные контуры
@@ -390,6 +399,11 @@ Contour.prototype.__define({
 					//});
 					child_contour.redraw(on_child_contour_redrawed);
 				}
+			});
+
+			// перерисовываем размерные линии
+			_contour.getItems({class: DimensionLine}).forEach(function(dimension_line) {
+				dimension_line.redraw();
 			});
 
 			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
