@@ -1127,8 +1127,9 @@ Scheme.prototype.__define({
 			for (var i = 0; i < selected.length; i++) {
 				var path = selected[i];
 				if(path.parent instanceof Profile){
-					if(!path.layer.parent || (path.parent._row.elm_type == $p.enm.elm_types.Импост))
+					if(!path.layer.parent || !path.parent.nearest())
 						path.parent.move_points(delta, all_points);
+
 				}else if(path instanceof Filling){
 					path.position = path.position.add(delta);
 					while (path.children.length > 1)
@@ -2315,7 +2316,7 @@ function Profile(attr){
 									_profile.b = p.e;
 							}
 							else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-								mpoint = p.generatrix.getNearestPoint(_profile.b);
+								mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
 								if(!mpoint.is_nearest(_profile.b))
 									_profile.b = mpoint;
 							}
@@ -2326,7 +2327,7 @@ function Profile(attr){
 									_profile.e = p.b;
 							}
 							else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-								mpoint = p.generatrix.getNearestPoint(_profile.e);
+								mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
 								if(!mpoint.is_nearest(_profile.e))
 									_profile.e = mpoint;
 							}

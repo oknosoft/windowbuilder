@@ -91,6 +91,89 @@ BuilderElement._extend(paper.Group);
 // Привязываем свойства номенклатуры, вставки и цвета
 BuilderElement.prototype.__define({
 
+	/**
+	 * ### Элемент - владелец
+	 * имеет смысл для раскладок и рёбер заполнения
+	 * @property owner
+	 * @type BuilderElement
+	 */
+	owner: {
+		get : function(){ return this.data.owner; },
+		set : function(newValue){ this.data.owner = newValue; },
+		enumerable : false
+	},
+
+	/**
+	 * ### Образующая
+	 * прочитать - установить путь образующей. здесь может быть линия, простая дуга или безье
+	 * по ней будут пересчитаны pathData и прочие свойства
+	 * @property generatrix
+	 * @type paper.Path
+	 */
+	generatrix: {
+		get : function(){ return this.data.generatrix; },
+		set : function(attr){
+
+			this.data.generatrix.removeSegments();
+
+			if(this.hasOwnProperty('rays'))
+				this.rays.clear();
+
+			if(Array.isArray(attr))
+				this.data.generatrix.addSegments(attr);
+
+			else if(attr.proto &&  attr.p1 &&  attr.p2){
+
+				// сначала, выясняем направление пути
+				var tpath = attr.proto;
+				if(tpath.getDirectedAngle(attr.ipoint) < 0)
+					tpath.reverse();
+
+				// далее, уточняем порядок p1, p2
+				var d1 = tpath.getOffsetOf(attr.p1),
+					d2 = tpath.getOffsetOf(attr.p2), d3;
+				if(d1 > d2){
+					d3 = d2;
+					d2 = d1;
+					d1 = d3;
+				}
+				if(d1 > 0){
+					tpath = tpath.split(d1);
+					d2 = tpath.getOffsetOf(attr.p2);
+				}
+				if(d2 < tpath.length)
+					tpath.split(d2);
+
+				this.data.generatrix.remove();
+				this.data.generatrix = tpath;
+				this.data.generatrix.parent = this;
+
+				if(this.parent.parent)
+					this.data.generatrix.guide = true;
+			}
+		},
+		enumerable : true
+	},
+
+	/**
+	 * путь элемента - состоит из кривых, соединяющих вершины элемента
+	 * для профиля, вершин всегда 4, для заполнений может быть <> 4
+	 * @property path
+	 * @type paper.Path
+	 */
+	path: {
+		get : function(){ return this.data.path; },
+		set : function(attr){
+			if(attr instanceof paper.Path){
+				this.data.path.removeSegments();
+				this.data.path.addSegments(attr.segments);
+				if(!this.data.path.closed)
+					this.data.path.closePath(true);
+			}
+		},
+		enumerable : true
+	},
+
 	// виртуальные метаданные для автоформ
 	_metadata: {
 		get : function(){
@@ -214,93 +297,6 @@ BuilderElement.prototype.__define({
 
 });
 
-// Привязываем свойства геометрии
-BuilderElement.prototype.__define({
-
-	/**
-	 * ### Элемент - владелец
-	 * имеет смысл для раскладок и рёбер заполнения
-	 * @property owner
-	 * @type BuilderElement
-	 */
-	owner: {
-		get : function(){ return this.data.owner; },
-		set : function(newValue){ this.data.owner = newValue; },
-		enumerable : false
-	},
-
-	/**
-	 * ### Образующая
-	 * прочитать - установить путь образующей. здесь может быть линия, простая дуга или безье
-	 * по ней будут пересчитаны pathData и прочие свойства
-	 * @property generatrix
-	 * @type paper.Path
-	 */
-	generatrix: {
-		get : function(){ return this.data.generatrix; },
-		set : function(attr){
-
-			this.data.generatrix.removeSegments();
-
-			if(this.hasOwnProperty('rays'))
-				this.rays.clear();
-
-			if(Array.isArray(attr))
-				this.data.generatrix.addSegments(attr);
-
-			else if(attr.proto &&  attr.p1 &&  attr.p2){
-
-				// сначала, выясняем направление пути
-				var tpath = attr.proto;
-				if(tpath.getDirectedAngle(attr.ipoint) < 0)
-					tpath.reverse();
-
-				// далее, уточняем порядок p1, p2
-				var d1 = tpath.getOffsetOf(attr.p1),
-					d2 = tpath.getOffsetOf(attr.p2), d3;
-				if(d1 > d2){
-					d3 = d2;
-					d2 = d1;
-					d1 = d3;
-				}
-				if(d1 > 0){
-					tpath = tpath.split(d1);
-					d2 = tpath.getOffsetOf(attr.p2);
-				}
-				if(d2 < tpath.length)
-					tpath.split(d2);
-
-				this.data.generatrix.remove();
-				this.data.generatrix = tpath;
-				this.data.generatrix.parent = this;
-
-				if(this.parent.parent)
-					this.data.generatrix.guide = true;
-			}
-		},
-		enumerable : true
-	},
-
-	/**
-	 * путь элемента - состоит из кривых, соединяющих вершины элемента
-	 * для профиля, вершин всегда 4, для заполнений может быть <> 4
-	 * @property path
-	 * @type paper.Path
-	 */
-	path: {
-		get : function(){ return this.data.path; },
-		set : function(attr){
-			if(attr instanceof paper.Path){
-				this.data.path.removeSegments();
-				this.data.path.addSegments(attr.segments);
-				if(!this.data.path.closed)
-					this.data.path.closePath(true);
-			}
-		},
-		enumerable : true
-	}
-
-});
 
 Editor.BuilderElement = BuilderElement;
 

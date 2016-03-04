@@ -91,7 +91,7 @@ function Profile(attr){
 									_profile.b = p.e;
 							}
 							else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-								mpoint = p.generatrix.getNearestPoint(_profile.b);
+								mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
 								if(!mpoint.is_nearest(_profile.b))
 									_profile.b = mpoint;
 							}
@@ -102,7 +102,7 @@ function Profile(attr){
 									_profile.e = p.b;
 							}
 							else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-								mpoint = p.generatrix.getNearestPoint(_profile.e);
+								mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
 								if(!mpoint.is_nearest(_profile.e))
 									_profile.e = mpoint;
 							}

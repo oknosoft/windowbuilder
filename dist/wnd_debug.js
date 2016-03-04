@@ -3007,6 +3007,14 @@ $p.iface.oninit = function() {
 	});
 
 
+	// запрещаем масштабировать колёсиком мыши, т.к. для масштабирования у канваса свой инструмент
+	window.onmousewheel = function (e) {
+		if(e.ctrlKey){
+			e.preventDefault();
+			return false;
+		}
+	}
+
 };
 
 /**
