@@ -201,9 +201,9 @@ function Scheme(_canvas){
 		var bounds, shift;
 		_scheme.layers.forEach(function(l){
 			if(!bounds)
-				bounds = l.bounds;
+				bounds = l.strokeBounds;
 			else
-				bounds = bounds.unite(l.bounds);
+				bounds = bounds.unite(l.strokeBounds);
 		});
 		if(bounds){
 			_scheme.view.zoom = Math.min(_scheme.view.viewSize.height / (bounds.height+220), _scheme.view.viewSize.width / (bounds.width+220));

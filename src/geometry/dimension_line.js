@@ -21,21 +21,11 @@ function DimensionLine(attr){
 
 	var _row;
 
-	this.data._nodes = {
-			elm1: attr.elm1,
-			elm2: attr.elm2 || attr.elm1,
-			p1: attr.p1 || "b",
-			p2: attr.p2 || "e",
-
-			callout1: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
-			callout2: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
-			scale: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
-			text: new paper.PointText({
-				parent: this,
-				justification: 'center',
-				fillColor: 'black',
-				fontSize: 60})
-		};
+	this.data.pos = attr.pos;
+	this.data.elm1 = attr.elm1;
+	this.data.elm2 = attr.elm2 || this.data.elm1;
+	this.data.p1 = attr.p1 || "b";
+	this.data.p2 = attr.p2 || "e";
 
 	this.__define({
 		_row: {
@@ -81,23 +71,59 @@ DimensionLine.prototype.__define({
 		enumerable: false
 	},
 
+	_nodes: {
+		get: function () {
+
+			if(!this.data._nodes)
+				this.data._nodes = {
+
+					callout1: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
+					callout2: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
+					scale: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
+					text: new paper.PointText({
+						parent: this,
+						justification: 'center',
+						fillColor: 'black',
+						fontSize: 72})
+				};
+			return this.data._nodes;
+		}
+	},
+
 	redraw: {
 		value: function () {
 
-			var _nodes = this.data._nodes,
+			var _nodes = this._nodes,
 				_bounds = this.parent.parent.bounds,
-				b = _nodes.elm1[_nodes.p1],
-				e = _nodes.elm2[_nodes.p2],
-				tmp = new paper.Path({
-					insert: false,
-					segments: [b, e]
-				}),
-				normal = tmp.getNormalAt(0).multiply(100),
-				length = tmp.length,
-				bs = b.add(normal.multiply(0.8)),
-				es = e.add(normal.multiply(0.8));
+				b, e, tmp, normal, length, bs, es;
 
-			// выяснить ориентацию
+			if(!this.pos){
+				b = this.data.elm1[this.data.p1];
+				e = this.data.elm2[this.data.p2];
+
+			}else if(this.pos == "top"){
+				b = _bounds.topLeft;
+				e = _bounds.topRight;
+
+			}else if(this.pos == "left"){
+
+			}else if(this.pos == "bottom"){
+				b = _bounds.bottomLeft;
+				e = _bounds.bottomRight;
+
+			}else if(this.pos == "right"){
+
+			}
+
+			tmp = new paper.Path({
+				insert: false,
+				segments: [b, e]
+			});
+			normal = tmp.getNormalAt(0).multiply(100);
+			length = tmp.length;
+			bs = b.add(normal.multiply(0.8));
+			es = e.add(normal.multiply(0.8));
+
 			if(_nodes.callout1.segments.length){
 				_nodes.callout1.firstSegment.point = b;
 				_nodes.callout1.lastSegment.point = b.add(normal);
@@ -120,10 +146,6 @@ DimensionLine.prototype.__define({
 			_nodes.text.content = length.toFixed(0);
 			_nodes.text.rotation = e.subtract(b).angle;
 			_nodes.text.point = bs.add(es).divide(2);
-
-			// сместить
-
-			// нарисовать
 
 
 		},
@@ -155,10 +177,11 @@ DimensionLine.prototype.__define({
 	// расположение относительно контура $p.enm.pos
 	pos: {
 		get: function () {
-			return 0;
+			return this.data.pos || "";
 		},
 		set: function (v) {
-
+			this.data.pos = v;
+			this.redraw();
 		},
 		enumerable: false
 	},

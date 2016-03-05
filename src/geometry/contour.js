@@ -290,10 +290,12 @@ function Contour(attr){
 		});
 
 		// TODO отладка добавляем размерные линиии
-		new DimensionLine({
-			elm1: this.profiles[1],
-			parent: this.l_dimensions
-		});
+		if(!this.parent)
+			new DimensionLine({
+				//elm1: this.profiles[1],
+				pos: "top",
+				parent: this.l_dimensions
+			});
 	}
 
 
