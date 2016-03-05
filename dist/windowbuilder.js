@@ -98,7 +98,7 @@ function Contour(attr){
 		l_dimensions: {
 			get: function () {
 				if(!_layers.dimensions)
-					_layers.dimensions = new paper.Group({ parent: this, guide: true });
+					_layers.dimensions = new paper.Group({ parent: this });
 				return _layers.dimensions;
 			},
 			enumerable: false
@@ -298,13 +298,6 @@ function Contour(attr){
 
 		});
 
-		// TODO отладка добавляем размерные линиии
-		if(!this.parent)
-			new DimensionLine({
-				//elm1: this.profiles[1],
-				pos: "top",
-				parent: this.l_dimensions
-			});
 	}
 
 
@@ -1150,20 +1143,27 @@ DimensionLine.prototype.__define({
 				e = _bounds.topRight;
 
 			}else if(this.pos == "left"){
+				b = _bounds.bottomLeft;
+				e = _bounds.topLeft;
 
 			}else if(this.pos == "bottom"){
 				b = _bounds.bottomLeft;
 				e = _bounds.bottomRight;
 
 			}else if(this.pos == "right"){
-
+				b = _bounds.bottomRight;
+				e = _bounds.topRight;
 			}
 
 			tmp = new paper.Path({
 				insert: false,
 				segments: [b, e]
 			});
-			normal = tmp.getNormalAt(0).multiply(100);
+
+			normal = tmp.getNormalAt(0).multiply(90);
+			if(this.pos == "right" || this.pos == "bottom")
+				normal = normal.multiply(1.4).negate();
+
 			length = tmp.length;
 			bs = b.add(normal.multiply(0.8));
 			es = e.add(normal.multiply(0.8));
@@ -3579,9 +3579,11 @@ function Scheme(_canvas){
 	Scheme.superclass.constructor.call(this, _canvas);
 
 	var _scheme = paper.project = this,
-		_bounds,
-		_changes = [],
-		update_timer = false;
+		_data = _scheme.data = {
+			_bounds: null,
+			_update_timer: 0
+		},
+		_changes = [];
 
 	/**
 	 * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
@@ -3613,16 +3615,18 @@ function Scheme(_canvas){
 	this.__define("bounds", {
 		get : function(){
 
-			if(!_bounds)
-				_bounds = new paper.Rectangle({
-					point: [0, 0],
-					size: [this.ox.x, this.ox.y],
-					insert: false
+			if(!_data._bounds){
+				_scheme.layers.forEach(function(l){
+					if(!_data._bounds)
+						_data._bounds = l.bounds;
+					else
+						_data._bounds = _data._bounds.unite(l.bounds);
 				});
-			return _bounds;
+			}
+
+			return _data._bounds;
 		},
-		enumerable : false,
-		configurable : false});
+		enumerable : false});
 
 	/**
 	 * Менеджер соединений изделия
@@ -3764,7 +3768,7 @@ function Scheme(_canvas){
 				bounds = bounds.unite(l.strokeBounds);
 		});
 		if(bounds){
-			_scheme.view.zoom = Math.min(_scheme.view.viewSize.height / (bounds.height+220), _scheme.view.viewSize.width / (bounds.width+220));
+			_scheme.view.zoom = Math.min(_scheme.view.viewSize.height / (bounds.height+320), _scheme.view.viewSize.width / (bounds.width+320));
 			shift = (_scheme.view.viewSize.width - bounds.width * _scheme.view.zoom) / 2;
 			if(shift < 200)
 				shift = 0;
@@ -3790,7 +3794,7 @@ function Scheme(_canvas){
 
 				var contour = new Contour( {parent: parent, row: row});
 
-				// вложенные створки пока отключаем
+				// вложенные створки
 				load_contour(contour);
 
 			});
@@ -3799,12 +3803,69 @@ function Scheme(_canvas){
 		function load_object(o){
 
 			_scheme.ox = o;
+
+			_data._bounds = new paper.Rectangle({
+				point: [0, 0],
+				size: [o.x, o.y]
+			});
 			o = null;
 
 			// создаём семейство конструкций
+			_data._loading = true;
 			load_contour(null);
 
-			setTimeout(_scheme.zoom_fit, 100);
+			// авторазмерные линии
+			// находим крайние контуры
+			var left, right, top, bottom;
+			_scheme.layers.forEach(function(l){
+
+				if(!left || l.bounds.left < left.bounds.left)
+					left = l;
+
+				if(!right || l.bounds.right > right.bounds.right)
+					right = l;
+
+				if(!top || l.bounds.top < top.bounds.top)
+					top = l;
+
+				if(!bottom || l.bounds.bottom > bottom.bounds.bottom)
+					bottom = l;
+
+			});
+			// формируем авторазмеры
+			if(_scheme.layers.length == 1){
+				new DimensionLine({
+					pos: "bottom",
+					parent: bottom.l_dimensions
+				});
+				new DimensionLine({
+					pos: "right",
+					parent: right.l_dimensions
+				});
+			}else if(_scheme.layers.length == 2){
+				new DimensionLine({
+					pos: "top",
+					parent: left.l_dimensions
+				});
+				new DimensionLine({
+					pos: "top",
+					parent: right.l_dimensions
+				});
+				new DimensionLine({
+					pos: "left",
+					parent: left.l_dimensions
+				});
+				new DimensionLine({
+					pos: "right",
+					parent: right.l_dimensions
+				});
+			}
+
+			setTimeout(function () {
+				delete _data._loading;
+				_data._bounds = null;
+				_scheme.zoom_fit();
+			}, 100);
 
 		}
 
@@ -3823,6 +3884,9 @@ function Scheme(_canvas){
 	 * Регистрирует факты изменения элемнтов
 	 */
 	this.register_change = function () {
+		if(!_data._loading){
+			_data._bounds = null;
+		}
 		_changes.push(Date.now());
 	};
 
@@ -3837,16 +3901,15 @@ function Scheme(_canvas){
 	 * Регистрирует необходимость обновить изображение
  	 */
 	this.register_update = function () {
-		if(!update_timer){
-			update_timer = true;
-			setTimeout(function () {
-				_scheme.view.update();
-				update_timer = false;
-			}, 100);
-		}
+
+		if(_data._update_timer)
+			clearTimeout(_data._update_timer);
+
+		_data._update_timer = setTimeout(function () {
+			_scheme.view.update();
+			_data._update_timer = 0;
+		}, 100);
 	};
-
-
 
 	/**
 	 * Снимает выделение со всех узлов всех путей
@@ -4962,13 +5025,13 @@ function ToolRuler(){
 		table = div.firstChild.childNodes;
 
 		$p.iface.add_button(table[0].childNodes[1], null,
-			{name: "top", img: "/imgs/custom_field/align_top.png", title: $p.msg.align_set_top}).onclick = onclick;
+			{name: "top", img: "dist/imgs/align_top.png", title: $p.msg.align_set_top}).onclick = onclick;
 		$p.iface.add_button(table[1].childNodes[0], null,
-			{name: "left", img: "/imgs/custom_field/align_left.png", title: $p.msg.align_set_left}).onclick = onclick;
+			{name: "left", img: "dist/imgs/align_left.png", title: $p.msg.align_set_left}).onclick = onclick;
 		$p.iface.add_button(table[1].childNodes[2], null,
-			{name: "right", img: "/imgs/custom_field/align_right.png", title: $p.msg.align_set_right}).onclick = onclick;
+			{name: "right", img: "dist/imgs/align_right.png", title: $p.msg.align_set_right}).onclick = onclick;
 		$p.iface.add_button(table[2].childNodes[1], null,
-			{name: "bottom", img: "/imgs/custom_field/align_bottom.png", title: $p.msg.align_set_bottom}).onclick = onclick;
+			{name: "bottom", img: "dist/imgs/align_bottom.png", title: $p.msg.align_set_bottom}).onclick = onclick;
 
 		tool.wnd.attachObject(div);
 

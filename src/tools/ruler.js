@@ -49,13 +49,13 @@ function ToolRuler(){
 		table = div.firstChild.childNodes;
 
 		$p.iface.add_button(table[0].childNodes[1], null,
-			{name: "top", img: "/imgs/custom_field/align_top.png", title: $p.msg.align_set_top}).onclick = onclick;
+			{name: "top", img: "dist/imgs/align_top.png", title: $p.msg.align_set_top}).onclick = onclick;
 		$p.iface.add_button(table[1].childNodes[0], null,
-			{name: "left", img: "/imgs/custom_field/align_left.png", title: $p.msg.align_set_left}).onclick = onclick;
+			{name: "left", img: "dist/imgs/align_left.png", title: $p.msg.align_set_left}).onclick = onclick;
 		$p.iface.add_button(table[1].childNodes[2], null,
-			{name: "right", img: "/imgs/custom_field/align_right.png", title: $p.msg.align_set_right}).onclick = onclick;
+			{name: "right", img: "dist/imgs/align_right.png", title: $p.msg.align_set_right}).onclick = onclick;
 		$p.iface.add_button(table[2].childNodes[1], null,
-			{name: "bottom", img: "/imgs/custom_field/align_bottom.png", title: $p.msg.align_set_bottom}).onclick = onclick;
+			{name: "bottom", img: "dist/imgs/align_bottom.png", title: $p.msg.align_set_bottom}).onclick = onclick;
 
 		tool.wnd.attachObject(div);
 

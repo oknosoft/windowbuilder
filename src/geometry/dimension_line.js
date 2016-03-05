@@ -106,20 +106,27 @@ DimensionLine.prototype.__define({
 				e = _bounds.topRight;
 
 			}else if(this.pos == "left"){
+				b = _bounds.bottomLeft;
+				e = _bounds.topLeft;
 
 			}else if(this.pos == "bottom"){
 				b = _bounds.bottomLeft;
 				e = _bounds.bottomRight;
 
 			}else if(this.pos == "right"){
-
+				b = _bounds.bottomRight;
+				e = _bounds.topRight;
 			}
 
 			tmp = new paper.Path({
 				insert: false,
 				segments: [b, e]
 			});
-			normal = tmp.getNormalAt(0).multiply(100);
+
+			normal = tmp.getNormalAt(0).multiply(90);
+			if(this.pos == "right" || this.pos == "bottom")
+				normal = normal.multiply(1.4).negate();
+
 			length = tmp.length;
 			bs = b.add(normal.multiply(0.8));
 			es = e.add(normal.multiply(0.8));

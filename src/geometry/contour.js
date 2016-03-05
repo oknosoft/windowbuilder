@@ -89,7 +89,7 @@ function Contour(attr){
 		l_dimensions: {
 			get: function () {
 				if(!_layers.dimensions)
-					_layers.dimensions = new paper.Group({ parent: this, guide: true });
+					_layers.dimensions = new paper.Group({ parent: this });
 				return _layers.dimensions;
 			},
 			enumerable: false
@@ -289,13 +289,6 @@ function Contour(attr){
 
 		});
 
-		// TODO отладка добавляем размерные линиии
-		if(!this.parent)
-			new DimensionLine({
-				//elm1: this.profiles[1],
-				pos: "top",
-				parent: this.l_dimensions
-			});
 	}
 
 
