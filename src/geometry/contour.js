@@ -71,9 +71,7 @@ function Contour(attr){
 		l_text: {
 			get: function () {
 				if(!_layers.text)
-					_layers.text = new paper.Group({
-						parent: _contour
-					});
+					_layers.text = new paper.Group({ parent: this });
 				return _layers.text;
 			},
 			enumerable: false
@@ -91,9 +89,7 @@ function Contour(attr){
 		l_dimensions: {
 			get: function () {
 				if(!_layers.dimensions)
-					_layers.dimensions = new paper.Group({
-						parent: _contour
-					});
+					_layers.dimensions = new paper.Group({ parent: this, guide: true });
 				return _layers.dimensions;
 			},
 			enumerable: false
@@ -296,7 +292,7 @@ function Contour(attr){
 		// TODO отладка добавляем размерные линиии
 		new DimensionLine({
 			elm1: this.profiles[1],
-			parent: _contour.l_dimensions
+			parent: this.l_dimensions
 		});
 	}
 
@@ -360,6 +356,21 @@ Contour.prototype.__define({
 		enumerable : false
 	},
 
+	bounds: {
+		get: function () {
+			var profiles = this.profiles, res;
+			if(!profiles.length)
+				res = new paper.Rect()
+			else{
+				res = profiles[0].bounds;
+				for(var i = 1; i < profiles.length; i++)
+					res = res.unite(profiles[i].bounds);
+			}
+			return res;
+		},
+		enumerable : false
+	},
+
 	/**
 	 * Перерисовывает элементы контура
 	 * @method redraw
@@ -402,8 +413,8 @@ Contour.prototype.__define({
 			});
 
 			// перерисовываем размерные линии
-			_contour.getItems({class: DimensionLine}).forEach(function(dimension_line) {
-				dimension_line.redraw();
+			this.l_dimensions.children.forEach(function(elm) {
+					elm.redraw();
 			});
 
 			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
@@ -937,6 +948,9 @@ Contour.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Цвет фурнитуры
+	 */
 	clr_furn: {
 		get: function () {
 			return this._row.clr_furn;
@@ -947,6 +961,9 @@ Contour.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Направление открывания
+	 */
 	direction: {
 		get: function () {
 			return this._row.direction;
@@ -957,6 +974,9 @@ Contour.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Высота ручки
+	 */
 	h_ruch: {
 		get: function () {
 			return this._row.h_ruch;
@@ -967,6 +987,9 @@ Contour.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Вставка москитки
+	 */
 	mskt: {
 		get: function () {
 			return this._row.mskt;
@@ -977,12 +1000,33 @@ Contour.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Цвет москитки
+	 */
 	clr_mskt: {
 		get: function () {
 			return this._row.clr_mskt;
 		},
 		set: function (v) {
 			this._row.clr_mskt = v;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает профиль по стороне
+	 * @param side {_enm.positions|String}
+	 */
+	profile_by_side: {
+		value: function (side) {
+			var profiles = this.profiles;
+		},
+		enumerable : false
+	},
+
+	profile_by_furn_side: {
+		value: function (side) {
+			var profiles = this.profiles;
 		},
 		enumerable : false
 	}

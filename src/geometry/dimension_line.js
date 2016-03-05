@@ -19,8 +19,9 @@ function DimensionLine(attr){
 
 	// strokeColor: consts.lgray
 
-	var _row,
-		_nodes = {
+	var _row;
+
+	this.data._nodes = {
 			elm1: attr.elm1,
 			elm2: attr.elm2 || attr.elm1,
 			p1: attr.p1 || "b",
@@ -40,13 +41,6 @@ function DimensionLine(attr){
 		_row: {
 			get: function () {
 				return _row;
-			},
-			enumerable: false
-		},
-
-		_nodes: {
-			get: function () {
-				return _nodes;
 			},
 			enumerable: false
 		}
@@ -90,8 +84,10 @@ DimensionLine.prototype.__define({
 	redraw: {
 		value: function () {
 
-			var b = this._nodes.elm1[this._nodes.p1],
-				e = this._nodes.elm2[this._nodes.p2],
+			var _nodes = this.data._nodes,
+				_bounds = this.parent.parent.bounds,
+				b = _nodes.elm1[_nodes.p1],
+				e = _nodes.elm2[_nodes.p2],
 				tmp = new paper.Path({
 					insert: false,
 					segments: [b, e]
@@ -101,19 +97,29 @@ DimensionLine.prototype.__define({
 				bs = b.add(normal.multiply(0.8)),
 				es = e.add(normal.multiply(0.8));
 
-			this._nodes.callout1.removeSegments();
-			this._nodes.callout2.removeSegments();
-			this._nodes.scale.removeSegments();
-
 			// выяснить ориентацию
-			this._nodes.callout1.addSegments([b, b.add(normal)]);
-			this._nodes.callout2.addSegments([e, e.add(normal)]);
+			if(_nodes.callout1.segments.length){
+				_nodes.callout1.firstSegment.point = b;
+				_nodes.callout1.lastSegment.point = b.add(normal);
+			}else
+				_nodes.callout1.addSegments([b, b.add(normal)]);
 
-			this._nodes.scale.addSegments([bs, es]);
+			if(_nodes.callout2.segments.length){
+				_nodes.callout2.firstSegment.point = e;
+				_nodes.callout2.lastSegment.point = e.add(normal);
+			}else
+				_nodes.callout2.addSegments([e, e.add(normal)]);
 
-			this._nodes.text.content = length.toFixed(0);
-			this._nodes.text.rotation = e.subtract(b).angle;
-			this._nodes.text.point = bs.add(es).divide(2);
+			if(_nodes.scale.segments.length){
+				_nodes.scale.firstSegment.point = bs;
+				_nodes.scale.lastSegment.point = es;
+			}else
+				_nodes.scale.addSegments([bs, es]);
+
+
+			_nodes.text.content = length.toFixed(0);
+			_nodes.text.rotation = e.subtract(b).angle;
+			_nodes.text.point = bs.add(es).divide(2);
 
 			// сместить
 

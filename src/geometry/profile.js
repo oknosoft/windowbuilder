@@ -19,10 +19,7 @@ function Profile(attr){
 	var _profile = this,
 
 		// точки пересечения профиля с соседями с внутренней стороны
-		_corns = [],
-
-		// кеш лучей в узлах профиля
-		_rays = new ProfileRays();
+		_corns = [];
 
 	Profile.superclass.constructor.call(this, attr);
 
@@ -59,6 +56,9 @@ function Profile(attr){
 
 		h = null;
 		_row = null;
+
+		// кеш лучей в узлах профиля
+		this.data._rays = new ProfileRays();
 
 		this.data.generatrix.strokeColor = 'grey';
 
@@ -156,157 +156,6 @@ function Profile(attr){
 
 
 	/**
-	 * Координаты начала элемента
-	 * @property b
-	 * @type Point
-	 */
-	this.__define('b', {
-		get : function(){
-			if(this.data.generatrix)
-				return this.data.generatrix.firstSegment.point;
-		},
-		set : function(v){
-			_rays.clear();
-			if(this.data.generatrix)
-				this.data.generatrix.firstSegment.point = v;
-		},
-		enumerable : true,
-		configurable : false
-	});
-
-	/**
-	 * Координаты конца элемента
-	 * @property e
-	 * @type Point
-	 */
-	this.__define('e', {
-		get : function(){
-			if(this.data.generatrix)
-				return this.data.generatrix.lastSegment.point;
-		},
-		set : function(v){
-			_rays.clear();
-			if(this.data.generatrix)
-				this.data.generatrix.lastSegment.point = v;
-		},
-		enumerable : true,
-		configurable : false
-	});
-
-
-	this.__define({
-
-		/**
-		 * Опорные точки и лучи
-		 * @property rays
-		 * @type {Object}
-		 */
-		rays: {
-			get : function(){
-				if(!_rays.inner || !_rays.outer)
-					_rays.recalc(_profile);
-					return _rays;
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		/**
-		 * Радиус сегмента профиля
-		 * @property r
-		 * @type {Number}
-		 */
-		r: {
-			get : function(){
-				return this._row.r;
-			},
-			set: function(v){
-				_rays.clear();
-				this._row.r = v;
-			},
-			enumerable : true,
-			configurable : false
-		},
-
-		/**
-		 * Направление дуги сегмента профиля против часовой стрелки
-		 * @property arc_ccw
-		 * @type {Boolean}
-		 */
-		arc_ccw: {
-			get : function(){
-
-			},
-			set: function(v){
-				_rays.clear();
-			},
-			enumerable : true,
-			configurable : false
-		}
-
-	});
-
-	/**
-	 * Координата начала профиля
-	 * @property x1
-	 * @type {Number}
-	 */
-	this.__define("x1", {
-		get : function(){ return this.b.x.round(1); },
-		set: function(v){
-			_profile.select_node("b");
-			_profile.move_points(new paper.Point(v - this.b.x, 0));	},
-		enumerable : false,
-		configurable : false
-	});
-
-	/**
-	 * Координата начала профиля
-	 * @property y1
-	 * @type {Number}
-	 */
-	this.__define("y1", {
-		get : function(){
-			return Math.round((_profile.project.bounds.height-this.b.y)*10)/10; },
-		set: function(v){
-			v = _profile.project.bounds.height-v;
-			_profile.select_node("b");
-			_profile.move_points(new paper.Point(0, v - this.b.y)); },
-		enumerable : false,
-		configurable : false
-	});
-
-	/**
-	 * Координата конца профиля
-	 * @property x2
-	 * @type {Number}
-	 */
-	this.__define("x2", {
-		get : function(){ return this.e.x.round(1); },
-		set: function(v){
-			_profile.select_node("e");
-			_profile.move_points(new paper.Point(v - this.e.x, 0)); },
-		enumerable : false,
-		configurable : false
-	});
-
-	/**
-	 * Координата конца профиля
-	 * @property y2
-	 * @type {Number}
-	 */
-	this.__define("y2", {
-		get : function(){
-			return Math.round((_profile.project.bounds.height-this.e.y)*10)/10; },
-		set: function(v){
-			v = _profile.project.bounds.height-v;
-			_profile.select_node("e");
-			_profile.move_points(new paper.Point(0, v - this.e.y));},
-		enumerable : false,
-		configurable : false
-	});
-
-	/**
 	 * Координаты вершин (cornx1...corny4)
 	 * @method corns
 	 * @param corn {String|Number} - имя или номер вершины
@@ -331,7 +180,8 @@ function Profile(attr){
 	this.cnn_point = function(node, point){
 
 		var res = this.rays[node],
-			c_d = _profile.project.check_distance;
+			c_d = this.project.check_distance,
+			open_cnn = this.project.sys.allow_open_cnn;
 
 		if(!point)
 			point = this[node];
@@ -354,11 +204,15 @@ function Profile(attr){
 		res.cnn_types = acn.i;
 
 		// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
-		// TODO нужно свойство системы искать ли сложные L_I_I соединения
 		if(this.parent){
 			var profiles = this.parent.profiles, ares = [], angl;
 			for(var i in profiles){
 				if(c_d(profiles[i], _profile, res, point, false) === false){
+
+					// для простых систем разрывы профиля не анализируем
+					if(!open_cnn)
+						return res;
+
 					ares.push({
 						profile_point: res.profile_point,
 						profile: res.profile,
@@ -422,63 +276,6 @@ function Profile(attr){
 		return res;
 	};
 
-
-	/**
-	 * Обрабатывает смещение выделенных сегментов образующей профиля
-	 * @param delta {paper.Point} - куда и насколько смещать
-	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
-	 * @param [start_point] {paper.Point} - откуда началось движение
-	 */
-	this.move_points = function(delta, all_points, start_point){
-		var segments = _profile.generatrix.segments,
-			changed = false, cnn_point, free_point, j,
-			noti = {type: consts.move_points, profiles: [this], points: []}, noti_points, notifier;
-
-		for (j = 0; j < segments.length; j++) {
-			if (segments[j].selected || all_points){
-
-				noti_points = {old: segments[j].point.clone(), delta: delta};
-
-				// собственно, сдвиг узлов
-				free_point = segments[j].point.add(delta);
-				if(segments[j].point == _profile.b)
-					cnn_point = this.cnn_point("b", free_point);
-				else if(segments[j].point == _profile.e)
-					cnn_point = this.cnn_point("e", free_point);
-
-				if(cnn_point && cnn_point.cnn_types == acn.t &&
-					(segments[j].point == _profile.b || segments[j].point == _profile.e)){
-					segments[j].point = cnn_point.point;
-				}
-				else{
-					segments[j].point = free_point;
-				}
-
-				// накапливаем точки в нотификаторе
-				noti_points.new = segments[j].point;
-				if(start_point)
-					noti_points.start = start_point;
-				noti.points.push(noti_points);
-
-				changed = true;
-			}
-		}
-
-		if(changed){
-
-			_rays.clear();
-
-			// информируем систему об изменениях
-			_profile.parent.notify(noti);
-
-			notifier = Object.getNotifier(this);
-			notifier.notify({ type: 'update', name: "x1" });
-			notifier.notify({ type: 'update', name: "y1" });
-			notifier.notify({ type: 'update', name: "x2" });
-			notifier.notify({ type: 'update', name: "y2" });
-
-		}
-	};
 
 	/**
 	 * Рассчитывает точки пути на пересечении текущего и указанного профилей
@@ -657,6 +454,143 @@ function Profile(attr){
 Profile._extend(BuilderElement);
 
 Profile.prototype.__define({
+
+	/**
+	 * Координаты начала элемента
+	 * @property b
+	 * @type Point
+	 */
+	b: {
+		get : function(){
+			if(this.data.generatrix)
+				return this.data.generatrix.firstSegment.point;
+		},
+		set : function(v){
+			this.data._rays.clear();
+			if(this.data.generatrix)
+				this.data.generatrix.firstSegment.point = v;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Координаты конца элемента
+	 * @property e
+	 * @type Point
+	 */
+	e: {
+		get : function(){
+			if(this.data.generatrix)
+				return this.data.generatrix.lastSegment.point;
+		},
+		set : function(v){
+			this.data._rays.clear();
+			if(this.data.generatrix)
+				this.data.generatrix.lastSegment.point = v;
+		},
+		enumerable : false
+	},
+
+	bc: {
+		get : function(){
+			return this.corns(1);
+		},
+		enumerable : false
+	},
+
+	ec: {
+		get : function(){
+			return this.corns(2);
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Координата x начала профиля
+	 * @property x1
+	 * @type {Number}
+	 */
+	x1: {
+		get : function(){ return this.b.x.round(1); },
+		set: function(v){
+			this.select_node("b");
+			this.move_points(new paper.Point(v - this.b.x, 0));	},
+		enumerable : false
+	},
+
+	/**
+	 * Координата y начала профиля
+	 * @property y1
+	 * @type {Number}
+	 */
+	y1: {
+		get : function(){
+			return (this.project.bounds.height-this.b.y).round(1); },
+		set: function(v){
+			v = this.project.bounds.height-v;
+			this.select_node("b");
+			this.move_points(new paper.Point(0, v - this.b.y)); },
+		enumerable : false
+	},
+
+	/**
+	 * Координата x конца профиля
+	 * @property x2
+	 * @type {Number}
+	 */
+	x2: {
+		get : function(){ return this.e.x.round(1); },
+		set: function(v){
+			this.select_node("e");
+			this.move_points(new paper.Point(v - this.e.x, 0)); },
+		enumerable : false
+	},
+
+	/**
+	 * Координата y конца профиля
+	 * @property y2
+	 * @type {Number}
+	 */
+	y2: {
+		get : function(){
+			return (this.project.bounds.height-this.e.y).round(1); },
+		set: function(v){
+			v = this.project.bounds.height-v;
+			this.select_node("e");
+			this.move_points(new paper.Point(0, v - this.e.y));},
+		enumerable : false
+	},
+
+	/**
+	 * Радиус сегмента профиля
+	 * @property r
+	 * @type {Number}
+	 */
+	r: {
+		get : function(){
+			return this._row.r;
+		},
+		set: function(v){
+			this.data._rays.clear();
+			this._row.r = v;
+		},
+		enumerable : true
+	},
+
+	/**
+	 * Направление дуги сегмента профиля против часовой стрелки
+	 * @property arc_ccw
+	 * @type {Boolean}
+	 */
+	arc_ccw: {
+		get : function(){
+
+		},
+		set: function(v){
+			this.data._rays.clear();
+		},
+		enumerable : true
+	},
 
 	/**
 	 * Вычисляемые поля в таблице координат
@@ -1036,6 +970,82 @@ Profile.prototype.__define({
 
 			return $p.enm.elm_types.Рама;
 
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Опорные точки и лучи
+	 * @property rays
+	 * @type {Object}
+	 */
+	rays: {
+		get : function(){
+			if(!this.data._rays.inner || !this.data._rays.outer)
+				this.data._rays.recalc(this);
+			return this.data._rays;
+		},
+		enumerable : false,
+		configurable : false
+	},
+
+	/**
+	 * Обрабатывает смещение выделенных сегментов образующей профиля
+	 * @param delta {paper.Point} - куда и насколько смещать
+	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
+	 * @param [start_point] {paper.Point} - откуда началось движение
+	 */
+	move_points: {
+		value:  function(delta, all_points, start_point){
+			var segments = this.generatrix.segments,
+				changed = false, cnn_point, free_point, j,
+				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points, notifier;
+
+			for (j = 0; j < segments.length; j++) {
+				if (segments[j].selected || all_points){
+
+					noti_points = {old: segments[j].point.clone(), delta: delta};
+
+					// собственно, сдвиг узлов
+					free_point = segments[j].point.add(delta);
+					if(segments[j].point == this.b)
+						cnn_point = this.cnn_point("b", free_point);
+
+					else if(segments[j].point == this.e)
+						cnn_point = this.cnn_point("e", free_point);
+
+					if(cnn_point && cnn_point.cnn_types == acn.t &&
+						(segments[j].point == this.b || segments[j].point == this.e)){
+						segments[j].point = cnn_point.point;
+					}
+					else{
+						segments[j].point = free_point;
+					}
+
+					// накапливаем точки в нотификаторе
+					noti_points.new = segments[j].point;
+					if(start_point)
+						noti_points.start = start_point;
+					noti.points.push(noti_points);
+
+					changed = true;
+				}
+			}
+
+			if(changed){
+
+				this.data._rays.clear();
+
+				// информируем систему об изменениях
+				this.parent.notify(noti);
+
+				notifier = Object.getNotifier(this);
+				notifier.notify({ type: 'update', name: "x1" });
+				notifier.notify({ type: 'update', name: "y1" });
+				notifier.notify({ type: 'update', name: "x2" });
+				notifier.notify({ type: 'update', name: "y2" });
+
+			}
 		},
 		enumerable : false
 	}

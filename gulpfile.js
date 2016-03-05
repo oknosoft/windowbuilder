@@ -58,24 +58,8 @@ gulp.task('css-base64', function () {
 // Cборка библиотеки рисовалки
 gulp.task('build-lib', function(){
 	gulp.src([
-			'./src/paper_ex.js',
-			'./src/settings.js',
-			'./src/element.js',
-			'./src/scheme.js',
-			'./src/contour.js',
-			'./src/profile.js',
-			'./src/filling.js',
-			'./src/sectional.js',
-			'./src/freetext.js',
-			'./src/dimension_line.js',
-			'./src/tool_arc.js',
-			'./src/tool_lay_impost.js',
-			'./src/tool_pan.js',
-			'./src/tool_pen.js',
-			'./src/tool_ruler.js',
-			'./src/tool_select_elm.js',
-			'./src/tool_select_node.js',
-			'./src/tool_text.js',
+			'./src/geometry/*.js',
+			'./src/tools/*.js',
 			'./src/editor_accordion.js',
 			'./src/editor.js',
 			'./data/merged_wb_tips.js'
