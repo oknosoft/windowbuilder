@@ -584,20 +584,34 @@ Contour.prototype.__define({
 	 */
 	glass_segments: {
 		get: function(){
-			var profiles = this.profiles, findedb, findede, nodes = [];
+			var profiles = this.profiles,
+				is_flap = !!this.parent,
+				findedb, findede, nodes = [];
 
 			// для всех профилей контура
 			profiles.forEach(function (p) {
 
 				// ищем примыкания T к текущему профилю
-				var ip = p.joined_imposts(), pb, pe;
+				var ip = p.joined_imposts(),
+					gen = p.generatrix, pbg, peg,
+					pb = p.cnn_point("b"),
+					pe = p.cnn_point("e");
+
+				// для створочных импостов испльзуем не координаты их b и e, а ближайшие точки примыкающих образующих
+				if(is_flap && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+					pbg = pb.profile.generatrix.getNearestPoint(p.b);
+				else
+					pbg = p.b.clone();
+
+				if(is_flap && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+					peg = pe.profile.generatrix.getNearestPoint(p.e);
+				else
+					peg = p.e.clone();
 
 				// если есть примыкания T, добавляем сегменты, исключая соединения с пустотой
-				pb = p.cnn_point("b");
-				pe = p.cnn_point("e");
 				if(ip.inner.length){
 					ip.inner.sort(function (a, b) {
-						var g = p.generatrix, da = g.getOffsetOf(a.point) , db = g.getOffsetOf(b.point);
+						var da = gen.getOffsetOf(a.point) , db = gen.getOffsetOf(b.point);
 						if (da < db)
 							return -1;
 						else if (da > db)
@@ -605,15 +619,15 @@ Contour.prototype.__define({
 						return 0;
 					});
 					if(pb.profile)
-						nodes.push({b: p.b.clone(), e: ip.inner[0].point.clone(), profile: p});
+						nodes.push({b: pbg, e: ip.inner[0].point.clone(), profile: p});
 					for(var i = 1; i < ip.inner.length; i++)
 						nodes.push({b: ip.inner[i-1].point.clone(), e: ip.inner[i].point.clone(), profile: p});
 					if(pe.profile)
-						nodes.push({b: ip.inner[ip.inner.length-1].point.clone(), e: p.e.clone(), profile: p});
+						nodes.push({b: ip.inner[ip.inner.length-1].point.clone(), e: peg, profile: p});
 				}
 				if(ip.outer.length){
 					ip.outer.sort(function (a, b) {
-						var g = p.generatrix, da = g.getOffsetOf(a.point) , db = g.getOffsetOf(b.point);
+						var da = gen.getOffsetOf(a.point) , db = gen.getOffsetOf(b.point);
 						if (da < db)
 							return -1;
 						else if (da > db)
@@ -621,21 +635,21 @@ Contour.prototype.__define({
 						return 0;
 					});
 					if(pb.profile)
-						nodes.push({b: ip.outer[0].point.clone(), e: p.b.clone(), profile: p, outer: true});
+						nodes.push({b: ip.outer[0].point.clone(), e: pbg, profile: p, outer: true});
 					for(var i = 1; i < ip.outer.length; i++)
 						nodes.push({b: ip.outer[i].point.clone(), e: ip.outer[i-1].point.clone(), profile: p, outer: true});
 					if(pe.profile)
-						nodes.push({b: p.e.clone(), e: ip.outer[ip.outer.length-1].point.clone(), profile: p, outer: true});
+						nodes.push({b: peg, e: ip.outer[ip.outer.length-1].point.clone(), profile: p, outer: true});
 				}
 				if(!ip.inner.length){
 					// добавляем, если нет соединений с пустотой
 					if(pb.profile && pe.profile)
-						nodes.push({b: p.b.clone(), e: p.e.clone(), profile: p});
+						nodes.push({b: pbg, e: peg, profile: p});
 				}
 				if(!ip.outer.length && ((pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное) || (pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное))){
 					// добавляем, если нет соединений с пустотой
 					if(pb.profile && pe.profile)
-						nodes.push({b: p.e.clone(), e: p.b.clone(), profile: p, outer: true});
+						nodes.push({b: peg, e: pbg, profile: p, outer: true});
 				}
 			});
 
@@ -3319,12 +3333,14 @@ Profile.prototype.__define({
 		value : function(check_only){
 
 			var t = this,
+				gen = t.generatrix,
 				profiles = t.parent.profiles,
 				tinner = [], touter = [], curr, pb, pe, ip;
 
 			for(var i = 0; i<profiles.length; i++){
 
-				if((curr = profiles[i]) == t)
+				curr = profiles[i];
+				if(curr == t)
 					continue;
 
 				pb = curr.cnn_point("b");
@@ -3336,9 +3352,9 @@ Profile.prototype.__define({
 					// выясним, с какой стороны примыкающий профиль
 					ip = curr.corns(1);
 					if(t.rays.inner.getNearestPoint(ip).getDistance(ip, true) < t.rays.outer.getNearestPoint(ip).getDistance(ip, true))
-						tinner.push({point: pb.point.clone(), profile: curr});
+						tinner.push({point: gen.getNearestPoint(pb.point), profile: curr});
 					else
-						touter.push({point: pb.point.clone(), profile: curr});
+						touter.push({point: gen.getNearestPoint(pb.point), profile: curr});
 				}
 				pe = curr.cnn_point("e");
 				if(pe.profile == t && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
@@ -3348,9 +3364,9 @@ Profile.prototype.__define({
 
 					ip = curr.corns(2);
 					if(t.rays.inner.getNearestPoint(ip).getDistance(ip, true) < t.rays.outer.getNearestPoint(ip).getDistance(ip, true))
-						tinner.push({point: pe.point.clone(), profile: curr});
+						tinner.push({point: gen.getNearestPoint(pe.point), profile: curr});
 					else
-						touter.push({point: pe.point.clone(), profile: curr});
+						touter.push({point: gen.getNearestPoint(pe.point), profile: curr});
 				}
 
 			}

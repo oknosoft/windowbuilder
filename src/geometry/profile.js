@@ -906,12 +906,14 @@ Profile.prototype.__define({
 		value : function(check_only){
 
 			var t = this,
+				gen = t.generatrix,
 				profiles = t.parent.profiles,
 				tinner = [], touter = [], curr, pb, pe, ip;
 
 			for(var i = 0; i<profiles.length; i++){
 
-				if((curr = profiles[i]) == t)
+				curr = profiles[i];
+				if(curr == t)
 					continue;
 
 				pb = curr.cnn_point("b");
@@ -923,9 +925,9 @@ Profile.prototype.__define({
 					// выясним, с какой стороны примыкающий профиль
 					ip = curr.corns(1);
 					if(t.rays.inner.getNearestPoint(ip).getDistance(ip, true) < t.rays.outer.getNearestPoint(ip).getDistance(ip, true))
-						tinner.push({point: pb.point.clone(), profile: curr});
+						tinner.push({point: gen.getNearestPoint(pb.point), profile: curr});
 					else
-						touter.push({point: pb.point.clone(), profile: curr});
+						touter.push({point: gen.getNearestPoint(pb.point), profile: curr});
 				}
 				pe = curr.cnn_point("e");
 				if(pe.profile == t && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
@@ -935,9 +937,9 @@ Profile.prototype.__define({
 
 					ip = curr.corns(2);
 					if(t.rays.inner.getNearestPoint(ip).getDistance(ip, true) < t.rays.outer.getNearestPoint(ip).getDistance(ip, true))
-						tinner.push({point: pe.point.clone(), profile: curr});
+						tinner.push({point: gen.getNearestPoint(pe.point), profile: curr});
 					else
-						touter.push({point: pe.point.clone(), profile: curr});
+						touter.push({point: gen.getNearestPoint(pe.point), profile: curr});
 				}
 
 			}
