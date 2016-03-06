@@ -285,22 +285,43 @@ function Scheme(_canvas){
 					parent: right.l_dimensions
 				});
 			}else if(_scheme.layers.length == 2){
-				new DimensionLine({
-					pos: "top",
-					parent: left.l_dimensions
-				});
-				new DimensionLine({
-					pos: "top",
-					parent: right.l_dimensions
-				});
-				new DimensionLine({
-					pos: "left",
-					parent: left.l_dimensions
-				});
-				new DimensionLine({
-					pos: "right",
-					parent: right.l_dimensions
-				});
+				if(left != right){
+					// подобие балкона
+					new DimensionLine({
+						pos: "top",
+						parent: left.l_dimensions
+					});
+					new DimensionLine({
+						pos: "top",
+						parent: right.l_dimensions
+					});
+					new DimensionLine({
+						pos: "left",
+						parent: left.l_dimensions
+					});
+					new DimensionLine({
+						pos: "right",
+						parent: right.l_dimensions
+					});
+				}else{
+					// один над другим
+					new DimensionLine({
+						pos: "top",
+						parent: top.l_dimensions
+					});
+					new DimensionLine({
+						pos: "left",
+						parent: top.l_dimensions
+					});
+					new DimensionLine({
+						pos: "left",
+						parent: bottom.l_dimensions
+					});
+					//new DimensionLine({
+					//	pos: "right",
+					//	parent: right.l_dimensions
+					//});
+				}
 			}
 
 			setTimeout(function () {

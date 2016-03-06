@@ -140,7 +140,8 @@ function Contour(attr){
 				var need_bind = attr.length,
 					outer_nodes = this.outer_nodes,
 					available_bind = outer_nodes.length,
-					elm, curr;
+					elm, curr,
+					noti = {type: consts.move_points, profiles: [], points: []};
 
 				// первый проход: по двум узлам
 				for(var i in attr){
@@ -154,10 +155,22 @@ function Contour(attr){
 							curr.binded = true;
 							need_bind--;
 							available_bind--;
-							if(!curr.b.is_nearest(elm.b))
+							if(!curr.b.is_nearest(elm.b)){
 								elm.b = curr.b;
-							if(!curr.e.is_nearest(elm.e))
+								if(noti.profiles.indexOf(elm) == -1){
+									noti.profiles.push(elm);
+									noti.points.push(elm.b);
+								}
+							}
+
+							if(!curr.e.is_nearest(elm.e)){
 								elm.e = curr.e;
+								if(noti.profiles.indexOf(elm) == -1){
+									noti.profiles.push(elm);
+									noti.points.push(elm.e);
+								}
+							}
+
 							break;
 						}
 					}
@@ -181,6 +194,11 @@ function Contour(attr){
 								elm.rays.clear(true);
 								elm.b = curr.b;
 								elm.e = curr.e;
+								if(noti.profiles.indexOf(elm) == -1){
+									noti.profiles.push(elm);
+									noti.points.push(elm.b);
+									noti.points.push(elm.e);
+								}
 								break;
 							}
 						}
@@ -205,6 +223,11 @@ function Contour(attr){
 							elm.rays.clear(true);
 							elm.b = curr.b;
 							elm.e = curr.e;
+							if(noti.profiles.indexOf(elm) == -1){
+								noti.profiles.push(elm);
+								noti.points.push(elm.b);
+								noti.points.push(elm.e);
+							}
 							break;
 						}
 					}
@@ -227,9 +250,15 @@ function Contour(attr){
 						curr.profile = elm;
 						if(curr.outer)
 							delete curr.outer;
+						curr.binded = true;
+
 						elm.data.binded = true;
 						elm.data.simulated = true;
-						curr.binded = true;
+
+						noti.profiles.push(elm);
+						noti.points.push(elm.b);
+						noti.points.push(elm.e);
+
 						need_bind--;
 					}
 				}
@@ -244,6 +273,10 @@ function Contour(attr){
 						}
 					});
 				}
+
+				// информируем систему об изменениях
+				if(noti.points.length)
+					this.notify(noti);
 
 			}
 
@@ -3843,22 +3876,43 @@ function Scheme(_canvas){
 					parent: right.l_dimensions
 				});
 			}else if(_scheme.layers.length == 2){
-				new DimensionLine({
-					pos: "top",
-					parent: left.l_dimensions
-				});
-				new DimensionLine({
-					pos: "top",
-					parent: right.l_dimensions
-				});
-				new DimensionLine({
-					pos: "left",
-					parent: left.l_dimensions
-				});
-				new DimensionLine({
-					pos: "right",
-					parent: right.l_dimensions
-				});
+				if(left != right){
+					// подобие балкона
+					new DimensionLine({
+						pos: "top",
+						parent: left.l_dimensions
+					});
+					new DimensionLine({
+						pos: "top",
+						parent: right.l_dimensions
+					});
+					new DimensionLine({
+						pos: "left",
+						parent: left.l_dimensions
+					});
+					new DimensionLine({
+						pos: "right",
+						parent: right.l_dimensions
+					});
+				}else{
+					// один над другим
+					new DimensionLine({
+						pos: "top",
+						parent: top.l_dimensions
+					});
+					new DimensionLine({
+						pos: "left",
+						parent: top.l_dimensions
+					});
+					new DimensionLine({
+						pos: "left",
+						parent: bottom.l_dimensions
+					});
+					//new DimensionLine({
+					//	pos: "right",
+					//	parent: right.l_dimensions
+					//});
+				}
 			}
 
 			setTimeout(function () {
