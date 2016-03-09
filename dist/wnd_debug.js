@@ -2660,15 +2660,17 @@ function OBtnAuthSync() {
 
 	$p.eve.attachEvent("pouch_load_data_start", function (page) {
 
+		if(!$p.iface.sync)
+			$p.iface.wnd_sync();
+		$p.iface.sync.create($p.eve.stepper);
+		$p.eve.stepper.frm_sync.setItemValue("text_bottom", "Читаем справочники");
+
 		if(page.hasOwnProperty("local_rows") && page.local_rows < 10){
-			if(!$p.iface.sync)
-				$p.iface.wnd_sync();
-			$p.iface.sync.create($p.eve.stepper);
-
 			$p.eve.stepper.wnd_sync.setText("Первый запуск - подготовка данных");
-
 			$p.eve.stepper.frm_sync.setItemValue("text_processed", "Загрузка начального образа");
-			$p.eve.stepper.frm_sync.setItemValue("text_bottom", "Читаем справочники");
+		}else{
+			$p.eve.stepper.wnd_sync.setText("Загрузка данных из IndexedDB");
+			$p.eve.stepper.frm_sync.setItemValue("text_processed", "Извлечение начального образа");
 		}
 
 		set_spin(true);
@@ -2677,8 +2679,9 @@ function OBtnAuthSync() {
 	$p.eve.attachEvent("pouch_load_data_page", function (page) {
 		set_spin(true);
 		if($p.eve.stepper.wnd_sync){
-			$p.eve.stepper.frm_sync.setItemValue("text_current", "Обработано элементов: " + page.docs_written + " из " + page.total_rows);
-			$p.eve.stepper.frm_sync.setItemValue("text_bottom", "Текущий запрос: " + page.page + " (" + (100 * page.docs_written/page.total_rows).toFixed(0) + "%)");
+			var docs_written = page.docs_written || page.page * page.limit;
+			$p.eve.stepper.frm_sync.setItemValue("text_current", "Обработано элементов: " + docs_written + " из " + page.total_rows);
+			$p.eve.stepper.frm_sync.setItemValue("text_bottom", "Текущий запрос: " + page.page + " (" + (100 * docs_written/page.total_rows).toFixed(0) + "%)");
 		}
 	});
 
@@ -2686,13 +2689,20 @@ function OBtnAuthSync() {
 		set_spin(true);
 	});
 
+	/**
+	 * Завершение начальной синхронизации либо загрузки данных при старте
+	 */
 	$p.eve.attachEvent("pouch_load_data_loaded", function (page) {
 		if($p.eve.stepper.wnd_sync){
-			setTimeout(function () {
+			if(page.docs_written){
+				setTimeout(function () {
+					$p.iface.sync.close();
+					$p.eve.redirect = true;
+					location.reload(true);
+				}, 3000);
+			}else{
 				$p.iface.sync.close();
-				$p.eve.redirect = true;
-				location.reload(true);
-			}, 3000);
+			}
 		}
 	});
 
@@ -3504,6 +3514,14 @@ $p.iface.view_settings = function (cell) {
 		});
 
 		t.form.attachEvent("onButtonClick", function(name){
+
+			function do_reload(){
+				setTimeout(function () {
+					$p.eve.redirect = true;
+					location.reload(true);
+				}, 2000);
+			}
+
 			if(name == "save")
 				location.reload();
 
@@ -3515,13 +3533,14 @@ $p.iface.view_settings = function (cell) {
 					callback: function(btn) {
 						if(btn){
 
-							setTimeout($p.wsql.pouch.local.ram.destroy);
-							setTimeout($p.wsql.pouch.local.doc.destroy);
-							setTimeout($p.wsql.pouch.log_out, 1000);
-							setTimeout(function () {
-								$p.eve.redirect = true;
-								location.reload(true);
-							}, 2000);
+							$p.wsql.pouch.log_out();
+
+							$p.wsql.pouch.local.ram.destroy()
+								.then($p.wsql.pouch.local.doc.destroy)
+								.catch($p.wsql.pouch.local.doc.destroy)
+								.then(do_reload)
+								.catch(do_reload);
+
 						}
 					}
 				});

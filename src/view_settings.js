@@ -113,6 +113,14 @@ $p.iface.view_settings = function (cell) {
 		});
 
 		t.form.attachEvent("onButtonClick", function(name){
+
+			function do_reload(){
+				setTimeout(function () {
+					$p.eve.redirect = true;
+					location.reload(true);
+				}, 2000);
+			}
+
 			if(name == "save")
 				location.reload();
 
@@ -124,13 +132,14 @@ $p.iface.view_settings = function (cell) {
 					callback: function(btn) {
 						if(btn){
 
-							setTimeout($p.wsql.pouch.local.ram.destroy);
-							setTimeout($p.wsql.pouch.local.doc.destroy);
-							setTimeout($p.wsql.pouch.log_out, 1000);
-							setTimeout(function () {
-								$p.eve.redirect = true;
-								location.reload(true);
-							}, 2000);
+							$p.wsql.pouch.log_out();
+
+							$p.wsql.pouch.local.ram.destroy()
+								.then($p.wsql.pouch.local.doc.destroy)
+								.catch($p.wsql.pouch.local.doc.destroy)
+								.then(do_reload)
+								.catch(do_reload);
+
 						}
 					}
 				});
