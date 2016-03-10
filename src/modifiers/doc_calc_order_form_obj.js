@@ -165,6 +165,8 @@ $p.modifiers.push(
 
 			attr.toolbar_struct = $p.injected_data["toolbar_calc_order_obj.xml"];
 
+			attr.toolbar_click = toolbar_click;
+
 			return this.constructor.prototype.form_obj.call(this, pwnd, attr)
 				.then(function (res) {
 
@@ -193,6 +195,10 @@ $p.modifiers.push(
 
 					case 'btn_retrieve':
 						save("retrieve");
+						break;
+
+					case 'btn_close':
+						wnd.close();
 						break;
 
 					case 'btn_add_builder':
@@ -484,19 +490,6 @@ $p.modifiers.push(
 					});
 				}
 
-				wnd.progressOn();
-				// TODO: _mgr.save
-				//_mgr.save({
-				//	ref: o.ref,
-				//	del_row: rId,
-				//	o: o._obj,
-				//	action: "calc",
-				//	specify: "production"
-				//}).then(function(res){
-				//	if(!$p.msg.check_soap_result(res))			// сервер об ошибках не сообщил. считаем, что данные записались
-				//		wnd.reflect_characteristic_change(res); // - перезаполнить шапку и табчасть
-				//	wnd.progressOff();
-				//});
 			}
 
 			function save(action){
@@ -504,24 +497,23 @@ $p.modifiers.push(
 				function do_save(){
 
 					wnd.progressOn();
+
 					o.note = wnd.elmnts.note_editor.getContent();
-					// TODO: _mgr.save
-					//_mgr.save({
-					//	ref: o.ref,
-					//	o: o._obj,
-					//	action: "calc"
-					//}).then(function(res){
-					//	if(!$p.msg.check_soap_result(res)) {
-					//		o._mixin(res.calc_order);
-					//		production_refresh();
-					//		header_refresh();
-					//		set_editable();
-					//		setTimeout(function(){
-					//			$p.iface.grid_calc_order.reload(undefined, true);
-					//		}, 200);
-					//	}
-					//	wnd.progressOff();
-					//});
+
+					o.save()
+						.then(function(){
+
+							wnd.progressOff();
+							wnd.modified = false;
+
+							if(action == "sent" || action == "close")
+								wnd.close();
+
+						})
+						.catch(function(err){
+							wnd.progressOff();
+							$p.record_log(err);
+						});
 				}
 
 				if(action == "sent"){
