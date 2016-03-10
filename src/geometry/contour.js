@@ -588,13 +588,13 @@ Contour.prototype.__define({
 					pb = p.cnn_point("b"),
 					pe = p.cnn_point("e");
 
-				// для створочных импостов испльзуем не координаты их b и e, а ближайшие точки примыкающих образующих
-				if(is_flap && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+				// для створочных импостов используем не координаты их b и e, а ближайшие точки примыкающих образующих
+				if(is_flap && pb.is_t)
 					pbg = pb.profile.generatrix.getNearestPoint(p.b);
 				else
 					pbg = p.b.clone();
 
-				if(is_flap && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+				if(is_flap && pe.is_t)
 					peg = pe.profile.generatrix.getNearestPoint(p.e);
 				else
 					peg = p.e.clone();
@@ -637,8 +637,8 @@ Contour.prototype.__define({
 					if(pb.profile && pe.profile)
 						nodes.push({b: pbg, e: peg, profile: p});
 				}
-				if(!ip.outer.length && ((pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное) || (pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное))){
-					// добавляем, если нет соединений с пустотой
+				if(!ip.outer.length && (pb.is_t || pe.is_t)){
+					// для импостов добавляем сегмент в обратном направлении
 					if(pb.profile && pe.profile)
 						nodes.push({b: peg, e: pbg, profile: p, outer: true});
 				}

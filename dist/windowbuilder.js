@@ -597,13 +597,13 @@ Contour.prototype.__define({
 					pb = p.cnn_point("b"),
 					pe = p.cnn_point("e");
 
-				// для створочных импостов испльзуем не координаты их b и e, а ближайшие точки примыкающих образующих
-				if(is_flap && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+				// для створочных импостов используем не координаты их b и e, а ближайшие точки примыкающих образующих
+				if(is_flap && pb.is_t)
 					pbg = pb.profile.generatrix.getNearestPoint(p.b);
 				else
 					pbg = p.b.clone();
 
-				if(is_flap && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+				if(is_flap && pe.is_t)
 					peg = pe.profile.generatrix.getNearestPoint(p.e);
 				else
 					peg = p.e.clone();
@@ -646,8 +646,8 @@ Contour.prototype.__define({
 					if(pb.profile && pe.profile)
 						nodes.push({b: pbg, e: peg, profile: p});
 				}
-				if(!ip.outer.length && ((pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное) || (pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное))){
-					// добавляем, если нет соединений с пустотой
+				if(!ip.outer.length && (pb.is_t || pe.is_t)){
+					// для импостов добавляем сегмент в обратном направлении
 					if(pb.profile && pe.profile)
 						nodes.push({b: peg, e: pbg, profile: p, outer: true});
 				}
@@ -3387,10 +3387,11 @@ Profile.prototype.__define({
 
 			// если начало или конец элемента соединены с соседями по Т, значит это импост
 			var cnn_point = this.cnn_point("b");
-			if(cnn_point.profile != this && cnn_point.cnn && cnn_point.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+			if(cnn_point.profile != this && cnn_point.is_t)
 				return $p.enm.elm_types.Импост;
+
 			cnn_point = this.cnn_point("e");
-			if(cnn_point.profile != this && cnn_point.cnn && cnn_point.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+			if(cnn_point.profile != this && cnn_point.is_t)
 				return $p.enm.elm_types.Импост;
 
 			// Если вложенный контур, значит это створка
@@ -3516,6 +3517,27 @@ function CnnPoint(){
 	 */
 	this.cnn = null;
 }
+CnnPoint.prototype.__define({
+	is_t: {
+		get: function () {
+
+			// если это угол, то точно не T
+			if(!this.cnn || this.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное)
+				return false;
+
+			// если это Ʇ, или † то без вариантов T
+			if(this.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+				return true;
+
+			// если это Ꞁ или └─, то может быть T в разрыв - проверяем
+			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной || this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной)
+				return !!this.is_cut;
+
+			return true;
+		},
+		enumerable: false
+	}
+});
 
 function ProfileRays(){
 

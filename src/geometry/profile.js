@@ -960,10 +960,11 @@ Profile.prototype.__define({
 
 			// если начало или конец элемента соединены с соседями по Т, значит это импост
 			var cnn_point = this.cnn_point("b");
-			if(cnn_point.profile != this && cnn_point.cnn && cnn_point.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+			if(cnn_point.profile != this && cnn_point.is_t)
 				return $p.enm.elm_types.Импост;
+
 			cnn_point = this.cnn_point("e");
-			if(cnn_point.profile != this && cnn_point.cnn && cnn_point.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+			if(cnn_point.profile != this && cnn_point.is_t)
 				return $p.enm.elm_types.Импост;
 
 			// Если вложенный контур, значит это створка
@@ -1089,6 +1090,27 @@ function CnnPoint(){
 	 */
 	this.cnn = null;
 }
+CnnPoint.prototype.__define({
+	is_t: {
+		get: function () {
+
+			// если это угол, то точно не T
+			if(!this.cnn || this.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное)
+				return false;
+
+			// если это Ʇ, или † то без вариантов T
+			if(this.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
+				return true;
+
+			// если это Ꞁ или └─, то может быть T в разрыв - проверяем
+			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной || this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной)
+				return !!this.is_cut;
+
+			return true;
+		},
+		enumerable: false
+	}
+});
 
 function ProfileRays(){
 
