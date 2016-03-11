@@ -2503,42 +2503,70 @@ function Profile(attr){
 	 * Наблюдает за изменениями контура и пересчитывает путь элемента при изменении соседних элементов
 	 */
 	this.observer = function(an){
-		var moved = Array.isArray(an) ? an[an.length-1] : an;
 
-		if(moved.profiles.indexOf(_profile) == -1){
+		var bcnn, ecnn, moved;
 
-			// если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
-			var bcnn = _profile.cnn_point("b"),
-				ecnn = _profile.cnn_point("e"),
-				mpoint;
+		// собственно, привязка
+		function do_bind(p){
 
-			moved.profiles.forEach(function (p) {
-				if(bcnn.cnn && bcnn.profile == p){
-					if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-						if(!_profile.b.is_nearest(p.e))
-							_profile.b = p.e;
-					}
-					else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-						mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
-						if(!mpoint.is_nearest(_profile.b))
-							_profile.b = mpoint;
+			var mpoint, imposts;
+
+			if(bcnn.cnn && bcnn.profile == p){
+				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+					if(!_profile.b.is_nearest(p.e))
+						_profile.b = p.e;
+				}
+				else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
+					if(!mpoint.is_nearest(_profile.b))
+						_profile.b = mpoint;
+				}
+			}
+			if(ecnn.cnn && ecnn.profile == p){
+				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+					if(!_profile.e.is_nearest(p.b))
+						_profile.e = p.b;
+				}
+				else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
+					if(!mpoint.is_nearest(_profile.e))
+						_profile.e = mpoint;
+				}
+			}
+
+			// если мы в обсервере и есть T и в массиве обработанных есть примыкающий T - пересчитываем
+			if(moved){
+				imposts = _profile.joined_imposts();
+				imposts = imposts.inner.concat(imposts.outer);
+				for(var i in imposts){
+					if(moved.profiles.indexOf(imposts[i]) == -1){
+						imposts[i].profile.observer(_profile);
 					}
 				}
-				if(ecnn.cnn && ecnn.profile == p){
-					if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-						if(!_profile.e.is_nearest(p.b))
-							_profile.e = p.b;
-					}
-					else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-						mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
-						if(!mpoint.is_nearest(_profile.e))
-							_profile.e = mpoint;
-					}
-				}
-			});
+			}
 
-			moved.profiles.push(_profile);
 		}
+
+		if(Array.isArray(an)){
+			moved = an[an.length-1];
+
+			if(moved.profiles.indexOf(_profile) == -1){
+
+				bcnn = _profile.cnn_point("b");
+				ecnn = _profile.cnn_point("e");
+
+				// если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
+				moved.profiles.forEach(do_bind);
+
+				moved.profiles.push(_profile);
+			}
+
+		}else if(an instanceof Profile){
+			bcnn = _profile.cnn_point("b");
+			ecnn = _profile.cnn_point("e");
+			do_bind(an);
+		}
+
 	};
 
 	/**
@@ -3485,7 +3513,7 @@ Profile.prototype.__define({
 	 */
 	rays: {
 		get : function(){
-			if(!this.data._rays.inner || !this.data._rays.outer)
+			if(!this.data._rays.inner.segments.length || !this.data._rays.outer.segments.length)
 				this.data._rays.recalc(this);
 			return this.data._rays;
 		},
@@ -3617,93 +3645,96 @@ function ProfileRays(){
 
 	this.b = new CnnPoint();
 	this.e = new CnnPoint();
-
-	this.clear = function(with_cnn){
-		if(this.inner){
-			this.inner.removeSegments();
-			delete this.inner;
-		}
-		if(this.outer){
-			this.outer.removeSegments();
-			delete this.outer;
-		}
-		if(with_cnn){
-			this.b.profile = null;
-			this.e.profile = null;
-			this.b.cnn = null;
-			this.e.cnn = null;
-		}
-	};
-
-	this.recalc = function(_profile){
-
-		var path = _profile.generatrix,
-			len = path.length;
-
-		if(!this.outer)
-			this.outer = new paper.Path({ insert: false });
-		else
-			this.outer.removeSegments();
-		if(!this.inner)
-			this.inner = new paper.Path({ insert: false });
-		else
-			this.inner.removeSegments();
-
-		if(!len)
-			return;
-
-		var d1 = _profile.d1, d2 = _profile.d2,
-			ds = 3 * _profile.width, step = len * 0.02,
-			point_b, tangent_b, normal_b,
-			point_e, tangent_e, normal_e;
-
-
-		// первая точка эквидистанты. аппроксимируется касательной на участке (from < начала пути)
-		point_b = path.firstSegment.point;
-		tangent_b = path.getTangentAt(0);
-		normal_b = path.getNormalAt(0);
-
-		// добавляем первые точки путей
-		this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
-		this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
-		point_e = path.lastSegment.point;
-
-		// для прямого пути, чуть наклоняем нормаль
-		if(path.is_linear()){
-
-			this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
-			this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
-
-		}else{
-
-			this.outer.add(point_b.add(normal_b.multiply(d1)));
-			this.inner.add(point_b.add(normal_b.multiply(d2)));
-
-			for(var i = step; i<=len; i+=step) {
-				point_b = path.getPointAt(i);
-				if(!point_b)
-					continue;
-				normal_b = path.getNormalAt(i);
-				this.outer.add(point_b.add(normal_b.normalize(d1)));
-				this.inner.add(point_b.add(normal_b.normalize(d2)));
-			}
-
-			normal_e = path.getNormalAt(len);
-			this.outer.add(point_e.add(normal_e.multiply(d1)));
-			this.inner.add(point_e.add(normal_e.multiply(d2)));
-
-			tangent_e = path.getTangentAt(len);
-			this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
-			this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
-
-			this.outer.simplify(0.8);
-			this.inner.simplify(0.8);
-		}
-
-		this.inner.reverse();
-	}
+	this.inner = new paper.Path({ insert: false });
+	this.outer = new paper.Path({ insert: false });
 
 }
+ProfileRays.prototype.__define({
+
+	clear_segments: {
+		value: function () {
+			if(this.inner.segments.length)
+				this.inner.removeSegments();
+			if(this.outer.segments.length)
+				this.outer.removeSegments();
+		}
+	},
+
+	clear: {
+		value: function(with_cnn){
+			this.clear_segments();
+			if(with_cnn){
+				this.b.profile = null;
+				this.e.profile = null;
+				this.b.cnn = null;
+				this.e.cnn = null;
+			}
+		}
+	},
+
+	recalc: {
+		value: function(_profile){
+
+			var path = _profile.generatrix,
+				len = path.length;
+
+			this.clear_segments();
+
+			if(!len)
+				return;
+
+			var d1 = _profile.d1, d2 = _profile.d2,
+				ds = 3 * _profile.width, step = len * 0.02,
+				point_b, tangent_b, normal_b,
+				point_e, tangent_e, normal_e;
+
+
+			// первая точка эквидистанты. аппроксимируется касательной на участке (from < начала пути)
+			point_b = path.firstSegment.point;
+			tangent_b = path.getTangentAt(0);
+			normal_b = path.getNormalAt(0);
+
+			// добавляем первые точки путей
+			this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
+			this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
+			point_e = path.lastSegment.point;
+
+			// для прямого пути, чуть наклоняем нормаль
+			if(path.is_linear()){
+
+				this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
+				this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
+
+			}else{
+
+				this.outer.add(point_b.add(normal_b.multiply(d1)));
+				this.inner.add(point_b.add(normal_b.multiply(d2)));
+
+				for(var i = step; i<=len; i+=step) {
+					point_b = path.getPointAt(i);
+					if(!point_b)
+						continue;
+					normal_b = path.getNormalAt(i);
+					this.outer.add(point_b.add(normal_b.normalize(d1)));
+					this.inner.add(point_b.add(normal_b.normalize(d2)));
+				}
+
+				normal_e = path.getNormalAt(len);
+				this.outer.add(point_e.add(normal_e.multiply(d1)));
+				this.inner.add(point_e.add(normal_e.multiply(d2)));
+
+				tangent_e = path.getTangentAt(len);
+				this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
+				this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
+
+				this.outer.simplify(0.8);
+				this.inner.simplify(0.8);
+			}
+
+			this.inner.reverse();
+		}
+	}
+});
 
 /**
  * Created 24.07.2015<br />
