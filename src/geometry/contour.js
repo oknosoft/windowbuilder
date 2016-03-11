@@ -131,38 +131,42 @@ function Contour(attr){
 				var need_bind = attr.length,
 					outer_nodes = this.outer_nodes,
 					available_bind = outer_nodes.length,
-					elm, curr,
+					elm, curr, b3,
 					noti = {type: consts.move_points, profiles: [], points: []};
 
-				// первый проход: по двум узлам
-				for(var i in attr){
-					curr = attr[i];
-					for(var j in outer_nodes){
-						elm = outer_nodes[j];
-						if(elm.data.binded)
-							continue;
-						if(curr.b.is_nearest(elm.b, true) && curr.e.is_nearest(elm.e, true)){
-							elm.data.binded = true;
-							curr.binded = true;
-							need_bind--;
-							available_bind--;
-							if(!curr.b.is_nearest(elm.b)){
-								elm.b = curr.b;
-								if(noti.profiles.indexOf(elm) == -1){
-									noti.profiles.push(elm);
-									noti.points.push(elm.b);
+				// первый проход: по двум узлам либо примыканию к образующей
+				if(need_bind){
+					for(var i in attr){
+						curr = attr[i];             // curr.profile - сегмент внешнего профиля
+						for(var j in outer_nodes){
+							elm = outer_nodes[j];   // elm - сегмент профиля текущего контура
+							if(elm.data.binded)
+								continue;
+							if(curr.profile.is_nearest(elm)){
+								elm.data.binded = true;
+								curr.binded = true;
+								need_bind--;
+								available_bind--;
+								if(!curr.b.is_nearest(elm.b)){
+									elm.rays.clear(true);
+									elm.b = curr.b;
+									if(noti.profiles.indexOf(elm) == -1){
+										noti.profiles.push(elm);
+										noti.points.push(elm.b);
+									}
 								}
-							}
 
-							if(!curr.e.is_nearest(elm.e)){
-								elm.e = curr.e;
-								if(noti.profiles.indexOf(elm) == -1){
-									noti.profiles.push(elm);
-									noti.points.push(elm.e);
+								if(!curr.e.is_nearest(elm.e)){
+									elm.rays.clear(true);
+									elm.e = curr.e;
+									if(noti.profiles.indexOf(elm) == -1){
+										noti.profiles.push(elm);
+										noti.points.push(elm.e);
+									}
 								}
-							}
 
-							break;
+								break;
+							}
 						}
 					}
 				}
@@ -388,7 +392,7 @@ Contour.prototype.__define({
 		get: function () {
 			var profiles = this.profiles, res;
 			if(!profiles.length)
-				res = new paper.Rect()
+				res = new paper.Rectangle()
 			else{
 				res = profiles[0].bounds;
 				for(var i = 1; i < profiles.length; i++)
@@ -495,12 +499,24 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Возвращает массив внешних узлов текущего контура. Ососбо актуально для створок, т.к. они всегда замкнуты
+	 * Возвращает массив внешних примыкающих профилей текущего контура. Актуально для створок, т.к. они всегда замкнуты
 	 * @property outer_nodes
 	 * @for Contour
 	 * @type {Array}
 	 */
 	outer_nodes: {
+		get: function(){
+			return this.outer_profiles.map(function (v) {
+				return v.elm;
+			});
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает массив внешних примыкающих профилей текущего контура
+	 */
+	outer_profiles: {
 		get: function(){
 			// сначала получим все профили
 			var profiles = this.profiles,
@@ -529,7 +545,12 @@ Contour.prototype.__define({
 				if(to_remove.indexOf(elm) != -1)
 					continue;
 				elm.data.binded = false;
-				res.push(elm);
+				res.push({
+					elm: elm,
+					profile: elm.nearest(),
+					b: elm.b,
+					e: elm.e
+				});
 			}
 			return res;
 		},
@@ -729,34 +750,52 @@ Contour.prototype.__define({
 
 				for(var g in glasses){
 
-					if((glass = glasses[g]).visible)
+					glass = glasses[g];
+					if(glass.visible)
 						continue;
-
-					glass_nodes = glass.nodes;
 
 					// вычисляем рейтинг
 					сrating = 0;
-					for(var j in glass_contour){
-						for(var i in glass_nodes){
-							if(glass_contour[j].b.is_nearest(glass_nodes[i])){
-								сrating++;
-								break;
-							}
-						}
-						if(сrating > 2)
-							break;
+					glass_nodes = glass.outer_profiles;
+					// если есть привязанные профили, используем их. иначе - координаты узлов
+					if(glass_nodes.length){
+						for(var j in glass_contour){
+							for(var i in glass_nodes){
+								if(glass_contour[j].profile == glass_nodes[i].profile &&
+									glass_contour[j].b.is_nearest(glass_nodes[i].b) &&
+									glass_contour[j].e.is_nearest(glass_nodes[i].e)){
 
+									сrating++;
+									break;
+								}
+							}
+							if(сrating > 2)
+								break;
+						}
+					}else{
+						glass_nodes = glass.nodes;
+						for(var j in glass_contour){
+							for(var i in glass_nodes){
+								if(glass_contour[j].b.is_nearest(glass_nodes[i])){
+									сrating++;
+									break;
+								}
+							}
+							if(сrating > 2)
+								break;
+						}
 					}
+
 					if(сrating > rating || !сglass){
 						rating = сrating;
 						сglass = glass;
 					}
 					if(сrating == rating && сglass != glass){
 						if(!glass_path_center){
-							glass_path_center = glass_nodes[0];
-							for(var i=1; i<glass_nodes.length; i++)
-								glass_path_center = glass_path_center.add(glass_nodes[i]);
-							glass_path_center = glass_path_center.divide(glass_nodes.length);
+							glass_path_center = glass_contour[0].b;
+							for(var i=1; i<glass_contour.length; i++)
+								glass_path_center = glass_path_center.add(glass_contour[i].b);
+							glass_path_center = glass_path_center.divide(glass_contour.length);
 						}
 						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(сglass.bounds.center, true))
 							сglass = glass;

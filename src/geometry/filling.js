@@ -258,6 +258,16 @@ Filling.prototype.__define({
 	},
 
 	/**
+	 * Возвращает массив внешних примыкающих профилей текущего заполнения
+	 */
+	outer_profiles: {
+		get: function () {
+			return this.profiles;
+		},
+		enumerable : false
+	},
+
+	/**
 	 * Массив с рёбрами периметра
 	 */
 	perimeter: {

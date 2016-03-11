@@ -140,38 +140,42 @@ function Contour(attr){
 				var need_bind = attr.length,
 					outer_nodes = this.outer_nodes,
 					available_bind = outer_nodes.length,
-					elm, curr,
+					elm, curr, b3,
 					noti = {type: consts.move_points, profiles: [], points: []};
 
-				// первый проход: по двум узлам
-				for(var i in attr){
-					curr = attr[i];
-					for(var j in outer_nodes){
-						elm = outer_nodes[j];
-						if(elm.data.binded)
-							continue;
-						if(curr.b.is_nearest(elm.b, true) && curr.e.is_nearest(elm.e, true)){
-							elm.data.binded = true;
-							curr.binded = true;
-							need_bind--;
-							available_bind--;
-							if(!curr.b.is_nearest(elm.b)){
-								elm.b = curr.b;
-								if(noti.profiles.indexOf(elm) == -1){
-									noti.profiles.push(elm);
-									noti.points.push(elm.b);
+				// первый проход: по двум узлам либо примыканию к образующей
+				if(need_bind){
+					for(var i in attr){
+						curr = attr[i];             // curr.profile - сегмент внешнего профиля
+						for(var j in outer_nodes){
+							elm = outer_nodes[j];   // elm - сегмент профиля текущего контура
+							if(elm.data.binded)
+								continue;
+							if(curr.profile.is_nearest(elm)){
+								elm.data.binded = true;
+								curr.binded = true;
+								need_bind--;
+								available_bind--;
+								if(!curr.b.is_nearest(elm.b)){
+									elm.rays.clear(true);
+									elm.b = curr.b;
+									if(noti.profiles.indexOf(elm) == -1){
+										noti.profiles.push(elm);
+										noti.points.push(elm.b);
+									}
 								}
-							}
 
-							if(!curr.e.is_nearest(elm.e)){
-								elm.e = curr.e;
-								if(noti.profiles.indexOf(elm) == -1){
-									noti.profiles.push(elm);
-									noti.points.push(elm.e);
+								if(!curr.e.is_nearest(elm.e)){
+									elm.rays.clear(true);
+									elm.e = curr.e;
+									if(noti.profiles.indexOf(elm) == -1){
+										noti.profiles.push(elm);
+										noti.points.push(elm.e);
+									}
 								}
-							}
 
-							break;
+								break;
+							}
 						}
 					}
 				}
@@ -397,7 +401,7 @@ Contour.prototype.__define({
 		get: function () {
 			var profiles = this.profiles, res;
 			if(!profiles.length)
-				res = new paper.Rect()
+				res = new paper.Rectangle()
 			else{
 				res = profiles[0].bounds;
 				for(var i = 1; i < profiles.length; i++)
@@ -504,12 +508,24 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Возвращает массив внешних узлов текущего контура. Ососбо актуально для створок, т.к. они всегда замкнуты
+	 * Возвращает массив внешних примыкающих профилей текущего контура. Актуально для створок, т.к. они всегда замкнуты
 	 * @property outer_nodes
 	 * @for Contour
 	 * @type {Array}
 	 */
 	outer_nodes: {
+		get: function(){
+			return this.outer_profiles.map(function (v) {
+				return v.elm;
+			});
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает массив внешних примыкающих профилей текущего контура
+	 */
+	outer_profiles: {
 		get: function(){
 			// сначала получим все профили
 			var profiles = this.profiles,
@@ -538,7 +554,12 @@ Contour.prototype.__define({
 				if(to_remove.indexOf(elm) != -1)
 					continue;
 				elm.data.binded = false;
-				res.push(elm);
+				res.push({
+					elm: elm,
+					profile: elm.nearest(),
+					b: elm.b,
+					e: elm.e
+				});
 			}
 			return res;
 		},
@@ -738,34 +759,52 @@ Contour.prototype.__define({
 
 				for(var g in glasses){
 
-					if((glass = glasses[g]).visible)
+					glass = glasses[g];
+					if(glass.visible)
 						continue;
-
-					glass_nodes = glass.nodes;
 
 					// вычисляем рейтинг
 					сrating = 0;
-					for(var j in glass_contour){
-						for(var i in glass_nodes){
-							if(glass_contour[j].b.is_nearest(glass_nodes[i])){
-								сrating++;
-								break;
-							}
-						}
-						if(сrating > 2)
-							break;
+					glass_nodes = glass.outer_profiles;
+					// если есть привязанные профили, используем их. иначе - координаты узлов
+					if(glass_nodes.length){
+						for(var j in glass_contour){
+							for(var i in glass_nodes){
+								if(glass_contour[j].profile == glass_nodes[i].profile &&
+									glass_contour[j].b.is_nearest(glass_nodes[i].b) &&
+									glass_contour[j].e.is_nearest(glass_nodes[i].e)){
 
+									сrating++;
+									break;
+								}
+							}
+							if(сrating > 2)
+								break;
+						}
+					}else{
+						glass_nodes = glass.nodes;
+						for(var j in glass_contour){
+							for(var i in glass_nodes){
+								if(glass_contour[j].b.is_nearest(glass_nodes[i])){
+									сrating++;
+									break;
+								}
+							}
+							if(сrating > 2)
+								break;
+						}
 					}
+
 					if(сrating > rating || !сglass){
 						rating = сrating;
 						сglass = glass;
 					}
 					if(сrating == rating && сglass != glass){
 						if(!glass_path_center){
-							glass_path_center = glass_nodes[0];
-							for(var i=1; i<glass_nodes.length; i++)
-								glass_path_center = glass_path_center.add(glass_nodes[i]);
-							glass_path_center = glass_path_center.divide(glass_nodes.length);
+							glass_path_center = glass_contour[0].b;
+							for(var i=1; i<glass_contour.length; i++)
+								glass_path_center = glass_path_center.add(glass_contour[i].b);
+							glass_path_center = glass_path_center.divide(glass_contour.length);
 						}
 						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(сglass.bounds.center, true))
 							сglass = glass;
@@ -1853,6 +1892,16 @@ Filling.prototype.__define({
 	},
 
 	/**
+	 * Возвращает массив внешних примыкающих профилей текущего заполнения
+	 */
+	outer_profiles: {
+		get: function () {
+			return this.profiles;
+		},
+		enumerable : false
+	},
+
+	/**
 	 * Массив с рёбрами периметра
 	 */
 	perimeter: {
@@ -2450,137 +2499,47 @@ function Profile(attr){
 
 	Profile.superclass.constructor.call(this, attr);
 
-	// initialize
-	(function(){
-
-		var h = _profile.project.bounds.height,
-			_row = _profile._row;
-
-		if(attr.r)
-			_row.r = attr.r;
-
-		if(attr.generatrix) {
-			this.data.generatrix = attr.generatrix;
-			if(this.data.generatrix.data.reversed)
-				delete this.data.generatrix.data.reversed;
-
-		} else {
-
-			if(_row.path_data) {
-				this.data.generatrix = new paper.Path(_row.path_data);
-
-			}else{
-				this.data.generatrix = new paper.Path([_row.x1, h - _row.y1]);
-				if(_row.r){
-					this.data.generatrix.arcTo(
-						$p.m.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2,
-							_row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
-				}else{
-					this.data.generatrix.lineTo([_row.x2, h - _row.y2]);
-				}
-			}
-		}
-
-		h = null;
-		_row = null;
-
-		// кеш лучей в узлах профиля
-		this.data._rays = new ProfileRays();
-
-		this.data.generatrix.strokeColor = 'grey';
-
-		this.data.path = new paper.Path();
-		this.data.path.strokeColor = 'black';
-		this.data.path.strokeWidth = 1;
-		this.data.path.strokeScaling = false;
-		this.data.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
-
-		this.addChild(this.data.path);
-		this.addChild(this.data.generatrix);
-
-		/**
-		 * Подключает наблюдателя за событиями контура с именем _consts.move_points_
-		 */
-		if(this.parent){
-			Object.observe(this.parent._noti, function (an) {
-				var moved = an[an.length-1];
-				if(moved.profiles.indexOf(_profile) == -1){
-
-					// если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
-					var bcnn = _profile.cnn_point("b"),
-						ecnn = _profile.cnn_point("e"),
-						mpoint;
-
-					moved.profiles.forEach(function (p) {
-						if(bcnn.cnn && bcnn.profile == p){
-							if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-								if(!_profile.b.is_nearest(p.e))
-									_profile.b = p.e;
-							}
-							else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-								mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
-								if(!mpoint.is_nearest(_profile.b))
-									_profile.b = mpoint;
-							}
-						}
-						if(ecnn.cnn && ecnn.profile == p){
-							if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-								if(!_profile.e.is_nearest(p.b))
-									_profile.e = p.b;
-							}
-							else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-								mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
-								if(!mpoint.is_nearest(_profile.e))
-									_profile.e = mpoint;
-							}
-						}
-					});
-
-					moved.profiles.push(_profile);
-				}
-
-			}, [consts.move_points]);
-		}
-
-	}).call(this);
-
 	/**
-	 * Примыкающий внешний элемент - имеет смысл для створок и, возможно, рёбер заполнения
-	 * @property nearest
-	 * @type Profile
+	 * Наблюдает за изменениями контура и пересчитывает путь элемента при изменении соседних элементов
 	 */
-	this.nearest = function(){
-		var ngeneratrix, children,
-			b = _profile.b, e = _profile.e;
+	this.observer = function(an){
+		var moved = Array.isArray(an) ? an[an.length-1] : an;
 
-		function check_nearest(){
-			if(_profile.data._nearest){
-				ngeneratrix = _profile.data._nearest.generatrix;
-				if( ngeneratrix.getNearestPoint(b).is_nearest(b) && ngeneratrix.getNearestPoint(e).is_nearest(e)){
-					_profile.data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, _profile.data._nearest, acn.ii, _profile.data._nearest_cnn);
-					return true;
+		if(moved.profiles.indexOf(_profile) == -1){
+
+			// если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
+			var bcnn = _profile.cnn_point("b"),
+				ecnn = _profile.cnn_point("e"),
+				mpoint;
+
+			moved.profiles.forEach(function (p) {
+				if(bcnn.cnn && bcnn.profile == p){
+					if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+						if(!_profile.b.is_nearest(p.e))
+							_profile.b = p.e;
+					}
+					else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+						mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
+						if(!mpoint.is_nearest(_profile.b))
+							_profile.b = mpoint;
+					}
 				}
-			}
-			_profile.data._nearest = null;
-			_profile.data._nearest_cnn = null;
+				if(ecnn.cnn && ecnn.profile == p){
+					if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+						if(!_profile.e.is_nearest(p.b))
+							_profile.e = p.b;
+					}
+					else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+						mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
+						if(!mpoint.is_nearest(_profile.e))
+							_profile.e = mpoint;
+					}
+				}
+			});
+
+			moved.profiles.push(_profile);
 		}
-
-		if(_profile.parent && _profile.parent.parent){
-			if(!check_nearest()){
-				children = _profile.parent.parent.children;
-				for(var p in children){
-					if((_profile.data._nearest = children[p]) instanceof Profile && check_nearest())
-						return _profile.data._nearest;
-					else
-						_profile.data._nearest = null;
-				}
-			}
-		}else
-			_profile.data._nearest = null;
-
-		return _profile.data._nearest;
 	};
-
 
 	/**
 	 * Координаты вершин (cornx1...corny4)
@@ -2702,7 +2661,6 @@ function Profile(attr){
 
 		return res;
 	};
-
 
 	/**
 	 * Рассчитывает точки пути на пересечении текущего и указанного профилей
@@ -2877,10 +2835,115 @@ function Profile(attr){
 		return cnn_point;
 	};
 
+	//
+	this.initialize(attr);
+
 }
 Profile._extend(BuilderElement);
 
 Profile.prototype.__define({
+
+	/**
+	 * Вызывается из конструктора - создаёт пути и лучи
+	 */
+	initialize: {
+		value : function(attr){
+
+			var h = this.project.bounds.height,
+				_row = this._row;
+
+			if(attr.r)
+				_row.r = attr.r;
+
+			if(attr.generatrix) {
+				this.data.generatrix = attr.generatrix;
+				if(this.data.generatrix.data.reversed)
+					delete this.data.generatrix.data.reversed;
+
+			} else {
+
+				if(_row.path_data) {
+					this.data.generatrix = new paper.Path(_row.path_data);
+
+				}else{
+					this.data.generatrix = new paper.Path([_row.x1, h - _row.y1]);
+					if(_row.r){
+						this.data.generatrix.arcTo(
+							$p.m.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2,
+								_row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
+					}else{
+						this.data.generatrix.lineTo([_row.x2, h - _row.y2]);
+					}
+				}
+			}
+
+			h = null;
+			_row = null;
+
+			// кеш лучей в узлах профиля
+			this.data._rays = new ProfileRays();
+
+			this.data.generatrix.strokeColor = 'grey';
+
+			this.data.path = new paper.Path();
+			this.data.path.strokeColor = 'black';
+			this.data.path.strokeWidth = 1;
+			this.data.path.strokeScaling = false;
+			this.data.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
+
+			this.addChild(this.data.path);
+			this.addChild(this.data.generatrix);
+
+			/**
+			 * Подключаем наблюдателя за событиями контура с именем _consts.move_points_
+			 */
+			if(this.parent)
+				Object.observe(this.parent._noti, this.observer, [consts.move_points]);
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Примыкающий внешний элемент - имеет смысл для сегментов створок
+	 * @property nearest
+	 * @type Profile
+	 */
+	nearest: {
+		value : function(){
+			var _profile = this,
+				b = _profile.b,
+				e = _profile.e,
+				ngeneratrix, children;
+
+			function check_nearest(){
+				if(_profile.data._nearest){
+					ngeneratrix = _profile.data._nearest.generatrix;
+					if( ngeneratrix.getNearestPoint(b).is_nearest(b) && ngeneratrix.getNearestPoint(e).is_nearest(e)){
+						_profile.data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, _profile.data._nearest, acn.ii, _profile.data._nearest_cnn);
+						return true;
+					}
+				}
+				_profile.data._nearest = null;
+				_profile.data._nearest_cnn = null;
+			}
+
+			if(_profile.parent && _profile.parent.parent){
+				if(!check_nearest()){
+					children = _profile.parent.parent.children;
+					for(var p in children){
+						if((_profile.data._nearest = children[p]) instanceof Profile && check_nearest())
+							return _profile.data._nearest;
+						else
+							_profile.data._nearest = null;
+					}
+				}
+			}else
+				_profile.data._nearest = null;
+
+			return _profile.data._nearest;
+		},
+		enumerable : false
+	},
 
 	/**
 	 * Координаты начала элемента
@@ -3326,6 +3389,17 @@ Profile.prototype.__define({
 	},
 
 	/**
+	 * Выясняет, примыкает ли указанный профиль к текущему
+	 */
+	is_nearest: {
+		value : function(p){
+			return (this.b.is_nearest(p.b, true) && this.e.is_nearest(p.e, true)) ||
+				(this.generatrix.getNearestPoint(p.b).is_nearest(p.b) && this.generatrix.getNearestPoint(p.e).is_nearest(p.e));
+		},
+		enumerable : false
+	},
+
+	/**
 	 * Возвращает массив примыкающих ипостов
 	 */
 	joined_imposts: {
@@ -3545,10 +3619,14 @@ function ProfileRays(){
 	this.e = new CnnPoint();
 
 	this.clear = function(with_cnn){
-		if(this.inner)
+		if(this.inner){
+			this.inner.removeSegments();
 			delete this.inner;
-		if(this.outer)
+		}
+		if(this.outer){
+			this.outer.removeSegments();
 			delete this.outer;
+		}
 		if(with_cnn){
 			this.b.profile = null;
 			this.e.profile = null;
