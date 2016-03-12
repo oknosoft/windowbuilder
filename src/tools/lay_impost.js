@@ -31,11 +31,13 @@ function ToolLayImpost(){
 
 	tool.resetHot = function(type, event, mode) {
 	};
+
 	tool.testHot = function(type, event, mode) {
 		/*	if (mode != 'tool-select')
 		 return false;*/
 		return this.hitTest(event);
 	};
+
 	tool.hitTest = function(event) {
 		// var hitSize = 4.0; // / view.zoom;
 		var hitSize = 2;
@@ -53,14 +55,18 @@ function ToolLayImpost(){
 
 		return true;
 	};
+
 	tool.on({
+
 		activate: function() {
 			_editor.tb_left.select(tool.options.name);
 			_editor.canvas_cursor('cursor-arrow-lay');
 		},
+
 		deactivate: function() {
 			_editor.hide_selection_bounds();
 		},
+
 		mousedown: function(event) {
 
 			var b, e, r, contour;
@@ -120,6 +126,7 @@ function ToolLayImpost(){
 				_editor.project.deselectAll();
 			}
 		},
+
 		mouseup: function(event) {
 			if (this.mode && this.changed) {
 				//undo.snapshot("Move Shapes");
@@ -128,6 +135,7 @@ function ToolLayImpost(){
 			_editor.canvas_cursor('cursor-arrow-lay');
 
 		},
+
 		mousedrag: function(event) {
 			if (this.mode) {
 
@@ -140,6 +148,7 @@ function ToolLayImpost(){
 
 			}
 		},
+
 		mousemove: function(event) {
 			this.hitTest(event);
 		}

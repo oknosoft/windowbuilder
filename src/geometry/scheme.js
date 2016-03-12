@@ -210,11 +210,11 @@ function Scheme(_canvas){
 				bounds = bounds.unite(l.strokeBounds);
 		});
 		if(bounds){
-			_scheme.view.zoom = Math.min(_scheme.view.viewSize.height / (bounds.height+320), _scheme.view.viewSize.width / (bounds.width+320));
+			_scheme.view.zoom = Math.min((_scheme.view.viewSize.height - 20) / (bounds.height+320), (_scheme.view.viewSize.width - 20) / (bounds.width+320));
 			shift = (_scheme.view.viewSize.width - bounds.width * _scheme.view.zoom) / 2;
 			if(shift < 200)
 				shift = 0;
-			_scheme.view.center = bounds.center.add([shift, 60]);
+			_scheme.view.center = bounds.center.add([shift, 40]);
 		}
 	};
 
@@ -379,25 +379,15 @@ function Scheme(_canvas){
 	 * В отличии от deselectAll() сами пути могут оставаться выделенными
 	 * учитываются узлы всех путей, в том числе и не выделенных
 	 */
-	this.deselect_all_points = function() {
+	this.deselect_all_points = function(with_items) {
 		this.getItems({class: paper.Path}).forEach(function (item) {
 			item.segments.forEach(function (s) {
 				if (s.selected)
 					s.selected = false;
 			});
-		})
-		//this.layers.forEach(function (l) {
-		//	if (l instanceof Contour) {
-		//		var selected = l.getItems({class: paper.Path});
-		//		for (var i = 0; i < selected.length; i++) {
-		//			var item = selected[i];
-		//			item.segments.forEach(function (s) {
-		//				if (s.selected)
-		//					s.selected = false;
-		//			});
-		//		}
-		//	}
-		//});
+			if(with_items && item.selected)
+				item.selected = false;
+		});
 	};
 
 	/**

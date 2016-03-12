@@ -20,6 +20,7 @@ var acn,
 	 * @type {number}
 	 */
 	this.sticking = 90;
+	this.sticking0 = this.sticking / 2;
 	this.sticking2 = this.sticking * this.sticking;
 	this.font_size = 60;
 

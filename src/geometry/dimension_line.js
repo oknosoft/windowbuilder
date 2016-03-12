@@ -52,8 +52,11 @@ function DimensionLine(attr){
 
 	this.on({
 		mouseenter: this._mouseenter,
-		mouseleave: this._mouseleave
+		mouseleave: this._mouseleave,
+		click: this._click
 	});
+
+	$p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this));
 
 }
 DimensionLine._extend(paper.Group);
@@ -105,6 +108,91 @@ DimensionLine.prototype.__define({
 	_mouseleave: {
 		value: function (event) {
 			//paper.canvas_cursor('cursor-arrow-white');
+		},
+		enumerable: false
+	},
+
+	_click: {
+		value: function (event) {
+			event.stop();
+			this.wnd = new RulerWnd();
+			this.wnd.size = this.size;
+		},
+		enumerable: false
+	},
+
+	_move_points: {
+		value: function (event, xy) {
+
+			var _bounds = this.parent.parent.bounds,
+				delta, segments;
+
+			if(this.pos == "top" || this.pos == "bottom")
+				if(event.name == "right")
+					delta = new paper.Point(event.size - _bounds.width, 0);
+				else
+					delta = new paper.Point(_bounds.width - event.size, 0);
+			else{
+				if(event.name == "bottom")
+					delta = new paper.Point(0, event.size - _bounds.height);
+				else
+					delta = new paper.Point(0, _bounds.height - event.size);
+			}
+
+
+			if(delta.length){
+				paper.project.deselect_all_points();
+				paper.project.getItems({class: Profile}).forEach(function (p) {
+					if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0 && Math.abs(p.e[xy] - _bounds[event.name]) < consts.sticking0){
+						p.generatrix.segments.forEach(function (segm) {
+							segm.selected = true;
+						})
+					}else if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0){
+						p.generatrix.firstSegment.selected = true;
+
+					}else if(Math.abs(p.e[xy] - _bounds[event.name]) < consts.sticking0){
+						p.generatrix.lastSegment.selected = true;
+
+					}
+				});
+				paper.project.move_points(delta);
+				setTimeout(paper.project.deselect_all_points.bind(paper.project, true), 200);
+			}
+		},
+		enumerable: false
+	},
+
+	_sizes_wnd: {
+		value: function (event) {
+			if(event.wnd == this.wnd){
+
+				switch(event.name) {
+					case 'close':
+						this._nodes.text.selected = false;
+						this.wnd = null;
+						break;
+
+					case 'left':
+						if(this.pos == "top" || this.pos == "bottom")
+							this._move_points(event, "x");
+						break;
+
+					case 'right':
+						if(this.pos == "top" || this.pos == "bottom")
+							this._move_points(event, "x");
+						break;
+
+					case 'top':
+						if(this.pos == "left" || this.pos == "right")
+							this._move_points(event, "y");
+						break;
+
+					case 'bottom':
+						if(this.pos == "left" || this.pos == "right")
+							this._move_points(event, "y");
+						break;
+				}
+			}
 		},
 		enumerable: false
 	},
@@ -181,10 +269,10 @@ DimensionLine.prototype.__define({
 	// размер
 	size: {
 		get: function () {
-			return 0;
+			return parseFloat(this._nodes.text.content);
 		},
 		set: function (v) {
-
+			this._nodes.text.content = parseFloat(v);
 		},
 		enumerable: false
 	},

@@ -11,8 +11,7 @@
  */
 function ToolSelectElm(){
 
-	var _editor = paper,
-		tool = this;
+	var tool = this;
 
 	ToolSelectElm.superclass.constructor.call(this);
 
@@ -43,9 +42,9 @@ function ToolSelectElm(){
 
 		// Hit test items.
 		if (event.point){
-			tool.hitItem = _editor.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
 			if (!tool.hitItem)
-				tool.hitItem = _editor.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+				tool.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
 		}
 
 		if (tool.hitItem) {
@@ -53,15 +52,15 @@ function ToolSelectElm(){
 				if (tool.hitItem.item instanceof paper.PointText){
 
 				}else if (tool.hitItem.item.selected) {
-					_editor.canvas_cursor('cursor-arrow-small');
+					paper.canvas_cursor('cursor-arrow-small');
 
 				} else {
-					_editor.canvas_cursor('cursor-arrow-black-shape');
+					paper.canvas_cursor('cursor-arrow-black-shape');
 
 				}
 			}
 		} else {
-			_editor.canvas_cursor('cursor-arrow-black');
+			paper.canvas_cursor('cursor-arrow-black');
 		}
 
 		return true;
@@ -69,14 +68,14 @@ function ToolSelectElm(){
 	tool.on({
 		activate: function() {
 
-			_editor.tb_left.select(tool.options.name);
+			paper.tb_left.select(tool.options.name);
 
-			_editor.canvas_cursor('cursor-arrow-black');
-			_editor.clear_selection_bounds();
+			paper.canvas_cursor('cursor-arrow-black');
+			paper.clear_selection_bounds();
 
 		},
 		deactivate: function() {
-			_editor.hide_selection_bounds();
+			paper.hide_selection_bounds();
 			tool.detache_wnd();
 
 		},
@@ -91,20 +90,20 @@ function ToolSelectElm(){
 					if (event.modifiers.shift) {
 						item.selected = !item.selected;
 					} else {
-						_editor.project.deselectAll();
+						paper.project.deselectAll();
 						item.selected = true;
 					}
 					if (item.selected) {
 						this.mode = 'move-shapes';
-						_editor.project.deselect_all_points();
+						paper.project.deselect_all_points();
 						this.mouseStartPos = event.point.clone();
-						this.originalContent = _editor.capture_selection_state();
+						this.originalContent = paper.capture_selection_state();
 					}
 				}
 				if(is_profile)
-					tool.attache_wnd(tool.hitItem.item.parent, _editor);
+					tool.attache_wnd(tool.hitItem.item.parent, paper);
 
-				_editor.clear_selection_bounds();
+				paper.clear_selection_bounds();
 
 			} else {
 				// Clicked on and empty area, engage box select.
@@ -116,7 +115,7 @@ function ToolSelectElm(){
 		mouseup: function(event) {
 			if (this.mode == 'move-shapes') {
 				if (this.changed) {
-					//_editor.clear_selection_bounds();
+					//paper.clear_selection_bounds();
 					//undo.snapshot("Move Shapes");
 				}
 				this.duplicates = null;
@@ -124,20 +123,20 @@ function ToolSelectElm(){
 				var box = new paper.Rectangle(this.mouseStartPos, event.point);
 
 				if (!event.modifiers.shift)
-					_editor.project.deselectAll();
+					paper.project.deselectAll();
 
-				var selectedPaths = _editor.paths_intersecting_rect(box);
+				var selectedPaths = paper.paths_intersecting_rect(box);
 				for (var i = 0; i < selectedPaths.length; i++)
 					selectedPaths[i].selected = !selectedPaths[i].selected;
 			}
 
-			_editor.clear_selection_bounds();
+			paper.clear_selection_bounds();
 
 			if (tool.hitItem) {
 				if (tool.hitItem.item.selected) {
-					_editor.canvas_cursor('cursor-arrow-small');
+					paper.canvas_cursor('cursor-arrow-small');
 				} else {
-					_editor.canvas_cursor('cursor-arrow-black-shape');
+					paper.canvas_cursor('cursor-arrow-black-shape');
 				}
 			}
 		},
@@ -146,18 +145,18 @@ function ToolSelectElm(){
 
 				this.changed = true;
 
-				_editor.canvas_cursor('cursor-arrow-small');
+				paper.canvas_cursor('cursor-arrow-small');
 
 				var delta = event.point.subtract(this.mouseStartPos);
 				if (event.modifiers.shift)
-					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
+					delta = paper.snap_to_angle(delta, Math.PI*2/8);
 
-				_editor.restore_selection_state(this.originalContent);
-				_editor.project.move_points(delta, true);
-				_editor.clear_selection_bounds();
+				paper.restore_selection_state(this.originalContent);
+				paper.project.move_points(delta, true);
+				paper.clear_selection_bounds();
 
 			} else if (this.mode == 'box-select') {
-				_editor.drag_rect(this.mouseStartPos, event.point);
+				paper.drag_rect(this.mouseStartPos, event.point);
 			}
 		},
 		mousemove: function(event) {
@@ -167,7 +166,7 @@ function ToolSelectElm(){
 			var selected, i, path, point, newpath;
 			if (event.key == '+') {
 
-				selected = _editor.project.selectedItems;
+				selected = paper.project.selectedItems;
 				for (i = 0; i < selected.length; i++) {
 					path = selected[i];
 
@@ -189,7 +188,7 @@ function ToolSelectElm(){
 				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
 					return;
 
-				selected = _editor.project.selectedItems;
+				selected = paper.project.selectedItems;
 				for (i = 0; i < selected.length; i++) {
 					path = selected[i];
 					if(path.parent instanceof Profile){
@@ -206,16 +205,16 @@ function ToolSelectElm(){
 				return false;
 
 			} else if (event.key == 'left') {
-				_editor.project.move_points(new paper.Point(-10, 0), true);
+				paper.project.move_points(new paper.Point(-10, 0), true);
 
 			} else if (event.key == 'right') {
-				_editor.project.move_points(new paper.Point(10, 0), true);
+				paper.project.move_points(new paper.Point(10, 0), true);
 
 			} else if (event.key == 'up') {
-				_editor.project.move_points(new paper.Point(0, -10), true);
+				paper.project.move_points(new paper.Point(0, -10), true);
 
 			} else if (event.key == 'down') {
-				_editor.project.move_points(new paper.Point(0, 10), true);
+				paper.project.move_points(new paper.Point(0, 10), true);
 
 			}
 		}
@@ -223,4 +222,4 @@ function ToolSelectElm(){
 
 	return tool;
 }
-ToolSelectElm._extend(paper.Tool);
+ToolSelectElm._extend(ToolElement);

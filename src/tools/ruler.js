@@ -23,62 +23,9 @@ function ToolRuler(){
 		name: 'ruler',
 		wnd: {
 			caption: "Размеры и сдвиг",
-			height: 280
+			height: 200
 		}
 	};
-
-	function tool_wnd(){
-
-		var folder, opened = false, profile = tool.options,
-			div=document.createElement("table"), table, input;
-
-		function onclick(e){
-
-		}
-
-		$p.wsql.restore_options("editor", tool.options);
-
-		tool.wnd = $p.iface.dat_blank(paper._dxw, tool.options.wnd);
-
-		div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +
-			'<tr><td></td><td><input type="text" style="width: 70px;  text-align: center;" readonly ></td><td></td></tr>' +
-			'<tr><td></td><td align="center"></td><td></td></tr>';
-		div.style.width = "130px";
-		div.style.margin ="auto";
-		table = div.firstChild.childNodes;
-
-		$p.iface.add_button(table[0].childNodes[1], null,
-			{name: "top", img: "dist/imgs/align_top.png", title: $p.msg.align_set_top}).onclick = onclick;
-		$p.iface.add_button(table[1].childNodes[0], null,
-			{name: "left", img: "dist/imgs/align_left.png", title: $p.msg.align_set_left}).onclick = onclick;
-		$p.iface.add_button(table[1].childNodes[2], null,
-			{name: "right", img: "dist/imgs/align_right.png", title: $p.msg.align_set_right}).onclick = onclick;
-		$p.iface.add_button(table[2].childNodes[1], null,
-			{name: "bottom", img: "dist/imgs/align_bottom.png", title: $p.msg.align_set_bottom}).onclick = onclick;
-
-		tool.wnd.attachObject(div);
-
-		input = table[1].childNodes[1];
-		input.grid = {
-			editStop: function (v) {
-
-			},
-			getPosition: function (v) {
-				var offsetLeft = v.offsetLeft, offsetTop = v.offsetTop;
-				while ( v = v.offsetParent ){
-					offsetLeft += v.offsetLeft;
-					offsetTop  += v.offsetTop;
-				}
-				return [offsetLeft + 7, offsetTop + 9];
-			}
-		};
-
-		input.firstChild.onfocus = function (e) {
-			tool.__calck = new eXcell_calck(this);
-			tool.__calck.edit();
-		};
-
-	}
 
 	tool.resetHot = function(type, event, mode) {
 	};
@@ -109,8 +56,7 @@ function ToolRuler(){
 		activate: function() {
 			paper.tb_left.select(tool.options.name);
 			paper.canvas_cursor('cursor-arrow-ruler-light');
-
-			tool_wnd();
+			tool.wnd = new RulerWnd(tool.options);
 		},
 		deactivate: function() {
 
@@ -167,4 +113,93 @@ function ToolRuler(){
 	return tool;
 
 }
-ToolRuler._extend(paper.Tool);
+ToolRuler._extend(ToolElement);
+
+function RulerWnd(options){
+
+	if(!options)
+		options = {
+			name: 'sizes',
+			wnd: {
+				caption: "Размеры и сдвиг",
+				height: 200,
+				allow_close: true,
+				modal: true,
+				on_close: function () {
+					if(wnd.elmnts.calck && wnd.elmnts.calck.removeSelf)
+						wnd.elmnts.calck.removeSelf();
+					$p.eve.callEvent("sizes_wnd", [{
+						wnd: wnd,
+						name: "close",
+						size: wnd.size
+					}]);
+					return true;
+				}
+			}
+		};
+	$p.wsql.restore_options("editor", options);
+
+	var wnd = $p.iface.dat_blank(paper._dxw, options.wnd),
+		div=document.createElement("table"),
+		table, input, calck;
+
+	function onclick(e){
+		$p.eve.callEvent("sizes_wnd", [{
+			wnd: wnd,
+			name: e.currentTarget.name,
+			size: wnd.size
+		}]);
+	}
+
+	div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +
+		'<tr><td></td><td><input type="text" style="width: 70px;  text-align: center;" readonly ></td><td></td></tr>' +
+		'<tr><td></td><td align="center"></td><td></td></tr>';
+	div.style.width = "130px";
+	div.style.margin ="auto";
+	table = div.firstChild.childNodes;
+
+	$p.iface.add_button(table[0].childNodes[1], null,
+		{name: "top", img: "dist/imgs/align_top.png", title: $p.msg.align_set_top}).onclick = onclick;
+	$p.iface.add_button(table[1].childNodes[0], null,
+		{name: "left", img: "dist/imgs/align_left.png", title: $p.msg.align_set_left}).onclick = onclick;
+	$p.iface.add_button(table[1].childNodes[2], null,
+		{name: "right", img: "dist/imgs/align_right.png", title: $p.msg.align_set_right}).onclick = onclick;
+	$p.iface.add_button(table[2].childNodes[1], null,
+		{name: "bottom", img: "dist/imgs/align_bottom.png", title: $p.msg.align_set_bottom}).onclick = onclick;
+
+	wnd.attachObject(div);
+
+	input = table[1].childNodes[1];
+	input.grid = {
+		editStop: function (v) {
+
+		},
+		getPosition: function (v) {
+			var offsetLeft = v.offsetLeft, offsetTop = v.offsetTop;
+			while ( v = v.offsetParent ){
+				offsetLeft += v.offsetLeft;
+				offsetTop  += v.offsetTop;
+			}
+			return [offsetLeft + 7, offsetTop + 9];
+		}
+	};
+
+	input.firstChild.onfocus = function (e) {
+		wnd.elmnts.calck = new eXcell_calck(this);
+		wnd.elmnts.calck.edit();
+	};
+
+	wnd.__define({
+		size: {
+			get: function () {
+				return parseFloat(input.firstChild.value);
+			},
+			set: function (v) {
+				input.firstChild.value = parseFloat(v);
+			},
+			enumerable: false
+		}
+	});
+
+	return wnd;
+}

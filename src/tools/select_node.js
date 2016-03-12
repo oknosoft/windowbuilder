@@ -8,8 +8,7 @@
 
 function ToolSelectNode(){
 
-	var _editor = paper,
-		tool = this;
+	var tool = this;
 
 	ToolSelectNode.superclass.constructor.call(this);
 
@@ -45,17 +44,17 @@ function ToolSelectNode(){
 
 			// Hit test items.
 			//stroke:true
-			tool.hitItem = _editor.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
 			if (!tool.hitItem)
-				tool.hitItem = _editor.project.hitTest(event.point, { fill:true, guides: false, tolerance: hitSize });
+				tool.hitItem = paper.project.hitTest(event.point, { fill:true, guides: false, tolerance: hitSize });
 
 			// Hit test selected handles
-			hit = _editor.project.hitTest(event.point, { selected: true, handles: true, tolerance: hitSize });
+			hit = paper.project.hitTest(event.point, { selected: true, handles: true, tolerance: hitSize });
 			if (hit)
 				tool.hitItem = hit;
 
 			// Hit test points
-			hit = _editor.project.hitPoints(event.point);
+			hit = paper.project.hitPoints(event.point);
 
 			if (hit){
 				if(hit.item.parent instanceof Profile){
@@ -72,32 +71,32 @@ function ToolSelectNode(){
 				if (tool.hitItem.item instanceof paper.PointText){
 
 				}else if (tool.hitItem.item.selected) {
-					_editor.canvas_cursor('cursor-arrow-small');
+					paper.canvas_cursor('cursor-arrow-small');
 
 				} else {
-					_editor.canvas_cursor('cursor-arrow-white-shape');
+					paper.canvas_cursor('cursor-arrow-white-shape');
 
 				}
 			} else if (tool.hitItem.type == 'segment' || tool.hitItem.type == 'handle-in' || tool.hitItem.type == 'handle-out') {
 				if (tool.hitItem.segment.selected) {
-					_editor.canvas_cursor('cursor-arrow-small-point');
+					paper.canvas_cursor('cursor-arrow-small-point');
 				} else {
-					_editor.canvas_cursor('cursor-arrow-white-point');
+					paper.canvas_cursor('cursor-arrow-white-point');
 				}
 			}
 		} else {
-			_editor.canvas_cursor('cursor-arrow-white');
+			paper.canvas_cursor('cursor-arrow-white');
 		}
 
 		return true;
 	};
 	tool.on({
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-arrow-white');
+			paper.tb_left.select(tool.options.name);
+			paper.canvas_cursor('cursor-arrow-white');
 		},
 		deactivate: function() {
-			_editor.clear_selection_bounds();
+			paper.clear_selection_bounds();
 			tool.detache_wnd();
 		},
 		mousedown: function(event) {
@@ -115,29 +114,29 @@ function ToolSelectNode(){
 					if (event.modifiers.shift) {
 						item.selected = !item.selected;
 					} else {
-						_editor.project.deselectAll();
+						paper.project.deselectAll();
 						item.selected = true;
 					}
 					if (item.selected) {
 						this.mode = 'move-shapes';
-						_editor.project.deselect_all_points();
+						paper.project.deselect_all_points();
 						this.mouseStartPos = event.point.clone();
-						this.originalContent = _editor.capture_selection_state();
+						this.originalContent = paper.capture_selection_state();
 					}
 				} else if (tool.hitItem.type == 'segment') {
 					if (event.modifiers.shift) {
 						tool.hitItem.segment.selected = !tool.hitItem.segment.selected;
 					} else {
 						if (!tool.hitItem.segment.selected){
-							_editor.project.deselect_all_points();
-							_editor.project.deselectAll();
+							paper.project.deselect_all_points();
+							paper.project.deselectAll();
 						}
 						tool.hitItem.segment.selected = true;
 					}
 					if (tool.hitItem.segment.selected) {
 						this.mode = consts.move_points;
 						this.mouseStartPos = event.point.clone();
-						this.originalContent = _editor.capture_selection_state();
+						this.originalContent = paper.capture_selection_state();
 					}
 				} else if (tool.hitItem.type == 'handle-in' || tool.hitItem.type == 'handle-out') {
 					this.mode = consts.move_handle;
@@ -156,9 +155,9 @@ function ToolSelectNode(){
 				}
 
 				if(is_profile)
-					tool.attache_wnd(tool.hitItem.item.parent, _editor);
+					tool.attache_wnd(tool.hitItem.item.parent, paper);
 
-				_editor.clear_selection_bounds();
+				paper.clear_selection_bounds();
 
 			} else {
 				// Clicked on and empty area, engage box select.
@@ -172,44 +171,44 @@ function ToolSelectNode(){
 		mouseup: function(event) {
 			if (this.mode == 'move-shapes') {
 				if (this.changed) {
-					_editor.clear_selection_bounds();
+					paper.clear_selection_bounds();
 					//undo.snapshot("Move Shapes");
 				}
 			} else if (this.mode == consts.move_points) {
 				if (this.changed) {
-					_editor.clear_selection_bounds();
+					paper.clear_selection_bounds();
 					//undo.snapshot("Move Points");
 				}
 			} else if (this.mode == consts.move_handle) {
 				if (this.changed) {
-					_editor.clear_selection_bounds();
+					paper.clear_selection_bounds();
 					//undo.snapshot("Move Handle");
 				}
 			} else if (this.mode == 'box-select') {
 				var box = new paper.Rectangle(this.mouseStartPos, event.point);
 
 				if (!event.modifiers.shift)
-					_editor.project.deselectAll();
+					paper.project.deselectAll();
 
-				var selectedSegments = _editor.segments_in_rect(box);
+				var selectedSegments = paper.segments_in_rect(box);
 				if (selectedSegments.length > 0) {
 					for (var i = 0; i < selectedSegments.length; i++) {
 						selectedSegments[i].selected = !selectedSegments[i].selected;
 					}
 				} else {
-					var selectedPaths = _editor.paths_intersecting_rect(box);
+					var selectedPaths = paper.paths_intersecting_rect(box);
 					for (var i = 0; i < selectedPaths.length; i++)
 						selectedPaths[i].selected = !selectedPaths[i].selected;
 				}
 			}
 
-			_editor.clear_selection_bounds();
+			paper.clear_selection_bounds();
 
 			if (tool.hitItem) {
 				if (tool.hitItem.item.selected) {
-					_editor.canvas_cursor('cursor-arrow-small');
+					paper.canvas_cursor('cursor-arrow-small');
 				} else {
-					_editor.canvas_cursor('cursor-arrow-white-shape');
+					paper.canvas_cursor('cursor-arrow-white-shape');
 				}
 			}
 		},
@@ -217,26 +216,26 @@ function ToolSelectNode(){
 			this.changed = true;
 
 			if (this.mode == 'move-shapes') {
-				_editor.canvas_cursor('cursor-arrow-small');
+				paper.canvas_cursor('cursor-arrow-small');
 
 				var delta = event.point.subtract(this.mouseStartPos);
 				if (event.modifiers.shift)
-					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
+					delta = paper.snap_to_angle(delta, Math.PI*2/8);
 
-				_editor.restore_selection_state(this.originalContent);
-				_editor.project.move_points(delta, true);
-				_editor.clear_selection_bounds();
+				paper.restore_selection_state(this.originalContent);
+				paper.project.move_points(delta, true);
+				paper.clear_selection_bounds();
 
 			} else if (this.mode == consts.move_points) {
-				_editor.canvas_cursor('cursor-arrow-small');
+				paper.canvas_cursor('cursor-arrow-small');
 
 				var delta = event.point.subtract(this.mouseStartPos);
 				if (event.modifiers.shift) {
-					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
+					delta = paper.snap_to_angle(delta, Math.PI*2/8);
 				}
-				_editor.restore_selection_state(this.originalContent);
-				_editor.project.move_points(delta);
-				_editor.purge_selection();
+				paper.restore_selection_state(this.originalContent);
+				paper.project.move_points(delta);
+				paper.purge_selection();
 
 
 			} else if (this.mode == consts.move_handle) {
@@ -250,14 +249,14 @@ function ToolSelectNode(){
 				if (tool.hitItem.type == 'handle-out') {
 					var handlePos = this.originalHandleOut.add(delta);
 					if (event.modifiers.shift)
-						handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
+						handlePos = paper.snap_to_angle(handlePos, Math.PI*2/8);
 
 					tool.hitItem.segment.handleOut = handlePos;
 					tool.hitItem.segment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
 				} else {
 					var handlePos = this.originalHandleIn.add(delta);
 					if (event.modifiers.shift)
-						handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
+						handlePos = paper.snap_to_angle(handlePos, Math.PI*2/8);
 
 					tool.hitItem.segment.handleIn = handlePos;
 					tool.hitItem.segment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
@@ -266,10 +265,10 @@ function ToolSelectNode(){
 				noti.profiles[0].rays.clear();
 				noti.profiles[0].parent.notify(noti);
 
-				_editor.purge_selection();
+				paper.purge_selection();
 
 			} else if (this.mode == 'box-select') {
-				_editor.drag_rect(this.mouseStartPos, event.point);
+				paper.drag_rect(this.mouseStartPos, event.point);
 			}
 		},
 		mousemove: function(event) {
@@ -279,7 +278,7 @@ function ToolSelectNode(){
 			var selected, i, j, path, segment, index, point, handle, do_select;
 			if (event.key == '+') {
 
-				selected = _editor.project.selectedItems;
+				selected = paper.project.selectedItems;
 				for (i = 0; i < selected.length; i++) {
 					path = selected[i];
 					do_select = false;
@@ -315,7 +314,7 @@ function ToolSelectNode(){
 				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
 					return;
 
-				selected = _editor.project.selectedItems;
+				selected = paper.project.selectedItems;
 				for (i = 0; i < selected.length; i++) {
 					path = selected[i];
 					do_select = false;
@@ -344,16 +343,16 @@ function ToolSelectNode(){
 				return false;
 
 			} else if (event.key == 'left') {
-				_editor.project.move_points(new paper.Point(-10, 0));
+				paper.project.move_points(new paper.Point(-10, 0));
 
 			} else if (event.key == 'right') {
-				_editor.project.move_points(new paper.Point(10, 0));
+				paper.project.move_points(new paper.Point(10, 0));
 
 			} else if (event.key == 'up') {
-				_editor.project.move_points(new paper.Point(0, -10));
+				paper.project.move_points(new paper.Point(0, -10));
 
 			} else if (event.key == 'down') {
-				_editor.project.move_points(new paper.Point(0, 10));
+				paper.project.move_points(new paper.Point(0, 10));
 
 			}
 		}
@@ -362,4 +361,4 @@ function ToolSelectNode(){
 	return tool;
 
 }
-ToolSelectNode._extend(paper.Tool);
+ToolSelectNode._extend(ToolElement);

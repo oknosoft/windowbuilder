@@ -1175,8 +1175,11 @@ function DimensionLine(attr){
 
 	this.on({
 		mouseenter: this._mouseenter,
-		mouseleave: this._mouseleave
+		mouseleave: this._mouseleave,
+		click: this._click
 	});
+
+	$p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this));
 
 }
 DimensionLine._extend(paper.Group);
@@ -1228,6 +1231,91 @@ DimensionLine.prototype.__define({
 	_mouseleave: {
 		value: function (event) {
 			//paper.canvas_cursor('cursor-arrow-white');
+		},
+		enumerable: false
+	},
+
+	_click: {
+		value: function (event) {
+			event.stop();
+			this.wnd = new RulerWnd();
+			this.wnd.size = this.size;
+		},
+		enumerable: false
+	},
+
+	_move_points: {
+		value: function (event, xy) {
+
+			var _bounds = this.parent.parent.bounds,
+				delta, segments;
+
+			if(this.pos == "top" || this.pos == "bottom")
+				if(event.name == "right")
+					delta = new paper.Point(event.size - _bounds.width, 0);
+				else
+					delta = new paper.Point(_bounds.width - event.size, 0);
+			else{
+				if(event.name == "bottom")
+					delta = new paper.Point(0, event.size - _bounds.height);
+				else
+					delta = new paper.Point(0, _bounds.height - event.size);
+			}
+
+
+			if(delta.length){
+				paper.project.deselect_all_points();
+				paper.project.getItems({class: Profile}).forEach(function (p) {
+					if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0 && Math.abs(p.e[xy] - _bounds[event.name]) < consts.sticking0){
+						p.generatrix.segments.forEach(function (segm) {
+							segm.selected = true;
+						})
+					}else if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0){
+						p.generatrix.firstSegment.selected = true;
+
+					}else if(Math.abs(p.e[xy] - _bounds[event.name]) < consts.sticking0){
+						p.generatrix.lastSegment.selected = true;
+
+					}
+				});
+				paper.project.move_points(delta);
+				setTimeout(paper.project.deselect_all_points.bind(paper.project, true), 200);
+			}
+		},
+		enumerable: false
+	},
+
+	_sizes_wnd: {
+		value: function (event) {
+			if(event.wnd == this.wnd){
+
+				switch(event.name) {
+					case 'close':
+						this._nodes.text.selected = false;
+						this.wnd = null;
+						break;
+
+					case 'left':
+						if(this.pos == "top" || this.pos == "bottom")
+							this._move_points(event, "x");
+						break;
+
+					case 'right':
+						if(this.pos == "top" || this.pos == "bottom")
+							this._move_points(event, "x");
+						break;
+
+					case 'top':
+						if(this.pos == "left" || this.pos == "right")
+							this._move_points(event, "y");
+						break;
+
+					case 'bottom':
+						if(this.pos == "left" || this.pos == "right")
+							this._move_points(event, "y");
+						break;
+				}
+			}
 		},
 		enumerable: false
 	},
@@ -1304,10 +1392,10 @@ DimensionLine.prototype.__define({
 	// размер
 	size: {
 		get: function () {
-			return 0;
+			return parseFloat(this._nodes.text.content);
 		},
 		set: function (v) {
-
+			this._nodes.text.content = parseFloat(v);
 		},
 		enumerable: false
 	},
@@ -2425,64 +2513,6 @@ paper.Point.prototype.__define({
 	is_nearest: {
 		value: function (point, sticking) {
 			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 10);
-		},
-		enumerable: false
-	}
-
-});
-
-/**
- * Расширение класса Tool
- */
-paper.Tool.prototype.__define({
-
-	/**
-	 * Отключает и выгружает из памяти окно свойств инструмента
-	 * @param tool
-	 */
-	detache_wnd: {
-		value: function(){
-			if(this.wnd && this.wnd.wnd_options){
-				this.wnd.wnd_options(this.options.wnd);
-				$p.wsql.save_options("editor", this.options);
-				this.wnd.close();
-			}
-			this.wnd = null;
-			this.profile = null;
-		},
-		enumerable: false
-	},
-
-	/**
-	 * Подключает окно редактор свойств текущего элемента, выбранного инструментом
-	 */
-	attache_wnd: {
-		value: function(profile, _editor){
-
-			this.profile = profile;
-
-			if(!this.wnd || !this._grid){
-
-				this.wnd = _editor._acc.elm.cells("a");
-
-				this._grid = this.wnd.attachHeadFields({
-					obj: profile,
-					oxml: {
-						" ": ["inset", "clr"],
-						"Начало": ["x1", "y1"],
-						"Конец": ["x2", "y2"]
-
-					}
-				});
-				this._grid.attachEvent("onRowSelect", function(id,ind){
-					if(id == "x1" || id == "y1")
-						this._obj.select_node("b");
-					else if(id == "x2" || id == "y2")
-						this._obj.select_node("e");
-				});
-			}else{
-				this._grid.attach({obj: profile})
-			}
 		},
 		enumerable: false
 	}
@@ -3979,11 +4009,11 @@ function Scheme(_canvas){
 				bounds = bounds.unite(l.strokeBounds);
 		});
 		if(bounds){
-			_scheme.view.zoom = Math.min(_scheme.view.viewSize.height / (bounds.height+320), _scheme.view.viewSize.width / (bounds.width+320));
+			_scheme.view.zoom = Math.min((_scheme.view.viewSize.height - 20) / (bounds.height+320), (_scheme.view.viewSize.width - 20) / (bounds.width+320));
 			shift = (_scheme.view.viewSize.width - bounds.width * _scheme.view.zoom) / 2;
 			if(shift < 200)
 				shift = 0;
-			_scheme.view.center = bounds.center.add([shift, 60]);
+			_scheme.view.center = bounds.center.add([shift, 40]);
 		}
 	};
 
@@ -4148,25 +4178,15 @@ function Scheme(_canvas){
 	 * В отличии от deselectAll() сами пути могут оставаться выделенными
 	 * учитываются узлы всех путей, в том числе и не выделенных
 	 */
-	this.deselect_all_points = function() {
+	this.deselect_all_points = function(with_items) {
 		this.getItems({class: paper.Path}).forEach(function (item) {
 			item.segments.forEach(function (s) {
 				if (s.selected)
 					s.selected = false;
 			});
-		})
-		//this.layers.forEach(function (l) {
-		//	if (l instanceof Contour) {
-		//		var selected = l.getItems({class: paper.Path});
-		//		for (var i = 0; i < selected.length; i++) {
-		//			var item = selected[i];
-		//			item.segments.forEach(function (s) {
-		//				if (s.selected)
-		//					s.selected = false;
-		//			});
-		//		}
-		//	}
-		//});
+			if(with_items && item.selected)
+				item.selected = false;
+		});
 	};
 
 	/**
@@ -4454,6 +4474,7 @@ var acn,
 	 * @type {number}
 	 */
 	this.sticking = 90;
+	this.sticking0 = this.sticking / 2;
 	this.sticking2 = this.sticking * this.sticking;
 	this.font_size = 60;
 
@@ -4652,6 +4673,73 @@ ToolArc._extend(paper.Tool);
 
 
 /**
+ * Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
+ * Created 12.03.2016<br />
+ * @author Evgeniy Malyarov
+ * @module element
+ */
+
+function ToolElement() {
+	ToolElement.superclass.constructor.call(this);
+};
+ToolElement._extend(paper.Tool);
+
+ToolElement.prototype.__define({
+
+	/**
+	 * Отключает и выгружает из памяти окно свойств инструмента
+	 * @param tool
+	 */
+	detache_wnd: {
+		value: function(){
+			if(this.wnd && this.wnd.wnd_options){
+				this.wnd.wnd_options(this.options.wnd);
+				$p.wsql.save_options("editor", this.options);
+				this.wnd.close();
+			}
+			this.wnd = null;
+			this.profile = null;
+		},
+		enumerable: false
+	},
+
+	/**
+	 * Подключает окно редактор свойств текущего элемента, выбранного инструментом
+	 */
+	attache_wnd: {
+		value: function(profile, _editor){
+
+			this.profile = profile;
+
+			if(!this.wnd || !this._grid){
+
+				this.wnd = _editor._acc.elm.cells("a");
+
+				this._grid = this.wnd.attachHeadFields({
+					obj: profile,
+					oxml: {
+						" ": ["inset", "clr"],
+						"Начало": ["x1", "y1"],
+						"Конец": ["x2", "y2"]
+
+					}
+				});
+				this._grid.attachEvent("onRowSelect", function(id,ind){
+					if(id == "x1" || id == "y1")
+						this._obj.select_node("b");
+					else if(id == "x2" || id == "y2")
+						this._obj.select_node("e");
+				});
+			}else{
+				this._grid.attach({obj: profile})
+			}
+		},
+		enumerable: false
+	}
+
+});
+
+/**
  * Вставка раскладок и импостов
  * Created 25.08.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015
@@ -4684,11 +4772,13 @@ function ToolLayImpost(){
 
 	tool.resetHot = function(type, event, mode) {
 	};
+
 	tool.testHot = function(type, event, mode) {
 		/*	if (mode != 'tool-select')
 		 return false;*/
 		return this.hitTest(event);
 	};
+
 	tool.hitTest = function(event) {
 		// var hitSize = 4.0; // / view.zoom;
 		var hitSize = 2;
@@ -4706,14 +4796,18 @@ function ToolLayImpost(){
 
 		return true;
 	};
+
 	tool.on({
+
 		activate: function() {
 			_editor.tb_left.select(tool.options.name);
 			_editor.canvas_cursor('cursor-arrow-lay');
 		},
+
 		deactivate: function() {
 			_editor.hide_selection_bounds();
 		},
+
 		mousedown: function(event) {
 
 			var b, e, r, contour;
@@ -4773,6 +4867,7 @@ function ToolLayImpost(){
 				_editor.project.deselectAll();
 			}
 		},
+
 		mouseup: function(event) {
 			if (this.mode && this.changed) {
 				//undo.snapshot("Move Shapes");
@@ -4781,6 +4876,7 @@ function ToolLayImpost(){
 			_editor.canvas_cursor('cursor-arrow-lay');
 
 		},
+
 		mousedrag: function(event) {
 			if (this.mode) {
 
@@ -4793,6 +4889,7 @@ function ToolLayImpost(){
 
 			}
 		},
+
 		mousemove: function(event) {
 			this.hitTest(event);
 		}
@@ -5233,62 +5330,9 @@ function ToolRuler(){
 		name: 'ruler',
 		wnd: {
 			caption: "Размеры и сдвиг",
-			height: 280
+			height: 200
 		}
 	};
-
-	function tool_wnd(){
-
-		var folder, opened = false, profile = tool.options,
-			div=document.createElement("table"), table, input;
-
-		function onclick(e){
-
-		}
-
-		$p.wsql.restore_options("editor", tool.options);
-
-		tool.wnd = $p.iface.dat_blank(paper._dxw, tool.options.wnd);
-
-		div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +
-			'<tr><td></td><td><input type="text" style="width: 70px;  text-align: center;" readonly ></td><td></td></tr>' +
-			'<tr><td></td><td align="center"></td><td></td></tr>';
-		div.style.width = "130px";
-		div.style.margin ="auto";
-		table = div.firstChild.childNodes;
-
-		$p.iface.add_button(table[0].childNodes[1], null,
-			{name: "top", img: "dist/imgs/align_top.png", title: $p.msg.align_set_top}).onclick = onclick;
-		$p.iface.add_button(table[1].childNodes[0], null,
-			{name: "left", img: "dist/imgs/align_left.png", title: $p.msg.align_set_left}).onclick = onclick;
-		$p.iface.add_button(table[1].childNodes[2], null,
-			{name: "right", img: "dist/imgs/align_right.png", title: $p.msg.align_set_right}).onclick = onclick;
-		$p.iface.add_button(table[2].childNodes[1], null,
-			{name: "bottom", img: "dist/imgs/align_bottom.png", title: $p.msg.align_set_bottom}).onclick = onclick;
-
-		tool.wnd.attachObject(div);
-
-		input = table[1].childNodes[1];
-		input.grid = {
-			editStop: function (v) {
-
-			},
-			getPosition: function (v) {
-				var offsetLeft = v.offsetLeft, offsetTop = v.offsetTop;
-				while ( v = v.offsetParent ){
-					offsetLeft += v.offsetLeft;
-					offsetTop  += v.offsetTop;
-				}
-				return [offsetLeft + 7, offsetTop + 9];
-			}
-		};
-
-		input.firstChild.onfocus = function (e) {
-			tool.__calck = new eXcell_calck(this);
-			tool.__calck.edit();
-		};
-
-	}
 
 	tool.resetHot = function(type, event, mode) {
 	};
@@ -5319,8 +5363,7 @@ function ToolRuler(){
 		activate: function() {
 			paper.tb_left.select(tool.options.name);
 			paper.canvas_cursor('cursor-arrow-ruler-light');
-
-			tool_wnd();
+			tool.wnd = new RulerWnd(tool.options);
 		},
 		deactivate: function() {
 
@@ -5377,8 +5420,96 @@ function ToolRuler(){
 	return tool;
 
 }
-ToolRuler._extend(paper.Tool);
+ToolRuler._extend(ToolElement);
 
+function RulerWnd(options){
+
+	if(!options)
+		options = {
+			name: 'sizes',
+			wnd: {
+				caption: "Размеры и сдвиг",
+				height: 200,
+				allow_close: true,
+				modal: true,
+				on_close: function () {
+					if(wnd.elmnts.calck && wnd.elmnts.calck.removeSelf)
+						wnd.elmnts.calck.removeSelf();
+					$p.eve.callEvent("sizes_wnd", [{
+						wnd: wnd,
+						name: "close",
+						size: wnd.size
+					}]);
+					return true;
+				}
+			}
+		};
+	$p.wsql.restore_options("editor", options);
+
+	var wnd = $p.iface.dat_blank(paper._dxw, options.wnd),
+		div=document.createElement("table"),
+		table, input, calck;
+
+	function onclick(e){
+		$p.eve.callEvent("sizes_wnd", [{
+			wnd: wnd,
+			name: e.currentTarget.name,
+			size: wnd.size
+		}]);
+	}
+
+	div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +
+		'<tr><td></td><td><input type="text" style="width: 70px;  text-align: center;" readonly ></td><td></td></tr>' +
+		'<tr><td></td><td align="center"></td><td></td></tr>';
+	div.style.width = "130px";
+	div.style.margin ="auto";
+	table = div.firstChild.childNodes;
+
+	$p.iface.add_button(table[0].childNodes[1], null,
+		{name: "top", img: "dist/imgs/align_top.png", title: $p.msg.align_set_top}).onclick = onclick;
+	$p.iface.add_button(table[1].childNodes[0], null,
+		{name: "left", img: "dist/imgs/align_left.png", title: $p.msg.align_set_left}).onclick = onclick;
+	$p.iface.add_button(table[1].childNodes[2], null,
+		{name: "right", img: "dist/imgs/align_right.png", title: $p.msg.align_set_right}).onclick = onclick;
+	$p.iface.add_button(table[2].childNodes[1], null,
+		{name: "bottom", img: "dist/imgs/align_bottom.png", title: $p.msg.align_set_bottom}).onclick = onclick;
+
+	wnd.attachObject(div);
+
+	input = table[1].childNodes[1];
+	input.grid = {
+		editStop: function (v) {
+
+		},
+		getPosition: function (v) {
+			var offsetLeft = v.offsetLeft, offsetTop = v.offsetTop;
+			while ( v = v.offsetParent ){
+				offsetLeft += v.offsetLeft;
+				offsetTop  += v.offsetTop;
+			}
+			return [offsetLeft + 7, offsetTop + 9];
+		}
+	};
+
+	input.firstChild.onfocus = function (e) {
+		wnd.elmnts.calck = new eXcell_calck(this);
+		wnd.elmnts.calck.edit();
+	};
+
+	wnd.__define({
+		size: {
+			get: function () {
+				return parseFloat(input.firstChild.value);
+			},
+			set: function (v) {
+				input.firstChild.value = parseFloat(v);
+			},
+			enumerable: false
+		}
+	});
+
+	return wnd;
+}
 /**
  * Свойства и перемещение элемента
  * Created 25.08.2015<br />
@@ -5392,8 +5523,7 @@ ToolRuler._extend(paper.Tool);
  */
 function ToolSelectElm(){
 
-	var _editor = paper,
-		tool = this;
+	var tool = this;
 
 	ToolSelectElm.superclass.constructor.call(this);
 
@@ -5424,9 +5554,9 @@ function ToolSelectElm(){
 
 		// Hit test items.
 		if (event.point){
-			tool.hitItem = _editor.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
 			if (!tool.hitItem)
-				tool.hitItem = _editor.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+				tool.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
 		}
 
 		if (tool.hitItem) {
@@ -5434,15 +5564,15 @@ function ToolSelectElm(){
 				if (tool.hitItem.item instanceof paper.PointText){
 
 				}else if (tool.hitItem.item.selected) {
-					_editor.canvas_cursor('cursor-arrow-small');
+					paper.canvas_cursor('cursor-arrow-small');
 
 				} else {
-					_editor.canvas_cursor('cursor-arrow-black-shape');
+					paper.canvas_cursor('cursor-arrow-black-shape');
 
 				}
 			}
 		} else {
-			_editor.canvas_cursor('cursor-arrow-black');
+			paper.canvas_cursor('cursor-arrow-black');
 		}
 
 		return true;
@@ -5450,14 +5580,14 @@ function ToolSelectElm(){
 	tool.on({
 		activate: function() {
 
-			_editor.tb_left.select(tool.options.name);
+			paper.tb_left.select(tool.options.name);
 
-			_editor.canvas_cursor('cursor-arrow-black');
-			_editor.clear_selection_bounds();
+			paper.canvas_cursor('cursor-arrow-black');
+			paper.clear_selection_bounds();
 
 		},
 		deactivate: function() {
-			_editor.hide_selection_bounds();
+			paper.hide_selection_bounds();
 			tool.detache_wnd();
 
 		},
@@ -5472,20 +5602,20 @@ function ToolSelectElm(){
 					if (event.modifiers.shift) {
 						item.selected = !item.selected;
 					} else {
-						_editor.project.deselectAll();
+						paper.project.deselectAll();
 						item.selected = true;
 					}
 					if (item.selected) {
 						this.mode = 'move-shapes';
-						_editor.project.deselect_all_points();
+						paper.project.deselect_all_points();
 						this.mouseStartPos = event.point.clone();
-						this.originalContent = _editor.capture_selection_state();
+						this.originalContent = paper.capture_selection_state();
 					}
 				}
 				if(is_profile)
-					tool.attache_wnd(tool.hitItem.item.parent, _editor);
+					tool.attache_wnd(tool.hitItem.item.parent, paper);
 
-				_editor.clear_selection_bounds();
+				paper.clear_selection_bounds();
 
 			} else {
 				// Clicked on and empty area, engage box select.
@@ -5497,7 +5627,7 @@ function ToolSelectElm(){
 		mouseup: function(event) {
 			if (this.mode == 'move-shapes') {
 				if (this.changed) {
-					//_editor.clear_selection_bounds();
+					//paper.clear_selection_bounds();
 					//undo.snapshot("Move Shapes");
 				}
 				this.duplicates = null;
@@ -5505,20 +5635,20 @@ function ToolSelectElm(){
 				var box = new paper.Rectangle(this.mouseStartPos, event.point);
 
 				if (!event.modifiers.shift)
-					_editor.project.deselectAll();
+					paper.project.deselectAll();
 
-				var selectedPaths = _editor.paths_intersecting_rect(box);
+				var selectedPaths = paper.paths_intersecting_rect(box);
 				for (var i = 0; i < selectedPaths.length; i++)
 					selectedPaths[i].selected = !selectedPaths[i].selected;
 			}
 
-			_editor.clear_selection_bounds();
+			paper.clear_selection_bounds();
 
 			if (tool.hitItem) {
 				if (tool.hitItem.item.selected) {
-					_editor.canvas_cursor('cursor-arrow-small');
+					paper.canvas_cursor('cursor-arrow-small');
 				} else {
-					_editor.canvas_cursor('cursor-arrow-black-shape');
+					paper.canvas_cursor('cursor-arrow-black-shape');
 				}
 			}
 		},
@@ -5527,18 +5657,18 @@ function ToolSelectElm(){
 
 				this.changed = true;
 
-				_editor.canvas_cursor('cursor-arrow-small');
+				paper.canvas_cursor('cursor-arrow-small');
 
 				var delta = event.point.subtract(this.mouseStartPos);
 				if (event.modifiers.shift)
-					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
+					delta = paper.snap_to_angle(delta, Math.PI*2/8);
 
-				_editor.restore_selection_state(this.originalContent);
-				_editor.project.move_points(delta, true);
-				_editor.clear_selection_bounds();
+				paper.restore_selection_state(this.originalContent);
+				paper.project.move_points(delta, true);
+				paper.clear_selection_bounds();
 
 			} else if (this.mode == 'box-select') {
-				_editor.drag_rect(this.mouseStartPos, event.point);
+				paper.drag_rect(this.mouseStartPos, event.point);
 			}
 		},
 		mousemove: function(event) {
@@ -5548,7 +5678,7 @@ function ToolSelectElm(){
 			var selected, i, path, point, newpath;
 			if (event.key == '+') {
 
-				selected = _editor.project.selectedItems;
+				selected = paper.project.selectedItems;
 				for (i = 0; i < selected.length; i++) {
 					path = selected[i];
 
@@ -5570,7 +5700,7 @@ function ToolSelectElm(){
 				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
 					return;
 
-				selected = _editor.project.selectedItems;
+				selected = paper.project.selectedItems;
 				for (i = 0; i < selected.length; i++) {
 					path = selected[i];
 					if(path.parent instanceof Profile){
@@ -5587,16 +5717,16 @@ function ToolSelectElm(){
 				return false;
 
 			} else if (event.key == 'left') {
-				_editor.project.move_points(new paper.Point(-10, 0), true);
+				paper.project.move_points(new paper.Point(-10, 0), true);
 
 			} else if (event.key == 'right') {
-				_editor.project.move_points(new paper.Point(10, 0), true);
+				paper.project.move_points(new paper.Point(10, 0), true);
 
 			} else if (event.key == 'up') {
-				_editor.project.move_points(new paper.Point(0, -10), true);
+				paper.project.move_points(new paper.Point(0, -10), true);
 
 			} else if (event.key == 'down') {
-				_editor.project.move_points(new paper.Point(0, 10), true);
+				paper.project.move_points(new paper.Point(0, 10), true);
 
 			}
 		}
@@ -5604,7 +5734,7 @@ function ToolSelectElm(){
 
 	return tool;
 }
-ToolSelectElm._extend(paper.Tool);
+ToolSelectElm._extend(ToolElement);
 /**
  * Свойства и перемещение узлов элемента
  * Created 25.08.2015<br />
@@ -5615,8 +5745,7 @@ ToolSelectElm._extend(paper.Tool);
 
 function ToolSelectNode(){
 
-	var _editor = paper,
-		tool = this;
+	var tool = this;
 
 	ToolSelectNode.superclass.constructor.call(this);
 
@@ -5652,17 +5781,17 @@ function ToolSelectNode(){
 
 			// Hit test items.
 			//stroke:true
-			tool.hitItem = _editor.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
 			if (!tool.hitItem)
-				tool.hitItem = _editor.project.hitTest(event.point, { fill:true, guides: false, tolerance: hitSize });
+				tool.hitItem = paper.project.hitTest(event.point, { fill:true, guides: false, tolerance: hitSize });
 
 			// Hit test selected handles
-			hit = _editor.project.hitTest(event.point, { selected: true, handles: true, tolerance: hitSize });
+			hit = paper.project.hitTest(event.point, { selected: true, handles: true, tolerance: hitSize });
 			if (hit)
 				tool.hitItem = hit;
 
 			// Hit test points
-			hit = _editor.project.hitPoints(event.point);
+			hit = paper.project.hitPoints(event.point);
 
 			if (hit){
 				if(hit.item.parent instanceof Profile){
@@ -5679,32 +5808,32 @@ function ToolSelectNode(){
 				if (tool.hitItem.item instanceof paper.PointText){
 
 				}else if (tool.hitItem.item.selected) {
-					_editor.canvas_cursor('cursor-arrow-small');
+					paper.canvas_cursor('cursor-arrow-small');
 
 				} else {
-					_editor.canvas_cursor('cursor-arrow-white-shape');
+					paper.canvas_cursor('cursor-arrow-white-shape');
 
 				}
 			} else if (tool.hitItem.type == 'segment' || tool.hitItem.type == 'handle-in' || tool.hitItem.type == 'handle-out') {
 				if (tool.hitItem.segment.selected) {
-					_editor.canvas_cursor('cursor-arrow-small-point');
+					paper.canvas_cursor('cursor-arrow-small-point');
 				} else {
-					_editor.canvas_cursor('cursor-arrow-white-point');
+					paper.canvas_cursor('cursor-arrow-white-point');
 				}
 			}
 		} else {
-			_editor.canvas_cursor('cursor-arrow-white');
+			paper.canvas_cursor('cursor-arrow-white');
 		}
 
 		return true;
 	};
 	tool.on({
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-arrow-white');
+			paper.tb_left.select(tool.options.name);
+			paper.canvas_cursor('cursor-arrow-white');
 		},
 		deactivate: function() {
-			_editor.clear_selection_bounds();
+			paper.clear_selection_bounds();
 			tool.detache_wnd();
 		},
 		mousedown: function(event) {
@@ -5722,29 +5851,29 @@ function ToolSelectNode(){
 					if (event.modifiers.shift) {
 						item.selected = !item.selected;
 					} else {
-						_editor.project.deselectAll();
+						paper.project.deselectAll();
 						item.selected = true;
 					}
 					if (item.selected) {
 						this.mode = 'move-shapes';
-						_editor.project.deselect_all_points();
+						paper.project.deselect_all_points();
 						this.mouseStartPos = event.point.clone();
-						this.originalContent = _editor.capture_selection_state();
+						this.originalContent = paper.capture_selection_state();
 					}
 				} else if (tool.hitItem.type == 'segment') {
 					if (event.modifiers.shift) {
 						tool.hitItem.segment.selected = !tool.hitItem.segment.selected;
 					} else {
 						if (!tool.hitItem.segment.selected){
-							_editor.project.deselect_all_points();
-							_editor.project.deselectAll();
+							paper.project.deselect_all_points();
+							paper.project.deselectAll();
 						}
 						tool.hitItem.segment.selected = true;
 					}
 					if (tool.hitItem.segment.selected) {
 						this.mode = consts.move_points;
 						this.mouseStartPos = event.point.clone();
-						this.originalContent = _editor.capture_selection_state();
+						this.originalContent = paper.capture_selection_state();
 					}
 				} else if (tool.hitItem.type == 'handle-in' || tool.hitItem.type == 'handle-out') {
 					this.mode = consts.move_handle;
@@ -5763,9 +5892,9 @@ function ToolSelectNode(){
 				}
 
 				if(is_profile)
-					tool.attache_wnd(tool.hitItem.item.parent, _editor);
+					tool.attache_wnd(tool.hitItem.item.parent, paper);
 
-				_editor.clear_selection_bounds();
+				paper.clear_selection_bounds();
 
 			} else {
 				// Clicked on and empty area, engage box select.
@@ -5779,44 +5908,44 @@ function ToolSelectNode(){
 		mouseup: function(event) {
 			if (this.mode == 'move-shapes') {
 				if (this.changed) {
-					_editor.clear_selection_bounds();
+					paper.clear_selection_bounds();
 					//undo.snapshot("Move Shapes");
 				}
 			} else if (this.mode == consts.move_points) {
 				if (this.changed) {
-					_editor.clear_selection_bounds();
+					paper.clear_selection_bounds();
 					//undo.snapshot("Move Points");
 				}
 			} else if (this.mode == consts.move_handle) {
 				if (this.changed) {
-					_editor.clear_selection_bounds();
+					paper.clear_selection_bounds();
 					//undo.snapshot("Move Handle");
 				}
 			} else if (this.mode == 'box-select') {
 				var box = new paper.Rectangle(this.mouseStartPos, event.point);
 
 				if (!event.modifiers.shift)
-					_editor.project.deselectAll();
+					paper.project.deselectAll();
 
-				var selectedSegments = _editor.segments_in_rect(box);
+				var selectedSegments = paper.segments_in_rect(box);
 				if (selectedSegments.length > 0) {
 					for (var i = 0; i < selectedSegments.length; i++) {
 						selectedSegments[i].selected = !selectedSegments[i].selected;
 					}
 				} else {
-					var selectedPaths = _editor.paths_intersecting_rect(box);
+					var selectedPaths = paper.paths_intersecting_rect(box);
 					for (var i = 0; i < selectedPaths.length; i++)
 						selectedPaths[i].selected = !selectedPaths[i].selected;
 				}
 			}
 
-			_editor.clear_selection_bounds();
+			paper.clear_selection_bounds();
 
 			if (tool.hitItem) {
 				if (tool.hitItem.item.selected) {
-					_editor.canvas_cursor('cursor-arrow-small');
+					paper.canvas_cursor('cursor-arrow-small');
 				} else {
-					_editor.canvas_cursor('cursor-arrow-white-shape');
+					paper.canvas_cursor('cursor-arrow-white-shape');
 				}
 			}
 		},
@@ -5824,26 +5953,26 @@ function ToolSelectNode(){
 			this.changed = true;
 
 			if (this.mode == 'move-shapes') {
-				_editor.canvas_cursor('cursor-arrow-small');
+				paper.canvas_cursor('cursor-arrow-small');
 
 				var delta = event.point.subtract(this.mouseStartPos);
 				if (event.modifiers.shift)
-					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
+					delta = paper.snap_to_angle(delta, Math.PI*2/8);
 
-				_editor.restore_selection_state(this.originalContent);
-				_editor.project.move_points(delta, true);
-				_editor.clear_selection_bounds();
+				paper.restore_selection_state(this.originalContent);
+				paper.project.move_points(delta, true);
+				paper.clear_selection_bounds();
 
 			} else if (this.mode == consts.move_points) {
-				_editor.canvas_cursor('cursor-arrow-small');
+				paper.canvas_cursor('cursor-arrow-small');
 
 				var delta = event.point.subtract(this.mouseStartPos);
 				if (event.modifiers.shift) {
-					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
+					delta = paper.snap_to_angle(delta, Math.PI*2/8);
 				}
-				_editor.restore_selection_state(this.originalContent);
-				_editor.project.move_points(delta);
-				_editor.purge_selection();
+				paper.restore_selection_state(this.originalContent);
+				paper.project.move_points(delta);
+				paper.purge_selection();
 
 
 			} else if (this.mode == consts.move_handle) {
@@ -5857,14 +5986,14 @@ function ToolSelectNode(){
 				if (tool.hitItem.type == 'handle-out') {
 					var handlePos = this.originalHandleOut.add(delta);
 					if (event.modifiers.shift)
-						handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
+						handlePos = paper.snap_to_angle(handlePos, Math.PI*2/8);
 
 					tool.hitItem.segment.handleOut = handlePos;
 					tool.hitItem.segment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
 				} else {
 					var handlePos = this.originalHandleIn.add(delta);
 					if (event.modifiers.shift)
-						handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
+						handlePos = paper.snap_to_angle(handlePos, Math.PI*2/8);
 
 					tool.hitItem.segment.handleIn = handlePos;
 					tool.hitItem.segment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
@@ -5873,10 +6002,10 @@ function ToolSelectNode(){
 				noti.profiles[0].rays.clear();
 				noti.profiles[0].parent.notify(noti);
 
-				_editor.purge_selection();
+				paper.purge_selection();
 
 			} else if (this.mode == 'box-select') {
-				_editor.drag_rect(this.mouseStartPos, event.point);
+				paper.drag_rect(this.mouseStartPos, event.point);
 			}
 		},
 		mousemove: function(event) {
@@ -5886,7 +6015,7 @@ function ToolSelectNode(){
 			var selected, i, j, path, segment, index, point, handle, do_select;
 			if (event.key == '+') {
 
-				selected = _editor.project.selectedItems;
+				selected = paper.project.selectedItems;
 				for (i = 0; i < selected.length; i++) {
 					path = selected[i];
 					do_select = false;
@@ -5922,7 +6051,7 @@ function ToolSelectNode(){
 				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
 					return;
 
-				selected = _editor.project.selectedItems;
+				selected = paper.project.selectedItems;
 				for (i = 0; i < selected.length; i++) {
 					path = selected[i];
 					do_select = false;
@@ -5951,16 +6080,16 @@ function ToolSelectNode(){
 				return false;
 
 			} else if (event.key == 'left') {
-				_editor.project.move_points(new paper.Point(-10, 0));
+				paper.project.move_points(new paper.Point(-10, 0));
 
 			} else if (event.key == 'right') {
-				_editor.project.move_points(new paper.Point(10, 0));
+				paper.project.move_points(new paper.Point(10, 0));
 
 			} else if (event.key == 'up') {
-				_editor.project.move_points(new paper.Point(0, -10));
+				paper.project.move_points(new paper.Point(0, -10));
 
 			} else if (event.key == 'down') {
-				_editor.project.move_points(new paper.Point(0, 10));
+				paper.project.move_points(new paper.Point(0, 10));
 
 			}
 		}
@@ -5969,7 +6098,7 @@ function ToolSelectNode(){
 	return tool;
 
 }
-ToolSelectNode._extend(paper.Tool);
+ToolSelectNode._extend(ToolElement);
 /**
  * Ввод и редактирование произвольного текста
  * Created 25.08.2015<br />
