@@ -88,8 +88,14 @@ function Editor(pwnd){
 			{name: 'grid', img: 'grid.png', tooltip: 'Таблица координат'},
 			{name: 'line', img: 'line.png', tooltip: 'Произвольная линия'},
 			{name: 'text', img: 'text.png', tooltip: 'Произвольный текст'}
-		], onclick: function (name) {
+		],
+		onclick: function (name) {
 			return _editor.select_tool(name);
+		},
+		on_popup: function (popup, bdiv) {
+			popup.show(dhx4.absLeft(bdiv), 0, bdiv.offsetWidth, 400);
+			popup.p.style.top = (dhx4.absTop(bdiv) - 20) + "px";
+			popup.p.querySelector(".dhx_popup_arrow").style.top = "20px";
 		}
 	});
 

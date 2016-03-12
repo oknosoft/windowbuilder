@@ -1279,7 +1279,11 @@ DimensionLine.prototype.__define({
 					}
 				});
 				paper.project.move_points(delta);
-				setTimeout(paper.project.deselect_all_points.bind(paper.project, true), 200);
+				setTimeout(function () {
+					paper.project.deselect_all_points(true);
+					paper.project.register_update();
+					//paper.project.zoom_fit();
+				}, 200);
 			}
 		},
 		enumerable: false
@@ -5303,7 +5307,7 @@ function ToolPen(){
 
 
 }
-ToolPen._extend(paper.Tool);
+ToolPen._extend(ToolElement);
 
 /**
  * Относительное позиционирование и сдвиг
@@ -5315,16 +5319,13 @@ ToolPen._extend(paper.Tool);
 
 function ToolRuler(){
 
-	var selected,
+	var selected = {a: [], b: []},
 		tool = this;
 
 	ToolRuler.superclass.constructor.call(this);
 
-	tool.mouseStartPos = new paper.Point();
-	tool.mode = null;
+
 	tool.hitItem = null;
-	tool.originalContent = null;
-	tool.changed = false;
 
 	tool.options = {
 		name: 'ruler',
@@ -5334,35 +5335,38 @@ function ToolRuler(){
 		}
 	};
 
-	tool.resetHot = function(type, event, mode) {
-	};
-	tool.testHot = function(type, event, mode) {
-		/*	if (mode != 'tool-select')
-		 return false;*/
-		return tool.hitTest(event);
-	};
+	//tool.resetHot = function(type, event, mode) {
+	//};
+	//tool.testHot = function(type, event, mode) {
+	//	/*	if (mode != 'tool-select')
+	//	 return false;*/
+	//	return tool.hitTest(event);
+	//};
 	tool.hitTest = function(event) {
 
 		var hitSize = 4;
 		tool.hitItem = null;
 
 		if (event.point)
-			tool.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
-		if(!tool.hitItem)
-			tool.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:false, tolerance: hitSize });
 
 		if (tool.hitItem && tool.hitItem.item.parent instanceof Profile) {
 			paper.canvas_cursor('cursor-arrow-ruler');
+
 		} else {
 			paper.canvas_cursor('cursor-arrow-ruler-light');
+			tool.hitItem = null;
 		}
 
 		return true;
 	};
 	tool.on({
 		activate: function() {
+			selected.a.length = 0;
+			selected.b.length = 0;
 			paper.tb_left.select(tool.options.name);
 			paper.canvas_cursor('cursor-arrow-ruler-light');
+			paper.project.deselectAll();
 			tool.wnd = new RulerWnd(tool.options);
 		},
 		deactivate: function() {
@@ -5371,37 +5375,60 @@ function ToolRuler(){
 
 		},
 		mousedown: function(event) {
-			this.mode = null;
-			this.changed = false;
 
 			if (tool.hitItem) {
-				var is_profile = tool.hitItem.item.parent instanceof Profile,
-					item = is_profile ? tool.hitItem.item.parent.generatrix : tool.hitItem.item;
+				var item = tool.hitItem.item.parent;
 
-				if (is_profile) {
+				if (paper.Key.isDown('1') || paper.Key.isDown('a')) {
 
-					if (event.modifiers.shift) {
-						item.selected = !item.selected;
-					} else {
-						paper.project.deselectAll();
-						item.selected = true;
-					}
+					item.path.selected = true;
+
+					if(selected.a.indexOf(item) == -1)
+						selected.a.push(item);
+
+					if(selected.b.indexOf(item) != -1)
+						selected.b.splice(selected.b.indexOf(item), 1);
+
+				} else if (paper.Key.isDown('2') || paper.Key.isDown('b') || event.modifiers.shift) {
+					item.path.selected = true;
+
+					if(selected.b.indexOf(item) == -1)
+						selected.b.push(item);
+
+					if(selected.a.indexOf(item) != -1)
+						selected.a.splice(selected.a.indexOf(item), 1);
+
+				}else {
+					paper.project.deselectAll();
+					item.path.selected = true;
+					selected.a.length = 0;
+					selected.b.length = 0;
+					selected.a.push(item);
 				}
 
 				// Если выделено 2 элемента, рассчитаем сдвиг
-				if((selected = paper.project.selectedItems).length == 2){
+				if(selected.a.length && selected.b.length){
+					if(selected.a[0].orientation == selected.b[0].orientation){
+						if(selected.a[0].orientation == $p.enm.orientations.Вертикальная){
+							tool.wnd.size = Math.abs(selected.a[0].b.x - selected.b[0].b.x);
 
-				}
+						}else if(selected.a[0].orientation == $p.enm.orientations.Горизонтальная){
+							tool.wnd.size = Math.abs(selected.a[0].b.y - selected.b[0].b.y).round(1);
+
+						}else{
+							// для наклонной ориентации используем interiorpoint
+
+						}
+					}
+
+				}else if(tool.wnd.size != 0)
+					tool.wnd.size = 0;
 
 
-			} else {
-				// Clicked on and empty area, engage box select.
-				this.mouseStartPos = event.point.clone();
-				this.mode = 'box-select';
-
-				//if (!event.modifiers.shift)
-				//tool.detache_wnd();
-
+			}else {
+				paper.project.deselectAll();
+				selected.a.length = 0;
+				selected.b.length = 0;
 			}
 
 		},
@@ -6254,7 +6281,7 @@ function ToolText(){
 
 
 }
-ToolText._extend(paper.Tool);
+ToolText._extend(ToolElement);
 
 /**
  * Элементы управления в аккордеоне редактора
@@ -6699,8 +6726,14 @@ function Editor(pwnd){
 			{name: 'grid', img: 'grid.png', tooltip: 'Таблица координат'},
 			{name: 'line', img: 'line.png', tooltip: 'Произвольная линия'},
 			{name: 'text', img: 'text.png', tooltip: 'Произвольный текст'}
-		], onclick: function (name) {
+		],
+		onclick: function (name) {
 			return _editor.select_tool(name);
+		},
+		on_popup: function (popup, bdiv) {
+			popup.show(dhx4.absLeft(bdiv), 0, bdiv.offsetWidth, 400);
+			popup.p.style.top = (dhx4.absTop(bdiv) - 20) + "px";
+			popup.p.querySelector(".dhx_popup_arrow").style.top = "20px";
 		}
 	});
 

@@ -156,7 +156,11 @@ DimensionLine.prototype.__define({
 					}
 				});
 				paper.project.move_points(delta);
-				setTimeout(paper.project.deselect_all_points.bind(paper.project, true), 200);
+				setTimeout(function () {
+					paper.project.deselect_all_points(true);
+					paper.project.register_update();
+					//paper.project.zoom_fit();
+				}, 200);
 			}
 		},
 		enumerable: false

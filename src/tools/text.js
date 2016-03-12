@@ -153,4 +153,4 @@ function ToolText(){
 
 
 }
-ToolText._extend(paper.Tool);
+ToolText._extend(ToolElement);

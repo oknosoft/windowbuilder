@@ -286,4 +286,4 @@ function ToolPen(){
 
 
 }
-ToolPen._extend(paper.Tool);
+ToolPen._extend(ToolElement);
