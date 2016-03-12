@@ -50,6 +50,11 @@ function DimensionLine(attr){
 		DimensionLine.superclass.remove.call(this);
 	};
 
+	this.on({
+		mouseenter: this._mouseenter,
+		mouseleave: this._mouseleave
+	});
+
 }
 DimensionLine._extend(paper.Group);
 
@@ -88,6 +93,20 @@ DimensionLine.prototype.__define({
 				};
 			return this.data._nodes;
 		}
+	},
+
+	_mouseenter: {
+		value: function (event) {
+			paper.canvas_cursor('cursor-arrow-ruler');
+		},
+		enumerable: false
+	},
+
+	_mouseleave: {
+		value: function (event) {
+			//paper.canvas_cursor('cursor-arrow-white');
+		},
+		enumerable: false
 	},
 
 	redraw: {

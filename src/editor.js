@@ -282,7 +282,7 @@ function Editor(pwnd){
 		var boundingRect = new paper.Path.Rectangle(rect);
 
 		function checkPathItem(item) {
-			var children = item.children;
+			var children = item.children || [];
 			if (item.equals(boundingRect))
 				return;
 			if (!rect.intersects(item.bounds))
@@ -597,7 +597,7 @@ Editor.prototype.__define({
 			function checkPathItem(item) {
 				if (item._locked || !item._visible || item._guide)
 					return;
-				var children = item.children;
+				var children = item.children || [];
 				if (!rect.intersects(item.bounds))
 					return;
 				if (item instanceof paper.Path) {

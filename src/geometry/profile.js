@@ -1054,9 +1054,21 @@ Profile.prototype.__define({
 	move_points: {
 		value:  function(delta, all_points, start_point){
 			var segments = this.generatrix.segments,
-				changed = false, cnn_point, free_point, j,
+				changed, cnn_point, free_point, j,
 				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points, notifier;
 
+			// если не выделено ни одного сегмента, двигаем все сегменты
+			if(!all_points){
+				for (j = 0; j < segments.length; j++) {
+					if (segments[j].selected){
+						changed = true;
+						break;
+					}
+				}
+				all_points = !changed;
+			}
+
+			changed = false;
 			for (j = 0; j < segments.length; j++) {
 				if (segments[j].selected || all_points){
 

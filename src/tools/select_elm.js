@@ -50,10 +50,14 @@ function ToolSelectElm(){
 
 		if (tool.hitItem) {
 			if (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke') {
-				if (tool.hitItem.item.selected) {
+				if (tool.hitItem.item instanceof paper.PointText){
+
+				}else if (tool.hitItem.item.selected) {
 					_editor.canvas_cursor('cursor-arrow-small');
+
 				} else {
 					_editor.canvas_cursor('cursor-arrow-black-shape');
+
 				}
 			}
 		} else {

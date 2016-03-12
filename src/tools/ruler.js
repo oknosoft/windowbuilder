@@ -9,7 +9,6 @@
 function ToolRuler(){
 
 	var selected,
-		_editor = paper,
 		tool = this;
 
 	ToolRuler.superclass.constructor.call(this);
@@ -39,7 +38,7 @@ function ToolRuler(){
 
 		$p.wsql.restore_options("editor", tool.options);
 
-		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
+		tool.wnd = $p.iface.dat_blank(paper._dxw, tool.options.wnd);
 
 		div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +
 			'<tr><td></td><td><input type="text" style="width: 70px;  text-align: center;" readonly ></td><td></td></tr>' +
@@ -94,22 +93,22 @@ function ToolRuler(){
 		tool.hitItem = null;
 
 		if (event.point)
-			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
 		if(!tool.hitItem)
-			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, stroke:true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, tolerance: hitSize });
 
 		if (tool.hitItem && tool.hitItem.item.parent instanceof Profile) {
-			_editor.canvas_cursor('cursor-arrow-ruler');
+			paper.canvas_cursor('cursor-arrow-ruler');
 		} else {
-			_editor.canvas_cursor('cursor-arrow-ruler-light');
+			paper.canvas_cursor('cursor-arrow-ruler-light');
 		}
 
 		return true;
 	};
 	tool.on({
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-arrow-ruler-light');
+			paper.tb_left.select(tool.options.name);
+			paper.canvas_cursor('cursor-arrow-ruler-light');
 
 			tool_wnd();
 		},
@@ -131,13 +130,13 @@ function ToolRuler(){
 					if (event.modifiers.shift) {
 						item.selected = !item.selected;
 					} else {
-						_editor.project.deselectAll();
+						paper.project.deselectAll();
 						item.selected = true;
 					}
 				}
 
 				// Если выделено 2 элемента, рассчитаем сдвиг
-				if((selected = _editor.project.selectedItems).length == 2){
+				if((selected = paper.project.selectedItems).length == 2){
 
 				}
 

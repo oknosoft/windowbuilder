@@ -1173,6 +1173,11 @@ function DimensionLine(attr){
 		DimensionLine.superclass.remove.call(this);
 	};
 
+	this.on({
+		mouseenter: this._mouseenter,
+		mouseleave: this._mouseleave
+	});
+
 }
 DimensionLine._extend(paper.Group);
 
@@ -1211,6 +1216,20 @@ DimensionLine.prototype.__define({
 				};
 			return this.data._nodes;
 		}
+	},
+
+	_mouseenter: {
+		value: function (event) {
+			paper.canvas_cursor('cursor-arrow-ruler');
+		},
+		enumerable: false
+	},
+
+	_mouseleave: {
+		value: function (event) {
+			//paper.canvas_cursor('cursor-arrow-white');
+		},
+		enumerable: false
 	},
 
 	redraw: {
@@ -3530,9 +3549,21 @@ Profile.prototype.__define({
 	move_points: {
 		value:  function(delta, all_points, start_point){
 			var segments = this.generatrix.segments,
-				changed = false, cnn_point, free_point, j,
+				changed, cnn_point, free_point, j,
 				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points, notifier;
 
+			// если не выделено ни одного сегмента, двигаем все сегменты
+			if(!all_points){
+				for (j = 0; j < segments.length; j++) {
+					if (segments[j].selected){
+						changed = true;
+						break;
+					}
+				}
+				all_points = !changed;
+			}
+
+			changed = false;
 			for (j = 0; j < segments.length; j++) {
 				if (segments[j].selected || all_points){
 
@@ -4267,7 +4298,7 @@ Scheme.prototype.__define({
 						path.parent.move_points(delta, all_points);
 
 				}else if(path instanceof Filling){
-					path.position = path.position.add(delta);
+					//path.position = path.position.add(delta);
 					while (path.children.length > 1)
 						path.children[1].remove();
 				}
@@ -4665,8 +4696,10 @@ function ToolLayImpost(){
 		// Hit test items.
 		tool.hitItem = _editor.project.hitTest(event.point, { fill:true, tolerance: hitSize });
 
-		if (tool.hitItem && !(tool.hitItem.item.parent instanceof Profile) && (tool.hitItem.type == 'fill')) {
-			_editor.canvas_cursor('cursor-lay-impost');
+		if (tool.hitItem){
+			if(tool.hitItem.item instanceof Filling){
+				_editor.canvas_cursor('cursor-lay-impost');
+			}
 		} else {
 			_editor.canvas_cursor('cursor-arrow-lay');
 		}
@@ -5186,7 +5219,6 @@ ToolPen._extend(paper.Tool);
 function ToolRuler(){
 
 	var selected,
-		_editor = paper,
 		tool = this;
 
 	ToolRuler.superclass.constructor.call(this);
@@ -5216,7 +5248,7 @@ function ToolRuler(){
 
 		$p.wsql.restore_options("editor", tool.options);
 
-		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
+		tool.wnd = $p.iface.dat_blank(paper._dxw, tool.options.wnd);
 
 		div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +
 			'<tr><td></td><td><input type="text" style="width: 70px;  text-align: center;" readonly ></td><td></td></tr>' +
@@ -5271,22 +5303,22 @@ function ToolRuler(){
 		tool.hitItem = null;
 
 		if (event.point)
-			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
 		if(!tool.hitItem)
-			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, stroke:true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, tolerance: hitSize });
 
 		if (tool.hitItem && tool.hitItem.item.parent instanceof Profile) {
-			_editor.canvas_cursor('cursor-arrow-ruler');
+			paper.canvas_cursor('cursor-arrow-ruler');
 		} else {
-			_editor.canvas_cursor('cursor-arrow-ruler-light');
+			paper.canvas_cursor('cursor-arrow-ruler-light');
 		}
 
 		return true;
 	};
 	tool.on({
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-arrow-ruler-light');
+			paper.tb_left.select(tool.options.name);
+			paper.canvas_cursor('cursor-arrow-ruler-light');
 
 			tool_wnd();
 		},
@@ -5308,13 +5340,13 @@ function ToolRuler(){
 					if (event.modifiers.shift) {
 						item.selected = !item.selected;
 					} else {
-						_editor.project.deselectAll();
+						paper.project.deselectAll();
 						item.selected = true;
 					}
 				}
 
 				// Если выделено 2 элемента, рассчитаем сдвиг
-				if((selected = _editor.project.selectedItems).length == 2){
+				if((selected = paper.project.selectedItems).length == 2){
 
 				}
 
@@ -5399,10 +5431,14 @@ function ToolSelectElm(){
 
 		if (tool.hitItem) {
 			if (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke') {
-				if (tool.hitItem.item.selected) {
+				if (tool.hitItem.item instanceof paper.PointText){
+
+				}else if (tool.hitItem.item.selected) {
 					_editor.canvas_cursor('cursor-arrow-small');
+
 				} else {
 					_editor.canvas_cursor('cursor-arrow-black-shape');
+
 				}
 			}
 		} else {
@@ -5640,10 +5676,14 @@ function ToolSelectNode(){
 
 		if (tool.hitItem) {
 			if (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke') {
-				if (tool.hitItem.item.selected) {
+				if (tool.hitItem.item instanceof paper.PointText){
+
+				}else if (tool.hitItem.item.selected) {
 					_editor.canvas_cursor('cursor-arrow-small');
+
 				} else {
 					_editor.canvas_cursor('cursor-arrow-white-shape');
+
 				}
 			} else if (tool.hitItem.type == 'segment' || tool.hitItem.type == 'handle-in' || tool.hitItem.type == 'handle-out') {
 				if (tool.hitItem.segment.selected) {
@@ -6724,7 +6764,7 @@ function Editor(pwnd){
 		var boundingRect = new paper.Path.Rectangle(rect);
 
 		function checkPathItem(item) {
-			var children = item.children;
+			var children = item.children || [];
 			if (item.equals(boundingRect))
 				return;
 			if (!rect.intersects(item.bounds))
@@ -7039,7 +7079,7 @@ Editor.prototype.__define({
 			function checkPathItem(item) {
 				if (item._locked || !item._visible || item._guide)
 					return;
-				var children = item.children;
+				var children = item.children || [];
 				if (!rect.intersects(item.bounds))
 					return;
 				if (item instanceof paper.Path) {

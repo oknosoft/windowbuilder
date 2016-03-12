@@ -529,7 +529,7 @@ Scheme.prototype.__define({
 						path.parent.move_points(delta, all_points);
 
 				}else if(path instanceof Filling){
-					path.position = path.position.add(delta);
+					//path.position = path.position.add(delta);
 					while (path.children.length > 1)
 						path.children[1].remove();
 				}

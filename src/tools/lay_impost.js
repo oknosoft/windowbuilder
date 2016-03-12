@@ -43,8 +43,10 @@ function ToolLayImpost(){
 		// Hit test items.
 		tool.hitItem = _editor.project.hitTest(event.point, { fill:true, tolerance: hitSize });
 
-		if (tool.hitItem && !(tool.hitItem.item.parent instanceof Profile) && (tool.hitItem.type == 'fill')) {
-			_editor.canvas_cursor('cursor-lay-impost');
+		if (tool.hitItem){
+			if(tool.hitItem.item instanceof Filling){
+				_editor.canvas_cursor('cursor-lay-impost');
+			}
 		} else {
 			_editor.canvas_cursor('cursor-arrow-lay');
 		}
