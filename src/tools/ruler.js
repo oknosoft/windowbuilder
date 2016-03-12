@@ -57,6 +57,7 @@ function ToolRuler(){
 			paper.canvas_cursor('cursor-arrow-ruler-light');
 			paper.project.deselectAll();
 			tool.wnd = new RulerWnd(tool.options);
+			tool.wnd.size = 0;
 		},
 		deactivate: function() {
 
@@ -118,6 +119,8 @@ function ToolRuler(){
 				paper.project.deselectAll();
 				selected.a.length = 0;
 				selected.b.length = 0;
+				if(tool.wnd.size != 0)
+					tool.wnd.size = 0;
 			}
 
 		},
