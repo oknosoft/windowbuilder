@@ -39,16 +39,13 @@ function ToolLayImpost(){
 	};
 
 	tool.hitTest = function(event) {
-		// var hitSize = 4.0; // / view.zoom;
-		var hitSize = 2;
 
 		// Hit test items.
-		tool.hitItem = _editor.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+		tool.hitItem = _editor.project.hitTest(event.point, { class: Filling });
 
 		if (tool.hitItem){
-			if(tool.hitItem.item instanceof Filling){
-				_editor.canvas_cursor('cursor-lay-impost');
-			}
+			_editor.canvas_cursor('cursor-lay-impost');
+
 		} else {
 			_editor.canvas_cursor('cursor-arrow-lay');
 		}
