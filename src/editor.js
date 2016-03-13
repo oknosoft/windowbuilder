@@ -510,16 +510,17 @@ Editor.prototype.__define({
 
 					dhtmlxEvent(_canvas, "mousewheel", function(evt) {
 						var mousePosition, newZoom, offset, viewPosition, _ref1;
-						if (event.shiftKey) {
-							_editor.view.center = panAndZoom.changeCenter(_editor.view.center, event.deltaX, event.deltaY, 1);
-							return event.preventDefault();
-						} else if (event.altKey) {
-							mousePosition = new paper.Point(event.offsetX, event.offsetY);
+						if (evt.shiftKey || evt.ctrlKey) {
+							_editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
+							return evt.preventDefault();
+
+						}else if (evt.altKey) {
+							mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
 							viewPosition = _editor.view.viewToProject(mousePosition);
-							_ref1 = panAndZoom.changeZoom(_editor.view.zoom, event.deltaY, _editor.view.center, viewPosition), newZoom = _ref1[0], offset = _ref1[1];
+							_ref1 = panAndZoom.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition), newZoom = _ref1[0], offset = _ref1[1];
 							_editor.view.zoom = newZoom;
 							_editor.view.center = _editor.view.center.add(offset);
-							event.preventDefault();
+							evt.preventDefault();
 							return _editor.view.draw();
 						}
 					});

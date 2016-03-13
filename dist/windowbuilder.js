@@ -8,6 +8,26 @@
   }
 }(this, function() {
 /**
+ * Строковые константы интернационализации
+ * Created 13.03.2016<br />
+ * &copy; http://www.oknosoft.ru 2014-2016
+ * @author Evgeniy Malyarov
+ * @module i18n.ru.js
+ */
+
+(function (msg){
+	msg.align_node_right = "Уравнять вертикально вправо";
+	msg.align_node_bottom = "Уравнять горизонтально вниз";
+	msg.align_node_top = "Уравнять горизонтально вверх";
+	msg.align_node_left = "Уравнять вертикально влево";
+	msg.align_set_right = "Установить размер сдвигом правых элементов";
+	msg.align_set_bottom = "Установить размер сдвигом нижних элементов";
+	msg.align_set_top = "Установить размер сдвигом верхних элементов";
+	msg.align_set_left = "Установить размер сдвигом левых элементов";
+	msg.align_invalid_direction = "Неприменимо для элемента с данной ориентацией";
+})($p.msg);
+
+/**
  * Created 24.07.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
@@ -1300,20 +1320,12 @@ DimensionLine.prototype.__define({
 						break;
 
 					case 'left':
-						if(this.pos == "top" || this.pos == "bottom")
-							this._move_points(event, "x");
-						break;
-
 					case 'right':
 						if(this.pos == "top" || this.pos == "bottom")
 							this._move_points(event, "x");
 						break;
 
 					case 'top':
-						if(this.pos == "left" || this.pos == "right")
-							this._move_points(event, "y");
-						break;
-
 					case 'bottom':
 						if(this.pos == "left" || this.pos == "right")
 							this._move_points(event, "y");
@@ -5319,20 +5331,21 @@ ToolPen._extend(ToolElement);
 
 function ToolRuler(){
 
-	var selected = {a: [], b: []},
-		tool = this;
-
 	ToolRuler.superclass.constructor.call(this);
 
+	this.hitItem = null;
 
-	tool.hitItem = null;
-
-	tool.options = {
+	this.options = {
 		name: 'ruler',
 		wnd: {
 			caption: "Размеры и сдвиг",
 			height: 200
 		}
+	};
+
+	this.selected = {
+		a: [],
+		b: []
 	};
 
 	//tool.resetHot = function(type, event, mode) {
@@ -5342,79 +5355,81 @@ function ToolRuler(){
 	//	 return false;*/
 	//	return tool.hitTest(event);
 	//};
-	tool.hitTest = function(event) {
+	this.hitTest = function(event) {
 
 		var hitSize = 4;
-		tool.hitItem = null;
+		this.hitItem = null;
 
 		if (event.point)
-			tool.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:false, tolerance: hitSize });
+			this.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:false, tolerance: hitSize });
 
-		if (tool.hitItem && tool.hitItem.item.parent instanceof Profile) {
+		if (this.hitItem && this.hitItem.item.parent instanceof Profile) {
 			paper.canvas_cursor('cursor-arrow-ruler');
 
 		} else {
 			paper.canvas_cursor('cursor-arrow-ruler-light');
-			tool.hitItem = null;
+			this.hitItem = null;
 		}
 
 		return true;
 	};
-	tool.on({
+	this.on({
 		activate: function() {
-			selected.a.length = 0;
-			selected.b.length = 0;
-			paper.tb_left.select(tool.options.name);
+			this.selected.a.length = 0;
+			this.selected.b.length = 0;
+			paper.tb_left.select(this.options.name);
 			paper.canvas_cursor('cursor-arrow-ruler-light');
 			paper.project.deselectAll();
-			tool.wnd = new RulerWnd(tool.options);
-			tool.wnd.size = 0;
+			this.wnd = new RulerWnd(this.options);
+			this.wnd.size = 0;
 		},
 		deactivate: function() {
 
-			tool.detache_wnd();
+			this.detache_wnd();
 
 		},
 		mousedown: function(event) {
 
-			if (tool.hitItem) {
-				var item = tool.hitItem.item.parent;
+			if (this.hitItem) {
+				var item = this.hitItem.item.parent;
 
 				if (paper.Key.isDown('1') || paper.Key.isDown('a')) {
 
 					item.path.selected = true;
 
-					if(selected.a.indexOf(item) == -1)
-						selected.a.push(item);
+					if(this.selected.a.indexOf(item) == -1)
+						this.selected.a.push(item);
 
-					if(selected.b.indexOf(item) != -1)
-						selected.b.splice(selected.b.indexOf(item), 1);
+					if(this.selected.b.indexOf(item) != -1)
+						this.selected.b.splice(this.selected.b.indexOf(item), 1);
 
-				} else if (paper.Key.isDown('2') || paper.Key.isDown('b') || event.modifiers.shift) {
+				} else if (paper.Key.isDown('2') || paper.Key.isDown('b') ||
+					event.modifiers.shift || (this.selected.a.length && !this.selected.b.length)) {
+
 					item.path.selected = true;
 
-					if(selected.b.indexOf(item) == -1)
-						selected.b.push(item);
+					if(this.selected.b.indexOf(item) == -1)
+						this.selected.b.push(item);
 
-					if(selected.a.indexOf(item) != -1)
-						selected.a.splice(selected.a.indexOf(item), 1);
+					if(this.selected.a.indexOf(item) != -1)
+						this.selected.a.splice(this.selected.a.indexOf(item), 1);
 
 				}else {
 					paper.project.deselectAll();
 					item.path.selected = true;
-					selected.a.length = 0;
-					selected.b.length = 0;
-					selected.a.push(item);
+					this.selected.a.length = 0;
+					this.selected.b.length = 0;
+					this.selected.a.push(item);
 				}
 
 				// Если выделено 2 элемента, рассчитаем сдвиг
-				if(selected.a.length && selected.b.length){
-					if(selected.a[0].orientation == selected.b[0].orientation){
-						if(selected.a[0].orientation == $p.enm.orientations.Вертикальная){
-							tool.wnd.size = Math.abs(selected.a[0].b.x - selected.b[0].b.x);
+				if(this.selected.a.length && this.selected.b.length){
+					if(this.selected.a[0].orientation == this.selected.b[0].orientation){
+						if(this.selected.a[0].orientation == $p.enm.orientations.Вертикальная){
+							this.wnd.size = Math.abs(this.selected.a[0].b.x - this.selected.b[0].b.x);
 
-						}else if(selected.a[0].orientation == $p.enm.orientations.Горизонтальная){
-							tool.wnd.size = Math.abs(selected.a[0].b.y - selected.b[0].b.y).round(1);
+						}else if(this.selected.a[0].orientation == $p.enm.orientations.Горизонтальная){
+							this.wnd.size = Math.abs(this.selected.a[0].b.y - this.selected.b[0].b.y);
 
 						}else{
 							// для наклонной ориентации используем interiorpoint
@@ -5422,16 +5437,16 @@ function ToolRuler(){
 						}
 					}
 
-				}else if(tool.wnd.size != 0)
-					tool.wnd.size = 0;
+				}else if(this.wnd.size != 0)
+					this.wnd.size = 0;
 
 
 			}else {
 				paper.project.deselectAll();
-				selected.a.length = 0;
-				selected.b.length = 0;
-				if(tool.wnd.size != 0)
-					tool.wnd.size = 0;
+				this.selected.a.length = 0;
+				this.selected.b.length = 0;
+				if(this.wnd.size != 0)
+					this.wnd.size = 0;
 			}
 
 		},
@@ -5447,10 +5462,100 @@ function ToolRuler(){
 		}
 	});
 
-	return tool;
+	$p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this));
 
 }
 ToolRuler._extend(ToolElement);
+
+ToolRuler.prototype.__define({
+
+	_move_points: {
+		value: function (event, xy) {
+
+			// сортируем группы выделенных элеметов по правл-лево или верх-низ
+			// left_top == true, если элементы в массиве _a_ выше или левее элементов в массиве _b_
+			var pos1 = this.selected.a.reduce(function(sum, curr) {
+					return sum + curr.b[xy] + curr.e[xy];
+				}, 0) / (this.selected.a.length * 2),
+				pos2 = this.selected.b.reduce(function(sum, curr) {
+					return sum + curr.b[xy] + curr.e[xy];
+				}, 0) / (this.selected.b.length * 2),
+				delta = Math.abs(pos2 - pos1),
+				to_move;
+
+			if(xy == "x")
+				if(event.name == "right")
+					delta = new paper.Point(event.size - delta, 0);
+				else
+					delta = new paper.Point(delta - event.size, 0);
+			else{
+				if(event.name == "bottom")
+					delta = new paper.Point(0, event.size - delta);
+				else
+					delta = new paper.Point(0, delta - event.size);
+			}
+
+			if(delta.length){
+
+				paper.project.deselectAll();
+
+				if(event.name == "right" || event.name == "bottom")
+					to_move = pos1 < pos2 ? this.selected.b : this.selected.a;
+				else
+					to_move = pos1 < pos2 ? this.selected.a : this.selected.b;
+
+				to_move.forEach(function (p) {
+					p.generatrix.segments.forEach(function (segm) {
+						segm.selected = true;
+					})
+				});
+
+				paper.project.move_points(delta);
+				setTimeout(function () {
+					paper.project.deselectAll();
+					this.selected.a.forEach(function (p) {
+						p.path.selected = true;
+					});
+					this.selected.b.forEach(function (p) {
+						p.path.selected = true;
+					});
+					paper.project.register_update();
+				}
+					.bind(this), 200);
+			}
+
+		},
+		enumerable: false
+	},
+
+	_sizes_wnd: {
+		value: function (event) {
+
+			if(event.wnd == this.wnd){
+
+				if(!this.selected.a.length || !this.selected.b.length)
+					return;
+
+				switch(event.name) {
+
+					case 'left':
+					case 'right':
+						if(this.selected.a[0].orientation == $p.enm.orientations.Вертикальная)
+							this._move_points(event, "x");
+						break;
+
+					case 'top':
+					case 'bottom':
+						if(this.selected.a[0].orientation == $p.enm.orientations.Горизонтальная)
+							this._move_points(event, "y");
+						break;
+				}
+			}
+		},
+		enumerable: false
+	}
+
+});
 
 function RulerWnd(options){
 
@@ -5496,13 +5601,13 @@ function RulerWnd(options){
 	table = div.firstChild.childNodes;
 
 	$p.iface.add_button(table[0].childNodes[1], null,
-		{name: "top", img: "dist/imgs/align_top.png", title: $p.msg.align_set_top}).onclick = onclick;
+		{name: "top", img: "dist/imgs/align_top.png", tooltip: $p.msg.align_set_top}).onclick = onclick;
 	$p.iface.add_button(table[1].childNodes[0], null,
-		{name: "left", img: "dist/imgs/align_left.png", title: $p.msg.align_set_left}).onclick = onclick;
+		{name: "left", img: "dist/imgs/align_left.png", tooltip: $p.msg.align_set_left}).onclick = onclick;
 	$p.iface.add_button(table[1].childNodes[2], null,
-		{name: "right", img: "dist/imgs/align_right.png", title: $p.msg.align_set_right}).onclick = onclick;
+		{name: "right", img: "dist/imgs/align_right.png", tooltip: $p.msg.align_set_right}).onclick = onclick;
 	$p.iface.add_button(table[2].childNodes[1], null,
-		{name: "bottom", img: "dist/imgs/align_bottom.png", title: $p.msg.align_set_bottom}).onclick = onclick;
+		{name: "bottom", img: "dist/imgs/align_bottom.png", tooltip: $p.msg.align_set_bottom}).onclick = onclick;
 
 	wnd.attachObject(div);
 
@@ -5532,7 +5637,7 @@ function RulerWnd(options){
 				return parseFloat(input.firstChild.value);
 			},
 			set: function (v) {
-				input.firstChild.value = parseFloat(v);
+				input.firstChild.value = parseFloat(v).round(1);
 			},
 			enumerable: false
 		}
@@ -7151,16 +7256,17 @@ Editor.prototype.__define({
 
 					dhtmlxEvent(_canvas, "mousewheel", function(evt) {
 						var mousePosition, newZoom, offset, viewPosition, _ref1;
-						if (event.shiftKey) {
-							_editor.view.center = panAndZoom.changeCenter(_editor.view.center, event.deltaX, event.deltaY, 1);
-							return event.preventDefault();
-						} else if (event.altKey) {
-							mousePosition = new paper.Point(event.offsetX, event.offsetY);
+						if (evt.shiftKey || evt.ctrlKey) {
+							_editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
+							return evt.preventDefault();
+
+						}else if (evt.altKey) {
+							mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
 							viewPosition = _editor.view.viewToProject(mousePosition);
-							_ref1 = panAndZoom.changeZoom(_editor.view.zoom, event.deltaY, _editor.view.center, viewPosition), newZoom = _ref1[0], offset = _ref1[1];
+							_ref1 = panAndZoom.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition), newZoom = _ref1[0], offset = _ref1[1];
 							_editor.view.zoom = newZoom;
 							_editor.view.center = _editor.view.center.add(offset);
-							event.preventDefault();
+							evt.preventDefault();
 							return _editor.view.draw();
 						}
 					});

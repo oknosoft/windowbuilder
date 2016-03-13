@@ -58,6 +58,7 @@ gulp.task('css-base64', function () {
 // Cборка библиотеки рисовалки
 gulp.task('build-lib', function(){
 	gulp.src([
+			'./src/i18n.ru.js',
 			'./src/geometry/*.js',
 			'./src/tools/*.js',
 			'./src/editor_accordion.js',

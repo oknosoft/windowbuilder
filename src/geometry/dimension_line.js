@@ -177,20 +177,12 @@ DimensionLine.prototype.__define({
 						break;
 
 					case 'left':
-						if(this.pos == "top" || this.pos == "bottom")
-							this._move_points(event, "x");
-						break;
-
 					case 'right':
 						if(this.pos == "top" || this.pos == "bottom")
 							this._move_points(event, "x");
 						break;
 
 					case 'top':
-						if(this.pos == "left" || this.pos == "right")
-							this._move_points(event, "y");
-						break;
-
 					case 'bottom':
 						if(this.pos == "left" || this.pos == "right")
 							this._move_points(event, "y");
