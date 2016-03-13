@@ -93,7 +93,7 @@ function Editor(pwnd){
 			return _editor.select_tool(name);
 		},
 		on_popup: function (popup, bdiv) {
-			popup.show(dhx4.absLeft(bdiv), 0, bdiv.offsetWidth, 400);
+			popup.show(dhx4.absLeft(bdiv), 0, bdiv.offsetWidth, _editor._wrapper.offsetHeight);
 			popup.p.style.top = (dhx4.absTop(bdiv) - 20) + "px";
 			popup.p.querySelector(".dhx_popup_arrow").style.top = "20px";
 		}

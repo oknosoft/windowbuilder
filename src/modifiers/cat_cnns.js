@@ -32,10 +32,21 @@ $p.modifiers.push(
 		 * Для соединений с заполнениями учитывается толщина. Контроль остальных геометрических особенностей выполняется на стороне рисовалки
 		 * @param nom1 {_cat.nom}
 		 * @param nom2 {_cat.nom}
-		 * @param [cnn_type] {_enm.cnns}
+		 * @param [cnn_types] {_enm.cnns|Array.<_enm.cnns>}
 		 * @return {Array}
 		 */
-		_mgr.nom_cnn = function(nom1, nom2, cnn_type){
+		_mgr.nom_cnn = function(nom1, nom2, cnn_types){
+
+			// если второй элемент вертикальный - меняем местами эл 1-2 при поиске
+			if(nom1 instanceof $p.Editor.Profile &&
+				nom2 instanceof $p.Editor.Profile &&
+				cnn_types && cnn_types.indexOf($p.enm.cnn_types.УгловоеДиагональное) != -1 &&
+				nom1.orientation != $p.enm.orientations.Вертикальная &&
+				nom2.orientation == $p.enm.orientations.Вертикальная ){
+
+				return _mgr.nom_cnn(nom2, nom1, cnn_types);
+			}
+
 
 			var onom1, onom2,
 				is_i = false, art1glass = false, art2glass = false,
@@ -112,15 +123,15 @@ $p.modifiers.push(
 				});
 			}
 
-			if(cnn_type){
+			if(cnn_types){
 				var tmp = a1[onom2.ref], res = [], types;
 
-				if(Array.isArray(cnn_type))
-					types = cnn_type;
-				else if($p.enm.cnn_types.acn.a.indexOf(cnn_type) != -1)
+				if(Array.isArray(cnn_types))
+					types = cnn_types;
+				else if($p.enm.cnn_types.acn.a.indexOf(cnn_types) != -1)
 					types = $p.enm.cnn_types.acn.a;
 				else
-					types = [cnn_type];
+					types = [cnn_types];
 
 				tmp.forEach(function (c) {
 					if(types.indexOf(c.cnn_type) != -1)
@@ -147,17 +158,7 @@ $p.modifiers.push(
 				return curr_cnn;
 			}
 
-			var cnns;
-
-			// если второй элемент вертикальный - меняем местами эл 1-2 при поиске
-			if(elm1 instanceof $p.Editor.Profile &&
-					elm2 instanceof $p.Editor.Profile &&
-					cnn_types && cnn_types.indexOf($p.enm.cnn_types.УгловоеДиагональное) != -1 &&
-					elm2.orientation == $p.enm.orientations.Вертикальная ){
-				cnns = _mgr.nom_cnn(elm2, elm1, cnn_types);
-
-			}else
-				cnns = _mgr.nom_cnn(elm1, elm2, cnn_types);
+			var cnns = _mgr.nom_cnn(elm1, elm2, cnn_types);
 
 			// для примера подставляем первое попавшееся соединение
 			if(cnns.length)

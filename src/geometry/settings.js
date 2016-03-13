@@ -28,7 +28,7 @@ var acn,
 
 
 	// в пределах этого угла, считаем элемент вертикальным или горизонтальным
-	this.orientation_delta = 8;
+	this.orientation_delta = 7;
 
 	this.tune_paper = function (settings) {
 		/**

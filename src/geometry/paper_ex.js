@@ -214,7 +214,7 @@ paper.Path.prototype.__define({
 	intersect_point: {
 		value: function (path, point, elongate) {
 			var intersections = this.getIntersections(path),
-				delta = 10e9, tdelta, tpoint, tpoint;
+				delta = 10e9, tdelta, tpoint;
 
 			if(intersections.length == 1)
 				return intersections[0].point
@@ -230,6 +230,30 @@ paper.Path.prototype.__define({
 				return tpoint;
 
 			}else if(elongate){
+				// продлеваем пути до пересечения
+				var p1 = this.getNearestPoint(point),
+					p2 = path.getNearestPoint(point),
+					p1last = this.firstSegment.point.getDistance(p1, true) > this.lastSegment.point.getDistance(p1, true),
+					p2last = path.firstSegment.point.getDistance(p2, true) > path.lastSegment.point.getDistance(p2, true),
+					tg;
+
+				tg = (p1last ? this.getTangentAt(this.length) : this.getTangentAt(0).negate()).multiply(100);
+				if(this.is_linear){
+					if(p1last)
+						this.lastSegment.point = this.lastSegment.point.add(tg);
+					else
+						this.firstSegment.point = this.firstSegment.point.add(tg);
+				}
+
+				tg = (p2last ? path.getTangentAt(path.length) : path.getTangentAt(0).negate()).multiply(100);
+				if(path.is_linear){
+					if(p2last)
+						path.lastSegment.point = path.lastSegment.point.add(tg);
+					else
+						path.firstSegment.point = path.firstSegment.point.add(tg);
+				}
+
+				return this.intersect_point(path, point);
 
 			}
 		},

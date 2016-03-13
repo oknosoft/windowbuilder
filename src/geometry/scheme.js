@@ -391,17 +391,17 @@ function Scheme(_canvas){
 	};
 
 	/**
-	 * Находи точку на примыкающем профиле и проверяет расстояние до неё от текущей точки
+	 * Находит точку на примыкающем профиле и проверяет расстояние до неё от текущей точки
 	 * @param element {Profile} - профиль, расстояние до которого проверяем
 	 * @param profile {Profile|null} - текущий профиль
 	 * @param res {CnnPoint}
 	 * @param point {paper.Point}
-	 * @param check_only {boolean}
+	 * @param check_only {Boolean|String}
 	 * @returns {boolean}
 	 */
 	this.check_distance = function(element, profile, res, point, check_only){
 
-		var distance, gp,
+		var distance, gp, cnns,
 			bind_node = typeof check_only == "string" && check_only.indexOf("node") != -1,
 			bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only;
 
@@ -409,6 +409,23 @@ function Scheme(_canvas){
 
 
 		}else if((distance = element.b.getDistance(point)) < consts.sticking){
+
+			if(!res.cnn){
+
+				// а есть ли подходящее?
+				if(!element.is_collinear(profile)){
+					cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
+					if(!cnns.length)
+						return;
+				}
+
+				// если в точке сходятся 2 профиля текущего контура - ок
+
+				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
+
+			}else if(acn.a.indexOf(res.cnn.cnn_type) == -1)
+				return;
+
 			res.point = bind_node ? element.b : point;
 			res.distance = distance;
 			res.profile = element;
@@ -417,6 +434,23 @@ function Scheme(_canvas){
 			return false;
 
 		}else if((distance = element.e.getDistance(point)) < consts.sticking){
+
+			if(!res.cnn){
+
+				// а есть ли подходящее?
+				if(!element.is_collinear(profile)){
+					cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
+					if(!cnns.length)
+						return;
+				}
+
+				// если в точке сходятся 2 профиля текущего контура - ок
+
+				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
+
+			}else if(acn.a.indexOf(res.cnn.cnn_type) == -1)
+				return;
+
 			res.point = bind_node ? element.e : point;
 			res.distance = distance;
 			res.profile = element;

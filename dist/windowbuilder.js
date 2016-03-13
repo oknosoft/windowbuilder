@@ -1979,6 +1979,9 @@ Filling.prototype.__define({
 						curr.pb = prev.pe = curr.sub_path.intersect_point(prev.sub_path, curr.b, true);
 					if(!curr.pe)
 						curr.pe = next.pb = curr.sub_path.intersect_point(next.sub_path, curr.e, true);
+					if(!curr.pb || !curr.pe){
+						throw "Filling:path";
+					}
 					curr.sub_path = curr.sub_path.get_subpath(curr.pb, curr.pe);
 				}
 				// формируем путь
@@ -2494,7 +2497,7 @@ paper.Path.prototype.__define({
 	intersect_point: {
 		value: function (path, point, elongate) {
 			var intersections = this.getIntersections(path),
-				delta = 10e9, tdelta, tpoint, tpoint;
+				delta = 10e9, tdelta, tpoint;
 
 			if(intersections.length == 1)
 				return intersections[0].point
@@ -2510,6 +2513,30 @@ paper.Path.prototype.__define({
 				return tpoint;
 
 			}else if(elongate){
+				// продлеваем пути до пересечения
+				var p1 = this.getNearestPoint(point),
+					p2 = path.getNearestPoint(point),
+					p1last = this.firstSegment.point.getDistance(p1, true) > this.lastSegment.point.getDistance(p1, true),
+					p2last = path.firstSegment.point.getDistance(p2, true) > path.lastSegment.point.getDistance(p2, true),
+					tg;
+
+				tg = (p1last ? this.getTangentAt(this.length) : this.getTangentAt(0).negate()).multiply(100);
+				if(this.is_linear){
+					if(p1last)
+						this.lastSegment.point = this.lastSegment.point.add(tg);
+					else
+						this.firstSegment.point = this.firstSegment.point.add(tg);
+				}
+
+				tg = (p2last ? path.getTangentAt(path.length) : path.getTangentAt(0).negate()).multiply(100);
+				if(path.is_linear){
+					if(p2last)
+						path.lastSegment.point = path.lastSegment.point.add(tg);
+					else
+						path.firstSegment.point = path.firstSegment.point.add(tg);
+				}
+
+				return this.intersect_point(path, point);
 
 			}
 		},
@@ -3507,6 +3534,19 @@ Profile.prototype.__define({
 	},
 
 	/**
+	 * Выясняет, параллельны ли профили в пределах `consts.orientation_delta`
+	 */
+	is_collinear: {
+		value : function(profile) {
+			var angl = profile.e.subtract(profile.b).getDirectedAngle(this.e.subtract(this.b));
+			if (angl < 0)
+				angl += 180;
+			return Math.abs(angl) < consts.orientation_delta;
+		},
+		enumerable : false
+	},
+
+	/**
 	 * Возвращает массив примыкающих ипостов
 	 */
 	joined_imposts: {
@@ -4256,17 +4296,17 @@ function Scheme(_canvas){
 	};
 
 	/**
-	 * Находи точку на примыкающем профиле и проверяет расстояние до неё от текущей точки
+	 * Находит точку на примыкающем профиле и проверяет расстояние до неё от текущей точки
 	 * @param element {Profile} - профиль, расстояние до которого проверяем
 	 * @param profile {Profile|null} - текущий профиль
 	 * @param res {CnnPoint}
 	 * @param point {paper.Point}
-	 * @param check_only {boolean}
+	 * @param check_only {Boolean|String}
 	 * @returns {boolean}
 	 */
 	this.check_distance = function(element, profile, res, point, check_only){
 
-		var distance, gp,
+		var distance, gp, cnns,
 			bind_node = typeof check_only == "string" && check_only.indexOf("node") != -1,
 			bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only;
 
@@ -4274,6 +4314,23 @@ function Scheme(_canvas){
 
 
 		}else if((distance = element.b.getDistance(point)) < consts.sticking){
+
+			if(!res.cnn){
+
+				// а есть ли подходящее?
+				if(!element.is_collinear(profile)){
+					cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
+					if(!cnns.length)
+						return;
+				}
+
+				// если в точке сходятся 2 профиля текущего контура - ок
+
+				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
+
+			}else if(acn.a.indexOf(res.cnn.cnn_type) == -1)
+				return;
+
 			res.point = bind_node ? element.b : point;
 			res.distance = distance;
 			res.profile = element;
@@ -4282,6 +4339,23 @@ function Scheme(_canvas){
 			return false;
 
 		}else if((distance = element.e.getDistance(point)) < consts.sticking){
+
+			if(!res.cnn){
+
+				// а есть ли подходящее?
+				if(!element.is_collinear(profile)){
+					cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
+					if(!cnns.length)
+						return;
+				}
+
+				// если в точке сходятся 2 профиля текущего контура - ок
+
+				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
+
+			}else if(acn.a.indexOf(res.cnn.cnn_type) == -1)
+				return;
+
 			res.point = bind_node ? element.e : point;
 			res.distance = distance;
 			res.profile = element;
@@ -4548,7 +4622,7 @@ var acn,
 
 
 	// в пределах этого угла, считаем элемент вертикальным или горизонтальным
-	this.orientation_delta = 8;
+	this.orientation_delta = 7;
 
 	this.tune_paper = function (settings) {
 		/**
@@ -6884,7 +6958,7 @@ function Editor(pwnd){
 			return _editor.select_tool(name);
 		},
 		on_popup: function (popup, bdiv) {
-			popup.show(dhx4.absLeft(bdiv), 0, bdiv.offsetWidth, 400);
+			popup.show(dhx4.absLeft(bdiv), 0, bdiv.offsetWidth, _editor._wrapper.offsetHeight);
 			popup.p.style.top = (dhx4.absTop(bdiv) - 20) + "px";
 			popup.p.querySelector(".dhx_popup_arrow").style.top = "20px";
 		}

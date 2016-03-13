@@ -965,6 +965,19 @@ Profile.prototype.__define({
 	},
 
 	/**
+	 * Выясняет, параллельны ли профили в пределах `consts.orientation_delta`
+	 */
+	is_collinear: {
+		value : function(profile) {
+			var angl = profile.e.subtract(profile.b).getDirectedAngle(this.e.subtract(this.b));
+			if (angl < 0)
+				angl += 180;
+			return Math.abs(angl) < consts.orientation_delta;
+		},
+		enumerable : false
+	},
+
+	/**
 	 * Возвращает массив примыкающих ипостов
 	 */
 	joined_imposts: {

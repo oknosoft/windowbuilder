@@ -221,6 +221,9 @@ Filling.prototype.__define({
 						curr.pb = prev.pe = curr.sub_path.intersect_point(prev.sub_path, curr.b, true);
 					if(!curr.pe)
 						curr.pe = next.pb = curr.sub_path.intersect_point(next.sub_path, curr.e, true);
+					if(!curr.pb || !curr.pe){
+						throw "Filling:path";
+					}
 					curr.sub_path = curr.sub_path.get_subpath(curr.pb, curr.pe);
 				}
 				// формируем путь
