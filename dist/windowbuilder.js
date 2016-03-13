@@ -1479,19 +1479,15 @@ DimensionLine.prototype.__define({
  */
 function BuilderElement(attr){
 
-	var _row;
-
 	BuilderElement.superclass.constructor.call(this);
 
-	if(attr.row)
-		_row = attr.row;
-	else
-		_row = attr.row = this.project.ox.coordinates.add();
+	if(!attr.row)
+		attr.row = this.project.ox.coordinates.add();
 
 	this.__define({
 		_row: {
 			get: function () {
-				return _row;
+				return attr.row;
 			},
 			enumerable: false
 		}
@@ -1513,26 +1509,31 @@ function BuilderElement(attr){
 	}else if(attr.parent)
 		this.parent = attr.parent;
 
-	if(!_row.cnstr)
-		_row.cnstr = this.parent.cnstr;
+	if(!attr.row.cnstr)
+		attr.row.cnstr = this.parent.cnstr;
 
-	if(!_row.elm)
-		_row.elm = this.id;
+	if(!attr.row.elm)
+		attr.row.elm = this.id;
 
-	if(_row.elm_type.empty() && !this.inset.empty())
-		_row.elm_type = this.inset.nom.elm_type;
+	if(attr.row.elm_type.empty() && !this.inset.empty())
+		attr.row.elm_type = this.inset.nom.elm_type;
 
 	this.project.register_change();
 
 	/**
 	 * Удаляет элемент из контура и иерархии проекта
-	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
+	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_ и отключает наблюдателя
 	 * @method remove
 	 */
 	this.remove = function () {
-		if(this.project.ox === _row._owner._owner)
-			_row._owner.del(_row);
-		_row = null;
+
+		if(this.parent && this.parent._noti && this.observer)
+			Object.unobserve(this.parent._noti, this.observer);
+
+		if(this.project.ox === attr.row._owner._owner)
+			attr.row._owner.del(attr.row);
+		delete attr.row;
+
 		BuilderElement.superclass.remove.call(this);
 		this.project.register_change();
 	};
@@ -2578,8 +2579,16 @@ function Profile(attr){
 
 			if(bcnn.cnn && bcnn.profile == p){
 				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-					if(!_profile.b.is_nearest(p.e))
-						_profile.b = p.e;
+					if(!_profile.b.is_nearest(p.e)){
+						if(bcnn.to_cut || bcnn.is_cut){
+							if(_profile.b.getDistance(p.e, true) < _profile.b.getDistance(p.b, true))
+								_profile.b = p.e;
+							else
+								_profile.b = p.b;
+						} else
+							_profile.b = p.e;
+					}
+
 				}
 				else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
@@ -2589,8 +2598,15 @@ function Profile(attr){
 			}
 			if(ecnn.cnn && ecnn.profile == p){
 				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-					if(!_profile.e.is_nearest(p.b))
-						_profile.e = p.b;
+					if(!_profile.e.is_nearest(p.b)){
+						if(ecnn.to_cut || ecnn.is_cut){
+							if(_profile.e.getDistance(p.b, true) < _profile.e.getDistance(p.e, true))
+								_profile.e = p.b;
+							else
+								_profile.e = p.e;
+						} else
+							_profile.e = p.b;
+					}
 				}
 				else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
@@ -2674,13 +2690,7 @@ function Profile(attr){
 				return res;
 		}
 
-		delete res.profile_point;
-		delete res.is_cut;
-		delete res.to_cut;
-		res.profile = null;
-		res.cnn = null;
-		res.distance = 10e9;
-		res.cnn_types = acn.i;
+		res.clear();
 
 		// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 		if(this.parent){
@@ -2886,6 +2896,8 @@ function Profile(attr){
 					intersect_point(prays.inner, rays.outer, 2);
 					intersect_point(prays.inner, rays.inner, 3);
 				}
+			}else{
+				cnn_point.err = "orientation";
 			}
 
 		}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
@@ -2908,8 +2920,9 @@ function Profile(attr){
 					intersect_point(prays.outer, rays.outer, 2);
 					intersect_point(prays.outer, rays.inner, 3);
 				}
+			}else{
+				cnn_point.err = "orientation";
 			}
-
 		}
 
 		// если точка не рассчиталась - рассчитываем по умолчанию - как с пустотой
@@ -3354,7 +3367,6 @@ Profile.prototype.__define({
 
 			}
 
-
 			path.add(this.corns(4));
 			path.closePath();
 			path.reduce();
@@ -3460,6 +3472,8 @@ Profile.prototype.__define({
 	orientation: {
 		get : function(){
 			var angle_hor = this.angle_hor;
+			if(angle_hor > 180)
+				angle_hor -= 180;
 			if((angle_hor > -consts.orientation_delta && angle_hor < consts.orientation_delta) ||
 				(angle_hor > 180-consts.orientation_delta && angle_hor < 180+consts.orientation_delta))
 				return $p.enm.orientations.Горизонтальная;
@@ -3670,6 +3684,8 @@ Editor.Profile = Profile;
  */
 function CnnPoint(){
 
+	var _err = [];
+
 	/**
 	 * Расстояние до ближайшего профиля
 	 * @type {number}
@@ -3695,8 +3711,28 @@ function CnnPoint(){
 	 * @type {_cat.cnns}
 	 */
 	this.cnn = null;
+
+	/**
+	 * Массив ошибок соединения
+	 * @type {Array}
+	 */
+	this.__define({
+		err: {
+			get: function () {
+				return _err;
+			},
+			set: function (v) {
+				if(!v)
+					_err.length = 0;
+				else if(_err.indexOf(v) == -1)
+					_err.push(v);
+			},
+			enumerable: false
+		}
+	});
 }
 CnnPoint.prototype.__define({
+
 	is_t: {
 		get: function () {
 
@@ -3713,6 +3749,20 @@ CnnPoint.prototype.__define({
 				return !!this.is_cut;
 
 			return true;
+		},
+		enumerable: false
+	},
+
+	clear: {
+		value: function () {
+			delete this.profile_point;
+			delete this.is_cut;
+			delete this.to_cut;
+			this.profile = null;
+			this.cnn = null;
+			this.err = null;
+			this.distance = 10e9;
+			this.cnn_types = acn.i;
 		},
 		enumerable: false
 	}
@@ -4496,11 +4546,9 @@ var acn,
 
 	this.lgray = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
-	// минимальная длина сегмента заполнения
-	this.filling_min_length = 4;
 
 	// в пределах этого угла, считаем элемент вертикальным или горизонтальным
-	this.orientation_delta = 6;
+	this.orientation_delta = 8;
 
 	this.tune_paper = function (settings) {
 		/**
@@ -4796,16 +4844,13 @@ function ToolLayImpost(){
 	};
 
 	tool.hitTest = function(event) {
-		// var hitSize = 4.0; // / view.zoom;
-		var hitSize = 2;
 
 		// Hit test items.
-		tool.hitItem = _editor.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+		tool.hitItem = _editor.project.hitTest(event.point, { class: Filling });
 
 		if (tool.hitItem){
-			if(tool.hitItem.item instanceof Filling){
-				_editor.canvas_cursor('cursor-lay-impost');
-			}
+			_editor.canvas_cursor('cursor-lay-impost');
+
 		} else {
 			_editor.canvas_cursor('cursor-arrow-lay');
 		}

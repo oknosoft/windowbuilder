@@ -26,11 +26,9 @@ var acn,
 
 	this.lgray = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
-	// минимальная длина сегмента заполнения
-	this.filling_min_length = 4;
 
 	// в пределах этого угла, считаем элемент вертикальным или горизонтальным
-	this.orientation_delta = 6;
+	this.orientation_delta = 8;
 
 	this.tune_paper = function (settings) {
 		/**

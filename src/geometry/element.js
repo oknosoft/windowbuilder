@@ -25,19 +25,15 @@
  */
 function BuilderElement(attr){
 
-	var _row;
-
 	BuilderElement.superclass.constructor.call(this);
 
-	if(attr.row)
-		_row = attr.row;
-	else
-		_row = attr.row = this.project.ox.coordinates.add();
+	if(!attr.row)
+		attr.row = this.project.ox.coordinates.add();
 
 	this.__define({
 		_row: {
 			get: function () {
-				return _row;
+				return attr.row;
 			},
 			enumerable: false
 		}
@@ -59,26 +55,31 @@ function BuilderElement(attr){
 	}else if(attr.parent)
 		this.parent = attr.parent;
 
-	if(!_row.cnstr)
-		_row.cnstr = this.parent.cnstr;
+	if(!attr.row.cnstr)
+		attr.row.cnstr = this.parent.cnstr;
 
-	if(!_row.elm)
-		_row.elm = this.id;
+	if(!attr.row.elm)
+		attr.row.elm = this.id;
 
-	if(_row.elm_type.empty() && !this.inset.empty())
-		_row.elm_type = this.inset.nom.elm_type;
+	if(attr.row.elm_type.empty() && !this.inset.empty())
+		attr.row.elm_type = this.inset.nom.elm_type;
 
 	this.project.register_change();
 
 	/**
 	 * Удаляет элемент из контура и иерархии проекта
-	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
+	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_ и отключает наблюдателя
 	 * @method remove
 	 */
 	this.remove = function () {
-		if(this.project.ox === _row._owner._owner)
-			_row._owner.del(_row);
-		_row = null;
+
+		if(this.parent && this.parent._noti && this.observer)
+			Object.unobserve(this.parent._noti, this.observer);
+
+		if(this.project.ox === attr.row._owner._owner)
+			attr.row._owner.del(attr.row);
+		delete attr.row;
+
 		BuilderElement.superclass.remove.call(this);
 		this.project.register_change();
 	};

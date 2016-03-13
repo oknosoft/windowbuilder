@@ -37,8 +37,16 @@ function Profile(attr){
 
 			if(bcnn.cnn && bcnn.profile == p){
 				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-					if(!_profile.b.is_nearest(p.e))
-						_profile.b = p.e;
+					if(!_profile.b.is_nearest(p.e)){
+						if(bcnn.to_cut || bcnn.is_cut){
+							if(_profile.b.getDistance(p.e, true) < _profile.b.getDistance(p.b, true))
+								_profile.b = p.e;
+							else
+								_profile.b = p.b;
+						} else
+							_profile.b = p.e;
+					}
+
 				}
 				else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
@@ -48,8 +56,15 @@ function Profile(attr){
 			}
 			if(ecnn.cnn && ecnn.profile == p){
 				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-					if(!_profile.e.is_nearest(p.b))
-						_profile.e = p.b;
+					if(!_profile.e.is_nearest(p.b)){
+						if(ecnn.to_cut || ecnn.is_cut){
+							if(_profile.e.getDistance(p.b, true) < _profile.e.getDistance(p.e, true))
+								_profile.e = p.b;
+							else
+								_profile.e = p.e;
+						} else
+							_profile.e = p.b;
+					}
 				}
 				else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
@@ -133,13 +148,7 @@ function Profile(attr){
 				return res;
 		}
 
-		delete res.profile_point;
-		delete res.is_cut;
-		delete res.to_cut;
-		res.profile = null;
-		res.cnn = null;
-		res.distance = 10e9;
-		res.cnn_types = acn.i;
+		res.clear();
 
 		// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 		if(this.parent){
@@ -345,6 +354,8 @@ function Profile(attr){
 					intersect_point(prays.inner, rays.outer, 2);
 					intersect_point(prays.inner, rays.inner, 3);
 				}
+			}else{
+				cnn_point.err = "orientation";
 			}
 
 		}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
@@ -367,8 +378,9 @@ function Profile(attr){
 					intersect_point(prays.outer, rays.outer, 2);
 					intersect_point(prays.outer, rays.inner, 3);
 				}
+			}else{
+				cnn_point.err = "orientation";
 			}
-
 		}
 
 		// если точка не рассчиталась - рассчитываем по умолчанию - как с пустотой
@@ -813,7 +825,6 @@ Profile.prototype.__define({
 
 			}
 
-
 			path.add(this.corns(4));
 			path.closePath();
 			path.reduce();
@@ -919,6 +930,8 @@ Profile.prototype.__define({
 	orientation: {
 		get : function(){
 			var angle_hor = this.angle_hor;
+			if(angle_hor > 180)
+				angle_hor -= 180;
 			if((angle_hor > -consts.orientation_delta && angle_hor < consts.orientation_delta) ||
 				(angle_hor > 180-consts.orientation_delta && angle_hor < 180+consts.orientation_delta))
 				return $p.enm.orientations.Горизонтальная;
@@ -1129,6 +1142,8 @@ Editor.Profile = Profile;
  */
 function CnnPoint(){
 
+	var _err = [];
+
 	/**
 	 * Расстояние до ближайшего профиля
 	 * @type {number}
@@ -1154,8 +1169,28 @@ function CnnPoint(){
 	 * @type {_cat.cnns}
 	 */
 	this.cnn = null;
+
+	/**
+	 * Массив ошибок соединения
+	 * @type {Array}
+	 */
+	this.__define({
+		err: {
+			get: function () {
+				return _err;
+			},
+			set: function (v) {
+				if(!v)
+					_err.length = 0;
+				else if(_err.indexOf(v) == -1)
+					_err.push(v);
+			},
+			enumerable: false
+		}
+	});
 }
 CnnPoint.prototype.__define({
+
 	is_t: {
 		get: function () {
 
@@ -1172,6 +1207,20 @@ CnnPoint.prototype.__define({
 				return !!this.is_cut;
 
 			return true;
+		},
+		enumerable: false
+	},
+
+	clear: {
+		value: function () {
+			delete this.profile_point;
+			delete this.is_cut;
+			delete this.to_cut;
+			this.profile = null;
+			this.cnn = null;
+			this.err = null;
+			this.distance = 10e9;
+			this.cnn_types = acn.i;
 		},
 		enumerable: false
 	}
