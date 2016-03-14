@@ -107,7 +107,7 @@ function Editor(pwnd){
 		image_path: 'dist/imgs/',
 		buttons: [
 
-			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-lg"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left'},
+			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-lg"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '24px'},
 			{name: 'calck', text: '<i class="fa fa-calculator fa-lg"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
 			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока', float: 'left'},
@@ -190,6 +190,7 @@ function Editor(pwnd){
 					break;
 			}
 		}});
+	_editor.tb_top.cell.style.fontSize = "90%";
 
 
 	/**

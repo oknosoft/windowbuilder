@@ -78,7 +78,7 @@ function EditorAccordion(_editor, cell_acc) {
 					//}
 				},
 				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-lg"></i>', title: 'Добавить створку', float: 'left'},
-				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-lg"></i>', title: 'Удалить слой', float: 'left'}
+				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-lg"></i>', title: 'Удалить слой', float: 'right', paddingRight: '20px'}
 
 				//{name: 'close', text: '<i class="fa fa-times fa-lg"></i>', title: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
 
@@ -110,20 +110,24 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		tree_layers = new function SchemeLayers() {
 
-			var lid,
-				tree = new dhtmlXTreeObject({
+			var tree = new dhtmlXTreeObject({
 					parent: cont.querySelector("[name=content_layers]"),
 					checkbox: true
 				});
 
 
+			function layer_text(layer, bounds){
+				if(!bounds)
+					bounds = layer.bounds;
+				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr + " " + bounds.width.toFixed() + "х" + bounds.height.toFixed();
+			}
+
 			function load_layer(layer){
-				lid = (layer.parent ? "Створка №" : "Рама №") + layer.cnstr + " " + layer.bounds.width.toFixed() + "х" + layer.bounds.height.toFixed();
 
 				tree.insertNewItem(
 					layer.parent ? layer.parent.cnstr : 0,
 					layer.cnstr,
-					lid);
+					layer_text(layer));
 
 
 				layer.children.forEach(function (l) {
@@ -166,9 +170,7 @@ function EditorAccordion(_editor, cell_acc) {
 				});
 			}
 
-			//tree.setImagePath(dhtmlx.image_path + 'dhxtree_web/');
-			//tree.setIconsPath(dhtmlx.image_path + 'dhxtree_web/');
-			//tree.enableCheckBoxes(true, true);
+
 			tree.enableTreeImages(false);
 
 			// Гасим-включаем слой по чекбоксу
@@ -245,6 +247,11 @@ function EditorAccordion(_editor, cell_acc) {
 			this.unload = function () {
 				Object.unobserve(_editor.project._noti, observer);
 			}
+
+			// начинаем следить за изменениями размеров при перерисовке контуров
+			$p.eve.attachEvent("contour_redrawed", function (contour, bounds) {
+				tree.setItemText(contour.cnstr, layer_text(contour, bounds));
+			});
 
 		},
 

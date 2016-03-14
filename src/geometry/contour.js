@@ -445,9 +445,13 @@ Contour.prototype.__define({
 			});
 
 			// перерисовываем размерные линии
+			var _bounds = this.bounds;
 			this.l_dimensions.children.forEach(function(elm) {
-					elm.redraw();
+					elm.redraw(_bounds);
 			});
+
+			// информируем мир о новых размерах нашего контура
+			$p.eve.callEvent("contour_redrawed", [this, _bounds]);
 
 			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
 			if(!llength)

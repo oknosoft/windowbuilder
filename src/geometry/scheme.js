@@ -519,15 +519,14 @@ function Scheme(_canvas){
 			}
 		}
 
-		setTimeout(function() {
-			requestAnimationFrame(redraw);
-			process_redraw();
-		}, 20);
+		// искусственная задержка. зачем?
+		//setTimeout(function() {
+		//	requestAnimationFrame(redraw);
+		//	process_redraw();
+		//}, 20);
 
-		//requestAnimationFrame(redraw);
-		//setTimeout(process_redraw, 20);
-
-		//process_redraw();
+		requestAnimationFrame(redraw);
+		process_redraw();
 
 	}
 

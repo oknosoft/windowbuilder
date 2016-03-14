@@ -194,11 +194,13 @@ DimensionLine.prototype.__define({
 	},
 
 	redraw: {
-		value: function () {
+		value: function (_bounds) {
 
 			var _nodes = this._nodes,
-				_bounds = this.parent.parent.bounds,
 				b, e, tmp, normal, length, bs, es;
+
+			if(!_bounds)
+				_bounds = this.parent.parent.bounds;
 
 			if(!this.pos){
 				b = this.data.elm1[this.data.p1];
