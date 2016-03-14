@@ -1522,7 +1522,7 @@ function BuilderElement(attr){
 		attr.row.elm = this.id;
 
 	if(attr.row.elm_type.empty() && !this.inset.empty())
-		attr.row.elm_type = this.inset.nom.elm_type;
+		attr.row.elm_type = this.inset.nom().elm_type;
 
 	this.project.register_change();
 
@@ -3837,10 +3837,8 @@ ProfileRays.prototype.__define({
 		value: function(with_cnn){
 			this.clear_segments();
 			if(with_cnn){
-				this.b.profile = null;
-				this.e.profile = null;
-				this.b.cnn = null;
-				this.e.cnn = null;
+				this.b.clear();
+				this.e.clear();
 			}
 		}
 	},
@@ -5934,7 +5932,7 @@ function ToolSelectElm(){
 			this.hitTest(event);
 		},
 		keydown: function(event) {
-			var selected, i, path, point, newpath;
+			var selected, i, path, point;
 			if (event.key == '+') {
 
 				selected = paper.project.selectedItems;
@@ -5943,15 +5941,21 @@ function ToolSelectElm(){
 
 					if(path.parent instanceof Profile){
 
+						var cnn_point = path.parent.cnn_point("e");
+						if(cnn_point && cnn_point.profile)
+							cnn_point.profile.rays.clear(true);
+						path.parent.rays.clear(true);
+
 						point = path.getPointAt(path.length * 0.5);
-						path.parent.rays.clear();
-						newpath = path.split(path.length * 0.5);
+						var newpath = path.split(path.length * 0.5);
+						path.lastSegment.point = path.lastSegment.point.add(paper.Point.random());
+						newpath.firstSegment.point = path.lastSegment.point;
 						new Profile({generatrix: newpath, proto: path.parent});
 					}
 				}
 
 				// Prevent the key event from bubbling
-				event.event.preventDefault();
+				event.stop();
 				return false;
 
 			} else if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
@@ -5972,7 +5976,7 @@ function ToolSelectElm(){
 				}
 
 				// Prevent the key event from bubbling
-				event.event.preventDefault();
+				event.stop();
 				return false;
 
 			} else if (event.key == 'left') {
@@ -6301,7 +6305,7 @@ function ToolSelectNode(){
 				}
 
 				// Prevent the key event from bubbling
-				event.event.preventDefault();
+				event.stop();
 				return false;
 
 				// удаление сегмента или элемента
@@ -6335,7 +6339,7 @@ function ToolSelectNode(){
 					}
 				}
 				// Prevent the key event from bubbling
-				event.event.preventDefault();
+				event.stop();
 				return false;
 
 			} else if (event.key == 'left') {

@@ -62,7 +62,7 @@ function BuilderElement(attr){
 		attr.row.elm = this.id;
 
 	if(attr.row.elm_type.empty() && !this.inset.empty())
-		attr.row.elm_type = this.inset.nom.elm_type;
+		attr.row.elm_type = this.inset.nom().elm_type;
 
 	this.project.register_change();
 

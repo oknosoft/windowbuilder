@@ -1262,10 +1262,8 @@ ProfileRays.prototype.__define({
 		value: function(with_cnn){
 			this.clear_segments();
 			if(with_cnn){
-				this.b.profile = null;
-				this.e.profile = null;
-				this.b.cnn = null;
-				this.e.cnn = null;
+				this.b.clear();
+				this.e.clear();
 			}
 		}
 	},

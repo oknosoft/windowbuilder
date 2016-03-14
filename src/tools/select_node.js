@@ -305,7 +305,7 @@ function ToolSelectNode(){
 				}
 
 				// Prevent the key event from bubbling
-				event.event.preventDefault();
+				event.stop();
 				return false;
 
 				// удаление сегмента или элемента
@@ -339,7 +339,7 @@ function ToolSelectNode(){
 					}
 				}
 				// Prevent the key event from bubbling
-				event.event.preventDefault();
+				event.stop();
 				return false;
 
 			} else if (event.key == 'left') {
