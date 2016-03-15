@@ -41,7 +41,7 @@ function ToolLayImpost(){
 	tool.hitTest = function(event) {
 
 		// Hit test items.
-		tool.hitItem = _editor.project.hitTest(event.point, { class: Filling });
+		tool.hitItem = _editor.project.hitTest(event.point, { fill: true, class: Filling });
 
 		if (tool.hitItem){
 			_editor.canvas_cursor('cursor-lay-impost');

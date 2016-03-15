@@ -91,14 +91,17 @@ function ToolSelectNode(){
 		return true;
 	};
 	tool.on({
+
 		activate: function() {
 			paper.tb_left.select(tool.options.name);
 			paper.canvas_cursor('cursor-arrow-white');
 		},
+
 		deactivate: function() {
 			paper.clear_selection_bounds();
 			tool.detache_wnd();
 		},
+
 		mousedown: function(event) {
 			this.mode = null;
 			this.changed = false;
@@ -122,7 +125,10 @@ function ToolSelectNode(){
 						paper.project.deselect_all_points();
 						this.mouseStartPos = event.point.clone();
 						this.originalContent = paper.capture_selection_state();
+
+						$p.eve.callEvent("layer_activated", [item.layer]);
 					}
+
 				} else if (tool.hitItem.type == 'segment') {
 					if (event.modifiers.shift) {
 						tool.hitItem.segment.selected = !tool.hitItem.segment.selected;
@@ -155,7 +161,9 @@ function ToolSelectNode(){
 				}
 
 				if(is_profile)
-					tool.attache_wnd(tool.hitItem.item.parent, paper);
+					tool.attache_wnd(item.parent, paper._acc.elm.cells("a"));
+				else if(item instanceof Filling)
+					tool.attache_wnd(item, paper._acc.elm.cells("a"));
 
 				paper.clear_selection_bounds();
 
@@ -168,6 +176,7 @@ function ToolSelectNode(){
 					tool.detache_wnd();
 			}
 		},
+
 		mouseup: function(event) {
 			if (this.mode == 'move-shapes') {
 				if (this.changed) {
@@ -212,6 +221,7 @@ function ToolSelectNode(){
 				}
 			}
 		},
+
 		mousedrag: function(event) {
 			this.changed = true;
 

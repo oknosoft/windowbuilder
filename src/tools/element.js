@@ -18,12 +18,18 @@ ToolElement.prototype.__define({
 	 */
 	detache_wnd: {
 		value: function(){
-			if(this.wnd && this.wnd.wnd_options){
-				this.wnd.wnd_options(this.options.wnd);
-				$p.wsql.save_options("editor", this.options);
-				this.wnd.close();
+			if(this.wnd){
+				if(this._grid && this._grid.destructor){
+					this.wnd.detachObject();
+					delete this._grid;
+				}
+				if(this.wnd.wnd_options){
+					this.wnd.wnd_options(this.options.wnd);
+					$p.wsql.save_options("editor", this.options);
+					this.wnd.close();
+				}
+				delete this.wnd;
 			}
-			this.wnd = null;
 			this.profile = null;
 		},
 		enumerable: false
@@ -33,13 +39,13 @@ ToolElement.prototype.__define({
 	 * Подключает окно редактор свойств текущего элемента, выбранного инструментом
 	 */
 	attache_wnd: {
-		value: function(profile, _editor){
+		value: function(profile, cell){
 
 			this.profile = profile;
 
 			if(!this.wnd || !this._grid){
 
-				this.wnd = _editor._acc.elm.cells("a");
+				this.wnd = cell;
 
 				this._grid = this.wnd.attachHeadFields({
 					obj: profile,
@@ -56,8 +62,10 @@ ToolElement.prototype.__define({
 					else if(id == "x2" || id == "y2")
 						this._obj.select_node("e");
 				});
+
 			}else{
-				this._grid.attach({obj: profile})
+				if(this._grid._obj != profile)
+					this._grid.attach({obj: profile});
 			}
 		},
 		enumerable: false

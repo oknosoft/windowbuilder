@@ -2051,6 +2051,68 @@ Filling.prototype.__define({
 			return res;
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Координата x левой границы (только для чтения)
+	 */
+	x1: {
+		get: function () {
+			return (this.bounds.left - this.project.bounds.x).round(1);
+		},
+		set: function (v) {
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Координата x правой границы (только для чтения)
+	 */
+	x2: {
+		get: function () {
+			return (this.bounds.right - this.project.bounds.x).round(1);
+		},
+		set: function (v) {
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Координата y нижней границы (только для чтения)
+	 */
+	y1: {
+		get: function () {
+			return (this.project.bounds.height + this.project.bounds.y - this.bounds.bottom).round(1);
+		},
+		set: function (v) {
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Координата y верхней (только для чтения)
+	 */
+	y2: {
+		get: function () {
+			return (this.project.bounds.height + this.project.bounds.y - this.bounds.top).round(1);
+		},
+		set: function (v) {
+
+		},
+		enumerable : false
+	},
+
+	select_node: {
+		value: function (v) {
+			if(node == "b")
+				this.data.path.firstSegment.selected = true;
+			else
+				this.data.path.lastSegment.selected = true;
+		},
+		enumerable : false
 	}
 
 });
@@ -3140,10 +3202,10 @@ Profile.prototype.__define({
 	 * @type {Number}
 	 */
 	x1: {
-		get : function(){ return this.b.x.round(1); },
+		get : function(){ return (this.b.x - this.project.bounds.x).round(1); },
 		set: function(v){
 			this.select_node("b");
-			this.move_points(new paper.Point(v - this.b.x, 0));	},
+			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.b.x, 0));	},
 		enumerable : false
 	},
 
@@ -3154,9 +3216,9 @@ Profile.prototype.__define({
 	 */
 	y1: {
 		get : function(){
-			return (this.project.bounds.height-this.b.y).round(1); },
+			return (this.project.bounds.height + this.project.bounds.y - this.b.y).round(1); },
 		set: function(v){
-			v = this.project.bounds.height-v;
+			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("b");
 			this.move_points(new paper.Point(0, v - this.b.y)); },
 		enumerable : false
@@ -3168,10 +3230,10 @@ Profile.prototype.__define({
 	 * @type {Number}
 	 */
 	x2: {
-		get : function(){ return this.e.x.round(1); },
+		get : function(){ return (this.e.x - this.project.bounds.x).round(1); },
 		set: function(v){
 			this.select_node("e");
-			this.move_points(new paper.Point(v - this.e.x, 0)); },
+			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.e.x, 0)); },
 		enumerable : false
 	},
 
@@ -3182,9 +3244,9 @@ Profile.prototype.__define({
 	 */
 	y2: {
 		get : function(){
-			return (this.project.bounds.height-this.e.y).round(1); },
+			return (this.project.bounds.height + this.project.bounds.y - this.e.y).round(1); },
 		set: function(v){
-			v = this.project.bounds.height-v;
+			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("e");
 			this.move_points(new paper.Point(0, v - this.e.y));},
 		enumerable : false
@@ -4833,12 +4895,18 @@ ToolElement.prototype.__define({
 	 */
 	detache_wnd: {
 		value: function(){
-			if(this.wnd && this.wnd.wnd_options){
-				this.wnd.wnd_options(this.options.wnd);
-				$p.wsql.save_options("editor", this.options);
-				this.wnd.close();
+			if(this.wnd){
+				if(this._grid && this._grid.destructor){
+					this.wnd.detachObject();
+					delete this._grid;
+				}
+				if(this.wnd.wnd_options){
+					this.wnd.wnd_options(this.options.wnd);
+					$p.wsql.save_options("editor", this.options);
+					this.wnd.close();
+				}
+				delete this.wnd;
 			}
-			this.wnd = null;
 			this.profile = null;
 		},
 		enumerable: false
@@ -4848,13 +4916,13 @@ ToolElement.prototype.__define({
 	 * Подключает окно редактор свойств текущего элемента, выбранного инструментом
 	 */
 	attache_wnd: {
-		value: function(profile, _editor){
+		value: function(profile, cell){
 
 			this.profile = profile;
 
 			if(!this.wnd || !this._grid){
 
-				this.wnd = _editor._acc.elm.cells("a");
+				this.wnd = cell;
 
 				this._grid = this.wnd.attachHeadFields({
 					obj: profile,
@@ -4871,8 +4939,10 @@ ToolElement.prototype.__define({
 					else if(id == "x2" || id == "y2")
 						this._obj.select_node("e");
 				});
+
 			}else{
-				this._grid.attach({obj: profile})
+				if(this._grid._obj != profile)
+					this._grid.attach({obj: profile});
 			}
 		},
 		enumerable: false
@@ -4923,7 +4993,7 @@ function ToolLayImpost(){
 	tool.hitTest = function(event) {
 
 		// Hit test items.
-		tool.hitItem = _editor.project.hitTest(event.point, { class: Filling });
+		tool.hitItem = _editor.project.hitTest(event.point, { fill: true, class: Filling });
 
 		if (tool.hitItem){
 			_editor.canvas_cursor('cursor-lay-impost');
@@ -5866,14 +5936,22 @@ function ToolSelectElm(){
 						item.selected = true;
 					}
 					if (item.selected) {
+
 						this.mode = 'move-shapes';
 						paper.project.deselect_all_points();
 						this.mouseStartPos = event.point.clone();
 						this.originalContent = paper.capture_selection_state();
+
+						$p.eve.callEvent("layer_activated", [item.layer]);
+
+						if(is_profile)
+							tool.attache_wnd(item.parent, paper._acc.elm.cells("a"));
+						else if(item instanceof Filling)
+							tool.attache_wnd(item, paper._acc.elm.cells("a"));
+
 					}
 				}
-				if(is_profile)
-					tool.attache_wnd(tool.hitItem.item.parent, paper);
+
 
 				paper.clear_selection_bounds();
 
@@ -6094,14 +6172,17 @@ function ToolSelectNode(){
 		return true;
 	};
 	tool.on({
+
 		activate: function() {
 			paper.tb_left.select(tool.options.name);
 			paper.canvas_cursor('cursor-arrow-white');
 		},
+
 		deactivate: function() {
 			paper.clear_selection_bounds();
 			tool.detache_wnd();
 		},
+
 		mousedown: function(event) {
 			this.mode = null;
 			this.changed = false;
@@ -6125,7 +6206,10 @@ function ToolSelectNode(){
 						paper.project.deselect_all_points();
 						this.mouseStartPos = event.point.clone();
 						this.originalContent = paper.capture_selection_state();
+
+						$p.eve.callEvent("layer_activated", [item.layer]);
 					}
+
 				} else if (tool.hitItem.type == 'segment') {
 					if (event.modifiers.shift) {
 						tool.hitItem.segment.selected = !tool.hitItem.segment.selected;
@@ -6158,7 +6242,9 @@ function ToolSelectNode(){
 				}
 
 				if(is_profile)
-					tool.attache_wnd(tool.hitItem.item.parent, paper);
+					tool.attache_wnd(item.parent, paper._acc.elm.cells("a"));
+				else if(item instanceof Filling)
+					tool.attache_wnd(item, paper._acc.elm.cells("a"));
 
 				paper.clear_selection_bounds();
 
@@ -6171,6 +6257,7 @@ function ToolSelectNode(){
 					tool.detache_wnd();
 			}
 		},
+
 		mouseup: function(event) {
 			if (this.mode == 'move-shapes') {
 				if (this.changed) {
@@ -6215,6 +6302,7 @@ function ToolSelectNode(){
 				}
 			}
 		},
+
 		mousedrag: function(event) {
 			this.changed = true;
 
@@ -6697,35 +6785,6 @@ function EditorAccordion(_editor, cell_acc) {
 
 			tree.enableTreeImages(false);
 
-			// Гасим-включаем слой по чекбоксу
-			tree.attachEvent("onCheck", function(id, state){
-				var l = _editor.project.getItem({cnstr: Number(id)}),
-					sub = tree.getAllSubItems(id);
-
-				if(l)
-					l.visible = !!state;
-
-				if(typeof sub == "string")
-					sub = sub.split(",");
-				sub.forEach(function (id) {
-					tree.setCheck(id, state);
-				});
-
-				_editor.project.register_update();
-
-			});
-
-			// делаем выделенный слой активным
-			tree.attachEvent("onSelect", function(id){
-				var l = _editor.project.getItem({cnstr: Number(id)});
-				if(l)
-					l.activate();
-			});
-
-			$p.eve.attachEvent("layer_activated", function (l) {
-				if(l.cnstr && l.cnstr != tree.getSelectedItemId())
-					tree.selectItem(l.cnstr);
-			});
 
 			//tree.enableDragAndDrop(true, false);
 			//tree.setDragHandler(function(){ return false; });
@@ -6763,14 +6822,44 @@ function EditorAccordion(_editor, cell_acc) {
 				}
 			}
 
+			// начинаем следить за объектом
 			this.attache = function () {
-				// начинаем следить за объектом
 				Object.observe(_editor.project._noti, observer, ["rows"]);
 			}
 
 			this.unload = function () {
 				Object.unobserve(_editor.project._noti, observer);
 			}
+
+			// гасим-включаем слой по чекбоксу
+			tree.attachEvent("onCheck", function(id, state){
+				var l = _editor.project.getItem({cnstr: Number(id)}),
+					sub = tree.getAllSubItems(id);
+
+				if(l)
+					l.visible = !!state;
+
+				if(typeof sub == "string")
+					sub = sub.split(",");
+				sub.forEach(function (id) {
+					tree.setCheck(id, state);
+				});
+
+				_editor.project.register_update();
+
+			});
+
+			// делаем выделенный слой активным
+			tree.attachEvent("onSelect", function(id){
+				var l = _editor.project.getItem({cnstr: Number(id)});
+				if(l)
+					l.activate();
+			});
+
+			$p.eve.attachEvent("layer_activated", function (l) {
+				if(l.cnstr && l.cnstr != tree.getSelectedItemId())
+					tree.selectItem(l.cnstr);
+			});
 
 			// начинаем следить за изменениями размеров при перерисовке контуров
 			$p.eve.attachEvent("contour_redrawed", function (contour, bounds) {
@@ -7019,9 +7108,9 @@ function Editor(pwnd){
 					break;
 
 				case 'close':
-					_editor.select_tool('select_node');
 					if(_editor._pwnd._on_close)
 						_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
+					_editor.select_tool('select_node');
 					break;
 
 				case 'calck':

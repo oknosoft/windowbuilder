@@ -94,14 +94,22 @@ function ToolSelectElm(){
 						item.selected = true;
 					}
 					if (item.selected) {
+
 						this.mode = 'move-shapes';
 						paper.project.deselect_all_points();
 						this.mouseStartPos = event.point.clone();
 						this.originalContent = paper.capture_selection_state();
+
+						$p.eve.callEvent("layer_activated", [item.layer]);
+
+						if(is_profile)
+							tool.attache_wnd(item.parent, paper._acc.elm.cells("a"));
+						else if(item instanceof Filling)
+							tool.attache_wnd(item, paper._acc.elm.cells("a"));
+
 					}
 				}
-				if(is_profile)
-					tool.attache_wnd(tool.hitItem.item.parent, paper);
+
 
 				paper.clear_selection_bounds();
 

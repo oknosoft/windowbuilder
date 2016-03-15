@@ -287,6 +287,68 @@ Filling.prototype.__define({
 			return res;
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Координата x левой границы (только для чтения)
+	 */
+	x1: {
+		get: function () {
+			return (this.bounds.left - this.project.bounds.x).round(1);
+		},
+		set: function (v) {
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Координата x правой границы (только для чтения)
+	 */
+	x2: {
+		get: function () {
+			return (this.bounds.right - this.project.bounds.x).round(1);
+		},
+		set: function (v) {
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Координата y нижней границы (только для чтения)
+	 */
+	y1: {
+		get: function () {
+			return (this.project.bounds.height + this.project.bounds.y - this.bounds.bottom).round(1);
+		},
+		set: function (v) {
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Координата y верхней (только для чтения)
+	 */
+	y2: {
+		get: function () {
+			return (this.project.bounds.height + this.project.bounds.y - this.bounds.top).round(1);
+		},
+		set: function (v) {
+
+		},
+		enumerable : false
+	},
+
+	select_node: {
+		value: function (v) {
+			if(node == "b")
+				this.data.path.firstSegment.selected = true;
+			else
+				this.data.path.lastSegment.selected = true;
+		},
+		enumerable : false
 	}
 
 });

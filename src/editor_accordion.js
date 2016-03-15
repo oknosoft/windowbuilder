@@ -173,35 +173,6 @@ function EditorAccordion(_editor, cell_acc) {
 
 			tree.enableTreeImages(false);
 
-			// Гасим-включаем слой по чекбоксу
-			tree.attachEvent("onCheck", function(id, state){
-				var l = _editor.project.getItem({cnstr: Number(id)}),
-					sub = tree.getAllSubItems(id);
-
-				if(l)
-					l.visible = !!state;
-
-				if(typeof sub == "string")
-					sub = sub.split(",");
-				sub.forEach(function (id) {
-					tree.setCheck(id, state);
-				});
-
-				_editor.project.register_update();
-
-			});
-
-			// делаем выделенный слой активным
-			tree.attachEvent("onSelect", function(id){
-				var l = _editor.project.getItem({cnstr: Number(id)});
-				if(l)
-					l.activate();
-			});
-
-			$p.eve.attachEvent("layer_activated", function (l) {
-				if(l.cnstr && l.cnstr != tree.getSelectedItemId())
-					tree.selectItem(l.cnstr);
-			});
 
 			//tree.enableDragAndDrop(true, false);
 			//tree.setDragHandler(function(){ return false; });
@@ -239,14 +210,44 @@ function EditorAccordion(_editor, cell_acc) {
 				}
 			}
 
+			// начинаем следить за объектом
 			this.attache = function () {
-				// начинаем следить за объектом
 				Object.observe(_editor.project._noti, observer, ["rows"]);
 			}
 
 			this.unload = function () {
 				Object.unobserve(_editor.project._noti, observer);
 			}
+
+			// гасим-включаем слой по чекбоксу
+			tree.attachEvent("onCheck", function(id, state){
+				var l = _editor.project.getItem({cnstr: Number(id)}),
+					sub = tree.getAllSubItems(id);
+
+				if(l)
+					l.visible = !!state;
+
+				if(typeof sub == "string")
+					sub = sub.split(",");
+				sub.forEach(function (id) {
+					tree.setCheck(id, state);
+				});
+
+				_editor.project.register_update();
+
+			});
+
+			// делаем выделенный слой активным
+			tree.attachEvent("onSelect", function(id){
+				var l = _editor.project.getItem({cnstr: Number(id)});
+				if(l)
+					l.activate();
+			});
+
+			$p.eve.attachEvent("layer_activated", function (l) {
+				if(l.cnstr && l.cnstr != tree.getSelectedItemId())
+					tree.selectItem(l.cnstr);
+			});
 
 			// начинаем следить за изменениями размеров при перерисовке контуров
 			$p.eve.attachEvent("contour_redrawed", function (contour, bounds) {

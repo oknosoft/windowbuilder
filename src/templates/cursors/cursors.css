@@ -1,6 +1,6 @@
 /* курсоры построителя*/
 .cursor-pen-freehand    { cursor: url('cursor-pen-freehand.png') 5 2, default; }
-.cursor-lay-impost      { cursor: url('cursor-lay-impost.png') 3 6, default; }
+.cursor-lay-impost      { cursor: url('cursor-lay-impost.png') 7 7, default; }
 .cursor-arrow-lay       { cursor: url('cursor-arrow-lay.png') 1 1, default; }
 .cursor-arrow-ruler     { cursor: url('cursor-arrow-ruler.png') 3 1, default; }
 .cursor-arrow-ruler-light { cursor: url('cursor-arrow-ruler-light.png') 3 1, default; }

@@ -22,7 +22,7 @@
 	position: relative;
 	left: 50%;
 	margin-left: -46%;
-	/*	font-size: smaller; */
+	font-size: 90%;
 	line-height: normal;
 }
 .md_column1300>ul {
@@ -45,7 +45,7 @@
 }
 
 .md-fa-lg {
-	font-size: 1.33333333em;
+	font-size: 130%;
 	vertical-align: 25%;
 }
 

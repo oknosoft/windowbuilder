@@ -1,47 +1,55 @@
 <div class="md_column1300">
-    <h1><i class="fa fa-info-circle"></i> Интернет-магазин MetaStore</h1>
-    <p>Метамагазин - это веб-приложение с открытым исходным кодом, разработанное компанией <a href="http://www.oknosoft.ru/" target="_blank">Окнософт</a> на базе фреймворка <a href="http://www.oknosoft.ru/metadata/" target="_blank">Metadata.js</a> и распространяемое под <a href="http://www.oknosoft.ru/programmi-oknosoft/metadata.html" target="_blank">коммерческой лицензией Окнософт</a>.<br />
-        Исходный код и документация доступны на <a href="https://github.com/oknosoft/metastore" target="_blank">GitHub <i class="fa fa-github-alt"></i></a>.<br />
-        Приложение является веб-интерфейсом к типовым конфигурациям 1С (Управление торговлей 11.2, Комплексная автоматизация 2.0, ERP Управление предприятием 2.1) и реализует функциональность интернет-магазина для информационной базы 1С
+    <h1><i class="fa fa-info-circle"></i> Окнософт: Заказ дилера</h1>
+    <p>Заказ дилера - это веб-приложение с открытым исходным кодом, разработанное компанией <a href="http://www.oknosoft.ru/" target="_blank">Окнософт</a> на базе фреймворка <a href="http://www.oknosoft.ru/metadata/" target="_blank">Metadata.js</a><br />
+        Исходный код и документация доступны на <a href="https://github.com/oknosoft/windowbuilder" target="_blank">GitHub <i class="fa fa-github-alt"></i></a>.<br />
     </p>
+
+    <h3>Назначение и возможности</h3>
+    <ul>
+        <li>Построение и редактирование эскизов изделий в графическом 2D редакторе</li>
+        <li>Экстремальная поддержка сложных и нестандартных изделий (многоугольники, множественные перегибы профиля)</li>
+        <li>Расчет спецификации и координат технологических операций</li>
+        <li>Расчет цены и плановой себестоимости изделий по произвольным формулам с учетом индивидуальных дилерских скидок и наценок</li>
+        <li>Формирование печатных форм для заказчика и производства</li>
+        <li>Поддержка автономной работы при отсутствии доступа в Интернет и прозрачного обмена данными с сервером при возобнослении соединения</li>
+    </ul>
+
     <p>Использованы следующие библиотеки и инструменты:</p>
 
     <h3>Серверная часть</h3>
     <ul>
-        <li><a href="http://1c-dn.com/1c_enterprise/" target="_blank">1c_enterprise</a><span class="md_muted_color">, ORM сервер 1С:Предприятие</span></li>
-        <li><a href="http://www.postgresql.org/" target="_blank">postgreSQL</a><span class="md_muted_color">, мощная объектно-раляционная база данных</span></li>
-        <li><a href="https://nodejs.org/" target="_blank">node.js</a><span class="md_muted_color">, серверная программная платформа, основанная на движке V8 javascript</span></li>
-        <li><a href="http://nginx.org/ru/" target="_blank">nginx</a><span class="md_muted_color">, высокопроизводительный HTTP-сервер</span></li>
+        <li><a href="http://couchdb.apache.org/" target="_blank">CouchDB</a>, NoSQL база данных с поддержкой master-master репликации</li>
+        <li><a href="http://nginx.org/ru/" target="_blank">nginx</a>, высокопроизводительный HTTP-сервер</li>
+        <li><a href="http://1c-dn.com/1c_enterprise/" target="_blank">1c_enterprise</a>, ORM сервер 1С:Предприятие</li>
     </ul>
 
     <h3>Управление данными в памяти браузера</h3>
     <ul>
-        <li><a href="https://github.com/agershun/alasql" target="_blank">alaSQL</a><span class="md_muted_color">, база данных SQL для браузера и Node.js с поддержкой как традиционных реляционных таблиц, так и вложенных JSON данных (NoSQL)</span></li>
-        <li><a href="https://github.com/metatribal/xmlToJSON" target="_blank">xmlToJSON</a><span class="md_muted_color">, компактный javascript модуль для преобразования XML в JSON</span></li>
-        <li><a href="https://github.com/SheetJS/js-xlsx" target="_blank">xlsx</a><span class="md_muted_color">, библиотека для чтения и записи XLSX / XLSM / XLSB / XLS / ODS в браузере</span></li>
+        <li><a href="https://pouchdb.com/" target="_blank">PouchDB</a>, клиентская NoSQL база данных с поддержкой автономной работы и репликации с CouchDB</li>
+        <li><a href="https://github.com/agershun/alasql" target="_blank">alaSQL</a>, база данных SQL для браузера и Node.js с поддержкой как традиционных реляционных таблиц, так и вложенных JSON данных (NoSQL)</li>
+        <li><a href="https://github.com/metatribal/xmlToJSON" target="_blank">xmlToJSON</a>, компактный javascript модуль для преобразования XML в JSON</li>
+        <li><a href="https://github.com/SheetJS/js-xlsx" target="_blank">xlsx</a>, библиотека для чтения и записи XLSX / XLSM / XLSB / XLS / ODS в браузере</li>
     </ul>
 
     <h3>UI библиотеки и компоненты интерфейса</h3>
     <ul>
-        <li><a href="http://dhtmlx.com/" target="_blank">dhtmlx</a><span class="md_muted_color">, кроссбраузерная библиотека javascript для построения современных веб и мобильных приложений</span></li>
-        <li><a href="https://github.com/leongersen/noUiSlider" target="_blank">noUiSlider</a><span class="md_muted_color">, легковесный javascript компонент регулирования пары (min-max) значений </span></li>
-        <li><a href="https://github.com/eligrey/FileSaver.js" target="_blank">filesaver.js</a><span class="md_muted_color">, HTML5 реализация метода saveAs</span></li>
-        <li><a href="https://github.com/Diokuz/baron" target="_blank">baron</a><span class="md_muted_color">, компонент управления полосами прокрутки</span></li>
-        <li><a href="https://github.com/ded/qwery" target="_blank">qwery</a><span class="md_muted_color">, движок селекторов</span></li>
-        <li><a href="https://github.com/ded/bonzo" target="_blank">bonzo</a><span class="md_muted_color">, утилиты DOM</span></li>
-        <li><a href="https://github.com/fat/bean" target="_blank">bean</a><span class="md_muted_color">, библиотека событий для javascript</span></li>
+        <li><a href="http://paperjs.org/" target="_blank">paper.js</a>, фреймворк векторной графики для HTML5 Canvas</li>
+        <li><a href="http://dhtmlx.com/" target="_blank">dhtmlx</a>, кроссбраузерная библиотека javascript для построения современных веб и мобильных приложений</li>
+        <li><a href="https://github.com/Diokuz/baron" target="_blank">baron</a>, компонент управления полосами прокрутки</li>
+        <li><a href="https://jquery.com/" target="_blank">jQuery</a><span class="muted-color">, популярная JavaScript библиотека селекторов и событий DOM</li>
+        <li><a href="https://github.com/eligrey/FileSaver.js" target="_blank">filesaver.js</a>, HTML5 реализация метода saveAs</li>
     </ul>
 
     <h3>Графика</h3>
     <ul>
-        <li><a href="https://fortawesome.github.io/Font-Awesome/" target="_blank">fontawesome</a><span class="md_muted_color">, набор иконок и стилей CSS</span></li>
-        <li><a href="http://fontastic.me/" target="_blank">fontastic</a><span class="md_muted_color">, еще один набор иконок и стилей</span></li>
+        <li><a href="https://fortawesome.github.io/Font-Awesome/" target="_blank">fontawesome</a>, набор иконок и стилей CSS</li>
     </ul>
 
     <p>&nbsp;</p>
     <h2><i class="fa fa-question-circle"></i> Вопросы</h2>
     <p>Если обнаружили ошибку, пожалуйста,
-        <a href="https://github.com/oknosoft/metastore/issues/new" target="_blank">зарегистрируйте вопрос в GitHub</a> или
-        <a href="http://www.oknosoft.ru/metadata/#page-118" target="_blank">свяжитесь с разработчиком</a> напрямую<br />&nbsp;</p>
+        <a href="https://github.com/oknosoft/windowbuilder/issues/new" target="_blank">зарегистрируйте вопрос в GitHub</a> или
+        <a href="http://www.oknosoft.ru/metadata/#page-118" target="_blank">свяжитесь с разработчиком</a> напрямую<br /></p>
+    <p>&nbsp;</p>
 
 </div>

@@ -565,10 +565,10 @@ Profile.prototype.__define({
 	 * @type {Number}
 	 */
 	x1: {
-		get : function(){ return this.b.x.round(1); },
+		get : function(){ return (this.b.x - this.project.bounds.x).round(1); },
 		set: function(v){
 			this.select_node("b");
-			this.move_points(new paper.Point(v - this.b.x, 0));	},
+			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.b.x, 0));	},
 		enumerable : false
 	},
 
@@ -579,9 +579,9 @@ Profile.prototype.__define({
 	 */
 	y1: {
 		get : function(){
-			return (this.project.bounds.height-this.b.y).round(1); },
+			return (this.project.bounds.height + this.project.bounds.y - this.b.y).round(1); },
 		set: function(v){
-			v = this.project.bounds.height-v;
+			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("b");
 			this.move_points(new paper.Point(0, v - this.b.y)); },
 		enumerable : false
@@ -593,10 +593,10 @@ Profile.prototype.__define({
 	 * @type {Number}
 	 */
 	x2: {
-		get : function(){ return this.e.x.round(1); },
+		get : function(){ return (this.e.x - this.project.bounds.x).round(1); },
 		set: function(v){
 			this.select_node("e");
-			this.move_points(new paper.Point(v - this.e.x, 0)); },
+			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.e.x, 0)); },
 		enumerable : false
 	},
 
@@ -607,9 +607,9 @@ Profile.prototype.__define({
 	 */
 	y2: {
 		get : function(){
-			return (this.project.bounds.height-this.e.y).round(1); },
+			return (this.project.bounds.height + this.project.bounds.y - this.e.y).round(1); },
 		set: function(v){
-			v = this.project.bounds.height-v;
+			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("e");
 			this.move_points(new paper.Point(0, v - this.e.y));},
 		enumerable : false

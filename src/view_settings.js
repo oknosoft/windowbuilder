@@ -45,6 +45,7 @@ $p.iface.view_settings = function (cell) {
 			tabs: [
 				{id: "const", text: '<i class="fa fa-key"></i> Общее', active: true},
 				{id: "industry", text: '<i class="fa fa-industry"></i> Технология'},
+				{id: "price", text: '<i class="fa fa-money"></i> Цены'},
 				{id: "events", text: '<i class="fa fa-calendar-check-o"></i> Планирование'}
 			]
 		});
@@ -62,7 +63,7 @@ $p.iface.view_settings = function (cell) {
 				{ type:"settings", labelAlign:"left", position:"label-right"  },
 				{ type:"radio" , name:"device_type", labelWidth:120, label:'<i class="fa fa-desktop"></i> Компьютер', value:"desktop"},
 				{ type:"newcolumn"   },
-				{ type:"radio" , name:"device_type", labelWidth:150, label:'<i class="fa fa-mobile fa-lg"></i> Телефон, планшет', value:"phone"},
+				{ type:"radio" , name:"device_type", labelWidth:150, label:'<i class="fa fa-mobile fa-lg"></i> Телефон, планшет', value:"phone"}
 			]  },
 			{type:"template", label:"",value:"", note: {text: "Класс устройства определяется автоматически, но пользователь может задать его явно", width: 320}},
 
@@ -99,6 +100,7 @@ $p.iface.view_settings = function (cell) {
 
 			]
 		);
+		t.form.cont.style.fontSize = "100%";
 
 		// инициализация свойств
 
@@ -130,17 +132,8 @@ $p.iface.view_settings = function (cell) {
 					text: "Стереть справочники и перезаполнить данными сервера?",
 					cancel: $p.msg.cancel,
 					callback: function(btn) {
-						if(btn){
-
-							$p.wsql.pouch.log_out();
-
-							$p.wsql.pouch.local.ram.destroy()
-								.then($p.wsql.pouch.local.doc.destroy)
-								.catch($p.wsql.pouch.local.doc.destroy)
-								.then(do_reload)
-								.catch(do_reload);
-
-						}
+						if(btn)
+							$p.wsql.pouch.reset_local_data();
 					}
 				});
 			}
