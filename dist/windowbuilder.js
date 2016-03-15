@@ -5199,33 +5199,34 @@ function ToolPen(){
 		$p.wsql.restore_options("editor", tool.options);
 		tool.profile._mixin(tool.options.wnd, ["inset", "clr", "bind_generatrix", "bind_node"]);
 
-		if(tool.profile.inset.empty()){
+		if(tool.profile.inset.empty() || rama_impost.indexOf(tool.profile.inset) == -1){
 			if(rama_impost.length)
 				tool.profile.inset = rama_impost[0];
+			else
+				tool.profile.inset = $p.blank.guid;
 		}
 
 		if(tool.profile.clr.empty())
 			tool.profile.clr = $p.cat.predefined_elmnts.predefined("Цвет_Основной");
 
-		if(!tool.profile._metadata.fields.inset.choice_links)
-			tool.profile._metadata.fields.inset.choice_links = [{
-				name: ["selection",	"ref"],
-				path: [
-					function(o, f){
-						if($p.is_data_obj(o)){
-							return rama_impost.indexOf(o) != -1;
+		tool.profile._metadata.fields.inset.choice_links = [{
+			name: ["selection",	"ref"],
+			path: [
+				function(o, f){
+					if($p.is_data_obj(o)){
+						return rama_impost.indexOf(o) != -1;
 
-						}else{
-							var refs = "";
-							rama_impost.forEach(function (o) {
-								if(refs)
-									refs += ", ";
-								refs += "'" + o.ref + "'";
-							});
-							return "_t_.ref in (" + refs + ")";
-						}
-					}]
-			}];
+					}else{
+						var refs = "";
+						rama_impost.forEach(function (o) {
+							if(refs)
+								refs += ", ";
+							refs += "'" + o.ref + "'";
+						});
+						return "_t_.ref in (" + refs + ")";
+					}
+				}]
+		}];
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
 		tool.wnd.attachHeadFields({
@@ -5305,6 +5306,8 @@ function ToolPen(){
 			Object.unobserve(_editor.project, observer);
 
 			decorate_layers(true);
+
+			delete tool.profile._metadata.fields.inset.choice_links;
 
 			tool.detache_wnd();
 
@@ -6557,11 +6560,11 @@ function EditorAccordion(_editor, cell_acc) {
 			class_name: "",
 			name: 'aling_bottom',
 			buttons: [
-				{name: 'left', img: 'align_left.png', title: $p.msg.align_node_left, float: 'left'},
-				{name: 'bottom', img: 'align_bottom.png', title: $p.msg.align_node_bottom, float: 'left'},
-				{name: 'top', img: 'align_top.png', title: $p.msg.align_node_top, float: 'left'},
-				{name: 'right', img: 'align_right.png', title: $p.msg.align_node_right, float: 'left'},
-				{name: 'delete', text: '<i class="fa fa-trash-o fa-lg"></i>', title: 'Удалить элемент', float: 'right', paddingRight: '20px'}
+				{name: 'left', img: 'align_left.png', tooltip: $p.msg.align_node_left, float: 'left'},
+				{name: 'bottom', img: 'align_bottom.png', tooltip: $p.msg.align_node_bottom, float: 'left'},
+				{name: 'top', img: 'align_top.png', tooltip: $p.msg.align_node_top, float: 'left'},
+				{name: 'right', img: 'align_right.png', tooltip: $p.msg.align_node_right, float: 'left'},
+				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить элемент', float: 'right', paddingRight: '20px'}
 			],
 			image_path: "dist/imgs/",
 			onclick: function (name) {
@@ -6579,7 +6582,7 @@ function EditorAccordion(_editor, cell_acc) {
 			name: 'right',
 			image_path: 'dist/imgs/',
 			buttons: [
-				{name: 'standard_form', text: '<i class="fa fa-file-o fa-lg"></i>', title: 'Добавить рамный контур', float: 'left'
+				{name: 'standard_form', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'
 					//,sub: {
 					//	buttons: [
 					//		{name: 'square', img: 'square.png', float: 'left'},
@@ -6598,10 +6601,10 @@ function EditorAccordion(_editor, cell_acc) {
 					//		{name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]
 					//}
 				},
-				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-lg"></i>', title: 'Добавить створку', float: 'left'},
-				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-lg"></i>', title: 'Удалить слой', float: 'right', paddingRight: '20px'}
+				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: 'Добавить створку', float: 'left'},
+				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
 
-				//{name: 'close', text: '<i class="fa fa-times fa-lg"></i>', title: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
+				//{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
 
 			], onclick: function (name) {
 
@@ -6955,7 +6958,7 @@ function Editor(pwnd){
 	 * Панель выбора инструментов рисовалки
 	 * @type OTooolBar
 	 */
-	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '36px', left: '3px', name: 'left', height: '310px',
+	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '36px', left: '3px', name: 'left', height: '320px',
 		image_path: 'dist/imgs/',
 		buttons: [
 			{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['tip_select_elm.html']},
@@ -6988,20 +6991,20 @@ function Editor(pwnd){
 		image_path: 'dist/imgs/',
 		buttons: [
 
-			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-lg"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '24px'},
-			{name: 'calck', text: '<i class="fa fa-calculator fa-lg"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
+			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '30px'},
+			{name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
 			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока', float: 'left'},
-			{name: 'open', text: '<i class="fa fa-briefcase fa-lg"></i>', tooltip: 'Загрузить из другого заказа', float: 'left'},
+			{name: 'open', text: '<i class="fa fa-briefcase fa-fw"></i>', tooltip: 'Загрузить из другого заказа', float: 'left'},
 
 			{name: 'sep_1', text: '', float: 'left'},
-			{name: 'back', text: '<i class="fa fa-undo fa-lg"></i>', tooltip: 'Шаг назад', float: 'left'},
-			{name: 'rewind', text: '<i class="fa fa-repeat fa-lg"></i>', tooltip: 'Шаг вперед', float: 'left'},
+			{name: 'back', text: '<i class="fa fa-undo fa-fw"></i>', tooltip: 'Шаг назад', float: 'left'},
+			{name: 'rewind', text: '<i class="fa fa-repeat fa-fw"></i>', tooltip: 'Шаг вперед', float: 'left'},
 
 			{name: 'sep_2', text: '', float: 'left'},
-			{name: 'open_spec', text: '<i class="fa fa-table fa-lg"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
+			{name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
 
-			{name: 'close', text: '<i class="fa fa-times fa-lg"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
+			{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
 
 
 		], onclick: function (name) {
@@ -7016,6 +7019,7 @@ function Editor(pwnd){
 					break;
 
 				case 'close':
+					_editor.select_tool('select_node');
 					if(_editor._pwnd._on_close)
 						_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
 					break;
@@ -7071,7 +7075,7 @@ function Editor(pwnd){
 					break;
 			}
 		}});
-	_editor.tb_top.cell.style.fontSize = "90%";
+	//_editor.tb_top.cell.style.fontSize = "90%";
 
 
 	/**
@@ -7626,6 +7630,6 @@ if(typeof $p !== "undefined")
 	$p.Editor = Editor;
 
 
-$p.injected_data._mixin({"tip_editor_right.html":"<div class=\"clipper editor_accordion\">\r\n\r\n    <div class=\"scroller\">\r\n        <div class=\"container\">\r\n\r\n            <!-- РАЗДЕЛ 1 - дерево слоёв -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_layers\" style=\"font-weight: normal;\"></div>\r\n            </div>\r\n            <div name=\"content_layers\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 2 - реквизиты элемента -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_elm\" style=\"font-weight: normal;\"></div>\r\n            </div>\r\n            <div name=\"content_elm\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 3 - реквизиты створки -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_stv\">\r\n                    <span name=\"title\">Створка</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_stv\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 4 - реквизиты изделия -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_props\">\r\n                    <span name=\"title\">Изделие</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_props\" style=\"min-height: 330px;\"></div>\r\n\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"scroller__track\">\r\n        <div class=\"scroller__bar\" style=\"height: 26px; top: 0px;\"></div>\r\n    </div>\r\n\r\n</div>","tip_select_elm.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Свойства элемента</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент целиком<br />для изменения его свойств или перемещения</li>\r\n        <li>Добавить новый элемент делением текущего<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class=\"fa fa-question-circle fa-lg\"></i> Справка в wiki</a>\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Свойства узла</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и лучи узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
+$p.injected_data._mixin({"tip_editor_right.html":"<div class=\"clipper editor_accordion\">\r\n\r\n    <div class=\"scroller\">\r\n        <div class=\"container\">\r\n\r\n            <!-- РАЗДЕЛ 1 - дерево слоёв -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_layers\"></div>\r\n            </div>\r\n            <div name=\"content_layers\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 2 - реквизиты элемента -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_elm\"></div>\r\n            </div>\r\n            <div name=\"content_elm\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 3 - реквизиты створки -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_stv\">\r\n                    <span name=\"title\">Створка</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_stv\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 4 - реквизиты изделия -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_props\">\r\n                    <span name=\"title\">Изделие</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_props\" style=\"min-height: 330px;\"></div>\r\n\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"scroller__track\">\r\n        <div class=\"scroller__bar\" style=\"height: 26px; top: 0px;\"></div>\r\n    </div>\r\n\r\n</div>","tip_select_elm.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Свойства элемента</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент целиком<br />для изменения его свойств или перемещения</li>\r\n        <li>Добавить новый элемент делением текущего<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class=\"fa fa-question-circle fa-lg\"></i> Справка в wiki</a>\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Свойства узла</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и лучи узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
 return Editor;
 }));

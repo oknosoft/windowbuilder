@@ -74,7 +74,7 @@ function Editor(pwnd){
 	 * Панель выбора инструментов рисовалки
 	 * @type OTooolBar
 	 */
-	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '36px', left: '3px', name: 'left', height: '310px',
+	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '36px', left: '3px', name: 'left', height: '320px',
 		image_path: 'dist/imgs/',
 		buttons: [
 			{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['tip_select_elm.html']},
@@ -107,20 +107,20 @@ function Editor(pwnd){
 		image_path: 'dist/imgs/',
 		buttons: [
 
-			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-lg"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '24px'},
-			{name: 'calck', text: '<i class="fa fa-calculator fa-lg"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
+			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '30px'},
+			{name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
 			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока', float: 'left'},
-			{name: 'open', text: '<i class="fa fa-briefcase fa-lg"></i>', tooltip: 'Загрузить из другого заказа', float: 'left'},
+			{name: 'open', text: '<i class="fa fa-briefcase fa-fw"></i>', tooltip: 'Загрузить из другого заказа', float: 'left'},
 
 			{name: 'sep_1', text: '', float: 'left'},
-			{name: 'back', text: '<i class="fa fa-undo fa-lg"></i>', tooltip: 'Шаг назад', float: 'left'},
-			{name: 'rewind', text: '<i class="fa fa-repeat fa-lg"></i>', tooltip: 'Шаг вперед', float: 'left'},
+			{name: 'back', text: '<i class="fa fa-undo fa-fw"></i>', tooltip: 'Шаг назад', float: 'left'},
+			{name: 'rewind', text: '<i class="fa fa-repeat fa-fw"></i>', tooltip: 'Шаг вперед', float: 'left'},
 
 			{name: 'sep_2', text: '', float: 'left'},
-			{name: 'open_spec', text: '<i class="fa fa-table fa-lg"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
+			{name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
 
-			{name: 'close', text: '<i class="fa fa-times fa-lg"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
+			{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
 
 
 		], onclick: function (name) {
@@ -137,6 +137,7 @@ function Editor(pwnd){
 				case 'close':
 					if(_editor._pwnd._on_close)
 						_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
+					_editor.select_tool('select_node');
 					break;
 
 				case 'calck':
@@ -190,7 +191,7 @@ function Editor(pwnd){
 					break;
 			}
 		}});
-	_editor.tb_top.cell.style.fontSize = "90%";
+	//_editor.tb_top.cell.style.fontSize = "90%";
 
 
 	/**

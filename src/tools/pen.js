@@ -44,33 +44,34 @@ function ToolPen(){
 		$p.wsql.restore_options("editor", tool.options);
 		tool.profile._mixin(tool.options.wnd, ["inset", "clr", "bind_generatrix", "bind_node"]);
 
-		if(tool.profile.inset.empty()){
+		if(tool.profile.inset.empty() || rama_impost.indexOf(tool.profile.inset) == -1){
 			if(rama_impost.length)
 				tool.profile.inset = rama_impost[0];
+			else
+				tool.profile.inset = $p.blank.guid;
 		}
 
 		if(tool.profile.clr.empty())
 			tool.profile.clr = $p.cat.predefined_elmnts.predefined("Цвет_Основной");
 
-		if(!tool.profile._metadata.fields.inset.choice_links)
-			tool.profile._metadata.fields.inset.choice_links = [{
-				name: ["selection",	"ref"],
-				path: [
-					function(o, f){
-						if($p.is_data_obj(o)){
-							return rama_impost.indexOf(o) != -1;
+		tool.profile._metadata.fields.inset.choice_links = [{
+			name: ["selection",	"ref"],
+			path: [
+				function(o, f){
+					if($p.is_data_obj(o)){
+						return rama_impost.indexOf(o) != -1;
 
-						}else{
-							var refs = "";
-							rama_impost.forEach(function (o) {
-								if(refs)
-									refs += ", ";
-								refs += "'" + o.ref + "'";
-							});
-							return "_t_.ref in (" + refs + ")";
-						}
-					}]
-			}];
+					}else{
+						var refs = "";
+						rama_impost.forEach(function (o) {
+							if(refs)
+								refs += ", ";
+							refs += "'" + o.ref + "'";
+						});
+						return "_t_.ref in (" + refs + ")";
+					}
+				}]
+		}];
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
 		tool.wnd.attachHeadFields({
@@ -150,6 +151,8 @@ function ToolPen(){
 			Object.unobserve(_editor.project, observer);
 
 			decorate_layers(true);
+
+			delete tool.profile._metadata.fields.inset.choice_links;
 
 			tool.detache_wnd();
 

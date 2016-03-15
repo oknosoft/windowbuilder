@@ -36,11 +36,11 @@ function EditorAccordion(_editor, cell_acc) {
 			class_name: "",
 			name: 'aling_bottom',
 			buttons: [
-				{name: 'left', img: 'align_left.png', title: $p.msg.align_node_left, float: 'left'},
-				{name: 'bottom', img: 'align_bottom.png', title: $p.msg.align_node_bottom, float: 'left'},
-				{name: 'top', img: 'align_top.png', title: $p.msg.align_node_top, float: 'left'},
-				{name: 'right', img: 'align_right.png', title: $p.msg.align_node_right, float: 'left'},
-				{name: 'delete', text: '<i class="fa fa-trash-o fa-lg"></i>', title: 'Удалить элемент', float: 'right', paddingRight: '20px'}
+				{name: 'left', img: 'align_left.png', tooltip: $p.msg.align_node_left, float: 'left'},
+				{name: 'bottom', img: 'align_bottom.png', tooltip: $p.msg.align_node_bottom, float: 'left'},
+				{name: 'top', img: 'align_top.png', tooltip: $p.msg.align_node_top, float: 'left'},
+				{name: 'right', img: 'align_right.png', tooltip: $p.msg.align_node_right, float: 'left'},
+				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить элемент', float: 'right', paddingRight: '20px'}
 			],
 			image_path: "dist/imgs/",
 			onclick: function (name) {
@@ -58,7 +58,7 @@ function EditorAccordion(_editor, cell_acc) {
 			name: 'right',
 			image_path: 'dist/imgs/',
 			buttons: [
-				{name: 'standard_form', text: '<i class="fa fa-file-o fa-lg"></i>', title: 'Добавить рамный контур', float: 'left'
+				{name: 'standard_form', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'
 					//,sub: {
 					//	buttons: [
 					//		{name: 'square', img: 'square.png', float: 'left'},
@@ -77,10 +77,10 @@ function EditorAccordion(_editor, cell_acc) {
 					//		{name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]
 					//}
 				},
-				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-lg"></i>', title: 'Добавить створку', float: 'left'},
-				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-lg"></i>', title: 'Удалить слой', float: 'right', paddingRight: '20px'}
+				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: 'Добавить створку', float: 'left'},
+				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
 
-				//{name: 'close', text: '<i class="fa fa-times fa-lg"></i>', title: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
+				//{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
 
 			], onclick: function (name) {
 
