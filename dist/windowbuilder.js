@@ -1641,6 +1641,7 @@ BuilderElement.prototype.__define({
 			var t = this,
 				_xfields = t.project.ox._metadata.tabular_sections.coordinates.fields, //_dgfields = this.project._dp._metadata.fields
 				inset = _xfields.inset._clone();
+
 			inset.choice_links = [{
 				name: ["selection",	"ref"],
 				path: [
@@ -1666,6 +1667,7 @@ BuilderElement.prototype.__define({
 
 			return {
 				fields: {
+					info: t.project.ox._metadata.fields.note,
 					inset: inset,
 					clr: _xfields.clr,
 					x1: _xfields.x1,
@@ -1702,6 +1704,14 @@ BuilderElement.prototype.__define({
 		enumerable : false
 	},
 
+	// информация для редактора свойста
+	info: {
+		get : function(){
+			return "№" + this.elm;
+		},
+		enumerable : true
+	},
+
 	// вставка
 	inset: {
 		get : function(){
@@ -1720,6 +1730,39 @@ BuilderElement.prototype.__define({
 		},
 		set : function(v){
 			this._row.clr = v;
+			var clr = this._row.clr,
+				view_out = false,
+				clr_str = clr.clr_str;
+
+			if(!view_out){
+				if(!clr.clr_in.empty() && clr.clr_in.clr_str)
+					clr_str = clr.clr_in.clr_str;
+			}else{
+				if(!clr.clr_out.empty() && clr.clr_out.clr_str)
+					clr_str = clr.clr_out.clr_str;
+			}
+
+			if(clr_str){
+				clr = clr_str.split(",");
+				if(clr.length == 1){
+					if(clr_str[0] != "#")
+						clr_str = "#" + clr_str;
+					clr = new paper.Color(clr_str);
+					clr.alpha = 0.96;
+
+				}else if(clr.length == 4){
+					clr = new paper.Color(clr[0], clr[1], clr[2], clr[3]);
+
+				}else if(clr.length == 3){
+					clr = new paper.Color({
+						stops: [clr[0], clr[1], clr[2]],
+						origin: this.data.path.bounds.bottomLeft,
+						destination: this.data.path.bounds.topRight
+					});
+				}
+				this.path.fillColor = clr;
+			}
+
 		},
 		enumerable : false
 	},
@@ -1784,13 +1827,12 @@ function Filling(attr){
 
 	Filling.superclass.constructor.call(this, attr);
 
-	var _row = attr.row,
-		_filling = this;
+	var _row = attr.row;
 
 	// initialize
 	(function(){
 
-		var h = _filling.project.bounds.height;
+		var h = this.project.bounds.height + this.project.bounds.y;
 
 		//this.guide = true
 
@@ -1811,12 +1853,10 @@ function Filling(attr){
 			]);
 		this.data.path.closePath(true);
 		this.data.path.guide = true;
+		this.data.path.reduce();
 		this.data.path.strokeWidth = 0;
-		this.data.path.fillColor = {
-			stops: ['#def', '#d0ddff', '#eff'],
-			origin: this.data.path.bounds.bottomLeft,
-			destination: this.data.path.bounds.topRight
-		};
+
+		this.clr = _row.clr.empty() ? $p.cat.predefined_elmnts.predefined("Цвет_Основной") : _row.clr;
 		this.data.path.visible = false;
 
 		this.addChild(this.data.path);
@@ -2003,6 +2043,9 @@ Filling.prototype.__define({
 
 			if(data.path.segments.length && !data.path.closed)
 				data.path.closePath(true);
+
+			data.path.reduce();
+
 			data = attr = null;
 		},
 		enumerable : false
@@ -2105,12 +2148,31 @@ Filling.prototype.__define({
 		enumerable : false
 	},
 
+	// информация для редактора свойста
+	info: {
+		get : function(){
+			return "№" + this.elm + " w:" + this.bounds.width.toFixed(0) + " h:" + this.bounds.height.toFixed(0);
+		},
+		enumerable : true
+	},
+
 	select_node: {
 		value: function (v) {
-			if(node == "b")
-				this.data.path.firstSegment.selected = true;
-			else
-				this.data.path.lastSegment.selected = true;
+			var point, segm, delta = 10e9;
+			if(v == "b"){
+				point = this.bounds.bottomLeft;
+			}else{
+				point = this.bounds.topRight;
+			}
+			this.data.path.segments.forEach(function (curr) {
+				curr.selected = false;
+				if(point.getDistance(curr.point) < delta){
+					delta = point.getDistance(curr.point);
+					segm = curr;
+				}
+			});
+			segm.selected = true;
+			this.view.update();
 		},
 		enumerable : false
 	}
@@ -3050,7 +3112,7 @@ Profile.prototype.__define({
 	initialize: {
 		value : function(attr){
 
-			var h = this.project.bounds.height,
+			var h = this.project.bounds.height + this.project.bounds.y,
 				_row = this._row;
 
 			if(attr.r)
@@ -3078,9 +3140,6 @@ Profile.prototype.__define({
 				}
 			}
 
-			h = null;
-			_row = null;
-
 			// кеш лучей в узлах профиля
 			this.data._rays = new ProfileRays();
 
@@ -3090,7 +3149,9 @@ Profile.prototype.__define({
 			this.data.path.strokeColor = 'black';
 			this.data.path.strokeWidth = 1;
 			this.data.path.strokeScaling = false;
-			this.data.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
+
+			this.clr = _row.clr.empty() ? $p.cat.predefined_elmnts.predefined("Цвет_Основной") : _row.clr;
+			//this.data.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
 			this.addChild(this.data.path);
 			this.addChild(this.data.generatrix);
@@ -3100,6 +3161,9 @@ Profile.prototype.__define({
 			 */
 			if(this.parent)
 				Object.observe(this.parent._noti, this.observer, [consts.move_points]);
+
+			h = null;
+			_row = null;
 		},
 		enumerable : false
 	},
@@ -3252,6 +3316,14 @@ Profile.prototype.__define({
 		enumerable : false
 	},
 
+	// информация для редактора свойста
+	info: {
+		get : function(){
+			return "№" + this.elm + " α:" + this.angle_hor.toFixed(0) + "° l:" + this.length.toFixed(0);
+		},
+		enumerable : true
+	},
+
 	/**
 	 * Радиус сегмента профиля
 	 * @property r
@@ -3294,8 +3366,7 @@ Profile.prototype.__define({
 			if(!this.data.generatrix)
 				return;
 
-			var h = this.project.bounds.height,
-				_row = this._row,
+			var _row = this._row,
 
 				cnns = this.project.connections.cnns,
 				b = this.rays.b,
@@ -3313,33 +3384,18 @@ Profile.prototype.__define({
 					aperture_len: this.corns(2).getDistance(this.corns(3))
 				}),
 
-				gen = this.generatrix,
-				sub_gen,
-				ppoints = {};
+				gen = this.generatrix;
 
-			_row.x1 = this.b.x.round(3);
-			_row.y1 = (h - this.b.y).round(3);
-			_row.x2 = this.e.x.round(3);
-			_row.y2 = (h - this.e.y).round(3);
+			_row.x1 = this.x1;
+			_row.y1 = this.y1;
+			_row.x2 = this.x2;
+			_row.y2 = this.y2;
 			_row.path_data = gen.pathData;
 			_row.nom = this.nom;
 
-			// находим проекции четырёх вершин на образующую
-			for(var i = 1; i<=4; i++)
-				ppoints[i] = gen.getNearestPoint(this.corns(i));
-
-			// находим точки, расположенные ближе к концам образующей
-			ppoints.b = ppoints[1].getDistance(gen.firstSegment.point, true) < ppoints[4].getDistance(gen.firstSegment.point, true) ? ppoints[1] : ppoints[4];
-			ppoints.e = ppoints[2].getDistance(gen.lastSegment.point, true) < ppoints[3].getDistance(gen.lastSegment.point, true) ? ppoints[2] : ppoints[3];
-
-			// получаем фрагмент образующей
-			sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
 
 			// добавляем припуски соединений
-			_row.len = sub_gen.length +
-				(b.cnn && !b.cnn.empty() ? b.cnn.sz : 0) +
-				(e.cnn && !e.cnn.empty() ? e.cnn.sz : 0);
-			sub_gen.remove();
+			_row.len = this.length;
 
 			// сохраняем информацию о соединениях
 			if(b.profile){
@@ -3374,11 +3430,11 @@ Profile.prototype.__define({
 			// получаем углы между элементами и к горизонту
 			_row.angle_hor = this.angle_hor;
 
-			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - sub_gen.getTangentAt(0).angle) * 10) / 10;
+			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - gen.getTangentAt(0).angle) * 10) / 10;
 			if(_row.alp1 < 0)
 				_row.alp1 = _row.alp1 + 360;
 
-			_row.alp2 = Math.round((sub_gen.getTangentAt(sub_gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
+			_row.alp2 = Math.round((gen.getTangentAt(gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
 			if(_row.alp2 < 0)
 				_row.alp2 = _row.alp2 + 360;
 
@@ -3559,6 +3615,40 @@ Profile.prototype.__define({
 			return res < 0 ? res + 360 : res;
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Длина профиля с учетом соединений
+	 */
+	length: {
+
+		get: function () {
+			var gen = this.generatrix,
+				sub_gen,
+				ppoints = {},
+				b = this.rays.b,
+				e = this.rays.e,
+				res;
+
+			// находим проекции четырёх вершин на образующую
+			for(var i = 1; i<=4; i++)
+				ppoints[i] = gen.getNearestPoint(this.corns(i));
+
+			// находим точки, расположенные ближе к концам образующей
+			ppoints.b = ppoints[1].getDistance(gen.firstSegment.point, true) < ppoints[4].getDistance(gen.firstSegment.point, true) ? ppoints[1] : ppoints[4];
+			ppoints.e = ppoints[2].getDistance(gen.lastSegment.point, true) < ppoints[3].getDistance(gen.lastSegment.point, true) ? ppoints[2] : ppoints[3];
+
+			// получаем фрагмент образующей
+			sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
+
+			res = sub_gen.length +
+				(b.cnn && !b.cnn.empty() ? b.cnn.sz : 0) +
+				(e.cnn && !e.cnn.empty() ? e.cnn.sz : 0);
+			sub_gen.remove();
+
+			return res;
+		},
+		enumerable: false
 	},
 
 	/**
@@ -4919,6 +5009,29 @@ ToolElement.prototype.__define({
 		value: function(profile, cell){
 
 			this.profile = profile;
+			var oxml = profile instanceof Profile ? {
+				" ": [
+					{id: "info", path: "o.info", synonym: "Элемент", type: "ro", txt: profile.info},
+					"inset",
+					"clr"
+				],
+				"Начало": ["x1", "y1"],
+				"Конец": ["x2", "y2"]
+			} : {
+				" ": [
+					{id: "info", path: "o.info", synonym: "Элемент", type: "ro", txt: profile.info},
+					"inset",
+					"clr"
+				],
+				"Начало": [
+					{id: "x1", path: "o.x1", synonym: "X1", type: "ro", txt: profile.x1},
+					{id: "y1", path: "o.y1", synonym: "Y1", type: "ro", txt: profile.y1}
+				],
+				"Конец": [
+					{id: "x2", path: "o.x2", synonym: "X2", type: "ro", txt: profile.x2},
+					{id: "y2", path: "o.y2", synonym: "Y2", type: "ro", txt: profile.y2}
+				]
+			};
 
 			if(!this.wnd || !this._grid){
 
@@ -4926,12 +5039,7 @@ ToolElement.prototype.__define({
 
 				this._grid = this.wnd.attachHeadFields({
 					obj: profile,
-					oxml: {
-						" ": ["inset", "clr"],
-						"Начало": ["x1", "y1"],
-						"Конец": ["x2", "y2"]
-
-					}
+					oxml: oxml
 				});
 				this._grid.attachEvent("onRowSelect", function(id,ind){
 					if(id == "x1" || id == "y1")
@@ -4942,7 +5050,10 @@ ToolElement.prototype.__define({
 
 			}else{
 				if(this._grid._obj != profile)
-					this._grid.attach({obj: profile});
+					this._grid.attach({
+						obj: profile,
+						oxml: oxml
+					});
 			}
 		},
 		enumerable: false
@@ -7443,6 +7554,7 @@ Editor.prototype.__define({
 				var _canvas = document.createElement('canvas'); // собственно, канвас
 				_editor._wrapper.appendChild(_canvas);
 				_canvas.style.marginTop = "24px";
+				_canvas.style.backgroundColor = "#f9fbfa";
 
 				var _scheme = new Scheme(_canvas);
 

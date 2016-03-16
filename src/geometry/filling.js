@@ -20,13 +20,12 @@ function Filling(attr){
 
 	Filling.superclass.constructor.call(this, attr);
 
-	var _row = attr.row,
-		_filling = this;
+	var _row = attr.row;
 
 	// initialize
 	(function(){
 
-		var h = _filling.project.bounds.height;
+		var h = this.project.bounds.height + this.project.bounds.y;
 
 		//this.guide = true
 
@@ -47,12 +46,10 @@ function Filling(attr){
 			]);
 		this.data.path.closePath(true);
 		this.data.path.guide = true;
+		this.data.path.reduce();
 		this.data.path.strokeWidth = 0;
-		this.data.path.fillColor = {
-			stops: ['#def', '#d0ddff', '#eff'],
-			origin: this.data.path.bounds.bottomLeft,
-			destination: this.data.path.bounds.topRight
-		};
+
+		this.clr = _row.clr.empty() ? $p.cat.predefined_elmnts.predefined("Цвет_Основной") : _row.clr;
 		this.data.path.visible = false;
 
 		this.addChild(this.data.path);
@@ -239,6 +236,9 @@ Filling.prototype.__define({
 
 			if(data.path.segments.length && !data.path.closed)
 				data.path.closePath(true);
+
+			data.path.reduce();
+
 			data = attr = null;
 		},
 		enumerable : false
@@ -341,12 +341,31 @@ Filling.prototype.__define({
 		enumerable : false
 	},
 
+	// информация для редактора свойста
+	info: {
+		get : function(){
+			return "№" + this.elm + " w:" + this.bounds.width.toFixed(0) + " h:" + this.bounds.height.toFixed(0);
+		},
+		enumerable : true
+	},
+
 	select_node: {
 		value: function (v) {
-			if(node == "b")
-				this.data.path.firstSegment.selected = true;
-			else
-				this.data.path.lastSegment.selected = true;
+			var point, segm, delta = 10e9;
+			if(v == "b"){
+				point = this.bounds.bottomLeft;
+			}else{
+				point = this.bounds.topRight;
+			}
+			this.data.path.segments.forEach(function (curr) {
+				curr.selected = false;
+				if(point.getDistance(curr.point) < delta){
+					delta = point.getDistance(curr.point);
+					segm = curr;
+				}
+			});
+			segm.selected = true;
+			this.view.update();
 		},
 		enumerable : false
 	}

@@ -181,6 +181,7 @@ BuilderElement.prototype.__define({
 			var t = this,
 				_xfields = t.project.ox._metadata.tabular_sections.coordinates.fields, //_dgfields = this.project._dp._metadata.fields
 				inset = _xfields.inset._clone();
+
 			inset.choice_links = [{
 				name: ["selection",	"ref"],
 				path: [
@@ -206,6 +207,7 @@ BuilderElement.prototype.__define({
 
 			return {
 				fields: {
+					info: t.project.ox._metadata.fields.note,
 					inset: inset,
 					clr: _xfields.clr,
 					x1: _xfields.x1,
@@ -242,6 +244,14 @@ BuilderElement.prototype.__define({
 		enumerable : false
 	},
 
+	// информация для редактора свойста
+	info: {
+		get : function(){
+			return "№" + this.elm;
+		},
+		enumerable : true
+	},
+
 	// вставка
 	inset: {
 		get : function(){
@@ -260,6 +270,39 @@ BuilderElement.prototype.__define({
 		},
 		set : function(v){
 			this._row.clr = v;
+			var clr = this._row.clr,
+				view_out = false,
+				clr_str = clr.clr_str;
+
+			if(!view_out){
+				if(!clr.clr_in.empty() && clr.clr_in.clr_str)
+					clr_str = clr.clr_in.clr_str;
+			}else{
+				if(!clr.clr_out.empty() && clr.clr_out.clr_str)
+					clr_str = clr.clr_out.clr_str;
+			}
+
+			if(clr_str){
+				clr = clr_str.split(",");
+				if(clr.length == 1){
+					if(clr_str[0] != "#")
+						clr_str = "#" + clr_str;
+					clr = new paper.Color(clr_str);
+					clr.alpha = 0.96;
+
+				}else if(clr.length == 4){
+					clr = new paper.Color(clr[0], clr[1], clr[2], clr[3]);
+
+				}else if(clr.length == 3){
+					clr = new paper.Color({
+						stops: [clr[0], clr[1], clr[2]],
+						origin: this.data.path.bounds.bottomLeft,
+						destination: this.data.path.bounds.topRight
+					});
+				}
+				this.path.fillColor = clr;
+			}
+
 		},
 		enumerable : false
 	},

@@ -470,6 +470,7 @@ Editor.prototype.__define({
 				var _canvas = document.createElement('canvas'); // собственно, канвас
 				_editor._wrapper.appendChild(_canvas);
 				_canvas.style.marginTop = "24px";
+				_canvas.style.backgroundColor = "#f9fbfa";
 
 				var _scheme = new Scheme(_canvas);
 
