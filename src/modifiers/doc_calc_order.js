@@ -16,7 +16,47 @@ $p.modifiers.push(
 
 		// после создания надо заполнить реквизиты по умолчанию: контрагент, организация, договор
 		_mgr.attache_event("after_create", function (attr) {
-			attr = null;
+
+			var acl = $p.current_acl.acl_objs,
+				obj = this;
+
+			//Организация
+			acl.find_rows({
+				by_default: true,
+				type: $p.cat.organizations.metadata().obj_presentation || $p.cat.organizations.metadata().name}, function (row) {
+				obj.organization = row.acl_obj;
+				return false;
+			});
+
+			//Подразделение
+			acl.find_rows({
+				by_default: true,
+				type: $p.cat.divisions.metadata().obj_presentation || $p.cat.divisions.metadata().name}, function (row) {
+				obj.department = row.acl_obj;
+				return false;
+			});
+
+			//Контрагент
+			acl.find_rows({
+				by_default: true,
+				type: $p.cat.partners.metadata().obj_presentation || $p.cat.partners.metadata().name}, function (row) {
+				obj.partner = row.acl_obj;
+				return false;
+			});
+
+			//Договор
+
+			//Менеджер
+			obj.manager = $p.current_user;
+
+			//СостояниеТранспорта
+			obj.obj_delivery_state = $p.enm.obj_delivery_states.Черновик;
+
+			//Заказ
+			obj._obj.invoice = $p.generate_guid;
+
+			obj = null;
+
 		});
 
 		// перед записью надо присвоить номер для нового и рассчитать итоги
