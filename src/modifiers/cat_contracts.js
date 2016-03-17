@@ -20,5 +20,15 @@ $p.modifiers.push(
 				" left outer join enm_contract_kinds as _k_ on _k_.ref = _t_.contract_kind %3 %4 LIMIT 300";
 		};
 
+		_mgr.by_partner_and_org = function (partner, organization, contract_kind) {
+			if(!contract_kind)
+				contract_kind = $p.enm.contract_kinds.СПокупателем;
+			var res = _mgr.find_rows({owner: partner, organization: organization, contract_kind: contract_kind});
+			res.sort(function (a, b) {
+				return a.date > b.date;
+			});
+			return res.length ? res[0] : _mgr.get();
+		}
+
 	}
 );

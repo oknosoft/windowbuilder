@@ -376,6 +376,16 @@ $p.modifiers.push(
 				" left outer join enm_contract_kinds as _k_ on _k_.ref = _t_.contract_kind %3 %4 LIMIT 300";
 		};
 
+		_mgr.by_partner_and_org = function (partner, organization, contract_kind) {
+			if(!contract_kind)
+				contract_kind = $p.enm.contract_kinds.СПокупателем;
+			var res = _mgr.find_rows({owner: partner, organization: organization, contract_kind: contract_kind});
+			res.sort(function (a, b) {
+				return a.date > b.date;
+			});
+			return res.length ? res[0] : _mgr.get();
+		}
+
 	}
 );
 /**
@@ -895,6 +905,7 @@ $p.modifiers.push(
 			});
 
 			//Договор
+			obj.contract = $p.cat.contracts.by_partner_and_org(obj.partner, obj.organization);
 
 			//Менеджер
 			obj.manager = $p.current_user;
@@ -903,15 +914,62 @@ $p.modifiers.push(
 			obj.obj_delivery_state = $p.enm.obj_delivery_states.Черновик;
 
 			//Заказ
-			obj._obj.invoice = $p.generate_guid;
+			obj._obj.invoice = $p.generate_guid();
 
-			obj = null;
+			//Номер документа
+			return obj.new_number_doc();
 
 		});
 
 		// перед записью надо присвоить номер для нового и рассчитать итоги
 		_mgr.attache_event("before_save", function (attr) {
 			attr = null;
+		});
+
+		// при изменении реквизита
+		_mgr.attache_event("value_change", function (attr) {
+			if(attr.field == "organization" && this.contract.organization != attr.value){
+				this.contract = $p.cat.contracts.by_partner_and_org(this.partner, attr.value);
+
+			}else if(attr.field == "partner" && this.contract.owner != attr.value){
+				this.contract = $p.cat.contracts.by_partner_and_org(attr.value, this.organization);
+
+			}
+		});
+
+		// при установке нового номера
+		_mgr._obj_сonstructor.prototype.__define({
+			new_number_doc: {
+
+				value: function () {
+
+					var obj = this,
+						prefix = ($p.current_acl.prefix || "") + obj.organization.prefix,
+						code_length = obj._metadata.code_length - prefix.length,
+						part;
+
+					return $p.wsql.pouch.local[obj._manager.cachable].query("doc_calc_order/number_doc",
+						{
+							limit : 1,
+							include_docs: false,
+							startkey: prefix + '\uffff',
+							endkey: prefix,
+							descending: true
+						})
+						.then(function (res) {
+							if(res.rows.length){
+								part = (parseInt(res.rows[0].key.substr(prefix.length)) + 1).toFixed(0);
+							}else{
+								part = "1";
+							}
+							while (part.length < code_length)
+								part = "0" + part;
+							obj.number_doc = prefix + part;
+
+							return obj;
+						});
+				}
+			}
 		});
 
 	}
