@@ -463,8 +463,6 @@ Profile.prototype.__define({
 			if(this.parent)
 				Object.observe(this.parent._noti, this.observer, [consts.move_points]);
 
-			h = null;
-			_row = null;
 		},
 		enumerable : false
 	},

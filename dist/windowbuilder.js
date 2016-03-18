@@ -1502,7 +1502,6 @@ function BuilderElement(attr){
 	if(attr.proto){
 
 		this.inset = attr.proto.inset;
-		this.clr = attr.proto.clr;
 
 		if(attr.parent)
 			this.parent = attr.parent;
@@ -1511,6 +1510,8 @@ function BuilderElement(attr){
 
 		if(attr.proto instanceof Profile)
 			this.insertBelow(attr.proto);
+
+		this.clr = attr.proto.clr;
 
 	}else if(attr.parent)
 		this.parent = attr.parent;
@@ -1742,7 +1743,8 @@ BuilderElement.prototype.__define({
 					clr_str = clr.clr_out.clr_str;
 			}
 
-			if(clr_str){
+			// цвет элементу присваиваем только если он уже нарисован
+			if(clr_str && this.path instanceof paper.Path){
 				clr = clr_str.split(",");
 				if(clr.length == 1){
 					if(clr_str[0] != "#")
@@ -1756,8 +1758,8 @@ BuilderElement.prototype.__define({
 				}else if(clr.length == 3){
 					clr = new paper.Color({
 						stops: [clr[0], clr[1], clr[2]],
-						origin: this.data.path.bounds.bottomLeft,
-						destination: this.data.path.bounds.topRight
+						origin: this.path.bounds.bottomLeft,
+						destination: this.path.bounds.topRight
 					});
 				}
 				this.path.fillColor = clr;
@@ -3162,8 +3164,6 @@ Profile.prototype.__define({
 			if(this.parent)
 				Object.observe(this.parent._noti, this.observer, [consts.move_points]);
 
-			h = null;
-			_row = null;
 		},
 		enumerable : false
 	},
