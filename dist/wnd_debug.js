@@ -1017,7 +1017,7 @@ $p.modifiers.push(
 
 		_mgr.form_obj = function(pwnd, attr){
 
-			var o, wnd;
+			var o, wnd, evts = [];
 
 			attr.draw_tabular_sections = function (o, wnd, tabular_init) {
 
@@ -1152,7 +1152,6 @@ $p.modifiers.push(
 						return res;
 					}
 				});
-
 
 
 			/**
@@ -1526,7 +1525,9 @@ $p.modifiers.push(
 						wnd.elmnts[elm].unload();
 				});
 
-
+				evts.forEach(function (id) {
+					$p.eve.detachEvent(id);
+				});
 
 				return true;
 			}
@@ -1581,20 +1582,64 @@ $p.modifiers.push(
 			}
 
 			/**
+			 * Обработчик события _ЗаписанаХарактеристикаПостроителя_
+			 * @param scheme
+			 * @param sattr
+			 */
+			function characteristic_saved(scheme, sattr){
+
+				var ox = scheme.ox,
+					dp = scheme._dp,
+					row;
+
+				o.production.find_rows({characteristic: ox}, function (_row) {
+					row = _row;
+					return false;
+				})
+				if(!row || ox.calc_order != o)
+					return;
+
+				//nom,characteristic,note,quantity,unit,qty,len,width,s,first_cost,marginality,price,discount_percent,discount_percent_internal,
+				//discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,department,ordn,changed
+
+				row.nom = ox.owner;
+				row.note = dp.note;
+				row.quantity = dp.quantity || 1;
+				row.discount_percent = dp.discount_percent;
+				row.discount_percent_internal = dp.discount_percent_internal;
+				if(row.unit.owner != row.nom)
+					row.unit = row.nom.storage_unit;
+
+			}
+
+			/**
 			 * ОткрытьПостроитель()
 			 * @param create_new {Boolean} - создавать новое изделие или открывать в текущей строке
 			 */
 			function open_builder(create_new){
-				var selId, row, attr;
+				var selId, row;
 
 				if(create_new){
+
 					row = production_new_row();
-					// объект продукции создаём, но из 1С не читаем и пока не записываем
+
+					// объект продукции создаём, но из базы не читаем и пока не записываем
 					$p.cat.characteristics.create({
 						ref: $p.generate_guid(),
 						calc_order: o,
 						product: row.row
 					}, true)
+						.then(function (ox) {
+
+							// записываем расчет, если не сделали этого ранее
+							if(o.is_new())
+								return o.save()
+									.then(function () {
+										return ox;
+									});
+							else
+								return ox;
+						})
 						.then(function (ox) {
 							row.characteristic = ox;
 							$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
@@ -1602,8 +1647,16 @@ $p.modifiers.push(
 
 				}else if((selId = production_get_sel_index()) != undefined){
 					row = o.production.get(selId);
-					if(row && !$p.is_empty_guid(row.characteristic.ref))
-						$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+					if(row){
+						if(row.characteristic.empty() || row.characteristic.calc_order.empty()){
+
+						}else
+							$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+					}
+				}
+
+				if(!evts.length){
+					evts.push($p.eve.attachEvent("characteristic_saved", characteristic_saved));
 				}
 			}
 
@@ -2632,26 +2685,17 @@ $p.modifiers.push(
 				spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin", "qty,totqty,totqty1");
 
 				// информируем мир об окончании расчета координат
+				$p.eve.callEvent("coordinates_calculated", [scheme, attr]);
+
+				// рассчитываем цены
+
+
+				// информируем мир о записи продукции
 				ox.save()
 					.then(function () {
 						$p.msg.show_msg("Спецификация рассчитана");
-						$p.eve.callEvent("coordinates_saved", [scheme, attr]);
+						$p.eve.callEvent("characteristic_saved", [scheme, attr]);
 					});
-
-				//$p.rest.build_select(attr, {
-				//	rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",
-				//	class_name: "cat.characteristics"
-				//});
-				//
-				//return $p.ajax.post_ex(attr.url,
-				//	JSON.stringify({
-				//		dp: scheme._dp._obj,
-				//		ox: ox._obj,
-				//		doc: ox.calc_order._obj
-				//	}), attr)
-				//	.then(function (req) {
-				//		return JSON.parse(req.response);
-				//	});
 
 			});
 

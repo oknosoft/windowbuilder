@@ -1647,16 +1647,21 @@ BuilderElement.prototype.__define({
 				name: ["selection",	"ref"],
 				path: [
 					function(o, f){
+						var selection = t instanceof Filling ?
+						{elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}} :
+						{elm_type: t.nom.elm_type};
+
 						if($p.is_data_obj(o)){
 							var ok = false;
-							t.project.sys.elmnts.find_rows({elm_type: t.nom.elm_type, nom: o}, function (row) {
+							selection.nom = o;
+							t.project.sys.elmnts.find_rows(selection, function (row) {
 								ok = true;
 								return false;
 							});
 							return ok;
 						}else{
 							var refs = "";
-							t.project.sys.elmnts.find_rows({elm_type: t.nom.elm_type}, function (row) {
+							t.project.sys.elmnts.find_rows(selection, function (row) {
 								if(refs)
 									refs += ", ";
 								refs += "'" + row.nom.ref + "'";
@@ -4659,23 +4664,25 @@ Scheme.prototype.__define({
 				_scheme.clear();
 
 				// переприсваиваем систему через номенклатуру характеристики
-				if(!base_block.production.owner.empty())
-					ox.owner = base_block.production.owner;
-				else if(!base_block.sys.nom.empty())
-					ox.owner = base_block.sys.nom;
+				base_block.production.load().then(function(obx){
 
-				// очищаем табчасти, перезаполняем контуры и координаты
-				ox.specification.clear();
-				ox.glasses.clear();
-				ox.glass_specification.clear();
-				ox.mosquito.clear();
+					if(!obx.owner.empty())
+						ox.owner = obx.owner;
 
-				ox.constructions.load(base_block.constructions);
-				ox.coordinates.load(base_block.coordinates);
-				ox.params.load(base_block.params);
-				ox.cnn_elmnts.load(base_block.cnn_elmnts);
+					// очищаем табчасти, перезаполняем контуры и координаты
+					ox.specification.clear();
+					ox.glasses.clear();
+					ox.glass_specification.clear();
+					ox.mosquito.clear();
 
-				_scheme.load(ox);
+					ox.constructions.load(base_block.constructions);
+					ox.coordinates.load(base_block.coordinates);
+					ox.params.load(base_block.params);
+					ox.cnn_elmnts.load(base_block.cnn_elmnts);
+
+					_scheme.load(ox);
+
+				});
 
 			}
 
@@ -6994,8 +7001,8 @@ function EditorAccordion(_editor, cell_acc) {
 				_grid = layout.cells("a").attachHeadFields({
 					obj: obj,
 					oxml: {
-						"Свойства": ["sys", "clr", "len", "height", "s"],
-						"Строка заказа": ["quantity", "price_internal", "discount_percent_internal", "discount_percent", "price", "amount"]
+						"Свойства": ["sys","clr","len","height","s"],
+						"Строка заказа": ["quantity","price_internal","discount_percent_internal","discount_percent","price","amount","note"]
 
 					},
 					ts: "extra_fields",

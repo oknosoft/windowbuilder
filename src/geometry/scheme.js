@@ -598,23 +598,25 @@ Scheme.prototype.__define({
 				_scheme.clear();
 
 				// переприсваиваем систему через номенклатуру характеристики
-				if(!base_block.production.owner.empty())
-					ox.owner = base_block.production.owner;
-				else if(!base_block.sys.nom.empty())
-					ox.owner = base_block.sys.nom;
+				base_block.production.load().then(function(obx){
 
-				// очищаем табчасти, перезаполняем контуры и координаты
-				ox.specification.clear();
-				ox.glasses.clear();
-				ox.glass_specification.clear();
-				ox.mosquito.clear();
+					if(!obx.owner.empty())
+						ox.owner = obx.owner;
 
-				ox.constructions.load(base_block.constructions);
-				ox.coordinates.load(base_block.coordinates);
-				ox.params.load(base_block.params);
-				ox.cnn_elmnts.load(base_block.cnn_elmnts);
+					// очищаем табчасти, перезаполняем контуры и координаты
+					ox.specification.clear();
+					ox.glasses.clear();
+					ox.glass_specification.clear();
+					ox.mosquito.clear();
 
-				_scheme.load(ox);
+					ox.constructions.load(base_block.constructions);
+					ox.coordinates.load(base_block.coordinates);
+					ox.params.load(base_block.params);
+					ox.cnn_elmnts.load(base_block.cnn_elmnts);
+
+					_scheme.load(ox);
+
+				});
 
 			}
 

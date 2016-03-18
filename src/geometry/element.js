@@ -187,16 +187,21 @@ BuilderElement.prototype.__define({
 				name: ["selection",	"ref"],
 				path: [
 					function(o, f){
+						var selection = t instanceof Filling ?
+						{elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}} :
+						{elm_type: t.nom.elm_type};
+
 						if($p.is_data_obj(o)){
 							var ok = false;
-							t.project.sys.elmnts.find_rows({elm_type: t.nom.elm_type, nom: o}, function (row) {
+							selection.nom = o;
+							t.project.sys.elmnts.find_rows(selection, function (row) {
 								ok = true;
 								return false;
 							});
 							return ok;
 						}else{
 							var refs = "";
-							t.project.sys.elmnts.find_rows({elm_type: t.nom.elm_type}, function (row) {
+							t.project.sys.elmnts.find_rows(selection, function (row) {
 								if(refs)
 									refs += ", ";
 								refs += "'" + row.nom.ref + "'";

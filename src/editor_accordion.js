@@ -271,8 +271,8 @@ function EditorAccordion(_editor, cell_acc) {
 				_grid = layout.cells("a").attachHeadFields({
 					obj: obj,
 					oxml: {
-						"Свойства": ["sys", "clr", "len", "height", "s"],
-						"Строка заказа": ["quantity", "price_internal", "discount_percent_internal", "discount_percent", "price", "amount"]
+						"Свойства": ["sys","clr","len","height","s"],
+						"Строка заказа": ["quantity","price_internal","discount_percent_internal","discount_percent","price","amount","note"]
 
 					},
 					ts: "extra_fields",

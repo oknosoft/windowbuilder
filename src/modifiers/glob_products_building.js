@@ -691,26 +691,17 @@ $p.modifiers.push(
 				spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin", "qty,totqty,totqty1");
 
 				// информируем мир об окончании расчета координат
+				$p.eve.callEvent("coordinates_calculated", [scheme, attr]);
+
+				// рассчитываем цены
+
+
+				// информируем мир о записи продукции
 				ox.save()
 					.then(function () {
 						$p.msg.show_msg("Спецификация рассчитана");
-						$p.eve.callEvent("coordinates_saved", [scheme, attr]);
+						$p.eve.callEvent("characteristic_saved", [scheme, attr]);
 					});
-
-				//$p.rest.build_select(attr, {
-				//	rest_name: "Module_ИнтеграцияЗаказДилера/РассчитатьСпецификациюСтроки/",
-				//	class_name: "cat.characteristics"
-				//});
-				//
-				//return $p.ajax.post_ex(attr.url,
-				//	JSON.stringify({
-				//		dp: scheme._dp._obj,
-				//		ox: ox._obj,
-				//		doc: ox.calc_order._obj
-				//	}), attr)
-				//	.then(function (req) {
-				//		return JSON.parse(req.response);
-				//	});
 
 			});
 
