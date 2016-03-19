@@ -109,7 +109,7 @@ $p.modifiers.push(
 						"Контактная информация": ["partner", "client_of_dealer", "phone",
 							{id: "shipping_address", path: "o.shipping_address", synonym: "Адрес доставки", type: "addr", txt: o["shipping_address"]}
 						],
-						"Дополнительные реквизиты": ["invoice_state",
+						"Дополнительные реквизиты": [
 							{id: "obj_delivery_state", path: "o.obj_delivery_state", synonym: "Состояние транспорта", type: "ro", txt: o["obj_delivery_state"].presentation}
 						]
 					}
