@@ -134,7 +134,7 @@ function Profile(attr){
 
 		var res = this.rays[node],
 			c_d = this.project.check_distance,
-			open_cnn = this.project.sys.allow_open_cnn;
+			open_cnn = this.project._dp.sys.allow_open_cnn;
 
 		if(!point)
 			point = this[node];

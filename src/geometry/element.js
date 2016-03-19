@@ -194,14 +194,14 @@ BuilderElement.prototype.__define({
 						if($p.is_data_obj(o)){
 							var ok = false;
 							selection.nom = o;
-							t.project.sys.elmnts.find_rows(selection, function (row) {
+							t.project._dp.sys.elmnts.find_rows(selection, function (row) {
 								ok = true;
 								return false;
 							});
 							return ok;
 						}else{
 							var refs = "";
-							t.project.sys.elmnts.find_rows(selection, function (row) {
+							t.project._dp.sys.elmnts.find_rows(selection, function (row) {
 								if(refs)
 									refs += ", ";
 								refs += "'" + row.nom.ref + "'";

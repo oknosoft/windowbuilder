@@ -995,14 +995,14 @@ Contour.prototype.__define({
 					function(o, f){
 						if($p.is_data_obj(o)){
 							var ok = false;
-							t.project.sys.furn.find_rows({furn: o}, function (row) {
+							t.project._dp.sys.furn.find_rows({furn: o}, function (row) {
 								ok = true;
 								return false;
 							});
 							return ok;
 						}else{
 							var refs = "";
-							t.project.sys.furn.each(function (row) {
+							t.project._dp.sys.furn.each(function (row) {
 								if(refs)
 									refs += ", ";
 								refs += "'" + row.furn.ref + "'";
@@ -1654,14 +1654,14 @@ BuilderElement.prototype.__define({
 						if($p.is_data_obj(o)){
 							var ok = false;
 							selection.nom = o;
-							t.project.sys.elmnts.find_rows(selection, function (row) {
+							t.project._dp.sys.elmnts.find_rows(selection, function (row) {
 								ok = true;
 								return false;
 							});
 							return ok;
 						}else{
 							var refs = "";
-							t.project.sys.elmnts.find_rows(selection, function (row) {
+							t.project._dp.sys.elmnts.find_rows(selection, function (row) {
 								if(refs)
 									refs += ", ";
 								refs += "'" + row.nom.ref + "'";
@@ -2840,7 +2840,7 @@ function Profile(attr){
 
 		var res = this.rays[node],
 			c_d = this.project.check_distance,
-			open_cnn = this.project.sys.allow_open_cnn;
+			open_cnn = this.project._dp.sys.allow_open_cnn;
 
 		if(!point)
 			point = this[node];
@@ -4089,9 +4089,17 @@ function Scheme(_canvas){
 	var _scheme = paper.project = this,
 		_data = _scheme.data = {
 			_bounds: null,
+			_calc_order_row: null,
 			_update_timer: 0
 		},
-		_changes = [];
+		_changes = [],
+		_dp_observer = function (changes) {
+			changes.forEach(function(change){
+				if(change.type == "update"){
+
+				}
+			});
+		};
 
 	/**
 	 * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
@@ -4108,11 +4116,17 @@ function Scheme(_canvas){
 
 	this._dp = $p.dp.buyers_order.create();
 
+	/**
+	 * Виртуальная табличная часть
+	 */
 	this._dp.__define("extra_fields", {
 		get: function(){
 			return _scheme.ox.params;
 		}
 	});
+
+	// начинаем следить за _dp, чтобы обработать изменения цвета и параметров
+	Object.observe(this._dp, _dp_observer, ["update"]);
 
 
 	/**
@@ -4192,23 +4206,14 @@ function Scheme(_canvas){
 	});
 
 	/**
-	 * СистемаОбъект текущего изделия
-	 * @property sys
-	 * @type _cat.production_params
+	 *
 	 */
-	this.__define("sys", {
+	this.__define("_calc_order_row", {
 		get: function () {
-			return _scheme._dp.sys;
-		},
-		set: function (v) {
-
-			if(_scheme._dp.sys == v)
-				return;
-
-			_scheme._dp.sys = v;
-
-			//TODO: установить номенклатуру и (???) цвет по умолчанию в продукции
-
+			if(!_calc_order_row && !this.ox.empty()){
+				_calc_order_row = this.ox.calc_order_row;
+			}
+			return _calc_order_row;
 		},
 		enumerable: false
 	});
@@ -4316,7 +4321,7 @@ function Scheme(_canvas){
 				point: [0, 0],
 				size: [o.x, o.y]
 			});
-			o = null;
+			_data._calc_order_row = o = null;
 
 			// создаём семейство конструкций
 			_data._loading = true;
@@ -4551,6 +4556,8 @@ function Scheme(_canvas){
 	this.unload = function () {
 		this.clear();
 		this.remove();
+		Object.unobserve(this._dp, _dp_observer);
+		_calc_order_row = null;
 	};
 
 	/**
@@ -4634,13 +4641,24 @@ Scheme.prototype.__define({
 	save_coordinates: {
 		value: function (attr) {
 
-			this.ox.cnn_elmnts.clear();
-			this.ox.glasses.clear();
+			var ox = this.ox;
+			ox.cnn_elmnts.clear();
+			ox.glasses.clear();
+			ox.x = this.bounds.width.round(1);
+			ox.y = this.bounds.height.round(1);
 
-			this.getItems({class: Contour, parent: undefined}).forEach(function (contour) {
-					contour.save_coordinates();
-				}
-			);
+			// смещаем слои, чтобы расположить изделие в начале координат
+			//var bpoint = this.bounds.point;
+			//if(bpoint.length > consts.sticking0){
+			//	this.getItems({class: Contour}).forEach(function (contour) {
+			//		contour.position = contour.position.subtract(bpoint);
+			//	});
+			//	this.data._bounds = null;
+			//};
+
+			this.layers.forEach(function (contour) {
+				contour.save_coordinates();
+			});
 			$p.eve.callEvent("save_coordinates", [this, attr]);
 		}
 	},
@@ -4722,7 +4740,7 @@ Scheme.prototype.__define({
 
 	default_inset: {
 		value: function (attr) {
-			return this.sys.inserts(attr.elm_type)[0];
+			return this._dp.sys.inserts(attr.elm_type)[0];
 		},
 		enumerable: false
 	},
@@ -5378,7 +5396,7 @@ function ToolPen(){
 	// подключает окно редактора
 	function tool_wnd(){
 
-		var rama_impost = _editor.project.sys.inserts();
+		var rama_impost = _editor.project._db.sys.inserts();
 
 		// создаём экземпляр обработки
 		tool.profile = $p.dp.builder_pen.create();
@@ -7001,8 +7019,18 @@ function EditorAccordion(_editor, cell_acc) {
 				_grid = layout.cells("a").attachHeadFields({
 					obj: obj,
 					oxml: {
-						"Свойства": ["sys","clr","len","height","s"],
-						"Строка заказа": ["quantity","price_internal","discount_percent_internal","discount_percent","price","amount","note"]
+						"Свойства": ["sys","clr",
+							{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro", txt: obj.len},
+							{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro", txt: obj.height},
+							{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro", txt: obj.s}
+						],
+						"Строка заказа": ["quantity",
+							{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro", txt: obj.price_internal},
+							{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro", txt: obj.discount_percent_internal},
+							"discount_percent",
+							{id: "price", path: "o.price", synonym: "Цена", type: "ro", txt: obj.price},
+							{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro", txt: obj.amount},
+							"note"]
 
 					},
 					ts: "extra_fields",

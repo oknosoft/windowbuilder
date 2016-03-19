@@ -966,14 +966,14 @@ Contour.prototype.__define({
 					function(o, f){
 						if($p.is_data_obj(o)){
 							var ok = false;
-							t.project.sys.furn.find_rows({furn: o}, function (row) {
+							t.project._dp.sys.furn.find_rows({furn: o}, function (row) {
 								ok = true;
 								return false;
 							});
 							return ok;
 						}else{
 							var refs = "";
-							t.project.sys.furn.each(function (row) {
+							t.project._dp.sys.furn.each(function (row) {
 								if(refs)
 									refs += ", ";
 								refs += "'" + row.furn.ref + "'";

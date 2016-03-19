@@ -271,8 +271,18 @@ function EditorAccordion(_editor, cell_acc) {
 				_grid = layout.cells("a").attachHeadFields({
 					obj: obj,
 					oxml: {
-						"Свойства": ["sys","clr","len","height","s"],
-						"Строка заказа": ["quantity","price_internal","discount_percent_internal","discount_percent","price","amount","note"]
+						"Свойства": ["sys","clr",
+							{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro", txt: obj.len},
+							{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro", txt: obj.height},
+							{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro", txt: obj.s}
+						],
+						"Строка заказа": ["quantity",
+							{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro", txt: obj.price_internal},
+							{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro", txt: obj.discount_percent_internal},
+							"discount_percent",
+							{id: "price", path: "o.price", synonym: "Цена", type: "ro", txt: obj.price},
+							{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro", txt: obj.amount},
+							"note"]
 
 					},
 					ts: "extra_fields",
