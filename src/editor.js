@@ -203,7 +203,7 @@ function Editor(pwnd){
 
 		this.attache = function (obj) {
 
-			if(!obj.cnstr || (_grid && _grid._obj === obj))
+			if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
 				return;
 
 			var attr = {

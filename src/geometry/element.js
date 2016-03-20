@@ -60,7 +60,7 @@ function BuilderElement(attr){
 		attr.row.cnstr = this.parent.cnstr;
 
 	if(!attr.row.elm)
-		attr.row.elm = this.id;
+		attr.row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
 
 	if(attr.row.elm_type.empty() && !this.inset.empty())
 		attr.row.elm_type = this.inset.nom().elm_type;

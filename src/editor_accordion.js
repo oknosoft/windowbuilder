@@ -245,7 +245,7 @@ function EditorAccordion(_editor, cell_acc) {
 			});
 
 			$p.eve.attachEvent("layer_activated", function (l) {
-				if(l.cnstr && l.cnstr != tree.getSelectedItemId())
+				if(l && l.cnstr && l.cnstr != tree.getSelectedItemId())
 					tree.selectItem(l.cnstr);
 			});
 

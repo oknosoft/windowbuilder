@@ -580,6 +580,7 @@ Scheme.prototype.__define({
 			ox.glasses.clear();
 			ox.x = this.bounds.width.round(1);
 			ox.y = this.bounds.height.round(1);
+			ox.s = this.area;
 
 			// смещаем слои, чтобы расположить изделие в начале координат
 			//var bpoint = this.bounds.point;
@@ -668,6 +669,16 @@ Scheme.prototype.__define({
 	contours: {
 		get: function () {
 			return this.getItems({class: Contour});
+		},
+		enumerable: false
+	},
+
+	/**
+	 * Площадь изделия. TODO: переделать с учетом пустот, наклонов и криволинейностей
+	 */
+	area: {
+		get: function () {
+			return (this.bounds.width * this.bounds.height / 1000000).round(3);
 		},
 		enumerable: false
 	},

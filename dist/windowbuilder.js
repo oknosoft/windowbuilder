@@ -315,12 +315,24 @@ function Contour(attr){
 	 * @method remove
 	 */
 	this.remove = function () {
-		_contour.children.forEach(function (elm) {
-			elm.remove();
+
+		//удаляем детей
+		while(this.children.length)
+			this.children[0].remove();
+
+		var ox = this.project.ox,
+			_del_rows = ox.coordinates.find_rows({cnstr: this.cnstr});
+		_del_rows.forEach(function (row) {
+			ox.coordinates.del(row._row);
 		});
-		if(_contour.project.ox === _row._owner._owner)
+		_del_rows = null;
+
+		// удаляем себя
+		if(ox === _row._owner._owner)
 			_row._owner.del(_row);
 		_row = null;
+
+		// стандартные действия по удалению элемента paperjs
 		Contour.superclass.remove.call(this);
 	};
 
@@ -441,7 +453,7 @@ Contour.prototype.__define({
 		value: function(on_contour_redrawed){
 
 			if(!this.visible)
-				return on_contour_redrawed();
+				return on_contour_redrawed ? on_contour_redrawed() : undefined;
 
 			var _contour = this,
 				profiles = this.profiles,
@@ -499,6 +511,12 @@ Contour.prototype.__define({
 		value: function () {
 
 			// ответственность за строку в таблице конструкций лежит на контуре
+
+			// удаляем скрытые заполнения
+			this.glasses(false, true).forEach(function (glass) {
+				if(!glass.visible)
+					glass.remove();
+			});
 
 			// запись в таблице координат, каждый элемент пересчитывает самостоятельно
 			this.children.forEach(function (elm) {
@@ -1520,7 +1538,7 @@ function BuilderElement(attr){
 		attr.row.cnstr = this.parent.cnstr;
 
 	if(!attr.row.elm)
-		attr.row.elm = this.id;
+		attr.row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
 
 	if(attr.row.elm_type.empty() && !this.inset.empty())
 		attr.row.elm_type = this.inset.nom().elm_type;
@@ -1899,7 +1917,7 @@ Filling.prototype.__define({
 	save_coordinates: {
 		value: function () {
 
-			var h = this.project.bounds.height,
+			var h = this.project.bounds.height + this.project.bounds.y,
 				_row = this._row,
 				bounds = this.bounds,
 				cnns = this.project.connections.cnns,
@@ -1913,13 +1931,16 @@ Filling.prototype.__define({
 					thickness: this.thickness
 				});
 
-			_row.x1 = Math.round(bounds.bottomLeft.x * 1000) / 1000;
-			_row.y1 = Math.round((h - bounds.bottomLeft.y) * 1000) / 1000;
-			_row.x2 = Math.round(bounds.topRight.x * 1000) / 1000;
-			_row.y2 = Math.round((h - bounds.topRight.y) * 1000) / 1000;
+			_row.x1 = (bounds.bottomLeft.x - this.project.bounds.x).round(3);
+			_row.y1 = (h - bounds.bottomLeft.y).round(3);
+			_row.x2 = (bounds.topRight.x - this.project.bounds.x).round(3);
+			_row.y2 = (h - bounds.topRight.y).round(3);
 			_row.path_data = this.path.pathData;
 
 			this.profiles.forEach(function (curr) {
+				if(!curr.profile || !curr.profile._row || !curr.cnn){
+					throw new ReferenceError("Не найдено ребро заполнения");
+				}
 				cnns.add({
 					elm1: _row.elm,
 					elm2: curr.profile._row.elm,
@@ -1928,7 +1949,7 @@ Filling.prototype.__define({
 					cnn: curr.cnn.ref,
 					aperture_len: curr.sub_path.length
 				});
-			});
+			}.bind(this));
 
 		},
 		enumerable : false
@@ -4646,6 +4667,7 @@ Scheme.prototype.__define({
 			ox.glasses.clear();
 			ox.x = this.bounds.width.round(1);
 			ox.y = this.bounds.height.round(1);
+			ox.s = this.area;
 
 			// смещаем слои, чтобы расположить изделие в начале координат
 			//var bpoint = this.bounds.point;
@@ -4734,6 +4756,16 @@ Scheme.prototype.__define({
 	contours: {
 		get: function () {
 			return this.getItems({class: Contour});
+		},
+		enumerable: false
+	},
+
+	/**
+	 * Площадь изделия. TODO: переделать с учетом пустот, наклонов и криволинейностей
+	 */
+	area: {
+		get: function () {
+			return (this.bounds.width * this.bounds.height / 1000000).round(3);
 		},
 		enumerable: false
 	},
@@ -5396,7 +5428,7 @@ function ToolPen(){
 	// подключает окно редактора
 	function tool_wnd(){
 
-		var rama_impost = _editor.project._db.sys.inserts();
+		var rama_impost = _editor.project._dp.sys.inserts();
 
 		// создаём экземпляр обработки
 		tool.profile = $p.dp.builder_pen.create();
@@ -6259,11 +6291,11 @@ function ToolSelectNode(){
 
 		if (event.point){
 
-			// Hit test items.
-			//stroke:true
+			// отдаём предпочтение выделенным ранее элементам
 			tool.hitItem = paper.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
+			// во вторую очередь - тем элементам, которые не скрыты
 			if (!tool.hitItem)
-				tool.hitItem = paper.project.hitTest(event.point, { fill:true, guides: false, tolerance: hitSize });
+				tool.hitItem = paper.project.hitTest(event.point, { fill:true, guides: false, visible: true, tolerance: hitSize });
 
 			// Hit test selected handles
 			hit = paper.project.hitTest(event.point, { selected: true, handles: true, tolerance: hitSize });
@@ -6993,7 +7025,7 @@ function EditorAccordion(_editor, cell_acc) {
 			});
 
 			$p.eve.attachEvent("layer_activated", function (l) {
-				if(l.cnstr && l.cnstr != tree.getSelectedItemId())
+				if(l && l.cnstr && l.cnstr != tree.getSelectedItemId())
 					tree.selectItem(l.cnstr);
 			});
 
@@ -7322,7 +7354,7 @@ function Editor(pwnd){
 
 		this.attache = function (obj) {
 
-			if(!obj.cnstr || (_grid && _grid._obj === obj))
+			if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
 				return;
 
 			var attr = {

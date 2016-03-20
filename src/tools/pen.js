@@ -35,7 +35,7 @@ function ToolPen(){
 	// подключает окно редактора
 	function tool_wnd(){
 
-		var rama_impost = _editor.project._db.sys.inserts();
+		var rama_impost = _editor.project._dp.sys.inserts();
 
 		// создаём экземпляр обработки
 		tool.profile = $p.dp.builder_pen.create();

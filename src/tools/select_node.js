@@ -42,11 +42,11 @@ function ToolSelectNode(){
 
 		if (event.point){
 
-			// Hit test items.
-			//stroke:true
+			// отдаём предпочтение выделенным ранее элементам
 			tool.hitItem = paper.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
+			// во вторую очередь - тем элементам, которые не скрыты
 			if (!tool.hitItem)
-				tool.hitItem = paper.project.hitTest(event.point, { fill:true, guides: false, tolerance: hitSize });
+				tool.hitItem = paper.project.hitTest(event.point, { fill:true, guides: false, visible: true, tolerance: hitSize });
 
 			// Hit test selected handles
 			hit = paper.project.hitTest(event.point, { selected: true, handles: true, tolerance: hitSize });

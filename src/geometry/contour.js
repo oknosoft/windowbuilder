@@ -286,12 +286,24 @@ function Contour(attr){
 	 * @method remove
 	 */
 	this.remove = function () {
-		_contour.children.forEach(function (elm) {
-			elm.remove();
+
+		//удаляем детей
+		while(this.children.length)
+			this.children[0].remove();
+
+		var ox = this.project.ox,
+			_del_rows = ox.coordinates.find_rows({cnstr: this.cnstr});
+		_del_rows.forEach(function (row) {
+			ox.coordinates.del(row._row);
 		});
-		if(_contour.project.ox === _row._owner._owner)
+		_del_rows = null;
+
+		// удаляем себя
+		if(ox === _row._owner._owner)
 			_row._owner.del(_row);
 		_row = null;
+
+		// стандартные действия по удалению элемента paperjs
 		Contour.superclass.remove.call(this);
 	};
 
@@ -412,7 +424,7 @@ Contour.prototype.__define({
 		value: function(on_contour_redrawed){
 
 			if(!this.visible)
-				return on_contour_redrawed();
+				return on_contour_redrawed ? on_contour_redrawed() : undefined;
 
 			var _contour = this,
 				profiles = this.profiles,
@@ -470,6 +482,12 @@ Contour.prototype.__define({
 		value: function () {
 
 			// ответственность за строку в таблице конструкций лежит на контуре
+
+			// удаляем скрытые заполнения
+			this.glasses(false, true).forEach(function (glass) {
+				if(!glass.visible)
+					glass.remove();
+			});
 
 			// запись в таблице координат, каждый элемент пересчитывает самостоятельно
 			this.children.forEach(function (elm) {

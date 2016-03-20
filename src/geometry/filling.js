@@ -85,7 +85,7 @@ Filling.prototype.__define({
 	save_coordinates: {
 		value: function () {
 
-			var h = this.project.bounds.height,
+			var h = this.project.bounds.height + this.project.bounds.y,
 				_row = this._row,
 				bounds = this.bounds,
 				cnns = this.project.connections.cnns,
@@ -99,13 +99,16 @@ Filling.prototype.__define({
 					thickness: this.thickness
 				});
 
-			_row.x1 = Math.round(bounds.bottomLeft.x * 1000) / 1000;
-			_row.y1 = Math.round((h - bounds.bottomLeft.y) * 1000) / 1000;
-			_row.x2 = Math.round(bounds.topRight.x * 1000) / 1000;
-			_row.y2 = Math.round((h - bounds.topRight.y) * 1000) / 1000;
+			_row.x1 = (bounds.bottomLeft.x - this.project.bounds.x).round(3);
+			_row.y1 = (h - bounds.bottomLeft.y).round(3);
+			_row.x2 = (bounds.topRight.x - this.project.bounds.x).round(3);
+			_row.y2 = (h - bounds.topRight.y).round(3);
 			_row.path_data = this.path.pathData;
 
 			this.profiles.forEach(function (curr) {
+				if(!curr.profile || !curr.profile._row || !curr.cnn){
+					throw new ReferenceError("Не найдено ребро заполнения");
+				}
 				cnns.add({
 					elm1: _row.elm,
 					elm2: curr.profile._row.elm,
@@ -114,7 +117,7 @@ Filling.prototype.__define({
 					cnn: curr.cnn.ref,
 					aperture_len: curr.sub_path.length
 				});
-			});
+			}.bind(this));
 
 		},
 		enumerable : false
