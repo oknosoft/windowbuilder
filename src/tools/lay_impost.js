@@ -88,7 +88,7 @@ function ToolLayImpost(){
 
 					//undo.snapshot("Move Shapes");
 					this.mode = null;
-					setTimeout(contour.redraw, 10);
+					setTimeout(contour.redraw.bind(contour), 10);
 
 
 				}else if(event.modifiers.space){
@@ -105,7 +105,7 @@ function ToolLayImpost(){
 
 					//undo.snapshot("Move Shapes");
 					this.mode = null;
-					setTimeout(contour.redraw, 10);
+					setTimeout(contour.redraw.bind(contour), 10);
 
 				} else {
 					_editor.project.deselectAll();

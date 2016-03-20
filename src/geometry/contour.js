@@ -466,7 +466,7 @@ Contour.prototype.__define({
 			$p.eve.callEvent("contour_redrawed", [this, _bounds]);
 
 			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
-			if(!llength)
+			if(!llength && on_contour_redrawed)
 				on_contour_redrawed();
 
 		},

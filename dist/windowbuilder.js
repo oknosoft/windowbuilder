@@ -495,7 +495,7 @@ Contour.prototype.__define({
 			$p.eve.callEvent("contour_redrawed", [this, _bounds]);
 
 			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
-			if(!llength)
+			if(!llength && on_contour_redrawed)
 				on_contour_redrawed();
 
 		},
@@ -4951,7 +4951,7 @@ function ToolArc(){
 
 					//undo.snapshot("Move Shapes");
 					this.mode = null;
-					setTimeout(contour.redraw, 10);
+					setTimeout(contour.redraw.bind(contour), 10);
 
 
 				}else if(event.modifiers.space){
@@ -4969,7 +4969,7 @@ function ToolArc(){
 
 					//undo.snapshot("Move Shapes");
 					this.mode = null;
-					setTimeout(contour.redraw, 10);
+					setTimeout(contour.redraw.bind(contour), 10);
 
 				} else {
 					_editor.project.deselectAll();
@@ -5208,7 +5208,7 @@ function ToolLayImpost(){
 
 					//undo.snapshot("Move Shapes");
 					this.mode = null;
-					setTimeout(contour.redraw, 10);
+					setTimeout(contour.redraw.bind(contour), 10);
 
 
 				}else if(event.modifiers.space){
@@ -5225,7 +5225,7 @@ function ToolLayImpost(){
 
 					//undo.snapshot("Move Shapes");
 					this.mode = null;
-					setTimeout(contour.redraw, 10);
+					setTimeout(contour.redraw.bind(contour), 10);
 
 				} else {
 					_editor.project.deselectAll();
@@ -5563,9 +5563,16 @@ function ToolPen(){
 			_editor.canvas_cursor('cursor-pen-freehand');
 
 			if (this.mode && this.path) {
+
+				// Рисуем профиль
 				new Profile({generatrix: this.path, proto: tool.profile});
 				this.mode = null;
 				this.path = null;
+
+			}else if (this.hitItem) {
+
+				// TODO: Выделяем элемент, если он подходящего типа
+
 			}
 
 		},
