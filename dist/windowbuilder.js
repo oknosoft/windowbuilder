@@ -4318,10 +4318,10 @@ function Scheme(_canvas){
 	 */
 	this.__define("_calc_order_row", {
 		get: function () {
-			if(!_calc_order_row && !this.ox.empty()){
-				_calc_order_row = this.ox.calc_order_row;
+			if(!_data._calc_order_row && !this.ox.empty()){
+				_data._calc_order_row = this.ox.calc_order_row;
 			}
-			return _calc_order_row;
+			return _data._calc_order_row;
 		},
 		enumerable: false
 	});
@@ -4514,12 +4514,19 @@ function Scheme(_canvas){
 		_scheme.ox = null;
 		_scheme.clear();
 
-		if($p.is_data_obj(id))
+		if($p.is_data_obj(id) && !id.is_new() && id.calc_order && !id.calc_order.is_new())
 			load_object(id);
 
-		else if($p.is_guid(id))
+		else if($p.is_guid(id)){
 			$p.cat.characteristics.get(id, true, true)
-				.then(load_object);
+				.then(function (ox) {
+					$p.doc.calc_order.get(ox.calc_order, true, true)
+						.then(function () {
+							load_object(ox);
+						})
+				});
+		}
+
 	};
 
 	/**
@@ -4749,12 +4756,17 @@ Scheme.prototype.__define({
 	save_coordinates: {
 		value: function (attr) {
 
+			// устанавливаем размеры в характеристике
 			var ox = this.ox;
 			ox.cnn_elmnts.clear();
 			ox.glasses.clear();
 			ox.x = this.bounds.width.round(1);
 			ox.y = this.bounds.height.round(1);
 			ox.s = this.area;
+
+			// устанавливаем свойства в строке заказа
+			var _row = this._calc_order_row;
+
 
 			// смещаем слои, чтобы расположить изделие в начале координат
 			//var bpoint = this.bounds.point;
@@ -5611,11 +5623,11 @@ function ToolPen(){
 				this.path = null;
 
 				// TODO: Выделяем элемент, если он подходящего типа
-				if(item.parent instanceof Profile){
+				if(item.parent instanceof Profile && item.parent.isInserted()){
 					item.parent.attache_wnd(paper._acc.elm.cells("a"));
 					item.parent.generatrix.selected = true;
 
-				}else if(item instanceof Filling){
+				}else if(item instanceof Filling && item.visible){
 					item.attache_wnd(paper._acc.elm.cells("a"));
 					item.selected = true;
 				}
@@ -6687,23 +6699,12 @@ function EditorAccordion(_editor, cell_acc) {
 	cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);
 
 	var _cell = cell_acc.cell,
-		cont = _cell.querySelector(".editor_accordion");
+		cont = _cell.querySelector(".editor_accordion"),
 
-	this.unload = function () {
-		tb_elm.unload();
-		tb_right.unload();
-		tree_layers.unload();
-		props.unload();
-	}
-
-	this.attache = function (obj) {
-		tree_layers.attache();
-		props.attache(obj);
-	};
-
-
-	// панели инструментов
-	var tb_elm = new $p.iface.OTooolBar({
+		/**
+		 * панель инструментов элемента
+		 */
+		tb_elm = new $p.iface.OTooolBar({
 			wrapper: cont.querySelector("[name=header_elm]"),
 			width: '100%',
 			height: '28px',
@@ -6724,6 +6725,9 @@ function EditorAccordion(_editor, cell_acc) {
 			}
 		}),
 
+		/**
+		 * панель инструментов свойств изделия
+		 */
 		tb_right = new $p.iface.OTooolBar({
 			wrapper: cont.querySelector("[name=header_layers]"),
 			width: '100%',
@@ -6787,9 +6791,9 @@ function EditorAccordion(_editor, cell_acc) {
 		tree_layers = new function SchemeLayers() {
 
 			var tree = new dhtmlXTreeObject({
-					parent: cont.querySelector("[name=content_layers]"),
-					checkbox: true
-				});
+				parent: cont.querySelector("[name=content_layers]"),
+				checkbox: true
+			});
 
 
 			function layer_text(layer, bounds){
@@ -6939,37 +6943,52 @@ function EditorAccordion(_editor, cell_acc) {
 
 			var _grid;
 
-			this.attache = function (obj) {
+			this.__define({
 
-				if(_grid && _grid.destructor)
-					_grid.destructor();
+				attache: {
+					value: function (obj) {
 
-				_grid = layout.cells("a").attachHeadFields({
-					obj: obj,
-					oxml: {
-						"Свойства": ["sys","clr",
-							{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro", txt: obj.len},
-							{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro", txt: obj.height},
-							{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro", txt: obj.s}
-						],
-						"Строка заказа": ["quantity",
-							{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro", txt: obj.price_internal},
-							{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro", txt: obj.discount_percent_internal},
-							"discount_percent",
-							{id: "price", path: "o.price", synonym: "Цена", type: "ro", txt: obj.price},
-							{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro", txt: obj.amount},
-							"note"]
+						if(_grid && _grid.destructor)
+							_grid.destructor();
 
-					},
-					ts: "extra_fields",
-					ts_title: "Свойства",
-					selection: {cnstr: 0, hide: {not: true}}
-				});
-			}
+						_grid = layout.cells("a").attachHeadFields({
+							obj: obj,
+							oxml: {
+								"Свойства": ["sys","clr",
+									{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro", txt: obj.len},
+									{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro", txt: obj.height},
+									{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro", txt: obj.s}
+								],
+								"Строка заказа": ["quantity",
+									{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro", txt: obj.price_internal},
+									{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro", txt: obj.discount_percent_internal},
+									"discount_percent",
+									{id: "price", path: "o.price", synonym: "Цена", type: "ro", txt: obj.price},
+									{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro", txt: obj.amount},
+									"note"]
 
-			this.unload = function () {
-				layout.unload();
-			}
+							},
+							ts: "extra_fields",
+							ts_title: "Свойства",
+							selection: {cnstr: 0, hide: {not: true}}
+						});
+					}
+				},
+
+				unload: {
+					value: function () {
+						layout.unload();
+					}
+				},
+
+				layout: {
+					get: function () {
+						return layout;
+					}
+				}
+
+			});
+
 
 		})(new dhtmlXLayoutObject({
 			parent:     cont.querySelector("[name=content_props]"),
@@ -6987,29 +7006,102 @@ function EditorAccordion(_editor, cell_acc) {
 					height:         330
 				}
 			]
+		})),
+
+		/**
+		 * свойства створки в аккордионе
+		 */
+		stv = new (function StvProps(layout) {
+
+			var _grid,
+				_eve_layer_activated;
+
+			this.__define({
+
+				attache: {
+					value: function (obj) {
+
+						if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
+							return;
+
+						var attr = {
+							obj: obj,
+							oxml: {
+								"Фурнитура": ["furn", "clr_furn", "direction", "h_ruch"],
+								"Москитка": ["mskt", "clr_mskt"],
+								"Параметры": []
+							},
+							ts: "params",
+							ts_title: "Параметры",
+							selection: {cnstr: obj.cnstr || -1, hide: {not: true}}
+						};
+
+						if(!_grid)
+							_grid = layout.cells("a").attachHeadFields(attr);
+						else
+							_grid.attach(attr);
+					}
+				},
+
+				unload: {
+					value: function () {
+						layout.unload();
+						$p.eve.detachEvent(_eve_layer_activated);
+					}
+				},
+
+				layout: {
+					get: function () {
+						return layout;
+					}
+				}
+
+			});
+
+			_eve_layer_activated = $p.eve.attachEvent("layer_activated", this.attache);
+
+		})(new dhtmlXLayoutObject({
+			parent:     cont.querySelector("[name=content_stv]"),
+			pattern:    "1C",
+			offsets: {
+				top:    0,
+				right:  0,
+				bottom: 0,
+				left:   0
+			},
+			cells: [
+				{
+					id:             "a",
+					header:         false,
+					height:         200
+				}
+			]
 		}));
+
+	this.unload = function () {
+		tb_elm.unload();
+		tb_right.unload();
+		tree_layers.unload();
+		props.unload();
+		stv.unload();
+	}
+
+	this.attache = function (obj) {
+		tree_layers.attache();
+		props.attache(obj);
+	};
+
+	this.resize_canvas = function (w, h) {
+		var scroller = $(cont, '.scroller').baron();
+		scroller.update();
+		this.elm.setSizes();
+		props.layout.setSizes();
+		stv.layout.setSizes();
+	};
 
 
 	this.elm = new dhtmlXLayoutObject({
 		parent:     cont.querySelector("[name=content_elm]"),
-		pattern:    "1C",
-		offsets: {
-			top:    0,
-			right:  0,
-			bottom: 0,
-			left:   0
-		},
-		cells: [
-			{
-				id:             "a",
-				header:         false,
-				height:         200
-			}
-		]
-	});
-
-	this.stv = new dhtmlXLayoutObject({
-		parent:     cont.querySelector("[name=content_stv]"),
 		pattern:    "1C",
 		offsets: {
 			top:    0,
@@ -7178,7 +7270,7 @@ function Editor(pwnd){
 
 				case 'save_close':
 					if(_editor.project)
-						_editor.project.save_coordinates({close: true});
+						_editor.project.save_coordinates({save: true, close: true});
 					break;
 
 				case 'close':
@@ -7189,7 +7281,7 @@ function Editor(pwnd){
 
 				case 'calck':
 					if(_editor.project)
-						_editor.project.save_coordinates();
+						_editor.project.save_coordinates({save: true});
 					break;
 
 				case 'stamp':
@@ -7241,44 +7333,11 @@ function Editor(pwnd){
 	//_editor.tb_top.cell.style.fontSize = "90%";
 
 
-	/**
-	 * свойства створки в аккордионе
-	 */
-	_editor.stv = new (function StvProps(layout) {
-
-		var _grid;
-
-		this.attache = function (obj) {
-
-			if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
-				return;
-
-			var attr = {
-				obj: obj,
-				oxml: {
-					"Фурнитура": ["furn", "clr_furn", "direction", "h_ruch"],
-					"Москитка": ["mskt", "clr_mskt"],
-					"Параметры": []
-				},
-				ts: "params",
-				ts_title: "Параметры",
-				selection: {cnstr: obj.cnstr || -1, hide: {not: true}}
-			};
-
-			if(!_grid)
-				_grid = layout.cells("a").attachHeadFields(attr);
-			else
-				_grid.attach(attr);
-		}
-
-		this.unload = function () {
-			layout.unload();
-			// TODO: detachEvent
-		}
-
-		$p.eve.attachEvent("layer_activated", this.attache);
-
-	})(_editor._acc.stv);
+	// Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
+	$p.eve.attachEvent("characteristic_saved", function (scheme, attr) {
+		if(scheme == _editor.project && attr.close && _editor._pwnd._on_close)
+			_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
+	});
 
 	_editor.clear_selection_bounds = function() {
 		if (selectionBoundsShape)
@@ -7520,6 +7579,7 @@ Editor.prototype.__define({
 				 */
 				function pwnd_resize_finish(){
 					_editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
+					_editor._acc.resize_canvas(_editor._layout.cells("b").getWidth(), _editor._layout.cells("b").getHeight());
 				}
 
 				_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);

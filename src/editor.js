@@ -131,7 +131,7 @@ function Editor(pwnd){
 
 				case 'save_close':
 					if(_editor.project)
-						_editor.project.save_coordinates({close: true});
+						_editor.project.save_coordinates({save: true, close: true});
 					break;
 
 				case 'close':
@@ -142,7 +142,7 @@ function Editor(pwnd){
 
 				case 'calck':
 					if(_editor.project)
-						_editor.project.save_coordinates();
+						_editor.project.save_coordinates({save: true});
 					break;
 
 				case 'stamp':
@@ -194,44 +194,11 @@ function Editor(pwnd){
 	//_editor.tb_top.cell.style.fontSize = "90%";
 
 
-	/**
-	 * свойства створки в аккордионе
-	 */
-	_editor.stv = new (function StvProps(layout) {
-
-		var _grid;
-
-		this.attache = function (obj) {
-
-			if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
-				return;
-
-			var attr = {
-				obj: obj,
-				oxml: {
-					"Фурнитура": ["furn", "clr_furn", "direction", "h_ruch"],
-					"Москитка": ["mskt", "clr_mskt"],
-					"Параметры": []
-				},
-				ts: "params",
-				ts_title: "Параметры",
-				selection: {cnstr: obj.cnstr || -1, hide: {not: true}}
-			};
-
-			if(!_grid)
-				_grid = layout.cells("a").attachHeadFields(attr);
-			else
-				_grid.attach(attr);
-		}
-
-		this.unload = function () {
-			layout.unload();
-			// TODO: detachEvent
-		}
-
-		$p.eve.attachEvent("layer_activated", this.attache);
-
-	})(_editor._acc.stv);
+	// Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
+	$p.eve.attachEvent("characteristic_saved", function (scheme, attr) {
+		if(scheme == _editor.project && attr.close && _editor._pwnd._on_close)
+			_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
+	});
 
 	_editor.clear_selection_bounds = function() {
 		if (selectionBoundsShape)
@@ -473,6 +440,7 @@ Editor.prototype.__define({
 				 */
 				function pwnd_resize_finish(){
 					_editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
+					_editor._acc.resize_canvas(_editor._layout.cells("b").getWidth(), _editor._layout.cells("b").getHeight());
 				}
 
 				_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);

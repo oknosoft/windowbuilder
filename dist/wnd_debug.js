@@ -2728,11 +2728,13 @@ $p.modifiers.push(
 
 
 				// информируем мир о записи продукции
-				ox.save()
-					.then(function () {
-						$p.msg.show_msg("Спецификация рассчитана");
-						$p.eve.callEvent("characteristic_saved", [scheme, attr]);
-					});
+				if(attr.save){
+					ox.save()
+						.then(function () {
+							$p.msg.show_msg("Спецификация рассчитана");
+							$p.eve.callEvent("characteristic_saved", [scheme, attr]);
+						});
+				}
 
 			});
 

@@ -187,11 +187,11 @@ function ToolPen(){
 				this.path = null;
 
 				// TODO: Выделяем элемент, если он подходящего типа
-				if(item.parent instanceof Profile){
+				if(item.parent instanceof Profile && item.parent.isInserted()){
 					item.parent.attache_wnd(paper._acc.elm.cells("a"));
 					item.parent.generatrix.selected = true;
 
-				}else if(item instanceof Filling){
+				}else if(item instanceof Filling && item.visible){
 					item.attache_wnd(paper._acc.elm.cells("a"));
 					item.selected = true;
 				}

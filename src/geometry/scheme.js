@@ -144,10 +144,10 @@ function Scheme(_canvas){
 	 */
 	this.__define("_calc_order_row", {
 		get: function () {
-			if(!_calc_order_row && !this.ox.empty()){
-				_calc_order_row = this.ox.calc_order_row;
+			if(!_data._calc_order_row && !this.ox.empty()){
+				_data._calc_order_row = this.ox.calc_order_row;
 			}
-			return _calc_order_row;
+			return _data._calc_order_row;
 		},
 		enumerable: false
 	});
@@ -340,12 +340,19 @@ function Scheme(_canvas){
 		_scheme.ox = null;
 		_scheme.clear();
 
-		if($p.is_data_obj(id))
+		if($p.is_data_obj(id) && !id.is_new() && id.calc_order && !id.calc_order.is_new())
 			load_object(id);
 
-		else if($p.is_guid(id))
+		else if($p.is_guid(id)){
 			$p.cat.characteristics.get(id, true, true)
-				.then(load_object);
+				.then(function (ox) {
+					$p.doc.calc_order.get(ox.calc_order, true, true)
+						.then(function () {
+							load_object(ox);
+						})
+				});
+		}
+
 	};
 
 	/**
@@ -575,12 +582,17 @@ Scheme.prototype.__define({
 	save_coordinates: {
 		value: function (attr) {
 
+			// устанавливаем размеры в характеристике
 			var ox = this.ox;
 			ox.cnn_elmnts.clear();
 			ox.glasses.clear();
 			ox.x = this.bounds.width.round(1);
 			ox.y = this.bounds.height.round(1);
 			ox.s = this.area;
+
+			// устанавливаем свойства в строке заказа
+			var _row = this._calc_order_row;
+
 
 			// смещаем слои, чтобы расположить изделие в начале координат
 			//var bpoint = this.bounds.point;
