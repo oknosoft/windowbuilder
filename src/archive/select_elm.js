@@ -21,12 +21,10 @@ function ToolSelectElm(){
 	tool.originalContent = null;
 	tool.changed = false;
 	tool.duplicates = null;
+	tool.profile = null;
 	tool.options = {
-		name: 'select_elm',
-		wnd: {
-			caption: "Свойства элемента",
-			height: 380
-		}};
+		name: 'select_elm'
+	};
 
 	tool.resetHot = function(type, event, mode) {
 	};
@@ -66,6 +64,7 @@ function ToolSelectElm(){
 		return true;
 	};
 	tool.on({
+
 		activate: function() {
 
 			paper.tb_left.select(tool.options.name);
@@ -74,11 +73,15 @@ function ToolSelectElm(){
 			paper.clear_selection_bounds();
 
 		},
+
 		deactivate: function() {
 			paper.hide_selection_bounds();
-			tool.detache_wnd();
-
+			if(tool.profile){
+				tool.profile.detache_wnd();
+				delete tool.profile;
+			}
 		},
+
 		mousedown: function(event) {
 			this.mode = null;
 			this.changed = false;
@@ -95,21 +98,24 @@ function ToolSelectElm(){
 					}
 					if (item.selected) {
 
-						this.mode = 'move-shapes';
+						this.mode = consts.move_shapes;
 						paper.project.deselect_all_points();
 						this.mouseStartPos = event.point.clone();
 						this.originalContent = paper.capture_selection_state();
 
-						$p.eve.callEvent("layer_activated", [item.layer]);
+						if(item.layer)
+							$p.eve.callEvent("layer_activated", [item.layer]);
 
-						if(is_profile)
-							tool.attache_wnd(item.parent, paper._acc.elm.cells("a"));
-						else if(item instanceof Filling)
-							tool.attache_wnd(item, paper._acc.elm.cells("a"));
+						if(is_profile){
+							item.parent.attache_wnd(paper._acc.elm.cells("a"));
+							tool.profile = item.parent;
 
+						}else if(item instanceof Filling){
+							item.attache_wnd(paper._acc.elm.cells("a"));
+							tool.profile = item;
+						}
 					}
 				}
-
 
 				paper.clear_selection_bounds();
 
@@ -121,7 +127,7 @@ function ToolSelectElm(){
 			}
 		},
 		mouseup: function(event) {
-			if (this.mode == 'move-shapes') {
+			if (this.mode == consts.move_shapes) {
 				if (this.changed) {
 					//paper.clear_selection_bounds();
 					//undo.snapshot("Move Shapes");
@@ -149,7 +155,7 @@ function ToolSelectElm(){
 			}
 		},
 		mousedrag: function(event) {
-			if (this.mode == 'move-shapes') {
+			if (this.mode == consts.move_shapes) {
 
 				this.changed = true;
 

@@ -74,10 +74,10 @@ function Editor(pwnd){
 	 * Панель выбора инструментов рисовалки
 	 * @type OTooolBar
 	 */
-	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '36px', left: '3px', name: 'left', height: '320px',
+	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '36px', left: '3px', name: 'left', height: '300px',
 		image_path: 'dist/imgs/',
 		buttons: [
-			{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['tip_select_elm.html']},
+			//{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['tip_select_elm.html']},
 			{name: 'select_node', img: 'icon-arrow-white.png', title: $p.injected_data['tip_select_node.html']},
 			{name: 'pan', img: 'icon-hand.png', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
 			{name: 'zoom_fit', img: 'cursor-zoom.png', tooltip: 'Вписать в окно'},
@@ -378,12 +378,6 @@ function Editor(pwnd){
 		return tool;
 	};
 
-
-	/**
-	 * Свойства и перемещение элемента
-	 */
-	new ToolSelectElm();
-
 	/**
 	 * Свойства и перемещение узлов элемента
 	 */
@@ -419,7 +413,7 @@ function Editor(pwnd){
 	 */
 	new ToolRuler();
 
-	this.tools[2].activate();
+	this.tools[1].activate();
 
 }
 Editor._extend(paper.PaperScope);

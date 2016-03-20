@@ -74,6 +74,8 @@ function BuilderElement(attr){
 	 */
 	this.remove = function () {
 
+		this.detache_wnd();
+
 		if(this.parent && this.parent._noti && this.observer)
 			Object.unobserve(this.parent._noti, this.observer);
 
@@ -344,6 +346,49 @@ BuilderElement.prototype.__define({
 			return this.nom.sizefurn || 20;
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Подключает окно редактор свойств текущего элемента, выбранного инструментом
+	 */
+	attache_wnd: {
+		value: function(cell){
+
+			if(!this.data._grid || !this.data._grid.cell){
+
+				this.data._grid = cell.attachHeadFields({
+					obj: this,
+					oxml: this.oxml
+				});
+				this.data._grid.attachEvent("onRowSelect", function(id,ind){
+					if(id == "x1" || id == "y1")
+						this.select_node("b");
+					else if(id == "x2" || id == "y2")
+						this.select_node("e");
+				});
+
+			}else{
+				if(this.data._grid._obj != this)
+					this.data._grid.attach({
+						obj: this,
+						oxml: this.oxml
+					});
+			}
+		},
+		enumerable: false
+	},
+
+	/**
+	 * Отключает и выгружает из памяти окно свойств элемента
+	 */
+	detache_wnd: {
+		value: function(){
+			if(this.data._grid && this.data._grid.destructor){
+				this.data._grid._owner_cell.detachObject(true);
+				delete this.data._grid;
+			}
+		},
+		enumerable: false
 	}
 
 });

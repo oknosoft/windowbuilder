@@ -33,63 +33,6 @@ ToolElement.prototype.__define({
 			this.profile = null;
 		},
 		enumerable: false
-	},
-
-	/**
-	 * Подключает окно редактор свойств текущего элемента, выбранного инструментом
-	 */
-	attache_wnd: {
-		value: function(profile, cell){
-
-			this.profile = profile;
-			var oxml = profile instanceof Profile ? {
-				" ": [
-					{id: "info", path: "o.info", synonym: "Элемент", type: "ro", txt: profile.info},
-					"inset",
-					"clr"
-				],
-				"Начало": ["x1", "y1"],
-				"Конец": ["x2", "y2"]
-			} : {
-				" ": [
-					{id: "info", path: "o.info", synonym: "Элемент", type: "ro", txt: profile.info},
-					"inset",
-					"clr"
-				],
-				"Начало": [
-					{id: "x1", path: "o.x1", synonym: "X1", type: "ro", txt: profile.x1},
-					{id: "y1", path: "o.y1", synonym: "Y1", type: "ro", txt: profile.y1}
-				],
-				"Конец": [
-					{id: "x2", path: "o.x2", synonym: "X2", type: "ro", txt: profile.x2},
-					{id: "y2", path: "o.y2", synonym: "Y2", type: "ro", txt: profile.y2}
-				]
-			};
-
-			if(!this.wnd || !this._grid){
-
-				this.wnd = cell;
-
-				this._grid = this.wnd.attachHeadFields({
-					obj: profile,
-					oxml: oxml
-				});
-				this._grid.attachEvent("onRowSelect", function(id,ind){
-					if(id == "x1" || id == "y1")
-						this._obj.select_node("b");
-					else if(id == "x2" || id == "y2")
-						this._obj.select_node("e");
-				});
-
-			}else{
-				if(this._grid._obj != profile)
-					this._grid.attach({
-						obj: profile,
-						oxml: oxml
-					});
-			}
-		},
-		enumerable: false
 	}
 
 });

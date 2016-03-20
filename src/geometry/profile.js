@@ -1168,6 +1168,24 @@ Profile.prototype.__define({
 			}
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Описание полей диалога свойств элемента
+	 */
+	oxml: {
+		get: function () {
+			return {
+				" ": [
+					{id: "info", path: "o.info", synonym: "Элемент", type: "ro", txt: this.info},
+					"inset",
+					"clr"
+				],
+				"Начало": ["x1", "y1"],
+				"Конец": ["x2", "y2"]
+			}
+		},
+		enumerable: false
 	}
 
 });

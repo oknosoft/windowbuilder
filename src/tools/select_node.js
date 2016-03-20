@@ -99,7 +99,10 @@ function ToolSelectNode(){
 
 		deactivate: function() {
 			paper.clear_selection_bounds();
-			tool.detache_wnd();
+			if(tool.profile){
+				tool.profile.detache_wnd();
+				delete tool.profile;
+			}
 		},
 
 		mousedown: function(event) {
@@ -114,6 +117,7 @@ function ToolSelectNode(){
 				var is_profile = tool.hitItem.item.parent instanceof Profile,
 					item = is_profile ? tool.hitItem.item.parent.generatrix : tool.hitItem.item;
 				if (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke') {
+
 					if (event.modifiers.shift) {
 						item.selected = !item.selected;
 					} else {
@@ -121,12 +125,13 @@ function ToolSelectNode(){
 						item.selected = true;
 					}
 					if (item.selected) {
-						this.mode = 'move-shapes';
+						this.mode = consts.move_shapes;
 						paper.project.deselect_all_points();
 						this.mouseStartPos = event.point.clone();
 						this.originalContent = paper.capture_selection_state();
 
-						$p.eve.callEvent("layer_activated", [item.layer]);
+						if(item.layer)
+							$p.eve.callEvent("layer_activated", [item.layer]);
 					}
 
 				} else if (tool.hitItem.type == 'segment') {
@@ -150,20 +155,25 @@ function ToolSelectNode(){
 					this.originalHandleIn = tool.hitItem.segment.handleIn.clone();
 					this.originalHandleOut = tool.hitItem.segment.handleOut.clone();
 
-					/*				if (tool.hitItem.type == 'handle-out') {
+					/* if (tool.hitItem.type == 'handle-out') {
 					 this.originalHandlePos = tool.hitItem.segment.handleOut.clone();
 					 this.originalOppHandleLength = tool.hitItem.segment.handleIn.length;
 					 } else {
 					 this.originalHandlePos = tool.hitItem.segment.handleIn.clone();
 					 this.originalOppHandleLength = tool.hitItem.segment.handleOut.length;
-					 }*/
-//				this.originalContent = capture_selection_state(); // For some reason this does not work!
+					 }
+					 this.originalContent = capture_selection_state(); // For some reason this does not work!
+					 */
 				}
 
-				if(is_profile)
-					tool.attache_wnd(item.parent, paper._acc.elm.cells("a"));
-				else if(item instanceof Filling)
-					tool.attache_wnd(item, paper._acc.elm.cells("a"));
+				if(is_profile){
+					item.parent.attache_wnd(paper._acc.elm.cells("a"));
+					this.profile = item.parent;
+
+				}else if(item instanceof Filling){
+					item.attache_wnd(paper._acc.elm.cells("a"));
+					this.profile = item;
+				}
 
 				paper.clear_selection_bounds();
 
@@ -172,42 +182,59 @@ function ToolSelectNode(){
 				this.mouseStartPos = event.point.clone();
 				this.mode = 'box-select';
 
-				if (!event.modifiers.shift)
-					tool.detache_wnd();
+				if(!event.modifiers.shift && this.profile){
+					this.profile.detache_wnd();
+					delete this.profile;
+				}
+
 			}
 		},
 
 		mouseup: function(event) {
-			if (this.mode == 'move-shapes') {
+
+			if (this.mode == consts.move_shapes) {
 				if (this.changed) {
 					paper.clear_selection_bounds();
 					//undo.snapshot("Move Shapes");
 				}
+
 			} else if (this.mode == consts.move_points) {
 				if (this.changed) {
 					paper.clear_selection_bounds();
 					//undo.snapshot("Move Points");
 				}
+
 			} else if (this.mode == consts.move_handle) {
 				if (this.changed) {
 					paper.clear_selection_bounds();
 					//undo.snapshot("Move Handle");
 				}
 			} else if (this.mode == 'box-select') {
+
 				var box = new paper.Rectangle(this.mouseStartPos, event.point);
 
 				if (!event.modifiers.shift)
 					paper.project.deselectAll();
 
-				var selectedSegments = paper.segments_in_rect(box);
-				if (selectedSegments.length > 0) {
-					for (var i = 0; i < selectedSegments.length; i++) {
-						selectedSegments[i].selected = !selectedSegments[i].selected;
-					}
-				} else {
+				// при зажатом ctrl или alt добавляем элемент иначе - узел
+				if (event.modifiers.control || event.modifiers.option) {
+
 					var selectedPaths = paper.paths_intersecting_rect(box);
 					for (var i = 0; i < selectedPaths.length; i++)
 						selectedPaths[i].selected = !selectedPaths[i].selected;
+
+				}else {
+
+					var selectedSegments = paper.segments_in_rect(box);
+					if (selectedSegments.length > 0) {
+						for (var i = 0; i < selectedSegments.length; i++) {
+							selectedSegments[i].selected = !selectedSegments[i].selected;
+						}
+					} else {
+						var selectedPaths = paper.paths_intersecting_rect(box);
+						for (var i = 0; i < selectedPaths.length; i++)
+							selectedPaths[i].selected = !selectedPaths[i].selected;
+					}
 				}
 			}
 
@@ -225,7 +252,7 @@ function ToolSelectNode(){
 		mousedrag: function(event) {
 			this.changed = true;
 
-			if (this.mode == 'move-shapes') {
+			if (this.mode == consts.move_shapes) {
 				paper.canvas_cursor('cursor-arrow-small');
 
 				var delta = event.point.subtract(this.mouseStartPos);
@@ -281,36 +308,64 @@ function ToolSelectNode(){
 				paper.drag_rect(this.mouseStartPos, event.point);
 			}
 		},
+
 		mousemove: function(event) {
 			this.hitTest(event);
 		},
+
 		keydown: function(event) {
 			var selected, i, j, path, segment, index, point, handle, do_select;
-			if (event.key == '+') {
+
+			if (event.key == '+' || event.key == 'insert') {
 
 				selected = paper.project.selectedItems;
-				for (i = 0; i < selected.length; i++) {
-					path = selected[i];
-					do_select = false;
-					if(path.parent instanceof Profile){
-						for (j = 0; j < path.segments.length; j++) {
-							segment = path.segments[j];
-							if (segment.selected){
-								do_select = true;
-								break;
-							}
-						}
-						if(!do_select){
-							j = 0;
-							segment = path.segments[j];
-							do_select = true;
+
+				// при зажатом ctrl или alt добавляем элемент иначе - узел
+				if (event.modifiers.space) {
+
+					for (i = 0; i < selected.length; i++) {
+						path = selected[i];
+
+						if(path.parent instanceof Profile){
+
+							var cnn_point = path.parent.cnn_point("e");
+							if(cnn_point && cnn_point.profile)
+								cnn_point.profile.rays.clear(true);
+							path.parent.rays.clear(true);
+
+							point = path.getPointAt(path.length * 0.5);
+							var newpath = path.split(path.length * 0.5);
+							path.lastSegment.point = path.lastSegment.point.add(paper.Point.random());
+							newpath.firstSegment.point = path.lastSegment.point;
+							new Profile({generatrix: newpath, proto: path.parent});
 						}
 					}
-					if(do_select){
-						index = (j < (path.segments.length - 1) ? j + 1 : j);
-						point = segment.curve.getPointAt(0.5, true);
-						handle = segment.curve.getTangentAt(0.5, true).normalize(segment.curve.length / 4);
-						path.insert(index, new paper.Segment(point, handle.negate(), handle));
+
+				}else{
+
+					for (i = 0; i < selected.length; i++) {
+						path = selected[i];
+						do_select = false;
+						if(path.parent instanceof Profile){
+							for (j = 0; j < path.segments.length; j++) {
+								segment = path.segments[j];
+								if (segment.selected){
+									do_select = true;
+									break;
+								}
+							}
+							if(!do_select){
+								j = 0;
+								segment = path.segments[j];
+								do_select = true;
+							}
+						}
+						if(do_select){
+							index = (j < (path.segments.length - 1) ? j + 1 : j);
+							point = segment.curve.getPointAt(0.5, true);
+							handle = segment.curve.getTangentAt(0.5, true).normalize(segment.curve.length / 4);
+							path.insert(index, new paper.Segment(point, handle.negate(), handle));
+						}
 					}
 				}
 

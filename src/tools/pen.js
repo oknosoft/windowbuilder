@@ -134,6 +134,7 @@ function ToolPen(){
 		return true;
 	};
 	tool.on({
+
 		activate: function() {
 			_editor.tb_left.select(tool.options.name);
 			_editor.canvas_cursor('cursor-pen-freehand');
@@ -145,6 +146,7 @@ function ToolPen(){
 			decorate_layers();
 
 		},
+
 		deactivate: function() {
 			_editor.clear_selection_bounds();
 
@@ -157,6 +159,7 @@ function ToolPen(){
 			tool.detache_wnd();
 
 		},
+
 		mousedown: function(event) {
 
 			_editor.project.deselectAll();
@@ -165,6 +168,7 @@ function ToolPen(){
 			this.mouseStartPos = event.point.clone();
 
 		},
+
 		mouseup: function(event) {
 
 			_editor.canvas_cursor('cursor-pen-freehand');
@@ -176,13 +180,29 @@ function ToolPen(){
 				this.mode = null;
 				this.path = null;
 
-			}else if (this.hitItem) {
+			}else if (this.hitItem && this.hitItem.item) {
+
+				var item = this.hitItem.item;
+				this.mode = null;
+				this.path = null;
 
 				// TODO: Выделяем элемент, если он подходящего типа
+				if(item.parent instanceof Profile){
+					item.parent.attache_wnd(paper._acc.elm.cells("a"));
+					item.parent.generatrix.selected = true;
+
+				}else if(item instanceof Filling){
+					item.attache_wnd(paper._acc.elm.cells("a"));
+					item.selected = true;
+				}
+
+				if(item.selected && item.layer)
+					$p.eve.callEvent("layer_activated", [item.layer]);
 
 			}
 
 		},
+
 		mousedrag: function(event) {
 
 			var delta = event.point.subtract(this.mouseStartPos),
@@ -287,8 +307,30 @@ function ToolPen(){
 				this.path.selected = true;
 			}
 		},
+
 		mousemove: function(event) {
 			this.hitTest(event);
+		},
+
+		keydown: function(event) {
+
+			// удаление сегмента или элемента
+			if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+
+				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+					return;
+
+				paper.project.selectedItems.forEach(function (path) {
+					if(path.parent instanceof Profile)
+						path.parent.remove();
+				});
+
+				this.mode = null;
+				this.path = null;
+
+				event.stop();
+				return false;
+			}
 		}
 	});
 

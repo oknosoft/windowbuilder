@@ -43,6 +43,7 @@ var acn,
 
 	this.move_points = 'move_points';
 	this.move_handle = 'move_handle';
+	this.move_shapes = 'move-shapes';
 
 
 
