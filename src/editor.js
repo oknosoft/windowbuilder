@@ -52,7 +52,7 @@ function Editor(pwnd){
 			collapsed_text: "Инструменты",
 			width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 360 : 240
 		}],
-		offsets: { top: 0, right: 0, bottom: 0, left: 0}
+		offsets: { top: 28, right: 0, bottom: 0, left: 0}
 	});         // разбивка на канвас и аккордион
 	_editor._wrapper = document.createElement('div');                  // контейнер канваса
 	_editor._layout.cells("a").attachObject(_editor._wrapper);
@@ -74,7 +74,7 @@ function Editor(pwnd){
 	 * Панель выбора инструментов рисовалки
 	 * @type OTooolBar
 	 */
-	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '36px', left: '3px', name: 'left', height: '300px',
+	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '300px',
 		image_path: 'dist/imgs/',
 		buttons: [
 			//{name: 'select_elm', img: 'icon-arrow-black.png', title: $p.injected_data['tip_select_elm.html']},
@@ -103,7 +103,7 @@ function Editor(pwnd){
 	 * Верхняя панель инструментов
 	 * @type {OTooolBar}
 	 */
-	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._wrapper, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
+	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
 		image_path: 'dist/imgs/',
 		buttons: [
 
@@ -112,6 +112,11 @@ function Editor(pwnd){
 
 			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока', float: 'left'},
 			{name: 'open', text: '<i class="fa fa-briefcase fa-fw"></i>', tooltip: 'Загрузить из другого заказа', float: 'left'},
+
+			{name: 'sep_0', text: '', float: 'left'},
+			{name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
+			{name: 'paste', text: '<i class="fa fa-clipboard fa-fw"></i>', tooltip: 'Вставить', float: 'left'},
+			{name: 'paste_prop', text: '<i class="fa fa-paint-brush fa-fw"></i>', tooltip: 'Применить скопированные свойства', float: 'left'},
 
 			{name: 'sep_1', text: '', float: 'left'},
 			{name: 'back', text: '<i class="fa fa-undo fa-fw"></i>', tooltip: 'Шаг назад', float: 'left'},
@@ -191,7 +196,10 @@ function Editor(pwnd){
 					break;
 			}
 		}});
-	//_editor.tb_top.cell.style.fontSize = "90%";
+	_editor._layout.base.style.backgroundColor = "#f5f5f5";
+	_editor._layout.base.parentNode.parentNode.style.top = "0px"
+	_editor.tb_top.cell.style.background = "transparent";
+	_editor.tb_top.cell.style.boxShadow = "none";
 
 
 	// Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
@@ -430,7 +438,6 @@ Editor.prototype.__define({
 
 				var _canvas = document.createElement('canvas'); // собственно, канвас
 				_editor._wrapper.appendChild(_canvas);
-				_canvas.style.marginTop = "24px";
 				_canvas.style.backgroundColor = "#f9fbfa";
 
 				var _scheme = new Scheme(_canvas);
