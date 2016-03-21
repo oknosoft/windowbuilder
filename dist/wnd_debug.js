@@ -1108,10 +1108,22 @@ $p.modifiers.push(
 
 			attr.draw_pg_header = function (o, wnd) {
 
+				function layout_resize_finish() {
+					setTimeout(function () {
+						wnd.elmnts.layout_header.setSizes();
+						wnd.elmnts.pg_left.objBox.style.width = "100%";
+						wnd.elmnts.pg_right.objBox.style.width = "100%";
+					}, 200);
+				}
+
 				/**
 				 *	закладка шапка
 				 */
 				wnd.elmnts.layout_header = wnd.elmnts.tabs.tab_header.attachLayout('3U');
+
+				wnd.elmnts.layout_header.attachEvent("onResizeFinish", layout_resize_finish);
+
+				wnd.elmnts.layout_header.attachEvent("onPanelResizeFinish", layout_resize_finish);
 
 				/**
 				 *	левая колонка шапки документа
@@ -2139,6 +2151,10 @@ $p.modifiers.push(
 					row_cpec.totqty = row_cpec.qty;
 
 				row_cpec.totqty1 = row_cpec.totqty * row_cpec.nom.loss_factor;
+
+				["len","width","s","qty","totqty","totqty1"].forEach(function (fld) {
+					row_cpec[fld] = row_cpec[fld].round(4);
+				});
 			}
 
 			/**

@@ -440,7 +440,7 @@ Editor.prototype.__define({
 				 */
 				function pwnd_resize_finish(){
 					_editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
-					_editor._acc.resize_canvas(_editor._layout.cells("b").getWidth(), _editor._layout.cells("b").getHeight());
+					_editor._acc.resize_canvas();
 				}
 
 				_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);

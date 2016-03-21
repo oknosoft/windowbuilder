@@ -481,9 +481,6 @@ Contour.prototype.__define({
 	save_coordinates: {
 		value: function () {
 
-			// ответственность за строку в таблице конструкций лежит на контуре
-			
-
 			// удаляем скрытые заполнения
 			this.glasses(false, true).forEach(function (glass) {
 				if(!glass.visible)
@@ -496,6 +493,18 @@ Contour.prototype.__define({
 					elm.save_coordinates();
 			});
 
+			// ответственность за строку в таблице конструкций лежит на контуре
+			var profile_bounds = this.profile_bounds;
+			this._row.x = profile_bounds.width;
+			this._row.y = profile_bounds.height;
+			this._row.is_rectangular = this.is_rectangular;
+			if(this.parent){
+				this._row.w = this.w;
+				this._row.h = this.h;
+			}else{
+				this._row.w = 0;
+				this._row.h = 0;
+			}
 		},
 		enumerable : false
 	},
@@ -1118,19 +1127,112 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Возвращает профиль по стороне
-	 * @param side {_enm.positions|String}
+	 * Габариты по внешним краям профиля
 	 */
-	profile_by_side: {
+	profile_bounds: {
+		get: function () {
+			var bounds;
+
+			this.profiles.forEach(function (profile) {
+				if(!bounds)
+					bounds = profile.path.bounds;
+				else
+					bounds = bounds.unite(profile.path.bounds);
+			});
+			return bounds;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает структуру профилей по сторонам
+	 */
+	profiles_by_side: {
+		get: function () {
+			// получаем таблицу расстояний профилей от рёбер габаритов
+			var profiles = this.profiles,
+				bounds = this.bounds,
+				res = {}, ares = [];
+
+			function by_side(name) {
+				ares.sort(function (a, b) {
+					return a[name] - b[name];
+				});
+				res[name] = ares[0].profile;
+			}
+
+			if(profiles.length){
+				profiles.forEach(function (profile) {
+					ares.push({
+						profile: profile,
+						left: Math.abs(profile.b.x + profile.e.x - bounds.left * 2),
+						top: Math.abs(profile.b.y + profile.e.y - bounds.top * 2),
+						bottom: Math.abs(profile.b.y + profile.e.y - bounds.bottom * 2),
+						right: Math.abs(profile.b.x + profile.e.x - bounds.right * 2)
+					});
+				});
+				["left","top","bottom","right"].forEach(by_side);
+			}
+
+			return res;
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Возвращает профиль по номеру стороны фурнитуры
+	 * @param side {Number}
+	 */
+	profile_by_furn_side: {
 		value: function (side) {
 			var profiles = this.profiles;
 		},
 		enumerable : false
 	},
 
-	profile_by_furn_side: {
-		value: function (side) {
-			var profiles = this.profiles;
+	/**
+	 * Признак прямоугольности
+	 */
+	is_rectangular: {
+		get : function(){
+			return (this.side_count != 4) || !this.profiles.some(function (profile) {
+				return !profile.is_linear();
+			});
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Количество сторон контура
+	 */
+	side_count: {
+		get : function(){
+			return this.profiles.length;
+		},
+		enumerable : false
+	},
+
+	w: {
+		get : function(){
+			if(this.side_count != 4)
+				return 0;
+			var profiles = this.profiles_by_side,
+				profile_bounds = this.profile_bounds;
+
+			return profile_bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn;
+		},
+		enumerable : false
+	},
+
+	h: {
+		get : function(){
+			if(this.side_count != 4)
+				return 0;
+			var profiles = this.profiles_by_side,
+				profile_bounds = this.profile_bounds;
+
+			return profile_bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn;
 		},
 		enumerable : false
 	}

@@ -373,6 +373,12 @@ function EditorAccordion(_editor, cell_acc) {
 							_grid = layout.cells("a").attachHeadFields(attr);
 						else
 							_grid.attach(attr);
+
+						setTimeout(function () {
+							layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 21 + "px";
+							layout.setSizes();
+							_grid.objBox.style.width = "100%";
+						}, 200);
 					}
 				},
 
@@ -424,7 +430,7 @@ function EditorAccordion(_editor, cell_acc) {
 		props.attache(obj);
 	};
 
-	this.resize_canvas = function (w, h) {
+	this.resize_canvas = function () {
 		var scroller = $(cont, '.scroller').baron();
 		scroller.update();
 		this.elm.setSizes();

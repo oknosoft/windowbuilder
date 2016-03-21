@@ -94,10 +94,22 @@ $p.modifiers.push(
 
 			attr.draw_pg_header = function (o, wnd) {
 
+				function layout_resize_finish() {
+					setTimeout(function () {
+						wnd.elmnts.layout_header.setSizes();
+						wnd.elmnts.pg_left.objBox.style.width = "100%";
+						wnd.elmnts.pg_right.objBox.style.width = "100%";
+					}, 200);
+				}
+
 				/**
 				 *	закладка шапка
 				 */
 				wnd.elmnts.layout_header = wnd.elmnts.tabs.tab_header.attachLayout('3U');
+
+				wnd.elmnts.layout_header.attachEvent("onResizeFinish", layout_resize_finish);
+
+				wnd.elmnts.layout_header.attachEvent("onPanelResizeFinish", layout_resize_finish);
 
 				/**
 				 *	левая колонка шапки документа
