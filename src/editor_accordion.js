@@ -253,30 +253,41 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		props = new (function SchemeProps(layout) {
 
-			var _grid;
+			var _obj,
+				_grid,
+				_reflect_id;
+
+			function reflect_changes() {
+				_obj.len = _editor.project.bounds.width.round(0);
+				_obj.height = _editor.project.bounds.height.round(0);
+				_obj.s = _editor.project.area;
+			}
 
 			this.__define({
 
 				attache: {
 					value: function (obj) {
 
+						_obj = obj;
+						obj = null;
+
 						if(_grid && _grid.destructor)
 							_grid.destructor();
 
 						_grid = layout.cells("a").attachHeadFields({
-							obj: obj,
+							obj: _obj,
 							oxml: {
 								"Свойства": ["sys","clr",
-									{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro", txt: obj.len},
-									{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro", txt: obj.height},
-									{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro", txt: obj.s}
+									{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro", txt: _obj.len},
+									{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro", txt: _obj.height},
+									{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro", txt: _obj.s}
 								],
 								"Строка заказа": ["quantity",
-									{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro", txt: obj.price_internal},
-									{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro", txt: obj.discount_percent_internal},
+									{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro", txt: _obj.price_internal},
+									{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro", txt: _obj.discount_percent_internal},
+									{id: "price", path: "o.price", synonym: "Цена", type: "ro", txt: _obj.price},
 									"discount_percent",
-									{id: "price", path: "o.price", synonym: "Цена", type: "ro", txt: obj.price},
-									{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro", txt: obj.amount},
+									{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro", txt: _obj.amount},
 									"note"]
 
 							},
@@ -290,6 +301,7 @@ function EditorAccordion(_editor, cell_acc) {
 				unload: {
 					value: function () {
 						layout.unload();
+						_obj = null;
 					}
 				},
 
@@ -299,6 +311,15 @@ function EditorAccordion(_editor, cell_acc) {
 					}
 				}
 
+			});
+
+			// начинаем следить за изменениями размеров при перерисовке контуров
+			$p.eve.attachEvent("contour_redrawed", function () {
+				if(_obj){
+					if(_reflect_id)
+						clearTimeout(_reflect_id);
+					_reflect_id = setTimeout(reflect_changes, 100);
+				}
 			});
 
 

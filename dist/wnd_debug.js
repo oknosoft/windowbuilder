@@ -1021,40 +1021,47 @@ $p.modifiers.push(
 
 	function($p) {
 
-		var _mgr = $p.doc.calc_order;
+		var _mgr = $p.doc.calc_order,
+			_meta_patched;
 
-		/**
-		 * структура заголовков табчасти продукции
-		 * @param source
-		 */
-		(function(source){
 
-			if($p.wsql.get_user_param("hide_price_dealer")){
-				source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил";
-				source.widths = "40,200,*,220,0,70,70,70,70,40,70,70,70,0,0,0";
-				source.min_widths = "30,200,220,150,0,70,40,70,70,70,70,70,70,0,0,0";
 
-			}else if($p.wsql.get_user_param("hide_price_manufacturer")){
-				source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма";
-				source.widths = "40,200,*,220,0,70,70,70,70,40,0,0,0,70,70,70";
-				source.min_widths = "30,200,220,150,0,70,40,70,70,70,0,0,0,70,70,70";
-
-			}else{
-				source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма";
-				source.widths = "40,200,*,220,0,70,70,70,70,40,70,70,70,70,70,70";
-				source.min_widths = "30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70";
-			}
-
-			if($p.ajax.root)
-				source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro";
-			else
-				source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro";
-
-		})($p.doc.calc_order.metadata().form.obj.tabular_sections.production);
 
 		_mgr.form_obj = function(pwnd, attr){
 
 			var o, wnd, evts = [];
+
+			/**
+			 * структура заголовков табчасти продукции
+			 * @param source
+			 */
+			if(!_meta_patched){
+				(function(source){
+
+					if($p.wsql.get_user_param("hide_price_dealer")){
+						source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил";
+						source.widths = "40,200,*,220,0,70,70,70,70,40,70,70,70,0,0,0";
+						source.min_widths = "30,200,220,150,0,70,40,70,70,70,70,70,70,0,0,0";
+
+					}else if($p.wsql.get_user_param("hide_price_manufacturer")){
+						source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма";
+						source.widths = "40,200,*,220,0,70,70,70,70,40,0,0,0,70,70,70";
+						source.min_widths = "30,200,220,150,0,70,40,70,70,70,0,0,0,70,70,70";
+
+					}else{
+						source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма";
+						source.widths = "40,200,*,220,0,70,70,70,70,40,70,70,70,70,70,70";
+						source.min_widths = "30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70";
+					}
+
+					if($p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length)
+						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro";
+					else
+						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro";
+
+				})($p.doc.calc_order.metadata().form.obj.tabular_sections.production);
+				_meta_patched = true;
+			}
 
 			attr.draw_tabular_sections = function (o, wnd, tabular_init) {
 

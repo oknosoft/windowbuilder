@@ -482,6 +482,7 @@ Contour.prototype.__define({
 		value: function () {
 
 			// ответственность за строку в таблице конструкций лежит на контуре
+			
 
 			// удаляем скрытые заполнения
 			this.glasses(false, true).forEach(function (glass) {

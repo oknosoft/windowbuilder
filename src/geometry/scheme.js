@@ -114,27 +114,49 @@ function Scheme(_canvas){
 		},
 		set: function (v) {
 
+			// устанавливаем в _dp характеристику
 			_scheme._dp.characteristic = v;
 			_scheme._dp.clr = _scheme._dp.characteristic.clr;
 
-			// оповещаем о новых слоях
-			Object.getNotifier(_scheme._noti).notify({
-				type: 'rows',
-				tabular: "constructions"
-			});
+			// устанавливаем строку заказа
+			_scheme.data._calc_order_row = _scheme._dp.characteristic.calc_order_row;
 
+			// устанавливаем в _dp свойства строки заказа
+			if(_scheme.data._calc_order_row){
+				"quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach(function (fld) {
+					_scheme._dp[fld] = _scheme._calc_order_row[fld];
+				});
+			}else{
+				// TODO: установить режим только просмотр, если не найдена строка заказа
+			}
+
+
+			// устанавливаем в _dp систему профилей
 			var setted;
 			$p.cat.production_params.find_rows({nom: _scheme._dp.characteristic.owner}, function(o){
 				_scheme._dp.sys = o;
 				setted = true;
-				Object.getNotifier(_scheme._dp).notify({
-					type: 'row',
-					tabular: "extra_fields"
-				});
 				return false;
 			});
 			if(!setted)
 				_scheme._dp.sys = "";
+
+			// устанавливаем в _dp цвет
+			_scheme._dp.clr = _scheme._dp.characteristic.clr;
+			if(_scheme._dp.clr.empty())
+				_scheme._dp.clr = _scheme._dp.sys.default_clr;
+
+			// оповещаем о новых слоях и свойствах изделия
+			Object.getNotifier(_scheme._noti).notify({
+				type: 'rows',
+				tabular: 'constructions'
+			});
+			Object.getNotifier(_scheme._dp).notify({
+				type: 'rows',
+				tabular: 'extra_fields'
+			});
+			
+			
 		},
 		enumerable: false
 	});
@@ -255,7 +277,7 @@ function Scheme(_canvas){
 				point: [0, 0],
 				size: [o.x, o.y]
 			});
-			_data._calc_order_row = o = null;
+			o = null;
 
 			// создаём семейство конструкций
 			_data._loading = true;

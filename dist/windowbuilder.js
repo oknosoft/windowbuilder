@@ -4288,27 +4288,49 @@ function Scheme(_canvas){
 		},
 		set: function (v) {
 
+			// устанавливаем в _dp характеристику
 			_scheme._dp.characteristic = v;
 			_scheme._dp.clr = _scheme._dp.characteristic.clr;
 
-			// оповещаем о новых слоях
-			Object.getNotifier(_scheme._noti).notify({
-				type: 'rows',
-				tabular: "constructions"
-			});
+			// устанавливаем строку заказа
+			_scheme.data._calc_order_row = _scheme._dp.characteristic.calc_order_row;
 
+			// устанавливаем в _dp свойства строки заказа
+			if(_scheme.data._calc_order_row){
+				"quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach(function (fld) {
+					_scheme._dp[fld] = _scheme._calc_order_row[fld];
+				});
+			}else{
+				// TODO: установить режим только просмотр, если не найдена строка заказа
+			}
+
+
+			// устанавливаем в _dp систему профилей
 			var setted;
 			$p.cat.production_params.find_rows({nom: _scheme._dp.characteristic.owner}, function(o){
 				_scheme._dp.sys = o;
 				setted = true;
-				Object.getNotifier(_scheme._dp).notify({
-					type: 'row',
-					tabular: "extra_fields"
-				});
 				return false;
 			});
 			if(!setted)
 				_scheme._dp.sys = "";
+
+			// устанавливаем в _dp цвет
+			_scheme._dp.clr = _scheme._dp.characteristic.clr;
+			if(_scheme._dp.clr.empty())
+				_scheme._dp.clr = _scheme._dp.sys.default_clr;
+
+			// оповещаем о новых слоях и свойствах изделия
+			Object.getNotifier(_scheme._noti).notify({
+				type: 'rows',
+				tabular: 'constructions'
+			});
+			Object.getNotifier(_scheme._dp).notify({
+				type: 'rows',
+				tabular: 'extra_fields'
+			});
+			
+			
 		},
 		enumerable: false
 	});
@@ -4429,7 +4451,7 @@ function Scheme(_canvas){
 				point: [0, 0],
 				size: [o.x, o.y]
 			});
-			_data._calc_order_row = o = null;
+			o = null;
 
 			// создаём семейство конструкций
 			_data._loading = true;
@@ -6941,30 +6963,41 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		props = new (function SchemeProps(layout) {
 
-			var _grid;
+			var _obj,
+				_grid,
+				_reflect_id;
+
+			function reflect_changes() {
+				_obj.len = _editor.project.bounds.width.round(0);
+				_obj.height = _editor.project.bounds.height.round(0);
+				_obj.s = _editor.project.area;
+			}
 
 			this.__define({
 
 				attache: {
 					value: function (obj) {
 
+						_obj = obj;
+						obj = null;
+
 						if(_grid && _grid.destructor)
 							_grid.destructor();
 
 						_grid = layout.cells("a").attachHeadFields({
-							obj: obj,
+							obj: _obj,
 							oxml: {
 								"Свойства": ["sys","clr",
-									{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro", txt: obj.len},
-									{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro", txt: obj.height},
-									{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro", txt: obj.s}
+									{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro", txt: _obj.len},
+									{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro", txt: _obj.height},
+									{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro", txt: _obj.s}
 								],
 								"Строка заказа": ["quantity",
-									{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro", txt: obj.price_internal},
-									{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro", txt: obj.discount_percent_internal},
+									{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro", txt: _obj.price_internal},
+									{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro", txt: _obj.discount_percent_internal},
+									{id: "price", path: "o.price", synonym: "Цена", type: "ro", txt: _obj.price},
 									"discount_percent",
-									{id: "price", path: "o.price", synonym: "Цена", type: "ro", txt: obj.price},
-									{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro", txt: obj.amount},
+									{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro", txt: _obj.amount},
 									"note"]
 
 							},
@@ -6978,6 +7011,7 @@ function EditorAccordion(_editor, cell_acc) {
 				unload: {
 					value: function () {
 						layout.unload();
+						_obj = null;
 					}
 				},
 
@@ -6987,6 +7021,15 @@ function EditorAccordion(_editor, cell_acc) {
 					}
 				}
 
+			});
+
+			// начинаем следить за изменениями размеров при перерисовке контуров
+			$p.eve.attachEvent("contour_redrawed", function () {
+				if(_obj){
+					if(_reflect_id)
+						clearTimeout(_reflect_id);
+					_reflect_id = setTimeout(reflect_changes, 100);
+				}
 			});
 
 
