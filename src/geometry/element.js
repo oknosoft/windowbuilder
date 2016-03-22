@@ -360,11 +360,11 @@ BuilderElement.prototype.__define({
 					obj: this,
 					oxml: this.oxml
 				});
-				this.data._grid.attachEvent("onRowSelect", function(id,ind){
+				this.data._grid.attachEvent("onRowSelect", function(id){
 					if(id == "x1" || id == "y1")
-						this.select_node("b");
+						this._obj.select_node("b");
 					else if(id == "x2" || id == "y2")
-						this.select_node("e");
+						this._obj.select_node("e");
 				});
 
 			}else{

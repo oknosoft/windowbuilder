@@ -117,7 +117,7 @@ paper.Path.prototype.__define({
 						tmp.data.reversed = true;
 						for(var i = loc1.offset; i>=loc2.offset; i+=step)
 							tmp.add(this.getPointAt(i));
-					}else{
+					}else if(step > 0){
 						for(var i = loc1.offset; i<=loc2.offset; i+=step)
 							tmp.add(this.getPointAt(i));
 					}

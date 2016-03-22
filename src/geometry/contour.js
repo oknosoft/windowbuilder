@@ -690,7 +690,7 @@ Contour.prototype.__define({
 					if(pb.profile && pe.profile)
 						nodes.push({b: pbg, e: peg, profile: p});
 				}
-				if(!ip.outer.length && (pb.is_t || pe.is_t)){
+				if(!ip.outer.length && (pb.is_l || pe.is_l)){
 					// для импостов добавляем сегмент в обратном направлении
 					if(pb.profile && pe.profile)
 						nodes.push({b: peg, e: pbg, profile: p, outer: true});

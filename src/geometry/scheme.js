@@ -443,15 +443,14 @@ function Scheme(_canvas){
 
 
 		}else if((distance = element.b.getDistance(point)) < consts.sticking){
+			// Если мы находимся в окрестности начала элемента
 
 			if(!res.cnn){
 
 				// а есть ли подходящее?
-				if(!element.is_collinear(profile)){
-					cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
-					if(!cnns.length)
-						return;
-				}
+				cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
+				if(!cnns.length)
+					return;
 
 				// если в точке сходятся 2 профиля текущего контура - ок
 
@@ -469,14 +468,13 @@ function Scheme(_canvas){
 
 		}else if((distance = element.e.getDistance(point)) < consts.sticking){
 
+			// Если мы находимся в окрестности конца элемента
 			if(!res.cnn){
 
 				// а есть ли подходящее?
-				if(!element.is_collinear(profile)){
-					cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
-					if(!cnns.length)
-						return;
-				}
+				cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
+				if(!cnns.length)
+					return;
 
 				// если в точке сходятся 2 профиля текущего контура - ок
 
@@ -493,6 +491,8 @@ function Scheme(_canvas){
 			return false;
 
 		}else{
+			
+			// это соединение с пустотой
 			gp = element.generatrix.getNearestPoint(point);
 			if(gp && (distance = gp.getDistance(point)) < consts.sticking){
 				if(distance < res.distance || bind_generatrix){

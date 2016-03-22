@@ -38,11 +38,15 @@ function Profile(attr){
 			if(bcnn.cnn && bcnn.profile == p){
 				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					if(!_profile.b.is_nearest(p.e)){
-						if(bcnn.to_cut || bcnn.is_cut){
-							if(_profile.b.getDistance(p.e, true) < _profile.b.getDistance(p.b, true))
-								_profile.b = p.e;
-							else
-								_profile.b = p.b;
+						if(bcnn.is_t){
+							if(paper.Key.isDown('alt')){
+
+							}else{
+								if(_profile.b.getDistance(p.e, true) < _profile.b.getDistance(p.b, true))
+									_profile.b = p.e;
+								else
+									_profile.b = p.b;
+							}
 						} else
 							_profile.b = p.e;
 					}
@@ -57,11 +61,15 @@ function Profile(attr){
 			if(ecnn.cnn && ecnn.profile == p){
 				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					if(!_profile.e.is_nearest(p.b)){
-						if(ecnn.to_cut || ecnn.is_cut){
-							if(_profile.e.getDistance(p.b, true) < _profile.e.getDistance(p.e, true))
-								_profile.e = p.b;
-							else
-								_profile.e = p.e;
+						if(ecnn.is_t){
+							if(paper.Key.isDown('alt')){
+
+							}else{
+								if(_profile.e.getDistance(p.b, true) < _profile.e.getDistance(p.e, true))
+									_profile.e = p.b;
+								else
+									_profile.e = p.e;
+							}
 						} else
 							_profile.e = p.b;
 					}
@@ -128,6 +136,7 @@ function Profile(attr){
 	 * Находит точку примыкания концов профиля к соседними элементами контура
 	 * @method cnn_point
 	 * @param node {String} - имя узла профиля: "b" или "e"
+	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
 	 * @return {CnnPoint} - объект {point, profile, cnn_types}
 	 */
 	this.cnn_point = function(node, point){
@@ -171,53 +180,18 @@ function Profile(attr){
 				res._mixin(ares[0]);
 
 
-			}else if(ares.length == 2){
+			}else if(ares.length >= 2){
 
-				// если в точке сходятся 3 профиля...
-				if(node == "b"){
-					if(ares[0].profile_point == "e")
-						ares[0].angl = ares[0].profile.e.subtract(ares[0].profile.b).getDirectedAngle(this.e.subtract(this.b));
-					else
-						ares[0].angl = ares[0].profile.b.subtract(ares[0].profile.e).getDirectedAngle(this.e.subtract(this.b));
-
-					if(ares[1].profile_point == "e")
-						ares[1].angl = ares[1].profile.e.subtract(ares[1].profile.b).getDirectedAngle(this.e.subtract(this.b));
-					else
-						ares[1].angl = ares[1].profile.b.subtract(ares[1].profile.e).getDirectedAngle(this.e.subtract(this.b));
-
-				}else{
-					if(ares[0].profile_point == "e")
-						ares[0].angl = ares[0].profile.e.subtract(ares[0].profile.b).getDirectedAngle(this.b.subtract(this.e));
-					else
-						ares[0].angl = ares[0].profile.b.subtract(ares[0].profile.e).getDirectedAngle(this.b.subtract(this.e));
-
-					if(ares[1].profile_point == "e")
-						ares[1].angl = ares[1].profile.e.subtract(ares[1].profile.b).getDirectedAngle(this.b.subtract(this.e));
-					else
-						ares[1].angl = ares[1].profile.b.subtract(ares[1].profile.e).getDirectedAngle(this.b.subtract(this.e));
-
-				}
-
-				if(ares[0].angl < 0)
-					ares[0].angl += 180;
-				if(ares[1].angl < 0)
-					ares[1].angl += 180;
-
-				if(Math.abs(ares[1].angl - ares[0].angl) < consts.orientation_delta){
-					// вероятно, мы находимся в разрыве - выбираем любой
-					res._mixin(ares[0]);
-					res.is_cut = true;
-
-				}else {
-					// скорее всего, к нам примыкает разрыв - выбираем с наибольшим углом к нашему
-					res._mixin(ares[0].angl > ares[1].angl ? ares[0] : ares[1]);
-					res.to_cut = true;
-
-				}
-
-				ares = null;
+				// если в точке сходятся 3 и более профиля...
+				// и среди соединений нет углового диагонального, вероятно, мы находимся в разрыве - выбираем соединение с пустотой
+				// if(ares.some(function (curr) {
+				// 		if(curr.profile && curr.profile_point)
+				// 			;
+				// 	})){
+				// }
+				res.clear();
 			}
-
+			ares = null;
 		}
 
 		return res;
@@ -279,7 +253,7 @@ function Profile(attr){
 			prays = cnn_point.profile.rays;
 		}
 
-		if(cnn_point.cnn && (cnn_point.cnn_types == $p.enm.cnn_types.acn.t || cnn_point.to_cut)){
+		if(cnn_point.is_t){
 
 			// для Т-соединений сначала определяем, изнутри или снаружи находится наш профиль
 			if(!cnn_point.profile.path.segments.length)
@@ -442,7 +416,7 @@ Profile.prototype.__define({
 			}
 
 			// кеш лучей в узлах профиля
-			this.data._rays = new ProfileRays();
+			this.data._rays = new ProfileRays(this);
 
 			this.data.generatrix.strokeColor = 'grey';
 
@@ -1090,7 +1064,7 @@ Profile.prototype.__define({
 	rays: {
 		get : function(){
 			if(!this.data._rays.inner.segments.length || !this.data._rays.outer.segments.length)
-				this.data._rays.recalc(this);
+				this.data._rays.recalc();
 			return this.data._rays;
 		},
 		enumerable : false,
@@ -1197,9 +1171,16 @@ Editor.Profile = Profile;
  * @class CnnPoint
  * @constructor
  */
-function CnnPoint(){
+function CnnPoint(parent){
 
 	var _err = [];
+
+	/**
+	 * Профиль, которому принадлежит точка соединения
+	 * @type {Profile}
+	 */
+	this.parent = parent;
+	parent = null;
 
 	/**
 	 * Расстояние до ближайшего профиля
@@ -1248,6 +1229,10 @@ function CnnPoint(){
 }
 CnnPoint.prototype.__define({
 
+	/**
+	 * Проверяет, является ли соединение в точке Т-образным.
+	 * L для примыкающих рассматривается, как Т
+	 */
 	is_t: {
 		get: function () {
 
@@ -1260,10 +1245,26 @@ CnnPoint.prototype.__define({
 				return true;
 
 			// если это Ꞁ или └─, то может быть T в разрыв - проверяем
-			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной || this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной)
-				return !!this.is_cut;
+			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной && this.parent.orientation != $p.enm.orientations.Вертикальная)
+				return true;
 
-			return true;
+			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной && this.parent.orientation != $p.enm.orientations.Горизонтальная)
+				return true;
+
+			return false;
+		},
+		enumerable: false
+	},
+
+	/**
+	 * Проверяет, является ли соединение в точке L-образным
+	 * Соединения Т всегда L-образные
+	 */
+	is_l: {
+		get: function () {
+			return this.is_t ||
+				(this.cnn && (this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной || 
+					this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной));
 		},
 		enumerable: false
 	},
@@ -1271,8 +1272,6 @@ CnnPoint.prototype.__define({
 	clear: {
 		value: function () {
 			delete this.profile_point;
-			delete this.is_cut;
-			delete this.to_cut;
 			this.profile = null;
 			this.cnn = null;
 			this.err = null;
@@ -1283,10 +1282,13 @@ CnnPoint.prototype.__define({
 	}
 });
 
-function ProfileRays(){
+function ProfileRays(parent){
 
-	this.b = new CnnPoint();
-	this.e = new CnnPoint();
+	this.parent = parent;
+	parent = null;
+
+	this.b = new CnnPoint(this.parent);
+	this.e = new CnnPoint(this.parent);
 	this.inner = new paper.Path({ insert: false });
 	this.outer = new paper.Path({ insert: false });
 
@@ -1313,9 +1315,9 @@ ProfileRays.prototype.__define({
 	},
 
 	recalc: {
-		value: function(_profile){
+		value: function(){
 
-			var path = _profile.generatrix,
+			var path = this.parent.generatrix,
 				len = path.length;
 
 			this.clear_segments();
@@ -1323,8 +1325,8 @@ ProfileRays.prototype.__define({
 			if(!len)
 				return;
 
-			var d1 = _profile.d1, d2 = _profile.d2,
-				ds = 3 * _profile.width, step = len * 0.02,
+			var d1 = this.parent.d1, d2 = this.parent.d2,
+				ds = 3 * this.parent.width, step = len * 0.02,
 				point_b, tangent_b, normal_b,
 				point_e, tangent_e, normal_e;
 

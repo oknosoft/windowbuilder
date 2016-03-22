@@ -102,7 +102,7 @@ $p.modifiers.push(
 
 				row_cpec.totqty1 = row_cpec.totqty * row_cpec.nom.loss_factor;
 
-				["len","width","s","qty","totqty","totqty1"].forEach(function (fld) {
+				["len","width","s","qty","totqty","totqty1","alp1","alp2"].forEach(function (fld) {
 					row_cpec[fld] = row_cpec[fld].round(4);
 				});
 			}
