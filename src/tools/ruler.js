@@ -245,13 +245,20 @@ function RulerWnd(options){
 				allow_close: true,
 				modal: true,
 				on_close: function () {
+
 					if(wnd.elmnts.calck && wnd.elmnts.calck.removeSelf)
 						wnd.elmnts.calck.removeSelf();
+
+					$p.eve.detachEvent(wnd_keydown);
+						
 					$p.eve.callEvent("sizes_wnd", [{
 						wnd: wnd,
 						name: "close",
 						size: wnd.size
 					}]);
+
+					wnd = null;
+					
 					return true;
 				}
 			}
@@ -259,10 +266,43 @@ function RulerWnd(options){
 	$p.wsql.restore_options("editor", options);
 
 	var wnd = $p.iface.dat_blank(paper._dxw, options.wnd),
-		div=document.createElement("table"),
-		table, input, calck;
+		
+		wnd_keydown = $p.eve.attachEvent("keydown", function (ev) {
 
-	function onclick(e){
+			if(wnd){
+				switch(ev.keyCode) {
+					case 27:        // закрытие по {ESC}
+						wnd.close();
+						break;
+					case 37:        // left
+						on_button_click({
+							currentTarget: {name: "left"}
+						});
+						break;
+					case 38:        // up
+						on_button_click({
+							currentTarget: {name: "top"}
+						});
+						break;
+					case 39:        // right
+						on_button_click({
+							currentTarget: {name: "right"}
+						});
+						break;
+					case 40:        // down
+						on_button_click({
+							currentTarget: {name: "bottom"}
+						});
+						break;
+				}
+				return $p.cancel_bubble(ev);
+			}
+			
+		}),
+		div=document.createElement("table"),
+		table, input;
+
+	function on_button_click(e){
 		$p.eve.callEvent("sizes_wnd", [{
 			wnd: wnd,
 			name: e.currentTarget.name,
@@ -278,13 +318,13 @@ function RulerWnd(options){
 	table = div.firstChild.childNodes;
 
 	$p.iface.add_button(table[0].childNodes[1], null,
-		{name: "top", img: "dist/imgs/align_top.png", tooltip: $p.msg.align_set_top}).onclick = onclick;
+		{name: "top", img: "dist/imgs/align_top.png", tooltip: $p.msg.align_set_top}).onclick = on_button_click;
 	$p.iface.add_button(table[1].childNodes[0], null,
-		{name: "left", img: "dist/imgs/align_left.png", tooltip: $p.msg.align_set_left}).onclick = onclick;
+		{name: "left", img: "dist/imgs/align_left.png", tooltip: $p.msg.align_set_left}).onclick = on_button_click;
 	$p.iface.add_button(table[1].childNodes[2], null,
-		{name: "right", img: "dist/imgs/align_right.png", tooltip: $p.msg.align_set_right}).onclick = onclick;
+		{name: "right", img: "dist/imgs/align_right.png", tooltip: $p.msg.align_set_right}).onclick = on_button_click;
 	$p.iface.add_button(table[2].childNodes[1], null,
-		{name: "bottom", img: "dist/imgs/align_bottom.png", tooltip: $p.msg.align_set_bottom}).onclick = onclick;
+		{name: "bottom", img: "dist/imgs/align_bottom.png", tooltip: $p.msg.align_set_bottom}).onclick = on_button_click;
 
 	wnd.attachObject(div);
 
@@ -319,6 +359,12 @@ function RulerWnd(options){
 			enumerable: false
 		}
 	});
+
+	setTimeout(function () {
+		input.firstChild.focus();
+	}, 100);
+
+	
 
 	return wnd;
 }

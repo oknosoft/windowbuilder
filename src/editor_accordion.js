@@ -213,17 +213,29 @@ function EditorAccordion(_editor, cell_acc) {
 
 			// гасим-включаем слой по чекбоксу
 			tree.attachEvent("onCheck", function(id, state){
-				var l = _editor.project.getItem({cnstr: Number(id)}),
+				var l,
+					pid = tree.getParentId(id),
 					sub = tree.getAllSubItems(id);
 
-				if(l)
+				if(pid && state && !tree.isItemChecked(pid)){
+					if(l = _editor.project.getItem({cnstr: Number(pid)}))
+						l.visible = true;
+					tree.setCheck(pid, 1);
+				}
+
+				if(l = _editor.project.getItem({cnstr: Number(id)}))
 					l.visible = !!state;
 
 				if(typeof sub == "string")
 					sub = sub.split(",");
 				sub.forEach(function (id) {
 					tree.setCheck(id, state);
+					if(l = _editor.project.getItem({cnstr: Number(id)}))
+						l.visible = !!state;
 				});
+
+				if(pid && state && !tree.isItemChecked(pid))
+					tree.setCheck(pid, 1);
 
 				_editor.project.register_update();
 

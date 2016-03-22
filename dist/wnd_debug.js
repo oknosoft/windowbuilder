@@ -1646,12 +1646,8 @@ $p.modifiers.push(
 
 				var ox = scheme.ox,
 					dp = scheme._dp,
-					row;
-
-				o.production.find_rows({characteristic: ox}, function (_row) {
-					row = _row;
-					return false;
-				})
+					row = ox.calc_order_row;
+				
 				if(!row || ox.calc_order != o)
 					return;
 
@@ -1661,11 +1657,14 @@ $p.modifiers.push(
 				row.nom = ox.owner;
 				row.note = dp.note;
 				row.quantity = dp.quantity || 1;
+				row.len = ox.x;
+				row.width = ox.y;
+				row.s = ox.s;
 				row.discount_percent = dp.discount_percent;
 				row.discount_percent_internal = dp.discount_percent_internal;
 				if(row.unit.owner != row.nom)
 					row.unit = row.nom.storage_unit;
-
+				
 			}
 
 			/**
