@@ -2889,9 +2889,107 @@ paper.Point.prototype.__define({
 			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 10);
 		},
 		enumerable: false
+	},
+
+	/**
+	 * ПоложениеТочкиОтносительноПрямой
+	 * @param x1 {Number}
+	 * @param y1 {Number}
+	 * @param x2 {Number}
+	 * @param y2 {Number}
+	 * @return {number}
+	 */
+	point_pos: {
+		value: function(x1,y1, x2,y2){
+			if (Math.abs(x1-x2) < 0.2){
+				// вертикаль  >0 - справа, <0 - слева,=0 - на линии
+				return (this.x-x1)*(y1-y2);
+			}
+			if (Math.abs(y1-y2) < 0.2){
+				// горизонталь >0 - снизу, <0 - сверху,=0 - на линии
+				return (this.y-y1)*(x2-x1);
+			}
+			// >0 - справа, <0 - слева,=0 - на линии
+			return (this.y-y1)*(x2-x1)-(y2-y1)*(this.x-x1);
+		},
+		enumerable: false
+	},
+
+	/**
+	 * Рассчитывает координаты точки, лежащей на окружности
+	 * @param x1 {Number}
+	 * @param y1 {Number}
+	 * @param x2 {Number}
+	 * @param y2 {Number}
+	 * @param r {Number}
+	 * @param arc_ccw {Boolean}
+	 * @param more_180 {Boolean}
+	 * @return {Point}
+	 */
+	arc_cntr: {
+		value: function(x1,y1, x2,y2, r0, ccw){
+			var a,b,p,r,q,yy1,xx1,yy2,xx2;
+			if(ccw){
+				var tmpx=x1, tmpy=y1;
+				x1=x2; y1=y2; x2=tmpx; y2=tmpy;
+			}
+			if (x1!=x2){
+				a=(x1*x1 - x2*x2 - y2*y2 + y1*y1)/(2*(x1-x2));
+				b=((y2-y1)/(x1-x2));
+				p=b*b+ 1;
+				r=-2*((x1-a)*b+y1);
+				q=(x1-a)*(x1-a) - r0*r0 + y1*y1;
+				yy1=(-r + Math.sqrt(r*r - 4*p*q))/(2*p);
+				xx1=a+b*yy1;
+				yy2=(-r - Math.sqrt(r*r - 4*p*q))/(2*p);
+				xx2=a+b*yy2;
+			} else{
+				a=(y1*y1 - y2*y2 - x2*x2 + x1*x1)/(2*(y1-y2));
+				b=((x2-x1)/(y1-y2));
+				p=b*b+ 1;
+				r=-2*((y1-a)*b+x1);
+				q=(y1-a)*(y1-a) - r0*r0 + x1*x1;
+				xx1=(-r - Math.sqrt(r*r - 4*p*q))/(2*p);
+				yy1=a+b*xx1;
+				xx2=(-r + Math.sqrt(r*r - 4*p*q))/(2*p);
+				yy2=a+b*xx2;
+			}
+
+			if (new paper.Point(xx1,yy1).point_pos(x1,y1, x2,y2)>0)
+				return {x: xx1, y: yy1};
+			else
+				return {x: xx2, y: yy2}
+		},
+		enumerable: false
+	},
+
+	arc_point: {
+		value: function(x1,y1, x2,y2, r, arc_ccw, more_180){
+			var point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
+			if (r>0){
+				var dx = x1-x2, dy = y1-y2, dr = r*r-(dx*dx+dy*dy)/4, l, h, centr;
+				if(dr >= 0){
+					centr = this.arc_cntr(x1,y1, x2,y2, r, arc_ccw);
+					dx = centr.x - point.x;
+					dy = point.y - centr.y;	// т.к. Y перевернут
+					l = Math.sqrt(dx*dx + dy*dy);
+
+					if(more_180)
+						h = r+Math.sqrt(dr);
+					else
+						h = r-Math.sqrt(dr);
+
+					point.x += dx*h/l;
+					point.y += dy*h/l;
+				}
+			}
+			return point;
+		},
+		enumerable: false
 	}
 
 });
+
 
 
 
@@ -5090,8 +5188,7 @@ var acn,
 
 function ToolArc(){
 
-	var _editor = paper,
-		tool = this;
+	var tool = this;
 
 	ToolArc.superclass.constructor.call(this);
 
@@ -5133,30 +5230,33 @@ function ToolArc(){
 		tool.hitItem = null;
 
 		if (event.point)
-			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
 		if(!tool.hitItem)
-			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+			tool.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
 
 		if (tool.hitItem && tool.hitItem.item.parent instanceof Profile
 			&& (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke')) {
-			_editor.canvas_cursor('cursor-arc');
+			paper.canvas_cursor('cursor-arc');
 		} else {
-			_editor.canvas_cursor('cursor-arc-arrow');
+			paper.canvas_cursor('cursor-arc-arrow');
 		}
 
 		return true;
 	};
 	tool.on({
+		
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-arc-arrow');
+			paper.tb_left.select(tool.options.name);
+			paper.canvas_cursor('cursor-arc-arrow');
 		},
+		
 		deactivate: function() {
-			_editor.hide_selection_bounds();
+			paper.hide_selection_bounds();
 		},
+		
 		mousedown: function(event) {
 
-			var b, e, r, contour;
+			var b, e, r;
 
 			this.mode = null;
 			this.changed = false;
@@ -5172,63 +5272,79 @@ function ToolArc(){
 					b = this.mode.firstSegment.point;
 					e = this.mode.lastSegment.point;
 					r = (b.getDistance(e) / 2) + 0.001;
-					contour = this.mode.parent.parent;
 
-					do_arc(this.mode, $p.m.arc_point(b.x, b.y, e.x, e.y, r, event.modifiers.option, false));
+					do_arc(this.mode, event.point.arc_point(b.x, b.y, e.x, e.y, r, event.modifiers.option, false));
 
 					//undo.snapshot("Move Shapes");
+					r = this.mode;
 					this.mode = null;
-					setTimeout(contour.redraw.bind(contour), 10);
-
+					
 
 				}else if(event.modifiers.space){
 					// при зажатом space удаляем кривизну
 
 					e = this.mode.lastSegment.point;
-					contour = this.mode.parent.parent;
-
-					this.mode.removeSegments(1);
-					this.mode.firstSegment.handleIn = null;
-					this.mode.firstSegment.handleOut = null;
-					this.mode.lineTo(e);
-					this.mode.parent.rays.clear();
-					this.mode.selected = true;
-
-					//undo.snapshot("Move Shapes");
+					r = this.mode;
 					this.mode = null;
-					setTimeout(contour.redraw.bind(contour), 10);
+
+					r.removeSegments(1);
+					r.firstSegment.handleIn = null;
+					r.firstSegment.handleOut = null;
+					r.lineTo(e);
+					r.parent.rays.clear();
+					r.selected = true;
+					//undo.snapshot("Move Shapes");
 
 				} else {
-					_editor.project.deselectAll();
-					this.mode.selected = true;
-					_editor.project.deselect_all_points();
+					paper.project.deselectAll();
+
+					r = this.mode;
+					r.selected = true;
+					paper.project.deselect_all_points();
 					this.mouseStartPos = event.point.clone();
-					this.originalContent = _editor.capture_selection_state();
+					this.originalContent = paper.capture_selection_state();
 
 				}
 
-				//attache_dg(tool.hitItem.item.parent, tool.wnd);
+				setTimeout(function () {
+					r.layer.redraw();
+					r.parent.attache_wnd(paper._acc.elm.cells("a"));
+					$p.eve.callEvent("layer_activated", [r.layer]);
+				}, 10);
 
 			}else{
 				//tool.detache_wnd();
-				_editor.project.deselectAll();
+				paper.project.deselectAll();
 			}
 		},
+		
 		mouseup: function(event) {
+
+			var item = this.hitItem ? this.hitItem.item : null;
+
+			if(item instanceof Filling && item.visible){
+				item.attache_wnd(paper._acc.elm.cells("a"));
+				item.selected = true;
+
+				if(item.selected && item.layer)
+					$p.eve.callEvent("layer_activated", [item.layer]);
+			}
+
 			if (this.mode && this.changed) {
 				//undo.snapshot("Move Shapes");
-				//_editor.project.redraw();
+				//paper.project.redraw();
 			}
 
-			_editor.canvas_cursor('cursor-arc-arrow');
+			paper.canvas_cursor('cursor-arc-arrow');
 
 		},
+		
 		mousedrag: function(event) {
 			if (this.mode) {
 
 				this.changed = true;
 
-				_editor.canvas_cursor('cursor-arrow-small');
+				paper.canvas_cursor('cursor-arrow-small');
 
 				do_arc(this.mode, event.point);
 
@@ -5237,9 +5353,11 @@ function ToolArc(){
 
 			}
 		},
+		
 		mousemove: function(event) {
 			this.hitTest(event);
 		}
+		
 	});
 
 	return tool;
@@ -5884,8 +6002,11 @@ function ToolPen(){
 					return;
 
 				paper.project.selectedItems.forEach(function (path) {
-					if(path.parent instanceof Profile)
-						path.parent.remove();
+					if(path.parent instanceof Profile){
+						path = path.parent;
+						path.removeChildren();
+						path.remove();
+					}
 				});
 
 				this.mode = null;

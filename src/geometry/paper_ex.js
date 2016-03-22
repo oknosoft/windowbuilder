@@ -276,9 +276,107 @@ paper.Point.prototype.__define({
 			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 10);
 		},
 		enumerable: false
+	},
+
+	/**
+	 * ПоложениеТочкиОтносительноПрямой
+	 * @param x1 {Number}
+	 * @param y1 {Number}
+	 * @param x2 {Number}
+	 * @param y2 {Number}
+	 * @return {number}
+	 */
+	point_pos: {
+		value: function(x1,y1, x2,y2){
+			if (Math.abs(x1-x2) < 0.2){
+				// вертикаль  >0 - справа, <0 - слева,=0 - на линии
+				return (this.x-x1)*(y1-y2);
+			}
+			if (Math.abs(y1-y2) < 0.2){
+				// горизонталь >0 - снизу, <0 - сверху,=0 - на линии
+				return (this.y-y1)*(x2-x1);
+			}
+			// >0 - справа, <0 - слева,=0 - на линии
+			return (this.y-y1)*(x2-x1)-(y2-y1)*(this.x-x1);
+		},
+		enumerable: false
+	},
+
+	/**
+	 * Рассчитывает координаты точки, лежащей на окружности
+	 * @param x1 {Number}
+	 * @param y1 {Number}
+	 * @param x2 {Number}
+	 * @param y2 {Number}
+	 * @param r {Number}
+	 * @param arc_ccw {Boolean}
+	 * @param more_180 {Boolean}
+	 * @return {Point}
+	 */
+	arc_cntr: {
+		value: function(x1,y1, x2,y2, r0, ccw){
+			var a,b,p,r,q,yy1,xx1,yy2,xx2;
+			if(ccw){
+				var tmpx=x1, tmpy=y1;
+				x1=x2; y1=y2; x2=tmpx; y2=tmpy;
+			}
+			if (x1!=x2){
+				a=(x1*x1 - x2*x2 - y2*y2 + y1*y1)/(2*(x1-x2));
+				b=((y2-y1)/(x1-x2));
+				p=b*b+ 1;
+				r=-2*((x1-a)*b+y1);
+				q=(x1-a)*(x1-a) - r0*r0 + y1*y1;
+				yy1=(-r + Math.sqrt(r*r - 4*p*q))/(2*p);
+				xx1=a+b*yy1;
+				yy2=(-r - Math.sqrt(r*r - 4*p*q))/(2*p);
+				xx2=a+b*yy2;
+			} else{
+				a=(y1*y1 - y2*y2 - x2*x2 + x1*x1)/(2*(y1-y2));
+				b=((x2-x1)/(y1-y2));
+				p=b*b+ 1;
+				r=-2*((y1-a)*b+x1);
+				q=(y1-a)*(y1-a) - r0*r0 + x1*x1;
+				xx1=(-r - Math.sqrt(r*r - 4*p*q))/(2*p);
+				yy1=a+b*xx1;
+				xx2=(-r + Math.sqrt(r*r - 4*p*q))/(2*p);
+				yy2=a+b*xx2;
+			}
+
+			if (new paper.Point(xx1,yy1).point_pos(x1,y1, x2,y2)>0)
+				return {x: xx1, y: yy1};
+			else
+				return {x: xx2, y: yy2}
+		},
+		enumerable: false
+	},
+
+	arc_point: {
+		value: function(x1,y1, x2,y2, r, arc_ccw, more_180){
+			var point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
+			if (r>0){
+				var dx = x1-x2, dy = y1-y2, dr = r*r-(dx*dx+dy*dy)/4, l, h, centr;
+				if(dr >= 0){
+					centr = this.arc_cntr(x1,y1, x2,y2, r, arc_ccw);
+					dx = centr.x - point.x;
+					dy = point.y - centr.y;	// т.к. Y перевернут
+					l = Math.sqrt(dx*dx + dy*dy);
+
+					if(more_180)
+						h = r+Math.sqrt(dr);
+					else
+						h = r-Math.sqrt(dr);
+
+					point.x += dx*h/l;
+					point.y += dy*h/l;
+				}
+			}
+			return point;
+		},
+		enumerable: false
 	}
 
 });
+
 
 
 

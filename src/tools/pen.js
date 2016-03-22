@@ -321,8 +321,11 @@ function ToolPen(){
 					return;
 
 				paper.project.selectedItems.forEach(function (path) {
-					if(path.parent instanceof Profile)
-						path.parent.remove();
+					if(path.parent instanceof Profile){
+						path = path.parent;
+						path.removeChildren();
+						path.remove();
+					}
 				});
 
 				this.mode = null;
