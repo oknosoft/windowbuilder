@@ -5040,14 +5040,12 @@ Scheme.prototype.__define({
 	load_stamp: {
 		value: function(id){
 
-			var _scheme = this._scheme || this;
-
 			function do_load(obx){
 
-				var ox = _scheme.ox;
+				var ox = this.ox;
 
 				// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
-				_scheme.clear();
+				this.clear();
 
 				// переприсваиваем систему через номенклатуру характеристики
 				if(!obx.owner.empty())
@@ -5064,12 +5062,12 @@ Scheme.prototype.__define({
 				ox.params.load(obx.params);
 				ox.cnn_elmnts.load(obx.cnn_elmnts);
 
-				_scheme.load(ox);
+				this.load(ox);
 
 			}
 
 			$p.cat.characteristics.get(id, true, true)
-				.then(do_load);
+				.then(do_load.bind(this));
 
 		}
 	},
@@ -8025,8 +8023,8 @@ Editor.prototype.__define({
 				return;
 			}
 
-			$p.cat.characteristics.form_selection_block({
-				
+			$p.cat.characteristics.form_selection_block(this.project._pwnd, {
+				on_select: this.project.load_stamp.bind(this.project)
 			});
 		}
 	},

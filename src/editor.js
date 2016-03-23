@@ -539,8 +539,8 @@ Editor.prototype.__define({
 				return;
 			}
 
-			$p.cat.characteristics.form_selection_block({
-				
+			$p.cat.characteristics.form_selection_block(this.project._pwnd, {
+				on_select: this.project.load_stamp.bind(this.project)
 			});
 		}
 	},

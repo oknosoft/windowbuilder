@@ -96,7 +96,7 @@ $p.modifiers.push(
 
 				function layout_resize_finish() {
 					setTimeout(function () {
-						if(wnd.elmnts.layout_header){
+						if(wnd.elmnts.layout_header.setSizes){
 							wnd.elmnts.layout_header.setSizes();
 							wnd.elmnts.pg_left.objBox.style.width = "100%";
 							wnd.elmnts.pg_right.objBox.style.width = "100%";
