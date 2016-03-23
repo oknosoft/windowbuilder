@@ -629,6 +629,28 @@ Scheme.prototype.__define({
 				contour.save_coordinates();
 			});
 			$p.eve.callEvent("save_coordinates", [this, attr]);
+			
+		}
+	},
+
+	/**
+	 * возвращает строку svg эскиза изделия
+	 * @method get_svg
+	 * @for Scheme
+	 * @param [attr] {Object} - указывает видимость слоёв
+	 */
+	get_svg: {
+
+		value: function (attr) {
+
+			var svg = this.exportSVG({excludeData: true});
+			svg.removeAttribute("x");
+			svg.removeAttribute("y");
+			svg.removeAttribute("width");
+			svg.removeAttribute("height");
+			svg.querySelector("g").setAttribute("transform", "scale(0.22)");
+
+			return svg.outerHTML;
 		}
 	},
 
@@ -636,14 +658,14 @@ Scheme.prototype.__define({
 	 * Перезаполняет изделие данными типового блока
 	 * @method load_stamp
 	 * @for Scheme
-	 * @param id {String|CatObj} - идентификатор или объект - основание (типовой блок или характеристика продукции)
+	 * @param id {String|CatObj} - идентификатор или объект - основание (характеристика продукции)
 	 */
 	load_stamp: {
 		value: function(id){
 
 			var _scheme = this._scheme || this;
 
-			function do_load(base_block){
+			function do_load(obx){
 
 				var ox = _scheme.ox;
 
@@ -651,34 +673,26 @@ Scheme.prototype.__define({
 				_scheme.clear();
 
 				// переприсваиваем систему через номенклатуру характеристики
-				base_block.production.load().then(function(obx){
+				if(!obx.owner.empty())
+					ox.owner = obx.owner;
 
-					if(!obx.owner.empty())
-						ox.owner = obx.owner;
+				// очищаем табчасти, перезаполняем контуры и координаты
+				ox.specification.clear();
+				ox.glasses.clear();
+				ox.glass_specification.clear();
+				ox.mosquito.clear();
 
-					// очищаем табчасти, перезаполняем контуры и координаты
-					ox.specification.clear();
-					ox.glasses.clear();
-					ox.glass_specification.clear();
-					ox.mosquito.clear();
+				ox.constructions.load(obx.constructions);
+				ox.coordinates.load(obx.coordinates);
+				ox.params.load(obx.params);
+				ox.cnn_elmnts.load(obx.cnn_elmnts);
 
-					ox.constructions.load(base_block.constructions);
-					ox.coordinates.load(base_block.coordinates);
-					ox.params.load(base_block.params);
-					ox.cnn_elmnts.load(base_block.cnn_elmnts);
-
-					_scheme.load(ox);
-
-				});
+				_scheme.load(ox);
 
 			}
 
-			if($p.is_data_obj(id))
-				do_load(id);
-
-			else if($p.is_guid(id))
-				$p.cat.base_blocks.get(id, true, true)
-					.then(do_load);
+			$p.cat.characteristics.get(id, true, true)
+				.then(do_load);
 
 		}
 	},

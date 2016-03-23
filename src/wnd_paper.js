@@ -21,7 +21,6 @@ $p.settings = function (prm, modifiers) {
 		production: "8756eecf-f577-402c-86ce-74608d062a32"
 	};
 	localStorage.setItem("wb_offline", "true");
-	localStorage.setItem("wb_base_blocks_folder", "20c5524b-7eab-11e2-be96-206a8a1a5bb0");// типовой блок по умолчанию
 
 	//prm.ws_url = "ws://builder.oknosoft.local:8001";
 

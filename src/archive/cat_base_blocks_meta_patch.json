@@ -1,0 +1,17 @@
+{
+  "cat": {
+
+    "base_blocks": {
+      "form": {
+        "selection": {
+          "fields": [],
+          "cols": [
+            {"id": "presentation", "width": "260", "type": "ro", "align": "left", "sort": "server", "caption": "Наименование"},
+            {"id": "svg", "width": "*", "type": "rsvg", "align": "left", "sort": "server", "caption": "Эскиз"}
+          ]
+        }
+      }
+    }
+
+  }
+}

@@ -109,8 +109,7 @@ function Editor(pwnd){
 			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '30px'},
 			{name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
-			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока', float: 'left'},
-			{name: 'open', text: '<i class="fa fa-briefcase fa-fw"></i>', tooltip: 'Загрузить из другого заказа', float: 'left'},
+			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
 
 			{name: 'sep_0', text: '', float: 'left'},
 			{name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
@@ -129,10 +128,7 @@ function Editor(pwnd){
 
 		], onclick: function (name) {
 			switch(name) {
-				case 'open':
-					_editor.open();
-					break;
-
+				
 				case 'save_close':
 					if(_editor.project)
 						_editor.project.save_coordinates({save: true, close: true});
@@ -516,15 +512,7 @@ Editor.prototype.__define({
 				_editor._acc.attache(_editor.project._dp);
 			}
 
-			if(!ox){
-				// последовательно выбираем заказ и изделие
-				$p.cat.characteristics.form_selection({
-					initial_value: $p.job_prm.demo.production,
-					on_select: function (sval) {
-						_editor.project.load(sval);
-					}
-				});
-			}else
+			if(ox)
 				_editor.project.load(ox);
 		}
 	},
@@ -538,27 +526,21 @@ Editor.prototype.__define({
 	load_stamp: {
 		value: function(confirmed){
 
-			if(this.project.ox.elm_str && !confirmed){
+			if(this.project.ox.coordinates.count() && !confirmed){
 				dhtmlx.confirm({
 					title: $p.msg.bld_from_blocks_title,
 					text: $p.msg.bld_from_blocks,
 					cancel: $p.msg.cancel,
 					callback: function(btn) {
 						if(btn)
-							load_stamp(true);
-					}
+							this.load_stamp(true);
+					}.bind(this)
 				});
 				return;
 			}
 
-			$p.cat.base_blocks.form_selection({
-				o: this.project.ox,
-				wnd: this.project._pwnd,
-				_scheme: this.project,
-				on_select: this.project.load_stamp
-			}, {
-				initial_value: null, // TODO: возможно, надо запоминать типовой блок в изделии?
-				parent: $p.wsql.get_user_param("base_blocks_folder") ? $p.wsql.get_user_param("base_blocks_folder") : null
+			$p.cat.characteristics.form_selection_block({
+				
 			});
 		}
 	},

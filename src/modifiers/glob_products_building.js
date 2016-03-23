@@ -702,7 +702,16 @@ $p.modifiers.push(
 
 				// информируем мир о записи продукции
 				if(attr.save){
-					ox.save()
+
+					// сохраняем картинку вместе с изделием
+					var svg = scheme.get_svg();
+					
+					ox.save(undefined, undefined, {
+							svg: {
+								"content_type": "image/svg+xml",
+								"data": new Blob([svg], {type: "image/svg+xml"})
+							}
+					})
 						.then(function () {
 							$p.msg.show_msg("Спецификация рассчитана");
 							$p.eve.callEvent("characteristic_saved", [scheme, attr]);

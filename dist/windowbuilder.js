@@ -5006,6 +5006,28 @@ Scheme.prototype.__define({
 				contour.save_coordinates();
 			});
 			$p.eve.callEvent("save_coordinates", [this, attr]);
+			
+		}
+	},
+
+	/**
+	 * возвращает строку svg эскиза изделия
+	 * @method get_svg
+	 * @for Scheme
+	 * @param [attr] {Object} - указывает видимость слоёв
+	 */
+	get_svg: {
+
+		value: function (attr) {
+
+			var svg = this.exportSVG({excludeData: true});
+			svg.removeAttribute("x");
+			svg.removeAttribute("y");
+			svg.removeAttribute("width");
+			svg.removeAttribute("height");
+			svg.querySelector("g").setAttribute("transform", "scale(0.22)");
+
+			return svg.outerHTML;
 		}
 	},
 
@@ -5013,14 +5035,14 @@ Scheme.prototype.__define({
 	 * Перезаполняет изделие данными типового блока
 	 * @method load_stamp
 	 * @for Scheme
-	 * @param id {String|CatObj} - идентификатор или объект - основание (типовой блок или характеристика продукции)
+	 * @param id {String|CatObj} - идентификатор или объект - основание (характеристика продукции)
 	 */
 	load_stamp: {
 		value: function(id){
 
 			var _scheme = this._scheme || this;
 
-			function do_load(base_block){
+			function do_load(obx){
 
 				var ox = _scheme.ox;
 
@@ -5028,34 +5050,26 @@ Scheme.prototype.__define({
 				_scheme.clear();
 
 				// переприсваиваем систему через номенклатуру характеристики
-				base_block.production.load().then(function(obx){
+				if(!obx.owner.empty())
+					ox.owner = obx.owner;
 
-					if(!obx.owner.empty())
-						ox.owner = obx.owner;
+				// очищаем табчасти, перезаполняем контуры и координаты
+				ox.specification.clear();
+				ox.glasses.clear();
+				ox.glass_specification.clear();
+				ox.mosquito.clear();
 
-					// очищаем табчасти, перезаполняем контуры и координаты
-					ox.specification.clear();
-					ox.glasses.clear();
-					ox.glass_specification.clear();
-					ox.mosquito.clear();
+				ox.constructions.load(obx.constructions);
+				ox.coordinates.load(obx.coordinates);
+				ox.params.load(obx.params);
+				ox.cnn_elmnts.load(obx.cnn_elmnts);
 
-					ox.constructions.load(base_block.constructions);
-					ox.coordinates.load(base_block.coordinates);
-					ox.params.load(base_block.params);
-					ox.cnn_elmnts.load(base_block.cnn_elmnts);
-
-					_scheme.load(ox);
-
-				});
+				_scheme.load(ox);
 
 			}
 
-			if($p.is_data_obj(id))
-				do_load(id);
-
-			else if($p.is_guid(id))
-				$p.cat.base_blocks.get(id, true, true)
-					.then(do_load);
+			$p.cat.characteristics.get(id, true, true)
+				.then(do_load);
 
 		}
 	},
@@ -7581,8 +7595,7 @@ function Editor(pwnd){
 			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '30px'},
 			{name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
-			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока', float: 'left'},
-			{name: 'open', text: '<i class="fa fa-briefcase fa-fw"></i>', tooltip: 'Загрузить из другого заказа', float: 'left'},
+			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
 
 			{name: 'sep_0', text: '', float: 'left'},
 			{name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
@@ -7601,10 +7614,7 @@ function Editor(pwnd){
 
 		], onclick: function (name) {
 			switch(name) {
-				case 'open':
-					_editor.open();
-					break;
-
+				
 				case 'save_close':
 					if(_editor.project)
 						_editor.project.save_coordinates({save: true, close: true});
@@ -7988,15 +7998,7 @@ Editor.prototype.__define({
 				_editor._acc.attache(_editor.project._dp);
 			}
 
-			if(!ox){
-				// последовательно выбираем заказ и изделие
-				$p.cat.characteristics.form_selection({
-					initial_value: $p.job_prm.demo.production,
-					on_select: function (sval) {
-						_editor.project.load(sval);
-					}
-				});
-			}else
+			if(ox)
 				_editor.project.load(ox);
 		}
 	},
@@ -8010,27 +8012,21 @@ Editor.prototype.__define({
 	load_stamp: {
 		value: function(confirmed){
 
-			if(this.project.ox.elm_str && !confirmed){
+			if(this.project.ox.coordinates.count() && !confirmed){
 				dhtmlx.confirm({
 					title: $p.msg.bld_from_blocks_title,
 					text: $p.msg.bld_from_blocks,
 					cancel: $p.msg.cancel,
 					callback: function(btn) {
 						if(btn)
-							load_stamp(true);
-					}
+							this.load_stamp(true);
+					}.bind(this)
 				});
 				return;
 			}
 
-			$p.cat.base_blocks.form_selection({
-				o: this.project.ox,
-				wnd: this.project._pwnd,
-				_scheme: this.project,
-				on_select: this.project.load_stamp
-			}, {
-				initial_value: null, // TODO: возможно, надо запоминать типовой блок в изделии?
-				parent: $p.wsql.get_user_param("base_blocks_folder") ? $p.wsql.get_user_param("base_blocks_folder") : null
+			$p.cat.characteristics.form_selection_block({
+				
 			});
 		}
 	},

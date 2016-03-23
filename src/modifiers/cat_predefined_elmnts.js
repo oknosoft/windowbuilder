@@ -13,6 +13,12 @@ $p.modifiers.push(
 		var _mgr = $p.cat.predefined_elmnts,
 			_predefined = {};
 
+		/**
+		 * Возвращает предопределенный элемент или массив элементов
+		 * 
+		 * @param name
+		 * @return {*}
+		 */
 		_mgr.predefined = function(name){
 
 			if(_predefined[name])
@@ -24,8 +30,15 @@ $p.modifiers.push(
 				return false;
 			});
 			if(res){
-				_predefined[name] = res.elm;
-				return res.elm;
+				if(res.elm){
+					_predefined[name] = res.elm;
+				}else{
+					_predefined[name] = [];
+					res.elmnts.each(function (row) {
+						_predefined[name].push(row.elm);
+					});
+				}
+				return _predefined[name];
 			}
 		};
 
