@@ -21,11 +21,7 @@ $p.iface.view_orders = function (cell) {
 
 			if(!t.list){
 				t.carousel.cells("list").detachObject(true);
-				t.list = $p.doc.calc_order.form_list(t.carousel.cells("list"), {
-					hide_header: true,
-					date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
-					date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31")
-				});
+				t.list = $p.doc.calc_order.form_list(t.carousel.cells("list"));
 			}
 
 		}
@@ -164,7 +160,7 @@ $p.iface.view_orders = function (cell) {
 			keys:           false,
 			touch_scroll:   false,
 			offset_left:    0,
-			offset_top:     4,
+			offset_top:     0,
 			offset_item:    0
 		});
 		t.carousel.hideControls();

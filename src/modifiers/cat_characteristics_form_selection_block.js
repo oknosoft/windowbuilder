@@ -107,7 +107,7 @@ $p.modifiers.push(
 			if(!attr.initial_value){
 
 			}
-			attr.selection = [{calc_order: selection_block.calc_order}];
+			//attr.selection = [{calc_order: selection_block.calc_order}];
 
 			var wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 

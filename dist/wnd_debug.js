@@ -178,7 +178,7 @@ $p.modifiers.push(
 			if(!attr.initial_value){
 
 			}
-			attr.selection = [{calc_order: selection_block.calc_order}];
+			//attr.selection = [{calc_order: selection_block.calc_order}];
 
 			var wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
@@ -1107,6 +1107,62 @@ $p.modifiers.push(
 	}
 
 );
+/**
+ * форма списка документов Расчет-заказ. публикуемый метод: doc.calc_order.form_list(o, pwnd, attr)
+ */
+
+$p.modifiers.push(
+	function($p) {
+
+		var _mgr = $p.doc.calc_order;
+
+		_mgr.form_list = function(pwnd, attr){
+			
+			if(!attr)
+				attr = {
+					hide_header: true,
+					date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
+					date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31")
+				};
+			
+			var layout = pwnd.attachLayout({
+				pattern: "2U",
+				cells: [{
+					id: "a",
+					text: "Фильтр",
+					collapsed_text: "Фильтр",
+					collapse:       true,
+					width: 180
+				}, {
+					id: "b",
+					text: "Заказы",
+					header: false
+				}],
+				offsets: { top: 0, right: 0, bottom: 0, left: 0}
+			}),
+
+				wnd = _mgr.form_selection(layout.cells("b"), attr),
+
+				filter_view = {"value": "doc_calc_order/date"},
+
+				filter_key = {};
+
+			filter_key.__define({
+				value: {
+					get: function () {
+						return "draft";
+					}
+				}
+			});
+
+			wnd.elmnts.filter.additional._view = filter_view;
+			wnd.elmnts.filter.additional._key = filter_key;
+
+			return wnd;
+		};
+	}
+);
+
 /**
  * форма документа Расчет-заказ. публикуемый метод: doc.calc_order.form_obj(o, pwnd, attr)
  */
@@ -3579,11 +3635,7 @@ $p.iface.view_orders = function (cell) {
 
 			if(!t.list){
 				t.carousel.cells("list").detachObject(true);
-				t.list = $p.doc.calc_order.form_list(t.carousel.cells("list"), {
-					hide_header: true,
-					date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
-					date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31")
-				});
+				t.list = $p.doc.calc_order.form_list(t.carousel.cells("list"));
 			}
 
 		}
@@ -3722,7 +3774,7 @@ $p.iface.view_orders = function (cell) {
 			keys:           false,
 			touch_scroll:   false,
 			offset_left:    0,
-			offset_top:     4,
+			offset_top:     0,
 			offset_item:    0
 		});
 		t.carousel.hideControls();
