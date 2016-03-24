@@ -22,7 +22,6 @@ $p.modifiers.push(
 					id: "a",
 					text: "Фильтр",
 					collapsed_text: "Фильтр",
-					collapse:       true,
 					width: 180
 				}, {
 					id: "b",
@@ -34,10 +33,13 @@ $p.modifiers.push(
 
 				wnd = _mgr.form_selection(layout.cells("b"), attr),
 
-				filter_view = {"value": "doc_calc_order/date"},
+				tree = layout.cells("a").attachTree(),
 
+
+				filter_view = {"value": "doc_calc_order/date"},
 				filter_key = {};
 
+			// настраиваем фильтр для списка заказов
 			filter_key.__define({
 				value: {
 					get: function () {
@@ -45,9 +47,15 @@ $p.modifiers.push(
 					}
 				}
 			});
-
 			wnd.elmnts.filter.additional._view = filter_view;
 			wnd.elmnts.filter.additional._key = filter_key;
+
+			// настраиваем дерево
+			tree.enableTreeImages(false);
+			tree.parse($p.injected_data["tree_filteres.xml"]);
+			tree.attachEvent("onSelect", function(id){
+				id = null;
+			});
 
 			return wnd;
 		};
