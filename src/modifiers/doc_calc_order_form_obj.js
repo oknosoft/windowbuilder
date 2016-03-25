@@ -173,8 +173,10 @@ $p.modifiers.push(
 				wnd.elmnts.note_editor.attachEvent("onAccess", function(name, ev){
 					if(wnd.elmnts.ro)
 						return false;
-					if (name == "blur")
+					if (name == "blur"){
+						this.clearFormatting();
 						o.note = this.getContent();
+					}
 				});
 
 				//wnd.elmnts.pg_header = wnd.elmnts.tabs.tab_header.attachHeadFields({
@@ -518,6 +520,7 @@ $p.modifiers.push(
 
 					wnd.progressOn();
 
+					wnd.elmnts.note_editor.clearFormatting();
 					o.note = wnd.elmnts.note_editor.getContent();
 
 					o.save()

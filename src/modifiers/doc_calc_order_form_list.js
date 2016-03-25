@@ -36,26 +36,74 @@ $p.modifiers.push(
 				tree = layout.cells("a").attachTree(),
 
 
-				filter_view = {"value": "doc_calc_order/date"},
+				filter_view = {},
 				filter_key = {};
 
 			// настраиваем фильтр для списка заказов
-			filter_key.__define({
+			filter_view.__define({
 				value: {
 					get: function () {
-						return "draft";
+						switch(tree.getSelectedItemId()) {
+
+							case 'draft':
+							case 'sent':
+							case 'declined':
+							case 'confirmed':
+							case 'template':
+							case 'zarchive':
+								return 'doc_calc_order/date';
+
+							case 'credit':
+							case 'prepayment':
+							case 'underway':
+							case 'manufactured':
+							case 'executed':
+							case 'deleted':
+							case 'all':
+								return '';
+						}
 					}
 				}
 			});
-			wnd.elmnts.filter.additional._view = filter_view;
-			wnd.elmnts.filter.additional._key = filter_key;
+			filter_key.__define({
+				value: {
+					get: function () {
+						switch(tree.getSelectedItemId()) {
+
+							case 'draft':
+								return 'draft';
+							case 'sent':
+								return 'sent';
+							case 'declined':
+								return 'declined';
+							case 'confirmed':
+								return 'confirmed';
+							case 'template':
+								return 'template';
+							case 'zarchive':
+								return 'zarchive';
+
+							case 'credit':
+							case 'prepayment':
+							case 'underway':
+							case 'manufactured':
+							case 'executed':
+							case 'all':
+								return '';
+
+							case 'deleted':
+								return 'deleted';
+						}
+					}
+				}
+			});
+			wnd.elmnts.filter.custom_selection._view = filter_view;
+			wnd.elmnts.filter.custom_selection._key = filter_key;
 
 			// настраиваем дерево
 			tree.enableTreeImages(false);
 			tree.parse($p.injected_data["tree_filteres.xml"]);
-			tree.attachEvent("onSelect", function(id){
-				id = null;
-			});
+			tree.attachEvent("onSelect", wnd.elmnts.filter.call_event);
 
 			return wnd;
 		};

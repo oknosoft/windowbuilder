@@ -119,10 +119,10 @@ $p.modifiers.push(
 				text: "Расчет",
 				name: "calc_order"
 			});
-			var fdiv = wnd.elmnts.filter.additional.calc_order.parentNode;
+			var fdiv = wnd.elmnts.filter.custom_selection.calc_order.parentNode;
 			fdiv.removeChild(fdiv.firstChild);
 
-			wnd.elmnts.filter.additional.calc_order = new $p.iface.OCombo({
+			wnd.elmnts.filter.custom_selection.calc_order = new $p.iface.OCombo({
 				parent: fdiv,
 				obj: selection_block,
 				field: "calc_order",
@@ -138,7 +138,7 @@ $p.modifiers.push(
 					return Promise.resolve(l);
 				}
 			});
-			wnd.elmnts.filter.additional.calc_order.getBase().style.border = "none";
+			wnd.elmnts.filter.custom_selection.calc_order.getBase().style.border = "none";
 
 			return wnd;
 		};
