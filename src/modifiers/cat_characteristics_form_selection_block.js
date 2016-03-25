@@ -30,7 +30,7 @@ $p.modifiers.push(
 
 				_meta.form = {
 					selection: {
-						fields: ["name as presentation","s"],
+						fields: ["presentation","svg"],
 						cols: [
 							{"id": "presentation", "width": "260", "type": "ro", "align": "left", "sort": "na", "caption": "Наименование"},
 							{"id": "svg", "width": "*", "type": "rsvg", "align": "left", "sort": "na", "caption": "Эскиз"}
@@ -92,7 +92,7 @@ $p.modifiers.push(
 							if(this._obj[f] == v)
 								return;
 							_mgr._obj_сonstructor.prototype.__setter.call(this, "calc_order", v);
-							if(wnd && wnd.elmnts && wnd.elmnts.filter)
+							if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount())
 								wnd.elmnts.filter.call_event();
 						}
 					}
@@ -115,6 +115,73 @@ $p.modifiers.push(
 
 			// подсовываем типовой форме списка изменённые метаданные
 			attr.metadata = _meta;
+
+			// и еще, подсовываем форме собственный обработчик получения данных
+			attr.custom_selection = function (attr) {
+				var ares = [], crefs = [], calc_order;
+
+				// получаем ссылку на расчет из отбора
+				attr.selection.some(function (o) {
+					if(Object.keys(o).indexOf("calc_order") != -1){
+						calc_order = o.calc_order;
+						return true;
+					}
+				});
+				
+				// получаем документ расчет
+				return $p.doc.calc_order.get(calc_order, true, true)
+					.then(function (o) {
+
+						// получаем массив ссылок на характеристики в табчасти продукции
+						o.production.each(function (row) {
+							if(!row.characteristic.empty()){
+								if(row.characteristic.is_new())
+									crefs.push(row.characteristic.ref);
+								
+								else{
+									// если это характеристика продукции - добавляем
+									if(!row.characteristic.calc_order.empty() && row.characteristic.coordinates.count()){
+										if(row.characteristic._attachments)
+											ares.push(row.characteristic);
+										else
+											crefs.push(row.characteristic.ref);
+									}
+								}
+							}
+						});
+						return crefs.length ? _mgr.pouch_load_array(crefs, true) : crefs;
+					})
+					.then(function () {
+						crefs.forEach(function (o) {
+							o = _mgr.get(o, false, true);
+							if(o && !o.calc_order.empty() && o.coordinates.count()){
+								ares.push(o);
+							}
+						});
+						crefs = ares.map(function (o) {
+							return {
+								ref: o.ref,
+								presentation: (o.calc_order_row.note || o.note || o.name) + "\n" + o.owner.name,
+								svg: o._attachments ? o._attachments.svg : ""
+							}
+						});
+						ares.length = 0;
+						crefs.forEach(function (o) {
+							if(o.svg && o.svg.data){
+								ares.push($p.read_blob(o.svg.data)
+									.then(function (svg) {
+										o.svg = svg;
+									}))
+							}
+						});
+						return Promise.all(ares);
+
+					})
+					.then(function () {
+						return $p.iface.data_to_grid.call(_mgr, crefs, attr);
+					});
+
+			};
 
 			// создаём форму списка
 			wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
@@ -148,9 +215,6 @@ $p.modifiers.push(
 				}
 			});
 			wnd.elmnts.filter.custom_selection.calc_order.getBase().style.border = "none";
-			
-			// добавляем пользовательский отбор по "площадь > 0"
-			wnd.elmnts.filter.custom_selection.s = {value: {gt: 0}};
 
 			return wnd;
 		};

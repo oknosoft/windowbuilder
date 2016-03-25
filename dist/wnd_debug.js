@@ -101,7 +101,7 @@ $p.modifiers.push(
 
 				_meta.form = {
 					selection: {
-						fields: ["name as presentation","s"],
+						fields: ["presentation","svg"],
 						cols: [
 							{"id": "presentation", "width": "260", "type": "ro", "align": "left", "sort": "na", "caption": "Наименование"},
 							{"id": "svg", "width": "*", "type": "rsvg", "align": "left", "sort": "na", "caption": "Эскиз"}
@@ -163,7 +163,7 @@ $p.modifiers.push(
 							if(this._obj[f] == v)
 								return;
 							_mgr._obj_сonstructor.prototype.__setter.call(this, "calc_order", v);
-							if(wnd && wnd.elmnts && wnd.elmnts.filter)
+							if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount())
 								wnd.elmnts.filter.call_event();
 						}
 					}
@@ -186,6 +186,73 @@ $p.modifiers.push(
 
 			// подсовываем типовой форме списка изменённые метаданные
 			attr.metadata = _meta;
+
+			// и еще, подсовываем форме собственный обработчик получения данных
+			attr.custom_selection = function (attr) {
+				var ares = [], crefs = [], calc_order;
+
+				// получаем ссылку на расчет из отбора
+				attr.selection.some(function (o) {
+					if(Object.keys(o).indexOf("calc_order") != -1){
+						calc_order = o.calc_order;
+						return true;
+					}
+				});
+				
+				// получаем документ расчет
+				return $p.doc.calc_order.get(calc_order, true, true)
+					.then(function (o) {
+
+						// получаем массив ссылок на характеристики в табчасти продукции
+						o.production.each(function (row) {
+							if(!row.characteristic.empty()){
+								if(row.characteristic.is_new())
+									crefs.push(row.characteristic.ref);
+								
+								else{
+									// если это характеристика продукции - добавляем
+									if(!row.characteristic.calc_order.empty() && row.characteristic.coordinates.count()){
+										if(row.characteristic._attachments)
+											ares.push(row.characteristic);
+										else
+											crefs.push(row.characteristic.ref);
+									}
+								}
+							}
+						});
+						return crefs.length ? _mgr.pouch_load_array(crefs, true) : crefs;
+					})
+					.then(function () {
+						crefs.forEach(function (o) {
+							o = _mgr.get(o, false, true);
+							if(o && !o.calc_order.empty() && o.coordinates.count()){
+								ares.push(o);
+							}
+						});
+						crefs = ares.map(function (o) {
+							return {
+								ref: o.ref,
+								presentation: (o.calc_order_row.note || o.note || o.name) + "\n" + o.owner.name,
+								svg: o._attachments ? o._attachments.svg : ""
+							}
+						});
+						ares.length = 0;
+						crefs.forEach(function (o) {
+							if(o.svg && o.svg.data){
+								ares.push($p.read_blob(o.svg.data)
+									.then(function (svg) {
+										o.svg = svg;
+									}))
+							}
+						});
+						return Promise.all(ares);
+
+					})
+					.then(function () {
+						return $p.iface.data_to_grid.call(_mgr, crefs, attr);
+					});
+
+			};
 
 			// создаём форму списка
 			wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
@@ -219,9 +286,6 @@ $p.modifiers.push(
 				}
 			});
 			wnd.elmnts.filter.custom_selection.calc_order.getBase().style.border = "none";
-			
-			// добавляем пользовательский отбор по "площадь > 0"
-			wnd.elmnts.filter.custom_selection.s = {value: {gt: 0}};
 
 			return wnd;
 		};
@@ -1354,7 +1418,7 @@ $p.modifiers.push(
 				wnd.elmnts.pg_left = wnd.elmnts.cell_left.attachHeadFields({
 					obj: o,
 					pwnd: wnd,
-					read_only: !$p.ajax.root,
+					read_only: wnd.elmnts.ro,
 					oxml: {
 						" ": [{id: "number_doc", path: "o.number_doc", synonym: "Номер", type: "ro", txt: o.number_doc},
 							{id: "date", path: "o.date", synonym: "Дата", type: "ro", txt: $p.dateFormat(o.date, "")},
@@ -1383,7 +1447,7 @@ $p.modifiers.push(
 				wnd.elmnts.pg_right = wnd.elmnts.cell_right.attachHeadFields({
 					obj: o,
 					pwnd: wnd,
-					read_only: !$p.ajax.root,
+					read_only: wnd.elmnts.ro,
 					oxml: {
 						"Налоги": ["vat_consider", "vat_included"],
 						"Аналитика": ["project",
@@ -1400,22 +1464,19 @@ $p.modifiers.push(
 				 */
 				wnd.elmnts.cell_note = wnd.elmnts.layout_header.cells('c');
 				wnd.elmnts.cell_note.hideHeader();
-				wnd.elmnts.cell_note.setHeight(140);
-				wnd.elmnts.note_editor = wnd.elmnts.cell_note.attachEditor();
-				wnd.elmnts.note_editor.setContent(o.note);
-				wnd.elmnts.note_editor.attachEvent("onAccess", function(name, ev){
-					if(wnd.elmnts.ro)
-						return false;
-					if (name == "blur"){
-						this.clearFormatting();
-						o.note = this.getContent();
+				wnd.elmnts.cell_note.setHeight(100);
+				wnd.elmnts.note_editor = wnd.elmnts.cell_note.attachEditor({
+					content: o.note,
+					onFocusChanged: function(name, ev){
+						if(!wnd.elmnts.ro && name == "blur")
+							o.note = this.getContent().replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
 					}
 				});
 
 				//wnd.elmnts.pg_header = wnd.elmnts.tabs.tab_header.attachHeadFields({
 				//	obj: o,
 				//	pwnd: wnd,
-				//	read_only: !$p.ajax.root    // TODO: учитывать права для каждой роли на каждый объект
+				//	read_only: wnd.elmnts.ro    // TODO: учитывать права для каждой роли на каждый объект
 				//});
 			};
 
@@ -1753,8 +1814,8 @@ $p.modifiers.push(
 
 					wnd.progressOn();
 
-					wnd.elmnts.note_editor.clearFormatting();
-					o.note = wnd.elmnts.note_editor.getContent();
+					if(!wnd.elmnts.ro)
+						o.note = wnd.elmnts.note_editor.getContent().replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
 
 					o.save()
 						.then(function(){
@@ -1781,7 +1842,7 @@ $p.modifiers.push(
 						callback: function(btn) {
 							if(btn){
 								// установить транспорт в "отправлено" и записать
-								o["obj_delivery_state"] = $p.enm.obj_delivery_states.Отправлен;
+								o.obj_delivery_state = $p.enm.obj_delivery_states.Отправлен;
 								do_save();
 							}
 						}
@@ -1789,7 +1850,7 @@ $p.modifiers.push(
 
 				} else if(action == "retrieve"){
 					// установить транспорт в "отозвано" и записать
-					o["obj_delivery_state"] =  $p.enm.obj_delivery_states.Отозван;
+					o.obj_delivery_state =  $p.enm.obj_delivery_states.Отозван;
 					do_save();
 
 				} else if(action == "save"){
@@ -1815,23 +1876,33 @@ $p.modifiers.push(
 			function set_editable(){
 
 				// статусы
-				var ds = $p.enm["obj_delivery_states"],
-					st_draft = ds.Черновик.ref,
-					st_sent = ds.Отправлен.ref,
-					st_retrieve = ds.Отозван.ref,
-					st_rejected = ds.Отклонен.ref,
+				var st_draft = $p.enm.obj_delivery_states.Черновик,
+					st_retrieve = $p.enm.obj_delivery_states.Отозван,
 					retrieve_enabed,
 					detales_toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
 
 				wnd.elmnts.pg_right.cells("vat_consider", 1).setDisabled(true);
 				wnd.elmnts.pg_right.cells("vat_included", 1).setDisabled(true);
 
-				wnd.elmnts.ro = o["posted"] || o["_deleted"];
-				if(!wnd.elmnts.ro && !o["obj_delivery_state"].empty())
-					wnd.elmnts.ro = !($p.is_equal(o["obj_delivery_state"], st_draft) || $p.is_equal(o["obj_delivery_state"], st_retrieve));
+				// технолог может изменять шаблоны
+				if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон){
+					wnd.elmnts.ro = !$p.current_acl.acl_objs._obj.some(function (row) {
+						if(row.type == "ИзменениеТехнологическойНСИ") // && row.acl_obj == "role"
+							return true;
+					});
 
-				retrieve_enabed = !o["_deleted"] &&
-					($p.is_equal(o["obj_delivery_state"], st_sent) || $p.is_equal(o["obj_delivery_state"], st_rejected));
+				// ведущий менеджер может изменять проведенные
+				}else if(o.posted || o._deleted){
+					wnd.elmnts.ro = !$p.current_acl.acl_objs._obj.some(function (row) {
+						if(row.type == "СогласованиеРасчетовЗаказов") // && row.acl_obj == "role"
+							return true;
+					});
+
+				}else if(!wnd.elmnts.ro && !o.obj_delivery_state.empty())
+					wnd.elmnts.ro = o.obj_delivery_state != st_draft && o.obj_delivery_state != st_retrieve;
+
+				retrieve_enabed = !o._deleted &&
+					(o.obj_delivery_state == $p.enm.obj_delivery_states.Отправлен || o.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен);
 
 				wnd.elmnts.grids.production.setEditable(!wnd.elmnts.ro);
 				wnd.elmnts.pg_left.setEditable(!wnd.elmnts.ro);
