@@ -20,7 +20,8 @@ function eXcell_rsvg(cell){ //the eXcell name is defined here
 	this.edit = function(){};  //read-only cell doesn't have edit method
 	this.isDisabled = function(){ return true; }; // the cell is read-only, so it's always in the disabled state
 	this.setValue=function(val){
-		this.setCValue(val ? $p.iface.scale_svg(val, 120, 10) : "нет эскиза");
+		this.cell.style.padding = "2px 4px";
+		this.setCValue(val ? $p.iface.scale_svg(val, 120, 0) : "нет эскиза");
 	}
 }
 eXcell_rsvg.prototype = new eXcell();

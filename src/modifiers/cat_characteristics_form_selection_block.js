@@ -32,7 +32,7 @@ $p.modifiers.push(
 					selection: {
 						fields: ["presentation","svg"],
 						cols: [
-							{"id": "presentation", "width": "260", "type": "ro", "align": "left", "sort": "na", "caption": "Наименование"},
+							{"id": "presentation", "width": "320", "type": "ro", "align": "left", "sort": "na", "caption": "Наименование"},
 							{"id": "svg", "width": "*", "type": "rsvg", "align": "left", "sort": "na", "caption": "Эскиз"}
 						]
 					}
@@ -141,7 +141,9 @@ $p.modifiers.push(
 								else{
 									// если это характеристика продукции - добавляем
 									if(!row.characteristic.calc_order.empty() && row.characteristic.coordinates.count()){
-										if(row.characteristic._attachments)
+										if(row.characteristic._attachments &&
+												row.characteristic._attachments.svg &&
+												!row.characteristic._attachments.svg.stub)
 											ares.push(row.characteristic);
 										else
 											crefs.push(row.characteristic.ref);
@@ -152,23 +154,32 @@ $p.modifiers.push(
 						return crefs.length ? _mgr.pouch_load_array(crefs, true) : crefs;
 					})
 					.then(function () {
+
+						// если это характеристика продукции - добавляем
 						crefs.forEach(function (o) {
 							o = _mgr.get(o, false, true);
 							if(o && !o.calc_order.empty() && o.coordinates.count()){
 								ares.push(o);
 							}
 						});
-						crefs = ares.map(function (o) {
-							return {
-								ref: o.ref,
-								presentation: (o.calc_order_row.note || o.note || o.name) + "\n" + o.owner.name,
-								svg: o._attachments ? o._attachments.svg : ""
-							}
+
+						// фильтруем по подстроке
+						crefs.length = 0;
+						ares.forEach(function (o) {
+							var presentation = (o.calc_order_row.note || o.note || o.name) + "&lt;br /&gt;" + o.owner.name;
+							if(!attr.filter || presentation.indexOf(attr.filter) != -1)
+								crefs.push({
+									ref: o.ref,
+									presentation: presentation,
+									svg: o._attachments ? o._attachments.svg : ""
+								});
 						});
+
+						// догружаем изображения
 						ares.length = 0;
 						crefs.forEach(function (o) {
 							if(o.svg && o.svg.data){
-								ares.push($p.read_blob(o.svg.data)
+								ares.push($p.blob_as_text(o.svg.data)
 									.then(function (svg) {
 										o.svg = svg;
 									}))
@@ -178,6 +189,7 @@ $p.modifiers.push(
 
 					})
 					.then(function () {
+						// конвертируем в xml для вставки в грид
 						return $p.iface.data_to_grid.call(_mgr, crefs, attr);
 					});
 

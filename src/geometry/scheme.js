@@ -226,26 +226,6 @@ function Scheme(_canvas){
 	};
 
 	/**
-	 * Изменяет центр и масштаб, чтобы изделие вписалось в размер окна
-	 */
-	this.zoom_fit = function(){
-		var bounds, shift;
-		_scheme.layers.forEach(function(l){
-			if(!bounds)
-				bounds = l.strokeBounds;
-			else
-				bounds = bounds.unite(l.strokeBounds);
-		});
-		if(bounds){
-			_scheme.view.zoom = Math.min((_scheme.view.viewSize.height - 20) / (bounds.height+320), (_scheme.view.viewSize.width - 20) / (bounds.width+320));
-			shift = (_scheme.view.viewSize.width - bounds.width * _scheme.view.zoom) / 2;
-			if(shift < 200)
-				shift = 0;
-			_scheme.view.center = bounds.center.add([shift, 40]);
-		}
-	};
-
-	/**
 	 * Читает изделие по ссылке или объекту продукции
 	 * @method load
 	 * @param id {String|CatObj} - идентификатор или объект продукции
@@ -634,6 +614,40 @@ Scheme.prototype.__define({
 	},
 
 	/**
+	 * Габариты эскиза со всеми видимыми дополнениями - размерные линии, визуализация и т.д.
+	 */
+	strokeBounds: {
+
+		get: function () {
+
+			var bounds = new paper.Rectangle();
+			this.layers.forEach(function(l){
+				bounds = bounds.unite(l.strokeBounds);
+			});
+
+			return bounds;
+		}
+	},
+
+	/**
+	 * Изменяет центр и масштаб, чтобы изделие вписалось в размер окна
+	 */
+	zoom_fit: {
+		value: function () {
+
+			var bounds = this.strokeBounds, shift;
+
+			if(bounds){
+				this.view.zoom = Math.min((this.view.viewSize.height - 20) / (bounds.height+320), (this.view.viewSize.width - 20) / (bounds.width+320));
+				shift = (this.view.viewSize.width - bounds.width * this.view.zoom) / 2;
+				if(shift < 200)
+					shift = 0;
+				this.view.center = bounds.center.add([shift, 40]);
+			}
+		}
+	},
+
+	/**
 	 * возвращает строку svg эскиза изделия
 	 * @method get_svg
 	 * @for Scheme
@@ -643,12 +657,15 @@ Scheme.prototype.__define({
 
 		value: function (attr) {
 
-			var svg = this.exportSVG({excludeData: true});
-			svg.removeAttribute("x");
-			svg.removeAttribute("y");
-			svg.removeAttribute("width");
-			svg.removeAttribute("height");
-			svg.querySelector("g").setAttribute("transform", "scale(0.22)");
+			var svg = this.exportSVG({excludeData: true}),
+				bounds = this.strokeBounds;
+
+			svg.setAttribute("x", bounds.x);
+			svg.setAttribute("y", bounds.y);
+			svg.setAttribute("width", bounds.width);
+			svg.setAttribute("height", bounds.height);
+			//svg.querySelector("g").setAttribute("transform", "scale(1)");
+			svg.querySelector("g").removeAttribute("transform");
 
 			return svg.outerHTML;
 		}
