@@ -13,6 +13,21 @@ $p.modifiers.push(
 		var _mgr = $p.cat.characteristics,
 			_meta = $p.cat.characteristics.metadata()._clone(),
 			selection_block, wnd;
+		
+		// рассчеты, помеченные, как шаблоны, загрузим в память заранее
+		// Подписываемся на событие окончания загрузки локальных данных
+		var pouch_data_loaded = $p.eve.attachEvent("pouch_load_data_loaded", function () {
+
+			setTimeout(function () {
+				$p.cat.predefined_elmnts.predefined("Расчет_ТиповойБлок").forEach(function (o) {
+					o.load();
+				});
+			}, 1000);			
+
+			$p.eve.detachEvent(pouch_data_loaded);
+
+		});
+		
 
 		// попробуем подсунуть типовой форме выбора виртуальные метаданные - с деревом и ограниченным списком значений
 		_mgr.form_selection_block = function(pwnd, attr){
@@ -74,7 +89,7 @@ $p.modifiers.push(
 						}
 					},
 
-					// виртуальный датаменеджер для автоформ
+					// виртуальный датаменеджер для поля фильтра по заказу
 					_manager: {
 						get: function () {
 							return {
@@ -89,20 +104,27 @@ $p.modifiers.push(
 						},
 
 						set: function (v) {
-							if(this._obj[f] == v)
+							if(this._obj.calc_order == v)
 								return;
 							_mgr._obj_сonstructor.prototype.__setter.call(this, "calc_order", v);
+
 							if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount())
 								wnd.elmnts.filter.call_event();
+
+							if(!$p.is_empty_guid(this._obj.calc_order) &&
+									$p.wsql.get_user_param("template_block_calc_order") != this._obj.calc_order){
+								$p.wsql.set_user_param("template_block_calc_order", this._obj.calc_order);
+							}
 						}
 					}
-
 				});
 			}
 
 			// объект отбора по ссылке на расчет в продукции
-			selection_block.calc_order = $p.wsql.get_user_param("template_block_calc_order");
-			if(!selection_block.calc_order.empty()){
+			if(selection_block.calc_order.empty()){
+				selection_block.calc_order = $p.wsql.get_user_param("template_block_calc_order");
+			}
+			if(selection_block.calc_order.empty()){
 				$p.cat.predefined_elmnts.predefined("Расчет_ТиповойБлок").some(function (o) {
 					selection_block.calc_order = o;
 					$p.wsql.set_user_param("template_block_calc_order", selection_block.calc_order.ref);
@@ -214,13 +236,13 @@ $p.modifiers.push(
 				parent: fdiv,
 				obj: selection_block,
 				field: "calc_order",
-				width: 200,
+				width: 220,
 				get_option_list: function (val, selection) {
 
 					var l = [];
 
 					$p.cat.predefined_elmnts.predefined("Расчет_ТиповойБлок").forEach(function (o) {
-						l.push({text: o.presentation, value: o.ref});
+						l.push({text: o.note || o.presentation, value: o.ref});
 					});
 
 					return Promise.resolve(l);
