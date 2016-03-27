@@ -132,14 +132,21 @@ function Scheme(_canvas){
 
 
 			// устанавливаем в _dp систему профилей
-			var setted;
-			$p.cat.production_params.find_rows({nom: _scheme._dp.characteristic.owner}, function(o){
-				_scheme._dp.sys = o;
-				setted = true;
-				return false;
-			});
-			if(!setted)
+			if(_scheme._dp.characteristic.empty())
 				_scheme._dp.sys = "";
+			else{
+				var setted;
+				$p.cat.production_params.find_rows({nom: _scheme._dp.characteristic.owner}, function(o){
+					_scheme._dp.sys = o;
+					setted = true;
+					return false;
+				});
+				// пересчитываем параметры изделия при установке системы TODO: подумать, как не портить старые изделия, открытые для просмотра
+				if(setted){
+					_scheme._dp.sys.refill_prm(_scheme._dp.characteristic);
+				}else
+					_scheme._dp.sys = "";
+			}
 
 			// устанавливаем в _dp цвет
 			_scheme._dp.clr = _scheme._dp.characteristic.clr;

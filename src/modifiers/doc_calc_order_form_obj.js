@@ -623,7 +623,12 @@ $p.modifiers.push(
 						detales_toolbar.disableItem(itemId);
 					});
 				}else{
-					wnd.elmnts.frm_toolbar.enableItem("btn_sent");
+					// шаблоны никогда не надо отправлять
+					if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон)
+						wnd.elmnts.frm_toolbar.disableItem("btn_sent");
+					else
+						wnd.elmnts.frm_toolbar.enableItem("btn_sent");
+
 					wnd.elmnts.frm_toolbar.enableItem("btn_save");
 					detales_toolbar.forEachItem(function(itemId){
 						detales_toolbar.enableItem(itemId);

@@ -27,11 +27,11 @@ $p.modifiers.push(
 		 */
 		_mgr.prms_get = function(attr, callback){
 
-			var osys = $p.cat["production_params"].get(attr.sys),
+			var osys = $p.cat.production_params.get(attr.sys),
 				ofurn = _mgr.get(attr.ref),
 				dp_buyers_order = $p.dp.buyers_order.create(),
-				oprm = dp_buyers_order["product_params"],
-				prm_direction = $p.cat.predefined_elmnts.by_name("Параметр_НаправлениеОткрывания").elm,
+				oprm = dp_buyers_order.product_params,
+				prm_direction = $p.cat.predefined_elmnts.predefined("Параметр_НаправлениеОткрывания"),
 				aprm = [], afurn_set = [];
 
 			function add_furn_prm(obj){
@@ -61,19 +61,13 @@ $p.modifiers.push(
 				add_furn_prm(ofurn.furn_set);
 
 			// Приклеиваем значения по умолчанию
-			var direction_added = ofurn.open_type.empty() ||
-					ofurn.open_type == $p.enm.open_types.Глухое ||
-					ofurn.open_type == $p.enm.open_types.Откидное,
-				prm_row, prm_ref;
+			var prm_row, prm_ref;
 
 			aprm.forEach(function(v){
 
 				prm_ref = {param: $p.cch.properties.get(v, false)};
 				if(!(prm_row = oprm.find(prm_ref)))
 					prm_row = oprm.add(prm_ref);
-
-				if(!direction_added && $p.is_equal(prm_direction, prm_row.param))
-					direction_added = true;
 
 				osys.furn_params.each(function(row){
 					if($p.is_equal(row.param, prm_row.param)){
@@ -84,16 +78,6 @@ $p.modifiers.push(
 					}
 				});
 			});
-
-			if(!direction_added){
-				osys.furn_params.each(function(row){
-					if($p.is_equal(row.param, prm_direction)){
-						prm_row = oprm.add({param: row.param, value: row.value, hide: row.hide});
-						direction_added = true;
-						return false;
-					}
-				});
-			}
 
 			// параметры и значения по умолчанию получены в oprm
 			if((prm_row = oprm.find(prm_direction.ref)) && (prm_row.row > 1))
