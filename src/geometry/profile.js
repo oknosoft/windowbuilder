@@ -190,6 +190,7 @@ function Profile(attr){
 				// 	})){
 				// }
 				res.clear();
+				res.is_cut = true;
 			}
 			ares = null;
 		}
@@ -647,13 +648,13 @@ Profile.prototype.__define({
 				row_b = cnns.add({
 					elm1: _row.elm,
 					node1: "b",
-					cnn: b.cnn.ref,
+					cnn: b.cnn ? b.cnn.ref : "",
 					aperture_len: this.corns(1).getDistance(this.corns(4))
 				}),
 				row_e = cnns.add({
 					elm1: _row.elm,
 					node1: "e",
-					cnn: e.cnn.ref,
+					cnn: e.cnn ? e.cnn.ref : "",
 					aperture_len: this.corns(2).getDistance(this.corns(3))
 				}),
 
@@ -1160,6 +1161,26 @@ Profile.prototype.__define({
 			}
 		},
 		enumerable: false
+	},
+
+	/**
+	 * Выясняет, имеет ли текущий профиль соединение с указанным
+	 */
+	has_cnn: {
+		value: function (profile, point) {
+
+			if(
+				(this.b.is_nearest(point, true) && this.cnn_point("b").profile == profile) ||
+				(this.e.is_nearest(point, true) && this.cnn_point("e").profile == profile) ||
+				(profile.b.is_nearest(point, true) && profile.cnn_point("b").profile == this) ||
+				(profile.e.is_nearest(point, true) && profile.cnn_point("e").profile == this)
+			)
+				return true;
+
+			else
+				return false;
+
+		}
 	}
 
 });
@@ -1269,9 +1290,18 @@ CnnPoint.prototype.__define({
 		enumerable: false
 	},
 
+	is_i: {
+		get: function () {
+			return !this.profile && !this.is_cut;
+		}
+	},
+
 	clear: {
 		value: function () {
-			delete this.profile_point;
+			if(this.profile_point)
+				delete this.profile_point;
+			if(this.is_cut)
+				delete this.is_cut;
 			this.profile = null;
 			this.cnn = null;
 			this.err = null;

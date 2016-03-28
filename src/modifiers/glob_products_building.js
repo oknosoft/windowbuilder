@@ -551,6 +551,15 @@ $p.modifiers.push(
 
 						b = curr.rays.b;
 						e = curr.rays.e;
+						
+						if(!b.cnn || !e.cnn){
+							$p.record_log({
+								note: "не найдено соединение",
+								obj: _row._obj
+							});
+							return;
+						}
+
 						prev = b.profile;
 						next = e.profile;
 						row_cnn_prev = b.cnn.main_row(curr);

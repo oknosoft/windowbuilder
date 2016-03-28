@@ -662,11 +662,11 @@ Contour.prototype.__define({
 							return 1;
 						return 0;
 					});
-					if(pb.profile)
+					if(!pb.is_i)
 						nodes.push({b: pbg, e: ip.inner[0].point.clone(), profile: p});
 					for(var i = 1; i < ip.inner.length; i++)
 						nodes.push({b: ip.inner[i-1].point.clone(), e: ip.inner[i].point.clone(), profile: p});
-					if(pe.profile)
+					if(!pe.is_i)
 						nodes.push({b: ip.inner[ip.inner.length-1].point.clone(), e: peg, profile: p});
 				}
 				if(ip.outer.length){
@@ -678,21 +678,21 @@ Contour.prototype.__define({
 							return 1;
 						return 0;
 					});
-					if(pb.profile)
+					if(!pb.is_i)
 						nodes.push({b: ip.outer[0].point.clone(), e: pbg, profile: p, outer: true});
 					for(var i = 1; i < ip.outer.length; i++)
 						nodes.push({b: ip.outer[i].point.clone(), e: ip.outer[i-1].point.clone(), profile: p, outer: true});
-					if(pe.profile)
+					if(!pe.is_i)
 						nodes.push({b: peg, e: ip.outer[ip.outer.length-1].point.clone(), profile: p, outer: true});
 				}
 				if(!ip.inner.length){
 					// добавляем, если нет соединений с пустотой
-					if(pb.profile && pe.profile)
+					if(!pb.is_i && !pe.is_i)
 						nodes.push({b: pbg, e: peg, profile: p});
 				}
-				if(!ip.outer.length && (pb.is_l || pe.is_l)){
+				if(!ip.outer.length && (pb.is_cut || pe.is_cut || pb.is_t || pe.is_t)){
 					// для импостов добавляем сегмент в обратном направлении
-					if(pb.profile && pe.profile)
+					if(!pb.is_i && !pe.is_i)
 						nodes.push({b: peg, e: pbg, profile: p, outer: true});
 				}
 			});
@@ -720,7 +720,9 @@ Contour.prototype.__define({
 					segments.forEach(function (segm) {
 						if(segm == curr || segm.profile == curr.profile)
 							return;
-						if(curr.e.is_nearest(segm.b))
+						// если конец нашего совпадает с началом следующего...
+						// и если существует соединение нашего со следующим
+						if(curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b))
 							curr.anext.push(segm);
 					});
 				}
@@ -753,7 +755,7 @@ Contour.prototype.__define({
 							segments.splice(ind, 1);
 					});
 				}
-			};
+			}
 
 			return res;
 

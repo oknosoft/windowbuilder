@@ -691,11 +691,11 @@ Contour.prototype.__define({
 							return 1;
 						return 0;
 					});
-					if(pb.profile)
+					if(!pb.is_i)
 						nodes.push({b: pbg, e: ip.inner[0].point.clone(), profile: p});
 					for(var i = 1; i < ip.inner.length; i++)
 						nodes.push({b: ip.inner[i-1].point.clone(), e: ip.inner[i].point.clone(), profile: p});
-					if(pe.profile)
+					if(!pe.is_i)
 						nodes.push({b: ip.inner[ip.inner.length-1].point.clone(), e: peg, profile: p});
 				}
 				if(ip.outer.length){
@@ -707,21 +707,21 @@ Contour.prototype.__define({
 							return 1;
 						return 0;
 					});
-					if(pb.profile)
+					if(!pb.is_i)
 						nodes.push({b: ip.outer[0].point.clone(), e: pbg, profile: p, outer: true});
 					for(var i = 1; i < ip.outer.length; i++)
 						nodes.push({b: ip.outer[i].point.clone(), e: ip.outer[i-1].point.clone(), profile: p, outer: true});
-					if(pe.profile)
+					if(!pe.is_i)
 						nodes.push({b: peg, e: ip.outer[ip.outer.length-1].point.clone(), profile: p, outer: true});
 				}
 				if(!ip.inner.length){
 					// добавляем, если нет соединений с пустотой
-					if(pb.profile && pe.profile)
+					if(!pb.is_i && !pe.is_i)
 						nodes.push({b: pbg, e: peg, profile: p});
 				}
-				if(!ip.outer.length && (pb.is_l || pe.is_l)){
+				if(!ip.outer.length && (pb.is_cut || pe.is_cut || pb.is_t || pe.is_t)){
 					// для импостов добавляем сегмент в обратном направлении
-					if(pb.profile && pe.profile)
+					if(!pb.is_i && !pe.is_i)
 						nodes.push({b: peg, e: pbg, profile: p, outer: true});
 				}
 			});
@@ -749,7 +749,9 @@ Contour.prototype.__define({
 					segments.forEach(function (segm) {
 						if(segm == curr || segm.profile == curr.profile)
 							return;
-						if(curr.e.is_nearest(segm.b))
+						// если конец нашего совпадает с началом следующего...
+						// и если существует соединение нашего со следующим
+						if(curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b))
 							curr.anext.push(segm);
 					});
 				}
@@ -782,7 +784,7 @@ Contour.prototype.__define({
 							segments.splice(ind, 1);
 					});
 				}
-			};
+			}
 
 			return res;
 
@@ -3187,6 +3189,7 @@ function Profile(attr){
 				// 	})){
 				// }
 				res.clear();
+				res.is_cut = true;
 			}
 			ares = null;
 		}
@@ -3644,13 +3647,13 @@ Profile.prototype.__define({
 				row_b = cnns.add({
 					elm1: _row.elm,
 					node1: "b",
-					cnn: b.cnn.ref,
+					cnn: b.cnn ? b.cnn.ref : "",
 					aperture_len: this.corns(1).getDistance(this.corns(4))
 				}),
 				row_e = cnns.add({
 					elm1: _row.elm,
 					node1: "e",
-					cnn: e.cnn.ref,
+					cnn: e.cnn ? e.cnn.ref : "",
 					aperture_len: this.corns(2).getDistance(this.corns(3))
 				}),
 
@@ -4157,6 +4160,26 @@ Profile.prototype.__define({
 			}
 		},
 		enumerable: false
+	},
+
+	/**
+	 * Выясняет, имеет ли текущий профиль соединение с указанным
+	 */
+	has_cnn: {
+		value: function (profile, point) {
+
+			if(
+				(this.b.is_nearest(point, true) && this.cnn_point("b").profile == profile) ||
+				(this.e.is_nearest(point, true) && this.cnn_point("e").profile == profile) ||
+				(profile.b.is_nearest(point, true) && profile.cnn_point("b").profile == this) ||
+				(profile.e.is_nearest(point, true) && profile.cnn_point("e").profile == this)
+			)
+				return true;
+
+			else
+				return false;
+
+		}
 	}
 
 });
@@ -4266,9 +4289,18 @@ CnnPoint.prototype.__define({
 		enumerable: false
 	},
 
+	is_i: {
+		get: function () {
+			return !this.profile && !this.is_cut;
+		}
+	},
+
 	clear: {
 		value: function () {
-			delete this.profile_point;
+			if(this.profile_point)
+				delete this.profile_point;
+			if(this.is_cut)
+				delete this.is_cut;
 			this.profile = null;
 			this.cnn = null;
 			this.err = null;
