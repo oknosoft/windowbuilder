@@ -342,6 +342,7 @@ function Scheme(_canvas){
 				delete _data._loading;
 				_data._bounds = null;
 				_scheme.zoom_fit();
+				$p.eve.callEvent("scheme_changed", [_scheme]);
 			}, 100);
 
 		}
@@ -361,7 +362,6 @@ function Scheme(_canvas){
 						})
 				});
 		}
-
 	};
 
 	/**

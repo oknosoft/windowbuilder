@@ -4751,6 +4751,7 @@ function Scheme(_canvas){
 				delete _data._loading;
 				_data._bounds = null;
 				_scheme.zoom_fit();
+				$p.eve.callEvent("scheme_changed", [_scheme]);
 			}, 100);
 
 		}
@@ -4770,7 +4771,6 @@ function Scheme(_canvas){
 						})
 				});
 		}
-
 	};
 
 	/**
@@ -7553,7 +7553,7 @@ function EditorAccordion(_editor, cell_acc) {
  * @extends paper.PaperScope
  * @param pwnd {dhtmlXLayoutCell} - ячейка dhtmlx, в которой будут размещены редактор и изделия
  */
-function Editor(pwnd){
+function Editor(pwnd, attr){
 
 	acn = $p.enm.cnn_types.acn;
 
@@ -7608,7 +7608,6 @@ function Editor(pwnd){
 
 	// аккордион со свойствами
 	_editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b")) ;
-
 
 	/**
 	 * Панель выбора инструментов рисовалки
@@ -7742,6 +7741,15 @@ function Editor(pwnd){
 		if(scheme == _editor.project && attr.close && _editor._pwnd._on_close)
 			_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
 	});
+
+	// Обработчик события при изменениях изделия
+	$p.eve.attachEvent("scheme_changed", function (scheme) {
+		if(scheme == _editor.project){
+			if(attr.set_text && scheme._calc_order_row)
+				attr.set_text(scheme.ox.prod_name(true) + scheme._dp.sys.name + (scheme.ox._modified ? " *" : ""));
+		}
+	});
+
 
 	_editor.clear_selection_bounds = function() {
 		if (selectionBoundsShape)

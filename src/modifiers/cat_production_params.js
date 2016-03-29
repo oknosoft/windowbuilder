@@ -83,7 +83,7 @@ $p.modifiers.push(
 					// бежим по параметрам. при необходимости, добавляем или перезаполняем и устанавливаем признак hide
 					prm_ts.forEach(function (default_row) {
 						var row;
-						prm_ts.find_rows({cnstr: cnstr, param: default_row.param}, function (_row) {
+						ox.params.find_rows({cnstr: cnstr, param: default_row.param}, function (_row) {
 							row = _row;
 						});
 						if(!row)

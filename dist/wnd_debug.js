@@ -25,33 +25,15 @@ $p.modifiers.push(
 
 		// перед записью надо пересчитать наименование и рассчитать итоги
 		_mgr.attache_event("before_save", function (attr) {
-			var _row = this.calc_order_row;
-			if(_row){
-				this.name = (this.calc_order.number_internal || this.calc_order.number_doc) + "/" + _row.row.pad();
-				if(this.clr.name)
-					this.name += "/" + this.clr.name;
 
-				if(this.x && this.y)
-					this.name += "/" + this.x.toFixed(0) + "x" + this.y.toFixed(0);
-				else if(this.x)
-					this.name += "/" + this.x.toFixed(0);
-				else if(this.y)
-					this.name += "/" + this.y.toFixed(0);
-
-				if(this.z){
-					if(this.x || this.y)
-						this.name += "x" + this.z.toFixed(0);
-					else
-						this.name += "/" + this.z.toFixed(0);
-				}
-
-				if(this.s)
-					this.name += "/S:" + this.s.toFixed(3);
-
-			}
+			var name = this.prod_name();
+			if(name)
+				this.name = name;
+			
 		});
 
 		_mgr._obj_сonstructor.prototype.__define({
+			
 			calc_order_row: {
 				get: function () {
 					var _calc_order_row;
@@ -62,6 +44,42 @@ $p.modifiers.push(
 					return _calc_order_row;
 				},
 				enumerable: false
+			},
+			
+			prod_name: {
+				value: function (short) {
+
+					var _row = this.calc_order_row,
+						name = "";
+					
+					if(_row){
+						
+						name = (this.calc_order.number_internal || this.calc_order.number_doc) + "/" + _row.row.pad();
+						
+						if(!short){
+							if(this.clr.name)
+								name += "/" + this.clr.name;
+
+							if(this.x && this.y)
+								name += "/" + this.x.toFixed(0) + "x" + this.y.toFixed(0);
+							else if(this.x)
+								name += "/" + this.x.toFixed(0);
+							else if(this.y)
+								name += "/" + this.y.toFixed(0);
+
+							if(this.z){
+								if(this.x || this.y)
+									name += "x" + this.z.toFixed(0);
+								else
+									name += "/" + this.z.toFixed(0);
+							}
+
+							if(this.s)
+								name += "/S:" + this.s.toFixed(3);	
+						}
+					}
+					return name;
+				}
 			}
 		});
 
@@ -990,7 +1008,7 @@ $p.modifiers.push(
 					// бежим по параметрам. при необходимости, добавляем или перезаполняем и устанавливаем признак hide
 					prm_ts.forEach(function (default_row) {
 						var row;
-						prm_ts.find_rows({cnstr: cnstr, param: default_row.param}, function (_row) {
+						ox.params.find_rows({cnstr: cnstr, param: default_row.param}, function (_row) {
 							row = _row;
 						});
 						if(!row)
@@ -3849,8 +3867,10 @@ $p.iface.view_orders = function (cell) {
 
 			var _cell = t.carousel.cells("list");
 
-			if(t.carousel.getActiveCell() != _cell)
+			if(t.carousel.getActiveCell() != _cell){
 				_cell.setActive();
+				cell.setText({text: "Заказы"});
+			}
 
 			if(!t.list){
 				t.carousel.cells("list").detachObject(true);
@@ -3874,6 +3894,9 @@ $p.iface.view_orders = function (cell) {
 							setTimeout(function () {
 								$p.iface.set_hash(undefined, "", "list");
 							});
+						},
+						set_text: function (text) {
+							cell.setText({text: "<b>" + text + "</b>"});
 						}
 					})
 					.then(function (wnd) {
@@ -3954,9 +3977,14 @@ $p.iface.view_orders = function (cell) {
 						$p.iface.set_hash("doc.calc_order", "", "list");
 				}
 
-			}
+			};
 
-			t.editor = new $p.Editor(_cell);
+			// создаём экземпляр графического редактора
+			t.editor = new $p.Editor(_cell, {
+				set_text: function (text) {
+					cell.setText({text: "<b>" + text + "</b>"});
+				}
+			});
 
 			setTimeout(function () {
 				$p.iface.set_hash(obj);
