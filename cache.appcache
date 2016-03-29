@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 000000000025
+# 000000000026
 
 # Additional resources to cache
 CACHE:
@@ -26,7 +26,7 @@ lib/metadata.js
 
 # css и картинки
 
-dist_md/dhx_terrace.css?000000000025
+dist_md/dhx_terrace.css
 dist/windowbuilder.min.css
 lib/font-awesome-4.5.0/css/font-awesome.min.css
 lib/font-awesome-4.5.0/fonts/fontawesome-webfont.woff2?v=4.5.0
