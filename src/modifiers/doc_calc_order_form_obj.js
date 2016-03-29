@@ -168,13 +168,14 @@ $p.modifiers.push(
 				wnd.elmnts.cell_note = wnd.elmnts.layout_header.cells('c');
 				wnd.elmnts.cell_note.hideHeader();
 				wnd.elmnts.cell_note.setHeight(100);
-				wnd.elmnts.note_editor = wnd.elmnts.cell_note.attachEditor({
-					content: o.note,
-					onFocusChanged: function(name, ev){
-						if(!wnd.elmnts.ro && name == "blur")
-							o.note = this.getContent().replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
-					}
-				});
+				wnd.elmnts.cell_note.attachHTMLString("<textarea style='width: 100%; height: 100%; border: none;'>" + o.note + "</textarea>");
+				// wnd.elmnts.note_editor = wnd.elmnts.cell_note.attachEditor({
+				// 	content: o.note,
+				// 	onFocusChanged: function(name, ev){
+				// 		if(!wnd.elmnts.ro && name == "blur")
+				// 			o.note = this.getContent().replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
+				// 	}
+				// });
 
 				//wnd.elmnts.pg_header = wnd.elmnts.tabs.tab_header.attachHeadFields({
 				//	obj: o,
@@ -518,7 +519,7 @@ $p.modifiers.push(
 					wnd.progressOn();
 
 					if(!wnd.elmnts.ro)
-						o.note = wnd.elmnts.note_editor.getContent().replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
+						o.note = wnd.elmnts.cell_note.cell.querySelector("textarea").value.replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
 
 					o.save()
 						.then(function(){

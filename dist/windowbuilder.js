@@ -25,6 +25,18 @@
 	msg.align_set_top = "Установить размер сдвигом верхних элементов";
 	msg.align_set_left = "Установить размер сдвигом левых элементов";
 	msg.align_invalid_direction = "Неприменимо для элемента с данной ориентацией";
+
+	msg.bld_constructor = "Конструктор объектов графического построителя";
+	msg.bld_title = "Графический построитель";
+	msg.bld_empty_param = "Не заполнен обязательный параметр <br />";
+	msg.bld_not_product = "В текущей строке нет изделия построителя";
+	msg.bld_not_draw = "Отсутствует эскиз или не указана система профилей";
+	msg.bld_wnd_title = "Построитель изделия № ";
+	msg.bld_from_blocks_title = "Выбор типового блока";
+	msg.bld_from_blocks = "Текущее изделие будет заменено конфигурацией типового блока. Продолжить?";
+	msg.bld_split_imp = "В параметрах продукции<br />'%1'<br />запрещены незамкнутые контуры<br />" +
+		"Для включения деления импостом,<br />установите это свойство в 'Истина'";
+	
 })($p.msg);
 
 /**
@@ -4779,6 +4791,8 @@ function Scheme(_canvas){
 	this.register_change = function () {
 		if(!_data._loading){
 			_data._bounds = null;
+			this.ox._data._modified = true;
+			$p.eve.callEvent("scheme_changed", [this]);
 		}
 		_changes.push(Date.now());
 	};
@@ -7645,7 +7659,7 @@ function Editor(pwnd, attr){
 		image_path: 'dist/imgs/',
 		buttons: [
 
-			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '30px'},
+			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '34px'},
 			{name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
 			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
@@ -7675,7 +7689,7 @@ function Editor(pwnd, attr){
 
 				case 'close':
 					if(_editor._pwnd._on_close)
-						_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
+						_editor._pwnd._on_close();
 					_editor.select_tool('select_node');
 					break;
 
@@ -7731,7 +7745,7 @@ function Editor(pwnd, attr){
 			}
 		}});
 	_editor._layout.base.style.backgroundColor = "#f5f5f5";
-	_editor._layout.base.parentNode.parentNode.style.top = "0px"
+	//_editor._layout.base.parentNode.parentNode.style.top = "0px";
 	_editor.tb_top.cell.style.background = "transparent";
 	_editor.tb_top.cell.style.boxShadow = "none";
 
@@ -7739,14 +7753,14 @@ function Editor(pwnd, attr){
 	// Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
 	$p.eve.attachEvent("characteristic_saved", function (scheme, attr) {
 		if(scheme == _editor.project && attr.close && _editor._pwnd._on_close)
-			_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
+			_editor._pwnd._on_close();
 	});
 
 	// Обработчик события при изменениях изделия
 	$p.eve.attachEvent("scheme_changed", function (scheme) {
 		if(scheme == _editor.project){
 			if(attr.set_text && scheme._calc_order_row)
-				attr.set_text(scheme.ox.prod_name(true) + scheme._dp.sys.name + (scheme.ox._modified ? " *" : ""));
+				attr.set_text(scheme.ox.prod_name(true) + " " + scheme._dp.sys.name + (scheme.ox._modified ? " *" : ""));
 		}
 	});
 

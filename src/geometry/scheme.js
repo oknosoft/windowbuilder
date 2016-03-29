@@ -370,6 +370,8 @@ function Scheme(_canvas){
 	this.register_change = function () {
 		if(!_data._loading){
 			_data._bounds = null;
+			this.ox._data._modified = true;
+			$p.eve.callEvent("scheme_changed", [this]);
 		}
 		_changes.push(Date.now());
 	};

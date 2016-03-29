@@ -51,6 +51,10 @@ $p.iface.view_orders = function (cell) {
 					.then(function (wnd) {
 						t.doc = wnd;
 					});
+
+			else if(t.doc && t.doc.wnd){
+				t.doc.wnd.set_text();
+			}
 		}
 
 		function show_builder(ref){
@@ -78,7 +82,7 @@ $p.iface.view_orders = function (cell) {
 						show_doc(hprm.ref);
 
 
-				} if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
+				} else if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
 
 					if(hprm.frm != "builder")
 						setTimeout(function () {
@@ -107,26 +111,40 @@ $p.iface.view_orders = function (cell) {
 
 			// создадим экземпляр графического редактора
 			var _cell = t.carousel.cells("builder"),
-				hprm = $p.job_prm.parse_url(),
-				obj = hprm.obj || "doc.calc_order";
+				obj = $p.job_prm.parse_url().obj || "doc.calc_order";
 
-			_cell._on_close = function () {
+			_cell._on_close = function (confirmed) {
 
-				_cell = t.carousel.cells("doc");
+				if(t.editor.project.ox._modified && !confirmed){
+					dhtmlx.confirm({
+						title: $p.msg.bld_title,
+						text: $p.msg.modified_close,
+						cancel: $p.msg.cancel,
+						callback: function(btn) {
+							if(btn)
+								this._on_close(true);
+						}.bind(this)
+					});
+					return;
+				}
+
+				var _cell = t.carousel.cells("doc");
 
 				if(!$p.is_empty_guid(_cell.ref))
 					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");
 
 				else{
-					hprm = $p.job_prm.parse_url();
-					obj = $p.cat.characteristics.get(hprm.ref, false, true);
-					if(obj && !$p.is_empty_guid(obj.calc_order.ref))
+					
+					var hprm = $p.job_prm.parse_url(),
+						obj = $p.cat.characteristics.get(hprm.ref, false, true);
+					
+					if(obj && !obj.calc_order.empty())
 						$p.iface.set_hash("doc.calc_order", obj.calc_order.ref, "doc");
 					else
 						$p.iface.set_hash("doc.calc_order", "", "list");
 				}
 
-			};
+			}.bind(_cell);
 
 			// создаём экземпляр графического редактора
 			t.editor = new $p.Editor(_cell, {

@@ -105,7 +105,7 @@ function Editor(pwnd, attr){
 		image_path: 'dist/imgs/',
 		buttons: [
 
-			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '30px'},
+			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '34px'},
 			{name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
 			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
@@ -135,7 +135,7 @@ function Editor(pwnd, attr){
 
 				case 'close':
 					if(_editor._pwnd._on_close)
-						_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
+						_editor._pwnd._on_close();
 					_editor.select_tool('select_node');
 					break;
 
@@ -191,7 +191,7 @@ function Editor(pwnd, attr){
 			}
 		}});
 	_editor._layout.base.style.backgroundColor = "#f5f5f5";
-	_editor._layout.base.parentNode.parentNode.style.top = "0px"
+	//_editor._layout.base.parentNode.parentNode.style.top = "0px";
 	_editor.tb_top.cell.style.background = "transparent";
 	_editor.tb_top.cell.style.boxShadow = "none";
 
@@ -199,7 +199,7 @@ function Editor(pwnd, attr){
 	// Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
 	$p.eve.attachEvent("characteristic_saved", function (scheme, attr) {
 		if(scheme == _editor.project && attr.close && _editor._pwnd._on_close)
-			_editor._pwnd._on_close(_editor.project ? _editor.project.ox : null);
+			_editor._pwnd._on_close();
 	});
 
 	// Обработчик события при изменениях изделия

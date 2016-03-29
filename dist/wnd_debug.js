@@ -1545,13 +1545,14 @@ $p.modifiers.push(
 				wnd.elmnts.cell_note = wnd.elmnts.layout_header.cells('c');
 				wnd.elmnts.cell_note.hideHeader();
 				wnd.elmnts.cell_note.setHeight(100);
-				wnd.elmnts.note_editor = wnd.elmnts.cell_note.attachEditor({
-					content: o.note,
-					onFocusChanged: function(name, ev){
-						if(!wnd.elmnts.ro && name == "blur")
-							o.note = this.getContent().replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
-					}
-				});
+				wnd.elmnts.cell_note.attachHTMLString("<textarea style='width: 100%; height: 100%; border: none;'>" + o.note + "</textarea>");
+				// wnd.elmnts.note_editor = wnd.elmnts.cell_note.attachEditor({
+				// 	content: o.note,
+				// 	onFocusChanged: function(name, ev){
+				// 		if(!wnd.elmnts.ro && name == "blur")
+				// 			o.note = this.getContent().replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
+				// 	}
+				// });
 
 				//wnd.elmnts.pg_header = wnd.elmnts.tabs.tab_header.attachHeadFields({
 				//	obj: o,
@@ -1895,7 +1896,7 @@ $p.modifiers.push(
 					wnd.progressOn();
 
 					if(!wnd.elmnts.ro)
-						o.note = wnd.elmnts.note_editor.getContent().replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
+						o.note = wnd.elmnts.cell_note.cell.querySelector("textarea").value.replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
 
 					o.save()
 						.then(function(){
@@ -3902,6 +3903,10 @@ $p.iface.view_orders = function (cell) {
 					.then(function (wnd) {
 						t.doc = wnd;
 					});
+
+			else if(t.doc && t.doc.wnd){
+				t.doc.wnd.set_text();
+			}
 		}
 
 		function show_builder(ref){
@@ -3929,7 +3934,7 @@ $p.iface.view_orders = function (cell) {
 						show_doc(hprm.ref);
 
 
-				} if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
+				} else if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
 
 					if(hprm.frm != "builder")
 						setTimeout(function () {
@@ -3958,26 +3963,40 @@ $p.iface.view_orders = function (cell) {
 
 			// создадим экземпляр графического редактора
 			var _cell = t.carousel.cells("builder"),
-				hprm = $p.job_prm.parse_url(),
-				obj = hprm.obj || "doc.calc_order";
+				obj = $p.job_prm.parse_url().obj || "doc.calc_order";
 
-			_cell._on_close = function () {
+			_cell._on_close = function (confirmed) {
 
-				_cell = t.carousel.cells("doc");
+				if(t.editor.project.ox._modified && !confirmed){
+					dhtmlx.confirm({
+						title: $p.msg.bld_title,
+						text: $p.msg.modified_close,
+						cancel: $p.msg.cancel,
+						callback: function(btn) {
+							if(btn)
+								this._on_close(true);
+						}.bind(this)
+					});
+					return;
+				}
+
+				var _cell = t.carousel.cells("doc");
 
 				if(!$p.is_empty_guid(_cell.ref))
 					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");
 
 				else{
-					hprm = $p.job_prm.parse_url();
-					obj = $p.cat.characteristics.get(hprm.ref, false, true);
-					if(obj && !$p.is_empty_guid(obj.calc_order.ref))
+					
+					var hprm = $p.job_prm.parse_url(),
+						obj = $p.cat.characteristics.get(hprm.ref, false, true);
+					
+					if(obj && !obj.calc_order.empty())
 						$p.iface.set_hash("doc.calc_order", obj.calc_order.ref, "doc");
 					else
 						$p.iface.set_hash("doc.calc_order", "", "list");
 				}
 
-			};
+			}.bind(_cell);
 
 			// создаём экземпляр графического редактора
 			t.editor = new $p.Editor(_cell, {
