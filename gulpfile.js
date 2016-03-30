@@ -62,8 +62,7 @@ gulp.task('build-lib', function(){
 			'./src/i18n.ru.js',
 			'./src/geometry/*.js',
 			'./src/tools/*.js',
-			'./src/editor_accordion.js',
-			'./src/editor.js',
+			'./src/editor/*.js',
 			'./data/merged_wb_tips.js'
 		])
 		.pipe(concat('windowbuilder.js'))

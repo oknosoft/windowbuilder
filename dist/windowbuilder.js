@@ -445,7 +445,7 @@ Contour.prototype.__define({
 		get: function () {
 			var profiles = this.profiles, res;
 			if(!profiles.length)
-				res = new paper.Rectangle()
+				res = new paper.Rectangle();
 			else{
 				res = profiles[0].bounds;
 				for(var i = 1; i < profiles.length; i++)
@@ -821,7 +821,7 @@ Contour.prototype.__define({
 			 * @param glass_contour {Array}
 			 */
 			function bind_glass(glass_contour){
-				var rating = 0, glass, сrating, сglass, glass_nodes, glass_path_center;
+				var rating = 0, glass, crating, cglass, glass_nodes, glass_path_center;
 
 				for(var g in glasses){
 
@@ -830,7 +830,7 @@ Contour.prototype.__define({
 						continue;
 
 					// вычисляем рейтинг
-					сrating = 0;
+					crating = 0;
 					glass_nodes = glass.outer_profiles;
 					// если есть привязанные профили, используем их. иначе - координаты узлов
 					if(glass_nodes.length){
@@ -840,11 +840,11 @@ Contour.prototype.__define({
 									glass_contour[j].b.is_nearest(glass_nodes[i].b) &&
 									glass_contour[j].e.is_nearest(glass_nodes[i].e)){
 
-									сrating++;
+									crating++;
 									break;
 								}
 							}
-							if(сrating > 2)
+							if(crating > 2)
 								break;
 						}
 					}else{
@@ -852,38 +852,38 @@ Contour.prototype.__define({
 						for(var j in glass_contour){
 							for(var i in glass_nodes){
 								if(glass_contour[j].b.is_nearest(glass_nodes[i])){
-									сrating++;
+									crating++;
 									break;
 								}
 							}
-							if(сrating > 2)
+							if(crating > 2)
 								break;
 						}
 					}
 
-					if(сrating > rating || !сglass){
-						rating = сrating;
-						сglass = glass;
+					if(crating > rating || !cglass){
+						rating = crating;
+						cglass = glass;
 					}
-					if(сrating == rating && сglass != glass){
+					if(crating == rating && cglass != glass){
 						if(!glass_path_center){
 							glass_path_center = glass_contour[0].b;
 							for(var i=1; i<glass_contour.length; i++)
 								glass_path_center = glass_path_center.add(glass_contour[i].b);
 							glass_path_center = glass_path_center.divide(glass_contour.length);
 						}
-						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(сglass.bounds.center, true))
-							сglass = glass;
+						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(cglass.bounds.center, true))
+							cglass = glass;
 					}
 				}
 
 				// TODO реализовать настоящее ранжирование
-				if(сglass || (сglass = _contour.getItem({class: Filling, visible: false}))) {
-					сglass.path = glass_contour;
-					сglass.visible = true;
-					if (сglass instanceof Filling) {
-						сglass.sendToBack();
-						сglass.path.visible = true;
+				if(cglass || (cglass = _contour.getItem({class: Filling, visible: false}))) {
+					cglass.path = glass_contour;
+					cglass.visible = true;
+					if (cglass instanceof Filling) {
+						cglass.sendToBack();
+						cglass.path.visible = true;
 					}
 				}else{
 					// добавляем заполнение
@@ -896,9 +896,9 @@ Contour.prototype.__define({
 					}else{
 
 					}
-					сglass = new Filling({proto: glass, parent: _contour, path: glass_contour});
-					сglass.sendToBack();
-					сglass.path.visible = true;
+					cglass = new Filling({proto: glass, parent: _contour, path: glass_contour});
+					cglass.sendToBack();
+					cglass.path.visible = true;
 				}
 			}
 
@@ -1406,8 +1406,7 @@ DimensionLine.prototype.__define({
 	_move_points: {
 		value: function (event, xy) {
 
-			var _bounds = this.parent.parent.bounds,
-				delta, segments;
+			var _bounds = this.parent.parent.bounds, delta;
 
 			if(this.pos == "top" || this.pos == "bottom")
 				if(event.name == "right")
@@ -4688,7 +4687,6 @@ function Scheme(_canvas){
 			o = null;
 
 			// создаём семейство конструкций
-			_data._loading = true;
 			load_contour(null);
 
 			// авторазмерные линии
@@ -4760,14 +4758,16 @@ function Scheme(_canvas){
 			}
 
 			setTimeout(function () {
-				delete _data._loading;
 				_data._bounds = null;
 				_scheme.zoom_fit();
 				$p.eve.callEvent("scheme_changed", [_scheme]);
+				delete _data._loading;
+				delete _data._snapshot;
 			}, 100);
 
 		}
 
+		_data._loading = true;
 		_scheme.ox = null;
 		_scheme.clear();
 
@@ -5022,10 +5022,6 @@ Scheme.prototype.__define({
 			ox.y = this.bounds.height.round(1);
 			ox.s = this.area;
 
-			// устанавливаем свойства в строке заказа
-			var _row = this._calc_order_row;
-
-
 			// смещаем слои, чтобы расположить изделие в начале координат
 			//var bpoint = this.bounds.point;
 			//if(bpoint.length > consts.sticking0){
@@ -5102,13 +5098,14 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Перезаполняет изделие данными типового блока
+	 * Перезаполняет изделие данными типового блока или снапшота
 	 * @method load_stamp
 	 * @for Scheme
-	 * @param id {String|CatObj} - идентификатор или объект - основание (характеристика продукции)
+	 * @param obx {String|CatObj|Object} - идентификатор или объект-основание (характеристика продукции либо снапшот)
+	 * @param is_snapshot {Boolean}
 	 */
 	load_stamp: {
-		value: function(id){
+		value: function(obx, is_snapshot){
 
 			function do_load(obx){
 
@@ -5117,16 +5114,10 @@ Scheme.prototype.__define({
 				// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
 				this.clear();
 
-				// переприсваиваем систему через номенклатуру характеристики
-				if(!obx.owner.empty())
-					ox.owner = obx.owner;
-
+				// переприсваиваем номенклатуру, цвет и размеры
+				ox._mixin(obx, ["owner","clr","x","y","s","s"]);
+					
 				// очищаем табчасти, перезаполняем контуры и координаты
-				ox.specification.clear();
-				ox.glasses.clear();
-				ox.glass_specification.clear();
-				ox.mosquito.clear();
-
 				ox.constructions.load(obx.constructions);
 				ox.coordinates.load(obx.coordinates);
 				ox.params.load(obx.params);
@@ -5136,8 +5127,15 @@ Scheme.prototype.__define({
 
 			}
 
-			$p.cat.characteristics.get(id, true, true)
-				.then(do_load.bind(this));
+			this.data._loading = true;
+
+			if(is_snapshot){
+				this.data._snapshot = true;
+				do_load.call(this, obx);
+				
+			}else
+				$p.cat.characteristics.get(obx, true, true)
+					.then(do_load.bind(this));
 
 		}
 	},
@@ -7577,12 +7575,7 @@ function Editor(pwnd, attr){
 		 * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
 		 * @type {Undo}
 		 */
-		undo = new function Undo(){
-
-			this.clear = function () {
-
-			}
-		},
+		undo = new UndoRedo(this),
 
 		selectionBounds = null,
 		selectionBoundsShape = null,
@@ -7709,11 +7702,11 @@ function Editor(pwnd, attr){
 					break;
 
 				case 'back':
-					$p.msg.show_msg(name);
+					undo.back();
 					break;
 
 				case 'rewind':
-					$p.msg.show_msg(name);
+					undo.rewind();
 					break;
 
 				case 'open_spec':
@@ -8259,6 +8252,120 @@ if(typeof $p !== "undefined")
 	$p.Editor = Editor;
 
 
+/**
+ * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
+ * @author Evgeniy Malyarov
+ * @module undo
+ */
+
+/**
+ * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
+ * Из публичных интерфейсов имеет только методы back() и rewind()
+ * Основную работу делает прослушивая широковещательные события
+ * @class UndoRedo
+ * @constructor
+ * @param _editor {Editor} - указатель на экземпляр редактора
+ */
+function UndoRedo(_editor){
+
+	var _history = [],
+		pos = -1,
+		snap_timer;
+
+	function run_snapshot() {
+		
+		// запускаем короткий пересчет изделия
+		if(pos >= 0){
+
+			// если pos < конца истории, отрезаем хвост истории
+			if(pos > 0 && pos < (_history.length - 1)){
+				_history.splice(pos, _history.length - pos - 1);
+			}
+
+			_editor.project.save_coordinates({snapshot: true});
+
+		}
+
+	}
+
+	function save_snapshot(scheme) {
+		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification"])));
+		pos = _history.length - 1;
+		enable_buttons();
+	}
+
+	function apply_snapshot() {
+		_editor.project.load_stamp(JSON.parse(_history[pos]), true);
+		enable_buttons();
+	}
+	
+	function enable_buttons() {
+		if(pos < 1)
+			_editor.tb_top.buttons.back.classList.add("disabledbutton");
+		else
+			_editor.tb_top.buttons.back.classList.remove("disabledbutton");
+
+		if(pos < (_history.length - 1))
+			_editor.tb_top.buttons.rewind.classList.remove("disabledbutton");
+		else
+			_editor.tb_top.buttons.rewind.classList.add("disabledbutton");
+
+	}
+
+	function clear() {
+		_history.length = 0;
+		pos = -1;
+	}
+
+	// обрабатываем изменения изделия
+	$p.eve.attachEvent("scheme_changed", function (scheme, attr) {
+		if(scheme == _editor.project){
+
+			// при открытии изделия чистим историю
+			if(scheme.data._loading){
+				if(!scheme.data._snapshot){
+					clear();
+					save_snapshot(scheme);	
+				}
+
+			} else{
+				// при обычных изменениях, запускаем таймер снапшота
+				if(snap_timer)
+					clearTimeout(snap_timer);
+				snap_timer = setTimeout(run_snapshot, 800);
+				enable_buttons();
+			}
+		}
+
+	});
+
+	// при закрытии редактора чистим историю
+	$p.eve.attachEvent("editor_closed", clear);
+
+	// при готовности снапшота, добавляем его в историю
+	$p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
+		if(scheme == _editor.project){
+			save_snapshot(scheme);
+		}
+
+	});
+
+	this.back = function() {
+		if(pos > 0)
+			pos--;
+		if(pos >= 0)
+			apply_snapshot();
+		else
+			enable_buttons();
+	};
+
+	this.rewind = function() {
+		if(pos <= (_history.length - 1)){
+			pos++;
+			apply_snapshot();
+		}
+	}
+}
 $p.injected_data._mixin({"tip_editor_right.html":"<div class=\"clipper editor_accordion\">\r\n\r\n    <div class=\"scroller\">\r\n        <div class=\"container\">\r\n\r\n            <!-- РАЗДЕЛ 1 - дерево слоёв -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_layers\"></div>\r\n            </div>\r\n            <div name=\"content_layers\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 2 - реквизиты элемента -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_elm\"></div>\r\n            </div>\r\n            <div name=\"content_elm\" style=\"min-height: 220px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 3 - реквизиты створки -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_stv\">\r\n                    <span name=\"title\">Створка</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_stv\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 4 - реквизиты изделия -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_props\">\r\n                    <span name=\"title\">Изделие</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_props\" style=\"min-height: 330px;\"></div>\r\n\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"scroller__track\">\r\n        <div class=\"scroller__bar\" style=\"height: 26px; top: 0px;\"></div>\r\n    </div>\r\n\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
 return Editor;
 }));

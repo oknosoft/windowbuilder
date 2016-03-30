@@ -3136,9 +3136,15 @@ $p.modifiers.push(
 				// информируем мир об окончании расчета координат
 				$p.eve.callEvent("coordinates_calculated", [scheme, attr]);
 
+				
 				// рассчитываем цены
 
 
+				// информируем мир о завершении пересчета
+				if(attr.snapshot){
+					$p.eve.callEvent("scheme_snapshot", [scheme, attr]);
+				}
+				
 				// информируем мир о записи продукции
 				if(attr.save){
 
@@ -3981,6 +3987,8 @@ $p.iface.view_orders = function (cell) {
 				}
 
 				var _cell = t.carousel.cells("doc");
+				
+				$p.eve.callEvent("editor_closed", [t.editor]);
 
 				if(!$p.is_empty_guid(_cell.ref))
 					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");

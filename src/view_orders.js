@@ -129,6 +129,8 @@ $p.iface.view_orders = function (cell) {
 				}
 
 				var _cell = t.carousel.cells("doc");
+				
+				$p.eve.callEvent("editor_closed", [t.editor]);
 
 				if(!$p.is_empty_guid(_cell.ref))
 					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");

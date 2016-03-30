@@ -706,9 +706,15 @@ $p.modifiers.push(
 				// информируем мир об окончании расчета координат
 				$p.eve.callEvent("coordinates_calculated", [scheme, attr]);
 
+				
 				// рассчитываем цены
 
 
+				// информируем мир о завершении пересчета
+				if(attr.snapshot){
+					$p.eve.callEvent("scheme_snapshot", [scheme, attr]);
+				}
+				
 				// информируем мир о записи продукции
 				if(attr.save){
 

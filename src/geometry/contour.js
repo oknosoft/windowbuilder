@@ -404,7 +404,7 @@ Contour.prototype.__define({
 		get: function () {
 			var profiles = this.profiles, res;
 			if(!profiles.length)
-				res = new paper.Rectangle()
+				res = new paper.Rectangle();
 			else{
 				res = profiles[0].bounds;
 				for(var i = 1; i < profiles.length; i++)
@@ -780,7 +780,7 @@ Contour.prototype.__define({
 			 * @param glass_contour {Array}
 			 */
 			function bind_glass(glass_contour){
-				var rating = 0, glass, сrating, сglass, glass_nodes, glass_path_center;
+				var rating = 0, glass, crating, cglass, glass_nodes, glass_path_center;
 
 				for(var g in glasses){
 
@@ -789,7 +789,7 @@ Contour.prototype.__define({
 						continue;
 
 					// вычисляем рейтинг
-					сrating = 0;
+					crating = 0;
 					glass_nodes = glass.outer_profiles;
 					// если есть привязанные профили, используем их. иначе - координаты узлов
 					if(glass_nodes.length){
@@ -799,11 +799,11 @@ Contour.prototype.__define({
 									glass_contour[j].b.is_nearest(glass_nodes[i].b) &&
 									glass_contour[j].e.is_nearest(glass_nodes[i].e)){
 
-									сrating++;
+									crating++;
 									break;
 								}
 							}
-							if(сrating > 2)
+							if(crating > 2)
 								break;
 						}
 					}else{
@@ -811,38 +811,38 @@ Contour.prototype.__define({
 						for(var j in glass_contour){
 							for(var i in glass_nodes){
 								if(glass_contour[j].b.is_nearest(glass_nodes[i])){
-									сrating++;
+									crating++;
 									break;
 								}
 							}
-							if(сrating > 2)
+							if(crating > 2)
 								break;
 						}
 					}
 
-					if(сrating > rating || !сglass){
-						rating = сrating;
-						сglass = glass;
+					if(crating > rating || !cglass){
+						rating = crating;
+						cglass = glass;
 					}
-					if(сrating == rating && сglass != glass){
+					if(crating == rating && cglass != glass){
 						if(!glass_path_center){
 							glass_path_center = glass_contour[0].b;
 							for(var i=1; i<glass_contour.length; i++)
 								glass_path_center = glass_path_center.add(glass_contour[i].b);
 							glass_path_center = glass_path_center.divide(glass_contour.length);
 						}
-						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(сglass.bounds.center, true))
-							сglass = glass;
+						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(cglass.bounds.center, true))
+							cglass = glass;
 					}
 				}
 
 				// TODO реализовать настоящее ранжирование
-				if(сglass || (сglass = _contour.getItem({class: Filling, visible: false}))) {
-					сglass.path = glass_contour;
-					сglass.visible = true;
-					if (сglass instanceof Filling) {
-						сglass.sendToBack();
-						сglass.path.visible = true;
+				if(cglass || (cglass = _contour.getItem({class: Filling, visible: false}))) {
+					cglass.path = glass_contour;
+					cglass.visible = true;
+					if (cglass instanceof Filling) {
+						cglass.sendToBack();
+						cglass.path.visible = true;
 					}
 				}else{
 					// добавляем заполнение
@@ -855,9 +855,9 @@ Contour.prototype.__define({
 					}else{
 
 					}
-					сglass = new Filling({proto: glass, parent: _contour, path: glass_contour});
-					сglass.sendToBack();
-					сglass.path.visible = true;
+					cglass = new Filling({proto: glass, parent: _contour, path: glass_contour});
+					cglass.sendToBack();
+					cglass.path.visible = true;
 				}
 			}
 

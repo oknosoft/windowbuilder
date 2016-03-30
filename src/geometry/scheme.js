@@ -267,7 +267,6 @@ function Scheme(_canvas){
 			o = null;
 
 			// создаём семейство конструкций
-			_data._loading = true;
 			load_contour(null);
 
 			// авторазмерные линии
@@ -339,14 +338,16 @@ function Scheme(_canvas){
 			}
 
 			setTimeout(function () {
-				delete _data._loading;
 				_data._bounds = null;
 				_scheme.zoom_fit();
 				$p.eve.callEvent("scheme_changed", [_scheme]);
+				delete _data._loading;
+				delete _data._snapshot;
 			}, 100);
 
 		}
 
+		_data._loading = true;
 		_scheme.ox = null;
 		_scheme.clear();
 
@@ -601,10 +602,6 @@ Scheme.prototype.__define({
 			ox.y = this.bounds.height.round(1);
 			ox.s = this.area;
 
-			// устанавливаем свойства в строке заказа
-			var _row = this._calc_order_row;
-
-
 			// смещаем слои, чтобы расположить изделие в начале координат
 			//var bpoint = this.bounds.point;
 			//if(bpoint.length > consts.sticking0){
@@ -681,13 +678,14 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Перезаполняет изделие данными типового блока
+	 * Перезаполняет изделие данными типового блока или снапшота
 	 * @method load_stamp
 	 * @for Scheme
-	 * @param id {String|CatObj} - идентификатор или объект - основание (характеристика продукции)
+	 * @param obx {String|CatObj|Object} - идентификатор или объект-основание (характеристика продукции либо снапшот)
+	 * @param is_snapshot {Boolean}
 	 */
 	load_stamp: {
-		value: function(id){
+		value: function(obx, is_snapshot){
 
 			function do_load(obx){
 
@@ -696,16 +694,10 @@ Scheme.prototype.__define({
 				// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
 				this.clear();
 
-				// переприсваиваем систему через номенклатуру характеристики
-				if(!obx.owner.empty())
-					ox.owner = obx.owner;
-
+				// переприсваиваем номенклатуру, цвет и размеры
+				ox._mixin(obx, ["owner","clr","x","y","s","s"]);
+					
 				// очищаем табчасти, перезаполняем контуры и координаты
-				ox.specification.clear();
-				ox.glasses.clear();
-				ox.glass_specification.clear();
-				ox.mosquito.clear();
-
 				ox.constructions.load(obx.constructions);
 				ox.coordinates.load(obx.coordinates);
 				ox.params.load(obx.params);
@@ -715,8 +707,15 @@ Scheme.prototype.__define({
 
 			}
 
-			$p.cat.characteristics.get(id, true, true)
-				.then(do_load.bind(this));
+			this.data._loading = true;
+
+			if(is_snapshot){
+				this.data._snapshot = true;
+				do_load.call(this, obx);
+				
+			}else
+				$p.cat.characteristics.get(obx, true, true)
+					.then(do_load.bind(this));
 
 		}
 	},

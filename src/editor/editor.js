@@ -23,12 +23,7 @@ function Editor(pwnd, attr){
 		 * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
 		 * @type {Undo}
 		 */
-		undo = new function Undo(){
-
-			this.clear = function () {
-
-			}
-		},
+		undo = new UndoRedo(this),
 
 		selectionBounds = null,
 		selectionBoundsShape = null,
@@ -155,11 +150,11 @@ function Editor(pwnd, attr){
 					break;
 
 				case 'back':
-					$p.msg.show_msg(name);
+					undo.back();
 					break;
 
 				case 'rewind':
-					$p.msg.show_msg(name);
+					undo.rewind();
 					break;
 
 				case 'open_spec':

@@ -124,8 +124,7 @@ DimensionLine.prototype.__define({
 	_move_points: {
 		value: function (event, xy) {
 
-			var _bounds = this.parent.parent.bounds,
-				delta, segments;
+			var _bounds = this.parent.parent.bounds, delta;
 
 			if(this.pos == "top" || this.pos == "bottom")
 				if(event.name == "right")
