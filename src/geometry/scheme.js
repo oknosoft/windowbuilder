@@ -28,8 +28,29 @@ function Scheme(_canvas){
 		},
 		_changes = [],
 		_dp_observer = function (changes) {
+
+			if(_data._loading || _data._snapshot)
+				return;
+
+			var evented, scheme_changed_names = ["clr","sys"];
+
 			changes.forEach(function(change){
-				if(change.type == "update"){
+
+				if(scheme_changed_names.indexOf(change.name) != -1){
+
+					if(change.name == "clr"){
+						_scheme.ox.clr = change.object[change.name];
+					}
+
+					if(change.name == "sys"){
+						_scheme.ox.owner = change.object[change.name];
+					}
+
+					if(!evented){
+						// информируем мир об изменениях
+						$p.eve.callEvent("scheme_changed", [_scheme]);
+						evented = true;
+					}
 
 				}
 			});
@@ -115,16 +136,21 @@ function Scheme(_canvas){
 		set: function (v) {
 
 			// устанавливаем в _dp характеристику
-			_scheme._dp.characteristic = v;
-			_scheme._dp.clr = _scheme._dp.characteristic.clr;
+			var _dp = _scheme._dp;
+			_dp.characteristic = v;
+			var ox = _dp.characteristic;
+			_dp.clr = ox.clr;
+			_dp.len = ox.x;
+			_dp.height = ox.y;
+			_dp.s = ox.s;
 
 			// устанавливаем строку заказа
-			_scheme.data._calc_order_row = _scheme._dp.characteristic.calc_order_row;
+			_scheme.data._calc_order_row = ox.calc_order_row;
 
 			// устанавливаем в _dp свойства строки заказа
 			if(_scheme.data._calc_order_row){
 				"quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach(function (fld) {
-					_scheme._dp[fld] = _scheme._calc_order_row[fld];
+					_dp[fld] = _scheme._calc_order_row[fld];
 				});
 			}else{
 				// TODO: установить режим только просмотр, если не найдена строка заказа
@@ -132,33 +158,32 @@ function Scheme(_canvas){
 
 
 			// устанавливаем в _dp систему профилей
-			if(_scheme._dp.characteristic.empty())
-				_scheme._dp.sys = "";
+			if(ox.empty())
+				_dp.sys = "";
 			else{
 				var setted;
-				$p.cat.production_params.find_rows({nom: _scheme._dp.characteristic.owner}, function(o){
-					_scheme._dp.sys = o;
+				$p.cat.production_params.find_rows({nom: ox.owner}, function(o){
+					_dp.sys = o;
 					setted = true;
 					return false;
 				});
 				// пересчитываем параметры изделия при установке системы TODO: подумать, как не портить старые изделия, открытые для просмотра
 				if(setted){
-					_scheme._dp.sys.refill_prm(_scheme._dp.characteristic);
+					_dp.sys.refill_prm(ox);
 				}else
-					_scheme._dp.sys = "";
+					_dp.sys = "";
 			}
 
-			// устанавливаем в _dp цвет
-			_scheme._dp.clr = _scheme._dp.characteristic.clr;
-			if(_scheme._dp.clr.empty())
-				_scheme._dp.clr = _scheme._dp.sys.default_clr;
+			// устанавливаем в _dp цвет по умолчанию
+			if(_dp.clr.empty())
+				_dp.clr = _dp.sys.default_clr;
 
 			// оповещаем о новых слоях и свойствах изделия
 			Object.getNotifier(_scheme._noti).notify({
 				type: 'rows',
 				tabular: 'constructions'
 			});
-			Object.getNotifier(_scheme._dp).notify({
+			Object.getNotifier(_dp).notify({
 				type: 'rows',
 				tabular: 'extra_fields'
 			});
@@ -202,15 +227,17 @@ function Scheme(_canvas){
 	 * @returns {*}
 	 */
 	this.hitPoints = function (point) {
-		var item, items = _scheme.selectedItems, hit;
-		for(var i in items){
-			item = items[i];
+		var item, hit;
+
+		_scheme.selectedItems.some(function (item) {
 			hit = item.hitTest(point, { segments: true, tolerance: 6 });
 			if(hit)
-				break;
-		}
+				return true;
+		});
+
 		if(!hit)
 			hit = _scheme.hitTest(point, { segments: true, tolerance: 4 });
+
 		if(hit && hit.item.layer && hit.item.layer.parent){
 			item = hit.item;
 			// если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
@@ -221,12 +248,11 @@ function Scheme(_canvas){
 					(item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1)))
 				return hit;
 
-			items = item.layer.parent.profiles;
-			for(var i in items){
-				hit = items[i].hitTest(point, { segments: true, tolerance: 6 });
+			item.layer.parent.profiles.some(function (item) {
+				hit = item.hitTest(point, { segments: true, tolerance: 6 });
 				if(hit)
-					break;
-			}
+					return true;
+			});
 			//item.selected = false;
 		}
 		return hit;
@@ -348,7 +374,8 @@ function Scheme(_canvas){
 		}
 
 		_data._loading = true;
-		_scheme.ox = null;
+		if(id != _scheme.ox)
+			_scheme.ox = null;
 		_scheme.clear();
 
 		if($p.is_data_obj(id) && id.calc_order && !id.calc_order.is_new())
@@ -510,7 +537,7 @@ function Scheme(_canvas){
 		this.clear();
 		this.remove();
 		Object.unobserve(this._dp, _dp_observer);
-		_calc_order_row = null;
+		this.data._calc_order_row = null;
 	};
 
 	/**

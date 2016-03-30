@@ -1229,6 +1229,12 @@ function CnnPoint(parent){
 	 */
 	this.cnn = null;
 
+
+	this.point = null;
+
+	this.profile_point = "";
+
+
 	/**
 	 * Массив ошибок соединения
 	 * @type {Array}

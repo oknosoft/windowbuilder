@@ -3979,12 +3979,30 @@ $p.iface.view_orders = function (cell) {
 						text: $p.msg.modified_close,
 						cancel: $p.msg.cancel,
 						callback: function(btn) {
-							if(btn)
-								this._on_close(true);
+							if(btn){
+								// закрыть изменённый без сохранения - значит прочитать его из pouchdb
+								t.editor.project.data._loading = true;
+								if(t.editor.project.ox.is_new()){
+									// если характеристика не была записана - удаляем её вместе со строкой заказа
+									var _row = t.editor.project.ox.calc_order_row;
+									if(_row)
+										_row._owner.del(_row);
+									t.editor.project.ox.unload();
+									this._on_close(true);
+								}else{
+									t.editor.project.ox.load()
+										.then(function () {
+											this._on_close(true);
+										}.bind(this));
+								}
+							}								
 						}.bind(this)
 					});
 					return;
 				}
+
+				t.editor.project.data._loading = true;
+				t.editor.project.ox = null;
 
 				var _cell = t.carousel.cells("doc");
 				

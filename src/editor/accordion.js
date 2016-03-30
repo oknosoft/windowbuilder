@@ -290,16 +290,16 @@ function EditorAccordion(_editor, cell_acc) {
 							obj: _obj,
 							oxml: {
 								"Свойства": ["sys","clr",
-									{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro", txt: _obj.len},
-									{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro", txt: _obj.height},
-									{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro", txt: _obj.s}
+									{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
+									{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
+									{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro"}
 								],
 								"Строка заказа": ["quantity",
-									{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro", txt: _obj.price_internal},
-									{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro", txt: _obj.discount_percent_internal},
-									{id: "price", path: "o.price", synonym: "Цена", type: "ro", txt: _obj.price},
+									{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro"},
+									{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro"},
+									{id: "price", path: "o.price", synonym: "Цена", type: "ro"},
 									"discount_percent",
-									{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro", txt: _obj.amount},
+									{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro"},
 									"note"]
 
 							},

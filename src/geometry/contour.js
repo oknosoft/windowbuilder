@@ -31,7 +31,6 @@ function Contour(attr){
 	var _contour = this,
 		_parent = attr.parent,
 		_row,
-		_glasses = [],
 		_notifier = Object.getNotifier(this._noti),
 		_layers = {};
 
@@ -131,7 +130,7 @@ function Contour(attr){
 				var need_bind = attr.length,
 					outer_nodes = this.outer_nodes,
 					available_bind = outer_nodes.length,
-					elm, curr, b3,
+					elm, curr,
 					noti = {type: consts.move_points, profiles: [], points: []};
 
 				// первый проход: по двум узлам либо примыканию к образующей
@@ -630,7 +629,7 @@ Contour.prototype.__define({
 		get: function(){
 			var profiles = this.profiles,
 				is_flap = !!this.parent,
-				findedb, findede, nodes = [];
+				nodes = [];
 
 			// для всех профилей контура
 			profiles.forEach(function (p) {
@@ -772,7 +771,6 @@ Contour.prototype.__define({
 		value: function () {
 			var _contour = this,
 				contours = _contour.glass_contours,
-				nodes = _contour.nodes,
 				glasses = _contour.glasses(true);
 
 			/**
