@@ -15,7 +15,7 @@ $p.modifiers.push(
 
 		_mgr.form_obj = function(pwnd, attr){
 
-			var o, wnd, evts = [];
+			var o, wnd, evts = [], attr_on_close = attr.on_close;
 
 			/**
 			 * структура заголовков табчасти продукции
@@ -81,7 +81,7 @@ $p.modifiers.push(
 						// в зависимости от статуса
 						setTimeout(set_editable, 50);
 
-					})
+					});
 
 				/**
 				 *	статусбар с картинками
@@ -168,7 +168,7 @@ $p.modifiers.push(
 				wnd.elmnts.cell_note = wnd.elmnts.layout_header.cells('c');
 				wnd.elmnts.cell_note.hideHeader();
 				wnd.elmnts.cell_note.setHeight(100);
-				wnd.elmnts.cell_note.attachHTMLString("<textarea style='width: 100%; height: 100%; border: none;'>" + o.note + "</textarea>");
+				wnd.elmnts.cell_note.attachHTMLString("<textarea class='textarea_editor'>" + o.note + "</textarea>");
 				// wnd.elmnts.note_editor = wnd.elmnts.cell_note.attachEditor({
 				// 	content: o.note,
 				// 	onFocusChanged: function(name, ev){
@@ -187,6 +187,8 @@ $p.modifiers.push(
 			attr.toolbar_struct = $p.injected_data["toolbar_calc_order_obj.xml"];
 
 			attr.toolbar_click = toolbar_click;
+
+			attr.on_close = frm_close;
 
 			return this.constructor.prototype.form_obj.call(this, pwnd, attr)
 				.then(function (res) {
@@ -445,7 +447,7 @@ $p.modifiers.push(
 			function header_refresh(){
 				function reflect(id){
 					if(typeof id == "string"){
-						var fv = o[id]
+						var fv = o[id];
 						if(fv != undefined){
 							if($p.is_data_obj(fv))
 								this.cells(id, 1).setValue(fv.presentation);
@@ -516,23 +518,19 @@ $p.modifiers.push(
 
 				function do_save(){
 
-					wnd.progressOn();
-
 					if(!wnd.elmnts.ro)
 						o.note = wnd.elmnts.cell_note.cell.querySelector("textarea").value.replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
 
 					o.save()
 						.then(function(){
 
-							wnd.progressOff();
-							wnd.modified = false;
-
 							if(action == "sent" || action == "close")
 								wnd.close();
+							else
+								wnd.set_text();
 
 						})
 						.catch(function(err){
-							wnd.progressOff();
 							$p.record_log(err);
 						});
 				}
@@ -562,11 +560,11 @@ $p.modifiers.push(
 				}
 			}
 
-			function frm_close(win){
+			function frm_close(){
 
 				// выгружаем из памяти всплывающие окна скидки и связанных файлов
 				["vault", "vault_pop", "discount", "discount_pop"].forEach(function (elm) {
-					if (wnd.elmnts[elm])
+					if (wnd.elmnts[elm] && wnd.elmnts[elm].unload)
 						wnd.elmnts[elm].unload();
 				});
 
@@ -574,6 +572,9 @@ $p.modifiers.push(
 					$p.eve.detachEvent(id);
 				});
 
+				if(typeof attr_on_close == "function")
+					attr_on_close();
+				
 				return true;
 			}
 

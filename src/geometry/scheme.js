@@ -150,7 +150,7 @@ function Scheme(_canvas){
 			// устанавливаем в _dp свойства строки заказа
 			if(_scheme.data._calc_order_row){
 				"quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach(function (fld) {
-					_dp[fld] = _scheme._calc_order_row[fld];
+					_dp[fld] = _scheme.data._calc_order_row[fld];
 				});
 			}else{
 				// TODO: установить режим только просмотр, если не найдена строка заказа

@@ -194,7 +194,7 @@ function Editor(pwnd, attr){
 	// Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
 	$p.eve.attachEvent("characteristic_saved", function (scheme, attr) {
 		if(scheme == _editor.project && attr.close && _editor._pwnd._on_close)
-			_editor._pwnd._on_close();
+			setTimeout(_editor._pwnd._on_close);			
 	});
 
 	// Обработчик события при изменениях изделия
