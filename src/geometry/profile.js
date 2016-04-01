@@ -33,56 +33,76 @@ function Profile(attr){
 		// собственно, привязка
 		function do_bind(p){
 
-			var mpoint, imposts;
+			var mpoint, imposts, moved_fact;
 
 			if(bcnn.cnn && bcnn.profile == p){
+				// обрабатываем угол
 				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					if(!_profile.b.is_nearest(p.e)){
-						if(bcnn.is_t){
-							if(paper.Key.isDown('alt')){
-
+						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное){
+							if(paper.Key.isDown('control')){
+								console.log('control');
 							}else{
 								if(_profile.b.getDistance(p.e, true) < _profile.b.getDistance(p.b, true))
 									_profile.b = p.e;
 								else
 									_profile.b = p.b;
+								moved_fact = true;
 							}
-						} else
-							_profile.b = p.e;
+						} else{
+							// отрываем привязанный ранее профиль
+							bcnn.clear();
+							_profile.data._rays.clear_segments();
+						}
 					}
 
 				}
+				// обрабатываем T
 				else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+					// импосты в створках и все остальные импосты
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
-					if(!mpoint.is_nearest(_profile.b))
+					if(!mpoint.is_nearest(_profile.b)){
 						_profile.b = mpoint;
+						moved_fact = true;
+					}
 				}
+
 			}
 			if(ecnn.cnn && ecnn.profile == p){
+				// обрабатываем угол
 				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					if(!_profile.e.is_nearest(p.b)){
-						if(ecnn.is_t){
-							if(paper.Key.isDown('alt')){
-
+						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное){
+							if(paper.Key.isDown('control')){
+								console.log('control');
 							}else{
 								if(_profile.e.getDistance(p.b, true) < _profile.e.getDistance(p.e, true))
 									_profile.e = p.b;
 								else
 									_profile.e = p.e;
+								moved_fact = true;
 							}
-						} else
-							_profile.e = p.b;
+						} else{
+							// отрываем привязанный ранее профиль
+							ecnn.clear();
+							_profile.data._rays.clear_segments();
+						}
 					}
 				}
+				// обрабатываем T
 				else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+					// импосты в створках и все остальные импосты
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
-					if(!mpoint.is_nearest(_profile.e))
+					if(!mpoint.is_nearest(_profile.e)){
 						_profile.e = mpoint;
+						moved_fact = true;
+					}
 				}
+
 			}
 
 			// если мы в обсервере и есть T и в массиве обработанных есть примыкающий T - пересчитываем
-			if(moved){
+			if(moved && moved_fact){
 				imposts = _profile.joined_imposts();
 				imposts = imposts.inner.concat(imposts.outer);
 				for(var i in imposts){
@@ -151,8 +171,9 @@ function Profile(attr){
 
 		// Если привязка не нарушена, возвращаем предыдущее значение
 		if(res.profile && res.profile.children.length){
-			if(res.profile_point == "b" || res.profile_point == "e")
+			if(!res.is_t && (res.profile_point == "b" || res.profile_point == "e"))
 				return res;
+
 			else if(c_d(res.profile, _profile, res, point, true) === false)
 				return res;
 		}

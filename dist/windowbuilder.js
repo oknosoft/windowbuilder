@@ -1859,6 +1859,9 @@ BuilderElement.prototype.__define({
 		},
 		set : function(v){
 			this._row.inset = v;
+			if(this.data && this.data._rays)
+				this.data._rays.clear_segments();
+			this.project.register_change();
 		},
 		enumerable : false
 	},
@@ -1903,6 +1906,8 @@ BuilderElement.prototype.__define({
 				}
 				this.path.fillColor = clr;
 			}
+
+			this.project.register_change();
 
 		},
 		enumerable : false
@@ -3041,56 +3046,76 @@ function Profile(attr){
 		// собственно, привязка
 		function do_bind(p){
 
-			var mpoint, imposts;
+			var mpoint, imposts, moved_fact;
 
 			if(bcnn.cnn && bcnn.profile == p){
+				// обрабатываем угол
 				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					if(!_profile.b.is_nearest(p.e)){
-						if(bcnn.is_t){
-							if(paper.Key.isDown('alt')){
-
+						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное){
+							if(paper.Key.isDown('control')){
+								console.log('control');
 							}else{
 								if(_profile.b.getDistance(p.e, true) < _profile.b.getDistance(p.b, true))
 									_profile.b = p.e;
 								else
 									_profile.b = p.b;
+								moved_fact = true;
 							}
-						} else
-							_profile.b = p.e;
+						} else{
+							// отрываем привязанный ранее профиль
+							bcnn.clear();
+							_profile.data._rays.clear_segments();
+						}
 					}
 
 				}
+				// обрабатываем T
 				else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+					// импосты в створках и все остальные импосты
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
-					if(!mpoint.is_nearest(_profile.b))
+					if(!mpoint.is_nearest(_profile.b)){
 						_profile.b = mpoint;
+						moved_fact = true;
+					}
 				}
+
 			}
 			if(ecnn.cnn && ecnn.profile == p){
+				// обрабатываем угол
 				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					if(!_profile.e.is_nearest(p.b)){
-						if(ecnn.is_t){
-							if(paper.Key.isDown('alt')){
-
+						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное){
+							if(paper.Key.isDown('control')){
+								console.log('control');
 							}else{
 								if(_profile.e.getDistance(p.b, true) < _profile.e.getDistance(p.e, true))
 									_profile.e = p.b;
 								else
 									_profile.e = p.e;
+								moved_fact = true;
 							}
-						} else
-							_profile.e = p.b;
+						} else{
+							// отрываем привязанный ранее профиль
+							ecnn.clear();
+							_profile.data._rays.clear_segments();
+						}
 					}
 				}
+				// обрабатываем T
 				else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+					// импосты в створках и все остальные импосты
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
-					if(!mpoint.is_nearest(_profile.e))
+					if(!mpoint.is_nearest(_profile.e)){
 						_profile.e = mpoint;
+						moved_fact = true;
+					}
 				}
+
 			}
 
 			// если мы в обсервере и есть T и в массиве обработанных есть примыкающий T - пересчитываем
-			if(moved){
+			if(moved && moved_fact){
 				imposts = _profile.joined_imposts();
 				imposts = imposts.inner.concat(imposts.outer);
 				for(var i in imposts){
@@ -3159,8 +3184,9 @@ function Profile(attr){
 
 		// Если привязка не нарушена, возвращаем предыдущее значение
 		if(res.profile && res.profile.children.length){
-			if(res.profile_point == "b" || res.profile_point == "e")
+			if(!res.is_t && (res.profile_point == "b" || res.profile_point == "e"))
 				return res;
+
 			else if(c_d(res.profile, _profile, res, point, true) === false)
 				return res;
 		}
@@ -4883,8 +4909,8 @@ function Scheme(_canvas){
 		if(element === profile){
 
 
-		}else if((distance = element.b.getDistance(point)) < consts.sticking){
-			// Если мы находимся в окрестности начала элемента
+		}else if((distance = element.b.getDistance(point)) < (res.is_t ? consts.sticking_l : consts.sticking)){
+			// Если мы находимся в окрестности начала соседнего элемента
 
 			if(!res.cnn){
 
@@ -4907,9 +4933,9 @@ function Scheme(_canvas){
 			res.cnn_types = acn.a;
 			return false;
 
-		}else if((distance = element.e.getDistance(point)) < consts.sticking){
+		}else if((distance = element.e.getDistance(point)) < (res.is_t ? consts.sticking_l : consts.sticking)){
 
-			// Если мы находимся в окрестности конца элемента
+			// Если мы находимся в окрестности конца соседнего элемента
 			if(!res.cnn){
 
 				// а есть ли подходящее?
@@ -4933,7 +4959,7 @@ function Scheme(_canvas){
 
 		}else{
 			
-			// это соединение с пустотой
+			// это соединение с пустотой или T
 			gp = element.generatrix.getNearestPoint(point);
 			if(gp && (distance = gp.getDistance(point)) < consts.sticking){
 				if(distance < res.distance || bind_generatrix){
@@ -5020,20 +5046,18 @@ Scheme.prototype.__define({
 	 */
 	move_points: {
 		value: function (delta, all_points) {
+			this.selectedItems.forEach(function (item) {
+				if(item.parent instanceof Profile){
+					if(!item.layer.parent || !item.parent.nearest())
+						item.parent.move_points(delta, all_points);
 
-			var selected = this.selectedItems;
-			for (var i = 0; i < selected.length; i++) {
-				var path = selected[i];
-				if(path.parent instanceof Profile){
-					if(!path.layer.parent || !path.parent.nearest())
-						path.parent.move_points(delta, all_points);
-
-				}else if(path instanceof Filling){
-					//path.position = path.position.add(delta);
-					while (path.children.length > 1)
-						path.children[1].remove();
+				}else if(item instanceof Filling){
+					//item.position = item.position.add(delta);
+					while (item.children.length > 1)
+						item.children[1].remove();
 				}
-			}
+			});
+			// TODO: возможно, здесь надо подвигать примыкающие контуры
 		}
 	},
 
@@ -5261,6 +5285,7 @@ var acn,
 	 * @type {number}
 	 */
 	this.sticking = 90;
+	this.sticking_l = 7;
 	this.sticking0 = this.sticking / 2;
 	this.sticking2 = this.sticking * this.sticking;
 	this.font_size = 60;
@@ -5487,7 +5512,7 @@ ToolArc._extend(paper.Tool);
 
 function ToolElement() {
 	ToolElement.superclass.constructor.call(this);
-};
+}
 ToolElement._extend(paper.Tool);
 
 ToolElement.prototype.__define({

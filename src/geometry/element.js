@@ -267,6 +267,9 @@ BuilderElement.prototype.__define({
 		},
 		set : function(v){
 			this._row.inset = v;
+			if(this.data && this.data._rays)
+				this.data._rays.clear_segments();
+			this.project.register_change();
 		},
 		enumerable : false
 	},
@@ -311,6 +314,8 @@ BuilderElement.prototype.__define({
 				}
 				this.path.fillColor = clr;
 			}
+
+			this.project.register_change();
 
 		},
 		enumerable : false

@@ -459,8 +459,8 @@ function Scheme(_canvas){
 		if(element === profile){
 
 
-		}else if((distance = element.b.getDistance(point)) < consts.sticking){
-			// Если мы находимся в окрестности начала элемента
+		}else if((distance = element.b.getDistance(point)) < (res.is_t ? consts.sticking_l : consts.sticking)){
+			// Если мы находимся в окрестности начала соседнего элемента
 
 			if(!res.cnn){
 
@@ -483,9 +483,9 @@ function Scheme(_canvas){
 			res.cnn_types = acn.a;
 			return false;
 
-		}else if((distance = element.e.getDistance(point)) < consts.sticking){
+		}else if((distance = element.e.getDistance(point)) < (res.is_t ? consts.sticking_l : consts.sticking)){
 
-			// Если мы находимся в окрестности конца элемента
+			// Если мы находимся в окрестности конца соседнего элемента
 			if(!res.cnn){
 
 				// а есть ли подходящее?
@@ -509,7 +509,7 @@ function Scheme(_canvas){
 
 		}else{
 			
-			// это соединение с пустотой
+			// это соединение с пустотой или T
 			gp = element.generatrix.getNearestPoint(point);
 			if(gp && (distance = gp.getDistance(point)) < consts.sticking){
 				if(distance < res.distance || bind_generatrix){
@@ -596,20 +596,18 @@ Scheme.prototype.__define({
 	 */
 	move_points: {
 		value: function (delta, all_points) {
+			this.selectedItems.forEach(function (item) {
+				if(item.parent instanceof Profile){
+					if(!item.layer.parent || !item.parent.nearest())
+						item.parent.move_points(delta, all_points);
 
-			var selected = this.selectedItems;
-			for (var i = 0; i < selected.length; i++) {
-				var path = selected[i];
-				if(path.parent instanceof Profile){
-					if(!path.layer.parent || !path.parent.nearest())
-						path.parent.move_points(delta, all_points);
-
-				}else if(path instanceof Filling){
-					//path.position = path.position.add(delta);
-					while (path.children.length > 1)
-						path.children[1].remove();
+				}else if(item instanceof Filling){
+					//item.position = item.position.add(delta);
+					while (item.children.length > 1)
+						item.children[1].remove();
 				}
-			}
+			});
+			// TODO: возможно, здесь надо подвигать примыкающие контуры
 		}
 	},
 

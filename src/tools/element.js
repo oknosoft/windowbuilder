@@ -7,7 +7,7 @@
 
 function ToolElement() {
 	ToolElement.superclass.constructor.call(this);
-};
+}
 ToolElement._extend(paper.Tool);
 
 ToolElement.prototype.__define({
