@@ -57,3 +57,11 @@
 .dhx_cell_editor .dhx_cell_stb{
 	display: none;
 }
+
+.span_user {
+	font-size: smaller;
+	text-decoration: underline;
+	float: right;
+	line-height: 22px;
+	padding-right: 2px;
+}

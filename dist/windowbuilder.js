@@ -762,8 +762,12 @@ Contour.prototype.__define({
 							return;
 						// если конец нашего совпадает с началом следующего...
 						// и если существует соединение нашего со следующим
-						if(curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b))
-							curr.anext.push(segm);
+						if(curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b)){
+
+							if(curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
+								curr.anext.push(segm);
+						}
+
 					});
 				}
 				return curr.anext;
@@ -783,18 +787,17 @@ Contour.prototype.__define({
 			}
 
 			while(segments.length){
-				if(curr == segments[0])
-					break;
 				curr = segments[0];
 				acurr = [curr];
 				if(go_go(curr) && acurr.length > 1){
 					res.push(acurr);
-					acurr.forEach(function (el) {
-						var ind = segments.indexOf(el);
-						if(ind != -1)
-							segments.splice(ind, 1);
-					});
 				}
+				// удаляем из segments уже задействованные или не пригодившиеся сегменты
+				acurr.forEach(function (el) {
+					var ind = segments.indexOf(el);
+					if(ind != -1)
+						segments.splice(ind, 1);
+				});
 			}
 
 			return res;
@@ -7607,6 +7610,71 @@ function EditorAccordion(_editor, cell_acc) {
 }
 
 /**
+ * Работа с буфером обмена
+ * @author Evgeniy Malyarov
+ * @module clipboard
+ */
+
+/**
+ * Объект для прослушивания и обработки событий буфера обмена
+ * @param _editor
+ * @constructor
+ */
+function Clipbrd(_editor) {
+
+	var fakecb = {
+		clipboardData: {
+			types: ['text/plain'],
+			json: '{a: 0}',
+			getData: function () {
+				return this.json;
+			}
+		}
+	};
+
+	function onpaste(e) {
+		var _scheme = _editor.project;
+
+		if(!e)
+			e = fakecb;
+
+		if(!_scheme.ox.empty()){
+
+			if(e.clipboardData.types.indexOf('text/plain') == -1)
+				return;
+
+			try{
+				var data = JSON.parse(e.clipboardData.getData('text/plain'));
+				e.preventDefault();
+			}catch(e){
+				return;
+			}
+
+		}
+	}
+
+	function oncopy(e) {
+		var _scheme = _editor.project;
+		if(!_scheme.ox.empty()){
+			e.clipboardData.setData('text/plain', fakecb.clipboardData.json);
+			//e.clipboardData.setData('text/html', '<b>Hello, world!</b>');
+			e.preventDefault();
+		}
+	}
+
+	this.copy = function () {
+		document.execCommand('copy');
+	};
+
+	this.paste = function () {
+		onpaste();
+	};
+
+	document.addEventListener('copy', oncopy);
+
+	document.addEventListener('paste', onpaste);
+}
+/**
  * Created 24.07.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
@@ -7633,6 +7701,18 @@ function Editor(pwnd, attr){
 		 */
 		undo = new UndoRedo(this),
 
+		/**
+		 * Объект для прослушивания и обработки событий буфера обмена
+		 * @type {Clipbrd}
+		 */
+		clipbrd = new Clipbrd(this),
+
+		/**
+		 * Объект для управления редактором с клавиатуры
+		 * @type {Keybrd}
+		 */
+		keybrd = new Keybrd(this),
+
 		selectionBounds = null,
 		selectionBoundsShape = null,
 		drawSelectionBounds = 0;
@@ -7642,24 +7722,52 @@ function Editor(pwnd, attr){
 
 	consts.tune_paper(_editor.settings);
 
-	_editor._pwnd = pwnd;
-	_editor._layout = pwnd.attachLayout({
-		pattern: "2U",
-		cells: [{
-			id: "a",
-			text: "Изделие",
-			header: false
-		}, {
-			id: "b",
-			text: "Инструменты",
-			collapsed_text: "Инструменты",
-			width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 360 : 240
-		}],
-		offsets: { top: 28, right: 0, bottom: 0, left: 0}
-	});         // разбивка на канвас и аккордион
-	_editor._wrapper = document.createElement('div');                  // контейнер канваса
+	_editor.__define({
+
+		// ячейка родительского окна
+		_pwnd: {
+			get: function () {
+				return pwnd;
+			}
+		},
+
+		// разбивка на канвас и аккордион
+		_layout: {
+			value: pwnd.attachLayout({
+				pattern: "2U",
+				cells: [{
+					id: "a",
+					text: "Изделие",
+					header: false
+				}, {
+					id: "b",
+					text: "Инструменты",
+					collapsed_text: "Инструменты",
+					width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 360 : 240
+				}],
+				offsets: { top: 28, right: 0, bottom: 0, left: 0}
+			})
+		},
+
+		// контейнер канваса
+		_wrapper: {
+			value: document.createElement('div')
+		},
+
+		// указатель на локальный dhtmlXWindows
+		_dxw: {
+			get: function () {
+				return this._layout.dhxWins;
+			}
+		},
+
+		toString: {
+			value: function(){ return $p.msg.bld_constructor; }
+		}
+	});
+
+
 	_editor._layout.cells("a").attachObject(_editor._wrapper);
-	_editor._dxw = _editor._layout.dhxWins;                             // указатель на dhtmlXWindows
 	_editor._dxw.attachViewportTo(_editor._wrapper);
 
 	_editor._wrapper.oncontextmenu = function (event) {
@@ -7667,7 +7775,6 @@ function Editor(pwnd, attr){
 		return $p.cancel_bubble(event);
 	};
 
-	_editor.toString = function(){ return $p.msg.bld_constructor; };
 
 	// аккордион со свойствами
 	_editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b")) ;
@@ -7711,18 +7818,19 @@ function Editor(pwnd, attr){
 			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '34px'},
 			{name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
+			{name: 'sep_0', text: '', float: 'left'},
 			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
 
-			{name: 'sep_0', text: '', float: 'left'},
+			{name: 'sep_1', text: '', float: 'left'},
 			{name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
 			{name: 'paste', text: '<i class="fa fa-clipboard fa-fw"></i>', tooltip: 'Вставить', float: 'left'},
 			{name: 'paste_prop', text: '<i class="fa fa-paint-brush fa-fw"></i>', tooltip: 'Применить скопированные свойства', float: 'left'},
 
-			{name: 'sep_1', text: '', float: 'left'},
+			{name: 'sep_2', text: '', float: 'left'},
 			{name: 'back', text: '<i class="fa fa-undo fa-fw"></i>', tooltip: 'Шаг назад', float: 'left'},
 			{name: 'rewind', text: '<i class="fa fa-repeat fa-fw"></i>', tooltip: 'Шаг вперед', float: 'left'},
 
-			{name: 'sep_2', text: '', float: 'left'},
+			{name: 'sep_3', text: '', float: 'left'},
 			{name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
 
 			{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
@@ -7737,8 +7845,8 @@ function Editor(pwnd, attr){
 					break;
 
 				case 'close':
-					if(_editor._pwnd._on_close)
-						_editor._pwnd._on_close();
+					if(pwnd._on_close)
+						pwnd._on_close();
 					_editor.select_tool('select_node');
 					break;
 
@@ -7763,6 +7871,18 @@ function Editor(pwnd, attr){
 
 				case 'rewind':
 					undo.rewind();
+					break;
+
+				case 'copy':
+					clipbrd.copy();
+					break;
+
+				case 'paste':
+					clipbrd.paste();
+					break;
+
+				case 'paste_prop':
+					$p.msg.show_msg(name);
 					break;
 
 				case 'open_spec':
@@ -7801,8 +7921,8 @@ function Editor(pwnd, attr){
 
 	// Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
 	$p.eve.attachEvent("characteristic_saved", function (scheme, attr) {
-		if(scheme == _editor.project && attr.close && _editor._pwnd._on_close)
-			setTimeout(_editor._pwnd._on_close);			
+		if(scheme == _editor.project && attr.close && pwnd._on_close)
+			setTimeout(pwnd._on_close);
 	});
 
 	// Обработчик события при изменениях изделия
@@ -8150,7 +8270,7 @@ Editor.prototype.__define({
 				return;
 			}
 
-			$p.cat.characteristics.form_selection_block(this.project._pwnd, {
+			$p.cat.characteristics.form_selection_block(this._pwnd, {
 				on_select: this.project.load_stamp.bind(this.project)
 			});
 		}
@@ -8308,6 +8428,20 @@ if(typeof $p !== "undefined")
 	$p.Editor = Editor;
 
 
+/**
+ * Обработчик сочетаний клавишь
+ * @author Evgeniy Malyarov
+ * @module keyboard
+ */
+
+/**
+ * Управление редактором с клавиатуры
+ * @param _editor
+ * @constructor
+ */
+function Keybrd(_editor) {
+	
+}
 /**
  * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
  * @author Evgeniy Malyarov

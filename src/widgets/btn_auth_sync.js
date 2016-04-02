@@ -74,13 +74,15 @@ function OBtnAuthSync() {
 		bars.forEach(function (bar) {
 
 			if($p.wsql.pouch.authorized){
-				bar.buttons.auth.title = $p.msg.logged_in + $p.wsql.pouch.authorized;
-				bar.buttons.auth.innerHTML = '<i class="fa fa-sign-out md-fa-lg"></i>';
+				// bar.buttons.auth.title = $p.msg.logged_in + $p.wsql.pouch.authorized;
+				// bar.buttons.auth.innerHTML = '<i class="fa fa-sign-out md-fa-lg"></i>';
+				bar.buttons.auth.title = "Отключиться от сервера";
+				bar.buttons.auth.innerHTML = '<span class="span_user">' + $p.wsql.pouch.authorized + '</span>';
 				bar.buttons.sync.title = "Синхронизация выполняется...";
 				bar.buttons.sync.innerHTML = '<i class="fa fa-refresh md-fa-lg"></i>';
 			}else{
 				bar.buttons.auth.title = "Войти на сервер и включить синхронизацию данных";
-				bar.buttons.auth.innerHTML = '<i class="fa fa-sign-in md-fa-lg"></i>';
+				bar.buttons.auth.innerHTML = '&nbsp;<i class="fa fa-sign-in md-fa-lg"></i><span class="span_user">Вход...</span>';
 				bar.buttons.sync.title = "Синхронизация не выполняется - пользователь не авторизован на сервере";
 				bar.buttons.sync.innerHTML = '<i class="fa fa-ban md-fa-lg"></i>';
 					//'<i class="fa fa-refresh fa-stack-1x"></i>' +

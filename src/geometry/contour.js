@@ -721,8 +721,12 @@ Contour.prototype.__define({
 							return;
 						// если конец нашего совпадает с началом следующего...
 						// и если существует соединение нашего со следующим
-						if(curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b))
-							curr.anext.push(segm);
+						if(curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b)){
+
+							if(curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
+								curr.anext.push(segm);
+						}
+
 					});
 				}
 				return curr.anext;
@@ -742,18 +746,17 @@ Contour.prototype.__define({
 			}
 
 			while(segments.length){
-				if(curr == segments[0])
-					break;
 				curr = segments[0];
 				acurr = [curr];
 				if(go_go(curr) && acurr.length > 1){
 					res.push(acurr);
-					acurr.forEach(function (el) {
-						var ind = segments.indexOf(el);
-						if(ind != -1)
-							segments.splice(ind, 1);
-					});
 				}
+				// удаляем из segments уже задействованные или не пригодившиеся сегменты
+				acurr.forEach(function (el) {
+					var ind = segments.indexOf(el);
+					if(ind != -1)
+						segments.splice(ind, 1);
+				});
 			}
 
 			return res;

@@ -3283,13 +3283,15 @@ function OBtnAuthSync() {
 		bars.forEach(function (bar) {
 
 			if($p.wsql.pouch.authorized){
-				bar.buttons.auth.title = $p.msg.logged_in + $p.wsql.pouch.authorized;
-				bar.buttons.auth.innerHTML = '<i class="fa fa-sign-out md-fa-lg"></i>';
+				// bar.buttons.auth.title = $p.msg.logged_in + $p.wsql.pouch.authorized;
+				// bar.buttons.auth.innerHTML = '<i class="fa fa-sign-out md-fa-lg"></i>';
+				bar.buttons.auth.title = "Отключиться от сервера";
+				bar.buttons.auth.innerHTML = '<span class="span_user">' + $p.wsql.pouch.authorized + '</span>';
 				bar.buttons.sync.title = "Синхронизация выполняется...";
 				bar.buttons.sync.innerHTML = '<i class="fa fa-refresh md-fa-lg"></i>';
 			}else{
 				bar.buttons.auth.title = "Войти на сервер и включить синхронизацию данных";
-				bar.buttons.auth.innerHTML = '<i class="fa fa-sign-in md-fa-lg"></i>';
+				bar.buttons.auth.innerHTML = '&nbsp;<i class="fa fa-sign-in md-fa-lg"></i><span class="span_user">Вход...</span>';
 				bar.buttons.sync.title = "Синхронизация не выполняется - пользователь не авторизован на сервере";
 				bar.buttons.sync.innerHTML = '<i class="fa fa-ban md-fa-lg"></i>';
 					//'<i class="fa fa-refresh fa-stack-1x"></i>' +
@@ -4041,14 +4043,15 @@ $p.iface.view_orders = function (cell) {
 		t.tb_nav = new $p.iface.OTooolBar({
 			wrapper: cell.cell.querySelector(".dhx_cell_sidebar_hdr"),
 			class_name: 'md_otbnav',
-			width: '180px', height: '28px', top: '3px', right: '3px', name: 'right',
+			width: '260px', height: '28px', top: '3px', right: '3px', name: 'right',
 			buttons: [
 				{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
 				{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
 				{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
 				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
-				{name: 'auth', text: '', float: 'left'},
-				{name: 'sync', text: '', float: 'left'}
+				{name: 'sep_0', text: '', float: 'right'},
+				{name: 'sync', text: '', float: 'right'},
+				{name: 'auth', text: '', width: '80px', float: 'right'}
 
 				//{name: 'filter', text: '<i class="fa fa-filter md-fa-lg"></i>', tooltip: 'Фильтр', float: 'left'}
 
