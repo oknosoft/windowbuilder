@@ -1777,16 +1777,51 @@ BuilderElement.prototype.__define({
 	_metadata: {
 		get : function(){
 			var t = this,
-				_xfields = t.project.ox._metadata.tabular_sections.coordinates.fields, //_dgfields = this.project._dp._metadata.fields
-				inset = _xfields.inset._clone();
+				_meta = t.project.ox._metadata,
+				_xfields = _meta.tabular_sections.coordinates.fields, //_dgfields = t.project._dp._metadata.fields
+				inset = _xfields.inset._clone(),
+				cnn1 = _meta.tabular_sections.cnn_elmnts.fields.cnn._clone(),
+				cnn2 = cnn1._clone(),
+				info = _meta.fields.note._clone();
+
+			function cnn_choice_links(o, cnn_point){
+				var nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
+
+				if($p.is_data_obj(o)){
+					return nom_cnns.some(function (cnn) {
+						return o == cnn;
+					});
+
+				}else{
+					var refs = "";
+					nom_cnns.forEach(function (cnn) {
+						if(refs)
+							refs += ", ";
+						refs += "'" + cnn.ref + "'";
+					});
+					return "_t_.ref in (" + refs + ")";
+				}
+			}
+
+			info.synonym = "Элемент";
 
 			inset.choice_links = [{
 				name: ["selection",	"ref"],
 				path: [
 					function(o, f){
-						var selection = t instanceof Filling ?
-						{elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}} :
-						{elm_type: t.nom.elm_type};
+						var selection;
+						if(t instanceof Filling)
+							selection = {elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}};
+
+						else if(t instanceof Profile){
+							if(t.nearest())
+								selection = {elm_type: $p.enm.elm_types.Створка};
+
+							else
+								selection = {elm_type: {in: [$p.enm.elm_types.Рама, $p.enm.elm_types.Импост]}};
+						}else
+							selection = {elm_type: t.nom.elm_type};
+
 
 						if($p.is_data_obj(o)){
 							var ok = false;
@@ -1808,15 +1843,33 @@ BuilderElement.prototype.__define({
 				}]}
 			];
 
+			cnn1.choice_links = [{
+				name: ["selection",	"ref"],
+				path: [
+					function(o, f){
+						return cnn_choice_links(o, t.rays.b);
+					}]}
+			];
+
+			cnn2.choice_links = [{
+				name: ["selection",	"ref"],
+				path: [
+					function(o, f){
+						return cnn_choice_links(o, t.rays.e);
+					}]}
+			];
+
 			return {
 				fields: {
-					info: t.project.ox._metadata.fields.note,
+					info: info,
 					inset: inset,
 					clr: _xfields.clr,
 					x1: _xfields.x1,
 					x2: _xfields.x2,
 					y1: _xfields.y1,
-					y2: _xfields.y2
+					y2: _xfields.y2,
+					cnn1: cnn1,
+					cnn2: cnn2
 				}
 			};
 		},
@@ -1961,9 +2014,10 @@ BuilderElement.prototype.__define({
 					oxml: this.oxml
 				});
 				this.data._grid.attachEvent("onRowSelect", function(id){
-					if(id == "x1" || id == "y1")
+					if(["x1","y1","cnn1"].indexOf(id) != -1)
 						this._obj.select_node("b");
-					else if(id == "x2" || id == "y2")
+
+					else if(["x2","y2","cnn2"].indexOf(id) != -1)
 						this._obj.select_node("e");
 				});
 
@@ -2379,17 +2433,17 @@ Filling.prototype.__define({
 		get: function () {
 			return {
 				" ": [
-					{id: "info", path: "o.info", synonym: "Элемент", type: "ro", txt: this.info},
+					{id: "info", path: "o.info", type: "ro"},
 					"inset",
 					"clr"
 				],
 				"Начало": [
-					{id: "x1", path: "o.x1", synonym: "X1", type: "ro", txt: this.x1},
-					{id: "y1", path: "o.y1", synonym: "Y1", type: "ro", txt: this.y1}
+					{id: "x1", path: "o.x1", synonym: "X1", type: "ro"},
+					{id: "y1", path: "o.y1", synonym: "Y1", type: "ro"}
 				],
 				"Конец": [
-					{id: "x2", path: "o.x2", synonym: "X2", type: "ro", txt: this.x2},
-					{id: "y2", path: "o.y2", synonym: "Y2", type: "ro", txt: this.y2}
+					{id: "x2", path: "o.x2", synonym: "X2", type: "ro"},
+					{id: "y2", path: "o.y2", synonym: "Y2", type: "ro"}
 				]
 			}
 		},
@@ -3055,7 +3109,7 @@ function Profile(attr){
 				// обрабатываем угол
 				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					if(!_profile.b.is_nearest(p.e)){
-						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное){
+						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
 							if(paper.Key.isDown('control')){
 								console.log('control');
 							}else{
@@ -3088,7 +3142,7 @@ function Profile(attr){
 				// обрабатываем угол
 				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					if(!_profile.e.is_nearest(p.b)){
-						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное){
+						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
 							if(paper.Key.isDown('control')){
 								console.log('control');
 							}else{
@@ -3169,7 +3223,13 @@ function Profile(attr){
 	};
 
 	/**
-	 * Находит точку примыкания концов профиля к соседними элементами контура
+	 * С этой функции начинается пересчет и перерисовка профиля
+	 * Возвращает объект соединения конца профиля
+	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
+	 * - Попутно устанавливает признак `is_cut`, если в точке сходятся больше двух профилей
+	 * - Не делает подмену соединения, хотя могла бы
+	 * - Не делает подмену вставки, хотя могла бы
+	 *
 	 * @method cnn_point
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
@@ -3178,7 +3238,6 @@ function Profile(attr){
 	this.cnn_point = function(node, point){
 
 		var res = this.rays[node],
-			c_d = this.project.check_distance,
 			open_cnn = this.project._dp.sys.allow_open_cnn;
 
 		if(!point)
@@ -3187,20 +3246,19 @@ function Profile(attr){
 
 		// Если привязка не нарушена, возвращаем предыдущее значение
 		if(res.profile && res.profile.children.length){
-			if(!res.is_t && (res.profile_point == "b" || res.profile_point == "e"))
+			if(!res.is_l && (res.profile_point == "b" || res.profile_point == "e"))
 				return res;
 
-			else if(c_d(res.profile, _profile, res, point, true) === false)
+			else if(this.check_distance(res.profile, res, point, true) === false)
 				return res;
 		}
 
-		res.clear();
-
 		// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
+		res.clear();
 		if(this.parent){
-			var profiles = this.parent.profiles, ares = [], angl;
+			var profiles = this.parent.profiles, ares = [];
 			for(var i in profiles){
-				if(c_d(profiles[i], _profile, res, point, false) === false){
+				if(this.check_distance(profiles[i], res, point, false) === false){
 
 					// для простых систем разрывы профиля не анализируем
 					if(!open_cnn)
@@ -3221,11 +3279,6 @@ function Profile(attr){
 
 				// если в точке сходятся 3 и более профиля...
 				// и среди соединений нет углового диагонального, вероятно, мы находимся в разрыве - выбираем соединение с пустотой
-				// if(ares.some(function (curr) {
-				// 		if(curr.profile && curr.profile_point)
-				// 			;
-				// 	})){
-				// }
 				res.clear();
 				res.is_cut = true;
 			}
@@ -3577,10 +3630,13 @@ Profile.prototype.__define({
 	 * @type {Number}
 	 */
 	x1: {
-		get : function(){ return (this.b.x - this.project.bounds.x).round(1); },
+		get : function(){
+			return (this.b.x - this.project.bounds.x).round(1); 
+		},
 		set: function(v){
 			this.select_node("b");
-			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.b.x, 0));	},
+			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.b.x, 0));	
+		},
 		enumerable : false
 	},
 
@@ -3591,11 +3647,13 @@ Profile.prototype.__define({
 	 */
 	y1: {
 		get : function(){
-			return (this.project.bounds.height + this.project.bounds.y - this.b.y).round(1); },
+			return (this.project.bounds.height + this.project.bounds.y - this.b.y).round(1); 
+		},
 		set: function(v){
 			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("b");
-			this.move_points(new paper.Point(0, v - this.b.y)); },
+			this.move_points(new paper.Point(0, v - this.b.y)); 
+		},
 		enumerable : false
 	},
 
@@ -3605,10 +3663,13 @@ Profile.prototype.__define({
 	 * @type {Number}
 	 */
 	x2: {
-		get : function(){ return (this.e.x - this.project.bounds.x).round(1); },
+		get : function(){ 
+			return (this.e.x - this.project.bounds.x).round(1); 
+		},
 		set: function(v){
 			this.select_node("e");
-			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.e.x, 0)); },
+			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.e.x, 0));
+		},
 		enumerable : false
 	},
 
@@ -3619,11 +3680,35 @@ Profile.prototype.__define({
 	 */
 	y2: {
 		get : function(){
-			return (this.project.bounds.height + this.project.bounds.y - this.e.y).round(1); },
+			return (this.project.bounds.height + this.project.bounds.y - this.e.y).round(1); 
+		},
 		set: function(v){
 			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("e");
-			this.move_points(new paper.Point(0, v - this.e.y));},
+			this.move_points(new paper.Point(0, v - this.e.y));
+		},
+		enumerable : false
+	},
+	
+	cnn1: {
+		get : function(){
+			return this.cnn_point("b").cnn || $p.cat.cnns.get(); 
+		},
+		set: function(v){
+			this.rays.b.cnn = $p.cat.cnns.get(v);
+			this.project.register_change();
+		},
+		enumerable : false
+	},
+
+	cnn2: {
+		get : function(){
+			return this.cnn_point("e").cnn || $p.cat.cnns.get(); 
+		},
+		set: function(v){
+			this.rays.e.cnn = $p.cat.cnns.get(v);
+			this.project.register_change();
+		},
 		enumerable : false
 	},
 
@@ -3798,7 +3883,7 @@ Profile.prototype.__define({
 			// очищаем существующий путь
 			path.removeSegments();
 
-			// TODO отказаться повторного пересчета и заействовать клоны rays-ов
+			// TODO отказаться от повторного пересчета и заействовать клоны rays-ов
 			path.add(this.corns(1));
 
 			if(gpath.is_linear()){
@@ -4034,7 +4119,7 @@ Profile.prototype.__define({
 					continue;
 
 				pb = curr.cnn_point("b");
-				if(pb.profile == t && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
+				if(pb.profile == t && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
 
 					if(check_only)
 						return check_only;
@@ -4047,7 +4132,7 @@ Profile.prototype.__define({
 						touter.push({point: gen.getNearestPoint(pb.point), profile: curr});
 				}
 				pe = curr.cnn_point("e");
-				if(pe.profile == t && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
+				if(pe.profile == t && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
 
 					if(check_only)
 						return check_only;
@@ -4189,12 +4274,12 @@ Profile.prototype.__define({
 		get: function () {
 			return {
 				" ": [
-					{id: "info", path: "o.info", synonym: "Элемент", type: "ro", txt: this.info},
+					{id: "info", path: "o.info", type: "ro"},
 					"inset",
 					"clr"
 				],
-				"Начало": ["x1", "y1"],
-				"Конец": ["x2", "y2"]
+				"Начало": ["x1", "y1", "cnn1"],
+				"Конец": ["x2", "y2", "cnn2"]
 			}
 		},
 		enumerable: false
@@ -4217,7 +4302,18 @@ Profile.prototype.__define({
 			else
 				return false;
 
-		}
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Вызывает одноименную функцию _scheme в контексте текущего профиля
+	 */
+	check_distance: {
+		value: function (element, res, point, check_only) {
+			return this.project.check_distance(element, this, res, point, check_only);
+		},
+		enumerable : false
 	}
 
 });
@@ -4346,10 +4442,11 @@ CnnPoint.prototype.__define({
 			if(this.is_cut)
 				delete this.is_cut;
 			this.profile = null;
-			this.cnn = null;
 			this.err = null;
 			this.distance = 10e9;
 			this.cnn_types = acn.i;
+			if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.tcn.i)
+				this.cnn = null;
 		},
 		enumerable: false
 	}
@@ -4896,11 +4993,13 @@ function Scheme(_canvas){
 
 	/**
 	 * Находит точку на примыкающем профиле и проверяет расстояние до неё от текущей точки
+	 * !! Изменяет res - CnnPoint
 	 * @param element {Profile} - профиль, расстояние до которого проверяем
-	 * @param profile {Profile|null} - текущий профиль
-	 * @param res {CnnPoint}
-	 * @param point {paper.Point}
-	 * @param check_only {Boolean|String}
+	 * @param profile {Profile|null} - текущий профиль - используется, чтобы не искать соединения с самим собой 
+	 * TODO: возможно, имеет смысл разрешить змее кусать себя за хвост
+	 * @param res {CnnPoint} - описание соединения на конце текущего профиля
+	 * @param point {paper.Point} - точка, окрестность которой анализируем
+	 * @param check_only {Boolean|String} - указывает, выполнять только проверку или привязывать точку к узлам или профилю или к узлам и профилю
 	 * @returns {boolean}
 	 */
 	this.check_distance = function(element, profile, res, point, check_only){
@@ -4912,10 +5011,10 @@ function Scheme(_canvas){
 		if(element === profile){
 
 
-		}else if((distance = element.b.getDistance(point)) < (res.is_t ? consts.sticking_l : consts.sticking)){
+		}else if((distance = element.b.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
 			// Если мы находимся в окрестности начала соседнего элемента
 
-			if(!res.cnn){
+			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
 				// а есть ли подходящее?
 				cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
@@ -4936,10 +5035,10 @@ function Scheme(_canvas){
 			res.cnn_types = acn.a;
 			return false;
 
-		}else if((distance = element.e.getDistance(point)) < (res.is_t ? consts.sticking_l : consts.sticking)){
+		}else if((distance = element.e.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
 
 			// Если мы находимся в окрестности конца соседнего элемента
-			if(!res.cnn){
+			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
 				// а есть ли подходящее?
 				cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
@@ -5305,7 +5404,7 @@ var acn,
 		 * @property handleSize
 		 * @type {number}
 		 */
-		settings.handleSize = 8;
+		settings.handleSize = 9;
 	};
 
 
@@ -8556,6 +8655,6 @@ function UndoRedo(_editor){
 		}
 	}
 }
-$p.injected_data._mixin({"tip_editor_right.html":"<div class=\"clipper editor_accordion\">\r\n\r\n    <div class=\"scroller\">\r\n        <div class=\"container\">\r\n\r\n            <!-- РАЗДЕЛ 1 - дерево слоёв -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_layers\"></div>\r\n            </div>\r\n            <div name=\"content_layers\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 2 - реквизиты элемента -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_elm\"></div>\r\n            </div>\r\n            <div name=\"content_elm\" style=\"min-height: 220px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 3 - реквизиты створки -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_stv\">\r\n                    <span name=\"title\">Створка</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_stv\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 4 - реквизиты изделия -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_props\">\r\n                    <span name=\"title\">Изделие</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_props\" style=\"min-height: 330px;\"></div>\r\n\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"scroller__track\">\r\n        <div class=\"scroller__bar\" style=\"height: 26px; top: 0px;\"></div>\r\n    </div>\r\n\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
+$p.injected_data._mixin({"tip_editor_right.html":"<div class=\"clipper editor_accordion\">\r\n\r\n    <div class=\"scroller\">\r\n        <div class=\"container\">\r\n\r\n            <!-- РАЗДЕЛ 1 - дерево слоёв -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_layers\"></div>\r\n            </div>\r\n            <div name=\"content_layers\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 2 - реквизиты элемента -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_elm\"></div>\r\n            </div>\r\n            <div name=\"content_elm\" style=\"min-height: 260px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 3 - реквизиты створки -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_stv\">\r\n                    <span name=\"title\">Створка</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_stv\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 4 - реквизиты изделия -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_props\">\r\n                    <span name=\"title\">Изделие</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_props\" style=\"min-height: 330px;\"></div>\r\n\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"scroller__track\">\r\n        <div class=\"scroller__bar\" style=\"height: 26px; top: 0px;\"></div>\r\n    </div>\r\n\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
 return Editor;
 }));

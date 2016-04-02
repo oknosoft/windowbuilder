@@ -72,7 +72,7 @@ $p.modifiers.push(
 
 			if(!nom2 || ($p.is_data_obj(nom2) && nom2.empty())){
 				is_i = true;
-				onom2 = nom2 = {val: "i", ref: $p.blank.guid};
+				onom2 = nom2 = $p.cat.nom.get();
 
 			}else{
 

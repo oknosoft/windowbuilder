@@ -39,7 +39,7 @@ function Profile(attr){
 				// обрабатываем угол
 				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					if(!_profile.b.is_nearest(p.e)){
-						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное){
+						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
 							if(paper.Key.isDown('control')){
 								console.log('control');
 							}else{
@@ -72,7 +72,7 @@ function Profile(attr){
 				// обрабатываем угол
 				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					if(!_profile.e.is_nearest(p.b)){
-						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное){
+						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
 							if(paper.Key.isDown('control')){
 								console.log('control');
 							}else{
@@ -153,7 +153,13 @@ function Profile(attr){
 	};
 
 	/**
-	 * Находит точку примыкания концов профиля к соседними элементами контура
+	 * С этой функции начинается пересчет и перерисовка профиля
+	 * Возвращает объект соединения конца профиля
+	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
+	 * - Попутно устанавливает признак `is_cut`, если в точке сходятся больше двух профилей
+	 * - Не делает подмену соединения, хотя могла бы
+	 * - Не делает подмену вставки, хотя могла бы
+	 *
 	 * @method cnn_point
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
@@ -162,7 +168,6 @@ function Profile(attr){
 	this.cnn_point = function(node, point){
 
 		var res = this.rays[node],
-			c_d = this.project.check_distance,
 			open_cnn = this.project._dp.sys.allow_open_cnn;
 
 		if(!point)
@@ -171,20 +176,19 @@ function Profile(attr){
 
 		// Если привязка не нарушена, возвращаем предыдущее значение
 		if(res.profile && res.profile.children.length){
-			if(!res.is_t && (res.profile_point == "b" || res.profile_point == "e"))
+			if(!res.is_l && (res.profile_point == "b" || res.profile_point == "e"))
 				return res;
 
-			else if(c_d(res.profile, _profile, res, point, true) === false)
+			else if(this.check_distance(res.profile, res, point, true) === false)
 				return res;
 		}
 
-		res.clear();
-
 		// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
+		res.clear();
 		if(this.parent){
-			var profiles = this.parent.profiles, ares = [], angl;
+			var profiles = this.parent.profiles, ares = [];
 			for(var i in profiles){
-				if(c_d(profiles[i], _profile, res, point, false) === false){
+				if(this.check_distance(profiles[i], res, point, false) === false){
 
 					// для простых систем разрывы профиля не анализируем
 					if(!open_cnn)
@@ -205,11 +209,6 @@ function Profile(attr){
 
 				// если в точке сходятся 3 и более профиля...
 				// и среди соединений нет углового диагонального, вероятно, мы находимся в разрыве - выбираем соединение с пустотой
-				// if(ares.some(function (curr) {
-				// 		if(curr.profile && curr.profile_point)
-				// 			;
-				// 	})){
-				// }
 				res.clear();
 				res.is_cut = true;
 			}
@@ -561,10 +560,13 @@ Profile.prototype.__define({
 	 * @type {Number}
 	 */
 	x1: {
-		get : function(){ return (this.b.x - this.project.bounds.x).round(1); },
+		get : function(){
+			return (this.b.x - this.project.bounds.x).round(1); 
+		},
 		set: function(v){
 			this.select_node("b");
-			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.b.x, 0));	},
+			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.b.x, 0));	
+		},
 		enumerable : false
 	},
 
@@ -575,11 +577,13 @@ Profile.prototype.__define({
 	 */
 	y1: {
 		get : function(){
-			return (this.project.bounds.height + this.project.bounds.y - this.b.y).round(1); },
+			return (this.project.bounds.height + this.project.bounds.y - this.b.y).round(1); 
+		},
 		set: function(v){
 			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("b");
-			this.move_points(new paper.Point(0, v - this.b.y)); },
+			this.move_points(new paper.Point(0, v - this.b.y)); 
+		},
 		enumerable : false
 	},
 
@@ -589,10 +593,13 @@ Profile.prototype.__define({
 	 * @type {Number}
 	 */
 	x2: {
-		get : function(){ return (this.e.x - this.project.bounds.x).round(1); },
+		get : function(){ 
+			return (this.e.x - this.project.bounds.x).round(1); 
+		},
 		set: function(v){
 			this.select_node("e");
-			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.e.x, 0)); },
+			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.e.x, 0));
+		},
 		enumerable : false
 	},
 
@@ -603,11 +610,35 @@ Profile.prototype.__define({
 	 */
 	y2: {
 		get : function(){
-			return (this.project.bounds.height + this.project.bounds.y - this.e.y).round(1); },
+			return (this.project.bounds.height + this.project.bounds.y - this.e.y).round(1); 
+		},
 		set: function(v){
 			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("e");
-			this.move_points(new paper.Point(0, v - this.e.y));},
+			this.move_points(new paper.Point(0, v - this.e.y));
+		},
+		enumerable : false
+	},
+	
+	cnn1: {
+		get : function(){
+			return this.cnn_point("b").cnn || $p.cat.cnns.get(); 
+		},
+		set: function(v){
+			this.rays.b.cnn = $p.cat.cnns.get(v);
+			this.project.register_change();
+		},
+		enumerable : false
+	},
+
+	cnn2: {
+		get : function(){
+			return this.cnn_point("e").cnn || $p.cat.cnns.get(); 
+		},
+		set: function(v){
+			this.rays.e.cnn = $p.cat.cnns.get(v);
+			this.project.register_change();
+		},
 		enumerable : false
 	},
 
@@ -782,7 +813,7 @@ Profile.prototype.__define({
 			// очищаем существующий путь
 			path.removeSegments();
 
-			// TODO отказаться повторного пересчета и заействовать клоны rays-ов
+			// TODO отказаться от повторного пересчета и заействовать клоны rays-ов
 			path.add(this.corns(1));
 
 			if(gpath.is_linear()){
@@ -1018,7 +1049,7 @@ Profile.prototype.__define({
 					continue;
 
 				pb = curr.cnn_point("b");
-				if(pb.profile == t && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
+				if(pb.profile == t && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
 
 					if(check_only)
 						return check_only;
@@ -1031,7 +1062,7 @@ Profile.prototype.__define({
 						touter.push({point: gen.getNearestPoint(pb.point), profile: curr});
 				}
 				pe = curr.cnn_point("e");
-				if(pe.profile == t && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
+				if(pe.profile == t && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
 
 					if(check_only)
 						return check_only;
@@ -1173,12 +1204,12 @@ Profile.prototype.__define({
 		get: function () {
 			return {
 				" ": [
-					{id: "info", path: "o.info", synonym: "Элемент", type: "ro", txt: this.info},
+					{id: "info", path: "o.info", type: "ro"},
 					"inset",
 					"clr"
 				],
-				"Начало": ["x1", "y1"],
-				"Конец": ["x2", "y2"]
+				"Начало": ["x1", "y1", "cnn1"],
+				"Конец": ["x2", "y2", "cnn2"]
 			}
 		},
 		enumerable: false
@@ -1201,7 +1232,18 @@ Profile.prototype.__define({
 			else
 				return false;
 
-		}
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Вызывает одноименную функцию _scheme в контексте текущего профиля
+	 */
+	check_distance: {
+		value: function (element, res, point, check_only) {
+			return this.project.check_distance(element, this, res, point, check_only);
+		},
+		enumerable : false
 	}
 
 });
@@ -1330,10 +1372,11 @@ CnnPoint.prototype.__define({
 			if(this.is_cut)
 				delete this.is_cut;
 			this.profile = null;
-			this.cnn = null;
 			this.err = null;
 			this.distance = 10e9;
 			this.cnn_types = acn.i;
+			if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.tcn.i)
+				this.cnn = null;
 		},
 		enumerable: false
 	}

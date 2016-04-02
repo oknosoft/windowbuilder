@@ -45,7 +45,8 @@ $p.iface.view_orders = function (cell) {
 							});
 						},
 						set_text: function (text) {
-							cell.setText({text: "<b>" + text + "</b>"});
+							if(t.carousel.getActiveCell() == _cell)
+								cell.setText({text: "<b>" + text + "</b>"});
 						}
 					})
 					.then(function (wnd) {
@@ -179,30 +180,7 @@ $p.iface.view_orders = function (cell) {
 		}
 
 		// Рисуем дополнительные элементы навигации
-		t.tb_nav = new $p.iface.OTooolBar({
-			wrapper: cell.cell.querySelector(".dhx_cell_sidebar_hdr"),
-			class_name: 'md_otbnav',
-			width: '260px', height: '28px', top: '3px', right: '3px', name: 'right',
-			buttons: [
-				{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
-				{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
-				{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
-				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
-				{name: 'sep_0', text: '', float: 'right'},
-				{name: 'sync', text: '', float: 'right'},
-				{name: 'auth', text: '', width: '80px', float: 'right'}
-
-				//{name: 'filter', text: '<i class="fa fa-filter md-fa-lg"></i>', tooltip: 'Фильтр', float: 'left'}
-
-			], onclick: function (name) {
-
-				if(['settings', 'about', 'events'].indexOf(name) != -1)
-					$p.iface.main.cells(name).setActive(true);
-
-				return false;
-			}
-		});
-		$p.iface.btn_auth_sync.bind(t.tb_nav);
+		t.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 
 		// страницы карусели
 		t.carousel = cell.attachCarousel({

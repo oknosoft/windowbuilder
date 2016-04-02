@@ -78,27 +78,8 @@ $p.iface.view_events = function (cell) {
 		}else
 			create_scheduler();
 
-
-		t.tb_nav = new $p.iface.OTooolBar({
-			wrapper: cell.cell.querySelector(".dhx_cell_sidebar_hdr"),
-			class_name: 'md_otbnav',
-			width: '180px', height: '28px', top: '3px', right: '3px', name: 'right',
-			buttons: [
-				{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
-				{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
-				{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
-				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
-				{name: 'auth', text: '', float: 'left'},
-				{name: 'sync', text: '', float: 'left'}
-
-			], onclick: function (name) {
-				if(['settings', 'about', 'orders'].indexOf(name) != -1)
-					$p.iface.main.cells(name).setActive(true);
-
-				return false;
-			}
-		});
-		$p.iface.btn_auth_sync.bind(t.tb_nav);
+		// Рисуем дополнительные элементы навигации
+		t.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 
 		/**
 		 * Обработчик маршрутизации

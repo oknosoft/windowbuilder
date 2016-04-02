@@ -380,17 +380,17 @@ Filling.prototype.__define({
 		get: function () {
 			return {
 				" ": [
-					{id: "info", path: "o.info", synonym: "Элемент", type: "ro", txt: this.info},
+					{id: "info", path: "o.info", type: "ro"},
 					"inset",
 					"clr"
 				],
 				"Начало": [
-					{id: "x1", path: "o.x1", synonym: "X1", type: "ro", txt: this.x1},
-					{id: "y1", path: "o.y1", synonym: "Y1", type: "ro", txt: this.y1}
+					{id: "x1", path: "o.x1", synonym: "X1", type: "ro"},
+					{id: "y1", path: "o.y1", synonym: "Y1", type: "ro"}
 				],
 				"Конец": [
-					{id: "x2", path: "o.x2", synonym: "X2", type: "ro", txt: this.x2},
-					{id: "y2", path: "o.y2", synonym: "Y2", type: "ro", txt: this.y2}
+					{id: "x2", path: "o.x2", synonym: "X2", type: "ro"},
+					{id: "y2", path: "o.y2", synonym: "Y2", type: "ro"}
 				]
 			}
 		},

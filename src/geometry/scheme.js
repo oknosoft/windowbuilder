@@ -443,11 +443,13 @@ function Scheme(_canvas){
 
 	/**
 	 * Находит точку на примыкающем профиле и проверяет расстояние до неё от текущей точки
+	 * !! Изменяет res - CnnPoint
 	 * @param element {Profile} - профиль, расстояние до которого проверяем
-	 * @param profile {Profile|null} - текущий профиль
-	 * @param res {CnnPoint}
-	 * @param point {paper.Point}
-	 * @param check_only {Boolean|String}
+	 * @param profile {Profile|null} - текущий профиль - используется, чтобы не искать соединения с самим собой 
+	 * TODO: возможно, имеет смысл разрешить змее кусать себя за хвост
+	 * @param res {CnnPoint} - описание соединения на конце текущего профиля
+	 * @param point {paper.Point} - точка, окрестность которой анализируем
+	 * @param check_only {Boolean|String} - указывает, выполнять только проверку или привязывать точку к узлам или профилю или к узлам и профилю
 	 * @returns {boolean}
 	 */
 	this.check_distance = function(element, profile, res, point, check_only){
@@ -459,10 +461,10 @@ function Scheme(_canvas){
 		if(element === profile){
 
 
-		}else if((distance = element.b.getDistance(point)) < (res.is_t ? consts.sticking_l : consts.sticking)){
+		}else if((distance = element.b.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
 			// Если мы находимся в окрестности начала соседнего элемента
 
-			if(!res.cnn){
+			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
 				// а есть ли подходящее?
 				cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
@@ -483,10 +485,10 @@ function Scheme(_canvas){
 			res.cnn_types = acn.a;
 			return false;
 
-		}else if((distance = element.e.getDistance(point)) < (res.is_t ? consts.sticking_l : consts.sticking)){
+		}else if((distance = element.e.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
 
 			// Если мы находимся в окрестности конца соседнего элемента
-			if(!res.cnn){
+			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
 				// а есть ли подходящее?
 				cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);

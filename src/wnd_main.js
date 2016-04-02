@@ -73,6 +73,27 @@ $p.iface.oninit = function() {
 	// наблюдатель за событиями авторизации и синхронизации
 	$p.iface.btn_auth_sync = new OBtnAuthSync();
 
+	$p.iface.btns_nav = function (wrapper) {
+		return $p.iface.btn_auth_sync.bind(new $p.iface.OTooolBar({
+			wrapper: wrapper,
+			class_name: 'md_otbnav',
+			width: '260px', height: '28px', top: '3px', right: '3px', name: 'right',
+			buttons: [
+				{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
+				{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
+				{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
+				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
+				{name: 'sep_0', text: '', float: 'right'},
+				{name: 'sync', text: '', float: 'right'},
+				{name: 'auth', text: '', width: '80px', float: 'right'}
+
+			], onclick: function (name) {
+				$p.iface.main.cells(name).setActive(true);
+				return false;
+			}
+		}))
+	};
+
 	// подписываемся на событие готовности метаданных, после которого рисуем интерфейс
 	var dt = Date.now();
 	$p.eve.attachEvent("meta", function () {

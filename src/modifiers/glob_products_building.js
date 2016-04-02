@@ -596,8 +596,8 @@ $p.modifiers.push(
 
 							len_angle = {
 								angle: 0,
-								alp1: prev.generatrix.angle_to(curr.generatrix, curr.b, true),
-								alp2: curr.generatrix.angle_to(next.generatrix, curr.e, true),
+								alp1: prev ? prev.generatrix.angle_to(curr.generatrix, curr.b, true) : 90,
+								alp2: next ? curr.generatrix.angle_to(next.generatrix, curr.e, true) : 90,
 								// art1: true TODO: учесть art-1-2
 							};
 

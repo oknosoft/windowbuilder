@@ -105,6 +105,7 @@ function OBtnAuthSync() {
 		bar.buttons.sync.onmouseout = sync_mouseout;
 		bars.push(bar);
 		setTimeout(set_auth);
+		return bar;
 	};
 
 	$p.eve.attachEvent("pouch_load_data_start", function (page) {

@@ -182,16 +182,51 @@ BuilderElement.prototype.__define({
 	_metadata: {
 		get : function(){
 			var t = this,
-				_xfields = t.project.ox._metadata.tabular_sections.coordinates.fields, //_dgfields = this.project._dp._metadata.fields
-				inset = _xfields.inset._clone();
+				_meta = t.project.ox._metadata,
+				_xfields = _meta.tabular_sections.coordinates.fields, //_dgfields = t.project._dp._metadata.fields
+				inset = _xfields.inset._clone(),
+				cnn1 = _meta.tabular_sections.cnn_elmnts.fields.cnn._clone(),
+				cnn2 = cnn1._clone(),
+				info = _meta.fields.note._clone();
+
+			function cnn_choice_links(o, cnn_point){
+				var nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
+
+				if($p.is_data_obj(o)){
+					return nom_cnns.some(function (cnn) {
+						return o == cnn;
+					});
+
+				}else{
+					var refs = "";
+					nom_cnns.forEach(function (cnn) {
+						if(refs)
+							refs += ", ";
+						refs += "'" + cnn.ref + "'";
+					});
+					return "_t_.ref in (" + refs + ")";
+				}
+			}
+
+			info.synonym = "Элемент";
 
 			inset.choice_links = [{
 				name: ["selection",	"ref"],
 				path: [
 					function(o, f){
-						var selection = t instanceof Filling ?
-						{elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}} :
-						{elm_type: t.nom.elm_type};
+						var selection;
+						if(t instanceof Filling)
+							selection = {elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}};
+
+						else if(t instanceof Profile){
+							if(t.nearest())
+								selection = {elm_type: $p.enm.elm_types.Створка};
+
+							else
+								selection = {elm_type: {in: [$p.enm.elm_types.Рама, $p.enm.elm_types.Импост]}};
+						}else
+							selection = {elm_type: t.nom.elm_type};
+
 
 						if($p.is_data_obj(o)){
 							var ok = false;
@@ -213,15 +248,33 @@ BuilderElement.prototype.__define({
 				}]}
 			];
 
+			cnn1.choice_links = [{
+				name: ["selection",	"ref"],
+				path: [
+					function(o, f){
+						return cnn_choice_links(o, t.rays.b);
+					}]}
+			];
+
+			cnn2.choice_links = [{
+				name: ["selection",	"ref"],
+				path: [
+					function(o, f){
+						return cnn_choice_links(o, t.rays.e);
+					}]}
+			];
+
 			return {
 				fields: {
-					info: t.project.ox._metadata.fields.note,
+					info: info,
 					inset: inset,
 					clr: _xfields.clr,
 					x1: _xfields.x1,
 					x2: _xfields.x2,
 					y1: _xfields.y1,
-					y2: _xfields.y2
+					y2: _xfields.y2,
+					cnn1: cnn1,
+					cnn2: cnn2
 				}
 			};
 		},
@@ -366,9 +419,10 @@ BuilderElement.prototype.__define({
 					oxml: this.oxml
 				});
 				this.data._grid.attachEvent("onRowSelect", function(id){
-					if(id == "x1" || id == "y1")
+					if(["x1","y1","cnn1"].indexOf(id) != -1)
 						this._obj.select_node("b");
-					else if(id == "x2" || id == "y2")
+
+					else if(["x2","y2","cnn2"].indexOf(id) != -1)
 						this._obj.select_node("e");
 				});
 

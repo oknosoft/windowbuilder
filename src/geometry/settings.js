@@ -37,7 +37,7 @@ var acn,
 		 * @property handleSize
 		 * @type {number}
 		 */
-		settings.handleSize = 8;
+		settings.handleSize = 9;
 	};
 
 
