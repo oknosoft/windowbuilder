@@ -513,7 +513,7 @@ function Scheme(_canvas){
 			
 			// это соединение с пустотой или T
 			gp = element.generatrix.getNearestPoint(point);
-			if(gp && (distance = gp.getDistance(point)) < consts.sticking){
+			if(gp && (distance = gp.getDistance(point)) < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
 				if(distance < res.distance || bind_generatrix){
 					if(element.d0 != 0 && element.rays.outer){
 						// для вложенных створок учтём смещение

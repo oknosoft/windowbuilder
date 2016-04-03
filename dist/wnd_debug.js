@@ -963,7 +963,7 @@ $p.modifiers.push(
 			 * @param elm_types - допустимые типы элементов
 			 */
 			inserts: {
-				value: function(elm_types){
+				value: function(elm_types, by_default){
 					var __noms = [];
 					if(!elm_types)
 						elm_types = $p.enm.elm_types.rama_impost;
@@ -975,10 +975,35 @@ $p.modifiers.push(
 						elm_types = [elm_types];
 
 					this.elmnts.each(function(row){
-						if(!row.nom.empty() && __noms.indexOf(row.nom) == -1 && elm_types.indexOf(row.elm_type) != -1)
-							__noms.push(row.nom);
+						if(!row.nom.empty() && elm_types.indexOf(row.elm_type) != -1 &&
+								!__noms.some(function (e) {
+									return row.nom == e.nom;
+								}))
+							__noms.push({by_default: row.by_default, nom: row.nom});
 					});
-					return __noms;
+					__noms.sort(function (a, b) {
+						
+						if(by_default){
+
+							if (a.by_default && !b.by_default)
+								return -1;
+							else if (!a.by_default && b.by_default)
+								return 1;
+							else
+								return 0;
+
+						}else{
+							if (a.nom.name < b.nom.name)
+								return -1;
+							else if (a.nom.name > b.nom.name)
+								return 1;
+							else
+								return 0;
+						}
+					});
+					return __noms.map(function (e) {
+						return e.nom;
+					});
 				},
 				enumerable: false
 			},

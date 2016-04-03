@@ -2104,7 +2104,13 @@ function Filling(attr){
 		this.data.path.reduce();
 		this.data.path.strokeWidth = 0;
 
-		this.clr = _row.clr.empty() ? $p.cat.predefined_elmnts.predefined("Цвет_Основной") : _row.clr;
+		if(_row.inset.empty())
+			_row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}, true);
+
+		if(_row.clr.empty())
+			_row.clr = _row.inset.nom().clr;
+		this.clr = _row.clr;
+
 		this.data.path.visible = false;
 
 		this.addChild(this.data.path);
@@ -3560,13 +3566,10 @@ Profile.prototype.__define({
 
 
 			// Если привязка не нарушена, возвращаем предыдущее значение
-			if(res.profile && res.profile.children.length){
-				if(!res.is_l && (res.profile_point == "b" || res.profile_point == "e"))
-					return res;
-
-				else if(this.check_distance(res.profile, res, point, true) === false)
-					return res;
-			}
+			if(res.profile &&
+					res.profile.children.length &&
+					this.check_distance(res.profile, res, point, true) === false)
+				return res;
 
 			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 			res.clear();
@@ -4365,16 +4368,45 @@ Editor.Profile = Profile;
  * @class CnnPoint
  * @constructor
  */
-function CnnPoint(parent){
+function CnnPoint(parent, node){
+		
+	//  массив ошибок соединения
+	this._err = [];
 
-	var _err = [];
+	// строка в таблице соединений
+	this._row = parent.project.connections.cnns.find({elm1: parent.elm, node1: node});
+		
+	// примыкающий профиль
+	this._profile;
 
-	/**
-	 * Профиль, которому принадлежит точка соединения
-	 * @type {Profile}
-	 */
-	this.parent = parent;
-	parent = null;
+		
+	if(this._row){
+
+		/**
+		 * Текущее соединение - объект справочника соединения
+		 * @type {_cat.cnns}
+		 */
+		this.cnn = this._row.cnn;
+
+		/**
+		 * Массив допустимых типов соединений
+		 * По умолчанию - соединение с пустотой
+		 * @type {Array}
+		 */
+		if(acn.a.indexOf(this.cnn.cnn_type) != -1)
+			this.cnn_types = acn.a;
+
+		else if(acn.t.indexOf(this.cnn.cnn_type) != -1)
+			this.cnn_types = acn.t;
+
+		else
+			this.cnn_types = acn.i;
+
+	}else{
+
+		this.cnn = null;
+		this.cnn_types = acn.i;
+	}
 
 	/**
 	 * Расстояние до ближайшего профиля
@@ -4382,50 +4414,24 @@ function CnnPoint(parent){
 	 */
 	this.distance = 10e9;
 
-	/**
-	 * Массив допустимых типов соединений
-	 * По умолчанию - соединение с пустотой
-	 * @type {Array}
-	 */
-	this.cnn_types = acn.i;
-
-	/**
-	 * Профиль, с которым пересекается наш элемент
-	 * @property profile
-	 * @type {Profile}
-	 */
-	this.profile = null;
-
-	/**
-	 * Текущее соединение - объект справочника соединения
-	 * @type {_cat.cnns}
-	 */
-	this.cnn = null;
-
-
 	this.point = null;
 
 	this.profile_point = "";
 
 
-	/**
-	 * Массив ошибок соединения
-	 * @type {Array}
-	 */
 	this.__define({
-		err: {
-			get: function () {
-				return _err;
-			},
-			set: function (v) {
-				if(!v)
-					_err.length = 0;
-				else if(_err.indexOf(v) == -1)
-					_err.push(v);
-			},
-			enumerable: false
+
+		/**
+		 * Профиль, которому принадлежит точка соединения
+		 * @type {Profile}
+		 */
+		parent: {
+			value: parent,
+			writable: false
 		}
 	});
+
+
 }
 CnnPoint.prototype.__define({
 
@@ -4463,10 +4469,9 @@ CnnPoint.prototype.__define({
 	is_l: {
 		get: function () {
 			return this.is_t ||
-				(this.cnn && (this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной || 
+				!!(this.cnn && (this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной ||
 					this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной));
-		},
-		enumerable: false
+		}
 	},
 
 	is_i: {
@@ -4487,8 +4492,41 @@ CnnPoint.prototype.__define({
 			this.cnn_types = acn.i;
 			if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.tcn.i)
 				this.cnn = null;
+		}
+	},
+
+	/**
+	 * Массив ошибок соединения
+	 * @type {Array}
+	 */
+	err: {
+		get: function () {
+			return this._err;
 		},
-		enumerable: false
+		set: function (v) {
+			if(!v)
+				this._err.length = 0;
+			else if(this._err.indexOf(v) == -1)
+				this._err.push(v);
+		}
+	},
+
+	/**
+	 * Профиль, с которым пересекается наш элемент в точке соединения
+	 * @property profile
+	 * @type {Profile}
+	 */
+	profile: {
+		get: function () {
+			if(this._profile === undefined && this._row && this._row.elm2){
+				this._profile = this.parent.layer.getItem({elm: this._row.elm2});
+				delete this._row;
+			}
+			return this._profile;
+		},
+		set: function (v) {
+			this._profile = v;
+		}
 	}
 });
 
@@ -4497,8 +4535,8 @@ function ProfileRays(parent){
 	this.parent = parent;
 	parent = null;
 
-	this.b = new CnnPoint(this.parent);
-	this.e = new CnnPoint(this.parent);
+	this.b = new CnnPoint(this.parent, "b");
+	this.e = new CnnPoint(this.parent, "e");
 	this.inner = new paper.Path({ insert: false });
 	this.outer = new paper.Path({ insert: false });
 
@@ -5103,7 +5141,7 @@ function Scheme(_canvas){
 			
 			// это соединение с пустотой или T
 			gp = element.generatrix.getNearestPoint(point);
-			if(gp && (distance = gp.getDistance(point)) < consts.sticking){
+			if(gp && (distance = gp.getDistance(point)) < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
 				if(distance < res.distance || bind_generatrix){
 					if(element.d0 != 0 && element.rays.outer){
 						// для вложенных створок учтём смещение

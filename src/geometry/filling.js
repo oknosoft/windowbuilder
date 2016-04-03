@@ -49,7 +49,13 @@ function Filling(attr){
 		this.data.path.reduce();
 		this.data.path.strokeWidth = 0;
 
-		this.clr = _row.clr.empty() ? $p.cat.predefined_elmnts.predefined("Цвет_Основной") : _row.clr;
+		if(_row.inset.empty())
+			_row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}, true);
+
+		if(_row.clr.empty())
+			_row.clr = _row.inset.nom().clr;
+		this.clr = _row.clr;
+
 		this.data.path.visible = false;
 
 		this.addChild(this.data.path);
