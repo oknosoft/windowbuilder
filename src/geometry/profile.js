@@ -1279,6 +1279,11 @@ Profile.prototype.__define({
 			return this.project.check_distance(element, this, res, point, check_only);
 		},
 		enumerable : false
+	},
+
+	default_clr_str: {
+		value: "FEFEFE",
+		enumerable: false
 	}
 
 });

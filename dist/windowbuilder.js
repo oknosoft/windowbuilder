@@ -1943,6 +1943,9 @@ BuilderElement.prototype.__define({
 					clr_str = clr.clr_out.clr_str;
 			}
 
+			if(!clr_str)
+				clr_str = this.default_clr_str; 
+					
 			// цвет элементу присваиваем только если он уже нарисован
 			if(clr_str && this.path instanceof paper.Path){
 				clr = clr_str.split(",");
@@ -2104,12 +2107,28 @@ function Filling(attr){
 		this.data.path.reduce();
 		this.data.path.strokeWidth = 0;
 
+		// для нового устанавливаем вставку по умолчанию
 		if(_row.inset.empty())
-			_row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}, true);
+			_row.inset = this.project.default_inset({
+				elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение],
+				by_default: true
+			});
 
+		// для нового устанавливаем цвет по умолчанию
 		if(_row.clr.empty())
-			_row.clr = _row.inset.nom().clr;
+			this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, function (row) {
+				_row.clr = row.clr;
+				return false;
+			});
+		if(_row.clr.empty())
+			this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, function (row) {
+				_row.clr = row.clr;
+				return false;
+			});
 		this.clr = _row.clr;
+
+		if(_row.elm_type.empty())
+			_row.elm_type = $p.enm.elm_types.Стекло;
 
 		this.data.path.visible = false;
 
@@ -2455,6 +2474,11 @@ Filling.prototype.__define({
 				]
 			}
 		},
+		enumerable: false
+	},
+
+	default_clr_str: {
+		value: "#def,#d0ddff,#eff",
 		enumerable: false
 	}
 
@@ -4357,6 +4381,11 @@ Profile.prototype.__define({
 			return this.project.check_distance(element, this, res, point, check_only);
 		},
 		enumerable : false
+	},
+
+	default_clr_str: {
+		value: "FEFEFE",
+		enumerable: false
 	}
 
 });
@@ -5103,7 +5132,7 @@ function Scheme(_canvas){
 
 				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
-			}else if(acn.a.indexOf(res.cnn.cnn_type) == -1)
+			}else if(res.cnn && acn.a.indexOf(res.cnn.cnn_type) == -1)
 				return;
 
 			res.point = bind_node ? element.b : point;
@@ -5127,7 +5156,7 @@ function Scheme(_canvas){
 
 				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
-			}else if(acn.a.indexOf(res.cnn.cnn_type) == -1)
+			}else if(res.cnn && acn.a.indexOf(res.cnn.cnn_type) == -1)
 				return;
 
 			res.point = bind_node ? element.e : point;
@@ -5411,7 +5440,7 @@ Scheme.prototype.__define({
 
 	default_inset: {
 		value: function (attr) {
-			return this._dp.sys.inserts(attr.elm_type)[0];
+			return this._dp.sys.inserts(attr.elm_type, attr.by_default)[0];
 		},
 		enumerable: false
 	},
@@ -7495,8 +7524,13 @@ function EditorAccordion(_editor, cell_acc) {
 				}
 				if(cnstr && l){
 					tree.deleteItem(cnstr);
+					cnstr = l.parent ? l.parent.cnstr : 0;
 					l.remove();
-					setTimeout(_editor.project.zoom_fit, 100);
+					setTimeout(function () {
+						_editor.project.zoom_fit();
+						if(cnstr)
+							tree.selectItem(cnstr, true);
+					}, 100);
 				}
 			};
 
@@ -7831,8 +7865,76 @@ function Clipbrd(_editor) {
 	}
 
 	function oncopy(e) {
+
+		if(e.target && ["INPUT","TEXTAREA"].indexOf(e.target.tagName) != -1)
+			return;
+
 		var _scheme = _editor.project;
 		if(!_scheme.ox.empty()){
+
+			// получаем выделенные элементы
+			var sitems = [];
+			_scheme.selectedItems.forEach(function (el) {
+				if(el.parent instanceof Profile)
+					el = el.parent;
+				if(el instanceof BuilderElement && sitems.indexOf(el) == -1)
+					sitems.push(el);
+			});
+
+			// сериализуем
+			var res = {
+				sys: {
+					ref: _scheme._dp.sys.ref,
+					presentation: _scheme._dp.sys.presentation
+				},
+
+				clr: {
+					ref: _scheme.clr.ref,
+					presentation: _scheme.clr.presentation
+				},
+
+				calc_order: {
+					ref: _scheme.ox.calc_order.ref,
+					presentation: _scheme.ox.calc_order.presentation
+				}
+			};
+			if(sitems.length){
+				res.product = {
+					ref: _scheme.ox.ref,
+					presentation: _scheme.ox.presentation
+				};
+				res.items = [];
+				sitems.forEach(function (el) {
+					res.items.push({
+						elm: el.elm,
+						elm_type: el._row.elm_type.name,
+						inset: {
+							ref: el.inset.ref,
+							presentation: el.inset.presentation
+						},
+						clr: {
+							ref: el.clr.ref,
+							presentation: el.clr.presentation
+						},
+						path_data: el.path.pathData,
+						x1: el.x1,
+						x2: el.x2,
+						y1: el.y1,
+						y2: el.y2
+					});
+				});
+
+			}else{
+				_editor.project.save_coordinates({
+					snapshot: true,
+					clipboard: true,
+					callback: function (scheme) {
+						res.product = {}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"]);
+					}
+				});
+			}
+			fakecb.clipboardData.json = JSON.stringify(res, null, '\t');
+
 			e.clipboardData.setData('text/plain', fakecb.clipboardData.json);
 			//e.clipboardData.setData('text/html', '<b>Hello, world!</b>');
 			e.preventDefault();
@@ -7846,6 +7948,13 @@ function Clipbrd(_editor) {
 	this.paste = function () {
 		onpaste();
 	};
+
+	// при готовности снапшота, помещаем результат в буфер обмена
+	$p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
+		if(scheme == _editor.project && attr.clipboard){
+			attr.callback(scheme);
+		}
+	});
 
 	document.addEventListener('copy', oncopy);
 
@@ -8660,14 +8769,14 @@ function UndoRedo(_editor){
 				_history.splice(pos, _history.length - pos - 1);
 			}
 
-			_editor.project.save_coordinates({snapshot: true});
+			_editor.project.save_coordinates({snapshot: true, clipboard: false});
 
 		}
 
 	}
 
 	function save_snapshot(scheme) {
-		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification"])));
+		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"])));
 		pos = _history.length - 1;
 		enable_buttons();
 	}
@@ -8722,7 +8831,7 @@ function UndoRedo(_editor){
 
 	// при готовности снапшота, добавляем его в историю
 	$p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
-		if(scheme == _editor.project){
+		if(scheme == _editor.project && !attr.clipboard){
 			save_snapshot(scheme);
 		}
 

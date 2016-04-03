@@ -28,14 +28,14 @@ function UndoRedo(_editor){
 				_history.splice(pos, _history.length - pos - 1);
 			}
 
-			_editor.project.save_coordinates({snapshot: true});
+			_editor.project.save_coordinates({snapshot: true, clipboard: false});
 
 		}
 
 	}
 
 	function save_snapshot(scheme) {
-		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification"])));
+		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"])));
 		pos = _history.length - 1;
 		enable_buttons();
 	}
@@ -90,7 +90,7 @@ function UndoRedo(_editor){
 
 	// при готовности снапшота, добавляем его в историю
 	$p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
-		if(scheme == _editor.project){
+		if(scheme == _editor.project && !attr.clipboard){
 			save_snapshot(scheme);
 		}
 

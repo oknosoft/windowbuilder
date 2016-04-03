@@ -3911,25 +3911,31 @@ $p.iface.view_orders = function (cell) {
 				_cell.setActive();
 
 			if(!_cell.ref || _cell.ref != ref)
-				$p.doc.calc_order.form_obj(_cell, {
-						ref: ref,
-						bind_pwnd: true,
-						on_close: function () {
-							setTimeout(function () {
-								$p.iface.set_hash(undefined, "", "list");
-							});
-						},
-						set_text: function (text) {
-							if(t.carousel.getActiveCell() == _cell)
-								cell.setText({text: "<b>" + text + "</b>"});
-						}
-					})
-					.then(function (wnd) {
-						t.doc = wnd;
-					});
+
+				setTimeout(function () {
+
+					$p.doc.calc_order.form_obj(_cell, {
+							ref: ref,
+							bind_pwnd: true,
+							on_close: function () {
+								setTimeout(function () {
+									$p.iface.set_hash(undefined, "", "list");
+								});
+							},
+							set_text: function (text) {
+								if(t.carousel.getActiveCell() == _cell)
+									cell.setText({text: "<b>" + text + "</b>"});
+							}
+						})
+						.then(function (wnd) {
+							t.doc = wnd;
+							setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 200);
+						})
+
+				}, 100);
 
 			else if(t.doc && t.doc.wnd){
-				t.doc.wnd.set_text();
+				setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 300);
 			}
 		}
 
@@ -4069,6 +4075,8 @@ $p.iface.view_orders = function (cell) {
 		t.carousel.addCell("list");
 		t.carousel.addCell("doc");
 		t.carousel.addCell("builder");
+		t.carousel.conf.anim_step = 75;
+		t.carousel.conf.anim_slide = "left 0.2s";
 
 
 		// Подписываемся на событие окончания загрузки локальных данных

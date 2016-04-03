@@ -197,8 +197,13 @@ function EditorAccordion(_editor, cell_acc) {
 				}
 				if(cnstr && l){
 					tree.deleteItem(cnstr);
+					cnstr = l.parent ? l.parent.cnstr : 0;
 					l.remove();
-					setTimeout(_editor.project.zoom_fit, 100);
+					setTimeout(function () {
+						_editor.project.zoom_fit();
+						if(cnstr)
+							tree.selectItem(cnstr, true);
+					}, 100);
 				}
 			};
 

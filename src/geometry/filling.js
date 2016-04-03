@@ -49,12 +49,28 @@ function Filling(attr){
 		this.data.path.reduce();
 		this.data.path.strokeWidth = 0;
 
+		// для нового устанавливаем вставку по умолчанию
 		if(_row.inset.empty())
-			_row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}, true);
+			_row.inset = this.project.default_inset({
+				elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение],
+				by_default: true
+			});
 
+		// для нового устанавливаем цвет по умолчанию
 		if(_row.clr.empty())
-			_row.clr = _row.inset.nom().clr;
+			this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, function (row) {
+				_row.clr = row.clr;
+				return false;
+			});
+		if(_row.clr.empty())
+			this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, function (row) {
+				_row.clr = row.clr;
+				return false;
+			});
 		this.clr = _row.clr;
+
+		if(_row.elm_type.empty())
+			_row.elm_type = $p.enm.elm_types.Стекло;
 
 		this.data.path.visible = false;
 
@@ -400,6 +416,11 @@ Filling.prototype.__define({
 				]
 			}
 		},
+		enumerable: false
+	},
+
+	default_clr_str: {
+		value: "#def,#d0ddff,#eff",
 		enumerable: false
 	}
 

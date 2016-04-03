@@ -348,6 +348,9 @@ BuilderElement.prototype.__define({
 					clr_str = clr.clr_out.clr_str;
 			}
 
+			if(!clr_str)
+				clr_str = this.default_clr_str; 
+					
 			// цвет элементу присваиваем только если он уже нарисован
 			if(clr_str && this.path instanceof paper.Path){
 				clr = clr_str.split(",");

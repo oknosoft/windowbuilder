@@ -475,7 +475,7 @@ function Scheme(_canvas){
 
 				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
-			}else if(acn.a.indexOf(res.cnn.cnn_type) == -1)
+			}else if(res.cnn && acn.a.indexOf(res.cnn.cnn_type) == -1)
 				return;
 
 			res.point = bind_node ? element.b : point;
@@ -499,7 +499,7 @@ function Scheme(_canvas){
 
 				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
-			}else if(acn.a.indexOf(res.cnn.cnn_type) == -1)
+			}else if(res.cnn && acn.a.indexOf(res.cnn.cnn_type) == -1)
 				return;
 
 			res.point = bind_node ? element.e : point;
@@ -783,7 +783,7 @@ Scheme.prototype.__define({
 
 	default_inset: {
 		value: function (attr) {
-			return this._dp.sys.inserts(attr.elm_type)[0];
+			return this._dp.sys.inserts(attr.elm_type, attr.by_default)[0];
 		},
 		enumerable: false
 	},
