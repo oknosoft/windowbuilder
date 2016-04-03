@@ -509,6 +509,17 @@ Editor.prototype.__define({
 
 				pwnd_resize_finish();
 
+				/**
+				 * Подписываемся на событие смещения мыши, чтобы показать текущие координаты
+				 */
+				var _mousepos = document.createElement('div');
+				_editor._wrapper.appendChild(_mousepos);
+				_mousepos.className = "mousepos";
+				_scheme.view.on('mousemove', function (event) {
+					var bounds = _scheme.bounds;
+					_mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
+						" y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
+				});
 
 				/**
 				 * Объект для реализации функций масштабирования

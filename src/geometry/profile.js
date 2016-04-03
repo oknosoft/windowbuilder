@@ -16,383 +16,7 @@
  */
 function Profile(attr){
 
-	var _profile = this,
-
-		// точки пересечения профиля с соседями с внутренней стороны
-		_corns = [];
-
 	Profile.superclass.constructor.call(this, attr);
-
-	/**
-	 * Наблюдает за изменениями контура и пересчитывает путь элемента при изменении соседних элементов
-	 */
-	this.observer = function(an){
-
-		var bcnn, ecnn, moved;
-
-		// собственно, привязка
-		function do_bind(p){
-
-			var mpoint, imposts, moved_fact;
-
-			if(bcnn.cnn && bcnn.profile == p){
-				// обрабатываем угол
-				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-					if(!_profile.b.is_nearest(p.e)){
-						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
-							if(paper.Key.isDown('control')){
-								console.log('control');
-							}else{
-								if(_profile.b.getDistance(p.e, true) < _profile.b.getDistance(p.b, true))
-									_profile.b = p.e;
-								else
-									_profile.b = p.b;
-								moved_fact = true;
-							}
-						} else{
-							// отрываем привязанный ранее профиль
-							bcnn.clear();
-							_profile.data._rays.clear_segments();
-						}
-					}
-
-				}
-				// обрабатываем T
-				else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-					// импосты в створках и все остальные импосты
-					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.b);
-					if(!mpoint.is_nearest(_profile.b)){
-						_profile.b = mpoint;
-						moved_fact = true;
-					}
-				}
-
-			}
-			if(ecnn.cnn && ecnn.profile == p){
-				// обрабатываем угол
-				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-					if(!_profile.e.is_nearest(p.b)){
-						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
-							if(paper.Key.isDown('control')){
-								console.log('control');
-							}else{
-								if(_profile.e.getDistance(p.b, true) < _profile.e.getDistance(p.e, true))
-									_profile.e = p.b;
-								else
-									_profile.e = p.e;
-								moved_fact = true;
-							}
-						} else{
-							// отрываем привязанный ранее профиль
-							ecnn.clear();
-							_profile.data._rays.clear_segments();
-						}
-					}
-				}
-				// обрабатываем T
-				else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-					// импосты в створках и все остальные импосты
-					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(_profile.e);
-					if(!mpoint.is_nearest(_profile.e)){
-						_profile.e = mpoint;
-						moved_fact = true;
-					}
-				}
-
-			}
-
-			// если мы в обсервере и есть T и в массиве обработанных есть примыкающий T - пересчитываем
-			if(moved && moved_fact){
-				imposts = _profile.joined_imposts();
-				imposts = imposts.inner.concat(imposts.outer);
-				for(var i in imposts){
-					if(moved.profiles.indexOf(imposts[i]) == -1){
-						imposts[i].profile.observer(_profile);
-					}
-				}
-			}
-
-		}
-
-		if(Array.isArray(an)){
-			moved = an[an.length-1];
-
-			if(moved.profiles.indexOf(_profile) == -1){
-
-				bcnn = _profile.cnn_point("b");
-				ecnn = _profile.cnn_point("e");
-
-				// если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
-				moved.profiles.forEach(do_bind);
-
-				moved.profiles.push(_profile);
-			}
-
-		}else if(an instanceof Profile){
-			bcnn = _profile.cnn_point("b");
-			ecnn = _profile.cnn_point("e");
-			do_bind(an);
-		}
-
-	};
-
-	/**
-	 * Координаты вершин (cornx1...corny4)
-	 * @method corns
-	 * @param corn {String|Number} - имя или номер вершины
-	 * @return {Point|Number} - координата или точка
-	 */
-	this.corns = function(corn){
-		if(typeof corn == "number")
-			return _corns[corn];
-		else{
-			var index = corn.substr(corn.length-1, 1),
-				axis = corn.substr(corn.length-2, 1);
-			return _corns[index][axis];
-		}
-	};
-
-	/**
-	 * С этой функции начинается пересчет и перерисовка профиля
-	 * Возвращает объект соединения конца профиля
-	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
-	 * - Попутно устанавливает признак `is_cut`, если в точке сходятся больше двух профилей
-	 * - Не делает подмену соединения, хотя могла бы
-	 * - Не делает подмену вставки, хотя могла бы
-	 *
-	 * @method cnn_point
-	 * @param node {String} - имя узла профиля: "b" или "e"
-	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
-	 * @return {CnnPoint} - объект {point, profile, cnn_types}
-	 */
-	this.cnn_point = function(node, point){
-
-		var res = this.rays[node],
-			open_cnn = this.project._dp.sys.allow_open_cnn;
-
-		if(!point)
-			point = this[node];
-
-
-		// Если привязка не нарушена, возвращаем предыдущее значение
-		if(res.profile && res.profile.children.length){
-			if(!res.is_l && (res.profile_point == "b" || res.profile_point == "e"))
-				return res;
-
-			else if(this.check_distance(res.profile, res, point, true) === false)
-				return res;
-		}
-
-		// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
-		res.clear();
-		if(this.parent){
-			var profiles = this.parent.profiles, ares = [];
-			for(var i in profiles){
-				if(this.check_distance(profiles[i], res, point, false) === false){
-
-					// для простых систем разрывы профиля не анализируем
-					if(!open_cnn)
-						return res;
-
-					ares.push({
-						profile_point: res.profile_point,
-						profile: res.profile,
-						cnn_types: res.cnn_types,
-						point: res.point});
-				}
-			}
-			if(ares.length == 1){
-				res._mixin(ares[0]);
-
-
-			}else if(ares.length >= 2){
-
-				// если в точке сходятся 3 и более профиля...
-				// и среди соединений нет углового диагонального, вероятно, мы находимся в разрыве - выбираем соединение с пустотой
-				res.clear();
-				res.is_cut = true;
-			}
-			ares = null;
-		}
-
-		return res;
-	};
-
-	/**
-	 * Рассчитывает точки пути на пересечении текущего и указанного профилей
-	 * @method path_points
-	 * @param cnn_point {CnnPoint}
-	 */
-	this.path_points = function(cnn_point, profile_point){
-
-		if(!_profile.generatrix.curves.length)
-			return cnn_point;
-
-		var prays, rays = this.rays, normal;
-
-		// ищет точку пересечения открытых путей
-		// если указан индекс, заполняет точку в массиве _corns. иначе - возвращает расстояние от узла до пересечения
-		function intersect_point(path1, path2, index){
-			var intersections = path1.getIntersections(path2),
-				delta = 10e9, tdelta, point, tpoint;
-
-			if(intersections.length == 1)
-				if(index)
-					_corns[index] = intersections[0].point;
-				else
-					return intersections[0].point.getDistance(cnn_point.point, true);
-
-			else if(intersections.length > 1){
-				intersections.forEach(function(o){
-					tdelta = o.point.getDistance(cnn_point.point, true);
-					if(tdelta < delta){
-						delta = tdelta;
-						point = o.point;
-					}
-				});
-				if(index)
-					_corns[index] = point;
-				else
-					return delta;
-			}
-		}
-
-		//TODO учесть импосты, у которых образующая совпадает с ребром
-		function detect_side(){
-			var isinner = intersect_point(prays.inner, _profile.generatrix),
-				isouter = intersect_point(prays.outer, _profile.generatrix);
-			if(isinner != undefined && isouter == undefined)
-				return 1;
-			else if(isinner == undefined && isouter != undefined)
-				return -1;
-			else
-				return 1;
-		}
-
-		// если пересечение в узлах, используем лучи профиля
-		if(cnn_point.profile){
-			prays = cnn_point.profile.rays;
-		}
-
-		if(cnn_point.is_t){
-
-			// для Т-соединений сначала определяем, изнутри или снаружи находится наш профиль
-			if(!cnn_point.profile.path.segments.length)
-				cnn_point.profile.redraw();
-
-			if(profile_point == "b"){
-				// в зависимости от стороны соединения
-				if(detect_side() < 0){
-					intersect_point(prays.outer, rays.outer, 1);
-					intersect_point(prays.outer, rays.inner, 4);
-
-				}else{
-					intersect_point(prays.inner, rays.outer, 1);
-					intersect_point(prays.inner, rays.inner, 4);
-
-				}
-
-			}else if(profile_point == "e"){
-				// в зависимости от стороны соединения
-				if(detect_side() < 0){
-					intersect_point(prays.outer, rays.outer, 2);
-					intersect_point(prays.outer, rays.inner, 3);
-
-				}else{
-					intersect_point(prays.inner, rays.outer, 2);
-					intersect_point(prays.inner, rays.inner, 3);
-
-				}
-			}
-
-		}else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.i){
-			// соединение с пустотой
-			if(profile_point == "b"){
-				normal = this.generatrix.firstCurve.getNormalAt(0, true);
-				_corns[1] = this.b.add(normal.normalize(this.d1));
-				_corns[4] = this.b.add(normal.normalize(this.d2));
-
-			}else if(profile_point == "e"){
-				normal = this.generatrix.lastCurve.getNormalAt(1, true);
-				_corns[2] = this.e.add(normal.normalize(this.d1));
-				_corns[3] = this.e.add(normal.normalize(this.d2));
-			}
-
-		}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
-			// угловое диагональное
-			if(profile_point == "b"){
-				intersect_point(prays.outer, rays.outer, 1);
-				intersect_point(prays.inner, rays.inner, 4);
-
-			}else if(profile_point == "e"){
-				intersect_point(prays.outer, rays.outer, 2);
-				intersect_point(prays.inner, rays.inner, 3);
-			}
-
-		}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.av){
-			// угловое к вертикальной
-			if(this.orientation == $p.enm.orientations.Вертикальная){
-				if(profile_point == "b"){
-					intersect_point(prays.outer, rays.outer, 1);
-					intersect_point(prays.outer, rays.inner, 4);
-
-				}else if(profile_point == "e"){
-					intersect_point(prays.outer, rays.outer, 2);
-					intersect_point(prays.outer, rays.inner, 3);
-				}
-			}else if(this.orientation == $p.enm.orientations.Горизонтальная){
-				if(profile_point == "b"){
-					intersect_point(prays.inner, rays.outer, 1);
-					intersect_point(prays.inner, rays.inner, 4);
-
-				}else if(profile_point == "e"){
-					intersect_point(prays.inner, rays.outer, 2);
-					intersect_point(prays.inner, rays.inner, 3);
-				}
-			}else{
-				cnn_point.err = "orientation";
-			}
-
-		}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
-			// угловое к горизонтальной
-			if(this.orientation == $p.enm.orientations.Вертикальная){
-				if(profile_point == "b"){
-					intersect_point(prays.inner, rays.outer, 1);
-					intersect_point(prays.inner, rays.inner, 4);
-
-				}else if(profile_point == "e"){
-					intersect_point(prays.inner, rays.outer, 2);
-					intersect_point(prays.inner, rays.inner, 3);
-				}
-			}else if(this.orientation == $p.enm.orientations.Горизонтальная){
-				if(profile_point == "b"){
-					intersect_point(prays.outer, rays.outer, 1);
-					intersect_point(prays.outer, rays.inner, 4);
-
-				}else if(profile_point == "e"){
-					intersect_point(prays.outer, rays.outer, 2);
-					intersect_point(prays.outer, rays.inner, 3);
-				}
-			}else{
-				cnn_point.err = "orientation";
-			}
-		}
-
-		// если точка не рассчиталась - рассчитываем по умолчанию - как с пустотой
-		if(profile_point == "b"){
-			if(!_corns[1])
-				_corns[1] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d1));
-			if(!_corns[4])
-				_corns[4] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d2));
-
-		}else if(profile_point == "e"){
-			if(!_corns[2])
-				_corns[2] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d1));
-			if(!_corns[3])
-				_corns[3] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
-		}
-		return cnn_point;
-	};
 
 	//
 	this.initialize(attr);
@@ -436,6 +60,9 @@ Profile.prototype.__define({
 				}
 			}
 
+			// точки пересечения профиля с соседями с внутренней стороны
+			this.data._corns = [];
+
 			// кеш лучей в узлах профиля
 			this.data._rays = new ProfileRays(this);
 
@@ -455,8 +82,43 @@ Profile.prototype.__define({
 			/**
 			 * Подключаем наблюдателя за событиями контура с именем _consts.move_points_
 			 */
-			if(this.parent)
-				Object.observe(this.parent._noti, this.observer, [consts.move_points]);
+			if(this.parent){
+				this._observer = this.observer.bind(this);
+				Object.observe(this.parent._noti, this._observer, [consts.move_points]);
+			}				
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Наблюдает за изменениями контура и пересчитывает путь элемента при изменении соседних элементов
+	 */
+	observer: {
+		value: function(an){
+
+			var bcnn, ecnn, moved;
+			
+			if(Array.isArray(an)){
+				moved = an[an.length-1];
+
+				if(moved.profiles.indexOf(this) == -1){
+
+					bcnn = this.cnn_point("b");
+					ecnn = this.cnn_point("e");
+
+					// если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
+					moved.profiles.forEach(function (p) {
+						this.do_bind(p, bcnn, ecnn, moved);
+					}.bind(this));
+
+					moved.profiles.push(this);
+				}
+
+			}else if(an instanceof Profile){
+				this.do_bind(an, this.cnn_point("b"), this.cnn_point("e"));
+				
+			}
 
 		},
 		enumerable : false
@@ -776,16 +438,286 @@ Profile.prototype.__define({
 
 	/**
 	 * Дополняет cnn_point свойствами соединения
-	 * @param cnn_point {CnnPoint}
+	 * @param node {String} b, e - начало или конец элемента
 	 */
 	postcalc_cnn: {
-		value: function(cnn_point){
+		value: function(node){
+
+			var cnn_point = this.cnn_point(node);
 
 			cnn_point.cnn = $p.cat.cnns.elm_cnn(this, cnn_point.profile, cnn_point.cnn_types, cnn_point.cnn);
 
 			return cnn_point;
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Пересчитывает вставку после пересчета соединений
+	 * Попутно устанавливает тип элемента
+	 */
+	postcalc_inset: {
+
+		value: function(){
+
+			return this;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * С этой функции начинается пересчет и перерисовка профиля
+	 * Возвращает объект соединения конца профиля
+	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
+	 * - Попутно устанавливает признак `is_cut`, если в точке сходятся больше двух профилей
+	 * - Не делает подмену соединения, хотя могла бы
+	 * - Не делает подмену вставки, хотя могла бы
+	 *
+	 * @method cnn_point
+	 * @param node {String} - имя узла профиля: "b" или "e"
+	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
+	 * @return {CnnPoint} - объект {point, profile, cnn_types}
+	 */
+	cnn_point: {
+		value: function(node, point){
+
+			var res = this.rays[node];
+
+			if(!point)
+				point = this[node];
+
+
+			// Если привязка не нарушена, возвращаем предыдущее значение
+			if(res.profile && res.profile.children.length){
+				if(!res.is_l && (res.profile_point == "b" || res.profile_point == "e"))
+					return res;
+
+				else if(this.check_distance(res.profile, res, point, true) === false)
+					return res;
+			}
+
+			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
+			res.clear();
+			if(this.parent){
+				var profiles = this.parent.profiles,
+					allow_open_cnn = this.project._dp.sys.allow_open_cnn,
+					ares = [];
+
+				for(var i in profiles){
+					if(this.check_distance(profiles[i], res, point, false) === false){
+
+						// для простых систем разрывы профиля не анализируем
+						if(!allow_open_cnn)
+							return res;
+
+						ares.push({
+							profile_point: res.profile_point,
+							profile: res.profile,
+							cnn_types: res.cnn_types,
+							point: res.point});
+					}
+				}
+
+				if(ares.length == 1){
+					res._mixin(ares[0]);
+
+
+				}else if(ares.length >= 2){
+
+					// если в точке сходятся 3 и более профиля...
+					// и среди соединений нет углового диагонального, вероятно, мы находимся в разрыве - выбираем соединение с пустотой
+					res.clear();
+					res.is_cut = true;
+				}
+				ares = null;
+			}
+
+			return res;
+
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Рассчитывает точки пути на пересечении текущего и указанного профилей
+	 * @method path_points
+	 * @param cnn_point {CnnPoint}
+	 */
+	path_points: {
+		value: function(cnn_point, profile_point){
+
+			var _profile = this,
+				_corns = this.data._corns,
+				rays = this.rays,
+				prays,  normal;
+
+			if(!this.generatrix.curves.length)
+				return cnn_point;
+
+			// ищет точку пересечения открытых путей
+			// если указан индекс, заполняет точку в массиве _corns. иначе - возвращает расстояние от узла до пересечения
+			function intersect_point(path1, path2, index){
+				var intersections = path1.getIntersections(path2),
+					delta = 10e9, tdelta, point, tpoint;
+
+				if(intersections.length == 1)
+					if(index)
+						_corns[index] = intersections[0].point;
+					else
+						return intersections[0].point.getDistance(cnn_point.point, true);
+
+				else if(intersections.length > 1){
+					intersections.forEach(function(o){
+						tdelta = o.point.getDistance(cnn_point.point, true);
+						if(tdelta < delta){
+							delta = tdelta;
+							point = o.point;
+						}
+					});
+					if(index)
+						_corns[index] = point;
+					else
+						return delta;
+				}
+			}
+
+			//TODO учесть импосты, у которых образующая совпадает с ребром
+			function detect_side(){
+				var isinner = intersect_point(prays.inner, _profile.generatrix),
+					isouter = intersect_point(prays.outer, _profile.generatrix);
+				if(isinner != undefined && isouter == undefined)
+					return 1;
+				else if(isinner == undefined && isouter != undefined)
+					return -1;
+				else
+					return 1;
+			}
+
+			// если пересечение в узлах, используем лучи профиля
+			if(cnn_point.profile){
+				prays = cnn_point.profile.rays;
+			}
+
+			if(cnn_point.is_t){
+
+				// для Т-соединений сначала определяем, изнутри или снаружи находится наш профиль
+				if(!cnn_point.profile.path.segments.length)
+					cnn_point.profile.redraw();
+
+				if(profile_point == "b"){
+					// в зависимости от стороны соединения
+					if(detect_side() < 0){
+						intersect_point(prays.outer, rays.outer, 1);
+						intersect_point(prays.outer, rays.inner, 4);
+
+					}else{
+						intersect_point(prays.inner, rays.outer, 1);
+						intersect_point(prays.inner, rays.inner, 4);
+
+					}
+
+				}else if(profile_point == "e"){
+					// в зависимости от стороны соединения
+					if(detect_side() < 0){
+						intersect_point(prays.outer, rays.outer, 2);
+						intersect_point(prays.outer, rays.inner, 3);
+
+					}else{
+						intersect_point(prays.inner, rays.outer, 2);
+						intersect_point(prays.inner, rays.inner, 3);
+
+					}
+				}
+
+			}else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.i){
+				// соединение с пустотой
+				if(profile_point == "b"){
+					normal = this.generatrix.firstCurve.getNormalAt(0, true);
+					_corns[1] = this.b.add(normal.normalize(this.d1));
+					_corns[4] = this.b.add(normal.normalize(this.d2));
+
+				}else if(profile_point == "e"){
+					normal = this.generatrix.lastCurve.getNormalAt(1, true);
+					_corns[2] = this.e.add(normal.normalize(this.d1));
+					_corns[3] = this.e.add(normal.normalize(this.d2));
+				}
+
+			}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+				// угловое диагональное
+				if(profile_point == "b"){
+					intersect_point(prays.outer, rays.outer, 1);
+					intersect_point(prays.inner, rays.inner, 4);
+
+				}else if(profile_point == "e"){
+					intersect_point(prays.outer, rays.outer, 2);
+					intersect_point(prays.inner, rays.inner, 3);
+				}
+
+			}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.av){
+				// угловое к вертикальной
+				if(this.orientation == $p.enm.orientations.Вертикальная){
+					if(profile_point == "b"){
+						intersect_point(prays.outer, rays.outer, 1);
+						intersect_point(prays.outer, rays.inner, 4);
+
+					}else if(profile_point == "e"){
+						intersect_point(prays.outer, rays.outer, 2);
+						intersect_point(prays.outer, rays.inner, 3);
+					}
+				}else if(this.orientation == $p.enm.orientations.Горизонтальная){
+					if(profile_point == "b"){
+						intersect_point(prays.inner, rays.outer, 1);
+						intersect_point(prays.inner, rays.inner, 4);
+
+					}else if(profile_point == "e"){
+						intersect_point(prays.inner, rays.outer, 2);
+						intersect_point(prays.inner, rays.inner, 3);
+					}
+				}else{
+					cnn_point.err = "orientation";
+				}
+
+			}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
+				// угловое к горизонтальной
+				if(this.orientation == $p.enm.orientations.Вертикальная){
+					if(profile_point == "b"){
+						intersect_point(prays.inner, rays.outer, 1);
+						intersect_point(prays.inner, rays.inner, 4);
+
+					}else if(profile_point == "e"){
+						intersect_point(prays.inner, rays.outer, 2);
+						intersect_point(prays.inner, rays.inner, 3);
+					}
+				}else if(this.orientation == $p.enm.orientations.Горизонтальная){
+					if(profile_point == "b"){
+						intersect_point(prays.outer, rays.outer, 1);
+						intersect_point(prays.outer, rays.inner, 4);
+
+					}else if(profile_point == "e"){
+						intersect_point(prays.outer, rays.outer, 2);
+						intersect_point(prays.outer, rays.inner, 3);
+					}
+				}else{
+					cnn_point.err = "orientation";
+				}
+			}
+
+			// если точка не рассчиталась - рассчитываем по умолчанию - как с пустотой
+			if(profile_point == "b"){
+				if(!_corns[1])
+					_corns[1] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d1));
+				if(!_corns[4])
+					_corns[4] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d2));
+
+			}else if(profile_point == "e"){
+				if(!_corns[2])
+					_corns[2] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d1));
+				if(!_corns[3])
+					_corns[3] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
+			}
+			return cnn_point;
+		},
+		enumerable: false
 	},
 
 	/**
@@ -796,19 +728,20 @@ Profile.prototype.__define({
 		value: function () {
 
 			// получаем узлы
-			var bcnn = this.cnn_point("b"),
-				ecnn = this.cnn_point("e"),
+			var bcnn = this.postcalc_cnn("b"),
+				ecnn = this.postcalc_cnn("e"),
 				path = this.data.path,
 				gpath = this.generatrix,
-				glength = gpath.length,
 				rays = this.rays,
 				offset1, offset2, tpath, step;
 
 
 			// получаем соединения концов профиля и точки пересечения с соседями
-			this.path_points(this.postcalc_cnn(bcnn), "b");
-			this.path_points(this.postcalc_cnn(ecnn), "e");
+			this.path_points(bcnn, "b");
+			this.path_points(ecnn, "e");
 
+			// уточняем вставку
+			this.postcalc_inset();
 
 			// очищаем существующий путь
 			path.removeSegments();
@@ -1125,6 +1058,24 @@ Profile.prototype.__define({
 	},
 
 	/**
+	 * Координаты вершин (cornx1...corny4)
+	 * @method corns
+	 * @param corn {String|Number} - имя или номер вершины
+	 * @return {Point|Number} - координата или точка
+	 */
+	corns: {
+		value: function(corn){
+			if(typeof corn == "number")
+				return this.data._corns[corn];
+			else{
+				var index = corn.substr(corn.length-1, 1),
+					axis = corn.substr(corn.length-2, 1);
+				return this.data._corns[index][axis];
+			}
+		}
+	},
+
+	/**
 	 * Обрабатывает смещение выделенных сегментов образующей профиля
 	 * @param delta {paper.Point} - куда и насколько смещать
 	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
@@ -1195,6 +1146,93 @@ Profile.prototype.__define({
 			}
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Вспомогательная функция обсервера. Выполняет привязку узлов
+	 */
+	do_bind: {
+		value: function (p, bcnn, ecnn, moved) {
+
+			var mpoint, imposts, moved_fact;
+
+			if(bcnn.cnn && bcnn.profile == p){
+				// обрабатываем угол
+				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+					if(!this.b.is_nearest(p.e)){
+						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+							if(paper.Key.isDown('control')){
+								console.log('control');
+							}else{
+								if(this.b.getDistance(p.e, true) < this.b.getDistance(p.b, true))
+									this.b = p.e;
+								else
+									this.b = p.b;
+								moved_fact = true;
+							}
+						} else{
+							// отрываем привязанный ранее профиль
+							bcnn.clear();
+							this.data._rays.clear_segments();
+						}
+					}
+
+				}
+				// обрабатываем T
+				else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+					// импосты в створках и все остальные импосты
+					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
+					if(!mpoint.is_nearest(this.b)){
+						this.b = mpoint;
+						moved_fact = true;
+					}
+				}
+
+			}
+			if(ecnn.cnn && ecnn.profile == p){
+				// обрабатываем угол
+				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+					if(!this.e.is_nearest(p.b)){
+						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+							if(paper.Key.isDown('control')){
+								console.log('control');
+							}else{
+								if(this.e.getDistance(p.b, true) < this.e.getDistance(p.e, true))
+									this.e = p.b;
+								else
+									this.e = p.e;
+								moved_fact = true;
+							}
+						} else{
+							// отрываем привязанный ранее профиль
+							ecnn.clear();
+							this.data._rays.clear_segments();
+						}
+					}
+				}
+				// обрабатываем T
+				else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+					// импосты в створках и все остальные импосты
+					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
+					if(!mpoint.is_nearest(this.e)){
+						this.e = mpoint;
+						moved_fact = true;
+					}
+				}
+
+			}
+
+			// если мы в обсервере и есть T и в массиве обработанных есть примыкающий T - пересчитываем
+			if(moved && moved_fact){
+				imposts = this.joined_imposts();
+				imposts = imposts.inner.concat(imposts.outer);
+				for(var i in imposts){
+					if(moved.profiles.indexOf(imposts[i]) == -1){
+						imposts[i].profile.observer(this);
+					}
+				}
+			}
+		}
 	},
 
 	/**
