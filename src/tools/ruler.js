@@ -243,27 +243,27 @@ function RulerWnd(options){
 				caption: "Размеры и сдвиг",
 				height: 200,
 				allow_close: true,
-				modal: true,
-				on_close: function () {
-
-					if(wnd.elmnts.calck && wnd.elmnts.calck.removeSelf)
-						wnd.elmnts.calck.removeSelf();
-
-					$p.eve.detachEvent(wnd_keydown);
-						
-					$p.eve.callEvent("sizes_wnd", [{
-						wnd: wnd,
-						name: "close",
-						size: wnd.size
-					}]);
-
-					wnd = null;
-					
-					return true;
-				}
+				modal: true
 			}
 		};
 	$p.wsql.restore_options("editor", options);
+	options.wnd.on_close = function () {
+
+		if(wnd.elmnts.calck && wnd.elmnts.calck.removeSelf)
+			wnd.elmnts.calck.removeSelf();
+
+		$p.eve.detachEvent(wnd_keydown);
+
+		$p.eve.callEvent("sizes_wnd", [{
+			wnd: wnd,
+			name: "close",
+			size: wnd.size
+		}]);
+
+		wnd = null;
+
+		return true;
+	};
 
 	var wnd = $p.iface.dat_blank(paper._dxw, options.wnd),
 		

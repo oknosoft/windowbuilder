@@ -2650,7 +2650,7 @@ $p.modifiers.push(
 				if(!row_spec)
 					row_spec = spec.add();
 				row_spec.nom = nom || row_base.nom;
-				row_spec.clr = $p.cat.clrs.by_predefined(row_base.clr, elm.clr, ox.clr);
+				row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr);
 				row_spec.elm = elm.elm;
 				if(origin)
 					row_spec.origin = origin;
@@ -3022,7 +3022,7 @@ $p.modifiers.push(
 						row_cnn_next = e.cnn.main_row(curr);
 
 						// добавляем строку спецификации
-						row_spec = new_spec_row(null, curr, row_cnn_prev, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0))
+						row_spec = new_spec_row(null, curr, row_cnn_prev || row_cnn_next, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
 
 						// уточняем размер
 						row_spec.len = (_row.len - (row_cnn_prev ? row_cnn_prev.sz : 0) - (row_cnn_next ? row_cnn_next.sz : 0))
@@ -3053,7 +3053,7 @@ $p.modifiers.push(
 							len_angle = {
 								angle: 0,
 								alp1: prev ? prev.generatrix.angle_to(curr.generatrix, curr.b, true) : 90,
-								alp2: next ? curr.generatrix.angle_to(next.generatrix, curr.e, true) : 90,
+								alp2: next ? curr.generatrix.angle_to(next.generatrix, curr.e, true) : 90
 								// art1: true TODO: учесть art-1-2
 							};
 
