@@ -494,8 +494,8 @@ Contour.prototype.__define({
 
 			// ответственность за строку в таблице конструкций лежит на контуре
 			var profile_bounds = this.profile_bounds;
-			this._row.x = profile_bounds.width;
-			this._row.y = profile_bounds.height;
+			this._row.x = profile_bounds ? profile_bounds.width : 0;
+			this._row.y = profile_bounds? profile_bounds.height : 0;
 			this._row.is_rectangular = this.is_rectangular;
 			if(this.parent){
 				this._row.w = this.w;
@@ -1223,7 +1223,7 @@ Contour.prototype.__define({
 			var profiles = this.profiles_by_side,
 				profile_bounds = this.profile_bounds;
 
-			return profile_bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn;
+			return profile_bounds? profile_bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
 		},
 		enumerable : false
 	},
@@ -1235,7 +1235,7 @@ Contour.prototype.__define({
 			var profiles = this.profiles_by_side,
 				profile_bounds = this.profile_bounds;
 
-			return profile_bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn;
+			return profile_bounds ? profile_bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
 		},
 		enumerable : false
 	}

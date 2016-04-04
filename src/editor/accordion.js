@@ -50,7 +50,7 @@ function EditorAccordion(_editor, cell_acc) {
 			name: 'right',
 			image_path: 'dist/imgs/',
 			buttons: [
-				{name: 'standard_form', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'
+				{name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'
 					//,sub: {
 					//	buttons: [
 					//		{name: 'square', img: 'square.png', float: 'left'},
@@ -69,7 +69,7 @@ function EditorAccordion(_editor, cell_acc) {
 					//		{name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]
 					//}
 				},
-				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: 'Добавить створку', float: 'left'},
+				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
 				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
 
 				//{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
@@ -82,10 +82,28 @@ function EditorAccordion(_editor, cell_acc) {
 						var fillings = _editor.project.getItems({class: Filling, selected: true});
 						if(fillings.length)
 							fillings[0].create_leaf();
+						else
+							$p.msg.show_msg({
+								type: "alert-warning",
+								text: $p.msg.bld_new_stv_no_filling,
+								title: $p.msg.bld_new_stv
+							});
 						break;
 
 					case 'drop_layer':
 						tree_layers.drop_layer();
+						break;
+
+					case 'new_layer':
+
+						// создаём пустой новый слой
+						new Contour( {parent: undefined});
+
+						// оповещаем мир о новых слоях
+						Object.getNotifier(_editor.project._noti).notify({
+							type: 'rows',
+							tabular: "constructions"
+						});
 						break;
 
 					default:

@@ -139,6 +139,27 @@ function ToolPen(){
 			_editor.tb_left.select(tool.options.name);
 			_editor.canvas_cursor('cursor-pen-freehand');
 
+			if(!_editor.project.layers.length){
+
+				// создаём пустой новый слой
+				new Contour( {parent: undefined});
+
+				// оповещаем мир о новых слоях
+				Object.getNotifier(_editor.project._noti).notify({
+					type: 'rows',
+					tabular: "constructions"
+				});
+
+			}
+
+			if(_editor.project._dp.sys.empty()){
+				$p.msg.show_msg({
+					type: "alert-warning",
+					text: $p.msg.bld_not_sys,
+					title: $p.msg.bld_title
+				});
+			}
+
 			tool_wnd();
 
 			Object.observe(_editor.project, observer);

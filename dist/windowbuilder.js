@@ -31,11 +31,14 @@
 	msg.bld_empty_param = "Не заполнен обязательный параметр <br />";
 	msg.bld_not_product = "В текущей строке нет изделия построителя";
 	msg.bld_not_draw = "Отсутствует эскиз или не указана система профилей";
-	msg.bld_wnd_title = "Построитель изделия № ";
+	msg.bld_not_sys = "Не указана система профилей";
 	msg.bld_from_blocks_title = "Выбор типового блока";
 	msg.bld_from_blocks = "Текущее изделие будет заменено конфигурацией типового блока. Продолжить?";
 	msg.bld_split_imp = "В параметрах продукции<br />'%1'<br />запрещены незамкнутые контуры<br />" +
 		"Для включения деления импостом,<br />установите это свойство в 'Истина'";
+
+	msg.bld_new_stv = "Добавить створку";
+	msg.bld_new_stv_no_filling = "Перед добавлением створки, укажите заполнение,<br />в которое поместить створку";
 	
 })($p.msg);
 
@@ -535,8 +538,8 @@ Contour.prototype.__define({
 
 			// ответственность за строку в таблице конструкций лежит на контуре
 			var profile_bounds = this.profile_bounds;
-			this._row.x = profile_bounds.width;
-			this._row.y = profile_bounds.height;
+			this._row.x = profile_bounds ? profile_bounds.width : 0;
+			this._row.y = profile_bounds? profile_bounds.height : 0;
 			this._row.is_rectangular = this.is_rectangular;
 			if(this.parent){
 				this._row.w = this.w;
@@ -1264,7 +1267,7 @@ Contour.prototype.__define({
 			var profiles = this.profiles_by_side,
 				profile_bounds = this.profile_bounds;
 
-			return profile_bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn;
+			return profile_bounds? profile_bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
 		},
 		enumerable : false
 	},
@@ -1276,7 +1279,7 @@ Contour.prototype.__define({
 			var profiles = this.profiles_by_side,
 				profile_bounds = this.profile_bounds;
 
-			return profile_bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn;
+			return profile_bounds ? profile_bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
 		},
 		enumerable : false
 	}
@@ -4696,11 +4699,11 @@ function Scheme(_canvas){
 				if(scheme_changed_names.indexOf(change.name) != -1){
 
 					if(change.name == "clr"){
-						_scheme.ox.clr = change.object[change.name];
+						_scheme.ox.clr = change.object.clr;
 					}
 
 					if(change.name == "sys"){
-						_scheme.ox.owner = change.object[change.name];
+						_scheme.ox.owner = change.object.sys.nom;
 					}
 
 					if(!evented){
@@ -4815,7 +4818,7 @@ function Scheme(_canvas){
 
 
 			// устанавливаем в _dp систему профилей
-			if(ox.empty())
+			if(ox.empty() || ox.owner.empty())
 				_dp.sys = "";
 			else{
 				var setted;
@@ -5277,6 +5280,9 @@ Scheme.prototype.__define({
 	 */
 	save_coordinates: {
 		value: function (attr) {
+
+			if(!this.bounds)
+				return;
 
 			// устанавливаем размеры в характеристике
 			var ox = this.ox;
@@ -6164,6 +6170,27 @@ function ToolPen(){
 		activate: function() {
 			_editor.tb_left.select(tool.options.name);
 			_editor.canvas_cursor('cursor-pen-freehand');
+
+			if(!_editor.project.layers.length){
+
+				// создаём пустой новый слой
+				new Contour( {parent: undefined});
+
+				// оповещаем мир о новых слоях
+				Object.getNotifier(_editor.project._noti).notify({
+					type: 'rows',
+					tabular: "constructions"
+				});
+
+			}
+
+			if(_editor.project._dp.sys.empty()){
+				$p.msg.show_msg({
+					type: "alert-warning",
+					text: $p.msg.bld_not_sys,
+					title: $p.msg.bld_title
+				});
+			}
 
 			tool_wnd();
 
@@ -7377,7 +7404,7 @@ function EditorAccordion(_editor, cell_acc) {
 			name: 'right',
 			image_path: 'dist/imgs/',
 			buttons: [
-				{name: 'standard_form', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'
+				{name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'
 					//,sub: {
 					//	buttons: [
 					//		{name: 'square', img: 'square.png', float: 'left'},
@@ -7396,7 +7423,7 @@ function EditorAccordion(_editor, cell_acc) {
 					//		{name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]
 					//}
 				},
-				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: 'Добавить створку', float: 'left'},
+				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
 				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
 
 				//{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
@@ -7409,10 +7436,28 @@ function EditorAccordion(_editor, cell_acc) {
 						var fillings = _editor.project.getItems({class: Filling, selected: true});
 						if(fillings.length)
 							fillings[0].create_leaf();
+						else
+							$p.msg.show_msg({
+								type: "alert-warning",
+								text: $p.msg.bld_new_stv_no_filling,
+								title: $p.msg.bld_new_stv
+							});
 						break;
 
 					case 'drop_layer':
 						tree_layers.drop_layer();
+						break;
+
+					case 'new_layer':
+
+						// создаём пустой новый слой
+						new Contour( {parent: undefined});
+
+						// оповещаем мир о новых слоях
+						Object.getNotifier(_editor.project._noti).notify({
+							type: 'rows',
+							tabular: "constructions"
+						});
 						break;
 
 					default:
@@ -8343,6 +8388,7 @@ function Editor(pwnd, attr){
 	};
 
 
+	// Создаём инструменты
 
 	/**
 	 * Это не настоящий инструмент, а команда вписывания в окно
@@ -8402,6 +8448,106 @@ function Editor(pwnd, attr){
 
 	this.tools[1].activate();
 
+
+	// Создаём экземпляр проекта Scheme
+	(function () {
+
+		var _canvas = document.createElement('canvas'); // собственно, канвас
+		_editor._wrapper.appendChild(_canvas);
+		_canvas.style.backgroundColor = "#f9fbfa";
+
+		var _scheme = new Scheme(_canvas),
+			pwnd_resize_finish = function(){
+				_editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
+				_editor._acc.resize_canvas();
+			};
+
+
+		/**
+		 * Подписываемся на события изменения размеров
+		 */
+		_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
+
+		_editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
+
+		if(_editor._pwnd instanceof  dhtmlXWindowsCell)
+			_editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
+
+		pwnd_resize_finish();
+
+		/**
+		 * Подписываемся на событие смещения мыши, чтобы показать текущие координаты
+		 */
+		var _mousepos = document.createElement('div');
+		_editor._wrapper.appendChild(_mousepos);
+		_mousepos.className = "mousepos";
+		_scheme.view.on('mousemove', function (event) {
+			var bounds = _scheme.bounds;
+			if(bounds)
+				_mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
+					" y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
+		});
+
+		/**
+		 * Объект для реализации функций масштабирования
+		 * @type {StableZoom}
+		 */
+		var pan_zoom = new function StableZoom(){
+
+			function changeZoom(oldZoom, delta) {
+				var factor;
+				factor = 1.05;
+				if (delta < 0) {
+					return oldZoom * factor;
+				}
+				if (delta > 0) {
+					return oldZoom / factor;
+				}
+				return oldZoom;
+			}
+
+			var panAndZoom = this;
+
+			dhtmlxEvent(_canvas, "mousewheel", function(evt) {
+				var mousePosition, newZoom, offset, viewPosition, _ref1;
+				if (evt.shiftKey || evt.ctrlKey) {
+					_editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
+					return evt.preventDefault();
+
+				}else if (evt.altKey) {
+					mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
+					viewPosition = _editor.view.viewToProject(mousePosition);
+					_ref1 = panAndZoom.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
+					newZoom = _ref1[0];
+					offset = _ref1[1];
+					_editor.view.zoom = newZoom;
+					_editor.view.center = _editor.view.center.add(offset);
+					evt.preventDefault();
+					return _editor.view.draw();
+				}
+			});
+
+			this.changeZoom = function(oldZoom, delta, c, p) {
+				var a, beta, newZoom, pc;
+				newZoom = changeZoom.call(this, oldZoom, delta);
+				beta = oldZoom / newZoom;
+				pc = p.subtract(c);
+				a = p.subtract(pc.multiply(beta)).subtract(c);
+				return [newZoom, a];
+			};
+
+			this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
+				var offset;
+				offset = new paper.Point(deltaX, -deltaY);
+				offset = offset.multiply(factor);
+				return oldCenter.add(offset);
+			};
+		};
+
+		_editor._acc.attache(_editor.project._dp);
+
+	})();
+
 }
 Editor._extend(paper.PaperScope);
 
@@ -8444,104 +8590,8 @@ Editor.prototype.__define({
 	 */
 	open: {
 		value: function (ox) {
-			var _editor = this;
-
-			if(!_editor.project){
-
-				var _canvas = document.createElement('canvas'); // собственно, канвас
-				_editor._wrapper.appendChild(_canvas);
-				_canvas.style.backgroundColor = "#f9fbfa";
-
-				var _scheme = new Scheme(_canvas);
-
-				/**
-				 * Подписываемся на события изменения размеров
-				 */
-				function pwnd_resize_finish(){
-					_editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
-					_editor._acc.resize_canvas();
-				}
-
-				_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
-
-				_editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
-
-				if(_editor._pwnd instanceof  dhtmlXWindowsCell)
-					_editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
-
-				pwnd_resize_finish();
-
-				/**
-				 * Подписываемся на событие смещения мыши, чтобы показать текущие координаты
-				 */
-				var _mousepos = document.createElement('div');
-				_editor._wrapper.appendChild(_mousepos);
-				_mousepos.className = "mousepos";
-				_scheme.view.on('mousemove', function (event) {
-					var bounds = _scheme.bounds;
-					_mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
-						" y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
-				});
-
-				/**
-				 * Объект для реализации функций масштабирования
-				 * @type {StableZoom}
-				 */
-				var pan_zoom = new function StableZoom(){
-
-					function changeZoom(oldZoom, delta) {
-						var factor;
-						factor = 1.05;
-						if (delta < 0) {
-							return oldZoom * factor;
-						}
-						if (delta > 0) {
-							return oldZoom / factor;
-						}
-						return oldZoom;
-					}
-
-					var panAndZoom = this;
-
-					dhtmlxEvent(_canvas, "mousewheel", function(evt) {
-						var mousePosition, newZoom, offset, viewPosition, _ref1;
-						if (evt.shiftKey || evt.ctrlKey) {
-							_editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
-							return evt.preventDefault();
-
-						}else if (evt.altKey) {
-							mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
-							viewPosition = _editor.view.viewToProject(mousePosition);
-							_ref1 = panAndZoom.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition), newZoom = _ref1[0], offset = _ref1[1];
-							_editor.view.zoom = newZoom;
-							_editor.view.center = _editor.view.center.add(offset);
-							evt.preventDefault();
-							return _editor.view.draw();
-						}
-					});
-
-					this.changeZoom = function(oldZoom, delta, c, p) {
-						var a, beta, newZoom, pc;
-						newZoom = changeZoom.call(this, oldZoom, delta);
-						beta = oldZoom / newZoom;
-						pc = p.subtract(c);
-						a = p.subtract(pc.multiply(beta)).subtract(c);
-						return [newZoom, a];
-					};
-
-					this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
-						var offset;
-						offset = new paper.Point(deltaX, -deltaY);
-						offset = offset.multiply(factor);
-						return oldCenter.add(offset);
-					};
-				};
-
-				_editor._acc.attache(_editor.project._dp);
-			}
-
 			if(ox)
-				_editor.project.load(ox);
+				this.project.load(ox);
 		}
 	},
 
@@ -8567,7 +8617,7 @@ Editor.prototype.__define({
 				return;
 			}
 
-			$p.cat.characteristics.form_selection_block(this._pwnd, {
+			$p.cat.characteristics.form_selection_block(null, {
 				on_select: this.project.load_stamp.bind(this.project)
 			});
 		}

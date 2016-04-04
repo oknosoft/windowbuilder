@@ -381,6 +381,7 @@ function Editor(pwnd, attr){
 	};
 
 
+	// Создаём инструменты
 
 	/**
 	 * Это не настоящий инструмент, а команда вписывания в окно
@@ -440,6 +441,106 @@ function Editor(pwnd, attr){
 
 	this.tools[1].activate();
 
+
+	// Создаём экземпляр проекта Scheme
+	(function () {
+
+		var _canvas = document.createElement('canvas'); // собственно, канвас
+		_editor._wrapper.appendChild(_canvas);
+		_canvas.style.backgroundColor = "#f9fbfa";
+
+		var _scheme = new Scheme(_canvas),
+			pwnd_resize_finish = function(){
+				_editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
+				_editor._acc.resize_canvas();
+			};
+
+
+		/**
+		 * Подписываемся на события изменения размеров
+		 */
+		_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
+
+		_editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
+
+		if(_editor._pwnd instanceof  dhtmlXWindowsCell)
+			_editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
+
+		pwnd_resize_finish();
+
+		/**
+		 * Подписываемся на событие смещения мыши, чтобы показать текущие координаты
+		 */
+		var _mousepos = document.createElement('div');
+		_editor._wrapper.appendChild(_mousepos);
+		_mousepos.className = "mousepos";
+		_scheme.view.on('mousemove', function (event) {
+			var bounds = _scheme.bounds;
+			if(bounds)
+				_mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
+					" y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
+		});
+
+		/**
+		 * Объект для реализации функций масштабирования
+		 * @type {StableZoom}
+		 */
+		var pan_zoom = new function StableZoom(){
+
+			function changeZoom(oldZoom, delta) {
+				var factor;
+				factor = 1.05;
+				if (delta < 0) {
+					return oldZoom * factor;
+				}
+				if (delta > 0) {
+					return oldZoom / factor;
+				}
+				return oldZoom;
+			}
+
+			var panAndZoom = this;
+
+			dhtmlxEvent(_canvas, "mousewheel", function(evt) {
+				var mousePosition, newZoom, offset, viewPosition, _ref1;
+				if (evt.shiftKey || evt.ctrlKey) {
+					_editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
+					return evt.preventDefault();
+
+				}else if (evt.altKey) {
+					mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
+					viewPosition = _editor.view.viewToProject(mousePosition);
+					_ref1 = panAndZoom.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
+					newZoom = _ref1[0];
+					offset = _ref1[1];
+					_editor.view.zoom = newZoom;
+					_editor.view.center = _editor.view.center.add(offset);
+					evt.preventDefault();
+					return _editor.view.draw();
+				}
+			});
+
+			this.changeZoom = function(oldZoom, delta, c, p) {
+				var a, beta, newZoom, pc;
+				newZoom = changeZoom.call(this, oldZoom, delta);
+				beta = oldZoom / newZoom;
+				pc = p.subtract(c);
+				a = p.subtract(pc.multiply(beta)).subtract(c);
+				return [newZoom, a];
+			};
+
+			this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
+				var offset;
+				offset = new paper.Point(deltaX, -deltaY);
+				offset = offset.multiply(factor);
+				return oldCenter.add(offset);
+			};
+		};
+
+		_editor._acc.attache(_editor.project._dp);
+
+	})();
+
 }
 Editor._extend(paper.PaperScope);
 
@@ -482,104 +583,8 @@ Editor.prototype.__define({
 	 */
 	open: {
 		value: function (ox) {
-			var _editor = this;
-
-			if(!_editor.project){
-
-				var _canvas = document.createElement('canvas'); // собственно, канвас
-				_editor._wrapper.appendChild(_canvas);
-				_canvas.style.backgroundColor = "#f9fbfa";
-
-				var _scheme = new Scheme(_canvas);
-
-				/**
-				 * Подписываемся на события изменения размеров
-				 */
-				function pwnd_resize_finish(){
-					_editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
-					_editor._acc.resize_canvas();
-				}
-
-				_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
-
-				_editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
-
-				if(_editor._pwnd instanceof  dhtmlXWindowsCell)
-					_editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
-
-				pwnd_resize_finish();
-
-				/**
-				 * Подписываемся на событие смещения мыши, чтобы показать текущие координаты
-				 */
-				var _mousepos = document.createElement('div');
-				_editor._wrapper.appendChild(_mousepos);
-				_mousepos.className = "mousepos";
-				_scheme.view.on('mousemove', function (event) {
-					var bounds = _scheme.bounds;
-					_mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
-						" y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
-				});
-
-				/**
-				 * Объект для реализации функций масштабирования
-				 * @type {StableZoom}
-				 */
-				var pan_zoom = new function StableZoom(){
-
-					function changeZoom(oldZoom, delta) {
-						var factor;
-						factor = 1.05;
-						if (delta < 0) {
-							return oldZoom * factor;
-						}
-						if (delta > 0) {
-							return oldZoom / factor;
-						}
-						return oldZoom;
-					}
-
-					var panAndZoom = this;
-
-					dhtmlxEvent(_canvas, "mousewheel", function(evt) {
-						var mousePosition, newZoom, offset, viewPosition, _ref1;
-						if (evt.shiftKey || evt.ctrlKey) {
-							_editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
-							return evt.preventDefault();
-
-						}else if (evt.altKey) {
-							mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
-							viewPosition = _editor.view.viewToProject(mousePosition);
-							_ref1 = panAndZoom.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition), newZoom = _ref1[0], offset = _ref1[1];
-							_editor.view.zoom = newZoom;
-							_editor.view.center = _editor.view.center.add(offset);
-							evt.preventDefault();
-							return _editor.view.draw();
-						}
-					});
-
-					this.changeZoom = function(oldZoom, delta, c, p) {
-						var a, beta, newZoom, pc;
-						newZoom = changeZoom.call(this, oldZoom, delta);
-						beta = oldZoom / newZoom;
-						pc = p.subtract(c);
-						a = p.subtract(pc.multiply(beta)).subtract(c);
-						return [newZoom, a];
-					};
-
-					this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
-						var offset;
-						offset = new paper.Point(deltaX, -deltaY);
-						offset = offset.multiply(factor);
-						return oldCenter.add(offset);
-					};
-				};
-
-				_editor._acc.attache(_editor.project._dp);
-			}
-
 			if(ox)
-				_editor.project.load(ox);
+				this.project.load(ox);
 		}
 	},
 
@@ -605,7 +610,7 @@ Editor.prototype.__define({
 				return;
 			}
 
-			$p.cat.characteristics.form_selection_block(this._pwnd, {
+			$p.cat.characteristics.form_selection_block(null, {
 				on_select: this.project.load_stamp.bind(this.project)
 			});
 		}

@@ -39,11 +39,11 @@ function Scheme(_canvas){
 				if(scheme_changed_names.indexOf(change.name) != -1){
 
 					if(change.name == "clr"){
-						_scheme.ox.clr = change.object[change.name];
+						_scheme.ox.clr = change.object.clr;
 					}
 
 					if(change.name == "sys"){
-						_scheme.ox.owner = change.object[change.name];
+						_scheme.ox.owner = change.object.sys.nom;
 					}
 
 					if(!evented){
@@ -158,7 +158,7 @@ function Scheme(_canvas){
 
 
 			// устанавливаем в _dp систему профилей
-			if(ox.empty())
+			if(ox.empty() || ox.owner.empty())
 				_dp.sys = "";
 			else{
 				var setted;
@@ -620,6 +620,9 @@ Scheme.prototype.__define({
 	 */
 	save_coordinates: {
 		value: function (attr) {
+
+			if(!this.bounds)
+				return;
 
 			// устанавливаем размеры в характеристике
 			var ox = this.ox;
