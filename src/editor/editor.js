@@ -358,10 +358,10 @@ function Editor(pwnd, attr){
 	 * @return {exporters.CompoundPath}
 	 */
 	_editor.drag_rect = function(p1, p2) {
-		var half = new paper.Point(0.5 / _editor.view.zoom, 0.5 / _editor.view.zoom);
-		var start = p1.add(half);
-		var end = p2.add(half);
-		var rect = new paper.CompoundPath();
+		var half = new paper.Point(0.5 / _editor.view.zoom, 0.5 / _editor.view.zoom),
+			start = p1.add(half),
+			end = p2.add(half),
+			rect = new paper.CompoundPath();
 		rect.moveTo(start);
 		rect.lineTo(new paper.Point(start.x, end.y));
 		rect.lineTo(end);

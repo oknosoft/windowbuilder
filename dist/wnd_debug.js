@@ -2312,9 +2312,6 @@ $p.modifiers.push(
 );
 /**
  * Дополнительные методы перечисления Типы элементов
- *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
  * @author Evgeniy Malyarov
  * @module enm_elm_types
  */
@@ -2372,6 +2369,33 @@ $p.modifiers.push(
 				configurable : false
 			}
 
+		});
+
+	}
+);
+/**
+ * Дополнительные методы перечисления Типы открывания
+ * @author Evgeniy Malyarov
+ * @module enm_open_types
+ */
+
+$p.modifiers.push(
+	function($p) {
+
+		var _mgr = $p.enm.open_types;
+
+		_mgr.__define({
+			
+			is_opening: {
+				value: function (v) {
+					
+					if(!v || v.empty() || v == _mgr.Глухое || v == _mgr.Неподвижное)
+						return false;
+					
+					return true;
+					
+				}
+			}
 		});
 
 	}

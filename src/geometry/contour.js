@@ -79,7 +79,9 @@ function Contour(attr){
 		// служебная группа визуализации допов
 		l_visualization: {
 			get: function () {
-
+				if(!_layers.visualization)
+					_layers.visualization = new paper.Group({ parent: this });
+				return _layers.visualization;
 			},
 			enumerable: false
 		},
@@ -97,7 +99,9 @@ function Contour(attr){
 		// служебная группа петель и ручек
 		l_furn: {
 			get: function () {
-
+				if(!_layers.furn)
+					_layers.furn = new paper.Group({ parent: this, guide: true });
+				return _layers.furn;
 			},
 			enumerable: false
 		},
@@ -105,7 +109,9 @@ function Contour(attr){
 		// служебная группа номеров элементов
 		l_elm_no: {
 			get: function () {
-
+				if(!_layers.elm_no)
+					_layers.elm_no = new paper.Group({ parent: this, guide: true });
+				return _layers.elm_no;
 			},
 			enumerable: false
 		}
@@ -443,6 +449,9 @@ Contour.prototype.__define({
 			// создаём и перерисовываем заполнения
 			_contour.glass_recalc();
 
+			// рисуем направление открывания и ручку
+			_contour.draw_opening();
+
 			// перерисовываем вложенные контуры
 			_contour.children.forEach(function(child_contour) {
 				if (child_contour instanceof Contour){
@@ -530,7 +539,7 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Возвращает массив внешних примыкающих профилей текущего контура. Актуально для створок, т.к. они всегда замкнуты
+	 * Возвращает массив внешних профилей текущего контура. Актуально для створок, т.к. они всегда замкнуты
 	 * @property outer_nodes
 	 * @for Contour
 	 * @type {Array}
@@ -545,7 +554,7 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Возвращает массив внешних примыкающих профилей текущего контура
+	 * Возвращает массив внешних и примыкающих профилей текущего контура
 	 */
 	outer_profiles: {
 		get: function(){
@@ -1060,6 +1069,7 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 			this._row.furn = v;
+			this.project.register_change();
 		},
 		enumerable : false
 	},
@@ -1073,6 +1083,7 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 			this._row.clr_furn = v;
+			this.project.register_change();
 		},
 		enumerable : false
 	},
@@ -1086,6 +1097,7 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 			this._row.direction = v;
+			this.project.register_change();
 		},
 		enumerable : false
 	},
@@ -1099,6 +1111,7 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 			this._row.h_ruch = v;
+			this.project.register_change();
 		},
 		enumerable : false
 	},
@@ -1112,6 +1125,7 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 			this._row.mskt = v;
+			this.project.register_change();
 		},
 		enumerable : false
 	},
@@ -1125,6 +1139,7 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 			this._row.clr_mskt = v;
+			this.project.register_change();
 		},
 		enumerable : false
 	},
@@ -1151,7 +1166,7 @@ Contour.prototype.__define({
 	 * Возвращает структуру профилей по сторонам
 	 */
 	profiles_by_side: {
-		get: function () {
+		value: function (side) {
 			// получаем таблицу расстояний профилей от рёбер габаритов
 			var profiles = this.profiles,
 				bounds = this.bounds,
@@ -1165,6 +1180,7 @@ Contour.prototype.__define({
 			}
 
 			if(profiles.length){
+
 				profiles.forEach(function (profile) {
 					ares.push({
 						profile: profile,
@@ -1174,6 +1190,12 @@ Contour.prototype.__define({
 						right: Math.abs(profile.b.x + profile.e.x - bounds.right * 2)
 					});
 				});
+
+				if(side){
+					by_side(side);
+					return res[side];
+				}
+
 				["left","top","bottom","right"].forEach(by_side);
 			}
 
@@ -1184,12 +1206,45 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Возвращает профиль по номеру стороны фурнитуры
+	 * Возвращает профиль по номеру стороны фурнитуры, учитывает направление открывания, по умолчанию - левое
+	 * - первая первая сторона всегда нижняя
+	 * - далее, по часовой стрелке 2 - левая, 3 - верхняя и т.д.
+	 * - если направление правое, обход против часовой
 	 * @param side {Number}
+	 * @param cache {Object}
 	 */
 	profile_by_furn_side: {
-		value: function (side) {
-			var profiles = this.profiles;
+		value: function (side, cache) {
+
+			if(!cache)
+				cache = {
+					profiles: this.outer_nodes,
+					bottom: this.profiles_by_side("bottom")
+				};
+
+			var profile = cache.bottom,
+				profile_node = this.direction == $p.enm.open_directions.Правое ? "b" : "e",
+				other_node = this.direction == $p.enm.open_directions.Правое ? "e" : "b",
+				next = function () {
+
+					side--;
+					if(side <= 0)
+						return profile;
+
+					cache.profiles.some(function (curr) {
+						if(curr[other_node].is_nearest(profile[profile_node])){
+							profile = curr;
+							return true;
+						}
+					});
+
+					return next();
+
+				};
+
+			return next();
+
+
 		},
 		enumerable : false
 	},
@@ -1216,27 +1271,107 @@ Contour.prototype.__define({
 		enumerable : false
 	},
 
+	/**
+	 * Ширина контура по фальцу
+	 */
 	w: {
 		get : function(){
 			if(this.side_count != 4)
 				return 0;
-			var profiles = this.profiles_by_side,
-				profile_bounds = this.profile_bounds;
+			var profiles = this.profiles_by_side(),
+				bounds = this.profile_bounds;
 
-			return profile_bounds? profile_bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
+			return bounds? bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
 		},
 		enumerable : false
 	},
 
+	/**
+	 * Высота контура по фальцу
+	 */
 	h: {
 		get : function(){
 			if(this.side_count != 4)
 				return 0;
-			var profiles = this.profiles_by_side,
-				profile_bounds = this.profile_bounds;
+			var profiles = this.profiles_by_side(),
+				bounds = this.profile_bounds;
 
-			return profile_bounds ? profile_bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
+			return bounds ? bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
 		},
 		enumerable : false
+	},
+
+	/**
+	 * Рисует направление открывания
+	 */
+	draw_opening: {
+		value: function () {
+			
+			if(!this.parent || !$p.enm.open_types.is_opening(this.furn.open_type)){
+				this.l_furn.visible = false;
+				return;
+			}
+
+			// рисует линии открывания на поворотной, поворотнооткидной и фрамужной фурнитуре
+			function rotary_folding() {
+				_contour.furn.open_tunes.forEach(function (row) {
+
+					if(row.rotation_axis){
+						var axis = _contour.profile_by_furn_side(row.side, cache),
+							other = _contour.profile_by_furn_side(
+								row.side + 2 <= this._owner.side_count ? row.side + 2 : row.side - 2, cache);
+
+						_contour.l_furn._opening.moveTo(axis.corns(3));
+						_contour.l_furn._opening.lineTo(other.rays.inner.getPointAt(other.rays.inner.length / 2));
+						_contour.l_furn._opening.lineTo(axis.corns(4));
+
+					}
+				});
+			}
+
+			function sliding() {
+
+			}
+
+
+			var _contour = this,
+				cache = {
+					profiles: this.outer_nodes,
+					bottom: this.profiles_by_side("bottom")
+				};
+
+			if(!_contour.l_furn._opening)
+				_contour.l_furn._opening = new paper.CompoundPath({
+					parent: _contour.l_furn,
+					strokeColor: 'black'
+				});
+			else
+				_contour.l_furn._opening.removeChildren();
+
+			_contour.l_furn.visible = true;
+
+			if(this.furn.open_type == $p.enm.open_types.Раздвижное)
+				sliding();
+
+			else
+				rotary_folding();
+
+		},
+		enumerable: false
+	},
+
+	/**
+	 * Рисует ручку
+	 */
+	draw_handle: {
+		value: function () {
+
+			if(!this.parent || !$p.enm.open_types.is_opening(this.furn.open_type)){
+				this.l_furn.visible = false;
+				return;
+			}
+
+		},
+		enumerable: false
 	}
 });
