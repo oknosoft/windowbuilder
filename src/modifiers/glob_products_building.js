@@ -589,7 +589,7 @@ $p.modifiers.push(
 						}
 
 						// РассчитатьКоличествоПлощадьМассу
-						calc_count_area_mass(row_spec, _row, row_cnn_prev.angle_calc_method, row_cnn_next.angle_calc_method);
+						calc_count_area_mass(row_spec, _row, row_cnn_prev.angle_calc_method, row_cnn_next ? row_cnn_next.angle_calc_method : null);
 
 						// НадоДобавитьСпецификациюСоединения
 						if(need_add_cnn_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
@@ -597,7 +597,7 @@ $p.modifiers.push(
 							len_angle = {
 								angle: 0,
 								alp1: prev ? prev.generatrix.angle_to(curr.generatrix, curr.b, true) : 90,
-								alp2: next ? curr.generatrix.angle_to(next.generatrix, curr.e, true) : 90,
+								alp2: next ? curr.generatrix.angle_to(next.generatrix, curr.e, true) : 90
 								// art1: true TODO: учесть art-1-2
 							};
 
