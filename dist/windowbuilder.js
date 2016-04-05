@@ -4837,8 +4837,16 @@ function Scheme(_canvas){
 						_scheme.ox.clr = change.object.clr;
 					}
 
-					if(change.name == "sys"){
+					if(change.name == "sys" && !change.object.sys.empty()){
 						_scheme.ox.owner = change.object.sys.nom;
+
+						if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
+							$p.wsql.set_user_param("editor_last_sys", change.object.sys.ref);
+
+						if(_scheme.ox.clr.empty()){
+							_scheme._dp.clr = change.object.sys.default_clr;
+							_scheme.ox.clr = change.object.sys.default_clr;
+						}
 					}
 
 					if(!evented){
@@ -4933,7 +4941,10 @@ function Scheme(_canvas){
 			// устанавливаем в _dp характеристику
 			var _dp = _scheme._dp;
 			_dp.characteristic = v;
-			var ox = _dp.characteristic;
+
+			var ox = _dp.characteristic,
+				setted;
+
 			_dp.clr = ox.clr;
 			_dp.len = ox.x;
 			_dp.height = ox.y;
@@ -4953,21 +4964,30 @@ function Scheme(_canvas){
 
 
 			// устанавливаем в _dp систему профилей
-			if(ox.empty() || ox.owner.empty())
+			if(ox.empty())
 				_dp.sys = "";
-			else{
-				var setted;
+
+			else if(ox.owner.empty()){
+
+				_dp.sys = $p.wsql.get_user_param("editor_last_sys");
+				ox.owner = _dp.sys.nom;
+				setted = !_dp.sys.empty();
+
+			}else{
+
 				$p.cat.production_params.find_rows({nom: ox.owner}, function(o){
 					_dp.sys = o;
 					setted = true;
 					return false;
 				});
-				// пересчитываем параметры изделия при установке системы TODO: подумать, как не портить старые изделия, открытые для просмотра
-				if(setted){
-					_dp.sys.refill_prm(ox);
-				}else
-					_dp.sys = "";
 			}
+
+			// пересчитываем параметры изделия при установке системы TODO: подумать, как не портить старые изделия, открытые для просмотра
+			if(setted){
+				_dp.sys.refill_prm(ox);
+
+			}else if(!_dp.sys.empty())
+				_dp.sys = "";
 
 			// устанавливаем в _dp цвет по умолчанию
 			if(_dp.clr.empty())
@@ -5466,10 +5486,13 @@ Scheme.prototype.__define({
 	zoom_fit: {
 		value: function () {
 
-			var bounds = this.strokeBounds, shift;
+			var bounds = this.strokeBounds,
+				height = (bounds.height < 1000 ? 1000 : bounds.height) + 320,
+				width = (bounds.width < 1000 ? 1000 : bounds.width) + 320,
+				shift;
 
 			if(bounds){
-				this.view.zoom = Math.min((this.view.viewSize.height - 20) / (bounds.height+320), (this.view.viewSize.width - 20) / (bounds.width+320));
+				this.view.zoom = Math.min((this.view.viewSize.height - 20) / height, (this.view.viewSize.width - 20) / width);
 				shift = (this.view.viewSize.width - bounds.width * this.view.zoom) / 2;
 				if(shift < 200)
 					shift = 0;

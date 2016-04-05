@@ -2719,7 +2719,7 @@ $p.modifiers.push(
 						}catch(err){
 							$p.record_log(err);
 						}
-					};
+					}
 
 					if(!row_spec.qty)
 						spec.del(row_spec.row-1);
@@ -2757,7 +2757,7 @@ $p.modifiers.push(
 					}else{
 						if(row.amin > len_angl.angle || row.amax < len_angl.angle)
 							return;
-					};
+					}
 
 					// "Устанавливать с" проверяем только для соединений профиля
 					if(($p.enm.cnn_types.acn.a.indexOf(cnn.cnn_type) != -1) && (
