@@ -42,6 +42,9 @@ $p.settings = function (prm, modifiers) {
 		password: "2"
 	}];
 
+	// не шевелить hash url при открытии подсиненных форм
+	prm.keep_hash = true;
+
 	// скин по умолчанию
 	prm.skin = "dhx_terrace";
 
