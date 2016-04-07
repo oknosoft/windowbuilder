@@ -37,27 +37,23 @@ $p.iface.view_orders = function (cell) {
 
 			if(!_cell.ref || _cell.ref != ref)
 
-				setTimeout(function () {
-
-					$p.doc.calc_order.form_obj(_cell, {
-							ref: ref,
-							bind_pwnd: true,
-							on_close: function () {
-								setTimeout(function () {
-									$p.iface.set_hash(undefined, "", "list");
-								});
-							},
-							set_text: function (text) {
-								if(t.carousel.getActiveCell() == _cell)
-									cell.setText({text: "<b>" + text + "</b>"});
-							}
-						})
-						.then(function (wnd) {
-							t.doc = wnd;
-							setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 200);
-						})
-
-				}, 100);
+				$p.doc.calc_order.form_obj(_cell, {
+						ref: ref,
+						bind_pwnd: true,
+						on_close: function () {
+							setTimeout(function () {
+								$p.iface.set_hash(undefined, "", "list");
+							});
+						},
+						set_text: function (text) {
+							if(t.carousel.getActiveCell() == _cell)
+								cell.setText({text: "<b>" + text + "</b>"});
+						}
+					})
+					.then(function (wnd) {
+						t.doc = wnd;
+						setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 300);
+					});
 
 			else if(t.doc && t.doc.wnd){
 				setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 300);

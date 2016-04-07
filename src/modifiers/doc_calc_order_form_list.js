@@ -13,7 +13,13 @@ $p.modifiers.push(
 				attr = {
 					hide_header: true,
 					date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
-					date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31")
+					date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
+					on_new: function (o) {
+						$p.iface.set_hash(_mgr.class_name, o.ref);
+					},
+					on_edit: function (_mgr, rId) {
+						$p.iface.set_hash(_mgr.class_name, rId);
+					}
 				};
 			
 			var layout = pwnd.attachLayout({
@@ -37,6 +43,7 @@ $p.modifiers.push(
 
 
 				filter_view = {},
+				
 				filter_key = {};
 
 			// настраиваем фильтр для списка заказов
@@ -104,6 +111,15 @@ $p.modifiers.push(
 			tree.enableTreeImages(false);
 			tree.parse($p.injected_data["tree_filteres.xml"]);
 			tree.attachEvent("onSelect", wnd.elmnts.filter.call_event);
+
+			$p.eve.attachEvent("frm_close", function (class_name, ref) {
+				if(_mgr.class_name == class_name){
+					wnd.elmnts.grid.reload()
+						.then(function () {
+							wnd.elmnts.grid.selectRowById(ref);
+						});
+				}
+			});
 
 			return wnd;
 		};

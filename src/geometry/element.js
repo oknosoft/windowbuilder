@@ -212,6 +212,8 @@ BuilderElement.prototype.__define({
 
 			info.synonym = "Элемент";
 
+			// динамические отборы для вставок и соединений
+
 			inset.choice_links = [{
 				name: ["selection",	"ref"],
 				path: [
@@ -265,6 +267,10 @@ BuilderElement.prototype.__define({
 						return cnn_choice_links(o, t.rays.e);
 					}]}
 			];
+
+			// дополняем свойства поля цвет отбором по служебным цветам
+			$p.cat.clrs.selection_exclude_service(_xfields.clr);
+
 
 			return {
 				fields: {

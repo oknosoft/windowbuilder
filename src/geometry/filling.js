@@ -161,6 +161,9 @@ Filling.prototype.__define({
 			this.parent = contour;
 			this._row.cnstr = contour.cnstr;
 
+			// фурнитура и параметры по умолчанию
+			contour.furn = this.project.default_furn;
+
 			// оповещаем мир о новых слоях
 			Object.getNotifier(this.project._noti).notify({
 				type: 'rows',

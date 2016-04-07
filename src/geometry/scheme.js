@@ -387,6 +387,8 @@ function Scheme(_canvas){
 				_data._bounds = null;
 				_scheme.zoom_fit();
 				$p.eve.callEvent("scheme_changed", [_scheme]);
+				if(_scheme.layers.length)
+					$p.eve.callEvent("layer_activated", [_scheme.layers[0]]);
 				delete _data._loading;
 				delete _data._snapshot;
 			}, 100);
@@ -413,24 +415,27 @@ function Scheme(_canvas){
 	};
 
 	/**
+	 * информирует о наличии изменений
+	 */
+	this.has_changes = function () {
+		return _changes.length > 0;
+	};
+	
+	/**
 	 * Регистрирует факты изменения элемнтов
 	 */
-	this.register_change = function () {
+	this.register_change = function (with_update) {
 		if(!_data._loading){
 			_data._bounds = null;
 			this.ox._data._modified = true;
 			$p.eve.callEvent("scheme_changed", [this]);
 		}
 		_changes.push(Date.now());
-	};
 
-	/**
-	 * информирует о наличии изменений
-	 */
-	this.has_changes = function () {
-		return _changes.length > 0;
+		if(with_update)
+			this.register_update();
 	};
-
+	
 	/**
 	 * Регистрирует необходимость обновить изображение
  	 */
@@ -817,6 +822,14 @@ Scheme.prototype.__define({
 	default_clr: {
 		value: function (attr) {
 			return this.ox.clr;
+		},
+		enumerable: false
+	},
+	
+	default_furn: {
+		get: function () {
+			if(this._dp.sys.furn.count())
+				return this._dp.sys.furn.get(0).furn;
 		},
 		enumerable: false
 	}

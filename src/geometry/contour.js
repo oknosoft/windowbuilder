@@ -1068,8 +1068,41 @@ Contour.prototype.__define({
 			return this._row.furn;
 		},
 		set: function (v) {
+
 			this._row.furn = v;
-			this.project.register_change();
+			
+			// при необходимости устанавливаем направление открывания
+			if(this.direction.empty()){
+				this.project._dp.sys.furn_params.find_rows({
+					param: $p.cat.predefined_elmnts.predefined("Параметр_НаправлениеОткрывания")
+				}, function (row) {
+					this.direction = row.value;
+					return false;
+				}.bind(this._row));
+			}
+			
+			// при необходимости устанавливаем цвет
+			// если есть контуры с цветной фурнитурой, используем. иначе - цвет из фурнитуры
+			if(this.clr_furn.empty()){
+				this.project.ox.constructions.find_rows({clr_furn: {not: $p.cat.clrs.get()}}, function (row) {
+					this.clr_furn = row.clr_furn;
+					return false;
+				}.bind(this._row));
+			}
+			if(this.clr_furn.empty()){
+				this._row.furn.colors.each(function (row) {
+					this.clr_furn = row.clr;
+					return false;
+				}.bind(this._row));
+			}
+
+			// перезаполняем параметры фурнитуры
+			this._row.furn.refill_prm(this);
+
+			this.project.register_change(true);
+
+			$p.eve.callEvent("furn_changed", [this]);
+			
 		},
 		enumerable : false
 	},
@@ -1097,7 +1130,7 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 			this._row.direction = v;
-			this.project.register_change();
+			this.project.register_change(true);
 		},
 		enumerable : false
 	},
@@ -1350,7 +1383,7 @@ Contour.prototype.__define({
 
 			_contour.l_furn.visible = true;
 
-			if(this.furn.open_type == $p.enm.open_types.Раздвижное)
+			if(this.furn.is_sliding)
 				sliding();
 
 			else

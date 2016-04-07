@@ -298,6 +298,9 @@ function EditorAccordion(_editor, cell_acc) {
 				_obj.s = _editor.project.area;
 			}
 
+			// корректируем метаданные поля выбора цвета
+			$p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"));
+
 			this.__define({
 
 				attache: {
@@ -381,8 +384,7 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		stv = new (function StvProps(layout) {
 
-			var _grid,
-				_eve_layer_activated;
+			var t = this, _grid, _evts = [];
 
 			this.__define({
 
@@ -409,18 +411,27 @@ function EditorAccordion(_editor, cell_acc) {
 						else
 							_grid.attach(attr);
 
-						setTimeout(function () {
-							layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 21 + "px";
-							layout.setSizes();
-							_grid.objBox.style.width = "100%";
-						}, 200);
+						setTimeout(t.set_sizes, 200);
+					}
+				},
+
+				set_sizes: {
+
+					value: function (do_reload) {
+						if(do_reload)
+							_grid.reload();
+						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 21 + "px";
+						layout.setSizes();
+						_grid.objBox.style.width = "100%";
 					}
 				},
 
 				unload: {
 					value: function () {
+						_evts.forEach(function (eid) {
+							$p.eve.detachEvent(eid);
+						});
 						layout.unload();
-						$p.eve.detachEvent(_eve_layer_activated);
 					}
 				},
 
@@ -432,7 +443,8 @@ function EditorAccordion(_editor, cell_acc) {
 
 			});
 
-			_eve_layer_activated = $p.eve.attachEvent("layer_activated", this.attache);
+			_evts.push($p.eve.attachEvent("layer_activated", this.attache));
+			_evts.push($p.eve.attachEvent("furn_changed", this.set_sizes));
 
 		})(new dhtmlXLayoutObject({
 			parent:     cont.querySelector("[name=content_stv]"),

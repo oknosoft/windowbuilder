@@ -1112,8 +1112,41 @@ Contour.prototype.__define({
 			return this._row.furn;
 		},
 		set: function (v) {
+
 			this._row.furn = v;
-			this.project.register_change();
+			
+			// при необходимости устанавливаем направление открывания
+			if(this.direction.empty()){
+				this.project._dp.sys.furn_params.find_rows({
+					param: $p.cat.predefined_elmnts.predefined("Параметр_НаправлениеОткрывания")
+				}, function (row) {
+					this.direction = row.value;
+					return false;
+				}.bind(this._row));
+			}
+			
+			// при необходимости устанавливаем цвет
+			// если есть контуры с цветной фурнитурой, используем. иначе - цвет из фурнитуры
+			if(this.clr_furn.empty()){
+				this.project.ox.constructions.find_rows({clr_furn: {not: $p.cat.clrs.get()}}, function (row) {
+					this.clr_furn = row.clr_furn;
+					return false;
+				}.bind(this._row));
+			}
+			if(this.clr_furn.empty()){
+				this._row.furn.colors.each(function (row) {
+					this.clr_furn = row.clr;
+					return false;
+				}.bind(this._row));
+			}
+
+			// перезаполняем параметры фурнитуры
+			this._row.furn.refill_prm(this);
+
+			this.project.register_change(true);
+
+			$p.eve.callEvent("furn_changed", [this]);
+			
 		},
 		enumerable : false
 	},
@@ -1141,7 +1174,7 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 			this._row.direction = v;
-			this.project.register_change();
+			this.project.register_change(true);
 		},
 		enumerable : false
 	},
@@ -1394,7 +1427,7 @@ Contour.prototype.__define({
 
 			_contour.l_furn.visible = true;
 
-			if(this.furn.open_type == $p.enm.open_types.Раздвижное)
+			if(this.furn.is_sliding)
 				sliding();
 
 			else
@@ -1945,6 +1978,8 @@ BuilderElement.prototype.__define({
 
 			info.synonym = "Элемент";
 
+			// динамические отборы для вставок и соединений
+
 			inset.choice_links = [{
 				name: ["selection",	"ref"],
 				path: [
@@ -1998,6 +2033,10 @@ BuilderElement.prototype.__define({
 						return cnn_choice_links(o, t.rays.e);
 					}]}
 			];
+
+			// дополняем свойства поля цвет отбором по служебным цветам
+			$p.cat.clrs.selection_exclude_service(_xfields.clr);
+
 
 			return {
 				fields: {
@@ -2356,6 +2395,9 @@ Filling.prototype.__define({
 			// помещаем себя вовнутрь нового слоя
 			this.parent = contour;
 			this._row.cnstr = contour.cnstr;
+
+			// фурнитура и параметры по умолчанию
+			contour.furn = this.project.default_furn;
 
 			// оповещаем мир о новых слоях
 			Object.getNotifier(this.project._noti).notify({
@@ -5182,6 +5224,8 @@ function Scheme(_canvas){
 				_data._bounds = null;
 				_scheme.zoom_fit();
 				$p.eve.callEvent("scheme_changed", [_scheme]);
+				if(_scheme.layers.length)
+					$p.eve.callEvent("layer_activated", [_scheme.layers[0]]);
 				delete _data._loading;
 				delete _data._snapshot;
 			}, 100);
@@ -5208,24 +5252,27 @@ function Scheme(_canvas){
 	};
 
 	/**
+	 * информирует о наличии изменений
+	 */
+	this.has_changes = function () {
+		return _changes.length > 0;
+	};
+	
+	/**
 	 * Регистрирует факты изменения элемнтов
 	 */
-	this.register_change = function () {
+	this.register_change = function (with_update) {
 		if(!_data._loading){
 			_data._bounds = null;
 			this.ox._data._modified = true;
 			$p.eve.callEvent("scheme_changed", [this]);
 		}
 		_changes.push(Date.now());
-	};
 
-	/**
-	 * информирует о наличии изменений
-	 */
-	this.has_changes = function () {
-		return _changes.length > 0;
+		if(with_update)
+			this.register_update();
 	};
-
+	
 	/**
 	 * Регистрирует необходимость обновить изображение
  	 */
@@ -5612,6 +5659,14 @@ Scheme.prototype.__define({
 	default_clr: {
 		value: function (attr) {
 			return this.ox.clr;
+		},
+		enumerable: false
+	},
+	
+	default_furn: {
+		get: function () {
+			if(this._dp.sys.furn.count())
+				return this._dp.sys.furn.get(0).furn;
 		},
 		enumerable: false
 	}
@@ -7810,6 +7865,9 @@ function EditorAccordion(_editor, cell_acc) {
 				_obj.s = _editor.project.area;
 			}
 
+			// корректируем метаданные поля выбора цвета
+			$p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"));
+
 			this.__define({
 
 				attache: {
@@ -7893,8 +7951,7 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		stv = new (function StvProps(layout) {
 
-			var _grid,
-				_eve_layer_activated;
+			var t = this, _grid, _evts = [];
 
 			this.__define({
 
@@ -7921,18 +7978,27 @@ function EditorAccordion(_editor, cell_acc) {
 						else
 							_grid.attach(attr);
 
-						setTimeout(function () {
-							layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 21 + "px";
-							layout.setSizes();
-							_grid.objBox.style.width = "100%";
-						}, 200);
+						setTimeout(t.set_sizes, 200);
+					}
+				},
+
+				set_sizes: {
+
+					value: function (do_reload) {
+						if(do_reload)
+							_grid.reload();
+						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 21 + "px";
+						layout.setSizes();
+						_grid.objBox.style.width = "100%";
 					}
 				},
 
 				unload: {
 					value: function () {
+						_evts.forEach(function (eid) {
+							$p.eve.detachEvent(eid);
+						});
 						layout.unload();
-						$p.eve.detachEvent(_eve_layer_activated);
 					}
 				},
 
@@ -7944,7 +8010,8 @@ function EditorAccordion(_editor, cell_acc) {
 
 			});
 
-			_eve_layer_activated = $p.eve.attachEvent("layer_activated", this.attache);
+			_evts.push($p.eve.attachEvent("layer_activated", this.attache));
+			_evts.push($p.eve.attachEvent("furn_changed", this.set_sizes));
 
 		})(new dhtmlXLayoutObject({
 			parent:     cont.querySelector("[name=content_stv]"),

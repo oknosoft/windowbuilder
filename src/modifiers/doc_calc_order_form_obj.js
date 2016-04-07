@@ -11,8 +11,6 @@ $p.modifiers.push(
 			_meta_patched;
 
 
-
-
 		_mgr.form_obj = function(pwnd, attr){
 
 			var o, wnd, evts = [], attr_on_close = attr.on_close;
@@ -564,7 +562,7 @@ $p.modifiers.push(
 
 				// выгружаем из памяти всплывающие окна скидки и связанных файлов
 				["vault", "vault_pop", "discount", "discount_pop"].forEach(function (elm) {
-					if (wnd.elmnts[elm] && wnd.elmnts[elm].unload)
+					if (wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload)
 						wnd.elmnts[elm].unload();
 				});
 
@@ -673,6 +671,17 @@ $p.modifiers.push(
 			}
 
 			/**
+			 * показывает диалог с сообщением "это не продукция"
+			 */
+			function not_production(){
+				$p.msg.show_msg({
+					title: $p.msg.bld_title,
+					type: "alert-error",
+					text: $p.msg.bld_not_product
+				});
+			}
+
+			/**
 			 * ОткрытьПостроитель()
 			 * @param create_new {Boolean} - создавать новое изделие или открывать в текущей строке
 			 */
@@ -708,7 +717,15 @@ $p.modifiers.push(
 				}else if((selId = production_get_sel_index()) != undefined){
 					row = o.production.get(selId);
 					if(row){
-						if(row.characteristic.empty() || row.characteristic.calc_order.empty()){
+						if(row.characteristic.empty() ||
+								row.characteristic.calc_order.empty() ||
+								row.characteristic.owner.is_procedure ||
+								row.characteristic.owner.is_service ||
+								row.characteristic.owner.is_accessory){
+							not_production();
+
+						}else if(row.characteristic.coordinates.count() == 0){
+							// возможно, это заготовка - проверим номенклатуру системы
 
 						}else
 							$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");

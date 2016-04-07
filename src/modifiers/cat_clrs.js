@@ -32,5 +32,26 @@ $p.modifiers.push(
 				return clr;
 		};
 
+		/**
+		 * Дополняет связи параметров выбора отбором, исключающим служебные цвета
+		 * @param mf {Object} - описание метаданных поля
+		 */
+		_mgr.selection_exclude_service = function (mf) {
+
+			if(!mf.choice_params)
+				mf.choice_params = [];
+
+			if(mf.choice_params.some(function (ch) {
+					if(ch.name == "parent")
+						return true;
+				}))
+				return;
+
+			mf.choice_params.push({
+				name: "parent",
+				path: {not: $p.cat.clrs.predefined("СЛУЖЕБНЫЕ")}
+			});
+		};
+
 	}
 );

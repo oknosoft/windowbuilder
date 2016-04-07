@@ -39,7 +39,7 @@ $p.settings = function (prm, modifiers) {
 	// гостевые пользователи для демо-режима
 	prm.guests = [{
 		username: "Дилер",
-		password: "2"
+		password: "1gNjzYQKBlcD"
 	}];
 
 	// не шевелить hash url при открытии подсиненных форм

@@ -20,82 +20,96 @@ $p.modifiers.push(
 		};
 
 
-		/**
-		 * вычисляет список параметров и доступных значений фурнитуры
-		 * @param attr {object} - условия, для которых надо получить список параметров
-		 * @param callback {function} - функция обратного вызова
-		 */
-		_mgr.prms_get = function(attr, callback){
+		// методы объекта
+		_mgr._obj_сonstructor.prototype.__define({
 
-			var osys = $p.cat.production_params.get(attr.sys),
-				ofurn = _mgr.get(attr.ref),
-				dp_buyers_order = $p.dp.buyers_order.create(),
-				oprm = dp_buyers_order.product_params,
-				prm_direction = $p.cat.predefined_elmnts.predefined("Параметр_НаправлениеОткрывания"),
-				aprm = [], afurn_set = [];
+			/**
+			 * Перезаполняет табчасть параметров указанного контура
+			 */
+			refill_prm: {
+				value: function (contour) {
 
-			function add_furn_prm(obj){
+					var osys = contour.project._dp.sys,
+						fprms = contour.project.ox.params,
+						prm_direction = $p.cat.predefined_elmnts.predefined("Параметр_НаправлениеОткрывания");
 
-				if(afurn_set.indexOf(obj.ref)!=-1)
-					return;
+					// формируем массив требуемых параметров по задействованным в contour.furn.furn_set
+					var aprm = contour.furn.furn_set.add_furn_prm();
 
-				afurn_set.push(obj.ref);
+					// дозаполняем и приклеиваем значения по умолчанию
+					var prm_row, forcibly;
+					aprm.forEach(function(v){
 
-				obj.selection_params.each(function(row){
-					if(aprm.indexOf(row.param.ref)==-1)
-						aprm.push(row.param.ref);
-				});
+						// направления в табчасть не добавляем
+						if(v == prm_direction)
+							return;
+						
+						prm_row = null;
+						forcibly = true;
+						fprms.find_rows({param: v, cnstr: contour.cnstr}, function (row) {
+							prm_row = row;
+							return forcibly = false;
+						});
+						if(!prm_row)
+							prm_row = fprms.add({param: v, cnstr: contour.cnstr}, true);
 
-				obj.specification.each(function(row){
-					if($p.is_data_obj(row.nom_set) && row.nom_set._manager === $p.cat.furns)
-						add_furn_prm(row.nom_set);
-				});
+						osys.furn_params.each(function(row){
+							if(row.param == prm_row.param){
+								if(row.forcibly || forcibly)
+									prm_row.value = row.value;
+								prm_row.hide = row.hide;
+								return false;
+							}
+						});
+					});
+
+					// удаляем лишние строки
+					var adel = [];
+					fprms.find_rows({cnstr: contour.cnstr}, function (row) {
+						if(aprm.indexOf(row.param) == -1)
+							adel.push(row);
+					});
+					adel.forEach(function (row) {
+						fprms.del(row, true);
+					});
+					
+					
+				},
+				enumerable: false
+			},
+
+			add_furn_prm: {
+				value: function (aprm, afurn_set) {
+
+					if(!aprm)
+						aprm = [];
+
+					if(!afurn_set)
+						afurn_set = [];
+
+					// если параметры этого набора уже обработаны - пропускаем
+					if(afurn_set.indexOf(this.ref)!=-1)
+						return;
+
+					afurn_set.push(this.ref);
+
+					this.selection_params.each(function(row){
+						if(aprm.indexOf(row.param)==-1)
+							aprm.push(row.param);
+					});
+
+					this.specification.each(function(row){
+						if(row.nom_set && row.nom_set._manager === _mgr)
+							row.nom_set.add_furn_prm(aprm, afurn_set);
+					});
+					
+					return aprm;
+
+				},
+				enumerable: false
 			}
-
-			// загружаем в oprm параметры текущей фурнитуры
-			if(!attr.refills)
-				oprm.load(attr.fprms);
-
-			// формируем массив требуемых параметров по задействованным в ofurn.furn_set
-			if(!ofurn.furn_set.empty())
-				add_furn_prm(ofurn.furn_set);
-
-			// Приклеиваем значения по умолчанию
-			var prm_row, prm_ref;
-
-			aprm.forEach(function(v){
-
-				prm_ref = {param: $p.cch.properties.get(v, false)};
-				if(!(prm_row = oprm.find(prm_ref)))
-					prm_row = oprm.add(prm_ref);
-
-				osys.furn_params.each(function(row){
-					if($p.is_equal(row.param, prm_row.param)){
-						if(attr.refills || row.forcibly)
-							prm_row.value = row.value;
-						prm_row.hide = row.hide;
-						return false;
-					}
-				});
-			});
-
-			// параметры и значения по умолчанию получены в oprm
-			if((prm_row = oprm.find(prm_direction.ref)) && (prm_row.row > 1))
-				oprm.swap(prm_row.row -1, 0);
-
-			var res = {
-				sub_type: ofurn.open_type.empty() ? "" : ofurn.open_type.name,
-				furn_no: ofurn.id,
-				fprms: []};
-			oprm.each(function(row){
-				res.fprms.push(row);
-			});
-			if(res.sub_type.toLowerCase() == $p.enm.tso.rotary_folding.toLowerCase())
-				res.sub_type = $p.enm.tso.rotary_folding;
-
-			callback(res);
-
-		}
+			
+		});
 
 	}
 );
