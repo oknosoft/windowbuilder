@@ -112,6 +112,7 @@ $p.modifiers.push(
 			tree.parse($p.injected_data["tree_filteres.xml"]);
 			tree.attachEvent("onSelect", wnd.elmnts.filter.call_event);
 
+			// подписываемся на событие закрытия формы заказа, чтобы обновить список и попытаться спозиционироваться на нужной строке
 			$p.eve.attachEvent("frm_close", function (class_name, ref) {
 				if(_mgr.class_name == class_name){
 					wnd.elmnts.grid.reload()
