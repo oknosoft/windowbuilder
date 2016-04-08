@@ -233,6 +233,7 @@ $p.modifiers.push(
 						}
 
 					}else {
+						// TODO: заменить eval и try-catch на динамическую функцию
 						try{
 							if(eval(row_cnn_spec.formula) === false)
 								return;
@@ -433,13 +434,52 @@ $p.modifiers.push(
 
 			/**
 			 * Спецификации фурнитуры
+			 * @param contour {Contour}
 			 */
-			function spec_furn(scheme) {
+			function spec_furn(contour) {
+
+				// у рамных контуров фурнитуры не бывает
+				if(!contour.parent)
+					return false;
+				
+				// кеш сторон фурнитуры
+				var cache = {
+					profiles: contour.outer_nodes,
+					bottom: contour.profiles_by_side("bottom")
+				};
+
+				if(!check_opening_restrictions(contour, cache))
+					return;
+
 
 			}
 
 			/**
-			 * Спецификации соединений
+			 * Проверяет ограничения открывания, добавляет визуализацию ошибок
+			 * @param contour {Contour}
+			 * @param cache {Object}
+			 * @return {boolean}
+			 */
+			function check_opening_restrictions(contour, cache) {
+				
+				contour.furn.open_tunes.each(function (row) {
+					var elm = contour.profile_by_furn_side(row.side, cache),
+						len = elm._row.len - 2 * elm.nom.sizefurn;
+
+					// angle_hor = elm.angle_hor; TODO: реализовать проверку углов
+
+					if(len < row.lmin ||
+						len > row.lmax ||
+						(!elm.is_linear() && !row.arc_available)){
+
+						new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.cat.predefined_elmnts.predefined("Номенклатура_Ошибка_Фурнитуры"), contour.furn).dop = -1;
+					}
+				});
+			}
+
+			/**
+			 * Спецификации соединений примыкающих профилей
+			 * @param elm {Profile}
 			 */
 			function spec_nearest_cnn(elm) {
 				var nearest = elm.nearest();
@@ -454,9 +494,150 @@ $p.modifiers.push(
 			}
 
 			/**
-			 * Спецификация вставки элемента
+			 * Спецификация профиля
+			 * @param elm {Profile}
 			 */
-			function spec_insets(elm) {
+			function spec_profile(elm) {
+
+				var b, e, prev, next, len_angle,
+					_row, row_cnn_prev, row_cnn_next, row_spec;
+
+				_row = elm._row;
+				if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure)
+					return;
+
+				b = elm.rays.b;
+				e = elm.rays.e;
+
+				if(!b.cnn || !e.cnn){
+					$p.record_log({
+						note: "не найдено соединение",
+						obj: _row._obj
+					});
+					return;
+				}
+
+				prev = b.profile;
+				next = e.profile;
+				row_cnn_prev = b.cnn.main_row(elm);
+				row_cnn_next = e.cnn.main_row(elm);
+
+				// добавляем строку спецификации
+				row_spec = new_spec_row(null, elm, row_cnn_prev || row_cnn_next, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
+
+				// уточняем размер
+				row_spec.len = (_row.len - (row_cnn_prev ? row_cnn_prev.sz : 0) - (row_cnn_next ? row_cnn_next.sz : 0))
+					* ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
+
+				// profile.Длина - то, что получится после обработки
+				// row_spec.Длина - сколько взять (отрезать)
+				elm.data._len = _row.len;
+				_row.len = (_row.len
+					- (!row_cnn_prev || row_cnn_prev.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_prev.sz)
+					- (!row_cnn_next || row_cnn_next.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_next.sz))
+					* 1000 * ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
+
+				// припуск для гнутых элементов
+				if(!elm.is_linear())
+					row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
+				else if((row_cnn_prev && row_cnn_prev.formula) || (row_cnn_next && row_cnn_next.formula)){
+					// TODO: дополнительная корректировка длины формулой
+
+				}
+
+				// РассчитатьКоличествоПлощадьМассу
+				calc_count_area_mass(row_spec, _row, row_cnn_prev.angle_calc_method, row_cnn_next ? row_cnn_next.angle_calc_method : null);
+
+				// НадоДобавитьСпецификациюСоединения
+				if(need_add_cnn_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
+
+					len_angle = {
+						angle: 0,
+						alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
+						alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90
+						// art1: true TODO: учесть art-1-2
+					};
+
+					if(b.cnn.cnn_type == $p.enm.cnn_types.ТОбразное || b.cnn.cnn_type == $p.enm.cnn_types.НезамкнутыйКонтур){
+						// соединение Т-образное или незамкнутый контур: для них арт 1-2 не используется
+
+						// для него надо рассчитать еще и с другой стороны
+						if(need_add_cnn_spec(e.cnn, next ? next.elm : 0, _row.elm)){
+							//	TODO: ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
+						}
+					}
+
+					// для раскладок доппроверка
+					//Если СтрК.ТипЭлемента = Перечисления.пзТипыЭлементов.Раскладка И (СоедСлед != Неопределено)
+					//	И (СоедСлед.ТипСоединения = Перечисления.пзТипыСоединений.ТОбразное
+					//	Или СоедСлед.ТипСоединения = Перечисления.пзТипыСоединений.НезамкнутыйКонтур) Тогда
+					//	Если НадоДобавитьСпецификациюСоединения(СтруктураПараметров, СоедСлед, СтрК, След) Тогда
+					//		ДлиныУглыСлед.Вставить("ДлинаСоединения", СтрК.Длина);
+					//		ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
+					//	КонецЕсли;
+					//КонецЕсли;
+
+					// спецификацию с предыдущей стороны рассчитваем всегда
+					add_cnn_spec(b.cnn, elm, len_angle);
+
+				}
+
+
+				// Спецификация вставки
+				spec_inset(elm);
+
+				// Если у профиля есть примыкающий элемент, добавим спецификацию соединения
+				if(elm.layer.parent)
+					spec_nearest_cnn(elm);
+
+			}
+
+			/**
+			 * Спецификация заполнения
+			 * @param glass {Filling}
+			 */
+			function spec_glass(glass) {
+
+				var curr, prev, next, len_angle, _row, row_cnn;
+
+				var profiles = glass.profiles,
+					glength = profiles.length;
+
+				_row = glass._row;
+
+				// для всех рёбер заполнения
+				for(var i=0; i<glength; i++ ){
+					curr = profiles[i];
+					prev = (i==0 ? profiles[glength-1] : profiles[i-1]).profile;
+					next = (i==glength-1 ? profiles[0] : profiles[i+1]).profile;
+					row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});
+
+					len_angle = {
+						angle: 0,
+						alp1: prev.generatrix.angle_to(curr.profile.generatrix, curr.b, true),
+						alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
+						len: row_cnn.length ? row_cnn[0].aperture_len : 0,
+						origin: cnn_row(_row.elm, curr.profile.elm),
+						glass: true
+
+					};
+
+					// добавляем спецификацию соединения рёбер заполнения с профилем
+					add_cnn_spec(curr.cnn, curr.profile, len_angle);
+
+				}
+
+				// добавляем спецификацию вставки в заполнение
+				spec_inset(glass);
+
+				// TODO: для всех раскладок заполнения
+			}
+
+			/**
+			 * Спецификация вставки элемента
+			 * @param elm {BuilderElement}
+			 */
+			function spec_inset(elm) {
 
 				var _row = elm._row;
 
@@ -530,151 +711,25 @@ $p.modifiers.push(
 			}
 
 			/**
-			 * Базовая cпецификация по соединениям и вставкам таблицы координат
+			 * Основная cпецификация по соединениям и вставкам таблицы координат
+			 * @param scheme {Scheme}
 			 */
 			function spec_base(scheme) {
 
-				var b, e, curr, prev, next, len_angle,
-					_row, row_constr, row_cnn, row_cnn_prev, row_cnn_next, row_spec;
-
+				// сбрасываем структуру обработанных соединений
 				added_cnn_spec = {};
 
 				// для всех контуров изделия
 				scheme.contours.forEach(function (contour) {
 
 					// для всех профилей контура
-					contour.profiles.forEach(function (curr) {
-
-						_row = curr._row;
-						if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure)
-							return;
-
-						b = curr.rays.b;
-						e = curr.rays.e;
-						
-						if(!b.cnn || !e.cnn){
-							$p.record_log({
-								note: "не найдено соединение",
-								obj: _row._obj
-							});
-							return;
-						}
-
-						prev = b.profile;
-						next = e.profile;
-						row_cnn_prev = b.cnn.main_row(curr);
-						row_cnn_next = e.cnn.main_row(curr);
-
-						// добавляем строку спецификации
-						row_spec = new_spec_row(null, curr, row_cnn_prev || row_cnn_next, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
-
-						// уточняем размер
-						row_spec.len = (_row.len - (row_cnn_prev ? row_cnn_prev.sz : 0) - (row_cnn_next ? row_cnn_next.sz : 0))
-							* ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
-
-						// profile.Длина - то, что получится после обработки
-						// row_spec.Длина - сколько взять (отрезать)
-						curr.data._len = _row.len;
-						_row.len = (_row.len
-							- (!row_cnn_prev || row_cnn_prev.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_prev.sz)
-							- (!row_cnn_next || row_cnn_next.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_next.sz))
-							* 1000 * ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
-
-						// припуск для гнутых элементов
-						if(!curr.is_linear())
-							row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
-						else if((row_cnn_prev && row_cnn_prev.formula) || (row_cnn_next && row_cnn_next.formula)){
-							// TODO: дополнительная корректировка длины формулой
-
-						}
-
-						// РассчитатьКоличествоПлощадьМассу
-						calc_count_area_mass(row_spec, _row, row_cnn_prev.angle_calc_method, row_cnn_next ? row_cnn_next.angle_calc_method : null);
-
-						// НадоДобавитьСпецификациюСоединения
-						if(need_add_cnn_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
-
-							len_angle = {
-								angle: 0,
-								alp1: prev ? prev.generatrix.angle_to(curr.generatrix, curr.b, true) : 90,
-								alp2: next ? curr.generatrix.angle_to(next.generatrix, curr.e, true) : 90
-								// art1: true TODO: учесть art-1-2
-							};
-
-							if(b.cnn.cnn_type == $p.enm.cnn_types.ТОбразное || b.cnn.cnn_type == $p.enm.cnn_types.НезамкнутыйКонтур){
-								// соединение Т-образное или незамкнутый контур: для них арт 1-2 не используется
-
-								// для него надо рассчитать еще и с другой стороны
-								if(need_add_cnn_spec(e.cnn, next ? next.elm : 0, _row.elm)){
-								//	TODO: ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
-								}
-							}
-
-							// для раскладок доппроверка
-							//Если СтрК.ТипЭлемента = Перечисления.пзТипыЭлементов.Раскладка И (СоедСлед != Неопределено)
-							//	И (СоедСлед.ТипСоединения = Перечисления.пзТипыСоединений.ТОбразное
-							//	Или СоедСлед.ТипСоединения = Перечисления.пзТипыСоединений.НезамкнутыйКонтур) Тогда
-							//	Если НадоДобавитьСпецификациюСоединения(СтруктураПараметров, СоедСлед, СтрК, След) Тогда
-							//		ДлиныУглыСлед.Вставить("ДлинаСоединения", СтрК.Длина);
-							//		ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
-							//	КонецЕсли;
-							//КонецЕсли;
-
-							// спецификацию с предыдущей стороны рассчитваем всегда
-							add_cnn_spec(b.cnn, curr, len_angle);
-
-						}
-
-
-						// Спецификация вставки
-						spec_insets(curr);
-
-						// Если у профиля есть примыкающий элемент, добавим спецификацию соединения
-						if(contour.parent)
-							spec_nearest_cnn(curr);
-
-					});
-
+					contour.profiles.forEach(spec_profile);
 
 					// для всех заполнений контура
-					contour.glasses(false, true).forEach(function (glass) {
+					contour.glasses(false, true).forEach(spec_glass);
 
-						var profiles = glass.profiles,
-							glength = profiles.length;
-
-						_row = glass._row;
-
-						// для всех рёбер заполнения
-						for(var i=0; i<glength; i++ ){
-							curr = profiles[i];
-							prev = (i==0 ? profiles[glength-1] : profiles[i-1]).profile;
-							next = (i==glength-1 ? profiles[0] : profiles[i+1]).profile;
-							row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});
-
-							len_angle = {
-								angle: 0,
-								alp1: prev.generatrix.angle_to(curr.profile.generatrix, curr.b, true),
-								alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
-								len: row_cnn.length ? row_cnn[0].aperture_len : 0,
-								origin: cnn_row(_row.elm, curr.profile.elm),
-								glass: true
-
-							};
-
-							// добавляем спецификацию соединения рёбер заполнения с профилем
-							add_cnn_spec(curr.cnn, curr.profile, len_angle);
-
-						}
-
-						// добавляем спецификацию вставки в заполнение
-						spec_insets(glass);
-
-						// TODO: для всех раскладок заполнения
-
-					});
-
-
-
+					// фурнитура контура
+					spec_furn(contour);
 
 				});
 
@@ -684,6 +739,10 @@ $p.modifiers.push(
 			 * Пересчет спецификации при записи изделия
 			 */
 			$p.eve.attachEvent("save_coordinates", function (scheme, attr) {
+
+				//console.time("spec_base");
+				//console.profile();
+
 
 				ox = scheme.ox;
 				spec = ox.specification;
@@ -701,7 +760,12 @@ $p.modifiers.push(
 				spec_base(scheme);
 
 				// сворачиваем
-				spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin", "qty,totqty,totqty1");
+				spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop", "qty,totqty,totqty1");
+
+
+				//console.timeEnd("spec_base");
+				//console.profileEnd();
+
 
 				// информируем мир об окончании расчета координат
 				$p.eve.callEvent("coordinates_calculated", [scheme, attr]);

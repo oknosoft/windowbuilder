@@ -171,7 +171,7 @@ paper.Path.prototype.__define({
 				res.add(this.lastSegment.point.add(normal.multiply(delta)));
 
 				res.simplify(0.8);
-			};
+			}
 
 			return res.elongation(elong);
 		},

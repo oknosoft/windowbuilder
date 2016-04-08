@@ -113,7 +113,7 @@ function ToolArc(){
 					r.lineTo(e);
 					r.parent.rays.clear();
 					r.selected = true;
-					//undo.snapshot("Move Shapes");
+					r.parent.parent.notify({type: consts.move_points, profiles: [r.parent], points: []});
 
 				} else {
 					paper.project.deselectAll();

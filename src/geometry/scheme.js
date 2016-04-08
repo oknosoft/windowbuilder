@@ -214,7 +214,7 @@ function Scheme(_canvas){
 	});
 
 	/**
-	 *
+	 * Строка табчасти продукция текущего заказа, соответствующая редактируемому изделию
 	 */
 	this.__define("_calc_order_row", {
 		get: function () {
@@ -443,7 +443,7 @@ function Scheme(_canvas){
 
 		if(_data._update_timer)
 			clearTimeout(_data._update_timer);
-
+		
 		_data._update_timer = setTimeout(function () {
 			_scheme.view.update();
 			_data._update_timer = 0;
@@ -610,6 +610,18 @@ function Scheme(_canvas){
 
 	}
 
+	$p.eve.attachEvent("coordinates_calculated", function (scheme, attr) {
+		
+		if(_scheme != scheme)
+			return;
+		
+		_scheme.layers.forEach(function(l){
+			if(l instanceof Contour)
+				l.draw_visualization();
+		});
+		_scheme.register_update();
+	});
+	
 	redraw();
 }
 Scheme._extend(paper.Project);

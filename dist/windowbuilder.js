@@ -120,11 +120,11 @@ function Contour(attr){
 			enumerable: false
 		},
 
-		// служебная группа визуализации допов
+		// служебная группа визуализации допов,  петель и ручек
 		l_visualization: {
 			get: function () {
 				if(!_layers.visualization)
-					_layers.visualization = new paper.Group({ parent: this });
+					_layers.visualization = new paper.Group({ parent: this, guide: true });
 				return _layers.visualization;
 			},
 			enumerable: false
@@ -136,26 +136,6 @@ function Contour(attr){
 				if(!_layers.dimensions)
 					_layers.dimensions = new paper.Group({ parent: this });
 				return _layers.dimensions;
-			},
-			enumerable: false
-		},
-
-		// служебная группа петель и ручек
-		l_furn: {
-			get: function () {
-				if(!_layers.furn)
-					_layers.furn = new paper.Group({ parent: this, guide: true });
-				return _layers.furn;
-			},
-			enumerable: false
-		},
-
-		// служебная группа номеров элементов
-		l_elm_no: {
-			get: function () {
-				if(!_layers.elm_no)
-					_layers.elm_no = new paper.Group({ parent: this, guide: true });
-				return _layers.elm_no;
 			},
 			enumerable: false
 		}
@@ -481,7 +461,7 @@ Contour.prototype.__define({
 
 			function on_child_contour_redrawed(){
 				llength--;
-				if(!llength)
+				if(!llength && on_contour_redrawed)
 					on_contour_redrawed();
 			}
 
@@ -1385,7 +1365,8 @@ Contour.prototype.__define({
 		value: function () {
 			
 			if(!this.parent || !$p.enm.open_types.is_opening(this.furn.open_type)){
-				this.l_furn.visible = false;
+				if(this.l_visualization._opening && this.l_visualization._opening.visible)
+					this.l_visualization._opening.visible = false;
 				return;
 			}
 
@@ -1398,9 +1379,9 @@ Contour.prototype.__define({
 							other = _contour.profile_by_furn_side(
 								row.side + 2 <= this._owner.side_count ? row.side + 2 : row.side - 2, cache);
 
-						_contour.l_furn._opening.moveTo(axis.corns(3));
-						_contour.l_furn._opening.lineTo(other.rays.inner.getPointAt(other.rays.inner.length / 2));
-						_contour.l_furn._opening.lineTo(axis.corns(4));
+						_contour.l_visualization._opening.moveTo(axis.corns(3));
+						_contour.l_visualization._opening.lineTo(other.rays.inner.getPointAt(other.rays.inner.length / 2));
+						_contour.l_visualization._opening.lineTo(axis.corns(4));
 
 					}
 				});
@@ -1411,22 +1392,25 @@ Contour.prototype.__define({
 			}
 
 
+			// создаём кеш элементов по номеру фурнитуры
 			var _contour = this,
 				cache = {
 					profiles: this.outer_nodes,
 					bottom: this.profiles_by_side("bottom")
 				};
 
-			if(!_contour.l_furn._opening)
-				_contour.l_furn._opening = new paper.CompoundPath({
-					parent: _contour.l_furn,
+			// подготавливаем слой для рисования
+			if(!_contour.l_visualization._opening)
+				_contour.l_visualization._opening = new paper.CompoundPath({
+					parent: _contour.l_visualization,
 					strokeColor: 'black'
 				});
 			else
-				_contour.l_furn._opening.removeChildren();
+				_contour.l_visualization._opening.removeChildren();
 
-			_contour.l_furn.visible = true;
+			//_contour.l_visualization.visible = true;
 
+			// рисуем раправление открывания
 			if(this.furn.is_sliding)
 				sliding();
 
@@ -1438,15 +1422,39 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Рисует ручку
+	 * Рисует дополнительную визуализацию. Данные берёт из спецификации
 	 */
-	draw_handle: {
+	draw_visualization: {
 		value: function () {
 
-			if(!this.parent || !$p.enm.open_types.is_opening(this.furn.open_type)){
-				this.l_furn.visible = false;
-				return;
-			}
+
+			var profiles = this.profiles,
+				l_vis = this.l_visualization;
+
+			if(l_vis._by_spec)
+				l_vis._by_spec.removeChildren();
+			else
+				l_vis._by_spec = new paper.Group({ parent: l_vis });
+
+			// получаем строки спецификации с визуализацией
+			this.project.ox.specification.find_rows({dop: -1}, function (row) {
+
+				profiles.some(function (elm) {
+					if(row.elm == elm.elm){
+						
+						// есть визуализация для текущего профиля
+						row.nom.visualization.draw(elm, l_vis);
+						
+						return true;
+					}
+				});
+			});
+
+			// перерисовываем вложенные контуры
+			this.children.forEach(function(l) {
+				if(l instanceof Contour)
+					l.draw_visualization();
+			});
 
 		},
 		enumerable: false
@@ -3069,7 +3077,7 @@ paper.Path.prototype.__define({
 				res.add(this.lastSegment.point.add(normal.multiply(delta)));
 
 				res.simplify(0.8);
-			};
+			}
 
 			return res.elongation(elong);
 		},
@@ -5051,7 +5059,7 @@ function Scheme(_canvas){
 	});
 
 	/**
-	 *
+	 * Строка табчасти продукция текущего заказа, соответствующая редактируемому изделию
 	 */
 	this.__define("_calc_order_row", {
 		get: function () {
@@ -5280,7 +5288,7 @@ function Scheme(_canvas){
 
 		if(_data._update_timer)
 			clearTimeout(_data._update_timer);
-
+		
 		_data._update_timer = setTimeout(function () {
 			_scheme.view.update();
 			_data._update_timer = 0;
@@ -5447,6 +5455,18 @@ function Scheme(_canvas){
 
 	}
 
+	$p.eve.attachEvent("coordinates_calculated", function (scheme, attr) {
+		
+		if(_scheme != scheme)
+			return;
+		
+		_scheme.layers.forEach(function(l){
+			if(l instanceof Contour)
+				l.draw_visualization();
+		});
+		_scheme.register_update();
+	});
+	
 	redraw();
 }
 Scheme._extend(paper.Project);
@@ -5857,7 +5877,7 @@ function ToolArc(){
 					r.lineTo(e);
 					r.parent.rays.clear();
 					r.selected = true;
-					//undo.snapshot("Move Shapes");
+					r.parent.parent.notify({type: consts.move_points, profiles: [r.parent], points: []});
 
 				} else {
 					paper.project.deselectAll();
