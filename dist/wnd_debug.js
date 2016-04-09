@@ -2623,19 +2623,6 @@ $p.modifiers.push(
 				glass_formulas,
 				params;
 
-			/**
-			 * Перед записью изделия построителя
-			 * Аналог УПзП-шного __ПередЗаписьюНаСервере__
-			 * @method before_save
-			 * @for ProductsBuilding
-			 * @param o
-			 * @param row
-			 * @param prm
-			 * @param cancel
-			 */
-			function before_save(o, row, prm, cancel) {
-
-			}
 
 			/**
 			 * РассчитатьКоличествоПлощадьМассу
@@ -2748,7 +2735,7 @@ $p.modifiers.push(
 			 * СтрокаСоединений
 			 * @param elm1
 			 * @param elm2
-			 * @return {*}
+			 * @return {Number|DataObj}
 			 */
 			function cnn_row(elm1, elm2){
 				var res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
@@ -2766,7 +2753,7 @@ $p.modifiers.push(
 			 * @param elm1
 			 * @param elm2
 			 */
-			function need_add_cnn_spec(cnn, elm1, elm2){
+			function cnn_need_add_spec(cnn, elm1, elm2){
 
 				// соединения крест пересечение и крест в стык обрабатываем отдельно
 				if(cnn && cnn.cnn_type == $p.enm.cnn_types.КрестВСтык)
@@ -2786,7 +2773,7 @@ $p.modifiers.push(
 			 * @param row_base
 			 * @param [nom]
 			 * @param [origin]
-			 * @return {TabularSectionRow.<cat.characteristics.specification>}
+			 * @return {TabularSectionRow.cat.characteristics.specification}
 			 */
 			function new_spec_row(row_spec, elm, row_base, nom, origin){
 				if(!row_spec)
@@ -2805,11 +2792,11 @@ $p.modifiers.push(
 			 * @param elm
 			 * @param len_angl
 			 */
-			function add_cnn_spec(cnn, elm, len_angl){
+			function cnn_add_spec(cnn, elm, len_angl){
 
 				var sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
 
-				filter_cnn_spec(cnn, elm, len_angl).forEach(function (row_cnn_spec) {
+				cnn_filter_spec(cnn, elm, len_angl).forEach(function (row_cnn_spec) {
 					var nom = row_cnn_spec.nom;
 					// TODO: nom может быть вставкой - в этом случае надо разузловать
 					var row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin);
@@ -2853,7 +2840,7 @@ $p.modifiers.push(
 			 * @param elm
 			 * @param len_angl
 			 */
-			function filter_cnn_spec(cnn, elm, len_angl){
+			function cnn_filter_spec(cnn, elm, len_angl){
 
 				var res = [], nom, angle_hor = elm.angle_hor;
 
@@ -2921,7 +2908,7 @@ $p.modifiers.push(
 			 * @param by_perimetr
 			 * @return {boolean}
 			 */
-			function check_inset(inset, elm, by_perimetr){
+			function inset_check(inset, elm, by_perimetr){
 
 				var is_tabular = true,
 					_row = elm._row;
@@ -2971,7 +2958,7 @@ $p.modifiers.push(
 			 * @param elm
 			 * @param [is_high_level_call]
 			 */
-			function filter_inset_spec(inset, elm, is_high_level_call){
+			function inset_filter_spec(inset, elm, is_high_level_call){
 
 				var res = [], glass_rows;
 				if(!inset || inset.empty())
@@ -2996,7 +2983,7 @@ $p.modifiers.push(
 					if(glass_rows.length){
 						glass_formulas[elm.elm] = "";
 						glass_rows.forEach(function (row) {
-							filter_inset_spec(row.inset, elm).forEach(function (row) {
+							inset_filter_spec(row.inset, elm).forEach(function (row) {
 								res.push(row);
 							});
 							if(!glass_formulas[elm.elm])
@@ -3011,7 +2998,7 @@ $p.modifiers.push(
 				inset.specification.each(function (row) {
 
 					// Проверяем ограничения строки вставки
-					if(!check_inset(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль))
+					if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль))
 						return;
 
 					// Проверяем параметры изделия
@@ -3022,7 +3009,7 @@ $p.modifiers.push(
 					if(row.nom._manager.class_name == "cat.nom")
 						res.push(row);
 					else
-						filter_inset_spec(row.nom, elm).forEach(function (row) {
+						inset_filter_spec(row.nom, elm).forEach(function (row) {
 							res.push(row);
 						});
 				});
@@ -3034,7 +3021,7 @@ $p.modifiers.push(
 			 * Спецификации фурнитуры
 			 * @param contour {Contour}
 			 */
-			function spec_furn(contour) {
+			function furn_spec(contour) {
 
 				// у рамных контуров фурнитуры не бывает
 				if(!contour.parent)
@@ -3043,13 +3030,21 @@ $p.modifiers.push(
 				// кеш сторон фурнитуры
 				var cache = {
 					profiles: contour.outer_nodes,
-					bottom: contour.profiles_by_side("bottom")
+					bottom: contour.profiles_by_side("bottom"),
+					params: contour.project.ox.params
 				};
 
-				if(!check_opening_restrictions(contour, cache))
+				// проверяем, подходит ли фурнитура под геометрию контура
+				if(!furn_check_opening_restrictions(contour, cache))
 					return;
 
+				// уточняем высоту ручки, т.к. от неё зависят координаты в спецификации
+				furn_update_handle_height(contour, cache, contour.furn.furn_set);
 
+				// получаем спецификацию фурнитуры и переносим её в спецификацию изделия
+				furn_get_spec(contour, cache, contour.furn.furn_set).each(function (row) {
+					row = null;
+				});
 			}
 
 			/**
@@ -3058,8 +3053,13 @@ $p.modifiers.push(
 			 * @param cache {Object}
 			 * @return {boolean}
 			 */
-			function check_opening_restrictions(contour, cache) {
-				
+			function furn_check_opening_restrictions(contour, cache) {
+
+				var ok = true;
+
+				// TODO: реализовать проверку по количеству сторон
+
+				// проверка геометрии
 				contour.furn.open_tunes.each(function (row) {
 					var elm = contour.profile_by_furn_side(row.side, cache),
 						len = elm._row.len - 2 * elm.nom.sizefurn;
@@ -3071,18 +3071,186 @@ $p.modifiers.push(
 						(!elm.is_linear() && !row.arc_available)){
 
 						new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.cat.predefined_elmnts.predefined("Номенклатура_Ошибка_Фурнитуры"), contour.furn).dop = -1;
+						ok = false;
 					}
+
 				});
+
+				return ok;
 			}
+
+			/**
+			 * Уточняет высоту ручки
+			 * @param contour {Contour}
+			 * @param cache {Object}
+			 */
+			function furn_update_handle_height(contour, cache, furn_set){
+
+				if(!contour.furn.handle_side && furn_set.empty())
+					return;
+
+				// получаем элемент, на котором ручка и длину элемента
+				var elm = contour.profile_by_furn_side(contour.furn.handle_side, cache),
+					len = elm._row.len;
+
+				// бежим по спецификации набора в поисках строки про ручку
+				furn_set.specification.find_rows({dop: 0}, function (row) {
+
+					// проверяем, проходит ли строка
+					if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row))
+						return;
+
+					if(furn_set_handle_height(contour, row, len))
+						return false;
+
+					if(row.is_set_row){
+						var ok = false;
+						furn_get_spec(contour, cache, row.nom_set, true).each(function (sub_row) {
+							if(furn_set_handle_height(contour, sub_row, len))
+								return !(ok = true);
+						});
+						if(ok)
+							return false;
+					}
+
+				})
+
+
+			}
+
+			/**
+			 * Устанавливает высоту ручки в контуре, если этого требует текущая строка спецификации фкрнитуры
+			 * @param contour {Contour}
+			 * @param row {TabularSectionRow.cat.furns.specification}
+			 * @param len {Number}
+			 */
+			function furn_set_handle_height(contour, row, len){
+
+				if(row.handle_height_base == -1){
+					contour._row.h_ruch = (len / 2).round(0);
+					contour._row.fix_ruch = false;
+					return true;
+
+				}else if(row.handle_height_base > 0){
+					contour._row.h_ruch = row.handle_height_base;
+					contour._row.fix_ruch = true;
+					return true;
+
+				}
+			}
+
+			/**
+			 * Аналог УПзП-шного _ПолучитьСпецификациюФурнитурыСФильтром_
+			 * @param contour {Contour}
+			 * @param cache {Object}
+			 * @param furn_set {_cat.furns}
+			 * @param [exclude_dop] {Boolean}
+			 */
+			function furn_get_spec(contour, cache, furn_set, exclude_dop) {
+
+				var res = $p.dp.buyers_order.create().specification;
+
+				// бежим по всем строкам набора
+				furn_set.specification.find_rows({dop: 0}, function (row) {
+
+					// проверяем, проходит ли строка
+					if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row))
+						return;
+
+					// ищем строки дополнительной спецификации
+					if(!exclude_dop){
+						furn_set.specification.find_rows({is_main_specification_row: false, elm: row.elm}, function (dop_row) {
+
+							if(!furn_check_row_restrictions(contour, cache, furn_set, dop_row))
+								return;
+
+							if(dop_row.is_procedure_row){
+
+							}else if(!dop_row.quantity)
+								return;
+
+							// в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
+							if(dop_row.is_set_row){
+								furn_get_spec(contour, cache, dop_row.nom_set).each(function (sub_row) {
+									if(!sub_row.quantity)
+										return;
+
+									res.add(sub_row).quantity = dop_row.quantity * sub_row.quantity;
+								});
+							}else{
+								res.add(dop_row).origin = furn_set;
+							}
+
+						});
+					}
+
+					// в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
+					if(row.is_set_row){
+						furn_get_spec(contour, cache, row.nom_set).each(function (sub_row) {
+							if(!sub_row.quantity)
+								return;
+
+							res.add(sub_row).quantity = row.quantity * sub_row.quantity;
+						});
+					}else{
+						res.add(row).origin = furn_set;
+					}
+
+				});
+
+				return res;
+			}
+
+			/**
+			 * Аналог УПзП-шного _ПроверитьОграниченияСтрокиФурнитуры_
+			 * @param contour {Contour}
+			 * @param cache {Object}
+			 * @param furn_set {_cat.furns}
+			 * @param row {_cat.furns.specification.row}
+			 */
+			function furn_check_row_restrictions(contour, cache, furn_set, row) {
+
+				var res = true;
+
+				// по таблице параметров
+				furn_set.selection_params.find_rows({elm: row.elm, dop: row.dop}, function (row) {
+
+					var ok = false;
+					cache.params.find_rows({cnstr: contour.cnstr, param: row.param, value: row.value}, function () {
+						return !(ok = true);
+					});
+
+					if(!ok)
+						return res = false;
+
+				});
+
+				// по таблице ограничений
+				if(res){
+					furn_set.specification_restrictions.find_rows({elm: row.elm, dop: row.dop}, function (row) {
+
+						var elm = contour.profile_by_furn_side(row.side, cache),
+							len = elm._row.len - 2 * elm.nom.sizefurn;
+
+						if(len < row.lmin || len > row.lmax ){
+							return res = false;
+
+						}
+					});
+				}
+
+				return res;
+			}
+
 
 			/**
 			 * Спецификации соединений примыкающих профилей
 			 * @param elm {Profile}
 			 */
-			function spec_nearest_cnn(elm) {
+			function cnn_spec_nearest(elm) {
 				var nearest = elm.nearest();
 				if(nearest && elm.data._nearest_cnn)
-					add_cnn_spec(elm.data._nearest_cnn, elm, {
+					cnn_add_spec(elm.data._nearest_cnn, elm, {
 						angle:  0,
 						alp1:   0,
 						alp2:   0,
@@ -3095,7 +3263,7 @@ $p.modifiers.push(
 			 * Спецификация профиля
 			 * @param elm {Profile}
 			 */
-			function spec_profile(elm) {
+			function base_spec_profile(elm) {
 
 				var b, e, prev, next, len_angle,
 					_row, row_cnn_prev, row_cnn_next, row_spec;
@@ -3147,7 +3315,7 @@ $p.modifiers.push(
 				calc_count_area_mass(row_spec, _row, row_cnn_prev.angle_calc_method, row_cnn_next ? row_cnn_next.angle_calc_method : null);
 
 				// НадоДобавитьСпецификациюСоединения
-				if(need_add_cnn_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
+				if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
 
 					len_angle = {
 						angle: 0,
@@ -3160,7 +3328,7 @@ $p.modifiers.push(
 						// соединение Т-образное или незамкнутый контур: для них арт 1-2 не используется
 
 						// для него надо рассчитать еще и с другой стороны
-						if(need_add_cnn_spec(e.cnn, next ? next.elm : 0, _row.elm)){
+						if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm)){
 							//	TODO: ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
 						}
 					}
@@ -3176,17 +3344,17 @@ $p.modifiers.push(
 					//КонецЕсли;
 
 					// спецификацию с предыдущей стороны рассчитваем всегда
-					add_cnn_spec(b.cnn, elm, len_angle);
+					cnn_add_spec(b.cnn, elm, len_angle);
 
 				}
 
 
 				// Спецификация вставки
-				spec_inset(elm);
+				inset_spec(elm);
 
 				// Если у профиля есть примыкающий элемент, добавим спецификацию соединения
 				if(elm.layer.parent)
-					spec_nearest_cnn(elm);
+					cnn_spec_nearest(elm);
 
 			}
 
@@ -3194,7 +3362,7 @@ $p.modifiers.push(
 			 * Спецификация заполнения
 			 * @param glass {Filling}
 			 */
-			function spec_glass(glass) {
+			function base_spec_glass(glass) {
 
 				var curr, prev, next, len_angle, _row, row_cnn;
 
@@ -3221,12 +3389,12 @@ $p.modifiers.push(
 					};
 
 					// добавляем спецификацию соединения рёбер заполнения с профилем
-					add_cnn_spec(curr.cnn, curr.profile, len_angle);
+					cnn_add_spec(curr.cnn, curr.profile, len_angle);
 
 				}
 
 				// добавляем спецификацию вставки в заполнение
-				spec_inset(glass);
+				inset_spec(glass);
 
 				// TODO: для всех раскладок заполнения
 			}
@@ -3235,11 +3403,11 @@ $p.modifiers.push(
 			 * Спецификация вставки элемента
 			 * @param elm {BuilderElement}
 			 */
-			function spec_inset(elm) {
+			function inset_spec(elm) {
 
 				var _row = elm._row;
 
-				filter_inset_spec(elm.inset, elm, true).forEach(function (row_ins_spec) {
+				inset_filter_spec(elm.inset, elm, true).forEach(function (row_ins_spec) {
 
 					var row_spec;
 
@@ -3274,7 +3442,7 @@ $p.modifiers.push(
 							var row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
 							elm.perimeter.forEach(function (rib) {
 								row_prm._row._mixin(rib);
-								if(check_inset(row_ins_spec, row_prm, true)){
+								if(inset_check(row_ins_spec, row_prm, true)){
 									row_spec = new_spec_row(null, elm, row_ins_spec, null, elm.inset);
 									calc_qty_len(row_spec, row_ins_spec, rib.len);
 									calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
@@ -3312,7 +3480,7 @@ $p.modifiers.push(
 			 * Основная cпецификация по соединениям и вставкам таблицы координат
 			 * @param scheme {Scheme}
 			 */
-			function spec_base(scheme) {
+			function base_spec(scheme) {
 
 				// сбрасываем структуру обработанных соединений
 				added_cnn_spec = {};
@@ -3321,13 +3489,13 @@ $p.modifiers.push(
 				scheme.contours.forEach(function (contour) {
 
 					// для всех профилей контура
-					contour.profiles.forEach(spec_profile);
+					contour.profiles.forEach(base_spec_profile);
 
 					// для всех заполнений контура
-					contour.glasses(false, true).forEach(spec_glass);
+					contour.glasses(false, true).forEach(base_spec_glass);
 
 					// фурнитура контура
-					spec_furn(contour);
+					furn_spec(contour);
 
 				});
 
@@ -3338,7 +3506,7 @@ $p.modifiers.push(
 			 */
 			$p.eve.attachEvent("save_coordinates", function (scheme, attr) {
 
-				//console.time("spec_base");
+				//console.time("base_spec");
 				//console.profile();
 
 
@@ -3355,13 +3523,13 @@ $p.modifiers.push(
 				spec.clear();
 
 				// рассчитываем базовую сецификацию
-				spec_base(scheme);
+				base_spec(scheme);
 
 				// сворачиваем
 				spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop", "qty,totqty,totqty1");
 
 
-				//console.timeEnd("spec_base");
+				//console.timeEnd("base_spec");
 				//console.profileEnd();
 
 
