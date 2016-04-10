@@ -31,7 +31,7 @@ $p.modifiers.push(
 
 					var osys = contour.project._dp.sys,
 						fprms = contour.project.ox.params,
-						prm_direction = $p.cat.predefined_elmnts.predefined("Параметр_НаправлениеОткрывания");
+						prm_direction = $p.job_prm.properties.direction;
 
 					// формируем массив требуемых параметров по задействованным в contour.furn.furn_set
 					var aprm = contour.furn.furn_set.add_furn_prm();

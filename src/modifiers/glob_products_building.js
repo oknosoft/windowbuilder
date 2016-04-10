@@ -249,8 +249,8 @@ $p.modifiers.push(
 				cnn.specification.each(function (row) {
 					nom = row.nom;
 					if(!nom || nom.empty() ||
-							nom == $p.cat.predefined_elmnts.predefined("Номенклатура_Артикул1") ||
-							nom == $p.cat.predefined_elmnts.predefined("Номенклатура_Артикул2"))
+							nom == $p.job_prm.nom.art1 ||
+							nom == $p.job_prm.nom.art2)
 						return;
 
 					// только для прямых или только для кривых профилей
@@ -445,7 +445,20 @@ $p.modifiers.push(
 
 				// получаем спецификацию фурнитуры и переносим её в спецификацию изделия
 				furn_get_spec(contour, cache, contour.furn.furn_set).each(function (row) {
-					row = null;
+					var elm = {elm: -contour.cnstr, clr: contour.clr_furn},
+						row_spec = new_spec_row(null, elm, row, row.nom_set, row.origin);
+
+					if(row.is_procedure_row){
+						row_spec.elm = row.handle_height_min;
+						row_spec.len = row.coefficient / 1000;
+						row_spec.qty = 0;
+						row_spec.totqty = 1;
+						row_spec.totqty1 = 1;
+						//row_spec.Комментарий = Стр.Формула;
+					}else{
+						row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
+						calc_count_area_mass(row_spec);
+					}
 				});
 			}
 
@@ -472,7 +485,7 @@ $p.modifiers.push(
 						len > row.lmax ||
 						(!elm.is_linear() && !row.arc_available)){
 
-						new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.cat.predefined_elmnts.predefined("Номенклатура_Ошибка_Фурнитуры"), contour.furn).dop = -1;
+						new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.job_prm.nom.furn_error, contour.furn).dop = -1;
 						ok = false;
 					}
 
@@ -566,7 +579,16 @@ $p.modifiers.push(
 							if(!furn_check_row_restrictions(contour, cache, furn_set, dop_row))
 								return;
 
+							// расчет координаты и (или) визуализации
 							if(dop_row.is_procedure_row){
+
+								var invert = false,
+									invert_nearest = false,
+									coordin = 0,
+									elm = contour.profile_by_furn_side(row.side, cache),
+									len = elm._row.len;
+
+								return;
 
 							}else if(!dop_row.quantity)
 								return;
@@ -708,6 +730,7 @@ $p.modifiers.push(
 				// припуск для гнутых элементов
 				if(!elm.is_linear())
 					row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
+
 				else if((row_cnn_prev && row_cnn_prev.formula) || (row_cnn_next && row_cnn_next.formula)){
 					// TODO: дополнительная корректировка длины формулой
 

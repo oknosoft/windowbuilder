@@ -13,21 +13,6 @@ $p.modifiers.push(
 		var _mgr = $p.cat.characteristics,
 			_meta = $p.cat.characteristics.metadata()._clone(),
 			selection_block, wnd;
-		
-		// рассчеты, помеченные, как шаблоны, загрузим в память заранее
-		// Подписываемся на событие окончания загрузки локальных данных
-		var pouch_data_loaded = $p.eve.attachEvent("pouch_load_data_loaded", function () {
-
-			setTimeout(function () {
-				$p.cat.predefined_elmnts.predefined("Расчет_ТиповойБлок").forEach(function (o) {
-					o.load();
-				});
-			}, 1000);			
-
-			$p.eve.detachEvent(pouch_data_loaded);
-
-		});
-		
 
 		// попробуем подсунуть типовой форме выбора виртуальные метаданные - с деревом и ограниченным списком значений
 		_mgr.form_selection_block = function(pwnd, attr){
@@ -125,7 +110,7 @@ $p.modifiers.push(
 				selection_block.calc_order = $p.wsql.get_user_param("template_block_calc_order");
 			}
 			if(selection_block.calc_order.empty()){
-				$p.cat.predefined_elmnts.predefined("Расчет_ТиповойБлок").some(function (o) {
+				$p.job_prm.builder.base_block.some(function (o) {
 					selection_block.calc_order = o;
 					$p.wsql.set_user_param("template_block_calc_order", selection_block.calc_order.ref);
 					return true;
@@ -241,7 +226,7 @@ $p.modifiers.push(
 
 					var l = [];
 
-					$p.cat.predefined_elmnts.predefined("Расчет_ТиповойБлок").forEach(function (o) {
+					$p.job_prm.builder.base_block.forEach(function (o) {
 						l.push({text: o.note || o.presentation, value: o.ref});
 					});
 

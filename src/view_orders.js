@@ -112,6 +112,11 @@ $p.iface.view_orders = function (cell) {
 
 		function create_elmnts(){
 
+			if(t.predefined_elmnts_inited){
+				$p.eve.detachEvent(t.predefined_elmnts_inited);
+				delete t.predefined_elmnts_inited;
+			}
+
 			// создадим экземпляр графического редактора
 			var _cell = t.carousel.cells("builder"),
 				obj = $p.job_prm.parse_url().obj || "doc.calc_order";
@@ -202,10 +207,10 @@ $p.iface.view_orders = function (cell) {
 
 		// Подписываемся на событие окончания загрузки локальных данных
 		// и рисум список заказов и заготовку графического редактора
-		if($p.wsql.pouch._data_loaded)
+		if($p.job_prm.builder)
 			setTimeout(create_elmnts);
 		else
-			$p.eve.attachEvent("pouch_load_data_loaded", create_elmnts);
+			t.predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", create_elmnts);
 
 
 		/**

@@ -1054,7 +1054,7 @@ Contour.prototype.__define({
 			// при необходимости устанавливаем направление открывания
 			if(this.direction.empty()){
 				this.project._dp.sys.furn_params.find_rows({
-					param: $p.cat.predefined_elmnts.predefined("Параметр_НаправлениеОткрывания")
+					param: $p.job_prm.properties.direction
 				}, function (row) {
 					this.direction = row.value;
 					return false;

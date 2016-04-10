@@ -17,8 +17,6 @@ function DimensionLine(attr){
 
 	DimensionLine.superclass.constructor.call(this, attr);
 
-	// strokeColor: consts.lgray
-
 	var _row;
 
 	this.data.pos = attr.pos;

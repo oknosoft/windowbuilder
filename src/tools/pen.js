@@ -52,7 +52,7 @@ function ToolPen(){
 		}
 
 		if(tool.profile.clr.empty())
-			tool.profile.clr = $p.cat.predefined_elmnts.predefined("Цвет_Основной");
+			tool.profile.clr = $p.job_prm.builder.base_clr;
 
 		tool.profile._metadata.fields.inset.choice_links = [{
 			name: ["selection",	"ref"],

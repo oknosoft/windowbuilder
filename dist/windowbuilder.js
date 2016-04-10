@@ -1098,7 +1098,7 @@ Contour.prototype.__define({
 			// при необходимости устанавливаем направление открывания
 			if(this.direction.empty()){
 				this.project._dp.sys.furn_params.find_rows({
-					param: $p.cat.predefined_elmnts.predefined("Параметр_НаправлениеОткрывания")
+					param: $p.job_prm.properties.direction
 				}, function (row) {
 					this.direction = row.value;
 					return false;
@@ -1478,8 +1478,6 @@ function DimensionLine(attr){
 
 
 	DimensionLine.superclass.constructor.call(this, attr);
-
-	// strokeColor: consts.lgray
 
 	var _row;
 
@@ -3363,7 +3361,7 @@ Profile.prototype.__define({
 			this.data.path.strokeWidth = 1;
 			this.data.path.strokeScaling = false;
 
-			this.clr = _row.clr.empty() ? $p.cat.predefined_elmnts.predefined("Цвет_Основной") : _row.clr;
+			this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
 			//this.data.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
 			this.addChild(this.data.path);
@@ -5727,22 +5725,6 @@ var acn,
  */
 	consts = new function Settings(){
 
-	/**
-	 * Прилипание. На этом расстоянии узел пытается прилепиться к другому узлу или элементу
-	 * @property sticking
-	 * @type {number}
-	 */
-	this.sticking = 90;
-	this.sticking_l = 7;
-	this.sticking0 = this.sticking / 2;
-	this.sticking2 = this.sticking * this.sticking;
-	this.font_size = 60;
-
-	this.lgray = new paper.Color(0.96, 0.98, 0.94, 0.96);
-
-
-	// в пределах этого угла, считаем элемент вертикальным или горизонтальным
-	this.orientation_delta = 7;
 
 	this.tune_paper = function (settings) {
 		/**
@@ -5750,8 +5732,24 @@ var acn,
 		 * @property handleSize
 		 * @type {number}
 		 */
-		settings.handleSize = 9;
-	};
+		settings.handleSize = $p.job_prm.builder.handle_size;
+
+		/**
+		 * Прилипание. На этом расстоянии узел пытается прилепиться к другому узлу или элементу
+		 * @property sticking
+		 * @type {number}
+		 */
+		this.sticking = $p.job_prm.builder.sticking || 90;
+		this.sticking_l = $p.job_prm.builder.sticking_l || 7;
+		this.sticking0 = this.sticking / 2;
+		this.sticking2 = this.sticking * this.sticking;
+		this.font_size = $p.job_prm.builder.font_size || 60;
+
+		// в пределах этого угла, считаем элемент вертикальным или горизонтальным
+		this.orientation_delta = $p.job_prm.builder.orientation_delta || 7;
+		
+
+	}.bind(this);
 
 
 
@@ -6317,7 +6315,7 @@ function ToolPen(){
 		}
 
 		if(tool.profile.clr.empty())
-			tool.profile.clr = $p.cat.predefined_elmnts.predefined("Цвет_Основной");
+			tool.profile.clr = $p.job_prm.builder.base_clr;
 
 		tool.profile._metadata.fields.inset.choice_links = [{
 			name: ["selection",	"ref"],

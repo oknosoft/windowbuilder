@@ -73,7 +73,7 @@ Profile.prototype.__define({
 			this.data.path.strokeWidth = 1;
 			this.data.path.strokeScaling = false;
 
-			this.clr = _row.clr.empty() ? $p.cat.predefined_elmnts.predefined("Цвет_Основной") : _row.clr;
+			this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
 			//this.data.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
 			this.addChild(this.data.path);

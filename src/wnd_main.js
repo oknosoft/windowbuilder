@@ -146,7 +146,7 @@ $p.iface.oninit = function() {
 	});
 
 	// Подписываемся на событие окончания загрузки локальных данных
-	var pouch_data_loaded = $p.eve.attachEvent("pouch_load_data_loaded", function () {
+	var predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", function () {
 
 		$p.iface.main.progressOff();
 
@@ -164,7 +164,7 @@ $p.iface.oninit = function() {
 			}, 100);
 		}
 
-		$p.eve.detachEvent(pouch_data_loaded);
+		$p.eve.detachEvent(predefined_elmnts_inited);
 
 	});
 
