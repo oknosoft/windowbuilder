@@ -1121,37 +1121,10 @@ $p.modifiers.push(
 $p.modifiers.push(
 	function($p){
 
-		/**
-		 * Возвращает предопределенный элемент или массив элементов
-		 * 
-		 * @param name
-		 * @return {*}
-		 */
-		// _mgr.predefined = function(name){
-		//
-		// 	if(_predefined[name])
-		// 		return _predefined[name];
-		//
-		// 	var res;
-		// 	_mgr.find_rows({name: name}, function (o) {
-		// 		res = o;
-		// 		return false;
-		// 	});
-		// 	if(res){
-		// 		if(res.elm){
-		// 			_predefined[name] = res.elm;
-		// 		}else{
-		// 			_predefined[name] = [];
-		// 			res.elmnts.each(function (row) {
-		// 				_predefined[name].push(row.elm);
-		// 			});
-		// 		}
-		// 		return _predefined[name];
-		// 	}
-		// };
-
 		// Подписываемся на событие окончания загрузки локальных данных
 		var pouch_data_loaded = $p.eve.attachEvent("pouch_load_data_loaded", function () {
+
+			$p.eve.detachEvent(pouch_data_loaded);
 
 			// читаем элементы из pouchdb и создаём свойства
 			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 300, _skip: 0 })
@@ -1204,8 +1177,6 @@ $p.modifiers.push(
 					$p.eve.callEvent("predefined_elmnts_inited");
 					
 				});
-			
-			$p.eve.detachEvent(pouch_data_loaded);
 			
 		});
 

@@ -1103,18 +1103,31 @@ Profile.prototype.__define({
 
 					// собственно, сдвиг узлов
 					free_point = segments[j].point.add(delta);
-					if(segments[j].point == this.b)
-						cnn_point = this.cnn_point("b", free_point);
 
-					else if(segments[j].point == this.e)
-						cnn_point = this.cnn_point("e", free_point);
+					if(segments[j].point == this.b){
+						cnn_point = this.rays.b;
+						if(!cnn_point.profile || paper.Key.isDown('control'))
+							cnn_point = this.cnn_point("b", free_point);
+
+					}else if(segments[j].point == this.e){
+						cnn_point = this.rays.e;
+						if(!cnn_point.profile || paper.Key.isDown('control'))
+							cnn_point = this.cnn_point("e", free_point);
+
+					}else
+						cnn_point = null;
 
 					if(cnn_point && cnn_point.cnn_types == acn.t &&
 						(segments[j].point == this.b || segments[j].point == this.e)){
 						segments[j].point = cnn_point.point;
-					}
-					else{
+
+					}else{
 						segments[j].point = free_point;
+						// если соединение угловое диагональное, тянем тянем соседние узлы сразу
+						if(cnn_point && !paper.Key.isDown('control')){
+							if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point))
+								cnn_point.profile[cnn_point.profile_point] = free_point;
+						}
 					}
 
 					// накапливаем точки в нотификаторе
