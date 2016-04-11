@@ -1443,7 +1443,7 @@ Contour.prototype.__define({
 					if(row.elm == elm.elm){
 						
 						// есть визуализация для текущего профиля
-						row.nom.visualization.draw(elm, l_vis);
+						row.nom.visualization.draw(elm, l_vis, row.len * 1000);
 						
 						return true;
 					}
@@ -2985,7 +2985,7 @@ paper.Path.prototype.__define({
 		value: function (point1, point2) {
 			var tmp;
 
-			if(point1.is_nearest(this.firstSegment.point) && point2.is_nearest(this.lastSegment.point)){
+			if(!this.length || (point1.is_nearest(this.firstSegment.point) && point2.is_nearest(this.lastSegment.point))){
 				tmp = this.clone(false);
 
 			}else if(point2.is_nearest(this.firstSegment.point) && point1.is_nearest(this.lastSegment.point)){
@@ -3121,9 +3121,13 @@ paper.Path.prototype.__define({
 				delta = 10e9, tdelta, tpoint;
 
 			if(intersections.length == 1)
-				return intersections[0].point
+				return intersections[0].point;
 
 			else if(intersections.length > 1){
+
+				if(!point)
+					point = this.getPointAt(this.length /2);
+				
 				intersections.forEach(function(o){
 					tdelta = o.point.getDistance(point, true);
 					if(tdelta < delta){
@@ -5175,8 +5179,7 @@ function Scheme(_canvas){
 			// создаём семейство конструкций
 			load_contour(null);
 
-			// авторазмерные линии
-			// находим крайние контуры
+			// TODO: перенести в отдельный объект авторазмерные линии - находим крайние контуры
 			var left, right, top, bottom;
 			_scheme.layers.forEach(function(l){
 
@@ -5193,6 +5196,7 @@ function Scheme(_canvas){
 					bottom = l;
 
 			});
+
 			// формируем авторазмеры
 			if(_scheme.layers.length == 1){
 				new DimensionLine({
@@ -5246,9 +5250,17 @@ function Scheme(_canvas){
 			setTimeout(function () {
 				_data._bounds = null;
 				_scheme.zoom_fit();
+
+				// виртуальное событие, чтобы UndoRedo сделал начальный снапшот
 				$p.eve.callEvent("scheme_changed", [_scheme]);
+
+				// виртуальное событие, чтобы активировать слой у вереве слоёв
 				if(_scheme.layers.length)
 					$p.eve.callEvent("layer_activated", [_scheme.layers[0]]);
+
+				// виртуальное событие, чтобы нарисовать визуализацию
+				$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+
 				delete _data._loading;
 				delete _data._snapshot;
 			}, 100);

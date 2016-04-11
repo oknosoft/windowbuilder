@@ -454,7 +454,9 @@ $p.modifiers.push(
 						row_spec.qty = 0;
 						row_spec.totqty = 1;
 						row_spec.totqty1 = 1;
-						//row_spec.Комментарий = Стр.Формула;
+						if(!row_spec.nom.visualization.empty())
+							row_spec.dop = -1;
+
 					}else{
 						row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
 						calc_count_area_mass(row_spec);
@@ -582,11 +584,59 @@ $p.modifiers.push(
 							// расчет координаты и (или) визуализации
 							if(dop_row.is_procedure_row){
 
-								var invert = false,
+								var invert = contour.direction == $p.enm.open_directions.Правое,
 									invert_nearest = false,
 									coordin = 0,
-									elm = contour.profile_by_furn_side(row.side, cache),
-									len = elm._row.len;
+									elm = contour.profile_by_furn_side(dop_row.side, cache),
+									len = elm._row.len,
+									sizefurn = elm.nom.sizefurn,
+									dx0 = (len - elm.data._len) / 2,
+									dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
+									faltz = len - 2 * sizefurn;
+
+								if(dop_row.offset_option == $p.enm.offset_options.Формула){
+
+
+								}else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
+									coordin = faltz + dop_row.contraction;
+
+								}else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
+									// строим горизонтальную линию от нижней границы контура, находим пересечение и offset
+									var bounds = contour.profile_bounds,
+										hor = new paper.Path({
+											insert: false,
+											segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
+										});
+
+									coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor));
+
+								}else{
+
+									if(invert){
+
+										if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+
+
+										}else{
+
+										}
+
+									}else{
+
+										if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+
+
+										}else{
+
+										}
+									}
+								}
+
+								var procedure_row = res.add(dop_row);
+								procedure_row.origin = furn_set;
+								procedure_row.handle_height_min = elm.elm;
+								procedure_row.handle_height_max = contour.cnstr;
+								procedure_row.coefficient = coordin;
 
 								return;
 
@@ -596,10 +646,15 @@ $p.modifiers.push(
 							// в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
 							if(dop_row.is_set_row){
 								furn_get_spec(contour, cache, dop_row.nom_set).each(function (sub_row) {
-									if(!sub_row.quantity)
+
+									if(sub_row.is_procedure_row)
+										res.add(sub_row);
+
+									else if(!sub_row.quantity)
 										return;
 
-									res.add(sub_row).quantity = dop_row.quantity * sub_row.quantity;
+									res.add(sub_row).quantity = row.quantity * sub_row.quantity;
+
 								});
 							}else{
 								res.add(dop_row).origin = furn_set;
@@ -611,10 +666,15 @@ $p.modifiers.push(
 					// в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
 					if(row.is_set_row){
 						furn_get_spec(contour, cache, row.nom_set).each(function (sub_row) {
-							if(!sub_row.quantity)
+
+							if(sub_row.is_procedure_row)
+								res.add(sub_row);
+
+							else if(!sub_row.quantity)
 								return;
 
 							res.add(sub_row).quantity = row.quantity * sub_row.quantity;
+
 						});
 					}else{
 						res.add(row).origin = furn_set;

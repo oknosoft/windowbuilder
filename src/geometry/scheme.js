@@ -315,8 +315,7 @@ function Scheme(_canvas){
 			// создаём семейство конструкций
 			load_contour(null);
 
-			// авторазмерные линии
-			// находим крайние контуры
+			// TODO: перенести в отдельный объект авторазмерные линии - находим крайние контуры
 			var left, right, top, bottom;
 			_scheme.layers.forEach(function(l){
 
@@ -333,6 +332,7 @@ function Scheme(_canvas){
 					bottom = l;
 
 			});
+
 			// формируем авторазмеры
 			if(_scheme.layers.length == 1){
 				new DimensionLine({
@@ -386,9 +386,17 @@ function Scheme(_canvas){
 			setTimeout(function () {
 				_data._bounds = null;
 				_scheme.zoom_fit();
+
+				// виртуальное событие, чтобы UndoRedo сделал начальный снапшот
 				$p.eve.callEvent("scheme_changed", [_scheme]);
+
+				// виртуальное событие, чтобы активировать слой у вереве слоёв
 				if(_scheme.layers.length)
 					$p.eve.callEvent("layer_activated", [_scheme.layers[0]]);
+
+				// виртуальное событие, чтобы нарисовать визуализацию
+				$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+
 				delete _data._loading;
 				delete _data._snapshot;
 			}, 100);

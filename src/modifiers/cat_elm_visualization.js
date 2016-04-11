@@ -16,7 +16,9 @@ $p.modifiers.push(
 		_mgr._obj_сonstructor.prototype.__define({
 
 			draw: {
-				value: function (elm, layer) {
+				value: function (elm, layer, offset) {
+
+					var subpath;
 
 					if(this.svg_path.indexOf('{"method":') == 0){
 
@@ -27,10 +29,10 @@ $p.modifiers.push(
 
 						if(attr.method == "subpath_outer"){
 
-							var subpath = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2)).equidistant(attr.offset || 10);
+							subpath = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2)).equidistant(attr.offset || 10);
 
 							subpath.parent = layer._by_spec;
-							subpath.strokeWidth = attr.strokeWidth || 10;
+							subpath.strokeWidth = attr.strokeWidth || 4;
 							subpath.strokeColor = attr.strokeColor || 'red';
 							subpath.strokeCap = attr.strokeCap || 'round';
 							if(attr.dashArray)
@@ -38,6 +40,32 @@ $p.modifiers.push(
 
 						}
 						
+					}else if(this.svg_path){
+						subpath = new paper.CompoundPath({
+							pathData: this.svg_path,
+							parent: layer._by_spec,
+							strokeColor: 'black',
+							strokeScaling: false
+							//pivot: [this.cx, this.cy]
+						});
+
+						if(this.elm_side == -1){
+							// в середине элемента
+							var p0 = elm.generatrix.getPointAt(offset || 0),
+								p1 = elm.rays.inner.getNearestPoint(p0),
+								p2 = elm.rays.outer.getNearestPoint(p0);
+							subpath.position = p1.add(p2).divide(2);
+
+						}else if(!this.elm_side){
+							// изнутри
+							subpath.position = elm.rays.inner.getNearestPoint(elm.generatrix.getPointAt(offset || 0));
+
+						}else{
+							// снаружи
+							subpath.position = elm.rays.outer.getNearestPoint(elm.generatrix.getPointAt(offset || 0));
+						}
+
+
 					}
 
 				}

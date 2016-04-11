@@ -1399,7 +1399,7 @@ Contour.prototype.__define({
 					if(row.elm == elm.elm){
 						
 						// есть визуализация для текущего профиля
-						row.nom.visualization.draw(elm, l_vis);
+						row.nom.visualization.draw(elm, l_vis, row.len * 1000);
 						
 						return true;
 					}
