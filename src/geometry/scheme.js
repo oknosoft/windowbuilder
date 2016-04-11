@@ -632,13 +632,35 @@ Scheme.prototype.__define({
 	 * Двигает выделенные точки путей либо все точки выделенных элементов
 	 * @method move_points
 	 * @for Scheme
+	 * @param delta {paper.Point}
+	 * @param [all_points] {Boolean}
 	 */
 	move_points: {
 		value: function (delta, all_points) {
+
+			var other = [];
+
 			this.selectedItems.forEach(function (item) {
+
 				if(item.parent instanceof Profile){
-					if(!item.layer.parent || !item.parent.nearest())
-						item.parent.move_points(delta, all_points);
+					if(!item.layer.parent || !item.parent.nearest()){
+
+						var check_selected;
+						item.segments.forEach(function (segm) {
+							if(segm.selected && other.indexOf(segm) != -1)
+								check_selected = !(segm.selected = false);
+						});
+
+						// если уже двигали и не осталось ни одного выделенного - выходим
+						if(check_selected && item.segments.some(function (segm) {
+								return segm.selected;
+							}))
+							return;
+
+						// двигаем и накапливаем связанные
+						other = other.concat(item.parent.move_points(delta, all_points));
+
+					}
 
 				}else if(item instanceof Filling){
 					//item.position = item.position.add(delta);

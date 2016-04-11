@@ -4368,65 +4368,67 @@ Profile.prototype.__define({
 	 */
 	move_points: {
 		value:  function(delta, all_points, start_point){
-			var segments = this.generatrix.segments,
-				changed, cnn_point, free_point, j,
+			var changed, 
+				other = [],
 				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points, notifier;
 
 			// если не выделено ни одного сегмента, двигаем все сегменты
 			if(!all_points){
-				for (j = 0; j < segments.length; j++) {
-					if (segments[j].selected){
-						changed = true;
-						break;
-					}
-				}
-				all_points = !changed;
+				all_points = !this.generatrix.segments.some(function (segm) {
+					if (segm.selected)
+						return true;
+				});
 			}
+			
+			this.generatrix.segments.forEach(function (segm) {
 
-			changed = false;
-			for (j = 0; j < segments.length; j++) {
-				if (segments[j].selected || all_points){
+				var cnn_point, free_point;
+				
+				if (segm.selected || all_points){
 
-					noti_points = {old: segments[j].point.clone(), delta: delta};
+					noti_points = {old: segm.point.clone(), delta: delta};
 
 					// собственно, сдвиг узлов
-					free_point = segments[j].point.add(delta);
+					free_point = segm.point.add(delta);
 
-					if(segments[j].point == this.b){
+					if(segm.point == this.b){
 						cnn_point = this.rays.b;
-						if(!cnn_point.profile || paper.Key.isDown('control'))
+						if(!cnn_point.profile_point || paper.Key.isDown('control'))
 							cnn_point = this.cnn_point("b", free_point);
 
-					}else if(segments[j].point == this.e){
+					}else if(segm.point == this.e){
 						cnn_point = this.rays.e;
-						if(!cnn_point.profile || paper.Key.isDown('control'))
+						if(!cnn_point.profile_point || paper.Key.isDown('control'))
 							cnn_point = this.cnn_point("e", free_point);
 
-					}else
-						cnn_point = null;
+					}
 
 					if(cnn_point && cnn_point.cnn_types == acn.t &&
-						(segments[j].point == this.b || segments[j].point == this.e)){
-						segments[j].point = cnn_point.point;
+						(segm.point == this.b || segm.point == this.e)){
+						segm.point = cnn_point.point;
 
 					}else{
-						segments[j].point = free_point;
+						segm.point = free_point;
 						// если соединение угловое диагональное, тянем тянем соседние узлы сразу
 						if(cnn_point && !paper.Key.isDown('control')){
-							if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point))
+							if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
+								other.push(cnn_point.profile_point == "b" ? cnn_point.profile.data.generatrix.firstSegment : cnn_point.profile.data.generatrix.lastSegment );
 								cnn_point.profile[cnn_point.profile_point] = free_point;
+							}								
 						}
 					}
 
 					// накапливаем точки в нотификаторе
-					noti_points.new = segments[j].point;
+					noti_points.new = segm.point;
 					if(start_point)
 						noti_points.start = start_point;
 					noti.points.push(noti_points);
 
 					changed = true;
 				}
-			}
+				
+			}.bind(this));
+
 
 			if(changed){
 
@@ -4442,6 +4444,8 @@ Profile.prototype.__define({
 				notifier.notify({ type: 'update', name: "y2" });
 
 			}
+			
+			return other;
 		},
 		enumerable : false
 	},
@@ -5488,13 +5492,35 @@ Scheme.prototype.__define({
 	 * Двигает выделенные точки путей либо все точки выделенных элементов
 	 * @method move_points
 	 * @for Scheme
+	 * @param delta {paper.Point}
+	 * @param [all_points] {Boolean}
 	 */
 	move_points: {
 		value: function (delta, all_points) {
+
+			var other = [];
+
 			this.selectedItems.forEach(function (item) {
+
 				if(item.parent instanceof Profile){
-					if(!item.layer.parent || !item.parent.nearest())
-						item.parent.move_points(delta, all_points);
+					if(!item.layer.parent || !item.parent.nearest()){
+
+						var check_selected;
+						item.segments.forEach(function (segm) {
+							if(segm.selected && other.indexOf(segm) != -1)
+								check_selected = !(segm.selected = false);
+						});
+
+						// если уже двигали и не осталось ни одного выделенного - выходим
+						if(check_selected && item.segments.some(function (segm) {
+								return segm.selected;
+							}))
+							return;
+
+						// двигаем и накапливаем связанные
+						other = other.concat(item.parent.move_points(delta, all_points));
+
+					}
 
 				}else if(item instanceof Filling){
 					//item.position = item.position.add(delta);
