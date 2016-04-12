@@ -27,6 +27,8 @@ function Scheme(_canvas){
 			_update_timer: 0
 		},
 		_changes = [],
+		
+		// наблюдатель за изменениями свойств изделия
 		_dp_observer = function (changes) {
 
 			if(_data._loading || _data._snapshot)
@@ -60,6 +62,20 @@ function Scheme(_canvas){
 						evented = true;
 					}
 
+				}
+			});
+		},
+
+		// наблюдатель за изменениями параметров створки
+		_papam_observer = function (changes) {
+
+			if(_data._loading || _data._snapshot)
+				return;
+
+			changes.some(function(change){
+				if(change.tabular == "params"){
+					_scheme.register_change();
+					return true;
 				}
 			});
 		};
@@ -139,16 +155,21 @@ function Scheme(_canvas){
 	 */
 	this.__define("ox", {
 		get: function () {
-			return _scheme._dp.characteristic;
+			return this._dp.characteristic;
 		},
 		set: function (v) {
 
+			
+			var _dp = this._dp,
+				setted;
+			
+			// пытаемся отключить обсервер от табчасти
+			Object.unobserve(_dp.characteristic, _papam_observer);
+
 			// устанавливаем в _dp характеристику
-			var _dp = _scheme._dp;
 			_dp.characteristic = v;
 
-			var ox = _dp.characteristic,
-				setted;
+			var ox = _dp.characteristic;
 
 			_dp.clr = ox.clr;
 			_dp.len = ox.x;
@@ -207,7 +228,9 @@ function Scheme(_canvas){
 				type: 'rows',
 				tabular: 'extra_fields'
 			});
-			
+
+			// начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
+			Object.observe(ox, _papam_observer, ["row", "rows"]);
 			
 		},
 		enumerable: false
@@ -569,9 +592,11 @@ function Scheme(_canvas){
 	 * Деструктор
 	 */
 	this.unload = function () {
+		_data._loading = true;
 		this.clear();
 		this.remove();
 		Object.unobserve(this._dp, _dp_observer);
+		Object.unobserve(this._dp.characteristic, _papam_observer);
 		this.data._calc_order_row = null;
 	};
 

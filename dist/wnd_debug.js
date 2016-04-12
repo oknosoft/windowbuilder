@@ -691,6 +691,13 @@ $p.modifiers.push(
 							pivot: [0, 0]
 						});
 
+						var angle_hor = elm.generatrix.getTangentAt(offset).angle;
+						if((this.rotate != -1 || elm.orientation == $p.enm.orientations.Горизонтальная) && angle_hor != this.angle_hor){
+							subpath.rotation = angle_hor - this.angle_hor;
+						}
+
+						offset += elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
+
 						if(this.elm_side == -1){
 							// в середине элемента
 							var p0 = elm.generatrix.getPointAt(offset || 0),
@@ -708,10 +715,7 @@ $p.modifiers.push(
 							subpath.position = elm.rays.outer.getNearestPoint(elm.generatrix.getPointAt(offset || 0));
 						}
 
-						var angle_hor = elm.generatrix.getTangentAt(offset).angle;
-						if(this.rotate != -1 && angle_hor != this.angle_hor){
-							subpath.rotation = angle_hor - this.angle_hor;
-						}
+
 
 
 					}
@@ -3258,19 +3262,19 @@ $p.modifiers.push(
 									if(invert){
 
 										if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
-
+											coordin = dop_row.contraction;
 
 										}else{
-
+											coordin = len - dop_row.contraction;
 										}
 
 									}else{
 
 										if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
-
+											coordin = len - dop_row.contraction;
 
 										}else{
-
+											coordin = dop_row.contraction;
 										}
 									}
 								}

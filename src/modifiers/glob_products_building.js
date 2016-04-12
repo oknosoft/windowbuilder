@@ -615,19 +615,19 @@ $p.modifiers.push(
 									if(invert){
 
 										if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
-
+											coordin = dop_row.contraction;
 
 										}else{
-
+											coordin = len - dop_row.contraction;
 										}
 
 									}else{
 
 										if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
-
+											coordin = len - dop_row.contraction;
 
 										}else{
-
+											coordin = dop_row.contraction;
 										}
 									}
 								}
