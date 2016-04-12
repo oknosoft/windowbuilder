@@ -128,7 +128,7 @@ function EditorAccordion(_editor, cell_acc) {
 
 			function layer_text(layer, bounds){
 				if(!bounds)
-					bounds = layer.bounds;
+					bounds = layer.profile_bounds;
 				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr + " " + bounds.width.toFixed() + "х" + bounds.height.toFixed();
 			}
 
@@ -182,28 +182,6 @@ function EditorAccordion(_editor, cell_acc) {
 
 
 			tree.enableTreeImages(false);
-
-
-			//tree.enableDragAndDrop(true, false);
-			//tree.setDragHandler(function(){ return false; });
-			//tree.dragger.addDragLanding(tb_bottom.cell, {
-			//	_drag : function(sourceHtmlObject, dhtmlObject, targetHtmlObject){
-			//		tb_bottom.buttons["delete"].style.backgroundColor="";
-			//		$p.msg.show_msg({type: "alert-warning",
-			//			text: sourceHtmlObject.parentObject.id,
-			//			title: $p.msg.main_title});
-			//	},
-			//	_dragIn : function(dst, src, x, y, ev){
-			//		if(tb_bottom.buttons["delete"] == ev.target || tb_bottom.buttons["delete"] == ev.target.parentElement){
-			//			tb_bottom.buttons["delete"].style.backgroundColor="#fffacd";
-			//			return dst;
-			//		}
-			//	},
-			//	_dragOut : function(htmlObject){
-			//		tb_bottom.buttons["delete"].style.backgroundColor="";
-			//		return this;
-			//	}
-			//});
 
 
 			this.drop_layer = function () {
@@ -266,19 +244,31 @@ function EditorAccordion(_editor, cell_acc) {
 
 			// делаем выделенный слой активным
 			tree.attachEvent("onSelect", function(id){
-				var l = _editor.project.getItem({cnstr: Number(id)});
-				if(l)
-					l.activate();
+				var contour = _editor.project.getItem({cnstr: Number(id)});
+				if(contour){
+					contour.activate();
+					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
+				}
 			});
 
-			$p.eve.attachEvent("layer_activated", function (l) {
-				if(l && l.cnstr && l.cnstr != tree.getSelectedItemId())
-					tree.selectItem(l.cnstr);
+			$p.eve.attachEvent("layer_activated", function (contour) {
+				if(contour && contour.cnstr && contour.cnstr != tree.getSelectedItemId()){
+					tree.selectItem(contour.cnstr);
+					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
+				}
+
 			});
 
 			// начинаем следить за изменениями размеров при перерисовке контуров
 			$p.eve.attachEvent("contour_redrawed", function (contour, bounds) {
-				tree.setItemText(contour.cnstr, layer_text(contour, bounds));
+
+				var text = layer_text(contour, bounds);
+
+				tree.setItemText(contour.cnstr, text);
+
+				if(contour.project.activeLayer == contour)
+					cont.querySelector("[name=header_stv]").innerHTML = text;
+
 			});
 
 		},
@@ -420,7 +410,7 @@ function EditorAccordion(_editor, cell_acc) {
 					value: function (do_reload) {
 						if(do_reload)
 							_grid.reload();
-						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 21 + "px";
+						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + "px";
 						layout.setSizes();
 						_grid.objBox.style.width = "100%";
 					}

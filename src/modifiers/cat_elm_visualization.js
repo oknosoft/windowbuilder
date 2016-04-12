@@ -41,12 +41,14 @@ $p.modifiers.push(
 						}
 						
 					}else if(this.svg_path){
+
 						subpath = new paper.CompoundPath({
 							pathData: this.svg_path,
 							parent: layer._by_spec,
 							strokeColor: 'black',
-							strokeScaling: false
-							//pivot: [this.cx, this.cy]
+							fillColor: 'white',
+							strokeScaling: false,
+							pivot: [0, 0]
 						});
 
 						if(this.elm_side == -1){
@@ -54,6 +56,7 @@ $p.modifiers.push(
 							var p0 = elm.generatrix.getPointAt(offset || 0),
 								p1 = elm.rays.inner.getNearestPoint(p0),
 								p2 = elm.rays.outer.getNearestPoint(p0);
+
 							subpath.position = p1.add(p2).divide(2);
 
 						}else if(!this.elm_side){
@@ -63,6 +66,11 @@ $p.modifiers.push(
 						}else{
 							// снаружи
 							subpath.position = elm.rays.outer.getNearestPoint(elm.generatrix.getPointAt(offset || 0));
+						}
+
+						var angle_hor = elm.generatrix.getTangentAt(offset).angle;
+						if(this.rotate != -1 && angle_hor != this.angle_hor){
+							subpath.rotation = angle_hor - this.angle_hor;
 						}
 
 

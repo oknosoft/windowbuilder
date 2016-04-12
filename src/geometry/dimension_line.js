@@ -138,12 +138,15 @@ DimensionLine.prototype.__define({
 
 
 			if(delta.length){
+
 				paper.project.deselect_all_points();
+
 				paper.project.getItems({class: Profile}).forEach(function (p) {
 					if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0 && Math.abs(p.e[xy] - _bounds[event.name]) < consts.sticking0){
 						p.generatrix.segments.forEach(function (segm) {
 							segm.selected = true;
 						})
+
 					}else if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0){
 						p.generatrix.firstSegment.selected = true;
 
@@ -151,13 +154,14 @@ DimensionLine.prototype.__define({
 						p.generatrix.lastSegment.selected = true;
 
 					}
+
 				});
-				paper.project.move_points(delta);
+				this.project.move_points(delta);
 				setTimeout(function () {
-					paper.project.deselect_all_points(true);
-					paper.project.register_update();
-					//paper.project.zoom_fit();
-				}, 200);
+					this.deselect_all_points(true);
+					this.register_update();
+					//this.zoom_fit();
+				}.bind(this.project), 200);
 			}
 		},
 		enumerable: false

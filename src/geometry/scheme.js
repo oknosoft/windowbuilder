@@ -660,7 +660,7 @@ Scheme.prototype.__define({
 						});
 
 						// если уже двигали и не осталось ни одного выделенного - выходим
-						if(check_selected && item.segments.some(function (segm) {
+						if(check_selected && !item.segments.some(function (segm) {
 								return segm.selected;
 							}))
 							return;

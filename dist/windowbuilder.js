@@ -489,7 +489,7 @@ Contour.prototype.__define({
 			});
 
 			// перерисовываем размерные линии
-			var _bounds = this.bounds;
+			var _bounds = this.profile_bounds;
 			this.l_dimensions.children.forEach(function(elm) {
 					elm.redraw(_bounds);
 			});
@@ -1600,12 +1600,15 @@ DimensionLine.prototype.__define({
 
 
 			if(delta.length){
+
 				paper.project.deselect_all_points();
+
 				paper.project.getItems({class: Profile}).forEach(function (p) {
 					if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0 && Math.abs(p.e[xy] - _bounds[event.name]) < consts.sticking0){
 						p.generatrix.segments.forEach(function (segm) {
 							segm.selected = true;
 						})
+
 					}else if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0){
 						p.generatrix.firstSegment.selected = true;
 
@@ -1613,13 +1616,14 @@ DimensionLine.prototype.__define({
 						p.generatrix.lastSegment.selected = true;
 
 					}
+
 				});
-				paper.project.move_points(delta);
+				this.project.move_points(delta);
 				setTimeout(function () {
-					paper.project.deselect_all_points(true);
-					paper.project.register_update();
-					//paper.project.zoom_fit();
-				}, 200);
+					this.deselect_all_points(true);
+					this.register_update();
+					//this.zoom_fit();
+				}.bind(this.project), 200);
 			}
 		},
 		enumerable: false
@@ -5524,7 +5528,7 @@ Scheme.prototype.__define({
 						});
 
 						// если уже двигали и не осталось ни одного выделенного - выходим
-						if(check_selected && item.segments.some(function (segm) {
+						if(check_selected && !item.segments.some(function (segm) {
 								return segm.selected;
 							}))
 							return;
@@ -6867,18 +6871,17 @@ ToolRuler.prototype.__define({
 					})
 				});
 
-				paper.project.move_points(delta);
+				this.project.move_points(delta);
 				setTimeout(function () {
-					paper.project.deselectAll();
+					this.project.deselectAll();
 					this.selected.a.forEach(function (p) {
 						p.path.selected = true;
 					});
 					this.selected.b.forEach(function (p) {
 						p.path.selected = true;
 					});
-					paper.project.register_update();
-				}
-					.bind(this), 200);
+					this.project.register_update();
+				}.bind(this), 200);
 			}
 
 		},
@@ -6929,8 +6932,8 @@ function RulerWnd(options){
 	$p.wsql.restore_options("editor", options);
 	options.wnd.on_close = function () {
 
-		if(wnd.elmnts.calck && wnd.elmnts.calck.removeSelf)
-			wnd.elmnts.calck.removeSelf();
+		if(wnd.elmnts.calck && wnd.elmnts.calck.obj && wnd.elmnts.calck.obj.removeSelf)
+			wnd.elmnts.calck.obj.removeSelf();
 
 		$p.eve.detachEvent(wnd_keydown);
 
@@ -7764,7 +7767,7 @@ function EditorAccordion(_editor, cell_acc) {
 
 			function layer_text(layer, bounds){
 				if(!bounds)
-					bounds = layer.bounds;
+					bounds = layer.profile_bounds;
 				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr + " " + bounds.width.toFixed() + "х" + bounds.height.toFixed();
 			}
 
@@ -7818,28 +7821,6 @@ function EditorAccordion(_editor, cell_acc) {
 
 
 			tree.enableTreeImages(false);
-
-
-			//tree.enableDragAndDrop(true, false);
-			//tree.setDragHandler(function(){ return false; });
-			//tree.dragger.addDragLanding(tb_bottom.cell, {
-			//	_drag : function(sourceHtmlObject, dhtmlObject, targetHtmlObject){
-			//		tb_bottom.buttons["delete"].style.backgroundColor="";
-			//		$p.msg.show_msg({type: "alert-warning",
-			//			text: sourceHtmlObject.parentObject.id,
-			//			title: $p.msg.main_title});
-			//	},
-			//	_dragIn : function(dst, src, x, y, ev){
-			//		if(tb_bottom.buttons["delete"] == ev.target || tb_bottom.buttons["delete"] == ev.target.parentElement){
-			//			tb_bottom.buttons["delete"].style.backgroundColor="#fffacd";
-			//			return dst;
-			//		}
-			//	},
-			//	_dragOut : function(htmlObject){
-			//		tb_bottom.buttons["delete"].style.backgroundColor="";
-			//		return this;
-			//	}
-			//});
 
 
 			this.drop_layer = function () {
@@ -7902,19 +7883,31 @@ function EditorAccordion(_editor, cell_acc) {
 
 			// делаем выделенный слой активным
 			tree.attachEvent("onSelect", function(id){
-				var l = _editor.project.getItem({cnstr: Number(id)});
-				if(l)
-					l.activate();
+				var contour = _editor.project.getItem({cnstr: Number(id)});
+				if(contour){
+					contour.activate();
+					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
+				}
 			});
 
-			$p.eve.attachEvent("layer_activated", function (l) {
-				if(l && l.cnstr && l.cnstr != tree.getSelectedItemId())
-					tree.selectItem(l.cnstr);
+			$p.eve.attachEvent("layer_activated", function (contour) {
+				if(contour && contour.cnstr && contour.cnstr != tree.getSelectedItemId()){
+					tree.selectItem(contour.cnstr);
+					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
+				}
+
 			});
 
 			// начинаем следить за изменениями размеров при перерисовке контуров
 			$p.eve.attachEvent("contour_redrawed", function (contour, bounds) {
-				tree.setItemText(contour.cnstr, layer_text(contour, bounds));
+
+				var text = layer_text(contour, bounds);
+
+				tree.setItemText(contour.cnstr, text);
+
+				if(contour.project.activeLayer == contour)
+					cont.querySelector("[name=header_stv]").innerHTML = text;
+
 			});
 
 		},
@@ -8056,7 +8049,7 @@ function EditorAccordion(_editor, cell_acc) {
 					value: function (do_reload) {
 						if(do_reload)
 							_grid.reload();
-						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 21 + "px";
+						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + "px";
 						layout.setSizes();
 						_grid.objBox.style.width = "100%";
 					}

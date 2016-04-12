@@ -445,7 +445,7 @@ Contour.prototype.__define({
 			});
 
 			// перерисовываем размерные линии
-			var _bounds = this.bounds;
+			var _bounds = this.profile_bounds;
 			this.l_dimensions.children.forEach(function(elm) {
 					elm.redraw(_bounds);
 			});

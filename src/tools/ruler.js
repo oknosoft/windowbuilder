@@ -187,18 +187,17 @@ ToolRuler.prototype.__define({
 					})
 				});
 
-				paper.project.move_points(delta);
+				this.project.move_points(delta);
 				setTimeout(function () {
-					paper.project.deselectAll();
+					this.project.deselectAll();
 					this.selected.a.forEach(function (p) {
 						p.path.selected = true;
 					});
 					this.selected.b.forEach(function (p) {
 						p.path.selected = true;
 					});
-					paper.project.register_update();
-				}
-					.bind(this), 200);
+					this.project.register_update();
+				}.bind(this), 200);
 			}
 
 		},
@@ -249,8 +248,8 @@ function RulerWnd(options){
 	$p.wsql.restore_options("editor", options);
 	options.wnd.on_close = function () {
 
-		if(wnd.elmnts.calck && wnd.elmnts.calck.removeSelf)
-			wnd.elmnts.calck.removeSelf();
+		if(wnd.elmnts.calck && wnd.elmnts.calck.obj && wnd.elmnts.calck.obj.removeSelf)
+			wnd.elmnts.calck.obj.removeSelf();
 
 		$p.eve.detachEvent(wnd_keydown);
 
