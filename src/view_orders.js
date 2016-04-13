@@ -112,9 +112,9 @@ $p.iface.view_orders = function (cell) {
 
 		function create_elmnts(){
 
-			if(t.predefined_elmnts_inited){
-				$p.eve.detachEvent(t.predefined_elmnts_inited);
-				delete t.predefined_elmnts_inited;
+			if(t.init_event_id){
+				$p.eve.detachEvent(t.init_event_id);
+				delete t.init_event_id;
 			}
 
 			// создадим экземпляр графического редактора
@@ -210,7 +210,7 @@ $p.iface.view_orders = function (cell) {
 		if($p.job_prm.builder)
 			setTimeout(create_elmnts);
 		else
-			t.predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", create_elmnts);
+			t.init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", create_elmnts);
 
 
 		/**

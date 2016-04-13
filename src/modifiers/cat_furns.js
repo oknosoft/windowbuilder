@@ -21,7 +21,7 @@ $p.modifiers.push(
 
 
 		// методы объекта
-		_mgr._obj_сonstructor.prototype.__define({
+		_mgr._obj_constructor.prototype.__define({
 
 			/**
 			 * Перезаполняет табчасть параметров указанного контура

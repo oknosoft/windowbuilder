@@ -12,7 +12,7 @@ $p.modifiers.push(
 
 		var _mgr = $p.cat.inserts;
 
-		_mgr._obj_сonstructor.prototype.__define({
+		_mgr._obj_constructor.prototype.__define({
 
 			/**
 			 * Возвращает номенклатуру вставки в завсисмости от свойств элемента
@@ -35,7 +35,7 @@ $p.modifiers.push(
 					if(!main_rows.length && this.specification.count())
 						main_rows.push(this.specification.get(0));
 
-					if(main_rows.length && main_rows[0].nom instanceof _mgr._obj_сonstructor)
+					if(main_rows.length && main_rows[0].nom instanceof _mgr._obj_constructor)
 						_nom = main_rows[0].nom.nom();
 
 					else if(main_rows.length)

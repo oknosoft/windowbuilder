@@ -172,7 +172,7 @@ $p.modifiers.push(
 
 		// публичные методы объекта
 
-		_mgr._obj_сonstructor.prototype.__define({
+		_mgr._obj_constructor.prototype.__define({
 
 			/**
 			 * Возвращает основную строку спецификации соединения между элементами

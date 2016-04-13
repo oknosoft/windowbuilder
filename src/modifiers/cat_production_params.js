@@ -12,7 +12,7 @@ $p.modifiers.push(
 
 		var _mgr = $p.cat.production_params;
 
-		_mgr._obj_сonstructor.prototype.__define({
+		_mgr._obj_constructor.prototype.__define({
 
 			/**
 			 * возвращает доступные в данной системе элементы

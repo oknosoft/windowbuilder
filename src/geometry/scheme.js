@@ -716,13 +716,19 @@ Scheme.prototype.__define({
 			if(!this.bounds)
 				return;
 
-			// устанавливаем размеры в характеристике
 			var ox = this.ox;
-			ox.cnn_elmnts.clear();
-			ox.glasses.clear();
+
+			// переводим характеристику в тихий режим, чтобы она не создавала лишнего шума при изменениях
+			ox._silent();
+
+			// устанавливаем размеры в характеристике
 			ox.x = this.bounds.width.round(1);
 			ox.y = this.bounds.height.round(1);
 			ox.s = this.area;
+
+			// чистим табчасти, которые будут перезаполнены
+			ox.cnn_elmnts.clear();
+			ox.glasses.clear();
 
 			// смещаем слои, чтобы расположить изделие в начале координат
 			//var bpoint = this.bounds.point;
@@ -733,6 +739,7 @@ Scheme.prototype.__define({
 			//	this.data._bounds = null;
 			//};
 
+			// вызываем метод save_coordinates в дочерних слоях
 			this.layers.forEach(function (contour) {
 				contour.save_coordinates();
 			});

@@ -98,9 +98,7 @@ $p.iface.oninit = function() {
 	};
 
 	// подписываемся на событие готовности метаданных, после которого рисуем интерфейс
-	var dt = Date.now();
 	$p.eve.attachEvent("meta", function () {
-		console.log(Date.now() - dt);
 
 		// гасим заставку
 		document.body.removeChild(document.querySelector("#builder_splash"));

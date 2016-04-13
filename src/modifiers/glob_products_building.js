@@ -995,7 +995,8 @@ $p.modifiers.push(
 				//console.profile();
 
 
-				ox = scheme.ox;
+				// ссылки для быстрого доступа к свойствам обхекта продукции
+				ox = scheme.ox;					
 				spec = ox.specification;
 				constructions = ox.constructions;
 				coordinates = ox.coordinates;
@@ -1003,7 +1004,7 @@ $p.modifiers.push(
 				glass_specification = ox.glass_specification;
 				glass_formulas = {};
 				params = ox.params;
-
+				
 				// чистим спецификацию
 				spec.clear();
 
@@ -1023,6 +1024,22 @@ $p.modifiers.push(
 
 				
 				// рассчитываем цены
+
+				// типы цен получаем заранее, т.к. они пригодятся при расчете корректировки спецификации
+				var prm = {
+					calc_order_row: ox.calc_order_row,
+					spec: spec
+				};
+				$p.pricing.price_type(prm);
+
+				// производим корректировку спецификации с возможным вытягиванием строк в заказ и удалением строк из заказа
+				$p.spec_building.specification_adjustment(prm);
+
+				// рассчитываем плановую себестоимость
+				$p.pricing.calc_first_cost(prm);
+
+				// рассчитываем стоимость продажи
+				$p.pricing.calc_amount(prm);
 
 
 				// информируем мир о завершении пересчета

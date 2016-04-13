@@ -78,7 +78,7 @@ $p.modifiers.push(
 		});
 
 		// при установке нового номера
-		_mgr._obj_сonstructor.prototype.__define({
+		_mgr._obj_constructor.prototype.__define({
 			new_number_doc: {
 
 				value: function () {
@@ -88,7 +88,7 @@ $p.modifiers.push(
 						code_length = obj._metadata.code_length - prefix.length,
 						part;
 
-					return $p.wsql.pouch.local[obj._manager.cachable].query("doc_calc_order/number_doc",
+					return obj._manager.pouch_db.query("doc_calc_order/number_doc",
 						{
 							limit : 1,
 							include_docs: false,

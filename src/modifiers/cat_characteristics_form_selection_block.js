@@ -85,13 +85,13 @@ $p.modifiers.push(
 
 					calc_order: {
 						get: function () {
-							return _mgr._obj_сonstructor.prototype._getter.call(this, "calc_order");
+							return _mgr._obj_constructor.prototype._getter.call(this, "calc_order");
 						},
 
 						set: function (v) {
 							if(this._obj.calc_order == v)
 								return;
-							_mgr._obj_сonstructor.prototype.__setter.call(this, "calc_order", v);
+							_mgr._obj_constructor.prototype.__setter.call(this, "calc_order", v);
 
 							if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount())
 								wnd.elmnts.filter.call_event();

@@ -12,9 +12,9 @@
 $p.modifiers.push(
 	function($p){
 
-		$p.spec_building = new SpecBuilding($p);
+		$p.spec_building = new SpecBuilding();
 
-		function SpecBuilding($p){
+		function SpecBuilding(){
 
 			/**
 			 * Рассчитывает спецификацию в строке документа Расчет
@@ -24,6 +24,25 @@ $p.modifiers.push(
 			 */
 			this.calc_row_spec = function (prm, cancel) {
 
+			};
+
+			/**
+			 * Аналог УПзП-шного РассчитатьСпецификацию_пзКорректировкаСпецификации
+			 * @param attr
+			 */
+			this.specification_adjustment = function (attr) {
+
+				var adel = [];
+				
+				// удаляем строки, добавленные предыдущими корректировками
+				attr.spec.find_rows({ch: {in: [-1,-2]}}, function (row) {
+					adel.push(row);
+				});
+				adel.forEach(function (row) {
+					attr.spec.del(row, true);	
+				});
+				
+				
 			}
 
 		}

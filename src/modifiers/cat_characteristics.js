@@ -23,7 +23,7 @@ $p.modifiers.push(
 			
 		});
 
-		_mgr._obj_сonstructor.prototype.__define({
+		_mgr._obj_constructor.prototype.__define({
 			
 			calc_order_row: {
 				get: function () {
