@@ -2609,7 +2609,6 @@ $p.modifiers.push(
 			 */
 			this.price_type = function (prm) {
 
-				// first_cost_price_type = $p.job_prm.pricing.first_cost_price_type;
 				// Рез = Новый Структура("КМарж, КМаржМин, КМаржВнутр, Скидка, СкидкаВнешн, НаценкаВнешн, ТипЦенСебестоимость, ТипЦенПрайс, ТипЦенВнутр,
 				// 				|Формула, ФормулаПродажа, ФормулаВнутр, ФормулаВнешн",
 				// 				1.9, 1.2, 1.5, 0, 10, 0, ТипЦенПоУмолчанию, ТипЦенПоУмолчанию, ТипЦенПоУмолчанию, "", "", "",);
@@ -2620,15 +2619,30 @@ $p.modifiers.push(
 					discount: 0,
 					discount_external: 10,
 					extra_charge_external: 0,
-					price_type_first_cost: $p.job_prm.pricing.first_cost_price_type,
-					price_type_sale: $p.job_prm.pricing.first_cost_price_type,
-					price_type_internal: $p.job_prm.pricing.first_cost_price_type,
+					price_type_first_cost: $p.job_prm.pricing.price_type_first_cost,
+					price_type_sale: $p.job_prm.pricing.price_type_first_cost,
+					price_type_internal: $p.job_prm.pricing.price_type_first_cost,
 					formula: "",
 					sale_formula: "",
 					internal_formula: "",
 					external_formula: ""
 				};
-				
+
+				var filter = prm.calc_order_row.nom.price_group.empty() ?
+					{price_group: prm.calc_order_row.nom.price_group} :
+					{price_group: {in: [prm.calc_order_row.nom.price_group, $p.cat.price_groups.get()]}},
+					ares = [];
+
+				$p.ireg.margin_coefficients.find_rows(filter, function (row) {
+					ares.push(row);
+				});
+
+				// заглушка - фильтр только по ценовой группе
+				if(ares.length)
+					Object.keys(prm.price_type).forEach(function (key) {
+						prm.price_type[key] = ares[0][key];
+					});
+
 				return prm.price_type;
 			};
 

@@ -111,8 +111,8 @@
 .header__title {
     position: relative;
     z-index: 2;
-	height: 30px;
-	line-height: 28px;
+	height: 29px;
+	line-height: 27px;
     width: 100%;
     margin: 0;
 	padding-left: 8px;
@@ -123,11 +123,7 @@
 	border: 1px solid #cccccc;
 
 	color: #333333;
-	/*
-	font-family: Arial;
-	font-size: 13px;
-	font-weight: bold;
-	*/
+	font-size: 90%;
 
     opacity: 1;
     cursor: pointer;

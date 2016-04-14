@@ -421,6 +421,10 @@ Contour.prototype.__define({
 					on_contour_redrawed();
 			}
 
+			// чистим визуализацию
+			if(this.l_visualization._by_spec)
+				this.l_visualization._by_spec.removeChildren();
+
 			// сначала перерисовываем все профили контура
 			profiles.forEach(function(element) {
 				element.redraw();

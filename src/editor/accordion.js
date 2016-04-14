@@ -401,6 +401,12 @@ function EditorAccordion(_editor, cell_acc) {
 						else
 							_grid.attach(attr);
 
+						if(!obj.parent){
+							var rids = _grid.getAllRowIds();
+							if(rids)
+								_grid.closeItem(rids.split(",")[0]);
+						}
+
 						setTimeout(t.set_sizes, 200);
 					}
 				},

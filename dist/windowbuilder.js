@@ -465,6 +465,10 @@ Contour.prototype.__define({
 					on_contour_redrawed();
 			}
 
+			// чистим визуализацию
+			if(this.l_visualization._by_spec)
+				this.l_visualization._by_spec.removeChildren();
+
 			// сначала перерисовываем все профили контура
 			profiles.forEach(function(element) {
 				element.redraw();
@@ -8071,6 +8075,12 @@ function EditorAccordion(_editor, cell_acc) {
 							_grid = layout.cells("a").attachHeadFields(attr);
 						else
 							_grid.attach(attr);
+
+						if(!obj.parent){
+							var rids = _grid.getAllRowIds();
+							if(rids)
+								_grid.closeItem(rids.split(",")[0]);
+						}
 
 						setTimeout(t.set_sizes, 200);
 					}
