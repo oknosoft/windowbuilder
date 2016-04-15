@@ -959,8 +959,8 @@ $p.modifiers.push(
 		};
 
 
-		// публичные поля и методы
-
+		// публичные методы объекта
+		
 	}
 );
 /**
@@ -2590,13 +2590,73 @@ $p.modifiers.push(
 
 		$p.pricing = new Pricing($p);
 
+		// методы ценообразования в прототип номенклатуры
+		$p.cat.nom._obj_constructor.prototype.__define({
+
+			/**
+			 * Возвращает цену номенклатуры указанного типа
+			 * - на дату
+			 * - с подбором характеристики по цвету
+			 * - с пересчетом из валюты в валюту
+			 */
+			_price: {
+				value: function (attr) {
+					
+					if(!attr)
+						attr = {};
+
+					if(!attr.price_type)
+						attr.price_type = $p.job_prm.pricing.price_type_sale;
+					else if($p.is_data_obj(attr.price_type))
+						attr.price_type = attr.price_type.ref;
+
+					if(!attr.characteristic)
+						attr.characteristic = $p.blank.guid;
+					else if($p.is_data_obj(attr.characteristic))
+						attr.characteristic = attr.characteristic.ref;
+
+					if(!attr.currency || attr.currency.empty())
+						attr.currency = $p.job_prm.pricing.main_currency;
+
+					if(!attr.date)
+						attr.date = new Date();
+
+					var price = 0, currency, date = $p.blank.date;
+
+					if(this._data._price){
+						if(this._data._price[attr.characteristic]){
+							if(this._data._price[attr.characteristic][attr.price_type]){
+								this._data._price[attr.characteristic][attr.price_type].forEach(function (row) {
+									if(row.date > date && row.date <= attr.date){
+										price = row.price;
+										currency = row.currency;
+									}
+								})
+							}
+						}else if(attr.clr){
+
+						}
+					}
+
+					// Пересчитать из валюты в валюту
+					if(currency && currency != attr.currency){
+
+					}
+					
+					return price;
+
+				}
+			}
+		});
+
+
 
 		function Pricing($p){
 
-			var _cache;
-
 			/**
 			 * Возвращает цену номенклатуры по типу цен из регистра пзМаржинальныеКоэффициентыИСкидки
+			 * Если в маржинальных коэффициентах или номенклатуре указана формула - выполняет
+			 *
 			 * Аналог УПзП-шного __ПолучитьЦенуНоменклатуры__
 			 * @method nom_price
 			 * @param nom
@@ -2607,6 +2667,17 @@ $p.modifiers.push(
 			 */
 			this.nom_price = function (nom, characteristic, price_type, prm, row) {
 
+				if(row && prm){
+					var calc_order = prm.calc_order_row._owner._owner;
+					row.price = nom._price({
+						price_type: price_type,
+						characteristic: characteristic,
+						date: calc_order.date,
+						currency: calc_order.contract.settlements_currency
+					});
+
+					return row.price;
+				}
 			};
 
 			/**
@@ -2664,6 +2735,24 @@ $p.modifiers.push(
 			 */
 			this.calc_first_cost = function (prm) {
 
+				var marginality_in_spec = $p.job_prm.pricing.marginality_in_spec,
+					fake_row = {};
+
+				if(!prm.spec)
+					return;
+
+				prm.spec.each(function (row) {
+
+					$p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_first_cost, prm, row);
+					row.amount = row.price * row.totqty1;
+
+					if(marginality_in_spec){
+						fake_row._mixin(row, ["nom"]);
+						tmp_price = $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_sale, prm, fake_row);
+						row.amount_marged = (tmp_price ? tmp_price : row.price) * row.totqty1;
+					}
+
+				});
 			};
 
 			/**
@@ -2679,39 +2768,37 @@ $p.modifiers.push(
 			// виртуальный срез последних
 			function build_cache() {
 
-				var _tmp = {};
-
 				return $p.doc.nom_prices_setup.pouch_db.query("nom_prices_setup/slice_last",
 					{
 						limit : 1000,
 						include_docs: false,
-						startkey: '',
-						endkey: '\uffff'
+						startkey: [''],
+						endkey: ['\uffff'],
+						reduce: function(keys, values, rereduce) {
+							return values.length;
+						}
 					})
 					.then(function (res) {
 						res.rows.forEach(function (row) {
-							var keys = row.key.split("|"),
-								key = keys[0] + "|" + keys[1] + "|" + keys[2];
 
-							if(!_tmp[key])
-								_tmp[key] = [];
+							var onom = $p.cat.nom.get(row.key[0], false, true);
 
-							_tmp[key].push({
-								date: new Date(keys[3]),
+							if(!onom._data._price)
+								onom._data._price = {};
+
+							if(!onom._data._price[row.key[1]])
+								onom._data._price[row.key[1]] = {};
+
+							if(!onom._data._price[row.key[1]][row.key[2]])
+								onom._data._price[row.key[1]][row.key[2]] = [];
+
+							onom._data._price[row.key[1]][row.key[2]].push({
+								date: new Date(row.value.date),
 								price: row.value.price,
 								currency: $p.cat.currencies.get(row.value.currency)
 							});
 
 						});
-					})
-					.then(function () {
-						if(_cache){
-							Object.keys(_cache).forEach(function (key) {
-								delete _cache[key];
-							});
-						}
-						_cache = _tmp;
-						_tmp = null;
 					});
 			}
 
