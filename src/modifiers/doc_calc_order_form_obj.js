@@ -86,7 +86,7 @@ $p.modifiers.push(
 				 */
 				wnd.elmnts.statusbar = wnd.attachStatusBar({text: "<div></div>"});
 				wnd.elmnts.svgs = new $p.iface.OSvgs($p.doc.calc_order, wnd, wnd.elmnts.statusbar);
-				wnd.elmnts.svgs.reload(o.ref);
+				wnd.elmnts.svgs.reload(o);
 
 			};
 
@@ -667,6 +667,9 @@ $p.modifiers.push(
 				row.discount_percent_internal = dp.discount_percent_internal;
 				if(row.unit.owner != row.nom)
 					row.unit = row.nom.storage_unit;
+				
+				// обновляем эскизы
+				wnd.elmnts.svgs.reload(o);
 				
 			}
 

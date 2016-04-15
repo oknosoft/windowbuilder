@@ -1051,18 +1051,18 @@ $p.modifiers.push(
 				if(attr.save){
 
 					// сохраняем картинку вместе с изделием
-					var svg = scheme.get_svg();
-					
 					ox.save(undefined, undefined, {
 							svg: {
 								"content_type": "image/svg+xml",
-								"data": new Blob([svg], {type: "image/svg+xml"})
+								"data": new Blob([scheme.get_svg()], {type: "image/svg+xml"})
 							}
-					})
+						})
 						.then(function () {
 							$p.msg.show_msg("Спецификация рассчитана");
+							delete scheme.data._saving;
 							$p.eve.callEvent("characteristic_saved", [scheme, attr]);
 						});
+
 				}
 
 			});

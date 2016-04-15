@@ -652,7 +652,8 @@ function Scheme(_canvas){
 			if(l instanceof Contour)
 				l.draw_visualization();
 		});
-		_scheme.register_update();
+		_scheme.view.update();
+		
 	});
 	
 	redraw();
@@ -720,6 +721,8 @@ Scheme.prototype.__define({
 
 			// переводим характеристику в тихий режим, чтобы она не создавала лишнего шума при изменениях
 			ox._silent();
+
+			this.data._saving = true;
 
 			// устанавливаем размеры в характеристике
 			ox.x = this.bounds.width.round(1);

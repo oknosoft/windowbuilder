@@ -422,7 +422,7 @@ Contour.prototype.__define({
 			}
 
 			// чистим визуализацию
-			if(this.l_visualization._by_spec)
+			if(!this.project.data._saving && this.l_visualization._by_spec)
 				this.l_visualization._by_spec.removeChildren();
 
 			// сначала перерисовываем все профили контура

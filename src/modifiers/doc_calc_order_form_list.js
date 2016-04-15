@@ -107,6 +107,12 @@ $p.modifiers.push(
 			wnd.elmnts.filter.custom_selection._view = filter_view;
 			wnd.elmnts.filter.custom_selection._key = filter_key;
 
+			// картинка заказа в статусбаре
+			wnd.elmnts.svgs = new $p.iface.OSvgs($p.doc.calc_order, wnd, wnd.elmnts.status_bar);
+			wnd.elmnts.grid.attachEvent("onRowSelect", function (rid) {
+				wnd.elmnts.svgs.reload(rid);
+			});
+
 			// настраиваем дерево
 			tree.enableTreeImages(false);
 			tree.parse($p.injected_data["tree_filteres.xml"]);
@@ -117,7 +123,7 @@ $p.modifiers.push(
 				if(_mgr.class_name == class_name){
 					wnd.elmnts.grid.reload()
 						.then(function () {
-							wnd.elmnts.grid.selectRowById(ref);
+							wnd.elmnts.grid.selectRowById(ref, false, true, true);
 						});
 				}
 			});

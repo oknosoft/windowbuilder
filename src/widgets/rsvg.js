@@ -42,11 +42,11 @@ $p.iface.OSvgs = function (manager, layout, area) {
 	var t = this,
 		minmax = document.createElement('div'),
 		pics_area = document.createElement('div'),
-		stack = [],
+		stack = [], reload_id,
 		area_hidden = $p.wsql.get_user_param("svgs_area_hidden", "boolean"),
 		area_text = area.querySelector(".dhx_cell_statusbar_text");
 
-	if(area_text)
+	if(area_text && area_text.innerHTML == "<div></div>")
 		area_text.style.display = "none";
 
 	pics_area.className = 'svgs-area';
@@ -93,40 +93,69 @@ $p.iface.OSvgs = function (manager, layout, area) {
 
 	function draw_svgs(res){
 
-		var i, svg_elm;
-
 		$p.iface.clear_svgs(pics_area);
 
-		if(!res.svgs.length){
+		res.forEach(function (svg) {
+			if(!svg || svg.substr(0, 1) != "<")
+				return;
+			var svg_elm = document.createElement("div");
+			pics_area.appendChild(svg_elm);
+			svg_elm.style["float"] = "left";
+			svg_elm.innerHTML = $p.iface.scale_svg(svg, 88, 22);
+		});
+
+		if(!res.length){
 			// возможно, стоит показать надпись, что нет эскизов
-		}else
-			for(i in res.svgs){
-				if(!res.svgs[i] || res.svgs[i].substr(0, 1) != "<")
-					continue;
-				svg_elm = document.createElement("div");
-				pics_area.appendChild(svg_elm);
-				svg_elm.style["float"] = "left";
-				svg_elm.innerHTML = $p.iface.scale_svg(res.svgs[i], 88, 22);
-			}
+		}
 	}
 
 	this.reload = function (ref) {
 
-		if(ref)
+		if(ref){
 			stack.push(ref);
+			ref = null;
+		}
+
+		if(reload_id)
+			clearTimeout(reload_id);
 
 		if(!area_hidden)
-			setTimeout(function(){
+			reload_id = setTimeout(function(){
 				if(stack.length){
-					//manager.save({
-					//		ref: stack.pop(),
-					//		specify: "order_pics",
-					//		action: "calc",
-					//		async: true
-					//	})
-					//	.then(draw_svgs)
-					//	.catch($p.record_log);
-					//stack.length = 0;
+
+					// Получаем табчасть заказа
+					var _obj = stack.pop();
+
+					if (typeof _obj == "string")
+						_obj = $p.doc.calc_order.pouch_db.get(manager.class_name + "|" + _obj);
+					else
+						_obj = Promise.resolve({production: _obj.production._obj});
+
+					_obj.then(function (res) {
+							// Для продукций заказа получаем вложения
+							var aatt = [];
+							res.production.forEach(function (row) {
+								if(!$p.is_empty_guid(row.characteristic))
+									aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg").catch(function (err) {
+
+									}));
+							});
+							_obj = null;
+							return Promise.all(aatt);
+						})
+						.then(function (res) {
+							// Извлекаем из блоба svg-текст эскизов
+							var aatt = [];
+							res.forEach(function (row) {
+								if(row instanceof Blob && row.size)
+									aatt.push($p.blob_as_text(row));
+							});
+							return Promise.all(aatt);
+						})
+						.then(draw_svgs)
+						.catch($p.record_log);
+
+					stack.length = 0;
 				}
 			}, 300);
 	}
