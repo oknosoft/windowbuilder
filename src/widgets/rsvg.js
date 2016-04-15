@@ -100,7 +100,8 @@ $p.iface.OSvgs = function (manager, layout, area) {
 				return;
 			var svg_elm = document.createElement("div");
 			pics_area.appendChild(svg_elm);
-			svg_elm.style["float"] = "left";
+			svg_elm.style.float = "left";
+			svg_elm.style.marginLeft = "4px";
 			svg_elm.innerHTML = $p.iface.scale_svg(svg, 88, 22);
 		});
 
