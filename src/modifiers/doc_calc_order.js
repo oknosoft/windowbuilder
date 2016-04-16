@@ -68,17 +68,36 @@ $p.modifiers.push(
 
 		// при изменении реквизита
 		_mgr.attache_event("value_change", function (attr) {
+			
+			// реквизиты шапки
 			if(attr.field == "organization" && this.contract.organization != attr.value){
 				this.contract = $p.cat.contracts.by_partner_and_org(this.partner, attr.value);
 
 			}else if(attr.field == "partner" && this.contract.owner != attr.value){
 				this.contract = $p.cat.contracts.by_partner_and_org(attr.value, this.organization);
+				
+			// табчасть продукции
+			}else if(attr.tabular_section == "production"){
 
+				if(attr.field == "nom" || attr.field == "characteristic"){
+					
+				}else if(attr.field == "price" || attr.field == "price_internal" || attr.field == "quantity"){
+					
+					attr.row[attr.field] = attr.value;
+					
+					attr.row.amount = (attr.row.price * attr.row.quantity).round(2);
+					attr.row.amount_internal = (attr.row.price_internal * attr.row.quantity).round(2);
+
+					this.doc_amount = this.production.aggregate([], ["amount"]);
+				}
+				
 			}
 		});
 
-		// при установке нового номера
+
 		_mgr._obj_constructor.prototype.__define({
+
+			// при установке нового номера
 			new_number_doc: {
 
 				value: function () {
@@ -109,7 +128,16 @@ $p.modifiers.push(
 							return obj;
 						});
 				}
+			},
+
+			// валюту документа получаем из договора
+			doc_currency: {
+				get: function () {
+					return this.contract.settlements_currency;
+				}
 			}
+
+
 		});
 
 	}

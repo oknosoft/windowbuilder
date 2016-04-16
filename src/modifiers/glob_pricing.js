@@ -95,7 +95,7 @@ $p.modifiers.push(
 						price_type: price_type,
 						characteristic: characteristic,
 						date: calc_order.date,
-						currency: calc_order.contract.settlements_currency
+						currency: calc_order.doc_currency
 					});
 
 					return row.price;
@@ -209,10 +209,22 @@ $p.modifiers.push(
 
 				// КМарж в строке расчета
 				prm.calc_order_row.marginality = prm.calc_order_row.first_cost ? prm.calc_order_row.price / prm.calc_order_row.first_cost : 0;
+				
 
 				// TODO: Рассчитаем цену и сумму ВНУТР или ДИЛЕРСКУЮ цену и скидку
 
 				// TODO: вытягивание строк спецификации в заказ
+
+				// Эмулируем событие окончания редактирования, чтобы единообразно пересчитать строку табчасти
+				if(!prm.hand_start){
+					$p.doc.calc_order.handle_event(prm.calc_order_row._owner._owner, "value_change", {
+						field: "price",
+						value: prm.calc_order_row.price,
+						tabular_section: "production",
+						row: prm.calc_order_row
+					});
+				}
+
 
 
 			};
