@@ -2729,6 +2729,8 @@ $p.modifiers.push(
 
 			/**
 			 * Рассчитывает плановую себестоимость строки документа Расчет
+			 * Если есть спецификация, расчет ведется по ней. Иначе - по номенклатуре строки расчета
+			 *
 			 * Аналог УПзП-шного __РассчитатьПлановуюСебестоимость__
 			 * @param prm {Object}
 			 * @param prm.calc_order_row {TabularSectionRow.doc.calc_order.production}
@@ -2741,27 +2743,55 @@ $p.modifiers.push(
 				if(!prm.spec)
 					return;
 
-				prm.spec.each(function (row) {
+				// пытаемся рассчитать по спецификации
+				if(prm.spec.count()){
+					prm.spec.each(function (row) {
 
-					$p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_first_cost, prm, row);
-					row.amount = row.price * row.totqty1;
+						$p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_first_cost, prm, row);
+						row.amount = row.price * row.totqty1;
 
-					if(marginality_in_spec){
-						fake_row._mixin(row, ["nom"]);
-						tmp_price = $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_sale, prm, fake_row);
-						row.amount_marged = (tmp_price ? tmp_price : row.price) * row.totqty1;
-					}
+						if(marginality_in_spec){
+							fake_row._mixin(row, ["nom"]);
+							tmp_price = $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_sale, prm, fake_row);
+							row.amount_marged = (tmp_price ? tmp_price : row.price) * row.totqty1;
+						}
 
-				});
+					});
+					prm.calc_order_row.first_cost = prm.spec.aggregate([], ["amount"]).round(2);
+				}else{
+					// TODO: реализовать расчет себестомиости по номенклатуре строки расчета
+				}
+				
+				
+				
+				
 			};
 
 			/**
 			 * Рассчитывает стоимость продажи в строке документа Расчет
+			 * 
 			 * Аналог УПзП-шного __РассчитатьСтоимостьПродажи__
 			 * @param prm {Object}
 			 * @param prm.calc_order_row {TabularSectionRow.doc.calc_order.production}
 			 */
 			this.calc_amount = function (prm) {
+
+				// TODO: реализовать расчет цены продажи по номенклатуре строки расчета
+				var price_cost = $p.job_prm.pricing.marginality_in_spec ? prm.spec.aggregate([], ["amount_marged"]) : 0;
+
+				// цена продажи
+				if(price_cost)
+					prm.calc_order_row.price = price_cost.round(2);
+				else
+					prm.calc_order_row.price = (prm.calc_order_row.first_cost * prm.price_type.marginality).round(2);
+
+				// КМарж в строке расчета
+				prm.calc_order_row.marginality = prm.calc_order_row.first_cost ? prm.calc_order_row.price / prm.calc_order_row.first_cost : 0;
+
+				// TODO: Рассчитаем цену и сумму ВНУТР или ДИЛЕРСКУЮ цену и скидку
+
+				// TODO: вытягивание строк спецификации в заказ
+
 
 			};
 
