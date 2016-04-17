@@ -9101,7 +9101,7 @@ Editor.prototype.__define({
  * Экспортируем конструктор Editor, чтобы экземпляры построителя можно было создать снаружи
  * @property Editor
  * @for $p
- * @type {Editor}
+ * @type {function}
  */
 if(typeof $p !== "undefined")
 	$p.Editor = Editor;

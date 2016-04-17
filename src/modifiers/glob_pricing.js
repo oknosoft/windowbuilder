@@ -247,6 +247,9 @@ $p.modifiers.push(
 
 							var onom = $p.cat.nom.get(row.key[0], false, true);
 
+							if(!onom || !onom._data)
+								return;
+							
 							if(!onom._data._price)
 								onom._data._price = {};
 

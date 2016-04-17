@@ -16,7 +16,7 @@ $p.modifiers.push(
 			$p.eve.detachEvent(pouch_data_loaded);
 
 			// читаем элементы из pouchdb и создаём свойства
-			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 300, _skip: 0 })
+			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
 				.then(function (rows) {
 
 					var parents = {};
@@ -63,7 +63,10 @@ $p.modifiers.push(
 						});
 					}, 500);
 
-					$p.eve.callEvent("predefined_elmnts_inited");
+					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
+					setTimeout(function () {
+						$p.eve.callEvent("predefined_elmnts_inited");
+					}, 100);
 					
 				});
 			
