@@ -94,7 +94,7 @@ $p.modifiers.push(
 			}
 		});
 
-
+		// свойства и методы объекта
 		_mgr._obj_constructor.prototype.__define({
 
 			// при установке нового номера
@@ -134,6 +134,82 @@ $p.modifiers.push(
 			doc_currency: {
 				get: function () {
 					return this.contract.settlements_currency;
+				}
+			},
+
+			print_data: {
+				get: function () {
+					var res = {
+						АдресДоставки: "",
+						ВалютаДокумента: this.doc_currency.presentation,
+						ДатаЗаказаФорматD: $p.dateFormat(this.date, $p.dateFormat.masks.short_ru),
+						ДатаЗаказаФорматDD: $p.dateFormat(this.date, $p.dateFormat.masks.longDate),
+						ДатаТекущаяФорматD: $p.dateFormat(new Date(), $p.dateFormat.masks.short_ru),
+						ДатаТекущаяФорматDD: $p.dateFormat(new Date(), $p.dateFormat.masks.longDate),
+						ДоговорДатаФорматD: $p.dateFormat(this.contract.date.valueOf() == $p.blank.date.valueOf() ? this.date : this.contract.date, $p.dateFormat.masks.short_ru),
+						ДоговорДатаФорматDD: $p.dateFormat(this.contract.date.valueOf() == $p.blank.date.valueOf() ? this.date : this.contract.date, $p.dateFormat.masks.longDate),
+						ДоговорНомер: this.contract.number_doc ? this.contract.number_doc : this.number_doc,
+						ДоговорСрокДействия: $p.dateFormat(this.contract.validity, $p.dateFormat.masks.short_ru),
+						ЗаказНомер: this.number_doc,
+						Контрагент: this.partner.presentation,
+						КонтрагентДокумент: "",
+						КонтрагентКЛДолжность: "",
+						КонтрагентКЛДолжностьРП: "",
+						КонтрагентКЛИмя: "",
+						КонтрагентКЛИмяРП: "",
+						КонтрагентКЛК: "",
+						КонтрагентКЛОснованиеРП: "",
+						КонтрагентКЛОтчество: "",
+						КонтрагентКЛОтчествоРП: "",
+						КонтрагентКЛФамилия: "",
+						КонтрагентКЛФамилияРП: "",
+						КонтрагентЮрФизЛицо: "",
+						КратностьВзаиморасчетов: this.settlements_multiplicity,
+						КурсВзаиморасчетов: this.settlements_course,
+						ЛистКомплектацииГруппы: "",
+						ЛистКомплектацииСтроки: "",
+						Организация: this.organization.presentation,
+						ОрганизацияГород: this.organization.contact_information._obj.reduce(function (val, row) { return val || row.city }, "") || "Москва",
+						ОрганизацияБанкБИК: "",
+						ОрганизацияБанкГород: "",
+						ОрганизацияБанкКоррСчет: "",
+						ОрганизацияБанкНаименование: "",
+						ОрганизацияБанкНомерСчета: "",
+						ОрганизацияИндивидуальныйПредприниматель: "",
+						ОрганизацияИНН: "",
+						ОрганизацияКПП: "",
+						ОрганизацияСвидетельствоДатаВыдачи: "",
+						ОрганизацияСвидетельствоКодОргана: "",
+						ОрганизацияСвидетельствоНаименованиеОргана: "",
+						ОрганизацияСвидетельствоСерияНомер: "",
+						ОрганизацияЮрФизЛицо: "",
+						ОрганизацияЛоготип: "",
+						Продукция: [],
+						Проект: "",
+						СистемыПрофилей: "",
+						СистемыФурнитуры: "",
+						Сотрудник: this.manager.presentation,
+						СотрудникДолжность: this.manager.individual_person.Должность,
+						СотрудникДолжностьРП: this.manager.individual_person.ДолжностьРП,
+						СотрудникИмя: this.manager.individual_person.Имя,
+						СотрудникИмяРП: this.manager.individual_person.ИмяРП,
+						СотрудникОснованиеРП: this.manager.individual_person.ОснованиеРП,
+						СотрудникОтчество: this.manager.individual_person.Отчество,
+						СотрудникОтчествоРП: this.manager.individual_person.ОтчествоРП,
+						СотрудникФамилия: this.manager.individual_person.Фамилия,
+						СотрудникФамилияРП: this.manager.individual_person.ФамилияРП,
+						СотрудникФИОРП: this.manager.individual_person.ФамилияРП + " " + this.manager.individual_person.ИмяРП + " " + this.manager.individual_person.ОтчествоРП,
+						СуммаВключаетНДС: this.contract.vat_included,
+						СуммаДокумента: this.doc_amount,
+						СуммаДокументаПрописью: this.doc_amount,
+						СуммаНДС: "",
+						ТелефонПоАдресуДоставки: this.phone,
+						УчитыватьНДС: this.contract.vat_consider
+					};
+					
+					// СвойствоХарактеристикастроения: "",
+					
+					return Promise.resolve(res);
 				}
 			}
 

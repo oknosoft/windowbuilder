@@ -10,7 +10,17 @@ var templates = this._template.content.children,
 	header = templates.header,
 	doc = new $p.SpreadsheetDocument();
 
-// выводим заголовок
-doc.put(dhx4.template(header.innerHTML, obj), header.attributes);
+// получаем данные печати
+return obj.print_data.then(function (print_data) {
 
-return Promise.resolve(doc);
+	// выводим заголовок
+	doc.put(dhx4.template(header.innerHTML, print_data), header.attributes);
+
+	// выводим табличную часть
+
+
+	// выводим подвал
+
+	return doc;
+
+});
