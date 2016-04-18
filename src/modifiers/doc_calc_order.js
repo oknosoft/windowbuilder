@@ -201,7 +201,7 @@ $p.modifiers.push(
 						СотрудникФИОРП: this.manager.individual_person.ФамилияРП + " " + this.manager.individual_person.ИмяРП + " " + this.manager.individual_person.ОтчествоРП,
 						СуммаВключаетНДС: this.contract.vat_included,
 						СуммаДокумента: this.doc_amount,
-						СуммаДокументаПрописью: this.doc_amount,
+						СуммаДокументаПрописью: this.doc_amount.in_words(),
 						СуммаНДС: "",
 						ТелефонПоАдресуДоставки: this.phone,
 						УчитыватьНДС: this.contract.vat_consider
