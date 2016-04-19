@@ -450,9 +450,9 @@ Contour.prototype.__define({
 
 			// перерисовываем размерные линии
 			var _bounds = this.profile_bounds;
-			this.l_dimensions.children.forEach(function(elm) {
-					elm.redraw(_bounds);
-			});
+			for(var i = this.l_dimensions.children.length -1; i >=0; i--){
+				this.l_dimensions.children[i].redraw(_bounds);
+			}
 
 			// информируем мир о новых размерах нашего контура
 			$p.eve.callEvent("contour_redrawed", [this, _bounds]);

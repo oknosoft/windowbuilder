@@ -246,20 +246,22 @@ $p.modifiers.push(
 						break;
 
 					case 'btn_calendar':
-						caltndar_new_event();
+						calendar_new_event();
 						break;
 
 					case 'btn_go_connection':
 						go_connection();
 						break;
-
 				}
+
+				if(btn_id.substr(0,4)=="prn_")
+					_mgr.print(o, btn_id, wnd);
 			}
 
 			/**
 			 * создаёт событие календаря
 			 */
-			function caltndar_new_event(){
+			function calendar_new_event(){
 				$p.msg.show_not_implemented();
 			}
 

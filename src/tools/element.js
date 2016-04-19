@@ -19,15 +19,19 @@ ToolElement.prototype.__define({
 	detache_wnd: {
 		value: function(){
 			if(this.wnd){
+				
 				if(this._grid && this._grid.destructor){
-					this.wnd.detachObject();
+					if(this.wnd.detachObject)
+						this.wnd.detachObject();
 					delete this._grid;
 				}
+				
 				if(this.wnd.wnd_options){
 					this.wnd.wnd_options(this.options.wnd);
 					$p.wsql.save_options("editor", this.options);
 					this.wnd.close();
 				}
+				
 				delete this.wnd;
 			}
 			this.profile = null;

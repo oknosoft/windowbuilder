@@ -1062,9 +1062,42 @@ Profile.prototype.__define({
 	 */
 	corns: {
 		value: function(corn){
+			
 			if(typeof corn == "number")
 				return this.data._corns[corn];
-			else{
+				
+			else if(corn instanceof paper.Point){
+				
+				var res = {dist: Infinity, profile: this};
+				
+				for(var i = 1; i<5; i++){
+					if(this.data._corns[i].getDistance(corn) < res.dist){
+						res.dist = this.data._corns[i].getDistance(corn);
+						res.point = this.data._corns[i];
+						res.point_name = i;
+					}
+				}
+				
+				if(res.point.is_nearest(this.b))
+					res.point_name = "b";
+
+				else if(res.point.is_nearest(this.e))
+					res.point_name = "e";
+
+				else if(this.b.getDistance(corn) < res.dist){
+					res.dist = this.b.getDistance(corn);
+					res.point = this.b;
+					res.point_name = "b";
+
+				}else if(this.e.getDistance(corn) < res.dist){
+					res.dist = this.e.getDistance(corn);
+					res.point = this.e;
+					res.point_name = "e";
+				}
+				
+				return res;
+				
+			}else{
 				var index = corn.substr(corn.length-1, 1),
 					axis = corn.substr(corn.length-2, 1);
 				return this.data._corns[index][axis];

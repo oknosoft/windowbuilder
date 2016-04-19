@@ -15,16 +15,28 @@
 
         }
         body {
-            width: 88%;
-            margin: 0 4% 0 8%;
+            width: 210mm;
+            margin-left: auto;
+            margin-right: auto;
             overflow: hidden;
             color: rgb(48, 57, 66);
             font-family: Arial, sans-serif;
-            font-size: 100%;
+            font-size: 11pt;
             text-rendering: optimizeLegibility;
         }
 
-        /* Многоуровневый список*/
+        /* Таблица */
+        table.border {
+            border-collapse: collapse; border: 1px solid;
+        }
+        table.border > tbody > tr > td,
+        table.border > tr > td,
+        table.border td,
+        table.border th{
+            border: 1px solid;
+        }
+
+        /* Многоуровневый список */
         ol {
             counter-reset: li;
             list-style: none;

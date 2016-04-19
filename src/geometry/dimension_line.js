@@ -25,6 +25,11 @@ function DimensionLine(attr){
 	this.data.p1 = attr.p1 || "b";
 	this.data.p2 = attr.p2 || "e";
 
+	if(!this.data.pos && (!this.data.elm1 || !this.data.elm2)){
+		this.remove();
+		return null;
+	}
+
 	this.__define({
 		_row: {
 			get: function () {

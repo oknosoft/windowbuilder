@@ -105,14 +105,7 @@ function ToolPen(){
 				decorate_layers();
 		});
 	}
-
-	tool.resetHot = function(type, event, mode) {
-	};
-	tool.testHot = function(type, event, mode) {
-		/*	if (mode != 'tool-select')
-		 return false;*/
-		return tool.hitTest(event);
-	};
+	
 	tool.hitTest = function(event) {
 		// var hitSize = 4.0; // / view.zoom;
 		var hitSize = 4;
