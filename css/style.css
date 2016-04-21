@@ -519,8 +519,10 @@ span.arrow2 {
 }
 .work-section-grid p {
 	color: #7b7b7b;
-	font-size:1.2em;
+	font-size:1.1em;
 	font-weight:400;
+	text-align: left;
+	padding-bottom: .4em;
 }
 a.work {
 	color: #fff;
@@ -982,9 +984,6 @@ span.locate img {
 	}
 	.work-section-grid {
 		margin-top: 6.5em;
-	}
-	.work-section-grid p {
-		margin-bottom: 5em;
 	}
 	.happy-clients-grid h4 {
 		font-size: 0.95em;
