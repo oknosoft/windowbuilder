@@ -51,7 +51,6 @@ label{
 	width: 100%;
 	background: #fff;
 	box-shadow: 0 0 20px rgba(0,0,0,.1);
-	transition: height 1s;
 }
 #site-navbar {
 	transition: margin-top 1s;
@@ -488,10 +487,13 @@ i.s6 {
 	font-weight: 600;
 	padding: 0.5em;
 }
-.work-section-head p {
+.work-section-head p, .work-section-head ul {
 	color: #394b50;
-	font-size: 1.3em;
-	font-weight: 500;
+	font-size: 1.2em;
+	font-weight: 400;
+}
+.work-section-head ul {
+	list-style-position: inside;
 }
 .work-section-grid {
 	margin-top:8em;
@@ -859,10 +861,7 @@ span.locate img {
 }
 @media screen and (max-width: 1280px) { 
 	.top-menu ul li a {
-		font-size: 0.951em;
-	}
-	.header {
-		padding: 1.7em 0;
+		font-size: 1.1em;
 	}
 	h1 {
 		font-size: 1.4em;
@@ -888,9 +887,6 @@ span.locate img {
 	}
 	.top-menu ul li a:hover {
 		padding: 6px 13px;
-	}
-	.header {
-		padding: 1.5em 0;
 	}
 	h1 {
 		font-size: 1.4em;
@@ -921,9 +917,6 @@ span.locate img {
 	}
 	.service-section-head h3,.price-section-head h3,.work-section-head h3,.happy-clients-head h3,.contact-section-head h3 {
 		font-size: 1.9em;
-	}
-	.service-section-head p,.price-section-head p,.work-section-head p,.happy-clients-head p,.contact-section-head p {
-		font-size: 1.2em;
 	}
 	.icon {
 		width: 16%;
@@ -1085,9 +1078,6 @@ span.locate img {
 	.top-menu ul li a:hover {
 		padding: 10px 13px;
 	}
-	.header {
-		padding: 1.2em 0;
-	}
 	.about_left {
 		width:50%;
 		float:left;
@@ -1124,8 +1114,8 @@ span.locate img {
 	.service-section-head h3, .price-section-head h3, .work-section-head h3, .happy-clients-head h3, .contact-section-head h3,.about_right h3 {
 		font-size: 1.7em;
 	}
-	.service-section-head p, .price-section-head p, .work-section-head p, .happy-clients-head p, .contact-section-head p {
-		font-size: 1.2em;
+	.service-section-head p, .price-section-head p, .work-section-head p, .work-section-head ul, .happy-clients-head p, .contact-section-head p {
+		font-size: 1.1em;
 	}
 	.icon {
 		width: 11%;
@@ -1165,7 +1155,7 @@ span.locate img {
 		font-size: 2.5em;
 	}
 	.price-section-grid ul li {
-		font-size: 0.9em;
+		font-size: 1em;
 		padding: 0.6em;
 	}
 	.price-section-grid p{
@@ -1246,6 +1236,10 @@ span.locate img {
 }
 @media screen and (max-width: 640px){
 
+	#site-navigation {
+		position: relative;
+	}
+
 	h1 {
 		font-size: 1.2em;
 	}
@@ -1315,7 +1309,7 @@ span.locate img {
 		font-size: 2.2em;
 	}
 	.price-section-grid ul li {
-		font-size: 0.875em;
+		font-size: 1em;
 		padding: 0.5em;
 	}
 	.price-section-grid p{
@@ -1521,7 +1515,7 @@ span.locate img {
 		font-size: 2em;
 	}
 	.price-section-grid ul li {
-		font-size: 0.8em;
+		font-size: 1em;
 		padding: 0.5em;
 	}
 	.price-section-grid p{
@@ -1659,9 +1653,6 @@ span.locate img {
 	}
 	.banner-info h2 {
 		font-size: 2em;
-	}
-	.header {
-		padding: 1em 0;
 	}
 	.details form li {
 		width: 48%;

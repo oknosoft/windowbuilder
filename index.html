@@ -119,12 +119,10 @@
                 $(function(){
                     $(window).scroll(function() {
                         var top = $(document).scrollTop();
-                        if (top < 80){
+                        if (top < 80 && $(document).width() > 640){
                             $("#site-navbar").css({"margin-top": "-6em"});
-                            //$("#site-navigation").css({"height": "0"});
                         }else{
                             $("#site-navbar").css({"margin-top": "0px"});
-                            //$("#site-navigation").css({"height": "4em"});
                         }
                     });
                 });
@@ -185,8 +183,8 @@
 
         <div class="service-section" id="service">
             <div class="container">
-                <div class="service-section-head section-head text-center wow fadeInRight" data-wow-delay="0.4s">
-                    <h3>Возможности программы</h3>
+                <div class="service-section-head section-head wow fadeInRight" data-wow-delay="0.4s">
+                    <h3 class="text-center">Возможности программы</h3>
                     <p>Заказ дилера - это веб-сервис, предоставляемый компанией
                         <a href="http://www.oknosoft.ru/" title="Программы для оконных заводов и дилеров" target="_blank">Окнософт</a>
                         и предназначенный для расчета геометрии, спецификации и стоимости оконных и витражных конструкций, а так же, автоматизации взаимодействия менеджеров и дилеров
@@ -287,9 +285,9 @@
 
         <div class="price-section" id="pricing">
             <div class="container">
-                <div class="price-section-head section-head text-center wow fadeInLeft" data-wow-delay="0.4s">
-                    <h3>Выберите тариф</h3>
-                    <p>Наш сервис подойдёт как малым гаражным производствам, так и крупным оконныем заводам</p>
+                <div class="price-section-head section-head wow fadeInLeft" data-wow-delay="0.4s">
+                    <h3 class="text-center">Выберите тариф</h3>
+                    <p>Наш сервис подойдёт как малым гаражным производствам, так и крупным оконным заводам</p>
                 </div>
                 <div class="price-section-grids">
                     <div class="col-md-4 price-value text-center wow fadeInLeft" data-wow-delay="0.3s">
@@ -339,9 +337,18 @@
 
         <div class="work-section" id="work">
             <div class="container">
-                <div class="work-section-head section-head text-center wow fadeInRight" data-wow-delay="0.4s">
-                    <h3>Как это работает</h3>
-                    <p>Lorem Ipsum is simply dummy Business industry</p>
+                <div class="work-section-head section-head wow fadeInRight" data-wow-delay="0.4s">
+                    <h3 class="text-center" >Как это работает</h3>
+                    <p>Под капотом <i>Заказа дилера</i> крутятся мощные javascript библиотеки с открытым исходным кодом и поддержкой многочисленного сообщества разработчиков:</p>
+                    <ul>
+                        <li><a href="http://www.oknosoft.ru/metadata/">Metadata.js</a> - эмулирует наиболее востребованные классы API 1С внутри браузера (документы, справочники, регистры и отчеты)</li>
+                        <li><a href="http://alasql.org/">AlaSQL</a> - предоставляет SQL - интерфейс к данным javascript</li>
+                        <li><a href="http://pouchdb.com/">PouchDB</a> - отвечает за хранение данных в IndexedDB браузера
+                            и синхронизацию с сервером <a href="http://couchdb.apache.org/">CouchDB</a></li>
+                        <li><a href="http://paperjs.org/reference/global/">Paper.js</a> - порт библиотеки векторной графики <a href="http://scriptographer.org/reference/">Scriptographer</a> для javascript</li>
+                        <li><a href="http://dhtmlx.com/docs/products/">dhtmlx</a> - контролирует DOM браузера и формирует интерфейс пользователя (поля ввода, таблицы, формы)</li>
+                    </ul>
+
                 </div>
                 <div class="work-section-grids text-center wow fadeInUp" data-wow-delay="0.4s">
                     <div class="col-md-3 work-section-grid">
