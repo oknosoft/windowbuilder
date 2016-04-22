@@ -80,54 +80,172 @@ function Scheme(_canvas){
 			});
 		};
 
-	/**
-	 * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
-	 */
-	this._noti = {};
+
+
+	// Определяем свойства и методы изделия
+	this.__define({
+
+		/**
+		 * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
+		 */
+		_noti: {
+			value: {}
+		},
+
+		/**
+		 * Формирует оповещение для тех, кто следит за this._noti
+		 * @param obj
+		 */
+		notify: {
+			value: 	function (obj) {
+				Object.getNotifier(this._noti).notify(obj);
+			}
+		},
+
+		/**
+		 * Объект обработки с табличными частями
+		 */
+		_dp: {
+			value: $p.dp.buyers_order.create()
+		},
+
+		/**
+		 * ХарактеристикаОбъект текущего изделия
+		 * @property ox
+		 * @type _cat.characteristics
+		 */
+		ox: {
+			get: function () {
+				return this._dp.characteristic;
+			},
+			set: function (v) {
+
+
+				var _dp = this._dp,
+					setted;
+
+				// пытаемся отключить обсервер от табчасти
+				Object.unobserve(_dp.characteristic, _papam_observer);
+
+				// устанавливаем в _dp характеристику
+				_dp.characteristic = v;
+
+				var ox = _dp.characteristic;
+
+				_dp.clr = ox.clr;
+				_dp.len = ox.x;
+				_dp.height = ox.y;
+				_dp.s = ox.s;
+
+				// устанавливаем строку заказа
+				_scheme.data._calc_order_row = ox.calc_order_row;
+
+				// устанавливаем в _dp свойства строки заказа
+				if(_scheme.data._calc_order_row){
+					"quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach(function (fld) {
+						_dp[fld] = _scheme.data._calc_order_row[fld];
+					});
+				}else{
+					// TODO: установить режим только просмотр, если не найдена строка заказа
+				}
+
+
+				// устанавливаем в _dp систему профилей
+				if(ox.empty())
+					_dp.sys = "";
+
+				else if(ox.owner.empty()){
+
+					_dp.sys = $p.wsql.get_user_param("editor_last_sys");
+					ox.owner = _dp.sys.nom;
+					setted = !_dp.sys.empty();
+
+				}else{
+
+					$p.cat.production_params.find_rows({nom: ox.owner}, function(o){
+						_dp.sys = o;
+						setted = true;
+						return false;
+					});
+				}
+
+				// пересчитываем параметры изделия при установке системы TODO: подумать, как не портить старые изделия, открытые для просмотра
+				if(setted){
+					_dp.sys.refill_prm(ox);
+
+				}else if(!_dp.sys.empty())
+					_dp.sys = "";
+
+				// устанавливаем в _dp цвет по умолчанию
+				if(_dp.clr.empty())
+					_dp.clr = _dp.sys.default_clr;
+
+				// оповещаем о новых слоях и свойствах изделия
+				Object.getNotifier(_scheme._noti).notify({
+					type: 'rows',
+					tabular: 'constructions'
+				});
+				Object.getNotifier(_dp).notify({
+					type: 'rows',
+					tabular: 'extra_fields'
+				});
+
+				// начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
+				Object.observe(ox, _papam_observer, ["row", "rows"]);
+
+			}
+		},
+
+		/**
+		 * Строка табчасти продукция текущего заказа, соответствующая редактируемому изделию
+		 */
+		_calc_order_row: {
+			get: function () {
+				if(!_data._calc_order_row && !this.ox.empty()){
+					_data._calc_order_row = this.ox.calc_order_row;
+				}
+				return _data._calc_order_row;
+			}
+		},
+
+		/**
+		 * Габариты изделия. Рассчитываются, как объединение габаритов всех слоёв типа Contour
+		 * @property bounds
+		 * @type Rectangle
+		 */
+		bounds: {
+			get : function(){
+
+				if(!_data._bounds){
+					_scheme.contours.forEach(function(l){
+						if(!_data._bounds)
+							_data._bounds = l.bounds;
+						else
+							_data._bounds = _data._bounds.unite(l.bounds);
+					});
+				}
+
+				return _data._bounds;
+			},
+			enumerable : false}
+	});
+
 
 	/**
-	 * Формирует оповещение для тех, кто следит за this._noti
-	 * @param obj
+	 * Виртуальная табличная часть параметров изделия
 	 */
-	this.notify = function (obj) {
-		Object.getNotifier(_scheme._noti).notify(obj);
-	};
+	this._dp.__define({
 
-	this._dp = $p.dp.buyers_order.create();
-
-	/**
-	 * Виртуальная табличная часть
-	 */
-	this._dp.__define("extra_fields", {
-		get: function(){
-			return _scheme.ox.params;
-		}
+		extra_fields: {
+				get: function(){
+					return _scheme.ox.params;
+				}
+			}
 	});
 
 	// начинаем следить за _dp, чтобы обработать изменения цвета и параметров
 	Object.observe(this._dp, _dp_observer, ["update"]);
 
-
-	/**
-	 * Габариты изделия. Рассчитываются, как объединение габаритов всех слоёв типа Contour
-	 * @property bounds
-	 * @type Rectangle
-	 */
-	this.__define("bounds", {
-		get : function(){
-
-			if(!_data._bounds){
-				_scheme.layers.forEach(function(l){
-					if(!_data._bounds)
-						_data._bounds = l.bounds;
-					else
-						_data._bounds = _data._bounds.unite(l.bounds);
-				});
-			}
-
-			return _data._bounds;
-		},
-		enumerable : false});
 
 	/**
 	 * Менеджер соединений изделия
@@ -148,121 +266,6 @@ function Scheme(_canvas){
 
 	};
 
-	/**
-	 * ХарактеристикаОбъект текущего изделия
-	 * @property ox
-	 * @type _cat.characteristics
-	 */
-	this.__define("ox", {
-		get: function () {
-			return this._dp.characteristic;
-		},
-		set: function (v) {
-
-			
-			var _dp = this._dp,
-				setted;
-			
-			// пытаемся отключить обсервер от табчасти
-			Object.unobserve(_dp.characteristic, _papam_observer);
-
-			// устанавливаем в _dp характеристику
-			_dp.characteristic = v;
-
-			var ox = _dp.characteristic;
-
-			_dp.clr = ox.clr;
-			_dp.len = ox.x;
-			_dp.height = ox.y;
-			_dp.s = ox.s;
-
-			// устанавливаем строку заказа
-			_scheme.data._calc_order_row = ox.calc_order_row;
-
-			// устанавливаем в _dp свойства строки заказа
-			if(_scheme.data._calc_order_row){
-				"quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach(function (fld) {
-					_dp[fld] = _scheme.data._calc_order_row[fld];
-				});
-			}else{
-				// TODO: установить режим только просмотр, если не найдена строка заказа
-			}
-
-
-			// устанавливаем в _dp систему профилей
-			if(ox.empty())
-				_dp.sys = "";
-
-			else if(ox.owner.empty()){
-
-				_dp.sys = $p.wsql.get_user_param("editor_last_sys");
-				ox.owner = _dp.sys.nom;
-				setted = !_dp.sys.empty();
-
-			}else{
-
-				$p.cat.production_params.find_rows({nom: ox.owner}, function(o){
-					_dp.sys = o;
-					setted = true;
-					return false;
-				});
-			}
-
-			// пересчитываем параметры изделия при установке системы TODO: подумать, как не портить старые изделия, открытые для просмотра
-			if(setted){
-				_dp.sys.refill_prm(ox);
-
-			}else if(!_dp.sys.empty())
-				_dp.sys = "";
-
-			// устанавливаем в _dp цвет по умолчанию
-			if(_dp.clr.empty())
-				_dp.clr = _dp.sys.default_clr;
-
-			// оповещаем о новых слоях и свойствах изделия
-			Object.getNotifier(_scheme._noti).notify({
-				type: 'rows',
-				tabular: 'constructions'
-			});
-			Object.getNotifier(_dp).notify({
-				type: 'rows',
-				tabular: 'extra_fields'
-			});
-
-			// начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
-			Object.observe(ox, _papam_observer, ["row", "rows"]);
-			
-		},
-		enumerable: false
-	});
-
-	/**
-	 * Строка табчасти продукция текущего заказа, соответствующая редактируемому изделию
-	 */
-	this.__define("_calc_order_row", {
-		get: function () {
-			if(!_data._calc_order_row && !this.ox.empty()){
-				_data._calc_order_row = this.ox.calc_order_row;
-			}
-			return _data._calc_order_row;
-		},
-		enumerable: false
-	});
-
-	/**
-	 * Цвет текущего изделия
-	 * @property clr
-	 * @type _cat.production_params
-	 */
-	this.__define("clr", {
-		get: function () {
-			return _scheme._dp.characteristic.clr;
-		},
-		set: function (v) {
-			_scheme._dp.characteristic.clr = v;
-		},
-		enumerable: false
-	});
 
 	/**
 	 * Ищет точки в выделенных элементах. Если не находит, то во всём проекте
@@ -338,74 +341,6 @@ function Scheme(_canvas){
 			// создаём семейство конструкций
 			load_contour(null);
 
-			// TODO: перенести в отдельный объект авторазмерные линии - находим крайние контуры
-			var left, right, top, bottom;
-			_scheme.layers.forEach(function(l){
-
-				if(!left || l.bounds.left < left.bounds.left)
-					left = l;
-
-				if(!right || l.bounds.right > right.bounds.right)
-					right = l;
-
-				if(!top || l.bounds.top < top.bounds.top)
-					top = l;
-
-				if(!bottom || l.bounds.bottom > bottom.bounds.bottom)
-					bottom = l;
-
-			});
-
-			// формируем авторазмеры
-			if(_scheme.layers.length == 1){
-				new DimensionLine({
-					pos: "bottom",
-					parent: bottom.l_dimensions
-				});
-				new DimensionLine({
-					pos: "right",
-					parent: right.l_dimensions
-				});
-			}else if(_scheme.layers.length == 2){
-				if(left != right){
-					// подобие балкона
-					new DimensionLine({
-						pos: "top",
-						parent: left.l_dimensions
-					});
-					new DimensionLine({
-						pos: "top",
-						parent: right.l_dimensions
-					});
-					new DimensionLine({
-						pos: "left",
-						parent: left.l_dimensions
-					});
-					new DimensionLine({
-						pos: "right",
-						parent: right.l_dimensions
-					});
-				}else{
-					// один над другим
-					new DimensionLine({
-						pos: "top",
-						parent: top.l_dimensions
-					});
-					new DimensionLine({
-						pos: "left",
-						parent: top.l_dimensions
-					});
-					new DimensionLine({
-						pos: "left",
-						parent: bottom.l_dimensions
-					});
-					//new DimensionLine({
-					//	pos: "right",
-					//	parent: right.l_dimensions
-					//});
-				}
-			}
-
 			setTimeout(function () {
 				_data._bounds = null;
 				_scheme.zoom_fit();
@@ -413,9 +348,9 @@ function Scheme(_canvas){
 				// виртуальное событие, чтобы UndoRedo сделал начальный снапшот
 				$p.eve.callEvent("scheme_changed", [_scheme]);
 
-				// виртуальное событие, чтобы активировать слой у вереве слоёв
-				if(_scheme.layers.length)
-					$p.eve.callEvent("layer_activated", [_scheme.layers[0]]);
+				// виртуальное событие, чтобы активировать слой в дереве слоёв
+				if(_scheme.contours.length)
+					$p.eve.callEvent("layer_activated", [_scheme.contours[0]]);
 
 				// виртуальное событие, чтобы нарисовать визуализацию
 				$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
@@ -613,8 +548,14 @@ function Scheme(_canvas){
 			function on_contour_redrawed(){
 				if(!_changes.length){
 					llength--;
-					if(!llength)
+					if(!llength){
+						_data._bounds = null;
+						_scheme.contours.forEach(function(l){
+							l.draw_sizes();
+						});
+						_scheme.draw_sizes();
 						_scheme.view.update();
+					}
 				}
 			}
 
@@ -622,21 +563,13 @@ function Scheme(_canvas){
 				//console.log(_changes.length);
 				_changes.length = 0;
 
-				_scheme.layers.forEach(function(l){
-					if(l instanceof Contour){
-						llength++;
-						l.redraw(on_contour_redrawed);
-					}
+				_scheme.contours.forEach(function(l){
+					llength++;
+					l.redraw(on_contour_redrawed);
 				});
 
 			}
 		}
-
-		// искусственная задержка. зачем?
-		//setTimeout(function() {
-		//	requestAnimationFrame(redraw);
-		//	process_redraw();
-		//}, 20);
 
 		requestAnimationFrame(redraw);
 		process_redraw();
@@ -648,9 +581,8 @@ function Scheme(_canvas){
 		if(_scheme != scheme)
 			return;
 		
-		_scheme.layers.forEach(function(l){
-			if(l instanceof Contour)
-				l.draw_visualization();
+		_scheme.contours.forEach(function(l){
+			l.draw_visualization();
 		});
 		_scheme.view.update();
 		
@@ -743,7 +675,7 @@ Scheme.prototype.__define({
 			//};
 
 			// вызываем метод save_coordinates в дочерних слоях
-			this.layers.forEach(function (contour) {
+			this.contours.forEach(function (contour) {
 				contour.save_coordinates();
 			});
 			$p.eve.callEvent("save_coordinates", [this, attr]);
@@ -759,7 +691,7 @@ Scheme.prototype.__define({
 		get: function () {
 
 			var bounds = new paper.Rectangle();
-			this.layers.forEach(function(l){
+			this.contours.forEach(function(l){
 				bounds = bounds.unite(l.strokeBounds);
 			});
 
@@ -870,11 +802,16 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Возвращает массив контуров текущего изделия
+	 * Возвращает массив РАМНЫХ контуров текущего изделия
 	 */
 	contours: {
 		get: function () {
-			return this.getItems({class: Contour});
+			var res = [];
+			this.layers.forEach(function (l) {
+				if(l instanceof Contour)
+					res.push(l)
+			});
+			return res;
 		},
 		enumerable: false
 	},
@@ -889,6 +826,60 @@ Scheme.prototype.__define({
 		enumerable: false
 	},
 
+	/**
+	 * Цвет текущего изделия
+	 * @property clr
+	 * @type _cat.production_params
+	 */
+	clr: {
+		get: function () {
+			return this._dp.characteristic.clr;
+		},
+		set: function (v) {
+			this._dp.characteristic.clr = v;
+		}
+	},
+	
+	/**
+	 * Служебный слой размерных линий 
+	 */
+	l_dimensions: {
+		get: function () {
+			if(!this.data.l_dimensions)
+				this.data.l_dimensions = new DimensionLayer();
+			if(!this.data.l_dimensions.isInserted())
+				this.addChild(this.data.l_dimensions);
+			return this.data.l_dimensions;
+		}
+	},
+
+	/**
+	 * Создаёт и перерисовавает габаритные линии изделия
+	 */
+	draw_sizes: {
+		value: function () {
+			
+			if(!this.l_dimensions.bottom)
+				this.l_dimensions.bottom = new DimensionLine({
+					pos: "bottom",
+					parent: this.l_dimensions
+				});
+
+			if(!this.l_dimensions.right)
+				this.l_dimensions.right = new DimensionLine({
+					pos: "right",
+					parent: this.l_dimensions
+				});
+
+			this.l_dimensions.right.redraw();
+			this.l_dimensions.bottom.redraw();
+
+		}
+	},
+
+	/**
+	 * Возвращает вставку по умолчанию с учетом свойств системы и элемента
+	 */
 	default_inset: {
 		value: function (attr) {
 			return this._dp.sys.inserts(attr.elm_type, attr.by_default)[0];
@@ -896,13 +887,19 @@ Scheme.prototype.__define({
 		enumerable: false
 	},
 
+	/**
+	 * Возвращает цвет по умолчанию с учетом свойств системы и элемента
+	 */
 	default_clr: {
 		value: function (attr) {
 			return this.ox.clr;
 		},
 		enumerable: false
 	},
-	
+
+	/**
+	 * Возвращает фурнитуру по умолчанию с учетом свойств системы и контура
+	 */
 	default_furn: {
 		get: function () {
 			if(this._dp.sys.furn.count())

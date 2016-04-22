@@ -15,7 +15,7 @@
 function DimensionLine(attr){
 
 
-	DimensionLine.superclass.constructor.call(this, attr);
+	DimensionLine.superclass.constructor.call(this, {parent: attr.parent});
 
 	var _row;
 
@@ -34,8 +34,7 @@ function DimensionLine(attr){
 		_row: {
 			get: function () {
 				return _row;
-			},
-			enumerable: false
+			}
 		}
 	});
 
@@ -70,16 +69,14 @@ DimensionLine.prototype.__define({
 	_metadata: {
 		get: function () {
 			return $p.dp.builder_text.metadata();
-		},
-		enumerable: false
+		}
 	},
 
 	// виртуальный датаменеджер для автоформ
 	_manager: {
 		get: function () {
 			return $p.dp.builder_text;
-		},
-		enumerable: false
+		}
 	},
 
 	_nodes: {
@@ -104,15 +101,13 @@ DimensionLine.prototype.__define({
 	_mouseenter: {
 		value: function (event) {
 			paper.canvas_cursor('cursor-arrow-ruler');
-		},
-		enumerable: false
+		}
 	},
 
 	_mouseleave: {
 		value: function (event) {
 			//paper.canvas_cursor('cursor-arrow-white');
-		},
-		enumerable: false
+		}
 	},
 
 	_click: {
@@ -120,26 +115,55 @@ DimensionLine.prototype.__define({
 			event.stop();
 			this.wnd = new RulerWnd();
 			this.wnd.size = this.size;
-		},
-		enumerable: false
+		}
 	},
 
 	_move_points: {
 		value: function (event, xy) {
 
-			var _bounds = this.parent.parent.bounds, delta;
+			var _bounds, delta;
 
-			if(this.pos == "top" || this.pos == "bottom")
-				if(event.name == "right")
-					delta = new paper.Point(event.size - _bounds.width, 0);
-				else
-					delta = new paper.Point(_bounds.width - event.size, 0);
-			else{
-				if(event.name == "bottom")
-					delta = new paper.Point(0, event.size - _bounds.height);
-				else
-					delta = new paper.Point(0, _bounds.height - event.size);
+			// получаем дельту - на сколько смещать
+			if(this.data.elm1){
+				_bounds = {};
+
+				if(this.pos == "top" || this.pos == "bottom"){
+
+					_bounds[event.name] = Math.abs(this.data.elm1[this.data.p1].x - this.data.elm2[this.data.p2].x);
+
+					if(event.name == "right")
+						delta = new paper.Point(event.size - _bounds[event.name], 0);
+					else
+						delta = new paper.Point(_bounds[event.name] - event.size, 0);
+
+				}else{
+
+					_bounds[event.name] = Math.abs(this.data.elm1[this.data.p1].y - this.data.elm2[this.data.p2].y);
+
+					if(event.name == "bottom")
+						delta = new paper.Point(0, event.size - _bounds[event.name]);
+					else
+						delta = new paper.Point(0, _bounds[event.name] - event.size);
+				}
+
+			}else {
+
+				_bounds = this.layer.bounds;
+
+				if(this.pos == "top" || this.pos == "bottom")
+					if(event.name == "right")
+						delta = new paper.Point(event.size - _bounds.width, 0);
+					else
+						delta = new paper.Point(_bounds.width - event.size, 0);
+				else{
+					if(event.name == "bottom")
+						delta = new paper.Point(0, event.size - _bounds.height);
+					else
+						delta = new paper.Point(0, _bounds.height - event.size);
+				}
+
 			}
+
 
 
 			if(delta.length){
@@ -168,8 +192,7 @@ DimensionLine.prototype.__define({
 					//this.zoom_fit();
 				}.bind(this.project), 200);
 			}
-		},
-		enumerable: false
+		}
 	},
 
 	_sizes_wnd: {
@@ -195,20 +218,18 @@ DimensionLine.prototype.__define({
 						break;
 				}
 			}
-		},
-		enumerable: false
+		}
 	},
 
 	redraw: {
-		value: function (_bounds) {
+		value: function () {
 
 			var _nodes = this._nodes,
+				_bounds = this.layer.bounds,
 				b, e, tmp, normal, length, bs, es;
 
-			if(!_bounds)
-				_bounds = this.parent.parent.bounds;
-
 			if(!this.pos){
+
 				b = this.data.elm1[this.data.p1];
 				e = this.data.elm2[this.data.p2];
 
@@ -225,18 +246,33 @@ DimensionLine.prototype.__define({
 				e = _bounds.bottomRight;
 
 			}else if(this.pos == "right"){
+
 				b = _bounds.bottomRight;
 				e = _bounds.topRight;
 			}
 
-			tmp = new paper.Path({
-				insert: false,
-				segments: [b, e]
-			});
+			tmp = new paper.Path({ insert: false, segments: [b, e] });
+
+			if(this.data.elm1 && this.pos){
+
+				b = tmp.getNearestPoint(this.data.elm1[this.data.p1]);
+				e = tmp.getNearestPoint(this.data.elm2[this.data.p2]);
+				if(tmp.getOffsetOf(b) > tmp.getOffsetOf(e)){
+					normal = e;
+					e = b;
+					b = normal;
+				}
+				tmp.firstSegment.point = b;
+				tmp.lastSegment.point = e;
+
+			};
 
 			normal = tmp.getNormalAt(0).multiply(90);
 			if(this.pos == "right" || this.pos == "bottom")
 				normal = normal.multiply(1.4).negate();
+
+			if(this.layer instanceof DimensionLayer)
+				normal = normal.multiply(2);
 
 			length = tmp.length;
 			bs = b.add(normal.multiply(0.8));
@@ -277,8 +313,7 @@ DimensionLine.prototype.__define({
 		},
 		set: function (v) {
 			this._nodes.text.content = parseFloat(v);
-		},
-		enumerable: false
+		}
 	},
 
 	// угол к горизонту в направлении размера
@@ -288,8 +323,7 @@ DimensionLine.prototype.__define({
 		},
 		set: function (v) {
 
-		},
-		enumerable: false
+		}
 	},
 
 	// расположение относительно контура $p.enm.pos
@@ -300,19 +334,34 @@ DimensionLine.prototype.__define({
 		set: function (v) {
 			this.data.pos = v;
 			this.redraw();
-		},
-		enumerable: false
+		}
 	},
 
 	// отступ от внешней границы изделия
 	offset: {
 		get: function () {
-			return 100;
+			return this.data.offset || 90;
 		},
 		set: function (v) {
-
-		},
-		enumerable: false
+			this.data.offset = parseInt(v) || 90;
+		}
 	}
 
 });
+
+
+function DimensionLayer(attr) {
+	
+	DimensionLayer.superclass.constructor.call(this);
+	
+	if(!attr || !attr.parent){
+		this.__define({
+			bounds: {
+				get: function () {
+					return this.project.bounds;
+				}
+			}
+		});
+	}
+}
+DimensionLayer._extend(paper.Layer);

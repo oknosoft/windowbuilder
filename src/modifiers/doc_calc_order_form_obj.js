@@ -213,6 +213,10 @@ $p.modifiers.push(
 						save("save");
 						break;
 
+					case 'btn_save_close':
+						save("close");
+						break;
+
 					case 'btn_retrieve':
 						save("retrieve");
 						break;
@@ -555,7 +559,7 @@ $p.modifiers.push(
 					o.obj_delivery_state =  $p.enm.obj_delivery_states.Отозван;
 					do_save();
 
-				} else if(action == "save"){
+				} else if(action == "save" || action == "close"){
 					do_save();
 				}
 			}

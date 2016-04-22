@@ -132,7 +132,7 @@ function ToolPen(){
 			_editor.tb_left.select(tool.options.name);
 			_editor.canvas_cursor('cursor-pen-freehand');
 
-			if(!_editor.project.layers.length){
+			if(!_editor.project.contours.length){
 
 				// создаём пустой новый слой
 				new Contour( {parent: undefined});

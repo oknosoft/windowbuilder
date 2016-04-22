@@ -652,7 +652,7 @@ Profile.prototype.__define({
 
 			}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.av){
 				// угловое к вертикальной
-				if(this.orientation == $p.enm.orientations.Вертикальная){
+				if(this.orientation == $p.enm.orientations.vert){
 					if(profile_point == "b"){
 						intersect_point(prays.outer, rays.outer, 1);
 						intersect_point(prays.outer, rays.inner, 4);
@@ -661,7 +661,7 @@ Profile.prototype.__define({
 						intersect_point(prays.outer, rays.outer, 2);
 						intersect_point(prays.outer, rays.inner, 3);
 					}
-				}else if(this.orientation == $p.enm.orientations.Горизонтальная){
+				}else if(this.orientation == $p.enm.orientations.hor){
 					if(profile_point == "b"){
 						intersect_point(prays.inner, rays.outer, 1);
 						intersect_point(prays.inner, rays.inner, 4);
@@ -676,7 +676,7 @@ Profile.prototype.__define({
 
 			}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
 				// угловое к горизонтальной
-				if(this.orientation == $p.enm.orientations.Вертикальная){
+				if(this.orientation == $p.enm.orientations.vert){
 					if(profile_point == "b"){
 						intersect_point(prays.inner, rays.outer, 1);
 						intersect_point(prays.inner, rays.inner, 4);
@@ -685,7 +685,7 @@ Profile.prototype.__define({
 						intersect_point(prays.inner, rays.outer, 2);
 						intersect_point(prays.inner, rays.inner, 3);
 					}
-				}else if(this.orientation == $p.enm.orientations.Горизонтальная){
+				}else if(this.orientation == $p.enm.orientations.hor){
 					if(profile_point == "b"){
 						intersect_point(prays.outer, rays.outer, 1);
 						intersect_point(prays.outer, rays.inner, 4);
@@ -917,11 +917,21 @@ Profile.prototype.__define({
 				angle_hor -= 180;
 			if((angle_hor > -consts.orientation_delta && angle_hor < consts.orientation_delta) ||
 				(angle_hor > 180-consts.orientation_delta && angle_hor < 180+consts.orientation_delta))
-				return $p.enm.orientations.Горизонтальная;
+				return $p.enm.orientations.hor;
 			if((angle_hor > 90-consts.orientation_delta && angle_hor < 90+consts.orientation_delta) ||
 				(angle_hor > 270-consts.orientation_delta && angle_hor < 270+consts.orientation_delta))
-				return $p.enm.orientations.Вертикальная;
-			return $p.enm.orientations.Наклонная;
+				return $p.enm.orientations.vert;
+			return $p.enm.orientations.incline;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Положение элемента в контуре
+	 */
+	pos: {
+		get: function () {
+			
 		},
 		enumerable : false
 	},
@@ -1428,10 +1438,10 @@ CnnPoint.prototype.__define({
 				return true;
 
 			// если это Ꞁ или └─, то может быть T в разрыв - проверяем
-			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной && this.parent.orientation != $p.enm.orientations.Вертикальная)
+			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной && this.parent.orientation != $p.enm.orientations.vert)
 				return true;
 
-			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной && this.parent.orientation != $p.enm.orientations.Горизонтальная)
+			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной && this.parent.orientation != $p.enm.orientations.hor)
 				return true;
 
 			return false;

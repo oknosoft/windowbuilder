@@ -602,7 +602,7 @@ $p.modifiers.push(
 
 								}else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
 									// строим горизонтальную линию от нижней границы контура, находим пересечение и offset
-									var bounds = contour.profile_bounds,
+									var bounds = contour.parent.bounds,
 										hor = new paper.Path({
 											insert: false,
 											segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
@@ -971,7 +971,7 @@ $p.modifiers.push(
 				added_cnn_spec = {};
 
 				// для всех контуров изделия
-				scheme.contours.forEach(function (contour) {
+				scheme.getItems({class: $p.Contour}).forEach(function (contour) {
 
 					// для всех профилей контура
 					contour.profiles.forEach(base_spec_profile);
@@ -1030,16 +1030,20 @@ $p.modifiers.push(
 					calc_order_row: ox.calc_order_row,
 					spec: spec
 				};
-				$p.pricing.price_type(prm);
+				if(prm.calc_order_row){
 
-				// производим корректировку спецификации с возможным вытягиванием строк в заказ и удалением строк из заказа
-				$p.spec_building.specification_adjustment(prm);
+					$p.pricing.price_type(prm);
 
-				// рассчитываем плановую себестоимость
-				$p.pricing.calc_first_cost(prm);
+					// производим корректировку спецификации с возможным вытягиванием строк в заказ и удалением строк из заказа
+					$p.spec_building.specification_adjustment(prm);
 
-				// рассчитываем стоимость продажи
-				$p.pricing.calc_amount(prm);
+					// рассчитываем плановую себестоимость
+					$p.pricing.calc_first_cost(prm);
+
+					// рассчитываем стоимость продажи
+					$p.pricing.calc_amount(prm);
+				}
+
 
 
 				// информируем мир о завершении пересчета

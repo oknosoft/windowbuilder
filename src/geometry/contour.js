@@ -29,14 +29,14 @@ function Contour(attr){
 	};
 
 	var _contour = this,
-		_parent = attr.parent,
 		_row,
 		_notifier = Object.getNotifier(this._noti),
 		_layers = {};
 
 	Contour.superclass.constructor.call(this);
-	if(_parent)
-		this.parent = _parent;
+	
+	if(attr.parent)
+		this.parent = attr.parent;
 
 	// строка в таблице конструкций
 	if(attr.row)
@@ -52,8 +52,7 @@ function Contour(attr){
 		_row: {
 			get : function(){
 				return _row;
-			},
-			enumerable : false
+			}
 		},
 
 		cnstr: {
@@ -62,8 +61,7 @@ function Contour(attr){
 			},
 			set : function(v){
 				_row.cnstr = v;
-			},
-			enumerable : false
+			}
 		},
 
 		// служебная группа текстовых комментариев
@@ -72,8 +70,7 @@ function Contour(attr){
 				if(!_layers.text)
 					_layers.text = new paper.Group({ parent: this });
 				return _layers.text;
-			},
-			enumerable: false
+			}
 		},
 
 		// служебная группа визуализации допов,  петель и ручек
@@ -82,8 +79,7 @@ function Contour(attr){
 				if(!_layers.visualization)
 					_layers.visualization = new paper.Group({ parent: this, guide: true });
 				return _layers.visualization;
-			},
-			enumerable: false
+			}
 		},
 
 		// служебная группа размерных линий
@@ -92,8 +88,7 @@ function Contour(attr){
 				if(!_layers.dimensions)
 					_layers.dimensions = new paper.Group({ parent: this });
 				return _layers.dimensions;
-			},
-			enumerable: false
+			}
 		}
 
 	});
@@ -339,8 +334,7 @@ Contour.prototype.__define({
 			this.project._activeLayer = this;
 			$p.eve.callEvent("layer_activated", [this]);
 			this.project.register_update();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -358,8 +352,25 @@ Contour.prototype.__define({
 				}
 			});
 			return res;
-		},
-		enumerable : false
+		}
+	},
+
+	/**
+	 * Возвращает массив импостов текущего + вложенных контура
+	 * @property imposts
+	 * @for Contour
+	 * @returns {Array.<Profile>}
+	 */
+	imposts: {
+		get: function(){
+			var res = [];
+			this.getItems({class: Profile}).forEach(function(elm) {
+				if (elm.rays.b.is_t || elm.rays.e.is_t){
+					res.push(elm);
+				}
+			});
+			return res;
+		}
 	},
 
 	/**
@@ -381,23 +392,30 @@ Contour.prototype.__define({
 				}
 			});
 			return res;
-		},
-		enumerable : false
+		}
 	},
 
+	/**
+	 * Габариты по внешним краям профилей контура
+	 */
 	bounds: {
 		get: function () {
-			var profiles = this.profiles, res;
-			if(!profiles.length)
-				res = new paper.Rectangle();
-			else{
-				res = profiles[0].bounds;
-				for(var i = 1; i < profiles.length; i++)
-					res = res.unite(profiles[i].bounds);
+
+			if(!this.data._bounds){
+
+				var profiles = this.profiles, res;
+				if(!profiles.length)
+					this.data._bounds = new paper.Rectangle();
+				else{
+					this.data._bounds = profiles[0].bounds;
+					for(var i = 1; i < profiles.length; i++)
+						this.data._bounds = this.data._bounds.unite(profiles[i].bounds);
+				}
 			}
-			return res;
-		},
-		enumerable : false
+
+			return this.data._bounds;
+			
+		}
 	},
 
 	/**
@@ -421,6 +439,9 @@ Contour.prototype.__define({
 					on_contour_redrawed();
 			}
 
+			// сбрасываем кеш габаритов
+			this.data._bounds = null;
+			
 			// чистим визуализацию
 			if(!this.project.data._saving && this.l_visualization._by_spec)
 				this.l_visualization._by_spec.removeChildren();
@@ -449,20 +470,18 @@ Contour.prototype.__define({
 			});
 
 			// перерисовываем размерные линии
-			var _bounds = this.profile_bounds;
 			for(var i = this.l_dimensions.children.length -1; i >=0; i--){
-				this.l_dimensions.children[i].redraw(_bounds);
+				this.l_dimensions.children[i].redraw();
 			}
 
 			// информируем мир о новых размерах нашего контура
-			$p.eve.callEvent("contour_redrawed", [this, _bounds]);
+			$p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
 
 			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
 			if(!llength && on_contour_redrawed)
 				on_contour_redrawed();
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -486,9 +505,8 @@ Contour.prototype.__define({
 			});
 
 			// ответственность за строку в таблице конструкций лежит на контуре
-			var profile_bounds = this.profile_bounds;
-			this._row.x = profile_bounds ? profile_bounds.width : 0;
-			this._row.y = profile_bounds? profile_bounds.height : 0;
+			this._row.x = this.bounds ? this.bounds.width : 0;
+			this._row.y = this.bounds? this.bounds.height : 0;
 			this._row.is_rectangular = this.is_rectangular;
 			if(this.parent){
 				this._row.w = this.w;
@@ -497,8 +515,7 @@ Contour.prototype.__define({
 				this._row.w = 0;
 				this._row.h = 0;
 			}
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -518,8 +535,7 @@ Contour.prototype.__define({
 						return p;
 				}
 			}
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -533,8 +549,7 @@ Contour.prototype.__define({
 			return this.outer_profiles.map(function (v) {
 				return v.elm;
 			});
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -577,8 +592,7 @@ Contour.prototype.__define({
 				});
 			}
 			return res;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -607,8 +621,7 @@ Contour.prototype.__define({
 			});
 
 			return nodes;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -690,8 +703,7 @@ Contour.prototype.__define({
 			});
 
 			return nodes;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -754,8 +766,7 @@ Contour.prototype.__define({
 
 			return res;
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -860,8 +871,7 @@ Contour.prototype.__define({
 			 */
 			contours.forEach(bind_glass);
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -940,8 +950,7 @@ Contour.prototype.__define({
 			this.sort_nodes(curve_nodes);
 
 			return path_nodes;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -974,8 +983,7 @@ Contour.prototype.__define({
 					nodes.push(res[i]);
 				res.length = 0;
 			}
-		},
-		enumerable : false
+		}
 	},
 
 	// виртуальные метаданные для автоформ
@@ -1020,8 +1028,7 @@ Contour.prototype.__define({
 					params: t.project.ox._metadata.tabular_sections.params
 				}
 			};
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1030,8 +1037,7 @@ Contour.prototype.__define({
 	_manager: {
 		get: function () {
 			return this.project._dp._manager;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1040,8 +1046,7 @@ Contour.prototype.__define({
 	params: {
 		get: function () {
 			return this.project.ox.params;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1087,8 +1092,7 @@ Contour.prototype.__define({
 
 			$p.eve.callEvent("furn_changed", [this]);
 			
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1101,8 +1105,7 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.clr_furn = v;
 			this.project.register_change();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1115,8 +1118,7 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.direction = v;
 			this.project.register_change(true);
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1129,8 +1131,7 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.h_ruch = v;
 			this.project.register_change();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1143,8 +1144,7 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.mskt = v;
 			this.project.register_change();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1157,26 +1157,7 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.clr_mskt = v;
 			this.project.register_change();
-		},
-		enumerable : false
-	},
-
-	/**
-	 * Габариты по внешним краям профиля
-	 */
-	profile_bounds: {
-		get: function () {
-			var bounds;
-
-			this.profiles.forEach(function (profile) {
-				if(!bounds)
-					bounds = profile.path.bounds;
-				else
-					bounds = bounds.unite(profile.path.bounds);
-			});
-			return bounds;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1218,8 +1199,7 @@ Contour.prototype.__define({
 
 			return res;
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1262,8 +1242,7 @@ Contour.prototype.__define({
 			return next();
 
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1274,8 +1253,7 @@ Contour.prototype.__define({
 			return (this.side_count != 4) || !this.profiles.some(function (profile) {
 				return !profile.is_linear();
 			});
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1284,8 +1262,7 @@ Contour.prototype.__define({
 	side_count: {
 		get : function(){
 			return this.profiles.length;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1295,12 +1272,10 @@ Contour.prototype.__define({
 		get : function(){
 			if(this.side_count != 4)
 				return 0;
-			var profiles = this.profiles_by_side(),
-				bounds = this.profile_bounds;
-
-			return bounds? bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
-		},
-		enumerable : false
+			
+			var profiles = this.profiles_by_side();
+			return this.bounds ? this.bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
+		}
 	},
 
 	/**
@@ -1310,12 +1285,53 @@ Contour.prototype.__define({
 		get : function(){
 			if(this.side_count != 4)
 				return 0;
-			var profiles = this.profiles_by_side(),
-				bounds = this.profile_bounds;
+			
+			var profiles = this.profiles_by_side();
+			return this.bounds ? this.bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
+		}
+	},
 
-			return bounds ? bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
-		},
-		enumerable : false
+	/**
+	 * Положение контура в изделии
+	 */
+	pos: {
+		get: function () {
+
+		}
+	},
+
+	/**
+	 * Тест положения контура в изделии
+	 */
+	is_pos: {
+		value: function (pos) {
+
+			// если в изделии один контур или если контур является створкой, он занимает одновременно все положения
+			if(this.project.contours.count == 1 || this.parent)
+				return true;
+
+			// если контур реально верхний или правый и т.д. - возвращаем результат сразу
+			var res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
+
+			if(!res){
+				if(pos == "top"){
+					var rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.topRight.add([0, -200]));
+				}else if(pos == "left"){
+					var rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.bottomLeft.add([-200, 0]));
+				}else if(pos == "right"){
+					var rect = new paper.Rectangle(this.bounds.topRight, this.bounds.bottomRight.add([200, 0]));
+				}else if(pos == "bottom"){
+					var rect = new paper.Rectangle(this.bounds.bottomLeft, this.bounds.bottomRight.add([0, 200]));
+				}
+
+				res = !this.project.contours.some(function (l) {
+					return l != this && rect.intersects(l.bounds);
+				}.bind(this));
+			}
+
+			return res;
+
+		}
 	},
 
 	/**
@@ -1377,8 +1393,7 @@ Contour.prototype.__define({
 			else
 				rotary_folding();
 
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -1416,7 +1431,155 @@ Contour.prototype.__define({
 					l.draw_visualization();
 			});
 
-		},
-		enumerable: false
+		}
+	},
+
+	/**
+	 * формирует авторазмерные линии
+	 */
+	draw_sizes: {
+
+		value: function () {
+			
+			// сначала, строим размерные линии импостов
+
+			// получаем импосты контура, делим их на вертикальные и горизонтальные
+			var ihor = [], ivert = [];
+			this.imposts.forEach(function (elm) {
+				if(elm.orientation == $p.enm.orientations.hor)
+					ihor.push(elm);
+				else if(elm.orientation == $p.enm.orientations.vert)
+					ivert.push(elm);
+			});
+
+			if(ihor.length || ivert.length){
+
+				var by_side = this.profiles_by_side();
+
+				// сортируем ihor по убыванию y
+				ihor.sort(function (a, b) {
+					return b.b.y + b.e.y - a.b.y - a.e.y;
+				});
+				// сортируем ivert по возрастанию x
+				ihor.sort(function (a, b) {
+					return a.b.x + a.e.x - b.b.x - b.e.x;
+				});
+
+				if(!this.l_dimensions.ihor)
+					this.l_dimensions.ihor = {};
+				if(!this.l_dimensions.ivert)
+					this.l_dimensions.ivert = {};
+
+				// для ihor добавляем по вертикали
+				for(var i = 0; i< ihor.length; i++){
+					if(this.is_pos("right")){
+
+						if(i == 0 && !this.l_dimensions.ihor["0"]){
+							this.l_dimensions.ihor["0"] = new DimensionLine({
+								pos: "right",
+								elm1: by_side.bottom,
+								p1: by_side.bottom.b.x > by_side.bottom.e.x ? "b" : "e",
+								elm2: ihor[i],
+								p2: ihor[i].b.x > ihor[i].e.x ? "b" : "e",
+								parent: this.l_dimensions
+							});
+						}
+
+						if(i == ihor.length -1 && !this.l_dimensions.ihor[ihor.length]){
+
+							this.l_dimensions.ihor[ihor.length] = new DimensionLine({
+								pos: "right",
+								elm1: ihor[i],
+								p1: ihor[i].b.x > ihor[i].e.x ? "b" : "e",
+								elm2: by_side.top,
+								p2: by_side.top.b.x > by_side.top.e.x ? "b" : "e",
+								parent: this.l_dimensions
+							});
+
+						}
+
+					}else if(this.is_pos("left")){
+
+					}
+				}
+
+				// для ivert добавляем по горизонтали
+				for(var i = 0; i< ihor.length; i++){
+
+				}
+			}
+
+			
+			
+			// далее - размерные линии контура
+			if (this.project.contours.length > 1) {
+
+				if(this.is_pos("left") && !this.is_pos("right") && this.project.bounds.height != this.bounds.height){
+					if(!this.l_dimensions.left){
+						this.l_dimensions.left = new DimensionLine({
+							pos: "left",
+							parent: this.l_dimensions
+						});
+					}
+				}else{
+					if(this.l_dimensions.left){
+						this.l_dimensions.left.remove();
+						this.l_dimensions.left = null;
+					}
+				}
+
+				if(this.is_pos("right") && this.project.bounds.height != this.bounds.height){
+					if(!this.l_dimensions.right){
+						this.l_dimensions.right = new DimensionLine({
+							pos: "right",
+							parent: this.l_dimensions
+						});
+					}
+				}else{
+					if(this.l_dimensions.right){
+						this.l_dimensions.right.remove();
+						this.l_dimensions.right = null;
+					}
+				}
+
+				if(this.is_pos("top") && !this.is_pos("bottom") && this.project.bounds.width != this.bounds.width){
+					if(!this.l_dimensions.top){
+						this.l_dimensions.top = new DimensionLine({
+							pos: "top",
+							parent: this.l_dimensions
+						});
+					}
+				}else{
+					if(this.l_dimensions.top){
+						this.l_dimensions.top.remove();
+						this.l_dimensions.top = null;
+					}
+				}
+
+				if(this.is_pos("bottom") && this.project.bounds.width != this.bounds.width){
+					if(!this.l_dimensions.bottom){
+						this.l_dimensions.bottom = new DimensionLine({
+							pos: "bottom",
+							parent: this.l_dimensions
+						});
+					}
+				}else{
+					if(this.l_dimensions.bottom){
+						this.l_dimensions.bottom.remove();
+						this.l_dimensions.bottom = null;
+					}
+				}
+
+				
+			}
+		}
 	}
 });
+
+/**
+ * Экспортируем конструктор Contour, чтобы фильтровать инстанции этого типа
+ * @property Contour
+ * @for $p
+ * @type {function}
+ */
+$p.Contour = Contour;

@@ -29,7 +29,8 @@ function EditorAccordion(_editor, cell_acc) {
 				{name: 'bottom', img: 'align_bottom.png', tooltip: $p.msg.align_node_bottom, float: 'left'},
 				{name: 'top', img: 'align_top.png', tooltip: $p.msg.align_node_top, float: 'left'},
 				{name: 'right', img: 'align_right.png', tooltip: $p.msg.align_node_right, float: 'left'},
-				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить элемент', float: 'right', paddingRight: '20px'}
+				{name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
+				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
 			],
 			image_path: "dist/imgs/",
 			onclick: function (name) {
@@ -128,8 +129,9 @@ function EditorAccordion(_editor, cell_acc) {
 
 			function layer_text(layer, bounds){
 				if(!bounds)
-					bounds = layer.profile_bounds;
-				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr + " " + bounds.width.toFixed() + "х" + bounds.height.toFixed();
+					bounds = layer.bounds;
+				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr +
+					(bounds ? " " + bounds.width.toFixed() + "х" + bounds.height.toFixed() : "");
 			}
 
 			function load_layer(layer){
@@ -159,11 +161,9 @@ function EditorAccordion(_editor, cell_acc) {
 
 						// добавляем слои изделия
 						tree.deleteChildItems(0);
-						_editor.project.layers.forEach(function (l) {
-							if(l instanceof Contour){
-								load_layer(l);
-								tree.setSubChecked(l.cnstr, true);
-							}
+						_editor.project.contours.forEach(function (l) {
+							load_layer(l);
+							tree.setSubChecked(l.cnstr, true);
 
 						});
 

@@ -24,15 +24,8 @@
 	msg.align_set_bottom = "Установить размер сдвигом нижних элементов";
 	msg.align_set_top = "Установить размер сдвигом верхних элементов";
 	msg.align_set_left = "Установить размер сдвигом левых элементов";
+	msg.align_all = "Вписать в прямоугольник";
 	msg.align_invalid_direction = "Неприменимо для элемента с данной ориентацией";
-
-	msg.ruler_elm = "Расстояние между элементами";
-	msg.ruler_node = "Расстояние между узлами";
-	msg.ruler_new_line = "Добавить размерную линию";
-
-	msg.ruler_base = "По опорным линиям";
-	msg.ruler_inner = "По внутренним линиям";
-	msg.ruler_outer = "По внешним линиям";
 
 	msg.bld_constructor = "Конструктор объектов графического построителя";
 	msg.bld_title = "Графический построитель";
@@ -47,6 +40,18 @@
 
 	msg.bld_new_stv = "Добавить створку";
 	msg.bld_new_stv_no_filling = "Перед добавлением створки, укажите заполнение,<br />в которое поместить створку";
+
+	msg.del_elm = "Удалить элемент";
+
+	msg.ruler_elm = "Расстояние между элементами";
+	msg.ruler_node = "Расстояние между узлами";
+	msg.ruler_new_line = "Добавить размерную линию";
+
+	msg.ruler_base = "По опорным линиям";
+	msg.ruler_inner = "По внутренним линиям";
+	msg.ruler_outer = "По внешним линиям";
+
+	
 	
 })($p.msg);
 
@@ -81,14 +86,14 @@ function Contour(attr){
 	};
 
 	var _contour = this,
-		_parent = attr.parent,
 		_row,
 		_notifier = Object.getNotifier(this._noti),
 		_layers = {};
 
 	Contour.superclass.constructor.call(this);
-	if(_parent)
-		this.parent = _parent;
+	
+	if(attr.parent)
+		this.parent = attr.parent;
 
 	// строка в таблице конструкций
 	if(attr.row)
@@ -104,8 +109,7 @@ function Contour(attr){
 		_row: {
 			get : function(){
 				return _row;
-			},
-			enumerable : false
+			}
 		},
 
 		cnstr: {
@@ -114,8 +118,7 @@ function Contour(attr){
 			},
 			set : function(v){
 				_row.cnstr = v;
-			},
-			enumerable : false
+			}
 		},
 
 		// служебная группа текстовых комментариев
@@ -124,8 +127,7 @@ function Contour(attr){
 				if(!_layers.text)
 					_layers.text = new paper.Group({ parent: this });
 				return _layers.text;
-			},
-			enumerable: false
+			}
 		},
 
 		// служебная группа визуализации допов,  петель и ручек
@@ -134,8 +136,7 @@ function Contour(attr){
 				if(!_layers.visualization)
 					_layers.visualization = new paper.Group({ parent: this, guide: true });
 				return _layers.visualization;
-			},
-			enumerable: false
+			}
 		},
 
 		// служебная группа размерных линий
@@ -144,8 +145,7 @@ function Contour(attr){
 				if(!_layers.dimensions)
 					_layers.dimensions = new paper.Group({ parent: this });
 				return _layers.dimensions;
-			},
-			enumerable: false
+			}
 		}
 
 	});
@@ -391,8 +391,7 @@ Contour.prototype.__define({
 			this.project._activeLayer = this;
 			$p.eve.callEvent("layer_activated", [this]);
 			this.project.register_update();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -410,8 +409,25 @@ Contour.prototype.__define({
 				}
 			});
 			return res;
-		},
-		enumerable : false
+		}
+	},
+
+	/**
+	 * Возвращает массив импостов текущего + вложенных контура
+	 * @property imposts
+	 * @for Contour
+	 * @returns {Array.<Profile>}
+	 */
+	imposts: {
+		get: function(){
+			var res = [];
+			this.getItems({class: Profile}).forEach(function(elm) {
+				if (elm.rays.b.is_t || elm.rays.e.is_t){
+					res.push(elm);
+				}
+			});
+			return res;
+		}
 	},
 
 	/**
@@ -433,23 +449,30 @@ Contour.prototype.__define({
 				}
 			});
 			return res;
-		},
-		enumerable : false
+		}
 	},
 
+	/**
+	 * Габариты по внешним краям профилей контура
+	 */
 	bounds: {
 		get: function () {
-			var profiles = this.profiles, res;
-			if(!profiles.length)
-				res = new paper.Rectangle();
-			else{
-				res = profiles[0].bounds;
-				for(var i = 1; i < profiles.length; i++)
-					res = res.unite(profiles[i].bounds);
+
+			if(!this.data._bounds){
+
+				var profiles = this.profiles, res;
+				if(!profiles.length)
+					this.data._bounds = new paper.Rectangle();
+				else{
+					this.data._bounds = profiles[0].bounds;
+					for(var i = 1; i < profiles.length; i++)
+						this.data._bounds = this.data._bounds.unite(profiles[i].bounds);
+				}
 			}
-			return res;
-		},
-		enumerable : false
+
+			return this.data._bounds;
+			
+		}
 	},
 
 	/**
@@ -473,6 +496,9 @@ Contour.prototype.__define({
 					on_contour_redrawed();
 			}
 
+			// сбрасываем кеш габаритов
+			this.data._bounds = null;
+			
 			// чистим визуализацию
 			if(!this.project.data._saving && this.l_visualization._by_spec)
 				this.l_visualization._by_spec.removeChildren();
@@ -501,20 +527,18 @@ Contour.prototype.__define({
 			});
 
 			// перерисовываем размерные линии
-			var _bounds = this.profile_bounds;
 			for(var i = this.l_dimensions.children.length -1; i >=0; i--){
-				this.l_dimensions.children[i].redraw(_bounds);
+				this.l_dimensions.children[i].redraw();
 			}
 
 			// информируем мир о новых размерах нашего контура
-			$p.eve.callEvent("contour_redrawed", [this, _bounds]);
+			$p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
 
 			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
 			if(!llength && on_contour_redrawed)
 				on_contour_redrawed();
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -538,9 +562,8 @@ Contour.prototype.__define({
 			});
 
 			// ответственность за строку в таблице конструкций лежит на контуре
-			var profile_bounds = this.profile_bounds;
-			this._row.x = profile_bounds ? profile_bounds.width : 0;
-			this._row.y = profile_bounds? profile_bounds.height : 0;
+			this._row.x = this.bounds ? this.bounds.width : 0;
+			this._row.y = this.bounds? this.bounds.height : 0;
 			this._row.is_rectangular = this.is_rectangular;
 			if(this.parent){
 				this._row.w = this.w;
@@ -549,8 +572,7 @@ Contour.prototype.__define({
 				this._row.w = 0;
 				this._row.h = 0;
 			}
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -570,8 +592,7 @@ Contour.prototype.__define({
 						return p;
 				}
 			}
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -585,8 +606,7 @@ Contour.prototype.__define({
 			return this.outer_profiles.map(function (v) {
 				return v.elm;
 			});
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -629,8 +649,7 @@ Contour.prototype.__define({
 				});
 			}
 			return res;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -659,8 +678,7 @@ Contour.prototype.__define({
 			});
 
 			return nodes;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -742,8 +760,7 @@ Contour.prototype.__define({
 			});
 
 			return nodes;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -806,8 +823,7 @@ Contour.prototype.__define({
 
 			return res;
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -912,8 +928,7 @@ Contour.prototype.__define({
 			 */
 			contours.forEach(bind_glass);
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -992,8 +1007,7 @@ Contour.prototype.__define({
 			this.sort_nodes(curve_nodes);
 
 			return path_nodes;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1026,8 +1040,7 @@ Contour.prototype.__define({
 					nodes.push(res[i]);
 				res.length = 0;
 			}
-		},
-		enumerable : false
+		}
 	},
 
 	// виртуальные метаданные для автоформ
@@ -1072,8 +1085,7 @@ Contour.prototype.__define({
 					params: t.project.ox._metadata.tabular_sections.params
 				}
 			};
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1082,8 +1094,7 @@ Contour.prototype.__define({
 	_manager: {
 		get: function () {
 			return this.project._dp._manager;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1092,8 +1103,7 @@ Contour.prototype.__define({
 	params: {
 		get: function () {
 			return this.project.ox.params;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1139,8 +1149,7 @@ Contour.prototype.__define({
 
 			$p.eve.callEvent("furn_changed", [this]);
 			
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1153,8 +1162,7 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.clr_furn = v;
 			this.project.register_change();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1167,8 +1175,7 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.direction = v;
 			this.project.register_change(true);
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1181,8 +1188,7 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.h_ruch = v;
 			this.project.register_change();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1195,8 +1201,7 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.mskt = v;
 			this.project.register_change();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1209,26 +1214,7 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.clr_mskt = v;
 			this.project.register_change();
-		},
-		enumerable : false
-	},
-
-	/**
-	 * Габариты по внешним краям профиля
-	 */
-	profile_bounds: {
-		get: function () {
-			var bounds;
-
-			this.profiles.forEach(function (profile) {
-				if(!bounds)
-					bounds = profile.path.bounds;
-				else
-					bounds = bounds.unite(profile.path.bounds);
-			});
-			return bounds;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1270,8 +1256,7 @@ Contour.prototype.__define({
 
 			return res;
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1314,8 +1299,7 @@ Contour.prototype.__define({
 			return next();
 
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1326,8 +1310,7 @@ Contour.prototype.__define({
 			return (this.side_count != 4) || !this.profiles.some(function (profile) {
 				return !profile.is_linear();
 			});
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1336,8 +1319,7 @@ Contour.prototype.__define({
 	side_count: {
 		get : function(){
 			return this.profiles.length;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1347,12 +1329,10 @@ Contour.prototype.__define({
 		get : function(){
 			if(this.side_count != 4)
 				return 0;
-			var profiles = this.profiles_by_side(),
-				bounds = this.profile_bounds;
-
-			return bounds? bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
-		},
-		enumerable : false
+			
+			var profiles = this.profiles_by_side();
+			return this.bounds ? this.bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
+		}
 	},
 
 	/**
@@ -1362,12 +1342,53 @@ Contour.prototype.__define({
 		get : function(){
 			if(this.side_count != 4)
 				return 0;
-			var profiles = this.profiles_by_side(),
-				bounds = this.profile_bounds;
+			
+			var profiles = this.profiles_by_side();
+			return this.bounds ? this.bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
+		}
+	},
 
-			return bounds ? bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
-		},
-		enumerable : false
+	/**
+	 * Положение контура в изделии
+	 */
+	pos: {
+		get: function () {
+
+		}
+	},
+
+	/**
+	 * Тест положения контура в изделии
+	 */
+	is_pos: {
+		value: function (pos) {
+
+			// если в изделии один контур или если контур является створкой, он занимает одновременно все положения
+			if(this.project.contours.count == 1 || this.parent)
+				return true;
+
+			// если контур реально верхний или правый и т.д. - возвращаем результат сразу
+			var res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
+
+			if(!res){
+				if(pos == "top"){
+					var rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.topRight.add([0, -200]));
+				}else if(pos == "left"){
+					var rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.bottomLeft.add([-200, 0]));
+				}else if(pos == "right"){
+					var rect = new paper.Rectangle(this.bounds.topRight, this.bounds.bottomRight.add([200, 0]));
+				}else if(pos == "bottom"){
+					var rect = new paper.Rectangle(this.bounds.bottomLeft, this.bounds.bottomRight.add([0, 200]));
+				}
+
+				res = !this.project.contours.some(function (l) {
+					return l != this && rect.intersects(l.bounds);
+				}.bind(this));
+			}
+
+			return res;
+
+		}
 	},
 
 	/**
@@ -1429,8 +1450,7 @@ Contour.prototype.__define({
 			else
 				rotary_folding();
 
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -1468,10 +1488,158 @@ Contour.prototype.__define({
 					l.draw_visualization();
 			});
 
-		},
-		enumerable: false
+		}
+	},
+
+	/**
+	 * формирует авторазмерные линии
+	 */
+	draw_sizes: {
+
+		value: function () {
+			
+			// сначала, строим размерные линии импостов
+
+			// получаем импосты контура, делим их на вертикальные и горизонтальные
+			var ihor = [], ivert = [];
+			this.imposts.forEach(function (elm) {
+				if(elm.orientation == $p.enm.orientations.hor)
+					ihor.push(elm);
+				else if(elm.orientation == $p.enm.orientations.vert)
+					ivert.push(elm);
+			});
+
+			if(ihor.length || ivert.length){
+
+				var by_side = this.profiles_by_side();
+
+				// сортируем ihor по убыванию y
+				ihor.sort(function (a, b) {
+					return b.b.y + b.e.y - a.b.y - a.e.y;
+				});
+				// сортируем ivert по возрастанию x
+				ihor.sort(function (a, b) {
+					return a.b.x + a.e.x - b.b.x - b.e.x;
+				});
+
+				if(!this.l_dimensions.ihor)
+					this.l_dimensions.ihor = {};
+				if(!this.l_dimensions.ivert)
+					this.l_dimensions.ivert = {};
+
+				// для ihor добавляем по вертикали
+				for(var i = 0; i< ihor.length; i++){
+					if(this.is_pos("right")){
+
+						if(i == 0 && !this.l_dimensions.ihor["0"]){
+							this.l_dimensions.ihor["0"] = new DimensionLine({
+								pos: "right",
+								elm1: by_side.bottom,
+								p1: by_side.bottom.b.x > by_side.bottom.e.x ? "b" : "e",
+								elm2: ihor[i],
+								p2: ihor[i].b.x > ihor[i].e.x ? "b" : "e",
+								parent: this.l_dimensions
+							});
+						}
+
+						if(i == ihor.length -1 && !this.l_dimensions.ihor[ihor.length]){
+
+							this.l_dimensions.ihor[ihor.length] = new DimensionLine({
+								pos: "right",
+								elm1: ihor[i],
+								p1: ihor[i].b.x > ihor[i].e.x ? "b" : "e",
+								elm2: by_side.top,
+								p2: by_side.top.b.x > by_side.top.e.x ? "b" : "e",
+								parent: this.l_dimensions
+							});
+
+						}
+
+					}else if(this.is_pos("left")){
+
+					}
+				}
+
+				// для ivert добавляем по горизонтали
+				for(var i = 0; i< ihor.length; i++){
+
+				}
+			}
+
+			
+			
+			// далее - размерные линии контура
+			if (this.project.contours.length > 1) {
+
+				if(this.is_pos("left") && !this.is_pos("right") && this.project.bounds.height != this.bounds.height){
+					if(!this.l_dimensions.left){
+						this.l_dimensions.left = new DimensionLine({
+							pos: "left",
+							parent: this.l_dimensions
+						});
+					}
+				}else{
+					if(this.l_dimensions.left){
+						this.l_dimensions.left.remove();
+						this.l_dimensions.left = null;
+					}
+				}
+
+				if(this.is_pos("right") && this.project.bounds.height != this.bounds.height){
+					if(!this.l_dimensions.right){
+						this.l_dimensions.right = new DimensionLine({
+							pos: "right",
+							parent: this.l_dimensions
+						});
+					}
+				}else{
+					if(this.l_dimensions.right){
+						this.l_dimensions.right.remove();
+						this.l_dimensions.right = null;
+					}
+				}
+
+				if(this.is_pos("top") && !this.is_pos("bottom") && this.project.bounds.width != this.bounds.width){
+					if(!this.l_dimensions.top){
+						this.l_dimensions.top = new DimensionLine({
+							pos: "top",
+							parent: this.l_dimensions
+						});
+					}
+				}else{
+					if(this.l_dimensions.top){
+						this.l_dimensions.top.remove();
+						this.l_dimensions.top = null;
+					}
+				}
+
+				if(this.is_pos("bottom") && this.project.bounds.width != this.bounds.width){
+					if(!this.l_dimensions.bottom){
+						this.l_dimensions.bottom = new DimensionLine({
+							pos: "bottom",
+							parent: this.l_dimensions
+						});
+					}
+				}else{
+					if(this.l_dimensions.bottom){
+						this.l_dimensions.bottom.remove();
+						this.l_dimensions.bottom = null;
+					}
+				}
+
+				
+			}
+		}
 	}
 });
+
+/**
+ * Экспортируем конструктор Contour, чтобы фильтровать инстанции этого типа
+ * @property Contour
+ * @for $p
+ * @type {function}
+ */
+$p.Contour = Contour;
 /**
  *
  * Created 21.08.2015<br />
@@ -1489,7 +1657,7 @@ Contour.prototype.__define({
 function DimensionLine(attr){
 
 
-	DimensionLine.superclass.constructor.call(this, attr);
+	DimensionLine.superclass.constructor.call(this, {parent: attr.parent});
 
 	var _row;
 
@@ -1508,8 +1676,7 @@ function DimensionLine(attr){
 		_row: {
 			get: function () {
 				return _row;
-			},
-			enumerable: false
+			}
 		}
 	});
 
@@ -1544,16 +1711,14 @@ DimensionLine.prototype.__define({
 	_metadata: {
 		get: function () {
 			return $p.dp.builder_text.metadata();
-		},
-		enumerable: false
+		}
 	},
 
 	// виртуальный датаменеджер для автоформ
 	_manager: {
 		get: function () {
 			return $p.dp.builder_text;
-		},
-		enumerable: false
+		}
 	},
 
 	_nodes: {
@@ -1578,15 +1743,13 @@ DimensionLine.prototype.__define({
 	_mouseenter: {
 		value: function (event) {
 			paper.canvas_cursor('cursor-arrow-ruler');
-		},
-		enumerable: false
+		}
 	},
 
 	_mouseleave: {
 		value: function (event) {
 			//paper.canvas_cursor('cursor-arrow-white');
-		},
-		enumerable: false
+		}
 	},
 
 	_click: {
@@ -1594,26 +1757,55 @@ DimensionLine.prototype.__define({
 			event.stop();
 			this.wnd = new RulerWnd();
 			this.wnd.size = this.size;
-		},
-		enumerable: false
+		}
 	},
 
 	_move_points: {
 		value: function (event, xy) {
 
-			var _bounds = this.parent.parent.bounds, delta;
+			var _bounds, delta;
 
-			if(this.pos == "top" || this.pos == "bottom")
-				if(event.name == "right")
-					delta = new paper.Point(event.size - _bounds.width, 0);
-				else
-					delta = new paper.Point(_bounds.width - event.size, 0);
-			else{
-				if(event.name == "bottom")
-					delta = new paper.Point(0, event.size - _bounds.height);
-				else
-					delta = new paper.Point(0, _bounds.height - event.size);
+			// получаем дельту - на сколько смещать
+			if(this.data.elm1){
+				_bounds = {};
+
+				if(this.pos == "top" || this.pos == "bottom"){
+
+					_bounds[event.name] = Math.abs(this.data.elm1[this.data.p1].x - this.data.elm2[this.data.p2].x);
+
+					if(event.name == "right")
+						delta = new paper.Point(event.size - _bounds[event.name], 0);
+					else
+						delta = new paper.Point(_bounds[event.name] - event.size, 0);
+
+				}else{
+
+					_bounds[event.name] = Math.abs(this.data.elm1[this.data.p1].y - this.data.elm2[this.data.p2].y);
+
+					if(event.name == "bottom")
+						delta = new paper.Point(0, event.size - _bounds[event.name]);
+					else
+						delta = new paper.Point(0, _bounds[event.name] - event.size);
+				}
+
+			}else {
+
+				_bounds = this.layer.bounds;
+
+				if(this.pos == "top" || this.pos == "bottom")
+					if(event.name == "right")
+						delta = new paper.Point(event.size - _bounds.width, 0);
+					else
+						delta = new paper.Point(_bounds.width - event.size, 0);
+				else{
+					if(event.name == "bottom")
+						delta = new paper.Point(0, event.size - _bounds.height);
+					else
+						delta = new paper.Point(0, _bounds.height - event.size);
+				}
+
 			}
+
 
 
 			if(delta.length){
@@ -1642,8 +1834,7 @@ DimensionLine.prototype.__define({
 					//this.zoom_fit();
 				}.bind(this.project), 200);
 			}
-		},
-		enumerable: false
+		}
 	},
 
 	_sizes_wnd: {
@@ -1669,20 +1860,18 @@ DimensionLine.prototype.__define({
 						break;
 				}
 			}
-		},
-		enumerable: false
+		}
 	},
 
 	redraw: {
-		value: function (_bounds) {
+		value: function () {
 
 			var _nodes = this._nodes,
+				_bounds = this.layer.bounds,
 				b, e, tmp, normal, length, bs, es;
 
-			if(!_bounds)
-				_bounds = this.parent.parent.bounds;
-
 			if(!this.pos){
+
 				b = this.data.elm1[this.data.p1];
 				e = this.data.elm2[this.data.p2];
 
@@ -1699,18 +1888,33 @@ DimensionLine.prototype.__define({
 				e = _bounds.bottomRight;
 
 			}else if(this.pos == "right"){
+
 				b = _bounds.bottomRight;
 				e = _bounds.topRight;
 			}
 
-			tmp = new paper.Path({
-				insert: false,
-				segments: [b, e]
-			});
+			tmp = new paper.Path({ insert: false, segments: [b, e] });
+
+			if(this.data.elm1 && this.pos){
+
+				b = tmp.getNearestPoint(this.data.elm1[this.data.p1]);
+				e = tmp.getNearestPoint(this.data.elm2[this.data.p2]);
+				if(tmp.getOffsetOf(b) > tmp.getOffsetOf(e)){
+					normal = e;
+					e = b;
+					b = normal;
+				}
+				tmp.firstSegment.point = b;
+				tmp.lastSegment.point = e;
+
+			};
 
 			normal = tmp.getNormalAt(0).multiply(90);
 			if(this.pos == "right" || this.pos == "bottom")
 				normal = normal.multiply(1.4).negate();
+
+			if(this.layer instanceof DimensionLayer)
+				normal = normal.multiply(2);
 
 			length = tmp.length;
 			bs = b.add(normal.multiply(0.8));
@@ -1751,8 +1955,7 @@ DimensionLine.prototype.__define({
 		},
 		set: function (v) {
 			this._nodes.text.content = parseFloat(v);
-		},
-		enumerable: false
+		}
 	},
 
 	// угол к горизонту в направлении размера
@@ -1762,8 +1965,7 @@ DimensionLine.prototype.__define({
 		},
 		set: function (v) {
 
-		},
-		enumerable: false
+		}
 	},
 
 	// расположение относительно контура $p.enm.pos
@@ -1774,23 +1976,37 @@ DimensionLine.prototype.__define({
 		set: function (v) {
 			this.data.pos = v;
 			this.redraw();
-		},
-		enumerable: false
+		}
 	},
 
 	// отступ от внешней границы изделия
 	offset: {
 		get: function () {
-			return 100;
+			return this.data.offset || 90;
 		},
 		set: function (v) {
-
-		},
-		enumerable: false
+			this.data.offset = parseInt(v) || 90;
+		}
 	}
 
 });
 
+
+function DimensionLayer(attr) {
+	
+	DimensionLayer.superclass.constructor.call(this);
+	
+	if(!attr || !attr.parent){
+		this.__define({
+			bounds: {
+				get: function () {
+					return this.project.bounds;
+				}
+			}
+		});
+	}
+}
+DimensionLayer._extend(paper.Layer);
 /**
  * Created 24.07.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015
@@ -3965,7 +4181,7 @@ Profile.prototype.__define({
 
 			}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.av){
 				// угловое к вертикальной
-				if(this.orientation == $p.enm.orientations.Вертикальная){
+				if(this.orientation == $p.enm.orientations.vert){
 					if(profile_point == "b"){
 						intersect_point(prays.outer, rays.outer, 1);
 						intersect_point(prays.outer, rays.inner, 4);
@@ -3974,7 +4190,7 @@ Profile.prototype.__define({
 						intersect_point(prays.outer, rays.outer, 2);
 						intersect_point(prays.outer, rays.inner, 3);
 					}
-				}else if(this.orientation == $p.enm.orientations.Горизонтальная){
+				}else if(this.orientation == $p.enm.orientations.hor){
 					if(profile_point == "b"){
 						intersect_point(prays.inner, rays.outer, 1);
 						intersect_point(prays.inner, rays.inner, 4);
@@ -3989,7 +4205,7 @@ Profile.prototype.__define({
 
 			}else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
 				// угловое к горизонтальной
-				if(this.orientation == $p.enm.orientations.Вертикальная){
+				if(this.orientation == $p.enm.orientations.vert){
 					if(profile_point == "b"){
 						intersect_point(prays.inner, rays.outer, 1);
 						intersect_point(prays.inner, rays.inner, 4);
@@ -3998,7 +4214,7 @@ Profile.prototype.__define({
 						intersect_point(prays.inner, rays.outer, 2);
 						intersect_point(prays.inner, rays.inner, 3);
 					}
-				}else if(this.orientation == $p.enm.orientations.Горизонтальная){
+				}else if(this.orientation == $p.enm.orientations.hor){
 					if(profile_point == "b"){
 						intersect_point(prays.outer, rays.outer, 1);
 						intersect_point(prays.outer, rays.inner, 4);
@@ -4230,11 +4446,21 @@ Profile.prototype.__define({
 				angle_hor -= 180;
 			if((angle_hor > -consts.orientation_delta && angle_hor < consts.orientation_delta) ||
 				(angle_hor > 180-consts.orientation_delta && angle_hor < 180+consts.orientation_delta))
-				return $p.enm.orientations.Горизонтальная;
+				return $p.enm.orientations.hor;
 			if((angle_hor > 90-consts.orientation_delta && angle_hor < 90+consts.orientation_delta) ||
 				(angle_hor > 270-consts.orientation_delta && angle_hor < 270+consts.orientation_delta))
-				return $p.enm.orientations.Вертикальная;
-			return $p.enm.orientations.Наклонная;
+				return $p.enm.orientations.vert;
+			return $p.enm.orientations.incline;
+		},
+		enumerable : false
+	},
+
+	/**
+	 * Положение элемента в контуре
+	 */
+	pos: {
+		get: function () {
+			
 		},
 		enumerable : false
 	},
@@ -4741,10 +4967,10 @@ CnnPoint.prototype.__define({
 				return true;
 
 			// если это Ꞁ или └─, то может быть T в разрыв - проверяем
-			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной && this.parent.orientation != $p.enm.orientations.Вертикальная)
+			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной && this.parent.orientation != $p.enm.orientations.vert)
 				return true;
 
-			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной && this.parent.orientation != $p.enm.orientations.Горизонтальная)
+			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной && this.parent.orientation != $p.enm.orientations.hor)
 				return true;
 
 			return false;
@@ -4998,54 +5224,172 @@ function Scheme(_canvas){
 			});
 		};
 
-	/**
-	 * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
-	 */
-	this._noti = {};
+
+
+	// Определяем свойства и методы изделия
+	this.__define({
+
+		/**
+		 * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
+		 */
+		_noti: {
+			value: {}
+		},
+
+		/**
+		 * Формирует оповещение для тех, кто следит за this._noti
+		 * @param obj
+		 */
+		notify: {
+			value: 	function (obj) {
+				Object.getNotifier(this._noti).notify(obj);
+			}
+		},
+
+		/**
+		 * Объект обработки с табличными частями
+		 */
+		_dp: {
+			value: $p.dp.buyers_order.create()
+		},
+
+		/**
+		 * ХарактеристикаОбъект текущего изделия
+		 * @property ox
+		 * @type _cat.characteristics
+		 */
+		ox: {
+			get: function () {
+				return this._dp.characteristic;
+			},
+			set: function (v) {
+
+
+				var _dp = this._dp,
+					setted;
+
+				// пытаемся отключить обсервер от табчасти
+				Object.unobserve(_dp.characteristic, _papam_observer);
+
+				// устанавливаем в _dp характеристику
+				_dp.characteristic = v;
+
+				var ox = _dp.characteristic;
+
+				_dp.clr = ox.clr;
+				_dp.len = ox.x;
+				_dp.height = ox.y;
+				_dp.s = ox.s;
+
+				// устанавливаем строку заказа
+				_scheme.data._calc_order_row = ox.calc_order_row;
+
+				// устанавливаем в _dp свойства строки заказа
+				if(_scheme.data._calc_order_row){
+					"quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach(function (fld) {
+						_dp[fld] = _scheme.data._calc_order_row[fld];
+					});
+				}else{
+					// TODO: установить режим только просмотр, если не найдена строка заказа
+				}
+
+
+				// устанавливаем в _dp систему профилей
+				if(ox.empty())
+					_dp.sys = "";
+
+				else if(ox.owner.empty()){
+
+					_dp.sys = $p.wsql.get_user_param("editor_last_sys");
+					ox.owner = _dp.sys.nom;
+					setted = !_dp.sys.empty();
+
+				}else{
+
+					$p.cat.production_params.find_rows({nom: ox.owner}, function(o){
+						_dp.sys = o;
+						setted = true;
+						return false;
+					});
+				}
+
+				// пересчитываем параметры изделия при установке системы TODO: подумать, как не портить старые изделия, открытые для просмотра
+				if(setted){
+					_dp.sys.refill_prm(ox);
+
+				}else if(!_dp.sys.empty())
+					_dp.sys = "";
+
+				// устанавливаем в _dp цвет по умолчанию
+				if(_dp.clr.empty())
+					_dp.clr = _dp.sys.default_clr;
+
+				// оповещаем о новых слоях и свойствах изделия
+				Object.getNotifier(_scheme._noti).notify({
+					type: 'rows',
+					tabular: 'constructions'
+				});
+				Object.getNotifier(_dp).notify({
+					type: 'rows',
+					tabular: 'extra_fields'
+				});
+
+				// начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
+				Object.observe(ox, _papam_observer, ["row", "rows"]);
+
+			}
+		},
+
+		/**
+		 * Строка табчасти продукция текущего заказа, соответствующая редактируемому изделию
+		 */
+		_calc_order_row: {
+			get: function () {
+				if(!_data._calc_order_row && !this.ox.empty()){
+					_data._calc_order_row = this.ox.calc_order_row;
+				}
+				return _data._calc_order_row;
+			}
+		},
+
+		/**
+		 * Габариты изделия. Рассчитываются, как объединение габаритов всех слоёв типа Contour
+		 * @property bounds
+		 * @type Rectangle
+		 */
+		bounds: {
+			get : function(){
+
+				if(!_data._bounds){
+					_scheme.contours.forEach(function(l){
+						if(!_data._bounds)
+							_data._bounds = l.bounds;
+						else
+							_data._bounds = _data._bounds.unite(l.bounds);
+					});
+				}
+
+				return _data._bounds;
+			},
+			enumerable : false}
+	});
+
 
 	/**
-	 * Формирует оповещение для тех, кто следит за this._noti
-	 * @param obj
+	 * Виртуальная табличная часть параметров изделия
 	 */
-	this.notify = function (obj) {
-		Object.getNotifier(_scheme._noti).notify(obj);
-	};
+	this._dp.__define({
 
-	this._dp = $p.dp.buyers_order.create();
-
-	/**
-	 * Виртуальная табличная часть
-	 */
-	this._dp.__define("extra_fields", {
-		get: function(){
-			return _scheme.ox.params;
-		}
+		extra_fields: {
+				get: function(){
+					return _scheme.ox.params;
+				}
+			}
 	});
 
 	// начинаем следить за _dp, чтобы обработать изменения цвета и параметров
 	Object.observe(this._dp, _dp_observer, ["update"]);
 
-
-	/**
-	 * Габариты изделия. Рассчитываются, как объединение габаритов всех слоёв типа Contour
-	 * @property bounds
-	 * @type Rectangle
-	 */
-	this.__define("bounds", {
-		get : function(){
-
-			if(!_data._bounds){
-				_scheme.layers.forEach(function(l){
-					if(!_data._bounds)
-						_data._bounds = l.bounds;
-					else
-						_data._bounds = _data._bounds.unite(l.bounds);
-				});
-			}
-
-			return _data._bounds;
-		},
-		enumerable : false});
 
 	/**
 	 * Менеджер соединений изделия
@@ -5066,121 +5410,6 @@ function Scheme(_canvas){
 
 	};
 
-	/**
-	 * ХарактеристикаОбъект текущего изделия
-	 * @property ox
-	 * @type _cat.characteristics
-	 */
-	this.__define("ox", {
-		get: function () {
-			return this._dp.characteristic;
-		},
-		set: function (v) {
-
-			
-			var _dp = this._dp,
-				setted;
-			
-			// пытаемся отключить обсервер от табчасти
-			Object.unobserve(_dp.characteristic, _papam_observer);
-
-			// устанавливаем в _dp характеристику
-			_dp.characteristic = v;
-
-			var ox = _dp.characteristic;
-
-			_dp.clr = ox.clr;
-			_dp.len = ox.x;
-			_dp.height = ox.y;
-			_dp.s = ox.s;
-
-			// устанавливаем строку заказа
-			_scheme.data._calc_order_row = ox.calc_order_row;
-
-			// устанавливаем в _dp свойства строки заказа
-			if(_scheme.data._calc_order_row){
-				"quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach(function (fld) {
-					_dp[fld] = _scheme.data._calc_order_row[fld];
-				});
-			}else{
-				// TODO: установить режим только просмотр, если не найдена строка заказа
-			}
-
-
-			// устанавливаем в _dp систему профилей
-			if(ox.empty())
-				_dp.sys = "";
-
-			else if(ox.owner.empty()){
-
-				_dp.sys = $p.wsql.get_user_param("editor_last_sys");
-				ox.owner = _dp.sys.nom;
-				setted = !_dp.sys.empty();
-
-			}else{
-
-				$p.cat.production_params.find_rows({nom: ox.owner}, function(o){
-					_dp.sys = o;
-					setted = true;
-					return false;
-				});
-			}
-
-			// пересчитываем параметры изделия при установке системы TODO: подумать, как не портить старые изделия, открытые для просмотра
-			if(setted){
-				_dp.sys.refill_prm(ox);
-
-			}else if(!_dp.sys.empty())
-				_dp.sys = "";
-
-			// устанавливаем в _dp цвет по умолчанию
-			if(_dp.clr.empty())
-				_dp.clr = _dp.sys.default_clr;
-
-			// оповещаем о новых слоях и свойствах изделия
-			Object.getNotifier(_scheme._noti).notify({
-				type: 'rows',
-				tabular: 'constructions'
-			});
-			Object.getNotifier(_dp).notify({
-				type: 'rows',
-				tabular: 'extra_fields'
-			});
-
-			// начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
-			Object.observe(ox, _papam_observer, ["row", "rows"]);
-			
-		},
-		enumerable: false
-	});
-
-	/**
-	 * Строка табчасти продукция текущего заказа, соответствующая редактируемому изделию
-	 */
-	this.__define("_calc_order_row", {
-		get: function () {
-			if(!_data._calc_order_row && !this.ox.empty()){
-				_data._calc_order_row = this.ox.calc_order_row;
-			}
-			return _data._calc_order_row;
-		},
-		enumerable: false
-	});
-
-	/**
-	 * Цвет текущего изделия
-	 * @property clr
-	 * @type _cat.production_params
-	 */
-	this.__define("clr", {
-		get: function () {
-			return _scheme._dp.characteristic.clr;
-		},
-		set: function (v) {
-			_scheme._dp.characteristic.clr = v;
-		},
-		enumerable: false
-	});
 
 	/**
 	 * Ищет точки в выделенных элементах. Если не находит, то во всём проекте
@@ -5256,74 +5485,6 @@ function Scheme(_canvas){
 			// создаём семейство конструкций
 			load_contour(null);
 
-			// TODO: перенести в отдельный объект авторазмерные линии - находим крайние контуры
-			var left, right, top, bottom;
-			_scheme.layers.forEach(function(l){
-
-				if(!left || l.bounds.left < left.bounds.left)
-					left = l;
-
-				if(!right || l.bounds.right > right.bounds.right)
-					right = l;
-
-				if(!top || l.bounds.top < top.bounds.top)
-					top = l;
-
-				if(!bottom || l.bounds.bottom > bottom.bounds.bottom)
-					bottom = l;
-
-			});
-
-			// формируем авторазмеры
-			if(_scheme.layers.length == 1){
-				new DimensionLine({
-					pos: "bottom",
-					parent: bottom.l_dimensions
-				});
-				new DimensionLine({
-					pos: "right",
-					parent: right.l_dimensions
-				});
-			}else if(_scheme.layers.length == 2){
-				if(left != right){
-					// подобие балкона
-					new DimensionLine({
-						pos: "top",
-						parent: left.l_dimensions
-					});
-					new DimensionLine({
-						pos: "top",
-						parent: right.l_dimensions
-					});
-					new DimensionLine({
-						pos: "left",
-						parent: left.l_dimensions
-					});
-					new DimensionLine({
-						pos: "right",
-						parent: right.l_dimensions
-					});
-				}else{
-					// один над другим
-					new DimensionLine({
-						pos: "top",
-						parent: top.l_dimensions
-					});
-					new DimensionLine({
-						pos: "left",
-						parent: top.l_dimensions
-					});
-					new DimensionLine({
-						pos: "left",
-						parent: bottom.l_dimensions
-					});
-					//new DimensionLine({
-					//	pos: "right",
-					//	parent: right.l_dimensions
-					//});
-				}
-			}
-
 			setTimeout(function () {
 				_data._bounds = null;
 				_scheme.zoom_fit();
@@ -5331,9 +5492,9 @@ function Scheme(_canvas){
 				// виртуальное событие, чтобы UndoRedo сделал начальный снапшот
 				$p.eve.callEvent("scheme_changed", [_scheme]);
 
-				// виртуальное событие, чтобы активировать слой у вереве слоёв
-				if(_scheme.layers.length)
-					$p.eve.callEvent("layer_activated", [_scheme.layers[0]]);
+				// виртуальное событие, чтобы активировать слой в дереве слоёв
+				if(_scheme.contours.length)
+					$p.eve.callEvent("layer_activated", [_scheme.contours[0]]);
 
 				// виртуальное событие, чтобы нарисовать визуализацию
 				$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
@@ -5531,8 +5692,14 @@ function Scheme(_canvas){
 			function on_contour_redrawed(){
 				if(!_changes.length){
 					llength--;
-					if(!llength)
+					if(!llength){
+						_data._bounds = null;
+						_scheme.contours.forEach(function(l){
+							l.draw_sizes();
+						});
+						_scheme.draw_sizes();
 						_scheme.view.update();
+					}
 				}
 			}
 
@@ -5540,21 +5707,13 @@ function Scheme(_canvas){
 				//console.log(_changes.length);
 				_changes.length = 0;
 
-				_scheme.layers.forEach(function(l){
-					if(l instanceof Contour){
-						llength++;
-						l.redraw(on_contour_redrawed);
-					}
+				_scheme.contours.forEach(function(l){
+					llength++;
+					l.redraw(on_contour_redrawed);
 				});
 
 			}
 		}
-
-		// искусственная задержка. зачем?
-		//setTimeout(function() {
-		//	requestAnimationFrame(redraw);
-		//	process_redraw();
-		//}, 20);
 
 		requestAnimationFrame(redraw);
 		process_redraw();
@@ -5566,9 +5725,8 @@ function Scheme(_canvas){
 		if(_scheme != scheme)
 			return;
 		
-		_scheme.layers.forEach(function(l){
-			if(l instanceof Contour)
-				l.draw_visualization();
+		_scheme.contours.forEach(function(l){
+			l.draw_visualization();
 		});
 		_scheme.view.update();
 		
@@ -5661,7 +5819,7 @@ Scheme.prototype.__define({
 			//};
 
 			// вызываем метод save_coordinates в дочерних слоях
-			this.layers.forEach(function (contour) {
+			this.contours.forEach(function (contour) {
 				contour.save_coordinates();
 			});
 			$p.eve.callEvent("save_coordinates", [this, attr]);
@@ -5677,7 +5835,7 @@ Scheme.prototype.__define({
 		get: function () {
 
 			var bounds = new paper.Rectangle();
-			this.layers.forEach(function(l){
+			this.contours.forEach(function(l){
 				bounds = bounds.unite(l.strokeBounds);
 			});
 
@@ -5788,11 +5946,16 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Возвращает массив контуров текущего изделия
+	 * Возвращает массив РАМНЫХ контуров текущего изделия
 	 */
 	contours: {
 		get: function () {
-			return this.getItems({class: Contour});
+			var res = [];
+			this.layers.forEach(function (l) {
+				if(l instanceof Contour)
+					res.push(l)
+			});
+			return res;
 		},
 		enumerable: false
 	},
@@ -5807,6 +5970,60 @@ Scheme.prototype.__define({
 		enumerable: false
 	},
 
+	/**
+	 * Цвет текущего изделия
+	 * @property clr
+	 * @type _cat.production_params
+	 */
+	clr: {
+		get: function () {
+			return this._dp.characteristic.clr;
+		},
+		set: function (v) {
+			this._dp.characteristic.clr = v;
+		}
+	},
+	
+	/**
+	 * Служебный слой размерных линий 
+	 */
+	l_dimensions: {
+		get: function () {
+			if(!this.data.l_dimensions)
+				this.data.l_dimensions = new DimensionLayer();
+			if(!this.data.l_dimensions.isInserted())
+				this.addChild(this.data.l_dimensions);
+			return this.data.l_dimensions;
+		}
+	},
+
+	/**
+	 * Создаёт и перерисовавает габаритные линии изделия
+	 */
+	draw_sizes: {
+		value: function () {
+			
+			if(!this.l_dimensions.bottom)
+				this.l_dimensions.bottom = new DimensionLine({
+					pos: "bottom",
+					parent: this.l_dimensions
+				});
+
+			if(!this.l_dimensions.right)
+				this.l_dimensions.right = new DimensionLine({
+					pos: "right",
+					parent: this.l_dimensions
+				});
+
+			this.l_dimensions.right.redraw();
+			this.l_dimensions.bottom.redraw();
+
+		}
+	},
+
+	/**
+	 * Возвращает вставку по умолчанию с учетом свойств системы и элемента
+	 */
 	default_inset: {
 		value: function (attr) {
 			return this._dp.sys.inserts(attr.elm_type, attr.by_default)[0];
@@ -5814,13 +6031,19 @@ Scheme.prototype.__define({
 		enumerable: false
 	},
 
+	/**
+	 * Возвращает цвет по умолчанию с учетом свойств системы и элемента
+	 */
 	default_clr: {
 		value: function (attr) {
 			return this.ox.clr;
 		},
 		enumerable: false
 	},
-	
+
+	/**
+	 * Возвращает фурнитуру по умолчанию с учетом свойств системы и контура
+	 */
 	default_furn: {
 		get: function () {
 			if(this._dp.sys.furn.count())
@@ -6539,7 +6762,7 @@ function ToolPen(){
 			_editor.tb_left.select(tool.options.name);
 			_editor.canvas_cursor('cursor-pen-freehand');
 
-			if(!_editor.project.layers.length){
+			if(!_editor.project.contours.length){
 
 				// создаём пустой новый слой
 				new Contour( {parent: undefined});
@@ -7915,7 +8138,8 @@ function EditorAccordion(_editor, cell_acc) {
 				{name: 'bottom', img: 'align_bottom.png', tooltip: $p.msg.align_node_bottom, float: 'left'},
 				{name: 'top', img: 'align_top.png', tooltip: $p.msg.align_node_top, float: 'left'},
 				{name: 'right', img: 'align_right.png', tooltip: $p.msg.align_node_right, float: 'left'},
-				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить элемент', float: 'right', paddingRight: '20px'}
+				{name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
+				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
 			],
 			image_path: "dist/imgs/",
 			onclick: function (name) {
@@ -8014,8 +8238,9 @@ function EditorAccordion(_editor, cell_acc) {
 
 			function layer_text(layer, bounds){
 				if(!bounds)
-					bounds = layer.profile_bounds;
-				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr + " " + bounds.width.toFixed() + "х" + bounds.height.toFixed();
+					bounds = layer.bounds;
+				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr +
+					(bounds ? " " + bounds.width.toFixed() + "х" + bounds.height.toFixed() : "");
 			}
 
 			function load_layer(layer){
@@ -8045,11 +8270,9 @@ function EditorAccordion(_editor, cell_acc) {
 
 						// добавляем слои изделия
 						tree.deleteChildItems(0);
-						_editor.project.layers.forEach(function (l) {
-							if(l instanceof Contour){
-								load_layer(l);
-								tree.setSubChecked(l.cnstr, true);
-							}
+						_editor.project.contours.forEach(function (l) {
+							load_layer(l);
+							tree.setSubChecked(l.cnstr, true);
 
 						});
 
@@ -8888,11 +9111,8 @@ function Editor(pwnd, attr){
 			}
 		}
 
-		for (var i = 0, l = _editor.project.layers.length; i < l; i++) {
-			var layer = _editor.project.layers[i];
-			checkPathItem(layer);
-		}
-
+		this.project.getItems({class: Contour}).forEach(checkPathItem);
+		
 		boundingRect.remove();
 
 		return paths;
@@ -9007,8 +9227,9 @@ function Editor(pwnd, attr){
 		 * Подписываемся на события изменения размеров
 		 */
 		_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
-
 		_editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
+		_editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
+		_editor._layout.attachEvent("onExpand", pwnd_resize_finish);
 
 		if(_editor._pwnd instanceof  dhtmlXWindowsCell)
 			_editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
@@ -9196,9 +9417,7 @@ Editor.prototype.__define({
 				}
 			}
 
-			for (var i = this.project.layers.length - 1; i >= 0; i--) {
-				checkPathItem(this.project.layers[i]);
-			}
+			this.project.getItems({class: Contour}).forEach(checkPathItem);
 
 			return segments;
 		}
@@ -9222,7 +9441,11 @@ Editor.prototype.__define({
 			var minmax = {min: {}, max: {}},
 				profile = paper.tool.profile;
 
-			if(!profile)
+			if(name == "all"){
+				$p.msg.show_not_implemented();
+				return;
+
+			}else if(!profile)
 				return;
 
 			minmax.min.x = Math.min(profile.x1, profile.x2);
@@ -9311,8 +9534,7 @@ Editor.prototype.__define({
  * @for $p
  * @type {function}
  */
-if(typeof $p !== "undefined")
-	$p.Editor = Editor;
+$p.Editor = Editor;
 
 
 /**

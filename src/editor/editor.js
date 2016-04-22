@@ -341,11 +341,8 @@ function Editor(pwnd, attr){
 			}
 		}
 
-		for (var i = 0, l = _editor.project.layers.length; i < l; i++) {
-			var layer = _editor.project.layers[i];
-			checkPathItem(layer);
-		}
-
+		this.project.getItems({class: Contour}).forEach(checkPathItem);
+		
 		boundingRect.remove();
 
 		return paths;
@@ -460,8 +457,9 @@ function Editor(pwnd, attr){
 		 * Подписываемся на события изменения размеров
 		 */
 		_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
-
 		_editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
+		_editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
+		_editor._layout.attachEvent("onExpand", pwnd_resize_finish);
 
 		if(_editor._pwnd instanceof  dhtmlXWindowsCell)
 			_editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
@@ -649,9 +647,7 @@ Editor.prototype.__define({
 				}
 			}
 
-			for (var i = this.project.layers.length - 1; i >= 0; i--) {
-				checkPathItem(this.project.layers[i]);
-			}
+			this.project.getItems({class: Contour}).forEach(checkPathItem);
 
 			return segments;
 		}
@@ -675,7 +671,11 @@ Editor.prototype.__define({
 			var minmax = {min: {}, max: {}},
 				profile = paper.tool.profile;
 
-			if(!profile)
+			if(name == "all"){
+				$p.msg.show_not_implemented();
+				return;
+
+			}else if(!profile)
 				return;
 
 			minmax.min.x = Math.min(profile.x1, profile.x2);
@@ -764,6 +764,5 @@ Editor.prototype.__define({
  * @for $p
  * @type {function}
  */
-if(typeof $p !== "undefined")
-	$p.Editor = Editor;
+$p.Editor = Editor;
 
