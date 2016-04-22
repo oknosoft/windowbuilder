@@ -747,25 +747,25 @@ i.phone {
 i.ear-phones {
 	height: 85px;
 	width: 85px;	
-	background: url(../images/img-sprite.png) no-repeat -200px 0px;
+	background: url(../images/img-sprite.png) no-repeat -200px -76px;
 	display: inline-block;
 }
 i.lock {
 	height: 85px;
 	width: 85px;	
-	background: url(../images/img-sprite.png) no-repeat -285px 0px;
+	background: url(../images/img-sprite.png) no-repeat -285px -76px;
 	display: inline-block;
 }
 i.cloud {
 	height: 85px;
 	width: 85px;	
-	background: url(../images/img-sprite.png) no-repeat -370px 0px;
+	background: url(../images/img-sprite.png) no-repeat -370px -76px;
 	display: inline-block;
 }
 i.done {
 	height: 85px;
 	width: 85px;	
-	background: url(../images/img-sprite.png) no-repeat -455px 0px;
+	background: url(../images/img-sprite.png) no-repeat -455px -76px;
 	display: inline-block;
 }
 .map {
