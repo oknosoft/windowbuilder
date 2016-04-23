@@ -190,7 +190,7 @@ function ToolPen(){
 			if (this.mode && this.path) {
 
 				// Рисуем профиль
-				new Profile({generatrix: this.path, proto: tool.profile});
+				new Profile({generatrix: this.path, proto: this.profile});
 				this.mode = null;
 				this.path = null;
 

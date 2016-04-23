@@ -308,16 +308,16 @@ ToolRuler.prototype.__define({
 					})
 				});
 
-				this.project.move_points(delta);
+				paper.project.move_points(delta);
 				setTimeout(function () {
-					this.project.deselectAll();
+					paper.project.deselectAll();
 					this.selected.a.forEach(function (p) {
 						p.path.selected = true;
 					});
 					this.selected.b.forEach(function (p) {
 						p.path.selected = true;
 					});
-					this.project.register_update();
+					paper.project.register_update();
 				}.bind(this), 200);
 			}
 
@@ -439,13 +439,13 @@ function RulerWnd(options, tool){
 	table = div.firstChild.childNodes;
 
 	$p.iface.add_button(table[0].childNodes[1], null,
-		{name: "top", img: "dist/imgs/align_top.png", tooltip: $p.msg.align_set_top}).onclick = on_button_click;
+		{name: "top", css: 'tb_align_top', tooltip: $p.msg.align_set_top}).onclick = on_button_click;
 	$p.iface.add_button(table[1].childNodes[0], null,
-		{name: "left", img: "dist/imgs/align_left.png", tooltip: $p.msg.align_set_left}).onclick = on_button_click;
+		{name: "left", css: 'tb_align_left', tooltip: $p.msg.align_set_left}).onclick = on_button_click;
 	$p.iface.add_button(table[1].childNodes[2], null,
-		{name: "right", img: "dist/imgs/align_right.png", tooltip: $p.msg.align_set_right}).onclick = on_button_click;
+		{name: "right", css: 'tb_align_right', tooltip: $p.msg.align_set_right}).onclick = on_button_click;
 	$p.iface.add_button(table[2].childNodes[1], null,
-		{name: "bottom", img: "dist/imgs/align_bottom.png", tooltip: $p.msg.align_set_bottom}).onclick = on_button_click;
+		{name: "bottom", css: 'tb_align_bottom', tooltip: $p.msg.align_set_bottom}).onclick = on_button_click;
 
 	wnd.attachObject(div);
 

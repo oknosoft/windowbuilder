@@ -25,10 +25,10 @@ function EditorAccordion(_editor, cell_acc) {
 			class_name: "",
 			name: 'aling_bottom',
 			buttons: [
-				{name: 'left', img: 'align_left.png', tooltip: $p.msg.align_node_left, float: 'left'},
-				{name: 'bottom', img: 'align_bottom.png', tooltip: $p.msg.align_node_bottom, float: 'left'},
-				{name: 'top', img: 'align_top.png', tooltip: $p.msg.align_node_top, float: 'left'},
-				{name: 'right', img: 'align_right.png', tooltip: $p.msg.align_node_right, float: 'left'},
+				{name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
+				{name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
+				{name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
+				{name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
 				{name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
 				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
 			],

@@ -110,16 +110,16 @@ function Editor(pwnd, attr){
 	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '300px',
 		image_path: 'dist/imgs/',
 		buttons: [
-			{name: 'select_node', img: 'icon-arrow-white.png', title: $p.injected_data['tip_select_node.html']},
-			{name: 'pan', img: 'icon-hand.png', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
-			{name: 'zoom_fit', img: 'cursor-zoom.png', tooltip: 'Вписать в окно'},
-			{name: 'pen', img: 'cursor-pen-freehand.png', tooltip: 'Добавить профиль'},
-			{name: 'lay_impost', img: 'cursor-lay-impost.png', tooltip: 'Вставить раскладку или импосты'},
-			{name: 'arc', img: 'cursor-arc-r.png', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
-			{name: 'ruler', img: 'ruler_ui.png', tooltip: 'Позиционирование и сдвиг'},
-			{name: 'grid', img: 'grid.png', tooltip: 'Таблица координат'},
-			{name: 'line', img: 'line.png', tooltip: 'Произвольная линия'},
-			{name: 'text', img: 'text.png', tooltip: 'Произвольный текст'}
+			{name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
+			{name: 'pan', css: 'tb_icon-hand', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
+			{name: 'zoom_fit', css: 'tb_cursor-zoom', tooltip: 'Вписать в окно'},
+			{name: 'pen', css: 'tb_cursor-pen-freehand', tooltip: 'Добавить профиль'},
+			{name: 'lay_impost', css: 'tb_cursor-lay-impost', tooltip: 'Вставить раскладку или импосты'},
+			{name: 'arc', css: 'tb_cursor-arc-r', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
+			{name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
+			{name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
+			{name: 'line', css: 'tb_line', tooltip: 'Произвольная линия'},
+			{name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'}
 		],
 		onclick: function (name) {
 			return _editor.select_tool(name);
@@ -669,7 +669,10 @@ Editor.prototype.__define({
 	profile_align: {
 		value: 	function(name){
 			var minmax = {min: {}, max: {}},
-				profile = paper.tool.profile;
+				profile = this.tool.profile;
+
+			if(!(profile instanceof Profile) && this._acc.elm.cells("a").dataObj)
+				profile = this._acc.elm.cells("a").dataObj._obj;
 
 			if(name == "all"){
 				$p.msg.show_not_implemented();

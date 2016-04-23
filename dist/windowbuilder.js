@@ -526,11 +526,6 @@ Contour.prototype.__define({
 				}
 			});
 
-			// перерисовываем размерные линии
-			for(var i = this.l_dimensions.children.length -1; i >=0; i--){
-				this.l_dimensions.children[i].redraw();
-			}
-
 			// информируем мир о новых размерах нашего контура
 			$p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
 
@@ -1500,6 +1495,8 @@ Contour.prototype.__define({
 			
 			// сначала, строим размерные линии импостов
 
+
+
 			// получаем импосты контура, делим их на вертикальные и горизонтальные
 			var ihor = [], ivert = [];
 			this.imposts.forEach(function (elm) {
@@ -1511,7 +1508,48 @@ Contour.prototype.__define({
 
 			if(ihor.length || ivert.length){
 
-				var by_side = this.profiles_by_side();
+				var by_side = this.profiles_by_side(), i,
+
+					imposts_dimensions = function(arr, collection, i, pos, xy, sideb, sidee) {
+
+						if(i == 0 && !collection[i]){
+							collection[i] = new DimensionLine({
+								pos: pos,
+								elm1: sideb,
+								p1: sideb.b[xy] > sideb.e[xy] ? "b" : "e",
+								elm2: arr[i],
+								p2: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
+								parent: this.l_dimensions
+							});
+						}
+
+						if(i >= 0 && i < arr.length-1 && !collection[i+1]){
+
+							collection[i+1] = new DimensionLine({
+								pos: pos,
+								elm1: arr[i],
+								p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
+								elm2: arr[i+1],
+								p2: arr[i+1].b[xy] > arr[i+1].e[xy] ? "b" : "e",
+								parent: this.l_dimensions
+							});
+
+						}
+
+						if(i == arr.length-1 && !collection[arr.length]){
+
+							collection[arr.length] = new DimensionLine({
+								pos: pos,
+								elm1: arr[i],
+								p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
+								elm2: sidee,
+								p2: sidee.b[xy] > sidee.e[xy] ? "b" : "e",
+								parent: this.l_dimensions
+							});
+
+						}
+
+					}.bind(this);
 
 				// сортируем ihor по убыванию y
 				ihor.sort(function (a, b) {
@@ -1522,52 +1560,35 @@ Contour.prototype.__define({
 					return a.b.x + a.e.x - b.b.x - b.e.x;
 				});
 
-				if(!this.l_dimensions.ihor)
-					this.l_dimensions.ihor = {};
-				if(!this.l_dimensions.ivert)
-					this.l_dimensions.ivert = {};
 
 				// для ihor добавляем по вертикали
-				for(var i = 0; i< ihor.length; i++){
-					if(this.is_pos("right")){
+				if(!this.l_dimensions.ihor)
+					this.l_dimensions.ihor = {};
+				for(i = 0; i< ihor.length; i++){
 
-						if(i == 0 && !this.l_dimensions.ihor["0"]){
-							this.l_dimensions.ihor["0"] = new DimensionLine({
-								pos: "right",
-								elm1: by_side.bottom,
-								p1: by_side.bottom.b.x > by_side.bottom.e.x ? "b" : "e",
-								elm2: ihor[i],
-								p2: ihor[i].b.x > ihor[i].e.x ? "b" : "e",
-								parent: this.l_dimensions
-							});
-						}
+					if(this.is_pos("right"))
+						imposts_dimensions(ihor, this.l_dimensions.ihor, i, "right", "x", by_side.bottom, by_side.top);
 
-						if(i == ihor.length -1 && !this.l_dimensions.ihor[ihor.length]){
+					else if(this.is_pos("left"))
+						imposts_dimensions(ihor, this.l_dimensions.ihor, i, "left", "x", by_side.bottom, by_side.top);
 
-							this.l_dimensions.ihor[ihor.length] = new DimensionLine({
-								pos: "right",
-								elm1: ihor[i],
-								p1: ihor[i].b.x > ihor[i].e.x ? "b" : "e",
-								elm2: by_side.top,
-								p2: by_side.top.b.x > by_side.top.e.x ? "b" : "e",
-								parent: this.l_dimensions
-							});
-
-						}
-
-					}else if(this.is_pos("left")){
-
-					}
 				}
 
 				// для ivert добавляем по горизонтали
-				for(var i = 0; i< ihor.length; i++){
+				if(!this.l_dimensions.ivert)
+					this.l_dimensions.ivert = {};
+				for(i = 0; i< ivert.length; i++){
+
+					if(this.is_pos("bottom"))
+						imposts_dimensions(ivert, this.l_dimensions.ivert, i, "bottom", "y", by_side.left, by_side.right);
+
+					else if(this.is_pos("top"))
+						imposts_dimensions(ivert, this.l_dimensions.ivert, i, "top", "y", by_side.left, by_side.right);
 
 				}
 			}
 
-			
-			
+
 			// далее - размерные линии контура
 			if (this.project.contours.length > 1) {
 
@@ -1629,6 +1650,49 @@ Contour.prototype.__define({
 
 				
 			}
+
+			// перерисовываем размерные линии
+			for(var i = this.l_dimensions.children.length -1; i >=0; i--){
+				this.l_dimensions.children[i].redraw();
+			}
+		}
+	},
+	
+	clear_impost_dimentions: {
+	
+		value: function () {
+			for(var key in this.l_dimensions.ihor){
+				this.l_dimensions.ihor[key].remove();
+				delete this.l_dimensions.ihor[key];
+			}
+			for(var key in this.l_dimensions.ivert){
+				this.l_dimensions.ivert[key].remove();
+				delete this.l_dimensions.ivert[key];
+			}
+		}
+	},
+	
+	// обработчик события при удалении элемента
+	on_remove_elm: {
+		
+		value: function (elm) {
+
+			// при удалении любого профиля, удаляем размрные линии импостов
+			if (elm instanceof Profile && !this.project.data._loading)
+				this.clear_impost_dimentions();
+			
+		}
+	},
+
+	// обработчик события при вставке элемента
+	on_insert_elm: {
+
+		value: function (elm) {
+
+			// при вставке любого профиля, удаляем размрные линии импостов
+			if (elm instanceof Profile && !this.project.data._loading)
+				this.clear_impost_dimentions();
+
 		}
 	}
 });
@@ -1763,29 +1827,42 @@ DimensionLine.prototype.__define({
 	_move_points: {
 		value: function (event, xy) {
 
-			var _bounds, delta;
+			var _bounds, delta, size;
 
 			// получаем дельту - на сколько смещать
 			if(this.data.elm1){
+
+				// в _bounds[event.name] надо поместить координату по x или у (в зависисмости от xy), которую будем двигать
 				_bounds = {};
+
 
 				if(this.pos == "top" || this.pos == "bottom"){
 
-					_bounds[event.name] = Math.abs(this.data.elm1[this.data.p1].x - this.data.elm2[this.data.p2].x);
+					size = Math.abs(this.data.elm1[this.data.p1].x - this.data.elm2[this.data.p2].x);
 
-					if(event.name == "right")
-						delta = new paper.Point(event.size - _bounds[event.name], 0);
-					else
-						delta = new paper.Point(_bounds[event.name] - event.size, 0);
+					if(event.name == "right"){
+						delta = new paper.Point(event.size - size, 0);
+						_bounds[event.name] = Math.max(this.data.elm1[this.data.p1].x, this.data.elm2[this.data.p2].x);
+
+					}else{
+						delta = new paper.Point(size - event.size, 0);
+						_bounds[event.name] = Math.min(this.data.elm1[this.data.p1].x, this.data.elm2[this.data.p2].x);
+					}
+
 
 				}else{
 
-					_bounds[event.name] = Math.abs(this.data.elm1[this.data.p1].y - this.data.elm2[this.data.p2].y);
+					size = Math.abs(this.data.elm1[this.data.p1].y - this.data.elm2[this.data.p2].y);
 
-					if(event.name == "bottom")
-						delta = new paper.Point(0, event.size - _bounds[event.name]);
-					else
-						delta = new paper.Point(0, _bounds[event.name] - event.size);
+					if(event.name == "bottom"){
+						delta = new paper.Point(0, event.size - size);
+						_bounds[event.name] = Math.max(this.data.elm1[this.data.p1].y, this.data.elm2[this.data.p2].y);
+
+					}
+					else{
+						delta = new paper.Point(0, size - event.size);
+						_bounds[event.name] = Math.min(this.data.elm1[this.data.p1].y, this.data.elm2[this.data.p2].y);
+					}
 				}
 
 			}else {
@@ -2085,9 +2162,15 @@ function BuilderElement(attr){
 
 		this.detache_wnd();
 
-		if(this.parent && this.parent._noti && this._observer){
-			Object.unobserve(this.parent._noti, this._observer);
-			delete this._observer;
+		if(this.parent){
+
+			if (this.parent.on_remove_elm)
+				this.parent.on_remove_elm(this);
+
+			if (this.parent._noti && this._observer){
+				Object.unobserve(this.parent._noti, this._observer);
+				delete this._observer;
+			}
 		}
 
 		if(this.project.ox === attr.row._owner._owner)
@@ -3608,12 +3691,15 @@ Profile.prototype.__define({
 			this.addChild(this.data.path);
 			this.addChild(this.data.generatrix);
 
-			/**
-			 * Подключаем наблюдателя за событиями контура с именем _consts.move_points_
-			 */
+
 			if(this.parent){
+
+				// Подключаем наблюдателя за событиями контура с именем _consts.move_points_
 				this._observer = this.observer.bind(this);
 				Object.observe(this.parent._noti, this._observer, [consts.move_points]);
+
+				// Информируем контур о том, что у него появился новый ребёнок
+				this.parent.on_insert_elm(this);
 			}				
 
 		},
@@ -5689,16 +5775,25 @@ function Scheme(_canvas){
 
 			var llength = 0;
 
+			// вызывается после перерисовки очередного контура
 			function on_contour_redrawed(){
 				if(!_changes.length){
 					llength--;
+					
 					if(!llength){
+						
+						// если перерисованы все контуры, перерисовываем их размерные линии
 						_data._bounds = null;
 						_scheme.contours.forEach(function(l){
 							l.draw_sizes();
 						});
+						
+						// перерисовываем габаритные размерные линии изделия
 						_scheme.draw_sizes();
+						
+						// обновляем изображение на эуране
 						_scheme.view.update();
+						
 					}
 				}
 			}
@@ -6820,7 +6915,7 @@ function ToolPen(){
 			if (this.mode && this.path) {
 
 				// Рисуем профиль
-				new Profile({generatrix: this.path, proto: tool.profile});
+				new Profile({generatrix: this.path, proto: this.profile});
 				this.mode = null;
 				this.path = null;
 
@@ -7297,16 +7392,16 @@ ToolRuler.prototype.__define({
 					})
 				});
 
-				this.project.move_points(delta);
+				paper.project.move_points(delta);
 				setTimeout(function () {
-					this.project.deselectAll();
+					paper.project.deselectAll();
 					this.selected.a.forEach(function (p) {
 						p.path.selected = true;
 					});
 					this.selected.b.forEach(function (p) {
 						p.path.selected = true;
 					});
-					this.project.register_update();
+					paper.project.register_update();
 				}.bind(this), 200);
 			}
 
@@ -7428,13 +7523,13 @@ function RulerWnd(options, tool){
 	table = div.firstChild.childNodes;
 
 	$p.iface.add_button(table[0].childNodes[1], null,
-		{name: "top", img: "dist/imgs/align_top.png", tooltip: $p.msg.align_set_top}).onclick = on_button_click;
+		{name: "top", css: 'tb_align_top', tooltip: $p.msg.align_set_top}).onclick = on_button_click;
 	$p.iface.add_button(table[1].childNodes[0], null,
-		{name: "left", img: "dist/imgs/align_left.png", tooltip: $p.msg.align_set_left}).onclick = on_button_click;
+		{name: "left", css: 'tb_align_left', tooltip: $p.msg.align_set_left}).onclick = on_button_click;
 	$p.iface.add_button(table[1].childNodes[2], null,
-		{name: "right", img: "dist/imgs/align_right.png", tooltip: $p.msg.align_set_right}).onclick = on_button_click;
+		{name: "right", css: 'tb_align_right', tooltip: $p.msg.align_set_right}).onclick = on_button_click;
 	$p.iface.add_button(table[2].childNodes[1], null,
-		{name: "bottom", img: "dist/imgs/align_bottom.png", tooltip: $p.msg.align_set_bottom}).onclick = on_button_click;
+		{name: "bottom", css: 'tb_align_bottom', tooltip: $p.msg.align_set_bottom}).onclick = on_button_click;
 
 	wnd.attachObject(div);
 
@@ -8134,10 +8229,10 @@ function EditorAccordion(_editor, cell_acc) {
 			class_name: "",
 			name: 'aling_bottom',
 			buttons: [
-				{name: 'left', img: 'align_left.png', tooltip: $p.msg.align_node_left, float: 'left'},
-				{name: 'bottom', img: 'align_bottom.png', tooltip: $p.msg.align_node_bottom, float: 'left'},
-				{name: 'top', img: 'align_top.png', tooltip: $p.msg.align_node_top, float: 'left'},
-				{name: 'right', img: 'align_right.png', tooltip: $p.msg.align_node_right, float: 'left'},
+				{name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
+				{name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
+				{name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
+				{name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
 				{name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
 				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
 			],
@@ -8880,16 +8975,16 @@ function Editor(pwnd, attr){
 	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '300px',
 		image_path: 'dist/imgs/',
 		buttons: [
-			{name: 'select_node', img: 'icon-arrow-white.png', title: $p.injected_data['tip_select_node.html']},
-			{name: 'pan', img: 'icon-hand.png', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
-			{name: 'zoom_fit', img: 'cursor-zoom.png', tooltip: 'Вписать в окно'},
-			{name: 'pen', img: 'cursor-pen-freehand.png', tooltip: 'Добавить профиль'},
-			{name: 'lay_impost', img: 'cursor-lay-impost.png', tooltip: 'Вставить раскладку или импосты'},
-			{name: 'arc', img: 'cursor-arc-r.png', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
-			{name: 'ruler', img: 'ruler_ui.png', tooltip: 'Позиционирование и сдвиг'},
-			{name: 'grid', img: 'grid.png', tooltip: 'Таблица координат'},
-			{name: 'line', img: 'line.png', tooltip: 'Произвольная линия'},
-			{name: 'text', img: 'text.png', tooltip: 'Произвольный текст'}
+			{name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
+			{name: 'pan', css: 'tb_icon-hand', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
+			{name: 'zoom_fit', css: 'tb_cursor-zoom', tooltip: 'Вписать в окно'},
+			{name: 'pen', css: 'tb_cursor-pen-freehand', tooltip: 'Добавить профиль'},
+			{name: 'lay_impost', css: 'tb_cursor-lay-impost', tooltip: 'Вставить раскладку или импосты'},
+			{name: 'arc', css: 'tb_cursor-arc-r', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
+			{name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
+			{name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
+			{name: 'line', css: 'tb_line', tooltip: 'Произвольная линия'},
+			{name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'}
 		],
 		onclick: function (name) {
 			return _editor.select_tool(name);
@@ -9439,7 +9534,10 @@ Editor.prototype.__define({
 	profile_align: {
 		value: 	function(name){
 			var minmax = {min: {}, max: {}},
-				profile = paper.tool.profile;
+				profile = this.tool.profile;
+
+			if(!(profile instanceof Profile) && this._acc.elm.cells("a").dataObj)
+				profile = this._acc.elm.cells("a").dataObj._obj;
 
 			if(name == "all"){
 				$p.msg.show_not_implemented();

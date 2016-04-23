@@ -76,9 +76,15 @@ function BuilderElement(attr){
 
 		this.detache_wnd();
 
-		if(this.parent && this.parent._noti && this._observer){
-			Object.unobserve(this.parent._noti, this._observer);
-			delete this._observer;
+		if(this.parent){
+
+			if (this.parent.on_remove_elm)
+				this.parent.on_remove_elm(this);
+
+			if (this.parent._noti && this._observer){
+				Object.unobserve(this.parent._noti, this._observer);
+				delete this._observer;
+			}
 		}
 
 		if(this.project.ox === attr.row._owner._owner)

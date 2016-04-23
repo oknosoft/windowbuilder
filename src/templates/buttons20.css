@@ -2,4 +2,20 @@
 	background-repeat: no-repeat;
 	background-position: 4px;
 }
-.tb_open { background-image: url(../../lib/imgs/custom_web/open.png);}
+/* .tb_open { background-image: url(/imgs/open.png);} */
+.tb_align_bottom { background-image: url(/imgs/align_bottom.png); opacity: 0.9;}
+.tb_align_left { background-image: url(/imgs/align_left.png); opacity: 0.9;}
+.tb_align_right { background-image: url(/imgs/align_right.png); opacity: 0.9;}
+.tb_align_top { background-image: url(/imgs/align_top.png); opacity: 0.9;}
+
+.tb_icon-hand { background-image: url(/imgs/icon-hand.png);}
+.tb_icon-arrow-white { background-image: url(/imgs/icon-arrow-white.png);}
+.tb_cursor-zoom { background-image: url(/imgs/cursor-zoom.png);}
+.tb_cursor-pen-freehand { background-image: url(/imgs/cursor-pen-freehand.png);}
+.tb_cursor-lay-impost { background-image: url(/imgs/cursor-lay-impost.png);}
+.tb_cursor-arc-r { background-image: url(/imgs/cursor-arc-r.png);}
+.tb_ruler_ui { background-image: url(/imgs/ruler_ui.png);}
+.tb_grid { background-image: url(/imgs/grid.png);}
+.tb_line { background-image: url(/imgs/line.png);}
+.tb_text { background-image: url(/imgs/text.png);}
+

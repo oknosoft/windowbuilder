@@ -469,11 +469,6 @@ Contour.prototype.__define({
 				}
 			});
 
-			// перерисовываем размерные линии
-			for(var i = this.l_dimensions.children.length -1; i >=0; i--){
-				this.l_dimensions.children[i].redraw();
-			}
-
 			// информируем мир о новых размерах нашего контура
 			$p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
 
@@ -1443,6 +1438,8 @@ Contour.prototype.__define({
 			
 			// сначала, строим размерные линии импостов
 
+
+
 			// получаем импосты контура, делим их на вертикальные и горизонтальные
 			var ihor = [], ivert = [];
 			this.imposts.forEach(function (elm) {
@@ -1454,7 +1451,48 @@ Contour.prototype.__define({
 
 			if(ihor.length || ivert.length){
 
-				var by_side = this.profiles_by_side();
+				var by_side = this.profiles_by_side(), i,
+
+					imposts_dimensions = function(arr, collection, i, pos, xy, sideb, sidee) {
+
+						if(i == 0 && !collection[i]){
+							collection[i] = new DimensionLine({
+								pos: pos,
+								elm1: sideb,
+								p1: sideb.b[xy] > sideb.e[xy] ? "b" : "e",
+								elm2: arr[i],
+								p2: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
+								parent: this.l_dimensions
+							});
+						}
+
+						if(i >= 0 && i < arr.length-1 && !collection[i+1]){
+
+							collection[i+1] = new DimensionLine({
+								pos: pos,
+								elm1: arr[i],
+								p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
+								elm2: arr[i+1],
+								p2: arr[i+1].b[xy] > arr[i+1].e[xy] ? "b" : "e",
+								parent: this.l_dimensions
+							});
+
+						}
+
+						if(i == arr.length-1 && !collection[arr.length]){
+
+							collection[arr.length] = new DimensionLine({
+								pos: pos,
+								elm1: arr[i],
+								p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
+								elm2: sidee,
+								p2: sidee.b[xy] > sidee.e[xy] ? "b" : "e",
+								parent: this.l_dimensions
+							});
+
+						}
+
+					}.bind(this);
 
 				// сортируем ihor по убыванию y
 				ihor.sort(function (a, b) {
@@ -1465,52 +1503,35 @@ Contour.prototype.__define({
 					return a.b.x + a.e.x - b.b.x - b.e.x;
 				});
 
-				if(!this.l_dimensions.ihor)
-					this.l_dimensions.ihor = {};
-				if(!this.l_dimensions.ivert)
-					this.l_dimensions.ivert = {};
 
 				// для ihor добавляем по вертикали
-				for(var i = 0; i< ihor.length; i++){
-					if(this.is_pos("right")){
+				if(!this.l_dimensions.ihor)
+					this.l_dimensions.ihor = {};
+				for(i = 0; i< ihor.length; i++){
 
-						if(i == 0 && !this.l_dimensions.ihor["0"]){
-							this.l_dimensions.ihor["0"] = new DimensionLine({
-								pos: "right",
-								elm1: by_side.bottom,
-								p1: by_side.bottom.b.x > by_side.bottom.e.x ? "b" : "e",
-								elm2: ihor[i],
-								p2: ihor[i].b.x > ihor[i].e.x ? "b" : "e",
-								parent: this.l_dimensions
-							});
-						}
+					if(this.is_pos("right"))
+						imposts_dimensions(ihor, this.l_dimensions.ihor, i, "right", "x", by_side.bottom, by_side.top);
 
-						if(i == ihor.length -1 && !this.l_dimensions.ihor[ihor.length]){
+					else if(this.is_pos("left"))
+						imposts_dimensions(ihor, this.l_dimensions.ihor, i, "left", "x", by_side.bottom, by_side.top);
 
-							this.l_dimensions.ihor[ihor.length] = new DimensionLine({
-								pos: "right",
-								elm1: ihor[i],
-								p1: ihor[i].b.x > ihor[i].e.x ? "b" : "e",
-								elm2: by_side.top,
-								p2: by_side.top.b.x > by_side.top.e.x ? "b" : "e",
-								parent: this.l_dimensions
-							});
-
-						}
-
-					}else if(this.is_pos("left")){
-
-					}
 				}
 
 				// для ivert добавляем по горизонтали
-				for(var i = 0; i< ihor.length; i++){
+				if(!this.l_dimensions.ivert)
+					this.l_dimensions.ivert = {};
+				for(i = 0; i< ivert.length; i++){
+
+					if(this.is_pos("bottom"))
+						imposts_dimensions(ivert, this.l_dimensions.ivert, i, "bottom", "y", by_side.left, by_side.right);
+
+					else if(this.is_pos("top"))
+						imposts_dimensions(ivert, this.l_dimensions.ivert, i, "top", "y", by_side.left, by_side.right);
 
 				}
 			}
 
-			
-			
+
 			// далее - размерные линии контура
 			if (this.project.contours.length > 1) {
 
@@ -1572,6 +1593,49 @@ Contour.prototype.__define({
 
 				
 			}
+
+			// перерисовываем размерные линии
+			for(var i = this.l_dimensions.children.length -1; i >=0; i--){
+				this.l_dimensions.children[i].redraw();
+			}
+		}
+	},
+	
+	clear_impost_dimentions: {
+	
+		value: function () {
+			for(var key in this.l_dimensions.ihor){
+				this.l_dimensions.ihor[key].remove();
+				delete this.l_dimensions.ihor[key];
+			}
+			for(var key in this.l_dimensions.ivert){
+				this.l_dimensions.ivert[key].remove();
+				delete this.l_dimensions.ivert[key];
+			}
+		}
+	},
+	
+	// обработчик события при удалении элемента
+	on_remove_elm: {
+		
+		value: function (elm) {
+
+			// при удалении любого профиля, удаляем размрные линии импостов
+			if (elm instanceof Profile && !this.project.data._loading)
+				this.clear_impost_dimentions();
+			
+		}
+	},
+
+	// обработчик события при вставке элемента
+	on_insert_elm: {
+
+		value: function (elm) {
+
+			// при вставке любого профиля, удаляем размрные линии импостов
+			if (elm instanceof Profile && !this.project.data._loading)
+				this.clear_impost_dimentions();
+
 		}
 	}
 });

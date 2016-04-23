@@ -545,16 +545,25 @@ function Scheme(_canvas){
 
 			var llength = 0;
 
+			// вызывается после перерисовки очередного контура
 			function on_contour_redrawed(){
 				if(!_changes.length){
 					llength--;
+					
 					if(!llength){
+						
+						// если перерисованы все контуры, перерисовываем их размерные линии
 						_data._bounds = null;
 						_scheme.contours.forEach(function(l){
 							l.draw_sizes();
 						});
+						
+						// перерисовываем габаритные размерные линии изделия
 						_scheme.draw_sizes();
+						
+						// обновляем изображение на эуране
 						_scheme.view.update();
+						
 					}
 				}
 			}

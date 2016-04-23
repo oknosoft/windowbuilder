@@ -79,12 +79,15 @@ Profile.prototype.__define({
 			this.addChild(this.data.path);
 			this.addChild(this.data.generatrix);
 
-			/**
-			 * Подключаем наблюдателя за событиями контура с именем _consts.move_points_
-			 */
+
 			if(this.parent){
+
+				// Подключаем наблюдателя за событиями контура с именем _consts.move_points_
 				this._observer = this.observer.bind(this);
 				Object.observe(this.parent._noti, this._observer, [consts.move_points]);
+
+				// Информируем контур о том, что у него появился новый ребёнок
+				this.parent.on_insert_elm(this);
 			}				
 
 		},

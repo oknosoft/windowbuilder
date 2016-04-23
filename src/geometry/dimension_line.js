@@ -121,29 +121,42 @@ DimensionLine.prototype.__define({
 	_move_points: {
 		value: function (event, xy) {
 
-			var _bounds, delta;
+			var _bounds, delta, size;
 
 			// получаем дельту - на сколько смещать
 			if(this.data.elm1){
+
+				// в _bounds[event.name] надо поместить координату по x или у (в зависисмости от xy), которую будем двигать
 				_bounds = {};
+
 
 				if(this.pos == "top" || this.pos == "bottom"){
 
-					_bounds[event.name] = Math.abs(this.data.elm1[this.data.p1].x - this.data.elm2[this.data.p2].x);
+					size = Math.abs(this.data.elm1[this.data.p1].x - this.data.elm2[this.data.p2].x);
 
-					if(event.name == "right")
-						delta = new paper.Point(event.size - _bounds[event.name], 0);
-					else
-						delta = new paper.Point(_bounds[event.name] - event.size, 0);
+					if(event.name == "right"){
+						delta = new paper.Point(event.size - size, 0);
+						_bounds[event.name] = Math.max(this.data.elm1[this.data.p1].x, this.data.elm2[this.data.p2].x);
+
+					}else{
+						delta = new paper.Point(size - event.size, 0);
+						_bounds[event.name] = Math.min(this.data.elm1[this.data.p1].x, this.data.elm2[this.data.p2].x);
+					}
+
 
 				}else{
 
-					_bounds[event.name] = Math.abs(this.data.elm1[this.data.p1].y - this.data.elm2[this.data.p2].y);
+					size = Math.abs(this.data.elm1[this.data.p1].y - this.data.elm2[this.data.p2].y);
 
-					if(event.name == "bottom")
-						delta = new paper.Point(0, event.size - _bounds[event.name]);
-					else
-						delta = new paper.Point(0, _bounds[event.name] - event.size);
+					if(event.name == "bottom"){
+						delta = new paper.Point(0, event.size - size);
+						_bounds[event.name] = Math.max(this.data.elm1[this.data.p1].y, this.data.elm2[this.data.p2].y);
+
+					}
+					else{
+						delta = new paper.Point(0, size - event.size);
+						_bounds[event.name] = Math.min(this.data.elm1[this.data.p1].y, this.data.elm2[this.data.p2].y);
+					}
 				}
 
 			}else {
