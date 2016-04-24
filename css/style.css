@@ -244,6 +244,9 @@ h1{
 	width:15%;
 	margin-right:2%;
 }
+.col-md-12 .icon {
+	width:7%;
+}
 i.s1 {
 	width:70px;
 	height:70px;
@@ -298,11 +301,23 @@ i.s6 {
 .service-section-grid:hover i.s6{	
 	background: url('../images/img-sprite.png') no-repeat -890px -70px;
 }
+i.s7 {
+	width:70px;
+	height:70px;
+	background: url('../images/img-sprite.png') no-repeat -960px 0px;
+	display:inline-block;
+}
+.service-section-grid:hover i.s7{
+	background: url('../images/img-sprite.png') no-repeat -960px -70px;
+}
 .icon-text {
 	float:left;
 	width:83%;
 	margin-top: 0.8em;
 }
+
+/* service-section */
+
 .service-section {
 	padding:8em 0;
 }
@@ -312,13 +327,8 @@ i.s6 {
 	font-weight:600;
 	padding: 0.5em;
 }
-.service-section-head p {
-	color:#394b50;
-	font-size:1.3em;
-	font-weight:500;
-}
 .service-section-grid {
-	margin-top:4em;
+	margin-top:2em;
 }
 .service-section-grid h4 {
 	color:#394b50;
@@ -327,11 +337,18 @@ i.s6 {
 	font-family: 'Lato', sans-serif;
 	margin-bottom:0.85em;
 }
-.service-section-grid p {
-	color:#7b7b7b;
+.service-section-head p, .service-section-grid ul, .service-section-grid p {
+	color: #394B50;
 	font-size:1.2em;
 	font-weight:400;
 }
+.service-section-grid ul {
+	list-style-position: inside;
+}
+
+
+/* about-section */
+
 .about_left {
 	padding:0;
 }
@@ -478,6 +495,9 @@ i.s6 {
 	-o-transition: all 0.5s ease-in-out;
 	transition: all 0.5s ease-in-out;
 }
+
+/* work-section */
+
 .work-section {
 	padding: 6em 0;
 }
@@ -487,12 +507,14 @@ i.s6 {
 	font-weight: 600;
 	padding: 0.5em;
 }
-.work-section-head p, .work-section-head ul {
+.work-section-head p, .work-section-head ul, .work-section-grid p {
 	color: #394b50;
 	font-size: 1.2em;
 	font-weight: 400;
+	padding-bottom: .4em;
+	text-align: left;
 }
-.work-section-head ul, .service-section-head ul {
+.work-section-head ul {
 	list-style-position: inside;
 }
 .work-section-grid {
@@ -516,13 +538,6 @@ span.arrow2 {
 	font-weight:700;
 	margin-bottom:0.8em;
 	margin-top:4em;
-}
-.work-section-grid p {
-	color: #7b7b7b;
-	font-size:1.1em;
-	font-weight:400;
-	text-align: left;
-	padding-bottom: .4em;
 }
 a.work {
 	color: #fff;
@@ -614,9 +629,6 @@ img.closeq {
 }
 .contact-section {
 	padding: 0 0 1em 0;
-}
-.section-head{
-	padding: 0 0 2em 0;
 }
 .contact-section-head h3 {
 	color: #394b50;
@@ -881,7 +893,7 @@ span.locate img {
 }
 @media screen and (max-width: 1024px){
 	.top-menu ul li a {
-		font-size: 0.9em;
+		font-size: 1em;
 		padding: 6px 13px;
 	}
 	.top-menu ul li a.active {
@@ -920,7 +932,7 @@ span.locate img {
 	.service-section-head h3,.price-section-head h3,.work-section-head h3,.happy-clients-head h3,.contact-section-head h3 {
 		font-size: 1.9em;
 	}
-	.icon {
+	.icon, .col-md-12 .icon {
 		width: 16%;
 	}
 	.icon-text {
@@ -934,8 +946,8 @@ span.locate img {
 		font-size: 1.1em;
 		margin-bottom: 0.5em;
 	}
-	.service-section-grid p {
-		font-size: 0.9em;
+	.service-section-grid p, .service-section-grid ul {
+		font-size: 1em;
 	}
 	.service-section-grid {
 		margin-top: 2.5em;
@@ -944,7 +956,7 @@ span.locate img {
 		font-size: 2em;
 	}
 	.about_right p {
-		font-size: 0.9em;
+		font-size: 1em;
 	}
 	.about_right {
 		padding: 3em 3.5em 0;
@@ -1006,7 +1018,7 @@ span.locate img {
 		margin: 0.3em 0;
 	}
 	.address a {
-		font-size: 0.9em;
+		font-size: 1em;
 	}
 	.location {
 		top: 55px;
@@ -1120,7 +1132,7 @@ span.locate img {
 	.contact-section-head p .contact-section-head ul{
 		font-size: 1.1em;
 	}
-	.icon {
+	.icon, .col-md-12 .icon {
 		width: 11%;
 	}
 	.icon-text {
@@ -1224,7 +1236,7 @@ span.locate img {
 		margin-top: 3.8em;
 	}
 	.work-section-grid p {
-		font-size: 0.9em;
+		font-size: 1em;
 	}
 }
 @media screen and (max-width: 768px){
@@ -1276,7 +1288,7 @@ span.locate img {
 	.service-section-head h3, .price-section-head h3, .work-section-head h3, .happy-clients-head h3, .contact-section-head h3, .about_right h3 {
 		font-size: 1.6em;
 	}
-	.icon {
+	.icon, .col-md-12 .icon {
 		width: 13%;
 	}
 	.icon-text {
@@ -1461,7 +1473,7 @@ span.locate img {
 	.service-grid {
 		padding:0;
 	}
-	.icon {
+	.icon, .col-md-12 .icon {
 		width: 16%;
 	}
 	.icon-text {
@@ -1579,7 +1591,7 @@ span.locate img {
 	.logo {
 		width: 15%;
 	}
-	.icon {
+	.icon, .col-md-12 .icon {
 		width: 24%;
 	}
 	.icon-text {
