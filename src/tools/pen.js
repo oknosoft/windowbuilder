@@ -9,7 +9,8 @@
 function ToolPen(){
 
 	var _editor = paper,
-		tool = this;
+		tool = this,
+		on_layer_activated;
 
 	ToolPen.superclass.constructor.call(this);
 
@@ -89,6 +90,7 @@ function ToolPen(){
 
 	}
 
+	// делает полупрозрачными элементы неактивных контуров
 	function decorate_layers(reset){
 		var active = _editor.project.activeLayer;
 		_editor.project.getItems({class: Contour}).forEach(function (l) {
@@ -97,13 +99,6 @@ function ToolPen(){
 					elm.opacity = (l == active || reset) ? 1 : 0.5;
 			});
 		})
-	}
-
-	function observer(changes){
-		changes.forEach(function(change){
-			if(change.name == "_activeLayer")
-				decorate_layers();
-		});
 	}
 	
 	tool.hitTest = function(event) {
@@ -155,7 +150,10 @@ function ToolPen(){
 
 			tool_wnd();
 
-			Object.observe(_editor.project, observer);
+			if(!on_layer_activated)
+				on_layer_activated = $p.eve.attachEvent("layer_activated", function (contour) {
+					decorate_layers();
+				});
 
 			decorate_layers();
 
@@ -164,7 +162,10 @@ function ToolPen(){
 		deactivate: function() {
 			_editor.clear_selection_bounds();
 
-			Object.unobserve(_editor.project, observer);
+			if(on_layer_activated){
+				$p.eve.detachEvent(on_layer_activated);
+				on_layer_activated = null;
+			}
 
 			decorate_layers(true);
 
@@ -211,7 +212,7 @@ function ToolPen(){
 				}
 
 				if(item.selected && item.layer)
-					$p.eve.callEvent("layer_activated", [item.layer]);
+					item.layer.activate();
 
 			}
 

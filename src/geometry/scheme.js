@@ -740,7 +740,7 @@ Scheme.prototype.__define({
 		value: function (attr) {
 
 			var svg = this.exportSVG({excludeData: true}),
-				bounds = this.strokeBounds;
+				bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
 
 			svg.setAttribute("x", bounds.x);
 			svg.setAttribute("y", bounds.y);
@@ -867,19 +867,32 @@ Scheme.prototype.__define({
 	 */
 	draw_sizes: {
 		value: function () {
+
+			// получаем правую нижнюю strokeBounds и вычисляем отступы
+			var bounds = this.bounds,
+				stroke_bounds = this.strokeBounds;
+
+			if(bounds && stroke_bounds){
+				if(!this.l_dimensions.bottom)
+					this.l_dimensions.bottom = new DimensionLine({
+						pos: "bottom",
+						parent: this.l_dimensions,
+						offset: bounds.bottom - stroke_bounds.bottom -120
+					});
+				else
+					this.l_dimensions.bottom.offset = bounds.bottom - stroke_bounds.bottom -120;
+
+				if(!this.l_dimensions.right)
+					this.l_dimensions.right = new DimensionLine({
+						pos: "right",
+						parent: this.l_dimensions,
+						offset: bounds.right - stroke_bounds.right -120
+					});
+				else
+					this.l_dimensions.right.offset = bounds.right - stroke_bounds.right -120;
+
+			}
 			
-			if(!this.l_dimensions.bottom)
-				this.l_dimensions.bottom = new DimensionLine({
-					pos: "bottom",
-					parent: this.l_dimensions
-				});
-
-			if(!this.l_dimensions.right)
-				this.l_dimensions.right = new DimensionLine({
-					pos: "right",
-					parent: this.l_dimensions
-				});
-
 			this.l_dimensions.right.redraw();
 			this.l_dimensions.bottom.redraw();
 

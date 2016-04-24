@@ -422,7 +422,7 @@ Contour.prototype.__define({
 		get: function(){
 			var res = [];
 			this.getItems({class: Profile}).forEach(function(elm) {
-				if (elm.rays.b.is_t || elm.rays.e.is_t){
+				if (elm.rays.b.is_t || elm.rays.e.is_t || elm.rays.b.is_i || elm.rays.e.is_i){
 					res.push(elm);
 				}
 			});
@@ -1495,10 +1495,9 @@ Contour.prototype.__define({
 			
 			// сначала, строим размерные линии импостов
 
-
-
 			// получаем импосты контура, делим их на вертикальные и горизонтальные
-			var ihor = [], ivert = [];
+			var ihor = [], ivert = [], i;
+			
 			this.imposts.forEach(function (elm) {
 				if(elm.orientation == $p.enm.orientations.hor)
 					ihor.push(elm);
@@ -1508,9 +1507,11 @@ Contour.prototype.__define({
 
 			if(ihor.length || ivert.length){
 
-				var by_side = this.profiles_by_side(), i,
+				var by_side = this.profiles_by_side(),
 
 					imposts_dimensions = function(arr, collection, i, pos, xy, sideb, sidee) {
+
+						var offset = (pos == "right" || pos == "bottom") ? -130 : 90;
 
 						if(i == 0 && !collection[i]){
 							collection[i] = new DimensionLine({
@@ -1519,7 +1520,8 @@ Contour.prototype.__define({
 								p1: sideb.b[xy] > sideb.e[xy] ? "b" : "e",
 								elm2: arr[i],
 								p2: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
-								parent: this.l_dimensions
+								parent: this.l_dimensions,
+								offset: offset
 							});
 						}
 
@@ -1531,7 +1533,8 @@ Contour.prototype.__define({
 								p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
 								elm2: arr[i+1],
 								p2: arr[i+1].b[xy] > arr[i+1].e[xy] ? "b" : "e",
-								parent: this.l_dimensions
+								parent: this.l_dimensions,
+								offset: offset
 							});
 
 						}
@@ -1544,19 +1547,46 @@ Contour.prototype.__define({
 								p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
 								elm2: sidee,
 								p2: sidee.b[xy] > sidee.e[xy] ? "b" : "e",
-								parent: this.l_dimensions
+								parent: this.l_dimensions,
+								offset: offset
 							});
 
 						}
 
-					}.bind(this);
+					}.bind(this),
+
+					purge = function (arr, asizes, xy) {
+
+						var adel = [];
+						arr.forEach(function (elm) {
+
+							if(asizes.indexOf(elm.b[xy]) != -1 && asizes.indexOf(elm.e[xy]) != -1)
+								adel.push(elm);
+
+							else if(asizes.indexOf(elm.b[xy]) != -1)
+								asizes.push(elm.b[xy]);
+
+							else if(asizes.indexOf(elm.e[xy]) != -1)
+								asizes.push(elm.e[xy]);
+
+						});
+
+						adel.forEach(function (elm) {
+							arr.splice(arr.indexOf(elm), 1);
+						});
+						adel.length = 0;
+
+						return arr;
+					};
 
 				// сортируем ihor по убыванию y
-				ihor.sort(function (a, b) {
+				var asizes = [this.bounds.top, this.bounds.bottom];
+				purge(ihor, asizes, "y").sort(function (a, b) {
 					return b.b.y + b.e.y - a.b.y - a.e.y;
 				});
 				// сортируем ivert по возрастанию x
-				ihor.sort(function (a, b) {
+				asizes = [this.bounds.left, this.bounds.right];
+				purge(ivert, asizes, "x").sort(function (a, b) {
 					return a.b.x + a.e.x - b.b.x - b.e.x;
 				});
 
@@ -1596,9 +1626,12 @@ Contour.prototype.__define({
 					if(!this.l_dimensions.left){
 						this.l_dimensions.left = new DimensionLine({
 							pos: "left",
-							parent: this.l_dimensions
+							parent: this.l_dimensions,
+							offset: ihor.length ? 220 : 90
 						});
-					}
+					}else
+						this.l_dimensions.left.offset = ihor.length ? 220 : 90;
+
 				}else{
 					if(this.l_dimensions.left){
 						this.l_dimensions.left.remove();
@@ -1610,9 +1643,12 @@ Contour.prototype.__define({
 					if(!this.l_dimensions.right){
 						this.l_dimensions.right = new DimensionLine({
 							pos: "right",
-							parent: this.l_dimensions
+							parent: this.l_dimensions,
+							offset: ihor.length ? -260 : -130
 						});
-					}
+					}else
+						this.l_dimensions.right.offset = ihor.length ? -260 : -130;
+
 				}else{
 					if(this.l_dimensions.right){
 						this.l_dimensions.right.remove();
@@ -1624,9 +1660,11 @@ Contour.prototype.__define({
 					if(!this.l_dimensions.top){
 						this.l_dimensions.top = new DimensionLine({
 							pos: "top",
-							parent: this.l_dimensions
+							parent: this.l_dimensions,
+							offset: ivert.length ? 220 : 90
 						});
-					}
+					}else
+						this.l_dimensions.top.offset = ivert.length ? 220 : 90;
 				}else{
 					if(this.l_dimensions.top){
 						this.l_dimensions.top.remove();
@@ -1638,9 +1676,12 @@ Contour.prototype.__define({
 					if(!this.l_dimensions.bottom){
 						this.l_dimensions.bottom = new DimensionLine({
 							pos: "bottom",
-							parent: this.l_dimensions
+							parent: this.l_dimensions,
+							offset: ivert.length ? -260 : -130
 						});
-					}
+					}else
+						this.l_dimensions.bottom.offset = ivert.length ? -260 : -130;
+
 				}else{
 					if(this.l_dimensions.bottom){
 						this.l_dimensions.bottom.remove();
@@ -1651,14 +1692,17 @@ Contour.prototype.__define({
 				
 			}
 
-			// перерисовываем размерные линии
-			for(var i = this.l_dimensions.children.length -1; i >=0; i--){
+			// сначала гасим, а затем перерисовываем размерные линии
+			// for(i = this.l_dimensions.children.length -1; i >=0; i--){
+			// 	this.l_dimensions.children[i].visible = false;
+			// }
+			for(i = this.l_dimensions.children.length -1; i >=0; i--){
 				this.l_dimensions.children[i].redraw();
 			}
 		}
 	},
-	
-	clear_impost_dimentions: {
+
+	clear_dimentions: {
 	
 		value: function () {
 			for(var key in this.l_dimensions.ihor){
@@ -1669,6 +1713,22 @@ Contour.prototype.__define({
 				this.l_dimensions.ivert[key].remove();
 				delete this.l_dimensions.ivert[key];
 			}
+			if(this.l_dimensions.bottom){
+				this.l_dimensions.bottom.remove();
+				this.l_dimensions.bottom = null;
+			}
+			if(this.l_dimensions.top){
+				this.l_dimensions.top.remove();
+				this.l_dimensions.top = null;
+			}
+			if(this.l_dimensions.right){
+				this.l_dimensions.right.remove();
+				this.l_dimensions.right = null;
+			}
+			if(this.l_dimensions.left){
+				this.l_dimensions.left.remove();
+				this.l_dimensions.left = null;
+			}
 		}
 	},
 	
@@ -1678,8 +1738,11 @@ Contour.prototype.__define({
 		value: function (elm) {
 
 			// при удалении любого профиля, удаляем размрные линии импостов
-			if (elm instanceof Profile && !this.project.data._loading)
-				this.clear_impost_dimentions();
+			if(this.parent)
+				this.parent.on_remove_elm(elm);
+
+			else if (elm instanceof Profile && !this.project.data._loading)
+				this.clear_dimentions();
 			
 		}
 	},
@@ -1690,8 +1753,11 @@ Contour.prototype.__define({
 		value: function (elm) {
 
 			// при вставке любого профиля, удаляем размрные линии импостов
-			if (elm instanceof Profile && !this.project.data._loading)
-				this.clear_impost_dimentions();
+			if(this.parent)
+				this.parent.on_remove_elm(elm);
+
+			else if (elm instanceof Profile && !this.project.data._loading)
+				this.clear_dimentions();
 
 		}
 	}
@@ -1730,6 +1796,7 @@ function DimensionLine(attr){
 	this.data.elm2 = attr.elm2 || this.data.elm1;
 	this.data.p1 = attr.p1 || "b";
 	this.data.p2 = attr.p2 || "e";
+	this.data.offset = attr.offset;
 
 	if(!this.data.pos && (!this.data.elm1 || !this.data.elm2)){
 		this.remove();
@@ -1986,12 +2053,7 @@ DimensionLine.prototype.__define({
 
 			};
 
-			normal = tmp.getNormalAt(0).multiply(90);
-			if(this.pos == "right" || this.pos == "bottom")
-				normal = normal.multiply(1.4).negate();
-
-			if(this.layer instanceof DimensionLayer)
-				normal = normal.multiply(2);
+			normal = tmp.getNormalAt(0).multiply(this.offset);
 
 			length = tmp.length;
 			bs = b.add(normal.multiply(0.8));
@@ -3702,8 +3764,7 @@ Profile.prototype.__define({
 				this.parent.on_insert_elm(this);
 			}				
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -3735,8 +3796,7 @@ Profile.prototype.__define({
 				
 			}
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -3777,8 +3837,7 @@ Profile.prototype.__define({
 				_profile.data._nearest = null;
 
 			return _profile.data._nearest;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -3795,8 +3854,7 @@ Profile.prototype.__define({
 			this.data._rays.clear();
 			if(this.data.generatrix)
 				this.data.generatrix.firstSegment.point = v;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -3813,22 +3871,19 @@ Profile.prototype.__define({
 			this.data._rays.clear();
 			if(this.data.generatrix)
 				this.data.generatrix.lastSegment.point = v;
-		},
-		enumerable : false
+		}
 	},
 
 	bc: {
 		get : function(){
 			return this.corns(1);
-		},
-		enumerable : false
+		}
 	},
 
 	ec: {
 		get : function(){
 			return this.corns(2);
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -3843,8 +3898,7 @@ Profile.prototype.__define({
 		set: function(v){
 			this.select_node("b");
 			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.b.x, 0));	
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -3860,8 +3914,7 @@ Profile.prototype.__define({
 			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("b");
 			this.move_points(new paper.Point(0, v - this.b.y)); 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -3876,8 +3929,7 @@ Profile.prototype.__define({
 		set: function(v){
 			this.select_node("e");
 			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.e.x, 0));
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -3893,8 +3945,7 @@ Profile.prototype.__define({
 			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("e");
 			this.move_points(new paper.Point(0, v - this.e.y));
-		},
-		enumerable : false
+		}
 	},
 	
 	cnn1: {
@@ -3904,8 +3955,7 @@ Profile.prototype.__define({
 		set: function(v){
 			this.rays.b.cnn = $p.cat.cnns.get(v);
 			this.project.register_change();
-		},
-		enumerable : false
+		}
 	},
 
 	cnn2: {
@@ -3915,8 +3965,7 @@ Profile.prototype.__define({
 		set: function(v){
 			this.rays.e.cnn = $p.cat.cnns.get(v);
 			this.project.register_change();
-		},
-		enumerable : false
+		}
 	},
 
 	// информация для редактора свойста
@@ -4047,8 +4096,7 @@ Profile.prototype.__define({
 			// TODO: Рассчитать положение и ориентацию
 			// вероятно, импост, всегда занимает положение "центр"
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4063,8 +4111,7 @@ Profile.prototype.__define({
 			cnn_point.cnn = $p.cat.cnns.elm_cnn(this, cnn_point.profile, cnn_point.cnn_types, cnn_point.cnn);
 
 			return cnn_point;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4076,8 +4123,7 @@ Profile.prototype.__define({
 		value: function(){
 
 			return this;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4146,8 +4192,7 @@ Profile.prototype.__define({
 
 			return res;
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4328,8 +4373,7 @@ Profile.prototype.__define({
 					_corns[3] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
 			}
 			return cnn_point;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -4394,8 +4438,7 @@ Profile.prototype.__define({
 			path.reduce();
 
 			return this;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4411,8 +4454,7 @@ Profile.prototype.__define({
 			else
 				igen = gen.curves[1].point2;
 			return this.rays.inner.getNearestPoint(igen).add(this.rays.outer.getNearestPoint(igen)).divide(2)
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4430,8 +4472,7 @@ Profile.prototype.__define({
 			else
 				gen.lastSegment.selected = true;
 			this.view.update();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4484,8 +4525,7 @@ Profile.prototype.__define({
 		get : function(){
 			var res = Math.round((new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle * 10) / 10;
 			return res < 0 ? res + 360 : res;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4518,8 +4558,7 @@ Profile.prototype.__define({
 			sub_gen.remove();
 
 			return res;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -4537,8 +4576,7 @@ Profile.prototype.__define({
 				(angle_hor > 270-consts.orientation_delta && angle_hor < 270+consts.orientation_delta))
 				return $p.enm.orientations.vert;
 			return $p.enm.orientations.incline;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4547,8 +4585,7 @@ Profile.prototype.__define({
 	pos: {
 		get: function () {
 			
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4557,8 +4594,7 @@ Profile.prototype.__define({
 	is_linear: {
 		value : function(){
 			return this.generatrix.is_linear();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4568,8 +4604,7 @@ Profile.prototype.__define({
 		value : function(p){
 			return (this.b.is_nearest(p.b, true) && this.e.is_nearest(p.e, true)) ||
 				(this.generatrix.getNearestPoint(p.b).is_nearest(p.b) && this.generatrix.getNearestPoint(p.e).is_nearest(p.e));
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4581,8 +4616,7 @@ Profile.prototype.__define({
 			if (angl < 0)
 				angl += 180;
 			return Math.abs(angl) < consts.orientation_delta;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4635,8 +4669,7 @@ Profile.prototype.__define({
 				return false;
 			else
 				return {inner: tinner, outer: touter};
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4660,8 +4693,7 @@ Profile.prototype.__define({
 
 			return $p.enm.elm_types.Рама;
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4675,7 +4707,6 @@ Profile.prototype.__define({
 				this.data._rays.recalc();
 			return this.data._rays;
 		},
-		enumerable : false,
 		configurable : false
 	},
 
@@ -4740,7 +4771,8 @@ Profile.prototype.__define({
 		value:  function(delta, all_points, start_point){
 			var changed, 
 				other = [],
-				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points, notifier;
+				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;
+			
 
 			// если не выделено ни одного сегмента, двигаем все сегменты
 			if(!all_points){
@@ -4784,6 +4816,7 @@ Profile.prototype.__define({
 							if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
 								other.push(cnn_point.profile_point == "b" ? cnn_point.profile.data.generatrix.firstSegment : cnn_point.profile.data.generatrix.lastSegment );
 								cnn_point.profile[cnn_point.profile_point] = free_point;
+								noti.profiles.push(cnn_point.profile);
 							}								
 						}
 					}
@@ -4800,24 +4833,21 @@ Profile.prototype.__define({
 			}.bind(this));
 
 
+			// информируем систему об изменениях
 			if(changed){
-
 				this.data._rays.clear();
 
-				// информируем систему об изменениях
 				this.parent.notify(noti);
 
-				notifier = Object.getNotifier(this);
+				var notifier = Object.getNotifier(this);
 				notifier.notify({ type: 'update', name: "x1" });
 				notifier.notify({ type: 'update', name: "y1" });
 				notifier.notify({ type: 'update', name: "x2" });
 				notifier.notify({ type: 'update', name: "y2" });
-
 			}
 			
 			return other;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4921,8 +4951,7 @@ Profile.prototype.__define({
 				"Начало": ["x1", "y1", "cnn1"],
 				"Конец": ["x2", "y2", "cnn2"]
 			}
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -4942,8 +4971,7 @@ Profile.prototype.__define({
 			else
 				return false;
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -4952,13 +4980,11 @@ Profile.prototype.__define({
 	check_distance: {
 		value: function (element, res, point, check_only) {
 			return this.project.check_distance(element, this, res, point, check_only);
-		},
-		enumerable : false
+		}
 	},
 
 	default_clr_str: {
-		value: "FEFEFE",
-		enumerable: false
+		value: "FEFEFE"
 	}
 
 });
@@ -5060,8 +5086,7 @@ CnnPoint.prototype.__define({
 				return true;
 
 			return false;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -5970,7 +5995,7 @@ Scheme.prototype.__define({
 		value: function (attr) {
 
 			var svg = this.exportSVG({excludeData: true}),
-				bounds = this.strokeBounds;
+				bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
 
 			svg.setAttribute("x", bounds.x);
 			svg.setAttribute("y", bounds.y);
@@ -6097,19 +6122,32 @@ Scheme.prototype.__define({
 	 */
 	draw_sizes: {
 		value: function () {
+
+			// получаем правую нижнюю strokeBounds и вычисляем отступы
+			var bounds = this.bounds,
+				stroke_bounds = this.strokeBounds;
+
+			if(bounds && stroke_bounds){
+				if(!this.l_dimensions.bottom)
+					this.l_dimensions.bottom = new DimensionLine({
+						pos: "bottom",
+						parent: this.l_dimensions,
+						offset: bounds.bottom - stroke_bounds.bottom -120
+					});
+				else
+					this.l_dimensions.bottom.offset = bounds.bottom - stroke_bounds.bottom -120;
+
+				if(!this.l_dimensions.right)
+					this.l_dimensions.right = new DimensionLine({
+						pos: "right",
+						parent: this.l_dimensions,
+						offset: bounds.right - stroke_bounds.right -120
+					});
+				else
+					this.l_dimensions.right.offset = bounds.right - stroke_bounds.right -120;
+
+			}
 			
-			if(!this.l_dimensions.bottom)
-				this.l_dimensions.bottom = new DimensionLine({
-					pos: "bottom",
-					parent: this.l_dimensions
-				});
-
-			if(!this.l_dimensions.right)
-				this.l_dimensions.right = new DimensionLine({
-					pos: "right",
-					parent: this.l_dimensions
-				});
-
 			this.l_dimensions.right.redraw();
 			this.l_dimensions.bottom.redraw();
 
@@ -6734,7 +6772,8 @@ ToolPan._extend(paper.Tool);
 function ToolPen(){
 
 	var _editor = paper,
-		tool = this;
+		tool = this,
+		on_layer_activated;
 
 	ToolPen.superclass.constructor.call(this);
 
@@ -6814,6 +6853,7 @@ function ToolPen(){
 
 	}
 
+	// делает полупрозрачными элементы неактивных контуров
 	function decorate_layers(reset){
 		var active = _editor.project.activeLayer;
 		_editor.project.getItems({class: Contour}).forEach(function (l) {
@@ -6822,13 +6862,6 @@ function ToolPen(){
 					elm.opacity = (l == active || reset) ? 1 : 0.5;
 			});
 		})
-	}
-
-	function observer(changes){
-		changes.forEach(function(change){
-			if(change.name == "_activeLayer")
-				decorate_layers();
-		});
 	}
 	
 	tool.hitTest = function(event) {
@@ -6880,7 +6913,10 @@ function ToolPen(){
 
 			tool_wnd();
 
-			Object.observe(_editor.project, observer);
+			if(!on_layer_activated)
+				on_layer_activated = $p.eve.attachEvent("layer_activated", function (contour) {
+					decorate_layers();
+				});
 
 			decorate_layers();
 
@@ -6889,7 +6925,10 @@ function ToolPen(){
 		deactivate: function() {
 			_editor.clear_selection_bounds();
 
-			Object.unobserve(_editor.project, observer);
+			if(on_layer_activated){
+				$p.eve.detachEvent(on_layer_activated);
+				on_layer_activated = null;
+			}
 
 			decorate_layers(true);
 
@@ -6936,7 +6975,7 @@ function ToolPen(){
 				}
 
 				if(item.selected && item.layer)
-					$p.eve.callEvent("layer_activated", [item.layer]);
+					item.layer.activate();
 
 			}
 

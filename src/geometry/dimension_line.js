@@ -24,6 +24,7 @@ function DimensionLine(attr){
 	this.data.elm2 = attr.elm2 || this.data.elm1;
 	this.data.p1 = attr.p1 || "b";
 	this.data.p2 = attr.p2 || "e";
+	this.data.offset = attr.offset;
 
 	if(!this.data.pos && (!this.data.elm1 || !this.data.elm2)){
 		this.remove();
@@ -280,12 +281,7 @@ DimensionLine.prototype.__define({
 
 			};
 
-			normal = tmp.getNormalAt(0).multiply(90);
-			if(this.pos == "right" || this.pos == "bottom")
-				normal = normal.multiply(1.4).negate();
-
-			if(this.layer instanceof DimensionLayer)
-				normal = normal.multiply(2);
+			normal = tmp.getNormalAt(0).multiply(this.offset);
 
 			length = tmp.length;
 			bs = b.add(normal.multiply(0.8));

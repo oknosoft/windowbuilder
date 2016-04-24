@@ -90,8 +90,7 @@ Profile.prototype.__define({
 				this.parent.on_insert_elm(this);
 			}				
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -123,8 +122,7 @@ Profile.prototype.__define({
 				
 			}
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -165,8 +163,7 @@ Profile.prototype.__define({
 				_profile.data._nearest = null;
 
 			return _profile.data._nearest;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -183,8 +180,7 @@ Profile.prototype.__define({
 			this.data._rays.clear();
 			if(this.data.generatrix)
 				this.data.generatrix.firstSegment.point = v;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -201,22 +197,19 @@ Profile.prototype.__define({
 			this.data._rays.clear();
 			if(this.data.generatrix)
 				this.data.generatrix.lastSegment.point = v;
-		},
-		enumerable : false
+		}
 	},
 
 	bc: {
 		get : function(){
 			return this.corns(1);
-		},
-		enumerable : false
+		}
 	},
 
 	ec: {
 		get : function(){
 			return this.corns(2);
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -231,8 +224,7 @@ Profile.prototype.__define({
 		set: function(v){
 			this.select_node("b");
 			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.b.x, 0));	
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -248,8 +240,7 @@ Profile.prototype.__define({
 			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("b");
 			this.move_points(new paper.Point(0, v - this.b.y)); 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -264,8 +255,7 @@ Profile.prototype.__define({
 		set: function(v){
 			this.select_node("e");
 			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.e.x, 0));
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -281,8 +271,7 @@ Profile.prototype.__define({
 			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 			this.select_node("e");
 			this.move_points(new paper.Point(0, v - this.e.y));
-		},
-		enumerable : false
+		}
 	},
 	
 	cnn1: {
@@ -292,8 +281,7 @@ Profile.prototype.__define({
 		set: function(v){
 			this.rays.b.cnn = $p.cat.cnns.get(v);
 			this.project.register_change();
-		},
-		enumerable : false
+		}
 	},
 
 	cnn2: {
@@ -303,8 +291,7 @@ Profile.prototype.__define({
 		set: function(v){
 			this.rays.e.cnn = $p.cat.cnns.get(v);
 			this.project.register_change();
-		},
-		enumerable : false
+		}
 	},
 
 	// информация для редактора свойста
@@ -435,8 +422,7 @@ Profile.prototype.__define({
 			// TODO: Рассчитать положение и ориентацию
 			// вероятно, импост, всегда занимает положение "центр"
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -451,8 +437,7 @@ Profile.prototype.__define({
 			cnn_point.cnn = $p.cat.cnns.elm_cnn(this, cnn_point.profile, cnn_point.cnn_types, cnn_point.cnn);
 
 			return cnn_point;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -464,8 +449,7 @@ Profile.prototype.__define({
 		value: function(){
 
 			return this;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -534,8 +518,7 @@ Profile.prototype.__define({
 
 			return res;
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -716,8 +699,7 @@ Profile.prototype.__define({
 					_corns[3] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
 			}
 			return cnn_point;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -782,8 +764,7 @@ Profile.prototype.__define({
 			path.reduce();
 
 			return this;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -799,8 +780,7 @@ Profile.prototype.__define({
 			else
 				igen = gen.curves[1].point2;
 			return this.rays.inner.getNearestPoint(igen).add(this.rays.outer.getNearestPoint(igen)).divide(2)
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -818,8 +798,7 @@ Profile.prototype.__define({
 			else
 				gen.lastSegment.selected = true;
 			this.view.update();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -872,8 +851,7 @@ Profile.prototype.__define({
 		get : function(){
 			var res = Math.round((new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle * 10) / 10;
 			return res < 0 ? res + 360 : res;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -906,8 +884,7 @@ Profile.prototype.__define({
 			sub_gen.remove();
 
 			return res;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -925,8 +902,7 @@ Profile.prototype.__define({
 				(angle_hor > 270-consts.orientation_delta && angle_hor < 270+consts.orientation_delta))
 				return $p.enm.orientations.vert;
 			return $p.enm.orientations.incline;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -935,8 +911,7 @@ Profile.prototype.__define({
 	pos: {
 		get: function () {
 			
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -945,8 +920,7 @@ Profile.prototype.__define({
 	is_linear: {
 		value : function(){
 			return this.generatrix.is_linear();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -956,8 +930,7 @@ Profile.prototype.__define({
 		value : function(p){
 			return (this.b.is_nearest(p.b, true) && this.e.is_nearest(p.e, true)) ||
 				(this.generatrix.getNearestPoint(p.b).is_nearest(p.b) && this.generatrix.getNearestPoint(p.e).is_nearest(p.e));
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -969,8 +942,7 @@ Profile.prototype.__define({
 			if (angl < 0)
 				angl += 180;
 			return Math.abs(angl) < consts.orientation_delta;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1023,8 +995,7 @@ Profile.prototype.__define({
 				return false;
 			else
 				return {inner: tinner, outer: touter};
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1048,8 +1019,7 @@ Profile.prototype.__define({
 
 			return $p.enm.elm_types.Рама;
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1063,7 +1033,6 @@ Profile.prototype.__define({
 				this.data._rays.recalc();
 			return this.data._rays;
 		},
-		enumerable : false,
 		configurable : false
 	},
 
@@ -1128,7 +1097,8 @@ Profile.prototype.__define({
 		value:  function(delta, all_points, start_point){
 			var changed, 
 				other = [],
-				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points, notifier;
+				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;
+			
 
 			// если не выделено ни одного сегмента, двигаем все сегменты
 			if(!all_points){
@@ -1172,6 +1142,7 @@ Profile.prototype.__define({
 							if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
 								other.push(cnn_point.profile_point == "b" ? cnn_point.profile.data.generatrix.firstSegment : cnn_point.profile.data.generatrix.lastSegment );
 								cnn_point.profile[cnn_point.profile_point] = free_point;
+								noti.profiles.push(cnn_point.profile);
 							}								
 						}
 					}
@@ -1188,24 +1159,21 @@ Profile.prototype.__define({
 			}.bind(this));
 
 
+			// информируем систему об изменениях
 			if(changed){
-
 				this.data._rays.clear();
 
-				// информируем систему об изменениях
 				this.parent.notify(noti);
 
-				notifier = Object.getNotifier(this);
+				var notifier = Object.getNotifier(this);
 				notifier.notify({ type: 'update', name: "x1" });
 				notifier.notify({ type: 'update', name: "y1" });
 				notifier.notify({ type: 'update', name: "x2" });
 				notifier.notify({ type: 'update', name: "y2" });
-
 			}
 			
 			return other;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1309,8 +1277,7 @@ Profile.prototype.__define({
 				"Начало": ["x1", "y1", "cnn1"],
 				"Конец": ["x2", "y2", "cnn2"]
 			}
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -1330,8 +1297,7 @@ Profile.prototype.__define({
 			else
 				return false;
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -1340,13 +1306,11 @@ Profile.prototype.__define({
 	check_distance: {
 		value: function (element, res, point, check_only) {
 			return this.project.check_distance(element, this, res, point, check_only);
-		},
-		enumerable : false
+		}
 	},
 
 	default_clr_str: {
-		value: "FEFEFE",
-		enumerable: false
+		value: "FEFEFE"
 	}
 
 });
@@ -1448,8 +1412,7 @@ CnnPoint.prototype.__define({
 				return true;
 
 			return false;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
