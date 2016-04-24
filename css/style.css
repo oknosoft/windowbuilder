@@ -638,8 +638,11 @@ img.closeq {
 }
 .contact-section-head p {
 	color: #394b50;
-	font-size: 1.3em;
-	font-weight: 500;
+	font-size: 1.2em;
+	font-weight: 400;
+	text-align: left;
+	padding-bottom: 1em;
+	font-family: inherit;
 }
 .form input[type="text"] {
 	width: 85%;
