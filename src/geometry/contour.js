@@ -1503,14 +1503,14 @@ Contour.prototype.__define({
 						var adel = [];
 						arr.forEach(function (elm) {
 
-							if(asizes.indexOf(elm.b[xy]) != -1 && asizes.indexOf(elm.e[xy]) != -1)
+							if(asizes.indexOf(elm.b[xy].round(0)) != -1 && asizes.indexOf(elm.e[xy].round(0)) != -1)
 								adel.push(elm);
 
-							else if(asizes.indexOf(elm.b[xy]) != -1)
-								asizes.push(elm.b[xy]);
+							else if(asizes.indexOf(elm.b[xy].round(0)) == -1)
+								asizes.push(elm.b[xy].round(0));
 
-							else if(asizes.indexOf(elm.e[xy]) != -1)
-								asizes.push(elm.e[xy]);
+							else if(asizes.indexOf(elm.e[xy].round(0)) == -1)
+								asizes.push(elm.e[xy].round(0));
 
 						});
 
@@ -1523,12 +1523,12 @@ Contour.prototype.__define({
 					};
 
 				// сортируем ihor по убыванию y
-				var asizes = [this.bounds.top, this.bounds.bottom];
+				var asizes = [this.bounds.top.round(0), this.bounds.bottom.round(0)];
 				purge(ihor, asizes, "y").sort(function (a, b) {
 					return b.b.y + b.e.y - a.b.y - a.e.y;
 				});
 				// сортируем ivert по возрастанию x
-				asizes = [this.bounds.left, this.bounds.right];
+				asizes = [this.bounds.left.round(0), this.bounds.right.round(0)];
 				purge(ivert, asizes, "x").sort(function (a, b) {
 					return a.b.x + a.e.x - b.b.x - b.e.x;
 				});
