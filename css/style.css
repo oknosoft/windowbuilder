@@ -492,7 +492,7 @@ i.s6 {
 	font-size: 1.2em;
 	font-weight: 400;
 }
-.work-section-head ul {
+.work-section-head ul, .service-section-head ul {
 	list-style-position: inside;
 }
 .work-section-grid {
@@ -1113,7 +1113,11 @@ span.locate img {
 	.service-section-head h3, .price-section-head h3, .work-section-head h3, .happy-clients-head h3, .contact-section-head h3,.about_right h3 {
 		font-size: 1.7em;
 	}
-	.service-section-head p, .price-section-head p, .work-section-head p, .work-section-head ul, .happy-clients-head p, .contact-section-head p {
+	.service-section-head p, .service-section-head ul,
+	.price-section-head p, .price-section-head ul,
+	.work-section-head p, .work-section-head ul,
+	.happy-clients-head p, .happy-clients-head ul,
+	.contact-section-head p .contact-section-head ul{
 		font-size: 1.1em;
 	}
 	.icon {
