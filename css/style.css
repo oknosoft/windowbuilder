@@ -856,6 +856,12 @@ span.locate img {
 	-o-border-radius: 50%;
 	-ms-border-radius: 50%;
 }
+
+.youtube {
+	width: 853px;
+	height: 480px;
+}
+
 /*-- responsive-design starts-here --*/
 
 @media screen and (max-width: 1440px) {
@@ -1241,6 +1247,11 @@ span.locate img {
 	.work-section-grid p {
 		font-size: 1em;
 	}
+
+	.youtube {
+		width: 560px;
+		height: 315px;
+	}
 }
 @media screen and (max-width: 768px){
 
@@ -1580,6 +1591,11 @@ span.locate img {
 	}
 	.bottom-menu ul li {
 		margin: 0.3em;
+	}
+
+	.youtube {
+		width: 320px;
+		height: 180px;
 	}
 }
 @media screen and (max-width: 320px){
