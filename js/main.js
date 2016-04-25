@@ -64,21 +64,33 @@ function a_click(elm) {
 	}
 
 	function send_mail(frm) {
-		if(frm)
+
+		if(frm){
+			var info = $(".wpcf7-response-output", document.querySelector("#wpcf7-f320-o1"));
+
+			info.removeClass("hidden");
+			info.removeClass("wpcf7-not-valid");
+			info.text("<i class='fa fa-spinner fa-spin fa-lg fa-fw margin-bottom'></i>Отправка...");
+
 			$.ajax({
-				type: frm.attr('method'),
-				url: frm.attr('action'),
-				data: frm.serialize()
-			})
+					type: frm.attr('method'),
+					url: frm.attr('action'),
+					data: frm.serialize()
+				})
 				.done(function(data) {
-					console.log(data);
+					info.text("Сообщение было успешно отправлено");
 				})
 				.fail(function(err) {
+					info.text("Сообщение отправить не удалось");
+					info.addClass("wpcf7-not-valid");
 					console.log(err);
 				});
-				// .always(function() {
-				// 	alert( "complete" );
-				// });
+			// .always(function() {
+			// 	alert( "complete" );
+			// });
+		}
+
+
 	}
 
 	switch(elm.name) {
