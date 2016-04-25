@@ -1069,6 +1069,13 @@ span.locate img {
 	}
 }
 @media screen and (max-width: 800px){
+
+	span.arrow1, span.arrow2 {
+		display: none;
+	}
+	.col-md-3 {
+		width: 50%;
+	}
 	span.menu{
 		width:28px;
 		height:28px;
@@ -1240,7 +1247,6 @@ span.locate img {
 	}
 	.work-section-grid {
 		margin-top: 6em;
-		width: 25%;
 		float: left;
 		padding:0 10px;
 	}
@@ -1419,9 +1425,12 @@ span.locate img {
 }
 @media screen and (max-width: 480px){
 
+	i.s1, i.s2, i.s3, i.s4, i.s5, i.s6, i.s7 {
+		zoom: .75;
+	}
 
-	.work-section-grid{
-		width:50%;
+	.col-md-3 {
+		width: 100%;
 	}
 	span.arrow2 {
 		display:none;

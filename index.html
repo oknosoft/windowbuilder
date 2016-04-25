@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="keywords" content="заказ дилера,расчет окон,программа производство окон,суперокна онлайн,klaes,altawin,windraw,клаез,профстрой,альтавин,виндроу,калькулятор окон,программа расчета окон" />
 
@@ -24,8 +24,9 @@
     <!--jquery from jsdelivr-->
     <script src="//cdn.jsdelivr.net/jquery/2.2.3/jquery.min.js"></script>
 
-    <!-- UItoTop jQuery Plugin 1.2 | Matt Varone | http://www.mattvarone.com/web-design/uitotop-jquery-plugin -->
+    <!-- UItoTop jQuery Plugin 1.2 | Matt Varone | http://www.mattvarone.com/web-design/uitotop-jquery-plugin
     <script src="js/move-top.js"></script>
+    -->
 
     <!-- jQuery EasIng v1.1.2 - шевеление элементов -->
     <script src="js/easing.js"></script>
@@ -41,7 +42,7 @@
 
 </head>
 
-<body>
+<body class="loading">
 
 <!-- header-section-starts -->
 	<div class="header" id="site-navigation">
@@ -436,9 +437,8 @@
                                     <div class="form-group mobile-align-center">
                                         <a class="work" href="#" name="mail" onclick="a_click(this);">Отправить</a>
                                         <!-- input class="btn" type="submit" value="Отправить" -->
-                                        <img class="hidden ajax-loader" src="/metadata/wp-content/plugins/contact-form-7/images/ajax-loader.gif" alt="Отправка...">
                                     </div>
-                                    <p class="wpcf7-response-output "></p>
+                                    <p class="wpcf7-response-output hidden"></p>
                                 </form>
                             </div>
 
@@ -464,7 +464,7 @@
         </div>
     </div>
 
-    <a class="scroll" href="#home" id="toTop" style="display: block;"> <span id="toTopHover" style="opacity: 1;"> </span></a>
+    <!--a class="scroll" href="#home" id="toTop" style="display: block;"> <span id="toTopHover" style="opacity: 1;"> </span></a-->
 
 </body>
 </html>

@@ -5,11 +5,13 @@
  * Created 25.04.2016
  */
 
-
+/*
 addEventListener("load", function() {
 	setTimeout(hideURLbar, 0); }, false);
 
 function hideURLbar(){ window.scrollTo(0,1); }
+
+*/
 
 function a_click(elm) {
 
@@ -66,11 +68,12 @@ function a_click(elm) {
 	function send_mail(frm) {
 
 		if(frm){
+
 			var info = $(".wpcf7-response-output", document.querySelector("#wpcf7-f320-o1"));
 
 			info.removeClass("hidden");
 			info.removeClass("wpcf7-not-valid");
-			info.text("<i class='fa fa-spinner fa-spin fa-lg fa-fw margin-bottom'></i>Отправка...");
+			info[0].innerHTML = "<i class='fa fa-spinner fa-spin fa-lg fa-fw margin-bottom'></i>Отправка...";
 
 			$.ajax({
 					type: frm.attr('method'),
@@ -79,6 +82,9 @@ function a_click(elm) {
 				})
 				.done(function(data) {
 					info.text("Сообщение было успешно отправлено");
+					setTimeout(function () {
+						info.addClass("hidden");
+					}, 10000);
 				})
 				.fail(function(err) {
 					info.text("Сообщение отправить не удалось");
@@ -119,16 +125,39 @@ function a_click(elm) {
 };
 
 
-// script for menu
-$( "span.menu" ).click(function() {
-	$( ".top-menu" ).slideToggle( "slow", function() {
-		// Animation complete.
-	});
-});
+
 
 
 // FlexSlider
 $(window).load(function(){
+
+	// $('.flexslider').flexslider({
+	// 	animation: "slide",
+	// 	start: function(slider){
+	// 		$('body').removeClass('loading');
+	// 	}
+	// });
+
+	// script for menu
+	$( "span.menu" ).click(function() {
+		$( ".top-menu" ).slideToggle( "slow", function() {
+			// Animation complete.
+		});
+	});
+	$(function(){
+		$(window).scroll(function() {
+			var top = $(document).scrollTop();
+			if (top < 80 && $(document).width() > 640){
+				$("#site-navbar").css({"margin-top": "-6em"});
+			}else{
+				$("#site-navbar").css({"margin-top": "0px"});
+			}
+		});
+	});
+
+});
+
+$(document).ready(function($) {
 
 	$('.flexslider').flexslider({
 		animation: "slide",
@@ -137,22 +166,9 @@ $(window).load(function(){
 		}
 	});
 
-});
-
-$(document).ready(function($) {
-
 	$(".scroll").click(function(event){
 		event.preventDefault();
 		$('html,body').animate({scrollTop:$(this.hash).offset().top},1200);
-	});
-
-	$(window).scroll(function() {
-		var top = $(document).scrollTop();
-		if (top < 80 && $(document).width() > 640){
-			$("#site-navbar").css({"margin-top": "-6em"});
-		}else{
-			$("#site-navbar").css({"margin-top": "0px"});
-		}
 	});
 
 	/*
@@ -164,7 +180,7 @@ $(document).ready(function($) {
 	 };
 	 */
 
-	$().UItoTop({ easingType: 'easeOutQuart' });
+	// $().UItoTop({ easingType: 'easeOutQuart' });
 
 });
 
