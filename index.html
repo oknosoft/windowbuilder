@@ -12,81 +12,33 @@
     <link rel="shortcut icon" href="images/144.png" type="image/png">
     <link rel="apple-touch-icon-precomposed" href="images/144.png">
 
-    <link href="css/bootstrap.css" rel='stylesheet' type='text/css' />
-    <link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
-
-    <script src="//cdn.jsdelivr.net/jquery/2.2.3/jquery.min.js"></script>
-
-    <script>
-        addEventListener("load", function() {
-            setTimeout(hideURLbar, 0); }, false);
-
-        function hideURLbar(){ window.scrollTo(0,1); }
-
-        function a_click(elm) {
-
-            function prepare_mail(text) {
-
-                $("[name='your-message']")[0].value = "Подключение по тарифному плану '%1'".replace("%1", text);
-
-                var elm_name = $("[name='your-name']")[0];
-                elm_name.scrollIntoView();
-                setTimeout(elm_name.focus.bind(elm_name), 200);
-
-            }
-
-            switch(elm.name) {
-
-                case 'beginer':
-                    prepare_mail("Начальный");
-                    break;
-
-                case 'standart':
-                    prepare_mail("Стандарт");
-                    break;
-
-                case 'premium':
-                    prepare_mail("Премиум");
-                    break;
-
-                case 'mail':
-                    break;
-            }
-
-            var e = window.event;
-            e.preventDefault();
-            e.cancelBubble = true;
-            return false;
-        }
-    </script>
+    <link rel='stylesheet' href="css/bootstrap.css" type='text/css' />
+    <link rel='stylesheet' href="css/animate.css" type='text/css' />
+    <link rel="stylesheet" href="css/flexslider.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="css/style.css" type="text/css" media="all" />
 
     <!--webfont-->
     <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic">
     <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/fontawesome/4.6/css/font-awesome.min.css">
 
-    <!-- jQuery FlexSlider v2.0 http://www.woothemes.com/flexslider/ -->
-    <link rel="stylesheet" href="css/flexslider.css" type="text/css" media="screen" />
+    <!--jquery from jsdelivr-->
+    <script src="//cdn.jsdelivr.net/jquery/2.2.3/jquery.min.js"></script>
 
     <!-- UItoTop jQuery Plugin 1.2 | Matt Varone | http://www.mattvarone.com/web-design/uitotop-jquery-plugin -->
     <script src="js/move-top.js"></script>
 
     <!-- jQuery EasIng v1.1.2 - шевеление элементов -->
     <script src="js/easing.js"></script>
-    <script>
-        jQuery(document).ready(function($) {
-				$(".scroll").click(function(event){		
-					event.preventDefault();
-					$('html,body').animate({scrollTop:$(this.hash).offset().top},1200);
-				});
-			});
-    </script>
 
     <!--Animation-->
     <script src="js/wow.min.js"></script>
-    <link href="css/animate.css" rel='stylesheet' type='text/css' />
-    <script>
-        new WOW().init();
-    </script>
+
+    <!-- FlexSlider -->
+    <script defer src="js/jquery.flexslider.js"></script>
+
+    <!--site logic-->
+    <script src="js/main.js"></script>
+
 </head>
 
 <body>
@@ -109,25 +61,7 @@
 					<li><a class="scroll hvr-shutter-out-horizontal" href="#contact">Задать вопрос</a></li>
 				</ul>
 			</div>
-            <!-- script for menu -->
-			<script>
-				$( "span.menu" ).click(function() {
-				  $( ".top-menu" ).slideToggle( "slow", function() {
-				    // Animation complete.
-				  });
-				});
-                $(function(){
-                    $(window).scroll(function() {
-                        var top = $(document).scrollTop();
-                        if (top < 80 && $(document).width() > 640){
-                            $("#site-navbar").css({"margin-top": "-6em"});
-                        }else{
-                            $("#site-navbar").css({"margin-top": "0px"});
-                        }
-                    });
-                });
-			</script>
-			<!-- script for menu -->
+
 
 			<div class="clearfix"></div>
 		</div>
@@ -159,21 +93,7 @@
                             </div>
                     </section>
 
-					<!-- FlexSlider -->
-                    <script defer src="js/jquery.flexslider.js"></script>
-                    <script type="text/javascript">
-//                        $(function(){
-//                            SyntaxHighlighter.all();
-//                        });
-                        $(window).load(function(){
-                            $('.flexslider').flexslider({
-                                animation: "slide",
-								start: function(slider){
-								  $('body').removeClass('loading');
-								}
-                            });
-                        });
-                    </script>
+
                 </div>
             </div>
 		</div>
@@ -287,7 +207,7 @@
             </div>
         </div>
 
-        <div class="service-section" id="video">
+        <div class="work-section" id="video">
             <div class="container text-center">
                 <div class="service-section-head wow fadeInRight" data-wow-delay="0.4s">
                     <h3 class="text-center">Видеоролики</h3>
@@ -543,21 +463,6 @@
             </div>
         </div>
     </div>
-    <script>
-        $(document).ready(function() {
-            /*
-            var defaults = {
-                containerID: 'toTop', // fading element id
-                containerHoverID: 'toTopHover', // fading element hover id
-                scrollSpeed: 1200,
-                easingType: 'linear'
-            };
-            */
-
-            $().UItoTop({ easingType: 'easeOutQuart' });
-
-        });
-    </script>
 
     <a class="scroll" href="#home" id="toTop" style="display: block;"> <span id="toTopHover" style="opacity: 1;"> </span></a>
 
