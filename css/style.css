@@ -862,6 +862,11 @@ span.locate img {
 	height: 480px;
 }
 
+.wpcf7-not-valid {
+	border-color: red;
+	background-color: rgba(153,0,0,0.1);
+}
+
 /*-- responsive-design starts-here --*/
 
 @media screen and (max-width: 1440px) {
