@@ -47,7 +47,14 @@ function Scheme(_canvas){
 					if(change.name == "sys" && !change.object.sys.empty()){
 
 						if(_scheme.ox.owner != change.object.sys.nom){
+
 							_scheme.ox.owner = change.object.sys.nom;
+
+							change.object.sys.refill_prm(_scheme.ox);
+							Object.getNotifier(change.object).notify({
+								type: 'rows',
+								tabular: 'extra_fields'
+							});
 
 							_scheme.contours.forEach(function (l) {
 								l.on_sys_changed();
