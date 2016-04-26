@@ -36,6 +36,8 @@ $p.modifiers.push(
 			 * @property inserts
 			 * @for Production_params
 			 * @param elm_types - допустимые типы элементов
+			 * @param by_default {Boolean|String} - сортировать по признаку умолчания или по наименованию вставки
+			 * @return Array.<_cat.inserts>
 			 */
 			inserts: {
 				value: function(elm_types, by_default){
@@ -54,8 +56,12 @@ $p.modifiers.push(
 								!__noms.some(function (e) {
 									return row.nom == e.nom;
 								}))
-							__noms.push({by_default: row.by_default, nom: row.nom});
+							__noms.push(row);
 					});
+					
+					if(by_default == "rows")
+						return __noms;
+					
 					__noms.sort(function (a, b) {
 						
 						if(by_default){

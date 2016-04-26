@@ -1344,7 +1344,7 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Положение контура в изделии
+	 * Положение контура в изделии или створки в контуре
 	 */
 	pos: {
 		get: function () {
@@ -1731,8 +1731,10 @@ Contour.prototype.__define({
 			}
 		}
 	},
-	
-	// обработчик события при удалении элемента
+
+	/**
+	 * Обработчик события при удалении элемента
+	 */
 	on_remove_elm: {
 		
 		value: function (elm) {
@@ -1747,7 +1749,9 @@ Contour.prototype.__define({
 		}
 	},
 
-	// обработчик события при вставке элемента
+	/**
+	 * Обработчик события при вставке элемента
+	 */
 	on_insert_elm: {
 
 		value: function (elm) {
@@ -1759,6 +1763,24 @@ Contour.prototype.__define({
 			else if (elm instanceof Profile && !this.project.data._loading)
 				this.clear_dimentions();
 
+		}
+	},
+
+	/**
+	 * Обработчик при изменении системы
+	 */
+	on_sys_changed: {
+		value: function () {
+			
+			this.profiles.forEach(function (profile) {
+				profile._row.inset = profile.project.default_inset({elm_type: profile.elm_type, pos: profile.pos});
+				profile.data._rays.clear(true);
+			});
+
+			this.children.forEach(function(elm) {
+				if (elm instanceof Contour)
+					elm.on_sys_changed();
+			});
 		}
 	}
 });
@@ -2674,10 +2696,7 @@ function Filling(attr){
 
 		// для нового устанавливаем вставку по умолчанию
 		if(_row.inset.empty())
-			_row.inset = this.project.default_inset({
-				elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение],
-				by_default: true
-			});
+			_row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
 
 		// для нового устанавливаем цвет по умолчанию
 		if(_row.clr.empty())
@@ -4584,7 +4603,17 @@ Profile.prototype.__define({
 	 */
 	pos: {
 		get: function () {
-			
+			var by_side = this.layer.profiles_by_side();
+			if(by_side.top == this)
+				return $p.enm.positions.Верх;
+			if(by_side.bottom == this)
+				return $p.enm.positions.Низ;
+			if(by_side.left == this)
+				return $p.enm.positions.Лев;
+			if(by_side.right == this)
+				return $p.enm.positions.Прав;
+			// TODO: рассмотреть случай с выносом стоек и разрывами
+			return $p.enm.positions.Центр;
 		}
 	},
 
@@ -5300,7 +5329,14 @@ function Scheme(_canvas){
 					}
 
 					if(change.name == "sys" && !change.object.sys.empty()){
-						_scheme.ox.owner = change.object.sys.nom;
+
+						if(_scheme.ox.owner != change.object.sys.nom){
+							_scheme.ox.owner = change.object.sys.nom;
+
+							_scheme.contours.forEach(function (l) {
+								l.on_sys_changed();
+							});
+						}
 
 						if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
 							$p.wsql.set_user_param("editor_last_sys", change.object.sys.ref);
@@ -5309,6 +5345,8 @@ function Scheme(_canvas){
 							_scheme._dp.clr = change.object.sys.default_clr;
 							_scheme.ox.clr = change.object.sys.default_clr;
 						}
+
+						_scheme.register_change(true);
 					}
 
 					if(!evented){
@@ -6155,11 +6193,39 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Возвращает вставку по умолчанию с учетом свойств системы и элемента
+	 * Возвращает вставку по умолчанию с учетом свойств системы и положения элемента
 	 */
 	default_inset: {
 		value: function (attr) {
-			return this._dp.sys.inserts(attr.elm_type, attr.by_default)[0];
+
+			if(!attr.pos)
+				return this._dp.sys.inserts(attr.elm_type, true)[0];
+
+			var rows = this._dp.sys.inserts(attr.elm_type, "rows");
+			if(rows.length == 1)
+				return rows[0].nom;
+
+			var inset;
+			rows.some(function (row) {
+				if(row.pos == attr.pos && row.by_default)
+					return inset = row.nom;
+			});
+			if(!inset)
+				rows.some(function (row) {
+					if(row.pos == attr.pos)
+						return inset = row.nom;
+				});
+			if(!inset)
+				rows.some(function (row) {
+					if(row.pos == $p.enm.positions.Любое && row.by_default)
+						return inset = row.nom;
+				});
+			if(!inset)
+				rows.some(function (row) {
+					if(row.pos == $p.enm.positions.Любое)
+						return inset = row.nom;
+				});
+			return inset;
 		},
 		enumerable: false
 	},

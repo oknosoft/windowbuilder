@@ -45,7 +45,14 @@ function Scheme(_canvas){
 					}
 
 					if(change.name == "sys" && !change.object.sys.empty()){
-						_scheme.ox.owner = change.object.sys.nom;
+
+						if(_scheme.ox.owner != change.object.sys.nom){
+							_scheme.ox.owner = change.object.sys.nom;
+
+							_scheme.contours.forEach(function (l) {
+								l.on_sys_changed();
+							});
+						}
 
 						if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
 							$p.wsql.set_user_param("editor_last_sys", change.object.sys.ref);
@@ -54,6 +61,8 @@ function Scheme(_canvas){
 							_scheme._dp.clr = change.object.sys.default_clr;
 							_scheme.ox.clr = change.object.sys.default_clr;
 						}
+
+						_scheme.register_change(true);
 					}
 
 					if(!evented){
@@ -900,11 +909,39 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Возвращает вставку по умолчанию с учетом свойств системы и элемента
+	 * Возвращает вставку по умолчанию с учетом свойств системы и положения элемента
 	 */
 	default_inset: {
 		value: function (attr) {
-			return this._dp.sys.inserts(attr.elm_type, attr.by_default)[0];
+
+			if(!attr.pos)
+				return this._dp.sys.inserts(attr.elm_type, true)[0];
+
+			var rows = this._dp.sys.inserts(attr.elm_type, "rows");
+			if(rows.length == 1)
+				return rows[0].nom;
+
+			var inset;
+			rows.some(function (row) {
+				if(row.pos == attr.pos && row.by_default)
+					return inset = row.nom;
+			});
+			if(!inset)
+				rows.some(function (row) {
+					if(row.pos == attr.pos)
+						return inset = row.nom;
+				});
+			if(!inset)
+				rows.some(function (row) {
+					if(row.pos == $p.enm.positions.Любое && row.by_default)
+						return inset = row.nom;
+				});
+			if(!inset)
+				rows.some(function (row) {
+					if(row.pos == $p.enm.positions.Любое)
+						return inset = row.nom;
+				});
+			return inset;
 		},
 		enumerable: false
 	},

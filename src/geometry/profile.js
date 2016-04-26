@@ -910,7 +910,17 @@ Profile.prototype.__define({
 	 */
 	pos: {
 		get: function () {
-			
+			var by_side = this.layer.profiles_by_side();
+			if(by_side.top == this)
+				return $p.enm.positions.Верх;
+			if(by_side.bottom == this)
+				return $p.enm.positions.Низ;
+			if(by_side.left == this)
+				return $p.enm.positions.Лев;
+			if(by_side.right == this)
+				return $p.enm.positions.Прав;
+			// TODO: рассмотреть случай с выносом стоек и разрывами
+			return $p.enm.positions.Центр;
 		}
 	},
 

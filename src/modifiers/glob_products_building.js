@@ -204,7 +204,7 @@ $p.modifiers.push(
 					var row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin);
 
 					// В простейшем случае, формула = "ДобавитьКомандуСоединения(Парам);"
-					if(!row_cnn_spec.formula) {
+					if(row_cnn_spec.formula.empty()) {
 						if(nom.is_pieces){
 							if(!row_cnn_spec.coefficient)
 								row_spec.qty = row_cnn_spec.quantity;
@@ -791,7 +791,7 @@ $p.modifiers.push(
 				if(!elm.is_linear())
 					row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
 
-				else if((row_cnn_prev && row_cnn_prev.formula) || (row_cnn_next && row_cnn_next.formula)){
+				else if((row_cnn_prev && !row_cnn_prev.formula.empty()) || (row_cnn_next && !row_cnn_next.formula.empty())){
 					// TODO: дополнительная корректировка длины формулой
 
 				}
@@ -902,7 +902,7 @@ $p.modifiers.push(
 						$p.enm.elm_types.profiles.indexOf(_row.elm_type) != -1)
 						row_spec = new_spec_row(null, elm, row_ins_spec, null, elm.inset);
 
-					if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && row_ins_spec.formula){
+					if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !row_ins_spec.formula.empty()){
 						try{
 							row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, elm.inset);
 							if(eval(row_ins_spec.formula) === false)

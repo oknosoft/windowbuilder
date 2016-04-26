@@ -51,10 +51,7 @@ function Filling(attr){
 
 		// для нового устанавливаем вставку по умолчанию
 		if(_row.inset.empty())
-			_row.inset = this.project.default_inset({
-				elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение],
-				by_default: true
-			});
+			_row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
 
 		// для нового устанавливаем цвет по умолчанию
 		if(_row.clr.empty())

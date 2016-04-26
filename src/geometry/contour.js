@@ -1287,7 +1287,7 @@ Contour.prototype.__define({
 	},
 
 	/**
-	 * Положение контура в изделии
+	 * Положение контура в изделии или створки в контуре
 	 */
 	pos: {
 		get: function () {
@@ -1674,8 +1674,10 @@ Contour.prototype.__define({
 			}
 		}
 	},
-	
-	// обработчик события при удалении элемента
+
+	/**
+	 * Обработчик события при удалении элемента
+	 */
 	on_remove_elm: {
 		
 		value: function (elm) {
@@ -1690,7 +1692,9 @@ Contour.prototype.__define({
 		}
 	},
 
-	// обработчик события при вставке элемента
+	/**
+	 * Обработчик события при вставке элемента
+	 */
 	on_insert_elm: {
 
 		value: function (elm) {
@@ -1702,6 +1706,24 @@ Contour.prototype.__define({
 			else if (elm instanceof Profile && !this.project.data._loading)
 				this.clear_dimentions();
 
+		}
+	},
+
+	/**
+	 * Обработчик при изменении системы
+	 */
+	on_sys_changed: {
+		value: function () {
+			
+			this.profiles.forEach(function (profile) {
+				profile._row.inset = profile.project.default_inset({elm_type: profile.elm_type, pos: profile.pos});
+				profile.data._rays.clear(true);
+			});
+
+			this.children.forEach(function(elm) {
+				if (elm instanceof Contour)
+					elm.on_sys_changed();
+			});
 		}
 	}
 });
