@@ -1777,9 +1777,14 @@ Contour.prototype.__define({
 				profile.data._rays.clear(true);
 			});
 
-			this.children.forEach(function(elm) {
+			this.glasses().forEach(function(elm) {
 				if (elm instanceof Contour)
 					elm.on_sys_changed();
+				else{
+					// заполнения проверяем по толщине
+					if(elm.thickness < elm.project._dp.sys.tmin || elm.thickness > elm.project._dp.sys.tmax)
+						elm._row.inset = elm.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
+				}
 			});
 		}
 	}
@@ -6147,10 +6152,23 @@ Scheme.prototype.__define({
 	 */
 	l_dimensions: {
 		get: function () {
-			if(!this.data.l_dimensions)
+
+			var curr;
+
+			if(!this.data.l_dimensions){
+				curr = this.activeLayer;
 				this.data.l_dimensions = new DimensionLayer();
-			if(!this.data.l_dimensions.isInserted())
+				if(curr)
+					this._activeLayer = curr;
+			}
+
+			if(!this.data.l_dimensions.isInserted()){
+				curr = this.activeLayer;
 				this.addChild(this.data.l_dimensions);
+				if(curr)
+					this._activeLayer = curr;
+			}
+
 			return this.data.l_dimensions;
 		}
 	},
@@ -6839,7 +6857,9 @@ function ToolPen(){
 
 	var _editor = paper,
 		tool = this,
-		on_layer_activated;
+		on_layer_activated,
+		on_scheme_changed,
+		sys;
 
 	ToolPen.superclass.constructor.call(this);
 
@@ -6865,7 +6885,9 @@ function ToolPen(){
 	// подключает окно редактора
 	function tool_wnd(){
 
-		var rama_impost = _editor.project._dp.sys.inserts();
+		sys = _editor.project._dp.sys;
+
+		var rama_impost = sys.inserts();
 
 		// создаём экземпляр обработки
 		tool.profile = $p.dp.builder_pen.create();
@@ -6874,16 +6896,20 @@ function ToolPen(){
 		$p.wsql.restore_options("editor", tool.options);
 		tool.profile._mixin(tool.options.wnd, ["inset", "clr", "bind_generatrix", "bind_node"]);
 
-		if(tool.profile.inset.empty() || rama_impost.indexOf(tool.profile.inset) == -1){
-			if(rama_impost.length)
-				tool.profile.inset = rama_impost[0];
+		// вставка по умолчанию
+		if(rama_impost.length){
+			// если в текущем слое есть профили, выбираем импост
+			if(_editor.project.activeLayer instanceof Contour && _editor.project.activeLayer.profiles.length)
+				tool.profile.inset = _editor.project.default_inset({elm_type: $p.enm.elm_types.Импост});
 			else
-				tool.profile.inset = $p.blank.guid;
-		}
+				tool.profile.inset = _editor.project.default_inset({elm_type: $p.enm.elm_types.Рама});
+		}else
+			tool.profile.inset = $p.blank.guid;
 
-		if(tool.profile.clr.empty())
-			tool.profile.clr = $p.job_prm.builder.base_clr;
+		// цвет по умолчанию
+		tool.profile.clr = _editor.project.default_clr;
 
+		// параметры отбора для выбора вставок
 		tool.profile._metadata.fields.inset.choice_links = [{
 			name: ["selection",	"ref"],
 			path: [
@@ -6911,8 +6937,6 @@ function ToolPen(){
 		var wnd_options = tool.wnd.wnd_options;
 		tool.wnd.wnd_options = function (opt) {
 			wnd_options.call(tool.wnd, opt);
-			opt.inset = tool.profile.inset.ref;
-			opt.clr = tool.profile.clr.ref;
 			opt.bind_generatrix = tool.profile.bind_generatrix;
 			opt.bind_node = tool.profile.bind_node;
 		}
@@ -6981,8 +7005,22 @@ function ToolPen(){
 
 			if(!on_layer_activated)
 				on_layer_activated = $p.eve.attachEvent("layer_activated", function (contour) {
-					decorate_layers();
+					if(contour.project == _editor.project){
+						decorate_layers();
+					}
 				});
+
+			// при изменении системы, переоткрываем окно доступных вставок
+			if(!on_scheme_changed)
+				on_scheme_changed = $p.eve.attachEvent("scheme_changed", function (scheme) {
+				if(scheme == _editor.project && sys != scheme._dp.sys){
+
+					delete tool.profile._metadata.fields.inset.choice_links;
+					tool.detache_wnd();
+					tool_wnd();
+
+				}
+			});
 
 			decorate_layers();
 
@@ -6994,6 +7032,11 @@ function ToolPen(){
 			if(on_layer_activated){
 				$p.eve.detachEvent(on_layer_activated);
 				on_layer_activated = null;
+			}
+
+			if(on_scheme_changed){
+				$p.eve.detachEvent(on_scheme_changed);
+				on_scheme_changed = null;
 			}
 
 			decorate_layers(true);

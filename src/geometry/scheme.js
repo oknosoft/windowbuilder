@@ -863,10 +863,23 @@ Scheme.prototype.__define({
 	 */
 	l_dimensions: {
 		get: function () {
-			if(!this.data.l_dimensions)
+
+			var curr;
+
+			if(!this.data.l_dimensions){
+				curr = this.activeLayer;
 				this.data.l_dimensions = new DimensionLayer();
-			if(!this.data.l_dimensions.isInserted())
+				if(curr)
+					this._activeLayer = curr;
+			}
+
+			if(!this.data.l_dimensions.isInserted()){
+				curr = this.activeLayer;
 				this.addChild(this.data.l_dimensions);
+				if(curr)
+					this._activeLayer = curr;
+			}
+
 			return this.data.l_dimensions;
 		}
 	},

@@ -367,7 +367,9 @@ $p.modifiers.push(
 					return res;
 
 				if(is_high_level_call && inset.insert_type == $p.enm.inserts_types.Стеклопакет){
-					glass_rows = glass_specification.find_rows({elm: elm.elm});
+					glass_rows = glass_specification.find_rows({elm: elm.elm}).map(function (row) {
+						return row._row;
+					});
 					if(!glass_rows.length){
 						// заполняем спецификацию заполнений по умолчанию, чтобы склеить формулу
 						inset.specification.each(function (row) {

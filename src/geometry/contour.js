@@ -1720,9 +1720,14 @@ Contour.prototype.__define({
 				profile.data._rays.clear(true);
 			});
 
-			this.children.forEach(function(elm) {
+			this.glasses().forEach(function(elm) {
 				if (elm instanceof Contour)
 					elm.on_sys_changed();
+				else{
+					// заполнения проверяем по толщине
+					if(elm.thickness < elm.project._dp.sys.tmin || elm.thickness > elm.project._dp.sys.tmax)
+						elm._row.inset = elm.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
+				}
 			});
 		}
 	}
