@@ -58,7 +58,7 @@ $p.modifiers.push(
 							.then(function (doc) {
 								var url = window.URL.createObjectURL($p.injected_data['view_blank.html']),
 									wnd_print = window.open(
-										url, "wnd_print", "menubar=no,toolbar=no,location=no,status=no,directories=no,resizable=yes,scrollbars=yes");
+										url, "wnd_print", "width=1000,height=800,menubar=no,toolbar=no,location=no,status=no,directories=no,resizable=yes,scrollbars=yes");
 
 								wnd_print.onload = function(e) {
 									window.URL.revokeObjectURL(url);

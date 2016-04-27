@@ -139,8 +139,13 @@ $p.modifiers.push(
 
 			print_data: {
 				get: function () {
+					var our_bank_account = !this.organizational_unit.empty() && this.organizational_unit._manager == cat.organization_bank_accounts ?
+							this.organizational_unit : this.organization.main_bank_account,
+						get_imgs = [];
+
+					// заполняем res теми данными, которые доступны синхронно
 					var res = {
-						АдресДоставки: "",
+						АдресДоставки: this.shipping_address,
 						ВалютаДокумента: this.doc_currency.presentation,
 						ДатаЗаказаФорматD: $p.dateFormat(this.date, $p.dateFormat.masks.short_ru),
 						ДатаЗаказаФорматDD: $p.dateFormat(this.date, $p.dateFormat.masks.longDate),
@@ -152,6 +157,7 @@ $p.modifiers.push(
 						ДоговорСрокДействия: $p.dateFormat(this.contract.validity, $p.dateFormat.masks.short_ru),
 						ЗаказНомер: this.number_doc,
 						Контрагент: this.partner.presentation,
+						КонтрагентОписание: this.partner.long_presentation,
 						КонтрагентДокумент: "",
 						КонтрагентКЛДолжность: "",
 						КонтрагентКЛДолжностьРП: "",
@@ -170,24 +176,50 @@ $p.modifiers.push(
 						ЛистКомплектацииСтроки: "",
 						Организация: this.organization.presentation,
 						ОрганизацияГород: this.organization.contact_information._obj.reduce(function (val, row) { return val || row.city }, "") || "Москва",
-						ОрганизацияБанкБИК: "",
-						ОрганизацияБанкГород: "",
-						ОрганизацияБанкКоррСчет: "",
-						ОрганизацияБанкНаименование: "",
-						ОрганизацияБанкНомерСчета: "",
-						ОрганизацияИндивидуальныйПредприниматель: "",
-						ОрганизацияИНН: "",
-						ОрганизацияКПП: "",
-						ОрганизацияСвидетельствоДатаВыдачи: "",
-						ОрганизацияСвидетельствоКодОргана: "",
-						ОрганизацияСвидетельствоНаименованиеОргана: "",
-						ОрганизацияСвидетельствоСерияНомер: "",
-						ОрганизацияЮрФизЛицо: "",
-						ОрганизацияЛоготип: "",
-						Продукция: [],
-						Проект: "",
-						СистемыПрофилей: "",
-						СистемыФурнитуры: "",
+						ОрганизацияАдрес: this.organization.contact_information._obj.reduce(function (val, row) {
+
+							if(row.kind == $p.cat.contact_information_kinds.predefined("ЮрАдресОрганизации") && row.presentation)
+								return row.presentation;
+
+							else if(val)
+								return val;
+
+							else if(row.presentation && (
+									row.kind == $p.cat.contact_information_kinds.predefined("ФактАдресОрганизации") ||
+									row.kind == $p.cat.contact_information_kinds.predefined("ПочтовыйАдресОрганизации")
+								))
+								return row.presentation;
+
+						}, ""),
+						ОрганизацияТелефон: this.organization.contact_information._obj.reduce(function (val, row) {
+
+							if(row.kind == $p.cat.contact_information_kinds.predefined("ТелефонОрганизации") && row.presentation)
+								return row.presentation;
+
+							else if(val)
+								return val;
+
+							else if(row.kind == $p.cat.contact_information_kinds.predefined("ФаксОрганизации") && row.presentation)
+								return row.presentation;
+
+						}, ""),
+						ОрганизацияБанкБИК: our_bank_account.bank.id,
+						ОрганизацияБанкГород: our_bank_account.bank.city,
+						ОрганизацияБанкКоррСчет: our_bank_account.bank.correspondent_account,
+						ОрганизацияБанкНаименование: our_bank_account.bank.name,
+						ОрганизацияБанкНомерСчета: our_bank_account.account_number,
+						ОрганизацияИндивидуальныйПредприниматель: this.organization.individual_entrepreneur.presentation,
+						ОрганизацияИНН: this.organization.inn,
+						ОрганизацияКПП: this.organization.kpp,
+						ОрганизацияСвидетельствоДатаВыдачи: this.organization.certificate_date_issue,
+						ОрганизацияСвидетельствоКодОргана: this.organization.certificate_authority_code,
+						ОрганизацияСвидетельствоНаименованиеОргана: this.organization.certificate_authority_name,
+						ОрганизацияСвидетельствоСерияНомер: this.organization.certificate_series_number,
+						ОрганизацияЮрФизЛицо: this.organization.individual_legal.presentation,
+						ПродукцияЭскизы: {},
+						Проект: this.project.presentation,
+						СистемыПрофилей: this.sys_profile,
+						СистемыФурнитуры: this.sys_furn,
 						Сотрудник: this.manager.presentation,
 						СотрудникДолжность: this.manager.individual_person.Должность,
 						СотрудникДолжностьРП: this.manager.individual_person.ДолжностьРП,
@@ -206,10 +238,66 @@ $p.modifiers.push(
 						ТелефонПоАдресуДоставки: this.phone,
 						УчитыватьНДС: this.contract.vat_consider
 					};
+
+					// дополняем значениями свойств
+					this.extra_fields.forEach(function (row) {
+						res["Свойство" + row.property.name.replace(/\s/g,"")] = row.value.presentation || row.value;
+					});					
 					
-					// СвойствоХарактеристикастроения: "",
-					
-					return Promise.resolve(res);
+					// получаем логотип организации
+					for(var key in this.organization._attachments){
+						if(key.indexOf("logo") != -1){
+							get_imgs.push(this.organization.get_attachment(key)
+								.then(function (blob) {
+									return $p.blob_as_text(blob, blob.type.indexOf("svg") == -1 ? "data_url" : "")
+								})
+								.then(function (data_url) {
+									res.ОрганизацияЛоготип = data_url;
+								})
+								.catch($p.record_log));
+							break;
+						}
+					}
+
+					// получаем эскизы продукций
+					this.production._obj.forEach(function (row) {
+						if(!$p.is_empty_guid(row.characteristic))
+							get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic, "svg")
+								.then(function (blob) {
+									return $p.blob_as_text(blob)
+								})
+								.then(function (data_url) {
+									res.ПродукцияЭскизы[row.characteristic] = data_url;
+								})
+								.catch($p.record_log));
+					});
+
+					return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
+						.then(function () {
+							
+							if(!window.QRCode)
+								return new Promise(function(resolve, reject){
+									$p.load_script("lib/qrcodejs/qrcode.min.js", "script", resolve);
+								});
+							
+						})
+						.then(function () {
+
+							var svg = document.createElement("SVG");
+							svg.innerHTML = "<g />";
+							var qrcode = new QRCode(svg, {
+								text: "http://www.oknosoft.ru/zd/",
+								width: 100,
+								height: 100,
+								colorDark : "#000000",
+								colorLight : "#ffffff",
+								correctLevel : QRCode.CorrectLevel.Q,
+								useSVG: true
+							});
+							res.qrcode = svg.innerHTML;
+
+							return res;	
+						});
 				}
 			}
 
