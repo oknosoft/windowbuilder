@@ -277,7 +277,7 @@ $p.modifiers.push(
 							
 							if(!window.QRCode)
 								return new Promise(function(resolve, reject){
-									$p.load_script("lib/qrcodejs/qrcode.min.js", "script", resolve);
+									$p.load_script("lib/qrcodejs/qrcode.js", "script", resolve);
 								});
 							
 						})
@@ -291,7 +291,7 @@ $p.modifiers.push(
 								height: 100,
 								colorDark : "#000000",
 								colorLight : "#ffffff",
-								correctLevel : QRCode.CorrectLevel.Q,
+								correctLevel : QRCode.CorrectLevel.H,
 								useSVG: true
 							});
 							res.qrcode = svg.innerHTML;
