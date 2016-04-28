@@ -53,9 +53,9 @@ $p.modifiers.push(
 
 					this.elmnts.each(function(row){
 						if(!row.nom.empty() && elm_types.indexOf(row.elm_type) != -1 &&
-								!__noms.some(function (e) {
-									return row.nom == e.nom;
-								}))
+							(by_default == "rows" || !__noms.some(function (e) {
+								return row.nom == e.nom;
+							})))
 							__noms.push(row);
 					});
 					

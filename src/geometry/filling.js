@@ -99,7 +99,7 @@ Filling.prototype.__define({
 	/**
 	 * Вычисляемые поля в таблице координат
 	 * @method save_coordinates
-	 * @for Profile
+	 * @for Filling
 	 */
 	save_coordinates: {
 		value: function () {
