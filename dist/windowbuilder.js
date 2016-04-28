@@ -5131,10 +5131,7 @@ CnnPoint.prototype.__define({
 		get: function () {
 
 			// если это угол, то точно не T
-			if(this.is_i || this.profile_point == "b" || this.profile_point == "e")
-				return false;
-
-			return true;
+			return !(this.is_i || this.profile_point == "b" || this.profile_point == "e" || this.profile == this.parent);
 
 		}
 	},
