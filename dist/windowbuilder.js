@@ -4714,11 +4714,11 @@ Profile.prototype.__define({
 
 			// если начало или конец элемента соединены с соседями по Т, значит это импост
 			var cnn_point = this.cnn_point("b");
-			if(cnn_point.profile != this && cnn_point.is_t)
+			if(cnn_point.profile != this && cnn_point.is_tt)
 				return $p.enm.elm_types.Импост;
 
 			cnn_point = this.cnn_point("e");
-			if(cnn_point.profile != this && cnn_point.is_t)
+			if(cnn_point.profile != this && cnn_point.is_tt)
 				return $p.enm.elm_types.Импост;
 
 			// Если вложенный контур, значит это створка
@@ -5120,6 +5120,22 @@ CnnPoint.prototype.__define({
 				return true;
 
 			return false;
+		}
+	},
+
+	/**
+	 * Строгий вариант свойства is_t Ꞁ или └─ не рассматриваются, как T
+	 */
+	is_tt: {
+
+		get: function () {
+
+			// если это угол, то точно не T
+			if(this.is_i || this.profile_point == "b" || this.profile_point == "e")
+				return false;
+
+			return true;
+
 		}
 	},
 

@@ -139,7 +139,7 @@ $p.modifiers.push(
 
 			print_data: {
 				get: function () {
-					var our_bank_account = !this.organizational_unit.empty() && this.organizational_unit._manager == cat.organization_bank_accounts ?
+					var our_bank_account = this.organizational_unit && !this.organizational_unit.empty() && this.organizational_unit._manager == cat.organization_bank_accounts ?
 							this.organizational_unit : this.organization.main_bank_account,
 						get_imgs = [];
 
