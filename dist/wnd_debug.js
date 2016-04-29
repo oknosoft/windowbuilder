@@ -1630,6 +1630,9 @@ $p.modifiers.push(
 				}
 			},
 
+			/**
+			 * Возвращает данные для печати
+			 */
 			print_data: {
 				get: function () {
 					var our_bank_account = this.organizational_unit && !this.organizational_unit.empty() && this.organizational_unit._manager == cat.organization_bank_accounts ?
@@ -1735,7 +1738,13 @@ $p.modifiers.push(
 					// дополняем значениями свойств
 					this.extra_fields.forEach(function (row) {
 						res["Свойство" + row.property.name.replace(/\s/g,"")] = row.value.presentation || row.value;
-					});					
+					});
+
+					// TODO: дополнить датами доставки и монтажа
+					if(!this.shipping_address)
+						res.МонтажДоставкаСамовывоз = "Самовывоз";
+					else
+						res.МонтажДоставкаСамовывоз = "Монтаж по адресу: " + this.shipping_address;
 					
 					// получаем логотип организации
 					for(var key in this.organization._attachments){
@@ -1753,14 +1762,15 @@ $p.modifiers.push(
 					}
 
 					// получаем эскизы продукций
-					this.production._obj.forEach(function (row) {
-						if(!$p.is_empty_guid(row.characteristic))
-							get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic, "svg")
+					this.production.forEach(function (row) {
+						
+						if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory)
+							get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, "svg")
 								.then(function (blob) {
 									return $p.blob_as_text(blob)
 								})
 								.then(function (data_url) {
-									res.ПродукцияЭскизы[row.characteristic] = data_url;
+									res.ПродукцияЭскизы[row.characteristic.ref] = data_url;
 								})
 								.catch($p.record_log));
 					});
@@ -1791,6 +1801,35 @@ $p.modifiers.push(
 
 							return res;	
 						});
+				}
+			},
+
+			/**
+			 * Возвращает струклуру с описанием строки продукции для печати
+			 */
+			product_description: {
+				value: function (row) {
+
+					var product = row.characteristic,
+						res = {
+							НомерСтроки: row.row,
+							Количество: row.quantity,
+							Ед: row.unit.name,
+							Цвет: product.clr.name,
+							Размеры: row.len + "x" + row.width + ", Площадь:" + row.s + "²",
+							Продукция: row.nom.name_full || row.nom.name,
+							Заполнения: ""
+						};
+
+					product.glasses.forEach(function (row) {
+						if(res.Заполнения.indexOf(row.nom.name) == -1){
+							if(res.Заполнения)
+								res.Заполнения += ", ";
+							res.Заполнения += row.nom.name;
+						}
+					});
+					
+					return res;
 				}
 			}
 

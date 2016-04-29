@@ -7,75 +7,14 @@
         #qrcode#
     </svg>
 
-    <table width="100%" cellpadding="2" cellspacing="2" class="border">
-        <tr>
-            <td colspan="2" rowspan="2" style="min-height:13mm; width: 105mm;">
-                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="height: 13mm;">
-                    <tr>
-                        <td valign="top">
-                            <div>#ОрганизацияБанкНаименование#</div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td valign="bottom" style="height: 3mm;">
-                            <div style="font-size:10pt;">Банк получателя        </div>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-            <td style="min-height:7mm;height:auto; width: 25mm;">
-                <div>БИK</div>
-            </td>
-            <td rowspan="2" style="vertical-align: top; width: 60mm;">
-                <div style=" height: 7mm; line-height: 7mm; vertical-align: middle;">#ОрганизацияБанкБИК#</div>
-                <div>#ОрганизацияБанкКоррСчет#</div>
-            </td>
-        </tr>
-        <tr>
-            <td style="width: 25mm;">
-                <div>Сч. №</div>
-            </td>
-        </tr>
-        <tr>
-            <td style="min-height:6mm; height:auto; width: 50mm;">
-                <div>ИНН #ОрганизацияИНН#</div>
-            </td>
-            <td style="min-height:6mm; height:auto; width: 55mm;">
-                <div>КПП #ОрганизацияКПП#</div>
-            </td>
-            <td rowspan="2" style="min-height:19mm; height:auto; vertical-align: top; width: 25mm;">
-                <div>Сч. №</div>
-            </td>
-            <td rowspan="2" style="min-height:19mm; height:auto; vertical-align: top; width: 60mm;">
-                <div>#ОрганизацияБанкНомерСчета#</div>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" style="min-height:13mm; height:auto;">
-
-                <table border="0" cellpadding="0" cellspacing="0" style="height: 13mm; width: 105mm;">
-                    <tr>
-                        <td valign="top">
-                            <div>#Организация#</div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td valign="bottom" style="height: 3mm;">
-                            <div style="font-size: 10pt;">Получатель</div>
-                        </td>
-                    </tr>
-                </table>
-
-            </td>
-        </tr>
-    </table>
-
-    <div style="font-weight: bold; font-size: 16pt; padding:4pt;">
+    <div style="font-weight: bold; font-size: 14pt; float: left; padding:4pt; clear: both">
         Счет № #ЗаказНомер# от #ДатаЗаказаФорматDD#
     </div>
+    <div style="font-size: 10pt; float: right; text-align: right; padding-top: 4pt;">
+        Счет действителен 3 дня. Распечатано: #ДатаТекущаяФорматD#
+    </div>
 
-
-    <div style="background-color:#000000; width:100%; font-size:1px; height:2px;">&nbsp;</div>
+    <div style="background-color:#000000; width:100%; font-size:1px; height:2px; clear: both">&nbsp;</div>
 
     <table width="100%">
         <tr>
@@ -95,11 +34,38 @@
                 #КонтрагентОписание#
             </td>
         </tr>
+        <tr>
+            <td colspan="2">
+                <div style="padding-left:2px;">#МонтажДоставкаСамовывоз#</div>
+            </td>
+        </tr>
     </table>
-
 
 </div>
 
+<!-- Эскиз изделия + описание -->
+<div id='product' style="clear: both; padding: 4pt; border-top: gainsboro 1px dashed; margin-top: 4pt;">
+
+    <div style="width: 40%; height: 180px; float: left">
+        эскиз
+    </div>
+
+    <div style="width: 55%; float: left">
+        Описание
+    </div>
+
+</div>
+
+<div id='product_description'>
+    <table width="100%">
+        <tbody >
+        <tr><td><b>Изделие №#НомерСтроки#</b></td><td><b>Количество: #Количество# #Ед#</b>, Цвет: #Цвет#</td></tr>
+        <tr><td>Размеры:</td><td>#Размеры#</td></tr>
+        <tr><td>Продукция:</td><td>#Продукция#</td></tr>
+        <tr><td>Заполнения:</td><td>#Заполнения#</td></tr>
+        </tbody>
+    </table>
+</div>
 
 <!-- Заголовок и шапка табличной части -->
 <div id='table_header'>
@@ -117,15 +83,13 @@
         </tr>
         </thead>
         <tbody >
-        <tr><td align="center">1</td><td align="left"></td><td align="left"></td><td align="right">1</td><td align="left">шт</td><td align="right">0.00</td><td align="right">0.00</td></tr>    </tbody>
+        </tbody>
     </table>
 
 </div>
 
 <!-- Строка табличной части -->
-<div id='table_row'>
-
-</div>
+<tr id='table_row'><td align="center">1</td><td align="left"></td><td align="left"></td><td align="right">1</td><td align="left">шт</td><td align="right">0.00</td><td align="right">0.00</td></tr>
 
 <!-- Строка итогов табличной части -->
 <div id='table_footer'>
@@ -159,7 +123,5 @@
     <div style="width: 85mm;text-align:center;">М.П.</div>
     <br/>
 
-
-    <div style="width:800px;text-align:left;font-size:10pt;">Счет действителен к оплате в течении трех дней.</div>
 
 </div>

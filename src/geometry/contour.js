@@ -412,9 +412,9 @@ Contour.prototype.__define({
 				if(!profiles.length)
 					this.data._bounds = new paper.Rectangle();
 				else{
-					this.data._bounds = profiles[0].bounds;
+					this.data._bounds = profiles[0].path.bounds;
 					for(var i = 1; i < profiles.length; i++)
-						this.data._bounds = this.data._bounds.unite(profiles[i].bounds);
+						this.data._bounds = this.data._bounds.unite(profiles[i].path.bounds);
 				}
 			}
 
