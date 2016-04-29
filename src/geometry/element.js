@@ -41,10 +41,12 @@ function BuilderElement(attr){
 
 	if(attr.proto){
 
-		this.inset = attr.proto.inset;
+		if(attr.proto.inset)
+			this.inset = attr.proto.inset;
 
 		if(attr.parent)
 			this.parent = attr.parent;
+			
 		else if(attr.proto.parent)
 			this.parent = attr.proto.parent;
 
@@ -333,10 +335,16 @@ BuilderElement.prototype.__define({
 			return (this._row ? this._row.inset : null) || $p.cat.inserts.get();
 		},
 		set : function(v){
-			this._row.inset = v;
-			if(this.data && this.data._rays)
-				this.data._rays.clear_segments();
-			this.project.register_change();
+			
+			if(this._row.inset != v){
+				
+				this._row.inset = v;
+
+				if(this.data && this.data._rays)
+					this.data._rays.clear(true);
+				
+				this.project.register_change();	
+			}
 		},
 		enumerable : false
 	},

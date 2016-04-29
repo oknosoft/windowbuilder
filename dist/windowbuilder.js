@@ -275,7 +275,6 @@ function Contour(attr){
 							generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e),
 							proto: outer_nodes.length ? outer_nodes[0] : {
 								parent: this,
-								inset: _contour.project.default_inset({elm_type: $p.enm.elm_types.Створка}),
 								clr: _contour.project.default_clr()
 							}
 						});
@@ -309,6 +308,12 @@ function Contour(attr){
 				// информируем систему об изменениях
 				if(noti.points.length)
 					this.notify(noti);
+
+				// пересчитываем вставки створок
+				this.profiles.forEach(function (profile) {
+					profile.inset = profile.project.default_inset({elm_type: profile.elm_type, pos: profile.pos});
+				});
+
 
 			}
 
@@ -1773,8 +1778,7 @@ Contour.prototype.__define({
 		value: function () {
 			
 			this.profiles.forEach(function (profile) {
-				profile._row.inset = profile.project.default_inset({elm_type: profile.elm_type, pos: profile.pos});
-				profile.data._rays.clear(true);
+				profile.inset = profile.project.default_inset({elm_type: profile.elm_type, pos: profile.pos});
 			});
 
 			this.glasses().forEach(function(elm) {
@@ -1784,6 +1788,11 @@ Contour.prototype.__define({
 					// заполнения проверяем по толщине
 					if(elm.thickness < elm.project._dp.sys.tmin || elm.thickness > elm.project._dp.sys.tmax)
 						elm._row.inset = elm.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
+					// проверяем-изменяем соединения заполнений с профилями
+					elm.profiles.forEach(function (curr) {
+						if(!curr.cnn || !curr.cnn.check_nom2(curr.profile))
+							curr.cnn = $p.cat.cnns.elm_cnn(elm, curr.profile, acn.ii);
+					});
 				}
 			});
 		}
@@ -2216,10 +2225,12 @@ function BuilderElement(attr){
 
 	if(attr.proto){
 
-		this.inset = attr.proto.inset;
+		if(attr.proto.inset)
+			this.inset = attr.proto.inset;
 
 		if(attr.parent)
 			this.parent = attr.parent;
+			
 		else if(attr.proto.parent)
 			this.parent = attr.proto.parent;
 
@@ -2508,10 +2519,16 @@ BuilderElement.prototype.__define({
 			return (this._row ? this._row.inset : null) || $p.cat.inserts.get();
 		},
 		set : function(v){
-			this._row.inset = v;
-			if(this.data && this.data._rays)
-				this.data._rays.clear_segments();
-			this.project.register_change();
+			
+			if(this._row.inset != v){
+				
+				this._row.inset = v;
+
+				if(this.data && this.data._rays)
+					this.data._rays.clear(true);
+				
+				this.project.register_change();	
+			}
 		},
 		enumerable : false
 	},
@@ -4713,12 +4730,7 @@ Profile.prototype.__define({
 		get : function(){
 
 			// если начало или конец элемента соединены с соседями по Т, значит это импост
-			var cnn_point = this.cnn_point("b");
-			if(cnn_point.profile != this && cnn_point.is_tt)
-				return $p.enm.elm_types.Импост;
-
-			cnn_point = this.cnn_point("e");
-			if(cnn_point.profile != this && cnn_point.is_tt)
+			if(this.cnn_point("b").is_tt || this.cnn_point("e").is_tt)
 				return $p.enm.elm_types.Импост;
 
 			// Если вложенный контур, значит это створка
@@ -5148,6 +5160,9 @@ CnnPoint.prototype.__define({
 		}
 	},
 
+	/**
+	 * Проверяет, является ли соединение в точке соединением с пустотой
+	 */
 	is_i: {
 		get: function () {
 			return !this.profile && !this.is_cut;

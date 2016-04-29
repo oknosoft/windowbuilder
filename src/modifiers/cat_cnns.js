@@ -111,7 +111,7 @@ $p.modifiers.push(
 					var is_nom1 = art1glass ? (оCnn.art1glass && thickness1 >= Number(оCnn.tmin) && thickness1 <= Number(оCnn.tmax)) : false,
 						is_nom2 = art2glass ? (оCnn.art2glass && thickness2 >= Number(оCnn.tmin) && thickness2 <= Number(оCnn.tmax)) : false;
 
-					оCnn["cnn_elmnts"].each(function(row){
+					оCnn.cnn_elmnts.each(function(row){
 						if(is_nom1 && is_nom2)
 							return false;
 						is_nom1 = is_nom1 || $p.is_equal(row.nom1, onom1);
@@ -207,8 +207,19 @@ $p.modifiers.push(
 					if(ares.length)
 						return ares[0]._row;
 
-				},
-				enumerable: false
+				}
+			},
+
+			/**
+			 * Проверяет, есть ли nom в колонке nom2 соединяемых элементов
+			 */
+			check_nom2: {
+				value: function (nom) {
+					var ref = $p.is_data_obj(nom) ? nom.ref : nom;
+					return this.cnn_elmnts._obj.some(function (row) {
+						return row.nom == ref;
+					})
+				}
 			}
 		});
 
