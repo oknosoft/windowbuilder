@@ -1717,7 +1717,7 @@ $p.modifiers.push(
 						СистемыПрофилей: this.sys_profile,
 						СистемыФурнитуры: this.sys_furn,
 						Сотрудник: this.manager.presentation,
-						СотрудникДолжность: this.manager.individual_person.Должность,
+						СотрудникДолжность: this.manager.individual_person.Должность || "менеджер",
 						СотрудникДолжностьРП: this.manager.individual_person.ДолжностьРП,
 						СотрудникИмя: this.manager.individual_person.Имя,
 						СотрудникИмяРП: this.manager.individual_person.ИмяРП,
@@ -1726,13 +1726,26 @@ $p.modifiers.push(
 						СотрудникОтчествоРП: this.manager.individual_person.ОтчествоРП,
 						СотрудникФамилия: this.manager.individual_person.Фамилия,
 						СотрудникФамилияРП: this.manager.individual_person.ФамилияРП,
+						СотрудникФИО: this.manager.individual_person.Фамилия + 
+							(this.manager.individual_person.Имя ? " " + this.manager.individual_person.Имя[1].toUpperCase() + "." : "" )+
+							(this.manager.individual_person.Отчество ? " " + this.manager.individual_person.Отчество[1].toUpperCase() + "." : ""),
 						СотрудникФИОРП: this.manager.individual_person.ФамилияРП + " " + this.manager.individual_person.ИмяРП + " " + this.manager.individual_person.ОтчествоРП,
-						СуммаВключаетНДС: this.contract.vat_included,
-						СуммаДокумента: this.doc_amount,
+						СуммаДокумента: this.doc_amount.toFixed(2),
 						СуммаДокументаПрописью: this.doc_amount.in_words(),
-						СуммаНДС: "",
+						СуммаДокументаБезСкидки: this.production._obj.reduce(function (val, row){
+							return val + row.quantity * row.price;
+						}, 0).toFixed(2),
+						СуммаСкидки: this.production._obj.reduce(function (val, row){
+							return val + row.discount;
+						}, 0).toFixed(2),
+						СуммаНДС: this.production._obj.reduce(function (val, row){
+							return val + row.vat_amount;
+						}, 0).toFixed(2),
+						ТекстНДС: this.vat_consider ? (this.vat_included ? "В том числе НДС 18%" : "НДС 18% (сверху)") : "Без НДС",
 						ТелефонПоАдресуДоставки: this.phone,
-						УчитыватьНДС: this.contract.vat_consider
+						СуммаВключаетНДС: this.contract.vat_included,
+						УчитыватьНДС: this.contract.vat_consider,
+						ВсегоНаименований: this.production.count()
 					};
 
 					// дополняем значениями свойств
@@ -1807,7 +1820,7 @@ $p.modifiers.push(
 			/**
 			 * Возвращает струклуру с описанием строки продукции для печати
 			 */
-			product_description: {
+			row_description: {
 				value: function (row) {
 
 					var product = row.characteristic,
@@ -1816,9 +1829,17 @@ $p.modifiers.push(
 							Количество: row.quantity,
 							Ед: row.unit.name,
 							Цвет: product.clr.name,
-							Размеры: row.len + "x" + row.width + ", Площадь:" + row.s + "²",
-							Продукция: row.nom.name_full || row.nom.name,
-							Заполнения: ""
+							Размеры: row.len + "x" + row.width + ", Площадь:" + row.s + "м²",
+							Номенклатура: row.nom.name_full || row.nom.name,
+							Характеристика: product.name,
+							Заполнения: "",
+							Цена: row.price,
+							ЦенаВнутр: row.price_internal,
+							СкидкаПроцент: row.discount_percent,
+							СкидкаПроцентВнутр: row.discount_percent_internal,
+							Скидка: row.discount,
+							Сумма: row.amount,
+							СуммаВнутр: row.amount_internal
 						};
 
 					product.glasses.forEach(function (row) {

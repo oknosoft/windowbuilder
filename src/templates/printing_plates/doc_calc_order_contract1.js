@@ -6,21 +6,25 @@
  * Created 17.04.2016
  */
 
-var templates = this._template.content.children,
-	header = templates.header,
-	doc = new $p.SpreadsheetDocument();
+function fake(obj) {
+
+	var templates = this._template.content.children,
+		header = templates.header,
+		doc = new $p.SpreadsheetDocument();
 
 // получаем данные печати
-return obj.print_data.then(function (print_data) {
+	return obj.print_data.then(function (print_data) {
 
-	// выводим заголовок
-	doc.put(dhx4.template(header.innerHTML, print_data), header.attributes);
+		// выводим заголовок
+		doc.put(dhx4.template(header.innerHTML, print_data), header.attributes);
 
-	// выводим табличную часть
+		// выводим табличную часть
 
 
-	// выводим подвал
+		// выводим подвал
 
-	return doc;
+		return doc;
 
-});
+	});
+	
+}
