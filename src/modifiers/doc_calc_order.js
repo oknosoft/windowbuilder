@@ -252,7 +252,9 @@ $p.modifiers.push(
 						ТелефонПоАдресуДоставки: this.phone,
 						СуммаВключаетНДС: this.contract.vat_included,
 						УчитыватьНДС: this.contract.vat_consider,
-						ВсегоНаименований: this.production.count()
+						ВсегоНаименований: this.production.count(),
+						ВсегоИзделий: 0,
+						ВсегоПлощадьИзделий: 0
 					};
 
 					// дополняем значениями свойств
@@ -281,10 +283,14 @@ $p.modifiers.push(
 						}
 					}
 
-					// получаем эскизы продукций
+					// получаем эскизы продукций, параллельно накапливаем количество и площадь изделий
 					this.production.forEach(function (row) {
 						
-						if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory)
+						if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory){
+
+							res.ВсегоИзделий+= row.quantity;
+							res.ВсегоПлощадьИзделий+= row.quantity * row.s;
+
 							get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, "svg")
 								.then(function (blob) {
 									return $p.blob_as_text(blob)
@@ -293,7 +299,9 @@ $p.modifiers.push(
 									res.ПродукцияЭскизы[row.characteristic.ref] = data_url;
 								})
 								.catch($p.record_log));
+						}
 					});
+					res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
 					return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
 						.then(function () {
