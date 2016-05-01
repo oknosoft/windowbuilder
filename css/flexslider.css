@@ -114,7 +114,7 @@ html[xmlns] .slides {display: block;}
 		height: 9px;
 	}
 	.flexslider {
-		min-height: 180px;
+		min-height: 105px;
 	}
 	/* .flexslider { margin: 8px 34px -92px 35px; } */
 	.flex-control-nav {

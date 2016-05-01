@@ -1690,8 +1690,7 @@ span.locate img {
 		width: 100%;
 	}
 	.service-section-grid p {
-		height: 83px;
-		overflow: hidden;
+		min-height: 60px;
 	}
 	h1 {
 		font-size: 1.2em;
