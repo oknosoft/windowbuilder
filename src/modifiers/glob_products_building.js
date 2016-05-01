@@ -604,7 +604,7 @@ $p.modifiers.push(
 
 								}else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
 									// строим горизонтальную линию от нижней границы контура, находим пересечение и offset
-									var bounds = contour.parent.bounds,
+									var bounds = contour.bounds,
 										hor = new paper.Path({
 											insert: false,
 											segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
