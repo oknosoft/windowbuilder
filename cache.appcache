@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 000000000064
+# 000000000065
 
 # Additional resources to cache
 CACHE:
@@ -10,31 +10,34 @@ CACHE:
 
 # Эти позиции включаем только в продакшене
 #
+//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3,metadata@0.10.210(dhtmlx.min.js+metadata.min.js)
 
 # А эти - только в дебагере
-dist/windowbuilder.js
-dist/wnd_debug.js
-
-lib/dhtmlx_debug.js
-lib/alasql/alasql.js
+//oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
 lib/paper-core.js
-lib/jquery-2.2.0.min.js
 lib/baron/baron.min.js
-lib/pouchdb/pouchdb.js
-lib/metadata.js
+lib/qrcodejs/qrcode.js
+dist/windowbuilder.min.js
+dist/wnd_debug.min.js
 
 
 # css и картинки
 
-dist_md/dhx_terrace.css
-dist/windowbuilder.min.css
-lib/font-awesome-4.5.0/css/font-awesome.min.css
-lib/font-awesome-4.5.0/fonts/fontawesome-webfont.woff2?v=4.5.0
-lib/metadata.css
+//cdn.jsdelivr.net/g/metadata(dhx_terrace.css+metadata.css)
+//cdn.jsdelivr.net/fontawesome/4.6/css/font-awesome.min.css
+//cdn.jsdelivr.net/fontawesome/4.6/fonts/fontawesome-webfont.woff2?v=4.6.1
+#
 lib/baron/baron.css
-
+dist/windowbuilder.min.css
+#
 dist/imgs/fav-wnd.ico
-dist/imgs/fav-md144.png
+dist/imgs/fav-okn144.png
+#
+dist/imgs/stamp.png
+dist/imgs/about_48.png
+dist/imgs/settings_48.png
+dist/imgs/events_48.png
+dist/imgs/projects_48.png
 
 
 # offline.html will be displayed if the user is offline

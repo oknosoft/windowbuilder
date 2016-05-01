@@ -23,8 +23,11 @@ $p.settings = function (prm, modifiers) {
 	// расположение rest-сервиса 1c
 	prm.rest_path = "/a/zd/%1/odata/standard.odata/";
 
-	// по умолчанию, обращаемся к зоне 0
-	prm.zone = 0;
+	// по умолчанию, обращаемся к зоне 1
+	prm.zone = 1;
+
+	// объявляем номер демо-зоны
+	prm.zone_demo = 1;
 
 	// расположение couchdb
 	prm.couch_path = "/couchdb/wb_";
@@ -42,17 +45,14 @@ $p.settings = function (prm, modifiers) {
 		password: "1gNjzYQKBlcD"
 	}];
 
-	// не шевелить hash url при открытии подсиненных форм
+	// разрешаем сохранение пароля
+	prm.enable_save_pwd = true;
+
+	// не шевелить hash url при открытии подчиненных форм
 	prm.keep_hash = true;
 
 	// скин по умолчанию
 	prm.skin = "dhx_terrace";
-
-	// сокет временно отключаем
-	// prm.ws_url = "ws://builder.oknosoft.local:8001";
-
-	// TODO: удалить расположение файлов данных
-	prm.data_url = "data/";
 
 	// используем геокодер
 	prm.use_ip_geo = true;
@@ -170,10 +170,28 @@ $p.iface.oninit = function() {
 	var pouch_load_data_error = $p.eve.attachEvent("pouch_load_data_error", function (err) {
 
 		// если это первый запуск, показываем диалог авторизации
-		if(err.db_name && err.hasOwnProperty("doc_count") && err.doc_count < 10){
-			$p.iface.frm_auth({
-				modal_dialog: true
-			});
+		if(err.db_name && err.hasOwnProperty("doc_count") && err.doc_count < 10 && navigator.onLine){
+
+			// если это демо (zone === zone_demo), устанавливаем логин и пароль
+			if($p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && !$p.wsql.get_user_param("user_name")){
+				$p.wsql.set_user_param("enable_save_pwd", true);
+				$p.wsql.set_user_param("user_name", $p.job_prm.guests[0].username);
+				$p.wsql.set_user_param("user_pwd", $p.job_prm.guests[0].password);
+
+				setTimeout(function () {
+					$p.iface.frm_auth({
+						modal_dialog: true,
+						try_auto: true
+					});
+				}, 100);
+
+			}else{
+				$p.iface.frm_auth({
+					modal_dialog: true,
+					try_auto: $p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && $p.wsql.get_user_param("enable_save_pwd")
+				});
+			}
+
 		}
 		$p.iface.main.progressOff();
 

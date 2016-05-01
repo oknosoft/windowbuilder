@@ -295,8 +295,8 @@ $p.modifiers.push(
 								.then(function (blob) {
 									return $p.blob_as_text(blob)
 								})
-								.then(function (data_url) {
-									res.ПродукцияЭскизы[row.characteristic.ref] = data_url;
+								.then(function (svg_text) {
+									res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
 								})
 								.catch($p.record_log));
 						}

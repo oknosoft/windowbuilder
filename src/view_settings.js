@@ -91,7 +91,10 @@ $p.iface.view_settings = function (cell) {
 		t.form.checkItem("device_type", $p.wsql.get_user_param("device_type"));
 
 		["zone", "couch_path", "couch_suffix"].forEach(function (prm) {
-			t.form.setItemValue(prm, $p.wsql.get_user_param(prm) || $p.job_prm[prm]);
+			if(prm == "zone")
+				t.form.setItemValue(prm, $p.wsql.get_user_param(prm));
+			else
+				t.form.setItemValue(prm, $p.wsql.get_user_param(prm) || $p.job_prm[prm]);
 		});
 
 		t.form.attachEvent("onChange", function (name, value, state){
