@@ -3994,10 +3994,19 @@ $p.modifiers.push(
 								}else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
 									// строим горизонтальную линию от нижней границы контура, находим пересечение и offset
 									var bounds = contour.bounds,
+										by_side = contour.profiles_by_side(),
+										hor;
+									if(elm == by_side.top || elm == by_side.bottom){
+										hor = new paper.Path({
+											insert: false,
+											segments: [[bounds.left + contour.h_ruch, bounds.top - 200], [bounds.left + contour.h_ruch, bounds.bottom + 200]]
+										});
+									}else
 										hor = new paper.Path({
 											insert: false,
 											segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
 										});
+
 
 									coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor));
 
