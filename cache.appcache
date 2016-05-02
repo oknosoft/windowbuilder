@@ -10,7 +10,9 @@ CACHE:
 
 # Эти позиции включаем только в продакшене
 #
-//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3,metadata@0.10.210(dhtmlx.min.js+metadata.min.js)
+#//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3,metadata@0.10.210(dhtmlx.min.js+metadata.min.js)
+//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3,metadata@0.10.210(dhtmlx.min.js)
+lib/metadata.min.js
 
 # А эти - только в дебагере
 //oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
