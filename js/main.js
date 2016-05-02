@@ -116,6 +116,10 @@ function a_click(elm) {
 		case 'mail':
 			send_mail(check_form());
 			break;
+
+		case 'button_demo':
+			elm.parentElement.querySelector("a").click();
+			break;
 	}
 
 	var e = window.event;
