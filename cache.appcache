@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 000000000065
+# 000000000066
 
 # Additional resources to cache
 CACHE:
@@ -34,6 +34,7 @@ dist/windowbuilder.min.css
 #
 dist/imgs/fav-wnd.ico
 dist/imgs/fav-okn144.png
+dist/imgs/splash.gif
 #
 dist/imgs/stamp.png
 dist/imgs/about_48.png
