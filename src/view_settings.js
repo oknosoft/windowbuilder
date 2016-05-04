@@ -29,11 +29,19 @@ $p.iface.view_settings = function (cell) {
 			tabs: [
 				{id: "const", text: '<i class="fa fa-key"></i> Общее', active: true},
 				{id: "industry", text: '<i class="fa fa-industry"></i> Технология'},
-				{id: "price", text: '<i class="fa fa-money"></i> Цены'},
+				{id: "price", text: '<i class="fa fa-money"></i> Финансы'},
 				{id: "events", text: '<i class="fa fa-calendar-check-o"></i> Планирование'}
 			]
 		});
 
+		t.tabs.attachEvent("onSelect", function(id){
+			if(t[id] && t[id].tree && t[id].tree.getSelectedItemId()){
+				t[id].tree.callEvent("onSelect", [t[id].tree.getSelectedItemId()]);
+			}
+			return true;
+		});
+
+		// закладка основных настроек
 		t.tabs.cells("const").attachHTMLString($p.injected_data['view_settings.html']);
 		t.const = t.tabs.cells("const").cell.querySelector(".dhx_cell_cont_tabbar");
 		t.const.style.overflow = "auto";
@@ -127,6 +135,82 @@ $p.iface.view_settings = function (cell) {
 		});
 
 
+		// закладка технологии
+		t.industry = {
+			layout: t.tabs.cells("industry").attachLayout({
+				pattern: "2U",
+				cells: [{
+					id: "a",
+					text: "Разделы",
+					collapsed_text: "Разделы",
+					width: 200
+				}, {
+					id: "b",
+					text: "Раздел",
+					header: false
+				}],
+				offsets: { top: 0, right: 0, bottom: 0, left: 0}
+			})
+		};
+		// дерево технологических справочников
+		t.industry.tree = t.industry.layout.cells("a").attachTree();
+		t.industry.tree.enableTreeImages(false);
+		t.industry.tree.parse($p.injected_data["tree_industry.xml"]);
+		t.industry.tree.attachEvent("onSelect", function (name) {
+			$p.md.mgr_by_class_name(name).form_list(t.industry.layout.cells("b"), {hide_header: true});
+		});
+
+		// закладка ценообразования
+		t.price = {
+			layout: t.tabs.cells("price").attachLayout({
+				pattern: "2U",
+				cells: [{
+					id: "a",
+					text: "Разделы",
+					collapsed_text: "Разделы",
+					width: 200
+				}, {
+					id: "b",
+					text: "Раздел",
+					header: false
+				}],
+				offsets: { top: 0, right: 0, bottom: 0, left: 0}
+			})
+		};
+		// дерево справочников ценообразования
+		t.price.tree = t.price.layout.cells("a").attachTree();
+		t.price.tree.enableTreeImages(false);
+		t.price.tree.parse($p.injected_data["tree_price.xml"]);
+		t.price.tree.attachEvent("onSelect", function (name) {
+			$p.md.mgr_by_class_name(name).form_list(t.price.layout.cells("b"), {hide_header: true});
+		});
+
+		// закладка планирования
+		t.events = {
+			layout: t.tabs.cells("events").attachLayout({
+				pattern: "2U",
+				cells: [{
+					id: "a",
+					text: "Разделы",
+					collapsed_text: "Разделы",
+					width: 200
+				}, {
+					id: "b",
+					text: "Раздел",
+					header: false
+				}],
+				offsets: { top: 0, right: 0, bottom: 0, left: 0}
+			})
+		};
+		// дерево справочников планирования
+		t.events.tree = t.events.layout.cells("a").attachTree();
+		t.events.tree.enableTreeImages(false);
+		t.events.tree.parse($p.injected_data["tree_events.xml"]);
+		t.events.tree.attachEvent("onSelect", function (name) {
+			$p.md.mgr_by_class_name(name).form_list(t.events.layout.cells("b"), {hide_header: true});
+		});
+		
+		
 		/**
 		 * Обработчик маршрутизации
 		 * @param hprm
