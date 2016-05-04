@@ -22,7 +22,7 @@ function a_click(elm) {
 
 		elm_name.scrollIntoView();
 		setTimeout(elm_name.focus.bind(elm_name), 200);
-		$("[name='your-message']", div)[0].value = "Подключение по тарифному плану '%1'".replace("%1", text);
+		$("[name='your-message']", div)[0].value = "Подключение по тарифному плану '%1'".replace("%1", text) + "\nУкажите необходимые системы профилей и фурнитуры";
 	}
 
 	function check_form() {
