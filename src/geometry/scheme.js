@@ -981,8 +981,23 @@ Scheme.prototype.__define({
 	 */
 	default_furn: {
 		get: function () {
-			if(this._dp.sys.furn.count())
-				return this._dp.sys.furn.get(0).furn;
+			// ищем ранее выбранную фурнитуру для системы
+			var sys = this._dp.sys,
+				res;
+			while (true){
+				if(res = $p.job_prm.builder.base_furn[sys.ref])
+					break;
+				sys = sys.parent;
+				if(sys.empty())
+					break;
+			}
+			if(!res){
+				$p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ""}}, function (row) {
+					res = row;
+					return false;
+				});
+			}
+			return res;
 		},
 		enumerable: false
 	}

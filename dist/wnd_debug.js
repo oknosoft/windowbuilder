@@ -1366,23 +1366,36 @@ $p.modifiers.push(
 
 					rows.forEach(function (row) {
 
-						if(!row.is_folder && row.synonym){
+						if(!row.is_folder && row.synonym && parents[row.parent]){
 
 							var _mgr, tnames;
+							
 							if(row.type.is_ref){
 								tnames = row.type.types[0].split(".");
 								_mgr = $p[tnames[0]][tnames[1]]
 							}
 
-							if(row.list){
+							if(row.list == -1){
+
+								$p.job_prm[parents[row.parent]].__define(row.synonym, {
+									value: function () {
+										var res = {};
+										row.elmnts.forEach(function (row) {
+											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
+										});
+										return res;
+									}()
+								});
+
+							}else if(row.list){
 
 								$p.job_prm[parents[row.parent]].__define(row.synonym, {
 									value: row.elmnts.map(function (row) {
 										return _mgr ? _mgr.get(row.value, false) : row.value;
 									})
 								});
-							}
-							else{
+
+							}else{
 								$p.job_prm[parents[row.parent]].__define(row.synonym, { value: _mgr ? _mgr.get(row.value, false) : row.value });
 							}
 
@@ -1545,9 +1558,6 @@ $p.modifiers.push(
 
 			//СостояниеТранспорта
 			obj.obj_delivery_state = $p.enm.obj_delivery_states.Черновик;
-
-			//Заказ
-			obj._obj.invoice = $p.generate_guid();
 
 			//Номер документа
 			return obj.new_number_doc();

@@ -53,9 +53,6 @@ $p.modifiers.push(
 			//СостояниеТранспорта
 			obj.obj_delivery_state = $p.enm.obj_delivery_states.Черновик;
 
-			//Заказ
-			obj._obj.invoice = $p.generate_guid();
-
 			//Номер документа
 			return obj.new_number_doc();
 

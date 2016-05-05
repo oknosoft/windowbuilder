@@ -990,34 +990,11 @@ Contour.prototype.__define({
 	_metadata: {
 		get : function(){
 			var t = this,
-				_xfields = t.project.ox._metadata.tabular_sections.constructions.fields, //_dgfields = this.project._dp._metadata.fields
-				furn = _xfields.furn._clone();
-			furn.choice_links = [{
-				name: ["selection",	"ref"],
-				path: [
-					function(o, f){
-						if($p.is_data_obj(o)){
-							var ok = false;
-							t.project._dp.sys.furn.find_rows({furn: o}, function (row) {
-								ok = true;
-								return false;
-							});
-							return ok;
-						}else{
-							var refs = "";
-							t.project._dp.sys.furn.each(function (row) {
-								if(refs)
-									refs += ", ";
-								refs += "'" + row.furn.ref + "'";
-							});
-							return "_t_.ref in (" + refs + ")";
-						}
-					}]}
-			];
+				_xfields = t.project.ox._metadata.tabular_sections.constructions.fields; //_dgfields = this.project._dp._metadata.fields
 
 			return {
 				fields: {
-					furn: furn,
+					furn: _xfields.furn,
 					clr_furn: _xfields.clr_furn,
 					direction: _xfields.direction,
 					h_ruch: _xfields.h_ruch,

@@ -1047,34 +1047,11 @@ Contour.prototype.__define({
 	_metadata: {
 		get : function(){
 			var t = this,
-				_xfields = t.project.ox._metadata.tabular_sections.constructions.fields, //_dgfields = this.project._dp._metadata.fields
-				furn = _xfields.furn._clone();
-			furn.choice_links = [{
-				name: ["selection",	"ref"],
-				path: [
-					function(o, f){
-						if($p.is_data_obj(o)){
-							var ok = false;
-							t.project._dp.sys.furn.find_rows({furn: o}, function (row) {
-								ok = true;
-								return false;
-							});
-							return ok;
-						}else{
-							var refs = "";
-							t.project._dp.sys.furn.each(function (row) {
-								if(refs)
-									refs += ", ";
-								refs += "'" + row.furn.ref + "'";
-							});
-							return "_t_.ref in (" + refs + ")";
-						}
-					}]}
-			];
+				_xfields = t.project.ox._metadata.tabular_sections.constructions.fields; //_dgfields = this.project._dp._metadata.fields
 
 			return {
 				fields: {
-					furn: furn,
+					furn: _xfields.furn,
 					clr_furn: _xfields.clr_furn,
 					direction: _xfields.direction,
 					h_ruch: _xfields.h_ruch,
@@ -6298,8 +6275,23 @@ Scheme.prototype.__define({
 	 */
 	default_furn: {
 		get: function () {
-			if(this._dp.sys.furn.count())
-				return this._dp.sys.furn.get(0).furn;
+			// ищем ранее выбранную фурнитуру для системы
+			var sys = this._dp.sys,
+				res;
+			while (true){
+				if(res = $p.job_prm.builder.base_furn[sys.ref])
+					break;
+				sys = sys.parent;
+				if(sys.empty())
+					break;
+			}
+			if(!res){
+				$p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ""}}, function (row) {
+					res = row;
+					return false;
+				});
+			}
+			return res;
 		},
 		enumerable: false
 	}
