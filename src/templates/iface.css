@@ -64,6 +64,7 @@
 	float: right;
 	line-height: 22px;
 	padding-right: 2px;
+	word-break: break-all;
 }
 
 .mousepos {
