@@ -1608,7 +1608,7 @@ $p.modifiers.push(
 					var obj = this,
 						prefix = ($p.current_acl.prefix || "") + obj.organization.prefix,
 						code_length = obj._metadata.code_length - prefix.length,
-						part;
+						part = "";
 
 					return obj._manager.pouch_db.query("doc_calc_order/number_doc",
 						{
@@ -1620,7 +1620,13 @@ $p.modifiers.push(
 						})
 						.then(function (res) {
 							if(res.rows.length){
-								part = (parseInt(res.rows[0].key.substr(prefix.length)) + 1).toFixed(0);
+								var num0 = res.rows[0].key;
+								for(var i = num0.length-1; i>0; i--){
+									if(isNaN(parseInt(num0[i])))
+										break;
+									part = num0[i] + part;
+								}
+								part = (parseInt(part || 0) + 1).toFixed(0);
 							}else{
 								part = "1";
 							}
@@ -2459,31 +2465,6 @@ $p.modifiers.push(
 				grid.attachEvent("onRowSelect", production_on_row_activate);
 			}
 
-
-			/**
-			 * перечитывает реквизиты шапки из объекта в гриды
-			 */
-			function header_refresh(){
-				function reflect(id){
-					if(typeof id == "string"){
-						var fv = o[id];
-						if(fv != undefined){
-							if($p.is_data_obj(fv))
-								this.cells(id, 1).setValue(fv.presentation);
-							else if(fv instanceof Date)
-								this.cells(id, 1).setValue($p.dateFormat(fv, ""));
-							else
-								this.cells(id, 1).setValue(fv);
-
-						}else if(id.indexOf("extra_fields") > -1){
-							var row = o["extra_fields"].find(id.split("|")[1]);
-						}
-					}
-				}
-				wnd.elmnts.pg_left.forEachRow(function(id){	reflect.call(wnd.elmnts.pg_left, id); });
-				wnd.elmnts.pg_right.forEachRow(function(id){ reflect.call(wnd.elmnts.pg_right, id); });
-			}
-
 			function production_new_row(){
 				var row = o["production"].add({
 					qty: 1,
@@ -2739,6 +2720,7 @@ $p.modifiers.push(
 						});
 
 				}else if((selId = production_get_sel_index()) != undefined){
+
 					row = o.production.get(selId);
 					if(row){
 						if(row.characteristic.empty() ||
@@ -5247,15 +5229,9 @@ $p.iface.view_orders = function (cell) {
 		var t = this;
 
 		function show_list(){
-
-			// var _cell = t.carousel.cells("list");
-			//
-			// if(t.carousel.getActiveCell() != _cell){
-			// 	_cell.setActive();
-			// 	cell.setText({text: "Заказы"});
-			// }
-
+			
 			t.carousel.cells("list").setActive();
+			cell.setText({text: "Заказы"});
 
 			if(!t.list){
 				t.carousel.cells("list").detachObject(true);
@@ -5268,8 +5244,7 @@ $p.iface.view_orders = function (cell) {
 
 			var _cell = t.carousel.cells("doc");
 
-			if(t.carousel.getActiveCell() != _cell)
-				_cell.setActive();
+			_cell.setActive();
 
 			if(!_cell.ref || _cell.ref != ref)
 
@@ -5288,23 +5263,20 @@ $p.iface.view_orders = function (cell) {
 					})
 					.then(function (wnd) {
 						t.doc = wnd;
-						setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 300);
+						setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 200);
 					});
 
 			else if(t.doc && t.doc.wnd){
-				setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 300);
+				setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 200);
 			}
+
 		}
 
 		function show_builder(ref){
 
-			// var _cell = t.carousel.cells("builder");
-			//
-			// if(t.carousel.getActiveCell() != _cell)
-			// 	_cell.setActive();
-
 			t.carousel.cells("builder").setActive();
 
+			// отвязываем ошибки открытия построителя от текущего контекста
 			setTimeout(t.editor.open.bind(t.editor, ref));
 
 		}
@@ -5379,9 +5351,7 @@ $p.iface.view_orders = function (cell) {
 									this._on_close(true);
 								}else{
 									t.editor.project.ox.load()
-										.then(function () {
-											this._on_close(true);
-										}.bind(this));
+										.then(this._on_close.bind(this, true));
 								}
 							}								
 						}.bind(this)
@@ -5439,8 +5409,8 @@ $p.iface.view_orders = function (cell) {
 		t.carousel.addCell("list");
 		t.carousel.addCell("doc");
 		t.carousel.addCell("builder");
-		t.carousel.conf.anim_step = 75;
-		t.carousel.conf.anim_slide = "left 0.2s";
+		t.carousel.conf.anim_step = 200;
+		t.carousel.conf.anim_slide = "left 0.1s";
 
 
 		// Подписываемся на событие окончания загрузки локальных данных

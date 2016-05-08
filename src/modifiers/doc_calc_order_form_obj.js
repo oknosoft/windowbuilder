@@ -444,31 +444,6 @@ $p.modifiers.push(
 				grid.attachEvent("onRowSelect", production_on_row_activate);
 			}
 
-
-			/**
-			 * перечитывает реквизиты шапки из объекта в гриды
-			 */
-			function header_refresh(){
-				function reflect(id){
-					if(typeof id == "string"){
-						var fv = o[id];
-						if(fv != undefined){
-							if($p.is_data_obj(fv))
-								this.cells(id, 1).setValue(fv.presentation);
-							else if(fv instanceof Date)
-								this.cells(id, 1).setValue($p.dateFormat(fv, ""));
-							else
-								this.cells(id, 1).setValue(fv);
-
-						}else if(id.indexOf("extra_fields") > -1){
-							var row = o["extra_fields"].find(id.split("|")[1]);
-						}
-					}
-				}
-				wnd.elmnts.pg_left.forEachRow(function(id){	reflect.call(wnd.elmnts.pg_left, id); });
-				wnd.elmnts.pg_right.forEachRow(function(id){ reflect.call(wnd.elmnts.pg_right, id); });
-			}
-
 			function production_new_row(){
 				var row = o["production"].add({
 					qty: 1,
@@ -724,6 +699,7 @@ $p.modifiers.push(
 						});
 
 				}else if((selId = production_get_sel_index()) != undefined){
+
 					row = o.production.get(selId);
 					if(row){
 						if(row.characteristic.empty() ||

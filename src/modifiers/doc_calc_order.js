@@ -102,7 +102,7 @@ $p.modifiers.push(
 					var obj = this,
 						prefix = ($p.current_acl.prefix || "") + obj.organization.prefix,
 						code_length = obj._metadata.code_length - prefix.length,
-						part;
+						part = "";
 
 					return obj._manager.pouch_db.query("doc_calc_order/number_doc",
 						{
@@ -114,7 +114,13 @@ $p.modifiers.push(
 						})
 						.then(function (res) {
 							if(res.rows.length){
-								part = (parseInt(res.rows[0].key.substr(prefix.length)) + 1).toFixed(0);
+								var num0 = res.rows[0].key;
+								for(var i = num0.length-1; i>0; i--){
+									if(isNaN(parseInt(num0[i])))
+										break;
+									part = num0[i] + part;
+								}
+								part = (parseInt(part || 0) + 1).toFixed(0);
 							}else{
 								part = "1";
 							}

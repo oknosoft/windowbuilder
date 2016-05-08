@@ -1067,8 +1067,8 @@ Contour.prototype.__define({
 
 			this.project.register_change(true);
 
-			$p.eve.callEvent("furn_changed", [this]);
-			
+			setTimeout($p.eve.callEvent.bind($p.eve, "furn_changed", [this]));
+
 		}
 	},
 
