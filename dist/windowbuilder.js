@@ -6281,9 +6281,9 @@ Scheme.prototype.__define({
 			while (true){
 				if(res = $p.job_prm.builder.base_furn[sys.ref])
 					break;
-				sys = sys.parent;
 				if(sys.empty())
 					break;
+				sys = sys.parent;
 			}
 			if(!res){
 				$p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ""}}, function (row) {

@@ -31,7 +31,7 @@ $p.modifiers.push(
 
 					rows.forEach(function (row) {
 
-						if(!row.is_folder && row.synonym && parents[row.parent]){
+						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
 
 							var _mgr, tnames;
 							

@@ -1366,7 +1366,7 @@ $p.modifiers.push(
 
 					rows.forEach(function (row) {
 
-						if(!row.is_folder && row.synonym && parents[row.parent]){
+						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
 
 							var _mgr, tnames;
 							
@@ -5248,12 +5248,14 @@ $p.iface.view_orders = function (cell) {
 
 		function show_list(){
 
-			var _cell = t.carousel.cells("list");
+			// var _cell = t.carousel.cells("list");
+			//
+			// if(t.carousel.getActiveCell() != _cell){
+			// 	_cell.setActive();
+			// 	cell.setText({text: "Заказы"});
+			// }
 
-			if(t.carousel.getActiveCell() != _cell){
-				_cell.setActive();
-				cell.setText({text: "Заказы"});
-			}
+			t.carousel.cells("list").setActive();
 
 			if(!t.list){
 				t.carousel.cells("list").detachObject(true);
@@ -5296,12 +5298,14 @@ $p.iface.view_orders = function (cell) {
 
 		function show_builder(ref){
 
-			var _cell = t.carousel.cells("builder");
+			// var _cell = t.carousel.cells("builder");
+			//
+			// if(t.carousel.getActiveCell() != _cell)
+			// 	_cell.setActive();
 
-			if(t.carousel.getActiveCell() != _cell)
-				_cell.setActive();
+			t.carousel.cells("builder").setActive();
 
-			t.editor.open(ref);
+			setTimeout(t.editor.open.bind(t.editor, ref));
 
 		}
 
