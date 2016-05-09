@@ -86,6 +86,13 @@ $p.modifiers.push(
 
 		});
 
+		$p.doc.nom_prices_setup.attache_event("after_create", function (attr) {
+
+			//Номер документа
+			return this.new_number_doc();
+
+		});
+
 
 
 		function Pricing($p){
