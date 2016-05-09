@@ -10,6 +10,7 @@
 $p.modifiers.push(
 	function($p){
 
+		// экспортируем класс Pricing (модуль ценообразования)
 		$p.pricing = new Pricing($p);
 
 		// методы ценообразования в прототип номенклатуры
@@ -69,6 +70,20 @@ $p.modifiers.push(
 
 				}
 			}
+		});
+
+		/**
+		 * Обработчик события "при изменении свойства" в шапке или табличной части при редактировании в форме объекта
+		 * @this {DataObj} - обработчик вызывается в контексте текущего объекта
+		 */
+		$p.doc.nom_prices_setup.attache_event("add_row", function (attr) {
+
+			// установим валюту и тип цен по умолчению при добавлении строки
+			if(attr.tabular_section == "goods"){
+				attr.row.price_type = this.price_type;
+				attr.row.currency = this.price_type.price_currency;
+			}
+
 		});
 
 
