@@ -1,0 +1,64 @@
+<!-- Заголовок, шапка отчета -->
+<div id='header' class='container'>
+
+
+    <div style="font-weight: bold; font-size: 14pt; float: left; padding:4pt; clear: both">
+        Спецификация нарезки без оптимизации #ЗаказНомер# от #ДатаЗаказаФорматD#
+    </div>
+
+</div>
+
+<!-- Эскиз изделия + ячейка спецификации нарезки -->
+<div id='product' style="clear: both; padding: 4pt; border-top: gainsboro 1px dashed; margin-top: 4pt;">
+
+    <div style="width: 37%; min-height: 200px; float: left">
+        эскиз
+    </div>
+
+    <div style="width: 62%; float: left">
+        спецификация
+    </div>
+
+</div>
+
+<!-- шаблон ячейки описание изделия -->
+<div id='product_description'>
+    <table width="100%">
+        <tbody >
+        <tr><td><b>№ #НомерСтроки#, #Количество# #Ед#</b></td><td>Цвет: #Цвет#</td></tr>
+        <tr><td>Размеры:</td><td>#Размеры#</td></tr>
+        <tr><td>Продукция:</td><td>#Номенклатура#</td></tr>
+        <tr><td>Заполнения:</td><td>#Заполнения#</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- шапка, заголовок и строка табличной части -->
+<div id='table'>
+
+    <table class="border" width="100%" cellpadding="2" cellspacing="2">
+        <thead>
+        <tr>
+            <th style="width:40%;">Длина</th>
+            <th style="width:30%;">Углы</th>
+            <th>Кол-во</th>
+        </tr>
+        </thead>
+        <tbody >
+
+        <!-- Строка напиловки -->
+        <tr class="row_cut">
+            <td align="left">#len#</td>
+            <td align="center">#alp1# #alp2#</td>
+            <td align="center">#qty#</td>
+        </tr>
+
+        <!-- Строка материала -->
+        <tr class="row_nom">
+            <td colspan="3" align="left">#Материал#</td>    <!-- Номенклатура + цвет + штук + м.п.-->
+        </tr>
+
+        </tbody>
+    </table>
+
+</div>

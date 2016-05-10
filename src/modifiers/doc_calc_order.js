@@ -307,9 +307,9 @@ $p.modifiers.push(
 						res = {
 							НомерСтроки: row.row,
 							Количество: row.quantity,
-							Ед: row.unit.name,
+							Ед: row.unit.name || "шт",
 							Цвет: product.clr.name,
-							Размеры: row.len + "x" + row.width + ", Площадь:" + row.s + "м²",
+							Размеры: row.len + "x" + row.width + ", " + row.s + "м²",
 							Номенклатура: row.nom.name_full || row.nom.name,
 							Характеристика: product.name,
 							Заполнения: "",

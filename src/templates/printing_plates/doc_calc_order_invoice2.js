@@ -33,8 +33,7 @@ function fake(obj) {
 		.then(function () {
 
 			// выводим эскизы и описания продукций
-			var tpl_product = templates.product,
-				tpl_product_description = templates.product_description;
+			var tpl_product = templates.product;
 			obj.production.forEach(function (row) {
 
 				if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory){
@@ -45,13 +44,10 @@ function fake(obj) {
 					}else
 						tpl_product.children[0].innerHTML = "";
 
-					tpl_product.children[1].innerHTML = dhx4.template(tpl_product_description.innerHTML, obj.row_description(row));
+					tpl_product.children[1].innerHTML = dhx4.template(templates.product_description.innerHTML, obj.row_description(row));
 
 					doc.put(tpl_product.innerHTML, tpl_product.attributes);
-
 				}
-
-
 			});
 
 			// выводим табличную часть
