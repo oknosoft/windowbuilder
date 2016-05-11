@@ -934,28 +934,49 @@ Scheme.prototype.__define({
 	default_inset: {
 		value: function (attr) {
 
-			if(!attr.pos)
-				return this._dp.sys.inserts(attr.elm_type, true)[0];
+			var rows;
 
-			var rows = this._dp.sys.inserts(attr.elm_type, "rows");
+			if(!attr.pos){
+				rows = this._dp.sys.inserts(attr.elm_type, true);
+				// если доступна текущая, возвращаем её
+				if(attr.inset && rows.some(function (row) { return attr.inset == row; })){
+					return attr.inset;
+				}
+				return rows[0];
+			}
+
+			rows = this._dp.sys.inserts(attr.elm_type, "rows");
+
+			// если без вариантов, возвращаем без вариантов
 			if(rows.length == 1)
 				return rows[0].nom;
 
+			// если подходит текущая, возвращаем текущую
+			if(attr.inset && rows.some(function (row) {
+					return attr.inset == row.nom && (row.pos == attr.pos || row.pos == $p.enm.positions.Любое);
+				})){
+				return attr.inset;
+			}
+
 			var inset;
+			// ищем по умолчанию + pos
 			rows.some(function (row) {
 				if(row.pos == attr.pos && row.by_default)
 					return inset = row.nom;
 			});
+			// ищем по pos без умолчания
 			if(!inset)
 				rows.some(function (row) {
 					if(row.pos == attr.pos)
 						return inset = row.nom;
 				});
+			// ищем по умолчанию + любое
 			if(!inset)
 				rows.some(function (row) {
 					if(row.pos == $p.enm.positions.Любое && row.by_default)
 						return inset = row.nom;
 				});
+			// ищем любое без умолчаний
 			if(!inset)
 				rows.some(function (row) {
 					if(row.pos == $p.enm.positions.Любое)

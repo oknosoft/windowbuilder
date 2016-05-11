@@ -254,9 +254,13 @@ function Contour(attr){
 
 				// пересчитываем вставки створок
 				this.profiles.forEach(function (profile) {
-					profile.inset = profile.project.default_inset({elm_type: profile.elm_type, pos: profile.pos});
+					profile.inset = profile.project.default_inset({
+						elm_type: profile.elm_type,
+						pos: profile.pos,
+						inset: profile.inset
+					});
 				});
-
+				this.data._bounds = null;
 
 			}
 
@@ -408,13 +412,18 @@ Contour.prototype.__define({
 
 			if(!this.data._bounds){
 
-				var profiles = this.profiles, res;
+				var profiles = this.profiles;
 				if(!profiles.length)
 					this.data._bounds = new paper.Rectangle();
 				else{
 					this.data._bounds = profiles[0].path.bounds;
 					for(var i = 1; i < profiles.length; i++)
 						this.data._bounds = this.data._bounds.unite(profiles[i].path.bounds);
+				}
+
+				if(!this.data._bounds.width || !this.data._bounds.height){
+					for(var i = 1; i < profiles.length; i++)
+						this.data._bounds = this.data._bounds.unite(profiles[i].generatrix.bounds);
 				}
 			}
 
@@ -1698,7 +1707,11 @@ Contour.prototype.__define({
 		value: function () {
 			
 			this.profiles.forEach(function (profile) {
-				profile.inset = profile.project.default_inset({elm_type: profile.elm_type, pos: profile.pos});
+				profile.inset = profile.project.default_inset({
+					elm_type: profile.elm_type,
+					pos: profile.pos,
+					inset: profile.inset
+				});
 			});
 
 			this.glasses().forEach(function(elm) {

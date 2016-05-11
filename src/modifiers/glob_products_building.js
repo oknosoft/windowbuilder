@@ -784,31 +784,33 @@ $p.modifiers.push(
 				row_cnn_next = e.cnn.main_row(elm);
 
 				// добавляем строку спецификации
-				row_spec = new_spec_row(null, elm, row_cnn_prev || row_cnn_next, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
+				if(row_cnn_prev || row_cnn_next){
+					row_spec = new_spec_row(null, elm, row_cnn_prev || row_cnn_next, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
 
-				// уточняем размер
-				row_spec.len = (_row.len - (row_cnn_prev ? row_cnn_prev.sz : 0) - (row_cnn_next ? row_cnn_next.sz : 0))
-					* ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
+					// уточняем размер
+					row_spec.len = (_row.len - (row_cnn_prev ? row_cnn_prev.sz : 0) - (row_cnn_next ? row_cnn_next.sz : 0))
+						* ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
 
-				// profile.Длина - то, что получится после обработки
-				// row_spec.Длина - сколько взять (отрезать)
-				elm.data._len = _row.len;
-				_row.len = (_row.len
-					- (!row_cnn_prev || row_cnn_prev.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_prev.sz)
-					- (!row_cnn_next || row_cnn_next.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_next.sz))
-					* 1000 * ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
+					// profile.Длина - то, что получится после обработки
+					// row_spec.Длина - сколько взять (отрезать)
+					elm.data._len = _row.len;
+					_row.len = (_row.len
+						- (!row_cnn_prev || row_cnn_prev.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_prev.sz)
+						- (!row_cnn_next || row_cnn_next.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? 0 : row_cnn_next.sz))
+						* 1000 * ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
 
-				// припуск для гнутых элементов
-				if(!elm.is_linear())
-					row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
+					// припуск для гнутых элементов
+					if(!elm.is_linear())
+						row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
 
-				else if((row_cnn_prev && !row_cnn_prev.formula.empty()) || (row_cnn_next && !row_cnn_next.formula.empty())){
-					// TODO: дополнительная корректировка длины формулой
+					else if((row_cnn_prev && !row_cnn_prev.formula.empty()) || (row_cnn_next && !row_cnn_next.formula.empty())){
+						// TODO: дополнительная корректировка длины формулой
 
+					}
+
+					// РассчитатьКоличествоПлощадьМассу
+					calc_count_area_mass(row_spec, _row, row_cnn_prev ? row_cnn_prev.angle_calc_method : null, row_cnn_next ? row_cnn_next.angle_calc_method : null);
 				}
-
-				// РассчитатьКоличествоПлощадьМассу
-				calc_count_area_mass(row_spec, _row, row_cnn_prev.angle_calc_method, row_cnn_next ? row_cnn_next.angle_calc_method : null);
 
 				// НадоДобавитьСпецификациюСоединения
 				if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
