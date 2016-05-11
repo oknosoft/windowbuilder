@@ -459,9 +459,12 @@ $p.modifiers.push(
 				var selId = wnd.elmnts.grids.production.getSelectedRowId();
 				if(selId && !isNaN(Number(selId)))
 					return Number(selId)-1;
-				$p.msg.show_msg({type: "alert-warning",
+
+				$p.msg.show_msg({
+					type: "alert-warning",
 					text: $p.msg.no_selected_row.replace("%1", "Продукция"),
-					title: _mgr.metadata()["obj_presentation"] + ' №' + o.number_str});
+					title: o.presentation
+				});
 			}
 
 			function production_del_row(){
