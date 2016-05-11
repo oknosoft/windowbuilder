@@ -472,15 +472,18 @@ Contour.prototype.__define({
 				var profiles = this.profiles;
 				if(!profiles.length)
 					this.data._bounds = new paper.Rectangle();
+					
 				else{
+					
 					this.data._bounds = profiles[0].path.bounds;
 					for(var i = 1; i < profiles.length; i++)
 						this.data._bounds = this.data._bounds.unite(profiles[i].path.bounds);
-				}
 
-				if(!this.data._bounds.width || !this.data._bounds.height){
-					for(var i = 1; i < profiles.length; i++)
-						this.data._bounds = this.data._bounds.unite(profiles[i].generatrix.bounds);
+					// если профили еще не нарисованы, используем габариты образующих
+					if(!this.data._bounds.width || !this.data._bounds.height){
+						for(var i = 1; i < profiles.length; i++)
+							this.data._bounds = this.data._bounds.unite(profiles[i].generatrix.bounds);
+					}
 				}
 			}
 
@@ -1101,6 +1104,9 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 
+			if(this._row.furn == v)
+				return;
+			
 			this._row.furn = v;
 			
 			// при необходимости устанавливаем направление открывания
