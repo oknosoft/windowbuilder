@@ -3644,39 +3644,49 @@ $p.modifiers.push(
 
 				cnn_filter_spec(cnn, elm, len_angl).forEach(function (row_cnn_spec) {
 					var nom = row_cnn_spec.nom;
-					// TODO: nom может быть вставкой - в этом случае надо разузловать
-					var row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin);
 
-					// В простейшем случае, формула = "ДобавитьКомандуСоединения(Парам);"
-					if(row_cnn_spec.formula.empty()) {
-						if(nom.is_pieces){
-							if(!row_cnn_spec.coefficient)
-								row_spec.qty = row_cnn_spec.quantity;
-							else
-								row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
-									.round(nom.rounding_quantity);
-						}else{
-							// TODO: Строго говоря, нужно брать не размер соединения, а размеры предыдущего и последующего
-							row_spec.qty = row_cnn_spec.quantity;
-							if(row_cnn_spec.sz || row_cnn_spec.coefficient)
-								row_spec.len = (len_angl.len - (len_angl.glass ? cnn.sz * 2 : 0) - sign * 2 * row_cnn_spec.sz) *
-									(row_cnn_spec.coefficient || 0.001);
-						}
+					// TODO: nom может быть вставкой - в этом случае надо разузловать
+					if(nom._manager == $p.cat.inserts){
+						inset_spec(elm, nom);
 
 					}else {
-						// TODO: заменить eval и try-catch на динамическую функцию
-						try{
-							if(eval(row_cnn_spec.formula) === false)
-								return;
-						}catch(err){
-							$p.record_log(err);
+
+						var row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin);
+
+						// В простейшем случае, формула = "ДобавитьКомандуСоединения(Парам);"
+						if(row_cnn_spec.formula.empty()) {
+							if(nom.is_pieces){
+								if(!row_cnn_spec.coefficient)
+									row_spec.qty = row_cnn_spec.quantity;
+								else
+									row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
+										.round(nom.rounding_quantity);
+							}else{
+								// TODO: Строго говоря, нужно брать не размер соединения, а размеры предыдущего и последующего
+								row_spec.qty = row_cnn_spec.quantity;
+								if(row_cnn_spec.sz || row_cnn_spec.coefficient)
+									row_spec.len = (len_angl.len - (len_angl.glass ? cnn.sz * 2 : 0) - sign * 2 * row_cnn_spec.sz) *
+										(row_cnn_spec.coefficient || 0.001);
+							}
+
+						}else {
+							// TODO: заменить eval и try-catch на динамическую функцию
+							try{
+								if(eval(row_cnn_spec.formula) === false)
+									return;
+							}catch(err){
+								$p.record_log(err);
+							}
 						}
+
+						if(!row_spec.qty)
+							spec.del(row_spec.row-1);
+						else
+							calc_count_area_mass(row_spec, len_angl, row_cnn_spec.angle_calc_method);
+						
 					}
 
-					if(!row_spec.qty)
-						spec.del(row_spec.row-1);
-					else
-						calc_count_area_mass(row_spec, len_angl, row_cnn_spec.angle_calc_method);
+
 				});
 			}
 
@@ -4345,11 +4355,14 @@ $p.modifiers.push(
 			 * Спецификация вставки элемента
 			 * @param elm {BuilderElement}
 			 */
-			function inset_spec(elm) {
+			function inset_spec(elm, inset) {
 
 				var _row = elm._row;
+				
+				if(!inset)
+					inset = elm.inset;
 
-				inset_filter_spec(elm.inset, elm, true).forEach(function (row_ins_spec) {
+				inset_filter_spec(inset, elm, true).forEach(function (row_ins_spec) {
 
 					var row_spec;
 
@@ -4357,11 +4370,11 @@ $p.modifiers.push(
 					if((row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру
 						&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
 						$p.enm.elm_types.profiles.indexOf(_row.elm_type) != -1)
-						row_spec = new_spec_row(null, elm, row_ins_spec, null, elm.inset);
+						row_spec = new_spec_row(null, elm, row_ins_spec, null, inset);
 
 					if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !row_ins_spec.formula.empty()){
 						try{
-							row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, elm.inset);
+							row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, inset);
 							if(eval(row_ins_spec.formula) === false)
 								return;
 						}catch(err){
@@ -4385,7 +4398,7 @@ $p.modifiers.push(
 							elm.perimeter.forEach(function (rib) {
 								row_prm._row._mixin(rib);
 								if(inset_check(row_ins_spec, row_prm, true)){
-									row_spec = new_spec_row(null, elm, row_ins_spec, null, elm.inset);
+									row_spec = new_spec_row(null, elm, row_ins_spec, null, inset);
 									calc_qty_len(row_spec, row_ins_spec, rib.len);
 									calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
 								}
@@ -4399,7 +4412,7 @@ $p.modifiers.push(
 								row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление) && row_ins_spec.step){
 
 								for(var i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
-									row_spec = new_spec_row(null, elm, row_ins_spec, null, elm.inset);
+									row_spec = new_spec_row(null, elm, row_ins_spec, null, inset);
 									calc_qty_len(row_spec, row_ins_spec, w);
 									calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
 								}
