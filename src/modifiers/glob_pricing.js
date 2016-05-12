@@ -251,6 +251,29 @@ $p.modifiers.push(
 
 			};
 
+			/**
+			 * Пересчитывает сумму из валюты в валюту
+			 * @param amount {Number} - сумма к пересчету
+			 * @param date {Date} - дата курса
+			 * @param from - исходная валюта
+			 * @param [to] - конечная валюта
+			 * @return {Number}
+			 */
+			this.from_currency_to_currency = function (amount, date, from, to) {
+
+				if(!to || to.empty())
+					to = $p.job_prm.pricing.main_currency;
+				
+				if(!from || from == to)
+					return amount;
+				
+				if(!date)
+					date = new Date();
+				
+				// TODO: реализовать пересчет
+				return amount;
+			};
+			
 			// виртуальный срез последних
 			function build_cache() {
 
@@ -259,10 +282,10 @@ $p.modifiers.push(
 						limit : 1000,
 						include_docs: false,
 						startkey: [''],
-						endkey: ['\uffff'],
-						reduce: function(keys, values, rereduce) {
-							return values.length;
-						}
+						endkey: ['\uffff']
+						// ,reduce: function(keys, values, rereduce) {
+						// 	return values.length;
+						// }
 					})
 					.then(function (res) {
 						res.rows.forEach(function (row) {

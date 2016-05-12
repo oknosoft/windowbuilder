@@ -60,7 +60,45 @@ $p.modifiers.push(
 
 		// перед записью надо присвоить номер для нового и рассчитать итоги
 		_mgr.attache_event("before_save", function (attr) {
-			attr = null;
+
+			doc_amount = 0;
+			amount_internal = 0;
+			sys_profile = "";
+			sys_furn = "";
+
+			this.production.each(function (row) {
+
+				doc_amount += row.amount;
+				amount_internal += row.amount_internal;
+
+				var name;
+				if(!row.characteristic.calc_order.empty()){
+
+					name = row.nom.article || row.nom.nom_group.name || row.nom.id.substr(0, 3);
+					if(sys_profile.indexOf(name) == -1){
+						if(sys_profile)
+							sys_profile += " ";
+						sys_profile += name;
+					}
+
+					row.characteristic.constructions.each(function (row) {
+						if(row.parent && !row.furn.empty()){
+							name = row.furn.name_short || row.furn.name;
+							if(sys_furn.indexOf(name) == -1){
+								if(sys_furn)
+									sys_furn += " ";
+								sys_furn += name;
+							}
+						}
+					});
+				}
+			});
+
+			this.doc_amount = doc_amount;
+			this.amount_internal = amount_internal;
+			this.sys_profile = sys_profile;
+			this.sys_furn = sys_furn;
+			this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency);
 		});
 
 		// при изменении реквизита
@@ -98,7 +136,8 @@ $p.modifiers.push(
 			// валюту документа получаем из договора
 			doc_currency: {
 				get: function () {
-					return this.contract.settlements_currency;
+					var currency = this.contract.settlements_currency;
+					return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
 				}
 			},
 

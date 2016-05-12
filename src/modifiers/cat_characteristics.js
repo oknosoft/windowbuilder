@@ -21,8 +21,12 @@ $p.modifiers.push(
 			if(name)
 				this.name = name;
 			
+			// дублируем контрагента для целей RLS
+			this.partner = this.calc_order.partner;
+			
 		});
 
+		// свойства объекта характеристики
 		_mgr._obj_constructor.prototype.__define({
 			
 			calc_order_row: {
@@ -73,6 +77,16 @@ $p.modifiers.push(
 				}
 			}
 		});
+
+
+
+		// подписываемся на событие после загрузки из pouchdb-ram и готовности предопределенных
+		var init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", function () {
+			$p.eve.detachEvent(init_event_id);
+			return _mgr.pouch_load_view("doc/nom_characteristics");
+
+		});
+
 
 	}
 
