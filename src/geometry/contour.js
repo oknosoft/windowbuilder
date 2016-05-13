@@ -471,6 +471,11 @@ Contour.prototype.__define({
 			// создаём и перерисовываем заполнения
 			_contour.glass_recalc();
 
+			// перерисовываем раскладки заполнений
+			_contour.glasses(false, true).forEach(function (glass) {
+				glass.redraw_onlay();
+			});
+
 			// рисуем направление открывания и ручку
 			_contour.draw_opening();
 

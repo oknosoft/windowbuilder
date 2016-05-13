@@ -92,8 +92,16 @@ Filling.prototype.__define({
 	profiles: {
 		get : function(){
 			return this.data._profiles || [];
-		},
-		enumerable : false
+		}
+	},
+
+	/**
+	 * Массив раскладок
+	 */
+	onlays: {
+		get: function () {
+			return this.getItems({class: Onlay});
+		}
 	},
 
 	/**
@@ -138,8 +146,7 @@ Filling.prototype.__define({
 				});
 			}.bind(this));
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -167,8 +174,7 @@ Filling.prototype.__define({
 				tabular: "constructions"
 			});
 
-		},
-		enumerable : false
+		}
 	},
 
 	s: {
@@ -184,15 +190,13 @@ Filling.prototype.__define({
 	is_rectangular: {
 		get : function(){
 			return this.profiles.length == 4 && !this.data.path.hasHandles();
-		},
-		enumerable : false
+		}
 	},
 
 	is_sandwich: {
 		get : function(){
 			return false;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -265,8 +269,7 @@ Filling.prototype.__define({
 			data.path.reduce();
 
 			data = attr = null;
-		},
-		enumerable : false
+		}
 	},
 
 	// возвращает текущие (ранее установленные) узлы заполнения
@@ -281,8 +284,7 @@ Filling.prototype.__define({
 				res = this.parent.glass_nodes(this.path);
 			}
 			return res;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -291,8 +293,7 @@ Filling.prototype.__define({
 	outer_profiles: {
 		get: function () {
 			return this.profiles;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -310,8 +311,7 @@ Filling.prototype.__define({
 					tmp.angle += 360;
 			});
 			return res;
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -323,8 +323,7 @@ Filling.prototype.__define({
 		},
 		set: function (v) {
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -336,8 +335,7 @@ Filling.prototype.__define({
 		},
 		set: function (v) {
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -349,8 +347,7 @@ Filling.prototype.__define({
 		},
 		set: function (v) {
 
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -362,8 +359,7 @@ Filling.prototype.__define({
 		},
 		set: function (v) {
 
-		},
-		enumerable : false
+		}
 	},
 
 	// информация для редактора свойста
@@ -391,8 +387,7 @@ Filling.prototype.__define({
 			});
 			segm.selected = true;
 			this.view.update();
-		},
-		enumerable : false
+		}
 	},
 
 	/**
@@ -422,6 +417,17 @@ Filling.prototype.__define({
 	default_clr_str: {
 		value: "#def,#d0ddff,#eff",
 		enumerable: false
+	},
+
+	/**
+	 * Перерисовывает раскладки текущего заполнения
+	 */
+	redraw_onlay: {
+		value: function () {
+			this.onlays.forEach(function (elm) {
+				elm.redraw();
+			});
+		}
 	}
 
 });

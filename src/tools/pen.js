@@ -128,7 +128,7 @@ function ToolPen(){
 		if(!tool.hitItem)
 			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, tolerance: hitSize });
 
-		if (tool.hitItem && tool.hitItem.item.parent instanceof Profile
+		if (tool.hitItem && tool.hitItem.item.parent instanceof ProfileItem
 			&& (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke')) {
 			_editor.canvas_cursor('cursor-pen-adjust');
 		} else {
@@ -225,8 +225,29 @@ function ToolPen(){
 
 			if (this.mode && this.path) {
 
-				// Рисуем профиль
-				new Profile({generatrix: this.path, proto: this.profile});
+				if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+
+					// находим заполнение под линией
+					_editor.project.activeLayer.glasses(false, true).some(function (glass) {
+
+						if(glass.intersects(this.path)){
+							new Onlay({
+								generatrix: this.path,
+								proto: this.profile,
+								parent: glass
+							});
+							
+							return true;
+						}
+						
+					}.bind(this));
+
+				}else{
+					// Рисуем профиль
+					new Profile({generatrix: this.path, proto: this.profile});
+
+				}
+
 				this.mode = null;
 				this.path = null;
 
@@ -237,7 +258,7 @@ function ToolPen(){
 				this.path = null;
 
 				// TODO: Выделяем элемент, если он подходящего типа
-				if(item.parent instanceof Profile && item.parent.isInserted()){
+				if(item.parent instanceof ProfileItem && item.parent.isInserted()){
 					item.parent.attache_wnd(paper._acc.elm.cells("a"));
 					item.parent.generatrix.selected = true;
 
@@ -325,7 +346,7 @@ function ToolPen(){
 						res = {distance: 10e9};
 						for(i in _editor.project.activeLayer.children){
 							element = _editor.project.activeLayer.children[i];
-							if (element instanceof Profile &&
+							if (element instanceof ProfileItem &&
 								_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
 								this.path.firstSegment.point = res.point;
 								break;
@@ -336,7 +357,7 @@ function ToolPen(){
 					res = {distance: 10e9};
 					for(i in _editor.project.activeLayer.children){
 						element = _editor.project.activeLayer.children[i];
-						if (element instanceof Profile &&
+						if (element instanceof ProfileItem &&
 							_editor.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
 							this.path.lastSegment.point = res.point;
 							break;
@@ -371,7 +392,7 @@ function ToolPen(){
 					return;
 
 				paper.project.selectedItems.forEach(function (path) {
-					if(path.parent instanceof Profile){
+					if(path.parent instanceof ProfileItem){
 						path = path.parent;
 						path.removeChildren();
 						path.remove();

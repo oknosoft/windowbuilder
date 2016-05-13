@@ -57,7 +57,7 @@ function ToolSelectNode(){
 			hit = paper.project.hitPoints(event.point);
 
 			if (hit){
-				if(hit.item.parent instanceof Profile){
+				if(hit.item.parent instanceof ProfileItem){
 					if(hit.item.parent.generatrix === hit.item)
 						tool.hitItem = hit;
 				}else
@@ -114,7 +114,7 @@ function ToolSelectNode(){
 			}
 
 			if (tool.hitItem) {
-				var is_profile = tool.hitItem.item.parent instanceof Profile,
+				var is_profile = tool.hitItem.item.parent instanceof ProfileItem,
 					item = is_profile ? tool.hitItem.item.parent.generatrix : tool.hitItem.item;
 				if (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke') {
 
@@ -346,7 +346,7 @@ function ToolSelectNode(){
 					for (i = 0; i < selected.length; i++) {
 						path = selected[i];
 						do_select = false;
-						if(path.parent instanceof Profile){
+						if(path.parent instanceof ProfileItem){
 							for (j = 0; j < path.segments.length; j++) {
 								segment = path.segments[j];
 								if (segment.selected){
@@ -383,7 +383,7 @@ function ToolSelectNode(){
 				for (i = 0; i < selected.length; i++) {
 					path = selected[i];
 					do_select = false;
-					if(path.parent instanceof Profile){
+					if(path.parent instanceof ProfileItem){
 						for (j = 0; j < path.segments.length; j++) {
 							segment = path.segments[j];
 							do_select = do_select || segment.selected;

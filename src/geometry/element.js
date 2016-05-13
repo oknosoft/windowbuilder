@@ -59,7 +59,7 @@ function BuilderElement(attr){
 		this.parent = attr.parent;
 
 	if(!attr.row.cnstr)
-		attr.row.cnstr = this.parent.cnstr;
+		attr.row.cnstr = this.layer.cnstr;
 
 	if(!attr.row.elm)
 		attr.row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
