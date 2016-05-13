@@ -300,7 +300,7 @@ function ToolSelectNode(){
 				}
 
 				noti.profiles[0].rays.clear();
-				noti.profiles[0].parent.notify(noti);
+				noti.profiles[0].layer.notify(noti);
 
 				paper.purge_selection();
 

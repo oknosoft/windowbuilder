@@ -82,7 +82,7 @@ function ToolLayImpost(){
 					b = this.mode.firstSegment.point;
 					e = this.mode.lastSegment.point;
 					r = (b.getDistance(e) / 2) + 0.01;
-					contour = this.mode.parent.parent;
+					contour = this.mode.layer;
 
 					//do_arc(this.mode, $p.m.arc_point(b.x, b.y, e.x, e.y, r, event.modifiers.option, false));
 
@@ -95,7 +95,7 @@ function ToolLayImpost(){
 					// при зажатом space удаляем кривизну
 
 					e = this.mode.lastSegment.point;
-					contour = this.mode.parent.parent;
+					contour = this.mode.layer;
 
 					this.mode.removeSegments(1);
 					this.mode.firstSegment.linear = true;

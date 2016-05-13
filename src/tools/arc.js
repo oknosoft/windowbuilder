@@ -34,7 +34,7 @@ function ToolArc(){
 		element.parent.rays.clear();
 		element.selected = true;
 
-		element.parent.parent.notify({type: consts.move_points, profiles: [element.parent], points: []});
+		element.layer.notify({type: consts.move_points, profiles: [element.parent], points: []});
 	}
 
 	tool.resetHot = function(type, event, mode) {
@@ -54,7 +54,7 @@ function ToolArc(){
 		if(!tool.hitItem)
 			tool.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
 
-		if (tool.hitItem && tool.hitItem.item.parent instanceof Profile
+		if (tool.hitItem && tool.hitItem.item.parent instanceof ProfileItem
 			&& (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke')) {
 			paper.canvas_cursor('cursor-arc');
 		} else {
@@ -81,7 +81,7 @@ function ToolArc(){
 			this.mode = null;
 			this.changed = false;
 
-			if (tool.hitItem && tool.hitItem.item.parent instanceof Profile
+			if (tool.hitItem && tool.hitItem.item.parent instanceof ProfileItem
 				&& (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke')) {
 
 				this.mode = tool.hitItem.item.parent.generatrix;
@@ -113,7 +113,7 @@ function ToolArc(){
 					r.lineTo(e);
 					r.parent.rays.clear();
 					r.selected = true;
-					r.parent.parent.notify({type: consts.move_points, profiles: [r.parent], points: []});
+					r.layer.notify({type: consts.move_points, profiles: [r.parent], points: []});
 
 				} else {
 					paper.project.deselectAll();
@@ -168,7 +168,7 @@ function ToolArc(){
 
 				do_arc(this.mode, event.point);
 
-				//this.mode.parent.parent.redraw();
+				//this.mode.layer.redraw();
 
 
 			}

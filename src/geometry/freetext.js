@@ -37,12 +37,7 @@ function FreeText(attr){
 		attr.point = [_row.x1, _row.y1];
 
 	// разберёмся с родителем
-	if(!(attr.parent.parent instanceof Contour)){
-		while(!(attr.parent instanceof Contour))
-			attr.parent = attr.parent.parent;
-		attr.parent = attr.parent.l_text;
-	}else
-		attr.parent = attr.parent.parent.l_text;
+	attr.parent = attr.parent.layer.l_text;
 
 	FreeText.superclass.constructor.call(t, attr);
 

@@ -954,9 +954,9 @@ Profile.prototype.__define({
 				_profile.data._nearest_cnn = null;
 			}
 
-			if(_profile.parent && _profile.parent.parent){
+			if(_profile.layer.parent){
 				if(!check_nearest()){
-					children = _profile.parent.parent.children;
+					children = _profile.layer.parent.children;
 					for(var p in children){
 						if((_profile.data._nearest = children[p]) instanceof Profile && check_nearest())
 							return _profile.data._nearest;
@@ -1078,7 +1078,7 @@ Profile.prototype.__define({
 				return $p.enm.elm_types.Импост;
 
 			// Если вложенный контур, значит это створка
-			if(this.parent.parent instanceof Contour)
+			if(this.layer.parent instanceof Contour)
 				return $p.enm.elm_types.Створка;
 
 			return $p.enm.elm_types.Рама;

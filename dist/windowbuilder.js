@@ -3140,12 +3140,7 @@ function FreeText(attr){
 		attr.point = [_row.x1, _row.y1];
 
 	// разберёмся с родителем
-	if(!(attr.parent.parent instanceof Contour)){
-		while(!(attr.parent instanceof Contour))
-			attr.parent = attr.parent.parent;
-		attr.parent = attr.parent.l_text;
-	}else
-		attr.parent = attr.parent.parent.l_text;
+	attr.parent = attr.parent.layer.l_text;
 
 	FreeText.superclass.constructor.call(t, attr);
 
@@ -4676,9 +4671,9 @@ Profile.prototype.__define({
 				_profile.data._nearest_cnn = null;
 			}
 
-			if(_profile.parent && _profile.parent.parent){
+			if(_profile.layer.parent){
 				if(!check_nearest()){
-					children = _profile.parent.parent.children;
+					children = _profile.layer.parent.children;
 					for(var p in children){
 						if((_profile.data._nearest = children[p]) instanceof Profile && check_nearest())
 							return _profile.data._nearest;
@@ -4800,7 +4795,7 @@ Profile.prototype.__define({
 				return $p.enm.elm_types.Импост;
 
 			// Если вложенный контур, значит это створка
-			if(this.parent.parent instanceof Contour)
+			if(this.layer.parent instanceof Contour)
 				return $p.enm.elm_types.Створка;
 
 			return $p.enm.elm_types.Рама;
@@ -6675,7 +6670,7 @@ function ToolArc(){
 		element.parent.rays.clear();
 		element.selected = true;
 
-		element.parent.parent.notify({type: consts.move_points, profiles: [element.parent], points: []});
+		element.layer.notify({type: consts.move_points, profiles: [element.parent], points: []});
 	}
 
 	tool.resetHot = function(type, event, mode) {
@@ -6695,7 +6690,7 @@ function ToolArc(){
 		if(!tool.hitItem)
 			tool.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
 
-		if (tool.hitItem && tool.hitItem.item.parent instanceof Profile
+		if (tool.hitItem && tool.hitItem.item.parent instanceof ProfileItem
 			&& (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke')) {
 			paper.canvas_cursor('cursor-arc');
 		} else {
@@ -6722,7 +6717,7 @@ function ToolArc(){
 			this.mode = null;
 			this.changed = false;
 
-			if (tool.hitItem && tool.hitItem.item.parent instanceof Profile
+			if (tool.hitItem && tool.hitItem.item.parent instanceof ProfileItem
 				&& (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke')) {
 
 				this.mode = tool.hitItem.item.parent.generatrix;
@@ -6754,7 +6749,7 @@ function ToolArc(){
 					r.lineTo(e);
 					r.parent.rays.clear();
 					r.selected = true;
-					r.parent.parent.notify({type: consts.move_points, profiles: [r.parent], points: []});
+					r.layer.notify({type: consts.move_points, profiles: [r.parent], points: []});
 
 				} else {
 					paper.project.deselectAll();
@@ -6809,7 +6804,7 @@ function ToolArc(){
 
 				do_arc(this.mode, event.point);
 
-				//this.mode.parent.parent.redraw();
+				//this.mode.layer.redraw();
 
 
 			}
@@ -6955,7 +6950,7 @@ function ToolLayImpost(){
 					b = this.mode.firstSegment.point;
 					e = this.mode.lastSegment.point;
 					r = (b.getDistance(e) / 2) + 0.01;
-					contour = this.mode.parent.parent;
+					contour = this.mode.layer;
 
 					//do_arc(this.mode, $p.m.arc_point(b.x, b.y, e.x, e.y, r, event.modifiers.option, false));
 
@@ -6968,7 +6963,7 @@ function ToolLayImpost(){
 					// при зажатом space удаляем кривизну
 
 					e = this.mode.lastSegment.point;
-					contour = this.mode.parent.parent;
+					contour = this.mode.layer;
 
 					this.mode.removeSegments(1);
 					this.mode.firstSegment.linear = true;
@@ -8396,7 +8391,7 @@ function ToolSelectNode(){
 				}
 
 				noti.profiles[0].rays.clear();
-				noti.profiles[0].parent.notify(noti);
+				noti.profiles[0].layer.notify(noti);
 
 				paper.purge_selection();
 
