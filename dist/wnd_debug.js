@@ -84,6 +84,54 @@ $p.modifiers.push(
 					}
 					return name;
 				}
+			},
+
+			/**
+			 * Возвращает номенклатуру продукции по системе
+			 */
+			prod_nom: {
+				
+				get: function () {
+					
+					if(!this.sys.empty()){
+
+						var setted,
+							param = this.params;
+													
+						if(this.sys.production.count() == 1){
+							this.owner = this.sys.production.get(0).nom;
+							
+						}else{
+							this.sys.production.each(function (row) {
+
+								if(setted)
+									return false;
+								
+								if(row.param && !row.param.empty()){
+									param.find_rows({cnstr: 0, param: row.param, value: row.value}, function () {
+										setted = true;
+										this.owner = row.nom;
+										return false;
+									});
+								}
+										
+							});
+							if(!setted){
+								this.sys.production.find_rows({param: $p.blank.guid}, function (row) {
+									setted = true;
+									this.owner = row.nom;
+									return false;
+								});	
+							}
+							if(!setted){
+								this.owner = this.sys.production.get(0).nom;
+							}
+						}
+					}
+
+					return this.owner;
+				}
+
 			}
 		});
 
@@ -1204,8 +1252,7 @@ $p.modifiers.push(
 							__noms.push(row.nom);
 					});
 					return __noms;
-				},
-				enumerable: false
+				}
 			},
 
 			/**
@@ -1262,8 +1309,7 @@ $p.modifiers.push(
 					return __noms.map(function (e) {
 						return e.nom;
 					});
-				},
-				enumerable: false
+				}
 			},
 
 			/**
@@ -1303,6 +1349,11 @@ $p.modifiers.push(
 						if(default_row.forcibly && row.value != default_row.value)
 							row.value = default_row.value;
 					});
+
+					if(!cnstr){
+						ox.sys = this;
+						ox.owner = ox.prod_nom;
+					}
 				}
 			}
 
@@ -2811,6 +2862,85 @@ $p.modifiers.push(
 
 		}
 
+	}
+);
+
+/**
+ * Модификаторы обработки _builder_pen_
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module dp_builder_pen
+ * Created 13.05.2016
+ */
+
+$p.modifiers.push(
+
+	function($p) {
+
+		$p.dp.builder_pen.attache_event("value_change", function (attr) {
+
+			if(attr.field == "elm_type") {
+				this.inset = paper.project.default_inset({elm_type: this.elm_type});
+			}
+		});
+	}
+);
+/**
+ * Модификаторы обработки _Заказ покупателя_
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module dp_buyers_order
+ * Created 13.05.2016
+ */
+
+$p.modifiers.push(
+
+	function($p) {
+
+		var obj_constructor =  $p.dp.buyers_order._obj_constructor.prototype;
+
+		delete obj_constructor.clr;
+		delete obj_constructor.sys;
+		
+		
+		obj_constructor.__define({
+			
+			clr: {
+				get: function () {
+					return this.characteristic.clr;
+				},
+				set: function (v) {
+					
+					if(this.characteristic.clr == v)
+						return;
+
+					Object.getNotifier(this).notify({
+						type: 'update',
+						name: 'clr',
+						oldValue: this.characteristic.clr
+					});
+					this.characteristic.clr = v;
+					this._data._modified = true;
+				}
+			},
+
+			sys: {
+				get: function () {
+					return this.characteristic.sys;
+				},
+				set: function (v) {
+
+					if(this.characteristic.sys == v)
+						return;
+
+					Object.getNotifier(this).notify({
+						type: 'update',
+						name: 'sys',
+						oldValue: this.characteristic.sys
+					});
+					this.characteristic.sys = v;
+					this._data._modified = true;
+				}
+			}
+		});
 	}
 );
 

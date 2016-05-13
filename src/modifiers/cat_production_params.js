@@ -27,8 +27,7 @@ $p.modifiers.push(
 							__noms.push(row.nom);
 					});
 					return __noms;
-				},
-				enumerable: false
+				}
 			},
 
 			/**
@@ -85,8 +84,7 @@ $p.modifiers.push(
 					return __noms.map(function (e) {
 						return e.nom;
 					});
-				},
-				enumerable: false
+				}
 			},
 
 			/**
@@ -126,6 +124,11 @@ $p.modifiers.push(
 						if(default_row.forcibly && row.value != default_row.value)
 							row.value = default_row.value;
 					});
+
+					if(!cnstr){
+						ox.sys = this;
+						ox.owner = ox.prod_nom;
+					}
 				}
 			}
 

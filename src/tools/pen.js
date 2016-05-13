@@ -40,27 +40,37 @@ function ToolPen(){
 
 		sys = _editor.project._dp.sys;
 
-		var rama_impost = sys.inserts();
+		var rama_impost = sys.inserts([$p.enm.elm_types.Рама, $p.enm.elm_types.Импост, $p.enm.elm_types.Раскладка]);
 
 		// создаём экземпляр обработки
 		tool.profile = $p.dp.builder_pen.create();
 
 		// восстанавливаем сохранённые параметры
 		$p.wsql.restore_options("editor", tool.options);
-		tool.profile._mixin(tool.options.wnd, ["inset", "clr", "bind_generatrix", "bind_node"]);
+		["elm_type","inset","bind_generatrix","bind_node"].forEach(function (prop) {
+			if(prop == "bind_generatrix" || prop == "bind_node" || tool.options.wnd[prop])
+				tool.profile[prop] = tool.options.wnd[prop];
+		});
 
 		// вставка по умолчанию
 		if(rama_impost.length){
+			
 			// если в текущем слое есть профили, выбираем импост
-			if(_editor.project.activeLayer instanceof Contour && _editor.project.activeLayer.profiles.length)
-				tool.profile.inset = _editor.project.default_inset({elm_type: $p.enm.elm_types.Импост});
-			else
-				tool.profile.inset = _editor.project.default_inset({elm_type: $p.enm.elm_types.Рама});
+			if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Рама) &&
+					_editor.project.activeLayer instanceof Contour && _editor.project.activeLayer.profiles.length)
+				tool.profile.elm_type = $p.enm.elm_types.Импост;
+				
+			else if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Импост) &&
+				_editor.project.activeLayer instanceof Contour && !_editor.project.activeLayer.profiles.length)
+				tool.profile.elm_type = $p.enm.elm_types.Рама;
+
+			tool.profile.inset = _editor.project.default_inset({elm_type: tool.profile.elm_type});
+			
 		}else
 			tool.profile.inset = $p.blank.guid;
 
 		// цвет по умолчанию
-		tool.profile.clr = _editor.project.default_clr;
+		tool.profile.clr = _editor.project.clr;
 
 		// параметры отбора для выбора вставок
 		tool.profile._metadata.fields.inset.choice_links = [{

@@ -46,28 +46,21 @@ function Scheme(_canvas){
 
 					if(change.name == "sys" && !change.object.sys.empty()){
 
-						if(_scheme.ox.owner != change.object.sys.nom){
+						change.object.sys.refill_prm(_scheme.ox);
+						Object.getNotifier(change.object).notify({
+							type: 'rows',
+							tabular: 'extra_fields'
+						});
 
-							_scheme.ox.owner = change.object.sys.nom;
-
-							change.object.sys.refill_prm(_scheme.ox);
-							Object.getNotifier(change.object).notify({
-								type: 'rows',
-								tabular: 'extra_fields'
-							});
-
-							_scheme.contours.forEach(function (l) {
-								l.on_sys_changed();
-							});
-						}
+						_scheme.contours.forEach(function (l) {
+							l.on_sys_changed();
+						});
 
 						if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
 							$p.wsql.set_user_param("editor_last_sys", change.object.sys.ref);
 
-						if(_scheme.ox.clr.empty()){
-							_scheme._dp.clr = change.object.sys.default_clr;
+						if(_scheme.ox.clr.empty())
 							_scheme.ox.clr = change.object.sys.default_clr;
-						}
 
 						_scheme.register_change(true);
 					}
@@ -148,7 +141,6 @@ function Scheme(_canvas){
 
 				var ox = _dp.characteristic;
 
-				_dp.clr = ox.clr;
 				_dp.len = ox.x;
 				_dp.height = ox.y;
 				_dp.s = ox.s;
@@ -172,25 +164,32 @@ function Scheme(_canvas){
 
 				else if(ox.owner.empty()){
 
+					// для пустой номенклатуры, ставим предыдущую выбранную систему
 					_dp.sys = $p.wsql.get_user_param("editor_last_sys");
-					ox.owner = _dp.sys.nom;
 					setted = !_dp.sys.empty();
 
-				}else{
+				}else if(_dp.sys.empty()){
 
-					$p.cat.production_params.find_rows({nom: ox.owner}, function(o){
-						_dp.sys = o;
-						setted = true;
-						return false;
+					// ищем первую подходящую систему
+					$p.cat.production_params.find_rows({is_folder: false}, function(o){
+
+						if(setted)
+							return false;
+						
+						o.production.find_rows({nom: ox.owner}, function () {
+							_dp.sys = o;
+							setted = true;
+							return false;
+						});
+
 					});
 				}
 
-				// пересчитываем параметры изделия при установке системы TODO: подумать, как не портить старые изделия, открытые для просмотра
+				// пересчитываем параметры изделия при установке системы
 				if(setted){
 					_dp.sys.refill_prm(ox);
 
-				}else if(!_dp.sys.empty())
-					_dp.sys = "";
+				};
 
 				// устанавливаем в _dp цвет по умолчанию
 				if(_dp.clr.empty())
@@ -787,7 +786,7 @@ Scheme.prototype.__define({
 				this.clear();
 
 				// переприсваиваем номенклатуру, цвет и размеры
-				ox._mixin(obx, ["owner","clr","x","y","s","s"]);
+				ox._mixin(obx, ["owner","sys","clr","x","y","s","s"]);
 					
 				// очищаем табчасти, перезаполняем контуры и координаты
 				ox.constructions.load(obx.constructions);

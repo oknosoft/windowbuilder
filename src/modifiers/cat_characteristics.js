@@ -75,6 +75,54 @@ $p.modifiers.push(
 					}
 					return name;
 				}
+			},
+
+			/**
+			 * Возвращает номенклатуру продукции по системе
+			 */
+			prod_nom: {
+				
+				get: function () {
+					
+					if(!this.sys.empty()){
+
+						var setted,
+							param = this.params;
+													
+						if(this.sys.production.count() == 1){
+							this.owner = this.sys.production.get(0).nom;
+							
+						}else{
+							this.sys.production.each(function (row) {
+
+								if(setted)
+									return false;
+								
+								if(row.param && !row.param.empty()){
+									param.find_rows({cnstr: 0, param: row.param, value: row.value}, function () {
+										setted = true;
+										this.owner = row.nom;
+										return false;
+									});
+								}
+										
+							});
+							if(!setted){
+								this.sys.production.find_rows({param: $p.blank.guid}, function (row) {
+									setted = true;
+									this.owner = row.nom;
+									return false;
+								});	
+							}
+							if(!setted){
+								this.owner = this.sys.production.get(0).nom;
+							}
+						}
+					}
+
+					return this.owner;
+				}
+
 			}
 		});
 

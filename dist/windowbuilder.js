@@ -5359,28 +5359,21 @@ function Scheme(_canvas){
 
 					if(change.name == "sys" && !change.object.sys.empty()){
 
-						if(_scheme.ox.owner != change.object.sys.nom){
+						change.object.sys.refill_prm(_scheme.ox);
+						Object.getNotifier(change.object).notify({
+							type: 'rows',
+							tabular: 'extra_fields'
+						});
 
-							_scheme.ox.owner = change.object.sys.nom;
-
-							change.object.sys.refill_prm(_scheme.ox);
-							Object.getNotifier(change.object).notify({
-								type: 'rows',
-								tabular: 'extra_fields'
-							});
-
-							_scheme.contours.forEach(function (l) {
-								l.on_sys_changed();
-							});
-						}
+						_scheme.contours.forEach(function (l) {
+							l.on_sys_changed();
+						});
 
 						if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
 							$p.wsql.set_user_param("editor_last_sys", change.object.sys.ref);
 
-						if(_scheme.ox.clr.empty()){
-							_scheme._dp.clr = change.object.sys.default_clr;
+						if(_scheme.ox.clr.empty())
 							_scheme.ox.clr = change.object.sys.default_clr;
-						}
 
 						_scheme.register_change(true);
 					}
@@ -5461,7 +5454,6 @@ function Scheme(_canvas){
 
 				var ox = _dp.characteristic;
 
-				_dp.clr = ox.clr;
 				_dp.len = ox.x;
 				_dp.height = ox.y;
 				_dp.s = ox.s;
@@ -5485,16 +5477,24 @@ function Scheme(_canvas){
 
 				else if(ox.owner.empty()){
 
+					// для пустой номенклатуры, ставим предыдущую выбранную систему
 					_dp.sys = $p.wsql.get_user_param("editor_last_sys");
-					ox.owner = _dp.sys.nom;
 					setted = !_dp.sys.empty();
 
-				}else{
+				}else if(_dp.sys.empty()){
 
-					$p.cat.production_params.find_rows({nom: ox.owner}, function(o){
-						_dp.sys = o;
-						setted = true;
-						return false;
+					// ищем первую подходящую систему
+					$p.cat.production_params.find_rows({is_folder: false}, function(o){
+
+						if(setted)
+							return false;
+						
+						o.production.find_rows({nom: ox.owner}, function () {
+							_dp.sys = o;
+							setted = true;
+							return false;
+						});
+
 					});
 				}
 
@@ -5502,8 +5502,7 @@ function Scheme(_canvas){
 				if(setted){
 					_dp.sys.refill_prm(ox);
 
-				}else if(!_dp.sys.empty())
-					_dp.sys = "";
+				};
 
 				// устанавливаем в _dp цвет по умолчанию
 				if(_dp.clr.empty())
@@ -6100,7 +6099,7 @@ Scheme.prototype.__define({
 				this.clear();
 
 				// переприсваиваем номенклатуру, цвет и размеры
-				ox._mixin(obx, ["owner","clr","x","y","s","s"]);
+				ox._mixin(obx, ["owner","sys","clr","x","y","s","s"]);
 					
 				// очищаем табчасти, перезаполняем контуры и координаты
 				ox.constructions.load(obx.constructions);
@@ -6954,27 +6953,37 @@ function ToolPen(){
 
 		sys = _editor.project._dp.sys;
 
-		var rama_impost = sys.inserts();
+		var rama_impost = sys.inserts([$p.enm.elm_types.Рама, $p.enm.elm_types.Импост, $p.enm.elm_types.Раскладка]);
 
 		// создаём экземпляр обработки
 		tool.profile = $p.dp.builder_pen.create();
 
 		// восстанавливаем сохранённые параметры
 		$p.wsql.restore_options("editor", tool.options);
-		tool.profile._mixin(tool.options.wnd, ["inset", "clr", "bind_generatrix", "bind_node"]);
+		["elm_type","inset","bind_generatrix","bind_node"].forEach(function (prop) {
+			if(prop == "bind_generatrix" || prop == "bind_node" || tool.options.wnd[prop])
+				tool.profile[prop] = tool.options.wnd[prop];
+		});
 
 		// вставка по умолчанию
 		if(rama_impost.length){
+			
 			// если в текущем слое есть профили, выбираем импост
-			if(_editor.project.activeLayer instanceof Contour && _editor.project.activeLayer.profiles.length)
-				tool.profile.inset = _editor.project.default_inset({elm_type: $p.enm.elm_types.Импост});
-			else
-				tool.profile.inset = _editor.project.default_inset({elm_type: $p.enm.elm_types.Рама});
+			if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Рама) &&
+					_editor.project.activeLayer instanceof Contour && _editor.project.activeLayer.profiles.length)
+				tool.profile.elm_type = $p.enm.elm_types.Импост;
+				
+			else if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Импост) &&
+				_editor.project.activeLayer instanceof Contour && !_editor.project.activeLayer.profiles.length)
+				tool.profile.elm_type = $p.enm.elm_types.Рама;
+
+			tool.profile.inset = _editor.project.default_inset({elm_type: tool.profile.elm_type});
+			
 		}else
 			tool.profile.inset = $p.blank.guid;
 
 		// цвет по умолчанию
-		tool.profile.clr = _editor.project.default_clr;
+		tool.profile.clr = _editor.project.clr;
 
 		// параметры отбора для выбора вставок
 		tool.profile._metadata.fields.inset.choice_links = [{
