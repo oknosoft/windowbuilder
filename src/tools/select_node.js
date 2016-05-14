@@ -44,9 +44,10 @@ function ToolSelectNode(){
 
 			// отдаём предпочтение выделенным ранее элементам
 			tool.hitItem = paper.project.hitTest(event.point, { selected: true, fill:true, tolerance: hitSize });
+
 			// во вторую очередь - тем элементам, которые не скрыты
 			if (!tool.hitItem)
-				tool.hitItem = paper.project.hitTest(event.point, { fill:true, guides: false, visible: true, tolerance: hitSize });
+				tool.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize });
 
 			// Hit test selected handles
 			hit = paper.project.hitTest(event.point, { selected: true, handles: true, tolerance: hitSize });
@@ -117,6 +118,7 @@ function ToolSelectNode(){
 			if (tool.hitItem) {
 				var is_profile = tool.hitItem.item.parent instanceof ProfileItem,
 					item = is_profile ? tool.hitItem.item.parent.generatrix : tool.hitItem.item;
+
 				if (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke') {
 
 					if (event.modifiers.shift) {
@@ -171,9 +173,9 @@ function ToolSelectNode(){
 					item.parent.attache_wnd(paper._acc.elm.cells("a"));
 					this.profile = item.parent;
 
-				}else if(item instanceof Filling){
-					item.attache_wnd(paper._acc.elm.cells("a"));
-					this.profile = item;
+				}else if(item.parent instanceof Filling){
+					item.parent.attache_wnd(paper._acc.elm.cells("a"));
+					this.profile = item.parent;
 				}
 
 				paper.clear_selection_bounds();

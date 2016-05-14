@@ -29,7 +29,7 @@ var acn,
 		 * @type {number}
 		 */
 		this.sticking = $p.job_prm.builder.sticking || 90;
-		this.sticking_l = $p.job_prm.builder.sticking_l || 7;
+		this.sticking_l = $p.job_prm.builder.sticking_l || 9;
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
 		this.font_size = $p.job_prm.builder.font_size || 60;

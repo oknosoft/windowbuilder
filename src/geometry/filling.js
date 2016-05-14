@@ -60,7 +60,7 @@ function Filling(attr){
 				[_row.x2, h - _row.y1]
 			]);
 		this.data.path.closePath(true);
-		this.data.path.guide = true;
+		//this.data.path.guide = true;
 		this.data.path.reduce();
 		this.data.path.strokeWidth = 0;
 

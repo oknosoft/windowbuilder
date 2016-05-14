@@ -328,19 +328,30 @@ ProfileItem.prototype.__define({
 
 			//TODO учесть импосты, у которых образующая совпадает с ребром
 			function detect_side(){
-				var isinner = intersect_point(prays.inner, _profile.generatrix),
-					isouter = intersect_point(prays.outer, _profile.generatrix);
-				if(isinner != undefined && isouter == undefined)
+
+				if(cnn_point.profile instanceof ProfileItem){
+					var isinner = intersect_point(prays.inner, _profile.generatrix),
+						isouter = intersect_point(prays.outer, _profile.generatrix);
+					if(isinner != undefined && isouter == undefined)
+						return 1;
+					else if(isinner == undefined && isouter != undefined)
+						return -1;
+					else
+						return 1;
+				}else
 					return 1;
-				else if(isinner == undefined && isouter != undefined)
-					return -1;
-				else
-					return 1;
+
 			}
 
 			// если пересечение в узлах, используем лучи профиля
-			if(cnn_point.profile){
+			if(cnn_point.profile instanceof ProfileItem){
 				prays = cnn_point.profile.rays;
+
+			}else if(cnn_point.profile instanceof Filling){
+				prays = {
+					inner: cnn_point.profile.path,
+					outer: cnn_point.profile.path
+				};
 			}
 
 			if(cnn_point.is_t){
@@ -764,8 +775,7 @@ ProfileItem.prototype.__define({
 
 					}
 
-					if(cnn_point && cnn_point.cnn_types == acn.t &&
-						(segm.point == this.b || segm.point == this.e)){
+					if(cnn_point && cnn_point.cnn_types == acn.t && (segm.point == this.b || segm.point == this.e)){
 						segm.point = cnn_point.point;
 
 					}else{
@@ -1804,19 +1814,83 @@ Onlay.prototype.__define({
 
 
 			// Если привязка не нарушена, возвращаем предыдущее значение
-			if(res.profile &&
-				res.profile.children.length &&
-				this.check_distance(res.profile, res, point, true) === false)
-				return res;
+			if(res.profile && res.profile.children.length){
+				
+				if(res.profile instanceof Filling){
+					var np = res.profile.path.getNearestPoint(point),
+						distance = np.getDistance(point);
+					
+					if(distance < consts.sticking_l)
+						return res;
+					
+				}else{
+					if(this.check_distance(res.profile, res, point, true) === false)
+						return res;	
+				}
+			}
+				
 
 			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 			res.clear();
 			if(this.parent){
-
+				
+				var res_bind = this.bind_node(point);
+				if(res_bind.binded){
+					res._mixin(res_bind, ["point","profile","cnn_types","profile_point"]);
+				}
 			}
 
 			return res;
 
+		}
+	},
+
+	/**
+	 * Пытается привязать точку к рёбрам и раскладкам
+	 * @param point {paper.Point}
+	 * @param glasses {Array.<Filling>}
+	 * @return {Object}
+	 */
+	bind_node: {
+		
+		value: function (point, glasses) {
+			
+			if(!glasses)
+				glasses = [this.parent];
+
+			var res = {distance: Infinity, is_l: true};
+
+			// сначала, к образующим заполнений
+			glasses.some(function (glass) {
+				var np = glass.path.getNearestPoint(point),
+					distance = np.getDistance(point);
+
+				if(distance < res.distance){
+					res.distance = distance;
+					res.point = np;
+					res.profile = glass;
+					res.cnn_types = acn.t;
+				}
+				
+				if(distance < consts.sticking_l){
+					res.binded = true;
+					return true;
+				}
+
+				// затем, если не привязалось - к сегментам раскладок текущего заполнения
+				glass.onlays.some(function (elm) {
+					if (elm.project.check_distance(elm, null, res, point, "node_generatrix") === false ){
+						return true;
+					}
+				});
+
+			});
+
+			if(!res.binded && res.point && res.distance < consts.sticking){
+				res.binded = true;
+			}
+			
+			return res;
 		}
 	}
 

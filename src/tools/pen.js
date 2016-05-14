@@ -125,12 +125,14 @@ function ToolPen(){
 		// Hit test items.
 		if (event.point)
 			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
+
 		if(!tool.hitItem)
-			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
 
 		if (tool.hitItem && tool.hitItem.item.parent instanceof ProfileItem
 			&& (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke')) {
 			_editor.canvas_cursor('cursor-pen-adjust');
+
 		} else {
 			_editor.canvas_cursor('cursor-pen-freehand');
 		}
@@ -265,8 +267,8 @@ function ToolPen(){
 					item.parent.attache_wnd(paper._acc.elm.cells("a"));
 					item.parent.generatrix.selected = true;
 
-				}else if(item instanceof Filling && item.visible){
-					item.attache_wnd(paper._acc.elm.cells("a"));
+				}else if(item.parent instanceof Filling && item.parent.visible){
+					item.parent.attache_wnd(paper._acc.elm.cells("a"));
 					item.selected = true;
 				}
 
@@ -348,49 +350,15 @@ function ToolPen(){
 					// попытаемся привязать начало пути к профилям (и или заполнениям - для раскладок) контура
 					if(!this.start_binded){
 
-						res = {distance: Infinity};
-
 						if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
-							res.is_l = true;
-
-							// сначала, к образующим заполнений
-							_editor.project.activeLayer.glasses(false, true).some(function (elm) {
-								var b = elm.path.getNearestPoint(this.path.firstSegment.point),
-									distance = b.getDistance(this.path.firstSegment.point);
-
-								if(distance < consts.sticking_l){
-									this.path.firstSegment.point = b;
-									this.start_binded = true;
-									return true;
-								}
-
-								if(distance < res.distance){
-									res.distance = distance;
-									res.point = b;
-								}
-
-							}.bind(this));
-
-							// затем, если не привязалось - к сегментам раскладок
-							if(!this.start_binded){
-								_editor.project.activeLayer.getItems({class: Onlay}).some(function (elm) {
-
-									if (_editor.project.check_distance(elm, null, res, this.path.firstSegment.point, bind) === false ){
-										this.path.firstSegment.point = res.point;
-										this.start_binded = true;
-										return true;
-									}
-
-								}.bind(this));
-							}
-
-							if(!this.start_binded && res.point && res.distance < consts.sticking){
+							res = Onlay.prototype.bind_node(this.path.firstSegment.point, _editor.project.activeLayer.glasses(false, true));
+							if(res.binded)
 								this.path.firstSegment.point = res.point;
-							}
 
 						}else{
 
+							res = {distance: Infinity};
 							for(i in _editor.project.activeLayer.children){
 								element = _editor.project.activeLayer.children[i];
 								if (element instanceof Profile &&
@@ -404,47 +372,15 @@ function ToolPen(){
 					}
 
 					// попытаемся привязать конец пути к профилям (и или заполнениям - для раскладок) контура
-					res = {distance: Infinity};
-					this.fin_binded = false;
-
 					if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
-						res.is_l = true;
-
-						// сначала, к образующим заполнений
-						_editor.project.activeLayer.glasses(false, true).some(function (elm) {
-							var e = elm.path.getNearestPoint(this.path.lastSegment.point),
-								distance = e.getDistance(this.path.lastSegment.point);
-
-							if(distance < consts.sticking_l){
-								this.path.lastSegment.point = e;
-								this.fin_binded = true;
-								return true;
-							}
-
-							if(distance < res.distance){
-								res.distance = distance;
-								res.point = e;
-							}
-
-						}.bind(this));
-
-						// затем, если не привязалось - к сегментам раскладок
-						if(!this.fin_binded){
-							_editor.project.activeLayer.getItems({class: Onlay}).some(function (elm) {
-								if (_editor.project.check_distance(elm, null, res, this.path.lastSegment.point, bind) === false ){
-									this.path.lastSegment.point = res.point;
-									return true;
-								}
-							}.bind(this));
-						}
-
-						if(!this.fin_binded && res.point && res.distance < consts.sticking){
+						res = Onlay.prototype.bind_node(this.path.lastSegment.point, _editor.project.activeLayer.glasses(false, true));
+						if(res.binded)
 							this.path.lastSegment.point = res.point;
-						}
 
 					}else{
 
+						res = {distance: Infinity};
 						for(i in _editor.project.activeLayer.children){
 							element = _editor.project.activeLayer.children[i];
 							if (element instanceof Profile &&
@@ -454,9 +390,7 @@ function ToolPen(){
 							}
 						}
 					}
-
-
-
+					
 					//this.currentSegment.handleOut = handlePos;
 					//this.currentSegment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
 				} else {

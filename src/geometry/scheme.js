@@ -303,9 +303,9 @@ function Scheme(_canvas){
 			item = hit.item;
 			// если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
 			if(
-				(item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
+				(item.parent.b && item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
 					(item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1))
-					|| (item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
+					|| (item.parent.e && item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
 					(item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1)))
 				return hit;
 

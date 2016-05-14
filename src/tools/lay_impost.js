@@ -41,9 +41,9 @@ function ToolLayImpost(){
 	tool.hitTest = function(event) {
 
 		// Hit test items.
-		tool.hitItem = _editor.project.hitTest(event.point, { fill: true, class: Filling });
+		tool.hitItem = _editor.project.hitTest(event.point, { fill: true, class: paper.Path });
 
-		if (tool.hitItem){
+		if (tool.hitItem && tool.hitItem.item.parent instanceof Filling){
 			_editor.canvas_cursor('cursor-lay-impost');
 
 		} else {
