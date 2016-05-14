@@ -2687,8 +2687,23 @@ Editor.BuilderElement = BuilderElement;
 function Filling(attr){
 
 	Filling.superclass.constructor.call(this, attr);
-
+	
 	var _row = attr.row;
+
+	/**
+	 * За этим полем будут "следить" элементы раскладок и пересчитывать - перерисовывать себя при изменениях соседей
+	 */
+	this._noti = {};
+
+	/**
+	 * Формирует оповещение для тех, кто следит за this._noti
+	 * @param obj
+	 */
+	this.notify = function (obj) {
+		Object.getNotifier(this._noti).notify(obj);
+		this.project.register_change();
+	}.bind(this);
+	
 
 	// initialize
 	(function(){
@@ -4437,6 +4452,94 @@ ProfileItem.prototype.__define({
 		}
 	},
 
+	/**
+	 * Обрабатывает смещение выделенных сегментов образующей профиля
+	 * @param delta {paper.Point} - куда и насколько смещать
+	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
+	 * @param [start_point] {paper.Point} - откуда началось движение
+	 */
+	move_points: {
+		value:  function(delta, all_points, start_point){
+			var changed,
+				other = [],
+				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;
+
+
+			// если не выделено ни одного сегмента, двигаем все сегменты
+			if(!all_points){
+				all_points = !this.generatrix.segments.some(function (segm) {
+					if (segm.selected)
+						return true;
+				});
+			}
+
+			this.generatrix.segments.forEach(function (segm) {
+
+				var cnn_point, free_point;
+
+				if (segm.selected || all_points){
+
+					noti_points = {old: segm.point.clone(), delta: delta};
+
+					// собственно, сдвиг узлов
+					free_point = segm.point.add(delta);
+
+					if(segm.point == this.b){
+						cnn_point = this.rays.b;
+						if(!cnn_point.profile_point || paper.Key.isDown('control'))
+							cnn_point = this.cnn_point("b", free_point);
+
+					}else if(segm.point == this.e){
+						cnn_point = this.rays.e;
+						if(!cnn_point.profile_point || paper.Key.isDown('control'))
+							cnn_point = this.cnn_point("e", free_point);
+
+					}
+
+					if(cnn_point && cnn_point.cnn_types == acn.t &&
+						(segm.point == this.b || segm.point == this.e)){
+						segm.point = cnn_point.point;
+
+					}else{
+						segm.point = free_point;
+						// если соединение угловое диагональное, тянем тянем соседние узлы сразу
+						if(cnn_point && !paper.Key.isDown('control')){
+							if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
+								other.push(cnn_point.profile_point == "b" ? cnn_point.profile.data.generatrix.firstSegment : cnn_point.profile.data.generatrix.lastSegment );
+								cnn_point.profile[cnn_point.profile_point] = free_point;
+								noti.profiles.push(cnn_point.profile);
+							}
+						}
+					}
+
+					// накапливаем точки в нотификаторе
+					noti_points.new = segm.point;
+					if(start_point)
+						noti_points.start = start_point;
+					noti.points.push(noti_points);
+
+					changed = true;
+				}
+
+			}.bind(this));
+
+
+			// информируем систему об изменениях
+			if(changed){
+				this.data._rays.clear();
+
+				this.parent.notify(noti);
+
+				var notifier = Object.getNotifier(this);
+				notifier.notify({ type: 'update', name: "x1" });
+				notifier.notify({ type: 'update', name: "y1" });
+				notifier.notify({ type: 'update', name: "x2" });
+				notifier.notify({ type: 'update', name: "y2" });
+			}
+
+			return other;
+		}
+	},
 
 	/**
 	 * Описание полей диалога свойств элемента
@@ -4891,94 +4994,6 @@ Profile.prototype.__define({
 		}
 	},
 
-	/**
-	 * Обрабатывает смещение выделенных сегментов образующей профиля
-	 * @param delta {paper.Point} - куда и насколько смещать
-	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
-	 * @param [start_point] {paper.Point} - откуда началось движение
-	 */
-	move_points: {
-		value:  function(delta, all_points, start_point){
-			var changed, 
-				other = [],
-				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;
-			
-
-			// если не выделено ни одного сегмента, двигаем все сегменты
-			if(!all_points){
-				all_points = !this.generatrix.segments.some(function (segm) {
-					if (segm.selected)
-						return true;
-				});
-			}
-			
-			this.generatrix.segments.forEach(function (segm) {
-
-				var cnn_point, free_point;
-				
-				if (segm.selected || all_points){
-
-					noti_points = {old: segm.point.clone(), delta: delta};
-
-					// собственно, сдвиг узлов
-					free_point = segm.point.add(delta);
-
-					if(segm.point == this.b){
-						cnn_point = this.rays.b;
-						if(!cnn_point.profile_point || paper.Key.isDown('control'))
-							cnn_point = this.cnn_point("b", free_point);
-
-					}else if(segm.point == this.e){
-						cnn_point = this.rays.e;
-						if(!cnn_point.profile_point || paper.Key.isDown('control'))
-							cnn_point = this.cnn_point("e", free_point);
-
-					}
-
-					if(cnn_point && cnn_point.cnn_types == acn.t &&
-						(segm.point == this.b || segm.point == this.e)){
-						segm.point = cnn_point.point;
-
-					}else{
-						segm.point = free_point;
-						// если соединение угловое диагональное, тянем тянем соседние узлы сразу
-						if(cnn_point && !paper.Key.isDown('control')){
-							if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
-								other.push(cnn_point.profile_point == "b" ? cnn_point.profile.data.generatrix.firstSegment : cnn_point.profile.data.generatrix.lastSegment );
-								cnn_point.profile[cnn_point.profile_point] = free_point;
-								noti.profiles.push(cnn_point.profile);
-							}								
-						}
-					}
-
-					// накапливаем точки в нотификаторе
-					noti_points.new = segm.point;
-					if(start_point)
-						noti_points.start = start_point;
-					noti.points.push(noti_points);
-
-					changed = true;
-				}
-				
-			}.bind(this));
-
-
-			// информируем систему об изменениях
-			if(changed){
-				this.data._rays.clear();
-
-				this.parent.notify(noti);
-
-				var notifier = Object.getNotifier(this);
-				notifier.notify({ type: 'update', name: "x1" });
-				notifier.notify({ type: 'update', name: "y1" });
-				notifier.notify({ type: 'update', name: "x2" });
-				notifier.notify({ type: 'update', name: "y2" });
-			}
-			
-			return other;
-		}
-	},
 
 	/**
 	 * Вспомогательная функция обсервера, выполняет привязку узлов
@@ -6006,10 +6021,19 @@ function Scheme(_canvas){
 			bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only;
 
 		if(element === profile){
+			if(profile.is_linear())
+				return;
+			else{
+				// проверяем другой узел, затем - Т
 
+			}
+			return;
 
 		}else if((distance = element.b.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
 			// Если мы находимся в окрестности начала соседнего элемента
+			
+			if(typeof res.distance == "number" && res.distance < distance)
+				return;
 
 			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
@@ -6034,6 +6058,9 @@ function Scheme(_canvas){
 
 		}else if((distance = element.e.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
 
+			if(typeof res.distance == "number" && res.distance < distance)
+				return;
+
 			// Если мы находимся в окрестности конца соседнего элемента
 			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
@@ -6056,26 +6083,26 @@ function Scheme(_canvas){
 			res.cnn_types = acn.a;
 			return false;
 
-		}else{
+		}
+
+		// это соединение с пустотой или T
+		gp = element.generatrix.getNearestPoint(point);
+		if(gp && (distance = gp.getDistance(point)) < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
 			
-			// это соединение с пустотой или T
-			gp = element.generatrix.getNearestPoint(point);
-			if(gp && (distance = gp.getDistance(point)) < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
-				if(distance < res.distance || bind_generatrix){
-					if(element.d0 != 0 && element.rays.outer){
-						// для вложенных створок учтём смещение
-						res.point = element.rays.outer.getNearestPoint(point);
-						res.distance = 0;
-					}else{
-						res.point = gp;
-						res.distance = distance;
-					}
-					res.profile = element;
-					res.cnn_types = acn.t;
+			if(distance < res.distance || bind_generatrix){
+				if(element.d0 != 0 && element.rays.outer){
+					// для вложенных створок учтём смещение
+					res.point = element.rays.outer.getNearestPoint(point);
+					res.distance = 0;
+				}else{
+					res.point = gp;
+					res.distance = distance;
 				}
-				if(bind_generatrix)
-					return false;
+				res.profile = element;
+				res.cnn_types = acn.t;
 			}
+			if(bind_generatrix)
+				return false;
 		}
 	};
 
@@ -6173,8 +6200,8 @@ Scheme.prototype.__define({
 
 			this.selectedItems.forEach(function (item) {
 
-				if(item.parent instanceof Profile){
-					if(!item.layer.parent || !item.parent.nearest()){
+				if(item.parent instanceof ProfileItem){
+					if(!item.layer.parent || !item.parent.nearest || !item.parent.nearest()){
 
 						var check_selected;
 						item.segments.forEach(function (segm) {
@@ -6195,8 +6222,10 @@ Scheme.prototype.__define({
 
 				}else if(item instanceof Filling){
 					//item.position = item.position.add(delta);
-					while (item.children.length > 1)
-						item.children[1].remove();
+					while (item.children.length > 1){
+						if(!(item.children[1] instanceof Onlay))
+							item.children[1].remove();
+					}
 				}
 			});
 			// TODO: возможно, здесь надо подвигать примыкающие контуры
@@ -7371,17 +7400,20 @@ function ToolPen(){
 					// находим заполнение под линией
 					_editor.project.activeLayer.glasses(false, true).some(function (glass) {
 
-						if(glass.intersects(this.path)){
+						if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
 							new Onlay({
 								generatrix: this.path,
 								proto: this.profile,
 								parent: glass
 							});
-							
+							this.path = null;
 							return true;
 						}
 						
 					}.bind(this));
+
+					if(this.path)
+						this.path.remove();
 
 				}else{
 					// Рисуем профиль
@@ -7470,6 +7502,7 @@ function ToolPen(){
 						handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
 					this.currentSegment.handleOut = handlePos;
 					this.currentSegment.handleIn = handlePos.negate();
+
 				} else if (dragOut) {
 					// upzp
 
@@ -7482,26 +7515,113 @@ function ToolPen(){
 					else
 						this.path.add(this.mouseStartPos.add(delta));
 
-					// попытаемся привязать концы пути к профилям контура
+					// попытаемся привязать начало пути к профилям (и или заполнениям - для раскладок) контура
 					if(!this.start_binded){
-						res = {distance: 10e9};
+
+						res = {distance: Infinity};
+
+						if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+
+							res.is_l = true;
+
+							// сначала, к образующим заполнений
+							_editor.project.activeLayer.glasses(false, true).some(function (elm) {
+								var b = elm.path.getNearestPoint(this.path.firstSegment.point),
+									distance = b.getDistance(this.path.firstSegment.point);
+
+								if(distance < consts.sticking_l){
+									this.path.firstSegment.point = b;
+									this.start_binded = true;
+									return true;
+								}
+
+								if(distance < res.distance){
+									res.distance = distance;
+									res.point = b;
+								}
+
+							}.bind(this));
+
+							// затем, если не привязалось - к сегментам раскладок
+							if(!this.start_binded){
+								_editor.project.activeLayer.getItems({class: Onlay}).some(function (elm) {
+
+									if (_editor.project.check_distance(elm, null, res, this.path.firstSegment.point, bind) === false ){
+										this.path.firstSegment.point = res.point;
+										this.start_binded = true;
+										return true;
+									}
+
+								}.bind(this));
+							}
+
+							if(!this.start_binded && res.point && res.distance < consts.sticking){
+								this.path.firstSegment.point = res.point;
+							}
+
+						}else{
+
+							for(i in _editor.project.activeLayer.children){
+								element = _editor.project.activeLayer.children[i];
+								if (element instanceof Profile &&
+										_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
+									this.path.firstSegment.point = res.point;
+									break;
+								}
+							}
+							this.start_binded = true;
+						}
+					}
+
+					// попытаемся привязать конец пути к профилям (и или заполнениям - для раскладок) контура
+					res = {distance: Infinity};
+					this.fin_binded = false;
+
+					if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+
+						res.is_l = true;
+
+						// сначала, к образующим заполнений
+						_editor.project.activeLayer.glasses(false, true).some(function (elm) {
+							var e = elm.path.getNearestPoint(this.path.lastSegment.point),
+								distance = e.getDistance(this.path.lastSegment.point);
+
+							if(distance < consts.sticking_l){
+								this.path.lastSegment.point = e;
+								this.fin_binded = true;
+								return true;
+							}
+
+							if(distance < res.distance){
+								res.distance = distance;
+								res.point = e;
+							}
+
+						}.bind(this));
+
+						// затем, если не привязалось - к сегментам раскладок
+						if(!this.fin_binded){
+							_editor.project.activeLayer.getItems({class: Onlay}).some(function (elm) {
+								if (_editor.project.check_distance(elm, null, res, this.path.lastSegment.point, bind) === false ){
+									this.path.lastSegment.point = res.point;
+									return true;
+								}
+							}.bind(this));
+						}
+
+						if(!this.fin_binded && res.point && res.distance < consts.sticking){
+							this.path.lastSegment.point = res.point;
+						}
+
+					}else{
+
 						for(i in _editor.project.activeLayer.children){
 							element = _editor.project.activeLayer.children[i];
-							if (element instanceof ProfileItem &&
-								_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
-								this.path.firstSegment.point = res.point;
+							if (element instanceof Profile &&
+								_editor.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
+								this.path.lastSegment.point = res.point;
 								break;
 							}
-						}
-						this.start_binded = true;
-					}
-					res = {distance: 10e9};
-					for(i in _editor.project.activeLayer.children){
-						element = _editor.project.activeLayer.children[i];
-						if (element instanceof ProfileItem &&
-							_editor.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
-							this.path.lastSegment.point = res.point;
-							break;
 						}
 					}
 
@@ -8168,6 +8288,7 @@ function ToolSelectNode(){
 					paper.canvas_cursor('cursor-arrow-white-shape');
 
 				}
+
 			} else if (tool.hitItem.type == 'segment' || tool.hitItem.type == 'handle-in' || tool.hitItem.type == 'handle-out') {
 				if (tool.hitItem.segment.selected) {
 					paper.canvas_cursor('cursor-arrow-small-point');

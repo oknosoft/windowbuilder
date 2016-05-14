@@ -19,8 +19,23 @@
 function Filling(attr){
 
 	Filling.superclass.constructor.call(this, attr);
-
+	
 	var _row = attr.row;
+
+	/**
+	 * За этим полем будут "следить" элементы раскладок и пересчитывать - перерисовывать себя при изменениях соседей
+	 */
+	this._noti = {};
+
+	/**
+	 * Формирует оповещение для тех, кто следит за this._noti
+	 * @param obj
+	 */
+	this.notify = function (obj) {
+		Object.getNotifier(this._noti).notify(obj);
+		this.project.register_change();
+	}.bind(this);
+	
 
 	// initialize
 	(function(){

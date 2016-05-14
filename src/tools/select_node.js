@@ -77,6 +77,7 @@ function ToolSelectNode(){
 					paper.canvas_cursor('cursor-arrow-white-shape');
 
 				}
+
 			} else if (tool.hitItem.type == 'segment' || tool.hitItem.type == 'handle-in' || tool.hitItem.type == 'handle-out') {
 				if (tool.hitItem.segment.selected) {
 					paper.canvas_cursor('cursor-arrow-small-point');

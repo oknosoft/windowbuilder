@@ -230,17 +230,20 @@ function ToolPen(){
 					// находим заполнение под линией
 					_editor.project.activeLayer.glasses(false, true).some(function (glass) {
 
-						if(glass.intersects(this.path)){
+						if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
 							new Onlay({
 								generatrix: this.path,
 								proto: this.profile,
 								parent: glass
 							});
-							
+							this.path = null;
 							return true;
 						}
 						
 					}.bind(this));
+
+					if(this.path)
+						this.path.remove();
 
 				}else{
 					// Рисуем профиль
@@ -329,6 +332,7 @@ function ToolPen(){
 						handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
 					this.currentSegment.handleOut = handlePos;
 					this.currentSegment.handleIn = handlePos.negate();
+
 				} else if (dragOut) {
 					// upzp
 
@@ -341,26 +345,113 @@ function ToolPen(){
 					else
 						this.path.add(this.mouseStartPos.add(delta));
 
-					// попытаемся привязать концы пути к профилям контура
+					// попытаемся привязать начало пути к профилям (и или заполнениям - для раскладок) контура
 					if(!this.start_binded){
-						res = {distance: 10e9};
+
+						res = {distance: Infinity};
+
+						if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+
+							res.is_l = true;
+
+							// сначала, к образующим заполнений
+							_editor.project.activeLayer.glasses(false, true).some(function (elm) {
+								var b = elm.path.getNearestPoint(this.path.firstSegment.point),
+									distance = b.getDistance(this.path.firstSegment.point);
+
+								if(distance < consts.sticking_l){
+									this.path.firstSegment.point = b;
+									this.start_binded = true;
+									return true;
+								}
+
+								if(distance < res.distance){
+									res.distance = distance;
+									res.point = b;
+								}
+
+							}.bind(this));
+
+							// затем, если не привязалось - к сегментам раскладок
+							if(!this.start_binded){
+								_editor.project.activeLayer.getItems({class: Onlay}).some(function (elm) {
+
+									if (_editor.project.check_distance(elm, null, res, this.path.firstSegment.point, bind) === false ){
+										this.path.firstSegment.point = res.point;
+										this.start_binded = true;
+										return true;
+									}
+
+								}.bind(this));
+							}
+
+							if(!this.start_binded && res.point && res.distance < consts.sticking){
+								this.path.firstSegment.point = res.point;
+							}
+
+						}else{
+
+							for(i in _editor.project.activeLayer.children){
+								element = _editor.project.activeLayer.children[i];
+								if (element instanceof Profile &&
+										_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
+									this.path.firstSegment.point = res.point;
+									break;
+								}
+							}
+							this.start_binded = true;
+						}
+					}
+
+					// попытаемся привязать конец пути к профилям (и или заполнениям - для раскладок) контура
+					res = {distance: Infinity};
+					this.fin_binded = false;
+
+					if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+
+						res.is_l = true;
+
+						// сначала, к образующим заполнений
+						_editor.project.activeLayer.glasses(false, true).some(function (elm) {
+							var e = elm.path.getNearestPoint(this.path.lastSegment.point),
+								distance = e.getDistance(this.path.lastSegment.point);
+
+							if(distance < consts.sticking_l){
+								this.path.lastSegment.point = e;
+								this.fin_binded = true;
+								return true;
+							}
+
+							if(distance < res.distance){
+								res.distance = distance;
+								res.point = e;
+							}
+
+						}.bind(this));
+
+						// затем, если не привязалось - к сегментам раскладок
+						if(!this.fin_binded){
+							_editor.project.activeLayer.getItems({class: Onlay}).some(function (elm) {
+								if (_editor.project.check_distance(elm, null, res, this.path.lastSegment.point, bind) === false ){
+									this.path.lastSegment.point = res.point;
+									return true;
+								}
+							}.bind(this));
+						}
+
+						if(!this.fin_binded && res.point && res.distance < consts.sticking){
+							this.path.lastSegment.point = res.point;
+						}
+
+					}else{
+
 						for(i in _editor.project.activeLayer.children){
 							element = _editor.project.activeLayer.children[i];
-							if (element instanceof ProfileItem &&
-								_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
-								this.path.firstSegment.point = res.point;
+							if (element instanceof Profile &&
+								_editor.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
+								this.path.lastSegment.point = res.point;
 								break;
 							}
-						}
-						this.start_binded = true;
-					}
-					res = {distance: 10e9};
-					for(i in _editor.project.activeLayer.children){
-						element = _editor.project.activeLayer.children[i];
-						if (element instanceof ProfileItem &&
-							_editor.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
-							this.path.lastSegment.point = res.point;
-							break;
 						}
 					}
 

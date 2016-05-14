@@ -465,10 +465,19 @@ function Scheme(_canvas){
 			bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only;
 
 		if(element === profile){
+			if(profile.is_linear())
+				return;
+			else{
+				// проверяем другой узел, затем - Т
 
+			}
+			return;
 
 		}else if((distance = element.b.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
 			// Если мы находимся в окрестности начала соседнего элемента
+			
+			if(typeof res.distance == "number" && res.distance < distance)
+				return;
 
 			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
@@ -493,6 +502,9 @@ function Scheme(_canvas){
 
 		}else if((distance = element.e.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
 
+			if(typeof res.distance == "number" && res.distance < distance)
+				return;
+
 			// Если мы находимся в окрестности конца соседнего элемента
 			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
@@ -515,26 +527,26 @@ function Scheme(_canvas){
 			res.cnn_types = acn.a;
 			return false;
 
-		}else{
+		}
+
+		// это соединение с пустотой или T
+		gp = element.generatrix.getNearestPoint(point);
+		if(gp && (distance = gp.getDistance(point)) < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
 			
-			// это соединение с пустотой или T
-			gp = element.generatrix.getNearestPoint(point);
-			if(gp && (distance = gp.getDistance(point)) < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
-				if(distance < res.distance || bind_generatrix){
-					if(element.d0 != 0 && element.rays.outer){
-						// для вложенных створок учтём смещение
-						res.point = element.rays.outer.getNearestPoint(point);
-						res.distance = 0;
-					}else{
-						res.point = gp;
-						res.distance = distance;
-					}
-					res.profile = element;
-					res.cnn_types = acn.t;
+			if(distance < res.distance || bind_generatrix){
+				if(element.d0 != 0 && element.rays.outer){
+					// для вложенных створок учтём смещение
+					res.point = element.rays.outer.getNearestPoint(point);
+					res.distance = 0;
+				}else{
+					res.point = gp;
+					res.distance = distance;
 				}
-				if(bind_generatrix)
-					return false;
+				res.profile = element;
+				res.cnn_types = acn.t;
 			}
+			if(bind_generatrix)
+				return false;
 		}
 	};
 
@@ -632,8 +644,8 @@ Scheme.prototype.__define({
 
 			this.selectedItems.forEach(function (item) {
 
-				if(item.parent instanceof Profile){
-					if(!item.layer.parent || !item.parent.nearest()){
+				if(item.parent instanceof ProfileItem){
+					if(!item.layer.parent || !item.parent.nearest || !item.parent.nearest()){
 
 						var check_selected;
 						item.segments.forEach(function (segm) {
@@ -654,8 +666,10 @@ Scheme.prototype.__define({
 
 				}else if(item instanceof Filling){
 					//item.position = item.position.add(delta);
-					while (item.children.length > 1)
-						item.children[1].remove();
+					while (item.children.length > 1){
+						if(!(item.children[1] instanceof Onlay))
+							item.children[1].remove();
+					}
 				}
 			});
 			// TODO: возможно, здесь надо подвигать примыкающие контуры

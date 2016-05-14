@@ -720,6 +720,94 @@ ProfileItem.prototype.__define({
 		}
 	},
 
+	/**
+	 * Обрабатывает смещение выделенных сегментов образующей профиля
+	 * @param delta {paper.Point} - куда и насколько смещать
+	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
+	 * @param [start_point] {paper.Point} - откуда началось движение
+	 */
+	move_points: {
+		value:  function(delta, all_points, start_point){
+			var changed,
+				other = [],
+				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;
+
+
+			// если не выделено ни одного сегмента, двигаем все сегменты
+			if(!all_points){
+				all_points = !this.generatrix.segments.some(function (segm) {
+					if (segm.selected)
+						return true;
+				});
+			}
+
+			this.generatrix.segments.forEach(function (segm) {
+
+				var cnn_point, free_point;
+
+				if (segm.selected || all_points){
+
+					noti_points = {old: segm.point.clone(), delta: delta};
+
+					// собственно, сдвиг узлов
+					free_point = segm.point.add(delta);
+
+					if(segm.point == this.b){
+						cnn_point = this.rays.b;
+						if(!cnn_point.profile_point || paper.Key.isDown('control'))
+							cnn_point = this.cnn_point("b", free_point);
+
+					}else if(segm.point == this.e){
+						cnn_point = this.rays.e;
+						if(!cnn_point.profile_point || paper.Key.isDown('control'))
+							cnn_point = this.cnn_point("e", free_point);
+
+					}
+
+					if(cnn_point && cnn_point.cnn_types == acn.t &&
+						(segm.point == this.b || segm.point == this.e)){
+						segm.point = cnn_point.point;
+
+					}else{
+						segm.point = free_point;
+						// если соединение угловое диагональное, тянем тянем соседние узлы сразу
+						if(cnn_point && !paper.Key.isDown('control')){
+							if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
+								other.push(cnn_point.profile_point == "b" ? cnn_point.profile.data.generatrix.firstSegment : cnn_point.profile.data.generatrix.lastSegment );
+								cnn_point.profile[cnn_point.profile_point] = free_point;
+								noti.profiles.push(cnn_point.profile);
+							}
+						}
+					}
+
+					// накапливаем точки в нотификаторе
+					noti_points.new = segm.point;
+					if(start_point)
+						noti_points.start = start_point;
+					noti.points.push(noti_points);
+
+					changed = true;
+				}
+
+			}.bind(this));
+
+
+			// информируем систему об изменениях
+			if(changed){
+				this.data._rays.clear();
+
+				this.parent.notify(noti);
+
+				var notifier = Object.getNotifier(this);
+				notifier.notify({ type: 'update', name: "x1" });
+				notifier.notify({ type: 'update', name: "y1" });
+				notifier.notify({ type: 'update', name: "x2" });
+				notifier.notify({ type: 'update', name: "y2" });
+			}
+
+			return other;
+		}
+	},
 
 	/**
 	 * Описание полей диалога свойств элемента
@@ -1174,94 +1262,6 @@ Profile.prototype.__define({
 		}
 	},
 
-	/**
-	 * Обрабатывает смещение выделенных сегментов образующей профиля
-	 * @param delta {paper.Point} - куда и насколько смещать
-	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
-	 * @param [start_point] {paper.Point} - откуда началось движение
-	 */
-	move_points: {
-		value:  function(delta, all_points, start_point){
-			var changed, 
-				other = [],
-				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;
-			
-
-			// если не выделено ни одного сегмента, двигаем все сегменты
-			if(!all_points){
-				all_points = !this.generatrix.segments.some(function (segm) {
-					if (segm.selected)
-						return true;
-				});
-			}
-			
-			this.generatrix.segments.forEach(function (segm) {
-
-				var cnn_point, free_point;
-				
-				if (segm.selected || all_points){
-
-					noti_points = {old: segm.point.clone(), delta: delta};
-
-					// собственно, сдвиг узлов
-					free_point = segm.point.add(delta);
-
-					if(segm.point == this.b){
-						cnn_point = this.rays.b;
-						if(!cnn_point.profile_point || paper.Key.isDown('control'))
-							cnn_point = this.cnn_point("b", free_point);
-
-					}else if(segm.point == this.e){
-						cnn_point = this.rays.e;
-						if(!cnn_point.profile_point || paper.Key.isDown('control'))
-							cnn_point = this.cnn_point("e", free_point);
-
-					}
-
-					if(cnn_point && cnn_point.cnn_types == acn.t &&
-						(segm.point == this.b || segm.point == this.e)){
-						segm.point = cnn_point.point;
-
-					}else{
-						segm.point = free_point;
-						// если соединение угловое диагональное, тянем тянем соседние узлы сразу
-						if(cnn_point && !paper.Key.isDown('control')){
-							if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
-								other.push(cnn_point.profile_point == "b" ? cnn_point.profile.data.generatrix.firstSegment : cnn_point.profile.data.generatrix.lastSegment );
-								cnn_point.profile[cnn_point.profile_point] = free_point;
-								noti.profiles.push(cnn_point.profile);
-							}								
-						}
-					}
-
-					// накапливаем точки в нотификаторе
-					noti_points.new = segm.point;
-					if(start_point)
-						noti_points.start = start_point;
-					noti.points.push(noti_points);
-
-					changed = true;
-				}
-				
-			}.bind(this));
-
-
-			// информируем систему об изменениях
-			if(changed){
-				this.data._rays.clear();
-
-				this.parent.notify(noti);
-
-				var notifier = Object.getNotifier(this);
-				notifier.notify({ type: 'update', name: "x1" });
-				notifier.notify({ type: 'update', name: "y1" });
-				notifier.notify({ type: 'update', name: "x2" });
-				notifier.notify({ type: 'update', name: "y2" });
-			}
-			
-			return other;
-		}
-	},
 
 	/**
 	 * Вспомогательная функция обсервера, выполняет привязку узлов

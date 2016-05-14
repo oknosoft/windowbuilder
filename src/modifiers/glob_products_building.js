@@ -721,9 +721,15 @@ $p.modifiers.push(
 				furn_set.selection_params.find_rows({elm: row.elm, dop: row.dop}, function (row) {
 
 					var ok = false;
-					cache.params.find_rows({cnstr: contour.cnstr, param: row.param, value: row.value}, function () {
-						return !(ok = true);
-					});
+
+					if($p.job_prm.properties.direction == row.param){
+						return !(ok = contour.direction == row.value);
+
+					}else{
+						cache.params.find_rows({cnstr: contour.cnstr, param: row.param, value: row.value}, function () {
+							return !(ok = true);
+						});
+					}
 
 					if(!ok)
 						return res = false;
