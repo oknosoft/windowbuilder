@@ -367,18 +367,13 @@ function Contour(attr){
 			new Filling({row: row,	parent: _contour});
 		});
 
-		// все остальные элементы
-		this.project.ox.coordinates.find_rows({cnstr: this.cnstr}, function(row){
+		// остальные элементы (текст, размерные линии, доборные профили - пока только текст
+		this.project.ox.coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, function(row){
 
-			// раскладки
-			if(row.elm_type == $p.enm.elm_types.Раскладка){
-
-
-			}else if(row.elm_type == $p.enm.elm_types.Текст){
+			if(row.elm_type == $p.enm.elm_types.Текст){
 				new FreeText({
 					row: row,
-					parent: _contour.l_text,
-					content: 'The contents of the point text'
+					parent: _contour.l_text
 				});
 			}
 
@@ -574,8 +569,15 @@ Contour.prototype.__define({
 
 			// запись в таблице координат, каждый элемент пересчитывает самостоятельно
 			this.children.forEach(function (elm) {
-				if(elm.save_coordinates)
+				if(elm.save_coordinates){
 					elm.save_coordinates();
+
+				}else if(elm instanceof paper.Group && elm == elm.layer.l_text){
+					elm.children.forEach(function (elm) {
+						if(elm.save_coordinates)
+							elm.save_coordinates();
+					});
+				}
 			});
 
 			// ответственность за строку в таблице конструкций лежит на контуре
@@ -2687,8 +2689,6 @@ Editor.BuilderElement = BuilderElement;
 function Filling(attr){
 
 	Filling.superclass.constructor.call(this, attr);
-	
-	var _row = attr.row;
 
 	/**
 	 * За этим полем будут "следить" элементы раскладок и пересчитывать - перерисовывать себя при изменениях соседей
@@ -2706,71 +2706,76 @@ function Filling(attr){
 	
 
 	// initialize
-	(function(){
-
-		var h = this.project.bounds.height + this.project.bounds.y;
-
-		//this.guide = true
-
-		if(_row.path_data)
-			this.data.path = new paper.Path(_row.path_data);
-
-		else if(attr.path){
-
-			this.data.path = new paper.Path();
-			this.path = attr.path;
-
-		}else
-			this.data.path = new paper.Path([
-				[_row.x1, h - _row.y1],
-				[_row.x1, h - _row.y2],
-				[_row.x2, h - _row.y2],
-				[_row.x2, h - _row.y1]
-			]);
-		this.data.path.closePath(true);
-		//this.data.path.guide = true;
-		this.data.path.reduce();
-		this.data.path.strokeWidth = 0;
-
-		// для нового устанавливаем вставку по умолчанию
-		if(_row.inset.empty())
-			_row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
-
-		// для нового устанавливаем цвет по умолчанию
-		if(_row.clr.empty())
-			this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, function (row) {
-				_row.clr = row.clr;
-				return false;
-			});
-		if(_row.clr.empty())
-			this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, function (row) {
-				_row.clr = row.clr;
-				return false;
-			});
-		this.clr = _row.clr;
-
-		if(_row.elm_type.empty())
-			_row.elm_type = $p.enm.elm_types.Стекло;
-
-		this.data.path.visible = false;
-
-		this.addChild(this.data.path);
-		//this.addChild(this.data.generatrix);
-
-
-	}).call(this);
-
-	/**
-	 * Рёбра заполнения
-	 * @property ribs
-	 * @type {paper.Group}
-	 */
-	//this.ribs = new paper.Group();
+	this.initialize(attr);
+	
 
 }
 Filling._extend(BuilderElement);
 
 Filling.prototype.__define({
+
+	initialize: {
+		value: function (attr) {
+
+			var _row = attr.row,
+				h = this.project.bounds.height + this.project.bounds.y;
+
+			if(_row.path_data)
+				this.data.path = new paper.Path(_row.path_data);
+
+			else if(attr.path){
+
+				this.data.path = new paper.Path();
+				this.path = attr.path;
+
+			}else
+				this.data.path = new paper.Path([
+					[_row.x1, h - _row.y1],
+					[_row.x1, h - _row.y2],
+					[_row.x2, h - _row.y2],
+					[_row.x2, h - _row.y1]
+				]);
+			this.data.path.closePath(true);
+			//this.data.path.guide = true;
+			this.data.path.reduce();
+			this.data.path.strokeWidth = 0;
+
+			// для нового устанавливаем вставку по умолчанию
+			if(_row.inset.empty())
+				_row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
+
+			// для нового устанавливаем цвет по умолчанию
+			if(_row.clr.empty())
+				this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, function (row) {
+					_row.clr = row.clr;
+					return false;
+				});
+			if(_row.clr.empty())
+				this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, function (row) {
+					_row.clr = row.clr;
+					return false;
+				});
+			this.clr = _row.clr;
+
+			if(_row.elm_type.empty())
+				_row.elm_type = $p.enm.elm_types.Стекло;
+
+			this.data.path.visible = false;
+
+			this.addChild(this.data.path);
+			//this.addChild(this.data.generatrix);
+
+			// раскладки текущего заполнения
+			this.project.ox.coordinates.find_rows({
+				cnstr: this.layer.cnstr,
+				parent: this.elm,
+				elm_type: $p.enm.elm_types.Раскладка
+			}, function(row){
+				new Onlay({row: row, parent: this});
+			}.bind(this));
+			
+		}
+	},
 
 	profiles: {
 		get : function(){
@@ -2799,6 +2804,8 @@ Filling.prototype.__define({
 				_row = this._row,
 				bounds = this.bounds,
 				cnns = this.project.connections.cnns,
+				
+				// строка в таблице заполнений продукции
 				glass = this.project.ox.glasses.add({
 					elm: _row.elm,
 					nom: this.nom,
@@ -2809,12 +2816,14 @@ Filling.prototype.__define({
 					thickness: this.thickness
 				});
 
+			// координаты bounds
 			_row.x1 = (bounds.bottomLeft.x - this.project.bounds.x).round(3);
 			_row.y1 = (h - bounds.bottomLeft.y).round(3);
 			_row.x2 = (bounds.topRight.x - this.project.bounds.x).round(3);
 			_row.y2 = (h - bounds.topRight.y).round(3);
 			_row.path_data = this.path.pathData;
 
+			// соединения с профилями
 			this.profiles.forEach(function (curr) {
 				if(!curr.profile || !curr.profile._row || !curr.cnn){
 					throw new ReferenceError("Не найдено ребро заполнения");
@@ -2828,6 +2837,12 @@ Filling.prototype.__define({
 					aperture_len: curr.sub_path.length
 				});
 			}.bind(this));
+			
+			// дочерние раскладки
+			this.onlays.forEach(function (curr) {
+				curr.save_coordinates();
+			});
+			
 
 		}
 	},
@@ -3133,35 +3148,31 @@ Editor.Filling = Filling;
  */
 function FreeText(attr){
 
-	var _row, t = this;
+	var _row;
 
 	if(!attr.fontSize)
 		attr.fontSize = consts.font_size;
 
 	if(attr.row)
 		_row = attr.row;
-	else
+	else{
 		_row = attr.row = attr.parent.project.ox.coordinates.add();
+	}
 
-	if(attr.point){
-		var tpoint;
-		if(attr.point instanceof paper.Point)
-			tpoint = attr.point;
-		else
-			tpoint = new paper.Point(attr.point);
-		_row.x1 = tpoint.x;
-		_row.y1 = tpoint.y;
-	}else
-		attr.point = [_row.x1, _row.y1];
+	if(!_row.cnstr)
+		_row.cnstr = attr.parent.layer.cnstr;
+
+	if(!_row.elm)
+		_row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
 
 	// разберёмся с родителем
-	attr.parent = attr.parent.layer.l_text;
+	// if(attr.parent instanceof paper.path){
+	// 	attr.parent = attr.parent.layer.l_text;
+	// }
 
-	FreeText.superclass.constructor.call(t, attr);
+	FreeText.superclass.constructor.call(this, attr);
 
-	t.bringToFront();
-
-	t.__define({
+	this.__define({
 		_row: {
 			get: function () {
 				return _row;
@@ -3170,22 +3181,97 @@ function FreeText(attr){
 		}
 	});
 
+	if(attr.point){
+		if(attr.point instanceof paper.Point)
+			this.point = attr.point;
+		else
+			this.point = new paper.Point(attr.point);
+	}else{
+
+		
+		this.clr = _row.clr;
+		this.angle = _row.angle_hor;
+
+		if(_row.path_data){
+			var path_data = JSON.parse(_row.path_data);
+			this.x = _row.x1 + path_data.bounds_x || 0;
+			this.y = _row.y1 - path_data.bounds_y || 0;
+			this._mixin(path_data, null, ["bounds_x","bounds_y"]);
+		}else{
+			this.x = _row.x1;
+			this.y = _row.y1;
+		}
+	}
+
+	this.bringToFront();
+
 
 	/**
 	 * Удаляет элемент из контура и иерархии проекта
 	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
 	 * @method remove
 	 */
-	t.remove = function () {
+	this.remove = function () {
 		_row._owner.del(_row);
 		_row = null;
-		FreeText.superclass.remove.call(t);
+		FreeText.superclass.remove.call(this);
 	};
 
 }
 FreeText._extend(paper.PointText);
 
 FreeText.prototype.__define({
+
+	save_coordinates: {
+		value: function () {
+
+			var _row = this._row,
+				path_data = {
+					text: this.text,
+					font_family: this.font_family,
+					font_size: this.font_size,
+					bold: this.bold,
+					align: this.align.ref,
+					bounds_x: this.project.bounds.x,
+					bounds_y: this.project.bounds.y
+				};
+
+			_row.x1 = this.x;
+			_row.y1 = this.y;
+			_row.angle_hor = this.angle;
+			_row.path_data = JSON.stringify(path_data);
+
+			// устанавливаем тип элемента
+			_row.elm_type = this.elm_type;
+		}
+	},
+
+	/**
+	 * Возвращает тип элемента (Текст)
+	 */
+	elm_type: {
+		get : function(){
+
+			return $p.enm.elm_types.Текст;
+
+		}
+	},
+
+	move_points: {
+		value: function (point) {
+
+			this.point = point;
+
+			Object.getNotifier(this).notify({
+				type: 'update',
+				name: "x"
+			});
+			Object.getNotifier(this).notify({
+				type: 'update',
+				name: "y"
+			});
+		}
+	},
 
 	// виртуальные метаданные для автоформ
 	_metadata: {
@@ -3255,11 +3341,10 @@ FreeText.prototype.__define({
 	// координата x
 	x: {
 		get: function () {
-			return Math.round(this._row.x1);
+			return (this.point.x - this.project.bounds.x).round(1);
 		},
 		set: function (v) {
-			this._row.x1 = v;
-			this.point.x = v;
+			this.point.x = parseFloat(v) + this.project.bounds.x;
 			this.project.register_update();
 		},
 		enumerable: false
@@ -3268,12 +3353,10 @@ FreeText.prototype.__define({
 	// координата y
 	y: {
 		get: function () {
-			return Math.round(this._row.y1);
+			return (this.project.bounds.height + this.project.bounds.y - this.point.y).round(1);
 		},
 		set: function (v) {
-			this._row.y1 = v;
-			this.point.y = v;
-			this.project.register_update();
+			this.point.y = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
 		},
 		enumerable: false
 	},
@@ -3292,7 +3375,7 @@ FreeText.prototype.__define({
 				Object.getNotifier(this).notify({
 					type: 'unload'
 				});
-				setTimeout(this.remove, 50);
+				setTimeout(this.remove.bind(this), 50);
 			}
 
 		},
@@ -3305,7 +3388,6 @@ FreeText.prototype.__define({
 			return Math.round(this.rotation);
 		},
 		set: function (v) {
-			this._row.angle_hor = v;
 			this.rotation = v;
 			this.project.register_update();
 		},
@@ -3322,22 +3404,6 @@ FreeText.prototype.__define({
 			this.project.register_update();
 		},
 		enumerable: false
-	},
-
-	// обновляет координаты
-	refresh_pos: {
-		value: function () {
-			this.x = this.point.x;
-			this.y = this.point.y;
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: "x"
-			});
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: "y"
-			});
-		}
 	}
 
 });
@@ -3999,6 +4065,9 @@ ProfileItem.prototype.__define({
 
 			cnn_point.cnn = $p.cat.cnns.elm_cnn(this, cnn_point.profile, cnn_point.cnn_types, cnn_point.cnn);
 
+			if(!cnn_point.point)
+				cnn_point.point = this[node];
+			
 			return cnn_point;
 		}
 	},
@@ -4680,7 +4749,7 @@ Profile.prototype.__define({
 
 			// сохраняем информацию о соединениях
 			if(b.profile){
-				row_b.elm2 = b.profile._row.elm;
+				row_b.elm2 = b.profile.elm;
 				if(b.profile.e.is_nearest(b.point))
 					row_b.node2 = "e";
 				else if(b.profile.b.is_nearest(b.point))
@@ -4689,7 +4758,7 @@ Profile.prototype.__define({
 					row_b.node2 = "t";
 			}
 			if(e.profile){
-				row_e.elm2 = e.profile._row.elm;
+				row_e.elm2 = e.profile.elm;
 				if(e.profile.b.is_nearest(e.point))
 					row_e.node2 = "b";
 				else if(e.profile.e.is_nearest(e.point))
@@ -5417,18 +5486,18 @@ Onlay.prototype.__define({
 				b = this.rays.b,
 				e = this.rays.e,
 
-				// row_b = cnns.add({
-				// 	elm1: _row.elm,
-				// 	node1: "b",
-				// 	cnn: b.cnn ? b.cnn.ref : "",
-				// 	aperture_len: this.corns(1).getDistance(this.corns(4))
-				// }),
-				// row_e = cnns.add({
-				// 	elm1: _row.elm,
-				// 	node1: "e",
-				// 	cnn: e.cnn ? e.cnn.ref : "",
-				// 	aperture_len: this.corns(2).getDistance(this.corns(3))
-				// }),
+				row_b = cnns.add({
+					elm1: _row.elm,
+					node1: "b",
+					cnn: b.cnn ? b.cnn.ref : "",
+					aperture_len: this.corns(1).getDistance(this.corns(4))
+				}),
+				row_e = cnns.add({
+					elm1: _row.elm,
+					node1: "e",
+					cnn: e.cnn ? e.cnn.ref : "",
+					aperture_len: this.corns(2).getDistance(this.corns(3))
+				}),
 
 				gen = this.generatrix;
 
@@ -5438,30 +5507,35 @@ Onlay.prototype.__define({
 			_row.y2 = this.y2;
 			_row.path_data = gen.pathData;
 			_row.nom = this.nom;
+			_row.parent = this.parent.elm;
 
 
 			// добавляем припуски соединений
 			_row.len = this.length;
 
 			// сохраняем информацию о соединениях
-			// if(b.profile){
-			// 	row_b.elm2 = b.profile._row.elm;
-			// 	if(b.profile.e.is_nearest(b.point))
-			// 		row_b.node2 = "e";
-			// 	else if(b.profile.b.is_nearest(b.point))
-			// 		row_b.node2 = "b";
-			// 	else
-			// 		row_b.node2 = "t";
-			// }
-			// if(e.profile){
-			// 	row_e.elm2 = e.profile._row.elm;
-			// 	if(e.profile.b.is_nearest(e.point))
-			// 		row_e.node2 = "b";
-			// 	else if(e.profile.e.is_nearest(e.point))
-			// 		row_e.node2 = "b";
-			// 	else
-			// 		row_e.node2 = "t";
-			// }
+			if(b.profile){
+				row_b.elm2 = b.profile.elm;
+				if(b.profile instanceof Filling)
+					row_b.node2 = "t";
+				else if(b.profile.e.is_nearest(b.point))
+					row_b.node2 = "e";
+				else if(b.profile.b.is_nearest(b.point))
+					row_b.node2 = "b";
+				else
+					row_b.node2 = "t";
+			}
+			if(e.profile){
+				row_e.elm2 = e.profile.elm;
+				if(e.profile instanceof Filling)
+					row_e.node2 = "t";
+				else if(e.profile.b.is_nearest(e.point))
+					row_e.node2 = "b";
+				else if(e.profile.e.is_nearest(e.point))
+					row_e.node2 = "b";
+				else
+					row_e.node2 = "t";
+			}
 
 			// получаем углы между элементами и к горизонту
 			_row.angle_hor = this.angle_hor;
@@ -5513,7 +5587,7 @@ Onlay.prototype.__define({
 	},
 
 	/**
-	 * Возвращает тип элемента (рама, створка, импост)
+	 * Возвращает тип элемента (раскладка)
 	 */
 	elm_type: {
 		get : function(){
@@ -6224,6 +6298,9 @@ function Scheme(_canvas){
 					}
 				}
 			}
+
+			// if(_scheme.data._saving || _scheme.data._loading)
+			// 	return;
 
 			if(_changes.length){
 				//console.log(_changes.length);
@@ -8728,7 +8805,7 @@ function ToolText(){
 
 				}else {
 					this.text = new FreeText({
-						parent: tool.hitItem.item,
+						parent: tool.hitItem.item.layer.l_text,
 						point: this.mouseStartPos,
 						content: '...',
 						selected: true
@@ -8768,8 +8845,8 @@ function ToolText(){
 				if (event.modifiers.shift)
 					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
 
-				this.text.point = this.textStartPos.add(delta);
-				this.text.refresh_pos();
+				this.text.move_points(this.textStartPos.add(delta));
+				
 			}
 
 		},

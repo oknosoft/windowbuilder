@@ -595,6 +595,9 @@ function Scheme(_canvas){
 				}
 			}
 
+			// if(_scheme.data._saving || _scheme.data._loading)
+			// 	return;
+
 			if(_changes.length){
 				//console.log(_changes.length);
 				_changes.length = 0;

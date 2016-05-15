@@ -19,8 +19,6 @@
 function Filling(attr){
 
 	Filling.superclass.constructor.call(this, attr);
-	
-	var _row = attr.row;
 
 	/**
 	 * За этим полем будут "следить" элементы раскладок и пересчитывать - перерисовывать себя при изменениях соседей
@@ -38,71 +36,76 @@ function Filling(attr){
 	
 
 	// initialize
-	(function(){
-
-		var h = this.project.bounds.height + this.project.bounds.y;
-
-		//this.guide = true
-
-		if(_row.path_data)
-			this.data.path = new paper.Path(_row.path_data);
-
-		else if(attr.path){
-
-			this.data.path = new paper.Path();
-			this.path = attr.path;
-
-		}else
-			this.data.path = new paper.Path([
-				[_row.x1, h - _row.y1],
-				[_row.x1, h - _row.y2],
-				[_row.x2, h - _row.y2],
-				[_row.x2, h - _row.y1]
-			]);
-		this.data.path.closePath(true);
-		//this.data.path.guide = true;
-		this.data.path.reduce();
-		this.data.path.strokeWidth = 0;
-
-		// для нового устанавливаем вставку по умолчанию
-		if(_row.inset.empty())
-			_row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
-
-		// для нового устанавливаем цвет по умолчанию
-		if(_row.clr.empty())
-			this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, function (row) {
-				_row.clr = row.clr;
-				return false;
-			});
-		if(_row.clr.empty())
-			this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, function (row) {
-				_row.clr = row.clr;
-				return false;
-			});
-		this.clr = _row.clr;
-
-		if(_row.elm_type.empty())
-			_row.elm_type = $p.enm.elm_types.Стекло;
-
-		this.data.path.visible = false;
-
-		this.addChild(this.data.path);
-		//this.addChild(this.data.generatrix);
-
-
-	}).call(this);
-
-	/**
-	 * Рёбра заполнения
-	 * @property ribs
-	 * @type {paper.Group}
-	 */
-	//this.ribs = new paper.Group();
+	this.initialize(attr);
+	
 
 }
 Filling._extend(BuilderElement);
 
 Filling.prototype.__define({
+
+	initialize: {
+		value: function (attr) {
+
+			var _row = attr.row,
+				h = this.project.bounds.height + this.project.bounds.y;
+
+			if(_row.path_data)
+				this.data.path = new paper.Path(_row.path_data);
+
+			else if(attr.path){
+
+				this.data.path = new paper.Path();
+				this.path = attr.path;
+
+			}else
+				this.data.path = new paper.Path([
+					[_row.x1, h - _row.y1],
+					[_row.x1, h - _row.y2],
+					[_row.x2, h - _row.y2],
+					[_row.x2, h - _row.y1]
+				]);
+			this.data.path.closePath(true);
+			//this.data.path.guide = true;
+			this.data.path.reduce();
+			this.data.path.strokeWidth = 0;
+
+			// для нового устанавливаем вставку по умолчанию
+			if(_row.inset.empty())
+				_row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
+
+			// для нового устанавливаем цвет по умолчанию
+			if(_row.clr.empty())
+				this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, function (row) {
+					_row.clr = row.clr;
+					return false;
+				});
+			if(_row.clr.empty())
+				this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, function (row) {
+					_row.clr = row.clr;
+					return false;
+				});
+			this.clr = _row.clr;
+
+			if(_row.elm_type.empty())
+				_row.elm_type = $p.enm.elm_types.Стекло;
+
+			this.data.path.visible = false;
+
+			this.addChild(this.data.path);
+			//this.addChild(this.data.generatrix);
+
+			// раскладки текущего заполнения
+			this.project.ox.coordinates.find_rows({
+				cnstr: this.layer.cnstr,
+				parent: this.elm,
+				elm_type: $p.enm.elm_types.Раскладка
+			}, function(row){
+				new Onlay({row: row, parent: this});
+			}.bind(this));
+			
+		}
+	},
 
 	profiles: {
 		get : function(){
@@ -131,6 +134,8 @@ Filling.prototype.__define({
 				_row = this._row,
 				bounds = this.bounds,
 				cnns = this.project.connections.cnns,
+				
+				// строка в таблице заполнений продукции
 				glass = this.project.ox.glasses.add({
 					elm: _row.elm,
 					nom: this.nom,
@@ -141,12 +146,14 @@ Filling.prototype.__define({
 					thickness: this.thickness
 				});
 
+			// координаты bounds
 			_row.x1 = (bounds.bottomLeft.x - this.project.bounds.x).round(3);
 			_row.y1 = (h - bounds.bottomLeft.y).round(3);
 			_row.x2 = (bounds.topRight.x - this.project.bounds.x).round(3);
 			_row.y2 = (h - bounds.topRight.y).round(3);
 			_row.path_data = this.path.pathData;
 
+			// соединения с профилями
 			this.profiles.forEach(function (curr) {
 				if(!curr.profile || !curr.profile._row || !curr.cnn){
 					throw new ReferenceError("Не найдено ребро заполнения");
@@ -160,6 +167,12 @@ Filling.prototype.__define({
 					aperture_len: curr.sub_path.length
 				});
 			}.bind(this));
+			
+			// дочерние раскладки
+			this.onlays.forEach(function (curr) {
+				curr.save_coordinates();
+			});
+			
 
 		}
 	},

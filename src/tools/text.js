@@ -77,7 +77,7 @@ function ToolText(){
 
 				}else {
 					this.text = new FreeText({
-						parent: tool.hitItem.item,
+						parent: tool.hitItem.item.layer.l_text,
 						point: this.mouseStartPos,
 						content: '...',
 						selected: true
@@ -117,8 +117,8 @@ function ToolText(){
 				if (event.modifiers.shift)
 					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
 
-				this.text.point = this.textStartPos.add(delta);
-				this.text.refresh_pos();
+				this.text.move_points(this.textStartPos.add(delta));
+				
 			}
 
 		},

@@ -24,8 +24,7 @@ $p.modifiers.push(
 							_mgr.Рама,
 							_mgr.Створка,
 							_mgr.Импост,
-							_mgr.Штульп,
-							_mgr.Раскладка] );
+							_mgr.Штульп] );
 				},
 				enumerable : false,
 				configurable : false

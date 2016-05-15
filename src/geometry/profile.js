@@ -267,6 +267,9 @@ ProfileItem.prototype.__define({
 
 			cnn_point.cnn = $p.cat.cnns.elm_cnn(this, cnn_point.profile, cnn_point.cnn_types, cnn_point.cnn);
 
+			if(!cnn_point.point)
+				cnn_point.point = this[node];
+			
 			return cnn_point;
 		}
 	},
@@ -948,7 +951,7 @@ Profile.prototype.__define({
 
 			// сохраняем информацию о соединениях
 			if(b.profile){
-				row_b.elm2 = b.profile._row.elm;
+				row_b.elm2 = b.profile.elm;
 				if(b.profile.e.is_nearest(b.point))
 					row_b.node2 = "e";
 				else if(b.profile.b.is_nearest(b.point))
@@ -957,7 +960,7 @@ Profile.prototype.__define({
 					row_b.node2 = "t";
 			}
 			if(e.profile){
-				row_e.elm2 = e.profile._row.elm;
+				row_e.elm2 = e.profile.elm;
 				if(e.profile.b.is_nearest(e.point))
 					row_e.node2 = "b";
 				else if(e.profile.e.is_nearest(e.point))
@@ -1685,18 +1688,18 @@ Onlay.prototype.__define({
 				b = this.rays.b,
 				e = this.rays.e,
 
-				// row_b = cnns.add({
-				// 	elm1: _row.elm,
-				// 	node1: "b",
-				// 	cnn: b.cnn ? b.cnn.ref : "",
-				// 	aperture_len: this.corns(1).getDistance(this.corns(4))
-				// }),
-				// row_e = cnns.add({
-				// 	elm1: _row.elm,
-				// 	node1: "e",
-				// 	cnn: e.cnn ? e.cnn.ref : "",
-				// 	aperture_len: this.corns(2).getDistance(this.corns(3))
-				// }),
+				row_b = cnns.add({
+					elm1: _row.elm,
+					node1: "b",
+					cnn: b.cnn ? b.cnn.ref : "",
+					aperture_len: this.corns(1).getDistance(this.corns(4))
+				}),
+				row_e = cnns.add({
+					elm1: _row.elm,
+					node1: "e",
+					cnn: e.cnn ? e.cnn.ref : "",
+					aperture_len: this.corns(2).getDistance(this.corns(3))
+				}),
 
 				gen = this.generatrix;
 
@@ -1706,30 +1709,35 @@ Onlay.prototype.__define({
 			_row.y2 = this.y2;
 			_row.path_data = gen.pathData;
 			_row.nom = this.nom;
+			_row.parent = this.parent.elm;
 
 
 			// добавляем припуски соединений
 			_row.len = this.length;
 
 			// сохраняем информацию о соединениях
-			// if(b.profile){
-			// 	row_b.elm2 = b.profile._row.elm;
-			// 	if(b.profile.e.is_nearest(b.point))
-			// 		row_b.node2 = "e";
-			// 	else if(b.profile.b.is_nearest(b.point))
-			// 		row_b.node2 = "b";
-			// 	else
-			// 		row_b.node2 = "t";
-			// }
-			// if(e.profile){
-			// 	row_e.elm2 = e.profile._row.elm;
-			// 	if(e.profile.b.is_nearest(e.point))
-			// 		row_e.node2 = "b";
-			// 	else if(e.profile.e.is_nearest(e.point))
-			// 		row_e.node2 = "b";
-			// 	else
-			// 		row_e.node2 = "t";
-			// }
+			if(b.profile){
+				row_b.elm2 = b.profile.elm;
+				if(b.profile instanceof Filling)
+					row_b.node2 = "t";
+				else if(b.profile.e.is_nearest(b.point))
+					row_b.node2 = "e";
+				else if(b.profile.b.is_nearest(b.point))
+					row_b.node2 = "b";
+				else
+					row_b.node2 = "t";
+			}
+			if(e.profile){
+				row_e.elm2 = e.profile.elm;
+				if(e.profile instanceof Filling)
+					row_e.node2 = "t";
+				else if(e.profile.b.is_nearest(e.point))
+					row_e.node2 = "b";
+				else if(e.profile.e.is_nearest(e.point))
+					row_e.node2 = "b";
+				else
+					row_e.node2 = "t";
+			}
 
 			// получаем углы между элементами и к горизонту
 			_row.angle_hor = this.angle_hor;
@@ -1781,7 +1789,7 @@ Onlay.prototype.__define({
 	},
 
 	/**
-	 * Возвращает тип элемента (рама, створка, импост)
+	 * Возвращает тип элемента (раскладка)
 	 */
 	elm_type: {
 		get : function(){

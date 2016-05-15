@@ -310,18 +310,13 @@ function Contour(attr){
 			new Filling({row: row,	parent: _contour});
 		});
 
-		// все остальные элементы
-		this.project.ox.coordinates.find_rows({cnstr: this.cnstr}, function(row){
+		// остальные элементы (текст, размерные линии, доборные профили - пока только текст
+		this.project.ox.coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, function(row){
 
-			// раскладки
-			if(row.elm_type == $p.enm.elm_types.Раскладка){
-
-
-			}else if(row.elm_type == $p.enm.elm_types.Текст){
+			if(row.elm_type == $p.enm.elm_types.Текст){
 				new FreeText({
 					row: row,
-					parent: _contour.l_text,
-					content: 'The contents of the point text'
+					parent: _contour.l_text
 				});
 			}
 
@@ -517,8 +512,15 @@ Contour.prototype.__define({
 
 			// запись в таблице координат, каждый элемент пересчитывает самостоятельно
 			this.children.forEach(function (elm) {
-				if(elm.save_coordinates)
+				if(elm.save_coordinates){
 					elm.save_coordinates();
+
+				}else if(elm instanceof paper.Group && elm == elm.layer.l_text){
+					elm.children.forEach(function (elm) {
+						if(elm.save_coordinates)
+							elm.save_coordinates();
+					});
+				}
 			});
 
 			// ответственность за строку в таблице конструкций лежит на контуре
