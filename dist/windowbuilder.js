@@ -56,6 +56,1567 @@
 })($p.msg);
 
 /**
+ * Элементы управления в аккордеоне редактора
+ * Created 16.02.2016
+ * @author Evgeniy Malyarov
+ * @module editor
+ * @submodule editor_accordion
+ */
+
+function EditorAccordion(_editor, cell_acc) {
+
+	cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);
+
+	var _cell = cell_acc.cell,
+		cont = _cell.querySelector(".editor_accordion"),
+
+		/**
+		 * панель инструментов элемента
+		 */
+		tb_elm = new $p.iface.OTooolBar({
+			wrapper: cont.querySelector("[name=header_elm]"),
+			width: '100%',
+			height: '28px',
+			bottom: '2px',
+			left: '4px',
+			class_name: "",
+			name: 'aling_bottom',
+			buttons: [
+				{name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
+				{name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
+				{name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
+				{name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
+				{name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
+				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
+			],
+			image_path: "dist/imgs/",
+			onclick: function (name) {
+				return _editor.profile_align(name);
+			}
+		}),
+
+		/**
+		 * панель инструментов свойств изделия
+		 */
+		tb_right = new $p.iface.OTooolBar({
+			wrapper: cont.querySelector("[name=header_layers]"),
+			width: '100%',
+			height: '28px',
+			bottom: '2px',
+			left: '4px',
+			class_name: "",
+			name: 'right',
+			image_path: 'dist/imgs/',
+			buttons: [
+				{name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'
+					//,sub: {
+					//	buttons: [
+					//		{name: 'square', img: 'square.png', float: 'left'},
+					//		{name: 'triangle1', img: 'triangle1.png', float: 'right'},
+					//		{name: 'triangle2', img: 'triangle2.png', float: 'left'},
+					//		{name: 'triangle3', img: 'triangle3.png', float: 'right'},
+					//		{name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
+					//		{name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
+					//		{name: 'circle',    img: 'circle.png', float: 'left'},
+					//		{name: 'arc1',      img: 'arc1.png', float: 'right'},
+					//		{name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
+					//		{name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
+					//		{name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
+					//		{name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
+					//		{name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
+					//		{name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]
+					//}
+				},
+				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
+				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
+
+				//{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
+
+			], onclick: function (name) {
+
+				switch(name) {
+
+					case 'new_stv':
+						var fillings = _editor.project.getItems({class: Filling, selected: true});
+						if(fillings.length)
+							fillings[0].create_leaf();
+						else
+							$p.msg.show_msg({
+								type: "alert-warning",
+								text: $p.msg.bld_new_stv_no_filling,
+								title: $p.msg.bld_new_stv
+							});
+						break;
+
+					case 'drop_layer':
+						tree_layers.drop_layer();
+						break;
+
+					case 'new_layer':
+
+						// создаём пустой новый слой
+						new Contour( {parent: undefined});
+
+						// оповещаем мир о новых слоях
+						Object.getNotifier(_editor.project._noti).notify({
+							type: 'rows',
+							tabular: "constructions"
+						});
+						break;
+
+					default:
+						$p.msg.show_msg(name);
+						break;
+				}
+
+				return false;
+			}
+		}),
+
+		/**
+		 * слои в аккордионе
+		 */
+		tree_layers = new function SchemeLayers() {
+
+			var tree = new dhtmlXTreeObject({
+				parent: cont.querySelector("[name=content_layers]"),
+				checkbox: true
+			});
+
+
+			function layer_text(layer, bounds){
+				if(!bounds)
+					bounds = layer.bounds;
+				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr +
+					(bounds ? " " + bounds.width.toFixed() + "х" + bounds.height.toFixed() : "");
+			}
+
+			function load_layer(layer){
+
+				tree.insertNewItem(
+					layer.parent ? layer.parent.cnstr : 0,
+					layer.cnstr,
+					layer_text(layer));
+
+
+				layer.children.forEach(function (l) {
+					if(l instanceof Contour)
+						load_layer(l);
+
+				});
+
+			}
+
+			function observer(changes){
+
+				var synced;
+
+				changes.forEach(function(change){
+					if ("constructions" == change.tabular){
+
+						synced = true;
+
+						// добавляем слои изделия
+						tree.deleteChildItems(0);
+						_editor.project.contours.forEach(function (l) {
+							load_layer(l);
+							tree.setSubChecked(l.cnstr, true);
+
+						});
+
+						// служебный слой размеров
+						tree.insertNewItem(0, "sizes", "Размерные линии");
+
+						// служебный слой визуализации
+						tree.insertNewItem(0, "visualization", "Визуализация доп. элементов");
+
+						// служебный слой текстовых комментариев
+						tree.insertNewItem(0, "text", "Комментарии");
+
+					}
+				});
+			}
+
+
+			tree.enableTreeImages(false);
+
+
+			this.drop_layer = function () {
+				var cnstr = tree.getSelectedItemId(), l;
+				if(cnstr){
+					l = _editor.project.getItem({cnstr: Number(cnstr)});
+				}else if(l = _editor.project.activeLayer){
+					cnstr = l.cnstr;
+				}
+				if(cnstr && l){
+					tree.deleteItem(cnstr);
+					cnstr = l.parent ? l.parent.cnstr : 0;
+					l.remove();
+					setTimeout(function () {
+						_editor.project.zoom_fit();
+						if(cnstr)
+							tree.selectItem(cnstr, true);
+					}, 100);
+				}
+			};
+
+			// начинаем следить за объектом
+			this.attache = function () {
+				Object.observe(_editor.project._noti, observer, ["rows"]);
+			};
+
+			this.unload = function () {
+				Object.unobserve(_editor.project._noti, observer);
+			};
+
+			// гасим-включаем слой по чекбоксу
+			tree.attachEvent("onCheck", function(id, state){
+				var l,
+					pid = tree.getParentId(id),
+					sub = tree.getAllSubItems(id);
+
+				if(pid && state && !tree.isItemChecked(pid)){
+					if(l = _editor.project.getItem({cnstr: Number(pid)}))
+						l.visible = true;
+					tree.setCheck(pid, 1);
+				}
+
+				if(l = _editor.project.getItem({cnstr: Number(id)}))
+					l.visible = !!state;
+
+				if(typeof sub == "string")
+					sub = sub.split(",");
+				sub.forEach(function (id) {
+					tree.setCheck(id, state);
+					if(l = _editor.project.getItem({cnstr: Number(id)}))
+						l.visible = !!state;
+				});
+
+				if(pid && state && !tree.isItemChecked(pid))
+					tree.setCheck(pid, 1);
+
+				_editor.project.register_update();
+
+			});
+
+			// делаем выделенный слой активным
+			tree.attachEvent("onSelect", function(id){
+				var contour = _editor.project.getItem({cnstr: Number(id)});
+				if(contour){
+					contour.activate();
+					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
+				}
+			});
+
+			$p.eve.attachEvent("layer_activated", function (contour) {
+				if(contour && contour.cnstr && contour.cnstr != tree.getSelectedItemId()){
+					tree.selectItem(contour.cnstr);
+					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
+				}
+
+			});
+
+			// начинаем следить за изменениями размеров при перерисовке контуров
+			$p.eve.attachEvent("contour_redrawed", function (contour, bounds) {
+
+				var text = layer_text(contour, bounds);
+
+				tree.setItemText(contour.cnstr, text);
+
+				if(contour.project.activeLayer == contour)
+					cont.querySelector("[name=header_stv]").innerHTML = text;
+
+			});
+
+		},
+
+		/**
+		 * свойства изделия в аккордионе
+		 */
+		props = new (function SchemeProps(layout) {
+
+			var _obj,
+				_grid,
+				_reflect_id;
+
+			function reflect_changes() {
+				_obj.len = _editor.project.bounds.width.round(0);
+				_obj.height = _editor.project.bounds.height.round(0);
+				_obj.s = _editor.project.area;
+			}
+
+			// корректируем метаданные поля выбора цвета
+			$p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"));
+
+			this.__define({
+
+				attache: {
+					value: function (obj) {
+
+						_obj = obj;
+						obj = null;
+
+						if(_grid && _grid.destructor)
+							_grid.destructor();
+
+						_grid = layout.cells("a").attachHeadFields({
+							obj: _obj,
+							oxml: {
+								"Свойства": ["sys","clr",
+									{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
+									{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
+									{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro"}
+								],
+								"Строка заказа": ["quantity",
+									{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro"},
+									{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro"},
+									{id: "price", path: "o.price", synonym: "Цена", type: "ro"},
+									"discount_percent",
+									{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro"},
+									"note"]
+
+							},
+							ts: "extra_fields",
+							ts_title: "Свойства",
+							selection: {cnstr: 0, hide: {not: true}}
+						});
+					}
+				},
+
+				unload: {
+					value: function () {
+						layout.unload();
+						_obj = null;
+					}
+				},
+
+				layout: {
+					get: function () {
+						return layout;
+					}
+				}
+
+			});
+
+			// начинаем следить за изменениями размеров при перерисовке контуров
+			$p.eve.attachEvent("contour_redrawed", function () {
+				if(_obj){
+					if(_reflect_id)
+						clearTimeout(_reflect_id);
+					_reflect_id = setTimeout(reflect_changes, 100);
+				}
+			});
+
+
+		})(new dhtmlXLayoutObject({
+			parent:     cont.querySelector("[name=content_props]"),
+			pattern:    "1C",
+			offsets: {
+				top:    0,
+				right:  0,
+				bottom: 0,
+				left:   0
+			},
+			cells: [
+				{
+					id:             "a",
+					header:         false,
+					height:         330
+				}
+			]
+		})),
+
+		/**
+		 * свойства створки в аккордионе
+		 */
+		stv = new (function StvProps(layout) {
+
+			var t = this, _grid, _evts = [];
+
+			this.__define({
+
+				attache: {
+					value: function (obj) {
+
+						if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
+							return;
+
+						var attr = {
+							obj: obj,
+							oxml: {
+								"Фурнитура": ["furn", "clr_furn", "direction", "h_ruch"],
+								"Москитка": ["mskt", "clr_mskt"],
+								"Параметры": []
+							},
+							ts: "params",
+							ts_title: "Параметры",
+							selection: {cnstr: obj.cnstr || -1, hide: {not: true}}
+						};
+
+						if(!_grid)
+							_grid = layout.cells("a").attachHeadFields(attr);
+						else
+							_grid.attach(attr);
+
+						if(!obj.parent){
+							var rids = _grid.getAllRowIds();
+							if(rids)
+								_grid.closeItem(rids.split(",")[0]);
+						}
+
+						setTimeout(t.set_sizes, 200);
+					}
+				},
+
+				set_sizes: {
+
+					value: function (do_reload) {
+						if(do_reload)
+							_grid.reload();
+						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + "px";
+						layout.setSizes();
+						_grid.objBox.style.width = "100%";
+					}
+				},
+
+				unload: {
+					value: function () {
+						_evts.forEach(function (eid) {
+							$p.eve.detachEvent(eid);
+						});
+						layout.unload();
+					}
+				},
+
+				layout: {
+					get: function () {
+						return layout;
+					}
+				}
+
+			});
+
+			_evts.push($p.eve.attachEvent("layer_activated", this.attache));
+			_evts.push($p.eve.attachEvent("furn_changed", this.set_sizes));
+
+		})(new dhtmlXLayoutObject({
+			parent:     cont.querySelector("[name=content_stv]"),
+			pattern:    "1C",
+			offsets: {
+				top:    0,
+				right:  0,
+				bottom: 0,
+				left:   0
+			},
+			cells: [
+				{
+					id:             "a",
+					header:         false,
+					height:         200
+				}
+			]
+		}));
+
+	this.unload = function () {
+		tb_elm.unload();
+		tb_right.unload();
+		tree_layers.unload();
+		props.unload();
+		stv.unload();
+	};
+
+	this.attache = function (obj) {
+		tree_layers.attache();
+		props.attache(obj);
+	};
+
+	this.resize_canvas = function () {
+		var scroller = $(cont, '.scroller').baron();
+		scroller.update();
+		this.elm.setSizes();
+		props.layout.setSizes();
+		stv.layout.setSizes();
+	};
+
+
+	this.elm = new dhtmlXLayoutObject({
+		parent:     cont.querySelector("[name=content_elm]"),
+		pattern:    "1C",
+		offsets: {
+			top:    0,
+			right:  0,
+			bottom: 0,
+			left:   0
+		},
+		cells: [
+			{
+				id:             "a",
+				header:         false,
+				height:         200
+			}
+		]
+	});
+
+	this.header_stv = cont.querySelector("[name=header_stv]");
+	this.header_props = cont.querySelector("[name=header_props]");
+
+	baron({
+		cssGuru: true,
+		root: cont,
+		scroller: '.scroller',
+		bar: '.scroller__bar',
+		barOnCls: 'baron'
+	}).fix({
+		elements: '.header__title',
+		outside: 'header__title_state_fixed',
+		before: 'header__title_position_top',
+		after: 'header__title_position_bottom',
+		clickable: true
+	});
+
+}
+
+/**
+ * Работа с буфером обмена
+ * @author Evgeniy Malyarov
+ * @module clipboard
+ */
+
+/**
+ * Объект для прослушивания и обработки событий буфера обмена
+ * @param _editor
+ * @constructor
+ */
+function Clipbrd(_editor) {
+
+	var fakecb = {
+		clipboardData: {
+			types: ['text/plain'],
+			json: '{a: 0}',
+			getData: function () {
+				return this.json;
+			}
+		}
+	};
+
+	function onpaste(e) {
+		var _scheme = _editor.project;
+
+		if(!e)
+			e = fakecb;
+
+		if(!_scheme.ox.empty()){
+
+			if(e.clipboardData.types.indexOf('text/plain') == -1)
+				return;
+
+			try{
+				var data = JSON.parse(e.clipboardData.getData('text/plain'));
+				e.preventDefault();
+			}catch(e){
+				return;
+			}
+
+		}
+	}
+
+	function oncopy(e) {
+
+		if(e.target && ["INPUT","TEXTAREA"].indexOf(e.target.tagName) != -1)
+			return;
+
+		var _scheme = _editor.project;
+		if(!_scheme.ox.empty()){
+
+			// получаем выделенные элементы
+			var sitems = [];
+			_scheme.selectedItems.forEach(function (el) {
+				if(el.parent instanceof Profile)
+					el = el.parent;
+				if(el instanceof BuilderElement && sitems.indexOf(el) == -1)
+					sitems.push(el);
+			});
+
+			// сериализуем
+			var res = {
+				sys: {
+					ref: _scheme._dp.sys.ref,
+					presentation: _scheme._dp.sys.presentation
+				},
+
+				clr: {
+					ref: _scheme.clr.ref,
+					presentation: _scheme.clr.presentation
+				},
+
+				calc_order: {
+					ref: _scheme.ox.calc_order.ref,
+					presentation: _scheme.ox.calc_order.presentation
+				}
+			};
+			if(sitems.length){
+				res.product = {
+					ref: _scheme.ox.ref,
+					presentation: _scheme.ox.presentation
+				};
+				res.items = [];
+				sitems.forEach(function (el) {
+					res.items.push({
+						elm: el.elm,
+						elm_type: el._row.elm_type.name,
+						inset: {
+							ref: el.inset.ref,
+							presentation: el.inset.presentation
+						},
+						clr: {
+							ref: el.clr.ref,
+							presentation: el.clr.presentation
+						},
+						path_data: el.path.pathData,
+						x1: el.x1,
+						x2: el.x2,
+						y1: el.y1,
+						y2: el.y2
+					});
+				});
+
+			}else{
+				_editor.project.save_coordinates({
+					snapshot: true,
+					clipboard: true,
+					callback: function (scheme) {
+						res.product = {}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"]);
+					}
+				});
+			}
+			fakecb.clipboardData.json = JSON.stringify(res, null, '\t');
+
+			e.clipboardData.setData('text/plain', fakecb.clipboardData.json);
+			//e.clipboardData.setData('text/html', '<b>Hello, world!</b>');
+			e.preventDefault();
+		}
+	}
+
+	this.copy = function () {
+		document.execCommand('copy');
+	};
+
+	this.paste = function () {
+		onpaste();
+	};
+
+	// при готовности снапшота, помещаем результат в буфер обмена
+	$p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
+		if(scheme == _editor.project && attr.clipboard){
+			attr.callback(scheme);
+		}
+	});
+
+	document.addEventListener('copy', oncopy);
+
+	document.addEventListener('paste', onpaste);
+}
+/**
+ * Created 24.07.2015<br />
+ * &copy; http://www.oknosoft.ru 2014-2015
+ * @author	Evgeniy Malyarov
+ *
+ * @module  editor
+ */
+
+/**
+ * ### Графический редактор
+ * @class Editor
+ * @constructor
+ * @extends paper.PaperScope
+ * @param pwnd {dhtmlXLayoutCell} - ячейка dhtmlx, в которой будут размещены редактор и изделия
+ */
+function Editor(pwnd, attr){
+
+	acn = $p.enm.cnn_types.acn;
+
+	var _editor = this,
+
+		/**
+		 * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
+		 * @type {Undo}
+		 */
+		undo = new UndoRedo(this),
+
+		/**
+		 * Объект для прослушивания и обработки событий буфера обмена
+		 * @type {Clipbrd}
+		 */
+		clipbrd = new Clipbrd(this),
+
+		/**
+		 * Объект для управления редактором с клавиатуры
+		 * @type {Keybrd}
+		 */
+		keybrd = new Keybrd(this),
+
+		selectionBounds = null,
+		selectionBoundsShape = null,
+		drawSelectionBounds = 0;
+
+	Editor.superclass.constructor.call(_editor);
+	_editor.activate();
+
+	consts.tune_paper(_editor.settings);
+
+	_editor.__define({
+
+		// ячейка родительского окна
+		_pwnd: {
+			get: function () {
+				return pwnd;
+			}
+		},
+
+		// разбивка на канвас и аккордион
+		_layout: {
+			value: pwnd.attachLayout({
+				pattern: "2U",
+				cells: [{
+					id: "a",
+					text: "Изделие",
+					header: false
+				}, {
+					id: "b",
+					text: "Инструменты",
+					collapsed_text: "Инструменты",
+					width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 360 : 240
+				}],
+				offsets: { top: 28, right: 0, bottom: 0, left: 0}
+			})
+		},
+
+		// контейнер канваса
+		_wrapper: {
+			value: document.createElement('div')
+		},
+
+		// указатель на локальный dhtmlXWindows
+		_dxw: {
+			get: function () {
+				return this._layout.dhxWins;
+			}
+		},
+
+		toString: {
+			value: function(){ return $p.msg.bld_constructor; }
+		}
+	});
+
+
+	_editor._layout.cells("a").attachObject(_editor._wrapper);
+	_editor._dxw.attachViewportTo(_editor._wrapper);
+
+	_editor._wrapper.oncontextmenu = function (event) {
+		event.preventDefault();
+		return $p.cancel_bubble(event);
+	};
+
+
+	// аккордион со свойствами
+	_editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b")) ;
+
+	/**
+	 * Панель выбора инструментов рисовалки
+	 * @type OTooolBar
+	 */
+	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '300px',
+		image_path: 'dist/imgs/',
+		buttons: [
+			{name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
+			{name: 'pan', css: 'tb_icon-hand', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
+			{name: 'zoom_fit', css: 'tb_cursor-zoom', tooltip: 'Вписать в окно'},
+			{name: 'pen', css: 'tb_cursor-pen-freehand', tooltip: 'Добавить профиль'},
+			{name: 'lay_impost', css: 'tb_cursor-lay-impost', tooltip: 'Вставить раскладку или импосты'},
+			{name: 'arc', css: 'tb_cursor-arc-r', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
+			{name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
+			{name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
+			{name: 'line', css: 'tb_line', tooltip: 'Произвольная линия'},
+			{name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'}
+		],
+		onclick: function (name) {
+			return _editor.select_tool(name);
+		},
+		on_popup: function (popup, bdiv) {
+			popup.show(dhx4.absLeft(bdiv), 0, bdiv.offsetWidth, _editor._wrapper.offsetHeight);
+			popup.p.style.top = (dhx4.absTop(bdiv) - 20) + "px";
+			popup.p.querySelector(".dhx_popup_arrow").style.top = "20px";
+		}
+	});
+
+	/**
+	 * Верхняя панель инструментов
+	 * @type {OTooolBar}
+	 */
+	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
+		image_path: 'dist/imgs/',
+		buttons: [
+
+			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '34px'},
+			{name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
+
+			{name: 'sep_0', text: '', float: 'left'},
+			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
+
+			{name: 'sep_1', text: '', float: 'left'},
+			{name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
+			{name: 'paste', text: '<i class="fa fa-clipboard fa-fw"></i>', tooltip: 'Вставить', float: 'left'},
+			{name: 'paste_prop', text: '<i class="fa fa-paint-brush fa-fw"></i>', tooltip: 'Применить скопированные свойства', float: 'left'},
+
+			{name: 'sep_2', text: '', float: 'left'},
+			{name: 'back', text: '<i class="fa fa-undo fa-fw"></i>', tooltip: 'Шаг назад', float: 'left'},
+			{name: 'rewind', text: '<i class="fa fa-repeat fa-fw"></i>', tooltip: 'Шаг вперед', float: 'left'},
+
+			{name: 'sep_3', text: '', float: 'left'},
+			{name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
+
+			{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
+
+
+		], onclick: function (name) {
+			switch(name) {
+				
+				case 'save_close':
+					if(_editor.project)
+						_editor.project.save_coordinates({save: true, close: true});
+					break;
+
+				case 'close':
+					if(pwnd._on_close)
+						pwnd._on_close();
+					_editor.select_tool('select_node');
+					break;
+
+				case 'calck':
+					if(_editor.project)
+						_editor.project.save_coordinates({save: true});
+					break;
+
+				case 'stamp':
+					_editor.load_stamp();
+					break;
+
+				case 'new_stv':
+					var fillings = _editor.project.getItems({class: Filling, selected: true});
+					if(fillings.length)
+						fillings[0].create_leaf();
+					break;
+
+				case 'back':
+					undo.back();
+					break;
+
+				case 'rewind':
+					undo.rewind();
+					break;
+
+				case 'copy':
+					clipbrd.copy();
+					break;
+
+				case 'paste':
+					clipbrd.paste();
+					break;
+
+				case 'paste_prop':
+					$p.msg.show_msg(name);
+					break;
+
+				case 'open_spec':
+					_editor.project.ox.form_obj()
+						.then(function (w) {
+							w.wnd.maximize();
+						});
+					break;
+
+				case 'square':
+					$p.msg.show_msg(name);
+					break;
+
+				case 'triangle1':
+					$p.msg.show_msg(name);
+					break;
+
+				case 'triangle3':
+					$p.msg.show_msg(name);
+					break;
+
+				case 'triangle3':
+					$p.msg.show_msg(name);
+					break;
+
+				default:
+					$p.msg.show_msg(name);
+					break;
+			}
+		}});
+	_editor._layout.base.style.backgroundColor = "#f5f5f5";
+	//_editor._layout.base.parentNode.parentNode.style.top = "0px";
+	_editor.tb_top.cell.style.background = "transparent";
+	_editor.tb_top.cell.style.boxShadow = "none";
+
+
+	// Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
+	$p.eve.attachEvent("characteristic_saved", function (scheme, attr) {
+		if(scheme == _editor.project && attr.close && pwnd._on_close)
+			setTimeout(pwnd._on_close);
+	});
+
+	// Обработчик события при изменениях изделия
+	$p.eve.attachEvent("scheme_changed", function (scheme) {
+		if(scheme == _editor.project){
+			if(attr.set_text && scheme._calc_order_row)
+				attr.set_text(scheme.ox.prod_name(true) + " " + scheme._dp.sys.name + (scheme.ox._modified ? " *" : ""));
+		}
+	});
+
+
+	_editor.clear_selection_bounds = function() {
+		if (selectionBoundsShape)
+			selectionBoundsShape.remove();
+		selectionBoundsShape = null;
+		selectionBounds = null;
+	};
+
+	_editor.hide_selection_bounds = function() {
+		if (drawSelectionBounds > 0)
+			drawSelectionBounds--;
+		if (drawSelectionBounds == 0) {
+			if (selectionBoundsShape)
+				selectionBoundsShape.visible = false;
+		}
+	};
+
+	// Returns serialized contents of selected items.
+	_editor.capture_selection_state = function() {
+		var originalContent = [];
+		var selected = _editor.project.selectedItems;
+		for (var i = 0; i < selected.length; i++) {
+			var item = selected[i];
+			if (item.guide) continue;
+			var orig = {
+				id: item.id,
+				json: item.exportJSON({ asString: false }),
+				selectedSegments: []
+			};
+			originalContent.push(orig);
+		}
+		return originalContent;
+	};
+
+	// Restore the state of selected items.
+	_editor.restore_selection_state = function(originalContent) {
+		for (var i = 0; i < originalContent.length; i++) {
+			var orig = originalContent[i];
+			var item = this.project.getItem({id: orig.id});
+			if (!item)
+				continue;
+			// HACK: paper does not retain item IDs after importJSON,
+			// store the ID here, and restore after deserialization.
+			var id = item.id;
+			item.importJSON(orig.json);
+			item._id = id;
+		}
+	};
+
+	/**
+	 * Returns all items intersecting the rect.
+	 * Note: only the item outlines are tested
+	 */
+	_editor.paths_intersecting_rect = function(rect) {
+		var paths = [];
+		var boundingRect = new paper.Path.Rectangle(rect);
+
+		function checkPathItem(item) {
+			var children = item.children || [];
+			if (item.equals(boundingRect))
+				return;
+			if (!rect.intersects(item.bounds))
+				return;
+			if (item instanceof paper.PathItem ) {
+
+				if(item.parent instanceof Profile){
+					if(item != item.parent.generatrix)
+						return;
+
+					if (rect.contains(item.bounds)) {
+						paths.push(item);
+						return;
+					}
+					var isects = boundingRect.getIntersections(item);
+					if (isects.length > 0)
+						paths.push(item);
+				}
+
+			} else {
+				for (var j = children.length-1; j >= 0; j--)
+					checkPathItem(children[j]);
+			}
+		}
+
+		this.project.getItems({class: Contour}).forEach(checkPathItem);
+		
+		boundingRect.remove();
+
+		return paths;
+	};
+
+	/**
+	 * Create pixel perfect dotted rectable for drag selections
+	 * @param p1
+	 * @param p2
+	 * @return {exporters.CompoundPath}
+	 */
+	_editor.drag_rect = function(p1, p2) {
+		var half = new paper.Point(0.5 / _editor.view.zoom, 0.5 / _editor.view.zoom),
+			start = p1.add(half),
+			end = p2.add(half),
+			rect = new paper.CompoundPath();
+		rect.moveTo(start);
+		rect.lineTo(new paper.Point(start.x, end.y));
+		rect.lineTo(end);
+		rect.moveTo(start);
+		rect.lineTo(new paper.Point(end.x, start.y));
+		rect.lineTo(end);
+		rect.strokeColor = 'black';
+		rect.strokeWidth = 1.0 / _editor.view.zoom;
+		rect.dashOffset = 0.5 / _editor.view.zoom;
+		rect.dashArray = [1.0 / _editor.view.zoom, 1.0 / _editor.view.zoom];
+		rect.removeOn({
+			drag: true,
+			up: true
+		});
+		rect.guide = true;
+		return rect;
+	};
+
+
+	// Создаём инструменты
+
+	/**
+	 * Это не настоящий инструмент, а команда вписывания в окно
+	 */
+	new function ZoomFit() {
+
+		var tool = new paper.Tool();
+		tool.options = {name: 'zoom_fit'};
+		tool.on({
+			activate: function () {
+				_editor.project.zoom_fit();
+
+				var previous = _editor.tb_left.get_selected();
+
+				if(previous)
+					return _editor.select_tool(previous.replace("left_", ""));
+			}
+		});
+
+		return tool;
+	};
+
+	/**
+	 * Свойства и перемещение узлов элемента
+	 */
+	new ToolSelectNode();
+
+	/**
+	 * Панорама и масштабирование с колёсиком и без колёсика
+	 */
+	new ToolPan();
+
+	/**
+	 * Манипуляции с арками (дуги правильных окружностей)
+	 */
+	new ToolArc();
+
+	/**
+	 * Добавление (рисование) профилей
+	 */
+	new ToolPen();
+
+	/**
+	 * Вставка раскладок и импостов
+	 */
+	new ToolLayImpost();
+
+	/**
+	 * Инструмент произвольного текста
+	 */
+	new ToolText();
+
+	/**
+	 * Относительное позиционирование и сдвиг
+	 */
+	new ToolRuler();
+
+	this.tools[1].activate();
+
+
+	// Создаём экземпляр проекта Scheme
+	(function () {
+
+		var _canvas = document.createElement('canvas'); // собственно, канвас
+		_editor._wrapper.appendChild(_canvas);
+		_canvas.style.backgroundColor = "#f9fbfa";
+
+		var _scheme = new Scheme(_canvas),
+			pwnd_resize_finish = function(){
+				_editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
+				_editor._acc.resize_canvas();
+			};
+
+
+		/**
+		 * Подписываемся на события изменения размеров
+		 */
+		_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
+		_editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
+		_editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
+		_editor._layout.attachEvent("onExpand", pwnd_resize_finish);
+
+		if(_editor._pwnd instanceof  dhtmlXWindowsCell)
+			_editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
+
+		pwnd_resize_finish();
+
+		/**
+		 * Подписываемся на событие смещения мыши, чтобы показать текущие координаты
+		 */
+		var _mousepos = document.createElement('div');
+		_editor._wrapper.appendChild(_mousepos);
+		_mousepos.className = "mousepos";
+		_scheme.view.on('mousemove', function (event) {
+			var bounds = _scheme.bounds;
+			if(bounds)
+				_mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
+					" y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
+		});
+
+		/**
+		 * Объект для реализации функций масштабирования
+		 * @type {StableZoom}
+		 */
+		var pan_zoom = new function StableZoom(){
+
+			function changeZoom(oldZoom, delta) {
+				var factor;
+				factor = 1.05;
+				if (delta < 0) {
+					return oldZoom * factor;
+				}
+				if (delta > 0) {
+					return oldZoom / factor;
+				}
+				return oldZoom;
+			}
+
+			var panAndZoom = this;
+
+			dhtmlxEvent(_canvas, "mousewheel", function(evt) {
+				var mousePosition, newZoom, offset, viewPosition, _ref1;
+				if (evt.shiftKey || evt.ctrlKey) {
+					_editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
+					return evt.preventDefault();
+
+				}else if (evt.altKey) {
+					mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
+					viewPosition = _editor.view.viewToProject(mousePosition);
+					_ref1 = panAndZoom.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
+					newZoom = _ref1[0];
+					offset = _ref1[1];
+					_editor.view.zoom = newZoom;
+					_editor.view.center = _editor.view.center.add(offset);
+					evt.preventDefault();
+					return _editor.view.draw();
+				}
+			});
+
+			this.changeZoom = function(oldZoom, delta, c, p) {
+				var a, beta, newZoom, pc;
+				newZoom = changeZoom.call(this, oldZoom, delta);
+				beta = oldZoom / newZoom;
+				pc = p.subtract(c);
+				a = p.subtract(pc.multiply(beta)).subtract(c);
+				return [newZoom, a];
+			};
+
+			this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
+				var offset;
+				offset = new paper.Point(deltaX, -deltaY);
+				offset = offset.multiply(factor);
+				return oldCenter.add(offset);
+			};
+		};
+
+		_editor._acc.attache(_editor.project._dp);
+
+	})();
+
+}
+Editor._extend(paper.PaperScope);
+
+Editor.prototype.__define({
+
+	/**
+	 * Устанавливает икну курсора для всех канвасов редактора
+	 * @method canvas_cursor
+	 */
+	canvas_cursor: {
+		value: function (name) {
+			for(var p in this.projects){
+				var _scheme = this.projects[p];
+				for(var i=0; i<_scheme.view.element.classList.length; i++){
+					var class_name = _scheme.view.element.classList[i];
+					if(class_name == name)
+						return;
+					else if((/\bcursor-\S+/g).test(class_name))
+						_scheme.view.element.classList.remove(class_name);
+				}
+				_scheme.view.element.classList.add(name);
+			}
+		}
+	},
+
+	select_tool: {
+		value: function (name) {
+			for(var t in this.tools){
+				if(this.tools[t].options.name == name)
+					return this.tools[t].activate();
+			}
+		}
+	},
+
+	/**
+	 * ### Открывает изделие для редактирования
+	 * MDI пока не реализовано. Изделие загружается в текущий проект
+	 * @method open
+	 * @param [ox] {String|DataObj} - ссылка или объект продукции
+	 */
+	open: {
+		value: function (ox) {
+			if(ox)
+				this.project.load(ox);
+		}
+	},
+
+	/**
+	 * ### (Пере)заполняет изделие данными типового блока
+	 * Вызывает диалог выбора типового блока и перезаполняет продукцию данными выбора
+	 * @method load_stamp
+	 * @param confirmed {Boolean} - подавляет показ диалога подтверждения перезаполнения
+	 */
+	load_stamp: {
+		value: function(confirmed){
+
+			if(this.project.ox.coordinates.count() && !confirmed){
+				dhtmlx.confirm({
+					title: $p.msg.bld_from_blocks_title,
+					text: $p.msg.bld_from_blocks,
+					cancel: $p.msg.cancel,
+					callback: function(btn) {
+						if(btn)
+							this.load_stamp(true);
+					}.bind(this)
+				});
+				return;
+			}
+
+			$p.cat.characteristics.form_selection_block(null, {
+				on_select: this.project.load_stamp.bind(this.project)
+			});
+		}
+	},
+
+	/**
+	 * Returns path points which are contained in the rect
+	 * @param rect
+	 * @returns {Array}
+	 */
+	segments_in_rect: {
+		value: 	function(rect) {
+			var segments = [];
+
+			function checkPathItem(item) {
+				if (item._locked || !item._visible || item._guide)
+					return;
+				var children = item.children || [];
+				if (!rect.intersects(item.bounds))
+					return;
+				if (item instanceof paper.Path) {
+
+					if(item.parent instanceof Profile){
+						if(item != item.parent.generatrix)
+							return;
+
+						for (var i = 0; i < item.segments.length; i++) {
+							if (rect.contains(item.segments[i].point))
+								segments.push(item.segments[i]);
+						}
+					}
+
+				} else {
+					for (var j = children.length-1; j >= 0; j--)
+						checkPathItem(children[j]);
+				}
+			}
+
+			this.project.getItems({class: Contour}).forEach(checkPathItem);
+
+			return segments;
+		}
+	},
+
+	purge_selection: {
+		value: 	function(){
+			var selected = this.project.selectedItems, deselect = [];
+			for (var i = 0; i < selected.length; i++) {
+				var path = selected[i];
+				if(path.parent instanceof Profile && path != path.parent.generatrix)
+					deselect.push(path);
+			}
+			while(selected = deselect.pop())
+				selected.selected = false;
+		}
+	},
+
+	profile_align: {
+		value: 	function(name){
+			var minmax = {min: {}, max: {}},
+				profile = this.tool.profile;
+
+			if(!(profile instanceof Profile) && this._acc.elm.cells("a").dataObj)
+				profile = this._acc.elm.cells("a").dataObj._obj;
+
+			if(name == "all"){
+				$p.msg.show_not_implemented();
+				return;
+
+			}else if(!profile)
+				return;
+
+			minmax.min.x = Math.min(profile.x1, profile.x2);
+			minmax.min.y = Math.min(profile.y1, profile.y2);
+			minmax.max.x = Math.max(profile.x1, profile.x2);
+			minmax.max.y = Math.max(profile.y1, profile.y2);
+			minmax.max.dx = minmax.max.x - minmax.min.x;
+			minmax.max.dy = minmax.max.y - minmax.min.y;
+
+			if(name == 'left' && minmax.max.dx < minmax.max.dy){
+				if(profile.x1 - minmax.min.x > 0)
+					profile.x1 = minmax.min.x;
+				if(profile.x2 - minmax.min.x > 0)
+					profile.x2 = minmax.min.x;
+
+			}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
+				if(profile.x1 - minmax.max.x < 0)
+					profile.x1 = minmax.max.x;
+				if(profile.x2 - minmax.max.x < 0)
+					profile.x2 = minmax.max.x;
+
+			}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
+				if(profile.y1 - minmax.max.y < 0)
+					profile.y1 = minmax.max.y;
+				if(profile.y2 - minmax.max.y < 0)
+					profile.y2 = minmax.max.y;
+
+			}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
+				if (profile.y1 - minmax.min.y > 0)
+					profile.y1 = minmax.min.y;
+				if (profile.y2 - minmax.min.y > 0)
+					profile.y2 = minmax.min.y;
+
+			}else if(name == 'delete') {
+				profile.removeChildren();
+				profile.remove();
+
+			}else
+				$p.msg.show_msg({type: "alert-warning",
+					text: $p.msg.align_invalid_direction,
+					title: $p.msg.main_title});
+
+			this.view.update();
+			return false;
+		}
+	},
+
+	snap_to_angle: {
+		value: function(delta, snapAngle) {
+			var angle = Math.atan2(delta.y, delta.x);
+			angle = Math.round(angle/snapAngle) * snapAngle;
+			var dirx = Math.cos(angle),
+				diry = Math.sin(angle),
+				d = dirx*delta.x + diry*delta.y;
+			return new paper.Point(dirx*d, diry*d);
+		}
+	},
+
+	/**
+	 * Деструктор
+	 */
+	unload: {
+		value: function () {
+
+			if(this.tool && this.tool._callbacks.deactivate.length)
+				this.tool._callbacks.deactivate[0].call(this.tool);
+
+			for(var t in this.tools){
+				if(this.tools[t].remove)
+					this.tools[t].remove();
+				this.tools[t] = null;
+			}
+
+			this.tb_left.unload();
+			this.tb_top.unload();
+			this._acc.unload();
+
+		}
+	}
+
+});
+
+/**
+ * Экспортируем конструктор Editor, чтобы экземпляры построителя можно было создать снаружи
+ * @property Editor
+ * @for $p
+ * @type {function}
+ */
+$p.Editor = Editor;
+
+
+/**
+ * Обработчик сочетаний клавишь
+ * @author Evgeniy Malyarov
+ * @module keyboard
+ */
+
+/**
+ * Управление редактором с клавиатуры
+ * @param _editor
+ * @constructor
+ */
+function Keybrd(_editor) {
+	
+}
+/**
+ * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
+ * @author Evgeniy Malyarov
+ * @module undo
+ */
+
+/**
+ * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
+ * Из публичных интерфейсов имеет только методы back() и rewind()
+ * Основную работу делает прослушивая широковещательные события
+ * @class UndoRedo
+ * @constructor
+ * @param _editor {Editor} - указатель на экземпляр редактора
+ */
+function UndoRedo(_editor){
+
+	var _history = [],
+		pos = -1,
+		snap_timer;
+
+	function run_snapshot() {
+		
+		// запускаем короткий пересчет изделия
+		if(pos >= 0){
+
+			// если pos < конца истории, отрезаем хвост истории
+			if(pos > 0 && pos < (_history.length - 1)){
+				_history.splice(pos, _history.length - pos - 1);
+			}
+
+			_editor.project.save_coordinates({snapshot: true, clipboard: false});
+
+		}
+
+	}
+
+	function save_snapshot(scheme) {
+		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"])));
+		pos = _history.length - 1;
+		enable_buttons();
+	}
+
+	function apply_snapshot() {
+		_editor.project.load_stamp(JSON.parse(_history[pos]), true);
+		enable_buttons();
+	}
+	
+	function enable_buttons() {
+		if(pos < 1)
+			_editor.tb_top.buttons.back.classList.add("disabledbutton");
+		else
+			_editor.tb_top.buttons.back.classList.remove("disabledbutton");
+
+		if(pos < (_history.length - 1))
+			_editor.tb_top.buttons.rewind.classList.remove("disabledbutton");
+		else
+			_editor.tb_top.buttons.rewind.classList.add("disabledbutton");
+
+	}
+
+	function clear() {
+		_history.length = 0;
+		pos = -1;
+	}
+
+	// обрабатываем изменения изделия
+	$p.eve.attachEvent("scheme_changed", function (scheme, attr) {
+		if(scheme == _editor.project){
+
+			// при открытии изделия чистим историю
+			if(scheme.data._loading){
+				if(!scheme.data._snapshot){
+					clear();
+					save_snapshot(scheme);	
+				}
+
+			} else{
+				// при обычных изменениях, запускаем таймер снапшота
+				if(snap_timer)
+					clearTimeout(snap_timer);
+				snap_timer = setTimeout(run_snapshot, 800);
+				enable_buttons();
+			}
+		}
+
+	});
+
+	// при закрытии редактора чистим историю
+	$p.eve.attachEvent("editor_closed", clear);
+
+	// при готовности снапшота, добавляем его в историю
+	$p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
+		if(scheme == _editor.project && !attr.clipboard){
+			save_snapshot(scheme);
+		}
+
+	});
+
+	this.back = function() {
+		if(pos > 0)
+			pos--;
+		if(pos >= 0)
+			apply_snapshot();
+		else
+			enable_buttons();
+	};
+
+	this.rewind = function() {
+		if(pos <= (_history.length - 1)){
+			pos++;
+			apply_snapshot();
+		}
+	}
+}
+/**
  * Created 24.07.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
@@ -1496,213 +3057,220 @@ Contour.prototype.__define({
 	draw_sizes: {
 
 		value: function () {
-			
-			// сначала, строим размерные линии импостов
 
-			// получаем импосты контура, делим их на вертикальные и горизонтальные
-			var ihor = [], ivert = [], i;
-			
-			this.imposts.forEach(function (elm) {
-				if(elm.orientation == $p.enm.orientations.hor)
-					ihor.push(elm);
-				else if(elm.orientation == $p.enm.orientations.vert)
-					ivert.push(elm);
+			// сначала, перерисовываем размерные линии вложенных контуров, чтобы получить отступы
+			this.getItems({class: Contour}).forEach(function (l) {
+				l.draw_sizes();
 			});
 
-			if(ihor.length || ivert.length){
+			// для внешних контуров строим авторазмерные линии
+			if(!this.parent){
 
-				var by_side = this.profiles_by_side(),
+				// сначала, строим размерные линии импостов
 
-					imposts_dimensions = function(arr, collection, i, pos, xy, sideb, sidee) {
+				// получаем импосты контура, делим их на вертикальные и горизонтальные
+				var ihor = [], ivert = [], i;
 
-						var offset = (pos == "right" || pos == "bottom") ? -130 : 90;
-
-						if(i == 0 && !collection[i]){
-							collection[i] = new DimensionLine({
-								pos: pos,
-								elm1: sideb,
-								p1: sideb.b[xy] > sideb.e[xy] ? "b" : "e",
-								elm2: arr[i],
-								p2: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
-								parent: this.l_dimensions,
-								offset: offset
-							});
-						}
-
-						if(i >= 0 && i < arr.length-1 && !collection[i+1]){
-
-							collection[i+1] = new DimensionLine({
-								pos: pos,
-								elm1: arr[i],
-								p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
-								elm2: arr[i+1],
-								p2: arr[i+1].b[xy] > arr[i+1].e[xy] ? "b" : "e",
-								parent: this.l_dimensions,
-								offset: offset
-							});
-
-						}
-
-						if(i == arr.length-1 && !collection[arr.length]){
-
-							collection[arr.length] = new DimensionLine({
-								pos: pos,
-								elm1: arr[i],
-								p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
-								elm2: sidee,
-								p2: sidee.b[xy] > sidee.e[xy] ? "b" : "e",
-								parent: this.l_dimensions,
-								offset: offset
-							});
-
-						}
-
-					}.bind(this),
-
-					purge = function (arr, asizes, xy) {
-
-						var adel = [];
-						arr.forEach(function (elm) {
-
-							if(asizes.indexOf(elm.b[xy].round(0)) != -1 && asizes.indexOf(elm.e[xy].round(0)) != -1)
-								adel.push(elm);
-
-							else if(asizes.indexOf(elm.b[xy].round(0)) == -1)
-								asizes.push(elm.b[xy].round(0));
-
-							else if(asizes.indexOf(elm.e[xy].round(0)) == -1)
-								asizes.push(elm.e[xy].round(0));
-
-						});
-
-						adel.forEach(function (elm) {
-							arr.splice(arr.indexOf(elm), 1);
-						});
-						adel.length = 0;
-
-						return arr;
-					};
-
-				// сортируем ihor по убыванию y
-				var asizes = [this.bounds.top.round(0), this.bounds.bottom.round(0)];
-				purge(ihor, asizes, "y").sort(function (a, b) {
-					return b.b.y + b.e.y - a.b.y - a.e.y;
-				});
-				// сортируем ivert по возрастанию x
-				asizes = [this.bounds.left.round(0), this.bounds.right.round(0)];
-				purge(ivert, asizes, "x").sort(function (a, b) {
-					return a.b.x + a.e.x - b.b.x - b.e.x;
+				this.imposts.forEach(function (elm) {
+					if(elm.orientation == $p.enm.orientations.hor)
+						ihor.push(elm);
+					else if(elm.orientation == $p.enm.orientations.vert)
+						ivert.push(elm);
 				});
 
+				if(ihor.length || ivert.length){
 
-				// для ihor добавляем по вертикали
-				if(!this.l_dimensions.ihor)
-					this.l_dimensions.ihor = {};
-				for(i = 0; i< ihor.length; i++){
+					var by_side = this.profiles_by_side(),
 
-					if(this.is_pos("right"))
-						imposts_dimensions(ihor, this.l_dimensions.ihor, i, "right", "x", by_side.bottom, by_side.top);
+						imposts_dimensions = function(arr, collection, i, pos, xy, sideb, sidee) {
 
-					else if(this.is_pos("left"))
-						imposts_dimensions(ihor, this.l_dimensions.ihor, i, "left", "x", by_side.bottom, by_side.top);
+							var offset = (pos == "right" || pos == "bottom") ? -130 : 90;
 
+							if(i == 0 && !collection[i]){
+								collection[i] = new DimensionLine({
+									pos: pos,
+									elm1: sideb,
+									p1: sideb.b[xy] > sideb.e[xy] ? "b" : "e",
+									elm2: arr[i],
+									p2: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
+									parent: this.l_dimensions,
+									offset: offset
+								});
+							}
+
+							if(i >= 0 && i < arr.length-1 && !collection[i+1]){
+
+								collection[i+1] = new DimensionLine({
+									pos: pos,
+									elm1: arr[i],
+									p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
+									elm2: arr[i+1],
+									p2: arr[i+1].b[xy] > arr[i+1].e[xy] ? "b" : "e",
+									parent: this.l_dimensions,
+									offset: offset
+								});
+
+							}
+
+							if(i == arr.length-1 && !collection[arr.length]){
+
+								collection[arr.length] = new DimensionLine({
+									pos: pos,
+									elm1: arr[i],
+									p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
+									elm2: sidee,
+									p2: sidee.b[xy] > sidee.e[xy] ? "b" : "e",
+									parent: this.l_dimensions,
+									offset: offset
+								});
+
+							}
+
+						}.bind(this),
+
+						purge = function (arr, asizes, xy) {
+
+							var adel = [];
+							arr.forEach(function (elm) {
+
+								if(asizes.indexOf(elm.b[xy].round(0)) != -1 && asizes.indexOf(elm.e[xy].round(0)) != -1)
+									adel.push(elm);
+
+								else if(asizes.indexOf(elm.b[xy].round(0)) == -1)
+									asizes.push(elm.b[xy].round(0));
+
+								else if(asizes.indexOf(elm.e[xy].round(0)) == -1)
+									asizes.push(elm.e[xy].round(0));
+
+							});
+
+							adel.forEach(function (elm) {
+								arr.splice(arr.indexOf(elm), 1);
+							});
+							adel.length = 0;
+
+							return arr;
+						};
+
+					// сортируем ihor по убыванию y
+					var asizes = [this.bounds.top.round(0), this.bounds.bottom.round(0)];
+					purge(ihor, asizes, "y").sort(function (a, b) {
+						return b.b.y + b.e.y - a.b.y - a.e.y;
+					});
+					// сортируем ivert по возрастанию x
+					asizes = [this.bounds.left.round(0), this.bounds.right.round(0)];
+					purge(ivert, asizes, "x").sort(function (a, b) {
+						return a.b.x + a.e.x - b.b.x - b.e.x;
+					});
+
+
+					// для ihor добавляем по вертикали
+					if(!this.l_dimensions.ihor)
+						this.l_dimensions.ihor = {};
+					for(i = 0; i< ihor.length; i++){
+
+						if(this.is_pos("right"))
+							imposts_dimensions(ihor, this.l_dimensions.ihor, i, "right", "x", by_side.bottom, by_side.top);
+
+						else if(this.is_pos("left"))
+							imposts_dimensions(ihor, this.l_dimensions.ihor, i, "left", "x", by_side.bottom, by_side.top);
+
+					}
+
+					// для ivert добавляем по горизонтали
+					if(!this.l_dimensions.ivert)
+						this.l_dimensions.ivert = {};
+					for(i = 0; i< ivert.length; i++){
+
+						if(this.is_pos("bottom"))
+							imposts_dimensions(ivert, this.l_dimensions.ivert, i, "bottom", "y", by_side.left, by_side.right);
+
+						else if(this.is_pos("top"))
+							imposts_dimensions(ivert, this.l_dimensions.ivert, i, "top", "y", by_side.left, by_side.right);
+
+					}
 				}
 
-				// для ivert добавляем по горизонтали
-				if(!this.l_dimensions.ivert)
-					this.l_dimensions.ivert = {};
-				for(i = 0; i< ivert.length; i++){
 
-					if(this.is_pos("bottom"))
-						imposts_dimensions(ivert, this.l_dimensions.ivert, i, "bottom", "y", by_side.left, by_side.right);
+				// далее - размерные линии контура
+				if (this.project.contours.length > 1) {
 
-					else if(this.is_pos("top"))
-						imposts_dimensions(ivert, this.l_dimensions.ivert, i, "top", "y", by_side.left, by_side.right);
+					if(this.is_pos("left") && !this.is_pos("right") && this.project.bounds.height != this.bounds.height){
+						if(!this.l_dimensions.left){
+							this.l_dimensions.left = new DimensionLine({
+								pos: "left",
+								parent: this.l_dimensions,
+								offset: ihor.length ? 220 : 90
+							});
+						}else
+							this.l_dimensions.left.offset = ihor.length ? 220 : 90;
+
+					}else{
+						if(this.l_dimensions.left){
+							this.l_dimensions.left.remove();
+							this.l_dimensions.left = null;
+						}
+					}
+
+					if(this.is_pos("right") && this.project.bounds.height != this.bounds.height){
+						if(!this.l_dimensions.right){
+							this.l_dimensions.right = new DimensionLine({
+								pos: "right",
+								parent: this.l_dimensions,
+								offset: ihor.length ? -260 : -130
+							});
+						}else
+							this.l_dimensions.right.offset = ihor.length ? -260 : -130;
+
+					}else{
+						if(this.l_dimensions.right){
+							this.l_dimensions.right.remove();
+							this.l_dimensions.right = null;
+						}
+					}
+
+					if(this.is_pos("top") && !this.is_pos("bottom") && this.project.bounds.width != this.bounds.width){
+						if(!this.l_dimensions.top){
+							this.l_dimensions.top = new DimensionLine({
+								pos: "top",
+								parent: this.l_dimensions,
+								offset: ivert.length ? 220 : 90
+							});
+						}else
+							this.l_dimensions.top.offset = ivert.length ? 220 : 90;
+					}else{
+						if(this.l_dimensions.top){
+							this.l_dimensions.top.remove();
+							this.l_dimensions.top = null;
+						}
+					}
+
+					if(this.is_pos("bottom") && this.project.bounds.width != this.bounds.width){
+						if(!this.l_dimensions.bottom){
+							this.l_dimensions.bottom = new DimensionLine({
+								pos: "bottom",
+								parent: this.l_dimensions,
+								offset: ivert.length ? -260 : -130
+							});
+						}else
+							this.l_dimensions.bottom.offset = ivert.length ? -260 : -130;
+
+					}else{
+						if(this.l_dimensions.bottom){
+							this.l_dimensions.bottom.remove();
+							this.l_dimensions.bottom = null;
+						}
+					}
 
 				}
 			}
 
+			// перерисовываем размерные линии текущего контура
+			this.l_dimensions.children.forEach(function (dl) {
+				if(dl.redraw)
+					dl.redraw();
+			});
 
-			// далее - размерные линии контура
-			if (this.project.contours.length > 1) {
-
-				if(this.is_pos("left") && !this.is_pos("right") && this.project.bounds.height != this.bounds.height){
-					if(!this.l_dimensions.left){
-						this.l_dimensions.left = new DimensionLine({
-							pos: "left",
-							parent: this.l_dimensions,
-							offset: ihor.length ? 220 : 90
-						});
-					}else
-						this.l_dimensions.left.offset = ihor.length ? 220 : 90;
-
-				}else{
-					if(this.l_dimensions.left){
-						this.l_dimensions.left.remove();
-						this.l_dimensions.left = null;
-					}
-				}
-
-				if(this.is_pos("right") && this.project.bounds.height != this.bounds.height){
-					if(!this.l_dimensions.right){
-						this.l_dimensions.right = new DimensionLine({
-							pos: "right",
-							parent: this.l_dimensions,
-							offset: ihor.length ? -260 : -130
-						});
-					}else
-						this.l_dimensions.right.offset = ihor.length ? -260 : -130;
-
-				}else{
-					if(this.l_dimensions.right){
-						this.l_dimensions.right.remove();
-						this.l_dimensions.right = null;
-					}
-				}
-
-				if(this.is_pos("top") && !this.is_pos("bottom") && this.project.bounds.width != this.bounds.width){
-					if(!this.l_dimensions.top){
-						this.l_dimensions.top = new DimensionLine({
-							pos: "top",
-							parent: this.l_dimensions,
-							offset: ivert.length ? 220 : 90
-						});
-					}else
-						this.l_dimensions.top.offset = ivert.length ? 220 : 90;
-				}else{
-					if(this.l_dimensions.top){
-						this.l_dimensions.top.remove();
-						this.l_dimensions.top = null;
-					}
-				}
-
-				if(this.is_pos("bottom") && this.project.bounds.width != this.bounds.width){
-					if(!this.l_dimensions.bottom){
-						this.l_dimensions.bottom = new DimensionLine({
-							pos: "bottom",
-							parent: this.l_dimensions,
-							offset: ivert.length ? -260 : -130
-						});
-					}else
-						this.l_dimensions.bottom.offset = ivert.length ? -260 : -130;
-
-				}else{
-					if(this.l_dimensions.bottom){
-						this.l_dimensions.bottom.remove();
-						this.l_dimensions.bottom = null;
-					}
-				}
-
-				
-			}
-
-			// сначала гасим, а затем перерисовываем размерные линии
-			// for(i = this.l_dimensions.children.length -1; i >=0; i--){
-			// 	this.l_dimensions.children[i].visible = false;
-			// }
-			for(i = this.l_dimensions.children.length -1; i >=0; i--){
-				this.l_dimensions.children[i].redraw();
-			}
 		}
 	},
 
@@ -1808,7 +3376,7 @@ Contour.prototype.__define({
  * @for $p
  * @type {function}
  */
-$p.Contour = Contour;
+Editor.Contour = Contour;
 /**
  *
  * Created 21.08.2015<br />
@@ -1828,7 +3396,7 @@ function DimensionLine(attr){
 
 	DimensionLine.superclass.constructor.call(this, {parent: attr.parent});
 
-	var _row;
+	var _row = attr.row;
 
 	this.data.pos = attr.pos;
 	this.data.elm1 = attr.elm1;
@@ -1837,32 +3405,46 @@ function DimensionLine(attr){
 	this.data.p2 = attr.p2 || "e";
 	this.data.offset = attr.offset;
 
+	this.__define({
+		
+		_row: {
+			get: function () {
+				return _row;
+			}
+		},
+
+		/**
+		 * Удаляет элемент из контура и иерархии проекта
+		 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
+		 * @method remove
+		 */
+		remove: {
+			value: function () {
+				if(_row){
+					_row._owner.del(_row);
+					_row = null;
+				}
+				DimensionLine.superclass.remove.call(this);
+			}
+		}
+	});
+
 	if(!this.data.pos && (!this.data.elm1 || !this.data.elm2)){
 		this.remove();
 		return null;
 	}
 
-	this.__define({
-		_row: {
-			get: function () {
-				return _row;
-			}
-		}
-	});
-
-
-	/**
-	 * Удаляет элемент из контура и иерархии проекта
-	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
-	 * @method remove
-	 */
-	this.remove = function () {
-		if(_row){
-			_row._owner.del(_row);
-			_row = null;
-		}
-		DimensionLine.superclass.remove.call(this);
-	};
+	// создаём детей
+	new paper.Path({parent: this, name: 'callout1', strokeColor: 'black', guide: true});
+	new paper.Path({parent: this, name: 'callout2', strokeColor: 'black', guide: true});
+	new paper.Path({parent: this, name: 'scale', strokeColor: 'black', guide: true});
+	new paper.PointText({
+		parent: this,
+		name: 'text',
+		justification: 'center',
+		fillColor: 'black',
+		fontSize: 72});
+	
 
 	this.on({
 		mouseenter: this._mouseenter,
@@ -1888,25 +3470,6 @@ DimensionLine.prototype.__define({
 	_manager: {
 		get: function () {
 			return $p.dp.builder_text;
-		}
-	},
-
-	_nodes: {
-		get: function () {
-
-			if(!this.data._nodes)
-				this.data._nodes = {
-
-					callout1: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
-					callout2: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
-					scale: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
-					text: new paper.PointText({
-						parent: this,
-						justification: 'center',
-						fillColor: 'black',
-						fontSize: 72})
-				};
-			return this.data._nodes;
 		}
 	},
 
@@ -2026,7 +3589,7 @@ DimensionLine.prototype.__define({
 
 				switch(event.name) {
 					case 'close':
-						this._nodes.text.selected = false;
+						this.children.text.selected = false;
 						this.wnd = null;
 						break;
 
@@ -2049,14 +3612,20 @@ DimensionLine.prototype.__define({
 	redraw: {
 		value: function () {
 
-			var _nodes = this._nodes,
-				_bounds = this.layer.bounds,
+			var _bounds = this.layer.bounds,
 				b, e, tmp, normal, length, bs, es;
 
 			if(!this.pos){
 
-				b = this.data.elm1[this.data.p1];
-				e = this.data.elm2[this.data.p2];
+				if(typeof this.data.p1 == "number")
+					b = this.data.elm1.corns(this.data.p1);
+				else
+					b = this.data.elm1[this.data.p1];
+
+				if(typeof this.data.p2 == "number")
+					e = this.data.elm2.corns(this.data.p2);
+				else
+					e = this.data.elm2[this.data.p2];
 
 			}else if(this.pos == "top"){
 				b = _bounds.topLeft;
@@ -2095,31 +3664,36 @@ DimensionLine.prototype.__define({
 			normal = tmp.getNormalAt(0).multiply(this.offset);
 
 			length = tmp.length;
+			if(length < consts.sticking_l){
+				this.visible = false;
+				return;
+			}
+
 			bs = b.add(normal.multiply(0.8));
 			es = e.add(normal.multiply(0.8));
 
-			if(_nodes.callout1.segments.length){
-				_nodes.callout1.firstSegment.point = b;
-				_nodes.callout1.lastSegment.point = b.add(normal);
+			if(this.children.callout1.segments.length){
+				this.children.callout1.firstSegment.point = b;
+				this.children.callout1.lastSegment.point = b.add(normal);
 			}else
-				_nodes.callout1.addSegments([b, b.add(normal)]);
+				this.children.callout1.addSegments([b, b.add(normal)]);
 
-			if(_nodes.callout2.segments.length){
-				_nodes.callout2.firstSegment.point = e;
-				_nodes.callout2.lastSegment.point = e.add(normal);
+			if(this.children.callout2.segments.length){
+				this.children.callout2.firstSegment.point = e;
+				this.children.callout2.lastSegment.point = e.add(normal);
 			}else
-				_nodes.callout2.addSegments([e, e.add(normal)]);
+				this.children.callout2.addSegments([e, e.add(normal)]);
 
-			if(_nodes.scale.segments.length){
-				_nodes.scale.firstSegment.point = bs;
-				_nodes.scale.lastSegment.point = es;
+			if(this.children.scale.segments.length){
+				this.children.scale.firstSegment.point = bs;
+				this.children.scale.lastSegment.point = es;
 			}else
-				_nodes.scale.addSegments([bs, es]);
+				this.children.scale.addSegments([bs, es]);
 
 
-			_nodes.text.content = length.toFixed(0);
-			_nodes.text.rotation = e.subtract(b).angle;
-			_nodes.text.point = bs.add(es).divide(2);
+			this.children.text.content = length.toFixed(0);
+			this.children.text.rotation = e.subtract(b).angle;
+			this.children.text.point = bs.add(es).divide(2);
 
 
 		},
@@ -2129,10 +3703,10 @@ DimensionLine.prototype.__define({
 	// размер
 	size: {
 		get: function () {
-			return parseFloat(this._nodes.text.content);
+			return parseFloat(this.children.text.content);
 		},
 		set: function (v) {
-			this._nodes.text.content = parseFloat(v);
+			this.children.text.content = parseFloat(v).round(1);
 		}
 	},
 
@@ -2164,12 +3738,17 @@ DimensionLine.prototype.__define({
 		},
 		set: function (v) {
 			this.data.offset = parseInt(v) || 90;
+			this.project.register_change(true);
 		}
 	}
 
 });
 
-
+/**
+ * Служебный слой размерных линий
+ * @param attr
+ * @constructor
+ */
 function DimensionLayer(attr) {
 	
 	DimensionLayer.superclass.constructor.call(this);
@@ -2185,6 +3764,70 @@ function DimensionLayer(attr) {
 	}
 }
 DimensionLayer._extend(paper.Layer);
+
+
+/**
+ * Размерные линии, определяемые пользователем
+ * @param attr
+ * @constructor
+ */
+function DimensionLineCustom(attr) {
+
+	if(!attr.row)
+		attr.row = attr.parent.project.ox.coordinates.add();
+
+	DimensionLineCustom.superclass.constructor.call(this, attr);
+
+	this.on({
+		mouseenter: this._mouseenter,
+		mouseleave: this._mouseleave,
+		click: this._click
+	});
+
+}
+DimensionLineCustom._extend(DimensionLine);
+
+DimensionLineCustom.prototype.__define({
+
+	/**
+	 * Вычисляемые поля в таблице координат
+	 * @method save_coordinates
+	 * @for DimensionLineCustom
+	 */
+	save_coordinates: {
+		value: function () {
+
+			var _row = this._row;
+
+
+			// сохраняем размер
+			_row.len = this.size;
+
+			// устанавливаем тип элемента
+			_row.elm_type = this.elm_type;
+
+		}
+	},
+
+	/**
+	 * Возвращает тип элемента (размерная линия)
+	 */
+	elm_type: {
+		get : function(){
+
+			return $p.enm.elm_types.Размер;
+
+		}
+	},
+
+
+	_click: {
+		value: function (event) {
+			event.stop();
+			this.selected = true;
+		}
+	}
+});
 /**
  * Created 24.07.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015
@@ -4019,8 +5662,7 @@ ProfileItem.prototype.__define({
 	info: {
 		get : function(){
 			return "№" + this.elm + " α:" + this.angle_hor.toFixed(0) + "° l:" + this.length.toFixed(0);
-		},
-		enumerable : true
+		}
 	},
 
 	/**
@@ -4035,8 +5677,7 @@ ProfileItem.prototype.__define({
 		set: function(v){
 			this.data._rays.clear();
 			this._row.r = v;
-		},
-		enumerable : true
+		}
 	},
 
 	/**
@@ -4050,8 +5691,7 @@ ProfileItem.prototype.__define({
 		},
 		set: function(v){
 			this.data._rays.clear();
-		},
-		enumerable : true
+		}
 	},
 
 	/**
@@ -4311,6 +5951,42 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
+	 * Выделяет сегмент пути профиля, ближайший к точке
+	 */
+	select_corn: {
+		value:  function(point){
+
+			var res = {dist: Infinity},
+				dist;
+
+			this.path.segments.forEach(function (segm) {
+				dist = segm.point.getDistance(point);
+				if(dist < res.dist){
+					res.dist = dist;
+					res.segm = segm;
+				}
+			});
+
+			dist = this.b.getDistance(point);
+			if(dist < res.dist){
+				res.dist = dist;
+				res.segm = this.generatrix.firstSegment;
+			}
+
+			dist = this.e.getDistance(point);
+			if(dist < res.dist){
+				res.dist = dist;
+				res.segm = this.generatrix.lastSegment;
+			}
+
+			if(res.dist < consts.sticking0){
+				this.project.deselectAll();
+				res.segm.selected = true;
+			}
+		}
+	},
+
+	/**
 	 * Угол к горизонту прямой, проходящей через узлы
 	 */
 	angle_hor: {
@@ -4430,11 +6106,13 @@ ProfileItem.prototype.__define({
 
 			else if(corn instanceof paper.Point){
 
-				var res = {dist: Infinity, profile: this};
+				var res = {dist: Infinity, profile: this},
+					dist;
 
 				for(var i = 1; i<5; i++){
-					if(this.data._corns[i].getDistance(corn) < res.dist){
-						res.dist = this.data._corns[i].getDistance(corn);
+					dist = this.data._corns[i].getDistance(corn);
+					if(dist < res.dist){
+						res.dist = dist;
 						res.point = this.data._corns[i];
 						res.point_name = i;
 					}
@@ -4886,8 +6564,7 @@ Profile.prototype.__define({
 				curr = nearest;
 			}
 			return res;
-		},
-		enumerable : true
+		}
 	},
 
 	/**
@@ -4898,8 +6575,7 @@ Profile.prototype.__define({
 	 * @type Number
 	 */
 	d1: {
-		get : function(){ return -(this.d0 - this.sizeb); },
-		enumerable : true
+		get : function(){ return -(this.d0 - this.sizeb); }
 	},
 
 	/**
@@ -4909,8 +6585,7 @@ Profile.prototype.__define({
 	 * @type Number
 	 */
 	d2: {
-		get : function(){ return this.d1 - this.width; },
-		enumerable : true
+		get : function(){ return this.d1 - this.width; }
 	},
 
 	/**
@@ -5445,6 +7120,424 @@ ProfileRays.prototype.__define({
 
 
 
+
+/**
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module profile_addl
+ * Created 16.05.2016
+ */
+
+
+/**
+ * ### Дополнительный профиль
+ * Класс описывает поведение доборного и расширительного профилей
+ *
+ * - похож в поведении на сегмент створки, но расположен в том же слое, что и ведущий элемент
+ * - у дополнительного профиля есть координаты конца и начала, такие же, как у Profile
+ * - в случае внутреннего добора, могут быть Т - соединения, как у импоста
+ * - в случае внешнего, концы соединяются с пустотой
+ * - имеет одно ii примыкающее соединение
+ * - есть путь образующей - прямая или кривая линия, такая же, как у створки
+ * - длина дополнительного профиля может отличаться от длины ведущего элемента
+ *
+ * @class ProfileAddl
+ * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
+ * @constructor
+ * @extends ProfileItem
+ */
+function ProfileAddl(attr){
+
+	ProfileAddl.superclass.constructor.call(this, attr);
+
+}
+ProfileAddl._extend(ProfileItem);
+
+
+ProfileAddl.prototype.__define({
+
+	/**
+	 * Вычисляемые поля в таблице координат
+	 * @method save_coordinates
+	 * @for Profile
+	 */
+	save_coordinates: {
+		value: function () {
+
+			if(!this.data.generatrix)
+				return;
+
+			var _row = this._row,
+
+				cnns = this.project.connections.cnns,
+				b = this.rays.b,
+				e = this.rays.e,
+
+				row_b = cnns.add({
+					elm1: _row.elm,
+					node1: "b",
+					cnn: b.cnn ? b.cnn.ref : "",
+					aperture_len: this.corns(1).getDistance(this.corns(4))
+				}),
+				row_e = cnns.add({
+					elm1: _row.elm,
+					node1: "e",
+					cnn: e.cnn ? e.cnn.ref : "",
+					aperture_len: this.corns(2).getDistance(this.corns(3))
+				}),
+
+				gen = this.generatrix;
+
+			_row.x1 = this.x1;
+			_row.y1 = this.y1;
+			_row.x2 = this.x2;
+			_row.y2 = this.y2;
+			_row.path_data = gen.pathData;
+			_row.nom = this.nom;
+			_row.parent = this.parent.elm;
+
+
+			// добавляем припуски соединений
+			_row.len = this.length;
+
+			// сохраняем информацию о соединениях
+			if(b.profile){
+				row_b.elm2 = b.profile.elm;
+				if(b.profile instanceof Filling)
+					row_b.node2 = "t";
+				else if(b.profile.e.is_nearest(b.point))
+					row_b.node2 = "e";
+				else if(b.profile.b.is_nearest(b.point))
+					row_b.node2 = "b";
+				else
+					row_b.node2 = "t";
+			}
+			if(e.profile){
+				row_e.elm2 = e.profile.elm;
+				if(e.profile instanceof Filling)
+					row_e.node2 = "t";
+				else if(e.profile.b.is_nearest(e.point))
+					row_e.node2 = "b";
+				else if(e.profile.e.is_nearest(e.point))
+					row_e.node2 = "b";
+				else
+					row_e.node2 = "t";
+			}
+
+			// получаем углы между элементами и к горизонту
+			_row.angle_hor = this.angle_hor;
+
+			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - gen.getTangentAt(0).angle) * 10) / 10;
+			if(_row.alp1 < 0)
+				_row.alp1 = _row.alp1 + 360;
+
+			_row.alp2 = Math.round((gen.getTangentAt(gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
+			if(_row.alp2 < 0)
+				_row.alp2 = _row.alp2 + 360;
+
+			// устанавливаем тип элемента
+			_row.elm_type = this.elm_type;
+
+		}
+	},
+
+	/**
+	 * Примыкающий внешний элемент - имеет смысл для сегментов створок
+	 * @property nearest
+	 * @type Profile
+	 */
+	nearest: {
+		value : function(){
+			this.data._nearest_cnn = $p.cat.cnns.elm_cnn(this, this.parent, acn.ii, this.data._nearest_cnn);
+			return this.parent;
+		}
+	},
+
+	/**
+	 * Расстояние от узла до опорной линии
+	 * для створок и вложенных элементов зависит от ширины элементов и свойств примыкающих соединений
+	 * не имеет смысла для заполнения, но нужно для рёбер заполнений
+	 * @property d0
+	 * @type Number
+	 */
+	d0: {
+		get : function(){
+			var res = 0, curr = this, nearest;
+
+			while(nearest = curr.nearest()){
+				res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
+				curr = nearest;
+			}
+			return res;
+		}
+	},
+
+	/**
+	 * Расстояние от узла до внешнего ребра элемента
+	 * для рамы, обычно = 0, для импоста 1/2 ширины
+	 * зависит от ширины элементов и свойств примыкающих соединений
+	 * @property d1
+	 * @type Number
+	 */
+	d1: {
+		get : function(){ return -(this.d0 - this.sizeb); }
+	},
+
+	/**
+	 * Расстояние от узла до внутреннего ребра элемента
+	 * зависит от ширины элементов и свойств примыкающих соединений
+	 * @property d2
+	 * @type Number
+	 */
+	d2: {
+		get : function(){ return this.d1 - this.width; }
+	},
+
+	/**
+	 * Возвращает тип элемента (раскладка)
+	 */
+	elm_type: {
+		get : function(){
+
+			return $p.enm.elm_types.Расширитель;
+
+		}
+	},
+
+	/**
+	 * С этой функции начинается пересчет и перерисовка сегмента раскладки
+	 * Возвращает объект соединения конца профиля
+	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
+	 * - Попутно устанавливает признак `is_cut`, если в точке сходятся больше двух профилей
+	 * - Не делает подмену соединения, хотя могла бы
+	 * - Не делает подмену вставки, хотя могла бы
+	 *
+	 * @method cnn_point
+	 * @param node {String} - имя узла профиля: "b" или "e"
+	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
+	 * @return {CnnPoint} - объект {point, profile, cnn_types}
+	 */
+	cnn_point: {
+		value: function(node, point){
+
+			var res = this.rays[node];
+
+			if(!point)
+				point = this[node];
+
+
+			// Если привязка не нарушена, возвращаем предыдущее значение
+			if(res.profile && res.profile.children.length){
+
+				if(this.check_distance(res.profile, res, point, true) === false)
+					return res;
+			}
+
+
+			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
+			res.clear();
+			if(this.parent){
+
+				// var res_bind = this.bind_node(point);
+				// if(res_bind.binded){
+				// 	res._mixin(res_bind, ["point","profile","cnn_types","profile_point"]);
+				// }
+			}
+
+			return res;
+
+		}
+	}
+
+});
+
+/**
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module profile_addl
+ * Created 16.05.2016
+ */
+
+
+/**
+ * ### Соединительный профиль
+ * Класс описывает поведение соединительного профиля
+ *
+ * - у соединительного профиля есть координаты конца и начала, такие же, как у Profile
+ * - концы соединяются с пустотой
+ * - имеет как минимум одно ii примыкающее соединение
+ * - есть путь образующей - прямая или кривая линия, такая же, как у Profile
+ * - слвиг и искривление пути передаются примыкающим профилям
+ * - соединительный профиль живёт в слое одного из рамных контуров изделия, но может оказывать влияние на соединёные с ним контуры
+ * - длина соединительного профиля может отличаться от длин профилей, к которым он примыкает
+ *
+ * @class ProfileConnective
+ * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
+ * @constructor
+ * @extends ProfileItem
+ */
+function ProfileConnective(attr){
+
+	ProfileConnective.superclass.constructor.call(this, attr);
+
+}
+ProfileConnective._extend(ProfileItem);
+
+
+ProfileConnective.prototype.__define({
+
+	/**
+	 * Вычисляемые поля в таблице координат
+	 * @method save_coordinates
+	 * @for Profile
+	 */
+	save_coordinates: {
+		value: function () {
+
+			if(!this.data.generatrix)
+				return;
+
+			var _row = this._row,
+
+				cnns = this.project.connections.cnns,
+				b = this.rays.b,
+				e = this.rays.e,
+
+				row_b = cnns.add({
+					elm1: _row.elm,
+					node1: "b",
+					cnn: b.cnn ? b.cnn.ref : "",
+					aperture_len: this.corns(1).getDistance(this.corns(4))
+				}),
+				row_e = cnns.add({
+					elm1: _row.elm,
+					node1: "e",
+					cnn: e.cnn ? e.cnn.ref : "",
+					aperture_len: this.corns(2).getDistance(this.corns(3))
+				}),
+
+				gen = this.generatrix;
+
+			_row.x1 = this.x1;
+			_row.y1 = this.y1;
+			_row.x2 = this.x2;
+			_row.y2 = this.y2;
+			_row.path_data = gen.pathData;
+			_row.nom = this.nom;
+			_row.parent = this.parent.elm;
+
+
+			// добавляем припуски соединений
+			_row.len = this.length;
+
+			// сохраняем информацию о соединениях
+			if(b.profile){
+				row_b.elm2 = b.profile.elm;
+				if(b.profile instanceof Filling)
+					row_b.node2 = "t";
+				else if(b.profile.e.is_nearest(b.point))
+					row_b.node2 = "e";
+				else if(b.profile.b.is_nearest(b.point))
+					row_b.node2 = "b";
+				else
+					row_b.node2 = "t";
+			}
+			if(e.profile){
+				row_e.elm2 = e.profile.elm;
+				if(e.profile instanceof Filling)
+					row_e.node2 = "t";
+				else if(e.profile.b.is_nearest(e.point))
+					row_e.node2 = "b";
+				else if(e.profile.e.is_nearest(e.point))
+					row_e.node2 = "b";
+				else
+					row_e.node2 = "t";
+			}
+
+			// получаем углы между элементами и к горизонту
+			_row.angle_hor = this.angle_hor;
+
+			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - gen.getTangentAt(0).angle) * 10) / 10;
+			if(_row.alp1 < 0)
+				_row.alp1 = _row.alp1 + 360;
+
+			_row.alp2 = Math.round((gen.getTangentAt(gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
+			if(_row.alp2 < 0)
+				_row.alp2 = _row.alp2 + 360;
+
+			// устанавливаем тип элемента
+			_row.elm_type = this.elm_type;
+
+		}
+	},
+
+	/**
+	 * Расстояние от узла до опорной линии, для раскладок == 0
+	 * @property d0
+	 * @type Number
+	 */
+	d0: {
+		get : function(){
+			return 0;
+		}
+	},
+
+	/**
+	 * Расстояние от узла до внешнего ребра элемента
+	 * для рамы, обычно = 0, для импоста 1/2 ширины
+	 * зависит от ширины элементов и свойств примыкающих соединений
+	 * @property d1
+	 * @type Number
+	 */
+	d1: {
+		get : function(){ return this.sizeb; }
+	},
+
+	/**
+	 * Расстояние от узла до внутреннего ребра элемента
+	 * зависит от ширины элементов и свойств примыкающих соединений
+	 * @property d2
+	 * @type Number
+	 */
+	d2: {
+		get : function(){ return this.d1 - this.width; }
+	},
+
+	/**
+	 * Возвращает тип элемента (соединитель)
+	 */
+	elm_type: {
+		get : function(){
+
+			return $p.enm.elm_types.Соединитель;
+
+		}
+	},
+
+	/**
+	 * С этой функции начинается пересчет и перерисовка соединительного профиля
+	 * т.к. концы соединителя висят в пустоте и не связаны с другими профилями, возвращаем голый cnn_point
+	 *
+	 * @method cnn_point
+	 * @param node {String} - имя узла профиля: "b" или "e"
+	 * @return {CnnPoint} - объект {point, profile, cnn_types}
+	 */
+	cnn_point: {
+		value: function(node){
+
+			return this.rays[node];
+
+		}
+	}
+	
+});
+
+/**
+ * Раскладка
+ * @module profile_onlay
+ * Created 16.05.2016
+ */
+
 /**
  * ### Раскладка
  * Класс описывает поведение элемента раскладки
@@ -5621,25 +7714,25 @@ Onlay.prototype.__define({
 
 			// Если привязка не нарушена, возвращаем предыдущее значение
 			if(res.profile && res.profile.children.length){
-				
+
 				if(res.profile instanceof Filling){
 					var np = res.profile.path.getNearestPoint(point),
 						distance = np.getDistance(point);
-					
+
 					if(distance < consts.sticking_l)
 						return res;
-					
+
 				}else{
 					if(this.check_distance(res.profile, res, point, true) === false)
-						return res;	
+						return res;
 				}
 			}
-				
+
 
 			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 			res.clear();
 			if(this.parent){
-				
+
 				var res_bind = this.bind_node(point);
 				if(res_bind.binded){
 					res._mixin(res_bind, ["point","profile","cnn_types","profile_point"]);
@@ -5658,9 +7751,9 @@ Onlay.prototype.__define({
 	 * @return {Object}
 	 */
 	bind_node: {
-		
+
 		value: function (point, glasses) {
-			
+
 			if(!glasses)
 				glasses = [this.parent];
 
@@ -5677,7 +7770,7 @@ Onlay.prototype.__define({
 					res.profile = glass;
 					res.cnn_types = acn.t;
 				}
-				
+
 				if(distance < consts.sticking_l){
 					res.binded = true;
 					return true;
@@ -5695,7 +7788,7 @@ Onlay.prototype.__define({
 			if(!res.binded && res.point && res.distance < consts.sticking){
 				res.binded = true;
 			}
-			
+
 			return res;
 		}
 	}
@@ -7817,12 +9910,12 @@ function ToolRuler(){
 
 			// Hit test points
 			var hit = paper.project.hitPoints(event.point);
-			if (hit && hit.item.parent instanceof Profile){
+			if (hit && hit.item.parent instanceof ProfileItem){
 				this.hitItem = hit;
 			}
 		}
 
-		if (this.hitItem && this.hitItem.item.parent instanceof Profile) {
+		if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
 
 			if(this.mode){
 				var elm = this.hitItem.item.parent,
@@ -7831,6 +9924,7 @@ function ToolRuler(){
 				if(corn.dist < consts.sticking){
 					paper.canvas_cursor('cursor-arrow-white-point');
 					this.hitPoint = corn;
+					elm.select_corn(event.point);
 				}
 				else
 					paper.canvas_cursor('cursor-arrow-ruler');
@@ -7847,6 +9941,7 @@ function ToolRuler(){
 		return true;
 	};
 	this.on({
+
 		activate: function() {
 			this.selected.a.length = 0;
 			this.selected.b.length = 0;
@@ -7856,11 +9951,13 @@ function ToolRuler(){
 			this.wnd = new RulerWnd(this.options, this);
 			this.wnd.size = 0;
 		},
+
 		deactivate: function() {
 
 			this.detache_wnd();
 
 		},
+
 		mousedown: function(event) {
 
 			if (this.hitItem) {
@@ -7872,7 +9969,10 @@ function ToolRuler(){
 						this.selected.a.push(this.hitPoint);
 
 						if (!this.path){
-							this.path = new paper.Path([this.hitPoint.point, event.point]);
+							this.path = new paper.Path({
+								parent: this.hitPoint.profile.layer.l_dimensions,
+								segments: [this.hitPoint.point, event.point]
+							});
 							this.path.strokeColor = 'black';
 						}
 
@@ -7894,7 +9994,7 @@ function ToolRuler(){
 						this.selected.b.push(this.hitPoint);
 						
 						// создаём размерную линию
-						new DimensionLine({
+						new DimensionLineCustom({
 							elm1: this.selected.a[0].profile,
 							elm2: this.hitPoint.profile,
 							p1: this.selected.a[0].point_name,
@@ -7904,7 +10004,7 @@ function ToolRuler(){
 
 						this.mode = 2;
 
-						this.hitPoint.profile.project.register_update();
+						this.hitPoint.profile.project.register_change(true);
 
 					}
 
@@ -7982,13 +10082,16 @@ function ToolRuler(){
 			}
 
 		},
+
 		mouseup: function(event) {
 
 
 		},
+
 		mousedrag: function(event) {
 
 		},
+
 		mousemove: function(event) {
 			this.hitTest(event);
 
@@ -8019,7 +10122,30 @@ function ToolRuler(){
 					this.path_text.visible = false;
 			}
 
+		},
+
+		keydown: function(event) {
+
+			// удаление размерной линии
+			if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+
+				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+					return;
+
+				paper.project.selectedItems.some(function (path) {
+					if(path.parent instanceof DimensionLineCustom){
+						path.parent.remove();
+						return true;
+					}
+				});
+
+				// Prevent the key event from bubbling
+				event.stop();
+				return false;
+
+			}
 		}
+
 	});
 
 	$p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this));
@@ -8176,6 +10302,24 @@ function RulerWnd(options, tool){
 							currentTarget: {name: "bottom"}
 						});
 						break;
+
+					case 109:       // -
+					case 46:        // del
+					case 8:         // backspace
+						if(ev.target && ["textarea", "input"].indexOf(ev.target.tagName.toLowerCase())!=-1)
+							return;
+
+						paper.project.selectedItems.some(function (path) {
+							if(path.parent instanceof DimensionLineCustom){
+								path.parent.remove();
+								return true;
+							}
+						});
+
+						// Prevent the key event from bubbling
+						return $p.cancel_bubble(ev);
+
+						break;
 				}
 				return $p.cancel_bubble(ev);
 			}
@@ -8185,11 +10329,34 @@ function RulerWnd(options, tool){
 		table, input;
 
 	function on_button_click(e){
-		$p.eve.callEvent("sizes_wnd", [{
-			wnd: wnd,
-			name: e.currentTarget.name,
-			size: wnd.size
-		}]);
+
+		if(!paper.project.selectedItems.some(function (path) {
+				if(path.parent instanceof DimensionLineCustom){
+
+					switch(e.currentTarget.name) {
+
+						case "left":
+						case "bottom":
+							path.parent.offset -= 20;
+							break;
+
+						case "top":
+						case "right":
+							path.parent.offset += 20;
+							break;
+
+					}
+
+					return true;
+				}
+			})){
+
+			$p.eve.callEvent("sizes_wnd", [{
+				wnd: wnd,
+				name: e.currentTarget.name,
+				size: wnd.size
+			}]);
+		}
 	}
 
 	div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +
@@ -8613,7 +10780,7 @@ function ToolSelectNode(){
 		},
 
 		keydown: function(event) {
-			var selected, i, j, path, segment, index, point, handle, do_select;
+			var selected, i, j, path, segment, index, point, handle;
 
 			if (event.key == '+' || event.key == 'insert') {
 
@@ -8678,11 +10845,15 @@ function ToolSelectNode(){
 				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
 					return;
 
-				selected = paper.project.selectedItems;
-				for (i = 0; i < selected.length; i++) {
-					path = selected[i];
-					do_select = false;
-					if(path.parent instanceof ProfileItem){
+				paper.project.selectedItems.some(function (path) {
+
+					var do_select = false;
+
+					if(path.parent instanceof DimensionLineCustom){
+						path.parent.remove();
+						return true;
+
+					}else if(path.parent instanceof ProfileItem){
 						for (j = 0; j < path.segments.length; j++) {
 							segment = path.segments[j];
 							do_select = do_select || segment.selected;
@@ -8701,7 +10872,8 @@ function ToolSelectNode(){
 							path.remove();
 						}
 					}
-				}
+				});
+
 				// Prevent the key event from bubbling
 				event.stop();
 				return false;
@@ -8883,1567 +11055,6 @@ function ToolText(){
 }
 ToolText._extend(ToolElement);
 
-/**
- * Элементы управления в аккордеоне редактора
- * Created 16.02.2016
- * @author Evgeniy Malyarov
- * @module editor
- * @submodule editor_accordion
- */
-
-function EditorAccordion(_editor, cell_acc) {
-
-	cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);
-
-	var _cell = cell_acc.cell,
-		cont = _cell.querySelector(".editor_accordion"),
-
-		/**
-		 * панель инструментов элемента
-		 */
-		tb_elm = new $p.iface.OTooolBar({
-			wrapper: cont.querySelector("[name=header_elm]"),
-			width: '100%',
-			height: '28px',
-			bottom: '2px',
-			left: '4px',
-			class_name: "",
-			name: 'aling_bottom',
-			buttons: [
-				{name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
-				{name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
-				{name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
-				{name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
-				{name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
-				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
-			],
-			image_path: "dist/imgs/",
-			onclick: function (name) {
-				return _editor.profile_align(name);
-			}
-		}),
-
-		/**
-		 * панель инструментов свойств изделия
-		 */
-		tb_right = new $p.iface.OTooolBar({
-			wrapper: cont.querySelector("[name=header_layers]"),
-			width: '100%',
-			height: '28px',
-			bottom: '2px',
-			left: '4px',
-			class_name: "",
-			name: 'right',
-			image_path: 'dist/imgs/',
-			buttons: [
-				{name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'
-					//,sub: {
-					//	buttons: [
-					//		{name: 'square', img: 'square.png', float: 'left'},
-					//		{name: 'triangle1', img: 'triangle1.png', float: 'right'},
-					//		{name: 'triangle2', img: 'triangle2.png', float: 'left'},
-					//		{name: 'triangle3', img: 'triangle3.png', float: 'right'},
-					//		{name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-					//		{name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
-					//		{name: 'circle',    img: 'circle.png', float: 'left'},
-					//		{name: 'arc1',      img: 'arc1.png', float: 'right'},
-					//		{name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-					//		{name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
-					//		{name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
-					//		{name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
-					//		{name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-					//		{name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]
-					//}
-				},
-				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
-				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
-
-				//{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
-
-			], onclick: function (name) {
-
-				switch(name) {
-
-					case 'new_stv':
-						var fillings = _editor.project.getItems({class: Filling, selected: true});
-						if(fillings.length)
-							fillings[0].create_leaf();
-						else
-							$p.msg.show_msg({
-								type: "alert-warning",
-								text: $p.msg.bld_new_stv_no_filling,
-								title: $p.msg.bld_new_stv
-							});
-						break;
-
-					case 'drop_layer':
-						tree_layers.drop_layer();
-						break;
-
-					case 'new_layer':
-
-						// создаём пустой новый слой
-						new Contour( {parent: undefined});
-
-						// оповещаем мир о новых слоях
-						Object.getNotifier(_editor.project._noti).notify({
-							type: 'rows',
-							tabular: "constructions"
-						});
-						break;
-
-					default:
-						$p.msg.show_msg(name);
-						break;
-				}
-
-				return false;
-			}
-		}),
-
-		/**
-		 * слои в аккордионе
-		 */
-		tree_layers = new function SchemeLayers() {
-
-			var tree = new dhtmlXTreeObject({
-				parent: cont.querySelector("[name=content_layers]"),
-				checkbox: true
-			});
-
-
-			function layer_text(layer, bounds){
-				if(!bounds)
-					bounds = layer.bounds;
-				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr +
-					(bounds ? " " + bounds.width.toFixed() + "х" + bounds.height.toFixed() : "");
-			}
-
-			function load_layer(layer){
-
-				tree.insertNewItem(
-					layer.parent ? layer.parent.cnstr : 0,
-					layer.cnstr,
-					layer_text(layer));
-
-
-				layer.children.forEach(function (l) {
-					if(l instanceof Contour)
-						load_layer(l);
-
-				});
-
-			}
-
-			function observer(changes){
-
-				var synced;
-
-				changes.forEach(function(change){
-					if ("constructions" == change.tabular){
-
-						synced = true;
-
-						// добавляем слои изделия
-						tree.deleteChildItems(0);
-						_editor.project.contours.forEach(function (l) {
-							load_layer(l);
-							tree.setSubChecked(l.cnstr, true);
-
-						});
-
-						// служебный слой размеров
-						tree.insertNewItem(0, "sizes", "Размерные линии");
-
-						// служебный слой визуализации
-						tree.insertNewItem(0, "visualization", "Визуализация доп. элементов");
-
-						// служебный слой текстовых комментариев
-						tree.insertNewItem(0, "text", "Комментарии");
-
-					}
-				});
-			}
-
-
-			tree.enableTreeImages(false);
-
-
-			this.drop_layer = function () {
-				var cnstr = tree.getSelectedItemId(), l;
-				if(cnstr){
-					l = _editor.project.getItem({cnstr: Number(cnstr)});
-				}else if(l = _editor.project.activeLayer){
-					cnstr = l.cnstr;
-				}
-				if(cnstr && l){
-					tree.deleteItem(cnstr);
-					cnstr = l.parent ? l.parent.cnstr : 0;
-					l.remove();
-					setTimeout(function () {
-						_editor.project.zoom_fit();
-						if(cnstr)
-							tree.selectItem(cnstr, true);
-					}, 100);
-				}
-			};
-
-			// начинаем следить за объектом
-			this.attache = function () {
-				Object.observe(_editor.project._noti, observer, ["rows"]);
-			};
-
-			this.unload = function () {
-				Object.unobserve(_editor.project._noti, observer);
-			};
-
-			// гасим-включаем слой по чекбоксу
-			tree.attachEvent("onCheck", function(id, state){
-				var l,
-					pid = tree.getParentId(id),
-					sub = tree.getAllSubItems(id);
-
-				if(pid && state && !tree.isItemChecked(pid)){
-					if(l = _editor.project.getItem({cnstr: Number(pid)}))
-						l.visible = true;
-					tree.setCheck(pid, 1);
-				}
-
-				if(l = _editor.project.getItem({cnstr: Number(id)}))
-					l.visible = !!state;
-
-				if(typeof sub == "string")
-					sub = sub.split(",");
-				sub.forEach(function (id) {
-					tree.setCheck(id, state);
-					if(l = _editor.project.getItem({cnstr: Number(id)}))
-						l.visible = !!state;
-				});
-
-				if(pid && state && !tree.isItemChecked(pid))
-					tree.setCheck(pid, 1);
-
-				_editor.project.register_update();
-
-			});
-
-			// делаем выделенный слой активным
-			tree.attachEvent("onSelect", function(id){
-				var contour = _editor.project.getItem({cnstr: Number(id)});
-				if(contour){
-					contour.activate();
-					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
-				}
-			});
-
-			$p.eve.attachEvent("layer_activated", function (contour) {
-				if(contour && contour.cnstr && contour.cnstr != tree.getSelectedItemId()){
-					tree.selectItem(contour.cnstr);
-					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
-				}
-
-			});
-
-			// начинаем следить за изменениями размеров при перерисовке контуров
-			$p.eve.attachEvent("contour_redrawed", function (contour, bounds) {
-
-				var text = layer_text(contour, bounds);
-
-				tree.setItemText(contour.cnstr, text);
-
-				if(contour.project.activeLayer == contour)
-					cont.querySelector("[name=header_stv]").innerHTML = text;
-
-			});
-
-		},
-
-		/**
-		 * свойства изделия в аккордионе
-		 */
-		props = new (function SchemeProps(layout) {
-
-			var _obj,
-				_grid,
-				_reflect_id;
-
-			function reflect_changes() {
-				_obj.len = _editor.project.bounds.width.round(0);
-				_obj.height = _editor.project.bounds.height.round(0);
-				_obj.s = _editor.project.area;
-			}
-
-			// корректируем метаданные поля выбора цвета
-			$p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"));
-
-			this.__define({
-
-				attache: {
-					value: function (obj) {
-
-						_obj = obj;
-						obj = null;
-
-						if(_grid && _grid.destructor)
-							_grid.destructor();
-
-						_grid = layout.cells("a").attachHeadFields({
-							obj: _obj,
-							oxml: {
-								"Свойства": ["sys","clr",
-									{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
-									{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
-									{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro"}
-								],
-								"Строка заказа": ["quantity",
-									{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro"},
-									{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro"},
-									{id: "price", path: "o.price", synonym: "Цена", type: "ro"},
-									"discount_percent",
-									{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro"},
-									"note"]
-
-							},
-							ts: "extra_fields",
-							ts_title: "Свойства",
-							selection: {cnstr: 0, hide: {not: true}}
-						});
-					}
-				},
-
-				unload: {
-					value: function () {
-						layout.unload();
-						_obj = null;
-					}
-				},
-
-				layout: {
-					get: function () {
-						return layout;
-					}
-				}
-
-			});
-
-			// начинаем следить за изменениями размеров при перерисовке контуров
-			$p.eve.attachEvent("contour_redrawed", function () {
-				if(_obj){
-					if(_reflect_id)
-						clearTimeout(_reflect_id);
-					_reflect_id = setTimeout(reflect_changes, 100);
-				}
-			});
-
-
-		})(new dhtmlXLayoutObject({
-			parent:     cont.querySelector("[name=content_props]"),
-			pattern:    "1C",
-			offsets: {
-				top:    0,
-				right:  0,
-				bottom: 0,
-				left:   0
-			},
-			cells: [
-				{
-					id:             "a",
-					header:         false,
-					height:         330
-				}
-			]
-		})),
-
-		/**
-		 * свойства створки в аккордионе
-		 */
-		stv = new (function StvProps(layout) {
-
-			var t = this, _grid, _evts = [];
-
-			this.__define({
-
-				attache: {
-					value: function (obj) {
-
-						if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
-							return;
-
-						var attr = {
-							obj: obj,
-							oxml: {
-								"Фурнитура": ["furn", "clr_furn", "direction", "h_ruch"],
-								"Москитка": ["mskt", "clr_mskt"],
-								"Параметры": []
-							},
-							ts: "params",
-							ts_title: "Параметры",
-							selection: {cnstr: obj.cnstr || -1, hide: {not: true}}
-						};
-
-						if(!_grid)
-							_grid = layout.cells("a").attachHeadFields(attr);
-						else
-							_grid.attach(attr);
-
-						if(!obj.parent){
-							var rids = _grid.getAllRowIds();
-							if(rids)
-								_grid.closeItem(rids.split(",")[0]);
-						}
-
-						setTimeout(t.set_sizes, 200);
-					}
-				},
-
-				set_sizes: {
-
-					value: function (do_reload) {
-						if(do_reload)
-							_grid.reload();
-						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + "px";
-						layout.setSizes();
-						_grid.objBox.style.width = "100%";
-					}
-				},
-
-				unload: {
-					value: function () {
-						_evts.forEach(function (eid) {
-							$p.eve.detachEvent(eid);
-						});
-						layout.unload();
-					}
-				},
-
-				layout: {
-					get: function () {
-						return layout;
-					}
-				}
-
-			});
-
-			_evts.push($p.eve.attachEvent("layer_activated", this.attache));
-			_evts.push($p.eve.attachEvent("furn_changed", this.set_sizes));
-
-		})(new dhtmlXLayoutObject({
-			parent:     cont.querySelector("[name=content_stv]"),
-			pattern:    "1C",
-			offsets: {
-				top:    0,
-				right:  0,
-				bottom: 0,
-				left:   0
-			},
-			cells: [
-				{
-					id:             "a",
-					header:         false,
-					height:         200
-				}
-			]
-		}));
-
-	this.unload = function () {
-		tb_elm.unload();
-		tb_right.unload();
-		tree_layers.unload();
-		props.unload();
-		stv.unload();
-	};
-
-	this.attache = function (obj) {
-		tree_layers.attache();
-		props.attache(obj);
-	};
-
-	this.resize_canvas = function () {
-		var scroller = $(cont, '.scroller').baron();
-		scroller.update();
-		this.elm.setSizes();
-		props.layout.setSizes();
-		stv.layout.setSizes();
-	};
-
-
-	this.elm = new dhtmlXLayoutObject({
-		parent:     cont.querySelector("[name=content_elm]"),
-		pattern:    "1C",
-		offsets: {
-			top:    0,
-			right:  0,
-			bottom: 0,
-			left:   0
-		},
-		cells: [
-			{
-				id:             "a",
-				header:         false,
-				height:         200
-			}
-		]
-	});
-
-	this.header_stv = cont.querySelector("[name=header_stv]");
-	this.header_props = cont.querySelector("[name=header_props]");
-
-	baron({
-		cssGuru: true,
-		root: cont,
-		scroller: '.scroller',
-		bar: '.scroller__bar',
-		barOnCls: 'baron'
-	}).fix({
-		elements: '.header__title',
-		outside: 'header__title_state_fixed',
-		before: 'header__title_position_top',
-		after: 'header__title_position_bottom',
-		clickable: true
-	});
-
-}
-
-/**
- * Работа с буфером обмена
- * @author Evgeniy Malyarov
- * @module clipboard
- */
-
-/**
- * Объект для прослушивания и обработки событий буфера обмена
- * @param _editor
- * @constructor
- */
-function Clipbrd(_editor) {
-
-	var fakecb = {
-		clipboardData: {
-			types: ['text/plain'],
-			json: '{a: 0}',
-			getData: function () {
-				return this.json;
-			}
-		}
-	};
-
-	function onpaste(e) {
-		var _scheme = _editor.project;
-
-		if(!e)
-			e = fakecb;
-
-		if(!_scheme.ox.empty()){
-
-			if(e.clipboardData.types.indexOf('text/plain') == -1)
-				return;
-
-			try{
-				var data = JSON.parse(e.clipboardData.getData('text/plain'));
-				e.preventDefault();
-			}catch(e){
-				return;
-			}
-
-		}
-	}
-
-	function oncopy(e) {
-
-		if(e.target && ["INPUT","TEXTAREA"].indexOf(e.target.tagName) != -1)
-			return;
-
-		var _scheme = _editor.project;
-		if(!_scheme.ox.empty()){
-
-			// получаем выделенные элементы
-			var sitems = [];
-			_scheme.selectedItems.forEach(function (el) {
-				if(el.parent instanceof Profile)
-					el = el.parent;
-				if(el instanceof BuilderElement && sitems.indexOf(el) == -1)
-					sitems.push(el);
-			});
-
-			// сериализуем
-			var res = {
-				sys: {
-					ref: _scheme._dp.sys.ref,
-					presentation: _scheme._dp.sys.presentation
-				},
-
-				clr: {
-					ref: _scheme.clr.ref,
-					presentation: _scheme.clr.presentation
-				},
-
-				calc_order: {
-					ref: _scheme.ox.calc_order.ref,
-					presentation: _scheme.ox.calc_order.presentation
-				}
-			};
-			if(sitems.length){
-				res.product = {
-					ref: _scheme.ox.ref,
-					presentation: _scheme.ox.presentation
-				};
-				res.items = [];
-				sitems.forEach(function (el) {
-					res.items.push({
-						elm: el.elm,
-						elm_type: el._row.elm_type.name,
-						inset: {
-							ref: el.inset.ref,
-							presentation: el.inset.presentation
-						},
-						clr: {
-							ref: el.clr.ref,
-							presentation: el.clr.presentation
-						},
-						path_data: el.path.pathData,
-						x1: el.x1,
-						x2: el.x2,
-						y1: el.y1,
-						y2: el.y2
-					});
-				});
-
-			}else{
-				_editor.project.save_coordinates({
-					snapshot: true,
-					clipboard: true,
-					callback: function (scheme) {
-						res.product = {}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"]);
-					}
-				});
-			}
-			fakecb.clipboardData.json = JSON.stringify(res, null, '\t');
-
-			e.clipboardData.setData('text/plain', fakecb.clipboardData.json);
-			//e.clipboardData.setData('text/html', '<b>Hello, world!</b>');
-			e.preventDefault();
-		}
-	}
-
-	this.copy = function () {
-		document.execCommand('copy');
-	};
-
-	this.paste = function () {
-		onpaste();
-	};
-
-	// при готовности снапшота, помещаем результат в буфер обмена
-	$p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
-		if(scheme == _editor.project && attr.clipboard){
-			attr.callback(scheme);
-		}
-	});
-
-	document.addEventListener('copy', oncopy);
-
-	document.addEventListener('paste', onpaste);
-}
-/**
- * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
- *
- * @module  editor
- */
-
-/**
- * ### Графический редактор
- * @class Editor
- * @constructor
- * @extends paper.PaperScope
- * @param pwnd {dhtmlXLayoutCell} - ячейка dhtmlx, в которой будут размещены редактор и изделия
- */
-function Editor(pwnd, attr){
-
-	acn = $p.enm.cnn_types.acn;
-
-	var _editor = this,
-
-		/**
-		 * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
-		 * @type {Undo}
-		 */
-		undo = new UndoRedo(this),
-
-		/**
-		 * Объект для прослушивания и обработки событий буфера обмена
-		 * @type {Clipbrd}
-		 */
-		clipbrd = new Clipbrd(this),
-
-		/**
-		 * Объект для управления редактором с клавиатуры
-		 * @type {Keybrd}
-		 */
-		keybrd = new Keybrd(this),
-
-		selectionBounds = null,
-		selectionBoundsShape = null,
-		drawSelectionBounds = 0;
-
-	Editor.superclass.constructor.call(_editor);
-	_editor.activate();
-
-	consts.tune_paper(_editor.settings);
-
-	_editor.__define({
-
-		// ячейка родительского окна
-		_pwnd: {
-			get: function () {
-				return pwnd;
-			}
-		},
-
-		// разбивка на канвас и аккордион
-		_layout: {
-			value: pwnd.attachLayout({
-				pattern: "2U",
-				cells: [{
-					id: "a",
-					text: "Изделие",
-					header: false
-				}, {
-					id: "b",
-					text: "Инструменты",
-					collapsed_text: "Инструменты",
-					width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 360 : 240
-				}],
-				offsets: { top: 28, right: 0, bottom: 0, left: 0}
-			})
-		},
-
-		// контейнер канваса
-		_wrapper: {
-			value: document.createElement('div')
-		},
-
-		// указатель на локальный dhtmlXWindows
-		_dxw: {
-			get: function () {
-				return this._layout.dhxWins;
-			}
-		},
-
-		toString: {
-			value: function(){ return $p.msg.bld_constructor; }
-		}
-	});
-
-
-	_editor._layout.cells("a").attachObject(_editor._wrapper);
-	_editor._dxw.attachViewportTo(_editor._wrapper);
-
-	_editor._wrapper.oncontextmenu = function (event) {
-		event.preventDefault();
-		return $p.cancel_bubble(event);
-	};
-
-
-	// аккордион со свойствами
-	_editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b")) ;
-
-	/**
-	 * Панель выбора инструментов рисовалки
-	 * @type OTooolBar
-	 */
-	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '300px',
-		image_path: 'dist/imgs/',
-		buttons: [
-			{name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
-			{name: 'pan', css: 'tb_icon-hand', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
-			{name: 'zoom_fit', css: 'tb_cursor-zoom', tooltip: 'Вписать в окно'},
-			{name: 'pen', css: 'tb_cursor-pen-freehand', tooltip: 'Добавить профиль'},
-			{name: 'lay_impost', css: 'tb_cursor-lay-impost', tooltip: 'Вставить раскладку или импосты'},
-			{name: 'arc', css: 'tb_cursor-arc-r', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
-			{name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
-			{name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
-			{name: 'line', css: 'tb_line', tooltip: 'Произвольная линия'},
-			{name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'}
-		],
-		onclick: function (name) {
-			return _editor.select_tool(name);
-		},
-		on_popup: function (popup, bdiv) {
-			popup.show(dhx4.absLeft(bdiv), 0, bdiv.offsetWidth, _editor._wrapper.offsetHeight);
-			popup.p.style.top = (dhx4.absTop(bdiv) - 20) + "px";
-			popup.p.querySelector(".dhx_popup_arrow").style.top = "20px";
-		}
-	});
-
-	/**
-	 * Верхняя панель инструментов
-	 * @type {OTooolBar}
-	 */
-	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
-		image_path: 'dist/imgs/',
-		buttons: [
-
-			{name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '34px'},
-			{name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
-
-			{name: 'sep_0', text: '', float: 'left'},
-			{name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
-
-			{name: 'sep_1', text: '', float: 'left'},
-			{name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
-			{name: 'paste', text: '<i class="fa fa-clipboard fa-fw"></i>', tooltip: 'Вставить', float: 'left'},
-			{name: 'paste_prop', text: '<i class="fa fa-paint-brush fa-fw"></i>', tooltip: 'Применить скопированные свойства', float: 'left'},
-
-			{name: 'sep_2', text: '', float: 'left'},
-			{name: 'back', text: '<i class="fa fa-undo fa-fw"></i>', tooltip: 'Шаг назад', float: 'left'},
-			{name: 'rewind', text: '<i class="fa fa-repeat fa-fw"></i>', tooltip: 'Шаг вперед', float: 'left'},
-
-			{name: 'sep_3', text: '', float: 'left'},
-			{name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
-
-			{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
-
-
-		], onclick: function (name) {
-			switch(name) {
-				
-				case 'save_close':
-					if(_editor.project)
-						_editor.project.save_coordinates({save: true, close: true});
-					break;
-
-				case 'close':
-					if(pwnd._on_close)
-						pwnd._on_close();
-					_editor.select_tool('select_node');
-					break;
-
-				case 'calck':
-					if(_editor.project)
-						_editor.project.save_coordinates({save: true});
-					break;
-
-				case 'stamp':
-					_editor.load_stamp();
-					break;
-
-				case 'new_stv':
-					var fillings = _editor.project.getItems({class: Filling, selected: true});
-					if(fillings.length)
-						fillings[0].create_leaf();
-					break;
-
-				case 'back':
-					undo.back();
-					break;
-
-				case 'rewind':
-					undo.rewind();
-					break;
-
-				case 'copy':
-					clipbrd.copy();
-					break;
-
-				case 'paste':
-					clipbrd.paste();
-					break;
-
-				case 'paste_prop':
-					$p.msg.show_msg(name);
-					break;
-
-				case 'open_spec':
-					_editor.project.ox.form_obj()
-						.then(function (w) {
-							w.wnd.maximize();
-						});
-					break;
-
-				case 'square':
-					$p.msg.show_msg(name);
-					break;
-
-				case 'triangle1':
-					$p.msg.show_msg(name);
-					break;
-
-				case 'triangle3':
-					$p.msg.show_msg(name);
-					break;
-
-				case 'triangle3':
-					$p.msg.show_msg(name);
-					break;
-
-				default:
-					$p.msg.show_msg(name);
-					break;
-			}
-		}});
-	_editor._layout.base.style.backgroundColor = "#f5f5f5";
-	//_editor._layout.base.parentNode.parentNode.style.top = "0px";
-	_editor.tb_top.cell.style.background = "transparent";
-	_editor.tb_top.cell.style.boxShadow = "none";
-
-
-	// Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
-	$p.eve.attachEvent("characteristic_saved", function (scheme, attr) {
-		if(scheme == _editor.project && attr.close && pwnd._on_close)
-			setTimeout(pwnd._on_close);
-	});
-
-	// Обработчик события при изменениях изделия
-	$p.eve.attachEvent("scheme_changed", function (scheme) {
-		if(scheme == _editor.project){
-			if(attr.set_text && scheme._calc_order_row)
-				attr.set_text(scheme.ox.prod_name(true) + " " + scheme._dp.sys.name + (scheme.ox._modified ? " *" : ""));
-		}
-	});
-
-
-	_editor.clear_selection_bounds = function() {
-		if (selectionBoundsShape)
-			selectionBoundsShape.remove();
-		selectionBoundsShape = null;
-		selectionBounds = null;
-	};
-
-	_editor.hide_selection_bounds = function() {
-		if (drawSelectionBounds > 0)
-			drawSelectionBounds--;
-		if (drawSelectionBounds == 0) {
-			if (selectionBoundsShape)
-				selectionBoundsShape.visible = false;
-		}
-	};
-
-	// Returns serialized contents of selected items.
-	_editor.capture_selection_state = function() {
-		var originalContent = [];
-		var selected = _editor.project.selectedItems;
-		for (var i = 0; i < selected.length; i++) {
-			var item = selected[i];
-			if (item.guide) continue;
-			var orig = {
-				id: item.id,
-				json: item.exportJSON({ asString: false }),
-				selectedSegments: []
-			};
-			originalContent.push(orig);
-		}
-		return originalContent;
-	};
-
-	// Restore the state of selected items.
-	_editor.restore_selection_state = function(originalContent) {
-		for (var i = 0; i < originalContent.length; i++) {
-			var orig = originalContent[i];
-			var item = this.project.getItem({id: orig.id});
-			if (!item)
-				continue;
-			// HACK: paper does not retain item IDs after importJSON,
-			// store the ID here, and restore after deserialization.
-			var id = item.id;
-			item.importJSON(orig.json);
-			item._id = id;
-		}
-	};
-
-	/**
-	 * Returns all items intersecting the rect.
-	 * Note: only the item outlines are tested
-	 */
-	_editor.paths_intersecting_rect = function(rect) {
-		var paths = [];
-		var boundingRect = new paper.Path.Rectangle(rect);
-
-		function checkPathItem(item) {
-			var children = item.children || [];
-			if (item.equals(boundingRect))
-				return;
-			if (!rect.intersects(item.bounds))
-				return;
-			if (item instanceof paper.PathItem ) {
-
-				if(item.parent instanceof Profile){
-					if(item != item.parent.generatrix)
-						return;
-
-					if (rect.contains(item.bounds)) {
-						paths.push(item);
-						return;
-					}
-					var isects = boundingRect.getIntersections(item);
-					if (isects.length > 0)
-						paths.push(item);
-				}
-
-			} else {
-				for (var j = children.length-1; j >= 0; j--)
-					checkPathItem(children[j]);
-			}
-		}
-
-		this.project.getItems({class: Contour}).forEach(checkPathItem);
-		
-		boundingRect.remove();
-
-		return paths;
-	};
-
-	/**
-	 * Create pixel perfect dotted rectable for drag selections
-	 * @param p1
-	 * @param p2
-	 * @return {exporters.CompoundPath}
-	 */
-	_editor.drag_rect = function(p1, p2) {
-		var half = new paper.Point(0.5 / _editor.view.zoom, 0.5 / _editor.view.zoom),
-			start = p1.add(half),
-			end = p2.add(half),
-			rect = new paper.CompoundPath();
-		rect.moveTo(start);
-		rect.lineTo(new paper.Point(start.x, end.y));
-		rect.lineTo(end);
-		rect.moveTo(start);
-		rect.lineTo(new paper.Point(end.x, start.y));
-		rect.lineTo(end);
-		rect.strokeColor = 'black';
-		rect.strokeWidth = 1.0 / _editor.view.zoom;
-		rect.dashOffset = 0.5 / _editor.view.zoom;
-		rect.dashArray = [1.0 / _editor.view.zoom, 1.0 / _editor.view.zoom];
-		rect.removeOn({
-			drag: true,
-			up: true
-		});
-		rect.guide = true;
-		return rect;
-	};
-
-
-	// Создаём инструменты
-
-	/**
-	 * Это не настоящий инструмент, а команда вписывания в окно
-	 */
-	new function ZoomFit() {
-
-		var tool = new paper.Tool();
-		tool.options = {name: 'zoom_fit'};
-		tool.on({
-			activate: function () {
-				_editor.project.zoom_fit();
-
-				var previous = _editor.tb_left.get_selected();
-
-				if(previous)
-					return _editor.select_tool(previous.replace("left_", ""));
-			}
-		});
-
-		return tool;
-	};
-
-	/**
-	 * Свойства и перемещение узлов элемента
-	 */
-	new ToolSelectNode();
-
-	/**
-	 * Панорама и масштабирование с колёсиком и без колёсика
-	 */
-	new ToolPan();
-
-	/**
-	 * Манипуляции с арками (дуги правильных окружностей)
-	 */
-	new ToolArc();
-
-	/**
-	 * Добавление (рисование) профилей
-	 */
-	new ToolPen();
-
-	/**
-	 * Вставка раскладок и импостов
-	 */
-	new ToolLayImpost();
-
-	/**
-	 * Инструмент произвольного текста
-	 */
-	new ToolText();
-
-	/**
-	 * Относительное позиционирование и сдвиг
-	 */
-	new ToolRuler();
-
-	this.tools[1].activate();
-
-
-	// Создаём экземпляр проекта Scheme
-	(function () {
-
-		var _canvas = document.createElement('canvas'); // собственно, канвас
-		_editor._wrapper.appendChild(_canvas);
-		_canvas.style.backgroundColor = "#f9fbfa";
-
-		var _scheme = new Scheme(_canvas),
-			pwnd_resize_finish = function(){
-				_editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
-				_editor._acc.resize_canvas();
-			};
-
-
-		/**
-		 * Подписываемся на события изменения размеров
-		 */
-		_editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
-		_editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
-		_editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
-		_editor._layout.attachEvent("onExpand", pwnd_resize_finish);
-
-		if(_editor._pwnd instanceof  dhtmlXWindowsCell)
-			_editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
-
-		pwnd_resize_finish();
-
-		/**
-		 * Подписываемся на событие смещения мыши, чтобы показать текущие координаты
-		 */
-		var _mousepos = document.createElement('div');
-		_editor._wrapper.appendChild(_mousepos);
-		_mousepos.className = "mousepos";
-		_scheme.view.on('mousemove', function (event) {
-			var bounds = _scheme.bounds;
-			if(bounds)
-				_mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
-					" y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
-		});
-
-		/**
-		 * Объект для реализации функций масштабирования
-		 * @type {StableZoom}
-		 */
-		var pan_zoom = new function StableZoom(){
-
-			function changeZoom(oldZoom, delta) {
-				var factor;
-				factor = 1.05;
-				if (delta < 0) {
-					return oldZoom * factor;
-				}
-				if (delta > 0) {
-					return oldZoom / factor;
-				}
-				return oldZoom;
-			}
-
-			var panAndZoom = this;
-
-			dhtmlxEvent(_canvas, "mousewheel", function(evt) {
-				var mousePosition, newZoom, offset, viewPosition, _ref1;
-				if (evt.shiftKey || evt.ctrlKey) {
-					_editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
-					return evt.preventDefault();
-
-				}else if (evt.altKey) {
-					mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
-					viewPosition = _editor.view.viewToProject(mousePosition);
-					_ref1 = panAndZoom.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
-					newZoom = _ref1[0];
-					offset = _ref1[1];
-					_editor.view.zoom = newZoom;
-					_editor.view.center = _editor.view.center.add(offset);
-					evt.preventDefault();
-					return _editor.view.draw();
-				}
-			});
-
-			this.changeZoom = function(oldZoom, delta, c, p) {
-				var a, beta, newZoom, pc;
-				newZoom = changeZoom.call(this, oldZoom, delta);
-				beta = oldZoom / newZoom;
-				pc = p.subtract(c);
-				a = p.subtract(pc.multiply(beta)).subtract(c);
-				return [newZoom, a];
-			};
-
-			this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
-				var offset;
-				offset = new paper.Point(deltaX, -deltaY);
-				offset = offset.multiply(factor);
-				return oldCenter.add(offset);
-			};
-		};
-
-		_editor._acc.attache(_editor.project._dp);
-
-	})();
-
-}
-Editor._extend(paper.PaperScope);
-
-Editor.prototype.__define({
-
-	/**
-	 * Устанавливает икну курсора для всех канвасов редактора
-	 * @method canvas_cursor
-	 */
-	canvas_cursor: {
-		value: function (name) {
-			for(var p in this.projects){
-				var _scheme = this.projects[p];
-				for(var i=0; i<_scheme.view.element.classList.length; i++){
-					var class_name = _scheme.view.element.classList[i];
-					if(class_name == name)
-						return;
-					else if((/\bcursor-\S+/g).test(class_name))
-						_scheme.view.element.classList.remove(class_name);
-				}
-				_scheme.view.element.classList.add(name);
-			}
-		}
-	},
-
-	select_tool: {
-		value: function (name) {
-			for(var t in this.tools){
-				if(this.tools[t].options.name == name)
-					return this.tools[t].activate();
-			}
-		}
-	},
-
-	/**
-	 * ### Открывает изделие для редактирования
-	 * MDI пока не реализовано. Изделие загружается в текущий проект
-	 * @method open
-	 * @param [ox] {String|DataObj} - ссылка или объект продукции
-	 */
-	open: {
-		value: function (ox) {
-			if(ox)
-				this.project.load(ox);
-		}
-	},
-
-	/**
-	 * ### (Пере)заполняет изделие данными типового блока
-	 * Вызывает диалог выбора типового блока и перезаполняет продукцию данными выбора
-	 * @method load_stamp
-	 * @param confirmed {Boolean} - подавляет показ диалога подтверждения перезаполнения
-	 */
-	load_stamp: {
-		value: function(confirmed){
-
-			if(this.project.ox.coordinates.count() && !confirmed){
-				dhtmlx.confirm({
-					title: $p.msg.bld_from_blocks_title,
-					text: $p.msg.bld_from_blocks,
-					cancel: $p.msg.cancel,
-					callback: function(btn) {
-						if(btn)
-							this.load_stamp(true);
-					}.bind(this)
-				});
-				return;
-			}
-
-			$p.cat.characteristics.form_selection_block(null, {
-				on_select: this.project.load_stamp.bind(this.project)
-			});
-		}
-	},
-
-	/**
-	 * Returns path points which are contained in the rect
-	 * @param rect
-	 * @returns {Array}
-	 */
-	segments_in_rect: {
-		value: 	function(rect) {
-			var segments = [];
-
-			function checkPathItem(item) {
-				if (item._locked || !item._visible || item._guide)
-					return;
-				var children = item.children || [];
-				if (!rect.intersects(item.bounds))
-					return;
-				if (item instanceof paper.Path) {
-
-					if(item.parent instanceof Profile){
-						if(item != item.parent.generatrix)
-							return;
-
-						for (var i = 0; i < item.segments.length; i++) {
-							if (rect.contains(item.segments[i].point))
-								segments.push(item.segments[i]);
-						}
-					}
-
-				} else {
-					for (var j = children.length-1; j >= 0; j--)
-						checkPathItem(children[j]);
-				}
-			}
-
-			this.project.getItems({class: Contour}).forEach(checkPathItem);
-
-			return segments;
-		}
-	},
-
-	purge_selection: {
-		value: 	function(){
-			var selected = this.project.selectedItems, deselect = [];
-			for (var i = 0; i < selected.length; i++) {
-				var path = selected[i];
-				if(path.parent instanceof Profile && path != path.parent.generatrix)
-					deselect.push(path);
-			}
-			while(selected = deselect.pop())
-				selected.selected = false;
-		}
-	},
-
-	profile_align: {
-		value: 	function(name){
-			var minmax = {min: {}, max: {}},
-				profile = this.tool.profile;
-
-			if(!(profile instanceof Profile) && this._acc.elm.cells("a").dataObj)
-				profile = this._acc.elm.cells("a").dataObj._obj;
-
-			if(name == "all"){
-				$p.msg.show_not_implemented();
-				return;
-
-			}else if(!profile)
-				return;
-
-			minmax.min.x = Math.min(profile.x1, profile.x2);
-			minmax.min.y = Math.min(profile.y1, profile.y2);
-			minmax.max.x = Math.max(profile.x1, profile.x2);
-			minmax.max.y = Math.max(profile.y1, profile.y2);
-			minmax.max.dx = minmax.max.x - minmax.min.x;
-			minmax.max.dy = minmax.max.y - minmax.min.y;
-
-			if(name == 'left' && minmax.max.dx < minmax.max.dy){
-				if(profile.x1 - minmax.min.x > 0)
-					profile.x1 = minmax.min.x;
-				if(profile.x2 - minmax.min.x > 0)
-					profile.x2 = minmax.min.x;
-
-			}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
-				if(profile.x1 - minmax.max.x < 0)
-					profile.x1 = minmax.max.x;
-				if(profile.x2 - minmax.max.x < 0)
-					profile.x2 = minmax.max.x;
-
-			}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
-				if(profile.y1 - minmax.max.y < 0)
-					profile.y1 = minmax.max.y;
-				if(profile.y2 - minmax.max.y < 0)
-					profile.y2 = minmax.max.y;
-
-			}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
-				if (profile.y1 - minmax.min.y > 0)
-					profile.y1 = minmax.min.y;
-				if (profile.y2 - minmax.min.y > 0)
-					profile.y2 = minmax.min.y;
-
-			}else if(name == 'delete') {
-				profile.removeChildren();
-				profile.remove();
-
-			}else
-				$p.msg.show_msg({type: "alert-warning",
-					text: $p.msg.align_invalid_direction,
-					title: $p.msg.main_title});
-
-			this.view.update();
-			return false;
-		}
-	},
-
-	snap_to_angle: {
-		value: function(delta, snapAngle) {
-			var angle = Math.atan2(delta.y, delta.x);
-			angle = Math.round(angle/snapAngle) * snapAngle;
-			var dirx = Math.cos(angle),
-				diry = Math.sin(angle),
-				d = dirx*delta.x + diry*delta.y;
-			return new paper.Point(dirx*d, diry*d);
-		}
-	},
-
-	/**
-	 * Деструктор
-	 */
-	unload: {
-		value: function () {
-
-			if(this.tool && this.tool._callbacks.deactivate.length)
-				this.tool._callbacks.deactivate[0].call(this.tool);
-
-			for(var t in this.tools){
-				if(this.tools[t].remove)
-					this.tools[t].remove();
-				this.tools[t] = null;
-			}
-
-			this.tb_left.unload();
-			this.tb_top.unload();
-			this._acc.unload();
-
-		}
-	}
-
-});
-
-/**
- * Экспортируем конструктор Editor, чтобы экземпляры построителя можно было создать снаружи
- * @property Editor
- * @for $p
- * @type {function}
- */
-$p.Editor = Editor;
-
-
-/**
- * Обработчик сочетаний клавишь
- * @author Evgeniy Malyarov
- * @module keyboard
- */
-
-/**
- * Управление редактором с клавиатуры
- * @param _editor
- * @constructor
- */
-function Keybrd(_editor) {
-	
-}
-/**
- * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
- * @author Evgeniy Malyarov
- * @module undo
- */
-
-/**
- * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
- * Из публичных интерфейсов имеет только методы back() и rewind()
- * Основную работу делает прослушивая широковещательные события
- * @class UndoRedo
- * @constructor
- * @param _editor {Editor} - указатель на экземпляр редактора
- */
-function UndoRedo(_editor){
-
-	var _history = [],
-		pos = -1,
-		snap_timer;
-
-	function run_snapshot() {
-		
-		// запускаем короткий пересчет изделия
-		if(pos >= 0){
-
-			// если pos < конца истории, отрезаем хвост истории
-			if(pos > 0 && pos < (_history.length - 1)){
-				_history.splice(pos, _history.length - pos - 1);
-			}
-
-			_editor.project.save_coordinates({snapshot: true, clipboard: false});
-
-		}
-
-	}
-
-	function save_snapshot(scheme) {
-		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"])));
-		pos = _history.length - 1;
-		enable_buttons();
-	}
-
-	function apply_snapshot() {
-		_editor.project.load_stamp(JSON.parse(_history[pos]), true);
-		enable_buttons();
-	}
-	
-	function enable_buttons() {
-		if(pos < 1)
-			_editor.tb_top.buttons.back.classList.add("disabledbutton");
-		else
-			_editor.tb_top.buttons.back.classList.remove("disabledbutton");
-
-		if(pos < (_history.length - 1))
-			_editor.tb_top.buttons.rewind.classList.remove("disabledbutton");
-		else
-			_editor.tb_top.buttons.rewind.classList.add("disabledbutton");
-
-	}
-
-	function clear() {
-		_history.length = 0;
-		pos = -1;
-	}
-
-	// обрабатываем изменения изделия
-	$p.eve.attachEvent("scheme_changed", function (scheme, attr) {
-		if(scheme == _editor.project){
-
-			// при открытии изделия чистим историю
-			if(scheme.data._loading){
-				if(!scheme.data._snapshot){
-					clear();
-					save_snapshot(scheme);	
-				}
-
-			} else{
-				// при обычных изменениях, запускаем таймер снапшота
-				if(snap_timer)
-					clearTimeout(snap_timer);
-				snap_timer = setTimeout(run_snapshot, 800);
-				enable_buttons();
-			}
-		}
-
-	});
-
-	// при закрытии редактора чистим историю
-	$p.eve.attachEvent("editor_closed", clear);
-
-	// при готовности снапшота, добавляем его в историю
-	$p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
-		if(scheme == _editor.project && !attr.clipboard){
-			save_snapshot(scheme);
-		}
-
-	});
-
-	this.back = function() {
-		if(pos > 0)
-			pos--;
-		if(pos >= 0)
-			apply_snapshot();
-		else
-			enable_buttons();
-	};
-
-	this.rewind = function() {
-		if(pos <= (_history.length - 1)){
-			pos++;
-			apply_snapshot();
-		}
-	}
-}
 $p.injected_data._mixin({"tip_editor_right.html":"<div class=\"clipper editor_accordion\">\r\n\r\n    <div class=\"scroller\">\r\n        <div class=\"container\">\r\n\r\n            <!-- РАЗДЕЛ 1 - дерево слоёв -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_layers\"></div>\r\n            </div>\r\n            <div name=\"content_layers\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 2 - реквизиты элемента -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_elm\"></div>\r\n            </div>\r\n            <div name=\"content_elm\" style=\"min-height: 260px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 3 - реквизиты створки -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_stv\">\r\n                    Створка\r\n                    <!--span name=\"title\"></span-->\r\n                </div>\r\n            </div>\r\n            <div name=\"content_stv\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 4 - реквизиты изделия -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_props\">\r\n                    <span name=\"title\">Изделие</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_props\" style=\"min-height: 330px;\"></div>\r\n\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"scroller__track\">\r\n        <div class=\"scroller__bar\" style=\"height: 26px; top: 0px;\"></div>\r\n    </div>\r\n\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
 return Editor;
 }));

@@ -59,12 +59,12 @@ gulp.task('css-base64', function () {
 // Cборка библиотеки рисовалки
 gulp.task('build-lib', function(){
 	gulp.src([
-			'./src/i18n.ru.js',
-			'./src/geometry/*.js',
-			'./src/tools/*.js',
-			'./src/editor/*.js',
-			'./data/merged_wb_tips.js'
-		])
+		'./src/i18n.ru.js',
+		'./src/editor/*.js',
+		'./src/geometry/*.js',
+		'./src/tools/*.js',
+		'./data/merged_wb_tips.js'
+	])
 		.pipe(concat('windowbuilder.js'))
 		.pipe(umd({
 			exports: function(file) {

@@ -317,7 +317,7 @@ function ToolSelectNode(){
 		},
 
 		keydown: function(event) {
-			var selected, i, j, path, segment, index, point, handle, do_select;
+			var selected, i, j, path, segment, index, point, handle;
 
 			if (event.key == '+' || event.key == 'insert') {
 
@@ -382,11 +382,15 @@ function ToolSelectNode(){
 				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
 					return;
 
-				selected = paper.project.selectedItems;
-				for (i = 0; i < selected.length; i++) {
-					path = selected[i];
-					do_select = false;
-					if(path.parent instanceof ProfileItem){
+				paper.project.selectedItems.some(function (path) {
+
+					var do_select = false;
+
+					if(path.parent instanceof DimensionLineCustom){
+						path.parent.remove();
+						return true;
+
+					}else if(path.parent instanceof ProfileItem){
 						for (j = 0; j < path.segments.length; j++) {
 							segment = path.segments[j];
 							do_select = do_select || segment.selected;
@@ -405,7 +409,8 @@ function ToolSelectNode(){
 							path.remove();
 						}
 					}
-				}
+				});
+
 				// Prevent the key event from bubbling
 				event.stop();
 				return false;

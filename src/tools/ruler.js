@@ -55,12 +55,12 @@ function ToolRuler(){
 
 			// Hit test points
 			var hit = paper.project.hitPoints(event.point);
-			if (hit && hit.item.parent instanceof Profile){
+			if (hit && hit.item.parent instanceof ProfileItem){
 				this.hitItem = hit;
 			}
 		}
 
-		if (this.hitItem && this.hitItem.item.parent instanceof Profile) {
+		if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
 
 			if(this.mode){
 				var elm = this.hitItem.item.parent,
@@ -69,6 +69,7 @@ function ToolRuler(){
 				if(corn.dist < consts.sticking){
 					paper.canvas_cursor('cursor-arrow-white-point');
 					this.hitPoint = corn;
+					elm.select_corn(event.point);
 				}
 				else
 					paper.canvas_cursor('cursor-arrow-ruler');
@@ -85,6 +86,7 @@ function ToolRuler(){
 		return true;
 	};
 	this.on({
+
 		activate: function() {
 			this.selected.a.length = 0;
 			this.selected.b.length = 0;
@@ -94,11 +96,13 @@ function ToolRuler(){
 			this.wnd = new RulerWnd(this.options, this);
 			this.wnd.size = 0;
 		},
+
 		deactivate: function() {
 
 			this.detache_wnd();
 
 		},
+
 		mousedown: function(event) {
 
 			if (this.hitItem) {
@@ -110,7 +114,10 @@ function ToolRuler(){
 						this.selected.a.push(this.hitPoint);
 
 						if (!this.path){
-							this.path = new paper.Path([this.hitPoint.point, event.point]);
+							this.path = new paper.Path({
+								parent: this.hitPoint.profile.layer.l_dimensions,
+								segments: [this.hitPoint.point, event.point]
+							});
 							this.path.strokeColor = 'black';
 						}
 
@@ -132,7 +139,7 @@ function ToolRuler(){
 						this.selected.b.push(this.hitPoint);
 						
 						// создаём размерную линию
-						new DimensionLine({
+						new DimensionLineCustom({
 							elm1: this.selected.a[0].profile,
 							elm2: this.hitPoint.profile,
 							p1: this.selected.a[0].point_name,
@@ -142,7 +149,7 @@ function ToolRuler(){
 
 						this.mode = 2;
 
-						this.hitPoint.profile.project.register_update();
+						this.hitPoint.profile.project.register_change(true);
 
 					}
 
@@ -220,13 +227,16 @@ function ToolRuler(){
 			}
 
 		},
+
 		mouseup: function(event) {
 
 
 		},
+
 		mousedrag: function(event) {
 
 		},
+
 		mousemove: function(event) {
 			this.hitTest(event);
 
@@ -257,7 +267,30 @@ function ToolRuler(){
 					this.path_text.visible = false;
 			}
 
+		},
+
+		keydown: function(event) {
+
+			// удаление размерной линии
+			if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+
+				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+					return;
+
+				paper.project.selectedItems.some(function (path) {
+					if(path.parent instanceof DimensionLineCustom){
+						path.parent.remove();
+						return true;
+					}
+				});
+
+				// Prevent the key event from bubbling
+				event.stop();
+				return false;
+
+			}
 		}
+
 	});
 
 	$p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this));
@@ -414,6 +447,24 @@ function RulerWnd(options, tool){
 							currentTarget: {name: "bottom"}
 						});
 						break;
+
+					case 109:       // -
+					case 46:        // del
+					case 8:         // backspace
+						if(ev.target && ["textarea", "input"].indexOf(ev.target.tagName.toLowerCase())!=-1)
+							return;
+
+						paper.project.selectedItems.some(function (path) {
+							if(path.parent instanceof DimensionLineCustom){
+								path.parent.remove();
+								return true;
+							}
+						});
+
+						// Prevent the key event from bubbling
+						return $p.cancel_bubble(ev);
+
+						break;
 				}
 				return $p.cancel_bubble(ev);
 			}
@@ -423,11 +474,34 @@ function RulerWnd(options, tool){
 		table, input;
 
 	function on_button_click(e){
-		$p.eve.callEvent("sizes_wnd", [{
-			wnd: wnd,
-			name: e.currentTarget.name,
-			size: wnd.size
-		}]);
+
+		if(!paper.project.selectedItems.some(function (path) {
+				if(path.parent instanceof DimensionLineCustom){
+
+					switch(e.currentTarget.name) {
+
+						case "left":
+						case "bottom":
+							path.parent.offset -= 20;
+							break;
+
+						case "top":
+						case "right":
+							path.parent.offset += 20;
+							break;
+
+					}
+
+					return true;
+				}
+			})){
+
+			$p.eve.callEvent("sizes_wnd", [{
+				wnd: wnd,
+				name: e.currentTarget.name,
+				size: wnd.size
+			}]);
+		}
 	}
 
 	div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +

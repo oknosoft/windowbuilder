@@ -17,7 +17,7 @@ function DimensionLine(attr){
 
 	DimensionLine.superclass.constructor.call(this, {parent: attr.parent});
 
-	var _row;
+	var _row = attr.row;
 
 	this.data.pos = attr.pos;
 	this.data.elm1 = attr.elm1;
@@ -26,32 +26,46 @@ function DimensionLine(attr){
 	this.data.p2 = attr.p2 || "e";
 	this.data.offset = attr.offset;
 
+	this.__define({
+		
+		_row: {
+			get: function () {
+				return _row;
+			}
+		},
+
+		/**
+		 * Удаляет элемент из контура и иерархии проекта
+		 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
+		 * @method remove
+		 */
+		remove: {
+			value: function () {
+				if(_row){
+					_row._owner.del(_row);
+					_row = null;
+				}
+				DimensionLine.superclass.remove.call(this);
+			}
+		}
+	});
+
 	if(!this.data.pos && (!this.data.elm1 || !this.data.elm2)){
 		this.remove();
 		return null;
 	}
 
-	this.__define({
-		_row: {
-			get: function () {
-				return _row;
-			}
-		}
-	});
-
-
-	/**
-	 * Удаляет элемент из контура и иерархии проекта
-	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
-	 * @method remove
-	 */
-	this.remove = function () {
-		if(_row){
-			_row._owner.del(_row);
-			_row = null;
-		}
-		DimensionLine.superclass.remove.call(this);
-	};
+	// создаём детей
+	new paper.Path({parent: this, name: 'callout1', strokeColor: 'black', guide: true});
+	new paper.Path({parent: this, name: 'callout2', strokeColor: 'black', guide: true});
+	new paper.Path({parent: this, name: 'scale', strokeColor: 'black', guide: true});
+	new paper.PointText({
+		parent: this,
+		name: 'text',
+		justification: 'center',
+		fillColor: 'black',
+		fontSize: 72});
+	
 
 	this.on({
 		mouseenter: this._mouseenter,
@@ -77,25 +91,6 @@ DimensionLine.prototype.__define({
 	_manager: {
 		get: function () {
 			return $p.dp.builder_text;
-		}
-	},
-
-	_nodes: {
-		get: function () {
-
-			if(!this.data._nodes)
-				this.data._nodes = {
-
-					callout1: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
-					callout2: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
-					scale: new paper.Path({parent: this, strokeColor: 'black', guide: true}),
-					text: new paper.PointText({
-						parent: this,
-						justification: 'center',
-						fillColor: 'black',
-						fontSize: 72})
-				};
-			return this.data._nodes;
 		}
 	},
 
@@ -215,7 +210,7 @@ DimensionLine.prototype.__define({
 
 				switch(event.name) {
 					case 'close':
-						this._nodes.text.selected = false;
+						this.children.text.selected = false;
 						this.wnd = null;
 						break;
 
@@ -238,14 +233,20 @@ DimensionLine.prototype.__define({
 	redraw: {
 		value: function () {
 
-			var _nodes = this._nodes,
-				_bounds = this.layer.bounds,
+			var _bounds = this.layer.bounds,
 				b, e, tmp, normal, length, bs, es;
 
 			if(!this.pos){
 
-				b = this.data.elm1[this.data.p1];
-				e = this.data.elm2[this.data.p2];
+				if(typeof this.data.p1 == "number")
+					b = this.data.elm1.corns(this.data.p1);
+				else
+					b = this.data.elm1[this.data.p1];
+
+				if(typeof this.data.p2 == "number")
+					e = this.data.elm2.corns(this.data.p2);
+				else
+					e = this.data.elm2[this.data.p2];
 
 			}else if(this.pos == "top"){
 				b = _bounds.topLeft;
@@ -284,31 +285,36 @@ DimensionLine.prototype.__define({
 			normal = tmp.getNormalAt(0).multiply(this.offset);
 
 			length = tmp.length;
+			if(length < consts.sticking_l){
+				this.visible = false;
+				return;
+			}
+
 			bs = b.add(normal.multiply(0.8));
 			es = e.add(normal.multiply(0.8));
 
-			if(_nodes.callout1.segments.length){
-				_nodes.callout1.firstSegment.point = b;
-				_nodes.callout1.lastSegment.point = b.add(normal);
+			if(this.children.callout1.segments.length){
+				this.children.callout1.firstSegment.point = b;
+				this.children.callout1.lastSegment.point = b.add(normal);
 			}else
-				_nodes.callout1.addSegments([b, b.add(normal)]);
+				this.children.callout1.addSegments([b, b.add(normal)]);
 
-			if(_nodes.callout2.segments.length){
-				_nodes.callout2.firstSegment.point = e;
-				_nodes.callout2.lastSegment.point = e.add(normal);
+			if(this.children.callout2.segments.length){
+				this.children.callout2.firstSegment.point = e;
+				this.children.callout2.lastSegment.point = e.add(normal);
 			}else
-				_nodes.callout2.addSegments([e, e.add(normal)]);
+				this.children.callout2.addSegments([e, e.add(normal)]);
 
-			if(_nodes.scale.segments.length){
-				_nodes.scale.firstSegment.point = bs;
-				_nodes.scale.lastSegment.point = es;
+			if(this.children.scale.segments.length){
+				this.children.scale.firstSegment.point = bs;
+				this.children.scale.lastSegment.point = es;
 			}else
-				_nodes.scale.addSegments([bs, es]);
+				this.children.scale.addSegments([bs, es]);
 
 
-			_nodes.text.content = length.toFixed(0);
-			_nodes.text.rotation = e.subtract(b).angle;
-			_nodes.text.point = bs.add(es).divide(2);
+			this.children.text.content = length.toFixed(0);
+			this.children.text.rotation = e.subtract(b).angle;
+			this.children.text.point = bs.add(es).divide(2);
 
 
 		},
@@ -318,10 +324,10 @@ DimensionLine.prototype.__define({
 	// размер
 	size: {
 		get: function () {
-			return parseFloat(this._nodes.text.content);
+			return parseFloat(this.children.text.content);
 		},
 		set: function (v) {
-			this._nodes.text.content = parseFloat(v);
+			this.children.text.content = parseFloat(v).round(1);
 		}
 	},
 
@@ -353,12 +359,17 @@ DimensionLine.prototype.__define({
 		},
 		set: function (v) {
 			this.data.offset = parseInt(v) || 90;
+			this.project.register_change(true);
 		}
 	}
 
 });
 
-
+/**
+ * Служебный слой размерных линий
+ * @param attr
+ * @constructor
+ */
 function DimensionLayer(attr) {
 	
 	DimensionLayer.superclass.constructor.call(this);
@@ -374,3 +385,67 @@ function DimensionLayer(attr) {
 	}
 }
 DimensionLayer._extend(paper.Layer);
+
+
+/**
+ * Размерные линии, определяемые пользователем
+ * @param attr
+ * @constructor
+ */
+function DimensionLineCustom(attr) {
+
+	if(!attr.row)
+		attr.row = attr.parent.project.ox.coordinates.add();
+
+	DimensionLineCustom.superclass.constructor.call(this, attr);
+
+	this.on({
+		mouseenter: this._mouseenter,
+		mouseleave: this._mouseleave,
+		click: this._click
+	});
+
+}
+DimensionLineCustom._extend(DimensionLine);
+
+DimensionLineCustom.prototype.__define({
+
+	/**
+	 * Вычисляемые поля в таблице координат
+	 * @method save_coordinates
+	 * @for DimensionLineCustom
+	 */
+	save_coordinates: {
+		value: function () {
+
+			var _row = this._row;
+
+
+			// сохраняем размер
+			_row.len = this.size;
+
+			// устанавливаем тип элемента
+			_row.elm_type = this.elm_type;
+
+		}
+	},
+
+	/**
+	 * Возвращает тип элемента (размерная линия)
+	 */
+	elm_type: {
+		get : function(){
+
+			return $p.enm.elm_types.Размер;
+
+		}
+	},
+
+
+	_click: {
+		value: function (event) {
+			event.stop();
+			this.selected = true;
+		}
+	}
+});

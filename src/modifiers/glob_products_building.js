@@ -723,7 +723,7 @@ $p.modifiers.push(
 					var ok = false;
 
 					if($p.job_prm.properties.direction == row.param){
-						return !(ok = contour.direction == row.value);
+						ok = contour.direction == row.value;
 
 					}else{
 						cache.params.find_rows({cnstr: contour.cnstr, param: row.param, value: row.value}, function () {
@@ -1003,7 +1003,7 @@ $p.modifiers.push(
 				added_cnn_spec = {};
 
 				// для всех контуров изделия
-				scheme.getItems({class: $p.Contour}).forEach(function (contour) {
+				scheme.getItems({class: $p.Editor.Contour}).forEach(function (contour) {
 
 					// для всех профилей контура
 					contour.profiles.forEach(base_spec_profile);
