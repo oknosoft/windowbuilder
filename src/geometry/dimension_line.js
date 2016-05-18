@@ -19,12 +19,26 @@ function DimensionLine(attr){
 
 	var _row = attr.row;
 
+	if(_row && _row.path_data){
+		attr._mixin(JSON.parse(_row.path_data));
+		if(attr.elm1)
+			attr.elm1 = this.project.getItem({elm: attr.elm1});
+		if(attr.elm2)
+			attr.elm2 = this.project.getItem({elm: attr.elm2});
+	}
+
 	this.data.pos = attr.pos;
 	this.data.elm1 = attr.elm1;
 	this.data.elm2 = attr.elm2 || this.data.elm1;
 	this.data.p1 = attr.p1 || "b";
 	this.data.p2 = attr.p2 || "e";
 	this.data.offset = attr.offset;
+	
+	if(attr.impost)
+		this.data.impost = true;
+	
+	if(attr.contour)
+		this.data.contour = true;
 
 	this.__define({
 		
@@ -44,6 +58,7 @@ function DimensionLine(attr){
 				if(_row){
 					_row._owner.del(_row);
 					_row = null;
+					this.project.register_change();
 				}
 				DimensionLine.superclass.remove.call(this);
 			}
@@ -172,9 +187,7 @@ DimensionLine.prototype.__define({
 				}
 
 			}
-
-
-
+			
 			if(delta.length){
 
 				paper.project.deselect_all_points();
@@ -234,6 +247,8 @@ DimensionLine.prototype.__define({
 		value: function () {
 
 			var _bounds = this.layer.bounds,
+				_dim_bounds = this.layer instanceof DimensionLayer ? this.project.dimension_bounds : this.layer.dimension_bounds,
+				offset = 0,
 				b, e, tmp, normal, length, bs, es;
 
 			if(!this.pos){
@@ -251,19 +266,28 @@ DimensionLine.prototype.__define({
 			}else if(this.pos == "top"){
 				b = _bounds.topLeft;
 				e = _bounds.topRight;
+				offset = _bounds[this.pos] - _dim_bounds[this.pos];
 
 			}else if(this.pos == "left"){
 				b = _bounds.bottomLeft;
 				e = _bounds.topLeft;
+				offset = _bounds[this.pos] - _dim_bounds[this.pos];
 
 			}else if(this.pos == "bottom"){
 				b = _bounds.bottomLeft;
 				e = _bounds.bottomRight;
+				offset = _bounds[this.pos] - _dim_bounds[this.pos];
 
 			}else if(this.pos == "right"){
-
 				b = _bounds.bottomRight;
 				e = _bounds.topRight;
+				offset = _bounds[this.pos] - _dim_bounds[this.pos];
+			}
+
+			// если точки профиля еще не нарисованы - выходим
+			if(!b || !e){
+				this.visible = false;
+				return;
 			}
 
 			tmp = new paper.Path({ insert: false, segments: [b, e] });
@@ -282,13 +306,16 @@ DimensionLine.prototype.__define({
 
 			};
 
-			normal = tmp.getNormalAt(0).multiply(this.offset);
-
+			// прячем крошечные размеры
 			length = tmp.length;
 			if(length < consts.sticking_l){
 				this.visible = false;
 				return;
 			}
+
+			this.visible = true;
+
+			normal = tmp.getNormalAt(0).multiply(this.offset + offset);
 
 			bs = b.add(normal.multiply(0.8));
 			es = e.add(normal.multiply(0.8));
@@ -358,8 +385,11 @@ DimensionLine.prototype.__define({
 			return this.data.offset || 90;
 		},
 		set: function (v) {
-			this.data.offset = parseInt(v) || 90;
-			this.project.register_change(true);
+			var offset = (parseInt(v) || 90).round(0);
+			if(this.data.offset != offset){
+				this.data.offset = offset;
+				this.project.register_change(true);	
+			}
 		}
 	}
 
@@ -397,6 +427,14 @@ function DimensionLineCustom(attr) {
 	if(!attr.row)
 		attr.row = attr.parent.project.ox.coordinates.add();
 
+	// слой, которому принадлежит размерная линия
+	if(!attr.row.cnstr)
+		attr.row.cnstr = attr.parent.layer.cnstr;
+
+	// номер элемента
+	if(!attr.row.elm)
+		attr.row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+
 	DimensionLineCustom.superclass.constructor.call(this, attr);
 
 	this.on({
@@ -420,12 +458,21 @@ DimensionLineCustom.prototype.__define({
 
 			var _row = this._row;
 
-
 			// сохраняем размер
 			_row.len = this.size;
 
 			// устанавливаем тип элемента
 			_row.elm_type = this.elm_type;
+
+			// сериализованные данные
+			_row.path_data = JSON.stringify({
+				pos: this.pos,
+				elm1: this.data.elm1.elm,
+				elm2: this.data.elm2.elm,
+				p1: this.data.p1,
+				p2: this.data.p2,
+				offset: this.offset
+			});
 
 		}
 	},

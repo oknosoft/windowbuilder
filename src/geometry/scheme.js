@@ -241,8 +241,25 @@ function Scheme(_canvas){
 				}
 
 				return _data._bounds;
-			},
-			enumerable : false}
+			}
+		},
+
+		/**
+		 * Габариты с учетом пользовательских размерных линий, чтобы рассчитать отступы автолиний
+		 */
+		dimension_bounds: {
+
+			get: function(){
+				var bounds = this.bounds;
+				this.getItems({class: DimensionLine}).forEach(function (dl) {
+
+					if(dl instanceof DimensionLineCustom || dl.data.impost || dl.data.contour)
+						bounds = bounds.unite(dl.bounds);
+
+				});
+				return bounds;
+			}
+		}
 	});
 
 
@@ -287,17 +304,19 @@ function Scheme(_canvas){
 	 * @param point
 	 * @returns {*}
 	 */
-	this.hitPoints = function (point) {
+	this.hitPoints = function (point, tolerance) {
 		var item, hit;
 
+		// отдаём предпочтение сегментам выделенных путей
 		_scheme.selectedItems.some(function (item) {
-			hit = item.hitTest(point, { segments: true, tolerance: 6 });
+			hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 });
 			if(hit)
 				return true;
 		});
 
+		// если нет в выделенных, ищем во всех
 		if(!hit)
-			hit = _scheme.hitTest(point, { segments: true, tolerance: 4 });
+			hit = _scheme.hitTest(point, { segments: true, tolerance: tolerance || 6 });
 
 		if(hit && hit.item.layer && hit.item.layer.parent){
 			item = hit.item;
@@ -310,7 +329,7 @@ function Scheme(_canvas){
 				return hit;
 
 			item.layer.parent.profiles.some(function (item) {
-				hit = item.hitTest(point, { segments: true, tolerance: 6 });
+				hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 });
 				if(hit)
 					return true;
 			});
@@ -343,6 +362,22 @@ function Scheme(_canvas){
 			});
 		}
 
+		/**
+		 * Загружает размерные линии
+		 * Этот код нельзя выполнить внутри load_contour, т.к. линия может ссылаться на элементы разных контуров
+		 */
+		function load_dimension_lines() {
+
+			_scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, function(row){
+
+				new DimensionLineCustom( {
+					parent: _scheme.getItem({cnstr: row.cnstr}).l_dimensions,
+					row: row
+				});
+
+			});
+		}
+
 		function load_object(o){
 
 			_scheme.ox = o;
@@ -357,11 +392,18 @@ function Scheme(_canvas){
 			load_contour(null);
 
 			setTimeout(function () {
+
+				_data._bounds = null;
+
+				// згружаем пользовательские размерные линии
+				load_dimension_lines();
+
 				_data._bounds = null;
 				_scheme.zoom_fit();
 
 				// виртуальное событие, чтобы UndoRedo сделал начальный снапшот
-				$p.eve.callEvent("scheme_changed", [_scheme]);
+				//$p.eve.callEvent("scheme_changed", [_scheme]);
+				_scheme.register_change(true);
 
 				// виртуальное событие, чтобы активировать слой в дереве слоёв
 				if(_scheme.contours.length)
@@ -372,6 +414,8 @@ function Scheme(_canvas){
 
 				delete _data._loading;
 				delete _data._snapshot;
+
+				
 			}, 100);
 
 		}
@@ -913,28 +957,24 @@ Scheme.prototype.__define({
 	draw_sizes: {
 		value: function () {
 
-			// получаем правую нижнюю strokeBounds и вычисляем отступы
-			var bounds = this.bounds,
-				stroke_bounds = this.strokeBounds;
-
-			if(bounds && stroke_bounds){
+			if(this.bounds){
 				if(!this.l_dimensions.bottom)
 					this.l_dimensions.bottom = new DimensionLine({
 						pos: "bottom",
 						parent: this.l_dimensions,
-						offset: bounds.bottom - stroke_bounds.bottom -120
+						offset: -120
 					});
 				else
-					this.l_dimensions.bottom.offset = bounds.bottom - stroke_bounds.bottom -120;
+					this.l_dimensions.bottom.offset = -120;
 
 				if(!this.l_dimensions.right)
 					this.l_dimensions.right = new DimensionLine({
 						pos: "right",
 						parent: this.l_dimensions,
-						offset: bounds.right - stroke_bounds.right -120
+						offset: -120
 					});
 				else
-					this.l_dimensions.right.offset = bounds.right - stroke_bounds.right -120;
+					this.l_dimensions.right.offset = -120;
 
 			}
 			

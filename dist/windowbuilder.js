@@ -1703,8 +1703,10 @@ function Contour(attr){
 		// служебная группа размерных линий
 		l_dimensions: {
 			get: function () {
-				if(!_layers.dimensions)
+				if(!_layers.dimensions){
 					_layers.dimensions = new paper.Group({ parent: this });
+					_layers.dimensions.bringToFront();
+				}
 				return _layers.dimensions;
 			}
 		}
@@ -1928,7 +1930,7 @@ function Contour(attr){
 			new Filling({row: row,	parent: _contour});
 		});
 
-		// остальные элементы (текст, размерные линии, доборные профили - пока только текст
+		// остальные элементы (текст, доборные профили - пока только текст
 		this.project.ox.coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, function(row){
 
 			if(row.elm_type == $p.enm.elm_types.Текст){
@@ -2049,6 +2051,20 @@ Contour.prototype.__define({
 	},
 
 	/**
+	 * Габариты с учетом пользовательских размерных линий, чтобы рассчитать отступы автолиний 
+	 */
+	dimension_bounds: {
+		
+		get: function(){
+			var bounds = this.bounds;
+			this.getItems({class: DimensionLineCustom}).forEach(function (dl) {
+				bounds = bounds.unite(dl.bounds);									
+			});
+			return bounds;
+		}
+	},
+
+	/**
 	 * Перерисовывает элементы контура
 	 * @method redraw
 	 * @for Contour
@@ -2133,7 +2149,7 @@ Contour.prototype.__define({
 				if(elm.save_coordinates){
 					elm.save_coordinates();
 
-				}else if(elm instanceof paper.Group && elm == elm.layer.l_text){
+				}else if(elm instanceof paper.Group && (elm == elm.layer.l_text || elm == elm.layer.l_dimensions)){
 					elm.children.forEach(function (elm) {
 						if(elm.save_coordinates)
 							elm.save_coordinates();
@@ -3059,8 +3075,9 @@ Contour.prototype.__define({
 		value: function () {
 
 			// сначала, перерисовываем размерные линии вложенных контуров, чтобы получить отступы
-			this.getItems({class: Contour}).forEach(function (l) {
-				l.draw_sizes();
+			this.children.forEach(function (l) {
+				if(l instanceof Contour)
+					l.draw_sizes();
 			});
 
 			// для внешних контуров строим авторазмерные линии
@@ -3094,7 +3111,8 @@ Contour.prototype.__define({
 									elm2: arr[i],
 									p2: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
 									parent: this.l_dimensions,
-									offset: offset
+									offset: offset,
+									impost: true
 								});
 							}
 
@@ -3107,7 +3125,8 @@ Contour.prototype.__define({
 									elm2: arr[i+1],
 									p2: arr[i+1].b[xy] > arr[i+1].e[xy] ? "b" : "e",
 									parent: this.l_dimensions,
-									offset: offset
+									offset: offset,
+									impost: true
 								});
 
 							}
@@ -3121,7 +3140,8 @@ Contour.prototype.__define({
 									elm2: sidee,
 									p2: sidee.b[xy] > sidee.e[xy] ? "b" : "e",
 									parent: this.l_dimensions,
-									offset: offset
+									offset: offset,
+									impost: true
 								});
 
 							}
@@ -3200,7 +3220,8 @@ Contour.prototype.__define({
 							this.l_dimensions.left = new DimensionLine({
 								pos: "left",
 								parent: this.l_dimensions,
-								offset: ihor.length ? 220 : 90
+								offset: ihor.length ? 220 : 90,
+								contour: true
 							});
 						}else
 							this.l_dimensions.left.offset = ihor.length ? 220 : 90;
@@ -3217,7 +3238,8 @@ Contour.prototype.__define({
 							this.l_dimensions.right = new DimensionLine({
 								pos: "right",
 								parent: this.l_dimensions,
-								offset: ihor.length ? -260 : -130
+								offset: ihor.length ? -260 : -130,
+								contour: true
 							});
 						}else
 							this.l_dimensions.right.offset = ihor.length ? -260 : -130;
@@ -3234,7 +3256,8 @@ Contour.prototype.__define({
 							this.l_dimensions.top = new DimensionLine({
 								pos: "top",
 								parent: this.l_dimensions,
-								offset: ivert.length ? 220 : 90
+								offset: ivert.length ? 220 : 90,
+								contour: true
 							});
 						}else
 							this.l_dimensions.top.offset = ivert.length ? 220 : 90;
@@ -3250,7 +3273,8 @@ Contour.prototype.__define({
 							this.l_dimensions.bottom = new DimensionLine({
 								pos: "bottom",
 								parent: this.l_dimensions,
-								offset: ivert.length ? -260 : -130
+								offset: ivert.length ? -260 : -130,
+								contour: true
 							});
 						}else
 							this.l_dimensions.bottom.offset = ivert.length ? -260 : -130;
@@ -3398,12 +3422,26 @@ function DimensionLine(attr){
 
 	var _row = attr.row;
 
+	if(_row && _row.path_data){
+		attr._mixin(JSON.parse(_row.path_data));
+		if(attr.elm1)
+			attr.elm1 = this.project.getItem({elm: attr.elm1});
+		if(attr.elm2)
+			attr.elm2 = this.project.getItem({elm: attr.elm2});
+	}
+
 	this.data.pos = attr.pos;
 	this.data.elm1 = attr.elm1;
 	this.data.elm2 = attr.elm2 || this.data.elm1;
 	this.data.p1 = attr.p1 || "b";
 	this.data.p2 = attr.p2 || "e";
 	this.data.offset = attr.offset;
+	
+	if(attr.impost)
+		this.data.impost = true;
+	
+	if(attr.contour)
+		this.data.contour = true;
 
 	this.__define({
 		
@@ -3423,6 +3461,7 @@ function DimensionLine(attr){
 				if(_row){
 					_row._owner.del(_row);
 					_row = null;
+					this.project.register_change();
 				}
 				DimensionLine.superclass.remove.call(this);
 			}
@@ -3551,9 +3590,7 @@ DimensionLine.prototype.__define({
 				}
 
 			}
-
-
-
+			
 			if(delta.length){
 
 				paper.project.deselect_all_points();
@@ -3613,6 +3650,8 @@ DimensionLine.prototype.__define({
 		value: function () {
 
 			var _bounds = this.layer.bounds,
+				_dim_bounds = this.layer instanceof DimensionLayer ? this.project.dimension_bounds : this.layer.dimension_bounds,
+				offset = 0,
 				b, e, tmp, normal, length, bs, es;
 
 			if(!this.pos){
@@ -3630,19 +3669,28 @@ DimensionLine.prototype.__define({
 			}else if(this.pos == "top"){
 				b = _bounds.topLeft;
 				e = _bounds.topRight;
+				offset = _bounds[this.pos] - _dim_bounds[this.pos];
 
 			}else if(this.pos == "left"){
 				b = _bounds.bottomLeft;
 				e = _bounds.topLeft;
+				offset = _bounds[this.pos] - _dim_bounds[this.pos];
 
 			}else if(this.pos == "bottom"){
 				b = _bounds.bottomLeft;
 				e = _bounds.bottomRight;
+				offset = _bounds[this.pos] - _dim_bounds[this.pos];
 
 			}else if(this.pos == "right"){
-
 				b = _bounds.bottomRight;
 				e = _bounds.topRight;
+				offset = _bounds[this.pos] - _dim_bounds[this.pos];
+			}
+
+			// если точки профиля еще не нарисованы - выходим
+			if(!b || !e){
+				this.visible = false;
+				return;
 			}
 
 			tmp = new paper.Path({ insert: false, segments: [b, e] });
@@ -3661,13 +3709,16 @@ DimensionLine.prototype.__define({
 
 			};
 
-			normal = tmp.getNormalAt(0).multiply(this.offset);
-
+			// прячем крошечные размеры
 			length = tmp.length;
 			if(length < consts.sticking_l){
 				this.visible = false;
 				return;
 			}
+
+			this.visible = true;
+
+			normal = tmp.getNormalAt(0).multiply(this.offset + offset);
 
 			bs = b.add(normal.multiply(0.8));
 			es = e.add(normal.multiply(0.8));
@@ -3737,8 +3788,11 @@ DimensionLine.prototype.__define({
 			return this.data.offset || 90;
 		},
 		set: function (v) {
-			this.data.offset = parseInt(v) || 90;
-			this.project.register_change(true);
+			var offset = (parseInt(v) || 90).round(0);
+			if(this.data.offset != offset){
+				this.data.offset = offset;
+				this.project.register_change(true);	
+			}
 		}
 	}
 
@@ -3776,6 +3830,14 @@ function DimensionLineCustom(attr) {
 	if(!attr.row)
 		attr.row = attr.parent.project.ox.coordinates.add();
 
+	// слой, которому принадлежит размерная линия
+	if(!attr.row.cnstr)
+		attr.row.cnstr = attr.parent.layer.cnstr;
+
+	// номер элемента
+	if(!attr.row.elm)
+		attr.row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+
 	DimensionLineCustom.superclass.constructor.call(this, attr);
 
 	this.on({
@@ -3799,12 +3861,21 @@ DimensionLineCustom.prototype.__define({
 
 			var _row = this._row;
 
-
 			// сохраняем размер
 			_row.len = this.size;
 
 			// устанавливаем тип элемента
 			_row.elm_type = this.elm_type;
+
+			// сериализованные данные
+			_row.path_data = JSON.stringify({
+				pos: this.pos,
+				elm1: this.data.elm1.elm,
+				elm2: this.data.elm2.elm,
+				p1: this.data.p1,
+				p2: this.data.p2,
+				offset: this.offset
+			});
 
 		}
 	},
@@ -4868,24 +4939,25 @@ FreeText.prototype.__define({
 	save_coordinates: {
 		value: function () {
 
-			var _row = this._row,
-				path_data = {
-					text: this.text,
-					font_family: this.font_family,
-					font_size: this.font_size,
-					bold: this.bold,
-					align: this.align.ref,
-					bounds_x: this.project.bounds.x,
-					bounds_y: this.project.bounds.y
-				};
+			var _row = this._row;
 
 			_row.x1 = this.x;
 			_row.y1 = this.y;
 			_row.angle_hor = this.angle;
-			_row.path_data = JSON.stringify(path_data);
-
+			
 			// устанавливаем тип элемента
 			_row.elm_type = this.elm_type;
+
+			// сериализованные данные
+			_row.path_data = JSON.stringify({
+				text: this.text,
+				font_family: this.font_family,
+				font_size: this.font_size,
+				bold: this.bold,
+				align: this.align.ref,
+				bounds_x: this.project.bounds.x,
+				bounds_y: this.project.bounds.y
+			});
 		}
 	},
 
@@ -8038,8 +8110,25 @@ function Scheme(_canvas){
 				}
 
 				return _data._bounds;
-			},
-			enumerable : false}
+			}
+		},
+
+		/**
+		 * Габариты с учетом пользовательских размерных линий, чтобы рассчитать отступы автолиний
+		 */
+		dimension_bounds: {
+
+			get: function(){
+				var bounds = this.bounds;
+				this.getItems({class: DimensionLine}).forEach(function (dl) {
+
+					if(dl instanceof DimensionLineCustom || dl.data.impost || dl.data.contour)
+						bounds = bounds.unite(dl.bounds);
+
+				});
+				return bounds;
+			}
+		}
 	});
 
 
@@ -8084,17 +8173,19 @@ function Scheme(_canvas){
 	 * @param point
 	 * @returns {*}
 	 */
-	this.hitPoints = function (point) {
+	this.hitPoints = function (point, tolerance) {
 		var item, hit;
 
+		// отдаём предпочтение сегментам выделенных путей
 		_scheme.selectedItems.some(function (item) {
-			hit = item.hitTest(point, { segments: true, tolerance: 6 });
+			hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 });
 			if(hit)
 				return true;
 		});
 
+		// если нет в выделенных, ищем во всех
 		if(!hit)
-			hit = _scheme.hitTest(point, { segments: true, tolerance: 4 });
+			hit = _scheme.hitTest(point, { segments: true, tolerance: tolerance || 6 });
 
 		if(hit && hit.item.layer && hit.item.layer.parent){
 			item = hit.item;
@@ -8107,7 +8198,7 @@ function Scheme(_canvas){
 				return hit;
 
 			item.layer.parent.profiles.some(function (item) {
-				hit = item.hitTest(point, { segments: true, tolerance: 6 });
+				hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 });
 				if(hit)
 					return true;
 			});
@@ -8140,6 +8231,22 @@ function Scheme(_canvas){
 			});
 		}
 
+		/**
+		 * Загружает размерные линии
+		 * Этот код нельзя выполнить внутри load_contour, т.к. линия может ссылаться на элементы разных контуров
+		 */
+		function load_dimension_lines() {
+
+			_scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, function(row){
+
+				new DimensionLineCustom( {
+					parent: _scheme.getItem({cnstr: row.cnstr}).l_dimensions,
+					row: row
+				});
+
+			});
+		}
+
 		function load_object(o){
 
 			_scheme.ox = o;
@@ -8154,11 +8261,18 @@ function Scheme(_canvas){
 			load_contour(null);
 
 			setTimeout(function () {
+
+				_data._bounds = null;
+
+				// згружаем пользовательские размерные линии
+				load_dimension_lines();
+
 				_data._bounds = null;
 				_scheme.zoom_fit();
 
 				// виртуальное событие, чтобы UndoRedo сделал начальный снапшот
-				$p.eve.callEvent("scheme_changed", [_scheme]);
+				//$p.eve.callEvent("scheme_changed", [_scheme]);
+				_scheme.register_change(true);
 
 				// виртуальное событие, чтобы активировать слой в дереве слоёв
 				if(_scheme.contours.length)
@@ -8169,6 +8283,8 @@ function Scheme(_canvas){
 
 				delete _data._loading;
 				delete _data._snapshot;
+
+				
 			}, 100);
 
 		}
@@ -8710,28 +8826,24 @@ Scheme.prototype.__define({
 	draw_sizes: {
 		value: function () {
 
-			// получаем правую нижнюю strokeBounds и вычисляем отступы
-			var bounds = this.bounds,
-				stroke_bounds = this.strokeBounds;
-
-			if(bounds && stroke_bounds){
+			if(this.bounds){
 				if(!this.l_dimensions.bottom)
 					this.l_dimensions.bottom = new DimensionLine({
 						pos: "bottom",
 						parent: this.l_dimensions,
-						offset: bounds.bottom - stroke_bounds.bottom -120
+						offset: -120
 					});
 				else
-					this.l_dimensions.bottom.offset = bounds.bottom - stroke_bounds.bottom -120;
+					this.l_dimensions.bottom.offset = -120;
 
 				if(!this.l_dimensions.right)
 					this.l_dimensions.right = new DimensionLine({
 						pos: "right",
 						parent: this.l_dimensions,
-						offset: bounds.right - stroke_bounds.right -120
+						offset: -120
 					});
 				else
-					this.l_dimensions.right.offset = bounds.right - stroke_bounds.right -120;
+					this.l_dimensions.right.offset = -120;
 
 			}
 			
@@ -9900,16 +10012,16 @@ function ToolRuler(){
 
 	this.hitTest = function(event) {
 
-		var hitSize = 8;
 		this.hitItem = null;
 		this.hitPoint = null;
 
 		if (event.point){
 
-			this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+			// ловим профили, а точнее - заливку путей
+			this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
 
 			// Hit test points
-			var hit = paper.project.hitPoints(event.point);
+			var hit = paper.project.hitPoints(event.point, 20);
 			if (hit && hit.item.parent instanceof ProfileItem){
 				this.hitItem = hit;
 			}
@@ -9940,6 +10052,20 @@ function ToolRuler(){
 
 		return true;
 	};
+
+	this.remove_path = function () {
+		if (this.path){
+			this.path.removeSegments();
+			this.path.remove();
+			this.path = null;
+		}
+
+		if (this.path_text){
+			this.path_text.remove();
+			this.path_text = null;
+		}
+	};
+
 	this.on({
 
 		activate: function() {
@@ -9953,6 +10079,8 @@ function ToolRuler(){
 		},
 
 		deactivate: function() {
+
+			this.remove_path();
 
 			this.detache_wnd();
 
@@ -9980,16 +10108,7 @@ function ToolRuler(){
 
 					}else {
 
-						if (this.path){
-							this.path.removeSegments();
-							this.path.remove();
-							this.path = null;
-						}
-
-						if (this.path_text){
-							this.path_text.remove();
-							this.path_text = null;
-						}
+						this.remove_path();
 
 						this.selected.b.push(this.hitPoint);
 						
@@ -10062,17 +10181,8 @@ function ToolRuler(){
 
 			}else {
 
-				if (this.path){
-					this.path.removeSegments();
-					this.path.remove();
-					this.path = null;
-					this.mode = 2;
-				}
-
-				if (this.path_text){
-					this.path_text.remove();
-					this.path_text = null;
-				}
+				this.remove_path();
+				this.mode = 2;
 
 				paper.project.deselectAll();
 				this.selected.a.length = 0;

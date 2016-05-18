@@ -85,8 +85,10 @@ function Contour(attr){
 		// служебная группа размерных линий
 		l_dimensions: {
 			get: function () {
-				if(!_layers.dimensions)
+				if(!_layers.dimensions){
 					_layers.dimensions = new paper.Group({ parent: this });
+					_layers.dimensions.bringToFront();
+				}
 				return _layers.dimensions;
 			}
 		}
@@ -310,7 +312,7 @@ function Contour(attr){
 			new Filling({row: row,	parent: _contour});
 		});
 
-		// остальные элементы (текст, размерные линии, доборные профили - пока только текст
+		// остальные элементы (текст, доборные профили - пока только текст
 		this.project.ox.coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, function(row){
 
 			if(row.elm_type == $p.enm.elm_types.Текст){
@@ -431,6 +433,20 @@ Contour.prototype.__define({
 	},
 
 	/**
+	 * Габариты с учетом пользовательских размерных линий, чтобы рассчитать отступы автолиний 
+	 */
+	dimension_bounds: {
+		
+		get: function(){
+			var bounds = this.bounds;
+			this.getItems({class: DimensionLineCustom}).forEach(function (dl) {
+				bounds = bounds.unite(dl.bounds);									
+			});
+			return bounds;
+		}
+	},
+
+	/**
 	 * Перерисовывает элементы контура
 	 * @method redraw
 	 * @for Contour
@@ -515,7 +531,7 @@ Contour.prototype.__define({
 				if(elm.save_coordinates){
 					elm.save_coordinates();
 
-				}else if(elm instanceof paper.Group && elm == elm.layer.l_text){
+				}else if(elm instanceof paper.Group && (elm == elm.layer.l_text || elm == elm.layer.l_dimensions)){
 					elm.children.forEach(function (elm) {
 						if(elm.save_coordinates)
 							elm.save_coordinates();
@@ -1441,8 +1457,9 @@ Contour.prototype.__define({
 		value: function () {
 
 			// сначала, перерисовываем размерные линии вложенных контуров, чтобы получить отступы
-			this.getItems({class: Contour}).forEach(function (l) {
-				l.draw_sizes();
+			this.children.forEach(function (l) {
+				if(l instanceof Contour)
+					l.draw_sizes();
 			});
 
 			// для внешних контуров строим авторазмерные линии
@@ -1476,7 +1493,8 @@ Contour.prototype.__define({
 									elm2: arr[i],
 									p2: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
 									parent: this.l_dimensions,
-									offset: offset
+									offset: offset,
+									impost: true
 								});
 							}
 
@@ -1489,7 +1507,8 @@ Contour.prototype.__define({
 									elm2: arr[i+1],
 									p2: arr[i+1].b[xy] > arr[i+1].e[xy] ? "b" : "e",
 									parent: this.l_dimensions,
-									offset: offset
+									offset: offset,
+									impost: true
 								});
 
 							}
@@ -1503,7 +1522,8 @@ Contour.prototype.__define({
 									elm2: sidee,
 									p2: sidee.b[xy] > sidee.e[xy] ? "b" : "e",
 									parent: this.l_dimensions,
-									offset: offset
+									offset: offset,
+									impost: true
 								});
 
 							}
@@ -1582,7 +1602,8 @@ Contour.prototype.__define({
 							this.l_dimensions.left = new DimensionLine({
 								pos: "left",
 								parent: this.l_dimensions,
-								offset: ihor.length ? 220 : 90
+								offset: ihor.length ? 220 : 90,
+								contour: true
 							});
 						}else
 							this.l_dimensions.left.offset = ihor.length ? 220 : 90;
@@ -1599,7 +1620,8 @@ Contour.prototype.__define({
 							this.l_dimensions.right = new DimensionLine({
 								pos: "right",
 								parent: this.l_dimensions,
-								offset: ihor.length ? -260 : -130
+								offset: ihor.length ? -260 : -130,
+								contour: true
 							});
 						}else
 							this.l_dimensions.right.offset = ihor.length ? -260 : -130;
@@ -1616,7 +1638,8 @@ Contour.prototype.__define({
 							this.l_dimensions.top = new DimensionLine({
 								pos: "top",
 								parent: this.l_dimensions,
-								offset: ivert.length ? 220 : 90
+								offset: ivert.length ? 220 : 90,
+								contour: true
 							});
 						}else
 							this.l_dimensions.top.offset = ivert.length ? 220 : 90;
@@ -1632,7 +1655,8 @@ Contour.prototype.__define({
 							this.l_dimensions.bottom = new DimensionLine({
 								pos: "bottom",
 								parent: this.l_dimensions,
-								offset: ivert.length ? -260 : -130
+								offset: ivert.length ? -260 : -130,
+								contour: true
 							});
 						}else
 							this.l_dimensions.bottom.offset = ivert.length ? -260 : -130;

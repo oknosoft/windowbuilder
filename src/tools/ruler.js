@@ -45,16 +45,16 @@ function ToolRuler(){
 
 	this.hitTest = function(event) {
 
-		var hitSize = 8;
 		this.hitItem = null;
 		this.hitPoint = null;
 
 		if (event.point){
 
-			this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+			// ловим профили, а точнее - заливку путей
+			this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
 
 			// Hit test points
-			var hit = paper.project.hitPoints(event.point);
+			var hit = paper.project.hitPoints(event.point, 20);
 			if (hit && hit.item.parent instanceof ProfileItem){
 				this.hitItem = hit;
 			}
@@ -85,6 +85,20 @@ function ToolRuler(){
 
 		return true;
 	};
+
+	this.remove_path = function () {
+		if (this.path){
+			this.path.removeSegments();
+			this.path.remove();
+			this.path = null;
+		}
+
+		if (this.path_text){
+			this.path_text.remove();
+			this.path_text = null;
+		}
+	};
+
 	this.on({
 
 		activate: function() {
@@ -98,6 +112,8 @@ function ToolRuler(){
 		},
 
 		deactivate: function() {
+
+			this.remove_path();
 
 			this.detache_wnd();
 
@@ -125,16 +141,7 @@ function ToolRuler(){
 
 					}else {
 
-						if (this.path){
-							this.path.removeSegments();
-							this.path.remove();
-							this.path = null;
-						}
-
-						if (this.path_text){
-							this.path_text.remove();
-							this.path_text = null;
-						}
+						this.remove_path();
 
 						this.selected.b.push(this.hitPoint);
 						
@@ -207,17 +214,8 @@ function ToolRuler(){
 
 			}else {
 
-				if (this.path){
-					this.path.removeSegments();
-					this.path.remove();
-					this.path = null;
-					this.mode = 2;
-				}
-
-				if (this.path_text){
-					this.path_text.remove();
-					this.path_text = null;
-				}
+				this.remove_path();
+				this.mode = 2;
 
 				paper.project.deselectAll();
 				this.selected.a.length = 0;

@@ -92,24 +92,25 @@ FreeText.prototype.__define({
 	save_coordinates: {
 		value: function () {
 
-			var _row = this._row,
-				path_data = {
-					text: this.text,
-					font_family: this.font_family,
-					font_size: this.font_size,
-					bold: this.bold,
-					align: this.align.ref,
-					bounds_x: this.project.bounds.x,
-					bounds_y: this.project.bounds.y
-				};
+			var _row = this._row;
 
 			_row.x1 = this.x;
 			_row.y1 = this.y;
 			_row.angle_hor = this.angle;
-			_row.path_data = JSON.stringify(path_data);
-
+			
 			// устанавливаем тип элемента
 			_row.elm_type = this.elm_type;
+
+			// сериализованные данные
+			_row.path_data = JSON.stringify({
+				text: this.text,
+				font_family: this.font_family,
+				font_size: this.font_size,
+				bold: this.bold,
+				align: this.align.ref,
+				bounds_x: this.project.bounds.x,
+				bounds_y: this.project.bounds.y
+			});
 		}
 	},
 
