@@ -962,13 +962,13 @@ Profile.prototype.__define({
 					elm1: _row.elm,
 					node1: "b",
 					cnn: b.cnn ? b.cnn.ref : "",
-					aperture_len: this.corns(1).getDistance(this.corns(4))
+					aperture_len: this.corns(1).getDistance(this.corns(4)).round(1)
 				}),
 				row_e = cnns.add({
 					elm1: _row.elm,
 					node1: "e",
 					cnn: e.cnn ? e.cnn.ref : "",
-					aperture_len: this.corns(2).getDistance(this.corns(3))
+					aperture_len: this.corns(2).getDistance(this.corns(3)).round(1)
 				}),
 
 				gen = this.generatrix;
@@ -982,7 +982,7 @@ Profile.prototype.__define({
 
 
 			// добавляем припуски соединений
-			_row.len = this.length;
+			_row.len = this.length.round(1);
 
 			// сохраняем информацию о соединениях
 			if(b.profile){

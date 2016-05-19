@@ -196,7 +196,7 @@ Filling.prototype.__define({
 					node1: "",
 					node2: "",
 					cnn: curr.cnn.ref,
-					aperture_len: curr.aperture_path.get_subpath(pb, pe).length
+					aperture_len: curr.aperture_path.get_subpath(pb, pe).length.round(1)
 				});
 				
 			}
@@ -205,7 +205,7 @@ Filling.prototype.__define({
 			for(var i=0; i<length; i++ ){
 				delete profiles[i].aperture_path;
 			}
-			
+
 			
 			// дочерние раскладки
 			this.onlays.forEach(function (curr) {
