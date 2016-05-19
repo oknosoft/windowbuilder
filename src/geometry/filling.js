@@ -134,6 +134,9 @@ Filling.prototype.__define({
 				_row = this._row,
 				bounds = this.bounds,
 				cnns = this.project.connections.cnns,
+				profiles = this.profiles,
+				length = profiles.length,
+				curr, prev,	next, sub_path,
 				
 				// строка в таблице заполнений продукции
 				glass = this.project.ox.glasses.add({
@@ -153,20 +156,56 @@ Filling.prototype.__define({
 			_row.y2 = (h - bounds.topRight.y).round(3);
 			_row.path_data = this.path.pathData;
 
-			// соединения с профилями
-			this.profiles.forEach(function (curr) {
+
+			// получаем пути граней профиля
+			for(var i=0; i<length; i++ ){
+
+				curr = profiles[i];
+
 				if(!curr.profile || !curr.profile._row || !curr.cnn){
-					throw new ReferenceError("Не найдено ребро заполнения");
+					if($p.job_prm.debug)
+						throw new ReferenceError("Не найдено ребро заполнения");
+					else
+						return;
 				}
+
+				curr.aperture_path = curr.profile.generatrix.get_subpath(curr.b, curr.e).data.reversed ? curr.profile.rays.outer : curr.profile.rays.inner;
+			}
+
+			// получам пересечения
+			for(var i=0; i<length; i++ ){
+				
+				prev = i==0 ? profiles[length-1] : profiles[i-1];
+				curr = profiles[i];
+				next = i==length-1 ? profiles[0] : profiles[i+1];
+				
+				var pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true),
+					pe = curr.aperture_path.intersect_point(next.aperture_path, curr.e, true);
+				
+				if(!pb || !pe){
+					if($p.job_prm.debug)
+						throw "Filling:path";
+					else
+						return;
+				}
+
+				// соединения с профилями
 				cnns.add({
 					elm1: _row.elm,
 					elm2: curr.profile._row.elm,
 					node1: "",
 					node2: "",
 					cnn: curr.cnn.ref,
-					aperture_len: curr.sub_path.length
+					aperture_len: curr.aperture_path.get_subpath(pb, pe).length
 				});
-			}.bind(this));
+				
+			}
+
+			// удаляем лишние ссылки
+			for(var i=0; i<length; i++ ){
+				delete profiles[i].aperture_path;
+			}
+			
 			
 			// дочерние раскладки
 			this.onlays.forEach(function (curr) {
@@ -265,6 +304,7 @@ Filling.prototype.__define({
 					//	curr.outer = !curr.outer;
 					curr.sub_path = sub_path.equidistant(
 						(sub_path.data.reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
+
 				}
 				// получам пересечения
 				for(var i=0; i<length; i++ ){
@@ -276,7 +316,10 @@ Filling.prototype.__define({
 					if(!curr.pe)
 						curr.pe = next.pb = curr.sub_path.intersect_point(next.sub_path, curr.e, true);
 					if(!curr.pb || !curr.pe){
-						throw "Filling:path";
+						if($p.job_prm.debug)
+							throw "Filling:path";
+						else
+							continue;
 					}
 					curr.sub_path = curr.sub_path.get_subpath(curr.pb, curr.pe);
 				}

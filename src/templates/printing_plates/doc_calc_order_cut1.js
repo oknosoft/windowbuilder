@@ -25,7 +25,7 @@ function fake(obj) {
 		// сворачиваем по номенклатурам с профиль + армирование
 		var noms = $p.wsql.alasql("select nom, characteristic, sum(qty) as qty, sum(len * qty) as len from ? " +
 			"where len > 0 and width = 0 group by nom, characteristic", [o.specification._obj]),
-			profiles = ["Рама","Створка","Импост","Штульп","Штапик","Порог","Арматура","Подставочник","Расширитель","Соединитель"];
+			profiles = ["Рама","Створка","Импост","Штульп","Штапик","Порог","Арматура","Подставочник","Добор","Соединитель"];
 
 		noms.forEach(function (row) {
 

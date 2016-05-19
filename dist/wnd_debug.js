@@ -3776,7 +3776,12 @@ $p.modifiers.push(
 
 					// TODO: nom может быть вставкой - в этом случае надо разузловать
 					if(nom._manager == $p.cat.inserts){
-						inset_spec(elm, nom);
+						if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)){
+							var tmp_len_angl = len_angl._clone();
+							tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
+							inset_spec(elm, nom, tmp_len_angl);
+						}else
+							inset_spec(elm, nom, len_angl);
 
 					}else {
 
@@ -3793,9 +3798,9 @@ $p.modifiers.push(
 							}else{
 								// TODO: Строго говоря, нужно брать не размер соединения, а размеры предыдущего и последующего
 								row_spec.qty = row_cnn_spec.quantity;
+
 								if(row_cnn_spec.sz || row_cnn_spec.coefficient)
-									row_spec.len = (len_angl.len - (len_angl.glass ? cnn.sz * 2 : 0) - sign * 2 * row_cnn_spec.sz) *
-										(row_cnn_spec.coefficient || 0.001);
+									row_spec.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
 							}
 
 						}else {
@@ -3893,10 +3898,11 @@ $p.modifiers.push(
 			 * @param by_perimetr
 			 * @return {boolean}
 			 */
-			function inset_check(inset, elm, by_perimetr){
+			function inset_check(inset, elm, by_perimetr, len_angl){
 
 				var is_tabular = true,
-					_row = elm._row;
+					_row = elm._row,
+					len = len_angl ? len_angl.len : _row.len;
 
 				// проверяем площадь
 				if(inset.smin > _row.s || (_row.s && inset.smax && inset.smax < _row.s))
@@ -3926,7 +3932,7 @@ $p.modifiers.push(
 
 
 				if(!is_tabular || by_perimetr || inset.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
-					if(inset.lmin > _row.len || (inset.lmax < _row.len && inset.lmax > 0))
+					if(inset.lmin > len || (inset.lmax < len && inset.lmax > 0))
 						return false;
 					if(inset.ahmin > _row.angle_hor || inset.ahmax < _row.angle_hor)
 						return false;
@@ -3943,7 +3949,7 @@ $p.modifiers.push(
 			 * @param elm
 			 * @param [is_high_level_call]
 			 */
-			function inset_filter_spec(inset, elm, is_high_level_call){
+			function inset_filter_spec(inset, elm, is_high_level_call, len_angl){
 
 				var res = [], glass_rows;
 				if(!inset || inset.empty())
@@ -3970,7 +3976,7 @@ $p.modifiers.push(
 					if(glass_rows.length){
 						glass_formulas[elm.elm] = "";
 						glass_rows.forEach(function (row) {
-							inset_filter_spec(row.inset, elm).forEach(function (row) {
+							inset_filter_spec(row.inset, elm, false, len_angl).forEach(function (row) {
 								res.push(row);
 							});
 							if(!glass_formulas[elm.elm])
@@ -3985,7 +3991,7 @@ $p.modifiers.push(
 				inset.specification.each(function (row) {
 
 					// Проверяем ограничения строки вставки
-					if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль))
+					if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl))
 						return;
 
 					// Проверяем параметры изделия
@@ -3993,12 +3999,13 @@ $p.modifiers.push(
 						return;
 
 					// Добавляем или разузловываем дальше
-					if(row.nom._manager.class_name == "cat.nom")
-						res.push(row);
-					else
-						inset_filter_spec(row.nom, elm).forEach(function (row) {
+					if(row.nom._manager == $p.cat.inserts)
+						inset_filter_spec(row.nom, elm, false, len_angl).forEach(function (row) {
 							res.push(row);
 						});
+					else
+						res.push(row);
+						
 				});
 
 				return res;
@@ -4470,8 +4477,7 @@ $p.modifiers.push(
 						alp1: prev.generatrix.angle_to(curr.profile.generatrix, curr.b, true),
 						alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
 						len: row_cnn.length ? row_cnn[0].aperture_len : 0,
-						origin: cnn_row(_row.elm, curr.profile.elm),
-						glass: true
+						origin: cnn_row(_row.elm, curr.profile.elm)
 
 					};
 
@@ -4490,14 +4496,14 @@ $p.modifiers.push(
 			 * Спецификация вставки элемента
 			 * @param elm {BuilderElement}
 			 */
-			function inset_spec(elm, inset) {
+			function inset_spec(elm, inset, len_angl) {
 
 				var _row = elm._row;
 				
 				if(!inset)
 					inset = elm.inset;
 
-				inset_filter_spec(inset, elm, true).forEach(function (row_ins_spec) {
+				inset_filter_spec(inset, elm, true, len_angl).forEach(function (row_ins_spec) {
 
 					var row_spec;
 
@@ -4519,7 +4525,7 @@ $p.modifiers.push(
 					}else if($p.enm.elm_types.profiles.indexOf(_row.elm_type) != -1 ||
 								row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ДляЭлемента){
 						// Для вставок в профиль способ расчета количество не учитывается
-						calc_qty_len(row_spec, row_ins_spec, _row.len);
+						calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
 
 					}else{
 

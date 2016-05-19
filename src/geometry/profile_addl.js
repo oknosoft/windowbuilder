@@ -171,12 +171,12 @@ ProfileAddl.prototype.__define({
 	},
 
 	/**
-	 * Возвращает тип элемента (раскладка)
+	 * Возвращает тип элемента (Добор)
 	 */
 	elm_type: {
 		get : function(){
 
-			return $p.enm.elm_types.Расширитель;
+			return $p.enm.elm_types.Добор;
 
 		}
 	},
