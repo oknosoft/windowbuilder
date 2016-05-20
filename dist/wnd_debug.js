@@ -26,12 +26,18 @@ $p.modifiers.push(
 		// перед записью надо пересчитать наименование и рассчитать итоги
 		_mgr.attache_event("before_save", function (attr) {
 
+			// уточняем номенклатуру системы
+			var nom = this.prod_nom;
+
+			// пересчитываем наименование
 			var name = this.prod_name();
 			if(name)
 				this.name = name;
 			
 			// дублируем контрагента для целей RLS
 			this.partner = this.calc_order.partner;
+
+
 			
 		});
 
@@ -110,7 +116,7 @@ $p.modifiers.push(
 								if(row.param && !row.param.empty()){
 									param.find_rows({cnstr: 0, param: row.param, value: row.value}, function () {
 										setted = true;
-										this.owner = row.nom;
+										param._owner.owner = row.nom;
 										return false;
 									});
 								}
@@ -119,7 +125,7 @@ $p.modifiers.push(
 							if(!setted){
 								this.sys.production.find_rows({param: $p.blank.guid}, function (row) {
 									setted = true;
-									this.owner = row.nom;
+									param._owner.owner = row.nom;
 									return false;
 								});	
 							}
