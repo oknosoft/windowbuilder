@@ -402,21 +402,25 @@ function Scheme(_canvas){
 				_scheme.zoom_fit();
 
 				// виртуальное событие, чтобы UndoRedo сделал начальный снапшот
-				//$p.eve.callEvent("scheme_changed", [_scheme]);
+				$p.eve.callEvent("scheme_changed", [_scheme]);
+
+				// регистрируем изменение, чтобы отрисовались размерные линии
 				_scheme.register_change(true);
 
 				// виртуальное событие, чтобы активировать слой в дереве слоёв
-				if(_scheme.contours.length)
+				if(_scheme.contours.length){
 					$p.eve.callEvent("layer_activated", [_scheme.contours[0]]);
-
-				// виртуальное событие, чтобы нарисовать визуализацию
-				$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+				}
 
 				delete _data._loading;
 				delete _data._snapshot;
 
+				// виртуальное событие, чтобы нарисовать визуализацию
+				setTimeout(function () {
+					$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+				}, 100);
 				
-			}, 100);
+			}, 20);
 
 		}
 

@@ -1582,7 +1582,7 @@ function UndoRedo(_editor){
 				// при обычных изменениях, запускаем таймер снапшота
 				if(snap_timer)
 					clearTimeout(snap_timer);
-				snap_timer = setTimeout(run_snapshot, 800);
+				snap_timer = setTimeout(run_snapshot, 700);
 				enable_buttons();
 			}
 		}
@@ -3016,8 +3016,6 @@ Contour.prototype.__define({
 				});
 			else
 				_contour.l_visualization._opening.removeChildren();
-
-			//_contour.l_visualization.visible = true;
 
 			// рисуем раправление открывания
 			if(this.furn.is_sliding)
@@ -4520,7 +4518,7 @@ Filling.prototype.__define({
 				cnns = this.project.connections.cnns,
 				profiles = this.profiles,
 				length = profiles.length,
-				curr, prev,	next, sub_path,
+				curr, prev,	next,
 				
 				// строка в таблице заполнений продукции
 				glass = this.project.ox.glasses.add({
@@ -8314,21 +8312,25 @@ function Scheme(_canvas){
 				_scheme.zoom_fit();
 
 				// виртуальное событие, чтобы UndoRedo сделал начальный снапшот
-				//$p.eve.callEvent("scheme_changed", [_scheme]);
+				$p.eve.callEvent("scheme_changed", [_scheme]);
+
+				// регистрируем изменение, чтобы отрисовались размерные линии
 				_scheme.register_change(true);
 
 				// виртуальное событие, чтобы активировать слой в дереве слоёв
-				if(_scheme.contours.length)
+				if(_scheme.contours.length){
 					$p.eve.callEvent("layer_activated", [_scheme.contours[0]]);
-
-				// виртуальное событие, чтобы нарисовать визуализацию
-				$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+				}
 
 				delete _data._loading;
 				delete _data._snapshot;
 
+				// виртуальное событие, чтобы нарисовать визуализацию
+				setTimeout(function () {
+					$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+				}, 100);
 				
-			}, 100);
+			}, 20);
 
 		}
 
@@ -10964,7 +10966,7 @@ function ToolSelectNode(){
 
 					for (i = 0; i < selected.length; i++) {
 						path = selected[i];
-						do_select = false;
+						var do_select = false;
 						if(path.parent instanceof ProfileItem){
 							for (j = 0; j < path.segments.length; j++) {
 								segment = path.segments[j];

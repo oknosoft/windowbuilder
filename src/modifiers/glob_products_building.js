@@ -1105,6 +1105,8 @@ $p.modifiers.push(
 							$p.eve.callEvent("characteristic_saved", [scheme, attr]);
 						});
 
+				}else{
+					delete scheme.data._saving;
 				}
 
 			});

@@ -78,7 +78,7 @@ function UndoRedo(_editor){
 				// при обычных изменениях, запускаем таймер снапшота
 				if(snap_timer)
 					clearTimeout(snap_timer);
-				snap_timer = setTimeout(run_snapshot, 800);
+				snap_timer = setTimeout(run_snapshot, 700);
 				enable_buttons();
 			}
 		}

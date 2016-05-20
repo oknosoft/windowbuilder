@@ -1399,8 +1399,6 @@ Contour.prototype.__define({
 			else
 				_contour.l_visualization._opening.removeChildren();
 
-			//_contour.l_visualization.visible = true;
-
 			// рисуем раправление открывания
 			if(this.furn.is_sliding)
 				sliding();

@@ -348,7 +348,7 @@ function ToolSelectNode(){
 
 					for (i = 0; i < selected.length; i++) {
 						path = selected[i];
-						do_select = false;
+						var do_select = false;
 						if(path.parent instanceof ProfileItem){
 							for (j = 0; j < path.segments.length; j++) {
 								segment = path.segments[j];

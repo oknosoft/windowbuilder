@@ -136,7 +136,7 @@ Filling.prototype.__define({
 				cnns = this.project.connections.cnns,
 				profiles = this.profiles,
 				length = profiles.length,
-				curr, prev,	next, sub_path,
+				curr, prev,	next,
 				
 				// строка в таблице заполнений продукции
 				glass = this.project.ox.glasses.add({
