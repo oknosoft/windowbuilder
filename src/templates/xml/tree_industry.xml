@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tree id="0">
+    <item id="cat.nom_kinds" text="Виды номенклатуры" />
+    <item id="cat.nom_groups" text="Номенклатурные группы" />
+    <item id="cat.nom" text="Номенклатура" />
+    <item id="cat.production_params" text="Параметры продукции" select="1" tooltip="системы профилей"/>
+    <item id="cat.cnns" text="Соединения" />
+    <item id="cat.inserts" text="Вставки" />
+    <item id="cat.furns" text="Фурнитура" />
+    <item id="cat.clrs" text="Цвета" />
+    <item id="cat.color_price_groups" text="Цвето-ценовые группы" />
+    <item id="cch.properties" text="Дополнительные реквизиты" />
+    <item id="cat.params_links" text="Связи параметров" />
+    <item id="cat.elm_visualization" text="Визуализация элементов" />
+    <item id="cat.insert_bind" text="Привязки вставок" />
+    <item id="cat.formulas" text="Формулы" />
+</tree>

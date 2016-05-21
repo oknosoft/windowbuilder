@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tree id="0">
+    <item id="cat.organizations" text="Организации" />
+    <item id="cat.organization_bank_accounts" text="Счета организаций" />
+    <item id="cat.cashboxes" text="Кассы" />
+    <item id="cat.partners" text="Контрагенты" />
+    <item id="cat.partner_bank_accounts" text="Счета контрагентов" />
+    <item id="cat.contracts" text="Договоры" />
+    <item id="cat.users" text="Пользователи" />
+    <item id="cat.individuals" text="Физические лица" />
+    <item id="cat.currencies" text="Валюты" />
+    <item id="ireg.currency_courses" select="1" text="Курсы валют" />
+    <item id="cat.nom_prices_types" text="Виды цен" />
+    <item id="cat.price_groups" text="Ценовые группы" />
+    <item id="ireg.margin_coefficients" text="Маржинальные коэффициенты" />
+    <item id="doc.nom_prices_setup" text="Установка цен номенклатуры" />
+
+</tree>

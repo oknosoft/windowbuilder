@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding='utf-8'?>
+<toolbar>
+    <item type="button"     id="btn_save_close" text="Записать и закрыть"	title="Рассчитать, записать и закрыть"	img="save.gif" />
+    <item type="button"     id="btn_save"       text="Рассчитать"			title="Рассчитать и записать данные"	img="tb_calculate.png" />
+    <item type="separator"  id="sep1"	/>
+
+    <item type="button"     id="tb_back"    text="<i class='fa fa-undo fa-lg'></i>"   title="Шаг назад" enabled="false" />
+    <item type="button"     id="tb_rewind"    text="<i class='fa fa-repeat fa-lg'></i>"   title="Шаг вперед" enabled="false" />
+    <item type="separator"  id="sep2" title="" />
+
+    <item type="button"     id="btn_load_block"	img="tb_type_block.png"     title="Загрузить из типового блока" />
+    <item type="separator"  id="sep3" title="" />
+
+    <item type="button"     id="btn_prop_el"    img="tb_prop_el_w.png"      title="Свойства элемента" />
+    <item type="button"     id="btn_prop_cnn"   img="tb_prop_cnn_w.png"     title="Свойства соединения" />
+    <item type="button"     id="btn_prop_furn"  img="tb_prop_furn_w.png"    title="Свойства фурнитуры" />
+    <item type="button"     id="btn_prop_lay"   img="tb_prop_lay_w.gif"     title="Свойства раскладки" />
+    <item type="button"     id="btn_node_new"   img="tb_node_new_w.gif"     title="Добавить узел" />
+    <item type="button"     id="btn_delete_el"  img="tb_delete_w.png"       title="Удалить элемент" />
+
+    <item type="buttonSelect"   id="bs_split"   img="tb_split.gif"       title="Разделить" openAll="true" >
+        <item type="button"     id="btn_split_imp_vert" img="tb_split_imp_vert.gif" text="Импостом по вертикали" />
+        <item type="button"     id="btn_split_imp_hor"  img="tb_split_imp_hor.gif"  text="Импостом по горизонтали" />
+        <item type="button"     id="btn_split_vert"     img="tb_split_vert.gif"     text="Соед. профилем по вертикали" />
+        <item type="button"     id="btn_split_hor"      img="tb_split_hor.gif"      text="Соедин. профилем по горизонтали" />
+        <item type="button"     id="btn_split_cnt"      img="tb_split_imp.gif"      text="Разрыв контура импостом" />
+    </item>
+
+    <item type="buttonSelect"   id="bs_eq"          img="equate_size.gif"   title="Уравнять размеры" openAll="true" >
+        <item type="button"     id="btn_eq_glass"   img="tb_align_sizes.gif"    text="По заполнениям" />
+        <item type="button"     id="btn_eq_geom"    img="tb_align_geometrically.gif"    text="Геометрически" />
+        <item type="button"     id="btn_eq_left"    img="tb_align_left.gif"     text="По левому краю" />
+        <item type="button"     id="btn_eq_right"   img="tb_align_right.gif"    text="По правому краю" />
+        <item type="button"     id="btn_eq_top"     img="tb_align_top.gif"      text="По верхнему краю" />
+        <item type="button"     id="btn_eq_bottom"  img="tb_align_bottom.gif"   text="По нижнему краю" />
+        <item type="button"     id="btn_eq_ch"  img="tb_align_center_vert.png"     text="По центру вертикально" />
+        <item type="button"     id="btn_eq_cv"  img="tb_align_center_hor.png"     text="По центру горизонтально" />
+    </item>
+
+    <item type="buttonSelect"   id="bs_select"      img="tb_pick_out_w.png"   title="Выделить" openAll="true" >
+        <item type="button"   id="btn_select_rm"    text="Рамы" />
+        <item type="button"   id="btn_select_stv"   text="Створки" />
+        <item type="button"   id="btn_select_imp"   text="Импосты" />
+        <item type="button"   id="btn_select_gl"    text="Заполнения" />
+    </item>
+
+    <item type="buttonSelect"   id="bs_more"        img="tb_more_w.png" title="Дополнительно" openAll="true" >
+        <item type="button"   id="btn_zoom_in"      img="tb_zoom_in.png"    text="Увеличить масштаб" />
+        <item type="button"   id="btn_zoom_out"     img="tb_zoom_out.png"   text="Уменьшить масштаб" />
+        <item type="button"   id="btn_proportions"  img="proportions.png"   text="Пропорции" />
+    </item>
+
+</toolbar>

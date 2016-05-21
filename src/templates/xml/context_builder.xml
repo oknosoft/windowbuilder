@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding='utf-8'?>
+<menu>
+    <item id="btn_prop_el"    img="tb_prop_el.gif"      text="Свойства элемента" />
+    <item id="btn_prop_cnn"   img="tb_prop_cnn.gif"     text="Свойства соединения" />
+    <item id="btn_prop_furn"  img="tb_prop_furn.png"    text="Свойства фурнитуры" />
+    <item id="btn_stv_new"   img="tb_stv_new.png"       text="Добавить створку" />
+    <item id="btn_prop_lay"   img="tb_prop_lay.png"     text="Свойства раскладки" />
+    <item id="btn_node_new"   img="tb_node_new.png"     text="Добавить узел" />
+    <item id="btn_delete_el"  img="tb_del_el.png"       text="Удалить элемент" />
+
+    <item id="bs_split"   img="tb_split_contur.png"       text="Разделить"  >
+        <item id="btn_split_imp_vert"   img="tb_split_imp_vert.gif"    text="Импостом по вертикали" />
+        <item id="btn_split_imp_hor"   img="tb_split_imp_hor.gif"    text="Импостом по горизонтали" />
+        <item id="btn_split_vert"   img="tb_split_vert.gif"    text="Соед. профилем по вертикали" />
+        <item id="btn_split_hor"   img="tb_split_hor.gif"    text="Соедин. профилем по горизонтали" />
+        <item id="btn_split_cnt"   img="tb_split_imp.gif"    text="Разрыв контура импостом" />
+    </item>
+
+    <item id="bs_eq"              img="tb_align_geometrically.gif"  text="Уравнять размеры"  >
+        <item id="btn_eq_glass"   img="tb_align_sizes.gif"      text="По заполнениям" />
+        <item id="btn_eq_geom"    img="tb_align_geometrically.gif"    text="Геометрически" />
+        <item id="btn_eq_left"    img="tb_align_left.gif"       text="По левому краю" />
+        <item id="btn_eq_right"   img="tb_align_right.gif"      text="По правому краю" />
+        <item id="btn_eq_top"     img="tb_align_top.gif"        text="По верхнему краю" />
+        <item id="btn_eq_bottom"  img="tb_align_bottom.gif"     text="По нижнему краю" />
+        <item id="btn_eq_ch"  img="tb_align_center_vert.png"     text="По центру вертикально" />
+        <item id="btn_eq_cv"  img="tb_align_center_hor.png"     text="По центру горизонтально" />
+    </item>
+
+    <item id="bs_select"          img="selection.gif"           text="Выделить"  >
+        <item id="btn_select_rm"  text="Рамы" />
+        <item id="btn_select_stv"  text="Створки" />
+        <item id="btn_select_imp"  text="Импосты" />
+        <item id="btn_select_gl"  text="Заполнения" />
+    </item>
+
+    <item id="btn_prop_acr"  img="tb_prop_acr.png"      text="Размер и радиус" />
+    <item id="btn_proportions"  img="proportions.png"   text="Пропорции" />
+
+
+</menu>

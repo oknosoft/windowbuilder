@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tree id="0">
+    <item id="cat.stores" text="Склады" />
+    <item id="cat.divisions" select="1" text="Подразделения" />
+
+</tree>
