@@ -29,7 +29,7 @@ $p.iface.view_settings = function (cell) {
 			tabs: [
 				{id: "const", text: '<i class="fa fa-key"></i> Общее', active: true},
 				{id: "industry", text: '<i class="fa fa-industry"></i> Технология'},
-				{id: "price", text: '<i class="fa fa-money"></i> Финансы'},
+				{id: "price", text: '<i class="fa fa-money"></i> Учет'},
 				{id: "events", text: '<i class="fa fa-calendar-check-o"></i> Планирование'}
 			]
 		});
