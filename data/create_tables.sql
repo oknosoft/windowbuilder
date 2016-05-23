@@ -65,7 +65,6 @@ CREATE TABLE IF NOT EXISTS `enm_nom_types` (ref CHAR PRIMARY KEY NOT NULL, seque
 CREATE TABLE IF NOT EXISTS `enm_contact_information_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);
 CREATE TABLE IF NOT EXISTS `enm_costs_material_feeds` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);
 CREATE TABLE IF NOT EXISTS `enm_vat_rates` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);
-CREATE TABLE IF NOT EXISTS `enm_course_installation_methods` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);
 CREATE TABLE IF NOT EXISTS `enm_buyers_order_states` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);
 CREATE TABLE IF NOT EXISTS `enm_gender` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);
 CREATE TABLE IF NOT EXISTS `enm_elm_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR);
