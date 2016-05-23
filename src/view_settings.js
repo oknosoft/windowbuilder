@@ -85,11 +85,11 @@ $p.iface.view_settings = function (cell) {
 			{type:"template", label:"",value:"", note: {text: "", width: 320}},
 
 			{ type:"block", blockOffset: 0, name:"block_buttons", list:[
-				{type: "button", name: "save", value: "<i class='fa fa-floppy-o fa-fw' aria-hidden='true'></i>", tooltip: "Применить настройки и перезагрузить программу"},
+				{type: "button", name: "save", value: "<i class='fa fa-floppy-o fa-lg' aria-hidden='true'></i>", tooltip: "Применить настройки и перезагрузить программу"},
 				{type:"newcolumn"},
-				{type: "button", offsetLeft: 20, name: "reset", value: "<i class='fa fa-refresh fa-fw' aria-hidden='true'></i>", tooltip: "Стереть справочники и перезаполнить данными сервера"},
+				{type: "button", offsetLeft: 20, name: "reset", value: "<i class='fa fa-refresh fa-lg' aria-hidden='true'></i>", tooltip: "Стереть справочники и перезаполнить данными сервера"},
 				{type:"newcolumn"},
-				{type: "button", offsetLeft: 60, name: "upload", value: "<i class='fa fa-cloud-upload fa-fw' aria-hidden='true'></i>", tooltip: "Выгрузить изменения справочников на сервер"}
+				{type: "button", offsetLeft: 60, name: "upload", value: "<i class='fa fa-cloud-upload fa-lg' aria-hidden='true'></i>", tooltip: "Выгрузить изменения справочников на сервер"}
 			]  }
 
 			]

@@ -3420,7 +3420,6 @@ $p.modifiers.push(
 				return prm.price_type;
 			};
 
-
 			/**
 			 * Рассчитывает плановую себестоимость строки документа Расчет
 			 * Если есть спецификация, расчет ведется по ней. Иначе - по номенклатуре строки расчета
@@ -3522,6 +3521,75 @@ $p.modifiers.push(
 				
 				// TODO: реализовать пересчет
 				return amount;
+			};
+
+
+			/**
+			 * Выгружает в CouchDB изменённые в RAM справочники
+			 */
+			this.cut_upload = function () {
+
+				if(!$p.current_acl || !$p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length){
+					$p.msg.show_msg({
+						type: "alert-error",
+						text: $p.msg.error_low_acl,
+						title: $p.msg.error_rights
+					});
+					return true;
+				}
+
+				var mgrs = [
+					"cat.users",
+					"cat.individuals",
+					"cat.organizations",
+					"cat.partners",
+					"cat.contracts",
+					"cat.currencies",
+					"cat.nom_prices_types",
+					"cat.price_groups",
+					"cat.cashboxes",
+					"cat.partner_bank_accounts",
+					"cat.organization_bank_accounts",
+					"ireg.currency_courses",
+					"ireg.margin_coefficients"
+				];
+
+				$p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
+					filter: function (doc) {
+						return mgrs.indexOf(doc._id.split("|")[0]) != -1;
+					}
+				})
+					.on('change', function (info) {
+						//handle change
+
+					})
+					.on('paused', function (err) {
+						// replication paused (e.g. replication up to date, user went offline)
+
+					})
+					.on('active', function () {
+						// replicate resumed (e.g. new changes replicating, user went back online)
+
+					})
+					.on('denied', function (err) {
+						// a document failed to replicate (e.g. due to permissions)
+						$p.msg.show_msg(err.reason);
+						$p.record_log(err);
+
+					})
+					.on('complete', function (info) {
+						$p.msg.show_msg({
+							type: "alert-info",
+							text: $p.msg.sync_complite,
+							title: $p.msg.sync_title
+						});
+
+					})
+					.on('error', function (err) {
+						$p.msg.show_msg(err.reason);
+						$p.record_log(err);
+
+					});
 			};
 			
 			// виртуальный срез последних
@@ -5756,11 +5824,11 @@ $p.iface.view_settings = function (cell) {
 			{type:"template", label:"",value:"", note: {text: "", width: 320}},
 
 			{ type:"block", blockOffset: 0, name:"block_buttons", list:[
-				{type: "button", name: "save", value: "<i class='fa fa-floppy-o fa-fw' aria-hidden='true'></i>", tooltip: "Применить настройки и перезагрузить программу"},
+				{type: "button", name: "save", value: "<i class='fa fa-floppy-o fa-lg' aria-hidden='true'></i>", tooltip: "Применить настройки и перезагрузить программу"},
 				{type:"newcolumn"},
-				{type: "button", offsetLeft: 20, name: "reset", value: "<i class='fa fa-refresh fa-fw' aria-hidden='true'></i>", tooltip: "Стереть справочники и перезаполнить данными сервера"},
+				{type: "button", offsetLeft: 20, name: "reset", value: "<i class='fa fa-refresh fa-lg' aria-hidden='true'></i>", tooltip: "Стереть справочники и перезаполнить данными сервера"},
 				{type:"newcolumn"},
-				{type: "button", offsetLeft: 40, name: "upload", value: "<i class='fa fa-cloud-upload fa-fw' aria-hidden='true'></i>", tooltip: "Стереть справочники и перезаполнить данными сервера"}
+				{type: "button", offsetLeft: 60, name: "upload", value: "<i class='fa fa-cloud-upload fa-lg' aria-hidden='true'></i>", tooltip: "Выгрузить изменения справочников на сервер"}
 			]  }
 
 			]
@@ -5804,6 +5872,9 @@ $p.iface.view_settings = function (cell) {
 							$p.wsql.pouch.reset_local_data();
 					}
 				});
+				
+			}else if(name == "upload"){
+				$p.pricing.cut_upload();
 			}
 		});
 

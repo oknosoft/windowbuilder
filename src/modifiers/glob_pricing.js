@@ -278,24 +278,69 @@ $p.modifiers.push(
 			 * Выгружает в CouchDB изменённые в RAM справочники
 			 */
 			this.cut_upload = function () {
-				[
-					$p.cat.users,
-					$p.cat.individuals,
-					$p.cat.organizations,
-					$p.cat.partners,
-					$p.cat.contracts,
-					$p.cat.currencies,
-					$p.cat.nom_prices_types,
-					$p.cat.price_groups,
-					$p.ireg.currency_courses,
-					$p.ireg.margin_coefficients
 
-				].forEach(function (mgr) {
+				if(!$p.current_acl || !$p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length){
+					$p.msg.show_msg({
+						type: "alert-error",
+						text: $p.msg.error_low_acl,
+						title: $p.msg.error_rights
+					});
+					return true;
+				}
 
-				});
+				var mgrs = [
+					"cat.users",
+					"cat.individuals",
+					"cat.organizations",
+					"cat.partners",
+					"cat.contracts",
+					"cat.currencies",
+					"cat.nom_prices_types",
+					"cat.price_groups",
+					"cat.cashboxes",
+					"cat.partner_bank_accounts",
+					"cat.organization_bank_accounts",
+					"ireg.currency_courses",
+					"ireg.margin_coefficients"
+				];
 
+				$p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
+					filter: function (doc) {
+						return mgrs.indexOf(doc._id.split("|")[0]) != -1;
+					}
+				})
+					.on('change', function (info) {
+						//handle change
+
+					})
+					.on('paused', function (err) {
+						// replication paused (e.g. replication up to date, user went offline)
+
+					})
+					.on('active', function () {
+						// replicate resumed (e.g. new changes replicating, user went back online)
+
+					})
+					.on('denied', function (err) {
+						// a document failed to replicate (e.g. due to permissions)
+						$p.msg.show_msg(err.reason);
+						$p.record_log(err);
+
+					})
+					.on('complete', function (info) {
+						$p.msg.show_msg({
+							type: "alert-info",
+							text: $p.msg.sync_complite,
+							title: $p.msg.sync_title
+						});
+
+					})
+					.on('error', function (err) {
+						$p.msg.show_msg(err.reason);
+						$p.record_log(err);
+
+					});
 			};
-
 			
 			// виртуальный срез последних
 			function build_cache() {
