@@ -56,26 +56,30 @@ $p.modifiers.push(
 
 							// показываем отчет в отдельном окне
 							.then(function (doc) {
-								var url = window.URL.createObjectURL($p.injected_data['view_blank.html']),
-									wnd_print = window.open(
-										url, "wnd_print", "fullscreen,menubar=no,toolbar=no,location=no,status=no,directories=no,resizable=yes,scrollbars=yes");
 
-								if (wnd_print.outerWidth < screen.availWidth || wnd_print.outerHeight < screen.availHeight){
-									wnd_print.moveTo(0,0);
-									wnd_print.resizeTo(screen.availWidth, screen.availHeight);
+								if(doc && doc.content instanceof HTMLElement){
+
+									var url = window.URL.createObjectURL($p.injected_data['view_blank.html']),
+										wnd_print = window.open(
+											url, "wnd_print", "fullscreen,menubar=no,toolbar=no,location=no,status=no,directories=no,resizable=yes,scrollbars=yes");
+
+									if (wnd_print.outerWidth < screen.availWidth || wnd_print.outerHeight < screen.availHeight){
+										wnd_print.moveTo(0,0);
+										wnd_print.resizeTo(screen.availWidth, screen.availHeight);
+									}
+
+									wnd_print.onload = function(e) {
+										window.URL.revokeObjectURL(url);
+										wnd_print.document.body.appendChild(doc.content);
+
+										if(doc.title)
+											wnd_print.document.title = doc.title;
+
+										wnd_print.print();
+									};
+
+									return wnd_print;
 								}
-
-								wnd_print.onload = function(e) {
-									window.URL.revokeObjectURL(url);
-									wnd_print.document.body.appendChild(doc.content);
-
-									if(doc.title)
-										wnd_print.document.title = doc.title;
-
-									wnd_print.print();
-								};
-
-								return wnd_print;
 
 							});
 

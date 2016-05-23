@@ -170,7 +170,6 @@ $p.modifiers.push(
 				return prm.price_type;
 			};
 
-
 			/**
 			 * Рассчитывает плановую себестоимость строки документа Расчет
 			 * Если есть спецификация, расчет ведется по ней. Иначе - по номенклатуре строки расчета
@@ -273,6 +272,30 @@ $p.modifiers.push(
 				// TODO: реализовать пересчет
 				return amount;
 			};
+
+
+			/**
+			 * Выгружает в CouchDB изменённые в RAM справочники
+			 */
+			this.cut_upload = function () {
+				[
+					$p.cat.users,
+					$p.cat.individuals,
+					$p.cat.organizations,
+					$p.cat.partners,
+					$p.cat.contracts,
+					$p.cat.currencies,
+					$p.cat.nom_prices_types,
+					$p.cat.price_groups,
+					$p.ireg.currency_courses,
+					$p.ireg.margin_coefficients
+
+				].forEach(function (mgr) {
+
+				});
+
+			};
+
 			
 			// виртуальный срез последних
 			function build_cache() {
