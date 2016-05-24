@@ -3529,7 +3529,10 @@ $p.modifiers.push(
 			 */
 			this.cut_upload = function () {
 
-				if(!$p.current_acl || !$p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length){
+				if(!$p.current_acl || (
+						!$p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length &&
+						!$p.current_acl.acl_objs.find_rows({type: "ИзменениеТехнологическойНСИ"}).length
+					)){
 					$p.msg.show_msg({
 						type: "alert-error",
 						text: $p.msg.error_low_acl,
@@ -3537,59 +3540,141 @@ $p.modifiers.push(
 					});
 					return true;
 				}
+				
+				function upload_acc() {
+					var mgrs = [
+						"cat.users",
+						"cat.individuals",
+						"cat.organizations",
+						"cat.partners",
+						"cat.contracts",
+						"cat.currencies",
+						"cat.nom_prices_types",
+						"cat.price_groups",
+						"cat.cashboxes",
+						"cat.partner_bank_accounts",
+						"cat.organization_bank_accounts",
+						"cat.projects",
+						"cat.stores",
+						"cat.cash_flow_articles",
+						"cat.cost_items",
+						"cat.price_groups",
+						"cat.delivery_areas",
+						"ireg.currency_courses",
+						"ireg.margin_coefficients"
+					];
 
-				var mgrs = [
-					"cat.users",
-					"cat.individuals",
-					"cat.organizations",
-					"cat.partners",
-					"cat.contracts",
-					"cat.currencies",
-					"cat.nom_prices_types",
-					"cat.price_groups",
-					"cat.cashboxes",
-					"cat.partner_bank_accounts",
-					"cat.organization_bank_accounts",
-					"ireg.currency_courses",
-					"ireg.margin_coefficients"
-				];
-
-				$p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
-					filter: function (doc) {
-						return mgrs.indexOf(doc._id.split("|")[0]) != -1;
-					}
-				})
-					.on('change', function (info) {
-						//handle change
-
+					$p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
+						filter: function (doc) {
+							return mgrs.indexOf(doc._id.split("|")[0]) != -1;
+						}
 					})
-					.on('paused', function (err) {
-						// replication paused (e.g. replication up to date, user went offline)
+						.on('change', function (info) {
+							//handle change
 
-					})
-					.on('active', function () {
-						// replicate resumed (e.g. new changes replicating, user went back online)
+						})
+						.on('paused', function (err) {
+							// replication paused (e.g. replication up to date, user went offline)
 
-					})
-					.on('denied', function (err) {
-						// a document failed to replicate (e.g. due to permissions)
-						$p.msg.show_msg(err.reason);
-						$p.record_log(err);
+						})
+						.on('active', function () {
+							// replicate resumed (e.g. new changes replicating, user went back online)
 
-					})
-					.on('complete', function (info) {
-						$p.msg.show_msg({
-							type: "alert-info",
-							text: $p.msg.sync_complite,
-							title: $p.msg.sync_title
+						})
+						.on('denied', function (err) {
+							// a document failed to replicate (e.g. due to permissions)
+							$p.msg.show_msg(err.reason);
+							$p.record_log(err);
+
+						})
+						.on('complete', function (info) {
+							
+							if($p.current_acl.acl_objs.find_rows({type: "ИзменениеТехнологическойНСИ"}).length)
+								upload_tech();
+							else
+								$p.msg.show_msg({
+									type: "alert-info",
+									text: $p.msg.sync_complite,
+									title: $p.msg.sync_title
+								});
+
+						})
+						.on('error', function (err) {
+							$p.msg.show_msg(err.reason);
+							$p.record_log(err);
+
 						});
+				}
 
+				function upload_tech() {
+					var mgrs = [
+						"cat.units",
+						"cat.nom",
+						"cat.nom_groups",
+						"cat.nom_units",
+						"cat.nom_kinds",
+						"cat.elm_visualization",
+						"cat.destinations",
+						"cat.property_values",
+						"cat.property_values_hierarchy",
+						"cat.inserts",
+						"cat.insert_bind",
+						"cat.color_price_groups",
+						"cat.clrs",
+						"cat.furns",
+						"cat.cnns",
+						"cat.production_params",
+						"cat.parameters_keys",
+						"cat.formulas",
+						"cch.properties",
+						"cch.predefined_elmnts"
+						
+					];
+
+					$p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
+						filter: function (doc) {
+							return mgrs.indexOf(doc._id.split("|")[0]) != -1;
+						}
 					})
-					.on('error', function (err) {
-						$p.msg.show_msg(err.reason);
-						$p.record_log(err);
+						.on('change', function (info) {
+							//handle change
 
-					});
+						})
+						.on('paused', function (err) {
+							// replication paused (e.g. replication up to date, user went offline)
+
+						})
+						.on('active', function () {
+							// replicate resumed (e.g. new changes replicating, user went back online)
+
+						})
+						.on('denied', function (err) {
+							// a document failed to replicate (e.g. due to permissions)
+							$p.msg.show_msg(err.reason);
+							$p.record_log(err);
+
+						})
+						.on('complete', function (info) {
+							$p.msg.show_msg({
+								type: "alert-info",
+								text: $p.msg.sync_complite,
+								title: $p.msg.sync_title
+							});
+
+						})
+						.on('error', function (err) {
+							$p.msg.show_msg(err.reason);
+							$p.record_log(err);
+
+						});
+				}
+
+				
+				if($p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length)
+					upload_acc();
+				else
+					upload_tech();				
+				
 			};
 			
 			// виртуальный срез последних
