@@ -677,18 +677,12 @@ ProfileItem.prototype.__define({
 					}
 				}
 
-				if(res.point.is_nearest(this.b))
-					res.point_name = "b";
-
-				else if(res.point.is_nearest(this.e))
-					res.point_name = "e";
-
-				else if(this.b.getDistance(corn) < res.dist){
+				if(res.point.is_nearest(this.b)){
 					res.dist = this.b.getDistance(corn);
 					res.point = this.b;
 					res.point_name = "b";
-
-				}else if(this.e.getDistance(corn) < res.dist){
+					
+				}else if(res.point.is_nearest(this.e)){
 					res.dist = this.e.getDistance(corn);
 					res.point = this.e;
 					res.point_name = "e";
