@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 000000000096
+# 000000000097
 
 # Additional resources to cache
 CACHE:
@@ -10,12 +10,16 @@ CACHE:
 
 # Эти позиции включаем только в продакшене
 #
-#//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3,metadata@0.10.211(dhtmlx.min.js+metadata.min.js)
-//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3,metadata@0.10.211(dhtmlx.min.js)
+#//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3,metadata@0.10.212(dhtmlx.min.js+metadata.min.js)
+
+# На период отладки, берём metadata и dhtmlx c нашего сайта
+//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3
 lib/metadata.min.js
+lib/dhtmlx.min.js
 
 # А эти - только в дебагере
 //oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
+//oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.css
 lib/paper-core.js
 lib/baron/baron.min.js
 lib/qrcodejs/qrcode.js
@@ -25,16 +29,22 @@ dist/wnd_debug.min.js
 
 # css и картинки
 
-//cdn.jsdelivr.net/g/metadata(dhx_terrace.css+metadata.css)
 //cdn.jsdelivr.net/fontawesome/4.6/css/font-awesome.min.css
 //cdn.jsdelivr.net/fontawesome/4.6/fonts/fontawesome-webfont.woff2?v=4.6.1
+
+# //cdn.jsdelivr.net/g/metadata(dhx_terrace.css+metadata.css)
+dist_md/dhx_terrace.css
+lib/metadata.css
+
 #
 lib/baron/baron.css
 dist/windowbuilder.min.css
+
 #
 dist/imgs/fav-wnd.ico
 dist/imgs/fav-okn144.png
 dist/imgs/splash.gif
+
 #
 dist/imgs/stamp.png
 dist/imgs/about_48.png

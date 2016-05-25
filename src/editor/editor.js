@@ -595,7 +595,7 @@ Editor.prototype.__define({
 	load_stamp: {
 		value: function(confirmed){
 
-			if(this.project.ox.coordinates.count() && !confirmed){
+			if(!confirmed && this.project.ox.coordinates.count()){
 				dhtmlx.confirm({
 					title: $p.msg.bld_from_blocks_title,
 					text: $p.msg.bld_from_blocks,

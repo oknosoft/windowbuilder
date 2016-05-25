@@ -1313,7 +1313,7 @@ Editor.prototype.__define({
 	load_stamp: {
 		value: function(confirmed){
 
-			if(this.project.ox.coordinates.count() && !confirmed){
+			if(!confirmed && this.project.ox.coordinates.count()){
 				dhtmlx.confirm({
 					title: $p.msg.bld_from_blocks_title,
 					text: $p.msg.bld_from_blocks,
@@ -8319,10 +8319,15 @@ function Scheme(_canvas){
 				delete _data._loading;
 				delete _data._snapshot;
 
-				// виртуальное событие, чтобы нарисовать визуализацию
+				// виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
 				setTimeout(function () {
-					$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+					if(_scheme.ox.coordinates.count()){
+						$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+					}else{
+						paper.load_stamp();
+					}
 				}, 100);
+
 				
 			}, 20);
 
@@ -8975,6 +8980,9 @@ Scheme.prototype.__define({
 				if(sys.empty())
 					break;
 				sys = sys.parent;
+			}
+			if(!res){
+				res = $p.job_prm.builder.base_furn.null;
 			}
 			if(!res){
 				$p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ""}}, function (row) {
