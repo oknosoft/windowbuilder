@@ -98,7 +98,7 @@ $p.iface.view_settings = function (cell) {
 
 		// инициализация свойств
 
-		t.form.checkItem("device_type", $p.wsql.get_user_param("device_type"));
+		t.form.checkItem("device_type", $p.job_prm.device_type);
 
 		["zone", "couch_path", "couch_suffix"].forEach(function (prm) {
 			if(prm == "zone")

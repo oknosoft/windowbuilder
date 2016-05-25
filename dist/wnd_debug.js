@@ -2891,6 +2891,7 @@ $p.modifiers.push(
 
 			if(attr.field == "elm_type") {
 				this.inset = paper.project.default_inset({elm_type: this.elm_type});
+				this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
 			}
 		});
 	}
@@ -5922,7 +5923,7 @@ $p.iface.view_settings = function (cell) {
 
 		// инициализация свойств
 
-		t.form.checkItem("device_type", $p.wsql.get_user_param("device_type"));
+		t.form.checkItem("device_type", $p.job_prm.device_type);
 
 		["zone", "couch_path", "couch_suffix"].forEach(function (prm) {
 			if(prm == "zone")

@@ -39,12 +39,10 @@ function ToolPen(){
 	function tool_wnd(){
 
 		sys = _editor.project._dp.sys;
-
-		var rama_impost = sys.inserts([$p.enm.elm_types.Рама, $p.enm.elm_types.Импост, $p.enm.elm_types.Раскладка]);
-
+		
 		// создаём экземпляр обработки
 		tool.profile = $p.dp.builder_pen.create();
-
+		
 		// восстанавливаем сохранённые параметры
 		$p.wsql.restore_options("editor", tool.options);
 		["elm_type","inset","bind_generatrix","bind_node"].forEach(function (prop) {
@@ -52,22 +50,19 @@ function ToolPen(){
 				tool.profile[prop] = tool.options.wnd[prop];
 		});
 
-		// вставка по умолчанию
-		if(rama_impost.length){
-			
-			// если в текущем слое есть профили, выбираем импост
-			if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Рама) &&
-					_editor.project.activeLayer instanceof Contour && _editor.project.activeLayer.profiles.length)
-				tool.profile.elm_type = $p.enm.elm_types.Импост;
-				
-			else if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Импост) &&
-				_editor.project.activeLayer instanceof Contour && !_editor.project.activeLayer.profiles.length)
-				tool.profile.elm_type = $p.enm.elm_types.Рама;
+		// если в текущем слое есть профили, выбираем импост
+		if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Рама) &&
+			_editor.project.activeLayer instanceof Contour && _editor.project.activeLayer.profiles.length)
+			tool.profile.elm_type = $p.enm.elm_types.Импост;
 
-			tool.profile.inset = _editor.project.default_inset({elm_type: tool.profile.elm_type});
-			
-		}else
-			tool.profile.inset = $p.blank.guid;
+		else if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Импост) &&
+			_editor.project.activeLayer instanceof Contour && !_editor.project.activeLayer.profiles.length)
+			tool.profile.elm_type = $p.enm.elm_types.Рама;
+
+		// вставка по умолчанию
+		$p.dp.builder_pen.handle_event(tool.profile, "value_change", {
+			field: "elm_type"
+		});
 
 		// цвет по умолчанию
 		tool.profile.clr = _editor.project.clr;
@@ -78,11 +73,11 @@ function ToolPen(){
 			path: [
 				function(o, f){
 					if($p.is_data_obj(o)){
-						return rama_impost.indexOf(o) != -1;
+						return tool.profile.rama_impost.indexOf(o) != -1;
 
 					}else{
 						var refs = "";
-						rama_impost.forEach(function (o) {
+						tool.profile.rama_impost.forEach(function (o) {
 							if(refs)
 								refs += ", ";
 							refs += "'" + o.ref + "'";
