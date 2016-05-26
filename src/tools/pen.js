@@ -337,6 +337,7 @@ function ToolPen(){
 
 				}
 
+				this.path = null;
 
 			}else if (this.hitItem && this.hitItem.item) {
 
@@ -445,11 +446,23 @@ function ToolPen(){
 
 							res = {distance: Infinity};
 							for(i in _editor.project.activeLayer.children){
+
 								element = _editor.project.activeLayer.children[i];
-								if (element instanceof Profile &&
-										_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
-									this.path.firstSegment.point = res.point;
-									break;
+								if (element instanceof Profile){
+									
+									// сначала смотрим на доборы, затем - на сам профиль
+									if(element.children.some(function (addl) {
+											if(addl instanceof ProfileAddl && _editor.project.check_distance(addl, null, res, tool.path.firstSegment.point, bind) === false){
+												tool.path.firstSegment.point = res.point;
+												return true;
+											}
+										})){
+										break;
+										
+									}else if (_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
+										this.path.firstSegment.point = res.point;
+										break;
+									}
 								}
 							}
 							this.start_binded = true;
@@ -467,11 +480,24 @@ function ToolPen(){
 
 						res = {distance: Infinity};
 						for(i in _editor.project.activeLayer.children){
+
 							element = _editor.project.activeLayer.children[i];
-							if (element instanceof Profile &&
-								_editor.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
-								this.path.lastSegment.point = res.point;
-								break;
+							if (element instanceof Profile){
+
+								// сначала смотрим на доборы, затем - на сам профиль
+								if(element.children.some(function (addl) {
+										if(addl instanceof ProfileAddl && _editor.project.check_distance(addl, null, res, tool.path.lastSegment.point, bind) === false){
+											tool.path.lastSegment.point = res.point;
+											return true;
+										}
+									})){
+									break;
+
+								}else if (_editor.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
+									this.path.lastSegment.point = res.point;
+									break;
+
+								}
 							}
 						}
 					}

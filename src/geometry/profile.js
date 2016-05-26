@@ -82,6 +82,38 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
+	 * Наблюдает за изменениями контура и пересчитывает путь элемента при изменении соседних элементов
+	 */
+	observer: {
+		value: function(an){
+
+			var bcnn, ecnn, moved;
+
+			if(Array.isArray(an)){
+				moved = an[an.length-1];
+
+				if(moved.profiles.indexOf(this) == -1){
+
+					bcnn = this.cnn_point("b");
+					ecnn = this.cnn_point("e");
+
+					// если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
+					moved.profiles.forEach(function (p) {
+						this.do_bind(p, bcnn, ecnn, moved);
+					}.bind(this));
+
+					moved.profiles.push(this);
+				}
+
+			}else if(an instanceof Profile){
+				this.do_bind(an, this.cnn_point("b"), this.cnn_point("e"));
+
+			}
+
+		}
+	},
+
+	/**
 	 * Координаты начала элемента
 	 * @property b
 	 * @type Point
@@ -769,8 +801,10 @@ ProfileItem.prototype.__define({
 	redraw_children: {
 		value: function () {
 			this.children.forEach(function (elm) {
-				if(elm instanceof ProfileAddl)
+				if(elm instanceof ProfileAddl){
+					elm.observer(elm.parent);
 					elm.redraw();
+				}					
 			});
 		}
 	},
@@ -938,10 +972,10 @@ function Profile(attr){
 
 		// Подключаем наблюдателя за событиями контура с именем _consts.move_points_
 		this._observer = this.observer.bind(this);
-		Object.observe(this.parent._noti, this._observer, [consts.move_points]);
+		Object.observe(this.layer._noti, this._observer, [consts.move_points]);
 
 		// Информируем контур о том, что у него появился новый ребёнок
-		this.parent.on_insert_elm(this);
+		this.layer.on_insert_elm(this);
 	}
 
 }
@@ -1037,38 +1071,6 @@ Profile.prototype.__define({
 
 			// TODO: Рассчитать положение и ориентацию
 			// вероятно, импост, всегда занимает положение "центр"
-
-		}
-	},
-
-	/**
-	 * Наблюдает за изменениями контура и пересчитывает путь элемента при изменении соседних элементов
-	 */
-	observer: {
-		value: function(an){
-
-			var bcnn, ecnn, moved;
-
-			if(Array.isArray(an)){
-				moved = an[an.length-1];
-
-				if(moved.profiles.indexOf(this) == -1){
-
-					bcnn = this.cnn_point("b");
-					ecnn = this.cnn_point("e");
-
-					// если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
-					moved.profiles.forEach(function (p) {
-						this.do_bind(p, bcnn, ecnn, moved);
-					}.bind(this));
-
-					moved.profiles.push(this);
-				}
-
-			}else if(an instanceof Profile){
-				this.do_bind(an, this.cnn_point("b"), this.cnn_point("e"));
-
-			}
 
 		}
 	},
@@ -1455,7 +1457,7 @@ function CnnPoint(parent, node){
 	 * Расстояние до ближайшего профиля
 	 * @type {number}
 	 */
-	this.distance = 10e9;
+	this.distance = Infinity;
 
 	this.point = null;
 
@@ -1546,7 +1548,7 @@ CnnPoint.prototype.__define({
 				delete this.is_cut;
 			this.profile = null;
 			this.err = null;
-			this.distance = 10e9;
+			this.distance = Infinity;
 			this.cnn_types = acn.i;
 			if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.tcn.i)
 				this.cnn = null;

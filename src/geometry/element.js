@@ -227,15 +227,15 @@ BuilderElement.prototype.__define({
 				path: [
 					function(o, f){
 						var selection;
+
 						if(t instanceof Filling)
 							selection = {elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}};
 
 						else if(t instanceof Profile){
 							if(t.nearest())
-								selection = {elm_type: $p.enm.elm_types.Створка};
-
+								selection = {elm_type: {in: [$p.enm.elm_types.Створка, $p.enm.elm_types.Добор]}};
 							else
-								selection = {elm_type: {in: [$p.enm.elm_types.Рама, $p.enm.elm_types.Импост]}};
+								selection = {elm_type: {in: [$p.enm.elm_types.Рама, $p.enm.elm_types.Импост, $p.enm.elm_types.Добор]}};
 						}else
 							selection = {elm_type: t.nom.elm_type};
 

@@ -443,7 +443,7 @@ Filling.prototype.__define({
 
 	select_node: {
 		value: function (v) {
-			var point, segm, delta = 10e9;
+			var point, segm, delta = Infinity;
 			if(v == "b"){
 				point = this.bounds.bottomLeft;
 			}else{

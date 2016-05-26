@@ -214,7 +214,7 @@ paper.Path.prototype.__define({
 	intersect_point: {
 		value: function (path, point, elongate) {
 			var intersections = this.getIntersections(path),
-				delta = 10e9, tdelta, tpoint;
+				delta = Infinity, tdelta, tpoint;
 
 			if(intersections.length == 1)
 				return intersections[0].point;
@@ -233,7 +233,13 @@ paper.Path.prototype.__define({
 				});
 				return tpoint;
 
+			}else if(elongate == "nearest"){
+
+				// ищем проекцию ближайшей точки на path на наш путь
+				return this.getNearestPoint(path.getNearestPoint(point));
+
 			}else if(elongate){
+
 				// продлеваем пути до пересечения
 				var p1 = this.getNearestPoint(point),
 					p2 = path.getNearestPoint(point),

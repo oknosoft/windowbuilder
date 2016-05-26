@@ -27,7 +27,17 @@ function ProfileAddl(attr){
 
 	ProfileAddl.superclass.constructor.call(this, attr);
 
+	this.data.generatrix.strokeWidth = 0;
+
 	this.data.side = attr.side || "inner";
+
+	// if(this.parent){
+	//
+	// 	// Подключаем наблюдателя за событиями контура с именем _consts.move_points_
+	// 	this._observer = this.observer.bind(this);
+	// 	Object.observe(this.layer._noti, this._observer, [consts.move_points]);
+	//
+	// }
 
 }
 ProfileAddl._extend(ProfileItem);
@@ -173,6 +183,15 @@ ProfileAddl.prototype.__define({
 	},
 
 	/**
+	 * Возвращает истина, если соединение с наружной стороны
+	 */
+	outer: {
+		get: function () {
+			return this.data.side == "outer";
+		}	
+	},
+
+	/**
 	 * Возвращает тип элемента (Добор)
 	 */
 	elm_type: {
@@ -198,7 +217,35 @@ ProfileAddl.prototype.__define({
 	cnn_point: {
 		value: function(node, point){
 
-			var res = this.rays[node];
+			var res = this.rays[node],
+
+				check_distance = function(elm) {
+
+					if(elm == this || elm == this.parent)
+						return;
+
+					var gp = elm.generatrix.getNearestPoint(point), distance;
+
+					if(gp && (distance = gp.getDistance(point)) < consts.sticking){
+						if(distance < res.distance){
+							res.point = gp;
+							res.distance = distance;
+							res.profile = elm;
+						}
+					}
+
+					// if(elm.d0 != 0 && element.rays.outer){
+					// 	// для вложенных створок учтём смещение
+					// 	res.point = element.rays.outer.getNearestPoint(point);
+					// 	res.distance = 0;
+					// }else{
+					// 	res.point = gp;
+					// 	res.distance = distance;
+					// }
+
+					elm.getItems({class: ProfileAddl}).forEach(check_distance);
+
+				}.bind(this);
 
 			if(!point)
 				point = this[node];
@@ -207,7 +254,9 @@ ProfileAddl.prototype.__define({
 			// Если привязка не нарушена, возвращаем предыдущее значение
 			if(res.profile && res.profile.children.length){
 
-				if(this.check_distance(res.profile, res, point, true) === false)
+				check_distance(res.profile);
+
+				if(res.distance < consts.sticking)
 					return res;
 			}
 
@@ -216,28 +265,64 @@ ProfileAddl.prototype.__define({
 			res.clear();
 			res.cnn_types = acn.t;
 
-			if(this.parent){
+			this.layer.profiles.forEach(check_distance);
 
-				var profiles = this.layer.profiles, gp, distance;
-
-				for(var i=0; i<profiles.length; i++){
-					
-					if(profiles[i] != this.parent){
-						
-						gp = profiles[i].generatrix.getNearestPoint(point);
-						if(gp && (distance = gp.getDistance(point)) < consts.sticking){
-							if(distance < res.distance){
-								res.point = gp;
-								res.distance = distance;
-								res.profile = profiles[i];
-							}
-						}
-					}
-				}
-			}
 
 			return res;
 
+		}
+	},
+
+	/**
+	 * Вспомогательная функция обсервера, выполняет привязку узлов добора
+	 */
+	do_bind: {
+		value: function (p, bcnn, ecnn, moved) {
+
+			var imposts, moved_fact,
+
+				bind_node = function (node, cnn) {
+
+					if(!cnn.profile)
+						return;
+					
+					var mpoint = this.parent.generatrix.intersect_point(cnn.profile.generatrix, cnn.point, "nearest");
+					if(!mpoint.is_nearest(this[node])){
+						this[node] = mpoint;
+						moved_fact = true;
+					}
+
+				}.bind(this);
+			
+			// при смещениях родителя, даигаем образующую
+			if(this.parent == p){
+
+				bind_node("b", bcnn);
+				bind_node("e", ecnn);
+
+			}
+
+			if(bcnn.cnn && bcnn.profile == p){
+
+				bind_node("b", bcnn);
+
+			}
+			if(ecnn.cnn && ecnn.profile == p){
+
+				bind_node("e", ecnn);
+
+			}
+
+			// если мы в обсервере и есть T и в массиве обработанных есть примыкающий T - пересчитываем
+			if(moved && moved_fact){
+				// imposts = this.joined_imposts();
+				// imposts = imposts.inner.concat(imposts.outer);
+				// for(var i in imposts){
+				// 	if(moved.profiles.indexOf(imposts[i]) == -1){
+				// 		imposts[i].profile.observer(this);
+				// 	}
+				// }
+			}
 		}
 	}
 

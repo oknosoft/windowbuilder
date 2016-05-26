@@ -608,7 +608,7 @@ Contour.prototype.__define({
 					continue;
 				findedb = false;
 				findede = false;
-				for(var j=0; i<profiles.length; j++){
+				for(var j=0; j<profiles.length; j++){
 					if(profiles[j] == elm)
 						continue;
 					if(!findedb && elm.b.is_nearest(profiles[j].e))
@@ -740,6 +740,20 @@ Contour.prototype.__define({
 					if(!pb.is_i && !pe.is_i)
 						nodes.push({b: peg, e: pbg, profile: p, outer: true});
 				}
+			});
+
+			// если к сегментам примыкают доборы, заменяем сегменты доборами
+			nodes.forEach(function (curr) {
+				curr.profile.children.forEach(function (addl) {
+					if(addl instanceof ProfileAddl && curr.b.is_nearest(addl.b) && curr.e.is_nearest(addl.e)){
+
+						if(curr.outer && addl.outer || !curr.outer && !addl.outer){
+							curr.profile = addl;
+							if(curr.outer)
+								delete curr.outer;
+						}
+					}
+				});
 			});
 
 			return nodes;
