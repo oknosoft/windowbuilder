@@ -2097,12 +2097,7 @@ Contour.prototype.__define({
 				elm.redraw();
 			});
 
-			// затем, доборы и соединители
-			profiles.forEach(function(elm) {
-				elm.redraw_children();
-			});
-
-			// создаём и перерисовываем заполнения
+			// затем, создаём и перерисовываем заполнения
 			_contour.glass_recalc();
 
 			// перерисовываем раскладки заполнений
@@ -6370,21 +6365,14 @@ ProfileItem.prototype.__define({
 			path.closePath();
 			path.reduce();
 
-			return this;
-		}
-	},
-
-	/**
-	 * Перерисовывает доборы и соединители
-	 */
-	redraw_children: {
-		value: function () {
 			this.children.forEach(function (elm) {
 				if(elm instanceof ProfileAddl){
 					elm.observer(elm.parent);
 					elm.redraw();
-				}					
+				}
 			});
+
+			return this;
 		}
 	},
 
@@ -7497,7 +7485,7 @@ ProfileAddl.prototype.__define({
 					var gp = elm.generatrix.getNearestPoint(point), distance;
 
 					if(gp && (distance = gp.getDistance(point)) < consts.sticking){
-						if(distance < res.distance){
+						if(distance <= res.distance){
 							res.point = gp;
 							res.distance = distance;
 							res.profile = elm;

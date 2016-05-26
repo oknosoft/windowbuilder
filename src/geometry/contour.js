@@ -479,12 +479,7 @@ Contour.prototype.__define({
 				elm.redraw();
 			});
 
-			// затем, доборы и соединители
-			profiles.forEach(function(elm) {
-				elm.redraw_children();
-			});
-
-			// создаём и перерисовываем заполнения
+			// затем, создаём и перерисовываем заполнения
 			_contour.glass_recalc();
 
 			// перерисовываем раскладки заполнений

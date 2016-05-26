@@ -227,7 +227,7 @@ ProfileAddl.prototype.__define({
 					var gp = elm.generatrix.getNearestPoint(point), distance;
 
 					if(gp && (distance = gp.getDistance(point)) < consts.sticking){
-						if(distance < res.distance){
+						if(distance <= res.distance){
 							res.point = gp;
 							res.distance = distance;
 							res.profile = elm;

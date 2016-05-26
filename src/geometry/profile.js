@@ -791,21 +791,14 @@ ProfileItem.prototype.__define({
 			path.closePath();
 			path.reduce();
 
-			return this;
-		}
-	},
-
-	/**
-	 * Перерисовывает доборы и соединители
-	 */
-	redraw_children: {
-		value: function () {
 			this.children.forEach(function (elm) {
 				if(elm instanceof ProfileAddl){
 					elm.observer(elm.parent);
 					elm.redraw();
-				}					
+				}
 			});
+
+			return this;
 		}
 	},
 
