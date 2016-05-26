@@ -7477,7 +7477,7 @@ ProfileAddl.prototype.__define({
 
 			var res = this.rays[node],
 
-				check_distance = function(elm) {
+				check_distance = function(elm, with_addl) {
 
 					if(elm == this || elm == this.parent)
 						return;
@@ -7501,7 +7501,10 @@ ProfileAddl.prototype.__define({
 					// 	res.distance = distance;
 					// }
 
-					elm.getItems({class: ProfileAddl}).forEach(check_distance);
+					if(with_addl)
+						elm.getItems({class: ProfileAddl}).forEach(function (addl) {
+							check_distance(addl, with_addl);
+						});
 
 				}.bind(this);
 
@@ -7523,11 +7526,116 @@ ProfileAddl.prototype.__define({
 			res.clear();
 			res.cnn_types = acn.t;
 
-			this.layer.profiles.forEach(check_distance);
+			this.layer.profiles.forEach(function (addl) {
+				check_distance(addl, true);
+			});
 
 
 			return res;
 
+		}
+	},
+
+	/**
+	 * Рассчитывает точки пути на пересечении текущего и указанного профилей
+	 * @method path_points
+	 * @param cnn_point {CnnPoint}
+	 */
+	path_points: {
+		value: function(cnn_point, profile_point){
+
+			var _profile = this,
+				_corns = this.data._corns,
+				rays = this.rays,
+				prays,  normal;
+
+			if(!this.generatrix.curves.length)
+				return cnn_point;
+
+			// ищет точку пересечения открытых путей
+			// если указан индекс, заполняет точку в массиве _corns. иначе - возвращает расстояние от узла до пересечения
+			function intersect_point(path1, path2, index){
+				var intersections = path1.getIntersections(path2),
+					delta = Infinity, tdelta, point, tpoint;
+
+				if(intersections.length == 1)
+					if(index)
+						_corns[index] = intersections[0].point;
+					else
+						return intersections[0].point.getDistance(cnn_point.point, true);
+
+				else if(intersections.length > 1){
+					intersections.forEach(function(o){
+						tdelta = o.point.getDistance(cnn_point.point, true);
+						if(tdelta < delta){
+							delta = tdelta;
+							point = o.point;
+						}
+					});
+					if(index)
+						_corns[index] = point;
+					else
+						return delta;
+				}
+			}
+
+			// Определяем сторону примыкающего
+			function detect_side(){
+
+				var interior = _profile.generatrix.getPointAt(0.5, true);
+
+				return prays.inner.getNearestPoint(interior).getDistance(interior, true) < 
+						prays.outer.getNearestPoint(interior).getDistance(interior, true) ? 1 : -1;
+
+			}
+
+			// если пересечение в узлах, используем лучи профиля
+			prays = cnn_point.profile.rays;
+
+			// добор всегда Т. сначала определяем, изнутри или снаружи находится наш профиль
+			if(!cnn_point.profile.path.segments.length)
+				cnn_point.profile.redraw();
+
+			if(profile_point == "b"){
+				// в зависимости от стороны соединения
+				if(detect_side() < 0){
+					intersect_point(prays.outer, rays.outer, 1);
+					intersect_point(prays.outer, rays.inner, 4);
+
+				}else{
+					intersect_point(prays.inner, rays.outer, 1);
+					intersect_point(prays.inner, rays.inner, 4);
+
+				}
+
+			}else if(profile_point == "e"){
+				// в зависимости от стороны соединения
+				if(detect_side() < 0){
+					intersect_point(prays.outer, rays.outer, 2);
+					intersect_point(prays.outer, rays.inner, 3);
+
+				}else{
+					intersect_point(prays.inner, rays.outer, 2);
+					intersect_point(prays.inner, rays.inner, 3);
+
+				}
+			}
+
+			// если точка не рассчиталась - рассчитываем по умолчанию - как с пустотой
+			if(profile_point == "b"){
+				if(!_corns[1])
+					_corns[1] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d1));
+				if(!_corns[4])
+					_corns[4] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d2));
+
+			}else if(profile_point == "e"){
+				if(!_corns[2])
+					_corns[2] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d1));
+				if(!_corns[3])
+					_corns[3] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
+			}
+			
+			return cnn_point;
 		}
 	},
 
