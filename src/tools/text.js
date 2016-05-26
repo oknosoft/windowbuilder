@@ -36,7 +36,7 @@ function ToolText(){
 		return tool.hitTest(event);
 	};
 	tool.hitTest = function(event) {
-		var hitSize = 4;
+		var hitSize = 6;
 
 		// хит над текстом обрабатываем особо
 		tool.hitItem = _editor.project.hitTest(event.point, { class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize });

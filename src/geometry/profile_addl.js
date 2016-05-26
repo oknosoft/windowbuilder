@@ -27,6 +27,8 @@ function ProfileAddl(attr){
 
 	ProfileAddl.superclass.constructor.call(this, attr);
 
+	this.data.side = attr.side || "inner";
+
 }
 ProfileAddl._extend(ProfileItem);
 
@@ -182,10 +184,9 @@ ProfileAddl.prototype.__define({
 	},
 
 	/**
-	 * С этой функции начинается пересчет и перерисовка сегмента раскладки
+	 * С этой функции начинается пересчет и перерисовка сегмента добора
 	 * Возвращает объект соединения конца профиля
 	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
-	 * - Попутно устанавливает признак `is_cut`, если в точке сходятся больше двух профилей
 	 * - Не делает подмену соединения, хотя могла бы
 	 * - Не делает подмену вставки, хотя могла бы
 	 *
@@ -213,12 +214,26 @@ ProfileAddl.prototype.__define({
 
 			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 			res.clear();
+			res.cnn_types = acn.t;
+
 			if(this.parent){
 
-				// var res_bind = this.bind_node(point);
-				// if(res_bind.binded){
-				// 	res._mixin(res_bind, ["point","profile","cnn_types","profile_point"]);
-				// }
+				var profiles = this.layer.profiles, gp, distance;
+
+				for(var i=0; i<profiles.length; i++){
+					
+					if(profiles[i] != this.parent){
+						
+						gp = profiles[i].generatrix.getNearestPoint(point);
+						if(gp && (distance = gp.getDistance(point)) < consts.sticking){
+							if(distance < res.distance){
+								res.point = gp;
+								res.distance = distance;
+								res.profile = profiles[i];
+							}
+						}
+					}
+				}
 			}
 
 			return res;

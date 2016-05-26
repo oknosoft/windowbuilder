@@ -46,7 +46,7 @@ function ToolArc(){
 	};
 	tool.hitTest = function(event) {
 
-		var hitSize = 4;
+		var hitSize = 6;
 		tool.hitItem = null;
 
 		if (event.point)

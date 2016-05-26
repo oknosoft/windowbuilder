@@ -2093,8 +2093,13 @@ Contour.prototype.__define({
 				this.l_visualization._by_spec.removeChildren();
 
 			// сначала перерисовываем все профили контура
-			profiles.forEach(function(element) {
-				element.redraw();
+			profiles.forEach(function(elm) {
+				elm.redraw();
+			});
+
+			// затем, доборы и соединители
+			profiles.forEach(function(elm) {
+				elm.redraw_children();
 			});
 
 			// создаём и перерисовываем заполнения
@@ -2215,13 +2220,13 @@ Contour.prototype.__define({
 				to_remove = [], res = [], elm, findedb, findede;
 
 			// прочищаем, выкидывая такие, начало или конец которых соединениы не в узле
-			for(var i in profiles){
+			for(var i=0; i<profiles.length; i++){
 				elm = profiles[i];
 				if(elm.data.simulated)
 					continue;
 				findedb = false;
 				findede = false;
-				for(var j in profiles){
+				for(var j=0; i<profiles.length; j++){
 					if(profiles[j] == elm)
 						continue;
 					if(!findedb && elm.b.is_nearest(profiles[j].e))
@@ -2232,7 +2237,7 @@ Contour.prototype.__define({
 				if(!findedb || !findede)
 					to_remove.push(elm);
 			}
-			for(var i in profiles){
+			for(var i=0; i<profiles.length; i++){
 				elm = profiles[i];
 				if(to_remove.indexOf(elm) != -1)
 					continue;
@@ -6318,6 +6323,18 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
+	 * Перерисовывает доборы и соединители
+	 */
+	redraw_children: {
+		value: function () {
+			this.children.forEach(function (elm) {
+				if(elm instanceof ProfileAddl)
+					elm.redraw();
+			});
+		}
+	},
+
+	/**
 	 * Обрабатывает смещение выделенных сегментов образующей профиля
 	 * @param delta {paper.Point} - куда и насколько смещать
 	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
@@ -6392,7 +6409,8 @@ ProfileItem.prototype.__define({
 			if(changed){
 				this.data._rays.clear();
 
-				this.parent.notify(noti);
+				if(this.parent.notify)
+					this.parent.notify(noti);
 
 				var notifier = Object.getNotifier(this);
 				notifier.notify({ type: 'update', name: "x1" });
@@ -6802,7 +6820,7 @@ Profile.prototype.__define({
 					allow_open_cnn = this.project._dp.sys.allow_open_cnn,
 					ares = [];
 
-				for(var i in profiles){
+				for(var i=0; i<profiles.length; i++){
 					if(this.check_distance(profiles[i], res, point, false) === false){
 
 						// для простых систем разрывы профиля не анализируем
@@ -7257,6 +7275,8 @@ function ProfileAddl(attr){
 
 	ProfileAddl.superclass.constructor.call(this, attr);
 
+	this.data.side = attr.side || "inner";
+
 }
 ProfileAddl._extend(ProfileItem);
 
@@ -7412,10 +7432,9 @@ ProfileAddl.prototype.__define({
 	},
 
 	/**
-	 * С этой функции начинается пересчет и перерисовка сегмента раскладки
+	 * С этой функции начинается пересчет и перерисовка сегмента добора
 	 * Возвращает объект соединения конца профиля
 	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
-	 * - Попутно устанавливает признак `is_cut`, если в точке сходятся больше двух профилей
 	 * - Не делает подмену соединения, хотя могла бы
 	 * - Не делает подмену вставки, хотя могла бы
 	 *
@@ -7443,12 +7462,26 @@ ProfileAddl.prototype.__define({
 
 			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 			res.clear();
+			res.cnn_types = acn.t;
+
 			if(this.parent){
 
-				// var res_bind = this.bind_node(point);
-				// if(res_bind.binded){
-				// 	res._mixin(res_bind, ["point","profile","cnn_types","profile_point"]);
-				// }
+				var profiles = this.layer.profiles, gp, distance;
+
+				for(var i=0; i<profiles.length; i++){
+					
+					if(profiles[i] != this.parent){
+						
+						gp = profiles[i].generatrix.getNearestPoint(point);
+						if(gp && (distance = gp.getDistance(point)) < consts.sticking){
+							if(distance < res.distance){
+								res.point = gp;
+								res.distance = distance;
+								res.profile = profiles[i];
+							}
+						}
+					}
+				}
 			}
 
 			return res;
@@ -7801,7 +7834,6 @@ Onlay.prototype.__define({
 	 * С этой функции начинается пересчет и перерисовка сегмента раскладки
 	 * Возвращает объект соединения конца профиля
 	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
-	 * - Попутно устанавливает признак `is_cut`, если в точке сходятся больше двух профилей
 	 * - Не делает подмену соединения, хотя могла бы
 	 * - Не делает подмену вставки, хотя могла бы
 	 *
@@ -9114,7 +9146,7 @@ function ToolArc(){
 	};
 	tool.hitTest = function(event) {
 
-		var hitSize = 4;
+		var hitSize = 6;
 		tool.hitItem = null;
 
 		if (event.point)
@@ -9686,24 +9718,93 @@ function ToolPen(){
 	}
 	
 	tool.hitTest = function(event) {
-		// var hitSize = 4.0; // / view.zoom;
-		var hitSize = 4;
+
+		var hitSize = 16;
+
+		tool.addl_hit = null;
 		tool.hitItem = null;
 
-		// Hit test items.
-		if (event.point)
-			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
+		if(tool.profile.elm_type == $p.enm.elm_types.Добор || tool.profile.elm_type == $p.enm.elm_types.Соединитель){
 
-		if(!tool.hitItem)
-			tool.hitItem = _editor.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
 
-		if (tool.hitItem && tool.hitItem.item.parent instanceof ProfileItem
-			&& (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke')) {
-			_editor.canvas_cursor('cursor-pen-adjust');
+			// Hit test items.
+			if (event.point)
+				tool.hitItem = _editor.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
 
-		} else {
-			_editor.canvas_cursor('cursor-pen-freehand');
+			if (tool.hitItem) {
+
+				if(tool.hitItem.item.layer == _editor.project.activeLayer &&  tool.hitItem.item.parent instanceof ProfileItem && !(tool.hitItem.item.parent instanceof Onlay)){
+					// для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
+
+					var hit = {
+						point: tool.hitItem.point,
+						profile: tool.hitItem.item.parent
+					};
+
+					// выясним, с какой стороны примыкает профиль
+					if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
+							hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true))
+						hit.side = "inner";
+					else
+						hit.side = "outer";
+					
+					// бежим по всем заполнениям и находим ребро
+					hit.profile.layer.glasses(false, true).some(function (glass) {
+
+						for(var i=0; i<glass.profiles.length; i++){
+							var rib = glass.profiles[i];
+							if(rib.profile == hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)){
+
+								if(hit.side == "outer" && rib.outer || hit.side == "inner" && !rib.outer){
+									hit.rib = i;
+									hit.glass = glass;
+									return true;
+								}
+							}
+						}
+					});
+
+					if(hit.glass){
+						tool.addl_hit = hit;
+						_editor.canvas_cursor('cursor-pen-adjust');
+					}
+
+				}else if(tool.hitItem.item.parent instanceof Filling){
+					// для заполнения, ищем ребро и примыкающий профиль
+
+					// tool.addl_hit = tool.hitItem;
+					// _editor.canvas_cursor('cursor-pen-adjust');
+
+				}else{
+					_editor.canvas_cursor('cursor-pen-freehand');
+				}
+
+			} else {
+
+				tool.hitItem = _editor.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+				_editor.canvas_cursor('cursor-pen-freehand');
+			}
+
+		}else{
+			// var hitSize = 4.0; // / view.zoom;
+			hitSize = 6;
+
+			// Hit test items.
+			if (event.point)
+				tool.hitItem = _editor.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
+
+			if(!tool.hitItem)
+				tool.hitItem = _editor.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+
+			if (tool.hitItem && tool.hitItem.item.parent instanceof ProfileItem
+				&& (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke')) {
+				_editor.canvas_cursor('cursor-pen-adjust');
+
+			} else {
+				_editor.canvas_cursor('cursor-pen-freehand');
+			}
 		}
+
 
 		return true;
 	};
@@ -9783,17 +9884,38 @@ function ToolPen(){
 		mousedown: function(event) {
 
 			_editor.project.deselectAll();
-			this.mode = 'continue';
-			this.start_binded = false;
-			this.mouseStartPos = event.point.clone();
 
+			if(tool.profile.elm_type == $p.enm.elm_types.Добор || tool.profile.elm_type == $p.enm.elm_types.Соединитель){
+
+				// для доборов и соединителей, создаём элемент, если есть addl_hit
+				if(this.addl_hit){
+
+				}
+
+			}else{
+
+				// для профилей и раскладок, начинаем рисовать
+				this.mode = 'continue';
+				this.start_binded = false;
+				this.mouseStartPos = event.point.clone();
+			}
 		},
 
 		mouseup: function(event) {
 
 			_editor.canvas_cursor('cursor-pen-freehand');
 
-			if (this.mode && this.path) {
+			if(this.addl_hit && this.addl_hit.glass && this.profile.elm_type == $p.enm.elm_types.Добор && !this.profile.inset.empty()){
+				// рисуем доборный профиль
+				new ProfileAddl({
+					generatrix: this.addl_hit.generatrix,
+					proto: this.profile,
+					parent: this.addl_hit.profile,
+					side: this.addl_hit.side
+				});
+
+
+			}else if(this.mode && this.path) {
 
 				if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
@@ -9812,8 +9934,7 @@ function ToolPen(){
 						
 					}.bind(this));
 
-					if(this.path)
-						this.path.remove();
+
 
 				}else{
 					// Рисуем профиль
@@ -9821,14 +9942,10 @@ function ToolPen(){
 
 				}
 
-				this.mode = null;
-				this.path = null;
 
 			}else if (this.hitItem && this.hitItem.item) {
 
 				var item = this.hitItem.item;
-				this.mode = null;
-				this.path = null;
 
 				// TODO: Выделяем элемент, если он подходящего типа
 				if(item.parent instanceof ProfileItem && item.parent.isInserted()){
@@ -9844,6 +9961,11 @@ function ToolPen(){
 					item.layer.activate();
 
 			}
+
+			if(this.path)
+				this.path.remove();
+			this.mode = null;
+			this.path = null;
 
 		},
 
@@ -9973,7 +10095,59 @@ function ToolPen(){
 		},
 
 		mousemove: function(event) {
+
 			this.hitTest(event);
+
+			// елси есть addl_hit - рисуем прототип элемента
+			if(this.addl_hit && this.addl_hit.glass){
+
+				if (!this.path){
+					this.path = new paper.Path({
+						strokeColor: 'black',
+						fillColor: 'white',
+						strokeScaling: false,
+						guide: true
+					});
+				}
+
+				this.path.removeSegments();
+
+				// находим 2 точки на примыкающем профиле и 2 точки на предыдущем и последующем сегментах
+				var profiles = this.addl_hit.glass.profiles,
+					prev = this.addl_hit.rib==0 ? profiles[profiles.length-1] : profiles[this.addl_hit.rib-1],
+					curr = profiles[this.addl_hit.rib],
+					next = this.addl_hit.rib==profiles.length-1 ? profiles[0] : profiles[this.addl_hit.rib+1];
+
+				var path_prev = prev.outer ? prev.profile.rays.outer : prev.profile.rays.inner,
+					path_curr = curr.outer ? curr.profile.rays.outer : curr.profile.rays.inner,
+					path_next = next.outer ? next.profile.rays.outer : next.profile.rays.inner;
+
+				var p1 = path_curr.intersect_point(path_prev, curr.b),
+					p2 = path_curr.intersect_point(path_next, curr.e),
+					sub_path = path_curr.get_subpath(p1, p2);
+
+				// рисуем примерный путь доборного профиля
+				this.path.addSegments(sub_path.segments);
+
+				sub_path = sub_path.equidistant(-(this.profile.inset.nom().width || 20));
+				sub_path.reverse();
+				this.path.addSegments(sub_path.segments);
+				sub_path.removeSegments();
+				sub_path.remove();
+
+				this.path.closePath();
+
+				// получаем generatrix
+				if(!this.addl_hit.generatrix || !this.addl_hit.generatrix.firstSegment.point.is_nearest(curr.b) || !this.addl_hit.generatrix.lastSegment.point.is_nearest(curr.e)){
+					this.addl_hit.generatrix = curr.profile.generatrix.get_subpath(curr.b, curr.e);
+				}
+
+			}else if(this.path){
+				this.path.removeSegments();
+				this.path.remove();
+				this.path = null;
+			}
+
 		},
 
 		keydown: function(event) {
@@ -10063,7 +10237,7 @@ function ToolRuler(){
 			this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
 
 			// Hit test points
-			var hit = paper.project.hitPoints(event.point, 20);
+			var hit = paper.project.hitPoints(event.point, 16);
 			if (hit && hit.item.parent instanceof ProfileItem){
 				this.hitItem = hit;
 			}
@@ -10361,8 +10535,7 @@ ToolRuler.prototype.__define({
 				}.bind(this), 200);
 			}
 
-		},
-		enumerable: false
+		}
 	},
 
 	_sizes_wnd: {
@@ -10388,8 +10561,7 @@ ToolRuler.prototype.__define({
 						break;
 				}
 			}
-		},
-		enumerable: false
+		}
 	}
 
 });
@@ -10600,8 +10772,7 @@ function RulerWnd(options, tool){
 			},
 			set: function (v) {
 				input.firstChild.value = parseFloat(v).round(1);
-			},
-			enumerable: false
+			}
 		}
 	});
 
@@ -10651,7 +10822,7 @@ function ToolSelectNode(){
 		return tool.hitTest(event);
 	};
 	tool.hitTest = function(event) {
-		var hitSize = 4;
+		var hitSize = 6;
 		var hit = null;
 		tool.hitItem = null;
 
@@ -11088,7 +11259,7 @@ function ToolText(){
 		return tool.hitTest(event);
 	};
 	tool.hitTest = function(event) {
-		var hitSize = 4;
+		var hitSize = 6;
 
 		// хит над текстом обрабатываем особо
 		tool.hitItem = _editor.project.hitTest(event.point, { class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize });

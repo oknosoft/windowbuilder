@@ -54,7 +54,7 @@ function ToolRuler(){
 			this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
 
 			// Hit test points
-			var hit = paper.project.hitPoints(event.point, 20);
+			var hit = paper.project.hitPoints(event.point, 16);
 			if (hit && hit.item.parent instanceof ProfileItem){
 				this.hitItem = hit;
 			}
@@ -352,8 +352,7 @@ ToolRuler.prototype.__define({
 				}.bind(this), 200);
 			}
 
-		},
-		enumerable: false
+		}
 	},
 
 	_sizes_wnd: {
@@ -379,8 +378,7 @@ ToolRuler.prototype.__define({
 						break;
 				}
 			}
-		},
-		enumerable: false
+		}
 	}
 
 });
@@ -591,8 +589,7 @@ function RulerWnd(options, tool){
 			},
 			set: function (v) {
 				input.firstChild.value = parseFloat(v).round(1);
-			},
-			enumerable: false
+			}
 		}
 	});
 

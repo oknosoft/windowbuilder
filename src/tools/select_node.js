@@ -36,7 +36,7 @@ function ToolSelectNode(){
 		return tool.hitTest(event);
 	};
 	tool.hitTest = function(event) {
-		var hitSize = 4;
+		var hitSize = 6;
 		var hit = null;
 		tool.hitItem = null;
 

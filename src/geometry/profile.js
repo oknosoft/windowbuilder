@@ -764,6 +764,18 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
+	 * Перерисовывает доборы и соединители
+	 */
+	redraw_children: {
+		value: function () {
+			this.children.forEach(function (elm) {
+				if(elm instanceof ProfileAddl)
+					elm.redraw();
+			});
+		}
+	},
+
+	/**
 	 * Обрабатывает смещение выделенных сегментов образующей профиля
 	 * @param delta {paper.Point} - куда и насколько смещать
 	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
@@ -838,7 +850,8 @@ ProfileItem.prototype.__define({
 			if(changed){
 				this.data._rays.clear();
 
-				this.parent.notify(noti);
+				if(this.parent.notify)
+					this.parent.notify(noti);
 
 				var notifier = Object.getNotifier(this);
 				notifier.notify({ type: 'update', name: "x1" });
@@ -1248,7 +1261,7 @@ Profile.prototype.__define({
 					allow_open_cnn = this.project._dp.sys.allow_open_cnn,
 					ares = [];
 
-				for(var i in profiles){
+				for(var i=0; i<profiles.length; i++){
 					if(this.check_distance(profiles[i], res, point, false) === false){
 
 						// для простых систем разрывы профиля не анализируем

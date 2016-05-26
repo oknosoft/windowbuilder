@@ -475,8 +475,13 @@ Contour.prototype.__define({
 				this.l_visualization._by_spec.removeChildren();
 
 			// сначала перерисовываем все профили контура
-			profiles.forEach(function(element) {
-				element.redraw();
+			profiles.forEach(function(elm) {
+				elm.redraw();
+			});
+
+			// затем, доборы и соединители
+			profiles.forEach(function(elm) {
+				elm.redraw_children();
 			});
 
 			// создаём и перерисовываем заполнения
@@ -597,13 +602,13 @@ Contour.prototype.__define({
 				to_remove = [], res = [], elm, findedb, findede;
 
 			// прочищаем, выкидывая такие, начало или конец которых соединениы не в узле
-			for(var i in profiles){
+			for(var i=0; i<profiles.length; i++){
 				elm = profiles[i];
 				if(elm.data.simulated)
 					continue;
 				findedb = false;
 				findede = false;
-				for(var j in profiles){
+				for(var j=0; i<profiles.length; j++){
 					if(profiles[j] == elm)
 						continue;
 					if(!findedb && elm.b.is_nearest(profiles[j].e))
@@ -614,7 +619,7 @@ Contour.prototype.__define({
 				if(!findedb || !findede)
 					to_remove.push(elm);
 			}
-			for(var i in profiles){
+			for(var i=0; i<profiles.length; i++){
 				elm = profiles[i];
 				if(to_remove.indexOf(elm) != -1)
 					continue;
