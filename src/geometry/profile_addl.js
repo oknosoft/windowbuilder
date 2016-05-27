@@ -151,13 +151,16 @@ ProfileAddl.prototype.__define({
 	 */
 	d0: {
 		get : function(){
-			var res = 0, curr = this, nearest;
 
-			while(nearest = curr.nearest()){
-				res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
-				curr = nearest;
-			}
-			return res;
+			return 0;
+			//
+			// var res = 0, curr = this, nearest;
+			//
+			// while(nearest = curr.nearest()){
+			// 	res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
+			// 	curr = nearest;
+			// }
+			// return res;
 		}
 	},
 
@@ -394,7 +397,8 @@ ProfileAddl.prototype.__define({
 					if(!cnn.profile)
 						return;
 					
-					var mpoint = this.parent.generatrix.intersect_point(cnn.profile.generatrix, cnn.point, "nearest");
+					var gen = this.outer ? this.parent.rays.outer : this.parent.rays.inner;
+						mpoint = cnn.profile.generatrix.intersect_point(gen, cnn.point, "nearest");
 					if(!mpoint.is_nearest(this[node])){
 						this[node] = mpoint;
 						moved_fact = true;

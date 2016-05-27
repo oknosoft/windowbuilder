@@ -7409,13 +7409,16 @@ ProfileAddl.prototype.__define({
 	 */
 	d0: {
 		get : function(){
-			var res = 0, curr = this, nearest;
 
-			while(nearest = curr.nearest()){
-				res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
-				curr = nearest;
-			}
-			return res;
+			return 0;
+			//
+			// var res = 0, curr = this, nearest;
+			//
+			// while(nearest = curr.nearest()){
+			// 	res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
+			// 	curr = nearest;
+			// }
+			// return res;
 		}
 	},
 
@@ -7652,7 +7655,8 @@ ProfileAddl.prototype.__define({
 					if(!cnn.profile)
 						return;
 					
-					var mpoint = this.parent.generatrix.intersect_point(cnn.profile.generatrix, cnn.point, "nearest");
+					var gen = this.outer ? this.parent.rays.outer : this.parent.rays.inner;
+						mpoint = cnn.profile.generatrix.intersect_point(gen, cnn.point, "nearest");
 					if(!mpoint.is_nearest(this[node])){
 						this[node] = mpoint;
 						moved_fact = true;
@@ -10354,22 +10358,27 @@ function ToolPen(){
 				var p1 = path_curr.intersect_point(path_prev, curr.b),
 					p2 = path_curr.intersect_point(path_next, curr.e),
 					sub_path = path_curr.get_subpath(p1, p2);
-
-				// рисуем примерный путь доборного профиля
+					
+				// рисуем внушнюю часть прототипа пути доборного профиля
 				this.path.addSegments(sub_path.segments);
 
+				// завершим рисование прототипа пути доборного профиля
 				sub_path = sub_path.equidistant(-(this.profile.inset.nom().width || 20));
 				sub_path.reverse();
 				this.path.addSegments(sub_path.segments);
 				sub_path.removeSegments();
 				sub_path.remove();
-
 				this.path.closePath();
 
 				// получаем generatrix
-				if(!this.addl_hit.generatrix || !this.addl_hit.generatrix.firstSegment.point.is_nearest(curr.b) || !this.addl_hit.generatrix.lastSegment.point.is_nearest(curr.e)){
-					this.addl_hit.generatrix = curr.profile.generatrix.get_subpath(curr.b, curr.e);
+				if(!this.addl_hit.generatrix){
+					this.addl_hit.generatrix = new paper.Path({insert: false});
 				}
+				p1 = prev.profile.generatrix.getNearestPoint(p1);
+				p2 = next.profile.generatrix.getNearestPoint(p2);
+				this.addl_hit.generatrix.removeSegments();
+				this.addl_hit.generatrix.addSegments(path_curr.get_subpath(p1, p2).segments);
+				
 
 			}else if(this.path){
 				this.path.removeSegments();
