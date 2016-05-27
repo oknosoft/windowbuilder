@@ -513,7 +513,7 @@ function Scheme(_canvas){
 	 */
 	this.check_distance = function(element, profile, res, point, check_only){
 
-		var distance, gp, cnns,
+		var distance, gp, cnns, addls,
 			bind_node = typeof check_only == "string" && check_only.indexOf("node") != -1,
 			bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only;
 
@@ -583,8 +583,29 @@ function Scheme(_canvas){
 		}
 
 		// это соединение с пустотой или T
+		
+		// // если возможна привязка к добору, используем её
+		// element.addls.forEach(function (addl) {
+		// 	gp = addl.generatrix.getNearestPoint(point);
+		// 	distance = gp.getDistance(point);
+		//
+		// 	if(distance < res.distance){
+		// 		res.point = addl.rays.outer.getNearestPoint(point);
+		// 		res.distance = distance;
+		// 		res.point = gp;
+		// 		res.profile = addl;
+		// 		res.cnn_types = acn.t;
+		// 	}
+		// });
+		// if(res.distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
+		// 	return false;
+		// }
+
+		// если к доборам не привязались - проверяем профиль
 		gp = element.generatrix.getNearestPoint(point);
-		if(gp && (distance = gp.getDistance(point)) < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
+		distance = gp.getDistance(point);
+		
+		if(distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
 			
 			if(distance < res.distance || bind_generatrix){
 				if(element.d0 != 0 && element.rays.outer){
@@ -966,7 +987,10 @@ Scheme.prototype.__define({
 	draw_sizes: {
 		value: function () {
 
-			if(this.bounds){
+			var bounds = this.bounds;
+
+			if(bounds){
+
 				if(!this.l_dimensions.bottom)
 					this.l_dimensions.bottom = new DimensionLine({
 						pos: "bottom",
@@ -985,11 +1009,34 @@ Scheme.prototype.__define({
 				else
 					this.l_dimensions.right.offset = -120;
 
-			}
-			
-			this.l_dimensions.right.redraw();
-			this.l_dimensions.bottom.redraw();
+				
 
+				// если среди размеров, сформированных контурами есть габарит - второй раз не выводим
+
+				if(this.contours.some(function(l){
+						return l.l_dimensions.children.some(function (dl) {
+							if(dl.pos == "right" && Math.abs(dl.size - bounds.height) < consts.sticking_l ){
+								return true;
+							}
+						});
+					})){
+					this.l_dimensions.right.visible = false;
+				}else
+					this.l_dimensions.right.redraw();
+				
+				
+				if(this.contours.some(function(l){
+						return l.l_dimensions.children.some(function (dl) {
+							if(dl.pos == "bottom" && Math.abs(dl.size - bounds.width) < consts.sticking_l ){
+								return true;
+							}
+						});
+					})){
+					this.l_dimensions.bottom.visible = false;
+				}else
+					this.l_dimensions.bottom.redraw();
+
+			}
 		}
 	},
 
