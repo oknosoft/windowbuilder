@@ -714,7 +714,58 @@ $p.modifiers.push(
 				return a.date > b.date;
 			});
 			return res.length ? res[0] : _mgr.get();
-		}
+		};
+
+		// перед записью, устанавливаем код, родителя и наименование
+		_mgr.attache_event("before_save", function (attr) {
+
+			// уточняем родителя
+			if(!this._obj.parent)
+				this.parent = $p.blank.guid;
+
+			// уточняем вид договора
+			if(!this._obj.contract_kind)
+				this.contract_kind = $p.enm.contract_kinds.СПокупателем;
+
+			// уточняем ведение взаиморасчетов
+			if(!this._obj.mutual_settlements)
+				this.mutual_settlements = $p.enm.mutual_contract_settlements.ПоЗаказам;
+
+			// уточняем наименование
+			if(!this.name){
+				this.name = "Основной";
+			}
+
+			// присваиваем код
+			if(!this.id){
+				var prefix = ($p.current_acl.prefix || "") + ($p.wsql.get_user_param("zone") + "-"),
+					code_length = this._metadata.code_length - prefix.length,
+					part = "",
+					res = $p.wsql.alasql("select max(id) as id from ? where id like '" + prefix + "%'", [_mgr.alatable]);
+
+				// TODO: вынести в отдельную функцию
+
+				if(res.length){
+					var num0 = res[0].id || "";
+					for(var i = num0.length-1; i>0; i--){
+						if(isNaN(parseInt(num0[i])))
+							break;
+						part = num0[i] + part;
+					}
+					part = (parseInt(part || 0) + 1).toFixed(0);
+				}else{
+					part = "1";
+				}
+				while (part.length < code_length)
+					part = "0" + part;
+
+				this.id = prefix + part;
+			}
+			
+
+
+
+		});
 
 	}
 );
