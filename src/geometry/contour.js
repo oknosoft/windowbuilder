@@ -302,18 +302,26 @@ function Contour(attr){
 	// добавляем элементы контура
 	if(this.cnstr){
 
-		// профили
-		this.project.ox.coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, function(row){
-			new Profile({row: row,	parent: _contour});
+		var coordinates = this.project.ox.coordinates;
+		
+		// профили и доборы
+		coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, function(row){
+			
+			var profile = new Profile({row: row, parent: _contour});
+			
+			coordinates.find_rows({cnstr: row.cnstr, parent: {in: [row.elm, -row.elm]}, elm_type: $p.enm.elm_types.Добор}, function(row){
+				new ProfileAddl({row: row,	parent: profile});
+			});
+			
 		});
 
 		// заполнения
-		this.project.ox.coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.glasses}}, function(row){
+		coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.glasses}}, function(row){
 			new Filling({row: row,	parent: _contour});
 		});
 
-		// остальные элементы (текст, доборные профили - пока только текст
-		this.project.ox.coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, function(row){
+		// остальные элементы (текст)
+		coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, function(row){
 
 			if(row.elm_type == $p.enm.elm_types.Текст){
 				new FreeText({
@@ -685,12 +693,12 @@ Contour.prototype.__define({
 				if(is_flap && pb.is_t)
 					pbg = pb.profile.generatrix.getNearestPoint(p.b);
 				else
-					pbg = p.b.clone();
+					pbg = p.b;
 
 				if(is_flap && pe.is_t)
 					peg = pe.profile.generatrix.getNearestPoint(p.e);
 				else
-					peg = p.e.clone();
+					peg = p.e;
 
 				// если есть примыкания T, добавляем сегменты, исключая соединения с пустотой
 				if(ip.inner.length){
@@ -703,11 +711,13 @@ Contour.prototype.__define({
 						return 0;
 					});
 					if(!pb.is_i)
-						nodes.push({b: pbg, e: ip.inner[0].point.clone(), profile: p});
+						nodes.push(new GlassSegment(p, pbg, ip.inner[0].point));
+
 					for(var i = 1; i < ip.inner.length; i++)
-						nodes.push({b: ip.inner[i-1].point.clone(), e: ip.inner[i].point.clone(), profile: p});
+						nodes.push(new GlassSegment(p, ip.inner[i-1].point, ip.inner[i].point));
+
 					if(!pe.is_i)
-						nodes.push({b: ip.inner[ip.inner.length-1].point.clone(), e: peg, profile: p});
+						nodes.push(new GlassSegment(p, ip.inner[ip.inner.length-1].point, peg));
 				}
 				if(ip.outer.length){
 					ip.outer.sort(function (a, b) {
@@ -719,36 +729,24 @@ Contour.prototype.__define({
 						return 0;
 					});
 					if(!pb.is_i)
-						nodes.push({b: ip.outer[0].point.clone(), e: pbg, profile: p, outer: true});
+						nodes.push(new GlassSegment(p, ip.outer[0].point, pbg, true));
+
 					for(var i = 1; i < ip.outer.length; i++)
-						nodes.push({b: ip.outer[i].point.clone(), e: ip.outer[i-1].point.clone(), profile: p, outer: true});
+						nodes.push(new GlassSegment(p, ip.outer[i].point, ip.outer[i-1].point, true));
+
 					if(!pe.is_i)
-						nodes.push({b: peg, e: ip.outer[ip.outer.length-1].point.clone(), profile: p, outer: true});
+						nodes.push(new GlassSegment(p, peg, ip.outer[ip.outer.length-1].point, true));
 				}
 				if(!ip.inner.length){
 					// добавляем, если нет соединений с пустотой
 					if(!pb.is_i && !pe.is_i)
-						nodes.push({b: pbg, e: peg, profile: p});
+						nodes.push(new GlassSegment(p, pbg, peg));
 				}
 				if(!ip.outer.length && (pb.is_cut || pe.is_cut || pb.is_t || pe.is_t)){
 					// для импостов добавляем сегмент в обратном направлении
 					if(!pb.is_i && !pe.is_i)
-						nodes.push({b: peg, e: pbg, profile: p, outer: true});
+						nodes.push(new GlassSegment(p, peg, pbg, true));
 				}
-			});
-
-			// если к сегментам примыкают доборы, заменяем сегменты доборами
-			nodes.forEach(function (curr) {
-				curr.profile.children.forEach(function (addl) {
-					if(addl instanceof ProfileAddl && curr.b.is_nearest(addl.b) && curr.e.is_nearest(addl.e)){
-
-						if(curr.outer && addl.outer || !curr.outer && !addl.outer){
-							curr.profile = addl;
-							if(curr.outer)
-								delete curr.outer;
-						}
-					}
-				});
 			});
 
 			return nodes;
@@ -1795,3 +1793,52 @@ Contour.prototype.__define({
  * @type {function}
  */
 Editor.Contour = Contour;
+
+
+/**
+ * Сегмент заполнения содержит информацию примыкающем профиле и координатах начала и конца
+ * @constructor
+ */
+function GlassSegment(profile, b, e, outer) {
+
+	this.profile = profile;
+	this.b = b.clone();
+	this.e = e.clone();
+	this.outer = !!outer;
+
+	this.segment();
+
+}
+GlassSegment.prototype.__define({
+
+	segment: {
+		value: function () {
+
+			var gen;
+
+			if(this.profile.children.some(function (addl) {
+
+					if(addl instanceof ProfileAddl && this.outer == addl.outer){
+
+						if(!gen)
+							gen = this.profile.generatrix;
+
+						var b = this.profile instanceof ProfileAddl ? this.profile.b : this.b,
+							e = this.profile instanceof ProfileAddl ? this.profile.e : this.e;
+
+						// TODO: учесть импосты, привязанные к добору
+						
+						if(b.is_nearest(gen.getNearestPoint(addl.b), true) && e.is_nearest(gen.getNearestPoint(addl.e), true)){
+							this.profile = addl;
+							this.outer = false;
+							return true;
+						}
+					}
+				}.bind(this))){
+
+				this.segment();
+			}
+		}
+	}
+
+});

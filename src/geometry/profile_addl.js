@@ -29,106 +29,21 @@ function ProfileAddl(attr){
 
 	this.data.generatrix.strokeWidth = 0;
 
+	if(!attr.side && this._row.parent < 0)
+		attr.side = "outer";
+	
 	this.data.side = attr.side || "inner";
 
-	// if(this.parent){
-	//
-	// 	// Подключаем наблюдателя за событиями контура с именем _consts.move_points_
-	// 	this._observer = this.observer.bind(this);
-	// 	Object.observe(this.layer._noti, this._observer, [consts.move_points]);
-	//
-	// }
+	if(!this._row.parent)
+		this._row.parent = this.parent.elm;
+	if(this.outer)
+		this._row.parent = -this._row.parent;
 
 }
 ProfileAddl._extend(ProfileItem);
 
 
 ProfileAddl.prototype.__define({
-
-	/**
-	 * Вычисляемые поля в таблице координат
-	 * @method save_coordinates
-	 * @for Profile
-	 */
-	save_coordinates: {
-		value: function () {
-
-			if(!this.data.generatrix)
-				return;
-
-			var _row = this._row,
-
-				cnns = this.project.connections.cnns,
-				b = this.rays.b,
-				e = this.rays.e,
-
-				row_b = cnns.add({
-					elm1: _row.elm,
-					node1: "b",
-					cnn: b.cnn ? b.cnn.ref : "",
-					aperture_len: this.corns(1).getDistance(this.corns(4))
-				}),
-				row_e = cnns.add({
-					elm1: _row.elm,
-					node1: "e",
-					cnn: e.cnn ? e.cnn.ref : "",
-					aperture_len: this.corns(2).getDistance(this.corns(3))
-				}),
-
-				gen = this.generatrix;
-
-			_row.x1 = this.x1;
-			_row.y1 = this.y1;
-			_row.x2 = this.x2;
-			_row.y2 = this.y2;
-			_row.path_data = gen.pathData;
-			_row.nom = this.nom;
-			_row.parent = this.parent.elm;
-
-
-			// добавляем припуски соединений
-			_row.len = this.length;
-
-			// сохраняем информацию о соединениях
-			if(b.profile){
-				row_b.elm2 = b.profile.elm;
-				if(b.profile instanceof Filling)
-					row_b.node2 = "t";
-				else if(b.profile.e.is_nearest(b.point))
-					row_b.node2 = "e";
-				else if(b.profile.b.is_nearest(b.point))
-					row_b.node2 = "b";
-				else
-					row_b.node2 = "t";
-			}
-			if(e.profile){
-				row_e.elm2 = e.profile.elm;
-				if(e.profile instanceof Filling)
-					row_e.node2 = "t";
-				else if(e.profile.b.is_nearest(e.point))
-					row_e.node2 = "b";
-				else if(e.profile.e.is_nearest(e.point))
-					row_e.node2 = "b";
-				else
-					row_e.node2 = "t";
-			}
-
-			// получаем углы между элементами и к горизонту
-			_row.angle_hor = this.angle_hor;
-
-			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - gen.getTangentAt(0).angle) * 10) / 10;
-			if(_row.alp1 < 0)
-				_row.alp1 = _row.alp1 + 360;
-
-			_row.alp2 = Math.round((gen.getTangentAt(gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
-			if(_row.alp2 < 0)
-				_row.alp2 = _row.alp2 + 360;
-
-			// устанавливаем тип элемента
-			_row.elm_type = this.elm_type;
-
-		}
-	},
 
 	/**
 	 * Примыкающий внешний элемент - имеет смысл для сегментов створок
@@ -151,16 +66,8 @@ ProfileAddl.prototype.__define({
 	 */
 	d0: {
 		get : function(){
-
-			return 0;
-			//
-			// var res = 0, curr = this, nearest;
-			//
-			// while(nearest = curr.nearest()){
-			// 	res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
-			// 	curr = nearest;
-			// }
-			// return res;
+			this.nearest();
+			return this.data._nearest_cnn ? -this.data._nearest_cnn.sz : 0;
 		}
 	},
 
@@ -435,6 +342,12 @@ ProfileAddl.prototype.__define({
 				// 	}
 				// }
 			}
+		}
+	},
+
+	glass_segment: {
+		value: function () {
+			
 		}
 	}
 
