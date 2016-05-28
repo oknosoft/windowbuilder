@@ -55,7 +55,7 @@ $p.modifiers.push(
 					
 					if(_row){
 						
-						name = (this.calc_order.number_internal || this.calc_order.number_doc) + "/" + _row.row.pad();
+						name = this.sys.name || ((this.calc_order.number_internal || this.calc_order.number_doc) + "/" + _row.row.pad());
 						
 						if(!short){
 							if(this.clr.name)
