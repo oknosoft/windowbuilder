@@ -382,6 +382,10 @@ function Scheme(_canvas){
 
 			_scheme.ox = o;
 
+			// включаем перерисовку
+			_data._opened = true;
+			requestAnimationFrame(redraw);
+
 			_data._bounds = new paper.Rectangle({
 				point: [0, 0],
 				size: [o.x, o.y]
@@ -684,7 +688,9 @@ function Scheme(_canvas){
 			}
 		}
 
-		requestAnimationFrame(redraw);
+		if(_data._opened)
+			requestAnimationFrame(redraw);
+
 		process_redraw();
 
 	}
@@ -700,8 +706,7 @@ function Scheme(_canvas){
 		_scheme.view.update();
 		
 	});
-	
-	redraw();
+
 }
 Scheme._extend(paper.Project);
 

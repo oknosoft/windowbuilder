@@ -34,11 +34,11 @@ function ProfileAddl(attr){
 	
 	this.data.side = attr.side || "inner";
 
-	if(!this._row.parent)
+	if(!this._row.parent){
 		this._row.parent = this.parent.elm;
-	if(this.outer)
-		this._row.parent = -this._row.parent;
-
+		if(this.outer)
+			this._row.parent = -this._row.parent;
+	}
 }
 ProfileAddl._extend(ProfileItem);
 

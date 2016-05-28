@@ -144,6 +144,7 @@ $p.iface.view_orders = function (cell) {
 				}
 
 				t.editor.project.data._loading = true;
+				t.editor.project.data._opened = false;
 				t.editor.project.ox = null;
 
 				var _cell = t.carousel.cells("doc");

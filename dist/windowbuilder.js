@@ -7369,11 +7369,11 @@ function ProfileAddl(attr){
 	
 	this.data.side = attr.side || "inner";
 
-	if(!this._row.parent)
+	if(!this._row.parent){
 		this._row.parent = this.parent.elm;
-	if(this.outer)
-		this._row.parent = -this._row.parent;
-
+		if(this.outer)
+			this._row.parent = -this._row.parent;
+	}
 }
 ProfileAddl._extend(ProfileItem);
 
@@ -8515,6 +8515,10 @@ function Scheme(_canvas){
 
 			_scheme.ox = o;
 
+			// включаем перерисовку
+			_data._opened = true;
+			requestAnimationFrame(redraw);
+
 			_data._bounds = new paper.Rectangle({
 				point: [0, 0],
 				size: [o.x, o.y]
@@ -8817,7 +8821,9 @@ function Scheme(_canvas){
 			}
 		}
 
-		requestAnimationFrame(redraw);
+		if(_data._opened)
+			requestAnimationFrame(redraw);
+
 		process_redraw();
 
 	}
@@ -8833,8 +8839,7 @@ function Scheme(_canvas){
 		_scheme.view.update();
 		
 	});
-	
-	redraw();
+
 }
 Scheme._extend(paper.Project);
 

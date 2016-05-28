@@ -2059,20 +2059,28 @@ $p.modifiers.push(
 			filter_key.__define({
 				value: {
 					get: function () {
+						var key;
+
 						switch(tree.getSelectedItemId()) {
 
 							case 'draft':
-								return 'draft';
+								key = 'draft';
+								break;
 							case 'sent':
-								return 'sent';
+								key = 'sent';
+								break;
 							case 'declined':
-								return 'declined';
+								key = 'declined';
+								break;
 							case 'confirmed':
-								return 'confirmed';
+								key = 'confirmed';
+								break;
 							case 'template':
-								return 'template';
+								key = 'template';
+								break;
 							case 'zarchive':
-								return 'zarchive';
+								key = 'zarchive';
+								break;
 
 							case 'credit':
 							case 'prepayment':
@@ -2085,6 +2093,12 @@ $p.modifiers.push(
 							case 'deleted':
 								return 'deleted';
 						}
+						
+						return {
+							startkey: key+$p.date_add_day(dhx4.str2date(wnd.elmnts.filter.input_date_from.value), 0, true).toISOString(),
+							endkey: key+$p.date_add_day(dhx4.str2date(wnd.elmnts.filter.input_date_till.value), 1, true).toISOString(),
+							_drop_date: true
+						};
 					}
 				}
 			});
@@ -5757,6 +5771,7 @@ $p.iface.view_orders = function (cell) {
 				}
 
 				t.editor.project.data._loading = true;
+				t.editor.project.data._opened = false;
 				t.editor.project.ox = null;
 
 				var _cell = t.carousel.cells("doc");
