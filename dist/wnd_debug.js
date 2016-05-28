@@ -1533,9 +1533,23 @@ $p.modifiers.push(
 					
 					// рассчеты, помеченные, как шаблоны, загрузим в память заранее
 					setTimeout(function () {
+
+						if(!$p.job_prm.builder.base_block)
+							$p.job_prm.builder.base_block = [];
+
+						// дополним base_block шаблонами из систем профилей
+						$p.cat.production_params.forEach(function (o) {
+							if(!o.is_folder)
+								o.base_blocks.forEach(function (row) {
+									if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1)
+										$p.job_prm.builder.base_block.push(row.calc_order);
+								});
+						});
+						
 						$p.job_prm.builder.base_block.forEach(function (o) {
 							o.load();
 						});
+
 					}, 500);
 
 					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
