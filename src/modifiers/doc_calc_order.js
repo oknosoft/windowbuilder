@@ -100,7 +100,7 @@ $p.modifiers.push(
 			this.sys_furn = sys_furn;
 			this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency);
 
-			this._obj.search = this.number_doc + this.client_of_dealer + this.partner.name;
+			this._obj.partner_name = this.partner.name;
 		});
 
 		// при изменении реквизита
