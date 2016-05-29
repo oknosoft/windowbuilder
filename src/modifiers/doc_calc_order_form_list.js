@@ -109,11 +109,13 @@ $p.modifiers.push(
 							case 'deleted':
 								return 'deleted';
 						}
-						
+
+						var filter = wnd.elmnts.filter.get_filter(true);
 						return {
-							startkey: key+$p.date_add_day(dhx4.str2date(wnd.elmnts.filter.input_date_from.value), 0, true).toISOString(),
-							endkey: key+$p.date_add_day(dhx4.str2date(wnd.elmnts.filter.input_date_till.value), 1, true).toISOString(),
-							_drop_date: true
+							startkey: [key, filter.date_from.getFullYear(), filter.date_from.getMonth()+1, filter.date_from.getDate()],
+							endkey: [key, filter.date_till.getFullYear(), filter.date_till.getMonth()+1, filter.date_till.getDate()],
+							_drop_date: true,
+							_search: filter.filter.toLowerCase()
 						};
 					}
 				}

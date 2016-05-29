@@ -1702,6 +1702,8 @@ $p.modifiers.push(
 			this.sys_profile = sys_profile;
 			this.sys_furn = sys_furn;
 			this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency);
+
+			this._obj.search = this.number_doc + this.client_of_dealer + this.partner.name;
 		});
 
 		// при изменении реквизита
@@ -2093,11 +2095,13 @@ $p.modifiers.push(
 							case 'deleted':
 								return 'deleted';
 						}
-						
+
+						var filter = wnd.elmnts.filter.get_filter(true);
 						return {
-							startkey: key+$p.date_add_day(dhx4.str2date(wnd.elmnts.filter.input_date_from.value), 0, true).toISOString(),
-							endkey: key+$p.date_add_day(dhx4.str2date(wnd.elmnts.filter.input_date_till.value), 1, true).toISOString(),
-							_drop_date: true
+							startkey: [key, filter.date_from.getFullYear(), filter.date_from.getMonth()+1, filter.date_from.getDate()],
+							endkey: [key, filter.date_till.getFullYear(), filter.date_till.getMonth()+1, filter.date_till.getDate()],
+							_drop_date: true,
+							_search: filter.filter.toLowerCase()
 						};
 					}
 				}
