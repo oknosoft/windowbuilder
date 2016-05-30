@@ -3152,6 +3152,23 @@ $p.modifiers.push(
 				configurable : false
 			},
 
+			profile_items: {
+				get : function(){
+					return cache.profile_items
+						|| ( cache.profile_items = [
+							_mgr.Рама,
+							_mgr.Створка,
+							_mgr.Импост,
+							_mgr.Штульп,
+							_mgr.Добор,
+							_mgr.Соединитель,
+							_mgr.Раскладка
+						] );
+				},
+				enumerable : false,
+				configurable : false
+			},
+
 			rama_impost: {
 				get : function(){
 					return cache.rama_impost
@@ -4637,12 +4654,14 @@ $p.modifiers.push(
 				}
 
 
-				// Спецификация вставки
+				// спецификация вставки
 				inset_spec(elm);
 
-				// Если у профиля есть примыкающий элемент, добавим спецификацию соединения
-				if(elm.layer.parent)
-					cnn_spec_nearest(elm);
+				// если у профиля есть примыкающий родительский элемент, добавим спецификацию II соединения
+				cnn_spec_nearest(elm);
+
+				// если у профиля есть доборы, добавляем их спецификации
+				elm.addls.forEach(base_spec_profile);
 
 			}
 
@@ -4704,7 +4723,7 @@ $p.modifiers.push(
 					// добавляем строку спецификации, если профиль или не про шагам
 					if((row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру
 						&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
-						$p.enm.elm_types.profiles.indexOf(_row.elm_type) != -1)
+						$p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1)
 						row_spec = new_spec_row(null, elm, row_ins_spec, null, inset);
 
 					if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !row_ins_spec.formula.empty()){
@@ -4716,7 +4735,7 @@ $p.modifiers.push(
 							$p.record_log(err);
 						}
 
-					}else if($p.enm.elm_types.profiles.indexOf(_row.elm_type) != -1 ||
+					}else if($p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1 ||
 								row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ДляЭлемента){
 						// Для вставок в профиль способ расчета количество не учитывается
 						calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);

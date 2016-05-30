@@ -30,6 +30,23 @@ $p.modifiers.push(
 				configurable : false
 			},
 
+			profile_items: {
+				get : function(){
+					return cache.profile_items
+						|| ( cache.profile_items = [
+							_mgr.Рама,
+							_mgr.Створка,
+							_mgr.Импост,
+							_mgr.Штульп,
+							_mgr.Добор,
+							_mgr.Соединитель,
+							_mgr.Раскладка
+						] );
+				},
+				enumerable : false,
+				configurable : false
+			},
+
 			rama_impost: {
 				get : function(){
 					return cache.rama_impost
