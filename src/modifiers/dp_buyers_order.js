@@ -97,7 +97,9 @@ $p.modifiers.push(
 			// attr.draw_tabular_sections = function (o, wnd, tabular_init) {
 			//
 			// };
-			
+
+
+			o.presentation = "Добавление продукции с параметрами";
 
 			o.form_obj(pwnd, attr)
 				.then(function (res) {

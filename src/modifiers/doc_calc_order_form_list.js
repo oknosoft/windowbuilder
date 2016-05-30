@@ -115,6 +115,7 @@ $p.modifiers.push(
 							startkey: [key, filter.date_from.getFullYear(), filter.date_from.getMonth()+1, filter.date_from.getDate()],
 							endkey: [key, filter.date_till.getFullYear(), filter.date_till.getMonth()+1, filter.date_till.getDate()],
 							_drop_date: true,
+							_order_by: true,
 							_search: filter.filter.toLowerCase()
 						};
 					}
