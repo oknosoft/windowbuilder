@@ -34,6 +34,7 @@ gulp.task('injected-templates', function(){
 		'./data/create_tables.sql',
 		'./src/templates/xml/toolbar_calc_order_production.xml',
 		'./src/templates/xml/toolbar_calc_order_obj.xml',
+		'./src/templates/xml/toolbar_product_list.xml',
 		'./src/templates/xml/tree_*.xml',
 		'./src/templates/view_*.html'
 	])

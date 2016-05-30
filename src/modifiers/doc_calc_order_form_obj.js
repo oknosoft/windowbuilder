@@ -230,7 +230,7 @@ $p.modifiers.push(
 						break;
 
 					case 'btn_add_product':
-						$p.injected_data["wnd/wnd_product_list"](o, wnd, process_add_product);
+						$p.dp.buyers_order.form_product_list(wnd, process_add_product);
 						break;
 
 					case 'btn_add_material':
@@ -755,9 +755,13 @@ $p.modifiers.push(
 			/**
 			 * ОбработатьДобавитьПродукцию()
 			 */
-			function process_add_product(new_rows){
+			function process_add_product(ts){
 
-				wnd.progressOn();
+				if(ts && ts.count()){
+
+					ts.clear();
+				}
+				//wnd.progressOn();
 				// TODO: _mgr.save
 				//_mgr.save({
 				//	ref: o.ref,

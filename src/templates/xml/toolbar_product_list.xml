@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding='utf-8'?>
+<toolbar>
+    <item id="btn_ok"   type="button"   text="&lt;b&gt;Рассчитать и закрыть&lt;/b&gt;" title="Рассчитать, записать и закрыть"  />
+    <item id="sep0" type="separator"/>
+    <item id="btn_xls"  type="button"	text="Загрузить из XLS" title="Загрузить список продукции из файла xls" />
+
+    <item type="button" id="btn_post" enabled="false" text="" title="" />
+    <item type="button" id="btn_unpost" enabled="false" text="" title="" />
+    <item type="buttonSelect" id="bs_print" enabled="false" text="" title="" openAll="true">
+    </item>
+
+</toolbar>
