@@ -95,28 +95,37 @@ $p.modifiers.push(
 			 */
 			refill_prm: {
 				value: function (ox, cnstr) {
-					if(!cnstr)
-						cnstr = 0;
+
 					var prm_ts = !cnstr ? this.product_params : this.furn_params,
 						adel = [];
 
 					// если в характеристике есть лишние параметры - удаляем
-					ox.params.find_rows({cnstr: cnstr}, function (row) {
-						if(prm_ts.find_rows({param: row.param}).length == 0)
-							adel.push(row);
-					});
-					adel.forEach(function (row) {
-						ox.params.del(row);
-					});
+					if(!cnstr){
+						cnstr = 0;
+						ox.params.find_rows({cnstr: cnstr}, function (row) {
+							if(prm_ts.find_rows({param: row.param}).length == 0)
+								adel.push(row);
+						});
+						adel.forEach(function (row) {
+							ox.params.del(row);
+						});
+					}
 
 					// бежим по параметрам. при необходимости, добавляем или перезаполняем и устанавливаем признак hide
 					prm_ts.forEach(function (default_row) {
+						
 						var row;
 						ox.params.find_rows({cnstr: cnstr, param: default_row.param}, function (_row) {
 							row = _row;
+							return false;
 						});
-						if(!row)
+						
+						// если не найден параметр изделия - добавляем. если нет параметра фурнитуры - пропускаем
+						if(!row){
+							if(cnstr)
+								return;
 							row = ox.params.add({cnstr: cnstr, param: default_row.param, value: default_row.value});
+						}							
 
 						if(row.hide != default_row.hide)
 							row.hide = default_row.hide;
@@ -128,6 +137,12 @@ $p.modifiers.push(
 					if(!cnstr){
 						ox.sys = this;
 						ox.owner = ox.prod_nom;
+
+						// одновременно, перезаполним параметры фурнитуры
+						ox.constructions.forEach(function (row) {
+							if(!row.furn.empty())
+								ox.sys.refill_prm(ox, row.cnstr);
+						})
 					}
 				}
 			}

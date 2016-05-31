@@ -8180,15 +8180,26 @@ function Scheme(_canvas){
 					if(change.name == "sys" && !change.object.sys.empty()){
 
 						change.object.sys.refill_prm(_scheme.ox);
+						
+						// обновляем свойства изделия
 						Object.getNotifier(change.object).notify({
 							type: 'rows',
 							tabular: 'extra_fields'
 						});
 
+						// обновляем свойства створки
+						if(_scheme.activeLayer)
+							Object.getNotifier(_scheme.activeLayer).notify({
+								type: 'rows',
+								tabular: 'params'
+							});
+						
+						// информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
 						_scheme.contours.forEach(function (l) {
 							l.on_sys_changed();
 						});
 
+						
 						if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
 							$p.wsql.set_user_param("editor_last_sys", change.object.sys.ref);
 
