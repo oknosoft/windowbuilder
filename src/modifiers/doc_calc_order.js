@@ -14,6 +14,9 @@ $p.modifiers.push(
 
 		var _mgr = $p.doc.calc_order;
 
+		// переопределяем формирование списка выбора
+		_mgr.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
+
 		// после создания надо заполнить реквизиты по умолчанию: контрагент, организация, договор
 		_mgr.attache_event("after_create", function (attr) {
 

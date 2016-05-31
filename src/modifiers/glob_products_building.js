@@ -826,9 +826,22 @@ $p.modifiers.push(
 					if(!elm.is_linear())
 						row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
 
-					else if((row_cnn_prev && !row_cnn_prev.formula.empty()) || (row_cnn_next && !row_cnn_next.formula.empty())){
-						// TODO: дополнительная корректировка длины формулой
+					// дополнительная корректировка формулой - здесь можно изменить размер, номенклатуру и вообще, что угодно в спецификации
+					if(row_cnn_prev && !row_cnn_prev.formula.empty()){
+						row_cnn_prev.formula.execute({
+							ox: ox,
+							elm: elm,
+							row_cnn: row_cnn_prev,
+							row_spec: row_spec
+						});
 
+					}else if(row_cnn_next && !row_cnn_next.formula.empty()){
+						row_cnn_next.formula.execute({
+							ox: ox,
+							elm: elm,
+							row_cnn: row_cnn_next,
+							row_spec: row_spec
+						});
 					}
 
 					// РассчитатьКоличествоПлощадьМассу

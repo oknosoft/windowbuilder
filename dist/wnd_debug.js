@@ -22,7 +22,8 @@ $p.modifiers.push(
 	function($p) {
 
 		var _mgr = $p.cat.characteristics;
-
+		
+		
 		// перед записью надо пересчитать наименование и рассчитать итоги
 		_mgr.attache_event("before_save", function (attr) {
 
@@ -166,8 +167,6 @@ $p.modifiers.push(
 
 			}
 		});
-
-
 
 		// подписываемся на событие после загрузки из pouchdb-ram и готовности предопределенных
 		var init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", function () {
@@ -861,6 +860,8 @@ $p.modifiers.push(
 					.then(function (rows) {
 
 						rows.forEach(function (row) {
+
+							// формируем списки печатных форм и внешних обработок
 							if(row.parent == _mgr.predefined("printing_plates")){
 								row.params.find_rows({param: "destination"}, function (dest) {
 									var dmgr = $p.md.mgr_by_class_name(dest.value);
@@ -886,12 +887,11 @@ $p.modifiers.push(
 					if(!this._data._formula && this.formula)
 						this._data._formula = (new Function("obj", this.formula)).bind(this);
 
-					// создаём blob из шаблона пустой страницы
-					if(!($p.injected_data['view_blank.html'] instanceof Blob))
-						$p.injected_data['view_blank.html'] = new Blob([$p.injected_data['view_blank.html']], {type: 'text/html'});
-
-
 					if(this.parent == _mgr.predefined("printing_plates")){
+
+						// создаём blob из шаблона пустой страницы
+						if(!($p.injected_data['view_blank.html'] instanceof Blob))
+							$p.injected_data['view_blank.html'] = new Blob([$p.injected_data['view_blank.html']], {type: 'text/html'});
 
 						// получаем HTMLDivElement с отчетом
 						return this._data._formula(obj)
@@ -1657,6 +1657,9 @@ $p.modifiers.push(
 	function($p) {
 
 		var _mgr = $p.doc.calc_order;
+
+		// переопределяем формирование списка выбора
+		_mgr.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
 
 		// после создания надо заполнить реквизиты по умолчанию: контрагент, организация, договор
 		_mgr.attache_event("after_create", function (attr) {
@@ -4714,9 +4717,22 @@ $p.modifiers.push(
 					if(!elm.is_linear())
 						row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
 
-					else if((row_cnn_prev && !row_cnn_prev.formula.empty()) || (row_cnn_next && !row_cnn_next.formula.empty())){
-						// TODO: дополнительная корректировка длины формулой
+					// дополнительная корректировка формулой - здесь можно изменить размер, номенклатуру и вообще, что угодно в спецификации
+					if(row_cnn_prev && !row_cnn_prev.formula.empty()){
+						row_cnn_prev.formula.execute({
+							ox: ox,
+							elm: elm,
+							row_cnn: row_cnn_prev,
+							row_spec: row_spec
+						});
 
+					}else if(row_cnn_next && !row_cnn_next.formula.empty()){
+						row_cnn_next.formula.execute({
+							ox: ox,
+							elm: elm,
+							row_cnn: row_cnn_next,
+							row_spec: row_spec
+						});
 					}
 
 					// РассчитатьКоличествоПлощадьМассу

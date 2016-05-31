@@ -13,7 +13,8 @@ $p.modifiers.push(
 	function($p) {
 
 		var _mgr = $p.cat.characteristics;
-
+		
+		
 		// перед записью надо пересчитать наименование и рассчитать итоги
 		_mgr.attache_event("before_save", function (attr) {
 
@@ -157,8 +158,6 @@ $p.modifiers.push(
 
 			}
 		});
-
-
 
 		// подписываемся на событие после загрузки из pouchdb-ram и готовности предопределенных
 		var init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", function () {

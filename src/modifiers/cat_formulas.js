@@ -19,6 +19,8 @@ $p.modifiers.push(
 					.then(function (rows) {
 
 						rows.forEach(function (row) {
+
+							// формируем списки печатных форм и внешних обработок
 							if(row.parent == _mgr.predefined("printing_plates")){
 								row.params.find_rows({param: "destination"}, function (dest) {
 									var dmgr = $p.md.mgr_by_class_name(dest.value);
@@ -44,12 +46,11 @@ $p.modifiers.push(
 					if(!this._data._formula && this.formula)
 						this._data._formula = (new Function("obj", this.formula)).bind(this);
 
-					// создаём blob из шаблона пустой страницы
-					if(!($p.injected_data['view_blank.html'] instanceof Blob))
-						$p.injected_data['view_blank.html'] = new Blob([$p.injected_data['view_blank.html']], {type: 'text/html'});
-
-
 					if(this.parent == _mgr.predefined("printing_plates")){
+
+						// создаём blob из шаблона пустой страницы
+						if(!($p.injected_data['view_blank.html'] instanceof Blob))
+							$p.injected_data['view_blank.html'] = new Blob([$p.injected_data['view_blank.html']], {type: 'text/html'});
 
 						// получаем HTMLDivElement с отчетом
 						return this._data._formula(obj)
