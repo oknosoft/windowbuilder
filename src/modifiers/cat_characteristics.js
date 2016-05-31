@@ -27,8 +27,6 @@ $p.modifiers.push(
 			
 			// дублируем контрагента для целей RLS
 			this.partner = this.calc_order.partner;
-
-
 			
 		});
 
@@ -54,13 +52,41 @@ $p.modifiers.push(
 						name = "";
 					
 					if(_row){
+
+						if(this.calc_order.number_internal)
+							name = this.calc_order.number_internal.trim();
+							
+						else{
+							// убираем нули из середины номера
+							var num0 = this.calc_order.number_doc,
+								part = "";
+							for(var i = 0; i<num0.length; i++){
+								if(isNaN(parseInt(num0[i])))
+									name += num0[i];
+								else
+									break;
+							}							
+							for(var i = num0.length-1; i>0; i--){
+								if(isNaN(parseInt(num0[i])))
+									break;
+								part = num0[i] + part;
+							}
+							name += parseInt(part || 0).toFixed(0);
+						}
 						
-						name = this.sys.name || ((this.calc_order.number_internal || this.calc_order.number_doc) + "/" + _row.row.pad());
+						name += "/" + _row.row.pad();
+						
+						// добавляем название системы
+						if(!this.sys.empty())
+							name += "/" + this.sys.name;
 						
 						if(!short){
+
+							// добавляем название цвета
 							if(this.clr.name)
 								name += "/" + this.clr.name;
 
+							// добавляем размеры
 							if(this.x && this.y)
 								name += "/" + this.x.toFixed(0) + "x" + this.y.toFixed(0);
 							else if(this.x)

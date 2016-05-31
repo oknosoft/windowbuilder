@@ -971,7 +971,7 @@ function Editor(pwnd, attr){
 	$p.eve.attachEvent("scheme_changed", function (scheme) {
 		if(scheme == _editor.project){
 			if(attr.set_text && scheme._calc_order_row)
-				attr.set_text(scheme.ox.prod_name(true) + " " + scheme._dp.sys.name + (scheme.ox._modified ? " *" : ""));
+				attr.set_text(scheme.ox.prod_name(true) + " " + (scheme.ox._modified ? " *" : ""));
 		}
 	});
 

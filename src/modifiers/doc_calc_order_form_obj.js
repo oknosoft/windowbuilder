@@ -641,6 +641,9 @@ $p.modifiers.push(
 				//nom,characteristic,note,quantity,unit,qty,len,width,s,first_cost,marginality,price,discount_percent,discount_percent_internal,
 				//discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,department,ordn,changed
 
+				// т.к. табчасть мы будем перерисовывать в любом случае, отключаем обсерверы
+				ox._silent = true;
+				
 				row.nom = ox.owner;
 				row.note = dp.note;
 				row.quantity = dp.quantity || 1;
@@ -651,6 +654,9 @@ $p.modifiers.push(
 				row.discount_percent_internal = dp.discount_percent_internal;
 				if(row.unit.owner != row.nom)
 					row.unit = row.nom.storage_unit;
+
+				// обновляем табчасть
+				wnd.elmnts.grids.production.refresh_row(row);
 				
 				// обновляем эскизы
 				wnd.elmnts.svgs.reload(o);

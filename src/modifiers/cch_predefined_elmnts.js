@@ -88,12 +88,12 @@ $p.modifiers.push(
 							o.load();
 						});
 
-					}, 500);
+					}, 1000);
 
 					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
 					setTimeout(function () {
 						$p.eve.callEvent("predefined_elmnts_inited");
-					}, 100);
+					}, 200);
 					
 				});
 			

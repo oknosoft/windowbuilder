@@ -36,8 +36,6 @@ $p.modifiers.push(
 			
 			// дублируем контрагента для целей RLS
 			this.partner = this.calc_order.partner;
-
-
 			
 		});
 
@@ -63,13 +61,41 @@ $p.modifiers.push(
 						name = "";
 					
 					if(_row){
+
+						if(this.calc_order.number_internal)
+							name = this.calc_order.number_internal.trim();
+							
+						else{
+							// убираем нули из середины номера
+							var num0 = this.calc_order.number_doc,
+								part = "";
+							for(var i = 0; i<num0.length; i++){
+								if(isNaN(parseInt(num0[i])))
+									name += num0[i];
+								else
+									break;
+							}							
+							for(var i = num0.length-1; i>0; i--){
+								if(isNaN(parseInt(num0[i])))
+									break;
+								part = num0[i] + part;
+							}
+							name += parseInt(part || 0).toFixed(0);
+						}
 						
-						name = this.sys.name || ((this.calc_order.number_internal || this.calc_order.number_doc) + "/" + _row.row.pad());
+						name += "/" + _row.row.pad();
+						
+						// добавляем название системы
+						if(!this.sys.empty())
+							name += "/" + this.sys.name;
 						
 						if(!short){
+
+							// добавляем название цвета
 							if(this.clr.name)
 								name += "/" + this.clr.name;
 
+							// добавляем размеры
 							if(this.x && this.y)
 								name += "/" + this.x.toFixed(0) + "x" + this.y.toFixed(0);
 							else if(this.x)
@@ -1506,12 +1532,12 @@ $p.modifiers.push(
 							o.load();
 						});
 
-					}, 500);
+					}, 1000);
 
 					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
 					setTimeout(function () {
 						$p.eve.callEvent("predefined_elmnts_inited");
-					}, 100);
+					}, 200);
 					
 				});
 			
@@ -2769,6 +2795,9 @@ $p.modifiers.push(
 				//nom,characteristic,note,quantity,unit,qty,len,width,s,first_cost,marginality,price,discount_percent,discount_percent_internal,
 				//discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,department,ordn,changed
 
+				// т.к. табчасть мы будем перерисовывать в любом случае, отключаем обсерверы
+				ox._silent = true;
+				
 				row.nom = ox.owner;
 				row.note = dp.note;
 				row.quantity = dp.quantity || 1;
@@ -2779,6 +2808,9 @@ $p.modifiers.push(
 				row.discount_percent_internal = dp.discount_percent_internal;
 				if(row.unit.owner != row.nom)
 					row.unit = row.nom.storage_unit;
+
+				// обновляем табчасть
+				wnd.elmnts.grids.production.refresh_row(row);
 				
 				// обновляем эскизы
 				wnd.elmnts.svgs.reload(o);
