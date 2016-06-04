@@ -1278,7 +1278,7 @@ Contour.prototype.__define({
 	is_rectangular: {
 		get : function(){
 			return (this.side_count != 4) || !this.profiles.some(function (profile) {
-				return !profile.is_linear();
+				return !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 1);
 			});
 		}
 	},
@@ -1297,7 +1297,7 @@ Contour.prototype.__define({
 	 */
 	w: {
 		get : function(){
-			if(this.side_count != 4)
+			if(!this.is_rectangular)
 				return 0;
 			
 			var profiles = this.profiles_by_side();
@@ -1310,7 +1310,7 @@ Contour.prototype.__define({
 	 */
 	h: {
 		get : function(){
-			if(this.side_count != 4)
+			if(!this.is_rectangular)
 				return 0;
 			
 			var profiles = this.profiles_by_side();

@@ -4407,6 +4407,65 @@ $p.modifiers.push(
 			}
 
 			/**
+			 * Аналог УПзП-шного _ПроверитьОграниченияСтрокиФурнитуры_
+			 * @param contour {Contour}
+			 * @param cache {Object}
+			 * @param furn_set {_cat.furns}
+			 * @param row {_cat.furns.specification.row}
+			 */
+			function furn_check_row_restrictions(contour, cache, furn_set, row) {
+
+				var res = true;
+
+				// по таблице параметров
+				furn_set.selection_params.find_rows({elm: row.elm, dop: row.dop}, function (row) {
+
+					var ok = false;
+
+					if($p.job_prm.properties.direction == row.param){
+						ok = contour.direction == row.value;
+
+					}else{
+						cache.params.find_rows({cnstr: contour.cnstr, param: row.param, value: row.value}, function () {
+							return !(ok = true);
+						});
+					}
+
+					if(!ok)
+						return res = false;
+
+				});
+
+				// по таблице ограничений
+				if(res){
+					furn_set.specification_restrictions.find_rows({elm: row.elm, dop: row.dop}, function (row) {
+
+						var len;
+						
+						if(contour.is_rectangular){
+							if(!cache.w)
+								cache.w = contour.w;
+							if(!cache.h)
+								cache.h = contour.h;
+
+							len = (row.side == 1 || row.side == 3) ? cache.w : cache.h;
+							
+						}else{
+							var elm = contour.profile_by_furn_side(row.side, cache);
+							len = elm._row.len - 2 * elm.nom.sizefurn;	
+						}
+
+						if(len < row.lmin || len > row.lmax ){
+							return res = false;
+
+						}
+					});
+				}
+
+				return res;
+			}
+
+			/**
 			 * Уточняет высоту ручки
 			 * @param contour {Contour}
 			 * @param cache {Object}
@@ -4604,52 +4663,6 @@ $p.modifiers.push(
 				return res;
 			}
 
-			/**
-			 * Аналог УПзП-шного _ПроверитьОграниченияСтрокиФурнитуры_
-			 * @param contour {Contour}
-			 * @param cache {Object}
-			 * @param furn_set {_cat.furns}
-			 * @param row {_cat.furns.specification.row}
-			 */
-			function furn_check_row_restrictions(contour, cache, furn_set, row) {
-
-				var res = true;
-
-				// по таблице параметров
-				furn_set.selection_params.find_rows({elm: row.elm, dop: row.dop}, function (row) {
-
-					var ok = false;
-
-					if($p.job_prm.properties.direction == row.param){
-						ok = contour.direction == row.value;
-
-					}else{
-						cache.params.find_rows({cnstr: contour.cnstr, param: row.param, value: row.value}, function () {
-							return !(ok = true);
-						});
-					}
-
-					if(!ok)
-						return res = false;
-
-				});
-
-				// по таблице ограничений
-				if(res){
-					furn_set.specification_restrictions.find_rows({elm: row.elm, dop: row.dop}, function (row) {
-
-						var elm = contour.profile_by_furn_side(row.side, cache),
-							len = elm._row.len - 2 * elm.nom.sizefurn;
-
-						if(len < row.lmin || len > row.lmax ){
-							return res = false;
-
-						}
-					});
-				}
-
-				return res;
-			}
 
 
 			/**
