@@ -9,11 +9,6 @@
  */
 $p.settings = function (prm, modifiers) {
 
-	// разделитель для localStorage
-	prm.local_storage_prefix = "wb_";
-
-	// скин по умолчанию
-	prm.skin = "dhx_terrace";
 
 	prm.offline = true;                 // автономная работа. запросы к 1С запрещены
 	prm.demo = {
@@ -23,6 +18,25 @@ $p.settings = function (prm, modifiers) {
 	localStorage.setItem("wb_offline", "true");
 
 	//prm.ws_url = "ws://builder.oknosoft.local:8001";
+
+	prm.__define({
+
+		// разделитель для localStorage
+		local_storage_prefix: {
+			value: "wb_"
+		},
+
+		// скин по умолчанию
+		skin: {
+			value: "dhx_terrace"
+		},
+
+		// фильтр для репликации с CouchDB
+		pouch_filter: {
+			value: "auth/by_partner",
+			writable: false
+		}
+	});
 
 	/**
 	 * по умолчанию, обращаемся к зоне 0

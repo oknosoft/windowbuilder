@@ -291,7 +291,7 @@ $p.modifiers.push(
 			if(selection_block.calc_order.empty()){
 				selection_block.calc_order = $p.wsql.get_user_param("template_block_calc_order");
 			}
-			if(selection_block.calc_order.empty()){
+			if(selection_block.calc_order.empty() || selection_block.calc_order.is_new()){
 				$p.job_prm.builder.base_block.some(function (o) {
 					selection_block.calc_order = o;
 					$p.wsql.set_user_param("template_block_calc_order", selection_block.calc_order.ref);
@@ -2088,7 +2088,7 @@ $p.modifiers.push(
 							case 'confirmed':
 							case 'template':
 							case 'zarchive':
-								return 'doc_calc_order/date';
+								return 'doc/doc_calc_order_date';
 
 							case 'credit':
 							case 'prepayment':
@@ -3834,7 +3834,7 @@ $p.modifiers.push(
 			// виртуальный срез последних
 			function build_cache() {
 
-				return $p.doc.nom_prices_setup.pouch_db.query("nom_prices_setup/slice_last",
+				return $p.doc.nom_prices_setup.pouch_db.query("doc/nom_prices_setup_slice_last",
 					{
 						limit : 1000,
 						include_docs: false,
@@ -5447,15 +5447,62 @@ $p.iface.OSvgs = function (manager, layout, area) {
  */
 $p.settings = function (prm, modifiers) {
 
-	// разделитель для localStorage
-	prm.local_storage_prefix = "wb_";
+	prm.__define({
 
-	//prm.rest = true;
-	prm.irest_enabled = true;
+		// разделитель для localStorage
+		local_storage_prefix: {
+			value: "wb_"
+		},
 
-	// расположение rest-сервиса 1c
-	prm.rest_path = "/a/zd/%1/odata/standard.odata/";
+		// скин по умолчанию
+		skin: {
+			value: "dhx_terrace"
+		},
 
+		// фильтр для репликации с CouchDB
+		pouch_filter: {
+			value: {},
+			writable: false
+		},
+
+		// гостевые пользователи для демо-режима
+		guests: {
+			value: [{
+				username: "Дилер",
+				password: "1gNjzYQKBlcD"
+			}]
+		},
+
+		// если понадобится обратиться к 1С, будем использовать irest
+		irest_enabled: {
+			value: true
+		},
+
+		// расположение rest-сервиса 1c по умолчанию
+		rest_path: {
+			value: "/a/zd/%1/odata/standard.odata/"
+		},
+
+		// не шевелить hash url при открытии подчиненных форм
+		keep_hash: {
+			value: true
+		},
+
+		// используем геокодер
+		use_ip_geo: {
+			value: true
+		}
+		
+	});
+
+	// фильтр для репликации с CouchDB
+	prm.pouch_filter.__define({
+		doc: {
+			value: "auth/by_partner",
+			writable: false
+		}
+	});
+	
 	// по умолчанию, обращаемся к зоне 1
 	prm.zone = 1;
 
@@ -5471,24 +5518,10 @@ $p.settings = function (prm, modifiers) {
 
 	// пароль гостевого пользователя couchdb
 	prm.guest_pwd = "meta";
-
-	// гостевые пользователи для демо-режима
-	prm.guests = [{
-		username: "Дилер",
-		password: "1gNjzYQKBlcD"
-	}];
-
+	
 	// разрешаем сохранение пароля
 	prm.enable_save_pwd = true;
-
-	// не шевелить hash url при открытии подчиненных форм
-	prm.keep_hash = true;
-
-	// скин по умолчанию
-	prm.skin = "dhx_terrace";
-
-	// используем геокодер
-	prm.use_ip_geo = true;
+	
 
 	// разрешаем покидать страницу без лишних вопросов
 	// $p.eve.redirect = true;

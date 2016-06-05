@@ -58,7 +58,7 @@ $p.modifiers.push(
 							case 'confirmed':
 							case 'template':
 							case 'zarchive':
-								return 'doc_calc_order/date';
+								return 'doc/doc_calc_order_date';
 
 							case 'credit':
 							case 'prepayment':
