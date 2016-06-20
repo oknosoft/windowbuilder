@@ -13,7 +13,7 @@ CACHE:
 #//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3,metadata@0.10.212(dhtmlx.min.js+metadata.min.js)
 
 # На период отладки, берём metadata и dhtmlx c нашего сайта
-//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3
+//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2
 lib/metadata.min.js
 lib/dhtmlx.min.js
 

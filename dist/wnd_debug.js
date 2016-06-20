@@ -3834,7 +3834,7 @@ $p.modifiers.push(
 			// виртуальный срез последних
 			function build_cache() {
 
-				return $p.doc.nom_prices_setup.pouch_db.query("doc/nom_prices_setup_slice_last",
+				return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
 					{
 						limit : 1000,
 						include_docs: false,
