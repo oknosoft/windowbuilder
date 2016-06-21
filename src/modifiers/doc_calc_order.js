@@ -69,6 +69,28 @@ $p.modifiers.push(
 			sys_profile = "";
 			sys_furn = "";
 
+			// если установлен признак проведения, проверим состояние транспорта
+			if(this.posted){
+				if (this.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен ||
+					this.obj_delivery_state == $p.enm.obj_delivery_states.Отозван ||
+					this.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон){
+
+					$p.msg.show_msg({
+						type: "alert-warning",
+						text: "Нельзя провести заказ со статусом<br/>'Отклонён', 'Отозван' или 'Шаблон'",
+						title: this.presentation
+					});
+
+					return false;
+
+				}else if(this.obj_delivery_state != $p.enm.obj_delivery_states.Подтвержден){
+					this.obj_delivery_state = $p.enm.obj_delivery_states.Подтвержден;
+
+				}
+			}else if(this.obj_delivery_state == $p.enm.obj_delivery_states.Подтвержден){
+				this.obj_delivery_state = $p.enm.obj_delivery_states.Отправлен;
+			}
+
 			this.production.each(function (row) {
 
 				doc_amount += row.amount;

@@ -60,14 +60,16 @@ $p.modifiers.push(
 				$p.cat.characteristics.pouch_load_array(refs)
 					.then(function () {
 
-						/**
-						 * табчасть продукции
-						 */
+						// табчасть продукции со специфическим набором кнопок
 						tabular_init("production", $p.injected_data["toolbar_calc_order_production.xml"]);
 
 						var toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
 						toolbar.addSpacer("btn_delete");
 						toolbar.attachEvent("onclick", toolbar_click);
+
+						// табчасть планирования
+						tabular_init("planning");
+
 
 						// попап для присоединенных файлов
 						wnd.elmnts.discount_pop = new dhtmlXPopup({
@@ -221,6 +223,15 @@ $p.modifiers.push(
 						save("retrieve");
 						break;
 
+					case 'btn_post':
+						save("post");
+						break;
+
+					case 'btn_unpost':
+						save("unpost");
+						break;
+
+
 					case 'btn_close':
 						wnd.close();
 						break;
@@ -349,13 +360,6 @@ $p.modifiers.push(
 			}
 
 			/**
-			 * Перечитать табчасть продукции из объекта
-			 */
-			function production_refresh(){
-				o["production"].sync_grid(wnd.elmnts.grids.production);
-			}
-
-			/**
 			 * обработчик активизации строки продукции
 			 */
 			function production_on_row_activate(rId, cInd){
@@ -399,7 +403,6 @@ $p.modifiers.push(
 			/**
 			 * вспомогательные функции
 			 */
-
 
 			/**
 			 * настройка (инициализация) табличной части продукции
@@ -450,7 +453,7 @@ $p.modifiers.push(
 					quantity: 1,
 					discount_percent_internal: $p.wsql.get_user_param("discount", "number")
 				});
-				production_refresh();
+				o["production"].sync_grid(wnd.elmnts.grids.production);
 				wnd.elmnts.grids.production.selectRowById(row.row);
 				return row;
 			}
@@ -480,9 +483,11 @@ $p.modifiers.push(
 				if($p.is_data_obj(row.ordn) && !row.ordn.empty()){
 					// возможно, ссылка оборвана. в этом случае, удаление надо разрешить
 					if(o["production"].find({characteristic: row.ordn})){
-						$p.msg.show_msg({type: "alert-warning",
+						$p.msg.show_msg({
+							type: "alert-warning",
 							text: $p.msg.sub_row_change_disabled,
-							title: o.presentation + ' стр. №' + (rId + 1)});
+							title: o.presentation + ' стр. №' + (rId + 1)
+						});
 						return;
 					}
 				}
@@ -498,18 +503,22 @@ $p.modifiers.push(
 
 			function save(action){
 
-				function do_save(){
+				function do_save(post){
 
-					if(!wnd.elmnts.ro)
+					if(!wnd.elmnts.ro){
 						o.note = wnd.elmnts.cell_note.cell.querySelector("textarea").value.replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
+						wnd.elmnts.pg_left.selectRow(0);
+					}
 
-					o.save()
+					o.save(post)
 						.then(function(){
 
 							if(action == "sent" || action == "close")
 								wnd.close();
-							else
+							else{
 								wnd.set_text();
+								set_editable();
+							}
 
 						})
 						.catch(function(err){
@@ -539,6 +548,12 @@ $p.modifiers.push(
 
 				} else if(action == "save" || action == "close"){
 					do_save();
+
+				}else if(action == "post"){
+					do_save(true);
+
+				}else if(action == "unpost"){
+					do_save(false);
 				}
 			}
 
@@ -565,11 +580,12 @@ $p.modifiers.push(
 				// статусы
 				var st_draft = $p.enm.obj_delivery_states.Черновик,
 					st_retrieve = $p.enm.obj_delivery_states.Отозван,
-					retrieve_enabed,
-					detales_toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
+					retrieve_enabed, detales_toolbar;
 
 				wnd.elmnts.pg_right.cells("vat_consider", 1).setDisabled(true);
 				wnd.elmnts.pg_right.cells("vat_included", 1).setDisabled(true);
+
+				wnd.elmnts.ro = false;
 
 				// технолог может изменять шаблоны
 				if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон){
@@ -592,20 +608,34 @@ $p.modifiers.push(
 					(o.obj_delivery_state == $p.enm.obj_delivery_states.Отправлен || o.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен);
 
 				wnd.elmnts.grids.production.setEditable(!wnd.elmnts.ro);
+				wnd.elmnts.grids.planning.setEditable(!wnd.elmnts.ro);
 				wnd.elmnts.pg_left.setEditable(!wnd.elmnts.ro);
 				wnd.elmnts.pg_right.setEditable(!wnd.elmnts.ro);
 
-				// кнопки проведения гасим всегда
-				wnd.elmnts.frm_toolbar.hideItem("btn_post");
-				wnd.elmnts.frm_toolbar.hideItem("btn_unpost");
+				// гасим кнопки проведения, если недоступна роль
+				if(!$p.current_acl.acl_objs._obj.some(function (row) {
+						if(row.type == "СогласованиеРасчетовЗаказов")
+							return true;
+					})){
+					wnd.elmnts.frm_toolbar.hideItem("btn_post");
+					wnd.elmnts.frm_toolbar.hideItem("btn_unpost");
+				}
 
 				// кнопки записи и отправки гасим в зависимости от статуса
 				if(wnd.elmnts.ro){
 					wnd.elmnts.frm_toolbar.disableItem("btn_sent");
 					wnd.elmnts.frm_toolbar.disableItem("btn_save");
+
+					detales_toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
 					detales_toolbar.forEachItem(function(itemId){
 						detales_toolbar.disableItem(itemId);
 					});
+
+					detales_toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
+					detales_toolbar.forEachItem(function(itemId){
+						detales_toolbar.disableItem(itemId);
+					});
+
 				}else{
 					// шаблоны никогда не надо отправлять
 					if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон)
@@ -614,6 +644,13 @@ $p.modifiers.push(
 						wnd.elmnts.frm_toolbar.enableItem("btn_sent");
 
 					wnd.elmnts.frm_toolbar.enableItem("btn_save");
+
+					detales_toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
+					detales_toolbar.forEachItem(function(itemId){
+						detales_toolbar.enableItem(itemId);
+					});
+
+					detales_toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
 					detales_toolbar.forEachItem(function(itemId){
 						detales_toolbar.enableItem(itemId);
 					});
@@ -639,7 +676,7 @@ $p.modifiers.push(
 					return;
 
 				//nom,characteristic,note,quantity,unit,qty,len,width,s,first_cost,marginality,price,discount_percent,discount_percent_internal,
-				//discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,department,ordn,changed
+				//discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,ordn,changed
 
 				// т.к. табчасть мы будем перерисовывать в любом случае, отключаем обсерверы
 				ox._silent = true;

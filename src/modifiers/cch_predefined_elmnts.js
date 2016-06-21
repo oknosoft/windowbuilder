@@ -90,6 +90,10 @@ $p.modifiers.push(
 
 					}, 1000);
 
+					// загружаем ключи планирования, т.к. они нужны в ОЗУ
+					$p.cat.planning_keys.pouch_find_rows();
+
+
 					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
 					setTimeout(function () {
 						$p.eve.callEvent("predefined_elmnts_inited");
