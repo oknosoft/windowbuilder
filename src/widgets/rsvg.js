@@ -75,20 +75,14 @@ $p.iface.OSvgs = function (manager, layout, area) {
 
 		if(layout.setSizes)
 			layout.setSizes();
+
 		else if(layout.getDimension){
 			var dim = layout.getDimension();
 			layout.setDimension(dim[0], dim[1]);
 			layout.maximize();
 		}
 
-		if(area_hidden){
-			minmax.style.backgroundPositionX = "-32px";
-			minmax.style.top = layout.setSizes ? "16px" : "-18px";
-		}
-		else{
-			minmax.style.backgroundPositionX = "0px";
-			minmax.style.top = "0px";
-		}
+		minmax.style.backgroundPositionX = area_hidden ? "-32px" : "0px";
 	}
 
 	function draw_svgs(res){

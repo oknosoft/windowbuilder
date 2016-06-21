@@ -60,12 +60,11 @@ $p.modifiers.push(
 							case 'zarchive':
 								return 'doc/doc_calc_order_date';
 
-							case 'credit':
-							case 'prepayment':
+							case 'execution':
+							case 'plan':
 							case 'underway':
 							case 'manufactured':
 							case 'executed':
-							case 'deleted':
 							case 'all':
 								return '';
 						}
@@ -98,16 +97,13 @@ $p.modifiers.push(
 								key = 'zarchive';
 								break;
 
-							case 'credit':
-							case 'prepayment':
+							case 'execution':
+							case 'plan':
 							case 'underway':
 							case 'manufactured':
 							case 'executed':
 							case 'all':
 								return '';
-
-							case 'deleted':
-								return 'deleted';
 						}
 
 						var filter = wnd.elmnts.filter.get_filter(true);

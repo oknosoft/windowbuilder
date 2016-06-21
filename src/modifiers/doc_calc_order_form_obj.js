@@ -39,7 +39,7 @@ $p.modifiers.push(
 					}
 
 					if($p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length)
-						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro";
+						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro";
 					else
 						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro";
 
