@@ -13,13 +13,13 @@ CACHE:
 #//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2.3,metadata@0.10.212(dhtmlx.min.js+metadata.min.js)
 
 # На период отладки, берём metadata и dhtmlx c нашего сайта
-//cdn.jsdelivr.net/g/alasql,pouchdb,jquery@2.2
+//cdn.jsdelivr.net/g/momentjs,alasql,pouchdb,jquery@2.2
 lib/metadata.min.js
 lib/dhtmlx.min.js
 
 # А эти - только в дебагере
-//oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
-//oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.css
+# //oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
+# //oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.css
 lib/paper-core.js
 lib/baron/baron.min.js
 lib/qrcodejs/qrcode.js

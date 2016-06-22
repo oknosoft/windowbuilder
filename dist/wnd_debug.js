@@ -2077,7 +2077,8 @@ $p.modifiers.push(
 						$p.iface.set_hash(_mgr.class_name, rId);
 					}
 				};
-			
+
+			// разбивка на 2 колонки - дерево и карусель
 			var layout = pwnd.attachLayout({
 				pattern: "2U",
 				cells: [{
@@ -2093,10 +2094,26 @@ $p.modifiers.push(
 				offsets: { top: 0, right: 0, bottom: 0, left: 0}
 			}),
 
-				wnd = _mgr.form_selection(layout.cells("b"), attr),
-
 				tree = layout.cells("a").attachTree(),
 
+				carousel = layout.cells("b").attachCarousel({
+					keys:           false,
+					touch_scroll:   false,
+					offset_left:    0,
+					offset_top:     0,
+					offset_item:    0
+				});
+
+			// страницы карусели
+			carousel.hideControls();
+			carousel.addCell("list");
+			carousel.addCell("report");
+			carousel.conf.anim_step = 200;
+			carousel.conf.anim_slide = "left 0.1s";
+
+			var wnd = _mgr.form_selection(carousel.cells("list"), attr),
+
+				report,
 
 				filter_view = {},
 				
@@ -2185,7 +2202,80 @@ $p.modifiers.push(
 			// настраиваем дерево
 			tree.enableTreeImages(false);
 			tree.parse($p.injected_data["tree_filteres.xml"]);
-			tree.attachEvent("onSelect", wnd.elmnts.filter.call_event);
+			tree.attachEvent("onSelect", function (rid) {
+
+				// переключаем страницу карусели
+				switch(rid) {
+
+					case 'draft':
+					case 'sent':
+					case 'declined':
+					case 'confirmed':
+					case 'template':
+					case 'zarchive':
+					case 'all':
+						carousel.cells("list").setActive();
+						wnd.elmnts.filter.call_event();
+						return;
+				}
+
+				build_report(rid);
+
+			});
+
+			function build_report(rid) {
+
+				carousel.cells("report").setActive();
+
+				var data = [
+					['', 'Kia', 'Nissan', 'Toyota', 'Honda'],
+					['2008', 10, 11, 12, 13],
+					['2009', 20, 11, 14, 13],
+					['2009', 30, 15, 12, 13]
+				];
+
+				if(!report){
+
+					var _report = document.createElement('div');
+					_report.className = "handsontable_wrapper";
+					carousel.cells("report").attachObject(_report);
+
+					report = new $p.HandsontableDocument({
+						element: _report
+					}).then(function (rep) {
+
+						rep.hot = Handsontable(_report, {
+							data: data,
+							minRows: 5,
+							minCols: 6,
+							minSpareRows: 1,
+							currentRowClassName: 'currentRow',
+							currentColClassName: 'currentCol',
+							autoWrapRow: true,
+							rowHeaders: true,
+							colHeaders: true
+						});
+
+						rep.hot.selectCell(3,3);
+
+					});
+
+				}else{
+					data[1][1]+=1;
+					report.hot.selectCell(3,3);
+				}
+
+				switch(rid) {
+
+					case 'execution':
+					case 'plan':
+					case 'underway':
+					case 'manufactured':
+					case 'executed':
+
+						break;
+				}
+			}
 
 			return wnd;
 		};
