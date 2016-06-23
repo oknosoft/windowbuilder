@@ -38,7 +38,7 @@ $p.modifiers.push(
 						source.min_widths = "30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70";
 					}
 
-					if($p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length)
+					if($p.current_acl.role_available("СогласованиеРасчетовЗаказов"))
 						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro";
 					else
 						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro";
@@ -589,17 +589,11 @@ $p.modifiers.push(
 
 				// технолог может изменять шаблоны
 				if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон){
-					wnd.elmnts.ro = !$p.current_acl.acl_objs._obj.some(function (row) {
-						if(row.type == "ИзменениеТехнологическойНСИ") // && row.acl_obj == "role"
-							return true;
-					});
+					wnd.elmnts.ro = !$p.current_acl.role_available("ИзменениеТехнологическойНСИ");
 
 				// ведущий менеджер может изменять проведенные
 				}else if(o.posted || o._deleted){
-					wnd.elmnts.ro = !$p.current_acl.acl_objs._obj.some(function (row) {
-						if(row.type == "СогласованиеРасчетовЗаказов") // && row.acl_obj == "role"
-							return true;
-					});
+					wnd.elmnts.ro = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов");
 
 				}else if(!wnd.elmnts.ro && !o.obj_delivery_state.empty())
 					wnd.elmnts.ro = o.obj_delivery_state != st_draft && o.obj_delivery_state != st_retrieve;
@@ -613,10 +607,7 @@ $p.modifiers.push(
 				wnd.elmnts.pg_right.setEditable(!wnd.elmnts.ro);
 
 				// гасим кнопки проведения, если недоступна роль
-				if(!$p.current_acl.acl_objs._obj.some(function (row) {
-						if(row.type == "СогласованиеРасчетовЗаказов")
-							return true;
-					})){
+				if(!$p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
 					wnd.elmnts.frm_toolbar.hideItem("btn_post");
 					wnd.elmnts.frm_toolbar.hideItem("btn_unpost");
 				}

@@ -167,16 +167,10 @@ $p.modifiers.push(
 
 			});
 
+			
 			function build_report(rid) {
 
 				carousel.cells("report").setActive();
-
-				var data = [
-					['', 'Kia', 'Nissan', 'Toyota', 'Honda'],
-					['2008', 10, 11, 12, 13],
-					['2009', 20, 11, 14, 13],
-					['2009', 30, 15, 12, 13]
-				];
 
 				if(!report){
 
@@ -187,25 +181,14 @@ $p.modifiers.push(
 							if(!rep._online)
 								return report = null;
 
-							rep.hot = Handsontable(rep._cont, {
-								data: data,
-								minRows: 6,
-								minCols: 6,
-								minSpareRows: 1,
-								// currentRowClassName: 'currentRow',
-								// currentColClassName: 'currentCol',
-								autoWrapRow: true,
-								rowHeaders: true,
-								colHeaders: true
-							});
+							$p.doc.calc_order.rep_invoice_execution(report);
 
-							rep.hot.selectCell(3,3);
 
 						});
 
 				}else if(report._online){
-					data[1][1]+=1;
-					report.hot.selectCell(3,3);
+
+					$p.doc.calc_order.rep_invoice_execution(report);
 				}
 
 				switch(rid) {

@@ -1458,6 +1458,44 @@ $p.modifiers.push(
 );
 
 /**
+ * Дополнительные методы справочника Цвета
+ *
+ * Created 23.12.2015<br />
+ * &copy; http://www.oknosoft.ru 2014-2015
+ * @author Evgeniy Malyarov
+ * @module cat_cnns
+ */
+
+
+$p.modifiers.push(
+	function($p) {
+
+		$p.cat.users_acl._obj_constructor.prototype.__define({
+
+			role_available: {
+				value: function (name) {
+					return this.acl_objs._obj.some(function (row) {
+						return row.type == name;
+					});
+				}
+			},
+
+			partners_uids: {
+				get: function () {
+					var res = [];
+					this.acl_objs.each(function (row) {
+						if(row.acl_obj instanceof $p.cat.partners._obj_constructor)
+							res.push(row.acl_obj.ref)
+					});
+					return res;
+				}
+			}
+		});
+
+	}
+);
+
+/**
  * Дополнительные методы справочника Контрагенты
  *
  * Created 23.12.2015<br />
@@ -1647,7 +1685,7 @@ $p.modifiers.push(
 );
 
 /**
- * Модуль документа Расчет-заказ
+ * Модуль менеджера и документа Расчет-заказ
  * Обрботчики событий after_create, after_load, before_save, after_save, value_change
  * Методы выполняются в контексте текущего объекта this = DocObj
  * Created 16.03.2016<br />
@@ -2223,16 +2261,10 @@ $p.modifiers.push(
 
 			});
 
+			
 			function build_report(rid) {
 
 				carousel.cells("report").setActive();
-
-				var data = [
-					['', 'Kia', 'Nissan', 'Toyota', 'Honda'],
-					['2008', 10, 11, 12, 13],
-					['2009', 20, 11, 14, 13],
-					['2009', 30, 15, 12, 13]
-				];
 
 				if(!report){
 
@@ -2243,25 +2275,14 @@ $p.modifiers.push(
 							if(!rep._online)
 								return report = null;
 
-							rep.hot = Handsontable(rep._cont, {
-								data: data,
-								minRows: 6,
-								minCols: 6,
-								minSpareRows: 1,
-								// currentRowClassName: 'currentRow',
-								// currentColClassName: 'currentCol',
-								autoWrapRow: true,
-								rowHeaders: true,
-								colHeaders: true
-							});
+							$p.doc.calc_order.rep_invoice_execution(report);
 
-							rep.hot.selectCell(3,3);
 
 						});
 
 				}else if(report._online){
-					data[1][1]+=1;
-					report.hot.selectCell(3,3);
+
+					$p.doc.calc_order.rep_invoice_execution(report);
 				}
 
 				switch(rid) {
@@ -2321,7 +2342,7 @@ $p.modifiers.push(
 						source.min_widths = "30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70";
 					}
 
-					if($p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length)
+					if($p.current_acl.role_available("СогласованиеРасчетовЗаказов"))
 						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro";
 					else
 						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro";
@@ -2872,17 +2893,11 @@ $p.modifiers.push(
 
 				// технолог может изменять шаблоны
 				if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон){
-					wnd.elmnts.ro = !$p.current_acl.acl_objs._obj.some(function (row) {
-						if(row.type == "ИзменениеТехнологическойНСИ") // && row.acl_obj == "role"
-							return true;
-					});
+					wnd.elmnts.ro = !$p.current_acl.role_available("ИзменениеТехнологическойНСИ");
 
 				// ведущий менеджер может изменять проведенные
 				}else if(o.posted || o._deleted){
-					wnd.elmnts.ro = !$p.current_acl.acl_objs._obj.some(function (row) {
-						if(row.type == "СогласованиеРасчетовЗаказов") // && row.acl_obj == "role"
-							return true;
-					});
+					wnd.elmnts.ro = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов");
 
 				}else if(!wnd.elmnts.ro && !o.obj_delivery_state.empty())
 					wnd.elmnts.ro = o.obj_delivery_state != st_draft && o.obj_delivery_state != st_retrieve;
@@ -2896,10 +2911,7 @@ $p.modifiers.push(
 				wnd.elmnts.pg_right.setEditable(!wnd.elmnts.ro);
 
 				// гасим кнопки проведения, если недоступна роль
-				if(!$p.current_acl.acl_objs._obj.some(function (row) {
-						if(row.type == "СогласованиеРасчетовЗаказов")
-							return true;
-					})){
+				if(!$p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
 					wnd.elmnts.frm_toolbar.hideItem("btn_post");
 					wnd.elmnts.frm_toolbar.hideItem("btn_unpost");
 				}
@@ -3108,6 +3120,106 @@ $p.modifiers.push(
 	}
 );
 
+/**
+ * Отчеты по документу Расчет
+ * @module doc_calc_order_reports
+ * Created 23.06.2016
+ */
+
+$p.modifiers.push(
+	function($p) {
+
+		$p.doc.calc_order.rep_invoice_execution = function (rep) {
+
+			var query_options = {
+				reduce: true,
+				limit: 10000,
+				group: true,
+				group_level: 3
+			},
+				res = {
+					data: [],
+					readOnly: true,
+					colWidths: [180, 180, 200, 100, 100, 100, 100, 100],
+					colHeaders: ['Контрагент', 'Организация', 'Заказ', 'Сумма', 'Оплачено', 'Долг', 'Отгружено', 'Отгрузить'],
+					columns: [
+						{type: 'text'},
+						{type: 'text'},
+						{type: 'text'},
+						{type: 'numeric', format: '0 0.00'},
+						{type: 'numeric', format: '0 0.00'},
+						{type: 'numeric', format: '0 0.00'},
+						{type: 'numeric', format: '0 0.00'},
+						{type: 'numeric', format: '0 0.00'}
+					],
+					wordWrap: false
+					//minSpareRows: 1
+				};
+
+			if(!$p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
+				//query_options.group_level = 3;
+				query_options.startkey = [$p.current_acl.partners_uids[0],""];
+				query_options.endkey = [$p.current_acl.partners_uids[0],"\uffff"];
+			}
+
+			return $p.wsql.pouch.remote.doc.query("server/invoice_execution", query_options)
+
+				.then(function (data) {
+
+					var total = {
+						invoice: 0,
+						pay: 0,
+						total_pay: 0,
+						shipment:0,
+						total_shipment:0
+					};
+
+					if(data.rows){
+
+						data.rows.forEach(function (row) {
+
+							if(!row.value.total_pay && !row.value.total_shipment)
+								return;
+
+							res.data.push([
+								$p.cat.partners.get(row.key[0]).presentation,
+								$p.cat.organizations.get(row.key[1]).presentation,
+								row.key[2],
+								row.value.invoice,
+								row.value.pay,
+								row.value.total_pay,
+								row.value.shipment,
+								row.value.total_shipment]);
+
+							total.invoice+= row.value.invoice;
+							total.pay+=row.value.pay;
+							total.total_pay+=row.value.total_pay;
+							total.shipment+=row.value.shipment;
+							total.total_shipment+=row.value.total_shipment;
+						});
+
+						res.data.push([
+							"",
+							"",
+							"Итого:",
+							total.invoice,
+							total.pay,
+							total.total_pay,
+							total.shipment,
+							total.total_shipment]);
+
+						res.mergeCells= [
+							{row: res.data.length, col: 1, rowspan: 1, colspan: 3}
+						]
+					};
+
+					rep.requery(res);
+					
+					return res;
+				});
+		};
+	}
+);
 /**
  * Модификаторы обработки _builder_pen_
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
