@@ -5,7 +5,7 @@
     <item id="confirmed" text="&lt;i class='fa fa-thumbs-o-up fa-fw'&gt;&lt;/i&gt; Согласовано" tooltip="Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером" />
     <item id="declined" text="&lt;i class='fa fa-thumbs-o-down fa-fw'&gt;&lt;/i&gt; Отклонено" tooltip="Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации" />
     <item id="execution" text="&lt;i class='fa fa-money fa-fw'&gt;&lt;/i&gt; Взаиморасчеты" tooltip="Оплата, отгрузка" />
-    <item id="plan" text="&lt;i class='fa fa-hourglass-o fa-fw'&gt;&lt;/i&gt; План" tooltip="Согласованы, но еще не запущены в работу" />
+    <item id="plan" text="&lt;i class='fa fa-calendar-check-o fa-fw'&gt;&lt;/i&gt; План" tooltip="Согласованы, но еще не запущены в работу" />
     <item id="underway" text="&lt;i class='fa fa-industry fa-fw'&gt;&lt;/i&gt; В работе" tooltip="Включены в задания на производство, но еще не изготовлены" />
     <item id="manufactured" text="&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Изготовлено" tooltip="Изготовлены, но еще не отгружены" />
     <item id="executed" text="&lt;i class='fa fa-truck fa-fw'&gt;&lt;/i&gt; Исполнено" tooltip="Отгружены клиенту" />

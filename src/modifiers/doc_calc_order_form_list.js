@@ -180,31 +180,30 @@ $p.modifiers.push(
 
 				if(!report){
 
-					var _report = document.createElement('div');
-					_report.className = "handsontable_wrapper";
-					carousel.cells("report").attachObject(_report);
+					report = new $p.HandsontableDocument(carousel.cells("report"), {})
 
-					report = new $p.HandsontableDocument({
-						element: _report
-					}).then(function (rep) {
+						.then(function (rep) {
 
-						rep.hot = Handsontable(_report, {
-							data: data,
-							minRows: 5,
-							minCols: 6,
-							minSpareRows: 1,
-							currentRowClassName: 'currentRow',
-							currentColClassName: 'currentCol',
-							autoWrapRow: true,
-							rowHeaders: true,
-							colHeaders: true
+							if(!rep._online)
+								return report = null;
+
+							rep.hot = Handsontable(rep._cont, {
+								data: data,
+								minRows: 6,
+								minCols: 6,
+								minSpareRows: 1,
+								// currentRowClassName: 'currentRow',
+								// currentColClassName: 'currentCol',
+								autoWrapRow: true,
+								rowHeaders: true,
+								colHeaders: true
+							});
+
+							rep.hot.selectCell(3,3);
+
 						});
 
-						rep.hot.selectCell(3,3);
-
-					});
-
-				}else{
+				}else if(report._online){
 					data[1][1]+=1;
 					report.hot.selectCell(3,3);
 				}
