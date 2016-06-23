@@ -103,5 +103,88 @@ $p.modifiers.push(
 			
 		});
 
+		var _mgr = $p.cch.predefined_elmnts,
+			obj_constructor =  _mgr._obj_constructor.prototype;
+
+		delete obj_constructor.value;
+		obj_constructor.__define({
+
+			value: {
+				get: function () {
+
+					var mf = this.type,
+						res = this._obj ? this._obj.value : "",
+						mgr, ref;
+
+					if(this._obj.is_folder)
+						return "";
+
+					if(typeof res == "object")
+						return res;
+
+					else if(mf.is_ref){
+						if(mf.digits && typeof res === "number")
+							return res;
+
+						if(mf.hasOwnProperty("str_len") && !$p.is_guid(res))
+							return res;
+
+						if(mgr = $p.md.value_mgr(this._obj, "value", mf)){
+							if($p.is_data_mgr(mgr))
+								return mgr.get(res, false);
+							else
+								return $p.fetch_type(res, mgr);
+						}
+
+						if(res){
+							console.log(["value", mf, this._obj]);
+							return null;
+						}
+
+					}else if(mf.date_part)
+						return $p.fix_date(this._obj.value, true);
+
+					else if(mf.digits)
+						return $p.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
+
+					else if(mf.types[0]=="boolean")
+						return $p.fix_boolean(this._obj.value);
+
+					else
+						return this._obj.value || "";
+
+					return this.characteristic.clr;
+				},
+				
+				set: function (v) {
+
+					if(this._obj.value === v)
+						return;
+
+					Object.getNotifier(this).notify({
+						type: 'update',
+						name: 'value',
+						oldValue: this._obj.value
+					});
+					this._obj.value = $p.is_data_obj(v) ? v.ref : v;
+					this._data._modified = true;
+				}
+			}
+		});
+
+		_mgr.form_obj = function(pwnd, attr){
+
+			var o, wnd;
+
+			return this.constructor.prototype.form_obj.call(this, pwnd, attr)
+				.then(function (res) {
+					if(res){
+						o = res.o;
+						wnd = res.wnd;
+						return res;
+					}
+				});
+		}
+
 	}
 );
