@@ -34,7 +34,9 @@ function Scheme(_canvas){
 			if(_data._loading || _data._snapshot)
 				return;
 
-			var evented, scheme_changed_names = ["clr","sys"];
+			var evented,
+				scheme_changed_names = ["clr","sys"],
+				row_changed_names = ["quantity","discount_percent","discount_percent_internal"];
 
 			changes.forEach(function(change){
 
@@ -82,7 +84,14 @@ function Scheme(_canvas){
 						evented = true;
 					}
 
+				}else if(row_changed_names.indexOf(change.name) != -1){
+
+					_data._calc_order_row[change.name] = change.object[change.name];
+
+					_scheme.register_change(true);
+
 				}
+
 			});
 		},
 

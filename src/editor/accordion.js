@@ -302,26 +302,51 @@ function EditorAccordion(_editor, cell_acc) {
 						if(_grid && _grid.destructor)
 							_grid.destructor();
 
+						var is_dialer = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") && !$p.current_acl.role_available("РедактированиеСкидок"),
+							oxml = {
+								"Свойства": ["sys","clr",
+								{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
+								{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
+								{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro"}
+							]
+							};
+
+						if($p.wsql.get_user_param("hide_price_dealer")){
+							oxml["Строка заказа"] = [
+								"quantity",
+								{id: "price", path: "o.price", synonym: "Цена", type: "ro"},
+								{id: "discount_percent", path: "o.discount_percent", synonym: "Скидка %", type: is_dialer ? "ro" : "calck"},
+								{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro"},
+								"note"
+							];
+						}else{
+							oxml["Строка заказа"] = [
+								"quantity",
+								{id: "price_internal", path: "o.price_internal", synonym: "Цена дилера", type: "ro"},
+								{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка дил %", type: "calck"},
+								{id: "amount_internal", path: "o.amount_internal", synonym: "Сумма дилера", type: "ro"},
+								{id: "price", path: "o.price", synonym: "Цена пост", type: "ro"},
+								{id: "discount_percent", path: "o.discount_percent", synonym: "Скидка пост %", type: is_dialer ? "ro" : "calck"},
+								{id: "amount", path: "o.amount", synonym: "Сумма пост", type: "ro"},
+								"note"
+							];
+						}
+
 						_grid = layout.cells("a").attachHeadFields({
 							obj: _obj,
-							oxml: {
-								"Свойства": ["sys","clr",
-									{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
-									{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
-									{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro"}
-								],
-								"Строка заказа": ["quantity",
-									{id: "price_internal", path: "o.price_internal", synonym: "Цена внутр.", type: "ro"},
-									{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка внутр. %", type: "ro"},
-									{id: "price", path: "o.price", synonym: "Цена", type: "ro"},
-									"discount_percent",
-									{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro"},
-									"note"]
-
-							},
+							oxml: oxml,
 							ts: "extra_fields",
 							ts_title: "Свойства",
 							selection: {cnstr: 0, hide: {not: true}}
+						});
+
+						// при готовности снапшота, обновляем суммы и цены
+						_on_snapshot = $p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
+							if(scheme == _editor.project && !attr.clipboard){
+								["price_internal","amount_internal","price","amount"].forEach(function (fld) {
+									_obj[fld] = scheme.data._calc_order_row[fld];
+								});
+							}
 						});
 					}
 				},

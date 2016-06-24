@@ -33,12 +33,12 @@ $p.modifiers.push(
 						source.min_widths = "30,200,220,150,0,70,40,70,70,70,0,0,0,70,70,70";
 
 					}else{
-						source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма";
+						source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил";
 						source.widths = "40,200,*,220,0,70,70,70,70,40,70,70,70,70,70,70";
 						source.min_widths = "30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70";
 					}
 
-					if($p.current_acl.role_available("СогласованиеРасчетовЗаказов"))
+					if($p.current_acl.role_available("СогласованиеРасчетовЗаказов") || $p.current_acl.role_available("РедактированиеСкидок"))
 						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro";
 					else
 						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro";

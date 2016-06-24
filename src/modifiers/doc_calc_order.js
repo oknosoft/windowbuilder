@@ -143,14 +143,28 @@ $p.modifiers.push(
 
 				if(attr.field == "nom" || attr.field == "characteristic"){
 					
-				}else if(attr.field == "price" || attr.field == "price_internal" || attr.field == "quantity"){
+				}else if(attr.field == "price" || attr.field == "price_internal" || attr.field == "quantity" ||
+						attr.field == "discount_percent" || attr.field == "discount_percent_internal"){
 					
 					attr.row[attr.field] = attr.value;
 					
-					attr.row.amount = (attr.row.price * attr.row.quantity).round(2);
-					attr.row.amount_internal = (attr.row.price_internal * attr.row.quantity).round(2);
+					attr.row.amount = (attr.row.price * ((100 - attr.row.discount_percent)/100) * attr.row.quantity).round(2);
+
+					// если есть внешняя цена дилера, получим текущую дилерскую наценку
+					if(!attr.no_extra_charge){
+						var prm = {calc_order_row: attr.row};
+						$p.pricing.price_type(prm);
+						if(prm.price_type.extra_charge_external)
+							attr.row.price_internal = (attr.row.price * (100 - attr.row.discount_percent)/100 * (100 + prm.price_type.extra_charge_external)/100).round(2);
+					}
+	
+					attr.row.amount_internal = (attr.row.price_internal * ((100 - attr.row.discount_percent_internal)/100) * attr.row.quantity).round(2);
 
 					this.doc_amount = this.production.aggregate([], ["amount"]);
+					this.amount_internal = this.production.aggregate([], ["amount_internal"]);
+
+					// TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation
+
 				}
 				
 			}

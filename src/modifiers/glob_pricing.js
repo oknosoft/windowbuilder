@@ -237,8 +237,8 @@ $p.modifiers.push(
 				// TODO: Рассчитаем цену и сумму ВНУТР или ДИЛЕРСКУЮ цену и скидку
 				if(prm.price_type.extra_charge_external){
 
-					prm.calc_order_row.price_internal = prm.calc_order_row.price *
-						(100 - prm.calc_order_row.discount_percent)/100 * (100 + prm.price_type.extra_charge_external)/100;
+					prm.calc_order_row.price_internal = (prm.calc_order_row.price *
+						(100 - prm.calc_order_row.discount_percent)/100 * (100 + prm.price_type.extra_charge_external)/100).round(2);
 
 					// TODO: учесть формулу
 
@@ -253,7 +253,8 @@ $p.modifiers.push(
 						field: "price",
 						value: prm.calc_order_row.price,
 						tabular_section: "production",
-						row: prm.calc_order_row
+						row: prm.calc_order_row,
+						no_extra_charge: true
 					});
 				}
 
