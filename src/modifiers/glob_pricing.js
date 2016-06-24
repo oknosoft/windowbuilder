@@ -38,9 +38,6 @@ $p.modifiers.push(
 					else if($p.is_data_obj(attr.characteristic))
 						attr.characteristic = attr.characteristic.ref;
 
-					if(!attr.currency || attr.currency.empty())
-						attr.currency = $p.job_prm.pricing.main_currency;
-
 					if(!attr.date)
 						attr.date = new Date();
 
@@ -62,11 +59,7 @@ $p.modifiers.push(
 					}
 
 					// Пересчитать из валюты в валюту
-					if(currency && currency != attr.currency){
-
-					}
-					
-					return price;
+					return $p.pricing.from_currency_to_currency(price, attr.date, currency, attr.currency);
 
 				}
 			}
@@ -167,6 +160,14 @@ $p.modifiers.push(
 						prm.price_type[key] = ares[0][key];
 					});
 
+				// если для контрагента установлена индивидуальная наценка, подмешиваем её в prm
+				prm.calc_order_row._owner._owner.partner.extra_fields.find_rows({
+					property: $p.job_prm.pricing.dealer_surcharge
+				}, function (row) {
+					prm.price_type.extra_charge_external = row.value;
+					return false;
+				});
+
 				return prm.price_type;
 			};
 
@@ -229,10 +230,20 @@ $p.modifiers.push(
 					prm.calc_order_row.price = (prm.calc_order_row.first_cost * prm.price_type.marginality).round(2);
 
 				// КМарж в строке расчета
-				prm.calc_order_row.marginality = prm.calc_order_row.first_cost ? prm.calc_order_row.price / prm.calc_order_row.first_cost : 0;
+				prm.calc_order_row.marginality = prm.calc_order_row.first_cost ?
+					prm.calc_order_row.price * ((100 - prm.calc_order_row.discount_percent)/100) / prm.calc_order_row.first_cost : 0;
 				
 
 				// TODO: Рассчитаем цену и сумму ВНУТР или ДИЛЕРСКУЮ цену и скидку
+				if(prm.price_type.extra_charge_external){
+
+					prm.calc_order_row.price_internal = prm.calc_order_row.price *
+						(100 - prm.calc_order_row.discount_percent)/100 * (100 + prm.price_type.extra_charge_external)/100;
+
+					// TODO: учесть формулу
+
+				}
+
 
 				// TODO: вытягивание строк спецификации в заказ
 
@@ -268,9 +279,25 @@ $p.modifiers.push(
 				
 				if(!date)
 					date = new Date();
-				
-				// TODO: реализовать пересчет
-				return amount;
+
+				if(!this.cource_sql)
+					this.cource_sql = $p.wsql.alasql.compile("select top 1 * from `ireg_currency_courses` where `currency` = ? and `period` <= ? order by `date` desc");
+
+				var cfrom = {course: 1, multiplicity: 1}, 
+					cto = {course: 1, multiplicity: 1},
+					tmp;
+				if(from != $p.job_prm.pricing.main_currency){
+					tmp = this.cource_sql([from.ref, date]);
+					if(tmp.length)
+						cfrom = tmp[0];
+				}
+				if(to != $p.job_prm.pricing.main_currency){
+					tmp = this.cource_sql([to.ref, date]);
+					if(tmp.length)
+						cto = tmp[0];
+				}
+
+				return (amount * cfrom.course / cfrom.multiplicity) * cto.multiplicity / cto.course;
 			};
 
 
@@ -280,9 +307,8 @@ $p.modifiers.push(
 			this.cut_upload = function () {
 
 				if(!$p.current_acl || (
-						!$p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length &&
-						!$p.current_acl.acl_objs.find_rows({type: "ИзменениеТехнологическойНСИ"}).length
-					)){
+						!$p.current_acl.role_available("СогласованиеРасчетовЗаказов") &&
+						!$p.current_acl.role_available("ИзменениеТехнологическойНСИ"))){
 					$p.msg.show_msg({
 						type: "alert-error",
 						text: $p.msg.error_low_acl,
@@ -339,8 +365,9 @@ $p.modifiers.push(
 						})
 						.on('complete', function (info) {
 							
-							if($p.current_acl.acl_objs.find_rows({type: "ИзменениеТехнологическойНСИ"}).length)
+							if($p.current_acl.role_available("ИзменениеТехнологическойНСИ"))
 								upload_tech();
+
 							else
 								$p.msg.show_msg({
 									type: "alert-info",
@@ -420,7 +447,7 @@ $p.modifiers.push(
 				}
 
 				
-				if($p.current_acl.acl_objs.find_rows({type: "СогласованиеРасчетовЗаказов"}).length)
+				if($p.current_acl.role_available("СогласованиеРасчетовЗаказов"))
 					upload_acc();
 				else
 					upload_tech();				

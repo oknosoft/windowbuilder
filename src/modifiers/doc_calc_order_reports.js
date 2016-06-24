@@ -77,9 +77,9 @@ $p.modifiers.push(
 						});
 
 						res.data.push([
-							"",
-							"",
 							"Итого:",
+							"",
+							"",
 							total.invoice,
 							total.pay,
 							total.total_pay,
@@ -87,7 +87,7 @@ $p.modifiers.push(
 							total.total_shipment]);
 
 						res.mergeCells= [
-							{row: res.data.length, col: 1, rowspan: 1, colspan: 3}
+							{row: res.data.length-1, col: 0, rowspan: 1, colspan: 3}
 						]
 					};
 
