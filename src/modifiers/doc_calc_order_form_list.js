@@ -171,6 +171,25 @@ $p.modifiers.push(
 			function build_report(rid) {
 
 				carousel.cells("report").setActive();
+				
+				function show_report() {
+
+					switch(rid) {
+
+						case 'execution':
+							$p.doc.calc_order.rep_invoice_execution(report);
+							break;
+						
+						case 'plan':
+						case 'underway':
+						case 'manufactured':
+						case 'executed':
+
+							$p.doc.calc_order.rep_planing(report, rid);
+							break;
+					}
+					
+				}
 
 				if(!report){
 
@@ -181,26 +200,17 @@ $p.modifiers.push(
 							if(!rep._online)
 								return report = null;
 
-							$p.doc.calc_order.rep_invoice_execution(report);
+							show_report();
 
 
 						});
 
 				}else if(report._online){
 
-					$p.doc.calc_order.rep_invoice_execution(report);
+					show_report();
 				}
 
-				switch(rid) {
-
-					case 'execution':
-					case 'plan':
-					case 'underway':
-					case 'manufactured':
-					case 'executed':
-
-						break;
-				}
+				
 			}
 
 			return wnd;

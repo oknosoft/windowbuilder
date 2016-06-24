@@ -2403,6 +2403,25 @@ $p.modifiers.push(
 			function build_report(rid) {
 
 				carousel.cells("report").setActive();
+				
+				function show_report() {
+
+					switch(rid) {
+
+						case 'execution':
+							$p.doc.calc_order.rep_invoice_execution(report);
+							break;
+						
+						case 'plan':
+						case 'underway':
+						case 'manufactured':
+						case 'executed':
+
+							$p.doc.calc_order.rep_planing(report, rid);
+							break;
+					}
+					
+				}
 
 				if(!report){
 
@@ -2413,26 +2432,17 @@ $p.modifiers.push(
 							if(!rep._online)
 								return report = null;
 
-							$p.doc.calc_order.rep_invoice_execution(report);
+							show_report();
 
 
 						});
 
 				}else if(report._online){
 
-					$p.doc.calc_order.rep_invoice_execution(report);
+					show_report();
 				}
 
-				switch(rid) {
-
-					case 'execution':
-					case 'plan':
-					case 'underway':
-					case 'manufactured':
-					case 'executed':
-
-						break;
-				}
+				
 			}
 
 			return wnd;
@@ -3349,13 +3359,68 @@ $p.modifiers.push(
 						res.mergeCells= [
 							{row: res.data.length-1, col: 0, rowspan: 1, colspan: 3}
 						]
-					};
+					}
 
 					rep.requery(res);
 					
 					return res;
 				});
 		};
+
+		$p.doc.calc_order.rep_planing = function (rep, attr) {
+
+			var date_from = $p.date_add_day(new Date(), -1, true),
+				date_till = $p.date_add_day(date_from, 7, true),
+				query_options = {
+					reduce: true,
+					limit: 10000,
+					group: true,
+					group_level: 5,
+					startkey: [date_from.getFullYear(), date_from.getMonth()+1, date_from.getDate(), ""],
+					endkey: [date_till.getFullYear(), date_till.getMonth()+1, date_till.getDate(),"\uffff"]
+				},
+				res = {
+					data: [],
+					readOnly: true,
+					wordWrap: false
+					//minSpareRows: 1
+				};
+
+
+
+			return $p.wsql.pouch.remote.doc.query("server/planning", query_options)
+
+				.then(function (data) {
+
+
+					if(data.rows){
+						
+						var include_detales = $p.current_acl.role_available("СогласованиеРасчетовЗаказов");
+
+						data.rows.forEach(function (row) {
+
+							if(!include_detales){
+
+							}
+
+							res.data.push([
+								new Date(row.key[0], row.key[1]-1, row.key[2]),
+								$p.cat.planning_keys.get(row.key[3]),
+								row.value.debit,
+								row.value.credit,
+								row.value.total
+							]);
+						});
+
+					}
+
+					rep.requery(res);
+
+					return res;
+				});
+
+		};
+
 	}
 );
 /**
