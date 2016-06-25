@@ -1073,6 +1073,34 @@ $p.modifiers.push(
 
 		var _mgr = $p.cat.inserts;
 
+		_mgr._inserts_types_filling = [
+			$p.enm.inserts_types.Стеклопакет,
+			$p.enm.inserts_types.Заполнение,
+			$p.enm.inserts_types.ТиповойСтеклопакет
+		];
+		
+		_mgr.by_thickness = function (min, max) {
+
+			if(!_mgr._by_thickness){
+				_mgr._by_thickness = {};
+				_mgr.find_rows({insert_type: {in: _mgr._inserts_types_filling}}, function (ins) {
+					if(ins.thickness > 0){
+						if(!_mgr._by_thickness[ins.thickness])
+							_mgr._by_thickness[ins.thickness] = [];
+						_mgr._by_thickness[ins.thickness].push(ins);
+					}
+				});
+			}
+
+			var res = [];
+			for(var thickness in _mgr._by_thickness){
+				if(parseFloat(thickness) >= min && parseFloat(thickness) <= max)
+					Array.prototype.push.apply(res, _mgr._by_thickness[thickness]);
+			}
+			return res;
+
+		};
+
 		_mgr._obj_constructor.prototype.__define({
 
 			/**
@@ -1110,8 +1138,7 @@ $p.modifiers.push(
 
 					return _nom;
 
-				},
-				enumerable: false
+				}
 			},
 
 			/**
@@ -1142,9 +1169,9 @@ $p.modifiers.push(
 
 					return _cache.thickness;
 
-				},
-				enumerable: false
+				}
 			}
+
 		});
 	}
 );

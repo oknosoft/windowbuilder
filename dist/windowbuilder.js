@@ -4213,10 +4213,23 @@ BuilderElement.prototype.__define({
 					function(o, f){
 						var selection;
 
-						if(t instanceof Filling)
-							selection = {elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}};
+						if(t instanceof Filling){
 
-						else if(t instanceof Profile){
+							if($p.is_data_obj(o)){
+								return $p.cat.inserts._inserts_types_filling.indexOf(o.insert_type) != -1 &&
+										o.thickness >= t.project._dp.sys.tmin && o.thickness <= t.project._dp.sys.tmax;
+
+							}else{
+								var refs = "";
+								$p.cat.inserts.by_thickness(t.project._dp.sys.tmin, t.project._dp.sys.tmax).forEach(function (row) {
+									if(refs)
+										refs += ", ";
+									refs += "'" + row.ref + "'";
+								});
+								return "_t_.ref in (" + refs + ")";
+							}
+
+						}else if(t instanceof Profile){
 							if(t.nearest())
 								selection = {elm_type: {in: [$p.enm.elm_types.Створка, $p.enm.elm_types.Добор]}};
 							else
