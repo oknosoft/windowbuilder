@@ -35,8 +35,7 @@ ToolElement.prototype.__define({
 				delete this.wnd;
 			}
 			this.profile = null;
-		},
-		enumerable: false
+		}
 	}
 
 });

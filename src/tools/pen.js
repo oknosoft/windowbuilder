@@ -59,7 +59,7 @@ function ToolPen(){
 			_editor.project.activeLayer instanceof Contour && !_editor.project.activeLayer.profiles.length)
 			tool.profile.elm_type = $p.enm.elm_types.Рама;
 
-		// вставка по умолчанию
+		// вставку по умолчанию получаем эмулируя событие изменения типа элемента
 		$p.dp.builder_pen.handle_event(tool.profile, "value_change", {
 			field: "elm_type"
 		});
@@ -86,6 +86,9 @@ function ToolPen(){
 					}
 				}]
 		}];
+
+		// дополняем свойства поля цвет отбором по служебным цветам
+		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr);
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
 		tool.wnd.attachHeadFields({
@@ -203,6 +206,7 @@ function ToolPen(){
 
 		return true;
 	};
+	
 	tool.on({
 
 		activate: function() {

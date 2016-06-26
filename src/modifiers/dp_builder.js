@@ -8,13 +8,16 @@
 $p.modifiers.push(
 
 	function($p) {
-
-		$p.dp.builder_pen.attache_event("value_change", function (attr) {
-
+		
+		function elm_type_change(attr) {
 			if(attr.field == "elm_type") {
 				this.inset = paper.project.default_inset({elm_type: this.elm_type});
 				this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
 			}
-		});
+		}
+
+		$p.dp.builder_pen.attache_event("value_change", elm_type_change);
+
+		$p.dp.builder_lay_impost.attache_event("value_change", elm_type_change);
 	}
 );

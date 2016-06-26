@@ -9,7 +9,8 @@
 function ToolLayImpost(){
 
 	var _editor = paper,
-		tool = this;
+		tool = this,
+		sys;
 
 	ToolLayImpost.superclass.constructor.call(this);
 
@@ -21,16 +22,89 @@ function ToolLayImpost(){
 
 	tool.options = {
 		name: 'lay_impost',
-		nom: $p.cat.nom.get(),
-		clr: $p.cat.clrs.get(),
 		wnd: {
 			caption: "Импосты и раскладки",
-			height: 280
+			height: 340,
+			width: 320
 		}
 	};
 
-	tool.resetHot = function(type, event, mode) {
-	};
+	// подключает окно редактора
+	function tool_wnd(){
+
+		sys = _editor.project._dp.sys;
+
+		// создаём экземпляр обработки
+		tool.profile = $p.dp.builder_lay_impost.create();
+
+		// восстанавливаем сохранённые параметры
+		$p.wsql.restore_options("editor", tool.options);
+		for(var prop in tool.profile._metadata.fields) {
+			if(tool.options.wnd.hasOwnProperty(prop))
+				tool.profile[prop] = tool.options.wnd[prop];
+		}
+
+		// если в текущем слое есть профили, выбираем импост
+		if(tool.profile.elm_type.empty())
+			tool.profile.elm_type = $p.enm.elm_types.Импост;
+		
+		// вставку по умолчанию получаем эмулируя событие изменения типа элемента
+		$p.dp.builder_lay_impost.handle_event(tool.profile, "value_change", {
+			field: "elm_type"
+		});
+
+		// выравнивание по умолчанию
+		if(tool.profile.align_by_width.empty())
+			tool.profile.align_by_width = $p.enm.positions.Центр;
+		if(tool.profile.align_by_height.empty())
+			tool.profile.align_by_height = $p.enm.positions.Центр;
+
+		// цвет по умолчанию
+		if(tool.profile.clr.empty())
+			tool.profile.clr = _editor.project.clr;
+
+		// параметры отбора для выбора вставок
+		tool.profile._metadata.fields.inset.choice_links = [{
+			name: ["selection",	"ref"],
+			path: [
+				function(o, f){
+					if($p.is_data_obj(o)){
+						return tool.profile.rama_impost.indexOf(o) != -1;
+
+					}else{
+						var refs = "";
+						tool.profile.rama_impost.forEach(function (o) {
+							if(refs)
+								refs += ", ";
+							refs += "'" + o.ref + "'";
+						});
+						return "_t_.ref in (" + refs + ")";
+					}
+				}]
+		}];
+
+		// дополняем свойства поля цвет отбором по служебным цветам
+		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr);
+
+		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
+		tool.wnd.attachHeadFields({
+			obj: tool.profile
+		});
+
+		var wnd_options = tool.wnd.wnd_options;
+		tool.wnd.wnd_options = function (opt) {
+			wnd_options.call(tool.wnd, opt);
+
+			for(var prop in tool.profile._metadata.fields) {
+				if(prop.indexOf("step") == -1 && prop != "inset" && prop != "clr"){
+					var val = tool.profile[prop];
+					opt[prop] = $p.is_data_obj(val) ? val.ref : val;
+				}
+			}
+		};
+
+	}
+
 
 	tool.testHot = function(type, event, mode) {
 		/*	if (mode != 'tool-select')
@@ -53,15 +127,40 @@ function ToolLayImpost(){
 		return true;
 	};
 
+	tool.detache_wnd = function(){
+		if(this.wnd){
+
+			if(this._grid && this._grid.destructor){
+				if(this.wnd.detachObject)
+					this.wnd.detachObject();
+				delete this._grid;
+			}
+
+			if(this.wnd.wnd_options){
+				this.wnd.wnd_options(this.options.wnd);
+				$p.wsql.save_options("editor", this.options);
+				this.wnd.close();
+			}
+
+			delete this.wnd;
+		}
+		this.profile = null;
+	};
+
 	tool.on({
 
 		activate: function() {
 			_editor.tb_left.select(tool.options.name);
 			_editor.canvas_cursor('cursor-arrow-lay');
+
+			tool_wnd();
 		},
 
 		deactivate: function() {
-			_editor.hide_selection_bounds();
+
+			_editor.clear_selection_bounds();
+
+			tool.detache_wnd();
 		},
 
 		mousedown: function(event) {

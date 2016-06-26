@@ -56,6 +56,15 @@ $p.modifiers.push(
 				configurable : false
 			},
 
+			impost_lay: {
+				get : function(){
+					return cache.impost_lay
+						|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+				},
+				enumerable : false,
+				configurable : false
+			},
+
 			stvs: {
 				get : function(){
 					return cache.stvs || ( cache.stvs = [_mgr.Створка] );
