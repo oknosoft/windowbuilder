@@ -18,6 +18,7 @@ $p.modifiers.push(
 
 		$p.dp.builder_pen.attache_event("value_change", elm_type_change);
 
-		$p.dp.builder_lay_impost.attache_event("value_change", elm_type_change);
+		if($p.dp.builder_lay_impost)
+			$p.dp.builder_lay_impost.attache_event("value_change", elm_type_change);
 	}
 );
