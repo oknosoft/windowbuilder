@@ -9652,10 +9652,9 @@ function ToolLayImpost(){
 
 	ToolLayImpost.superclass.constructor.call(this);
 
-	tool.mouseStartPos = new paper.Point();
 	tool.mode = null;
 	tool.hitItem = null;
-	tool.originalContent = null;
+	tool.paths = [];
 	tool.changed = false;
 
 	tool.options = {
@@ -9725,8 +9724,69 @@ function ToolLayImpost(){
 		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr);
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
-		tool.wnd.attachHeadFields({
+		tool._grid = tool.wnd.attachHeadFields({
 			obj: tool.profile
+		});
+
+		//
+		if(!tool._grid_button_click)
+			tool._grid_button_click = function (btn, bar) {
+				tool.wnd.elmnts._btns.forEach(function (val, ind) {
+					if(val.id == bar){
+						var suffix = (ind == 0) ? "width" : "height";
+						tool.profile["step_by_" + suffix] = 0;
+
+						if(btn == "clear"){
+							tool.profile["cells_by_" + suffix] = 0;
+
+						}else if(btn == "del"){
+
+							if(tool.profile["cells_by_" + suffix] > 0)
+								tool.profile["cells_by_" + suffix] = tool.profile["cells_by_" + suffix] - 1;
+							else if(tool.profile["cells_by_" + suffix] < 0)
+								tool.profile["cells_by_" + suffix] = 0;
+
+						}else if(btn == "add"){
+
+							if(tool.profile["cells_by_" + suffix] < 2)
+								tool.profile["cells_by_" + suffix] = 2;
+							else
+								tool.profile["cells_by_" + suffix] = tool.profile["cells_by_" + suffix] + 1;
+						}
+
+					}
+				})
+			};
+
+		tool.wnd.elmnts._btns = [];
+		tool._grid.getAllRowIds().split(",").forEach(function (id) {
+			if(id.match(/^\d+$/)){
+
+				var cell = tool._grid.cells(id, 1);
+				cell.cell.style.position = "relative";
+				
+				tool.wnd.elmnts._btns.push({
+					id: id,
+					bar: new $p.iface.OTooolBar({
+						wrapper: cell.cell,
+						top: '0px',
+						right: '1px',
+						name: id,
+						width: '80px',
+						height: '20px',
+						class_name: "",
+						buttons: [
+							{name: 'clear', text: '<i class="fa fa-trash-o"></i>', title: 'Очистить направление', class_name: "md_otooolbar_grid_button"},
+							{name: 'del', text: '<i class="fa fa-minus-square-o"></i>', title: 'Удалить ячейку', class_name: "md_otooolbar_grid_button"},
+							{name: 'add', text: '<i class="fa fa-plus-square-o"></i>', title: 'Добавить ячейку', class_name: "md_otooolbar_grid_button"}
+						],
+						onclick: tool._grid_button_click
+					})
+				});
+
+				cell.cell.title = "";
+			}
+
 		});
 
 		var wnd_options = tool.wnd.wnd_options;
@@ -9752,14 +9812,19 @@ function ToolLayImpost(){
 
 	tool.hitTest = function(event) {
 
+		tool.hitItem = null;
+
 		// Hit test items.
-		tool.hitItem = _editor.project.hitTest(event.point, { fill: true, class: paper.Path });
+		if (event.point)
+			tool.hitItem = _editor.project.hitTest(event.point, { fill: true, class: paper.Path });
 
 		if (tool.hitItem && tool.hitItem.item.parent instanceof Filling){
 			_editor.canvas_cursor('cursor-lay-impost');
+			tool.hitItem = tool.hitItem.item.parent;
 
 		} else {
 			_editor.canvas_cursor('cursor-arrow-lay');
+			tool.hitItem = null;
 		}
 
 		return true;
@@ -9767,6 +9832,11 @@ function ToolLayImpost(){
 
 	tool.detache_wnd = function(){
 		if(this.wnd){
+
+			tool.wnd.elmnts._btns.forEach(function (btn) {
+				if(btn.btn && btn.btn.unload)
+					btn.btn.unload();
+			});
 
 			if(this._grid && this._grid.destructor){
 				if(this.wnd.detachObject)
@@ -9798,67 +9868,12 @@ function ToolLayImpost(){
 
 			_editor.clear_selection_bounds();
 
+			tool.paths.forEach(function (p) {
+				p.remove();
+			});
+			tool.paths.length = 0;
+
 			tool.detache_wnd();
-		},
-
-		mousedown: function(event) {
-
-			var b, e, r, contour;
-
-			this.mode = null;
-			this.changed = false;
-
-			if (tool.hitItem && tool.hitItem.item.parent instanceof Profile
-				&& (tool.hitItem.type == 'fill' || tool.hitItem.type == 'stroke')) {
-
-				this.mode = tool.hitItem.item.parent.generatrix;
-
-				if (event.modifiers.control || event.modifiers.option){
-					// при зажатом ctrl или alt строим правильную дугу
-
-					b = this.mode.firstSegment.point;
-					e = this.mode.lastSegment.point;
-					r = (b.getDistance(e) / 2) + 0.01;
-					contour = this.mode.layer;
-
-					//do_arc(this.mode, $p.m.arc_point(b.x, b.y, e.x, e.y, r, event.modifiers.option, false));
-
-					//undo.snapshot("Move Shapes");
-					this.mode = null;
-					setTimeout(contour.redraw.bind(contour), 10);
-
-
-				}else if(event.modifiers.space){
-					// при зажатом space удаляем кривизну
-
-					e = this.mode.lastSegment.point;
-					contour = this.mode.layer;
-
-					this.mode.removeSegments(1);
-					this.mode.firstSegment.linear = true;
-					this.mode.lineTo(e);
-					this.mode.parent.rays.clear();
-					this.mode.selected = true;
-
-					//undo.snapshot("Move Shapes");
-					this.mode = null;
-					setTimeout(contour.redraw.bind(contour), 10);
-
-				} else {
-					_editor.project.deselectAll();
-					this.mode.selected = true;
-					_editor.project.deselect_all_points();
-					this.mouseStartPos = event.point.clone();
-					this.originalContent = _editor.capture_selection_state();
-
-				}
-
-				//attache_dg(tool.hitItem.item.parent, tool.wnd);
-
-			}else{
-				//tool.detache_wnd();
-				_editor.project.deselectAll();
-			}
 		},
 
 		mouseup: function(event) {
@@ -9870,21 +9885,88 @@ function ToolLayImpost(){
 
 		},
 
-		mousedrag: function(event) {
-			if (this.mode) {
+		mousemove: function(event) {
 
-				this.changed = true;
+			this.hitTest(event);
 
-				_editor.canvas_cursor('cursor-arrow-small');
+			tool.paths.forEach(function (p) {
+				p.removeSegments();
+			});
 
-				//do_arc(this.mode, event.point);
+			if(!this.hitItem || tool.profile.inset.empty())
+				return;
 
+			var bounds = this.hitItem.bounds,
+				stepy = tool.profile.step_by_width || (tool.profile.cells_by_width && bounds.height / tool.profile.cells_by_width),
+				county = tool.profile.cells_by_width > 1 ? tool.profile.cells_by_width - 1 : Math.round(bounds.height / stepy) - 1,
+				stepx = tool.profile.step_by_height|| (tool.profile.cells_by_height && bounds.width / tool.profile.cells_by_height),
+				countx = tool.profile.cells_by_height > 1 ? tool.profile.cells_by_height - 1 : Math.round(bounds.width / stepx) - 1,
+				by_x = [], by_y = [];
+
+			if(stepy){
+				if(tool.profile.align_by_width == $p.enm.positions.Центр)
+					by_y.push(bounds.top + bounds.height / 2);
+
+				else if(tool.profile.align_by_width == $p.enm.positions.Верх)
+					by_y.push(bounds.top + stepy);
+
+				else if(tool.profile.align_by_width == $p.enm.positions.Инз)
+					by_y.push(bounds.bottom - stepy);
+			}
+
+			if(stepx){
+				if(tool.profile.align_by_height == $p.enm.positions.Центр)
+					by_x.push(bounds.left + bounds.width / 2);
+
+				else if(tool.profile.align_by_height == $p.enm.positions.Лев)
+					by_x.push(bounds.left + stepx);
+
+				else if(tool.profile.align_by_height == $p.enm.positions.Прав)
+					by_x.push(bounds.right - stepx);
+			}
+
+			var path, i;
+			for(i = 0; i < by_y.length; i++){
+
+				if(i < tool.paths.length)
+					path = tool.paths[i];
+
+				else{
+					path = new paper.Path({
+						strokeColor: 'black',
+						fillColor: 'white',
+						strokeScaling: false,
+						guide: true,
+						closed: true
+					});
+					tool.paths.push(path);
+				}
+
+				path.addSegments([[bounds.left, by_y[i] - 10], [bounds.right, by_y[i] - 10], [bounds.right, by_y[i] + 10], [bounds.left, by_y[i] + 10]]);
 
 			}
-		},
 
-		mousemove: function(event) {
-			this.hitTest(event);
+			for(i = 0; i < by_x.length; i++){
+
+				if(i + by_y.length < tool.paths.length)
+					path = tool.paths[i + by_y.length];
+
+				else{
+					path = new paper.Path({
+						strokeColor: 'black',
+						fillColor: 'white',
+						strokeScaling: false,
+						guide: true,
+						closed: true
+					});
+					tool.paths.push(path);
+				}
+
+				path.addSegments([[by_x[i] - 10, bounds.bottom], [by_x[i] - 10, bounds.top], [by_x[i] + 10, bounds.top], [by_x[i] + 10, bounds.bottom]]);
+
+			}
+
+
 		}
 	});
 
@@ -10101,7 +10183,7 @@ function ToolPen(){
 		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr);
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
-		tool.wnd.attachHeadFields({
+		tool._grid = tool.wnd.attachHeadFields({
 			obj: tool.profile
 		});
 

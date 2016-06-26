@@ -91,7 +91,7 @@ function ToolPen(){
 		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr);
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
-		tool.wnd.attachHeadFields({
+		tool._grid = tool.wnd.attachHeadFields({
 			obj: tool.profile
 		});
 
