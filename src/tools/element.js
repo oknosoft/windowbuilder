@@ -22,7 +22,7 @@ ToolElement.prototype.__define({
 				
 				if(this._grid && this._grid.destructor){
 					if(this.wnd.detachObject)
-						this.wnd.detachObject();
+						this.wnd.detachObject(true);
 					delete this._grid;
 				}
 				

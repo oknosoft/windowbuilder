@@ -9618,7 +9618,7 @@ ToolElement.prototype.__define({
 				
 				if(this._grid && this._grid.destructor){
 					if(this.wnd.detachObject)
-						this.wnd.detachObject();
+						this.wnd.detachObject(true);
 					delete this._grid;
 				}
 				
@@ -9691,10 +9691,10 @@ function ToolLayImpost(){
 		});
 
 		// выравнивание по умолчанию
-		if(tool.profile.align_by_width.empty())
-			tool.profile.align_by_width = $p.enm.positions.Центр;
-		if(tool.profile.align_by_height.empty())
-			tool.profile.align_by_height = $p.enm.positions.Центр;
+		if(tool.profile.align_by_y.empty())
+			tool.profile.align_by_y = $p.enm.positions.Центр;
+		if(tool.profile.align_by_x.empty())
+			tool.profile.align_by_x = $p.enm.positions.Центр;
 
 		// цвет по умолчанию
 		if(tool.profile.clr.empty())
@@ -9733,25 +9733,25 @@ function ToolLayImpost(){
 			tool._grid_button_click = function (btn, bar) {
 				tool.wnd.elmnts._btns.forEach(function (val, ind) {
 					if(val.id == bar){
-						var suffix = (ind == 0) ? "width" : "height";
+						var suffix = (ind == 0) ? "y" : "x";
 						tool.profile["step_by_" + suffix] = 0;
 
 						if(btn == "clear"){
-							tool.profile["cells_by_" + suffix] = 0;
+							tool.profile["elm_by_" + suffix] = 0;
 
 						}else if(btn == "del"){
 
-							if(tool.profile["cells_by_" + suffix] > 0)
-								tool.profile["cells_by_" + suffix] = tool.profile["cells_by_" + suffix] - 1;
-							else if(tool.profile["cells_by_" + suffix] < 0)
-								tool.profile["cells_by_" + suffix] = 0;
+							if(tool.profile["elm_by_" + suffix] > 0)
+								tool.profile["elm_by_" + suffix] = tool.profile["elm_by_" + suffix] - 1;
+							else if(tool.profile["elm_by_" + suffix] < 0)
+								tool.profile["elm_by_" + suffix] = 0;
 
 						}else if(btn == "add"){
 
-							if(tool.profile["cells_by_" + suffix] < 2)
-								tool.profile["cells_by_" + suffix] = 2;
+							if(tool.profile["elm_by_" + suffix] < 1)
+								tool.profile["elm_by_" + suffix] = 1;
 							else
-								tool.profile["cells_by_" + suffix] = tool.profile["cells_by_" + suffix] + 1;
+								tool.profile["elm_by_" + suffix] = tool.profile["elm_by_" + suffix] + 1;
 						}
 
 					}
@@ -9834,13 +9834,13 @@ function ToolLayImpost(){
 		if(this.wnd){
 
 			tool.wnd.elmnts._btns.forEach(function (btn) {
-				if(btn.btn && btn.btn.unload)
-					btn.btn.unload();
+				if(btn.bar && btn.bar.unload)
+					btn.bar.unload();
 			});
 
 			if(this._grid && this._grid.destructor){
 				if(this.wnd.detachObject)
-					this.wnd.detachObject();
+					this.wnd.detachObject(true);
 				delete this._grid;
 			}
 
@@ -9897,35 +9897,63 @@ function ToolLayImpost(){
 				return;
 
 			var bounds = this.hitItem.bounds,
-				stepy = tool.profile.step_by_width || (tool.profile.cells_by_width && bounds.height / tool.profile.cells_by_width),
-				county = tool.profile.cells_by_width > 1 ? tool.profile.cells_by_width - 1 : Math.round(bounds.height / stepy) - 1,
-				stepx = tool.profile.step_by_height|| (tool.profile.cells_by_height && bounds.width / tool.profile.cells_by_height),
-				countx = tool.profile.cells_by_height > 1 ? tool.profile.cells_by_height - 1 : Math.round(bounds.width / stepx) - 1,
-				by_x = [], by_y = [];
+				stepy = tool.profile.step_by_y || (tool.profile.elm_by_y && bounds.height / (tool.profile.elm_by_y + 1)),
+				county = tool.profile.elm_by_y > 0 ? tool.profile.elm_by_y.round(0) : Math.round(bounds.height / stepy) - 1,
+				stepx = tool.profile.step_by_x || (tool.profile.elm_by_x && bounds.width / (tool.profile.elm_by_x + 1)),
+				countx = tool.profile.elm_by_x > 0 ? tool.profile.elm_by_x.round(0) : Math.round(bounds.width / stepx) - 1,
+				by_x = [], by_y = [], base, pos, path, i;
 
 			if(stepy){
-				if(tool.profile.align_by_width == $p.enm.positions.Центр)
-					by_y.push(bounds.top + bounds.height / 2);
+				if(tool.profile.align_by_y == $p.enm.positions.Центр){
+					base = bounds.top + bounds.height / 2;
+					if(county % 2){
+						by_y.push(base);
+					}
+					for(i = 1; i < county; i++){
 
-				else if(tool.profile.align_by_width == $p.enm.positions.Верх)
-					by_y.push(bounds.top + stepy);
+						if(county % 2)
+							pos = base + stepy * i;
+						else
+							pos = base + stepy / 2 + (i > 1 ? stepy * (i - 1) : 0);
 
-				else if(tool.profile.align_by_width == $p.enm.positions.Инз)
-					by_y.push(bounds.bottom - stepy);
+						if(pos + consts.sticking_l < bounds.bottom)
+							by_y.push(pos);
+
+						if(county % 2)
+							pos = base - stepy * i;
+						else
+							pos = base - stepy / 2 - (i > 1 ? stepy * (i - 1) : 0);
+
+						if(pos - consts.sticking_l > bounds.top)
+							by_y.push(pos);
+					}
+
+				}else if(tool.profile.align_by_y == $p.enm.positions.Верх){
+
+					for(i = 1; i <= county; i++){
+						by_y.push(bounds.top + stepy * i);
+					}
+
+
+				}else if(tool.profile.align_by_y == $p.enm.positions.Низ){
+					for(i = 1; i <= county; i++){
+						by_y.push(bounds.bottom - stepy * i);
+					}
+
+				}
 			}
 
 			if(stepx){
-				if(tool.profile.align_by_height == $p.enm.positions.Центр)
+				if(tool.profile.align_by_x == $p.enm.positions.Центр)
 					by_x.push(bounds.left + bounds.width / 2);
 
-				else if(tool.profile.align_by_height == $p.enm.positions.Лев)
+				else if(tool.profile.align_by_x == $p.enm.positions.Лев)
 					by_x.push(bounds.left + stepx);
 
-				else if(tool.profile.align_by_height == $p.enm.positions.Прав)
+				else if(tool.profile.align_by_x == $p.enm.positions.Прав)
 					by_x.push(bounds.right - stepx);
 			}
 
-			var path, i;
 			for(i = 0; i < by_y.length; i++){
 
 				if(i < tool.paths.length)
