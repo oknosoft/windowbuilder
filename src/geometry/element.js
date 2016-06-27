@@ -368,44 +368,13 @@ BuilderElement.prototype.__define({
 			return this._row.clr;
 		},
 		set : function(v){
+			
 			this._row.clr = v;
-			var clr = this._row.clr,
-				view_out = false,
-				clr_str = clr.clr_str;
 
-			if(!view_out){
-				if(!clr.clr_in.empty() && clr.clr_in.clr_str)
-					clr_str = clr.clr_in.clr_str;
-			}else{
-				if(!clr.clr_out.empty() && clr.clr_out.clr_str)
-					clr_str = clr.clr_out.clr_str;
-			}
-
-			if(!clr_str)
-				clr_str = this.default_clr_str; 
-					
 			// цвет элементу присваиваем только если он уже нарисован
-			if(clr_str && this.path instanceof paper.Path){
-				clr = clr_str.split(",");
-				if(clr.length == 1){
-					if(clr_str[0] != "#")
-						clr_str = "#" + clr_str;
-					clr = new paper.Color(clr_str);
-					clr.alpha = 0.96;
-
-				}else if(clr.length == 4){
-					clr = new paper.Color(clr[0], clr[1], clr[2], clr[3]);
-
-				}else if(clr.length == 3){
-					clr = new paper.Color({
-						stops: [clr[0], clr[1], clr[2]],
-						origin: this.path.bounds.bottomLeft,
-						destination: this.path.bounds.topRight
-					});
-				}
-				this.path.fillColor = clr;
-			}
-
+			if(this.path instanceof paper.Path)
+				this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
+			
 			this.project.register_change();
 
 		},
@@ -490,6 +459,46 @@ BuilderElement.prototype.__define({
 
 });
 
+BuilderElement.clr_by_clr = function (clr, view_out) {
+
+	var clr_str = clr.clr_str;
+
+	if(!view_out){
+		if(!clr.clr_in.empty() && clr.clr_in.clr_str)
+			clr_str = clr.clr_in.clr_str;
+	}else{
+		if(!clr.clr_out.empty() && clr.clr_out.clr_str)
+			clr_str = clr.clr_out.clr_str;
+	}
+
+	if(!clr_str)
+		clr_str = this.default_clr_str ? this.default_clr_str : "fff";
+
+	
+	if(clr_str){
+		clr = clr_str.split(",");
+		if(clr.length == 1){
+			if(clr_str[0] != "#")
+				clr_str = "#" + clr_str;
+			clr = new paper.Color(clr_str);
+			clr.alpha = 0.96;
+
+		}else if(clr.length == 4){
+			clr = new paper.Color(clr[0], clr[1], clr[2], clr[3]);
+
+		}else if(clr.length == 3){
+			if(this.path && this.path.bounds)
+				clr = new paper.Color({
+					stops: [clr[0], clr[1], clr[2]],
+					origin: this.path.bounds.bottomLeft,
+					destination: this.path.bounds.topRight
+				});
+			else
+				clr = new paper.Color(clr[0]);
+		}
+		return clr;
+	}
+};
 
 Editor.BuilderElement = BuilderElement;
 

@@ -4353,44 +4353,13 @@ BuilderElement.prototype.__define({
 			return this._row.clr;
 		},
 		set : function(v){
+			
 			this._row.clr = v;
-			var clr = this._row.clr,
-				view_out = false,
-				clr_str = clr.clr_str;
 
-			if(!view_out){
-				if(!clr.clr_in.empty() && clr.clr_in.clr_str)
-					clr_str = clr.clr_in.clr_str;
-			}else{
-				if(!clr.clr_out.empty() && clr.clr_out.clr_str)
-					clr_str = clr.clr_out.clr_str;
-			}
-
-			if(!clr_str)
-				clr_str = this.default_clr_str; 
-					
 			// цвет элементу присваиваем только если он уже нарисован
-			if(clr_str && this.path instanceof paper.Path){
-				clr = clr_str.split(",");
-				if(clr.length == 1){
-					if(clr_str[0] != "#")
-						clr_str = "#" + clr_str;
-					clr = new paper.Color(clr_str);
-					clr.alpha = 0.96;
-
-				}else if(clr.length == 4){
-					clr = new paper.Color(clr[0], clr[1], clr[2], clr[3]);
-
-				}else if(clr.length == 3){
-					clr = new paper.Color({
-						stops: [clr[0], clr[1], clr[2]],
-						origin: this.path.bounds.bottomLeft,
-						destination: this.path.bounds.topRight
-					});
-				}
-				this.path.fillColor = clr;
-			}
-
+			if(this.path instanceof paper.Path)
+				this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
+			
 			this.project.register_change();
 
 		},
@@ -4475,6 +4444,46 @@ BuilderElement.prototype.__define({
 
 });
 
+BuilderElement.clr_by_clr = function (clr, view_out) {
+
+	var clr_str = clr.clr_str;
+
+	if(!view_out){
+		if(!clr.clr_in.empty() && clr.clr_in.clr_str)
+			clr_str = clr.clr_in.clr_str;
+	}else{
+		if(!clr.clr_out.empty() && clr.clr_out.clr_str)
+			clr_str = clr.clr_out.clr_str;
+	}
+
+	if(!clr_str)
+		clr_str = this.default_clr_str ? this.default_clr_str : "fff";
+
+	
+	if(clr_str){
+		clr = clr_str.split(",");
+		if(clr.length == 1){
+			if(clr_str[0] != "#")
+				clr_str = "#" + clr_str;
+			clr = new paper.Color(clr_str);
+			clr.alpha = 0.96;
+
+		}else if(clr.length == 4){
+			clr = new paper.Color(clr[0], clr[1], clr[2], clr[3]);
+
+		}else if(clr.length == 3){
+			if(this.path && this.path.bounds)
+				clr = new paper.Color({
+					stops: [clr[0], clr[1], clr[2]],
+					origin: this.path.bounds.bottomLeft,
+					destination: this.path.bounds.topRight
+				});
+			else
+				clr = new paper.Color(clr[0]);
+		}
+		return clr;
+	}
+};
 
 Editor.BuilderElement = BuilderElement;
 
@@ -9901,10 +9910,30 @@ function ToolLayImpost(){
 				county = tool.profile.elm_by_y > 0 ? tool.profile.elm_by_y.round(0) : Math.round(bounds.height / stepy) - 1,
 				stepx = tool.profile.step_by_x || (tool.profile.elm_by_x && bounds.width / (tool.profile.elm_by_x + 1)),
 				countx = tool.profile.elm_by_x > 0 ? tool.profile.elm_by_x.round(0) : Math.round(bounds.width / stepx) - 1,
-				by_x = [], by_y = [], base, pos, path, i;
+				w2 = tool.profile.inset.nom().width / 2, clr = BuilderElement.clr_by_clr(tool.profile.clr, false),
+				by_x = [], by_y = [], base, pos, path, i, j;
+
+			function get_path() {
+				base++;
+				if(base < tool.paths.length){
+					path = tool.paths[base];
+					path.fillColor = clr;
+				}else{
+					path = new paper.Path({
+						strokeColor: 'black',
+						fillColor: clr,
+						strokeScaling: false,
+						guide: true,
+						closed: true
+					});
+					tool.paths.push(path);
+				}
+				return path;
+			}
 
 			if(stepy){
 				if(tool.profile.align_by_y == $p.enm.positions.Центр){
+
 					base = bounds.top + bounds.height / 2;
 					if(county % 2){
 						by_y.push(base);
@@ -9916,7 +9945,7 @@ function ToolLayImpost(){
 						else
 							pos = base + stepy / 2 + (i > 1 ? stepy * (i - 1) : 0);
 
-						if(pos + consts.sticking_l < bounds.bottom)
+						if(pos + w2 + consts.sticking_l < bounds.bottom)
 							by_y.push(pos);
 
 						if(county % 2)
@@ -9924,74 +9953,130 @@ function ToolLayImpost(){
 						else
 							pos = base - stepy / 2 - (i > 1 ? stepy * (i - 1) : 0);
 
-						if(pos - consts.sticking_l > bounds.top)
+						if(pos - w2 - consts.sticking_l > bounds.top)
 							by_y.push(pos);
 					}
 
 				}else if(tool.profile.align_by_y == $p.enm.positions.Верх){
 
 					for(i = 1; i <= county; i++){
-						by_y.push(bounds.top + stepy * i);
+						pos = bounds.top + stepy * i;
+						if(pos + w2 + consts.sticking_l < bounds.bottom)
+							by_y.push(pos);
 					}
-
-
 				}else if(tool.profile.align_by_y == $p.enm.positions.Низ){
-					for(i = 1; i <= county; i++){
-						by_y.push(bounds.bottom - stepy * i);
-					}
 
+					for(i = 1; i <= county; i++){
+						pos = bounds.bottom - stepy * i;
+						if(pos - w2 - consts.sticking_l > bounds.top)
+							by_y.push(bounds.bottom - stepy * i);
+					}
 				}
 			}
 
 			if(stepx){
-				if(tool.profile.align_by_x == $p.enm.positions.Центр)
-					by_x.push(bounds.left + bounds.width / 2);
+				if(tool.profile.align_by_x == $p.enm.positions.Центр){
 
-				else if(tool.profile.align_by_x == $p.enm.positions.Лев)
-					by_x.push(bounds.left + stepx);
+					base = bounds.left + bounds.width / 2;
+					if(countx % 2){
+						by_x.push(base);
+					}
+					for(i = 1; i < countx; i++){
 
-				else if(tool.profile.align_by_x == $p.enm.positions.Прав)
-					by_x.push(bounds.right - stepx);
+						if(countx % 2)
+							pos = base + stepx * i;
+						else
+							pos = base + stepx / 2 + (i > 1 ? stepx * (i - 1) : 0);
+
+						if(pos + w2 + consts.sticking_l < bounds.right)
+							by_x.push(pos);
+
+						if(countx % 2)
+							pos = base - stepx * i;
+						else
+							pos = base - stepx / 2 - (i > 1 ? stepx * (i - 1) : 0);
+
+						if(pos - w2 - consts.sticking_l > bounds.left)
+							by_x.push(pos);
+					}
+
+				}else if(tool.profile.align_by_x == $p.enm.positions.Лев){
+
+					for(i = 1; i <= countx; i++){
+						pos = bounds.left + stepx * i;
+						if(pos + w2 + consts.sticking_l < bounds.right)
+							by_x.push(pos);
+					}
+
+				}else if(tool.profile.align_by_x == $p.enm.positions.Прав){
+
+					for(i = 1; i <= countx; i++){
+						pos = bounds.right - stepx * i;
+						if(pos - w2 - consts.sticking_l > bounds.left)
+							by_x.push(pos);
+					}
+				}
 			}
 
+			base = 0;
 			for(i = 0; i < by_y.length; i++){
 
-				if(i < tool.paths.length)
-					path = tool.paths[i];
+				// в зависимости от типа деления, рисуем прямые или разорванные отрезки
+				if(!by_x.length || tool.profile.split.empty() ||
+						tool.profile.split == $p.enm.lay_split_types.ДелениеВертикальных ||
+						tool.profile.split == $p.enm.lay_split_types.КрестПересечение){
 
-				else{
-					path = new paper.Path({
-						strokeColor: 'black',
-						fillColor: 'white',
-						strokeScaling: false,
-						guide: true,
-						closed: true
-					});
-					tool.paths.push(path);
+					get_path().addSegments([[bounds.left, by_y[i]-w2], [bounds.right, by_y[i]-w2], [bounds.right, by_y[i]+w2], [bounds.left, by_y[i]+w2]]);
+
+				}else{
+					by_x.sort(function (a,b) { return a-b; });
+					for(j = 0; j < by_x.length; j++){
+
+						if(j == 0){
+							get_path().addSegments([[bounds.left, by_y[i]-w2], [by_x[j]-w2, by_y[i]-w2], [by_x[j]-w2, by_y[i]+w2], [bounds.left, by_y[i]+w2]]);
+
+						}else{
+							get_path().addSegments([[by_x[j-1]+w2, by_y[i]-w2], [by_x[j]-w2, by_y[i]-w2], [by_x[j]-w2, by_y[i]+w2], [by_x[j-1]+w2, by_y[i]+w2]]);
+
+						}
+
+						if(j == by_x.length -1){
+							get_path().addSegments([[by_x[j]+w2, by_y[i]-w2], [bounds.right, by_y[i]-w2], [bounds.right, by_y[i]+w2], [by_x[j]+w2, by_y[i]+w2]]);
+
+						}
+
+					}
 				}
-
-				path.addSegments([[bounds.left, by_y[i] - 10], [bounds.right, by_y[i] - 10], [bounds.right, by_y[i] + 10], [bounds.left, by_y[i] + 10]]);
-
 			}
 
 			for(i = 0; i < by_x.length; i++){
 
-				if(i + by_y.length < tool.paths.length)
-					path = tool.paths[i + by_y.length];
+				// в зависимости от типа деления, рисуем прямые или разорванные отрезки
+				if(!by_y.length || tool.profile.split.empty() ||
+						tool.profile.split == $p.enm.lay_split_types.ДелениеГоризонтальных ||
+						tool.profile.split == $p.enm.lay_split_types.КрестПересечение){
 
-				else{
-					path = new paper.Path({
-						strokeColor: 'black',
-						fillColor: 'white',
-						strokeScaling: false,
-						guide: true,
-						closed: true
-					});
-					tool.paths.push(path);
+					get_path().addSegments([[by_x[i]-w2, bounds.bottom], [by_x[i]-w2, bounds.top], [by_x[i]+w2, bounds.top], [by_x[i]+w2, bounds.bottom]]);
+
+				}else{
+					by_y.sort(function (a,b) { return b-a; });
+					for(j = 0; j < by_y.length; j++){
+
+						if(j == 0){
+							get_path().addSegments([[by_x[i]-w2, bounds.bottom], [by_x[i]-w2, by_y[j]+w2], [by_x[i]+w2, by_y[j]+w2], [by_x[i]+w2, bounds.bottom]]);
+
+						}else{
+							get_path().addSegments([[by_x[i]-w2, by_y[j-1]-w2], [by_x[i]-w2, by_y[j]+w2], [by_x[i]+w2, by_y[j]+w2], [by_x[i]+w2, by_y[j-1]-w2]]);
+
+						}
+
+						if(j == by_x.length -1){
+							get_path().addSegments([[by_x[i]-w2, by_y[j]-w2], [by_x[i]-w2, bounds.top], [by_x[i]+w2, bounds.top], [by_x[i]+w2, by_y[j]-w2]]);
+
+						}
+
+					}
 				}
-
-				path.addSegments([[by_x[i] - 10, bounds.bottom], [by_x[i] - 10, bounds.top], [by_x[i] + 10, bounds.top], [by_x[i] + 10, bounds.bottom]]);
-
 			}
 
 
