@@ -176,7 +176,7 @@ $p.iface.oninit = function() {
 
 	});
 
-	// Подписываемся на событие окончания загрузки локальных данных
+	// Подписываемся на событие окончания загрузки предопределённых элементов
 	var predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", function () {
 
 		$p.iface.main.progressOff();
