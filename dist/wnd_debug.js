@@ -2514,7 +2514,7 @@ $p.modifiers.push(
 			 */
 			if(!_meta_patched){
 				(function(source){
-
+					// TODO: штуки сейчас спрятаны в ro и имеют нулевую ширину
 					if($p.wsql.get_user_param("hide_price_dealer")){
 						source.headers = "№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил";
 						source.widths = "40,200,*,220,0,70,70,70,70,40,70,70,70,0,0,0";
@@ -2532,9 +2532,9 @@ $p.modifiers.push(
 					}
 
 					if($p.current_acl.role_available("СогласованиеРасчетовЗаказов") || $p.current_acl.role_available("РедактированиеСкидок"))
-						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro";
+						source.types = "cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro";
 					else
-						source.types = "cntr,ref,ref,txt,calck,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro";
+						source.types = "cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro";
 
 				})($p.doc.calc_order.metadata().form.obj.tabular_sections.production);
 				_meta_patched = true;
@@ -6148,7 +6148,7 @@ $p.iface.oninit = function() {
 
 	});
 
-	// Подписываемся на событие окончания загрузки локальных данных
+	// Подписываемся на событие окончания загрузки предопределённых элементов
 	var predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", function () {
 
 		$p.iface.main.progressOff();
