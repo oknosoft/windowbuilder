@@ -65,6 +65,7 @@ $p.modifiers.push(
 			}
 		});
 
+		
 		/**
 		 * Обработчик события "при изменении свойства" в шапке или табличной части при редактировании в форме объекта
 		 * @this {DataObj} - обработчик вызывается в контексте текущего объекта
@@ -79,12 +80,20 @@ $p.modifiers.push(
 
 		});
 
+		/**
+		 * Обработчик при создании документа
+		 */
 		$p.doc.nom_prices_setup.attache_event("after_create", function (attr) {
 
 			//Номер документа
 			return this.new_number_doc();
 
 		});
+		
+		/**
+		 * Переопределяем формирование списка выбора характеристики в табчасти документа установки цен
+		 */
+		$p.doc.nom_prices_setup.metadata().tabular_sections.goods.fields.nom_characteristic._option_list_local = true;
 
 
 
