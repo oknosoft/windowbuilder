@@ -9988,12 +9988,13 @@ function ToolLayImpost(){
 				return;
 
 			var bounds = this.hitItem.bounds,
+				gen = this.hitItem.path,
 				stepy = this.profile.step_by_y || (this.profile.elm_by_y && bounds.height / (this.profile.elm_by_y + 1)),
 				county = this.profile.elm_by_y > 0 ? this.profile.elm_by_y.round(0) : Math.round(bounds.height / stepy) - 1,
 				stepx = this.profile.step_by_x || (this.profile.elm_by_x && bounds.width / (this.profile.elm_by_x + 1)),
 				countx = this.profile.elm_by_x > 0 ? this.profile.elm_by_x.round(0) : Math.round(bounds.width / stepx) - 1,
 				w2 = this.profile.inset.nom().width / 2, clr = BuilderElement.clr_by_clr(this.profile.clr, false),
-				by_x = [], by_y = [], base, pos, path, i, j;
+				by_x = [], by_y = [], base, pos, path, i, j, pts;
 
 			function get_path() {
 				base++;
@@ -10015,6 +10016,62 @@ function ToolLayImpost(){
 				return path;
 			}
 
+			function get_points(p1, p2) {
+
+				var res = {
+					p1: new paper.Point(p1),
+					p2: new paper.Point(p2)
+				},
+					c1 = gen.contains(res.p1),
+					c2 = gen.contains(res.p2);
+
+				if(c1 && c2)
+					return res;
+
+				var intersect = gen.getIntersections(new paper.Path({ insert: false, segments: [res.p1, res.p2] }));
+
+				if(c1){
+					intersect.reduce(function (sum, curr) {
+						var dist = sum.point.getDistance(curr.point);
+						if(dist < sum.dist){
+							res.p2 = curr.point;
+							sum.dist = dist;
+						}
+						return sum;
+					}, {dist: Infinity, point: res.p2});
+				}else if(c2){
+					intersect.reduce(function (sum, curr) {
+						var dist = sum.point.getDistance(curr.point);
+						if(dist < sum.dist){
+							res.p1 = curr.point;
+							sum.dist = dist;
+						}
+						return sum;
+					}, {dist: Infinity, point: res.p1});
+				}else if(intersect.length > 1){
+					intersect.reduce(function (sum, curr) {
+						var dist = sum.point.getDistance(curr.point);
+						if(dist < sum.dist){
+							res.p2 = curr.point;
+							sum.dist = dist;
+						}
+						return sum;
+					}, {dist: Infinity, point: res.p2});
+					intersect.reduce(function (sum, curr) {
+						var dist = sum.point.getDistance(curr.point);
+						if(dist < sum.dist){
+							res.p1 = curr.point;
+							sum.dist = dist;
+						}
+						return sum;
+					}, {dist: Infinity, point: res.p1});
+				}else{
+					return null;
+				}
+
+				return res;
+			}
+
 			function do_x() {
 				for(i = 0; i < by_x.length; i++){
 
@@ -10023,22 +10080,26 @@ function ToolLayImpost(){
 						tool.profile.split == $p.enm.lay_split_types.ДелениеГоризонтальных ||
 						tool.profile.split == $p.enm.lay_split_types.КрестПересечение){
 
-						get_path().addSegments([[by_x[i]-w2, bounds.bottom], [by_x[i]-w2, bounds.top], [by_x[i]+w2, bounds.top], [by_x[i]+w2, bounds.bottom]]);
+						if(pts = get_points([by_x[i], bounds.bottom], [by_x[i], bounds.top]))
+							get_path().addSegments([[pts.p1.x-w2, pts.p1.y], [pts.p2.x-w2, pts.p2.y], [pts.p2.x+w2, pts.p2.y], [pts.p1.x+w2, pts.p1.y]]);
 
 					}else{
 						by_y.sort(function (a,b) { return b-a; });
 						for(j = 0; j < by_y.length; j++){
 
 							if(j == 0){
-								get_path().addSegments([[by_x[i]-w2, bounds.bottom], [by_x[i]-w2, by_y[j]+w2], [by_x[i]+w2, by_y[j]+w2], [by_x[i]+w2, bounds.bottom]]);
+								if(pts = get_points([by_x[i], bounds.bottom], [by_x[i], by_y[j]]))
+									get_path().addSegments([[pts.p1.x-w2, pts.p1.y], [pts.p2.x-w2, pts.p2.y+w2], [pts.p2.x+w2, pts.p2.y+w2], [pts.p1.x+w2, pts.p1.y]]);
 
 							}else{
-								get_path().addSegments([[by_x[i]-w2, by_y[j-1]-w2], [by_x[i]-w2, by_y[j]+w2], [by_x[i]+w2, by_y[j]+w2], [by_x[i]+w2, by_y[j-1]-w2]]);
+								if(pts = get_points([by_x[i], by_y[j-1]], [by_x[i], by_y[j]]))
+									get_path().addSegments([[pts.p1.x-w2, pts.p1.y-w2], [pts.p2.x-w2, pts.p2.y+w2], [pts.p2.x+w2, pts.p2.y+w2], [pts.p1.x+w2, pts.p1.y-w2]]);
 
 							}
 
 							if(j == by_y.length -1){
-								get_path().addSegments([[by_x[i]-w2, by_y[j]-w2], [by_x[i]-w2, bounds.top], [by_x[i]+w2, bounds.top], [by_x[i]+w2, by_y[j]-w2]]);
+								if(pts = get_points([by_x[i], by_y[j]], [by_x[i], bounds.top]))
+									get_path().addSegments([[pts.p1.x-w2, pts.p1.y-w2], [pts.p2.x-w2, pts.p2.y], [pts.p2.x+w2, pts.p2.y], [pts.p1.x+w2, pts.p1.y-w2]]);
 
 							}
 
@@ -10055,22 +10116,26 @@ function ToolLayImpost(){
 						tool.profile.split == $p.enm.lay_split_types.ДелениеВертикальных ||
 						tool.profile.split == $p.enm.lay_split_types.КрестПересечение){
 
-						get_path().addSegments([[bounds.left, by_y[i]-w2], [bounds.right, by_y[i]-w2], [bounds.right, by_y[i]+w2], [bounds.left, by_y[i]+w2]]);
+						if(pts = get_points([bounds.left, by_y[i]], [bounds.right, by_y[i]]))
+							get_path().addSegments([[pts.p1.x, pts.p1.y-w2], [pts.p2.x, pts.p2.y-w2], [pts.p2.x, pts.p2.y+w2], [pts.p1.x, pts.p1.y+w2]]);
 
 					}else{
 						by_x.sort(function (a,b) { return a-b; });
 						for(j = 0; j < by_x.length; j++){
 
 							if(j == 0){
-								get_path().addSegments([[bounds.left, by_y[i]-w2], [by_x[j]-w2, by_y[i]-w2], [by_x[j]-w2, by_y[i]+w2], [bounds.left, by_y[i]+w2]]);
+								if(pts = get_points([bounds.left, by_y[i]], [by_x[j], by_y[i]]))
+									get_path().addSegments([[pts.p1.x, pts.p1.y-w2], [pts.p2.x-w2, pts.p2.y-w2], [pts.p2.x-w2, pts.p2.y+w2], [pts.p1.x, pts.p1.y+w2]]);
 
 							}else{
-								get_path().addSegments([[by_x[j-1]+w2, by_y[i]-w2], [by_x[j]-w2, by_y[i]-w2], [by_x[j]-w2, by_y[i]+w2], [by_x[j-1]+w2, by_y[i]+w2]]);
+								if(pts = get_points([by_x[j-1], by_y[i]], [by_x[j], by_y[i]]))
+									get_path().addSegments([[pts.p1.x+w2, pts.p1.y-w2], [pts.p2.x-w2, pts.p2.y-w2], [pts.p2.x-w2, pts.p2.y+w2], [pts.p1.x+w2, pts.p1.y+w2]]);
 
 							}
 
 							if(j == by_x.length -1){
-								get_path().addSegments([[by_x[j]+w2, by_y[i]-w2], [bounds.right, by_y[i]-w2], [bounds.right, by_y[i]+w2], [by_x[j]+w2, by_y[i]+w2]]);
+								if(pts = get_points([by_x[j], by_y[i]], [bounds.right, by_y[i]]))
+									get_path().addSegments([[pts.p1.x+w2, pts.p1.y-w2], [pts.p2.x, pts.p2.y-w2], [pts.p2.x, pts.p2.y+w2], [pts.p1.x+w2, pts.p1.y+w2]]);
 
 							}
 
