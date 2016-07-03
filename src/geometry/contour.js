@@ -255,12 +255,14 @@ function Contour(attr){
 					this.notify(noti);
 
 				// пересчитываем вставки створок
-				this.profiles.forEach(function (profile) {
-					profile.inset = profile.project.default_inset({
-						elm_type: profile.elm_type,
-						pos: profile.pos,
-						inset: profile.inset
-					});
+				this.profiles.forEach(function (p) {
+					if(p.nearest()){
+						p.inset = p.project.default_inset({
+							elm_type: p.elm_type,
+							pos: p.pos,
+							inset: p.inset
+						});
+					}
 				});
 				this.data._bounds = null;
 

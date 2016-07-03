@@ -44,6 +44,10 @@ function Scheme(_canvas){
 
 					if(change.name == "clr"){
 						_scheme.ox.clr = change.object.clr;
+						_scheme.getItems({class: ProfileItem}).forEach(function (p) {
+							if(!(p instanceof Onlay))
+								p.clr = change.object.clr;
+						})
 					}
 
 					if(change.name == "sys" && !change.object.sys.empty()){
