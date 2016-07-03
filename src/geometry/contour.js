@@ -616,9 +616,9 @@ Contour.prototype.__define({
 				for(var j=0; j<profiles.length; j++){
 					if(profiles[j] == elm)
 						continue;
-					if(!findedb && elm.b.is_nearest(profiles[j].e))
+					if(!findedb && elm.has_cnn(profiles[j], elm.b) && elm.b.is_nearest(profiles[j].e))
 						findedb = true;
-					if(!findede && elm.e.is_nearest(profiles[j].b))
+					if(!findede && elm.has_cnn(profiles[j], elm.e) && elm.e.is_nearest(profiles[j].b))
 						findede = true;
 				}
 				if(!findedb || !findede)

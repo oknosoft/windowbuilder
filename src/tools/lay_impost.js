@@ -347,6 +347,8 @@ function ToolLayImpost(){
 				if(base < tool.paths.length){
 					path = tool.paths[base];
 					path.fillColor = clr;
+					if(!path.isInserted())
+						path.parent = tool.hitItem.layer;
 				}else{
 					path = new paper.Path({
 						strokeColor: 'black',
