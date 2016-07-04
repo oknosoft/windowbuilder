@@ -252,13 +252,51 @@ function ToolLayImpost(){
 				nprofiles = [];
 
 			tool.paths.forEach(function (p) {
+
+				var p1, p2, iter = 0;
+
+				function do_bind() {
+
+					var correctedp1 = false,
+						correctedp2 = false;
+
+					// пытаемся вязать к профилям контура
+					lgeneratics.forEach(function (gen) {
+						var np = gen.getNearestPoint(p1);
+						if(!correctedp1 && np.getDistance(p1) < consts.sticking){
+							correctedp1 = true;
+							p1 = np;
+						}
+						np = gen.getNearestPoint(p2);
+						if(!correctedp2 && np.getDistance(p2) < consts.sticking){
+							correctedp2 = true;
+							p2 = np;
+						}
+					});
+
+					// если не привязалось - ищем точки на вновь добавленных профилях
+					if(tool.profile.split != $p.enm.lay_split_types.КрестВСтык && (!correctedp1 || !correctedp2)){
+						nprofiles.forEach(function (p) {
+							var np = p.generatrix.getNearestPoint(p1);
+							if(!correctedp1 && np.getDistance(p1) < consts.sticking){
+								correctedp1 = true;
+								p1 = np;
+							}
+							np = p.generatrix.getNearestPoint(p2);
+							if(!correctedp2 && np.getDistance(p2) < consts.sticking){
+								correctedp2 = true;
+								p2 = np;
+							}
+						});
+					}
+				}
+
 				p.remove();
 				if(p.segments.length){
 
-					var p1 = p.segments[0].point.add(p.segments[3].point).divide(2),
-						p2 = p.segments[1].point.add(p.segments[2].point).divide(2),
-						correctedp1 = false,
-						correctedp2 = false;
+					p1 = p.segments[0].point.add(p.segments[3].point).divide(2);
+					p2 = p.segments[1].point.add(p.segments[2].point).divide(2);
+
 
 					if(tool.profile.elm_type == $p.enm.elm_types.Раскладка){
 						nprofiles.push(new Onlay({
@@ -271,44 +309,43 @@ function ToolLayImpost(){
 
 					}else{
 
-						// пытаемся вязать к профилям контура
-						lgeneratics.forEach(function (gen) {
-							var np = gen.getNearestPoint(p1);
-							if(!correctedp1 && np.getDistance(p1) < consts.sticking){
-								correctedp1 = true;
-								p1 = np;
-							}
-							np = gen.getNearestPoint(p2);
-							if(!correctedp2 && np.getDistance(p2) < consts.sticking){
-								correctedp2 = true;
-								p2 = np;
-							}
-						});
+						while (iter < 10){
 
-						// если не привязалось - ищем точки на вновь добавленных профилях
-						if(tool.profile.split != $p.enm.lay_split_types.КрестВСтык && (!correctedp1 || !correctedp2)){
-							nprofiles.forEach(function (p) {
-								var np = p.generatrix.getNearestPoint(p1);
-								if(!correctedp1 && np.getDistance(p1) < consts.sticking){
-									correctedp1 = true;
-									p1 = np;
-								}
-								np = p.generatrix.getNearestPoint(p2);
-								if(!correctedp2 && np.getDistance(p2) < consts.sticking){
-									correctedp2 = true;
-									p2 = np;
-								}
-							});
+							iter++;
+							do_bind();
+							var angle = p2.subtract(p1).angle,
+								delta = Math.abs(angle % 90);
+
+							if(delta > 45)
+								delta -= 90;
+
+							if(delta < 0.02)
+								break;
+
+							if(angle > 180)
+								angle -= 180;
+							else if(angle < 0)
+								angle += 180;
+
+							if((angle > -40 && angle < 40) || (angle > 180-40 && angle < 180+40)){
+								p1.y = p2.y = (p1.y + p2.y) / 2;
+
+							}else if((angle > 90-40 && angle < 90+40) || (angle > 270-40 && angle < 270+40)){
+								p1.x = p2.x = (p1.x + p2.x) / 2;
+
+							}else
+								break;
 						}
 
 						// создаём новые профили
-						nprofiles.push(new Profile({
-							generatrix: new paper.Path({
-								segments: [p1, p2]
-							}),
-							parent: layer,
-							proto: tool.profile
-						}));
+						if(p2.getDistance(p1) > tool.profile.inset.nom().width)
+							nprofiles.push(new Profile({
+								generatrix: new paper.Path({
+									segments: [p1, p2]
+								}),
+								parent: layer,
+								proto: tool.profile
+							}));
 					}
 				}
 			});
