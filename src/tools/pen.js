@@ -16,7 +16,8 @@ function ToolPen(){
 
 	ToolPen.superclass.constructor.call(this);
 
-	tool.mouseStartPos = new paper.Point();
+	tool.point1 = new paper.Point();
+	tool.point2 = null;
 	tool.mode = null;
 	tool.hitItem = null;
 	tool.originalContent = null;
@@ -206,7 +207,8 @@ function ToolPen(){
 
 		return true;
 	};
-	
+
+
 	tool.on({
 
 		activate: function() {
@@ -233,6 +235,8 @@ function ToolPen(){
 					title: $p.msg.bld_title
 				});
 			}
+
+			tool._controls = new PenControls(tool);
 
 			tool_wnd();
 
@@ -278,6 +282,8 @@ function ToolPen(){
 
 			tool.detache_wnd();
 
+			tool._controls.unload();
+
 		},
 
 		mousedown: function(event) {
@@ -293,16 +299,20 @@ function ToolPen(){
 
 			}else{
 
-				// для профилей и раскладок, начинаем рисовать
-				this.mode = 'continue';
-				this.start_binded = false;
-				this.mouseStartPos = event.point.clone();
+				if(this.mode == 'continue'){
+					// для профилей и раскладок, начинаем рисовать
+					this.mode = 'create';
+					this.start_binded = false;
+
+				}
 			}
 		},
 
 		mouseup: function(event) {
 
 			_editor.canvas_cursor('cursor-pen-freehand');
+
+			var whas_select;
 
 			if(this.addl_hit && this.addl_hit.glass && this.profile.elm_type == $p.enm.elm_types.Добор && !this.profile.inset.empty()){
 				// рисуем доборный профиль
@@ -314,7 +324,7 @@ function ToolPen(){
 				});
 
 
-			}else if(this.mode && this.path) {
+			}else if(this.mode == 'create' && this.path) {
 
 				if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
@@ -343,7 +353,7 @@ function ToolPen(){
 
 				this.path = null;
 
-			}else if (this.hitItem && this.hitItem.item) {
+			}else if (this.hitItem && this.hitItem.item && (event.modifiers.shift || event.modifiers.control || event.modifiers.option)) {
 
 				var item = this.hitItem.item;
 
@@ -351,14 +361,37 @@ function ToolPen(){
 				if(item.parent instanceof ProfileItem && item.parent.isInserted()){
 					item.parent.attache_wnd(paper._acc.elm.cells("a"));
 					item.parent.generatrix.selected = true;
+					whas_select = true;
+					tool._controls.blur();
 
 				}else if(item.parent instanceof Filling && item.parent.visible){
 					item.parent.attache_wnd(paper._acc.elm.cells("a"));
 					item.selected = true;
+					whas_select = true;
+					tool._controls.blur();
 				}
 
 				if(item.selected && item.layer)
 					item.layer.activate();
+
+			}
+
+			if(!whas_select && !this.mode && !this.addl_hit) {
+
+				this.mode = 'continue';
+				this.point1 = tool._controls.point;
+
+				if (!this.path){
+					this.path = new paper.Path({
+						strokeColor: 'black',
+						segments: [this.point1]
+					});
+					this.currentSegment = this.path.segments[0];
+					this.originalHandleIn = this.currentSegment.handleIn.clone();
+					this.originalHandleOut = this.currentSegment.handleOut.clone();
+					this.currentSegment.selected = true;
+				}
+				return;
 
 			}
 
@@ -369,155 +402,6 @@ function ToolPen(){
 
 		},
 
-		mousedrag: function(event) {
-
-			var delta = event.point.subtract(this.mouseStartPos),
-				dragIn = false,
-				dragOut = false,
-				invert = false,
-				handlePos;
-
-			if (!this.mode || !this.path && delta.length < consts.sticking)
-				return;
-
-			if (!this.path){
-				this.path = new paper.Path();
-				this.path.strokeColor = 'black';
-				this.currentSegment = this.path.add(this.mouseStartPos);
-				this.originalHandleIn = this.currentSegment.handleIn.clone();
-				this.originalHandleOut = this.currentSegment.handleOut.clone();
-				this.currentSegment.selected = true;
-			}
-
-
-			if (this.mode == 'create') {
-				dragOut = true;
-				if (this.currentSegment.index > 0)
-					dragIn = true;
-			} else  if (this.mode == 'close') {
-				dragIn = true;
-				invert = true;
-			} else  if (this.mode == 'continue') {
-				dragOut = true;
-			} else if (this.mode == 'adjust') {
-				dragOut = true;
-			} else  if (this.mode == 'join') {
-				dragIn = true;
-				invert = true;
-			} else  if (this.mode == 'convert') {
-				dragIn = true;
-				dragOut = true;
-			}
-
-			if (dragIn || dragOut) {
-				var i, res, element, bind = this.profile.bind_node ? "node_" : "";
-
-				if(this.profile.bind_generatrix)
-					bind += "generatrix";
-
-				if (invert)
-					delta = delta.negate();
-
-				if (dragIn && dragOut) {
-					handlePos = this.originalHandleOut.add(delta);
-					if (event.modifiers.shift)
-						handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
-					this.currentSegment.handleOut = handlePos;
-					this.currentSegment.handleIn = handlePos.negate();
-
-				} else if (dragOut) {
-					// upzp
-
-					if (event.modifiers.shift) {
-						delta = _editor.snap_to_angle(delta, Math.PI*2/8);
-					}
-
-					if(this.path.segments.length > 1)
-						this.path.lastSegment.point = this.mouseStartPos.add(delta);
-					else
-						this.path.add(this.mouseStartPos.add(delta));
-
-					// попытаемся привязать начало пути к профилям (и или заполнениям - для раскладок) контура
-					if(!this.start_binded){
-
-						if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
-
-							res = Onlay.prototype.bind_node(this.path.firstSegment.point, _editor.project.activeLayer.glasses(false, true));
-							if(res.binded)
-								this.path.firstSegment.point = res.point;
-
-						}else{
-
-							res = {distance: Infinity};
-							for(i in _editor.project.activeLayer.children){
-
-								element = _editor.project.activeLayer.children[i];
-								if (element instanceof Profile){
-									
-									// сначала смотрим на доборы, затем - на сам профиль
-									if(element.children.some(function (addl) {
-											if(addl instanceof ProfileAddl && _editor.project.check_distance(addl, null, res, tool.path.firstSegment.point, bind) === false){
-												tool.path.firstSegment.point = res.point;
-												return true;
-											}
-										})){
-										break;
-										
-									}else if (_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
-										this.path.firstSegment.point = res.point;
-										break;
-									}
-								}
-							}
-							this.start_binded = true;
-						}
-					}
-
-					// попытаемся привязать конец пути к профилям (и или заполнениям - для раскладок) контура
-					if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
-
-						res = Onlay.prototype.bind_node(this.path.lastSegment.point, _editor.project.activeLayer.glasses(false, true));
-						if(res.binded)
-							this.path.lastSegment.point = res.point;
-
-					}else{
-
-						res = {distance: Infinity};
-						for(i in _editor.project.activeLayer.children){
-
-							element = _editor.project.activeLayer.children[i];
-							if (element instanceof Profile){
-
-								// сначала смотрим на доборы, затем - на сам профиль
-								if(element.children.some(function (addl) {
-										if(addl instanceof ProfileAddl && _editor.project.check_distance(addl, null, res, tool.path.lastSegment.point, bind) === false){
-											tool.path.lastSegment.point = res.point;
-											return true;
-										}
-									})){
-									break;
-
-								}else if (_editor.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
-									this.path.lastSegment.point = res.point;
-									break;
-
-								}
-							}
-						}
-					}
-					
-					//this.currentSegment.handleOut = handlePos;
-					//this.currentSegment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
-				} else {
-					handlePos = this.originalHandleIn.add(delta);
-					if (event.modifiers.shift)
-						handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
-					this.currentSegment.handleIn = handlePos;
-					this.currentSegment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
-				}
-				this.path.selected = true;
-			}
-		},
 
 		mousemove: function(event) {
 
@@ -573,9 +457,156 @@ function ToolPen(){
 				
 
 			}else if(this.path){
-				this.path.removeSegments();
-				this.path.remove();
-				this.path = null;
+
+				if(this.mode){
+
+					var delta = event.point.subtract(this.point1),
+						dragIn = false,
+						dragOut = false,
+						invert = false,
+						handlePos;
+
+					if (delta.length < consts.sticking)
+						return;
+
+					if (this.mode == 'create') {
+						dragOut = true;
+						if (this.currentSegment.index > 0)
+							dragIn = true;
+					} else  if (this.mode == 'close') {
+						dragIn = true;
+						invert = true;
+					} else  if (this.mode == 'continue') {
+						dragOut = true;
+					} else if (this.mode == 'adjust') {
+						dragOut = true;
+					} else  if (this.mode == 'join') {
+						dragIn = true;
+						invert = true;
+					} else  if (this.mode == 'convert') {
+						dragIn = true;
+						dragOut = true;
+					}
+
+					if (dragIn || dragOut) {
+						var i, res, element, bind = this.profile.bind_node ? "node_" : "";
+
+						if(this.profile.bind_generatrix)
+							bind += "generatrix";
+
+						if (invert)
+							delta = delta.negate();
+
+						if (dragIn && dragOut) {
+							handlePos = this.originalHandleOut.add(delta);
+							if (event.modifiers.shift)
+								handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
+							this.currentSegment.handleOut = handlePos;
+							this.currentSegment.handleIn = handlePos.negate();
+
+						} else if (dragOut) {
+							// upzp
+
+							if (event.modifiers.shift) {
+								delta = _editor.snap_to_angle(delta, Math.PI*2/8);
+							}
+
+							this.point2 = this.point1.add(delta);
+							if(this.path.segments.length > 1)
+								this.path.lastSegment.point = this.point2;
+							else
+								this.path.add(this.point2);
+
+							// попытаемся привязать начало пути к профилям (и или заполнениям - для раскладок) контура
+							if(!this.start_binded){
+
+								if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+
+									res = Onlay.prototype.bind_node(this.path.firstSegment.point, _editor.project.activeLayer.glasses(false, true));
+									if(res.binded)
+										this.path.firstSegment.point = res.point;
+
+								}else{
+
+									res = {distance: Infinity};
+									for(i in _editor.project.activeLayer.children){
+
+										element = _editor.project.activeLayer.children[i];
+										if (element instanceof Profile){
+
+											// сначала смотрим на доборы, затем - на сам профиль
+											if(element.children.some(function (addl) {
+													if(addl instanceof ProfileAddl && _editor.project.check_distance(addl, null, res, tool.path.firstSegment.point, bind) === false){
+														tool.path.firstSegment.point = res.point;
+														return true;
+													}
+												})){
+												break;
+
+											}else if (_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
+												this.path.firstSegment.point = res.point;
+												break;
+											}
+										}
+									}
+									this.start_binded = true;
+								}
+							}
+
+							// попытаемся привязать конец пути к профилям (и или заполнениям - для раскладок) контура
+							if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+
+								res = Onlay.prototype.bind_node(this.path.lastSegment.point, _editor.project.activeLayer.glasses(false, true));
+								if(res.binded)
+									this.path.lastSegment.point = res.point;
+
+							}else{
+
+								res = {distance: Infinity};
+								for(i in _editor.project.activeLayer.children){
+
+									element = _editor.project.activeLayer.children[i];
+									if (element instanceof Profile){
+
+										// сначала смотрим на доборы, затем - на сам профиль
+										if(element.children.some(function (addl) {
+												if(addl instanceof ProfileAddl && _editor.project.check_distance(addl, null, res, tool.path.lastSegment.point, bind) === false){
+													tool.path.lastSegment.point = res.point;
+													return true;
+												}
+											})){
+											break;
+
+										}else if (_editor.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
+											this.path.lastSegment.point = res.point;
+											break;
+
+										}
+									}
+								}
+							}
+
+							//this.currentSegment.handleOut = handlePos;
+							//this.currentSegment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
+						} else {
+							handlePos = this.originalHandleIn.add(delta);
+							if (event.modifiers.shift)
+								handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
+							this.currentSegment.handleIn = handlePos;
+							this.currentSegment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
+						}
+						this.path.selected = true;
+					}
+
+				}else{
+					this.path.removeSegments();
+					this.path.remove();
+					this.path = null;
+				}
+
+				if(event.className != "ToolEvent"){
+					_editor.project.register_update();
+				}
 			}
 
 		},
@@ -601,6 +632,15 @@ function ToolPen(){
 
 				event.stop();
 				return false;
+
+			}else if(event.key == 'escape'){
+
+				if(this.path){
+					this.path.removeSegments();
+					this.path.remove();
+					this.path = null;
+				}
+				this.mode = null;
 			}
 		}
 	});
@@ -610,3 +650,152 @@ function ToolPen(){
 
 }
 ToolPen._extend(ToolElement);
+
+/**
+ * Элементы управления рядом с указателем мыши
+ * @constructor
+ */
+function PenControls(tool) {
+
+	var _editor = paper,
+		t = this;
+
+	t._cont = document.createElement('div');
+	
+	function mousemove(event, ignore_pos) {
+
+		var bounds = _editor.project.bounds,
+			pos = ignore_pos || _editor.project.view.projectToView(event.point);
+
+		if(!ignore_pos){
+			t._cont.style.top = pos.y + 16 + "px";
+			t._cont.style.left = pos.x - 20 + "px";
+
+		}
+
+		if(bounds){
+			t._x.value = (event.point.x - bounds.x).toFixed(0);
+			t._y.value = (bounds.height + bounds.y - event.point.y).toFixed(0);
+
+			if(!ignore_pos){
+
+				if(tool.path){
+					t._l.value = tool.point1.getDistance(t.point).round(1);
+					var angle = t.point.subtract(tool.point1).angle;
+					if(angle < 0)
+						angle = 360 + angle;
+					t._a.value = angle.round(1);
+
+				}else{
+					t._l.value = 0;
+					t._a.value = 0;
+				}
+
+			}
+
+		}
+
+	}
+	
+	function input_change() {
+		
+		switch(this.name) {
+
+			case 'x':
+			case 'y':
+				setTimeout(function () {
+					tool.emit("mousemove", {
+						point: t.point,
+						modifiers: {}
+					});
+				});
+				break;
+
+			case 'l':
+			case 'a':
+
+				if(!tool.path)
+					return false;
+
+				var p = new paper.Point();
+				p.length = parseFloat(t._l.value || 0);
+				p.angle = parseFloat(t._a.value || 0);
+				p = tool.point1.add(p);
+
+				mousemove({point: p}, true);
+
+				input_change.call({name: "x"});
+				break;
+		} 
+	}
+
+	function create_click() {
+		setTimeout(function () {
+			tool.emit("mousedown", {
+				modifiers: {}
+			});
+			setTimeout(function () {
+
+				if(tool.mode == 'create' && tool.path){
+					setTimeout(create_click, 50);
+				}
+
+				tool.emit("mouseup", {
+					point: t.point,
+					modifiers: {}
+				});
+			});
+		});
+	}
+
+	_editor._wrapper.appendChild(t._cont);
+	t._cont.className = "pen_cont";
+	_editor.project.view.on('mousemove', mousemove);
+
+	t._cont.innerHTML = "<table><tr><td>x:</td><td><input type='number' name='x' /></td><td>y:</td><td><input type='number' name='y' /></td></tr>" +
+		"<tr><td>l:</td><td><input type='number' name='l' /></td><td>α:</td><td><input type='number' name='a' /></td></tr>" +
+		"<tr><td colspan='4'><input type='button' name='click' value='Создать точку' /></td></tr></table>";
+
+	t._x = t._cont.querySelector("[name=x]");
+	t._y = t._cont.querySelector("[name=y]");
+	t._l = t._cont.querySelector("[name=l]");
+	t._a = t._cont.querySelector("[name=a]");
+
+	t._x.onchange = input_change;
+	t._y.onchange = input_change;
+	t._l.onchange = input_change;
+	t._a.onchange = input_change;
+
+	t._cont.querySelector("[name=click]").onclick = create_click;
+	
+	this.unload = function () {
+		_editor.project.view.off('mousemove', mousemove);
+		_editor._wrapper.removeChild(t._cont);
+		t._cont = null;
+	}
+}
+PenControls.prototype.__define({
+
+	point: {
+		get: function () {
+			var bounds = paper.project.bounds,
+				x = parseFloat(this._x.value || 0) + (bounds ? bounds.x : 0),
+				y = (bounds ? (bounds.height + bounds.y) : 0) - parseFloat(this._y.value || 0);
+			return new paper.Point([x, y]);
+		}
+	},
+
+	blur: {
+		value: function () {
+			var focused = document.activeElement;
+			if(focused == this._x)
+				this._x.blur();
+			else if(focused == this._y)
+				this._y.blur();
+			else if(focused == this._l)
+				this._l.blur();
+			else if(focused == this._a)
+				this._a.blur();
+		}
+	}
+});
