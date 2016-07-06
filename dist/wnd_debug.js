@@ -8,14 +8,15 @@
   }
 }(this, function() {
 /**
- * Модуль объекта справочника ХарактеристикиНоменклатуры
+ * ### Модуль объекта справочника ХарактеристикиНоменклатуры
  * Обрботчики событий after_create, after_load, before_save, after_save, value_change
  * Методы выполняются в контексте текущего объекта this = DocObj
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 16.03.2016
  * 
- * Created 16.03.2016  
- * &copy; http://www.oknosoft.ru 2014-2016
- * @author Evgeniy Malyarov
- * @module cat_characteristics
+ * @module modifiers
+ * @submodule cat_characteristics
  */
 
 $p.modifiers.push(
@@ -182,12 +183,13 @@ $p.modifiers.push(
 );
 
 /**
- * Форма выбора типового блока
+ * ### Форма выбора типового блока
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_characteristics_form_selection_block
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 23.12.2015
+ * 
+ * @module modifiers
+ * @submodule cat_characteristics_form_selection_block
  */
 
 $p.modifiers.push(
@@ -424,12 +426,13 @@ $p.modifiers.push(
 	}
 );
 /**
- * Дополнительные методы справочника Цвета
+ * ### Дополнительные методы справочника Цвета
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 23.12.2015 
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_cnns
+ * @module modifiers
+ * @submodule cat_cnns
  */
 
 
@@ -482,12 +485,13 @@ $p.modifiers.push(
 );
 
 /**
- * Дополнительные методы справочника Соединения
+ * ### Дополнительные методы справочника _Соединения_
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_cnns
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 23.12.2015
+ *
+ * @module modifiers
+ * @submodule cat_cnns
  */
 
 
@@ -710,12 +714,13 @@ $p.modifiers.push(
 );
 
 /**
- * Дополнительные методы справочника Договоры контрагентов
+ * ### Дополнительные методы справочника _Договоры контрагентов_
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_contracts
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 23.12.2015
+ * 
+ * @module modifiers
+ * @submodule cat_contracts
  */
 
 $p.modifiers.push(
@@ -752,10 +757,11 @@ $p.modifiers.push(
 	}
 );
 /**
- * Дополнительные методы справочника Визуализация элементов
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module cat_elm_visualization
+ * ### Дополнительные методы справочника Визуализация элементов
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 08.04.2016
+ * 
+ * @module cat_elm_visualization
  */
 
 $p.modifiers.push(
@@ -842,9 +848,11 @@ $p.modifiers.push(
 );
 /**
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module cat_formulas
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 17.04.2016
+ *
+ * @module cat_formulas
+ *
  */
 
 $p.modifiers.push(
@@ -1851,11 +1859,13 @@ $p.modifiers.push(
 );
 
 /**
- * Модуль менеджера и документа Расчет-заказ
+ * ### Модуль менеджера и документа Расчет-заказ
  * Обрботчики событий after_create, after_load, before_save, after_save, value_change
  * Методы выполняются в контексте текущего объекта this = DocObj
- * Created 16.03.2016<br />
- * &copy; http://www.oknosoft.ru 2014-2016
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 16.03.2016
+ *
  * @author Evgeniy Malyarov
  * @module doc_calc_order
  */
@@ -2274,6 +2284,10 @@ $p.modifiers.push(
 );
 /**
  * форма списка документов Расчет-заказ. публикуемый метод: doc.calc_order.form_list(o, pwnd, attr)
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * 
+ * @module doc_calc_order_form_list
  */
 
 $p.modifiers.push(
@@ -2494,6 +2508,10 @@ $p.modifiers.push(
 
 /**
  * форма документа Расчет-заказ. публикуемый метод: doc.calc_order.form_obj(o, pwnd, attr)
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * 
+ * @module doc_calc_order_form_obj
  */
 
 
@@ -3311,9 +3329,13 @@ $p.modifiers.push(
 );
 
 /**
- * Отчеты по документу Расчет
- * @module doc_calc_order_reports
+ * ### Отчеты по документу Расчет
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 23.06.2016
+ * 
+ * @module doc_calc_order_reports
+ * 
  */
 
 $p.modifiers.push(
@@ -3466,10 +3488,12 @@ $p.modifiers.push(
 	}
 );
 /**
- * Модификаторы обработки _builder_pen_
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module dp_builder_pen
+ * ### Модификаторы обработки _builder_pen_
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 13.05.2016
+ * 
+ * @module dp_builder_pen
  */
 
 $p.modifiers.push(
@@ -3490,10 +3514,12 @@ $p.modifiers.push(
 	}
 );
 /**
- * Модификаторы обработки _Заказ покупателя_
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module dp_buyers_order
+ * ### Модификаторы обработки _Заказ покупателя_
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 13.05.2016
+ * 
+ * @module dp_buyers_order
  */
 
 $p.modifiers.push(
@@ -3825,10 +3851,14 @@ $p.modifiers.push(
 	}
 );
 /**
- * Модификаторы перечислений
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module enm_orientations
+ * ### Модификаторы перечислений
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 22.04.2016
+ * 
+ * @module modifiers 
+ * @submodule enmums
+ * 
  */
 
 

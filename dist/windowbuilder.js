@@ -742,15 +742,18 @@ function Clipbrd(_editor) {
 	document.addEventListener('paste', onpaste);
 }
 /**
- * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
+ * ### Графический редактор
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 24.07.2015
  *
  * @module  editor
  */
 
 /**
  * ### Графический редактор
+ * Унаследован от [paper.PaperScope](http://paperjs.org/reference/paperscope/)
+ *
  * @class Editor
  * @constructor
  * @extends paper.PaperScope
@@ -1095,7 +1098,7 @@ function Editor(pwnd, attr){
 	 * Create pixel perfect dotted rectable for drag selections
 	 * @param p1
 	 * @param p2
-	 * @return {exporters.CompoundPath}
+	 * @return {paper.CompoundPath}
 	 */
 	_editor.drag_rect = function(p1, p2) {
 		var half = new paper.Point(0.5 / _editor.view.zoom, 0.5 / _editor.view.zoom),
@@ -1288,7 +1291,8 @@ Editor._extend(paper.PaperScope);
 Editor.prototype.__define({
 
 	/**
-	 * Устанавливает икну курсора для всех канвасов редактора
+	 * ### Устанавливает икону курсора для всех канвасов редактора
+	 * 
 	 * @method canvas_cursor
 	 */
 	canvas_cursor: {
@@ -1359,6 +1363,7 @@ Editor.prototype.__define({
 
 	/**
 	 * Returns path points which are contained in the rect
+	 * @method segments_in_rect
 	 * @param rect
 	 * @returns {Array}
 	 */
@@ -1481,7 +1486,8 @@ Editor.prototype.__define({
 	},
 
 	/**
-	 * Деструктор
+	 * ### Деструктор
+	 * @method unload
 	 */
 	unload: {
 		value: function () {
@@ -1507,7 +1513,7 @@ Editor.prototype.__define({
 /**
  * Экспортируем конструктор Editor, чтобы экземпляры построителя можно было создать снаружи
  * @property Editor
- * @for $p
+ * @for MetaEngine
  * @type {function}
  */
 $p.Editor = Editor;
@@ -1642,14 +1648,18 @@ function UndoRedo(_editor){
 	}
 }
 /**
- * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
- * @module  contour
+ * ### Контур (слой) изделия
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 24.07.2015
+ *
+ * @module geometry
+ * @submodule contour
  */
 
 /**
- * Контур изделия - расширение Paper.Layer
+ * ### Контур (слой) изделия
+ * Унаследован от  [paper.Layer](http://paperjs.org/reference/layer/)
  * новые элементы попадают в активный слой-контур и не могут его покинуть
  * @class Contour
  * @constructor
@@ -3434,7 +3444,7 @@ Contour.prototype.__define({
 /**
  * Экспортируем конструктор Contour, чтобы фильтровать инстанции этого типа
  * @property Contour
- * @for $p
+ * @for MetaEngine
  * @type {function}
  */
 Editor.Contour = Contour;
@@ -3442,6 +3452,7 @@ Editor.Contour = Contour;
 
 /**
  * Сегмент заполнения содержит информацию примыкающем профиле и координатах начала и конца
+ * @class GlassSegment
  * @constructor
  */
 function GlassSegment(profile, b, e, outer) {
@@ -3488,18 +3499,23 @@ GlassSegment.prototype.__define({
 
 });
 /**
+ * ### Размерные линии на эскизе
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 21.08.2015
  *
- * Created 21.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author    Evgeniy Malyarov
- * @module  dimension_line
+ * @module geometry
+ * @submodule dimension_line
  */
 
 /**
- * Произвольный текст на эскизе
+ * ### Размерная линия на эскизе
+ * Унаследована от [paper.Group](http://paperjs.org/reference/group/)
+ *
+ * @class DimensionLine
+ * @extends paper.Group
  * @param attr {Object} - объект с указанием на строку координат и родительского слоя
  * @constructor
- * @extends paper.Group
  */
 function DimensionLine(attr){
 
@@ -3885,7 +3901,11 @@ DimensionLine.prototype.__define({
 });
 
 /**
- * Служебный слой размерных линий
+ * ### Служебный слой размерных линий
+ * Унаследован от [paper.Layer](http://paperjs.org/reference/layer/)
+ * 
+ * @class DimensionLayer
+ * @extends paper.Layer
  * @param attr
  * @constructor
  */
@@ -3907,7 +3927,9 @@ DimensionLayer._extend(paper.Layer);
 
 
 /**
- * Размерные линии, определяемые пользователем
+ * ### Размерные линии, определяемые пользователем
+ * @class DimensionLineCustom
+ * @extends DimensionLine
  * @param attr
  * @constructor
  */
@@ -3986,17 +4008,20 @@ DimensionLineCustom.prototype.__define({
 	}
 });
 /**
- * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
+ * ### Базовый класс элементов построителя
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 24.07.2015
  *
- * @module  element
+ * @module geometry
+ * @submodule element
  */
 
 
 /**
- * Базовый класс элементов построителя. его свойства и методы присущи всем элементам построителя,
- * но не характерны для классов Path и Group фреймворка paper.js
+ * ### Базовый класс элементов построителя
+ * Унаследован от [paper.Group](http://paperjs.org/reference/group/). Cвойства и методы `BuilderElement` присущи всем элементам построителя,
+ * но не характерны для классов [Path](http://paperjs.org/reference/path/) и [Group](http://paperjs.org/reference/group/) фреймворка [paper.js](http://paperjs.org/about/)
+ *
  * @class BuilderElement
  * @param attr {Object} - объект со свойствами создаваемого элемента
  *  @param attr.b {paper.Point} - координата узла начала элемента - не путать с координатами вершин пути элемента
@@ -4007,8 +4032,6 @@ DimensionLineCustom.prototype.__define({
  *  @param [attr.path] (r && arc_ccw && more_180)
  * @constructor
  * @extends paper.Group
- * @uses BuilderElementProperties
- * @uses NomenclatureProperties
  */
 function BuilderElement(attr){
 
@@ -4495,7 +4518,8 @@ Editor.BuilderElement = BuilderElement;
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
  *
- * @module  filling
+ * @module geometry
+ * @submodule filling
  */
 
 
@@ -5001,7 +5025,9 @@ Editor.Filling = Filling;
  * Created 21.08.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author    Evgeniy Malyarov
- * @module  freetext
+ * 
+ * @module geometry
+ * @submodule freetext
  */
 
 /**
@@ -5087,6 +5113,11 @@ FreeText._extend(paper.PointText);
 
 FreeText.prototype.__define({
 
+	/**
+	 * Вычисляемые поля в таблице координат
+	 * @method save_coordinates
+	 * @for FreeText
+	 */
 	save_coordinates: {
 		value: function () {
 
@@ -5114,6 +5145,8 @@ FreeText.prototype.__define({
 
 	/**
 	 * Возвращает тип элемента (Текст)
+	 * @property elm_type
+	 * @for FreeText
 	 */
 	elm_type: {
 		get : function(){
@@ -5123,6 +5156,11 @@ FreeText.prototype.__define({
 		}
 	},
 
+	/**
+	 * ### Перемещает элемент и информирует об этом наблюдателя 
+	 * @method move_points
+	 * @for FreeText
+	 */
 	move_points: {
 		value: function (point) {
 
@@ -5279,7 +5317,9 @@ FreeText.prototype.__define({
  *
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
- * @module  paper_ex
+ * 
+ * @module geometry
+ * @submodule paper_ex
  */
 
 /**
@@ -5673,7 +5713,8 @@ paper.Point.prototype.__define({
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
  *
- * @module  profile
+ * @module geometry
+ * @submodule profile
  */
 
 
@@ -5681,6 +5722,8 @@ paper.Point.prototype.__define({
  * ### Элемент профиля
  * Виртуальный класс описывает общие свойства профиля и раскладки
  *
+ * @class ProfileItem
+ * @extends BuilderElement
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
  */
@@ -6930,6 +6973,7 @@ Profile.prototype.__define({
 	 * - Не делает подмену вставки, хотя могла бы
 	 *
 	 * @method cnn_point
+	 * @for Profile
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
 	 * @return {CnnPoint} - объект {point, profile, cnn_types}
@@ -7385,8 +7429,10 @@ ProfileRays.prototype.__define({
 /**
  *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module profile_addl
  * Created 16.05.2016
+ * 
+ * @module geometry
+ * @submodule profile_addl
  */
 
 
@@ -7504,6 +7550,7 @@ ProfileAddl.prototype.__define({
 	 * - Не делает подмену вставки, хотя могла бы
 	 *
 	 * @method cnn_point
+	 * @for ProfileAddl
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
 	 * @return {CnnPoint} - объект {point, profile, cnn_types}
@@ -7739,9 +7786,12 @@ ProfileAddl.prototype.__define({
 
 /**
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module profile_addl
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 16.05.2016
+ * 
+ * @author	Evgeniy Malyarov
+ * @module geometry
+ * @submodule profile_addl
  */
 
 
@@ -7775,7 +7825,7 @@ ProfileConnective.prototype.__define({
 	/**
 	 * Вычисляемые поля в таблице координат
 	 * @method save_coordinates
-	 * @for Profile
+	 * @for ProfileConnective
 	 */
 	save_coordinates: {
 		value: function () {
@@ -7905,6 +7955,7 @@ ProfileConnective.prototype.__define({
 	 * т.к. концы соединителя висят в пустоте и не связаны с другими профилями, возвращаем голый cnn_point
 	 *
 	 * @method cnn_point
+	 * @for ProfileConnective
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @return {CnnPoint} - объект {point, profile, cnn_types}
 	 */
@@ -7919,9 +7970,13 @@ ProfileConnective.prototype.__define({
 });
 
 /**
- * Раскладка
- * @module profile_onlay
+ * ### Раскладка
+ * &copy; http://www.oknosoft.ru 2014-2015<br />
  * Created 16.05.2016
+ * 
+ * @module geometry
+ * @submodule profile_onlay
+ * 
  */
 
 /**
@@ -7951,7 +8006,7 @@ Onlay.prototype.__define({
 	/**
 	 * Вычисляемые поля в таблице координат
 	 * @method save_coordinates
-	 * @for Profile
+	 * @for Onlay
 	 */
 	save_coordinates: {
 		value: function () {
@@ -8084,6 +8139,7 @@ Onlay.prototype.__define({
 	 * - Не делает подмену вставки, хотя могла бы
 	 *
 	 * @method cnn_point
+	 * @for Onlay
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
 	 * @return {CnnPoint} - объект {point, profile, cnn_types}
@@ -8181,17 +8237,20 @@ Onlay.prototype.__define({
 });
 
 /**
- * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 24.07.2015
  *
- * @module  scheme
+ * @module geometry
+ * @submodule scheme
  */
 
 /**
  * ### Изделие
- * Расширение Paper.Project. Стандартные слои (layers) - это контуры изделия<br />
- * размерные линии, фурнитуру и визуализацию располагаем в отдельных слоях
+ * - Расширение [paper.Project](http://paperjs.org/reference/project/)
+ * - Стандартные слои (layers) - это контуры изделия, в них живут элементы
+ * - Размерные линии, фурнитуру и визуализацию располагаем в отдельных слоях
+ *
  * @class Scheme
  * @constructor
  * @extends paper.Project
@@ -9352,11 +9411,13 @@ Scheme.prototype.__define({
 
 });
 /**
- * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
+ * ### Разрез
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 24.07.2015
  *
- * @module  sectional
+ * @module geometry
+ * @submodule sectional
  */
 
 /**
@@ -9370,7 +9431,11 @@ function Sectional(arg){
 }
 Sectional._extend(BuilderElement);
 /**
- * настройки отладчика рисовалки paperjs
+ * ### Движок графического построителя
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * 
+ * @module geometry
  */
 
 "use strict";
@@ -9421,13 +9486,22 @@ var acn,
 
 };
 /**
- * Манипуляции с арками (дуги правильных окружностей)
- * Created 25.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author    Evgeniy Malyarov
- * @module  tool_arc
+ * ### Манипуляции с арками (дуги правильных окружностей)
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 25.08.2015
+ * 
+ * @module tools
+ * @submodule tool_arc
  */
 
+/**
+ * ### Манипуляции с арками (дуги правильных окружностей)
+ * 
+ * @class ToolArc
+ * @extends ToolElement
+ * @constructor
+ */
 function ToolArc(){
 
 	var tool = this;
@@ -9610,56 +9684,22 @@ ToolArc._extend(paper.Tool);
 
 
 /**
- * Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
- * Created 12.03.2016<br />
- * @author Evgeniy Malyarov
- * @module element
+ * ### Вставка раскладок и импостов
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 25.08.2015
+ * 
+ * @module tools
+ * @submodule tool_lay_impost
  */
-
-function ToolElement() {
-	ToolElement.superclass.constructor.call(this);
-}
-ToolElement._extend(paper.Tool);
-
-ToolElement.prototype.__define({
-
-	/**
-	 * Отключает и выгружает из памяти окно свойств инструмента
-	 * @param tool
-	 */
-	detache_wnd: {
-		value: function(){
-			if(this.wnd){
-				
-				if(this._grid && this._grid.destructor){
-					if(this.wnd.detachObject)
-						this.wnd.detachObject(true);
-					delete this._grid;
-				}
-				
-				if(this.wnd.wnd_options){
-					this.wnd.wnd_options(this.options.wnd);
-					$p.wsql.save_options("editor", this.options);
-					this.wnd.close();
-				}
-				
-				delete this.wnd;
-			}
-			this.profile = null;
-		}
-	}
-
-});
-
 
 /**
- * Вставка раскладок и импостов
- * Created 25.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author    Evgeniy Malyarov
- * @module  tool_lay_impost
+ * ### Вставка раскладок и импостов
+ * 
+ * @class ToolLayImpost
+ * @extends paper.Tool
+ * @constructor
  */
-
 function ToolLayImpost(){
 
 	var _editor = paper,
@@ -10288,13 +10328,22 @@ function ToolLayImpost(){
 ToolLayImpost._extend(paper.Tool);
 
 /**
- * Панорама и масштабирование с колёсиком и без колёсика
- * Created 25.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module tool_pan
+ * ### Панорама и масштабирование с колёсиком и без колёсика
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 25.08.2015
+ * 
+ * @module tools
+ * @submodule tool_pan
  */
 
+/**
+ * ### Панорама и масштабирование с колёсиком и без колёсика
+ * 
+ * @class ToolPan
+ * @extends paper.Tool
+ * @constructor
+ */
 function ToolPan(){
 
 	var _editor = paper,
@@ -10402,13 +10451,22 @@ function ToolPan(){
 ToolPan._extend(paper.Tool);
 
 /**
- * Добавление (рисование) профилей
- * Created 25.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author    Evgeniy Malyarov
- * @module  tool_pen
+ * ### Добавление (рисование) профилей
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 25.08.2015
+ *
+ * @module tools
+ * @submodule tool_pen
  */
 
+/**
+ * ### Добавление (рисование) профилей
+ *
+ * @class ToolPen
+ * @extends ToolElement
+ * @constructor
+ */
 function ToolPen(){
 
 	var _editor = paper,
@@ -11063,7 +11121,9 @@ function ToolPen(){
 ToolPen._extend(ToolElement);
 
 /**
- * Элементы управления рядом с указателем мыши
+ * ### Элементы управления рядом с указателем мыши инструмента `ToolPen`
+ *
+ * @class PenControls
  * @constructor
  */
 function PenControls(tool) {
@@ -12420,6 +12480,59 @@ function ToolText(){
 
 }
 ToolText._extend(ToolElement);
+
+/**
+ * ### Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 12.03.2016
+ *
+ * @module tools
+ * @submodule tool_element
+ */
+
+/**
+ * ### Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
+ *
+ * @class ToolElement
+ * @extends paper.Tool
+ * @constructor
+ */
+function ToolElement() {
+	ToolElement.superclass.constructor.call(this);
+}
+ToolElement._extend(paper.Tool);
+
+ToolElement.prototype.__define({
+
+	/**
+	 * Отключает и выгружает из памяти окно свойств инструмента
+	 * @param tool
+	 */
+	detache_wnd: {
+		value: function(){
+			if(this.wnd){
+				
+				if(this._grid && this._grid.destructor){
+					if(this.wnd.detachObject)
+						this.wnd.detachObject(true);
+					delete this._grid;
+				}
+				
+				if(this.wnd.wnd_options){
+					this.wnd.wnd_options(this.options.wnd);
+					$p.wsql.save_options("editor", this.options);
+					this.wnd.close();
+				}
+				
+				delete this.wnd;
+			}
+			this.profile = null;
+		}
+	}
+
+});
+
 
 $p.injected_data._mixin({"tip_editor_right.html":"<div class=\"clipper editor_accordion\">\r\n\r\n    <div class=\"scroller\">\r\n        <div class=\"container\">\r\n\r\n            <!-- РАЗДЕЛ 1 - дерево слоёв -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_layers\"></div>\r\n            </div>\r\n            <div name=\"content_layers\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 2 - реквизиты элемента -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_elm\"></div>\r\n            </div>\r\n            <div name=\"content_elm\" style=\"min-height: 260px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 3 - реквизиты створки -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_stv\">\r\n                    Створка\r\n                    <!--span name=\"title\"></span-->\r\n                </div>\r\n            </div>\r\n            <div name=\"content_stv\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 4 - реквизиты изделия -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_props\">\r\n                    <span name=\"title\">Изделие</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_props\" style=\"min-height: 330px;\"></div>\r\n\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"scroller__track\">\r\n        <div class=\"scroller__bar\" style=\"height: 26px; top: 0px;\"></div>\r\n    </div>\r\n\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
 return Editor;
