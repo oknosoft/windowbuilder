@@ -1,7 +1,11 @@
 /**
- * Отчеты по документу Расчет
- * @module doc_calc_order_reports
+ * ### Отчеты по документу Расчет
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 23.06.2016
+ * 
+ * @module doc_calc_order_reports
+ * 
  */
 
 $p.modifiers.push(

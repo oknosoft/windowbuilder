@@ -1,5 +1,9 @@
 /**
- * настройки отладчика рисовалки paperjs
+ * ### Движок графического построителя
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * 
+ * @module geometry
  */
 
 "use strict";

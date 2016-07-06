@@ -6667,10 +6667,12 @@ $p.iface.view_settings = function (cell) {
 						$p.wsql.set_user_param("hide_price_dealer", "");
 						$p.wsql.set_user_param("hide_price_manufacturer", "");
 					}
-				}else if(name == "modifiers"){
-					$p.wsql.set_user_param(name, value);
 				}
 			});
+
+			t.form2.getInput("modifiers").onchange = function () {
+				$p.wsql.set_user_param("modifiers", this.value);
+			};
 
 		}
 		

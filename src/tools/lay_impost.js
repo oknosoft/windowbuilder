@@ -1,11 +1,20 @@
 /**
- * Вставка раскладок и импостов
- * Created 25.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author    Evgeniy Malyarov
- * @module  tool_lay_impost
+ * ### Вставка раскладок и импостов
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 25.08.2015
+ * 
+ * @module tools
+ * @submodule tool_lay_impost
  */
 
+/**
+ * ### Вставка раскладок и импостов
+ * 
+ * @class ToolLayImpost
+ * @extends paper.Tool
+ * @constructor
+ */
 function ToolLayImpost(){
 
 	var _editor = paper,

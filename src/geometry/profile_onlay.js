@@ -1,7 +1,11 @@
 /**
- * Раскладка
- * @module profile_onlay
+ * ### Раскладка
+ * &copy; http://www.oknosoft.ru 2014-2015<br />
  * Created 16.05.2016
+ * 
+ * @module geometry
+ * @submodule profile_onlay
+ * 
  */
 
 /**
@@ -31,7 +35,7 @@ Onlay.prototype.__define({
 	/**
 	 * Вычисляемые поля в таблице координат
 	 * @method save_coordinates
-	 * @for Profile
+	 * @for Onlay
 	 */
 	save_coordinates: {
 		value: function () {
@@ -164,6 +168,7 @@ Onlay.prototype.__define({
 	 * - Не делает подмену вставки, хотя могла бы
 	 *
 	 * @method cnn_point
+	 * @for Onlay
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
 	 * @return {CnnPoint} - объект {point, profile, cnn_types}

@@ -1,8 +1,12 @@
 /**
- * Модификаторы перечислений
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module enm_orientations
+ * ### Модификаторы перечислений
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 22.04.2016
+ * 
+ * @module modifiers 
+ * @submodule enmums
+ * 
  */
 
 

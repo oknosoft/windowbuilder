@@ -3,7 +3,9 @@
  *
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
- * @module  paper_ex
+ * 
+ * @module geometry
+ * @submodule paper_ex
  */
 
 /**

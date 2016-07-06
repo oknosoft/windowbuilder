@@ -3,7 +3,9 @@
  * Created 21.08.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author    Evgeniy Malyarov
- * @module  freetext
+ * 
+ * @module geometry
+ * @submodule freetext
  */
 
 /**
@@ -89,6 +91,11 @@ FreeText._extend(paper.PointText);
 
 FreeText.prototype.__define({
 
+	/**
+	 * Вычисляемые поля в таблице координат
+	 * @method save_coordinates
+	 * @for FreeText
+	 */
 	save_coordinates: {
 		value: function () {
 
@@ -116,6 +123,8 @@ FreeText.prototype.__define({
 
 	/**
 	 * Возвращает тип элемента (Текст)
+	 * @property elm_type
+	 * @for FreeText
 	 */
 	elm_type: {
 		get : function(){
@@ -125,6 +134,11 @@ FreeText.prototype.__define({
 		}
 	},
 
+	/**
+	 * ### Перемещает элемент и информирует об этом наблюдателя 
+	 * @method move_points
+	 * @for FreeText
+	 */
 	move_points: {
 		value: function (point) {
 

@@ -1,13 +1,16 @@
 /**
- * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
+ * ### Графический редактор
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 24.07.2015
  *
  * @module  editor
  */
 
 /**
  * ### Графический редактор
+ * Унаследован от [paper.PaperScope](http://paperjs.org/reference/paperscope/)
+ *
  * @class Editor
  * @constructor
  * @extends paper.PaperScope
@@ -352,7 +355,7 @@ function Editor(pwnd, attr){
 	 * Create pixel perfect dotted rectable for drag selections
 	 * @param p1
 	 * @param p2
-	 * @return {exporters.CompoundPath}
+	 * @return {paper.CompoundPath}
 	 */
 	_editor.drag_rect = function(p1, p2) {
 		var half = new paper.Point(0.5 / _editor.view.zoom, 0.5 / _editor.view.zoom),
@@ -545,7 +548,8 @@ Editor._extend(paper.PaperScope);
 Editor.prototype.__define({
 
 	/**
-	 * Устанавливает икну курсора для всех канвасов редактора
+	 * ### Устанавливает икону курсора для всех канвасов редактора
+	 * 
 	 * @method canvas_cursor
 	 */
 	canvas_cursor: {
@@ -616,6 +620,7 @@ Editor.prototype.__define({
 
 	/**
 	 * Returns path points which are contained in the rect
+	 * @method segments_in_rect
 	 * @param rect
 	 * @returns {Array}
 	 */
@@ -738,7 +743,8 @@ Editor.prototype.__define({
 	},
 
 	/**
-	 * Деструктор
+	 * ### Деструктор
+	 * @method unload
 	 */
 	unload: {
 		value: function () {
@@ -764,7 +770,7 @@ Editor.prototype.__define({
 /**
  * Экспортируем конструктор Editor, чтобы экземпляры построителя можно было создать снаружи
  * @property Editor
- * @for $p
+ * @for MetaEngine
  * @type {function}
  */
 $p.Editor = Editor;

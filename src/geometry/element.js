@@ -1,15 +1,18 @@
 /**
- * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
+ * ### Базовый класс элементов построителя
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 24.07.2015
  *
- * @module  element
+ * @module geometry
+ * @submodule element
  */
 
 
 /**
- * Базовый класс элементов построителя. его свойства и методы присущи всем элементам построителя,
- * но не характерны для классов Path и Group фреймворка paper.js
+ * ### Базовый класс элементов построителя
+ * Унаследован от [paper.Group](http://paperjs.org/reference/group/). Cвойства и методы `BuilderElement` присущи всем элементам построителя,
+ * но не характерны для классов [Path](http://paperjs.org/reference/path/) и [Group](http://paperjs.org/reference/group/) фреймворка [paper.js](http://paperjs.org/about/)
+ *
  * @class BuilderElement
  * @param attr {Object} - объект со свойствами создаваемого элемента
  *  @param attr.b {paper.Point} - координата узла начала элемента - не путать с координатами вершин пути элемента
@@ -20,8 +23,6 @@
  *  @param [attr.path] (r && arc_ccw && more_180)
  * @constructor
  * @extends paper.Group
- * @uses BuilderElementProperties
- * @uses NomenclatureProperties
  */
 function BuilderElement(attr){
 

@@ -1,12 +1,16 @@
 /**
- * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
- * @module  contour
+ * ### Контур (слой) изделия
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 24.07.2015
+ *
+ * @module geometry
+ * @submodule contour
  */
 
 /**
- * Контур изделия - расширение Paper.Layer
+ * ### Контур (слой) изделия
+ * Унаследован от  [paper.Layer](http://paperjs.org/reference/layer/)
  * новые элементы попадают в активный слой-контур и не могут его покинуть
  * @class Contour
  * @constructor
@@ -1791,7 +1795,7 @@ Contour.prototype.__define({
 /**
  * Экспортируем конструктор Contour, чтобы фильтровать инстанции этого типа
  * @property Contour
- * @for $p
+ * @for MetaEngine
  * @type {function}
  */
 Editor.Contour = Contour;
@@ -1799,6 +1803,7 @@ Editor.Contour = Contour;
 
 /**
  * Сегмент заполнения содержит информацию примыкающем профиле и координатах начала и конца
+ * @class GlassSegment
  * @constructor
  */
 function GlassSegment(profile, b, e, outer) {

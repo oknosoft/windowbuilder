@@ -1,11 +1,20 @@
 /**
- * Панорама и масштабирование с колёсиком и без колёсика
- * Created 25.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module tool_pan
+ * ### Панорама и масштабирование с колёсиком и без колёсика
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 25.08.2015
+ * 
+ * @module tools
+ * @submodule tool_pan
  */
 
+/**
+ * ### Панорама и масштабирование с колёсиком и без колёсика
+ * 
+ * @class ToolPan
+ * @extends paper.Tool
+ * @constructor
+ */
 function ToolPan(){
 
 	var _editor = paper,

@@ -1,11 +1,20 @@
 /**
- * Добавление (рисование) профилей
- * Created 25.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author    Evgeniy Malyarov
- * @module  tool_pen
+ * ### Добавление (рисование) профилей
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 25.08.2015
+ *
+ * @module tools
+ * @submodule tool_pen
  */
 
+/**
+ * ### Добавление (рисование) профилей
+ *
+ * @class ToolPen
+ * @extends ToolElement
+ * @constructor
+ */
 function ToolPen(){
 
 	var _editor = paper,
@@ -660,7 +669,9 @@ function ToolPen(){
 ToolPen._extend(ToolElement);
 
 /**
- * Элементы управления рядом с указателем мыши
+ * ### Элементы управления рядом с указателем мыши инструмента `ToolPen`
+ *
+ * @class PenControls
  * @constructor
  */
 function PenControls(tool) {

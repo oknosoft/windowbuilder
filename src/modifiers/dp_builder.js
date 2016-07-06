@@ -1,8 +1,10 @@
 /**
- * Модификаторы обработки _builder_pen_
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module dp_builder_pen
+ * ### Модификаторы обработки _builder_pen_
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 13.05.2016
+ * 
+ * @module dp_builder_pen
  */
 
 $p.modifiers.push(

@@ -1,10 +1,11 @@
 /**
- * Дополнительные методы справочника Соединения
+ * ### Дополнительные методы справочника _Соединения_
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_cnns
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 23.12.2015
+ *
+ * @module modifiers
+ * @submodule cat_cnns
  */
 
 

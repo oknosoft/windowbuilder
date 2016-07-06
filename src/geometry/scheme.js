@@ -1,15 +1,18 @@
 /**
- * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 24.07.2015
  *
- * @module  scheme
+ * @module geometry
+ * @submodule scheme
  */
 
 /**
  * ### Изделие
- * Расширение Paper.Project. Стандартные слои (layers) - это контуры изделия<br />
- * размерные линии, фурнитуру и визуализацию располагаем в отдельных слоях
+ * - Расширение [paper.Project](http://paperjs.org/reference/project/)
+ * - Стандартные слои (layers) - это контуры изделия, в них живут элементы
+ * - Размерные линии, фурнитуру и визуализацию располагаем в отдельных слоях
+ *
  * @class Scheme
  * @constructor
  * @extends paper.Project

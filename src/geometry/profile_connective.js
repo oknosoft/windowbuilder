@@ -1,8 +1,11 @@
 /**
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module profile_addl
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 16.05.2016
+ * 
+ * @author	Evgeniy Malyarov
+ * @module geometry
+ * @submodule profile_addl
  */
 
 
@@ -36,7 +39,7 @@ ProfileConnective.prototype.__define({
 	/**
 	 * Вычисляемые поля в таблице координат
 	 * @method save_coordinates
-	 * @for Profile
+	 * @for ProfileConnective
 	 */
 	save_coordinates: {
 		value: function () {
@@ -166,6 +169,7 @@ ProfileConnective.prototype.__define({
 	 * т.к. концы соединителя висят в пустоте и не связаны с другими профилями, возвращаем голый cnn_point
 	 *
 	 * @method cnn_point
+	 * @for ProfileConnective
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @return {CnnPoint} - объект {point, profile, cnn_types}
 	 */

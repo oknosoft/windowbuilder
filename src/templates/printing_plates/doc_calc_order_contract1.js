@@ -1,9 +1,10 @@
 /**
- * Код печатной формы договора
+ * ### Код печатной формы договора
  * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module doc_calc_order_contract1
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 17.04.2016
+ * 
+ * @module doc_calc_order_contract1
  */
 
 function fake(obj) {

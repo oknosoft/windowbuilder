@@ -1,10 +1,11 @@
 /**
- * Дополнительные методы справочника Договоры контрагентов
+ * ### Дополнительные методы справочника _Договоры контрагентов_
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_contracts
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 23.12.2015
+ * 
+ * @module modifiers
+ * @submodule cat_contracts
  */
 
 $p.modifiers.push(

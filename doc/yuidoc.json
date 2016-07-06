@@ -1,0 +1,13 @@
+{
+  "name": "orders dealer API",
+  "description": "Объектная модель 'Заказа дилера'",
+  "version": "0.0.3",
+  "url": "http://www.oknosoft.ru/zd/",
+  "options": {
+    "outdir": "doc/out",
+    "themedir": "node_modules/yuidoc-bootstrap-theme",
+    "helpers": ["node_modules/yuidoc-bootstrap-theme/helpers/helpers.js"],
+    "exclude": "socket_1c,zarchive",
+    "tabtospace": 2
+  }
+}

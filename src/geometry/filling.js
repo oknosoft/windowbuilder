@@ -3,7 +3,8 @@
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
  *
- * @module  filling
+ * @module geometry
+ * @submodule filling
  */
 
 

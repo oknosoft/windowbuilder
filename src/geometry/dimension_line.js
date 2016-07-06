@@ -1,16 +1,21 @@
 /**
+ * ### Размерные линии на эскизе
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 21.08.2015
  *
- * Created 21.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author    Evgeniy Malyarov
- * @module  dimension_line
+ * @module geometry
+ * @submodule dimension_line
  */
 
 /**
- * Произвольный текст на эскизе
+ * ### Размерная линия на эскизе
+ * Унаследована от [paper.Group](http://paperjs.org/reference/group/)
+ *
+ * @class DimensionLine
+ * @extends paper.Group
  * @param attr {Object} - объект с указанием на строку координат и родительского слоя
  * @constructor
- * @extends paper.Group
  */
 function DimensionLine(attr){
 
@@ -396,7 +401,11 @@ DimensionLine.prototype.__define({
 });
 
 /**
- * Служебный слой размерных линий
+ * ### Служебный слой размерных линий
+ * Унаследован от [paper.Layer](http://paperjs.org/reference/layer/)
+ * 
+ * @class DimensionLayer
+ * @extends paper.Layer
  * @param attr
  * @constructor
  */
@@ -418,7 +427,9 @@ DimensionLayer._extend(paper.Layer);
 
 
 /**
- * Размерные линии, определяемые пользователем
+ * ### Размерные линии, определяемые пользователем
+ * @class DimensionLineCustom
+ * @extends DimensionLine
  * @param attr
  * @constructor
  */

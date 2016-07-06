@@ -1,12 +1,13 @@
 /**
- * Модуль объекта справочника ХарактеристикиНоменклатуры
+ * ### Модуль объекта справочника ХарактеристикиНоменклатуры
  * Обрботчики событий after_create, after_load, before_save, after_save, value_change
  * Методы выполняются в контексте текущего объекта this = DocObj
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 16.03.2016
  * 
- * Created 16.03.2016  
- * &copy; http://www.oknosoft.ru 2014-2016
- * @author Evgeniy Malyarov
- * @module cat_characteristics
+ * @module modifiers
+ * @submodule cat_characteristics
  */
 
 $p.modifiers.push(

@@ -1,11 +1,20 @@
 /**
- * Манипуляции с арками (дуги правильных окружностей)
- * Created 25.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author    Evgeniy Malyarov
- * @module  tool_arc
+ * ### Манипуляции с арками (дуги правильных окружностей)
+ * 
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 25.08.2015
+ * 
+ * @module tools
+ * @submodule tool_arc
  */
 
+/**
+ * ### Манипуляции с арками (дуги правильных окружностей)
+ * 
+ * @class ToolArc
+ * @extends ToolElement
+ * @constructor
+ */
 function ToolArc(){
 
 	var tool = this;

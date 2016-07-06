@@ -3,7 +3,8 @@
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
  *
- * @module  profile
+ * @module geometry
+ * @submodule profile
  */
 
 
@@ -11,6 +12,8 @@
  * ### Элемент профиля
  * Виртуальный класс описывает общие свойства профиля и раскладки
  *
+ * @class ProfileItem
+ * @extends BuilderElement
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
  */
@@ -1260,6 +1263,7 @@ Profile.prototype.__define({
 	 * - Не делает подмену вставки, хотя могла бы
 	 *
 	 * @method cnn_point
+	 * @for Profile
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
 	 * @return {CnnPoint} - объект {point, profile, cnn_types}

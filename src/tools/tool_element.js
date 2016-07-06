@@ -1,10 +1,20 @@
 /**
- * Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
- * Created 12.03.2016<br />
- * @author Evgeniy Malyarov
- * @module element
+ * ### Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 12.03.2016
+ *
+ * @module tools
+ * @submodule tool_element
  */
 
+/**
+ * ### Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
+ *
+ * @class ToolElement
+ * @extends paper.Tool
+ * @constructor
+ */
 function ToolElement() {
 	ToolElement.superclass.constructor.call(this);
 }
