@@ -9486,6 +9486,59 @@ var acn,
 
 };
 /**
+ * ### Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 12.03.2016
+ *
+ * @module tools
+ * @submodule tool_element
+ */
+
+/**
+ * ### Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
+ *
+ * @class ToolElement
+ * @extends paper.Tool
+ * @constructor
+ */
+function ToolElement() {
+	ToolElement.superclass.constructor.call(this);
+}
+ToolElement._extend(paper.Tool);
+
+ToolElement.prototype.__define({
+
+	/**
+	 * Отключает и выгружает из памяти окно свойств инструмента
+	 * @param tool
+	 */
+	detache_wnd: {
+		value: function(){
+			if(this.wnd){
+				
+				if(this._grid && this._grid.destructor){
+					if(this.wnd.detachObject)
+						this.wnd.detachObject(true);
+					delete this._grid;
+				}
+				
+				if(this.wnd.wnd_options){
+					this.wnd.wnd_options(this.options.wnd);
+					$p.wsql.save_options("editor", this.options);
+					this.wnd.close();
+				}
+				
+				delete this.wnd;
+			}
+			this.profile = null;
+		}
+	}
+
+});
+
+
+/**
  * ### Манипуляции с арками (дуги правильных окружностей)
  * 
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
@@ -12480,59 +12533,6 @@ function ToolText(){
 
 }
 ToolText._extend(ToolElement);
-
-/**
- * ### Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
- *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
- * Created 12.03.2016
- *
- * @module tools
- * @submodule tool_element
- */
-
-/**
- * ### Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
- *
- * @class ToolElement
- * @extends paper.Tool
- * @constructor
- */
-function ToolElement() {
-	ToolElement.superclass.constructor.call(this);
-}
-ToolElement._extend(paper.Tool);
-
-ToolElement.prototype.__define({
-
-	/**
-	 * Отключает и выгружает из памяти окно свойств инструмента
-	 * @param tool
-	 */
-	detache_wnd: {
-		value: function(){
-			if(this.wnd){
-				
-				if(this._grid && this._grid.destructor){
-					if(this.wnd.detachObject)
-						this.wnd.detachObject(true);
-					delete this._grid;
-				}
-				
-				if(this.wnd.wnd_options){
-					this.wnd.wnd_options(this.options.wnd);
-					$p.wsql.save_options("editor", this.options);
-					this.wnd.close();
-				}
-				
-				delete this.wnd;
-			}
-			this.profile = null;
-		}
-	}
-
-});
-
 
 $p.injected_data._mixin({"tip_editor_right.html":"<div class=\"clipper editor_accordion\">\r\n\r\n    <div class=\"scroller\">\r\n        <div class=\"container\">\r\n\r\n            <!-- РАЗДЕЛ 1 - дерево слоёв -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_layers\"></div>\r\n            </div>\r\n            <div name=\"content_layers\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 2 - реквизиты элемента -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_elm\"></div>\r\n            </div>\r\n            <div name=\"content_elm\" style=\"min-height: 260px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 3 - реквизиты створки -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_stv\">\r\n                    Створка\r\n                    <!--span name=\"title\"></span-->\r\n                </div>\r\n            </div>\r\n            <div name=\"content_stv\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 4 - реквизиты изделия -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_props\">\r\n                    <span name=\"title\">Изделие</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_props\" style=\"min-height: 330px;\"></div>\r\n\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"scroller__track\">\r\n        <div class=\"scroller__bar\" style=\"height: 26px; top: 0px;\"></div>\r\n    </div>\r\n\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
 return Editor;
