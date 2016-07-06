@@ -282,6 +282,12 @@ function ToolPen(){
 
 			tool.detache_wnd();
 
+			if(this.path){
+				this.path.remove();
+				this.path = null;
+			}
+			this.mode = null;
+
 			tool._controls.unload();
 
 		},
@@ -393,14 +399,16 @@ function ToolPen(){
 					this.originalHandleOut = this.currentSegment.handleOut.clone();
 					this.currentSegment.selected = true;
 				}
+				this.start_binded = false;
 				return;
 
 			}
 
-			if(this.path)
+			if(this.path){
 				this.path.remove();
+				this.path = null;
+			}				
 			this.mode = null;
-			this.path = null;
 
 		},
 
@@ -636,7 +644,6 @@ function ToolPen(){
 			}else if(event.key == 'escape'){
 
 				if(this.path){
-					this.path.removeSegments();
 					this.path.remove();
 					this.path = null;
 				}
