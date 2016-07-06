@@ -124,7 +124,7 @@ DimensionLine.prototype.__define({
 	_click: {
 		value: function (event) {
 			event.stop();
-			this.wnd = new RulerWnd();
+			this.wnd = new RulerWnd(null, this);
 			this.wnd.size = this.size;
 		}
 	},

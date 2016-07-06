@@ -20,7 +20,7 @@ function createWindow () {
 	mainWindow = new BrowserWindow({width: 1200, height: 800})
 
 	// и загружаем index.html приложения.
-	mainWindow.loadURL('file://' + __dirname + '/debug.html')
+	mainWindow.loadURL('file://' + __dirname + '/debug.electron.html')
 
 	// Открываем DevTools.
 	mainWindow.webContents.openDevTools()

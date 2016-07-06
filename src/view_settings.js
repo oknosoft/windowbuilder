@@ -78,6 +78,8 @@ $p.iface.view_settings = function (cell) {
 						$p.wsql.set_user_param("hide_price_dealer", "");
 						$p.wsql.set_user_param("hide_price_manufacturer", "");
 					}
+				}else if(name == "modifiers"){
+					$p.wsql.set_user_param(name, value);
 				}
 			});
 
@@ -134,7 +136,7 @@ $p.iface.view_settings = function (cell) {
 			{type:"template", label:"",value:"",
 				note: {text: "Можно указать как относительный, так и абсолютный URL публикации CouchDB", width: 320}},
 
-			{type: "label", labelWidth:320, label: "Значение разделителя публикации 1С fresh", className: "label_options"},
+			{type: "label", labelWidth:320, label: "Значение разделителя данных", className: "label_options"},
 			{type:"input" , inputWidth: 220, name:"zone", label:"Зона:", numberFormat: ["0", "", ""], validate:"NotEmpty,ValidInteger"},
 			{type:"template", label:"",value:"", note: {text: "Для неразделенной публикации, зона = 0", width: 320}},
 
@@ -220,7 +222,11 @@ $p.iface.view_settings = function (cell) {
 			{type: "label", labelWidth:320, label: "Наценки и скидки", className: "label_options"},
 			{type:"input" , labelWidth:180, inputWidth: 120, name:"surcharge_internal", label:"Наценка дилера, %:", numberFormat: ["0", "", ""], validate:"NotEmpty,ValidInteger"},
 			{type:"input" , labelWidth:180, inputWidth: 120, name:"discount_percent_internal", label:"Скидка дилера, %:", numberFormat: ["0", "", ""], validate:"NotEmpty,ValidInteger"},
-			{type:"template", label:"",value:"", note: {text: "Значения наценки и скидки по умолчанию, которые дилер предоставляет своим (конечным) покупателям", width: 320}}
+			{type:"template", label:"",value:"", note: {text: "Значения наценки и скидки по умолчанию, которые дилер предоставляет своим (конечным) покупателям", width: 320}},
+
+			{type: "label", labelWidth:320, label: "Подключаемые модули", className: "label_options"},
+			{type:"input" , position:"label-top", inputWidth: 320, name:"modifiers", label:"Модификаторы:", value: $p.wsql.get_user_param("modifiers"), rows: 3, style:"height:80px;"},
+			{type:"template", label:"",value:"", note: {text: "Список дополнительных модулей", width: 320}}
 
 		]);
 		t.form2.cont.style.fontSize = "100%";

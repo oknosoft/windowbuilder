@@ -3613,7 +3613,7 @@ DimensionLine.prototype.__define({
 	_click: {
 		value: function (event) {
 			event.stop();
-			this.wnd = new RulerWnd();
+			this.wnd = new RulerWnd(null, this);
 			this.wnd.size = this.size;
 		}
 	},
@@ -10420,7 +10420,7 @@ function ToolPen(){
 	ToolPen.superclass.constructor.call(this);
 
 	tool.point1 = new paper.Point();
-	tool.point2 = null;
+	tool.last_profile = null;
 	tool.mode = null;
 	tool.hitItem = null;
 	tool.originalContent = null;
@@ -10693,6 +10693,8 @@ function ToolPen(){
 
 			_editor.project.deselectAll();
 
+			tool.last_profile = null;
+
 			if(tool.profile.elm_type == $p.enm.elm_types.Добор || tool.profile.elm_type == $p.enm.elm_types.Соединитель){
 
 				// для доборов и соединителей, создаём элемент, если есть addl_hit
@@ -10750,7 +10752,7 @@ function ToolPen(){
 
 				}else{
 					// Рисуем профиль
-					new Profile({generatrix: this.path, proto: this.profile});
+					this.last_profile = new Profile({generatrix: this.path, proto: this.profile});
 
 				}
 
@@ -10804,7 +10806,6 @@ function ToolPen(){
 			this.path = null;
 
 		},
-
 
 		mousemove: function(event) {
 
@@ -10913,12 +10914,11 @@ function ToolPen(){
 							if (event.modifiers.shift) {
 								delta = _editor.snap_to_angle(delta, Math.PI*2/8);
 							}
-
-							this.point2 = this.point1.add(delta);
+							
 							if(this.path.segments.length > 1)
-								this.path.lastSegment.point = this.point2;
+								this.path.lastSegment.point = this.point1.add(delta);
 							else
-								this.path.add(this.point2);
+								this.path.add(this.point1.add(delta));
 
 							// попытаемся привязать начало пути к профилям (и или заполнениям - для раскладок) контура
 							if(!this.start_binded){
@@ -10966,7 +10966,7 @@ function ToolPen(){
 							}else{
 
 								res = {distance: Infinity};
-								for(i in _editor.project.activeLayer.children){
+								for(i = 0; i < _editor.project.activeLayer.children.length; i++){
 
 									element = _editor.project.activeLayer.children[i];
 									if (element instanceof Profile){
@@ -11044,6 +11044,7 @@ function ToolPen(){
 					this.path = null;
 				}
 				this.mode = null;
+				this._controls.blur();
 			}
 		}
 	});
@@ -11140,7 +11141,13 @@ function PenControls(tool) {
 			setTimeout(function () {
 
 				if(tool.mode == 'create' && tool.path){
-					setTimeout(create_click, 50);
+					setTimeout(function () {
+						if(tool.last_profile){
+							mousemove({point: tool.last_profile.e}, true);
+							tool.last_profile = null;
+							create_click();
+						}
+					}, 50);
 				}
 
 				tool.emit("mouseup", {
@@ -11611,7 +11618,8 @@ function RulerWnd(options, tool){
 		$p.eve.callEvent("sizes_wnd", [{
 			wnd: wnd,
 			name: "close",
-			size: wnd.size
+			size: wnd.size,
+			tool: tool
 		}]);
 
 		wnd = null;
@@ -11700,7 +11708,8 @@ function RulerWnd(options, tool){
 			$p.eve.callEvent("sizes_wnd", [{
 				wnd: wnd,
 				name: e.currentTarget.name,
-				size: wnd.size
+				size: wnd.size,
+				tool: tool
 			}]);
 		}
 	}
@@ -11724,7 +11733,7 @@ function RulerWnd(options, tool){
 
 	wnd.attachObject(div);
 
-	if(tool){
+	if(tool instanceof ToolRuler){
 
 		div.style.marginTop = "22px";
 
@@ -11770,7 +11779,12 @@ function RulerWnd(options, tool){
 	input = table[1].childNodes[1];
 	input.grid = {
 		editStop: function (v) {
-
+			$p.eve.callEvent("sizes_wnd", [{
+				wnd: wnd,
+				name: "size_change",
+				size: wnd.size,
+				tool: tool
+			}]);
 		},
 		getPosition: function (v) {
 			var offsetLeft = v.offsetLeft, offsetTop = v.offsetTop;

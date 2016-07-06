@@ -406,7 +406,8 @@ function RulerWnd(options, tool){
 		$p.eve.callEvent("sizes_wnd", [{
 			wnd: wnd,
 			name: "close",
-			size: wnd.size
+			size: wnd.size,
+			tool: tool
 		}]);
 
 		wnd = null;
@@ -495,7 +496,8 @@ function RulerWnd(options, tool){
 			$p.eve.callEvent("sizes_wnd", [{
 				wnd: wnd,
 				name: e.currentTarget.name,
-				size: wnd.size
+				size: wnd.size,
+				tool: tool
 			}]);
 		}
 	}
@@ -519,7 +521,7 @@ function RulerWnd(options, tool){
 
 	wnd.attachObject(div);
 
-	if(tool){
+	if(tool instanceof ToolRuler){
 
 		div.style.marginTop = "22px";
 
@@ -565,7 +567,12 @@ function RulerWnd(options, tool){
 	input = table[1].childNodes[1];
 	input.grid = {
 		editStop: function (v) {
-
+			$p.eve.callEvent("sizes_wnd", [{
+				wnd: wnd,
+				name: "size_change",
+				size: wnd.size,
+				tool: tool
+			}]);
 		},
 		getPosition: function (v) {
 			var offsetLeft = v.offsetLeft, offsetTop = v.offsetTop;
