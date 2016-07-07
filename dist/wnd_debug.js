@@ -1649,7 +1649,14 @@ $p.modifiers.push(
 								});
 
 							}else{
-								$p.job_prm[parents[row.parent]].__define(row.synonym, { value: _mgr ? _mgr.get(row.value, false) : row.value });
+
+								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
+									delete $p.job_prm[parents[row.parent]][row.synonym];
+
+								$p.job_prm[parents[row.parent]].__define(row.synonym, {
+									value: _mgr ? _mgr.get(row.value, false) : row.value,
+									configurable: true
+								});
 							}
 
 						}
@@ -4690,30 +4697,29 @@ $p.modifiers.push(
 
 						var row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin);
 
-						// В простейшем случае, формула = "ДобавитьКомандуСоединения(Парам);"
-						if(row_cnn_spec.formula.empty()) {
-							if(nom.is_pieces){
-								if(!row_cnn_spec.coefficient)
-									row_spec.qty = row_cnn_spec.quantity;
-								else
-									row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
-										.round(nom.rounding_quantity);
-							}else{
-								// TODO: Строго говоря, нужно брать не размер соединения, а размеры предыдущего и последующего
+						// рассчитаем количество
+						if(nom.is_pieces){
+							if(!row_cnn_spec.coefficient)
 								row_spec.qty = row_cnn_spec.quantity;
+							else
+								row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
+									.round(nom.rounding_quantity);
+						}else{
+							// TODO: Строго говоря, нужно брать не размер соединения, а размеры предыдущего и последующего
+							row_spec.qty = row_cnn_spec.quantity;
 
-								if(row_cnn_spec.sz || row_cnn_spec.coefficient)
-									row_spec.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
-							}
+							if(row_cnn_spec.sz || row_cnn_spec.coefficient)
+								row_spec.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
+						}
 
-						}else {
-							// TODO: заменить eval и try-catch на динамическую функцию
-							try{
-								if(eval(row_cnn_spec.formula) === false)
-									return;
-							}catch(err){
-								$p.record_log(err);
-							}
+						// если указана формула - выполняем
+						if(!row_cnn_spec.formula.empty()) {
+							row_cnn_spec.formula.execute({
+								ox: ox,
+								elm: elm,
+								row_cnn: row_cnn_spec,
+								row_spec: row_spec
+							});
 						}
 
 						if(!row_spec.qty)
@@ -5440,22 +5446,26 @@ $p.modifiers.push(
 
 					// добавляем строку спецификации, если профиль или не про шагам
 					if((row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру
-						&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
-						$p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1)
+							&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
+							$p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1)
 						row_spec = new_spec_row(null, elm, row_ins_spec, null, inset);
 
 					if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !row_ins_spec.formula.empty()){
-						try{
-							row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, inset);
-							if(eval(row_ins_spec.formula) === false)
-								return;
-						}catch(err){
-							$p.record_log(err);
-						}
+
+						// если строка спецификации не добавлена на предыдущем шаге, делаем это сейчас
+						row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, inset);
+
+						// выполняем формулу
+						row_ins_spec.formula.execute({
+							ox: ox,
+							elm: elm,
+							row_ins: row_ins_spec,
+							row_spec: row_spec
+						});
 
 					}else if($p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1 ||
 								row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ДляЭлемента){
-						// Для вставок в профиль способ расчета количество не учитывается
+						// для вставок в профиль способ расчета количество не учитывается
 						calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
 
 					}else{

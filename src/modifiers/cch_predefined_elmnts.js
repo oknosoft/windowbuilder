@@ -61,7 +61,14 @@ $p.modifiers.push(
 								});
 
 							}else{
-								$p.job_prm[parents[row.parent]].__define(row.synonym, { value: _mgr ? _mgr.get(row.value, false) : row.value });
+
+								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
+									delete $p.job_prm[parents[row.parent]][row.synonym];
+
+								$p.job_prm[parents[row.parent]].__define(row.synonym, {
+									value: _mgr ? _mgr.get(row.value, false) : row.value,
+									configurable: true
+								});
 							}
 
 						}
