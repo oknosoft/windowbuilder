@@ -1076,10 +1076,26 @@ ProfileItem.prototype.__define({
  * ### Профиль
  * Класс описывает поведение сегмента профиля (створка, рама, импост)<br />
  * У профиля есть координаты конца и начала, есть путь образующей - прямая или кривая линия
+ *
  * @class Profile
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
  * @extends ProfileItem
+ *
+ * @example
+ *
+ *     // Создаём элемент профиля на основании пути образующей
+ *     // одновременно, указываем контур, которому будет принадлежать профиль, вставку и цвет
+ *     new Profile({
+ *       generatrix: new paper.Path({
+ *         segments: [[1000,100], [0, 100]]
+ *       }),
+ *       proto: {
+ *         parent: _contour,
+ *         inset: _inset
+ *         clr: _clr
+ *       }
+ *     });
  */
 function Profile(attr){
 
