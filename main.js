@@ -17,7 +17,11 @@ let mainWindow
 
 function createWindow () {
 	// Создаём окно браузера
-	mainWindow = new BrowserWindow({width: 1200, height: 800})
+	mainWindow = new BrowserWindow({
+		width: 1200,
+		height: 800,
+		icon:	'dist/imgs/fav-wnd.ico'
+	})
 
 	// и загружаем index.html приложения.
 	mainWindow.loadURL('file://' + __dirname + '/debug.electron.html')
