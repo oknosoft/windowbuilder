@@ -35,8 +35,7 @@ function BuilderElement(attr){
 		_row: {
 			get: function () {
 				return attr.row;
-			},
-			enumerable: false
+			}
 		}
 	});
 
@@ -114,8 +113,7 @@ BuilderElement.prototype.__define({
 	 */
 	owner: {
 		get : function(){ return this.data.owner; },
-		set : function(newValue){ this.data.owner = newValue; },
-		enumerable : false
+		set : function(newValue){ this.data.owner = newValue; }
 	},
 
 	/**
@@ -198,6 +196,7 @@ BuilderElement.prototype.__define({
 				inset = _xfields.inset._clone(),
 				cnn1 = _meta.tabular_sections.cnn_elmnts.fields.cnn._clone(),
 				cnn2 = cnn1._clone(),
+				cnn3 = cnn1._clone(),
 				info = _meta.fields.note._clone();
 
 			function cnn_choice_links(o, cnn_point){
@@ -290,6 +289,35 @@ BuilderElement.prototype.__define({
 					}]}
 			];
 
+			cnn3.choice_links = [{
+				name: ["selection",	"ref"],
+				path: [
+					function(o){
+
+						var cnn_ii = t.selected_cnn_ii(), nom_cnns;
+
+						if(cnn_ii.elm instanceof Filling)
+							nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
+						else
+							nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
+
+						if($p.is_data_obj(o)){
+							return nom_cnns.some(function (cnn) {
+								return o == cnn;
+							});
+
+						}else{
+							var refs = "";
+							nom_cnns.forEach(function (cnn) {
+								if(refs)
+									refs += ", ";
+								refs += "'" + cnn.ref + "'";
+							});
+							return "_t_.ref in (" + refs + ")";
+						}
+					}]}
+			];
+
 			// дополняем свойства поля цвет отбором по служебным цветам
 			$p.cat.clrs.selection_exclude_service(_xfields.clr);
 
@@ -304,35 +332,32 @@ BuilderElement.prototype.__define({
 					y1: _xfields.y1,
 					y2: _xfields.y2,
 					cnn1: cnn1,
-					cnn2: cnn2
+					cnn2: cnn2,
+					cnn3: cnn3
 				}
 			};
-		},
-		enumerable : false
+		}
 	},
 
 	// виртуальный датаменеджер для автоформ
 	_manager: {
 		get: function () {
 			return this.project._dp._manager;
-		},
-		enumerable : false
+		}
 	},
 
 	// номенклатура - свойство только для чтения, т.к. вычисляется во вставке
 	nom:{
 		get : function(){
 			return this.inset.nom(this);
-		},
-		enumerable : false
+		}
 	},
 
 	// номер элемента - свойство только для чтения
 	elm: {
 		get : function(){
 			return this._row.elm;
-		},
-		enumerable : false
+		}
 	},
 
 	// информация для редактора свойста
@@ -359,8 +384,7 @@ BuilderElement.prototype.__define({
 				
 				this.project.register_change();	
 			}
-		},
-		enumerable : false
+		}
 	},
 
 	// цвет элемента
@@ -378,40 +402,51 @@ BuilderElement.prototype.__define({
 			
 			this.project.register_change();
 
-		},
-		enumerable : false
+		}
 	},
 
 	// ширина
 	width: {
 		get : function(){
 			return this.nom.width || 80;
-		},
-		enumerable : false
+		}
 	},
 
 	// толщина (для заполнений и, возможно, профилей в 3D)
 	thickness: {
 		get : function(){
 			return this.inset.thickness;
-		},
-		enumerable : false
+		}
 	},
 
 	// опорный размер (0 для рам и створок, 1/2 ширины для импостов)
 	sizeb: {
 		get : function(){
 			return this.inset.sizeb || 0;
-		},
-		enumerable : false
+		}
 	},
 
 	// размер до фурнитурного паза
 	sizefurn: {
 		get : function(){
 			return this.nom.sizefurn || 20;
+		}
+	},
+
+	/**
+	 * Примыкающее соединение для диалога свойств
+	 */
+	cnn3: {
+		get : function(){
+			var cnn_ii = this.selected_cnn_ii();
+			return cnn_ii ? cnn_ii.row.cnn : $p.cat.cnns.get();
 		},
-		enumerable : false
+		set: function(v){
+			var cnn_ii = this.selected_cnn_ii();
+			if(cnn_ii)
+				cnn_ii.row.cnn = v;
+			this.project.register_change();
+		}
 	},
 
 	/**
@@ -441,8 +476,11 @@ BuilderElement.prototype.__define({
 						oxml: this.oxml
 					});
 			}
-		},
-		enumerable: false
+
+			cell.layout.base.style.height = (Math.max(this.data._grid.rowsBuffer.length, 9) + 1) * 22 + "px";
+			cell.layout.setSizes();
+			this.data._grid.objBox.style.width = "100%";
+		}
 	},
 
 	/**
@@ -454,8 +492,40 @@ BuilderElement.prototype.__define({
 				this.data._grid._owner_cell.detachObject(true);
 				delete this.data._grid;
 			}
-		},
-		enumerable: false
+		}
+	},
+	
+	selected_cnn_ii: {
+		value: function(){
+			var t = this,
+				sel = t.project.getSelectedItems(),
+				cnns = this.project.connections.cnns,
+				items = [], res;
+
+			sel.forEach(function (item) {
+				if(item.parent instanceof ProfileItem || item.parent instanceof Filling)
+					items.push(item.parent);
+				else if(item instanceof Filling)
+					items.push(item);
+			});
+
+			if(items.length > 1 &&
+				items.some(function (item) { return item == t; }) &&
+				items.some(function (item) {
+					if(item != t){
+						cnns.forEach(function (row) {
+							if(!row.node1 && !row.node2 &&
+								((row.elm1 == t.elm && row.elm2 == item.elm) || (row.elm1 == item.elm && row.elm2 == t.elm))){
+								res = {elm: item, row: row};
+								return false;
+							}
+						});
+						if(res)
+							return true;
+					}
+				}))
+				return res;
+		}
 	}
 
 });

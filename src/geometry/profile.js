@@ -962,7 +962,7 @@ ProfileItem.prototype.__define({
 
 					}
 
-					if(cnn_point && cnn_point.cnn_types == acn.t && (segm.point == this.b || segm.point == this.e)){
+					if(cnn_point && cnn_point.cnn_types == $p.enm.cnn_types.acn.t && (segm.point == this.b || segm.point == this.e)){
 						segm.point = cnn_point.point;
 
 					}else{
@@ -1012,15 +1012,21 @@ ProfileItem.prototype.__define({
 	 */
 	oxml: {
 		get: function () {
-			return {
-				" ": [
-					{id: "info", path: "o.info", type: "ro"},
-					"inset",
-					"clr"
-				],
-				"Начало": ["x1", "y1", "cnn1"],
-				"Конец": ["x2", "y2", "cnn2"]
-			}
+			var cnn_ii = this.selected_cnn_ii(),
+				oxml = {
+					" ": [
+						{id: "info", path: "o.info", type: "ro"},
+						"inset",
+						"clr"
+					],
+					"Начало": ["x1", "y1", "cnn1"],
+					"Конец": ["x2", "y2", "cnn2"]
+				};
+			
+			if(cnn_ii)
+				oxml["Примыкание"] = ["cnn3"];
+			
+			return oxml; 
 		}
 	},
 
@@ -1133,7 +1139,7 @@ Profile.prototype.__define({
 				if(_profile.data._nearest){
 					ngeneratrix = _profile.data._nearest.generatrix;
 					if( ngeneratrix.getNearestPoint(b).is_nearest(b) && ngeneratrix.getNearestPoint(e).is_nearest(e)){
-						_profile.data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, _profile.data._nearest, acn.ii, _profile.data._nearest_cnn);
+						_profile.data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, _profile.data._nearest, $p.enm.cnn_types.acn.ii, _profile.data._nearest_cnn);
 						return true;
 					}
 				}
@@ -1370,7 +1376,7 @@ Profile.prototype.__define({
 
 			if(bcnn.cnn && bcnn.profile == p){
 				// обрабатываем угол
-				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+				if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					if(!this.b.is_nearest(p.e)){
 						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
 							if(paper.Key.isDown('control')){
@@ -1391,7 +1397,7 @@ Profile.prototype.__define({
 
 				}
 				// обрабатываем T
-				else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+				else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					// импосты в створках и все остальные импосты
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
 					if(!mpoint.is_nearest(this.b)){
@@ -1403,7 +1409,7 @@ Profile.prototype.__define({
 			}
 			if(ecnn.cnn && ecnn.profile == p){
 				// обрабатываем угол
-				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+				if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					if(!this.e.is_nearest(p.b)){
 						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
 							if(paper.Key.isDown('control')){
@@ -1423,7 +1429,7 @@ Profile.prototype.__define({
 					}
 				}
 				// обрабатываем T
-				else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+				else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					// импосты в створках и все остальные импосты
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
 					if(!mpoint.is_nearest(this.e)){
@@ -1481,19 +1487,19 @@ function CnnPoint(parent, node){
 		 * По умолчанию - соединение с пустотой
 		 * @type {Array}
 		 */
-		if(acn.a.indexOf(this.cnn.cnn_type) != -1)
-			this.cnn_types = acn.a;
+		if($p.enm.cnn_types.acn.a.indexOf(this.cnn.cnn_type) != -1)
+			this.cnn_types = $p.enm.cnn_types.acn.a;
 
-		else if(acn.t.indexOf(this.cnn.cnn_type) != -1)
-			this.cnn_types = acn.t;
+		else if($p.enm.cnn_types.acn.t.indexOf(this.cnn.cnn_type) != -1)
+			this.cnn_types = $p.enm.cnn_types.acn.t;
 
 		else
-			this.cnn_types = acn.i;
+			this.cnn_types = $p.enm.cnn_types.acn.i;
 
 	}else{
 
 		this.cnn = null;
-		this.cnn_types = acn.i;
+		this.cnn_types = $p.enm.cnn_types.acn.i;
 	}
 
 	/**
@@ -1592,7 +1598,7 @@ CnnPoint.prototype.__define({
 			this.profile = null;
 			this.err = null;
 			this.distance = Infinity;
-			this.cnn_types = acn.i;
+			this.cnn_types = $p.enm.cnn_types.acn.i;
 			if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.tcn.i)
 				this.cnn = null;
 		}

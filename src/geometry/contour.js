@@ -1784,7 +1784,7 @@ Contour.prototype.__define({
 					// проверяем-изменяем соединения заполнений с профилями
 					elm.profiles.forEach(function (curr) {
 						if(!curr.cnn || !curr.cnn.check_nom2(curr.profile))
-							curr.cnn = $p.cat.cnns.elm_cnn(elm, curr.profile, acn.ii);
+							curr.cnn = $p.cat.cnns.elm_cnn(elm, curr.profile, $p.enm.cnn_types.acn.ii);
 					});
 				}
 			});

@@ -238,7 +238,7 @@ Onlay.prototype.__define({
 					res.distance = distance;
 					res.point = np;
 					res.profile = glass;
-					res.cnn_types = acn.t;
+					res.cnn_types = $p.enm.cnn_types.acn.t;
 				}
 
 				if(distance < consts.sticking_l){

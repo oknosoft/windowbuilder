@@ -8,8 +8,8 @@
 
 function ToolText(){
 
-	var _editor = paper,
-		tool = this;
+	var tool = this,
+		_editor = this._scope;
 
 	ToolText.superclass.constructor.call(this);
 

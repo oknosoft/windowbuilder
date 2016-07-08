@@ -760,9 +760,7 @@ function Clipbrd(_editor) {
  * @param pwnd {dhtmlXLayoutCell} - ячейка dhtmlx, в которой будут размещены редактор и изделия
  */
 function Editor(pwnd, attr){
-
-	acn = $p.enm.cnn_types.acn;
-
+	
 	var _editor = this,
 
 		/**
@@ -3433,7 +3431,7 @@ Contour.prototype.__define({
 					// проверяем-изменяем соединения заполнений с профилями
 					elm.profiles.forEach(function (curr) {
 						if(!curr.cnn || !curr.cnn.check_nom2(curr.profile))
-							curr.cnn = $p.cat.cnns.elm_cnn(elm, curr.profile, acn.ii);
+							curr.cnn = $p.cat.cnns.elm_cnn(elm, curr.profile, $p.enm.cnn_types.acn.ii);
 					});
 				}
 			});
@@ -4044,8 +4042,7 @@ function BuilderElement(attr){
 		_row: {
 			get: function () {
 				return attr.row;
-			},
-			enumerable: false
+			}
 		}
 	});
 
@@ -4123,8 +4120,7 @@ BuilderElement.prototype.__define({
 	 */
 	owner: {
 		get : function(){ return this.data.owner; },
-		set : function(newValue){ this.data.owner = newValue; },
-		enumerable : false
+		set : function(newValue){ this.data.owner = newValue; }
 	},
 
 	/**
@@ -4207,6 +4203,7 @@ BuilderElement.prototype.__define({
 				inset = _xfields.inset._clone(),
 				cnn1 = _meta.tabular_sections.cnn_elmnts.fields.cnn._clone(),
 				cnn2 = cnn1._clone(),
+				cnn3 = cnn1._clone(),
 				info = _meta.fields.note._clone();
 
 			function cnn_choice_links(o, cnn_point){
@@ -4299,6 +4296,35 @@ BuilderElement.prototype.__define({
 					}]}
 			];
 
+			cnn3.choice_links = [{
+				name: ["selection",	"ref"],
+				path: [
+					function(o){
+
+						var cnn_ii = t.selected_cnn_ii(), nom_cnns;
+
+						if(cnn_ii.elm instanceof Filling)
+							nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
+						else
+							nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
+
+						if($p.is_data_obj(o)){
+							return nom_cnns.some(function (cnn) {
+								return o == cnn;
+							});
+
+						}else{
+							var refs = "";
+							nom_cnns.forEach(function (cnn) {
+								if(refs)
+									refs += ", ";
+								refs += "'" + cnn.ref + "'";
+							});
+							return "_t_.ref in (" + refs + ")";
+						}
+					}]}
+			];
+
 			// дополняем свойства поля цвет отбором по служебным цветам
 			$p.cat.clrs.selection_exclude_service(_xfields.clr);
 
@@ -4313,35 +4339,32 @@ BuilderElement.prototype.__define({
 					y1: _xfields.y1,
 					y2: _xfields.y2,
 					cnn1: cnn1,
-					cnn2: cnn2
+					cnn2: cnn2,
+					cnn3: cnn3
 				}
 			};
-		},
-		enumerable : false
+		}
 	},
 
 	// виртуальный датаменеджер для автоформ
 	_manager: {
 		get: function () {
 			return this.project._dp._manager;
-		},
-		enumerable : false
+		}
 	},
 
 	// номенклатура - свойство только для чтения, т.к. вычисляется во вставке
 	nom:{
 		get : function(){
 			return this.inset.nom(this);
-		},
-		enumerable : false
+		}
 	},
 
 	// номер элемента - свойство только для чтения
 	elm: {
 		get : function(){
 			return this._row.elm;
-		},
-		enumerable : false
+		}
 	},
 
 	// информация для редактора свойста
@@ -4368,8 +4391,7 @@ BuilderElement.prototype.__define({
 				
 				this.project.register_change();	
 			}
-		},
-		enumerable : false
+		}
 	},
 
 	// цвет элемента
@@ -4387,40 +4409,51 @@ BuilderElement.prototype.__define({
 			
 			this.project.register_change();
 
-		},
-		enumerable : false
+		}
 	},
 
 	// ширина
 	width: {
 		get : function(){
 			return this.nom.width || 80;
-		},
-		enumerable : false
+		}
 	},
 
 	// толщина (для заполнений и, возможно, профилей в 3D)
 	thickness: {
 		get : function(){
 			return this.inset.thickness;
-		},
-		enumerable : false
+		}
 	},
 
 	// опорный размер (0 для рам и створок, 1/2 ширины для импостов)
 	sizeb: {
 		get : function(){
 			return this.inset.sizeb || 0;
-		},
-		enumerable : false
+		}
 	},
 
 	// размер до фурнитурного паза
 	sizefurn: {
 		get : function(){
 			return this.nom.sizefurn || 20;
+		}
+	},
+
+	/**
+	 * Примыкающее соединение для диалога свойств
+	 */
+	cnn3: {
+		get : function(){
+			var cnn_ii = this.selected_cnn_ii();
+			return cnn_ii ? cnn_ii.row.cnn : $p.cat.cnns.get();
 		},
-		enumerable : false
+		set: function(v){
+			var cnn_ii = this.selected_cnn_ii();
+			if(cnn_ii)
+				cnn_ii.row.cnn = v;
+			this.project.register_change();
+		}
 	},
 
 	/**
@@ -4450,8 +4483,11 @@ BuilderElement.prototype.__define({
 						oxml: this.oxml
 					});
 			}
-		},
-		enumerable: false
+
+			cell.layout.base.style.height = (Math.max(this.data._grid.rowsBuffer.length, 9) + 1) * 22 + "px";
+			cell.layout.setSizes();
+			this.data._grid.objBox.style.width = "100%";
+		}
 	},
 
 	/**
@@ -4463,8 +4499,40 @@ BuilderElement.prototype.__define({
 				this.data._grid._owner_cell.detachObject(true);
 				delete this.data._grid;
 			}
-		},
-		enumerable: false
+		}
+	},
+	
+	selected_cnn_ii: {
+		value: function(){
+			var t = this,
+				sel = t.project.getSelectedItems(),
+				cnns = this.project.connections.cnns,
+				items = [], res;
+
+			sel.forEach(function (item) {
+				if(item.parent instanceof ProfileItem || item.parent instanceof Filling)
+					items.push(item.parent);
+				else if(item instanceof Filling)
+					items.push(item);
+			});
+
+			if(items.length > 1 &&
+				items.some(function (item) { return item == t; }) &&
+				items.some(function (item) {
+					if(item != t){
+						cnns.forEach(function (row) {
+							if(!row.node1 && !row.node2 &&
+								((row.elm1 == t.elm && row.elm2 == item.elm) || (row.elm1 == item.elm && row.elm2 == t.elm))){
+								res = {elm: item, row: row};
+								return false;
+							}
+						});
+						if(res)
+							return true;
+					}
+				}))
+				return res;
+		}
 	}
 
 });
@@ -4982,21 +5050,28 @@ Filling.prototype.__define({
 	 */
 	oxml: {
 		get: function () {
-			return {
-				" ": [
-					{id: "info", path: "o.info", type: "ro"},
-					"inset",
-					"clr"
-				],
-				"Начало": [
-					{id: "x1", path: "o.x1", synonym: "X1", type: "ro"},
-					{id: "y1", path: "o.y1", synonym: "Y1", type: "ro"}
-				],
-				"Конец": [
-					{id: "x2", path: "o.x2", synonym: "X2", type: "ro"},
-					{id: "y2", path: "o.y2", synonym: "Y2", type: "ro"}
-				]
-			}
+			var cnn_ii = this.selected_cnn_ii(),
+				oxml = {
+					" ": [
+						{id: "info", path: "o.info", type: "ro"},
+						"inset",
+						"clr"
+					],
+					"Начало": [
+						{id: "x1", path: "o.x1", synonym: "X1", type: "ro"},
+						{id: "y1", path: "o.y1", synonym: "Y1", type: "ro"}
+					],
+					"Конец": [
+						{id: "x2", path: "o.x2", synonym: "X2", type: "ro"},
+						{id: "y2", path: "o.y2", synonym: "Y2", type: "ro"}
+					]
+				};
+
+			if(cnn_ii)
+				oxml["Примыкание"] = ["cnn3"];
+
+			return oxml;
+			
 		},
 		enumerable: false
 	},
@@ -6672,7 +6747,7 @@ ProfileItem.prototype.__define({
 
 					}
 
-					if(cnn_point && cnn_point.cnn_types == acn.t && (segm.point == this.b || segm.point == this.e)){
+					if(cnn_point && cnn_point.cnn_types == $p.enm.cnn_types.acn.t && (segm.point == this.b || segm.point == this.e)){
 						segm.point = cnn_point.point;
 
 					}else{
@@ -6722,15 +6797,21 @@ ProfileItem.prototype.__define({
 	 */
 	oxml: {
 		get: function () {
-			return {
-				" ": [
-					{id: "info", path: "o.info", type: "ro"},
-					"inset",
-					"clr"
-				],
-				"Начало": ["x1", "y1", "cnn1"],
-				"Конец": ["x2", "y2", "cnn2"]
-			}
+			var cnn_ii = this.selected_cnn_ii(),
+				oxml = {
+					" ": [
+						{id: "info", path: "o.info", type: "ro"},
+						"inset",
+						"clr"
+					],
+					"Начало": ["x1", "y1", "cnn1"],
+					"Конец": ["x2", "y2", "cnn2"]
+				};
+			
+			if(cnn_ii)
+				oxml["Примыкание"] = ["cnn3"];
+			
+			return oxml; 
 		}
 	},
 
@@ -6843,7 +6924,7 @@ Profile.prototype.__define({
 				if(_profile.data._nearest){
 					ngeneratrix = _profile.data._nearest.generatrix;
 					if( ngeneratrix.getNearestPoint(b).is_nearest(b) && ngeneratrix.getNearestPoint(e).is_nearest(e)){
-						_profile.data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, _profile.data._nearest, acn.ii, _profile.data._nearest_cnn);
+						_profile.data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, _profile.data._nearest, $p.enm.cnn_types.acn.ii, _profile.data._nearest_cnn);
 						return true;
 					}
 				}
@@ -7080,7 +7161,7 @@ Profile.prototype.__define({
 
 			if(bcnn.cnn && bcnn.profile == p){
 				// обрабатываем угол
-				if(acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+				if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					if(!this.b.is_nearest(p.e)){
 						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
 							if(paper.Key.isDown('control')){
@@ -7101,7 +7182,7 @@ Profile.prototype.__define({
 
 				}
 				// обрабатываем T
-				else if(acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+				else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					// импосты в створках и все остальные импосты
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
 					if(!mpoint.is_nearest(this.b)){
@@ -7113,7 +7194,7 @@ Profile.prototype.__define({
 			}
 			if(ecnn.cnn && ecnn.profile == p){
 				// обрабатываем угол
-				if(acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+				if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					if(!this.e.is_nearest(p.b)){
 						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
 							if(paper.Key.isDown('control')){
@@ -7133,7 +7214,7 @@ Profile.prototype.__define({
 					}
 				}
 				// обрабатываем T
-				else if(acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+				else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					// импосты в створках и все остальные импосты
 					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
 					if(!mpoint.is_nearest(this.e)){
@@ -7191,19 +7272,19 @@ function CnnPoint(parent, node){
 		 * По умолчанию - соединение с пустотой
 		 * @type {Array}
 		 */
-		if(acn.a.indexOf(this.cnn.cnn_type) != -1)
-			this.cnn_types = acn.a;
+		if($p.enm.cnn_types.acn.a.indexOf(this.cnn.cnn_type) != -1)
+			this.cnn_types = $p.enm.cnn_types.acn.a;
 
-		else if(acn.t.indexOf(this.cnn.cnn_type) != -1)
-			this.cnn_types = acn.t;
+		else if($p.enm.cnn_types.acn.t.indexOf(this.cnn.cnn_type) != -1)
+			this.cnn_types = $p.enm.cnn_types.acn.t;
 
 		else
-			this.cnn_types = acn.i;
+			this.cnn_types = $p.enm.cnn_types.acn.i;
 
 	}else{
 
 		this.cnn = null;
-		this.cnn_types = acn.i;
+		this.cnn_types = $p.enm.cnn_types.acn.i;
 	}
 
 	/**
@@ -7302,7 +7383,7 @@ CnnPoint.prototype.__define({
 			this.profile = null;
 			this.err = null;
 			this.distance = Infinity;
-			this.cnn_types = acn.i;
+			this.cnn_types = $p.enm.cnn_types.acn.i;
 			if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.tcn.i)
 				this.cnn = null;
 		}
@@ -7498,7 +7579,7 @@ ProfileAddl.prototype.__define({
 	 */
 	nearest: {
 		value : function(){
-			this.data._nearest_cnn = $p.cat.cnns.elm_cnn(this, this.parent, acn.ii, this.data._nearest_cnn);
+			this.data._nearest_cnn = $p.cat.cnns.elm_cnn(this, this.parent, $p.enm.cnn_types.acn.ii, this.data._nearest_cnn);
 			return this.parent;
 		}
 	},
@@ -7623,7 +7704,7 @@ ProfileAddl.prototype.__define({
 
 			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 			res.clear();
-			res.cnn_types = acn.t;
+			res.cnn_types = $p.enm.cnn_types.acn.t;
 
 			this.layer.profiles.forEach(function (addl) {
 				check_distance(addl, true);
@@ -8225,7 +8306,7 @@ Onlay.prototype.__define({
 					res.distance = distance;
 					res.point = np;
 					res.profile = glass;
-					res.cnn_types = acn.t;
+					res.cnn_types = $p.enm.cnn_types.acn.t;
 				}
 
 				if(distance < consts.sticking_l){
@@ -8817,10 +8898,10 @@ function Scheme(_canvas){
 			if(typeof res.distance == "number" && res.distance < distance)
 				return;
 
-			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
+			if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
 				// а есть ли подходящее?
-				cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
+				cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
 				if(!cnns.length)
 					return;
 
@@ -8828,14 +8909,14 @@ function Scheme(_canvas){
 
 				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
-			}else if(res.cnn && acn.a.indexOf(res.cnn.cnn_type) == -1)
+			}else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
 				return;
 
 			res.point = bind_node ? element.b : point;
 			res.distance = distance;
 			res.profile = element;
 			res.profile_point = 'b';
-			res.cnn_types = acn.a;
+			res.cnn_types = $p.enm.cnn_types.acn.a;
 			return false;
 
 		}else if((distance = element.e.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
@@ -8844,10 +8925,10 @@ function Scheme(_canvas){
 				return;
 
 			// Если мы находимся в окрестности конца соседнего элемента
-			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
+			if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
 				// а есть ли подходящее?
-				cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
+				cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
 				if(!cnns.length)
 					return;
 
@@ -8855,14 +8936,14 @@ function Scheme(_canvas){
 
 				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
-			}else if(res.cnn && acn.a.indexOf(res.cnn.cnn_type) == -1)
+			}else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
 				return;
 
 			res.point = bind_node ? element.e : point;
 			res.distance = distance;
 			res.profile = element;
 			res.profile_point = 'e';
-			res.cnn_types = acn.a;
+			res.cnn_types = $p.enm.cnn_types.acn.a;
 			return false;
 
 		}
@@ -8879,7 +8960,7 @@ function Scheme(_canvas){
 		// 		res.distance = distance;
 		// 		res.point = gp;
 		// 		res.profile = addl;
-		// 		res.cnn_types = acn.t;
+		// 		res.cnn_types = $p.enm.cnn_types.acn.t;
 		// 	}
 		// });
 		// if(res.distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
@@ -8902,7 +8983,7 @@ function Scheme(_canvas){
 					res.distance = distance;
 				}
 				res.profile = element;
-				res.cnn_types = acn.t;
+				res.cnn_types = $p.enm.cnn_types.acn.t;
 			}
 			if(bind_generatrix)
 				return false;
@@ -9457,14 +9538,9 @@ Sectional._extend(BuilderElement);
 "use strict";
 
 /**
- * Алиасы глобальных свойств
- */
-var acn,
-
-/**
  * Константы и параметры
  */
-	consts = new function Settings(){
+	var consts = new function Settings(){
 
 
 	this.tune_paper = function (settings) {
@@ -12127,12 +12203,9 @@ function ToolSelectNode(){
 					 */
 				}
 
-				if(is_profile){
-					item.parent.attache_wnd(paper._acc.elm.cells("a"));
-					this.profile = item.parent;
-
-				}else if(item.parent instanceof Filling){
-					item.parent.attache_wnd(paper._acc.elm.cells("a"));
+				// подключаем диадог свойств элемента
+				if(is_profile || item.parent instanceof Filling){
+					item.parent.attache_wnd(this._scope._acc.elm.cells("a"));
 					this.profile = item.parent;
 				}
 
@@ -12403,8 +12476,8 @@ ToolSelectNode._extend(ToolElement);
 
 function ToolText(){
 
-	var _editor = paper,
-		tool = this;
+	var tool = this,
+		_editor = this._scope;
 
 	ToolText.superclass.constructor.call(this);
 

@@ -169,12 +169,9 @@ function ToolSelectNode(){
 					 */
 				}
 
-				if(is_profile){
-					item.parent.attache_wnd(paper._acc.elm.cells("a"));
-					this.profile = item.parent;
-
-				}else if(item.parent instanceof Filling){
-					item.parent.attache_wnd(paper._acc.elm.cells("a"));
+				// подключаем диадог свойств элемента
+				if(is_profile || item.parent instanceof Filling){
+					item.parent.attache_wnd(this._scope._acc.elm.cells("a"));
 					this.profile = item.parent;
 				}
 

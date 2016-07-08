@@ -54,7 +54,7 @@ ProfileAddl.prototype.__define({
 	 */
 	nearest: {
 		value : function(){
-			this.data._nearest_cnn = $p.cat.cnns.elm_cnn(this, this.parent, acn.ii, this.data._nearest_cnn);
+			this.data._nearest_cnn = $p.cat.cnns.elm_cnn(this, this.parent, $p.enm.cnn_types.acn.ii, this.data._nearest_cnn);
 			return this.parent;
 		}
 	},
@@ -179,7 +179,7 @@ ProfileAddl.prototype.__define({
 
 			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 			res.clear();
-			res.cnn_types = acn.t;
+			res.cnn_types = $p.enm.cnn_types.acn.t;
 
 			this.layer.profiles.forEach(function (addl) {
 				check_distance(addl, true);

@@ -467,21 +467,28 @@ Filling.prototype.__define({
 	 */
 	oxml: {
 		get: function () {
-			return {
-				" ": [
-					{id: "info", path: "o.info", type: "ro"},
-					"inset",
-					"clr"
-				],
-				"Начало": [
-					{id: "x1", path: "o.x1", synonym: "X1", type: "ro"},
-					{id: "y1", path: "o.y1", synonym: "Y1", type: "ro"}
-				],
-				"Конец": [
-					{id: "x2", path: "o.x2", synonym: "X2", type: "ro"},
-					{id: "y2", path: "o.y2", synonym: "Y2", type: "ro"}
-				]
-			}
+			var cnn_ii = this.selected_cnn_ii(),
+				oxml = {
+					" ": [
+						{id: "info", path: "o.info", type: "ro"},
+						"inset",
+						"clr"
+					],
+					"Начало": [
+						{id: "x1", path: "o.x1", synonym: "X1", type: "ro"},
+						{id: "y1", path: "o.y1", synonym: "Y1", type: "ro"}
+					],
+					"Конец": [
+						{id: "x2", path: "o.x2", synonym: "X2", type: "ro"},
+						{id: "y2", path: "o.y2", synonym: "Y2", type: "ro"}
+					]
+				};
+
+			if(cnn_ii)
+				oxml["Примыкание"] = ["cnn3"];
+
+			return oxml;
+			
 		},
 		enumerable: false
 	},

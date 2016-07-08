@@ -31,8 +31,8 @@ $p.modifiers.push(
 		/**
 		 * Возвращает массив соединений, доступный для сочетания номенклатур.
 		 * Для соединений с заполнениями учитывается толщина. Контроль остальных геометрических особенностей выполняется на стороне рисовалки
-		 * @param nom1 {_cat.nom}
-		 * @param nom2 {_cat.nom}
+		 * @param nom1 {_cat.nom|BuilderElement}
+		 * @param nom2 {_cat.nom|BuilderElement}
 		 * @param [cnn_types] {_enm.cnns|Array.<_enm.cnns>}
 		 * @return {Array}
 		 */

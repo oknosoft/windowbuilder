@@ -9,14 +9,9 @@
 "use strict";
 
 /**
- * Алиасы глобальных свойств
- */
-var acn,
-
-/**
  * Константы и параметры
  */
-	consts = new function Settings(){
+	var consts = new function Settings(){
 
 
 	this.tune_paper = function (settings) {

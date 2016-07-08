@@ -563,10 +563,10 @@ function Scheme(_canvas){
 			if(typeof res.distance == "number" && res.distance < distance)
 				return;
 
-			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
+			if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
 				// а есть ли подходящее?
-				cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
+				cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
 				if(!cnns.length)
 					return;
 
@@ -574,14 +574,14 @@ function Scheme(_canvas){
 
 				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
-			}else if(res.cnn && acn.a.indexOf(res.cnn.cnn_type) == -1)
+			}else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
 				return;
 
 			res.point = bind_node ? element.b : point;
 			res.distance = distance;
 			res.profile = element;
 			res.profile_point = 'b';
-			res.cnn_types = acn.a;
+			res.cnn_types = $p.enm.cnn_types.acn.a;
 			return false;
 
 		}else if((distance = element.e.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
@@ -590,10 +590,10 @@ function Scheme(_canvas){
 				return;
 
 			// Если мы находимся в окрестности конца соседнего элемента
-			if(profile && (!res.cnn || acn.a.indexOf(res.cnn.cnn_type) == -1)){
+			if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
 
 				// а есть ли подходящее?
-				cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
+				cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
 				if(!cnns.length)
 					return;
 
@@ -601,14 +601,14 @@ function Scheme(_canvas){
 
 				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
-			}else if(res.cnn && acn.a.indexOf(res.cnn.cnn_type) == -1)
+			}else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
 				return;
 
 			res.point = bind_node ? element.e : point;
 			res.distance = distance;
 			res.profile = element;
 			res.profile_point = 'e';
-			res.cnn_types = acn.a;
+			res.cnn_types = $p.enm.cnn_types.acn.a;
 			return false;
 
 		}
@@ -625,7 +625,7 @@ function Scheme(_canvas){
 		// 		res.distance = distance;
 		// 		res.point = gp;
 		// 		res.profile = addl;
-		// 		res.cnn_types = acn.t;
+		// 		res.cnn_types = $p.enm.cnn_types.acn.t;
 		// 	}
 		// });
 		// if(res.distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
@@ -648,7 +648,7 @@ function Scheme(_canvas){
 					res.distance = distance;
 				}
 				res.profile = element;
-				res.cnn_types = acn.t;
+				res.cnn_types = $p.enm.cnn_types.acn.t;
 			}
 			if(bind_generatrix)
 				return false;

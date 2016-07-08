@@ -17,9 +17,7 @@
  * @param pwnd {dhtmlXLayoutCell} - ячейка dhtmlx, в которой будут размещены редактор и изделия
  */
 function Editor(pwnd, attr){
-
-	acn = $p.enm.cnn_types.acn;
-
+	
 	var _editor = this,
 
 		/**
