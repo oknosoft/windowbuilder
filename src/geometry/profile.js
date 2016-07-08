@@ -1141,7 +1141,7 @@ Profile.prototype.__define({
 				_profile.data._nearest_cnn = null;
 			}
 
-			if(_profile.layer.parent){
+			if(_profile.layer && _profile.layer.parent){
 				if(!check_nearest()){
 					children = _profile.layer.parent.children;
 					for(var p in children){

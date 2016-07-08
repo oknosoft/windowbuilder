@@ -31,7 +31,7 @@ paper.Path.prototype.__define({
 	 * Угол по отношению к соседнему пути _other_ в точке _point_
 	 */
 	angle_to: {
-		value : function(other, point, interior){
+		value : function(other, point, interior, round){
 			var p1 = this.getNearestPoint(point),
 				p2 = other.getNearestPoint(point),
 				t1 = this.getTangentAt(this.getOffsetOf(p1)),
@@ -41,7 +41,7 @@ paper.Path.prototype.__define({
 				res += 360;
 			if(interior && res > 180)
 				res = 180 - (res - 180);
-			return res;
+			return round ? res.round(round) : res.round(1);
 		},
 		enumerable : false
 	},

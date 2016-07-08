@@ -5345,7 +5345,7 @@ paper.Path.prototype.__define({
 	 * Угол по отношению к соседнему пути _other_ в точке _point_
 	 */
 	angle_to: {
-		value : function(other, point, interior){
+		value : function(other, point, interior, round){
 			var p1 = this.getNearestPoint(point),
 				p2 = other.getNearestPoint(point),
 				t1 = this.getTangentAt(this.getOffsetOf(p1)),
@@ -5355,7 +5355,7 @@ paper.Path.prototype.__define({
 				res += 360;
 			if(interior && res > 180)
 				res = 180 - (res - 180);
-			return res;
+			return round ? res.round(round) : res.round(1);
 		},
 		enumerable : false
 	},
@@ -6851,7 +6851,7 @@ Profile.prototype.__define({
 				_profile.data._nearest_cnn = null;
 			}
 
-			if(_profile.layer.parent){
+			if(_profile.layer && _profile.layer.parent){
 				if(!check_nearest()){
 					children = _profile.layer.parent.children;
 					for(var p in children){
@@ -11062,7 +11062,7 @@ function ToolPen(){
 
 									res = Onlay.prototype.bind_node(this.path.firstSegment.point, _editor.project.activeLayer.glasses(false, true));
 									if(res.binded)
-										this.path.firstSegment.point = res.point;
+										tool.path.firstSegment.point = tool.point1 = res.point;
 
 								}else{
 
@@ -11075,14 +11075,14 @@ function ToolPen(){
 											// сначала смотрим на доборы, затем - на сам профиль
 											if(element.children.some(function (addl) {
 													if(addl instanceof ProfileAddl && _editor.project.check_distance(addl, null, res, tool.path.firstSegment.point, bind) === false){
-														tool.path.firstSegment.point = res.point;
+														tool.path.firstSegment.point = tool.point1 = res.point;
 														return true;
 													}
 												})){
 												break;
 
 											}else if (_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
-												this.path.firstSegment.point = res.point;
+												tool.path.firstSegment.point = tool.point1 = res.point;
 												break;
 											}
 										}

@@ -541,7 +541,7 @@ function ToolPen(){
 
 									res = Onlay.prototype.bind_node(this.path.firstSegment.point, _editor.project.activeLayer.glasses(false, true));
 									if(res.binded)
-										this.path.firstSegment.point = res.point;
+										tool.path.firstSegment.point = tool.point1 = res.point;
 
 								}else{
 
@@ -554,14 +554,14 @@ function ToolPen(){
 											// сначала смотрим на доборы, затем - на сам профиль
 											if(element.children.some(function (addl) {
 													if(addl instanceof ProfileAddl && _editor.project.check_distance(addl, null, res, tool.path.firstSegment.point, bind) === false){
-														tool.path.firstSegment.point = res.point;
+														tool.path.firstSegment.point = tool.point1 = res.point;
 														return true;
 													}
 												})){
 												break;
 
 											}else if (_editor.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
-												this.path.firstSegment.point = res.point;
+												tool.path.firstSegment.point = tool.point1 = res.point;
 												break;
 											}
 										}
