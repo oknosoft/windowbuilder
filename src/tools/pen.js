@@ -14,6 +14,8 @@
  * @class ToolPen
  * @extends ToolElement
  * @constructor
+ * @menuorder 54
+ * @tooltip Рисование
  */
 function ToolPen(){
 

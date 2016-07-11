@@ -14,6 +14,8 @@
  * @class ToolArc
  * @extends ToolElement
  * @constructor
+ * @menuorder 56
+ * @tooltip Арка
  */
 function ToolArc(){
 

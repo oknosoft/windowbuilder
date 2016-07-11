@@ -6,6 +6,14 @@
  * @module  tool_text
  */
 
+/**
+ * ### Произвольный текст
+ * 
+ * @class ToolText
+ * @constructor
+ * @menuorder 60
+ * @tooltip Добавление текста
+ */
 function ToolText(){
 
 	var tool = this,

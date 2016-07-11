@@ -14,6 +14,8 @@
  * @class ToolLayImpost
  * @extends paper.Tool
  * @constructor
+ * @menuorder 55
+ * @tooltip Импосты и раскладки
  */
 function ToolLayImpost(){
 

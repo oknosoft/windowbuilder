@@ -1,7 +1,7 @@
 {
   "name"    : "windowbuilder",
   "version" : "0.1.0",
-  "main"    : "main.js",
+  "main"    : "electron.js",
 
   "devDependencies": {
     "gulp": "^3.9.0",

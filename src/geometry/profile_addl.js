@@ -24,6 +24,8 @@
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
  * @extends ProfileItem
+ * @menuorder 43
+ * @tooltip Дополнительный профиль
  */
 function ProfileAddl(attr){
 

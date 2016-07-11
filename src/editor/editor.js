@@ -9,32 +9,54 @@
 
 /**
  * ### Графический редактор
- * Унаследован от [paper.PaperScope](http://paperjs.org/reference/paperscope/)
+ * - Унаследован от [paper.PaperScope](http://paperjs.org/reference/paperscope/)
+ * - У редактора есть коллекция проектов ({{#crossLink "Scheme"}}изделий{{/crossLink}}). В настоящий момент, поддержано единственное активное изделие, но потенциально, имеется возможность одновременного редактирования нескольких изделий
+ * - У `редактора` есть коллекция инструментов ([tools](http://paperjs.org/reference/tool/)). Часть инструментов встроена в редактор, но у конечного пользователя, есть возможность как переопределить поведение встроенных инструментов, так и подключить собственные специализированные инструменты
  *
  * @class Editor
  * @constructor
  * @extends paper.PaperScope
  * @param pwnd {dhtmlXLayoutCell} - ячейка dhtmlx, в которой будут размещены редактор и изделия
+ * @menuorder 10
+ * @tooltip Графический редактор
  */
 function Editor(pwnd, attr){
 	
 	var _editor = this,
 
 		/**
+		 * ### История редактирования
 		 * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
-		 * @type {Undo}
+		 *
+		 * @property undo
+		 * @for Editor
+		 * @type {UndoRedo}
+		 * @final
+		 * @private
 		 */
 		undo = new UndoRedo(this),
 
 		/**
+		 * ### Буфер обмена
 		 * Объект для прослушивания и обработки событий буфера обмена
+		 *
+		 * @property clipbrd
+		 * @for Editor
 		 * @type {Clipbrd}
+		 * @final
+		 * @private
 		 */
 		clipbrd = new Clipbrd(this),
 
 		/**
+		 * ### Клавиатура
 		 * Объект для управления редактором с клавиатуры
+		 *
+		 * @property keybrd
+		 * @for Editor
 		 * @type {Keybrd}
+		 * @final
+		 * @private
 		 */
 		keybrd = new Keybrd(this),
 
@@ -382,7 +404,13 @@ function Editor(pwnd, attr){
 	// Создаём инструменты
 
 	/**
+	 * ### Вписать в окно
 	 * Это не настоящий инструмент, а команда вписывания в окно
+	 *
+	 * @class ZoomFit
+	 * @constructor
+	 * @menuorder 53
+	 * @tooltip Масштаб в экран
 	 */
 	new function ZoomFit() {
 

@@ -1,11 +1,21 @@
 /**
- * Свойства и перемещение узлов элемента
- * Created 25.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module tool_select_node
+ * ### Свойства и перемещение узлов элемента
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 25.08.2015
+ *
+ * @module tools
+ * @submodule tool_select_node
  */
 
+/**
+ * ### Свойства и перемещение узлов элемента
+ *
+ * @class ToolSelectNode
+ * @constructor
+ * @menuorder 51
+ * @tooltip Узлы и элементы
+ */
 function ToolSelectNode(){
 
 	var tool = this;

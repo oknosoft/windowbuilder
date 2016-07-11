@@ -15,6 +15,8 @@
  * @class Contour
  * @constructor
  * @extends paper.Layer
+ * @menuorder 30
+ * @tooltip Контур (слой) изделия
  */
 function Contour(attr){
 

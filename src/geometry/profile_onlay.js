@@ -13,14 +13,16 @@
  * Класс описывает поведение элемента раскладки
  *
  * - у раскладки есть координаты конца и начала
- * - есть путь образующей - прямая или кривая линия, такая же, как у Profile
- * - владелец типа Filling
+ * - есть путь образующей - прямая или кривая линия, такая же, как у {{#crossLink "Profile"}}{{/crossLink}}
+ * - владелец типа {{#crossLink "Filling"}}{{/crossLink}}
  * - концы могут соединяться не только с пустотой или другими раскладками, но и с рёбрами заполнения
  *
  * @class Onlay
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
  * @extends ProfileItem
+ * @menuorder 44
+ * @tooltip Раскладка
  */
 function Onlay(attr){
 

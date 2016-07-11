@@ -6,6 +6,14 @@
  * @module  tool_ruler
  */
 
+/**
+ * ### Относительное позиционирование и сдвиг
+ * 
+ * @class ToolRuler
+ * @constructor
+ * @menuorder 57
+ * @tooltip Позиция и сдвиг
+ */
 function ToolRuler(){
 
 	ToolRuler.superclass.constructor.call(this);

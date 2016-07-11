@@ -16,6 +16,8 @@
  * @extends BuilderElement
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
+ * @menuorder 41
+ * @tooltip Элемент профиля
  */
 function ProfileItem(attr){
 
@@ -1087,6 +1089,8 @@ ProfileItem.prototype.__define({
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
  * @extends ProfileItem
+ * @menuorder 42
+ * @tooltip Профиль
  *
  * @example
  *

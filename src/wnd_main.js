@@ -243,8 +243,6 @@ $p.iface.oninit = function() {
 
 /**
  * Обработчик маршрутизации
- * @param hprm
- * @return {boolean}
  */
 $p.eve.hash_route.push(function (hprm) {
 

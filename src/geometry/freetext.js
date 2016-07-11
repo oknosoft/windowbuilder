@@ -9,11 +9,15 @@
  */
 
 /**
- * Произвольный текст на эскизе
+ * ### Произвольный текст на эскизе
+ *
+ * @class FreeText
  * @param attr {Object} - объект с указанием на строку координат и родительского слоя
  * @param attr.parent {BuilderElement} - элемент, к которому привязывается комментарий
  * @constructor
  * @extends paper.PointText
+ * @menuorder 46
+ * @tooltip Текст на эскизе
  */
 function FreeText(attr){
 

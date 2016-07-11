@@ -17,6 +17,8 @@
  * @constructor
  * @extends paper.Project
  * @param _canvas {HTMLCanvasElement} - канвас, в котором будет размещено изделие
+ * @menuorder 20
+ * @tooltip Изделие
  */
 function Scheme(_canvas){
 

@@ -14,6 +14,8 @@
  * @class ToolPan
  * @extends paper.Tool
  * @constructor
+ * @menuorder 52
+ * @tooltip Панорама и масштаб
  */
 function ToolPan(){
 
