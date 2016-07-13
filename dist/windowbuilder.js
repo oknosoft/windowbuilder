@@ -608,7 +608,10 @@ function EditorAccordion(_editor, cell_acc) {
  */
 
 /**
+ * ### Буфер обмена
  * Объект для прослушивания и обработки событий буфера обмена
+ * 
+ * @class Clipbrd
  * @param _editor
  * @constructor
  */
@@ -752,32 +755,70 @@ function Clipbrd(_editor) {
 
 /**
  * ### Графический редактор
- * Унаследован от [paper.PaperScope](http://paperjs.org/reference/paperscope/)
+ * - Унаследован от [paper.PaperScope](http://paperjs.org/reference/paperscope/)
+ * - У редактора есть коллекция проектов ({{#crossLink "Scheme"}}изделий{{/crossLink}}). В настоящий момент, поддержано единственное активное изделие, но потенциально, имеется возможность одновременного редактирования нескольких изделий
+ * - У `редактора` есть коллекция инструментов ([tools](http://paperjs.org/reference/tool/)). Часть инструментов встроена в редактор, но у конечного пользователя, есть возможность как переопределить поведение встроенных инструментов, так и подключить собственные специализированные инструменты
+ *
+ *
+ * - **Редактор** можно рассматривать, как четрёжный стол (кульман)
+ * - **Изделие** подобно листу ватмана, прикрепленному к кульману в текущий момент
+ * - **Инструменты** - это карандаши и рейсшины, которые инженер использует для редактирования изделия
+ *
+ * @example
+ *
+ *     // создаём экземпляр графического редактора
+ *     // передаём в конструктор указатель на ячейку _cell и дополнительные реквизиты с функцией set_text()
+ *     t.editor = new $p.Editor(_cell, {
+ *       set_text: function (text) {
+ *         cell.setText({text: "<b>" + text + "</b>"});
+ *       }
+ *     });
  *
  * @class Editor
  * @constructor
  * @extends paper.PaperScope
- * @param pwnd {dhtmlXLayoutCell} - ячейка dhtmlx, в которой будут размещены редактор и изделия
+ * @param pwnd {dhtmlXCellObject} - [ячейка dhtmlx](http://docs.dhtmlx.com/cell__index.html), в которой будет размещен редактор
+ * @param [attr] {Object} - дополнительные параметры инициализации редактора
+ * @menuorder 10
+ * @tooltip Графический редактор
  */
 function Editor(pwnd, attr){
 	
 	var _editor = this,
 
 		/**
+		 * ### История редактирования
 		 * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
-		 * @type {Undo}
+		 *
+		 * @property undo
+		 * @for Editor
+		 * @type {UndoRedo}
+		 * @final
+		 * @private
 		 */
 		undo = new UndoRedo(this),
 
 		/**
+		 * ### Буфер обмена
 		 * Объект для прослушивания и обработки событий буфера обмена
+		 *
+		 * @property clipbrd
+		 * @for Editor
 		 * @type {Clipbrd}
+		 * @final
+		 * @private
 		 */
 		clipbrd = new Clipbrd(this),
 
 		/**
+		 * ### Клавиатура
 		 * Объект для управления редактором с клавиатуры
+		 *
+		 * @property keybrd
+		 * @for Editor
 		 * @type {Keybrd}
+		 * @final
+		 * @private
 		 */
 		keybrd = new Keybrd(this),
 
@@ -792,7 +833,15 @@ function Editor(pwnd, attr){
 
 	_editor.__define({
 
-		// ячейка родительского окна
+		/**
+		 * ### Ячейка родительского окна
+		 * [dhtmlXCell](http://docs.dhtmlx.com/cell__index.html), в которой размещен редактор
+		 *
+		 * @property _pwnd
+		 * @type dhtmlXCellObject
+		 * @final
+		 * @private
+		 */
 		_pwnd: {
 			get: function () {
 				return pwnd;
@@ -1125,7 +1174,13 @@ function Editor(pwnd, attr){
 	// Создаём инструменты
 
 	/**
+	 * ### Вписать в окно
 	 * Это не настоящий инструмент, а команда вписывания в окно
+	 *
+	 * @class ZoomFit
+	 * @constructor
+	 * @menuorder 53
+	 * @tooltip Масштаб в экран
 	 */
 	new function ZoomFit() {
 
@@ -1309,6 +1364,12 @@ Editor.prototype.__define({
 		}
 	},
 
+	/**
+	 * ### Активизирует инструмент
+	 *
+	 * @param name
+	 * @return {*|{value}}
+	 */
 	select_tool: {
 		value: function (name) {
 			for(var t in this.tools){
@@ -1524,7 +1585,10 @@ $p.Editor = Editor;
  */
 
 /**
+ * ### Клавиатура
  * Управление редактором с клавиатуры
+ *
+ * @class Keybrd
  * @param _editor
  * @constructor
  */
@@ -1538,9 +1602,11 @@ function Keybrd(_editor) {
  */
 
 /**
+ * ### История редактирования
  * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
  * Из публичных интерфейсов имеет только методы back() и rewind()
  * Основную работу делает прослушивая широковещательные события
+ * 
  * @class UndoRedo
  * @constructor
  * @param _editor {Editor} - указатель на экземпляр редактора
@@ -1662,6 +1728,8 @@ function UndoRedo(_editor){
  * @class Contour
  * @constructor
  * @extends paper.Layer
+ * @menuorder 30
+ * @tooltip Контур (слой) изделия
  */
 function Contour(attr){
 
@@ -3508,12 +3576,15 @@ GlassSegment.prototype.__define({
 
 /**
  * ### Размерная линия на эскизе
- * Унаследована от [paper.Group](http://paperjs.org/reference/group/)
+ * Унаследована от [paper.Group](http://paperjs.org/reference/group/)<br />
+ * См. так же, {{#crossLink "DimensionLineCustom"}}{{/crossLink}} - размерная линия, устанавливаемая пользователем
  *
  * @class DimensionLine
  * @extends paper.Group
  * @param attr {Object} - объект с указанием на строку координат и родительского слоя
  * @constructor
+ * @menuorder 46
+ * @tooltip Размерная линия
  */
 function DimensionLine(attr){
 
@@ -4018,7 +4089,8 @@ DimensionLineCustom.prototype.__define({
 /**
  * ### Базовый класс элементов построителя
  * Унаследован от [paper.Group](http://paperjs.org/reference/group/). Cвойства и методы `BuilderElement` присущи всем элементам построителя,
- * но не характерны для классов [Path](http://paperjs.org/reference/path/) и [Group](http://paperjs.org/reference/group/) фреймворка [paper.js](http://paperjs.org/about/)
+ * но не характерны для классов [Path](http://paperjs.org/reference/path/) и [Group](http://paperjs.org/reference/group/) фреймворка [paper.js](http://paperjs.org/about/),
+ * т.к. описывают не линию и не коллекцию графических примитивов, а элемент конструкции с определенной физикой и поведением
  *
  * @class BuilderElement
  * @param attr {Object} - объект со свойствами создаваемого элемента
@@ -4030,6 +4102,8 @@ DimensionLineCustom.prototype.__define({
  *  @param [attr.path] (r && arc_ccw && more_180)
  * @constructor
  * @extends paper.Group
+ * @menuorder 40
+ * @tooltip Элемент изделия
  */
 function BuilderElement(attr){
 
@@ -4592,13 +4666,17 @@ Editor.BuilderElement = BuilderElement;
 
 
 /**
- * Инкапсулирует поведение элемента заполнения.<br />
- * У заполнения есть коллекция рёбер, образующая путь контура.<br />
- * Путь всегда замкнутый, образует простой многоугольник без внутренних пересечений, рёбра могут быть гнутыми.
+ * ### Заполнение
+ * - Инкапсулирует поведение элемента заполнения
+ * - У заполнения есть коллекция рёбер, образующая путь контура
+ * - Путь всегда замкнутый, образует простой многоугольник без внутренних пересечений, рёбра могут быть гнутыми
+ *
  * @class Filling
  * @param attr {Object} - объект со свойствами создаваемого элемента
  * @constructor
  * @extends BuilderElement
+ * @menuorder 45
+ * @tooltip Заполнение
  */
 function Filling(attr){
 
@@ -5106,11 +5184,15 @@ Editor.Filling = Filling;
  */
 
 /**
- * Произвольный текст на эскизе
+ * ### Произвольный текст на эскизе
+ *
+ * @class FreeText
  * @param attr {Object} - объект с указанием на строку координат и родительского слоя
  * @param attr.parent {BuilderElement} - элемент, к которому привязывается комментарий
  * @constructor
  * @extends paper.PointText
+ * @menuorder 46
+ * @tooltip Текст на эскизе
  */
 function FreeText(attr){
 
@@ -5801,6 +5883,8 @@ paper.Point.prototype.__define({
  * @extends BuilderElement
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
+ * @menuorder 41
+ * @tooltip Элемент профиля
  */
 function ProfileItem(attr){
 
@@ -6872,6 +6956,8 @@ ProfileItem.prototype.__define({
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
  * @extends ProfileItem
+ * @menuorder 42
+ * @tooltip Профиль
  *
  * @example
  *
@@ -7549,6 +7635,8 @@ ProfileRays.prototype.__define({
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
  * @extends ProfileItem
+ * @menuorder 43
+ * @tooltip Дополнительный профиль
  */
 function ProfileAddl(attr){
 
@@ -8081,14 +8169,16 @@ ProfileConnective.prototype.__define({
  * Класс описывает поведение элемента раскладки
  *
  * - у раскладки есть координаты конца и начала
- * - есть путь образующей - прямая или кривая линия, такая же, как у Profile
- * - владелец типа Filling
+ * - есть путь образующей - прямая или кривая линия, такая же, как у {{#crossLink "Profile"}}{{/crossLink}}
+ * - владелец типа {{#crossLink "Filling"}}{{/crossLink}}
  * - концы могут соединяться не только с пустотой или другими раскладками, но и с рёбрами заполнения
  *
  * @class Onlay
  * @param attr {Object} - объект со свойствами создаваемого элемента см. {{#crossLink "BuilderElement"}}параметр конструктора BuilderElement{{/crossLink}}
  * @constructor
  * @extends ProfileItem
+ * @menuorder 44
+ * @tooltip Раскладка
  */
 function Onlay(attr){
 
@@ -8352,6 +8442,8 @@ Onlay.prototype.__define({
  * @constructor
  * @extends paper.Project
  * @param _canvas {HTMLCanvasElement} - канвас, в котором будет размещено изделие
+ * @menuorder 20
+ * @tooltip Изделие
  */
 function Scheme(_canvas){
 
@@ -9339,7 +9431,7 @@ Scheme.prototype.__define({
 
 			if(!this.data.l_dimensions.isInserted()){
 				curr = this.activeLayer;
-				this.addChild(this.data.l_dimensions);
+				this.addLayer(this.data.l_dimensions);
 				if(curr)
 					this._activeLayer = curr;
 			}
@@ -9646,6 +9738,8 @@ ToolElement.prototype.__define({
  * @class ToolArc
  * @extends ToolElement
  * @constructor
+ * @menuorder 56
+ * @tooltip Арка
  */
 function ToolArc(){
 
@@ -9844,6 +9938,8 @@ ToolArc._extend(paper.Tool);
  * @class ToolLayImpost
  * @extends paper.Tool
  * @constructor
+ * @menuorder 55
+ * @tooltip Импосты и раскладки
  */
 function ToolLayImpost(){
 
@@ -10488,6 +10584,8 @@ ToolLayImpost._extend(paper.Tool);
  * @class ToolPan
  * @extends paper.Tool
  * @constructor
+ * @menuorder 52
+ * @tooltip Панорама и масштаб
  */
 function ToolPan(){
 
@@ -10611,6 +10709,8 @@ ToolPan._extend(paper.Tool);
  * @class ToolPen
  * @extends ToolElement
  * @constructor
+ * @menuorder 54
+ * @tooltip Рисование
  */
 function ToolPen(){
 
@@ -11430,6 +11530,14 @@ PenControls.prototype.__define({
  * @module  tool_ruler
  */
 
+/**
+ * ### Относительное позиционирование и сдвиг
+ * 
+ * @class ToolRuler
+ * @constructor
+ * @menuorder 57
+ * @tooltip Позиция и сдвиг
+ */
 function ToolRuler(){
 
 	ToolRuler.superclass.constructor.call(this);
@@ -12033,13 +12141,23 @@ function RulerWnd(options, tool){
 	return wnd;
 }
 /**
- * Свойства и перемещение узлов элемента
- * Created 25.08.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module tool_select_node
+ * ### Свойства и перемещение узлов элемента
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * Created 25.08.2015
+ *
+ * @module tools
+ * @submodule tool_select_node
  */
 
+/**
+ * ### Свойства и перемещение узлов элемента
+ *
+ * @class ToolSelectNode
+ * @constructor
+ * @menuorder 51
+ * @tooltip Узлы и элементы
+ */
 function ToolSelectNode(){
 
 	var tool = this;
@@ -12474,6 +12592,14 @@ ToolSelectNode._extend(ToolElement);
  * @module  tool_text
  */
 
+/**
+ * ### Произвольный текст
+ * 
+ * @class ToolText
+ * @constructor
+ * @menuorder 60
+ * @tooltip Добавление текста
+ */
 function ToolText(){
 
 	var tool = this,

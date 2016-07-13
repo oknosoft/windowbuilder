@@ -13,10 +13,26 @@
  * - У редактора есть коллекция проектов ({{#crossLink "Scheme"}}изделий{{/crossLink}}). В настоящий момент, поддержано единственное активное изделие, но потенциально, имеется возможность одновременного редактирования нескольких изделий
  * - У `редактора` есть коллекция инструментов ([tools](http://paperjs.org/reference/tool/)). Часть инструментов встроена в редактор, но у конечного пользователя, есть возможность как переопределить поведение встроенных инструментов, так и подключить собственные специализированные инструменты
  *
+ *
+ * - **Редактор** можно рассматривать, как четрёжный стол (кульман)
+ * - **Изделие** подобно листу ватмана, прикрепленному к кульману в текущий момент
+ * - **Инструменты** - это карандаши и рейсшины, которые инженер использует для редактирования изделия
+ *
+ * @example
+ *
+ *     // создаём экземпляр графического редактора
+ *     // передаём в конструктор указатель на ячейку _cell и дополнительные реквизиты с функцией set_text()
+ *     var editor = new $p.Editor(_cell, {
+ *       set_text: function (text) {
+ *         cell.setText({text: "<b>" + text + "</b>"});
+ *       }
+ *     });
+ *
  * @class Editor
  * @constructor
  * @extends paper.PaperScope
- * @param pwnd {dhtmlXLayoutCell} - ячейка dhtmlx, в которой будут размещены редактор и изделия
+ * @param pwnd {dhtmlXCellObject} - [ячейка dhtmlx](http://docs.dhtmlx.com/cell__index.html), в которой будет размещен редактор
+ * @param [attr] {Object} - дополнительные параметры инициализации редактора
  * @menuorder 10
  * @tooltip Графический редактор
  */
@@ -71,7 +87,15 @@ function Editor(pwnd, attr){
 
 	_editor.__define({
 
-		// ячейка родительского окна
+		/**
+		 * ### Ячейка родительского окна
+		 * [dhtmlXCell](http://docs.dhtmlx.com/cell__index.html), в которой размещен редактор
+		 *
+		 * @property _pwnd
+		 * @type dhtmlXCellObject
+		 * @final
+		 * @private
+		 */
 		_pwnd: {
 			get: function () {
 				return pwnd;
@@ -574,9 +598,12 @@ Editor._extend(paper.PaperScope);
 Editor.prototype.__define({
 
 	/**
-	 * ### Устанавливает икону курсора для всех канвасов редактора
+	 * ### Устанавливает икону курсора
+	 * Действие выполняется для всех канвасов редактора
 	 * 
 	 * @method canvas_cursor
+	 * @for Editor
+	 * @param name {String} - имя css класса курсора
 	 */
 	canvas_cursor: {
 		value: function (name) {
@@ -594,6 +621,14 @@ Editor.prototype.__define({
 		}
 	},
 
+	/**
+	 * ### Активизирует инструмент
+	 * Находит инструмент по имени в коллекции tools и выполняет его метод [Tool.activate()](http://paperjs.org/reference/tool/#activate)
+	 *
+	 * @method select_tool
+	 * @for Editor
+	 * @param name {String} - имя инструмента
+	 */
 	select_tool: {
 		value: function (name) {
 			for(var t in this.tools){
@@ -607,6 +642,7 @@ Editor.prototype.__define({
 	 * ### Открывает изделие для редактирования
 	 * MDI пока не реализовано. Изделие загружается в текущий проект
 	 * @method open
+	 * @for Editor
 	 * @param [ox] {String|DataObj} - ссылка или объект продукции
 	 */
 	open: {
@@ -618,7 +654,11 @@ Editor.prototype.__define({
 
 	/**
 	 * ### (Пере)заполняет изделие данными типового блока
-	 * Вызывает диалог выбора типового блока и перезаполняет продукцию данными выбора
+	 * - Вызывает диалог выбора типового блока и перезаполняет продукцию данными выбора
+	 * - Если текущее изделие не пустое, задаёт вопрос о перезаписи данными типового блока
+	 * - В обработчик выбора типового блока передаёт метод {{#crossLink "Scheme/load_stamp:method"}}Scheme.load_stamp(){{/crossLink}} текущего изделия
+	 *
+	 * @for Editor
 	 * @method load_stamp
 	 * @param confirmed {Boolean} - подавляет показ диалога подтверждения перезаполнения
 	 */
@@ -647,6 +687,7 @@ Editor.prototype.__define({
 	/**
 	 * Returns path points which are contained in the rect
 	 * @method segments_in_rect
+	 * @for Editor
 	 * @param rect
 	 * @returns {Array}
 	 */
@@ -771,6 +812,7 @@ Editor.prototype.__define({
 	/**
 	 * ### Деструктор
 	 * @method unload
+	 * @for Editor
 	 */
 	unload: {
 		value: function () {

@@ -14,7 +14,12 @@ function EditorAccordion(_editor, cell_acc) {
 		cont = _cell.querySelector(".editor_accordion"),
 
 		/**
-		 * панель инструментов элемента
+		 * ### Панель инструментов элемента
+		 * @property tb_elm
+		 * @for EditorAccordion
+		 * @type {OTooolBar}
+		 * @final
+		 * @private
 		 */
 		tb_elm = new $p.iface.OTooolBar({
 			wrapper: cont.querySelector("[name=header_elm]"),

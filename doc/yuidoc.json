@@ -5,8 +5,8 @@
   "url": "http://www.oknosoft.ru/zd/",
   "options": {
     "outdir": "doc/out",
-    "themedir": "node_modules/yuidoc-bootstrap-theme",
-    "helpers": ["node_modules/yuidoc-bootstrap-theme/helpers/helpers.js"],
+    "themedir": "doc/yuidoc-bootstrap-theme",
+    "helpers": ["doc/yuidoc-bootstrap-theme/helpers/helpers.js"],
     "exclude": "socket_1c,zarchive,modifiers",
     "tabtospace": 2
   }
