@@ -352,9 +352,9 @@ Contour.prototype.__define({
 	 * Врезаем оповещение при активации слоя
 	 */
 	activate: {
-		value: function() {
+		value: function(custom) {
 			this.project._activeLayer = this;
-			$p.eve.callEvent("layer_activated", [this]);
+			$p.eve.callEvent("layer_activated", [this, !custom]);
 			this.project.register_update();
 		}
 	},
@@ -1398,6 +1398,7 @@ Contour.prototype.__define({
 				});
 			}
 
+			// рисует линии открывания на раздвижке
 			function sliding() {
 
 			}
@@ -1698,33 +1699,62 @@ Contour.prototype.__define({
 		}
 	},
 
+	/**
+	 * ### Стирает размерные линии
+	 *
+	 * @method clear_dimentions
+	 * @for Contour
+	 */
 	clear_dimentions: {
 	
 		value: function () {
 			for(var key in this.l_dimensions.ihor){
+				this.l_dimensions.ihor[key].removeChildren();
 				this.l_dimensions.ihor[key].remove();
 				delete this.l_dimensions.ihor[key];
 			}
 			for(var key in this.l_dimensions.ivert){
+				this.l_dimensions.ivert[key].removeChildren();
 				this.l_dimensions.ivert[key].remove();
 				delete this.l_dimensions.ivert[key];
 			}
 			if(this.l_dimensions.bottom){
+				this.l_dimensions.bottom.removeChildren();
 				this.l_dimensions.bottom.remove();
 				this.l_dimensions.bottom = null;
 			}
 			if(this.l_dimensions.top){
+				this.l_dimensions.top.removeChildren();
 				this.l_dimensions.top.remove();
 				this.l_dimensions.top = null;
 			}
 			if(this.l_dimensions.right){
+				this.l_dimensions.right.removeChildren();
 				this.l_dimensions.right.remove();
 				this.l_dimensions.right = null;
 			}
 			if(this.l_dimensions.left){
+				this.l_dimensions.left.removeChildren();
 				this.l_dimensions.left.remove();
 				this.l_dimensions.left = null;
 			}
+		}
+	},
+
+	/**
+	 * ### Непрозрачность без учета вложенных контуров
+	 * В отличии от прототипа `opacity`, затрагивает только элементы текущего слоя
+	 */
+	opacity: {
+		get: function () {
+			return this.children.length ? this.children[0].opacity : 1;
+		},
+
+		set: function (v) {
+			this.children.forEach(function(elm){
+				if(elm instanceof BuilderElement)
+					elm.opacity = v;
+			});
 		}
 	},
 

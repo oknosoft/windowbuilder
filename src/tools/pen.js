@@ -118,13 +118,13 @@ function ToolPen(){
 
 	// делает полупрозрачными элементы неактивных контуров
 	function decorate_layers(reset){
+
 		var active = _editor.project.activeLayer;
+
 		_editor.project.getItems({class: Contour}).forEach(function (l) {
-			l.children.forEach(function(elm){
-				if(!(elm instanceof Contour))
-					elm.opacity = (l == active || reset) ? 1 : 0.5;
-			});
+			l.opacity = (l == active || reset) ? 1 : 0.5;
 		})
+
 	}
 	
 	tool.hitTest = function(event) {
@@ -252,8 +252,9 @@ function ToolPen(){
 			tool_wnd();
 
 			if(!on_layer_activated)
-				on_layer_activated = $p.eve.attachEvent("layer_activated", function (contour) {
-					if(contour.project == _editor.project){
+				on_layer_activated = $p.eve.attachEvent("layer_activated", function (contour, virt) {
+
+					if(!virt && contour.project == _editor.project && !_editor.project.data._loading && !_editor.project.data._snapshot){
 						decorate_layers();
 					}
 				});
@@ -294,9 +295,11 @@ function ToolPen(){
 			tool.detache_wnd();
 
 			if(this.path){
+				this.path.removeSegments();
 				this.path.remove();
-				this.path = null;
 			}
+			this.path = null;
+			this.last_profile = null;
 			this.mode = null;
 
 			tool._controls.unload();
@@ -391,7 +394,7 @@ function ToolPen(){
 				}
 
 				if(item.selected && item.layer)
-					item.layer.activate();
+					item.layer.activate(true);
 
 			}
 
@@ -663,8 +666,6 @@ function ToolPen(){
 			}
 		}
 	});
-
-	return tool;
 
 
 }

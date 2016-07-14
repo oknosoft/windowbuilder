@@ -455,7 +455,7 @@ function Scheme(_canvas){
 
 				// виртуальное событие, чтобы активировать слой в дереве слоёв
 				if(_scheme.contours.length){
-					$p.eve.callEvent("layer_activated", [_scheme.contours[0]]);
+					$p.eve.callEvent("layer_activated", [_scheme.contours[0], true]);
 				}
 
 				delete _data._loading;

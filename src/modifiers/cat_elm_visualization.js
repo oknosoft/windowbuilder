@@ -49,31 +49,40 @@ $p.modifiers.push(
 							strokeColor: 'black',
 							fillColor: 'white',
 							strokeScaling: false,
-							pivot: [0, 0]
+							pivot: [0, 0],
+							opacity: elm.opacity
 						});
 
-						var angle_hor = elm.generatrix.getTangentAt(offset).angle;
+						// угол касательной
+						var angle_hor;
+						if(elm.is_linear() || offset < 0)
+							angle_hor = elm.generatrix.getTangentAt(0).angle;
+						else if(offset > elm.generatrix.length)
+							angle_hor = elm.generatrix.getTangentAt(elm.generatrix.length).angle;
+						else
+							angle_hor = elm.generatrix.getTangentAt(offset).angle;
+
 						if((this.rotate != -1 || elm.orientation == $p.enm.orientations.Горизонтальная) && angle_hor != this.angle_hor){
 							subpath.rotation = angle_hor - this.angle_hor;
 						}
 
 						offset += elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
 
+						var p0 = elm.generatrix.getPointAt(offset > elm.generatrix.length ? elm.generatrix.length : offset || 0);
 						if(this.elm_side == -1){
 							// в середине элемента
-							var p0 = elm.generatrix.getPointAt(offset || 0),
-								p1 = elm.rays.inner.getNearestPoint(p0),
+							var p1 = elm.rays.inner.getNearestPoint(p0),
 								p2 = elm.rays.outer.getNearestPoint(p0);
 
 							subpath.position = p1.add(p2).divide(2);
 
 						}else if(!this.elm_side){
 							// изнутри
-							subpath.position = elm.rays.inner.getNearestPoint(elm.generatrix.getPointAt(offset || 0));
+							subpath.position = elm.rays.inner.getNearestPoint(p0);
 
 						}else{
 							// снаружи
-							subpath.position = elm.rays.outer.getNearestPoint(elm.generatrix.getPointAt(offset || 0));
+							subpath.position = elm.rays.outer.getNearestPoint(p0);
 						}
 
 

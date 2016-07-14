@@ -251,7 +251,7 @@ function EditorAccordion(_editor, cell_acc) {
 			tree.attachEvent("onSelect", function(id){
 				var contour = _editor.project.getItem({cnstr: Number(id)});
 				if(contour){
-					contour.activate();
+					contour.activate(true);
 					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
 				}
 			});

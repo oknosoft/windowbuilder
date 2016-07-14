@@ -1074,6 +1074,21 @@ ProfileItem.prototype.__define({
 	 */
 	default_clr_str: {
 		value: "FEFEFE"
+	},
+
+	/**
+	 * ### Непрозрачность профиля
+	 * В отличии от прототипа `opacity`, не изменяет прозрачость образующей
+	 */
+	opacity: {
+		get: function () {
+			return this.path ? this.path.opacity : 1;
+		},
+
+		set: function (v) {
+			if(this.path)
+				this.path.opacity = v;
+		}
 	}
 
 });

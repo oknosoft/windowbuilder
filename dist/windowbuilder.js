@@ -71,7 +71,12 @@ function EditorAccordion(_editor, cell_acc) {
 		cont = _cell.querySelector(".editor_accordion"),
 
 		/**
-		 * панель инструментов элемента
+		 * ### Панель инструментов элемента
+		 * @property tb_elm
+		 * @for EditorAccordion
+		 * @type {OTooolBar}
+		 * @final
+		 * @private
 		 */
 		tb_elm = new $p.iface.OTooolBar({
 			wrapper: cont.querySelector("[name=header_elm]"),
@@ -303,7 +308,7 @@ function EditorAccordion(_editor, cell_acc) {
 			tree.attachEvent("onSelect", function(id){
 				var contour = _editor.project.getItem({cnstr: Number(id)});
 				if(contour){
-					contour.activate();
+					contour.activate(true);
 					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
 				}
 			});
@@ -768,7 +773,7 @@ function Clipbrd(_editor) {
  *
  *     // создаём экземпляр графического редактора
  *     // передаём в конструктор указатель на ячейку _cell и дополнительные реквизиты с функцией set_text()
- *     t.editor = new $p.Editor(_cell, {
+ *     var editor = new $p.Editor(_cell, {
  *       set_text: function (text) {
  *         cell.setText({text: "<b>" + text + "</b>"});
  *       }
@@ -1344,9 +1349,12 @@ Editor._extend(paper.PaperScope);
 Editor.prototype.__define({
 
 	/**
-	 * ### Устанавливает икону курсора для всех канвасов редактора
+	 * ### Устанавливает икону курсора
+	 * Действие выполняется для всех канвасов редактора
 	 * 
 	 * @method canvas_cursor
+	 * @for Editor
+	 * @param name {String} - имя css класса курсора
 	 */
 	canvas_cursor: {
 		value: function (name) {
@@ -1366,9 +1374,11 @@ Editor.prototype.__define({
 
 	/**
 	 * ### Активизирует инструмент
+	 * Находит инструмент по имени в коллекции tools и выполняет его метод [Tool.activate()](http://paperjs.org/reference/tool/#activate)
 	 *
-	 * @param name
-	 * @return {*|{value}}
+	 * @method select_tool
+	 * @for Editor
+	 * @param name {String} - имя инструмента
 	 */
 	select_tool: {
 		value: function (name) {
@@ -1383,6 +1393,7 @@ Editor.prototype.__define({
 	 * ### Открывает изделие для редактирования
 	 * MDI пока не реализовано. Изделие загружается в текущий проект
 	 * @method open
+	 * @for Editor
 	 * @param [ox] {String|DataObj} - ссылка или объект продукции
 	 */
 	open: {
@@ -1394,7 +1405,11 @@ Editor.prototype.__define({
 
 	/**
 	 * ### (Пере)заполняет изделие данными типового блока
-	 * Вызывает диалог выбора типового блока и перезаполняет продукцию данными выбора
+	 * - Вызывает диалог выбора типового блока и перезаполняет продукцию данными выбора
+	 * - Если текущее изделие не пустое, задаёт вопрос о перезаписи данными типового блока
+	 * - В обработчик выбора типового блока передаёт метод {{#crossLink "Scheme/load_stamp:method"}}Scheme.load_stamp(){{/crossLink}} текущего изделия
+	 *
+	 * @for Editor
 	 * @method load_stamp
 	 * @param confirmed {Boolean} - подавляет показ диалога подтверждения перезаполнения
 	 */
@@ -1423,6 +1438,7 @@ Editor.prototype.__define({
 	/**
 	 * Returns path points which are contained in the rect
 	 * @method segments_in_rect
+	 * @for Editor
 	 * @param rect
 	 * @returns {Array}
 	 */
@@ -1547,6 +1563,7 @@ Editor.prototype.__define({
 	/**
 	 * ### Деструктор
 	 * @method unload
+	 * @for Editor
 	 */
 	unload: {
 		value: function () {
@@ -2065,9 +2082,9 @@ Contour.prototype.__define({
 	 * Врезаем оповещение при активации слоя
 	 */
 	activate: {
-		value: function() {
+		value: function(custom) {
 			this.project._activeLayer = this;
-			$p.eve.callEvent("layer_activated", [this]);
+			$p.eve.callEvent("layer_activated", [this, !custom]);
 			this.project.register_update();
 		}
 	},
@@ -3111,6 +3128,7 @@ Contour.prototype.__define({
 				});
 			}
 
+			// рисует линии открывания на раздвижке
 			function sliding() {
 
 			}
@@ -3411,33 +3429,62 @@ Contour.prototype.__define({
 		}
 	},
 
+	/**
+	 * ### Стирает размерные линии
+	 *
+	 * @method clear_dimentions
+	 * @for Contour
+	 */
 	clear_dimentions: {
 	
 		value: function () {
 			for(var key in this.l_dimensions.ihor){
+				this.l_dimensions.ihor[key].removeChildren();
 				this.l_dimensions.ihor[key].remove();
 				delete this.l_dimensions.ihor[key];
 			}
 			for(var key in this.l_dimensions.ivert){
+				this.l_dimensions.ivert[key].removeChildren();
 				this.l_dimensions.ivert[key].remove();
 				delete this.l_dimensions.ivert[key];
 			}
 			if(this.l_dimensions.bottom){
+				this.l_dimensions.bottom.removeChildren();
 				this.l_dimensions.bottom.remove();
 				this.l_dimensions.bottom = null;
 			}
 			if(this.l_dimensions.top){
+				this.l_dimensions.top.removeChildren();
 				this.l_dimensions.top.remove();
 				this.l_dimensions.top = null;
 			}
 			if(this.l_dimensions.right){
+				this.l_dimensions.right.removeChildren();
 				this.l_dimensions.right.remove();
 				this.l_dimensions.right = null;
 			}
 			if(this.l_dimensions.left){
+				this.l_dimensions.left.removeChildren();
 				this.l_dimensions.left.remove();
 				this.l_dimensions.left = null;
 			}
+		}
+	},
+
+	/**
+	 * ### Непрозрачность без учета вложенных контуров
+	 * В отличии от прототипа `opacity`, затрагивает только элементы текущего слоя
+	 */
+	opacity: {
+		get: function () {
+			return this.children.length ? this.children[0].opacity : 1;
+		},
+
+		set: function (v) {
+			this.children.forEach(function(elm){
+				if(elm instanceof BuilderElement)
+					elm.opacity = v;
+			});
 		}
 	},
 
@@ -6941,6 +6988,21 @@ ProfileItem.prototype.__define({
 	 */
 	default_clr_str: {
 		value: "FEFEFE"
+	},
+
+	/**
+	 * ### Непрозрачность профиля
+	 * В отличии от прототипа `opacity`, не изменяет прозрачость образующей
+	 */
+	opacity: {
+		get: function () {
+			return this.path ? this.path.opacity : 1;
+		},
+
+		set: function (v) {
+			if(this.path)
+				this.path.opacity = v;
+		}
 	}
 
 });
@@ -8793,9 +8855,22 @@ function Scheme(_canvas){
 	};
 
 	/**
-	 * Читает изделие по ссылке или объекту продукции
+	 * ### Читает изделие по ссылке или объекту продукции
+	 * Выполняет следующую последовательность действий:
+	 * - Если передана ссылка, получает объект из базы данных
+	 * - Удаляет все слои и элементы текущего графисеского контекста
+	 * - Рекурсивно создаёт контуры изделия по данным табличной части конструкций текущей продукции
+	 * - Рассчитывает габариты эскиза
+	 * - Згружает пользовательские размерные линии
+	 * - Делает начальный снапшот для {{#crossLink "UndoRedo"}}{{/crossLink}}
+	 * - Рисует автоматические размерные линии
+	 * - Активирует текущий слой в дереве слоёв
+	 * - Рисует дополнительные элементы визуализации
+	 *
 	 * @method load
+	 * @for Scheme
 	 * @param id {String|CatObj} - идентификатор или объект продукции
+	 * @async
 	 */
 	this.load = function(id){
 
@@ -8867,7 +8942,7 @@ function Scheme(_canvas){
 
 				// виртуальное событие, чтобы активировать слой в дереве слоёв
 				if(_scheme.contours.length){
-					$p.eve.callEvent("layer_activated", [_scheme.contours[0]]);
+					$p.eve.callEvent("layer_activated", [_scheme.contours[0], true]);
 				}
 
 				delete _data._loading;
@@ -9258,7 +9333,11 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Габариты эскиза со всеми видимыми дополнениями - размерные линии, визуализация и т.д.
+	 * ### Габариты эскиза со всеми видимыми дополнениями
+	 * В свойстве `strokeBounds` учтены все видимые дополнения - размерные линии, визуализация и т.д.
+	 *
+	 * @property strokeBounds
+	 * @for Scheme
 	 */
 	strokeBounds: {
 
@@ -9274,7 +9353,11 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Изменяет центр и масштаб, чтобы изделие вписалось в размер окна
+	 * ### Изменяет центр и масштаб, чтобы изделие вписалось в размер окна
+	 * Используется инструментом {{#crossLink "ZoomFit"}}{{/crossLink}}, вызывается при открытии изделия и после загрузки типового блока
+	 *
+	 * @method zoom_fit
+	 * @for Scheme
 	 */
 	zoom_fit: {
 		value: function () {
@@ -9295,10 +9378,12 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * возвращает строку svg эскиза изделия
+	 * ### Bозвращает строку svg эскиза изделия
+	 * Вызывается при записи изделия. Полученный эскиз сохраняется во вложении к характеристике
+	 *
 	 * @method get_svg
 	 * @for Scheme
-	 * @param [attr] {Object} - указывает видимость слоёв
+	 * @param [attr] {Object} - указывает видимость слоёв и элементов, используется для формирования эскиза части изделия
 	 */
 	get_svg: {
 
@@ -9319,7 +9404,9 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Перезаполняет изделие данными типового блока или снапшота
+	 * ### Перезаполняет изделие данными типового блока или снапшота
+	 * Вызывается, обычно, из формы выбора типового блока, но может быть вызван явно в скриптах тестирования или групповых обработках
+	 *
 	 * @method load_stamp
 	 * @for Scheme
 	 * @param obx {String|CatObj|Object} - идентификатор или объект-основание (характеристика продукции либо снапшот)
@@ -9362,7 +9449,9 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Вписывает канвас в указанные размеры
+	 * ### Вписывает канвас в указанные размеры
+	 * Используется при создании проекта и при изменении размеров области редактирования
+	 *
 	 * @method resize_canvas
 	 * @for Scheme
 	 * @param w {Number} - ширина, в которую будет вписан канвас
@@ -9377,6 +9466,9 @@ Scheme.prototype.__define({
 
 	/**
 	 * Возвращает массив РАМНЫХ контуров текущего изделия
+	 * @property contours
+	 * @for Scheme
+	 * @type Array
 	 */
 	contours: {
 		get: function () {
@@ -9391,7 +9483,12 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Площадь изделия. TODO: переделать с учетом пустот, наклонов и криволинейностей
+	 * ### Площадь изделия
+	 * TODO: переделать с учетом пустот, наклонов и криволинейностей
+	 *
+	 * @property area
+	 * @for Scheme
+	 * @type Number
 	 */
 	area: {
 		get: function () {
@@ -9401,8 +9498,10 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Цвет текущего изделия
+	 * ### Цвет текущего изделия
+	 *
 	 * @property clr
+	 * @for Scheme
 	 * @type _cat.production_params
 	 */
 	clr: {
@@ -9415,7 +9514,11 @@ Scheme.prototype.__define({
 	},
 	
 	/**
-	 * Служебный слой размерных линий 
+	 * ### Служебный слой размерных линий
+	 *
+	 * @property l_dimensions
+	 * @for Scheme
+	 * @type DimensionLayer
 	 */
 	l_dimensions: {
 		get: function () {
@@ -9441,7 +9544,12 @@ Scheme.prototype.__define({
 	},
 
 	/**
-	 * Создаёт и перерисовавает габаритные линии изделия
+	 * ### Создаёт и перерисовавает габаритные линии изделия
+	 * Отвечает только за габариты изделия.<br />
+	 * Авторазмерные линии контуров и пользовательские размерные линии, контуры рисуют самостоятельно
+	 *
+	 * @method draw_sizes
+	 * @for Scheme
 	 */
 	draw_sizes: {
 		value: function () {
@@ -10813,13 +10921,13 @@ function ToolPen(){
 
 	// делает полупрозрачными элементы неактивных контуров
 	function decorate_layers(reset){
+
 		var active = _editor.project.activeLayer;
+
 		_editor.project.getItems({class: Contour}).forEach(function (l) {
-			l.children.forEach(function(elm){
-				if(!(elm instanceof Contour))
-					elm.opacity = (l == active || reset) ? 1 : 0.5;
-			});
+			l.opacity = (l == active || reset) ? 1 : 0.5;
 		})
+
 	}
 	
 	tool.hitTest = function(event) {
@@ -10947,8 +11055,9 @@ function ToolPen(){
 			tool_wnd();
 
 			if(!on_layer_activated)
-				on_layer_activated = $p.eve.attachEvent("layer_activated", function (contour) {
-					if(contour.project == _editor.project){
+				on_layer_activated = $p.eve.attachEvent("layer_activated", function (contour, virt) {
+
+					if(!virt && contour.project == _editor.project && !_editor.project.data._loading && !_editor.project.data._snapshot){
 						decorate_layers();
 					}
 				});
@@ -10989,9 +11098,11 @@ function ToolPen(){
 			tool.detache_wnd();
 
 			if(this.path){
+				this.path.removeSegments();
 				this.path.remove();
-				this.path = null;
 			}
+			this.path = null;
+			this.last_profile = null;
 			this.mode = null;
 
 			tool._controls.unload();
@@ -11086,7 +11197,7 @@ function ToolPen(){
 				}
 
 				if(item.selected && item.layer)
-					item.layer.activate();
+					item.layer.activate(true);
 
 			}
 
@@ -11358,8 +11469,6 @@ function ToolPen(){
 			}
 		}
 	});
-
-	return tool;
 
 
 }
