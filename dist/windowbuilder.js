@@ -10067,11 +10067,8 @@ function ToolArc(){
 		
 	});
 
-	return tool;
-
-
 }
-ToolArc._extend(paper.Tool);
+ToolArc._extend(ToolElement);
 
 
 /**
@@ -10110,7 +10107,7 @@ function ToolLayImpost(){
 		name: 'lay_impost',
 		wnd: {
 			caption: "Импосты и раскладки",
-			height: 340,
+			height: 360,
 			width: 320
 		}
 	};
@@ -11675,6 +11672,7 @@ PenControls.prototype.__define({
  * ### Относительное позиционирование и сдвиг
  * 
  * @class ToolRuler
+ * @extends ToolElement
  * @constructor
  * @menuorder 57
  * @tooltip Позиция и сдвиг

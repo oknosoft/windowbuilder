@@ -190,9 +190,6 @@ function ToolArc(){
 		
 	});
 
-	return tool;
-
-
 }
-ToolArc._extend(paper.Tool);
+ToolArc._extend(ToolElement);
 

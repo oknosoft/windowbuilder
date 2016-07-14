@@ -10,6 +10,7 @@
  * ### Относительное позиционирование и сдвиг
  * 
  * @class ToolRuler
+ * @extends ToolElement
  * @constructor
  * @menuorder 57
  * @tooltip Позиция и сдвиг
