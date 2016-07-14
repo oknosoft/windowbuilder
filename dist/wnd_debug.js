@@ -5185,8 +5185,8 @@ $p.modifiers.push(
 											segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
 										});
 
-
-									coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor));
+									coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor)) -
+										elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
 
 								}else{
 
