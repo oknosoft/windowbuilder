@@ -110,10 +110,12 @@ function ToolRuler(){
 	this.on({
 
 		activate: function() {
+
 			this.selected.a.length = 0;
 			this.selected.b.length = 0;
-			paper.tb_left.select(this.options.name);
-			paper.canvas_cursor('cursor-arrow-ruler-light');
+
+			this.on_activate('cursor-arrow-ruler-light');
+
 			paper.project.deselectAll();
 			this.wnd = new RulerWnd(this.options, this);
 			this.wnd.size = 0;

@@ -12,7 +12,7 @@
  * ### Вставка раскладок и импостов
  * 
  * @class ToolLayImpost
- * @extends paper.Tool
+ * @extends ToolElement
  * @constructor
  * @menuorder 55
  * @tooltip Импосты и раскладки
@@ -34,7 +34,7 @@ function ToolLayImpost(){
 		name: 'lay_impost',
 		wnd: {
 			caption: "Импосты и раскладки",
-			height: 340,
+			height: 360,
 			width: 320
 		}
 	};
@@ -99,6 +99,20 @@ function ToolLayImpost(){
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
 		tool._grid = tool.wnd.attachHeadFields({
 			obj: tool.profile
+		});
+
+		// если деление != РядЭлементов, сбрасываем длину в 0
+		tool._grid.attachEvent("onPropertyChanged", function(pname){
+			if((pname || tool._grid && tool._grid.getSelectedRowId()) == "split" && tool.profile.split != $p.enm.lay_split_types.РядЭлементов){
+				tool.profile.len = 0;
+			}
+		});
+
+		// строка с длиной доступна только для ряда элементов
+		tool._grid.attachEvent("onBeforeSelect",function(id){
+			if (id == "len")
+				return tool.profile.split == $p.enm.lay_split_types.РядЭлементов;
+			return true;
 		});
 
 		//
@@ -231,9 +245,7 @@ function ToolLayImpost(){
 	tool.on({
 
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-arrow-lay');
-
+			this.on_activate('cursor-arrow-lay');
 			tool_wnd();
 		},
 
@@ -638,8 +650,5 @@ function ToolLayImpost(){
 		}
 	});
 
-	return tool;
-
-
 }
-ToolLayImpost._extend(paper.Tool);
+ToolLayImpost._extend(ToolElement);

@@ -77,8 +77,7 @@ function ToolArc(){
 	tool.on({
 		
 		activate: function() {
-			paper.tb_left.select(tool.options.name);
-			paper.canvas_cursor('cursor-arc-arrow');
+			this.on_activate('cursor-arc-arrow');
 		},
 		
 		deactivate: function() {

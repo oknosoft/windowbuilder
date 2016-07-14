@@ -12,6 +12,7 @@
  * ### Свойства и перемещение узлов элемента
  *
  * @class ToolSelectNode
+ * @extends ToolElement
  * @constructor
  * @menuorder 51
  * @tooltip Узлы и элементы
@@ -105,8 +106,7 @@ function ToolSelectNode(){
 	tool.on({
 
 		activate: function() {
-			paper.tb_left.select(tool.options.name);
-			paper.canvas_cursor('cursor-arrow-white');
+			this.on_activate('cursor-arrow-white');
 		},
 
 		deactivate: function() {

@@ -190,11 +190,15 @@ $p.modifiers.push(
 
 			/**
 			 * ДополнитьСпецификациюСпецификациейСоединения
-			 * @param cnn
-			 * @param elm
-			 * @param len_angl
+			 * @method cnn_add_spec
+			 * @param cnn {_cat.Cnns}
+			 * @param elm {BuilderElement}
+			 * @param len_angl {Object}
 			 */
 			function cnn_add_spec(cnn, elm, len_angl){
+
+				if(!cnn)
+					return;
 
 				var sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
 

@@ -162,8 +162,8 @@ $p.modifiers.push(
 	
 					attr.row.amount_internal = (attr.row.price_internal * ((100 - attr.row.discount_percent_internal)/100) * attr.row.quantity).round(2);
 
-					this.doc_amount = this.production.aggregate([], ["amount"]);
-					this.amount_internal = this.production.aggregate([], ["amount_internal"]);
+					this.doc_amount = this.production.aggregate([], ["amount"]).round(2);
+					this.amount_internal = this.production.aggregate([], ["amount_internal"]).round(2);
 
 					// TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation
 

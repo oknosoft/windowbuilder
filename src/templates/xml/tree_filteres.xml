@@ -9,6 +9,10 @@
     <item id="underway" text="&lt;i class='fa fa-industry fa-fw'&gt;&lt;/i&gt; В работе" tooltip="Включены в задания на производство, но еще не изготовлены" />
     <item id="manufactured" text="&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Изготовлено" tooltip="Изготовлены, но еще не отгружены" />
     <item id="executed" text="&lt;i class='fa fa-truck fa-fw'&gt;&lt;/i&gt; Исполнено" tooltip="Отгружены клиенту" />
+
+    <item id="service" text="&lt;i class='fa fa-medkit fa-fw'&gt;&lt;/i&gt; Сервис" tooltip="Сервисное обслуживание" />
+    <item id="complaints" text="&lt;i class='fa fa-frown-o fa-fw'&gt;&lt;/i&gt; Рекламации" tooltip="Жалобы и рекламации" />
+
     <item id="template" text="&lt;i class='fa fa-puzzle-piece fa-fw'&gt;&lt;/i&gt; Шаблоны" tooltip="Типовые блоки" />
     <item id="zarchive" text="&lt;i class='fa fa-archive fa-fw'&gt;&lt;/i&gt; Архив" tooltip="Старые заказы" />
     <item id="all" text="&lt;i class='fa fa-expand fa-fw'&gt;&lt;/i&gt; Все" tooltip="Отключить фильтрацию" />

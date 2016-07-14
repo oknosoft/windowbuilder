@@ -9802,7 +9802,10 @@ ToolElement._extend(paper.Tool);
 ToolElement.prototype.__define({
 
 	/**
-	 * Отключает и выгружает из памяти окно свойств инструмента
+	 * ### Отключает и выгружает из памяти окно свойств инструмента
+	 *
+	 * @method detache_wnd
+	 * @for ToolElement
 	 * @param tool
 	 */
 	detache_wnd: {
@@ -9824,6 +9827,48 @@ ToolElement.prototype.__define({
 				delete this.wnd;
 			}
 			this.profile = null;
+		}
+	},
+
+	/**
+	 * ### Общие действия при активизации инструмента
+	 *
+	 * @method on_activate
+	 * @for ToolElement
+	 */
+	on_activate: {
+		value: function (cursor) {
+
+			this._scope.tb_left.select(this.options.name);
+
+			this._scope.canvas_cursor(cursor);
+
+			// для всех инструментов, кроме select_node...
+			if(this.options.name != "select_node"){
+
+				if(!this._scope.project.contours.length){
+
+					// создаём пустой новый слой
+					new Contour( {parent: undefined});
+
+					// оповещаем мир о новых слоях
+					Object.getNotifier(this._scope.project._noti).notify({
+						type: 'rows',
+						tabular: "constructions"
+					});
+
+				}
+
+				// проверяем заполненность системы
+				if(this._scope.project._dp.sys.empty()){
+					$p.msg.show_msg({
+						type: "alert-warning",
+						text: $p.msg.bld_not_sys,
+						title: $p.msg.bld_title
+					});
+				}
+			}
+
 		}
 	}
 
@@ -9909,8 +9954,7 @@ function ToolArc(){
 	tool.on({
 		
 		activate: function() {
-			paper.tb_left.select(tool.options.name);
-			paper.canvas_cursor('cursor-arc-arrow');
+			this.on_activate('cursor-arc-arrow');
 		},
 		
 		deactivate: function() {
@@ -10044,7 +10088,7 @@ ToolArc._extend(paper.Tool);
  * ### Вставка раскладок и импостов
  * 
  * @class ToolLayImpost
- * @extends paper.Tool
+ * @extends ToolElement
  * @constructor
  * @menuorder 55
  * @tooltip Импосты и раскладки
@@ -10131,6 +10175,20 @@ function ToolLayImpost(){
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
 		tool._grid = tool.wnd.attachHeadFields({
 			obj: tool.profile
+		});
+
+		// если деление != РядЭлементов, сбрасываем длину в 0
+		tool._grid.attachEvent("onPropertyChanged", function(pname){
+			if((pname || tool._grid && tool._grid.getSelectedRowId()) == "split" && tool.profile.split != $p.enm.lay_split_types.РядЭлементов){
+				tool.profile.len = 0;
+			}
+		});
+
+		// строка с длиной доступна только для ряда элементов
+		tool._grid.attachEvent("onBeforeSelect",function(id){
+			if (id == "len")
+				return tool.profile.split == $p.enm.lay_split_types.РядЭлементов;
+			return true;
 		});
 
 		//
@@ -10263,9 +10321,7 @@ function ToolLayImpost(){
 	tool.on({
 
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-arrow-lay');
-
+			this.on_activate('cursor-arrow-lay');
 			tool_wnd();
 		},
 
@@ -10670,11 +10726,8 @@ function ToolLayImpost(){
 		}
 	});
 
-	return tool;
-
-
 }
-ToolLayImpost._extend(paper.Tool);
+ToolLayImpost._extend(ToolElement);
 
 /**
  * ### Панорама и масштабирование с колёсиком и без колёсика
@@ -10690,7 +10743,7 @@ ToolLayImpost._extend(paper.Tool);
  * ### Панорама и масштабирование с колёсиком и без колёсика
  * 
  * @class ToolPan
- * @extends paper.Tool
+ * @extends ToolElement
  * @constructor
  * @menuorder 52
  * @tooltip Панорама и масштаб
@@ -10728,12 +10781,14 @@ function ToolPan(){
 		return true;
 	};
 	tool.on({
+
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-hand');
+			this.on_activate('cursor-hand');
 		},
+
 		deactivate: function() {
 		},
+
 		mousedown: function(event) {
 			this.mouseStartPos = event.point.subtract(_editor.view.center);
 			this.mode = '';
@@ -10744,6 +10799,7 @@ function ToolPan(){
 				this.mode = 'pan';
 			}
 		},
+
 		mouseup: function(event) {
 			if (this.mode == 'zoom') {
 				var zoomCenter = event.point.subtract(_editor.view.center);
@@ -10795,11 +10851,8 @@ function ToolPan(){
 		}
 	});
 
-	return tool;
-
-
 }
-ToolPan._extend(paper.Tool);
+ToolPan._extend(ToolElement);
 
 /**
  * ### Добавление (рисование) профилей
@@ -11026,31 +11079,10 @@ function ToolPen(){
 	tool.on({
 
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-pen-freehand');
 
-			if(!_editor.project.contours.length){
+			this.on_activate('cursor-pen-freehand');
 
-				// создаём пустой новый слой
-				new Contour( {parent: undefined});
-
-				// оповещаем мир о новых слоях
-				Object.getNotifier(_editor.project._noti).notify({
-					type: 'rows',
-					tabular: "constructions"
-				});
-
-			}
-
-			if(_editor.project._dp.sys.empty()){
-				$p.msg.show_msg({
-					type: "alert-warning",
-					text: $p.msg.bld_not_sys,
-					title: $p.msg.bld_title
-				});
-			}
-
-			tool._controls = new PenControls(tool);
+			this._controls = new PenControls(this);
 
 			tool_wnd();
 
@@ -11743,10 +11775,12 @@ function ToolRuler(){
 	this.on({
 
 		activate: function() {
+
 			this.selected.a.length = 0;
 			this.selected.b.length = 0;
-			paper.tb_left.select(this.options.name);
-			paper.canvas_cursor('cursor-arrow-ruler-light');
+
+			this.on_activate('cursor-arrow-ruler-light');
+
 			paper.project.deselectAll();
 			this.wnd = new RulerWnd(this.options, this);
 			this.wnd.size = 0;
@@ -12263,6 +12297,7 @@ function RulerWnd(options, tool){
  * ### Свойства и перемещение узлов элемента
  *
  * @class ToolSelectNode
+ * @extends ToolElement
  * @constructor
  * @menuorder 51
  * @tooltip Узлы и элементы
@@ -12356,8 +12391,7 @@ function ToolSelectNode(){
 	tool.on({
 
 		activate: function() {
-			paper.tb_left.select(tool.options.name);
-			paper.canvas_cursor('cursor-arrow-white');
+			this.on_activate('cursor-arrow-white');
 		},
 
 		deactivate: function() {
@@ -12705,6 +12739,7 @@ ToolSelectNode._extend(ToolElement);
  * ### Произвольный текст
  * 
  * @class ToolText
+ * @extends ToolElement
  * @constructor
  * @menuorder 60
  * @tooltip Добавление текста
@@ -12712,7 +12747,7 @@ ToolSelectNode._extend(ToolElement);
 function ToolText(){
 
 	var tool = this,
-		_editor = this._scope;
+		_editor = paper;
 
 	ToolText.superclass.constructor.call(this);
 
@@ -12758,8 +12793,7 @@ function ToolText(){
 	};
 	tool.on({
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-text-select');
+			this.on_activate('cursor-text-select');
 		},
 		deactivate: function() {
 			_editor.hide_selection_bounds();
@@ -12851,9 +12885,6 @@ function ToolText(){
 			}
 		}
 	});
-
-	return tool;
-
 
 }
 ToolText._extend(ToolElement);

@@ -77,6 +77,8 @@ $p.modifiers.push(
 							case 'sent':
 							case 'declined':
 							case 'confirmed':
+							case 'service':
+							case 'complaints':
 							case 'template':
 							case 'zarchive':
 								return 'doc/doc_calc_order_date';
@@ -95,27 +97,19 @@ $p.modifiers.push(
 			filter_key.__define({
 				value: {
 					get: function () {
-						var key;
+						var key, id;
 
-						switch(tree.getSelectedItemId()) {
+						switch(id = tree.getSelectedItemId()) {
 
 							case 'draft':
-								key = 'draft';
-								break;
 							case 'sent':
-								key = 'sent';
-								break;
 							case 'declined':
-								key = 'declined';
-								break;
 							case 'confirmed':
-								key = 'confirmed';
-								break;
+							case 'service':
+							case 'complaints':
 							case 'template':
-								key = 'template';
-								break;
 							case 'zarchive':
-								key = 'zarchive';
+								key = id;
 								break;
 
 							case 'execution':
@@ -159,6 +153,8 @@ $p.modifiers.push(
 					case 'sent':
 					case 'declined':
 					case 'confirmed':
+					case 'service':
+					case 'complaints':
 					case 'template':
 					case 'zarchive':
 					case 'all':
@@ -171,7 +167,6 @@ $p.modifiers.push(
 
 			});
 
-			
 			function build_report(rid) {
 
 				carousel.cells("report").setActive();

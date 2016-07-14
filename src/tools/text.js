@@ -10,6 +10,7 @@
  * ### Произвольный текст
  * 
  * @class ToolText
+ * @extends ToolElement
  * @constructor
  * @menuorder 60
  * @tooltip Добавление текста
@@ -17,7 +18,7 @@
 function ToolText(){
 
 	var tool = this,
-		_editor = this._scope;
+		_editor = paper;
 
 	ToolText.superclass.constructor.call(this);
 
@@ -63,8 +64,7 @@ function ToolText(){
 	};
 	tool.on({
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-text-select');
+			this.on_activate('cursor-text-select');
 		},
 		deactivate: function() {
 			_editor.hide_selection_bounds();
@@ -156,9 +156,6 @@ function ToolText(){
 			}
 		}
 	});
-
-	return tool;
-
 
 }
 ToolText._extend(ToolElement);

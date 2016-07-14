@@ -12,7 +12,7 @@
  * ### Панорама и масштабирование с колёсиком и без колёсика
  * 
  * @class ToolPan
- * @extends paper.Tool
+ * @extends ToolElement
  * @constructor
  * @menuorder 52
  * @tooltip Панорама и масштаб
@@ -50,12 +50,14 @@ function ToolPan(){
 		return true;
 	};
 	tool.on({
+
 		activate: function() {
-			_editor.tb_left.select(tool.options.name);
-			_editor.canvas_cursor('cursor-hand');
+			this.on_activate('cursor-hand');
 		},
+
 		deactivate: function() {
 		},
+
 		mousedown: function(event) {
 			this.mouseStartPos = event.point.subtract(_editor.view.center);
 			this.mode = '';
@@ -66,6 +68,7 @@ function ToolPan(){
 				this.mode = 'pan';
 			}
 		},
+
 		mouseup: function(event) {
 			if (this.mode == 'zoom') {
 				var zoomCenter = event.point.subtract(_editor.view.center);
@@ -117,8 +120,5 @@ function ToolPan(){
 		}
 	});
 
-	return tool;
-
-
 }
-ToolPan._extend(paper.Tool);
+ToolPan._extend(ToolElement);
