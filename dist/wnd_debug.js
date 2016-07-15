@@ -3520,15 +3520,15 @@ $p.modifiers.push(
 		});
 
 		if($p.dp.builder_lay_impost)
-			$p.dp.builder_pen.on("value_change", function(attr){
+			$p.dp.builder_lay_impost.on("value_change", function(attr){
 				if(attr.field == "elm_type") {
 					this.inset_by_y = paper.project.default_inset({
 						elm_type: this.elm_type,
-						pos: $p.enm.positions.Верх
+						pos: $p.enm.positions.ЦентрГоризонталь
 					});
 					this.inset_by_x = paper.project.default_inset({
 						elm_type: this.elm_type,
-						pos: $p.enm.positions.Лев
+						pos: $p.enm.positions.ЦентрВертикаль
 					});
 					this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
 				}
@@ -3966,6 +3966,48 @@ $p.modifiers.push(
 			incline: {
 				get: function () {
 					return this.Наклонная;
+				}
+			}
+		});
+
+		/**
+		 * Дополнительные методы перечисления ПоложениеЭлемента
+		 */
+		$p.enm.positions.__define({
+
+			left: {
+				get: function () {
+					return this.Лев;
+				}
+			},
+
+			right: {
+				get: function () {
+					return this.Прав;
+				}
+			},
+
+			top: {
+				get: function () {
+					return this.Верх;
+				}
+			},
+
+			bottom: {
+				get: function () {
+					return this.Низ;
+				}
+			},
+
+			hor: {
+				get: function () {
+					return this.ЦентрГоризонталь;
+				}
+			},
+
+			vert: {
+				get: function () {
+					return this.ЦентрВертикаль;
 				}
 			}
 		});
@@ -6580,6 +6622,7 @@ $p.iface.view_orders = function (cell) {
 				t.editor.project.data._loading = true;
 				t.editor.project.data._opened = false;
 				t.editor.project.ox = null;
+				t.editor.project._dp.base_block = null;
 
 				var _cell = t.carousel.cells("doc");
 				

@@ -51,6 +51,29 @@ ToolElement.prototype.__define({
 		}
 	},
 
+
+	/**
+	 * ### Проверяет, есть ли в проекте стои, при необходимости добавляет
+	 * @method detache_wnd
+	 * @for ToolElement
+	 */
+	check_layer: {
+		value: function () {
+			if(!this._scope.project.contours.length){
+
+				// создаём пустой новый слой
+				new Contour( {parent: undefined});
+
+				// оповещаем мир о новых слоях
+				Object.getNotifier(this._scope.project._noti).notify({
+					type: 'rows',
+					tabular: "constructions"
+				});
+
+			}
+		}
+	},
+
 	/**
 	 * ### Общие действия при активизации инструмента
 	 *
@@ -67,18 +90,7 @@ ToolElement.prototype.__define({
 			// для всех инструментов, кроме select_node...
 			if(this.options.name != "select_node"){
 
-				if(!this._scope.project.contours.length){
-
-					// создаём пустой новый слой
-					new Contour( {parent: undefined});
-
-					// оповещаем мир о новых слоях
-					Object.getNotifier(this._scope.project._noti).notify({
-						type: 'rows',
-						tabular: "constructions"
-					});
-
-				}
+				this.check_layer();
 
 				// проверяем заполненность системы
 				if(this._scope.project._dp.sys.empty()){

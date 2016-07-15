@@ -464,7 +464,12 @@ function Scheme(_canvas){
 				// виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
 				setTimeout(function () {
 					if(_scheme.ox.coordinates.count()){
-						$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+						if(_scheme.ox.specification.count()){
+							$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+						}else{
+							// если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок - запускаем пересчет
+							_scheme.register_change(true);
+						}
 					}else{
 						paper.load_stamp();
 					}
@@ -722,11 +727,14 @@ function Scheme(_canvas){
 				//console.log(_changes.length);
 				_changes.length = 0;
 
-				_scheme.contours.forEach(function(l){
-					llength++;
-					l.redraw(on_contour_redrawed);
-				});
-
+				if(_scheme.contours.length){
+					_scheme.contours.forEach(function(l){
+						llength++;
+						l.redraw(on_contour_redrawed);
+					});
+				}else{
+					_scheme.draw_sizes();
+				}
 			}
 		}
 
@@ -873,10 +881,12 @@ Scheme.prototype.__define({
 	 * @for Scheme
 	 */
 	zoom_fit: {
-		value: function () {
+		value: function (bounds) {
 
-			var bounds = this.strokeBounds,
-				height = (bounds.height < 1000 ? 1000 : bounds.height) + 320,
+			if(!bounds)
+				bounds = this.strokeBounds;
+
+			var height = (bounds.height < 1000 ? 1000 : bounds.height) + 320,
 				width = (bounds.width < 1000 ? 1000 : bounds.width) + 320,
 				shift;
 
@@ -932,6 +942,10 @@ Scheme.prototype.__define({
 
 				var ox = this.ox;
 
+				// сохраняем ссылку на типовой блок
+				if(!is_snapshot)
+					this._dp.base_block = obx;
+
 				// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
 				this.clear();
 
@@ -943,6 +957,11 @@ Scheme.prototype.__define({
 				ox.coordinates.load(obx.coordinates);
 				ox.params.load(obx.params);
 				ox.cnn_elmnts.load(obx.cnn_elmnts);
+
+				ox.specification.clear();
+				ox.glass_specification.clear();
+				ox.glasses.clear();
+				ox.mosquito.clear();
 
 				this.load(ox);
 
@@ -1116,6 +1135,11 @@ Scheme.prototype.__define({
 				}else
 					this.l_dimensions.bottom.redraw();
 
+			}else{
+				if(this.l_dimensions.bottom)
+					this.l_dimensions.bottom.visible = false;
+				if(this.l_dimensions.right)
+					this.l_dimensions.right.visible = false;
 			}
 		}
 	},

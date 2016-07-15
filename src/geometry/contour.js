@@ -426,11 +426,7 @@ Contour.prototype.__define({
 			if(!this.data._bounds){
 
 				var profiles = this.profiles;
-				if(!profiles.length)
-					this.data._bounds = new paper.Rectangle();
-					
-				else{
-					
+				if(profiles.length && profiles[0].path){
 					this.data._bounds = profiles[0].path.bounds;
 					for(var i = 1; i < profiles.length; i++)
 						this.data._bounds = this.data._bounds.unite(profiles[i].path.bounds);
@@ -440,6 +436,10 @@ Contour.prototype.__define({
 						for(var i = 1; i < profiles.length; i++)
 							this.data._bounds = this.data._bounds.unite(profiles[i].generatrix.bounds);
 					}
+
+				}else{
+					this.data._bounds = new paper.Rectangle();
+
 				}
 			}
 

@@ -2156,11 +2156,7 @@ Contour.prototype.__define({
 			if(!this.data._bounds){
 
 				var profiles = this.profiles;
-				if(!profiles.length)
-					this.data._bounds = new paper.Rectangle();
-					
-				else{
-					
+				if(profiles.length && profiles[0].path){
 					this.data._bounds = profiles[0].path.bounds;
 					for(var i = 1; i < profiles.length; i++)
 						this.data._bounds = this.data._bounds.unite(profiles[i].path.bounds);
@@ -2170,6 +2166,10 @@ Contour.prototype.__define({
 						for(var i = 1; i < profiles.length; i++)
 							this.data._bounds = this.data._bounds.unite(profiles[i].generatrix.bounds);
 					}
+
+				}else{
+					this.data._bounds = new paper.Rectangle();
+
 				}
 			}
 
@@ -8951,7 +8951,12 @@ function Scheme(_canvas){
 				// виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
 				setTimeout(function () {
 					if(_scheme.ox.coordinates.count()){
-						$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+						if(_scheme.ox.specification.count()){
+							$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+						}else{
+							// если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок - запускаем пересчет
+							_scheme.register_change(true);
+						}
 					}else{
 						paper.load_stamp();
 					}
@@ -9209,11 +9214,14 @@ function Scheme(_canvas){
 				//console.log(_changes.length);
 				_changes.length = 0;
 
-				_scheme.contours.forEach(function(l){
-					llength++;
-					l.redraw(on_contour_redrawed);
-				});
-
+				if(_scheme.contours.length){
+					_scheme.contours.forEach(function(l){
+						llength++;
+						l.redraw(on_contour_redrawed);
+					});
+				}else{
+					_scheme.draw_sizes();
+				}
 			}
 		}
 
@@ -9360,10 +9368,12 @@ Scheme.prototype.__define({
 	 * @for Scheme
 	 */
 	zoom_fit: {
-		value: function () {
+		value: function (bounds) {
 
-			var bounds = this.strokeBounds,
-				height = (bounds.height < 1000 ? 1000 : bounds.height) + 320,
+			if(!bounds)
+				bounds = this.strokeBounds;
+
+			var height = (bounds.height < 1000 ? 1000 : bounds.height) + 320,
 				width = (bounds.width < 1000 ? 1000 : bounds.width) + 320,
 				shift;
 
@@ -9419,6 +9429,10 @@ Scheme.prototype.__define({
 
 				var ox = this.ox;
 
+				// сохраняем ссылку на типовой блок
+				if(!is_snapshot)
+					this._dp.base_block = obx;
+
 				// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
 				this.clear();
 
@@ -9430,6 +9444,11 @@ Scheme.prototype.__define({
 				ox.coordinates.load(obx.coordinates);
 				ox.params.load(obx.params);
 				ox.cnn_elmnts.load(obx.cnn_elmnts);
+
+				ox.specification.clear();
+				ox.glass_specification.clear();
+				ox.glasses.clear();
+				ox.mosquito.clear();
 
 				this.load(ox);
 
@@ -9603,6 +9622,11 @@ Scheme.prototype.__define({
 				}else
 					this.l_dimensions.bottom.redraw();
 
+			}else{
+				if(this.l_dimensions.bottom)
+					this.l_dimensions.bottom.visible = false;
+				if(this.l_dimensions.right)
+					this.l_dimensions.right.visible = false;
 			}
 		}
 	},
@@ -9830,6 +9854,29 @@ ToolElement.prototype.__define({
 		}
 	},
 
+
+	/**
+	 * ### Проверяет, есть ли в проекте стои, при необходимости добавляет
+	 * @method detache_wnd
+	 * @for ToolElement
+	 */
+	check_layer: {
+		value: function () {
+			if(!this._scope.project.contours.length){
+
+				// создаём пустой новый слой
+				new Contour( {parent: undefined});
+
+				// оповещаем мир о новых слоях
+				Object.getNotifier(this._scope.project._noti).notify({
+					type: 'rows',
+					tabular: "constructions"
+				});
+
+			}
+		}
+	},
+
 	/**
 	 * ### Общие действия при активизации инструмента
 	 *
@@ -9846,18 +9893,7 @@ ToolElement.prototype.__define({
 			// для всех инструментов, кроме select_node...
 			if(this.options.name != "select_node"){
 
-				if(!this._scope.project.contours.length){
-
-					// создаём пустой новый слой
-					new Contour( {parent: undefined});
-
-					// оповещаем мир о новых слоях
-					Object.getNotifier(this._scope.project._noti).notify({
-						type: 'rows',
-						tabular: "constructions"
-					});
-
-				}
+				this.check_layer();
 
 				// проверяем заполненность системы
 				if(this._scope.project._dp.sys.empty()){
@@ -10147,7 +10183,7 @@ function ToolLayImpost(){
 			tool.profile.clr = _editor.project.clr;
 
 		// параметры отбора для выбора вставок
-		tool.profile._metadata.fields.inset.choice_links = [{
+		tool.profile._metadata.fields.inset_by_y.choice_links = tool.profile._metadata.fields.inset_by_y.choice_links = [{
 			name: ["selection",	"ref"],
 			path: [
 				function(o, f){
@@ -10174,18 +10210,14 @@ function ToolLayImpost(){
 			obj: tool.profile
 		});
 
-		// если деление != РядЭлементов, сбрасываем длину в 0
-		tool._grid.attachEvent("onPropertyChanged", function(pname){
-			if((pname || tool._grid && tool._grid.getSelectedRowId()) == "split" && tool.profile.split != $p.enm.lay_split_types.РядЭлементов){
-				tool.profile.len = 0;
-			}
-		});
-
-		// строка с длиной доступна только для ряда элементов
-		tool._grid.attachEvent("onBeforeSelect",function(id){
-			if (id == "len")
-				return tool.profile.split == $p.enm.lay_split_types.РядЭлементов;
-			return true;
+		if(!tool.options.wnd.bounds_open){
+			tool._grid.collapseKids(tool._grid.getRowById(
+				tool._grid.getAllRowIds().split(",")[13]
+			));
+		}
+		tool._grid.attachEvent("onOpenEnd", function(id,state){
+			if(id == this.getAllRowIds().split(",")[13])
+				tool.options.wnd.bounds_open = state > 0;
 		});
 
 		//
@@ -10219,30 +10251,51 @@ function ToolLayImpost(){
 			};
 
 		tool.wnd.elmnts._btns = [];
-		tool._grid.getAllRowIds().split(",").forEach(function (id) {
+		tool._grid.getAllRowIds().split(",").forEach(function (id, ind) {
 			if(id.match(/^\d+$/)){
 
 				var cell = tool._grid.cells(id, 1);
 				cell.cell.style.position = "relative";
-				
-				tool.wnd.elmnts._btns.push({
-					id: id,
-					bar: new $p.iface.OTooolBar({
-						wrapper: cell.cell,
-						top: '0px',
-						right: '1px',
-						name: id,
-						width: '80px',
-						height: '20px',
-						class_name: "",
-						buttons: [
-							{name: 'clear', text: '<i class="fa fa-trash-o"></i>', title: 'Очистить направление', class_name: "md_otooolbar_grid_button"},
-							{name: 'del', text: '<i class="fa fa-minus-square-o"></i>', title: 'Удалить ячейку', class_name: "md_otooolbar_grid_button"},
-							{name: 'add', text: '<i class="fa fa-plus-square-o"></i>', title: 'Добавить ячейку', class_name: "md_otooolbar_grid_button"}
-						],
-						onclick: tool._grid_button_click
-					})
-				});
+
+				if(ind < 10){
+					tool.wnd.elmnts._btns.push({
+						id: id,
+						bar: new $p.iface.OTooolBar({
+							wrapper: cell.cell,
+							top: '0px',
+							right: '1px',
+							name: id,
+							width: '80px',
+							height: '20px',
+							class_name: "",
+							buttons: [
+								{name: 'clear', text: '<i class="fa fa-trash-o"></i>', title: 'Очистить направление', class_name: "md_otooolbar_grid_button"},
+								{name: 'del', text: '<i class="fa fa-minus-square-o"></i>', title: 'Удалить ячейку', class_name: "md_otooolbar_grid_button"},
+								{name: 'add', text: '<i class="fa fa-plus-square-o"></i>', title: 'Добавить ячейку', class_name: "md_otooolbar_grid_button"}
+							],
+							onclick: tool._grid_button_click
+						})
+					});
+				}else{
+					tool.wnd.elmnts._btns.push({
+						id: id,
+						bar: new $p.iface.OTooolBar({
+							wrapper: cell.cell,
+							top: '0px',
+							right: '1px',
+							name: id,
+							width: '80px',
+							height: '20px',
+							class_name: "",
+							buttons: [
+								{name: 'clear', text: '<i class="fa fa-trash-o"></i>', title: 'Очистить габариты', class_name: "md_otooolbar_grid_button"},
+							],
+							onclick: function () {
+								tool.profile.w = tool.profile.h = 0;
+							}
+						})
+					});
+				}
 
 				cell.cell.title = "";
 			}
@@ -10254,7 +10307,7 @@ function ToolLayImpost(){
 			wnd_options.call(tool.wnd, opt);
 
 			for(var prop in tool.profile._metadata.fields) {
-				if(prop.indexOf("step") == -1 && prop != "inset" && prop != "clr"){
+				if(prop.indexOf("step") == -1 && prop.indexOf("inset") == -1 && prop != "clr" && prop != "w" && prop != "h"){
 					var val = tool.profile[prop];
 					opt[prop] = $p.is_data_obj(val) ? val.ref : val;
 				}
@@ -10338,18 +10391,117 @@ function ToolLayImpost(){
 
 			_editor.canvas_cursor('cursor-arrow-lay');
 
-			if(!this.hitItem || this.profile.inset.empty())
+			if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty())
 				return;
 
-			var layer = tool.hitItem.layer,
+			if(!this.hitItem && (tool.profile.elm_type == $p.enm.elm_types.Раскладка || !this.profile.w || !this.profile.h))
+				return;
+
+			this.check_layer();
+
+			var layer = tool.hitItem ? tool.hitItem.layer : _editor.project.activeLayer,
 				lgeneratics = layer.profiles.map(function (p) {
 					return p.nearest() ? p.rays.outer : p.generatrix
 				}),
 				nprofiles = [];
 
+			function n1(p) {
+				return p.segments[0].point.add(p.segments[3].point).divide(2);
+			}
+
+			function n2(p) {
+				return p.segments[1].point.add(p.segments[2].point).divide(2);
+			}
+
+			function check_inset(inset, pos){
+
+				var nom = inset.nom(),
+					rows = [];
+
+				_editor.project._dp.sys.elmnts.each(function(row){
+					if(row.nom.nom() == nom)
+						rows.push(row);
+				});
+
+				for(var i=0; i<rows.length; i++){
+					if(rows[i].pos == pos)
+						return rows[i].nom;
+				}
+
+				return inset;
+			}
+
+			function rectification() {
+				// получаем таблицу расстояний профилей от рёбер габаритов
+				var bounds, ares = [],
+					group = new paper.Group({ insert: false });
+
+				function reverce(p) {
+					var s = p.segments.map(function(s){return s.point.clone()})
+					p.removeSegments();
+					p.addSegments([s[1], s[0], s[3], s[2]]);
+				}
+
+				function by_side(name) {
+
+					ares.sort(function (a, b) {
+						return a[name] - b[name];
+					});
+
+					ares.forEach(function (p) {
+						if(ares[0][name] == p[name]){
+							var p1 = n1(p.profile),
+								p2 = n2(p.profile),
+								angle = p2.subtract(p1).angle.round(0);
+							if(angle < 0)
+								angle += 360;
+
+							if(name == "left" && angle != 270){
+								reverce(p.profile);
+							}else if(name == "top" && angle != 0){
+								reverce(p.profile);
+							}else if(name == "right" && angle != 90){
+								reverce(p.profile);
+							}else if(name == "bottom" && angle != 180){
+								reverce(p.profile);
+							}
+
+							if(name == "left" || name == "right")
+								p.profile._inset = check_inset(tool.profile.inset_by_x, $p.enm.positions[name]);
+							else
+								p.profile._inset = check_inset(tool.profile.inset_by_y, $p.enm.positions[name]);
+						}
+					});
+
+				}
+
+				tool.paths.forEach(function (p) {
+					if(p.segments.length)
+						p.parent = group;
+				});
+				bounds = group.bounds;
+
+				group.children.forEach(function (p) {
+					ares.push({
+						profile: p,
+						left: Math.abs(n1(p).x + n2(p).x - bounds.left * 2),
+						top: Math.abs(n1(p).y + n2(p).y - bounds.top * 2),
+						bottom: Math.abs(n1(p).y + n2(p).y - bounds.bottom * 2),
+						right: Math.abs(n1(p).x + n2(p).x - bounds.right * 2)
+					});
+				});
+
+				["left","top","bottom","right"].forEach(by_side);
+			}
+
+			// уточним направления путей для витража
+			if(!this.hitItem){
+				rectification();
+			}
+
 			tool.paths.forEach(function (p) {
 
-				var p1, p2, iter = 0;
+				var p1, p2, iter = 0, angle, proto = {clr: tool.profile.clr};
 
 				function do_bind() {
 
@@ -10390,17 +10542,25 @@ function ToolLayImpost(){
 				p.remove();
 				if(p.segments.length){
 
-					p1 = p.segments[0].point.add(p.segments[3].point).divide(2);
-					p2 = p.segments[1].point.add(p.segments[2].point).divide(2);
+					p1 = n1(p);
+					p2 = n2(p);
 
+					// в зависимости от наклона разные вставки
+					angle = p2.subtract(p1).angle;
+					if((angle > -40 && angle < 40) || (angle > 180-40 && angle < 180+40)){
+						proto.inset = p._inset || tool.profile.inset_by_y;
+					}else{
+						proto.inset = p._inset || tool.profile.inset_by_x;
+					}
 
 					if(tool.profile.elm_type == $p.enm.elm_types.Раскладка){
+
 						nprofiles.push(new Onlay({
 							generatrix: new paper.Path({
 								segments: [p1, p2]
 							}),
 							parent: tool.hitItem,
-							proto: tool.profile
+							proto: proto
 						}));
 
 					}else{
@@ -10409,8 +10569,8 @@ function ToolLayImpost(){
 
 							iter++;
 							do_bind();
-							var angle = p2.subtract(p1).angle,
-								delta = Math.abs(angle % 90);
+							angle = p2.subtract(p1).angle;
+							var delta = Math.abs(angle % 90);
 
 							if(delta > 45)
 								delta -= 90;
@@ -10434,13 +10594,13 @@ function ToolLayImpost(){
 						}
 
 						// создаём новые профили
-						if(p2.getDistance(p1) > tool.profile.inset.nom().width)
+						if(p2.getDistance(p1) > proto.inset.nom().width)
 							nprofiles.push(new Profile({
 								generatrix: new paper.Path({
 									segments: [p1, p2]
 								}),
 								parent: layer,
-								proto: tool.profile
+								proto: proto
 							}));
 					}
 				}
@@ -10464,16 +10624,33 @@ function ToolLayImpost(){
 				p.removeSegments();
 			});
 
-			if(!this.hitItem || this.profile.inset.empty())
+			if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty())
 				return;
 
-			var bounds = this.hitItem.bounds,
-				gen = this.hitItem.path,
-				stepy = this.profile.step_by_y || (this.profile.elm_by_y && bounds.height / (this.profile.elm_by_y + 1)),
+			var bounds, gen, hit = !!this.hitItem;
+
+			if(hit){
+				bounds = this.hitItem.bounds;
+				gen = this.hitItem.path;
+			}else if(this.profile.w && this.profile.h) {
+				gen = new paper.Path({
+					insert: false,
+					segments: [[0,0], [0, -this.profile.h], [this.profile.w, -this.profile.h], [this.profile.w, 0]],
+					closed: true
+				});
+				bounds = gen.bounds;
+				_editor.project.zoom_fit(_editor.project.strokeBounds.unite(bounds));
+
+			}else
+				return;
+
+			var stepy = this.profile.step_by_y || (this.profile.elm_by_y && bounds.height / (this.profile.elm_by_y + ((hit || this.profile.elm_by_y < 2) ? 1 : -1))),
 				county = this.profile.elm_by_y > 0 ? this.profile.elm_by_y.round(0) : Math.round(bounds.height / stepy) - 1,
-				stepx = this.profile.step_by_x || (this.profile.elm_by_x && bounds.width / (this.profile.elm_by_x + 1)),
+				stepx = this.profile.step_by_x || (this.profile.elm_by_x && bounds.width / (this.profile.elm_by_x + ((hit || this.profile.elm_by_x < 2) ? 1 : -1))),
 				countx = this.profile.elm_by_x > 0 ? this.profile.elm_by_x.round(0) : Math.round(bounds.width / stepx) - 1,
-				w2 = this.profile.inset.nom().width / 2, clr = BuilderElement.clr_by_clr(this.profile.clr, false),
+				w2x = this.profile.inset_by_x.nom().width / 2,
+				w2y = this.profile.inset_by_y.nom().width / 2,
+				clr = BuilderElement.clr_by_clr(this.profile.clr, false),
 				by_x = [], by_y = [], base, pos, path, i, j, pts;
 
 			function get_path() {
@@ -10482,7 +10659,7 @@ function ToolLayImpost(){
 					path = tool.paths[base];
 					path.fillColor = clr;
 					if(!path.isInserted())
-						path.parent = tool.hitItem.layer;
+						path.parent = tool.hitItem ? tool.hitItem.layer : _editor.project.activeLayer;
 				}else{
 					path = new paper.Path({
 						strokeColor: 'black',
@@ -10561,25 +10738,25 @@ function ToolLayImpost(){
 						tool.profile.split == $p.enm.lay_split_types.КрестПересечение){
 
 						if(pts = get_points([by_x[i], bounds.bottom], [by_x[i], bounds.top]))
-							get_path().addSegments([[pts.p1.x-w2, pts.p1.y], [pts.p2.x-w2, pts.p2.y], [pts.p2.x+w2, pts.p2.y], [pts.p1.x+w2, pts.p1.y]]);
+							get_path().addSegments([[pts.p1.x-w2x, pts.p1.y], [pts.p2.x-w2x, pts.p2.y], [pts.p2.x+w2x, pts.p2.y], [pts.p1.x+w2x, pts.p1.y]]);
 
 					}else{
 						by_y.sort(function (a,b) { return b-a; });
 						for(j = 0; j < by_y.length; j++){
 
 							if(j == 0){
-								if(pts = get_points([by_x[i], bounds.bottom], [by_x[i], by_y[j]]))
-									get_path().addSegments([[pts.p1.x-w2, pts.p1.y], [pts.p2.x-w2, pts.p2.y+w2], [pts.p2.x+w2, pts.p2.y+w2], [pts.p1.x+w2, pts.p1.y]]);
+								if(hit && (pts = get_points([by_x[i], bounds.bottom], [by_x[i], by_y[j]])))
+									get_path().addSegments([[pts.p1.x-w2x, pts.p1.y], [pts.p2.x-w2x, pts.p2.y+w2x], [pts.p2.x+w2x, pts.p2.y+w2x], [pts.p1.x+w2x, pts.p1.y]]);
 
 							}else{
 								if(pts = get_points([by_x[i], by_y[j-1]], [by_x[i], by_y[j]]))
-									get_path().addSegments([[pts.p1.x-w2, pts.p1.y-w2], [pts.p2.x-w2, pts.p2.y+w2], [pts.p2.x+w2, pts.p2.y+w2], [pts.p1.x+w2, pts.p1.y-w2]]);
+									get_path().addSegments([[pts.p1.x-w2x, pts.p1.y-w2x], [pts.p2.x-w2x, pts.p2.y+w2x], [pts.p2.x+w2x, pts.p2.y+w2x], [pts.p1.x+w2x, pts.p1.y-w2x]]);
 
 							}
 
 							if(j == by_y.length -1){
-								if(pts = get_points([by_x[i], by_y[j]], [by_x[i], bounds.top]))
-									get_path().addSegments([[pts.p1.x-w2, pts.p1.y-w2], [pts.p2.x-w2, pts.p2.y], [pts.p2.x+w2, pts.p2.y], [pts.p1.x+w2, pts.p1.y-w2]]);
+								if(hit && (pts = get_points([by_x[i], by_y[j]], [by_x[i], bounds.top])))
+									get_path().addSegments([[pts.p1.x-w2x, pts.p1.y-w2x], [pts.p2.x-w2x, pts.p2.y], [pts.p2.x+w2x, pts.p2.y], [pts.p1.x+w2x, pts.p1.y-w2x]]);
 
 							}
 
@@ -10597,25 +10774,25 @@ function ToolLayImpost(){
 						tool.profile.split == $p.enm.lay_split_types.КрестПересечение){
 
 						if(pts = get_points([bounds.left, by_y[i]], [bounds.right, by_y[i]]))
-							get_path().addSegments([[pts.p1.x, pts.p1.y-w2], [pts.p2.x, pts.p2.y-w2], [pts.p2.x, pts.p2.y+w2], [pts.p1.x, pts.p1.y+w2]]);
+							get_path().addSegments([[pts.p1.x, pts.p1.y-w2y], [pts.p2.x, pts.p2.y-w2y], [pts.p2.x, pts.p2.y+w2y], [pts.p1.x, pts.p1.y+w2y]]);
 
 					}else{
 						by_x.sort(function (a,b) { return a-b; });
 						for(j = 0; j < by_x.length; j++){
 
 							if(j == 0){
-								if(pts = get_points([bounds.left, by_y[i]], [by_x[j], by_y[i]]))
-									get_path().addSegments([[pts.p1.x, pts.p1.y-w2], [pts.p2.x-w2, pts.p2.y-w2], [pts.p2.x-w2, pts.p2.y+w2], [pts.p1.x, pts.p1.y+w2]]);
+								if(hit && (pts = get_points([bounds.left, by_y[i]], [by_x[j], by_y[i]])))
+									get_path().addSegments([[pts.p1.x, pts.p1.y-w2y], [pts.p2.x-w2y, pts.p2.y-w2y], [pts.p2.x-w2y, pts.p2.y+w2y], [pts.p1.x, pts.p1.y+w2y]]);
 
 							}else{
 								if(pts = get_points([by_x[j-1], by_y[i]], [by_x[j], by_y[i]]))
-									get_path().addSegments([[pts.p1.x+w2, pts.p1.y-w2], [pts.p2.x-w2, pts.p2.y-w2], [pts.p2.x-w2, pts.p2.y+w2], [pts.p1.x+w2, pts.p1.y+w2]]);
+									get_path().addSegments([[pts.p1.x+w2y, pts.p1.y-w2y], [pts.p2.x-w2y, pts.p2.y-w2y], [pts.p2.x-w2y, pts.p2.y+w2y], [pts.p1.x+w2y, pts.p1.y+w2y]]);
 
 							}
 
 							if(j == by_x.length -1){
-								if(pts = get_points([by_x[j], by_y[i]], [bounds.right, by_y[i]]))
-									get_path().addSegments([[pts.p1.x+w2, pts.p1.y-w2], [pts.p2.x, pts.p2.y-w2], [pts.p2.x, pts.p2.y+w2], [pts.p1.x+w2, pts.p1.y+w2]]);
+								if(hit && (pts = get_points([by_x[j], by_y[i]], [bounds.right, by_y[i]])))
+									get_path().addSegments([[pts.p1.x+w2y, pts.p1.y-w2y], [pts.p2.x, pts.p2.y-w2y], [pts.p2.x, pts.p2.y+w2y], [pts.p1.x+w2y, pts.p1.y+w2y]]);
 
 							}
 
@@ -10638,7 +10815,7 @@ function ToolLayImpost(){
 						else
 							pos = base + stepy / 2 + (i > 1 ? stepy * (i - 1) : 0);
 
-						if(pos + w2 + consts.sticking_l < bounds.bottom)
+						if(pos + w2y + consts.sticking_l < bounds.bottom)
 							by_y.push(pos);
 
 						if(county % 2)
@@ -10646,23 +10823,40 @@ function ToolLayImpost(){
 						else
 							pos = base - stepy / 2 - (i > 1 ? stepy * (i - 1) : 0);
 
-						if(pos - w2 - consts.sticking_l > bounds.top)
+						if(pos - w2y - consts.sticking_l > bounds.top)
 							by_y.push(pos);
 					}
 
 				}else if(tool.profile.align_by_y == $p.enm.positions.Верх){
 
-					for(i = 1; i <= county; i++){
-						pos = bounds.top + stepy * i;
-						if(pos + w2 + consts.sticking_l < bounds.bottom)
-							by_y.push(pos);
+					if(hit){
+						for(i = 1; i <= county; i++){
+							pos = bounds.top + stepy * i;
+							if(pos + w2y + consts.sticking_l < bounds.bottom)
+								by_y.push(pos);
+						}
+					}else{
+						for(i = 0; i < county; i++){
+							pos = bounds.top + stepy * i;
+							if(pos - w2y - consts.sticking_l < bounds.bottom)
+								by_y.push(pos);
+						}
 					}
+
 				}else if(tool.profile.align_by_y == $p.enm.positions.Низ){
 
-					for(i = 1; i <= county; i++){
-						pos = bounds.bottom - stepy * i;
-						if(pos - w2 - consts.sticking_l > bounds.top)
-							by_y.push(bounds.bottom - stepy * i);
+					if(hit){
+						for(i = 1; i <= county; i++){
+							pos = bounds.bottom - stepy * i;
+							if(pos - w2y - consts.sticking_l > bounds.top)
+								by_y.push(bounds.bottom - stepy * i);
+						}
+					}else{
+						for(i = 0; i < county; i++){
+							pos = bounds.bottom - stepy * i;
+							if(pos + w2y + consts.sticking_l > bounds.top)
+								by_y.push(bounds.bottom - stepy * i);
+						}
 					}
 				}
 			}
@@ -10681,7 +10875,7 @@ function ToolLayImpost(){
 						else
 							pos = base + stepx / 2 + (i > 1 ? stepx * (i - 1) : 0);
 
-						if(pos + w2 + consts.sticking_l < bounds.right)
+						if(pos + w2x + consts.sticking_l < bounds.right)
 							by_x.push(pos);
 
 						if(countx % 2)
@@ -10689,24 +10883,41 @@ function ToolLayImpost(){
 						else
 							pos = base - stepx / 2 - (i > 1 ? stepx * (i - 1) : 0);
 
-						if(pos - w2 - consts.sticking_l > bounds.left)
+						if(pos - w2x - consts.sticking_l > bounds.left)
 							by_x.push(pos);
 					}
 
 				}else if(tool.profile.align_by_x == $p.enm.positions.Лев){
 
-					for(i = 1; i <= countx; i++){
-						pos = bounds.left + stepx * i;
-						if(pos + w2 + consts.sticking_l < bounds.right)
-							by_x.push(pos);
+					if(hit){
+						for(i = 1; i <= countx; i++){
+							pos = bounds.left + stepx * i;
+							if(pos + w2x + consts.sticking_l < bounds.right)
+								by_x.push(pos);
+						}
+					}else{
+						for(i = 0; i < countx; i++){
+							pos = bounds.left + stepx * i;
+							if(pos - w2x - consts.sticking_l < bounds.right)
+								by_x.push(pos);
+						}
 					}
+
 
 				}else if(tool.profile.align_by_x == $p.enm.positions.Прав){
 
-					for(i = 1; i <= countx; i++){
-						pos = bounds.right - stepx * i;
-						if(pos - w2 - consts.sticking_l > bounds.left)
-							by_x.push(pos);
+					if(hit){
+						for(i = 1; i <= countx; i++){
+							pos = bounds.right - stepx * i;
+							if(pos - w2x - consts.sticking_l > bounds.left)
+								by_x.push(pos);
+						}
+					}else{
+						for(i = 0; i < countx; i++){
+							pos = bounds.right - stepx * i;
+							if(pos + w2x + consts.sticking_l > bounds.left)
+								by_x.push(pos);
+						}
 					}
 				}
 			}
@@ -11165,6 +11376,8 @@ function ToolPen(){
 		mouseup: function(event) {
 
 			_editor.canvas_cursor('cursor-pen-freehand');
+
+			this.check_layer();
 
 			var whas_select;
 
@@ -11725,7 +11938,7 @@ function ToolRuler(){
 			this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
 
 			// Hit test points
-			var hit = paper.project.hitPoints(event.point, 16);
+			var hit = paper.project.hitPoints(event.point, 20);
 			if (hit && hit.item.parent instanceof ProfileItem){
 				this.hitItem = hit;
 			}
@@ -12349,7 +12562,7 @@ function ToolSelectNode(){
 				tool.hitItem = hit;
 
 			// Hit test points
-			hit = paper.project.hitPoints(event.point);
+			hit = paper.project.hitPoints(event.point, 20);
 
 			if (hit){
 				if(hit.item.parent instanceof ProfileItem){

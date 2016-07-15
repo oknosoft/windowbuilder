@@ -63,7 +63,7 @@ function ToolRuler(){
 			this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
 
 			// Hit test points
-			var hit = paper.project.hitPoints(event.point, 16);
+			var hit = paper.project.hitPoints(event.point, 20);
 			if (hit && hit.item.parent instanceof ProfileItem){
 				this.hitItem = hit;
 			}

@@ -313,6 +313,8 @@ function ToolPen(){
 
 			_editor.canvas_cursor('cursor-pen-freehand');
 
+			this.check_layer();
+
 			var whas_select;
 
 			if(this.addl_hit && this.addl_hit.glass && this.profile.elm_type == $p.enm.elm_types.Добор && !this.profile.inset.empty()){

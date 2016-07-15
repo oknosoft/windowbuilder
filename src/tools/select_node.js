@@ -66,7 +66,7 @@ function ToolSelectNode(){
 				tool.hitItem = hit;
 
 			// Hit test points
-			hit = paper.project.hitPoints(event.point);
+			hit = paper.project.hitPoints(event.point, 20);
 
 			if (hit){
 				if(hit.item.parent instanceof ProfileItem){

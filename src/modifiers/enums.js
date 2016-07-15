@@ -96,5 +96,47 @@ $p.modifiers.push(
 			}
 		});
 
+		/**
+		 * Дополнительные методы перечисления ПоложениеЭлемента
+		 */
+		$p.enm.positions.__define({
+
+			left: {
+				get: function () {
+					return this.Лев;
+				}
+			},
+
+			right: {
+				get: function () {
+					return this.Прав;
+				}
+			},
+
+			top: {
+				get: function () {
+					return this.Верх;
+				}
+			},
+
+			bottom: {
+				get: function () {
+					return this.Низ;
+				}
+			},
+
+			hor: {
+				get: function () {
+					return this.ЦентрГоризонталь;
+				}
+			},
+
+			vert: {
+				get: function () {
+					return this.ЦентрВертикаль;
+				}
+			}
+		});
+
 	}
 );
