@@ -19,6 +19,7 @@ $p.iface.view_settings = function (cell) {
 				return false;
 			}
 
+			return true;
 		}
 
 		function deferred_init(){
@@ -324,7 +325,7 @@ $p.iface.view_settings = function (cell) {
 		 * @param hprm
 		 * @return {boolean}
 		 */
-		$p.eve.hash_route.push(hash_route);
+		$p.on("hash_route", hash_route);
 
 	}
 

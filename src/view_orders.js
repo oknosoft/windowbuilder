@@ -102,6 +102,8 @@ $p.iface.view_orders = function (cell) {
 				return false;
 			}
 
+			return true;
+
 		}
 
 		function create_elmnts(){
@@ -211,7 +213,7 @@ $p.iface.view_orders = function (cell) {
 		 * @param hprm
 		 * @return {boolean}
 		 */
-		$p.eve.hash_route.push(hash_route);
+		$p.on("hash_route", hash_route);
 
 	}
 

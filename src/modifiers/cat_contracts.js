@@ -33,7 +33,7 @@ $p.modifiers.push(
 		};
 
 		// перед записью, устанавливаем код, родителя и наименование
-		// _mgr.attache_event("before_save", function (attr) {
+		// _mgr.on("before_save", function (attr) {
 		//
 		//
 		//

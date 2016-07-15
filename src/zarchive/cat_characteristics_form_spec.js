@@ -16,7 +16,7 @@ $p.modifiers.push(
 
 		}
 
-		//_mgr.attache_event("before_save", function (attr) {
+		//_mgr.on("before_save", function (attr) {
 		//	var obj = this,
 		//		data = {
 		//			action: "save",

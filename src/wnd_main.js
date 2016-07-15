@@ -7,12 +7,15 @@
  * @module wnd_main
  */
 
+
 /**
+ * ### При установке параметров сеанса
  * Процедура устанавливает параметры работы программы, специфичные для текущей сборки
+ *
  * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
  * @param modifiers {Array} - сюда можно добавить обработчики, переопределяющие функциональность объектов данных
  */
-$p.settings = function (prm, modifiers) {
+$p.on("settings", function (prm, modifiers) {
 
 	prm.__define({
 
@@ -59,7 +62,7 @@ $p.settings = function (prm, modifiers) {
 		use_ip_geo: {
 			value: true
 		}
-		
+
 	});
 
 	// фильтр для репликации с CouchDB
@@ -69,7 +72,7 @@ $p.settings = function (prm, modifiers) {
 			writable: false
 		}
 	});
-	
+
 	// по умолчанию, обращаемся к зоне 1
 	prm.zone = 1;
 
@@ -85,17 +88,23 @@ $p.settings = function (prm, modifiers) {
 
 	// пароль гостевого пользователя couchdb
 	prm.guest_pwd = "meta";
-	
+
 	// разрешаем сохранение пароля
 	prm.enable_save_pwd = true;
-	
+
 
 	// разрешаем покидать страницу без лишних вопросов
 	// $p.eve.redirect = true;
 
-};
+});
 
-$p.iface.oninit = function() {
+/**
+ * ### При инициализации интерфейса
+ * Вызывается после готовности DOM и установки параметров сеанса, до готовности метаданных
+ * В этом обработчике можно начать рисовать интерфейс, но обращаться к данным еще рановато
+ *
+ */
+$p.on("iface_init", function() {
 
 	// разделы интерфейса
 	$p.iface.sidebar_items = [
@@ -230,7 +239,6 @@ $p.iface.oninit = function() {
 
 	});
 
-
 	// запрещаем масштабировать колёсиком мыши, т.к. для масштабирования у канваса свой инструмент
 	window.onmousewheel = function (e) {
 		if(e.ctrlKey){
@@ -239,12 +247,12 @@ $p.iface.oninit = function() {
 		}
 	}
 
-};
+});
 
 /**
- * Обработчик маршрутизации
+ * ### Обработчик маршрутизации
  */
-$p.eve.hash_route.push(function (hprm) {
+$p.on("hash_route", function (hprm) {
 
 	// view отвечает за переключение закладки в SideBar
 	if(hprm.view && $p.iface.main.getActiveItem() != hprm.view){
@@ -253,5 +261,6 @@ $p.eve.hash_route.push(function (hprm) {
 				$p.iface.main.cells(item).setActive(true);
 		});
 	}
+
 	return false;
 });

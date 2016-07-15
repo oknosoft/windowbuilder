@@ -34,7 +34,7 @@ function ToolLayImpost(){
 		name: 'lay_impost',
 		wnd: {
 			caption: "Импосты и раскладки",
-			height: 360,
+			height: 420,
 			width: 320
 		}
 	};

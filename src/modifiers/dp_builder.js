@@ -10,17 +10,27 @@
 $p.modifiers.push(
 
 	function($p) {
-		
-		function elm_type_change(attr) {
+
+		$p.dp.builder_pen.on("value_change", function(attr){
 			if(attr.field == "elm_type") {
 				this.inset = paper.project.default_inset({elm_type: this.elm_type});
 				this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
 			}
-		}
-
-		$p.dp.builder_pen.attache_event("value_change", elm_type_change);
+		});
 
 		if($p.dp.builder_lay_impost)
-			$p.dp.builder_lay_impost.attache_event("value_change", elm_type_change);
+			$p.dp.builder_pen.on("value_change", function(attr){
+				if(attr.field == "elm_type") {
+					this.inset_by_y = paper.project.default_inset({
+						elm_type: this.elm_type,
+						pos: $p.enm.positions.Верх
+					});
+					this.inset_by_x = paper.project.default_inset({
+						elm_type: this.elm_type,
+						pos: $p.enm.positions.Лев
+					});
+					this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
+				}
+			});
 	}
 );

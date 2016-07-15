@@ -20,7 +20,7 @@ $p.modifiers.push(
 		_mgr.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
 
 		// после создания надо заполнить реквизиты по умолчанию: контрагент, организация, договор
-		_mgr.attache_event("after_create", function (attr) {
+		_mgr.on("after_create", function (attr) {
 
 			var acl = $p.current_acl.acl_objs,
 				obj = this;
@@ -64,7 +64,7 @@ $p.modifiers.push(
 		});
 
 		// перед записью надо присвоить номер для нового и рассчитать итоги
-		_mgr.attache_event("before_save", function (attr) {
+		_mgr.on("before_save", function (attr) {
 
 			doc_amount = 0;
 			amount_internal = 0;
@@ -131,7 +131,7 @@ $p.modifiers.push(
 		});
 
 		// при изменении реквизита
-		_mgr.attache_event("value_change", function (attr) {
+		_mgr.on("value_change", function (attr) {
 			
 			// реквизиты шапки
 			if(attr.field == "organization" && this.contract.organization != attr.value){

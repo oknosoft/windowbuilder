@@ -70,6 +70,7 @@ $p.iface.view_events = function (cell) {
 				return false;
 			}
 
+			return true;
 		}
 
 		if(!window.dhtmlXScheduler){
@@ -86,7 +87,7 @@ $p.iface.view_events = function (cell) {
 		 * @param hprm
 		 * @return {boolean}
 		 */
-		$p.eve.hash_route.push(hash_route);
+		$p.on("hash_route", hash_route);
 
 	}
 

@@ -27,7 +27,7 @@ $p.modifiers.push(
 		
 		
 		// перед записью надо пересчитать наименование и рассчитать итоги
-		_mgr.attache_event("before_save", function (attr) {
+		_mgr.on("before_save", function (attr) {
 
 			// уточняем номенклатуру системы
 			var nom = this.prod_nom;
@@ -748,7 +748,7 @@ $p.modifiers.push(
 		};
 
 		// перед записью, устанавливаем код, родителя и наименование
-		// _mgr.attache_event("before_save", function (attr) {
+		// _mgr.on("before_save", function (attr) {
 		//
 		//
 		//
@@ -1896,7 +1896,7 @@ $p.modifiers.push(
 		_mgr.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
 
 		// после создания надо заполнить реквизиты по умолчанию: контрагент, организация, договор
-		_mgr.attache_event("after_create", function (attr) {
+		_mgr.on("after_create", function (attr) {
 
 			var acl = $p.current_acl.acl_objs,
 				obj = this;
@@ -1940,7 +1940,7 @@ $p.modifiers.push(
 		});
 
 		// перед записью надо присвоить номер для нового и рассчитать итоги
-		_mgr.attache_event("before_save", function (attr) {
+		_mgr.on("before_save", function (attr) {
 
 			doc_amount = 0;
 			amount_internal = 0;
@@ -2007,7 +2007,7 @@ $p.modifiers.push(
 		});
 
 		// при изменении реквизита
-		_mgr.attache_event("value_change", function (attr) {
+		_mgr.on("value_change", function (attr) {
 			
 			// реквизиты шапки
 			if(attr.field == "organization" && this.contract.organization != attr.value){
@@ -3511,18 +3511,28 @@ $p.modifiers.push(
 $p.modifiers.push(
 
 	function($p) {
-		
-		function elm_type_change(attr) {
+
+		$p.dp.builder_pen.on("value_change", function(attr){
 			if(attr.field == "elm_type") {
 				this.inset = paper.project.default_inset({elm_type: this.elm_type});
 				this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
 			}
-		}
-
-		$p.dp.builder_pen.attache_event("value_change", elm_type_change);
+		});
 
 		if($p.dp.builder_lay_impost)
-			$p.dp.builder_lay_impost.attache_event("value_change", elm_type_change);
+			$p.dp.builder_pen.on("value_change", function(attr){
+				if(attr.field == "elm_type") {
+					this.inset_by_y = paper.project.default_inset({
+						elm_type: this.elm_type,
+						pos: $p.enm.positions.Верх
+					});
+					this.inset_by_x = paper.project.default_inset({
+						elm_type: this.elm_type,
+						pos: $p.enm.positions.Лев
+					});
+					this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
+				}
+			});
 	}
 );
 /**
@@ -4034,7 +4044,7 @@ $p.modifiers.push(
 		 * Обработчик события "при изменении свойства" в шапке или табличной части при редактировании в форме объекта
 		 * @this {DataObj} - обработчик вызывается в контексте текущего объекта
 		 */
-		$p.doc.nom_prices_setup.attache_event("add_row", function (attr) {
+		$p.doc.nom_prices_setup.on("add_row", function (attr) {
 
 			// установим валюту и тип цен по умолчению при добавлении строки
 			if(attr.tabular_section == "goods"){
@@ -4047,7 +4057,7 @@ $p.modifiers.push(
 		/**
 		 * Обработчик при создании документа
 		 */
-		$p.doc.nom_prices_setup.attache_event("after_create", function (attr) {
+		$p.doc.nom_prices_setup.on("after_create", function (attr) {
 
 			//Номер документа
 			return this.new_number_doc();
@@ -6038,12 +6048,15 @@ $p.iface.OSvgs = function (manager, layout, area) {
  * @module wnd_main
  */
 
+
 /**
+ * ### При установке параметров сеанса
  * Процедура устанавливает параметры работы программы, специфичные для текущей сборки
+ *
  * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
  * @param modifiers {Array} - сюда можно добавить обработчики, переопределяющие функциональность объектов данных
  */
-$p.settings = function (prm, modifiers) {
+$p.on("settings", function (prm, modifiers) {
 
 	prm.__define({
 
@@ -6090,7 +6103,7 @@ $p.settings = function (prm, modifiers) {
 		use_ip_geo: {
 			value: true
 		}
-		
+
 	});
 
 	// фильтр для репликации с CouchDB
@@ -6100,7 +6113,7 @@ $p.settings = function (prm, modifiers) {
 			writable: false
 		}
 	});
-	
+
 	// по умолчанию, обращаемся к зоне 1
 	prm.zone = 1;
 
@@ -6116,17 +6129,23 @@ $p.settings = function (prm, modifiers) {
 
 	// пароль гостевого пользователя couchdb
 	prm.guest_pwd = "meta";
-	
+
 	// разрешаем сохранение пароля
 	prm.enable_save_pwd = true;
-	
+
 
 	// разрешаем покидать страницу без лишних вопросов
 	// $p.eve.redirect = true;
 
-};
+});
 
-$p.iface.oninit = function() {
+/**
+ * ### При инициализации интерфейса
+ * Вызывается после готовности DOM и установки параметров сеанса, до готовности метаданных
+ * В этом обработчике можно начать рисовать интерфейс, но обращаться к данным еще рановато
+ *
+ */
+$p.on("iface_init", function() {
 
 	// разделы интерфейса
 	$p.iface.sidebar_items = [
@@ -6261,7 +6280,6 @@ $p.iface.oninit = function() {
 
 	});
 
-
 	// запрещаем масштабировать колёсиком мыши, т.к. для масштабирования у канваса свой инструмент
 	window.onmousewheel = function (e) {
 		if(e.ctrlKey){
@@ -6270,12 +6288,12 @@ $p.iface.oninit = function() {
 		}
 	}
 
-};
+});
 
 /**
- * Обработчик маршрутизации
+ * ### Обработчик маршрутизации
  */
-$p.eve.hash_route.push(function (hprm) {
+$p.on("hash_route", function (hprm) {
 
 	// view отвечает за переключение закладки в SideBar
 	if(hprm.view && $p.iface.main.getActiveItem() != hprm.view){
@@ -6284,6 +6302,7 @@ $p.eve.hash_route.push(function (hprm) {
 				$p.iface.main.cells(item).setActive(true);
 		});
 	}
+
 	return false;
 });
 /**
@@ -6383,6 +6402,7 @@ $p.iface.view_events = function (cell) {
 				return false;
 			}
 
+			return true;
 		}
 
 		if(!window.dhtmlXScheduler){
@@ -6399,7 +6419,7 @@ $p.iface.view_events = function (cell) {
 		 * @param hprm
 		 * @return {boolean}
 		 */
-		$p.eve.hash_route.push(hash_route);
+		$p.on("hash_route", hash_route);
 
 	}
 
@@ -6514,6 +6534,8 @@ $p.iface.view_orders = function (cell) {
 				return false;
 			}
 
+			return true;
+
 		}
 
 		function create_elmnts(){
@@ -6623,7 +6645,7 @@ $p.iface.view_orders = function (cell) {
 		 * @param hprm
 		 * @return {boolean}
 		 */
-		$p.eve.hash_route.push(hash_route);
+		$p.on("hash_route", hash_route);
 
 	}
 
@@ -6655,6 +6677,7 @@ $p.iface.view_settings = function (cell) {
 				return false;
 			}
 
+			return true;
 		}
 
 		function deferred_init(){
@@ -6960,7 +6983,7 @@ $p.iface.view_settings = function (cell) {
 		 * @param hprm
 		 * @return {boolean}
 		 */
-		$p.eve.hash_route.push(hash_route);
+		$p.on("hash_route", hash_route);
 
 	}
 

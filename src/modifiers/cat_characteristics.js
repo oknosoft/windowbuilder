@@ -18,7 +18,7 @@ $p.modifiers.push(
 		
 		
 		// перед записью надо пересчитать наименование и рассчитать итоги
-		_mgr.attache_event("before_save", function (attr) {
+		_mgr.on("before_save", function (attr) {
 
 			// уточняем номенклатуру системы
 			var nom = this.prod_nom;

@@ -70,7 +70,7 @@ $p.modifiers.push(
 		 * Обработчик события "при изменении свойства" в шапке или табличной части при редактировании в форме объекта
 		 * @this {DataObj} - обработчик вызывается в контексте текущего объекта
 		 */
-		$p.doc.nom_prices_setup.attache_event("add_row", function (attr) {
+		$p.doc.nom_prices_setup.on("add_row", function (attr) {
 
 			// установим валюту и тип цен по умолчению при добавлении строки
 			if(attr.tabular_section == "goods"){
@@ -83,7 +83,7 @@ $p.modifiers.push(
 		/**
 		 * Обработчик при создании документа
 		 */
-		$p.doc.nom_prices_setup.attache_event("after_create", function (attr) {
+		$p.doc.nom_prices_setup.on("after_create", function (attr) {
 
 			//Номер документа
 			return this.new_number_doc();
