@@ -683,9 +683,11 @@ function PenControls(tool) {
 
 				if(tool.path){
 					t._l.value = tool.point1.getDistance(t.point).round(1);
-					var angle = t.point.subtract(tool.point1).angle;
+					var p = t.point.subtract(tool.point1);
+					p.y = -p.y;
+					var angle = p.angle;
 					if(angle < 0)
-						angle = 360 + angle;
+						angle += 360;
 					t._a.value = angle.round(1);
 
 				}else{
@@ -722,9 +724,9 @@ function PenControls(tool) {
 				var p = new paper.Point();
 				p.length = parseFloat(t._l.value || 0);
 				p.angle = parseFloat(t._a.value || 0);
-				p = tool.point1.add(p);
+				p.y = -p.y;
 
-				mousemove({point: p}, true);
+				mousemove({point: tool.point1.add(p)}, true);
 
 				input_change.call({name: "x"});
 				break;

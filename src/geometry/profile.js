@@ -31,9 +31,9 @@ ProfileItem._extend(BuilderElement);
 ProfileItem.prototype.__define({
 
 	/**
-	 * Вычисляемые поля в таблице координат
+	 * ### Вычисляемые поля в таблице координат
 	 * @method save_coordinates
-	 * @for Profile
+	 * @for ProfileItem
 	 */
 	save_coordinates: {
 		value: function () {
@@ -131,6 +131,9 @@ ProfileItem.prototype.__define({
 
 	/**
 	 * Вызывается из конструктора - создаёт пути и лучи
+	 * @method initialize
+	 * @for ProfileItem
+	 * @private
 	 */
 	initialize: {
 		value : function(attr){
@@ -186,7 +189,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
+	 * ### Обсервер
 	 * Наблюдает за изменениями контура и пересчитывает путь элемента при изменении соседних элементов
+	 *
+	 * @method observer
+	 * @for ProfileItem
+	 * @private
 	 */
 	observer: {
 		value: function(an){
@@ -218,9 +226,10 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Координаты начала элемента
+	 * ### Координаты начала элемента
 	 * @property b
-	 * @type Point
+	 * @for ProfileItem
+	 * @type paper.Point
 	 */
 	b: {
 		get : function(){
@@ -237,6 +246,7 @@ ProfileItem.prototype.__define({
 	/**
 	 * Координаты конца элемента
 	 * @property e
+	 * @for ProfileItem
 	 * @type Point
 	 */
 	e: {
@@ -251,12 +261,26 @@ ProfileItem.prototype.__define({
 		}
 	},
 
+	/**
+	 * ### Точка corns(1)
+	 *
+	 * @property bc
+	 * @for ProfileItem
+	 * @type Point
+	 */
 	bc: {
 		get : function(){
 			return this.corns(1);
 		}
 	},
 
+	/**
+	 * ### Точка corns(2)
+	 *
+	 * @property ec
+	 * @for ProfileItem
+	 * @type Point
+	 */
 	ec: {
 		get : function(){
 			return this.corns(2);
@@ -264,9 +288,11 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Координата x начала профиля
+	 * ### Координата x начала профиля
+	 *
 	 * @property x1
-	 * @type {Number}
+	 * @for ProfileItem
+	 * @type Number
 	 */
 	x1: {
 		get : function(){
@@ -279,9 +305,11 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Координата y начала профиля
+	 * ### Координата y начала профиля
+	 *
 	 * @property y1
-	 * @type {Number}
+	 * @for ProfileItem
+	 * @type Number
 	 */
 	y1: {
 		get : function(){
@@ -295,9 +323,11 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Координата x конца профиля
+	 * ###Координата x конца профиля
+	 *
 	 * @property x2
-	 * @type {Number}
+	 * @for ProfileItem
+	 * @type Number
 	 */
 	x2: {
 		get : function(){
@@ -310,9 +340,11 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Координата y конца профиля
+	 * ### Координата y конца профиля
+	 *
 	 * @property y2
-	 * @type {Number}
+	 * @for ProfileItem
+	 * @type Number
 	 */
 	y2: {
 		get : function(){
@@ -326,7 +358,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Соединение в точке 'b' для диалога свойств
+	 * ### Соединение в точке 'b' для диалога свойств
+	 *
+	 * @property cnn1
+	 * @for ProfileItem
+	 * @type _cat.cnns
+	 * @private
 	 */
 	cnn1: {
 		get : function(){
@@ -340,6 +377,11 @@ ProfileItem.prototype.__define({
 
 	/**
 	 * Соединение в точке 'e' для диалога свойств
+	 *
+	 * @property cnn2
+	 * @for ProfileItem
+	 * @type _cat.cnns
+	 * @private
 	 */
 	cnn2: {
 		get : function(){
@@ -353,6 +395,12 @@ ProfileItem.prototype.__define({
 
 	/**
 	 * информация для диалога свойств
+	 *
+	 * @property info
+	 * @for ProfileItem
+	 * @type String
+	 * @final
+	 * @private
 	 */
 	info: {
 		get : function(){
@@ -361,9 +409,11 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Радиус сегмента профиля
+	 * ### Радиус сегмента профиля
+	 *
 	 * @property r
-	 * @type {Number}
+	 * @for ProfileItem
+	 * @type Number
 	 */
 	r: {
 		get : function(){
@@ -376,9 +426,11 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Направление дуги сегмента профиля против часовой стрелки
+	 * ### Направление дуги сегмента профиля против часовой стрелки
+	 *
 	 * @property arc_ccw
-	 * @type {Boolean}
+	 * @for ProfileItem
+	 * @type Boolean
 	 */
 	arc_ccw: {
 		get : function(){
@@ -390,8 +442,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Дополняет cnn_point свойствами соединения
+	 * ### Дополняет cnn_point свойствами соединения
+	 *
+	 * @method postcalc_cnn
+	 * @for ProfileItem
 	 * @param node {String} b, e - начало или конец элемента
+	 * @returns CnnPoint
 	 */
 	postcalc_cnn: {
 		value: function(node){
@@ -408,8 +464,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Пересчитывает вставку после пересчета соединений
+	 * ### Пересчитывает вставку после пересчета соединений
 	 * Попутно устанавливает тип элемента
+	 *
+	 * @method postcalc_inset
+	 * @for ProfileItem
+	 * @chainable
 	 */
 	postcalc_inset: {
 
@@ -420,8 +480,11 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Рассчитывает точки пути на пересечении текущего и указанного профилей
+	 * ### Рассчитывает точки пути
+	 * на пересечении текущего и указанного профилей
+	 *
 	 * @method path_points
+	 * @for ProfileItem
 	 * @param cnn_point {CnnPoint}
 	 */
 	path_points: {
@@ -612,7 +675,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
+	 * ### Точка внутри пути
 	 * Возвращает точку, расположенную гарантированно внутри профиля
+	 *
+	 * @property interiorPoint
+	 * @for ProfileItem
+	 * @type paper.Point
 	 */
 	interiorPoint: {
 		value: function () {
@@ -628,9 +696,11 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Выделяет начало или конец профиля
-	 * @param profile
-	 * @param node
+	 * ### Выделяет начало или конец профиля
+	 *
+	 * @method select_node
+	 * @for ProfileItem
+	 * @param node {String} b, e - начало или конец элемента
 	 */
 	select_node: {
 		value:  function(node){
@@ -646,7 +716,11 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Выделяет сегмент пути профиля, ближайший к точке
+	 * ### Выделяет сегмент пути профиля, ближайший к точке
+	 *
+	 * @method select_corn
+	 * @for ProfileItem
+	 * @param point {paper.Point}
 	 */
 	select_corn: {
 		value:  function(point){
@@ -682,7 +756,13 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Угол к горизонту прямой, проходящей через узлы
+	 * ### Угол к горизонту
+	 * Рассчитывается для прямой, проходящей через узлы
+	 *
+	 * @property angle_hor
+	 * @for ProfileItem
+	 * @type Number
+	 * @final
 	 */
 	angle_hor: {
 		get : function(){
@@ -692,7 +772,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Длина профиля с учетом соединений
+	 * ### Длина профиля с учетом соединений
+	 *
+	 * @property length
+	 * @for ProfileItem
+	 * @type Number
+	 * @final
 	 */
 	length: {
 
@@ -725,7 +810,14 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Ориентация профиля
+	 * ### Ориентация профиля
+	 * Вычисляется по гулу к горизонту.
+	 * Если угол в пределах `orientation_delta`, элемент признаётся горизонтальным или вертикальным. Иначе - наклонным
+	 *
+	 * @property orientation
+	 * @for ProfileItem
+	 * @type _enm.orientations
+	 * @final
 	 */
 	orientation: {
 		get : function(){
@@ -743,7 +835,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Признак прямолинейности
+	 * ### Признак прямолинейности
+	 * Вычисляется, как `is_linear()` {{#crossLink "BuilderElement/generatrix:property"}}образующей{{/crossLink}}
+	 *
+	 * @method is_linear
+	 * @for ProfileItem
+	 * @returns Boolean
 	 */
 	is_linear: {
 		value : function(){
@@ -752,7 +849,13 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Выясняет, примыкает ли указанный профиль к текущему
+	 * ### Выясняет, примыкает ли указанный профиль к текущему
+	 * Вычисления делаются на основании близости координат концов текущего профиля образующей соседнего
+	 *
+	 * @method is_nearest
+	 * @for ProfileItem
+	 * @param p {ProfileItem}
+	 * @returns Boolean
 	 */
 	is_nearest: {
 		value : function(p){
@@ -762,11 +865,17 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Выясняет, параллельны ли профили в пределах `consts.orientation_delta`
+	 * ### Выясняет, параллельны ли профили
+	 * в пределах `consts.orientation_delta`
+	 *
+	 * @method is_collinear
+	 * @for ProfileItem
+	 * @param p {ProfileItem}
+	 * @returns Boolean
 	 */
 	is_collinear: {
-		value : function(profile) {
-			var angl = profile.e.subtract(profile.b).getDirectedAngle(this.e.subtract(this.b));
+		value : function(p) {
+			var angl = p.e.subtract(p.b).getDirectedAngle(this.e.subtract(this.b));
 			if (angl < 0)
 				angl += 180;
 			return Math.abs(angl) < consts.orientation_delta;
@@ -774,9 +883,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Опорные точки и лучи
+	 * ### Опорные точки и лучи
+	 *
 	 * @property rays
-	 * @type {Object}
+	 * @for ProfileItem
+	 * @type ProfileRays
+	 * @final
 	 */
 	rays: {
 		get : function(){
@@ -787,8 +899,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Доборы текущего профиля
-	 * @type {Array.<ProfileAddl>}
+	 * ### Доборы текущего профиля
+	 *
+	 * @property addls
+	 * @for ProfileItem
+	 * @type Array.<ProfileAddl>
+	 * @final
 	 */
 	addls: {
 		get : function(){
@@ -849,8 +965,19 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Формирует путь сегмента профиля на основании пути образующей
+	 * ### Формирует путь сегмента профиля
+	 * Пересчитывает соединения с соседями и стоит путь профиля на основании пути образующей
+	 * - Сначала, вызывает {{#crossLink "ProfileItem/postcalc_cnn:method"}}postcalc_cnn(){{/crossLink}} для узлов `b` и `e`
+	 * - Внутри `postcalc_cnn`, выполняется {{#crossLink "ProfileItem/cnn_point:method"}}cnn_point(){{/crossLink}} для пересчета соединений на концах профиля
+	 * - Внутри `cnn_point`:
+	 *    + {{#crossLink "ProfileItem/check_distance:method"}}check_distance(){{/crossLink}} - проверяет привязку, если вернулось false, `cnn_point` завершает свою работы
+	 *    + цикл по всем профилям и поиск привязки
+	 * - {{#crossLink "ProfileItem/postcalc_inset:method"}}postcalc_inset(){{/crossLink}} - проверяет корректность вставки, заменяет при необходимости
+	 * - {{#crossLink "ProfileItem/path_points:method"}}path_points(){{/crossLink}} - рассчитывает координаты вершин пути профиля
+	 *
 	 * @method redraw
+	 * @for ProfileItem
+	 * @chainable
 	 */
 	redraw: {
 		value: function () {
@@ -1296,6 +1423,7 @@ Profile.prototype.__define({
 	},
 
 	/**
+	 * ### Соединение конца профиля
 	 * С этой функции начинается пересчет и перерисовка профиля
 	 * Возвращает объект соединения конца профиля
 	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
@@ -1304,7 +1432,7 @@ Profile.prototype.__define({
 	 * - Не делает подмену вставки, хотя могла бы
 	 *
 	 * @method cnn_point
-	 * @for Profile
+	 * @for ProfileItem
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
 	 * @return {CnnPoint} - объект {point, profile, cnn_types}
@@ -1497,14 +1625,14 @@ function CnnPoint(parent, node){
 
 		/**
 		 * Текущее соединение - объект справочника соединения
-		 * @type {_cat.cnns}
+		 * @type _cat.cnns
 		 */
 		this.cnn = this._row.cnn;
 
 		/**
 		 * Массив допустимых типов соединений
 		 * По умолчанию - соединение с пустотой
-		 * @type {Array}
+		 * @type Array
 		 */
 		if($p.enm.cnn_types.acn.a.indexOf(this.cnn.cnn_type) != -1)
 			this.cnn_types = $p.enm.cnn_types.acn.a;
@@ -1523,7 +1651,7 @@ function CnnPoint(parent, node){
 
 	/**
 	 * Расстояние до ближайшего профиля
-	 * @type {number}
+	 * @type Number
 	 */
 	this.distance = Infinity;
 
@@ -1536,7 +1664,7 @@ function CnnPoint(parent, node){
 
 		/**
 		 * Профиль, которому принадлежит точка соединения
-		 * @type {Profile}
+		 * @type Profile
 		 */
 		parent: {
 			value: parent,
@@ -1625,7 +1753,7 @@ CnnPoint.prototype.__define({
 
 	/**
 	 * Массив ошибок соединения
-	 * @type {Array}
+	 * @type Array
 	 */
 	err: {
 		get: function () {
@@ -1642,7 +1770,7 @@ CnnPoint.prototype.__define({
 	/**
 	 * Профиль, с которым пересекается наш элемент в точке соединения
 	 * @property profile
-	 * @type {Profile}
+	 * @type Profile
 	 */
 	profile: {
 		get: function () {
