@@ -1591,16 +1591,6 @@ Editor.prototype.__define({
 		}
 	},
 
-	snap_to_angle: {
-		value: function(delta, snapAngle) {
-			var angle = Math.atan2(delta.y, delta.x);
-			angle = Math.round(angle/snapAngle) * snapAngle;
-			var dirx = Math.cos(angle),
-				diry = Math.sin(angle),
-				d = dirx*delta.x + diry*delta.y;
-			return new paper.Point(dirx*d, diry*d);
-		}
-	},
 
 	/**
 	 * ### Деструктор
@@ -5875,7 +5865,7 @@ paper.Point.prototype.__define({
 	},
 
 	/**
-	 * Рассчитывает координаты точки, лежащей на окружности
+	 * ### Рассчитывает координаты центра окружности по точкам и радиусу
 	 * @param x1 {Number}
 	 * @param y1 {Number}
 	 * @param x2 {Number}
@@ -5922,6 +5912,17 @@ paper.Point.prototype.__define({
 		enumerable: false
 	},
 
+	/**
+	 * ### Рассчитывает координаты точки, лежащей на окружности
+	 * @param x1
+	 * @param y1
+	 * @param x2
+	 * @param y2
+	 * @param r
+	 * @param arc_ccw
+	 * @param more_180
+	 * @return {{x: number, y: number}}
+	 */
 	arc_point: {
 		value: function(x1,y1, x2,y2, r, arc_ccw, more_180){
 			var point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
@@ -5945,6 +5946,28 @@ paper.Point.prototype.__define({
 			return point;
 		},
 		enumerable: false
+	},
+
+	/**
+	 * ### Привязка к углу
+	 * Сдвигает точку к ближайшему лучу с углом, кратным snapAngle
+	 *
+	 * @param [snapAngle] {Number} - шаг угла, по умолчанию 45°
+	 * @return {paper.Point}
+	 */
+	snap_to_angle: {
+		value: function(snapAngle) {
+			if(!snapAngle)
+				snapAngle = Math.PI*2/8;
+
+			var angle = Math.atan2(this.y, this.x);
+			angle = Math.round(angle/snapAngle) * snapAngle;
+			var dirx = Math.cos(angle),
+				diry = Math.sin(angle),
+				d = dirx*this.x + diry*this.y;
+
+			return new paper.Point(dirx*d, diry*d);
+		}
 	}
 
 });
@@ -9798,7 +9821,7 @@ Scheme.prototype.__define({
 	selected_profiles: {
 		value: function (all) {
 
-			var res = [];
+			var res = [], count = this.selectedItems.length;
 
 			this.selectedItems.forEach(function (item) {
 
@@ -9810,7 +9833,7 @@ Scheme.prototype.__define({
 						if(res.indexOf(p) != -1)
 							return;
 
-						if(!(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected))
+						if(count < 2 || !(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected))
 							res.push(p);
 
 					}
@@ -11664,16 +11687,15 @@ function ToolPen(){
 						if (dragIn && dragOut) {
 							handlePos = this.originalHandleOut.add(delta);
 							if (event.modifiers.shift)
-								handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
+								handlePos = handlePos.snap_to_angle();
 							this.currentSegment.handleOut = handlePos;
 							this.currentSegment.handleIn = handlePos.negate();
 
 						} else if (dragOut) {
 							// upzp
 
-							if (event.modifiers.shift) {
-								delta = _editor.snap_to_angle(delta, Math.PI*2/8);
-							}
+							if (event.modifiers.shift)
+								delta = delta.snap_to_angle();
 							
 							if(this.path.segments.length > 1)
 								this.path.lastSegment.point = this.point1.add(delta);
@@ -11754,7 +11776,7 @@ function ToolPen(){
 						} else {
 							handlePos = this.originalHandleIn.add(delta);
 							if (event.modifiers.shift)
-								handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
+								handlePos = handlePos.snap_to_angle();
 							this.currentSegment.handleIn = handlePos;
 							this.currentSegment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
 						}
@@ -12859,7 +12881,7 @@ function ToolSelectNode(){
 
 				var delta = event.point.subtract(this.mouseStartPos);
 				if (event.modifiers.shift)
-					delta = paper.snap_to_angle(delta, Math.PI*2/8);
+					delta = delta.snap_to_angle();
 
 				paper.restore_selection_state(this.originalContent);
 				paper.project.move_points(delta, true);
@@ -12869,9 +12891,8 @@ function ToolSelectNode(){
 				paper.canvas_cursor('cursor-arrow-small');
 
 				var delta = event.point.subtract(this.mouseStartPos);
-				if (event.modifiers.shift) {
-					delta = paper.snap_to_angle(delta, Math.PI*2/8);
-				}
+				if (event.modifiers.shift)
+					delta = delta.snap_to_angle();
 				paper.restore_selection_state(this.originalContent);
 				paper.project.move_points(delta);
 				paper.purge_selection();
@@ -12888,14 +12909,14 @@ function ToolSelectNode(){
 				if (tool.hitItem.type == 'handle-out') {
 					var handlePos = this.originalHandleOut.add(delta);
 					if (event.modifiers.shift)
-						handlePos = paper.snap_to_angle(handlePos, Math.PI*2/8);
+						handlePos = handlePos.snap_to_angle();
 
 					tool.hitItem.segment.handleOut = handlePos;
 					tool.hitItem.segment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
 				} else {
 					var handlePos = this.originalHandleIn.add(delta);
 					if (event.modifiers.shift)
-						handlePos = paper.snap_to_angle(handlePos, Math.PI*2/8);
+						handlePos = handlePos.snap_to_angle();
 
 					tool.hitItem.segment.handleIn = handlePos;
 					tool.hitItem.segment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
@@ -13159,7 +13180,7 @@ function ToolText(){
 			if (this.text) {
 				var delta = event.point.subtract(this.mouseStartPos);
 				if (event.modifiers.shift)
-					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
+					delta = delta.snap_to_angle();
 
 				this.text.move_points(this.textStartPos.add(delta));
 				

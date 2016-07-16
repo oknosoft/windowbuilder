@@ -1269,7 +1269,7 @@ Scheme.prototype.__define({
 	selected_profiles: {
 		value: function (all) {
 
-			var res = [];
+			var res = [], count = this.selectedItems.length;
 
 			this.selectedItems.forEach(function (item) {
 
@@ -1281,7 +1281,7 @@ Scheme.prototype.__define({
 						if(res.indexOf(p) != -1)
 							return;
 
-						if(!(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected))
+						if(count < 2 || !(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected))
 							res.push(p);
 
 					}

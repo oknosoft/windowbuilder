@@ -123,7 +123,7 @@ function ToolText(){
 			if (this.text) {
 				var delta = event.point.subtract(this.mouseStartPos);
 				if (event.modifiers.shift)
-					delta = _editor.snap_to_angle(delta, Math.PI*2/8);
+					delta = delta.snap_to_angle();
 
 				this.text.move_points(this.textStartPos.add(delta));
 				

@@ -842,16 +842,6 @@ Editor.prototype.__define({
 		}
 	},
 
-	snap_to_angle: {
-		value: function(delta, snapAngle) {
-			var angle = Math.atan2(delta.y, delta.x);
-			angle = Math.round(angle/snapAngle) * snapAngle;
-			var dirx = Math.cos(angle),
-				diry = Math.sin(angle),
-				d = dirx*delta.x + diry*delta.y;
-			return new paper.Point(dirx*d, diry*d);
-		}
-	},
 
 	/**
 	 * ### Деструктор

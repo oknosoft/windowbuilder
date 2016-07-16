@@ -504,16 +504,15 @@ function ToolPen(){
 						if (dragIn && dragOut) {
 							handlePos = this.originalHandleOut.add(delta);
 							if (event.modifiers.shift)
-								handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
+								handlePos = handlePos.snap_to_angle();
 							this.currentSegment.handleOut = handlePos;
 							this.currentSegment.handleIn = handlePos.negate();
 
 						} else if (dragOut) {
 							// upzp
 
-							if (event.modifiers.shift) {
-								delta = _editor.snap_to_angle(delta, Math.PI*2/8);
-							}
+							if (event.modifiers.shift)
+								delta = delta.snap_to_angle();
 							
 							if(this.path.segments.length > 1)
 								this.path.lastSegment.point = this.point1.add(delta);
@@ -594,7 +593,7 @@ function ToolPen(){
 						} else {
 							handlePos = this.originalHandleIn.add(delta);
 							if (event.modifiers.shift)
-								handlePos = _editor.snap_to_angle(handlePos, Math.PI*2/8);
+								handlePos = handlePos.snap_to_angle();
 							this.currentSegment.handleIn = handlePos;
 							this.currentSegment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
 						}

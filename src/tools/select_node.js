@@ -267,7 +267,7 @@ function ToolSelectNode(){
 
 				var delta = event.point.subtract(this.mouseStartPos);
 				if (event.modifiers.shift)
-					delta = paper.snap_to_angle(delta, Math.PI*2/8);
+					delta = delta.snap_to_angle();
 
 				paper.restore_selection_state(this.originalContent);
 				paper.project.move_points(delta, true);
@@ -277,9 +277,8 @@ function ToolSelectNode(){
 				paper.canvas_cursor('cursor-arrow-small');
 
 				var delta = event.point.subtract(this.mouseStartPos);
-				if (event.modifiers.shift) {
-					delta = paper.snap_to_angle(delta, Math.PI*2/8);
-				}
+				if (event.modifiers.shift)
+					delta = delta.snap_to_angle();
 				paper.restore_selection_state(this.originalContent);
 				paper.project.move_points(delta);
 				paper.purge_selection();
@@ -296,14 +295,14 @@ function ToolSelectNode(){
 				if (tool.hitItem.type == 'handle-out') {
 					var handlePos = this.originalHandleOut.add(delta);
 					if (event.modifiers.shift)
-						handlePos = paper.snap_to_angle(handlePos, Math.PI*2/8);
+						handlePos = handlePos.snap_to_angle();
 
 					tool.hitItem.segment.handleOut = handlePos;
 					tool.hitItem.segment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
 				} else {
 					var handlePos = this.originalHandleIn.add(delta);
 					if (event.modifiers.shift)
-						handlePos = paper.snap_to_angle(handlePos, Math.PI*2/8);
+						handlePos = handlePos.snap_to_angle();
 
 					tool.hitItem.segment.handleIn = handlePos;
 					tool.hitItem.segment.handleOut = handlePos.normalize(-this.originalHandleOut.length);

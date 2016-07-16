@@ -315,7 +315,7 @@ paper.Point.prototype.__define({
 	},
 
 	/**
-	 * Рассчитывает координаты точки, лежащей на окружности
+	 * ### Рассчитывает координаты центра окружности по точкам и радиусу
 	 * @param x1 {Number}
 	 * @param y1 {Number}
 	 * @param x2 {Number}
@@ -362,6 +362,17 @@ paper.Point.prototype.__define({
 		enumerable: false
 	},
 
+	/**
+	 * ### Рассчитывает координаты точки, лежащей на окружности
+	 * @param x1
+	 * @param y1
+	 * @param x2
+	 * @param y2
+	 * @param r
+	 * @param arc_ccw
+	 * @param more_180
+	 * @return {{x: number, y: number}}
+	 */
 	arc_point: {
 		value: function(x1,y1, x2,y2, r, arc_ccw, more_180){
 			var point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
@@ -385,6 +396,28 @@ paper.Point.prototype.__define({
 			return point;
 		},
 		enumerable: false
+	},
+
+	/**
+	 * ### Привязка к углу
+	 * Сдвигает точку к ближайшему лучу с углом, кратным snapAngle
+	 *
+	 * @param [snapAngle] {Number} - шаг угла, по умолчанию 45°
+	 * @return {paper.Point}
+	 */
+	snap_to_angle: {
+		value: function(snapAngle) {
+			if(!snapAngle)
+				snapAngle = Math.PI*2/8;
+
+			var angle = Math.atan2(this.y, this.x);
+			angle = Math.round(angle/snapAngle) * snapAngle;
+			var dirx = Math.cos(angle),
+				diry = Math.sin(angle),
+				d = dirx*this.x + diry*this.y;
+
+			return new paper.Point(dirx*d, diry*d);
+		}
 	}
 
 });
