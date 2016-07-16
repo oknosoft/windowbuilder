@@ -136,7 +136,7 @@ $p.modifiers.push(
 						if(this.sys.production.count() == 1){
 							this.owner = this.sys.production.get(0).nom;
 							
-						}else{
+						}else if(this.sys.production.count() > 1){
 							this.sys.production.each(function (row) {
 
 								if(setted)

@@ -110,7 +110,7 @@ $p.modifiers.push(
 			if(selection_block.calc_order.empty()){
 				selection_block.calc_order = $p.wsql.get_user_param("template_block_calc_order");
 			}
-			if(selection_block.calc_order.empty() || selection_block.calc_order.is_new()){
+			if($p.job_prm.builder.base_block && (selection_block.calc_order.empty() || selection_block.calc_order.is_new())){
 				$p.job_prm.builder.base_block.some(function (o) {
 					selection_block.calc_order = o;
 					$p.wsql.set_user_param("template_block_calc_order", selection_block.calc_order.ref);
