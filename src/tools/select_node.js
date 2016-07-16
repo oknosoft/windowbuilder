@@ -125,7 +125,8 @@ function ToolSelectNode(){
 
 			}
 
-			if (tool.hitItem) {
+			if (tool.hitItem && !event.modifiers.alt) {
+
 				var is_profile = tool.hitItem.item.parent instanceof ProfileItem,
 					item = is_profile ? tool.hitItem.item.parent.generatrix : tool.hitItem.item;
 
@@ -226,8 +227,8 @@ function ToolSelectNode(){
 				if (!event.modifiers.shift)
 					paper.project.deselectAll();
 
-				// при зажатом ctrl или alt добавляем элемент иначе - узел
-				if (event.modifiers.control || event.modifiers.option) {
+				// при зажатом ctrl добавляем элемент иначе - узел
+				if (event.modifiers.control) {
 
 					var selectedPaths = paper.paths_intersecting_rect(box);
 					for (var i = 0; i < selectedPaths.length; i++)

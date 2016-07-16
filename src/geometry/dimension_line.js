@@ -231,7 +231,8 @@ DimensionLine.prototype.__define({
 
 				switch(event.name) {
 					case 'close':
-						this.children.text.selected = false;
+						if(this.children.text)
+							this.children.text.selected = false;
 						this.wnd = null;
 						break;
 

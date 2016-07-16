@@ -918,8 +918,10 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Координаты вершин (cornx1...corny4)
+	 * ### Координаты вершин (cornx1...corny4)
+	 *
 	 * @method corns
+	 * @for ProfileItem
 	 * @param corn {String|Number} - имя или номер вершины
 	 * @return {Point|Number} - координата или точка
 	 */
@@ -1048,13 +1050,21 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
+	 * ### Двигает узлы
 	 * Обрабатывает смещение выделенных сегментов образующей профиля
+	 *
+	 * @method move_points
+	 * @for ProfileItem
 	 * @param delta {paper.Point} - куда и насколько смещать
 	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
 	 * @param [start_point] {paper.Point} - откуда началось движение
 	 */
 	move_points: {
 		value:  function(delta, all_points, start_point){
+
+			if(!delta.length)
+				return;
+
 			var changed,
 				other = [],
 				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;

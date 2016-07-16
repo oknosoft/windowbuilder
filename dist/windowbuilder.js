@@ -851,7 +851,14 @@ function Editor(pwnd, attr){
 			}
 		},
 
-		// разбивка на канвас и аккордион
+		/**
+		 * ### Разбивка на канвас и аккордион
+		 *
+		 * @property _layout
+		 * @type dhtmlXLayoutObject
+		 * @final
+		 * @private
+		 */
 		_layout: {
 			value: pwnd.attachLayout({
 				pattern: "2U",
@@ -869,23 +876,34 @@ function Editor(pwnd, attr){
 			})
 		},
 
-		// контейнер канваса
+		/**
+		 * ### Контейнер канваса
+		 *
+		 * @property _wrapper
+		 * @type HTMLDivElement
+		 * @final
+		 * @private
+		 */
 		_wrapper: {
 			value: document.createElement('div')
 		},
 
-		// указатель на локальный dhtmlXWindows
+		/**
+		 * ### Локальный dhtmlXWindows
+		 * Нужен для привязки окон инструментов к области редактирования
+		 *
+		 * @property _dxw
+		 * @type dhtmlXWindows
+		 * @final
+		 * @private
+		 */
 		_dxw: {
 			get: function () {
 				return this._layout.dhxWins;
 			}
-		},
-
-		toString: {
-			value: function(){ return $p.msg.bld_constructor; }
 		}
-	});
 
+	});
 
 	_editor._layout.cells("a").attachObject(_editor._wrapper);
 	_editor._dxw.attachViewportTo(_editor._wrapper);
@@ -896,12 +914,21 @@ function Editor(pwnd, attr){
 	};
 
 
-	// аккордион со свойствами
-	_editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b")) ;
+	/**
+	 * ### Aккордион со свойствами
+	 *
+	 * @property _acc
+	 * @type {EditorAccordion}
+	 * @private
+	 */
+	_editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
 
 	/**
-	 * Панель выбора инструментов рисовалки
+	 * ### Панель выбора инструментов рисовалки
+	 *
+	 * @property tb_left
 	 * @type OTooolBar
+	 * @private
 	 */
 	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '300px',
 		image_path: 'dist/imgs/',
@@ -928,8 +955,11 @@ function Editor(pwnd, attr){
 	});
 
 	/**
-	 * Верхняя панель инструментов
-	 * @type {OTooolBar}
+	 * ### Верхняя панель инструментов
+	 *
+	 * @property tb_top
+	 * @type OTooolBar
+	 * @private
 	 */
 	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
 		image_path: 'dist/imgs/',
@@ -1033,6 +1063,7 @@ function Editor(pwnd, attr){
 					break;
 			}
 		}});
+
 	_editor._layout.base.style.backgroundColor = "#f5f5f5";
 	//_editor._layout.base.parentNode.parentNode.style.top = "0px";
 	_editor.tb_top.cell.style.background = "transparent";
@@ -1497,7 +1528,6 @@ Editor.prototype.__define({
 	profile_align: {
 		value: 	function(name){
 
-			var profiles = this.project.selected_profiles();
 
 			// если "все", получаем все профили активного или родительского контура
 			if(name == "all"){
@@ -1537,10 +1567,16 @@ Editor.prototype.__define({
 
 
 			}else{
-				this.project.selected_profiles().forEach(function (profile) {
+
+				var profiles = this.project.selected_profiles(),
+					contours = [], changed;
+
+				profiles.forEach(function (profile) {
 
 					if(profile.angle_hor % 90 == 0)
 						return;
+
+					changed = true;
 
 					var minmax = {min: {}, max: {}};
 
@@ -1582,15 +1618,91 @@ Editor.prototype.__define({
 					}else
 						$p.msg.show_msg({type: "info", text: $p.msg.align_invalid_direction});
 
-				})
-			};
+				});
 
-			if(profiles.length)
-				this.project.register_change(true);
+				// прочищаем размерные линии
+				if(changed || profiles.length > 1){
+					profiles.forEach(function (p) {
+						if(contours.indexOf(p.layer) == -1)
+							contours.push(p.layer);
+					});
+					contours.forEach(function (l) {
+						l.clear_dimentions();
+					});
+				}
+
+				// если выделено несколько, запланируем групповое выравнивание
+				if(name != 'delete' && profiles.length > 1){
+
+					if(changed){
+						this.project.register_change(true);
+						setTimeout(this.profile_group_align.bind(this, name, profiles), 100);
+
+					}else
+						this.profile_group_align(name);
+
+				}else if(changed)
+					this.project.register_change(true);
+			}
 
 		}
 	},
 
+	profile_group_align: {
+		value: 	function(name, profiles){
+
+			var	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
+
+			if(!profiles)
+				profiles = this.project.selected_profiles();
+
+			if(profiles.length < 1)
+				return;
+
+			profiles.forEach(function (p) {
+				switch (name){
+					case 'left':
+						if(p.x1 < coordin)
+							coordin = p.x1;
+						if(p.x2 < coordin)
+							coordin = p.x2;
+						break;
+					case 'bottom':
+						if(p.y1 < coordin)
+							coordin = p.y1;
+						if(p.y2 < coordin)
+							coordin = p.y2;
+						break;
+					case 'top':
+						if(p.y1 > coordin)
+							coordin = p.y1;
+						if(p.y2 > coordin)
+							coordin = p.y2;
+						break;
+					case 'right':
+						if(p.x1 > coordin)
+							coordin = p.x1;
+						if(p.x2 > coordin)
+							coordin = p.x2;
+						break;
+				}
+			});
+
+			profiles.forEach(function (p) {
+				switch (name){
+					case 'left':
+					case 'right':
+						p.x1 = p.x2 = coordin;
+						break;
+					case 'bottom':
+					case 'top':
+						p.y1 = p.y2 = coordin;
+						break;
+				}
+			});
+
+		}
+	},
 
 	/**
 	 * ### Деструктор
@@ -3531,7 +3643,7 @@ Contour.prototype.__define({
 			if(this.parent)
 				this.parent.on_remove_elm(elm);
 
-			else if (elm instanceof Profile && !this.project.data._loading)
+			if (elm instanceof Profile && !this.project.data._loading)
 				this.clear_dimentions();
 			
 		}
@@ -3548,7 +3660,7 @@ Contour.prototype.__define({
 			if(this.parent)
 				this.parent.on_remove_elm(elm);
 
-			else if (elm instanceof Profile && !this.project.data._loading)
+			if (elm instanceof Profile && !this.project.data._loading)
 				this.clear_dimentions();
 
 		}
@@ -3876,7 +3988,8 @@ DimensionLine.prototype.__define({
 
 				switch(event.name) {
 					case 'close':
-						this.children.text.selected = false;
+						if(this.children.text)
+							this.children.text.selected = false;
 						this.wnd = null;
 						break;
 
@@ -4230,7 +4343,7 @@ function BuilderElement(attr){
 	this.project.register_change();
 
 	/**
-	 * Удаляет элемент из контура и иерархии проекта
+	 * ### Удаляет элемент из контура и иерархии проекта
 	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_ и отключает наблюдателя
 	 * @method remove
 	 */
@@ -6739,6 +6852,7 @@ ProfileItem.prototype.__define({
 	 * Рассчитывается для прямой, проходящей через узлы
 	 *
 	 * @property angle_hor
+	 * @for ProfileItem
 	 * @type Number
 	 * @final
 	 */
@@ -6750,7 +6864,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Длина профиля с учетом соединений
+	 * ### Длина профиля с учетом соединений
+	 *
+	 * @property length
+	 * @for ProfileItem
+	 * @type Number
+	 * @final
 	 */
 	length: {
 
@@ -6783,7 +6902,14 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Ориентация профиля
+	 * ### Ориентация профиля
+	 * Вычисляется по гулу к горизонту.
+	 * Если угол в пределах `orientation_delta`, элемент признаётся горизонтальным или вертикальным. Иначе - наклонным
+	 *
+	 * @property orientation
+	 * @for ProfileItem
+	 * @type _enm.orientations
+	 * @final
 	 */
 	orientation: {
 		get : function(){
@@ -6801,7 +6927,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Признак прямолинейности
+	 * ### Признак прямолинейности
+	 * Вычисляется, как `is_linear()` {{#crossLink "BuilderElement/generatrix:property"}}образующей{{/crossLink}}
+	 *
+	 * @method is_linear
+	 * @for ProfileItem
+	 * @returns Boolean
 	 */
 	is_linear: {
 		value : function(){
@@ -6810,7 +6941,13 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Выясняет, примыкает ли указанный профиль к текущему
+	 * ### Выясняет, примыкает ли указанный профиль к текущему
+	 * Вычисления делаются на основании близости координат концов текущего профиля образующей соседнего
+	 *
+	 * @method is_nearest
+	 * @for ProfileItem
+	 * @param p {ProfileItem}
+	 * @returns Boolean
 	 */
 	is_nearest: {
 		value : function(p){
@@ -6820,11 +6957,17 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Выясняет, параллельны ли профили в пределах `consts.orientation_delta`
+	 * ### Выясняет, параллельны ли профили
+	 * в пределах `consts.orientation_delta`
+	 *
+	 * @method is_collinear
+	 * @for ProfileItem
+	 * @param p {ProfileItem}
+	 * @returns Boolean
 	 */
 	is_collinear: {
-		value : function(profile) {
-			var angl = profile.e.subtract(profile.b).getDirectedAngle(this.e.subtract(this.b));
+		value : function(p) {
+			var angl = p.e.subtract(p.b).getDirectedAngle(this.e.subtract(this.b));
 			if (angl < 0)
 				angl += 180;
 			return Math.abs(angl) < consts.orientation_delta;
@@ -6832,9 +6975,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Опорные точки и лучи
+	 * ### Опорные точки и лучи
+	 *
 	 * @property rays
-	 * @type Object
+	 * @for ProfileItem
+	 * @type ProfileRays
+	 * @final
 	 */
 	rays: {
 		get : function(){
@@ -6845,8 +6991,12 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Доборы текущего профиля
+	 * ### Доборы текущего профиля
+	 *
+	 * @property addls
+	 * @for ProfileItem
 	 * @type Array.<ProfileAddl>
+	 * @final
 	 */
 	addls: {
 		get : function(){
@@ -6860,8 +7010,10 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
-	 * Координаты вершин (cornx1...corny4)
+	 * ### Координаты вершин (cornx1...corny4)
+	 *
 	 * @method corns
+	 * @for ProfileItem
 	 * @param corn {String|Number} - имя или номер вершины
 	 * @return {Point|Number} - координата или точка
 	 */
@@ -6990,13 +7142,21 @@ ProfileItem.prototype.__define({
 	},
 
 	/**
+	 * ### Двигает узлы
 	 * Обрабатывает смещение выделенных сегментов образующей профиля
+	 *
+	 * @method move_points
+	 * @for ProfileItem
 	 * @param delta {paper.Point} - куда и насколько смещать
 	 * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
 	 * @param [start_point] {paper.Point} - откуда началось движение
 	 */
 	move_points: {
 		value:  function(delta, all_points, start_point){
+
+			if(!delta.length)
+				return;
+
 			var changed,
 				other = [],
 				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;
@@ -7365,6 +7525,7 @@ Profile.prototype.__define({
 	},
 
 	/**
+	 * ### Соединение конца профиля
 	 * С этой функции начинается пересчет и перерисовка профиля
 	 * Возвращает объект соединения конца профиля
 	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
@@ -7373,7 +7534,7 @@ Profile.prototype.__define({
 	 * - Не делает подмену вставки, хотя могла бы
 	 *
 	 * @method cnn_point
-	 * @for Profile
+	 * @for ProfileItem
 	 * @param node {String} - имя узла профиля: "b" или "e"
 	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
 	 * @return {CnnPoint} - объект {point, profile, cnn_types}
@@ -9414,7 +9575,7 @@ Scheme.prototype.__define({
 	move_points: {
 		value: function (delta, all_points) {
 
-			var other = [];
+			var other = [], layers = [];
 
 			this.selectedItems.forEach(function (item) {
 
@@ -9435,6 +9596,11 @@ Scheme.prototype.__define({
 
 						// двигаем и накапливаем связанные
 						other = other.concat(item.parent.move_points(delta, all_points));
+
+						if(layers.indexOf(item.layer) == -1){
+							layers.push(item.layer);
+							item.layer.clear_dimentions();
+						}
 
 					}
 
@@ -12831,7 +12997,8 @@ function ToolSelectNode(){
 
 			}
 
-			if (tool.hitItem) {
+			if (tool.hitItem && !event.modifiers.alt) {
+
 				var is_profile = tool.hitItem.item.parent instanceof ProfileItem,
 					item = is_profile ? tool.hitItem.item.parent.generatrix : tool.hitItem.item;
 
@@ -12932,8 +13099,8 @@ function ToolSelectNode(){
 				if (!event.modifiers.shift)
 					paper.project.deselectAll();
 
-				// при зажатом ctrl или alt добавляем элемент иначе - узел
-				if (event.modifiers.control || event.modifiers.option) {
+				// при зажатом ctrl добавляем элемент иначе - узел
+				if (event.modifiers.control) {
 
 					var selectedPaths = paper.paths_intersecting_rect(box);
 					for (var i = 0; i < selectedPaths.length; i++)

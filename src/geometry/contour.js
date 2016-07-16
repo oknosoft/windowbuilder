@@ -1769,7 +1769,7 @@ Contour.prototype.__define({
 			if(this.parent)
 				this.parent.on_remove_elm(elm);
 
-			else if (elm instanceof Profile && !this.project.data._loading)
+			if (elm instanceof Profile && !this.project.data._loading)
 				this.clear_dimentions();
 			
 		}
@@ -1786,7 +1786,7 @@ Contour.prototype.__define({
 			if(this.parent)
 				this.parent.on_remove_elm(elm);
 
-			else if (elm instanceof Profile && !this.project.data._loading)
+			if (elm instanceof Profile && !this.project.data._loading)
 				this.clear_dimentions();
 
 		}

@@ -102,7 +102,14 @@ function Editor(pwnd, attr){
 			}
 		},
 
-		// разбивка на канвас и аккордион
+		/**
+		 * ### Разбивка на канвас и аккордион
+		 *
+		 * @property _layout
+		 * @type dhtmlXLayoutObject
+		 * @final
+		 * @private
+		 */
 		_layout: {
 			value: pwnd.attachLayout({
 				pattern: "2U",
@@ -120,23 +127,34 @@ function Editor(pwnd, attr){
 			})
 		},
 
-		// контейнер канваса
+		/**
+		 * ### Контейнер канваса
+		 *
+		 * @property _wrapper
+		 * @type HTMLDivElement
+		 * @final
+		 * @private
+		 */
 		_wrapper: {
 			value: document.createElement('div')
 		},
 
-		// указатель на локальный dhtmlXWindows
+		/**
+		 * ### Локальный dhtmlXWindows
+		 * Нужен для привязки окон инструментов к области редактирования
+		 *
+		 * @property _dxw
+		 * @type dhtmlXWindows
+		 * @final
+		 * @private
+		 */
 		_dxw: {
 			get: function () {
 				return this._layout.dhxWins;
 			}
-		},
-
-		toString: {
-			value: function(){ return $p.msg.bld_constructor; }
 		}
-	});
 
+	});
 
 	_editor._layout.cells("a").attachObject(_editor._wrapper);
 	_editor._dxw.attachViewportTo(_editor._wrapper);
@@ -147,12 +165,21 @@ function Editor(pwnd, attr){
 	};
 
 
-	// аккордион со свойствами
-	_editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b")) ;
+	/**
+	 * ### Aккордион со свойствами
+	 *
+	 * @property _acc
+	 * @type {EditorAccordion}
+	 * @private
+	 */
+	_editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
 
 	/**
-	 * Панель выбора инструментов рисовалки
+	 * ### Панель выбора инструментов рисовалки
+	 *
+	 * @property tb_left
 	 * @type OTooolBar
+	 * @private
 	 */
 	_editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '300px',
 		image_path: 'dist/imgs/',
@@ -179,8 +206,11 @@ function Editor(pwnd, attr){
 	});
 
 	/**
-	 * Верхняя панель инструментов
-	 * @type {OTooolBar}
+	 * ### Верхняя панель инструментов
+	 *
+	 * @property tb_top
+	 * @type OTooolBar
+	 * @private
 	 */
 	_editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
 		image_path: 'dist/imgs/',
@@ -284,6 +314,7 @@ function Editor(pwnd, attr){
 					break;
 			}
 		}});
+
 	_editor._layout.base.style.backgroundColor = "#f5f5f5";
 	//_editor._layout.base.parentNode.parentNode.style.top = "0px";
 	_editor.tb_top.cell.style.background = "transparent";
@@ -748,7 +779,6 @@ Editor.prototype.__define({
 	profile_align: {
 		value: 	function(name){
 
-			var profiles = this.project.selected_profiles();
 
 			// если "все", получаем все профили активного или родительского контура
 			if(name == "all"){
@@ -788,10 +818,16 @@ Editor.prototype.__define({
 
 
 			}else{
-				this.project.selected_profiles().forEach(function (profile) {
+
+				var profiles = this.project.selected_profiles(),
+					contours = [], changed;
+
+				profiles.forEach(function (profile) {
 
 					if(profile.angle_hor % 90 == 0)
 						return;
+
+					changed = true;
 
 					var minmax = {min: {}, max: {}};
 
@@ -833,15 +869,91 @@ Editor.prototype.__define({
 					}else
 						$p.msg.show_msg({type: "info", text: $p.msg.align_invalid_direction});
 
-				})
-			};
+				});
 
-			if(profiles.length)
-				this.project.register_change(true);
+				// прочищаем размерные линии
+				if(changed || profiles.length > 1){
+					profiles.forEach(function (p) {
+						if(contours.indexOf(p.layer) == -1)
+							contours.push(p.layer);
+					});
+					contours.forEach(function (l) {
+						l.clear_dimentions();
+					});
+				}
+
+				// если выделено несколько, запланируем групповое выравнивание
+				if(name != 'delete' && profiles.length > 1){
+
+					if(changed){
+						this.project.register_change(true);
+						setTimeout(this.profile_group_align.bind(this, name, profiles), 100);
+
+					}else
+						this.profile_group_align(name);
+
+				}else if(changed)
+					this.project.register_change(true);
+			}
 
 		}
 	},
 
+	profile_group_align: {
+		value: 	function(name, profiles){
+
+			var	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
+
+			if(!profiles)
+				profiles = this.project.selected_profiles();
+
+			if(profiles.length < 1)
+				return;
+
+			profiles.forEach(function (p) {
+				switch (name){
+					case 'left':
+						if(p.x1 < coordin)
+							coordin = p.x1;
+						if(p.x2 < coordin)
+							coordin = p.x2;
+						break;
+					case 'bottom':
+						if(p.y1 < coordin)
+							coordin = p.y1;
+						if(p.y2 < coordin)
+							coordin = p.y2;
+						break;
+					case 'top':
+						if(p.y1 > coordin)
+							coordin = p.y1;
+						if(p.y2 > coordin)
+							coordin = p.y2;
+						break;
+					case 'right':
+						if(p.x1 > coordin)
+							coordin = p.x1;
+						if(p.x2 > coordin)
+							coordin = p.x2;
+						break;
+				}
+			});
+
+			profiles.forEach(function (p) {
+				switch (name){
+					case 'left':
+					case 'right':
+						p.x1 = p.x2 = coordin;
+						break;
+					case 'bottom':
+					case 'top':
+						p.y1 = p.y2 = coordin;
+						break;
+				}
+			});
+
+		}
+	},
 
 	/**
 	 * ### Деструктор

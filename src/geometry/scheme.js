@@ -772,7 +772,7 @@ Scheme.prototype.__define({
 	move_points: {
 		value: function (delta, all_points) {
 
-			var other = [];
+			var other = [], layers = [];
 
 			this.selectedItems.forEach(function (item) {
 
@@ -793,6 +793,11 @@ Scheme.prototype.__define({
 
 						// двигаем и накапливаем связанные
 						other = other.concat(item.parent.move_points(delta, all_points));
+
+						if(layers.indexOf(item.layer) == -1){
+							layers.push(item.layer);
+							item.layer.clear_dimentions();
+						}
 
 					}
 
