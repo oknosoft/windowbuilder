@@ -20,7 +20,7 @@ lib/dhtmlx.min.js
 # А эти - только в дебагере
 # //oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
 # //oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.css
-lib/paper-core.js
+lib/paper-core.min.js
 lib/baron/baron.min.js
 lib/qrcodejs/qrcode.js
 dist/windowbuilder.min.js

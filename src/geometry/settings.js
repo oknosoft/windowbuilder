@@ -34,7 +34,7 @@
 		this.font_size = $p.job_prm.builder.font_size || 60;
 
 		// в пределах этого угла, считаем элемент вертикальным или горизонтальным
-		this.orientation_delta = $p.job_prm.builder.orientation_delta || 7;
+		this.orientation_delta = $p.job_prm.builder.orientation_delta || 20;
 		
 
 	}.bind(this);

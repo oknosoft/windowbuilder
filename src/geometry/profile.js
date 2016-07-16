@@ -686,7 +686,7 @@ ProfileItem.prototype.__define({
 	 */
 	angle_hor: {
 		get : function(){
-			var res = Math.round((new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle * 10) / 10;
+			var res = (new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle.round(1);
 			return res < 0 ? res + 360 : res;
 		}
 	},

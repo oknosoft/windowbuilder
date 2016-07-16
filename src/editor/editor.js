@@ -738,63 +738,107 @@ Editor.prototype.__define({
 		}
 	},
 
+	/**
+	 * ### Поворот кратно 90° и выравнивание
+	 *
+	 * @method profile_align
+	 * @for Editor
+	 * @param name {String} - ('left', 'right', 'top', 'bottom', 'all', 'delete')
+	 */
 	profile_align: {
 		value: 	function(name){
-			var minmax = {min: {}, max: {}},
-				profile = this.tool.profile;
 
-			if(!(profile instanceof Profile) && this._acc.elm.cells("a").dataObj)
-				profile = this._acc.elm.cells("a").dataObj._obj;
+			var profiles = this.project.selected_profiles();
 
+			// если "все", получаем все профили активного или родительского контура
 			if(name == "all"){
-				$p.msg.show_not_implemented();
-				return;
 
-			}else if(!profile)
-				return;
+				var l = this.project.activeLayer;
+				while (l.parent)
+					l = l.parent;
 
-			minmax.min.x = Math.min(profile.x1, profile.x2);
-			minmax.min.y = Math.min(profile.y1, profile.y2);
-			minmax.max.x = Math.max(profile.x1, profile.x2);
-			minmax.max.y = Math.max(profile.y1, profile.y2);
-			minmax.max.dx = minmax.max.x - minmax.min.x;
-			minmax.max.dy = minmax.max.y - minmax.min.y;
+				l.profiles.forEach(function (profile) {
 
-			if(name == 'left' && minmax.max.dx < minmax.max.dy){
-				if(profile.x1 - minmax.min.x > 0)
-					profile.x1 = minmax.min.x;
-				if(profile.x2 - minmax.min.x > 0)
-					profile.x2 = minmax.min.x;
+					if(profile.angle_hor % 90 == 0)
+						return;
 
-			}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
-				if(profile.x1 - minmax.max.x < 0)
-					profile.x1 = minmax.max.x;
-				if(profile.x2 - minmax.max.x < 0)
-					profile.x2 = minmax.max.x;
+					var mid;
 
-			}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
-				if(profile.y1 - minmax.max.y < 0)
-					profile.y1 = minmax.max.y;
-				if(profile.y2 - minmax.max.y < 0)
-					profile.y2 = minmax.max.y;
+					if(profile.orientation == $p.enm.orientations.vert){
 
-			}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
-				if (profile.y1 - minmax.min.y > 0)
-					profile.y1 = minmax.min.y;
-				if (profile.y2 - minmax.min.y > 0)
-					profile.y2 = minmax.min.y;
+						mid = profile.b.x + profile.e.x / 2;
 
-			}else if(name == 'delete') {
-				profile.removeChildren();
-				profile.remove();
+						if(mid < l.bounds.center.x)
+							profile.x1 = profile.x2 = Math.min(profile.x1, profile.x2);
+						else
+							profile.x1 = profile.x2 = Math.max(profile.x1, profile.x2);
 
-			}else
-				$p.msg.show_msg({type: "alert-warning",
-					text: $p.msg.align_invalid_direction,
-					title: $p.msg.main_title});
+					}else if(profile.orientation == $p.enm.orientations.hor){
 
-			this.view.update();
-			return false;
+						mid = profile.b.y + profile.e.y / 2;
+
+						if(mid < l.bounds.center.y)
+							profile.y1 = profile.y2 = Math.max(profile.y1, profile.y2);
+						else
+							profile.y1 = profile.y2 = Math.min(profile.y1, profile.y2);
+
+					}
+
+				});
+
+
+			}else{
+				this.project.selected_profiles().forEach(function (profile) {
+
+					if(profile.angle_hor % 90 == 0)
+						return;
+
+					var minmax = {min: {}, max: {}};
+
+					minmax.min.x = Math.min(profile.x1, profile.x2);
+					minmax.min.y = Math.min(profile.y1, profile.y2);
+					minmax.max.x = Math.max(profile.x1, profile.x2);
+					minmax.max.y = Math.max(profile.y1, profile.y2);
+					minmax.max.dx = minmax.max.x - minmax.min.x;
+					minmax.max.dy = minmax.max.y - minmax.min.y;
+
+					if(name == 'left' && minmax.max.dx < minmax.max.dy){
+						if(profile.x1 - minmax.min.x > 0)
+							profile.x1 = minmax.min.x;
+						if(profile.x2 - minmax.min.x > 0)
+							profile.x2 = minmax.min.x;
+
+					}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
+						if(profile.x1 - minmax.max.x < 0)
+							profile.x1 = minmax.max.x;
+						if(profile.x2 - minmax.max.x < 0)
+							profile.x2 = minmax.max.x;
+
+					}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
+						if(profile.y1 - minmax.max.y < 0)
+							profile.y1 = minmax.max.y;
+						if(profile.y2 - minmax.max.y < 0)
+							profile.y2 = minmax.max.y;
+
+					}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
+						if (profile.y1 - minmax.min.y > 0)
+							profile.y1 = minmax.min.y;
+						if (profile.y2 - minmax.min.y > 0)
+							profile.y2 = minmax.min.y;
+
+					}else if(name == 'delete') {
+						profile.removeChildren();
+						profile.remove();
+
+					}else
+						$p.msg.show_msg({type: "info", text: $p.msg.align_invalid_direction});
+
+				})
+			};
+
+			if(profiles.length)
+				this.project.register_change(true);
+
 		}
 	},
 

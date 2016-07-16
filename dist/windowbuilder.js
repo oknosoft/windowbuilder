@@ -135,8 +135,6 @@ function EditorAccordion(_editor, cell_acc) {
 				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
 				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
 
-				//{name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть редактор', float: 'right', paddingRight: '20px'}
-
 			], onclick: function (name) {
 
 				switch(name) {
@@ -1489,63 +1487,107 @@ Editor.prototype.__define({
 		}
 	},
 
+	/**
+	 * ### Поворот кратно 90° и выравнивание
+	 *
+	 * @method profile_align
+	 * @for Editor
+	 * @param name {String} - ('left', 'right', 'top', 'bottom', 'all', 'delete')
+	 */
 	profile_align: {
 		value: 	function(name){
-			var minmax = {min: {}, max: {}},
-				profile = this.tool.profile;
 
-			if(!(profile instanceof Profile) && this._acc.elm.cells("a").dataObj)
-				profile = this._acc.elm.cells("a").dataObj._obj;
+			var profiles = this.project.selected_profiles();
 
+			// если "все", получаем все профили активного или родительского контура
 			if(name == "all"){
-				$p.msg.show_not_implemented();
-				return;
 
-			}else if(!profile)
-				return;
+				var l = this.project.activeLayer;
+				while (l.parent)
+					l = l.parent;
 
-			minmax.min.x = Math.min(profile.x1, profile.x2);
-			minmax.min.y = Math.min(profile.y1, profile.y2);
-			minmax.max.x = Math.max(profile.x1, profile.x2);
-			minmax.max.y = Math.max(profile.y1, profile.y2);
-			minmax.max.dx = minmax.max.x - minmax.min.x;
-			minmax.max.dy = minmax.max.y - minmax.min.y;
+				l.profiles.forEach(function (profile) {
 
-			if(name == 'left' && minmax.max.dx < minmax.max.dy){
-				if(profile.x1 - minmax.min.x > 0)
-					profile.x1 = minmax.min.x;
-				if(profile.x2 - minmax.min.x > 0)
-					profile.x2 = minmax.min.x;
+					if(profile.angle_hor % 90 == 0)
+						return;
 
-			}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
-				if(profile.x1 - minmax.max.x < 0)
-					profile.x1 = minmax.max.x;
-				if(profile.x2 - minmax.max.x < 0)
-					profile.x2 = minmax.max.x;
+					var mid;
 
-			}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
-				if(profile.y1 - minmax.max.y < 0)
-					profile.y1 = minmax.max.y;
-				if(profile.y2 - minmax.max.y < 0)
-					profile.y2 = minmax.max.y;
+					if(profile.orientation == $p.enm.orientations.vert){
 
-			}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
-				if (profile.y1 - minmax.min.y > 0)
-					profile.y1 = minmax.min.y;
-				if (profile.y2 - minmax.min.y > 0)
-					profile.y2 = minmax.min.y;
+						mid = profile.b.x + profile.e.x / 2;
 
-			}else if(name == 'delete') {
-				profile.removeChildren();
-				profile.remove();
+						if(mid < l.bounds.center.x)
+							profile.x1 = profile.x2 = Math.min(profile.x1, profile.x2);
+						else
+							profile.x1 = profile.x2 = Math.max(profile.x1, profile.x2);
 
-			}else
-				$p.msg.show_msg({type: "alert-warning",
-					text: $p.msg.align_invalid_direction,
-					title: $p.msg.main_title});
+					}else if(profile.orientation == $p.enm.orientations.hor){
 
-			this.view.update();
-			return false;
+						mid = profile.b.y + profile.e.y / 2;
+
+						if(mid < l.bounds.center.y)
+							profile.y1 = profile.y2 = Math.max(profile.y1, profile.y2);
+						else
+							profile.y1 = profile.y2 = Math.min(profile.y1, profile.y2);
+
+					}
+
+				});
+
+
+			}else{
+				this.project.selected_profiles().forEach(function (profile) {
+
+					if(profile.angle_hor % 90 == 0)
+						return;
+
+					var minmax = {min: {}, max: {}};
+
+					minmax.min.x = Math.min(profile.x1, profile.x2);
+					minmax.min.y = Math.min(profile.y1, profile.y2);
+					minmax.max.x = Math.max(profile.x1, profile.x2);
+					minmax.max.y = Math.max(profile.y1, profile.y2);
+					minmax.max.dx = minmax.max.x - minmax.min.x;
+					minmax.max.dy = minmax.max.y - minmax.min.y;
+
+					if(name == 'left' && minmax.max.dx < minmax.max.dy){
+						if(profile.x1 - minmax.min.x > 0)
+							profile.x1 = minmax.min.x;
+						if(profile.x2 - minmax.min.x > 0)
+							profile.x2 = minmax.min.x;
+
+					}else if(name == 'right' && minmax.max.dx < minmax.max.dy){
+						if(profile.x1 - minmax.max.x < 0)
+							profile.x1 = minmax.max.x;
+						if(profile.x2 - minmax.max.x < 0)
+							profile.x2 = minmax.max.x;
+
+					}else if(name == 'top' && minmax.max.dx > minmax.max.dy){
+						if(profile.y1 - minmax.max.y < 0)
+							profile.y1 = minmax.max.y;
+						if(profile.y2 - minmax.max.y < 0)
+							profile.y2 = minmax.max.y;
+
+					}else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
+						if (profile.y1 - minmax.min.y > 0)
+							profile.y1 = minmax.min.y;
+						if (profile.y2 - minmax.min.y > 0)
+							profile.y2 = minmax.min.y;
+
+					}else if(name == 'delete') {
+						profile.removeChildren();
+						profile.remove();
+
+					}else
+						$p.msg.show_msg({type: "info", text: $p.msg.align_invalid_direction});
+
+				})
+			};
+
+			if(profiles.length)
+				this.project.register_change(true);
+
 		}
 	},
 
@@ -6600,7 +6642,7 @@ ProfileItem.prototype.__define({
 	 */
 	angle_hor: {
 		get : function(){
-			var res = Math.round((new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle * 10) / 10;
+			var res = (new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle.round(1);
 			return res < 0 ? res + 360 : res;
 		}
 	},
@@ -8817,14 +8859,14 @@ function Scheme(_canvas){
 
 	/**
 	 * Ищет точки в выделенных элементах. Если не находит, то во всём проекте
-	 * @param point
+	 * @param point {paper.Point}
 	 * @returns {*}
 	 */
 	this.hitPoints = function (point, tolerance) {
 		var item, hit;
 
 		// отдаём предпочтение сегментам выделенных путей
-		_scheme.selectedItems.some(function (item) {
+		this.selectedItems.some(function (item) {
 			hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 });
 			if(hit)
 				return true;
@@ -8832,7 +8874,7 @@ function Scheme(_canvas){
 
 		// если нет в выделенных, ищем во всех
 		if(!hit)
-			hit = _scheme.hitTest(point, { segments: true, tolerance: tolerance || 6 });
+			hit = this.hitTest(point, { segments: true, tolerance: tolerance || 6 });
 
 		if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
 			item = hit.item;
@@ -9497,8 +9539,7 @@ Scheme.prototype.__define({
 					res.push(l)
 			});
 			return res;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -9508,12 +9549,12 @@ Scheme.prototype.__define({
 	 * @property area
 	 * @for Scheme
 	 * @type Number
+	 * @final
 	 */
 	area: {
 		get: function () {
 			return (this.bounds.width * this.bounds.height / 1000000).round(3);
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -9521,7 +9562,7 @@ Scheme.prototype.__define({
 	 *
 	 * @property clr
 	 * @for Scheme
-	 * @type _cat.production_params
+	 * @type _cat.clrs
 	 */
 	clr: {
 		get: function () {
@@ -9538,6 +9579,7 @@ Scheme.prototype.__define({
 	 * @property l_dimensions
 	 * @for Scheme
 	 * @type DimensionLayer
+	 * @final
 	 */
 	l_dimensions: {
 		get: function () {
@@ -9632,7 +9674,15 @@ Scheme.prototype.__define({
 	},
 
 	/**
+	 * ### Вставка по умолчанию
 	 * Возвращает вставку по умолчанию с учетом свойств системы и положения элемента
+	 *
+	 * @method default_inset
+	 * @for Scheme
+	 * @param [attr] {Object}
+	 * @param [attr.pos] {_enm.positions} - положение элемента
+	 * @param [attr.elm_type] {_enm.elm_types} - тип элемента
+	 * @returns {Array.<ProfileItem>}
 	 */
 	default_inset: {
 		value: function (attr) {
@@ -9686,22 +9736,30 @@ Scheme.prototype.__define({
 						return inset = row.nom;
 				});
 			return inset;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
+	 * ### Цвет по умолчанию
 	 * Возвращает цвет по умолчанию с учетом свойств системы и элемента
+	 *
+	 * @property default_clr
+	 * @for Scheme
+	 * @final
 	 */
 	default_clr: {
 		value: function (attr) {
 			return this.ox.clr;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
-	 * Возвращает фурнитуру по умолчанию с учетом свойств системы и контура
+	 * ### Фурнитура по умолчанию
+	 * Возвращает фурнитуру текущего изделия по умолчанию с учетом свойств системы и контура
+	 *
+	 * @property default_furn
+	 * @for Scheme
+	 * @final
 	 */
 	default_furn: {
 		get: function () {
@@ -9725,8 +9783,42 @@ Scheme.prototype.__define({
 				});
 			}
 			return res;
-		},
-		enumerable: false
+		}
+	},
+
+	/**
+	 * ### Выделенные профили
+	 * Возвращает массив выделенных профилей. Выделенным считаем профиль, у которого выделены `b` и `e` или выделен сам профиль при невыделенных узлах
+	 *
+	 * @method selected_profiles
+	 * @for Scheme
+	 * @param [all] {Boolean} - если true, возвращает все выделенные профили. Иначе, только те, которе можно двигать
+	 * @returns {Array.<ProfileItem>}
+	 */
+	selected_profiles: {
+		value: function (all) {
+
+			var res = [];
+
+			this.selectedItems.forEach(function (item) {
+
+				var p = item.parent;
+
+				if(p instanceof ProfileItem){
+					if(all || !item.layer.parent || !p.nearest || !p.nearest()){
+
+						if(res.indexOf(p) != -1)
+							return;
+
+						if(!(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected))
+							res.push(p);
+
+					}
+				}
+			});
+
+			return res;
+		}
 	}
 
 
@@ -9787,7 +9879,7 @@ Sectional._extend(BuilderElement);
 		this.font_size = $p.job_prm.builder.font_size || 60;
 
 		// в пределах этого угла, считаем элемент вертикальным или горизонтальным
-		this.orientation_delta = $p.job_prm.builder.orientation_delta || 7;
+		this.orientation_delta = $p.job_prm.builder.orientation_delta || 20;
 		
 
 	}.bind(this);
@@ -10613,6 +10705,10 @@ function ToolLayImpost(){
 					ecnn = p.cnn_point("e");
 			});
 
+			if(!this.hitItem)
+				setTimeout(function () {
+					_editor.tools[1].activate();
+				}, 100);
 
 		},
 

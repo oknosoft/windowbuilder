@@ -330,14 +330,14 @@ function Scheme(_canvas){
 
 	/**
 	 * Ищет точки в выделенных элементах. Если не находит, то во всём проекте
-	 * @param point
+	 * @param point {paper.Point}
 	 * @returns {*}
 	 */
 	this.hitPoints = function (point, tolerance) {
 		var item, hit;
 
 		// отдаём предпочтение сегментам выделенных путей
-		_scheme.selectedItems.some(function (item) {
+		this.selectedItems.some(function (item) {
 			hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 });
 			if(hit)
 				return true;
@@ -345,7 +345,7 @@ function Scheme(_canvas){
 
 		// если нет в выделенных, ищем во всех
 		if(!hit)
-			hit = _scheme.hitTest(point, { segments: true, tolerance: tolerance || 6 });
+			hit = this.hitTest(point, { segments: true, tolerance: tolerance || 6 });
 
 		if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
 			item = hit.item;
@@ -1010,8 +1010,7 @@ Scheme.prototype.__define({
 					res.push(l)
 			});
 			return res;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -1021,12 +1020,12 @@ Scheme.prototype.__define({
 	 * @property area
 	 * @for Scheme
 	 * @type Number
+	 * @final
 	 */
 	area: {
 		get: function () {
 			return (this.bounds.width * this.bounds.height / 1000000).round(3);
-		},
-		enumerable: false
+		}
 	},
 
 	/**
@@ -1034,7 +1033,7 @@ Scheme.prototype.__define({
 	 *
 	 * @property clr
 	 * @for Scheme
-	 * @type _cat.production_params
+	 * @type _cat.clrs
 	 */
 	clr: {
 		get: function () {
@@ -1051,6 +1050,7 @@ Scheme.prototype.__define({
 	 * @property l_dimensions
 	 * @for Scheme
 	 * @type DimensionLayer
+	 * @final
 	 */
 	l_dimensions: {
 		get: function () {
@@ -1145,7 +1145,15 @@ Scheme.prototype.__define({
 	},
 
 	/**
+	 * ### Вставка по умолчанию
 	 * Возвращает вставку по умолчанию с учетом свойств системы и положения элемента
+	 *
+	 * @method default_inset
+	 * @for Scheme
+	 * @param [attr] {Object}
+	 * @param [attr.pos] {_enm.positions} - положение элемента
+	 * @param [attr.elm_type] {_enm.elm_types} - тип элемента
+	 * @returns {Array.<ProfileItem>}
 	 */
 	default_inset: {
 		value: function (attr) {
@@ -1199,22 +1207,30 @@ Scheme.prototype.__define({
 						return inset = row.nom;
 				});
 			return inset;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
+	 * ### Цвет по умолчанию
 	 * Возвращает цвет по умолчанию с учетом свойств системы и элемента
+	 *
+	 * @property default_clr
+	 * @for Scheme
+	 * @final
 	 */
 	default_clr: {
 		value: function (attr) {
 			return this.ox.clr;
-		},
-		enumerable: false
+		}
 	},
 
 	/**
-	 * Возвращает фурнитуру по умолчанию с учетом свойств системы и контура
+	 * ### Фурнитура по умолчанию
+	 * Возвращает фурнитуру текущего изделия по умолчанию с учетом свойств системы и контура
+	 *
+	 * @property default_furn
+	 * @for Scheme
+	 * @final
 	 */
 	default_furn: {
 		get: function () {
@@ -1238,8 +1254,42 @@ Scheme.prototype.__define({
 				});
 			}
 			return res;
-		},
-		enumerable: false
+		}
+	},
+
+	/**
+	 * ### Выделенные профили
+	 * Возвращает массив выделенных профилей. Выделенным считаем профиль, у которого выделены `b` и `e` или выделен сам профиль при невыделенных узлах
+	 *
+	 * @method selected_profiles
+	 * @for Scheme
+	 * @param [all] {Boolean} - если true, возвращает все выделенные профили. Иначе, только те, которе можно двигать
+	 * @returns {Array.<ProfileItem>}
+	 */
+	selected_profiles: {
+		value: function (all) {
+
+			var res = [];
+
+			this.selectedItems.forEach(function (item) {
+
+				var p = item.parent;
+
+				if(p instanceof ProfileItem){
+					if(all || !item.layer.parent || !p.nearest || !p.nearest()){
+
+						if(res.indexOf(p) != -1)
+							return;
+
+						if(!(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected))
+							res.push(p);
+
+					}
+				}
+			});
+
+			return res;
+		}
 	}
 
 

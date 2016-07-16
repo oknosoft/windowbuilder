@@ -504,6 +504,10 @@ function ToolLayImpost(){
 					ecnn = p.cnn_point("e");
 			});
 
+			if(!this.hitItem)
+				setTimeout(function () {
+					_editor.tools[1].activate();
+				}, 100);
 
 		},
 
