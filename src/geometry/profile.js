@@ -465,7 +465,7 @@ ProfileItem.prototype.__define({
 
 	/**
 	 * ### Пересчитывает вставку после пересчета соединений
-	 * Попутно устанавливает тип элемента
+	 * Контроль пока только по типу элемента
 	 *
 	 * @method postcalc_inset
 	 * @for ProfileItem
@@ -474,6 +474,9 @@ ProfileItem.prototype.__define({
 	postcalc_inset: {
 
 		value: function(){
+
+			// если слева и справа T - и тип не импост или есть не T и тпи импост
+			this.inset = this.project.check_inset({ elm: this });
 
 			return this;
 		}
@@ -1420,7 +1423,7 @@ Profile.prototype.__define({
 		get : function(){
 
 			// если начало или конец элемента соединены с соседями по Т, значит это импост
-			if(this.cnn_point("b").is_tt || this.cnn_point("e").is_tt)
+			if(this.data._rays && (this.data._rays.b.is_tt || this.data._rays.e.is_tt))
 				return $p.enm.elm_types.Импост;
 
 			// Если вложенный контур, значит это створка
@@ -1713,7 +1716,7 @@ CnnPoint.prototype.__define({
 	},
 
 	/**
-	 * Строгий вариант свойства is_t Ꞁ или └─ не рассматриваются, как T
+	 * Строгий вариант свойства is_t: Ꞁ и └ не рассматриваются, как T
 	 */
 	is_tt: {
 

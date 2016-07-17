@@ -634,6 +634,7 @@ function Scheme(_canvas){
 		}
 
 		// это соединение с пустотой или T
+		res.profile_point = '';
 		
 		// // если возможна привязка к добору, используем её
 		// element.addls.forEach(function (addl) {
@@ -1211,7 +1212,44 @@ Scheme.prototype.__define({
 					if(row.pos == $p.enm.positions.Любое)
 						return inset = row.nom;
 				});
+
 			return inset;
+		}
+	},
+
+	/**
+	 * ### Контроль вставки
+	 * Проверяет, годится ли текущая вставка для данного типа элемента и положения
+	 */
+	check_inset: {
+		value: function (attr) {
+
+			var inset = attr.inset ? attr.inset : attr.elm.inset,
+				elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type,
+				nom = inset.nom(),
+				rows = [];
+
+			// если номенклатура пустая, выходим без проверки
+			if(!nom || nom.empty())
+				return inset;
+
+			// получаем список вставок с той же номенклатурой, что и наша
+			this._dp.sys.elmnts.each(function(row){
+				if((elm_type ? row.elm_type == elm_type : true) && row.nom.nom() == nom)
+					rows.push(row);
+			});
+
+			// TODO: отфильтровать по положению attr.pos
+
+			// если в списке есть наша, возвращаем её, иначе - первую из списка
+			for(var i=0; i<rows.length; i++){
+				if(rows[i].nom == inset)
+					return inset;
+			}
+
+			if(rows.length)
+				return rows[0].nom;
+
 		}
 	},
 

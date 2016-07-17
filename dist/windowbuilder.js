@@ -6557,7 +6557,7 @@ ProfileItem.prototype.__define({
 
 	/**
 	 * ### Пересчитывает вставку после пересчета соединений
-	 * Попутно устанавливает тип элемента
+	 * Контроль пока только по типу элемента
 	 *
 	 * @method postcalc_inset
 	 * @for ProfileItem
@@ -6566,6 +6566,9 @@ ProfileItem.prototype.__define({
 	postcalc_inset: {
 
 		value: function(){
+
+			// если слева и справа T - и тип не импост или есть не T и тпи импост
+			this.inset = this.project.check_inset({ elm: this });
 
 			return this;
 		}
@@ -7512,7 +7515,7 @@ Profile.prototype.__define({
 		get : function(){
 
 			// если начало или конец элемента соединены с соседями по Т, значит это импост
-			if(this.cnn_point("b").is_tt || this.cnn_point("e").is_tt)
+			if(this.data._rays && (this.data._rays.b.is_tt || this.data._rays.e.is_tt))
 				return $p.enm.elm_types.Импост;
 
 			// Если вложенный контур, значит это створка
@@ -7805,7 +7808,7 @@ CnnPoint.prototype.__define({
 	},
 
 	/**
-	 * Строгий вариант свойства is_t Ꞁ или └─ не рассматриваются, как T
+	 * Строгий вариант свойства is_t: Ꞁ и └ не рассматриваются, как T
 	 */
 	is_tt: {
 
@@ -9437,6 +9440,7 @@ function Scheme(_canvas){
 		}
 
 		// это соединение с пустотой или T
+		res.profile_point = '';
 		
 		// // если возможна привязка к добору, используем её
 		// element.addls.forEach(function (addl) {
@@ -10014,7 +10018,44 @@ Scheme.prototype.__define({
 					if(row.pos == $p.enm.positions.Любое)
 						return inset = row.nom;
 				});
+
 			return inset;
+		}
+	},
+
+	/**
+	 * ### Контроль вставки
+	 * Проверяет, годится ли текущая вставка для данного типа элемента и положения
+	 */
+	check_inset: {
+		value: function (attr) {
+
+			var inset = attr.inset ? attr.inset : attr.elm.inset,
+				elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type,
+				nom = inset.nom(),
+				rows = [];
+
+			// если номенклатура пустая, выходим без проверки
+			if(!nom || nom.empty())
+				return inset;
+
+			// получаем список вставок с той же номенклатурой, что и наша
+			this._dp.sys.elmnts.each(function(row){
+				if((elm_type ? row.elm_type == elm_type : true) && row.nom.nom() == nom)
+					rows.push(row);
+			});
+
+			// TODO: отфильтровать по положению attr.pos
+
+			// если в списке есть наша, возвращаем её, иначе - первую из списка
+			for(var i=0; i<rows.length; i++){
+				if(rows[i].nom == inset)
+					return inset;
+			}
+
+			if(rows.length)
+				return rows[0].nom;
+
 		}
 	},
 
