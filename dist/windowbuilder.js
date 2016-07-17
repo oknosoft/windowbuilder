@@ -7087,13 +7087,13 @@ ProfileItem.prototype.__define({
 				rays = this.rays,
 				offset1, offset2, tpath, step;
 
+			// уточняем вставку
+			if(this.project._dp.sys.allow_open_cnn)
+				this.postcalc_inset();
 
 			// получаем соединения концов профиля и точки пересечения с соседями
 			this.path_points(bcnn, "b");
 			this.path_points(ecnn, "e");
-
-			// уточняем вставку
-			this.postcalc_inset();
 
 			// очищаем существующий путь
 			path.removeSegments();
@@ -9366,13 +9366,47 @@ function Scheme(_canvas){
 	 * @param res {CnnPoint} - описание соединения на конце текущего профиля
 	 * @param point {paper.Point} - точка, окрестность которой анализируем
 	 * @param check_only {Boolean|String} - указывает, выполнять только проверку или привязывать точку к узлам или профилю или к узлам и профилю
-	 * @returns {boolean}
+	 * @returns {Boolean|undefined}
 	 */
 	this.check_distance = function(element, profile, res, point, check_only){
 
 		var distance, gp, cnns, addls,
 			bind_node = typeof check_only == "string" && check_only.indexOf("node") != -1,
-			bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only;
+			bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only,
+			node_distance;
+
+		// Проверяет дистанцию в окрестности начала или конца соседнего элемента
+		function check_node_distance(node) {
+
+			if((distance = element[node].getDistance(point)) < (_scheme._dp.sys.allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)){
+
+				if(typeof res.distance == "number" && res.distance < distance)
+					return 1;
+
+				if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
+
+					// а есть ли подходящее?
+					cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
+					if(!cnns.length)
+						return 1;
+
+					// если в точке сходятся 2 профиля текущего контура - ок
+
+					// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
+
+				}else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
+					return 1;
+
+				res.point = bind_node ? element[node] : point;
+				res.distance = distance;
+				res.profile = element;
+				res.profile_point = node;
+				res.cnn_types = $p.enm.cnn_types.acn.a;
+
+				return 2;
+			}
+
+		}
 
 		if(element === profile){
 			if(profile.is_linear())
@@ -9383,59 +9417,19 @@ function Scheme(_canvas){
 			}
 			return;
 
-		}else if((distance = element.b.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
+		}else if(node_distance = check_node_distance("b")){
 			// Если мы находимся в окрестности начала соседнего элемента
-			
-			if(typeof res.distance == "number" && res.distance < distance)
+			if(node_distance == 2)
+				return false;
+			else
 				return;
 
-			if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
-
-				// а есть ли подходящее?
-				cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
-				if(!cnns.length)
-					return;
-
-				// если в точке сходятся 2 профиля текущего контура - ок
-
-				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
-
-			}else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
-				return;
-
-			res.point = bind_node ? element.b : point;
-			res.distance = distance;
-			res.profile = element;
-			res.profile_point = 'b';
-			res.cnn_types = $p.enm.cnn_types.acn.a;
-			return false;
-
-		}else if((distance = element.e.getDistance(point)) < (res.is_l ? consts.sticking_l : consts.sticking)){
-
-			if(typeof res.distance == "number" && res.distance < distance)
-				return;
-
+		}else if(node_distance = check_node_distance("e")){
 			// Если мы находимся в окрестности конца соседнего элемента
-			if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
-
-				// а есть ли подходящее?
-				cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
-				if(!cnns.length)
-					return;
-
-				// если в точке сходятся 2 профиля текущего контура - ок
-
-				// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
-
-			}else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
+			if(node_distance == 2)
+				return false;
+			else
 				return;
-
-			res.point = bind_node ? element.e : point;
-			res.distance = distance;
-			res.profile = element;
-			res.profile_point = 'e';
-			res.cnn_types = $p.enm.cnn_types.acn.a;
-			return false;
 
 		}
 

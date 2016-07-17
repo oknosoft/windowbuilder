@@ -995,13 +995,13 @@ ProfileItem.prototype.__define({
 				rays = this.rays,
 				offset1, offset2, tpath, step;
 
+			// уточняем вставку
+			if(this.project._dp.sys.allow_open_cnn)
+				this.postcalc_inset();
 
 			// получаем соединения концов профиля и точки пересечения с соседями
 			this.path_points(bcnn, "b");
 			this.path_points(ecnn, "e");
-
-			// уточняем вставку
-			this.postcalc_inset();
 
 			// очищаем существующий путь
 			path.removeSegments();
