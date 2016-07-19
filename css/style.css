@@ -157,10 +157,10 @@ h1{
 }
 .banner-info h2 {
 	color: #fff;
-	font-size: 3em;
+	font-size: 3.5em;
 	font-weight: 100;
 	word-spacing: 2px;
-	padding: 1.4em 0 1em 0;
+	padding: 2.5em 0 2em 0;
 }
 .banner-info p {
 	color:#fff;
@@ -320,6 +320,11 @@ i.s7 {
 
 .service-section {
 	padding:8em 0 0 0;
+}
+.service-section-head h2 {
+	color:#394b50;
+	font-size:3.5em;
+	padding: 2em 0;
 }
 .service-section-head h3 {
 	color:#394b50;
@@ -895,7 +900,10 @@ span.locate img {
 		font-size: 1.4em;
 	}
 	.banner-info h2 {
-		font-size: 2.4em;
+		font-size: 3em;
+	}
+	.service-section-head h2 {
+		font-size: 3em;
 	}
 	.about_right {
 		padding: 5em 5em 0;
@@ -920,7 +928,10 @@ span.locate img {
 		font-size: 1.4em;
 	}
 	.banner-info h2 {
-		font-size: 2.1em;
+		font-size: 2.4em;
+	}
+	.service-section-head h2 {
+		font-size: 2.4em;
 	}
 	.banner-info p {
 		font-size: 1em;
@@ -1122,7 +1133,10 @@ span.locate img {
 		font-size: 1.2em;
 	}
 	.banner-info h2 {
-		font-size: 2em;
+		font-size: 2.2em;
+	}
+	.service-section-head h2 {
+		font-size: 2.2em;
 	}
 	.banner-info p {
 		font-size: 0.95em;
@@ -1284,6 +1298,9 @@ span.locate img {
 		font-size: 1.2em;
 	}
 	.banner-info h2 {
+		font-size: 2em;
+	}
+	.service-section-head h2 {
 		font-size: 2em;
 	}
 	.banner-info p {
@@ -1460,7 +1477,10 @@ span.locate img {
 		font-size: 1.2em;
 	}
 	.banner-info h2 {
-		font-size: 2em;
+		font-size: 1.8em;
+	}
+	.service-section-head h2 {
+		font-size: 1.8em;
 	}
 	.banner-info p {
 		height:20px;
@@ -1695,9 +1715,6 @@ span.locate img {
 	h1 {
 		font-size: 1.2em;
 	}
-	.banner-info h2 {
-		font-size: 2em;
-	}
 	.details form li {
 		width: 48%;
 		margin-bottom:10px;
@@ -1742,7 +1759,7 @@ span.locate img {
 
 /* BUTTON */
 .md_btn.btn-fluid {
-	width: 260px;
+	width: 280px;
 	padding: 0 0 0 1em;
 	text-align: left;
 	margin-top: .8em;
