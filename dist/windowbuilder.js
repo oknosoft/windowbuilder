@@ -7594,7 +7594,6 @@ Profile.prototype.__define({
 			}
 
 			return res;
-
 		}
 	},
 

@@ -2073,14 +2073,14 @@ $p.modifiers.push(
 					var res = {
 						АдресДоставки: this.shipping_address,
 						ВалютаДокумента: this.doc_currency.presentation,
-						ДатаЗаказаФорматD: $p.dateFormat(this.date, $p.dateFormat.masks.short_ru),
-						ДатаЗаказаФорматDD: $p.dateFormat(this.date, $p.dateFormat.masks.longDate),
-						ДатаТекущаяФорматD: $p.dateFormat(new Date(), $p.dateFormat.masks.short_ru),
-						ДатаТекущаяФорматDD: $p.dateFormat(new Date(), $p.dateFormat.masks.longDate),
-						ДоговорДатаФорматD: $p.dateFormat(this.contract.date.valueOf() == $p.blank.date.valueOf() ? this.date : this.contract.date, $p.dateFormat.masks.short_ru),
-						ДоговорДатаФорматDD: $p.dateFormat(this.contract.date.valueOf() == $p.blank.date.valueOf() ? this.date : this.contract.date, $p.dateFormat.masks.longDate),
+						ДатаЗаказаФорматD: $p.moment(this.date).format("L"),
+						ДатаЗаказаФорматDD: $p.moment(this.date).format("LL"),
+						ДатаТекущаяФорматD: $p.moment().format("L"),
+						ДатаТекущаяФорматDD: $p.moment().format("LL"),
+						ДоговорДатаФорматD: $p.moment(this.contract.date.valueOf() == $p.blank.date.valueOf() ? this.date : this.contract.date).format("L"),
+						ДоговорДатаФорматDD: $p.moment(this.contract.date.valueOf() == $p.blank.date.valueOf() ? this.date : this.contract.date).format("LL"),
 						ДоговорНомер: this.contract.number_doc ? this.contract.number_doc : this.number_doc,
-						ДоговорСрокДействия: $p.dateFormat(this.contract.validity, $p.dateFormat.masks.short_ru),
+						ДоговорСрокДействия: $p.moment(this.contract.validity).format("L"),
 						ЗаказНомер: this.number_doc,
 						Контрагент: this.partner.presentation,
 						КонтрагентОписание: this.partner.long_presentation,
@@ -2647,7 +2647,7 @@ $p.modifiers.push(
 					read_only: wnd.elmnts.ro,
 					oxml: {
 						" ": [{id: "number_doc", path: "o.number_doc", synonym: "Номер", type: "ro", txt: o.number_doc},
-							{id: "date", path: "o.date", synonym: "Дата", type: "ro", txt: $p.dateFormat(o.date, "")},
+							{id: "date", path: "o.date", synonym: "Дата", type: "ro", txt: $p.moment(o.date).format($p.moment._masks.date_time)},
 							"number_internal"
 							],
 						"Контактная информация": ["partner", "client_of_dealer", "phone",
@@ -6164,7 +6164,7 @@ $p.on("settings", function (prm, modifiers) {
 
 	// расположение couchdb
 	prm.couch_path = "/couchdb/wb_";
-	//prm.couchdb = "http://192.168.9.136:5984/wb_";
+	//prm.couchdb = "http://i980:5984/wb_";
 
 	// логин гостевого пользователя couchdb
 	prm.guest_name = "guest";

@@ -81,7 +81,7 @@ $p.on("settings", function (prm, modifiers) {
 
 	// расположение couchdb
 	prm.couch_path = "/couchdb/wb_";
-	//prm.couchdb = "http://192.168.9.136:5984/wb_";
+	//prm.couchdb = "http://i980:5984/wb_";
 
 	// логин гостевого пользователя couchdb
 	prm.guest_name = "guest";
