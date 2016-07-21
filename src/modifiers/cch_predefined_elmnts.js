@@ -133,14 +133,14 @@ $p.modifiers.push(
 						if(mf.digits && typeof res === "number")
 							return res;
 
-						if(mf.hasOwnProperty("str_len") && !$p.is_guid(res))
+						if(mf.hasOwnProperty("str_len") && !$p.utils.is_guid(res))
 							return res;
 
 						if(mgr = $p.md.value_mgr(this._obj, "value", mf)){
-							if($p.is_data_mgr(mgr))
+							if($p.utils.is_data_mgr(mgr))
 								return mgr.get(res, false);
 							else
-								return $p.fetch_type(res, mgr);
+								return $p.utils.fetch_type(res, mgr);
 						}
 
 						if(res){
@@ -149,13 +149,13 @@ $p.modifiers.push(
 						}
 
 					}else if(mf.date_part)
-						return $p.fix_date(this._obj.value, true);
+						return $p.utils.fix_date(this._obj.value, true);
 
 					else if(mf.digits)
-						return $p.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
+						return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
 
 					else if(mf.types[0]=="boolean")
-						return $p.fix_boolean(this._obj.value);
+						return $p.utils.fix_boolean(this._obj.value);
 
 					else
 						return this._obj.value || "";
@@ -173,7 +173,7 @@ $p.modifiers.push(
 						name: 'value',
 						oldValue: this._obj.value
 					});
-					this._obj.value = $p.is_data_obj(v) ? v.ref : v;
+					this._obj.value = $p.utils.is_data_obj(v) ? v.ref : v;
 					this._data._modified = true;
 				}
 			}

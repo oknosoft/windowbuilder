@@ -30,18 +30,18 @@ $p.modifiers.push(
 
 					if(!attr.price_type)
 						attr.price_type = $p.job_prm.pricing.price_type_sale;
-					else if($p.is_data_obj(attr.price_type))
+					else if($p.utils.is_data_obj(attr.price_type))
 						attr.price_type = attr.price_type.ref;
 
 					if(!attr.characteristic)
-						attr.characteristic = $p.blank.guid;
-					else if($p.is_data_obj(attr.characteristic))
+						attr.characteristic = $p.utils.blank.guid;
+					else if($p.utils.is_data_obj(attr.characteristic))
 						attr.characteristic = attr.characteristic.ref;
 
 					if(!attr.date)
 						attr.date = new Date();
 
-					var price = 0, currency, date = $p.blank.date;
+					var price = 0, currency, date = $p.utils.blank.date;
 
 					if(this._data._price){
 						if(this._data._price[attr.characteristic]){

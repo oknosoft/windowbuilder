@@ -57,7 +57,7 @@ $p.modifiers.push(
 			if(nom1 instanceof $p.Editor.BuilderElement){
 				onom1 = nom1.nom;
 
-			}else if($p.is_data_obj(nom1)){
+			}else if($p.utils.is_data_obj(nom1)){
 				onom1 = nom1;
 
 			}else{
@@ -71,7 +71,7 @@ $p.modifiers.push(
 				ref1 = onom1.ref;
 
 
-			if(!nom2 || ($p.is_data_obj(nom2) && nom2.empty())){
+			if(!nom2 || ($p.utils.is_data_obj(nom2) && nom2.empty())){
 				is_i = true;
 				onom2 = nom2 = $p.cat.nom.get();
 
@@ -80,7 +80,7 @@ $p.modifiers.push(
 				if(nom2 instanceof $p.Editor.BuilderElement){
 					onom2 = nom2.nom;
 
-				}else if($p.is_data_obj(nom2)){
+				}else if($p.utils.is_data_obj(nom2)){
 					onom2 = nom2;
 
 				}else{
@@ -115,8 +115,8 @@ $p.modifiers.push(
 					оCnn.cnn_elmnts.each(function(row){
 						if(is_nom1 && is_nom2)
 							return false;
-						is_nom1 = is_nom1 || $p.is_equal(row.nom1, onom1);
-						is_nom2 = is_nom2 || $p.is_equal(row.nom2, onom2);
+						is_nom1 = is_nom1 || $p.utils.is_equal(row.nom1, onom1);
+						is_nom2 = is_nom2 || $p.utils.is_equal(row.nom2, onom2);
 					});
 					if(is_nom1 && is_nom2){
 						a2.push(оCnn);
@@ -216,7 +216,7 @@ $p.modifiers.push(
 			 */
 			check_nom2: {
 				value: function (nom) {
-					var ref = $p.is_data_obj(nom) ? nom.ref : nom;
+					var ref = $p.utils.is_data_obj(nom) ? nom.ref : nom;
 					return this.cnn_elmnts._obj.some(function (row) {
 						return row.nom == ref;
 					})

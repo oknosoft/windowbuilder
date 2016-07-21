@@ -485,10 +485,10 @@ function Scheme(_canvas){
 			_scheme.ox = null;
 		_scheme.clear();
 
-		if($p.is_data_obj(id) && id.calc_order && !id.calc_order.is_new())
+		if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new())
 			load_object(id);
 
-		else if($p.is_guid(id) || $p.is_data_obj(id)){
+		else if($p.utils.is_guid(id) || $p.utils.is_data_obj(id)){
 			$p.cat.characteristics.get(id, true, true)
 				.then(function (ox) {
 					$p.doc.calc_order.get(ox.calc_order, true, true)

@@ -69,7 +69,7 @@ $p.iface.view_orders = function (cell) {
 
 			if(hprm.view == "orders"){
 
-				if(hprm.obj == "doc.calc_order" && !$p.is_empty_guid(hprm.ref)){
+				if(hprm.obj == "doc.calc_order" && !$p.utils.is_empty_guid(hprm.ref)){
 
 					if(hprm.frm != "doc")
 						setTimeout(function () {
@@ -79,7 +79,7 @@ $p.iface.view_orders = function (cell) {
 						show_doc(hprm.ref);
 
 
-				} else if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
+				} else if(hprm.obj == "cat.characteristics" && !$p.utils.is_empty_guid(hprm.ref)) {
 
 					if(hprm.frm != "builder")
 						setTimeout(function () {
@@ -154,7 +154,7 @@ $p.iface.view_orders = function (cell) {
 				
 				$p.eve.callEvent("editor_closed", [t.editor]);
 
-				if(!$p.is_empty_guid(_cell.ref))
+				if(!$p.utils.is_empty_guid(_cell.ref))
 					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");
 
 				else{

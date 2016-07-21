@@ -84,7 +84,7 @@ function ToolPen(){
 			name: ["selection",	"ref"],
 			path: [
 				function(o, f){
-					if($p.is_data_obj(o)){
+					if($p.utils.is_data_obj(o)){
 						return tool.profile.rama_impost.indexOf(o) != -1;
 
 					}else{

@@ -130,7 +130,7 @@ $p.iface.OSvgs = function (manager, layout, area) {
 							// Для продукций заказа получаем вложения
 							var aatt = [];
 							res.production.forEach(function (row) {
-								if(!$p.is_empty_guid(row.characteristic))
+								if(!$p.utils.is_empty_guid(row.characteristic))
 									aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg").catch(function (err) {
 
 									}));
@@ -143,7 +143,7 @@ $p.iface.OSvgs = function (manager, layout, area) {
 							var aatt = [];
 							res.forEach(function (row) {
 								if(row instanceof Blob && row.size)
-									aatt.push($p.blob_as_text(row));
+									aatt.push($p.utils.blob_as_text(row));
 							});
 							return Promise.all(aatt);
 						})

@@ -201,8 +201,8 @@ $p.modifiers.push(
 						ДатаЗаказаФорматDD: $p.moment(this.date).format("LL"),
 						ДатаТекущаяФорматD: $p.moment().format("L"),
 						ДатаТекущаяФорматDD: $p.moment().format("LL"),
-						ДоговорДатаФорматD: $p.moment(this.contract.date.valueOf() == $p.blank.date.valueOf() ? this.date : this.contract.date).format("L"),
-						ДоговорДатаФорматDD: $p.moment(this.contract.date.valueOf() == $p.blank.date.valueOf() ? this.date : this.contract.date).format("LL"),
+						ДоговорДатаФорматD: $p.moment(this.contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : this.contract.date).format("L"),
+						ДоговорДатаФорматDD: $p.moment(this.contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : this.contract.date).format("LL"),
 						ДоговорНомер: this.contract.number_doc ? this.contract.number_doc : this.number_doc,
 						ДоговорСрокДействия: $p.moment(this.contract.validity).format("L"),
 						ЗаказНомер: this.number_doc,
@@ -320,7 +320,7 @@ $p.modifiers.push(
 						if(key.indexOf("logo") != -1){
 							get_imgs.push(this.organization.get_attachment(key)
 								.then(function (blob) {
-									return $p.blob_as_text(blob, blob.type.indexOf("svg") == -1 ? "data_url" : "")
+									return $p.utils.blob_as_text(blob, blob.type.indexOf("svg") == -1 ? "data_url" : "")
 								})
 								.then(function (data_url) {
 									res.ОрганизацияЛоготип = data_url;
@@ -340,7 +340,7 @@ $p.modifiers.push(
 
 							get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, "svg")
 								.then(function (blob) {
-									return $p.blob_as_text(blob)
+									return $p.utils.blob_as_text(blob)
 								})
 								.then(function (svg_text) {
 									res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;

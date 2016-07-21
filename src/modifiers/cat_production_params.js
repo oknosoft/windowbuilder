@@ -23,7 +23,7 @@ $p.modifiers.push(
 				get: function(){
 					var __noms = [];
 					this.elmnts._obj.forEach(function(row){
-						if(!$p.is_empty_guid(row.nom) && __noms.indexOf(row.nom) == -1)
+						if(!$p.utils.is_empty_guid(row.nom) && __noms.indexOf(row.nom) == -1)
 							__noms.push(row.nom);
 					});
 					return __noms;

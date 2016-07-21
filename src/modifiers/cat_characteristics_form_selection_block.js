@@ -25,7 +25,7 @@ $p.modifiers.push(
 
 				selection_block = {
 					_obj: {
-						_calc_order: $p.blank.guid
+						_calc_order: $p.utils.blank.guid
 					}
 				};
 
@@ -52,7 +52,7 @@ $p.modifiers.push(
 							// 	path: [
 							// 		function(o, f){
 							//
-							// 			if($p.is_data_obj(o)){
+							// 			if($p.utils.is_data_obj(o)){
 							// 				return o.s > 0;
 							//
 							// 			}else{
@@ -97,7 +97,7 @@ $p.modifiers.push(
 							if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount())
 								wnd.elmnts.filter.call_event();
 
-							if(!$p.is_empty_guid(this._obj.calc_order) &&
+							if(!$p.utils.is_empty_guid(this._obj.calc_order) &&
 									$p.wsql.get_user_param("template_block_calc_order") != this._obj.calc_order){
 								$p.wsql.set_user_param("template_block_calc_order", this._obj.calc_order);
 							}
@@ -187,7 +187,7 @@ $p.modifiers.push(
 						ares.length = 0;
 						crefs.forEach(function (o) {
 							if(o.svg && o.svg.data){
-								ares.push($p.blob_as_text(o.svg.data)
+								ares.push($p.utils.blob_as_text(o.svg.data)
 									.then(function (svg) {
 										o.svg = svg;
 									}))

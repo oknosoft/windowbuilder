@@ -143,7 +143,7 @@ $p.modifiers.push(
 										
 							});
 							if(!setted){
-								this.sys.production.find_rows({param: $p.blank.guid}, function (row) {
+								this.sys.production.find_rows({param: $p.utils.blank.guid}, function (row) {
 									setted = true;
 									param._owner.owner = row.nom;
 									return false;

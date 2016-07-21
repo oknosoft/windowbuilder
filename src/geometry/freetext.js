@@ -286,7 +286,7 @@ FreeText.prototype.__define({
 			return $p.enm.text_aligns.get(this.justification);
 		},
 		set: function (v) {
-			this.justification = $p.is_data_obj(v) ? v.ref : v;
+			this.justification = $p.utils.is_data_obj(v) ? v.ref : v;
 			this.project.register_update();
 		},
 		enumerable: false

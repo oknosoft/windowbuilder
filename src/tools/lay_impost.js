@@ -78,7 +78,7 @@ function ToolLayImpost(){
 			name: ["selection",	"ref"],
 			path: [
 				function(o, f){
-					if($p.is_data_obj(o)){
+					if($p.utils.is_data_obj(o)){
 						return tool.profile.rama_impost.indexOf(o) != -1;
 
 					}else{
@@ -200,7 +200,7 @@ function ToolLayImpost(){
 			for(var prop in tool.profile._metadata.fields) {
 				if(prop.indexOf("step") == -1 && prop.indexOf("inset") == -1 && prop != "clr" && prop != "w" && prop != "h"){
 					var val = tool.profile[prop];
-					opt[prop] = $p.is_data_obj(val) ? val.ref : val;
+					opt[prop] = $p.utils.is_data_obj(val) ? val.ref : val;
 				}
 			}
 		};

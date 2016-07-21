@@ -152,7 +152,7 @@ $p.modifiers.push(
 										
 							});
 							if(!setted){
-								this.sys.production.find_rows({param: $p.blank.guid}, function (row) {
+								this.sys.production.find_rows({param: $p.utils.blank.guid}, function (row) {
 									setted = true;
 									param._owner.owner = row.nom;
 									return false;
@@ -209,7 +209,7 @@ $p.modifiers.push(
 
 				selection_block = {
 					_obj: {
-						_calc_order: $p.blank.guid
+						_calc_order: $p.utils.blank.guid
 					}
 				};
 
@@ -236,7 +236,7 @@ $p.modifiers.push(
 							// 	path: [
 							// 		function(o, f){
 							//
-							// 			if($p.is_data_obj(o)){
+							// 			if($p.utils.is_data_obj(o)){
 							// 				return o.s > 0;
 							//
 							// 			}else{
@@ -281,7 +281,7 @@ $p.modifiers.push(
 							if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount())
 								wnd.elmnts.filter.call_event();
 
-							if(!$p.is_empty_guid(this._obj.calc_order) &&
+							if(!$p.utils.is_empty_guid(this._obj.calc_order) &&
 									$p.wsql.get_user_param("template_block_calc_order") != this._obj.calc_order){
 								$p.wsql.set_user_param("template_block_calc_order", this._obj.calc_order);
 							}
@@ -371,7 +371,7 @@ $p.modifiers.push(
 						ares.length = 0;
 						crefs.forEach(function (o) {
 							if(o.svg && o.svg.data){
-								ares.push($p.blob_as_text(o.svg.data)
+								ares.push($p.utils.blob_as_text(o.svg.data)
 									.then(function (svg) {
 										o.svg = svg;
 									}))
@@ -543,7 +543,7 @@ $p.modifiers.push(
 			if(nom1 instanceof $p.Editor.BuilderElement){
 				onom1 = nom1.nom;
 
-			}else if($p.is_data_obj(nom1)){
+			}else if($p.utils.is_data_obj(nom1)){
 				onom1 = nom1;
 
 			}else{
@@ -557,7 +557,7 @@ $p.modifiers.push(
 				ref1 = onom1.ref;
 
 
-			if(!nom2 || ($p.is_data_obj(nom2) && nom2.empty())){
+			if(!nom2 || ($p.utils.is_data_obj(nom2) && nom2.empty())){
 				is_i = true;
 				onom2 = nom2 = $p.cat.nom.get();
 
@@ -566,7 +566,7 @@ $p.modifiers.push(
 				if(nom2 instanceof $p.Editor.BuilderElement){
 					onom2 = nom2.nom;
 
-				}else if($p.is_data_obj(nom2)){
+				}else if($p.utils.is_data_obj(nom2)){
 					onom2 = nom2;
 
 				}else{
@@ -601,8 +601,8 @@ $p.modifiers.push(
 					оCnn.cnn_elmnts.each(function(row){
 						if(is_nom1 && is_nom2)
 							return false;
-						is_nom1 = is_nom1 || $p.is_equal(row.nom1, onom1);
-						is_nom2 = is_nom2 || $p.is_equal(row.nom2, onom2);
+						is_nom1 = is_nom1 || $p.utils.is_equal(row.nom1, onom1);
+						is_nom2 = is_nom2 || $p.utils.is_equal(row.nom2, onom2);
 					});
 					if(is_nom1 && is_nom2){
 						a2.push(оCnn);
@@ -702,7 +702,7 @@ $p.modifiers.push(
 			 */
 			check_nom2: {
 				value: function (nom) {
-					var ref = $p.is_data_obj(nom) ? nom.ref : nom;
+					var ref = $p.utils.is_data_obj(nom) ? nom.ref : nom;
 					return this.cnn_elmnts._obj.some(function (row) {
 						return row.nom == ref;
 					})
@@ -1337,7 +1337,7 @@ $p.modifiers.push(
 				get: function(){
 					var __noms = [];
 					this.elmnts._obj.forEach(function(row){
-						if(!$p.is_empty_guid(row.nom) && __noms.indexOf(row.nom) == -1)
+						if(!$p.utils.is_empty_guid(row.nom) && __noms.indexOf(row.nom) == -1)
 							__noms.push(row.nom);
 					});
 					return __noms;
@@ -1524,7 +1524,7 @@ $p.modifiers.push(
 
 					for(var i in aattr){
 
-						ref = $p.fix_guid(aattr[i]);
+						ref = $p.utils.fix_guid(aattr[i]);
 
 						acl = aattr[i].acl;
 						if(acl)
@@ -1730,14 +1730,14 @@ $p.modifiers.push(
 						if(mf.digits && typeof res === "number")
 							return res;
 
-						if(mf.hasOwnProperty("str_len") && !$p.is_guid(res))
+						if(mf.hasOwnProperty("str_len") && !$p.utils.is_guid(res))
 							return res;
 
 						if(mgr = $p.md.value_mgr(this._obj, "value", mf)){
-							if($p.is_data_mgr(mgr))
+							if($p.utils.is_data_mgr(mgr))
 								return mgr.get(res, false);
 							else
-								return $p.fetch_type(res, mgr);
+								return $p.utils.fetch_type(res, mgr);
 						}
 
 						if(res){
@@ -1746,13 +1746,13 @@ $p.modifiers.push(
 						}
 
 					}else if(mf.date_part)
-						return $p.fix_date(this._obj.value, true);
+						return $p.utils.fix_date(this._obj.value, true);
 
 					else if(mf.digits)
-						return $p.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
+						return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
 
 					else if(mf.types[0]=="boolean")
-						return $p.fix_boolean(this._obj.value);
+						return $p.utils.fix_boolean(this._obj.value);
 
 					else
 						return this._obj.value || "";
@@ -1770,7 +1770,7 @@ $p.modifiers.push(
 						name: 'value',
 						oldValue: this._obj.value
 					});
-					this._obj.value = $p.is_data_obj(v) ? v.ref : v;
+					this._obj.value = $p.utils.is_data_obj(v) ? v.ref : v;
 					this._data._modified = true;
 				}
 			}
@@ -2077,8 +2077,8 @@ $p.modifiers.push(
 						ДатаЗаказаФорматDD: $p.moment(this.date).format("LL"),
 						ДатаТекущаяФорматD: $p.moment().format("L"),
 						ДатаТекущаяФорматDD: $p.moment().format("LL"),
-						ДоговорДатаФорматD: $p.moment(this.contract.date.valueOf() == $p.blank.date.valueOf() ? this.date : this.contract.date).format("L"),
-						ДоговорДатаФорматDD: $p.moment(this.contract.date.valueOf() == $p.blank.date.valueOf() ? this.date : this.contract.date).format("LL"),
+						ДоговорДатаФорматD: $p.moment(this.contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : this.contract.date).format("L"),
+						ДоговорДатаФорматDD: $p.moment(this.contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : this.contract.date).format("LL"),
 						ДоговорНомер: this.contract.number_doc ? this.contract.number_doc : this.number_doc,
 						ДоговорСрокДействия: $p.moment(this.contract.validity).format("L"),
 						ЗаказНомер: this.number_doc,
@@ -2196,7 +2196,7 @@ $p.modifiers.push(
 						if(key.indexOf("logo") != -1){
 							get_imgs.push(this.organization.get_attachment(key)
 								.then(function (blob) {
-									return $p.blob_as_text(blob, blob.type.indexOf("svg") == -1 ? "data_url" : "")
+									return $p.utils.blob_as_text(blob, blob.type.indexOf("svg") == -1 ? "data_url" : "")
 								})
 								.then(function (data_url) {
 									res.ОрганизацияЛоготип = data_url;
@@ -2216,7 +2216,7 @@ $p.modifiers.push(
 
 							get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, "svg")
 								.then(function (blob) {
-									return $p.blob_as_text(blob)
+									return $p.utils.blob_as_text(blob)
 								})
 								.then(function (svg_text) {
 									res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
@@ -2577,7 +2577,7 @@ $p.modifiers.push(
 				 */
 				var refs = [];
 				o.production.each(function (row) {
-					if(!$p.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new())
+					if(!$p.utils.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new())
 						refs.push(row._obj.characteristic);
 				});
 				$p.cat.characteristics.pouch_load_array(refs)
@@ -2835,9 +2835,9 @@ $p.modifiers.push(
 						//_mgr.save({
 						//	ref: o.ref,
 						//	discounts: {
-						//		production: $p.fix_number(wnd.elmnts.discount.getItemValue("production"), true),
-						//		accessories: $p.fix_number(wnd.elmnts.discount.getItemValue("accessories"), true),
-						//		services: $p.fix_number(wnd.elmnts.discount.getItemValue("services"), true)
+						//		production: $p.utils.fix_number(wnd.elmnts.discount.getItemValue("production"), true),
+						//		accessories: $p.utils.fix_number(wnd.elmnts.discount.getItemValue("accessories"), true),
+						//		services: $p.utils.fix_number(wnd.elmnts.discount.getItemValue("services"), true)
 						//	},
 						//	o: o._obj,
 						//	action: "calc",
@@ -2893,12 +2893,12 @@ $p.modifiers.push(
 					pval;
 
 
-				if($p.is_data_obj(row.ordn) && !row.ordn.empty()){
+				if($p.utils.is_data_obj(row.ordn) && !row.ordn.empty()){
 					for(var i in sfields)
 						if(rofields.indexOf(sfields[i])!=-1){
 							pval = this.cells(rId, Number(i)).getValue();
 							this.setCellExcellType(rId, Number(i), "ro");
-							if($p.is_data_obj(pval))
+							if($p.utils.is_data_obj(pval))
 								this.cells(rId, Number(i)).setValue(pval.presentation);
 						}
 				}
@@ -3004,7 +3004,7 @@ $p.modifiers.push(
 					row = o["production"].get(rId);
 
 				// проверяем, не подчинена ли текущая строка продукции
-				if($p.is_data_obj(row.ordn) && !row.ordn.empty()){
+				if($p.utils.is_data_obj(row.ordn) && !row.ordn.empty()){
 					// возможно, ссылка оборвана. в этом случае, удаление надо разрешить
 					if(o["production"].find({characteristic: row.ordn})){
 						$p.msg.show_msg({
@@ -3017,7 +3017,7 @@ $p.modifiers.push(
 				}
 
 				// если удаляем строку продукции, за одно надо удалить и подчиненные аксессуары
-				if($p.is_data_obj(row.characteristic) && !row.characteristic.empty()){
+				if($p.utils.is_data_obj(row.characteristic) && !row.characteristic.empty()){
 					o["production"].find_rows({ordn: row.characteristic}).forEach(function (r) {
 						o["production"].del(r);
 					});
@@ -3239,7 +3239,7 @@ $p.modifiers.push(
 
 					// объект продукции создаём, но из базы не читаем и пока не записываем
 					$p.cat.characteristics.create({
-						ref: $p.generate_guid(),
+						ref: $p.utils.generate_guid(),
 						calc_order: o,
 						product: row.row
 					}, true)
@@ -3288,7 +3288,7 @@ $p.modifiers.push(
 
 				if((selId = production_get_sel_index()) != undefined){
 					row = o.production.get(selId);
-					if(row && !$p.is_empty_guid(row.characteristic.ref)){
+					if(row && !$p.utils.is_empty_guid(row.characteristic.ref)){
 						row.characteristic.form_obj()
 							.then(function (w) {
 								w.wnd.maximize();
@@ -3445,8 +3445,8 @@ $p.modifiers.push(
 
 		$p.doc.calc_order.rep_planing = function (rep, attr) {
 
-			var date_from = $p.date_add_day(new Date(), -1, true),
-				date_till = $p.date_add_day(date_from, 7, true),
+			var date_from = $p.utils.date_add_day(new Date(), -1, true),
+				date_till = $p.utils.date_add_day(date_from, 7, true),
 				query_options = {
 					reduce: true,
 					limit: 10000,
@@ -4046,18 +4046,18 @@ $p.modifiers.push(
 
 					if(!attr.price_type)
 						attr.price_type = $p.job_prm.pricing.price_type_sale;
-					else if($p.is_data_obj(attr.price_type))
+					else if($p.utils.is_data_obj(attr.price_type))
 						attr.price_type = attr.price_type.ref;
 
 					if(!attr.characteristic)
-						attr.characteristic = $p.blank.guid;
-					else if($p.is_data_obj(attr.characteristic))
+						attr.characteristic = $p.utils.blank.guid;
+					else if($p.utils.is_data_obj(attr.characteristic))
 						attr.characteristic = attr.characteristic.ref;
 
 					if(!attr.date)
 						attr.date = new Date();
 
-					var price = 0, currency, date = $p.blank.date;
+					var price = 0, currency, date = $p.utils.blank.date;
 
 					if(this._data._price){
 						if(this._data._price[attr.characteristic]){
@@ -4882,7 +4882,7 @@ $p.modifiers.push(
 				if(inset.is_main_elm && !inset.quantity)
 					return false;
 
-				if($p.is_data_obj(inset)){
+				if($p.utils.is_data_obj(inset)){
 
 					// только для прямых или только для кривых профилей
 					if((inset.for_direct_profile_only > 0 && !elm.profile.is_linear()) ||
@@ -6055,7 +6055,7 @@ $p.iface.OSvgs = function (manager, layout, area) {
 							// Для продукций заказа получаем вложения
 							var aatt = [];
 							res.production.forEach(function (row) {
-								if(!$p.is_empty_guid(row.characteristic))
+								if(!$p.utils.is_empty_guid(row.characteristic))
 									aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg").catch(function (err) {
 
 									}));
@@ -6068,7 +6068,7 @@ $p.iface.OSvgs = function (manager, layout, area) {
 							var aatt = [];
 							res.forEach(function (row) {
 								if(row instanceof Blob && row.size)
-									aatt.push($p.blob_as_text(row));
+									aatt.push($p.utils.blob_as_text(row));
 							});
 							return Promise.all(aatt);
 						})
@@ -6425,7 +6425,7 @@ $p.iface.view_events = function (cell) {
 					});
 				else{
 
-					if(!$p.is_empty_guid(hprm.ref)){
+					if(!$p.utils.is_empty_guid(hprm.ref)){
 
 						//if(hprm.frm != "doc")
 						//	setTimeout(function () {
@@ -6435,7 +6435,7 @@ $p.iface.view_events = function (cell) {
 						//	show_doc(hprm.ref);
 
 
-					} else if($p.is_empty_guid(hprm.ref) || hprm.frm == "list"){
+					} else if($p.utils.is_empty_guid(hprm.ref) || hprm.frm == "list"){
 
 						show_list();
 					}
@@ -6543,7 +6543,7 @@ $p.iface.view_orders = function (cell) {
 
 			if(hprm.view == "orders"){
 
-				if(hprm.obj == "doc.calc_order" && !$p.is_empty_guid(hprm.ref)){
+				if(hprm.obj == "doc.calc_order" && !$p.utils.is_empty_guid(hprm.ref)){
 
 					if(hprm.frm != "doc")
 						setTimeout(function () {
@@ -6553,7 +6553,7 @@ $p.iface.view_orders = function (cell) {
 						show_doc(hprm.ref);
 
 
-				} else if(hprm.obj == "cat.characteristics" && !$p.is_empty_guid(hprm.ref)) {
+				} else if(hprm.obj == "cat.characteristics" && !$p.utils.is_empty_guid(hprm.ref)) {
 
 					if(hprm.frm != "builder")
 						setTimeout(function () {
@@ -6628,7 +6628,7 @@ $p.iface.view_orders = function (cell) {
 				
 				$p.eve.callEvent("editor_closed", [t.editor]);
 
-				if(!$p.is_empty_guid(_cell.ref))
+				if(!$p.utils.is_empty_guid(_cell.ref))
 					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");
 
 				else{

@@ -470,11 +470,11 @@ function RulerWnd(options, tool){
 						});
 
 						// Prevent the key event from bubbling
-						return $p.cancel_bubble(ev);
+						return $p.iface.cancel_bubble(ev);
 
 						break;
 				}
-				return $p.cancel_bubble(ev);
+				return $p.iface.cancel_bubble(ev);
 			}
 			
 		}),

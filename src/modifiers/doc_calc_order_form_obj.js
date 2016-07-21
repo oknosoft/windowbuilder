@@ -58,7 +58,7 @@ $p.modifiers.push(
 				 */
 				var refs = [];
 				o.production.each(function (row) {
-					if(!$p.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new())
+					if(!$p.utils.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new())
 						refs.push(row._obj.characteristic);
 				});
 				$p.cat.characteristics.pouch_load_array(refs)
@@ -316,9 +316,9 @@ $p.modifiers.push(
 						//_mgr.save({
 						//	ref: o.ref,
 						//	discounts: {
-						//		production: $p.fix_number(wnd.elmnts.discount.getItemValue("production"), true),
-						//		accessories: $p.fix_number(wnd.elmnts.discount.getItemValue("accessories"), true),
-						//		services: $p.fix_number(wnd.elmnts.discount.getItemValue("services"), true)
+						//		production: $p.utils.fix_number(wnd.elmnts.discount.getItemValue("production"), true),
+						//		accessories: $p.utils.fix_number(wnd.elmnts.discount.getItemValue("accessories"), true),
+						//		services: $p.utils.fix_number(wnd.elmnts.discount.getItemValue("services"), true)
 						//	},
 						//	o: o._obj,
 						//	action: "calc",
@@ -374,12 +374,12 @@ $p.modifiers.push(
 					pval;
 
 
-				if($p.is_data_obj(row.ordn) && !row.ordn.empty()){
+				if($p.utils.is_data_obj(row.ordn) && !row.ordn.empty()){
 					for(var i in sfields)
 						if(rofields.indexOf(sfields[i])!=-1){
 							pval = this.cells(rId, Number(i)).getValue();
 							this.setCellExcellType(rId, Number(i), "ro");
-							if($p.is_data_obj(pval))
+							if($p.utils.is_data_obj(pval))
 								this.cells(rId, Number(i)).setValue(pval.presentation);
 						}
 				}
@@ -485,7 +485,7 @@ $p.modifiers.push(
 					row = o["production"].get(rId);
 
 				// проверяем, не подчинена ли текущая строка продукции
-				if($p.is_data_obj(row.ordn) && !row.ordn.empty()){
+				if($p.utils.is_data_obj(row.ordn) && !row.ordn.empty()){
 					// возможно, ссылка оборвана. в этом случае, удаление надо разрешить
 					if(o["production"].find({characteristic: row.ordn})){
 						$p.msg.show_msg({
@@ -498,7 +498,7 @@ $p.modifiers.push(
 				}
 
 				// если удаляем строку продукции, за одно надо удалить и подчиненные аксессуары
-				if($p.is_data_obj(row.characteristic) && !row.characteristic.empty()){
+				if($p.utils.is_data_obj(row.characteristic) && !row.characteristic.empty()){
 					o["production"].find_rows({ordn: row.characteristic}).forEach(function (r) {
 						o["production"].del(r);
 					});
@@ -720,7 +720,7 @@ $p.modifiers.push(
 
 					// объект продукции создаём, но из базы не читаем и пока не записываем
 					$p.cat.characteristics.create({
-						ref: $p.generate_guid(),
+						ref: $p.utils.generate_guid(),
 						calc_order: o,
 						product: row.row
 					}, true)
@@ -769,7 +769,7 @@ $p.modifiers.push(
 
 				if((selId = production_get_sel_index()) != undefined){
 					row = o.production.get(selId);
-					if(row && !$p.is_empty_guid(row.characteristic.ref)){
+					if(row && !$p.utils.is_empty_guid(row.characteristic.ref)){
 						row.characteristic.form_obj()
 							.then(function (w) {
 								w.wnd.maximize();

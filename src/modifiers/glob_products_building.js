@@ -342,7 +342,7 @@ $p.modifiers.push(
 				if(inset.is_main_elm && !inset.quantity)
 					return false;
 
-				if($p.is_data_obj(inset)){
+				if($p.utils.is_data_obj(inset)){
 
 					// только для прямых или только для кривых профилей
 					if((inset.for_direct_profile_only > 0 && !elm.profile.is_linear()) ||

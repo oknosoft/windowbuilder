@@ -32,7 +32,7 @@ function fake(obj) {
 
 			var table_row = document.createElement("TR"),
 				nom = $p.cat.nom.get(row.nom),
-				cx = $p.is_empty_guid(row.characteristic) ? "" : " " + $p.cat.nom.get(row.characteristic, false, true),
+				cx = $p.utils.is_empty_guid(row.characteristic) ? "" : " " + $p.cat.nom.get(row.characteristic, false, true),
 				len = (row.len + (row.qty + 1) * nom.saw_width).round(2),
 				row_data = {
 					Материал: "<b>" + (nom.article || nom.name) + " " + cx + "</b> <span style='float: right;'>" +

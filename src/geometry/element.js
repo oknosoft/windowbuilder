@@ -205,7 +205,7 @@ BuilderElement.prototype.__define({
 			function cnn_choice_links(o, cnn_point){
 				var nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
 
-				if($p.is_data_obj(o)){
+				if($p.utils.is_data_obj(o)){
 					return nom_cnns.some(function (cnn) {
 						return o == cnn;
 					});
@@ -233,7 +233,7 @@ BuilderElement.prototype.__define({
 
 						if(t instanceof Filling){
 
-							if($p.is_data_obj(o)){
+							if($p.utils.is_data_obj(o)){
 								return $p.cat.inserts._inserts_types_filling.indexOf(o.insert_type) != -1 &&
 										o.thickness >= t.project._dp.sys.tmin && o.thickness <= t.project._dp.sys.tmax;
 
@@ -256,7 +256,7 @@ BuilderElement.prototype.__define({
 							selection = {elm_type: t.nom.elm_type};
 
 
-						if($p.is_data_obj(o)){
+						if($p.utils.is_data_obj(o)){
 							var ok = false;
 							selection.nom = o;
 							t.project._dp.sys.elmnts.find_rows(selection, function (row) {
@@ -304,7 +304,7 @@ BuilderElement.prototype.__define({
 						else
 							nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
 
-						if($p.is_data_obj(o)){
+						if($p.utils.is_data_obj(o)){
 							return nom_cnns.some(function (cnn) {
 								return o == cnn;
 							});

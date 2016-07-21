@@ -103,8 +103,8 @@ $p.modifiers.push(
 
 		$p.doc.calc_order.rep_planing = function (rep, attr) {
 
-			var date_from = $p.date_add_day(new Date(), -1, true),
-				date_till = $p.date_add_day(date_from, 7, true),
+			var date_from = $p.utils.date_add_day(new Date(), -1, true),
+				date_till = $p.utils.date_add_day(date_from, 7, true),
 				query_options = {
 					reduce: true,
 					limit: 10000,

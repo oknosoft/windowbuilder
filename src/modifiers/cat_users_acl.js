@@ -20,7 +20,7 @@ $p.modifiers.push(
 
 					for(var i in aattr){
 
-						ref = $p.fix_guid(aattr[i]);
+						ref = $p.utils.fix_guid(aattr[i]);
 
 						acl = aattr[i].acl;
 						if(acl)

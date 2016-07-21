@@ -161,7 +161,7 @@ function Editor(pwnd, attr){
 
 	_editor._wrapper.oncontextmenu = function (event) {
 		event.preventDefault();
-		return $p.cancel_bubble(event);
+		return $p.iface.cancel_bubble(event);
 	};
 
 

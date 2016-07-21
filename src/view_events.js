@@ -51,7 +51,7 @@ $p.iface.view_events = function (cell) {
 					});
 				else{
 
-					if(!$p.is_empty_guid(hprm.ref)){
+					if(!$p.utils.is_empty_guid(hprm.ref)){
 
 						//if(hprm.frm != "doc")
 						//	setTimeout(function () {
@@ -61,7 +61,7 @@ $p.iface.view_events = function (cell) {
 						//	show_doc(hprm.ref);
 
 
-					} else if($p.is_empty_guid(hprm.ref) || hprm.frm == "list"){
+					} else if($p.utils.is_empty_guid(hprm.ref) || hprm.frm == "list"){
 
 						show_list();
 					}
