@@ -1,9 +1,7 @@
 /**
- * Дополнительные методы плана видов характеристик Свойства объектов
+ * ### Дополнительные методы плана видов характеристик Свойства объектов
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
  * @module cch_properties
  */
 

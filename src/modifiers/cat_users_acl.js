@@ -1,10 +1,8 @@
 /**
- * Дополнительные методы справочника Цвета
+ * ### Дополнительные методы справочника _Права внешних пользователей_
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_cnns
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cat_users_acl
  */
 
 
@@ -68,6 +66,12 @@ $p.modifiers.push(
 
 		$p.cat.users_acl._obj_constructor.prototype.__define({
 
+			/**
+			 * ### Роль доступна
+			 *
+			 * @param name {String}
+			 * @returns {Boolean}
+			 */
 			role_available: {
 				value: function (name) {
 					return this.acl_objs._obj.some(function (row) {
@@ -76,6 +80,12 @@ $p.modifiers.push(
 				}
 			},
 
+			/**
+			 * ### Идентификаторы доступных контрагентов
+			 * Для пользователей с ограниченным доступом
+			 *
+			 * @returns {Array}
+			 */
 			partners_uids: {
 				get: function () {
 					var res = [];

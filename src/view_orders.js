@@ -108,10 +108,7 @@ $p.iface.view_orders = function (cell) {
 
 		function create_elmnts(){
 
-			if(t.init_event_id){
-				$p.eve.detachEvent(t.init_event_id);
-				delete t.init_event_id;
-			}
+			$p.off(create_elmnts);
 
 			// создадим экземпляр графического редактора
 			var _cell = t.carousel.cells("builder"),
@@ -206,8 +203,7 @@ $p.iface.view_orders = function (cell) {
 		if($p.job_prm.builder)
 			setTimeout(create_elmnts);
 		else
-			t.init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", create_elmnts);
-
+			$p.on({ predefined_elmnts_inited: create_elmnts });
 
 		/**
 		 * Обработчик маршрутизации
@@ -218,9 +214,6 @@ $p.iface.view_orders = function (cell) {
 
 	}
 
-	if(!$p.iface._orders)
-		$p.iface._orders = new OViewOrders();
-
-	return $p.iface._orders;
+	return $p.iface._orders || ($p.iface._orders = new OViewOrders());
 
 };

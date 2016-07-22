@@ -329,9 +329,6 @@ $p.iface.view_settings = function (cell) {
 
 	}
 
-	if(!$p.iface._settings)
-		$p.iface._settings = new OViewSettings();
-
-	return $p.iface._settings;
+	return $p.iface._settings || ($p.iface._settings = new OViewSettings());
 
 };

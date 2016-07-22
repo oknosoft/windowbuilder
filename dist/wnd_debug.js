@@ -1226,11 +1226,9 @@ $p.modifiers.push(
 	}
 );
 /**
- * Дополнительные методы справочника Контрагенты
+ * ### Дополнительные методы справочника Контрагенты
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
  * @module cat_partners
  */
 
@@ -1503,12 +1501,10 @@ $p.modifiers.push(
 );
 
 /**
- * Дополнительные методы справочника Цвета
+ * ### Дополнительные методы справочника _Права внешних пользователей_
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_cnns
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cat_users_acl
  */
 
 
@@ -1572,6 +1568,12 @@ $p.modifiers.push(
 
 		$p.cat.users_acl._obj_constructor.prototype.__define({
 
+			/**
+			 * ### Роль доступна
+			 *
+			 * @param name {String}
+			 * @returns {Boolean}
+			 */
 			role_available: {
 				value: function (name) {
 					return this.acl_objs._obj.some(function (row) {
@@ -1580,6 +1582,12 @@ $p.modifiers.push(
 				}
 			},
 
+			/**
+			 * ### Идентификаторы доступных контрагентов
+			 * Для пользователей с ограниченным доступом
+			 *
+			 * @returns {Array}
+			 */
 			partners_uids: {
 				get: function () {
 					var res = [];
@@ -1596,115 +1604,115 @@ $p.modifiers.push(
 );
 
 /**
- * Дополнительные методы справочника Контрагенты
+ * ### Дополнительные методы ПВХ Предопределенные элементы
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_partners
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cch_predefined_elmnts
  */
 
 $p.modifiers.push(
 	function($p){
 
 		// Подписываемся на событие окончания загрузки локальных данных
-		var pouch_data_loaded = $p.eve.attachEvent("pouch_load_data_loaded", function () {
+		$p.on({
+			pouch_load_data_loaded: function pouch_load_data_loaded() {
 
-			$p.eve.detachEvent(pouch_data_loaded);
+				$p.off(pouch_load_data_loaded);
 
-			// читаем элементы из pouchdb и создаём свойства
-			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
-				.then(function (rows) {
+				// читаем элементы из pouchdb и создаём свойства
+				$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
+					.then(function (rows) {
 
-					var parents = {};
+						var parents = {};
 
-					rows.forEach(function (row) {
-						if(row.is_folder && row.synonym){
-							var ref = row._id.split("|")[1];
-							parents[ref] = row.synonym;
-							$p.job_prm.__define(row.synonym, { value: {} });
-						}
-					});
-
-					rows.forEach(function (row) {
-
-						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
-
-							var _mgr, tnames;
-							
-							if(row.type.is_ref){
-								tnames = row.type.types[0].split(".");
-								_mgr = $p[tnames[0]][tnames[1]]
+						rows.forEach(function (row) {
+							if(row.is_folder && row.synonym){
+								var ref = row._id.split("|")[1];
+								parents[ref] = row.synonym;
+								$p.job_prm.__define(row.synonym, { value: {} });
 							}
-
-							if(row.list == -1){
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: function () {
-										var res = {};
-										row.elmnts.forEach(function (row) {
-											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
-										});
-										return res;
-									}()
-								});
-
-							}else if(row.list){
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: row.elmnts.map(function (row) {
-										return _mgr ? _mgr.get(row.value, false) : row.value;
-									})
-								});
-
-							}else{
-
-								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
-									delete $p.job_prm[parents[row.parent]][row.synonym];
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: _mgr ? _mgr.get(row.value, false) : row.value,
-									configurable: true
-								});
-							}
-
-						}
-					});
-				})
-				.then(function () {
-					
-					// рассчеты, помеченные, как шаблоны, загрузим в память заранее
-					setTimeout(function () {
-
-						if(!$p.job_prm.builder.base_block)
-							$p.job_prm.builder.base_block = [];
-
-						// дополним base_block шаблонами из систем профилей
-						$p.cat.production_params.forEach(function (o) {
-							if(!o.is_folder)
-								o.base_blocks.forEach(function (row) {
-									if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1)
-										$p.job_prm.builder.base_block.push(row.calc_order);
-								});
-						});
-						
-						$p.job_prm.builder.base_block.forEach(function (o) {
-							o.load();
 						});
 
-					}, 1000);
+						rows.forEach(function (row) {
 
-					// загружаем ключи планирования, т.к. они нужны в ОЗУ
-					$p.cat.planning_keys.pouch_find_rows();
+							if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
+
+								var _mgr, tnames;
+
+								if(row.type.is_ref){
+									tnames = row.type.types[0].split(".");
+									_mgr = $p[tnames[0]][tnames[1]]
+								}
+
+								if(row.list == -1){
+
+									$p.job_prm[parents[row.parent]].__define(row.synonym, {
+										value: function () {
+											var res = {};
+											row.elmnts.forEach(function (row) {
+												res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
+											});
+											return res;
+										}()
+									});
+
+								}else if(row.list){
+
+									$p.job_prm[parents[row.parent]].__define(row.synonym, {
+										value: row.elmnts.map(function (row) {
+											return _mgr ? _mgr.get(row.value, false) : row.value;
+										})
+									});
+
+								}else{
+
+									if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
+										delete $p.job_prm[parents[row.parent]][row.synonym];
+
+									$p.job_prm[parents[row.parent]].__define(row.synonym, {
+										value: _mgr ? _mgr.get(row.value, false) : row.value,
+										configurable: true
+									});
+								}
+
+							}
+						});
+					})
+					.then(function () {
+
+						// рассчеты, помеченные, как шаблоны, загрузим в память заранее
+						setTimeout(function () {
+
+							if(!$p.job_prm.builder.base_block)
+								$p.job_prm.builder.base_block = [];
+
+							// дополним base_block шаблонами из систем профилей
+							$p.cat.production_params.forEach(function (o) {
+								if(!o.is_folder)
+									o.base_blocks.forEach(function (row) {
+										if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1)
+											$p.job_prm.builder.base_block.push(row.calc_order);
+									});
+							});
+
+							$p.job_prm.builder.base_block.forEach(function (o) {
+								o.load();
+							});
+
+						}, 1000);
+
+						// загружаем ключи планирования, т.к. они нужны в ОЗУ
+						$p.cat.planning_keys.pouch_find_rows();
 
 
-					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-					setTimeout(function () {
-						$p.eve.callEvent("predefined_elmnts_inited");
-					}, 200);
-					
-				});
-			
+						// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
+						setTimeout(function () {
+							$p.eve.callEvent("predefined_elmnts_inited");
+						}, 200);
+
+					});
+
+			}
 		});
 
 		var _mgr = $p.cch.predefined_elmnts,
@@ -1793,11 +1801,9 @@ $p.modifiers.push(
 	}
 );
 /**
- * Дополнительные методы плана видов характеристик Свойства объектов
+ * ### Дополнительные методы плана видов характеристик Свойства объектов
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
  * @module cch_properties
  */
 
@@ -4015,11 +4021,10 @@ $p.modifiers.push(
 	}
 );
 /**
+ * ### Модуль Ценообразование
  * Аналог УПзП-шного __ЦенообразованиеСервер__
  *
- * Created 26.05.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
  * @module  glob_pricing
  */
 
@@ -5748,182 +5753,6 @@ $p.modifiers.push(
 
 $p.injected_data._mixin({"create_tables.sql":"USE md;\nCREATE TABLE IF NOT EXISTS `areg_invoice_payments` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, `trans` CHAR, `partner` CHAR, `organization` CHAR, `period` Date, `recorder` CHAR, `amount_mutual` FLOAT, `amount_operation` FLOAT);\nCREATE TABLE IF NOT EXISTS `areg_planning` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, `phase` CHAR, `date` Date, `work_center` CHAR, `obj` CHAR, `elm` INT, `specimen` INT, `period` Date, `recorder` CHAR, `quantity` FLOAT, `cost` FLOAT);\nCREATE TABLE IF NOT EXISTS `ireg_currency_courses` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, `currency` CHAR, `period` Date, `course` FLOAT, `multiplicity` INT);\nCREATE TABLE IF NOT EXISTS `ireg_margin_coefficients` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, `price_group` CHAR, `parameters_key` CHAR, `condition_formula` CHAR, `marginality` FLOAT, `marginality_min` FLOAT, `marginality_internal` FLOAT, `price_type_first_cost` CHAR, `price_type_sale` CHAR, `price_type_internal` CHAR, `formula` CHAR, `sale_formula` CHAR, `internal_formula` CHAR, `external_formula` CHAR, `extra_charge_external` FLOAT, `discount_external` FLOAT, `discount` FLOAT, `note` CHAR);\nCREATE TABLE IF NOT EXISTS `ireg_$log` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, `date` INT, `sequence` INT, `class` CHAR, `note` CHAR, `obj` CHAR);\nCREATE TABLE IF NOT EXISTS `ireg_buyers_order_states` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, `invoice` CHAR, `state` CHAR, `event_date` Date, `СуммаОплаты` FLOAT, `ПроцентОплаты` INT, `СуммаОтгрузки` FLOAT, `ПроцентОтгрузки` INT, `СуммаДолга` FLOAT, `ПроцентДолга` INT, `ЕстьРасхожденияОрдерНакладная` BOOLEAN);\nCREATE TABLE IF NOT EXISTS `doc_planning_event` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `phase` CHAR, `work_center` CHAR, `recipient` CHAR, `calc_order` CHAR, `note` CHAR, `ts_executors` JSON, `ts_planning` JSON);\nCREATE TABLE IF NOT EXISTS `doc_nom_prices_setup` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `note` CHAR, `responsible` CHAR, `price_type` CHAR, `ts_goods` JSON);\nCREATE TABLE IF NOT EXISTS `doc_selling` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `warehouse` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_goods` JSON, `ts_services` JSON);\nCREATE TABLE IF NOT EXISTS `doc_credit_cash_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `partner_T` CHAR, `department` CHAR, `cashbox` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_payment_details` JSON);\nCREATE TABLE IF NOT EXISTS `doc_debit_cash_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `partner_T` CHAR, `department` CHAR, `cashbox` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_payment_details` JSON);\nCREATE TABLE IF NOT EXISTS `doc_credit_bank_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_payment_details` JSON);\nCREATE TABLE IF NOT EXISTS `doc_debit_bank_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_payment_details` JSON);\nCREATE TABLE IF NOT EXISTS `doc_work_centers_performance` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `start_date` Date, `expiration_date` Date, `responsible` CHAR, `note` CHAR, `ts_planning` JSON);\nCREATE TABLE IF NOT EXISTS `doc_credit_card_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_payment_details` JSON);\nCREATE TABLE IF NOT EXISTS `doc_calc_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `number_internal` CHAR, `project` CHAR, `organization` CHAR, `partner` CHAR, `client_of_dealer` CHAR, `contract` CHAR, `organizational_unit` CHAR, `note` CHAR, `manager` CHAR, `leading_manager` CHAR, `department` CHAR, `doc_amount` FLOAT, `amount_operation` FLOAT, `amount_internal` FLOAT, `accessory_characteristic` CHAR, `sys_profile` CHAR, `sys_furn` CHAR, `phone` CHAR, `delivery_area` CHAR, `shipping_address` CHAR, `coordinates` CHAR, `address_fields` CHAR, `difficult` BOOLEAN, `vat_consider` BOOLEAN, `vat_included` BOOLEAN, `settlements_course` FLOAT, `settlements_multiplicity` INT, `obj_delivery_state` CHAR, `category` CHAR, `ts_production` JSON, `ts_extra_fields` JSON, `ts_contact_information` JSON, `ts_planning` JSON);\nCREATE TABLE IF NOT EXISTS `doc_work_centers_task` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `work_center` CHAR, `recipient` CHAR, `responsible` CHAR, `note` CHAR, `ts_planning` JSON);\nCREATE TABLE IF NOT EXISTS `doc_purchase` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `warehouse` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_goods` JSON, `ts_services` JSON);\nCREATE TABLE IF NOT EXISTS `doc_registers_correction` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `original_doc_type` CHAR, `responsible` CHAR, `note` CHAR, `ts_registers_table` JSON);\nCREATE TABLE IF NOT EXISTS `cat_planning_keys` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `work_shift` CHAR, `department` CHAR, `work_center` CHAR, `work_center_kind` CHAR, `predefined_name` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_insert_bind` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `inset` CHAR, `inset_T` CHAR, `zone` INT, `predefined_name` CHAR, `ts_production` JSON);\nCREATE TABLE IF NOT EXISTS `cat_nom_groups` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `vat_rate` CHAR, `predefined_name` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_price_groups` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `definition` CHAR, `predefined_name` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_characteristics` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `x` FLOAT, `y` FLOAT, `z` FLOAT, `s` FLOAT, `clr` CHAR, `weight` FLOAT, `condition_products` FLOAT, `calc_order` CHAR, `product` INT, `leading_product` CHAR, `leading_elm` INT, `note` CHAR, `partner` CHAR, `sys` CHAR, `predefined_name` CHAR, `owner` CHAR, `ts_constructions` JSON, `ts_coordinates` JSON, `ts_cnn_elmnts` JSON, `ts_params` JSON, `ts_glass_specification` JSON, `ts_extra_fields` JSON, `ts_glasses` JSON, `ts_mosquito` JSON, `ts_specification` JSON);\nCREATE TABLE IF NOT EXISTS `cat_individuals` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `birth_date` Date, `inn` CHAR, `imns_code` CHAR, `note` CHAR, `pfr_number` CHAR, `sex` CHAR, `birth_place` CHAR, `ОсновноеИзображение` CHAR, `Фамилия` CHAR, `Имя` CHAR, `Отчество` CHAR, `ФамилияРП` CHAR, `ИмяРП` CHAR, `ОтчествоРП` CHAR, `ОснованиеРП` CHAR, `ДолжностьРП` CHAR, `Должность` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_contact_information` JSON);\nCREATE TABLE IF NOT EXISTS `cat_nom_prices_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `price_currency` CHAR, `discount_percent` FLOAT, `vat_price_included` BOOLEAN, `rounding_order` CHAR, `rounding_in_a_big_way` BOOLEAN, `note` CHAR, `predefined_name` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_cash_flow_articles` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `definition` CHAR, `sorting_field` INT, `predefined_name` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_stores` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `note` CHAR, `department` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_projects` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `start` Date, `finish` Date, `launch` Date, `readiness` Date, `finished` BOOLEAN, `responsible` CHAR, `note` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_users` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `invalid` BOOLEAN, `department` CHAR, `individual_person` CHAR, `note` CHAR, `ancillary` BOOLEAN, `user_ib_uid` CHAR, `user_fresh_uid` CHAR, `id` CHAR, `predefined_name` CHAR, `ts_extra_fields` JSON, `ts_contact_information` JSON);\nCREATE TABLE IF NOT EXISTS `cat_divisions` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `main_project` CHAR, `sorting` INT, `predefined_name` CHAR, `parent` CHAR, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_color_price_groups` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `for_pricing_only` CHAR, `for_pricing_only_T` CHAR, `predefined_name` CHAR, `ts_price_groups` JSON, `ts_clr_conformity` JSON);\nCREATE TABLE IF NOT EXISTS `cat_clrs` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `ral` CHAR, `machine_tools_clr` CHAR, `clr_str` CHAR, `clr_out` CHAR, `clr_in` CHAR, `predefined_name` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_furns` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `flap_weight_max` INT, `left_right` BOOLEAN, `is_set` BOOLEAN, `is_sliding` BOOLEAN, `furn_set` CHAR, `side_count` INT, `handle_side` INT, `open_type` CHAR, `name_short` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_open_tunes` JSON, `ts_specification` JSON, `ts_selection_params` JSON, `ts_specification_restrictions` JSON, `ts_colors` JSON);\nCREATE TABLE IF NOT EXISTS `cat_cnns` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `priority` INT, `amin` INT, `amax` INT, `sd1` CHAR, `sd2` CHAR, `sz` FLOAT, `cnn_type` CHAR, `ahmin` INT, `ahmax` INT, `lmin` INT, `lmax` INT, `tmin` INT, `tmax` INT, `var_layers` BOOLEAN, `for_direct_profile_only` INT, `art1vert` BOOLEAN, `art1glass` BOOLEAN, `art2glass` BOOLEAN, `predefined_name` CHAR, `ts_specification` JSON, `ts_cnn_elmnts` JSON, `ts_selection_params` JSON);\nCREATE TABLE IF NOT EXISTS `cat_delivery_areas` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `country` CHAR, `region` CHAR, `city` CHAR, `latitude` FLOAT, `longitude` FLOAT, `ind` CHAR, `delivery_area` CHAR, `specify_area_by_geocoder` BOOLEAN, `predefined_name` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_users_acl` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `prefix` CHAR, `predefined_name` CHAR, `owner` CHAR, `ts_acl_objs` JSON);\nCREATE TABLE IF NOT EXISTS `cat_production_params` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `default_clr` CHAR, `allow_open_cnn` BOOLEAN, `clr_group` CHAR, `is_drainage` BOOLEAN, `tmin` INT, `tmax` INT, `lay_split_type` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_elmnts` JSON, `ts_production` JSON, `ts_product_params` JSON, `ts_furn_params` JSON, `ts_colors` JSON, `ts_base_blocks` JSON);\nCREATE TABLE IF NOT EXISTS `cat_parameters_keys` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `КоличествоПараметров` INT, `predefined_name` CHAR, `ts_params` JSON);\nCREATE TABLE IF NOT EXISTS `cat_inserts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `insert_type` CHAR, `clr` CHAR, `priority` INT, `lmin` INT, `lmax` INT, `hmin` INT, `hmax` INT, `smin` FLOAT, `smax` FLOAT, `for_direct_profile_only` INT, `ahmin` INT, `ahmax` INT, `mmin` INT, `mmax` INT, `insert_glass_type` CHAR, `impost_fixation` CHAR, `shtulp_fixation` BOOLEAN, `can_rotate` BOOLEAN, `sizeb` FLOAT, `predefined_name` CHAR, `ts_specification` JSON, `ts_selection_params` JSON);\nCREATE TABLE IF NOT EXISTS `cat_organizations` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `prefix` CHAR, `individual_legal` CHAR, `individual_entrepreneur` CHAR, `inn` CHAR, `kpp` CHAR, `main_bank_account` CHAR, `main_cashbox` CHAR, `certificate_series_number` CHAR, `certificate_date_issue` Date, `certificate_authority_name` CHAR, `certificate_authority_code` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_contact_information` JSON, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_nom` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `article` CHAR, `name_full` CHAR, `base_unit` CHAR, `storage_unit` CHAR, `nom_kind` CHAR, `nom_group` CHAR, `vat_rate` CHAR, `note` CHAR, `price_group` CHAR, `elm_type` CHAR, `len` FLOAT, `width` FLOAT, `thickness` FLOAT, `sizefurn` FLOAT, `sizefaltz` FLOAT, `density` FLOAT, `volume` FLOAT, `arc_elongation` FLOAT, `loss_factor` FLOAT, `rounding_quantity` INT, `clr` CHAR, `cutting_optimization_type` CHAR, `saw_width` FLOAT, `double_cut` INT, `overmeasure` FLOAT, `coloration_area` FLOAT, `pricing` CHAR, `visualization` CHAR, `complete_list_sorting` INT, `is_accessory` BOOLEAN, `is_procedure` BOOLEAN, `is_service` BOOLEAN, `is_pieces` BOOLEAN, `predefined_name` CHAR, `parent` CHAR, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_partners` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `main_bank_account` CHAR, `note` CHAR, `kpp` CHAR, `okpo` CHAR, `inn` CHAR, `individual_legal` CHAR, `main_contract` CHAR, `identification_document` CHAR, `buyer_main_manager` CHAR, `is_buyer` BOOLEAN, `is_supplier` BOOLEAN, `primary_contact` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_contact_information` JSON, `ts_extra_fields` JSON);\nCREATE TABLE IF NOT EXISTS `cat_units` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `international_short` CHAR, `predefined_name` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_cashboxes` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `funds_currency` CHAR, `department` CHAR, `current_account` CHAR, `predefined_name` CHAR, `owner` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_meta_ids` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `full_moniker` CHAR, `predefined_name` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_property_values` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `heft` FLOAT, `ПолноеНаименование` CHAR, `predefined_name` CHAR, `owner` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_nom_units` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `qualifier_unit` CHAR, `heft` FLOAT, `volume` FLOAT, `coefficient` FLOAT, `rounding_threshold` INT, `ПредупреждатьОНецелыхМестах` BOOLEAN, `predefined_name` CHAR, `owner` CHAR, `owner_T` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_contracts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `settlements_currency` CHAR, `mutual_settlements` CHAR, `contract_kind` CHAR, `date` Date, `check_days_without_pay` BOOLEAN, `allowable_debts_amount` FLOAT, `allowable_debts_days` INT, `note` CHAR, `check_debts_amount` BOOLEAN, `check_debts_days` BOOLEAN, `number_doc` CHAR, `organization` CHAR, `main_cash_flow_article` CHAR, `main_project` CHAR, `accounting_reflect` BOOLEAN, `tax_accounting_reflect` BOOLEAN, `prepayment_percent` FLOAT, `validity` Date, `vat_included` BOOLEAN, `price_type` CHAR, `vat_consider` BOOLEAN, `days_without_pay` INT, `predefined_name` CHAR, `owner` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_nom_kinds` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `nom_type` CHAR, `НаборСвойствНоменклатура` CHAR, `НаборСвойствХарактеристика` CHAR, `predefined_name` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_contact_information_kinds` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `ВидПоляДругое` CHAR, `Используется` BOOLEAN, `mandatory_fields` BOOLEAN, `type` CHAR, `predefined_name` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_currencies` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `extra_charge` FLOAT, `main_currency` CHAR, `parameters_russian_recipe` CHAR, `predefined_name` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_elm_visualization` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `svg_path` CHAR, `note` CHAR, `attributes` CHAR, `rotate` INT, `offset` INT, `side` CHAR, `elm_side` INT, `cx` INT, `cy` INT, `angle_hor` INT, `predefined_name` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_formulas` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `formula` CHAR, `leading_formula` CHAR, `condition_formula` BOOLEAN, `definition` CHAR, `template` CHAR, `zone` INT, `predefined_name` CHAR, `parent` CHAR, `ts_params` JSON);\nCREATE TABLE IF NOT EXISTS `cat_countries` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `alpha2` CHAR, `alpha3` CHAR, `predefined_name` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_work_centers` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `work_center_kind` CHAR, `КоэффициентВремениРаботы` FLOAT, `МаксимальнаяЗагрузка` FLOAT, `calendar` CHAR, `definition` CHAR, `predefined_name` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_destinations` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `КоличествоРеквизитов` CHAR, `КоличествоСведений` CHAR, `Используется` BOOLEAN, `predefined_name` CHAR, `parent` CHAR, `ts_extra_fields` JSON, `ts_extra_properties` JSON);\nCREATE TABLE IF NOT EXISTS `cat_banks_qualifier` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `correspondent_account` CHAR, `city` CHAR, `address` CHAR, `phone_numbers` CHAR, `activity_ceased` BOOLEAN, `swift` CHAR, `inn` CHAR, `predefined_name` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_property_values_hierarchy` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `heft` FLOAT, `ПолноеНаименование` CHAR, `predefined_name` CHAR, `owner` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_work_center_kinds` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `department` CHAR, `predefined_name` CHAR, `parent` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_organization_bank_accounts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `bank` CHAR, `bank_bic` CHAR, `funds_currency` CHAR, `account_number` CHAR, `settlements_bank` CHAR, `settlements_bank_bic` CHAR, `department` CHAR, `predefined_name` CHAR, `owner` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_partner_bank_accounts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `account_number` CHAR, `bank` CHAR, `settlements_bank` CHAR, `correspondent_text` CHAR, `appointments_text` CHAR, `funds_currency` CHAR, `bank_bic` CHAR, `bank_name` CHAR, `bank_correspondent_account` CHAR, `bank_city` CHAR, `bank_address` CHAR, `bank_phone_numbers` CHAR, `settlements_bank_bic` CHAR, `settlements_bank_correspondent_account` CHAR, `settlements_bank_city` CHAR, `predefined_name` CHAR, `owner` CHAR, `owner_T` CHAR);\nCREATE TABLE IF NOT EXISTS `cat_params_links` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `master` CHAR, `slave` CHAR, `zone` INT, `predefined_name` CHAR, `ts_values` JSON);\nCREATE TABLE IF NOT EXISTS `cch_properties` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `shown` BOOLEAN, `extra_values_owner` CHAR, `available` BOOLEAN, `caption` CHAR, `mandatory` BOOLEAN, `note` CHAR, `destination` CHAR, `tooltip` CHAR, `is_extra_property` BOOLEAN, `list` BOOLEAN, `predefined_name` CHAR, `type` JSON, `ts_extra_fields_dependencies` JSON);\nCREATE TABLE IF NOT EXISTS `cch_predefined_elmnts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `value` CHAR, `value_T` CHAR, `definition` CHAR, `synonym` CHAR, `list` INT, `zone` INT, `predefined_name` CHAR, `parent` CHAR, `type` CHAR, `ts_elmnts` JSON);\nCREATE TABLE IF NOT EXISTS `enm_individual_legal` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_nom_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_contact_information_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_vat_rates` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_buyers_order_states` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_gender` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_positions` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_elm_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_cnn_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_sz_line_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_open_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_cutting_optimization_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_lay_split_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_inserts_glass_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_inserts_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_cnn_sides` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_specification_installation_methods` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_angle_calculating_ways` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_count_calculating_ways` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_simple_complex_all` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_orientations` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_plan_limit` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_open_directions` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_color_groups_destination` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_text_aligns` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_contraction_options` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_offset_options` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_transfer_operations_options` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_order_categories` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_caching_type` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_obj_delivery_states` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_contract_kinds` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_mutual_contract_settlements` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_impost_mount_options` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_inset_attrs_options` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\nCREATE TABLE IF NOT EXISTS `enm_accumulation_record_type` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN);\n","toolbar_calc_order_production.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_grp_add\" text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку заказа\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_add_builder\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt; Изделие построителя\" />\r\n        <item type=\"button\" id=\"btn_add_product\" text=\"&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Продукцию или услугу\" />\r\n        <item type=\"button\" id=\"btn_add_material\" text=\"&lt;i class='fa fa-cube fa-fw'&gt;&lt;/i&gt; Материал\" />\r\n    </item>\r\n\r\n    <item type=\"button\" id=\"btn_edit\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt;\" title=\"Редактировать изделие построителя\" />\r\n    <item type=\"button\" id=\"btn_spec\" text=\"&lt;i class='fa fa-table fa-fw'&gt;&lt;/i&gt;\" title=\"Открыть спецификацию изделия\" />\r\n    <item type=\"button\" id=\"btn_delete\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Удалить строку заказа\" />\r\n\r\n    <item type=\"button\" id=\"btn_discount\" text=\"&lt;i class='fa fa-percent fa-fw'&gt;&lt;/i&gt;\" title=\"Скидки по типам строк заказа\"/>\r\n\r\n    <item id=\"sep1\" type=\"separator\"/>\r\n\r\n</toolbar>","toolbar_calc_order_obj.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_save_close\" text=\"&lt;i class='fa fa-caret-square-o-down fa-fw'&gt;&lt;/i&gt;\" title=\"Записать и закрыть\"/>\r\n    <item type=\"button\" id=\"btn_save\" text=\"&lt;i class='fa fa-floppy-o fa-fw'&gt;&lt;/i&gt;\" title=\"Записать\"/>\r\n    <item type=\"button\" id=\"btn_sent\" text=\"&lt;i class='fa fa-paper-plane-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отправить заказ\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Провести документ\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"&lt;i class='fa fa-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отмена проведения\" />\r\n\r\n    <item type=\"button\" id=\"btn_files\" text=\"&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;\" title=\"Присоединенные файлы\"/>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt;\" title=\"Печать\" openAll=\"true\">\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_message\" enabled=\"false\" text=\"Сообщение\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;\"  title=\"Дополнительно\" openAll=\"true\">\r\n        <item type=\"button\"     id=\"btn_retrieve\"    text=\"&lt;i class='fa fa-undo fa-fw'&gt;&lt;/i&gt; Отозвать\" title=\"Отозвать заказ\" />\r\n        <item type=\"separator\"  id=\"sep_export\" />\r\n        <item type=\"button\" id=\"btn_import\" text=\"&lt;i class='fa fa-upload fa-fw'&gt;&lt;/i&gt; Загрузить из файла\" />\r\n        <item type=\"button\" id=\"btn_export\" text=\"&lt;i class='fa fa-download fa-fw'&gt;&lt;/i&gt; Выгрузить в файл\" />\r\n    </item>\r\n\r\n    <item id=\"sep_close_1\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_close\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Закрыть форму\"/>\r\n    <item id=\"sep_close_2\" type=\"separator\"/>\r\n\r\n</toolbar>","toolbar_product_list.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"btn_ok\"   type=\"button\"   text=\"&lt;b&gt;Рассчитать и закрыть&lt;/b&gt;\" title=\"Рассчитать, записать и закрыть\"  />\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item id=\"btn_xls\"  type=\"button\"\ttext=\"Загрузить из XLS\" title=\"Загрузить список продукции из файла xls\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"buttonSelect\" id=\"bs_print\" enabled=\"false\" text=\"\" title=\"\" openAll=\"true\">\r\n    </item>\r\n\r\n</toolbar>","tree_events.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.stores\" text=\"Склады\" />\r\n    <item id=\"cat.divisions\" select=\"1\" text=\"Подразделения\" />\r\n\r\n</tree>\r\n","tree_filteres.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"draft\" text=\"&lt;i class='fa fa-pencil fa-fw'&gt;&lt;/i&gt; Черновики\" select=\"1\" tooltip=\"Предварительные расчеты\"/>\r\n    <item id=\"sent\" text=\"&lt;i class='fa fa-paper-plane-o fa-fw'&gt;&lt;/i&gt; Отправлено\" tooltip=\"Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в 'черновики')\" />\r\n    <item id=\"confirmed\" text=\"&lt;i class='fa fa-thumbs-o-up fa-fw'&gt;&lt;/i&gt; Согласовано\" tooltip=\"Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером\" />\r\n    <item id=\"declined\" text=\"&lt;i class='fa fa-thumbs-o-down fa-fw'&gt;&lt;/i&gt; Отклонено\" tooltip=\"Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации\" />\r\n    <item id=\"execution\" text=\"&lt;i class='fa fa-money fa-fw'&gt;&lt;/i&gt; Долги\" tooltip=\"Оплата, отгрузка\" />\r\n    <item id=\"plan\" text=\"&lt;i class='fa fa-calendar-check-o fa-fw'&gt;&lt;/i&gt; План\" tooltip=\"Согласованы, но еще не запущены в работу\" />\r\n    <item id=\"underway\" text=\"&lt;i class='fa fa-industry fa-fw'&gt;&lt;/i&gt; В работе\" tooltip=\"Включены в задания на производство, но еще не изготовлены\" />\r\n    <item id=\"manufactured\" text=\"&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Изготовлено\" tooltip=\"Изготовлены, но еще не отгружены\" />\r\n    <item id=\"executed\" text=\"&lt;i class='fa fa-truck fa-fw'&gt;&lt;/i&gt; Исполнено\" tooltip=\"Отгружены клиенту\" />\r\n\r\n    <item id=\"service\" text=\"&lt;i class='fa fa-medkit fa-fw'&gt;&lt;/i&gt; Сервис\" tooltip=\"Сервисное обслуживание\" />\r\n    <item id=\"complaints\" text=\"&lt;i class='fa fa-frown-o fa-fw'&gt;&lt;/i&gt; Рекламации\" tooltip=\"Жалобы и рекламации\" />\r\n\r\n    <item id=\"template\" text=\"&lt;i class='fa fa-puzzle-piece fa-fw'&gt;&lt;/i&gt; Шаблоны\" tooltip=\"Типовые блоки\" />\r\n    <item id=\"zarchive\" text=\"&lt;i class='fa fa-archive fa-fw'&gt;&lt;/i&gt; Архив\" tooltip=\"Старые заказы\" />\r\n    <item id=\"all\" text=\"&lt;i class='fa fa-expand fa-fw'&gt;&lt;/i&gt; Все\" tooltip=\"Отключить фильтрацию\" />\r\n</tree>\r\n","tree_industry.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.nom_kinds\" text=\"Виды номенклатуры\" />\r\n    <item id=\"cat.nom_groups\" text=\"Номенклатурные группы\" />\r\n    <item id=\"cat.nom\" text=\"Номенклатура\" />\r\n    <item id=\"cat.production_params\" text=\"Параметры продукции\" select=\"1\" tooltip=\"системы профилей\"/>\r\n    <item id=\"cat.cnns\" text=\"Соединения\" />\r\n    <item id=\"cat.inserts\" text=\"Вставки\" />\r\n    <item id=\"cat.furns\" text=\"Фурнитура\" />\r\n    <item id=\"cat.clrs\" text=\"Цвета\" />\r\n    <item id=\"cat.color_price_groups\" text=\"Цвето-ценовые группы\" />\r\n    <item id=\"cch.properties\" text=\"Дополнительные реквизиты\" />\r\n    <item id=\"cat.params_links\" text=\"Связи параметров\" />\r\n    <item id=\"cat.elm_visualization\" text=\"Визуализация элементов\" />\r\n    <item id=\"cat.insert_bind\" text=\"Привязки вставок\" />\r\n    <item id=\"cat.formulas\" text=\"Формулы\" />\r\n</tree>\r\n","tree_price.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.users\" text=\"Пользователи\" />\r\n    <item id=\"cat.individuals\" text=\"Физические лица\" />\r\n    <item id=\"cat.organizations\" text=\"Организации\" />\r\n    <item id=\"cat.partners\" text=\"Контрагенты\" />\r\n    <item id=\"cat.contracts\" text=\"Договоры\" />\r\n    <item id=\"cat.currencies\" text=\"Валюты\" />\r\n    <item id=\"ireg.currency_courses\" select=\"1\" text=\"Курсы валют\" />\r\n    <item id=\"cat.nom_prices_types\" text=\"Виды цен\" />\r\n    <item id=\"cat.price_groups\" text=\"Ценовые группы\" />\r\n    <item id=\"ireg.margin_coefficients\" text=\"Маржинальные коэффициенты\" />\r\n    <item id=\"doc.nom_prices_setup\" text=\"Установка цен номенклатуры\" />\r\n    <item id=\"cch.predefined_elmnts\" text=\"Константы и списки\" />\r\n\r\n</tree>\r\n","view_about.html":"<div class=\"md_column1300\">\r\n    <h1><i class=\"fa fa-info-circle\"></i> Окнософт: Заказ дилера</h1>\r\n    <p>Заказ дилера - это веб-приложение с открытым исходным кодом, разработанное компанией <a href=\"http://www.oknosoft.ru/\" target=\"_blank\">Окнософт</a> на базе фреймворка <a href=\"http://www.oknosoft.ru/metadata/\" target=\"_blank\">Metadata.js</a><br />\r\n        Исходный код и документация доступны на <a href=\"https://github.com/oknosoft/windowbuilder\" target=\"_blank\">GitHub <i class=\"fa fa-github-alt\"></i></a>.<br />\r\n    </p>\r\n\r\n    <h3>Назначение и возможности</h3>\r\n    <ul>\r\n        <li>Построение и редактирование эскизов изделий в графическом 2D редакторе</li>\r\n        <li>Экстремальная поддержка нестандартных изделий (многоугольники, сложные перегибы профиля)</li>\r\n        <li>Расчет спецификации и координат технологических операций</li>\r\n        <li>Расчет цены и плановой себестоимости изделий по произвольным формулам с учетом индивидуальных дилерских скидок и наценок</li>\r\n        <li>Формирование печатных форм для заказчика и производства</li>\r\n        <li>Поддержка автономной работы при отсутствии доступа в Интернет и прозрачного обмена с сервером при возобновлении соединения</li>\r\n    </ul>\r\n\r\n    <p>Использованы следующие библиотеки и инструменты:</p>\r\n\r\n    <h3>Серверная часть</h3>\r\n    <ul>\r\n        <li><a href=\"http://couchdb.apache.org/\" target=\"_blank\">CouchDB</a>, NoSQL база данных с поддержкой master-master репликации</li>\r\n        <li><a href=\"http://nginx.org/ru/\" target=\"_blank\">nginx</a>, высокопроизводительный HTTP-сервер</li>\r\n        <li><a href=\"http://1c-dn.com/1c_enterprise/\" target=\"_blank\">1c_enterprise</a>, ORM сервер 1С:Предприятие</li>\r\n    </ul>\r\n\r\n    <h3>Управление данными в памяти браузера</h3>\r\n    <ul>\r\n        <li><a href=\"https://pouchdb.com/\" target=\"_blank\">PouchDB</a>, клиентская NoSQL база данных с поддержкой автономной работы и репликации с CouchDB</li>\r\n        <li><a href=\"https://github.com/agershun/alasql\" target=\"_blank\">alaSQL</a>, база данных SQL для браузера и Node.js с поддержкой как традиционных реляционных таблиц, так и вложенных JSON данных (NoSQL)</li>\r\n        <li><a href=\"https://github.com/SheetJS/js-xlsx\" target=\"_blank\">xlsx</a>, библиотека для чтения и записи XLSX / XLSM / XLSB / XLS / ODS в браузере</li>\r\n    </ul>\r\n\r\n    <h3>UI библиотеки и компоненты интерфейса</h3>\r\n    <ul>\r\n        <li><a href=\"http://paperjs.org/\" target=\"_blank\">paper.js</a>, фреймворк векторной графики для HTML5 Canvas</li>\r\n        <li><a href=\"http://dhtmlx.com/\" target=\"_blank\">dhtmlx</a>, кроссбраузерная библиотека javascript для построения современных веб и мобильных приложений</li>\r\n        <li><a href=\"https://github.com/Diokuz/baron\" target=\"_blank\">baron</a>, компонент управления полосами прокрутки</li>\r\n        <li><a href=\"https://jquery.com/\" target=\"_blank\">jQuery</a>, популярная JavaScript библиотека селекторов и событий DOM</li>\r\n        <li><a href=\"https://github.com/eligrey/FileSaver.js\" target=\"_blank\">filesaver.js</a>, HTML5 реализация метода saveAs</li>\r\n    </ul>\r\n\r\n    <h3>Графика</h3>\r\n    <ul>\r\n        <li><a href=\"https://fortawesome.github.io/Font-Awesome/\" target=\"_blank\">fontawesome</a>, набор иконок и стилей CSS</li>\r\n    </ul>\r\n\r\n    <p>&nbsp;</p>\r\n    <h2><i class=\"fa fa-question-circle\"></i> Вопросы</h2>\r\n    <p>Если обнаружили ошибку, пожалуйста,\r\n        <a href=\"https://github.com/oknosoft/windowbuilder/issues/new\" target=\"_blank\">зарегистрируйте вопрос в GitHub</a> или\r\n        <a href=\"http://www.oknosoft.ru/metadata/#page-118\" target=\"_blank\">свяжитесь с разработчиком</a> напрямую<br /></p>\r\n    <p>&nbsp;</p>\r\n\r\n</div>","view_blank.html":"<!DOCTYPE html>\r\n<html lang=\"ru\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"/>\r\n    <title>Документ</title>\r\n    <style>\r\n\r\n        html {\r\n            width: 100%;\r\n            height: 100%;\r\n            margin: 0;\r\n            padding: 0;\r\n            overflow: auto;\r\n\r\n        }\r\n        body {\r\n            width: 210mm;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n            overflow: hidden;\r\n            color: rgb(48, 57, 66);\r\n            font-family: Arial, sans-serif;\r\n            font-size: 11pt;\r\n            text-rendering: optimizeLegibility;\r\n        }\r\n\r\n        /* Таблица */\r\n        table.border {\r\n            border-collapse: collapse; border: 1px solid;\r\n        }\r\n        table.border > tbody > tr > td,\r\n        table.border > tr > td,\r\n        table.border th{\r\n            border: 1px solid;\r\n        }\r\n        .noborder{\r\n            border: none;\r\n        }\r\n\r\n        /* Многоуровневый список */\r\n        ol {\r\n            counter-reset: li;\r\n            list-style: none;\r\n            padding: 0;\r\n        }\r\n        li {\r\n            margin-top: 8px;\r\n        }\r\n        li:before {\r\n            counter-increment: li;\r\n            content: counters(li,\".\") \".\";\r\n            padding-right: 8px;\r\n        }\r\n        li.flex {\r\n            display: flex;\r\n            text-align: left;\r\n            list-style-position: outside;\r\n            font-weight: normal;\r\n        }\r\n\r\n        .container {\r\n            width: 100%;\r\n            position: relative;\r\n        }\r\n\r\n        .margin-top-20 {\r\n            margin-top: 20px;\r\n        }\r\n\r\n        .column-50-percent {\r\n            width: 48%;\r\n            min-width: 40%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .column-30-percent {\r\n            width: 31%;\r\n            min-width: 30%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .block-left {\r\n            display: block;\r\n            float: left;\r\n        }\r\n\r\n        .block-center {\r\n            display: block;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n        }\r\n\r\n        .block-right {\r\n            display: block;\r\n            float: right;\r\n        }\r\n\r\n        .list-center {\r\n            text-align: center;\r\n            list-style-position: inside;\r\n            font-weight: bold;\r\n        }\r\n\r\n        .clear-both {\r\n            clear: both;\r\n        }\r\n\r\n        .small {\r\n            font-size: small;\r\n        }\r\n\r\n        .text-center {\r\n            text-align: center;\r\n        }\r\n\r\n        .text-justify {\r\n            text-align: justify;\r\n        }\r\n\r\n        .text-right {\r\n            text-align: right;\r\n        }\r\n\r\n        .muted-color {\r\n            color: #636773;\r\n        }\r\n\r\n        .accent-color {\r\n            color: #f30000;\r\n        }\r\n\r\n        .note {\r\n            background: #eaf3f8;\r\n            color: #2980b9;\r\n            font-style: italic;\r\n            padding: 12px 20px;\r\n        }\r\n\r\n        .note:before {\r\n            content: 'Замечание: ';\r\n            font-weight: 500;\r\n        }\r\n        *, *:before, *:after {\r\n            box-sizing: inherit;\r\n        }\r\n\r\n    </style>\r\n</head>\r\n<body>\r\n\r\n</body>\r\n</html>","view_settings.html":"<div class=\"md_column1300\">\r\n\r\n    <div class=\"md_column320\" name=\"form1\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n    <div class=\"md_column320\" name=\"form2\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n</div>"});
 /**
- *
- * Created 07.11.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @license content of this file is covered by Oknosoft Commercial license. Usage without proper license is prohibited. To obtain it contact info@oknosoft.ru
- * @author  Evgeniy Malyarov
- * @module  widgets
- * @submodule btn_auth_sync
- */
-
-/**
- * ### Невизуальный компонент для управления кнопками авторизации и синхронизации на панелях инструментов
- * Изменяет текст, всплывающие подсказки и обработчики нажатий кнопок в зависимости от ...
- *
- * @class OBtnAuthSync
- * @constructor
- */
-function OBtnAuthSync() {
-
-	var bars = [], spin_timer;
-
-	//$(t.tb_nav.buttons.bell).addClass("disabledbutton");
-
-	function btn_click(){
-
-		if($p.wsql.pouch.authorized)
-			dhtmlx.confirm({
-				title: $p.msg.log_out_title,
-				text: $p.msg.logged_in + $p.wsql.pouch.authorized + $p.msg.log_out_break,
-				cancel: $p.msg.cancel,
-				callback: function(btn) {
-					if(btn){
-						$p.wsql.pouch.log_out();
-					}
-				}
-			});
-		else
-			$p.iface.frm_auth({
-				modal_dialog: true
-				//, try_auto: true
-			});
-	}
-
-	function sync_mouseover(){
-
-	}
-
-	function sync_mouseout(){
-
-	}
-
-	function set_spin(spin){
-
-		if(spin && spin_timer){
-			clearTimeout(spin_timer);
-
-		}else{
-			bars.forEach(function (bar) {
-				if(spin)
-					bar.buttons.sync.innerHTML = '<i class="fa fa-refresh fa-spin md-fa-lg"></i>';
-				else{
-					if($p.wsql.pouch.authorized)
-						bar.buttons.sync.innerHTML = '<i class="fa fa-refresh md-fa-lg"></i>';
-					else
-						bar.buttons.sync.innerHTML = '<i class="fa fa-ban md-fa-lg"></i>';
-				}
-			});
-		}
-		spin_timer = spin ? setTimeout(set_spin, 3000) : 0;
-	}
-
-	function set_auth(){
-
-		bars.forEach(function (bar) {
-
-			if($p.wsql.pouch.authorized){
-				// bar.buttons.auth.title = $p.msg.logged_in + $p.wsql.pouch.authorized;
-				// bar.buttons.auth.innerHTML = '<i class="fa fa-sign-out md-fa-lg"></i>';
-				bar.buttons.auth.title = "Отключиться от сервера";
-				bar.buttons.auth.innerHTML = '<span class="span_user">' + $p.wsql.pouch.authorized + '</span>';
-				bar.buttons.sync.title = "Синхронизация выполняется...";
-				bar.buttons.sync.innerHTML = '<i class="fa fa-refresh md-fa-lg"></i>';
-			}else{
-				bar.buttons.auth.title = "Войти на сервер и включить синхронизацию данных";
-				bar.buttons.auth.innerHTML = '&nbsp;<i class="fa fa-sign-in md-fa-lg"></i><span class="span_user">Вход...</span>';
-				bar.buttons.sync.title = "Синхронизация не выполняется - пользователь не авторизован на сервере";
-				bar.buttons.sync.innerHTML = '<i class="fa fa-ban md-fa-lg"></i>';
-					//'<i class="fa fa-refresh fa-stack-1x"></i>' +
-					//'<i class="fa fa-ban fa-stack-2x text-danger"></i>' +
-					//'</span>';
-			}
-		})
-	}
-
-	/**
-	 * Привязывает обработчики к кнопке
-	 * @param btn
-	 */
-	this.bind = function (bar) {
-		bar.buttons.auth.onclick = btn_click;
-		//bar.buttons.auth.onmouseover = null;
-		//bar.buttons.auth.onmouseout = null;
-		bar.buttons.sync.onclick = null;
-		bar.buttons.sync.onmouseover = sync_mouseover;
-		bar.buttons.sync.onmouseout = sync_mouseout;
-		bars.push(bar);
-		setTimeout(set_auth);
-		return bar;
-	};
-
-	$p.eve.attachEvent("pouch_load_data_start", function (page) {
-
-		if(!$p.iface.sync)
-			$p.iface.wnd_sync();
-		$p.iface.sync.create($p.eve.stepper);
-		$p.eve.stepper.frm_sync.setItemValue("text_bottom", "Читаем справочники");
-
-		if(page.hasOwnProperty("local_rows") && page.local_rows < 10){
-			$p.eve.stepper.wnd_sync.setText("Первый запуск - подготовка данных");
-			$p.eve.stepper.frm_sync.setItemValue("text_processed", "Загрузка начального образа");
-		}else{
-			$p.eve.stepper.wnd_sync.setText("Загрузка данных из IndexedDB");
-			$p.eve.stepper.frm_sync.setItemValue("text_processed", "Извлечение начального образа");
-		}
-
-		set_spin(true);
-	});
-
-	$p.eve.attachEvent("pouch_load_data_page", function (page) {
-		set_spin(true);
-		if($p.eve.stepper.wnd_sync){
-			var docs_written = page.docs_written || page.page * page.limit;
-			$p.eve.stepper.frm_sync.setItemValue("text_current", "Обработано элементов: " + docs_written + " из " + page.total_rows);
-			$p.eve.stepper.frm_sync.setItemValue("text_bottom", "Текущий запрос: " + page.page + " (" + (100 * docs_written/page.total_rows).toFixed(0) + "%)");
-		}
-	});
-
-	$p.eve.attachEvent("pouch_change", function (id, page) {
-		set_spin(true);
-	});
-
-	/**
-	 * Завершение начальной синхронизации либо загрузки данных при старте
-	 */
-	$p.eve.attachEvent("pouch_load_data_loaded", function (page) {
-		if($p.eve.stepper.wnd_sync){
-			if(page.docs_written){
-				setTimeout(function () {
-					$p.iface.sync.close();
-					$p.eve.redirect = true;
-					location.reload(true);
-				}, 3000);
-			}else{
-				$p.iface.sync.close();
-			}
-		}
-	});
-
-	$p.eve.attachEvent("pouch_load_data_error", function (err) {
-		set_spin();
-		if($p.eve.stepper.wnd_sync)
-			$p.iface.sync.close();
-	});
-
-	$p.eve.attachEvent("log_in", function (username) {
-		set_auth();
-	});
-
-	$p.eve.attachEvent("log_out", function () {
-		set_auth();
-	});
-
-}
-
-
-
-/**
  * Ячейка грида для отображения картинки svg и компонент,
  * получающий и отображающий галерею эскизов объекта данных
  *
@@ -6090,140 +5919,211 @@ $p.iface.OSvgs = function (manager, layout, area) {
  * @module wnd_main
  */
 
+$p.on({
 
-/**
- * ### При установке параметров сеанса
- * Процедура устанавливает параметры работы программы, специфичные для текущей сборки
- *
- * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
- * @param modifiers {Array} - сюда можно добавить обработчики, переопределяющие функциональность объектов данных
- */
-$p.on("settings", function (prm, modifiers) {
+	/**
+	 * ### При установке параметров сеанса
+	 * Процедура устанавливает параметры работы программы, специфичные для текущей сборки
+	 *
+	 * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
+	 * @param modifiers {Array} - сюда можно добавить обработчики, переопределяющие функциональность объектов данных
+	 */
+	settings: function (prm, modifiers) {
 
-	prm.__define({
+		prm.__define({
 
-		// разделитель для localStorage
-		local_storage_prefix: {
-			value: "wb_"
-		},
+			// разделитель для localStorage
+			local_storage_prefix: {
+				value: "wb_"
+			},
 
-		// скин по умолчанию
-		skin: {
-			value: "dhx_terrace"
-		},
+			// скин по умолчанию
+			skin: {
+				value: "dhx_terrace"
+			},
 
-		// фильтр для репликации с CouchDB
-		pouch_filter: {
-			value: {},
-			writable: false
-		},
+			// фильтр для репликации с CouchDB
+			pouch_filter: {
+				value: (function () {
+					var filter = {};
+					filter.__define({
+						doc: {
+							value: "auth/by_partner",
+							writable: false
+						}
+					});
+					return filter;
+				})(),
+				writable: false
+			},
 
-		// гостевые пользователи для демо-режима
-		guests: {
-			value: [{
-				username: "Дилер",
-				password: "1gNjzYQKBlcD"
-			}]
-		},
+			// гостевые пользователи для демо-режима
+			guests: {
+				value: [{
+					username: "Дилер",
+					password: "1gNjzYQKBlcD"
+				}]
+			},
 
-		// если понадобится обратиться к 1С, будем использовать irest
-		irest_enabled: {
-			value: true
-		},
+			// если понадобится обратиться к 1С, будем использовать irest
+			irest_enabled: {
+				value: true
+			},
 
-		// расположение rest-сервиса 1c по умолчанию
-		rest_path: {
-			value: "/a/zd/%1/odata/standard.odata/"
-		},
+			// расположение rest-сервиса 1c по умолчанию
+			rest_path: {
+				value: "/a/zd/%1/odata/standard.odata/"
+			},
 
-		// не шевелить hash url при открытии подчиненных форм
-		keep_hash: {
-			value: true
-		},
+			// не шевелить hash url при открытии подчиненных форм
+			keep_hash: {
+				value: true
+			},
 
-		// используем геокодер
-		use_ip_geo: {
-			value: true
-		}
+			// используем геокодер
+			use_ip_geo: {
+				value: true
+			}
 
-	});
+		});
 
-	// фильтр для репликации с CouchDB
-	prm.pouch_filter.__define({
-		doc: {
-			value: "auth/by_partner",
-			writable: false
-		}
-	});
+		// по умолчанию, обращаемся к зоне 1
+		prm.zone = 1;
 
-	// по умолчанию, обращаемся к зоне 1
-	prm.zone = 1;
+		// объявляем номер демо-зоны
+		prm.zone_demo = 1;
 
-	// объявляем номер демо-зоны
-	prm.zone_demo = 1;
+		// расположение couchdb
+		prm.couch_path = "/couchdb/wb_";
+		//prm.couchdb = "http://i980:5984/wb_";
 
-	// расположение couchdb
-	prm.couch_path = "/couchdb/wb_";
-	//prm.couchdb = "http://i980:5984/wb_";
+		// логин гостевого пользователя couchdb
+		prm.guest_name = "guest";
 
-	// логин гостевого пользователя couchdb
-	prm.guest_name = "guest";
+		// пароль гостевого пользователя couchdb
+		prm.guest_pwd = "meta";
 
-	// пароль гостевого пользователя couchdb
-	prm.guest_pwd = "meta";
-
-	// разрешаем сохранение пароля
-	prm.enable_save_pwd = true;
-
-
-	// разрешаем покидать страницу без лишних вопросов
-	// $p.eve.redirect = true;
-
-});
-
-/**
- * ### При инициализации интерфейса
- * Вызывается после готовности DOM и установки параметров сеанса, до готовности метаданных
- * В этом обработчике можно начать рисовать интерфейс, но обращаться к данным еще рановато
- *
- */
-$p.on("iface_init", function() {
-
-	// разделы интерфейса
-	$p.iface.sidebar_items = [
-		{id: "orders", text: "Заказы", icon: "projects_48.png"},
-		{id: "events", text: "Планирование", icon: "events_48.png"},
-		{id: "settings", text: "Настройки", icon: "settings_48.png"},
-		{id: "about", text: "О программе", icon: "about_48.png"}
-	];
+		// разрешаем сохранение пароля
+		prm.enable_save_pwd = true;
 
 
-	// наблюдатель за событиями авторизации и синхронизации
-	$p.iface.btn_auth_sync = new OBtnAuthSync();
+		// разрешаем покидать страницу без лишних вопросов
+		// $p.eve.redirect = true;
 
-	$p.iface.btns_nav = function (wrapper) {
-		return $p.iface.btn_auth_sync.bind(new $p.iface.OTooolBar({
-			wrapper: wrapper,
-			class_name: 'md_otbnav',
-			width: '260px', height: '28px', top: '3px', right: '3px', name: 'right',
-			buttons: [
-				{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
-				{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
-				{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
-				{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
-				{name: 'sep_0', text: '', float: 'right'},
-				{name: 'sync', text: '', float: 'right'},
-				{name: 'auth', text: '', width: '80px', float: 'right'}
+	},
 
-			], onclick: function (name) {
-				$p.iface.main.cells(name).setActive(true);
+	/**
+	 * ### При инициализации интерфейса
+	 * Вызывается после готовности DOM и установки параметров сеанса, до готовности метаданных
+	 * В этом обработчике можно начать рисовать интерфейс, но обращаться к данным еще рановато
+	 *
+	 */
+	iface_init: function() {
+
+		// разделы интерфейса
+		$p.iface.sidebar_items = [
+			{id: "orders", text: "Заказы", icon: "projects_48.png"},
+			{id: "events", text: "Планирование", icon: "events_48.png"},
+			{id: "settings", text: "Настройки", icon: "settings_48.png"},
+			{id: "about", text: "О программе", icon: "about_48.png"}
+		];
+
+
+		// наблюдатель за событиями авторизации и синхронизации
+		$p.iface.btn_auth_sync = new $p.iface.OBtnAuthSync();
+
+		$p.iface.btns_nav = function (wrapper) {
+			return $p.iface.btn_auth_sync.bind(new $p.iface.OTooolBar({
+				wrapper: wrapper,
+				class_name: 'md_otbnav',
+				width: '260px', height: '28px', top: '3px', right: '3px', name: 'right',
+				buttons: [
+					{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
+					{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
+					{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
+					{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
+					{name: 'sep_0', text: '', float: 'right'},
+					{name: 'sync', text: '', float: 'right'},
+					{name: 'auth', text: '', width: '80px', float: 'right'}
+
+				], onclick: function (name) {
+					$p.iface.main.cells(name).setActive(true);
+					return false;
+				}
+			}))
+		};
+
+		// Подписываемся на событие окончания загрузки предопределённых элементов
+		var predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", function () {
+
+			$p.iface.main.progressOff();
+
+			// если разрешено сохранение пароля - сразу пытаемся залогиниться
+			if(!$p.wsql.pouch.authorized && navigator.onLine &&
+				$p.wsql.get_user_param("enable_save_pwd") &&
+				$p.wsql.get_user_param("user_name") &&
+				$p.wsql.get_user_param("user_pwd")){
+
+				setTimeout(function () {
+					$p.iface.frm_auth({
+						modal_dialog: true,
+						try_auto: true
+					});
+				}, 100);
+			}
+
+			$p.eve.detachEvent(predefined_elmnts_inited);
+
+		});
+
+		// Назначаем обработчик ошибки загрузки локальных данных
+		var pouch_load_data_error = $p.eve.attachEvent("pouch_load_data_error", function (err) {
+
+			// если это первый запуск, показываем диалог авторизации
+			if(err.db_name && err.hasOwnProperty("doc_count") && err.doc_count < 10 && navigator.onLine){
+
+				// если это демо (zone === zone_demo), устанавливаем логин и пароль
+				if($p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && !$p.wsql.get_user_param("user_name")){
+					$p.wsql.set_user_param("enable_save_pwd", true);
+					$p.wsql.set_user_param("user_name", $p.job_prm.guests[0].username);
+					$p.wsql.set_user_param("user_pwd", $p.job_prm.guests[0].password);
+
+					setTimeout(function () {
+						$p.iface.frm_auth({
+							modal_dialog: true,
+							try_auto: true
+						});
+					}, 100);
+
+				}else{
+					$p.iface.frm_auth({
+						modal_dialog: true,
+						try_auto: $p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && $p.wsql.get_user_param("enable_save_pwd")
+					});
+				}
+
+			}
+
+			$p.iface.main.progressOff();
+			$p.eve.detachEvent(pouch_load_data_error);
+
+		});
+
+		// запрещаем масштабировать колёсиком мыши, т.к. для масштабирования у канваса свой инструмент
+		window.onmousewheel = function (e) {
+			if(e.ctrlKey){
+				e.preventDefault();
 				return false;
 			}
-		}))
-	};
+		}
 
-	// подписываемся на событие готовности метаданных, после которого рисуем интерфейс
-	$p.eve.attachEvent("meta", function () {
+	},
+
+	/**
+	 * ### При готовности метаданных
+	 * рисуем интерфейс
+	 */
+	meta: function () {
 
 		// гасим заставку
 		document.body.removeChild(document.querySelector("#builder_splash"));
@@ -6266,86 +6166,24 @@ $p.on("iface_init", function() {
 		} else
 			setTimeout($p.iface.hash_route);
 
-	});
+	},
 
-	// Подписываемся на событие окончания загрузки предопределённых элементов
-	var predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", function () {
+	/**
+	 * ### Обработчик маршрутизации
+	 */
+	hash_route: function (hprm) {
 
-		$p.iface.main.progressOff();
-
-		// если разрешено сохранение пароля - сразу пытаемся залогиниться
-		if(!$p.wsql.pouch.authorized && navigator.onLine &&
-			$p.wsql.get_user_param("enable_save_pwd") &&
-			$p.wsql.get_user_param("user_name") &&
-			$p.wsql.get_user_param("user_pwd")){
-
-			setTimeout(function () {
-				$p.iface.frm_auth({
-					modal_dialog: true,
-					try_auto: true
-				});
-			}, 100);
+		// view отвечает за переключение закладки в SideBar
+		if(hprm.view && $p.iface.main.getActiveItem() != hprm.view){
+			$p.iface.main.getAllItems().forEach(function(item){
+				if(item == hprm.view)
+					$p.iface.main.cells(item).setActive(true);
+			});
 		}
 
-		$p.eve.detachEvent(predefined_elmnts_inited);
-
-	});
-
-	// Подписываемся на событие окончания загрузки локальных данных
-	var pouch_load_data_error = $p.eve.attachEvent("pouch_load_data_error", function (err) {
-
-		// если это первый запуск, показываем диалог авторизации
-		if(err.db_name && err.hasOwnProperty("doc_count") && err.doc_count < 10 && navigator.onLine){
-
-			// если это демо (zone === zone_demo), устанавливаем логин и пароль
-			if($p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && !$p.wsql.get_user_param("user_name")){
-				$p.wsql.set_user_param("enable_save_pwd", true);
-				$p.wsql.set_user_param("user_name", $p.job_prm.guests[0].username);
-				$p.wsql.set_user_param("user_pwd", $p.job_prm.guests[0].password);
-
-				setTimeout(function () {
-					$p.iface.frm_auth({
-						modal_dialog: true,
-						try_auto: true
-					});
-				}, 100);
-
-			}else{
-				$p.iface.frm_auth({
-					modal_dialog: true,
-					try_auto: $p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && $p.wsql.get_user_param("enable_save_pwd")
-				});
-			}
-
-		}
-		$p.iface.main.progressOff();
-
-	});
-
-	// запрещаем масштабировать колёсиком мыши, т.к. для масштабирования у канваса свой инструмент
-	window.onmousewheel = function (e) {
-		if(e.ctrlKey){
-			e.preventDefault();
-			return false;
-		}
+		return false;
 	}
 
-});
-
-/**
- * ### Обработчик маршрутизации
- */
-$p.on("hash_route", function (hprm) {
-
-	// view отвечает за переключение закладки в SideBar
-	if(hprm.view && $p.iface.main.getActiveItem() != hprm.view){
-		$p.iface.main.getAllItems().forEach(function(item){
-			if(item == hprm.view)
-				$p.iface.main.cells(item).setActive(true);
-		});
-	}
-
-	return false;
 });
 /**
  *
@@ -6365,10 +6203,7 @@ $p.iface.view_about = function (cell) {
 		this.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 	}
 
-	if(!$p.iface._about)
-		$p.iface._about = new OViewAbout();
-
-	return $p.iface._about;
+	return $p.iface._about || ($p.iface._about = new OViewAbout());
 
 };
 
@@ -6465,10 +6300,7 @@ $p.iface.view_events = function (cell) {
 
 	}
 
-	if(!$p.iface._events)
-		$p.iface._events = new OViewEvents();
-
-	return $p.iface._events;
+	return $p.iface._events || ($p.iface._events = new OViewEvents());
 
 };
 
@@ -6582,10 +6414,7 @@ $p.iface.view_orders = function (cell) {
 
 		function create_elmnts(){
 
-			if(t.init_event_id){
-				$p.eve.detachEvent(t.init_event_id);
-				delete t.init_event_id;
-			}
+			$p.off(create_elmnts);
 
 			// создадим экземпляр графического редактора
 			var _cell = t.carousel.cells("builder"),
@@ -6680,8 +6509,7 @@ $p.iface.view_orders = function (cell) {
 		if($p.job_prm.builder)
 			setTimeout(create_elmnts);
 		else
-			t.init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", create_elmnts);
-
+			$p.on({ predefined_elmnts_inited: create_elmnts });
 
 		/**
 		 * Обработчик маршрутизации
@@ -6692,10 +6520,7 @@ $p.iface.view_orders = function (cell) {
 
 	}
 
-	if(!$p.iface._orders)
-		$p.iface._orders = new OViewOrders();
-
-	return $p.iface._orders;
+	return $p.iface._orders || ($p.iface._orders = new OViewOrders());
 
 };
 
@@ -7030,10 +6855,7 @@ $p.iface.view_settings = function (cell) {
 
 	}
 
-	if(!$p.iface._settings)
-		$p.iface._settings = new OViewSettings();
-
-	return $p.iface._settings;
+	return $p.iface._settings || ($p.iface._settings = new OViewSettings());
 
 };
 

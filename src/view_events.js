@@ -91,9 +91,6 @@ $p.iface.view_events = function (cell) {
 
 	}
 
-	if(!$p.iface._events)
-		$p.iface._events = new OViewEvents();
-
-	return $p.iface._events;
+	return $p.iface._events || ($p.iface._events = new OViewEvents());
 
 };

@@ -1,9 +1,8 @@
 /**
+ * ### Модуль Ценообразование
  * Аналог УПзП-шного __ЦенообразованиеСервер__
  *
- * Created 26.05.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author	Evgeniy Malyarov
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
  * @module  glob_pricing
  */
 

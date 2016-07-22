@@ -16,9 +16,6 @@ $p.iface.view_about = function (cell) {
 		this.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 	}
 
-	if(!$p.iface._about)
-		$p.iface._about = new OViewAbout();
-
-	return $p.iface._about;
+	return $p.iface._about || ($p.iface._about = new OViewAbout());
 
 };

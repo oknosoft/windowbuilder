@@ -1,113 +1,113 @@
 /**
- * Дополнительные методы справочника Контрагенты
+ * ### Дополнительные методы ПВХ Предопределенные элементы
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
- * @module cat_partners
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cch_predefined_elmnts
  */
 
 $p.modifiers.push(
 	function($p){
 
 		// Подписываемся на событие окончания загрузки локальных данных
-		var pouch_data_loaded = $p.eve.attachEvent("pouch_load_data_loaded", function () {
+		$p.on({
+			pouch_load_data_loaded: function pouch_load_data_loaded() {
 
-			$p.eve.detachEvent(pouch_data_loaded);
+				$p.off(pouch_load_data_loaded);
 
-			// читаем элементы из pouchdb и создаём свойства
-			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
-				.then(function (rows) {
+				// читаем элементы из pouchdb и создаём свойства
+				$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
+					.then(function (rows) {
 
-					var parents = {};
+						var parents = {};
 
-					rows.forEach(function (row) {
-						if(row.is_folder && row.synonym){
-							var ref = row._id.split("|")[1];
-							parents[ref] = row.synonym;
-							$p.job_prm.__define(row.synonym, { value: {} });
-						}
-					});
-
-					rows.forEach(function (row) {
-
-						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
-
-							var _mgr, tnames;
-							
-							if(row.type.is_ref){
-								tnames = row.type.types[0].split(".");
-								_mgr = $p[tnames[0]][tnames[1]]
+						rows.forEach(function (row) {
+							if(row.is_folder && row.synonym){
+								var ref = row._id.split("|")[1];
+								parents[ref] = row.synonym;
+								$p.job_prm.__define(row.synonym, { value: {} });
 							}
-
-							if(row.list == -1){
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: function () {
-										var res = {};
-										row.elmnts.forEach(function (row) {
-											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
-										});
-										return res;
-									}()
-								});
-
-							}else if(row.list){
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: row.elmnts.map(function (row) {
-										return _mgr ? _mgr.get(row.value, false) : row.value;
-									})
-								});
-
-							}else{
-
-								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
-									delete $p.job_prm[parents[row.parent]][row.synonym];
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: _mgr ? _mgr.get(row.value, false) : row.value,
-									configurable: true
-								});
-							}
-
-						}
-					});
-				})
-				.then(function () {
-					
-					// рассчеты, помеченные, как шаблоны, загрузим в память заранее
-					setTimeout(function () {
-
-						if(!$p.job_prm.builder.base_block)
-							$p.job_prm.builder.base_block = [];
-
-						// дополним base_block шаблонами из систем профилей
-						$p.cat.production_params.forEach(function (o) {
-							if(!o.is_folder)
-								o.base_blocks.forEach(function (row) {
-									if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1)
-										$p.job_prm.builder.base_block.push(row.calc_order);
-								});
-						});
-						
-						$p.job_prm.builder.base_block.forEach(function (o) {
-							o.load();
 						});
 
-					}, 1000);
+						rows.forEach(function (row) {
 
-					// загружаем ключи планирования, т.к. они нужны в ОЗУ
-					$p.cat.planning_keys.pouch_find_rows();
+							if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
+
+								var _mgr, tnames;
+
+								if(row.type.is_ref){
+									tnames = row.type.types[0].split(".");
+									_mgr = $p[tnames[0]][tnames[1]]
+								}
+
+								if(row.list == -1){
+
+									$p.job_prm[parents[row.parent]].__define(row.synonym, {
+										value: function () {
+											var res = {};
+											row.elmnts.forEach(function (row) {
+												res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
+											});
+											return res;
+										}()
+									});
+
+								}else if(row.list){
+
+									$p.job_prm[parents[row.parent]].__define(row.synonym, {
+										value: row.elmnts.map(function (row) {
+											return _mgr ? _mgr.get(row.value, false) : row.value;
+										})
+									});
+
+								}else{
+
+									if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
+										delete $p.job_prm[parents[row.parent]][row.synonym];
+
+									$p.job_prm[parents[row.parent]].__define(row.synonym, {
+										value: _mgr ? _mgr.get(row.value, false) : row.value,
+										configurable: true
+									});
+								}
+
+							}
+						});
+					})
+					.then(function () {
+
+						// рассчеты, помеченные, как шаблоны, загрузим в память заранее
+						setTimeout(function () {
+
+							if(!$p.job_prm.builder.base_block)
+								$p.job_prm.builder.base_block = [];
+
+							// дополним base_block шаблонами из систем профилей
+							$p.cat.production_params.forEach(function (o) {
+								if(!o.is_folder)
+									o.base_blocks.forEach(function (row) {
+										if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1)
+											$p.job_prm.builder.base_block.push(row.calc_order);
+									});
+							});
+
+							$p.job_prm.builder.base_block.forEach(function (o) {
+								o.load();
+							});
+
+						}, 1000);
+
+						// загружаем ключи планирования, т.к. они нужны в ОЗУ
+						$p.cat.planning_keys.pouch_find_rows();
 
 
-					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-					setTimeout(function () {
-						$p.eve.callEvent("predefined_elmnts_inited");
-					}, 200);
-					
-				});
-			
+						// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
+						setTimeout(function () {
+							$p.eve.callEvent("predefined_elmnts_inited");
+						}, 200);
+
+					});
+
+			}
 		});
 
 		var _mgr = $p.cch.predefined_elmnts,
