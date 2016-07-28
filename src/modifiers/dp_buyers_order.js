@@ -7,71 +7,24 @@
  * @module dp_buyers_order
  */
 
-$p.modifiers.push(
 
-	function($p) {
+$p.dp.buyers_order.__define({
 
-		var _mgr = $p.dp.buyers_order;
-			
-		// переопределяем свойства цвет и система - они будут псевдонимами свойств текущей характеристики
-		
-		var obj_constructor =  _mgr._obj_constructor.prototype;
-		delete obj_constructor.clr;
-		delete obj_constructor.sys;			
-		obj_constructor.__define({
-			
-			clr: {
-				get: function () {
-					return this.characteristic.clr;
-				},
-				set: function (v) {
-					
-					if(this.characteristic.clr == v)
-						return;
+	unload_obj: {
+		value: function () {
 
-					Object.getNotifier(this).notify({
-						type: 'update',
-						name: 'clr',
-						oldValue: this.characteristic.clr
-					});
-					this.characteristic.clr = v;
-					this._data._modified = true;
-				}
-			},
+		}
+	},
 
-			sys: {
-				get: function () {
-					return this.characteristic.sys;
-				},
-				set: function (v) {
+	/**
+	 * форма ДобавитьСписокПродукции. публикуемый метод: $p.dp.buyers_order.form_product_list(o, pwnd, attr)
+	 * @param pwnd
+	 * @param attr
+	 */
+	form_product_list: {
+		value: function (pwnd, callback) {
 
-					if(this.characteristic.sys == v)
-						return;
-
-					Object.getNotifier(this).notify({
-						type: 'update',
-						name: 'sys',
-						oldValue: this.characteristic.sys
-					});
-					this.characteristic.sys = v;
-					this._data._modified = true;
-				}
-			}
-		});
-
-		
-		_mgr.unload_obj = function () {
-			
-		};
-
-		/**
-		 * форма ДобавитьСписокПродукции. публикуемый метод: $p.dp.buyers_order.form_product_list(o, pwnd, attr)
-		 * @param pwnd
-		 * @param attr
-		 */
-		_mgr.form_product_list = function (pwnd, callback) {
-
-			var o = _mgr.create(), 
+			var o = this.create(),
 				wnd,
 				attr = {
 
@@ -110,4 +63,48 @@ $p.modifiers.push(
 
 		}
 	}
-);
+});
+
+// переопределяем свойства цвет и система - они будут псевдонимами свойств текущей характеристики
+delete $p.DpBuyers_order.prototype.clr;
+delete $p.DpBuyers_order.prototype.sys;
+$p.DpBuyers_order.prototype.__define({
+
+	clr: {
+		get: function () {
+			return this.characteristic.clr;
+		},
+		set: function (v) {
+
+			if(this.characteristic.clr == v)
+				return;
+
+			Object.getNotifier(this).notify({
+				type: 'update',
+				name: 'clr',
+				oldValue: this.characteristic.clr
+			});
+			this.characteristic.clr = v;
+			this._data._modified = true;
+		}
+	},
+
+	sys: {
+		get: function () {
+			return this.characteristic.sys;
+		},
+		set: function (v) {
+
+			if(this.characteristic.sys == v)
+				return;
+
+			Object.getNotifier(this).notify({
+				type: 'update',
+				name: 'sys',
+				oldValue: this.characteristic.sys
+			});
+			this.characteristic.sys = v;
+			this._data._modified = true;
+		}
+	}
+});

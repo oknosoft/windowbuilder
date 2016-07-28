@@ -8,17 +8,17 @@
  * 
  */
 
-$p.modifiers.push(
-	function($p) {
+$p.doc.calc_order.__define({
 
-		$p.doc.calc_order.rep_invoice_execution = function (rep) {
+	rep_invoice_execution: {
+		value: function (rep) {
 
 			var query_options = {
-				reduce: true,
-				limit: 10000,
-				group: true,
-				group_level: 3
-			},
+					reduce: true,
+					limit: 10000,
+					group: true,
+					group_level: 3
+				},
 				res = {
 					data: [],
 					readOnly: true,
@@ -96,12 +96,14 @@ $p.modifiers.push(
 					}
 
 					rep.requery(res);
-					
+
 					return res;
 				});
-		};
+		}
+	},
 
-		$p.doc.calc_order.rep_planing = function (rep, attr) {
+	rep_planing: {
+		value: function (rep, attr) {
 
 			var date_from = $p.utils.date_add_day(new Date(), -1, true),
 				date_till = $p.utils.date_add_day(date_from, 7, true),
@@ -128,7 +130,7 @@ $p.modifiers.push(
 
 
 					if(data.rows){
-						
+
 						var include_detales = $p.current_acl.role_available("СогласованиеРасчетовЗаказов");
 
 						data.rows.forEach(function (row) {
@@ -153,7 +155,7 @@ $p.modifiers.push(
 					return res;
 				});
 
-		};
-
+		}
 	}
-);
+
+});

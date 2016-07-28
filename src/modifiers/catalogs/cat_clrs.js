@@ -8,36 +8,32 @@
  * @submodule cat_cnns
  */
 
+$p.cat.clrs.__define({
 
-$p.modifiers.push(
-	function($p) {
-
-		var _mgr = $p.cat.clrs;
-
-
-		// публичные методы менеджера
-
-		/**
-		 * ПолучитьЦветПоПредопределенномуЦвету
-		 * @param clr
-		 * @param clr_elm
-		 * @param clr_sch
-		 * @return {*}
-		 */
-		_mgr.by_predefined = function(clr, clr_elm, clr_sch){
+	/**
+	 * ПолучитьЦветПоПредопределенномуЦвету
+	 * @param clr
+	 * @param clr_elm
+	 * @param clr_sch
+	 * @return {*}
+	 */
+	by_predefined: {
+		value: function(clr, clr_elm, clr_sch){
 			if(clr.predefined_name){
 				return clr_elm;
 			}else if(clr.empty())
 				return clr_elm;
 			else
 				return clr;
-		};
+		}
+	},
 
-		/**
-		 * Дополняет связи параметров выбора отбором, исключающим служебные цвета
-		 * @param mf {Object} - описание метаданных поля
-		 */
-		_mgr.selection_exclude_service = function (mf) {
+	/**
+	 * Дополняет связи параметров выбора отбором, исключающим служебные цвета
+	 * @param mf {Object} - описание метаданных поля
+	 */
+	selection_exclude_service: {
+		value: function (mf) {
 
 			if(!mf.choice_params)
 				mf.choice_params = [];
@@ -52,7 +48,7 @@ $p.modifiers.push(
 				name: "parent",
 				path: {not: $p.cat.clrs.predefined("СЛУЖЕБНЫЕ")}
 			});
-		};
-
+		}
 	}
-);
+});
+

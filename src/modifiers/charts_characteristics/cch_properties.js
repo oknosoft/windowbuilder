@@ -5,18 +5,17 @@
  * @module cch_properties
  */
 
-$p.modifiers.push(
-	function($p) {
 
-		var _mgr = $p.cch.properties;
+$p.cch.properties.__define({
 
-		/**
-		 * Проверяем заполненность обязательных полей
-		 * @param prms {Array}
-		 * @param title {String}
-		 * @return {boolean}
-		 */
-		_mgr.check_mandatory = function(prms, title){
+	/**
+	 * Проверяем заполненность обязательных полей
+	 * @param prms {Array}
+	 * @param title {String}
+	 * @return {boolean}
+	 */
+	check_mandatory: {
+		value: function(prms, title){
 
 			var t, row;
 
@@ -32,15 +31,17 @@ $p.modifiers.push(
 				}
 			}
 
-		};
+		}
+	},
 
-		/**
-		 * Возвращает массив доступных для данного свойства значений
-		 * @param prop {CatObj} - планвидовхарактеристик ссылка или объект
-		 * @param ret_mgr {Object} - установить в этом объекте указатель на менеджера объекта
-		 * @return {Array}
-		 */
-		_mgr.slist = function(prop, ret_mgr){
+	/**
+	 * Возвращает массив доступных для данного свойства значений
+	 * @param prop {CatObj} - планвидовхарактеристик ссылка или объект
+	 * @param ret_mgr {Object} - установить в этом объекте указатель на менеджера объекта
+	 * @return {Array}
+	 */
+	slist: {
+		value: function(prop, ret_mgr){
 
 			var res = [], rt, at, pmgr, op = this.get(prop);
 
@@ -73,7 +74,6 @@ $p.modifiers.push(
 					}
 			}
 			return res;
-		};
-
+		}
 	}
-);
+});
