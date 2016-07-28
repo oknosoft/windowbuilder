@@ -10,14 +10,17 @@
  * @submodule cat_characteristics
  */
 
-
+// при старте приложения
 $p.on({
+
+	// загружаем в ОЗУ обычные характеристики (без ссылок на заказы)
 	predefined_elmnts_inited: function common_characteristics() {
 		$p.off(common_characteristics);
 		return $p.cat.characteristics.pouch_load_view("doc/nom_characteristics");
 	}
 });
 
+// подписки на события
 $p.cat.characteristics.on({
 
 	// перед записью надо пересчитать наименование и рассчитать итоги
@@ -38,7 +41,7 @@ $p.cat.characteristics.on({
 });
 
 // свойства объекта характеристики
-$p.CatNom.prototype.__define({
+$p.CatCharacteristics.prototype.__define({
 
 	calc_order_row: {
 		get: function () {
