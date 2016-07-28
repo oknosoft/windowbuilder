@@ -1,11 +1,9 @@
 /**
  * ### Дополнительные методы справочника Цвета
  * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
- * Created 23.12.2015 
- *
- * @module modifiers
- * @submodule cat_cnns
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cat_cnns
+ * Created 23.12.2015
  */
 
 $p.cat.clrs.__define({

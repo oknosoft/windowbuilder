@@ -1,12 +1,9 @@
 /**
  * ### Модификаторы перечислений
  * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module enmums
  * Created 22.04.2016
- * 
- * @module modifiers 
- * @submodule enmums
- * 
  */
 
 (function($p){

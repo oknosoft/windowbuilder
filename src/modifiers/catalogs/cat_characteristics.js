@@ -3,11 +3,9 @@
  * Обрботчики событий after_create, after_load, before_save, after_save, value_change
  * Методы выполняются в контексте текущего объекта this = DocObj
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cat_characteristics
  * Created 16.03.2016
- * 
- * @module modifiers
- * @submodule cat_characteristics
  */
 
 // при старте приложения
