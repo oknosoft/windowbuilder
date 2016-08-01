@@ -3042,9 +3042,10 @@ $p.injected_data._mixin({"toolbar_calc_order_production.xml":"<?xml version=\"1.
 /**
  * ### Модификаторы обработки _builder_pen_
  * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * @module dp_builder_pen
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 13.05.2016
+ * 
+ * @module dp_builder_pen
  */
 
 $p.dp.builder_pen.on({
@@ -3189,11 +3190,9 @@ $p.DpBuyers_order.prototype.__define({
  * Обрботчики событий after_create, after_load, before_save, after_save, value_change
  * Методы выполняются в контексте текущего объекта this = DocObj
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cat_characteristics
  * Created 16.03.2016
- * 
- * @module modifiers
- * @submodule cat_characteristics
  */
 
 // при старте приложения
@@ -3359,11 +3358,9 @@ $p.CatCharacteristics.prototype.__define({
 /**
  * ### Форма выбора типового блока
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cat_characteristics_form_selection_block
  * Created 23.12.2015
- * 
- * @module modifiers
- * @submodule cat_characteristics_form_selection_block
  */
 
 (function($p){
@@ -3600,11 +3597,9 @@ $p.CatCharacteristics.prototype.__define({
 /**
  * ### Дополнительные методы справочника Цвета
  * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
- * Created 23.12.2015 
- *
- * @module modifiers
- * @submodule cat_cnns
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cat_cnns
+ * Created 23.12.2015
  */
 
 $p.cat.clrs.__define({
@@ -3655,11 +3650,9 @@ $p.cat.clrs.__define({
 /**
  * ### Дополнительные методы справочника _Соединения_
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cat_cnns
  * Created 23.12.2015
- *
- * @module modifiers
- * @submodule cat_cnns
  */
 
 (function($p){
@@ -3873,11 +3866,9 @@ $p.CatCnns.prototype.__define({
 /**
  * ### Дополнительные методы справочника _Договоры контрагентов_
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module cat_contracts
  * Created 23.12.2015
- * 
- * @module modifiers
- * @submodule cat_contracts
  */
 
 $p.cat.contracts.__define({
@@ -7125,10 +7116,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
 			date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
 			on_new: function (o) {
-				$p.iface.set_hash(this.class_name, o.ref);
+				$p.iface.set_hash(this.class_name, o.ref, "doc");
 			},
 			on_edit: function (_mgr, rId) {
-				$p.iface.set_hash(_mgr.class_name, rId);
+				$p.iface.set_hash(_mgr.class_name, rId, "doc");
 			}
 		};
 
@@ -8422,12 +8413,9 @@ $p.doc.nom_prices_setup.on({
 /**
  * ### Модификаторы перечислений
  * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * @module enmums
  * Created 22.04.2016
- * 
- * @module modifiers 
- * @submodule enmums
- * 
  */
 
 (function($p){
@@ -8732,9 +8720,8 @@ $p.on({
 	 * Процедура устанавливает параметры работы программы, специфичные для текущей сборки
 	 *
 	 * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
-	 * @param modifiers {Array} - сюда можно добавить обработчики, переопределяющие функциональность объектов данных
 	 */
-	settings: function (prm, modifiers) {
+	settings: function (prm) {
 
 		prm.__define({
 

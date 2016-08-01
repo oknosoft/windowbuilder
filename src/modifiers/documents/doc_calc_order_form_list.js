@@ -15,10 +15,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
 			date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
 			on_new: function (o) {
-				$p.iface.set_hash(this.class_name, o.ref);
+				$p.iface.set_hash(this.class_name, o.ref, "doc");
 			},
 			on_edit: function (_mgr, rId) {
-				$p.iface.set_hash(_mgr.class_name, rId);
+				$p.iface.set_hash(_mgr.class_name, rId, "doc");
 			}
 		};
 
