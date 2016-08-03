@@ -1,5 +1,6 @@
 /**
- * ### Дополнительные методы плана видов характеристик Свойства объектов
+ * ### Дополнительные методы плана видов характеристик _Свойства объектов_
+ * аналог подсистемы _Свойства_ БСП
  *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
  * @module cch_properties
@@ -9,7 +10,10 @@
 $p.cch.properties.__define({
 
 	/**
-	 * Проверяем заполненность обязательных полей
+	 * ### Проверяет заполненность обязательных полей
+	 *
+	 * @method check_mandatory
+	 * @override
 	 * @param prms {Array}
 	 * @param title {String}
 	 * @return {boolean}
@@ -30,12 +34,14 @@ $p.cch.properties.__define({
 					return true;
 				}
 			}
-
 		}
 	},
 
 	/**
-	 * Возвращает массив доступных для данного свойства значений
+	 * ### Возвращает массив доступных для данного свойства значений
+	 *
+	 * @method slist
+	 * @override
 	 * @param prop {CatObj} - планвидовхарактеристик ссылка или объект
 	 * @param ret_mgr {Object} - установить в этом объекте указатель на менеджера объекта
 	 * @return {Array}
@@ -69,11 +75,11 @@ $p.cch.properties.__define({
 								pmgr.find_rows({owner: prop}, function(v){
 									res.push({value: v.ref, text: v.presentation});
 								});
-
 						}
 					}
 			}
 			return res;
 		}
 	}
+
 });

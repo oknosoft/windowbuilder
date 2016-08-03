@@ -1,5 +1,6 @@
 /**
  * ### Дополнительные методы ПВХ Предопределенные элементы
+ * Предопределенные элементы - аналог констант для хранения ссылочных и списочных настроек приложения
  *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
  * @module cch_predefined_elmnts
@@ -109,11 +110,18 @@
 		}
 	});
 
-	var _mgr = $p.cch.predefined_elmnts,
-		obj_constructor =  $p.CchPredefined_elmnts.prototype;
+	var _mgr = $p.cch.predefined_elmnts;
 
-	delete obj_constructor.value;
-	obj_constructor.__define({
+	
+	/**
+	 * Переопределяем геттер значения
+	 *
+	 * @property value
+	 * @override
+	 * @type {*}
+	 */
+	delete $p.CchPredefined_elmnts.prototype.value;
+	$p.CchPredefined_elmnts.prototype.__define({
 
 		value: {
 			get: function () {
@@ -177,7 +185,15 @@
 			}
 		}
 	});
-
+	/**
+	 * ### Форма элемента
+	 *
+	 * @method form_obj
+	 * @override
+	 * @param pwnd
+	 * @param attr
+	 * @returns {*}
+	 */
 	_mgr.form_obj = function(pwnd, attr){
 
 		var o, wnd;
