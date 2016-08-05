@@ -2,7 +2,8 @@
 <tree id="0">
     <item id="cat.stores" text="Склады"><icons file="icon_1c_cat" /></item>
     <item id="cat.divisions" text="Подразделения"><icons file="icon_1c_cat" /></item>
+    <!--
     <item id="doc.work_centers_performance" select="1" text="Мощности рабочих центров"><icons file="icon_1c_doc" /></item>
     <item id="doc.planning_event" text="Событие планирования"><icons file="icon_1c_doc" /></item>
-
+    -->
 </tree>
