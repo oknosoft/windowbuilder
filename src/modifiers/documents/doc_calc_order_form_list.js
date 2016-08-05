@@ -38,7 +38,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			offsets: { top: 0, right: 0, bottom: 0, left: 0}
 		}),
 
-		tree = layout.cells("a").attachTreeView(),
+		tree = layout.cells("a").attachTreeView({
+			iconset: "font_awesome",
+		}),
 
 		carousel = layout.cells("b").attachCarousel({
 			keys:           false,

@@ -126,9 +126,9 @@ function EditorAccordion(_editor, cell_acc) {
 
 			var tree = new dhtmlXTreeView({
 				parent: cont.querySelector("[name=content_layers]"),
-				checkboxes: true
+				checkboxes: true,
+				multiselect: false
 			});
-
 
 			function layer_text(layer, bounds){
 				if(!bounds)
@@ -139,10 +139,10 @@ function EditorAccordion(_editor, cell_acc) {
 
 			function load_layer(layer){
 
-				tree.insertNewItem(
-					layer.parent ? layer.parent.cnstr : 0,
+				tree.addItem(
 					layer.cnstr,
-					layer_text(layer));
+					layer_text(layer),
+					layer.parent ? layer.parent.cnstr : 0);
 
 
 				layer.children.forEach(function (l) {
@@ -163,21 +163,22 @@ function EditorAccordion(_editor, cell_acc) {
 						synced = true;
 
 						// добавляем слои изделия
-						tree.deleteChildItems(0);
+						tree.clearAll();
 						_editor.project.contours.forEach(function (l) {
 							load_layer(l);
-							tree.setSubChecked(l.cnstr, true);
+							tree.checkItem(l.cnstr);
+							tree.openItem(l.cnstr);
 
 						});
 
 						// служебный слой размеров
-						tree.insertNewItem(0, "sizes", "Размерные линии");
+						tree.addItem("sizes", "Размерные линии", 0);
 
 						// служебный слой визуализации
-						tree.insertNewItem(0, "visualization", "Визуализация доп. элементов");
+						tree.addItem("visualization", "Визуализация доп. элементов", 0);
 
 						// служебный слой текстовых комментариев
-						tree.insertNewItem(0, "text", "Комментарии");
+						tree.addItem("text", "Комментарии", 0);
 
 					}
 				});
@@ -198,7 +199,7 @@ function EditorAccordion(_editor, cell_acc) {
 					setTimeout(function () {
 						_editor.project.zoom_fit();
 						if(cnstr)
-							tree.selectItem(cnstr, true);
+							tree.selectItem(cnstr);
 					}, 100);
 				}
 			};
@@ -216,12 +217,12 @@ function EditorAccordion(_editor, cell_acc) {
 			tree.attachEvent("onCheck", function(id, state){
 				var l,
 					pid = tree.getParentId(id),
-					sub = tree.getAllSubItems(id);
+					sub = tree.getSubItems(id);
 
 				if(pid && state && !tree.isItemChecked(pid)){
 					if(l = _editor.project.getItem({cnstr: Number(pid)}))
 						l.visible = true;
-					tree.setCheck(pid, 1);
+					tree.checkItem(pid);
 				}
 
 				if(l = _editor.project.getItem({cnstr: Number(id)}))
@@ -230,23 +231,26 @@ function EditorAccordion(_editor, cell_acc) {
 				if(typeof sub == "string")
 					sub = sub.split(",");
 				sub.forEach(function (id) {
-					tree.setCheck(id, state);
+					state ? tree.checkItem(id) : tree.uncheckItem(id);
 					if(l = _editor.project.getItem({cnstr: Number(id)}))
 						l.visible = !!state;
 				});
 
 				if(pid && state && !tree.isItemChecked(pid))
-					tree.setCheck(pid, 1);
+					tree.checkItem(pid);
 
 				_editor.project.register_update();
 
 			});
 
 			// делаем выделенный слой активным
-			tree.attachEvent("onSelect", function(id){
+			tree.attachEvent("onSelect", function(id, mode){
+				if(!mode)
+					return;
 				var contour = _editor.project.getItem({cnstr: Number(id)});
 				if(contour){
-					contour.activate(true);
+					if(contour.project.activeLayer != contour)
+						contour.activate(true);
 					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
 				}
 			});
