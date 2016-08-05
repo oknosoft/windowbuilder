@@ -10,8 +10,10 @@ var gulp = require('gulp'),
 	uglify = require('gulp-uglify'),
 	rename = require('gulp-rename'),
 	resources = require('./src/utils/resource-concat.js'),
-	path = require('path'),
-	umd = require('gulp-umd');
+	prebuild = require('./src/utils/prebuild.js'),
+	umd = require('gulp-umd'),
+	replace = require('gulp-replace'),
+	package_data = JSON.parse(require('fs').readFileSync('package.json', 'utf8'));  // данные файла package.json
 
 module.exports = gulp;
 
@@ -89,10 +91,8 @@ gulp.task('injected-templates', function(){
 // Сборка метаданных
 gulp.task('injected-meta', function(){
 
-	var prebuild = require('./src/utils/prebuild.js');
-
 	return gulp.src(['./src/utils/prebuild.js'])
-		.pipe(prebuild('prebuild.js'))
+		.pipe(prebuild(package_data))
 		.pipe(gulp.dest('./data'));
 
 });

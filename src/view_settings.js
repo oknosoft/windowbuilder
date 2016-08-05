@@ -102,8 +102,8 @@ $p.iface.view_settings = function (cell) {
 		});
 
 		t.tabs.attachEvent("onSelect", function(id){
-			if(t[id] && t[id].tree && t[id].tree.getSelectedItemId()){
-				t[id].tree.callEvent("onSelect", [t[id].tree.getSelectedItemId()]);
+			if(t[id] && t[id].tree && t[id].tree.getSelectedId()){
+				t[id].tree.callEvent("onSelect", [t[id].tree.getSelectedId()]);
 			}
 			return true;
 		});
@@ -262,9 +262,8 @@ $p.iface.view_settings = function (cell) {
 			})
 		};
 		// дерево технологических справочников
-		t.industry.tree = t.industry.layout.cells("a").attachTree();
-		t.industry.tree.enableTreeImages(false);
-		t.industry.tree.parse($p.injected_data["tree_industry.xml"]);
+		t.industry.tree = t.industry.layout.cells("a").attachTreeView();
+		t.industry.tree.loadStruct($p.injected_data["tree_industry.xml"]);
 		t.industry.tree.attachEvent("onSelect", function (name) {
 			$p.md.mgr_by_class_name(name).form_list(t.industry.layout.cells("b"), {hide_header: true});
 		});
@@ -287,9 +286,8 @@ $p.iface.view_settings = function (cell) {
 			})
 		};
 		// дерево справочников ценообразования
-		t.price.tree = t.price.layout.cells("a").attachTree();
-		t.price.tree.enableTreeImages(false);
-		t.price.tree.parse($p.injected_data["tree_price.xml"]);
+		t.price.tree = t.price.layout.cells("a").attachTreeView();
+		t.price.tree.loadStruct($p.injected_data["tree_price.xml"]);
 		t.price.tree.attachEvent("onSelect", function (name) {
 			$p.md.mgr_by_class_name(name).form_list(t.price.layout.cells("b"), {hide_header: true});
 		});
@@ -312,9 +310,8 @@ $p.iface.view_settings = function (cell) {
 			})
 		};
 		// дерево справочников планирования
-		t.events.tree = t.events.layout.cells("a").attachTree();
-		t.events.tree.enableTreeImages(false);
-		t.events.tree.parse($p.injected_data["tree_events.xml"]);
+		t.events.tree = t.events.layout.cells("a").attachTreeView();
+		t.events.tree.loadStruct($p.injected_data["tree_events.xml"]);
 		t.events.tree.attachEvent("onSelect", function (name) {
 			$p.md.mgr_by_class_name(name).form_list(t.events.layout.cells("b"), {hide_header: true});
 		});

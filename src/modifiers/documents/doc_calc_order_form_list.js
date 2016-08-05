@@ -38,7 +38,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			offsets: { top: 0, right: 0, bottom: 0, left: 0}
 		}),
 
-		tree = layout.cells("a").attachTree(),
+		tree = layout.cells("a").attachTreeView(),
 
 		carousel = layout.cells("b").attachCarousel({
 			keys:           false,
@@ -67,7 +67,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 	filter_view.__define({
 		value: {
 			get: function () {
-				switch(tree.getSelectedItemId()) {
+				switch(tree.getSelectedId()) {
 
 					case 'draft':
 					case 'sent':
@@ -95,7 +95,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			get: function () {
 				var key, id;
 
-				switch(id = tree.getSelectedItemId()) {
+				switch(id = tree.getSelectedId()) {
 
 					case 'draft':
 					case 'sent':
@@ -138,8 +138,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 	});
 
 	// настраиваем дерево
-	tree.enableTreeImages(false);
-	tree.parse($p.injected_data["tree_filteres.xml"]);
+	tree.loadStruct($p.injected_data["tree_filteres.xml"]);
 	tree.attachEvent("onSelect", function (rid) {
 
 		// переключаем страницу карусели

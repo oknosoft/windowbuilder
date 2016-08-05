@@ -181,9 +181,9 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		tree_layers = new function SchemeLayers() {
 
-			var tree = new dhtmlXTreeObject({
+			var tree = new dhtmlXTreeView({
 				parent: cont.querySelector("[name=content_layers]"),
-				checkbox: true
+				checkboxes: true
 			});
 
 
@@ -241,11 +241,8 @@ function EditorAccordion(_editor, cell_acc) {
 			}
 
 
-			tree.enableTreeImages(false);
-
-
 			this.drop_layer = function () {
-				var cnstr = tree.getSelectedItemId(), l;
+				var cnstr = tree.getSelectedId(), l;
 				if(cnstr){
 					l = _editor.project.getItem({cnstr: Number(cnstr)});
 				}else if(l = _editor.project.activeLayer){
@@ -312,7 +309,7 @@ function EditorAccordion(_editor, cell_acc) {
 			});
 
 			$p.eve.attachEvent("layer_activated", function (contour) {
-				if(contour && contour.cnstr && contour.cnstr != tree.getSelectedItemId()){
+				if(contour && contour.cnstr && contour.cnstr != tree.getSelectedId()){
 					tree.selectItem(contour.cnstr);
 					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
 				}

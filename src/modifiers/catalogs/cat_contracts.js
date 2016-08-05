@@ -23,7 +23,7 @@ $p.cat.contracts.__define({
 		value: function (partner, organization, contract_kind) {
 			if(!contract_kind)
 				contract_kind = $p.enm.contract_kinds.СПокупателем;
-			var res = _mgr.find_rows({owner: partner, organization: organization, contract_kind: contract_kind});
+			var res = this.find_rows({owner: partner, organization: organization, contract_kind: contract_kind});
 			res.sort(function (a, b) {
 				return a.date > b.date;
 			});

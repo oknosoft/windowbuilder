@@ -1,16 +1,31 @@
 {
   "name"    : "windowbuilder",
+  "description": "Order dealer for windows and stained glass",
   "version" : "0.1.0",
   "main"    : "electron.js",
-
+  "dependencies": {
+    "metadata-js": ">=0.11"
+  },
   "devDependencies": {
-    "gulp": "^3.9",
-    "gulp-concat": "^2.6",
-    "gulp-csso": "^1.0",
-    "gulp-rename": "^1.2",
-    "gulp-uglify": "^1.4",
-    "gulp-umd": "^0.2",
-    "gulp-base64": "^0.1",
+    "gulp": ">=3.9",
+    "gulp-concat": ">=2.6",
+    "gulp-csso": ">=2.0",
+    "gulp-rename": ">=1.2",
+    "gulp-uglify": ">=2.0",
+    "gulp-umd": ">=0.2",
+    "gulp-replace": ">=0.5",
+    "gulp-base64": ">=0.1",
     "jasmine": ">=2.4"
+  },
+  "engines": {
+    "node": ">=6.0"
+  },
+  "homepage": "http://www.oknosoft.ru/zd/",
+  "license" : "SEE LICENSE IN LICENSE.en.md",
+  "config": {
+    "couchdb": "http://i980:89/couchdb/wb_",
+    "zone": 0,
+    "prefix": "wb_",
+    "suffix": ""
   }
 }
