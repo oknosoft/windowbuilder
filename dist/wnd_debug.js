@@ -7162,7 +7162,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 		}),
 
 		tree = layout.cells("a").attachTreeView({
-			iconset: "font_awesome",
+			iconset: "font_awesome"
 		}),
 
 		carousel = layout.cells("b").attachCarousel({
@@ -7264,7 +7264,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 	// настраиваем дерево
 	tree.loadStruct($p.injected_data["tree_filteres.xml"]);
-	tree.attachEvent("onSelect", function (rid) {
+	tree.attachEvent("onSelect", function (rid, mode) {
+
+		if(!mode)
+			return;
 
 		// переключаем страницу карусели
 		switch(rid) {
@@ -8836,6 +8839,10 @@ $p.on({
 	 */
 	iface_init: function() {
 
+		// патч параметра couch_path
+		if($p.wsql.get_user_param("couch_path") && $p.wsql.get_user_param("couch_path") != $p.job_prm.couch_path)
+			$p.wsql.set_user_param("couch_path", $p.job_prm.couch_path);
+
 		// разделы интерфейса
 		$p.iface.sidebar_items = [
 			{id: "orders", text: "Заказы", icon: "projects_48.png"},
@@ -9495,6 +9502,9 @@ $p.iface.view_settings = function (cell) {
 			]
 		);
 		t.form1.cont.style.fontSize = "100%";
+
+		t.form1.disableItem("couch_path");
+		t.form1.disableItem("couch_suffix");
 
 		// инициализация свойств
 

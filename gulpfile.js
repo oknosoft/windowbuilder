@@ -43,6 +43,7 @@ gulp.task('build-iface', function(){
 // Cборка библиотеки рисовалки
 gulp.task('build-lib', function(){
 	return gulp.src([
+		'./lib/baron/baron.js',
 		'./src/i18n.ru.js',
 		'./src/editor/*.js',
 		'./src/geometry/*.js',
@@ -91,7 +92,7 @@ gulp.task('injected-templates', function(){
 // Сборка метаданных
 gulp.task('injected-meta', function(){
 
-	return gulp.src(['./src/utils/prebuild.js'])
+	return gulp.src(['./src/utils/default_settings.js'])
 		.pipe(prebuild(package_data))
 		.pipe(gulp.dest('./data'));
 
@@ -100,13 +101,14 @@ gulp.task('injected-meta', function(){
 // Сборка css
 gulp.task('css-base64', function () {
 	return gulp.src([
+		'./lib/baron/baron.css',
 		'./src/templates/cursors/cursors.css',
 		'./src/templates/buttons20.css',
 		'./src/templates/baron.css',
 		'./src/templates/iface.css'
 	])
 		.pipe(base64())
-		.pipe(concat('windowbuilder.min.css'))
+		.pipe(concat('windowbuilder.css'))
 		.pipe(gulp.dest('./dist'));
 });
 

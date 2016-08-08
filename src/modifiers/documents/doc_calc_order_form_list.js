@@ -39,7 +39,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 		}),
 
 		tree = layout.cells("a").attachTreeView({
-			iconset: "font_awesome",
+			iconset: "font_awesome"
 		}),
 
 		carousel = layout.cells("b").attachCarousel({
@@ -141,7 +141,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 	// настраиваем дерево
 	tree.loadStruct($p.injected_data["tree_filteres.xml"]);
-	tree.attachEvent("onSelect", function (rid) {
+	tree.attachEvent("onSelect", function (rid, mode) {
+
+		if(!mode)
+			return;
 
 		// переключаем страницу карусели
 		switch(rid) {

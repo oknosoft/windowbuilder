@@ -23,7 +23,7 @@
   "homepage": "http://www.oknosoft.ru/zd/",
   "license" : "SEE LICENSE IN LICENSE.en.md",
   "config": {
-    "couchdb": "http://i980:89/couchdb/wb_",
+    "couchdb": "/couchdb/wb_",
     "zone": 0,
     "prefix": "wb_",
     "suffix": ""

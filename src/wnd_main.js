@@ -107,6 +107,10 @@ $p.on({
 	 */
 	iface_init: function() {
 
+		// патч параметра couch_path
+		if($p.wsql.get_user_param("couch_path") && $p.wsql.get_user_param("couch_path") != $p.job_prm.couch_path)
+			$p.wsql.set_user_param("couch_path", $p.job_prm.couch_path);
+
 		// разделы интерфейса
 		$p.iface.sidebar_items = [
 			{id: "orders", text: "Заказы", icon: "projects_48.png"},

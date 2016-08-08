@@ -19,10 +19,9 @@ module.exports = function (package_data) {
 		throw new PluginError('metadata-prebuild', 'Missing "package_data" option for metadata-prebuild');
 	}
 
-	var firstFile = null;
-
-	// подключим метадату
-	var $p = require('../../lib/metadata.core.js');
+	var firstFile = null,
+		jstext = "",                    // в этой переменной будем накапливать текст модуля
+		$p = require('metadata-js');    // подключим метадату
 
 	// установим параметры
 	$p.on("settings", function (prm) {
@@ -165,11 +164,30 @@ module.exports = function (package_data) {
 
 	}
 
-	// т.к. содержимое входных файлов нам не интересно, сразу вызываем cb()
+	// складываем содержимое входных файлов в jstext
 	function bufferContents(file, enc, cb) {
+
+		// ignore empty files
+		if (file.isNull()) {
+			cb();
+			return;
+		}
+
+		// we don't do streams (yet)
+		if (file.isStream()) {
+			this.emit('error', new PluginError('gulp-concat',  'Streaming not supported'));
+			cb();
+			return;
+		}
 
 		if (!firstFile) {
 			firstFile = file;
+		}
+
+		if(path.extname(file.path) == ".js"){
+			if(jstext)
+				jstext += "\n";
+			jstext += file.contents.toString();
 		}
 
 		cb();
@@ -204,7 +222,7 @@ module.exports = function (package_data) {
 
 					text = "$p.wsql.alasql('" + sql + "', []);\n\n"
 						+ text + "\n\n"
-						+ "$p.md.init(" + JSON.stringify(_m) + ");";
+						+ "$p.md.init(" + JSON.stringify(_m) + ");\n\n" + jstext;
 
 					joinedFile.contents = new Buffer(text);
 					t.push(joinedFile);

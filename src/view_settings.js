@@ -165,6 +165,9 @@ $p.iface.view_settings = function (cell) {
 		);
 		t.form1.cont.style.fontSize = "100%";
 
+		t.form1.disableItem("couch_path");
+		t.form1.disableItem("couch_suffix");
+
 		// инициализация свойств
 
 		t.form1.checkItem("device_type", $p.job_prm.device_type);
