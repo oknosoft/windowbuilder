@@ -171,7 +171,9 @@ $p.doc.calc_order.on({
 $p.DocCalc_order.prototype.__define({
 
 
-	// валюту документа получаем из договора
+	/**
+	 * Возвращает валюту документа
+	 */
 	doc_currency: {
 		get: function () {
 			var currency = this.contract.settlements_currency;
@@ -408,6 +410,32 @@ $p.DocCalc_order.prototype.__define({
 			});
 
 			return res;
+		}
+	},
+
+	/**
+	 * Заполняет табчасть планирования данными по умолчанию
+	 */
+	fill_plan: {
+		value: function (confirmed) {
+
+			// если табчасть не пустая - задаём вопрос
+			if(this.planning.count() && !confirmed){
+				dhtmlx.confirm({
+					title: $p.msg.main_title,
+					text: $p.msg.tabular_will_cleared.replace('%1', "Планирование"),
+					cancel: $p.msg.cancel,
+					callback: function(btn) {
+						if(btn){
+							this.fill_plan(true);
+						}
+					}.bind(this)
+				});
+				return;
+			}
+
+			this.planning.clear();
+
 		}
 	}
 

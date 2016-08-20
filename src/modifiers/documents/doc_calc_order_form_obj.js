@@ -70,6 +70,9 @@
 
 					// табчасть планирования
 					tabular_init("planning");
+					toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
+					toolbar.addButton("btn_fill_plan", 3, "Заполнить");
+					toolbar.attachEvent("onclick", toolbar_click);
 
 
 					// попап для присоединенных файлов
@@ -233,6 +236,9 @@
 					save("unpost");
 					break;
 
+				case 'btn_fill_plan':
+					o.fill_plan();
+					break;
 
 				case 'btn_close':
 					wnd.close();

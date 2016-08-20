@@ -58,80 +58,69 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 	carousel.conf.anim_slide = "left 0.1s";
 
 	var wnd = this.form_selection(carousel.cells("list"), attr),
-
-		report,
-
-		filter_view = {},
-
-		filter_key = {};
+		report;
 
 	// настраиваем фильтр для списка заказов
-	filter_view.__define({
-		value: {
-			get: function () {
-				switch(tree.getSelectedId()) {
+	wnd.elmnts.filter.custom_selection._view = {
+		get value() {
+			switch(tree.getSelectedId()) {
 
-					case 'draft':
-					case 'sent':
-					case 'declined':
-					case 'confirmed':
-					case 'service':
-					case 'complaints':
-					case 'template':
-					case 'zarchive':
-						return 'doc/doc_calc_order_date';
+				case 'draft':
+				case 'sent':
+				case 'declined':
+				case 'confirmed':
+				case 'service':
+				case 'complaints':
+				case 'template':
+				case 'zarchive':
+					return 'doc/by_date';
 
-					case 'execution':
-					case 'plan':
-					case 'underway':
-					case 'manufactured':
-					case 'executed':
-					case 'all':
-						return '';
-				}
+				case 'execution':
+				case 'plan':
+				case 'underway':
+				case 'manufactured':
+				case 'executed':
+				case 'all':
+					return '';
 			}
 		}
-	});
-	filter_key.__define({
-		value: {
-			get: function () {
-				var key, id;
+	};
+	wnd.elmnts.filter.custom_selection._key = {
+		get value(){
+			var key, id;
 
-				switch(id = tree.getSelectedId()) {
+			switch(id = tree.getSelectedId()) {
 
-					case 'draft':
-					case 'sent':
-					case 'declined':
-					case 'confirmed':
-					case 'service':
-					case 'complaints':
-					case 'template':
-					case 'zarchive':
-						key = id;
-						break;
+				case 'draft':
+				case 'sent':
+				case 'declined':
+				case 'confirmed':
+				case 'service':
+				case 'complaints':
+				case 'template':
+				case 'zarchive':
+					key = id;
+					break;
 
-					case 'execution':
-					case 'plan':
-					case 'underway':
-					case 'manufactured':
-					case 'executed':
-					case 'all':
-						return '';
-				}
-
-				var filter = wnd.elmnts.filter.get_filter(true);
-				return {
-					startkey: [key, filter.date_from.getFullYear(), filter.date_from.getMonth()+1, filter.date_from.getDate()],
-					endkey: [key, filter.date_till.getFullYear(), filter.date_till.getMonth()+1, filter.date_till.getDate()],
-					_drop_date: true,
-					_order_by: true,
-					_search: filter.filter.toLowerCase()
-				};
+				case 'execution':
+				case 'plan':
+				case 'underway':
+				case 'manufactured':
+				case 'executed':
+				case 'all':
+					return '';
 			}
+
+			var filter = wnd.elmnts.filter.get_filter(true);
+			return {
+				startkey: [key, filter.date_from.getFullYear(), filter.date_from.getMonth()+1, filter.date_from.getDate()],
+				endkey: [key, filter.date_till.getFullYear(), filter.date_till.getMonth()+1, filter.date_till.getDate()],
+				_drop_date: true,
+				_order_by: true,
+				_search: filter.filter.toLowerCase()
+			};
 		}
-	});
-	wnd.elmnts.filter.custom_selection._view = filter_view;
-	wnd.elmnts.filter.custom_selection._key = filter_key;
+	};
 
 	// картинка заказа в статусбаре
 	wnd.elmnts.svgs = new $p.iface.OSvgs(this, wnd, wnd.elmnts.status_bar);
