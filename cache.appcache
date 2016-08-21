@@ -10,7 +10,7 @@ CACHE:
 
 # Эти позиции включаем только в продакшене
 #
-https://cdn.jsdelivr.net/g/momentjs,alasql,pouchdb,jquery@2.2,metadata@0.11.217(dhtmlx.min.js+metadata.min.js)
+https://cdn.jsdelivr.net/g/momentjs,alasql,pouchdb,jquery@2.2,metadata@0.11.218(dhtmlx.min.js)
 
 # На период отладки, берём metadata и dhtmlx c нашего сайта
 #//cdn.jsdelivr.net/g/momentjs,alasql,pouchdb,jquery@2.2
@@ -31,7 +31,7 @@ dist/wnd_debug.min.js
 https://cdn.jsdelivr.net/fontawesome/4.6.3/css/font-awesome.min.css
 https://cdn.jsdelivr.net/fontawesome/4.6.3/fonts/fontawesome-webfont.woff2?v=4.6.3
 
-https://cdn.jsdelivr.net/g/metadata@0.11.217(dhx_terrace.css+metadata.css)
+https://cdn.jsdelivr.net/g/metadata@0.11.218(dhx_terrace.css+metadata.css)
 
 #
 dist/windowbuilder.css

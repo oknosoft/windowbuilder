@@ -51,8 +51,9 @@ $p.cat.clrs.__define({
 						var clr_group, elm, res = [];
 
 						if(sys instanceof $p.Editor.BuilderElement){
-							elm = sys;
-							clr_group = sys.project._dp.sys.clr_group;
+							clr_group = sys.inset.clr_group;
+							if(clr_group.empty() && !(sys instanceof $p.Editor.Filling))
+								clr_group = sys.project._dp.sys.clr_group;
 
 						}else if(sys instanceof $p.DataProcessorObj){
 							clr_group = sys.sys.clr_group;
@@ -101,6 +102,17 @@ $p.cat.clrs.__define({
 
 				selection.clr_in = $p.utils.blank.guid;
 				selection.clr_out = $p.utils.blank.guid;
+
+				if(attr.selection){
+					attr.selection.some(function (sel) {
+						for(var key in sel){
+							if(key == "ref"){
+								selection.ref = sel.ref;
+								return true;
+							}
+						}
+					});
+				}
 				
 				return this.constructor.prototype.get_option_list.call(this, val, selection);
 			}
@@ -132,10 +144,16 @@ $p.cat.clrs.__define({
 						clr_in.unload();
 						clr_out.unload();
 
+						eclr.clr_in = $p.utils.blank.guid;
+						eclr.clr_out = $p.utils.blank.guid;
+
 						return true;
 					});
 
 					Object.unobserve(eclr);
+
+					eclr.clr_in = $p.utils.blank.guid;
+					eclr.clr_out = $p.utils.blank.guid;
 
 					// Создаём элементы управления
 					var clr_in = new $p.iface.OCombo({
@@ -166,6 +184,23 @@ $p.cat.clrs.__define({
 					return wnd;
 
 				})
+		}
+	},
+
+	/**
+	 * Изменяем алгоритм построения формы списка. Игнорируем иерархию, если указаны цвета изнутри или снаружи
+	 */
+	sync_grid: {
+		value: function(attr, grid) {
+
+			if(attr.action == "get_selection" && attr.selection && attr.selection.some(function (v) {
+				return v.hasOwnProperty("clr_in") || v.hasOwnProperty("clr_out");
+				})){
+				delete attr.parent;
+				delete attr.initial_value;
+			}
+
+			return $p.DataManager.prototype.sync_grid.call(this, attr, grid);
 		}
 	}
 });
