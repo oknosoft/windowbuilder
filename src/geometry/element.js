@@ -322,7 +322,7 @@ BuilderElement.prototype.__define({
 			];
 
 			// дополняем свойства поля цвет отбором по служебным цветам
-			$p.cat.clrs.selection_exclude_service(_xfields.clr);
+			$p.cat.clrs.selection_exclude_service(_xfields.clr, t);
 
 
 			return {

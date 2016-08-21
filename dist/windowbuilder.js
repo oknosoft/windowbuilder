@@ -1750,9 +1750,6 @@ function EditorAccordion(_editor, cell_acc) {
 				_obj.s = _editor.project.area;
 			}
 
-			// корректируем метаданные поля выбора цвета
-			$p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"));
-
 			this.__define({
 
 				attache: {
@@ -1760,6 +1757,9 @@ function EditorAccordion(_editor, cell_acc) {
 
 						_obj = obj;
 						obj = null;
+
+						// корректируем метаданные поля выбора цвета
+						$p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"), _obj);
 
 						if(_grid && _grid.destructor)
 							_grid.destructor();
@@ -5994,7 +5994,7 @@ BuilderElement.prototype.__define({
 			];
 
 			// дополняем свойства поля цвет отбором по служебным цветам
-			$p.cat.clrs.selection_exclude_service(_xfields.clr);
+			$p.cat.clrs.selection_exclude_service(_xfields.clr, t);
 
 
 			return {
@@ -12010,7 +12010,7 @@ function ToolLayImpost(){
 		}];
 
 		// дополняем свойства поля цвет отбором по служебным цветам
-		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr);
+		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr, sys);
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
 		tool._grid = tool.wnd.attachHeadFields({
@@ -12975,7 +12975,7 @@ function ToolPen(){
 		}];
 
 		// дополняем свойства поля цвет отбором по служебным цветам
-		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr);
+		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr, sys);
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
 		tool._grid = tool.wnd.attachHeadFields({

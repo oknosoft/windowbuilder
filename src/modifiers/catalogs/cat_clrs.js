@@ -33,19 +33,56 @@ $p.cat.clrs.__define({
 	selection_exclude_service: {
 		value: function (mf, sys) {
 
-			if(!mf.choice_params)
+			if(mf.choice_params)
+				mf.choice_params.length = 0;
+			else
 				mf.choice_params = [];
-
-			if(mf.choice_params.some(function (ch) {
-					if(ch.name == "parent")
-						return true;
-				}))
-				return;
 
 			mf.choice_params.push({
 				name: "parent",
 				path: {not: $p.cat.clrs.predefined("СЛУЖЕБНЫЕ")}
 			});
+
+			if(sys){
+				mf.choice_params.push({
+					name: "ref",
+					get path(){
+
+						var clr_group, elm, res = [];
+
+						if(sys instanceof $p.Editor.BuilderElement){
+							elm = sys;
+							clr_group = sys.project._dp.sys.clr_group;
+
+						}else if(sys instanceof $p.DataProcessorObj){
+							clr_group = sys.sys.clr_group;
+
+						}else{
+							clr_group = sys.clr_group;
+
+						}
+
+						if(clr_group.empty() || !clr_group.clr_conformity.count()){
+							$p.cat.clrs.alatable.forEach(function (row) {
+								if(!row.is_folder)
+									res.push(row.ref);
+							})
+						}else{
+							$p.cat.clrs.alatable.forEach(function (row) {
+								if(!row.is_folder){
+									if(clr_group.clr_conformity._obj.some(function (cg) {
+											return row.parent == cg.clr1 || row.ref == cg.clr1;
+										}))
+										res.push(row.ref);
+								}
+							})
+						}
+						return {in: res};
+					}
+				});
+			}
+
+
 		}
 	},
 
@@ -58,7 +95,6 @@ $p.cat.clrs.__define({
 			attr.hide_filter = true;
 
 			var wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr),
-				toolbar = wnd.elmnts.filter,
 				eclr = this.get($p.utils.blank.guid, false, true);
 
 			function get_option_list(val, selection) {
@@ -69,60 +105,67 @@ $p.cat.clrs.__define({
 				return this.constructor.prototype.get_option_list.call(this, val, selection);
 			}
 
-			toolbar.__define({
-				get_filter: {
-					value: function () {
-						var res = {
-							selection: []
-						};
-						if(clr_in.getSelectedValue())
-							res.selection.push({clr_in: clr_in.getSelectedValue()});
-						if(clr_out.getSelectedValue())
-							res.selection.push({clr_out: clr_out.getSelectedValue()});
-						if(res.selection.length)
-							res.hide_tree = true;
-						return res;
-					}
-				}
-			});
+			return (wnd instanceof Promise ? wnd : Promise.resolve(wnd))
+				.then(function (wnd) {
 
-			wnd.attachEvent("onClose", function(){
+					var tb_filter = wnd.elmnts.filter;
 
-				clr_in.unload();
-				clr_out.unload();
+					tb_filter.__define({
+						get_filter: {
+							value: function () {
+								var res = {
+									selection: []
+								};
+								if(clr_in.getSelectedValue())
+									res.selection.push({clr_in: clr_in.getSelectedValue()});
+								if(clr_out.getSelectedValue())
+									res.selection.push({clr_out: clr_out.getSelectedValue()});
+								if(res.selection.length)
+									res.hide_tree = true;
+								return res;
+							}
+						}
+					});
 
-				return true;
-			});
+					wnd.attachEvent("onClose", function(){
 
-			Object.unobserve(eclr);
+						clr_in.unload();
+						clr_out.unload();
 
-			// Создаём элементы управления
-			var clr_in = new $p.iface.OCombo({
-				parent: toolbar.div.obj,
-				obj: eclr,
-				field: "clr_in",
-				width: 150,
-				hide_frm: true,
-				get_option_list: get_option_list
-			}), clr_out = new $p.iface.OCombo({
-				parent: toolbar.div.obj,
-				obj: eclr,
-				field: "clr_out",
-				width: 150,
-				hide_frm: true,
-				get_option_list: get_option_list
-			});
+						return true;
+					});
 
-			clr_in.DOMelem.style.float = "left";
-			clr_in.DOMelem_input.placeholder = "Цвет изнутри";
-			clr_out.DOMelem_input.placeholder = "Цвет снаружи";
+					Object.unobserve(eclr);
 
-			clr_in.attachEvent("onChange", toolbar.call_event);
-			clr_out.attachEvent("onChange", toolbar.call_event);
-			clr_in.attachEvent("onBlur", toolbar.call_event);
-			clr_out.attachEvent("onBlur", toolbar.call_event);
+					// Создаём элементы управления
+					var clr_in = new $p.iface.OCombo({
+						parent: tb_filter.div.obj,
+						obj: eclr,
+						field: "clr_in",
+						width: 150,
+						hide_frm: true,
+						get_option_list: get_option_list
+					}), clr_out = new $p.iface.OCombo({
+						parent: tb_filter.div.obj,
+						obj: eclr,
+						field: "clr_out",
+						width: 150,
+						hide_frm: true,
+						get_option_list: get_option_list
+					});
 
-			return wnd;
+					clr_in.DOMelem.style.float = "left";
+					clr_in.DOMelem_input.placeholder = "Цвет изнутри";
+					clr_out.DOMelem_input.placeholder = "Цвет снаружи";
+
+					clr_in.attachEvent("onChange", tb_filter.call_event);
+					clr_out.attachEvent("onChange", tb_filter.call_event);
+					clr_in.attachEvent("onClose", tb_filter.call_event);
+					clr_out.attachEvent("onClose", tb_filter.call_event);
+
+					return wnd;
+
+				})
 		}
 	}
 });

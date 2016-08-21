@@ -94,7 +94,7 @@ function ToolLayImpost(){
 		}];
 
 		// дополняем свойства поля цвет отбором по служебным цветам
-		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr);
+		$p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr, sys);
 
 		tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
 		tool._grid = tool.wnd.attachHeadFields({
