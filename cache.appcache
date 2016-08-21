@@ -20,10 +20,11 @@ https://cdn.jsdelivr.net/g/momentjs,alasql,pouchdb,jquery@2.2,metadata@0.11.218(
 # А эти - только в дебагере
 # //oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
 # //oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.css
+lib/metadata.min.js
 lib/paper-core.min.js
 lib/qrcodejs/qrcode.js
-dist/windowbuilder.min.js
-dist/wnd_debug.min.js
+dist/windowbuilder.js
+dist/wnd_debug.js
 
 
 # css и картинки
