@@ -134,10 +134,7 @@
 					"Контактная информация": ["partner", "client_of_dealer", "phone",
 						{id: "shipping_address", path: "o.shipping_address", synonym: "Адрес доставки", type: "addr", txt: o["shipping_address"]}
 					],
-					"Дополнительные реквизиты": [
-						{id: "obj_delivery_state", path: "o.obj_delivery_state", synonym: "Состояние транспорта", type: "ro", txt: o["obj_delivery_state"].presentation},
-						"category"
-					]
+					"Дополнительные реквизиты": ["obj_delivery_state", "category"]
 				}
 			});
 
@@ -365,7 +362,6 @@
 			});
 		}
 
-
 		function save(action){
 
 			function do_save(post){
@@ -440,6 +436,7 @@
 			return true;
 		}
 
+		// устанавливает видимость и доступность
 		function set_editable(){
 
 			// статусы
@@ -475,6 +472,11 @@
 			if(!$p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
 				wnd.elmnts.frm_toolbar.hideItem("btn_post");
 				wnd.elmnts.frm_toolbar.hideItem("btn_unpost");
+			}
+
+			// если не технологи и не менеджер - запрещаем менять статусы
+			if(!$p.current_acl.role_available("ИзменениеТехнологическойНСИ") && !$p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
+				wnd.elmnts.pg_left.cells("obj_delivery_state", 1).setDisabled(true);
 			}
 
 			// кнопки записи и отправки гасим в зависимости от статуса
