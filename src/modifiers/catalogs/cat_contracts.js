@@ -27,7 +27,7 @@ $p.cat.contracts.__define({
 			res.sort(function (a, b) {
 				return a.date > b.date;
 			});
-			return res.length ? res[0] : _mgr.get();
+			return res.length ? res[0] : this.get();
 		}
 	}
 

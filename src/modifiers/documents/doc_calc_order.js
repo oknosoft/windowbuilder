@@ -44,7 +44,7 @@ $p.doc.calc_order.on({
 		});
 
 		//Договор
-		obj.contract = $p.cat.contracts.by_partner_and_org(obj.partner, obj.organization);
+		this.contract = $p.cat.contracts.by_partner_and_org(obj.partner, obj.organization);
 
 		//Менеджер
 		obj.manager = $p.current_user;
@@ -134,7 +134,7 @@ $p.doc.calc_order.on({
 		}else if(attr.field == "partner" && this.contract.owner != attr.value){
 			this.contract = $p.cat.contracts.by_partner_and_org(attr.value, this.organization);
 
-			// табчасть продукции
+		// табчасть продукции
 		}else if(attr.tabular_section == "production"){
 
 			if(attr.field == "nom" || attr.field == "characteristic"){
@@ -156,6 +156,35 @@ $p.doc.calc_order.on({
 
 				attr.row.amount_internal = (attr.row.price_internal * ((100 - attr.row.discount_percent_internal)/100) * attr.row.quantity).round(2);
 
+				// ставка и сумма НДС
+				if(this.vat_consider){
+					attr.row.vat_rate = attr.row.nom.vat_rate.empty() ? $p.enm.vat_rates.НДС18 : attr.row.nom.vat_rate;
+					switch (attr.row.vat_rate){
+						case $p.enm.vat_rates.НДС18:
+						case $p.enm.vat_rates.НДС18_118:
+							attr.row.vat_amount = (attr.row.amount * 18 / 118).round(2);
+							break;
+						case $p.enm.vat_rates.НДС10:
+						case $p.enm.vat_rates.НДС10_110:
+							attr.row.vat_amount = (attr.row.amount * 10 / 110).round(2);
+							break;
+						case $p.enm.vat_rates.НДС20:
+						case $p.enm.vat_rates.НДС20_120:
+							attr.row.vat_amount = (attr.row.amount * 20 / 120).round(2);
+							break;
+						case $p.enm.vat_rates.НДС0:
+						case $p.enm.vat_rates.БезНДС:
+							attr.row.vat_amount = 0;
+							break;
+					}
+					if(!this.vat_included){
+						attr.row.amount += attr.row.vat_amount;
+					}
+				}else{
+					attr.row.vat_rate = $p.enm.vat_rates.БезНДС;
+					attr.row.vat_amount = 0;
+				}
+
 				this.doc_amount = this.production.aggregate([], ["amount"]).round(2);
 				this.amount_internal = this.production.aggregate([], ["amount_internal"]).round(2);
 
@@ -168,6 +197,7 @@ $p.doc.calc_order.on({
 });
 
 // свойства и методы объекта
+delete $p.DocCalc_order.prototype.contract;
 $p.DocCalc_order.prototype.__define({
 
 
@@ -178,6 +208,18 @@ $p.DocCalc_order.prototype.__define({
 		get: function () {
 			var currency = this.contract.settlements_currency;
 			return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
+		}
+	},
+
+	/**
+	 * При установке договора, синхронно устанавливаем параметры НДС
+	 */
+	contract: {
+		get: function(){return this._getter('contract')},
+		set: function(v){
+			this._setter('contract',v);
+			this.vat_consider = this.contract.vat_consider;
+			this.vat_included = this.contract.vat_included;
 		}
 	},
 
