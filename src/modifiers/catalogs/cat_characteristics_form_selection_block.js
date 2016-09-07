@@ -171,7 +171,7 @@
 					// фильтруем по подстроке
 					crefs.length = 0;
 					ares.forEach(function (o) {
-						var presentation = (o.calc_order_row.note || o.note || o.name) + "&lt;br /&gt;" + o.owner.name;
+						var presentation = (o.calc_order_row.note || o.note || o.name) + "<br />" + o.owner.name;
 						if(!attr.filter || presentation.indexOf(attr.filter) != -1)
 							crefs.push({
 								ref: o.ref,

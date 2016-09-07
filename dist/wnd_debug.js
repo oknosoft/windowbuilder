@@ -3672,7 +3672,7 @@ $p.CatCharacteristics.prototype.__define({
 					// фильтруем по подстроке
 					crefs.length = 0;
 					ares.forEach(function (o) {
-						var presentation = (o.calc_order_row.note || o.note || o.name) + "&lt;br /&gt;" + o.owner.name;
+						var presentation = (o.calc_order_row.note || o.note || o.name) + "<br />" + o.owner.name;
 						if(!attr.filter || presentation.indexOf(attr.filter) != -1)
 							crefs.push({
 								ref: o.ref,
@@ -9058,28 +9058,29 @@ $p.iface.OSvgs = function (manager, layout, area) {
 						_obj = Promise.resolve({production: _obj.production._obj});
 
 					_obj.then(function (res) {
-							// Для продукций заказа получаем вложения
-							var aatt = [];
+
+						// Для продукций заказа получаем вложения
+						var aatt = [];
+						if(res.production)
 							res.production.forEach(function (row) {
 								if(!$p.utils.is_empty_guid(row.characteristic))
-									aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg").catch(function (err) {
-
-									}));
-							});
-							_obj = null;
-							return Promise.all(aatt);
-						})
-						.then(function (res) {
-							// Извлекаем из блоба svg-текст эскизов
-							var aatt = [];
-							res.forEach(function (row) {
-								if(row instanceof Blob && row.size)
-									aatt.push($p.utils.blob_as_text(row));
-							});
-							return Promise.all(aatt);
-						})
-						.then(draw_svgs)
-						.catch($p.record_log);
+									aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg")
+										.catch(function (err) {}));
+						});
+						_obj = null;
+						return Promise.all(aatt);
+					})
+					.then(function (res) {
+						// Извлекаем из блоба svg-текст эскизов
+						var aatt = [];
+						res.forEach(function (row) {
+							if(row instanceof Blob && row.size)
+								aatt.push($p.utils.blob_as_text(row));
+						});
+						return Promise.all(aatt);
+					})
+					.then(draw_svgs)
+					.catch($p.record_log);
 
 					stack.length = 0;
 				}
