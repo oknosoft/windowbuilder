@@ -228,8 +228,7 @@ $p.DocCalc_order.prototype.__define({
 	 */
 	print_data: {
 		get: function () {
-			var our_bank_account = this.organizational_unit && !this.organizational_unit.empty() && this.organizational_unit._manager == cat.organization_bank_accounts ?
-					this.organizational_unit : this.organization.main_bank_account,
+			var our_bank_account = this.bank_account && !this.bank_account.empty() ? this.bank_account : this.organization.main_bank_account,
 				get_imgs = [];
 
 			// заполняем res теми данными, которые доступны синхронно

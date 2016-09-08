@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 000000000131
+# 000000000133
 
 # Additional resources to cache
 CACHE:
@@ -10,7 +10,7 @@ CACHE:
 
 # Эти позиции включаем только в продакшене
 #
-https://cdn.jsdelivr.net/g/momentjs@2.14,alasql@0.3,pouchdb@6.0,jquery@2.2,metadata@0.11.218(dhtmlx.min.js)
+https://cdn.jsdelivr.net/g/momentjs@2.14,alasql@0.3,pouchdb@6.0,jquery@2.2,metadata@0.11.219(dhtmlx.min.js+metadata.min.js)
 
 # На период отладки, берём metadata и dhtmlx c нашего сайта
 #//cdn.jsdelivr.net/g/momentjs,alasql,pouchdb,jquery@2.2
@@ -18,9 +18,8 @@ https://cdn.jsdelivr.net/g/momentjs@2.14,alasql@0.3,pouchdb@6.0,jquery@2.2,metad
 #lib/dhtmlx.min.js
 
 # А эти - только в дебагере
-# //oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
-# //oknosoft.github.io/metadata.js/lib/dhtmlxscheduler/dhtmlxscheduler.css
-lib/metadata.min.js
+# //metadata.js.org/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
+# //metadata.js.org/lib/dhtmlxscheduler/dhtmlxscheduler.css
 lib/paper-core.min.js
 lib/qrcodejs/qrcode.js
 dist/windowbuilder.js
@@ -32,7 +31,7 @@ dist/wnd_debug.js
 https://cdn.jsdelivr.net/fontawesome/4.6.3/css/font-awesome.min.css
 https://cdn.jsdelivr.net/fontawesome/4.6.3/fonts/fontawesome-webfont.woff2?v=4.6.3
 
-https://cdn.jsdelivr.net/g/metadata@0.11.218(dhx_terrace.css+metadata.css)
+https://cdn.jsdelivr.net/g/metadata@0.11.219(dhx_terrace.css+metadata.css)
 
 #
 dist/windowbuilder.css

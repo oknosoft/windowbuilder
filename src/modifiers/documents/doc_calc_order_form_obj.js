@@ -156,8 +156,12 @@
 				oxml: {
 					"Налоги": ["vat_consider", "vat_included"],
 					"Аналитика": ["project",
-						{id: "organization", path: "o.organization", synonym: "Организация", type: "refc", txt: o["organization"].presentation},
-						"contract", "organizational_unit", "department"],
+						{id: "organization", path: "o.organization", synonym: "Организация", type: "refc"},
+						{id: "contract", path: "o.contract", synonym: "Договор", type: "refc"},
+						{id: "bank_account", path: "o.bank_account", synonym: "Счет организации", type: "refc"},
+						{id: "department", path: "o.department", synonym: "Офис продаж", type: "refc"},
+						{id: "warehouse", path: "o.warehouse", synonym: "Склад отгрузки", type: "refc"},
+						],
 					"Итоги": [{id: "doc_currency", path: "o.doc_currency", synonym: "Валюта документа", type: "ro", txt: o["doc_currency"].presentation},
 						{id: "doc_amount", path: "o.doc_amount", synonym: "Сумма", type: "ron", txt: o["doc_amount"]},
 						{id: "amount_internal", path: "o.amount_internal", synonym: "Сумма внутр", type: "ron", txt: o["amount_internal"]}]
