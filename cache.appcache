@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 000000000135
+# 000000000142
 
 # Additional resources to cache
 CACHE:
@@ -54,7 +54,6 @@ dist/imgs/projects_48.png
 
 # All other resources (e.g. sites) require the user to be online.
 NETWORK:
-
-# данные - xml-ки форм, панелей и менюшек
-
 *
+http://*
+https://*
