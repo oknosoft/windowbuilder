@@ -10,10 +10,10 @@ CACHE:
 
 # Эти позиции включаем только в продакшене
 #
-https://cdn.jsdelivr.net/g/momentjs@2.14,alasql@0.3,pouchdb@6.0,jquery@2.2,metadata@0.11.219(dhtmlx.min.js)
+https://cdn.jsdelivr.net/g/momentjs@2.15,alasql@0.3,pouchdb@6.0,jquery@2.2,metadata@0.11.220(dhtmlx.min.js+metadata.min.js)
 
 # На период отладки, берём metadata и dhtmlx c нашего сайта
-lib/metadata.min.js
+#lib/metadata.min.js
 #lib/dhtmlx.min.js
 
 # А эти - только в дебагере
@@ -29,10 +29,7 @@ dist/wnd_debug.js
 
 https://cdn.jsdelivr.net/fontawesome/4.6.3/css/font-awesome.min.css
 https://cdn.jsdelivr.net/fontawesome/4.6.3/fonts/fontawesome-webfont.woff2?v=4.6.3
-
-https://cdn.jsdelivr.net/g/metadata@0.11.219(dhx_terrace.css+metadata.css)
-
-#
+https://cdn.jsdelivr.net/g/metadata@0.11.220(dhx_terrace.css+metadata.css)
 dist/windowbuilder.css
 
 #
