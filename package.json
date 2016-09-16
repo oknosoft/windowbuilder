@@ -4,9 +4,7 @@
   "version" : "0.1.0",
   "main"    : "electron.js",
   "dependencies": {
-    "metadata-js": ">=0.11",
-    "http-proxy": ">=1.14",
-    "request": ">=2.74"
+    "metadata-js": ">=0.11"
   },
   "devDependencies": {
     "gulp": ">=3.9",

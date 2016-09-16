@@ -57,7 +57,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 	carousel.conf.anim_step = 200;
 	carousel.conf.anim_slide = "left 0.1s";
 
-	var wnd = this.form_selection(carousel.cells("list"), attr),
+	var wnd = this.constructor.prototype.form_selection.call(this, carousel.cells("list"), attr),
 		report;
 
 	// настраиваем фильтр для списка заказов

@@ -79,7 +79,8 @@ $p.iface.OSvgs = function (manager, layout, area) {
 		else if(layout.getDimension){
 			var dim = layout.getDimension();
 			layout.setDimension(dim[0], dim[1]);
-			layout.maximize();
+			if(!layout.do_not_maximize)
+				layout.maximize();
 		}
 
 		minmax.style.backgroundPositionX = area_hidden ? "-32px" : "0px";
