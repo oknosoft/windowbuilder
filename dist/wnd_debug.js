@@ -7126,8 +7126,10 @@ $p.doc.calc_order.on({
 	value_change: function (attr) {
 
 		// реквизиты шапки
-		if(attr.field == "organization" && this.contract.organization != attr.value){
-			this.contract = $p.cat.contracts.by_partner_and_org(this.partner, attr.value);
+		if(attr.field == "organization"){
+			this.new_number_doc();
+			if(this.contract.organization != attr.value)
+				this.contract = $p.cat.contracts.by_partner_and_org(this.partner, attr.value);
 
 		}else if(attr.field == "partner" && this.contract.owner != attr.value){
 			this.contract = $p.cat.contracts.by_partner_and_org(attr.value, this.organization);
