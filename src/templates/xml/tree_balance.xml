@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tree id="0">
+    <item id="doc.debit_cash_order" text="Приходный кассовый ордер" select="1"><icons file="icon_1c_doc" /></item>
+    <item id="doc.credit_card_order" text="Оплата от покупателя платежной картой"><icons file="icon_1c_doc" /></item>
+    <item id="doc.debit_bank_order" text="Платежное поручение входящее"><icons file="icon_1c_doc" /></item>
+    <item id="doc.selling" text="Реализация товаров и услуг"><icons file="icon_1c_doc" /></item>
+</tree>

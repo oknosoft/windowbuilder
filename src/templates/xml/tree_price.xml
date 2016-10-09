@@ -8,9 +8,9 @@
     <item id="cat.nom_prices_types" text="Виды цен"><icons file="icon_1c_cat" /></item>
     <item id="cat.price_groups" text="Ценовые группы"><icons file="icon_1c_cat" /></item>
     <item id="cat.currencies" text="Валюты"><icons file="icon_1c_cat" /></item>
-    <item id="ireg.currency_courses" select="1" text="Курсы валют"><icons file="icon_1c_ireg" /></item>
+    <item id="ireg.currency_courses" text="Курсы валют"><icons file="icon_1c_ireg" /></item>
     <item id="ireg.margin_coefficients" text="Маржинальные коэффициенты"><icons file="icon_1c_ireg" /></item>
-    <item id="doc.nom_prices_setup" text="Установка цен номенклатуры"><icons file="icon_1c_doc" /></item>
+    <item id="doc.nom_prices_setup" text="Установка цен номенклатуры" select="1"><icons file="icon_1c_doc" /></item>
     <item id="cch.predefined_elmnts" text="Константы и списки"><icons file="icon_1c_cch" /></item>
 
 </tree>

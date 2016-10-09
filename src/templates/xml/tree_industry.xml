@@ -3,7 +3,7 @@
     <item id="cat.nom_kinds" text="Виды номенклатуры"><icons file="icon_1c_cat" /></item>
     <item id="cat.nom_groups" text="Номенклатурные группы"><icons file="icon_1c_cat" /></item>
     <item id="cat.nom" text="Номенклатура"><icons file="icon_1c_cat" /></item>
-    <item id="cat.production_params" text="Параметры продукции" select="1" tooltip="системы профилей"><icons file="icon_1c_cat" /></item>
+    <item id="cat.production_params" text="Параметры продукции" select="1"><icons file="icon_1c_cat" /></item>
     <item id="cat.cnns" text="Соединения"><icons file="icon_1c_cat" /></item>
     <item id="cat.inserts" text="Вставки"><icons file="icon_1c_cat" /></item>
     <item id="cat.furns" text="Фурнитура"><icons file="icon_1c_cat" /></item>

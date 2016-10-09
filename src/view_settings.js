@@ -96,7 +96,8 @@ $p.iface.view_settings = function (cell) {
 			tabs: [
 				{id: "const", text: '<i class="fa fa-key"></i> Общее', active: true},
 				{id: "industry", text: '<i class="fa fa-industry"></i> Технология'},
-				{id: "price", text: '<i class="fa fa-money"></i> Учет'},
+				{id: "price", text: '<i class="fa fa-sliders"></i> Учет'},
+				{id: "balance", text: '<i class="fa fa-money"></i> Оплата'},
 				{id: "events", text: '<i class="fa fa-calendar-check-o"></i> Планирование'}
 			]
 		});
@@ -293,6 +294,30 @@ $p.iface.view_settings = function (cell) {
 		t.price.tree.loadStruct($p.injected_data["tree_price.xml"]);
 		t.price.tree.attachEvent("onSelect", function (name) {
 			$p.md.mgr_by_class_name(name).form_list(t.price.layout.cells("b"), {hide_header: true});
+		});
+
+		// закладка оплат и отгрузок
+		t.balance = {
+			layout: t.tabs.cells("balance").attachLayout({
+				pattern: "2U",
+				cells: [{
+					id: "a",
+					text: "Разделы",
+					collapsed_text: "Разделы",
+					width: 200
+				}, {
+					id: "b",
+					text: "Раздел",
+					header: false
+				}],
+				offsets: { top: 0, right: 0, bottom: 0, left: 0}
+			})
+		};
+		// дерево документов оплаты и отгрузки
+		t.balance.tree = t.balance.layout.cells("a").attachTreeView();
+		t.balance.tree.loadStruct($p.injected_data["tree_balance.xml"]);
+		t.balance.tree.attachEvent("onSelect", function (name) {
+			$p.md.mgr_by_class_name(name).form_list(t.balance.layout.cells("b"), {hide_header: true});
 		});
 
 		// закладка планирования

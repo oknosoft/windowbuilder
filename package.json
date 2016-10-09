@@ -2,6 +2,9 @@
   "name"    : "windowbuilder",
   "description": "Order dealer for windows and stained glass",
   "version" : "0.1.0",
+  "author": "Evgeniy Malyarov <info@oknosoft.ru> (http://www.oknosoft.ru)",
+  "license" : "SEE LICENSE IN LICENSE.en.md",
+  "private": true,
   "main"    : "electron.js",
   "dependencies": {
     "metadata-js": ">=0.11"
@@ -21,10 +24,10 @@
     "node": ">=6.0"
   },
   "homepage": "http://www.oknosoft.ru/zd/",
-  "license" : "SEE LICENSE IN LICENSE.en.md",
+
   "config": {
-    "couchdb": "/couchdb/wb_",
-    "couchdb1": "http://i980:5984/wb_",
+    "couchdb1": "/couchdb/wb_",
+    "couchdb": "http://cou206:5984/wb_",
     "zone": 1,
     "zone_demo": 1,
     "prefix": "wb_",
