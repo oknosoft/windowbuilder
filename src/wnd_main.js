@@ -81,8 +81,8 @@ $p.on({
 		prm.zone_demo = 1;
 
 		// расположение couchdb
-		prm.couch_path = "http://cou206:5984/wb_";
-		//prm.couch_path = "/couchdb/wb_";
+		//prm.couch_path = "http://cou206:5984/wb_";
+		prm.couch_path = "/couchdb/wb_";
 
 		// логин гостевого пользователя couchdb
 		prm.guest_name = "guest";

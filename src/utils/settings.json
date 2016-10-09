@@ -17,7 +17,7 @@
     "socket": 0
   },
   "pouch": {
-    "path": "http://cou206:5984/wb_",
+    "path": "/couchdb/wb_",
     "zone": 0,
     "prefix": "wb_",
     "suffix": ""
