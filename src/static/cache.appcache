@@ -1,0 +1,35 @@
+CACHE MANIFEST
+# 000000000145
+
+# Additional resources to cache
+CACHE:
+
+# Заголовок и библиотеки
+# /
+index.html
+manifest.json
+# 2.about.8c109d06e40c7110eb12.js
+# app.689e06216cd1c02a188d.js
+# vendor.5482a5c0eeea19451966.js
+
+# шрифты
+https://fonts.googleapis.com/css?family=Roboto
+https://fonts.gstatic.com/s/roboto/v15/mErvLBYg_cXG3rLvUsKT_fesZW2xOQ-xsNqO47m55DA.woff2
+https://fonts.gstatic.com/s/roboto/v15/CWB0XYA8bzo0kSThX0UTuA.woff2
+
+# css и картинки
+# app.e9c186ae118d2102512cadf88b549c49.css
+favicon.ico
+barcode32.png
+barcode144.png
+
+
+# offline.html will be displayed if the user is offline
+# FALLBACK:
+/ index.html
+
+# All other resources (e.g. sites) require the user to be online.
+NETWORK:
+*
+http://*
+https://*

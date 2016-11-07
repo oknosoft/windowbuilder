@@ -24,8 +24,7 @@ gulp.task('build-iface', function(){
 		'./data/merged_wb_templates.js',
 		'./src/modifiers/**/*.js',
 		'./src/widgets/*.js',
-		'./src/wnd_main.js',
-		'./src/view_*.js'
+		'./src/wnd_main.js'
 	])
 		.pipe(concat('wnd_debug.js'))
 		.pipe(umd({
@@ -44,7 +43,6 @@ gulp.task('build-iface', function(){
 gulp.task('build-lib', function(){
 	return gulp.src([
 		'./lib/baron/baron.js',
-		'./src/i18n.ru.js',
 		'./src/editor/*.js',
 		'./src/geometry/*.js',
 		'./src/tools/*.js',

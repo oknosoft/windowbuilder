@@ -115,11 +115,11 @@ $p.doc.calc_order.on({
 			}
 		});
 
-		this.doc_amount = doc_amount;
-		this.amount_internal = amount_internal;
+		this.doc_amount = doc_amount.round(2);
+		this.amount_internal = amount_internal.round(2);
 		this.sys_profile = sys_profile;
 		this.sys_furn = sys_furn;
-		this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency);
+		this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(2);
 
 		this._obj.partner_name = this.partner.name;
 	},
@@ -180,7 +180,7 @@ $p.doc.calc_order.on({
 							break;
 					}
 					if(!this.vat_included){
-						attr.row.amount += attr.row.vat_amount;
+						attr.row.amount = (attr.row.amount + attr.row.vat_amount).round(2);
 					}
 				}else{
 					attr.row.vat_rate = $p.enm.vat_rates.БезНДС;
@@ -222,6 +222,38 @@ $p.DocCalc_order.prototype.__define({
 			this._setter('contract',v);
 			this.vat_consider = this.contract.vat_consider;
 			this.vat_included = this.contract.vat_included;
+		}
+	},
+
+	dispatching_totals: {
+		value: function () {
+
+			options = {
+				reduce: true,
+				limit: 10000,
+				group: true,
+				keys: []
+			};
+			this.production.forEach(function (row) {
+				if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory){
+					options.keys.push([row.characteristic.ref, "305e374b-3aa9-11e6-bf30-82cf9717e145", 1, 0])
+				}
+			});
+
+			return $p.wsql.pouch.remote.doc.query('server/dispatching', options)
+				.then(function (result) {
+					var res = {};
+					result.rows.forEach(function (row) {
+						if(row.value.plan){
+							row.value.plan = $p.moment(row.value.plan).format("L")
+						}
+						if(row.value.fact){
+							row.value.fact = $p.moment(row.value.fact).format("L")
+						}
+						res[row.key[0]] = row.value
+					});
+					return res;
+				});
 		}
 	},
 
@@ -439,9 +471,9 @@ $p.DocCalc_order.prototype.__define({
 					ЦенаВнутр: row.price_internal,
 					СкидкаПроцент: row.discount_percent,
 					СкидкаПроцентВнутр: row.discount_percent_internal,
-					Скидка: row.discount,
-					Сумма: row.amount,
-					СуммаВнутр: row.amount_internal
+					Скидка: row.discount.round(2),
+					Сумма: row.amount.round(2),
+					СуммаВнутр: row.amount_internal.round(2)
 				};
 
 			product.glasses.forEach(function (row) {

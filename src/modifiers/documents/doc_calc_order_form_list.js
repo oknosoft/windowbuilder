@@ -9,7 +9,7 @@
 
 $p.doc.calc_order.form_list = function(pwnd, attr){
 
-	if(!attr)
+	if(!attr){
 		attr = {
 			hide_header: true,
 			date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
@@ -21,6 +21,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 				$p.iface.set_hash(_mgr.class_name, rId, "doc");
 			}
 		};
+	}
+
+	// вместо пагинации используем умную загрузку
+	//attr.smart_rendering = true;
+
+	// несмотря на отсутствие пагинации, показываем стстусбар
+	//attr.status_bar = true;
 
 	// разбивка на 2 колонки - дерево и карусель
 	var layout = pwnd.attachLayout({
