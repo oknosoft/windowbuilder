@@ -74,24 +74,24 @@ class AppContainer extends Component {
     $p.rx_events(store);
 
     // меняем подписки на события pouchdb
-    $p.adapters.pouch.removeAllListeners('pouch_no_data');
-    $p.adapters.pouch.on('pouch_no_data', () => {
-
-      const {username, password} = $p.job_prm.guests[0]
-
-      // информируем систему о первом запуске
-      store.dispatch(
-        $p.rx_actions.POUCH_NO_DATA($p.adapters.pouch, username, $p.aes.Ctr.decrypt(password))
-      )
-
-      setTimeout(function () {
-        // попытка авторизации под гостевым пользователем
-        store.dispatch(
-          $p.rx_actions.USER_TRY_LOG_IN($p.adapters.pouch, username, $p.aes.Ctr.decrypt(password))
-        )
-      })
-
-    });
+    // $p.adapters.pouch.removeAllListeners('pouch_no_data');
+    // $p.adapters.pouch.on('pouch_no_data', () => {
+    //
+    //   const {username, password} = $p.job_prm.guests[0]
+    //
+    //   // информируем систему о первом запуске
+    //   store.dispatch(
+    //     $p.rx_actions.POUCH_NO_DATA($p.adapters.pouch, username, $p.aes.Ctr.decrypt(password))
+    //   )
+    //
+    //   setTimeout(function () {
+    //     // попытка авторизации под гостевым пользователем
+    //     store.dispatch(
+    //       $p.rx_actions.USER_TRY_LOG_IN($p.adapters.pouch, username, $p.aes.Ctr.decrypt(password))
+    //     )
+    //   })
+    //
+    // });
 
     // информируем хранилище о готовности MetaEngine
     store.dispatch($p.rx_actions.META_LOADED($p))

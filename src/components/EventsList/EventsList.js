@@ -185,9 +185,8 @@ export default class EventsList extends Component {
       _top: increment,
       _skip: startIndex,
       _key: {
-        startkey: ['doc.planning_event', 2000],
-        endkey: ['doc.planning_event', 2020],
-        _order_by: 'des'
+        startkey: ['draft', 2000],
+        endkey: ['draft', 2020]
       }
     }
 

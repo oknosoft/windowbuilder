@@ -1,8 +1,8 @@
 {
   "lang": "ru",
-  "name": "Штрихкоды",
-  "short_name": "Штрихкоды",
-  "description": "Демо штрихкоды",
+  "name": "Закакз дилера",
+  "short_name": "Заказы",
+  "description": "Закакз дилера",
   "icons": [
     {
       "src": "barcode32.png",

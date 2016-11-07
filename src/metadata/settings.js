@@ -12,10 +12,7 @@ export default function settings(prm) {
     local_storage_prefix: "wb_",
 
     // гостевые пользователи для демо-режима
-    guests: [{
-      username: "Рабочий",
-      password: "1gNjzYQKBlcD"
-    }],
+    guests: [],
 
     // если понадобится обратиться к 1С, будем использовать irest
     irest_enabled: true,
@@ -24,7 +21,8 @@ export default function settings(prm) {
     rest_path: "",
 
     // расположение couchdb
-    couch_path: "http://cou206:5984/wb_",
+    couch_path: "/couchdb/wb_",
+    //couch_path: "http://cou206:5984/wb_",
     //couch_path: "https://light.oknosoft.ru/couchdb/wb_",
 
     pouch_filter: {
