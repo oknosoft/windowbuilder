@@ -84,7 +84,7 @@ function mapStateToProps(state, props) {
     navlist_open: iface.navlist_open,
     show_notifications: false,
 
-    title: "Закакз дилера",
+    title: "Заказ дилера",
     sync_tooltip: meta.sync_started ? "Синхронизация выполняется" : "Синхронизация отключена",
     notifications_tooltip: "Сообщений нет",
     button_label: (state.meta.user.logged_in || state.meta.user.defined) ? state.meta.user.name : "Вход / регистрация",

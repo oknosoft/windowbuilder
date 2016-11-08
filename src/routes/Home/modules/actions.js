@@ -41,7 +41,7 @@ export const actions = {
 
   handleEdit: (row) => ({
     type: LOCATION_CHANGE,
-    payload: {pathname:'doc_planning_event/'+row.ref, search:'',hash:''}
+    payload: {pathname:'doc_calc_order/'+row.ref, search:'',hash:''}
   }),
   handleRevert: $p.rx_actions.OBJ_REVERT,
   handlePost: $p.rx_actions.obj_post,

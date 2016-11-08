@@ -9,6 +9,7 @@ import { LOCATION_CHANGE } from 'react-router-redux'
 
 // стили для react-data-grid
 import 'metadata-react-ui/react-data-grid.css'
+import 'react-flex-layout/react-flex-layout-splitter.css'
 import 'react-virtualized/styles.css'
 import 'react-virtualized-select/styles.css'
 
@@ -21,7 +22,12 @@ import settings from '../metadata/settings'
 // функция инициализации структуры метаданных
 import meta_init from '../metadata/init'
 
+// собственно, metaengine
 import $p from 'metadata'
+
+// модификатор отчета materials_demand
+import materials_demand from '../metadata/reports/materials_demand'
+
 
 export function handleLocationChange(store, pathname, search = '', hash = ''){
   store.dispatch({
@@ -73,25 +79,8 @@ class AppContainer extends Component {
     // подключаем обработчики событий плагином metadata-redux
     $p.rx_events(store);
 
-    // меняем подписки на события pouchdb
-    // $p.adapters.pouch.removeAllListeners('pouch_no_data');
-    // $p.adapters.pouch.on('pouch_no_data', () => {
-    //
-    //   const {username, password} = $p.job_prm.guests[0]
-    //
-    //   // информируем систему о первом запуске
-    //   store.dispatch(
-    //     $p.rx_actions.POUCH_NO_DATA($p.adapters.pouch, username, $p.aes.Ctr.decrypt(password))
-    //   )
-    //
-    //   setTimeout(function () {
-    //     // попытка авторизации под гостевым пользователем
-    //     store.dispatch(
-    //       $p.rx_actions.USER_TRY_LOG_IN($p.adapters.pouch, username, $p.aes.Ctr.decrypt(password))
-    //     )
-    //   })
-    //
-    // });
+    // выполняем модификаторы
+    materials_demand($p)
 
     // информируем хранилище о готовности MetaEngine
     store.dispatch($p.rx_actions.META_LOADED($p))

@@ -1,6 +1,8 @@
 // We only need to import the modules necessary for initial render
 import CoreLayout from '../layouts/CoreLayout/CoreLayout'
 import Home from './Home'
+import DataObjRoute from './DataObj'
+import DataListRoute from './DataList'
 import LoginRoute from './Login'
 import AboutRoute from './About'
 
@@ -14,7 +16,8 @@ export const createRoutes = (store) => ({
   childRoutes: [
     LoginRoute(store),
     AboutRoute(store),
-    //DataObjRoute(store)
+    DataListRoute(store),
+    DataObjRoute(store)
   ]
 })
 

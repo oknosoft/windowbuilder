@@ -9869,7 +9869,7 @@ $p.iface.view_settings = function (cell) {
 
 			// подключаем обработчик изменения значений в форме
 			t.form2.attachEvent("onChange", function (name, value, state){
-				
+
 				if(name == "hide_price"){
 					if(value == "hide_price_dealer"){
 						$p.wsql.set_user_param("hide_price_dealer", true);
@@ -9890,8 +9890,120 @@ $p.iface.view_settings = function (cell) {
 				$p.wsql.set_user_param("modifiers", this.value);
 			};
 
+      // закладка технологии
+      if($p.current_acl.role_available("ИзменениеТехнологическойНСИ")){
+        t.industry = {
+          layout: t.tabs.cells("industry").attachLayout({
+            pattern: "2U",
+            cells: [{
+              id: "a",
+              text: "Разделы",
+              collapsed_text: "Разделы",
+              width: 200
+            }, {
+              id: "b",
+              text: "Раздел",
+              header: false
+            }],
+            offsets: { top: 0, right: 0, bottom: 0, left: 0}
+          })
+        };
+        // дерево технологических справочников
+        t.industry.tree = t.industry.layout.cells("a").attachTreeView();
+        t.industry.tree.loadStruct($p.injected_data["tree_industry.xml"]);
+        t.industry.tree.attachEvent("onSelect", function (name) {
+          $p.md.mgr_by_class_name(name).form_list(t.industry.layout.cells("b"), {hide_header: true});
+        });
+
+      }else{
+        t.tabs.cells("industry").hide();
+      }
+
+      // закладка ценообразования
+      if($p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
+        t.price = {
+          layout: t.tabs.cells("price").attachLayout({
+            pattern: "2U",
+            cells: [{
+              id: "a",
+              text: "Разделы",
+              collapsed_text: "Разделы",
+              width: 200
+            }, {
+              id: "b",
+              text: "Раздел",
+              header: false
+            }],
+            offsets: { top: 0, right: 0, bottom: 0, left: 0}
+          })
+        };
+        // дерево справочников ценообразования
+        t.price.tree = t.price.layout.cells("a").attachTreeView();
+        t.price.tree.loadStruct($p.injected_data["tree_price.xml"]);
+        t.price.tree.attachEvent("onSelect", function (name) {
+          $p.md.mgr_by_class_name(name).form_list(t.price.layout.cells("b"), {hide_header: true});
+        });
+
+      }else{
+        t.tabs.cells("price").hide();
+      }
+
+
+      // закладка оплат и отгрузок
+      t.balance = {
+        layout: t.tabs.cells("balance").attachLayout({
+          pattern: "2U",
+          cells: [{
+            id: "a",
+            text: "Разделы",
+            collapsed_text: "Разделы",
+            width: 200
+          }, {
+            id: "b",
+            text: "Раздел",
+            header: false
+          }],
+          offsets: { top: 0, right: 0, bottom: 0, left: 0}
+        })
+      };
+      // дерево документов оплаты и отгрузки
+      t.balance.tree = t.balance.layout.cells("a").attachTreeView();
+      t.balance.tree.loadStruct($p.injected_data["tree_balance.xml"]);
+      t.balance.tree.attachEvent("onSelect", function (name) {
+        $p.md.mgr_by_class_name(name).form_list(t.balance.layout.cells("b"), {hide_header: true});
+      });
+
+      // закладка планирования
+      if($p.current_acl.role_available("СогласованиеРасчетовЗаказов") || $p.current_acl.role_available("ИзменениеТехнологическойНСИ")){
+        t.events = {
+          layout: t.tabs.cells("events").attachLayout({
+            pattern: "2U",
+            cells: [{
+              id: "a",
+              text: "Разделы",
+              collapsed_text: "Разделы",
+              width: 200
+            }, {
+              id: "b",
+              text: "Раздел",
+              header: false
+            }],
+            offsets: { top: 0, right: 0, bottom: 0, left: 0}
+          })
+        };
+        // дерево справочников планирования
+        t.events.tree = t.events.layout.cells("a").attachTreeView();
+        t.events.tree.loadStruct($p.injected_data["tree_events.xml"]);
+        t.events.tree.attachEvent("onSelect", function (name) {
+          $p.md.mgr_by_class_name(name).form_list(t.events.layout.cells("b"), {hide_header: true});
+        });
+
+      }else{
+        t.tabs.cells("events").hide();
+      }
+
 		}
-		
+
 		t.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 
 		// разделы настроек
@@ -10010,7 +10122,7 @@ $p.iface.view_settings = function (cell) {
 							$p.wsql.pouch.reset_local_data();
 					}
 				});
-				
+
 			}else if(name == "upload"){
 				$p.pricing.cut_upload();
 			}
@@ -10051,104 +10163,6 @@ $p.iface.view_settings = function (cell) {
 		}
 
 
-
-		// закладка технологии
-		t.industry = {
-			layout: t.tabs.cells("industry").attachLayout({
-				pattern: "2U",
-				cells: [{
-					id: "a",
-					text: "Разделы",
-					collapsed_text: "Разделы",
-					width: 200
-				}, {
-					id: "b",
-					text: "Раздел",
-					header: false
-				}],
-				offsets: { top: 0, right: 0, bottom: 0, left: 0}
-			})
-		};
-		// дерево технологических справочников
-		t.industry.tree = t.industry.layout.cells("a").attachTreeView();
-		t.industry.tree.loadStruct($p.injected_data["tree_industry.xml"]);
-		t.industry.tree.attachEvent("onSelect", function (name) {
-			$p.md.mgr_by_class_name(name).form_list(t.industry.layout.cells("b"), {hide_header: true});
-		});
-
-		// закладка ценообразования
-		t.price = {
-			layout: t.tabs.cells("price").attachLayout({
-				pattern: "2U",
-				cells: [{
-					id: "a",
-					text: "Разделы",
-					collapsed_text: "Разделы",
-					width: 200
-				}, {
-					id: "b",
-					text: "Раздел",
-					header: false
-				}],
-				offsets: { top: 0, right: 0, bottom: 0, left: 0}
-			})
-		};
-		// дерево справочников ценообразования
-		t.price.tree = t.price.layout.cells("a").attachTreeView();
-		t.price.tree.loadStruct($p.injected_data["tree_price.xml"]);
-		t.price.tree.attachEvent("onSelect", function (name) {
-			$p.md.mgr_by_class_name(name).form_list(t.price.layout.cells("b"), {hide_header: true});
-		});
-
-		// закладка оплат и отгрузок
-		t.balance = {
-			layout: t.tabs.cells("balance").attachLayout({
-				pattern: "2U",
-				cells: [{
-					id: "a",
-					text: "Разделы",
-					collapsed_text: "Разделы",
-					width: 200
-				}, {
-					id: "b",
-					text: "Раздел",
-					header: false
-				}],
-				offsets: { top: 0, right: 0, bottom: 0, left: 0}
-			})
-		};
-		// дерево документов оплаты и отгрузки
-		t.balance.tree = t.balance.layout.cells("a").attachTreeView();
-		t.balance.tree.loadStruct($p.injected_data["tree_balance.xml"]);
-		t.balance.tree.attachEvent("onSelect", function (name) {
-			$p.md.mgr_by_class_name(name).form_list(t.balance.layout.cells("b"), {hide_header: true});
-		});
-
-		// закладка планирования
-		t.events = {
-			layout: t.tabs.cells("events").attachLayout({
-				pattern: "2U",
-				cells: [{
-					id: "a",
-					text: "Разделы",
-					collapsed_text: "Разделы",
-					width: 200
-				}, {
-					id: "b",
-					text: "Раздел",
-					header: false
-				}],
-				offsets: { top: 0, right: 0, bottom: 0, left: 0}
-			})
-		};
-		// дерево справочников планирования
-		t.events.tree = t.events.layout.cells("a").attachTreeView();
-		t.events.tree.loadStruct($p.injected_data["tree_events.xml"]);
-		t.events.tree.attachEvent("onSelect", function (name) {
-			$p.md.mgr_by_class_name(name).form_list(t.events.layout.cells("b"), {hide_header: true});
-		});
-		
-		
 		/**
 		 * Обработчик маршрутизации
 		 * @param hprm
