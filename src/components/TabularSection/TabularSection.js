@@ -1,5 +1,39 @@
-import React, { Component, PropTypes } from 'react';
-import ReactDataGrid from 'react-data-grid';
+import React, {Component, PropTypes} from "react";
+import ReactDataGrid from "react-data-grid";
+import { Menu } from "react-data-grid/addons";
+
+// Import the necessary modules.
+
+// Create the context menu.
+// Use this.props.rowIdx and this.props.idx to get the row/column where the menu is shown.
+class MyContextMenu extends Component {
+
+  onRowDelete(e, data) {
+    if (typeof(this.props.onRowDelete) === 'function') {
+      this.props.onRowDelete(e, data);
+    }
+  }
+
+  onRowAdd(e, data) {
+    if (typeof(this.props.onRowAdd) === 'function') {
+      this.props.onRowAdd(e, data);
+    }
+  }
+
+  render() {
+
+    let { ContextMenu, MenuItem} = Menu;
+
+    return (
+      <ContextMenu>
+        <MenuItem data={{rowIdx: this.props.rowIdx, idx: this.props.idx}} onClick={::this.onRowDelete}>Delete Row</MenuItem>
+        <MenuItem data={{rowIdx: this.props.rowIdx, idx: this.props.idx}} onClick={::this.onRowAdd}>Add Row</MenuItem>
+      </ContextMenu>
+    );
+  }
+
+}
+
 
 export default class TabularSection extends Component {
 
@@ -54,6 +88,22 @@ export default class TabularSection extends Component {
     return this.state._tabular.get(i)._obj;
   }
 
+  deleteRow(e, data) {
+    this.state._tabular.del(data.rowIdx)
+    this.refs.grid.forceUpdate()
+  }
+
+  addRow(e, data) {
+    this.state._tabular.add()
+    this.refs.grid.forceUpdate()
+  }
+
+  handleRowUpdated(e){
+    //merge updated row with current row and rerender by setting state
+    var row = this.rowGetter(e.rowIdx);
+    Object.assign(row._row || row, e.updated);
+  }
+
   render() {
 
     const { $p } = this.context;
@@ -67,9 +117,19 @@ export default class TabularSection extends Component {
     }
 
     return <ReactDataGrid
+      ref="grid"
       columns={_columns}
+      enableCellSelect={true}
       rowGetter={::this.rowGetter}
       rowsCount={_tabular.count()}
-      minHeight={140} />
+      onRowUpdated={this.handleRowUpdated}
+      minHeight={200}
+
+      contextMenu={<MyContextMenu
+        onRowDelete={::this.deleteRow}
+        onRowAdd={::this.addRow}
+      />}
+
+    />
   }
 }

@@ -1,7 +1,6 @@
-import React, { Component, PropTypes } from 'react';
-import classes from './DataField.scss'
-
-import VirtualizedSelect from 'react-virtualized-select'
+import React, {Component, PropTypes} from "react";
+import classes from "./DataField.scss";
+import VirtualizedSelect from "react-virtualized-select";
 
 export default class FieldSelect extends Component {
 
@@ -9,6 +8,7 @@ export default class FieldSelect extends Component {
     _obj: PropTypes.object.isRequired,
     _fld: PropTypes.string.isRequired,
     _meta: PropTypes.object,
+    _hide_label: PropTypes.bool,
     handleValueChange: PropTypes.func
   }
 
@@ -24,7 +24,9 @@ export default class FieldSelect extends Component {
       selectedCreatable: null,
     }
 
-    this._loadGithubUsers = ::this._loadGithubUsers
+    this._loadOptions = ::this._loadOptions
+
+    this._onChange = ::this._onChange
 
   }
 
@@ -32,7 +34,7 @@ export default class FieldSelect extends Component {
     window.open(value.html_url)
   }
 
-  _loadGithubUsers (input) {
+  _loadOptions (input) {
 
     return this.props._obj[this.props._fld]._manager.get_option_list({
       presentation: {like: input}
@@ -44,28 +46,52 @@ export default class FieldSelect extends Component {
       })
   }
 
+  _onChange(value){
+    this.setState({value})
+    if(this.props.handleValueChange)
+      this.props.handleValueChange(value)
+  }
+
   render() {
+
     return (
 
-      <div className={classes.field}>
-        <div className={classes.label}>{this.props._meta.synonym}</div>
-        <div className={classes.dataselect}>
-          <VirtualizedSelect
-            name={this.props._meta.name}
-            async
-            backspaceRemoves={false}
-            labelKey='presentation'
-            valueKey='ref'
-            loadOptions={this._loadGithubUsers}
-            minimumInput={0}
-            onChange={(selectedGithubUser) => this.setState({ selectedGithubUser })}
-            onValueClick={this._goToGithubUser}
-            options={this.state.githubUsers}
-            value={this.state.selectedGithubUser}
+      this.props._hide_label ?
 
-          />
+        <VirtualizedSelect
+          name={this.props._meta.name}
+          async
+          backspaceRemoves={false}
+          labelKey='presentation'
+          valueKey='ref'
+          loadOptions={this._loadOptions}
+          minimumInput={0}
+          onChange={this._onChange}
+          onValueClick={this._goToGithubUser}
+          options={this.state.githubUsers}
+          value={this.state.value}
+
+        />
+        :
+        <div className={classes.field}>
+          <div className={classes.label}>{this.props._meta.synonym}</div>
+          <div className={classes.dataselect}>
+            <VirtualizedSelect
+              name={this.props._meta.name}
+              async
+              backspaceRemoves={false}
+              labelKey='presentation'
+              valueKey='ref'
+              loadOptions={this._loadOptions}
+              minimumInput={0}
+              onChange={this._onChange}
+              onValueClick={this._goToGithubUser}
+              options={this.state.githubUsers}
+              value={this.state.value}
+
+            />
+          </div>
         </div>
-      </div>
 
     );
   }

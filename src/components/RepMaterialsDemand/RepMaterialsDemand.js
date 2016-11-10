@@ -101,8 +101,6 @@ export default class RepMaterialsDemand extends Component {
 
     const { _obj, height, width } = this.props
 
-    const { characteristic_mgr } = this.state
-
     return (
 
       _obj
@@ -116,50 +114,16 @@ export default class RepMaterialsDemand extends Component {
           handlePrint={::this.handlePrint}
           handleAttachment={::this.handleAttachment}
           handleClose={this.props.handleClose}
+
+          _obj={_obj}
         />
 
-        <div className={classes.cont} style={{width: width}}>
+        <div className={classes.cont} style={{width: width - 20}}>
 
-          <Layout layoutWidth={width - 24} layoutHeight={height - 120} >
-            <Layout layoutWidth={'flex'}>
-
-              <TabularSection
-                _obj={_obj}
-                _tabular="specification"
-
-              />
-
-            </Layout>
-            <LayoutSplitter />
-            <Layout layoutWidth={Math.floor((width - 24)/4)}>
-
-              {// <DataField _obj={_obj} _fld="Санаторий" handleValueChange={this.handleValueChange("Санаторий")} />
-              }
-
-              <TabularSection
-                _obj={_obj}
-                _tabular="production"
-                _columns={[
-                  {
-                    key: 'characteristic',
-                    name: 'Продукция',
-                    resizable : true,
-                    width : 160,
-                    formatter: v => {
-                      v = characteristic_mgr.get(v.value)
-                      return (<div>{v instanceof Promise ? 'loading...' : v.presentation}</div>)
-                    }
-                  },
-                  {
-                    key: 'qty',
-                    name: 'Штук',
-                    resizable : true
-
-                  }]}
-              />
-
-            </Layout>
-          </Layout>
+          <TabularSection
+            _obj={_obj}
+            _tabular="specification"
+          />
 
         </div>
 

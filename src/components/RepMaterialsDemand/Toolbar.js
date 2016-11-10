@@ -11,6 +11,9 @@ import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import MenuItem from 'material-ui/MenuItem';
 import PrintIcon from 'material-ui/svg-icons/action/print';
 
+import ReportSettings from './Settings';
+
+
 import classes from './RepMaterialsDemand.scss'
 
 export default class DataObjToolbar extends Component{
@@ -20,6 +23,8 @@ export default class DataObjToolbar extends Component{
     handleSave: PropTypes.func.isRequired,        // обработчик формирования отчета
     handlePrint: PropTypes.func.isRequired,       // обработчик открытия диалога печати
     handleClose: PropTypes.func.isRequired,       // команда Закрыть форму
+
+    _obj: PropTypes.object,
 
   }
 
@@ -32,11 +37,11 @@ export default class DataObjToolbar extends Component{
       <Toolbar className={classes.toolbar}>
         <ToolbarGroup firstChild={true}>
           <FlatButton
-            tooltip="Сформировать"
-            onTouchTap={props.handleSave}
             label="Сформировать"
             labelPosition="after"
             icon={<RunIcon />}
+            className={classes.tbButton}
+            onTouchTap={props.handleSave}
           >
           </FlatButton>
 
@@ -44,18 +49,9 @@ export default class DataObjToolbar extends Component{
 
         <ToolbarGroup>
 
-          <IconMenu
-            iconButtonElement={
-              <IconButton touch={true} tooltip="Дополнительно">
-                <MoreVertIcon />
-              </IconButton>
-            }
-          >
-            <MenuItem primaryText="Печать" leftIcon={<PrintIcon />} onTouchTap={props.handlePrint} />
+          <ReportSettings _obj={props._obj} />
 
-          </IconMenu>
-
-          <IconButton touch={true} tooltip="Закрыть форму" tooltipPosition="bottom-left" onTouchTap={props.handleClose}>
+          <IconButton touch={true} onTouchTap={props.handleClose}>
             <CloseIcon />
           </IconButton>
 

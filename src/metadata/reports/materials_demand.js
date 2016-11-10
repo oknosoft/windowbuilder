@@ -5,6 +5,8 @@
  * Created 07.11.2016
  */
 
+import React from 'react';
+
 export default function ($p) {
 
   const {characteristics, nom, nom_kinds, clrs} = $p.cat
@@ -15,7 +17,7 @@ export default function ($p) {
     formatters: {
       value: {
         characteristic: v => {
-          v = characteristic_mgr.get(v.value)
+          v = characteristics.get(v.value)
           return (<div>{v instanceof Promise ? 'loading...' : v.presentation}</div>)
         }
       }
