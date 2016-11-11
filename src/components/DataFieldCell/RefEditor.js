@@ -25,7 +25,7 @@ class RefEditor extends Component {
     super(props);
     this.state = {
       value: [],
-      _meta: props._meta || props.rowData._row._metadata(props.column.key)
+      _meta: props._meta || props.rowData._metadata(props.column.key)
     };
     this.handleSelectChange = this.handleSelectChange.bind(this);
   }
@@ -46,7 +46,7 @@ class RefEditor extends Component {
 
   render() {
 
-    const _obj = this.props.rowData._row;
+    const _obj = this.props.rowData;
     const _fld = this.props.column.key
     const _val = _obj[_fld];
     const subProps = {

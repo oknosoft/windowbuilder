@@ -7,7 +7,7 @@ import LayoutSplitter from '../react-flex-layout/react-flex-layout-splitter'
 import Toolbar from "./Toolbar";
 import DataField from '../DataField'
 
-import TabularSection from '../TabularSection'
+import RepTabularSection from './RepTabularSection'
 
 import DumbLoader from '../DumbLoader'
 
@@ -65,25 +65,13 @@ export default class RepMaterialsDemand extends Component {
   }
 
   handleSave(){
-
-    this.props.handleSave(this.props._obj)
-  }
-
-  handleSend(){
-
-    this.props.handleSave(this.props._obj)
-
-  }
-
-  handleMarkDeleted(){
-
+    this.props._obj.calculate()
+      .then(() => {
+        this.forceUpdate()
+      })
   }
 
   handlePrint(){
-
-  }
-
-  handleAttachment(){
 
   }
 
@@ -109,20 +97,19 @@ export default class RepMaterialsDemand extends Component {
 
         <Toolbar
           handleSave={::this.handleSave}
-          handleSend={::this.handleSend}
-          handleMarkDeleted={::this.handleMarkDeleted}
           handlePrint={::this.handlePrint}
-          handleAttachment={::this.handleAttachment}
           handleClose={this.props.handleClose}
 
           _obj={_obj}
         />
 
-        <div className={classes.cont} style={{width: width - 20}}>
+        <div className={classes.cont} style={{width: width - 20, height: height - 120}}>
 
-          <TabularSection
+          <RepTabularSection
             _obj={_obj}
             _tabular="specification"
+            ref="specification"
+            minHeight={height - 130}
           />
 
         </div>

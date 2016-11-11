@@ -2,18 +2,18 @@ import React, {Component, PropTypes} from "react";
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from "material-ui/Toolbar";
 import FlatButton from "material-ui/FlatButton";
 import MoreVertIcon from "material-ui/svg-icons/navigation/more-vert";
-import Popover from 'material-ui/Popover';
-import {List, ListItem} from 'material-ui/List';
-import Subheader from 'material-ui/Subheader';
 
-import TabularSection from '../TabularSection'
+import Dialog from 'material-ui/Dialog';
 
-import RefEditor from '../DataFieldCell/RefEditor'
+import {Tabs, Tab} from 'material-ui/Tabs';
+
+
+import SettingsProduction from './SettingsProduction';
+import SettingsColumns from './SettingsColumns';
+
 
 import classes from './RepMaterialsDemand.scss'
 
-//options for priorities autocomplete editor
-var CharacteristicEditor = <RefEditor />
 
 export default class ReportSettings extends Component{
 
@@ -26,8 +26,17 @@ export default class ReportSettings extends Component{
 
     this.state = {
       open: false,
+      tab_value: 'a'
     };
   }
+
+  handleTabChange = (tab_value) => {
+    if(tab_value === 'a' || tab_value === 'b'){
+      this.setState({
+        tab_value: tab_value,
+      });
+    }
+  };
 
   handleTouchTap = (event) => {
     // This prevents ghost click.
@@ -49,6 +58,15 @@ export default class ReportSettings extends Component{
 
     const { _obj } = this.props
 
+    const actions = [
+      <FlatButton
+        label="Ок"
+        primary={true}
+        keyboardFocused={true}
+        onTouchTap={this.handleRequestClose}
+      />
+    ];
+
     return (
 
       <div>
@@ -60,41 +78,35 @@ export default class ReportSettings extends Component{
           onTouchTap={this.handleTouchTap}
         />
 
-        <Popover
+        <Dialog
+          title="Параметры отчета"
+          actions={actions}
+          modal={true}
           open={this.state.open}
-          anchorEl={this.state.anchorEl}
-          anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
-          targetOrigin={{horizontal: 'right', vertical: 'top'}}
           onRequestClose={this.handleRequestClose}
+          autoScrollBodyContent={true}
         >
 
-          <List className={classes.list} >
+          <Tabs
+            value={this.state.tab_value}
+            onChange={this.handleTabChange}
+          >
+            <Tab label="Изделия" value="a">
 
-            <Subheader>Продукция</Subheader>
+              <SettingsProduction _obj={_obj} />
 
-            <TabularSection
-              _obj={_obj}
-              _tabular="production"
-              _columns={[
-                {
-                  key: 'characteristic',
-                  name: 'Продукция',
-                  resizable : true,
-                  formatter: _obj.formatters.characteristic,
-                  editor: CharacteristicEditor
-                },
-                {
-                  key: 'qty',
-                  name: 'Штук',
-                  width : 90,
-                  resizable : true,
-                  editable : true
-                }]}
-            />
+            </Tab>
 
-          </List>
+            <Tab label="Колонки" value="b">
 
-        </Popover>
+              <SettingsColumns _obj={_obj} rowKey="id" />
+
+            </Tab>
+
+          </Tabs>
+
+        </Dialog>
+
       </div>
     )
   }
