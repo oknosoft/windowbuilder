@@ -90,7 +90,7 @@ export default class ReportSettings extends Component{
         <Dialog
           title="Параметры отчета"
           actions={actions}
-          modal={true}
+          modal={false}
           open={this.state.open}
           onRequestClose={this.handleRequestClose}
           autoScrollBodyContent={true}

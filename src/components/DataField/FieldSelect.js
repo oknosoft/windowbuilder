@@ -18,16 +18,11 @@ export default class FieldSelect extends Component {
     this.state = {
       clearable: true,
       disabled: false,
-      githubUsers: [],
+      options: [],
       multi: false,
       searchable: true,
       selectedCreatable: null,
     }
-
-    this._loadOptions = ::this._loadOptions
-
-    this._onChange = ::this._onChange
-
   }
 
   _goToGithubUser (value) {
@@ -36,13 +31,21 @@ export default class FieldSelect extends Component {
 
   _loadOptions (input) {
 
-    return this.props._obj[this.props._fld]._manager.get_option_list({
-      presentation: {like: input}
-    })
-      .then((githubUsers) => {
-        this.setState({ githubUsers })
+    const selection = {_top: 40};
+    if(input){
+      selection.presentation = {like: input}
+    }
+    if(this.props._meta.choice_params){
+      this.props._meta.choice_params.forEach(function (cp) {
+        selection[cp.name] = cp.path
+      })
+    }
 
-        return { options: githubUsers }
+    return this.props._obj[this.props._fld]._manager.get_option_list(selection)
+      .then((options) => {
+        this.setState({ options })
+
+        return { options: options }
       })
   }
 
@@ -64,11 +67,11 @@ export default class FieldSelect extends Component {
           backspaceRemoves={false}
           labelKey='presentation'
           valueKey='ref'
-          loadOptions={this._loadOptions}
+          loadOptions={::this._loadOptions}
           minimumInput={0}
-          onChange={this._onChange}
-          onValueClick={this._goToGithubUser}
-          options={this.state.githubUsers}
+          onChange={::this._onChange}
+          //onValueClick={this._goToGithubUser}
+          options={this.state.options}
           value={this.state.value}
 
         />
@@ -82,11 +85,11 @@ export default class FieldSelect extends Component {
               backspaceRemoves={false}
               labelKey='presentation'
               valueKey='ref'
-              loadOptions={this._loadOptions}
+              loadOptions={::this._loadOptions}
               minimumInput={0}
-              onChange={this._onChange}
-              onValueClick={this._goToGithubUser}
-              options={this.state.githubUsers}
+              onChange={::this._onChange}
+              //onValueClick={this._goToGithubUser}
+              options={this.state.options}
               value={this.state.value}
 
             />

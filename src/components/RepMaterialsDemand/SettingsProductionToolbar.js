@@ -4,7 +4,9 @@ import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui
 import IconButton from 'material-ui/IconButton';
 import AddIcon from 'material-ui/svg-icons/content/add-circle-outline';
 import RemoveIcon from 'material-ui/svg-icons/action/delete';
-import OrderIcon from 'material-ui/svg-icons/action/work';
+
+import SelectOrder from './SelectOrder';
+
 
 import classes from './RepMaterialsDemand.scss'
 
@@ -32,9 +34,11 @@ export default class SettingsProductionToolbar extends Component{
             <RemoveIcon />
           </IconButton>
           <ToolbarSeparator />
-          <IconButton touch={true} tooltip="Заполнить по заказу" onTouchTap={props.handleCustom}>
-            <OrderIcon />
-          </IconButton>
+
+          <SelectOrder
+            handleSelect={props.handleCustom}
+          />
+
         </ToolbarGroup>
       </Toolbar>
     )
