@@ -74,7 +74,7 @@ export default class TabularSection extends Component {
       _tabular: props._obj[props._tabular],
 
       get rows(){
-        return this._tabular._obj.map(row => row._row)
+        return this._tabular._rows || []
       },
 
       groupBy: [],

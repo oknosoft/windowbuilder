@@ -49,6 +49,15 @@ export default class ReportSettings extends Component{
   };
 
   handleRequestClose = () => {
+
+    const flds = [], ids = this.refs.clmns.state.selectedIds
+    this.refs.clmns.state.rows.forEach(row => {
+      if(ids.indexOf(row.id) != -1){
+        flds.push(row.id)
+      }
+    })
+    this.props._obj.column_flds = flds
+
     this.setState({
       open: false,
     });
@@ -99,7 +108,7 @@ export default class ReportSettings extends Component{
 
             <Tab label="Колонки" value="b">
 
-              <SettingsColumns _obj={_obj} rowKey="id" />
+              <SettingsColumns ref="clmns" _obj={_obj} rowKey="id" />
 
             </Tab>
 

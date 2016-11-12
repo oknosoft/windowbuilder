@@ -29,13 +29,33 @@ export default class SettingsColumns extends Component{
 
   constructor (props, context) {
 
-    super(props);
+    super(props)
 
-    const { _obj } = props;
+    const { _obj } = props
+    const flds = _obj.column_flds.length && _obj.column_flds.length < 19 ?
+      _obj.column_flds : ['nom','clr','characteristic','len','width','nom_kind','qty','totqty1']
+    const rows = _obj.columns_avalable.map(clmn => ({id: clmn.key, name: clmn.name}))
+
+    rows.sort(function (a, b) {
+      const ia = flds.indexOf(a.id)
+      const ib = flds.indexOf(b.id)
+
+      if(ia < 0 && ib < 0)
+        return 0;
+
+      if(ia < 0)
+        return 1;
+
+      if(ib < 0)
+        return -1;
+
+      return ia - ib;
+
+    })
 
     this.state = {
-      rows: _obj.columns_avalable.map(clmn => ({id: clmn.key, name: clmn.name})),
-      selectedIds: ['nom','clr','characteristic','len','width','nom_kind','qty','totqty1']
+      rows: rows,
+      selectedIds: flds
     }
   }
 

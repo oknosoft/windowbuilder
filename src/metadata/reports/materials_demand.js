@@ -73,6 +73,35 @@ export default function ($p) {
         }
 
         return this._columns.flds;
+      },
+      set: function (v) {
+        if(!Array.isArray(v)){
+          return;
+        }
+        if(!this._columns){
+          this._columns = {
+            name: 'specification',
+            flds: []
+          }
+        }
+
+        // если массивы идентичны, ничего записывать не надо
+        function test(arr, arr2){
+          if(arr.length != arr2.length){
+            return false
+          }
+          for( let i = 0; i < arr.length; i++ ){
+            if(arr[i] !== arr2[i]){
+              return false
+            }
+          }
+          return true;
+        }
+
+        if(!test(this._columns.flds, v)){
+          this._columns.flds = v;
+          $p.wsql.save_options(this._manager.class_name, this._columns)
+        }
       }
     },
 
@@ -93,14 +122,18 @@ export default function ($p) {
       }
     },
 
+    resources: {
+        value: ['qty','totqty','totqty1','amount','amount_marged']
+    },
+
     calculate: {
       value: function () {
 
-        const production = this.production,
-          specification = this.specification,
+        const t = this,
+          specification = t.specification,
           arefs = [], aobjs = [],
           spec_flds = Object.keys(characteristics.metadata('specification').fields),
-          rspec_flds = Object.keys(this._metadata('specification').fields);
+          rspec_flds = Object.keys(t._metadata('specification').fields);
 
         function material(row) {
 
@@ -111,17 +144,17 @@ export default function ($p) {
           }
 
           if(row.len && row.width)
-            res += ' ' + 1000*row.len.toFixed(0) + "x" + 1000*row.width.toFixed(0);
+            res += ' ' + (1000*row.len).toFixed(0) + "x" + (1000*row.width).toFixed(0);
           else if(row.len)
-            res += ' ' + 1000*row.len.toFixed(0);
+            res += ' ' + (1000*row.len).toFixed(0);
           else if(row.width)
-            res += ' ' + 1000*row.width.toFixed(0);
+            res += ' ' + (1000*row.width).toFixed(0);
 
           return res;
         }
 
         // получаем массив объектов продукций
-        production.each(function (row) {
+        t.production.each(function (row) {
           if(!row.characteristic.empty() && row.characteristic.is_new() && arefs.indexOf(row.characteristic.ref) == -1){
             arefs.push(row.characteristic.ref)
             aobjs.push(row.characteristic.load())
@@ -130,6 +163,11 @@ export default function ($p) {
 
         // чистим таблицу результата
         specification.clear();
+        if(!specification._rows){
+          specification._rows = []
+        }else{
+          specification._rows.length = 0;
+        }
 
         return Promise.all(aobjs)
 
@@ -139,7 +177,7 @@ export default function ($p) {
             arefs.length = 0;
             aobjs.length = 0;
 
-            production.each(function (row) {
+            t.production.each(function (row) {
 
               if (!row.characteristic.empty() && !row.characteristic.calc_order.empty()
                   && row.characteristic.calc_order.is_new() && arefs.indexOf(row.characteristic.calc_order.ref) == -1) {
@@ -165,7 +203,7 @@ export default function ($p) {
             const prows = {};
 
             // бежим по продукции и заполняем результат
-            production.each(function (row) {
+            t.production.each(function (row) {
               if(!row.characteristic.empty()){
                 row.characteristic.specification.each(function (sprow) {
                   let resrow = {};
@@ -214,6 +252,28 @@ export default function ($p) {
             })
 
             // сворачиваем результат и сохраняем его в specification._rows
+
+            const dimensions = [], resources = [];
+            t.column_flds.forEach(fld => {
+              if(t.resources.indexOf(fld) != -1){
+                resources.push(fld)
+              }else{
+                dimensions.push(fld)
+              }
+            })
+            specification.group_by(dimensions, resources);
+            specification.forEach(function (row) {
+
+              // округление
+              row.qty = row.qty.round(3);
+              row.totqty = row.totqty.round(3);
+              row.totqty1 = row.totqty1.round(3);
+              row.price = row.price.round(3);
+              row.amount = row.amount.round(3);
+              row.amount_marged = row.amount_marged.round(3);
+
+              specification._rows.push(row);
+            })
 
           })
       }

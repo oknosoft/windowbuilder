@@ -11,24 +11,8 @@ import RepTabularSection from './RepTabularSection'
 
 import DumbLoader from '../DumbLoader'
 
-
 import classes from './RepMaterialsDemand.scss'
 
-
-import CircularProgress from 'material-ui/CircularProgress';
-
-const styles = {
-  root: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    padding: '8px'
-  },
-  block: {
-    //flex: '1 100%',
-    fontWeight: 'bold'
-  }
-}
 
 export default class RepMaterialsDemand extends Component {
 
@@ -39,11 +23,7 @@ export default class RepMaterialsDemand extends Component {
     handleSave: PropTypes.func.isRequired,
     handleRevert: PropTypes.func.isRequired,
     handleMarkDeleted: PropTypes.func.isRequired,
-    handlePost: PropTypes.func.isRequired,
-    handleUnPost: PropTypes.func.isRequired,
     handlePrint: PropTypes.func.isRequired,
-    handleAttachment: PropTypes.func.isRequired,
-    handleValueChange: PropTypes.func.isRequired,
     handleAddRow: PropTypes.func.isRequired,
     handleDelRow: PropTypes.func.isRequired
   }
@@ -67,23 +47,14 @@ export default class RepMaterialsDemand extends Component {
   handleSave(){
     this.props._obj.calculate()
       .then(() => {
-        this.forceUpdate()
+        this.refs.specification.setState({groupBy: []})
+        //this.forceUpdate()
       })
   }
 
   handlePrint(){
 
   }
-
-  handleValueChange(_fld){
-    return (event, value) => {
-      const { _obj, handleValueChange } = this.props
-      const old_value = _obj[_fld]
-      _obj[_fld] = (value || (event && event.target ? event.target.value : ''))
-      handleValueChange(_fld, old_value)
-    }
-  }
-
 
   render() {
 
@@ -103,13 +74,13 @@ export default class RepMaterialsDemand extends Component {
           _obj={_obj}
         />
 
-        <div className={classes.cont} style={{width: width - 20, height: height - 120}}>
+        <div className={classes.cont} style={{width: width - 20, height: height - 150}}>
 
           <RepTabularSection
             _obj={_obj}
             _tabular="specification"
             ref="specification"
-            minHeight={height - 130}
+            minHeight={height - 160}
           />
 
         </div>
