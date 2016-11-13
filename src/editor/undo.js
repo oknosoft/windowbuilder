@@ -9,7 +9,7 @@
  * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
  * Из публичных интерфейсов имеет только методы back() и rewind()
  * Основную работу делает прослушивая широковещательные события
- * 
+ *
  * @class UndoRedo
  * @constructor
  * @param _editor {Editor} - указатель на экземпляр редактора
@@ -21,7 +21,7 @@ function UndoRedo(_editor){
 		snap_timer;
 
 	function run_snapshot() {
-		
+
 		// запускаем короткий пересчет изделия
 		if(pos >= 0){
 
@@ -37,7 +37,7 @@ function UndoRedo(_editor){
 	}
 
 	function save_snapshot(scheme) {
-		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"])));
+		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","specification","predefined_name"])));
 		pos = _history.length - 1;
 		enable_buttons();
 	}
@@ -46,7 +46,7 @@ function UndoRedo(_editor){
 		_editor.project.load_stamp(JSON.parse(_history[pos]), true);
 		enable_buttons();
 	}
-	
+
 	function enable_buttons() {
 		if(pos < 1)
 			_editor.tb_top.buttons.back.classList.add("disabledbutton");
@@ -73,7 +73,7 @@ function UndoRedo(_editor){
 			if(scheme.data._loading){
 				if(!scheme.data._snapshot){
 					clear();
-					save_snapshot(scheme);	
+					save_snapshot(scheme);
 				}
 
 			} else{

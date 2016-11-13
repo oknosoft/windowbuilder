@@ -2008,7 +2008,7 @@ function EditorAccordion(_editor, cell_acc) {
 /**
  * ### Буфер обмена
  * Объект для прослушивания и обработки событий буфера обмена
- * 
+ *
  * @class Clipbrd
  * @param _editor
  * @constructor
@@ -2111,7 +2111,7 @@ function Clipbrd(_editor) {
 					snapshot: true,
 					clipboard: true,
 					callback: function (scheme) {
-						res.product = {}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"]);
+						res.product = {}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","specification","predefined_name"]);
 					}
 				});
 			}
@@ -2142,6 +2142,7 @@ function Clipbrd(_editor) {
 
 	document.addEventListener('paste', onpaste);
 }
+
 /**
  * ### Графический редактор
  * 
@@ -3210,7 +3211,7 @@ function Keybrd(_editor) {
  * Объект для сохранения истории редактирования и реализации команд (вперёд|назад)
  * Из публичных интерфейсов имеет только методы back() и rewind()
  * Основную работу делает прослушивая широковещательные события
- * 
+ *
  * @class UndoRedo
  * @constructor
  * @param _editor {Editor} - указатель на экземпляр редактора
@@ -3222,7 +3223,7 @@ function UndoRedo(_editor){
 		snap_timer;
 
 	function run_snapshot() {
-		
+
 		// запускаем короткий пересчет изделия
 		if(pos >= 0){
 
@@ -3238,7 +3239,7 @@ function UndoRedo(_editor){
 	}
 
 	function save_snapshot(scheme) {
-		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"])));
+		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","specification","predefined_name"])));
 		pos = _history.length - 1;
 		enable_buttons();
 	}
@@ -3247,7 +3248,7 @@ function UndoRedo(_editor){
 		_editor.project.load_stamp(JSON.parse(_history[pos]), true);
 		enable_buttons();
 	}
-	
+
 	function enable_buttons() {
 		if(pos < 1)
 			_editor.tb_top.buttons.back.classList.add("disabledbutton");
@@ -3274,7 +3275,7 @@ function UndoRedo(_editor){
 			if(scheme.data._loading){
 				if(!scheme.data._snapshot){
 					clear();
-					save_snapshot(scheme);	
+					save_snapshot(scheme);
 				}
 
 			} else{
@@ -3315,6 +3316,7 @@ function UndoRedo(_editor){
 		}
 	}
 }
+
 /**
  * ### Контур (слой) изделия
  *
@@ -10220,7 +10222,7 @@ Onlay.prototype.__define({
 });
 
 /**
- * 
+ *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 24.07.2015
  *
@@ -10253,7 +10255,7 @@ function Scheme(_canvas){
 			_update_timer: 0
 		},
 		_changes = [],
-		
+
 		// наблюдатель за изменениями свойств изделия
 		_dp_observer = function (changes) {
 
@@ -10279,7 +10281,7 @@ function Scheme(_canvas){
 					if(change.name == "sys" && !change.object.sys.empty()){
 
 						change.object.sys.refill_prm(_scheme.ox);
-						
+
 						// обновляем свойства изделия
 						Object.getNotifier(change.object).notify({
 							type: 'rows',
@@ -10292,13 +10294,13 @@ function Scheme(_canvas){
 								type: 'rows',
 								tabular: 'params'
 							});
-						
+
 						// информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
 						_scheme.contours.forEach(function (l) {
 							l.on_sys_changed();
 						});
 
-						
+
 						if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
 							$p.wsql.set_user_param("editor_last_sys", change.object.sys.ref);
 
@@ -10425,7 +10427,7 @@ function Scheme(_canvas){
 
 						if(setted)
 							return false;
-						
+
 						o.production.find_rows({nom: ox.owner}, function () {
 							_dp.sys = o;
 							setted = true;
@@ -10696,7 +10698,7 @@ function Scheme(_canvas){
 					}
 				}, 100);
 
-				
+
 			}, 20);
 
 		}
@@ -10726,7 +10728,7 @@ function Scheme(_canvas){
 	this.has_changes = function () {
 		return _changes.length > 0;
 	};
-	
+
 	/**
 	 * Регистрирует факты изменения элемнтов
 	 */
@@ -10741,7 +10743,7 @@ function Scheme(_canvas){
 		if(with_update)
 			this.register_update();
 	};
-	
+
 	/**
 	 * Регистрирует необходимость обновить изображение
  	 */
@@ -10749,7 +10751,7 @@ function Scheme(_canvas){
 
 		if(_data._update_timer)
 			clearTimeout(_data._update_timer);
-		
+
 		_data._update_timer = setTimeout(function () {
 			_scheme.view.update();
 			_data._update_timer = 0;
@@ -10776,7 +10778,7 @@ function Scheme(_canvas){
 	 * Находит точку на примыкающем профиле и проверяет расстояние до неё от текущей точки
 	 * !! Изменяет res - CnnPoint
 	 * @param element {Profile} - профиль, расстояние до которого проверяем
-	 * @param profile {Profile|null} - текущий профиль - используется, чтобы не искать соединения с самим собой 
+	 * @param profile {Profile|null} - текущий профиль - используется, чтобы не искать соединения с самим собой
 	 * TODO: возможно, имеет смысл разрешить змее кусать себя за хвост
 	 * @param res {CnnPoint} - описание соединения на конце текущего профиля
 	 * @param point {paper.Point} - точка, окрестность которой анализируем
@@ -10850,7 +10852,7 @@ function Scheme(_canvas){
 
 		// это соединение с пустотой или T
 		res.profile_point = '';
-		
+
 		// // если возможна привязка к добору, используем её
 		// element.addls.forEach(function (addl) {
 		// 	gp = addl.generatrix.getNearestPoint(point);
@@ -10871,9 +10873,9 @@ function Scheme(_canvas){
 		// если к доборам не привязались - проверяем профиль
 		gp = element.generatrix.getNearestPoint(point);
 		distance = gp.getDistance(point);
-		
+
 		if(distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
-			
+
 			if(distance < res.distance || bind_generatrix){
 				if(element.d0 != 0 && element.rays.outer){
 					// для вложенных створок учтём смещение
@@ -10917,21 +10919,21 @@ function Scheme(_canvas){
 			function on_contour_redrawed(){
 				if(!_changes.length){
 					llength--;
-					
+
 					if(!llength){
-						
+
 						// если перерисованы все контуры, перерисовываем их размерные линии
 						_data._bounds = null;
 						_scheme.contours.forEach(function(l){
 							l.draw_sizes();
 						});
-						
+
 						// перерисовываем габаритные размерные линии изделия
 						_scheme.draw_sizes();
-						
+
 						// обновляем изображение на эуране
 						_scheme.view.update();
-						
+
 					}
 				}
 			}
@@ -10962,15 +10964,15 @@ function Scheme(_canvas){
 	}
 
 	$p.eve.attachEvent("coordinates_calculated", function (scheme, attr) {
-		
+
 		if(_scheme != scheme)
 			return;
-		
+
 		_scheme.contours.forEach(function(l){
 			l.draw_visualization();
 		});
 		_scheme.view.update();
-		
+
 	});
 
 }
@@ -11070,7 +11072,7 @@ Scheme.prototype.__define({
 				contour.save_coordinates();
 			});
 			$p.eve.callEvent("save_coordinates", [this, attr]);
-			
+
 		}
 	},
 
@@ -11172,17 +11174,17 @@ Scheme.prototype.__define({
 
 				// переприсваиваем номенклатуру, цвет и размеры
 				ox._mixin(obx, ["owner","sys","clr","x","y","s","s"]);
-					
+
 				// очищаем табчасти, перезаполняем контуры и координаты
 				ox.constructions.load(obx.constructions);
 				ox.coordinates.load(obx.coordinates);
 				ox.params.load(obx.params);
 				ox.cnn_elmnts.load(obx.cnn_elmnts);
+        ox.inserts.load(obx.inserts);
 
 				ox.specification.clear();
 				ox.glass_specification.clear();
 				ox.glasses.clear();
-				ox.mosquito.clear();
 
 				this.load(ox);
 
@@ -11193,7 +11195,7 @@ Scheme.prototype.__define({
 			if(is_snapshot){
 				this.data._snapshot = true;
 				do_load.call(this, obx);
-				
+
 			}else
 				$p.cat.characteristics.get(obx, true, true)
 					.then(do_load.bind(this));
@@ -11264,7 +11266,7 @@ Scheme.prototype.__define({
 			this._dp.characteristic.clr = v;
 		}
 	},
-	
+
 	/**
 	 * ### Служебный слой размерных линий
 	 *
@@ -11329,7 +11331,7 @@ Scheme.prototype.__define({
 				else
 					this.l_dimensions.right.offset = -120;
 
-				
+
 
 				// если среди размеров, сформированных контурами есть габарит - второй раз не выводим
 
@@ -11343,8 +11345,8 @@ Scheme.prototype.__define({
 					this.l_dimensions.right.visible = false;
 				}else
 					this.l_dimensions.right.redraw();
-				
-				
+
+
 				if(this.contours.some(function(l){
 						return l.l_dimensions.children.some(function (dl) {
 							if(dl.pos == "bottom" && Math.abs(dl.size - bounds.width) < consts.sticking_l ){
@@ -11552,6 +11554,7 @@ Scheme.prototype.__define({
 
 
 });
+
 /**
  * ### Разрез
  * 

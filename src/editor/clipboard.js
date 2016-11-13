@@ -7,7 +7,7 @@
 /**
  * ### Буфер обмена
  * Объект для прослушивания и обработки событий буфера обмена
- * 
+ *
  * @class Clipbrd
  * @param _editor
  * @constructor
@@ -110,7 +110,7 @@ function Clipbrd(_editor) {
 					snapshot: true,
 					clipboard: true,
 					callback: function (scheme) {
-						res.product = {}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","mosquito","specification","predefined_name"]);
+						res.product = {}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","specification","predefined_name"]);
 					}
 				});
 			}
