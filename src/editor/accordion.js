@@ -403,7 +403,7 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		stv = new (function StvProps(layout) {
 
-			var t = this, _grid, _evts = [];
+			var t = this, _grid, _inserts, _evts = [];
 
 			this.__define({
 
@@ -413,22 +413,43 @@ function EditorAccordion(_editor, cell_acc) {
 						if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
 							return;
 
+            layout.cells("a").setActive();
+
 						var attr = {
 							obj: obj,
 							oxml: {
 								"Фурнитура": ["furn", "clr_furn", "direction", "h_ruch"],
-								"Москитка": ["mskt", "clr_mskt"],
 								"Параметры": []
 							},
 							ts: "params",
 							ts_title: "Параметры",
 							selection: {cnstr: obj.cnstr || -1, hide: {not: true}}
-						};
+						},
+              attr_inserts = {
+                obj: obj.project.ox,
+                ts: "inserts",
+                selection: {cnstr: obj.cnstr || -1}
+              };
 
-						if(!_grid)
-							_grid = layout.cells("a").attachHeadFields(attr);
-						else
-							_grid.attach(attr);
+						if(!_grid){
+              _grid = layout.cells("a").attachHeadFields(attr);
+            }else{
+              _grid.attach(attr);
+            }
+
+            if(!$p.cat.characteristics._on_add_row){
+              $p.cat.characteristics._on_add_row = function (attr) {
+                if (attr.tabular_section == "inserts") {
+                  attr.row._obj.cnstr = obj.cnstr;
+                }
+              };
+              $p.cat.characteristics.on("add_row", $p.cat.characteristics._on_add_row)
+            }
+
+            if(_inserts){
+              layout.cells("b").detachObject(true);
+            }
+            _inserts = layout.cells("b").attachTabular(attr_inserts);
 
 						if(!obj.parent){
 							var rids = _grid.getAllRowIds();
@@ -445,7 +466,7 @@ function EditorAccordion(_editor, cell_acc) {
 					value: function (do_reload) {
 						if(do_reload)
 							_grid.reload();
-						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + "px";
+						layout.base.style.height = ((Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + 35) + "px";
 						layout.setSizes();
 						_grid.objBox.style.width = "100%";
 					}
@@ -471,23 +492,43 @@ function EditorAccordion(_editor, cell_acc) {
 			_evts.push($p.eve.attachEvent("layer_activated", this.attache));
 			_evts.push($p.eve.attachEvent("furn_changed", this.set_sizes));
 
-		})(new dhtmlXLayoutObject({
-			parent:     cont.querySelector("[name=content_stv]"),
-			pattern:    "1C",
-			offsets: {
-				top:    0,
-				right:  0,
-				bottom: 0,
-				left:   0
-			},
-			cells: [
-				{
-					id:             "a",
-					header:         false,
-					height:         200
-				}
-			]
-		}));
+		})(
+      // new dhtmlXLayoutObject({
+      //   parent: cont.querySelector("[name=content_stv]"),
+      //   pattern: "1C",
+      //   offsets: {
+      //     top: 0,
+      //     right: 0,
+      //     bottom: 0,
+      //     left: 0
+      //   },
+      //   cells: [
+      //     {
+      //       id: "a",
+      //       header: false,
+      //       height: 200
+      //     }
+      //   ]
+      // }),
+
+      new dhtmlXTabBar({
+
+        parent: cont.querySelector("[name=content_stv]"),
+        close_button: false,           // boolean, render closing button on tabs, optional
+        arrows_mode: "auto",          // mode of showing tabs arrows (auto, always)
+
+        tabs: [
+          {
+            id: "a",
+            text: "Свойства"
+          },
+          {
+            id: "b",
+            text: "Вставки"
+          }
+        ]
+      })
+    );
 
 	this.unload = function () {
 		tb_elm.unload();

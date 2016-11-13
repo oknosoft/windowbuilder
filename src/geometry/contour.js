@@ -1,6 +1,6 @@
 /**
  * ### Контур (слой) изделия
- * 
+ *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 24.07.2015
  *
@@ -40,7 +40,7 @@ function Contour(attr){
 		_layers = {};
 
 	Contour.superclass.constructor.call(this);
-	
+
 	if(attr.parent)
 		this.parent = attr.parent;
 
@@ -311,16 +311,16 @@ function Contour(attr){
 	if(this.cnstr){
 
 		var coordinates = this.project.ox.coordinates;
-		
+
 		// профили и доборы
 		coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, function(row){
-			
+
 			var profile = new Profile({row: row, parent: _contour});
-			
+
 			coordinates.find_rows({cnstr: row.cnstr, parent: {in: [row.elm, -row.elm]}, elm_type: $p.enm.elm_types.Добор}, function(row){
 				new ProfileAddl({row: row,	parent: profile});
 			});
-			
+
 		});
 
 		// заполнения
@@ -444,19 +444,19 @@ Contour.prototype.__define({
 			}
 
 			return this.data._bounds;
-			
+
 		}
 	},
 
 	/**
-	 * Габариты с учетом пользовательских размерных линий, чтобы рассчитать отступы автолиний 
+	 * Габариты с учетом пользовательских размерных линий, чтобы рассчитать отступы автолиний
 	 */
 	dimension_bounds: {
-		
+
 		get: function(){
 			var bounds = this.bounds;
 			this.getItems({class: DimensionLineCustom}).forEach(function (dl) {
-				bounds = bounds.unite(dl.bounds);									
+				bounds = bounds.unite(dl.bounds);
 			});
 			return bounds;
 		}
@@ -485,7 +485,7 @@ Contour.prototype.__define({
 
 			// сбрасываем кеш габаритов
 			this.data._bounds = null;
-			
+
 			// чистим визуализацию
 			if(!this.project.data._saving && this.l_visualization._by_spec)
 				this.l_visualization._by_spec.removeChildren();
@@ -1052,9 +1052,7 @@ Contour.prototype.__define({
 					furn: _xfields.furn,
 					clr_furn: _xfields.clr_furn,
 					direction: _xfields.direction,
-					h_ruch: _xfields.h_ruch,
-					mskt: _xfields.mskt,
-					clr_mskt: _xfields.clr_mskt
+					h_ruch: _xfields.h_ruch
 				},
 				tabular_sections: {
 					params: t.project.ox._metadata.tabular_sections.params
@@ -1092,9 +1090,9 @@ Contour.prototype.__define({
 
 			if(this._row.furn == v)
 				return;
-			
+
 			this._row.furn = v;
-			
+
 			// при необходимости устанавливаем направление открывания
 			if(this.direction.empty()){
 				this.project._dp.sys.furn_params.find_rows({
@@ -1104,7 +1102,7 @@ Contour.prototype.__define({
 					return false;
 				}.bind(this._row));
 			}
-			
+
 			// при необходимости устанавливаем цвет
 			// если есть контуры с цветной фурнитурой, используем. иначе - цвет из фурнитуры
 			if(this.clr_furn.empty()){
@@ -1165,32 +1163,6 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 			this._row.h_ruch = v;
-			this.project.register_change();
-		}
-	},
-
-	/**
-	 * Вставка москитки
-	 */
-	mskt: {
-		get: function () {
-			return this._row.mskt;
-		},
-		set: function (v) {
-			this._row.mskt = v;
-			this.project.register_change();
-		}
-	},
-
-	/**
-	 * Цвет москитки
-	 */
-	clr_mskt: {
-		get: function () {
-			return this._row.clr_mskt;
-		},
-		set: function (v) {
-			this._row.clr_mskt = v;
 			this.project.register_change();
 		}
 	},
@@ -1307,7 +1279,7 @@ Contour.prototype.__define({
 		get : function(){
 			if(!this.is_rectangular)
 				return 0;
-			
+
 			var profiles = this.profiles_by_side();
 			return this.bounds ? this.bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
 		}
@@ -1320,7 +1292,7 @@ Contour.prototype.__define({
 		get : function(){
 			if(!this.is_rectangular)
 				return 0;
-			
+
 			var profiles = this.profiles_by_side();
 			return this.bounds ? this.bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
 		}
@@ -1374,7 +1346,7 @@ Contour.prototype.__define({
 	 */
 	draw_opening: {
 		value: function () {
-			
+
 			if(!this.parent || !$p.enm.open_types.is_opening(this.furn.open_type)){
 				if(this.l_visualization._opening && this.l_visualization._opening.visible)
 					this.l_visualization._opening.visible = false;
@@ -1450,10 +1422,10 @@ Contour.prototype.__define({
 
 				profiles.some(function (elm) {
 					if(row.elm == elm.elm){
-						
+
 						// есть визуализация для текущего профиля
 						row.nom.visualization.draw(elm, l_vis, row.len * 1000);
-						
+
 						return true;
 					}
 				});
@@ -1706,7 +1678,7 @@ Contour.prototype.__define({
 	 * @for Contour
 	 */
 	clear_dimentions: {
-	
+
 		value: function () {
 			for(var key in this.l_dimensions.ihor){
 				this.l_dimensions.ihor[key].removeChildren();
@@ -1762,7 +1734,7 @@ Contour.prototype.__define({
 	 * Обработчик события при удалении элемента
 	 */
 	on_remove_elm: {
-		
+
 		value: function (elm) {
 
 			// при удалении любого профиля, удаляем размрные линии импостов
@@ -1771,7 +1743,7 @@ Contour.prototype.__define({
 
 			if (elm instanceof Profile && !this.project.data._loading)
 				this.clear_dimentions();
-			
+
 		}
 	},
 
@@ -1797,7 +1769,7 @@ Contour.prototype.__define({
 	 */
 	on_sys_changed: {
 		value: function () {
-			
+
 			this.profiles.forEach(function (profile) {
 				profile.inset = profile.project.default_inset({
 					elm_type: profile.elm_type,
@@ -1866,7 +1838,7 @@ GlassSegment.prototype.__define({
 							e = this.profile instanceof ProfileAddl ? this.profile.e : this.e;
 
 						// TODO: учесть импосты, привязанные к добору
-						
+
 						if(b.is_nearest(gen.getNearestPoint(addl.b), true) && e.is_nearest(gen.getNearestPoint(addl.e), true)){
 							this.profile = addl;
 							this.outer = false;

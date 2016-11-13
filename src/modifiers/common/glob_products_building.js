@@ -514,7 +514,7 @@ function ProductsBuilding(){
 	}
 
 	/**
-	 * Аналог УПзП-шного _ПроверитьОграниченияСтрокиФурнитуры_
+	 * Проверяет ограничения строки фурнитуры
 	 * @param contour {Contour}
 	 * @param cache {Object}
 	 * @param furn_set {_cat.furns}
@@ -1051,6 +1051,12 @@ function ProductsBuilding(){
 			furn_spec(contour);
 
 		});
+
+    // спецификация москиток
+
+    // спецификация вставок в контур
+
+    // спецификация вставок в изделие
 
 	}
 
