@@ -1440,6 +1440,24 @@ Contour.prototype.__define({
 		}
 	},
 
+  /**
+   * Массив с рёбрами периметра
+   */
+  perimeter: {
+    get: function () {
+      var res = [], tmp;
+      this.outer_profiles.forEach(function (curr) {
+        res.push(tmp = {
+          len: curr.sub_path.length,
+          angle: curr.e.subtract(curr.b).angle
+        });
+        if(tmp.angle < 0)
+          tmp.angle += 360;
+      });
+      return res;
+    }
+  },
+
 	/**
 	 * формирует авторазмерные линии
 	 */

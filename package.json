@@ -136,7 +136,7 @@
     "eslint-config-standard-react": "^4.2",
     "eslint-plugin-babel": "^3.3",
     "eslint-plugin-promise": "^3.0",
-    "eslint-plugin-react": "^6.5",
+    "eslint-plugin-react": "^6.7",
     "eslint-plugin-standard": "^2.0",
     "isparta-loader": "^2.0",
     "karma": "^1.2",
@@ -175,8 +175,8 @@
   "homepage": "http://www.oknosoft.ru/zd/",
 
   "config": {
-    "couchdb": "/couchdb/wb_",
-    "couchdb1": "http://cou206:5984/wb_",
+    "couchdb1": "/couchdb/wb_",
+    "couchdb": "http://cou206:5984/wb_",
     "zone": 1,
     "zone_demo": 1,
     "prefix": "wb_",

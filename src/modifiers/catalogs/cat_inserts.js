@@ -83,6 +83,33 @@ $p.CatInserts.prototype.__define({
 		}
 	},
 
+  /**
+   * Возвращает атрибуты характеристики виртуальной продукции по вставке в контур
+   */
+  contour_attrs: {
+    value: function (contour) {
+
+      var main_rows = [],
+        res = {calc_order: contour.project.ox.calc_order};
+
+      this.specification.find_rows({is_main_elm: true}, function (row) {
+        main_rows.push(row);
+        return false;
+      });
+
+      if(main_rows.length){
+        var irow = main_rows[0];
+        res.owner = irow.nom instanceof $p.CatInserts ? irow.nom.nom() : irow.nom;
+        res.x = contour.w + irow.sz;
+        res.y = contour.h + irow.sz;
+        res.s = ((res.x * res.y) / 1000000).round(3)
+      }
+
+      return res;
+
+    }
+  },
+
 	/**
 	 * Возвращает толщину вставки
 	 */

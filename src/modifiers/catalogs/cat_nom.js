@@ -53,22 +53,50 @@ $p.CatNom.prototype.__define({
 			if(!attr.date)
 				attr.date = new Date();
 
-			var price = 0, currency, date = $p.utils.blank.date;
+			var price = 0, currency, start_date = $p.utils.blank.date;
 
+      // если для номенклатуры существует структура цен, ищем подходящую
 			if(this._data._price){
 				if(this._data._price[attr.characteristic]){
 					if(this._data._price[attr.characteristic][attr.price_type]){
 						this._data._price[attr.characteristic][attr.price_type].forEach(function (row) {
-							if(row.date > date && row.date <= attr.date){
+							if(row.date > start_date && row.date <= attr.date){
 								price = row.price;
 								currency = row.currency;
+                start_date = row.date;
 							}
 						})
 					}
+
 				}else if(attr.clr){
 
-				}
-			}
+        }
+
+      }
+
+      // если есть формула - выполняем вне зависимости от установленной цены
+      if(attr.formula){
+
+        // если нет цены на характеристику, ищем цену без характеристики
+        if(!price){
+          if(this._data._price[$p.utils.blank.guid][attr.price_type]){
+            this._data._price[$p.utils.blank.guid][attr.price_type].forEach(function (row) {
+              if(row.date > start_date && row.date <= attr.date){
+                price = row.price;
+                currency = row.currency;
+                start_date = row.date;
+              }
+            })
+          }
+        }
+        price = attr.formula.execute({
+          nom: this,
+          characteristic: $p.cat.characteristics.get(attr.characteristic, false),
+          date: attr.date,
+          price: price,
+          currency: currency
+        })
+      }
 
 			// Пересчитать из валюты в валюту
 			return $p.pricing.from_currency_to_currency(price, attr.date, currency, attr.currency);

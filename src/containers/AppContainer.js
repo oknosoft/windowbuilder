@@ -7,11 +7,12 @@ import { Router } from 'react-router'
 import { Provider } from 'react-redux'
 import { LOCATION_CHANGE } from 'react-router-redux'
 
-// стили для react-data-grid
+// стили для react-data-grid и react-virtualized
 import 'metadata-react-ui/react-data-grid.css' // .react-grid-HeaderCell  : font-weight: 700; */
-import 'react-flex-layout/react-flex-layout-splitter.css'
 import 'react-virtualized/styles.css'
 import 'react-virtualized-select/styles.css'
+
+//import 'react-flex-layout/react-flex-layout-splitter.css'
 
 // стили MuiTheme для material-ui
 import MuiThemeProvider, { styles, muiTheme } from './MuiTheme';

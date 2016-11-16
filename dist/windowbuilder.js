@@ -1847,15 +1847,6 @@ function EditorAccordion(_editor, cell_acc) {
               _grid.attach(attr);
             }
 
-            if(!$p.cat.characteristics._on_add_row){
-              $p.cat.characteristics._on_add_row = function (attr) {
-                if (attr.tabular_section == "inserts") {
-                  attr.row._obj.cnstr = obj.cnstr;
-                }
-              };
-              $p.cat.characteristics.on("add_row", $p.cat.characteristics._on_add_row)
-            }
-
             if(_inserts){
               layout.cells("b").detachObject(true);
             }
@@ -4758,6 +4749,24 @@ Contour.prototype.__define({
 
 		}
 	},
+
+  /**
+   * Массив с рёбрами периметра
+   */
+  perimeter: {
+    get: function () {
+      var res = [], tmp;
+      this.outer_profiles.forEach(function (curr) {
+        res.push(tmp = {
+          len: curr.sub_path.length,
+          angle: curr.e.subtract(curr.b).angle
+        });
+        if(tmp.angle < 0)
+          tmp.angle += 360;
+      });
+      return res;
+    }
+  },
 
 	/**
 	 * формирует авторазмерные линии

@@ -30,13 +30,17 @@ function Pricing($p){
 	this.nom_price = function (nom, characteristic, price_type, prm, row) {
 
 		if(row && prm){
-			var calc_order = prm.calc_order_row._owner._owner;
-			row.price = nom._price({
-				price_type: price_type,
-				characteristic: characteristic,
-				date: calc_order.date,
-				currency: calc_order.doc_currency
-			});
+			var calc_order = prm.calc_order_row._owner._owner,
+        price_prm = {
+          price_type: price_type,
+          characteristic: characteristic,
+          date: calc_order.date,
+          currency: calc_order.doc_currency
+        };
+      if(price_type == prm.price_type.price_type_first_cost && !prm.price_type.formula.empty()){
+        price_prm.formula = prm.price_type.formula;
+      }
+			row.price = nom._price(price_prm);
 
 			return row.price;
 		}
@@ -81,6 +85,9 @@ function Pricing($p){
 
 		// заглушка - фильтр только по ценовой группе
 		if(ares.length)
+      ares.sort(function (a, b) {
+        return a.price_group.ref < b.price_group.ref;
+      })
 			Object.keys(prm.price_type).forEach(function (key) {
 				prm.price_type[key] = ares[0][key];
 			});
@@ -107,7 +114,7 @@ function Pricing($p){
 	this.calc_first_cost = function (prm) {
 
 		var marginality_in_spec = $p.job_prm.pricing.marginality_in_spec,
-			fake_row = {};
+			fake_row = {}, tmp_price;
 
 		if(!prm.spec)
 			return;
@@ -127,12 +134,26 @@ function Pricing($p){
 
 			});
 			prm.calc_order_row.first_cost = prm.spec.aggregate([], ["amount"]).round(2);
+
 		}else{
-			// TODO: реализовать расчет себестомиости по номенклатуре строки расчета
+
+      // расчет себестомиости по номенклатуре строки расчета
+      fake_row.nom = prm.calc_order_row.nom;
+      fake_row.characteristic = prm.calc_order_row.characteristic;
+      prm.calc_order_row.first_cost = $p.pricing.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
 		}
 
-
-
+    // себестоимость вытянутых строк спецификации в заказ
+		if(prm.order_rows){
+      for(var rid in prm.order_rows){
+        var fake_prm = {
+          spec: prm.order_rows[rid].characteristic.specification,
+          calc_order_row: prm.order_rows[rid]
+        }
+        this.price_type(fake_prm)
+        this.calc_first_cost(fake_prm)
+      }
+    }
 
 	};
 
@@ -156,21 +177,18 @@ function Pricing($p){
 
 		// КМарж в строке расчета
 		prm.calc_order_row.marginality = prm.calc_order_row.first_cost ?
-		prm.calc_order_row.price * ((100 - prm.calc_order_row.discount_percent)/100) / prm.calc_order_row.first_cost : 0;
+      prm.calc_order_row.price * ((100 - prm.calc_order_row.discount_percent)/100) / prm.calc_order_row.first_cost : 0;
 
 
 		// TODO: Рассчитаем цену и сумму ВНУТР или ДИЛЕРСКУЮ цену и скидку
 		if(prm.price_type.extra_charge_external){
 
 			prm.calc_order_row.price_internal = (prm.calc_order_row.price *
-			(100 - prm.calc_order_row.discount_percent)/100 * (100 + prm.price_type.extra_charge_external)/100).round(2);
+			  (100 - prm.calc_order_row.discount_percent)/100 * (100 + prm.price_type.extra_charge_external)/100).round(2);
 
 			// TODO: учесть формулу
 
 		}
-
-
-		// TODO: вытягивание строк спецификации в заказ
 
 		// Эмулируем событие окончания редактирования, чтобы единообразно пересчитать строку табчасти
 		if(!prm.hand_start){
@@ -183,7 +201,17 @@ function Pricing($p){
 			});
 		}
 
-
+    // Цены и суммы вытянутых строк спецификации в заказ
+    if(prm.order_rows){
+      for(var rid in prm.order_rows){
+        var fake_prm = {
+          spec: prm.order_rows[rid].characteristic.specification,
+          calc_order_row: prm.order_rows[rid]
+        }
+        this.price_type(fake_prm);
+        this.calc_amount(fake_prm);
+      }
+    }
 
 	};
 

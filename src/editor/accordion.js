@@ -437,15 +437,6 @@ function EditorAccordion(_editor, cell_acc) {
               _grid.attach(attr);
             }
 
-            if(!$p.cat.characteristics._on_add_row){
-              $p.cat.characteristics._on_add_row = function (attr) {
-                if (attr.tabular_section == "inserts") {
-                  attr.row._obj.cnstr = obj.cnstr;
-                }
-              };
-              $p.cat.characteristics.on("add_row", $p.cat.characteristics._on_add_row)
-            }
-
             if(_inserts){
               layout.cells("b").detachObject(true);
             }

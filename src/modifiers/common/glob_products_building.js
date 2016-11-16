@@ -18,7 +18,8 @@ function ProductsBuilding(){
 		cnn_elmnts,
 		glass_specification,
 		glass_formulas,
-		params;
+		params,
+    find_cx_sql;
 
 
 	/**
@@ -1029,6 +1030,62 @@ function ProductsBuilding(){
 		});
 	}
 
+  /**
+   * Ищет характеристику в озу, в indexeddb не лезет, если нет в озу - создаёт
+   * @param elm
+   * @param origin
+   * @return {$p.CatCharacteristics}
+   */
+	function find_create_cx(elm, origin) {
+    if(!find_cx_sql){
+      find_cx_sql = $p.wsql.alasql.compile("select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?")
+    }
+    var aref = find_cx_sql([ox.ref, elm, origin]);
+    if(aref.length){
+      return $p.cat.characteristics.get(aref[0].ref, false);
+    }
+    return $p.cat.characteristics.create({
+      leading_product: ox,
+      leading_elm: elm,
+      origin: origin
+    }, false, true)._set_loaded();
+  }
+
+  /**
+   * Спецификация вставок в контур
+   * @param contour
+   */
+  function inset_contour_spec(contour) {
+
+    // во время расчетов возможна подмена объекта спецификации
+    var spec_tmp = spec;
+
+    ox.inserts.find_rows({cnstr: contour.cnstr}, function (irow) {
+      var elm = {
+        _row: {}
+      },
+        inset = irow.inset;
+
+      // если во вставке указано создавать продукцию, создаём
+      if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
+        // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём
+        var cx = find_create_cx(-contour.cnstr, inset.ref);
+        ox._order_rows.push(cx);
+
+        // дозаполняем реквизиты характеристики
+        cx._mixin(inset.contour_attrs(contour));
+
+      }
+
+      // рассчитаем спецификацию вставки
+
+
+    })
+
+    // восстанавливаем исходную ссылку объекта спецификации
+    spec = spec_tmp;
+  }
+
 	/**
 	 * Основная cпецификация по соединениям и вставкам таблицы координат
 	 * @param scheme {Scheme}
@@ -1039,7 +1096,7 @@ function ProductsBuilding(){
 		added_cnn_spec = {};
 
 		// для всех контуров изделия
-		scheme.getItems({class: $p.Editor.Contour}).forEach(function (contour) {
+    scheme.getItems({class: $p.Editor.Contour}).forEach(function (contour) {
 
 			// для всех профилей контура
 			contour.profiles.forEach(base_spec_profile);
@@ -1050,11 +1107,10 @@ function ProductsBuilding(){
 			// фурнитура контура
 			furn_spec(contour);
 
+      // спецификация вставок в контур
+      inset_contour_spec(contour)
+
 		});
-
-    // спецификация москиток
-
-    // спецификация вставок в контур
 
     // спецификация вставок в изделие
 
@@ -1081,6 +1137,9 @@ function ProductsBuilding(){
 
 		// чистим спецификацию
 		spec.clear();
+
+    // массив продукций к добавлению в заказ
+    ox._order_rows = [];
 
 		// рассчитываем базовую сецификацию
 		base_spec(scheme);
