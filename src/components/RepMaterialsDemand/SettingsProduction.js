@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from "react";
 
 import TabularSection from '../TabularSection'
 
-import RefEditor from '../DataFieldCell/RefEditor'
+import RefEditor from '../DataField/DataCell'
 
 import SettingsProductionToolbar from './SettingsProductionToolbar';
 

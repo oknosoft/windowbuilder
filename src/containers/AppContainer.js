@@ -1,5 +1,7 @@
 /**
- * Самый верхний уровень
+ * Самый верхний уровень - провайдер redux и router
+ * Здесь же, подключаем индикатор состояния загрузки приложения
+ * и обработчик роутинга на login при первом запуске
  */
 
 import React, { Component, PropTypes } from 'react'
@@ -45,14 +47,17 @@ class AppContainer extends Component {
     store: PropTypes.object.isRequired
   }
 
+  // эти свойства будут доступны в контексте детей
   static childContextTypes = {
     $p: React.PropTypes.object.isRequired,
+    store: React.PropTypes.object.isRequired,
     handleLocationChange: React.PropTypes.func.isRequired
   };
-
   getChildContext() {
+    const { store } = props
     return {
       $p,
+      store,
       handleLocationChange: this.handleLocationChange
     };
   }

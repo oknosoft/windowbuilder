@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
 
-import FieldSelect from '../DataField/FieldSelect'
+import FieldSelect from './FieldSelect'
 
 
 const ExcelColumn = {
