@@ -87,7 +87,7 @@ class AppContainer extends Component {
     }
 
     let t = this,
-      pnames = ['meta_loaded', 'data_empty', 'data_loaded', 'fetch_local', 'sync_started'],
+      pnames = ['meta_loaded','data_empty','data_loaded','fetch_local','sync_started','page'],
       current_state = select(store.getState());
 
     function handleChange() {
@@ -166,6 +166,7 @@ class AppContainer extends Component {
       return (
         <DumbScreen
           title = "Загрузка данных из IndexedDB..."
+          page = {meta.page}
         />
       )
     }

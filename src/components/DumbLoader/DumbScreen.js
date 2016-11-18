@@ -14,15 +14,16 @@ export default class DumbScreen extends Component {
     step_size: PropTypes.number,
     count_all: PropTypes.number,
 
-    text_title: PropTypes.string,
-    text_processed: PropTypes.string,
-    text_current: PropTypes.string,
-    text_bottom: PropTypes.string
+    title: PropTypes.string,
+    processed: PropTypes.string,
+    current: PropTypes.string,
+    bottom: PropTypes.string,
+    page: PropTypes.object
   }
 
   render() {
 
-    let { title, img } = this.props;
+    let { title, img, page } = this.props;
 
     if(!title)
       title = "Заставка загрузка модулей...";
@@ -33,6 +34,8 @@ export default class DumbScreen extends Component {
       <div className={classes.progress} style={{position: 'relative', width: 300}}>{title}</div>
 
       { img }
+
+      { page ? <div className={classes.progress} style={{position: 'relative', width: 300}}>{page.page}</div> : null }
 
     </div>
 

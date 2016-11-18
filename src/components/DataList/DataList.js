@@ -176,7 +176,7 @@ export default class DataList extends Component {
     const column = columns[index]
     const v = row[column.id]
 
-    switch ($p.rx_control_by_type(column.type, v)){
+    switch ($p.UI.control_by_type(column.type, v)){
 
       case 'ocombo':
         return $p.utils.value_mgr(row, column.id, column.type, false, v).get(v).presentation
