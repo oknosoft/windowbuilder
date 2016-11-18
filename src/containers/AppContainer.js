@@ -4,32 +4,30 @@
  * и обработчик роутинга на login при первом запуске
  */
 
-import React, { Component, PropTypes } from 'react'
-import { Router } from 'react-router'
-import { Provider } from 'react-redux'
-import { LOCATION_CHANGE } from 'react-router-redux'
+import React, {Component, PropTypes} from "react";
+import {Router} from "react-router";
+import {Provider} from "react-redux";
+import {LOCATION_CHANGE} from "react-router-redux";
 
-// стили для react-data-grid и react-virtualized
-import 'metadata-react-ui/react-data-grid.css' // .react-grid-HeaderCell  : font-weight: 700; */
-import 'react-virtualized/styles.css'
-import 'react-virtualized-select/styles.css'
 
+import "metadata-react-ui/react-data-grid.css";
+import "react-virtualized/styles.css";
+import "react-virtualized-select/styles.css";
 //import 'react-flex-layout/react-flex-layout-splitter.css'
 
+import DumbScreen from '../components/DumbLoader/DumbScreen';
+
+
 // стили MuiTheme для material-ui
-import MuiThemeProvider, { styles, muiTheme } from './MuiTheme';
-
+import MuiThemeProvider, {styles, muiTheme} from "./MuiTheme";
 // функция установки параметров сеанса
-import settings from '../metadata/settings'
-
+import settings from "../metadata/settings";
 // функция инициализации структуры метаданных
-import meta_init from '../metadata/init'
-
+import meta_init from "../metadata/init";
 // собственно, metaengine
-import $p from 'metadata'
-
+import $p from "metadata";
 // модификатор отчета materials_demand
-import materials_demand from '../metadata/reports/materials_demand'
+import materials_demand from "../metadata/reports/materials_demand";
 
 
 export function handleLocationChange(store, pathname, search = '', hash = ''){
@@ -54,7 +52,7 @@ class AppContainer extends Component {
     handleLocationChange: React.PropTypes.func.isRequired
   };
   getChildContext() {
-    const { store } = props
+    const { store } = this.props
     return {
       $p,
       store,
@@ -74,31 +72,103 @@ class AppContainer extends Component {
 
   }
 
+  subscriber(store) {
+
+    function select(state) {
+
+      const {meta} = state,
+        res = {};
+
+      pnames.forEach(function (name) {
+        res[name] = meta[name];
+      })
+
+      return res
+    }
+
+    let t = this,
+      pnames = ['meta_loaded', 'data_empty', 'data_loaded', 'fetch_local', 'sync_started'],
+      current_state = select(store.getState());
+
+    function handleChange() {
+      let previous_state = current_state
+      current_state = select(store.getState())
+
+      pnames.some(function (name) {
+        if (current_state[name] != previous_state[name]) {
+          t.setState(current_state);
+          return true;
+        }
+      })
+    }
+
+    return handleChange
+
+  }
+
   // вызывается один раз на клиенте и сервере при подготовке компонента
   componentWillMount() {
 
     const { store } = this.props
 
-    // инициализируем параметры сеанса и метаданные
-    $p.wsql.init(settings, meta_init);
+    setTimeout(() => {
 
-    // подключаем обработчики событий плагином metadata-redux
-    $p.rx_events(store);
+      // инициализируем параметры сеанса и метаданные
+      $p.wsql.init(settings, meta_init);
 
-    // выполняем модификаторы
-    materials_demand($p)
+      // подключаем обработчики событий плагином metadata-redux
+      $p.rx_events(store);
 
-    // информируем хранилище о готовности MetaEngine
-    store.dispatch($p.rx_actions.META_LOADED($p))
+      // выполняем модификаторы
+      materials_demand($p)
 
-    // читаем локальные данные в ОЗУ
-    return $p.adapters.pouch.load_data();
+      // информируем хранилище о готовности MetaEngine
+      store.dispatch($p.rx_actions.META_LOADED($p))
+
+      // читаем локальные данные в ОЗУ
+      $p.adapters.pouch.load_data();
+
+      // подписываемся на события хранилища
+      store.subscribe(this.subscriber(store))
+
+    })
 
   }
 
   render () {
 
     const { history, routes, store } = this.props
+
+    const meta = store.getState().meta
+
+    // при первом старте и при загрузке данных, минуя роутинг показываем заставку
+    // если пустые данные, перебрасываем на страницу авторизации
+    //
+    // if(!meta_loaded) - заглушка заставка
+    // if(data_empty && route.path != '/login') - перебросить в login
+    // if(fetch_local && !data_loaded)
+
+    if(!meta.meta_loaded){
+        return (
+          <DumbScreen />
+        )
+    }
+
+    if(meta.data_empty){
+      if(routes.path != '/login'){
+        handleLocationChange(store, '/login');
+      }
+    }else{
+
+    }
+
+    if(!meta.data_loaded && meta.fetch_local){
+      return (
+        <DumbScreen
+          title = "Загрузка данных из IndexedDB..."
+        />
+      )
+    }
 
     return (
       <Provider store={store}>
@@ -110,6 +180,7 @@ class AppContainer extends Component {
       </Provider>
     )
   }
+
 }
 
 export default AppContainer

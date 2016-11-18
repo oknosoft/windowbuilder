@@ -51,7 +51,11 @@ class CoreLayout extends Component {
             <div style={{width: width}}>
               <Header {...props} />
               <div className={classes.mainContainer}>
-                {React.cloneElement(props.children, { height, width, data_empty: this.state.data_empty })}
+                {React.cloneElement(props.children, {
+                  height,
+                  width,
+                  data_empty: this.state.data_empty
+                })}
               </div>
             </div>
           )
