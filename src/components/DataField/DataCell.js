@@ -11,7 +11,7 @@ const ExcelColumn = {
   filterable: React.PropTypes.bool
 };
 
-class RefEditor extends Component {
+class DataCell extends Component {
 
   static propTypes = {
     options: React.PropTypes.array.isRequired,
@@ -64,4 +64,4 @@ class RefEditor extends Component {
   }
 }
 
-export default RefEditor;
+export default DataCell;
