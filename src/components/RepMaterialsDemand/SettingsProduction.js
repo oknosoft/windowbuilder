@@ -2,14 +2,14 @@ import React, {Component, PropTypes} from "react";
 
 import TabularSection from '../TabularSection'
 
-import RefEditor from '../DataField/DataCell'
+import DataCell from 'components/DataField/DataCell'
 
 import SettingsProductionToolbar from './SettingsProductionToolbar';
 
 import classes from './RepMaterialsDemand.scss'
 
 //options for priorities autocomplete editor
-var CharacteristicEditor = <RefEditor />
+var CharacteristicEditor = <DataCell />
 
 export default class SettingsProduction extends Component{
 

@@ -5,7 +5,7 @@ import Layout from '../react-flex-layout/react-flex-layout'
 import LayoutSplitter from '../react-flex-layout/react-flex-layout-splitter'
 
 import Toolbar from "./Toolbar";
-import DataField from '../DataField'
+import DataField from 'components/DataField'
 
 import RepTabularSection from './RepTabularSection'
 

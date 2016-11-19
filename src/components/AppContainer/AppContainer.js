@@ -10,32 +10,31 @@ import {Provider} from "react-redux";
 import {LOCATION_CHANGE} from "react-router-redux";
 
 
+import "metadata-react-ui/combined.css";
 import "metadata-react-ui/react-data-grid.css";
 import "react-virtualized/styles.css";
 import "react-virtualized-select/styles.css";
 //import 'react-flex-layout/react-flex-layout-splitter.css'
 
-import DumbScreen from '../components/DumbLoader/DumbScreen';
+import DumbScreen from 'components/DumbLoader/DumbScreen';
 
 
 // стили MuiTheme для material-ui
-import MuiThemeProvider, {styles, muiTheme} from "./MuiTheme";
+import MuiThemeProvider, {styles, muiTheme} from "./AppMuiTheme";
+
 // функция установки параметров сеанса
-import settings from "../metadata/settings";
+import settings from "metadata/settings";
+
 // функция инициализации структуры метаданных
-import meta_init from "../metadata/init";
+import meta_init from "metadata/init";
+
 // собственно, metaengine
 import $p from "metadata";
+
 // модификатор отчета materials_demand
-import materials_demand from "../metadata/reports/materials_demand";
+import materials_demand from "metadata/reports/materials_demand";
 
 
-export function handleLocationChange(store, pathname, search = '', hash = ''){
-  store.dispatch({
-    type: LOCATION_CHANGE,
-    payload: {pathname, search, hash}
-  })
-}
 
 class AppContainer extends Component {
 
@@ -50,7 +49,15 @@ class AppContainer extends Component {
     $p: React.PropTypes.object.isRequired,
     store: React.PropTypes.object.isRequired,
     handleLocationChange: React.PropTypes.func.isRequired
-  };
+  }
+
+  static handleLocationChange(store, pathname, search = '', hash = ''){
+    store.dispatch({
+      type: LOCATION_CHANGE,
+      payload: {pathname, search, hash}
+    })
+  }
+
   getChildContext() {
     const { store } = this.props
     return {
@@ -67,7 +74,7 @@ class AppContainer extends Component {
     const { store } = props
 
     this.handleLocationChange = function(pathname, search = '', hash = ''){
-      handleLocationChange(store, pathname, search, hash)
+      AppContainer.handleLocationChange(store, pathname, search, hash)
     }
 
   }

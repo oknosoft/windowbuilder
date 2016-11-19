@@ -5,7 +5,7 @@ import { useRouterHistory } from 'react-router'
 import { syncHistoryWithStore } from 'react-router-redux'
 import createStore from './store/createStore'
 
-import AppContainer from './containers/AppContainer'
+import AppContainer from './components/AppContainer'
 
 // Needed for onTouchTap
 // http://stackoverflow.com/a/34015469/988941

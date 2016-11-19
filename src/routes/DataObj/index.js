@@ -1,12 +1,14 @@
 // import { injectReducer } from '../../store/reducers'
 import $p from 'metadata'
 
-import { handleLocationChange } from 'containers/AppContainer'
+import AppContainer from 'components/AppContainer'
 
 import DumbLoader from 'components/DumbLoader'
 
 export default (store) => ({
+
   path: ':meta/:guid(/:form)(/:options)',
+
   /*  Async getComponent is only invoked when route matches   */
   getComponent (nextState, cb) {
     /*  Webpack - use 'require.ensure' to create a split point
@@ -33,7 +35,7 @@ export default (store) => ({
             if(_obj.is_new()){
 
               setTimeout(function () {
-                handleLocationChange(store, '/')
+                AppContainer.handleLocationChange(store, '/')
               })
 
             }else{
@@ -50,7 +52,7 @@ export default (store) => ({
         /*  Return getComponent   */
         cb(null, DumbLoader)
         setTimeout(function () {
-          handleLocationChange(store, nextState.location.pathname)
+          AppContainer.handleLocationChange(store, nextState.location.pathname)
         }, 3000)
       }
 

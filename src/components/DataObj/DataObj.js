@@ -5,7 +5,7 @@ import Layout from '../react-flex-layout/react-flex-layout'
 import LayoutSplitter from '../react-flex-layout/react-flex-layout-splitter'
 
 import Toolbar from "./Toolbar";
-import DataField from '../DataField'
+import DataField from 'components/DataField'
 
 import TabularSection from '../TabularSection'
 
@@ -117,8 +117,6 @@ export default class DataObj extends Component {
           <Layout layoutWidth={screen.width - 24} layoutHeight={screen.height - 140} >
             <Layout layoutWidth={'flex'}>
 
-              {/*<DataField _obj={_obj} _fld="partner" />
-              <DataField _obj={_obj.partner} _fld="phone" />*/}
               <DataField _obj={_obj} _fld="НачалоПериода" handleValueChange={this.handleValueChange("НачалоПериода")} />
               <DataField _obj={_obj} _fld="КонецПериода" handleValueChange={this.handleValueChange("КонецПериода")} />
               <DataField _obj={_obj} _fld="КоличествоДней" handleValueChange={this.handleValueChange("КоличествоДней")} />

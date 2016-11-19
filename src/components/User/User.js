@@ -6,7 +6,7 @@ import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import Toggle from 'material-ui/Toggle';
 import Divider from 'material-ui/Divider';
-import DataField from '../DataField'
+import DataField from 'components/DataField'
 
 import CircularProgress from "material-ui/CircularProgress";
 
