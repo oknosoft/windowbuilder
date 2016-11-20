@@ -34,7 +34,7 @@ export default function (props) {
         <li><a href="https://pouchdb.com/" target="_blank">PouchDB</a>, клиентская NoSQL база данных с поддержкой автономной работы и репликации с CouchDB</li>
         <li><a href="https://github.com/agershun/alasql" target="_blank">AlaSQL</a>, SQL-интерфейс к массивам javascript в памяти браузера и Node.js</li>
         <li><a href="http://www.movable-type.co.uk/scripts/aes.html" target="_blank">Aes</a>, библиотека шифрования/дешифрования строк</li>
-        <li><a href="http://www.movable-type.co.uk/scripts/aes.html" target="_blank">Redux</a>, диспетчер состояния веб-приложения</li>
+        <li><a href="https://github.com/reactjs/redux" target="_blank">Redux</a>, диспетчер состояния веб-приложения</li>
       </ul>
 
       <h4>UI библиотеки и компоненты интерфейса</h4>
@@ -43,7 +43,6 @@ export default function (props) {
         <li><a href="https://github.com/bvaughn/react-virtualized" target="_blank">React virtualized</a>, компоненты React для динамических списков</li>
         <li><a href="https://github.com/eligrey/FileSaver.js" target="_blank">Filesaver.js</a>, HTML5 реализация метода saveAs</li>
         <li><a href="http://momentjs.com/" target="_blank">Moment.js</a>, библиотека форматирования интервалов и дат</li>
-        <li><a href="http://numbrojs.com/" target="_blank">Numbro</a>, библиотека форматирования чисел</li>
         <li><a href="http://meritt.github.io/rubles/" target="_blank">Rubles.js</a>, библиотека форматирования чисел - сумма прописью</li>
       </ul>
 

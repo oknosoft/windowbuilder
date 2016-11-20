@@ -1,5 +1,5 @@
 // We only need to import the modules necessary for initial render
-import CoreLayout from '../layouts/CoreLayout/CoreLayout'
+import CoreLayout from '../components/CoreLayout/CoreLayout'
 import Home from './Home'
 import DataObjRoute from './DataObj'
 import DataListRoute from './DataList'
