@@ -163,7 +163,7 @@ class AppContainer extends Component {
 
     if(meta.data_empty){
       if(routes.path != '/login'){
-        handleLocationChange(store, '/login');
+        AppContainer.handleLocationChange(store, '/login');
       }
     }else{
 
