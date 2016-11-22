@@ -16,6 +16,7 @@ $p.on({
 		$p.off(common_characteristics);
 		return $p.cat.characteristics.pouch_load_view("doc/nom_characteristics");
 	}
+
 });
 
 // подписки на события
@@ -35,7 +36,30 @@ $p.cat.characteristics.on({
 		// дублируем контрагента для целей RLS
 		this.partner = this.calc_order.partner;
 
-	}
+	},
+
+  // при изменении реквизита
+  value_change: function (attr) {
+
+	  if(attr.field != 'inset' || attr.tabular_section != 'inserts'){
+	    return;
+    }
+
+    this.add_inset_params(attr.value, attr.row.cnstr);
+
+    // {
+    //   field: cell_field.field,
+    //   value: nValue,
+    //   tabular_section: _tsname,
+    //   grid: _grid,
+    //   row: cell_field.obj,
+    //   cell: (rId && cInd) ? _grid.cells(rId, cInd) : (_grid.getSelectedCellIndex() >=0 ? _grid.cells() : null),
+    //   wnd: _pwnd.pwnd
+    // }
+
+  }
+
+
 });
 
 // свойства объекта характеристики
@@ -163,7 +187,38 @@ $p.CatCharacteristics.prototype.__define({
 			return this.owner;
 		}
 
-	}
+	},
+
+  /**
+   * Добавляет параметры вставки
+   * @param inset
+   * @param cnstr
+   */
+  add_inset_params: {
+    value: function (inset, cnstr) {
+
+      var ts_params = this.params,
+        params = [];
+
+      ts_params.find_rows({cnstr: cnstr}, function (row) {
+        if(params.indexOf(row.param) == -1){
+          params.push(row.param);
+        }
+        return row.param;
+      });
+
+      inset.used_params.forEach(function (param) {
+        if(params.indexOf(param) == -1){
+          ts_params.add({
+            cnstr: cnstr,
+            param: param
+          })
+          params.push(param)
+        }
+      })
+    }
+  }
+
 });
 
 

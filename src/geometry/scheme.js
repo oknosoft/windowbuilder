@@ -1327,7 +1327,34 @@ Scheme.prototype.__define({
 
 			return res;
 		}
-	}
+	},
+
+  /**
+   * ### Выделенный элемент
+   * Возвращает первый из найденных выделенных элементов
+   *
+   * @property selected_elm
+   * @for Scheme
+   * @returns {BuilderElement}
+   */
+  selected_elm: {
+    get: function () {
+
+      var res;
+
+      this.selectedItems.some(function (item) {
+
+        if(item instanceof BuilderElement){
+          return res = item;
+
+        }else if(item.parent instanceof BuilderElement){
+          return res = item.parent;
+        }
+      });
+
+      return res;
+    }
+  }
 
 
 });

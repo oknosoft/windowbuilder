@@ -222,6 +222,8 @@ export default function ($p) {
                   resrow.amount_marged = resrow.amount_marged * row.qty;
 
                   // рассчитаем недостающие поля
+
+                  // если номер элемента < 0, интерпретируем его, как номер конструкции
                   if(resrow.elm > 0){
                     resrow.cnstr = row.characteristic.coordinates.find_rows({elm: resrow.elm})[0].cnstr;
                   }else if(resrow.elm < 0){

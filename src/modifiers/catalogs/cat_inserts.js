@@ -112,6 +112,9 @@ $p.CatInserts.prototype.__define({
 
 	/**
 	 * Возвращает толщину вставки
+   *
+   * @property thickness
+   * @return {Number}
 	 */
 	thickness: {
 		get: function () {
@@ -139,7 +142,26 @@ $p.CatInserts.prototype.__define({
 			return _cache.thickness;
 
 		}
-	}
+	},
+
+  /**
+   * Возвращает массив задействованных во вставке параметров
+   * @property used_params
+   * @return {Array}
+   */
+  used_params: {
+	  get: function () {
+      var res = [];
+
+      this.selection_params.each(function (row) {
+        if(!row.param.empty() && res.indexOf(row.param) == -1){
+          res.push(row.param)
+        }
+      })
+
+      return res;
+    }
+  }
 
 });
 

@@ -1,6 +1,6 @@
 /**
  * ### Графический редактор
- * 
+ *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 24.07.2015
  *
@@ -37,7 +37,7 @@
  * @tooltip Графический редактор
  */
 function Editor(pwnd, attr){
-	
+
 	var _editor = this,
 
 		/**
@@ -239,7 +239,7 @@ function Editor(pwnd, attr){
 
 		], onclick: function (name) {
 			switch(name) {
-				
+
 				case 'save_close':
 					if(_editor.project)
 						_editor.project.save_coordinates({save: true, close: true});
@@ -420,7 +420,7 @@ function Editor(pwnd, attr){
 		}
 
 		this.project.getItems({class: Contour}).forEach(checkPathItem);
-		
+
 		boundingRect.remove();
 
 		return paths;
@@ -631,7 +631,7 @@ Editor.prototype.__define({
 	/**
 	 * ### Устанавливает икону курсора
 	 * Действие выполняется для всех канвасов редактора
-	 * 
+	 *
 	 * @method canvas_cursor
 	 * @for Editor
 	 * @param name {String} - имя css класса курсора
@@ -768,6 +768,102 @@ Editor.prototype.__define({
 				selected.selected = false;
 		}
 	},
+
+
+  /**
+   * ### Диалог дополнительных вставок
+   *
+   * @param [cnstr] {Number} - номер элемента или контура
+   */
+  additional_inserts: {
+    value: 	function(cnstr){
+
+      var caption = $p.msg.additional_inserts,
+        meta_fields = $p.cat.characteristics.metadata("inserts").fields._clone();
+
+      if(!cnstr){
+        cnstr = 0;
+        caption+= ' в изделие';
+        meta_fields.inset.choice_params[0].path = ["Изделие"];
+
+      }else if(cnstr == 'elm'){
+        cnstr = this.project.selected_elm;
+        if(cnstr){
+          // добавляем параметры вставки
+          this.project.ox.add_inset_params(cnstr.inset, -cnstr.elm);
+          caption+= ' элем. №' + cnstr.elm;
+          cnstr = -cnstr.elm;
+          meta_fields.inset.choice_params[0].path = ["Элемент"];
+
+        }else{
+          return;
+        }
+
+      }else if(cnstr == 'contour'){
+        cnstr = this.project.activeLayer.cnstr
+        caption+= ' в контур №' + cnstr;
+        meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Контур"];
+
+      }
+
+      var options = {
+        name: 'additional_inserts',
+        wnd: {
+          caption: caption,
+          allow_close: true,
+          width: 360,
+          height: 420,
+          modal: true
+        }
+      };
+      // восстанавливаем сохранённые параметры
+      //$p.wsql.restore_options("editor", options);
+
+      var wnd = $p.iface.dat_blank(this._dxw, options.wnd);
+
+      wnd.elmnts.layout = wnd.attachLayout({
+        pattern: "2E",
+        cells: [{
+          id: "a",
+          text: "Вставки",
+          header: false,
+          height: 160
+        }, {
+          id: "b",
+          text: "Параметры",
+          header: false
+        }],
+        offsets: { top: 0, right: 0, bottom: 0, left: 0}
+      });
+
+      wnd.elmnts.grids.inserts = wnd.elmnts.layout.cells("a").attachTabular({
+        obj: this.project.ox,
+        ts: "inserts",
+        selection: {cnstr: cnstr},
+        metadata: meta_fields,
+        ts_captions: {
+          fields: ["inset", "clr"],
+          headers: "Вставка,Цвет",
+          widths: "*,*",
+          min_widths: "100,100",
+          aligns: "",
+          sortings: "na,na",
+          types: "ref,ref"
+        }
+      });
+
+      wnd.elmnts.grids.params = wnd.elmnts.layout.cells("b").attachHeadFields({
+        obj: this.project.ox,
+        ts: "params",
+        selection: {cnstr: cnstr},
+        oxml: {
+          "Параметры": []
+        },
+        ts_title: "Параметры"
+      });
+
+    }
+  },
 
 	/**
 	 * ### Поворот кратно 90° и выравнивание

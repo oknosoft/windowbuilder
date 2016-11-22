@@ -1445,11 +1445,13 @@ function EditorAccordion(_editor, cell_acc) {
 				{name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
 				{name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
 				{name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
+        {name: 'sep_0', text: '', float: 'left'},
+        {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
 				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
 			],
 			image_path: "dist/imgs/",
 			onclick: function (name) {
-				return _editor.profile_align(name);
+				return name == 'additional_inserts' ? _editor.additional_inserts('elm') : _editor.profile_align(name);
 			}
 		}),
 
@@ -1486,6 +1488,9 @@ function EditorAccordion(_editor, cell_acc) {
 					//}
 				},
 				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
+        {name: 'sep_0', text: '', float: 'left'},
+        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
+        {name: 'inserts_to_contour', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_contour, float: 'left'},
 				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
 
 			], onclick: function (name) {
@@ -1519,6 +1524,16 @@ function EditorAccordion(_editor, cell_acc) {
 							tabular: "constructions"
 						});
 						break;
+
+          case 'inserts_to_product':
+            // дополнительные вставки в изделие
+            _editor.additional_inserts();
+            break;
+
+          case 'inserts_to_contour':
+            // дополнительные вставки в контур
+            _editor.additional_inserts('contour');
+            break;
 
 					default:
 						$p.msg.show_msg(name);
@@ -1813,7 +1828,7 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		stv = new (function StvProps(layout) {
 
-			var t = this, _grid, _inserts, _evts = [];
+			var t = this, _grid, _evts = [];
 
 			this.__define({
 
@@ -1823,8 +1838,6 @@ function EditorAccordion(_editor, cell_acc) {
 						if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
 							return;
 
-            layout.cells("a").setActive();
-
 						var attr = {
 							obj: obj,
 							oxml: {
@@ -1833,24 +1846,14 @@ function EditorAccordion(_editor, cell_acc) {
 							},
 							ts: "params",
 							ts_title: "Параметры",
-							selection: {cnstr: obj.cnstr || -1, hide: {not: true}}
-						},
-              attr_inserts = {
-                obj: obj.project.ox,
-                ts: "inserts",
-                selection: {cnstr: obj.cnstr || -1}
-              };
+							selection: {cnstr: obj.cnstr || -9999, hide: {not: true}}
+						};
 
 						if(!_grid){
               _grid = layout.cells("a").attachHeadFields(attr);
             }else{
               _grid.attach(attr);
             }
-
-            if(_inserts){
-              layout.cells("b").detachObject(true);
-            }
-            _inserts = layout.cells("b").attachTabular(attr_inserts);
 
 						if(!obj.parent){
 							var rids = _grid.getAllRowIds();
@@ -1867,7 +1870,7 @@ function EditorAccordion(_editor, cell_acc) {
 					value: function (do_reload) {
 						if(do_reload)
 							_grid.reload();
-						layout.base.style.height = ((Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + 35) + "px";
+						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + "px";
 						layout.setSizes();
 						_grid.objBox.style.width = "100%";
 					}
@@ -1894,42 +1897,43 @@ function EditorAccordion(_editor, cell_acc) {
 			_evts.push($p.eve.attachEvent("furn_changed", this.set_sizes));
 
 		})(
-      // new dhtmlXLayoutObject({
-      //   parent: cont.querySelector("[name=content_stv]"),
-      //   pattern: "1C",
-      //   offsets: {
-      //     top: 0,
-      //     right: 0,
-      //     bottom: 0,
-      //     left: 0
-      //   },
-      //   cells: [
-      //     {
-      //       id: "a",
-      //       header: false,
-      //       height: 200
-      //     }
-      //   ]
-      // }),
-
-      new dhtmlXTabBar({
-
+      new dhtmlXLayoutObject({
         parent: cont.querySelector("[name=content_stv]"),
-        close_button: false,           // boolean, render closing button on tabs, optional
-        arrows_mode: "auto",          // mode of showing tabs arrows (auto, always)
-
-        tabs: [
+        pattern: "1C",
+        offsets: {
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0
+        },
+        cells: [
           {
             id: "a",
-            text: "Свойства"
-          },
-          {
-            id: "b",
-            text: "Вставки"
+            header: false,
+            height: 200
           }
         ]
       })
+
+      // new dhtmlXTabBar({
+      //
+      //   parent: cont.querySelector("[name=content_stv]"),
+      //   close_button: false,           // boolean, render closing button on tabs, optional
+      //   arrows_mode: "auto",          // mode of showing tabs arrows (auto, always)
+      //
+      //   tabs: [
+      //     {
+      //       id: "a",
+      //       text: "Свойства"
+      //     },
+      //     {
+      //       id: "b",
+      //       text: "Вставки"
+      //     }
+      //   ]
+      // })
     );
+
 
 	this.unload = function () {
 		tb_elm.unload();
@@ -1951,7 +1955,6 @@ function EditorAccordion(_editor, cell_acc) {
 		props.layout.setSizes();
 		stv.layout.setSizes();
 	};
-
 
 	this.elm = new dhtmlXLayoutObject({
 		parent:     cont.querySelector("[name=content_elm]"),
@@ -2136,7 +2139,7 @@ function Clipbrd(_editor) {
 
 /**
  * ### Графический редактор
- * 
+ *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
  * Created 24.07.2015
  *
@@ -2173,7 +2176,7 @@ function Clipbrd(_editor) {
  * @tooltip Графический редактор
  */
 function Editor(pwnd, attr){
-	
+
 	var _editor = this,
 
 		/**
@@ -2375,7 +2378,7 @@ function Editor(pwnd, attr){
 
 		], onclick: function (name) {
 			switch(name) {
-				
+
 				case 'save_close':
 					if(_editor.project)
 						_editor.project.save_coordinates({save: true, close: true});
@@ -2556,7 +2559,7 @@ function Editor(pwnd, attr){
 		}
 
 		this.project.getItems({class: Contour}).forEach(checkPathItem);
-		
+
 		boundingRect.remove();
 
 		return paths;
@@ -2767,7 +2770,7 @@ Editor.prototype.__define({
 	/**
 	 * ### Устанавливает икону курсора
 	 * Действие выполняется для всех канвасов редактора
-	 * 
+	 *
 	 * @method canvas_cursor
 	 * @for Editor
 	 * @param name {String} - имя css класса курсора
@@ -2904,6 +2907,102 @@ Editor.prototype.__define({
 				selected.selected = false;
 		}
 	},
+
+
+  /**
+   * ### Диалог дополнительных вставок
+   *
+   * @param [cnstr] {Number} - номер элемента или контура
+   */
+  additional_inserts: {
+    value: 	function(cnstr){
+
+      var caption = $p.msg.additional_inserts,
+        meta_fields = $p.cat.characteristics.metadata("inserts").fields._clone();
+
+      if(!cnstr){
+        cnstr = 0;
+        caption+= ' в изделие';
+        meta_fields.inset.choice_params[0].path = ["Изделие"];
+
+      }else if(cnstr == 'elm'){
+        cnstr = this.project.selected_elm;
+        if(cnstr){
+          // добавляем параметры вставки
+          this.project.ox.add_inset_params(cnstr.inset, -cnstr.elm);
+          caption+= ' элем. №' + cnstr.elm;
+          cnstr = -cnstr.elm;
+          meta_fields.inset.choice_params[0].path = ["Элемент"];
+
+        }else{
+          return;
+        }
+
+      }else if(cnstr == 'contour'){
+        cnstr = this.project.activeLayer.cnstr
+        caption+= ' в контур №' + cnstr;
+        meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Контур"];
+
+      }
+
+      var options = {
+        name: 'additional_inserts',
+        wnd: {
+          caption: caption,
+          allow_close: true,
+          width: 360,
+          height: 420,
+          modal: true
+        }
+      };
+      // восстанавливаем сохранённые параметры
+      //$p.wsql.restore_options("editor", options);
+
+      var wnd = $p.iface.dat_blank(this._dxw, options.wnd);
+
+      wnd.elmnts.layout = wnd.attachLayout({
+        pattern: "2E",
+        cells: [{
+          id: "a",
+          text: "Вставки",
+          header: false,
+          height: 160
+        }, {
+          id: "b",
+          text: "Параметры",
+          header: false
+        }],
+        offsets: { top: 0, right: 0, bottom: 0, left: 0}
+      });
+
+      wnd.elmnts.grids.inserts = wnd.elmnts.layout.cells("a").attachTabular({
+        obj: this.project.ox,
+        ts: "inserts",
+        selection: {cnstr: cnstr},
+        metadata: meta_fields,
+        ts_captions: {
+          fields: ["inset", "clr"],
+          headers: "Вставка,Цвет",
+          widths: "*,*",
+          min_widths: "100,100",
+          aligns: "",
+          sortings: "na,na",
+          types: "ref,ref"
+        }
+      });
+
+      wnd.elmnts.grids.params = wnd.elmnts.layout.cells("b").attachHeadFields({
+        obj: this.project.ox,
+        ts: "params",
+        selection: {cnstr: cnstr},
+        oxml: {
+          "Параметры": []
+        },
+        ts_title: "Параметры"
+      });
+
+    }
+  },
 
 	/**
 	 * ### Поворот кратно 90° и выравнивание
@@ -3135,6 +3234,8 @@ $p.Editor = Editor;
  */
 
 (function (msg){
+
+  msg.additional_inserts = "Доп. вставки";
 	msg.align_node_right = "Уравнять вертикально вправо";
 	msg.align_node_bottom = "Уравнять горизонтально вниз";
 	msg.align_node_top = "Уравнять горизонтально вверх";
@@ -3162,6 +3263,10 @@ $p.Editor = Editor;
 
 	msg.del_elm = "Удалить элемент";
 
+  msg.to_contour = "в контур";
+  msg.to_elm = "в элемент";
+  msg.to_product = "в изделие";
+
 	msg.ruler_elm = "Расстояние между элементами";
 	msg.ruler_node = "Расстояние между узлами";
 	msg.ruler_new_line = "Добавить размерную линию";
@@ -3170,8 +3275,8 @@ $p.Editor = Editor;
 	msg.ruler_inner = "По внутренним линиям";
 	msg.ruler_outer = "По внешним линиям";
 
-	
-	
+
+
 })($p.msg);
 
 /**
@@ -11559,7 +11664,34 @@ Scheme.prototype.__define({
 
 			return res;
 		}
-	}
+	},
+
+  /**
+   * ### Выделенный элемент
+   * Возвращает первый из найденных выделенных элементов
+   *
+   * @property selected_elm
+   * @for Scheme
+   * @returns {BuilderElement}
+   */
+  selected_elm: {
+    get: function () {
+
+      var res;
+
+      this.selectedItems.some(function (item) {
+
+        if(item instanceof BuilderElement){
+          return res = item;
+
+        }else if(item.parent instanceof BuilderElement){
+          return res = item.parent;
+        }
+      });
+
+      return res;
+    }
+  }
 
 
 });
