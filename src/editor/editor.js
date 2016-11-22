@@ -819,7 +819,8 @@ Editor.prototype.__define({
       // восстанавливаем сохранённые параметры
       //$p.wsql.restore_options("editor", options);
 
-      var wnd = $p.iface.dat_blank(this._dxw, options.wnd);
+      //var wnd = $p.iface.dat_blank(this._dxw, options.wnd);
+      var wnd = $p.iface.dat_blank(null, options.wnd);
 
       wnd.elmnts.layout = wnd.attachLayout({
         pattern: "2E",
