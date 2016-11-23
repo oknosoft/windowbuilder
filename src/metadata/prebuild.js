@@ -9,9 +9,9 @@
 const fs = require('fs')
 const path = require('path')
 
-const settings = fs.readFileSync('./settings.js', 'utf8')
+const settings = fs.readFileSync('config/app.settings.js', 'utf8')
 
-const config = require('./config.js')       // подключение к CouchDB
+const config = require('../../config/metadata.config.js')       // подключение к CouchDB
 const MetaEngine = require('metadata-core/index.js')
   .default.plugin(require('metadata-pouchdb/index.js').default)
 
@@ -102,7 +102,7 @@ $p.wsql.init(function (prm) {
 
 
         // записываем результат
-        fs.writeFile('./init.js', text, 'utf8', function (err) {
+        fs.writeFile(__dirname + '/init.js', text, 'utf8', function (err) {
           if (err){
             console.log(err)
             process.exit(1)

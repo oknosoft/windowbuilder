@@ -23,7 +23,7 @@ import DumbScreen from 'components/DumbLoader/DumbScreen';
 import MuiThemeProvider, {styles, muiTheme} from "./AppMuiTheme";
 
 // функция установки параметров сеанса
-import settings from "metadata/settings";
+import settings from "../../../config/app.settings";
 
 // функция инициализации структуры метаданных
 import meta_init from "metadata/init";
