@@ -1766,7 +1766,11 @@ function EditorAccordion(_editor, cell_acc) {
 							oxml: oxml,
 							ts: "extra_fields",
 							ts_title: "Свойства",
-							selection: {cnstr: 0, hide: {not: true}}
+							selection: {
+							  cnstr: 0,
+                inset: $p.utils.blank.guid,
+                hide: {not: true}
+							}
 						});
 
 						// при готовности снапшота, обновляем суммы и цены
@@ -1846,7 +1850,11 @@ function EditorAccordion(_editor, cell_acc) {
 							},
 							ts: "params",
 							ts_title: "Параметры",
-							selection: {cnstr: obj.cnstr || -9999, hide: {not: true}}
+							selection: {
+							  cnstr: obj.cnstr || -9999,
+                inset: $p.utils.blank.guid,
+                hide: {not: true}
+							}
 						};
 
 						if(!_grid){
@@ -2995,12 +3003,25 @@ Editor.prototype.__define({
       wnd.elmnts.grids.params = wnd.elmnts.layout.cells("b").attachHeadFields({
         obj: this.project.ox,
         ts: "params",
-        selection: {cnstr: cnstr},
+        selection: {cnstr: cnstr, inset: $p.utils.blank.guid},
         oxml: {
           "Параметры": []
         },
         ts_title: "Параметры"
       });
+
+      // фильтруем параметры при выборе вставки
+      function refill_prms(){
+        var row = wnd.elmnts.grids.inserts.get_cell_field();
+        wnd.elmnts.grids.params.selection = {cnstr: cnstr, inset: row.obj.inset};
+      }
+      wnd.elmnts.grids.inserts.attachEvent("onRowSelect", refill_prms);
+      wnd.elmnts.grids.inserts.attachEvent("onEditCell", function (stage, rId, cInd) {
+        if(!cInd){
+          setTimeout(refill_prms)
+        }
+      });
+
 
     }
   },

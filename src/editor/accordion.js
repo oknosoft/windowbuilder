@@ -356,7 +356,11 @@ function EditorAccordion(_editor, cell_acc) {
 							oxml: oxml,
 							ts: "extra_fields",
 							ts_title: "Свойства",
-							selection: {cnstr: 0, hide: {not: true}}
+							selection: {
+							  cnstr: 0,
+                inset: $p.utils.blank.guid,
+                hide: {not: true}
+							}
 						});
 
 						// при готовности снапшота, обновляем суммы и цены
@@ -436,7 +440,11 @@ function EditorAccordion(_editor, cell_acc) {
 							},
 							ts: "params",
 							ts_title: "Параметры",
-							selection: {cnstr: obj.cnstr || -9999, hide: {not: true}}
+							selection: {
+							  cnstr: obj.cnstr || -9999,
+                inset: $p.utils.blank.guid,
+                hide: {not: true}
+							}
 						};
 
 						if(!_grid){

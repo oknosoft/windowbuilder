@@ -298,17 +298,23 @@ function ProductsBuilding(){
 
 	/**
 	 * Проверяет соответствие параметров отбора параметрам изделия
-	 * @param selection_params
-	 * @param elm
-	 * @param [cnstr]
+	 * @param selection_params {TabularSection} - табчасть параметров вставки, фурнитуры или соединения
+	 * @param elm {Number} - идентификатор строки спецификации
+	 * @param [cnstr] {Number} - номер конструкции или элемента
 	 * @return {boolean}
 	 */
-	function check_params(selection_params, elm, cnstr){
+	function check_params(selection_params, elm, cnstr, parent_inset){
 		var ok = true;
+		// для дополнительных вставок
 		selection_params.find_rows({elm: elm}, function (prm) {
 			ok = false;
-			params.find_rows({cnstr: cnstr || 0, param: prm.param, value: prm.value}, function () {
-				ok = true;
+			params.find_rows({
+			  cnstr: cnstr || 0,
+        inset: parent_inset || $p.utils.blank.guid,
+        param: prm.param,
+        value: prm.value
+			}, function () {
+			  ok = true;
 				return false;
 			});
 			return ok;
@@ -371,9 +377,10 @@ function ProductsBuilding(){
 
 	/**
 	 * ПолучитьСпецификациюВставкиСФильтром
-	 * @param inset
-	 * @param elm
-	 * @param [is_high_level_call]
+	 * @param inset (CatInserts) - вставка
+	 * @param elm {BuilderElement} - элемент, к которому привязана вставка
+	 * @param [is_high_level_call] {Boolean} - вызов верхнего уровня - специфично для стеклопакетов
+   * @param [len_angl] {BuilderElement} - элемент, к которому привязана вставка
 	 */
 	function inset_filter_spec(inset, elm, is_high_level_call, len_angl){
 
@@ -420,8 +427,8 @@ function ProductsBuilding(){
 			if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl))
 				return;
 
-			// Проверяем параметры изделия
-			if(!check_params(inset.selection_params, row.elm))
+			// Проверяем параметры изделия, контура или элемента
+			if(!check_params(inset.selection_params, row.elm, len_angl && len_angl.cnstr, len_angl && len_angl.parent_inset))
 				return;
 
 			// Добавляем или разузловываем дальше
@@ -534,7 +541,12 @@ function ProductsBuilding(){
 				ok = contour.direction == row.value;
 
 			}else{
-				cache.params.find_rows({cnstr: contour.cnstr, param: row.param, value: row.value}, function () {
+				cache.params.find_rows({
+				  cnstr: contour.cnstr,
+          inset: $p.utils.blank.guid,
+          param: row.param,
+          value: row.value
+				}, function () {
 					return !(ok = true);
 				});
 			}
@@ -795,7 +807,7 @@ function ProductsBuilding(){
 	 */
 	function base_spec_profile(elm) {
 
-		var b, e, prev, next, len_angle,
+		var b, e, prev, next, len_angl,
 			_row, row_cnn_prev, row_cnn_next, row_spec;
 
 		_row = elm._row;
@@ -863,7 +875,7 @@ function ProductsBuilding(){
 		// НадоДобавитьСпецификациюСоединения
 		if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
 
-			len_angle = {
+			len_angl = {
 				angle: 0,
 				alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
 				alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90
@@ -890,7 +902,7 @@ function ProductsBuilding(){
 			//КонецЕсли;
 
 			// спецификацию с предыдущей стороны рассчитваем всегда
-			cnn_add_spec(b.cnn, elm, len_angle);
+			cnn_add_spec(b.cnn, elm, len_angl);
 
 		}
 
@@ -912,7 +924,7 @@ function ProductsBuilding(){
 	 */
 	function base_spec_glass(glass) {
 
-		var curr, prev, next, len_angle, _row, row_cnn;
+		var curr, prev, next, len_angl, _row, row_cnn;
 
 		var profiles = glass.profiles,
 			glength = profiles.length;
@@ -926,7 +938,7 @@ function ProductsBuilding(){
 			next = (i==glength-1 ? profiles[0] : profiles[i+1]).profile;
 			row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});
 
-			len_angle = {
+			len_angl = {
 				angle: 0,
 				alp1: prev.generatrix.angle_to(curr.profile.generatrix, curr.b, true),
 				alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
@@ -936,7 +948,7 @@ function ProductsBuilding(){
 			};
 
 			// добавляем спецификацию соединения рёбер заполнения с профилем
-			cnn_add_spec(curr.cnn, curr.profile, len_angle);
+			cnn_add_spec(curr.cnn, curr.profile, len_angl);
 
 		}
 

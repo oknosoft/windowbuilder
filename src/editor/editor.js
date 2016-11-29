@@ -856,12 +856,25 @@ Editor.prototype.__define({
       wnd.elmnts.grids.params = wnd.elmnts.layout.cells("b").attachHeadFields({
         obj: this.project.ox,
         ts: "params",
-        selection: {cnstr: cnstr},
+        selection: {cnstr: cnstr, inset: $p.utils.blank.guid},
         oxml: {
           "Параметры": []
         },
         ts_title: "Параметры"
       });
+
+      // фильтруем параметры при выборе вставки
+      function refill_prms(){
+        var row = wnd.elmnts.grids.inserts.get_cell_field();
+        wnd.elmnts.grids.params.selection = {cnstr: cnstr, inset: row.obj.inset};
+      }
+      wnd.elmnts.grids.inserts.attachEvent("onRowSelect", refill_prms);
+      wnd.elmnts.grids.inserts.attachEvent("onEditCell", function (stage, rId, cInd) {
+        if(!cInd){
+          setTimeout(refill_prms)
+        }
+      });
+
 
     }
   },
