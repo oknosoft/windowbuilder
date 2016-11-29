@@ -98,11 +98,39 @@ $p.CatInserts.prototype.__define({
       });
 
       if(main_rows.length){
-        var irow = main_rows[0];
+        var irow = main_rows[0],
+          sizes = {},
+          sz_keys = {},
+          sz_prms = ['length', 'width', 'thickness'].map(function (name) {
+            var prm = $p.job_prm.properties[name];
+            sz_keys[prm.ref] = name;
+            return prm;
+          });
+
+        // установим номенклатуру продукции
         res.owner = irow.nom instanceof $p.CatInserts ? irow.nom.nom() : irow.nom;
-        res.x = contour.w + irow.sz;
-        res.y = contour.h + irow.sz;
-        res.s = ((res.x * res.y) / 1000000).round(3)
+
+        // если в параметрах вставки задействованы свойства длина и или ширина - габариты получаем из свойств
+        contour.project.ox.params.find_rows({
+          cnstr: contour.cnstr,
+          inset: this,
+          param: {in: sz_prms}
+        }, function (row) {
+          sizes[sz_keys[row.param.ref]] = row.value
+        });
+
+        if(Object.keys(sizes).length > 0){
+          res.x = sizes.length ? (sizes.length + irow.sz) * (irow.coefficient * 1000 || 1) : 0;
+          res.y = sizes.width ? (sizes.width + irow.sz) * (irow.coefficient * 1000 || 1) : 0;
+          res.s = ((res.x * res.y) / 1000000).round(3);
+          res.z = sizes.thickness * (irow.coefficient * 1000 || 1);
+
+        }else{
+          res.x = contour.w + irow.sz;
+          res.y = contour.h + irow.sz;
+          res.s = ((res.x * res.y) / 1000000).round(3)
+        }
+
       }
 
       return res;

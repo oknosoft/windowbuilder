@@ -790,7 +790,7 @@ Editor.prototype.__define({
         cnstr = this.project.selected_elm;
         if(cnstr){
           // добавляем параметры вставки
-          this.project.ox.add_inset_params(cnstr.inset, -cnstr.elm);
+          this.project.ox.add_inset_params(cnstr.inset, -cnstr.elm, $p.utils.blank.guid);
           caption+= ' элем. №' + cnstr.elm;
           cnstr = -cnstr.elm;
           meta_fields.inset.choice_params[0].path = ["Элемент"];

@@ -195,12 +195,12 @@ $p.CatCharacteristics.prototype.__define({
    * @param cnstr
    */
   add_inset_params: {
-    value: function (inset, cnstr) {
+    value: function (inset, cnstr, blank_inset) {
 
       var ts_params = this.params,
         params = [];
 
-      ts_params.find_rows({cnstr: cnstr, inset: inset}, function (row) {
+      ts_params.find_rows({cnstr: cnstr, inset: blank_inset || inset}, function (row) {
         if(params.indexOf(row.param) == -1){
           params.push(row.param);
         }
@@ -211,7 +211,7 @@ $p.CatCharacteristics.prototype.__define({
         if(params.indexOf(param) == -1){
           ts_params.add({
             cnstr: cnstr,
-            inset: inset,
+            inset: blank_inset || inset,
             param: param
           })
           params.push(param)

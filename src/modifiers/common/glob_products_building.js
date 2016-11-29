@@ -234,6 +234,8 @@ function ProductsBuilding(){
 					row_cnn_spec.formula.execute({
 						ox: ox,
 						elm: elm,
+            cnstr: 0,
+            inset: $p.utils.blank.guid,
 						row_cnn: row_cnn_spec,
 						row_spec: row_spec
 					});
@@ -303,14 +305,14 @@ function ProductsBuilding(){
 	 * @param [cnstr] {Number} - номер конструкции или элемента
 	 * @return {boolean}
 	 */
-	function check_params(selection_params, elm, cnstr, parent_inset){
+	function check_params(selection_params, elm, cnstr, origin){
 		var ok = true;
 		// для дополнительных вставок
 		selection_params.find_rows({elm: elm}, function (prm) {
 			ok = false;
 			params.find_rows({
 			  cnstr: cnstr || 0,
-        inset: parent_inset || $p.utils.blank.guid,
+        inset: origin || $p.utils.blank.guid,
         param: prm.param,
         value: prm.value
 			}, function () {
@@ -428,7 +430,7 @@ function ProductsBuilding(){
 				return;
 
 			// Проверяем параметры изделия, контура или элемента
-			if(!check_params(inset.selection_params, row.elm, len_angl && len_angl.cnstr, len_angl && len_angl.parent_inset))
+			if(!check_params(inset.selection_params, row.elm, len_angl && len_angl.cnstr, len_angl && len_angl.origin))
 				return;
 
 			// Добавляем или разузловываем дальше
@@ -855,6 +857,8 @@ function ProductsBuilding(){
 				row_cnn_prev.formula.execute({
 					ox: ox,
 					elm: elm,
+          cnstr: 0,
+          inset: $p.utils.blank.guid,
 					row_cnn: row_cnn_prev,
 					row_spec: row_spec
 				});
@@ -863,6 +867,8 @@ function ProductsBuilding(){
 				row_cnn_next.formula.execute({
 					ox: ox,
 					elm: elm,
+          cnstr: 0,
+          inset: $p.utils.blank.guid,
 					row_cnn: row_cnn_next,
 					row_spec: row_spec
 				});
@@ -988,6 +994,8 @@ function ProductsBuilding(){
 				row_ins_spec.formula.execute({
 					ox: ox,
 					elm: elm,
+          cnstr: len_angl && len_angl.cnstr || 0,
+          inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
 					row_ins: row_ins_spec,
 					row_spec: row_spec
 				});
@@ -1074,12 +1082,15 @@ function ProductsBuilding(){
 
     ox.inserts.find_rows({cnstr: contour.cnstr}, function (irow) {
       var elm = {
-        _row: {}
+        _row: {},
+        elm: 0,
+        clr: ox.clr
       },
         inset = irow.inset;
 
       // если во вставке указано создавать продукцию, создаём
       if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
+
         // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём
         var cx = find_create_cx(-contour.cnstr, inset.ref);
         ox._order_rows.push(cx);
@@ -1090,7 +1101,17 @@ function ProductsBuilding(){
       }
 
       // рассчитаем спецификацию вставки
-
+      var len_angl = {
+        angle: 0,
+        alp1: 0,
+        alp2: 0,
+        len: 0,
+        origin: inset,
+        cnstr: contour.cnstr
+      }
+      spec = cx.specification;
+      spec.clear();
+      inset_spec(elm, inset, len_angl);
 
     })
 
