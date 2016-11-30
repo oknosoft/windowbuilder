@@ -291,7 +291,7 @@ function ProductsBuilding(){
 				return;
 
 			// Проверяем параметры изделия и добавляем, если проходит по ограничениям
-			if(check_params(cnn.selection_params, row.elm))
+			if(check_params(cnn.selection_params, row, elm))
 				res.push(row);
 
 		});
@@ -301,26 +301,73 @@ function ProductsBuilding(){
 	/**
 	 * Проверяет соответствие параметров отбора параметрам изделия
 	 * @param selection_params {TabularSection} - табчасть параметров вставки, фурнитуры или соединения
-	 * @param elm {Number} - идентификатор строки спецификации
+	 * @param spec_elm {Number} - идентификатор строки спецификации
 	 * @param [cnstr] {Number} - номер конструкции или элемента
 	 * @return {boolean}
 	 */
-	function check_params(selection_params, elm, cnstr, origin){
+	function check_params(selection_params, spec_row, elm, cnstr, origin){
 		var ok = true;
-		// для дополнительных вставок
-		selection_params.find_rows({elm: elm}, function (prm) {
+
+		// режем параметры по элементу
+		selection_params.find_rows({elm: spec_row.elm}, function (prm) {
+
 			ok = false;
-			params.find_rows({
-			  cnstr: cnstr || 0,
-        inset: origin || $p.utils.blank.guid,
-        param: prm.param,
-        value: prm.value
-			}, function () {
-			  ok = true;
-				return false;
-			});
+			var val = prm.value,
+        is_calck;
+
+			// вычисляемые параметры
+			if(prm.param == $p.job_prm.properties.clr_elm){
+        val = $p.cat.clrs.by_predefined(spec_row.clr, elm.clr, ox.clr);
+      }
+
+      // если сравнение на равенство - решаем в лоб
+      if(prm.comparison_type.empty() || prm.comparison_type == $p.enm.comparison_types.eq){
+        params.find_rows({
+          cnstr: cnstr || 0,
+          inset: origin || $p.utils.blank.guid,
+          param: prm.param,
+          value: val
+        }, function () {
+          ok = true;
+          return false;
+        });
+
+      }else{
+        params.find_rows({
+          cnstr: cnstr || 0,
+          inset: origin || $p.utils.blank.guid,
+          param: prm.param
+        }, function (row) {
+          switch(prm.comparison_type) {
+
+            case $p.enm.comparison_types.ne:
+              ok = (is_calck ? val : row.value) != prm.value;
+              break;
+
+            case $p.enm.comparison_types.gt:
+              ok = row.value > val;
+              break;
+
+            case $p.enm.comparison_types.gte:
+              ok = row.value >= val;
+              break;
+
+            case $p.enm.comparison_types.lt:
+              ok = row.value < val;
+              break;
+
+            case $p.enm.comparison_types.lte:
+              ok = row.value <= val;
+              break;
+          }
+
+          return false;
+        });
+      }
+
 			return ok;
 		});
+
 		return ok;
 	}
 
@@ -430,7 +477,7 @@ function ProductsBuilding(){
 				return;
 
 			// Проверяем параметры изделия, контура или элемента
-			if(!check_params(inset.selection_params, row.elm, len_angl && len_angl.cnstr, len_angl && len_angl.origin))
+			if(!check_params(inset.selection_params, row, elm, len_angl && len_angl.cnstr, len_angl && len_angl.origin))
 				return;
 
 			// Добавляем или разузловываем дальше
@@ -1146,6 +1193,7 @@ function ProductsBuilding(){
 		});
 
     // спецификация вставок в изделие
+    inset_contour_spec({cnstr:0, project: scheme});
 
 	}
 

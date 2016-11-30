@@ -134,6 +134,39 @@ function EditorAccordion(_editor, cell_acc) {
 			}
 		}),
 
+    /**
+     * панель инструментов над парамтрами изделия
+     */
+    tb_bottom = new $p.iface.OTooolBar({
+      wrapper: cont.querySelector("[name=header_props]"),
+      width: '100%',
+      height: '28px',
+      bottom: '2px',
+      left: '4px',
+      class_name: "",
+      name: 'bottom',
+      image_path: 'dist/imgs/',
+      buttons: [
+        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
+
+      ], onclick: function (name) {
+
+        switch(name) {
+
+          case 'refill':
+            _editor.project._dp.sys.refill_prm(_editor.project.ox);
+            props.reload();
+            break;
+
+          default:
+            $p.msg.show_msg(name);
+            break;
+        }
+
+        return false;
+      }
+    }),
+
 		/**
 		 * слои в аккордионе
 		 */
@@ -385,7 +418,13 @@ function EditorAccordion(_editor, cell_acc) {
 					get: function () {
 						return layout;
 					}
-				}
+				},
+
+        reload: {
+				  value: function () {
+            _grid.reload();
+          }
+        }
 
 			});
 
