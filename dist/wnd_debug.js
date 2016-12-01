@@ -5715,7 +5715,10 @@ function Pricing($p){
 		prm.calc_order_row._owner._owner.partner.extra_fields.find_rows({
 			property: $p.job_prm.pricing.dealer_surcharge
 		}, function (row) {
-			prm.price_type.extra_charge_external = row.value;
+		  var val = parseFloat(row.value);
+		  if(val){
+        prm.price_type.extra_charge_external = val;
+      }
 			return false;
 		});
 
