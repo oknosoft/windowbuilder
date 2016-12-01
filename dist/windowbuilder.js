@@ -9586,7 +9586,7 @@ ProfileRays.prototype.__define({
  *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
  * Created 16.05.2016
- * 
+ *
  * @module geometry
  * @submodule profile_addl
  */
@@ -9619,7 +9619,7 @@ function ProfileAddl(attr){
 
 	if(!attr.side && this._row.parent < 0)
 		attr.side = "outer";
-	
+
 	this.data.side = attr.side || "inner";
 
 	if(!this._row.parent){
@@ -9684,20 +9684,14 @@ ProfileAddl.prototype.__define({
 	 * Возвращает истина, если соединение с наружной стороны
 	 */
 	outer: {
-		get: function () {
-			return this.data.side == "outer";
-		}	
+		get: function () { return this.data.side == "outer"; }
 	},
 
 	/**
 	 * Возвращает тип элемента (Добор)
 	 */
 	elm_type: {
-		get : function(){
-
-			return $p.enm.elm_types.Добор;
-
-		}
+		get : function(){ return $p.enm.elm_types.Добор; }
 	},
 
 	/**
@@ -9787,6 +9781,7 @@ ProfileAddl.prototype.__define({
 
 			var _profile = this,
 				_corns = this.data._corns,
+        interior = this.generatrix.getPointAt(this.generatrix.length/2),
 				rays = this.rays,
 				prays,  normal;
 
@@ -9823,9 +9818,7 @@ ProfileAddl.prototype.__define({
 			// Определяем сторону примыкающего
 			function detect_side(){
 
-				var interior = _profile.generatrix.getPointAt(0.5, true);
-
-				return prays.inner.getNearestPoint(interior).getDistance(interior, true) < 
+				return prays.inner.getNearestPoint(interior).getDistance(interior, true) <
 						prays.outer.getNearestPoint(interior).getDistance(interior, true) ? 1 : -1;
 
 			}
@@ -9875,7 +9868,7 @@ ProfileAddl.prototype.__define({
 				if(!_corns[3])
 					_corns[3] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
 			}
-			
+
 			return cnn_point;
 		}
 	},
@@ -9892,7 +9885,7 @@ ProfileAddl.prototype.__define({
 
 					if(!cnn.profile)
 						return;
-					
+
 					var gen = this.outer ? this.parent.rays.outer : this.parent.rays.inner;
 						mpoint = cnn.profile.generatrix.intersect_point(gen, cnn.point, "nearest");
 					if(!mpoint.is_nearest(this[node])){
@@ -9901,7 +9894,7 @@ ProfileAddl.prototype.__define({
 					}
 
 				}.bind(this);
-			
+
 			// при смещениях родителя, даигаем образующую
 			if(this.parent == p){
 
@@ -9936,7 +9929,7 @@ ProfileAddl.prototype.__define({
 
 	glass_segment: {
 		value: function () {
-			
+
 		}
 	}
 
