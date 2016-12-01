@@ -150,10 +150,18 @@ $p.doc.calc_order.on({
 
 				// если есть внешняя цена дилера, получим текущую дилерскую наценку
 				if(!attr.no_extra_charge){
-					var prm = {calc_order_row: attr.row};
-					$p.pricing.price_type(prm);
-					if(prm.price_type.extra_charge_external)
-						attr.row.price_internal = (attr.row.price * (100 - attr.row.discount_percent)/100 * (100 + prm.price_type.extra_charge_external)/100).round(2);
+					var prm = {calc_order_row: attr.row},
+            extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
+
+					// если пересчет выполняется менеджером, используем наценку по умолчанию
+          if(!$p.current_acl.partners_uids.length || !extra_charge){
+            $p.pricing.price_type(prm);
+            extra_charge = prm.price_type.extra_charge_external;
+          }
+
+					if(extra_charge){
+            attr.row.price_internal = (attr.row.price * (100 - attr.row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
+          }
 				}
 
 				attr.row.amount_internal = (attr.row.price_internal * ((100 - attr.row.discount_percent_internal)/100) * attr.row.quantity).round(2);

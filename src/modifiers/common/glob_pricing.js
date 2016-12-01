@@ -167,7 +167,13 @@ function Pricing($p){
 	this.calc_amount = function (prm) {
 
 		// TODO: реализовать расчет цены продажи по номенклатуре строки расчета
-		var price_cost = $p.job_prm.pricing.marginality_in_spec ? prm.spec.aggregate([], ["amount_marged"]) : 0;
+		var price_cost = $p.job_prm.pricing.marginality_in_spec ? prm.spec.aggregate([], ["amount_marged"]) : 0,
+      extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
+
+    // если пересчет выполняется менеджером, используем наценку по умолчанию
+    if(!$p.current_acl.partners_uids.length || !extra_charge){
+      extra_charge = prm.price_type.extra_charge_external;
+    }
 
 		// цена продажи
 		if(price_cost)
@@ -181,10 +187,10 @@ function Pricing($p){
 
 
 		// TODO: Рассчитаем цену и сумму ВНУТР или ДИЛЕРСКУЮ цену и скидку
-		if(prm.price_type.extra_charge_external){
+		if(extra_charge){
 
 			prm.calc_order_row.price_internal = (prm.calc_order_row.price *
-			  (100 - prm.calc_order_row.discount_percent)/100 * (100 + prm.price_type.extra_charge_external)/100).round(2);
+			  (100 - prm.calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
 
 			// TODO: учесть формулу
 

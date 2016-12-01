@@ -1,8 +1,8 @@
 /**
  * форма документа Расчет-заказ. публикуемый метод: doc.calc_order.form_obj(o, pwnd, attr)
- * 
+ *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * 
+ *
  * @module doc_calc_order_form_obj
  */
 
@@ -347,7 +347,7 @@
 			var row = o["production"].add({
 				qty: 1,
 				quantity: 1,
-				discount_percent_internal: $p.wsql.get_user_param("discount", "number")
+				discount_percent_internal: $p.wsql.get_user_param("discount_percent_internal", "number")
 			});
 			o["production"].sync_grid(wnd.elmnts.grids.production);
 			wnd.elmnts.grids.production.selectRowById(row.row);

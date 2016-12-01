@@ -46,16 +46,27 @@ $p.iface.view_settings = function (cell) {
 
 			if($p.current_acl.partners_uids.length){
 
+			  var surcharge_internal = $p.wsql.get_user_param("surcharge_internal", "number"),
+          discount_percent_internal = $p.wsql.get_user_param("discount_percent_internal", "number");
 
-				var partner = $p.cat.partners.get($p.current_acl.partners_uids[0]),
-					prm = {calc_order_row: {
-						nom: $p.cat.nom.get(),
-						_owner: {_owner: {partner: partner}}
-					}};
+			  // если заданы параметры для текущего пользователя - используем их
+			  if(!surcharge_internal){
 
-				$p.pricing.price_type(prm);
+          var partner = $p.cat.partners.get($p.current_acl.partners_uids[0]),
+            prm = {calc_order_row: {
+              nom: $p.cat.nom.get(),
+              _owner: {_owner: {partner: partner}}
+            }};
 
-				t.form2.setItemValue("surcharge_internal", prm.price_type.extra_charge_external);
+          $p.pricing.price_type(prm);
+
+          $p.wsql.set_user_param("surcharge_internal", surcharge_internal = prm.price_type.extra_charge_external);
+          $p.wsql.set_user_param("discount_percent_internal", discount_percent_internal = prm.price_type.discount_external);
+
+        }
+
+				t.form2.setItemValue("surcharge_internal", surcharge_internal);
+        t.form2.setItemValue("discount_percent_internal", discount_percent_internal);
 
 
 			}else{
@@ -79,7 +90,9 @@ $p.iface.view_settings = function (cell) {
 						$p.wsql.set_user_param("hide_price_dealer", "");
 						$p.wsql.set_user_param("hide_price_manufacturer", "");
 					}
-				}
+				}else if(name == "surcharge_internal" || name == "discount_percent_internal"){
+          $p.wsql.set_user_param(name, parseFloat(value));
+        }
 			});
 
 			t.form2.getInput("modifiers").onchange = function () {
@@ -297,13 +310,6 @@ $p.iface.view_settings = function (cell) {
 		});
 
 		t.form1.attachEvent("onButtonClick", function(name){
-
-			function do_reload(){
-				setTimeout(function () {
-					$p.eve.redirect = true;
-					location.reload(true);
-				}, 2000);
-			}
 
 			if(name == "save")
 				location.reload();

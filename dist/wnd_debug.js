@@ -5786,7 +5786,13 @@ function Pricing($p){
 	this.calc_amount = function (prm) {
 
 		// TODO: реализовать расчет цены продажи по номенклатуре строки расчета
-		var price_cost = $p.job_prm.pricing.marginality_in_spec ? prm.spec.aggregate([], ["amount_marged"]) : 0;
+		var price_cost = $p.job_prm.pricing.marginality_in_spec ? prm.spec.aggregate([], ["amount_marged"]) : 0,
+      extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
+
+    // если пересчет выполняется менеджером, используем наценку по умолчанию
+    if(!$p.current_acl.partners_uids.length || !extra_charge){
+      extra_charge = prm.price_type.extra_charge_external;
+    }
 
 		// цена продажи
 		if(price_cost)
@@ -5800,10 +5806,10 @@ function Pricing($p){
 
 
 		// TODO: Рассчитаем цену и сумму ВНУТР или ДИЛЕРСКУЮ цену и скидку
-		if(prm.price_type.extra_charge_external){
+		if(extra_charge){
 
 			prm.calc_order_row.price_internal = (prm.calc_order_row.price *
-			  (100 - prm.calc_order_row.discount_percent)/100 * (100 + prm.price_type.extra_charge_external)/100).round(2);
+			  (100 - prm.calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
 
 			// TODO: учесть формулу
 
@@ -7651,10 +7657,18 @@ $p.doc.calc_order.on({
 
 				// если есть внешняя цена дилера, получим текущую дилерскую наценку
 				if(!attr.no_extra_charge){
-					var prm = {calc_order_row: attr.row};
-					$p.pricing.price_type(prm);
-					if(prm.price_type.extra_charge_external)
-						attr.row.price_internal = (attr.row.price * (100 - attr.row.discount_percent)/100 * (100 + prm.price_type.extra_charge_external)/100).round(2);
+					var prm = {calc_order_row: attr.row},
+            extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
+
+					// если пересчет выполняется менеджером, используем наценку по умолчанию
+          if(!$p.current_acl.partners_uids.length || !extra_charge){
+            $p.pricing.price_type(prm);
+            extra_charge = prm.price_type.extra_charge_external;
+          }
+
+					if(extra_charge){
+            attr.row.price_internal = (attr.row.price * (100 - attr.row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
+          }
 				}
 
 				attr.row.amount_internal = (attr.row.price_internal * ((100 - attr.row.discount_percent_internal)/100) * attr.row.quantity).round(2);
@@ -8235,9 +8249,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 /**
  * форма документа Расчет-заказ. публикуемый метод: doc.calc_order.form_obj(o, pwnd, attr)
- * 
+ *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
- * 
+ *
  * @module doc_calc_order_form_obj
  */
 
@@ -8582,7 +8596,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			var row = o["production"].add({
 				qty: 1,
 				quantity: 1,
-				discount_percent_internal: $p.wsql.get_user_param("discount", "number")
+				discount_percent_internal: $p.wsql.get_user_param("discount_percent_internal", "number")
 			});
 			o["production"].sync_grid(wnd.elmnts.grids.production);
 			wnd.elmnts.grids.production.selectRowById(row.row);
@@ -10225,16 +10239,27 @@ $p.iface.view_settings = function (cell) {
 
 			if($p.current_acl.partners_uids.length){
 
+			  var surcharge_internal = $p.wsql.get_user_param("surcharge_internal", "number"),
+          discount_percent_internal = $p.wsql.get_user_param("discount_percent_internal", "number");
 
-				var partner = $p.cat.partners.get($p.current_acl.partners_uids[0]),
-					prm = {calc_order_row: {
-						nom: $p.cat.nom.get(),
-						_owner: {_owner: {partner: partner}}
-					}};
+			  // если заданы параметры для текущего пользователя - используем их
+			  if(!surcharge_internal){
 
-				$p.pricing.price_type(prm);
+          var partner = $p.cat.partners.get($p.current_acl.partners_uids[0]),
+            prm = {calc_order_row: {
+              nom: $p.cat.nom.get(),
+              _owner: {_owner: {partner: partner}}
+            }};
 
-				t.form2.setItemValue("surcharge_internal", prm.price_type.extra_charge_external);
+          $p.pricing.price_type(prm);
+
+          $p.wsql.set_user_param("surcharge_internal", surcharge_internal = prm.price_type.extra_charge_external);
+          $p.wsql.set_user_param("discount_percent_internal", discount_percent_internal = prm.price_type.discount_external);
+
+        }
+
+				t.form2.setItemValue("surcharge_internal", surcharge_internal);
+        t.form2.setItemValue("discount_percent_internal", discount_percent_internal);
 
 
 			}else{
@@ -10258,7 +10283,9 @@ $p.iface.view_settings = function (cell) {
 						$p.wsql.set_user_param("hide_price_dealer", "");
 						$p.wsql.set_user_param("hide_price_manufacturer", "");
 					}
-				}
+				}else if(name == "surcharge_internal" || name == "discount_percent_internal"){
+          $p.wsql.set_user_param(name, parseFloat(value));
+        }
 			});
 
 			t.form2.getInput("modifiers").onchange = function () {
@@ -10476,13 +10503,6 @@ $p.iface.view_settings = function (cell) {
 		});
 
 		t.form1.attachEvent("onButtonClick", function(name){
-
-			function do_reload(){
-				setTimeout(function () {
-					$p.eve.redirect = true;
-					location.reload(true);
-				}, 2000);
-			}
 
 			if(name == "save")
 				location.reload();
