@@ -4858,11 +4858,23 @@ $p.CatInserts.prototype.__define({
           res.z = sizes.thickness * (irow.coefficient * 1000 || 1);
 
         }else{
-          res.x = contour.w + irow.sz;
-          res.y = contour.h + irow.sz;
-          res.s = ((res.x * res.y) / 1000000).round(3)
-        }
 
+          if(irow.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !irow.formula.empty()){
+            irow.formula.execute({
+              ox: contour.project.ox,
+              contour: contour,
+              inset: this,
+              row_ins: irow,
+              res: res
+            });
+
+          }else{
+            res.x = contour.w + irow.sz;
+            res.y = contour.h + irow.sz;
+            res.s = ((res.x * res.y) / 1000000).round(3)
+
+          }
+        }
       }
 
       return res;
