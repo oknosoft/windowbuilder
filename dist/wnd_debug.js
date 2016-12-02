@@ -3901,7 +3901,7 @@ $p.CatCharacteristics.prototype.__define({
 })($p);
 /**
  * ### Дополнительные методы справочника Цвета
- * 
+ *
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
  * @module cat_cnns
  * Created 23.12.2015
@@ -3996,6 +3996,47 @@ $p.cat.clrs.__define({
 
 			attr.hide_filter = true;
 
+      attr.toolbar_click = function (btn_id, wnd){
+
+        // если указаны оба цвета
+        if(btn_id=="btn_select" && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
+
+          // ищем в справочнике цветов
+          var ares = $p.wsql.alasql("select ref from ? where clr_in = ? and clr_out = ? and (not ref = ?)",
+            [$p.cat.clrs.alatable, eclr.clr_in.ref, eclr.clr_out.ref, $p.utils.blank.guid]);
+
+          // если не нашли - создаём
+          if(ares.length){
+            pwnd.on_select.call(pwnd, $p.cat.clrs.get(ares[0]));
+
+          }else{
+            $p.cat.clrs.create({
+              clr_in: eclr.clr_in,
+              clr_out: eclr.clr_out,
+              name: eclr.clr_in.name + " \\ " + eclr.clr_out.name,
+              parent: $p.job_prm.builder.composite_clr_folder
+            })
+              .then(function (obj) {
+                // регистрируем цвет в couchdb
+                return obj.register_on_server()
+              })
+              .then(function (obj) {
+                pwnd.on_select.call(pwnd, obj);
+              })
+              .catch(function (err) {
+                $p.msg.show_msg({
+                  type: "alert-warning",
+                  text: "Недостаточно прав для добавления составного цвета",
+                  title: "Составной цвет"
+                });
+              })
+          }
+
+          wnd.close();
+          return false;
+        }
+      }
+
 			var wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr),
 				eclr = this.get($p.utils.blank.guid, false, true);
 
@@ -4014,7 +4055,7 @@ $p.cat.clrs.__define({
 						}
 					});
 				}
-				
+
 				return this.constructor.prototype.get_option_list.call(this, val, selection);
 			}
 
@@ -4082,6 +4123,13 @@ $p.cat.clrs.__define({
 					clr_in.attachEvent("onClose", tb_filter.call_event);
 					clr_out.attachEvent("onClose", tb_filter.call_event);
 
+					// гасим кнопки управления
+          wnd.elmnts.toolbar.hideItem("btn_new");
+          wnd.elmnts.toolbar.hideItem("btn_edit");
+          wnd.elmnts.toolbar.hideItem("btn_delete");
+
+          wnd.elmnts.toolbar.setItemText("btn_select", "<b>Выбрать или создать</b>");
+
 					return wnd;
 
 				})
@@ -4104,6 +4152,22 @@ $p.cat.clrs.__define({
 			return $p.DataManager.prototype.sync_grid.call(this, attr, grid);
 		}
 	}
+});
+
+
+$p.CatClrs.prototype.__define({
+
+  register_on_server: {
+    value: function () {
+      return $p.wsql.pouch.save_obj(this, {
+        db: $p.wsql.pouch.remote.ram
+      })
+        .then(function (obj) {
+          return obj.save();
+        })
+    }
+  }
+
 });
 
 
@@ -7669,7 +7733,7 @@ $p.doc.calc_order.on({
             extra_charge = prm.price_type.extra_charge_external;
           }
 
-					if(extra_charge){
+					if(attr.field != "price_internal" && extra_charge && attr.row.price){
             attr.row.price_internal = (attr.row.price * (100 - attr.row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
           }
 				}

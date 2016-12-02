@@ -159,7 +159,7 @@ $p.doc.calc_order.on({
             extra_charge = prm.price_type.extra_charge_external;
           }
 
-					if(extra_charge){
+					if(attr.field != "price_internal" && extra_charge && attr.row.price){
             attr.row.price_internal = (attr.row.price * (100 - attr.row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
           }
 				}
