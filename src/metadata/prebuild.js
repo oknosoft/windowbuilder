@@ -154,8 +154,8 @@ function create_modules(_m){
   // менеджеры объектов данных, отчетов и обработок
   for(var category in categoties){
     for(name in _m[category]){
+      text+= obj_constructor_text(_m, category, name, categoties[category].obj);
       if(sys_nsmes.indexOf(name) == -1){
-        text+= obj_constructor_text(_m, category, name, categoties[category].obj);
         text+= "$p." + category + "." + name + " = new " + categoties[category].mgr + "('" + category + "." + name + "')\n";
       }
     }

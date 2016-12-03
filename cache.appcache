@@ -1,7 +1,8 @@
 CACHE MANIFEST
-# 000000000166
+# 000000000167
 
 # Additional resources to cache
+# https://github.com/oknosoft/metadata.js/pull/180
 CACHE:
 
 # Заголовок и библиотеки
