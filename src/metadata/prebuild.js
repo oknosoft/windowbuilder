@@ -69,7 +69,7 @@ $p.wsql.init(function (prm) {
       //   doc: ['planning_event'],
       //   dp: [],
       //   areg: [],
-      //   ireg: ['$log']
+      //   ireg: ['log']
       // }, filtred_meta = {};
       // for(var cls in _m){
       //   if(!filter[cls]){
@@ -127,8 +127,11 @@ $p.wsql.init(function (prm) {
 function create_modules(_m){
 
   var name,
+    sys_nsmes = ["log","meta_objs","meta_fields","scheme_settings"],
     text = "(function(){\n" +
-      "const {EnumManager,CatManager,DocManager,LogManager,DataProcessorsManager,ChartOfCharacteristicManager,ChartOfAccountManager,InfoRegManager,AccumRegManager,BusinessProcessManager,TaskManager,CatObj, DocObj, TabularSectionRow, DataProcessorObj, RegisterRow, BusinessProcessObj, TaskObj} = $p.classes\n" +
+      "const {EnumManager,CatManager,DocManager,DataProcessorsManager,ChartOfCharacteristicManager,ChartOfAccountManager, \
+      InfoRegManager,AccumRegManager,BusinessProcessManager,TaskManager,CatObj, DocObj, TabularSectionRow, DataProcessorObj, \
+      RegisterRow, BusinessProcessObj, TaskObj} = $p.classes\n" +
       "const _define = Object.defineProperties\n\n",
     categoties = {
       cch: {mgr: "ChartOfCharacteristicManager", obj: "CatObj"},
@@ -151,11 +154,10 @@ function create_modules(_m){
   // менеджеры объектов данных, отчетов и обработок
   for(var category in categoties){
     for(name in _m[category]){
-      text+= obj_constructor_text(_m, category, name, categoties[category].obj);
-      if(name == "$log")
-        text+= "$p." + category + "." + name + " = new LogManager('ireg.$log')\n";
-      else
+      if(sys_nsmes.indexOf(name) == -1){
+        text+= obj_constructor_text(_m, category, name, categoties[category].obj);
         text+= "$p." + category + "." + name + " = new " + categoties[category].mgr + "('" + category + "." + name + "')\n";
+      }
     }
   }
 
