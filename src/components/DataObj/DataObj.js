@@ -14,39 +14,29 @@ import classes from './DataObj.scss'
 
 import CircularProgress from 'material-ui/CircularProgress';
 
-const styles = {
-  root: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    padding: '8px'
-  },
-  block: {
-    //flex: '1 100%',
-    fontWeight: 'bold'
-  }
-}
 
 export default class DataObj extends Component {
 
   static contextTypes = {
-    screen: React.PropTypes.object.isRequired
+    $p: React.PropTypes.object.isRequired
   }
 
   static propTypes = {
-    _obj: PropTypes.object,
-    _acl: PropTypes.string.isRequired,
+    _obj: PropTypes.object,             // DataObj, с которым будет связан компонент
+    _acl: PropTypes.string.isRequired,  // Права на чтение-изменение
 
-    handleSave: PropTypes.func.isRequired,
-    handleRevert: PropTypes.func.isRequired,
-    handleMarkDeleted: PropTypes.func.isRequired,
-    handlePost: PropTypes.func.isRequired,
-    handleUnPost: PropTypes.func.isRequired,
-    handlePrint: PropTypes.func.isRequired,
-    handleAttachment: PropTypes.func.isRequired,
-    handleValueChange: PropTypes.func.isRequired,
-    handleAddRow: PropTypes.func.isRequired,
-    handleDelRow: PropTypes.func.isRequired
+    read_only: PropTypes.object,        // Элемент только для чтения
+
+    handleSave: PropTypes.func,
+    handleRevert: PropTypes.func,
+    handleMarkDeleted: PropTypes.func,
+    handlePost: PropTypes.func,
+    handleUnPost: PropTypes.func,
+    handlePrint: PropTypes.func,
+    handleAttachment: PropTypes.func,
+    handleValueChange: PropTypes.func,
+    handleAddRow: PropTypes.func,
+    handleDelRow: PropTypes.func
   }
 
   constructor(props) {
@@ -91,9 +81,7 @@ export default class DataObj extends Component {
 
   render() {
 
-    const { screen } = this.context
-    const { _obj } = this.props
-
+    const { width, height, _obj } = this.props
 
     return (
 
@@ -110,34 +98,13 @@ export default class DataObj extends Component {
           handleClose={this.props.handleClose}
         />
 
-        <div className={classes.cont} style={{width: screen.width}}>
+        <div className={classes.cont} style={{ width }}>
 
-          <div style={styles.block}>{_obj.presentation}, заявитель: {_obj.partner.presentation}</div>
+          {/*
+          <DataField _obj={_obj} _fld="note" handleValueChange={this.handleValueChange("note")} />
 
-          <Layout layoutWidth={screen.width - 24} layoutHeight={screen.height - 140} >
-            <Layout layoutWidth={'flex'}>
-
-              <DataField _obj={_obj} _fld="НачалоПериода" handleValueChange={this.handleValueChange("НачалоПериода")} />
-              <DataField _obj={_obj} _fld="КонецПериода" handleValueChange={this.handleValueChange("КонецПериода")} />
-              <DataField _obj={_obj} _fld="КоличествоДней" handleValueChange={this.handleValueChange("КоличествоДней")} />
-              <DataField _obj={_obj} _fld="note" handleValueChange={this.handleValueChange("note")} />
-
-              <TabularSection _obj={_obj} _tabular="guests"/>
-
-            </Layout>
-            <LayoutSplitter />
-            <Layout layoutWidth={Math.floor((screen.width - 24)/3)}>
-
-              <DataField _obj={_obj} _fld="Санаторий" handleValueChange={this.handleValueChange("Санаторий")} />
-              <DataField _obj={_obj} _fld="КатегорияПутевки" handleValueChange={this.handleValueChange("КатегорияПутевки")} />
-              <DataField _obj={_obj} _fld="КатегорияНомера" handleValueChange={this.handleValueChange("КатегорияНомера")} />
-              <DataField _obj={_obj} _fld="КоличествоМестЗабронировано" disabled={true} />
-              <DataField _obj={_obj} _fld="КоличествоМестОтказано" disabled={true} />
-              <DataField _obj={_obj} _fld="АктуальноеКоличествоМест" disabled={true} />
-              <DataField _obj={_obj} _fld="organization" handleValueChange={this.handleValueChange("organization")} />
-
-            </Layout>
-          </Layout>
+          <TabularSection _obj={_obj} _tabular="cashboxes"/>
+           */}
 
         </div>
 

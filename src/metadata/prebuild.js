@@ -9,11 +9,15 @@
 const fs = require('fs')
 const path = require('path')
 
+// текст модуля начальных настроек приложения для включения в итоговый скрипт
 const settings = fs.readFileSync('config/app.settings.js', 'utf8')
 
-const config = require('../../config/metadata.config.js')       // подключение к CouchDB
-const MetaEngine = require('metadata-core/index.js')
-  .default.plugin(require('metadata-pouchdb/index.js').default)
+// конфигурация подключения к CouchDB
+const config = require('../../config/metadata.config.js')
+
+// конструктор metadata-core и плагин metadata-pouchdb
+const MetaEngine = require('metadata-core').default
+	.plugin(require('metadata-pouchdb').default)
 
 
 var jstext = "",            // в этой переменной будем накапливать текст модуля
@@ -169,7 +173,7 @@ function obj_constructor_text(_m, category, name, proto) {
 
   var meta = _m[category][name],
     fn_name = $p.classes.DataManager.prototype.obj_constructor.call({class_name: category + "." + name, constructor_names: {}}),
-    text = "\n/**\n* ### " + $p.msg.meta[category] + " " + meta.name,
+    text = "\n/**\n* ### " + $p.msg('meta')[category] + " " + meta.name,
     f, props = "";
 
   text += "\n* " + (meta.illustration || meta.synonym);

@@ -1,12 +1,10 @@
-import { connect } from 'react-redux'
-import { mapStateToProps, actions } from '../modules/login'
-
+import {connect} from "react-redux";
+import {mapStateToProps, actions} from "../modules/login";
 /*  This is a container component. Notice it does not contain any JSX,
  nor does it import React. This component is **only** responsible for
  wiring in the actions and state necessary to render a presentational
  component - in this case, the DataList:   */
-
-import FrmLogin from 'components/FrmLogin'
+import FrmLogin from "metadata-react-ui/FrmLogin/src";
 
 
 /*  Note: mapStateToProps is where you should use `reselect` to create selectors, ie:

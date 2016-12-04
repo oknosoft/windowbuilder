@@ -2,8 +2,9 @@
 import React, {Component, PropTypes} from "react";
 import {InfiniteLoader, Grid} from "react-virtualized";
 import Toolbar from "./Toolbar";
-import styles from "./DataList.scss";
 import cn from "classnames";
+
+import styles from "./DataList.scss";
 
 
 const limit = 30,
@@ -17,28 +18,120 @@ export default class DataList extends Component {
 
   static propTypes = {
 
-    columns: PropTypes.array.isRequired,
+    _mgr: PropTypes.object.isRequired,    // Менеджер данных
+    _meta: PropTypes.object,              // Описание метаданных. Если не указано, используем метаданные менеджера
+    selection_mode: PropTypes.bool,       // Режим выбора из списка. Если истина - дополнительно рисум кнопку выбора
+    columns: PropTypes.array,             // Настройки колонок динамического списка. Если не указано - генерируем по метаданным
+    select: PropTypes.object,             // Параметры запроса к couchdb. Если не указано - генерируем по метаданным
 
-    select: PropTypes.object.isRequired,
-    _mgr: PropTypes.object.isRequired,
-    _width: PropTypes.number.isRequired,
-    _height: PropTypes.number.isRequired
+    read_only: PropTypes.object,          // Элемент только для чтения
+    deny_add_del: PropTypes.bool,         // Запрет добавления и удаления строк (скрывает кнопки в панели, отключает обработчики)
+    modal: PropTypes.bool,                // Показывать список в модальном диалоге
+    width: PropTypes.number.isRequired,   // Ширина элемента управления - вычисляется родительским компонентом с помощью `react-virtualized/AutoSizer`
+    height: PropTypes.number.isRequired,  // Высота элемента управления - вычисляется родительским компонентом с помощью `react-virtualized/AutoSizer`
+    Toolbar: PropTypes.func,              // Индивидуальная панель инструментов. Если не указана, рисуем типовую
+
+    // Redux actions
+    handleSelect: PropTypes.func,         // обработчик выбора значения в списке
+    handleAdd: PropTypes.func,            // обработчик добавления объекта
+    handleEdit: PropTypes.func,           // обработчик открытия формы редактора
+    handleRevert: PropTypes.func,         // откатить изменения - перечитать объект из базы данных
+    handleMarkDeleted: PropTypes.func,    // обработчик удаления строки
+    handlePost: PropTypes.func,           // обработчик проведения документа
+    handleUnPost: PropTypes.func,         // отмена проведения
+    handlePrint: PropTypes.func,          // обработчик открытия диалога печати
+    handleAttachment: PropTypes.func,     // обработчик открытия диалога присоединенных файлов
   }
 
-  constructor (props) {
+  static defaultProps = {
+    width: 1000,
+    height: 400
+  }
+
+  constructor(props, context) {
 
     super(props);
 
     this.state = {
       totalRowCount: totalRows,
-      selectedRowIndex: 0
+      selectedRowIndex: 0,
+      columns: props.columns,
+      _meta: props._meta || props._mgr.metadata(),
+
+      // готовим фильтры для запроса couchdb
+      select: props.select || {
+        _view: 'doc/by_date',
+        _raw: true,
+        _top: 30,
+        _skip: 0,
+        _key: {
+          startkey: [props.params.options || props._mgr.class_name, 2000],
+          endkey: [props.params.options || props._mgr.class_name, 2020]
+        }
+      }
+    }
+
+    const {state} = this
+    const {$p} = context
+
+    if (!state.columns || !state.columns.length) {
+
+      state.columns = []
+
+      // набираем поля
+      if (state._meta.form && state._meta.form.selection) {
+        state._meta.form.selection.cols.forEach(fld => {
+          const fld_meta = state._meta.fields[fld.id] || props._mgr.metadata(fld.id)
+          state.columns.push({
+            id: fld.id,
+            synonym: fld.caption || fld_meta.synonym,
+            tooltip: fld_meta.tooltip,
+            type: fld_meta.type,
+            width: (fld.width == '*') ? 250 : (parseInt(fld.width) || 140)
+          });
+        });
+
+      } else {
+
+        if (props._mgr instanceof $p.classes.CatManager) {
+          if (state._meta.code_length) {
+            state.columns.push('id')
+          }
+
+          if (state._meta.main_presentation_name) {
+            state.columns.push('name')
+          }
+
+        } else if (props._mgr instanceof $p.classes.DocManager) {
+          state.columns.push('number_doc')
+          state.columns.push('date')
+        }
+
+        state.columns = state.columns.map((id, index) => {
+          // id, synonym, tooltip, type, width
+          const fld_meta = state._meta.fields[id] || props._mgr.metadata(id)
+          return {
+            id,
+            synonym: fld_meta.synonym,
+            tooltip: fld_meta.tooltip,
+            type: fld_meta.type,
+            width: fld_meta.width || 140
+          }
+        })
+      }
     }
 
     this._list = {
       _data: [],
-      get size(){ return this._data.length},
-      get(index){ return this._data[index]},
-      clear(){this._data.length = 0}
+      get size() {
+        return this._data.length
+      },
+      get(index){
+        return this._data[index]
+      },
+      clear(){
+        this._data.length = 0
+      }
     }
 
     this._isRowLoaded = ::this._isRowLoaded
@@ -49,21 +142,35 @@ export default class DataList extends Component {
 
   }
 
-  render () {
+  render() {
 
-    const { totalRowCount } = this.state
-    const { columns, _width, _height } = this.props
+    const {columns, totalRowCount, select} = this.state
+    const {width, height, selection_mode, params, _mgr} = this.props
+    const key0 = params.options || _mgr.class_name
+
+    if(select._key.startkey[0] != key0){
+      select._key.startkey[0] = key0
+      select._key.endkey[0] = key0
+      setTimeout(() => {
+        this.setState({ totalRowCount: totalRows })
+      })
+    }
 
     return (
       <div>
 
         <Toolbar
-          handleAdd={this.props.handleAdd}
+
+          selection_mode={!!selection_mode}
+          handleSelect={this.handleSelect}
+
+          handleAdd={this.handleAdd}
           handleEdit={this.handleEdit}
           handleRemove={this.handleRemove}
-          handleSelectionChange={this.handleSelectionChange}
           handlePrint={this.handlePrint}
           handleAttachment={this.handleAttachment}
+
+          handleSelectionChange={this.handleSelectionChange}
           selectionValue={{}}
         />
 
@@ -108,7 +215,7 @@ export default class DataList extends Component {
                           left: left
                         }}>{column.synonym}</div>
 
-                      left+=column.width
+                      left += column.width
 
                       return res;
                     })
@@ -125,8 +232,8 @@ export default class DataList extends Component {
                   columnWidth={({index}) => columns[index].width }
                   rowCount={totalRowCount}
                   rowHeight={30}
-                  width={_width}
-                  height={_height-140}
+                  width={width}
+                  height={height - 90}
                   style={{top: 30}}
                 />
 
@@ -143,40 +250,72 @@ export default class DataList extends Component {
     )
   }
 
-  handleAdd(e){
-
-  }
-
-  handleEdit(e){
+  // обработчик выбора значения в списке
+  handleSelect = () => {
     const row = this._list.get(this.state.selectedRowIndex)
-    if(row)
-      this.props.handleEdit(row)
+    const {handleSelect, _mgr} = this.props
+    if (row && handleSelect) {
+      handleSelect(row, _mgr)
+    }
   }
 
-  handleRemove(e){
+  // обработчик добавления элемента списка
+  handleAdd = () => {
+    const {handleAdd, _mgr} = this.props
+    if (handleAdd) {
+      handleAdd(_mgr)
+    }
+  }
+
+  // обработчик редактирования элемента списка
+  handleEdit = () => {
+    const row = this._list.get(this.state.selectedRowIndex)
+    const {handleEdit, _mgr} = this.props
+    if (row && handleEdit) {
+      handleEdit(row, _mgr)
+    }
+  }
+
+  // обработчик удаления элемента списка
+  handleRemove = () => {
+    const row = this._list.get(this.state.selectedRowIndex)
+    const {handleRemove, _mgr} = this.props
+    if (row && handleRemove) {
+      handleRemove(row, _mgr)
+    }
+  }
+
+  // обработчик изменении свойств отбора
+  handleSelectionChange = () => {
 
   }
 
-  handleSelectionChange(e){
-
+  // обработчик печати теущей строки
+  handlePrint = () => {
+    const row = this._list.get(this.state.selectedRowIndex)
+    const {handlePrint, _mgr} = this.props
+    if (row && handlePrint) {
+      handlePrint(row, _mgr)
+    }
   }
 
-  handlePrint(e){
-
+  // обработчик вложений теущей строки
+  handleAttachment = () => {
+    const row = this._list.get(this.state.selectedRowIndex)
+    const {handleAttachment, _mgr} = this.props
+    if (row && handleAttachment) {
+      handleAttachment(row, _mgr)
+    }
   }
 
-  handleAttachment(e){
+  _formatter(row, index) {
 
-  }
-
-  _formatter (row, index){
-
-    const { $p } = this.context
-    const { columns } = this.props
+    const {$p} = this.context
+    const {columns} = this.state
     const column = columns[index]
     const v = row[column.id]
 
-    switch ($p.UI.control_by_type(column.type, v)){
+    switch ($p.UI.control_by_type(column.type, v)) {
 
       case 'ocombo':
         return $p.utils.value_mgr(row, column.id, column.type, false, v).get(v).presentation
@@ -190,19 +329,19 @@ export default class DataList extends Component {
     }
   }
 
-  _isRowLoaded ({ index }) {
+  _isRowLoaded({index}) {
     const res = !!this._list.get(index)
     return res
   }
 
-  _getRowClassName (row) {
+  _getRowClassName(row) {
     return row % 2 === 0 ? styles.evenRow : styles.oddRow
   }
 
-  _loadMoreRows ({ startIndex, stopIndex }) {
+  _loadMoreRows({startIndex, stopIndex}) {
 
-    const { totalRowCount } = this.state
-    const { select, _mgr } = this.props
+    const {select, totalRowCount} = this.state
+    const {_mgr} = this.props
     const increment = Math.max(limit, stopIndex - startIndex + 1)
 
     select._top = increment
@@ -215,17 +354,17 @@ export default class DataList extends Component {
 
         // обновляем массив результата
         for (var i = 0; i < data.length; i++) {
-          if(!this._list._data[i+startIndex]){
-            this._list._data[i+startIndex] = data[i];
+          if (!this._list._data[i + startIndex]) {
+            this._list._data[i + startIndex] = data[i];
           }
         }
 
         // обновляем состояние - изменилось количество записей
-        if(totalRowCount != startIndex + data.length + (data.length < increment ? 0 : increment )){
+        if (totalRowCount != startIndex + data.length + (data.length < increment ? 0 : increment )) {
           this.setState({
             totalRowCount: startIndex + data.length + (data.length < increment ? 0 : increment )
           })
-        }else{
+        } else {
           this.forceUpdate()
         }
 
@@ -239,12 +378,12 @@ export default class DataList extends Component {
    * @param key - Unique key within array of cells
    * @param rowIndex - Vertical (row) index of cell
    * @param style - Style object to be applied to cell
-   * @return {XML}
+   * @return {Component}
    * @private
    */
-  _cellRenderer ({columnIndex, isScrolling, key, rowIndex, style}) {
+  _cellRenderer({columnIndex, isScrolling, key, rowIndex, style}) {
 
-    const { $p } = this.context
+    const {$p} = this.context
     const setState = ::this.setState
     // var grid = this.refs.AutoSizer.refs.Grid
 
@@ -269,7 +408,7 @@ export default class DataList extends Component {
       content = (
         <div
           className={styles.placeholder}
-          style={{ width: 10 + Math.random() * 80 }}
+          style={{width: 10 + Math.random() * 80}}
         />
       )
     }

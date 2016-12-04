@@ -1,26 +1,22 @@
 import React, {Component, PropTypes} from "react";
-import { IndexLink, Link } from 'react-router'
-import NavUserButtons from '../NavUserButtons'
-import NavList from '../NavList'
-import classes from './Header.scss'
-
-
-import $p from 'metadata'
-
 import AppBar from 'material-ui/AppBar';
+
+import NavUserButtons from '../NavUserButtons'
+import NavList from 'metadata-react-ui/NavList/src'
 
 export default class Header extends Component {
 
   static propTypes = {
 
-    sync_started: PropTypes.bool,
-    show_indicator: PropTypes.bool,
-    logged_in: PropTypes.bool,
+    title: PropTypes.string.isRequired,         // заголовок AppBar
+    navlist_items: PropTypes.array.isRequired,  // массив элементов меню
 
-    title: PropTypes.string.isRequired,
-    sync_tooltip: PropTypes.string.isRequired,
-    notifications_tooltip: PropTypes.string.isRequired,
-    button_label: PropTypes.string.isRequired
+    sync_started: PropTypes.bool,               // выполняется синхронизация
+    show_indicator: PropTypes.bool,             // показывать ли индикатор синхронизации
+    logged_in: PropTypes.bool,                  // пользователь залогинен
+    sync_tooltip: PropTypes.string.isRequired,  // текст всплывающей подсказки синхронизации
+    notifications_tooltip: PropTypes.string.isRequired, // текст всплывающей подсказки оповещений
+    button_label: PropTypes.string.isRequired // текст кнопки текущего пользователя (правая)
 
   }
 
@@ -34,7 +30,6 @@ export default class Header extends Component {
         titleStyle={{fontSize: 18}}
         iconElementLeft={<NavList {...props} />}
         iconElementRight={<NavUserButtons {...props} />}
-
       />
     )
   }

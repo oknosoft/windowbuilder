@@ -1,3 +1,3 @@
-import FrmAbout from './FrmAbout'
+import FrmAbout from "./FrmAbout";
 
 export default FrmAbout

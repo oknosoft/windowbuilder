@@ -48,10 +48,13 @@ export default class TabularSection extends Component {
     _meta: PropTypes.object,
     _columns: PropTypes.object,
 
-    Toolbar: PropTypes.func,
+    read_only: PropTypes.object,          // Элемент только для чтения
+    deny_add_del: PropTypes.bool,         // Запрет добавления и удаления строк (скрывает кнопки в панели, отключает обработчики)
 
-    handleValueChange: PropTypes.func,
-    handleRowChange: PropTypes.func,
+    Toolbar: PropTypes.func,              // Индивидуальная панель инструментов. Если не указана, рисуем типовую
+
+    handleValueChange: PropTypes.func,    // Обработчик изменения значения в ячейке
+    handleRowChange: PropTypes.func,      // При окончании редактирования строки
   }
 
   constructor (props, context) {

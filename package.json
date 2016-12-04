@@ -11,7 +11,7 @@
     "npm": "^3.5"
   },
   "scripts": {
-    "clean": "rimraf v2",
+    "clean": "rimraf dist/v2",
     "prebuild:meta": "node ./src/metadata/prebuild.js",
     "compile": "better-npm-run compile",
     "lint": "eslint src tests server",
@@ -162,7 +162,6 @@
     "redbox-react": "^1.3",
     "sinon": "^1.17",
     "sinon-chai": "^2.8",
-    "simple-assign": "^0.1",
     "webpack-dev-middleware": "^1.8",
     "webpack-hot-middleware": "^2.13",
 

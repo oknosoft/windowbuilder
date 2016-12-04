@@ -46,11 +46,11 @@ export default class NavUserButtons extends Component{
   };
 
   static contextTypes = {
-    handleLocationChange: React.PropTypes.func.isRequired
+    $p: React.PropTypes.object.isRequired
   }
 
   handleLogin = (e) => {
-    this.context.handleLocationChange('/login')
+    this.context.$p.UI.history.push('/login')
   }
 
   render () {
