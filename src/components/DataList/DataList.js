@@ -55,6 +55,7 @@ export default class DataList extends Component {
     this.state = {
       totalRowCount: totalRows,
       selectedRowIndex: 0,
+      do_reload: false,
       columns: props.columns,
       _meta: props._meta || props._mgr.metadata(),
 
@@ -134,12 +135,18 @@ export default class DataList extends Component {
       }
     }
 
-    this._isRowLoaded = ::this._isRowLoaded
-    this._loadMoreRows = ::this._loadMoreRows
-    this._cellRenderer = ::this._cellRenderer
+  }
 
-    this.handleEdit = ::this.handleEdit
-
+  componentDidUpdate (prevProps, prevState) {
+    // If props/state signals that the underlying collection has changed,
+    // Reload the most recently requested batch of rows:
+    if (this.state.do_reload) {
+      this.state.do_reload = false;
+      this._loadMoreRows({
+        startIndex: 0,
+        stopIndex: 30
+      })
+    }
   }
 
   render() {
@@ -152,7 +159,11 @@ export default class DataList extends Component {
       select._key.startkey[0] = key0
       select._key.endkey[0] = key0
       setTimeout(() => {
-        this.setState({ totalRowCount: totalRows })
+        this._list.clear()
+        this.setState({
+          do_reload: true,
+          totalRowCount: 0
+        })
       })
     }
 
@@ -329,7 +340,7 @@ export default class DataList extends Component {
     }
   }
 
-  _isRowLoaded({index}) {
+  _isRowLoaded = ({index}) => {
     const res = !!this._list.get(index)
     return res
   }
@@ -338,14 +349,18 @@ export default class DataList extends Component {
     return row % 2 === 0 ? styles.evenRow : styles.oddRow
   }
 
-  _loadMoreRows({startIndex, stopIndex}) {
+  _loadMoreRows = ({startIndex, stopIndex}) => {
 
     const {select, totalRowCount} = this.state
     const {_mgr} = this.props
     const increment = Math.max(limit, stopIndex - startIndex + 1)
 
-    select._top = increment
-    select._skip = startIndex
+    Object.assign(select, {
+      _top: increment,
+      _skip: startIndex,
+      _view: 'doc/by_date',
+      _raw: true
+    })
 
     // выполняем запрос
     return _mgr.find_rows_remote(select)
@@ -381,9 +396,8 @@ export default class DataList extends Component {
    * @return {Component}
    * @private
    */
-  _cellRenderer({columnIndex, isScrolling, key, rowIndex, style}) {
+  _cellRenderer = ({columnIndex, isScrolling, key, rowIndex, style}) => {
 
-    const {$p} = this.context
     const setState = ::this.setState
     // var grid = this.refs.AutoSizer.refs.Grid
 
