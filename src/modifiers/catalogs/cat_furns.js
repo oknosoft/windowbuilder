@@ -47,14 +47,16 @@ $p.CatFurns.prototype.__define({
 					prm_row = row;
 					return forcibly = false;
 				});
-				if(!prm_row)
-					prm_row = fprms.add({param: v, cnstr: contour.cnstr}, true);
+				if(!prm_row){
+          prm_row = fprms.add({param: v, cnstr: contour.cnstr}, true);
+        }
 
 				osys.furn_params.each(function(row){
 					if(row.param == prm_row.param){
-						if(row.forcibly || forcibly)
-							prm_row.value = row.value;
-						prm_row.hide = row.hide;
+						if(row.forcibly || forcibly){
+              prm_row.value = row.value;
+            }
+						prm_row.hide = row.hide || row.param.is_calculated;
 						return false;
 					}
 				});

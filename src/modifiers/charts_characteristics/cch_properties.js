@@ -16,7 +16,7 @@ $p.cch.properties.__define({
 	 * @override
 	 * @param prms {Array}
 	 * @param title {String}
-	 * @return {boolean}
+	 * @return {Boolean}
 	 */
 	check_mandatory: {
 		value: function(prms, title){
@@ -81,5 +81,41 @@ $p.cch.properties.__define({
 			return res;
 		}
 	}
+
+});
+
+$p.CchProperties.prototype.__define({
+
+  /**
+   * ### Является ли значение параметра вычисляемым
+   *
+   * @property is_calculated
+   * @type {Boolean}
+   */
+  is_calculated: {
+    get: function () {
+      return $p.job_prm.properties.calculated.indexOf(this) != -1;
+    }
+  },
+
+  /**
+   * ### Рассчитывает значение вычисляемого параметра
+   * @param obj {Object}
+   * @param [obj.row]
+   * @param [obj.elm]
+   * @param [obj.ox]
+   */
+  calculated_value: {
+    value: function (obj) {
+      if(!this._calculated_value){
+        if(this._formula){
+          this._calculated_value = $p.cat.formulas.get(this._formula);
+        }else{
+          return;
+        }
+      }
+      return this._calculated_value.execute(obj)
+    }
+  }
 
 });

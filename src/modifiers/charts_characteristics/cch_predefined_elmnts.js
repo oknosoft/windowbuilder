@@ -28,7 +28,9 @@
 							var ref = row._id.split("|")[1];
 							parents[ref] = row.synonym;
 							$p.job_prm.__define(row.synonym, { value: {} });
+
 						}
+
 					});
 
 					rows.forEach(function (row) {
@@ -58,9 +60,21 @@
 
 								$p.job_prm[parents[row.parent]].__define(row.synonym, {
 									value: row.elmnts.map(function (row) {
-										return _mgr ? _mgr.get(row.value, false) : row.value;
+									  if(_mgr){
+                      var value = _mgr.get(row.value, false);
+                      if(!$p.utils.is_empty_guid(row.elm)){
+                        value._formula = row.elm;
+                      }
+                      return value;
+                    }else{
+                      return row.value;
+                    }
 									})
 								});
+
+                if(row.synonym == "calculated"){
+
+                }
 
 							}else{
 
@@ -115,7 +129,7 @@
 
 	var _mgr = $p.cch.predefined_elmnts;
 
-	
+
 	/**
 	 * Переопределяем геттер значения
 	 *

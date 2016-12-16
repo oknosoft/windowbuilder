@@ -313,15 +313,19 @@ function ProductsBuilding(){
 
 			ok = false;
 			var val = prm.value,
-        is_calck;
+        is_calculated = prm.param.is_calculated;
 
 			// вычисляемые параметры
-			if(prm.param == $p.job_prm.properties.clr_elm){
-        val = $p.cat.clrs.by_predefined(spec_row.clr, elm.clr, ox.clr);
+			if(is_calculated){
+        val = prm.param.calculated_value({
+          row: spec_row,
+          elm: elm,
+          ox: ox
+        });
       }
 
-      // если сравнение на равенство - решаем в лоб
-      if(prm.comparison_type.empty() || prm.comparison_type == $p.enm.comparison_types.eq){
+      // если сравнение на равенство - решаем в лоб, если вычисляемый параметр типа массив - выясняем вхождение значения в параметр
+      if((!Array.isArray(val)) && (prm.comparison_type.empty() || prm.comparison_type == $p.enm.comparison_types.eq)){
         params.find_rows({
           cnstr: cnstr || 0,
           inset: origin || $p.utils.blank.guid,
@@ -338,10 +342,11 @@ function ProductsBuilding(){
           inset: origin || $p.utils.blank.guid,
           param: prm.param
         }, function (row) {
+
           switch(prm.comparison_type) {
 
             case $p.enm.comparison_types.ne:
-              ok = (is_calck ? val : row.value) != prm.value;
+              ok = (is_calculated ? val : row.value) != prm.value;
               break;
 
             case $p.enm.comparison_types.gt:
@@ -359,6 +364,27 @@ function ProductsBuilding(){
             case $p.enm.comparison_types.lte:
               ok = row.value <= val;
               break;
+
+            case $p.enm.comparison_types.nin:
+              if(Array.isArray(val) && !Array.isArray(prm.value)){
+                ok = val.indexOf(prm.value) == -1;
+
+              }else if(Array.isArray(prm.value) && !Array.isArray(val)){
+                ok = prm.value.indexOf(val) == -1;
+
+              }
+              break;
+
+            case $p.enm.comparison_types.in:
+              if(Array.isArray(val) && !Array.isArray(prm.value)){
+                ok = val.indexOf(prm.value) != -1;
+
+              }else if(Array.isArray(prm.value) && !Array.isArray(val)){
+                ok = prm.value.indexOf(val) != -1;
+
+              }
+              break;
+
           }
 
           return false;
