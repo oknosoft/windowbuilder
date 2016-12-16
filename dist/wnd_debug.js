@@ -5861,6 +5861,62 @@ $p.CchProperties.prototype.__define({
       }
       return this._calculated_value.execute(obj)
     }
+  },
+
+  /**
+   * ### Дополняет отбор фильтром по параметрам выбора
+   * @param filter {Object} - дополняемый фильтр
+   * @param attr {Object} - атрибуты OCombo
+   */
+  filter_params_links: {
+    value: function (filter, attr) {
+
+      // первым делом, выясняем, есть ли ограничитель на текущий параметр
+      if(!this.hasOwnProperty("_params_links")){
+        this._params_links = $p.cat.params_links.find_rows({slave: this})
+      }
+      if(!this._params_links.length){
+        return;
+      }
+
+      var ts = attr.obj._owner,
+        ox = ts._owner,
+        selection = attr.grid.selection._clone();
+      if(selection.hasOwnProperty("hide")){
+        delete selection.hide;
+      }
+      var  prms = ts.find_rows(selection);
+
+      // для всех возможных связей параметров
+      this._params_links.forEach(function (link) {
+        var ok = true;
+        // для всех записей ключа параметров
+        link.master.params.forEach(function (row) {
+          ok = prms.some(function (prm) {
+            return prm.property == prm.property && prm.value == prm.value;
+          });
+          if(!ok){
+            return false;
+          }
+        });
+
+        // если ключ найден в параметрах, добавляем фильтр
+        if(ok){
+          if(!filter.ref){
+            filter.ref = {in: []}
+          }
+          if(filter.ref.in){
+            link.values._obj.forEach(function (row) {
+              if(filter.ref.in.indexOf(row.value) == -1){
+                filter.ref.in.push(row.value);
+              }
+            });
+          }
+        }
+
+      });
+
+    }
   }
 
 });
