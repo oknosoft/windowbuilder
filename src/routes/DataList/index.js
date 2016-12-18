@@ -2,12 +2,14 @@
 //import { injectReducer } from '../../store/reducers'
 
 export default (store) => ({
+
 	path: '/:meta/list(/:options)(/:form)',
+
 	/*  Async getComponent is only invoked when route matches   */
 	getComponent (nextState, cb) {
 		/*  Webpack - use 'require.ensure' to create a split point
 		 and embed an async module loader (jsonp) when bundling   */
-		require.ensure([], (require) => {
+		require.ensure([], function(require) {
 
 			/*  Webpack - use require callback to define
 			 dependencies for bundling   */
@@ -21,6 +23,7 @@ export default (store) => ({
 			cb(null, DataListContainer)
 
 			/* Webpack named bundle   */
-		}, 'app')
+		}, 'app');
+
 	}
 })
