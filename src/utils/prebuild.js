@@ -60,7 +60,7 @@ module.exports = function (package_data) {
 				cch: {mgr: "ChartOfCharacteristicManager", obj: "CatObj"},
 				cacc: {mgr: "ChartOfAccountManager", obj: "CatObj"},
 				cat: {mgr: "CatManager", obj: "CatObj"},
-				bp: {mgr: "BusinessProcessObj", obj: "BusinessProcessObj"},
+				bp: {mgr: "BusinessProcessManager", obj: "BusinessProcessObj"},
 				tsk: {mgr: "TaskManager", obj: "TaskObj"},
 				doc: {mgr: "DocManager", obj: "DocObj"},
 				ireg: {mgr: "InfoRegManager", obj: "RegisterRow"},
@@ -137,9 +137,10 @@ module.exports = function (package_data) {
 			text += fn_name + ".prototype.__define({" + props + "});\n";
 
 
-		// табличные части по метаданным
-		props = "";
-		for(var ts in meta.tabular_sections){
+  // табличные части по метаданным
+  for(var ts in meta.tabular_sections){
+
+    props = "";
 
 			// создаём конструктор строки табчасти
 			var row_fn_name = $p.DataManager.prototype.obj_constructor.call({class_name: category + "." + name}, ts);

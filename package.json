@@ -7,7 +7,7 @@
   "private": true,
   "main"    : "electron.js",
   "engines": {
-    "node": "^6.5",
+    "node": "^6.9",
     "npm": "^3.5"
   },
   "scripts": {

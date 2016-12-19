@@ -158,9 +158,9 @@ function create_modules(_m){
   // менеджеры объектов данных, отчетов и обработок
   for(var category in categoties){
     for(name in _m[category]){
-      text+= obj_constructor_text(_m, category, name, categoties[category].obj);
       if(sys_nsmes.indexOf(name) == -1){
-        text+= "$p." + category + "." + name + " = new " + categoties[category].mgr + "('" + category + "." + name + "')\n";
+	      text+= obj_constructor_text(_m, category, name, categoties[category].obj);
+	      text+= "$p." + category + "." + name + " = new " + categoties[category].mgr + "('" + category + "." + name + "')\n";
       }
     }
   }
@@ -216,8 +216,9 @@ function obj_constructor_text(_m, category, name, proto) {
 
 
   // табличные части по метаданным
-  props = "";
   for(var ts in meta.tabular_sections){
+
+	props = "";
 
     // создаём конструктор строки табчасти
     var row_fn_name = $p.classes.DataManager.prototype.obj_constructor.call({class_name: category + "." + name, constructor_names: {}}, ts);
@@ -246,4 +247,3 @@ function obj_constructor_text(_m, category, name, proto) {
   return text;
 
 }
-
