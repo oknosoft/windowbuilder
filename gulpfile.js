@@ -33,10 +33,9 @@ gulp.task('build-iface', function(){
 			}
 		}))
 		.pipe(gulp.dest('./dist'))
-		.pipe(rename('wnd_debug.min.js'))
-		.pipe(uglify())
-		.pipe(gulp.dest('./dist'))
-		;
+		// .pipe(rename('wnd_debug.min.js'))
+		// .pipe(uglify())
+		// .pipe(gulp.dest('./dist'))
 });
 
 // Cборка библиотеки рисовалки
@@ -55,9 +54,10 @@ gulp.task('build-lib', function(){
 			}
 		}))
 		.pipe(gulp.dest('./dist'))
-		.pipe(rename('windowbuilder.min.js'))
-		.pipe(uglify())
-		.pipe(gulp.dest('./dist'));
+		// .pipe(rename('windowbuilder.min.js'))
+		// .pipe(uglify())
+		// .pipe(gulp.dest('./dist'))
+
 });
 
 

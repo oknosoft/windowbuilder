@@ -8,154 +8,157 @@
 
 /**
  * ### Произвольный текст
- * 
+ *
  * @class ToolText
  * @extends ToolElement
  * @constructor
  * @menuorder 60
  * @tooltip Добавление текста
  */
-function ToolText(){
+class ToolText extends ToolElement {
 
-	var tool = this,
-		_editor = paper;
+  constructor() {
 
-	ToolText.superclass.constructor.call(this);
+    super()
 
-	tool.mouseStartPos = new paper.Point();
-	tool.mode = null;
-	tool.hitItem = null;
-	tool.originalContent = null;
-	tool.changed = false;
+    Object.assign(this, {
+      options: {
+        name: 'text',
+        wnd: {
+          caption: "Произвольный текст",
+          width: 290,
+          height: 290
+        }
+      },
+      mouseStartPos: new paper.Point(),
+      mode: null,
+      hitItem: null,
+      originalContent: null,
+      changed: false
+    })
 
-	tool.options = {
-		name: 'text',
-		wnd: {
-			caption: "Произвольный текст",
-			width: 290,
-			height: 290
-		}
-	};
+    this.on({
 
-	tool.resetHot = function(type, event, mode) {
-	};
-	tool.testHot = function(type, event, mode) {
-		/*	if (mode != 'tool-select')
-		 return false;*/
-		return tool.hitTest(event);
-	};
-	tool.hitTest = function(event) {
-		var hitSize = 6;
+      activate: function() {
+        this.on_activate('cursor-text-select');
+      },
 
-		// хит над текстом обрабатываем особо
-		tool.hitItem = _editor.project.hitTest(event.point, { class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize });
-		if(!tool.hitItem)
-			tool.hitItem = _editor.project.hitTest(event.point, { fill: true, stroke: false, tolerance: hitSize });
+      deactivate: function() {
+        paper.hide_selection_bounds();
+        this.detache_wnd();
+      },
 
-		if (tool.hitItem){
-			if(tool.hitItem.item instanceof paper.PointText)
-				_editor.canvas_cursor('cursor-text');     // указатель с черным Т
-			else
-				_editor.canvas_cursor('cursor-text-add'); // указатель с серым Т
-		} else
-			_editor.canvas_cursor('cursor-text-select');  // указатель с вопросом
+      mousedown: function(event) {
+        this.text = null;
+        this.changed = false;
 
-		return true;
-	};
-	tool.on({
-		activate: function() {
-			this.on_activate('cursor-text-select');
-		},
-		deactivate: function() {
-			_editor.hide_selection_bounds();
-			tool.detache_wnd();
-		},
-		mousedown: function(event) {
-			this.text = null;
-			this.changed = false;
+        paper.project.deselectAll();
+        this.mouseStartPos = event.point.clone();
 
-			_editor.project.deselectAll();
-			this.mouseStartPos = event.point.clone();
+        if (this.hitItem) {
 
-			if (tool.hitItem) {
+          if(this.hitItem.item instanceof paper.PointText){
+            this.text = this.hitItem.item;
+            this.text.selected = true;
 
-				if(tool.hitItem.item instanceof paper.PointText){
-					this.text = tool.hitItem.item;
-					this.text.selected = true;
+          }else {
+            this.text = new FreeText({
+              parent: this.hitItem.item.layer.l_text,
+              point: this.mouseStartPos,
+              content: '...',
+              selected: true
+            });
+          }
 
-				}else {
-					this.text = new FreeText({
-						parent: tool.hitItem.item.layer.l_text,
-						point: this.mouseStartPos,
-						content: '...',
-						selected: true
-					});
-				}
+          this.textStartPos = this.text.point;
 
-				this.textStartPos = this.text.point;
+          // включить диалог свойст текстового элемента
+          if(!this.wnd || !this.wnd.elmnts){
+            $p.wsql.restore_options("editor", this.options);
+            this.wnd = $p.iface.dat_blank(paper._dxw, this.options.wnd);
+            this._grid = this.wnd.attachHeadFields({
+              obj: this.text
+            });
+          }else{
+            this._grid.attach({obj: this.text})
+          }
 
-				// включить диалог свойст текстового элемента
-				if(!tool.wnd || !tool.wnd.elmnts){
-					$p.wsql.restore_options("editor", tool.options);
-					tool.wnd = $p.iface.dat_blank(_editor._dxw, tool.options.wnd);
-					tool._grid = tool.wnd.attachHeadFields({
-						obj: this.text
-					});
-				}else{
-					tool._grid.attach({obj: this.text})
-				}
+        }else
+          this.detache_wnd();
 
-			}else
-				tool.detache_wnd();
+      },
 
-		},
-		mouseup: function(event) {
+      mouseup: function(event) {
 
-			if (this.mode && this.changed) {
-				//undo.snapshot("Move Shapes");
-			}
+        if (this.mode && this.changed) {
+          //undo.snapshot("Move Shapes");
+        }
 
-			_editor.canvas_cursor('cursor-arrow-lay');
+        paper.canvas_cursor('cursor-arrow-lay');
 
-		},
-		mousedrag: function(event) {
+      },
 
-			if (this.text) {
-				var delta = event.point.subtract(this.mouseStartPos);
-				if (event.modifiers.shift)
-					delta = delta.snap_to_angle();
+      mousedrag: function(event) {
 
-				this.text.move_points(this.textStartPos.add(delta));
-				
-			}
+        if (this.text) {
+          var delta = event.point.subtract(this.mouseStartPos);
+          if (event.modifiers.shift)
+            delta = delta.snap_to_angle();
 
-		},
-		mousemove: function(event) {
-			this.hitTest(event);
-		},
-		keydown: function(event) {
-			var selected, i, text;
-			if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+          this.text.move_points(this.textStartPos.add(delta));
 
-				if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
-					return;
+        }
 
-				selected = _editor.project.selectedItems;
-				for (i = 0; i < selected.length; i++) {
-					text = selected[i];
-					if(text instanceof FreeText){
-						text.text = "";
-						setTimeout(function () {
-							_editor.view.update();
-						}, 100);
-					}
-				}
+      },
 
-				event.preventDefault();
-				return false;
-			}
-		}
-	});
+      mousemove: function(event) {
+        this.hitTest(event);
+      },
+
+      keydown: function(event) {
+        var selected, i, text;
+        if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+
+          if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+            return;
+
+          selected = paper.project.selectedItems;
+          for (i = 0; i < selected.length; i++) {
+            text = selected[i];
+            if(text instanceof FreeText){
+              text.text = "";
+              setTimeout(function () {
+                paper.view.update();
+              }, 100);
+            }
+          }
+
+          event.preventDefault();
+          return false;
+        }
+      }
+    })
+
+  }
+
+  hitTest(event) {
+    var hitSize = 6;
+
+    // хит над текстом обрабатываем особо
+    this.hitItem = paper.project.hitTest(event.point, { class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize });
+    if(!this.hitItem)
+      this.hitItem = paper.project.hitTest(event.point, { fill: true, stroke: false, tolerance: hitSize });
+
+    if (this.hitItem){
+      if(this.hitItem.item instanceof paper.PointText)
+        paper.canvas_cursor('cursor-text');     // указатель с черным Т
+      else
+        paper.canvas_cursor('cursor-text-add'); // указатель с серым Т
+    } else
+      paper.canvas_cursor('cursor-text-select');  // указатель с вопросом
+
+    return true;
+  }
 
 }
-ToolText._extend(ToolElement);
+
