@@ -65,6 +65,11 @@ class ToolSelectNode extends ToolElement {
 
         if (this.hitItem && !event.modifiers.alt) {
 
+          if(this.hitItem.item instanceof paper.PointText) {
+            return
+          }
+
+
           var is_profile = this.hitItem.item.parent instanceof ProfileItem,
             item = is_profile ? this.hitItem.item.parent.generatrix : this.hitItem.item;
 
@@ -418,7 +423,9 @@ class ToolSelectNode extends ToolElement {
 
     if (this.hitItem) {
       if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
+
         if (this.hitItem.item instanceof paper.PointText) {
+          paper.canvas_cursor('cursor-text');     // указатель с черным Т
 
         } else if (this.hitItem.item.selected) {
           paper.canvas_cursor('cursor-arrow-small');

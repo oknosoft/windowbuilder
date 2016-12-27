@@ -7,13 +7,12 @@
 var gulp = require('gulp'),
 	base64 = require('gulp-base64'),
 	concat = require('gulp-concat'),
-	uglify = require('gulp-uglify'),
+  strip = require('gulp-strip-comments'),
 	rename = require('gulp-rename'),
 	resources = require('./src/utils/resource-concat.js'),
 	prebuild = require('./src/utils/prebuild.js'),
 	umd = require('gulp-umd'),
-	replace = require('gulp-replace'),
-	package_data = JSON.parse(require('fs').readFileSync('package.json', 'utf8'));  // данные файла package.json
+	package_data = require('./package.json', 'utf8');  // данные файла package.json
 
 module.exports = gulp;
 
@@ -27,15 +26,13 @@ gulp.task('build-iface', function(){
 		'./src/wnd_main.js'
 	])
 		.pipe(concat('wnd_debug.js'))
+    .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
 				return 'undefined';
 			}
 		}))
-		.pipe(gulp.dest('./dist'))
-		// .pipe(rename('wnd_debug.min.js'))
-		// .pipe(uglify())
-		// .pipe(gulp.dest('./dist'))
+    .pipe(gulp.dest('./dist'))
 });
 
 // Cборка библиотеки рисовалки
@@ -48,15 +45,13 @@ gulp.task('build-lib', function(){
 		'./data/merged_wb_tips.js'
 	])
 		.pipe(concat('windowbuilder.js'))
+    .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
 				return 'Editor';
 			}
 		}))
 		.pipe(gulp.dest('./dist'))
-		// .pipe(rename('windowbuilder.min.js'))
-		// .pipe(uglify())
-		// .pipe(gulp.dest('./dist'))
 
 });
 
@@ -69,7 +64,7 @@ gulp.task('injected-tips', function(){
 		.pipe(resources('merged_wb_tips.js', function (data) {
 			return new Buffer('$p.injected_data._mixin(' + JSON.stringify(data) + ');');
 		}))
-		.pipe(gulp.dest('./data'));
+		.pipe(gulp.dest('./data'))
 });
 
 // Сборка ресурсов интерфейса
@@ -84,7 +79,7 @@ gulp.task('injected-templates', function(){
 		.pipe(resources('merged_wb_templates.js', function (data) {
 			return new Buffer('$p.injected_data._mixin(' + JSON.stringify(data) + ');');
 		}))
-		.pipe(gulp.dest('./data'));
+		.pipe(gulp.dest('./data'))
 });
 
 // Сборка метаданных
@@ -92,7 +87,7 @@ gulp.task('injected-meta', function(){
 
 	return gulp.src(['./src/utils/default_settings.js'])
 		.pipe(prebuild(package_data))
-		.pipe(gulp.dest('./data'));
+		.pipe(gulp.dest('./data'))
 
 });
 
@@ -107,6 +102,6 @@ gulp.task('css-base64', function () {
 	])
 		.pipe(base64())
 		.pipe(concat('windowbuilder.css'))
-		.pipe(gulp.dest('./dist'));
+		.pipe(gulp.dest('./dist'))
 });
 

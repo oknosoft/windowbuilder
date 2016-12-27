@@ -782,19 +782,19 @@ class ToolLayImpost extends ToolElement {
 
   hitTest(event) {
 
-    tool.hitItem = null;
+    this.hitItem = null;
 
     // Hit test items.
     if (event.point)
-      tool.hitItem = paper.project.hitTest(event.point, { fill: true, class: paper.Path });
+      this.hitItem = paper.project.hitTest(event.point, { fill: true, class: paper.Path });
 
-    if (tool.hitItem && tool.hitItem.item.parent instanceof Filling){
+    if (this.hitItem && this.hitItem.item.parent instanceof Filling){
       paper.canvas_cursor('cursor-lay-impost');
-      tool.hitItem = tool.hitItem.item.parent;
+      this.hitItem = this.hitItem.item.parent;
 
     } else {
       paper.canvas_cursor('cursor-arrow-lay');
-      tool.hitItem = null;
+      this.hitItem = null;
     }
 
     return true;
@@ -809,7 +809,7 @@ class ToolLayImpost extends ToolElement {
       });
     }
 
-    super.prototype.detache_wnd.call(this)
+    ToolElement.prototype.detache_wnd.call(this)
 
   }
 

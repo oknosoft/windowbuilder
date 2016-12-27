@@ -4,11 +4,12 @@
     <item id="sent" text="Отправлено" tooltip="Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в 'черновики')"><icons file="fa-paper-plane-o" /></item>
     <item id="confirmed" text="Согласовано" tooltip="Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером"><icons file="fa-thumbs-o-up" /></item>
     <item id="declined" text="Отклонено" tooltip="Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации"><icons file="fa-thumbs-o-down" /></item>
-    <item id="execution" text="Долги" tooltip="Оплата, отгрузка"><icons file="fa-money" /></item>
+
+    <!--item id="execution" text="Долги" tooltip="Оплата, отгрузка"><icons file="fa-money" /></item>
     <item id="plan" text="План" tooltip="Согласованы, но еще не запущены в работу"><icons file="fa-calendar-check-o" /></item>
     <item id="underway" text="В работе" tooltip="Включены в задания на производство, но еще не изготовлены"><icons file="fa-industry" /></item>
     <item id="manufactured" text="Изготовлено" tooltip="Изготовлены, но еще не отгружены"><icons file="fa-gavel" /></item>
-    <item id="executed" text="Исполнено" tooltip="Отгружены клиенту"><icons file="fa-truck" /></item>
+    <item id="executed" text="Исполнено" tooltip="Отгружены клиенту"><icons file="fa-truck" /></item -->
 
     <item id="service" text="Сервис" tooltip="Сервисное обслуживание"><icons file="fa-medkit" /></item>
     <item id="complaints" text="Рекламации" tooltip="Жалобы и рекламации"><icons file="fa-frown-o" /></item>
