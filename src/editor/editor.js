@@ -393,33 +393,16 @@ function Editor(pwnd, attr){
 		var boundingRect = new paper.Path.Rectangle(rect);
 
 		function checkPathItem(item) {
-			var children = item.children || [];
-			if (item.equals(boundingRect))
-				return;
-			if (!rect.intersects(item.bounds))
-				return;
-			if (item instanceof paper.PathItem ) {
-
-				if(item.parent instanceof Profile){
-					if(item != item.parent.generatrix)
-						return;
-
-					if (rect.contains(item.bounds)) {
-						paths.push(item);
-						return;
-					}
-					var isects = boundingRect.getIntersections(item);
-					if (isects.length > 0)
-						paths.push(item);
-				}
-
-			} else {
-				for (var j = children.length-1; j >= 0; j--)
-					checkPathItem(children[j]);
-			}
+      if (rect.contains(item.generatrix.bounds)) {
+        paths.push(item.generatrix);
+        return;
+      }
+      // var isects = boundingRect.getIntersections(item);
+      // if (isects.length > 0)
+      //   paths.push(item);
 		}
 
-		this.project.getItems({class: Contour}).forEach(checkPathItem);
+		this.project.getItems({class: ProfileItem}).forEach(checkPathItem);
 
 		boundingRect.remove();
 
@@ -734,7 +717,7 @@ Editor.prototype.__define({
 					return;
 				if (item instanceof paper.Path) {
 
-					if(item.parent instanceof Profile){
+					if(item.parent instanceof ProfileItem){
 						if(item != item.parent.generatrix)
 							return;
 
@@ -761,7 +744,7 @@ Editor.prototype.__define({
 			var selected = this.project.selectedItems, deselect = [];
 			for (var i = 0; i < selected.length; i++) {
 				var path = selected[i];
-				if(path.parent instanceof Profile && path != path.parent.generatrix)
+				if(path.parent instanceof ProfileItem && path != path.parent.generatrix)
 					deselect.push(path);
 			}
 			while(selected = deselect.pop())

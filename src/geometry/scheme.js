@@ -1354,6 +1354,29 @@ Scheme.prototype.__define({
 
       return res;
     }
+  },
+
+  /**
+   * Массив с рёбрами периметра
+   */
+  perimeter: {
+    get: function () {
+
+      let res = [],
+        contours = this.contours,
+        tmp;
+
+      // если в изделии один рамный контур - просто возвращаем его периметр
+      if(contours.length == 1){
+        return contours[0].perimeter;
+      }
+
+      // находим самый нижний правый контур
+
+      // бежим по всем контурам, находим примыкания, исключаем их из результата
+
+      return res;
+    }
   }
 
 

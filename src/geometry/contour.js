@@ -1447,10 +1447,13 @@ Contour.prototype.__define({
     get: function () {
       var res = [], tmp;
       this.outer_profiles.forEach(function (curr) {
-        res.push(tmp = {
+        res.push(tmp = curr.sub_path ? {
           len: curr.sub_path.length,
           angle: curr.e.subtract(curr.b).angle
-        });
+        } : {
+            len: curr.elm.length,
+            angle: curr.elm.angle_hor
+          });
         if(tmp.angle < 0)
           tmp.angle += 360;
       });

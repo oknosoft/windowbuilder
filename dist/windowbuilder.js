@@ -2198,33 +2198,13 @@ function Editor(pwnd, attr){
 		var boundingRect = new paper.Path.Rectangle(rect);
 
 		function checkPathItem(item) {
-			var children = item.children || [];
-			if (item.equals(boundingRect))
-				return;
-			if (!rect.intersects(item.bounds))
-				return;
-			if (item instanceof paper.PathItem ) {
-
-				if(item.parent instanceof Profile){
-					if(item != item.parent.generatrix)
-						return;
-
-					if (rect.contains(item.bounds)) {
-						paths.push(item);
-						return;
-					}
-					var isects = boundingRect.getIntersections(item);
-					if (isects.length > 0)
-						paths.push(item);
-				}
-
-			} else {
-				for (var j = children.length-1; j >= 0; j--)
-					checkPathItem(children[j]);
-			}
+      if (rect.contains(item.generatrix.bounds)) {
+        paths.push(item.generatrix);
+        return;
+      }
 		}
 
-		this.project.getItems({class: Contour}).forEach(checkPathItem);
+		this.project.getItems({class: ProfileItem}).forEach(checkPathItem);
 
 		boundingRect.remove();
 
@@ -2451,7 +2431,7 @@ Editor.prototype.__define({
 					return;
 				if (item instanceof paper.Path) {
 
-					if(item.parent instanceof Profile){
+					if(item.parent instanceof ProfileItem){
 						if(item != item.parent.generatrix)
 							return;
 
@@ -2478,7 +2458,7 @@ Editor.prototype.__define({
 			var selected = this.project.selectedItems, deselect = [];
 			for (var i = 0; i < selected.length; i++) {
 				var path = selected[i];
-				if(path.parent instanceof Profile && path != path.parent.generatrix)
+				if(path.parent instanceof ProfileItem && path != path.parent.generatrix)
 					deselect.push(path);
 			}
 			while(selected = deselect.pop())
@@ -4113,10 +4093,13 @@ Contour.prototype.__define({
     get: function () {
       var res = [], tmp;
       this.outer_profiles.forEach(function (curr) {
-        res.push(tmp = {
+        res.push(tmp = curr.sub_path ? {
           len: curr.sub_path.length,
           angle: curr.e.subtract(curr.b).angle
-        });
+        } : {
+            len: curr.elm.length,
+            angle: curr.elm.angle_hor
+          });
         if(tmp.angle < 0)
           tmp.angle += 360;
       });
@@ -9414,6 +9397,23 @@ Scheme.prototype.__define({
           return res = item.parent;
         }
       });
+
+      return res;
+    }
+  },
+
+  perimeter: {
+    get: function () {
+
+      let res = [],
+        contours = this.contours,
+        tmp;
+
+      if(contours.length == 1){
+        return contours[0].perimeter;
+      }
+
+
 
       return res;
     }

@@ -1157,7 +1157,8 @@ function ProductsBuilding(){
       var elm = {
         _row: {},
         elm: 0,
-        clr: ox.clr
+        clr: ox.clr,
+        get perimeter() {return contour.perimeter}
       },
         inset = irow.inset;
 
@@ -1219,7 +1220,11 @@ function ProductsBuilding(){
 		});
 
     // спецификация вставок в изделие
-    inset_contour_spec({cnstr:0, project: scheme});
+    inset_contour_spec({
+      cnstr:0,
+      project: scheme,
+      get perimeter() {return this.project.perimeter}
+    });
 
 	}
 
