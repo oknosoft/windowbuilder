@@ -191,8 +191,10 @@ Onlay.prototype.__define({
 					var np = res.profile.path.getNearestPoint(point),
 						distance = np.getDistance(point);
 
-					if(distance < consts.sticking_l)
-						return res;
+					if(distance < consts.sticking_l){
+            res.point = np;
+            return res;
+          }
 
 				}else{
 					if(this.check_distance(res.profile, res, point, true) === false)

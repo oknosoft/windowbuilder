@@ -8204,8 +8204,6 @@ ProfileConnective.prototype.__define({
 	});
 
 
-
-
 function Onlay(attr){
 
 	Onlay.superclass.constructor.call(this, attr);
@@ -8215,7 +8213,6 @@ Onlay._extend(ProfileItem);
 
 
 Onlay.prototype.__define({
-
 
 	save_coordinates: {
 		value: function () {
@@ -8293,23 +8290,19 @@ Onlay.prototype.__define({
 		}
 	},
 
-
 	d0: {
 		get : function(){
 			return 0;
 		}
 	},
 
-
 	d1: {
 		get : function(){ return this.sizeb; }
 	},
 
-
 	d2: {
 		get : function(){ return this.d1 - this.width; }
 	},
-
 
 	elm_type: {
 		get : function(){
@@ -8318,7 +8311,6 @@ Onlay.prototype.__define({
 
 		}
 	},
-
 
 	cnn_point: {
 		value: function(node, point){
@@ -8335,8 +8327,10 @@ Onlay.prototype.__define({
 					var np = res.profile.path.getNearestPoint(point),
 						distance = np.getDistance(point);
 
-					if(distance < consts.sticking_l)
-						return res;
+					if(distance < consts.sticking_l){
+            res.point = np;
+            return res;
+          }
 
 				}else{
 					if(this.check_distance(res.profile, res, point, true) === false)
@@ -8358,7 +8352,6 @@ Onlay.prototype.__define({
 
 		}
 	},
-
 
 	bind_node: {
 
