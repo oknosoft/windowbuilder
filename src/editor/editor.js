@@ -799,10 +799,7 @@ Editor.prototype.__define({
           modal: true
         }
       };
-      // восстанавливаем сохранённые параметры
-      //$p.wsql.restore_options("editor", options);
 
-      //var wnd = $p.iface.dat_blank(this._dxw, options.wnd);
       var wnd = $p.iface.dat_blank(null, options.wnd);
 
       wnd.elmnts.layout = wnd.attachLayout({
@@ -859,6 +856,46 @@ Editor.prototype.__define({
       });
 
 
+    }
+  },
+
+  /**
+   * ### Диалог радиуса выделенного элемента
+   */
+  profile_radius: {
+    value: 	function(){
+
+      var elm = this.project.selected_elm;
+      if(elm instanceof ProfileItem){
+
+        // модальный диалог
+        var options = {
+          name: 'profile_radius',
+          wnd: {
+            caption: $p.msg.bld_arc,
+            allow_close: true,
+            width: 360,
+            height: 180,
+            modal: true
+          }
+        };
+
+        var wnd = $p.iface.dat_blank(null, options.wnd);
+
+        wnd.elmnts.grids.radius = wnd.attachHeadFields({
+          obj: elm,
+          oxml: {
+            " ": ["r", "arc_ccw"]
+          }
+        });
+
+      }else{
+        $p.msg.show_msg({
+          type: "alert-info",
+          text: $p.msg.arc_invalid_elm,
+          title: $p.msg.bld_arc
+        });
+      }
     }
   },
 

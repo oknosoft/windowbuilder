@@ -37,11 +37,23 @@ function EditorAccordion(_editor, cell_acc) {
 				{name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
+        {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
 				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
 			],
 			image_path: "dist/imgs/",
 			onclick: function (name) {
-				return name == 'additional_inserts' ? _editor.additional_inserts('elm') : _editor.profile_align(name);
+        switch (name) {
+          case 'arc':
+            _editor.profile_radius()
+            break;
+
+          case 'additional_inserts':
+            _editor.additional_inserts('elm')
+            break;
+
+          default:
+            _editor.profile_align(name)
+        }
 			}
 		}),
 

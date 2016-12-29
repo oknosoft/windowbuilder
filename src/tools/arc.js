@@ -81,6 +81,7 @@ class ToolArc extends ToolElement{
             r.firstSegment.handleOut = null;
             r.lineTo(e);
             r.parent.rays.clear();
+            r.parent._row.r = 0;
             r.selected = true;
             r.layer.notify({type: consts.move_points, profiles: [r.parent], points: []});
 

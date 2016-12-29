@@ -49,7 +49,7 @@ function BuilderElement(attr){
 
 		if(attr.parent)
 			this.parent = attr.parent;
-			
+
 		else if(attr.proto.parent)
 			this.parent = attr.proto.parent;
 
@@ -336,7 +336,9 @@ BuilderElement.prototype.__define({
 					y2: _xfields.y2,
 					cnn1: cnn1,
 					cnn2: cnn2,
-					cnn3: cnn3
+					cnn3: cnn3,
+          r: _xfields.r,
+          arc_ccw: _xfields.arc_ccw
 				}
 			};
 		}
@@ -377,15 +379,15 @@ BuilderElement.prototype.__define({
 			return (this._row ? this._row.inset : null) || $p.cat.inserts.get();
 		},
 		set : function(v){
-			
+
 			if(this._row.inset != v){
-				
+
 				this._row.inset = v;
 
 				if(this.data && this.data._rays)
 					this.data._rays.clear(true);
-				
-				this.project.register_change();	
+
+				this.project.register_change();
 			}
 		}
 	},
@@ -396,13 +398,13 @@ BuilderElement.prototype.__define({
 			return this._row.clr;
 		},
 		set : function(v){
-			
+
 			this._row.clr = v;
 
 			// цвет элементу присваиваем только если он уже нарисован
 			if(this.path instanceof paper.Path)
 				this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
-			
+
 			this.project.register_change();
 
 		}
@@ -497,7 +499,7 @@ BuilderElement.prototype.__define({
 			}
 		}
 	},
-	
+
 	selected_cnn_ii: {
 		value: function(){
 			var t = this,
@@ -548,7 +550,7 @@ BuilderElement.clr_by_clr = function (clr, view_out) {
 	if(!clr_str)
 		clr_str = this.default_clr_str ? this.default_clr_str : "fff";
 
-	
+
 	if(clr_str){
 		clr = clr_str.split(",");
 		if(clr.length == 1){

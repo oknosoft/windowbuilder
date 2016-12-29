@@ -138,7 +138,7 @@ ProfileItem.prototype.__define({
 	initialize: {
 		value : function(attr){
 
-			var h = this.project.bounds.height + this.project.bounds.y,
+			const h = this.project.bounds.height + this.project.bounds.y,
 				_row = this._row;
 
 			if(attr.r)
@@ -155,10 +155,13 @@ ProfileItem.prototype.__define({
 					this.data.generatrix = new paper.Path(_row.path_data);
 
 				}else{
-					this.data.generatrix = new paper.Path([_row.x1, h - _row.y1]);
+
+          const first_point = new paper.Point([_row.x1, h - _row.y1]);
+					this.data.generatrix = new paper.Path(first_point);
+
 					if(_row.r){
 						this.data.generatrix.arcTo(
-							$p.m.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2,
+              first_point.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2,
 								_row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
 					}else{
 						this.data.generatrix.lineTo([_row.x2, h - _row.y2]);
@@ -420,10 +423,61 @@ ProfileItem.prototype.__define({
 			return this._row.r;
 		},
 		set: function(v){
-			this.data._rays.clear();
-			this._row.r = v;
+		  if(this._row.r != v){
+        this.data._rays.clear();
+        this._row.r = v;
+        this.set_generatrix_radius();
+      }
 		}
 	},
+
+  /**
+   * Искривляет образующую в соответствии с радиусом
+   */
+  set_generatrix_radius: {
+	  value: function (h) {
+
+	    const _row = this._row,
+        gen = this.data.generatrix,
+        b = gen.firstSegment.point.clone(),
+        e = gen.lastSegment.point.clone(),
+        min_radius = b.getDistance(e) / 2;
+
+	    if(!h){
+        h = this.project.bounds.height + this.project.bounds.y
+      }
+
+      gen.removeSegments(1);
+      gen.firstSegment.handleIn = null;
+      gen.firstSegment.handleOut = null;
+
+      if(_row.r < min_radius){
+        _row.r = 0;
+      }else if(_row.r == min_radius){
+        _row.r += 0.001;
+      }
+
+      if(_row.r){
+        let p = new paper.Point(b.arc_point(b.x, b.y, e.x, e.y, _row.r, _row.arc_ccw, false));
+        if(p.point_pos(b.x, b.y, e.x, e.y) > 0 && !_row.arc_ccw || p.point_pos(b.x, b.y, e.x, e.y) < 0 && _row.arc_ccw){
+          p = new paper.Point(b.arc_point(b.x, b.y, e.x, e.y, _row.r, !_row.arc_ccw, false));
+        }
+        gen.arcTo(p, e);
+
+      }else{
+
+        gen.lineTo(e);
+
+      }
+
+      gen.layer.notify({
+        type: consts.move_points,
+        profiles: [this],
+        points: []
+      });
+
+    }
+  },
 
 	/**
 	 * ### Направление дуги сегмента профиля против часовой стрелки
@@ -434,10 +488,14 @@ ProfileItem.prototype.__define({
 	 */
 	arc_ccw: {
 		get : function(){
-
+      return this._row.arc_ccw;
 		},
 		set: function(v){
-			this.data._rays.clear();
+		  if(this._row.arc_ccw != v){
+        this.data._rays.clear();
+        this._row.arc_ccw = v;
+        this.set_generatrix_radius();
+      }
 		}
 	},
 
@@ -458,7 +516,7 @@ ProfileItem.prototype.__define({
 
 			if(!cnn_point.point)
 				cnn_point.point = this[node];
-			
+
 			return cnn_point;
 		}
 	},
@@ -952,7 +1010,7 @@ ProfileItem.prototype.__define({
 					res.dist = this.b.getDistance(corn);
 					res.point = this.b;
 					res.point_name = "b";
-					
+
 				}else if(res.point.is_nearest(this.e)){
 					res.dist = this.e.getDistance(corn);
 					res.point = this.e;
@@ -1164,11 +1222,11 @@ ProfileItem.prototype.__define({
 					"Начало": ["x1", "y1", "cnn1"],
 					"Конец": ["x2", "y2", "cnn2"]
 				};
-			
+
 			if(cnn_ii)
 				oxml["Примыкание"] = ["cnn3"];
-			
-			return oxml; 
+
+			return oxml;
 		}
 	},
 
@@ -1280,7 +1338,7 @@ function Profile(attr){
 Profile._extend(ProfileItem);
 
 Profile.prototype.__define({
-	
+
 
 	/**
 	 * Примыкающий внешний элемент - имеет смысл для сегментов створок
@@ -1622,17 +1680,17 @@ Editor.Profile = Profile;
  * @constructor
  */
 function CnnPoint(parent, node){
-		
+
 	//  массив ошибок соединения
 	this._err = [];
 
 	// строка в таблице соединений
 	this._row = parent.project.connections.cnns.find({elm1: parent.elm, node1: node});
-		
+
 	// примыкающий профиль
 	this._profile;
 
-		
+
 	if(this._row){
 
 		/**
