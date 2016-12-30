@@ -14,103 +14,113 @@
  * @constructor
  * @param _editor {Editor} - указатель на экземпляр редактора
  */
-function UndoRedo(_editor){
+class UndoRedo {
 
-	var _history = [],
-		pos = -1,
-		snap_timer;
+  constructor(_editor) {
 
-	function run_snapshot() {
+    this._editor = _editor;
+    this._history = [];
+    this._pos = -1;
 
-		// запускаем короткий пересчет изделия
-		if(pos >= 0){
+    // обрабатываем изменения изделия
+    $p.eve.attachEvent("scheme_changed", this.scheme_changed.bind(this));
 
-			// если pos < конца истории, отрезаем хвост истории
-			if(pos > 0 && pos < (_history.length - 1)){
-				_history.splice(pos, _history.length - pos - 1);
-			}
+    // при закрытии редактора чистим историю
+    $p.eve.attachEvent("editor_closed", this.clear.bind(this));
 
-			_editor.project.save_coordinates({snapshot: true, clipboard: false});
+    // при готовности снапшота, добавляем его в историю
+    $p.eve.attachEvent("scheme_snapshot", this.scheme_snapshot.bind(this));
 
-		}
+  }
 
-	}
+  run_snapshot() {
 
-	function save_snapshot(scheme) {
-		_history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields","glasses","specification","predefined_name"])));
-		pos = _history.length - 1;
-		enable_buttons();
-	}
+    // запускаем короткий пересчет изделия
+    if (this._pos >= 0) {
 
-	function apply_snapshot() {
-		_editor.project.load_stamp(JSON.parse(_history[pos]), true);
-		enable_buttons();
-	}
+      // если pos < конца истории, отрезаем хвост истории
+      if (this._pos > 0 && this._pos < (this._history.length - 1)) {
+        this._history.splice(this._pos, this._history.length - this._pos - 1);
+      }
 
-	function enable_buttons() {
-		if(pos < 1)
-			_editor.tb_top.buttons.back.classList.add("disabledbutton");
-		else
-			_editor.tb_top.buttons.back.classList.remove("disabledbutton");
+      this._editor.project.save_coordinates({snapshot: true, clipboard: false});
 
-		if(pos < (_history.length - 1))
-			_editor.tb_top.buttons.rewind.classList.remove("disabledbutton");
-		else
-			_editor.tb_top.buttons.rewind.classList.add("disabledbutton");
+    }
 
-	}
+  }
 
-	function clear() {
-		_history.length = 0;
-		pos = -1;
-	}
+  scheme_snapshot(scheme, attr) {
+    if (scheme == this._editor.project && !attr.clipboard) {
+      this.save_snapshot(scheme);
+    }
+  }
 
-	// обрабатываем изменения изделия
-	$p.eve.attachEvent("scheme_changed", function (scheme, attr) {
-		if(scheme == _editor.project){
+  scheme_changed(scheme, attr) {
 
-			// при открытии изделия чистим историю
-			if(scheme.data._loading){
-				if(!scheme.data._snapshot){
-					clear();
-					save_snapshot(scheme);
-				}
+    if (scheme == this._editor.project) {
 
-			} else{
-				// при обычных изменениях, запускаем таймер снапшота
-				if(snap_timer)
-					clearTimeout(snap_timer);
-				snap_timer = setTimeout(run_snapshot, 700);
-				enable_buttons();
-			}
-		}
+      // при открытии изделия чистим историю
+      if (scheme.data._loading) {
+        if (!scheme.data._snapshot) {
+          this.clear();
+          this.save_snapshot(scheme);
+        }
 
-	});
+      } else {
+        // при обычных изменениях, запускаем таймер снапшота
+        if (this._snap_timer)
+          clearTimeout(this._snap_timer);
+        this._snap_timer = setTimeout(this.run_snapshot.bind(this), 700);
+        this.enable_buttons();
+      }
+    }
 
-	// при закрытии редактора чистим историю
-	$p.eve.attachEvent("editor_closed", clear);
+  }
 
-	// при готовности снапшота, добавляем его в историю
-	$p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
-		if(scheme == _editor.project && !attr.clipboard){
-			save_snapshot(scheme);
-		}
+  save_snapshot(scheme) {
+    this._history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields", "glasses", "specification", "predefined_name"])));
+    this._pos = this._history.length - 1;
+    this.enable_buttons();
+  }
 
-	});
+  apply_snapshot() {
+    this._editor.project.load_stamp(JSON.parse(this._history[this._pos]), true);
+    this.enable_buttons();
+  }
 
-	this.back = function() {
-		if(pos > 0)
-			pos--;
-		if(pos >= 0)
-			apply_snapshot();
-		else
-			enable_buttons();
-	};
+  enable_buttons() {
+    if (this._pos < 1)
+      this._editor.tb_top.buttons.back.classList.add("disabledbutton");
+    else
+      this._editor.tb_top.buttons.back.classList.remove("disabledbutton");
 
-	this.rewind = function() {
-		if(pos <= (_history.length - 1)){
-			pos++;
-			apply_snapshot();
-		}
-	}
+    if (this._pos < (this._history.length - 1))
+      this._editor.tb_top.buttons.rewind.classList.remove("disabledbutton");
+    else
+      this._editor.tb_top.buttons.rewind.classList.add("disabledbutton");
+
+  }
+
+  clear() {
+    this._history.length = 0;
+    this._pos = -1;
+  }
+
+  back() {
+    if (this._pos > 0)
+      this._pos--;
+    if (this._pos >= 0)
+      this.apply_snapshot();
+    else
+      this.enable_buttons();
+  }
+
+  rewind() {
+    if (this._pos <= (this._history.length - 1)) {
+      this._pos++;
+      this.apply_snapshot();
+    }
+  }
+
 }
+

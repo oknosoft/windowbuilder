@@ -94,7 +94,7 @@ $p.CchProperties.prototype.__define({
    */
   is_calculated: {
     get: function () {
-      return $p.job_prm.properties.calculated.indexOf(this) != -1;
+      return ($p.job_prm.properties.calculated || []).indexOf(this) != -1;
     }
   },
 

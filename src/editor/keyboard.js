@@ -12,6 +12,10 @@
  * @param _editor
  * @constructor
  */
-function Keybrd(_editor) {
-	
+class Keybrd {
+
+  constructor(_editor){
+
+  }
+
 }
