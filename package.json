@@ -172,7 +172,6 @@
     "gulp-rename": "^1.2",
     "gulp-strip-comments": "^2.4",
     "gulp-umd": "^0.2",
-    "gulp-babel": "^6.1",
     "gulp-base64": "^0.1",
     "jasmine": "^2.4",
     "metadata-js": "^0.12"
