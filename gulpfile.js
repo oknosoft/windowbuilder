@@ -12,7 +12,7 @@ var gulp = require('gulp'),
 	resources = require('./src/utils/resource-concat.js'),
 	prebuild = require('./src/utils/prebuild.js'),
 	umd = require('gulp-umd'),
-  babel = require('gulp-babel'),
+  //babel = require('gulp-babel'),
 	package_data = require('./package.json', 'utf8');  // данные файла package.json
 
 module.exports = gulp;

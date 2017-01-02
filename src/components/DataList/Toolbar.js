@@ -11,7 +11,7 @@ import MenuItem from "material-ui/MenuItem";
 import PrintIcon from "material-ui/svg-icons/action/print";
 import AttachIcon from "material-ui/svg-icons/editor/attach-file";
 import SelectIcon from "material-ui/svg-icons/av/playlist-add-check";
-import Filter from "../DataSelection";
+import SchemeSettings from "../SchemeSettings";
 
 import classes from "./DataList.scss";
 
@@ -25,8 +25,9 @@ export default class DataListToolbar extends Component {
     handleEdit: PropTypes.func.isRequired,            // обработчик открфтия формы редактора
     handleRemove: PropTypes.func.isRequired,          // обработчик удаления строки
 
-    handleSelectionChange: PropTypes.func.isRequired, // ??? обработчик при изменении фильтра
-    selectionValue: PropTypes.object.isRequired,      // значение фильтра
+    handleSchemeChange: PropTypes.func.isRequired,    // обработчик при изменении настроек компоновки
+    scheme: PropTypes.object.isRequired,              // значение настроек компоновки
+    schemas: PropTypes.object.isRequired,             // менеджер настроек компоновки
 
     handlePrint: PropTypes.func.isRequired,           // обработчик открытия диалога печати
     handleAttachment: PropTypes.func.isRequired,      // обработчик открытия диалога присоединенных файлов
@@ -62,7 +63,12 @@ export default class DataListToolbar extends Component {
           </IconButton>
 
           <ToolbarSeparator />
-          <Filter selectionChange={props.handleSelectionChange} selectionValue={props.selectionValue}/>
+          <SchemeSettings
+            handleSchemeChange={props.handleSchemeChange}
+            scheme={props.scheme}
+            schemas={props.schemas}
+            show_prm={false}
+          />
 
         </ToolbarGroup>
 
