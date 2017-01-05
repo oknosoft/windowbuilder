@@ -36,8 +36,7 @@ export default function ($p) {
               column = {
                 key: fld,
                 name: _fld.synonym,
-                resizable: true,
-                draggable: true
+                resizable: true
               }
 
             if (_fld.type.is_ref) {

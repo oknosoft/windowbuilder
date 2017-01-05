@@ -4,7 +4,7 @@ import {GridList, GridTile} from 'material-ui/GridList';
 import Layout from '../react-flex-layout/react-flex-layout'
 import LayoutSplitter from '../react-flex-layout/react-flex-layout-splitter'
 
-import Toolbar from "./Toolbar";
+import Toolbar from "./RepToolbar";
 import DataField from 'components/DataField'
 
 import RepTabularSection from './RepTabularSection'
@@ -34,15 +34,18 @@ export default class RepMaterialsDemand extends Component {
 
   constructor(props, context) {
 
-    super(props);
+    super(props, context);
 
-    const { $p } = context
+    const {$p} = context
+    const {_obj} = props
+    const class_name = _obj._manager.class_name + ".specification"
 
-    this.state = {
-      characteristic_mgr: $p.cat.characteristics
-    };
+    $p.cat.scheme_settings.get_scheme(class_name)
+      .then(this.handleSchemeChange)
 
   }
+
+  state = {}
 
   handleSave(){
     this.props._obj.calculate()
@@ -56,14 +59,34 @@ export default class RepMaterialsDemand extends Component {
 
   }
 
+  // обработчик при изменении настроек компоновки
+  handleSchemeChange = (scheme) => {
+    this.setState({
+      scheme,
+      columns: scheme.columns()
+    })
+  }
+
   render() {
 
     const { _obj, height, width } = this.props
+    const {columns, scheme} = this.state
+
+    if (!scheme) {
+      return <DumbLoader title="Чтение настроек компоновки..."/>
+
+    }
+    else if (!_obj) {
+      return <DumbLoader title="Чтение объекта данных..."/>
+
+    }
+    else if (!columns || !columns.length) {
+      return <DumbLoader title="Ошибка настроек компоновки..."/>
+
+    }
 
     return (
 
-      _obj
-        ?
       <div>
 
         <Toolbar
@@ -72,6 +95,9 @@ export default class RepMaterialsDemand extends Component {
           handleClose={this.props.handleClose}
 
           _obj={_obj}
+
+          scheme={scheme}
+          handleSchemeChange={this.handleSchemeChange}
         />
 
         <div className={classes.cont} style={{width: width - 20, height: height - 150}}>
@@ -81,13 +107,12 @@ export default class RepMaterialsDemand extends Component {
             _tabular="specification"
             ref="specification"
             minHeight={height - 160}
+            scheme={scheme}
           />
 
         </div>
 
       </div>
-        :
-      <DumbLoader />
 
     );
   }

@@ -12,7 +12,6 @@ import "metadata-react-ui/combined.css";
 import "metadata-react-ui/react-data-grid.css";
 import "metadata-react-ui/metadata-react-ui.css";
 import "react-virtualized/styles.css";
-import "react-virtualized-select/styles.css";
 import "styles/core.scss";
 //import 'react-flex-layout/react-flex-layout-splitter.css'
 

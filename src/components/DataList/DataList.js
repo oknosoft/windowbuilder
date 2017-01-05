@@ -1,10 +1,9 @@
 /** @flow */
 import React, {Component, PropTypes} from "react";
 import {InfiniteLoader, Grid} from "react-virtualized";
-import DumbLoader from '../DumbLoader'
+import DumbLoader from "../DumbLoader";
 import Toolbar from "./Toolbar";
 import cn from "classnames";
-
 import styles from "./DataList.scss";
 
 
@@ -14,18 +13,18 @@ const limit = 30,
 class DataListStorage {
 
   constructor() {
-   this._data = []
+    this._data = []
   }
 
   get size() {
     return this._data.length
   }
 
-  get(index){
+  get(index) {
     return this._data[index]
   }
 
-  clear(){
+  clear() {
     this._data.length = 0
   }
 
@@ -44,8 +43,6 @@ export default class DataList extends Component {
     _meta: PropTypes.object,              // Описание метаданных. Если не указано, используем метаданные менеджера
 
     // настройки компоновки
-    schemas: PropTypes.object.isRequired, // менеджер настроек компоновки
-    columns: PropTypes.array,             // todo: переместить в scheme // Настройки колонок динамического списка. Если не указано - генерируем по метаданным
     select: PropTypes.object,             // todo: переместить в scheme // Параметры запроса к couchdb. Если не указано - генерируем по метаданным
 
     // настройки внешнего вида и поведения
@@ -87,10 +84,7 @@ export default class DataList extends Component {
       totalRowCount: totalRows,
       selectedRowIndex: 0,
       do_reload: false,
-      columns: props.columns,
       _meta: props._meta || props._mgr.metadata(),
-
-      scheme: null,
 
       // готовим фильтры для запроса couchdb
       select: props.select || {
@@ -105,64 +99,13 @@ export default class DataList extends Component {
       }
     }
 
-    // TODO: колонки должны переехать в scheme
-    if (!state.columns || !state.columns.length) {
-
-      state.columns = []
-
-      // набираем поля
-      if (state._meta.form && state._meta.form.selection) {
-        state._meta.form.selection.cols.forEach(fld => {
-          const fld_meta = state._meta.fields[fld.id] || props._mgr.metadata(fld.id)
-          state.columns.push({
-            id: fld.id,
-            synonym: fld.caption || fld_meta.synonym,
-            tooltip: fld_meta.tooltip,
-            type: fld_meta.type,
-            width: (fld.width == '*') ? 250 : (parseInt(fld.width) || 140)
-          });
-        });
-
-      } else {
-
-        if (props._mgr instanceof $p.classes.CatManager) {
-          if (state._meta.code_length) {
-            state.columns.push('id')
-          }
-
-          if (state._meta.main_presentation_name) {
-            state.columns.push('name')
-          }
-
-        } else if (props._mgr instanceof $p.classes.DocManager) {
-          state.columns.push('number_doc')
-          state.columns.push('date')
-        }
-
-        state.columns = state.columns.map((id, index) => {
-          // id, synonym, tooltip, type, width
-          const fld_meta = state._meta.fields[id] || props._mgr.metadata(id)
-          return {
-            id,
-            synonym: fld_meta.synonym,
-            tooltip: fld_meta.tooltip,
-            type: fld_meta.type,
-            width: fld_meta.width || 140
-          }
-        })
-      }
-    }
-
     this._list = new DataListStorage()
 
-    props.schemas.get_scheme(class_name)
-      .then((scheme) => {
-        this.setState({ scheme })
-      })
-
+    $p.cat.scheme_settings.get_scheme(class_name)
+      .then(this.handleSchemeChange)
   }
 
-  componentDidUpdate (prevProps, prevState) {
+  componentDidUpdate(prevProps, prevState) {
     // If props/state signals that the underlying collection has changed,
     // Reload the most recently requested batch of rows:
     if (this.state.do_reload) {
@@ -177,14 +120,18 @@ export default class DataList extends Component {
   render() {
 
     const {columns, totalRowCount, select, scheme} = this.state
-    const {width, height, selection_mode, params, _mgr, schemas} = this.props
+    const {width, height, selection_mode, params, _mgr} = this.props
     const key0 = params.options || _mgr.class_name
 
-    if(!scheme){
-      return <DumbLoader title="Чтение настроек компоновки..." />
+    if (!scheme) {
+      return <DumbLoader title="Чтение настроек компоновки..."/>
+
+    } else if (!columns || !columns.length) {
+      return <DumbLoader title="Ошибка настроек компоновки..."/>
+
     }
 
-    if(select._key.startkey[0] != key0){
+    if (select._key.startkey[0] != key0) {
       select._key.startkey[0] = key0
       select._key.endkey[0] = key0
       setTimeout(() => {
@@ -212,7 +159,6 @@ export default class DataList extends Component {
           handleAttachment={this.handleAttachment}
 
           scheme={scheme}
-          schemas={schemas}
           handleSchemeChange={this.handleSchemeChange}
 
         />
@@ -243,7 +189,7 @@ export default class DataList extends Component {
 
                 <div
                   //className={styles.BodyGrid}
-                  style={{position: 'relative'}}>
+                  style={{position: 'relative', zIndex: -1}}>
                   {
                     columns.map(function (column, index) {
 
@@ -330,7 +276,10 @@ export default class DataList extends Component {
 
   // обработчик при изменении настроек компоновки
   handleSchemeChange = (scheme) => {
-
+    this.setState({
+      scheme,
+      columns: scheme.columns()
+    })
   }
 
   // обработчик печати теущей строки

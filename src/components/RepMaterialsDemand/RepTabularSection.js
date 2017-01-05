@@ -1,13 +1,15 @@
 import React, {Component, PropTypes} from "react";
 import ReactDataGrid from "react-data-grid";
-import {Menu, Data, Editors, ToolsPanel} from "react-data-grid/addons";
 
+//import {Menu, Data, Editors, ToolsPanel} from "react-data-grid/addons";
+
+import {Data} from "react-data-grid/addons";
 const Selectors = Data.Selectors;
-const { AdvancedToolbar, GroupedColumnsPanel }   = ToolsPanel;
-const DraggableContainer  = ReactDataGridPlugins.Draggable.Container;
+
+// const { AdvancedToolbar, GroupedColumnsPanel }   = ToolsPanel;
+// const DraggableContainer  = ReactDataGridPlugins.Draggable.Container;
 
   // // Import the necessary modules.
-  // import { Menu } from "react-data-grid/addons";
   // // Create the context menu.
   // // Use this.props.rowIdx and this.props.idx to get the row/column where the menu is shown.
   // class MyContextMenu extends Component {
@@ -38,21 +40,21 @@ const DraggableContainer  = ReactDataGridPlugins.Draggable.Container;
   //
   // }
 
-class CustomToolbar extends Component {
-  render() {
-    return (
-      <AdvancedToolbar>
-        <GroupedColumnsPanel
-          groupBy={this.props.groupBy}
-          onColumnGroupAdded={this.props.onColumnGroupAdded}
-          onColumnGroupDeleted={this.props.onColumnGroupDeleted}
-        />
-      </AdvancedToolbar>
-    )
-  }
-}
+// class CustomToolbar extends Component {
+//   render() {
+//     return (
+//       <AdvancedToolbar>
+//         <GroupedColumnsPanel
+//           groupBy={this.props.groupBy}
+//           onColumnGroupAdded={this.props.onColumnGroupAdded}
+//           onColumnGroupDeleted={this.props.onColumnGroupDeleted}
+//         />
+//       </AdvancedToolbar>
+//     )
+//   }
+// }
 
-export default class TabularSection extends Component {
+export default class RepTabularSection extends Component {
 
   static propTypes = {
 
@@ -60,7 +62,8 @@ export default class TabularSection extends Component {
     _tabular: PropTypes.string.isRequired,
     _meta: PropTypes.object,
 
-    handleValueChange: PropTypes.func,
+    scheme: PropTypes.object.isRequired,              // значение настроек компоновки
+
     handleRowChange: PropTypes.func,
   }
 
@@ -82,16 +85,16 @@ export default class TabularSection extends Component {
     }
   }
 
-  getRows() {
+  getRows = () => {
     return Selectors.getRows(this.state);
   }
 
-  getRowAt(index){
-    var rows = this.getRows();
+  getRowAt = (index) => {
+    const rows = this.getRows();
     return rows[index];
   }
 
-  getSize() {
+  getSize = () => {
     return this.getRows().length;
   }
 
@@ -108,7 +111,7 @@ export default class TabularSection extends Component {
     this.setState({groupBy: columnGroups});
   }
 
-  onRowExpandToggle(args){
+  onRowExpandToggle = (args) => {
     var expandedRows = Object.assign({}, this.state.expandedRows);
     expandedRows[args.columnGroupName] = Object.assign({}, expandedRows[args.columnGroupName]);
     expandedRows[args.columnGroupName][args.name] = {isExpanded: args.shouldExpand};
@@ -117,36 +120,21 @@ export default class TabularSection extends Component {
 
   render() {
 
-    const { _obj } = this.props;
+    const { _obj, minHeight } = this.props;
 
     return (
 
-      <div>
+      <ReactDataGrid
+        ref="grid"
+        columns={_obj.columns}
+        enableCellSelect={true}
+        rowGetter={this.getRowAt}
+        rowsCount={this.getSize()}
+        minHeight={minHeight || 200}
 
-        <DraggableContainer>
+        onRowExpandToggle={this.onRowExpandToggle}
 
-          <ReactDataGrid
-            ref="grid"
-            columns={_obj.columns}
-            enableCellSelect={true}
-            enableDragAndDrop={true}
-            rowGetter={::this.getRowAt}
-            rowsCount={this.getSize()}
-            minHeight={this.props.minHeight || 200}
-
-            onRowExpandToggle={this.onRowExpandToggle}
-
-            toolbar={<CustomToolbar
-              groupBy={this.state.groupBy}
-              onColumnGroupAdded={::this.onColumnGroupAdded}
-              onColumnGroupDeleted={::this.onColumnGroupDeleted}
-            />}
-
-          />
-
-        </DraggableContainer>
-
-      </div>
+      />
 
     )
 

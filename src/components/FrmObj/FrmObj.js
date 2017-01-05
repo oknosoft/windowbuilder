@@ -6,9 +6,7 @@ export default class FrmObj extends Component {
 
   render() {
     return (
-      <DataObj
-        {...this.props}
-      />
+      <DataObj {...this.props} />
     );
   }
 }

@@ -13,10 +13,12 @@ import PrintIcon from 'material-ui/svg-icons/action/print';
 
 import ReportSettings from './Settings';
 
+import SchemeSettings from "../SchemeSettings";
+
 
 import classes from './RepMaterialsDemand.scss'
 
-export default class DataObjToolbar extends Component{
+export default class RepToolbar extends Component{
 
   static propTypes = {
 
@@ -24,34 +26,42 @@ export default class DataObjToolbar extends Component{
     handlePrint: PropTypes.func.isRequired,       // обработчик открытия диалога печати
     handleClose: PropTypes.func.isRequired,       // команда Закрыть форму
 
+    handleSchemeChange: PropTypes.func.isRequired,    // обработчик при изменении настроек компоновки
+    scheme: PropTypes.object.isRequired,              // значение настроек компоновки
+
     _obj: PropTypes.object,
 
   }
 
   render(){
 
-    const props = this.props;
+    const {handleSave, handleClose, handleSchemeChange, scheme, _obj} = this.props;
 
     return (
 
       <Toolbar className={classes.toolbar}>
-        <ToolbarGroup firstChild={true}>
+        <ToolbarGroup className={"meta-toolbar-group"} firstChild={true}>
           <FlatButton
             label="Сформировать"
             labelPosition="after"
             icon={<RunIcon />}
             className={classes.tbButton}
-            onTouchTap={props.handleSave}
+            onTouchTap={handleSave}
           >
           </FlatButton>
 
         </ToolbarGroup>
 
-        <ToolbarGroup>
+        <ToolbarGroup className={"meta-toolbar-group"}>
 
-          <ReportSettings _obj={props._obj} />
+          <SchemeSettings
+            handleSchemeChange={handleSchemeChange}
+            scheme={scheme}
+          />
 
-          <IconButton touch={true} onTouchTap={props.handleClose}>
+          <ReportSettings _obj={_obj} />
+
+          <IconButton touch={true} onTouchTap={handleClose}>
             <CloseIcon />
           </IconButton>
 

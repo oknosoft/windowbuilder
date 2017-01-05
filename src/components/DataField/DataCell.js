@@ -17,7 +17,7 @@ class DataCell extends Component {
   }
 
   static propTypes = {
-    options: React.PropTypes.array.isRequired,
+    options: React.PropTypes.array,
     column: React.PropTypes.shape(ExcelColumn),
     value: React.PropTypes.array
   }
