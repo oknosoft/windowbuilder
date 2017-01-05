@@ -4,7 +4,7 @@ import {GridList, GridTile} from 'material-ui/GridList';
 import Layout from '../react-flex-layout/react-flex-layout'
 import LayoutSplitter from '../react-flex-layout/react-flex-layout-splitter'
 
-import Toolbar from "./RepToolbar";
+import RepToolbar from "./RepToolbar";
 import DataField from 'components/DataField'
 
 import RepTabularSection from './RepTabularSection'
@@ -47,7 +47,7 @@ export default class RepMaterialsDemand extends Component {
 
   state = {}
 
-  handleSave(){
+  handleSave = () => {
     this.props._obj.calculate()
       .then(() => {
         this.refs.specification.setState({groupBy: []})
@@ -55,7 +55,7 @@ export default class RepMaterialsDemand extends Component {
       })
   }
 
-  handlePrint(){
+  handlePrint = () => {
 
   }
 
@@ -69,8 +69,9 @@ export default class RepMaterialsDemand extends Component {
 
   render() {
 
-    const { _obj, height, width } = this.props
-    const {columns, scheme} = this.state
+    const {props, state, handleSave, handlePrint, handleSchemeChange} = this
+    const { _obj, height, width, handleClose } = props
+    const {columns, scheme} = state
 
     if (!scheme) {
       return <DumbLoader title="Чтение настроек компоновки..."/>
@@ -89,24 +90,24 @@ export default class RepMaterialsDemand extends Component {
 
       <div>
 
-        <Toolbar
-          handleSave={::this.handleSave}
-          handlePrint={::this.handlePrint}
-          handleClose={this.props.handleClose}
+        <RepToolbar
+          handleSave={handleSave}
+          handlePrint={handlePrint}
+          handleClose={handleClose}
 
           _obj={_obj}
 
           scheme={scheme}
-          handleSchemeChange={this.handleSchemeChange}
+          handleSchemeChange={handleSchemeChange}
         />
 
-        <div className={classes.cont} style={{width: width - 20, height: height - 150}}>
+        <div className={classes.cont} style={{width: width - 20, height: height - 50}}>
 
           <RepTabularSection
             _obj={_obj}
             _tabular="specification"
             ref="specification"
-            minHeight={height - 160}
+            minHeight={height - 60}
             scheme={scheme}
           />
 

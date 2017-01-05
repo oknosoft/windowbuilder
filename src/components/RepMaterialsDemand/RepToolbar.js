@@ -11,9 +11,10 @@ import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import MenuItem from 'material-ui/MenuItem';
 import PrintIcon from 'material-ui/svg-icons/action/print';
 
-import ReportSettings from './Settings';
 
 import SchemeSettings from "../SchemeSettings";
+import TabularSection from '../TabularSection'
+import SettingsProductionToolbar from './SettingsProductionToolbar';
 
 
 import classes from './RepMaterialsDemand.scss'
@@ -39,7 +40,7 @@ export default class RepToolbar extends Component{
 
     return (
 
-      <Toolbar className={classes.toolbar}>
+      <Toolbar>
         <ToolbarGroup className={"meta-toolbar-group"} firstChild={true}>
           <FlatButton
             label="Сформировать"
@@ -57,9 +58,14 @@ export default class RepToolbar extends Component{
           <SchemeSettings
             handleSchemeChange={handleSchemeChange}
             scheme={scheme}
+            tabParams={<TabularSection
+              _obj={_obj}
+              _tabular="production"
+              minHeight={140}
+              Toolbar={SettingsProductionToolbar}
+              handleCustom={() => { console.log('handleCustom') }}
+            />}
           />
-
-          <ReportSettings _obj={_obj} />
 
           <IconButton touch={true} onTouchTap={handleClose}>
             <CloseIcon />

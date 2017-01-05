@@ -25,8 +25,8 @@ export default class SettingsProductionToolbar extends Component{
     const props = this.props;
     return (
 
-      <Toolbar className={classes.toolbar}>
-        <ToolbarGroup firstChild={true}>
+      <Toolbar>
+        <ToolbarGroup className={"meta-toolbar-group"} firstChild={true}>
           <IconButton touch={true} tooltip="Добавить строку" tooltipPosition="bottom-right" onTouchTap={props.handleAdd}>
             <AddIcon />
           </IconButton>

@@ -21,8 +21,9 @@ import SchemeSettingsTabs from './SchemeSettingsTabs';
 export default class SchemeSettingsWrapper extends Component{
 
   static propTypes = {
+    scheme: PropTypes.object.isRequired,
     handleSchemeChange: PropTypes.func.isRequired,
-    scheme: PropTypes.object.isRequired
+    tabParams: PropTypes.object
   }
 
   state = {
@@ -49,17 +50,20 @@ export default class SchemeSettingsWrapper extends Component{
 
   render(){
 
+    const {props, state, handleOpen, handleOk, handleClose, handleSchemeChange} = this;
+    const {open, scheme} = state
+
     const actions = [
       <FlatButton
         label="Применить"
         primary={true}
         keyboardFocused={true}
-        onTouchTap={this.handleOk}
+        onTouchTap={handleOk}
       />,
       <FlatButton
         label="Отмена"
         secondary={true}
-        onTouchTap={this.handleClose}
+        onTouchTap={handleClose}
       />,
     ];
 
@@ -67,7 +71,7 @@ export default class SchemeSettingsWrapper extends Component{
 
       <div>
 
-        <IconButton touch={true} tooltip="Настройка списка" onTouchTap={this.handleOpen}>
+        <IconButton touch={true} tooltip="Настройка списка" onTouchTap={handleOpen}>
           <IconFilter />
         </IconButton>
 
@@ -76,13 +80,14 @@ export default class SchemeSettingsWrapper extends Component{
           actions={actions}
           modal={false}
           autoScrollBodyContent={true}
-          open={this.state.open}
-          onRequestClose={this.handleClose}
+          open={open}
+          onRequestClose={handleClose}
         >
 
           <SchemeSettingsTabs
-            handleSchemeChange={this.handleSchemeChange}
-            scheme={this.props.scheme}
+            handleSchemeChange={handleSchemeChange}
+            scheme={scheme || props.scheme}
+            tabParams={props.tabParams}
           />
 
         </Dialog>
