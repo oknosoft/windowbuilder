@@ -125,12 +125,11 @@ export default class SchemeSettingsTabs extends Component {
 
         <Tab label="Вариант" value="v">
 
-          <div style={{height: 376}}>
-            <SchemeSettingsSelect
-              scheme={scheme}
-              handleSchemeChange={handleSchemeChange}
-            />
-          </div>
+          <SchemeSettingsSelect
+            scheme={scheme}
+            handleSchemeChange={handleSchemeChange}
+            minHeight={376}
+          />
 
         </Tab>
 

@@ -59,15 +59,14 @@ export default class DataListToolbar extends Component {
             <RemoveIcon />
           </IconButton>
 
-          <ToolbarSeparator />
+        </ToolbarGroup>
+
+        <ToolbarGroup className={"meta-toolbar-group"}>
+
           <SchemeSettings
             handleSchemeChange={props.handleSchemeChange}
             scheme={props.scheme}
           />
-
-        </ToolbarGroup>
-
-        <ToolbarGroup className={"meta-toolbar-group"}>
 
           <IconMenu
             iconButtonElement={
@@ -80,6 +79,7 @@ export default class DataListToolbar extends Component {
             <MenuItem primaryText="Вложения" leftIcon={<AttachIcon />} onTouchTap={props.handleAttachment}/>
 
           </IconMenu>
+
         </ToolbarGroup>
 
       </Toolbar>

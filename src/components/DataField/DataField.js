@@ -43,7 +43,6 @@ export default class DataField extends Component {
       _meta: _meta,
       _obj: _obj,
       _fld: _fld,
-      _val: _val,
       handleValueChange: handleValueChange
     }
 

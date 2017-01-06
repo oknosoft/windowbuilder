@@ -10,7 +10,7 @@
 import React, { Component, PropTypes } from 'react';
 
 import IconButton from 'material-ui/IconButton';
-import IconFilter from 'material-ui/svg-icons/content/filter-list';
+import IconSettings from 'material-ui/svg-icons/action/settings';
 
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
@@ -73,7 +73,7 @@ export default class SchemeSettingsWrapper extends Component{
       <div>
 
         <IconButton touch={true} tooltip="Настройка списка" onTouchTap={handleOpen}>
-          <IconFilter />
+          <IconSettings />
         </IconButton>
 
         <Dialog

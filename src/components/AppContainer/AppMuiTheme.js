@@ -33,18 +33,16 @@ export const muiTheme = getMuiTheme({
   },
 
   // spacing: {
-  //   iconSize: 24,
-  //
-  //   desktopGutter: 24,
-  //   desktopGutterMore: 32,
-  //   desktopGutterLess: 16,
-  //   desktopGutterMini: 8,
-  //   desktopKeylineIncrement: 64,
-  //   desktopDropDownMenuItemHeight: 32,
-  //   desktopDropDownMenuFontSize: 15,
-  //   desktopDrawerMenuItemHeight: 48,
-  //   desktopSubheaderHeight: 48,
-  //   desktopToolbarHeight: 56,
+  //   desktopGutter: 16,
+  //   desktopGutterMore: 24,
+  //   desktopGutterLess: 8,
+  //   desktopGutterMini: 6,
+  //   // desktopKeylineIncrement: 64,
+  //   // desktopDropDownMenuItemHeight: 32,
+  //   // desktopDropDownMenuFontSize: 15,
+  //   // desktopDrawerMenuItemHeight: 48,
+  //   // desktopSubheaderHeight: 48,
+  //   // desktopToolbarHeight: 56,
   // }
 
 });
