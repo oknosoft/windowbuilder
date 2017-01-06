@@ -9,59 +9,13 @@ import IconThumbDown from "material-ui/svg-icons/action/thumb-down";
 import IconMoodBad from "material-ui/svg-icons/social/mood-bad";
 import IconLocalPharmacy from "material-ui/svg-icons/maps/local-pharmacy";
 import IconSend from "material-ui/svg-icons/content/send";
+import IconWork from "material-ui/svg-icons/action/work";
 
 export default [
   {
     text: 'Заказы',
-    icon: <IconInbox />,
-    open: true,
-    items: [
-      {
-        text: 'Черновики',
-        navigate: 'doc_calc_order/list/draft',
-        icon: <IconDrafts />
-      },
-      {
-        text: 'Отправлено',
-        navigate: 'doc_calc_order/list/sent',
-        icon: <IconSend />
-      },
-      {
-        text: 'Согласовано',
-        navigate: 'doc_calc_order/list/confirmed',
-        icon: <IconThumbUp />
-      },
-      {
-        text: 'Отклонено',
-        navigate: 'doc_calc_order/list/declined',
-        icon: <IconThumbDown />
-      },
-      {
-        text: 'Сервис',
-        navigate: 'doc_calc_order/list/service',
-        icon: <IconLocalPharmacy />
-      },
-      {
-        text: 'Рекламации',
-        navigate: 'doc_calc_order/list/complaints',
-        icon: <IconMoodBad />
-      },
-      {
-        text: 'Шаблоны',
-        navigate: 'doc_calc_order/list/template',
-        icon: <IconDrafts />
-      },
-      {
-        text: 'Архив',
-        navigate: 'doc_calc_order/list/zarchive',
-        icon: <IconDrafts />
-      },
-      {
-        text: 'Все',
-        navigate: 'doc_calc_order/list/all',
-        icon: <IconDrafts />
-      }
-    ]
+    navigate: 'doc_calc_order/list/draft',
+    icon: <IconWork />
   },
   {
     text: 'Отчеты',

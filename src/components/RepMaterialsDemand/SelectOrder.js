@@ -1,22 +1,19 @@
 /** @flow */
 import React, {Component, PropTypes} from "react";
-
 import IconButton from 'material-ui/IconButton';
-import OrderIcon from 'material-ui/svg-icons/action/work';
-
+import IconWork from 'material-ui/svg-icons/action/work';
 import Dialog from 'material-ui/Dialog';
+import DataList from "../DataList"
 
-import EventsList from "../EventsList"
-
-import classes from "./RepMaterialsDemand.scss";
-
-const columns = ['date','number_doc']
-const columnWidths = [50,50]
 
 export default class SelectOrder extends Component {
 
   static propTypes = {
     handleSelect: React.PropTypes.func.isRequired
+  }
+
+  static contextTypes = {
+    $p: React.PropTypes.object.isRequired
   }
 
   constructor(props) {
@@ -25,7 +22,7 @@ export default class SelectOrder extends Component {
 
     this.state = {
       open: false
-    };
+    }
   }
 
   handleTouchTap = (event) => {
@@ -34,42 +31,49 @@ export default class SelectOrder extends Component {
 
     this.setState({
       open: true
-    });
-  };
+    })
+  }
 
   handleRequestClose = () => {
     this.setState({
       open: false,
-    });
-  };
+    })
+  }
+
+  handleSelect = (row, _mgr) => {
+    this.handleRequestClose()
+    this.props.handleSelect(row, _mgr)
+  }
 
 
   render () {
 
-    const { fetch_remote, handleSelect } = this.props
+    const {handleSelect, handleRequestClose, context, state} = this
 
     return (
       <div>
 
         <IconButton touch={true} tooltip="Заполнить по заказу" onTouchTap={this.handleTouchTap}>
-          <OrderIcon />
+          <IconWork />
         </IconButton>
 
         <Dialog
           title="Заполнить по заказу"
           //actions={actions}
           modal={false}
-          open={this.state.open}
-          onRequestClose={this.handleRequestClose}
+          open={state.open}
+          onRequestClose={handleRequestClose}
           autoScrollBodyContent={true}
         >
 
-          <EventsList
-            width={600}
-            height={350}
-            //fetch_remote={fetch_remote}
-            columns={columns}
-            columnWidths={columnWidths}
+          <DataList
+            width={700}
+            height={400}
+            _mgr={context.$p.doc.calc_order}
+            selection_mode
+            deny_add_del
+            handleSelect={handleSelect}
+
           />
 
         </Dialog>

@@ -1,25 +1,22 @@
-import React, { Component, PropTypes } from 'react';
-import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import React, {Component, PropTypes} from "react";
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from "material-ui/Toolbar";
+import IconButton from "material-ui/IconButton";
+import IconMenu from "material-ui/IconMenu";
+import FlatButton from "material-ui/FlatButton";
+import MenuItem from "material-ui/MenuItem";
 
-import IconButton from 'material-ui/IconButton';
-import FlatButton from 'material-ui/FlatButton';
-import RunIcon from 'material-ui/svg-icons/av/play-arrow';
-import CloseIcon from 'material-ui/svg-icons/navigation/close';
-
-import IconMenu from 'material-ui/IconMenu';
-import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
-import MenuItem from 'material-ui/MenuItem';
-import PrintIcon from 'material-ui/svg-icons/action/print';
-
+import RunIcon from "material-ui/svg-icons/av/play-arrow";
+import MoreVertIcon from "material-ui/svg-icons/navigation/more-vert";
+import PrintIcon from "material-ui/svg-icons/action/print";
+import ShareIcon from "material-ui/svg-icons/social/share";
 
 import SchemeSettings from "../SchemeSettings";
-import TabularSection from '../TabularSection'
-import SettingsProductionToolbar from './SettingsProductionToolbar';
+import TabularSection from "../TabularSection";
+import SettingsProductionToolbar from "./SettingsProductionToolbar";
 
+import classes from "./RepMaterialsDemand.scss";
 
-import classes from './RepMaterialsDemand.scss'
-
-export default class RepToolbar extends Component{
+export default class RepToolbar extends Component {
 
   static propTypes = {
 
@@ -34,23 +31,25 @@ export default class RepToolbar extends Component{
 
   }
 
-  render(){
+  handleCustom = (row, _mgr) => {
+    this.props._obj.fill_by_order(row, _mgr)
+      .then((objs) => {
+        this.refs.production.forceUpdate()
+      })
+  }
 
-    const {handleSave, handleClose, handleSchemeChange, scheme, _obj} = this.props;
+  render() {
+
+    const {handleCustom, props} = this;
+    const {handleSave, handleClose, handleSchemeChange, handlePrint, handleExport, scheme, _obj} = props;
 
     return (
 
       <Toolbar>
         <ToolbarGroup className={"meta-toolbar-group"} firstChild={true}>
-          <FlatButton
-            label="Сформировать"
-            labelPosition="after"
-            icon={<RunIcon />}
-            className={classes.tbButton}
-            onTouchTap={handleSave}
-          >
-          </FlatButton>
-
+          <IconButton touch={true} tooltip="Сформировать отчет" tooltipPosition="bottom-right" onTouchTap={handleSave}>
+            <RunIcon />
+          </IconButton>
         </ToolbarGroup>
 
         <ToolbarGroup className={"meta-toolbar-group"}>
@@ -59,17 +58,26 @@ export default class RepToolbar extends Component{
             handleSchemeChange={handleSchemeChange}
             scheme={scheme}
             tabParams={<TabularSection
+              ref="production"
               _obj={_obj}
               _tabular="production"
               minHeight={140}
               Toolbar={SettingsProductionToolbar}
-              handleCustom={() => { console.log('handleCustom') }}
+              handleCustom={handleCustom}
             />}
           />
 
-          <IconButton touch={true} onTouchTap={handleClose}>
-            <CloseIcon />
-          </IconButton>
+          <IconMenu
+            iconButtonElement={
+              <IconButton touch={true} tooltip="Дополнительно" tooltipPosition="bottom-left">
+                <MoreVertIcon />
+              </IconButton>
+            }
+          >
+            <MenuItem primaryText="Печать" leftIcon={<PrintIcon />} onTouchTap={handlePrint}/>
+            <MenuItem primaryText="Экспорт" leftIcon={<ShareIcon />} onTouchTap={handleExport}/>
+
+          </IconMenu>
 
         </ToolbarGroup>
 

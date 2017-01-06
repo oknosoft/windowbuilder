@@ -278,6 +278,41 @@ export default function ($p) {
 
           })
       }
+    },
+
+    fill_by_order: {
+      value: function (row, _mgr) {
+        if(!row || !row._id){
+          return;
+        }
+        const ids = row._id.split('|');
+        if(ids.length < 2){
+          return
+        }
+        return _mgr.get(ids[1], 'promise')
+          .then((doc) => {
+            this.production.clear()
+            const rows = []
+            const refs = []
+            doc.production.forEach((row) => {
+              if(!row.characteristic.empty()){
+                rows.push({
+                  characteristic: row.characteristic,
+                  qty: row.qty,
+                })
+                if(row.characteristic.is_new()){
+                  refs.push(row.characteristic.ref)
+                }
+              }
+            })
+            return $p.adapters.pouch.load_array($p.cat.characteristics, refs)
+              .then(() => rows)
+        })
+          .then((rows) => {
+            this.production.load(rows)
+            return rows
+          })
+      }
     }
   })
 
