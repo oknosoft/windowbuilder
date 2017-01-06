@@ -24,8 +24,10 @@ class DataCell extends Component {
 
   // props.column.key, props.rowData(._row)
 
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+
+    super(props, context)
+
     this.state = {
       value: [],
       _meta: props._meta || props.rowData._metadata(props.column.key)

@@ -44,7 +44,8 @@ export default class SchemeSettingsWrapper extends Component{
   }
 
   handleSchemeChange = (scheme) => {
-    this.state.scheme = scheme;
+    this.props.handleSchemeChange(scheme)
+    this.setState({scheme});
   }
 
 
