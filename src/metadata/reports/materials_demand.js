@@ -23,116 +23,17 @@ export default function ($p) {
       }
     },
 
-    columns_avalable: {
-      get: function () {
-
-        if(!this._columns_avalable){
-
-          this._columns_avalable = []
-
-          let _meta = this._metadata('specification')
-          for (let fld in _meta.fields) {
-            let _fld = _meta.fields[fld],
-              column = {
-                key: fld,
-                name: _fld.synonym,
-                resizable: true
-              }
-
-            if (_fld.type.is_ref) {
-              column.formatter = v => {
-                return <div>{v.value.presentation}</div>
-              }
-            }
-
-            this._columns_avalable.push(column)
-
-          }
-
-        }
-
-        return this._columns_avalable;
-      }
-    },
-
-    column_flds: {
-      get: function () {
-
-        if(!this._columns){
-          this._columns = {
-            name: 'specification',
-            flds: []
-          }
-          $p.wsql.restore_options(this._manager.class_name, this._columns)
-        }
-
-        if(!this._columns.flds.length){
-          this._columns.flds = this.columns_avalable.map(column => column.key)
-          $p.wsql.save_options(this._manager.class_name, this._columns)
-        }
-
-        return this._columns.flds;
-      },
-      set: function (v) {
-        if(!Array.isArray(v)){
-          return;
-        }
-        if(!this._columns){
-          this._columns = {
-            name: 'specification',
-            flds: []
-          }
-        }
-
-        // если массивы идентичны, ничего записывать не надо
-        function test(arr, arr2){
-          if(arr.length != arr2.length){
-            return false
-          }
-          for( let i = 0; i < arr.length; i++ ){
-            if(arr[i] !== arr2[i]){
-              return false
-            }
-          }
-          return true;
-        }
-
-        if(!test(this._columns.flds, v)){
-          this._columns.flds = v;
-          $p.wsql.save_options(this._manager.class_name, this._columns)
-        }
-      }
-    },
-
-    columns: {
-      get: function () {
-
-        let columns = this.columns_avalable;
-
-        return this.column_flds.map(fld => {
-          let column;
-          columns.some(function (clmn) {
-            if(clmn.key == fld){
-              column = clmn;
-            }
-          })
-          return column;
-        })
-      }
-    },
-
     resources: {
         value: ['qty','totqty','totqty1','amount','amount_marged']
     },
 
     calculate: {
-      value: function () {
+      value: function (_columns) {
 
-        const t = this,
-          specification = t.specification,
-          arefs = [], aobjs = [],
+        const {specification, production, resources} = this;
+        const arefs = [], aobjs = [],
           spec_flds = Object.keys(characteristics.metadata('specification').fields),
-          rspec_flds = Object.keys(t._metadata('specification').fields);
+          rspec_flds = Object.keys(this._metadata('specification').fields);
 
         function material(row) {
 
@@ -153,7 +54,7 @@ export default function ($p) {
         }
 
         // получаем массив объектов продукций
-        t.production.each(function (row) {
+        production.each(function (row) {
           if(!row.characteristic.empty() && row.characteristic.is_new() && arefs.indexOf(row.characteristic.ref) == -1){
             arefs.push(row.characteristic.ref)
             aobjs.push(row.characteristic.load())
@@ -176,7 +77,7 @@ export default function ($p) {
             arefs.length = 0;
             aobjs.length = 0;
 
-            t.production.each(function (row) {
+            production.each(function (row) {
 
               if (!row.characteristic.empty() && !row.characteristic.calc_order.empty()
                   && row.characteristic.calc_order.is_new() && arefs.indexOf(row.characteristic.calc_order.ref) == -1) {
@@ -202,7 +103,7 @@ export default function ($p) {
             const prows = {};
 
             // бежим по продукции и заполняем результат
-            t.production.each(function (row) {
+            production.each(function (row) {
               if(!row.characteristic.empty()){
                 row.characteristic.specification.each(function (sprow) {
                   let resrow = {};
@@ -254,15 +155,16 @@ export default function ($p) {
 
             // сворачиваем результат и сохраняем его в specification._rows
 
-            const dimensions = [], resources = [];
-            t.column_flds.forEach(fld => {
-              if(t.resources.indexOf(fld) != -1){
-                resources.push(fld)
+            const dims = [], ress = [];
+            _columns.forEach(fld => {
+              const {key} = fld
+              if(resources.indexOf(key) != -1){
+                ress.push(key)
               }else{
-                dimensions.push(fld)
+                dims.push(key)
               }
             })
-            specification.group_by(dimensions, resources);
+            specification.group_by(dims, ress);
             specification.forEach(function (row) {
 
               // округление

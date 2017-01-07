@@ -40,15 +40,17 @@ export default class RepMaterialsDemand extends Component {
     const {_obj} = props
     const class_name = _obj._manager.class_name + ".specification"
 
+    this.state = {
+      _meta: _obj._metadata("specification"),
+    }
+
     $p.cat.scheme_settings.get_scheme(class_name)
       .then(this.handleSchemeChange)
 
   }
 
-  state = {}
-
   handleSave = () => {
-    this.props._obj.calculate()
+    this.props._obj.calculate(this.state._columns)
       .then(() => {
         this.refs.specification.setState({groupBy: []})
         //this.forceUpdate()
@@ -61,9 +63,15 @@ export default class RepMaterialsDemand extends Component {
 
   // обработчик при изменении настроек компоновки
   handleSchemeChange = (scheme) => {
+
+    const {props, state, context} = this
+    const {UI} = context.$p
+    const _columns = scheme.columns("ts")
+    UI.fix_columns(_columns, state._meta.fields, props._obj)
+
     this.setState({
       scheme,
-      columns: scheme.columns()
+      _columns
     })
   }
 
@@ -71,7 +79,7 @@ export default class RepMaterialsDemand extends Component {
 
     const {props, state, handleSave, handlePrint, handleSchemeChange} = this
     const { _obj, height, width, handleClose } = props
-    const {columns, scheme} = state
+    const {_columns, scheme} = state
 
     if (!scheme) {
       return <DumbLoader title="Чтение настроек компоновки..."/>
@@ -81,7 +89,7 @@ export default class RepMaterialsDemand extends Component {
       return <DumbLoader title="Чтение объекта данных..."/>
 
     }
-    else if (!columns || !columns.length) {
+    else if (!_columns || !_columns.length) {
       return <DumbLoader title="Ошибка настроек компоновки..."/>
 
     }
@@ -107,8 +115,8 @@ export default class RepMaterialsDemand extends Component {
             _obj={_obj}
             _tabular="specification"
             ref="specification"
+            _columns={_columns}
             minHeight={height - 60}
-            scheme={scheme}
           />
 
         </div>

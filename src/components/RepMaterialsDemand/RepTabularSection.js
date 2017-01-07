@@ -62,19 +62,25 @@ export default class RepTabularSection extends Component {
     _tabular: PropTypes.string.isRequired,
     _meta: PropTypes.object,
 
-    scheme: PropTypes.object.isRequired,              // значение настроек компоновки
+    _columns: PropTypes.array.isRequired,   // колонки
 
     handleRowChange: PropTypes.func,
   }
 
+  static contextTypes = {
+    $p: React.PropTypes.object.isRequired
+  }
+
   constructor (props, context) {
 
-    super(props);
+    super(props, context);
+
+    const {_obj, _tabular, _meta} = props
 
     this.state = {
 
-      _meta: props._meta || props._obj._metadata(props._tabular),
-      _tabular: props._obj[props._tabular],
+      _meta: _meta || _obj._metadata(_tabular),
+      _tabular: _obj[_tabular],
 
       get rows(){
         return this._tabular._rows || []
@@ -120,19 +126,20 @@ export default class RepTabularSection extends Component {
 
   render() {
 
-    const { _obj, minHeight } = this.props;
+    const {props, getRowAt, onRowExpandToggle} = this;
+    const {_columns, minHeight} = props;
 
     return (
 
       <ReactDataGrid
         ref="grid"
-        columns={_obj.columns}
+        columns={_columns}
         enableCellSelect={true}
-        rowGetter={this.getRowAt}
+        rowGetter={getRowAt}
         rowsCount={this.getSize()}
         minHeight={minHeight || 200}
 
-        onRowExpandToggle={this.onRowExpandToggle}
+        onRowExpandToggle={onRowExpandToggle}
 
       />
 
