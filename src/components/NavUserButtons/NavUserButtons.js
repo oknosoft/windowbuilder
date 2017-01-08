@@ -50,7 +50,8 @@ export default class NavUserButtons extends Component{
   }
 
   handleLogin = (e) => {
-    this.context.$p.UI.history.push('/login')
+    const {$p} = this.context
+    $p.UI.history.push('/login')
   }
 
   render () {
