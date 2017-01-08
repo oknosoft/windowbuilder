@@ -1,7 +1,7 @@
 /**
  * ### Дополнительные методы справочника _Права внешних пользователей_
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
  * @module cat_users_acl
  */
 

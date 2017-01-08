@@ -1,6 +1,7 @@
 /**
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * Created 17.04.2016
  *
  * @module cat_formulas

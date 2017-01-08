@@ -1,7 +1,7 @@
 /**
  * ### Дополнительные методы справочника _Соединения_
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
  * @module cat_cnns
  * Created 23.12.2015
  */

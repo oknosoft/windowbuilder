@@ -1,7 +1,8 @@
 /**
  * ### Размерные линии на эскизе
- * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * Created 21.08.2015
  *
  * @module geometry
@@ -41,15 +42,15 @@ function DimensionLine(attr){
 	this.data.p1 = attr.p1 || "b";
 	this.data.p2 = attr.p2 || "e";
 	this.data.offset = attr.offset;
-	
+
 	if(attr.impost)
 		this.data.impost = true;
-	
+
 	if(attr.contour)
 		this.data.contour = true;
 
 	this.__define({
-		
+
 		_row: {
 			get: function () {
 				return _row;
@@ -88,7 +89,7 @@ function DimensionLine(attr){
 		justification: 'center',
 		fillColor: 'black',
 		fontSize: 72});
-	
+
 
 	this.on({
 		mouseenter: this._mouseenter,
@@ -195,7 +196,7 @@ DimensionLine.prototype.__define({
 				}
 
 			}
-			
+
 			if(delta.length){
 
 				paper.project.deselect_all_points();
@@ -397,7 +398,7 @@ DimensionLine.prototype.__define({
 			var offset = (parseInt(v) || 90).round(0);
 			if(this.data.offset != offset){
 				this.data.offset = offset;
-				this.project.register_change(true);	
+				this.project.register_change(true);
 			}
 		}
 	}
@@ -407,16 +408,16 @@ DimensionLine.prototype.__define({
 /**
  * ### Служебный слой размерных линий
  * Унаследован от [paper.Layer](http://paperjs.org/reference/layer/)
- * 
+ *
  * @class DimensionLayer
  * @extends paper.Layer
  * @param attr
  * @constructor
  */
 function DimensionLayer(attr) {
-	
+
 	DimensionLayer.superclass.constructor.call(this);
-	
+
 	if(!attr || !attr.parent){
 		this.__define({
 			bounds: {

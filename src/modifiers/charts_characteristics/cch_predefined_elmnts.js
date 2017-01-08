@@ -2,7 +2,8 @@
  * ### Дополнительные методы ПВХ Предопределенные элементы
  * Предопределенные элементы - аналог констант для хранения ссылочных и списочных настроек приложения
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * @module cch_predefined_elmnts
  */
 

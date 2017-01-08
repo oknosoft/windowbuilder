@@ -1,16 +1,17 @@
 /**
  * ### Панорама и масштабирование с колёсиком и без колёсика
- * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * Created 25.08.2015
- * 
+ *
  * @module tools
  * @submodule tool_pan
  */
 
 /**
  * ### Панорама и масштабирование с колёсиком и без колёсика
- * 
+ *
  * @class ToolPan
  * @extends ToolElement
  * @constructor

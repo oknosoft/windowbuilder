@@ -1,7 +1,7 @@
 /**
  * ### Манипуляции с арками (дуги правильных окружностей)
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017<br />
  * Created 25.08.2015
  *
  * @module tools

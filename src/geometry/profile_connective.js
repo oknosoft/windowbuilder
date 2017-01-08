@@ -1,8 +1,9 @@
 /**
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * Created 16.05.2016
- * 
+ *
  * @author	Evgeniy Malyarov
  * @module geometry
  * @submodule profile_addl
@@ -180,5 +181,5 @@ ProfileConnective.prototype.__define({
 
 		}
 	}
-	
+
 });

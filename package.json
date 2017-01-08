@@ -141,7 +141,7 @@
     "eslint-config-standard-react": "^4.2",
     "eslint-plugin-babel": "^4.0",
     "eslint-plugin-promise": "^3.4",
-    "eslint-plugin-react": "^6.8",
+    "eslint-plugin-react": "^6.9",
     "eslint-plugin-standard": "^2.0",
     "isparta-loader": "^2.0",
     "karma": "^1.2",
@@ -165,8 +165,11 @@
     "webpack-dev-middleware": "^1.9",
     "webpack-hot-middleware": "^2.15"
   },
-
   "homepage": "http://www.oknosoft.ru/zd/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oknosoft/windowbuilder.git"
+  },
 
   "config": {
     "couchdb1": "/couchdb/wb_",

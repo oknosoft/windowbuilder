@@ -1,8 +1,8 @@
 /**
  * ### Движок графического построителя
- * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
- * 
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * @module geometry
  */
 
@@ -35,7 +35,7 @@
 
 		// в пределах этого угла, считаем элемент вертикальным или горизонтальным
 		this.orientation_delta = $p.job_prm.builder.orientation_delta || 20;
-		
+
 
 	}.bind(this);
 

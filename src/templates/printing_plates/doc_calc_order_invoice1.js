@@ -1,9 +1,10 @@
 /**
  * ### Код печатной формы счета-заказа
- * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * Created 17.04.2016
- * 
+ *
  * @module doc_calc_order_invoice1
  */
 
@@ -65,7 +66,7 @@ function fake(obj) {
 
 			// возаращаем сформированный документ
 			return doc;
-			
+
 		});
-	
+
 }

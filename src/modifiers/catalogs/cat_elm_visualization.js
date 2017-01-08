@@ -1,8 +1,9 @@
 /**
  * ### Дополнительные методы справочника Визуализация элементов
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * Created 08.04.2016
- * 
+ *
  * @module cat_elm_visualization
  */
 

@@ -1,9 +1,10 @@
 /**
  * ### Модификаторы обработки _Заказ покупателя_
- * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * Created 13.05.2016
- * 
+ *
  * @module dp_buyers_order
  */
 

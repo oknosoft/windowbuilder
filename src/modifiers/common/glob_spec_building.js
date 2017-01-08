@@ -2,7 +2,7 @@
  * Аналог УПзП-шного __ФормированиеСпецификацийСервер__
  * Содержит методы расчета спецификации без привязки к построителю. Например, по регистру корректировки спецификации
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
  *
  * @module  glob_spec_building
  * Created 26.05.2015

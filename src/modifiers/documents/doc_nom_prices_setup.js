@@ -1,7 +1,7 @@
 /**
  * ### Модуль менеджера и документа Установка цен номенклатуры
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
  *
  * @module doc_nom_prices_setup
  * Created 28.07.2016

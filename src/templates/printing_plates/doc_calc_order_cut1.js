@@ -1,7 +1,8 @@
 /**
  * ### Код печатной формы нарезки профиля без оптимизации
- * 
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016<br />
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * Created 17.04.2016
  *
  * @module doc_calc_order_cut1
@@ -53,9 +54,9 @@ function fake(obj) {
 					row.qty = row.qty * quantity;
 					table_row.innerHTML = dhx4.template(tpl_table_row_cut.innerHTML, row);
 					table_table.appendChild(table_row);
-					
+
 				});
-				
+
 			}
 
 		});
@@ -75,7 +76,7 @@ function fake(obj) {
 			if(!row.characteristic.empty())
 				aobjs.push($p.cat.characteristics.get(row.characteristic.ref, true, true));
 		});
-		
+
 		return Promise.all(aobjs);
 
 	})
