@@ -1,11 +1,11 @@
 {
-  "name"    : "windowbuilder",
+  "name": "windowbuilder",
   "description": "Order dealer for windows and stained glass",
-  "version" : "0.1.0",
+  "version": "0.1.0",
   "author": "Evgeniy Malyarov <info@oknosoft.ru> (http://www.oknosoft.ru)",
-  "license" : "SEE LICENSE IN LICENSE.en.md",
+  "license": "SEE LICENSE IN LICENSE.en.md",
   "private": true,
-  "main"    : "electron.js",
+  "main": "electron.js",
   "engines": {
     "node": "^6.9",
     "npm": "^3.5"

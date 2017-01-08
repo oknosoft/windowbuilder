@@ -1,27 +1,18 @@
 /**
+ * ### Отчет _Потребность в материалах_
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
  * @module materials_demand
+ *
  * Created 07.11.2016
  */
 
-import React from 'react';
 
 export default function ($p) {
 
   const {characteristics, nom, nom_kinds, clrs} = $p.cat
 
-  // свойства объекта отчета _Потребность по материалам_
+  // свойства объекта отчета
   Object.defineProperties($p.RepMaterials_demand.prototype, {
-
-    formatters: {
-      value: {
-        characteristic: v => {
-          v = characteristics.get(v.value)
-          return (<div>{v instanceof Promise ? 'loading...' : v.presentation}</div>)
-        }
-      }
-    },
 
     resources: {
         value: ['qty','totqty','totqty1','amount','amount_marged']
