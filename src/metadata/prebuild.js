@@ -18,6 +18,8 @@ const config = require('../../config/metadata.config.js')
 // конструктор metadata-core и плагин metadata-pouchdb
 const MetaEngine = require('metadata-core').default
 	.plugin(require('metadata-pouchdb').default)
+  .plugin(require('metadata-abstract-ui/meta').default)
+  .plugin(require('metadata-abstract-ui').default)
 
 
 var jstext = "",            // в этой переменной будем накапливать текст модуля
