@@ -1,14 +1,9 @@
-import React, { Component, PropTypes } from 'react';
-import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
-
-import IconButton from 'material-ui/IconButton';
-import AddIcon from 'material-ui/svg-icons/content/add-circle-outline';
-import RemoveIcon from 'material-ui/svg-icons/action/delete';
-
-import SelectOrder from './SelectOrder';
-
-
-import classes from './RepMaterialsDemand.scss'
+import React, {Component, PropTypes} from "react";
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from "material-ui/Toolbar";
+import IconButton from "material-ui/IconButton";
+import AddIcon from "material-ui/svg-icons/content/add-circle-outline";
+import RemoveIcon from "material-ui/svg-icons/action/delete";
+import SelectOrder from "./SelectOrder";
 
 export default class SettingsProductionToolbar extends Component{
 

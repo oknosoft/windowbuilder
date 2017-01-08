@@ -1,3 +1,3 @@
-import FrmObj from './FrmObj'
+import DataObj from './DataObj'
 
-export default FrmObj
+export default DataObj

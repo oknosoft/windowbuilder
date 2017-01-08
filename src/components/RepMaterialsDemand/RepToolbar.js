@@ -2,19 +2,16 @@ import React, {Component, PropTypes} from "react";
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from "material-ui/Toolbar";
 import IconButton from "material-ui/IconButton";
 import IconMenu from "material-ui/IconMenu";
-import FlatButton from "material-ui/FlatButton";
+import SettingsProductionToolbar from "./SettingsProductionToolbar";
 import MenuItem from "material-ui/MenuItem";
 
 import RunIcon from "material-ui/svg-icons/av/play-arrow";
 import MoreVertIcon from "material-ui/svg-icons/navigation/more-vert";
 import PrintIcon from "material-ui/svg-icons/action/print";
 import ShareIcon from "material-ui/svg-icons/social/share";
-
 import SchemeSettings from "../SchemeSettings";
 import TabularSection from "../TabularSection";
-import SettingsProductionToolbar from "./SettingsProductionToolbar";
 
-import classes from "./RepMaterialsDemand.scss";
 
 export default class RepToolbar extends Component {
 

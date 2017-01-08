@@ -1,11 +1,11 @@
 /**
- * Уровень под провайдером и роутингом
+ * ### Уровень под провайдером и роутингом
  */
 
 import React, {Component, PropTypes} from "react";
 import {connect} from "react-redux";
 import {AutoSizer} from "react-virtualized";
-import Header from "components/Header";
+import Header from "./Header";
 import navlist_items from "./navlist_items";
 import {navlist_open} from "store/ifaceReducer";
 import {muiTheme} from "./AppMuiTheme";

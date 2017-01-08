@@ -1,19 +1,19 @@
 // конструктор metadata.js
 
-import MetaEngine from 'metadata-core';
-import metadata_pouchdb from 'metadata-pouchdb';
-import metadata_redux from 'metadata-redux';
-import metadata_ui from 'metadata-abstract-ui';
-import metadata_react_ui from '../components/common/plugin';
+import MetaEngine from "metadata-core";
+import metadata_pouchdb from "metadata-pouchdb";
+import metadata_redux from "metadata-redux";
+import metadata_ui from "metadata-abstract-ui";
+import metadata_react_ui from "./react_ui_plugin";
 
 // функция установки параметров сеанса
 import settings from "../../config/app.settings";
 
 // скрипт инициализации метаданных
-import meta_init from './init';
+import meta_init from "./init";
 
 // методы и обработчики событий объектов и менеджеров данных
-import modifiers from './modifiers';
+import modifiers from "./modifiers";
 
 /* global __DEBUG__ */
 

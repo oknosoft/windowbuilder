@@ -1,6 +1,5 @@
 import React from 'react'
 import { Header } from 'components/Header/Header'
-import classes from 'components/Header/Header.scss'
 import { IndexLink, Link } from 'react-router'
 import { shallow } from 'enzyme'
 
@@ -21,7 +20,7 @@ describe('(Component) Header', () => {
 
     it('Should render a Link to Home route', () => {
       expect(_wrapper.contains(
-        <IndexLink activeClassName={classes.activeRoute} to='/'>
+        <IndexLink to='/'>
           Home
         </IndexLink>
       )).to.be.true
@@ -29,7 +28,7 @@ describe('(Component) Header', () => {
 
     it('Should render a Link to DataObj route', () => {
       expect(_wrapper.contains(
-        <Link activeClassName={classes.activeRoute} to='/counter'>
+        <Link to='/counter'>
           Counter
         </Link>
       )).to.be.true

@@ -1,4 +1,4 @@
-/** @flow */
+
 import React, {Component, PropTypes} from "react";
 import IconButton from 'material-ui/IconButton';
 import IconWork from 'material-ui/svg-icons/action/work';

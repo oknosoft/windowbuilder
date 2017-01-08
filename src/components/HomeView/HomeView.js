@@ -1,4 +1,4 @@
-/** @flow */
+
 import React, {Component, PropTypes} from "react";
 import DataList from "../DataList"
 
@@ -16,7 +16,6 @@ export default class HomeView extends Component {
   render () {
 
     const { props } = this
-    const { $p } = this.context
 
     return <DataList
       { ...props }

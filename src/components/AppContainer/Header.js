@@ -1,8 +1,11 @@
-import React, {Component, PropTypes} from "react";
-import AppBar from 'material-ui/AppBar';
+/**
+ * ### AppBar, Drawer с навигацией и UserButtons
+ */
 
-import NavUserButtons from '../NavUserButtons'
-import NavList from 'metadata-react-ui/NavList/src'
+import React, {Component, PropTypes} from "react";
+import AppBar from "material-ui/AppBar";
+import NavUserButtons from "./NavUserButtons";
+import NavList from "metadata-react-ui/NavList/src";
 
 export default class Header extends Component {
 
@@ -16,7 +19,7 @@ export default class Header extends Component {
     logged_in: PropTypes.bool,                  // пользователь залогинен
     sync_tooltip: PropTypes.string.isRequired,  // текст всплывающей подсказки синхронизации
     notifications_tooltip: PropTypes.string.isRequired, // текст всплывающей подсказки оповещений
-    button_label: PropTypes.string.isRequired // текст кнопки текущего пользователя (правая)
+    button_label: PropTypes.string.isRequired,  // текст кнопки текущего пользователя (правая)
 
   }
 

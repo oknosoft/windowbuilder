@@ -1,20 +1,10 @@
-import React, { Component, PropTypes } from 'react';
-
-import {GridList, GridTile} from 'material-ui/GridList';
-import Layout from '../react-flex-layout/react-flex-layout'
-import LayoutSplitter from '../react-flex-layout/react-flex-layout-splitter'
-
+import React, {Component, PropTypes} from "react";
 import RepToolbar from "./RepToolbar";
-import DataField from 'components/DataField'
-
-import RepTabularSection from './RepTabularSection'
-
-import DumbLoader from '../DumbLoader'
-
-import classes from './RepMaterialsDemand.scss'
+import RepTabularSection from "./RepTabularSection";
+import DumbLoader from "../DumbLoader";
 
 
-export default class RepMaterialsDemand extends Component {
+export default class Report extends Component {
 
   static propTypes = {
     _obj: PropTypes.object,
@@ -52,7 +42,7 @@ export default class RepMaterialsDemand extends Component {
   handleSave = () => {
     this.props._obj.calculate(this.state._columns)
       .then(() => {
-        this.refs.specification.setState({groupBy: []})
+        this.refs.data.setState({groupBy: []})
         //this.forceUpdate()
       })
   }
@@ -80,7 +70,7 @@ export default class RepMaterialsDemand extends Component {
   render() {
 
     const {props, state, handleSave, handlePrint, handleSchemeChange} = this
-    const { _obj, height, width, handleClose } = props
+    const {_obj, height, width, handleClose} = props
     const {_columns, scheme} = state
 
     if (!scheme) {
@@ -111,12 +101,12 @@ export default class RepMaterialsDemand extends Component {
           handleSchemeChange={handleSchemeChange}
         />
 
-        <div className={classes.cont} style={{width: width - 20, height: height - 50}}>
+        <div className="meta-padding-8" style={{width: width - 20, height: height - 50}}>
 
           <RepTabularSection
             _obj={_obj}
             _tabular="specification"
-            ref="specification"
+            ref="data"
             _columns={_columns}
             minHeight={height - 60}
           />
