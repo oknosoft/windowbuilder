@@ -2,17 +2,16 @@
  * ### Абстрактное поле ввода
  * Тип элемента управления вычисляется по метаданным поля
  *
- * @module FieldText
+ * @module DataField
  *
  */
 
-import React, { Component, PropTypes } from 'react';
-
-import FieldSelect from './FieldSelect'
-import FieldText from './FieldText'
-import FieldDate from './FieldDate'
-import FieldNumber from './FieldNumber'
-import FieldToggle from './FieldToggle'
+import React, {Component, PropTypes} from "react";
+import FieldSelect from "./FieldSelect";
+import FieldText from "./FieldText";
+import FieldDate from "./FieldDate";
+import FieldNumber from "./FieldNumber";
+import FieldToggle from "./FieldToggle";
 
 
 export default class DataField extends Component {
@@ -44,9 +43,9 @@ export default class DataField extends Component {
 
   render() {
 
-    const { $p } = this.context;
-    const { _meta } = this.state;
-    const { _obj, _fld, handleValueChange, label_position } = this.props;
+    const {$p} = this.context;
+    const {_meta} = this.state;
+    const {_obj, _fld, handleValueChange, label_position} = this.props;
     const _val = _obj[_fld];
     const subProps = {
       _meta: _meta,
@@ -57,7 +56,7 @@ export default class DataField extends Component {
 
     let Control
 
-    switch ($p.UI.control_by_type(_meta.type, _val)){
+    switch ($p.UI.control_by_type(_meta.type, _val)) {
 
       case 'ocombo':
         Control = FieldSelect
@@ -81,10 +80,10 @@ export default class DataField extends Component {
 
     }
 
-    if(label_position == $p.enm.label_positions.hide){
+    if (label_position == $p.enm.label_positions.hide) {
       return <Control {...subProps} />
 
-    }else{
+    } else {
       return (
         <div className={'meta-datafield-field'}>
           <div className={'meta-datafield-label'}>{_meta.synonym}</div>
@@ -92,7 +91,7 @@ export default class DataField extends Component {
             <Control {...subProps} />
           </div>
         </div>
-        )
+      )
     }
   }
 }
