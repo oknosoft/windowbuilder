@@ -89,6 +89,7 @@
     "babel-runtime": "^6.20",
     "better-npm-run": "^0.0.14",
     "classnames": "^2.2",
+    "clipboard": "^1.5",
     "css-loader": "^0.26",
     "cssnano": "^3.10",
     "debug": "^2.6",
@@ -103,20 +104,20 @@
     "material-ui": "^0.16",
     "metadata-core": "2.0.0-beta.13",
     "metadata-pouchdb": "2.0.0-beta.13",
-    "metadata-redux": "2.0.0-beta.13",
     "metadata-react-ui": "2.0.0-beta.13",
+    "metadata-redux": "2.0.0-beta.13",
     "node-sass": "^4.1",
     "normalize.css": "^5.0",
     "postcss-loader": "^1.2",
     "react": "^15.4",
     "react-addons-shallow-compare": "^15.4",
     "react-data-grid": "^1.0",
-    "react-tap-event-plugin": "^2.0",
     "react-dom": "^15.4",
     "react-flex-layout": "^0.9",
     "react-redux": "^5.0",
     "react-router": "^3.0",
     "react-router-redux": "^4.0",
+    "react-tap-event-plugin": "^2.0",
     "react-virtualized": "^8.9",
     "redux": "^3.0",
     "redux-thunk": "^2.0",
@@ -126,6 +127,7 @@
     "superlogin-client": "^0.4",
     "url-loader": "^0.5",
     "webpack": "^1.14",
+    "xlsx": "^0.8",
     "yargs": "^6.5"
   },
   "devDependencies": {
@@ -170,7 +172,6 @@
     "type": "git",
     "url": "https://github.com/oknosoft/windowbuilder.git"
   },
-
   "config": {
     "couchdb1": "/couchdb/wb_",
     "couchdb": "http://cou206:5984/wb_",

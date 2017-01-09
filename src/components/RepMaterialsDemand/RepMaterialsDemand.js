@@ -28,13 +28,14 @@ export default class Report extends Component {
 
     const {$p} = context
     const {_obj} = props
-    const class_name = _obj._manager.class_name + ".specification"
+    const _tabular = "specification"
 
     this.state = {
-      _meta: _obj._metadata("specification"),
+      _tabular,
+      _meta: _obj._metadata(_tabular),
     }
 
-    $p.cat.scheme_settings.get_scheme(class_name)
+    $p.cat.scheme_settings.get_scheme(_obj._manager.class_name + `.${_tabular}`)
       .then(this.handleSchemeChange)
 
   }
@@ -71,7 +72,7 @@ export default class Report extends Component {
 
     const {props, state, handleSave, handlePrint, handleSchemeChange} = this
     const {_obj, height, width, handleClose} = props
-    const {_columns, scheme} = state
+    const {_columns, scheme, _tabular} = state
 
     if (!scheme) {
       return <DumbLoader title="Чтение настроек компоновки..."/>
@@ -96,6 +97,8 @@ export default class Report extends Component {
           handleClose={handleClose}
 
           _obj={_obj}
+          _tabular={_tabular}
+          _columns={_columns}
 
           scheme={scheme}
           handleSchemeChange={handleSchemeChange}
@@ -104,9 +107,9 @@ export default class Report extends Component {
         <div className="meta-padding-8" style={{width: width - 20, height: height - 50}}>
 
           <RepTabularSection
-            _obj={_obj}
-            _tabular="specification"
             ref="data"
+            _obj={_obj}
+            _tabular={_tabular}
             _columns={_columns}
             minHeight={height - 60}
           />

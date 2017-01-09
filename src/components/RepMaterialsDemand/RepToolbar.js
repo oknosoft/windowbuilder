@@ -8,9 +8,14 @@ import MenuItem from "material-ui/MenuItem";
 import RunIcon from "material-ui/svg-icons/av/play-arrow";
 import MoreVertIcon from "material-ui/svg-icons/navigation/more-vert";
 import PrintIcon from "material-ui/svg-icons/action/print";
-import ShareIcon from "material-ui/svg-icons/social/share";
+import CopyIcon from "material-ui/svg-icons/content/content-copy";
+import CloudDownloadIcon from "material-ui/svg-icons/file/cloud-download";
+import FileDownloadIcon from "material-ui/svg-icons/file/file-download";
+
 import SchemeSettings from "../SchemeSettings";
 import TabularSection from "../TabularSection";
+
+import export_handlers from "./export_handlers"
 
 
 export default class RepToolbar extends Component {
@@ -25,7 +30,13 @@ export default class RepToolbar extends Component {
     scheme: PropTypes.object.isRequired,              // значение настроек компоновки
 
     _obj: PropTypes.object,
+    _tabular: PropTypes.string.isRequired,
+    _columns: PropTypes.array.isRequired,   // колонки
 
+  }
+
+  static contextTypes = {
+    $p: React.PropTypes.object.isRequired
   }
 
   handleCustom = (row, _mgr) => {
@@ -35,10 +46,18 @@ export default class RepToolbar extends Component {
       })
   }
 
+  constructor (props, context) {
+
+    super(props, context);
+
+    export_handlers.call(this);
+
+  }
+
   render() {
 
-    const {handleCustom, props} = this;
-    const {handleSave, handleClose, handleSchemeChange, handlePrint, handleExport, scheme, _obj} = props;
+    const {handleCustom, handleExportXLS, handleExportJSON, handleExportCSV, props} = this;
+    const {handleSave, handleClose, handleSchemeChange, handlePrint, scheme, _obj, _tabular} = props;
 
     return (
 
@@ -72,8 +91,10 @@ export default class RepToolbar extends Component {
               </IconButton>
             }
           >
-            <MenuItem primaryText="Печать" leftIcon={<PrintIcon />} onTouchTap={handlePrint}/>
-            <MenuItem primaryText="Экспорт" leftIcon={<ShareIcon />} onTouchTap={handleExport}/>
+            <MenuItem primaryText="Печать" leftIcon={<PrintIcon />} disabled onTouchTap={handlePrint}/>
+            <MenuItem primaryText="Копировать CSV" leftIcon={<CopyIcon />} onTouchTap={handleExportCSV}/>
+            <MenuItem primaryText="Копировать JSON" leftIcon={<CloudDownloadIcon />} onTouchTap={handleExportJSON}/>
+            <MenuItem primaryText="Экспорт в XLS" leftIcon={<FileDownloadIcon />} onTouchTap={handleExportXLS}/>
 
           </IconMenu>
 

@@ -24,7 +24,15 @@ const webpackConfig = {
   resolveLoader: {
     fallback: path.join(__dirname, '..', 'node_modules')
   },
-  module: {}
+  module: {},
+  node: {
+    fs: "empty"
+  },
+  externals: [
+    {
+      './cptable': 'var cptable'
+    }
+  ],
 }
 // ------------------------------------
 // Entry Points
