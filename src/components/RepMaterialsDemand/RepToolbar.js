@@ -54,11 +54,12 @@ export default class RepToolbar extends Component {
           <SchemeSettings
             handleSchemeChange={handleSchemeChange}
             scheme={scheme}
+
             tabParams={<TabularSection
               ref="production"
               _obj={_obj}
               _tabular="production"
-              minHeight={140}
+              minHeight={160}
               Toolbar={SettingsProductionToolbar}
               handleCustom={handleCustom}
             />}
