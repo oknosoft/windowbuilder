@@ -15,9 +15,6 @@ import FileDownloadIcon from "material-ui/svg-icons/file/file-download";
 import SchemeSettings from "../SchemeSettings";
 import TabularSection from "../TabularSection";
 
-import export_handlers from "./export_handlers"
-
-
 export default class RepToolbar extends Component {
 
   static propTypes = {
@@ -50,7 +47,7 @@ export default class RepToolbar extends Component {
 
     super(props, context);
 
-    export_handlers.call(this);
+    context.$p.UI.export_handlers.call(this);
 
   }
 

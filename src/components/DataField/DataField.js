@@ -1,14 +1,21 @@
+/**
+ * ### Абстрактное поле ввода
+ * Тип элемента управления вычисляется по метаданным поля
+ *
+ * @module FieldText
+ *
+ */
+
 import React, { Component, PropTypes } from 'react';
 
 import FieldSelect from './FieldSelect'
 import FieldText from './FieldText'
+import FieldDate from './FieldDate'
+import FieldNumber from './FieldNumber'
+import FieldToggle from './FieldToggle'
 
 
 export default class DataField extends Component {
-
-  static contextTypes = {
-    $p: React.PropTypes.object.isRequired
-  }
 
   static propTypes = {
     _obj: PropTypes.object.isRequired,  // DataObj, к реквизиту которого будет привязано поле
@@ -20,6 +27,10 @@ export default class DataField extends Component {
     mandatory: PropTypes.bool,          // поле обязательно для заполнения
     multi: PropTypes.bool,              // множественный выбор - значение является массивом
     handleValueChange: PropTypes.func   // обработчик при изменении значения в поле
+  }
+
+  static contextTypes = {
+    $p: React.PropTypes.object.isRequired
   }
 
   constructor(props, context) {
@@ -44,28 +55,41 @@ export default class DataField extends Component {
       handleValueChange: handleValueChange
     }
 
-    let control
+    let Control
 
-    switch ($p.UI.control_by_type(this.state._meta.type, _val)){
+    switch ($p.UI.control_by_type(_meta.type, _val)){
 
       case 'ocombo':
-        control = <FieldSelect {...subProps} />;
+        Control = FieldSelect
+        break;
+
+      case 'calck':
+      case 'edn':
+        Control = FieldNumber
+        break;
+
+      case 'dhxCalendar':
+        Control = FieldDate
+        break;
+
+      case 'ch':
+        Control = FieldToggle
         break;
 
       default:
-        control = <FieldText {...subProps} />
+        Control = FieldText
 
     }
 
     if(label_position == $p.enm.label_positions.hide){
-      return control
+      return <Control {...subProps} />
 
     }else{
       return (
         <div className={'meta-datafield-field'}>
           <div className={'meta-datafield-label'}>{_meta.synonym}</div>
           <div className={'meta-datafield-data'}>
-            {control}
+            <Control {...subProps} />
           </div>
         </div>
         )

@@ -4,7 +4,7 @@ import MetaEngine from "metadata-core";
 import metadata_pouchdb from "metadata-pouchdb";
 import metadata_redux from "metadata-redux";
 import metadata_ui from "metadata-abstract-ui";
-import metadata_react_ui from "./react_ui_plugin";
+import metadata_react_ui from "metadata-react-ui/plugin";
 
 // функция установки параметров сеанса
 import settings from "../../config/app.settings";
