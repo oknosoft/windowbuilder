@@ -1,4 +1,7 @@
+
 import React, {Component, PropTypes} from "react";
+import $p from "metadata";
+
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from "material-ui/Toolbar";
 import IconButton from "material-ui/IconButton";
 import IconMenu from "material-ui/IconMenu";
@@ -15,7 +18,7 @@ import FileDownloadIcon from "material-ui/svg-icons/file/file-download";
 import SchemeSettings from "../SchemeSettings";
 import TabularSection from "../TabularSection";
 
-export default class RepToolbar extends Component {
+export default class RepToolbar extends $p.UI.ExportHandlers(Component) {
 
   static propTypes = {
 
@@ -32,23 +35,11 @@ export default class RepToolbar extends Component {
 
   }
 
-  static contextTypes = {
-    $p: React.PropTypes.object.isRequired
-  }
-
   handleCustom = (row, _mgr) => {
     this.props._obj.fill_by_order(row, _mgr)
       .then((objs) => {
         this.refs.production.forceUpdate()
       })
-  }
-
-  constructor (props, context) {
-
-    super(props, context);
-
-    context.$p.UI.export_handlers.call(this);
-
   }
 
   render() {

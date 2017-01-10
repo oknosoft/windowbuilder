@@ -1,5 +1,6 @@
 /** @flow */
 import React, {Component, PropTypes} from "react";
+
 import {InfiniteLoader, Grid} from "react-virtualized";
 import DumbLoader from "../DumbLoader";
 import Toolbar from "./DataListToolbar";
@@ -32,10 +33,6 @@ class DataListStorage {
 
 export default class DataList extends Component {
 
-  static contextTypes = {
-    $p: React.PropTypes.object.isRequired
-  }
-
   static propTypes = {
 
     // данные
@@ -66,6 +63,10 @@ export default class DataList extends Component {
     handleUnPost: PropTypes.func,         // отмена проведения
     handlePrint: PropTypes.func,          // обработчик открытия диалога печати
     handleAttachment: PropTypes.func,     // обработчик открытия диалога присоединенных файлов
+  }
+
+  static contextTypes = {
+    $p: React.PropTypes.object.isRequired
   }
 
   static defaultProps = {
@@ -377,33 +378,42 @@ export default class DataList extends Component {
    */
   _cellRenderer = ({columnIndex, isScrolling, key, rowIndex, style}) => {
 
-    const setState = ::this.setState
-    // var grid = this.refs.AutoSizer.refs.Grid
+    const {state, props, _list, handleEdit, handleSelect} = this
+    const {hoveredColumnIndex, hoveredRowIndex, selectedRowIndex} = state
 
+    // оформление ячейки
     const classNames = cn(
       this._getRowClassName(rowIndex),
       styles.cell,
       {
-        [styles.centeredCell]: columnIndex > 3, // выравнивание текста по центру
-        [styles.hoveredItem]: rowIndex === this.state.hoveredRowIndex && rowIndex != this.state.selectedRowIndex, // || columnIndex === this.state.hoveredColumnIndex
-        [styles.selectedItem]: rowIndex === this.state.selectedRowIndex
+        //[styles.centeredCell]: columnIndex > 3, // выравнивание текста по центру
+        [styles.hoveredItem]: rowIndex == hoveredRowIndex && rowIndex != selectedRowIndex, // || columnIndex === this.state.hoveredColumnIndex
+        [styles.selectedItem]: rowIndex == selectedRowIndex
       }
     )
 
-    const row = this._list.get(rowIndex)
+    // данные строки
+    const row = _list.get(rowIndex)
 
-    let content
-
-    if (row) {
-      content = this._formatter(row, columnIndex)
-
-    } else {
-      content = (
+    // текст ячейки
+    const content = row ? this._formatter(row, columnIndex) : (
         <div
           className={styles.placeholder}
           style={{width: 10 + Math.random() * 80}}
         />
       )
+
+    const onMouseOver = () => {
+      this.setState({
+        hoveredColumnIndex: columnIndex,
+        hoveredRowIndex: rowIndex
+      })
+    }
+
+    const onTouchTap = () => {
+      this.setState({
+        selectedRowIndex: rowIndex
+      })
     }
 
     // It is important to attach the style specified as it controls the cell's position.
@@ -414,18 +424,10 @@ export default class DataList extends Component {
         className={classNames}
         key={key}
         style={style}
-        onMouseOver={function () {
-          setState({
-            hoveredColumnIndex: columnIndex,
-            hoveredRowIndex: rowIndex
-          })
-        }}
-        onTouchTap={function () {
-          setState({
-            selectedRowIndex: rowIndex
-          })
-        }}
-        onDoubleClick={this.handleEdit}
+        onMouseOver={onMouseOver}
+        onTouchTap={onTouchTap}
+        onDoubleClick={props.selection_mode ? handleSelect : handleEdit}
+        title={hoveredColumnIndex == columnIndex && hoveredRowIndex == rowIndex ? content : ''}
       >
         {content}
       </div>
