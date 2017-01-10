@@ -1,10 +1,12 @@
-import React, {Component, PropTypes} from "react";
+import React, {PropTypes} from "react";
+import MetaComponent from "../common/MetaComponent";
+
 import RepToolbar from "./RepToolbar";
 import RepTabularSection from "./RepTabularSection";
 import DumbLoader from "../DumbLoader";
 
 
-export default class Report extends Component {
+export default class Report extends MetaComponent {
 
   static propTypes = {
     _obj: PropTypes.object,
@@ -16,10 +18,6 @@ export default class Report extends Component {
     handlePrint: PropTypes.func.isRequired,
     handleAddRow: PropTypes.func.isRequired,
     handleDelRow: PropTypes.func.isRequired
-  }
-
-  static contextTypes = {
-    $p: React.PropTypes.object.isRequired
   }
 
   constructor(props, context) {

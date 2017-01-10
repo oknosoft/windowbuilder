@@ -49,28 +49,9 @@ export default class SchemeSettingsTabs extends Component {
               <TabularSection
                 _obj={scheme}
                 _tabular="params"
-                minHeight={160}
+                minHeight={308}
               />
           }
-
-          <TabularSection
-            _obj={scheme}
-            _tabular="selection"
-            minHeight={120}
-
-            rowSelection={{
-              showCheckbox: true,
-              enableShiftSelect: true,
-              selectBy: {
-                keys: {
-                  rowKey: "field",
-                  markKey: "use",
-                  values: scheme.used_fields()
-                }
-              }
-            }}
-
-          />
 
         </Tab>
 
@@ -80,7 +61,7 @@ export default class SchemeSettingsTabs extends Component {
             _obj={scheme}
             _tabular="fields"
             deny_add_del={true}
-            minHeight={328}
+            minHeight={308}
 
             rowSelection={{
               showCheckbox: true,
@@ -97,28 +78,51 @@ export default class SchemeSettingsTabs extends Component {
 
         </Tab>
 
+        <Tab label="Отбор" value="s">
+
+          <TabularSection
+            _obj={scheme}
+            _tabular="selection"
+            minHeight={308}
+
+            rowSelection={{
+              showCheckbox: true,
+              enableShiftSelect: true,
+              selectBy: {
+                keys: {
+                  rowKey: "field",
+                  markKey: "use",
+                  values: scheme.used_fields()
+                }
+              }
+            }}
+
+          />
+
+        </Tab>
+
         <Tab label="Группировка" value="g">
 
           <TabularSection
             _obj={scheme}
             _tabular="dimensions"
-            minHeight={140}
+            minHeight={130}
           />
 
           <TabularSection
             _obj={scheme}
             _tabular="resources"
-            minHeight={140}
+            minHeight={130}
           />
 
         </Tab>
 
-        <Tab label="Сортировка" value="s">
+        <Tab label="Сортировка" value="o">
 
           <TabularSection
             _obj={scheme}
             _tabular="sorting"
-            minHeight={328}
+            minHeight={308}
           />
 
         </Tab>
@@ -128,7 +132,7 @@ export default class SchemeSettingsTabs extends Component {
           <SchemeSettingsSelect
             scheme={scheme}
             handleSchemeChange={handleSchemeChange}
-            minHeight={376}
+            minHeight={356}
           />
 
         </Tab>

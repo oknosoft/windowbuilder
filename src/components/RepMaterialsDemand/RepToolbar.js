@@ -1,6 +1,6 @@
 
-import React, {Component, PropTypes} from "react";
-import $p from "metadata";
+import React, {PropTypes} from "react";
+import MetaComponent from "../common/MetaComponent";
 
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from "material-ui/Toolbar";
 import IconButton from "material-ui/IconButton";
@@ -18,7 +18,7 @@ import FileDownloadIcon from "material-ui/svg-icons/file/file-download";
 import SchemeSettings from "../SchemeSettings";
 import TabularSection from "../TabularSection";
 
-export default class RepToolbar extends $p.UI.ExportHandlers(Component) {
+export default class RepToolbar extends MetaComponent {
 
   static propTypes = {
 
@@ -40,6 +40,14 @@ export default class RepToolbar extends $p.UI.ExportHandlers(Component) {
       .then((objs) => {
         this.refs.production.forceUpdate()
       })
+  }
+
+  constructor (props, context) {
+
+    super(props, context);
+
+    context.$p.UI.export_handlers.call(this);
+
   }
 
   render() {
@@ -66,7 +74,7 @@ export default class RepToolbar extends $p.UI.ExportHandlers(Component) {
               ref="production"
               _obj={_obj}
               _tabular="production"
-              minHeight={160}
+              minHeight={308}
               Toolbar={SettingsProductionToolbar}
               handleCustom={handleCustom}
             />}

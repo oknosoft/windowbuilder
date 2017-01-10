@@ -1,19 +1,17 @@
 
-import React, {Component, PropTypes} from "react";
+import React, {PropTypes} from "react";
+import MetaComponent from "../common/MetaComponent";
+
 import IconButton from 'material-ui/IconButton';
 import IconWork from 'material-ui/svg-icons/action/work';
 import Dialog from 'material-ui/Dialog';
 import DataList from "../DataList"
 
 
-export default class SelectOrder extends Component {
+export default class SelectOrder extends MetaComponent {
 
   static propTypes = {
     handleSelect: React.PropTypes.func.isRequired
-  }
-
-  static contextTypes = {
-    $p: React.PropTypes.object.isRequired
   }
 
   constructor(props) {
@@ -68,7 +66,7 @@ export default class SelectOrder extends Component {
 
           <DataList
             width={700}
-            height={400}
+            height={300}
             _mgr={context.$p.doc.calc_order}
             selection_mode
             deny_add_del

@@ -3,7 +3,8 @@
  * войти-выйти, имя пользователя, состояние репликации, индикатор оповещений
  */
 
-import React, {Component, PropTypes} from "react";
+import React, {PropTypes} from "react";
+import MetaComponent from "../common/MetaComponent";
 
 import FlatButton from 'material-ui/FlatButton';
 import {white} from 'material-ui/styles/colors';
@@ -28,7 +29,7 @@ const refreshStyles = {
   },
 };
 
-export default class NavUserButtons extends Component{
+export default class NavUserButtons extends MetaComponent{
 
   static propTypes = {
 
@@ -44,25 +45,18 @@ export default class NavUserButtons extends Component{
 
   }
 
-  static defaultProps = {
-    show_notifications: true
-  };
-
-  static contextTypes = {
-    $p: React.PropTypes.object.isRequired
-  }
-
   handleLogin = (e) => {
-    const {$p} = this.context
-    $p.UI.history.push('/login')
+    this.context.$p.UI.history.push('/login')
   }
 
   render () {
 
+    const {show_indicator, show_notifications, sync_started, sync_tooltip, notifications_tooltip, button_label} = this.props
+
     return (
       <div>
 
-        { this.props.show_indicator
+        { show_indicator
 
           ?
           <RefreshIndicator
@@ -74,8 +68,8 @@ export default class NavUserButtons extends Component{
             style={refreshStyles.refresh}
           />
           :
-          <IconButton tooltip={this.props.sync_tooltip} className="meta-appbar-button" touch={true}>
-            {this.props.sync_started ?
+          <IconButton tooltip={sync_tooltip} className="meta-appbar-button" tooltipPosition="bottom-left" touch={true}>
+            {sync_started ?
               <SyncIcon color={white}/>
               :
               <SyncIconDisabled color={white}/>
@@ -84,10 +78,10 @@ export default class NavUserButtons extends Component{
         }
 
         {
-          this.props.show_notifications
+          show_notifications
 
             ?
-            <IconButton tooltip={this.props.notifications_tooltip} className="meta-appbar-button" touch={true}>
+            <IconButton tooltip={notifications_tooltip} className="meta-appbar-button" touch={true}>
               <NotificationsIconNone color={white} />
             </IconButton>
             :
@@ -95,7 +89,7 @@ export default class NavUserButtons extends Component{
         }
 
         <FlatButton
-          label={this.props.button_label}
+          label={button_label}
           onTouchTap={this.handleLogin}
           className="meta-appbar-button"
         />

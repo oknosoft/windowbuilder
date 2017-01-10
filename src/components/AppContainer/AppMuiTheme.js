@@ -32,18 +32,15 @@ export const muiTheme = getMuiTheme({
     titleFontSize: 18,
   },
 
-  // spacing: {
-  //   desktopGutter: 16,
-  //   desktopGutterMore: 24,
-  //   desktopGutterLess: 8,
-  //   desktopGutterMini: 6,
-  //   // desktopKeylineIncrement: 64,
-  //   // desktopDropDownMenuItemHeight: 32,
-  //   // desktopDropDownMenuFontSize: 15,
-  //   // desktopDrawerMenuItemHeight: 48,
-  //   // desktopSubheaderHeight: 48,
-  //   // desktopToolbarHeight: 56,
-  // }
+  spacing: {
+    desktopGutter: 18,
+    desktopKeylineIncrement: 96,
+    // desktopDropDownMenuItemHeight: 32,
+    // desktopDropDownMenuFontSize: 15,
+    // desktopDrawerMenuItemHeight: 32,
+    // desktopSubheaderHeight: 48,
+    // desktopToolbarHeight: 56,
+  }
 
 });
 

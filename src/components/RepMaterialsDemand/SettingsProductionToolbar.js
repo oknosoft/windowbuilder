@@ -11,27 +11,28 @@ export default class SettingsProductionToolbar extends Component{
 
     handleAdd: PropTypes.func.isRequired,             // обработчик добавления объекта
     handleRemove: PropTypes.func.isRequired,          // обработчик удаления строки
-
     handleCustom: PropTypes.func.isRequired
 
   }
 
   render(){
-    const props = this.props;
+
+    const {handleAdd, handleRemove, handleCustom} = this.props;
+
     return (
 
       <Toolbar>
         <ToolbarGroup className={"meta-toolbar-group"} firstChild={true}>
-          <IconButton touch={true} tooltip="Добавить строку" tooltipPosition="bottom-right" onTouchTap={props.handleAdd}>
+          <IconButton touch={true} tooltip="Добавить строку" tooltipPosition="bottom-right" onTouchTap={handleAdd}>
             <AddIcon />
           </IconButton>
-          <IconButton touch={true} tooltip="Удалить строку" onTouchTap={props.handleRemove}>
+          <IconButton touch={true} tooltip="Удалить строку" onTouchTap={handleRemove}>
             <RemoveIcon />
           </IconButton>
           <ToolbarSeparator />
 
           <SelectOrder
-            handleSelect={props.handleCustom}
+            handleSelect={handleCustom}
           />
 
         </ToolbarGroup>

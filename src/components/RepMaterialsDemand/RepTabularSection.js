@@ -1,4 +1,6 @@
-import React, {Component, PropTypes} from "react";
+import React, {PropTypes} from "react";
+import MetaComponent from "../common/MetaComponent";
+
 import ReactDataGrid from "react-data-grid";
 
 //import {Menu, Data, Editors, ToolsPanel} from "react-data-grid/addons";
@@ -54,7 +56,7 @@ const Selectors = Data.Selectors;
 //   }
 // }
 
-export default class RepTabularSection extends Component {
+export default class RepTabularSection extends MetaComponent {
 
   static propTypes = {
 
