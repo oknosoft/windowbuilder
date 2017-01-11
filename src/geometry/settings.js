@@ -6,8 +6,6 @@
  * @module geometry
  */
 
-"use strict";
-
 /**
  * Константы и параметры
  */

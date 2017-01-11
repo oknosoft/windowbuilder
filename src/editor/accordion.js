@@ -6,6 +6,9 @@
  * @submodule editor_accordion
  */
 
+"use strict";
+
+
 function EditorAccordion(_editor, cell_acc) {
 
 	cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);

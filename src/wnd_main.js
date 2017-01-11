@@ -33,12 +33,12 @@ $p.on({
 			pouch_filter: {
 				value: (function () {
 					var filter = {};
-					filter.__define({
-						doc: {
-							value: "auth/by_partner",
-							writable: false
-						}
-					});
+					// filter.__define({
+					// 	doc: {
+					// 		value: "auth/by_partner",
+					// 		writable: false
+					// 	}
+					// });
 					return filter;
 				})(),
 				writable: false
@@ -82,7 +82,8 @@ $p.on({
 
 		// расположение couchdb
 		//prm.couch_path = "http://cou206:5984/wb_";
-		prm.couch_path = "/couchdb/wb_";
+		//prm.couch_path = "/couchdb/wb_";
+    prm.couch_path = "http://i980:5984/wb_";
 
 		// логин гостевого пользователя couchdb
 		prm.guest_name = "guest";
@@ -240,7 +241,7 @@ $p.on({
 		$p.iface.main.progressOn();
 
 		// активируем страницу
-		hprm = $p.job_prm.parse_url();
+    var hprm = $p.job_prm.parse_url();
 		if(!hprm.view || $p.iface.main.getAllItems().indexOf(hprm.view) == -1){
 			$p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, "orders");
 		} else

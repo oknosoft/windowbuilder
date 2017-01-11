@@ -1257,6 +1257,9 @@ baron.fn.log = function(level, msg, nodes) {
 };
 
 
+"use strict";
+
+
 function EditorAccordion(_editor, cell_acc) {
 
 	cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);
@@ -4518,8 +4521,6 @@ GlassSegment.prototype.__define({
 });
 
 
-
-
 function DimensionLine(attr){
 
 
@@ -4542,20 +4543,19 @@ function DimensionLine(attr){
 	this.data.p2 = attr.p2 || "e";
 	this.data.offset = attr.offset;
 
-		if(attr.impost)
+	if(attr.impost)
 		this.data.impost = true;
 
-		if(attr.contour)
+	if(attr.contour)
 		this.data.contour = true;
 
 	this.__define({
 
-				_row: {
+		_row: {
 			get: function () {
 				return _row;
 			}
 		},
-
 
 		remove: {
 			value: function () {
@@ -4585,7 +4585,7 @@ function DimensionLine(attr){
 		fontSize: 72});
 
 
-		this.on({
+	this.on({
 		mouseenter: this._mouseenter,
 		mouseleave: this._mouseleave,
 		click: this._click
@@ -4686,7 +4686,7 @@ DimensionLine.prototype.__define({
 
 			}
 
-						if(delta.length){
+			if(delta.length){
 
 				paper.project.deselect_all_points();
 
@@ -4880,19 +4880,18 @@ DimensionLine.prototype.__define({
 			var offset = (parseInt(v) || 90).round(0);
 			if(this.data.offset != offset){
 				this.data.offset = offset;
-				this.project.register_change(true);	
+				this.project.register_change(true);
 			}
 		}
 	}
 
 });
 
-
 function DimensionLayer(attr) {
 
-		DimensionLayer.superclass.constructor.call(this);
+	DimensionLayer.superclass.constructor.call(this);
 
-		if(!attr || !attr.parent){
+	if(!attr || !attr.parent){
 		this.__define({
 			bounds: {
 				get: function () {
@@ -4903,7 +4902,6 @@ function DimensionLayer(attr) {
 	}
 }
 DimensionLayer._extend(paper.Layer);
-
 
 
 function DimensionLineCustom(attr) {
@@ -4930,7 +4928,6 @@ DimensionLineCustom._extend(DimensionLine);
 
 DimensionLineCustom.prototype.__define({
 
-
 	save_coordinates: {
 		value: function () {
 
@@ -4952,7 +4949,6 @@ DimensionLineCustom.prototype.__define({
 		}
 	},
 
-
 	elm_type: {
 		get : function(){
 
@@ -4969,6 +4965,7 @@ DimensionLineCustom.prototype.__define({
 		}
 	}
 });
+
 
 
 function BuilderElement(attr){
@@ -8178,8 +8175,6 @@ ProfileAddl.prototype.__define({
 
 
 
-
-
 function ProfileConnective(attr){
 
 	ProfileConnective.superclass.constructor.call(this, attr);
@@ -8189,7 +8184,6 @@ ProfileConnective._extend(ProfileItem);
 
 
 ProfileConnective.prototype.__define({
-
 
 	save_coordinates: {
 		value: function () {
@@ -8267,23 +8261,19 @@ ProfileConnective.prototype.__define({
 		}
 	},
 
-
 	d0: {
 		get : function(){
 			return 0;
 		}
 	},
 
-
 	d1: {
 		get : function(){ return this.sizeb; }
 	},
 
-
 	d2: {
 		get : function(){ return this.d1 - this.width; }
 	},
-
 
 	elm_type: {
 		get : function(){
@@ -8293,7 +8283,6 @@ ProfileConnective.prototype.__define({
 		}
 	},
 
-
 	cnn_point: {
 		value: function(node){
 
@@ -8302,7 +8291,7 @@ ProfileConnective.prototype.__define({
 		}
 	}
 
-	});
+});
 
 
 function Onlay(attr){
@@ -9522,6 +9511,7 @@ function Sectional(arg){
 }
 Sectional._extend(BuilderElement);
 
+
 "use strict";
 
 	var consts = new function Settings(){
@@ -9539,7 +9529,7 @@ Sectional._extend(BuilderElement);
 		this.orientation_delta = $p.job_prm.builder.orientation_delta || 20;
 
 
-			}.bind(this);
+	}.bind(this);
 
 
 
@@ -9550,6 +9540,7 @@ Sectional._extend(BuilderElement);
 
 
 };
+
 
 class ToolElement extends paper.Tool {
 
