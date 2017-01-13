@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding='utf-8'?>
+<toolbar>
+
+    <item id="sep0" type="separator"/>
+
+    <item type="button" id="btn_origin" text="&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt; Происхождение" title="Ссылка на настройки" />
+
+    <item id="sep1" type="separator"/>
+
+</toolbar>
