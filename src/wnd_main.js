@@ -82,8 +82,9 @@ $p.on({
 
 		// расположение couchdb
 		//prm.couch_path = "http://cou206:5984/wb_";
-		//prm.couch_path = "/couchdb/wb_";
-    prm.couch_path = "http://i980:5984/wb_";
+    //prm.couch_path = "https://kint.oknosoft.ru/couchdb2/wb_";
+		prm.couch_path = "/couchdb/wb_";
+
 
 		// логин гостевого пользователя couchdb
 		prm.guest_name = "guest";

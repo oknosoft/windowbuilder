@@ -306,14 +306,16 @@ function ProductsBuilding(){
 	 * @return {boolean}
 	 */
 	function check_params(selection_params, spec_row, elm, cnstr, origin){
-		var ok = true;
+
+		let ok = true;
 
 		// режем параметры по элементу
 		selection_params.find_rows({elm: spec_row.elm}, function (prm) {
 
 			ok = false;
-			var val = prm.value,
+			let val = prm.value,
         is_calculated = prm.param.is_calculated;
+
 
 			// вычисляемые параметры
 			if(is_calculated){
@@ -336,7 +338,54 @@ function ProductsBuilding(){
           return false;
         });
 
-      }else{
+      }
+      else if(is_calculated){
+
+        switch(prm.comparison_type) {
+
+          case $p.enm.comparison_types.ne:
+            ok = val != prm.value;
+            break;
+
+          case $p.enm.comparison_types.gt:
+            ok = val > prm.value;
+            break;
+
+          case $p.enm.comparison_types.gte:
+            ok = val >= prm.value;
+            break;
+
+          case $p.enm.comparison_types.lt:
+            ok = val < prm.value;
+            break;
+
+          case $p.enm.comparison_types.lte:
+            ok = val <= prm.value;
+            break;
+
+          case $p.enm.comparison_types.nin:
+            if(Array.isArray(val) && !Array.isArray(prm.value)){
+              ok = val.indexOf(prm.value) == -1;
+
+            }else if(Array.isArray(prm.value) && !Array.isArray(val)){
+              ok = prm.value.indexOf(val) == -1;
+
+            }
+            break;
+
+          case $p.enm.comparison_types.in:
+            if(Array.isArray(val) && !Array.isArray(prm.value)){
+              ok = val.indexOf(prm.value) != -1;
+
+            }else if(Array.isArray(prm.value) && !Array.isArray(val)){
+              ok = prm.value.indexOf(val) != -1;
+
+            }
+            break;
+        }
+
+      }
+      else{
         params.find_rows({
           cnstr: cnstr || 0,
           inset: origin || $p.utils.blank.guid,
@@ -346,7 +395,7 @@ function ProductsBuilding(){
           switch(prm.comparison_type) {
 
             case $p.enm.comparison_types.ne:
-              ok = (is_calculated ? val : row.value) != prm.value;
+              ok = row.value != prm.value;
               break;
 
             case $p.enm.comparison_types.gt:
@@ -384,7 +433,6 @@ function ProductsBuilding(){
 
               }
               break;
-
           }
 
           return false;
@@ -508,8 +556,11 @@ function ProductsBuilding(){
 
 			// Добавляем или разузловываем дальше
 			if(row.nom._manager == $p.cat.inserts)
-				inset_filter_spec(row.nom, elm, false, len_angl).forEach(function (row) {
-					res.push(row);
+				inset_filter_spec(row.nom, elm, false, len_angl).forEach(function (subrow) {
+				  const fakerow = {}._mixin(subrow, ['angle_calc_method','clr','count_calc_method','elm','formula','is_main_elm','is_order_row','nom','sz']);
+				  fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
+          fakerow.coefficient = (subrow.coefficient || 1) * (row.coefficient || 1);
+					res.push(fakerow);
 				});
 			else
 				res.push(row);
@@ -1237,7 +1288,7 @@ function ProductsBuilding(){
 		//console.profile();
 
 
-		// ссылки для быстрого доступа к свойствам обхекта продукции
+		// ссылки для быстрого доступа к свойствам объекта продукции
 		ox = scheme.ox;
 		spec = ox.specification;
 		constructions = ox.constructions;

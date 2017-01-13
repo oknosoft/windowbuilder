@@ -20,6 +20,7 @@ module.exports = gulp;
 // Cборка проекта
 gulp.task('build-iface', function(){
 	return gulp.src([
+	  //'./dist/worker.js',
 		'./data/prebuild.js',
 		'./data/merged_wb_templates.js',
 		'./src/modifiers/**/*.js',

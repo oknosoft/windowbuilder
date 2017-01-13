@@ -61,10 +61,10 @@ $p.doc.calc_order.on({
 	// перед записью надо присвоить номер для нового и рассчитать итоги
 	before_save: function (attr) {
 
-		doc_amount = 0;
-		amount_internal = 0;
-		sys_profile = "";
-		sys_furn = "";
+		var doc_amount = 0,
+      amount_internal = 0,
+      sys_profile = "",
+      sys_furn = "";
 
 		// если установлен признак проведения, проверим состояние транспорта
 		if(this.posted){
@@ -237,7 +237,7 @@ $p.DocCalc_order.prototype.__define({
 	dispatching_totals: {
 		value: function () {
 
-			options = {
+			var options = {
 				reduce: true,
 				limit: 10000,
 				group: true,

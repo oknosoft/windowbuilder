@@ -1,21 +1,20 @@
 CACHE MANIFEST
-# 000000000175
+# 000000000177
 
 # Additional resources to cache
 # https://github.com/oknosoft/metadata.js/pull/180
 CACHE:
 
 # Заголовок и библиотеки
-# /
+./
 
 
 # Эти позиции включаем только в продакшене
 #
 https://cdn.jsdelivr.net/g/momentjs@2.17,alasql@0.3,pouchdb@6.1,jquery@2.2,metadata@0.12.225(dhtmlx.min.js)
 
-# На период отладки, берём metadata и dhtmlx c нашего сайта
-#lib/metadata.min.js
-#lib/dhtmlx.min.js
+# На период отладки, берём metadata.min.js c нашего сайта
+lib/metadata.min.js
 
 # А эти - только в дебагере
 # //metadata.js.org/lib/dhtmlxscheduler/dhtmlxscheduler.min.js

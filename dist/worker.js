@@ -1,3 +1,4 @@
+"use strict";
 
 (function(){
 
@@ -13,7 +14,7 @@
 
 	function offerToReload() {
 
-		var confirm_count = 0;
+		let confirm_count = 0;
 
 		function do_reload(){
 
@@ -23,11 +24,11 @@
 					text: "Файлы на сервере обновлены<br /> Рекомендуется закрыть браузер и войти<br />повторно для применения обновления",
 					ok: "Перезагрузка",
 					cancel: "Продолжить",
-					callback: function(btn) {
+					callback: (btn) => {
 
 						if(btn){
 
-							setTimeout(function () {
+							setTimeout(() => {
 								if(typeof $p == "object" && $p.eve)
 									$p.eve.redirect = true;
 								location.reload(true);
@@ -53,10 +54,10 @@
 
 	if (navigator.serviceWorker) {
 		navigator.serviceWorker.register('worker.js')
-			.then(function (registration) {
-				registration.addEventListener('updatefound', function () {
-					var newWorker = registration.installing;
-					registration.installing.addEventListener('statechange', function () {
+			.then((registration) => {
+				registration.addEventListener('updatefound', () => {
+					const newWorker = registration.installing;
+					registration.installing.addEventListener('statechange', () => {
 						if (newWorker.state == 'installed' && navigator.serviceWorker.controller) {
 							offerToReload();
 						}
@@ -64,10 +65,11 @@
 				});
 				giveIntro();
 			})
-			.catch(function(error) {
+			.catch((error) => {
 				console.log('ServiceWorker registration failed: ', error);
 			});
-	} else if (window.applicationCache) {
+	}
+	else if (window.applicationCache) {
 		applicationCache.addEventListener('cached', onCached, false);
 		applicationCache.addEventListener('noupdate', giveIntro, false);
 		applicationCache.addEventListener('updateready', offerToReload, false);

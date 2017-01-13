@@ -575,7 +575,7 @@
 
 		/**
 		 * ОткрытьПостроитель()
-		 * @param create_new {Boolean} - создавать новое изделие или открывать в текущей строке
+		 * @param [create_new] {Boolean} - создавать новое изделие или открывать в текущей строке
 		 */
 		function open_builder(create_new){
 			var selId, row;

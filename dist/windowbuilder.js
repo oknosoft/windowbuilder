@@ -9512,8 +9512,6 @@ function Sectional(arg){
 Sectional._extend(BuilderElement);
 
 
-"use strict";
-
 	var consts = new function Settings(){
 
 

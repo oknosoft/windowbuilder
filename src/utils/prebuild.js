@@ -229,7 +229,7 @@ module.exports = function (package_data) {
 				// получаем скрипт таблиц
 				$p.md.create_tables(function (sql) {
 
-					text = "'use strict';\n\n$p.wsql.alasql('" + sql + "', []);\n\n"
+					text = "$p.wsql.alasql('" + sql + "', []);\n\n"
 						+ text + "\n\n"
 						+ "$p.md.init(" + JSON.stringify(_m) + ");\n\n" + jstext;
 
