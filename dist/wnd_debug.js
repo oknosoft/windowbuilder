@@ -2114,7 +2114,18 @@ $p.cat.characteristics.__define({
           if(ts == "specification"){
             tabular_init("specification", $p.injected_data["toolbar_characteristics_specification.xml"]);
             wnd.elmnts.tabs.tab_specification.getAttachedToolbar().attachEvent("onclick", (btn_id) => {
-              console.log(btn_id)
+
+              const selId = wnd.elmnts.grids.specification.getSelectedRowId();
+              if(selId && !isNaN(Number(selId))){
+                return o.open_origin(Number(selId)-1);
+              }
+
+              $p.msg.show_msg({
+                type: "alert-warning",
+                text: $p.msg.no_selected_row.replace("%1", "Спецификация"),
+                title: o.presentation
+              });
+
             });
           }else{
             tabular_init(ts);
@@ -2277,6 +2288,28 @@ $p.CatCharacteristics.prototype.__define({
           params.push(param)
         }
       })
+    }
+  },
+
+  open_origin: {
+    value: function (row_id) {
+      try{
+        let {origin} = this.specification.get(row_id);
+        if(typeof origin == "number"){
+          origin = this.cnn_elmnts.get(origin-1).cnn;
+        }
+        if(origin.is_new()){
+          return $p.msg.show_msg({
+            type: "alert-warning",
+            text: `Пустая ссылка на настройки в строке №${row_id+1}`,
+            title: o.presentation
+          });
+        }
+        origin.form_obj();
+      }
+      catch (err){
+        $p.record_log(err);
+      }
     }
   }
 
@@ -4640,12 +4673,14 @@ function ProductsBuilding(){
 
 	function cnn_add_spec(cnn, elm, len_angl){
 
-		if(!cnn)
-			return;
+		if(!cnn){
+      return;
+    }
 
-		var sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
+		const sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
 
 		cnn_filter_spec(cnn, elm, len_angl).forEach(function (row_cnn_spec) {
+
 			var nom = row_cnn_spec.nom;
 
 			if(nom._manager == $p.cat.inserts){
@@ -4658,7 +4693,7 @@ function ProductsBuilding(){
 
 			}else {
 
-				var row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin);
+				var row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin || cnn);
 
 				if(nom.is_pieces){
 					if(!row_cnn_spec.coefficient)
@@ -4721,11 +4756,13 @@ function ProductsBuilding(){
 			if(($p.enm.cnn_types.acn.a.indexOf(cnn.cnn_type) != -1) && (
 					(row.set_specification == $p.enm.specification_installation_methods.САртикулом1 && !len_angl.art1) ||
 					(row.set_specification == $p.enm.specification_installation_methods.САртикулом2 && !len_angl.art2)
-				))
-				return;
+				)){
+        return;
+      }
 
-			if(check_params(cnn.selection_params, row, elm))
-				res.push(row);
+			if(check_params(cnn.selection_params, row, elm)){
+        res.push(row);
+      }
 
 		});
 		return res;
@@ -4912,8 +4949,9 @@ function ProductsBuilding(){
 	function inset_filter_spec(inset, elm, is_high_level_call, len_angl){
 
 		var res = [], glass_rows;
-		if(!inset || inset.empty())
-			return res;
+		if(!inset || inset.empty()){
+      return res;
+    }
 
 		if(is_high_level_call && inset.insert_type == $p.enm.inserts_types.Стеклопакет){
 			glass_rows = glass_specification.find_rows({elm: elm.elm}).map(function (row) {
@@ -4949,21 +4987,27 @@ function ProductsBuilding(){
 
 		inset.specification.each(function (row) {
 
-			if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl))
-				return;
+			if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl)){
+        return;
+      }
 
-			if(!check_params(inset.selection_params, row, elm, len_angl && len_angl.cnstr, len_angl && len_angl.origin))
-				return;
+			if(!check_params(inset.selection_params, row, elm, len_angl && len_angl.cnstr, len_angl && len_angl.origin)){
+        return;
+      }
 
-			if(row.nom._manager == $p.cat.inserts)
-				inset_filter_spec(row.nom, elm, false, len_angl).forEach(function (subrow) {
-				  const fakerow = {}._mixin(subrow, ['angle_calc_method','clr','count_calc_method','elm','formula','is_main_elm','is_order_row','nom','sz']);
-				  fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
+			if(row.nom._manager == $p.cat.inserts){
+        inset_filter_spec(row.nom, elm, false, len_angl).forEach(function (subrow) {
+          const fakerow = {}._mixin(subrow, ['angle_calc_method','clr','count_calc_method','elm','formula','is_main_elm','is_order_row','nom','sz']);
+          fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
           fakerow.coefficient = (subrow.coefficient || 1) * (row.coefficient || 1);
-					res.push(fakerow);
-				});
-			else
-				res.push(row);
+          fakerow._origin = row.nom;
+          res.push(fakerow);
+        });
+      }
+			else{
+        res.push(row);
+      }
+
 
 		});
 
@@ -5401,16 +5445,18 @@ function ProductsBuilding(){
 
 		inset_filter_spec(inset, elm, true, len_angl).forEach(function (row_ins_spec) {
 
-			var row_spec;
+		  const origin = row_ins_spec._origin || inset;
+
+			let row_spec;
 
 			if((row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру
 				&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
 				$p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1)
-				row_spec = new_spec_row(null, elm, row_ins_spec, null, inset);
+				row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
 
 			if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !row_ins_spec.formula.empty()){
 
-				row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, inset);
+				row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, origin);
 
 				row_ins_spec.formula.execute({
 					ox: ox,
@@ -5437,7 +5483,7 @@ function ProductsBuilding(){
 					elm.perimeter.forEach(function (rib) {
 						row_prm._row._mixin(rib);
 						if(inset_check(row_ins_spec, row_prm, true)){
-							row_spec = new_spec_row(null, elm, row_ins_spec, null, inset);
+							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
 							calc_qty_len(row_spec, row_ins_spec, rib.len);
 							calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
 						}
@@ -5451,7 +5497,7 @@ function ProductsBuilding(){
 						row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление) && row_ins_spec.step){
 
 						for(var i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
-							row_spec = new_spec_row(null, elm, row_ins_spec, null, inset);
+							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
 							calc_qty_len(row_spec, row_ins_spec, w);
 							calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
 						}
