@@ -1347,6 +1347,7 @@ Profile.prototype.__define({
 	 */
 	nearest: {
 		value : function(){
+
 			var _profile = this,
 				b = _profile.b,
 				e = _profile.e,

@@ -2764,13 +2764,9 @@ class Editor extends paper.PaperScope {
 
   }
 
-  glass_align(name = 'auto', glasses) {
+  do_glass_align(name = 'auto', glasses) {
 
     const shift = [];
-
-    function reorder() {
-
-    }
 
     if(!glasses){
       glasses = this.project.selected_glasses();
@@ -2810,17 +2806,120 @@ class Editor extends paper.PaperScope {
       }
     })
 
-    switch (name){
-      case 'height':
+    glasses = glasses.map((glass) => {
+      const {bounds, profiles} = glass;
+      const res = {
+        glass,
+        width: bounds.width,
+        height: bounds.height,
+      }
+      profiles.forEach((curr) => {
+        const profile = curr.profile.nearest() || curr.profile;
+        if(shift.indexOf(profile) != -1){
+          const point = curr.b.add(curr.e).divide(2);
+          if(name == 'width'){
+            if(point.x < bounds.center.x){
+              res.left = profile
+            }
+            else{
+              res.right = profile
+            }
+          }
+          else{
+            if(point.y < bounds.center.y){
+              res.top = profile
+            }
+            else{
+              res.bottom = profile
+            }
+          }
+        }
+      });
+      return res;
+    })
 
-        break;
+    shift.forEach((impost, index) => {
+      const res = {impost, dx: [], dy: []};
+      glasses.forEach((curr) => {
+        if(curr.left == impost || curr.right == impost){
+          res.dx.push(curr)
+        }
+        else if(curr.top == impost || curr.bottom == impost){
+          res.dy.push(curr)
+        }
+      })
+      shift[index] = res
+    })
 
-      case 'width':
+    const res = []
+    shift.forEach((curr) => {
 
-        break;
+      let medium = 0;
+      let delta = 0;
+
+      if (name == 'width') {
+        curr.dx.forEach((glass) => {
+          medium += glass.width
+        });
+        medium = medium / curr.dx.length;
+        curr.dx.forEach((glass) => {
+          if(glass.right == curr.impost){
+            delta += (medium - glass.width) / (1.2 * curr.dx.length)
+          }
+          else if(glass.left == curr.impost){
+            delta += (glass.width - medium) / (1.2 * curr.dx.length)
+          }
+        });
+        delta = new paper.Point([delta,0])
+      }
+      else {
+
+        delta = new paper.Point([0, delta])
+      }
+
+      if(delta.length){
+        curr.impost.move_points(delta, true);
+      }
+      res.push(delta)
+    })
+
+    return res;
+  }
+  glass_align(name = 'auto', glasses) {
+
+    const shift = this.do_glass_align(name, glasses);
+    const {data} = this.project;
+
+    if(!data._align_counter){
+      data._align_counter = 1;
+    }
+    if(data._align_counter > 12){
+      data._align_counter = 0;
+      return
+    }
+
+    if(!shift){
+      return
+    }
+
+    if(shift.some((delta) => {
+      return delta.length > 1
+      })){
+
+      data._align_counter+= 1;
+
+      this.project.contours.forEach(function(l){
+        l.redraw();
+      });
+
+      return this.glass_align(name, glasses);
+    }
+    else{
+      data._align_counter = 0;
     }
 
   }
+
 
   clear_selection_bounds() {
     if (this._selectionBoundsShape) {
@@ -2873,7 +2972,7 @@ $p.Editor = Editor;
 	msg.align_set_bottom = "Установить размер сдвигом нижних элементов";
 	msg.align_set_top = "Установить размер сдвигом верхних элементов";
 	msg.align_set_left = "Установить размер сдвигом левых элементов";
-	msg.align_all = "Установить прямые углы";
+	msg.align_all = "Установить прямые углы или уравнять по заполнениям";
 	msg.align_invalid_direction = "Неприменимо для элемента с данной ориентацией";
 
 	msg.bld_constructor = "Конструктор объектов графического построителя";
@@ -5549,7 +5648,7 @@ function Filling(attr){
 	this.initialize(attr);
 
 
-	}
+}
 Filling._extend(BuilderElement);
 
 Filling.prototype.__define({
@@ -5609,7 +5708,7 @@ Filling.prototype.__define({
 				new Onlay({row: row, parent: this});
 			}.bind(this));
 
-					}
+		}
 	},
 
 	profiles: {
@@ -5668,14 +5767,14 @@ Filling.prototype.__define({
 
 			for(var i=0; i<length; i++ ){
 
-								prev = i==0 ? profiles[length-1] : profiles[i-1];
+				prev = i==0 ? profiles[length-1] : profiles[i-1];
 				curr = profiles[i];
 				next = i==length-1 ? profiles[0] : profiles[i+1];
 
-								var pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true),
+				var pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true),
 					pe = curr.aperture_path.intersect_point(next.aperture_path, curr.e, true);
 
-								if(!pb || !pe){
+				if(!pb || !pe){
 					if($p.job_prm.debug)
 						throw "Filling:path";
 					else
@@ -5691,7 +5790,7 @@ Filling.prototype.__define({
 					aperture_len: curr.aperture_path.get_subpath(pb, pe).length.round(1)
 				});
 
-							}
+			}
 
 			for(var i=0; i<length; i++ ){
 				delete profiles[i].aperture_path;
@@ -5703,7 +5802,7 @@ Filling.prototype.__define({
 			});
 
 
-					}
+		}
 	},
 
 	create_leaf: {
@@ -5749,7 +5848,7 @@ Filling.prototype.__define({
 		get : function(){ return this.data.path; },
 		set : function(attr){
 
-			var data = this.data;
+			const data = this.data;
 			data.path.removeSegments();
 			data._profiles = [];
 
@@ -5806,7 +5905,6 @@ Filling.prototype.__define({
 
 			data.path.reduce();
 
-			data = attr = null;
 		}
 	},
 
@@ -5838,8 +5936,9 @@ Filling.prototype.__define({
 					len: curr.sub_path.length,
 					angle: curr.e.subtract(curr.b).angle
 				});
-				if(tmp.angle < 0)
-					tmp.angle += 360;
+				if(tmp.angle < 0){
+          tmp.angle += 360;
+        }
 			});
 			return res;
 		}
@@ -5932,7 +6031,7 @@ Filling.prototype.__define({
 
 			return oxml;
 
-					},
+		},
 		enumerable: false
 	},
 
@@ -5952,6 +6051,7 @@ Filling.prototype.__define({
 });
 
 Editor.Filling = Filling;
+
 
 
 
@@ -7501,6 +7601,7 @@ Profile.prototype.__define({
 
 	nearest: {
 		value : function(){
+
 			var _profile = this,
 				b = _profile.b,
 				e = _profile.e,

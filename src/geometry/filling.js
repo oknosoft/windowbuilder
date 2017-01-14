@@ -38,11 +38,11 @@ function Filling(attr){
 		Object.getNotifier(this._noti).notify(obj);
 		this.project.register_change();
 	}.bind(this);
-	
+
 
 	// initialize
 	this.initialize(attr);
-	
+
 
 }
 Filling._extend(BuilderElement);
@@ -108,7 +108,7 @@ Filling.prototype.__define({
 			}, function(row){
 				new Onlay({row: row, parent: this});
 			}.bind(this));
-			
+
 		}
 	},
 
@@ -142,7 +142,7 @@ Filling.prototype.__define({
 				profiles = this.profiles,
 				length = profiles.length,
 				curr, prev,	next,
-				
+
 				// строка в таблице заполнений продукции
 				glass = this.project.ox.glasses.add({
 					elm: _row.elm,
@@ -179,14 +179,14 @@ Filling.prototype.__define({
 
 			// получам пересечения
 			for(var i=0; i<length; i++ ){
-				
+
 				prev = i==0 ? profiles[length-1] : profiles[i-1];
 				curr = profiles[i];
 				next = i==length-1 ? profiles[0] : profiles[i+1];
-				
+
 				var pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true),
 					pe = curr.aperture_path.intersect_point(next.aperture_path, curr.e, true);
-				
+
 				if(!pb || !pe){
 					if($p.job_prm.debug)
 						throw "Filling:path";
@@ -203,7 +203,7 @@ Filling.prototype.__define({
 					cnn: curr.cnn.ref,
 					aperture_len: curr.aperture_path.get_subpath(pb, pe).length.round(1)
 				});
-				
+
 			}
 
 			// удаляем лишние ссылки
@@ -211,12 +211,12 @@ Filling.prototype.__define({
 				delete profiles[i].aperture_path;
 			}
 
-			
+
 			// дочерние раскладки
 			this.onlays.forEach(function (curr) {
 				curr.save_coordinates();
 			});
-			
+
 
 		}
 	},
@@ -280,7 +280,7 @@ Filling.prototype.__define({
 		get : function(){ return this.data.path; },
 		set : function(attr){
 
-			var data = this.data;
+			const data = this.data;
 			data.path.removeSegments();
 			data._profiles = [];
 
@@ -344,7 +344,6 @@ Filling.prototype.__define({
 
 			data.path.reduce();
 
-			data = attr = null;
 		}
 	},
 
@@ -383,8 +382,9 @@ Filling.prototype.__define({
 					len: curr.sub_path.length,
 					angle: curr.e.subtract(curr.b).angle
 				});
-				if(tmp.angle < 0)
-					tmp.angle += 360;
+				if(tmp.angle < 0){
+          tmp.angle += 360;
+        }
 			});
 			return res;
 		}
@@ -492,7 +492,7 @@ Filling.prototype.__define({
 				oxml["Примыкание"] = ["cnn3"];
 
 			return oxml;
-			
+
 		},
 		enumerable: false
 	},

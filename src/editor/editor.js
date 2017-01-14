@@ -1063,18 +1063,10 @@ class Editor extends paper.PaperScope {
 
   }
 
-  /**
-   * Уравнивание по ширинам заполнений
-   */
-  glass_align(name = 'auto', glasses) {
+  do_glass_align(name = 'auto', glasses) {
 
     // массив элементов, которые будем двигать
     const shift = [];
-
-    // упорядочивает заполнения в массиве слева на право или снизу вверх
-    function reorder() {
-
-    }
 
     if(!glasses){
       glasses = this.project.selected_glasses();
@@ -1117,17 +1109,127 @@ class Editor extends paper.PaperScope {
       }
     })
 
-    switch (name){
-      case 'height':
+    // модифицируем коллекцию заполнений - подклеиваем в неё импосты
+    glasses = glasses.map((glass) => {
+      const {bounds, profiles} = glass;
+      const res = {
+        glass,
+        width: bounds.width,
+        height: bounds.height,
+      }
+      profiles.forEach((curr) => {
+        const profile = curr.profile.nearest() || curr.profile;
+        if(shift.indexOf(profile) != -1){
+          const point = curr.b.add(curr.e).divide(2);
+          if(name == 'width'){
+            if(point.x < bounds.center.x){
+              res.left = profile
+            }
+            else{
+              res.right = profile
+            }
+          }
+          else{
+            if(point.y < bounds.center.y){
+              res.top = profile
+            }
+            else{
+              res.bottom = profile
+            }
+          }
+        }
+      });
+      return res;
+    })
 
-        break;
+    // модифицируем коллекцию импостов - подклеиваем сдвиги
+    shift.forEach((impost, index) => {
+      const res = {impost, dx: [], dy: []};
+      // находим все заполнения, примыкающие к импосту
+      glasses.forEach((curr) => {
+        if(curr.left == impost || curr.right == impost){
+          res.dx.push(curr)
+        }
+        else if(curr.top == impost || curr.bottom == impost){
+          res.dy.push(curr)
+        }
+      })
+      shift[index] = res
+    })
 
-      case 'width':
+    // рассчитываем, на сколько и в какую сторону двигать
+    const res = []
+    shift.forEach((curr) => {
 
-        break;
+      let medium = 0;
+      let delta = 0;
+
+      if (name == 'width') {
+        curr.dx.forEach((glass) => {
+          medium += glass.width
+        });
+        medium = medium / curr.dx.length;
+        curr.dx.forEach((glass) => {
+          if(glass.right == curr.impost){
+            delta += (medium - glass.width) / (1.2 * curr.dx.length)
+          }
+          else if(glass.left == curr.impost){
+            delta += (glass.width - medium) / (1.2 * curr.dx.length)
+          }
+        });
+        delta = new paper.Point([delta,0])
+      }
+      else {
+
+        delta = new paper.Point([0, delta])
+      }
+
+      if(delta.length){
+        curr.impost.move_points(delta, true);
+      }
+      res.push(delta)
+    })
+
+    return res;
+  }
+  /**
+   * Уравнивание по ширинам заполнений
+   */
+  glass_align(name = 'auto', glasses) {
+
+    const shift = this.do_glass_align(name, glasses);
+    const {data} = this.project;
+
+    if(!data._align_counter){
+      data._align_counter = 1;
+    }
+    if(data._align_counter > 12){
+      data._align_counter = 0;
+      return
+    }
+
+    if(!shift){
+      return
+    }
+
+    if(shift.some((delta) => {
+      return delta.length > 1
+      })){
+
+      data._align_counter+= 1;
+
+      this.project.contours.forEach(function(l){
+        l.redraw();
+      });
+
+      return this.glass_align(name, glasses);
+    }
+    else{
+      data._align_counter = 0;
     }
 
   }
+
 
   clear_selection_bounds() {
     if (this._selectionBoundsShape) {
