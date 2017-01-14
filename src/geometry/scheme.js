@@ -176,12 +176,12 @@ function Scheme(_canvas){
 				_dp.s = ox.s;
 
 				// устанавливаем строку заказа
-				_scheme.data._calc_order_row = ox.calc_order_row;
+        _data._calc_order_row = ox.calc_order_row;
 
 				// устанавливаем в _dp свойства строки заказа
-				if(_scheme.data._calc_order_row){
+				if(_data._calc_order_row){
 					"quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach(function (fld) {
-						_dp[fld] = _scheme.data._calc_order_row[fld];
+						_dp[fld] = _data._calc_order_row[fld];
 					});
 				}else{
 					// TODO: установить режим только просмотр, если не найдена строка заказа
@@ -328,178 +328,6 @@ function Scheme(_canvas){
 
 	};
 
-
-	/**
-	 * Ищет точки в выделенных элементах. Если не находит, то во всём проекте
-	 * @param point {paper.Point}
-	 * @returns {*}
-	 */
-	this.hitPoints = function (point, tolerance) {
-		var item, hit;
-
-		// отдаём предпочтение сегментам выделенных путей
-		this.selectedItems.some(function (item) {
-			hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 });
-			if(hit)
-				return true;
-		});
-
-		// если нет в выделенных, ищем во всех
-		if(!hit)
-			hit = this.hitTest(point, { segments: true, tolerance: tolerance || 6 });
-
-		if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
-			item = hit.item;
-			// если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
-			if(
-				(item.parent.b && item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
-					(item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1))
-					|| (item.parent.e && item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
-					(item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1)))
-				return hit;
-
-			item.layer.parent.profiles.some(function (item) {
-				hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 });
-				if(hit)
-					return true;
-			});
-			//item.selected = false;
-		}
-		return hit;
-	};
-
-	/**
-	 * ### Читает изделие по ссылке или объекту продукции
-	 * Выполняет следующую последовательность действий:
-	 * - Если передана ссылка, получает объект из базы данных
-	 * - Удаляет все слои и элементы текущего графисеского контекста
-	 * - Рекурсивно создаёт контуры изделия по данным табличной части конструкций текущей продукции
-	 * - Рассчитывает габариты эскиза
-	 * - Згружает пользовательские размерные линии
-	 * - Делает начальный снапшот для {{#crossLink "UndoRedo"}}{{/crossLink}}
-	 * - Рисует автоматические размерные линии
-	 * - Активирует текущий слой в дереве слоёв
-	 * - Рисует дополнительные элементы визуализации
-	 *
-	 * @method load
-	 * @for Scheme
-	 * @param id {String|CatObj} - идентификатор или объект продукции
-	 * @async
-	 */
-	this.load = function(id){
-
-		/**
-		 * Рекурсивно создаёт контуры изделия
-		 * @param [parent] {Contour}
-		 */
-		function load_contour(parent){
-			// создаём семейство конструкций
-			var out_cns = parent ? parent.cnstr : 0;
-			_scheme.ox.constructions.find_rows({parent: out_cns}, function(row){
-
-				var contour = new Contour( {parent: parent, row: row});
-
-				// вложенные створки
-				load_contour(contour);
-
-			});
-		}
-
-		/**
-		 * Загружает размерные линии
-		 * Этот код нельзя выполнить внутри load_contour, т.к. линия может ссылаться на элементы разных контуров
-		 */
-		function load_dimension_lines() {
-
-			_scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, function(row){
-
-				new DimensionLineCustom( {
-					parent: _scheme.getItem({cnstr: row.cnstr}).l_dimensions,
-					row: row
-				});
-
-			});
-		}
-
-		function load_object(o){
-
-			_scheme.ox = o;
-
-			// включаем перерисовку
-			_data._opened = true;
-			requestAnimationFrame(redraw);
-
-			_data._bounds = new paper.Rectangle({
-				point: [0, 0],
-				size: [o.x, o.y]
-			});
-			o = null;
-
-			// создаём семейство конструкций
-			load_contour(null);
-
-			setTimeout(function () {
-
-				_data._bounds = null;
-
-				// згружаем пользовательские размерные линии
-				load_dimension_lines();
-
-				_data._bounds = null;
-				_scheme.zoom_fit();
-
-				// виртуальное событие, чтобы UndoRedo сделал начальный снапшот
-				$p.eve.callEvent("scheme_changed", [_scheme]);
-
-				// регистрируем изменение, чтобы отрисовались размерные линии
-				_scheme.register_change(true);
-
-				// виртуальное событие, чтобы активировать слой в дереве слоёв
-				if(_scheme.contours.length){
-					$p.eve.callEvent("layer_activated", [_scheme.contours[0], true]);
-				}
-
-				delete _data._loading;
-				delete _data._snapshot;
-
-				// виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
-				setTimeout(function () {
-					if(_scheme.ox.coordinates.count()){
-						if(_scheme.ox.specification.count()){
-							$p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
-						}else{
-							// если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок - запускаем пересчет
-							_scheme.register_change(true);
-						}
-					}else{
-						paper.load_stamp();
-					}
-				}, 100);
-
-
-			}, 20);
-
-		}
-
-		_data._loading = true;
-		if(id != _scheme.ox)
-			_scheme.ox = null;
-		_scheme.clear();
-
-		if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new())
-			load_object(id);
-
-		else if($p.utils.is_guid(id) || $p.utils.is_data_obj(id)){
-			$p.cat.characteristics.get(id, true, true)
-				.then(function (ox) {
-					$p.doc.calc_order.get(ox.calc_order, true, true)
-						.then(function () {
-							load_object(ox);
-						})
-				});
-		}
-	};
-
 	/**
 	 * информирует о наличии изменений
 	 */
@@ -536,140 +364,138 @@ function Scheme(_canvas){
 		}, 100);
 	};
 
-	/**
-	 * Снимает выделение со всех узлов всех путей
-	 * В отличии от deselectAll() сами пути могут оставаться выделенными
-	 * учитываются узлы всех путей, в том числе и не выделенных
-	 */
-	this.deselect_all_points = function(with_items) {
-		this.getItems({class: paper.Path}).forEach(function (item) {
-			item.segments.forEach(function (s) {
-				if (s.selected)
-					s.selected = false;
-			});
-			if(with_items && item.selected)
-				item.selected = false;
-		});
-	};
+  /**
+   * ### Читает изделие по ссылке или объекту продукции
+   * Выполняет следующую последовательность действий:
+   * - Если передана ссылка, получает объект из базы данных
+   * - Удаляет все слои и элементы текущего графисеского контекста
+   * - Рекурсивно создаёт контуры изделия по данным табличной части конструкций текущей продукции
+   * - Рассчитывает габариты эскиза
+   * - Згружает пользовательские размерные линии
+   * - Делает начальный снапшот для {{#crossLink "UndoRedo"}}{{/crossLink}}
+   * - Рисует автоматические размерные линии
+   * - Активирует текущий слой в дереве слоёв
+   * - Рисует дополнительные элементы визуализации
+   *
+   * @method load
+   * @for Scheme
+   * @param id {String|CatObj} - идентификатор или объект продукции
+   * @async
+   */
+  this.load = function(id){
 
-	/**
-	 * Находит точку на примыкающем профиле и проверяет расстояние до неё от текущей точки
-	 * !! Изменяет res - CnnPoint
-	 * @param element {Profile} - профиль, расстояние до которого проверяем
-	 * @param profile {Profile|null} - текущий профиль - используется, чтобы не искать соединения с самим собой
-	 * TODO: возможно, имеет смысл разрешить змее кусать себя за хвост
-	 * @param res {CnnPoint} - описание соединения на конце текущего профиля
-	 * @param point {paper.Point} - точка, окрестность которой анализируем
-	 * @param check_only {Boolean|String} - указывает, выполнять только проверку или привязывать точку к узлам или профилю или к узлам и профилю
-	 * @returns {Boolean|undefined}
-	 */
-	this.check_distance = function(element, profile, res, point, check_only){
+    /**
+     * Рекурсивно создаёт контуры изделия
+     * @param [parent] {Contour}
+     */
+    function load_contour(parent) {
+      // создаём семейство конструкций
+      var out_cns = parent ? parent.cnstr : 0;
+      _scheme.ox.constructions.find_rows({parent: out_cns}, function(row){
 
-		var distance, gp, cnns, addls,
-			bind_node = typeof check_only == "string" && check_only.indexOf("node") != -1,
-			bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only,
-			node_distance;
+        var contour = new Contour( {parent: parent, row: row});
 
-		// Проверяет дистанцию в окрестности начала или конца соседнего элемента
-		function check_node_distance(node) {
+        // вложенные створки
+        load_contour(contour);
 
-			if((distance = element[node].getDistance(point)) < (_scheme._dp.sys.allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)){
+      });
+    }
 
-				if(typeof res.distance == "number" && res.distance < distance)
-					return 1;
+    /**
+     * Загружает размерные линии
+     * Этот код нельзя выполнить внутри load_contour, т.к. линия может ссылаться на элементы разных контуров
+     */
+    function load_dimension_lines() {
 
-				if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
+      _scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, function(row){
 
-					// а есть ли подходящее?
-					cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
-					if(!cnns.length)
-						return 1;
+        new DimensionLineCustom( {
+          parent: _scheme.getItem({cnstr: row.cnstr}).l_dimensions,
+          row: row
+        });
 
-					// если в точке сходятся 2 профиля текущего контура - ок
+      });
+    }
 
-					// если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
+    function load_object(o){
 
-				}else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
-					return 1;
+      _scheme.ox = o;
 
-				res.point = bind_node ? element[node] : point;
-				res.distance = distance;
-				res.profile = element;
-				res.profile_point = node;
-				res.cnn_types = $p.enm.cnn_types.acn.a;
+      // включаем перерисовку
+      _data._opened = true;
+      requestAnimationFrame(redraw);
 
-				return 2;
-			}
+      _data._bounds = new paper.Rectangle({
+        point: [0, 0],
+        size: [o.x, o.y]
+      });
+      o = null;
 
-		}
+      // создаём семейство конструкций
+      load_contour(null);
 
-		if(element === profile){
-			if(profile.is_linear())
-				return;
-			else{
-				// проверяем другой узел, затем - Т
+      setTimeout(function () {
 
-			}
-			return;
+        _data._bounds = null;
 
-		}else if(node_distance = check_node_distance("b")){
-			// Если мы находимся в окрестности начала соседнего элемента
-			if(node_distance == 2)
-				return false;
-			else
-				return;
+        // згружаем пользовательские размерные линии
+        load_dimension_lines();
 
-		}else if(node_distance = check_node_distance("e")){
-			// Если мы находимся в окрестности конца соседнего элемента
-			if(node_distance == 2)
-				return false;
-			else
-				return;
+        _data._bounds = null;
+        _scheme.zoom_fit();
 
-		}
+        // виртуальное событие, чтобы UndoRedo сделал начальный снапшот
+        $p.eve.callEvent("scheme_changed", [_scheme]);
 
-		// это соединение с пустотой или T
-		res.profile_point = '';
+        // регистрируем изменение, чтобы отрисовались размерные линии
+        _scheme.register_change(true);
 
-		// // если возможна привязка к добору, используем её
-		// element.addls.forEach(function (addl) {
-		// 	gp = addl.generatrix.getNearestPoint(point);
-		// 	distance = gp.getDistance(point);
-		//
-		// 	if(distance < res.distance){
-		// 		res.point = addl.rays.outer.getNearestPoint(point);
-		// 		res.distance = distance;
-		// 		res.point = gp;
-		// 		res.profile = addl;
-		// 		res.cnn_types = $p.enm.cnn_types.acn.t;
-		// 	}
-		// });
-		// if(res.distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
-		// 	return false;
-		// }
+        // виртуальное событие, чтобы активировать слой в дереве слоёв
+        if(_scheme.contours.length){
+          $p.eve.callEvent("layer_activated", [_scheme.contours[0], true]);
+        }
 
-		// если к доборам не привязались - проверяем профиль
-		gp = element.generatrix.getNearestPoint(point);
-		distance = gp.getDistance(point);
+        delete _data._loading;
+        delete _data._snapshot;
 
-		if(distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
+        // виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
+        setTimeout(function () {
+          if(_scheme.ox.coordinates.count()){
+            if(_scheme.ox.specification.count()){
+              $p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+            }else{
+              // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок - запускаем пересчет
+              _scheme.register_change(true);
+            }
+          }else{
+            paper.load_stamp();
+          }
+        }, 100);
 
-			if(distance < res.distance || bind_generatrix){
-				if(element.d0 != 0 && element.rays.outer){
-					// для вложенных створок учтём смещение
-					res.point = element.rays.outer.getNearestPoint(point);
-					res.distance = 0;
-				}else{
-					res.point = gp;
-					res.distance = distance;
-				}
-				res.profile = element;
-				res.cnn_types = $p.enm.cnn_types.acn.t;
-			}
-			if(bind_generatrix)
-				return false;
-		}
-	};
+
+      }, 20);
+
+    }
+
+    _data._loading = true;
+    if(id != _scheme.ox){
+      _scheme.ox = null;
+    }
+    _scheme.clear();
+
+    if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new())
+      load_object(id);
+
+    else if($p.utils.is_guid(id) || $p.utils.is_data_obj(id)){
+      $p.cat.characteristics.get(id, true, true)
+        .then(function (ox) {
+          $p.doc.calc_order.get(ox.calc_order, true, true)
+            .then(function () {
+              load_object(ox);
+            })
+        });
+    }
+  }
 
 	/**
 	 * Деструктор
@@ -716,7 +542,7 @@ function Scheme(_canvas){
 				}
 			}
 
-			// if(_scheme.data._saving || _scheme.data._loading)
+			// if(_data._saving || _data._loading)
 			// 	return;
 
 			if(_changes.length){
@@ -741,6 +567,7 @@ function Scheme(_canvas){
 
 	}
 
+	// следим за событием _coordinates_calculated_ и обновляем визуализацию
 	$p.eve.attachEvent("coordinates_calculated", function (scheme, attr) {
 
 		if(_scheme != scheme)
@@ -1248,6 +1075,130 @@ Scheme.prototype.__define({
 		}
 	},
 
+  /**
+   * Находит точку на примыкающем профиле и проверяет расстояние до неё от текущей точки
+   * !! Изменяет res - CnnPoint
+   * @param element {Profile} - профиль, расстояние до которого проверяем
+   * @param profile {Profile|null} - текущий профиль - используется, чтобы не искать соединения с самим собой
+   * TODO: возможно, имеет смысл разрешить змее кусать себя за хвост
+   * @param res {CnnPoint} - описание соединения на конце текущего профиля
+   * @param point {paper.Point} - точка, окрестность которой анализируем
+   * @param check_only {Boolean|String} - указывает, выполнять только проверку или привязывать точку к узлам или профилю или к узлам и профилю
+   * @returns {Boolean|undefined}
+   */
+  check_distance: {
+	  value: function(element, profile, res, point, check_only){
+
+	    const _scheme = this;
+
+      let distance, gp, cnns, addls,
+        bind_node = typeof check_only == "string" && check_only.indexOf("node") != -1,
+        bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only,
+        node_distance;
+
+      // Проверяет дистанцию в окрестности начала или конца соседнего элемента
+      function check_node_distance(node) {
+
+        if((distance = element[node].getDistance(point)) < (_scheme._dp.sys.allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)){
+
+          if(typeof res.distance == "number" && res.distance < distance)
+            return 1;
+
+          if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
+
+            // а есть ли подходящее?
+            cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
+            if(!cnns.length)
+              return 1;
+
+            // если в точке сходятся 2 профиля текущего контура - ок
+
+            // если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
+
+          }else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
+            return 1;
+
+          res.point = bind_node ? element[node] : point;
+          res.distance = distance;
+          res.profile = element;
+          res.profile_point = node;
+          res.cnn_types = $p.enm.cnn_types.acn.a;
+
+          return 2;
+        }
+
+      }
+
+      if(element === profile){
+        if(profile.is_linear())
+          return;
+        else{
+          // проверяем другой узел, затем - Т
+
+        }
+        return;
+
+      }else if(node_distance = check_node_distance("b")){
+        // Если мы находимся в окрестности начала соседнего элемента
+        if(node_distance == 2)
+          return false;
+        else
+          return;
+
+      }else if(node_distance = check_node_distance("e")){
+        // Если мы находимся в окрестности конца соседнего элемента
+        if(node_distance == 2)
+          return false;
+        else
+          return;
+
+      }
+
+      // это соединение с пустотой или T
+      res.profile_point = '';
+
+      // // если возможна привязка к добору, используем её
+      // element.addls.forEach(function (addl) {
+      // 	gp = addl.generatrix.getNearestPoint(point);
+      // 	distance = gp.getDistance(point);
+      //
+      // 	if(distance < res.distance){
+      // 		res.point = addl.rays.outer.getNearestPoint(point);
+      // 		res.distance = distance;
+      // 		res.point = gp;
+      // 		res.profile = addl;
+      // 		res.cnn_types = $p.enm.cnn_types.acn.t;
+      // 	}
+      // });
+      // if(res.distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
+      // 	return false;
+      // }
+
+      // если к доборам не привязались - проверяем профиль
+      gp = element.generatrix.getNearestPoint(point);
+      distance = gp.getDistance(point);
+
+      if(distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
+
+        if(distance < res.distance || bind_generatrix){
+          if(element.d0 != 0 && element.rays.outer){
+            // для вложенных створок учтём смещение
+            res.point = element.rays.outer.getNearestPoint(point);
+            res.distance = 0;
+          }else{
+            res.point = gp;
+            res.distance = distance;
+          }
+          res.profile = element;
+          res.cnn_types = $p.enm.cnn_types.acn.t;
+        }
+        if(bind_generatrix){
+          return false;
+        }
+      }
+    }
+  },
+
 	/**
 	 * ### Цвет по умолчанию
 	 * Возвращает цвет по умолчанию с учетом свойств системы и элемента
@@ -1300,27 +1251,29 @@ Scheme.prototype.__define({
 	 * Возвращает массив выделенных профилей. Выделенным считаем профиль, у которого выделены `b` и `e` или выделен сам профиль при невыделенных узлах
 	 *
 	 * @method selected_profiles
-	 * @for Scheme
 	 * @param [all] {Boolean} - если true, возвращает все выделенные профили. Иначе, только те, которе можно двигать
 	 * @returns {Array.<ProfileItem>}
 	 */
 	selected_profiles: {
 		value: function (all) {
 
-			var res = [], count = this.selectedItems.length;
+			const res = [];
+			const count = this.selectedItems.length;
 
 			this.selectedItems.forEach(function (item) {
 
-				var p = item.parent;
+        const p = item.parent;
 
 				if(p instanceof ProfileItem){
 					if(all || !item.layer.parent || !p.nearest || !p.nearest()){
 
-						if(res.indexOf(p) != -1)
-							return;
+						if(res.indexOf(p) != -1){
+              return;
+            }
 
-						if(count < 2 || !(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected))
-							res.push(p);
+						if(count < 2 || !(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected)){
+              res.push(p);
+            }
 
 					}
 				}
@@ -1329,6 +1282,31 @@ Scheme.prototype.__define({
 			return res;
 		}
 	},
+
+  /**
+   * ### Выделенные заполнения
+   *
+   * @method selected_glasses
+   * @returns {Array.<Filling>}
+   */
+  selected_glasses: {
+    value: function () {
+
+      const res = [];
+
+      this.selectedItems.forEach(function (item) {
+
+        if(item instanceof Filling && res.indexOf(item) == -1){
+          res.push(item);
+        }
+        else if(item.parent instanceof Filling && res.indexOf(item.parent) == -1){
+          res.push(item.parent);
+        }
+      });
+
+      return res;
+    }
+  },
 
   /**
    * ### Выделенный элемент
@@ -1354,6 +1332,84 @@ Scheme.prototype.__define({
       });
 
       return res;
+    }
+  },
+
+  /**
+   * Ищет точки в выделенных элементах. Если не находит, то во всём проекте
+   * @param point {paper.Point}
+   * @returns {*}
+   */
+  hitPoints: {
+    value: function (point, tolerance) {
+
+      var item, hit;
+
+      // отдаём предпочтение сегментам выделенных путей
+      this.selectedItems.some(function (item) {
+        hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 });
+        if(hit)
+          return true;
+      });
+
+      // если нет в выделенных, ищем во всех
+      if(!hit)
+        hit = this.hitTest(point, { segments: true, tolerance: tolerance || 6 });
+
+      if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
+        item = hit.item;
+        // если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
+        if(
+          (item.parent.b && item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
+          (item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1))
+          || (item.parent.e && item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
+          (item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1)))
+          return hit;
+
+        item.layer.parent.profiles.some(function (item) {
+          hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 });
+          if(hit)
+            return true;
+        });
+        //item.selected = false;
+      }
+      return hit;
+    }
+  },
+
+  /**
+   * Корневой слой для текущего слоя
+   */
+  rootLayer: {
+    value: function (layer) {
+
+      if(!layer){
+        layer = this.activeLayer
+      }
+
+      while (layer.parent){
+        layer = layer.parent
+      }
+
+      return layer
+    }
+  },
+
+  /**
+   * Снимает выделение со всех узлов всех путей
+   * В отличии от deselectAll() сами пути могут оставаться выделенными
+   * учитываются узлы всех путей, в том числе и не выделенных
+   */
+  deselect_all_points: {
+    value: function(with_items) {
+      this.getItems({class: paper.Path}).forEach(function (item) {
+        item.segments.forEach(function (s) {
+          if (s.selected)
+            s.selected = false;
+        });
+        if(with_items && item.selected)
+          item.selected = false;
+      });
     }
   },
 

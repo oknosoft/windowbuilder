@@ -388,7 +388,7 @@ Contour.prototype.__define({
 		get: function(){
 			var res = [];
 			this.getItems({class: Profile}).forEach(function(elm) {
-				if (elm.rays.b.is_t || elm.rays.e.is_t || elm.rays.b.is_i || elm.rays.e.is_i){
+				if (elm.rays.b.is_tt || elm.rays.e.is_tt || elm.rays.b.is_i || elm.rays.e.is_i){
 					res.push(elm);
 				}
 			});

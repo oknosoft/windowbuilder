@@ -627,8 +627,8 @@ class Editor extends paper.PaperScope {
   }
 
   purge_selection(){
-    const selected = this.project.selectedItems,
-      deselect = [];
+    const deselect = [];
+    let selected = this.project.selectedItems;
 
     for (var i = 0; i < selected.length; i++) {
       var path = selected[i];
@@ -636,8 +636,9 @@ class Editor extends paper.PaperScope {
         deselect.push(path);
     }
 
-    while(selected = deselect.pop())
+    while(selected = deselect.pop()){
       selected.selected = false;
+    }
   }
 
   // Returns serialized contents of selected items.
@@ -883,11 +884,14 @@ class Editor extends paper.PaperScope {
     // если "все", получаем все профили активного или родительского контура
     if(name == "all"){
 
-      var l = this.project.activeLayer;
-      while (l.parent)
-        l = l.parent;
+      if(this.glass_align()){
+        return
+      }
 
-      l.profiles.forEach(function (profile) {
+      // получаем текущий внешний контур
+      const layer = this.project.rootLayer();
+
+      layer.profiles.forEach(function (profile) {
 
         if(profile.angle_hor % 90 == 0)
           return;
@@ -898,7 +902,7 @@ class Editor extends paper.PaperScope {
 
           mid = profile.b.x + profile.e.x / 2;
 
-          if(mid < l.bounds.center.x)
+          if(mid < layer.bounds.center.x)
             profile.x1 = profile.x2 = Math.min(profile.x1, profile.x2);
           else
             profile.x1 = profile.x2 = Math.max(profile.x1, profile.x2);
@@ -907,7 +911,7 @@ class Editor extends paper.PaperScope {
 
           mid = profile.b.y + profile.e.y / 2;
 
-          if(mid < l.bounds.center.y)
+          if(mid < layer.bounds.center.y)
             profile.y1 = profile.y2 = Math.max(profile.y1, profile.y2);
           else
             profile.y1 = profile.y2 = Math.min(profile.y1, profile.y2);
@@ -998,15 +1002,22 @@ class Editor extends paper.PaperScope {
 
   }
 
-  profile_group_align(name, profiles){
+  /**
+   * ### Групповое выравнивание профилей
+   * @param name
+   * @param profiles
+   */
+  profile_group_align(name, profiles) {
 
-    var	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
+    let	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
 
-    if(!profiles)
+    if(!profiles){
       profiles = this.project.selected_profiles();
+    }
 
-    if(profiles.length < 1)
-      return;
+    if(!profiles.length){
+      return
+    }
 
     profiles.forEach(function (p) {
       switch (name){
@@ -1049,6 +1060,72 @@ class Editor extends paper.PaperScope {
           break;
       }
     });
+
+  }
+
+  /**
+   * Уравнивание по ширинам заполнений
+   */
+  glass_align(name = 'auto', glasses) {
+
+    // массив элементов, которые будем двигать
+    const shift = [];
+
+    // упорядочивает заполнения в массиве слева на право или снизу вверх
+    function reorder() {
+
+    }
+
+    if(!glasses){
+      glasses = this.project.selected_glasses();
+    }
+
+    if(glasses.length < 2){
+      return
+    }
+
+    // получаем текущий внешний контур
+    let layer;
+
+    if(glasses.some((glass) => {
+        const gl = this.project.rootLayer(glass.layer);
+        if(!layer){
+          layer = gl;
+        }
+        else if(layer != gl){
+          $p.msg.show_msg({
+            type: "alert-info",
+            text: "Заполнения принадлежат разным рамным контурам",
+            title: "Выравнивание"
+          });
+          return true
+        }
+      })){
+      return
+    }
+
+    // выясняем направление, в котром уравнивать
+    if(name == 'auto'){
+      name = 'width'
+    }
+
+    // собираем в массиве shift все импосты подходящего направления
+    const orientation = name == 'width' ? $p.enm.orientations.vert : $p.enm.orientations.hor;
+    layer.imposts.forEach((impost) => {
+      if(impost.orientation == orientation){
+        shift.push(impost)
+      }
+    })
+
+    switch (name){
+      case 'height':
+
+        break;
+
+      case 'width':
+
+        break;
+    }
 
   }
 
