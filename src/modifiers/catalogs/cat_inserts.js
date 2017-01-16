@@ -167,28 +167,25 @@ $p.CatInserts.prototype.__define({
 	thickness: {
 		get: function () {
 
-			if(!this._cache)
-				this._cache = {};
+			if(!this._cache){
+        this._cache = {};
+      }
 
-			var _cache = this._cache;
+			const {_cache} = this;
 
 			if(!_cache.hasOwnProperty("thickness")){
 				_cache.thickness = 0;
-				if(this.insert_type == $p.enm.inserts_types.ТиповойСтеклопакет || this.insert_type == $p.enm.inserts_types.Стеклопакет){
-
-					if(this.insert_glass_type == $p.enm.inserts_glass_types.Рамка)
-						_cache.thickness += this.nom().thickness;
-
-					else if(this.insert_glass_type == $p.enm.inserts_glass_types.Стекло)
-						this.specification.each(function (row) {
-							_cache.thickness += row.nom.thickness;
-						});
-				}else
-					_cache.thickness = this.nom().thickness;
+				const nom = this.nom();
+				if(nom){
+          _cache.thickness = nom.thickness;
+        }else{
+          this.specification.forEach((row) => {
+            _cache.thickness += row.nom.thickness;
+          });
+        }
 			}
 
 			return _cache.thickness;
-
 		}
 	},
 

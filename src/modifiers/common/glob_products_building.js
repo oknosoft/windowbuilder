@@ -511,39 +511,54 @@ function ProductsBuilding(){
 	 */
 	function inset_filter_spec(inset, elm, is_high_level_call, len_angl){
 
-		var res = [], glass_rows;
+		const res = [];
+		const glass_rows = [];
+
 		if(!inset || inset.empty()){
       return res;
     }
 
-		if(is_high_level_call && inset.insert_type == $p.enm.inserts_types.Стеклопакет){
-			glass_rows = glass_specification.find_rows({elm: elm.elm}).map(function (row) {
-				return row._row;
-			});
-			if(!glass_rows.length){
-				// заполняем спецификацию заполнений по умолчанию, чтобы склеить формулу
-				inset.specification.each(function (row) {
-					glass_rows.push(
-						glass_specification.add({
-							elm: elm.elm,
-							gno: 0,
-							inset: row.nom,
-							clr: row.clr
-						})
-					);
-				});
-			}
+    // для заполнений, можно переопределить состав верхнего уровня
+		if(is_high_level_call && inset.insert_type == $p.enm.inserts_types.Заполнение){
 
+			glass_specification.find_rows({elm: elm.elm}, (row) => {
+        glass_rows.push(row._row);
+			});
+
+			// if(!glass_rows.length){
+			// 	// заполняем спецификацию заполнений по умолчанию, чтобы склеить формулу
+			// 	inset.specification.each((row) => {
+			// 		glass_rows.push(
+			// 			glass_specification.add({
+			// 				elm: elm.elm,
+			// 				gno: 0,
+			// 				inset: row.nom,
+			// 				clr: row.clr
+			// 			})
+			// 		);
+			// 	});
+			// }
+
+      // очистим формулу
+      if(glass_formulas[elm.elm]){
+        delete glass_formulas[elm.elm];
+      }
+
+      // если спецификация верхнего уровня задана в изделии, используем её, параллельно формируем формулу
 			if(glass_rows.length){
 				glass_formulas[elm.elm] = "";
-				glass_rows.forEach(function (row) {
-					inset_filter_spec(row.inset, elm, false, len_angl).forEach(function (row) {
+				glass_rows.forEach((row) => {
+
+					inset_filter_spec(row.inset, elm, false, len_angl).forEach((row) => {
 						res.push(row);
 					});
-					if(!glass_formulas[elm.elm])
-						glass_formulas[elm.elm] = row.inset.name;
-					else
-						glass_formulas[elm.elm] += "x" + row.inset.name;
+
+					if(!glass_formulas[elm.elm]){
+            glass_formulas[elm.elm] = row.inset.name;
+          }
+					else{
+            glass_formulas[elm.elm] += "x" + row.inset.name;
+          }
 				});
 				return res;
 			}
@@ -563,7 +578,7 @@ function ProductsBuilding(){
 
 			// Добавляем или разузловываем дальше
 			if(row.nom._manager == $p.cat.inserts){
-        inset_filter_spec(row.nom, elm, false, len_angl).forEach(function (subrow) {
+        inset_filter_spec(row.nom, elm, false, len_angl).forEach((subrow) => {
           const fakerow = {}._mixin(subrow, ['angle_calc_method','clr','count_calc_method','elm','formula','is_main_elm','is_order_row','nom','sz']);
           fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
           fakerow.coefficient = (subrow.coefficient || 1) * (row.coefficient || 1);
@@ -574,7 +589,6 @@ function ProductsBuilding(){
 			else{
         res.push(row);
       }
-
 
 		});
 

@@ -26,7 +26,7 @@ function Scheme(_canvas){
 	// создаём объект проекта paperjs
 	Scheme.superclass.constructor.call(this, _canvas);
 
-	var _scheme = paper.project = this,
+	const _scheme = paper.project = this,
 		_data = _scheme.data = {
 			_bounds: null,
 			_calc_order_row: null,
@@ -40,9 +40,9 @@ function Scheme(_canvas){
 			if(_data._loading || _data._snapshot)
 				return;
 
-			var evented,
-				scheme_changed_names = ["clr","sys"],
-				row_changed_names = ["quantity","discount_percent","discount_percent_internal"];
+			const scheme_changed_names = ["clr","sys"];
+      const row_changed_names = ["quantity","discount_percent","discount_percent_internal"];
+			let evented
 
 			changes.forEach(function(change){
 
@@ -159,9 +159,8 @@ function Scheme(_canvas){
 			},
 			set: function (v) {
 
-
-				var _dp = this._dp,
-					setted;
+			  const {_dp} = this;
+			  let setted;
 
 				// пытаемся отключить обсервер от табчасти
 				Object.unobserve(_dp.characteristic, _papam_observer);
@@ -169,7 +168,7 @@ function Scheme(_canvas){
 				// устанавливаем в _dp характеристику
 				_dp.characteristic = v;
 
-				var ox = _dp.characteristic;
+        const ox = _dp.characteristic;
 
 				_dp.len = ox.x;
 				_dp.height = ox.y;
@@ -218,12 +217,12 @@ function Scheme(_canvas){
 				// пересчитываем параметры изделия при установке системы
 				if(setted){
 					_dp.sys.refill_prm(ox);
-
-				};
+				}
 
 				// устанавливаем в _dp цвет по умолчанию
-				if(_dp.clr.empty())
-					_dp.clr = _dp.sys.default_clr;
+				if(_dp.clr.empty()){
+          _dp.clr = _dp.sys.default_clr;
+        }
 
 				// оповещаем о новых слоях и свойствах изделия
 				Object.getNotifier(_scheme._noti).notify({
@@ -495,7 +494,7 @@ function Scheme(_canvas){
             })
         });
     }
-  }
+  };
 
 	/**
 	 * Деструктор
@@ -888,15 +887,17 @@ Scheme.prototype.__define({
 			if(!this.data.l_dimensions){
 				curr = this.activeLayer;
 				this.data.l_dimensions = new DimensionLayer();
-				if(curr)
-					this._activeLayer = curr;
+				if(curr){
+          this._activeLayer = curr;
+        }
 			}
 
 			if(!this.data.l_dimensions.isInserted()){
 				curr = this.activeLayer;
 				this.addLayer(this.data.l_dimensions);
-				if(curr)
-					this._activeLayer = curr;
+				if(curr){
+          this._activeLayer = curr;
+        }
 			}
 
 			return this.data.l_dimensions;
