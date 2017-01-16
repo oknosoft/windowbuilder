@@ -469,10 +469,10 @@ Contour.prototype.__define({
 	 * @for Contour
 	 */
 	redraw: {
-		value: function(on_contour_redrawed){
+		value: function(on_redrawed){
 
 			if(!this.visible)
-				return on_contour_redrawed ? on_contour_redrawed() : undefined;
+				return on_redrawed ? on_redrawed() : undefined;
 
 			var _contour = this,
 				profiles = this.profiles,
@@ -480,8 +480,8 @@ Contour.prototype.__define({
 
 			function on_child_contour_redrawed(){
 				llength--;
-				if(!llength && on_contour_redrawed)
-					on_contour_redrawed();
+				if(!llength && on_redrawed)
+					on_redrawed();
 			}
 
 			// сбрасываем кеш габаритов
@@ -504,7 +504,7 @@ Contour.prototype.__define({
 				glass.redraw_onlay();
 			});
 
-			// рисуем направление открывания и ручку
+			// рисуем направление открывания
 			_contour.draw_opening();
 
 			// перерисовываем вложенные контуры
@@ -523,8 +523,8 @@ Contour.prototype.__define({
 			$p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
 
 			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
-			if(!llength && on_contour_redrawed)
-				on_contour_redrawed();
+			if(!llength && on_redrawed)
+				on_redrawed();
 
 		}
 	},
