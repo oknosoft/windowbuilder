@@ -11,9 +11,7 @@ $p.cat.inserts.__define({
 
 	_inserts_types_filling: {
 		value: [
-			$p.enm.inserts_types.Стеклопакет,
-			$p.enm.inserts_types.Заполнение,
-			$p.enm.inserts_types.ТиповойСтеклопакет
+			$p.enm.inserts_types.Заполнение
 		]
 	},
 

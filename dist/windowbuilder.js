@@ -3502,10 +3502,10 @@ Contour.prototype.__define({
 	},
 
 	redraw: {
-		value: function(on_contour_redrawed){
+		value: function(on_redrawed){
 
 			if(!this.visible)
-				return on_contour_redrawed ? on_contour_redrawed() : undefined;
+				return on_redrawed ? on_redrawed() : undefined;
 
 			var _contour = this,
 				profiles = this.profiles,
@@ -3513,8 +3513,8 @@ Contour.prototype.__define({
 
 			function on_child_contour_redrawed(){
 				llength--;
-				if(!llength && on_contour_redrawed)
-					on_contour_redrawed();
+				if(!llength && on_redrawed)
+					on_redrawed();
 			}
 
 			this.data._bounds = null;
@@ -3543,8 +3543,8 @@ Contour.prototype.__define({
 
 			$p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
 
-			if(!llength && on_contour_redrawed)
-				on_contour_redrawed();
+			if(!llength && on_redrawed)
+				on_redrawed();
 
 		}
 	},
@@ -6046,7 +6046,25 @@ Filling.prototype.__define({
 				elm.redraw();
 			});
 		}
-	}
+	},
+
+  formula: {
+	  get: function () {
+      const {ox} = this.project;
+      let res = '';
+
+      ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+        if(!res){
+          res = row._row.inset.name;
+        }
+        else{
+          res += "x" + row._row.inset.name;
+        }
+      });
+
+      return res || this.inset.name;
+    }
+  },
 
 });
 
@@ -7245,24 +7263,20 @@ ProfileItem.prototype.__define({
 	length: {
 
 		get: function () {
-			var gen = this.generatrix,
-				sub_gen,
-				ppoints = {},
-				b = this.rays.b,
-				e = this.rays.e,
-				res;
 
-			for(var i = 1; i<=4; i++)
-				ppoints[i] = gen.getNearestPoint(this.corns(i));
+		  const {b, e, outer} = this.rays;
+			const gen = this.elm_type == $p.enm.elm_types.Импост ? this.generatrix : outer;
+      const ppoints = {};
 
-			ppoints.b = ppoints[1].getDistance(gen.firstSegment.point, true) < ppoints[4].getDistance(gen.firstSegment.point, true) ? ppoints[1] : ppoints[4];
-			ppoints.e = ppoints[2].getDistance(gen.lastSegment.point, true) < ppoints[3].getDistance(gen.lastSegment.point, true) ? ppoints[2] : ppoints[3];
+			for(let i = 1; i<=4; i++){
+        ppoints[i] = gen.getNearestPoint(this.corns(i));
+      }
 
-			sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
+			ppoints.b = gen.getOffsetOf(ppoints[1]) < gen.getOffsetOf(ppoints[4]) ? ppoints[1] : ppoints[4];
+			ppoints.e = gen.getOffsetOf(ppoints[2]) > gen.getOffsetOf(ppoints[3]) ? ppoints[2] : ppoints[3];
 
-			res = sub_gen.length +
-				(b.cnn && !b.cnn.empty() ? b.cnn.sz : 0) +
-				(e.cnn && !e.cnn.empty() ? e.cnn.sz : 0);
+			const sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
+			const res = sub_gen.length + (b.cnn ? b.cnn.sz : 0) + (e.cnn ? e.cnn.sz : 0);
 			sub_gen.remove();
 
 			return res;
@@ -8655,7 +8669,7 @@ function Scheme(_canvas){
 
 	Scheme.superclass.constructor.call(this, _canvas);
 
-	var _scheme = paper.project = this,
+	const _scheme = paper.project = this,
 		_data = _scheme.data = {
 			_bounds: null,
 			_calc_order_row: null,
@@ -8668,9 +8682,9 @@ function Scheme(_canvas){
 			if(_data._loading || _data._snapshot)
 				return;
 
-			var evented,
-				scheme_changed_names = ["clr","sys"],
-				row_changed_names = ["quantity","discount_percent","discount_percent_internal"];
+			const scheme_changed_names = ["clr","sys"];
+      const row_changed_names = ["quantity","discount_percent","discount_percent_internal"];
+			let evented
 
 			changes.forEach(function(change){
 
@@ -8766,15 +8780,14 @@ function Scheme(_canvas){
 			},
 			set: function (v) {
 
-
-				var _dp = this._dp,
-					setted;
+			  const {_dp} = this;
+			  let setted;
 
 				Object.unobserve(_dp.characteristic, _papam_observer);
 
 				_dp.characteristic = v;
 
-				var ox = _dp.characteristic;
+        const ox = _dp.characteristic;
 
 				_dp.len = ox.x;
 				_dp.height = ox.y;
@@ -8816,11 +8829,11 @@ function Scheme(_canvas){
 
 				if(setted){
 					_dp.sys.refill_prm(ox);
+				}
 
-				};
-
-				if(_dp.clr.empty())
-					_dp.clr = _dp.sys.default_clr;
+				if(_dp.clr.empty()){
+          _dp.clr = _dp.sys.default_clr;
+        }
 
 				Object.getNotifier(_scheme._noti).notify({
 					type: 'rows',
@@ -9024,7 +9037,7 @@ function Scheme(_canvas){
             })
         });
     }
-  }
+  };
 
 	this.unload = function () {
 		_data._loading = true;
@@ -9299,15 +9312,17 @@ Scheme.prototype.__define({
 			if(!this.data.l_dimensions){
 				curr = this.activeLayer;
 				this.data.l_dimensions = new DimensionLayer();
-				if(curr)
-					this._activeLayer = curr;
+				if(curr){
+          this._activeLayer = curr;
+        }
 			}
 
 			if(!this.data.l_dimensions.isInserted()){
 				curr = this.activeLayer;
 				this.addLayer(this.data.l_dimensions);
-				if(curr)
-					this._activeLayer = curr;
+				if(curr){
+          this._activeLayer = curr;
+        }
 			}
 
 			return this.data.l_dimensions;

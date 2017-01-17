@@ -843,27 +843,23 @@ ProfileItem.prototype.__define({
 	length: {
 
 		get: function () {
-			var gen = this.generatrix,
-				sub_gen,
-				ppoints = {},
-				b = this.rays.b,
-				e = this.rays.e,
-				res;
+
+		  const {b, e, outer} = this.rays;
+			const gen = this.elm_type == $p.enm.elm_types.Импост ? this.generatrix : outer;
+      const ppoints = {};
 
 			// находим проекции четырёх вершин на образующую
-			for(var i = 1; i<=4; i++)
-				ppoints[i] = gen.getNearestPoint(this.corns(i));
+			for(let i = 1; i<=4; i++){
+        ppoints[i] = gen.getNearestPoint(this.corns(i));
+      }
 
-			// находим точки, расположенные ближе к концам образующей
-			ppoints.b = ppoints[1].getDistance(gen.firstSegment.point, true) < ppoints[4].getDistance(gen.firstSegment.point, true) ? ppoints[1] : ppoints[4];
-			ppoints.e = ppoints[2].getDistance(gen.lastSegment.point, true) < ppoints[3].getDistance(gen.lastSegment.point, true) ? ppoints[2] : ppoints[3];
+			// находим точки, расположенные ближе к концам
+			ppoints.b = gen.getOffsetOf(ppoints[1]) < gen.getOffsetOf(ppoints[4]) ? ppoints[1] : ppoints[4];
+			ppoints.e = gen.getOffsetOf(ppoints[2]) > gen.getOffsetOf(ppoints[3]) ? ppoints[2] : ppoints[3];
 
 			// получаем фрагмент образующей
-			sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
-
-			res = sub_gen.length +
-				(b.cnn && !b.cnn.empty() ? b.cnn.sz : 0) +
-				(e.cnn && !e.cnn.empty() ? e.cnn.sz : 0);
+			const sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
+			const res = sub_gen.length + (b.cnn ? b.cnn.sz : 0) + (e.cnn ? e.cnn.sz : 0);
 			sub_gen.remove();
 
 			return res;

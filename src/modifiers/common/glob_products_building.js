@@ -17,7 +17,6 @@ function ProductsBuilding(){
 		coordinates,
 		cnn_elmnts,
 		glass_specification,
-		glass_formulas,
 		params,
     find_cx_sql;
 
@@ -519,7 +518,7 @@ function ProductsBuilding(){
     }
 
     // для заполнений, можно переопределить состав верхнего уровня
-		if(is_high_level_call && inset.insert_type == $p.enm.inserts_types.Заполнение){
+		if(is_high_level_call && (inset.insert_type == "Заполнение" || inset.insert_type == "Стеклопакет" || inset.insert_type == "ТиповойСтеклопакет")){
 
 			glass_specification.find_rows({elm: elm.elm}, (row) => {
         glass_rows.push(row._row);
@@ -539,26 +538,13 @@ function ProductsBuilding(){
 			// 	});
 			// }
 
-      // очистим формулу
-      if(glass_formulas[elm.elm]){
-        delete glass_formulas[elm.elm];
-      }
 
       // если спецификация верхнего уровня задана в изделии, используем её, параллельно формируем формулу
 			if(glass_rows.length){
-				glass_formulas[elm.elm] = "";
 				glass_rows.forEach((row) => {
-
 					inset_filter_spec(row.inset, elm, false, len_angl).forEach((row) => {
 						res.push(row);
 					});
-
-					if(!glass_formulas[elm.elm]){
-            glass_formulas[elm.elm] = row.inset.name;
-          }
-					else{
-            glass_formulas[elm.elm] += "x" + row.inset.name;
-          }
 				});
 				return res;
 			}
@@ -1322,7 +1308,6 @@ function ProductsBuilding(){
 		coordinates = ox.coordinates;
 		cnn_elmnts = ox.cnn_elmnts;
 		glass_specification = ox.glass_specification;
-		glass_formulas = {};
 		params = ox.params;
 
 		// чистим спецификацию

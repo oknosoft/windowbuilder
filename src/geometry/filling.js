@@ -511,7 +511,28 @@ Filling.prototype.__define({
 				elm.redraw();
 			});
 		}
-	}
+	},
+
+  /**
+   * Возвращает формулу (код состава) заполнения
+   */
+  formula: {
+	  get: function () {
+      const {ox} = this.project;
+      let res = '';
+
+      ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+        if(!res){
+          res = row._row.inset.name;
+        }
+        else{
+          res += "x" + row._row.inset.name;
+        }
+      });
+
+      return res || this.inset.name;
+    }
+  },
 
 });
 
