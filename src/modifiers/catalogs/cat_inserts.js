@@ -20,17 +20,17 @@ $p.cat.inserts.__define({
 
 			if(!this._by_thickness){
 				this._by_thickness = {};
-				this.find_rows({insert_type: {in: this._inserts_types_filling}}, function (ins) {
+				this.find_rows({insert_type: {in: this._inserts_types_filling}}, (ins) => {
 					if(ins.thickness > 0){
 						if(!this._by_thickness[ins.thickness])
 							this._by_thickness[ins.thickness] = [];
 						this._by_thickness[ins.thickness].push(ins);
 					}
-				}.bind(this));
+				});
 			}
 
-			var res = [];
-			for(var thickness in this._by_thickness){
+			const res = [];
+			for(let thickness in this._by_thickness){
 				if(parseFloat(thickness) >= min && parseFloat(thickness) <= max)
 					Array.prototype.push.apply(res, this._by_thickness[thickness]);
 			}
@@ -55,9 +55,10 @@ $p.CatInserts.prototype.__define({
 	 * Возвращает номенклатуру вставки в завсисмости от свойств элемента
 	 */
 	nom: {
-		value: function (elm) {
+		value: function (elm, strict) {
 
-			var main_rows = [], _nom;
+			const main_rows = [];
+			let _nom;
 
 			this.specification.find_rows({is_main_elm: true}, function (row) {
 				main_rows.push(row);
@@ -69,23 +70,29 @@ $p.CatInserts.prototype.__define({
 			if(this._cache.nom)
 				return this._cache.nom;
 
-			if(!main_rows.length && this.specification.count())
-				main_rows.push(this.specification.get(0));
+			if(!main_rows.length && !strict && this.specification.count()){
+        main_rows.push(this.specification.get(0))
+      }
 
-			if(main_rows.length && main_rows[0].nom instanceof $p.CatInserts)
-				_nom = main_rows[0].nom.nom();
+			if(main_rows.length && main_rows[0].nom instanceof $p.CatInserts){
+        _nom = main_rows[0].nom.nom()
+      }
+      else if(main_rows.length){
+        _nom = main_rows[0].nom
+      }
+      else{
+        _nom = $p.cat.nom.get()
+      }
 
-			else if(main_rows.length)
-				_nom = main_rows[0].nom;
-
-			else
-				_nom = $p.cat.nom.get();
-
-			if(main_rows.length < 2)
-				this._cache.nom = _nom;
+			if(main_rows.length < 2){
+        this._cache.nom = _nom;
+      }
+      else{
+			  // TODO: реализовать фильтр
+        this._cache.nom = _nom;
+      }
 
 			return _nom;
-
 		}
 	},
 
@@ -173,10 +180,11 @@ $p.CatInserts.prototype.__define({
 
 			if(!_cache.hasOwnProperty("thickness")){
 				_cache.thickness = 0;
-				const nom = this.nom();
-				if(nom){
+				const nom = this.nom(null, true);
+				if(nom && !nom.empty()){
           _cache.thickness = nom.thickness;
-        }else{
+        }
+        else{
           this.specification.forEach((row) => {
             _cache.thickness += row.nom.thickness;
           });

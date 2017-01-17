@@ -3248,17 +3248,17 @@ $p.cat.inserts.__define({
 
 			if(!this._by_thickness){
 				this._by_thickness = {};
-				this.find_rows({insert_type: {in: this._inserts_types_filling}}, function (ins) {
+				this.find_rows({insert_type: {in: this._inserts_types_filling}}, (ins) => {
 					if(ins.thickness > 0){
 						if(!this._by_thickness[ins.thickness])
 							this._by_thickness[ins.thickness] = [];
 						this._by_thickness[ins.thickness].push(ins);
 					}
-				}.bind(this));
+				});
 			}
 
-			var res = [];
-			for(var thickness in this._by_thickness){
+			const res = [];
+			for(let thickness in this._by_thickness){
 				if(parseFloat(thickness) >= min && parseFloat(thickness) <= max)
 					Array.prototype.push.apply(res, this._by_thickness[thickness]);
 			}
@@ -3280,9 +3280,10 @@ $p.cat.inserts.__define({
 $p.CatInserts.prototype.__define({
 
 	nom: {
-		value: function (elm) {
+		value: function (elm, strict) {
 
-			var main_rows = [], _nom;
+			const main_rows = [];
+			let _nom;
 
 			this.specification.find_rows({is_main_elm: true}, function (row) {
 				main_rows.push(row);
@@ -3294,23 +3295,28 @@ $p.CatInserts.prototype.__define({
 			if(this._cache.nom)
 				return this._cache.nom;
 
-			if(!main_rows.length && this.specification.count())
-				main_rows.push(this.specification.get(0));
+			if(!main_rows.length && !strict && this.specification.count()){
+        main_rows.push(this.specification.get(0))
+      }
 
-			if(main_rows.length && main_rows[0].nom instanceof $p.CatInserts)
-				_nom = main_rows[0].nom.nom();
+			if(main_rows.length && main_rows[0].nom instanceof $p.CatInserts){
+        _nom = main_rows[0].nom.nom()
+      }
+      else if(main_rows.length){
+        _nom = main_rows[0].nom
+      }
+      else{
+        _nom = $p.cat.nom.get()
+      }
 
-			else if(main_rows.length)
-				_nom = main_rows[0].nom;
-
-			else
-				_nom = $p.cat.nom.get();
-
-			if(main_rows.length < 2)
-				this._cache.nom = _nom;
+			if(main_rows.length < 2){
+        this._cache.nom = _nom;
+      }
+      else{
+        this._cache.nom = _nom;
+      }
 
 			return _nom;
-
 		}
 	},
 
@@ -3387,10 +3393,11 @@ $p.CatInserts.prototype.__define({
 
 			if(!_cache.hasOwnProperty("thickness")){
 				_cache.thickness = 0;
-				const nom = this.nom();
-				if(nom){
+				const nom = this.nom(null, true);
+				if(nom && !nom.empty()){
           _cache.thickness = nom.thickness;
-        }else{
+        }
+        else{
           this.specification.forEach((row) => {
             _cache.thickness += row.nom.thickness;
           });
@@ -3801,6 +3808,334 @@ $p.CatUsers_acl.prototype.__define({
 			return res;
 		}
 	}
+});
+
+
+(function($p){
+
+	$p.on({
+		pouch_load_data_loaded: function predefined_elmnts_data_loaded() {
+
+			$p.off(predefined_elmnts_data_loaded);
+
+			$p.cat.planning_keys.pouch_find_rows({_top: 500, _skip: 0 });
+
+			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
+				.then(function (rows) {
+
+					var parents = {};
+
+					rows.forEach(function (row) {
+						if(row.is_folder && row.synonym){
+							var ref = row._id.split("|")[1];
+							parents[ref] = row.synonym;
+							$p.job_prm.__define(row.synonym, { value: {} });
+
+						}
+
+					});
+
+					rows.forEach(function (row) {
+
+						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
+
+							var _mgr, tnames;
+
+							if(row.type.is_ref){
+								tnames = row.type.types[0].split(".");
+								_mgr = $p[tnames[0]][tnames[1]]
+							}
+
+							if(row.list == -1){
+
+								$p.job_prm[parents[row.parent]].__define(row.synonym, {
+									value: function () {
+										var res = {};
+										row.elmnts.forEach(function (row) {
+											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
+										});
+										return res;
+									}()
+								});
+
+							}else if(row.list){
+
+								$p.job_prm[parents[row.parent]].__define(row.synonym, {
+									value: row.elmnts.map(function (row) {
+									  if(_mgr){
+                      var value = _mgr.get(row.value, false);
+                      if(!$p.utils.is_empty_guid(row.elm)){
+                        value._formula = row.elm;
+                      }
+                      return value;
+                    }else{
+                      return row.value;
+                    }
+									})
+								});
+
+                if(row.synonym == "calculated"){
+
+                }
+
+							}else{
+
+								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
+									delete $p.job_prm[parents[row.parent]][row.synonym];
+
+								$p.job_prm[parents[row.parent]].__define(row.synonym, {
+									value: _mgr ? _mgr.get(row.value, false) : row.value,
+									configurable: true
+								});
+							}
+
+						}
+					});
+				})
+				.then(function () {
+
+					setTimeout(function () {
+
+						if(!$p.job_prm.builder.base_block)
+							$p.job_prm.builder.base_block = [];
+
+						$p.cat.production_params.forEach(function (o) {
+							if(!o.is_folder)
+								o.base_blocks.forEach(function (row) {
+									if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1)
+										$p.job_prm.builder.base_block.push(row.calc_order);
+								});
+						});
+
+						$p.job_prm.builder.base_block.forEach(function (o) {
+							o.load();
+						});
+
+					}, 1000);
+
+					$p.cat.planning_keys.pouch_find_rows();
+
+
+					setTimeout(function () {
+						$p.eve.callEvent("predefined_elmnts_inited");
+					}, 200);
+
+				});
+
+		}
+	});
+
+	var _mgr = $p.cch.predefined_elmnts;
+
+
+	delete $p.CchPredefined_elmnts.prototype.value;
+	$p.CchPredefined_elmnts.prototype.__define({
+
+		value: {
+			get: function () {
+
+				var mf = this.type,
+					res = this._obj ? this._obj.value : "",
+					mgr, ref;
+
+				if(this._obj.is_folder)
+					return "";
+
+				if(typeof res == "object")
+					return res;
+
+				else if(mf.is_ref){
+					if(mf.digits && typeof res === "number")
+						return res;
+
+					if(mf.hasOwnProperty("str_len") && !$p.utils.is_guid(res))
+						return res;
+
+					if(mgr = $p.md.value_mgr(this._obj, "value", mf)){
+						if($p.utils.is_data_mgr(mgr))
+							return mgr.get(res, false);
+						else
+							return $p.utils.fetch_type(res, mgr);
+					}
+
+					if(res){
+						console.log(["value", mf, this._obj]);
+						return null;
+					}
+
+				}else if(mf.date_part)
+					return $p.utils.fix_date(this._obj.value, true);
+
+				else if(mf.digits)
+					return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
+
+				else if(mf.types[0]=="boolean")
+					return $p.utils.fix_boolean(this._obj.value);
+
+				else
+					return this._obj.value || "";
+
+				return this.characteristic.clr;
+			},
+
+			set: function (v) {
+
+				if(this._obj.value === v)
+					return;
+
+				Object.getNotifier(this).notify({
+					type: 'update',
+					name: 'value',
+					oldValue: this._obj.value
+				});
+				this._obj.value = $p.utils.is_data_obj(v) ? v.ref : v;
+				this._data._modified = true;
+			}
+		}
+	});
+	_mgr.form_obj = function(pwnd, attr){
+
+		var o, wnd;
+
+		return this.constructor.prototype.form_obj.call(this, pwnd, attr)
+			.then(function (res) {
+				if(res){
+					o = res.o;
+					wnd = res.wnd;
+					return res;
+				}
+			});
+	}
+
+})($p);
+
+
+
+$p.cch.properties.__define({
+
+	check_mandatory: {
+		value: function(prms, title){
+
+			var t, row;
+
+			for(t in prms){
+				row = prms[t];
+				if(row.param.mandatory && (!row.value || row.value.empty())){
+					$p.msg.show_msg({
+						type: "alert-error",
+						text: $p.msg.bld_empty_param + row.param.presentation,
+						title: title || $p.msg.bld_title});
+					return true;
+				}
+			}
+		}
+	},
+
+	slist: {
+		value: function(prop, ret_mgr){
+
+			var res = [], rt, at, pmgr, op = this.get(prop);
+
+			if(op && op.type.is_ref){
+				for(rt in op.type.types)
+					if(op.type.types[rt].indexOf(".") > -1){
+						at = op.type.types[rt].split(".");
+						pmgr = $p[at[0]][at[1]];
+						if(pmgr){
+
+							if(ret_mgr)
+								ret_mgr.mgr = pmgr;
+
+							if(pmgr.class_name=="enm.open_directions")
+								pmgr.get_option_list().forEach(function(v){
+									if(v.value && v.value!=$p.enm.tso.folding)
+										res.push(v);
+								});
+
+							else if(pmgr.class_name.indexOf("enm.")!=-1 || !pmgr.metadata().has_owners)
+								res = pmgr.get_option_list();
+
+							else
+								pmgr.find_rows({owner: prop}, function(v){
+									res.push({value: v.ref, text: v.presentation});
+								});
+						}
+					}
+			}
+			return res;
+		}
+	}
+
+});
+
+$p.CchProperties.prototype.__define({
+
+  is_calculated: {
+    get: function () {
+      return ($p.job_prm.properties.calculated || []).indexOf(this) != -1;
+    }
+  },
+
+  calculated_value: {
+    value: function (obj) {
+      if(!this._calculated_value){
+        if(this._formula){
+          this._calculated_value = $p.cat.formulas.get(this._formula);
+        }else{
+          return;
+        }
+      }
+      return this._calculated_value.execute(obj)
+    }
+  },
+
+  filter_params_links: {
+    value: function (filter, attr) {
+
+      if(!this.hasOwnProperty("_params_links")){
+        this._params_links = $p.cat.params_links.find_rows({slave: this})
+      }
+      if(!this._params_links.length){
+        return;
+      }
+
+      var ts = attr.obj._owner,
+        ox = ts._owner,
+        selection = attr.grid.selection._clone();
+      if(selection.hasOwnProperty("hide")){
+        delete selection.hide;
+      }
+      var  prms = ts.find_rows(selection);
+
+      this._params_links.forEach(function (link) {
+        var ok = true;
+        link.master.params.forEach(function (row) {
+          ok = prms.some(function (prm) {
+            return prm.property == prm.property && prm.value == prm.value;
+          });
+          if(!ok){
+            return false;
+          }
+        });
+
+        if(ok){
+          if(!filter.ref){
+            filter.ref = {in: []}
+          }
+          if(filter.ref.in){
+            link.values._obj.forEach(function (row) {
+              if(filter.ref.in.indexOf(row.value) == -1){
+                filter.ref.in.push(row.value);
+              }
+            });
+          }
+        }
+
+      });
+
+    }
+  }
+
 });
 
 
@@ -4626,7 +4961,7 @@ function ProductsBuilding(){
 		if(is_high_level_call && (inset.insert_type == "Заполнение" || inset.insert_type == "Стеклопакет" || inset.insert_type == "ТиповойСтеклопакет")){
 
 			glass_specification.find_rows({elm: elm.elm}, (row) => {
-        glass_rows.push(row._row);
+        glass_rows.push(row);
 			});
 
 
@@ -7251,334 +7586,6 @@ $p.doc.selling.on({
 
 
 })($p);
-
-
-(function($p){
-
-	$p.on({
-		pouch_load_data_loaded: function predefined_elmnts_data_loaded() {
-
-			$p.off(predefined_elmnts_data_loaded);
-
-			$p.cat.planning_keys.pouch_find_rows({_top: 500, _skip: 0 });
-
-			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
-				.then(function (rows) {
-
-					var parents = {};
-
-					rows.forEach(function (row) {
-						if(row.is_folder && row.synonym){
-							var ref = row._id.split("|")[1];
-							parents[ref] = row.synonym;
-							$p.job_prm.__define(row.synonym, { value: {} });
-
-						}
-
-					});
-
-					rows.forEach(function (row) {
-
-						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
-
-							var _mgr, tnames;
-
-							if(row.type.is_ref){
-								tnames = row.type.types[0].split(".");
-								_mgr = $p[tnames[0]][tnames[1]]
-							}
-
-							if(row.list == -1){
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: function () {
-										var res = {};
-										row.elmnts.forEach(function (row) {
-											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
-										});
-										return res;
-									}()
-								});
-
-							}else if(row.list){
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: row.elmnts.map(function (row) {
-									  if(_mgr){
-                      var value = _mgr.get(row.value, false);
-                      if(!$p.utils.is_empty_guid(row.elm)){
-                        value._formula = row.elm;
-                      }
-                      return value;
-                    }else{
-                      return row.value;
-                    }
-									})
-								});
-
-                if(row.synonym == "calculated"){
-
-                }
-
-							}else{
-
-								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
-									delete $p.job_prm[parents[row.parent]][row.synonym];
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: _mgr ? _mgr.get(row.value, false) : row.value,
-									configurable: true
-								});
-							}
-
-						}
-					});
-				})
-				.then(function () {
-
-					setTimeout(function () {
-
-						if(!$p.job_prm.builder.base_block)
-							$p.job_prm.builder.base_block = [];
-
-						$p.cat.production_params.forEach(function (o) {
-							if(!o.is_folder)
-								o.base_blocks.forEach(function (row) {
-									if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1)
-										$p.job_prm.builder.base_block.push(row.calc_order);
-								});
-						});
-
-						$p.job_prm.builder.base_block.forEach(function (o) {
-							o.load();
-						});
-
-					}, 1000);
-
-					$p.cat.planning_keys.pouch_find_rows();
-
-
-					setTimeout(function () {
-						$p.eve.callEvent("predefined_elmnts_inited");
-					}, 200);
-
-				});
-
-		}
-	});
-
-	var _mgr = $p.cch.predefined_elmnts;
-
-
-	delete $p.CchPredefined_elmnts.prototype.value;
-	$p.CchPredefined_elmnts.prototype.__define({
-
-		value: {
-			get: function () {
-
-				var mf = this.type,
-					res = this._obj ? this._obj.value : "",
-					mgr, ref;
-
-				if(this._obj.is_folder)
-					return "";
-
-				if(typeof res == "object")
-					return res;
-
-				else if(mf.is_ref){
-					if(mf.digits && typeof res === "number")
-						return res;
-
-					if(mf.hasOwnProperty("str_len") && !$p.utils.is_guid(res))
-						return res;
-
-					if(mgr = $p.md.value_mgr(this._obj, "value", mf)){
-						if($p.utils.is_data_mgr(mgr))
-							return mgr.get(res, false);
-						else
-							return $p.utils.fetch_type(res, mgr);
-					}
-
-					if(res){
-						console.log(["value", mf, this._obj]);
-						return null;
-					}
-
-				}else if(mf.date_part)
-					return $p.utils.fix_date(this._obj.value, true);
-
-				else if(mf.digits)
-					return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
-
-				else if(mf.types[0]=="boolean")
-					return $p.utils.fix_boolean(this._obj.value);
-
-				else
-					return this._obj.value || "";
-
-				return this.characteristic.clr;
-			},
-
-			set: function (v) {
-
-				if(this._obj.value === v)
-					return;
-
-				Object.getNotifier(this).notify({
-					type: 'update',
-					name: 'value',
-					oldValue: this._obj.value
-				});
-				this._obj.value = $p.utils.is_data_obj(v) ? v.ref : v;
-				this._data._modified = true;
-			}
-		}
-	});
-	_mgr.form_obj = function(pwnd, attr){
-
-		var o, wnd;
-
-		return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-			.then(function (res) {
-				if(res){
-					o = res.o;
-					wnd = res.wnd;
-					return res;
-				}
-			});
-	}
-
-})($p);
-
-
-
-$p.cch.properties.__define({
-
-	check_mandatory: {
-		value: function(prms, title){
-
-			var t, row;
-
-			for(t in prms){
-				row = prms[t];
-				if(row.param.mandatory && (!row.value || row.value.empty())){
-					$p.msg.show_msg({
-						type: "alert-error",
-						text: $p.msg.bld_empty_param + row.param.presentation,
-						title: title || $p.msg.bld_title});
-					return true;
-				}
-			}
-		}
-	},
-
-	slist: {
-		value: function(prop, ret_mgr){
-
-			var res = [], rt, at, pmgr, op = this.get(prop);
-
-			if(op && op.type.is_ref){
-				for(rt in op.type.types)
-					if(op.type.types[rt].indexOf(".") > -1){
-						at = op.type.types[rt].split(".");
-						pmgr = $p[at[0]][at[1]];
-						if(pmgr){
-
-							if(ret_mgr)
-								ret_mgr.mgr = pmgr;
-
-							if(pmgr.class_name=="enm.open_directions")
-								pmgr.get_option_list().forEach(function(v){
-									if(v.value && v.value!=$p.enm.tso.folding)
-										res.push(v);
-								});
-
-							else if(pmgr.class_name.indexOf("enm.")!=-1 || !pmgr.metadata().has_owners)
-								res = pmgr.get_option_list();
-
-							else
-								pmgr.find_rows({owner: prop}, function(v){
-									res.push({value: v.ref, text: v.presentation});
-								});
-						}
-					}
-			}
-			return res;
-		}
-	}
-
-});
-
-$p.CchProperties.prototype.__define({
-
-  is_calculated: {
-    get: function () {
-      return ($p.job_prm.properties.calculated || []).indexOf(this) != -1;
-    }
-  },
-
-  calculated_value: {
-    value: function (obj) {
-      if(!this._calculated_value){
-        if(this._formula){
-          this._calculated_value = $p.cat.formulas.get(this._formula);
-        }else{
-          return;
-        }
-      }
-      return this._calculated_value.execute(obj)
-    }
-  },
-
-  filter_params_links: {
-    value: function (filter, attr) {
-
-      if(!this.hasOwnProperty("_params_links")){
-        this._params_links = $p.cat.params_links.find_rows({slave: this})
-      }
-      if(!this._params_links.length){
-        return;
-      }
-
-      var ts = attr.obj._owner,
-        ox = ts._owner,
-        selection = attr.grid.selection._clone();
-      if(selection.hasOwnProperty("hide")){
-        delete selection.hide;
-      }
-      var  prms = ts.find_rows(selection);
-
-      this._params_links.forEach(function (link) {
-        var ok = true;
-        link.master.params.forEach(function (row) {
-          ok = prms.some(function (prm) {
-            return prm.property == prm.property && prm.value == prm.value;
-          });
-          if(!ok){
-            return false;
-          }
-        });
-
-        if(ok){
-          if(!filter.ref){
-            filter.ref = {in: []}
-          }
-          if(filter.ref.in){
-            link.values._obj.forEach(function (row) {
-              if(filter.ref.in.indexOf(row.value) == -1){
-                filter.ref.in.push(row.value);
-              }
-            });
-          }
-        }
-
-      });
-
-    }
-  }
-
-});
 
 
 

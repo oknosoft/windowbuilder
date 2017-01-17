@@ -521,7 +521,7 @@ function ProductsBuilding(){
 		if(is_high_level_call && (inset.insert_type == "Заполнение" || inset.insert_type == "Стеклопакет" || inset.insert_type == "ТиповойСтеклопакет")){
 
 			glass_specification.find_rows({elm: elm.elm}, (row) => {
-        glass_rows.push(row._row);
+        glass_rows.push(row);
 			});
 
 			// if(!glass_rows.length){
