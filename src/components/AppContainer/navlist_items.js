@@ -9,6 +9,7 @@ import IconThumbDown from "material-ui/svg-icons/action/thumb-down";
 import IconMoodBad from "material-ui/svg-icons/social/mood-bad";
 import IconLocalPharmacy from "material-ui/svg-icons/maps/local-pharmacy";
 import IconSend from "material-ui/svg-icons/content/send";
+import IconUndo from "material-ui/svg-icons/content/undo";
 import IconWork from "material-ui/svg-icons/action/work";
 
 export default [
@@ -33,6 +34,11 @@ export default [
     text: 'Профиль',
     navigate: 'login',
     icon: <IconPerson />
+  },
+  {
+    text: 'Версия 0.12',
+    navigate: () => {location.replace("/")},
+    icon: <IconUndo />
   },
   {
     text: 'О программе',

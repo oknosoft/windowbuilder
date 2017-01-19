@@ -106,19 +106,6 @@ export default class RepTabularSection extends MetaComponent {
     return this.getRows().length;
   }
 
-  onColumnGroupAdded(colName) {
-    var columnGroups = this.state.groupBy.slice(0);
-    if(columnGroups.indexOf(colName) === -1) {
-      columnGroups.push(colName);
-    }
-    this.setState({groupBy: columnGroups});
-  }
-
-  onColumnGroupDeleted (name) {
-    var columnGroups = this.state.groupBy.filter(function(g){return g !== name});
-    this.setState({groupBy: columnGroups});
-  }
-
   onRowExpandToggle = (args) => {
     var expandedRows = Object.assign({}, this.state.expandedRows);
     expandedRows[args.columnGroupName] = Object.assign({}, expandedRows[args.columnGroupName]);

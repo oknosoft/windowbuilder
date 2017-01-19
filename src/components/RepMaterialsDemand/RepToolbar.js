@@ -4,8 +4,8 @@ import MetaComponent from "../common/MetaComponent";
 
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from "material-ui/Toolbar";
 import IconButton from "material-ui/IconButton";
+import FlatButton from "material-ui/FlatButton";
 import IconMenu from "material-ui/IconMenu";
-import SettingsProductionToolbar from "./SettingsProductionToolbar";
 import MenuItem from "material-ui/MenuItem";
 
 import RunIcon from "material-ui/svg-icons/av/play-arrow";
@@ -16,7 +16,7 @@ import CloudDownloadIcon from "material-ui/svg-icons/file/cloud-download";
 import FileDownloadIcon from "material-ui/svg-icons/file/file-download";
 
 import SchemeSettings from "../SchemeSettings";
-import TabularSection from "../TabularSection";
+import SettingsParams from "./SettingsParams";
 
 export default class RepToolbar extends MetaComponent {
 
@@ -59,9 +59,13 @@ export default class RepToolbar extends MetaComponent {
 
       <Toolbar>
         <ToolbarGroup className={"meta-toolbar-group"} firstChild={true}>
-          <IconButton touch={true} tooltip="Сформировать отчет" tooltipPosition="bottom-right" onTouchTap={handleSave}>
-            <RunIcon />
-          </IconButton>
+
+          <FlatButton
+            label="Сформировать"
+            onTouchTap={handleSave}
+            icon={<RunIcon />}
+          />
+
         </ToolbarGroup>
 
         <ToolbarGroup className={"meta-toolbar-group"}>
@@ -70,12 +74,9 @@ export default class RepToolbar extends MetaComponent {
             handleSchemeChange={handleSchemeChange}
             scheme={scheme}
 
-            tabParams={<TabularSection
+            tabParams={<SettingsParams
               ref="production"
               _obj={_obj}
-              _tabular="production"
-              minHeight={308}
-              Toolbar={SettingsProductionToolbar}
               handleCustom={handleCustom}
             />}
           />

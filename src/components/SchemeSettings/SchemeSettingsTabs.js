@@ -12,6 +12,9 @@ import {Tabs, Tab} from "material-ui/Tabs";
 import TabularSection from "../TabularSection";
 import SchemeSettingsSelect from "./SchemeSettingsSelect"
 
+import DataField, {FieldSelect} from "../DataField";
+import Divider from 'material-ui/Divider';
+
 
 export default class SchemeSettingsTabs extends Component {
 
@@ -29,9 +32,16 @@ export default class SchemeSettingsTabs extends Component {
     this.setState({tab_value})
   }
 
+
+
   render() {
 
-    const {handleSchemeChange, scheme, tabParams} = this.props
+    const {handleSchemeChange, scheme, tabParams} = this.props;
+
+
+    // если панель параметров передали снаружи, показываем её
+    // если в scheme.query есть 'date', показываем выбор периода
+    // по умолчанию, показываем табчать параметров
 
     return (
 
@@ -46,11 +56,27 @@ export default class SchemeSettingsTabs extends Component {
             tabParams ?
               tabParams
               :
-              <TabularSection
-                _obj={scheme}
-                _tabular="params"
-                minHeight={308}
-              />
+              (
+                scheme.query.match('date') ?
+                  <div style={{height: 356}}>
+
+                    <DataField
+                      _obj={scheme}
+                      _fld="date_from"
+                    />
+                    <DataField
+                      _obj={scheme}
+                      _fld="date_till"
+                    />
+
+                  </div>
+                  :
+                  <TabularSection
+                    _obj={scheme}
+                    _tabular="params"
+                    minHeight={308}
+                  />
+              )
           }
 
         </Tab>

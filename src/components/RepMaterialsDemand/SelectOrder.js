@@ -65,11 +65,13 @@ export default class SelectOrder extends MetaComponent {
         >
 
           <DataList
-            width={700}
-            height={300}
+            width={680}
+            height={320}
             _mgr={context.$p.doc.calc_order}
             selection_mode
             deny_add_del
+            show_variants
+            show_search
             handleSelect={handleSelect}
 
           />

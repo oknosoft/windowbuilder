@@ -40,6 +40,8 @@ export function mapStateToProps(state, props) {
 	return {
 		meta: state.meta,
 		_mgr: _mgr,
-		_acl: 'e'
+		_acl: 'e',
+    show_search: true,
+    show_variants: true,
 	}
 }

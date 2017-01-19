@@ -30,9 +30,9 @@ export default $p
 // скрипт инициализации в привязке к store приложения
 export function init(store, subscriber) {
 
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
 
-    setTimeout(() => {
+    setTimeout(function() {
 
       try {
         // инициализируем параметры сеанса и метаданные

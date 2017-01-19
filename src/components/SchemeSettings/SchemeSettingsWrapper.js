@@ -6,13 +6,17 @@
  *
  * Created 31.12.2016
  */
+
 import React, {Component, PropTypes} from "react";
 import IconButton from "material-ui/IconButton";
 import IconSettings from "material-ui/svg-icons/action/settings";
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
-import SchemeSettingsTabs from "./SchemeSettingsTabs";
 import TextField from "material-ui/TextField";
+import DropDownMenu from 'material-ui/DropDownMenu';
+import MenuItem from 'material-ui/MenuItem';
+
+import SchemeSettingsTabs from "./SchemeSettingsTabs";
 
 
 export default class SchemeSettingsWrapper extends Component {
@@ -21,12 +25,30 @@ export default class SchemeSettingsWrapper extends Component {
     scheme: PropTypes.object.isRequired,
     handleSchemeChange: PropTypes.func.isRequired,
     tabParams: PropTypes.object,                    // конструктор пользовательской панели параметров
-    show_search: PropTypes.boolean,                 // показывать поле поиска
-    show_variants: PropTypes.boolean,               // показывать список вариантов
+    show_search: PropTypes.bool,                    // показывать поле поиска
+    show_variants: PropTypes.bool,                  // показывать список вариантов настройки динсписка
   }
 
-  state = {
-    open: false,
+  constructor(props, context) {
+
+    super(props, context);
+
+    const {scheme} = props
+
+    this.state = {
+      scheme,
+      open: false,
+      variants: [scheme]
+    }
+
+    scheme._manager.get_option_list({
+      _top: 40,
+      obj: scheme.obj,
+    })
+      .then((variants) => {
+        this.setState({variants})
+      })
+
   }
 
   handleOpen = () => {
@@ -39,7 +61,7 @@ export default class SchemeSettingsWrapper extends Component {
 
   handleOk = () => {
     this.handleClose();
-    this.props.handleSchemeChange(this.state.scheme || this.props.scheme);
+    this.props.handleSchemeChange(this.state.scheme);
   }
 
   handleSchemeChange = (scheme) => {
@@ -47,7 +69,14 @@ export default class SchemeSettingsWrapper extends Component {
     this.setState({scheme});
   }
 
-  handleSearchChange = (event, newValu) => {
+  handleSearchChange = (event, newValue) => {
+
+  }
+
+  handleVariantChange = (event, index, value) => {
+
+    const {_manager} = this.state.scheme;
+    this.handleSchemeChange(_manager.get(value));
 
   }
 
@@ -59,8 +88,8 @@ export default class SchemeSettingsWrapper extends Component {
 
   render() {
 
-    const {props, state, handleOpen, handleOk, handleClose, handleSchemeChange, handleSearchChange} = this;
-    const {open, scheme} = state
+    const {props, state, handleOpen, handleOk, handleClose, handleSchemeChange, handleSearchChange, handleVariantChange} = this;
+    const {open, scheme, variants} = state
     const {show_search, show_variants, tabParams} = props
 
     const actions = [
@@ -77,11 +106,18 @@ export default class SchemeSettingsWrapper extends Component {
       />,
     ];
 
+    const menuitems = [];
+    if(show_variants && scheme){
+      variants.forEach((v) => {
+        menuitems.push(<MenuItem value={v.ref} key={v.ref} primaryText={v.name} />);
+      })
+    }
+
     return (
 
       <div>
 
-        {show_search ? (
+        {show_search ?
             <TextField
               name="search"
               ref={(search) => {this.searchInput = search;}}
@@ -89,8 +125,29 @@ export default class SchemeSettingsWrapper extends Component {
               underlineShow={false}
               style={{backgroundColor: 'white', height: 36, top: -6, padding: 6}}
               onChange={handleSearchChange}
+              disabled
             />
-          ) : null
+          :
+          null
+        }
+
+        {
+          show_variants && scheme ?
+            <DropDownMenu
+              ref={(ref) => {
+                if(ref){
+                  const {style} = ref.rootNode.firstChild.children[1];
+                  style.lineHeight = '36px';
+                  style.top = '6px';
+                }
+              }}
+              maxHeight={300}
+              value={scheme.ref}
+              onChange={handleVariantChange}>
+              {menuitems}
+            </DropDownMenu>
+            :
+            null
         }
 
         <IconButton touch={true} tooltip="Настройка списка" onTouchTap={handleOpen}>
@@ -108,7 +165,7 @@ export default class SchemeSettingsWrapper extends Component {
 
           <SchemeSettingsTabs
             handleSchemeChange={handleSchemeChange}
-            scheme={scheme || props.scheme}
+            scheme={scheme}
             tabParams={tabParams}
           />
 

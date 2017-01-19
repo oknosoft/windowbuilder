@@ -12,12 +12,8 @@ export default class Report extends MetaComponent {
     _obj: PropTypes.object,
     _acl: PropTypes.string.isRequired,
 
-    handleSave: PropTypes.func.isRequired,
-    handleRevert: PropTypes.func.isRequired,
-    handleMarkDeleted: PropTypes.func.isRequired,
     handlePrint: PropTypes.func.isRequired,
-    handleAddRow: PropTypes.func.isRequired,
-    handleDelRow: PropTypes.func.isRequired
+
   }
 
   constructor(props, context) {
@@ -39,9 +35,12 @@ export default class Report extends MetaComponent {
   }
 
   handleSave = () => {
+
+    const {scheme} = this.state;
+
     this.props._obj.calculate(this.state._columns)
       .then(() => {
-        this.refs.data.setState({groupBy: []})
+        this.refs.data.setState({groupBy: scheme.dims()})
         //this.forceUpdate()
       })
   }

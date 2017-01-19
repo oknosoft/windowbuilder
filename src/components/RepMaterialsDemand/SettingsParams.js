@@ -5,13 +5,15 @@ import AddIcon from "material-ui/svg-icons/content/add-circle-outline";
 import RemoveIcon from "material-ui/svg-icons/action/delete";
 import SelectOrder from "./SelectOrder";
 
-export default class SettingsProductionToolbar extends Component{
+import TabularSection from "../TabularSection";
+
+class SettingsToolbar extends Component{
 
   static propTypes = {
 
-    handleAdd: PropTypes.func.isRequired,             // обработчик добавления объекта
-    handleRemove: PropTypes.func.isRequired,          // обработчик удаления строки
-    handleCustom: PropTypes.func.isRequired
+    handleAdd: PropTypes.func,             // обработчик добавления объекта
+    handleRemove: PropTypes.func,          // обработчик удаления строки
+    handleCustom: PropTypes.func
 
   }
 
@@ -39,5 +41,36 @@ export default class SettingsProductionToolbar extends Component{
       </Toolbar>
     )
   }
+}
+
+export default class SettingsParams extends Component{
+
+  static propTypes = {
+
+    handleAdd: PropTypes.func,             // обработчик добавления объекта
+    handleRemove: PropTypes.func,          // обработчик удаления строки
+    handleCustom: PropTypes.func,
+    _obj: PropTypes.object.isRequired,
+
+  }
+
+  render(){
+
+    const {handleAdd, handleRemove, handleCustom, _obj} = this.props;
+
+    return (
+
+      <TabularSection
+        _obj={_obj}
+        _tabular="production"
+        minHeight={308}
+        Toolbar={SettingsToolbar}
+        handleAdd={handleAdd}
+        handleRemove={handleRemove}
+        handleCustom={handleCustom}
+      />
+    )
+  }
+
 }
 

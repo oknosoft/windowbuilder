@@ -118,6 +118,7 @@ $p.on({
 			{id: "orders", text: "Заказы", icon: "projects_48.png"},
 			{id: "events", text: "Планирование", icon: "events_48.png"},
 			{id: "settings", text: "Настройки", icon: "settings_48.png"},
+      {id: "v2", text: "Версия 2.0", icon: "v2_48.png"},
 			{id: "about", text: "О программе", icon: "about_48.png"}
 		];
 
@@ -230,9 +231,15 @@ $p.on({
 		// подписываемся на событие навигации по сайдбару
 		$p.iface.main.attachEvent("onSelect", function(id){
 
+		  if(id == "v2"){
+        $p.eve.redirect = true;
+        location.replace("/v2/");
+      }
+
 			var hprm = $p.job_prm.parse_url();
-			if(hprm.view != id)
-				$p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, id);
+			if(hprm.view != id){
+        $p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, id);
+      }
 
 			$p.iface["view_" + id]($p.iface.main.cells(id));
 

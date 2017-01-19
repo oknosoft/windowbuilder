@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 000000000183
+# 000000000184
 
 # Additional resources to cache
 # https://github.com/oknosoft/metadata.js/pull/180
@@ -43,6 +43,7 @@ dist/imgs/about_48.png
 dist/imgs/settings_48.png
 dist/imgs/events_48.png
 dist/imgs/projects_48.png
+dist/imgs/v2_48.png
 
 
 # offline.html will be displayed if the user is offline
