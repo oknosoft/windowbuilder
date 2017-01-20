@@ -468,7 +468,13 @@ class Editor extends paper.PaperScope {
         dhtmlxEvent(_canvas, "mousewheel", function(evt) {
           var mousePosition, newZoom, offset, viewPosition, _ref1;
           if (evt.shiftKey || evt.ctrlKey) {
-            _editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
+            if(evt.shiftKey && !evt.deltaX){
+              _editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
+            }
+            else{
+              _editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
+            }
+
             return evt.preventDefault();
 
           }else if (evt.altKey) {
