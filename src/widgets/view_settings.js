@@ -75,7 +75,7 @@ $p.iface.view_settings = function (cell) {
 			}
 
 			// подключаем обработчик изменения значений в форме
-			t.form2.attachEvent("onChange", function (name, value, state){
+			t.form2.attachEvent("onChange", (name, value, state) => {
 
 				if(name == "hide_price"){
 					if(value == "hide_price_dealer"){
@@ -95,7 +95,7 @@ $p.iface.view_settings = function (cell) {
         }
 			});
 
-			t.form2.getInput("modifiers").onchange = function () {
+			t.form2.getInput("modifiers").onchange = () => {
 				$p.wsql.set_user_param("modifiers", this.value);
 			};
 
@@ -120,7 +120,7 @@ $p.iface.view_settings = function (cell) {
         // дерево технологических справочников
         t.industry.tree = t.industry.layout.cells("a").attachTreeView();
         t.industry.tree.loadStruct($p.injected_data["tree_industry.xml"]);
-        t.industry.tree.attachEvent("onSelect", function (name) {
+        t.industry.tree.attachEvent("onSelect", (name) => {
           $p.md.mgr_by_class_name(name).form_list(t.industry.layout.cells("b"), {hide_header: true});
         });
 
@@ -149,7 +149,7 @@ $p.iface.view_settings = function (cell) {
         // дерево справочников ценообразования
         t.price.tree = t.price.layout.cells("a").attachTreeView();
         t.price.tree.loadStruct($p.injected_data["tree_price.xml"]);
-        t.price.tree.attachEvent("onSelect", function (name) {
+        t.price.tree.attachEvent("onSelect", (name) => {
           $p.md.mgr_by_class_name(name).form_list(t.price.layout.cells("b"), {hide_header: true});
         });
 
@@ -178,7 +178,7 @@ $p.iface.view_settings = function (cell) {
       // дерево документов оплаты и отгрузки
       t.balance.tree = t.balance.layout.cells("a").attachTreeView();
       t.balance.tree.loadStruct($p.injected_data["tree_balance.xml"]);
-      t.balance.tree.attachEvent("onSelect", function (name) {
+      t.balance.tree.attachEvent("onSelect", (name) => {
         $p.md.mgr_by_class_name(name).form_list(t.balance.layout.cells("b"), {hide_header: true});
       });
 
@@ -203,7 +203,7 @@ $p.iface.view_settings = function (cell) {
         // дерево справочников планирования
         t.events.tree = t.events.layout.cells("a").attachTreeView();
         t.events.tree.loadStruct($p.injected_data["tree_events.xml"]);
-        t.events.tree.attachEvent("onSelect", function (name) {
+        t.events.tree.attachEvent("onSelect", (name) => {
           $p.md.mgr_by_class_name(name).form_list(t.events.layout.cells("b"), {hide_header: true});
         });
 
@@ -227,7 +227,7 @@ $p.iface.view_settings = function (cell) {
 			]
 		});
 
-		t.tabs.attachEvent("onSelect", function(id){
+		t.tabs.attachEvent("onSelect", (id) => {
 			if(t[id] && t[id].tree && t[id].tree.getSelectedId()){
 				t[id].tree.callEvent("onSelect", [t[id].tree.getSelectedId()]);
 			}
@@ -261,16 +261,16 @@ $p.iface.view_settings = function (cell) {
 			//	"О настройке кроссдоменных запросов к 1С <a href='#'>см. здесь</a>", width: 320}},
 
 			{type: "label", labelWidth:320, label: "Адрес CouchDB", className: "label_options"},
-			{type:"input" , inputWidth: 220, name:"couch_path", label:"Путь:", validate:"NotEmpty"},
+			{type:"input" , inputWidth: 220, disabled: true, name:"couch_path", label:"Путь:", validate:"NotEmpty"},
 			{type:"template", label:"",value:"",
 				note: {text: "Можно указать как относительный, так и абсолютный URL публикации CouchDB", width: 320}},
 
 			{type: "label", labelWidth:320, label: "Значение разделителя данных", className: "label_options"},
-			{type:"input" , inputWidth: 220, name:"zone", label:"Зона:", numberFormat: ["0", "", ""], validate:"NotEmpty,ValidInteger"},
+			{type:"input" , inputWidth: 220, disabled: true, name:"zone", label:"Зона:", numberFormat: ["0", "", ""], validate:"NotEmpty,ValidInteger"},
 			{type:"template", label:"",value:"", note: {text: "Для неразделенной публикации, зона = 0", width: 320}},
 
 			{type: "label", labelWidth:320, label: "Суффикс базы пользователя", className: "label_options"},
-			{type:"input" , inputWidth: 220, name:"couch_suffix", label:"Суффикс:"},
+			{type:"input" , inputWidth: 220, disabled: true, name:"couch_suffix", label:"Суффикс:"},
 			{type:"template", label:"",value:"",
 				note: {text: "Назначается дилеру при регистрации", width: 320}},
 
@@ -280,52 +280,64 @@ $p.iface.view_settings = function (cell) {
 			{type:"template", label:"",value:"", note: {text: "", width: 320}},
 
 			{ type:"block", blockOffset: 0, name:"block_buttons", list:[
-				{type: "button", name: "save", value: "<i class='fa fa-floppy-o fa-lg'></i>", tooltip: "Применить настройки и перезагрузить программу"},
+				{type: "button", name: "save", value: "<i class='fa fa-floppy-o fa-fw'></i>", tooltip: "Применить настройки и перезагрузить программу"},
 				{type:"newcolumn"},
-				{type: "button", offsetLeft: 20, name: "reset", value: "<i class='fa fa-refresh fa-lg'></i>", tooltip: "Стереть справочники и перезаполнить данными сервера"},
+        {type: "button", offsetLeft: 16, name: "unlock", value: "<i class='fa fa-unlock fa-fw'></i>", tooltip: "Разблокировать реквизиты"},
+        {type:"newcolumn"},
+				{type: "button", offsetLeft: 16, name: "reset", value: "<i class='fa fa-refresh fa-fw'></i>", tooltip: "Стереть справочники и перезаполнить данными сервера"},
 				{type:"newcolumn"},
-				{type: "button", offsetLeft: 60, name: "upload", value: "<i class='fa fa-cloud-upload fa-lg'></i>", tooltip: "Выгрузить изменения справочников на сервер"}
+				{type: "button", offsetLeft: 40, name: "upload", value: "<i class='fa fa-cloud-upload fa-fw'></i>", tooltip: "Выгрузить изменения справочников на сервер"}
 			]  }
 
 			]
 		);
 		t.form1.cont.style.fontSize = "100%";
 
-		t.form1.disableItem("couch_path");
-		t.form1.disableItem("couch_suffix");
+		let locked = ["zone", "couch_path", "couch_suffix"];
+    locked.forEach((prm) => {
+      t.form1.setItemValue(prm, $p.wsql.get_user_param(prm));
+    });
 
 		// инициализация свойств
-
 		t.form1.checkItem("device_type", $p.job_prm.device_type);
 
-		["zone", "couch_path", "couch_suffix"].forEach(function (prm) {
-			if(prm == "zone")
-				t.form1.setItemValue(prm, $p.wsql.get_user_param(prm));
-			else
-				t.form1.setItemValue(prm, $p.wsql.get_user_param(prm) || $p.job_prm[prm]);
-		});
-
-		t.form1.attachEvent("onChange", function (name, value, state){
+		t.form1.attachEvent("onChange", (name, value, state) => {
 			$p.wsql.set_user_param(name, name == "enable_save_pwd" ? state || "" : value);
 		});
 
-		t.form1.attachEvent("onButtonClick", function(name){
+		t.form1.attachEvent("onButtonClick", (name) => {
 
-			if(name == "save")
-				location.reload();
-
+			if(name == "save"){
+        location.reload();
+      }
+      else if(name == "unlock"){
+        dhtmlx.confirm({
+          title: "Разблокировать реквизиты?",
+          text: "Неаккуратное изменение параметров может привести к потере данных",
+          cancel: $p.msg.cancel,
+          callback: (btn) => {
+            if(btn){
+              locked.forEach((prm) => {
+                t.form1.enableItem(prm);
+              });
+              t.form2.enableItem("modifiers");
+            }
+          }
+        });
+      }
 			else if(name == "reset"){
 				dhtmlx.confirm({
 					title: "Сброс данных",
 					text: "Стереть справочники и перезаполнить данными сервера?",
 					cancel: $p.msg.cancel,
-					callback: function(btn) {
-						if(btn)
-							$p.wsql.pouch.reset_local_data();
+					callback: (btn) => {
+						if(btn){
+              $p.wsql.pouch.reset_local_data();
+            }
 					}
 				});
-
-			}else if(name == "upload"){
+			}
+			else if(name == "upload"){
 				$p.pricing.cut_upload();
 			}
 		});
@@ -350,7 +362,7 @@ $p.iface.view_settings = function (cell) {
 			{type:"template", label:"",value:"", note: {text: "Значения наценки и скидки по умолчанию, которые дилер предоставляет своим (конечным) покупателям", width: 320}},
 
 			{type: "label", labelWidth:320, label: "Подключаемые модули", className: "label_options"},
-			{type:"input" , position:"label-top", inputWidth: 320, name:"modifiers", label:"Модификаторы:", value: $p.wsql.get_user_param("modifiers"), rows: 3, style:"height:80px;"},
+			{type:"input" , position:"label-top", inputWidth: 320, disabled: true, name:"modifiers", label:"Модификаторы:", value: $p.wsql.get_user_param("modifiers"), rows: 3, style:"height:80px;"},
 			{type:"template", label:"",value:"", note: {text: "Список дополнительных модулей", width: 320}}
 
 		]);

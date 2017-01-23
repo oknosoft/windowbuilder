@@ -109,9 +109,12 @@ $p.on({
 	 */
 	iface_init: function() {
 
-		// патч параметра couch_path
-		if($p.wsql.get_user_param("couch_path") && $p.wsql.get_user_param("couch_path") != $p.job_prm.couch_path)
-			$p.wsql.set_user_param("couch_path", $p.job_prm.couch_path);
+		// патч параметров подключения
+    ["couch_path", "zone", "couch_suffix"].forEach((prm) => {
+      if($p.job_prm.url_prm[prm] && $p.wsql.get_user_param(prm) != $p.job_prm.url_prm[prm]){
+        $p.wsql.set_user_param(prm, $p.job_prm.url_prm[prm]);
+      }
+    })
 
 		// разделы интерфейса
 		$p.iface.sidebar_items = [
