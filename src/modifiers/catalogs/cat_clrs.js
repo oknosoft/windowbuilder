@@ -95,6 +95,8 @@ $p.cat.clrs.__define({
 	form_selection: {
 		value: function (pwnd, attr) {
 
+		  const eclr = this.get();
+
 			attr.hide_filter = true;
 
       attr.toolbar_click = function (btn_id, wnd){
@@ -138,8 +140,8 @@ $p.cat.clrs.__define({
         }
       }
 
-			var wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr),
-				eclr = this.get($p.utils.blank.guid, false, true);
+      const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
+
 
 			function get_option_list(val, selection) {
 
@@ -147,7 +149,7 @@ $p.cat.clrs.__define({
 				selection.clr_out = $p.utils.blank.guid;
 
 				if(attr.selection){
-					attr.selection.some(function (sel) {
+					attr.selection.some((sel) => {
 						for(var key in sel){
 							if(key == "ref"){
 								selection.ref = sel.ref;
@@ -161,14 +163,14 @@ $p.cat.clrs.__define({
 			}
 
 			return (wnd instanceof Promise ? wnd : Promise.resolve(wnd))
-				.then(function (wnd) {
+				.then((wnd) => {
 
-					var tb_filter = wnd.elmnts.filter;
+					const tb_filter = wnd.elmnts.filter;
 
 					tb_filter.__define({
 						get_filter: {
-							value: function () {
-								var res = {
+							value: () => {
+								const res = {
 									selection: []
 								};
 								if(clr_in.getSelectedValue())
@@ -182,7 +184,7 @@ $p.cat.clrs.__define({
 						}
 					});
 
-					wnd.attachEvent("onClose", function(){
+					wnd.attachEvent("onClose", () => {
 
 						clr_in.unload();
 						clr_out.unload();
@@ -199,14 +201,15 @@ $p.cat.clrs.__define({
 					eclr.clr_out = $p.utils.blank.guid;
 
 					// Создаём элементы управления
-					var clr_in = new $p.iface.OCombo({
+					const clr_in = new $p.iface.OCombo({
 						parent: tb_filter.div.obj,
 						obj: eclr,
 						field: "clr_in",
 						width: 150,
 						hide_frm: true,
 						get_option_list: get_option_list
-					}), clr_out = new $p.iface.OCombo({
+					});
+					const clr_out = new $p.iface.OCombo({
 						parent: tb_filter.div.obj,
 						obj: eclr,
 						field: "clr_out",

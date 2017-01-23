@@ -274,6 +274,11 @@ $p.iface.view_settings = function (cell) {
 			{type:"template", label:"",value:"",
 				note: {text: "Назначается дилеру при регистрации", width: 320}},
 
+      {type: "label", labelWidth:320, label: "Использовать прямое подключение", className: "label_options"},
+      {type:"checkbox", name:"couch_direct",  disabled: true, label:"Direct:", checked: $p.wsql.get_user_param("couch_direct", "boolean")},
+      {type:"template", label:"",value:"", note: {text: "Работать онлайн, не задействовать базу данных браузера", width: 320}},
+      {type:"template", label:"",value:"", note: {text: "", width: 320}},
+
 			{type: "label", labelWidth:320, label: "Сохранять пароль пользователя", className: "label_options"},
 			{type:"checkbox", name:"enable_save_pwd", label:"Разрешить:", checked: $p.wsql.get_user_param("enable_save_pwd", "boolean")},
 			{type:"template", label:"",value:"", note: {text: "Не рекомендуется, если к компьютеру имеют доступ посторонние лица", width: 320}},
@@ -302,7 +307,7 @@ $p.iface.view_settings = function (cell) {
 		t.form1.checkItem("device_type", $p.job_prm.device_type);
 
 		t.form1.attachEvent("onChange", (name, value, state) => {
-			$p.wsql.set_user_param(name, name == "enable_save_pwd" ? state || "" : value);
+			$p.wsql.set_user_param(name, typeof state == "boolean" ? state || "" : value);
 		});
 
 		t.form1.attachEvent("onButtonClick", (name) => {
@@ -320,6 +325,7 @@ $p.iface.view_settings = function (cell) {
               locked.forEach((prm) => {
                 t.form1.enableItem(prm);
               });
+              t.form1.enableItem("couch_direct");
               t.form2.enableItem("modifiers");
             }
           }

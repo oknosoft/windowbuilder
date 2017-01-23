@@ -2591,6 +2591,8 @@ $p.cat.clrs.__define({
 	form_selection: {
 		value: function (pwnd, attr) {
 
+		  const eclr = this.get();
+
 			attr.hide_filter = true;
 
       attr.toolbar_click = function (btn_id, wnd){
@@ -2630,8 +2632,8 @@ $p.cat.clrs.__define({
         }
       }
 
-			var wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr),
-				eclr = this.get($p.utils.blank.guid, false, true);
+      const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
+
 
 			function get_option_list(val, selection) {
 
@@ -2639,7 +2641,7 @@ $p.cat.clrs.__define({
 				selection.clr_out = $p.utils.blank.guid;
 
 				if(attr.selection){
-					attr.selection.some(function (sel) {
+					attr.selection.some((sel) => {
 						for(var key in sel){
 							if(key == "ref"){
 								selection.ref = sel.ref;
@@ -2653,14 +2655,14 @@ $p.cat.clrs.__define({
 			}
 
 			return (wnd instanceof Promise ? wnd : Promise.resolve(wnd))
-				.then(function (wnd) {
+				.then((wnd) => {
 
-					var tb_filter = wnd.elmnts.filter;
+					const tb_filter = wnd.elmnts.filter;
 
 					tb_filter.__define({
 						get_filter: {
-							value: function () {
-								var res = {
+							value: () => {
+								const res = {
 									selection: []
 								};
 								if(clr_in.getSelectedValue())
@@ -2674,7 +2676,7 @@ $p.cat.clrs.__define({
 						}
 					});
 
-					wnd.attachEvent("onClose", function(){
+					wnd.attachEvent("onClose", () => {
 
 						clr_in.unload();
 						clr_out.unload();
@@ -2690,14 +2692,15 @@ $p.cat.clrs.__define({
 					eclr.clr_in = $p.utils.blank.guid;
 					eclr.clr_out = $p.utils.blank.guid;
 
-					var clr_in = new $p.iface.OCombo({
+					const clr_in = new $p.iface.OCombo({
 						parent: tb_filter.div.obj,
 						obj: eclr,
 						field: "clr_in",
 						width: 150,
 						hide_frm: true,
 						get_option_list: get_option_list
-					}), clr_out = new $p.iface.OCombo({
+					});
+					const clr_out = new $p.iface.OCombo({
 						parent: tb_filter.div.obj,
 						obj: eclr,
 						field: "clr_out",
@@ -8265,6 +8268,11 @@ $p.iface.view_settings = function (cell) {
 			{type:"template", label:"",value:"",
 				note: {text: "Назначается дилеру при регистрации", width: 320}},
 
+      {type: "label", labelWidth:320, label: "Использовать прямое подключение", className: "label_options"},
+      {type:"checkbox", name:"couch_direct",  disabled: true, label:"Direct:", checked: $p.wsql.get_user_param("couch_direct", "boolean")},
+      {type:"template", label:"",value:"", note: {text: "Работать онлайн, не задействовать базу данных браузера", width: 320}},
+      {type:"template", label:"",value:"", note: {text: "", width: 320}},
+
 			{type: "label", labelWidth:320, label: "Сохранять пароль пользователя", className: "label_options"},
 			{type:"checkbox", name:"enable_save_pwd", label:"Разрешить:", checked: $p.wsql.get_user_param("enable_save_pwd", "boolean")},
 			{type:"template", label:"",value:"", note: {text: "Не рекомендуется, если к компьютеру имеют доступ посторонние лица", width: 320}},
@@ -8292,7 +8300,7 @@ $p.iface.view_settings = function (cell) {
 		t.form1.checkItem("device_type", $p.job_prm.device_type);
 
 		t.form1.attachEvent("onChange", (name, value, state) => {
-			$p.wsql.set_user_param(name, name == "enable_save_pwd" ? state || "" : value);
+			$p.wsql.set_user_param(name, typeof state == "boolean" ? state || "" : value);
 		});
 
 		t.form1.attachEvent("onButtonClick", (name) => {
@@ -8310,6 +8318,7 @@ $p.iface.view_settings = function (cell) {
               locked.forEach((prm) => {
                 t.form1.enableItem(prm);
               });
+              t.form1.enableItem("couch_direct");
               t.form2.enableItem("modifiers");
             }
           }
