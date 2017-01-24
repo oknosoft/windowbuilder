@@ -685,20 +685,16 @@ class Editor extends paper.PaperScope {
    * Note: only the item outlines are tested
    */
   paths_intersecting_rect(rect) {
-    var paths = [];
-    var boundingRect = new paper.Path.Rectangle(rect);
 
-    function checkPathItem(item) {
+    const paths = [];
+    const boundingRect = new paper.Path.Rectangle(rect);
+
+    this.project.getItems({class: ProfileItem}).forEach((item) => {
       if (rect.contains(item.generatrix.bounds)) {
         paths.push(item.generatrix);
         return;
       }
-      // var isects = boundingRect.getIntersections(item);
-      // if (isects.length > 0)
-      //   paths.push(item);
-    }
-
-    this.project.getItems({class: ProfileItem}).forEach(checkPathItem);
+    });
 
     boundingRect.remove();
 
@@ -712,11 +708,12 @@ class Editor extends paper.PaperScope {
    * @return {paper.CompoundPath}
    */
   drag_rect(p1, p2) {
-    const view = this.view;
-    var half = new paper.Point(0.5 / view.zoom, 0.5 / view.zoom),
-      start = p1.add(half),
-      end = p2.add(half),
-      rect = new paper.CompoundPath();
+    const {view} = this;
+    const half = new paper.Point(0.5 / view.zoom, 0.5 / view.zoom);
+    const start = p1.add(half);
+    const end = p2.add(half);
+    const rect = new paper.CompoundPath();
+
     rect.moveTo(start);
     rect.lineTo(new paper.Point(start.x, end.y));
     rect.lineTo(end);

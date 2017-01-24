@@ -418,8 +418,8 @@ class ToolSelectNode extends ToolElement {
   }
 
   hitTest(event) {
-    var hitSize = 6;
-    var hit = null;
+
+    const hitSize = 6;
     this.hitItem = null;
 
     if (event.point) {
@@ -428,49 +428,60 @@ class ToolSelectNode extends ToolElement {
       this.hitItem = paper.project.hitTest(event.point, {selected: true, fill: true, tolerance: hitSize});
 
       // во вторую очередь - тем элементам, которые не скрыты
-      if (!this.hitItem)
+      if (!this.hitItem){
         this.hitItem = paper.project.hitTest(event.point, {fill: true, visible: true, tolerance: hitSize});
+      }
 
       // Hit test selected handles
-      hit = paper.project.hitTest(event.point, {selected: true, handles: true, tolerance: hitSize});
-      if (hit)
+      let hit = paper.project.hitTest(event.point, {selected: true, handles: true, tolerance: hitSize});
+      if (hit){
         this.hitItem = hit;
+      }
 
       // Hit test points
       hit = paper.project.hitPoints(event.point, 20);
 
       if (hit) {
         if (hit.item.parent instanceof ProfileItem) {
-          if (hit.item.parent.generatrix === hit.item)
+          if (hit.item.parent.generatrix === hit.item){
             this.hitItem = hit;
-        } else
+          }
+        }
+        else{
           this.hitItem = hit;
+        }
       }
-
     }
 
     if (this.hitItem) {
       if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
 
         if (this.hitItem.item instanceof paper.PointText) {
-          paper.canvas_cursor('cursor-text');     // указатель с черным Т
-
-        } else if (this.hitItem.item.selected) {
-          paper.canvas_cursor('cursor-arrow-small');
-
-        } else {
-          paper.canvas_cursor('cursor-arrow-white-shape');
-
+          if(this.hitItem.item.parent instanceof DimensionLineCustom){
+            this.hitItem = null;
+            paper.canvas_cursor('cursor-arrow-white');
+          }
+          else{
+            paper.canvas_cursor('cursor-text');     // указатель с черным Т
+          }
         }
-
-      } else if (this.hitItem.type == 'segment' || this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
+        else if (this.hitItem.item.selected) {
+          paper.canvas_cursor('cursor-arrow-small');
+        }
+        else {
+          paper.canvas_cursor('cursor-arrow-white-shape');
+        }
+      }
+      else if (this.hitItem.type == 'segment' || this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
         if (this.hitItem.segment.selected) {
           paper.canvas_cursor('cursor-arrow-small-point');
-        } else {
+        }
+        else {
           paper.canvas_cursor('cursor-arrow-white-point');
         }
       }
-    } else {
+    }
+    else {
       paper.canvas_cursor('cursor-arrow-white');
     }
 

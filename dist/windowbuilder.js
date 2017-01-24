@@ -2422,17 +2422,16 @@ class Editor extends paper.PaperScope {
   }
 
   paths_intersecting_rect(rect) {
-    var paths = [];
-    var boundingRect = new paper.Path.Rectangle(rect);
 
-    function checkPathItem(item) {
+    const paths = [];
+    const boundingRect = new paper.Path.Rectangle(rect);
+
+    this.project.getItems({class: ProfileItem}).forEach((item) => {
       if (rect.contains(item.generatrix.bounds)) {
         paths.push(item.generatrix);
         return;
       }
-    }
-
-    this.project.getItems({class: ProfileItem}).forEach(checkPathItem);
+    });
 
     boundingRect.remove();
 
@@ -2440,11 +2439,12 @@ class Editor extends paper.PaperScope {
   }
 
   drag_rect(p1, p2) {
-    const view = this.view;
-    var half = new paper.Point(0.5 / view.zoom, 0.5 / view.zoom),
-      start = p1.add(half),
-      end = p2.add(half),
-      rect = new paper.CompoundPath();
+    const {view} = this;
+    const half = new paper.Point(0.5 / view.zoom, 0.5 / view.zoom);
+    const start = p1.add(half);
+    const end = p2.add(half);
+    const rect = new paper.CompoundPath();
+
     rect.moveTo(start);
     rect.lineTo(new paper.Point(start.x, end.y));
     rect.lineTo(end);
@@ -12701,55 +12701,66 @@ class ToolSelectNode extends ToolElement {
   }
 
   hitTest(event) {
-    var hitSize = 6;
-    var hit = null;
+
+    const hitSize = 6;
     this.hitItem = null;
 
     if (event.point) {
 
       this.hitItem = paper.project.hitTest(event.point, {selected: true, fill: true, tolerance: hitSize});
 
-      if (!this.hitItem)
+      if (!this.hitItem){
         this.hitItem = paper.project.hitTest(event.point, {fill: true, visible: true, tolerance: hitSize});
+      }
 
-      hit = paper.project.hitTest(event.point, {selected: true, handles: true, tolerance: hitSize});
-      if (hit)
+      let hit = paper.project.hitTest(event.point, {selected: true, handles: true, tolerance: hitSize});
+      if (hit){
         this.hitItem = hit;
+      }
 
       hit = paper.project.hitPoints(event.point, 20);
 
       if (hit) {
         if (hit.item.parent instanceof ProfileItem) {
-          if (hit.item.parent.generatrix === hit.item)
+          if (hit.item.parent.generatrix === hit.item){
             this.hitItem = hit;
-        } else
+          }
+        }
+        else{
           this.hitItem = hit;
+        }
       }
-
     }
 
     if (this.hitItem) {
       if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
 
         if (this.hitItem.item instanceof paper.PointText) {
-          paper.canvas_cursor('cursor-text');     
-
-        } else if (this.hitItem.item.selected) {
-          paper.canvas_cursor('cursor-arrow-small');
-
-        } else {
-          paper.canvas_cursor('cursor-arrow-white-shape');
-
+          if(this.hitItem.item.parent instanceof DimensionLineCustom){
+            this.hitItem = null;
+            paper.canvas_cursor('cursor-arrow-white');
+          }
+          else{
+            paper.canvas_cursor('cursor-text');     
+          }
         }
-
-      } else if (this.hitItem.type == 'segment' || this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
+        else if (this.hitItem.item.selected) {
+          paper.canvas_cursor('cursor-arrow-small');
+        }
+        else {
+          paper.canvas_cursor('cursor-arrow-white-shape');
+        }
+      }
+      else if (this.hitItem.type == 'segment' || this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
         if (this.hitItem.segment.selected) {
           paper.canvas_cursor('cursor-arrow-small-point');
-        } else {
+        }
+        else {
           paper.canvas_cursor('cursor-arrow-white-point');
         }
       }
-    } else {
+    }
+    else {
       paper.canvas_cursor('cursor-arrow-white');
     }
 
