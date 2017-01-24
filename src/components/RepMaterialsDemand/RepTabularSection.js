@@ -3,10 +3,10 @@ import MetaComponent from "../common/MetaComponent";
 
 import ReactDataGrid from "react-data-grid";
 
-//import {Menu, Data, Editors, ToolsPanel} from "react-data-grid/addons";
+//import {Menu, Data, Editors, ToolsPanel} from "react-data-grid-addons";
 
-import {Data} from "react-data-grid/addons";
-const Selectors = Data.Selectors;
+import {Data} from "react-data-grid-addons";
+const {Selectors} = Data;
 
 // const { AdvancedToolbar, GroupedColumnsPanel }   = ToolsPanel;
 // const DraggableContainer  = ReactDataGridPlugins.Draggable.Container;
