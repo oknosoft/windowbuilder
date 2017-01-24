@@ -594,11 +594,25 @@ Scheme.prototype.__define({
 	move_points: {
 		value: function (delta, all_points) {
 
-			var other = [], layers = [];
+			let other = [];
+			const layers = [];
+      const profiles = [];
 
-			this.selectedItems.forEach(function (item) {
+			this.selectedItems.forEach((item) => {
 
-				if(item.parent instanceof ProfileItem){
+				if(item instanceof paper.Path && item.parent instanceof ProfileItem){
+
+				  if(profiles.indexOf(item.parent) != -1){
+				    return;
+          }
+
+          profiles.push(item.parent);
+
+				  if(item.parent._hatching){
+            item.parent._hatching.remove();
+            item.parent._hatching = null;
+          }
+
 					if(!item.layer.parent || !item.parent.nearest || !item.parent.nearest()){
 
 						var check_selected;
@@ -623,7 +637,8 @@ Scheme.prototype.__define({
 
 					}
 
-				}else if(item instanceof Filling){
+				}
+				else if(item instanceof Filling){
 					//item.position = item.position.add(delta);
 					while (item.children.length > 1){
 						if(!(item.children[1] instanceof Onlay))

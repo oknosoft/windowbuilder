@@ -2394,33 +2394,31 @@ class Editor extends paper.PaperScope {
 
   capture_selection_state() {
 
-    const originalContent = [],
-      selected = this.project.selectedItems;
+    const originalContent = [];
 
-    for (var i = 0; i < selected.length; i++) {
-      var item = selected[i];
-      if (item.guide) continue;
-      var orig = {
-        id: item.id,
-        json: item.exportJSON({asString: false}),
-        selectedSegments: []
-      };
-      originalContent.push(orig);
-    }
+    this.project.selectedItems.forEach((item) => {
+      if (item instanceof paper.Path && !item.guide){
+        originalContent.push({
+          id: item.id,
+          json: item.exportJSON({asString: false}),
+          selectedSegments: []
+        });
+      }
+    });
+
     return originalContent;
   }
 
   restore_selection_state(originalContent) {
 
-    for (var i = 0; i < originalContent.length; i++) {
-      var orig = originalContent[i];
-      var item = this.project.getItem({id: orig.id});
-      if (!item)
-        continue;
-      var id = item.id;
-      item.importJSON(orig.json);
-      item._id = id;
-    }
+    originalContent.forEach((orig) => {
+      const item = this.project.getItem({id: orig.id});
+      if (item){
+        const id = item.id;
+        item.importJSON(orig.json);
+        item._id = id;
+      }
+    })
   }
 
   paths_intersecting_rect(rect) {
@@ -5212,7 +5210,7 @@ BuilderElement.prototype.__define({
 
 	owner: {
 		get : function(){ return this.data.owner; },
-		set : function(newValue){ this.data.owner = newValue; }
+		set : function(v){ this.data.owner = v; }
 	},
 
 	generatrix: {
@@ -5473,8 +5471,9 @@ BuilderElement.prototype.__define({
 
 			this._row.clr = v;
 
-			if(this.path instanceof paper.Path)
-				this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
+			if(this.path instanceof paper.Path){
+        this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
+      }
 
 			this.project.register_change();
 
@@ -5507,13 +5506,14 @@ BuilderElement.prototype.__define({
 
 	cnn3: {
 		get : function(){
-			var cnn_ii = this.selected_cnn_ii();
+			const cnn_ii = this.selected_cnn_ii();
 			return cnn_ii ? cnn_ii.row.cnn : $p.cat.cnns.get();
 		},
 		set: function(v){
-			var cnn_ii = this.selected_cnn_ii();
-			if(cnn_ii)
-				cnn_ii.row.cnn = v;
+      const cnn_ii = this.selected_cnn_ii();
+			if(cnn_ii){
+        cnn_ii.row.cnn = v;
+      }
 			this.project.register_change();
 		}
 	},
@@ -6482,18 +6482,19 @@ paper.Path.prototype.__define({
 
 	intersect_point: {
 		value: function (path, point, elongate) {
-			var intersections = this.getIntersections(path),
-				delta = Infinity, tdelta, tpoint;
+			const intersections = this.getIntersections(path);
+			let delta = Infinity, tdelta, tpoint;
 
-			if(intersections.length == 1)
-				return intersections[0].point;
+			if(intersections.length == 1){
+        return intersections[0].point;
+      }
+      else if(intersections.length > 1){
 
-			else if(intersections.length > 1){
+				if(!point){
+          point = this.getPointAt(this.length /2);
+        }
 
-				if(!point)
-					point = this.getPointAt(this.length /2);
-
-								intersections.forEach(function(o){
+				intersections.forEach((o) => {
 					tdelta = o.point.getDistance(point, true);
 					if(tdelta < delta){
 						delta = tdelta;
@@ -6501,14 +6502,15 @@ paper.Path.prototype.__define({
 					}
 				});
 				return tpoint;
-
-			}else if(elongate == "nearest"){
+			}
+			else if(elongate == "nearest"){
 
 				return this.getNearestPoint(path.getNearestPoint(point));
 
-			}else if(elongate){
+			}
+			else if(elongate){
 
-				var p1 = this.getNearestPoint(point),
+				let p1 = this.getNearestPoint(point),
 					p2 = path.getNearestPoint(point),
 					p1last = this.firstSegment.point.getDistance(p1, true) > this.lastSegment.point.getDistance(p1, true),
 					p2last = path.firstSegment.point.getDistance(p2, true) > path.lastSegment.point.getDistance(p2, true),
@@ -6659,18 +6661,84 @@ ProfileItem._extend(BuilderElement);
 
 ProfileItem.prototype.__define({
 
+  setSelection: {
+    value: function (selection) {
+
+      BuilderElement.prototype.setSelection.call(this, selection);
+
+      const {generatrix, path} = this.data;
+
+      generatrix.setSelection(selection);
+
+      if(selection){
+
+        const {angle_hor, rays} = this;
+        const {inner, outer} = rays;
+        const delta = ((angle_hor > 20 && angle_hor < 70) || (angle_hor > 200 && angle_hor < 250)) ? [500, 500] : [500, -500];
+        this._hatching = new paper.CompoundPath({
+          parent: this,
+          guide: true,
+          strokeColor: 'grey',
+          strokeScaling: false
+        })
+
+        path.setSelection(0);
+
+        for(let t = 0; t < inner.length; t+=40){
+          const ip = inner.getPointAt(t);
+          const fp = new paper.Path({
+            insert: false,
+            segments: [
+              ip.add(delta),
+              ip.subtract(delta)
+            ]
+          })
+          const op = fp.intersect_point(outer, ip);
+          if(ip && op){
+            const cip = path.contains(ip);
+            const cop = path.contains(op);
+            if(cip && cop){
+              this._hatching.moveTo(ip);
+              this._hatching.lineTo(op);
+            }
+            else if(cip && !cop){
+              const pp = fp.intersect_point(path, op);
+              this._hatching.moveTo(ip);
+              this._hatching.lineTo(pp);
+            }
+            else if(!cip && cop){
+              const pp = fp.intersect_point(path, ip);
+              this._hatching.moveTo(pp);
+              this._hatching.lineTo(op);
+            }
+          }
+        }
+
+      }
+      else{
+        if(this._hatching){
+          this._hatching.remove();
+          this._hatching = null;
+        }
+      }
+
+    }
+  },
+
 	save_coordinates: {
 		value: function () {
 
-			if(!this.data.generatrix)
-				return;
+		  const {data, _row, rays, generatrix, project} = this;
 
-			var _row = this._row,
+			if(!generatrix){
+        return;
+      }
 
-				cnns = this.project.connections.cnns,
-				b = this.rays.b,
-				e = this.rays.e,
-				row_b = cnns.add({
+      const cnns = project.connections.cnns;
+      const b = rays.b;
+      const e = rays.e;
+
+			let	row_b = cnns.add({
 					elm1: _row.elm,
 					node1: "b",
 					cnn: b.cnn ? b.cnn.ref : "",
@@ -6681,15 +6749,13 @@ ProfileItem.prototype.__define({
 					node1: "e",
 					cnn: e.cnn ? e.cnn.ref : "",
 					aperture_len: this.corns(2).getDistance(this.corns(3)).round(1)
-				}),
-
-				gen = this.generatrix;
+				});
 
 			_row.x1 = this.x1;
 			_row.y1 = this.y1;
 			_row.x2 = this.x2;
 			_row.y2 = this.y2;
-			_row.path_data = gen.pathData;
+			_row.path_data = generatrix.pathData;
 			_row.nom = this.nom;
 
 
@@ -6718,18 +6784,18 @@ ProfileItem.prototype.__define({
 				cnns.add({
 					elm1: _row.elm,
 					elm2: row_b.elm,
-					cnn: this.data._nearest_cnn,
+					cnn: data._nearest_cnn,
 					aperture_len: _row.len
 				});
 			}
 
 			_row.angle_hor = this.angle_hor;
 
-			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - gen.getTangentAt(0).angle) * 10) / 10;
+			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - generatrix.getTangentAt(0).angle) * 10) / 10;
 			if(_row.alp1 < 0)
 				_row.alp1 = _row.alp1 + 360;
 
-			_row.alp2 = Math.round((gen.getTangentAt(gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
+			_row.alp2 = Math.round((generatrix.getTangentAt(generatrix.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
 			if(_row.alp2 < 0)
 				_row.alp2 = _row.alp2 + 360;
 
@@ -9121,11 +9187,25 @@ Scheme.prototype.__define({
 	move_points: {
 		value: function (delta, all_points) {
 
-			var other = [], layers = [];
+			let other = [];
+			const layers = [];
+      const profiles = [];
 
-			this.selectedItems.forEach(function (item) {
+			this.selectedItems.forEach((item) => {
 
-				if(item.parent instanceof ProfileItem){
+				if(item instanceof paper.Path && item.parent instanceof ProfileItem){
+
+				  if(profiles.indexOf(item.parent) != -1){
+				    return;
+          }
+
+          profiles.push(item.parent);
+
+				  if(item.parent._hatching){
+            item.parent._hatching.remove();
+            item.parent._hatching = null;
+          }
+
 					if(!item.layer.parent || !item.parent.nearest || !item.parent.nearest()){
 
 						var check_selected;
@@ -9148,7 +9228,8 @@ Scheme.prototype.__define({
 
 					}
 
-				}else if(item instanceof Filling){
+				}
+				else if(item instanceof Filling){
 					while (item.children.length > 1){
 						if(!(item.children[1] instanceof Onlay))
 							item.children[1].remove();
@@ -12280,6 +12361,7 @@ class ToolSelectNode extends ToolElement {
       },
 
       mousedown: function(event) {
+
         this.mode = null;
         this.changed = false;
 
@@ -12294,8 +12376,7 @@ class ToolSelectNode extends ToolElement {
           }
 
 
-          var is_profile = this.hitItem.item.parent instanceof ProfileItem,
-            item = is_profile ? this.hitItem.item.parent.generatrix : this.hitItem.item;
+          const item = this.hitItem.item.parent;
 
           if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
 
@@ -12338,9 +12419,9 @@ class ToolSelectNode extends ToolElement {
 
           }
 
-          if(is_profile || item.parent instanceof Filling){
-            item.parent.attache_wnd(this._scope._acc.elm.cells("a"));
-            this.profile = item.parent;
+          if(item instanceof ProfileItem || item instanceof Filling){
+            item.attache_wnd(this._scope._acc.elm.cells("a"));
+            this.profile = item;
           }
 
           paper.clear_selection_bounds();
@@ -12377,26 +12458,47 @@ class ToolSelectNode extends ToolElement {
 
           var box = new paper.Rectangle(this.mouseStartPos, event.point);
 
-          if (!event.modifiers.shift)
+          if (!event.modifiers.shift){
             paper.project.deselectAll();
+          }
 
           if (event.modifiers.control) {
 
-            var selectedPaths = paper.paths_intersecting_rect(box);
-            for (var i = 0; i < selectedPaths.length; i++)
-              selectedPaths[i].selected = !selectedPaths[i].selected;
+            const profiles = [];
+            paper.paths_intersecting_rect(box).forEach((path) => {
+              if(path.parent instanceof ProfileItem){
+                if(profiles.indexOf(path.parent) == -1){
+                  profiles.push(path.parent);
+                  path.parent.selected = !path.parent.selected;
+                }
+              }
+              else{
+                path.selected = !path.selected;
+              }
+            })
 
-          }else {
+          }
+          else {
 
-            var selectedSegments = paper.segments_in_rect(box);
+            const selectedSegments = paper.segments_in_rect(box);
             if (selectedSegments.length > 0) {
-              for (var i = 0; i < selectedSegments.length; i++) {
+              for (let i = 0; i < selectedSegments.length; i++) {
                 selectedSegments[i].selected = !selectedSegments[i].selected;
               }
-            } else {
-              var selectedPaths = paper.paths_intersecting_rect(box);
-              for (var i = 0; i < selectedPaths.length; i++)
-                selectedPaths[i].selected = !selectedPaths[i].selected;
+            }
+            else {
+              const profiles = [];
+              paper.paths_intersecting_rect(box).forEach((path) => {
+                if(path.parent instanceof ProfileItem){
+                  if(profiles.indexOf(path.parent) == -1){
+                    profiles.push(path.parent);
+                    path.parent.selected = !path.parent.selected;
+                  }
+                }
+                else{
+                  path.selected = !path.selected;
+                }
+              })
             }
           }
         }
@@ -12404,7 +12506,7 @@ class ToolSelectNode extends ToolElement {
         paper.clear_selection_bounds();
 
         if (this.hitItem) {
-          if (this.hitItem.item.selected) {
+          if (this.hitItem.item.selected || this.hitItem.item.parent.selected) {
             paper.canvas_cursor('cursor-arrow-small');
           } else {
             paper.canvas_cursor('cursor-arrow-white-shape');
@@ -12413,50 +12515,56 @@ class ToolSelectNode extends ToolElement {
       },
 
       mousedrag: function(event) {
+
         this.changed = true;
 
         if (this.mode == consts.move_shapes) {
           paper.canvas_cursor('cursor-arrow-small');
 
-          var delta = event.point.subtract(this.mouseStartPos);
-          if (event.modifiers.shift)
+          let delta = event.point.subtract(this.mouseStartPos);
+          if (event.modifiers.shift){
             delta = delta.snap_to_angle();
+          }
 
           paper.restore_selection_state(this.originalContent);
           paper.project.move_points(delta, true);
           paper.clear_selection_bounds();
 
-        } else if (this.mode == consts.move_points) {
+        }
+        else if (this.mode == consts.move_points) {
           paper.canvas_cursor('cursor-arrow-small');
 
-          var delta = event.point.subtract(this.mouseStartPos);
-          if (event.modifiers.shift)
+          let delta = event.point.subtract(this.mouseStartPos);
+          if (event.modifiers.shift){
             delta = delta.snap_to_angle();
+          }
           paper.restore_selection_state(this.originalContent);
           paper.project.move_points(delta);
           paper.purge_selection();
+        }
+        else if (this.mode == consts.move_handle) {
 
-
-        } else if (this.mode == consts.move_handle) {
-
-          var delta = event.point.subtract(this.mouseStartPos),
-            noti = {
-              type: consts.move_handle,
-              profiles: [this.hitItem.item.parent],
-              points: []};
+          const delta = event.point.subtract(this.mouseStartPos);
+          const noti = {
+            type: consts.move_handle,
+            profiles: [this.hitItem.item.parent],
+            points: []
+          };
 
           if (this.hitItem.type == 'handle-out') {
-            var handlePos = this.originalHandleOut.add(delta);
-            if (event.modifiers.shift)
+            let handlePos = this.originalHandleOut.add(delta);
+            if (event.modifiers.shift){
               handlePos = handlePos.snap_to_angle();
+            }
 
             this.hitItem.segment.handleOut = handlePos;
             this.hitItem.segment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
-          } else {
-            var handlePos = this.originalHandleIn.add(delta);
-            if (event.modifiers.shift)
+          }
+          else {
+            let handlePos = this.originalHandleIn.add(delta);
+            if (event.modifiers.shift){
               handlePos = handlePos.snap_to_angle();
-
+            }
             this.hitItem.segment.handleIn = handlePos;
             this.hitItem.segment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
           }
@@ -12465,8 +12573,8 @@ class ToolSelectNode extends ToolElement {
           noti.profiles[0].layer.notify(noti);
 
           paper.purge_selection();
-
-        } else if (this.mode == 'box-select') {
+        }
+        else if (this.mode == 'box-select') {
           paper.drag_rect(this.mouseStartPos, event.point);
         }
       },

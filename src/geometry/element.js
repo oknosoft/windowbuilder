@@ -117,7 +117,7 @@ BuilderElement.prototype.__define({
 	 */
 	owner: {
 		get : function(){ return this.data.owner; },
-		set : function(newValue){ this.data.owner = newValue; }
+		set : function(v){ this.data.owner = v; }
 	},
 
 	/**
@@ -403,8 +403,9 @@ BuilderElement.prototype.__define({
 			this._row.clr = v;
 
 			// цвет элементу присваиваем только если он уже нарисован
-			if(this.path instanceof paper.Path)
-				this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
+			if(this.path instanceof paper.Path){
+        this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
+      }
 
 			this.project.register_change();
 
@@ -444,13 +445,14 @@ BuilderElement.prototype.__define({
 	 */
 	cnn3: {
 		get : function(){
-			var cnn_ii = this.selected_cnn_ii();
+			const cnn_ii = this.selected_cnn_ii();
 			return cnn_ii ? cnn_ii.row.cnn : $p.cat.cnns.get();
 		},
 		set: function(v){
-			var cnn_ii = this.selected_cnn_ii();
-			if(cnn_ii)
-				cnn_ii.row.cnn = v;
+      const cnn_ii = this.selected_cnn_ii();
+			if(cnn_ii){
+        cnn_ii.row.cnn = v;
+      }
 			this.project.register_change();
 		}
 	},

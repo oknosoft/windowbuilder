@@ -650,36 +650,34 @@ class Editor extends paper.PaperScope {
   // Returns serialized contents of selected items.
   capture_selection_state() {
 
-    const originalContent = [],
-      selected = this.project.selectedItems;
+    const originalContent = [];
 
-    for (var i = 0; i < selected.length; i++) {
-      var item = selected[i];
-      if (item.guide) continue;
-      var orig = {
-        id: item.id,
-        json: item.exportJSON({asString: false}),
-        selectedSegments: []
-      };
-      originalContent.push(orig);
-    }
+    this.project.selectedItems.forEach((item) => {
+      if (item instanceof paper.Path && !item.guide){
+        originalContent.push({
+          id: item.id,
+          json: item.exportJSON({asString: false}),
+          selectedSegments: []
+        });
+      }
+    });
+
     return originalContent;
   }
 
   // Restore the state of selected items.
   restore_selection_state(originalContent) {
 
-    for (var i = 0; i < originalContent.length; i++) {
-      var orig = originalContent[i];
-      var item = this.project.getItem({id: orig.id});
-      if (!item)
-        continue;
-      // HACK: paper does not retain item IDs after importJSON,
-      // store the ID here, and restore after deserialization.
-      var id = item.id;
-      item.importJSON(orig.json);
-      item._id = id;
-    }
+    originalContent.forEach((orig) => {
+      const item = this.project.getItem({id: orig.id});
+      if (item){
+        // HACK: paper does not retain item IDs after importJSON,
+        // store the ID here, and restore after deserialization.
+        const id = item.id;
+        item.importJSON(orig.json);
+        item._id = id;
+      }
+    })
   }
 
   /**

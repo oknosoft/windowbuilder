@@ -3,7 +3,7 @@
  *
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author	Evgeniy Malyarov
- * 
+ *
  * @module geometry
  * @submodule paper_ex
  */
@@ -215,18 +215,19 @@ paper.Path.prototype.__define({
 	 */
 	intersect_point: {
 		value: function (path, point, elongate) {
-			var intersections = this.getIntersections(path),
-				delta = Infinity, tdelta, tpoint;
+			const intersections = this.getIntersections(path);
+			let delta = Infinity, tdelta, tpoint;
 
-			if(intersections.length == 1)
-				return intersections[0].point;
+			if(intersections.length == 1){
+        return intersections[0].point;
+      }
+      else if(intersections.length > 1){
 
-			else if(intersections.length > 1){
+				if(!point){
+          point = this.getPointAt(this.length /2);
+        }
 
-				if(!point)
-					point = this.getPointAt(this.length /2);
-				
-				intersections.forEach(function(o){
+				intersections.forEach((o) => {
 					tdelta = o.point.getDistance(point, true);
 					if(tdelta < delta){
 						delta = tdelta;
@@ -234,16 +235,17 @@ paper.Path.prototype.__define({
 					}
 				});
 				return tpoint;
-
-			}else if(elongate == "nearest"){
+			}
+			else if(elongate == "nearest"){
 
 				// ищем проекцию ближайшей точки на path на наш путь
 				return this.getNearestPoint(path.getNearestPoint(point));
 
-			}else if(elongate){
+			}
+			else if(elongate){
 
 				// продлеваем пути до пересечения
-				var p1 = this.getNearestPoint(point),
+				let p1 = this.getNearestPoint(point),
 					p2 = path.getNearestPoint(point),
 					p1last = this.firstSegment.point.getDistance(p1, true) > this.lastSegment.point.getDistance(p1, true),
 					p2last = path.firstSegment.point.getDistance(p2, true) > path.lastSegment.point.getDistance(p2, true),

@@ -30,6 +30,70 @@ ProfileItem._extend(BuilderElement);
 
 ProfileItem.prototype.__define({
 
+  setSelection: {
+    value: function (selection) {
+
+      BuilderElement.prototype.setSelection.call(this, selection);
+
+      const {generatrix, path} = this.data;
+
+      generatrix.setSelection(selection);
+
+      if(selection){
+
+        const {angle_hor, rays} = this;
+        const {inner, outer} = rays;
+        const delta = ((angle_hor > 20 && angle_hor < 70) || (angle_hor > 200 && angle_hor < 250)) ? [500, 500] : [500, -500];
+        this._hatching = new paper.CompoundPath({
+          parent: this,
+          guide: true,
+          strokeColor: 'grey',
+          strokeScaling: false
+        })
+
+        path.setSelection(0);
+
+        for(let t = 0; t < inner.length; t+=40){
+          const ip = inner.getPointAt(t);
+          const fp = new paper.Path({
+            insert: false,
+            segments: [
+              ip.add(delta),
+              ip.subtract(delta)
+            ]
+          })
+          const op = fp.intersect_point(outer, ip);
+          if(ip && op){
+            const cip = path.contains(ip);
+            const cop = path.contains(op);
+            if(cip && cop){
+              this._hatching.moveTo(ip);
+              this._hatching.lineTo(op);
+            }
+            else if(cip && !cop){
+              const pp = fp.intersect_point(path, op);
+              this._hatching.moveTo(ip);
+              this._hatching.lineTo(pp);
+            }
+            else if(!cip && cop){
+              const pp = fp.intersect_point(path, ip);
+              this._hatching.moveTo(pp);
+              this._hatching.lineTo(op);
+            }
+          }
+        }
+
+      }
+      else{
+        if(this._hatching){
+          this._hatching.remove();
+          this._hatching = null;
+        }
+      }
+
+    }
+  },
+
 	/**
 	 * ### Вычисляемые поля в таблице координат
 	 * @method save_coordinates
@@ -38,15 +102,17 @@ ProfileItem.prototype.__define({
 	save_coordinates: {
 		value: function () {
 
-			if(!this.data.generatrix)
-				return;
+		  const {data, _row, rays, generatrix, project} = this;
 
-			var _row = this._row,
+			if(!generatrix){
+        return;
+      }
 
-				cnns = this.project.connections.cnns,
-				b = this.rays.b,
-				e = this.rays.e,
-				row_b = cnns.add({
+      const cnns = project.connections.cnns;
+      const b = rays.b;
+      const e = rays.e;
+
+			let	row_b = cnns.add({
 					elm1: _row.elm,
 					node1: "b",
 					cnn: b.cnn ? b.cnn.ref : "",
@@ -57,15 +123,13 @@ ProfileItem.prototype.__define({
 					node1: "e",
 					cnn: e.cnn ? e.cnn.ref : "",
 					aperture_len: this.corns(2).getDistance(this.corns(3)).round(1)
-				}),
-
-				gen = this.generatrix;
+				});
 
 			_row.x1 = this.x1;
 			_row.y1 = this.y1;
 			_row.x2 = this.x2;
 			_row.y2 = this.y2;
-			_row.path_data = gen.pathData;
+			_row.path_data = generatrix.pathData;
 			_row.nom = this.nom;
 
 
@@ -97,7 +161,7 @@ ProfileItem.prototype.__define({
 				cnns.add({
 					elm1: _row.elm,
 					elm2: row_b.elm,
-					cnn: this.data._nearest_cnn,
+					cnn: data._nearest_cnn,
 					aperture_len: _row.len
 				});
 			}
@@ -105,11 +169,11 @@ ProfileItem.prototype.__define({
 			// получаем углы между элементами и к горизонту
 			_row.angle_hor = this.angle_hor;
 
-			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - gen.getTangentAt(0).angle) * 10) / 10;
+			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - generatrix.getTangentAt(0).angle) * 10) / 10;
 			if(_row.alp1 < 0)
 				_row.alp1 = _row.alp1 + 360;
 
-			_row.alp2 = Math.round((gen.getTangentAt(gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
+			_row.alp2 = Math.round((generatrix.getTangentAt(generatrix.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
 			if(_row.alp2 < 0)
 				_row.alp2 = _row.alp2 + 360;
 
