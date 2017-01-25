@@ -72,7 +72,10 @@ class ToolSelectNode extends ToolElement {
           }
 
 
-          const item = this.hitItem.item.parent;
+          let item = this.hitItem.item.parent;
+          if (event.modifiers.space && item.nearest && item.nearest()) {
+            item = item.nearest();
+          }
 
           if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
 
@@ -295,7 +298,7 @@ class ToolSelectNode extends ToolElement {
       },
 
       keydown: function(event) {
-        var selected, i, j, path, segment, index, point, handle;
+        var selected, j, path, segment, index, point, handle;
 
         if (event.key == '+' || event.key == 'insert') {
 
@@ -304,7 +307,7 @@ class ToolSelectNode extends ToolElement {
           // при зажатом ctrl или alt добавляем элемент иначе - узел
           if (event.modifiers.space) {
 
-            for (i = 0; i < selected.length; i++) {
+            for (let i = 0; i < selected.length; i++) {
               path = selected[i];
 
               if(path.parent instanceof Profile){
@@ -322,13 +325,14 @@ class ToolSelectNode extends ToolElement {
               }
             }
 
-          }else{
+          }
+          else{
 
-            for (i = 0; i < selected.length; i++) {
+            for (let i = 0; i < selected.length; i++) {
               path = selected[i];
-              var do_select = false;
+              let do_select = false;
               if(path.parent instanceof ProfileItem){
-                for (j = 0; j < path.segments.length; j++) {
+                for (let j = 0; j < path.segments.length; j++) {
                   segment = path.segments[j];
                   if (segment.selected){
                     do_select = true;
@@ -354,22 +358,23 @@ class ToolSelectNode extends ToolElement {
           event.stop();
           return false;
 
-          // удаление сегмента или элемента
-        } else if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+
+        } // удаление сегмента или элемента
+        else if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
           if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
             return;
 
-          paper.project.selectedItems.some(function (path) {
+          paper.project.selectedItems.some((path) => {
 
-            var do_select = false;
+            let do_select = false;
 
             if(path.parent instanceof DimensionLineCustom){
               path.parent.remove();
               return true;
 
             }else if(path.parent instanceof ProfileItem){
-              for (j = 0; j < path.segments.length; j++) {
+              for (let j = 0; j < path.segments.length; j++) {
                 segment = path.segments[j];
                 do_select = do_select || segment.selected;
                 if (segment.selected && segment != path.firstSegment && segment != path.lastSegment ){
@@ -393,18 +398,18 @@ class ToolSelectNode extends ToolElement {
           event.stop();
           return false;
 
-        } else if (event.key == 'left') {
+        }
+        else if (event.key == 'left') {
           paper.project.move_points(new paper.Point(-10, 0));
-
-        } else if (event.key == 'right') {
+        }
+        else if (event.key == 'right') {
           paper.project.move_points(new paper.Point(10, 0));
-
-        } else if (event.key == 'up') {
+        }
+        else if (event.key == 'up') {
           paper.project.move_points(new paper.Point(0, -10));
-
-        } else if (event.key == 'down') {
+        }
+        else if (event.key == 'down') {
           paper.project.move_points(new paper.Point(0, 10));
-
         }
       }
     });
