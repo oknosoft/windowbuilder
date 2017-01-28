@@ -222,9 +222,10 @@ class ToolSelectNode extends ToolElement {
         paper.clear_selection_bounds();
 
         if (this.hitItem) {
-          if (this.hitItem.item.selected || this.hitItem.item.parent.selected) {
+          if (this.hitItem.item.selected || (this.hitItem.item.parent && this.hitItem.item.parent.selected)) {
             paper.canvas_cursor('cursor-arrow-small');
-          } else {
+          }
+          else {
             paper.canvas_cursor('cursor-arrow-white-shape');
           }
         }

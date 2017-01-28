@@ -34,7 +34,7 @@ class PenControls {
         case 'y':
           setTimeout(() => {
             tool.emit("mousemove", {
-              point: this.point,
+              point: t.point,
               modifiers: {}
             });
           });
@@ -393,8 +393,6 @@ class ToolPen extends ToolElement {
             parent: this.addl_hit.profile,
             side: this.addl_hit.side
           });
-
-
         }
         else if(this.mode == 'create' && this.path) {
 
@@ -423,14 +421,15 @@ class ToolPen extends ToolElement {
 
           this.path = null;
 
-          setTimeout(() => {
-            if(this.last_profile){
-              this._controls.mousemove({point: this.last_profile.e}, true);
-              this.last_profile = null;
-              this._controls.create_click();
-            }
-          }, 50);
-
+          if(this.profile.elm_type = $p.enm.elm_types.Рама){
+            setTimeout(() => {
+              if(this.last_profile){
+                this._controls.mousemove({point: this.last_profile.e}, true);
+                this.last_profile = null;
+                this._controls.create_click();
+              }
+            }, 50);
+          }
         }
         else if (this.hitItem && this.hitItem.item && (event.modifiers.shift || event.modifiers.control || event.modifiers.option)) {
 
