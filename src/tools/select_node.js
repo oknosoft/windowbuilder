@@ -61,8 +61,8 @@ class ToolSelectNode extends ToolElement {
         this.mode = null;
         this.changed = false;
 
-        if(event.event.which == 3){
-
+        if(event.event && event.event.which && event.event.which > 1){
+          //
         }
 
         if (this.hitItem && !event.modifiers.alt) {
@@ -95,7 +95,8 @@ class ToolSelectNode extends ToolElement {
                 $p.eve.callEvent("layer_activated", [item.layer]);
             }
 
-          } else if (this.hitItem.type == 'segment') {
+          }
+          else if (this.hitItem.type == 'segment') {
             if (event.modifiers.shift) {
               this.hitItem.segment.selected = !this.hitItem.segment.selected;
             } else {
@@ -110,7 +111,8 @@ class ToolSelectNode extends ToolElement {
               this.mouseStartPos = event.point.clone();
               this.originalContent = paper.capture_selection_state();
             }
-          } else if (this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
+          }
+          else if (this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
             this.mode = consts.move_handle;
             this.mouseStartPos = event.point.clone();
             this.originalHandleIn = this.hitItem.segment.handleIn.clone();
@@ -236,21 +238,19 @@ class ToolSelectNode extends ToolElement {
           paper.canvas_cursor('cursor-arrow-small');
 
           let delta = event.point.subtract(this.mouseStartPos);
-          if (event.modifiers.shift){
-            delta = delta.snap_to_angle();
+          if (!event.modifiers.shift){
+            delta = delta.snap_to_angle(Math.PI*2/4);
           }
-
           paper.restore_selection_state(this.originalContent);
           paper.project.move_points(delta, true);
           paper.clear_selection_bounds();
-
         }
         else if (this.mode == consts.move_points) {
           paper.canvas_cursor('cursor-arrow-small');
 
           let delta = event.point.subtract(this.mouseStartPos);
-          if (event.modifiers.shift){
-            delta = delta.snap_to_angle();
+          if(!event.modifiers.shift) {
+            delta = delta.snap_to_angle(Math.PI*2/4);
           }
           paper.restore_selection_state(this.originalContent);
           paper.project.move_points(delta);
@@ -267,18 +267,13 @@ class ToolSelectNode extends ToolElement {
 
           if (this.hitItem.type == 'handle-out') {
             let handlePos = this.originalHandleOut.add(delta);
-            if (event.modifiers.shift){
-              handlePos = handlePos.snap_to_angle();
-            }
 
             this.hitItem.segment.handleOut = handlePos;
             this.hitItem.segment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
           }
           else {
             let handlePos = this.originalHandleIn.add(delta);
-            if (event.modifiers.shift){
-              handlePos = handlePos.snap_to_angle();
-            }
+
             this.hitItem.segment.handleIn = handlePos;
             this.hitItem.segment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
           }

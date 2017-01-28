@@ -20,45 +20,11 @@ class PenControls {
   constructor(tool) {
 
     const t = this;
+    const _cont = this._cont = document.createElement('div');
 
-    t._cont = document.createElement('div');
-
-    function mousemove(event, ignore_pos) {
-
-      var bounds = paper.project.bounds,
-        pos = ignore_pos || paper.project.view.projectToView(event.point);
-
-      if(!ignore_pos){
-        t._cont.style.top = pos.y + 16 + "px";
-        t._cont.style.left = pos.x - 20 + "px";
-
-      }
-
-      if(bounds){
-        t._x.value = (event.point.x - bounds.x).toFixed(0);
-        t._y.value = (bounds.height + bounds.y - event.point.y).toFixed(0);
-
-        if(!ignore_pos){
-
-          if(tool.path){
-            t._l.value = tool.point1.getDistance(t.point).round(1);
-            var p = t.point.subtract(tool.point1);
-            p.y = -p.y;
-            var angle = p.angle;
-            if(angle < 0)
-              angle += 360;
-            t._a.value = angle.round(1);
-
-          }else{
-            t._l.value = 0;
-            t._a.value = 0;
-          }
-
-        }
-
-      }
-
-    }
+    this._tool = tool;
+    this.mousemove = this.mousemove.bind(this);
+    this.create_click = this.create_click.bind(this);
 
     function input_change() {
 
@@ -66,9 +32,9 @@ class PenControls {
 
         case 'x':
         case 'y':
-          setTimeout(function () {
+          setTimeout(() => {
             tool.emit("mousemove", {
-              point: t.point,
+              point: this.point,
               modifiers: {}
             });
           });
@@ -77,72 +43,43 @@ class PenControls {
         case 'l':
         case 'a':
 
-          if(!tool.path)
+          if(!tool.path){
             return false;
+          }
 
-          var p = new paper.Point();
+          const p = new paper.Point();
           p.length = parseFloat(t._l.value || 0);
           p.angle = parseFloat(t._a.value || 0);
           p.y = -p.y;
 
-          mousemove({point: tool.point1.add(p)}, true);
+          t.mousemove({point: tool.point1.add(p)}, true);
 
           input_change.call({name: "x"});
           break;
       }
     }
 
-    function create_click() {
-      setTimeout(function () {
-        tool.emit("mousedown", {
-          modifiers: {}
-        });
-        setTimeout(function () {
+    paper._wrapper.appendChild(_cont);
+    _cont.className = "pen_cont";
 
-          if(tool.mode == 'create' && tool.path){
-            setTimeout(function () {
-              if(tool.last_profile){
-                mousemove({point: tool.last_profile.e}, true);
-                tool.last_profile = null;
-                create_click();
-              }
-            }, 50);
-          }
+    paper.project.view.on('mousemove', this.mousemove);
 
-          tool.emit("mouseup", {
-            point: t.point,
-            modifiers: {}
-          });
-        });
-      });
-    }
-
-    paper._wrapper.appendChild(t._cont);
-    t._cont.className = "pen_cont";
-
-    paper.project.view.on('mousemove', mousemove);
-
-    t._cont.innerHTML = "<table><tr><td>x:</td><td><input type='number' name='x' /></td><td>y:</td><td><input type='number' name='y' /></td></tr>" +
+    _cont.innerHTML = "<table><tr><td>x:</td><td><input type='number' name='x' /></td><td>y:</td><td><input type='number' name='y' /></td></tr>" +
       "<tr><td>l:</td><td><input type='number' name='l' /></td><td>α:</td><td><input type='number' name='a' /></td></tr>" +
       "<tr><td colspan='4'><input type='button' name='click' value='Создать точку' /></td></tr></table>";
 
-    t._x = t._cont.querySelector("[name=x]");
-    t._y = t._cont.querySelector("[name=y]");
-    t._l = t._cont.querySelector("[name=l]");
-    t._a = t._cont.querySelector("[name=a]");
+    this._x = _cont.querySelector("[name=x]");
+    this._y = _cont.querySelector("[name=y]");
+    this._l = _cont.querySelector("[name=l]");
+    this._a = _cont.querySelector("[name=a]");
 
-    t._x.onchange = input_change;
-    t._y.onchange = input_change;
-    t._l.onchange = input_change;
-    t._a.onchange = input_change;
+    this._x.onchange = input_change;
+    this._y.onchange = input_change;
+    this._l.onchange = input_change;
+    this._a.onchange = input_change;
 
-    t._cont.querySelector("[name=click]").onclick = create_click;
+    _cont.querySelector("[name=click]").onclick = this.create_click;
 
-    t.unload = function () {
-      paper.project.view.off('mousemove', mousemove);
-      paper._wrapper.removeChild(t._cont);
-      t._cont = null;
-    }
 
   }
 
@@ -163,6 +100,70 @@ class PenControls {
       this._l.blur();
     else if(focused == this._a)
       this._a.blur();
+  }
+
+  mousemove(event, ignore_pos) {
+
+    const bounds = paper.project.bounds;
+    const pos = ignore_pos || paper.project.view.projectToView(event.point);
+
+    if (!ignore_pos) {
+      this._cont.style.top = pos.y + 16 + "px";
+      this._cont.style.left = pos.x - 20 + "px";
+
+    }
+
+    if (bounds) {
+      this._x.value = (event.point.x - bounds.x).toFixed(0);
+      this._y.value = (bounds.height + bounds.y - event.point.y).toFixed(0);
+
+      if (!ignore_pos) {
+
+        if (this._tool.path) {
+          this._l.value = this._tool.point1.getDistance(this.point).round(1);
+          const p = this.point.subtract(this._tool.point1);
+          p.y = -p.y;
+          let angle = p.angle;
+          if (angle < 0){
+            angle += 360;
+          }
+          this._a.value = angle.round(1);
+        }
+        else {
+          this._l.value = 0;
+          this._a.value = 0;
+        }
+      }
+    }
+  }
+
+  create_click() {
+    setTimeout(() => {
+      this._tool.emit("mousedown", {
+        modifiers: {}
+      });
+      setTimeout(() => {
+        // if(this._tool.mode == 'create' && this._tool.path){
+        //   setTimeout(() => {
+        //     if(this._tool.last_profile){
+        //       this.mousemove({point: this._tool.last_profile.e}, true);
+        //       this._tool.last_profile = null;
+        //       create_click();
+        //     }
+        //   }, 50);
+        // }
+        this._tool.emit("mouseup", {
+          point: this.point,
+          modifiers: {}
+        });
+      });
+    });
+  }
+
+  unload() {
+    paper.project.view.off('mousemove', this.mousemove);
+    paper._wrapper.removeChild(this._cont);
+    this._cont = null;
   }
 
 }
@@ -204,7 +205,7 @@ class ToolPen extends ToolElement {
       start_binded: false
     })
 
-    var on_layer_activated,
+    let on_layer_activated,
       on_scheme_changed,
       sys;
 
@@ -347,6 +348,10 @@ class ToolPen extends ToolElement {
 
         paper.project.deselectAll();
 
+        if(event.event && event.event.which && event.event.which > 1){
+          return this.keydown({key: 'escape'});
+        }
+
         tool.last_profile = null;
 
         if(tool.profile.elm_type == $p.enm.elm_types.Добор || tool.profile.elm_type == $p.enm.elm_types.Соединитель){
@@ -371,11 +376,16 @@ class ToolPen extends ToolElement {
 
         paper.canvas_cursor('cursor-pen-freehand');
 
+        if(event.event && event.event.which && event.event.which > 1){
+          return this.keydown({key: 'escape'});
+        }
+
         this.check_layer();
 
-        var whas_select;
+        let whas_select;
 
         if(this.addl_hit && this.addl_hit.glass && this.profile.elm_type == $p.enm.elm_types.Добор && !this.profile.inset.empty()){
+
           // рисуем доборный профиль
           new ProfileAddl({
             generatrix: this.addl_hit.generatrix,
@@ -385,7 +395,8 @@ class ToolPen extends ToolElement {
           });
 
 
-        }else if(this.mode == 'create' && this.path) {
+        }
+        else if(this.mode == 'create' && this.path) {
 
           if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
@@ -404,36 +415,52 @@ class ToolPen extends ToolElement {
 
             }.bind(this));
 
-
-
-          }else{
+          }
+          else{
             // Рисуем профиль
             this.last_profile = new Profile({generatrix: this.path, proto: this.profile});
-
           }
 
           this.path = null;
 
-        }else if (this.hitItem && this.hitItem.item && (event.modifiers.shift || event.modifiers.control || event.modifiers.option)) {
+          setTimeout(() => {
+            if(this.last_profile){
+              this._controls.mousemove({point: this.last_profile.e}, true);
+              this.last_profile = null;
+              this._controls.create_click();
+            }
+          }, 50);
 
-          var item = this.hitItem.item;
+        }
+        else if (this.hitItem && this.hitItem.item && (event.modifiers.shift || event.modifiers.control || event.modifiers.option)) {
+
+          let item = this.hitItem.item.parent;
+          if (event.modifiers.space && item.nearest && item.nearest()) {
+            item = item.nearest();
+          }
+
+          if (event.modifiers.shift) {
+            item.selected = !item.selected;
+          } else {
+            paper.project.deselectAll();
+            item.selected = true;
+          }
 
           // TODO: Выделяем элемент, если он подходящего типа
-          if(item.parent instanceof ProfileItem && item.parent.isInserted()){
-            item.parent.attache_wnd(paper._acc.elm.cells("a"));
-            item.parent.generatrix.selected = true;
+          if(item instanceof ProfileItem && item.isInserted()){
+            item.attache_wnd(paper._acc.elm.cells("a"));
             whas_select = true;
             tool._controls.blur();
 
-          }else if(item.parent instanceof Filling && item.parent.visible){
-            item.parent.attache_wnd(paper._acc.elm.cells("a"));
-            item.selected = true;
+          }else if(item instanceof Filling && item.visible){
+            item.attache_wnd(paper._acc.elm.cells("a"));
             whas_select = true;
             tool._controls.blur();
           }
 
-          if(item.selected && item.layer)
+          if(item.selected && item.layer){
             item.layer.activate(true);
+          }
 
         }
 
@@ -457,7 +484,7 @@ class ToolPen extends ToolElement {
 
         }
 
-        if(this.path){
+        if(this.path) {
           this.path.remove();
           this.path = null;
         }
@@ -561,16 +588,18 @@ class ToolPen extends ToolElement {
 
               if (dragIn && dragOut) {
                 handlePos = this.originalHandleOut.add(delta);
-                if (event.modifiers.shift)
+                if(!event.modifiers.shift) {
                   handlePos = handlePos.snap_to_angle();
+                }
                 this.currentSegment.handleOut = handlePos;
                 this.currentSegment.handleIn = handlePos.negate();
 
               } else if (dragOut) {
                 // upzp
 
-                if (event.modifiers.shift)
+                if(!event.modifiers.shift) {
                   delta = delta.snap_to_angle();
+                }
 
                 if(this.path.segments.length > 1)
                   this.path.lastSegment.point = this.point1.add(delta);
@@ -650,8 +679,9 @@ class ToolPen extends ToolElement {
                 //this.currentSegment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
               } else {
                 handlePos = this.originalHandleIn.add(delta);
-                if (event.modifiers.shift)
+                if(!event.modifiers.shift) {
                   handlePos = handlePos.snap_to_angle();
+                }
                 this.currentSegment.handleIn = handlePos;
                 this.currentSegment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
               }
@@ -671,38 +701,8 @@ class ToolPen extends ToolElement {
 
       },
 
-      keydown: function(event) {
+      keydown: this.keydown
 
-        // удаление сегмента или элемента
-        if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
-
-          if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
-            return;
-
-          paper.project.selectedItems.forEach(function (path) {
-            if(path.parent instanceof ProfileItem){
-              path = path.parent;
-              path.removeChildren();
-              path.remove();
-            }
-          });
-
-          this.mode = null;
-          this.path = null;
-
-          event.stop();
-          return false;
-
-        }else if(event.key == 'escape'){
-
-          if(this.path){
-            this.path.remove();
-            this.path = null;
-          }
-          this.mode = null;
-          this._controls.blur();
-        }
-      }
     })
 
   }
@@ -799,12 +799,45 @@ class ToolPen extends ToolElement {
     return true;
   }
 
+  keydown(event) {
+
+    // удаление сегмента или элемента
+    if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+
+      if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+        return;
+
+      paper.project.selectedItems.forEach((path) => {
+        if(path.parent instanceof ProfileItem){
+          path = path.parent;
+          path.removeChildren();
+          path.remove();
+        }
+      });
+
+      this.mode = null;
+      this.path = null;
+
+      event.stop();
+      return false;
+
+    }else if(event.key == 'escape'){
+
+      if(this.path){
+        this.path.remove();
+        this.path = null;
+      }
+      this.mode = null;
+      this._controls.blur();
+    }
+  }
+
   // делает полупрозрачными элементы неактивных контуров
   decorate_layers(reset){
 
     const active = paper.project.activeLayer;
 
-    paper.project.getItems({class: Contour}).forEach(function (l) {
+    paper.project.getItems({class: Contour}).forEach((l) => {
       l.opacity = (l == active || reset) ? 1 : 0.5;
     })
 

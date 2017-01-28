@@ -409,12 +409,15 @@ paper.Point.prototype.__define({
 	 */
 	snap_to_angle: {
 		value: function(snapAngle) {
-			if(!snapAngle)
-				snapAngle = Math.PI*2/8;
 
-			var angle = Math.atan2(this.y, this.x);
+			if(!snapAngle){
+        snapAngle = Math.PI*2/8;
+      }
+
+			let angle = Math.atan2(this.y, this.x);
 			angle = Math.round(angle/snapAngle) * snapAngle;
-			var dirx = Math.cos(angle),
+
+			const dirx = Math.cos(angle),
 				diry = Math.sin(angle),
 				d = dirx*this.x + diry*this.y;
 
