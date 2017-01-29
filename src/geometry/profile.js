@@ -1487,51 +1487,73 @@ Profile.prototype.__define({
 
 		value : function(check_only){
 
-			var t = this,
-				gen = t.generatrix,
-				profiles = t.parent.profiles,
-				tinner = [], touter = [], curr, pb, pe, ip;
+		  const {rays, generatrix} = this;
+      const tinner = [];
+      const touter = [];
 
-			for(var i = 0; i<profiles.length; i++){
+      if(this.parent.profiles.some((curr) => {
 
-				curr = profiles[i];
-				if(curr == t)
-					continue;
+          if(curr == this){
+            return
+          }
 
-				pb = curr.cnn_point("b");
-				if(pb.profile == t && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+          const pb = curr.cnn_point("b");
+          if(pb.profile == this && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
 
-					if(check_only)
-						return check_only;
+            if(check_only){
+              return true;
+            }
 
-					// выясним, с какой стороны примыкающий профиль
-					ip = curr.corns(1);
-					if(t.rays.inner.getNearestPoint(ip).getDistance(ip, true) < t.rays.outer.getNearestPoint(ip).getDistance(ip, true))
-						tinner.push({point: gen.getNearestPoint(pb.point), profile: curr});
-					else
-						touter.push({point: gen.getNearestPoint(pb.point), profile: curr});
-				}
-				pe = curr.cnn_point("e");
-				if(pe.profile == t && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+            // выясним, с какой стороны примыкающий профиль
+            const ip = curr.corns(1);
+            if(rays.inner.getNearestPoint(ip).getDistance(ip, true) < rays.outer.getNearestPoint(ip).getDistance(ip, true))
+              tinner.push({point: generatrix.getNearestPoint(pb.point), profile: curr});
+            else
+              touter.push({point: generatrix.getNearestPoint(pb.point), profile: curr});
+          }
 
-					if(check_only)
-						return check_only;
+          const pe = curr.cnn_point("e");
+          if(pe.profile == this && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
 
-					ip = curr.corns(2);
-					if(t.rays.inner.getNearestPoint(ip).getDistance(ip, true) < t.rays.outer.getNearestPoint(ip).getDistance(ip, true))
-						tinner.push({point: gen.getNearestPoint(pe.point), profile: curr});
-					else
-						touter.push({point: gen.getNearestPoint(pe.point), profile: curr});
-				}
+            if(check_only){
+              return true;
+            }
 
-			}
+            const ip = curr.corns(2);
+            if(rays.inner.getNearestPoint(ip).getDistance(ip, true) < rays.outer.getNearestPoint(ip).getDistance(ip, true))
+              tinner.push({point: generatrix.getNearestPoint(pe.point), profile: curr});
+            else
+              touter.push({point: generatrix.getNearestPoint(pe.point), profile: curr});
+          }
 
-			if(check_only)
-				return false;
-			else
-				return {inner: tinner, outer: touter};
+        })) {
+        return true;
+      }
+
+      return check_only ? false : {inner: tinner, outer: touter};
+
 		}
 	},
+
+  /**
+   * Возвращает массив примыкающих створочных элементов
+   */
+  joined_nearests: {
+	  value: function () {
+
+	    const res = [];
+
+	    this.layer.contours.forEach((contour) => {
+        contour.profiles.forEach((profile) => {
+          if(profile.nearest() == this){
+            res.push(profile)
+          }
+        })
+      })
+
+      return res;
+    }
+  },
 
 	/**
 	 * Возвращает тип элемента (рама, створка, импост)

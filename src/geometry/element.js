@@ -385,8 +385,15 @@ BuilderElement.prototype.__define({
 
 				this._row.inset = v;
 
-				if(this.data && this.data._rays)
-					this.data._rays.clear(true);
+				if(this.data && this.data._rays){
+          this.data._rays.clear(true);
+        }
+
+        if(this.joined_nearests){
+          this.joined_nearests().forEach((profile) => {
+            profile.data._rays.clear(true);
+          })
+        }
 
 				this.project.register_change();
 			}

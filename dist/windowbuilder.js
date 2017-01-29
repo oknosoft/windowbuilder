@@ -3431,65 +3431,67 @@ Contour.prototype.__define({
 
 	profiles: {
 		get: function(){
-			var res = [];
-			this.children.forEach(function(elm) {
-				if (elm instanceof Profile){
-					res.push(elm);
-				}
-			});
-			return res;
+      return this.children.filter((elm) => elm instanceof Profile);
 		}
 	},
 
 	imposts: {
 		get: function(){
-			var res = [];
-			this.getItems({class: Profile}).forEach(function(elm) {
-				if (elm.rays.b.is_tt || elm.rays.e.is_tt || elm.rays.b.is_i || elm.rays.e.is_i){
-					res.push(elm);
-				}
-			});
-			return res;
+      return this.getItems({class: Profile}).filter((elm) => {
+        return elm.rays.b.is_tt || elm.rays.e.is_tt || elm.rays.b.is_i || elm.rays.e.is_i;
+      });
 		}
 	},
 
 	glasses: {
 		value: function (hide, glass_only) {
-			var res = [];
-			this.children.forEach(function(elm) {
-				if ((!glass_only && elm instanceof Contour) || elm instanceof Filling){
-					res.push(elm);
-					if(hide)
-						elm.visible = false;
-				}
-			});
-			return res;
+			return this.children.filter((elm) => {
+        if((!glass_only && elm instanceof Contour) || elm instanceof Filling) {
+          if(hide){
+            elm.visible = false;
+          }
+          return true;
+        }
+      });
 		}
 	},
+
+  contours: {
+    get: function () {
+      return this.children.filter((elm) => elm instanceof Contour);
+    }
+  },
 
 	bounds: {
 		get: function () {
 
-			if(!this.data._bounds){
+      const {data} = this;
 
-				var profiles = this.profiles;
+			if(!data._bounds){
+
+				const {profiles} = this;
+
 				if(profiles.length && profiles[0].path){
-					this.data._bounds = profiles[0].path.bounds;
-					for(var i = 1; i < profiles.length; i++)
-						this.data._bounds = this.data._bounds.unite(profiles[i].path.bounds);
 
-					if(!this.data._bounds.width || !this.data._bounds.height){
-						for(var i = 1; i < profiles.length; i++)
-							this.data._bounds = this.data._bounds.unite(profiles[i].generatrix.bounds);
+          profiles.forEach((profile) => {
+            data._bounds = data._bounds ?
+              data._bounds.unite(profile.path.bounds) :
+              profile.path.bounds
+          });
+
+					if(!data._bounds.width || !data._bounds.height){
+            profiles.forEach((profile) => {
+              data._bounds = data._bounds.unite(profile.generatrix.bounds)
+            });
 					}
 
 				}else{
-					this.data._bounds = new paper.Rectangle();
+          data._bounds = new paper.Rectangle();
 
 				}
 			}
 
-			return this.data._bounds;
+			return data._bounds;
 
 		}
 	},
@@ -3497,8 +3499,8 @@ Contour.prototype.__define({
 	dimension_bounds: {
 
 		get: function(){
-			var bounds = this.bounds;
-			this.getItems({class: DimensionLineCustom}).forEach(function (dl) {
+			let bounds = this.bounds;
+			this.getItems({class: DimensionLineCustom}).forEach((dl) => {
 				bounds = bounds.unite(dl.bounds);
 			});
 			return bounds;
@@ -3795,9 +3797,10 @@ Contour.prototype.__define({
 
 	glass_recalc: {
 		value: function () {
-			var _contour = this,
-				contours = _contour.glass_contours,
-				glasses = _contour.glasses(true);
+
+			const _contour = this;
+      const contours = _contour.glass_contours;
+      const glasses = _contour.glasses(true);
 
 			function bind_glass(glass_contour){
 				var rating = 0, glass, crating, cglass, glass_nodes, glass_path_center;
@@ -4191,10 +4194,11 @@ Contour.prototype.__define({
 	is_pos: {
 		value: function (pos) {
 
-			if(this.project.contours.count == 1 || this.parent)
-				return true;
+			if(this.project.contours.count == 1 || this.parent){
+        return true;
+      }
 
-			var res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
+			let res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
 
 			if(!res){
 				if(pos == "top"){
@@ -5455,8 +5459,15 @@ BuilderElement.prototype.__define({
 
 				this._row.inset = v;
 
-				if(this.data && this.data._rays)
-					this.data._rays.clear(true);
+				if(this.data && this.data._rays){
+          this.data._rays.clear(true);
+        }
+
+        if(this.joined_nearests){
+          this.joined_nearests().forEach((profile) => {
+            profile.data._rays.clear(true);
+          })
+        }
 
 				this.project.register_change();
 			}
@@ -7749,50 +7760,69 @@ Profile.prototype.__define({
 
 		value : function(check_only){
 
-			var t = this,
-				gen = t.generatrix,
-				profiles = t.parent.profiles,
-				tinner = [], touter = [], curr, pb, pe, ip;
+		  const {rays, generatrix} = this;
+      const tinner = [];
+      const touter = [];
 
-			for(var i = 0; i<profiles.length; i++){
+      if(this.parent.profiles.some((curr) => {
 
-				curr = profiles[i];
-				if(curr == t)
-					continue;
+          if(curr == this){
+            return
+          }
 
-				pb = curr.cnn_point("b");
-				if(pb.profile == t && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+          const pb = curr.cnn_point("b");
+          if(pb.profile == this && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
 
-					if(check_only)
-						return check_only;
+            if(check_only){
+              return true;
+            }
 
-					ip = curr.corns(1);
-					if(t.rays.inner.getNearestPoint(ip).getDistance(ip, true) < t.rays.outer.getNearestPoint(ip).getDistance(ip, true))
-						tinner.push({point: gen.getNearestPoint(pb.point), profile: curr});
-					else
-						touter.push({point: gen.getNearestPoint(pb.point), profile: curr});
-				}
-				pe = curr.cnn_point("e");
-				if(pe.profile == t && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+            const ip = curr.corns(1);
+            if(rays.inner.getNearestPoint(ip).getDistance(ip, true) < rays.outer.getNearestPoint(ip).getDistance(ip, true))
+              tinner.push({point: generatrix.getNearestPoint(pb.point), profile: curr});
+            else
+              touter.push({point: generatrix.getNearestPoint(pb.point), profile: curr});
+          }
 
-					if(check_only)
-						return check_only;
+          const pe = curr.cnn_point("e");
+          if(pe.profile == this && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
 
-					ip = curr.corns(2);
-					if(t.rays.inner.getNearestPoint(ip).getDistance(ip, true) < t.rays.outer.getNearestPoint(ip).getDistance(ip, true))
-						tinner.push({point: gen.getNearestPoint(pe.point), profile: curr});
-					else
-						touter.push({point: gen.getNearestPoint(pe.point), profile: curr});
-				}
+            if(check_only){
+              return true;
+            }
 
-			}
+            const ip = curr.corns(2);
+            if(rays.inner.getNearestPoint(ip).getDistance(ip, true) < rays.outer.getNearestPoint(ip).getDistance(ip, true))
+              tinner.push({point: generatrix.getNearestPoint(pe.point), profile: curr});
+            else
+              touter.push({point: generatrix.getNearestPoint(pe.point), profile: curr});
+          }
 
-			if(check_only)
-				return false;
-			else
-				return {inner: tinner, outer: touter};
+        })) {
+        return true;
+      }
+
+      return check_only ? false : {inner: tinner, outer: touter};
+
 		}
 	},
+
+  joined_nearests: {
+	  value: function () {
+
+	    const res = [];
+
+	    this.layer.contours.forEach((contour) => {
+        contour.profiles.forEach((profile) => {
+          if(profile.nearest() == this){
+            res.push(profile)
+          }
+        })
+      })
+
+      return res;
+    }
+  },
 
 	elm_type: {
 		get : function(){
@@ -9370,12 +9400,7 @@ Scheme.prototype.__define({
 
 	contours: {
 		get: function () {
-			var res = [];
-			this.layers.forEach(function (l) {
-				if(l instanceof Contour)
-					res.push(l)
-			});
-			return res;
+			return this.layers.filter((l) => l instanceof Contour);
 		}
 	},
 
@@ -11168,12 +11193,13 @@ class ToolPen extends ToolElement {
       });
 
       if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Рама) &&
-        paper.project.activeLayer instanceof Contour && paper.project.activeLayer.profiles.length)
+          paper.project.activeLayer instanceof Contour && paper.project.activeLayer.profiles.length) {
         tool.profile.elm_type = $p.enm.elm_types.Импост;
-
+      }
       else if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Импост) &&
-        paper.project.activeLayer instanceof Contour && !paper.project.activeLayer.profiles.length)
+          paper.project.activeLayer instanceof Contour && !paper.project.activeLayer.profiles.length) {
         tool.profile.elm_type = $p.enm.elm_types.Рама;
+      }
 
       $p.dp.builder_pen.handle_event(tool.profile, "value_change", {
         field: "elm_type"
@@ -11207,7 +11233,7 @@ class ToolPen extends ToolElement {
         obj: tool.profile
       });
 
-      var wnd_options = tool.wnd.wnd_options;
+      const wnd_options = tool.wnd.wnd_options;
       tool.wnd.wnd_options = function (opt) {
         wnd_options.call(tool.wnd, opt);
         opt.bind_generatrix = tool.profile.bind_generatrix;
@@ -11353,7 +11379,7 @@ class ToolPen extends ToolElement {
 
           this.path = null;
 
-          if(this.profile.elm_type = $p.enm.elm_types.Рама){
+          if(this.profile.elm_type == $p.enm.elm_types.Рама){
             setTimeout(() => {
               if(this.last_profile){
                 this._controls.mousemove({point: this.last_profile.e}, true);

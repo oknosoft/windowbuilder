@@ -846,12 +846,7 @@ Scheme.prototype.__define({
 	 */
 	contours: {
 		get: function () {
-			var res = [];
-			this.layers.forEach(function (l) {
-				if(l instanceof Contour)
-					res.push(l)
-			});
-			return res;
+			return this.layers.filter((l) => l instanceof Contour);
 		}
 	},
 

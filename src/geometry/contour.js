@@ -368,13 +368,7 @@ Contour.prototype.__define({
 	 */
 	profiles: {
 		get: function(){
-			var res = [];
-			this.children.forEach(function(elm) {
-				if (elm instanceof Profile){
-					res.push(elm);
-				}
-			});
-			return res;
+      return this.children.filter((elm) => elm instanceof Profile);
 		}
 	},
 
@@ -386,13 +380,9 @@ Contour.prototype.__define({
 	 */
 	imposts: {
 		get: function(){
-			var res = [];
-			this.getItems({class: Profile}).forEach(function(elm) {
-				if (elm.rays.b.is_tt || elm.rays.e.is_tt || elm.rays.b.is_i || elm.rays.e.is_i){
-					res.push(elm);
-				}
-			});
-			return res;
+      return this.getItems({class: Profile}).filter((elm) => {
+        return elm.rays.b.is_tt || elm.rays.e.is_tt || elm.rays.b.is_i || elm.rays.e.is_i;
+      });
 		}
 	},
 
@@ -406,17 +396,28 @@ Contour.prototype.__define({
 	 */
 	glasses: {
 		value: function (hide, glass_only) {
-			var res = [];
-			this.children.forEach(function(elm) {
-				if ((!glass_only && elm instanceof Contour) || elm instanceof Filling){
-					res.push(elm);
-					if(hide)
-						elm.visible = false;
-				}
-			});
-			return res;
+			return this.children.filter((elm) => {
+        if((!glass_only && elm instanceof Contour) || elm instanceof Filling) {
+          if(hide){
+            elm.visible = false;
+          }
+          return true;
+        }
+      });
 		}
 	},
+
+  /**
+   * Возвращает массив вложенных контуров текущего контура
+   * @property contours
+   * @for Contour
+   * @type Array
+   */
+  contours: {
+    get: function () {
+      return this.children.filter((elm) => elm instanceof Contour);
+    }
+  },
 
 	/**
 	 * Габариты по внешним краям профилей контура
@@ -424,27 +425,34 @@ Contour.prototype.__define({
 	bounds: {
 		get: function () {
 
-			if(!this.data._bounds){
+      const {data} = this;
 
-				var profiles = this.profiles;
+			if(!data._bounds){
+
+				const {profiles} = this;
+
 				if(profiles.length && profiles[0].path){
-					this.data._bounds = profiles[0].path.bounds;
-					for(var i = 1; i < profiles.length; i++)
-						this.data._bounds = this.data._bounds.unite(profiles[i].path.bounds);
+
+          profiles.forEach((profile) => {
+            data._bounds = data._bounds ?
+              data._bounds.unite(profile.path.bounds) :
+              profile.path.bounds
+          });
 
 					// если профили еще не нарисованы, используем габариты образующих
-					if(!this.data._bounds.width || !this.data._bounds.height){
-						for(var i = 1; i < profiles.length; i++)
-							this.data._bounds = this.data._bounds.unite(profiles[i].generatrix.bounds);
+					if(!data._bounds.width || !data._bounds.height){
+            profiles.forEach((profile) => {
+              data._bounds = data._bounds.unite(profile.generatrix.bounds)
+            });
 					}
 
 				}else{
-					this.data._bounds = new paper.Rectangle();
+          data._bounds = new paper.Rectangle();
 
 				}
 			}
 
-			return this.data._bounds;
+			return data._bounds;
 
 		}
 	},
@@ -455,8 +463,8 @@ Contour.prototype.__define({
 	dimension_bounds: {
 
 		get: function(){
-			var bounds = this.bounds;
-			this.getItems({class: DimensionLineCustom}).forEach(function (dl) {
+			let bounds = this.bounds;
+			this.getItems({class: DimensionLineCustom}).forEach((dl) => {
 				bounds = bounds.unite(dl.bounds);
 			});
 			return bounds;
@@ -832,9 +840,10 @@ Contour.prototype.__define({
 	 */
 	glass_recalc: {
 		value: function () {
-			var _contour = this,
-				contours = _contour.glass_contours,
-				glasses = _contour.glasses(true);
+
+			const _contour = this;
+      const contours = _contour.glass_contours;
+      const glasses = _contour.glasses(true);
 
 			/**
 			 * Привязывает к пути найденной замкнутой области заполнение или вложенный контур текущего контура
@@ -1315,11 +1324,12 @@ Contour.prototype.__define({
 		value: function (pos) {
 
 			// если в изделии один контур или если контур является створкой, он занимает одновременно все положения
-			if(this.project.contours.count == 1 || this.parent)
-				return true;
+			if(this.project.contours.count == 1 || this.parent){
+        return true;
+      }
 
 			// если контур реально верхний или правый и т.д. - возвращаем результат сразу
-			var res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
+			let res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
 
 			if(!res){
 				if(pos == "top"){

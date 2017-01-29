@@ -226,12 +226,13 @@ class ToolPen extends ToolElement {
 
       // если в текущем слое есть профили, выбираем импост
       if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Рама) &&
-        paper.project.activeLayer instanceof Contour && paper.project.activeLayer.profiles.length)
+          paper.project.activeLayer instanceof Contour && paper.project.activeLayer.profiles.length) {
         tool.profile.elm_type = $p.enm.elm_types.Импост;
-
+      }
       else if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Импост) &&
-        paper.project.activeLayer instanceof Contour && !paper.project.activeLayer.profiles.length)
+          paper.project.activeLayer instanceof Contour && !paper.project.activeLayer.profiles.length) {
         tool.profile.elm_type = $p.enm.elm_types.Рама;
+      }
 
       // вставку по умолчанию получаем эмулируя событие изменения типа элемента
       $p.dp.builder_pen.handle_event(tool.profile, "value_change", {
@@ -269,7 +270,8 @@ class ToolPen extends ToolElement {
         obj: tool.profile
       });
 
-      var wnd_options = tool.wnd.wnd_options;
+      // подмешиваем в метод wnd_options() установку доппараметров
+      const wnd_options = tool.wnd.wnd_options;
       tool.wnd.wnd_options = function (opt) {
         wnd_options.call(tool.wnd, opt);
         opt.bind_generatrix = tool.profile.bind_generatrix;
@@ -421,7 +423,7 @@ class ToolPen extends ToolElement {
 
           this.path = null;
 
-          if(this.profile.elm_type = $p.enm.elm_types.Рама){
+          if(this.profile.elm_type == $p.enm.elm_types.Рама){
             setTimeout(() => {
               if(this.last_profile){
                 this._controls.mousemove({point: this.last_profile.e}, true);
