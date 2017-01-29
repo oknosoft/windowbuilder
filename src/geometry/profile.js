@@ -7,6 +7,288 @@
  * @submodule profile
  */
 
+/**
+ * Объект, описывающий геометрию соединения
+ * @class CnnPoint
+ * @constructor
+ */
+class CnnPoint {
+
+  constructor(parent, node) {
+
+    this._parent = parent;
+    this._node = node;
+
+    this.initialize();
+  }
+
+  /**
+   * Проверяет, является ли соединение в точке Т-образным.
+   * L для примыкающих рассматривается, как Т
+   */
+  get is_t() {
+    // если это угол, то точно не T
+    if(!this.cnn || this.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное){
+      return false;
+    }
+
+    // если это Ʇ, или † то без вариантов T
+    if(this.cnn.cnn_type == $p.enm.cnn_types.ТОбразное){
+      return true;
+    }
+
+    // если это Ꞁ или └─, то может быть T в разрыв - проверяем
+    if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной && this.parent.orientation != $p.enm.orientations.vert){
+      return true;
+    }
+
+    if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной && this.parent.orientation != $p.enm.orientations.hor){
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Строгий вариант свойства is_t: Ꞁ и └ не рассматриваются, как T
+   */
+  get is_tt() {
+    // если это угол, то точно не T
+    return !(this.is_i || this.profile_point == "b" || this.profile_point == "e" || this.profile == this.parent);
+  }
+
+  /**
+   * Проверяет, является ли соединение в точке L-образным
+   * Соединения Т всегда L-образные
+   */
+  get is_l() {
+    return this.is_t ||
+      !!(this.cnn && (this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной ||
+      this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной));
+  }
+
+  /**
+   * Проверяет, является ли соединение в точке соединением с пустотой
+   */
+  get is_i() {
+    return !this.profile && !this.is_cut;
+  }
+
+  /**
+   * Профиль, которому принадлежит точка соединения
+   * @type Profile
+   */
+  get parent() {
+    return this._parent;
+  }
+
+  /**
+   * Имя точки соединения (b или e)
+   * @type {String}
+   */
+  get node() {
+    return this._node;
+  }
+
+  clear() {
+    if(this.profile_point){
+      delete this.profile_point;
+    }
+    if(this.is_cut){
+      delete this.is_cut;
+    }
+    this.profile = null;
+    this.err = null;
+    this.distance = Infinity;
+    this.cnn_types = $p.enm.cnn_types.acn.i;
+    if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.tcn.i){
+      this.cnn = null;
+    }
+  }
+
+  /**
+   * Массив ошибок соединения
+   * @type Array
+   */
+  get err() {
+    return this._err;
+  }
+  set err(v) {
+    if(!v){
+      this._err.length = 0;
+    }
+    else if(this._err.indexOf(v) == -1){
+      this._err.push(v);
+    }
+  }
+
+  /**
+   * Профиль, с которым пересекается наш элемент в точке соединения
+   * @property profile
+   * @type Profile
+   */
+  get profile() {
+    if(this._profile === undefined && this._row && this._row.elm2){
+      this._profile = this.parent.layer.getItem({elm: this._row.elm2});
+      delete this._row;
+    }
+    return this._profile;
+  }
+  set profile(v) {
+    this._profile = v;
+  }
+
+  initialize() {
+
+    const {_parent, _node} = this;
+
+    //  массив ошибок соединения
+    this._err = [];
+
+    // строка в таблице соединений
+    this._row = _parent.project.connections.cnns.find({elm1: _parent.elm, node1: _node});
+
+    // примыкающий профиль
+    this._profile;
+
+    if(this._row){
+
+      /**
+       * Текущее соединение - объект справочника соединения
+       * @type _cat.cnns
+       */
+      this.cnn = this._row.cnn;
+
+      /**
+       * Массив допустимых типов соединений
+       * По умолчанию - соединение с пустотой
+       * @type Array
+       */
+      if($p.enm.cnn_types.acn.a.indexOf(this.cnn.cnn_type) != -1){
+        this.cnn_types = $p.enm.cnn_types.acn.a;
+      }
+      else if($p.enm.cnn_types.acn.t.indexOf(this.cnn.cnn_type) != -1){
+        this.cnn_types = $p.enm.cnn_types.acn.t;
+      }
+      else{
+        this.cnn_types = $p.enm.cnn_types.acn.i;
+      }
+    }
+    else{
+      this.cnn = null;
+      this.cnn_types = $p.enm.cnn_types.acn.i;
+    }
+
+    /**
+     * Расстояние до ближайшего профиля
+     * @type Number
+     */
+    this.distance = Infinity;
+
+    this.point = null;
+
+    this.profile_point = "";
+
+  }
+}
+
+/**
+ * Объект, описывающий лучи пути профиля
+ * @class ProfileRays
+ * @constructor
+ */
+class ProfileRays {
+
+  constructor(parent) {
+    this.parent = parent;
+    this.b = new CnnPoint(this.parent, "b");
+    this.e = new CnnPoint(this.parent, "e");
+    this.inner = new paper.Path({ insert: false });
+    this.outer = new paper.Path({ insert: false });
+  }
+
+  clear_segments() {
+    if(this.inner.segments.length){
+      this.inner.removeSegments();
+    }
+    if(this.outer.segments.length){
+      this.outer.removeSegments();
+    }
+  }
+
+  clear(with_cnn) {
+    this.clear_segments();
+    if(with_cnn){
+      this.b.clear();
+      this.e.clear();
+    }
+  }
+
+  recalc() {
+
+    const {parent} = this;
+    const path = parent.generatrix;
+    const len = path.length;
+
+    this.clear_segments();
+
+    if(!len){
+      return;
+    }
+
+    const {d1, d2, width} = parent;
+    const ds = 3 * width;
+    const step = len * 0.02;
+
+    // первая точка эквидистанты. аппроксимируется касательной на участке (from < начала пути)
+    let point_b = path.firstSegment.point,
+      tangent_b = path.getTangentAt(0),
+      normal_b = path.getNormalAt(0),
+      point_e = path.lastSegment.point,
+      tangent_e, normal_e;
+
+    // добавляем первые точки путей
+    this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
+    this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
+
+    // для прямого пути, чуть наклоняем нормаль
+    if(path.is_linear()){
+
+      this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
+      this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
+
+    }else{
+
+      this.outer.add(point_b.add(normal_b.multiply(d1)));
+      this.inner.add(point_b.add(normal_b.multiply(d2)));
+
+      for(let i = step; i<=len; i+=step) {
+        point_b = path.getPointAt(i);
+        if(!point_b){
+          continue;
+        }
+        normal_b = path.getNormalAt(i);
+        this.outer.add(point_b.add(normal_b.normalize(d1)));
+        this.inner.add(point_b.add(normal_b.normalize(d2)));
+      }
+
+      normal_e = path.getNormalAt(len);
+      this.outer.add(point_e.add(normal_e.multiply(d1)));
+      this.inner.add(point_e.add(normal_e.multiply(d2)));
+
+      tangent_e = path.getTangentAt(len);
+      this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
+      this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
+
+      this.outer.simplify(0.8);
+      this.inner.simplify(0.8);
+    }
+
+    this.inner.reverse();
+  }
+
+}
+
 
 /**
  * ### Элемент профиля
@@ -1754,284 +2036,3 @@ Profile.prototype.__define({
 });
 
 Editor.Profile = Profile;
-
-/**
- * Объект, описывающий геометрию соединения
- * @class CnnPoint
- * @constructor
- */
-function CnnPoint(parent, node){
-
-	//  массив ошибок соединения
-	this._err = [];
-
-	// строка в таблице соединений
-	this._row = parent.project.connections.cnns.find({elm1: parent.elm, node1: node});
-
-	// примыкающий профиль
-	this._profile;
-
-
-	if(this._row){
-
-		/**
-		 * Текущее соединение - объект справочника соединения
-		 * @type _cat.cnns
-		 */
-		this.cnn = this._row.cnn;
-
-		/**
-		 * Массив допустимых типов соединений
-		 * По умолчанию - соединение с пустотой
-		 * @type Array
-		 */
-		if($p.enm.cnn_types.acn.a.indexOf(this.cnn.cnn_type) != -1)
-			this.cnn_types = $p.enm.cnn_types.acn.a;
-
-		else if($p.enm.cnn_types.acn.t.indexOf(this.cnn.cnn_type) != -1)
-			this.cnn_types = $p.enm.cnn_types.acn.t;
-
-		else
-			this.cnn_types = $p.enm.cnn_types.acn.i;
-
-	}else{
-
-		this.cnn = null;
-		this.cnn_types = $p.enm.cnn_types.acn.i;
-	}
-
-	/**
-	 * Расстояние до ближайшего профиля
-	 * @type Number
-	 */
-	this.distance = Infinity;
-
-	this.point = null;
-
-	this.profile_point = "";
-
-
-	this.__define({
-
-		/**
-		 * Профиль, которому принадлежит точка соединения
-		 * @type Profile
-		 */
-		parent: {
-			value: parent,
-			writable: false
-		}
-	});
-
-
-}
-CnnPoint.prototype.__define({
-
-	/**
-	 * Проверяет, является ли соединение в точке Т-образным.
-	 * L для примыкающих рассматривается, как Т
-	 */
-	is_t: {
-		get: function () {
-
-			// если это угол, то точно не T
-			if(!this.cnn || this.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное)
-				return false;
-
-			// если это Ʇ, или † то без вариантов T
-			if(this.cnn.cnn_type == $p.enm.cnn_types.ТОбразное)
-				return true;
-
-			// если это Ꞁ или └─, то может быть T в разрыв - проверяем
-			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной && this.parent.orientation != $p.enm.orientations.vert)
-				return true;
-
-			if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной && this.parent.orientation != $p.enm.orientations.hor)
-				return true;
-
-			return false;
-		}
-	},
-
-	/**
-	 * Строгий вариант свойства is_t: Ꞁ и └ не рассматриваются, как T
-	 */
-	is_tt: {
-
-		get: function () {
-
-			// если это угол, то точно не T
-			return !(this.is_i || this.profile_point == "b" || this.profile_point == "e" || this.profile == this.parent);
-
-		}
-	},
-
-	/**
-	 * Проверяет, является ли соединение в точке L-образным
-	 * Соединения Т всегда L-образные
-	 */
-	is_l: {
-		get: function () {
-			return this.is_t ||
-				!!(this.cnn && (this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной ||
-					this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной));
-		}
-	},
-
-	/**
-	 * Проверяет, является ли соединение в точке соединением с пустотой
-	 */
-	is_i: {
-		get: function () {
-			return !this.profile && !this.is_cut;
-		}
-	},
-
-	clear: {
-		value: function () {
-			if(this.profile_point)
-				delete this.profile_point;
-			if(this.is_cut)
-				delete this.is_cut;
-			this.profile = null;
-			this.err = null;
-			this.distance = Infinity;
-			this.cnn_types = $p.enm.cnn_types.acn.i;
-			if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.tcn.i)
-				this.cnn = null;
-		}
-	},
-
-	/**
-	 * Массив ошибок соединения
-	 * @type Array
-	 */
-	err: {
-		get: function () {
-			return this._err;
-		},
-		set: function (v) {
-			if(!v)
-				this._err.length = 0;
-			else if(this._err.indexOf(v) == -1)
-				this._err.push(v);
-		}
-	},
-
-	/**
-	 * Профиль, с которым пересекается наш элемент в точке соединения
-	 * @property profile
-	 * @type Profile
-	 */
-	profile: {
-		get: function () {
-			if(this._profile === undefined && this._row && this._row.elm2){
-				this._profile = this.parent.layer.getItem({elm: this._row.elm2});
-				delete this._row;
-			}
-			return this._profile;
-		},
-		set: function (v) {
-			this._profile = v;
-		}
-	}
-});
-
-function ProfileRays(parent){
-
-	this.parent = parent;
-	parent = null;
-
-	this.b = new CnnPoint(this.parent, "b");
-	this.e = new CnnPoint(this.parent, "e");
-	this.inner = new paper.Path({ insert: false });
-	this.outer = new paper.Path({ insert: false });
-
-}
-ProfileRays.prototype.__define({
-
-	clear_segments: {
-		value: function () {
-			if(this.inner.segments.length)
-				this.inner.removeSegments();
-			if(this.outer.segments.length)
-				this.outer.removeSegments();
-		}
-	},
-
-	clear: {
-		value: function(with_cnn){
-			this.clear_segments();
-			if(with_cnn){
-				this.b.clear();
-				this.e.clear();
-			}
-		}
-	},
-
-	recalc: {
-		value: function(){
-
-			var path = this.parent.generatrix,
-				len = path.length;
-
-			this.clear_segments();
-
-			if(!len)
-				return;
-
-			var d1 = this.parent.d1, d2 = this.parent.d2,
-				ds = 3 * this.parent.width, step = len * 0.02,
-				point_b, tangent_b, normal_b,
-				point_e, tangent_e, normal_e;
-
-
-			// первая точка эквидистанты. аппроксимируется касательной на участке (from < начала пути)
-			point_b = path.firstSegment.point;
-			tangent_b = path.getTangentAt(0);
-			normal_b = path.getNormalAt(0);
-
-			// добавляем первые точки путей
-			this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
-			this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
-			point_e = path.lastSegment.point;
-
-			// для прямого пути, чуть наклоняем нормаль
-			if(path.is_linear()){
-
-				this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
-				this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
-
-			}else{
-
-				this.outer.add(point_b.add(normal_b.multiply(d1)));
-				this.inner.add(point_b.add(normal_b.multiply(d2)));
-
-				for(var i = step; i<=len; i+=step) {
-					point_b = path.getPointAt(i);
-					if(!point_b)
-						continue;
-					normal_b = path.getNormalAt(i);
-					this.outer.add(point_b.add(normal_b.normalize(d1)));
-					this.inner.add(point_b.add(normal_b.normalize(d2)));
-				}
-
-				normal_e = path.getNormalAt(len);
-				this.outer.add(point_e.add(normal_e.multiply(d1)));
-				this.inner.add(point_e.add(normal_e.multiply(d2)));
-
-				tangent_e = path.getTangentAt(len);
-				this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
-				this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
-
-				this.outer.simplify(0.8);
-				this.inner.simplify(0.8);
-			}
-
-			this.inner.reverse();
-		}
-	}
-});
-
-
-
