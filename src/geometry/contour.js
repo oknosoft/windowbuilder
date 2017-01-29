@@ -701,10 +701,24 @@ Contour.prototype.__define({
 			profiles.forEach(function (p) {
 
 				// ищем примыкания T к текущему профилю
-				var ip = p.joined_imposts(),
-					gen = p.generatrix, pbg, peg,
+				const ip = p.joined_imposts(),
+					gen = p.generatrix,
 					pb = p.cnn_point("b"),
-					pe = p.cnn_point("e");
+					pe = p.cnn_point("e"),
+          fn_sort = (a, b) => {
+            const da = gen.getOffsetOf(a.point),
+              db = gen.getOffsetOf(b.point);
+
+            if (da < db){
+              return -1;
+            }
+            else if (da > db){
+              return 1;
+            }
+            return 0;
+          };
+
+				let pbg, peg;
 
 				// для створочных импостов используем не координаты их b и e, а ближайшие точки примыкающих образующих
 				if(is_flap && pb.is_t)
@@ -719,50 +733,49 @@ Contour.prototype.__define({
 
 				// если есть примыкания T, добавляем сегменты, исключая соединения с пустотой
 				if(ip.inner.length){
-					ip.inner.sort(function (a, b) {
-						var da = gen.getOffsetOf(a.point) , db = gen.getOffsetOf(b.point);
-						if (da < db)
-							return -1;
-						else if (da > db)
-							return 1;
-						return 0;
-					});
-					if(!pb.is_i)
-						nodes.push(new GlassSegment(p, pbg, ip.inner[0].point));
 
-					for(var i = 1; i < ip.inner.length; i++)
-						nodes.push(new GlassSegment(p, ip.inner[i-1].point, ip.inner[i].point));
+				  ip.inner.sort(fn_sort);
 
-					if(!pe.is_i)
-						nodes.push(new GlassSegment(p, ip.inner[ip.inner.length-1].point, peg));
+					if(!pb.is_i){
+            nodes.push(new GlassSegment(p, pbg, ip.inner[0].point));
+          }
+
+					for(let i = 1; i < ip.inner.length; i++){
+            nodes.push(new GlassSegment(p, ip.inner[i-1].point, ip.inner[i].point));
+          }
+
+					if(!pe.is_i){
+            nodes.push(new GlassSegment(p, ip.inner[ip.inner.length-1].point, peg));
+          }
+
 				}
 				if(ip.outer.length){
-					ip.outer.sort(function (a, b) {
-						var da = gen.getOffsetOf(a.point) , db = gen.getOffsetOf(b.point);
-						if (da < db)
-							return -1;
-						else if (da > db)
-							return 1;
-						return 0;
-					});
-					if(!pb.is_i)
-						nodes.push(new GlassSegment(p, ip.outer[0].point, pbg, true));
 
-					for(var i = 1; i < ip.outer.length; i++)
-						nodes.push(new GlassSegment(p, ip.outer[i].point, ip.outer[i-1].point, true));
+					ip.outer.sort(fn_sort);
 
-					if(!pe.is_i)
-						nodes.push(new GlassSegment(p, peg, ip.outer[ip.outer.length-1].point, true));
+					if(!pb.is_i){
+            nodes.push(new GlassSegment(p, ip.outer[0].point, pbg, true));
+          }
+
+					for(let i = 1; i < ip.outer.length; i++){
+            nodes.push(new GlassSegment(p, ip.outer[i].point, ip.outer[i-1].point, true));
+          }
+
+					if(!pe.is_i){
+            nodes.push(new GlassSegment(p, peg, ip.outer[ip.outer.length-1].point, true));
+          }
 				}
 				if(!ip.inner.length){
 					// добавляем, если нет соединений с пустотой
-					if(!pb.is_i && !pe.is_i)
-						nodes.push(new GlassSegment(p, pbg, peg));
+					if(!pb.is_i && !pe.is_i){
+            nodes.push(new GlassSegment(p, pbg, peg));
+          }
 				}
 				if(!ip.outer.length && (pb.is_cut || pe.is_cut || pb.is_t || pe.is_t)){
 					// для импостов добавляем сегмент в обратном направлении
-					if(!pb.is_i && !pe.is_i)
-						nodes.push(new GlassSegment(p, peg, pbg, true));
+					if(!pb.is_i && !pe.is_i){
+            nodes.push(new GlassSegment(p, peg, pbg, true));
+          }
 				}
 			});
 
@@ -778,14 +791,15 @@ Contour.prototype.__define({
 	 */
 	glass_contours: {
 		get: function(){
-			var segments = this.glass_segments,
-				curr, acurr, res = [];
+			const segments = this.glass_segments;
+      const res = [];
+			let curr, acurr;
 
 			// возвращает массив сегментов, которые могут следовать за текущим
 			function find_next(curr){
 				if(!curr.anext){
 					curr.anext = [];
-					segments.forEach(function (segm) {
+					segments.forEach((segm) => {
 						if(segm == curr || segm.profile == curr.profile)
 							return;
 						// если конец нашего совпадает с началом следующего...
@@ -803,11 +817,12 @@ Contour.prototype.__define({
 
 			// рекурсивно получает следующий сегмент, пока не уткнётся в текущий
 			function go_go(segm){
-				var anext = find_next(segm);
-				for(var i in anext){
-					if(anext[i] == curr)
-						return anext;
-					else if(acurr.every(function (el) {	return el != anext[i]; })){
+				const anext = find_next(segm);
+				for(let i = 0; i < anext.length; i++){
+					if(anext[i] == curr){
+            return anext;
+          }
+					else if(acurr.every((el) => el != anext[i] )){
 						acurr.push(anext[i]);
 						return go_go(anext[i]);
 					}
@@ -815,16 +830,19 @@ Contour.prototype.__define({
 			}
 
 			while(segments.length){
+
 				curr = segments[0];
 				acurr = [curr];
 				if(go_go(curr) && acurr.length > 1){
 					res.push(acurr);
 				}
+
 				// удаляем из segments уже задействованные или не пригодившиеся сегменты
-				acurr.forEach(function (el) {
-					var ind = segments.indexOf(el);
-					if(ind != -1)
-						segments.splice(ind, 1);
+				acurr.forEach((el) => {
+					const ind = segments.indexOf(el);
+					if(ind != -1){
+            segments.splice(ind, 1);
+          }
 				});
 			}
 
@@ -850,21 +868,23 @@ Contour.prototype.__define({
 			 * @param glass_contour {Array}
 			 */
 			function bind_glass(glass_contour){
-				var rating = 0, glass, crating, cglass, glass_nodes, glass_path_center;
 
-				for(var g in glasses){
+				let rating = 0, glass, crating, cglass, glass_nodes, glass_path_center;
+
+				for(let g in glasses){
 
 					glass = glasses[g];
-					if(glass.visible)
-						continue;
+					if(glass.visible){
+            continue;
+          }
 
 					// вычисляем рейтинг
 					crating = 0;
 					glass_nodes = glass.outer_profiles;
 					// если есть привязанные профили, используем их. иначе - координаты узлов
 					if(glass_nodes.length){
-						for(var j in glass_contour){
-							for(var i in glass_nodes){
+						for(let j = 0; j < glass_contour.length; j++){
+							for(let i = 0; i < glass_nodes.length; i++){
 								if(glass_contour[j].profile == glass_nodes[i].profile &&
 									glass_contour[j].b.is_nearest(glass_nodes[i].b) &&
 									glass_contour[j].e.is_nearest(glass_nodes[i].e)){
@@ -876,17 +896,19 @@ Contour.prototype.__define({
 							if(crating > 2)
 								break;
 						}
-					}else{
+					}
+					else{
 						glass_nodes = glass.nodes;
-						for(var j in glass_contour){
-							for(var i in glass_nodes){
+						for(let j = 0; j < glass_contour.length; j++){
+							for(let i = 0; i < glass_nodes.length; i++){
 								if(glass_contour[j].b.is_nearest(glass_nodes[i])){
 									crating++;
 									break;
 								}
 							}
-							if(crating > 2)
-								break;
+							if(crating > 2){
+                break;
+              }
 						}
 					}
 
@@ -897,12 +919,14 @@ Contour.prototype.__define({
 					if(crating == rating && cglass != glass){
 						if(!glass_path_center){
 							glass_path_center = glass_contour[0].b;
-							for(var i=1; i<glass_contour.length; i++)
-								glass_path_center = glass_path_center.add(glass_contour[i].b);
+							for(let i=1; i<glass_contour.length; i++){
+                glass_path_center = glass_path_center.add(glass_contour[i].b);
+              }
 							glass_path_center = glass_path_center.divide(glass_contour.length);
 						}
-						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(cglass.bounds.center, true))
-							cglass = glass;
+						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(cglass.bounds.center, true)){
+              cglass = glass;
+            }
 					}
 				}
 
@@ -920,9 +944,11 @@ Contour.prototype.__define({
 					// 2. если не находим, используем умолчание системы
 					if(glass = _contour.getItem({class: Filling})){
 
-					}else if(glass = _contour.project.getItem({class: Filling})){
+					}
+					else if(glass = _contour.project.getItem({class: Filling})){
 
-					}else{
+					}
+					else{
 
 					}
 					cglass = new Filling({proto: glass, parent: _contour, path: glass_contour});
@@ -1230,22 +1256,25 @@ Contour.prototype.__define({
 	profile_by_furn_side: {
 		value: function (side, cache) {
 
-			if(!cache)
-				cache = {
-					profiles: this.outer_nodes,
-					bottom: this.profiles_by_side("bottom")
-				};
+			if(!cache){
+        cache = {
+          profiles: this.outer_nodes,
+          bottom: this.profiles_by_side("bottom")
+        };
+      }
 
-			var profile = cache.bottom,
-				profile_node = this.direction == $p.enm.open_directions.Правое ? "b" : "e",
-				other_node = this.direction == $p.enm.open_directions.Правое ? "e" : "b",
-				next = function () {
+      const profile_node = this.direction == $p.enm.open_directions.Правое ? "b" : "e";
+      const other_node = profile_node == "b" ? "e" : "b";
 
+      let profile = cache.bottom;
+
+      const next = () => {
 					side--;
-					if(side <= 0)
-						return profile;
+					if(side <= 0){
+            return profile;
+          }
 
-					cache.profiles.some(function (curr) {
+					cache.profiles.some((curr) => {
 						if(curr[other_node].is_nearest(profile[profile_node])){
 							profile = curr;
 							return true;
@@ -1253,11 +1282,9 @@ Contour.prototype.__define({
 					});
 
 					return next();
-
 				};
 
 			return next();
-
 
 		}
 	},
@@ -1358,24 +1385,37 @@ Contour.prototype.__define({
 	draw_opening: {
 		value: function () {
 
-			if(!this.parent || !$p.enm.open_types.is_opening(this.furn.open_type)){
-				if(this.l_visualization._opening && this.l_visualization._opening.visible)
-					this.l_visualization._opening.visible = false;
+      const _contour = this;
+      const {l_visualization, furn} = this;
+
+			if(!this.parent || !$p.enm.open_types.is_opening(furn.open_type)){
+				if(l_visualization._opening && l_visualization._opening.visible)
+					l_visualization._opening.visible = false;
 				return;
 			}
 
+      // создаём кеш элементов по номеру фурнитуры
+      const cache = {
+        profiles: this.outer_nodes,
+        bottom: this.profiles_by_side("bottom")
+      };
+
 			// рисует линии открывания на поворотной, поворотнооткидной и фрамужной фурнитуре
 			function rotary_folding() {
-				_contour.furn.open_tunes.forEach(function (row) {
+
+        const {_opening} = l_visualization;
+        const {side_count} = _contour;
+
+				furn.open_tunes.forEach((row) => {
 
 					if(row.rotation_axis){
-						var axis = _contour.profile_by_furn_side(row.side, cache),
-							other = _contour.profile_by_furn_side(
-								row.side + 2 <= this._owner.side_count ? row.side + 2 : row.side - 2, cache);
+						const axis = _contour.profile_by_furn_side(row.side, cache);
+            const other = _contour.profile_by_furn_side(
+								row.side + 2 <= side_count ? row.side + 2 : row.side - 2, cache);
 
-						_contour.l_visualization._opening.moveTo(axis.corns(3));
-						_contour.l_visualization._opening.lineTo(other.rays.inner.getPointAt(other.rays.inner.length / 2));
-						_contour.l_visualization._opening.lineTo(axis.corns(4));
+						_opening.moveTo(axis.corns(3));
+						_opening.lineTo(other.rays.inner.getPointAt(other.rays.inner.length / 2));
+						_opening.lineTo(axis.corns(4));
 
 					}
 				});
@@ -1383,32 +1423,39 @@ Contour.prototype.__define({
 
 			// рисует линии открывания на раздвижке
 			function sliding() {
+			  // находим центр
+        const {center} = _contour.bounds;
+        const {_opening} = l_visualization;
 
+        if(_contour.direction == $p.enm.open_directions.Правое) {
+          _opening.moveTo(center.add([-100,0]));
+          _opening.lineTo(center.add([100,0]));
+          _opening.moveTo(center.add([30,30]));
+          _opening.lineTo(center.add([100,0]));
+          _opening.lineTo(center.add([30,-30]));
+        }
+        else {
+          _opening.moveTo(center.add([100,0]));
+          _opening.lineTo(center.add([-100,0]));
+          _opening.moveTo(center.add([-30,30]));
+          _opening.lineTo(center.add([-100,0]));
+          _opening.lineTo(center.add([-30,-30]));
+        }
 			}
 
-
-			// создаём кеш элементов по номеру фурнитуры
-			var _contour = this,
-				cache = {
-					profiles: this.outer_nodes,
-					bottom: this.profiles_by_side("bottom")
-				};
-
 			// подготавливаем слой для рисования
-			if(!_contour.l_visualization._opening)
-				_contour.l_visualization._opening = new paper.CompoundPath({
-					parent: _contour.l_visualization,
-					strokeColor: 'black'
-				});
-			else
-				_contour.l_visualization._opening.removeChildren();
+			if(!l_visualization._opening){
+        l_visualization._opening = new paper.CompoundPath({
+          parent: _contour.l_visualization,
+          strokeColor: 'black'
+        });
+      }
+			else{
+        l_visualization._opening.removeChildren();
+      }
 
 			// рисуем раправление открывания
-			if(this.furn.is_sliding)
-				sliding();
-
-			else
-				rotary_folding();
+      return furn.is_sliding ? sliding() : rotary_folding();
 
 		}
 	},
@@ -1826,6 +1873,7 @@ Contour.prototype.__define({
 			});
 		}
 	}
+
 });
 
 /**

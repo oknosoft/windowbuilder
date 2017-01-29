@@ -1172,10 +1172,10 @@ class Editor extends paper.PaperScope {
         medium = medium / curr.dx.length;
         curr.dx.forEach((glass) => {
           if(glass.right == curr.impost){
-            delta += (medium - glass.width) / (1.2 * curr.dx.length)
+            delta += (medium - glass.width) / (1.3 * curr.dx.length)
           }
           else if(glass.left == curr.impost){
-            delta += (glass.width - medium) / (1.2 * curr.dx.length)
+            delta += (glass.width - medium) / (1.3 * curr.dx.length)
           }
         });
         delta = new paper.Point([delta,0])
@@ -1214,12 +1214,12 @@ class Editor extends paper.PaperScope {
     }
 
     if(shift.some((delta) => {
-      return delta.length > 1
+      return delta.length > 0.8
       })){
 
       data._align_counter+= 1;
 
-      this.project.contours.forEach(function(l){
+      this.project.contours.forEach((l) => {
         l.redraw();
       });
 
