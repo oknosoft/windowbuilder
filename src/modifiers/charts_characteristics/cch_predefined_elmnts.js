@@ -20,9 +20,9 @@
 
 			// читаем элементы из pouchdb и создаём свойства
 			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
-				.then(function (rows) {
+				.then((rows) => {
 
-					var parents = {};
+					const parents = {};
 
 					rows.forEach(function (row) {
 						if(row.is_folder && row.synonym){
@@ -38,7 +38,7 @@
 
 						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
 
-							var _mgr, tnames;
+							let _mgr, tnames;
 
 							if(row.type.is_ref){
 								tnames = row.type.types[0].split(".");
@@ -79,8 +79,9 @@
 
 							}else{
 
-								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
-									delete $p.job_prm[parents[row.parent]][row.synonym];
+								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym)){
+                  delete $p.job_prm[parents[row.parent]][row.synonym];
+                }
 
 								$p.job_prm[parents[row.parent]].__define(row.synonym, {
 									value: _mgr ? _mgr.get(row.value, false) : row.value,
@@ -91,24 +92,26 @@
 						}
 					});
 				})
-				.then(function () {
+				.then(() => {
 
 					// рассчеты, помеченные, как шаблоны, загрузим в память заранее
-					setTimeout(function () {
+					setTimeout(() => {
 
-						if(!$p.job_prm.builder.base_block)
-							$p.job_prm.builder.base_block = [];
+						if(!$p.job_prm.builder.base_block){
+              $p.job_prm.builder.base_block = [];
+            }
 
 						// дополним base_block шаблонами из систем профилей
-						$p.cat.production_params.forEach(function (o) {
+						$p.cat.production_params.forEach((o) => {
 							if(!o.is_folder)
-								o.base_blocks.forEach(function (row) {
-									if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1)
-										$p.job_prm.builder.base_block.push(row.calc_order);
+								o.base_blocks.forEach((row) => {
+									if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1){
+                    $p.job_prm.builder.base_block.push(row.calc_order);
+                  }
 								});
 						});
 
-						$p.job_prm.builder.base_block.forEach(function (o) {
+						$p.job_prm.builder.base_block.forEach((o) => {
 							o.load();
 						});
 
@@ -119,7 +122,7 @@
 
 
 					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-					setTimeout(function () {
+					setTimeout(() => {
 						$p.eve.callEvent("predefined_elmnts_inited");
 					}, 200);
 
@@ -128,7 +131,7 @@
 		}
 	});
 
-	var _mgr = $p.cch.predefined_elmnts;
+	const _mgr = $p.cch.predefined_elmnts;
 
 
 	/**
@@ -144,54 +147,57 @@
 		value: {
 			get: function () {
 
-				var mf = this.type,
-					res = this._obj ? this._obj.value : "",
-					mgr, ref;
+				const mf = this.type;
+				const res = this._obj ? this._obj.value : "";
+				let mgr, ref;
 
-				if(this._obj.is_folder)
-					return "";
-
-				if(typeof res == "object")
-					return res;
-
+				if(this._obj.is_folder){
+          return "";
+        }
+				if(typeof res == "object"){
+          return res;
+        }
 				else if(mf.is_ref){
-					if(mf.digits && typeof res === "number")
-						return res;
-
-					if(mf.hasOwnProperty("str_len") && !$p.utils.is_guid(res))
-						return res;
-
+					if(mf.digits && typeof res === "number"){
+            return res;
+          }
+					if(mf.hasOwnProperty("str_len") && !$p.utils.is_guid(res)){
+            return res;
+          }
 					if(mgr = $p.md.value_mgr(this._obj, "value", mf)){
-						if($p.utils.is_data_mgr(mgr))
-							return mgr.get(res, false);
-						else
-							return $p.utils.fetch_type(res, mgr);
+						if($p.utils.is_data_mgr(mgr)){
+              return mgr.get(res, false);
+            }
+						else{
+              return $p.utils.fetch_type(res, mgr);
+            }
 					}
-
 					if(res){
 						console.log(["value", mf, this._obj]);
 						return null;
 					}
-
-				}else if(mf.date_part)
-					return $p.utils.fix_date(this._obj.value, true);
-
-				else if(mf.digits)
-					return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
-
-				else if(mf.types[0]=="boolean")
-					return $p.utils.fix_boolean(this._obj.value);
-
-				else
-					return this._obj.value || "";
+				}
+				else if(mf.date_part){
+          return $p.utils.fix_date(this._obj.value, true);
+        }
+        else if(mf.digits){
+          return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
+        }
+        else if(mf.types[0]=="boolean"){
+          return $p.utils.fix_boolean(this._obj.value);
+        }
+				else{
+          return this._obj.value || "";
+        }
 
 				return this.characteristic.clr;
 			},
 
 			set: function (v) {
 
-				if(this._obj.value === v)
-					return;
+				if(this._obj.value === v){
+          return;
+        }
 
 				Object.getNotifier(this).notify({
 					type: 'update',
@@ -203,6 +209,7 @@
 			}
 		}
 	});
+
 	/**
 	 * ### Форма элемента
 	 *
@@ -214,7 +221,7 @@
 	 */
 	_mgr.form_obj = function(pwnd, attr){
 
-		var o, wnd;
+		let o, wnd;
 
 		return this.constructor.prototype.form_obj.call(this, pwnd, attr)
 			.then(function (res) {
