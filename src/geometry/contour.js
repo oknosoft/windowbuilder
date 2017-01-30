@@ -10,6 +10,56 @@
  */
 
 /**
+ * ### Сегмент заполнения
+ * содержит информацию о примыкающем профиле и координатах начала и конца
+ * @class GlassSegment
+ * @constructor
+ */
+class GlassSegment {
+
+  constructor(profile, b, e, outer) {
+
+    this.profile = profile;
+    this.b = b.clone();
+    this.e = e.clone();
+    this.outer = !!outer;
+
+    this.segment();
+
+  }
+
+  segment() {
+
+    let gen;
+
+    if(this.profile.children.some((addl) => {
+
+        if(addl instanceof ProfileAddl && this.outer == addl.outer){
+
+          if(!gen){
+            gen = this.profile.generatrix;
+          }
+
+          const b = this.profile instanceof ProfileAddl ? this.profile.b : this.b;
+          const e = this.profile instanceof ProfileAddl ? this.profile.e : this.e;
+
+          // TODO: учесть импосты, привязанные к добору
+
+          if(b.is_nearest(gen.getNearestPoint(addl.b), true) && e.is_nearest(gen.getNearestPoint(addl.e), true)){
+            this.profile = addl;
+            this.outer = false;
+            return true;
+          }
+        }
+      })){
+
+      this.segment();
+    }
+
+  }
+}
+
+/**
  * ### Контур (слой) изделия
  * Унаследован от  [paper.Layer](http://paperjs.org/reference/layer/)
  * новые элементы попадают в активный слой-контур и не могут его покинуть
@@ -21,333 +71,92 @@
  */
 function Contour(attr){
 
-	/**
-	 * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
-	 */
+	// за этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
 	this._noti = {};
 
-	/**
-	 * Формирует оповещение для тех, кто следит за this._noti
-	 * @param obj
-	 */
-	this.notify = function (obj) {
-		_notifier.notify(obj);
-		_contour.project.register_change();
-	};
+  // метод - нотификатор
+  this._notifier = Object.getNotifier(this._noti);
 
-	var _contour = this,
-		_row,
-		_notifier = Object.getNotifier(this._noti),
-		_layers = {};
+  // здесь живут группы текста и размерных линий
+  this._layers = {};
 
-	Contour.superclass.constructor.call(this);
-
-	if(attr.parent)
-		this.parent = attr.parent;
 
 	// строка в таблице конструкций
-	if(attr.row)
-		_row = attr.row;
+	if(attr.row){
+    this._row = attr.row;
+  }
 	else{
-		_row = _contour.project.ox.constructions.add({ parent: this.parent ? this.parent.cnstr : 0 });
-		_row.cnstr = _contour.project.ox.constructions.aggregate([], ["cnstr"], "MAX") + 1;
+	  const {constructions} = this.project.ox;
+    this._row = constructions.add({ parent: this.parent ? this.parent.cnstr : 0 });
+    this._row.cnstr = constructions.aggregate([], ["cnstr"], "MAX") + 1;
 	}
 
 
-	this.__define({
+  Contour.superclass.constructor.call(this);
 
-		_row: {
-			get : function(){
-				return _row;
-			}
-		},
-
-		cnstr: {
-			get : function(){
-				return _row.cnstr;
-			},
-			set : function(v){
-				_row.cnstr = v;
-			}
-		},
-
-		// служебная группа текстовых комментариев
-		l_text: {
-			get: function () {
-				if(!_layers.text)
-					_layers.text = new paper.Group({ parent: this });
-				return _layers.text;
-			}
-		},
-
-		// служебная группа визуализации допов,  петель и ручек
-		l_visualization: {
-			get: function () {
-				if(!_layers.visualization)
-					_layers.visualization = new paper.Group({ parent: this, guide: true });
-				return _layers.visualization;
-			}
-		},
-
-		// служебная группа размерных линий
-		l_dimensions: {
-			get: function () {
-				if(!_layers.dimensions){
-					_layers.dimensions = new paper.Group({ parent: this });
-					_layers.dimensions.bringToFront();
-				}
-				return _layers.dimensions;
-			}
-		}
-
-	});
-
-
-	/**
-	 * путь контура - при чтении похож на bounds
-	 * для вложенных контуров определяет положение, форму и количество сегментов створок
-	 * @property path
-	 * @type paper.Path
-	 */
-	this.__define('path', {
-		get : function(){
-			return this.bounds;
-		},
-		set : function(attr){
-
-			if(Array.isArray(attr)){
-
-				var need_bind = attr.length,
-					outer_nodes = this.outer_nodes,
-					available_bind = outer_nodes.length,
-					elm, curr,
-					noti = {type: consts.move_points, profiles: [], points: []};
-
-				// первый проход: по двум узлам либо примыканию к образующей
-				if(need_bind){
-					for(var i in attr){
-						curr = attr[i];             // curr.profile - сегмент внешнего профиля
-						for(var j in outer_nodes){
-							elm = outer_nodes[j];   // elm - сегмент профиля текущего контура
-							if(elm.data.binded)
-								continue;
-							if(curr.profile.is_nearest(elm)){
-								elm.data.binded = true;
-								curr.binded = true;
-								need_bind--;
-								available_bind--;
-								if(!curr.b.is_nearest(elm.b)){
-									elm.rays.clear(true);
-									elm.b = curr.b;
-									if(noti.profiles.indexOf(elm) == -1){
-										noti.profiles.push(elm);
-										noti.points.push(elm.b);
-									}
-								}
-
-								if(!curr.e.is_nearest(elm.e)){
-									elm.rays.clear(true);
-									elm.e = curr.e;
-									if(noti.profiles.indexOf(elm) == -1){
-										noti.profiles.push(elm);
-										noti.points.push(elm.e);
-									}
-								}
-
-								break;
-							}
-						}
-					}
-				}
-
-				// второй проход: по одному узлу
-				if(need_bind){
-					for(var i in attr){
-						curr = attr[i];
-						if(curr.binded)
-							continue;
-						for(var j in outer_nodes){
-							elm = outer_nodes[j];
-							if(elm.data.binded)
-								continue;
-							if(curr.b.is_nearest(elm.b, true) || curr.e.is_nearest(elm.e, true)){
-								elm.data.binded = true;
-								curr.binded = true;
-								need_bind--;
-								available_bind--;
-								elm.rays.clear(true);
-								elm.b = curr.b;
-								elm.e = curr.e;
-								if(noti.profiles.indexOf(elm) == -1){
-									noti.profiles.push(elm);
-									noti.points.push(elm.b);
-									noti.points.push(elm.e);
-								}
-								break;
-							}
-						}
-					}
-				}
-
-				// третий проход - из оставшихся
-				if(need_bind && available_bind){
-					for(var i in attr){
-						curr = attr[i];
-						if(curr.binded)
-							continue;
-						for(var j in outer_nodes){
-							elm = outer_nodes[j];
-							if(elm.data.binded)
-								continue;
-							elm.data.binded = true;
-							curr.binded = true;
-							need_bind--;
-							available_bind--;
-							// TODO заменить на клонирование образующей
-							elm.rays.clear(true);
-							elm.b = curr.b;
-							elm.e = curr.e;
-							if(noti.profiles.indexOf(elm) == -1){
-								noti.profiles.push(elm);
-								noti.points.push(elm.b);
-								noti.points.push(elm.e);
-							}
-							break;
-						}
-					}
-				}
-
-				// четвертый проход - добавляем
-				if(need_bind){
-					for(var i in attr){
-						curr = attr[i];
-						if(curr.binded)
-							continue;
-						elm = new Profile({
-							generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e),
-							proto: outer_nodes.length ? outer_nodes[0] : {
-								parent: this,
-								clr: _contour.project.default_clr()
-							}
-						});
-						curr.profile = elm;
-						if(curr.outer)
-							delete curr.outer;
-						curr.binded = true;
-
-						elm.data.binded = true;
-						elm.data.simulated = true;
-
-						noti.profiles.push(elm);
-						noti.points.push(elm.b);
-						noti.points.push(elm.e);
-
-						need_bind--;
-					}
-				}
-
-				// удаляем лишнее
-				if(available_bind){
-					outer_nodes.forEach(function (elm) {
-						if(!elm.data.binded){
-							elm.rays.clear(true);
-							elm.remove();
-							available_bind--;
-						}
-					});
-				}
-
-				// информируем систему об изменениях
-				if(noti.points.length)
-					this.notify(noti);
-
-				// пересчитываем вставки створок
-				this.profiles.forEach(function (p) {
-					if(p.nearest()){
-						p.inset = p.project.default_inset({
-							elm_type: p.elm_type,
-							pos: p.pos,
-							inset: p.inset
-						});
-					}
-				});
-				this.data._bounds = null;
-
-			}
-
-		},
-		enumerable : true
-	});
-
-
-	/**
-	 * Удаляет контур из иерархии проекта
-	 * Одновлеменно, удаляет строку из табчасти _Конструкции_ и подчиненные строки из табчасти _Координаты_
-	 * @method remove
-	 */
-	this.remove = function () {
-
-		//удаляем детей
-		while(this.children.length)
-			this.children[0].remove();
-
-		var ox = this.project.ox,
-			_del_rows = ox.coordinates.find_rows({cnstr: this.cnstr});
-		_del_rows.forEach(function (row) {
-			ox.coordinates.del(row._row);
-		});
-		_del_rows = null;
-
-		// удаляем себя
-		if(ox === _row._owner._owner)
-			_row._owner.del(_row);
-		_row = null;
-
-		// стандартные действия по удалению элемента paperjs
-		Contour.superclass.remove.call(this);
-	};
+  if(attr.parent){
+    this.parent = attr.parent;
+  }
 
 
 	// добавляем элементы контура
 	if(this.cnstr){
 
-		var coordinates = this.project.ox.coordinates;
+		const {coordinates} = this.project.ox;
 
 		// профили и доборы
-		coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, function(row){
+		coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => {
 
-			var profile = new Profile({row: row, parent: _contour});
+      const profile = new Profile({row: row, parent: this});
 
-			coordinates.find_rows({cnstr: row.cnstr, parent: {in: [row.elm, -row.elm]}, elm_type: $p.enm.elm_types.Добор}, function(row){
+			coordinates.find_rows({cnstr: row.cnstr, parent: {in: [row.elm, -row.elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => {
 				new ProfileAddl({row: row,	parent: profile});
 			});
 
 		});
 
 		// заполнения
-		coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.glasses}}, function(row){
-			new Filling({row: row,	parent: _contour});
+		coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.glasses}}, (row) => {
+			new Filling({row: row,	parent: this});
 		});
 
 		// остальные элементы (текст)
-		coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, function(row){
+		coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, (row) => {
 
 			if(row.elm_type == $p.enm.elm_types.Текст){
-				new FreeText({
-					row: row,
-					parent: _contour.l_text
-				});
+				new FreeText({row: row, parent: this.l_text});
 			}
-
 		});
 
 	}
-
 
 }
 Contour._extend(paper.Layer);
 
 Contour.prototype.__define({
+
+  /**
+   * Номер конструкции текущего слоя
+   */
+  cnstr: {
+    get : function(){
+      return this._row.cnstr;
+    },
+    set : function(v){
+      this._row.cnstr = v;
+    }
+  },
+
+  /**
+   * Формирует оповещение для тех, кто следит за this._noti
+   * @param obj
+   */
+  notify: {
+    value: function (obj) {
+      this._notifier.notify(obj);
+      this.project.register_change();
+    }
+  },
 
 	/**
 	 * Врезаем оповещение при активации слоя
@@ -359,6 +168,212 @@ Contour.prototype.__define({
 			this.project.register_update();
 		}
 	},
+
+  /**
+   * Удаляет контур из иерархии проекта
+   * Одновлеменно, удаляет строку из табчасти _Конструкции_ и подчиненные строки из табчасти _Координаты_
+   * @method remove
+   */
+  remove: {
+	  value: function () {
+
+      //удаляем детей
+      const {children, _row} = this;
+      while(children.length){
+        children[0].remove();
+      }
+
+      const {ox} = this.project;
+      ox.coordinates.find_rows({cnstr: this.cnstr}).forEach(function (row) {
+        ox.coordinates.del(row._row);
+      });
+
+      // удаляем себя
+      if(ox === _row._owner._owner){
+        _row._owner.del(_row);
+      }
+      this._row = null;
+
+      // стандартные действия по удалению элемента paperjs
+      Contour.superclass.remove.call(this);
+    }
+  },
+
+  /**
+   * путь контура - при чтении похож на bounds
+   * для вложенных контуров определяет положение, форму и количество сегментов створок
+   * @property path
+   * @type paper.Path
+   */
+  path: {
+    get : function(){
+      return this.bounds;
+    },
+    set : function(attr){
+
+      if(Array.isArray(attr)){
+
+        const noti = {type: consts.move_points, profiles: [], points: []};
+        const {outer_nodes} = this;
+
+        let need_bind = attr.length,
+          available_bind = outer_nodes.length,
+          elm, curr;
+
+        // первый проход: по двум узлам либо примыканию к образующей
+        if(need_bind){
+          for(var i in attr){
+            curr = attr[i];             // curr.profile - сегмент внешнего профиля
+            for(var j in outer_nodes){
+              elm = outer_nodes[j];   // elm - сегмент профиля текущего контура
+              if(elm.data.binded)
+                continue;
+              if(curr.profile.is_nearest(elm)){
+                elm.data.binded = true;
+                curr.binded = true;
+                need_bind--;
+                available_bind--;
+                if(!curr.b.is_nearest(elm.b)){
+                  elm.rays.clear(true);
+                  elm.b = curr.b;
+                  if(noti.profiles.indexOf(elm) == -1){
+                    noti.profiles.push(elm);
+                    noti.points.push(elm.b);
+                  }
+                }
+
+                if(!curr.e.is_nearest(elm.e)){
+                  elm.rays.clear(true);
+                  elm.e = curr.e;
+                  if(noti.profiles.indexOf(elm) == -1){
+                    noti.profiles.push(elm);
+                    noti.points.push(elm.e);
+                  }
+                }
+
+                break;
+              }
+            }
+          }
+        }
+
+        // второй проход: по одному узлу
+        if(need_bind){
+          for(var i in attr){
+            curr = attr[i];
+            if(curr.binded)
+              continue;
+            for(var j in outer_nodes){
+              elm = outer_nodes[j];
+              if(elm.data.binded)
+                continue;
+              if(curr.b.is_nearest(elm.b, true) || curr.e.is_nearest(elm.e, true)){
+                elm.data.binded = true;
+                curr.binded = true;
+                need_bind--;
+                available_bind--;
+                elm.rays.clear(true);
+                elm.b = curr.b;
+                elm.e = curr.e;
+                if(noti.profiles.indexOf(elm) == -1){
+                  noti.profiles.push(elm);
+                  noti.points.push(elm.b);
+                  noti.points.push(elm.e);
+                }
+                break;
+              }
+            }
+          }
+        }
+
+        // третий проход - из оставшихся
+        if(need_bind && available_bind){
+          for(var i in attr){
+            curr = attr[i];
+            if(curr.binded)
+              continue;
+            for(var j in outer_nodes){
+              elm = outer_nodes[j];
+              if(elm.data.binded)
+                continue;
+              elm.data.binded = true;
+              curr.binded = true;
+              need_bind--;
+              available_bind--;
+              // TODO заменить на клонирование образующей
+              elm.rays.clear(true);
+              elm.b = curr.b;
+              elm.e = curr.e;
+              if(noti.profiles.indexOf(elm) == -1){
+                noti.profiles.push(elm);
+                noti.points.push(elm.b);
+                noti.points.push(elm.e);
+              }
+              break;
+            }
+          }
+        }
+
+        // четвертый проход - добавляем
+        if(need_bind){
+          for(var i in attr){
+            curr = attr[i];
+            if(curr.binded)
+              continue;
+            elm = new Profile({
+              generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e),
+              proto: outer_nodes.length ? outer_nodes[0] : {
+                  parent: this,
+                  clr: this.project.default_clr()
+                }
+            });
+            curr.profile = elm;
+            if(curr.outer)
+              delete curr.outer;
+            curr.binded = true;
+
+            elm.data.binded = true;
+            elm.data.simulated = true;
+
+            noti.profiles.push(elm);
+            noti.points.push(elm.b);
+            noti.points.push(elm.e);
+
+            need_bind--;
+          }
+        }
+
+        // удаляем лишнее
+        if(available_bind){
+          outer_nodes.forEach(function (elm) {
+            if(!elm.data.binded){
+              elm.rays.clear(true);
+              elm.remove();
+              available_bind--;
+            }
+          });
+        }
+
+        // информируем систему об изменениях
+        if(noti.points.length){
+          this.notify(noti);
+        }
+
+        // пересчитываем вставки створок
+        this.profiles.forEach((p) => {
+          if(p.nearest()){
+            p.inset = p.project.default_inset({
+              elm_type: p.elm_type,
+              pos: p.pos,
+              inset: p.inset
+            });
+          }
+        });
+        this.data._bounds = null;
+      }
+    },
+    enumerable : true
+  },
 
 	/**
 	 * Возвращает массив профилей текущего контура
@@ -479,12 +494,11 @@ Contour.prototype.__define({
 	redraw: {
 		value: function(on_redrawed){
 
-			if(!this.visible)
-				return on_redrawed ? on_redrawed() : undefined;
+			if(!this.visible){
+        return on_redrawed ? on_redrawed() : undefined;
+      }
 
-			var _contour = this,
-				profiles = this.profiles,
-				llength = 0;
+			let llength = 0;
 
 			function on_child_contour_redrawed(){
 				llength--;
@@ -496,31 +510,32 @@ Contour.prototype.__define({
 			this.data._bounds = null;
 
 			// чистим визуализацию
-			if(!this.project.data._saving && this.l_visualization._by_spec)
-				this.l_visualization._by_spec.removeChildren();
+			if(!this.project.data._saving && this.l_visualization._by_spec){
+        this.l_visualization._by_spec.removeChildren();
+      }
 
 			// сначала перерисовываем все профили контура
-			profiles.forEach(function(elm) {
+      this.profiles.forEach((elm) => {
 				elm.redraw();
 			});
 
 			// затем, создаём и перерисовываем заполнения
-			_contour.glass_recalc();
+      this.glass_recalc();
 
 			// перерисовываем раскладки заполнений
-			_contour.glasses(false, true).forEach(function (glass) {
+      this.glasses(false, true).forEach((glass) => {
 				glass.redraw_onlay();
 			});
 
 			// рисуем направление открывания
-			_contour.draw_opening();
+      this.draw_opening();
 
 			// перерисовываем вложенные контуры
-			_contour.children.forEach(function(child_contour) {
+      this.children.forEach((child_contour) => {
 				if (child_contour instanceof Contour){
 					llength++;
 					//setTimeout(function () {
-					//	if(!_contour.project.has_changes())
+					//	if(!this.project.has_changes())
 					//		child_contour.redraw(on_child_contour_redrawed);
 					//});
 					child_contour.redraw(on_child_contour_redrawed);
@@ -531,8 +546,9 @@ Contour.prototype.__define({
 			$p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
 
 			// если нет вложенных контуров, информируем проект о завершении перерисовки контура
-			if(!llength && on_redrawed)
-				on_redrawed();
+			if(!llength && on_redrawed){
+        on_redrawed();
+      }
 
 		}
 	},
@@ -1379,6 +1395,40 @@ Contour.prototype.__define({
 		}
 	},
 
+  /**
+   * Cлужебная группа текстовых комментариев
+   */
+  l_text: {
+    get: function () {
+      const {_layers} = this;
+      return _layers.text || (_layers.text = new paper.Group({ parent: this }));
+    }
+  },
+
+  /**
+   * Cлужебная группа визуализации допов,  петель и ручек
+   */
+  l_visualization: {
+    get: function () {
+      const {_layers} = this;
+      return _layers.visualization || (_layers.visualization = new paper.Group({ parent: this, guide: true }));
+    }
+  },
+
+  /**
+   * Cлужебная группа размерных линий
+   */
+  l_dimensions: {
+    get: function () {
+      const {_layers} = this;
+      if(!_layers.dimensions){
+        _layers.dimensions = new paper.Group({ parent: this });
+        _layers.dimensions.bringToFront();
+      }
+      return _layers.dimensions;
+    }
+  },
+
 	/**
 	 * Рисует направление открывания
 	 */
@@ -1884,52 +1934,3 @@ Contour.prototype.__define({
  */
 Editor.Contour = Contour;
 
-
-/**
- * Сегмент заполнения содержит информацию примыкающем профиле и координатах начала и конца
- * @class GlassSegment
- * @constructor
- */
-function GlassSegment(profile, b, e, outer) {
-
-	this.profile = profile;
-	this.b = b.clone();
-	this.e = e.clone();
-	this.outer = !!outer;
-
-	this.segment();
-
-}
-GlassSegment.prototype.__define({
-
-	segment: {
-		value: function () {
-
-			var gen;
-
-			if(this.profile.children.some(function (addl) {
-
-					if(addl instanceof ProfileAddl && this.outer == addl.outer){
-
-						if(!gen)
-							gen = this.profile.generatrix;
-
-						var b = this.profile instanceof ProfileAddl ? this.profile.b : this.b,
-							e = this.profile instanceof ProfileAddl ? this.profile.e : this.e;
-
-						// TODO: учесть импосты, привязанные к добору
-
-						if(b.is_nearest(gen.getNearestPoint(addl.b), true) && e.is_nearest(gen.getNearestPoint(addl.e), true)){
-							this.profile = addl;
-							this.outer = false;
-							return true;
-						}
-					}
-				}.bind(this))){
-
-				this.segment();
-			}
-		}
-	}
-
-});

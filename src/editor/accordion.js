@@ -13,8 +13,7 @@ function EditorAccordion(_editor, cell_acc) {
 
 	cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);
 
-	var _cell = cell_acc.cell,
-		cont = _cell.querySelector(".editor_accordion"),
+	const cont = cell_acc.cell.querySelector(".editor_accordion"),
 
 		/**
 		 * ### Панель инструментов элемента
@@ -308,33 +307,37 @@ function EditorAccordion(_editor, cell_acc) {
 
 			// делаем выделенный слой активным
 			tree.attachEvent("onSelect", function(id, mode){
-				if(!mode)
-					return;
+				if(!mode){
+          return;
+        }
 				var contour = _editor.project.getItem({cnstr: Number(id)});
 				if(contour){
-					if(contour.project.activeLayer != contour)
-						contour.activate(true);
+					if(contour.project.activeLayer != contour){
+            contour.activate(true);
+          }
 					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
 				}
 			});
 
 			$p.eve.attachEvent("layer_activated", function (contour) {
 				if(contour && contour.cnstr && contour.cnstr != tree.getSelectedId()){
-					tree.selectItem(contour.cnstr);
-					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
+				  if(tree.items[contour.cnstr]){
+            tree.selectItem(contour.cnstr);
+            cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
+          }
 				}
-
 			});
 
 			// начинаем следить за изменениями размеров при перерисовке контуров
 			$p.eve.attachEvent("contour_redrawed", function (contour, bounds) {
 
-				var text = layer_text(contour, bounds);
+				const text = layer_text(contour, bounds);
 
 				tree.setItemText(contour.cnstr, text);
 
-				if(contour.project.activeLayer == contour)
-					cont.querySelector("[name=header_stv]").innerHTML = text;
+				if(contour.project.activeLayer == contour){
+          cont.querySelector("[name=header_stv]").innerHTML = text;
+        }
 
 			});
 
