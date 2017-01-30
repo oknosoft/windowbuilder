@@ -2325,9 +2325,9 @@ $p.CatCharacteristics.prototype.__define({
 
 (function($p){
 
-	var _mgr = $p.cat.characteristics,
-		_meta = $p.cat.characteristics.metadata()._clone(),
-		selection_block, wnd;
+	const _mgr = $p.cat.characteristics;
+  const _meta = $p.cat.characteristics.metadata()._clone();
+	let selection_block, wnd;
 
 	_mgr.form_selection_block = function(pwnd, attr){
 
@@ -2400,7 +2400,7 @@ $p.CatCharacteristics.prototype.__define({
 			selection_block.calc_order = $p.wsql.get_user_param("template_block_calc_order");
 		}
 		if($p.job_prm.builder.base_block && (selection_block.calc_order.empty() || selection_block.calc_order.is_new())){
-			$p.job_prm.builder.base_block.some(function (o) {
+			$p.job_prm.builder.base_block.some((o) => {
 				selection_block.calc_order = o;
 				$p.wsql.set_user_param("template_block_calc_order", selection_block.calc_order.ref);
 				return true;
@@ -2414,7 +2414,7 @@ $p.CatCharacteristics.prototype.__define({
 		attr.custom_selection = function (attr) {
 			var ares = [], crefs = [], calc_order;
 
-			attr.selection.some(function (o) {
+			attr.selection.some((o) => {
 				if(Object.keys(o).indexOf("calc_order") != -1){
 					calc_order = o.calc_order;
 					return true;
@@ -2445,7 +2445,7 @@ $p.CatCharacteristics.prototype.__define({
 				})
 				.then(function () {
 
-					crefs.forEach(function (o) {
+					crefs.forEach((o) => {
 						o = _mgr.get(o, false, true);
 						if(o && !o.calc_order.empty() && o.coordinates.count()){
 							ares.push(o);
@@ -2453,9 +2453,9 @@ $p.CatCharacteristics.prototype.__define({
 					});
 
 					crefs.length = 0;
-					ares.forEach(function (o) {
-						var presentation = (o.calc_order_row.note || o.note || o.name) + "<br />" + o.owner.name;
-						if(!attr.filter || presentation.indexOf(attr.filter) != -1)
+					ares.forEach((o) => {
+            const presentation = (o.calc_order_row.note || o.note || o.name) + "<br />" + o.owner.name;
+						if(!attr.filter || presentation.toLowerCase().match(attr.filter.toLowerCase()))
 							crefs.push({
 								ref: o.ref,
 								presentation: presentation,
@@ -2464,7 +2464,7 @@ $p.CatCharacteristics.prototype.__define({
 					});
 
 					ares.length = 0;
-					crefs.forEach(function (o) {
+					crefs.forEach((o) => {
 						if(o.svg && o.svg.data){
 							ares.push($p.utils.blob_as_text(o.svg.data)
 								.then(function (svg) {
@@ -2491,7 +2491,7 @@ $p.CatCharacteristics.prototype.__define({
 			text: "Расчет",
 			name: "calc_order"
 		});
-		var fdiv = wnd.elmnts.filter.custom_selection.calc_order.parentNode;
+    const fdiv = wnd.elmnts.filter.custom_selection.calc_order.parentNode;
 		fdiv.removeChild(fdiv.firstChild);
 
 		wnd.elmnts.filter.custom_selection.calc_order = new $p.iface.OCombo({
@@ -2499,13 +2499,31 @@ $p.CatCharacteristics.prototype.__define({
 			obj: selection_block,
 			field: "calc_order",
 			width: 220,
-			get_option_list: function (val, selection) {
+			get_option_list: (val, selection) => {
 
-				var l = [];
+				const l = [];
 
-				$p.job_prm.builder.base_block.forEach(function (o) {
-					l.push({text: o.note || o.presentation, value: o.ref});
+				$p.job_prm.builder.base_block.forEach((o) => {
+				  if(selection.presentation && selection.presentation.like){
+				    if(o.note.toLowerCase().match(selection.presentation.like.toLowerCase()) || o.presentation.toLowerCase().match(selection.presentation.like.toLowerCase())){
+              l.push({text: o.note || o.presentation, value: o.ref});
+            }
+          }else{
+            l.push({text: o.note || o.presentation, value: o.ref});
+          }
 				});
+
+        l.sort((a, b) => {
+          if (a.text < b.text){
+            return -1;
+          }
+          else if (a.text > b.text){
+            return 1;
+          }
+          else{
+            return 0;
+          }
+        })
 
 				return Promise.resolve(l);
 			}
