@@ -7075,12 +7075,14 @@ ProfileItem.prototype.__define({
 			_row.angle_hor = this.angle_hor;
 
 			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - generatrix.getTangentAt(0).angle) * 10) / 10;
-			if(_row.alp1 < 0)
-				_row.alp1 = _row.alp1 + 360;
+			if(_row.alp1 < 0){
+        _row.alp1 = _row.alp1 + 360;
+      }
 
 			_row.alp2 = Math.round((generatrix.getTangentAt(generatrix.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
-			if(_row.alp2 < 0)
-				_row.alp2 = _row.alp2 + 360;
+			if(_row.alp2 < 0){
+        _row.alp2 = _row.alp2 + 360;
+      }
 
 			_row.elm_type = this.elm_type;
 
