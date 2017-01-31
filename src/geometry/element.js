@@ -32,8 +32,9 @@ function BuilderElement(attr){
 
 	BuilderElement.superclass.constructor.call(this);
 
-	if(!attr.row)
-		attr.row = this.project.ox.coordinates.add();
+	if(!attr.row){
+    attr.row = this.project.ox.coordinates.add();
+  }
 
 	this.__define({
 		_row: {
@@ -45,31 +46,39 @@ function BuilderElement(attr){
 
 	if(attr.proto){
 
-		if(attr.proto.inset)
-			this.inset = attr.proto.inset;
+		if(attr.proto.inset){
+      this.inset = attr.proto.inset;
+    }
 
-		if(attr.parent)
-			this.parent = attr.parent;
+		if(attr.parent){
+      this.parent = attr.parent;
+    }
+		else if(attr.proto.parent){
+      this.parent = attr.proto.parent;
+    }
 
-		else if(attr.proto.parent)
-			this.parent = attr.proto.parent;
-
-		if(attr.proto instanceof Profile)
-			this.insertBelow(attr.proto);
+		if(attr.proto instanceof Profile){
+      this.insertBelow(attr.proto);
+    }
 
 		this.clr = attr.proto.clr;
 
-	}else if(attr.parent)
-		this.parent = attr.parent;
+	}
+	else if(attr.parent){
+    this.parent = attr.parent;
+  }
 
-	if(!attr.row.cnstr)
-		attr.row.cnstr = this.layer.cnstr;
+	if(!attr.row.cnstr){
+    attr.row.cnstr = this.layer.cnstr;
+  }
 
-	if(!attr.row.elm)
-		attr.row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+	if(!attr.row.elm){
+    attr.row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+  }
 
-	if(attr.row.elm_type.empty() && !this.inset.empty())
-		attr.row.elm_type = this.inset.nom().elm_type;
+	if(attr.row.elm_type.empty() && !this.inset.empty()){
+    attr.row.elm_type = this.inset.nom().elm_type;
+  }
 
 	this.project.register_change();
 
@@ -93,8 +102,9 @@ function BuilderElement(attr){
 			}
 		}
 
-		if(this.project.ox === attr.row._owner._owner)
-			attr.row._owner.del(attr.row);
+		if(this.project.ox === attr.row._owner._owner){
+      attr.row._owner.del(attr.row);
+    }
 		delete attr.row;
 
 		BuilderElement.superclass.remove.call(this);

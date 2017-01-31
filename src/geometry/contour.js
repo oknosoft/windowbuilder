@@ -86,8 +86,8 @@ function Contour(attr){
     this._row = attr.row;
   }
 	else{
-	  const {constructions} = this.project.ox;
-    this._row = constructions.add({ parent: this.parent ? this.parent.cnstr : 0 });
+	  const {constructions} = paper.project.ox;
+    this._row = constructions.add({ parent: attr.parent ? attr.parent.cnstr : 0 });
     this._row.cnstr = constructions.aggregate([], ["cnstr"], "MAX") + 1;
 	}
 
@@ -102,7 +102,7 @@ function Contour(attr){
 	// добавляем элементы контура
 	if(this.cnstr){
 
-		const {coordinates} = this.project.ox;
+		const {coordinates} = paper.project.ox;
 
 		// профили и доборы
 		coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => {

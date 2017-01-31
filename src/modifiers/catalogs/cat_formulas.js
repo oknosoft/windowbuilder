@@ -44,59 +44,82 @@ $p.CatFormulas.prototype.__define({
 		value: function (obj) {
 
 			// создаём функцию из текста формулы
-			if(!this._data._formula && this.formula)
-				this._data._formula = (new Function("obj", this.formula)).bind(this);
+			if(!this._data._formula && this.formula){
+        this._data._formula = (new Function("obj", this.formula)).bind(this);
+      }
+
+      const {_formula} = this._data;
 
 			if(this.parent == $p.cat.formulas.predefined("printing_plates")){
 
+        if(!_formula){
+          $p.msg.show_msg({
+            title: $p.msg.bld_title,
+            type: "alert-error",
+            text: `Ошибка в формуле<br /><b>${this.name}</b>`
+          });
+          return Promise.resolve();
+        }
+
 				// создаём blob из шаблона пустой страницы
-				if(!($p.injected_data['view_blank.html'] instanceof Blob))
-					$p.injected_data['view_blank.html'] = new Blob([$p.injected_data['view_blank.html']], {type: 'text/html'});
+				if(!($p.injected_data['view_blank.html'] instanceof Blob)){
+          $p.injected_data['view_blank.html'] = new Blob([$p.injected_data['view_blank.html']], {type: 'text/html'});
+        }
 
 				// получаем HTMLDivElement с отчетом
-				return this._data._formula(obj)
+				return _formula(obj)
 
 				// показываем отчет в отдельном окне
 					.then(function (doc) {
 
 						if(doc && doc.content instanceof HTMLElement){
 
-							var url = window.URL.createObjectURL($p.injected_data['view_blank.html']),
-								wnd_print = window.open(
-									url, "wnd_print", "fullscreen,menubar=no,toolbar=no,location=no,status=no,directories=no,resizable=yes,scrollbars=yes");
+							const url = window.URL.createObjectURL($p.injected_data['view_blank.html']);
 
-							if (wnd_print.outerWidth < screen.availWidth || wnd_print.outerHeight < screen.availHeight){
-								wnd_print.moveTo(0,0);
-								wnd_print.resizeTo(screen.availWidth, screen.availHeight);
-							}
+							try{
+                const	wnd_print = window.open(
+                  url, "wnd_print", "fullscreen,menubar=no,toolbar=no,location=no,status=no,directories=no,resizable=yes,scrollbars=yes");
 
-							wnd_print.onload = function(e) {
-								window.URL.revokeObjectURL(url);
-								wnd_print.document.body.appendChild(doc.content);
+                if (wnd_print.outerWidth < screen.availWidth || wnd_print.outerHeight < screen.availHeight){
+                  wnd_print.moveTo(0,0);
+                  wnd_print.resizeTo(screen.availWidth, screen.availHeight);
+                }
 
-								if(doc.title)
-									wnd_print.document.title = doc.title;
+                wnd_print.onload = function(e) {
+                  window.URL.revokeObjectURL(url);
+                  wnd_print.document.body.appendChild(doc.content);
+                  if(doc.title){
+                    wnd_print.document.title = doc.title;
+                  }
+                  wnd_print.print();
+                };
 
-								wnd_print.print();
-							};
-
-							return wnd_print;
+                return wnd_print;
+              }
+              catch(err){
+                $p.msg.show_msg({
+                  title: $p.msg.bld_title,
+                  type: "alert-error",
+                  text: err.message.match("outerWidth") ?
+                    "Ошибка открытия окна печати<br />Вероятно, в браузере заблокированы всплывающие окна" : err.message
+                });
+              }
 						}
-
 					});
 
-			}else
-				return this._data._formula(obj)
-
+			}
+			else{
+        return _formula && _formula(obj)
+      }
 
 		}
 	},
 
 	_template: {
 		get: function () {
-			if(!this._data._template)
-				this._data._template = new $p.SpreadsheetDocument(this.template);
-
+			if(!this._data._template){
+        this._data._template = new $p.SpreadsheetDocument(this.template);
+      }
 			return this._data._template;
 		}
 	}
