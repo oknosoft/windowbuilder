@@ -22,6 +22,7 @@ const webpackConfig = {
       'node_modules',
     ],
     extensions: ['.js', '.jsx', '.json'],
+    symlinks: false,
   },
   module: {},
   node: {
@@ -77,7 +78,7 @@ if (__DEV__) {
   debug('Enable plugins for live development (HMR, NoErrors).')
   webpackConfig.plugins.push(
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoErrorsPlugin()
+    new webpack.NoEmitOnErrorsPlugin()
   )
 } else if (__PROD__) {
   debug('Enable plugins for production (OccurenceOrder, Dedupe & UglifyJS).')

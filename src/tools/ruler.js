@@ -12,99 +12,131 @@
  * @param tool
  * @constructor
  */
-function RulerWnd(options, tool){
+class RulerWnd {
 
-  if(!options)
-    options = {
-      name: 'sizes',
-      wnd: {
-        caption: "Размеры и сдвиг",
-        height: 200,
-        allow_close: true,
-        modal: true
-      }
-    };
-  $p.wsql.restore_options("editor", options);
-  options.wnd.on_close = function () {
+  constructor(options = {
+    name: 'sizes',
+    wnd: {
+      caption: "Размеры и сдвиг",
+      height: 200,
+      allow_close: true,
+      modal: true
+    }
+  }, tool) {
 
-    if(wnd.elmnts.calck && wnd.elmnts.calck.obj && wnd.elmnts.calck.obj.removeSelf)
-      wnd.elmnts.calck.obj.removeSelf();
+    $p.wsql.restore_options("editor", options);
+    options.wnd.on_close = this.on_close.bind(this);
 
-    $p.eve.detachEvent(wnd_keydown);
+    this.tool = tool;
+    const wnd = this.wnd = $p.iface.dat_blank(paper._dxw, options.wnd);
 
-    $p.eve.callEvent("sizes_wnd", [{
-      wnd: wnd,
-      name: "close",
-      size: wnd.size,
-      tool: tool
-    }]);
+    this.on_keydown = this.on_keydown.bind(this);
+    this.on_button_click = this.on_button_click.bind(this);
+    this.wnd_keydown = $p.eve.attachEvent("keydown", this.on_keydown);
 
-    wnd = null;
+    const div = document.createElement("table");
+    div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +
+        '<tr><td></td><td><input type="text" style="width: 70px;  text-align: center;" readonly value="0"></td><td></td></tr>' +
+        '<tr><td></td><td align="center"></td><td></td></tr>';
+    div.style.width = "130px";
+    div.style.margin = "auto";
+    div.style.borderSpacing = 0;
 
-    return true;
-  };
+    this.table = div.firstChild.childNodes;
 
-  var wnd = $p.iface.dat_blank(paper._dxw, options.wnd),
+    $p.iface.add_button(this.table[0].childNodes[1], null,
+      {name: "top", css: 'tb_align_top', tooltip: $p.msg.align_set_top}).onclick = this.on_button_click;
+    $p.iface.add_button(this.table[1].childNodes[0], null,
+      {name: "left", css: 'tb_align_left', tooltip: $p.msg.align_set_left}).onclick = this.on_button_click;
+    $p.iface.add_button(this.table[1].childNodes[2], null,
+      {name: "right", css: 'tb_align_right', tooltip: $p.msg.align_set_right}).onclick = this.on_button_click;
+    $p.iface.add_button(this.table[2].childNodes[1], null,
+      {name: "bottom", css: 'tb_align_bottom', tooltip: $p.msg.align_set_bottom}).onclick = this.on_button_click;
 
-    wnd_keydown = $p.eve.attachEvent("keydown", function (ev) {
+    wnd.attachObject(div);
 
-      if(wnd){
-        switch(ev.keyCode) {
-          case 27:        // закрытие по {ESC}
-            wnd.close();
-            break;
-          case 37:        // left
-            on_button_click({
-              currentTarget: {name: "left"}
-            });
-            break;
-          case 38:        // up
-            on_button_click({
-              currentTarget: {name: "top"}
-            });
-            break;
-          case 39:        // right
-            on_button_click({
-              currentTarget: {name: "right"}
-            });
-            break;
-          case 40:        // down
-            on_button_click({
-              currentTarget: {name: "bottom"}
-            });
-            break;
+    if(tool instanceof ToolRuler){
 
-          case 109:       // -
-          case 46:        // del
-          case 8:         // backspace
-            if(ev.target && ["textarea", "input"].indexOf(ev.target.tagName.toLowerCase())!=-1)
-              return;
+      div.style.marginTop = "22px";
 
-            paper.project.selectedItems.some(function (path) {
-              if(path.parent instanceof DimensionLineCustom){
-                path.parent.remove();
-                return true;
+      wnd.tb_mode = new $p.iface.OTooolBar({
+        wrapper: wnd.cell,
+        width: '100%',
+        height: '28px',
+        class_name: "",
+        name: 'tb_mode',
+        buttons: [
+          {name: '0', img: 'ruler_elm.png', tooltip: $p.msg.ruler_elm, float: 'left'},
+          {name: '1', img: 'ruler_node.png', tooltip: $p.msg.ruler_node, float: 'left'},
+          {name: '2', img: 'ruler_arrow.png', tooltip: $p.msg.ruler_new_line, float: 'left'},
+
+          {name: 'sep_0', text: '', float: 'left'},
+          {name: 'base', img: 'ruler_base.png', tooltip: $p.msg.ruler_base, float: 'left'},
+          {name: 'inner', img: 'ruler_inner.png', tooltip: $p.msg.ruler_inner, float: 'left'},
+          {name: 'outer', img: 'ruler_outer.png', tooltip: $p.msg.ruler_outer, float: 'left'}
+        ],
+        image_path: "dist/imgs/",
+        onclick: (name) => {
+
+          if(['0','1','2'].indexOf(name) != -1){
+            wnd.tb_mode.select(name);
+            tool.mode = name;
+          }else{
+            ['base','inner','outer'].forEach((btn) => {
+              if(btn != name){
+                wnd.tb_mode.buttons[btn].classList.remove("muted");
               }
             });
+            wnd.tb_mode.buttons[name].classList.add("muted");
+          }
 
-            // Prevent the key event from bubbling
-            return $p.iface.cancel_bubble(ev);
-
-            break;
+          return false;
         }
-        return $p.iface.cancel_bubble(ev);
+      });
+
+      wnd.tb_mode.select(options.mode);
+      wnd.tb_mode.buttons.base.classList.add("muted");
+      wnd.tb_mode.cell.style.backgroundColor = "#f5f5f5";
+    }
+
+    this.input = this.table[1].childNodes[1];
+    this.input.grid = {
+      editStop: (v) => {
+        $p.eve.callEvent("sizes_wnd", [{
+          wnd: wnd,
+          name: "size_change",
+          size: this.size,
+          tool: tool
+        }]);
+      },
+      getPosition: (v) => {
+        let {offsetLeft, offsetTop} = v;
+        while ( v = v.offsetParent ){
+          offsetLeft += v.offsetLeft;
+          offsetTop  += v.offsetTop;
+        }
+        return [offsetLeft + 7, offsetTop + 9];
       }
+    };
+    this.input.firstChild.onfocus = function (e) {
+      wnd.elmnts.calck = new eXcell_calck(this);
+      wnd.elmnts.calck.edit();
+    };
 
-    }),
-    div=document.createElement("table"),
-    table, input;
+    setTimeout(function () {
+      this.input && this.input.firstChild.focus();
+    }, 100);
 
-  function on_button_click(e){
+  }
 
-    if(!paper.project.selectedItems.some(function (path) {
+  on_button_click(ev) {
+
+    const {wnd, tool, size} = this;
+
+    if(!paper.project.selectedItems.some((path) => {
         if(path.parent instanceof DimensionLineCustom){
 
-          switch(e.currentTarget.name) {
+          switch(ev.currentTarget.name) {
 
             case "left":
             case "bottom":
@@ -124,118 +156,112 @@ function RulerWnd(options, tool){
 
       $p.eve.callEvent("sizes_wnd", [{
         wnd: wnd,
-        name: e.currentTarget.name,
-        size: wnd.size,
+        name: ev.currentTarget.name,
+        size: size,
         tool: tool
       }]);
     }
   }
 
-  div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +
-    '<tr><td></td><td><input type="text" style="width: 70px;  text-align: center;" readonly ></td><td></td></tr>' +
-    '<tr><td></td><td align="center"></td><td></td></tr>';
-  div.style.width = "130px";
-  div.style.margin = "auto";
-  div.style.borderSpacing = 0;
-  table = div.firstChild.childNodes;
+  on_keydown(ev) {
 
-  $p.iface.add_button(table[0].childNodes[1], null,
-    {name: "top", css: 'tb_align_top', tooltip: $p.msg.align_set_top}).onclick = on_button_click;
-  $p.iface.add_button(table[1].childNodes[0], null,
-    {name: "left", css: 'tb_align_left', tooltip: $p.msg.align_set_left}).onclick = on_button_click;
-  $p.iface.add_button(table[1].childNodes[2], null,
-    {name: "right", css: 'tb_align_right', tooltip: $p.msg.align_set_right}).onclick = on_button_click;
-  $p.iface.add_button(table[2].childNodes[1], null,
-    {name: "bottom", css: 'tb_align_bottom', tooltip: $p.msg.align_set_bottom}).onclick = on_button_click;
+    const {wnd} = this;
 
-  wnd.attachObject(div);
-
-  if(tool instanceof ToolRuler){
-
-    div.style.marginTop = "22px";
-
-    wnd.tb_mode = new $p.iface.OTooolBar({
-      wrapper: wnd.cell,
-      width: '100%',
-      height: '28px',
-      class_name: "",
-      name: 'tb_mode',
-      buttons: [
-        {name: '0', img: 'ruler_elm.png', tooltip: $p.msg.ruler_elm, float: 'left'},
-        {name: '1', img: 'ruler_node.png', tooltip: $p.msg.ruler_node, float: 'left'},
-        {name: '2', img: 'ruler_arrow.png', tooltip: $p.msg.ruler_new_line, float: 'left'},
-
-        {name: 'sep_0', text: '', float: 'left'},
-        {name: 'base', img: 'ruler_base.png', tooltip: $p.msg.ruler_base, float: 'left'},
-        {name: 'inner', img: 'ruler_inner.png', tooltip: $p.msg.ruler_inner, float: 'left'},
-        {name: 'outer', img: 'ruler_outer.png', tooltip: $p.msg.ruler_outer, float: 'left'}
-      ],
-      image_path: "dist/imgs/",
-      onclick: function (name) {
-
-        if(['0','1','2'].indexOf(name) != -1){
-          wnd.tb_mode.select(name);
-          tool.mode = name;
-        }else{
-          ['base','inner','outer'].forEach(function (btn) {
-            if(btn != name)
-              wnd.tb_mode.buttons[btn].classList.remove("muted");
+    if(wnd){
+      switch(ev.keyCode) {
+        case 27:        // закрытие по {ESC}
+          wnd.close();
+          break;
+        case 37:        // left
+          this.on_button_click({
+            currentTarget: {name: "left"}
           });
-          wnd.tb_mode.buttons[name].classList.add("muted");
-        }
+          break;
+        case 38:        // up
+          this.on_button_click({
+            currentTarget: {name: "top"}
+          });
+          break;
+        case 39:        // right
+          this.on_button_click({
+            currentTarget: {name: "right"}
+          });
+          break;
+        case 40:        // down
+          this.on_button_click({
+            currentTarget: {name: "bottom"}
+          });
+          break;
 
-        return false;
+        case 109:       // -
+        case 46:        // del
+        case 8:         // backspace
+          if(ev.target && ["textarea", "input"].indexOf(ev.target.tagName.toLowerCase())!=-1)
+            return;
+
+          paper.project.selectedItems.some(function (path) {
+            if(path.parent instanceof DimensionLineCustom){
+              path.parent.remove();
+              return true;
+            }
+          });
+
+          // Prevent the key event from bubbling
+          return $p.iface.cancel_bubble(ev);
+
+          break;
       }
-    });
+      return $p.iface.cancel_bubble(ev);
+    }
 
-    wnd.tb_mode.select(options.mode);
-    wnd.tb_mode.buttons.base.classList.add("muted");
-    wnd.tb_mode.cell.style.backgroundColor = "#f5f5f5";
   }
 
-  input = table[1].childNodes[1];
-  input.grid = {
-    editStop: function (v) {
-      $p.eve.callEvent("sizes_wnd", [{
-        wnd: wnd,
-        name: "size_change",
-        size: wnd.size,
-        tool: tool
-      }]);
-    },
-    getPosition: function (v) {
-      var offsetLeft = v.offsetLeft, offsetTop = v.offsetTop;
-      while ( v = v.offsetParent ){
-        offsetLeft += v.offsetLeft;
-        offsetTop  += v.offsetTop;
-      }
-      return [offsetLeft + 7, offsetTop + 9];
+  on_close() {
+
+    const {wnd, wnd_keydown, tool, size} = this;
+
+    if(wnd.elmnts.calck && wnd.elmnts.calck.obj && wnd.elmnts.calck.obj.removeSelf){
+      wnd.elmnts.calck.obj.removeSelf();
     }
-  };
 
-  input.firstChild.onfocus = function (e) {
-    wnd.elmnts.calck = new eXcell_calck(this);
-    wnd.elmnts.calck.edit();
-  };
+    $p.eve.detachEvent(wnd_keydown);
 
-  wnd.__define({
-    size: {
-      get: function () {
-        return parseFloat(input.firstChild.value);
-      },
-      set: function (v) {
-        input.firstChild.value = parseFloat(v).round(1);
-      }
+    $p.eve.callEvent("sizes_wnd", [{
+      wnd: wnd,
+      name: "close",
+      size: size,
+      tool: tool
+    }]);
+
+    wnd = tool = null;
+
+    delete this.wnd;
+    delete this.tool;
+
+    return true;
+
+  }
+
+  close() {
+    if(this.wnd){
+      this.wnd.close();
     }
-  });
+  }
 
-  setTimeout(function () {
-    input.firstChild.focus();
-  }, 100);
+  wnd_options(options) {
+    if(this.wnd){
+      this.wnd.wnd_options(options);
+    }
+  }
 
-
-  return wnd;
+  get size() {
+    return parseFloat(this.input.firstChild.value) || 0;
+  }
+  set size(v) {
+    this.input.firstChild.value = parseFloat(v).round(1);
+  }
 }
+
 
 /**
  * ### Относительное позиционирование и сдвиг
@@ -285,7 +311,6 @@ class ToolRuler extends ToolElement {
 
         paper.project.deselectAll();
         this.wnd = new RulerWnd(this.options, this);
-        this.wnd.size = 0;
       },
 
       deactivate: function() {
@@ -397,8 +422,9 @@ class ToolRuler extends ToolElement {
           paper.project.deselectAll();
           this.selected.a.length = 0;
           this.selected.b.length = 0;
-          if(this.wnd.size != 0)
+          if(this.wnd.size != 0){
             this.wnd.size = 0;
+          }
         }
 
       },
@@ -500,15 +526,18 @@ class ToolRuler extends ToolElement {
           this.hitPoint = corn;
           elm.select_corn(event.point);
         }
-        else
+        else{
           paper.canvas_cursor('cursor-arrow-ruler');
+        }
       }
 
     } else {
-      if(this.mode)
+      if(this.mode){
         paper.canvas_cursor('cursor-text-select');
-      else
+      }
+      else{
         paper.canvas_cursor('cursor-arrow-ruler-light');
+      }
       this.hitItem = null;
     }
 
@@ -597,7 +626,7 @@ class ToolRuler extends ToolElement {
 
   _sizes_wnd(event){
 
-    if(event.wnd == this.wnd){
+    if(this.wnd && event.wnd == this.wnd.wnd){
 
       if(!this.selected.a.length || !this.selected.b.length){
         return;

@@ -5,7 +5,7 @@
 import React, {Component, PropTypes} from "react";
 import AppBar from "material-ui/AppBar";
 import NavUserButtons from "./NavUserButtons";
-import NavList from "metadata-react-ui/NavList/src";
+import NavList from "metadata-react-ui/NavList";
 
 export default class Header extends Component {
 

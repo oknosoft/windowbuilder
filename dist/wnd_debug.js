@@ -5386,10 +5386,10 @@ function ProductsBuilding(){
       const seam = $p.enm.angle_calculating_ways.СварнойШов;
       const d45 = Math.sin(Math.PI / 4);
       const dprev = row_cnn_prev ? (
-          row_cnn_prev.angle_calc_method == seam ? row_cnn_prev.sz * d45 / Math.sin(_row.alp1 / 180 * Math.PI) : row_cnn_prev.sz
+          row_cnn_prev.angle_calc_method == seam && _row.alp1 > 0 ? row_cnn_prev.sz * d45 / Math.sin(_row.alp1 / 180 * Math.PI) : row_cnn_prev.sz
         ) : 0;
       const dnext = row_cnn_next ? (
-          row_cnn_next.angle_calc_method == seam ? row_cnn_next.sz * d45 / Math.sin(_row.alp2 / 180 * Math.PI) : row_cnn_next.sz
+          row_cnn_next.angle_calc_method == seam && _row.alp2 > 0 ? row_cnn_next.sz * d45 / Math.sin(_row.alp2 / 180 * Math.PI) : row_cnn_next.sz
         ) : 0;
 
       row_spec.len = (_row.len - dprev - dnext)
