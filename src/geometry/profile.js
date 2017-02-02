@@ -1390,16 +1390,16 @@ ProfileItem.prototype.__define({
 		value: function () {
 
 			// получаем узлы
-			var bcnn = this.postcalc_cnn("b"),
-				ecnn = this.postcalc_cnn("e"),
-				path = this.data.path,
-				gpath = this.generatrix,
-				rays = this.rays,
-				offset1, offset2, tpath, step;
+			const bcnn = this.postcalc_cnn("b");
+      const ecnn = this.postcalc_cnn("e");
+      const {path, generatrix, rays, project} = this;
+
+      let offset1, offset2, tpath, step;
 
 			// уточняем вставку
-			if(this.project._dp.sys.allow_open_cnn)
-				this.postcalc_inset();
+			if(project._dp.sys.allow_open_cnn){
+        this.postcalc_inset();
+      }
 
 			// получаем соединения концов профиля и точки пересечения с соседями
 			this.path_points(bcnn, "b");
@@ -1411,7 +1411,7 @@ ProfileItem.prototype.__define({
 			// TODO отказаться от повторного пересчета и задействовать клоны rays-ов
 			path.add(this.corns(1));
 
-			if(gpath.is_linear()){
+			if(generatrix.is_linear()){
 				path.add(this.corns(2), this.corns(3));
 
 			}else{
@@ -1933,15 +1933,19 @@ Profile.prototype.__define({
 	 */
 	pos: {
 		get: function () {
-			var by_side = this.layer.profiles_by_side();
-			if(by_side.top == this)
-				return $p.enm.positions.Верх;
-			if(by_side.bottom == this)
-				return $p.enm.positions.Низ;
-			if(by_side.left == this)
-				return $p.enm.positions.Лев;
-			if(by_side.right == this)
-				return $p.enm.positions.Прав;
+			const by_side = this.layer.profiles_by_side();
+			if(by_side.top == this){
+        return $p.enm.positions.Верх;
+      }
+			if(by_side.bottom == this){
+        return $p.enm.positions.Низ;
+      }
+			if(by_side.left == this){
+        return $p.enm.positions.Лев;
+      }
+			if(by_side.right == this){
+        return $p.enm.positions.Прав;
+      }
 			// TODO: рассмотреть случай с выносом стоек и разрывами
 			return $p.enm.positions.Центр;
 		}

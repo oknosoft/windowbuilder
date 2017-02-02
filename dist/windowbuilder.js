@@ -3478,16 +3478,14 @@ Contour.prototype.__define({
 
       const {data} = this;
 
-			if(!data._bounds){
+			if(!data._bounds || !data._bounds.width || !data._bounds.height){
 
 				const {profiles} = this;
 
 				if(profiles.length && profiles[0].path){
 
           profiles.forEach((profile) => {
-            data._bounds = data._bounds ?
-              data._bounds.unite(profile.path.bounds) :
-              profile.path.bounds
+            data._bounds = data._bounds ? data._bounds.unite(profile.path.bounds) : profile.path.bounds
           });
 
 					if(!data._bounds.width || !data._bounds.height){
@@ -3495,15 +3493,13 @@ Contour.prototype.__define({
               data._bounds = data._bounds.unite(profile.generatrix.bounds)
             });
 					}
-
-				}else{
+				}
+				else{
           data._bounds = new paper.Rectangle();
-
 				}
 			}
 
 			return data._bounds;
-
 		}
 	},
 
@@ -4118,9 +4114,9 @@ Contour.prototype.__define({
 
 	profiles_by_side: {
 		value: function (side) {
-			var profiles = this.profiles,
-				bounds = this.bounds,
-				res = {}, ares = [];
+			const {profiles, bounds} = this;
+      const res = {};
+      const ares = [];
 
 			function by_side(name) {
 				ares.sort(function (a, b) {
@@ -4131,7 +4127,7 @@ Contour.prototype.__define({
 
 			if(profiles.length){
 
-				profiles.forEach(function (profile) {
+				profiles.forEach((profile) => {
 					ares.push({
 						profile: profile,
 						left: Math.abs(profile.b.x + profile.e.x - bounds.left * 2),
@@ -4927,7 +4923,7 @@ DimensionLine.prototype.__define({
 
 	_sizes_wnd: {
 		value: function (event) {
-			if(event.wnd == this.wnd){
+      if(this.wnd && event.wnd == this.wnd.wnd){
 
 				switch(event.name) {
 					case 'close':
@@ -7740,15 +7736,15 @@ ProfileItem.prototype.__define({
 	redraw: {
 		value: function () {
 
-			var bcnn = this.postcalc_cnn("b"),
-				ecnn = this.postcalc_cnn("e"),
-				path = this.data.path,
-				gpath = this.generatrix,
-				rays = this.rays,
-				offset1, offset2, tpath, step;
+			const bcnn = this.postcalc_cnn("b");
+      const ecnn = this.postcalc_cnn("e");
+      const {path, generatrix, rays, project} = this;
 
-			if(this.project._dp.sys.allow_open_cnn)
-				this.postcalc_inset();
+      let offset1, offset2, tpath, step;
+
+			if(project._dp.sys.allow_open_cnn){
+        this.postcalc_inset();
+      }
 
 			this.path_points(bcnn, "b");
 			this.path_points(ecnn, "e");
@@ -7757,7 +7753,7 @@ ProfileItem.prototype.__define({
 
 			path.add(this.corns(1));
 
-			if(gpath.is_linear()){
+			if(generatrix.is_linear()){
 				path.add(this.corns(2), this.corns(3));
 
 			}else{
@@ -8161,15 +8157,19 @@ Profile.prototype.__define({
 
 	pos: {
 		get: function () {
-			var by_side = this.layer.profiles_by_side();
-			if(by_side.top == this)
-				return $p.enm.positions.Верх;
-			if(by_side.bottom == this)
-				return $p.enm.positions.Низ;
-			if(by_side.left == this)
-				return $p.enm.positions.Лев;
-			if(by_side.right == this)
-				return $p.enm.positions.Прав;
+			const by_side = this.layer.profiles_by_side();
+			if(by_side.top == this){
+        return $p.enm.positions.Верх;
+      }
+			if(by_side.bottom == this){
+        return $p.enm.positions.Низ;
+      }
+			if(by_side.left == this){
+        return $p.enm.positions.Лев;
+      }
+			if(by_side.right == this){
+        return $p.enm.positions.Прав;
+      }
 			return $p.enm.positions.Центр;
 		}
 	},
@@ -9382,8 +9382,10 @@ Scheme.prototype.__define({
 
 		value: function (attr) {
 
-			var svg = this.exportSVG({excludeData: true}),
-				bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
+      this.deselectAll();
+
+			const svg = this.exportSVG({excludeData: true});
+			const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
 
 			svg.setAttribute("x", bounds.x);
 			svg.setAttribute("y", bounds.y);
@@ -9601,13 +9603,14 @@ Scheme.prototype.__define({
 	check_inset: {
 		value: function (attr) {
 
-			var inset = attr.inset ? attr.inset : attr.elm.inset,
-				elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type,
-				nom = inset.nom(),
-				rows = [];
+			const inset = attr.inset ? attr.inset : attr.elm.inset;
+      const elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type;
+      const nom = inset.nom();
+      const rows = [];
 
-			if(!nom || nom.empty())
-				return inset;
+			if(!nom || nom.empty()){
+        return inset;
+      }
 
 			this._dp.sys.elmnts.each(function(row){
 				if((elm_type ? row.elm_type == elm_type : true) && row.nom.nom() == nom)
@@ -11828,15 +11831,19 @@ class ToolPen extends ToolElement {
 
 class RulerWnd {
 
-  constructor(options = {
-    name: 'sizes',
-    wnd: {
-      caption: "Размеры и сдвиг",
-      height: 200,
-      allow_close: true,
-      modal: true
+  constructor(options, tool) {
+
+    if(!options){
+      options = {
+        name: 'sizes',
+        wnd: {
+          caption: "Размеры и сдвиг",
+          height: 200,
+          allow_close: true,
+          modal: true
+        }
+      }
     }
-  }, tool) {
 
     $p.wsql.restore_options("editor", options);
     if(options.mode > 2){
@@ -12021,10 +12028,11 @@ class RulerWnd {
         case 109:       
         case 46:        
         case 8:         
-          if(ev.target && ["textarea", "input"].indexOf(ev.target.tagName.toLowerCase())!=-1)
+          if(ev.target && ["textarea", "input"].indexOf(ev.target.tagName.toLowerCase())!=-1){
             return;
+          }
 
-          paper.project.selectedItems.some(function (path) {
+          paper.project.selectedItems.some((path) => {
             if(path.parent instanceof DimensionLineCustom){
               path.parent.remove();
               return true;

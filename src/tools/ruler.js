@@ -14,15 +14,19 @@
  */
 class RulerWnd {
 
-  constructor(options = {
-    name: 'sizes',
-    wnd: {
-      caption: "Размеры и сдвиг",
-      height: 200,
-      allow_close: true,
-      modal: true
+  constructor(options, tool) {
+
+    if(!options){
+      options = {
+        name: 'sizes',
+        wnd: {
+          caption: "Размеры и сдвиг",
+          height: 200,
+          allow_close: true,
+          modal: true
+        }
+      }
     }
-  }, tool) {
 
     $p.wsql.restore_options("editor", options);
     if(options.mode > 2){
@@ -207,10 +211,11 @@ class RulerWnd {
         case 109:       // -
         case 46:        // del
         case 8:         // backspace
-          if(ev.target && ["textarea", "input"].indexOf(ev.target.tagName.toLowerCase())!=-1)
+          if(ev.target && ["textarea", "input"].indexOf(ev.target.tagName.toLowerCase())!=-1){
             return;
+          }
 
-          paper.project.selectedItems.some(function (path) {
+          paper.project.selectedItems.some((path) => {
             if(path.parent instanceof DimensionLineCustom){
               path.parent.remove();
               return true;

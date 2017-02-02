@@ -754,15 +754,17 @@ Scheme.prototype.__define({
 
 		value: function (attr) {
 
-			var svg = this.exportSVG({excludeData: true}),
-				bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
+      this.deselectAll();
+
+			const svg = this.exportSVG({excludeData: true});
+			const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
 
 			svg.setAttribute("x", bounds.x);
 			svg.setAttribute("y", bounds.y);
 			svg.setAttribute("width", bounds.width);
 			svg.setAttribute("height", bounds.height);
-			//svg.querySelector("g").setAttribute("transform", "scale(1)");
 			svg.querySelector("g").removeAttribute("transform");
+      //svg.querySelector("g").setAttribute("transform", "scale(1)");
 
 			return svg.outerHTML;
 		}
@@ -1057,14 +1059,15 @@ Scheme.prototype.__define({
 	check_inset: {
 		value: function (attr) {
 
-			var inset = attr.inset ? attr.inset : attr.elm.inset,
-				elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type,
-				nom = inset.nom(),
-				rows = [];
+			const inset = attr.inset ? attr.inset : attr.elm.inset;
+      const elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type;
+      const nom = inset.nom();
+      const rows = [];
 
 			// если номенклатура пустая, выходим без проверки
-			if(!nom || nom.empty())
-				return inset;
+			if(!nom || nom.empty()){
+        return inset;
+      }
 
 			// получаем список вставок с той же номенклатурой, что и наша
 			this._dp.sys.elmnts.each(function(row){

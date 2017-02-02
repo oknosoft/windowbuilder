@@ -228,25 +228,28 @@ DimensionLine.prototype.__define({
 
 	_sizes_wnd: {
 		value: function (event) {
-			if(event.wnd == this.wnd){
+      if(this.wnd && event.wnd == this.wnd.wnd){
 
 				switch(event.name) {
 					case 'close':
-						if(this.children.text)
-							this.children.text.selected = false;
+						if(this.children.text){
+              this.children.text.selected = false;
+            }
 						this.wnd = null;
 						break;
 
 					case 'left':
 					case 'right':
-						if(this.pos == "top" || this.pos == "bottom")
-							this._move_points(event, "x");
+						if(this.pos == "top" || this.pos == "bottom"){
+              this._move_points(event, "x");
+            }
 						break;
 
 					case 'top':
 					case 'bottom':
-						if(this.pos == "left" || this.pos == "right")
-							this._move_points(event, "y");
+						if(this.pos == "left" || this.pos == "right"){
+              this._move_points(event, "y");
+            }
 						break;
 				}
 			}

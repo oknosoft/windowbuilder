@@ -442,16 +442,14 @@ Contour.prototype.__define({
 
       const {data} = this;
 
-			if(!data._bounds){
+			if(!data._bounds || !data._bounds.width || !data._bounds.height){
 
 				const {profiles} = this;
 
 				if(profiles.length && profiles[0].path){
 
           profiles.forEach((profile) => {
-            data._bounds = data._bounds ?
-              data._bounds.unite(profile.path.bounds) :
-              profile.path.bounds
+            data._bounds = data._bounds ? data._bounds.unite(profile.path.bounds) : profile.path.bounds
           });
 
 					// если профили еще не нарисованы, используем габариты образующих
@@ -460,15 +458,13 @@ Contour.prototype.__define({
               data._bounds = data._bounds.unite(profile.generatrix.bounds)
             });
 					}
-
-				}else{
+				}
+				else{
           data._bounds = new paper.Rectangle();
-
 				}
 			}
 
 			return data._bounds;
-
 		}
 	},
 
@@ -1225,9 +1221,9 @@ Contour.prototype.__define({
 	profiles_by_side: {
 		value: function (side) {
 			// получаем таблицу расстояний профилей от рёбер габаритов
-			var profiles = this.profiles,
-				bounds = this.bounds,
-				res = {}, ares = [];
+			const {profiles, bounds} = this;
+      const res = {};
+      const ares = [];
 
 			function by_side(name) {
 				ares.sort(function (a, b) {
@@ -1238,7 +1234,7 @@ Contour.prototype.__define({
 
 			if(profiles.length){
 
-				profiles.forEach(function (profile) {
+				profiles.forEach((profile) => {
 					ares.push({
 						profile: profile,
 						left: Math.abs(profile.b.x + profile.e.x - bounds.left * 2),
