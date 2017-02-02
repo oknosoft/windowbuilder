@@ -4927,21 +4927,24 @@ DimensionLine.prototype.__define({
 
 				switch(event.name) {
 					case 'close':
-						if(this.children.text)
-							this.children.text.selected = false;
+						if(this.children.text){
+              this.children.text.selected = false;
+            }
 						this.wnd = null;
 						break;
 
 					case 'left':
 					case 'right':
-						if(this.pos == "top" || this.pos == "bottom")
-							this._move_points(event, "x");
+						if(this.pos == "top" || this.pos == "bottom"){
+              this._move_points(event, "x");
+            }
 						break;
 
 					case 'top':
 					case 'bottom':
-						if(this.pos == "left" || this.pos == "right")
-							this._move_points(event, "y");
+						if(this.pos == "left" || this.pos == "right"){
+              this._move_points(event, "y");
+            }
 						break;
 				}
 			}
@@ -11844,12 +11847,12 @@ class RulerWnd {
         }
       }
     }
-
     $p.wsql.restore_options("editor", options);
     if(options.mode > 2){
       options.mode = 2;
     }
     options.wnd.on_close = this.on_close.bind(this);
+    this.options = options;
 
     this.tool = tool;
     const wnd = this.wnd = $p.iface.dat_blank(paper._dxw, options.wnd);
@@ -12063,6 +12066,14 @@ class RulerWnd {
       tool: this.tool
     }]);
 
+    if (this.options){
+      if(this.tool instanceof DimensionLine) {
+        delete this.options.wnd.on_close;
+        this.wnd.wnd_options(this.options.wnd);
+        $p.wsql.save_options("editor", this.options);
+      }
+      delete this.options;
+    }
     delete this.wnd;
     delete this.tool;
 
