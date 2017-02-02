@@ -11839,6 +11839,9 @@ class RulerWnd {
   }, tool) {
 
     $p.wsql.restore_options("editor", options);
+    if(options.mode > 2){
+      options.mode = 2;
+    }
     options.wnd.on_close = this.on_close.bind(this);
 
     this.tool = tool;
@@ -11893,23 +11896,31 @@ class RulerWnd {
         onclick: (name) => {
 
           if(['0','1','2'].indexOf(name) != -1){
-            wnd.tb_mode.select(name);
+
+            ['0','1','2'].forEach((btn) => {
+              if(btn != name){
+                wnd.tb_mode.buttons[btn].classList.remove("muted");
+              }
+            });
+            wnd.tb_mode.buttons[name].classList.add("muted");
             tool.mode = name;
-          }else{
+          }
+          else{
             ['base','inner','outer'].forEach((btn) => {
               if(btn != name){
                 wnd.tb_mode.buttons[btn].classList.remove("muted");
               }
             });
             wnd.tb_mode.buttons[name].classList.add("muted");
+            tool.base_line = name;
           }
 
           return false;
         }
       });
 
-      wnd.tb_mode.select(options.mode);
-      wnd.tb_mode.buttons.base.classList.add("muted");
+      wnd.tb_mode.buttons[tool.mode].classList.add("muted");
+      wnd.tb_mode.buttons[tool.base_line].classList.add("muted");
       wnd.tb_mode.cell.style.backgroundColor = "#f5f5f5";
     }
 
@@ -12031,22 +12042,18 @@ class RulerWnd {
 
   on_close() {
 
-    const {wnd, wnd_keydown, tool, size} = this;
-
-    if(wnd.elmnts.calck && wnd.elmnts.calck.obj && wnd.elmnts.calck.obj.removeSelf){
-      wnd.elmnts.calck.obj.removeSelf();
+    if(this.wnd && this.wnd.elmnts.calck && this.wnd.elmnts.calck.obj && this.wnd.elmnts.calck.obj.removeSelf){
+      this.wnd.elmnts.calck.obj.removeSelf();
     }
 
-    $p.eve.detachEvent(wnd_keydown);
+    $p.eve.detachEvent(this.wnd_keydown);
 
     $p.eve.callEvent("sizes_wnd", [{
-      wnd: wnd,
+      wnd: this.wnd,
       name: "close",
-      size: size,
-      tool: tool
+      size: this.size,
+      tool: this.tool
     }]);
-
-    wnd = tool = null;
 
     delete this.wnd;
     delete this.tool;
@@ -12087,6 +12094,7 @@ class ToolRuler extends ToolElement {
       options: {
         name: 'ruler',
         mode: 0,
+        base_line: 0,
         wnd: {
           caption: "Размеры и сдвиг",
           height: 200
@@ -12128,103 +12136,78 @@ class ToolRuler extends ToolElement {
 
         if (this.hitItem) {
 
-          if(this.mode > 1 && this.hitPoint){
+          if (this.mode == 0) {
 
-            if(this.mode == 2){
+            this.add_hit_item(event);
 
-              this.selected.a.push(this.hitPoint);
-
-              if (!this.path){
-                this.path = new paper.Path({
-                  parent: this.hitPoint.profile.layer.l_dimensions,
-                  segments: [this.hitPoint.point, event.point]
-                });
-                this.path.strokeColor = 'black';
-              }
-
-              this.mode = 3;
-
-            }else {
-
-              this.remove_path();
-
-              this.selected.b.push(this.hitPoint);
-
-              new DimensionLineCustom({
-                elm1: this.selected.a[0].profile,
-                elm2: this.hitPoint.profile,
-                p1: this.selected.a[0].point_name,
-                p2: this.hitPoint.point_name,
-                parent: this.hitPoint.profile.layer.l_dimensions
-              });
-
-              this.mode = 2;
-
-              this.hitPoint.profile.project.register_change(true);
-
-            }
-
-          }else{
-
-            var item = this.hitItem.item.parent;
-
-            if (paper.Key.isDown('1') || paper.Key.isDown('a')) {
-
-              item.path.selected = true;
-
-              if(this.selected.a.indexOf(item) == -1)
-                this.selected.a.push(item);
-
-              if(this.selected.b.indexOf(item) != -1)
-                this.selected.b.splice(this.selected.b.indexOf(item), 1);
-
-            } else if (paper.Key.isDown('2') || paper.Key.isDown('b') ||
-              event.modifiers.shift || (this.selected.a.length && !this.selected.b.length)) {
-
-              item.path.selected = true;
-
-              if(this.selected.b.indexOf(item) == -1)
-                this.selected.b.push(item);
-
-              if(this.selected.a.indexOf(item) != -1)
-                this.selected.a.splice(this.selected.a.indexOf(item), 1);
-
-            }else {
-              paper.project.deselectAll();
-              item.path.selected = true;
-              this.selected.a.length = 0;
-              this.selected.b.length = 0;
-              this.selected.a.push(item);
-            }
-
-            if(this.selected.a.length && this.selected.b.length){
-              if(this.selected.a[0].orientation == this.selected.b[0].orientation){
-                if(this.selected.a[0].orientation == $p.enm.orientations.Вертикальная){
+            if (this.selected.a.length && this.selected.b.length) {
+              if (this.selected.a[0].orientation == this.selected.b[0].orientation) {
+                if (this.selected.a[0].orientation == $p.enm.orientations.Вертикальная) {
                   this.wnd.size = Math.abs(this.selected.a[0].b.x - this.selected.b[0].b.x);
 
-                }else if(this.selected.a[0].orientation == $p.enm.orientations.Горизонтальная){
+                } else if (this.selected.a[0].orientation == $p.enm.orientations.Горизонтальная) {
                   this.wnd.size = Math.abs(this.selected.a[0].b.y - this.selected.b[0].b.y);
 
-                }else{
+                } else {
 
                 }
               }
 
-            }else if(this.wnd.size != 0)
+            }
+            else if (this.wnd.size != 0) {
               this.wnd.size = 0;
+            }
+
+          }
+          else if (this.mode == 1) {
+
+            this.add_hit_point(event);
+
+          }
+          else {
+
+            if (this.hitPoint) {
+
+              if (this.mode == 2) {
+
+                this.selected.a.push(this.hitPoint);
+
+                if (!this.path) {
+                  this.path = new paper.Path({
+                    parent: this.hitPoint.profile.layer.l_dimensions,
+                    segments: [this.hitPoint.point, event.point]
+                  });
+                  this.path.strokeColor = 'black';
+                }
+
+                this.mode = 3;
+
+              }
+              else {
+
+                this.remove_path();
+
+                this.selected.b.push(this.hitPoint);
+
+                new DimensionLineCustom({
+                  elm1: this.selected.a[0].profile,
+                  elm2: this.hitPoint.profile,
+                  p1: this.selected.a[0].point_name,
+                  p2: this.hitPoint.point_name,
+                  parent: this.hitPoint.profile.layer.l_dimensions
+                });
+
+                this.mode = 2;
+
+                this.hitPoint.profile.project.register_change(true);
+
+              }
+            }
           }
 
-        }else {
-
-          this.remove_path();
-          this.mode = 2;
-
-          paper.project.deselectAll();
-          this.selected.a.length = 0;
-          this.selected.b.length = 0;
-          if(this.wnd.size != 0){
-            this.wnd.size = 0;
-          }
+        }
+        else {
+          this.reset_selected();
         }
 
       },
@@ -12339,7 +12322,7 @@ class ToolRuler extends ToolElement {
     return true;
   }
 
-  remove_path () {
+  remove_path() {
 
     if (this.path){
       this.path.removeSegments();
@@ -12353,12 +12336,88 @@ class ToolRuler extends ToolElement {
     }
   }
 
+  reset_selected() {
+
+    this.remove_path();
+    paper.project.deselectAll();
+    this.selected.a.length = 0;
+    this.selected.b.length = 0;
+    if(this.mode > 2){
+      this.mode = 2;
+    }
+    if(this.wnd.size){
+      this.wnd.size = 0;
+    }
+  }
+
+  add_hit_point() {
+
+  }
+
+  add_hit_item(event) {
+
+    const item = this.hitItem.item.parent;
+
+    if (paper.Key.isDown('1') || paper.Key.isDown('a')) {
+
+      if(this.selected.a.indexOf(item) == -1){
+        this.selected.a.push(item);
+      }
+
+      if(this.selected.b.indexOf(item) != -1){
+        this.selected.b.splice(this.selected.b.indexOf(item), 1);
+      }
+
+    }
+    else if (paper.Key.isDown('2') || paper.Key.isDown('b') ||
+      event.modifiers.shift || (this.selected.a.length && !this.selected.b.length)) {
+
+      if(this.selected.b.indexOf(item) == -1){
+        this.selected.b.push(item);
+      }
+
+      if(this.selected.a.indexOf(item) != -1){
+        this.selected.a.splice(this.selected.a.indexOf(item), 1);
+      }
+
+    }
+    else {
+      paper.project.deselectAll();
+      this.selected.a.length = 0;
+      this.selected.b.length = 0;
+      this.selected.a.push(item);
+    }
+
+    switch(this.base_line){
+
+      case 'inner':
+        item.path.selected = true;
+        break;
+
+      case 'outer':
+        item.path.selected = true;
+        break;
+
+      default:
+        item.generatrix.selected = true;
+        break;
+    }
+
+  }
+
   get mode(){
     return this.options.mode || 0;
   }
   set mode(v){
     paper.project.deselectAll();
     this.options.mode = parseInt(v);
+  }
+
+  get base_line(){
+    return this.options.base_line || 'base';
+  }
+  set base_line(v){
+    this.options.base_line = v;
   }
 
   _move_points(event, xy){
