@@ -26,17 +26,14 @@ dist/wnd_debug.js
 
 
 # css и картинки
-
 https://cdn.jsdelivr.net/fontawesome/4.6.3/css/font-awesome.min.css
 https://cdn.jsdelivr.net/fontawesome/4.6.3/fonts/fontawesome-webfont.woff2?v=4.6.3
 https://cdn.jsdelivr.net/g/metadata@0.12.225(dhx_terrace.css+metadata.css)
 dist/windowbuilder.css
-
 #
 dist/imgs/fav-wnd.ico
 dist/imgs/fav-okn144.png
 dist/imgs/splash.gif
-
 #
 dist/imgs/stamp.png
 dist/imgs/about_48.png

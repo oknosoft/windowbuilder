@@ -7,6 +7,202 @@
  * @module wnd_main
  */
 
+class OrderDealerApp {
+
+  constructor($p) {
+
+    // разделы интерфейса
+    this.sidebar_items = [
+        {id: "orders", text: "Заказы", icon: "projects_48.png"},
+        {id: "events", text: "Планирование", icon: "events_48.png"},
+        {id: "settings", text: "Настройки", icon: "settings_48.png"},
+        {id: "v2", text: "Версия 2.0", icon: "v2_48.png"},
+        {id: "about", text: "О программе", icon: "about_48.png"}
+      ];
+
+    // наблюдатель за событиями авторизации и синхронизации
+    this.btn_auth_sync = new $p.iface.OBtnAuthSync();
+
+    // Подписываемся на событие окончания загрузки предопределённых элементов
+    this.predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", this.predefined_elmnts_inited.bind(this));
+
+    // Назначаем обработчик ошибки загрузки локальных данных
+    this.pouch_load_data_error = $p.eve.attachEvent("pouch_load_data_error", this.pouch_load_data_error.bind(this));
+
+    // основной сайдбар
+    this.sidebar = new dhtmlXSideBar({
+        parent: document.body,
+        icons_path: "dist/imgs/",
+        width: 180,
+        header: true,
+        template: "tiles",
+        autohide: true,
+        items: this.sidebar_items,
+        offsets: {
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0
+        }
+      });
+
+    // подписываемся на событие навигации по сайдбару
+    this.sidebar.attachEvent("onSelect", this.sidebar_select);
+
+    // включаем индикатор загрузки
+    this.sidebar.progressOn();
+
+    // запрещаем масштабировать колёсиком мыши, т.к. для масштабирования у канваса свой инструмент
+    window.onmousewheel = (e) => {
+      if(e.ctrlKey){
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // активируем страницу
+    const hprm = $p.job_prm.parse_url();
+    if(!hprm.view || this.sidebar.getAllItems().indexOf(hprm.view) == -1){
+      $p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, "orders");
+    } else{
+      setTimeout($p.iface.hash_route);
+    }
+
+  }
+
+  btns_nav(wrapper) {
+
+    return this.btn_auth_sync.bind(new $p.iface.OTooolBar({
+      wrapper: wrapper,
+      class_name: 'md_otbnav',
+      width: '260px', height: '28px', top: '3px', right: '3px', name: 'right',
+      buttons: [
+        {name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
+        {name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
+        {name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
+        {name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
+        {name: 'sep_0', text: '', float: 'right'},
+        {name: 'sync', text: '', float: 'right'},
+        {name: 'auth', text: '', width: '80px', float: 'right'}
+
+      ], onclick: (name) => {
+        this.sidebar.cells(name).setActive(true);
+        return false;
+      }
+    }))
+
+  }
+
+  /**
+   * патч параметров подключения
+   */
+  patch_cnn() {
+
+    ["couch_path", "zone", "couch_suffix", "couch_direct"].forEach((prm) => {
+      if($p.job_prm.url_prm[prm] && $p.wsql.get_user_param(prm) != $p.job_prm.url_prm[prm]){
+        $p.wsql.set_user_param(prm, $p.job_prm.url_prm[prm]);
+      }
+    });
+
+    if(location.host.match("aribaz")){
+      $p.wsql.set_user_param("zone", 2);
+    }
+    else if(location.host.match("tmk")){
+      $p.wsql.set_user_param("zone", 23);
+    }
+    else if(location.host.match("ecookna")){
+      $p.wsql.set_user_param("zone", 21);
+    }
+
+
+  }
+
+  predefined_elmnts_inited(err) {
+
+    this.sidebar.progressOff();
+
+    // если разрешено сохранение пароля - сразу пытаемся залогиниться
+    if(!$p.wsql.pouch.authorized && navigator.onLine &&
+      $p.wsql.get_user_param("enable_save_pwd") &&
+      $p.wsql.get_user_param("user_name") &&
+      $p.wsql.get_user_param("user_pwd")){
+
+      setTimeout(function () {
+        $p.iface.frm_auth({
+          modal_dialog: true,
+          try_auto: true
+        });
+      }, 100);
+    }
+
+    $p.eve.detachEvent(this.predefined_elmnts_inited);
+
+  }
+
+  pouch_load_data_error(err) {
+
+    // если это первый запуск, показываем диалог авторизации
+    if(err.db_name && err.hasOwnProperty("doc_count") && err.doc_count < 10 && navigator.onLine){
+
+      // если это демо (zone === zone_demo), устанавливаем логин и пароль
+      if($p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && !$p.wsql.get_user_param("user_name")){
+        $p.wsql.set_user_param("enable_save_pwd", true);
+        $p.wsql.set_user_param("user_name", $p.job_prm.guests[0].username);
+        $p.wsql.set_user_param("user_pwd", $p.job_prm.guests[0].password);
+
+        setTimeout(function () {
+          $p.iface.frm_auth({
+            modal_dialog: true,
+            try_auto: true
+          });
+        }, 100);
+
+      }else{
+        $p.iface.frm_auth({
+          modal_dialog: true,
+          try_auto: $p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && $p.wsql.get_user_param("enable_save_pwd")
+        });
+      }
+
+    }
+
+    this.sidebar.progressOff();
+    $p.eve.detachEvent(this.pouch_load_data_error);
+
+  }
+
+  sidebar_select(id) {
+
+    if(id == "v2"){
+      $p.eve.redirect = true;
+      location.replace("/v2/");
+    }
+
+    const hprm = $p.job_prm.parse_url();
+    if(hprm.view != id){
+      $p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, id);
+    }
+
+    $p.iface["view_" + id](this.cells(id));
+
+  }
+
+  hash_route(hprm) {
+
+    // view отвечает за переключение закладки в SideBar
+    if(hprm.view && this.sidebar.getActiveItem() != hprm.view){
+      this.sidebar.getAllItems().forEach((item) => {
+        if(item == hprm.view){
+          this.sidebar.cells(item).setActive(true);
+        }
+      });
+    }
+
+    return false;
+
+  }
+}
+
 $p.on({
 
 	/**
@@ -32,14 +228,13 @@ $p.on({
 			// фильтр для репликации с CouchDB
 			pouch_filter: {
 				value: (function () {
-					var filter = {};
 					// filter.__define({
 					// 	doc: {
 					// 		value: "auth/by_partner",
 					// 		writable: false
 					// 	}
 					// });
-					return filter;
+					return {};
 				})(),
 				writable: false
 			},
@@ -85,19 +280,8 @@ $p.on({
     //prm.couch_path = "https://kint.oknosoft.ru/couchdb2/wb_";
 		prm.couch_path = "/couchdb/wb_";
 
-
-		// логин гостевого пользователя couchdb
-		prm.guest_name = "guest";
-
-		// пароль гостевого пользователя couchdb
-		prm.guest_pwd = "meta";
-
 		// разрешаем сохранение пароля
 		prm.enable_save_pwd = true;
-
-
-		// разрешаем покидать страницу без лишних вопросов
-		// $p.eve.redirect = true;
 
 	},
 
@@ -108,172 +292,14 @@ $p.on({
 	 *
 	 */
 	iface_init: function() {
-
-		// патч параметров подключения
-    ["couch_path", "zone", "couch_suffix"].forEach((prm) => {
-      if($p.job_prm.url_prm[prm] && $p.wsql.get_user_param(prm) != $p.job_prm.url_prm[prm]){
-        $p.wsql.set_user_param(prm, $p.job_prm.url_prm[prm]);
-      }
-    })
-
-		// разделы интерфейса
-		$p.iface.sidebar_items = [
-			{id: "orders", text: "Заказы", icon: "projects_48.png"},
-			{id: "events", text: "Планирование", icon: "events_48.png"},
-			{id: "settings", text: "Настройки", icon: "settings_48.png"},
-      {id: "v2", text: "Версия 2.0", icon: "v2_48.png"},
-			{id: "about", text: "О программе", icon: "about_48.png"}
-		];
-
-
-		// наблюдатель за событиями авторизации и синхронизации
-		$p.iface.btn_auth_sync = new $p.iface.OBtnAuthSync();
-
-		$p.iface.btns_nav = function (wrapper) {
-			return $p.iface.btn_auth_sync.bind(new $p.iface.OTooolBar({
-				wrapper: wrapper,
-				class_name: 'md_otbnav',
-				width: '260px', height: '28px', top: '3px', right: '3px', name: 'right',
-				buttons: [
-					{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
-					{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
-					{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
-					{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
-					{name: 'sep_0', text: '', float: 'right'},
-					{name: 'sync', text: '', float: 'right'},
-					{name: 'auth', text: '', width: '80px', float: 'right'}
-
-				], onclick: function (name) {
-					$p.iface.main.cells(name).setActive(true);
-					return false;
-				}
-			}))
-		};
-
-		// Подписываемся на событие окончания загрузки предопределённых элементов
-		var predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", function () {
-
-			$p.iface.main.progressOff();
-
-			// если разрешено сохранение пароля - сразу пытаемся залогиниться
-			if(!$p.wsql.pouch.authorized && navigator.onLine &&
-				$p.wsql.get_user_param("enable_save_pwd") &&
-				$p.wsql.get_user_param("user_name") &&
-				$p.wsql.get_user_param("user_pwd")){
-
-				setTimeout(function () {
-					$p.iface.frm_auth({
-						modal_dialog: true,
-						try_auto: true
-					});
-				}, 100);
-			}
-
-			$p.eve.detachEvent(predefined_elmnts_inited);
-
-		});
-
-		// Назначаем обработчик ошибки загрузки локальных данных
-		var pouch_load_data_error = $p.eve.attachEvent("pouch_load_data_error", function (err) {
-
-			// если это первый запуск, показываем диалог авторизации
-			if(err.db_name && err.hasOwnProperty("doc_count") && err.doc_count < 10 && navigator.onLine){
-
-				// если это демо (zone === zone_demo), устанавливаем логин и пароль
-				if($p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && !$p.wsql.get_user_param("user_name")){
-					$p.wsql.set_user_param("enable_save_pwd", true);
-					$p.wsql.set_user_param("user_name", $p.job_prm.guests[0].username);
-					$p.wsql.set_user_param("user_pwd", $p.job_prm.guests[0].password);
-
-					setTimeout(function () {
-						$p.iface.frm_auth({
-							modal_dialog: true,
-							try_auto: true
-						});
-					}, 100);
-
-				}else{
-					$p.iface.frm_auth({
-						modal_dialog: true,
-						try_auto: $p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && $p.wsql.get_user_param("enable_save_pwd")
-					});
-				}
-
-			}
-
-			$p.iface.main.progressOff();
-			$p.eve.detachEvent(pouch_load_data_error);
-
-		});
-
-		// запрещаем масштабировать колёсиком мыши, т.к. для масштабирования у канваса свой инструмент
-		window.onmousewheel = function (e) {
-			if(e.ctrlKey){
-				e.preventDefault();
-				return false;
-			}
-		};
-
-		// основной сайдбар
-		$p.iface.main = new dhtmlXSideBar({
-			parent: document.body,
-			icons_path: "dist/imgs/",
-			width: 180,
-			header: true,
-			template: "tiles",
-			autohide: true,
-			items: $p.iface.sidebar_items,
-			offsets: {
-				top: 0,
-				right: 0,
-				bottom: 0,
-				left: 0
-			}
-		});
-
-		// подписываемся на событие навигации по сайдбару
-		$p.iface.main.attachEvent("onSelect", function(id){
-
-		  if(id == "v2"){
-        $p.eve.redirect = true;
-        location.replace("/v2/");
-      }
-
-			var hprm = $p.job_prm.parse_url();
-			if(hprm.view != id){
-        $p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, id);
-      }
-
-			$p.iface["view_" + id]($p.iface.main.cells(id));
-
-		});
-
-		// включаем индикатор загрузки
-		$p.iface.main.progressOn();
-
-		// активируем страницу
-    var hprm = $p.job_prm.parse_url();
-		if(!hprm.view || $p.iface.main.getAllItems().indexOf(hprm.view) == -1){
-			$p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, "orders");
-		} else
-			setTimeout($p.iface.hash_route);
-
+    $p.iface.main = new OrderDealerApp($p);
 	},
 
 	/**
 	 * ### Обработчик маршрутизации
 	 */
 	hash_route: function (hprm) {
-
-		// view отвечает за переключение закладки в SideBar
-		if(hprm.view && $p.iface.main.getActiveItem() != hprm.view){
-			$p.iface.main.getAllItems().forEach(function(item){
-				if(item == hprm.view)
-					$p.iface.main.cells(item).setActive(true);
-			});
-		}
-
-		return false;
+	  return $p.iface.main.hash_route(hprm);
 	}
 
 });

@@ -13,7 +13,7 @@ $p.iface.view_about = function (cell) {
 		cell.attachHTMLString($p.injected_data['view_about.html']);
 		cell.cell.querySelector(".dhx_cell_cont_sidebar").style.overflow = "auto";
 
-		this.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
+		this.tb_nav = $p.iface.main.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 	}
 
 	return $p.iface._about || ($p.iface._about = new OViewAbout());

@@ -13,7 +13,7 @@ $p.iface.view_orders = function (cell) {
 		var t = this;
 
 		function show_list(){
-			
+
 			t.carousel.cells("list").setActive();
 			cell.setText({text: "Заказы"});
 
@@ -136,7 +136,7 @@ $p.iface.view_orders = function (cell) {
 									t.editor.project.ox.load()
 										.then(this._on_close.bind(this, true));
 								}
-							}								
+							}
 						}.bind(this)
 					});
 					return;
@@ -148,17 +148,17 @@ $p.iface.view_orders = function (cell) {
 				t.editor.project._dp.base_block = null;
 
 				var _cell = t.carousel.cells("doc");
-				
+
 				$p.eve.callEvent("editor_closed", [t.editor]);
 
 				if(!$p.utils.is_empty_guid(_cell.ref))
 					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");
 
 				else{
-					
+
 					var hprm = $p.job_prm.parse_url(),
 						obj = $p.cat.characteristics.get(hprm.ref, false, true);
-					
+
 					if(obj && !obj.calc_order.empty())
 						$p.iface.set_hash("doc.calc_order", obj.calc_order.ref, "doc");
 					else
@@ -180,7 +180,7 @@ $p.iface.view_orders = function (cell) {
 		}
 
 		// Рисуем дополнительные элементы навигации
-		t.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
+		t.tb_nav = $p.iface.main.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 
 		// страницы карусели
 		t.carousel = cell.attachCarousel({

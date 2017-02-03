@@ -7787,7 +7787,6 @@ $p.iface.OSvgs = function (manager, layout, area) {
 
 };
 
-
 $p.iface.view_about = function (cell) {
 
 	function OViewAbout(){
@@ -7795,13 +7794,12 @@ $p.iface.view_about = function (cell) {
 		cell.attachHTMLString($p.injected_data['view_about.html']);
 		cell.cell.querySelector(".dhx_cell_cont_sidebar").style.overflow = "auto";
 
-		this.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
+		this.tb_nav = $p.iface.main.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 	}
 
 	return $p.iface._about || ($p.iface._about = new OViewAbout());
 
 };
-
 
 
 $p.iface.view_events = function (cell) {
@@ -7865,8 +7863,7 @@ $p.iface.view_events = function (cell) {
 		}else
 			create_scheduler();
 
-		t.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
-
+		t.tb_nav = $p.iface.main.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 
 		$p.on("hash_route", hash_route);
 
@@ -7877,7 +7874,6 @@ $p.iface.view_events = function (cell) {
 };
 
 
-
 $p.iface.view_orders = function (cell) {
 
 	function OViewOrders(){
@@ -7886,7 +7882,7 @@ $p.iface.view_orders = function (cell) {
 
 		function show_list(){
 
-						t.carousel.cells("list").setActive();
+			t.carousel.cells("list").setActive();
 			cell.setText({text: "Заказы"});
 
 			if(!t.list){
@@ -8004,7 +8000,7 @@ $p.iface.view_orders = function (cell) {
 									t.editor.project.ox.load()
 										.then(this._on_close.bind(this, true));
 								}
-							}								
+							}
 						}.bind(this)
 					});
 					return;
@@ -8017,17 +8013,17 @@ $p.iface.view_orders = function (cell) {
 
 				var _cell = t.carousel.cells("doc");
 
-								$p.eve.callEvent("editor_closed", [t.editor]);
+				$p.eve.callEvent("editor_closed", [t.editor]);
 
 				if(!$p.utils.is_empty_guid(_cell.ref))
 					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");
 
 				else{
 
-										var hprm = $p.job_prm.parse_url(),
+					var hprm = $p.job_prm.parse_url(),
 						obj = $p.cat.characteristics.get(hprm.ref, false, true);
 
-										if(obj && !obj.calc_order.empty())
+					if(obj && !obj.calc_order.empty())
 						$p.iface.set_hash("doc.calc_order", obj.calc_order.ref, "doc");
 					else
 						$p.iface.set_hash("doc.calc_order", "", "list");
@@ -8046,7 +8042,7 @@ $p.iface.view_orders = function (cell) {
 			});
 		}
 
-		t.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
+		t.tb_nav = $p.iface.main.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 
 		t.carousel = cell.attachCarousel({
 			keys:           false,
@@ -8067,7 +8063,6 @@ $p.iface.view_orders = function (cell) {
 			setTimeout(create_elmnts);
 		else
 			$p.on({ predefined_elmnts_inited: create_elmnts });
-
 
 		$p.on("hash_route", hash_route);
 
@@ -8272,7 +8267,7 @@ $p.iface.view_settings = function (cell) {
 
 		}
 
-		t.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
+		t.tb_nav = $p.iface.main.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 
 		t.tabs = cell.attachTabbar({
 			arrows_mode:    "auto",
@@ -8440,6 +8435,186 @@ $p.iface.view_settings = function (cell) {
 };
 
 
+class OrderDealerApp {
+
+  constructor($p) {
+
+    this.sidebar_items = [
+        {id: "orders", text: "Заказы", icon: "projects_48.png"},
+        {id: "events", text: "Планирование", icon: "events_48.png"},
+        {id: "settings", text: "Настройки", icon: "settings_48.png"},
+        {id: "v2", text: "Версия 2.0", icon: "v2_48.png"},
+        {id: "about", text: "О программе", icon: "about_48.png"}
+      ];
+
+    this.btn_auth_sync = new $p.iface.OBtnAuthSync();
+
+    this.predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", this.predefined_elmnts_inited.bind(this));
+
+    this.pouch_load_data_error = $p.eve.attachEvent("pouch_load_data_error", this.pouch_load_data_error.bind(this));
+
+    this.sidebar = new dhtmlXSideBar({
+        parent: document.body,
+        icons_path: "dist/imgs/",
+        width: 180,
+        header: true,
+        template: "tiles",
+        autohide: true,
+        items: this.sidebar_items,
+        offsets: {
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0
+        }
+      });
+
+    this.sidebar.attachEvent("onSelect", this.sidebar_select);
+
+    this.sidebar.progressOn();
+
+    window.onmousewheel = (e) => {
+      if(e.ctrlKey){
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    const hprm = $p.job_prm.parse_url();
+    if(!hprm.view || this.sidebar.getAllItems().indexOf(hprm.view) == -1){
+      $p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, "orders");
+    } else{
+      setTimeout($p.iface.hash_route);
+    }
+
+  }
+
+  btns_nav(wrapper) {
+
+    return this.btn_auth_sync.bind(new $p.iface.OTooolBar({
+      wrapper: wrapper,
+      class_name: 'md_otbnav',
+      width: '260px', height: '28px', top: '3px', right: '3px', name: 'right',
+      buttons: [
+        {name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
+        {name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
+        {name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
+        {name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
+        {name: 'sep_0', text: '', float: 'right'},
+        {name: 'sync', text: '', float: 'right'},
+        {name: 'auth', text: '', width: '80px', float: 'right'}
+
+      ], onclick: (name) => {
+        this.sidebar.cells(name).setActive(true);
+        return false;
+      }
+    }))
+
+  }
+
+  patch_cnn() {
+
+    ["couch_path", "zone", "couch_suffix", "couch_direct"].forEach((prm) => {
+      if($p.job_prm.url_prm[prm] && $p.wsql.get_user_param(prm) != $p.job_prm.url_prm[prm]){
+        $p.wsql.set_user_param(prm, $p.job_prm.url_prm[prm]);
+      }
+    });
+
+    if(location.host.match("aribaz")){
+      $p.wsql.set_user_param("zone", 2);
+    }
+    else if(location.host.match("tmk")){
+      $p.wsql.set_user_param("zone", 23);
+    }
+    else if(location.host.match("ecookna")){
+      $p.wsql.set_user_param("zone", 21);
+    }
+
+
+  }
+
+  predefined_elmnts_inited(err) {
+
+    this.sidebar.progressOff();
+
+    if(!$p.wsql.pouch.authorized && navigator.onLine &&
+      $p.wsql.get_user_param("enable_save_pwd") &&
+      $p.wsql.get_user_param("user_name") &&
+      $p.wsql.get_user_param("user_pwd")){
+
+      setTimeout(function () {
+        $p.iface.frm_auth({
+          modal_dialog: true,
+          try_auto: true
+        });
+      }, 100);
+    }
+
+    $p.eve.detachEvent(this.predefined_elmnts_inited);
+
+  }
+
+  pouch_load_data_error(err) {
+
+    if(err.db_name && err.hasOwnProperty("doc_count") && err.doc_count < 10 && navigator.onLine){
+
+      if($p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && !$p.wsql.get_user_param("user_name")){
+        $p.wsql.set_user_param("enable_save_pwd", true);
+        $p.wsql.set_user_param("user_name", $p.job_prm.guests[0].username);
+        $p.wsql.set_user_param("user_pwd", $p.job_prm.guests[0].password);
+
+        setTimeout(function () {
+          $p.iface.frm_auth({
+            modal_dialog: true,
+            try_auto: true
+          });
+        }, 100);
+
+      }else{
+        $p.iface.frm_auth({
+          modal_dialog: true,
+          try_auto: $p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && $p.wsql.get_user_param("enable_save_pwd")
+        });
+      }
+
+    }
+
+    this.sidebar.progressOff();
+    $p.eve.detachEvent(this.pouch_load_data_error);
+
+  }
+
+  sidebar_select(id) {
+
+    if(id == "v2"){
+      $p.eve.redirect = true;
+      location.replace("/v2/");
+    }
+
+    const hprm = $p.job_prm.parse_url();
+    if(hprm.view != id){
+      $p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, id);
+    }
+
+    $p.iface["view_" + id](this.cells(id));
+
+  }
+
+  hash_route(hprm) {
+
+    if(hprm.view && this.sidebar.getActiveItem() != hprm.view){
+      this.sidebar.getAllItems().forEach((item) => {
+        if(item == hprm.view){
+          this.sidebar.cells(item).setActive(true);
+        }
+      });
+    }
+
+    return false;
+
+  }
+}
+
 $p.on({
 
 	settings: function (prm) {
@@ -8456,8 +8631,7 @@ $p.on({
 
 			pouch_filter: {
 				value: (function () {
-					var filter = {};
-					return filter;
+					return {};
 				})(),
 				writable: false
 			},
@@ -8493,167 +8667,16 @@ $p.on({
 
 		prm.couch_path = "/couchdb/wb_";
 
-
-		prm.guest_name = "guest";
-
-		prm.guest_pwd = "meta";
-
 		prm.enable_save_pwd = true;
-
-
 
 	},
 
 	iface_init: function() {
-
-    ["couch_path", "zone", "couch_suffix"].forEach((prm) => {
-      if($p.job_prm.url_prm[prm] && $p.wsql.get_user_param(prm) != $p.job_prm.url_prm[prm]){
-        $p.wsql.set_user_param(prm, $p.job_prm.url_prm[prm]);
-      }
-    })
-
-		$p.iface.sidebar_items = [
-			{id: "orders", text: "Заказы", icon: "projects_48.png"},
-			{id: "events", text: "Планирование", icon: "events_48.png"},
-			{id: "settings", text: "Настройки", icon: "settings_48.png"},
-      {id: "v2", text: "Версия 2.0", icon: "v2_48.png"},
-			{id: "about", text: "О программе", icon: "about_48.png"}
-		];
-
-
-		$p.iface.btn_auth_sync = new $p.iface.OBtnAuthSync();
-
-		$p.iface.btns_nav = function (wrapper) {
-			return $p.iface.btn_auth_sync.bind(new $p.iface.OTooolBar({
-				wrapper: wrapper,
-				class_name: 'md_otbnav',
-				width: '260px', height: '28px', top: '3px', right: '3px', name: 'right',
-				buttons: [
-					{name: 'about', text: '<i class="fa fa-info-circle md-fa-lg"></i>', tooltip: 'О программе', float: 'right'},
-					{name: 'settings', text: '<i class="fa fa-cog md-fa-lg"></i>', tooltip: 'Настройки', float: 'right'},
-					{name: 'events', text: '<i class="fa fa-calendar-check-o md-fa-lg"></i>', tooltip: 'Планирование', float: 'right'},
-					{name: 'orders', text: '<i class="fa fa-suitcase md-fa-lg"></i>', tooltip: 'Заказы', float: 'right'},
-					{name: 'sep_0', text: '', float: 'right'},
-					{name: 'sync', text: '', float: 'right'},
-					{name: 'auth', text: '', width: '80px', float: 'right'}
-
-				], onclick: function (name) {
-					$p.iface.main.cells(name).setActive(true);
-					return false;
-				}
-			}))
-		};
-
-		var predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", function () {
-
-			$p.iface.main.progressOff();
-
-			if(!$p.wsql.pouch.authorized && navigator.onLine &&
-				$p.wsql.get_user_param("enable_save_pwd") &&
-				$p.wsql.get_user_param("user_name") &&
-				$p.wsql.get_user_param("user_pwd")){
-
-				setTimeout(function () {
-					$p.iface.frm_auth({
-						modal_dialog: true,
-						try_auto: true
-					});
-				}, 100);
-			}
-
-			$p.eve.detachEvent(predefined_elmnts_inited);
-
-		});
-
-		var pouch_load_data_error = $p.eve.attachEvent("pouch_load_data_error", function (err) {
-
-			if(err.db_name && err.hasOwnProperty("doc_count") && err.doc_count < 10 && navigator.onLine){
-
-				if($p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && !$p.wsql.get_user_param("user_name")){
-					$p.wsql.set_user_param("enable_save_pwd", true);
-					$p.wsql.set_user_param("user_name", $p.job_prm.guests[0].username);
-					$p.wsql.set_user_param("user_pwd", $p.job_prm.guests[0].password);
-
-					setTimeout(function () {
-						$p.iface.frm_auth({
-							modal_dialog: true,
-							try_auto: true
-						});
-					}, 100);
-
-				}else{
-					$p.iface.frm_auth({
-						modal_dialog: true,
-						try_auto: $p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && $p.wsql.get_user_param("enable_save_pwd")
-					});
-				}
-
-			}
-
-			$p.iface.main.progressOff();
-			$p.eve.detachEvent(pouch_load_data_error);
-
-		});
-
-		window.onmousewheel = function (e) {
-			if(e.ctrlKey){
-				e.preventDefault();
-				return false;
-			}
-		};
-
-		$p.iface.main = new dhtmlXSideBar({
-			parent: document.body,
-			icons_path: "dist/imgs/",
-			width: 180,
-			header: true,
-			template: "tiles",
-			autohide: true,
-			items: $p.iface.sidebar_items,
-			offsets: {
-				top: 0,
-				right: 0,
-				bottom: 0,
-				left: 0
-			}
-		});
-
-		$p.iface.main.attachEvent("onSelect", function(id){
-
-		  if(id == "v2"){
-        $p.eve.redirect = true;
-        location.replace("/v2/");
-      }
-
-			var hprm = $p.job_prm.parse_url();
-			if(hprm.view != id){
-        $p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, id);
-      }
-
-			$p.iface["view_" + id]($p.iface.main.cells(id));
-
-		});
-
-		$p.iface.main.progressOn();
-
-    var hprm = $p.job_prm.parse_url();
-		if(!hprm.view || $p.iface.main.getAllItems().indexOf(hprm.view) == -1){
-			$p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, "orders");
-		} else
-			setTimeout($p.iface.hash_route);
-
+    $p.iface.main = new OrderDealerApp($p);
 	},
 
 	hash_route: function (hprm) {
-
-		if(hprm.view && $p.iface.main.getActiveItem() != hprm.view){
-			$p.iface.main.getAllItems().forEach(function(item){
-				if(item == hprm.view)
-					$p.iface.main.cells(item).setActive(true);
-			});
-		}
-
-		return false;
+	  return $p.iface.main.hash_route(hprm);
 	}
 
 });

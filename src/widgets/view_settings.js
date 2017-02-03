@@ -213,7 +213,7 @@ $p.iface.view_settings = function (cell) {
 
 		}
 
-		t.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
+		t.tb_nav = $p.iface.main.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 
 		// разделы настроек
 		t.tabs = cell.attachTabbar({

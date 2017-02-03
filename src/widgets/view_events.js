@@ -80,7 +80,7 @@ $p.iface.view_events = function (cell) {
 			create_scheduler();
 
 		// Рисуем дополнительные элементы навигации
-		t.tb_nav = $p.iface.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
+		t.tb_nav = $p.iface.main.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 
 		/**
 		 * Обработчик маршрутизации
