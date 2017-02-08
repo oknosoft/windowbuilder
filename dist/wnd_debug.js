@@ -4772,8 +4772,9 @@ function ProductsBuilding(){
 
 				if(!row_cnn_spec.formula.empty()) {
 					row_cnn_spec.formula.execute({
-						ox: ox,
-						elm: elm,
+						ox,
+						elm,
+            len_angl,
             cnstr: 0,
             inset: $p.utils.blank.guid,
 						row_cnn: row_cnn_spec,
