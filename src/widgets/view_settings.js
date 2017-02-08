@@ -395,3 +395,4 @@ $p.iface.view_settings = function (cell) {
 	return $p.iface._settings || ($p.iface._settings = new OViewSettings());
 
 };
+

@@ -20,6 +20,8 @@ lib/metadata.min.js
 # //metadata.js.org/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
 # //metadata.js.org/lib/dhtmlxscheduler/dhtmlxscheduler.css
 lib/paper-core.min.js
+lib/pouchdb/pouchdb.authentication.min.js
+lib/pouchdb/pouchdb.find.min.js
 lib/qrcodejs/qrcode.js
 dist/windowbuilder.js
 dist/wnd_debug.js

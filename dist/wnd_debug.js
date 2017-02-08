@@ -4736,33 +4736,38 @@ function ProductsBuilding(){
 
 		const sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
 
-		cnn_filter_spec(cnn, elm, len_angl).forEach(function (row_cnn_spec) {
+		cnn_filter_spec(cnn, elm, len_angl).forEach((row_cnn_spec) => {
 
-			var nom = row_cnn_spec.nom;
+			const {nom} = row_cnn_spec;
 
 			if(nom._manager == $p.cat.inserts){
 				if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)){
-					var tmp_len_angl = len_angl._clone();
+					const tmp_len_angl = len_angl._clone();
 					tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
 					inset_spec(elm, nom, tmp_len_angl);
-				}else
-					inset_spec(elm, nom, len_angl);
+				}else{
+          inset_spec(elm, nom, len_angl);
+        }
+			}
+			else {
 
-			}else {
-
-				var row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin || cnn);
+        const row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin || cnn);
 
 				if(nom.is_pieces){
-					if(!row_cnn_spec.coefficient)
-						row_spec.qty = row_cnn_spec.quantity;
-					else
-						row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
-							.round(nom.rounding_quantity);
-				}else{
+					if(!row_cnn_spec.coefficient){
+            row_spec.qty = row_cnn_spec.quantity;
+          }
+					else{
+            row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
+              .round(nom.rounding_quantity);
+          }
+				}
+				else{
 					row_spec.qty = row_cnn_spec.quantity;
 
-					if(row_cnn_spec.sz || row_cnn_spec.coefficient)
-						row_spec.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
+					if(row_cnn_spec.sz || row_cnn_spec.coefficient){
+            row_spec.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
+          }
 				}
 
 				if(!row_cnn_spec.formula.empty()) {
@@ -4776,38 +4781,43 @@ function ProductsBuilding(){
 					});
 				}
 
-				if(!row_spec.qty)
-					spec.del(row_spec.row-1);
-				else
-					calc_count_area_mass(row_spec, len_angl, row_cnn_spec.angle_calc_method);
-
+				if(!row_spec.qty){
+          spec.del(row_spec.row-1);
+        }
+				else{
+          calc_count_area_mass(row_spec, len_angl, row_cnn_spec.angle_calc_method);
+        }
 			}
-
 
 		});
 	}
 
 	function cnn_filter_spec(cnn, elm, len_angl){
 
-		var res = [], nom, angle_hor = elm.angle_hor;
+		const res = [];
+		const {angle_hor} = elm;
 
-		cnn.specification.each(function (row) {
-			nom = row.nom;
+		cnn.specification.each((row) => {
+			const {nom} = row;
 			if(!nom || nom.empty() ||
-				nom == $p.job_prm.nom.art1 ||
-				nom == $p.job_prm.nom.art2)
-				return;
+				  nom == $p.job_prm.nom.art1 ||
+				  nom == $p.job_prm.nom.art2){
+        return;
+      }
 
 			if((row.for_direct_profile_only > 0 && !elm.profile.is_linear()) ||
-				(row.for_direct_profile_only < 0 &&elm.profile.is_linear()))
-				return;
+				(row.for_direct_profile_only < 0 &&elm.profile.is_linear())){
+        return;
+      }
 
 			if(cnn.cnn_type == $p.enm.cnn_types.Наложение){
-				if(row.amin > angle_hor || row.amax < angle_hor)
-					return;
+				if(row.amin > angle_hor || row.amax < angle_hor || row.sz_min > len_angl.len || row.sz_max < len_angl.len){
+          return;
+        }
 			}else{
-				if(row.amin > len_angl.angle || row.amax < len_angl.angle)
-					return;
+				if(row.amin > len_angl.angle || row.amax < len_angl.angle){
+          return;
+        }
 			}
 
 			if(($p.enm.cnn_types.acn.a.indexOf(cnn.cnn_type) != -1) && (
@@ -4822,6 +4832,7 @@ function ProductsBuilding(){
       }
 
 		});
+
 		return res;
 	}
 
@@ -5459,20 +5470,16 @@ function ProductsBuilding(){
 
 	function base_spec_glass(glass) {
 
-		var curr, prev, next, len_angl, _row, row_cnn;
+    const {profiles, _row} = glass;
+    const glength = profiles.length;
 
-		var profiles = glass.profiles,
-			glength = profiles.length;
+		for(let i=0; i<glength; i++ ){
+			const curr = profiles[i];
+      const prev = (i==0 ? profiles[glength-1] : profiles[i-1]).profile;
+      const next = (i==glength-1 ? profiles[0] : profiles[i+1]).profile;
+      const row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});
 
-		_row = glass._row;
-
-		for(var i=0; i<glength; i++ ){
-			curr = profiles[i];
-			prev = (i==0 ? profiles[glength-1] : profiles[i-1]).profile;
-			next = (i==glength-1 ? profiles[0] : profiles[i+1]).profile;
-			row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});
-
-			len_angl = {
+			const len_angl = {
 				angle: 0,
 				alp1: prev.generatrix.angle_to(curr.profile.generatrix, curr.b, true),
 				alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
@@ -5913,7 +5920,36 @@ $p.doc.calc_order.on({
 		this.sys_furn = sys_furn;
 		this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(2);
 
-		this._obj.partner_name = this.partner.name;
+		const {_obj, obj_delivery_state, category, number_internal, partner, note} = this;
+    if(obj_delivery_state=='Шаблон'){
+      _obj.state = 'template'
+    }
+    else if(category=='Сервис'){
+      _obj.state = 'service';
+    }
+    else if(category=='Рекламация'){
+      _obj.state = 'complaints';
+    }
+    else if(obj_delivery_state=='Отправлен'){
+      _obj.state = 'sent';
+    }
+    else if(obj_delivery_state=='Отклонен'){
+      _obj.state = 'declined';
+    }
+    else if(obj_delivery_state=='Подтвержден'){
+      _obj.state = 'confirmed';
+    }
+    else if(obj_delivery_state=='Архив'){
+      _obj.state = 'zarchive';
+    }
+    else{
+      _obj.state = 'draft';
+    }
+
+		_obj.search = (this.number_doc +
+      (number_internal ? " " + number_internal : "") +
+      (partner.name ? " " + partner.name : "") +
+      (note ? " " + note : "")).toLowerCase();
 	},
 
 	value_change: function (attr) {
@@ -8433,6 +8469,7 @@ $p.iface.view_settings = function (cell) {
 	return $p.iface._settings || ($p.iface._settings = new OViewSettings());
 
 };
+
 
 
 class OrderDealerApp {

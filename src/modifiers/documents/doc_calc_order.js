@@ -122,7 +122,38 @@ $p.doc.calc_order.on({
 		this.sys_furn = sys_furn;
 		this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(2);
 
-		this._obj.partner_name = this.partner.name;
+		const {_obj, obj_delivery_state, category, number_internal, partner, note} = this;
+		// фильтр по статусу
+    if(obj_delivery_state=='Шаблон'){
+      _obj.state = 'template'
+    }
+    else if(category=='Сервис'){
+      _obj.state = 'service';
+    }
+    else if(category=='Рекламация'){
+      _obj.state = 'complaints';
+    }
+    else if(obj_delivery_state=='Отправлен'){
+      _obj.state = 'sent';
+    }
+    else if(obj_delivery_state=='Отклонен'){
+      _obj.state = 'declined';
+    }
+    else if(obj_delivery_state=='Подтвержден'){
+      _obj.state = 'confirmed';
+    }
+    else if(obj_delivery_state=='Архив'){
+      _obj.state = 'zarchive';
+    }
+    else{
+      _obj.state = 'draft';
+    }
+
+		// строка поиска
+		_obj.search = (this.number_doc +
+      (number_internal ? " " + number_internal : "") +
+      (partner.name ? " " + partner.name : "") +
+      (note ? " " + note : "")).toLowerCase();
 	},
 
 	// при изменении реквизита
