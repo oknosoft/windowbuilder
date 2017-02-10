@@ -32,7 +32,7 @@ export function init(store, subscriber) {
 
   return new Promise((resolve, reject) => {
 
-    setTimeout(function() {
+    setTimeout(() => {
 
       try {
         // инициализируем параметры сеанса и метаданные
