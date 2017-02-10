@@ -53,6 +53,7 @@ export const mapStateToProps = (state, props) => ({
 	zone: $p.wsql.get_user_param("zone"),
 	couch_path: $p.wsql.get_user_param("couch_path"),
 	couch_suffix: $p.wsql.get_user_param("couch_suffix"),
+  couch_direct: !!$p.wsql.get_user_param("couch_direct"),
 	enable_save_pwd: !!$p.wsql.get_user_param("enable_save_pwd"),
 
 })

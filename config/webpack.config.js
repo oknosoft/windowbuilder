@@ -269,8 +269,10 @@ if (!__DEV__) {
   // })
 
   webpackConfig.plugins.push(
-    new ExtractTextPlugin('[name].[contenthash].css', {
-      allChunks: true
+    new ExtractTextPlugin({
+    	filename: '[name].[contenthash].css',
+	    disable: false,
+	    allChunks: true
     })
   )
 }

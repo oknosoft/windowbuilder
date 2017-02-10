@@ -1,5 +1,6 @@
 /** @flow */
 import React, {Component, PropTypes} from "react";
+import MetaComponent from "../common/MetaComponent";
 
 import {InfiniteLoader, Grid} from "react-virtualized";
 import DumbLoader from "../DumbLoader";
@@ -31,7 +32,7 @@ class DataListStorage {
 
 }
 
-export default class DataList extends Component {
+export default class DataList extends MetaComponent {
 
   static propTypes = {
 
@@ -67,10 +68,6 @@ export default class DataList extends Component {
     handleAttachment: PropTypes.func,     // обработчик открытия диалога присоединенных файлов
   }
 
-  static contextTypes = {
-    $p: React.PropTypes.object.isRequired
-  }
-
   static defaultProps = {
     width: 1000,
     height: 400
@@ -80,9 +77,8 @@ export default class DataList extends Component {
 
     super(props, context);
 
-    const {class_name} = props._mgr
-    const {$p} = context
-
+    const {class_name} = props._mgr;
+    const {$p} = context;
     const state = this.state = {
       totalRowCount: totalRows,
       selectedRowIndex: 0,
@@ -102,10 +98,10 @@ export default class DataList extends Component {
       }
     }
 
-    this._list = new DataListStorage()
+    this._list = new DataListStorage();
 
     $p.cat.scheme_settings.get_scheme(class_name)
-      .then(this.handleSchemeChange)
+      .then(this.handleSchemeChange);
   }
 
   componentDidUpdate(prevProps, prevState) {

@@ -152,7 +152,7 @@ export default function ($p) {
             }
           })
           specification.group_by(dimentions, resources);
-          specification.forEach(function (row) {
+          specification.forEach((row) => {
 
             // округление
             row.qty = row.qty.round(3);
