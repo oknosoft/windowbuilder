@@ -21,6 +21,7 @@ const webpackConfig = {
       paths.client(),
       'node_modules',
     ],
+	// alias: {'metadata-ui': 'path to metadata-react-ui/src'},
     extensions: ['.js', '.jsx', '.json'],
     symlinks: false,
   },
@@ -84,7 +85,7 @@ if (__DEV__) {
   debug('Enable plugins for production (OccurenceOrder, Dedupe & UglifyJS).')
   webpackConfig.plugins.push(
     new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.optimize.DedupePlugin(),
+    // new webpack.optimize.DedupePlugin(),
     // new webpack.optimize.UglifyJsPlugin({
     //   compress: {
     //     unused: true,

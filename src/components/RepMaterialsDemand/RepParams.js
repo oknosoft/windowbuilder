@@ -3,9 +3,9 @@ import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from "material-ui
 import IconButton from "material-ui/IconButton";
 import AddIcon from "material-ui/svg-icons/content/add-circle-outline";
 import RemoveIcon from "material-ui/svg-icons/action/delete";
+import TabularSection from "metadata-ui/TabularSection";
 import SelectOrder from "./SelectOrder";
 
-import TabularSection from "../TabularSection";
 
 class SettingsToolbar extends Component{
 
@@ -43,31 +43,38 @@ class SettingsToolbar extends Component{
   }
 }
 
-export default class SettingsParams extends Component{
+export default class RepParams extends Component{
 
   static propTypes = {
 
     handleAdd: PropTypes.func,             // обработчик добавления объекта
     handleRemove: PropTypes.func,          // обработчик удаления строки
-    handleCustom: PropTypes.func,
     _obj: PropTypes.object.isRequired,
 
   }
 
+  handleCustom = (row, _mgr) => {
+    this.props._obj.fill_by_order(row, _mgr)
+      .then((objs) => {
+        this.refs.production.forceUpdate()
+      })
+  }
+
   render(){
 
-    const {handleAdd, handleRemove, handleCustom, _obj} = this.props;
+    const {handleAdd, handleRemove, _obj} = this.props;
 
     return (
 
       <TabularSection
         _obj={_obj}
         _tabular="production"
+        ref="production"
         minHeight={308}
         Toolbar={SettingsToolbar}
         handleAdd={handleAdd}
         handleRemove={handleRemove}
-        handleCustom={handleCustom}
+        handleCustom={this.handleCustom}
       />
     )
   }

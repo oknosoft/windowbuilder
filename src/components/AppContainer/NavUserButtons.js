@@ -4,7 +4,7 @@
  */
 
 import React, {PropTypes} from "react";
-import MetaComponent from "../common/MetaComponent";
+import MetaComponent from "metadata-ui/common/MetaComponent";
 
 import FlatButton from 'material-ui/FlatButton';
 import {white} from 'material-ui/styles/colors';

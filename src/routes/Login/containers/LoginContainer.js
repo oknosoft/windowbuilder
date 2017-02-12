@@ -4,7 +4,7 @@ import {mapStateToProps, actions} from "../modules/login";
  nor does it import React. This component is **only** responsible for
  wiring in the actions and state necessary to render a presentational
  component - in this case, the DataList:   */
-import FrmLogin from "metadata-react-ui/FrmLogin";
+import FrmLogin from "metadata-ui/FrmLogin";
 
 
 /*  Note: mapStateToProps is where you should use `reselect` to create selectors, ie:

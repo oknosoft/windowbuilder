@@ -4,7 +4,7 @@
  component - in this case, the counter:   */
 import {connect} from "react-redux";
 import {actions, mapStateToProps} from "../modules/actions";
-import FrmObj from "components/FrmObj";
+import FrmObj from "metadata-ui/FrmObj";
 
 
 /*  Note: mapStateToProps is where you should use `reselect` to create selectors, ie:

@@ -1,11 +1,11 @@
 
 import React, {PropTypes} from "react";
-import MetaComponent from "../common/MetaComponent";
+import MetaComponent from "metadata-ui/common/MetaComponent";
 
 import IconButton from 'material-ui/IconButton';
 import IconWork from 'material-ui/svg-icons/action/work';
 import Dialog from 'material-ui/Dialog';
-import DataList from "../DataList"
+import DataList from "metadata-ui/DataList"
 
 
 export default class SelectOrder extends MetaComponent {

@@ -1,3 +1,2 @@
-import RepMaterialsDemand from './RepMaterialsDemand'
 
-export default RepMaterialsDemand
+export default from './RepMaterialsDemand'

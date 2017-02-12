@@ -8,9 +8,9 @@ import React, {Component, PropTypes} from "react";
 import {Router} from "react-router";
 import {Provider} from "react-redux";
 
-import "metadata-react-ui/combined.css";
-import "metadata-react-ui/react-data-grid.css";
-import "metadata-react-ui/metadata-react-ui.css";
+import "metadata-react-ui/css/combined.css";
+import "metadata-react-ui/css/react-data-grid.css";
+import "metadata-react-ui/css/metadata-react-ui.css";
 import "react-virtualized/styles.css";
 import "styles/core.scss";
 //import 'react-flex-layout/react-flex-layout-splitter.css'

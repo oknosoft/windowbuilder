@@ -1,6 +1,6 @@
 
 import React, {Component, PropTypes} from "react";
-import DataList from "../DataList"
+import DataList from "metadata-ui/DataList"
 
 export default class HomeView extends Component {
 
