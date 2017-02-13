@@ -1512,23 +1512,21 @@ Contour.prototype.__define({
 	draw_visualization: {
 		value: function () {
 
+		  const {profiles, l_visualization} = this;
 
-			var profiles = this.profiles,
-				l_vis = this.l_visualization;
-
-			if(l_vis._by_spec)
-				l_vis._by_spec.removeChildren();
+			if(l_visualization._by_spec)
+				l_visualization._by_spec.removeChildren();
 			else
-				l_vis._by_spec = new paper.Group({ parent: l_vis });
+				l_visualization._by_spec = new paper.Group({ parent: l_visualization });
 
 			// получаем строки спецификации с визуализацией
-			this.project.ox.specification.find_rows({dop: -1}, function (row) {
+			this.project.ox.specification.find_rows({dop: -1}, (row) => {
 
-				profiles.some(function (elm) {
+				profiles.some((elm) => {
 					if(row.elm == elm.elm){
 
 						// есть визуализация для текущего профиля
-						row.nom.visualization.draw(elm, l_vis, row.len * 1000);
+						row.nom.visualization.draw(elm, l_visualization, row.len * 1000);
 
 						return true;
 					}
@@ -1536,7 +1534,7 @@ Contour.prototype.__define({
 			});
 
 			// перерисовываем вложенные контуры
-			this.children.forEach(function(l) {
+			this.children.forEach((l) => {
 				if(l instanceof Contour)
 					l.draw_visualization();
 			});

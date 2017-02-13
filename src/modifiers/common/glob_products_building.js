@@ -600,27 +600,29 @@ function ProductsBuilding(){
 	function furn_spec(contour) {
 
 		// у рамных контуров фурнитуры не бывает
-		if(!contour.parent)
-			return false;
+		if(!contour.parent){
+      return false;
+    }
 
 		// кеш сторон фурнитуры
-		var cache = {
+		const cache = {
 			profiles: contour.outer_nodes,
 			bottom: contour.profiles_by_side("bottom"),
 			params: contour.project.ox.params
 		};
 
 		// проверяем, подходит ли фурнитура под геометрию контура
-		if(!furn_check_opening_restrictions(contour, cache))
-			return;
+		if(!furn_check_opening_restrictions(contour, cache)){
+      return;
+    }
 
 		// уточняем высоту ручки, т.к. от неё зависят координаты в спецификации
 		furn_update_handle_height(contour, cache, contour.furn.furn_set);
 
 		// получаем спецификацию фурнитуры и переносим её в спецификацию изделия
-		furn_get_spec(contour, cache, contour.furn.furn_set).each(function (row) {
-			var elm = {elm: -contour.cnstr, clr: contour.clr_furn},
-				row_spec = new_spec_row(null, elm, row, row.nom_set, row.origin);
+		furn_get_spec(contour, cache, contour.furn.furn_set).each((row) => {
+			const elm = {elm: -contour.cnstr, clr: contour.clr_furn};
+			const row_spec = new_spec_row(null, elm, row, row.nom_set, row.origin);
 
 			if(row.is_procedure_row){
 				row_spec.elm = row.handle_height_min;
@@ -628,10 +630,11 @@ function ProductsBuilding(){
 				row_spec.qty = 0;
 				row_spec.totqty = 1;
 				row_spec.totqty1 = 1;
-				if(!row_spec.nom.visualization.empty())
-					row_spec.dop = -1;
-
-			}else{
+				if(!row_spec.nom.visualization.empty()){
+          row_spec.dop = -1;
+        }
+			}
+			else{
 				row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
 				calc_count_area_mass(row_spec);
 			}
