@@ -1979,6 +1979,76 @@ $p.dp.builder_lay_impost.on({
 });
 
 
+$p.DpBuilder_price.prototype.__define({
+  form_obj: {
+    value: function (pwnd, attr) {
+
+      const {nom, goods, _manager, _metadata} = this;
+
+      const options = {
+        name: 'wnd_obj_' + _manager.class_name,
+        wnd: {
+          top: 80 + Math.random()*40,
+          left: 120 + Math.random()*80,
+          width: 780,
+          height: 400,
+          modal: true,
+          center: false,
+          pwnd: pwnd,
+          allow_close: true,
+          allow_minmax: true,
+          caption: `Цены: <b>${nom.name}</b>`
+        }
+      };
+
+      const wnd = $p.iface.dat_blank(null, options.wnd);
+
+      const ts_captions = {
+        "fields":["price_type","nom_characteristic","date","price","currency"],
+        "headers":"Тип Цен,Характеристика,Дата,Цена,Валюта",
+        "widths":"200,*,150,120,100",
+        "min_widths":"150,200,100,100,100",
+        "aligns":"",
+        "sortings":"na,na,na,na,na",
+        "types":"ro,ro,dhxCalendar,ro,ro"
+      };
+
+      return $p.wsql.pouch.local.doc.query('doc/doc_nom_prices_setup_slice_last', {
+        limit : 1000,
+        include_docs: false,
+        startkey: [nom.ref, ''],
+        endkey: [nom.ref, '\uffff']
+      })
+        .then((data) => {
+        if(data && data.rows){
+          data.rows.forEach((row) => {
+            goods.add({
+              nom_characteristic: row.key[1],
+              price_type: row.key[2],
+              date: row.value.date,
+              price: row.value.price,
+              currency: row.value.currency
+            })
+          });
+
+          goods.sort(["price_type","nom_characteristic","date"]);
+
+          wnd.elmnts.grids.goods = wnd.attachTabular({
+            obj: this,
+            ts: "goods",
+            pwnd: wnd,
+            ts_captions: ts_captions
+          });
+          wnd.detachToolbar();
+        }
+      })
+
+
+    }
+  }
+});
+
+
 
 $p.dp.buyers_order.__define({
 
@@ -6572,6 +6642,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 				.then(function () {
 
 					tabular_init("production", $p.injected_data["toolbar_calc_order_production.xml"]);
+          wnd.elmnts.grids.production.disable_sorting = true;
 
 					var toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
 					toolbar.addSpacer("btn_delete");
@@ -6581,7 +6652,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 					toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
 					toolbar.addButton("btn_fill_plan", 3, "Заполнить");
 					toolbar.attachEvent("onclick", toolbar_click);
-
 
 					wnd.elmnts.discount_pop = new dhtmlXPopup({
 						toolbar: toolbar,

@@ -63,6 +63,7 @@
 
 					// табчасть продукции со специфическим набором кнопок
 					tabular_init("production", $p.injected_data["toolbar_calc_order_production.xml"]);
+          wnd.elmnts.grids.production.disable_sorting = true;
 
 					var toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
 					toolbar.addSpacer("btn_delete");
@@ -73,7 +74,6 @@
 					toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
 					toolbar.addButton("btn_fill_plan", 3, "Заполнить");
 					toolbar.attachEvent("onclick", toolbar_click);
-
 
 					// попап для присоединенных файлов
 					wnd.elmnts.discount_pop = new dhtmlXPopup({
