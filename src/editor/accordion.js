@@ -72,25 +72,7 @@ function EditorAccordion(_editor, cell_acc) {
 			name: 'right',
 			image_path: 'dist/imgs/',
 			buttons: [
-				{name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'
-					//,sub: {
-					//	buttons: [
-					//		{name: 'square', img: 'square.png', float: 'left'},
-					//		{name: 'triangle1', img: 'triangle1.png', float: 'right'},
-					//		{name: 'triangle2', img: 'triangle2.png', float: 'left'},
-					//		{name: 'triangle3', img: 'triangle3.png', float: 'right'},
-					//		{name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-					//		{name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
-					//		{name: 'circle',    img: 'circle.png', float: 'left'},
-					//		{name: 'arc1',      img: 'arc1.png', float: 'right'},
-					//		{name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-					//		{name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
-					//		{name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
-					//		{name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
-					//		{name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-					//		{name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]
-					//}
-				},
+				{name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
 				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
@@ -492,7 +474,7 @@ function EditorAccordion(_editor, cell_acc) {
 						var attr = {
 							obj: obj,
 							oxml: {
-								"Фурнитура": ["furn", "clr_furn", "direction", "h_ruch"],
+								"Фурнитура": ["furn", "direction", "h_ruch"],
 								"Параметры": []
 							},
 							ts: "params",

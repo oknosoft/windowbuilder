@@ -270,6 +270,41 @@ class ToolPen extends ToolElement {
         obj: tool.profile
       });
 
+      // панелька с командой типовых форм
+      tool.wnd.tb_mode = new $p.iface.OTooolBar({
+        wrapper: tool.wnd.cell,
+        width: '100%',
+        height: '28px',
+        class_name: "",
+        name: 'tb_mode',
+        buttons: [
+          {name: 'standard_form', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить типовую форму', float: 'left',
+            sub: {
+              width: '62px',
+              height:'206px',
+              buttons: [
+                {name: 'square', img: 'square.png', float: 'left'},
+                {name: 'triangle1', img: 'triangle1.png', float: 'right'},
+                {name: 'triangle2', img: 'triangle2.png', float: 'left'},
+                {name: 'triangle3', img: 'triangle3.png', float: 'right'},
+                {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
+                {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
+                {name: 'circle',    img: 'circle.png', float: 'left'},
+                {name: 'arc1',      img: 'arc1.png', float: 'right'},
+                {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
+                {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
+                {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
+                {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
+                {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
+                {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
+          },
+        ],
+        image_path: "dist/imgs/",
+        onclick: (name) => tool.standard_form(name)
+      });
+      tool.wnd.tb_mode.cell.style.backgroundColor = "#f5f5f5";
+      tool.wnd.cell.firstChild.style.marginTop = "22px";
+
       // подмешиваем в метод wnd_options() установку доппараметров
       const wnd_options = tool.wnd.wnd_options;
       tool.wnd.wnd_options = function (opt) {
@@ -840,6 +875,116 @@ class ToolPen extends ToolElement {
       this.mode = null;
       this._controls.blur();
     }
+  }
+
+  /**
+   * ### Добавление типовой формы
+   *
+   * @param [name] {String} - имя типовой формы
+   */
+  standard_form(name) {
+
+    if(name == 'standard_form'){
+      name = 'square'
+    }
+
+    if(this['add_' + name]){
+      this['add_' + name](paper.project.bounds);
+      paper.project.zoom_fit();
+    }
+    else{
+      $p.msg.show_not_implemented();
+    }
+    // switch(name) {
+    //   case 'square':
+    //   case 'triangle1':
+    //   case 'triangle2':
+    //   case 'triangle3':
+    //   case 'semicircle1':
+    //   case 'semicircle2':
+    //   case 'circle':
+    //   case 'arc1':
+    //   case 'trapeze1':
+    //   case 'trapeze2':
+    //   case 'trapeze3':
+    //   case 'trapeze4':
+    //   case 'trapeze5':
+    //   case 'trapeze6':
+    //     // типовая форма
+    //     _editor.standard_form(name);
+    //     break;
+    // }
+
+  }
+
+  /**
+   * ### Добавляет последовательность профилей
+   * @param points {Array}
+   */
+  add_sequence(points) {
+    points.forEach((segments) => {
+      new Profile({generatrix: new paper.Path({
+        strokeColor: 'black',
+        segments: segments
+      }), proto: this.profile});
+    })
+  }
+
+  /**
+   * Рисует квадрат
+   * @param bounds
+   */
+  add_square(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0,-1000])],
+      [point.add([0,-1000]), point.add([1000,-1000])],
+      [point.add([1000,-1000]), point.add([1000,0])],
+      [point.add([1000,0]), point]
+    ])
+  }
+
+  /**
+   * Рисует triangle1
+   * @param bounds
+   */
+  add_triangle1(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0,-1000])],
+      [point.add([1000,-1000]), point.add([1000,0])],
+      [point.add([1000,0]), point]
+    ])
+  }
+
+  /**
+   * Рисует triangle2
+   * @param bounds
+   */
+  add_triangle2(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([1000,-1000])],
+      [point.add([1000,-1000]), point.add([1000,0])],
+      [point.add([1000,0]), point]
+    ])
+  }
+
+  /**
+   * Рисует triangle3
+   * @param bounds
+   */
+  add_triangle3(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([1000,-1000])],
+      [point.add([1000,-1000]), point.add([2000,0])],
+      [point.add([2000,0]), point]
+    ])
   }
 
   // делает полупрозрачными элементы неактивных контуров

@@ -359,8 +359,9 @@ class Editor extends paper.PaperScope {
 
           var previous = _editor.tb_left.get_selected();
 
-          if(previous)
+          if(previous){
             return _editor.select_tool(previous.replace("left_", ""));
+          }
         }
       });
 
@@ -731,7 +732,6 @@ class Editor extends paper.PaperScope {
     rect.guide = true;
     return rect;
   }
-
 
   /**
    * ### Диалог дополнительных вставок

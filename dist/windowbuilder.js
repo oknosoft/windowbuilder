@@ -1312,8 +1312,7 @@ function EditorAccordion(_editor, cell_acc) {
 			name: 'right',
 			image_path: 'dist/imgs/',
 			buttons: [
-				{name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'
-				},
+				{name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
 				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
@@ -1688,7 +1687,7 @@ function EditorAccordion(_editor, cell_acc) {
 						var attr = {
 							obj: obj,
 							oxml: {
-								"Фурнитура": ["furn", "clr_furn", "direction", "h_ruch"],
+								"Фурнитура": ["furn", "direction", "h_ruch"],
 								"Параметры": []
 							},
 							ts: "params",
@@ -2179,8 +2178,9 @@ class Editor extends paper.PaperScope {
 
           var previous = _editor.tb_left.get_selected();
 
-          if(previous)
+          if(previous){
             return _editor.select_tool(previous.replace("left_", ""));
+          }
         }
       });
 
@@ -2465,7 +2465,6 @@ class Editor extends paper.PaperScope {
     rect.guide = true;
     return rect;
   }
-
 
   additional_inserts(cnstr){
 
@@ -3474,23 +3473,16 @@ Contour.prototype.__define({
 
 			if(!data._bounds || !data._bounds.width || !data._bounds.height){
 
-				const {profiles} = this;
+			  this.profiles.forEach((profile) => {
+          const path = profile.path || profile.generatrix;
+          if(path){
+            data._bounds = data._bounds ? data._bounds.unite(path.bounds) : path.bounds
+          }
+        });
 
-				if(profiles.length && profiles[0].path){
-
-          profiles.forEach((profile) => {
-            data._bounds = data._bounds ? data._bounds.unite(profile.path.bounds) : profile.path.bounds
-          });
-
-					if(!data._bounds.width || !data._bounds.height){
-            profiles.forEach((profile) => {
-              data._bounds = data._bounds.unite(profile.generatrix.bounds)
-            });
-					}
-				}
-				else{
+        if(!data._bounds){
           data._bounds = new paper.Rectangle();
-				}
+        }
 			}
 
 			return data._bounds;
@@ -11325,6 +11317,40 @@ class ToolPen extends ToolElement {
         obj: tool.profile
       });
 
+      tool.wnd.tb_mode = new $p.iface.OTooolBar({
+        wrapper: tool.wnd.cell,
+        width: '100%',
+        height: '28px',
+        class_name: "",
+        name: 'tb_mode',
+        buttons: [
+          {name: 'standard_form', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить типовую форму', float: 'left',
+            sub: {
+              width: '62px',
+              height:'206px',
+              buttons: [
+                {name: 'square', img: 'square.png', float: 'left'},
+                {name: 'triangle1', img: 'triangle1.png', float: 'right'},
+                {name: 'triangle2', img: 'triangle2.png', float: 'left'},
+                {name: 'triangle3', img: 'triangle3.png', float: 'right'},
+                {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
+                {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
+                {name: 'circle',    img: 'circle.png', float: 'left'},
+                {name: 'arc1',      img: 'arc1.png', float: 'right'},
+                {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
+                {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
+                {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
+                {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
+                {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
+                {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
+          },
+        ],
+        image_path: "dist/imgs/",
+        onclick: (name) => tool.standard_form(name)
+      });
+      tool.wnd.tb_mode.cell.style.backgroundColor = "#f5f5f5";
+      tool.wnd.cell.firstChild.style.marginTop = "22px";
+
       const wnd_options = tool.wnd.wnd_options;
       tool.wnd.wnd_options = function (opt) {
         wnd_options.call(tool.wnd, opt);
@@ -11864,6 +11890,68 @@ class ToolPen extends ToolElement {
       this.mode = null;
       this._controls.blur();
     }
+  }
+
+  standard_form(name) {
+
+    if(name == 'standard_form'){
+      name = 'square'
+    }
+
+    if(this['add_' + name]){
+      this['add_' + name](paper.project.bounds);
+      paper.project.zoom_fit();
+    }
+    else{
+      $p.msg.show_not_implemented();
+    }
+
+  }
+
+  add_sequence(points) {
+    points.forEach((segments) => {
+      new Profile({generatrix: new paper.Path({
+        strokeColor: 'black',
+        segments: segments
+      }), proto: this.profile});
+    })
+  }
+
+  add_square(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0,-1000])],
+      [point.add([0,-1000]), point.add([1000,-1000])],
+      [point.add([1000,-1000]), point.add([1000,0])],
+      [point.add([1000,0]), point]
+    ])
+  }
+
+  add_triangle1(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0,-1000])],
+      [point.add([1000,-1000]), point.add([1000,0])],
+      [point.add([1000,0]), point]
+    ])
+  }
+
+  add_triangle2(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([1000,-1000])],
+      [point.add([1000,-1000]), point.add([1000,0])],
+      [point.add([1000,0]), point]
+    ])
+  }
+
+  add_triangle3(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([1000,-1000])],
+      [point.add([1000,-1000]), point.add([2000,0])],
+      [point.add([2000,0]), point]
+    ])
   }
 
   decorate_layers(reset){

@@ -439,24 +439,16 @@ Contour.prototype.__define({
 
 			if(!data._bounds || !data._bounds.width || !data._bounds.height){
 
-				const {profiles} = this;
+			  this.profiles.forEach((profile) => {
+          const path = profile.path || profile.generatrix;
+          if(path){
+            data._bounds = data._bounds ? data._bounds.unite(path.bounds) : path.bounds
+          }
+        });
 
-				if(profiles.length && profiles[0].path){
-
-          profiles.forEach((profile) => {
-            data._bounds = data._bounds ? data._bounds.unite(profile.path.bounds) : profile.path.bounds
-          });
-
-					// если профили еще не нарисованы, используем габариты образующих
-					if(!data._bounds.width || !data._bounds.height){
-            profiles.forEach((profile) => {
-              data._bounds = data._bounds.unite(profile.generatrix.bounds)
-            });
-					}
-				}
-				else{
+        if(!data._bounds){
           data._bounds = new paper.Rectangle();
-				}
+        }
 			}
 
 			return data._bounds;
