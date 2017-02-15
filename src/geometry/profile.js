@@ -898,8 +898,8 @@ ProfileItem.prototype.__define({
    */
   default_inset: {
 	  value: function (all) {
-      const nearest = this.nearest();
-      const {orientation} = this;
+      const nearest = this.nearest(true);
+      const {orientation, data} = this;
       if(nearest || all){
         let pos = nearest ? nearest.pos : this.pos;
         if(pos == $p.enm.positions.Центр){
@@ -915,6 +915,9 @@ ProfileItem.prototype.__define({
           pos: pos,
           inset: this.inset
         });
+      }
+      if(nearest){
+        data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
       }
     }
   },
@@ -1721,39 +1724,42 @@ Profile.prototype.__define({
 	 * @type Profile
 	 */
 	nearest: {
-		value : function(){
+		value : function(ignore_cnn){
 
-			var _profile = this,
-				b = _profile.b,
-				e = _profile.e,
-				ngeneratrix, children;
+			const _profile = this;
+			const {b, e, data} = this;
 
 			function check_nearest(){
-				if(_profile.data._nearest){
-					ngeneratrix = _profile.data._nearest.generatrix;
-					if( ngeneratrix.getNearestPoint(b).is_nearest(b) && ngeneratrix.getNearestPoint(e).is_nearest(e)){
-						_profile.data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, _profile.data._nearest, $p.enm.cnn_types.acn.ii, _profile.data._nearest_cnn);
+				if(data._nearest){
+					const {generatrix} = data._nearest;
+					if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
+					  if(!ignore_cnn){
+              data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
+            }
 						return true;
 					}
 				}
-				_profile.data._nearest = null;
-				_profile.data._nearest_cnn = null;
+        data._nearest = null;
+        data._nearest_cnn = null;
 			}
 
 			if(_profile.layer && _profile.layer.parent){
 				if(!check_nearest()){
-					children = _profile.layer.parent.children;
+					const {children} = _profile.layer.parent;
 					for(var p in children){
-						if((_profile.data._nearest = children[p]) instanceof Profile && check_nearest())
-							return _profile.data._nearest;
-						else
-							_profile.data._nearest = null;
+						if((data._nearest = children[p]) instanceof Profile && check_nearest()){
+              return data._nearest;
+            }
+						else{
+              data._nearest = null;
+            }
 					}
 				}
-			}else
-				_profile.data._nearest = null;
+			}else{
+        data._nearest = null;
+      }
 
-			return _profile.data._nearest;
+			return data._nearest;
 		}
 	},
 
@@ -1765,7 +1771,7 @@ Profile.prototype.__define({
 	 */
 	d0: {
 		get : function(){
-			var res = 0, curr = this, nearest;
+			let res = 0, curr = this, nearest;
 
 			while(nearest = curr.nearest()){
 				res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
@@ -1860,7 +1866,7 @@ Profile.prototype.__define({
 
 	    this.layer.contours.forEach((contour) => {
         contour.profiles.forEach((profile) => {
-          if(profile.nearest() == this){
+          if(profile.nearest(true) == this){
             res.push(profile)
           }
         })
@@ -1989,7 +1995,7 @@ Profile.prototype.__define({
 	do_bind: {
 		value: function (p, bcnn, ecnn, moved) {
 
-			var mpoint, imposts, moved_fact;
+			let moved_fact;
 
 			if(bcnn.cnn && bcnn.profile == p){
 				// обрабатываем угол
@@ -1999,24 +2005,26 @@ Profile.prototype.__define({
 							if(paper.Key.isDown('control')){
 								console.log('control');
 							}else{
-								if(this.b.getDistance(p.e, true) < this.b.getDistance(p.b, true))
-									this.b = p.e;
-								else
-									this.b = p.b;
+								if(this.b.getDistance(p.e, true) < this.b.getDistance(p.b, true)){
+                  this.b = p.e;
+                }
+								else{
+                  this.b = p.b;
+                }
 								moved_fact = true;
 							}
-						} else{
-							// отрываем привязанный ранее профиль
+						}
+            // отрываем привязанный ранее профиль
+						else{
 							bcnn.clear();
 							this.data._rays.clear_segments();
 						}
 					}
-
 				}
 				// обрабатываем T
 				else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
 					// импосты в створках и все остальные импосты
-					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
+					const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
 					if(!mpoint.is_nearest(this.b)){
 						this.b = mpoint;
 						moved_fact = true;
@@ -2048,7 +2056,7 @@ Profile.prototype.__define({
 				// обрабатываем T
 				else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
 					// импосты в створках и все остальные импосты
-					mpoint = (p.nearest() ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
+          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
 					if(!mpoint.is_nearest(this.e)){
 						this.e = mpoint;
 						moved_fact = true;
@@ -2059,13 +2067,12 @@ Profile.prototype.__define({
 
 			// если мы в обсервере и есть T и в массиве обработанных есть примыкающий T - пересчитываем
 			if(moved && moved_fact){
-				imposts = this.joined_imposts();
-				imposts = imposts.inner.concat(imposts.outer);
-				for(var i in imposts){
-					if(moved.profiles.indexOf(imposts[i]) == -1){
-						imposts[i].profile.observer(this);
-					}
-				}
+				const imposts = this.joined_imposts();
+        imposts.inner.concat(imposts.outer).forEach((impost) => {
+          if(moved.profiles.indexOf(impost) == -1){
+            impost.profile.observer(this);
+          }
+        })
 			}
 		}
 	}

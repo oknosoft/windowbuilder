@@ -228,8 +228,9 @@ Contour.prototype.__define({
             curr = attr[i];             // curr.profile - сегмент внешнего профиля
             for(let j in outer_nodes){
               elm = outer_nodes[j];   // elm - сегмент профиля текущего контура
-              if(elm.data.binded)
+              if(elm.data.binded){
                 continue;
+              }
               if(curr.profile.is_nearest(elm)){
                 elm.data.binded = true;
                 curr.binded = true;
