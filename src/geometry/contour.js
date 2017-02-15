@@ -9,6 +9,8 @@
  * @submodule contour
  */
 
+/* global paper, $p */
+
 /**
  * ### Сегмент заполнения
  * содержит информацию о примыкающем профиле и координатах начала и конца
@@ -222,9 +224,9 @@ Contour.prototype.__define({
 
         // первый проход: по двум узлам либо примыканию к образующей
         if(need_bind){
-          for(var i in attr){
+          for(let i in attr){
             curr = attr[i];             // curr.profile - сегмент внешнего профиля
-            for(var j in outer_nodes){
+            for(let j in outer_nodes){
               elm = outer_nodes[j];   // elm - сегмент профиля текущего контура
               if(elm.data.binded)
                 continue;
@@ -259,11 +261,11 @@ Contour.prototype.__define({
 
         // второй проход: по одному узлу
         if(need_bind){
-          for(var i in attr){
+          for(let i in attr){
             curr = attr[i];
             if(curr.binded)
               continue;
-            for(var j in outer_nodes){
+            for(let j in outer_nodes){
               elm = outer_nodes[j];
               if(elm.data.binded)
                 continue;
@@ -288,11 +290,11 @@ Contour.prototype.__define({
 
         // третий проход - из оставшихся
         if(need_bind && available_bind){
-          for(var i in attr){
+          for(let i in attr){
             curr = attr[i];
             if(curr.binded)
               continue;
-            for(var j in outer_nodes){
+            for(let j in outer_nodes){
               elm = outer_nodes[j];
               if(elm.data.binded)
                 continue;
@@ -316,7 +318,7 @@ Contour.prototype.__define({
 
         // четвертый проход - добавляем
         if(need_bind){
-          for(var i in attr){
+          for(let i in attr){
             curr = attr[i];
             if(curr.binded)
               continue;
@@ -345,7 +347,7 @@ Contour.prototype.__define({
 
         // удаляем лишнее
         if(available_bind){
-          outer_nodes.forEach(function (elm) {
+          outer_nodes.forEach((elm) => {
             if(!elm.data.binded){
               elm.rays.clear(true);
               elm.remove();
@@ -630,12 +632,15 @@ Contour.prototype.__define({
 	outer_profiles: {
 		get: function(){
 			// сначала получим все профили
-			var profiles = this.profiles,
-				to_remove = [], res = [], elm, findedb, findede;
+			const {profiles} = this;
+			const to_remove = [];
+			const res = [];
+
+			let findedb, findede;
 
 			// прочищаем, выкидывая такие, начало или конец которых соединениы не в узле
-			for(var i=0; i<profiles.length; i++){
-				elm = profiles[i];
+			for(let i=0; i<profiles.length; i++){
+				const elm = profiles[i];
 				if(elm.data.simulated)
 					continue;
 				findedb = false;
@@ -651,8 +656,8 @@ Contour.prototype.__define({
 				if(!findedb || !findede)
 					to_remove.push(elm);
 			}
-			for(var i=0; i<profiles.length; i++){
-				elm = profiles[i];
+			for(let i=0; i<profiles.length; i++){
+				const elm = profiles[i];
 				if(to_remove.indexOf(elm) != -1)
 					continue;
 				elm.data.binded = false;
@@ -1064,13 +1069,17 @@ Contour.prototype.__define({
 	 */
 	sort_nodes: {
 		value: function (nodes) {
-			if(!nodes.length)
-				return nodes;
-			var prev = nodes[0], res = [prev], curr, couner = nodes.length + 1;
+			if(!nodes.length){
+        return nodes;
+      }
+      let prev = nodes[0];
+      const res = [prev];
+			let couner = nodes.length + 1;
+
 			while (res.length < nodes.length && couner){
 				couner--;
-				for(var i = 0; i < nodes.length; i++){
-					curr = nodes[i];
+				for(let i = 0; i < nodes.length; i++){
+					const curr = nodes[i];
 					if(res.indexOf(curr) != -1)
 						continue;
 					if(prev.node2 == curr.node1){
@@ -1082,8 +1091,9 @@ Contour.prototype.__define({
 			}
 			if(couner){
 				nodes.length = 0;
-				for(var i = 0; i < res.length; i++)
-					nodes.push(res[i]);
+				for(let i = 0; i < res.length; i++){
+          nodes.push(res[i]);
+        }
 				res.length = 0;
 			}
 		}
@@ -1136,8 +1146,9 @@ Contour.prototype.__define({
 		},
 		set: function (v) {
 
-			if(this._row.furn == v)
-				return;
+			if(this._row.furn == v){
+        return;
+      }
 
 			this._row.furn = v;
 
@@ -1233,7 +1244,6 @@ Contour.prototype.__define({
 			}
 
 			if(profiles.length){
-
 				profiles.forEach((profile) => {
 					ares.push({
 						profile: profile,
@@ -1243,7 +1253,6 @@ Contour.prototype.__define({
 						right: Math.abs(profile.b.x + profile.e.x - bounds.right * 2)
 					});
 				});
-
 				if(side){
 					by_side(side);
 					return res[side];
@@ -1253,7 +1262,6 @@ Contour.prototype.__define({
 			}
 
 			return res;
-
 		}
 	},
 
@@ -1306,7 +1314,7 @@ Contour.prototype.__define({
 	 */
 	is_rectangular: {
 		get : function(){
-			return (this.side_count != 4) || !this.profiles.some(function (profile) {
+			return (this.side_count != 4) || !this.profiles.some((profile) => {
 				return !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 1);
 			});
 		}
@@ -1326,10 +1334,10 @@ Contour.prototype.__define({
 	 */
 	w: {
 		get : function(){
-			if(!this.is_rectangular)
-				return 0;
-
-			var profiles = this.profiles_by_side();
+			if(!this.is_rectangular){
+        return 0;
+      }
+      const profiles = this.profiles_by_side();
 			return this.bounds ? this.bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
 		}
 	},
@@ -1339,10 +1347,10 @@ Contour.prototype.__define({
 	 */
 	h: {
 		get : function(){
-			if(!this.is_rectangular)
-				return 0;
-
-			var profiles = this.profiles_by_side();
+			if(!this.is_rectangular){
+        return 0;
+      }
+      const profiles = this.profiles_by_side();
 			return this.bounds ? this.bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
 		}
 	},
@@ -1371,19 +1379,23 @@ Contour.prototype.__define({
 			let res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
 
 			if(!res){
+			  let rect;
 				if(pos == "top"){
-					var rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.topRight.add([0, -200]));
-				}else if(pos == "left"){
-					var rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.bottomLeft.add([-200, 0]));
-				}else if(pos == "right"){
-					var rect = new paper.Rectangle(this.bounds.topRight, this.bounds.bottomRight.add([200, 0]));
-				}else if(pos == "bottom"){
-					var rect = new paper.Rectangle(this.bounds.bottomLeft, this.bounds.bottomRight.add([0, 200]));
+					rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.topRight.add([0, -200]));
+				}
+				else if(pos == "left"){
+					rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.bottomLeft.add([-200, 0]));
+				}
+				else if(pos == "right"){
+					rect = new paper.Rectangle(this.bounds.topRight, this.bounds.bottomRight.add([200, 0]));
+				}
+				else if(pos == "bottom"){
+					rect = new paper.Rectangle(this.bounds.bottomLeft, this.bounds.bottomRight.add([0, 200]));
 				}
 
-				res = !this.project.contours.some(function (l) {
+				res = !this.project.contours.some((l) => {
 					return l != this && rect.intersects(l.bounds);
-				}.bind(this));
+				});
 			}
 
 			return res;
@@ -1514,14 +1526,15 @@ Contour.prototype.__define({
 
 		  const {profiles, l_visualization} = this;
 
-			if(l_visualization._by_spec)
-				l_visualization._by_spec.removeChildren();
-			else
-				l_visualization._by_spec = new paper.Group({ parent: l_visualization });
+			if(l_visualization._by_spec){
+        l_visualization._by_spec.removeChildren();
+      }
+			else{
+        l_visualization._by_spec = new paper.Group({ parent: l_visualization });
+      }
 
 			// получаем строки спецификации с визуализацией
 			this.project.ox.specification.find_rows({dop: -1}, (row) => {
-
 				profiles.some((elm) => {
 					if(row.elm == elm.elm){
 
@@ -1547,17 +1560,19 @@ Contour.prototype.__define({
    */
   perimeter: {
     get: function () {
-      var res = [], tmp;
-      this.outer_profiles.forEach(function (curr) {
-        res.push(tmp = curr.sub_path ? {
-          len: curr.sub_path.length,
-          angle: curr.e.subtract(curr.b).angle
-        } : {
+      const res = [];
+      this.outer_profiles.forEach((curr) => {
+        const tmp = curr.sub_path ? {
+            len: curr.sub_path.length,
+            angle: curr.e.subtract(curr.b).angle
+          } : {
             len: curr.elm.length,
             angle: curr.elm.angle_hor
-          });
-        if(tmp.angle < 0)
+          };
+        res.push(tmp);
+        if(tmp.angle < 0){
           tmp.angle += 360;
+        }
       });
       return res;
     }
@@ -1571,7 +1586,7 @@ Contour.prototype.__define({
 		value: function () {
 
 			// сначала, перерисовываем размерные линии вложенных контуров, чтобы получить отступы
-			this.children.forEach(function (l) {
+			this.children.forEach((l) => {
 				if(l instanceof Contour)
 					l.draw_sizes();
 			});
@@ -1582,9 +1597,10 @@ Contour.prototype.__define({
 				// сначала, строим размерные линии импостов
 
 				// получаем импосты контура, делим их на вертикальные и горизонтальные
-				var ihor = [], ivert = [], i;
+				const ihor = [];
+				const ivert = [];
 
-				this.imposts.forEach(function (elm) {
+				this.imposts.forEach((elm) => {
 					if(elm.orientation == $p.enm.orientations.hor)
 						ihor.push(elm);
 					else if(elm.orientation == $p.enm.orientations.vert)
@@ -1593,11 +1609,10 @@ Contour.prototype.__define({
 
 				if(ihor.length || ivert.length){
 
-					var by_side = this.profiles_by_side(),
+					const by_side = this.profiles_by_side();
+          const imposts_dimensions = (arr, collection, i, pos, xy, sideb, sidee) => {
 
-						imposts_dimensions = function(arr, collection, i, pos, xy, sideb, sidee) {
-
-							var offset = (pos == "right" || pos == "bottom") ? -130 : 90;
+            const offset = (pos == "right" || pos == "bottom") ? -130 : 90;
 
 							if(i == 0 && !collection[i]){
 								collection[i] = new DimensionLine({
@@ -1613,7 +1628,6 @@ Contour.prototype.__define({
 							}
 
 							if(i >= 0 && i < arr.length-1 && !collection[i+1]){
-
 								collection[i+1] = new DimensionLine({
 									pos: pos,
 									elm1: arr[i],
@@ -1624,11 +1638,9 @@ Contour.prototype.__define({
 									offset: offset,
 									impost: true
 								});
-
 							}
 
 							if(i == arr.length-1 && !collection[arr.length]){
-
 								collection[arr.length] = new DimensionLine({
 									pos: pos,
 									elm1: arr[i],
@@ -1639,28 +1651,27 @@ Contour.prototype.__define({
 									offset: offset,
 									impost: true
 								});
-
 							}
 
-						}.bind(this),
+						};
 
-						purge = function (arr, asizes, xy) {
+          const purge = (arr, asizes, xy) => {
 
-							var adel = [];
-							arr.forEach(function (elm) {
+							const adel = [];
 
-								if(asizes.indexOf(elm.b[xy].round(0)) != -1 && asizes.indexOf(elm.e[xy].round(0)) != -1)
-									adel.push(elm);
-
-								else if(asizes.indexOf(elm.b[xy].round(0)) == -1)
-									asizes.push(elm.b[xy].round(0));
-
-								else if(asizes.indexOf(elm.e[xy].round(0)) == -1)
-									asizes.push(elm.e[xy].round(0));
-
+							arr.forEach((elm) => {
+								if(asizes.indexOf(elm.b[xy].round(0)) != -1 && asizes.indexOf(elm.e[xy].round(0)) != -1){
+                  adel.push(elm);
+                }
+                else if(asizes.indexOf(elm.b[xy].round(0)) == -1){
+                  asizes.push(elm.b[xy].round(0));
+                }
+                else if(asizes.indexOf(elm.e[xy].round(0)) == -1){
+                  asizes.push(elm.e[xy].round(0));
+                }
 							});
 
-							adel.forEach(function (elm) {
+							adel.forEach((elm) => {
 								arr.splice(arr.indexOf(elm), 1);
 							});
 							adel.length = 0;
@@ -1668,45 +1679,39 @@ Contour.prototype.__define({
 							return arr;
 						};
 
-					// сортируем ihor по убыванию y
-					var asizes = [this.bounds.top.round(0), this.bounds.bottom.round(0)];
-					purge(ihor, asizes, "y").sort(function (a, b) {
-						return b.b.y + b.e.y - a.b.y - a.e.y;
-					});
+          const {bounds} = this;
+          // сортируем ihor по убыванию y
+					purge(ihor, [bounds.top.round(0), bounds.bottom.round(0)], "y").sort((a, b) => b.b.y + b.e.y - a.b.y - a.e.y);
 					// сортируем ivert по возрастанию x
-					asizes = [this.bounds.left.round(0), this.bounds.right.round(0)];
-					purge(ivert, asizes, "x").sort(function (a, b) {
-						return a.b.x + a.e.x - b.b.x - b.e.x;
-					});
-
+					purge(ivert, [bounds.left.round(0), bounds.right.round(0)], "x").sort((a, b) => a.b.x + a.e.x - b.b.x - b.e.x);
 
 					// для ihor добавляем по вертикали
-					if(!this.l_dimensions.ihor)
-						this.l_dimensions.ihor = {};
-					for(i = 0; i< ihor.length; i++){
+					if(!this.l_dimensions.ihor){
+            this.l_dimensions.ihor = {};
+          }
+					for(let i = 0; i< ihor.length; i++){
 
-						if(this.is_pos("right"))
-							imposts_dimensions(ihor, this.l_dimensions.ihor, i, "right", "x", by_side.bottom, by_side.top);
-
-						else if(this.is_pos("left"))
-							imposts_dimensions(ihor, this.l_dimensions.ihor, i, "left", "x", by_side.bottom, by_side.top);
-
+						if(this.is_pos("right")){
+              imposts_dimensions(ihor, this.l_dimensions.ihor, i, "right", "x", by_side.bottom, by_side.top);
+            }
+            else if(this.is_pos("left")){
+              imposts_dimensions(ihor, this.l_dimensions.ihor, i, "left", "x", by_side.bottom, by_side.top);
+            }
 					}
 
 					// для ivert добавляем по горизонтали
-					if(!this.l_dimensions.ivert)
-						this.l_dimensions.ivert = {};
-					for(i = 0; i< ivert.length; i++){
-
-						if(this.is_pos("bottom"))
-							imposts_dimensions(ivert, this.l_dimensions.ivert, i, "bottom", "y", by_side.left, by_side.right);
-
-						else if(this.is_pos("top"))
-							imposts_dimensions(ivert, this.l_dimensions.ivert, i, "top", "y", by_side.left, by_side.right);
-
+					if(!this.l_dimensions.ivert){
+            this.l_dimensions.ivert = {};
+          }
+					for(let i = 0; i< ivert.length; i++){
+						if(this.is_pos("bottom")){
+              imposts_dimensions(ivert, this.l_dimensions.ivert, i, "bottom", "y", by_side.left, by_side.right);
+            }
+            else if(this.is_pos("top")){
+              imposts_dimensions(ivert, this.l_dimensions.ivert, i, "top", "y", by_side.left, by_side.right);
+            }
 					}
 				}
-
 
 				// далее - размерные линии контура
 				if (this.project.contours.length > 1) {
@@ -1786,9 +1791,8 @@ Contour.prototype.__define({
 			}
 
 			// перерисовываем размерные линии текущего контура
-			this.l_dimensions.children.forEach(function (dl) {
-				if(dl.redraw)
-					dl.redraw();
+			this.l_dimensions.children.forEach((dl) => {
+				dl.redraw && dl.redraw();
 			});
 
 		}
@@ -1803,12 +1807,12 @@ Contour.prototype.__define({
 	clear_dimentions: {
 
 		value: function () {
-			for(var key in this.l_dimensions.ihor){
+			for(let key in this.l_dimensions.ihor){
 				this.l_dimensions.ihor[key].removeChildren();
 				this.l_dimensions.ihor[key].remove();
 				delete this.l_dimensions.ihor[key];
 			}
-			for(var key in this.l_dimensions.ivert){
+			for(let key in this.l_dimensions.ivert){
 				this.l_dimensions.ivert[key].removeChildren();
 				this.l_dimensions.ivert[key].remove();
 				delete this.l_dimensions.ivert[key];

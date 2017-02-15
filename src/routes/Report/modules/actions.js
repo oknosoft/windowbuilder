@@ -18,7 +18,7 @@ export const actions = {
 	handleAddRow: rx_actions.OBJ_ADD_ROW,
 	handleDelRow: rx_actions.OBJ_DEL_ROW,
 
-  handleClose: () => (dispatch, getState) => $p.UI.history.push('/')
+	handleClose: () => (dispatch, getState) => $p.UI.history.push('/')
 }
 
 /**
@@ -29,7 +29,7 @@ export const actions = {
 export const mapStateToProps = (state, props) => {
 
 	const _mgr = $p.md.mgr_by_class_name(props.params.meta);
-  const _obj = _mgr.get(props.params.guid);
+  const _obj = _mgr.get();
 
 	return {
 		meta: state.meta,

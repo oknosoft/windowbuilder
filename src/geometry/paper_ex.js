@@ -287,7 +287,7 @@ paper.Point.prototype.__define({
 	 */
 	is_nearest: {
 		value: function (point, sticking) {
-			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 10);
+			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 16);
 		},
 		enumerable: false
 	},
@@ -423,7 +423,19 @@ paper.Point.prototype.__define({
 
 			return new paper.Point(dirx*d, diry*d);
 		}
-	}
+	},
+
+  bind_to_nodes: {
+	  value: function (sticking) {
+      return paper.project.activeLayer.nodes.some((point) => {
+        if(point.is_nearest(this, sticking)){
+          this.x = point.x;
+          this.y = point.y;
+          return true;
+        }
+      });
+    }
+  }
 
 });
 

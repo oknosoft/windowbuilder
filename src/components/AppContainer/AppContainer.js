@@ -108,7 +108,7 @@ export default class AppContainer extends Component {
     const meta = store.getState().meta
 
     // при первом старте и при загрузке данных, минуя роутинг показываем заставку
-    // если пустые данные, перебрасываем на страницу авторизации
+    // если пустые данные или прямое подключение, перебрасываем на страницу авторизации
     //
     // TODO: если гостевая зона и указан пользователь по умолчанию - делаем попытку входа в программу
     //
@@ -136,8 +136,15 @@ export default class AppContainer extends Component {
             $p.aes.Ctr.decrypt($p.job_prm.guests[0].password)))
         }
 
-        // если зона не гостевая, перемещаемся на страницу авторизации
-      } else if (routes.path.indexOf('/login') == -1) {
+      }
+      // // если разрешено сохранение пароля, делаем попытку авторизации
+      // else if($p.wsql.get_user_param("enable_save_pwd") &&
+      //   $p.wsql.get_user_param("user_name") &&
+      //   $p.wsql.get_user_param("user_pwd") && navigator.onLine){
+      //
+      // }
+      // если зона не гостевая, перемещаемся на страницу авторизации
+      else if (routes.path.indexOf('/login') == -1) {
         history.push('/login')
       }
 

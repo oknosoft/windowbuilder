@@ -11,6 +11,7 @@ import IconLocalPharmacy from "material-ui/svg-icons/maps/local-pharmacy";
 import IconSend from "material-ui/svg-icons/content/send";
 import IconUndo from "material-ui/svg-icons/content/undo";
 import IconWork from "material-ui/svg-icons/action/work";
+import IconDateRange from "material-ui/svg-icons/action/date-range";
 
 export default [
   {
@@ -19,13 +20,18 @@ export default [
     icon: <IconWork />
   },
   {
+    text: 'Планирование',
+    navigate: 'planning/work_centers_task',
+    icon: <IconDateRange />
+  },
+  {
     text: 'Отчеты',
     icon: <IconInbox />,
     open: true,
     items: [
       {
         text: 'Потребность',
-        navigate: 'rep_materials_demand/main',
+        navigate: 'rep_materials_demand/report/main',
         icon: <IconList />
       }
     ]
@@ -37,7 +43,7 @@ export default [
   },
   {
     text: 'Версия 0.12',
-    navigate: () => {location.replace("/")},
+    navigate: () => location.replace("/"),
     icon: <IconUndo />
   },
   {

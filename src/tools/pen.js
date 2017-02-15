@@ -398,6 +398,10 @@ class ToolPen extends ToolElement {
         }
         else if(this.mode == 'create' && this.path) {
 
+          if (this.path.length < consts.sticking){
+            return;
+          }
+
           if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
             // находим заполнение под линией
@@ -556,8 +560,9 @@ class ToolPen extends ToolElement {
               invert = false,
               handlePos;
 
-            if (delta.length < consts.sticking)
+            if (delta.length < consts.sticking){
               return;
+            }
 
             if (this.mode == 'create') {
               dragOut = true;
@@ -595,17 +600,23 @@ class ToolPen extends ToolElement {
                 this.currentSegment.handleOut = handlePos;
                 this.currentSegment.handleIn = handlePos.negate();
 
-              } else if (dragOut) {
-                // upzp
+              }
+              else if (dragOut) {
 
+                // при отжатом shift пытаемся привязать точку к узлам или кратно 45
+                let bpoint = this.point1.add(delta);
                 if(!event.modifiers.shift) {
-                  delta = delta.snap_to_angle();
+                  if(!bpoint.bind_to_nodes(true)){
+                    bpoint = this.point1.add(delta.snap_to_angle());
+                  }
                 }
 
-                if(this.path.segments.length > 1)
-                  this.path.lastSegment.point = this.point1.add(delta);
-                else
-                  this.path.add(this.point1.add(delta));
+                if(this.path.segments.length > 1){
+                  this.path.lastSegment.point = bpoint;
+                }
+                else{
+                  this.path.add(bpoint);
+                }
 
                 // попытаемся привязать начало пути к профилям (и или заполнениям - для раскладок) контура
                 if(!this.start_binded){
@@ -613,32 +624,32 @@ class ToolPen extends ToolElement {
                   if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
                     res = Onlay.prototype.bind_node(this.path.firstSegment.point, paper.project.activeLayer.glasses(false, true));
-                    if(res.binded)
+                    if(res.binded){
                       tool.path.firstSegment.point = tool.point1 = res.point;
+                    }
 
-                  }else{
+                  }
+                  // привязка к узлам для рамы уже случилась - вяжем для импоста
+                  else if(tool.profile.elm_type == $p.enm.elm_types.Импост){
 
                     res = {distance: Infinity};
-                    for(i in paper.project.activeLayer.children){
+                    paper.project.activeLayer.profiles.some((element) => {
 
-                      element = paper.project.activeLayer.children[i];
-                      if (element instanceof Profile){
+                      // сначала смотрим на доборы, затем - на сам профиль
+                      if(element.children.some(function (addl) {
+                          if(addl instanceof ProfileAddl && paper.project.check_distance(addl, null, res, tool.path.firstSegment.point, bind) === false){
+                            tool.path.firstSegment.point = tool.point1 = res.point;
+                            return true;
+                          }
+                        })){
+                        return true;
 
-                        // сначала смотрим на доборы, затем - на сам профиль
-                        if(element.children.some(function (addl) {
-                            if(addl instanceof ProfileAddl && paper.project.check_distance(addl, null, res, tool.path.firstSegment.point, bind) === false){
-                              tool.path.firstSegment.point = tool.point1 = res.point;
-                              return true;
-                            }
-                          })){
-                          break;
-
-                        }else if (paper.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
-                          tool.path.firstSegment.point = tool.point1 = res.point;
-                          break;
-                        }
+                      }else if (paper.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
+                        tool.path.firstSegment.point = tool.point1 = res.point;
+                        return true;
                       }
-                    }
+                    })
+
                     this.start_binded = true;
                   }
                 }
@@ -650,35 +661,33 @@ class ToolPen extends ToolElement {
                   if(res.binded)
                     this.path.lastSegment.point = res.point;
 
-                }else{
+                }
+                else if(tool.profile.elm_type == $p.enm.elm_types.Импост){
 
                   res = {distance: Infinity};
-                  for(i = 0; i < paper.project.activeLayer.children.length; i++){
+                  paper.project.activeLayer.profiles.some((element) => {
 
-                    element = paper.project.activeLayer.children[i];
-                    if (element instanceof Profile){
+                    // сначала смотрим на доборы, затем - на сам профиль
+                    if(element.children.some(function (addl) {
+                        if(addl instanceof ProfileAddl && paper.project.check_distance(addl, null, res, tool.path.lastSegment.point, bind) === false){
+                          tool.path.lastSegment.point = res.point;
+                          return true;
+                        }
+                      })){
+                      return true;
 
-                      // сначала смотрим на доборы, затем - на сам профиль
-                      if(element.children.some(function (addl) {
-                          if(addl instanceof ProfileAddl && paper.project.check_distance(addl, null, res, tool.path.lastSegment.point, bind) === false){
-                            tool.path.lastSegment.point = res.point;
-                            return true;
-                          }
-                        })){
-                        break;
-
-                      }else if (paper.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
-                        this.path.lastSegment.point = res.point;
-                        break;
-
-                      }
+                    }else if (paper.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
+                      this.path.lastSegment.point = res.point;
+                      return true;
                     }
-                  }
+
+                  });
                 }
 
                 //this.currentSegment.handleOut = handlePos;
                 //this.currentSegment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
-              } else {
+              }
+              else {
                 handlePos = this.originalHandleIn.add(delta);
                 if(!event.modifiers.shift) {
                   handlePos = handlePos.snap_to_angle();

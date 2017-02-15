@@ -5,6 +5,9 @@ import DataObjRoute from "./DataObj";
 import DataListRoute from "./DataList";
 import LoginRoute from "./Login";
 import AboutRoute from "./About";
+import BuilderRoute from "./Builder";
+import PlanningRoute from "./Planning";
+import ReportRoute from "./Report";
 
 /*  Note: Instead of using JSX, we recommend using react-router
  PlainRoute objects to build route definitions.   */
@@ -15,6 +18,9 @@ export const createRoutes = (store) => ({
 	indexRoute: Home,
 	childRoutes: [
 		LoginRoute(store),
+    BuilderRoute(store),
+    PlanningRoute(store),
+    ReportRoute(store),
 		AboutRoute(store),
 		DataListRoute(store),
 		DataObjRoute(store),

@@ -3,7 +3,7 @@
 
 export default (store) => ({
 
-	path: '/:meta/list(/:options)',
+	path: '/planning(/:options)',
 
 	/*  Async getComponent is only invoked when route matches   */
 	getComponent (nextState, cb) {
@@ -11,7 +11,8 @@ export default (store) => ({
 		 and embed an async module loader (jsonp) when bundling   */
 		require.ensure([], function(require) {
 
-			/*  Webpack - use require callback to define dependencies for bundling   */
+			/*  Webpack - use require callback to define
+			 dependencies for bundling   */
 			const Container = require('./Container').default
 
 			/*  Add the reducer to the store on key 'dynlist'  */
@@ -22,7 +23,7 @@ export default (store) => ({
 			cb(null, Container)
 
 			/* Webpack named bundle   */
-		}, 'app');
+		}, 'planning');
 
 	}
 })

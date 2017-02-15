@@ -3,8 +3,8 @@
  wiring in the actions and state necessary to render a presentational
  component - in this case, the counter:   */
 import {connect} from "react-redux";
-import {actions, mapStateToProps} from "../modules/actions";
-import FrmReport from "components/RepMaterialsDemand";
+import {actions, mapStateToProps} from "./actions";
+import FrmObj from "metadata-ui/FrmObj";
 
 
 /*  Note: mapStateToProps is where you should use `reselect` to create selectors, ie:
@@ -21,4 +21,4 @@ import FrmReport from "components/RepMaterialsDemand";
  Selectors are composable. They can be used as input to other selectors.
  https://github.com/reactjs/reselect    */
 
-export default connect(mapStateToProps, actions)(FrmReport)
+export default connect(mapStateToProps, actions)(FrmObj)

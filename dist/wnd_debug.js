@@ -5142,23 +5142,25 @@ function ProductsBuilding(){
 
 	function furn_spec(contour) {
 
-		if(!contour.parent)
-			return false;
+		if(!contour.parent){
+      return false;
+    }
 
-		var cache = {
+		const cache = {
 			profiles: contour.outer_nodes,
 			bottom: contour.profiles_by_side("bottom"),
 			params: contour.project.ox.params
 		};
 
-		if(!furn_check_opening_restrictions(contour, cache))
-			return;
+		if(!furn_check_opening_restrictions(contour, cache)){
+      return;
+    }
 
 		furn_update_handle_height(contour, cache, contour.furn.furn_set);
 
-		furn_get_spec(contour, cache, contour.furn.furn_set).each(function (row) {
-			var elm = {elm: -contour.cnstr, clr: contour.clr_furn},
-				row_spec = new_spec_row(null, elm, row, row.nom_set, row.origin);
+		furn_get_spec(contour, cache, contour.furn.furn_set).each((row) => {
+			const elm = {elm: -contour.cnstr, clr: contour.clr_furn};
+			const row_spec = new_spec_row(null, elm, row, row.nom_set, row.origin);
 
 			if(row.is_procedure_row){
 				row_spec.elm = row.handle_height_min;
@@ -5166,10 +5168,11 @@ function ProductsBuilding(){
 				row_spec.qty = 0;
 				row_spec.totqty = 1;
 				row_spec.totqty1 = 1;
-				if(!row_spec.nom.visualization.empty())
-					row_spec.dop = -1;
-
-			}else{
+				if(!row_spec.nom.visualization.empty()){
+          row_spec.dop = -1;
+        }
+			}
+			else{
 				row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
 				calc_count_area_mass(row_spec);
 			}
@@ -8588,6 +8591,8 @@ class OrderDealerApp {
       }
     };
 
+    this.patch_cnn();
+
     const hprm = $p.job_prm.parse_url();
     if(!hprm.view || this.sidebar.getAllItems().indexOf(hprm.view) == -1){
       $p.iface.set_hash(hprm.obj, hprm.ref, hprm.frm, "orders");
@@ -8620,25 +8625,61 @@ class OrderDealerApp {
 
   }
 
+  reset_replace(prm) {
+
+    const {pouch} = $p.wsql;
+    const {local} = pouch;
+    const destroy_ram = local.ram.destroy.bind(local.ram);
+    const destroy_doc = local.doc.destroy.bind(local.doc);
+    const do_reload = () => {
+        setTimeout(() => {
+          $p.eve.redirect = true;
+          location.replace(prm.host);
+        }, 1000);
+      };
+    const do_replace = () => {
+      destroy_ram()
+        .then(destroy_doc)
+        .catch(destroy_doc)
+        .then(do_reload)
+        .catch(do_reload);
+    }
+
+    setTimeout(do_replace, 10000);
+
+    dhtmlx.confirm({
+      title: "Новый сервер",
+      text: `Зона №${prm.zone} перемещена на выделенный сервер ${prm.host}`,
+      cancel: $p.msg.cancel,
+      callback: do_replace
+    });
+  }
+
   patch_cnn() {
 
     ["couch_path", "zone", "couch_suffix", "couch_direct"].forEach((prm) => {
-      if($p.job_prm.url_prm[prm] && $p.wsql.get_user_param(prm) != $p.job_prm.url_prm[prm]){
+      if($p.job_prm.url_prm.hasOwnProperty(prm) && $p.wsql.get_user_param(prm) != $p.job_prm.url_prm[prm]){
         $p.wsql.set_user_param(prm, $p.job_prm.url_prm[prm]);
       }
     });
 
-    if(location.host.match("aribaz")){
-      $p.wsql.set_user_param("zone", 2);
+    const predefined = {
+      aribaz: {zone: 2},
+      ecookna: {zone: 21, host: "https://zakaz.ecookna.ru/"},
+      tmk: {zone: 23},
     }
-    else if(location.host.match("tmk")){
-      $p.wsql.set_user_param("zone", 23);
+    for(let elm in predefined){
+      const prm = predefined[elm];
+      if(location.host.match(elm) && $p.wsql.get_user_param("zone") != prm.zone){
+        $p.wsql.set_user_param("zone", prm.zone);
+      }
     }
-    else if(location.host.match("ecookna")){
-      $p.wsql.set_user_param("zone", 21);
+    for(let elm in predefined){
+      const prm = predefined[elm];
+      if(prm.host && $p.wsql.get_user_param("zone") == prm.zone && !location.host.match(elm)){
+        this.reset_replace(prm);
+      }
     }
-
-
   }
 
   predefined_elmnts_inited(err) {
@@ -8696,7 +8737,7 @@ class OrderDealerApp {
 
     if(id == "v2"){
       $p.eve.redirect = true;
-      location.replace("/v2/");
+      return location.replace("/v2/");
     }
 
     const hprm = $p.job_prm.parse_url();
@@ -8779,11 +8820,11 @@ $p.on({
 
 	},
 
-	iface_init: function() {
+	iface_init: () => {
     $p.iface.main = new OrderDealerApp($p);
 	},
 
-	hash_route: function (hprm) {
+	hash_route: (hprm) => {
 	  return $p.iface.main.hash_route(hprm);
 	}
 

@@ -4,13 +4,13 @@ import DumbLoader from "components/DumbLoader";
 
 export default (store) => ({
 
-	path: '/:meta/:guid(/:form)(/:options)',
+  path: '/:meta/:guid/builder(/:options)',
 
 	/*  Async getComponent is only invoked when route matches   */
 	getComponent (nextState, cb) {
 		/*  Webpack - use 'require.ensure' to create a split point
 		 and embed an async module loader (jsonp) when bundling   */
-		require.ensure([], function(require) {
+		require.ensure([], (require) => {
 
 			/*  Add the reducer to the store on key 'counter'  */
 			// const reducer = require('./modules/dataobjReducer').default
@@ -22,14 +22,14 @@ export default (store) => ({
 
 				const _obj = _mgr.get(nextState.params.guid)
 
-				/* Webpack - use require callback to define dependencies for bundling */
+				/*  Webpack - use require callback to define dependencies for bundling   */
 				const Container = require('./Container').default
 
 				if (_obj instanceof Promise) {
-					_obj.then(function (_obj) {
+					_obj.then((_obj) => {
 						if (_obj.is_new()) {
 
-							setTimeout(function () {
+							setTimeout(() => {
 								$p.UI.history.push('/')
 							})
 
@@ -46,13 +46,10 @@ export default (store) => ({
 			} else {
 				/*  Return getComponent   */
 				cb(null, DumbLoader)
-				// setTimeout(function () {
-				//   $p.UI.history.push(nextState.location.pathname)
-				// }, 3000)
 			}
 
 			/* Webpack named bundle   */
-		}, 'app');
+		}, 'builder');
 
 	}
 })

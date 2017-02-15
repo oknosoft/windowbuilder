@@ -133,12 +133,12 @@ class RulerWnd {
         return [offsetLeft + 7, offsetTop + 9];
       }
     };
-    this.input.firstChild.onfocus = function (e) {
+    this.input.firstChild.onfocus = function () {
       wnd.elmnts.calck = new eXcell_calck(this);
       wnd.elmnts.calck.edit();
     };
 
-    setTimeout(function () {
+    setTimeout(() => {
       this.input && this.input.firstChild.focus();
     }, 100);
 
@@ -299,7 +299,7 @@ class ToolRuler extends ToolElement {
     // mode : ["Элементы","Узлы","Новая линия","Новая линия узел2"];
     // base_line : ["base","inner","outer"];
 
-    super()
+    super();
 
     Object.assign(this, {
       options: {
@@ -320,7 +320,7 @@ class ToolRuler extends ToolElement {
         a: [],
         b: []
       }
-    })
+    });
 
     this.on({
 
@@ -441,33 +441,40 @@ class ToolRuler extends ToolElement {
       },
 
       mousemove: function(event) {
+
         this.hitTest(event);
 
-        if(this.mode == 3 && this.path){
+        const {mode, path} = this;
 
-          if(this.path.segments.length == 4)
-            this.path.removeSegments(1, 3, true);
+        if(mode == 3 && path){
 
-          if(!this.path_text)
+          if(path.segments.length == 4){
+            path.removeSegments(1, 3, true);
+          }
+
+          if(!this.path_text){
             this.path_text = new paper.PointText({
               justification: 'center',
               fillColor: 'black',
               fontSize: 72});
+          }
 
-          this.path.lastSegment.point = event.point;
-          var length = this.path.length;
+          path.lastSegment.point = event.point;
+
+          const {length} = path;
           if(length){
-            var normal = this.path.getNormalAt(0).multiply(120);
-            this.path.insertSegments(1, [this.path.firstSegment.point.add(normal), this.path.lastSegment.point.add(normal)]);
-            this.path.firstSegment.selected = true;
-            this.path.lastSegment.selected = true;
+            const normal = path.getNormalAt(0).multiply(120);
+            path.insertSegments(1, [path.firstSegment.point.add(normal), path.lastSegment.point.add(normal)]);
+            path.firstSegment.selected = true;
+            path.lastSegment.selected = true;
 
             this.path_text.content = length.toFixed(0);
             //this.path_text.rotation = e.subtract(b).angle;
-            this.path_text.point = this.path.curves[1].getPointAt(.5, true);
+            this.path_text.point = path.curves[1].getPointAt(.5, true);
 
-          }else
+          }else{
             this.path_text.visible = false;
+          }
         }
 
       },
@@ -494,7 +501,7 @@ class ToolRuler extends ToolElement {
         }
       }
 
-    })
+    });
 
     $p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this))
 
@@ -511,7 +518,7 @@ class ToolRuler extends ToolElement {
       this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
 
       // Hit test points
-      var hit = paper.project.hitPoints(event.point, 20);
+      const hit = paper.project.hitPoints(event.point, 20);
       if (hit && hit.item.parent instanceof ProfileItem){
         this.hitItem = hit;
       }

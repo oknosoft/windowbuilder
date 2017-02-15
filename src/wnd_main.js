@@ -60,6 +60,9 @@ class OrderDealerApp {
       }
     };
 
+    // корректируем параметры подключения
+    this.patch_cnn();
+
     // активируем страницу
     const hprm = $p.job_prm.parse_url();
     if(!hprm.view || this.sidebar.getAllItems().indexOf(hprm.view) == -1){
@@ -93,28 +96,65 @@ class OrderDealerApp {
 
   }
 
+  reset_replace(prm) {
+
+    const {pouch} = $p.wsql;
+    const {local} = pouch;
+    const destroy_ram = local.ram.destroy.bind(local.ram);
+    const destroy_doc = local.doc.destroy.bind(local.doc);
+    const do_reload = () => {
+        setTimeout(() => {
+          $p.eve.redirect = true;
+          location.replace(prm.host);
+        }, 1000);
+      };
+    const do_replace = () => {
+      destroy_ram()
+        .then(destroy_doc)
+        .catch(destroy_doc)
+        .then(do_reload)
+        .catch(do_reload);
+    }
+
+    setTimeout(do_replace, 10000);
+
+    dhtmlx.confirm({
+      title: "Новый сервер",
+      text: `Зона №${prm.zone} перемещена на выделенный сервер ${prm.host}`,
+      cancel: $p.msg.cancel,
+      callback: do_replace
+    });
+  }
+
   /**
    * патч параметров подключения
    */
   patch_cnn() {
 
     ["couch_path", "zone", "couch_suffix", "couch_direct"].forEach((prm) => {
-      if($p.job_prm.url_prm[prm] && $p.wsql.get_user_param(prm) != $p.job_prm.url_prm[prm]){
+      if($p.job_prm.url_prm.hasOwnProperty(prm) && $p.wsql.get_user_param(prm) != $p.job_prm.url_prm[prm]){
         $p.wsql.set_user_param(prm, $p.job_prm.url_prm[prm]);
       }
     });
 
-    if(location.host.match("aribaz")){
-      $p.wsql.set_user_param("zone", 2);
+    // предопределенные зоны
+    const predefined = {
+      aribaz: {zone: 2},
+      ecookna: {zone: 21, host: "https://zakaz.ecookna.ru/"},
+      tmk: {zone: 23},
     }
-    else if(location.host.match("tmk")){
-      $p.wsql.set_user_param("zone", 23);
+    for(let elm in predefined){
+      const prm = predefined[elm];
+      if(location.host.match(elm) && $p.wsql.get_user_param("zone") != prm.zone){
+        $p.wsql.set_user_param("zone", prm.zone);
+      }
     }
-    else if(location.host.match("ecookna")){
-      $p.wsql.set_user_param("zone", 21);
+    for(let elm in predefined){
+      const prm = predefined[elm];
+      if(prm.host && $p.wsql.get_user_param("zone") == prm.zone && !location.host.match(elm)){
+        this.reset_replace(prm);
+      }
     }
-
-
   }
 
   predefined_elmnts_inited(err) {
@@ -175,7 +215,7 @@ class OrderDealerApp {
 
     if(id == "v2"){
       $p.eve.redirect = true;
-      location.replace("/v2/");
+      return location.replace("/v2/");
     }
 
     const hprm = $p.job_prm.parse_url();
@@ -291,14 +331,14 @@ $p.on({
 	 * рисуем интерфейс
 	 *
 	 */
-	iface_init: function() {
+	iface_init: () => {
     $p.iface.main = new OrderDealerApp($p);
 	},
 
 	/**
 	 * ### Обработчик маршрутизации
 	 */
-	hash_route: function (hprm) {
+	hash_route: (hprm) => {
 	  return $p.iface.main.hash_route(hprm);
 	}
 
