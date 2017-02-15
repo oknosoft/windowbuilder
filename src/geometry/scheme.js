@@ -999,12 +999,12 @@ Scheme.prototype.__define({
 	default_inset: {
 		value: function (attr) {
 
-			var rows;
+			let rows;
 
 			if(!attr.pos){
 				rows = this._dp.sys.inserts(attr.elm_type, true);
 				// если доступна текущая, возвращаем её
-				if(attr.inset && rows.some(function (row) { return attr.inset == row; })){
+				if(attr.inset && rows.some((row) => attr.inset == row)){
 					return attr.inset;
 				}
 				return rows[0];
@@ -1013,40 +1013,50 @@ Scheme.prototype.__define({
 			rows = this._dp.sys.inserts(attr.elm_type, "rows");
 
 			// если без вариантов, возвращаем без вариантов
-			if(rows.length == 1)
-				return rows[0].nom;
+			if(rows.length == 1){
+        return rows[0].nom;
+      }
+
+      const pos_array = Array.isArray(attr.pos);
+      function check_pos(pos) {
+        if(pos_array){
+          return attr.pos.some((v) => v == pos);
+        }
+        return attr.pos == pos;
+      }
 
 			// если подходит текущая, возвращаем текущую
-			if(attr.inset && rows.some(function (row) {
-					return attr.inset == row.nom && (row.pos == attr.pos || row.pos == $p.enm.positions.Любое);
-				})){
+			if(attr.inset && rows.some((row) => attr.inset == row.nom && (check_pos(row.pos) || row.pos == $p.enm.positions.Любое))){
 				return attr.inset;
 			}
 
-			var inset;
+			let inset;
 			// ищем по умолчанию + pos
-			rows.some(function (row) {
-				if(row.pos == attr.pos && row.by_default)
+			rows.some((row) => {
+				if(check_pos(row.pos) && row.by_default)
 					return inset = row.nom;
 			});
 			// ищем по pos без умолчания
-			if(!inset)
-				rows.some(function (row) {
-					if(row.pos == attr.pos)
-						return inset = row.nom;
-				});
+			if(!inset){
+        rows.some((row) => {
+          if(check_pos(row.pos))
+            return inset = row.nom;
+        });
+      }
 			// ищем по умолчанию + любое
-			if(!inset)
-				rows.some(function (row) {
-					if(row.pos == $p.enm.positions.Любое && row.by_default)
-						return inset = row.nom;
-				});
+			if(!inset){
+        rows.some((row) => {
+          if(row.pos == $p.enm.positions.Любое && row.by_default)
+            return inset = row.nom;
+        });
+      }
 			// ищем любое без умолчаний
-			if(!inset)
-				rows.some(function (row) {
-					if(row.pos == $p.enm.positions.Любое)
-						return inset = row.nom;
-				});
+			if(!inset){
+        rows.some((row) => {
+          if(row.pos == $p.enm.positions.Любое)
+            return inset = row.nom;
+        });
+      }
 
 			return inset;
 		}

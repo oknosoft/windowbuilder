@@ -888,6 +888,37 @@ ProfileItem.prototype.__define({
 		}
 	},
 
+  /**
+   * ### Пересчитывает вставку при смене системы или добавлении створки
+   * Контроль пока только по типу элемента
+   *
+   * @method default_inset
+   * @for ProfileItem
+   * @param all {Boolean} - пересчитывать для любых (не только створочных) элементов
+   */
+  default_inset: {
+	  value: function (all) {
+      const nearest = this.nearest();
+      const {orientation} = this;
+      if(nearest || all){
+        let pos = nearest ? nearest.pos : this.pos;
+        if(pos == $p.enm.positions.Центр){
+          if(orientation == $p.enm.orientations.vert){
+            pos = [pos, $p.enm.positions.ЦентрВертикаль]
+          }
+          if(orientation == $p.enm.orientations.hor){
+            pos = [pos, $p.enm.positions.ЦентрГоризонталь]
+          }
+        }
+        this.inset = this.project.default_inset({
+          elm_type: this.elm_type,
+          pos: pos,
+          inset: this.inset
+        });
+      }
+    }
+  },
+
 	/**
 	 * ### Рассчитывает точки пути
 	 * на пересечении текущего и указанного профилей

@@ -149,10 +149,12 @@ class OrderDealerApp {
         $p.wsql.set_user_param("zone", prm.zone);
       }
     }
-    for(let elm in predefined){
-      const prm = predefined[elm];
-      if(prm.host && $p.wsql.get_user_param("zone") == prm.zone && !location.host.match(elm)){
-        this.reset_replace(prm);
+    if(!location.host.match("localhost")){
+      for(let elm in predefined){
+        const prm = predefined[elm];
+        if(prm.host && $p.wsql.get_user_param("zone") == prm.zone && !location.host.match(elm)){
+          this.reset_replace(prm);
+        }
       }
     }
   }

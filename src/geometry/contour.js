@@ -362,15 +362,7 @@ Contour.prototype.__define({
         }
 
         // пересчитываем вставки створок
-        this.profiles.forEach((p) => {
-          if(p.nearest()){
-            p.inset = p.project.default_inset({
-              elm_type: p.elm_type,
-              pos: p.pos,
-              inset: p.inset
-            });
-          }
-        });
+        this.profiles.forEach((p) => p.default_inset());
         this.data._bounds = null;
       }
     },
@@ -1897,23 +1889,18 @@ Contour.prototype.__define({
 	on_sys_changed: {
 		value: function () {
 
-			this.profiles.forEach(function (profile) {
-				profile.inset = profile.project.default_inset({
-					elm_type: profile.elm_type,
-					pos: profile.pos,
-					inset: profile.inset
-				});
-			});
+			this.profiles.forEach((elm) => elm.default_inset(true));
 
-			this.glasses().forEach(function(elm) {
-				if (elm instanceof Contour)
-					elm.on_sys_changed();
+			this.glasses().forEach((elm) => {
+				if (elm instanceof Contour){
+          elm.on_sys_changed();
+        }
 				else{
 					// заполнения проверяем по толщине
 					if(elm.thickness < elm.project._dp.sys.tmin || elm.thickness > elm.project._dp.sys.tmax)
 						elm._row.inset = elm.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
 					// проверяем-изменяем соединения заполнений с профилями
-					elm.profiles.forEach(function (curr) {
+					elm.profiles.forEach((curr) => {
 						if(!curr.cnn || !curr.cnn.check_nom2(curr.profile))
 							curr.cnn = $p.cat.cnns.elm_cnn(elm, curr.profile, $p.enm.cnn_types.acn.ii);
 					});

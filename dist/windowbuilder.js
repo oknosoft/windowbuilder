@@ -3426,15 +3426,7 @@ Contour.prototype.__define({
           this.notify(noti);
         }
 
-        this.profiles.forEach((p) => {
-          if(p.nearest()){
-            p.inset = p.project.default_inset({
-              elm_type: p.elm_type,
-              pos: p.pos,
-              inset: p.inset
-            });
-          }
-        });
+        this.profiles.forEach((p) => p.default_inset());
         this.data._bounds = null;
       }
     },
@@ -4700,21 +4692,16 @@ Contour.prototype.__define({
 	on_sys_changed: {
 		value: function () {
 
-			this.profiles.forEach(function (profile) {
-				profile.inset = profile.project.default_inset({
-					elm_type: profile.elm_type,
-					pos: profile.pos,
-					inset: profile.inset
-				});
-			});
+			this.profiles.forEach((elm) => elm.default_inset(true));
 
-			this.glasses().forEach(function(elm) {
-				if (elm instanceof Contour)
-					elm.on_sys_changed();
+			this.glasses().forEach((elm) => {
+				if (elm instanceof Contour){
+          elm.on_sys_changed();
+        }
 				else{
 					if(elm.thickness < elm.project._dp.sys.tmin || elm.thickness > elm.project._dp.sys.tmax)
 						elm._row.inset = elm.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
-					elm.profiles.forEach(function (curr) {
+					elm.profiles.forEach((curr) => {
 						if(!curr.cnn || !curr.cnn.check_nom2(curr.profile))
 							curr.cnn = $p.cat.cnns.elm_cnn(elm, curr.profile, $p.enm.cnn_types.acn.ii);
 					});
@@ -7388,6 +7375,29 @@ ProfileItem.prototype.__define({
 		}
 	},
 
+  default_inset: {
+	  value: function (all) {
+      const nearest = this.nearest();
+      const {orientation} = this;
+      if(nearest || all){
+        let pos = nearest ? nearest.pos : this.pos;
+        if(pos == $p.enm.positions.Центр){
+          if(orientation == $p.enm.orientations.vert){
+            pos = [pos, $p.enm.positions.ЦентрВертикаль]
+          }
+          if(orientation == $p.enm.orientations.hor){
+            pos = [pos, $p.enm.positions.ЦентрГоризонталь]
+          }
+        }
+        this.inset = this.project.default_inset({
+          elm_type: this.elm_type,
+          pos: pos,
+          inset: this.inset
+        });
+      }
+    }
+  },
+
 	path_points: {
 		value: function(cnn_point, profile_point){
 
@@ -9570,11 +9580,11 @@ Scheme.prototype.__define({
 	default_inset: {
 		value: function (attr) {
 
-			var rows;
+			let rows;
 
 			if(!attr.pos){
 				rows = this._dp.sys.inserts(attr.elm_type, true);
-				if(attr.inset && rows.some(function (row) { return attr.inset == row; })){
+				if(attr.inset && rows.some((row) => attr.inset == row)){
 					return attr.inset;
 				}
 				return rows[0];
@@ -9582,35 +9592,45 @@ Scheme.prototype.__define({
 
 			rows = this._dp.sys.inserts(attr.elm_type, "rows");
 
-			if(rows.length == 1)
-				return rows[0].nom;
+			if(rows.length == 1){
+        return rows[0].nom;
+      }
 
-			if(attr.inset && rows.some(function (row) {
-					return attr.inset == row.nom && (row.pos == attr.pos || row.pos == $p.enm.positions.Любое);
-				})){
+      const pos_array = Array.isArray(attr.pos);
+      function check_pos(pos) {
+        if(pos_array){
+          return attr.pos.some((v) => v == pos);
+        }
+        return attr.pos == pos;
+      }
+
+			if(attr.inset && rows.some((row) => attr.inset == row.nom && (check_pos(row.pos) || row.pos == $p.enm.positions.Любое))){
 				return attr.inset;
 			}
 
-			var inset;
-			rows.some(function (row) {
-				if(row.pos == attr.pos && row.by_default)
+			let inset;
+			rows.some((row) => {
+				if(check_pos(row.pos) && row.by_default)
 					return inset = row.nom;
 			});
-			if(!inset)
-				rows.some(function (row) {
-					if(row.pos == attr.pos)
-						return inset = row.nom;
-				});
-			if(!inset)
-				rows.some(function (row) {
-					if(row.pos == $p.enm.positions.Любое && row.by_default)
-						return inset = row.nom;
-				});
-			if(!inset)
-				rows.some(function (row) {
-					if(row.pos == $p.enm.positions.Любое)
-						return inset = row.nom;
-				});
+			if(!inset){
+        rows.some((row) => {
+          if(check_pos(row.pos))
+            return inset = row.nom;
+        });
+      }
+			if(!inset){
+        rows.some((row) => {
+          if(row.pos == $p.enm.positions.Любое && row.by_default)
+            return inset = row.nom;
+        });
+      }
+			if(!inset){
+        rows.some((row) => {
+          if(row.pos == $p.enm.positions.Любое)
+            return inset = row.nom;
+        });
+      }
 
 			return inset;
 		}
