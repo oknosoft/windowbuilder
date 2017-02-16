@@ -279,8 +279,8 @@ function ProductsBuilding(){
       }
 
 			// только для прямых или только для кривых профилей
-			if((row.for_direct_profile_only > 0 && !elm.profile.is_linear()) ||
-				(row.for_direct_profile_only < 0 &&elm.profile.is_linear())){
+			if((row.for_direct_profile_only > 0 && !elm.is_linear()) ||
+				(row.for_direct_profile_only < 0 && elm.is_linear())){
         return;
       }
 
@@ -470,42 +470,48 @@ function ProductsBuilding(){
 	 */
 	function inset_check(inset, elm, by_perimetr, len_angl){
 
-		var is_tabular = true,
-			_row = elm._row,
-			len = len_angl ? len_angl.len : _row.len;
+	  const {_row} = elm;
+	  const len = len_angl ? len_angl.len : _row.len
+		let is_tabular = true;
 
 		// проверяем площадь
-		if(inset.smin > _row.s || (_row.s && inset.smax && inset.smax < _row.s))
-			return false;
+		if(inset.smin > _row.s || (_row.s && inset.smax && inset.smax < _row.s)){
+      return false;
+    }
 
 		// Главный элемент с нулевым количеством не включаем
-		if(inset.is_main_elm && !inset.quantity)
-			return false;
+		if(inset.is_main_elm && !inset.quantity){
+      return false;
+    }
 
 		if($p.utils.is_data_obj(inset)){
 
 			// только для прямых или только для кривых профилей
-			if((inset.for_direct_profile_only > 0 && !elm.profile.is_linear()) ||
-				(inset.for_direct_profile_only < 0 &&elm.profile.is_linear()))
-				return false;
+			if((inset.for_direct_profile_only > 0 && !elm.is_linear()) || (inset.for_direct_profile_only < 0 &&elm.is_linear())){
+        return false;
+      }
 
 			if(inset.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
-				if(!elm.joined_imposts(true))
-					return false;
+				if(!elm.joined_imposts(true)){
+          return false;
+        }
 
 			}else if(inset.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
-				if(elm.joined_imposts(true))
-					return false;
+				if(elm.joined_imposts(true)){
+          return false;
+        }
 			}
 			is_tabular = false;
 		}
 
 
 		if(!is_tabular || by_perimetr || inset.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
-			if(inset.lmin > len || (inset.lmax < len && inset.lmax > 0))
-				return false;
-			if(inset.ahmin > _row.angle_hor || inset.ahmax < _row.angle_hor)
-				return false;
+			if(inset.lmin > len || (inset.lmax < len && inset.lmax > 0)){
+        return false;
+      }
+			if(inset.ahmin > _row.angle_hor || inset.ahmax < _row.angle_hor){
+        return false;
+      }
 		}
 
 		//// Включить проверку размеров и углов, поля "Устанавливать с..." и т.д.
@@ -1053,6 +1059,8 @@ function ProductsBuilding(){
 				// для него надо рассчитать еще и с другой стороны
 				if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm)){
 					//	TODO: ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
+          len_angl.angle = len_angl.alp2;
+          cnn_add_spec(e.cnn, elm, len_angl);
 				}
 			}
 
@@ -1067,6 +1075,7 @@ function ProductsBuilding(){
 			//КонецЕсли;
 
 			// спецификацию с предыдущей стороны рассчитваем всегда
+      len_angl.angle = len_angl.alp1;
 			cnn_add_spec(b.cnn, elm, len_angl);
 
 		}
