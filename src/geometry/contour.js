@@ -1670,7 +1670,7 @@ Contour.prototype.__define({
 				}
 
 				// далее - размерные линии контура
-        this.draw_sizes_contour();
+        this.draw_sizes_contour(ihor, ivert);
 
 			}
 
@@ -1685,7 +1685,7 @@ Contour.prototype.__define({
    */
   draw_sizes_contour: {
 
-    value: function () {
+    value: function (ihor, ivert) {
 
       const {project, l_dimensions} = this;
 
@@ -1696,11 +1696,11 @@ Contour.prototype.__define({
             l_dimensions.left = new DimensionLine({
               pos: "left",
               parent: l_dimensions,
-              offset: ihor.length ? 220 : 90,
+              offset: ihor.length > 2 ? 220 : 90,
               contour: true
             });
           }else
-            l_dimensions.left.offset = ihor.length ? 220 : 90;
+            l_dimensions.left.offset = ihor.length > 2 ? 220 : 90;
 
         }else{
           if(l_dimensions.left){
@@ -1714,11 +1714,11 @@ Contour.prototype.__define({
             l_dimensions.right = new DimensionLine({
               pos: "right",
               parent: l_dimensions,
-              offset: ihor.length ? -260 : -130,
+              offset: ihor.length > 2 ? -260 : -130,
               contour: true
             });
           }else
-            l_dimensions.right.offset = ihor.length ? -260 : -130;
+            l_dimensions.right.offset = ihor.length > 2 ? -260 : -130;
 
         }else{
           if(l_dimensions.right){
@@ -1732,11 +1732,11 @@ Contour.prototype.__define({
             l_dimensions.top = new DimensionLine({
               pos: "top",
               parent: l_dimensions,
-              offset: ivert.length ? 220 : 90,
+              offset: ivert.length > 2 ? 220 : 90,
               contour: true
             });
           }else
-            l_dimensions.top.offset = ivert.length ? 220 : 90;
+            l_dimensions.top.offset = ivert.length > 2 ? 220 : 90;
         }else{
           if(l_dimensions.top){
             l_dimensions.top.remove();
@@ -1749,11 +1749,11 @@ Contour.prototype.__define({
             l_dimensions.bottom = new DimensionLine({
               pos: "bottom",
               parent: l_dimensions,
-              offset: ivert.length ? -260 : -130,
+              offset: ivert.length > 2 ? -260 : -130,
               contour: true
             });
           }else
-            l_dimensions.bottom.offset = ivert.length ? -260 : -130;
+            l_dimensions.bottom.offset = ivert.length > 2 ? -260 : -130;
 
         }else{
           if(l_dimensions.bottom){

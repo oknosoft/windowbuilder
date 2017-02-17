@@ -954,7 +954,7 @@ class ToolPen extends ToolElement {
     const point = bounds.bottomRight;
     this.add_sequence([
       [point, point.add([0,-1000])],
-      [point.add([1000,-1000]), point.add([1000,0])],
+      [point.add([0,-1000]), point.add([1000,0])],
       [point.add([1000,0]), point]
     ])
   }

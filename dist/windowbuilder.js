@@ -4497,7 +4497,7 @@ Contour.prototype.__define({
           }
 				}
 
-        this.draw_sizes_contour();
+        this.draw_sizes_contour(ihor, ivert);
 
 			}
 
@@ -4508,7 +4508,7 @@ Contour.prototype.__define({
 
   draw_sizes_contour: {
 
-    value: function () {
+    value: function (ihor, ivert) {
 
       const {project, l_dimensions} = this;
 
@@ -4519,11 +4519,11 @@ Contour.prototype.__define({
             l_dimensions.left = new DimensionLine({
               pos: "left",
               parent: l_dimensions,
-              offset: ihor.length ? 220 : 90,
+              offset: ihor.length > 2 ? 220 : 90,
               contour: true
             });
           }else
-            l_dimensions.left.offset = ihor.length ? 220 : 90;
+            l_dimensions.left.offset = ihor.length > 2 ? 220 : 90;
 
         }else{
           if(l_dimensions.left){
@@ -4537,11 +4537,11 @@ Contour.prototype.__define({
             l_dimensions.right = new DimensionLine({
               pos: "right",
               parent: l_dimensions,
-              offset: ihor.length ? -260 : -130,
+              offset: ihor.length > 2 ? -260 : -130,
               contour: true
             });
           }else
-            l_dimensions.right.offset = ihor.length ? -260 : -130;
+            l_dimensions.right.offset = ihor.length > 2 ? -260 : -130;
 
         }else{
           if(l_dimensions.right){
@@ -4555,11 +4555,11 @@ Contour.prototype.__define({
             l_dimensions.top = new DimensionLine({
               pos: "top",
               parent: l_dimensions,
-              offset: ivert.length ? 220 : 90,
+              offset: ivert.length > 2 ? 220 : 90,
               contour: true
             });
           }else
-            l_dimensions.top.offset = ivert.length ? 220 : 90;
+            l_dimensions.top.offset = ivert.length > 2 ? 220 : 90;
         }else{
           if(l_dimensions.top){
             l_dimensions.top.remove();
@@ -4572,11 +4572,11 @@ Contour.prototype.__define({
             l_dimensions.bottom = new DimensionLine({
               pos: "bottom",
               parent: l_dimensions,
-              offset: ivert.length ? -260 : -130,
+              offset: ivert.length > 2 ? -260 : -130,
               contour: true
             });
           }else
-            l_dimensions.bottom.offset = ivert.length ? -260 : -130;
+            l_dimensions.bottom.offset = ivert.length > 2 ? -260 : -130;
 
         }else{
           if(l_dimensions.bottom){
@@ -4931,42 +4931,35 @@ DimensionLine.prototype.__define({
 	redraw: {
 		value: function () {
 
-			var _bounds = this.layer.bounds,
-				_dim_bounds = this.layer instanceof DimensionLayer ? this.project.dimension_bounds : this.layer.dimension_bounds,
-				offset = 0,
-				b, e, tmp, normal, length, bs, es;
+		  const {layer, project, data, pos} = this;
+      const _bounds = layer.bounds;
+      const _dim_bounds = layer instanceof DimensionLayer ? project.dimension_bounds : layer.dimension_bounds;
+			let offset = 0, b, e, tmp, normal, length, bs, es;
 
-			if(!this.pos){
+			if(!pos){
 
-				if(typeof this.data.p1 == "number")
-					b = this.data.elm1.corns(this.data.p1);
-				else
-					b = this.data.elm1[this.data.p1];
+				b = typeof data.p1 == "number" ? data.elm1.corns(data.p1) : b = data.elm1[data.p1];
+        e = typeof data.p2 == "number" ? data.elm2.corns(data.p2) : e = data.elm2[data.p2];
 
-				if(typeof this.data.p2 == "number")
-					e = this.data.elm2.corns(this.data.p2);
-				else
-					e = this.data.elm2[this.data.p2];
-
-			}else if(this.pos == "top"){
+			}else if(pos == "top"){
 				b = _bounds.topLeft;
 				e = _bounds.topRight;
-				offset = _bounds[this.pos] - _dim_bounds[this.pos];
+				offset = _bounds[pos] - _dim_bounds[pos];
 
-			}else if(this.pos == "left"){
+			}else if(pos == "left"){
 				b = _bounds.bottomLeft;
 				e = _bounds.topLeft;
-				offset = _bounds[this.pos] - _dim_bounds[this.pos];
+				offset = _bounds[pos] - _dim_bounds[pos];
 
-			}else if(this.pos == "bottom"){
+			}else if(pos == "bottom"){
 				b = _bounds.bottomLeft;
 				e = _bounds.bottomRight;
-				offset = _bounds[this.pos] - _dim_bounds[this.pos];
+				offset = _bounds[pos] - _dim_bounds[pos];
 
-			}else if(this.pos == "right"){
+			}else if(pos == "right"){
 				b = _bounds.bottomRight;
 				e = _bounds.topRight;
-				offset = _bounds[this.pos] - _dim_bounds[this.pos];
+				offset = _bounds[pos] - _dim_bounds[pos];
 			}
 
 			if(!b || !e){
@@ -4976,10 +4969,10 @@ DimensionLine.prototype.__define({
 
 			tmp = new paper.Path({ insert: false, segments: [b, e] });
 
-			if(this.data.elm1 && this.pos){
+			if(data.elm1 && pos){
 
-				b = tmp.getNearestPoint(this.data.elm1[this.data.p1]);
-				e = tmp.getNearestPoint(this.data.elm2[this.data.p2]);
+				b = tmp.getNearestPoint(data.elm1[data.p1]);
+				e = tmp.getNearestPoint(data.elm2[data.p2]);
 				if(tmp.getOffsetOf(b) > tmp.getOffsetOf(e)){
 					normal = e;
 					e = b;
@@ -5021,11 +5014,9 @@ DimensionLine.prototype.__define({
 			}else
 				this.children.scale.addSegments([bs, es]);
 
-
 			this.children.text.content = length.toFixed(0);
 			this.children.text.rotation = e.subtract(b).angle;
 			this.children.text.point = bs.add(es).divide(2);
-
 
 		},
 		enumerable : false
@@ -12011,7 +12002,7 @@ class ToolPen extends ToolElement {
     const point = bounds.bottomRight;
     this.add_sequence([
       [point, point.add([0,-1000])],
-      [point.add([1000,-1000]), point.add([1000,0])],
+      [point.add([0,-1000]), point.add([1000,0])],
       [point.add([1000,0]), point]
     ])
   }
