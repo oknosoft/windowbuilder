@@ -4383,10 +4383,7 @@ Contour.prototype.__define({
 				});
 			});
 
-			this.children.forEach((l) => {
-				if(l instanceof Contour)
-					l.draw_visualization();
-			});
+			this.children.forEach((l) => l instanceof Contour && l.draw_visualization());
 
 		}
 	},
@@ -4415,242 +4412,231 @@ Contour.prototype.__define({
 
 		value: function () {
 
-			this.children.forEach((l) => {
-				if(l instanceof Contour)
-					l.draw_sizes();
-			});
+		  const {contours, parent, l_dimensions, bounds} = this;
 
-			if(!this.parent){
+      contours.forEach((l) => l.draw_sizes());
+
+			if(!parent){
+
+        const by_side = this.profiles_by_side();
 
 
-				const ihor = [];
-				const ivert = [];
+				const ihor = [{
+				  point: bounds.top.round(0),
+          elm: by_side.top,
+          p: by_side.top.b.y < by_side.top.e.y ? "b" : "e"
+				}, {
+				  point: bounds.bottom.round(0),
+          elm: by_side.bottom,
+          p: by_side.bottom.b.y < by_side.bottom.e.y ? "b" : "e"
+        }];
+				const ivert = [{
+				  point: bounds.left.round(0),
+          elm: by_side.left,
+          p: by_side.left.b.x > by_side.left.e.x ? "b" : "e"
+        }, {
+				  point: bounds.right.round(0),
+          elm: by_side.right,
+          p: by_side.right.b.x > by_side.right.e.x ? "b" : "e"
+        }];
 
-				this.imposts.forEach((elm) => {
-					if(elm.orientation == $p.enm.orientations.hor)
-						ihor.push(elm);
-					else if(elm.orientation == $p.enm.orientations.vert)
-						ivert.push(elm);
+				this.profiles.forEach((elm) => {
+          if(ihor.every((v) => v.point != elm.b.y.round(0))){
+            ihor.push({
+              point: elm.b.y.round(0),
+              elm: elm,
+              p: "b"
+            });
+          }
+          if(ihor.every((v) => v.point != elm.e.y.round(0))){
+            ihor.push({
+              point: elm.e.y.round(0),
+              elm: elm,
+              p: "e"
+            });
+          }
+          if(ivert.every((v) => v.point != elm.b.x.round(0))){
+            ivert.push({
+              point: elm.b.x.round(0),
+              elm: elm,
+              p: "b"
+            });
+          }
+          if(ivert.every((v) => v.point != elm.e.x.round(0))){
+            ivert.push({
+              point: elm.e.x.round(0),
+              elm: elm,
+              p: "e"
+            });
+          }
 				});
 
-				if(ihor.length || ivert.length){
+				if(ihor.length > 2 || ivert.length > 2){
 
-					const by_side = this.profiles_by_side();
-          const imposts_dimensions = (arr, collection, i, pos, xy, sideb, sidee) => {
+          ihor.sort((a, b) => b.point - a.point);
+          ivert.sort((a, b) => a.point - b.point);
 
-            const offset = (pos == "right" || pos == "bottom") ? -130 : 90;
-
-							if(i == 0 && !collection[i]){
-								collection[i] = new DimensionLine({
-									pos: pos,
-									elm1: sideb,
-									p1: sideb.b[xy] > sideb.e[xy] ? "b" : "e",
-									elm2: arr[i],
-									p2: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
-									parent: this.l_dimensions,
-									offset: offset,
-									impost: true
-								});
-							}
-
-							if(i >= 0 && i < arr.length-1 && !collection[i+1]){
-								collection[i+1] = new DimensionLine({
-									pos: pos,
-									elm1: arr[i],
-									p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
-									elm2: arr[i+1],
-									p2: arr[i+1].b[xy] > arr[i+1].e[xy] ? "b" : "e",
-									parent: this.l_dimensions,
-									offset: offset,
-									impost: true
-								});
-							}
-
-							if(i == arr.length-1 && !collection[arr.length]){
-								collection[arr.length] = new DimensionLine({
-									pos: pos,
-									elm1: arr[i],
-									p1: arr[i].b[xy] > arr[i].e[xy] ? "b" : "e",
-									elm2: sidee,
-									p2: sidee.b[xy] > sidee.e[xy] ? "b" : "e",
-									parent: this.l_dimensions,
-									offset: offset,
-									impost: true
-								});
-							}
-
-						};
-
-          const purge = (arr, asizes, xy) => {
-
-							const adel = [];
-
-							arr.forEach((elm) => {
-								if(asizes.indexOf(elm.b[xy].round(0)) != -1 && asizes.indexOf(elm.e[xy].round(0)) != -1){
-                  adel.push(elm);
-                }
-                else if(asizes.indexOf(elm.b[xy].round(0)) == -1){
-                  asizes.push(elm.b[xy].round(0));
-                }
-                else if(asizes.indexOf(elm.e[xy].round(0)) == -1){
-                  asizes.push(elm.e[xy].round(0));
-                }
-							});
-
-							adel.forEach((elm) => {
-								arr.splice(arr.indexOf(elm), 1);
-							});
-							adel.length = 0;
-
-							return arr;
-						};
-
-          const {bounds} = this;
-					purge(ihor, [bounds.top.round(0), bounds.bottom.round(0)], "y").sort((a, b) => b.b.y + b.e.y - a.b.y - a.e.y);
-					purge(ivert, [bounds.left.round(0), bounds.right.round(0)], "x").sort((a, b) => a.b.x + a.e.x - b.b.x - b.e.x);
-
-					if(!this.l_dimensions.ihor){
-            this.l_dimensions.ihor = {};
+					if(!l_dimensions.ihor){
+            l_dimensions.ihor = {};
           }
-					for(let i = 0; i< ihor.length; i++){
-
-						if(this.is_pos("right")){
-              imposts_dimensions(ihor, this.l_dimensions.ihor, i, "right", "x", by_side.bottom, by_side.top);
-            }
-            else if(this.is_pos("left")){
-              imposts_dimensions(ihor, this.l_dimensions.ihor, i, "left", "x", by_side.bottom, by_side.top);
-            }
-					}
-
-					if(!this.l_dimensions.ivert){
-            this.l_dimensions.ivert = {};
+          if(this.is_pos("right")){
+            this.imposts_dimensions(ihor, l_dimensions.ihor, "right");
           }
-					for(let i = 0; i< ivert.length; i++){
-						if(this.is_pos("bottom")){
-              imposts_dimensions(ivert, this.l_dimensions.ivert, i, "bottom", "y", by_side.left, by_side.right);
-            }
-            else if(this.is_pos("top")){
-              imposts_dimensions(ivert, this.l_dimensions.ivert, i, "top", "y", by_side.left, by_side.right);
-            }
-					}
+          else if(this.is_pos("left")){
+            this.imposts_dimensions(ihor, l_dimensions.ihor, "left");
+          }
+
+					if(!l_dimensions.ivert){
+            l_dimensions.ivert = {};
+          }
+          if(this.is_pos("bottom")){
+            this.imposts_dimensions(ivert, l_dimensions.ivert, "bottom");
+          }
+          else if(this.is_pos("top")){
+            this.imposts_dimensions(ivert, l_dimensions.ivert, "top");
+          }
 				}
 
-				if (this.project.contours.length > 1) {
+        this.draw_sizes_contour();
 
-					if(this.is_pos("left") && !this.is_pos("right") && this.project.bounds.height != this.bounds.height){
-						if(!this.l_dimensions.left){
-							this.l_dimensions.left = new DimensionLine({
-								pos: "left",
-								parent: this.l_dimensions,
-								offset: ihor.length ? 220 : 90,
-								contour: true
-							});
-						}else
-							this.l_dimensions.left.offset = ihor.length ? 220 : 90;
-
-					}else{
-						if(this.l_dimensions.left){
-							this.l_dimensions.left.remove();
-							this.l_dimensions.left = null;
-						}
-					}
-
-					if(this.is_pos("right") && this.project.bounds.height != this.bounds.height){
-						if(!this.l_dimensions.right){
-							this.l_dimensions.right = new DimensionLine({
-								pos: "right",
-								parent: this.l_dimensions,
-								offset: ihor.length ? -260 : -130,
-								contour: true
-							});
-						}else
-							this.l_dimensions.right.offset = ihor.length ? -260 : -130;
-
-					}else{
-						if(this.l_dimensions.right){
-							this.l_dimensions.right.remove();
-							this.l_dimensions.right = null;
-						}
-					}
-
-					if(this.is_pos("top") && !this.is_pos("bottom") && this.project.bounds.width != this.bounds.width){
-						if(!this.l_dimensions.top){
-							this.l_dimensions.top = new DimensionLine({
-								pos: "top",
-								parent: this.l_dimensions,
-								offset: ivert.length ? 220 : 90,
-								contour: true
-							});
-						}else
-							this.l_dimensions.top.offset = ivert.length ? 220 : 90;
-					}else{
-						if(this.l_dimensions.top){
-							this.l_dimensions.top.remove();
-							this.l_dimensions.top = null;
-						}
-					}
-
-					if(this.is_pos("bottom") && this.project.bounds.width != this.bounds.width){
-						if(!this.l_dimensions.bottom){
-							this.l_dimensions.bottom = new DimensionLine({
-								pos: "bottom",
-								parent: this.l_dimensions,
-								offset: ivert.length ? -260 : -130,
-								contour: true
-							});
-						}else
-							this.l_dimensions.bottom.offset = ivert.length ? -260 : -130;
-
-					}else{
-						if(this.l_dimensions.bottom){
-							this.l_dimensions.bottom.remove();
-							this.l_dimensions.bottom = null;
-						}
-					}
-
-				}
 			}
 
-			this.l_dimensions.children.forEach((dl) => {
-				dl.redraw && dl.redraw();
-			});
+      l_dimensions.children.forEach((dl) => dl.redraw && dl.redraw());
 
 		}
 	},
 
+  draw_sizes_contour: {
+
+    value: function () {
+
+      const {project, l_dimensions} = this;
+
+      if (project.contours.length > 1) {
+
+        if(this.is_pos("left") && !this.is_pos("right") && project.bounds.height != this.bounds.height){
+          if(!l_dimensions.left){
+            l_dimensions.left = new DimensionLine({
+              pos: "left",
+              parent: l_dimensions,
+              offset: ihor.length ? 220 : 90,
+              contour: true
+            });
+          }else
+            l_dimensions.left.offset = ihor.length ? 220 : 90;
+
+        }else{
+          if(l_dimensions.left){
+            l_dimensions.left.remove();
+            l_dimensions.left = null;
+          }
+        }
+
+        if(this.is_pos("right") && project.bounds.height != this.bounds.height){
+          if(!l_dimensions.right){
+            l_dimensions.right = new DimensionLine({
+              pos: "right",
+              parent: l_dimensions,
+              offset: ihor.length ? -260 : -130,
+              contour: true
+            });
+          }else
+            l_dimensions.right.offset = ihor.length ? -260 : -130;
+
+        }else{
+          if(l_dimensions.right){
+            l_dimensions.right.remove();
+            l_dimensions.right = null;
+          }
+        }
+
+        if(this.is_pos("top") && !this.is_pos("bottom") && project.bounds.width != this.bounds.width){
+          if(!l_dimensions.top){
+            l_dimensions.top = new DimensionLine({
+              pos: "top",
+              parent: l_dimensions,
+              offset: ivert.length ? 220 : 90,
+              contour: true
+            });
+          }else
+            l_dimensions.top.offset = ivert.length ? 220 : 90;
+        }else{
+          if(l_dimensions.top){
+            l_dimensions.top.remove();
+            l_dimensions.top = null;
+          }
+        }
+
+        if(this.is_pos("bottom") && project.bounds.width != this.bounds.width){
+          if(!l_dimensions.bottom){
+            l_dimensions.bottom = new DimensionLine({
+              pos: "bottom",
+              parent: l_dimensions,
+              offset: ivert.length ? -260 : -130,
+              contour: true
+            });
+          }else
+            l_dimensions.bottom.offset = ivert.length ? -260 : -130;
+
+        }else{
+          if(l_dimensions.bottom){
+            l_dimensions.bottom.remove();
+            l_dimensions.bottom = null;
+          }
+        }
+
+      }
+    }
+  },
+
+  imposts_dimensions: {
+    value: function (arr, collection, pos) {
+
+      const offset = (pos == "right" || pos == "bottom") ? -130 : 90;
+
+      for(let i = 0; i < arr.length - 1; i++){
+        if(!collection[i]){
+          collection[i] = new DimensionLine({
+            pos: pos,
+            elm1: arr[i].elm,
+            p1: arr[i].p,
+            elm2: arr[i+1].elm,
+            p2: arr[i+1].p,
+            parent: this.l_dimensions,
+            offset: offset,
+            impost: true
+          });
+        }
+      }
+    }
+  },
+
 	clear_dimentions: {
 
 		value: function () {
-			for(let key in this.l_dimensions.ihor){
-				this.l_dimensions.ihor[key].removeChildren();
-				this.l_dimensions.ihor[key].remove();
-				delete this.l_dimensions.ihor[key];
+		  const {l_dimensions} = this;
+
+		  function clear_pos(pos) {
+        if(l_dimensions[pos]){
+          l_dimensions[pos].removeChildren();
+          l_dimensions[pos].remove();
+          l_dimensions[pos] = null;
+        }
+      }
+
+			for(let key in l_dimensions.ihor){
+        l_dimensions.ihor[key].removeChildren();
+        l_dimensions.ihor[key].remove();
+				delete l_dimensions.ihor[key];
 			}
-			for(let key in this.l_dimensions.ivert){
-				this.l_dimensions.ivert[key].removeChildren();
-				this.l_dimensions.ivert[key].remove();
-				delete this.l_dimensions.ivert[key];
+			for(let key in l_dimensions.ivert){
+        l_dimensions.ivert[key].removeChildren();
+        l_dimensions.ivert[key].remove();
+				delete l_dimensions.ivert[key];
 			}
-			if(this.l_dimensions.bottom){
-				this.l_dimensions.bottom.removeChildren();
-				this.l_dimensions.bottom.remove();
-				this.l_dimensions.bottom = null;
-			}
-			if(this.l_dimensions.top){
-				this.l_dimensions.top.removeChildren();
-				this.l_dimensions.top.remove();
-				this.l_dimensions.top = null;
-			}
-			if(this.l_dimensions.right){
-				this.l_dimensions.right.removeChildren();
-				this.l_dimensions.right.remove();
-				this.l_dimensions.right = null;
-			}
-			if(this.l_dimensions.left){
-				this.l_dimensions.left.removeChildren();
-				this.l_dimensions.left.remove();
-				this.l_dimensions.left = null;
-			}
+
+			['bottom','top','right','left'].forEach(clear_pos);
+
 		}
 	},
 
@@ -4670,13 +4656,12 @@ Contour.prototype.__define({
 	on_remove_elm: {
 
 		value: function (elm) {
-
-			if(this.parent)
-				this.parent.on_remove_elm(elm);
-
-			if (elm instanceof Profile && !this.project.data._loading)
-				this.clear_dimentions();
-
+			if(this.parent){
+        this.parent.on_remove_elm(elm);
+      }
+			if (elm instanceof Profile && !this.project.data._loading){
+        this.clear_dimentions();
+      }
 		}
 	},
 
@@ -8006,7 +7991,7 @@ Profile.prototype.__define({
 		value : function(ignore_cnn){
 
 			const _profile = this;
-			const {b, e, data} = this;
+			const {b, e, data, layer} = this;
 
 			function check_nearest(){
 				if(data._nearest){
@@ -8022,17 +8007,18 @@ Profile.prototype.__define({
         data._nearest_cnn = null;
 			}
 
-			if(_profile.layer && _profile.layer.parent){
+			if(layer && layer.parent){
 				if(!check_nearest()){
-					const {children} = _profile.layer.parent;
-					for(var p in children){
-						if((data._nearest = children[p]) instanceof Profile && check_nearest()){
+				  if(layer.parent.children.some((elm) => {
+            if((data._nearest = elm) instanceof Profile && check_nearest()){
               return data._nearest;
             }
-						else{
+            else{
               data._nearest = null;
             }
-					}
+          })){
+            return data._nearest
+          }
 				}
 			}else{
         data._nearest = null;
@@ -8166,12 +8152,15 @@ Profile.prototype.__define({
 
 	elm_type: {
 		get : function(){
+		  const {_rays} = this.data;
 
-			if(this.data._rays && (this.data._rays.b.is_tt || this.data._rays.e.is_tt))
-				return $p.enm.elm_types.Импост;
+			if(_rays && (_rays.b.is_tt || _rays.e.is_tt)){
+        return $p.enm.elm_types.Импост;
+      }
 
-			if(this.layer.parent instanceof Contour)
-				return $p.enm.elm_types.Створка;
+			if(this.layer.parent instanceof Contour){
+        return $p.enm.elm_types.Створка;
+      }
 
 			return $p.enm.elm_types.Рама;
 
@@ -8354,7 +8343,6 @@ Profile.prototype.__define({
 						moved_fact = true;
 					}
 				}
-
 			}
 
 			if(moved && moved_fact){

@@ -1728,7 +1728,7 @@ Profile.prototype.__define({
 		value : function(ignore_cnn){
 
 			const _profile = this;
-			const {b, e, data} = this;
+			const {b, e, data, layer} = this;
 
 			function check_nearest(){
 				if(data._nearest){
@@ -1744,17 +1744,18 @@ Profile.prototype.__define({
         data._nearest_cnn = null;
 			}
 
-			if(_profile.layer && _profile.layer.parent){
+			if(layer && layer.parent){
 				if(!check_nearest()){
-					const {children} = _profile.layer.parent;
-					for(var p in children){
-						if((data._nearest = children[p]) instanceof Profile && check_nearest()){
+				  if(layer.parent.children.some((elm) => {
+            if((data._nearest = elm) instanceof Profile && check_nearest()){
               return data._nearest;
             }
-						else{
+            else{
               data._nearest = null;
             }
-					}
+          })){
+            return data._nearest
+          }
 				}
 			}else{
         data._nearest = null;
@@ -1917,14 +1918,17 @@ Profile.prototype.__define({
 	 */
 	elm_type: {
 		get : function(){
+		  const {_rays} = this.data;
 
 			// если начало или конец элемента соединены с соседями по Т, значит это импост
-			if(this.data._rays && (this.data._rays.b.is_tt || this.data._rays.e.is_tt))
-				return $p.enm.elm_types.Импост;
+			if(_rays && (_rays.b.is_tt || _rays.e.is_tt)){
+        return $p.enm.elm_types.Импост;
+      }
 
 			// Если вложенный контур, значит это створка
-			if(this.layer.parent instanceof Contour)
-				return $p.enm.elm_types.Створка;
+			if(this.layer.parent instanceof Contour){
+        return $p.enm.elm_types.Створка;
+      }
 
 			return $p.enm.elm_types.Рама;
 
@@ -2143,7 +2147,6 @@ Profile.prototype.__define({
 						moved_fact = true;
 					}
 				}
-
 			}
 
 			// если мы в обсервере и есть T и в массиве обработанных есть примыкающий T - пересчитываем
