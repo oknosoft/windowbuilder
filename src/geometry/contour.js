@@ -665,21 +665,26 @@ Contour.prototype.__define({
 	 */
 	nodes: {
 		get: function(){
-			var findedb, findede, nodes = [];
 
-			this.profiles.forEach(function (p) {
-				findedb = false;
-				findede = false;
-				nodes.forEach(function (n) {
-					if(p.b.is_nearest(n))
-						findedb = true;
-					if(p.e.is_nearest(n))
-						findede = true;
+			const nodes = [];
+
+			this.profiles.forEach((p) => {
+				let findedb;
+				let findede;
+				nodes.forEach((n) => {
+					if(p.b.is_nearest(n)){
+            findedb = true;
+          }
+					if(p.e.is_nearest(n)){
+            findede = true;
+          }
 				});
-				if(!findedb)
-					nodes.push(p.b.clone());
-				if(!findede)
-					nodes.push(p.e.clone());
+				if(!findedb){
+          nodes.push(p.b.clone());
+        }
+				if(!findede){
+          nodes.push(p.e.clone());
+        }
 			});
 
 			return nodes;
@@ -695,12 +700,11 @@ Contour.prototype.__define({
 	 */
 	glass_segments: {
 		get: function(){
-			var profiles = this.profiles,
-				is_flap = !!this.parent,
-				nodes = [];
+			const	is_flap = !!this.parent;
+			const nodes = [];
 
 			// для всех профилей контура
-			profiles.forEach(function (p) {
+      this.profiles.forEach((p) => {
 
 				// ищем примыкания T к текущему профилю
 				const ip = p.joined_imposts(),
@@ -723,15 +727,19 @@ Contour.prototype.__define({
 				let pbg, peg;
 
 				// для створочных импостов используем не координаты их b и e, а ближайшие точки примыкающих образующих
-				if(is_flap && pb.is_t)
-					pbg = pb.profile.generatrix.getNearestPoint(p.b);
-				else
-					pbg = p.b;
+				if(is_flap && pb.is_t){
+          pbg = pb.profile.generatrix.getNearestPoint(p.b);
+        }
+				else{
+          pbg = p.b;
+        }
 
-				if(is_flap && pe.is_t)
-					peg = pe.profile.generatrix.getNearestPoint(p.e);
-				else
-					peg = p.e;
+				if(is_flap && pe.is_t){
+          peg = pe.profile.generatrix.getNearestPoint(p.e);
+        }
+				else{
+          peg = p.e;
+        }
 
 				// если есть примыкания T, добавляем сегменты, исключая соединения с пустотой
 				if(ip.inner.length){
@@ -767,18 +775,21 @@ Contour.prototype.__define({
             nodes.push(new GlassSegment(p, peg, ip.outer[ip.outer.length-1].point, true));
           }
 				}
+
+        // добавляем, если нет соединений с пустотой
 				if(!ip.inner.length){
-					// добавляем, если нет соединений с пустотой
 					if(!pb.is_i && !pe.is_i){
             nodes.push(new GlassSegment(p, pbg, peg));
           }
 				}
+
+        // для импостов добавляем сегмент в обратном направлении
 				if(!ip.outer.length && (pb.is_cut || pe.is_cut || pb.is_t || pe.is_t)){
-					// для импостов добавляем сегмент в обратном направлении
 					if(!pb.is_i && !pe.is_i){
             nodes.push(new GlassSegment(p, peg, pbg, true));
           }
 				}
+
 			});
 
 			return nodes;

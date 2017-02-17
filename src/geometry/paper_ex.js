@@ -32,15 +32,17 @@ paper.Path.prototype.__define({
 	 */
 	angle_to: {
 		value : function(other, point, interior, round){
-			var p1 = this.getNearestPoint(point),
+			const p1 = this.getNearestPoint(point),
 				p2 = other.getNearestPoint(point),
 				t1 = this.getTangentAt(this.getOffsetOf(p1)),
-				t2 = other.getTangentAt(other.getOffsetOf(p2)),
-				res = t2.angle - t1.angle;
-			if(res < 0)
-				res += 360;
-			if(interior && res > 180)
-				res = 180 - (res - 180);
+				t2 = other.getTangentAt(other.getOffsetOf(p2));
+			let res = t2.angle - t1.angle;
+			if(res < 0){
+        res += 360;
+      }
+			if(interior && res > 180){
+        res = 180 - (res - 180);
+      }
 			return round ? res.round(round) : res.round(1);
 		},
 		enumerable : false

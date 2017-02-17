@@ -858,12 +858,13 @@ ProfileItem.prototype.__define({
 	postcalc_cnn: {
 		value: function(node){
 
-			var cnn_point = this.cnn_point(node);
+			const cnn_point = this.cnn_point(node);
 
 			cnn_point.cnn = $p.cat.cnns.elm_cnn(this, cnn_point.profile, cnn_point.cnn_types, cnn_point.cnn);
 
-			if(!cnn_point.point)
-				cnn_point.point = this[node];
+			if(!cnn_point.point){
+        cnn_point.point = this[node];
+      }
 
 			return cnn_point;
 		}
@@ -1812,6 +1813,26 @@ Profile.prototype.__define({
       const tinner = [];
       const touter = [];
 
+      // точки, в которых сходятся более 2 профилей
+      const candidates = {b: [], e: []};
+
+      function add_impost(ip, curr, point) {
+        const res = {point: generatrix.getNearestPoint(point), profile: curr};
+        if(check_outer(ip)){
+          touter.push(res);
+        }
+        else{
+          tinner.push(res);
+        }
+      }
+
+      // выясним, с какой стороны примыкающий профиль
+      function check_outer(ip) {
+        if(rays.inner.getNearestPoint(ip).getDistance(ip, true) > rays.outer.getNearestPoint(ip).getDistance(ip, true)){
+          return true
+        }
+      }
+
       if(this.parent.profiles.some((curr) => {
 
           if(curr == this){
@@ -1819,36 +1840,51 @@ Profile.prototype.__define({
           }
 
           const pb = curr.cnn_point("b");
-          if(pb.profile == this && pb.cnn && pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+          if(pb.profile == this && pb.cnn){
 
-            if(check_only){
-              return true;
+            if(pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+              if(check_only){
+                return true;
+              }
+              add_impost(curr.corns(1), curr, pb.point);
             }
-
-            // выясним, с какой стороны примыкающий профиль
-            const ip = curr.corns(1);
-            if(rays.inner.getNearestPoint(ip).getDistance(ip, true) < rays.outer.getNearestPoint(ip).getDistance(ip, true))
-              tinner.push({point: generatrix.getNearestPoint(pb.point), profile: curr});
-            else
-              touter.push({point: generatrix.getNearestPoint(pb.point), profile: curr});
+            else{
+              candidates.b.push(curr.corns(1))
+            }
           }
 
           const pe = curr.cnn_point("e");
-          if(pe.profile == this && pe.cnn && pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
-
-            if(check_only){
-              return true;
+          if(pe.profile == this && pe.cnn){
+            if(pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+              if(check_only){
+                return true;
+              }
+              add_impost(curr.corns(2), curr, pe.point);
             }
-
-            const ip = curr.corns(2);
-            if(rays.inner.getNearestPoint(ip).getDistance(ip, true) < rays.outer.getNearestPoint(ip).getDistance(ip, true))
-              tinner.push({point: generatrix.getNearestPoint(pe.point), profile: curr});
-            else
-              touter.push({point: generatrix.getNearestPoint(pe.point), profile: curr});
+            else{
+              candidates.e.push(curr.corns(2))
+            }
           }
 
         })) {
         return true;
+      }
+
+      if(candidates.b.length > 1){
+        candidates.b.some((ip) => {
+          if(check_outer(ip)){
+            this.cnn_point("b").is_cut = true;
+            return true;
+          }
+        })
+      }
+      if(candidates.e.length > 1){
+        candidates.e.forEach((ip) => {
+          if(check_outer(ip)){
+            this.cnn_point("e").is_cut = true;
+            return true;
+          }
+        })
       }
 
       return check_only ? false : {inner: tinner, outer: touter};
@@ -1913,31 +1949,39 @@ Profile.prototype.__define({
 	cnn_point: {
 		value: function(node, point){
 
-			var res = this.rays[node];
+			const res = this.rays[node];
+      const {cnn, profile, profile_point} = res;
 
-			if(!point)
-				point = this[node];
-
+			if(!point){
+        point = this[node];
+      }
 
 			// Если привязка не нарушена, возвращаем предыдущее значение
-			if(res.profile &&
-				res.profile.children.length &&
-				this.check_distance(res.profile, res, point, true) === false)
-				return res;
+			if(profile && profile.children.length){
+        if(this.check_distance(profile, res, point, true) === false){
+          return res;
+        }
+      }
 
 			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
 			res.clear();
 			if(this.parent){
-				var profiles = this.parent.profiles,
-					allow_open_cnn = this.project._dp.sys.allow_open_cnn,
-					ares = [];
+				const profiles = this.parent.profiles;
+				const allow_open_cnn = this.project._dp.sys.allow_open_cnn;
+				const ares = [];
 
-				for(var i=0; i<profiles.length; i++){
+				for(let i=0; i<profiles.length; i++){
 					if(this.check_distance(profiles[i], res, point, false) === false){
 
 						// для простых систем разрывы профиля не анализируем
-						if(!allow_open_cnn)
-							return res;
+						if(!allow_open_cnn){
+						  if(res.profile == profile && res.profile_point == profile_point){
+						    if(cnn && !cnn.empty() && res.cnn != cnn){
+                  res.cnn = cnn;
+                }
+              }
+              return res;
+            }
 
 						ares.push({
 							profile_point: res.profile_point,
@@ -1949,21 +1993,58 @@ Profile.prototype.__define({
 
 				if(ares.length == 1){
 					res._mixin(ares[0]);
-
-
-				}else if(ares.length >= 2){
-
-					// если в точке сходятся 3 и более профиля...
-					// и среди соединений нет углового диагонального, вероятно, мы находимся в разрыве - выбираем соединение с пустотой
-					res.clear();
-					res.is_cut = true;
 				}
-				ares = null;
+        // если в точке сходятся 3 и более профиля, ищем тот, который смотрит на нас под максимально прямым углом
+				else if(ares.length >= 2){
+          if(this.max_right_angle(ares)){
+            res._mixin(ares[0]);
+            res.is_cut = true;
+
+            // если установленное ранее соединение проходит по типу, нового не ищем
+            if(cnn && res.cnn_types && res.cnn_types.indexOf(cnn.cnn_type) != -1 ){
+              res.cnn = cnn;
+            }
+
+          }
+          // и среди соединений нет углового диагонального, вероятно, мы находимся в разрыве - выбираем соединение с пустотой
+          else{
+            res.clear();
+            res.is_cut = true;
+          }
+				}
 			}
 
 			return res;
 		}
 	},
+
+  max_right_angle: {
+	  value: function (ares) {
+	    const {generatrix} = this;
+	    let has_a = true;
+      ares.forEach((res) => {
+        res._angle = generatrix.angle_to(res.profile.generatrix, res.point);
+      });
+      ares.sort((a, b) => {
+        let aa = a._angle - 90;
+        let ab = b._angle - 90;
+        if(aa < 0){
+          aa += 180;
+        }
+        if(ab < 0){
+          ab += 180;
+        }
+        if(aa > 180){
+          aa -= 180;
+        }
+        if(ab > 180){
+          ab -= 180;
+        }
+        return aa - ab;
+      });
+      return has_a;
+    }
+  },
 
 	/**
 	 * Положение элемента в контуре

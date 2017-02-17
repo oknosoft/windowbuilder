@@ -155,13 +155,20 @@ $p.cat.cnns.__define({
         return curr_cnn;
       }
 
-      var cnns = this.nom_cnn(elm1, elm2, cnn_types);
+      const cnns = this.nom_cnn(elm1, elm2, cnn_types);
 
       // для примера подставляем первое попавшееся соединение
-      if(cnns.length)
+      if(cnns.length){
+        if(cnns.length > 1){
+          cnns.sort((a, b) => {
+            return a.priority - b.priority;
+          });
+        }
         return cnns[0];
+      }
+      // TODO: возможно, надо вернуть соединение с пустотой
       else{
-        // TODO: возможно, надо вернуть соединение с пустотой
+
       }
     }
   },

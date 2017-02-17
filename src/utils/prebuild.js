@@ -22,7 +22,7 @@ module.exports = function (package_data) {
 
 	var firstFile = null,
 		jstext = "",                    // в этой переменной будем накапливать текст модуля
-		$p = require('metadata-js');    // подключим метадату 'metadata-js'
+		$p = require('../../lib/metadata.core.js');    // подключим метадату 'metadata-js'
 
 
 	// установим параметры
