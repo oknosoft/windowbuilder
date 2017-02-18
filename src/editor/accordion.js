@@ -8,7 +8,6 @@
 
 "use strict";
 
-
 function EditorAccordion(_editor, cell_acc) {
 
 	cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);
@@ -46,11 +45,11 @@ function EditorAccordion(_editor, cell_acc) {
 			onclick: function (name) {
         switch (name) {
           case 'arc':
-            _editor.profile_radius()
+            _editor.profile_radius();
             break;
 
           case 'additional_inserts':
-            _editor.additional_inserts('elm')
+            _editor.additional_inserts('elm');
             break;
 
           default:
@@ -84,15 +83,17 @@ function EditorAccordion(_editor, cell_acc) {
 				switch(name) {
 
 					case 'new_stv':
-						var fillings = _editor.project.getItems({class: Filling, selected: true});
-						if(fillings.length)
-							fillings[0].create_leaf();
-						else
-							$p.msg.show_msg({
-								type: "alert-warning",
-								text: $p.msg.bld_new_stv_no_filling,
-								title: $p.msg.bld_new_stv
-							});
+						const fillings = _editor.project.getItems({class: Filling, selected: true});
+						if(fillings.length){
+              fillings[0].create_leaf();
+            }
+						else{
+              $p.msg.show_msg({
+                type: "alert-warning",
+                text: $p.msg.bld_new_stv_no_filling,
+                title: $p.msg.bld_new_stv
+              });
+            }
 						break;
 
 					case 'drop_layer':
@@ -168,47 +169,42 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		tree_layers = new function SchemeLayers() {
 
-			var tree = new dhtmlXTreeView({
+			const tree = new dhtmlXTreeView({
 				parent: cont.querySelector("[name=content_layers]"),
 				checkboxes: true,
 				multiselect: false
 			});
 
 			function layer_text(layer, bounds){
-				if(!bounds)
-					bounds = layer.bounds;
+				if(!bounds){
+          bounds = layer.bounds;
+        }
 				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr +
 					(bounds ? " " + bounds.width.toFixed() + "х" + bounds.height.toFixed() : "");
 			}
 
 			function load_layer(layer){
-
 				tree.addItem(
 					layer.cnstr,
 					layer_text(layer),
 					layer.parent ? layer.parent.cnstr : 0);
 
-
-				layer.children.forEach(function (l) {
-					if(l instanceof Contour)
-						load_layer(l);
-
-				});
-
+				layer.contours.forEach((l) => load_layer(l));
 			}
 
 			function observer(changes){
 
-				var synced;
+				let synced;
 
-				changes.forEach(function(change){
+				changes.forEach((change) => {
+
 					if ("constructions" == change.tabular){
 
 						synced = true;
 
 						// добавляем слои изделия
 						tree.clearAll();
-						_editor.project.contours.forEach(function (l) {
+						_editor.project.contours.forEach((l) => {
 							load_layer(l);
 							tree.checkItem(l.cnstr);
 							tree.openItem(l.cnstr);
@@ -216,13 +212,16 @@ function EditorAccordion(_editor, cell_acc) {
 						});
 
 						// служебный слой размеров
-						tree.addItem("sizes", "Размерные линии", 0);
+						tree.addItem("l_dimensions", "Размерные линии", 0);
+
+            // служебный слой соединителей
+            tree.addItem("l_connective", "Соединители", 0);
 
 						// служебный слой визуализации
-						tree.addItem("visualization", "Визуализация доп. элементов", 0);
+						tree.addItem("l_visualization", "Визуализация доп. элементов", 0);
 
 						// служебный слой текстовых комментариев
-						tree.addItem("text", "Комментарии", 0);
+						tree.addItem("l_text", "Комментарии", 0);
 
 					}
 				});
@@ -230,20 +229,22 @@ function EditorAccordion(_editor, cell_acc) {
 
 
 			this.drop_layer = function () {
-				var cnstr = tree.getSelectedId(), l;
+				let cnstr = tree.getSelectedId(), l;
 				if(cnstr){
 					l = _editor.project.getItem({cnstr: Number(cnstr)});
-				}else if(l = _editor.project.activeLayer){
+				}
+				else if(l = _editor.project.activeLayer){
 					cnstr = l.cnstr;
 				}
 				if(cnstr && l){
 					tree.deleteItem(cnstr);
 					cnstr = l.parent ? l.parent.cnstr : 0;
 					l.remove();
-					setTimeout(function () {
+					setTimeout(() => {
 						_editor.project.zoom_fit();
-						if(cnstr)
-							tree.selectItem(cnstr);
+						if(cnstr){
+              tree.selectItem(cnstr);
+            }
 					}, 100);
 				}
 			};
@@ -258,41 +259,48 @@ function EditorAccordion(_editor, cell_acc) {
 			};
 
 			// гасим-включаем слой по чекбоксу
-			tree.attachEvent("onCheck", function(id, state){
-				var l,
-					pid = tree.getParentId(id),
-					sub = tree.getSubItems(id);
+			tree.attachEvent("onCheck", (id, state) => {
+
+        const pid = tree.getParentId(id);
+        const sub = tree.getSubItems(id);
+
+				let l;
 
 				if(pid && state && !tree.isItemChecked(pid)){
-					if(l = _editor.project.getItem({cnstr: Number(pid)}))
-						l.visible = true;
+					if(l = _editor.project.getItem({cnstr: Number(pid)})){
+            l.visible = true;
+          }
 					tree.checkItem(pid);
 				}
 
-				if(l = _editor.project.getItem({cnstr: Number(id)}))
-					l.visible = !!state;
+				if(l = _editor.project.getItem({cnstr: Number(id)})){
+          l.visible = !!state;
+        }
 
-				if(typeof sub == "string")
-					sub = sub.split(",");
-				sub.forEach(function (id) {
+				if(typeof sub == "string"){
+          sub = sub.split(",");
+        }
+				sub.forEach((id) => {
 					state ? tree.checkItem(id) : tree.uncheckItem(id);
-					if(l = _editor.project.getItem({cnstr: Number(id)}))
-						l.visible = !!state;
+					if(l = _editor.project.getItem({cnstr: Number(id)})){
+            l.visible = !!state;
+          }
 				});
 
-				if(pid && state && !tree.isItemChecked(pid))
-					tree.checkItem(pid);
+				if(pid && state && !tree.isItemChecked(pid)){
+          tree.checkItem(pid);
+        }
 
 				_editor.project.register_update();
 
 			});
 
 			// делаем выделенный слой активным
-			tree.attachEvent("onSelect", function(id, mode){
+			tree.attachEvent("onSelect", (id, mode) => {
 				if(!mode){
           return;
         }
-				var contour = _editor.project.getItem({cnstr: Number(id)});
+				const contour = _editor.project.getItem({cnstr: Number(id)});
 				if(contour){
 					if(contour.project.activeLayer != contour){
             contour.activate(true);
@@ -301,7 +309,7 @@ function EditorAccordion(_editor, cell_acc) {
 				}
 			});
 
-			$p.eve.attachEvent("layer_activated", function (contour) {
+			$p.eve.attachEvent("layer_activated", (contour) => {
 				if(contour && contour.cnstr && contour.cnstr != tree.getSelectedId()){
 				  if(tree.items[contour.cnstr]){
             tree.selectItem(contour.cnstr);
@@ -311,7 +319,7 @@ function EditorAccordion(_editor, cell_acc) {
 			});
 
 			// начинаем следить за изменениями размеров при перерисовке контуров
-			$p.eve.attachEvent("contour_redrawed", function (contour, bounds) {
+			$p.eve.attachEvent("contour_redrawed", (contour, bounds) => {
 
 				const text = layer_text(contour, bounds);
 
@@ -330,9 +338,7 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		props = new (function SchemeProps(layout) {
 
-			var _obj,
-				_grid,
-				_reflect_id;
+			let _obj, _grid, _reflect_id;
 
 			function reflect_changes() {
 				_obj.len = _editor.project.bounds.width.round(0);
@@ -354,8 +360,8 @@ function EditorAccordion(_editor, cell_acc) {
 						if(_grid && _grid.destructor)
 							_grid.destructor();
 
-						var is_dialer = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") && !$p.current_acl.role_available("РедактированиеСкидок"),
-							oxml = {
+						const is_dialer = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") && !$p.current_acl.role_available("РедактированиеСкидок");
+						const oxml = {
 								"Свойства": ["sys","clr",
 								{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
 								{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
@@ -397,9 +403,9 @@ function EditorAccordion(_editor, cell_acc) {
 						});
 
 						// при готовности снапшота, обновляем суммы и цены
-						_on_snapshot = $p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
+						_on_snapshot = $p.eve.attachEvent("scheme_snapshot", (scheme, attr) => {
 							if(scheme == _editor.project && !attr.clipboard){
-								["price_internal","amount_internal","price","amount"].forEach(function (fld) {
+								["price_internal","amount_internal","price","amount"].forEach((fld) => {
 									_obj[fld] = scheme.data._calc_order_row[fld];
 								});
 							}
@@ -429,7 +435,7 @@ function EditorAccordion(_editor, cell_acc) {
 			});
 
 			// начинаем следить за изменениями размеров при перерисовке контуров
-			$p.eve.attachEvent("contour_redrawed", function () {
+			$p.eve.attachEvent("contour_redrawed", () => {
 				if(_obj){
 					if(_reflect_id)
 						clearTimeout(_reflect_id);
@@ -461,17 +467,20 @@ function EditorAccordion(_editor, cell_acc) {
 		 */
 		stv = new (function StvProps(layout) {
 
-			var t = this, _grid, _evts = [];
+			const t = this;
+			const _evts = [];
+			let _grid;
 
 			this.__define({
 
 				attache: {
 					value: function (obj) {
 
-						if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
-							return;
+						if(!obj || !obj.cnstr || (_grid && _grid._obj === obj)){
+              return;
+            }
 
-						var attr = {
+						const attr = {
 							obj: obj,
 							oxml: {
 								"Фурнитура": ["furn", "direction", "h_ruch"],
@@ -493,9 +502,10 @@ function EditorAccordion(_editor, cell_acc) {
             }
 
 						if(!obj.parent){
-							var rids = _grid.getAllRowIds();
-							if(rids)
-								_grid.closeItem(rids.split(",")[0]);
+							const rids = _grid.getAllRowIds();
+							if(rids){
+                _grid.closeItem(rids.split(",")[0]);
+              }
 						}
 
 						setTimeout(t.set_sizes, 200);
@@ -505,8 +515,7 @@ function EditorAccordion(_editor, cell_acc) {
 				set_sizes: {
 
 					value: function (do_reload) {
-						if(do_reload)
-							_grid.reload();
+						do_reload && _grid.reload();
 						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + "px";
 						layout.setSizes();
 						_grid.objBox.style.width = "100%";
@@ -515,7 +524,7 @@ function EditorAccordion(_editor, cell_acc) {
 
 				unload: {
 					value: function () {
-						_evts.forEach(function (eid) {
+						_evts.forEach((eid) => {
 							$p.eve.detachEvent(eid);
 						});
 						layout.unload();
@@ -586,7 +595,7 @@ function EditorAccordion(_editor, cell_acc) {
 	};
 
 	this.resize_canvas = function () {
-		var scroller = $(cont, '.scroller').baron();
+		const scroller = $(cont, '.scroller').baron();
 		scroller.update();
 		this.elm.setSizes();
 		props.layout.setSizes();

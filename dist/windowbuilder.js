@@ -1259,7 +1259,6 @@ baron.fn.log = function(level, msg, nodes) {
 
 "use strict";
 
-
 function EditorAccordion(_editor, cell_acc) {
 
 	cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);
@@ -1289,11 +1288,11 @@ function EditorAccordion(_editor, cell_acc) {
 			onclick: function (name) {
         switch (name) {
           case 'arc':
-            _editor.profile_radius()
+            _editor.profile_radius();
             break;
 
           case 'additional_inserts':
-            _editor.additional_inserts('elm')
+            _editor.additional_inserts('elm');
             break;
 
           default:
@@ -1324,15 +1323,17 @@ function EditorAccordion(_editor, cell_acc) {
 				switch(name) {
 
 					case 'new_stv':
-						var fillings = _editor.project.getItems({class: Filling, selected: true});
-						if(fillings.length)
-							fillings[0].create_leaf();
-						else
-							$p.msg.show_msg({
-								type: "alert-warning",
-								text: $p.msg.bld_new_stv_no_filling,
-								title: $p.msg.bld_new_stv
-							});
+						const fillings = _editor.project.getItems({class: Filling, selected: true});
+						if(fillings.length){
+              fillings[0].create_leaf();
+            }
+						else{
+              $p.msg.show_msg({
+                type: "alert-warning",
+                text: $p.msg.bld_new_stv_no_filling,
+                title: $p.msg.bld_new_stv
+              });
+            }
 						break;
 
 					case 'drop_layer':
@@ -1398,57 +1399,54 @@ function EditorAccordion(_editor, cell_acc) {
 
 		tree_layers = new function SchemeLayers() {
 
-			var tree = new dhtmlXTreeView({
+			const tree = new dhtmlXTreeView({
 				parent: cont.querySelector("[name=content_layers]"),
 				checkboxes: true,
 				multiselect: false
 			});
 
 			function layer_text(layer, bounds){
-				if(!bounds)
-					bounds = layer.bounds;
+				if(!bounds){
+          bounds = layer.bounds;
+        }
 				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr +
 					(bounds ? " " + bounds.width.toFixed() + "х" + bounds.height.toFixed() : "");
 			}
 
 			function load_layer(layer){
-
 				tree.addItem(
 					layer.cnstr,
 					layer_text(layer),
 					layer.parent ? layer.parent.cnstr : 0);
 
-
-				layer.children.forEach(function (l) {
-					if(l instanceof Contour)
-						load_layer(l);
-
-				});
-
+				layer.contours.forEach((l) => load_layer(l));
 			}
 
 			function observer(changes){
 
-				var synced;
+				let synced;
 
-				changes.forEach(function(change){
+				changes.forEach((change) => {
+
 					if ("constructions" == change.tabular){
 
 						synced = true;
 
 						tree.clearAll();
-						_editor.project.contours.forEach(function (l) {
+						_editor.project.contours.forEach((l) => {
 							load_layer(l);
 							tree.checkItem(l.cnstr);
 							tree.openItem(l.cnstr);
 
 						});
 
-						tree.addItem("sizes", "Размерные линии", 0);
+						tree.addItem("l_dimensions", "Размерные линии", 0);
 
-						tree.addItem("visualization", "Визуализация доп. элементов", 0);
+            tree.addItem("l_connective", "Соединители", 0);
 
-						tree.addItem("text", "Комментарии", 0);
+						tree.addItem("l_visualization", "Визуализация доп. элементов", 0);
+
+						tree.addItem("l_text", "Комментарии", 0);
 
 					}
 				});
@@ -1456,20 +1454,22 @@ function EditorAccordion(_editor, cell_acc) {
 
 
 			this.drop_layer = function () {
-				var cnstr = tree.getSelectedId(), l;
+				let cnstr = tree.getSelectedId(), l;
 				if(cnstr){
 					l = _editor.project.getItem({cnstr: Number(cnstr)});
-				}else if(l = _editor.project.activeLayer){
+				}
+				else if(l = _editor.project.activeLayer){
 					cnstr = l.cnstr;
 				}
 				if(cnstr && l){
 					tree.deleteItem(cnstr);
 					cnstr = l.parent ? l.parent.cnstr : 0;
 					l.remove();
-					setTimeout(function () {
+					setTimeout(() => {
 						_editor.project.zoom_fit();
-						if(cnstr)
-							tree.selectItem(cnstr);
+						if(cnstr){
+              tree.selectItem(cnstr);
+            }
 					}, 100);
 				}
 			};
@@ -1482,40 +1482,47 @@ function EditorAccordion(_editor, cell_acc) {
 				Object.unobserve(_editor.project._noti, observer);
 			};
 
-			tree.attachEvent("onCheck", function(id, state){
-				var l,
-					pid = tree.getParentId(id),
-					sub = tree.getSubItems(id);
+			tree.attachEvent("onCheck", (id, state) => {
+
+        const pid = tree.getParentId(id);
+        const sub = tree.getSubItems(id);
+
+				let l;
 
 				if(pid && state && !tree.isItemChecked(pid)){
-					if(l = _editor.project.getItem({cnstr: Number(pid)}))
-						l.visible = true;
+					if(l = _editor.project.getItem({cnstr: Number(pid)})){
+            l.visible = true;
+          }
 					tree.checkItem(pid);
 				}
 
-				if(l = _editor.project.getItem({cnstr: Number(id)}))
-					l.visible = !!state;
+				if(l = _editor.project.getItem({cnstr: Number(id)})){
+          l.visible = !!state;
+        }
 
-				if(typeof sub == "string")
-					sub = sub.split(",");
-				sub.forEach(function (id) {
+				if(typeof sub == "string"){
+          sub = sub.split(",");
+        }
+				sub.forEach((id) => {
 					state ? tree.checkItem(id) : tree.uncheckItem(id);
-					if(l = _editor.project.getItem({cnstr: Number(id)}))
-						l.visible = !!state;
+					if(l = _editor.project.getItem({cnstr: Number(id)})){
+            l.visible = !!state;
+          }
 				});
 
-				if(pid && state && !tree.isItemChecked(pid))
-					tree.checkItem(pid);
+				if(pid && state && !tree.isItemChecked(pid)){
+          tree.checkItem(pid);
+        }
 
 				_editor.project.register_update();
 
 			});
 
-			tree.attachEvent("onSelect", function(id, mode){
+			tree.attachEvent("onSelect", (id, mode) => {
 				if(!mode){
           return;
         }
-				var contour = _editor.project.getItem({cnstr: Number(id)});
+				const contour = _editor.project.getItem({cnstr: Number(id)});
 				if(contour){
 					if(contour.project.activeLayer != contour){
             contour.activate(true);
@@ -1524,7 +1531,7 @@ function EditorAccordion(_editor, cell_acc) {
 				}
 			});
 
-			$p.eve.attachEvent("layer_activated", function (contour) {
+			$p.eve.attachEvent("layer_activated", (contour) => {
 				if(contour && contour.cnstr && contour.cnstr != tree.getSelectedId()){
 				  if(tree.items[contour.cnstr]){
             tree.selectItem(contour.cnstr);
@@ -1533,7 +1540,7 @@ function EditorAccordion(_editor, cell_acc) {
 				}
 			});
 
-			$p.eve.attachEvent("contour_redrawed", function (contour, bounds) {
+			$p.eve.attachEvent("contour_redrawed", (contour, bounds) => {
 
 				const text = layer_text(contour, bounds);
 
@@ -1549,9 +1556,7 @@ function EditorAccordion(_editor, cell_acc) {
 
 		props = new (function SchemeProps(layout) {
 
-			var _obj,
-				_grid,
-				_reflect_id;
+			let _obj, _grid, _reflect_id;
 
 			function reflect_changes() {
 				_obj.len = _editor.project.bounds.width.round(0);
@@ -1572,8 +1577,8 @@ function EditorAccordion(_editor, cell_acc) {
 						if(_grid && _grid.destructor)
 							_grid.destructor();
 
-						var is_dialer = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") && !$p.current_acl.role_available("РедактированиеСкидок"),
-							oxml = {
+						const is_dialer = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") && !$p.current_acl.role_available("РедактированиеСкидок");
+						const oxml = {
 								"Свойства": ["sys","clr",
 								{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
 								{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
@@ -1614,9 +1619,9 @@ function EditorAccordion(_editor, cell_acc) {
 							}
 						});
 
-						_on_snapshot = $p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
+						_on_snapshot = $p.eve.attachEvent("scheme_snapshot", (scheme, attr) => {
 							if(scheme == _editor.project && !attr.clipboard){
-								["price_internal","amount_internal","price","amount"].forEach(function (fld) {
+								["price_internal","amount_internal","price","amount"].forEach((fld) => {
 									_obj[fld] = scheme.data._calc_order_row[fld];
 								});
 							}
@@ -1645,7 +1650,7 @@ function EditorAccordion(_editor, cell_acc) {
 
 			});
 
-			$p.eve.attachEvent("contour_redrawed", function () {
+			$p.eve.attachEvent("contour_redrawed", () => {
 				if(_obj){
 					if(_reflect_id)
 						clearTimeout(_reflect_id);
@@ -1674,17 +1679,20 @@ function EditorAccordion(_editor, cell_acc) {
 
 		stv = new (function StvProps(layout) {
 
-			var t = this, _grid, _evts = [];
+			const t = this;
+			const _evts = [];
+			let _grid;
 
 			this.__define({
 
 				attache: {
 					value: function (obj) {
 
-						if(!obj || !obj.cnstr || (_grid && _grid._obj === obj))
-							return;
+						if(!obj || !obj.cnstr || (_grid && _grid._obj === obj)){
+              return;
+            }
 
-						var attr = {
+						const attr = {
 							obj: obj,
 							oxml: {
 								"Фурнитура": ["furn", "direction", "h_ruch"],
@@ -1706,9 +1714,10 @@ function EditorAccordion(_editor, cell_acc) {
             }
 
 						if(!obj.parent){
-							var rids = _grid.getAllRowIds();
-							if(rids)
-								_grid.closeItem(rids.split(",")[0]);
+							const rids = _grid.getAllRowIds();
+							if(rids){
+                _grid.closeItem(rids.split(",")[0]);
+              }
 						}
 
 						setTimeout(t.set_sizes, 200);
@@ -1718,8 +1727,7 @@ function EditorAccordion(_editor, cell_acc) {
 				set_sizes: {
 
 					value: function (do_reload) {
-						if(do_reload)
-							_grid.reload();
+						do_reload && _grid.reload();
 						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + "px";
 						layout.setSizes();
 						_grid.objBox.style.width = "100%";
@@ -1728,7 +1736,7 @@ function EditorAccordion(_editor, cell_acc) {
 
 				unload: {
 					value: function () {
-						_evts.forEach(function (eid) {
+						_evts.forEach((eid) => {
 							$p.eve.detachEvent(eid);
 						});
 						layout.unload();
@@ -1782,7 +1790,7 @@ function EditorAccordion(_editor, cell_acc) {
 	};
 
 	this.resize_canvas = function () {
-		var scroller = $(cont, '.scroller').baron();
+		const scroller = $(cont, '.scroller').baron();
 		scroller.update();
 		this.elm.setSizes();
 		props.layout.setSizes();
@@ -5065,84 +5073,70 @@ DimensionLine.prototype.__define({
 
 });
 
-function DimensionLayer(attr) {
+class DimensionLayer extends paper.Layer {
 
-	DimensionLayer.superclass.constructor.call(this);
-
-	if(!attr || !attr.parent){
-		this.__define({
-			bounds: {
-				get: function () {
-					return this.project.bounds;
-				}
-			}
-		});
-	}
-}
-DimensionLayer._extend(paper.Layer);
-
-
-function DimensionLineCustom(attr) {
-
-	if(!attr.row)
-		attr.row = attr.parent.project.ox.coordinates.add();
-
-	if(!attr.row.cnstr)
-		attr.row.cnstr = attr.parent.layer.cnstr;
-
-	if(!attr.row.elm)
-		attr.row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
-
-	DimensionLineCustom.superclass.constructor.call(this, attr);
-
-	this.on({
-		mouseenter: this._mouseenter,
-		mouseleave: this._mouseleave,
-		click: this._click
-	});
+  get bounds() {
+    return this.project.bounds;
+  }
 
 }
-DimensionLineCustom._extend(DimensionLine);
-
-DimensionLineCustom.prototype.__define({
-
-	save_coordinates: {
-		value: function () {
-
-			var _row = this._row;
-
-			_row.len = this.size;
-
-			_row.elm_type = this.elm_type;
-
-			_row.path_data = JSON.stringify({
-				pos: this.pos,
-				elm1: this.data.elm1.elm,
-				elm2: this.data.elm2.elm,
-				p1: this.data.p1,
-				p2: this.data.p2,
-				offset: this.offset
-			});
-
-		}
-	},
-
-	elm_type: {
-		get : function(){
-
-			return $p.enm.elm_types.Размер;
-
-		}
-	},
 
 
-	_click: {
-		value: function (event) {
-			event.stop();
-			this.selected = true;
-		}
-	}
-});
+class DimensionLineCustom extends DimensionLine {
+
+  constructor(attr) {
+
+    if(!attr.row){
+      attr.row = attr.parent.project.ox.coordinates.add();
+    }
+
+    if(!attr.row.cnstr){
+      attr.row.cnstr = attr.parent.layer.cnstr;
+    }
+
+    if(!attr.row.elm){
+      attr.row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+    }
+
+    super(attr);
+
+    this.on({
+      mouseenter: this._mouseenter,
+      mouseleave: this._mouseleave,
+      click: this._click
+    });
+
+  }
+
+  get elm_type() {
+    return $p.enm.elm_types.Размер;
+  }
+
+  save_coordinates() {
+    var _row = this._row;
+
+    _row.len = this.size;
+
+    _row.elm_type = this.elm_type;
+
+    _row.path_data = JSON.stringify({
+      pos: this.pos,
+      elm1: this.data.elm1.elm,
+      elm2: this.data.elm2.elm,
+      p1: this.data.p1,
+      p2: this.data.p2,
+      offset: this.offset
+    });
+  }
+
+  _click(event) {
+    event.stop();
+    this.selected = true;
+  }
+
+
+}
+
 
 
 
@@ -7981,38 +7975,41 @@ Profile.prototype.__define({
 	nearest: {
 		value : function(ignore_cnn){
 
-			const _profile = this;
-			const {b, e, data, layer} = this;
+			const {b, e, data, layer, project} = this;
+			const {_nearest} = data;
 
-			function check_nearest(){
+      const check_nearest = () => {
 				if(data._nearest){
 					const {generatrix} = data._nearest;
 					if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
 					  if(!ignore_cnn){
-              data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
+              data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
             }
 						return true;
 					}
 				}
         data._nearest = null;
         data._nearest_cnn = null;
-			}
+			};
 
-			if(layer && layer.parent){
-				if(!check_nearest()){
-				  if(layer.parent.children.some((elm) => {
-            if((data._nearest = elm) instanceof Profile && check_nearest()){
-              return data._nearest;
-            }
-            else{
-              data._nearest = null;
-            }
-          })){
-            return data._nearest
-          }
-				}
-			}else{
-        data._nearest = null;
+			const find_nearest = (children) => children.some((elm) => {
+        if(_nearest == elm){
+          return
+        }
+        if((data._nearest = elm) instanceof Profile && check_nearest()){
+          return data._nearest
+        }
+        else{
+          data._nearest = null
+        }
+      });
+
+      if(layer && !check_nearest()){
+        if(layer.parent){
+          find_nearest(layer.parent.children)
+        }else{
+          find_nearest(project.l_connective.children)
+        }
       }
 
 			return data._nearest;
@@ -8717,6 +8714,10 @@ ProfileConnective.prototype.__define({
 	}
 
 });
+
+class ConnectiveLayer extends paper.Layer {
+
+}
 
 
 function Onlay(attr){
@@ -9566,27 +9567,40 @@ Scheme.prototype.__define({
 	l_dimensions: {
 		get: function () {
 
-			var curr;
+      const {activeLayer, data} = this;
 
-			if(!this.data.l_dimensions){
-				curr = this.activeLayer;
-				this.data.l_dimensions = new DimensionLayer();
-				if(curr){
-          this._activeLayer = curr;
-        }
-			}
+      if(!data.l_dimensions){
+				data.l_dimensions = new DimensionLayer();
+      }
+      if(!data.l_dimensions.isInserted()){
+        this.addLayer(data.l_dimensions);
+      }
+      if(activeLayer){
+        this._activeLayer = activeLayer;
+      }
 
-			if(!this.data.l_dimensions.isInserted()){
-				curr = this.activeLayer;
-				this.addLayer(this.data.l_dimensions);
-				if(curr){
-          this._activeLayer = curr;
-        }
-			}
-
-			return this.data.l_dimensions;
+			return data.l_dimensions;
 		}
 	},
+
+  l_connective: {
+    get: function () {
+
+      const {activeLayer, data} = this;
+
+      if(!data.l_connective){
+        data.l_connective = new ConnectiveLayer();
+      }
+      if(!data.l_connective.isInserted()){
+        this.addLayer(data.l_connective);
+      }
+      if(activeLayer){
+        this._activeLayer = activeLayer;
+      }
+
+      return data.l_connective;
+    }
+  },
 
 	draw_sizes: {
 		value: function () {

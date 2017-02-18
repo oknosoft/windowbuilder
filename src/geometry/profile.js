@@ -1727,38 +1727,41 @@ Profile.prototype.__define({
 	nearest: {
 		value : function(ignore_cnn){
 
-			const _profile = this;
-			const {b, e, data, layer} = this;
+			const {b, e, data, layer, project} = this;
+			const {_nearest} = data;
 
-			function check_nearest(){
+      const check_nearest = () => {
 				if(data._nearest){
 					const {generatrix} = data._nearest;
 					if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
 					  if(!ignore_cnn){
-              data._nearest_cnn = $p.cat.cnns.elm_cnn(_profile, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
+              data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
             }
 						return true;
 					}
 				}
         data._nearest = null;
         data._nearest_cnn = null;
-			}
+			};
 
-			if(layer && layer.parent){
-				if(!check_nearest()){
-				  if(layer.parent.children.some((elm) => {
-            if((data._nearest = elm) instanceof Profile && check_nearest()){
-              return data._nearest;
-            }
-            else{
-              data._nearest = null;
-            }
-          })){
-            return data._nearest
-          }
-				}
-			}else{
-        data._nearest = null;
+			const find_nearest = (children) => children.some((elm) => {
+        if(_nearest == elm){
+          return
+        }
+        if((data._nearest = elm) instanceof Profile && check_nearest()){
+          return data._nearest
+        }
+        else{
+          data._nearest = null
+        }
+      });
+
+      if(layer && !check_nearest()){
+        if(layer.parent){
+          find_nearest(layer.parent.children)
+        }else{
+          find_nearest(project.l_connective.children)
+        }
       }
 
 			return data._nearest;

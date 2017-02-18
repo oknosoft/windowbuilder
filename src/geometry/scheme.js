@@ -894,27 +894,48 @@ Scheme.prototype.__define({
 	l_dimensions: {
 		get: function () {
 
-			var curr;
+      const {activeLayer, data} = this;
 
-			if(!this.data.l_dimensions){
-				curr = this.activeLayer;
-				this.data.l_dimensions = new DimensionLayer();
-				if(curr){
-          this._activeLayer = curr;
-        }
-			}
+      if(!data.l_dimensions){
+				data.l_dimensions = new DimensionLayer();
+      }
+      if(!data.l_dimensions.isInserted()){
+        this.addLayer(data.l_dimensions);
+      }
+      if(activeLayer){
+        this._activeLayer = activeLayer;
+      }
 
-			if(!this.data.l_dimensions.isInserted()){
-				curr = this.activeLayer;
-				this.addLayer(this.data.l_dimensions);
-				if(curr){
-          this._activeLayer = curr;
-        }
-			}
-
-			return this.data.l_dimensions;
+			return data.l_dimensions;
 		}
 	},
+
+  /**
+   * ### Служебный слой соединительных профилей
+   *
+   * @property l_connective
+   * @for Scheme
+   * @type ConnectiveLayer
+   * @final
+   */
+  l_connective: {
+    get: function () {
+
+      const {activeLayer, data} = this;
+
+      if(!data.l_connective){
+        data.l_connective = new ConnectiveLayer();
+      }
+      if(!data.l_connective.isInserted()){
+        this.addLayer(data.l_connective);
+      }
+      if(activeLayer){
+        this._activeLayer = activeLayer;
+      }
+
+      return data.l_connective;
+    }
+  },
 
 	/**
 	 * ### Создаёт и перерисовавает габаритные линии изделия

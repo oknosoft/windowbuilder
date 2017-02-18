@@ -408,21 +408,13 @@ DimensionLine.prototype.__define({
  * @param attr
  * @constructor
  */
-function DimensionLayer(attr) {
+class DimensionLayer extends paper.Layer {
 
-	DimensionLayer.superclass.constructor.call(this);
+  get bounds() {
+    return this.project.bounds;
+  }
 
-	if(!attr || !attr.parent){
-		this.__define({
-			bounds: {
-				get: function () {
-					return this.project.bounds;
-				}
-			}
-		});
-	}
 }
-DimensionLayer._extend(paper.Layer);
 
 
 /**
@@ -432,77 +424,70 @@ DimensionLayer._extend(paper.Layer);
  * @param attr
  * @constructor
  */
-function DimensionLineCustom(attr) {
+class DimensionLineCustom extends DimensionLine {
 
-	if(!attr.row)
-		attr.row = attr.parent.project.ox.coordinates.add();
+  constructor(attr) {
 
-	// слой, которому принадлежит размерная линия
-	if(!attr.row.cnstr)
-		attr.row.cnstr = attr.parent.layer.cnstr;
+    if(!attr.row){
+      attr.row = attr.parent.project.ox.coordinates.add();
+    }
 
-	// номер элемента
-	if(!attr.row.elm)
-		attr.row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+    // слой, которому принадлежит размерная линия
+    if(!attr.row.cnstr){
+      attr.row.cnstr = attr.parent.layer.cnstr;
+    }
 
-	DimensionLineCustom.superclass.constructor.call(this, attr);
+    // номер элемента
+    if(!attr.row.elm){
+      attr.row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+    }
 
-	this.on({
-		mouseenter: this._mouseenter,
-		mouseleave: this._mouseleave,
-		click: this._click
-	});
+    super(attr);
+
+    this.on({
+      mouseenter: this._mouseenter,
+      mouseleave: this._mouseleave,
+      click: this._click
+    });
+
+  }
+
+  /**
+   * Возвращает тип элемента (размерная линия)
+   */
+  get elm_type() {
+    return $p.enm.elm_types.Размер;
+  }
+
+  /**
+   * Вычисляемые поля в таблице координат
+   * @method save_coordinates
+   */
+  save_coordinates() {
+    var _row = this._row;
+
+    // сохраняем размер
+    _row.len = this.size;
+
+    // устанавливаем тип элемента
+    _row.elm_type = this.elm_type;
+
+    // сериализованные данные
+    _row.path_data = JSON.stringify({
+      pos: this.pos,
+      elm1: this.data.elm1.elm,
+      elm2: this.data.elm2.elm,
+      p1: this.data.p1,
+      p2: this.data.p2,
+      offset: this.offset
+    });
+  }
+
+  _click(event) {
+    event.stop();
+    this.selected = true;
+  }
+
 
 }
-DimensionLineCustom._extend(DimensionLine);
 
-DimensionLineCustom.prototype.__define({
-
-	/**
-	 * Вычисляемые поля в таблице координат
-	 * @method save_coordinates
-	 * @for DimensionLineCustom
-	 */
-	save_coordinates: {
-		value: function () {
-
-			var _row = this._row;
-
-			// сохраняем размер
-			_row.len = this.size;
-
-			// устанавливаем тип элемента
-			_row.elm_type = this.elm_type;
-
-			// сериализованные данные
-			_row.path_data = JSON.stringify({
-				pos: this.pos,
-				elm1: this.data.elm1.elm,
-				elm2: this.data.elm2.elm,
-				p1: this.data.p1,
-				p2: this.data.p2,
-				offset: this.offset
-			});
-
-		}
-	},
-
-	/**
-	 * Возвращает тип элемента (размерная линия)
-	 */
-	elm_type: {
-		get : function(){
-
-			return $p.enm.elm_types.Размер;
-
-		}
-	},
-
-
-	_click: {
-		value: function (event) {
-			event.stop();
-			this.selected = true;
-		}
-	}
-});

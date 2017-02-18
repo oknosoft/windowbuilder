@@ -6,7 +6,7 @@
  *
  * @author	Evgeniy Malyarov
  * @module geometry
- * @submodule profile_addl
+ * @submodule profile_connective
  */
 
 
@@ -183,3 +183,15 @@ ProfileConnective.prototype.__define({
 	}
 
 });
+
+/**
+ * ### Служебный слой соединительных профилей
+ * Унаследован от [paper.Layer](http://paperjs.org/reference/layer/)
+ *
+ * @class ConnectiveLayer
+ * @extends paper.Layer
+ * @constructor
+ */
+class ConnectiveLayer extends paper.Layer {
+
+}
