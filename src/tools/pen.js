@@ -104,6 +104,16 @@ class PenControls {
 
   mousemove(event, ignore_pos) {
 
+    const {elm_type} = this._tool.profile;
+
+    if(elm_type == $p.enm.elm_types.Добор || elm_type == $p.enm.elm_types.Соединитель){
+      this._cont.style.display = "none";
+      return;
+    }
+    else{
+      this._cont.style.display = "";
+    }
+
     const bounds = paper.project.bounds;
     const pos = ignore_pos || paper.project.view.projectToView(event.point);
 
@@ -191,6 +201,7 @@ class ToolPen extends ToolElement {
           caption: "Новый сегмент профиля",
           width: 320,
           height: 240,
+          allow_close: true,
           bind_generatrix: true,
           bind_node: false,
           inset: "",
@@ -219,9 +230,12 @@ class ToolPen extends ToolElement {
 
       // восстанавливаем сохранённые параметры
       $p.wsql.restore_options("editor", tool.options);
-      ["elm_type","inset","bind_generatrix","bind_node"].forEach(function (prop) {
-        if(prop == "bind_generatrix" || prop == "bind_node" || tool.options.wnd[prop])
+      tool.options.wnd.on_close = tool.on_close;
+
+      ["elm_type","inset","bind_generatrix","bind_node"].forEach((prop) => {
+        if(prop == "bind_generatrix" || prop == "bind_node" || tool.options.wnd[prop]){
           tool.profile[prop] = tool.options.wnd[prop];
+        }
       });
 
       // если в текущем слое есть профили, выбираем импост
@@ -312,9 +326,7 @@ class ToolPen extends ToolElement {
         opt.bind_generatrix = tool.profile.bind_generatrix;
         opt.bind_node = tool.profile.bind_node;
       }
-
     }
-
 
     tool.on({
 
@@ -537,7 +549,7 @@ class ToolPen extends ToolElement {
         this.hitTest(event);
 
         // елси есть addl_hit - рисуем прототип элемента
-        if(this.addl_hit && this.addl_hit.glass){
+        if(this.addl_hit){
 
           if (!this.path){
             this.path = new paper.Path({
@@ -550,42 +562,14 @@ class ToolPen extends ToolElement {
 
           this.path.removeSegments();
 
-          // находим 2 точки на примыкающем профиле и 2 точки на предыдущем и последующем сегментах
-          var profiles = this.addl_hit.glass.profiles,
-            prev = this.addl_hit.rib==0 ? profiles[profiles.length-1] : profiles[this.addl_hit.rib-1],
-            curr = profiles[this.addl_hit.rib],
-            next = this.addl_hit.rib==profiles.length-1 ? profiles[0] : profiles[this.addl_hit.rib+1];
-
-          var path_prev = prev.outer ? prev.profile.rays.outer : prev.profile.rays.inner,
-            path_curr = curr.outer ? curr.profile.rays.outer : curr.profile.rays.inner,
-            path_next = next.outer ? next.profile.rays.outer : next.profile.rays.inner;
-
-          var p1 = path_curr.intersect_point(path_prev, curr.b),
-            p2 = path_curr.intersect_point(path_next, curr.e),
-            sub_path = path_curr.get_subpath(p1, p2);
-
-          // рисуем внушнюю часть прототипа пути доборного профиля
-          this.path.addSegments(sub_path.segments);
-
-          // завершим рисование прототипа пути доборного профиля
-          sub_path = sub_path.equidistant(-(this.profile.inset.nom().width || 20));
-          sub_path.reverse();
-          this.path.addSegments(sub_path.segments);
-          sub_path.removeSegments();
-          sub_path.remove();
-          this.path.closePath();
-
-          // получаем generatrix
-          if(!this.addl_hit.generatrix){
-            this.addl_hit.generatrix = new paper.Path({insert: false});
+          if(this.addl_hit.glass){
+            this.draw_addl()
           }
-          p1 = prev.profile.generatrix.getNearestPoint(p1);
-          p2 = next.profile.generatrix.getNearestPoint(p2);
-          this.addl_hit.generatrix.removeSegments();
-          this.addl_hit.generatrix.addSegments(path_curr.get_subpath(p1, p2).segments);
-
-
-        }else if(this.path){
+          else{
+            this.draw_connective()
+          }
+        }
+        else if(this.path){
 
           if(this.mode){
 
@@ -733,7 +717,8 @@ class ToolPen extends ToolElement {
               this.path.selected = true;
             }
 
-          }else{
+          }
+          else{
             this.path.removeSegments();
             this.path.remove();
             this.path = null;
@@ -743,7 +728,6 @@ class ToolPen extends ToolElement {
             paper.project.register_update();
           }
         }
-
       },
 
       keydown: this.keydown
@@ -752,94 +736,211 @@ class ToolPen extends ToolElement {
 
   }
 
-  hitTest(event) {
+  draw_addl() {
 
-    var hitSize = 16;
+    // находим 2 точки на примыкающем профиле и 2 точки на предыдущем и последующем сегментах
+    const {profiles} = this.addl_hit.glass;
+    const prev = this.addl_hit.rib==0 ? profiles[profiles.length-1] : profiles[this.addl_hit.rib-1];
+    const curr = profiles[this.addl_hit.rib];
+    const next = this.addl_hit.rib==profiles.length-1 ? profiles[0] : profiles[this.addl_hit.rib+1];
+
+    const path_prev = prev.outer ? prev.profile.rays.outer : prev.profile.rays.inner;
+    const path_curr = curr.outer ? curr.profile.rays.outer : curr.profile.rays.inner;
+    const path_next = next.outer ? next.profile.rays.outer : next.profile.rays.inner;
+
+    let p1 = path_curr.intersect_point(path_prev, curr.b),
+      p2 = path_curr.intersect_point(path_next, curr.e),
+      sub_path = path_curr.get_subpath(p1, p2);
+
+    // рисуем внешнюю часть прототипа пути доборного профиля
+    this.path.addSegments(sub_path.segments);
+
+    // завершим рисование прототипа пути доборного профиля
+    sub_path = sub_path.equidistant(-(this.profile.inset.nom().width || 20));
+    sub_path.reverse();
+    this.path.addSegments(sub_path.segments);
+    sub_path.removeSegments();
+    sub_path.remove();
+    this.path.closePath();
+
+    // получаем generatrix
+    if(!this.addl_hit.generatrix){
+      this.addl_hit.generatrix = new paper.Path({insert: false});
+    }
+    p1 = prev.profile.generatrix.getNearestPoint(p1);
+    p2 = next.profile.generatrix.getNearestPoint(p2);
+    this.addl_hit.generatrix.removeSegments();
+    this.addl_hit.generatrix.addSegments(path_curr.get_subpath(p1, p2).segments);
+
+  }
+
+  draw_connective() {
+
+    const {rays, b, e} = this.addl_hit.profile;
+
+    let sub_path = rays.outer.get_subpath(b, e);
+
+    // получаем generatrix
+    if(!this.addl_hit.generatrix){
+      this.addl_hit.generatrix = new paper.Path({insert: false});
+    }
+    this.addl_hit.generatrix.removeSegments();
+    this.addl_hit.generatrix.addSegments(sub_path.segments);
+
+    // рисуем внутреннюю часть прототипа пути доборного профиля
+    this.path.addSegments(sub_path.equidistant(this.profile.inset.nom().width / 2 || 10).segments);
+
+    // завершим рисование прототипа пути доборного профиля
+    sub_path = sub_path.equidistant(-(this.profile.inset.nom().width || 10));
+    sub_path.reverse();
+    this.path.addSegments(sub_path.segments);
+    sub_path.removeSegments();
+    sub_path.remove();
+    this.path.closePath();
+
+  }
+
+  hitTest_addl(event) {
+
+    const hitSize = 16;
+
+    if (event.point){
+      this.hitItem = paper.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+    }
+
+    if (this.hitItem) {
+
+      if(this.hitItem.item.layer == paper.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+        // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
+
+        const hit = {
+          point: this.hitItem.point,
+          profile: this.hitItem.item.parent
+        };
+
+        // выясним, с какой стороны примыкает профиль
+        if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
+          hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true)){
+          hit.side = "inner";
+        }
+        else{
+          hit.side = "outer";
+        }
+
+        // бежим по всем заполнениям и находим ребро
+        hit.profile.layer.glasses(false, true).some((glass) => {
+          return glass.profiles.some((rib, index) => {
+            if(rib.profile == hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)){
+              if(hit.side == "outer" && rib.outer || hit.side == "inner" && !rib.outer){
+                hit.rib = index;
+                hit.glass = glass;
+                return true;
+              }
+            }
+          })
+
+        });
+
+        if(hit.glass){
+          this.addl_hit = hit;
+          paper.canvas_cursor('cursor-pen-adjust');
+        }
+
+      }
+      else if(this.hitItem.item.parent instanceof Filling){
+        // для заполнения, ищем ребро и примыкающий профиль
+
+        // this.addl_hit = this.hitItem;
+        // paper.canvas_cursor('cursor-pen-adjust');
+
+      }else{
+        paper.canvas_cursor('cursor-pen-freehand');
+      }
+
+    } else {
+
+      this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      paper.canvas_cursor('cursor-pen-freehand');
+    }
+
+  }
+
+  hitTest_connective(event) {
+
+    const hitSize = 16;
+
+    if (event.point){
+      this.hitItem = paper.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+    }
+
+    if (this.hitItem && !paper.project.activeLayer.parent) {
+
+      if(this.hitItem.item.layer == paper.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+        // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
+
+        const hit = {
+          point: this.hitItem.point,
+          profile: this.hitItem.item.parent
+        };
+
+        // выясним, с какой стороны примыкает профиль
+        if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
+          hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true)){
+          hit.side = "inner";
+        }
+        else{
+          hit.side = "outer";
+        }
+
+        // для соединителей, нас интересуют только внешние рёбра
+        if(hit.side == "outer"){
+          this.addl_hit = hit;
+          paper.canvas_cursor('cursor-pen-adjust');
+        }
+
+      }
+      else{
+        paper.canvas_cursor('cursor-pen-freehand');
+      }
+
+    }
+    else {
+      this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      paper.canvas_cursor('cursor-pen-freehand');
+    }
+  }
+
+  hitTest(event) {
 
     this.addl_hit = null;
     this.hitItem = null;
 
-    if(this.profile.elm_type == $p.enm.elm_types.Добор || this.profile.elm_type == $p.enm.elm_types.Соединитель){
+    if(this.profile.elm_type == $p.enm.elm_types.Добор){
+      this.hitTest_addl(event);
+    }
+    else if(this.profile.elm_type == $p.enm.elm_types.Соединитель){
+      this.hitTest_connective(event);
+    }
+    else{
 
+      const hitSize = 6;
 
-      // Hit test items.
-      if (event.point)
-        this.hitItem = paper.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
-
-      if (this.hitItem) {
-
-        if(this.hitItem.item.layer == paper.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
-          // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
-
-          var hit = {
-            point: this.hitItem.point,
-            profile: this.hitItem.item.parent
-          };
-
-          // выясним, с какой стороны примыкает профиль
-          if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
-            hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true))
-            hit.side = "inner";
-          else
-            hit.side = "outer";
-
-          // бежим по всем заполнениям и находим ребро
-          hit.profile.layer.glasses(false, true).some(function (glass) {
-
-            for(var i=0; i<glass.profiles.length; i++){
-              var rib = glass.profiles[i];
-              if(rib.profile == hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)){
-
-                if(hit.side == "outer" && rib.outer || hit.side == "inner" && !rib.outer){
-                  hit.rib = i;
-                  hit.glass = glass;
-                  return true;
-                }
-              }
-            }
-          });
-
-          if(hit.glass){
-            this.addl_hit = hit;
-            paper.canvas_cursor('cursor-pen-adjust');
-          }
-
-        }else if(this.hitItem.item.parent instanceof Filling){
-          // для заполнения, ищем ребро и примыкающий профиль
-
-          // this.addl_hit = this.hitItem;
-          // paper.canvas_cursor('cursor-pen-adjust');
-
-        }else{
-          paper.canvas_cursor('cursor-pen-freehand');
-        }
-
-      } else {
-
-        this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
-        paper.canvas_cursor('cursor-pen-freehand');
+      if (event.point){
+        this.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
       }
 
-    }else{
-      // var hitSize = 4.0; // / view.zoom;
-      hitSize = 6;
-
-      // Hit test items.
-      if (event.point)
-        this.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
-
-      if(!this.hitItem)
+      if(!this.hitItem){
         this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      }
 
       if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
         && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
         paper.canvas_cursor('cursor-pen-adjust');
-
-      } else {
+      }
+      else {
         paper.canvas_cursor('cursor-pen-freehand');
       }
     }
-
 
     return true;
   }

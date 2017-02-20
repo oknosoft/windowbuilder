@@ -22,7 +22,7 @@ class ToolLayImpost extends ToolElement {
 
   constructor() {
 
-    super()
+    super();
 
     const tool = Object.assign(this, {
         options: {
@@ -30,14 +30,15 @@ class ToolLayImpost extends ToolElement {
           wnd: {
             caption: "Импосты и раскладки",
             height: 420,
-            width: 320
+            width: 320,
+            allow_close: true,
           }
         },
         mode: null,
         hitItem: null,
         paths: [],
         changed: false
-      })
+      });
 
     var sys;
 
@@ -51,14 +52,17 @@ class ToolLayImpost extends ToolElement {
 
       // восстанавливаем сохранённые параметры
       $p.wsql.restore_options("editor", tool.options);
-      for(var prop in tool.profile._metadata.fields) {
+      tool.options.wnd.on_close = tool.on_close;
+
+      for(let prop in tool.profile._metadata.fields) {
         if(tool.options.wnd.hasOwnProperty(prop))
           tool.profile[prop] = tool.options.wnd[prop];
       }
 
       // если в текущем слое есть профили, выбираем импост
-      if(tool.profile.elm_type.empty())
+      if(tool.profile.elm_type.empty()){
         tool.profile.elm_type = $p.enm.elm_types.Импост;
+      }
 
       // вставку по умолчанию получаем эмулируя событие изменения типа элемента
       $p.dp.builder_lay_impost.handle_event(tool.profile, "value_change", {
@@ -66,14 +70,17 @@ class ToolLayImpost extends ToolElement {
       });
 
       // выравнивание по умолчанию
-      if(tool.profile.align_by_y.empty())
+      if(tool.profile.align_by_y.empty()){
         tool.profile.align_by_y = $p.enm.positions.Центр;
-      if(tool.profile.align_by_x.empty())
+      }
+      if(tool.profile.align_by_x.empty()){
         tool.profile.align_by_x = $p.enm.positions.Центр;
+      }
 
       // цвет по умолчанию
-      if(tool.profile.clr.empty())
+      if(tool.profile.clr.empty()){
         tool.profile.clr = paper.project.clr;
+      }
 
       // параметры отбора для выбора вставок
       tool.profile._metadata.fields.inset_by_y.choice_links = tool.profile._metadata.fields.inset_by_y.choice_links = [{
@@ -232,19 +239,19 @@ class ToolLayImpost extends ToolElement {
 
         paper.canvas_cursor('cursor-arrow-lay');
 
-        if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty())
+        if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty()){
           return;
+        }
 
-        if(!this.hitItem && (this.profile.elm_type == $p.enm.elm_types.Раскладка || !this.profile.w || !this.profile.h))
+        if(!this.hitItem && (this.profile.elm_type == $p.enm.elm_types.Раскладка || !this.profile.w || !this.profile.h)){
           return;
+        }
 
         this.check_layer();
 
-        var layer = this.hitItem ? this.hitItem.layer : paper.project.activeLayer,
-          lgeneratics = layer.profiles.map(function (p) {
-            return p.nearest() ? p.rays.outer : p.generatrix
-          }),
-          nprofiles = [];
+        const layer = this.hitItem ? this.hitItem.layer : paper.project.activeLayer;
+        const lgeneratics = layer.profiles.map((p) => p.nearest() ? p.rays.outer : p.generatrix);
+        const nprofiles = [];
 
         function n1(p) {
           return p.segments[0].point.add(p.segments[3].point).divide(2);
@@ -256,17 +263,19 @@ class ToolLayImpost extends ToolElement {
 
         function check_inset(inset, pos){
 
-          var nom = inset.nom(),
-            rows = [];
+          const nom = inset.nom();
+          const rows = [];
 
-          paper.project._dp.sys.elmnts.each(function(row){
-            if(row.nom.nom() == nom)
+          paper.project._dp.sys.elmnts.each((row) => {
+            if(row.nom.nom() == nom){
               rows.push(row);
+            }
           });
 
-          for(var i=0; i<rows.length; i++){
-            if(rows[i].pos == pos)
+          for(let i=0; i<rows.length; i++){
+            if(rows[i].pos == pos){
               return rows[i].nom;
+            }
           }
 
           return inset;
@@ -274,28 +283,27 @@ class ToolLayImpost extends ToolElement {
 
         function rectification() {
           // получаем таблицу расстояний профилей от рёбер габаритов
-          var bounds, ares = [],
-            group = new paper.Group({ insert: false });
+          const ares = [];
+          const group = new paper.Group({ insert: false });
 
           function reverce(p) {
-            var s = p.segments.map(function(s){return s.point.clone()})
+            const s = p.segments.map(function(s){return s.point.clone()})
             p.removeSegments();
             p.addSegments([s[1], s[0], s[3], s[2]]);
           }
 
           function by_side(name) {
 
-            ares.sort(function (a, b) {
-              return a[name] - b[name];
-            });
+            ares.sort((a, b) => a[name] - b[name]);
 
-            ares.forEach(function (p) {
+            ares.forEach((p) => {
               if(ares[0][name] == p[name]){
-                var p1 = n1(p.profile),
-                  p2 = n2(p.profile),
-                  angle = p2.subtract(p1).angle.round(0);
-                if(angle < 0)
+
+                let angle = n2(p.profile).subtract(n1(p.profile)).angle.round(0);
+
+                if(angle < 0){
                   angle += 360;
+                }
 
                 if(name == "left" && angle != 270){
                   reverce(p.profile);
@@ -307,22 +315,26 @@ class ToolLayImpost extends ToolElement {
                   reverce(p.profile);
                 }
 
-                if(name == "left" || name == "right")
+                if(name == "left" || name == "right"){
                   p.profile._inset = check_inset(tool.profile.inset_by_x, $p.enm.positions[name]);
-                else
+                }
+                else{
                   p.profile._inset = check_inset(tool.profile.inset_by_y, $p.enm.positions[name]);
+                }
               }
             });
 
           }
 
-          tool.paths.forEach(function (p) {
-            if(p.segments.length)
+          tool.paths.forEach((p) => {
+            if(p.segments.length){
               p.parent = group;
+            }
           });
-          bounds = group.bounds;
 
-          group.children.forEach(function (p) {
+          const bounds = group.bounds;
+
+          group.children.forEach((p) => {
             ares.push({
               profile: p,
               left: Math.abs(n1(p).x + n2(p).x - bounds.left * 2),
@@ -340,18 +352,18 @@ class ToolLayImpost extends ToolElement {
           rectification();
         }
 
-        tool.paths.forEach(function (p) {
+        tool.paths.forEach((p) => {
 
-          var p1, p2, iter = 0, angle, proto = {clr: tool.profile.clr};
+          let p1, p2, iter = 0, angle, proto = {clr: tool.profile.clr};
 
           function do_bind() {
 
-            var correctedp1 = false,
+            let correctedp1 = false,
               correctedp2 = false;
 
             // пытаемся вязать к профилям контура
             lgeneratics.forEach(function (gen) {
-              var np = gen.getNearestPoint(p1);
+              let np = gen.getNearestPoint(p1);
               if(!correctedp1 && np.getDistance(p1) < consts.sticking){
                 correctedp1 = true;
                 p1 = np;
@@ -365,8 +377,8 @@ class ToolLayImpost extends ToolElement {
 
             // если не привязалось - ищем точки на вновь добавленных профилях
             if(tool.profile.split != $p.enm.lay_split_types.КрестВСтык && (!correctedp1 || !correctedp2)){
-              nprofiles.forEach(function (p) {
-                var np = p.generatrix.getNearestPoint(p1);
+              nprofiles.forEach((p) => {
+                let np = p.generatrix.getNearestPoint(p1);
                 if(!correctedp1 && np.getDistance(p1) < consts.sticking){
                   correctedp1 = true;
                   p1 = np;
@@ -411,31 +423,34 @@ class ToolLayImpost extends ToolElement {
                 iter++;
                 do_bind();
                 angle = p2.subtract(p1).angle;
-                var delta = Math.abs(angle % 90);
+                let delta = Math.abs(angle % 90);
 
-                if(delta > 45)
+                if(delta > 45){
                   delta -= 90;
-
-                if(delta < 0.02)
+                }
+                if(delta < 0.02){
                   break;
-
-                if(angle > 180)
+                }
+                if(angle > 180){
                   angle -= 180;
-                else if(angle < 0)
+                }
+                else if(angle < 0){
                   angle += 180;
+                }
 
                 if((angle > -40 && angle < 40) || (angle > 180-40 && angle < 180+40)){
                   p1.y = p2.y = (p1.y + p2.y) / 2;
-
-                }else if((angle > 90-40 && angle < 90+40) || (angle > 270-40 && angle < 270+40)){
+                }
+                else if((angle > 90-40 && angle < 90+40) || (angle > 270-40 && angle < 270+40)){
                   p1.x = p2.x = (p1.x + p2.x) / 2;
-
-                }else
+                }
+                else{
                   break;
+                }
               }
 
               // создаём новые профили
-              if(p2.getDistance(p1) > proto.inset.nom().width)
+              if(p2.getDistance(p1) > proto.inset.nom().width){
                 nprofiles.push(new Profile({
                   generatrix: new paper.Path({
                     segments: [p1, p2]
@@ -443,19 +458,20 @@ class ToolLayImpost extends ToolElement {
                   parent: layer,
                   proto: proto
                 }));
+              }
             }
           }
         });
         tool.paths.length = 0;
 
         // пытаемся выполнить привязку
-        nprofiles.forEach(function (p) {
-          var bcnn = p.cnn_point("b"),
-            ecnn = p.cnn_point("e");
+        nprofiles.forEach((p) => {
+          p.cnn_point("b");
+          p.cnn_point("e");
         });
 
         if(!this.hitItem)
-          setTimeout(function () {
+          setTimeout(() => {
             paper.tools[1].activate();
           }, 100);
 
@@ -465,19 +481,21 @@ class ToolLayImpost extends ToolElement {
 
         this.hitTest(event);
 
-        this.paths.forEach(function (p) {
+        this.paths.forEach((p) => {
           p.removeSegments();
         });
 
-        if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty())
+        if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty()){
           return;
+        }
 
         var bounds, gen, hit = !!this.hitItem;
 
         if(hit){
           bounds = this.hitItem.bounds;
           gen = this.hitItem.path;
-        }else if(this.profile.w && this.profile.h) {
+        }
+        else if(this.profile.w && this.profile.h) {
           gen = new paper.Path({
             insert: false,
             segments: [[0,0], [0, -this.profile.h], [this.profile.w, -this.profile.h], [this.profile.w, 0]],
@@ -486,7 +504,8 @@ class ToolLayImpost extends ToolElement {
           bounds = gen.bounds;
           paper.project.zoom_fit(paper.project.strokeBounds.unite(bounds));
 
-        }else
+        }
+        else
           return;
 
         var stepy = this.profile.step_by_y || (this.profile.elm_by_y && bounds.height / (this.profile.elm_by_y + ((hit || this.profile.elm_by_y < 2) ? 1 : -1))),
@@ -802,16 +821,12 @@ class ToolLayImpost extends ToolElement {
   }
 
   detache_wnd(){
-
-    if(this.wnd){
-      this.wnd.elmnts._btns.forEach(function (btn) {
-        if(btn.bar && btn.bar.unload)
-          btn.bar.unload();
+    if(this.wnd && this.wnd.elmnts){
+      this.wnd.elmnts._btns.forEach((btn) => {
+        btn.bar && btn.bar.unload && btn.bar.unload()
       });
     }
-
     ToolElement.prototype.detache_wnd.call(this)
-
   }
 
 }

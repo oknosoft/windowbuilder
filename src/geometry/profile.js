@@ -1745,7 +1745,7 @@ Profile.prototype.__define({
 			};
 
 			const find_nearest = (children) => children.some((elm) => {
-        if(_nearest == elm){
+        if(_nearest == elm || !elm.generatrix){
           return
         }
         if((data._nearest = elm) instanceof Profile && check_nearest()){

@@ -263,15 +263,11 @@ class RulerWnd {
   }
 
   close() {
-    if(this.wnd){
-      this.wnd.close();
-    }
+    this.wnd && this.wnd.close()
   }
 
   wnd_options(options) {
-    if(this.wnd){
-      this.wnd.wnd_options(options);
-    }
+    this.wnd && this.wnd.wnd_options(options)
   }
 
   get size() {

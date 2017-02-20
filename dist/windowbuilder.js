@@ -7964,7 +7964,7 @@ Profile.prototype.__define({
 			};
 
 			const find_nearest = (children) => children.some((elm) => {
-        if(_nearest == elm){
+        if(_nearest == elm || !elm.generatrix){
           return
         }
         if((data._nearest = elm) instanceof Profile && check_nearest()){
@@ -8568,123 +8568,104 @@ ProfileAddl.prototype.__define({
 
 
 
-function ProfileConnective(attr){
+class ProfileConnective extends ProfileItem {
 
-	ProfileConnective.superclass.constructor.call(this, attr);
+  get d0() {
+    return 0;
+  }
+
+  get d1() {
+    return this.sizeb;
+  }
+
+  get d2() {
+    return this.d1 - this.width;
+  }
+
+  get elm_type() {
+    return $p.enm.elm_types.Соединитель;
+  }
+
+  cnn_point(node) {
+    return this.rays[node];
+  }
+
+  save_coordinates() {
+    if(!this.data.generatrix)
+      return;
+
+    var _row = this._row,
+
+      cnns = this.project.connections.cnns,
+      b = this.rays.b,
+      e = this.rays.e,
+
+      row_b = cnns.add({
+        elm1: _row.elm,
+        node1: "b",
+        cnn: b.cnn ? b.cnn.ref : "",
+        aperture_len: this.corns(1).getDistance(this.corns(4))
+      }),
+      row_e = cnns.add({
+        elm1: _row.elm,
+        node1: "e",
+        cnn: e.cnn ? e.cnn.ref : "",
+        aperture_len: this.corns(2).getDistance(this.corns(3))
+      }),
+
+      gen = this.generatrix;
+
+    _row.x1 = this.x1;
+    _row.y1 = this.y1;
+    _row.x2 = this.x2;
+    _row.y2 = this.y2;
+    _row.path_data = gen.pathData;
+    _row.nom = this.nom;
+    _row.parent = this.parent.elm;
+
+
+    _row.len = this.length;
+
+    if(b.profile){
+      row_b.elm2 = b.profile.elm;
+      if(b.profile instanceof Filling)
+        row_b.node2 = "t";
+      else if(b.profile.e.is_nearest(b.point))
+        row_b.node2 = "e";
+      else if(b.profile.b.is_nearest(b.point))
+        row_b.node2 = "b";
+      else
+        row_b.node2 = "t";
+    }
+    if(e.profile){
+      row_e.elm2 = e.profile.elm;
+      if(e.profile instanceof Filling)
+        row_e.node2 = "t";
+      else if(e.profile.b.is_nearest(e.point))
+        row_e.node2 = "b";
+      else if(e.profile.e.is_nearest(e.point))
+        row_e.node2 = "b";
+      else
+        row_e.node2 = "t";
+    }
+
+    _row.angle_hor = this.angle_hor;
+
+    _row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - gen.getTangentAt(0).angle) * 10) / 10;
+    if(_row.alp1 < 0)
+      _row.alp1 = _row.alp1 + 360;
+
+    _row.alp2 = Math.round((gen.getTangentAt(gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
+    if(_row.alp2 < 0)
+      _row.alp2 = _row.alp2 + 360;
+
+    _row.elm_type = this.elm_type;
+
+  }
+
 
 }
-ProfileConnective._extend(ProfileItem);
 
-
-ProfileConnective.prototype.__define({
-
-	save_coordinates: {
-		value: function () {
-
-			if(!this.data.generatrix)
-				return;
-
-			var _row = this._row,
-
-				cnns = this.project.connections.cnns,
-				b = this.rays.b,
-				e = this.rays.e,
-
-				row_b = cnns.add({
-					elm1: _row.elm,
-					node1: "b",
-					cnn: b.cnn ? b.cnn.ref : "",
-					aperture_len: this.corns(1).getDistance(this.corns(4))
-				}),
-				row_e = cnns.add({
-					elm1: _row.elm,
-					node1: "e",
-					cnn: e.cnn ? e.cnn.ref : "",
-					aperture_len: this.corns(2).getDistance(this.corns(3))
-				}),
-
-				gen = this.generatrix;
-
-			_row.x1 = this.x1;
-			_row.y1 = this.y1;
-			_row.x2 = this.x2;
-			_row.y2 = this.y2;
-			_row.path_data = gen.pathData;
-			_row.nom = this.nom;
-			_row.parent = this.parent.elm;
-
-
-			_row.len = this.length;
-
-			if(b.profile){
-				row_b.elm2 = b.profile.elm;
-				if(b.profile instanceof Filling)
-					row_b.node2 = "t";
-				else if(b.profile.e.is_nearest(b.point))
-					row_b.node2 = "e";
-				else if(b.profile.b.is_nearest(b.point))
-					row_b.node2 = "b";
-				else
-					row_b.node2 = "t";
-			}
-			if(e.profile){
-				row_e.elm2 = e.profile.elm;
-				if(e.profile instanceof Filling)
-					row_e.node2 = "t";
-				else if(e.profile.b.is_nearest(e.point))
-					row_e.node2 = "b";
-				else if(e.profile.e.is_nearest(e.point))
-					row_e.node2 = "b";
-				else
-					row_e.node2 = "t";
-			}
-
-			_row.angle_hor = this.angle_hor;
-
-			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - gen.getTangentAt(0).angle) * 10) / 10;
-			if(_row.alp1 < 0)
-				_row.alp1 = _row.alp1 + 360;
-
-			_row.alp2 = Math.round((gen.getTangentAt(gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
-			if(_row.alp2 < 0)
-				_row.alp2 = _row.alp2 + 360;
-
-			_row.elm_type = this.elm_type;
-
-		}
-	},
-
-	d0: {
-		get : function(){
-			return 0;
-		}
-	},
-
-	d1: {
-		get : function(){ return this.sizeb; }
-	},
-
-	d2: {
-		get : function(){ return this.d1 - this.width; }
-	},
-
-	elm_type: {
-		get : function(){
-
-			return $p.enm.elm_types.Соединитель;
-
-		}
-	},
-
-	cnn_point: {
-		value: function(node){
-
-			return this.rays[node];
-
-		}
-	}
-
-});
 
 class ConnectiveLayer extends paper.Layer {
 
@@ -10084,6 +10065,15 @@ class ToolElement extends paper.Tool {
     }
   }
 
+  on_close(wnd) {
+    if(wnd && wnd.cell){
+      setTimeout(() => {
+        paper.tools[1].activate();
+      })
+    }
+    return true;
+  }
+
 }
 
 
@@ -10260,7 +10250,7 @@ class ToolLayImpost extends ToolElement {
 
   constructor() {
 
-    super()
+    super();
 
     const tool = Object.assign(this, {
         options: {
@@ -10268,14 +10258,15 @@ class ToolLayImpost extends ToolElement {
           wnd: {
             caption: "Импосты и раскладки",
             height: 420,
-            width: 320
+            width: 320,
+            allow_close: true,
           }
         },
         mode: null,
         hitItem: null,
         paths: [],
         changed: false
-      })
+      });
 
     var sys;
 
@@ -10286,25 +10277,31 @@ class ToolLayImpost extends ToolElement {
       tool.profile = $p.dp.builder_lay_impost.create();
 
       $p.wsql.restore_options("editor", tool.options);
-      for(var prop in tool.profile._metadata.fields) {
+      tool.options.wnd.on_close = tool.on_close;
+
+      for(let prop in tool.profile._metadata.fields) {
         if(tool.options.wnd.hasOwnProperty(prop))
           tool.profile[prop] = tool.options.wnd[prop];
       }
 
-      if(tool.profile.elm_type.empty())
+      if(tool.profile.elm_type.empty()){
         tool.profile.elm_type = $p.enm.elm_types.Импост;
+      }
 
       $p.dp.builder_lay_impost.handle_event(tool.profile, "value_change", {
         field: "elm_type"
       });
 
-      if(tool.profile.align_by_y.empty())
+      if(tool.profile.align_by_y.empty()){
         tool.profile.align_by_y = $p.enm.positions.Центр;
-      if(tool.profile.align_by_x.empty())
+      }
+      if(tool.profile.align_by_x.empty()){
         tool.profile.align_by_x = $p.enm.positions.Центр;
+      }
 
-      if(tool.profile.clr.empty())
+      if(tool.profile.clr.empty()){
         tool.profile.clr = paper.project.clr;
+      }
 
       tool.profile._metadata.fields.inset_by_y.choice_links = tool.profile._metadata.fields.inset_by_y.choice_links = [{
         name: ["selection",	"ref"],
@@ -10460,19 +10457,19 @@ class ToolLayImpost extends ToolElement {
 
         paper.canvas_cursor('cursor-arrow-lay');
 
-        if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty())
+        if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty()){
           return;
+        }
 
-        if(!this.hitItem && (this.profile.elm_type == $p.enm.elm_types.Раскладка || !this.profile.w || !this.profile.h))
+        if(!this.hitItem && (this.profile.elm_type == $p.enm.elm_types.Раскладка || !this.profile.w || !this.profile.h)){
           return;
+        }
 
         this.check_layer();
 
-        var layer = this.hitItem ? this.hitItem.layer : paper.project.activeLayer,
-          lgeneratics = layer.profiles.map(function (p) {
-            return p.nearest() ? p.rays.outer : p.generatrix
-          }),
-          nprofiles = [];
+        const layer = this.hitItem ? this.hitItem.layer : paper.project.activeLayer;
+        const lgeneratics = layer.profiles.map((p) => p.nearest() ? p.rays.outer : p.generatrix);
+        const nprofiles = [];
 
         function n1(p) {
           return p.segments[0].point.add(p.segments[3].point).divide(2);
@@ -10484,45 +10481,46 @@ class ToolLayImpost extends ToolElement {
 
         function check_inset(inset, pos){
 
-          var nom = inset.nom(),
-            rows = [];
+          const nom = inset.nom();
+          const rows = [];
 
-          paper.project._dp.sys.elmnts.each(function(row){
-            if(row.nom.nom() == nom)
+          paper.project._dp.sys.elmnts.each((row) => {
+            if(row.nom.nom() == nom){
               rows.push(row);
+            }
           });
 
-          for(var i=0; i<rows.length; i++){
-            if(rows[i].pos == pos)
+          for(let i=0; i<rows.length; i++){
+            if(rows[i].pos == pos){
               return rows[i].nom;
+            }
           }
 
           return inset;
         }
 
         function rectification() {
-          var bounds, ares = [],
-            group = new paper.Group({ insert: false });
+          const ares = [];
+          const group = new paper.Group({ insert: false });
 
           function reverce(p) {
-            var s = p.segments.map(function(s){return s.point.clone()})
+            const s = p.segments.map(function(s){return s.point.clone()})
             p.removeSegments();
             p.addSegments([s[1], s[0], s[3], s[2]]);
           }
 
           function by_side(name) {
 
-            ares.sort(function (a, b) {
-              return a[name] - b[name];
-            });
+            ares.sort((a, b) => a[name] - b[name]);
 
-            ares.forEach(function (p) {
+            ares.forEach((p) => {
               if(ares[0][name] == p[name]){
-                var p1 = n1(p.profile),
-                  p2 = n2(p.profile),
-                  angle = p2.subtract(p1).angle.round(0);
-                if(angle < 0)
+
+                let angle = n2(p.profile).subtract(n1(p.profile)).angle.round(0);
+
+                if(angle < 0){
                   angle += 360;
+                }
 
                 if(name == "left" && angle != 270){
                   reverce(p.profile);
@@ -10534,22 +10532,26 @@ class ToolLayImpost extends ToolElement {
                   reverce(p.profile);
                 }
 
-                if(name == "left" || name == "right")
+                if(name == "left" || name == "right"){
                   p.profile._inset = check_inset(tool.profile.inset_by_x, $p.enm.positions[name]);
-                else
+                }
+                else{
                   p.profile._inset = check_inset(tool.profile.inset_by_y, $p.enm.positions[name]);
+                }
               }
             });
 
           }
 
-          tool.paths.forEach(function (p) {
-            if(p.segments.length)
+          tool.paths.forEach((p) => {
+            if(p.segments.length){
               p.parent = group;
+            }
           });
-          bounds = group.bounds;
 
-          group.children.forEach(function (p) {
+          const bounds = group.bounds;
+
+          group.children.forEach((p) => {
             ares.push({
               profile: p,
               left: Math.abs(n1(p).x + n2(p).x - bounds.left * 2),
@@ -10566,17 +10568,17 @@ class ToolLayImpost extends ToolElement {
           rectification();
         }
 
-        tool.paths.forEach(function (p) {
+        tool.paths.forEach((p) => {
 
-          var p1, p2, iter = 0, angle, proto = {clr: tool.profile.clr};
+          let p1, p2, iter = 0, angle, proto = {clr: tool.profile.clr};
 
           function do_bind() {
 
-            var correctedp1 = false,
+            let correctedp1 = false,
               correctedp2 = false;
 
             lgeneratics.forEach(function (gen) {
-              var np = gen.getNearestPoint(p1);
+              let np = gen.getNearestPoint(p1);
               if(!correctedp1 && np.getDistance(p1) < consts.sticking){
                 correctedp1 = true;
                 p1 = np;
@@ -10589,8 +10591,8 @@ class ToolLayImpost extends ToolElement {
             });
 
             if(tool.profile.split != $p.enm.lay_split_types.КрестВСтык && (!correctedp1 || !correctedp2)){
-              nprofiles.forEach(function (p) {
-                var np = p.generatrix.getNearestPoint(p1);
+              nprofiles.forEach((p) => {
+                let np = p.generatrix.getNearestPoint(p1);
                 if(!correctedp1 && np.getDistance(p1) < consts.sticking){
                   correctedp1 = true;
                   p1 = np;
@@ -10634,30 +10636,33 @@ class ToolLayImpost extends ToolElement {
                 iter++;
                 do_bind();
                 angle = p2.subtract(p1).angle;
-                var delta = Math.abs(angle % 90);
+                let delta = Math.abs(angle % 90);
 
-                if(delta > 45)
+                if(delta > 45){
                   delta -= 90;
-
-                if(delta < 0.02)
+                }
+                if(delta < 0.02){
                   break;
-
-                if(angle > 180)
+                }
+                if(angle > 180){
                   angle -= 180;
-                else if(angle < 0)
+                }
+                else if(angle < 0){
                   angle += 180;
+                }
 
                 if((angle > -40 && angle < 40) || (angle > 180-40 && angle < 180+40)){
                   p1.y = p2.y = (p1.y + p2.y) / 2;
-
-                }else if((angle > 90-40 && angle < 90+40) || (angle > 270-40 && angle < 270+40)){
+                }
+                else if((angle > 90-40 && angle < 90+40) || (angle > 270-40 && angle < 270+40)){
                   p1.x = p2.x = (p1.x + p2.x) / 2;
-
-                }else
+                }
+                else{
                   break;
+                }
               }
 
-              if(p2.getDistance(p1) > proto.inset.nom().width)
+              if(p2.getDistance(p1) > proto.inset.nom().width){
                 nprofiles.push(new Profile({
                   generatrix: new paper.Path({
                     segments: [p1, p2]
@@ -10665,18 +10670,19 @@ class ToolLayImpost extends ToolElement {
                   parent: layer,
                   proto: proto
                 }));
+              }
             }
           }
         });
         tool.paths.length = 0;
 
-        nprofiles.forEach(function (p) {
-          var bcnn = p.cnn_point("b"),
-            ecnn = p.cnn_point("e");
+        nprofiles.forEach((p) => {
+          p.cnn_point("b");
+          p.cnn_point("e");
         });
 
         if(!this.hitItem)
-          setTimeout(function () {
+          setTimeout(() => {
             paper.tools[1].activate();
           }, 100);
 
@@ -10686,19 +10692,21 @@ class ToolLayImpost extends ToolElement {
 
         this.hitTest(event);
 
-        this.paths.forEach(function (p) {
+        this.paths.forEach((p) => {
           p.removeSegments();
         });
 
-        if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty())
+        if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty()){
           return;
+        }
 
         var bounds, gen, hit = !!this.hitItem;
 
         if(hit){
           bounds = this.hitItem.bounds;
           gen = this.hitItem.path;
-        }else if(this.profile.w && this.profile.h) {
+        }
+        else if(this.profile.w && this.profile.h) {
           gen = new paper.Path({
             insert: false,
             segments: [[0,0], [0, -this.profile.h], [this.profile.w, -this.profile.h], [this.profile.w, 0]],
@@ -10707,7 +10715,8 @@ class ToolLayImpost extends ToolElement {
           bounds = gen.bounds;
           paper.project.zoom_fit(paper.project.strokeBounds.unite(bounds));
 
-        }else
+        }
+        else
           return;
 
         var stepy = this.profile.step_by_y || (this.profile.elm_by_y && bounds.height / (this.profile.elm_by_y + ((hit || this.profile.elm_by_y < 2) ? 1 : -1))),
@@ -11020,16 +11029,12 @@ class ToolLayImpost extends ToolElement {
   }
 
   detache_wnd(){
-
-    if(this.wnd){
-      this.wnd.elmnts._btns.forEach(function (btn) {
-        if(btn.bar && btn.bar.unload)
-          btn.bar.unload();
+    if(this.wnd && this.wnd.elmnts){
+      this.wnd.elmnts._btns.forEach((btn) => {
+        btn.bar && btn.bar.unload && btn.bar.unload()
       });
     }
-
     ToolElement.prototype.detache_wnd.call(this)
-
   }
 
 }
@@ -11233,6 +11238,16 @@ class PenControls {
 
   mousemove(event, ignore_pos) {
 
+    const {elm_type} = this._tool.profile;
+
+    if(elm_type == $p.enm.elm_types.Добор || elm_type == $p.enm.elm_types.Соединитель){
+      this._cont.style.display = "none";
+      return;
+    }
+    else{
+      this._cont.style.display = "";
+    }
+
     const bounds = paper.project.bounds;
     const pos = ignore_pos || paper.project.view.projectToView(event.point);
 
@@ -11302,6 +11317,7 @@ class ToolPen extends ToolElement {
           caption: "Новый сегмент профиля",
           width: 320,
           height: 240,
+          allow_close: true,
           bind_generatrix: true,
           bind_node: false,
           inset: "",
@@ -11327,9 +11343,12 @@ class ToolPen extends ToolElement {
       tool.profile = $p.dp.builder_pen.create();
 
       $p.wsql.restore_options("editor", tool.options);
-      ["elm_type","inset","bind_generatrix","bind_node"].forEach(function (prop) {
-        if(prop == "bind_generatrix" || prop == "bind_node" || tool.options.wnd[prop])
+      tool.options.wnd.on_close = tool.on_close;
+
+      ["elm_type","inset","bind_generatrix","bind_node"].forEach((prop) => {
+        if(prop == "bind_generatrix" || prop == "bind_node" || tool.options.wnd[prop]){
           tool.profile[prop] = tool.options.wnd[prop];
+        }
       });
 
       if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Рама) &&
@@ -11413,9 +11432,7 @@ class ToolPen extends ToolElement {
         opt.bind_generatrix = tool.profile.bind_generatrix;
         opt.bind_node = tool.profile.bind_node;
       }
-
     }
-
 
     tool.on({
 
@@ -11630,7 +11647,7 @@ class ToolPen extends ToolElement {
 
         this.hitTest(event);
 
-        if(this.addl_hit && this.addl_hit.glass){
+        if(this.addl_hit){
 
           if (!this.path){
             this.path = new paper.Path({
@@ -11643,38 +11660,14 @@ class ToolPen extends ToolElement {
 
           this.path.removeSegments();
 
-          var profiles = this.addl_hit.glass.profiles,
-            prev = this.addl_hit.rib==0 ? profiles[profiles.length-1] : profiles[this.addl_hit.rib-1],
-            curr = profiles[this.addl_hit.rib],
-            next = this.addl_hit.rib==profiles.length-1 ? profiles[0] : profiles[this.addl_hit.rib+1];
-
-          var path_prev = prev.outer ? prev.profile.rays.outer : prev.profile.rays.inner,
-            path_curr = curr.outer ? curr.profile.rays.outer : curr.profile.rays.inner,
-            path_next = next.outer ? next.profile.rays.outer : next.profile.rays.inner;
-
-          var p1 = path_curr.intersect_point(path_prev, curr.b),
-            p2 = path_curr.intersect_point(path_next, curr.e),
-            sub_path = path_curr.get_subpath(p1, p2);
-
-          this.path.addSegments(sub_path.segments);
-
-          sub_path = sub_path.equidistant(-(this.profile.inset.nom().width || 20));
-          sub_path.reverse();
-          this.path.addSegments(sub_path.segments);
-          sub_path.removeSegments();
-          sub_path.remove();
-          this.path.closePath();
-
-          if(!this.addl_hit.generatrix){
-            this.addl_hit.generatrix = new paper.Path({insert: false});
+          if(this.addl_hit.glass){
+            this.draw_addl()
           }
-          p1 = prev.profile.generatrix.getNearestPoint(p1);
-          p2 = next.profile.generatrix.getNearestPoint(p2);
-          this.addl_hit.generatrix.removeSegments();
-          this.addl_hit.generatrix.addSegments(path_curr.get_subpath(p1, p2).segments);
-
-
-        }else if(this.path){
+          else{
+            this.draw_connective()
+          }
+        }
+        else if(this.path){
 
           if(this.mode){
 
@@ -11814,7 +11807,8 @@ class ToolPen extends ToolElement {
               this.path.selected = true;
             }
 
-          }else{
+          }
+          else{
             this.path.removeSegments();
             this.path.remove();
             this.path = null;
@@ -11833,85 +11827,196 @@ class ToolPen extends ToolElement {
 
   }
 
-  hitTest(event) {
+  draw_addl() {
 
-    var hitSize = 16;
+
+    const {profiles} = this.addl_hit.glass;
+    const prev = this.addl_hit.rib==0 ? profiles[profiles.length-1] : profiles[this.addl_hit.rib-1];
+    const curr = profiles[this.addl_hit.rib];
+    const next = this.addl_hit.rib==profiles.length-1 ? profiles[0] : profiles[this.addl_hit.rib+1];
+
+    const path_prev = prev.outer ? prev.profile.rays.outer : prev.profile.rays.inner;
+    const path_curr = curr.outer ? curr.profile.rays.outer : curr.profile.rays.inner;
+    const path_next = next.outer ? next.profile.rays.outer : next.profile.rays.inner;
+
+    let p1 = path_curr.intersect_point(path_prev, curr.b),
+      p2 = path_curr.intersect_point(path_next, curr.e),
+      sub_path = path_curr.get_subpath(p1, p2);
+
+    this.path.addSegments(sub_path.segments);
+
+    sub_path = sub_path.equidistant(-(this.profile.inset.nom().width || 20));
+    sub_path.reverse();
+    this.path.addSegments(sub_path.segments);
+    sub_path.removeSegments();
+    sub_path.remove();
+    this.path.closePath();
+
+    if(!this.addl_hit.generatrix){
+      this.addl_hit.generatrix = new paper.Path({insert: false});
+    }
+    p1 = prev.profile.generatrix.getNearestPoint(p1);
+    p2 = next.profile.generatrix.getNearestPoint(p2);
+    this.addl_hit.generatrix.removeSegments();
+    this.addl_hit.generatrix.addSegments(path_curr.get_subpath(p1, p2).segments);
+
+  }
+
+  draw_connective() {
+
+    const {rays, b, e} = this.addl_hit.profile;
+
+    let sub_path = rays.outer.get_subpath(b, e);
+
+    if(!this.addl_hit.generatrix){
+      this.addl_hit.generatrix = new paper.Path({insert: false});
+    }
+    this.addl_hit.generatrix.removeSegments();
+    this.addl_hit.generatrix.addSegments(sub_path.segments);
+
+    this.path.addSegments(sub_path.equidistant(this.profile.inset.nom().width / 2 || 10).segments);
+
+    sub_path = sub_path.equidistant(-(this.profile.inset.nom().width || 10));
+    sub_path.reverse();
+    this.path.addSegments(sub_path.segments);
+    sub_path.removeSegments();
+    sub_path.remove();
+    this.path.closePath();
+
+  }
+
+  hitTest_addl(event) {
+
+    const hitSize = 16;
+
+    if (event.point){
+      this.hitItem = paper.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+    }
+
+    if (this.hitItem) {
+
+      if(this.hitItem.item.layer == paper.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+
+        const hit = {
+          point: this.hitItem.point,
+          profile: this.hitItem.item.parent
+        };
+
+        if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
+          hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true)){
+          hit.side = "inner";
+        }
+        else{
+          hit.side = "outer";
+        }
+
+        hit.profile.layer.glasses(false, true).some((glass) => {
+          return glass.profiles.some((rib, index) => {
+            if(rib.profile == hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)){
+              if(hit.side == "outer" && rib.outer || hit.side == "inner" && !rib.outer){
+                hit.rib = index;
+                hit.glass = glass;
+                return true;
+              }
+            }
+          })
+
+        });
+
+        if(hit.glass){
+          this.addl_hit = hit;
+          paper.canvas_cursor('cursor-pen-adjust');
+        }
+
+      }
+      else if(this.hitItem.item.parent instanceof Filling){
+
+
+      }else{
+        paper.canvas_cursor('cursor-pen-freehand');
+      }
+
+    } else {
+
+      this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      paper.canvas_cursor('cursor-pen-freehand');
+    }
+
+  }
+
+  hitTest_connective(event) {
+
+    const hitSize = 16;
+
+    if (event.point){
+      this.hitItem = paper.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+    }
+
+    if (this.hitItem && !paper.project.activeLayer.parent) {
+
+      if(this.hitItem.item.layer == paper.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+
+        const hit = {
+          point: this.hitItem.point,
+          profile: this.hitItem.item.parent
+        };
+
+        if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
+          hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true)){
+          hit.side = "inner";
+        }
+        else{
+          hit.side = "outer";
+        }
+
+        if(hit.side == "outer"){
+          this.addl_hit = hit;
+          paper.canvas_cursor('cursor-pen-adjust');
+        }
+
+      }
+      else{
+        paper.canvas_cursor('cursor-pen-freehand');
+      }
+
+    }
+    else {
+      this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      paper.canvas_cursor('cursor-pen-freehand');
+    }
+  }
+
+  hitTest(event) {
 
     this.addl_hit = null;
     this.hitItem = null;
 
-    if(this.profile.elm_type == $p.enm.elm_types.Добор || this.profile.elm_type == $p.enm.elm_types.Соединитель){
+    if(this.profile.elm_type == $p.enm.elm_types.Добор){
+      this.hitTest_addl(event);
+    }
+    else if(this.profile.elm_type == $p.enm.elm_types.Соединитель){
+      this.hitTest_connective(event);
+    }
+    else{
 
+      const hitSize = 6;
 
-      if (event.point)
-        this.hitItem = paper.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
-
-      if (this.hitItem) {
-
-        if(this.hitItem.item.layer == paper.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
-
-          var hit = {
-            point: this.hitItem.point,
-            profile: this.hitItem.item.parent
-          };
-
-          if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
-            hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true))
-            hit.side = "inner";
-          else
-            hit.side = "outer";
-
-          hit.profile.layer.glasses(false, true).some(function (glass) {
-
-            for(var i=0; i<glass.profiles.length; i++){
-              var rib = glass.profiles[i];
-              if(rib.profile == hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)){
-
-                if(hit.side == "outer" && rib.outer || hit.side == "inner" && !rib.outer){
-                  hit.rib = i;
-                  hit.glass = glass;
-                  return true;
-                }
-              }
-            }
-          });
-
-          if(hit.glass){
-            this.addl_hit = hit;
-            paper.canvas_cursor('cursor-pen-adjust');
-          }
-
-        }else if(this.hitItem.item.parent instanceof Filling){
-
-
-        }else{
-          paper.canvas_cursor('cursor-pen-freehand');
-        }
-
-      } else {
-
-        this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
-        paper.canvas_cursor('cursor-pen-freehand');
+      if (event.point){
+        this.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
       }
 
-    }else{
-      hitSize = 6;
-
-      if (event.point)
-        this.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
-
-      if(!this.hitItem)
+      if(!this.hitItem){
         this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      }
 
       if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
         && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
         paper.canvas_cursor('cursor-pen-adjust');
-
-      } else {
+      }
+      else {
         paper.canvas_cursor('cursor-pen-freehand');
       }
     }
-
 
     return true;
   }
@@ -12275,15 +12380,11 @@ class RulerWnd {
   }
 
   close() {
-    if(this.wnd){
-      this.wnd.close();
-    }
+    this.wnd && this.wnd.close()
   }
 
   wnd_options(options) {
-    if(this.wnd){
-      this.wnd.wnd_options(options);
-    }
+    this.wnd && this.wnd.wnd_options(options)
   }
 
   get size() {
