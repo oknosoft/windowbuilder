@@ -11818,7 +11818,6 @@ class ToolPen extends ToolElement {
             paper.project.register_update();
           }
         }
-
       },
 
       keydown: this.keydown
@@ -11828,7 +11827,6 @@ class ToolPen extends ToolElement {
   }
 
   draw_addl() {
-
 
     const {profiles} = this.addl_hit.glass;
     const prev = this.addl_hit.rib==0 ? profiles[profiles.length-1] : profiles[this.addl_hit.rib-1];

@@ -45,10 +45,6 @@ $p.wsql.init(function (prm) {
 
   const db = new $p.classes.PouchDB(config.couchdb + "meta", {
     skip_setup: true,
-    auth: {
-      username: "Рабочий",
-      password: "2"
-    }
   });
 
   let _m;

@@ -29,7 +29,7 @@ export const actions = {
 export const mapStateToProps = (state, props) => {
 
 	const _mgr = $p.md.mgr_by_class_name(props.params.meta);
-  const _obj = _mgr.get();
+  const _obj = _mgr.get(props.params.options);
 
 	return {
 		meta: state.meta,

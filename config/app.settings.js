@@ -22,7 +22,7 @@ export default function settings(prm) {
 
     // расположение couchdb
     couch_path: "/couchdb/wb_",
-    //couch_path: "http://cou206:5984/wb_",
+    //couch_path: "http://cou200:5984/wb_",
     //couch_path: "https://light.oknosoft.ru/couchdb/wb_",
 
     pouch_filter: {

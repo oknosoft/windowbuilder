@@ -198,7 +198,7 @@
   },
   "config": {
     "couchdb1": "/couchdb/wb_",
-    "couchdb": "http://cou206:5984/wb_",
+    "couchdb": "http://cou200:5984/wb_",
     "zone": 1,
     "zone_demo": 1,
     "prefix": "wb_",
