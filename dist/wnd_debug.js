@@ -2620,14 +2620,45 @@ $p.cat.clrs.__define({
 
 	by_predefined: {
 		value: function(clr, clr_elm, clr_sch){
-			if(clr.predefined_name){
-				return clr_elm;
-			}else if(clr.empty())
-				return clr_elm;
-			else
-				return clr;
+		  const {predefined_name} = clr;
+			if(predefined_name){
+			  switch (predefined_name){
+          case 'КакЭлемент':
+            return clr_elm;
+          case 'КакИзделие':
+            return clr_sch;
+          case 'КакЭлементСнаружи':
+            return clr_elm.clr_out.empty() ? clr_elm : clr_elm.clr_out;
+          case 'КакЭлементИзнутри':
+            return clr_elm.clr_in.empty() ? clr_elm : clr_elm.clr_in;
+          case 'КакИзделиеСнаружи':
+            return clr_sch.clr_out.empty() ? clr_sch : clr_sch.clr_out;
+          case 'КакИзделиеИзнутри':
+            return clr_sch.clr_in.empty() ? clr_sch : clr_sch.clr_in;
+          case 'КакЭлементИнверсный':
+            return this.inverted(clr_elm);
+          case 'КакИзделиеИнверсный':
+            return this.inverted(clr_sch);
+          case 'БезЦвета':
+            return this.get();
+          default :
+            return clr_elm;
+        }
+			}
+      return clr.empty() ? clr_elm : clr
 		}
 	},
+
+  inverted: {
+    value: function(clr){
+      if(clr.clr_in == clr.clr_out || clr.clr_in.empty() || clr.clr_out.empty()){
+        return clr;
+      }
+      const ares = $p.wsql.alasql("select top 1 ref from ? where clr_in = ? and clr_out = ? and (not ref = ?)",
+        [this.alatable, clr.clr_out.ref, clr.clr_in.ref, $p.utils.blank.guid]);
+      return ares.length ? this.get(ares[0]) : clr
+    }
+  },
 
 	selection_exclude_service: {
 		value: function (mf, sys) {
@@ -2697,13 +2728,13 @@ $p.cat.clrs.__define({
 
         if(btn_id=="btn_select" && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
 
-          var ares = $p.wsql.alasql("select ref from ? where clr_in = ? and clr_out = ? and (not ref = ?)",
+          const ares = $p.wsql.alasql("select top 1 ref from ? where clr_in = ? and clr_out = ? and (not ref = ?)",
             [$p.cat.clrs.alatable, eclr.clr_in.ref, eclr.clr_out.ref, $p.utils.blank.guid]);
 
           if(ares.length){
             pwnd.on_select.call(pwnd, $p.cat.clrs.get(ares[0]));
-
-          }else{
+          }
+          else{
             $p.cat.clrs.create({
               clr_in: eclr.clr_in,
               clr_out: eclr.clr_out,

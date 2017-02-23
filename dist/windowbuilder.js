@@ -5599,9 +5599,9 @@ BuilderElement.clr_by_clr = function (clr, view_out) {
 			clr_str = clr.clr_out.clr_str;
 	}
 
-	if(!clr_str)
-		clr_str = this.default_clr_str ? this.default_clr_str : "fff";
-
+	if(!clr_str){
+    clr_str = this.default_clr_str ? this.default_clr_str : "fff";
+  }
 
 	if(clr_str){
 		clr = clr_str.split(",");
