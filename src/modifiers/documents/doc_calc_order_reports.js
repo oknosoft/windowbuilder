@@ -142,7 +142,7 @@ $p.doc.calc_order.__define({
 
 							res.data.push([
 								new Date(row.key[0], row.key[1]-1, row.key[2]),
-								$p.cat.planning_keys.get(row.key[3]),
+								$p.cat.parameters_keys.get(row.key[3]),
 								row.value.debit,
 								row.value.credit,
 								row.value.total

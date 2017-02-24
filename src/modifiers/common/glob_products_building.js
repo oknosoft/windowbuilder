@@ -10,7 +10,7 @@
 
 function ProductsBuilding(){
 
-	var added_cnn_spec,
+  let added_cnn_spec,
 		ox,
 		spec,
 		constructions,
@@ -173,13 +173,15 @@ function ProductsBuilding(){
 	 * @return {TabularSectionRow.cat.characteristics.specification}
 	 */
 	function new_spec_row(row_spec, elm, row_base, nom, origin){
-		if(!row_spec)
-			row_spec = spec.add();
+		if(!row_spec){
+      row_spec = spec.add();
+    }
 		row_spec.nom = nom || row_base.nom;
 		row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr);
 		row_spec.elm = elm.elm;
-		if(origin)
-			row_spec.origin = origin;
+		if(origin){
+      row_spec.origin = origin;
+    }
 		return row_spec;
 	}
 
@@ -942,14 +944,13 @@ function ProductsBuilding(){
 	}
 
 
-
 	/**
 	 * Спецификации соединений примыкающих профилей
 	 * @param elm {Profile}
 	 */
 	function cnn_spec_nearest(elm) {
-		var nearest = elm.nearest();
-		if(nearest && elm.data._nearest_cnn)
+		const nearest = elm.nearest();
+		if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm.data._nearest_cnn)
 			cnn_add_spec(elm.data._nearest_cnn, elm, {
 				angle:  0,
 				alp1:   0,
@@ -965,13 +966,13 @@ function ProductsBuilding(){
 	 */
 	function base_spec_profile(elm) {
 
-		const _row = elm._row;
-		if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure){
+		const {_row, rays} = elm;
+
+		if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
       return;
     }
 
-    const b = elm.rays.b;
-    const e = elm.rays.e;
+    const {b, e} = rays;
 
 		if(!b.cnn || !e.cnn){
 			$p.record_log({
@@ -1099,11 +1100,21 @@ function ProductsBuilding(){
 	function base_spec_glass(glass) {
 
     const {profiles, _row} = glass;
+
+    if(_row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+      return;
+    }
+
     const glength = profiles.length;
 
 		// для всех рёбер заполнения
 		for(let i=0; i<glength; i++ ){
 			const curr = profiles[i];
+
+      if(curr.profile && curr.profile._row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+        return;
+      }
+
       const prev = (i==0 ? profiles[glength-1] : profiles[i-1]).profile;
       const next = (i==glength-1 ? profiles[0] : profiles[i+1]).profile;
       const row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});

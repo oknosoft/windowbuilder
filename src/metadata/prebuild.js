@@ -67,7 +67,7 @@ $p.wsql.init(function (prm) {
 
       // фильтруем метаданные для облегчения рабочего места
       // let filter = {
-      //   cat: ['users','users_acl','stores','divisions','individuals','planning_keys','work_shifts','work_center_kinds','work_centers','property_values'],
+      //   cat: ['users','users_acl','stores','divisions','individuals','parameters_keys','work_shifts','work_center_kinds','work_centers','property_values'],
       //   doc: ['planning_event'],
       //   dp: [],
       //   areg: [],

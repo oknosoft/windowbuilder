@@ -16,7 +16,7 @@
 			$p.off(predefined_elmnts_data_loaded);
 
 			// читаем ключи планирования. они хранятся в doc, но нужны оперативно в ram
-			$p.cat.planning_keys.pouch_find_rows({_top: 500, _skip: 0 });
+			$p.cat.parameters_keys.pouch_find_rows({_top: 500, _skip: 0 });
 
 			// читаем элементы из pouchdb и создаём свойства
 			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
@@ -118,7 +118,7 @@
 					}, 1000);
 
 					// загружаем ключи планирования, т.к. они нужны в ОЗУ
-					$p.cat.planning_keys.pouch_find_rows();
+					$p.cat.parameters_keys.pouch_find_rows();
 
 
 					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
