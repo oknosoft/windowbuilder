@@ -85,7 +85,7 @@ class Editor extends paper.PaperScope {
             id: "b",
             text: "Инструменты",
             collapsed_text: "Инструменты",
-            width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 360 : 240
+            width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 460 : 260
           }],
           offsets: { top: 28, right: 0, bottom: 0, left: 0}
         })
@@ -734,52 +734,94 @@ class Editor extends paper.PaperScope {
   }
 
   /**
+   * ### Диалог составного пакета
+   *
+   * @param [cnstr] {Number} - номер элемента или контура
+   */
+  glass_inserts(elm){
+
+    const options = {
+      name: 'glass_inserts',
+      wnd: {
+        caption: 'Составной пакет №' + elm.elm,
+        allow_close: true,
+        width: 460,
+        height: 320,
+        modal: true
+      }
+    };
+
+    const wnd = $p.iface.dat_blank(null, options.wnd);
+
+    wnd.elmnts.grids.inserts = wnd.attachTabular({
+      obj: this.project.ox,
+      ts: "glass_specification",
+      selection: {elm: elm.elm},
+      toolbar_struct: $p.injected_data["toolbar_add_del_compact.xml"],
+      ts_captions: {
+        fields: ["inset", "clr"],
+        headers: "Вставка,Цвет",
+        widths: "*,*",
+        min_widths: "100,100",
+        aligns: "",
+        sortings: "na,na",
+        types: "ref,ref"
+      }
+    });
+
+  }
+
+  /**
    * ### Диалог дополнительных вставок
    *
    * @param [cnstr] {Number} - номер элемента или контура
    */
   additional_inserts(cnstr){
 
-    var caption = $p.msg.additional_inserts,
-      meta_fields = $p.cat.characteristics.metadata("inserts").fields._clone();
+    const meta_fields = $p.cat.characteristics.metadata("inserts").fields._clone();
+    let caption = $p.msg.additional_inserts;
 
     if(!cnstr){
       cnstr = 0;
       caption+= ' в изделие';
       meta_fields.inset.choice_params[0].path = ["Изделие"];
 
-    }else if(cnstr == 'elm'){
+    }
+    else if(cnstr == 'elm'){
       cnstr = this.project.selected_elm;
-      if(cnstr){
+      if(cnstr instanceof Filling){
+        return this.glass_inserts(cnstr);
+      }
+      else if(cnstr){
         // добавляем параметры вставки
         this.project.ox.add_inset_params(cnstr.inset, -cnstr.elm, $p.utils.blank.guid);
         caption+= ' элем. №' + cnstr.elm;
         cnstr = -cnstr.elm;
         meta_fields.inset.choice_params[0].path = ["Элемент"];
-
-      }else{
+      }
+      else{
         return;
       }
-
-    }else if(cnstr == 'contour'){
+    }
+    else if(cnstr == 'contour'){
       cnstr = this.project.activeLayer.cnstr
       caption+= ' в контур №' + cnstr;
       meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Контур"];
 
     }
 
-    var options = {
+    const options = {
       name: 'additional_inserts',
       wnd: {
         caption: caption,
         allow_close: true,
-        width: 360,
+        width: 460,
         height: 420,
         modal: true
       }
     };
 
-    var wnd = $p.iface.dat_blank(null, options.wnd);
+    const wnd = $p.iface.dat_blank(null, options.wnd);
 
     wnd.elmnts.layout = wnd.attachLayout({
       pattern: "2E",
@@ -800,6 +842,7 @@ class Editor extends paper.PaperScope {
       obj: this.project.ox,
       ts: "inserts",
       selection: {cnstr: cnstr},
+      toolbar_struct: $p.injected_data["toolbar_add_del_compact.xml"],
       metadata: meta_fields,
       ts_captions: {
         fields: ["inset", "clr"],
@@ -840,22 +883,23 @@ class Editor extends paper.PaperScope {
    */
   profile_radius(){
 
-    var elm = this.project.selected_elm;
+    const elm = this.project.selected_elm;
+
     if(elm instanceof ProfileItem){
 
       // модальный диалог
-      var options = {
+      const options = {
         name: 'profile_radius',
         wnd: {
           caption: $p.msg.bld_arc,
           allow_close: true,
-          width: 360,
+          width: 460,
           height: 180,
           modal: true
         }
       };
 
-      var wnd = $p.iface.dat_blank(null, options.wnd);
+      const wnd = $p.iface.dat_blank(null, options.wnd);
 
       wnd.elmnts.grids.radius = wnd.attachHeadFields({
         obj: elm,
