@@ -827,6 +827,24 @@ ProfileItem.prototype.__define({
     }
   },
 
+  /**
+   * Сеттер вставки с учетом выделенных элементов
+   * @param v {CatInserts}
+   * @param ignore_select {Boolean}
+   */
+  set_inset: {
+    value: function (v, ignore_select) {
+      if(!ignore_select && this.project.selectedItems.length > 1){
+        this.project.selected_profiles(true).forEach((elm) => {
+          if(elm != this){
+            elm.set_inset(v, true);
+          }
+        });
+      }
+      BuilderElement.prototype.set_inset.call(this, v, ignore_select);
+    }
+  },
+
 	/**
 	 * ### Направление дуги сегмента профиля против часовой стрелки
 	 *

@@ -390,25 +390,32 @@ BuilderElement.prototype.__define({
 			return (this._row ? this._row.inset : null) || $p.cat.inserts.get();
 		},
 		set : function(v){
+			this.set_inset(v);
+		}
+	},
 
-			if(this._row.inset != v){
+  /**
+   * Сеттер вставки с учетом выделенных элементов
+   * @param v {CatInserts}
+   */
+  set_inset: {
+	  value: function(v){
+      if(this._row.inset != v){
 
-				this._row.inset = v;
+        this._row.inset = v;
 
-				if(this.data && this.data._rays){
+        if(this.data && this.data._rays){
           this.data._rays.clear(true);
         }
 
         if(this.joined_nearests){
-          this.joined_nearests().forEach((profile) => {
-            profile.data._rays.clear(true);
-          })
+          this.joined_nearests().forEach((profile) => profile.data._rays.clear(true))
         }
 
-				this.project.register_change();
-			}
-		}
-	},
+        this.project.register_change();
+      }
+    }
+  },
 
 	// цвет элемента
 	clr: {

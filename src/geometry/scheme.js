@@ -1305,7 +1305,7 @@ Scheme.prototype.__define({
 			const res = [];
 			const count = this.selectedItems.length;
 
-			this.selectedItems.forEach(function (item) {
+			this.selectedItems.forEach((item) => {
 
         const p = item.parent;
 
@@ -1339,7 +1339,7 @@ Scheme.prototype.__define({
 
       const res = [];
 
-      this.selectedItems.forEach(function (item) {
+      this.selectedItems.forEach((item) => {
 
         if(item instanceof Filling && res.indexOf(item) == -1){
           res.push(item);
