@@ -322,7 +322,22 @@ function Scheme(_canvas){
 				get : function(){
 					return _scheme.ox.cnn_elmnts;
 				}
-			}
+			},
+
+      elm_cnn: {
+			  value: function (elm1, elm2) {
+			    let res;
+          this.cnns.find_rows({
+            elm1: elm1.elm,
+            elm2: elm2.elm
+          }, (row) => {
+            res = row.cnn;
+            return false;
+          });
+          return res;
+        }
+      }
+
 		});
 
 	};

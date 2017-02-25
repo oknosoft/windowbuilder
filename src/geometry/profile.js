@@ -1773,14 +1773,17 @@ Profile.prototype.__define({
 		value : function(ignore_cnn){
 
 			const {b, e, data, layer, project} = this;
-			const {_nearest} = data;
+			let {_nearest, _nearest_cnn} = data;
 
       const check_nearest = () => {
 				if(data._nearest){
 					const {generatrix} = data._nearest;
 					if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
 					  if(!ignore_cnn){
-              data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
+					    if(!_nearest_cnn){
+                _nearest_cnn = project.connections.elm_cnn(this, data._nearest);
+              }
+              data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn);
             }
 						return true;
 					}

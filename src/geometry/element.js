@@ -475,6 +475,12 @@ BuilderElement.prototype.__define({
       const cnn_ii = this.selected_cnn_ii();
 			if(cnn_ii && cnn_ii.row.cnn != v){
         cnn_ii.row.cnn = v;
+        if(this.data._nearest_cnn){
+          this.data._nearest_cnn = cnn_ii.row.cnn;
+        }
+        if(this.rays){
+          this.rays.clear();
+        }
         this.project.register_change();
       }
 		}

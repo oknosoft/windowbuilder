@@ -5544,6 +5544,12 @@ BuilderElement.prototype.__define({
       const cnn_ii = this.selected_cnn_ii();
 			if(cnn_ii && cnn_ii.row.cnn != v){
         cnn_ii.row.cnn = v;
+        if(this.data._nearest_cnn){
+          this.data._nearest_cnn = cnn_ii.row.cnn;
+        }
+        if(this.rays){
+          this.rays.clear();
+        }
         this.project.register_change();
       }
 		}
@@ -7988,14 +7994,17 @@ Profile.prototype.__define({
 		value : function(ignore_cnn){
 
 			const {b, e, data, layer, project} = this;
-			const {_nearest} = data;
+			let {_nearest, _nearest_cnn} = data;
 
       const check_nearest = () => {
 				if(data._nearest){
 					const {generatrix} = data._nearest;
 					if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
 					  if(!ignore_cnn){
-              data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
+					    if(!_nearest_cnn){
+                _nearest_cnn = project.connections.elm_cnn(this, data._nearest);
+              }
+              data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn);
             }
 						return true;
 					}
@@ -9151,7 +9160,22 @@ function Scheme(_canvas){
 				get : function(){
 					return _scheme.ox.cnn_elmnts;
 				}
-			}
+			},
+
+      elm_cnn: {
+			  value: function (elm1, elm2) {
+			    let res;
+          this.cnns.find_rows({
+            elm1: elm1.elm,
+            elm2: elm2.elm
+          }, (row) => {
+            res = row.cnn;
+            return false;
+          });
+          return res;
+        }
+      }
+
 		});
 
 	};

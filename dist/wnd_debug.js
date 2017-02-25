@@ -3471,7 +3471,12 @@ $p.CatInserts.prototype.__define({
       }
 
 			if(main_rows.length && main_rows[0].nom instanceof $p.CatInserts){
-        _nom = main_rows[0].nom.nom()
+			  if(main_rows[0].nom == this){
+          _nom = $p.cat.nom.get()
+        }
+        else{
+          _nom = main_rows[0].nom.nom()
+        }
       }
       else if(main_rows.length){
         _nom = main_rows[0].nom
