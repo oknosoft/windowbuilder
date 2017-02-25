@@ -5460,7 +5460,7 @@ BuilderElement.prototype.__define({
 
 	elm: {
 		get : function(){
-			return this._row.elm;
+			return this._row ? this._row.elm : 0;
 		}
 	},
 
@@ -5483,17 +5483,10 @@ BuilderElement.prototype.__define({
   set_inset: {
 	  value: function(v){
       if(this._row.inset != v){
-
         this._row.inset = v;
-
         if(this.data && this.data._rays){
           this.data._rays.clear(true);
         }
-
-        if(this.joined_nearests){
-          this.joined_nearests().forEach((profile) => profile.data._rays.clear(true))
-        }
-
         this.project.register_change();
       }
     }
@@ -5504,17 +5497,19 @@ BuilderElement.prototype.__define({
 			return this._row.clr;
 		},
 		set : function(v){
-
-			this._row.clr = v;
-
-			if(this.path instanceof paper.Path){
-        this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
-      }
-
-			this.project.register_change();
-
+			this.set_clr(v);
 		}
 	},
+
+  set_clr: {
+    value: function (v) {
+      this._row.clr = v;
+      if(this.path instanceof paper.Path){
+        this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
+      }
+      this.project.register_change();
+    }
+  },
 
 	width: {
 		get : function(){
@@ -5547,10 +5542,10 @@ BuilderElement.prototype.__define({
 		},
 		set: function(v){
       const cnn_ii = this.selected_cnn_ii();
-			if(cnn_ii){
+			if(cnn_ii && cnn_ii.row.cnn != v){
         cnn_ii.row.cnn = v;
+        this.project.register_change();
       }
-			this.project.register_change();
 		}
 	},
 
@@ -5874,7 +5869,18 @@ class Filling extends BuilderElement {
         }
       });
     }
-    super.set_inset(v, ignore_select);
+    super.set_inset(v);
+  }
+
+  set_clr(v, ignore_select) {
+    if(!ignore_select && this.project.selectedItems.length > 1){
+      this.project.selected_glasses().forEach((elm) => {
+        if(elm != this){
+          elm.set_clr(v, true);
+        }
+      });
+    }
+    super.set_clr(v);
   }
 
   get profiles() {
@@ -7196,8 +7202,12 @@ ProfileItem.prototype.__define({
 			return this.cnn_point("b").cnn || $p.cat.cnns.get();
 		},
 		set: function(v){
-			this.rays.b.cnn = $p.cat.cnns.get(v);
-			this.project.register_change();
+      const {rays, project} = this;
+      const cnn = $p.cat.cnns.get(v);
+      if(rays.b.cnn != cnn){
+        rays.b.cnn = cnn;
+        project.register_change();
+      }
 		}
 	},
 
@@ -7206,8 +7216,12 @@ ProfileItem.prototype.__define({
 			return this.cnn_point("e").cnn || $p.cat.cnns.get();
 		},
 		set: function(v){
-			this.rays.e.cnn = $p.cat.cnns.get(v);
-			this.project.register_change();
+		  const {rays, project} = this;
+      const cnn = $p.cat.cnns.get(v);
+      if(rays.e.cnn != cnn){
+        rays.e.cnn = cnn;
+        project.register_change();
+      }
 		}
 	},
 
@@ -7279,12 +7293,28 @@ ProfileItem.prototype.__define({
     value: function (v, ignore_select) {
       if(!ignore_select && this.project.selectedItems.length > 1){
         this.project.selected_profiles(true).forEach((elm) => {
-          if(elm != this){
+          if(elm != this && elm.elm_type == this.elm_type){
             elm.set_inset(v, true);
           }
         });
       }
-      BuilderElement.prototype.set_inset.call(this, v, ignore_select);
+      if(this._row.inset != v){
+        this.joined_nearests().forEach((profile) => profile.data._rays.clear(true));
+        BuilderElement.prototype.set_inset.call(this, v);
+      }
+    }
+  },
+
+  set_clr: {
+    value: function (v, ignore_select) {
+      if(!ignore_select && this.project.selectedItems.length > 1){
+        this.project.selected_profiles(true).forEach((elm) => {
+          if(elm != this){
+            elm.set_clr(v, true);
+          }
+        });
+      }
+      BuilderElement.prototype.set_clr.call(this, v);
     }
   },
 
@@ -7320,7 +7350,7 @@ ProfileItem.prototype.__define({
 
 		value: function(){
 
-			this.inset = this.project.check_inset({ elm: this });
+			this.set_inset(this.project.check_inset({ elm: this }), true);
 
 			return this;
 		}
@@ -7340,11 +7370,11 @@ ProfileItem.prototype.__define({
             pos = [pos, $p.enm.positions.ЦентрГоризонталь]
           }
         }
-        this.inset = this.project.default_inset({
+        this.set_inset(this.project.default_inset({
           elm_type: this.elm_type,
           pos: pos,
           inset: this.inset
-        });
+        }), true);
       }
       if(nearest){
         data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
@@ -7860,8 +7890,7 @@ ProfileItem.prototype.__define({
 
 	oxml: {
 		get: function () {
-			var cnn_ii = this.selected_cnn_ii(),
-				oxml = {
+      const oxml = {
 					" ": [
 						{id: "info", path: "o.info", type: "ro"},
 						"inset",
@@ -7870,10 +7899,9 @@ ProfileItem.prototype.__define({
 					"Начало": ["x1", "y1", "cnn1"],
 					"Конец": ["x2", "y2", "cnn2"]
 				};
-
-			if(cnn_ii)
-				oxml["Примыкание"] = ["cnn3"];
-
+			if(this.selected_cnn_ii()){
+        oxml["Примыкание"] = ["cnn3"];
+      }
 			return oxml;
 		}
 	},
@@ -10306,18 +10334,18 @@ class ToolLayImpost extends ToolElement {
         tool.profile.clr = paper.project.clr;
       }
 
-      tool.profile._metadata.fields.inset_by_y.choice_links = tool.profile._metadata.fields.inset_by_y.choice_links = [{
+      tool.profile._metadata.fields.inset_by_x.choice_links = tool.profile._metadata.fields.inset_by_y.choice_links = [{
         name: ["selection",	"ref"],
-        path: [
-          function(o, f){
+        path: [(o, f) => {
             if($p.utils.is_data_obj(o)){
               return tool.profile.rama_impost.indexOf(o) != -1;
-
-            }else{
-              var refs = "";
-              tool.profile.rama_impost.forEach(function (o) {
-                if(refs)
+            }
+            else{
+              let refs = "";
+              tool.profile.rama_impost.forEach((o) => {
+                if(refs){
                   refs += ", ";
+                }
                 refs += "'" + o.ref + "'";
               });
               return "_t_.ref in (" + refs + ")";

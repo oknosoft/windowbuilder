@@ -372,7 +372,7 @@ BuilderElement.prototype.__define({
 	// номер элемента - свойство только для чтения
 	elm: {
 		get : function(){
-			return this._row.elm;
+			return this._row ? this._row.elm : 0;
 		}
 	},
 
@@ -401,17 +401,10 @@ BuilderElement.prototype.__define({
   set_inset: {
 	  value: function(v){
       if(this._row.inset != v){
-
         this._row.inset = v;
-
         if(this.data && this.data._rays){
           this.data._rays.clear(true);
         }
-
-        if(this.joined_nearests){
-          this.joined_nearests().forEach((profile) => profile.data._rays.clear(true))
-        }
-
         this.project.register_change();
       }
     }
@@ -423,18 +416,24 @@ BuilderElement.prototype.__define({
 			return this._row.clr;
 		},
 		set : function(v){
-
-			this._row.clr = v;
-
-			// цвет элементу присваиваем только если он уже нарисован
-			if(this.path instanceof paper.Path){
-        this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
-      }
-
-			this.project.register_change();
-
+			this.set_clr(v);
 		}
 	},
+
+  /**
+   * Сеттер цвета элемента
+   * @param v {CatClrs}
+   */
+  set_clr: {
+    value: function (v) {
+      this._row.clr = v;
+      // цвет элементу присваиваем только если он уже нарисован
+      if(this.path instanceof paper.Path){
+        this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
+      }
+      this.project.register_change();
+    }
+  },
 
 	// ширина
 	width: {
@@ -474,10 +473,10 @@ BuilderElement.prototype.__define({
 		},
 		set: function(v){
       const cnn_ii = this.selected_cnn_ii();
-			if(cnn_ii){
+			if(cnn_ii && cnn_ii.row.cnn != v){
         cnn_ii.row.cnn = v;
+        this.project.register_change();
       }
-			this.project.register_change();
 		}
 	},
 

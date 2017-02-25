@@ -721,8 +721,12 @@ ProfileItem.prototype.__define({
 			return this.cnn_point("b").cnn || $p.cat.cnns.get();
 		},
 		set: function(v){
-			this.rays.b.cnn = $p.cat.cnns.get(v);
-			this.project.register_change();
+      const {rays, project} = this;
+      const cnn = $p.cat.cnns.get(v);
+      if(rays.b.cnn != cnn){
+        rays.b.cnn = cnn;
+        project.register_change();
+      }
 		}
 	},
 
@@ -739,8 +743,12 @@ ProfileItem.prototype.__define({
 			return this.cnn_point("e").cnn || $p.cat.cnns.get();
 		},
 		set: function(v){
-			this.rays.e.cnn = $p.cat.cnns.get(v);
-			this.project.register_change();
+		  const {rays, project} = this;
+      const cnn = $p.cat.cnns.get(v);
+      if(rays.e.cnn != cnn){
+        rays.e.cnn = cnn;
+        project.register_change();
+      }
 		}
 	},
 
@@ -836,12 +844,33 @@ ProfileItem.prototype.__define({
     value: function (v, ignore_select) {
       if(!ignore_select && this.project.selectedItems.length > 1){
         this.project.selected_profiles(true).forEach((elm) => {
-          if(elm != this){
+          if(elm != this && elm.elm_type == this.elm_type){
             elm.set_inset(v, true);
           }
         });
       }
-      BuilderElement.prototype.set_inset.call(this, v, ignore_select);
+      if(this._row.inset != v){
+        this.joined_nearests().forEach((profile) => profile.data._rays.clear(true));
+        BuilderElement.prototype.set_inset.call(this, v);
+      }
+    }
+  },
+
+  /**
+   * Сеттер цвета элемента
+   * @param v {CatClrs}
+   * @param ignore_select {Boolean}
+   */
+  set_clr: {
+    value: function (v, ignore_select) {
+      if(!ignore_select && this.project.selectedItems.length > 1){
+        this.project.selected_profiles(true).forEach((elm) => {
+          if(elm != this){
+            elm.set_clr(v, true);
+          }
+        });
+      }
+      BuilderElement.prototype.set_clr.call(this, v);
     }
   },
 
@@ -901,7 +930,7 @@ ProfileItem.prototype.__define({
 		value: function(){
 
 			// если слева и справа T - и тип не импост или есть не T и тпи импост
-			this.inset = this.project.check_inset({ elm: this });
+			this.set_inset(this.project.check_inset({ elm: this }), true);
 
 			return this;
 		}
@@ -929,11 +958,11 @@ ProfileItem.prototype.__define({
             pos = [pos, $p.enm.positions.ЦентрГоризонталь]
           }
         }
-        this.inset = this.project.default_inset({
+        this.set_inset(this.project.default_inset({
           elm_type: this.elm_type,
           pos: pos,
           inset: this.inset
-        });
+        }), true);
       }
       if(nearest){
         data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
@@ -1609,8 +1638,7 @@ ProfileItem.prototype.__define({
 	 */
 	oxml: {
 		get: function () {
-			var cnn_ii = this.selected_cnn_ii(),
-				oxml = {
+      const oxml = {
 					" ": [
 						{id: "info", path: "o.info", type: "ro"},
 						"inset",
@@ -1619,10 +1647,9 @@ ProfileItem.prototype.__define({
 					"Начало": ["x1", "y1", "cnn1"],
 					"Конец": ["x2", "y2", "cnn2"]
 				};
-
-			if(cnn_ii)
-				oxml["Примыкание"] = ["cnn3"];
-
+			if(this.selected_cnn_ii()){
+        oxml["Примыкание"] = ["cnn3"];
+      }
 			return oxml;
 		}
 	},

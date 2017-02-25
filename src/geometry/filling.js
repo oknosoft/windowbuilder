@@ -261,7 +261,23 @@ class Filling extends BuilderElement {
         }
       });
     }
-    super.set_inset(v, ignore_select);
+    super.set_inset(v);
+  }
+
+  /**
+   * Сеттер цвета элемента
+   * @param v {CatClrs}
+   * @param ignore_select {Boolean}
+   */
+  set_clr(v, ignore_select) {
+    if(!ignore_select && this.project.selectedItems.length > 1){
+      this.project.selected_glasses().forEach((elm) => {
+        if(elm != this){
+          elm.set_clr(v, true);
+        }
+      });
+    }
+    super.set_clr(v);
   }
 
   get profiles() {

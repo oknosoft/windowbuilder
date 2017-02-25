@@ -83,18 +83,18 @@ class ToolLayImpost extends ToolElement {
       }
 
       // параметры отбора для выбора вставок
-      tool.profile._metadata.fields.inset_by_y.choice_links = tool.profile._metadata.fields.inset_by_y.choice_links = [{
+      tool.profile._metadata.fields.inset_by_x.choice_links = tool.profile._metadata.fields.inset_by_y.choice_links = [{
         name: ["selection",	"ref"],
-        path: [
-          function(o, f){
+        path: [(o, f) => {
             if($p.utils.is_data_obj(o)){
               return tool.profile.rama_impost.indexOf(o) != -1;
-
-            }else{
-              var refs = "";
-              tool.profile.rama_impost.forEach(function (o) {
-                if(refs)
+            }
+            else{
+              let refs = "";
+              tool.profile.rama_impost.forEach((o) => {
+                if(refs){
                   refs += ", ";
+                }
                 refs += "'" + o.ref + "'";
               });
               return "_t_.ref in (" + refs + ")";
