@@ -5863,9 +5863,19 @@ class Filling extends BuilderElement {
 
   set_inset(v, ignore_select) {
     if(!ignore_select && this.project.selectedItems.length > 1){
+
+      const {glass_specification} = this.project.ox;
+      const proto = glass_specification.find_rows({elm: this.elm});
+
       this.project.selected_glasses().forEach((elm) => {
         if(elm != this){
           elm.set_inset(v, true);
+          glass_specification.clear(true, {elm: elm.elm});
+          proto.forEach((row) => glass_specification.add({
+            elm: elm.elm,
+            inset: row.inset,
+            clr: row.clr,
+          }));
         }
       });
     }
