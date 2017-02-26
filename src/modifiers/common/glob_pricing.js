@@ -134,21 +134,86 @@ class Pricing {
       external_formula: empty_formula
     };
 
-    const filter = prm.calc_order_row.nom.price_group.empty() ?
-        {price_group: prm.calc_order_row.nom.price_group} :
-        {price_group: {in: [prm.calc_order_row.nom.price_group, $p.cat.price_groups.get()]}},
-      ares = [];
+    const {nom, characteristic} = prm.calc_order_row;
+    const filter = nom.price_group.empty() ?
+        {price_group: nom.price_group} :
+        {price_group: {in: [nom.price_group, $p.cat.price_groups.get()]}};
+    const ares = [];
 
-    $p.ireg.margin_coefficients.find_rows(filter, function (row) {
-      ares.push(row);
+    $p.ireg.margin_coefficients.find_rows(filter, (row) => {
+
+      // фильтруем по параметрам
+      let ok = true;
+      if(!row.key.empty()){
+        row.key.params.forEach((row_prm) => {
+
+          // для вычисляемых параметров выполняем формулу
+          if(row_prm.property.is_calculated){
+
+          }
+          // обычные параметры ищем в параметрах изделия
+          else{
+            let finded;
+            characteristic.params.find_rows({
+              cnstr: 0,
+              param: row_prm.property
+            }, (row_x) => {
+              finded = row_x;
+              return false;
+            });
+
+            if(finded){
+              if(row_prm.comparison_type == $p.enm.comparison_types.in){
+                ok = row_prm.txt_row.match(finded.value.ref);
+              }
+              else if(row_prm.comparison_type == $p.enm.comparison_types.nin){
+                ok = !row_prm.txt_row.match(finded.value.ref);
+              }
+              else if(row_prm.comparison_type.empty() || row_prm.comparison_type == $p.enm.comparison_types.eq){
+                ok = row_prm.value == finded.value;
+              }
+              else if(row_prm.comparison_type.empty() || row_prm.comparison_type == $p.enm.comparison_types.ne){
+                ok = row_prm.value != finded.value;
+              }
+            }
+            else{
+              ok = false;
+            }
+          }
+          if(!ok){
+            return false;
+          }
+        })
+      }
+      if(ok){
+        ares.push(row);
+      }
     });
 
-    // заглушка - фильтр только по ценовой группе
+    // сортируем по приоритету и ценовой группе
     if(ares.length){
-      ares.sort(function (a, b) {
-        return a.price_group.ref < b.price_group.ref;
-      })
-      Object.keys(prm.price_type).forEach(function (key) {
+      ares.sort((a, b) => {
+
+        a.key.priority
+
+        if (a.key.priority > b.key.priority) {
+          return -1;
+        }
+        if (a.key.priority < b.key.priority) {
+          return 1;
+        }
+
+        if (a.price_group.ref < b.price_group.ref) {
+          return -1;
+        }
+        if (a.price_group.ref > b.price_group.ref) {
+          return 1;
+        }
+
+        return 0;
+
+      });
+      Object.keys(prm.price_type).forEach((key) => {
         prm.price_type[key] = ares[0][key];
       });
     }
@@ -156,7 +221,7 @@ class Pricing {
     // если для контрагента установлена индивидуальная наценка, подмешиваем её в prm
     prm.calc_order_row._owner._owner.partner.extra_fields.find_rows({
       property: $p.job_prm.pricing.dealer_surcharge
-    }, function (row) {
+    }, (row) => {
       const val = parseFloat(row.value);
       if(val){
         prm.price_type.extra_charge_external = val;
