@@ -80,6 +80,13 @@ class ProfileConnective extends ProfileItem {
   }
 
   /**
+   * Возвращает массив примыкающих рам
+   */
+  joined_nearests() {
+    return [];
+  }
+
+  /**
    * Вычисляемые поля в таблице координат
    * @method save_coordinates
    * @for ProfileConnective

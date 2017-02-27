@@ -8640,6 +8640,10 @@ class ProfileConnective extends ProfileItem {
     return this.rays[node];
   }
 
+  joined_nearests() {
+    return [];
+  }
+
   save_coordinates() {
     if(!this.data.generatrix)
       return;
@@ -11375,7 +11379,7 @@ class ToolPen extends ToolElement {
 
     super()
 
-    const tool = Object.assign(this, {
+    Object.assign(this, {
       options: {
         name: 'pen',
         wnd: {
@@ -11394,501 +11398,535 @@ class ToolPen extends ToolElement {
       mode: null,
       hitItem: null,
       originalContent: null,
-      start_binded: false
+      start_binded: false,
     })
 
-    let on_layer_activated,
-      on_scheme_changed,
-      sys;
+    this.on({
+      activate: this.on_activate,
+      deactivate: this.on_deactivate,
+      mousedown: this.on_mousedown,
+      mouseup: this.on_mouseup,
+      mousemove: this.on_mousemove,
+      keydown: this.on_keydown,
+    })
 
-    function tool_wnd(){
+  }
 
-      sys = paper.project._dp.sys;
+  tool_wnd() {
 
-      tool.profile = $p.dp.builder_pen.create();
+    this.sys = paper.project._dp.sys;
 
-      $p.wsql.restore_options("editor", tool.options);
-      tool.options.wnd.on_close = tool.on_close;
+    this.profile = $p.dp.builder_pen.create();
 
-      ["elm_type","inset","bind_generatrix","bind_node"].forEach((prop) => {
-        if(prop == "bind_generatrix" || prop == "bind_node" || tool.options.wnd[prop]){
-          tool.profile[prop] = tool.options.wnd[prop];
-        }
-      });
+    $p.wsql.restore_options("editor", this.options);
+    this.options.wnd.on_close = this.on_close;
 
-      if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Рама) &&
-          paper.project.activeLayer instanceof Contour && paper.project.activeLayer.profiles.length) {
-        tool.profile.elm_type = $p.enm.elm_types.Импост;
+    ["elm_type","inset","bind_generatrix","bind_node"].forEach((prop) => {
+      if(prop == "bind_generatrix" || prop == "bind_node" || this.options.wnd[prop]){
+        this.profile[prop] = this.options.wnd[prop];
       }
-      else if((tool.profile.elm_type.empty() || tool.profile.elm_type == $p.enm.elm_types.Импост) &&
-          paper.project.activeLayer instanceof Contour && !paper.project.activeLayer.profiles.length) {
-        tool.profile.elm_type = $p.enm.elm_types.Рама;
-      }
+    });
 
-      $p.dp.builder_pen.handle_event(tool.profile, "value_change", {
-        field: "elm_type"
-      });
-
-      tool.profile.clr = paper.project.clr;
-
-      tool.profile._metadata.fields.inset.choice_links = [{
-        name: ["selection",	"ref"],
-        path: [
-          function(o, f){
-            if($p.utils.is_data_obj(o)){
-              return tool.profile.rama_impost.indexOf(o) != -1;
-
-            }else{
-              var refs = "";
-              tool.profile.rama_impost.forEach(function (o) {
-                if(refs)
-                  refs += ", ";
-                refs += "'" + o.ref + "'";
-              });
-              return "_t_.ref in (" + refs + ")";
-            }
-          }]
-      }];
-
-      $p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr, sys);
-
-      tool.wnd = $p.iface.dat_blank(paper._dxw, tool.options.wnd);
-      tool._grid = tool.wnd.attachHeadFields({
-        obj: tool.profile
-      });
-
-      tool.wnd.tb_mode = new $p.iface.OTooolBar({
-        wrapper: tool.wnd.cell,
-        width: '100%',
-        height: '28px',
-        class_name: "",
-        name: 'tb_mode',
-        buttons: [
-          {name: 'standard_form', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить типовую форму', float: 'left',
-            sub: {
-              width: '62px',
-              height:'206px',
-              buttons: [
-                {name: 'square', img: 'square.png', float: 'left'},
-                {name: 'triangle1', img: 'triangle1.png', float: 'right'},
-                {name: 'triangle2', img: 'triangle2.png', float: 'left'},
-                {name: 'triangle3', img: 'triangle3.png', float: 'right'},
-                {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-                {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
-                {name: 'circle',    img: 'circle.png', float: 'left'},
-                {name: 'arc1',      img: 'arc1.png', float: 'right'},
-                {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-                {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
-                {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
-                {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
-                {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-                {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
-          },
-        ],
-        image_path: "dist/imgs/",
-        onclick: (name) => tool.standard_form(name)
-      });
-      tool.wnd.tb_mode.cell.style.backgroundColor = "#f5f5f5";
-      tool.wnd.cell.firstChild.style.marginTop = "22px";
-
-      const wnd_options = tool.wnd.wnd_options;
-      tool.wnd.wnd_options = function (opt) {
-        wnd_options.call(tool.wnd, opt);
-        opt.bind_generatrix = tool.profile.bind_generatrix;
-        opt.bind_node = tool.profile.bind_node;
-      }
+    if((this.profile.elm_type.empty() || this.profile.elm_type == $p.enm.elm_types.Рама) &&
+      paper.project.activeLayer instanceof Contour && paper.project.activeLayer.profiles.length) {
+      this.profile.elm_type = $p.enm.elm_types.Импост;
+    }
+    else if((this.profile.elm_type.empty() || this.profile.elm_type == $p.enm.elm_types.Импост) &&
+      paper.project.activeLayer instanceof Contour && !paper.project.activeLayer.profiles.length) {
+      this.profile.elm_type = $p.enm.elm_types.Рама;
     }
 
-    tool.on({
+    $p.dp.builder_pen.handle_event(this.profile, "value_change", {
+      field: "elm_type"
+    });
 
-      activate: function() {
+    this.profile.clr = paper.project.clr;
 
-        this.on_activate('cursor-pen-freehand');
+    this.profile._metadata.fields.inset.choice_links = [{
+      name: ["selection",	"ref"],
+      path: [(o, f) => {
+          if($p.utils.is_data_obj(o)){
+            return this.profile.rama_impost.indexOf(o) != -1;
+          }
+          else{
+            let refs = "";
+            this.profile.rama_impost.forEach((o) => {
+              if(refs){
+                refs += ", ";
+              }
+              refs += "'" + o.ref + "'";
+            });
+            return "_t_.ref in (" + refs + ")";
+          }
+        }]
+    }];
 
-        this._controls = new PenControls(this);
+    $p.cat.clrs.selection_exclude_service(this.profile._metadata.fields.clr, this.sys);
 
-        tool_wnd();
+    this.wnd = $p.iface.dat_blank(paper._dxw, this.options.wnd);
+    this._grid = this.wnd.attachHeadFields({
+      obj: this.profile
+    });
 
-        if(!on_layer_activated)
-          on_layer_activated = $p.eve.attachEvent("layer_activated", function (contour, virt) {
+    this.wnd.tb_mode = new $p.iface.OTooolBar({
+      wrapper: this.wnd.cell,
+      width: '100%',
+      height: '28px',
+      class_name: "",
+      name: 'tb_mode',
+      buttons: [
+        {name: 'standard_form', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить типовую форму', float: 'left',
+          sub: {
+            width: '62px',
+            height:'206px',
+            buttons: [
+              {name: 'square', img: 'square.png', float: 'left'},
+              {name: 'triangle1', img: 'triangle1.png', float: 'right'},
+              {name: 'triangle2', img: 'triangle2.png', float: 'left'},
+              {name: 'triangle3', img: 'triangle3.png', float: 'right'},
+              {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
+              {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
+              {name: 'circle',    img: 'circle.png', float: 'left'},
+              {name: 'arc1',      img: 'arc1.png', float: 'right'},
+              {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
+              {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
+              {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
+              {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
+              {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
+              {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
+        },
+      ],
+      image_path: "dist/imgs/",
+      onclick: (name) => this.standard_form(name)
+    });
+    this.wnd.tb_mode.cell.style.backgroundColor = "#f5f5f5";
+    this.wnd.cell.firstChild.style.marginTop = "22px";
 
-            if(!virt && contour.project == paper.project && !paper.project.data._loading && !paper.project.data._snapshot){
-              tool.decorate_layers();
-            }
-          });
+    const wnd_options = this.wnd.wnd_options;
+    this.wnd.wnd_options = (opt) => {
+      wnd_options.call(this.wnd, opt);
+      opt.bind_generatrix = this.profile.bind_generatrix;
+      opt.bind_node = this.profile.bind_node;
+    }
+  }
 
-        if(!on_scheme_changed)
-          on_scheme_changed = $p.eve.attachEvent("scheme_changed", function (scheme) {
-            if(scheme == paper.project && sys != scheme._dp.sys){
+  on_activate() {
 
-              delete tool.profile._metadata.fields.inset.choice_links;
-              tool.detache_wnd();
-              tool_wnd();
+    super.on_activate('cursor-pen-freehand');
 
-            }
-          });
+    this._controls = new PenControls(this);
 
-        tool.decorate_layers();
+    this.tool_wnd();
 
-      },
-
-      deactivate: function() {
-        paper.clear_selection_bounds();
-
-        if(on_layer_activated){
-          $p.eve.detachEvent(on_layer_activated);
-          on_layer_activated = null;
+    if(!this.on_layer_activated){
+      this.on_layer_activated = $p.eve.attachEvent("layer_activated", (contour, virt) => {
+        if(!virt && contour.project == paper.project && !paper.project.data._loading && !paper.project.data._snapshot){
+          this.decorate_layers();
         }
+      });
+    }
 
-        if(on_scheme_changed){
-          $p.eve.detachEvent(on_scheme_changed);
-          on_scheme_changed = null;
+    if(!this.on_scheme_changed){
+      this.on_scheme_changed = $p.eve.attachEvent("scheme_changed", (scheme) => {
+        if(scheme == paper.project && this.sys != scheme._dp.sys){
+          delete this.profile._metadata.fields.inset.choice_links;
+          this.detache_wnd();
+          tool_wnd();
         }
+      });
+    }
 
-        tool.decorate_layers(true);
+    this.decorate_layers();
+  }
 
-        delete tool.profile._metadata.fields.inset.choice_links;
+  on_deactivate() {
+    paper.clear_selection_bounds();
 
-        tool.detache_wnd();
+    if(this.on_layer_activated){
+      $p.eve.detachEvent(this.on_layer_activated);
+      this.on_layer_activated = null;
+    }
 
-        if(this.path){
-          this.path.removeSegments();
-          this.path.remove();
+    if(this.on_scheme_changed){
+      $p.eve.detachEvent(this.on_scheme_changed);
+      this.on_scheme_changed = null;
+    }
+
+    this.decorate_layers(true);
+
+    delete this.profile._metadata.fields.inset.choice_links;
+
+    this.detache_wnd();
+
+    if(this.path){
+      this.path.removeSegments();
+      this.path.remove();
+    }
+    this.path = null;
+    this.last_profile = null;
+    this.mode = null;
+
+    this._controls.unload();
+  }
+
+  on_keydown(event) {
+
+    if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+
+      if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+        return;
+
+      paper.project.selectedItems.forEach((path) => {
+        if(path.parent instanceof ProfileItem){
+          path = path.parent;
+          path.removeChildren();
+          path.remove();
         }
+      });
+
+      this.mode = null;
+      this.path = null;
+
+      event.stop();
+      return false;
+
+    }else if(event.key == 'escape'){
+
+      if(this.path){
+        this.path.remove();
         this.path = null;
-        this.last_profile = null;
-        this.mode = null;
+      }
+      this.mode = null;
+      this._controls.blur();
+    }
+  }
 
-        tool._controls.unload();
+  on_mousedown(event) {
+    paper.project.deselectAll();
 
-      },
+    if(event.event && event.event.which && event.event.which > 1){
+      return this.on_keydown({key: 'escape'});
+    }
 
-      mousedown: function(event) {
+    this.last_profile = null;
 
+    if(this.profile.elm_type == $p.enm.elm_types.Добор || this.profile.elm_type == $p.enm.elm_types.Соединитель){
+
+      if(this.addl_hit){
+
+      }
+
+    }else{
+
+      if(this.mode == 'continue'){
+        this.mode = 'create';
+        this.start_binded = false;
+      }
+    }
+  }
+
+  on_mouseup(event) {
+
+    paper.canvas_cursor('cursor-pen-freehand');
+
+    if(event.event && event.event.which && event.event.which > 1){
+      return this.on_keydown({key: 'escape'});
+    }
+
+    this.check_layer();
+
+    let whas_select;
+
+    if(this.addl_hit){
+
+      if(this.addl_hit.glass && this.profile.elm_type == $p.enm.elm_types.Добор && !this.profile.inset.empty()){
+        new ProfileAddl({
+          generatrix: this.addl_hit.generatrix,
+          proto: this.profile,
+          parent: this.addl_hit.profile,
+          side: this.addl_hit.side
+        });
+      }
+      else if(this.profile.elm_type == $p.enm.elm_types.Соединитель && !this.profile.inset.empty()){
+        new ProfileConnective({
+          generatrix: this.addl_hit.generatrix,
+          proto: this.profile,
+          parent: this.addl_hit.profile,
+        });
+      }
+
+    }
+    else if(this.mode == 'create' && this.path) {
+
+      if (this.path.length < consts.sticking){
+        return;
+      }
+
+      if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+
+        paper.project.activeLayer.glasses(false, true).some((glass) => {
+
+          if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
+            new Onlay({
+              generatrix: this.path,
+              proto: this.profile,
+              parent: glass
+            });
+            this.path = null;
+            return true;
+          }
+        });
+      }
+      else{
+        this.last_profile = new Profile({generatrix: this.path, proto: this.profile});
+      }
+
+      this.path = null;
+
+      if(this.profile.elm_type == $p.enm.elm_types.Рама){
+        setTimeout(() => {
+          if(this.last_profile){
+            this._controls.mousemove({point: this.last_profile.e}, true);
+            this.last_profile = null;
+            this._controls.create_click();
+          }
+        }, 50);
+      }
+    }
+    else if (this.hitItem && this.hitItem.item && (event.modifiers.shift || event.modifiers.control || event.modifiers.option)) {
+
+      let item = this.hitItem.item.parent;
+      if (event.modifiers.space && item.nearest && item.nearest()) {
+        item = item.nearest();
+      }
+
+      if (event.modifiers.shift) {
+        item.selected = !item.selected;
+      } else {
         paper.project.deselectAll();
+        item.selected = true;
+      }
 
-        if(event.event && event.event.which && event.event.which > 1){
-          return this.keydown({key: 'escape'});
-        }
+      if(item instanceof ProfileItem && item.isInserted()){
+        item.attache_wnd(paper._acc.elm.cells("a"));
+        whas_select = true;
+        this._controls.blur();
 
-        tool.last_profile = null;
+      }else if(item instanceof Filling && item.visible){
+        item.attache_wnd(paper._acc.elm.cells("a"));
+        whas_select = true;
+        this._controls.blur();
+      }
 
-        if(tool.profile.elm_type == $p.enm.elm_types.Добор || tool.profile.elm_type == $p.enm.elm_types.Соединитель){
+      if(item.selected && item.layer){
+        item.layer.activate(true);
+      }
 
-          if(this.addl_hit){
+    }
 
-          }
+    if(!whas_select && !this.mode && !this.addl_hit) {
 
-        }else{
+      this.mode = 'continue';
+      this.point1 = this._controls.point;
 
-          if(this.mode == 'continue'){
-            this.mode = 'create';
-            this.start_binded = false;
+      if (!this.path){
+        this.path = new paper.Path({
+          strokeColor: 'black',
+          segments: [this.point1]
+        });
+        this.currentSegment = this.path.segments[0];
+        this.originalHandleIn = this.currentSegment.handleIn.clone();
+        this.originalHandleOut = this.currentSegment.handleOut.clone();
+        this.currentSegment.selected = true;
+      }
+      this.start_binded = false;
+      return;
 
-          }
-        }
-      },
+    }
 
-      mouseup: function(event) {
+    if(this.path) {
+      this.path.remove();
+      this.path = null;
+    }
+    this.mode = null;
+  }
 
-        paper.canvas_cursor('cursor-pen-freehand');
+  on_mousemove(event) {
+    this.hitTest(event);
 
-        if(event.event && event.event.which && event.event.which > 1){
-          return this.keydown({key: 'escape'});
-        }
+    if(this.addl_hit){
 
-        this.check_layer();
+      if (!this.path){
+        this.path = new paper.Path({
+          strokeColor: 'black',
+          fillColor: 'white',
+          strokeScaling: false,
+          guide: true
+        });
+      }
 
-        let whas_select;
+      this.path.removeSegments();
 
-        if(this.addl_hit && this.addl_hit.glass && this.profile.elm_type == $p.enm.elm_types.Добор && !this.profile.inset.empty()){
+      if(this.addl_hit.glass){
+        this.draw_addl()
+      }
+      else{
+        this.draw_connective()
+      }
+    }
+    else if(this.path){
 
-          new ProfileAddl({
-            generatrix: this.addl_hit.generatrix,
-            proto: this.profile,
-            parent: this.addl_hit.profile,
-            side: this.addl_hit.side
-          });
-        }
-        else if(this.mode == 'create' && this.path) {
+      if(this.mode){
 
-          if (this.path.length < consts.sticking){
-            return;
-          }
+        var delta = event.point.subtract(this.point1),
+          dragIn = false,
+          dragOut = false,
+          invert = false,
+          handlePos;
 
-          if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
-
-            paper.project.activeLayer.glasses(false, true).some(function (glass) {
-
-              if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
-                new Onlay({
-                  generatrix: this.path,
-                  proto: this.profile,
-                  parent: glass
-                });
-                this.path = null;
-                return true;
-              }
-
-            }.bind(this));
-
-          }
-          else{
-            this.last_profile = new Profile({generatrix: this.path, proto: this.profile});
-          }
-
-          this.path = null;
-
-          if(this.profile.elm_type == $p.enm.elm_types.Рама){
-            setTimeout(() => {
-              if(this.last_profile){
-                this._controls.mousemove({point: this.last_profile.e}, true);
-                this.last_profile = null;
-                this._controls.create_click();
-              }
-            }, 50);
-          }
-        }
-        else if (this.hitItem && this.hitItem.item && (event.modifiers.shift || event.modifiers.control || event.modifiers.option)) {
-
-          let item = this.hitItem.item.parent;
-          if (event.modifiers.space && item.nearest && item.nearest()) {
-            item = item.nearest();
-          }
-
-          if (event.modifiers.shift) {
-            item.selected = !item.selected;
-          } else {
-            paper.project.deselectAll();
-            item.selected = true;
-          }
-
-          if(item instanceof ProfileItem && item.isInserted()){
-            item.attache_wnd(paper._acc.elm.cells("a"));
-            whas_select = true;
-            tool._controls.blur();
-
-          }else if(item instanceof Filling && item.visible){
-            item.attache_wnd(paper._acc.elm.cells("a"));
-            whas_select = true;
-            tool._controls.blur();
-          }
-
-          if(item.selected && item.layer){
-            item.layer.activate(true);
-          }
-
-        }
-
-        if(!whas_select && !this.mode && !this.addl_hit) {
-
-          this.mode = 'continue';
-          this.point1 = tool._controls.point;
-
-          if (!this.path){
-            this.path = new paper.Path({
-              strokeColor: 'black',
-              segments: [this.point1]
-            });
-            this.currentSegment = this.path.segments[0];
-            this.originalHandleIn = this.currentSegment.handleIn.clone();
-            this.originalHandleOut = this.currentSegment.handleOut.clone();
-            this.currentSegment.selected = true;
-          }
-          this.start_binded = false;
+        if (delta.length < consts.sticking){
           return;
-
         }
 
-        if(this.path) {
-          this.path.remove();
-          this.path = null;
+        if (this.mode == 'create') {
+          dragOut = true;
+          if (this.currentSegment.index > 0)
+            dragIn = true;
+        } else  if (this.mode == 'close') {
+          dragIn = true;
+          invert = true;
+        } else  if (this.mode == 'continue') {
+          dragOut = true;
+        } else if (this.mode == 'adjust') {
+          dragOut = true;
+        } else  if (this.mode == 'join') {
+          dragIn = true;
+          invert = true;
+        } else  if (this.mode == 'convert') {
+          dragIn = true;
+          dragOut = true;
         }
-        this.mode = null;
 
-      },
+        if (dragIn || dragOut) {
+          var i, res, element, bind = this.profile.bind_node ? "node_" : "";
 
-      mousemove: function(event) {
-
-        this.hitTest(event);
-
-        if(this.addl_hit){
-
-          if (!this.path){
-            this.path = new paper.Path({
-              strokeColor: 'black',
-              fillColor: 'white',
-              strokeScaling: false,
-              guide: true
-            });
+          if(this.profile.bind_generatrix){
+            bind += "generatrix";
           }
 
-          this.path.removeSegments();
-
-          if(this.addl_hit.glass){
-            this.draw_addl()
+          if (invert){
+            delta = delta.negate();
           }
-          else{
-            this.draw_connective()
+
+          if (dragIn && dragOut) {
+            handlePos = this.originalHandleOut.add(delta);
+            if(!event.modifiers.shift) {
+              handlePos = handlePos.snap_to_angle();
+            }
+            this.currentSegment.handleOut = handlePos;
+            this.currentSegment.handleIn = handlePos.negate();
+
           }
-        }
-        else if(this.path){
+          else if (dragOut) {
 
-          if(this.mode){
-
-            var delta = event.point.subtract(this.point1),
-              dragIn = false,
-              dragOut = false,
-              invert = false,
-              handlePos;
-
-            if (delta.length < consts.sticking){
-              return;
+            let bpoint = this.point1.add(delta);
+            if(!event.modifiers.shift) {
+              if(!bpoint.bind_to_nodes(true)){
+                bpoint = this.point1.add(delta.snap_to_angle());
+              }
             }
 
-            if (this.mode == 'create') {
-              dragOut = true;
-              if (this.currentSegment.index > 0)
-                dragIn = true;
-            } else  if (this.mode == 'close') {
-              dragIn = true;
-              invert = true;
-            } else  if (this.mode == 'continue') {
-              dragOut = true;
-            } else if (this.mode == 'adjust') {
-              dragOut = true;
-            } else  if (this.mode == 'join') {
-              dragIn = true;
-              invert = true;
-            } else  if (this.mode == 'convert') {
-              dragIn = true;
-              dragOut = true;
+            if(this.path.segments.length > 1){
+              this.path.lastSegment.point = bpoint;
+            }
+            else{
+              this.path.add(bpoint);
             }
 
-            if (dragIn || dragOut) {
-              var i, res, element, bind = this.profile.bind_node ? "node_" : "";
+            if(!this.start_binded){
 
-              if(this.profile.bind_generatrix)
-                bind += "generatrix";
+              if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
-              if (invert)
-                delta = delta.negate();
-
-              if (dragIn && dragOut) {
-                handlePos = this.originalHandleOut.add(delta);
-                if(!event.modifiers.shift) {
-                  handlePos = handlePos.snap_to_angle();
+                res = Onlay.prototype.bind_node(this.path.firstSegment.point, paper.project.activeLayer.glasses(false, true));
+                if(res.binded){
+                  this.path.firstSegment.point = this.point1 = res.point;
                 }
-                this.currentSegment.handleOut = handlePos;
-                this.currentSegment.handleIn = handlePos.negate();
 
               }
-              else if (dragOut) {
+              else if(this.profile.elm_type == $p.enm.elm_types.Импост){
 
-                let bpoint = this.point1.add(delta);
-                if(!event.modifiers.shift) {
-                  if(!bpoint.bind_to_nodes(true)){
-                    bpoint = this.point1.add(delta.snap_to_angle());
-                  }
-                }
+                res = {distance: Infinity};
+                paper.project.activeLayer.profiles.some((element) => {
 
-                if(this.path.segments.length > 1){
-                  this.path.lastSegment.point = bpoint;
-                }
-                else{
-                  this.path.add(bpoint);
-                }
-
-                if(!this.start_binded){
-
-                  if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
-
-                    res = Onlay.prototype.bind_node(this.path.firstSegment.point, paper.project.activeLayer.glasses(false, true));
-                    if(res.binded){
-                      tool.path.firstSegment.point = tool.point1 = res.point;
-                    }
-
-                  }
-                  else if(tool.profile.elm_type == $p.enm.elm_types.Импост){
-
-                    res = {distance: Infinity};
-                    paper.project.activeLayer.profiles.some((element) => {
-
-                      if(element.children.some(function (addl) {
-                          if(addl instanceof ProfileAddl && paper.project.check_distance(addl, null, res, tool.path.firstSegment.point, bind) === false){
-                            tool.path.firstSegment.point = tool.point1 = res.point;
-                            return true;
-                          }
-                        })){
-                        return true;
-
-                      }else if (paper.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
-                        tool.path.firstSegment.point = tool.point1 = res.point;
+                  if(element.children.some((addl) => {
+                      if(addl instanceof ProfileAddl && paper.project.check_distance(addl, null, res, this.path.firstSegment.point, bind) === false){
+                        this.path.firstSegment.point = this.point1 = res.point;
                         return true;
                       }
-                    })
+                    })){
+                    return true;
 
-                    this.start_binded = true;
+                  }else if (paper.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
+                    this.path.firstSegment.point = this.point1 = res.point;
+                    return true;
                   }
-                }
+                })
 
-                if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+                this.start_binded = true;
+              }
+            }
 
-                  res = Onlay.prototype.bind_node(this.path.lastSegment.point, paper.project.activeLayer.glasses(false, true));
-                  if(res.binded)
-                    this.path.lastSegment.point = res.point;
+            if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
-                }
-                else if(tool.profile.elm_type == $p.enm.elm_types.Импост){
+              res = Onlay.prototype.bind_node(this.path.lastSegment.point, paper.project.activeLayer.glasses(false, true));
+              if(res.binded)
+                this.path.lastSegment.point = res.point;
 
-                  res = {distance: Infinity};
-                  paper.project.activeLayer.profiles.some((element) => {
+            }
+            else if(this.profile.elm_type == $p.enm.elm_types.Импост){
 
-                    if(element.children.some(function (addl) {
-                        if(addl instanceof ProfileAddl && paper.project.check_distance(addl, null, res, tool.path.lastSegment.point, bind) === false){
-                          tool.path.lastSegment.point = res.point;
-                          return true;
-                        }
-                      })){
-                      return true;
+              res = {distance: Infinity};
+              paper.project.activeLayer.profiles.some((element) => {
 
-                    }else if (paper.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
+                if(element.children.some((addl) => {
+                    if(addl instanceof ProfileAddl && paper.project.check_distance(addl, null, res, this.path.lastSegment.point, bind) === false){
                       this.path.lastSegment.point = res.point;
                       return true;
                     }
+                  })){
+                  return true;
 
-                  });
+                }else if (paper.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
+                  this.path.lastSegment.point = res.point;
+                  return true;
                 }
 
-              }
-              else {
-                handlePos = this.originalHandleIn.add(delta);
-                if(!event.modifiers.shift) {
-                  handlePos = handlePos.snap_to_angle();
-                }
-                this.currentSegment.handleIn = handlePos;
-                this.currentSegment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
-              }
-              this.path.selected = true;
+              });
             }
 
           }
-          else{
-            this.path.removeSegments();
-            this.path.remove();
-            this.path = null;
+          else {
+            handlePos = this.originalHandleIn.add(delta);
+            if(!event.modifiers.shift) {
+              handlePos = handlePos.snap_to_angle();
+            }
+            this.currentSegment.handleIn = handlePos;
+            this.currentSegment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
           }
-
-          if(event.className != "ToolEvent"){
-            paper.project.register_update();
-          }
+          this.path.selected = true;
         }
-      },
 
-      keydown: this.keydown
+      }
+      else{
+        this.path.removeSegments();
+        this.path.remove();
+        this.path = null;
+      }
 
-    })
-
+      if(event.className != "ToolEvent"){
+        paper.project.register_update();
+      }
+    }
   }
 
   draw_addl() {
@@ -12084,37 +12122,7 @@ class ToolPen extends ToolElement {
     return true;
   }
 
-  keydown(event) {
 
-    if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
-
-      if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
-        return;
-
-      paper.project.selectedItems.forEach((path) => {
-        if(path.parent instanceof ProfileItem){
-          path = path.parent;
-          path.removeChildren();
-          path.remove();
-        }
-      });
-
-      this.mode = null;
-      this.path = null;
-
-      event.stop();
-      return false;
-
-    }else if(event.key == 'escape'){
-
-      if(this.path){
-        this.path.remove();
-        this.path = null;
-      }
-      this.mode = null;
-      this._controls.blur();
-    }
-  }
 
   standard_form(name) {
 
