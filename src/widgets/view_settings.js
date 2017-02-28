@@ -25,23 +25,24 @@ $p.iface.view_settings = function (cell) {
 		function deferred_init(){
 
 			// отписываемся от события
-			if(deferred_id)
-				$p.eve.detachEvent(deferred_id);
+			if(deferred_id){
+        $p.eve.detachEvent(deferred_id);
+      }
 
 			// разблокируем
-			if(t.form2.isLocked())
-				t.form2.unlock();
+			if(t.form2.isLocked()){
+        t.form2.unlock();
+      }
 
 			// устанавливаем значения сокрытия колонок цен
 			if($p.wsql.get_user_param("hide_price_dealer")){
 				t.form2.checkItem("hide_price", "hide_price_dealer");
-
-			}else if($p.wsql.get_user_param("hide_price_manufacturer")){
+			}
+			else if($p.wsql.get_user_param("hide_price_manufacturer")){
 				t.form2.checkItem("hide_price", "hide_price_manufacturer");
-
-			}else{
+			}
+			else{
 				t.form2.checkItem("hide_price", "hide_price_no");
-
 			}
 
 			if($p.current_acl.partners_uids.length){
@@ -55,6 +56,7 @@ $p.iface.view_settings = function (cell) {
           var partner = $p.cat.partners.get($p.current_acl.partners_uids[0]),
             prm = {calc_order_row: {
               nom: $p.cat.nom.get(),
+              characteristic: {params: {find_rows: () => null}},
               _owner: {_owner: {partner: partner}}
             }};
 

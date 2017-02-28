@@ -345,16 +345,21 @@ function ProductsBuilding(){
 
       // если сравнение на равенство - решаем в лоб, если вычисляемый параметр типа массив - выясняем вхождение значения в параметр
       if((!Array.isArray(val)) && (prm.comparison_type.empty() || prm.comparison_type == $p.enm.comparison_types.eq)){
-        params.find_rows({
-          cnstr: cnstr || 0,
-          inset: origin || $p.utils.blank.guid,
-          param: prm.param,
-          value: val
-        }, function () {
-          ok = true;
-          return false;
-        });
 
+			  if(is_calculated){
+          ok = val == prm.value;
+        }
+        else{
+          params.find_rows({
+            cnstr: cnstr || 0,
+            inset: origin || $p.utils.blank.guid,
+            param: prm.param,
+            value: val
+          }, () => {
+            ok = true;
+            return false;
+          });
+        }
       }
       else if(is_calculated){
 

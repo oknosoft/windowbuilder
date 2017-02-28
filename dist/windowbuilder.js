@@ -7766,12 +7766,6 @@ ProfileItem.prototype.__define({
       const ecnn = this.postcalc_cnn("e");
       const {path, generatrix, rays, project} = this;
 
-      let offset1, offset2, tpath, step;
-
-			if(project._dp.sys.allow_open_cnn){
-        this.postcalc_inset();
-      }
-
 			this.path_points(bcnn, "b");
 			this.path_points(ecnn, "e");
 
@@ -7781,15 +7775,17 @@ ProfileItem.prototype.__define({
 
 			if(generatrix.is_linear()){
 				path.add(this.corns(2), this.corns(3));
+			}
+			else{
 
-			}else{
+				let tpath = new paper.Path({insert: false});
+				let offset1 = rays.outer.getNearestLocation(this.corns(1)).offset;
+				let offset2 = rays.outer.getNearestLocation(this.corns(2)).offset;
+				let step = (offset2 - offset1) / 50;
 
-				tpath = new paper.Path({insert: false});
-				offset1 = rays.outer.getNearestLocation(this.corns(1)).offset;
-				offset2 = rays.outer.getNearestLocation(this.corns(2)).offset;
-				step = (offset2 - offset1) / 50;
-				for(var i = offset1 + step; i<offset2; i+=step)
-					tpath.add(rays.outer.getPointAt(i));
+				for(let i = offset1 + step; i<offset2; i+=step){
+          tpath.add(rays.outer.getPointAt(i));
+        }
 				tpath.simplify(0.8);
 				path.join(tpath);
 				path.add(this.corns(2));
@@ -7800,8 +7796,9 @@ ProfileItem.prototype.__define({
 				offset1 = rays.inner.getNearestLocation(this.corns(3)).offset;
 				offset2 = rays.inner.getNearestLocation(this.corns(4)).offset;
 				step = (offset2 - offset1) / 50;
-				for(var i = offset1 + step; i<offset2; i+=step)
-					tpath.add(rays.inner.getPointAt(i));
+				for(let i = offset1 + step; i<offset2; i+=step){
+          tpath.add(rays.inner.getPointAt(i));
+        }
 				tpath.simplify(0.8);
 				path.join(tpath);
 
@@ -7811,7 +7808,7 @@ ProfileItem.prototype.__define({
 			path.closePath();
 			path.reduce();
 
-			this.children.forEach(function (elm) {
+			this.children.forEach((elm) => {
 				if(elm instanceof ProfileAddl){
 					elm.observer(elm.parent);
 					elm.redraw();
@@ -8371,254 +8368,245 @@ Editor.Profile = Profile;
 
 
 
-function ProfileAddl(attr){
+class ProfileAddl extends ProfileItem {
 
-	ProfileAddl.superclass.constructor.call(this, attr);
+  constructor(attr) {
 
-	this.data.generatrix.strokeWidth = 0;
+    super(attr);
 
-	if(!attr.side && this._row.parent < 0)
-		attr.side = "outer";
+    this.data.generatrix.strokeWidth = 0;
 
-	this.data.side = attr.side || "inner";
+    if(!attr.side && this._row.parent < 0){
+      attr.side = "outer";
+    }
 
-	if(!this._row.parent){
-		this._row.parent = this.parent.elm;
-		if(this.outer)
-			this._row.parent = -this._row.parent;
-	}
+    this.data.side = attr.side || "inner";
+
+    if(!this._row.parent){
+      this._row.parent = this.parent.elm;
+      if(this.outer){
+        this._row.parent = -this._row.parent;
+      }
+    }
+
+  }
+
+  get d0() {
+    this.nearest();
+    return this.data._nearest_cnn ? -this.data._nearest_cnn.sz : 0;
+  }
+
+  get d1() {
+    return -(this.d0 - this.sizeb);
+  }
+
+  get d2() {
+    return this.d1 - this.width;
+  }
+
+  get outer() {
+    return this.data.side == "outer";
+  }
+
+  get elm_type() {
+    return $p.enm.elm_types.Добор;
+  }
+
+  nearest() {
+    const {data, parent} = this;
+    data._nearest_cnn = $p.cat.cnns.elm_cnn(this, parent, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
+    return parent;
+  }
+
+  cnn_point(node, point) {
+
+    const res = this.rays[node];
+
+    const check_distance = (elm, with_addl) => {
+
+        if(elm == this || elm == this.parent){
+          return;
+        }
+
+        const gp = elm.generatrix.getNearestPoint(point);
+        let distance;
+
+        if(gp && (distance = gp.getDistance(point)) < consts.sticking){
+          if(distance <= res.distance){
+            res.point = gp;
+            res.distance = distance;
+            res.profile = elm;
+          }
+        }
+
+        if(with_addl){
+          elm.getItems({class: ProfileAddl}).forEach((addl) => {
+            check_distance(addl, with_addl);
+          });
+        }
+
+      };
+
+    if(!point){
+      point = this[node];
+    }
+
+    if(res.profile && res.profile.children.length){
+      check_distance(res.profile);
+      if(res.distance < consts.sticking){
+        return res;
+      }
+    }
+
+    res.clear();
+    res.cnn_types = $p.enm.cnn_types.acn.t;
+
+    this.layer.profiles.forEach((addl) => check_distance(addl, true));
+
+    return res;
+  }
+
+  path_points(cnn_point, profile_point) {
+
+    const {generatrix, rays} = this;
+    const interior = generatrix.getPointAt(generatrix.length/2);
+
+    const _profile = this;
+    const _corns = this.data._corns;
+
+    if(!generatrix.curves.length){
+      return cnn_point;
+    }
+
+    function intersect_point(path1, path2, index){
+      var intersections = path1.getIntersections(path2),
+        delta = Infinity, tdelta, point, tpoint;
+
+      if(intersections.length == 1)
+        if(index)
+          _corns[index] = intersections[0].point;
+        else
+          return intersections[0].point.getDistance(cnn_point.point, true);
+
+      else if(intersections.length > 1){
+        intersections.forEach((o) => {
+          tdelta = o.point.getDistance(cnn_point.point, true);
+          if(tdelta < delta){
+            delta = tdelta;
+            point = o.point;
+          }
+        });
+        if(index)
+          _corns[index] = point;
+        else
+          return delta;
+      }
+    }
+
+    function detect_side(){
+      return prays.inner.getNearestPoint(interior).getDistance(interior, true) <
+        prays.outer.getNearestPoint(interior).getDistance(interior, true) ? 1 : -1;
+    }
+
+    const prays = cnn_point.profile.rays;
+
+    if(!cnn_point.profile.path.segments.length){
+      cnn_point.profile.redraw();
+    }
+
+    if(profile_point == "b"){
+      if(detect_side() < 0){
+        intersect_point(prays.outer, rays.outer, 1);
+        intersect_point(prays.outer, rays.inner, 4);
+      }
+      else{
+        intersect_point(prays.inner, rays.outer, 1);
+        intersect_point(prays.inner, rays.inner, 4);
+      }
+    }
+    else if(profile_point == "e"){
+      if(detect_side() < 0){
+        intersect_point(prays.outer, rays.outer, 2);
+        intersect_point(prays.outer, rays.inner, 3);
+      }
+      else{
+        intersect_point(prays.inner, rays.outer, 2);
+        intersect_point(prays.inner, rays.inner, 3);
+      }
+    }
+
+    if(profile_point == "b"){
+      if(!_corns[1]){
+        _corns[1] = this.b.add(generatrix.firstCurve.getNormalAt(0, true).normalize(this.d1));
+      }
+      if(!_corns[4]){
+        _corns[4] = this.b.add(generatrix.firstCurve.getNormalAt(0, true).normalize(this.d2));
+      }
+    }
+    else if(profile_point == "e"){
+      if(!_corns[2]){
+        _corns[2] = this.e.add(generatrix.lastCurve.getNormalAt(1, true).normalize(this.d1));
+      }
+      if(!_corns[3]){
+        _corns[3] = this.e.add(generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
+      }
+    }
+    return cnn_point;
+  }
+
+  do_bind(p, bcnn, ecnn, moved) {
+    var imposts, moved_fact,
+
+      bind_node = function (node, cnn) {
+
+        if(!cnn.profile)
+          return;
+
+        var gen = this.outer ? this.parent.rays.outer : this.parent.rays.inner;
+        mpoint = cnn.profile.generatrix.intersect_point(gen, cnn.point, "nearest");
+        if(!mpoint.is_nearest(this[node])){
+          this[node] = mpoint;
+          moved_fact = true;
+        }
+
+      }.bind(this);
+
+    if(this.parent == p){
+
+      bind_node("b", bcnn);
+      bind_node("e", ecnn);
+
+    }
+
+    if(bcnn.cnn && bcnn.profile == p){
+
+      bind_node("b", bcnn);
+
+    }
+    if(ecnn.cnn && ecnn.profile == p){
+
+      bind_node("e", ecnn);
+
+    }
+
+    if(moved && moved_fact){
+    }
+  }
+
+  glass_segment() {
+
+  }
+
 }
-ProfileAddl._extend(ProfileItem);
-
-
-ProfileAddl.prototype.__define({
-
-	nearest: {
-		value : function(){
-			this.data._nearest_cnn = $p.cat.cnns.elm_cnn(this, this.parent, $p.enm.cnn_types.acn.ii, this.data._nearest_cnn);
-			return this.parent;
-		}
-	},
-
-	d0: {
-		get : function(){
-			this.nearest();
-			return this.data._nearest_cnn ? -this.data._nearest_cnn.sz : 0;
-		}
-	},
-
-	d1: {
-		get : function(){ return -(this.d0 - this.sizeb); }
-	},
-
-	d2: {
-		get : function(){ return this.d1 - this.width; }
-	},
-
-	outer: {
-		get: function () { return this.data.side == "outer"; }
-	},
-
-	elm_type: {
-		get : function(){ return $p.enm.elm_types.Добор; }
-	},
-
-	cnn_point: {
-		value: function(node, point){
-
-			var res = this.rays[node],
-
-				check_distance = function(elm, with_addl) {
-
-					if(elm == this || elm == this.parent)
-						return;
-
-					var gp = elm.generatrix.getNearestPoint(point), distance;
-
-					if(gp && (distance = gp.getDistance(point)) < consts.sticking){
-						if(distance <= res.distance){
-							res.point = gp;
-							res.distance = distance;
-							res.profile = elm;
-						}
-					}
-
-
-					if(with_addl)
-						elm.getItems({class: ProfileAddl}).forEach(function (addl) {
-							check_distance(addl, with_addl);
-						});
-
-				}.bind(this);
-
-			if(!point)
-				point = this[node];
-
-
-			if(res.profile && res.profile.children.length){
-
-				check_distance(res.profile);
-
-				if(res.distance < consts.sticking)
-					return res;
-			}
-
-
-			res.clear();
-			res.cnn_types = $p.enm.cnn_types.acn.t;
-
-			this.layer.profiles.forEach(function (addl) {
-				check_distance(addl, true);
-			});
-
-
-			return res;
-
-		}
-	},
-
-	path_points: {
-		value: function(cnn_point, profile_point){
-
-			var _profile = this,
-				_corns = this.data._corns,
-        interior = this.generatrix.getPointAt(this.generatrix.length/2),
-				rays = this.rays,
-				prays,  normal;
-
-			if(!this.generatrix.curves.length)
-				return cnn_point;
-
-			function intersect_point(path1, path2, index){
-				var intersections = path1.getIntersections(path2),
-					delta = Infinity, tdelta, point, tpoint;
-
-				if(intersections.length == 1)
-					if(index)
-						_corns[index] = intersections[0].point;
-					else
-						return intersections[0].point.getDistance(cnn_point.point, true);
-
-				else if(intersections.length > 1){
-					intersections.forEach(function(o){
-						tdelta = o.point.getDistance(cnn_point.point, true);
-						if(tdelta < delta){
-							delta = tdelta;
-							point = o.point;
-						}
-					});
-					if(index)
-						_corns[index] = point;
-					else
-						return delta;
-				}
-			}
-
-			function detect_side(){
-
-				return prays.inner.getNearestPoint(interior).getDistance(interior, true) <
-						prays.outer.getNearestPoint(interior).getDistance(interior, true) ? 1 : -1;
-
-			}
-
-			prays = cnn_point.profile.rays;
-
-			if(!cnn_point.profile.path.segments.length)
-				cnn_point.profile.redraw();
-
-			if(profile_point == "b"){
-				if(detect_side() < 0){
-					intersect_point(prays.outer, rays.outer, 1);
-					intersect_point(prays.outer, rays.inner, 4);
-
-				}else{
-					intersect_point(prays.inner, rays.outer, 1);
-					intersect_point(prays.inner, rays.inner, 4);
-
-				}
-
-			}else if(profile_point == "e"){
-				if(detect_side() < 0){
-					intersect_point(prays.outer, rays.outer, 2);
-					intersect_point(prays.outer, rays.inner, 3);
-
-				}else{
-					intersect_point(prays.inner, rays.outer, 2);
-					intersect_point(prays.inner, rays.inner, 3);
-
-				}
-			}
-
-			if(profile_point == "b"){
-				if(!_corns[1])
-					_corns[1] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d1));
-				if(!_corns[4])
-					_corns[4] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d2));
-
-			}else if(profile_point == "e"){
-				if(!_corns[2])
-					_corns[2] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d1));
-				if(!_corns[3])
-					_corns[3] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
-			}
-
-			return cnn_point;
-		}
-	},
-
-	do_bind: {
-		value: function (p, bcnn, ecnn, moved) {
-
-			var imposts, moved_fact,
-
-				bind_node = function (node, cnn) {
-
-					if(!cnn.profile)
-						return;
-
-					var gen = this.outer ? this.parent.rays.outer : this.parent.rays.inner;
-						mpoint = cnn.profile.generatrix.intersect_point(gen, cnn.point, "nearest");
-					if(!mpoint.is_nearest(this[node])){
-						this[node] = mpoint;
-						moved_fact = true;
-					}
-
-				}.bind(this);
-
-			if(this.parent == p){
-
-				bind_node("b", bcnn);
-				bind_node("e", ecnn);
-
-			}
-
-			if(bcnn.cnn && bcnn.profile == p){
-
-				bind_node("b", bcnn);
-
-			}
-			if(ecnn.cnn && ecnn.profile == p){
-
-				bind_node("e", ecnn);
-
-			}
-
-			if(moved && moved_fact){
-			}
-		}
-	},
-
-	glass_segment: {
-		value: function () {
-
-		}
-	}
-
-});
 
 
 
 class ProfileConnective extends ProfileItem {
+
+  constructor(attr) {
+    attr.parent = paper.project.l_connective;
+    super(attr);
+  }
 
   get d0() {
     return 0;
@@ -8645,84 +8633,53 @@ class ProfileConnective extends ProfileItem {
   }
 
   save_coordinates() {
-    if(!this.data.generatrix)
+
+    if(!this.data.generatrix){
       return;
+    }
 
-    var _row = this._row,
+    const {_row, rays, project, generatrix} = this;
+    const {cnns} = project.connections;
 
-      cnns = this.project.connections.cnns,
-      b = this.rays.b,
-      e = this.rays.e,
-
-      row_b = cnns.add({
-        elm1: _row.elm,
-        node1: "b",
-        cnn: b.cnn ? b.cnn.ref : "",
-        aperture_len: this.corns(1).getDistance(this.corns(4))
-      }),
-      row_e = cnns.add({
-        elm1: _row.elm,
-        node1: "e",
-        cnn: e.cnn ? e.cnn.ref : "",
-        aperture_len: this.corns(2).getDistance(this.corns(3))
-      }),
-
-      gen = this.generatrix;
 
     _row.x1 = this.x1;
     _row.y1 = this.y1;
     _row.x2 = this.x2;
     _row.y2 = this.y2;
-    _row.path_data = gen.pathData;
     _row.nom = this.nom;
-    _row.parent = this.parent.elm;
-
+    _row.path_data = generatrix.pathData;
+    _row.parent = 0;
 
     _row.len = this.length;
 
-    if(b.profile){
-      row_b.elm2 = b.profile.elm;
-      if(b.profile instanceof Filling)
-        row_b.node2 = "t";
-      else if(b.profile.e.is_nearest(b.point))
-        row_b.node2 = "e";
-      else if(b.profile.b.is_nearest(b.point))
-        row_b.node2 = "b";
-      else
-        row_b.node2 = "t";
-    }
-    if(e.profile){
-      row_e.elm2 = e.profile.elm;
-      if(e.profile instanceof Filling)
-        row_e.node2 = "t";
-      else if(e.profile.b.is_nearest(e.point))
-        row_e.node2 = "b";
-      else if(e.profile.e.is_nearest(e.point))
-        row_e.node2 = "b";
-      else
-        row_e.node2 = "t";
-    }
-
     _row.angle_hor = this.angle_hor;
 
-    _row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - gen.getTangentAt(0).angle) * 10) / 10;
-    if(_row.alp1 < 0)
+    _row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - generatrix.getTangentAt(0).angle) * 10) / 10;
+    if(_row.alp1 < 0){
       _row.alp1 = _row.alp1 + 360;
+    }
 
-    _row.alp2 = Math.round((gen.getTangentAt(gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
-    if(_row.alp2 < 0)
+    _row.alp2 = Math.round((generatrix.getTangentAt(generatrix.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
+    if(_row.alp2 < 0){
       _row.alp2 = _row.alp2 + 360;
+    }
 
     _row.elm_type = this.elm_type;
 
   }
-
 
 }
 
 
 class ConnectiveLayer extends paper.Layer {
 
+  redraw() {
+    this.children.forEach((elm) => elm.redraw())
+  }
+
+  save_coordinates() {
+    this.children.forEach((elm) => elm.save_coordinates())
+  }
 }
 
 
@@ -9330,11 +9287,13 @@ function Scheme(_canvas){
 					if(!llength){
 
 						_data._bounds = null;
-						_scheme.contours.forEach(function(l){
+						_scheme.contours.forEach((l) => {
 							l.draw_sizes();
 						});
 
 						_scheme.draw_sizes();
+
+            _scheme.l_connective.redraw();
 
 						_scheme.view.update();
 
@@ -9347,7 +9306,7 @@ function Scheme(_canvas){
 				_changes.length = 0;
 
 				if(_scheme.contours.length){
-					_scheme.contours.forEach(function(l){
+					_scheme.contours.forEach((l) => {
 						llength++;
 						l.redraw(on_contour_redrawed);
 					});
@@ -9357,23 +9316,22 @@ function Scheme(_canvas){
 			}
 		}
 
-		if(_data._opened)
-			requestAnimationFrame(redraw);
+		if(_data._opened){
+      requestAnimationFrame(redraw);
+    }
 
 		process_redraw();
 
 	}
 
-	$p.eve.attachEvent("coordinates_calculated", function (scheme, attr) {
-
-		if(_scheme != scheme)
-			return;
-
-		_scheme.contours.forEach(function(l){
+	$p.eve.attachEvent("coordinates_calculated", (scheme, attr) => {
+		if(_scheme != scheme){
+      return;
+    }
+		_scheme.contours.forEach((l) => {
 			l.draw_visualization();
 		});
 		_scheme.view.update();
-
 	});
 
 }
@@ -9384,7 +9342,7 @@ Scheme.prototype.__define({
 	move_points: {
 		value: function (delta, all_points) {
 
-			let other = [];
+      const other = [];
 			const layers = [];
       const profiles = [];
 
@@ -9403,20 +9361,23 @@ Scheme.prototype.__define({
             item.parent._hatching = null;
           }
 
-					if(!item.layer.parent || !item.parent.nearest || !item.parent.nearest()){
+          if(item.layer instanceof ConnectiveLayer){
+            other.push.apply(other, item.parent.move_points(delta, all_points));
+          }
+          else if(!item.layer.parent || !item.parent.nearest || !item.parent.nearest()){
 
-						var check_selected;
-						item.segments.forEach(function (segm) {
-							if(segm.selected && other.indexOf(segm) != -1)
-								check_selected = !(segm.selected = false);
+						let check_selected;
+						item.segments.forEach((segm) => {
+							if(segm.selected && other.indexOf(segm) != -1){
+                check_selected = !(segm.selected = false);
+              }
 						});
 
-						if(check_selected && !item.segments.some(function (segm) {
-								return segm.selected;
-							}))
-							return;
+						if(check_selected && !item.segments.some((segm) => segm.selected)){
+              return;
+            }
 
-						other = other.concat(item.parent.move_points(delta, all_points));
+            other.push.apply(other, item.parent.move_points(delta, all_points));
 
 						if(layers.indexOf(item.layer) == -1){
 							layers.push(item.layer);
@@ -9428,8 +9389,9 @@ Scheme.prototype.__define({
 				}
 				else if(item instanceof Filling){
 					while (item.children.length > 1){
-						if(!(item.children[1] instanceof Onlay))
-							item.children[1].remove();
+						if(!(item.children[1] instanceof Onlay)){
+              item.children[1].remove();
+            }
 					}
 				}
 			});
@@ -9456,9 +9418,10 @@ Scheme.prototype.__define({
 			ox.glasses.clear();
 
 
-			this.contours.forEach(function (contour) {
-				contour.save_coordinates();
-			});
+			this.contours.forEach((contour) => contour.save_coordinates());
+
+      this.l_connective.save_coordinates();
+
 			$p.eve.callEvent("save_coordinates", [this, attr]);
 
 		}

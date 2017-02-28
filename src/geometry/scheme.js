@@ -542,12 +542,15 @@ function Scheme(_canvas){
 
 						// если перерисованы все контуры, перерисовываем их размерные линии
 						_data._bounds = null;
-						_scheme.contours.forEach(function(l){
+						_scheme.contours.forEach((l) => {
 							l.draw_sizes();
 						});
 
 						// перерисовываем габаритные размерные линии изделия
 						_scheme.draw_sizes();
+
+            // перерисовываем соединительные профили
+            _scheme.l_connective.redraw();
 
 						// обновляем изображение на эуране
 						_scheme.view.update();
@@ -564,7 +567,7 @@ function Scheme(_canvas){
 				_changes.length = 0;
 
 				if(_scheme.contours.length){
-					_scheme.contours.forEach(function(l){
+					_scheme.contours.forEach((l) => {
 						llength++;
 						l.redraw(on_contour_redrawed);
 					});
@@ -574,24 +577,23 @@ function Scheme(_canvas){
 			}
 		}
 
-		if(_data._opened)
-			requestAnimationFrame(redraw);
+		if(_data._opened){
+      requestAnimationFrame(redraw);
+    }
 
 		process_redraw();
 
 	}
 
 	// следим за событием _coordinates_calculated_ и обновляем визуализацию
-	$p.eve.attachEvent("coordinates_calculated", function (scheme, attr) {
-
-		if(_scheme != scheme)
-			return;
-
-		_scheme.contours.forEach(function(l){
+	$p.eve.attachEvent("coordinates_calculated", (scheme, attr) => {
+		if(_scheme != scheme){
+      return;
+    }
+		_scheme.contours.forEach((l) => {
 			l.draw_visualization();
 		});
 		_scheme.view.update();
-
 	});
 
 }
@@ -609,7 +611,7 @@ Scheme.prototype.__define({
 	move_points: {
 		value: function (delta, all_points) {
 
-			let other = [];
+      const other = [];
 			const layers = [];
       const profiles = [];
 
@@ -628,22 +630,27 @@ Scheme.prototype.__define({
             item.parent._hatching = null;
           }
 
-					if(!item.layer.parent || !item.parent.nearest || !item.parent.nearest()){
+          if(item.layer instanceof ConnectiveLayer){
+            // двигаем и накапливаем связанные
+            other.push.apply(other, item.parent.move_points(delta, all_points));
+          }
+          else if(!item.layer.parent || !item.parent.nearest || !item.parent.nearest()){
 
-						var check_selected;
-						item.segments.forEach(function (segm) {
-							if(segm.selected && other.indexOf(segm) != -1)
-								check_selected = !(segm.selected = false);
+						let check_selected;
+						item.segments.forEach((segm) => {
+							if(segm.selected && other.indexOf(segm) != -1){
+                check_selected = !(segm.selected = false);
+              }
 						});
 
 						// если уже двигали и не осталось ни одного выделенного - выходим
-						if(check_selected && !item.segments.some(function (segm) {
-								return segm.selected;
-							}))
-							return;
+						if(check_selected && !item.segments.some((segm) => segm.selected)){
+              return;
+            }
 
 						// двигаем и накапливаем связанные
-						other = other.concat(item.parent.move_points(delta, all_points));
+            other.push.apply(other, item.parent.move_points(delta, all_points));
+						//other = other.concat(item.parent.move_points(delta, all_points));
 
 						if(layers.indexOf(item.layer) == -1){
 							layers.push(item.layer);
@@ -656,8 +663,9 @@ Scheme.prototype.__define({
 				else if(item instanceof Filling){
 					//item.position = item.position.add(delta);
 					while (item.children.length > 1){
-						if(!(item.children[1] instanceof Onlay))
-							item.children[1].remove();
+						if(!(item.children[1] instanceof Onlay)){
+              item.children[1].remove();
+            }
 					}
 				}
 			});
@@ -702,9 +710,11 @@ Scheme.prototype.__define({
 			//};
 
 			// вызываем метод save_coordinates в дочерних слоях
-			this.contours.forEach(function (contour) {
-				contour.save_coordinates();
-			});
+			this.contours.forEach((contour) => contour.save_coordinates());
+
+      // вызываем метод save_coordinates в слое соединителей
+      this.l_connective.save_coordinates();
+
 			$p.eve.callEvent("save_coordinates", [this, attr]);
 
 		}

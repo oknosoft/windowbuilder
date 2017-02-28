@@ -1476,13 +1476,6 @@ ProfileItem.prototype.__define({
       const ecnn = this.postcalc_cnn("e");
       const {path, generatrix, rays, project} = this;
 
-      let offset1, offset2, tpath, step;
-
-			// уточняем вставку
-			if(project._dp.sys.allow_open_cnn){
-        this.postcalc_inset();
-      }
-
 			// получаем соединения концов профиля и точки пересечения с соседями
 			this.path_points(bcnn, "b");
 			this.path_points(ecnn, "e");
@@ -1495,15 +1488,17 @@ ProfileItem.prototype.__define({
 
 			if(generatrix.is_linear()){
 				path.add(this.corns(2), this.corns(3));
+			}
+			else{
 
-			}else{
+				let tpath = new paper.Path({insert: false});
+				let offset1 = rays.outer.getNearestLocation(this.corns(1)).offset;
+				let offset2 = rays.outer.getNearestLocation(this.corns(2)).offset;
+				let step = (offset2 - offset1) / 50;
 
-				tpath = new paper.Path({insert: false});
-				offset1 = rays.outer.getNearestLocation(this.corns(1)).offset;
-				offset2 = rays.outer.getNearestLocation(this.corns(2)).offset;
-				step = (offset2 - offset1) / 50;
-				for(var i = offset1 + step; i<offset2; i+=step)
-					tpath.add(rays.outer.getPointAt(i));
+				for(let i = offset1 + step; i<offset2; i+=step){
+          tpath.add(rays.outer.getPointAt(i));
+        }
 				tpath.simplify(0.8);
 				path.join(tpath);
 				path.add(this.corns(2));
@@ -1514,8 +1509,9 @@ ProfileItem.prototype.__define({
 				offset1 = rays.inner.getNearestLocation(this.corns(3)).offset;
 				offset2 = rays.inner.getNearestLocation(this.corns(4)).offset;
 				step = (offset2 - offset1) / 50;
-				for(var i = offset1 + step; i<offset2; i+=step)
-					tpath.add(rays.inner.getPointAt(i));
+				for(let i = offset1 + step; i<offset2; i+=step){
+          tpath.add(rays.inner.getPointAt(i));
+        }
 				tpath.simplify(0.8);
 				path.join(tpath);
 
@@ -1525,7 +1521,7 @@ ProfileItem.prototype.__define({
 			path.closePath();
 			path.reduce();
 
-			this.children.forEach(function (elm) {
+			this.children.forEach((elm) => {
 				if(elm instanceof ProfileAddl){
 					elm.observer(elm.parent);
 					elm.redraw();

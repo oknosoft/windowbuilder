@@ -24,7 +24,7 @@
 
 					const parents = {};
 
-					rows.forEach(function (row) {
+					rows.forEach((row) => {
 						if(row.is_folder && row.synonym){
 							var ref = row._id.split("|")[1];
 							parents[ref] = row.synonym;
@@ -34,7 +34,7 @@
 
 					});
 
-					rows.forEach(function (row) {
+					rows.forEach((row) => {
 
 						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
 
@@ -48,21 +48,22 @@
 							if(row.list == -1){
 
 								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: function () {
-										var res = {};
-										row.elmnts.forEach(function (row) {
+									value: () => {
+										const res = {};
+										row.elmnts.forEach((row) => {
 											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
 										});
 										return res;
 									}()
 								});
 
-							}else if(row.list){
+							}
+							else if(row.list){
 
 								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: row.elmnts.map(function (row) {
+									value: row.elmnts.map((row) => {
 									  if(_mgr){
-                      var value = _mgr.get(row.value, false);
+                      const value = _mgr.get(row.value, false);
                       if(!$p.utils.is_empty_guid(row.elm)){
                         value._formula = row.elm;
                       }
@@ -220,7 +221,7 @@
 		let o, wnd;
 
 		return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-			.then(function (res) {
+			.then((res) => {
 				if(res){
 					o = res.o;
 					wnd = res.wnd;

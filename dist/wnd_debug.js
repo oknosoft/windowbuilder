@@ -4025,20 +4025,21 @@ $p.CatUsers_acl.prototype.__define({
 
 								$p.job_prm[parents[row.parent]].__define(row.synonym, {
 									value: function () {
-										var res = {};
-										row.elmnts.forEach(function (row) {
+										const res = {};
+										row.elmnts.forEach((row) => {
 											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
 										});
 										return res;
 									}()
 								});
 
-							}else if(row.list){
+							}
+							else if(row.list){
 
 								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: row.elmnts.map(function (row) {
+									value: row.elmnts.map((row) => {
 									  if(_mgr){
-                      var value = _mgr.get(row.value, false);
+                      const value = _mgr.get(row.value, false);
                       if(!$p.utils.is_empty_guid(row.elm)){
                         value._formula = row.elm;
                       }
@@ -4316,1717 +4317,6 @@ $p.CchProperties.prototype.__define({
   }
 
 });
-
-
-class Pricing {
-
-  constructor($p) {
-
-    function build_cache() {
-
-      return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
-        {
-          limit : 1000,
-          include_docs: false,
-          startkey: [''],
-          endkey: ['\uffff']
-        })
-        .then(function (res) {
-          res.rows.forEach(function (row) {
-
-            var onom = $p.cat.nom.get(row.key[0], false, true);
-
-            if(!onom || !onom._data)
-              return;
-
-            if(!onom._data._price)
-              onom._data._price = {};
-
-            if(!onom._data._price[row.key[1]])
-              onom._data._price[row.key[1]] = {};
-
-            if(!onom._data._price[row.key[1]][row.key[2]])
-              onom._data._price[row.key[1]][row.key[2]] = [];
-
-            onom._data._price[row.key[1]][row.key[2]].push({
-              date: new Date(row.value.date),
-              price: row.value.price,
-              currency: $p.cat.currencies.get(row.value.currency)
-            });
-
-          });
-        });
-    }
-
-    var init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", function () {
-      $p.eve.detachEvent(init_event_id);
-      build_cache();
-    })
-
-    $p.eve.attachEvent("pouch_change", function (dbid, change) {
-      if (dbid != $p.doc.nom_prices_setup.cachable)
-        return;
-
-    })
-
-  }
-
-  nom_price(nom, characteristic, price_type, prm, row) {
-
-    if (row && prm) {
-      var calc_order = prm.calc_order_row._owner._owner,
-        price_prm = {
-          price_type: price_type,
-          characteristic: characteristic,
-          date: calc_order.date,
-          currency: calc_order.doc_currency
-        };
-      if (price_type == prm.price_type.price_type_first_cost && !prm.price_type.formula.empty()) {
-        price_prm.formula = prm.price_type.formula;
-      }
-      row.price = nom._price(price_prm);
-
-      return row.price;
-    }
-  }
-
-  price_type(prm) {
-
-    const empty_formula = $p.cat.formulas.get();
-
-    prm.price_type = {
-      marginality: 1.9,
-      marginality_min: 1.2,
-      marginality_internal: 1.5,
-      discount: 0,
-      discount_external: 10,
-      extra_charge_external: 0,
-      price_type_first_cost: $p.job_prm.pricing.price_type_first_cost,
-      price_type_sale: $p.job_prm.pricing.price_type_first_cost,
-      price_type_internal: $p.job_prm.pricing.price_type_first_cost,
-      formula: empty_formula,
-      sale_formula: empty_formula,
-      internal_formula: empty_formula,
-      external_formula: empty_formula
-    };
-
-    const {nom, characteristic} = prm.calc_order_row;
-    const filter = nom.price_group.empty() ?
-        {price_group: nom.price_group} :
-        {price_group: {in: [nom.price_group, $p.cat.price_groups.get()]}};
-    const ares = [];
-
-    $p.ireg.margin_coefficients.find_rows(filter, (row) => {
-
-      let ok = true;
-      if(!row.key.empty()){
-        row.key.params.forEach((row_prm) => {
-
-          if(row_prm.property.is_calculated){
-
-          }
-          else{
-            let finded;
-            characteristic.params.find_rows({
-              cnstr: 0,
-              param: row_prm.property
-            }, (row_x) => {
-              finded = row_x;
-              return false;
-            });
-
-            if(finded){
-              if(row_prm.comparison_type == $p.enm.comparison_types.in){
-                ok = row_prm.txt_row.match(finded.value.ref);
-              }
-              else if(row_prm.comparison_type == $p.enm.comparison_types.nin){
-                ok = !row_prm.txt_row.match(finded.value.ref);
-              }
-              else if(row_prm.comparison_type.empty() || row_prm.comparison_type == $p.enm.comparison_types.eq){
-                ok = row_prm.value == finded.value;
-              }
-              else if(row_prm.comparison_type.empty() || row_prm.comparison_type == $p.enm.comparison_types.ne){
-                ok = row_prm.value != finded.value;
-              }
-            }
-            else{
-              ok = false;
-            }
-          }
-          if(!ok){
-            return false;
-          }
-        })
-      }
-      if(ok){
-        ares.push(row);
-      }
-    });
-
-    if(ares.length){
-      ares.sort((a, b) => {
-
-        a.key.priority
-
-        if (a.key.priority > b.key.priority) {
-          return -1;
-        }
-        if (a.key.priority < b.key.priority) {
-          return 1;
-        }
-
-        if (a.price_group.ref < b.price_group.ref) {
-          return -1;
-        }
-        if (a.price_group.ref > b.price_group.ref) {
-          return 1;
-        }
-
-        return 0;
-
-      });
-      Object.keys(prm.price_type).forEach((key) => {
-        prm.price_type[key] = ares[0][key];
-      });
-    }
-
-    prm.calc_order_row._owner._owner.partner.extra_fields.find_rows({
-      property: $p.job_prm.pricing.dealer_surcharge
-    }, (row) => {
-      const val = parseFloat(row.value);
-      if(val){
-        prm.price_type.extra_charge_external = val;
-      }
-      return false;
-    });
-
-    return prm.price_type;
-  }
-
-  calc_first_cost(prm) {
-
-    var marginality_in_spec = $p.job_prm.pricing.marginality_in_spec,
-      fake_row = {}, tmp_price;
-
-    if(!prm.spec)
-      return;
-
-    if(prm.spec.count()){
-      prm.spec.each(function (row) {
-
-        $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_first_cost, prm, row);
-        row.amount = row.price * row.totqty1;
-
-        if(marginality_in_spec){
-          fake_row._mixin(row, ["nom"]);
-          tmp_price = $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_sale, prm, fake_row);
-          row.amount_marged = (tmp_price ? tmp_price : row.price) * row.totqty1;
-        }
-
-      });
-      prm.calc_order_row.first_cost = prm.spec.aggregate([], ["amount"]).round(2);
-
-    }else{
-
-      fake_row.nom = prm.calc_order_row.nom;
-      fake_row.characteristic = prm.calc_order_row.characteristic;
-      prm.calc_order_row.first_cost = $p.pricing.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
-    }
-
-    if(prm.order_rows){
-      for(var rid in prm.order_rows){
-        var fake_prm = {
-          spec: prm.order_rows[rid].characteristic.specification,
-          calc_order_row: prm.order_rows[rid]
-        }
-        this.price_type(fake_prm)
-        this.calc_first_cost(fake_prm)
-      }
-    }
-
-  }
-
-  calc_amount (prm) {
-
-    var price_cost = $p.job_prm.pricing.marginality_in_spec ? prm.spec.aggregate([], ["amount_marged"]) : 0,
-      extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
-
-    if(!$p.current_acl.partners_uids.length || !extra_charge){
-      extra_charge = prm.price_type.extra_charge_external;
-    }
-
-    if(price_cost)
-      prm.calc_order_row.price = price_cost.round(2);
-    else
-      prm.calc_order_row.price = (prm.calc_order_row.first_cost * prm.price_type.marginality).round(2);
-
-    prm.calc_order_row.marginality = prm.calc_order_row.first_cost ?
-      prm.calc_order_row.price * ((100 - prm.calc_order_row.discount_percent)/100) / prm.calc_order_row.first_cost : 0;
-
-
-    if(extra_charge){
-
-      prm.calc_order_row.price_internal = (prm.calc_order_row.price *
-      (100 - prm.calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
-
-
-    }
-
-    if(!prm.hand_start){
-      $p.doc.calc_order.handle_event(prm.calc_order_row._owner._owner, "value_change", {
-        field: "price",
-        value: prm.calc_order_row.price,
-        tabular_section: "production",
-        row: prm.calc_order_row,
-        no_extra_charge: true
-      });
-    }
-
-    if(prm.order_rows){
-      for(var rid in prm.order_rows){
-        var fake_prm = {
-          spec: prm.order_rows[rid].characteristic.specification,
-          calc_order_row: prm.order_rows[rid]
-        }
-        this.price_type(fake_prm);
-        this.calc_amount(fake_prm);
-      }
-    }
-
-  }
-
-  from_currency_to_currency (amount, date, from, to) {
-
-    if(!to || to.empty())
-      to = $p.job_prm.pricing.main_currency;
-
-    if(!from || from == to)
-      return amount;
-
-    if(!date)
-      date = new Date();
-
-    if(!this.cource_sql)
-      this.cource_sql = $p.wsql.alasql.compile("select top 1 * from `ireg_currency_courses` where `currency` = ? and `period` <= ? order by `date` desc");
-
-    var cfrom = {course: 1, multiplicity: 1},
-      cto = {course: 1, multiplicity: 1},
-      tmp;
-    if(from != $p.job_prm.pricing.main_currency){
-      tmp = this.cource_sql([from.ref, date]);
-      if(tmp.length)
-        cfrom = tmp[0];
-    }
-    if(to != $p.job_prm.pricing.main_currency){
-      tmp = this.cource_sql([to.ref, date]);
-      if(tmp.length)
-        cto = tmp[0];
-    }
-
-    return (amount * cfrom.course / cfrom.multiplicity) * cto.multiplicity / cto.course;
-  }
-
-  cut_upload () {
-
-    if(!$p.current_acl || (
-      !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") &&
-      !$p.current_acl.role_available("ИзменениеТехнологическойНСИ"))){
-      $p.msg.show_msg({
-        type: "alert-error",
-        text: $p.msg.error_low_acl,
-        title: $p.msg.error_rights
-      });
-      return true;
-    }
-
-    function upload_acc() {
-      var mgrs = [
-        "cat.users",
-        "cat.individuals",
-        "cat.organizations",
-        "cat.partners",
-        "cat.contracts",
-        "cat.currencies",
-        "cat.nom_prices_types",
-        "cat.price_groups",
-        "cat.cashboxes",
-        "cat.partner_bank_accounts",
-        "cat.organization_bank_accounts",
-        "cat.projects",
-        "cat.stores",
-        "cat.cash_flow_articles",
-        "cat.cost_items",
-        "cat.price_groups",
-        "cat.delivery_areas",
-        "ireg.currency_courses",
-        "ireg.margin_coefficients"
-      ];
-
-      $p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
-        filter: function (doc) {
-          return mgrs.indexOf(doc._id.split("|")[0]) != -1;
-        }
-      })
-        .on('change', function (info) {
-
-        })
-        .on('paused', function (err) {
-
-        })
-        .on('active', function () {
-
-        })
-        .on('denied', function (err) {
-          $p.msg.show_msg(err.reason);
-          $p.record_log(err);
-
-        })
-        .on('complete', function (info) {
-
-          if($p.current_acl.role_available("ИзменениеТехнологическойНСИ"))
-            upload_tech();
-
-          else
-            $p.msg.show_msg({
-              type: "alert-info",
-              text: $p.msg.sync_complite,
-              title: $p.msg.sync_title
-            });
-
-        })
-        .on('error', function (err) {
-          $p.msg.show_msg(err.reason);
-          $p.record_log(err);
-
-        });
-    }
-
-    function upload_tech() {
-      var mgrs = [
-        "cat.units",
-        "cat.nom",
-        "cat.nom_groups",
-        "cat.nom_units",
-        "cat.nom_kinds",
-        "cat.elm_visualization",
-        "cat.destinations",
-        "cat.property_values",
-        "cat.property_values_hierarchy",
-        "cat.inserts",
-        "cat.insert_bind",
-        "cat.color_price_groups",
-        "cat.clrs",
-        "cat.furns",
-        "cat.cnns",
-        "cat.production_params",
-        "cat.parameters_keys",
-        "cat.formulas",
-        "cch.properties",
-        "cch.predefined_elmnts"
-
-      ];
-
-      $p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
-        filter: function (doc) {
-          return mgrs.indexOf(doc._id.split("|")[0]) != -1;
-        }
-      })
-        .on('change', function (info) {
-
-        })
-        .on('paused', function (err) {
-
-        })
-        .on('active', function () {
-
-        })
-        .on('denied', function (err) {
-          $p.msg.show_msg(err.reason);
-          $p.record_log(err);
-
-        })
-        .on('complete', function (info) {
-          $p.msg.show_msg({
-            type: "alert-info",
-            text: $p.msg.sync_complite,
-            title: $p.msg.sync_title
-          });
-
-        })
-        .on('error', function (err) {
-          $p.msg.show_msg(err.reason);
-          $p.record_log(err);
-
-        });
-    }
-
-
-    if($p.current_acl.role_available("СогласованиеРасчетовЗаказов"))
-      upload_acc();
-    else
-      upload_tech();
-
-  }
-
-}
-
-
-$p.pricing = new Pricing($p);
-
-
-function ProductsBuilding(){
-
-  let added_cnn_spec,
-		ox,
-		spec,
-		constructions,
-		coordinates,
-		cnn_elmnts,
-		glass_specification,
-		params,
-    find_cx_sql;
-
-
-	function calc_count_area_mass(row_cpec, row_coord, angle_calc_method_prev, angle_calc_method_next){
-
-		if(!angle_calc_method_next){
-      angle_calc_method_next = angle_calc_method_prev;
-    }
-
-		if(angle_calc_method_prev && !row_cpec.nom.is_pieces){
-
-		  const angle_method = $p.enm.angle_calculating_ways;
-
-			if((angle_calc_method_prev == angle_method.Основной) || (angle_calc_method_prev == angle_method.СварнойШов)){
-				row_cpec.alp1 = row_coord.alp1;
-			}
-			else if(angle_calc_method_prev == angle_method._90){
-				row_cpec.alp1 = 90;
-			}
-			else if(angle_calc_method_prev == angle_method.СоединениеПополам){
-				row_cpec.alp1 = row_coord.alp1 / 2;
-			}
-			else if(angle_calc_method_prev == angle_method.Соединение){
-				row_cpec.alp1 = row_coord.alp1;
-			}
-
-			if((angle_calc_method_next == angle_method.Основной) || (angle_calc_method_next == angle_method.СварнойШов)){
-				row_cpec.alp2 = row_coord.alp2;
-			}
-			else if(angle_calc_method_next == angle_method._90){
-				row_cpec.alp2 = 90;
-			}
-			else if(angle_calc_method_next == angle_method.СоединениеПополам){
-				row_cpec.alp2 = row_coord.alp2 / 2;
-			}
-			else if(angle_calc_method_next == angle_method.Соединение){
-				row_cpec.alp2 = row_coord.alp2;
-			}
-		}
-
-		if(row_cpec.len){
-			if(row_cpec.width && !row_cpec.s)
-				row_cpec.s = row_cpec.len * row_cpec.width;
-		}else
-			row_cpec.s = 0;
-
-		if(!row_cpec.qty && (row_cpec.len || row_cpec.width))
-			row_cpec.qty = 1;
-
-		if(row_cpec.s)
-			row_cpec.totqty = row_cpec.qty * row_cpec.s;
-
-		else if(row_cpec.len)
-			row_cpec.totqty = row_cpec.qty * row_cpec.len;
-
-		else
-			row_cpec.totqty = row_cpec.qty;
-
-		row_cpec.totqty1 = row_cpec.totqty * row_cpec.nom.loss_factor;
-
-		["len","width","s","qty","totqty","totqty1","alp1","alp2"].forEach(function (fld) {
-			row_cpec[fld] = row_cpec[fld].round(4);
-		});
-	}
-
-	function calc_qty_len(row_spec, row_base, len){
-
-		var nom = row_spec.nom;
-
-		if(nom.cutting_optimization_type == $p.enm.cutting_optimization_types.Нет ||
-			nom.cutting_optimization_type.empty() || nom.is_pieces){
-
-			if(!row_base.coefficient || !len)
-				row_spec.qty = row_base.quantity;
-
-			else{
-				if(!nom.is_pieces){
-					row_spec.qty = row_base.quantity;
-					row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
-					if(nom.rounding_quantity){
-						row_spec.qty = (row_spec.qty * row_spec.len).round(nom.rounding_quantity);
-						row_spec.len = 0;
-					};
-
-				}else if(!nom.rounding_quantity){
-					row_spec.qty = Math.round((len - row_base.sz) * row_base.coefficient * row_base.quantity - 0.5);
-
-				}else{
-					row_spec.qty = ((len - row_base.sz) * row_base.coefficient * row_base.quantity).round(nom.rounding_quantity);
-				}
-			}
-
-		}else{
-			row_spec.qty = row_base.quantity;
-			row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
-		}
-	}
-
-	function cnn_row(elm1, elm2){
-		var res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
-		if(res.length)
-			return res[0].row;
-		res = cnn_elmnts.find_rows({elm1: elm2, elm2: elm1});
-		if(res.length)
-			return res[0].row;
-		return 0;
-	}
-
-	function cnn_need_add_spec(cnn, elm1, elm2){
-
-		if(cnn && cnn.cnn_type == $p.enm.cnn_types.КрестВСтык)
-			return false;
-
-		else if(!cnn || !elm1 || !elm2 || added_cnn_spec[elm1] == elm2 || added_cnn_spec[elm2] == elm1)
-			return false;
-
-		added_cnn_spec[elm1] = elm2;
-		return true;
-	}
-
-	function new_spec_row(row_spec, elm, row_base, nom, origin){
-		if(!row_spec){
-      row_spec = spec.add();
-    }
-		row_spec.nom = nom || row_base.nom;
-		row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr);
-		row_spec.elm = elm.elm;
-		if(origin){
-      row_spec.origin = origin;
-    }
-		return row_spec;
-	}
-
-	function cnn_add_spec(cnn, elm, len_angl){
-
-		if(!cnn){
-      return;
-    }
-
-		const sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
-
-		cnn_filter_spec(cnn, elm, len_angl).forEach((row_cnn_spec) => {
-
-			const {nom} = row_cnn_spec;
-
-			if(nom._manager == $p.cat.inserts){
-				if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)){
-					const tmp_len_angl = len_angl._clone();
-					tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
-					inset_spec(elm, nom, tmp_len_angl);
-				}else{
-          inset_spec(elm, nom, len_angl);
-        }
-			}
-			else {
-
-        const row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin || cnn);
-
-				if(nom.is_pieces){
-					if(!row_cnn_spec.coefficient){
-            row_spec.qty = row_cnn_spec.quantity;
-          }
-					else{
-            row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
-              .round(nom.rounding_quantity);
-          }
-				}
-				else{
-					row_spec.qty = row_cnn_spec.quantity;
-
-					if(row_cnn_spec.sz || row_cnn_spec.coefficient){
-            row_spec.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
-          }
-				}
-
-				if(!row_cnn_spec.formula.empty()) {
-					row_cnn_spec.formula.execute({
-						ox,
-						elm,
-            len_angl,
-            cnstr: 0,
-            inset: $p.utils.blank.guid,
-						row_cnn: row_cnn_spec,
-						row_spec: row_spec
-					});
-				}
-
-				if(!row_spec.qty){
-          spec.del(row_spec.row-1);
-        }
-				else{
-          calc_count_area_mass(row_spec, len_angl, row_cnn_spec.angle_calc_method);
-        }
-			}
-
-		});
-	}
-
-	function cnn_filter_spec(cnn, elm, len_angl){
-
-		const res = [];
-		const {angle_hor} = elm;
-
-		cnn.specification.each((row) => {
-			const {nom} = row;
-			if(!nom || nom.empty() ||
-				  nom == $p.job_prm.nom.art1 ||
-				  nom == $p.job_prm.nom.art2){
-        return;
-      }
-
-			if((row.for_direct_profile_only > 0 && !elm.is_linear()) ||
-				(row.for_direct_profile_only < 0 && elm.is_linear())){
-        return;
-      }
-
-			if(cnn.cnn_type == $p.enm.cnn_types.Наложение){
-				if(row.amin > angle_hor || row.amax < angle_hor || row.sz_min > len_angl.len || row.sz_max < len_angl.len){
-          return;
-        }
-			}else{
-				if(row.amin > len_angl.angle || row.amax < len_angl.angle){
-          return;
-        }
-			}
-
-			if(($p.enm.cnn_types.acn.a.indexOf(cnn.cnn_type) != -1) && (
-					(row.set_specification == $p.enm.specification_installation_methods.САртикулом1 && !len_angl.art1) ||
-					(row.set_specification == $p.enm.specification_installation_methods.САртикулом2 && !len_angl.art2)
-				)){
-        return;
-      }
-
-			if(check_params(cnn.selection_params, row, elm)){
-        res.push(row);
-      }
-
-		});
-
-		return res;
-	}
-
-	function check_params(selection_params, spec_row, elm, cnstr, origin){
-
-		let ok = true;
-
-		selection_params.find_rows({elm: spec_row.elm}, function (prm) {
-
-			ok = false;
-			let val = prm.value,
-        is_calculated = prm.param.is_calculated;
-
-
-			if(is_calculated){
-        val = prm.param.calculated_value({
-          row: spec_row,
-          elm: elm,
-          ox: ox
-        });
-      }
-
-      if((!Array.isArray(val)) && (prm.comparison_type.empty() || prm.comparison_type == $p.enm.comparison_types.eq)){
-        params.find_rows({
-          cnstr: cnstr || 0,
-          inset: origin || $p.utils.blank.guid,
-          param: prm.param,
-          value: val
-        }, function () {
-          ok = true;
-          return false;
-        });
-
-      }
-      else if(is_calculated){
-
-        switch(prm.comparison_type) {
-
-          case $p.enm.comparison_types.ne:
-            ok = val != prm.value;
-            break;
-
-          case $p.enm.comparison_types.gt:
-            ok = val > prm.value;
-            break;
-
-          case $p.enm.comparison_types.gte:
-            ok = val >= prm.value;
-            break;
-
-          case $p.enm.comparison_types.lt:
-            ok = val < prm.value;
-            break;
-
-          case $p.enm.comparison_types.lte:
-            ok = val <= prm.value;
-            break;
-
-          case $p.enm.comparison_types.nin:
-            if(Array.isArray(val) && !Array.isArray(prm.value)){
-              ok = val.indexOf(prm.value) == -1;
-
-            }else if(Array.isArray(prm.value) && !Array.isArray(val)){
-              ok = prm.value.indexOf(val) == -1;
-
-            }
-            break;
-
-          case $p.enm.comparison_types.in:
-            if(Array.isArray(val) && !Array.isArray(prm.value)){
-              ok = val.indexOf(prm.value) != -1;
-
-            }else if(Array.isArray(prm.value) && !Array.isArray(val)){
-              ok = prm.value.indexOf(val) != -1;
-
-            }
-            break;
-        }
-
-      }
-      else{
-        params.find_rows({
-          cnstr: cnstr || 0,
-          inset: origin || $p.utils.blank.guid,
-          param: prm.param
-        }, function (row) {
-
-          switch(prm.comparison_type) {
-
-            case $p.enm.comparison_types.ne:
-              ok = row.value != prm.value;
-              break;
-
-            case $p.enm.comparison_types.gt:
-              ok = row.value > val;
-              break;
-
-            case $p.enm.comparison_types.gte:
-              ok = row.value >= val;
-              break;
-
-            case $p.enm.comparison_types.lt:
-              ok = row.value < val;
-              break;
-
-            case $p.enm.comparison_types.lte:
-              ok = row.value <= val;
-              break;
-
-            case $p.enm.comparison_types.nin:
-              if(Array.isArray(val) && !Array.isArray(prm.value)){
-                ok = val.indexOf(prm.value) == -1;
-
-              }else if(Array.isArray(prm.value) && !Array.isArray(val)){
-                ok = prm.value.indexOf(val) == -1;
-
-              }
-              break;
-
-            case $p.enm.comparison_types.in:
-              if(Array.isArray(val) && !Array.isArray(prm.value)){
-                ok = val.indexOf(prm.value) != -1;
-
-              }else if(Array.isArray(prm.value) && !Array.isArray(val)){
-                ok = prm.value.indexOf(val) != -1;
-
-              }
-              break;
-          }
-
-          return false;
-        });
-      }
-
-			return ok;
-		});
-
-		return ok;
-	}
-
-	function inset_check(inset, elm, by_perimetr, len_angl){
-
-	  const {_row} = elm;
-	  const len = len_angl ? len_angl.len : _row.len
-		let is_tabular = true;
-
-		if(inset.smin > _row.s || (_row.s && inset.smax && inset.smax < _row.s)){
-      return false;
-    }
-
-		if(inset.is_main_elm && !inset.quantity){
-      return false;
-    }
-
-		if($p.utils.is_data_obj(inset)){
-
-			if((inset.for_direct_profile_only > 0 && !elm.is_linear()) || (inset.for_direct_profile_only < 0 &&elm.is_linear())){
-        return false;
-      }
-
-			if(inset.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
-				if(!elm.joined_imposts(true)){
-          return false;
-        }
-
-			}else if(inset.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
-				if(elm.joined_imposts(true)){
-          return false;
-        }
-			}
-			is_tabular = false;
-		}
-
-
-		if(!is_tabular || by_perimetr || inset.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
-			if(inset.lmin > len || (inset.lmax < len && inset.lmax > 0)){
-        return false;
-      }
-			if(inset.ahmin > _row.angle_hor || inset.ahmax < _row.angle_hor){
-        return false;
-      }
-		}
-
-
-		return true;
-	}
-
-	function inset_filter_spec(inset, elm, is_high_level_call, len_angl){
-
-		const res = [];
-		const glass_rows = [];
-
-		if(!inset || inset.empty()){
-      return res;
-    }
-
-		if(is_high_level_call && (inset.insert_type == "Заполнение" || inset.insert_type == "Стеклопакет" || inset.insert_type == "ТиповойСтеклопакет")){
-
-			glass_specification.find_rows({elm: elm.elm}, (row) => {
-        glass_rows.push(row);
-			});
-
-
-
-			if(glass_rows.length){
-				glass_rows.forEach((row) => {
-					inset_filter_spec(row.inset, elm, false, len_angl).forEach((row) => {
-						res.push(row);
-					});
-				});
-				return res;
-			}
-		}
-
-		inset.specification.each(function (row) {
-
-			if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl)){
-        return;
-      }
-
-			if(!check_params(inset.selection_params, row, elm, len_angl && len_angl.cnstr, len_angl && len_angl.origin)){
-        return;
-      }
-
-			if(row.nom._manager == $p.cat.inserts){
-        inset_filter_spec(row.nom, elm, false, len_angl).forEach((subrow) => {
-          const fakerow = {}._mixin(subrow, ['angle_calc_method','clr','count_calc_method','elm','formula','is_main_elm','is_order_row','nom','sz']);
-          fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
-          fakerow.coefficient = (subrow.coefficient || 1) * (row.coefficient || 1);
-          fakerow._origin = row.nom;
-          res.push(fakerow);
-        });
-      }
-			else{
-        res.push(row);
-      }
-
-		});
-
-		return res;
-	}
-
-	function furn_spec(contour) {
-
-		if(!contour.parent){
-      return false;
-    }
-
-		const cache = {
-			profiles: contour.outer_nodes,
-			bottom: contour.profiles_by_side("bottom"),
-			params: contour.project.ox.params
-		};
-
-		if(!furn_check_opening_restrictions(contour, cache)){
-      return;
-    }
-
-		furn_update_handle_height(contour, cache, contour.furn.furn_set);
-
-		furn_get_spec(contour, cache, contour.furn.furn_set).each((row) => {
-			const elm = {elm: -contour.cnstr, clr: contour.clr_furn};
-			const row_spec = new_spec_row(null, elm, row, row.nom_set, row.origin);
-
-			if(row.is_procedure_row){
-				row_spec.elm = row.handle_height_min;
-				row_spec.len = row.coefficient / 1000;
-				row_spec.qty = 0;
-				row_spec.totqty = 1;
-				row_spec.totqty1 = 1;
-				if(!row_spec.nom.visualization.empty()){
-          row_spec.dop = -1;
-        }
-			}
-			else{
-				row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
-				calc_count_area_mass(row_spec);
-			}
-		});
-	}
-
-	function furn_check_opening_restrictions(contour, cache) {
-
-		var ok = true;
-
-
-		contour.furn.open_tunes.each(function (row) {
-			var elm = contour.profile_by_furn_side(row.side, cache),
-				len = elm._row.len - 2 * elm.nom.sizefurn;
-
-
-			if(len < row.lmin ||
-				len > row.lmax ||
-				(!elm.is_linear() && !row.arc_available)){
-
-				new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.job_prm.nom.furn_error, contour.furn).dop = -1;
-				ok = false;
-			}
-
-		});
-
-		return ok;
-	}
-
-	function furn_check_row_restrictions(contour, cache, furn_set, row) {
-
-		var res = true;
-
-		furn_set.selection_params.find_rows({elm: row.elm, dop: row.dop}, function (row) {
-
-			var ok = false;
-
-			if($p.job_prm.properties.direction == row.param){
-				ok = contour.direction == row.value;
-
-			}else{
-				cache.params.find_rows({
-				  cnstr: contour.cnstr,
-          inset: $p.utils.blank.guid,
-          param: row.param,
-          value: row.value
-				}, function () {
-					return !(ok = true);
-				});
-			}
-
-			if(!ok)
-				return res = false;
-
-		});
-
-		if(res){
-			furn_set.specification_restrictions.find_rows({elm: row.elm, dop: row.dop}, function (row) {
-
-				var len;
-
-				if(contour.is_rectangular){
-					if(!cache.w)
-						cache.w = contour.w;
-					if(!cache.h)
-						cache.h = contour.h;
-
-					len = (row.side == 1 || row.side == 3) ? cache.w : cache.h;
-
-				}else{
-					var elm = contour.profile_by_furn_side(row.side, cache);
-					len = elm._row.len - 2 * elm.nom.sizefurn;
-				}
-
-				if(len < row.lmin || len > row.lmax ){
-					return res = false;
-
-				}
-			});
-		}
-
-		return res;
-	}
-
-	function furn_update_handle_height(contour, cache, furn_set){
-
-		if(!contour.furn.handle_side && furn_set.empty())
-			return;
-
-		var elm = contour.profile_by_furn_side(contour.furn.handle_side, cache),
-			len = elm._row.len;
-
-		furn_set.specification.find_rows({dop: 0}, function (row) {
-
-			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row))
-				return;
-
-			if(furn_set_handle_height(contour, row, len))
-				return false;
-
-			if(row.is_set_row){
-				var ok = false;
-				furn_get_spec(contour, cache, row.nom_set, true).each(function (sub_row) {
-					if(furn_set_handle_height(contour, sub_row, len))
-						return !(ok = true);
-				});
-				if(ok)
-					return false;
-			}
-
-		})
-
-
-	}
-
-	function furn_set_handle_height(contour, row, len){
-
-		if(row.handle_height_base == -1){
-			contour._row.h_ruch = (len / 2).round(0);
-			contour._row.fix_ruch = false;
-			return true;
-
-		}else if(row.handle_height_base > 0){
-			contour._row.h_ruch = row.handle_height_base;
-			contour._row.fix_ruch = true;
-			return true;
-
-		}
-	}
-
-	function furn_get_spec(contour, cache, furn_set, exclude_dop) {
-
-		var res = $p.dp.buyers_order.create().specification;
-
-		furn_set.specification.find_rows({dop: 0}, function (row) {
-
-			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row))
-				return;
-
-			if(!exclude_dop){
-				furn_set.specification.find_rows({is_main_specification_row: false, elm: row.elm}, function (dop_row) {
-
-					if(!furn_check_row_restrictions(contour, cache, furn_set, dop_row))
-						return;
-
-					if(dop_row.is_procedure_row){
-
-						var invert = contour.direction == $p.enm.open_directions.Правое,
-							invert_nearest = false,
-							coordin = 0,
-							elm = contour.profile_by_furn_side(dop_row.side, cache),
-							len = elm._row.len,
-							sizefurn = elm.nom.sizefurn,
-							dx0 = (len - elm.data._len) / 2,
-							dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
-							faltz = len - 2 * sizefurn;
-
-						if(dop_row.offset_option == $p.enm.offset_options.Формула){
-
-
-						}else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
-							coordin = faltz + dop_row.contraction;
-
-						}else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
-							var bounds = contour.bounds,
-								by_side = contour.profiles_by_side(),
-								hor;
-							if(elm == by_side.top || elm == by_side.bottom){
-								hor = new paper.Path({
-									insert: false,
-									segments: [[bounds.left + contour.h_ruch, bounds.top - 200], [bounds.left + contour.h_ruch, bounds.bottom + 200]]
-								});
-							}else
-								hor = new paper.Path({
-									insert: false,
-									segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
-								});
-
-							coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor)) -
-								elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
-
-						}else{
-
-							if(invert){
-
-								if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
-									coordin = dop_row.contraction;
-
-								}else{
-									coordin = len - dop_row.contraction;
-								}
-
-							}else{
-
-								if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
-									coordin = len - dop_row.contraction;
-
-								}else{
-									coordin = dop_row.contraction;
-								}
-							}
-						}
-
-						var procedure_row = res.add(dop_row);
-						procedure_row.origin = furn_set;
-						procedure_row.handle_height_min = elm.elm;
-						procedure_row.handle_height_max = contour.cnstr;
-						procedure_row.coefficient = coordin;
-
-						return;
-
-					}else if(!dop_row.quantity)
-						return;
-
-					if(dop_row.is_set_row){
-						furn_get_spec(contour, cache, dop_row.nom_set).each(function (sub_row) {
-
-							if(sub_row.is_procedure_row)
-								res.add(sub_row);
-
-							else if(!sub_row.quantity)
-								return;
-
-							res.add(sub_row).quantity = row.quantity * sub_row.quantity;
-
-						});
-					}else{
-						res.add(dop_row).origin = furn_set;
-					}
-
-				});
-			}
-
-			if(row.is_set_row){
-				furn_get_spec(contour, cache, row.nom_set).each(function (sub_row) {
-
-					if(sub_row.is_procedure_row)
-						res.add(sub_row);
-
-					else if(!sub_row.quantity)
-						return;
-
-					res.add(sub_row).quantity = row.quantity * sub_row.quantity;
-
-				});
-			}else{
-				res.add(row).origin = furn_set;
-			}
-
-		});
-
-		return res;
-	}
-
-
-	function cnn_spec_nearest(elm) {
-		const nearest = elm.nearest();
-		if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm.data._nearest_cnn)
-			cnn_add_spec(elm.data._nearest_cnn, elm, {
-				angle:  0,
-				alp1:   0,
-				alp2:   0,
-				len:    elm.data._len,
-				origin: cnn_row(elm.elm, nearest.elm)
-			});
-	}
-
-	function base_spec_profile(elm) {
-
-		const {_row, rays} = elm;
-
-		if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
-      return;
-    }
-
-    const {b, e} = rays;
-
-		if(!b.cnn || !e.cnn){
-			$p.record_log({
-				note: "не найдено соединение",
-				obj: _row._obj
-			});
-			return;
-		}
-
-    const prev = b.profile;
-    const next = e.profile;
-    const row_cnn_prev = b.cnn.main_row(elm);
-    const row_cnn_next = e.cnn.main_row(elm);
-
-		if(row_cnn_prev || row_cnn_next){
-
-			const row_spec = new_spec_row(null, elm, row_cnn_prev || row_cnn_next, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
-
-      const seam = $p.enm.angle_calculating_ways.СварнойШов;
-      const d45 = Math.sin(Math.PI / 4);
-      const dprev = row_cnn_prev ? (
-          row_cnn_prev.angle_calc_method == seam && _row.alp1 > 0 ? row_cnn_prev.sz * d45 / Math.sin(_row.alp1 / 180 * Math.PI) : row_cnn_prev.sz
-        ) : 0;
-      const dnext = row_cnn_next ? (
-          row_cnn_next.angle_calc_method == seam && _row.alp2 > 0 ? row_cnn_next.sz * d45 / Math.sin(_row.alp2 / 180 * Math.PI) : row_cnn_next.sz
-        ) : 0;
-
-      row_spec.len = (_row.len - dprev - dnext)
-				* ((row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
-
-			elm.data._len = _row.len;
-			_row.len = (_row.len
-				- (!row_cnn_prev || row_cnn_prev.angle_calc_method == seam ? 0 : row_cnn_prev.sz)
-				- (!row_cnn_next || row_cnn_next.angle_calc_method == seam ? 0 : row_cnn_next.sz))
-				* 1000 * ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
-
-			if(!elm.is_linear()){
-        row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
-      }
-
-			if(row_cnn_prev && !row_cnn_prev.formula.empty()){
-				row_cnn_prev.formula.execute({
-					ox: ox,
-					elm: elm,
-          cnstr: 0,
-          inset: $p.utils.blank.guid,
-					row_cnn: row_cnn_prev,
-					row_spec: row_spec
-				});
-
-			}else if(row_cnn_next && !row_cnn_next.formula.empty()){
-				row_cnn_next.formula.execute({
-					ox: ox,
-					elm: elm,
-          cnstr: 0,
-          inset: $p.utils.blank.guid,
-					row_cnn: row_cnn_next,
-					row_spec: row_spec
-				});
-			}
-
-			calc_count_area_mass(row_spec, _row, row_cnn_prev ? row_cnn_prev.angle_calc_method : null, row_cnn_next ? row_cnn_next.angle_calc_method : null);
-		}
-
-		if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
-
-			const len_angl = {
-				angle: 0,
-				alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
-				alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90
-			};
-
-			if(b.cnn.cnn_type == $p.enm.cnn_types.ТОбразное || b.cnn.cnn_type == $p.enm.cnn_types.НезамкнутыйКонтур){
-
-				if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm)){
-          len_angl.angle = len_angl.alp2;
-          cnn_add_spec(e.cnn, elm, len_angl);
-				}
-			}
-
-
-      len_angl.angle = len_angl.alp1;
-			cnn_add_spec(b.cnn, elm, len_angl);
-
-		}
-
-
-		inset_spec(elm);
-
-		cnn_spec_nearest(elm);
-
-		elm.addls.forEach(base_spec_profile);
-
-	}
-
-	function base_spec_glass(glass) {
-
-    const {profiles, _row} = glass;
-
-    if(_row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
-      return;
-    }
-
-    const glength = profiles.length;
-
-		for(let i=0; i<glength; i++ ){
-			const curr = profiles[i];
-
-      if(curr.profile && curr.profile._row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
-        return;
-      }
-
-      const prev = (i==0 ? profiles[glength-1] : profiles[i-1]).profile;
-      const next = (i==glength-1 ? profiles[0] : profiles[i+1]).profile;
-      const row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});
-
-			const len_angl = {
-				angle: 0,
-				alp1: prev.generatrix.angle_to(curr.profile.generatrix, curr.b, true),
-				alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
-				len: row_cnn.length ? row_cnn[0].aperture_len : 0,
-				origin: cnn_row(_row.elm, curr.profile.elm)
-
-			};
-
-			cnn_add_spec(curr.cnn, curr.profile, len_angl);
-
-		}
-
-		inset_spec(glass);
-
-	}
-
-	function inset_spec(elm, inset, len_angl) {
-
-		var _row = elm._row;
-
-		if(!inset)
-			inset = elm.inset;
-
-		inset_filter_spec(inset, elm, true, len_angl).forEach(function (row_ins_spec) {
-
-		  const origin = row_ins_spec._origin || inset;
-
-			let row_spec;
-
-			if((row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру
-				&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
-				$p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1)
-				row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
-
-			if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !row_ins_spec.formula.empty()){
-
-				row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, origin);
-
-				row_ins_spec.formula.execute({
-					ox: ox,
-					elm: elm,
-          cnstr: len_angl && len_angl.cnstr || 0,
-          inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
-					row_ins: row_ins_spec,
-					row_spec: row_spec
-				});
-
-			}else if($p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1 ||
-				row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ДляЭлемента){
-				calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
-
-			}else{
-
-				if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПлощади){
-					row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz)/1000;
-					row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz)/1000;
-					row_spec.s = _row.s;
-
-				}else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру){
-					var row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
-					elm.perimeter.forEach(function (rib) {
-						row_prm._row._mixin(rib);
-						if(inset_check(row_ins_spec, row_prm, true)){
-							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
-							calc_qty_len(row_spec, row_ins_spec, rib.len);
-							calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
-						}
-						row_spec = null;
-					});
-
-				}else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоШагам){
-
-					var h = _row.y2 - _row.y1, w = _row.x2 - _row.x1;
-					if((row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьШагиВторогоНаправления ||
-						row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление) && row_ins_spec.step){
-
-						for(var i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
-							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
-							calc_qty_len(row_spec, row_ins_spec, w);
-							calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
-						}
-						row_spec = null;
-					}
-
-				}else{
-					throw new Error("count_calc_method: " + row_ins_spec.count_calc_method);
-				}
-
-			}
-
-			if(row_spec)
-				calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
-
-		});
-	}
-
-	function find_create_cx(elm, origin) {
-    if(!find_cx_sql){
-      find_cx_sql = $p.wsql.alasql.compile("select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?")
-    }
-    var aref = find_cx_sql([ox.ref, elm, origin]);
-    if(aref.length){
-      return $p.cat.characteristics.get(aref[0].ref, false);
-    }
-    return $p.cat.characteristics.create({
-      leading_product: ox,
-      leading_elm: elm,
-      origin: origin
-    }, false, true)._set_loaded();
-  }
-
-  function inset_contour_spec(contour) {
-
-    var spec_tmp = spec;
-
-    ox.inserts.find_rows({cnstr: contour.cnstr}, function (irow) {
-      var elm = {
-        _row: {},
-        elm: 0,
-        clr: ox.clr,
-        get perimeter() {return contour.perimeter}
-      },
-        inset = irow.inset;
-
-      if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
-
-        var cx = find_create_cx(-contour.cnstr, inset.ref);
-        ox._order_rows.push(cx);
-
-        cx._mixin(inset.contour_attrs(contour));
-
-      }
-
-      var len_angl = {
-        angle: 0,
-        alp1: 0,
-        alp2: 0,
-        len: 0,
-        origin: inset,
-        cnstr: contour.cnstr
-      }
-      spec = cx.specification;
-      spec.clear();
-      inset_spec(elm, inset, len_angl);
-
-    })
-
-    spec = spec_tmp;
-  }
-
-	function base_spec(scheme) {
-
-		added_cnn_spec = {};
-
-    scheme.getItems({class: $p.Editor.Contour}).forEach(function (contour) {
-
-			contour.profiles.forEach(base_spec_profile);
-
-			contour.glasses(false, true).forEach(base_spec_glass);
-
-			furn_spec(contour);
-
-      inset_contour_spec(contour)
-
-		});
-
-    inset_contour_spec({
-      cnstr:0,
-      project: scheme,
-      get perimeter() {return this.project.perimeter}
-    });
-
-	}
-
-	$p.eve.attachEvent("save_coordinates", function (scheme, attr) {
-
-
-
-		ox = scheme.ox;
-		spec = ox.specification;
-		constructions = ox.constructions;
-		coordinates = ox.coordinates;
-		cnn_elmnts = ox.cnn_elmnts;
-		glass_specification = ox.glass_specification;
-		params = ox.params;
-
-		spec.clear();
-
-    ox._order_rows = [];
-
-		base_spec(scheme);
-
-		spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop", "qty,totqty,totqty1");
-
-
-
-
-		$p.eve.callEvent("coordinates_calculated", [scheme, attr]);
-
-
-
-		var prm = {
-			calc_order_row: ox.calc_order_row,
-			spec: spec
-		};
-		if(prm.calc_order_row){
-
-			$p.pricing.price_type(prm);
-
-			$p.spec_building.specification_adjustment(prm);
-
-			$p.pricing.calc_first_cost(prm);
-
-			$p.pricing.calc_amount(prm);
-		}
-
-
-
-		if(attr.snapshot){
-			$p.eve.callEvent("scheme_snapshot", [scheme, attr]);
-		}
-
-		if(attr.save){
-
-			ox.save(undefined, undefined, {
-				svg: {
-					"content_type": "image/svg+xml",
-					"data": new Blob([scheme.get_svg()], {type: "image/svg+xml"})
-				}
-			})
-				.then(function () {
-					$p.msg.show_msg("Спецификация рассчитана");
-					delete scheme.data._saving;
-					$p.eve.callEvent("characteristic_saved", [scheme, attr]);
-				});
-
-		}else{
-			delete scheme.data._saving;
-		}
-
-	});
-
-}
-
-
-$p.products_building = new ProductsBuilding();
-
-
-
-class SpecBuilding {
-
-  constructor($p) {
-
-  }
-
-  calc_row_spec (prm, cancel) {
-
-  }
-
-  specification_adjustment (attr) {
-
-    var ox = attr.calc_order_row.characteristic,
-      calc_order = attr.calc_order_row._owner._owner,
-      order_rows = {}, adel = [];
-
-    attr.spec.find_rows({ch: {in: [-1,-2]}}, function (row) {
-      adel.push(row);
-    });
-    adel.forEach(function (row) {
-      attr.spec.del(row, true);
-    });
-
-
-    adel.length = 0;
-    calc_order.production.forEach(function (row) {
-      if(row.ordn == ox){
-        if(ox._order_rows.indexOf(row.characteristic) == -1){
-          adel.push(row);
-        }else {
-          order_rows[row.characteristic.ref] = row;
-        }
-      }
-    })
-    adel.forEach(function (row) {
-      calc_order.production.del(row.row-1)
-    })
-
-    ox._order_rows.forEach(function (cx) {
-      var row = order_rows[cx.ref] || calc_order.production.add({
-          characteristic: cx
-        });
-      row.nom = cx.owner;
-      row.unit = row.nom.storage_unit;
-      row.ordn = ox;
-      row.len = cx.x;
-      row.width = cx.y;
-      row.s = cx.s;
-      row.qty = attr.calc_order_row.qty;
-      row.quantity = attr.calc_order_row.quantity;
-
-      cx.save();
-      order_rows[cx.ref] = row;
-    })
-
-    if(Object.keys(order_rows).length){
-      attr.order_rows = order_rows;
-    }
-  }
-
-}
-
-$p.spec_building = new SpecBuilding($p);
-
-
-
-
-
-(function (md) {
-
-	var value_mgr = md.value_mgr;
-
-	md.value_mgr = function(row, f, mf, array_enabled, v){
-
-		var tmp = value_mgr(row, f, mf, array_enabled, v);
-
-		if(tmp)
-			return tmp;
-
-		if(f == 'trans')
-			return $p.doc.calc_order;
-
-		else if(f == 'partner')
-			return $p.cat.partners;
-	}
-
-})($p.md);
 
 
 $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
@@ -7616,6 +5906,1722 @@ $p.doc.selling.on({
 
 
 
+class Pricing {
+
+  constructor($p) {
+
+    function build_cache() {
+
+      return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
+        {
+          limit : 1000,
+          include_docs: false,
+          startkey: [''],
+          endkey: ['\uffff']
+        })
+        .then(function (res) {
+          res.rows.forEach(function (row) {
+
+            var onom = $p.cat.nom.get(row.key[0], false, true);
+
+            if(!onom || !onom._data)
+              return;
+
+            if(!onom._data._price)
+              onom._data._price = {};
+
+            if(!onom._data._price[row.key[1]])
+              onom._data._price[row.key[1]] = {};
+
+            if(!onom._data._price[row.key[1]][row.key[2]])
+              onom._data._price[row.key[1]][row.key[2]] = [];
+
+            onom._data._price[row.key[1]][row.key[2]].push({
+              date: new Date(row.value.date),
+              price: row.value.price,
+              currency: $p.cat.currencies.get(row.value.currency)
+            });
+
+          });
+        });
+    }
+
+    var init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", function () {
+      $p.eve.detachEvent(init_event_id);
+      build_cache();
+    })
+
+    $p.eve.attachEvent("pouch_change", function (dbid, change) {
+      if (dbid != $p.doc.nom_prices_setup.cachable)
+        return;
+
+    })
+
+  }
+
+  nom_price(nom, characteristic, price_type, prm, row) {
+
+    if (row && prm) {
+      var calc_order = prm.calc_order_row._owner._owner,
+        price_prm = {
+          price_type: price_type,
+          characteristic: characteristic,
+          date: calc_order.date,
+          currency: calc_order.doc_currency
+        };
+      if (price_type == prm.price_type.price_type_first_cost && !prm.price_type.formula.empty()) {
+        price_prm.formula = prm.price_type.formula;
+      }
+      row.price = nom._price(price_prm);
+
+      return row.price;
+    }
+  }
+
+  price_type(prm) {
+
+    const empty_formula = $p.cat.formulas.get();
+
+    prm.price_type = {
+      marginality: 1.9,
+      marginality_min: 1.2,
+      marginality_internal: 1.5,
+      discount: 0,
+      discount_external: 10,
+      extra_charge_external: 0,
+      price_type_first_cost: $p.job_prm.pricing.price_type_first_cost,
+      price_type_sale: $p.job_prm.pricing.price_type_first_cost,
+      price_type_internal: $p.job_prm.pricing.price_type_first_cost,
+      formula: empty_formula,
+      sale_formula: empty_formula,
+      internal_formula: empty_formula,
+      external_formula: empty_formula
+    };
+
+    const {nom, characteristic} = prm.calc_order_row;
+    const filter = nom.price_group.empty() ?
+        {price_group: nom.price_group} :
+        {price_group: {in: [nom.price_group, $p.cat.price_groups.get()]}};
+    const ares = [];
+
+    $p.ireg.margin_coefficients.find_rows(filter, (row) => {
+
+      let ok = true;
+      if(!row.key.empty()){
+        row.key.params.forEach((row_prm) => {
+
+          if(row_prm.property.is_calculated){
+
+          }
+          else{
+            let finded;
+            characteristic.params.find_rows({
+              cnstr: 0,
+              param: row_prm.property
+            }, (row_x) => {
+              finded = row_x;
+              return false;
+            });
+
+            if(finded){
+              if(row_prm.comparison_type == $p.enm.comparison_types.in){
+                ok = row_prm.txt_row.match(finded.value.ref);
+              }
+              else if(row_prm.comparison_type == $p.enm.comparison_types.nin){
+                ok = !row_prm.txt_row.match(finded.value.ref);
+              }
+              else if(row_prm.comparison_type.empty() || row_prm.comparison_type == $p.enm.comparison_types.eq){
+                ok = row_prm.value == finded.value;
+              }
+              else if(row_prm.comparison_type.empty() || row_prm.comparison_type == $p.enm.comparison_types.ne){
+                ok = row_prm.value != finded.value;
+              }
+            }
+            else{
+              ok = false;
+            }
+          }
+          if(!ok){
+            return false;
+          }
+        })
+      }
+      if(ok){
+        ares.push(row);
+      }
+    });
+
+    if(ares.length){
+      ares.sort((a, b) => {
+
+        a.key.priority
+
+        if (a.key.priority > b.key.priority) {
+          return -1;
+        }
+        if (a.key.priority < b.key.priority) {
+          return 1;
+        }
+
+        if (a.price_group.ref < b.price_group.ref) {
+          return -1;
+        }
+        if (a.price_group.ref > b.price_group.ref) {
+          return 1;
+        }
+
+        return 0;
+
+      });
+      Object.keys(prm.price_type).forEach((key) => {
+        prm.price_type[key] = ares[0][key];
+      });
+    }
+
+    prm.calc_order_row._owner._owner.partner.extra_fields.find_rows({
+      property: $p.job_prm.pricing.dealer_surcharge
+    }, (row) => {
+      const val = parseFloat(row.value);
+      if(val){
+        prm.price_type.extra_charge_external = val;
+      }
+      return false;
+    });
+
+    return prm.price_type;
+  }
+
+  calc_first_cost(prm) {
+
+    var marginality_in_spec = $p.job_prm.pricing.marginality_in_spec,
+      fake_row = {}, tmp_price;
+
+    if(!prm.spec)
+      return;
+
+    if(prm.spec.count()){
+      prm.spec.each(function (row) {
+
+        $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_first_cost, prm, row);
+        row.amount = row.price * row.totqty1;
+
+        if(marginality_in_spec){
+          fake_row._mixin(row, ["nom"]);
+          tmp_price = $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_sale, prm, fake_row);
+          row.amount_marged = (tmp_price ? tmp_price : row.price) * row.totqty1;
+        }
+
+      });
+      prm.calc_order_row.first_cost = prm.spec.aggregate([], ["amount"]).round(2);
+
+    }else{
+
+      fake_row.nom = prm.calc_order_row.nom;
+      fake_row.characteristic = prm.calc_order_row.characteristic;
+      prm.calc_order_row.first_cost = $p.pricing.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
+    }
+
+    if(prm.order_rows){
+      for(var rid in prm.order_rows){
+        var fake_prm = {
+          spec: prm.order_rows[rid].characteristic.specification,
+          calc_order_row: prm.order_rows[rid]
+        }
+        this.price_type(fake_prm)
+        this.calc_first_cost(fake_prm)
+      }
+    }
+
+  }
+
+  calc_amount (prm) {
+
+    var price_cost = $p.job_prm.pricing.marginality_in_spec ? prm.spec.aggregate([], ["amount_marged"]) : 0,
+      extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
+
+    if(!$p.current_acl.partners_uids.length || !extra_charge){
+      extra_charge = prm.price_type.extra_charge_external;
+    }
+
+    if(price_cost)
+      prm.calc_order_row.price = price_cost.round(2);
+    else
+      prm.calc_order_row.price = (prm.calc_order_row.first_cost * prm.price_type.marginality).round(2);
+
+    prm.calc_order_row.marginality = prm.calc_order_row.first_cost ?
+      prm.calc_order_row.price * ((100 - prm.calc_order_row.discount_percent)/100) / prm.calc_order_row.first_cost : 0;
+
+
+    if(extra_charge){
+
+      prm.calc_order_row.price_internal = (prm.calc_order_row.price *
+      (100 - prm.calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
+
+
+    }
+
+    if(!prm.hand_start){
+      $p.doc.calc_order.handle_event(prm.calc_order_row._owner._owner, "value_change", {
+        field: "price",
+        value: prm.calc_order_row.price,
+        tabular_section: "production",
+        row: prm.calc_order_row,
+        no_extra_charge: true
+      });
+    }
+
+    if(prm.order_rows){
+      for(var rid in prm.order_rows){
+        var fake_prm = {
+          spec: prm.order_rows[rid].characteristic.specification,
+          calc_order_row: prm.order_rows[rid]
+        }
+        this.price_type(fake_prm);
+        this.calc_amount(fake_prm);
+      }
+    }
+
+  }
+
+  from_currency_to_currency (amount, date, from, to) {
+
+    if(!to || to.empty())
+      to = $p.job_prm.pricing.main_currency;
+
+    if(!from || from == to)
+      return amount;
+
+    if(!date)
+      date = new Date();
+
+    if(!this.cource_sql)
+      this.cource_sql = $p.wsql.alasql.compile("select top 1 * from `ireg_currency_courses` where `currency` = ? and `period` <= ? order by `date` desc");
+
+    var cfrom = {course: 1, multiplicity: 1},
+      cto = {course: 1, multiplicity: 1},
+      tmp;
+    if(from != $p.job_prm.pricing.main_currency){
+      tmp = this.cource_sql([from.ref, date]);
+      if(tmp.length)
+        cfrom = tmp[0];
+    }
+    if(to != $p.job_prm.pricing.main_currency){
+      tmp = this.cource_sql([to.ref, date]);
+      if(tmp.length)
+        cto = tmp[0];
+    }
+
+    return (amount * cfrom.course / cfrom.multiplicity) * cto.multiplicity / cto.course;
+  }
+
+  cut_upload () {
+
+    if(!$p.current_acl || (
+      !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") &&
+      !$p.current_acl.role_available("ИзменениеТехнологическойНСИ"))){
+      $p.msg.show_msg({
+        type: "alert-error",
+        text: $p.msg.error_low_acl,
+        title: $p.msg.error_rights
+      });
+      return true;
+    }
+
+    function upload_acc() {
+      var mgrs = [
+        "cat.users",
+        "cat.individuals",
+        "cat.organizations",
+        "cat.partners",
+        "cat.contracts",
+        "cat.currencies",
+        "cat.nom_prices_types",
+        "cat.price_groups",
+        "cat.cashboxes",
+        "cat.partner_bank_accounts",
+        "cat.organization_bank_accounts",
+        "cat.projects",
+        "cat.stores",
+        "cat.cash_flow_articles",
+        "cat.cost_items",
+        "cat.price_groups",
+        "cat.delivery_areas",
+        "ireg.currency_courses",
+        "ireg.margin_coefficients"
+      ];
+
+      $p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
+        filter: function (doc) {
+          return mgrs.indexOf(doc._id.split("|")[0]) != -1;
+        }
+      })
+        .on('change', function (info) {
+
+        })
+        .on('paused', function (err) {
+
+        })
+        .on('active', function () {
+
+        })
+        .on('denied', function (err) {
+          $p.msg.show_msg(err.reason);
+          $p.record_log(err);
+
+        })
+        .on('complete', function (info) {
+
+          if($p.current_acl.role_available("ИзменениеТехнологическойНСИ"))
+            upload_tech();
+
+          else
+            $p.msg.show_msg({
+              type: "alert-info",
+              text: $p.msg.sync_complite,
+              title: $p.msg.sync_title
+            });
+
+        })
+        .on('error', function (err) {
+          $p.msg.show_msg(err.reason);
+          $p.record_log(err);
+
+        });
+    }
+
+    function upload_tech() {
+      var mgrs = [
+        "cat.units",
+        "cat.nom",
+        "cat.nom_groups",
+        "cat.nom_units",
+        "cat.nom_kinds",
+        "cat.elm_visualization",
+        "cat.destinations",
+        "cat.property_values",
+        "cat.property_values_hierarchy",
+        "cat.inserts",
+        "cat.insert_bind",
+        "cat.color_price_groups",
+        "cat.clrs",
+        "cat.furns",
+        "cat.cnns",
+        "cat.production_params",
+        "cat.parameters_keys",
+        "cat.formulas",
+        "cch.properties",
+        "cch.predefined_elmnts"
+
+      ];
+
+      $p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
+        filter: function (doc) {
+          return mgrs.indexOf(doc._id.split("|")[0]) != -1;
+        }
+      })
+        .on('change', function (info) {
+
+        })
+        .on('paused', function (err) {
+
+        })
+        .on('active', function () {
+
+        })
+        .on('denied', function (err) {
+          $p.msg.show_msg(err.reason);
+          $p.record_log(err);
+
+        })
+        .on('complete', function (info) {
+          $p.msg.show_msg({
+            type: "alert-info",
+            text: $p.msg.sync_complite,
+            title: $p.msg.sync_title
+          });
+
+        })
+        .on('error', function (err) {
+          $p.msg.show_msg(err.reason);
+          $p.record_log(err);
+
+        });
+    }
+
+
+    if($p.current_acl.role_available("СогласованиеРасчетовЗаказов"))
+      upload_acc();
+    else
+      upload_tech();
+
+  }
+
+}
+
+
+$p.pricing = new Pricing($p);
+
+
+function ProductsBuilding(){
+
+  let added_cnn_spec,
+		ox,
+		spec,
+		constructions,
+		coordinates,
+		cnn_elmnts,
+		glass_specification,
+		params,
+    find_cx_sql;
+
+
+	function calc_count_area_mass(row_cpec, row_coord, angle_calc_method_prev, angle_calc_method_next){
+
+		if(!angle_calc_method_next){
+      angle_calc_method_next = angle_calc_method_prev;
+    }
+
+		if(angle_calc_method_prev && !row_cpec.nom.is_pieces){
+
+		  const angle_method = $p.enm.angle_calculating_ways;
+
+			if((angle_calc_method_prev == angle_method.Основной) || (angle_calc_method_prev == angle_method.СварнойШов)){
+				row_cpec.alp1 = row_coord.alp1;
+			}
+			else if(angle_calc_method_prev == angle_method._90){
+				row_cpec.alp1 = 90;
+			}
+			else if(angle_calc_method_prev == angle_method.СоединениеПополам){
+				row_cpec.alp1 = row_coord.alp1 / 2;
+			}
+			else if(angle_calc_method_prev == angle_method.Соединение){
+				row_cpec.alp1 = row_coord.alp1;
+			}
+
+			if((angle_calc_method_next == angle_method.Основной) || (angle_calc_method_next == angle_method.СварнойШов)){
+				row_cpec.alp2 = row_coord.alp2;
+			}
+			else if(angle_calc_method_next == angle_method._90){
+				row_cpec.alp2 = 90;
+			}
+			else if(angle_calc_method_next == angle_method.СоединениеПополам){
+				row_cpec.alp2 = row_coord.alp2 / 2;
+			}
+			else if(angle_calc_method_next == angle_method.Соединение){
+				row_cpec.alp2 = row_coord.alp2;
+			}
+		}
+
+		if(row_cpec.len){
+			if(row_cpec.width && !row_cpec.s)
+				row_cpec.s = row_cpec.len * row_cpec.width;
+		}else
+			row_cpec.s = 0;
+
+		if(!row_cpec.qty && (row_cpec.len || row_cpec.width))
+			row_cpec.qty = 1;
+
+		if(row_cpec.s)
+			row_cpec.totqty = row_cpec.qty * row_cpec.s;
+
+		else if(row_cpec.len)
+			row_cpec.totqty = row_cpec.qty * row_cpec.len;
+
+		else
+			row_cpec.totqty = row_cpec.qty;
+
+		row_cpec.totqty1 = row_cpec.totqty * row_cpec.nom.loss_factor;
+
+		["len","width","s","qty","totqty","totqty1","alp1","alp2"].forEach(function (fld) {
+			row_cpec[fld] = row_cpec[fld].round(4);
+		});
+	}
+
+	function calc_qty_len(row_spec, row_base, len){
+
+		var nom = row_spec.nom;
+
+		if(nom.cutting_optimization_type == $p.enm.cutting_optimization_types.Нет ||
+			nom.cutting_optimization_type.empty() || nom.is_pieces){
+
+			if(!row_base.coefficient || !len)
+				row_spec.qty = row_base.quantity;
+
+			else{
+				if(!nom.is_pieces){
+					row_spec.qty = row_base.quantity;
+					row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
+					if(nom.rounding_quantity){
+						row_spec.qty = (row_spec.qty * row_spec.len).round(nom.rounding_quantity);
+						row_spec.len = 0;
+					};
+
+				}else if(!nom.rounding_quantity){
+					row_spec.qty = Math.round((len - row_base.sz) * row_base.coefficient * row_base.quantity - 0.5);
+
+				}else{
+					row_spec.qty = ((len - row_base.sz) * row_base.coefficient * row_base.quantity).round(nom.rounding_quantity);
+				}
+			}
+
+		}else{
+			row_spec.qty = row_base.quantity;
+			row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
+		}
+	}
+
+	function cnn_row(elm1, elm2){
+		var res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
+		if(res.length)
+			return res[0].row;
+		res = cnn_elmnts.find_rows({elm1: elm2, elm2: elm1});
+		if(res.length)
+			return res[0].row;
+		return 0;
+	}
+
+	function cnn_need_add_spec(cnn, elm1, elm2){
+
+		if(cnn && cnn.cnn_type == $p.enm.cnn_types.КрестВСтык)
+			return false;
+
+		else if(!cnn || !elm1 || !elm2 || added_cnn_spec[elm1] == elm2 || added_cnn_spec[elm2] == elm1)
+			return false;
+
+		added_cnn_spec[elm1] = elm2;
+		return true;
+	}
+
+	function new_spec_row(row_spec, elm, row_base, nom, origin){
+		if(!row_spec){
+      row_spec = spec.add();
+    }
+		row_spec.nom = nom || row_base.nom;
+		row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr);
+		row_spec.elm = elm.elm;
+		if(origin){
+      row_spec.origin = origin;
+    }
+		return row_spec;
+	}
+
+	function cnn_add_spec(cnn, elm, len_angl){
+
+		if(!cnn){
+      return;
+    }
+
+		const sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
+
+		cnn_filter_spec(cnn, elm, len_angl).forEach((row_cnn_spec) => {
+
+			const {nom} = row_cnn_spec;
+
+			if(nom._manager == $p.cat.inserts){
+				if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)){
+					const tmp_len_angl = len_angl._clone();
+					tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
+					inset_spec(elm, nom, tmp_len_angl);
+				}else{
+          inset_spec(elm, nom, len_angl);
+        }
+			}
+			else {
+
+        const row_spec = new_spec_row(null, elm, row_cnn_spec, nom, len_angl.origin || cnn);
+
+				if(nom.is_pieces){
+					if(!row_cnn_spec.coefficient){
+            row_spec.qty = row_cnn_spec.quantity;
+          }
+					else{
+            row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
+              .round(nom.rounding_quantity);
+          }
+				}
+				else{
+					row_spec.qty = row_cnn_spec.quantity;
+
+					if(row_cnn_spec.sz || row_cnn_spec.coefficient){
+            row_spec.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
+          }
+				}
+
+				if(!row_cnn_spec.formula.empty()) {
+					row_cnn_spec.formula.execute({
+						ox,
+						elm,
+            len_angl,
+            cnstr: 0,
+            inset: $p.utils.blank.guid,
+						row_cnn: row_cnn_spec,
+						row_spec: row_spec
+					});
+				}
+
+				if(!row_spec.qty){
+          spec.del(row_spec.row-1);
+        }
+				else{
+          calc_count_area_mass(row_spec, len_angl, row_cnn_spec.angle_calc_method);
+        }
+			}
+
+		});
+	}
+
+	function cnn_filter_spec(cnn, elm, len_angl){
+
+		const res = [];
+		const {angle_hor} = elm;
+
+		cnn.specification.each((row) => {
+			const {nom} = row;
+			if(!nom || nom.empty() ||
+				  nom == $p.job_prm.nom.art1 ||
+				  nom == $p.job_prm.nom.art2){
+        return;
+      }
+
+			if((row.for_direct_profile_only > 0 && !elm.is_linear()) ||
+				(row.for_direct_profile_only < 0 && elm.is_linear())){
+        return;
+      }
+
+			if(cnn.cnn_type == $p.enm.cnn_types.Наложение){
+				if(row.amin > angle_hor || row.amax < angle_hor || row.sz_min > len_angl.len || row.sz_max < len_angl.len){
+          return;
+        }
+			}else{
+				if(row.amin > len_angl.angle || row.amax < len_angl.angle){
+          return;
+        }
+			}
+
+			if(($p.enm.cnn_types.acn.a.indexOf(cnn.cnn_type) != -1) && (
+					(row.set_specification == $p.enm.specification_installation_methods.САртикулом1 && !len_angl.art1) ||
+					(row.set_specification == $p.enm.specification_installation_methods.САртикулом2 && !len_angl.art2)
+				)){
+        return;
+      }
+
+			if(check_params(cnn.selection_params, row, elm)){
+        res.push(row);
+      }
+
+		});
+
+		return res;
+	}
+
+	function check_params(selection_params, spec_row, elm, cnstr, origin){
+
+		let ok = true;
+
+		selection_params.find_rows({elm: spec_row.elm}, function (prm) {
+
+			ok = false;
+			let val = prm.value,
+        is_calculated = prm.param.is_calculated;
+
+
+			if(is_calculated){
+        val = prm.param.calculated_value({
+          row: spec_row,
+          elm: elm,
+          ox: ox
+        });
+      }
+
+      if((!Array.isArray(val)) && (prm.comparison_type.empty() || prm.comparison_type == $p.enm.comparison_types.eq)){
+
+			  if(is_calculated){
+          ok = val == prm.value;
+        }
+        else{
+          params.find_rows({
+            cnstr: cnstr || 0,
+            inset: origin || $p.utils.blank.guid,
+            param: prm.param,
+            value: val
+          }, () => {
+            ok = true;
+            return false;
+          });
+        }
+      }
+      else if(is_calculated){
+
+        switch(prm.comparison_type) {
+
+          case $p.enm.comparison_types.ne:
+            ok = val != prm.value;
+            break;
+
+          case $p.enm.comparison_types.gt:
+            ok = val > prm.value;
+            break;
+
+          case $p.enm.comparison_types.gte:
+            ok = val >= prm.value;
+            break;
+
+          case $p.enm.comparison_types.lt:
+            ok = val < prm.value;
+            break;
+
+          case $p.enm.comparison_types.lte:
+            ok = val <= prm.value;
+            break;
+
+          case $p.enm.comparison_types.nin:
+            if(Array.isArray(val) && !Array.isArray(prm.value)){
+              ok = val.indexOf(prm.value) == -1;
+
+            }else if(Array.isArray(prm.value) && !Array.isArray(val)){
+              ok = prm.value.indexOf(val) == -1;
+
+            }
+            break;
+
+          case $p.enm.comparison_types.in:
+            if(Array.isArray(val) && !Array.isArray(prm.value)){
+              ok = val.indexOf(prm.value) != -1;
+
+            }else if(Array.isArray(prm.value) && !Array.isArray(val)){
+              ok = prm.value.indexOf(val) != -1;
+
+            }
+            break;
+        }
+
+      }
+      else{
+        params.find_rows({
+          cnstr: cnstr || 0,
+          inset: origin || $p.utils.blank.guid,
+          param: prm.param
+        }, function (row) {
+
+          switch(prm.comparison_type) {
+
+            case $p.enm.comparison_types.ne:
+              ok = row.value != prm.value;
+              break;
+
+            case $p.enm.comparison_types.gt:
+              ok = row.value > val;
+              break;
+
+            case $p.enm.comparison_types.gte:
+              ok = row.value >= val;
+              break;
+
+            case $p.enm.comparison_types.lt:
+              ok = row.value < val;
+              break;
+
+            case $p.enm.comparison_types.lte:
+              ok = row.value <= val;
+              break;
+
+            case $p.enm.comparison_types.nin:
+              if(Array.isArray(val) && !Array.isArray(prm.value)){
+                ok = val.indexOf(prm.value) == -1;
+
+              }else if(Array.isArray(prm.value) && !Array.isArray(val)){
+                ok = prm.value.indexOf(val) == -1;
+
+              }
+              break;
+
+            case $p.enm.comparison_types.in:
+              if(Array.isArray(val) && !Array.isArray(prm.value)){
+                ok = val.indexOf(prm.value) != -1;
+
+              }else if(Array.isArray(prm.value) && !Array.isArray(val)){
+                ok = prm.value.indexOf(val) != -1;
+
+              }
+              break;
+          }
+
+          return false;
+        });
+      }
+
+			return ok;
+		});
+
+		return ok;
+	}
+
+	function inset_check(inset, elm, by_perimetr, len_angl){
+
+	  const {_row} = elm;
+	  const len = len_angl ? len_angl.len : _row.len
+		let is_tabular = true;
+
+		if(inset.smin > _row.s || (_row.s && inset.smax && inset.smax < _row.s)){
+      return false;
+    }
+
+		if(inset.is_main_elm && !inset.quantity){
+      return false;
+    }
+
+		if($p.utils.is_data_obj(inset)){
+
+			if((inset.for_direct_profile_only > 0 && !elm.is_linear()) || (inset.for_direct_profile_only < 0 &&elm.is_linear())){
+        return false;
+      }
+
+			if(inset.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
+				if(!elm.joined_imposts(true)){
+          return false;
+        }
+
+			}else if(inset.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
+				if(elm.joined_imposts(true)){
+          return false;
+        }
+			}
+			is_tabular = false;
+		}
+
+
+		if(!is_tabular || by_perimetr || inset.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
+			if(inset.lmin > len || (inset.lmax < len && inset.lmax > 0)){
+        return false;
+      }
+			if(inset.ahmin > _row.angle_hor || inset.ahmax < _row.angle_hor){
+        return false;
+      }
+		}
+
+
+		return true;
+	}
+
+	function inset_filter_spec(inset, elm, is_high_level_call, len_angl){
+
+		const res = [];
+		const glass_rows = [];
+
+		if(!inset || inset.empty()){
+      return res;
+    }
+
+		if(is_high_level_call && (inset.insert_type == "Заполнение" || inset.insert_type == "Стеклопакет" || inset.insert_type == "ТиповойСтеклопакет")){
+
+			glass_specification.find_rows({elm: elm.elm}, (row) => {
+        glass_rows.push(row);
+			});
+
+
+
+			if(glass_rows.length){
+				glass_rows.forEach((row) => {
+					inset_filter_spec(row.inset, elm, false, len_angl).forEach((row) => {
+						res.push(row);
+					});
+				});
+				return res;
+			}
+		}
+
+		inset.specification.each(function (row) {
+
+			if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl)){
+        return;
+      }
+
+			if(!check_params(inset.selection_params, row, elm, len_angl && len_angl.cnstr, len_angl && len_angl.origin)){
+        return;
+      }
+
+			if(row.nom._manager == $p.cat.inserts){
+        inset_filter_spec(row.nom, elm, false, len_angl).forEach((subrow) => {
+          const fakerow = {}._mixin(subrow, ['angle_calc_method','clr','count_calc_method','elm','formula','is_main_elm','is_order_row','nom','sz']);
+          fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
+          fakerow.coefficient = (subrow.coefficient || 1) * (row.coefficient || 1);
+          fakerow._origin = row.nom;
+          res.push(fakerow);
+        });
+      }
+			else{
+        res.push(row);
+      }
+
+		});
+
+		return res;
+	}
+
+	function furn_spec(contour) {
+
+		if(!contour.parent){
+      return false;
+    }
+
+		const cache = {
+			profiles: contour.outer_nodes,
+			bottom: contour.profiles_by_side("bottom"),
+			params: contour.project.ox.params
+		};
+
+		if(!furn_check_opening_restrictions(contour, cache)){
+      return;
+    }
+
+		furn_update_handle_height(contour, cache, contour.furn.furn_set);
+
+		furn_get_spec(contour, cache, contour.furn.furn_set).each((row) => {
+			const elm = {elm: -contour.cnstr, clr: contour.clr_furn};
+			const row_spec = new_spec_row(null, elm, row, row.nom_set, row.origin);
+
+			if(row.is_procedure_row){
+				row_spec.elm = row.handle_height_min;
+				row_spec.len = row.coefficient / 1000;
+				row_spec.qty = 0;
+				row_spec.totqty = 1;
+				row_spec.totqty1 = 1;
+				if(!row_spec.nom.visualization.empty()){
+          row_spec.dop = -1;
+        }
+			}
+			else{
+				row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
+				calc_count_area_mass(row_spec);
+			}
+		});
+	}
+
+	function furn_check_opening_restrictions(contour, cache) {
+
+		var ok = true;
+
+
+		contour.furn.open_tunes.each(function (row) {
+			var elm = contour.profile_by_furn_side(row.side, cache),
+				len = elm._row.len - 2 * elm.nom.sizefurn;
+
+
+			if(len < row.lmin ||
+				len > row.lmax ||
+				(!elm.is_linear() && !row.arc_available)){
+
+				new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.job_prm.nom.furn_error, contour.furn).dop = -1;
+				ok = false;
+			}
+
+		});
+
+		return ok;
+	}
+
+	function furn_check_row_restrictions(contour, cache, furn_set, row) {
+
+		var res = true;
+
+		furn_set.selection_params.find_rows({elm: row.elm, dop: row.dop}, function (row) {
+
+			var ok = false;
+
+			if($p.job_prm.properties.direction == row.param){
+				ok = contour.direction == row.value;
+
+			}else{
+				cache.params.find_rows({
+				  cnstr: contour.cnstr,
+          inset: $p.utils.blank.guid,
+          param: row.param,
+          value: row.value
+				}, function () {
+					return !(ok = true);
+				});
+			}
+
+			if(!ok)
+				return res = false;
+
+		});
+
+		if(res){
+			furn_set.specification_restrictions.find_rows({elm: row.elm, dop: row.dop}, function (row) {
+
+				var len;
+
+				if(contour.is_rectangular){
+					if(!cache.w)
+						cache.w = contour.w;
+					if(!cache.h)
+						cache.h = contour.h;
+
+					len = (row.side == 1 || row.side == 3) ? cache.w : cache.h;
+
+				}else{
+					var elm = contour.profile_by_furn_side(row.side, cache);
+					len = elm._row.len - 2 * elm.nom.sizefurn;
+				}
+
+				if(len < row.lmin || len > row.lmax ){
+					return res = false;
+
+				}
+			});
+		}
+
+		return res;
+	}
+
+	function furn_update_handle_height(contour, cache, furn_set){
+
+		if(!contour.furn.handle_side && furn_set.empty())
+			return;
+
+		var elm = contour.profile_by_furn_side(contour.furn.handle_side, cache),
+			len = elm._row.len;
+
+		furn_set.specification.find_rows({dop: 0}, function (row) {
+
+			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row))
+				return;
+
+			if(furn_set_handle_height(contour, row, len))
+				return false;
+
+			if(row.is_set_row){
+				var ok = false;
+				furn_get_spec(contour, cache, row.nom_set, true).each(function (sub_row) {
+					if(furn_set_handle_height(contour, sub_row, len))
+						return !(ok = true);
+				});
+				if(ok)
+					return false;
+			}
+
+		})
+
+
+	}
+
+	function furn_set_handle_height(contour, row, len){
+
+		if(row.handle_height_base == -1){
+			contour._row.h_ruch = (len / 2).round(0);
+			contour._row.fix_ruch = false;
+			return true;
+
+		}else if(row.handle_height_base > 0){
+			contour._row.h_ruch = row.handle_height_base;
+			contour._row.fix_ruch = true;
+			return true;
+
+		}
+	}
+
+	function furn_get_spec(contour, cache, furn_set, exclude_dop) {
+
+		var res = $p.dp.buyers_order.create().specification;
+
+		furn_set.specification.find_rows({dop: 0}, function (row) {
+
+			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row))
+				return;
+
+			if(!exclude_dop){
+				furn_set.specification.find_rows({is_main_specification_row: false, elm: row.elm}, function (dop_row) {
+
+					if(!furn_check_row_restrictions(contour, cache, furn_set, dop_row))
+						return;
+
+					if(dop_row.is_procedure_row){
+
+						var invert = contour.direction == $p.enm.open_directions.Правое,
+							invert_nearest = false,
+							coordin = 0,
+							elm = contour.profile_by_furn_side(dop_row.side, cache),
+							len = elm._row.len,
+							sizefurn = elm.nom.sizefurn,
+							dx0 = (len - elm.data._len) / 2,
+							dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
+							faltz = len - 2 * sizefurn;
+
+						if(dop_row.offset_option == $p.enm.offset_options.Формула){
+
+
+						}else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
+							coordin = faltz + dop_row.contraction;
+
+						}else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
+							var bounds = contour.bounds,
+								by_side = contour.profiles_by_side(),
+								hor;
+							if(elm == by_side.top || elm == by_side.bottom){
+								hor = new paper.Path({
+									insert: false,
+									segments: [[bounds.left + contour.h_ruch, bounds.top - 200], [bounds.left + contour.h_ruch, bounds.bottom + 200]]
+								});
+							}else
+								hor = new paper.Path({
+									insert: false,
+									segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
+								});
+
+							coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor)) -
+								elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
+
+						}else{
+
+							if(invert){
+
+								if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+									coordin = dop_row.contraction;
+
+								}else{
+									coordin = len - dop_row.contraction;
+								}
+
+							}else{
+
+								if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+									coordin = len - dop_row.contraction;
+
+								}else{
+									coordin = dop_row.contraction;
+								}
+							}
+						}
+
+						var procedure_row = res.add(dop_row);
+						procedure_row.origin = furn_set;
+						procedure_row.handle_height_min = elm.elm;
+						procedure_row.handle_height_max = contour.cnstr;
+						procedure_row.coefficient = coordin;
+
+						return;
+
+					}else if(!dop_row.quantity)
+						return;
+
+					if(dop_row.is_set_row){
+						furn_get_spec(contour, cache, dop_row.nom_set).each(function (sub_row) {
+
+							if(sub_row.is_procedure_row)
+								res.add(sub_row);
+
+							else if(!sub_row.quantity)
+								return;
+
+							res.add(sub_row).quantity = row.quantity * sub_row.quantity;
+
+						});
+					}else{
+						res.add(dop_row).origin = furn_set;
+					}
+
+				});
+			}
+
+			if(row.is_set_row){
+				furn_get_spec(contour, cache, row.nom_set).each(function (sub_row) {
+
+					if(sub_row.is_procedure_row)
+						res.add(sub_row);
+
+					else if(!sub_row.quantity)
+						return;
+
+					res.add(sub_row).quantity = row.quantity * sub_row.quantity;
+
+				});
+			}else{
+				res.add(row).origin = furn_set;
+			}
+
+		});
+
+		return res;
+	}
+
+
+	function cnn_spec_nearest(elm) {
+		const nearest = elm.nearest();
+		if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm.data._nearest_cnn)
+			cnn_add_spec(elm.data._nearest_cnn, elm, {
+				angle:  0,
+				alp1:   0,
+				alp2:   0,
+				len:    elm.data._len,
+				origin: cnn_row(elm.elm, nearest.elm)
+			});
+	}
+
+	function base_spec_profile(elm) {
+
+		const {_row, rays} = elm;
+
+		if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+      return;
+    }
+
+    const {b, e} = rays;
+
+		if(!b.cnn || !e.cnn){
+			$p.record_log({
+				note: "не найдено соединение",
+				obj: _row._obj
+			});
+			return;
+		}
+
+    const prev = b.profile;
+    const next = e.profile;
+    const row_cnn_prev = b.cnn.main_row(elm);
+    const row_cnn_next = e.cnn.main_row(elm);
+
+		if(row_cnn_prev || row_cnn_next){
+
+			const row_spec = new_spec_row(null, elm, row_cnn_prev || row_cnn_next, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
+
+      const seam = $p.enm.angle_calculating_ways.СварнойШов;
+      const d45 = Math.sin(Math.PI / 4);
+      const dprev = row_cnn_prev ? (
+          row_cnn_prev.angle_calc_method == seam && _row.alp1 > 0 ? row_cnn_prev.sz * d45 / Math.sin(_row.alp1 / 180 * Math.PI) : row_cnn_prev.sz
+        ) : 0;
+      const dnext = row_cnn_next ? (
+          row_cnn_next.angle_calc_method == seam && _row.alp2 > 0 ? row_cnn_next.sz * d45 / Math.sin(_row.alp2 / 180 * Math.PI) : row_cnn_next.sz
+        ) : 0;
+
+      row_spec.len = (_row.len - dprev - dnext)
+				* ((row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
+
+			elm.data._len = _row.len;
+			_row.len = (_row.len
+				- (!row_cnn_prev || row_cnn_prev.angle_calc_method == seam ? 0 : row_cnn_prev.sz)
+				- (!row_cnn_next || row_cnn_next.angle_calc_method == seam ? 0 : row_cnn_next.sz))
+				* 1000 * ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
+
+			if(!elm.is_linear()){
+        row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
+      }
+
+			if(row_cnn_prev && !row_cnn_prev.formula.empty()){
+				row_cnn_prev.formula.execute({
+					ox: ox,
+					elm: elm,
+          cnstr: 0,
+          inset: $p.utils.blank.guid,
+					row_cnn: row_cnn_prev,
+					row_spec: row_spec
+				});
+
+			}else if(row_cnn_next && !row_cnn_next.formula.empty()){
+				row_cnn_next.formula.execute({
+					ox: ox,
+					elm: elm,
+          cnstr: 0,
+          inset: $p.utils.blank.guid,
+					row_cnn: row_cnn_next,
+					row_spec: row_spec
+				});
+			}
+
+			calc_count_area_mass(row_spec, _row, row_cnn_prev ? row_cnn_prev.angle_calc_method : null, row_cnn_next ? row_cnn_next.angle_calc_method : null);
+		}
+
+		if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
+
+			const len_angl = {
+				angle: 0,
+				alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
+				alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90
+			};
+
+			if(b.cnn.cnn_type == $p.enm.cnn_types.ТОбразное || b.cnn.cnn_type == $p.enm.cnn_types.НезамкнутыйКонтур){
+
+				if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm)){
+          len_angl.angle = len_angl.alp2;
+          cnn_add_spec(e.cnn, elm, len_angl);
+				}
+			}
+
+
+      len_angl.angle = len_angl.alp1;
+			cnn_add_spec(b.cnn, elm, len_angl);
+
+		}
+
+
+		inset_spec(elm);
+
+		cnn_spec_nearest(elm);
+
+		elm.addls.forEach(base_spec_profile);
+
+	}
+
+	function base_spec_glass(glass) {
+
+    const {profiles, _row} = glass;
+
+    if(_row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+      return;
+    }
+
+    const glength = profiles.length;
+
+		for(let i=0; i<glength; i++ ){
+			const curr = profiles[i];
+
+      if(curr.profile && curr.profile._row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+        return;
+      }
+
+      const prev = (i==0 ? profiles[glength-1] : profiles[i-1]).profile;
+      const next = (i==glength-1 ? profiles[0] : profiles[i+1]).profile;
+      const row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});
+
+			const len_angl = {
+				angle: 0,
+				alp1: prev.generatrix.angle_to(curr.profile.generatrix, curr.b, true),
+				alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
+				len: row_cnn.length ? row_cnn[0].aperture_len : 0,
+				origin: cnn_row(_row.elm, curr.profile.elm)
+
+			};
+
+			cnn_add_spec(curr.cnn, curr.profile, len_angl);
+
+		}
+
+		inset_spec(glass);
+
+	}
+
+	function inset_spec(elm, inset, len_angl) {
+
+		var _row = elm._row;
+
+		if(!inset)
+			inset = elm.inset;
+
+		inset_filter_spec(inset, elm, true, len_angl).forEach(function (row_ins_spec) {
+
+		  const origin = row_ins_spec._origin || inset;
+
+			let row_spec;
+
+			if((row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру
+				&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
+				$p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1)
+				row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
+
+			if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !row_ins_spec.formula.empty()){
+
+				row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, origin);
+
+				row_ins_spec.formula.execute({
+					ox: ox,
+					elm: elm,
+          cnstr: len_angl && len_angl.cnstr || 0,
+          inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
+					row_ins: row_ins_spec,
+					row_spec: row_spec
+				});
+
+			}else if($p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1 ||
+				row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ДляЭлемента){
+				calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
+
+			}else{
+
+				if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПлощади){
+					row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz)/1000;
+					row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz)/1000;
+					row_spec.s = _row.s;
+
+				}else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру){
+					var row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
+					elm.perimeter.forEach(function (rib) {
+						row_prm._row._mixin(rib);
+						if(inset_check(row_ins_spec, row_prm, true)){
+							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
+							calc_qty_len(row_spec, row_ins_spec, rib.len);
+							calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
+						}
+						row_spec = null;
+					});
+
+				}else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоШагам){
+
+					var h = _row.y2 - _row.y1, w = _row.x2 - _row.x1;
+					if((row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьШагиВторогоНаправления ||
+						row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление) && row_ins_spec.step){
+
+						for(var i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
+							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
+							calc_qty_len(row_spec, row_ins_spec, w);
+							calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
+						}
+						row_spec = null;
+					}
+
+				}else{
+					throw new Error("count_calc_method: " + row_ins_spec.count_calc_method);
+				}
+
+			}
+
+			if(row_spec)
+				calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
+
+		});
+	}
+
+	function find_create_cx(elm, origin) {
+    if(!find_cx_sql){
+      find_cx_sql = $p.wsql.alasql.compile("select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?")
+    }
+    var aref = find_cx_sql([ox.ref, elm, origin]);
+    if(aref.length){
+      return $p.cat.characteristics.get(aref[0].ref, false);
+    }
+    return $p.cat.characteristics.create({
+      leading_product: ox,
+      leading_elm: elm,
+      origin: origin
+    }, false, true)._set_loaded();
+  }
+
+  function inset_contour_spec(contour) {
+
+    var spec_tmp = spec;
+
+    ox.inserts.find_rows({cnstr: contour.cnstr}, function (irow) {
+      var elm = {
+        _row: {},
+        elm: 0,
+        clr: ox.clr,
+        get perimeter() {return contour.perimeter}
+      },
+        inset = irow.inset;
+
+      if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
+
+        var cx = find_create_cx(-contour.cnstr, inset.ref);
+        ox._order_rows.push(cx);
+
+        cx._mixin(inset.contour_attrs(contour));
+
+      }
+
+      var len_angl = {
+        angle: 0,
+        alp1: 0,
+        alp2: 0,
+        len: 0,
+        origin: inset,
+        cnstr: contour.cnstr
+      }
+      spec = cx.specification;
+      spec.clear();
+      inset_spec(elm, inset, len_angl);
+
+    })
+
+    spec = spec_tmp;
+  }
+
+	function base_spec(scheme) {
+
+		added_cnn_spec = {};
+
+    scheme.getItems({class: $p.Editor.Contour}).forEach(function (contour) {
+
+			contour.profiles.forEach(base_spec_profile);
+
+			contour.glasses(false, true).forEach(base_spec_glass);
+
+			furn_spec(contour);
+
+      inset_contour_spec(contour)
+
+		});
+
+    inset_contour_spec({
+      cnstr:0,
+      project: scheme,
+      get perimeter() {return this.project.perimeter}
+    });
+
+	}
+
+	$p.eve.attachEvent("save_coordinates", function (scheme, attr) {
+
+
+
+		ox = scheme.ox;
+		spec = ox.specification;
+		constructions = ox.constructions;
+		coordinates = ox.coordinates;
+		cnn_elmnts = ox.cnn_elmnts;
+		glass_specification = ox.glass_specification;
+		params = ox.params;
+
+		spec.clear();
+
+    ox._order_rows = [];
+
+		base_spec(scheme);
+
+		spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop", "qty,totqty,totqty1");
+
+
+
+
+		$p.eve.callEvent("coordinates_calculated", [scheme, attr]);
+
+
+
+		var prm = {
+			calc_order_row: ox.calc_order_row,
+			spec: spec
+		};
+		if(prm.calc_order_row){
+
+			$p.pricing.price_type(prm);
+
+			$p.spec_building.specification_adjustment(prm);
+
+			$p.pricing.calc_first_cost(prm);
+
+			$p.pricing.calc_amount(prm);
+		}
+
+
+
+		if(attr.snapshot){
+			$p.eve.callEvent("scheme_snapshot", [scheme, attr]);
+		}
+
+		if(attr.save){
+
+			ox.save(undefined, undefined, {
+				svg: {
+					"content_type": "image/svg+xml",
+					"data": new Blob([scheme.get_svg()], {type: "image/svg+xml"})
+				}
+			})
+				.then(function () {
+					$p.msg.show_msg("Спецификация рассчитана");
+					delete scheme.data._saving;
+					$p.eve.callEvent("characteristic_saved", [scheme, attr]);
+				});
+
+		}else{
+			delete scheme.data._saving;
+		}
+
+	});
+
+}
+
+
+$p.products_building = new ProductsBuilding();
+
+
+
+class SpecBuilding {
+
+  constructor($p) {
+
+  }
+
+  calc_row_spec (prm, cancel) {
+
+  }
+
+  specification_adjustment (attr) {
+
+    var ox = attr.calc_order_row.characteristic,
+      calc_order = attr.calc_order_row._owner._owner,
+      order_rows = {}, adel = [];
+
+    attr.spec.find_rows({ch: {in: [-1,-2]}}, function (row) {
+      adel.push(row);
+    });
+    adel.forEach(function (row) {
+      attr.spec.del(row, true);
+    });
+
+
+    adel.length = 0;
+    calc_order.production.forEach(function (row) {
+      if(row.ordn == ox){
+        if(ox._order_rows.indexOf(row.characteristic) == -1){
+          adel.push(row);
+        }else {
+          order_rows[row.characteristic.ref] = row;
+        }
+      }
+    })
+    adel.forEach(function (row) {
+      calc_order.production.del(row.row-1)
+    })
+
+    ox._order_rows.forEach(function (cx) {
+      var row = order_rows[cx.ref] || calc_order.production.add({
+          characteristic: cx
+        });
+      row.nom = cx.owner;
+      row.unit = row.nom.storage_unit;
+      row.ordn = ox;
+      row.len = cx.x;
+      row.width = cx.y;
+      row.s = cx.s;
+      row.qty = attr.calc_order_row.qty;
+      row.quantity = attr.calc_order_row.quantity;
+
+      cx.save();
+      order_rows[cx.ref] = row;
+    })
+
+    if(Object.keys(order_rows).length){
+      attr.order_rows = order_rows;
+    }
+  }
+
+}
+
+$p.spec_building = new SpecBuilding($p);
+
+
+
+
+
+(function (md) {
+
+	var value_mgr = md.value_mgr;
+
+	md.value_mgr = function(row, f, mf, array_enabled, v){
+
+		var tmp = value_mgr(row, f, mf, array_enabled, v);
+
+		if(tmp)
+			return tmp;
+
+		if(f == 'trans')
+			return $p.doc.calc_order;
+
+		else if(f == 'partner')
+			return $p.cat.partners;
+	}
+
+})($p.md);
+
+
 
 (function($p){
 
@@ -8338,21 +8344,22 @@ $p.iface.view_settings = function (cell) {
 
 		function deferred_init(){
 
-			if(deferred_id)
-				$p.eve.detachEvent(deferred_id);
+			if(deferred_id){
+        $p.eve.detachEvent(deferred_id);
+      }
 
-			if(t.form2.isLocked())
-				t.form2.unlock();
+			if(t.form2.isLocked()){
+        t.form2.unlock();
+      }
 
 			if($p.wsql.get_user_param("hide_price_dealer")){
 				t.form2.checkItem("hide_price", "hide_price_dealer");
-
-			}else if($p.wsql.get_user_param("hide_price_manufacturer")){
+			}
+			else if($p.wsql.get_user_param("hide_price_manufacturer")){
 				t.form2.checkItem("hide_price", "hide_price_manufacturer");
-
-			}else{
+			}
+			else{
 				t.form2.checkItem("hide_price", "hide_price_no");
-
 			}
 
 			if($p.current_acl.partners_uids.length){
@@ -8365,6 +8372,7 @@ $p.iface.view_settings = function (cell) {
           var partner = $p.cat.partners.get($p.current_acl.partners_uids[0]),
             prm = {calc_order_row: {
               nom: $p.cat.nom.get(),
+              characteristic: {params: {find_rows: () => null}},
               _owner: {_owner: {partner: partner}}
             }};
 
