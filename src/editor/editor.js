@@ -757,7 +757,7 @@ class Editor extends paper.PaperScope {
       obj: this.project.ox,
       ts: "glass_specification",
       selection: {elm: elm.elm},
-      toolbar_struct: $p.injected_data["toolbar_add_del_compact.xml"],
+      toolbar_struct: $p.injected_data["toolbar_glass_inserts.xml"],
       ts_captions: {
         fields: ["inset", "clr"],
         headers: "Вставка,Цвет",
@@ -766,6 +766,25 @@ class Editor extends paper.PaperScope {
         aligns: "",
         sortings: "na,na",
         types: "ref,ref"
+      }
+    });
+    wnd.attachEvent("onClose", () => {
+      elm && elm.redraw && elm.redraw();
+      return true;
+    });
+
+    const toolbar = wnd.getAttachedToolbar();
+    toolbar.attachEvent("onclick", (btn_id) => {
+      if(btn_id == "btn_inset"){
+        const {project, inset} = elm;
+        project.ox.glass_specification.clear(true, {elm: elm.elm});
+        inset.specification.forEach((row) => {
+          project.ox.glass_specification.add({
+            elm: elm.elm,
+            inset: row.nom,
+            clr: row.clr
+          })
+        });
       }
     });
 
@@ -1237,6 +1256,7 @@ class Editor extends paper.PaperScope {
 
     return res;
   }
+
   /**
    * Уравнивание по ширинам заполнений
    */

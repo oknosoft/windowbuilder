@@ -9,30 +9,34 @@
 /**
  * Константы и параметры
  */
-	var consts = new function Settings(){
+	const consts = new function Settings(){
 
 
 	this.tune_paper = function (settings) {
+
+	  const {builder} = $p.job_prm;
+
 		/**
 		 * Размер визуализации узла пути
 		 * @property handleSize
 		 * @type {number}
 		 */
-		settings.handleSize = $p.job_prm.builder.handle_size;
+		settings.handleSize = builder.handle_size;
 
 		/**
 		 * Прилипание. На этом расстоянии узел пытается прилепиться к другому узлу или элементу
 		 * @property sticking
 		 * @type {number}
 		 */
-		this.sticking = $p.job_prm.builder.sticking || 90;
-		this.sticking_l = $p.job_prm.builder.sticking_l || 9;
+		this.sticking = builder.sticking || 90;
+		this.sticking_l = builder.sticking_l || 9;
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = $p.job_prm.builder.font_size || 60;
+		this.font_size = builder.font_size || 60;
+    this.elm_font_size = builder.elm_font_size || 48;
 
 		// в пределах этого угла, считаем элемент вертикальным или горизонтальным
-		this.orientation_delta = $p.job_prm.builder.orientation_delta || 20;
+		this.orientation_delta = builder.orientation_delta || 30;
 
 
 	}.bind(this);

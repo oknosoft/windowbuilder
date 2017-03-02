@@ -244,8 +244,50 @@ class Filling extends BuilderElement {
   /**
    * Перерисовывает раскладки текущего заполнения
    */
-  redraw_onlay() {
-    this.onlays.forEach((elm) => elm.redraw());
+  redraw() {
+
+    this.sendToBack();
+
+    const {path, onlays, data, is_rectangular} = this;
+    const {elm_font_size} = consts;
+
+    path.visible = true;
+    onlays.forEach((elm) => elm.redraw());
+
+    // если текст не создан - добавляем
+    if(!data._text){
+      data._text = new paper.PointText({
+        parent: this,
+        fillColor: 'black',
+        fontSize: elm_font_size,
+        guide: true,
+      });
+    }
+    data._text.visible = is_rectangular;
+
+    if(is_rectangular){
+      const {bounds} = path;
+      data._text.content = this.formula;
+      data._text.point = bounds.bottomLeft.add([elm_font_size,-elm_font_size]);
+      if(data._text.bounds.width > (bounds.width - 2 * elm_font_size)){
+        const atext = data._text.content.split(' ');
+        if(atext.length > 1){
+          data._text.content = '';
+          atext.forEach((text, index) => {
+            if(!data._text.content){
+              data._text.content = text;
+            }
+            else{
+              data._text.content += ((index == atext.length - 1) ? '\n' : ' ') + text;
+            }
+          })
+          data._text.point.y -= elm_font_size;
+        }
+      }
+    }
+    else{
+
+    }
   }
 
   /**
@@ -506,15 +548,18 @@ class Filling extends BuilderElement {
    * Возвращает формулу (код состава) заполнения
    */
   get formula() {
+
     const {ox} = this.project;
-    let res = '';
+    let res;
 
     ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+      const aname = row.inset.name.split(' ');
+      const name = aname.length ? aname[0] : ''
       if(!res){
-        res = row._row.inset.name;
+        res = name;
       }
       else{
-        res += "x" + row._row.inset.name;
+        res += "x" + name;
       }
     });
 

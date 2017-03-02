@@ -48,13 +48,13 @@
 							if(row.list == -1){
 
 								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: () => {
+									value: (() => {
 										const res = {};
 										row.elmnts.forEach((row) => {
 											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
 										});
 										return res;
-									}()
+									})()
 								});
 
 							}

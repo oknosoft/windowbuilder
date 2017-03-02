@@ -102,5 +102,20 @@ $p.CatNom.prototype.__define({
 			return $p.pricing.from_currency_to_currency(price, attr.date, currency, attr.currency);
 
 		}
-	}
+	},
+
+  /**
+   * Представление объекта
+   * @property presentation
+   * @for CatObj
+   * @type String
+   */
+  presentation: {
+    get : function(){
+      return this.name + (this.article ? ' ' + this.article : '');
+    },
+    set : function(v){
+    }
+  }
+
 });

@@ -85,6 +85,7 @@ gulp.task('injected-templates', function(){
 		'./src/templates/xml/toolbar_calc_order_obj.xml',
 		'./src/templates/xml/toolbar_product_list.xml',
     './src/templates/xml/toolbar_characteristics_specification.xml',
+    './src/templates/xml/toolbar_glass_inserts.xml',
 		'./src/templates/xml/tree_*.xml',
 		'./src/templates/view_*.html'
 	])

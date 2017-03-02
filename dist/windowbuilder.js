@@ -2493,7 +2493,7 @@ class Editor extends paper.PaperScope {
       obj: this.project.ox,
       ts: "glass_specification",
       selection: {elm: elm.elm},
-      toolbar_struct: $p.injected_data["toolbar_add_del_compact.xml"],
+      toolbar_struct: $p.injected_data["toolbar_glass_inserts.xml"],
       ts_captions: {
         fields: ["inset", "clr"],
         headers: "Вставка,Цвет",
@@ -2502,6 +2502,25 @@ class Editor extends paper.PaperScope {
         aligns: "",
         sortings: "na,na",
         types: "ref,ref"
+      }
+    });
+    wnd.attachEvent("onClose", () => {
+      elm && elm.redraw && elm.redraw();
+      return true;
+    });
+
+    const toolbar = wnd.getAttachedToolbar();
+    toolbar.attachEvent("onclick", (btn_id) => {
+      if(btn_id == "btn_inset"){
+        const {project, inset} = elm;
+        project.ox.glass_specification.clear(true, {elm: elm.elm});
+        inset.specification.forEach((row) => {
+          project.ox.glass_specification.add({
+            elm: elm.elm,
+            inset: row.nom,
+            clr: row.clr
+          })
+        });
       }
     });
 
@@ -2938,6 +2957,7 @@ class Editor extends paper.PaperScope {
 
     return res;
   }
+
   glass_align(name = 'auto', glasses) {
 
     const shift = this.do_glass_align(name, glasses);
@@ -3574,10 +3594,6 @@ Contour.prototype.__define({
 
       this.glass_recalc();
 
-      this.glasses(false, true).forEach((glass) => {
-				glass.redraw_onlay();
-			});
-
       this.draw_opening();
 
       this.children.forEach((child_contour) => {
@@ -3940,8 +3956,7 @@ Contour.prototype.__define({
 					cglass.path = glass_contour;
 					cglass.visible = true;
 					if (cglass instanceof Filling) {
-						cglass.sendToBack();
-						cglass.path.visible = true;
+            cglass.redraw();
 					}
 				}else{
 					if(glass = _contour.getItem({class: Filling})){
@@ -3954,8 +3969,7 @@ Contour.prototype.__define({
 
 					}
 					cglass = new Filling({proto: glass, parent: _contour, path: glass_contour});
-					cglass.sendToBack();
-					cglass.path.visible = true;
+          cglass.redraw();
 				}
 			}
 
@@ -5863,8 +5877,49 @@ class Filling extends BuilderElement {
     this.view.update();
   }
 
-  redraw_onlay() {
-    this.onlays.forEach((elm) => elm.redraw());
+  redraw() {
+
+    this.sendToBack();
+
+    const {path, onlays, data, is_rectangular} = this;
+    const {elm_font_size} = consts;
+
+    path.visible = true;
+    onlays.forEach((elm) => elm.redraw());
+
+    if(!data._text){
+      data._text = new paper.PointText({
+        parent: this,
+        fillColor: 'black',
+        fontSize: elm_font_size,
+        guide: true,
+      });
+    }
+    data._text.visible = is_rectangular;
+
+    if(is_rectangular){
+      const {bounds} = path;
+      data._text.content = this.formula;
+      data._text.point = bounds.bottomLeft.add([elm_font_size,-elm_font_size]);
+      if(data._text.bounds.width > (bounds.width - 2 * elm_font_size)){
+        const atext = data._text.content.split(' ');
+        if(atext.length > 1){
+          data._text.content = '';
+          atext.forEach((text, index) => {
+            if(!data._text.content){
+              data._text.content = text;
+            }
+            else{
+              data._text.content += ((index == atext.length - 1) ? '\n' : ' ') + text;
+            }
+          })
+          data._text.point.y -= elm_font_size;
+        }
+      }
+    }
+    else{
+
+    }
   }
 
   set_inset(v, ignore_select) {
@@ -6063,15 +6118,18 @@ class Filling extends BuilderElement {
   }
 
   get formula() {
+
     const {ox} = this.project;
-    let res = '';
+    let res;
 
     ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+      const aname = row.inset.name.split(' ');
+      const name = aname.length ? aname[0] : ''
       if(!res){
-        res = row._row.inset.name;
+        res = name;
       }
       else{
-        res += "x" + row._row.inset.name;
+        res += "x" + name;
       }
     });
 
@@ -10006,19 +10064,23 @@ function Sectional(arg){
 Sectional._extend(BuilderElement);
 
 
-	var consts = new function Settings(){
+	const consts = new function Settings(){
 
 
 	this.tune_paper = function (settings) {
-		settings.handleSize = $p.job_prm.builder.handle_size;
 
-		this.sticking = $p.job_prm.builder.sticking || 90;
-		this.sticking_l = $p.job_prm.builder.sticking_l || 9;
+	  const {builder} = $p.job_prm;
+
+		settings.handleSize = builder.handle_size;
+
+		this.sticking = builder.sticking || 90;
+		this.sticking_l = builder.sticking_l || 9;
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = $p.job_prm.builder.font_size || 60;
+		this.font_size = builder.font_size || 60;
+    this.elm_font_size = builder.elm_font_size || 48;
 
-		this.orientation_delta = $p.job_prm.builder.orientation_delta || 20;
+		this.orientation_delta = builder.orientation_delta || 30;
 
 
 	}.bind(this);

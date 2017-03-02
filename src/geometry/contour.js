@@ -502,13 +502,8 @@ Contour.prototype.__define({
 				elm.redraw();
 			});
 
-			// затем, создаём и перерисовываем заполнения
+			// затем, создаём и перерисовываем заполнения, которые перерисуют свои раскладки
       this.glass_recalc();
-
-			// перерисовываем раскладки заполнений
-      this.glasses(false, true).forEach((glass) => {
-				glass.redraw_onlay();
-			});
 
 			// рисуем направление открывания
       this.draw_opening();
@@ -948,8 +943,7 @@ Contour.prototype.__define({
 					cglass.path = glass_contour;
 					cglass.visible = true;
 					if (cglass instanceof Filling) {
-						cglass.sendToBack();
-						cglass.path.visible = true;
+            cglass.redraw();
 					}
 				}else{
 					// добавляем заполнение
@@ -965,8 +959,7 @@ Contour.prototype.__define({
 
 					}
 					cglass = new Filling({proto: glass, parent: _contour, path: glass_contour});
-					cglass.sendToBack();
-					cglass.path.visible = true;
+          cglass.redraw();
 				}
 			}
 
