@@ -37,22 +37,24 @@ function Scheme(_canvas){
 		// наблюдатель за изменениями свойств изделия
 		_dp_observer = function (changes) {
 
-			if(_data._loading || _data._snapshot)
-				return;
+			if(_data._loading || _data._snapshot){
+        return;
+      }
 
 			const scheme_changed_names = ["clr","sys"];
       const row_changed_names = ["quantity","discount_percent","discount_percent_internal"];
 			let evented
 
-			changes.forEach(function(change){
+			changes.forEach((change) => {
 
 				if(scheme_changed_names.indexOf(change.name) != -1){
 
 					if(change.name == "clr"){
 						_scheme.ox.clr = change.object.clr;
-						_scheme.getItems({class: ProfileItem}).forEach(function (p) {
-							if(!(p instanceof Onlay))
-								p.clr = change.object.clr;
+						_scheme.getItems({class: ProfileItem}).forEach((p) => {
+							if(!(p instanceof Onlay)){
+                p.clr = change.object.clr;
+              }
 						})
 					}
 
@@ -74,9 +76,7 @@ function Scheme(_canvas){
 							});
 
 						// информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
-						_scheme.contours.forEach(function (l) {
-							l.on_sys_changed();
-						});
+						_scheme.contours.forEach((l) => l.on_sys_changed());
 
 
 						if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
@@ -94,7 +94,8 @@ function Scheme(_canvas){
 						evented = true;
 					}
 
-				}else if(row_changed_names.indexOf(change.name) != -1){
+				}
+				else if(row_changed_names.indexOf(change.name) != -1){
 
 					_data._calc_order_row[change.name] = change.object[change.name];
 
@@ -111,7 +112,7 @@ function Scheme(_canvas){
 			if(_data._loading || _data._snapshot)
 				return;
 
-			changes.some(function(change){
+			changes.some((change) => {
 				if(change.tabular == "params"){
 					_scheme.register_change();
 					return true;
@@ -200,17 +201,15 @@ function Scheme(_canvas){
 				}else if(_dp.sys.empty()){
 
 					// ищем первую подходящую систему
-					$p.cat.production_params.find_rows({is_folder: false}, function(o){
-
-						if(setted)
-							return false;
-
-						o.production.find_rows({nom: ox.owner}, function () {
+					$p.cat.production_params.find_rows({is_folder: false}, (o) => {
+						if(setted){
+              return false;
+            }
+						o.production.find_rows({nom: ox.owner}, () => {
 							_dp.sys = o;
 							setted = true;
 							return false;
 						});
-
 					});
 				}
 
@@ -360,23 +359,11 @@ function Scheme(_canvas){
 		}
 		_changes.push(Date.now());
 
-		if(with_update)
-			this.register_update();
+		if(with_update){
+      this.register_update();
+    }
 	};
 
-	/**
-	 * Регистрирует необходимость обновить изображение
- 	 */
-	this.register_update = function () {
-
-		if(_data._update_timer)
-			clearTimeout(_data._update_timer);
-
-		_data._update_timer = setTimeout(function () {
-			_scheme.view.update();
-			_data._update_timer = 0;
-		}, 100);
-	};
 
   /**
    * ### Читает изделие по ссылке или объекту продукции
@@ -404,31 +391,21 @@ function Scheme(_canvas){
      */
     function load_contour(parent) {
       // создаём семейство конструкций
-      var out_cns = parent ? parent.cnstr : 0;
-      _scheme.ox.constructions.find_rows({parent: out_cns}, function(row){
-
-        var contour = new Contour( {parent: parent, row: row});
-
-        // вложенные створки
-        load_contour(contour);
-
+      _scheme.ox.constructions.find_rows({parent: parent ? parent.cnstr : 0}, (row) => {
+        // и вложенные створки
+        load_contour(new Contour({parent: parent, row: row}));
       });
     }
 
     /**
-     * Загружает размерные линии
+     * Загружает пользовательские размерные линии
      * Этот код нельзя выполнить внутри load_contour, т.к. линия может ссылаться на элементы разных контуров
      */
     function load_dimension_lines() {
-
-      _scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, function(row){
-
-        new DimensionLineCustom( {
-          parent: _scheme.getItem({cnstr: row.cnstr}).l_dimensions,
-          row: row
-        });
-
-      });
+      _scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, (row) => new DimensionLineCustom({
+        parent: _scheme.getItem({cnstr: row.cnstr}).l_dimensions,
+        row: row
+      }));
     }
 
     function load_object(o){
@@ -443,12 +420,16 @@ function Scheme(_canvas){
         point: [0, 0],
         size: [o.x, o.y]
       });
+
+      // первым делом создаём соединители
+      o.coordinates.find_rows({cnstr: 0, elm_type: $p.enm.elm_types.Соединитель}, (row) =>
+        new ProfileConnective({row: row}));
       o = null;
 
       // создаём семейство конструкций
       load_contour(null);
 
-      setTimeout(function () {
+      setTimeout(() => {
 
         _data._bounds = null;
 
@@ -473,19 +454,20 @@ function Scheme(_canvas){
         delete _data._snapshot;
 
         // виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
-        setTimeout(function () {
+        setTimeout(() => {
           if(_scheme.ox.coordinates.count()){
             if(_scheme.ox.specification.count()){
               $p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
-            }else{
+            }
+            else{
               // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок - запускаем пересчет
               _scheme.register_change(true);
             }
-          }else{
+          }
+          else{
             paper.load_stamp();
           }
         }, 100);
-
 
       }, 20);
 
@@ -497,31 +479,18 @@ function Scheme(_canvas){
     }
     _scheme.clear();
 
-    if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new())
+    if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new()){
       load_object(id);
-
+    }
     else if($p.utils.is_guid(id) || $p.utils.is_data_obj(id)){
       $p.cat.characteristics.get(id, true, true)
-        .then(function (ox) {
+        .then((ox) => {
           $p.doc.calc_order.get(ox.calc_order, true, true)
-            .then(function () {
-              load_object(ox);
-            })
+            .then(() => load_object(ox))
         });
     }
   };
 
-	/**
-	 * Деструктор
-	 */
-	this.unload = function () {
-		_data._loading = true;
-		this.clear();
-		this.remove();
-		Object.unobserve(this._dp, _dp_observer);
-		Object.unobserve(this._dp.characteristic, _papam_observer);
-		this.data._calc_order_row = null;
-	};
 
 	/**
 	 * Перерисовывает все контуры изделия. Не занимается биндингом.
@@ -531,7 +500,7 @@ function Scheme(_canvas){
 
 		function process_redraw(){
 
-			var llength = 0;
+			let llength = 0;
 
 			// вызывается после перерисовки очередного контура
 			function on_contour_redrawed(){
@@ -571,7 +540,8 @@ function Scheme(_canvas){
 						llength++;
 						l.redraw(on_contour_redrawed);
 					});
-				}else{
+				}
+				else{
 					_scheme.draw_sizes();
 				}
 			}
@@ -600,6 +570,50 @@ function Scheme(_canvas){
 Scheme._extend(paper.Project);
 
 Scheme.prototype.__define({
+
+  /**
+   * Регистрирует необходимость обновить изображение
+   */
+  register_update: {
+    value: function () {
+      if(this.data._update_timer){
+        clearTimeout(this.data._update_timer);
+      }
+      this.data._update_timer = setTimeout(() => {
+        this.view.update();
+        this.data._update_timer = 0;
+      }, 100);
+    }
+  },
+
+  /**
+   * Деструктор
+   */
+  clear: {
+    value: function () {
+      const pnames = '_bounds,_update_timer,_loading';
+      for(let fld in this.data){
+        if(!pnames.match(fld)){
+          delete this.data[fld];
+        }
+      }
+      paper.Project.prototype.clear.call(this);
+    }
+  },
+
+  /**
+   * Деструктор
+   */
+  unload: {
+    value: function () {
+      this.data._loading = true;
+      this.clear();
+      this.remove();
+      Object.unobserve(this._dp, _dp_observer);
+      Object.unobserve(this._dp.characteristic, _papam_observer);
+      this.data._calc_order_row = null;
+    }
+  },
 
 	/**
 	 * Двигает выделенные точки путей либо все точки выделенных элементов
@@ -1302,7 +1316,7 @@ Scheme.prototype.__define({
 				res = $p.job_prm.builder.base_furn.null;
 			}
 			if(!res){
-				$p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ""}}, function (row) {
+				$p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ""}}, (row) => {
 					res = row;
 					return false;
 				});

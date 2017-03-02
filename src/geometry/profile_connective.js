@@ -95,10 +95,24 @@ class ProfileConnective extends ProfileItem {
    * @param [start_point] {paper.Point} - откуда началось движение
    */
   move_points(delta, all_points, start_point) {
+
     const nearests = this.joined_nearests();
+    const moved = {profiles: []};
+
     super.move_points(delta, all_points, start_point);
-    nearests.forEach((np) =>
-      np.do_bind(this, null, null, []));
+
+    // двигаем примыкающие
+    nearests.forEach((np) => {
+      np.do_bind(this, null, null, moved);
+      // двигаем связанные с примыкающими
+      ['b', 'e'].forEach((node) => {
+        const cp = np.cnn_point(node);
+        if(cp.profile){
+          cp.profile.do_bind(np, cp.profile.cnn_point("b"), cp.profile.cnn_point("e"), moved);
+        }
+      });
+    });
+
     this.project.register_change();
   }
 

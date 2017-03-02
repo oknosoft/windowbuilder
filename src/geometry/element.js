@@ -62,7 +62,7 @@ function BuilderElement(attr){
     this.parent = attr.parent;
   }
 
-	if(!this._row.cnstr){
+	if(!this._row.cnstr && this.layer.cnstr){
     this._row.cnstr = this.layer.cnstr;
   }
 

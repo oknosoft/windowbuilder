@@ -5198,7 +5198,7 @@ function BuilderElement(attr){
     this.parent = attr.parent;
   }
 
-	if(!this._row.cnstr){
+	if(!this._row.cnstr && this.layer.cnstr){
     this._row.cnstr = this.layer.cnstr;
   }
 
@@ -8713,10 +8713,22 @@ class ProfileConnective extends ProfileItem {
   }
 
   move_points(delta, all_points, start_point) {
+
     const nearests = this.joined_nearests();
+    const moved = {profiles: []};
+
     super.move_points(delta, all_points, start_point);
-    nearests.forEach((np) =>
-      np.do_bind(this, null, null, []));
+
+    nearests.forEach((np) => {
+      np.do_bind(this, null, null, moved);
+      ['b', 'e'].forEach((node) => {
+        const cp = np.cnn_point(node);
+        if(cp.profile){
+          cp.profile.do_bind(np, cp.profile.cnn_point("b"), cp.profile.cnn_point("e"), moved);
+        }
+      });
+    });
+
     this.project.register_change();
   }
 
@@ -8807,197 +8819,168 @@ class ConnectiveLayer extends paper.Layer {
 }
 
 
-function Onlay(attr){
+class Onlay extends ProfileItem {
 
-	Onlay.superclass.constructor.call(this, attr);
+  get d0() {
+    return 0;
+  }
+
+  get d1() {
+    return this.sizeb;
+  }
+
+  get d2() {
+    return this.d1 - this.width;
+  }
+
+  get elm_type() {
+    return $p.enm.elm_types.Раскладка;
+  }
+
+  save_coordinates() {
+
+    if(!this.data.generatrix){
+      return;
+    }
+
+    const {_row, project, rays, generatrix} = this;
+    const {cnns} = project.connections;
+    const {b, e} = rays;
+    const row_b = cnns.add({
+      elm1: _row.elm,
+      node1: "b",
+      cnn: b.cnn ? b.cnn.ref : "",
+      aperture_len: this.corns(1).getDistance(this.corns(4))
+    });
+    const row_e = cnns.add({
+      elm1: _row.elm,
+      node1: "e",
+      cnn: e.cnn ? e.cnn.ref : "",
+      aperture_len: this.corns(2).getDistance(this.corns(3))
+    });
+
+    _row.x1 = this.x1;
+    _row.y1 = this.y1;
+    _row.x2 = this.x2;
+    _row.y2 = this.y2;
+    _row.path_data = generatrix.pathData;
+    _row.nom = this.nom;
+    _row.parent = this.parent.elm;
+
+
+    _row.len = this.length;
+
+    if(b.profile){
+      row_b.elm2 = b.profile.elm;
+      if(b.profile instanceof Filling)
+        row_b.node2 = "t";
+      else if(b.profile.e.is_nearest(b.point))
+        row_b.node2 = "e";
+      else if(b.profile.b.is_nearest(b.point))
+        row_b.node2 = "b";
+      else
+        row_b.node2 = "t";
+    }
+    if(e.profile){
+      row_e.elm2 = e.profile.elm;
+      if(e.profile instanceof Filling)
+        row_e.node2 = "t";
+      else if(e.profile.b.is_nearest(e.point))
+        row_e.node2 = "b";
+      else if(e.profile.e.is_nearest(e.point))
+        row_e.node2 = "b";
+      else
+        row_e.node2 = "t";
+    }
+
+    _row.angle_hor = this.angle_hor;
+
+    _row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - generatrix.getTangentAt(0).angle) * 10) / 10;
+    if(_row.alp1 < 0)
+      _row.alp1 = _row.alp1 + 360;
+
+    _row.alp2 = Math.round((generatrix.getTangentAt(generatrix.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
+    if(_row.alp2 < 0)
+      _row.alp2 = _row.alp2 + 360;
+
+    _row.elm_type = this.elm_type;
+  }
+
+  cnn_point(node, point) {
+
+    const res = this.rays[node];
+
+    if(!point){
+      point = this[node];
+    }
+
+    if(res.profile && res.profile.children.length){
+
+      if(res.profile instanceof Filling){
+        const np = res.profile.path.getNearestPoint(point);
+        if(np.getDistance(point) < consts.sticking_l){
+          res.point = np;
+          return res;
+        }
+      }
+      else{
+        if(this.check_distance(res.profile, res, point, true) === false){
+          return res;
+        }
+      }
+    }
+
+    res.clear();
+    if(this.parent){
+      const res_bind = this.bind_node(point);
+      if(res_bind.binded){
+        res._mixin(res_bind, ["point","profile","cnn_types","profile_point"]);
+      }
+    }
+    return res;
+  }
+
+  bind_node(point, glasses) {
+
+    if(!glasses){
+      glasses = [this.parent];
+    }
+
+    let res = {distance: Infinity, is_l: true};
+
+    glasses.some((glass) => {
+      const np = glass.path.getNearestPoint(point);
+      let distance = np.getDistance(point);
+
+      if(distance < res.distance){
+        res.distance = distance;
+        res.point = np;
+        res.profile = glass;
+        res.cnn_types = $p.enm.cnn_types.acn.t;
+      }
+
+      if(distance < consts.sticking_l){
+        res.binded = true;
+        return true;
+      }
+
+      glass.onlays.some((elm) => {
+        if (elm.project.check_distance(elm, null, res, point, "node_generatrix") === false ){
+          return true;
+        }
+      });
+
+    });
+
+    if(!res.binded && res.point && res.distance < consts.sticking){
+      res.binded = true;
+    }
+
+    return res;
+  }
 
 }
-Onlay._extend(ProfileItem);
 
-
-Onlay.prototype.__define({
-
-	save_coordinates: {
-		value: function () {
-
-			if(!this.data.generatrix)
-				return;
-
-			var _row = this._row,
-
-				cnns = this.project.connections.cnns,
-				b = this.rays.b,
-				e = this.rays.e,
-
-				row_b = cnns.add({
-					elm1: _row.elm,
-					node1: "b",
-					cnn: b.cnn ? b.cnn.ref : "",
-					aperture_len: this.corns(1).getDistance(this.corns(4))
-				}),
-				row_e = cnns.add({
-					elm1: _row.elm,
-					node1: "e",
-					cnn: e.cnn ? e.cnn.ref : "",
-					aperture_len: this.corns(2).getDistance(this.corns(3))
-				}),
-
-				gen = this.generatrix;
-
-			_row.x1 = this.x1;
-			_row.y1 = this.y1;
-			_row.x2 = this.x2;
-			_row.y2 = this.y2;
-			_row.path_data = gen.pathData;
-			_row.nom = this.nom;
-			_row.parent = this.parent.elm;
-
-
-			_row.len = this.length;
-
-			if(b.profile){
-				row_b.elm2 = b.profile.elm;
-				if(b.profile instanceof Filling)
-					row_b.node2 = "t";
-				else if(b.profile.e.is_nearest(b.point))
-					row_b.node2 = "e";
-				else if(b.profile.b.is_nearest(b.point))
-					row_b.node2 = "b";
-				else
-					row_b.node2 = "t";
-			}
-			if(e.profile){
-				row_e.elm2 = e.profile.elm;
-				if(e.profile instanceof Filling)
-					row_e.node2 = "t";
-				else if(e.profile.b.is_nearest(e.point))
-					row_e.node2 = "b";
-				else if(e.profile.e.is_nearest(e.point))
-					row_e.node2 = "b";
-				else
-					row_e.node2 = "t";
-			}
-
-			_row.angle_hor = this.angle_hor;
-
-			_row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - gen.getTangentAt(0).angle) * 10) / 10;
-			if(_row.alp1 < 0)
-				_row.alp1 = _row.alp1 + 360;
-
-			_row.alp2 = Math.round((gen.getTangentAt(gen.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
-			if(_row.alp2 < 0)
-				_row.alp2 = _row.alp2 + 360;
-
-			_row.elm_type = this.elm_type;
-
-		}
-	},
-
-	d0: {
-		get : function(){
-			return 0;
-		}
-	},
-
-	d1: {
-		get : function(){ return this.sizeb; }
-	},
-
-	d2: {
-		get : function(){ return this.d1 - this.width; }
-	},
-
-	elm_type: {
-		get : function(){
-
-			return $p.enm.elm_types.Раскладка;
-
-		}
-	},
-
-	cnn_point: {
-		value: function(node, point){
-
-			var res = this.rays[node];
-
-			if(!point)
-				point = this[node];
-
-
-			if(res.profile && res.profile.children.length){
-
-				if(res.profile instanceof Filling){
-					var np = res.profile.path.getNearestPoint(point),
-						distance = np.getDistance(point);
-
-					if(distance < consts.sticking_l){
-            res.point = np;
-            return res;
-          }
-
-				}else{
-					if(this.check_distance(res.profile, res, point, true) === false)
-						return res;
-				}
-			}
-
-
-			res.clear();
-			if(this.parent){
-
-				var res_bind = this.bind_node(point);
-				if(res_bind.binded){
-					res._mixin(res_bind, ["point","profile","cnn_types","profile_point"]);
-				}
-			}
-
-			return res;
-
-		}
-	},
-
-	bind_node: {
-
-		value: function (point, glasses) {
-
-			if(!glasses)
-				glasses = [this.parent];
-
-			var res = {distance: Infinity, is_l: true};
-
-			glasses.some(function (glass) {
-				var np = glass.path.getNearestPoint(point),
-					distance = np.getDistance(point);
-
-				if(distance < res.distance){
-					res.distance = distance;
-					res.point = np;
-					res.profile = glass;
-					res.cnn_types = $p.enm.cnn_types.acn.t;
-				}
-
-				if(distance < consts.sticking_l){
-					res.binded = true;
-					return true;
-				}
-
-				glass.onlays.some(function (elm) {
-					if (elm.project.check_distance(elm, null, res, point, "node_generatrix") === false ){
-						return true;
-					}
-				});
-
-			});
-
-			if(!res.binded && res.point && res.distance < consts.sticking){
-				res.binded = true;
-			}
-
-			return res;
-		}
-	}
-
-});
 
 
 function Scheme(_canvas){
@@ -9014,22 +8997,24 @@ function Scheme(_canvas){
 
 		_dp_observer = function (changes) {
 
-			if(_data._loading || _data._snapshot)
-				return;
+			if(_data._loading || _data._snapshot){
+        return;
+      }
 
 			const scheme_changed_names = ["clr","sys"];
       const row_changed_names = ["quantity","discount_percent","discount_percent_internal"];
 			let evented
 
-			changes.forEach(function(change){
+			changes.forEach((change) => {
 
 				if(scheme_changed_names.indexOf(change.name) != -1){
 
 					if(change.name == "clr"){
 						_scheme.ox.clr = change.object.clr;
-						_scheme.getItems({class: ProfileItem}).forEach(function (p) {
-							if(!(p instanceof Onlay))
-								p.clr = change.object.clr;
+						_scheme.getItems({class: ProfileItem}).forEach((p) => {
+							if(!(p instanceof Onlay)){
+                p.clr = change.object.clr;
+              }
 						})
 					}
 
@@ -9048,9 +9033,7 @@ function Scheme(_canvas){
 								tabular: 'params'
 							});
 
-						_scheme.contours.forEach(function (l) {
-							l.on_sys_changed();
-						});
+						_scheme.contours.forEach((l) => l.on_sys_changed());
 
 
 						if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
@@ -9067,7 +9050,8 @@ function Scheme(_canvas){
 						evented = true;
 					}
 
-				}else if(row_changed_names.indexOf(change.name) != -1){
+				}
+				else if(row_changed_names.indexOf(change.name) != -1){
 
 					_data._calc_order_row[change.name] = change.object[change.name];
 
@@ -9083,7 +9067,7 @@ function Scheme(_canvas){
 			if(_data._loading || _data._snapshot)
 				return;
 
-			changes.some(function(change){
+			changes.some((change) => {
 				if(change.tabular == "params"){
 					_scheme.register_change();
 					return true;
@@ -9148,17 +9132,15 @@ function Scheme(_canvas){
 
 				}else if(_dp.sys.empty()){
 
-					$p.cat.production_params.find_rows({is_folder: false}, function(o){
-
-						if(setted)
-							return false;
-
-						o.production.find_rows({nom: ox.owner}, function () {
+					$p.cat.production_params.find_rows({is_folder: false}, (o) => {
+						if(setted){
+              return false;
+            }
+						o.production.find_rows({nom: ox.owner}, () => {
 							_dp.sys = o;
 							setted = true;
 							return false;
 						});
-
 					});
 				}
 
@@ -9277,44 +9259,25 @@ function Scheme(_canvas){
 		}
 		_changes.push(Date.now());
 
-		if(with_update)
-			this.register_update();
+		if(with_update){
+      this.register_update();
+    }
 	};
 
-	this.register_update = function () {
-
-		if(_data._update_timer)
-			clearTimeout(_data._update_timer);
-
-		_data._update_timer = setTimeout(function () {
-			_scheme.view.update();
-			_data._update_timer = 0;
-		}, 100);
-	};
 
   this.load = function(id){
 
     function load_contour(parent) {
-      var out_cns = parent ? parent.cnstr : 0;
-      _scheme.ox.constructions.find_rows({parent: out_cns}, function(row){
-
-        var contour = new Contour( {parent: parent, row: row});
-
-        load_contour(contour);
-
+      _scheme.ox.constructions.find_rows({parent: parent ? parent.cnstr : 0}, (row) => {
+        load_contour(new Contour({parent: parent, row: row}));
       });
     }
 
     function load_dimension_lines() {
-
-      _scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, function(row){
-
-        new DimensionLineCustom( {
-          parent: _scheme.getItem({cnstr: row.cnstr}).l_dimensions,
-          row: row
-        });
-
-      });
+      _scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, (row) => new DimensionLineCustom({
+        parent: _scheme.getItem({cnstr: row.cnstr}).l_dimensions,
+        row: row
+      }));
     }
 
     function load_object(o){
@@ -9328,11 +9291,14 @@ function Scheme(_canvas){
         point: [0, 0],
         size: [o.x, o.y]
       });
+
+      o.coordinates.find_rows({cnstr: 0, elm_type: $p.enm.elm_types.Соединитель}, (row) =>
+        new ProfileConnective({row: row}));
       o = null;
 
       load_contour(null);
 
-      setTimeout(function () {
+      setTimeout(() => {
 
         _data._bounds = null;
 
@@ -9352,18 +9318,19 @@ function Scheme(_canvas){
         delete _data._loading;
         delete _data._snapshot;
 
-        setTimeout(function () {
+        setTimeout(() => {
           if(_scheme.ox.coordinates.count()){
             if(_scheme.ox.specification.count()){
               $p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
-            }else{
+            }
+            else{
               _scheme.register_change(true);
             }
-          }else{
+          }
+          else{
             paper.load_stamp();
           }
         }, 100);
-
 
       }, 20);
 
@@ -9375,34 +9342,24 @@ function Scheme(_canvas){
     }
     _scheme.clear();
 
-    if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new())
+    if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new()){
       load_object(id);
-
+    }
     else if($p.utils.is_guid(id) || $p.utils.is_data_obj(id)){
       $p.cat.characteristics.get(id, true, true)
-        .then(function (ox) {
+        .then((ox) => {
           $p.doc.calc_order.get(ox.calc_order, true, true)
-            .then(function () {
-              load_object(ox);
-            })
+            .then(() => load_object(ox))
         });
     }
   };
 
-	this.unload = function () {
-		_data._loading = true;
-		this.clear();
-		this.remove();
-		Object.unobserve(this._dp, _dp_observer);
-		Object.unobserve(this._dp.characteristic, _papam_observer);
-		this.data._calc_order_row = null;
-	};
 
 	function redraw () {
 
 		function process_redraw(){
 
-			var llength = 0;
+			let llength = 0;
 
 			function on_contour_redrawed(){
 				if(!_changes.length){
@@ -9434,7 +9391,8 @@ function Scheme(_canvas){
 						llength++;
 						l.redraw(on_contour_redrawed);
 					});
-				}else{
+				}
+				else{
 					_scheme.draw_sizes();
 				}
 			}
@@ -9462,6 +9420,41 @@ function Scheme(_canvas){
 Scheme._extend(paper.Project);
 
 Scheme.prototype.__define({
+
+  register_update: {
+    value: function () {
+      if(this.data._update_timer){
+        clearTimeout(this.data._update_timer);
+      }
+      this.data._update_timer = setTimeout(() => {
+        this.view.update();
+        this.data._update_timer = 0;
+      }, 100);
+    }
+  },
+
+  clear: {
+    value: function () {
+      const pnames = '_bounds,_update_timer,_loading';
+      for(let fld in this.data){
+        if(!pnames.match(fld)){
+          delete this.data[fld];
+        }
+      }
+      paper.Project.prototype.clear.call(this);
+    }
+  },
+
+  unload: {
+    value: function () {
+      this.data._loading = true;
+      this.clear();
+      this.remove();
+      Object.unobserve(this._dp, _dp_observer);
+      Object.unobserve(this._dp.characteristic, _papam_observer);
+      this.data._calc_order_row = null;
+    }
+  },
 
 	move_points: {
 		value: function (delta, all_points) {
@@ -9961,7 +9954,7 @@ Scheme.prototype.__define({
 				res = $p.job_prm.builder.base_furn.null;
 			}
 			if(!res){
-				$p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ""}}, function (row) {
+				$p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ""}}, (row) => {
 					res = row;
 					return false;
 				});
