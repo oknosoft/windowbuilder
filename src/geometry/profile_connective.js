@@ -85,10 +85,48 @@ class ProfileConnective extends ProfileItem {
   }
 
   /**
+   * ### Двигает узлы
+   * Обрабатывает смещение выделенных сегментов образующей профиля
+   *
+   * @method move_points
+   * @for ProfileItem
+   * @param delta {paper.Point} - куда и насколько смещать
+   * @param [all_points] {Boolean} - указывает двигать все сегменты пути, а не только выделенные
+   * @param [start_point] {paper.Point} - откуда началось движение
+   */
+  move_points(delta, all_points, start_point) {
+    const nearests = this.joined_nearests();
+    super.move_points(delta, all_points, start_point);
+    nearests.forEach((np) =>
+      np.do_bind(this, null, null, []));
+    this.project.register_change();
+  }
+
+  /**
    * Возвращает массив примыкающих рам
    */
   joined_nearests() {
-    return [];
+
+    const res = [];
+
+    this.project.contours.forEach((contour) => {
+      contour.profiles.forEach((profile) => {
+        if(profile.nearest(true) == this){
+          res.push(profile)
+        }
+      })
+    })
+
+    return res;
+
+  }
+
+  /**
+   * Примыкающий внешний элемент - для соединителя всегда пусто
+   * @property nearest
+   */
+  nearest() {
+    return null;
   }
 
   /**
@@ -139,6 +177,27 @@ class ProfileConnective extends ProfileItem {
     // устанавливаем тип элемента
     _row.elm_type = this.elm_type;
 
+  }
+
+  /**
+   * ### Удаляет элемент из контура и иерархии проекта
+   * Одновлеменно, инициирует обновление путей примыкающих элементов
+   * @method remove
+   */
+  remove() {
+    this.joined_nearests().forEach((np) => {
+      const {data} = np;
+      if(data._rays){
+        data._rays.clear()
+      }
+      if(data._nearest){
+        data._nearest = null
+      }
+      if(data._nearest_cnn){
+        data._nearest_cnn = null
+      }
+    });
+    super.remove()
   }
 
 }

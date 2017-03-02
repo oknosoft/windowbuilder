@@ -36,13 +36,7 @@ function BuilderElement(attr){
     attr.row = this.project.ox.coordinates.add();
   }
 
-	this.__define({
-		_row: {
-			get: function () {
-				return attr.row;
-			}
-		}
-	});
+	this._row = attr.row;
 
 	if(attr.proto){
 
@@ -68,48 +62,20 @@ function BuilderElement(attr){
     this.parent = attr.parent;
   }
 
-	if(!attr.row.cnstr){
-    attr.row.cnstr = this.layer.cnstr;
+	if(!this._row.cnstr){
+    this._row.cnstr = this.layer.cnstr;
   }
 
-	if(!attr.row.elm){
-    attr.row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+	if(!this._row.elm){
+    this._row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
   }
 
-	if(attr.row.elm_type.empty() && !this.inset.empty()){
-    attr.row.elm_type = this.inset.nom().elm_type;
+	if(this._row.elm_type.empty() && !this.inset.empty()){
+    this._row.elm_type = this.inset.nom().elm_type;
   }
 
 	this.project.register_change();
 
-	/**
-	 * ### Удаляет элемент из контура и иерархии проекта
-	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_ и отключает наблюдателя
-	 * @method remove
-	 */
-	this.remove = function () {
-
-		this.detache_wnd();
-
-		if(this.parent){
-
-			if (this.parent.on_remove_elm)
-				this.parent.on_remove_elm(this);
-
-			if (this.parent._noti && this._observer){
-				Object.unobserve(this.parent._noti, this._observer);
-				delete this._observer;
-			}
-		}
-
-		if(this.project.ox === attr.row._owner._owner){
-      attr.row._owner.del(attr.row);
-    }
-		delete attr.row;
-
-		BuilderElement.superclass.remove.call(this);
-		this.project.register_change();
-	};
 
 }
 
@@ -563,7 +529,36 @@ BuilderElement.prototype.__define({
 				}))
 				return res;
 		}
-	}
+	},
+
+  /**
+   * ### Удаляет элемент из контура и иерархии проекта
+   * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_ и отключает наблюдателя
+   * @method remove
+   */
+  remove: {
+	  value: function () {
+
+      this.detache_wnd();
+
+      if(this.parent){
+        if (this.parent.on_remove_elm){
+          this.parent.on_remove_elm(this);
+        }
+        if (this.parent._noti && this._observer){
+          Object.unobserve(this.parent._noti, this._observer);
+          delete this._observer;
+        }
+      }
+
+      if(this.project.ox === this._row._owner._owner){
+        this._row._owner.del(this._row);
+      }
+
+      BuilderElement.superclass.remove.call(this);
+      this.project.register_change();
+    }
+  }
 
 });
 

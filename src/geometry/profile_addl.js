@@ -275,28 +275,28 @@ class ProfileAddl extends ProfileItem {
    * Вспомогательная функция обсервера, выполняет привязку узлов добора
    */
   do_bind(p, bcnn, ecnn, moved) {
-    var imposts, moved_fact,
 
-      bind_node = function (node, cnn) {
+    let imposts, moved_fact;
 
-        if(!cnn.profile)
+    const bind_node = (node, cnn) => {
+
+        if(!cnn.profile){
           return;
+        }
 
-        var gen = this.outer ? this.parent.rays.outer : this.parent.rays.inner;
-        mpoint = cnn.profile.generatrix.intersect_point(gen, cnn.point, "nearest");
+        const gen = this.outer ? this.parent.rays.outer : this.parent.rays.inner;
+        const mpoint = cnn.profile.generatrix.intersect_point(gen, cnn.point, "nearest");
         if(!mpoint.is_nearest(this[node])){
           this[node] = mpoint;
           moved_fact = true;
         }
 
-      }.bind(this);
+      };
 
     // при смещениях родителя, даигаем образующую
     if(this.parent == p){
-
       bind_node("b", bcnn);
       bind_node("e", ecnn);
-
     }
 
     if(bcnn.cnn && bcnn.profile == p){

@@ -5172,13 +5172,7 @@ function BuilderElement(attr){
     attr.row = this.project.ox.coordinates.add();
   }
 
-	this.__define({
-		_row: {
-			get: function () {
-				return attr.row;
-			}
-		}
-	});
+	this._row = attr.row;
 
 	if(attr.proto){
 
@@ -5204,43 +5198,20 @@ function BuilderElement(attr){
     this.parent = attr.parent;
   }
 
-	if(!attr.row.cnstr){
-    attr.row.cnstr = this.layer.cnstr;
+	if(!this._row.cnstr){
+    this._row.cnstr = this.layer.cnstr;
   }
 
-	if(!attr.row.elm){
-    attr.row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+	if(!this._row.elm){
+    this._row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
   }
 
-	if(attr.row.elm_type.empty() && !this.inset.empty()){
-    attr.row.elm_type = this.inset.nom().elm_type;
+	if(this._row.elm_type.empty() && !this.inset.empty()){
+    this._row.elm_type = this.inset.nom().elm_type;
   }
 
 	this.project.register_change();
 
-	this.remove = function () {
-
-		this.detache_wnd();
-
-		if(this.parent){
-
-			if (this.parent.on_remove_elm)
-				this.parent.on_remove_elm(this);
-
-			if (this.parent._noti && this._observer){
-				Object.unobserve(this.parent._noti, this._observer);
-				delete this._observer;
-			}
-		}
-
-		if(this.project.ox === attr.row._owner._owner){
-      attr.row._owner.del(attr.row);
-    }
-		delete attr.row;
-
-		BuilderElement.superclass.remove.call(this);
-		this.project.register_change();
-	};
 
 }
 
@@ -5640,7 +5611,31 @@ BuilderElement.prototype.__define({
 				}))
 				return res;
 		}
-	}
+	},
+
+  remove: {
+	  value: function () {
+
+      this.detache_wnd();
+
+      if(this.parent){
+        if (this.parent.on_remove_elm){
+          this.parent.on_remove_elm(this);
+        }
+        if (this.parent._noti && this._observer){
+          Object.unobserve(this.parent._noti, this._observer);
+          delete this._observer;
+        }
+      }
+
+      if(this.project.ox === this._row._owner._owner){
+        this._row._owner.del(this._row);
+      }
+
+      BuilderElement.superclass.remove.call(this);
+      this.project.register_change();
+    }
+  }
 
 });
 
@@ -6892,7 +6887,7 @@ class ProfileRays {
     const path = parent.generatrix;
     const len = path.length;
 
-    this.clear_segments();
+    this.clear();
 
     if(!len){
       return;
@@ -7168,28 +7163,23 @@ ProfileItem.prototype.__define({
 	observer: {
 		value: function(an){
 
-			var bcnn, ecnn, moved;
-
 			if(Array.isArray(an)){
-				moved = an[an.length-1];
+
+				const moved = an[an.length-1];
 
 				if(moved.profiles.indexOf(this) == -1){
 
-					bcnn = this.cnn_point("b");
-					ecnn = this.cnn_point("e");
-
-					moved.profiles.forEach(function (p) {
-						this.do_bind(p, bcnn, ecnn, moved);
-					}.bind(this));
+					moved.profiles.forEach((p) => {
+						this.do_bind(p, this.cnn_point("b"), this.cnn_point("e"), moved);
+					});
 
 					moved.profiles.push(this);
 				}
 
-			}else if(an instanceof Profile){
-				this.do_bind(an, this.cnn_point("b"), this.cnn_point("e"));
-
 			}
-
+			else if(an instanceof Profile || an instanceof ProfileConnective){
+				this.do_bind(an, this.cnn_point("b"), this.cnn_point("e"));
+			}
 		}
 	},
 
@@ -7231,43 +7221,59 @@ ProfileItem.prototype.__define({
 
 	x1: {
 		get : function(){
-			return (this.b.x - this.project.bounds.x).round(1);
+		  const {bounds} = this.project;
+			return bounds ? (this.b.x - bounds.x).round(1) : 0;
 		},
 		set: function(v){
-			this.select_node("b");
-			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.b.x, 0));
+      const {bounds} = this.project;
+      if(bounds){
+        this.select_node("b");
+        this.move_points(new paper.Point(parseFloat(v) + bounds.x - this.b.x, 0));
+      }
 		}
 	},
 
 	y1: {
 		get : function(){
-			return (this.project.bounds.height + this.project.bounds.y - this.b.y).round(1);
+      const {bounds} = this.project;
+			return bounds ? (bounds.height + bounds.y - this.b.y).round(1) : 0;
 		},
 		set: function(v){
-			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
-			this.select_node("b");
-			this.move_points(new paper.Point(0, v - this.b.y));
+      const {bounds} = this.project;
+      if(bounds){
+        v = bounds.height + bounds.y - parseFloat(v);
+        this.select_node("b");
+        this.move_points(new paper.Point(0, v - this.b.y));
+      }
 		}
 	},
 
 	x2: {
 		get : function(){
-			return (this.e.x - this.project.bounds.x).round(1);
+      const {bounds} = this.project;
+      return bounds ? (this.e.x - bounds.x).round(1) : 0;
 		},
 		set: function(v){
-			this.select_node("e");
-			this.move_points(new paper.Point(parseFloat(v) + this.project.bounds.x - this.e.x, 0));
+      const {bounds} = this.project;
+      if(bounds){
+        this.select_node("e");
+        this.move_points(new paper.Point(parseFloat(v) + bounds.x - this.e.x, 0));
+      }
 		}
 	},
 
 	y2: {
 		get : function(){
-			return (this.project.bounds.height + this.project.bounds.y - this.e.y).round(1);
+      const {bounds} = this.project;
+      return bounds ? (bounds.height + bounds.y - this.e.y).round(1) : 0;
 		},
 		set: function(v){
-			v = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
-			this.select_node("e");
-			this.move_points(new paper.Point(0, v - this.e.y));
+      const {bounds} = this.project;
+      if(bounds){
+        v = bounds.height + bounds.y - parseFloat(v);
+        this.select_node("e");
+        this.move_points(new paper.Point(0, v - this.e.y));
+      }
 		}
 	},
 
@@ -7880,47 +7886,49 @@ ProfileItem.prototype.__define({
 	move_points: {
 		value:  function(delta, all_points, start_point){
 
-			if(!delta.length)
-				return;
+			if(!delta.length){
+        return;
+      }
 
-			var changed,
-				other = [],
-				noti = {type: consts.move_points, profiles: [this], points: []}, noti_points;
+			const	other = [];
+			const noti = {type: consts.move_points, profiles: [this], points: []};
 
+      let changed;
 
 			if(!all_points){
-				all_points = !this.generatrix.segments.some(function (segm) {
+				all_points = !this.generatrix.segments.some((segm) => {
 					if (segm.selected)
 						return true;
 				});
 			}
 
-			this.generatrix.segments.forEach(function (segm) {
+			this.generatrix.segments.forEach((segm) => {
 
-				var cnn_point, free_point;
+				let cnn_point;
 
 				if (segm.selected || all_points){
 
-					noti_points = {old: segm.point.clone(), delta: delta};
+					const noti_points = {old: segm.point.clone(), delta: delta};
 
-					free_point = segm.point.add(delta);
+					const free_point = segm.point.add(delta);
 
 					if(segm.point == this.b){
 						cnn_point = this.rays.b;
-						if(!cnn_point.profile_point || paper.Key.isDown('control'))
-							cnn_point = this.cnn_point("b", free_point);
-
-					}else if(segm.point == this.e){
+						if(!cnn_point.profile_point || paper.Key.isDown('control')){
+              cnn_point = this.cnn_point("b", free_point);
+            }
+					}
+					else if(segm.point == this.e){
 						cnn_point = this.rays.e;
-						if(!cnn_point.profile_point || paper.Key.isDown('control'))
-							cnn_point = this.cnn_point("e", free_point);
-
+						if(!cnn_point.profile_point || paper.Key.isDown('control')){
+              cnn_point = this.cnn_point("e", free_point);
+            }
 					}
 
 					if(cnn_point && cnn_point.cnn_types == $p.enm.cnn_types.acn.t && (segm.point == this.b || segm.point == this.e)){
 						segm.point = cnn_point.point;
-
-					}else{
+					}
+					else{
 						segm.point = free_point;
 						if(cnn_point && !paper.Key.isDown('control')){
 							if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
@@ -7932,23 +7940,26 @@ ProfileItem.prototype.__define({
 					}
 
 					noti_points.new = segm.point;
-					if(start_point)
-						noti_points.start = start_point;
+					if(start_point){
+            noti_points.start = start_point;
+          }
 					noti.points.push(noti_points);
 
 					changed = true;
 				}
 
-			}.bind(this));
+			});
 
 
 			if(changed){
+
 				this.data._rays.clear();
 
-				if(this.parent.notify)
-					this.parent.notify(noti);
+				if(this.parent.notify){
+          this.parent.notify(noti);
+        }
 
-				var notifier = Object.getNotifier(this);
+				const notifier = Object.getNotifier(this);
 				notifier.notify({ type: 'update', name: "x1" });
 				notifier.notify({ type: 'update', name: "y1" });
 				notifier.notify({ type: 'update', name: "x2" });
@@ -8061,7 +8072,9 @@ Profile.prototype.__define({
               }
               data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn);
             }
-						return true;
+            if(data._nearest.isInserted()){
+              return true;
+            }
 					}
 				}
         data._nearest = null;
@@ -8072,11 +8085,14 @@ Profile.prototype.__define({
         if(_nearest == elm || !elm.generatrix){
           return
         }
-        if((data._nearest = elm) instanceof Profile && check_nearest()){
-          return data._nearest
-        }
-        else{
-          data._nearest = null
+        if(elm instanceof Profile || elm instanceof ProfileConnective){
+          data._nearest = elm;
+          if(check_nearest()){
+            return elm
+          }
+          else{
+            data._nearest = null
+          }
         }
       });
 
@@ -8350,64 +8366,74 @@ Profile.prototype.__define({
 
 			let moved_fact;
 
-			if(bcnn.cnn && bcnn.profile == p){
-				if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-					if(!this.b.is_nearest(p.e)){
-						if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
-							if(paper.Key.isDown('control')){
-								console.log('control');
-							}else{
-								if(this.b.getDistance(p.e, true) < this.b.getDistance(p.b, true)){
-                  this.b = p.e;
+      if(p instanceof ProfileConnective){
+        const {generatrix} = p;
+        this.data._rays.clear();
+        this.b = generatrix.getNearestPoint(this.b);
+        this.e = generatrix.getNearestPoint(this.e);
+        moved_fact = true;
+      }
+      else{
+        if(bcnn.cnn && bcnn.profile == p){
+          if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+            if(!this.b.is_nearest(p.e)){
+              if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+                if(paper.Key.isDown('control')){
+                  console.log('control');
+                }else{
+                  if(this.b.getDistance(p.e, true) < this.b.getDistance(p.b, true)){
+                    this.b = p.e;
+                  }
+                  else{
+                    this.b = p.b;
+                  }
+                  moved_fact = true;
                 }
-								else{
-                  this.b = p.b;
-                }
-								moved_fact = true;
-							}
-						}
-						else{
-							bcnn.clear();
-							this.data._rays.clear_segments();
-						}
-					}
-				}
-				else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-					const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
-					if(!mpoint.is_nearest(this.b)){
-						this.b = mpoint;
-						moved_fact = true;
-					}
-				}
+              }
+              else{
+                bcnn.clear();
+                this.data._rays.clear();
+              }
+            }
+          }
+          else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+            const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
+            if(!mpoint.is_nearest(this.b)){
+              this.b = mpoint;
+              moved_fact = true;
+            }
+          }
 
-			}
-			if(ecnn.cnn && ecnn.profile == p){
-				if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-					if(!this.e.is_nearest(p.b)){
-						if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
-							if(paper.Key.isDown('control')){
-								console.log('control');
-							}else{
-								if(this.e.getDistance(p.b, true) < this.e.getDistance(p.e, true))
-									this.e = p.b;
-								else
-									this.e = p.e;
-								moved_fact = true;
-							}
-						} else{
-							ecnn.clear();
-							this.data._rays.clear_segments();
-						}
-					}
-				}
-				else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
-					if(!mpoint.is_nearest(this.e)){
-						this.e = mpoint;
-						moved_fact = true;
-					}
-				}
-			}
+        }
+
+        if(ecnn.cnn && ecnn.profile == p){
+          if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+            if(!this.e.is_nearest(p.b)){
+              if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+                if(paper.Key.isDown('control')){
+                  console.log('control');
+                }else{
+                  if(this.e.getDistance(p.b, true) < this.e.getDistance(p.e, true))
+                    this.e = p.b;
+                  else
+                    this.e = p.e;
+                  moved_fact = true;
+                }
+              } else{
+                ecnn.clear();
+                this.data._rays.clear();
+              }
+            }
+          }
+          else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+            const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
+            if(!mpoint.is_nearest(this.e)){
+              this.e = mpoint;
+              moved_fact = true;
+            }
+          }
+        }
+      }
 
 			if(moved && moved_fact){
 				const imposts = this.joined_imposts();
@@ -8613,27 +8639,27 @@ class ProfileAddl extends ProfileItem {
   }
 
   do_bind(p, bcnn, ecnn, moved) {
-    var imposts, moved_fact,
 
-      bind_node = function (node, cnn) {
+    let imposts, moved_fact;
 
-        if(!cnn.profile)
+    const bind_node = (node, cnn) => {
+
+        if(!cnn.profile){
           return;
+        }
 
-        var gen = this.outer ? this.parent.rays.outer : this.parent.rays.inner;
-        mpoint = cnn.profile.generatrix.intersect_point(gen, cnn.point, "nearest");
+        const gen = this.outer ? this.parent.rays.outer : this.parent.rays.inner;
+        const mpoint = cnn.profile.generatrix.intersect_point(gen, cnn.point, "nearest");
         if(!mpoint.is_nearest(this[node])){
           this[node] = mpoint;
           moved_fact = true;
         }
 
-      }.bind(this);
+      };
 
     if(this.parent == p){
-
       bind_node("b", bcnn);
       bind_node("e", ecnn);
-
     }
 
     if(bcnn.cnn && bcnn.profile == p){
@@ -8686,8 +8712,32 @@ class ProfileConnective extends ProfileItem {
     return this.rays[node];
   }
 
+  move_points(delta, all_points, start_point) {
+    const nearests = this.joined_nearests();
+    super.move_points(delta, all_points, start_point);
+    nearests.forEach((np) =>
+      np.do_bind(this, null, null, []));
+    this.project.register_change();
+  }
+
   joined_nearests() {
-    return [];
+
+    const res = [];
+
+    this.project.contours.forEach((contour) => {
+      contour.profiles.forEach((profile) => {
+        if(profile.nearest(true) == this){
+          res.push(profile)
+        }
+      })
+    })
+
+    return res;
+
+  }
+
+  nearest() {
+    return null;
   }
 
   save_coordinates() {
@@ -8724,6 +8774,22 @@ class ProfileConnective extends ProfileItem {
 
     _row.elm_type = this.elm_type;
 
+  }
+
+  remove() {
+    this.joined_nearests().forEach((np) => {
+      const {data} = np;
+      if(data._rays){
+        data._rays.clear()
+      }
+      if(data._nearest){
+        data._nearest = null
+      }
+      if(data._nearest_cnn){
+        data._nearest_cnn = null
+      }
+    });
+    super.remove()
   }
 
 }
@@ -9486,14 +9552,9 @@ Scheme.prototype.__define({
 	},
 
 	strokeBounds: {
-
 		get: function () {
-
-			var bounds = new paper.Rectangle();
-			this.contours.forEach(function(l){
-				bounds = bounds.unite(l.strokeBounds);
-			});
-
+			let bounds = new paper.Rectangle();
+			this.contours.forEach((l) => bounds = bounds.unite(l.strokeBounds));
 			return bounds;
 		}
 	},

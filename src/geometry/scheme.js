@@ -728,14 +728,9 @@ Scheme.prototype.__define({
 	 * @for Scheme
 	 */
 	strokeBounds: {
-
 		get: function () {
-
-			var bounds = new paper.Rectangle();
-			this.contours.forEach(function(l){
-				bounds = bounds.unite(l.strokeBounds);
-			});
-
+			let bounds = new paper.Rectangle();
+			this.contours.forEach((l) => bounds = bounds.unite(l.strokeBounds));
 			return bounds;
 		}
 	},
