@@ -6,10 +6,8 @@
  * Created 07.11.2016
  */
 
+(($p) => {
 
-export default function ($p) {
-
-  const {characteristics, nom, nom_kinds, clrs} = $p.cat
   const Proto = $p.RepMaterials_demand
 
   // переопределяем прототип
@@ -17,10 +15,11 @@ export default function ($p) {
 
     calculate(_columns) {
 
-      const {specification, production} = this;
-      const arefs = [], aobjs = [],
-        spec_flds = Object.keys(characteristics.metadata('specification').fields),
-        rspec_flds = Object.keys(this._metadata('specification').fields);
+      const {specification, production, scheme, _manager} = this;
+      const arefs = [];
+      const aobjs = [];
+      const spec_flds = Object.keys($p.cat.characteristics.metadata('specification').fields);
+      const rspec_flds = Object.keys(_manager.metadata('specification').fields);
 
       function material(row) {
 
@@ -143,8 +142,10 @@ export default function ($p) {
           })
 
           // сворачиваем результат и сохраняем его в specification._rows
-
           const dimentions = [], resources = [];
+          if(!_columns){
+            _columns = scheme.columns('ts')
+          }
           _columns.forEach(fld => {
             const {key} = fld
             if ($p.RepMaterials_demand.resources.indexOf(key) != -1) {
@@ -170,15 +171,129 @@ export default function ($p) {
         })
     }
 
+    form_obj(pwnd, attr) {
+
+      const {specification, production, calc_order, _manager, _metadata} = this;
+
+      // форма в модальном диалоге
+      const options = {
+        name: 'wnd_obj_' + _manager.class_name,
+        wnd: {
+          top: 80 + Math.random()*40,
+          left: 120 + Math.random()*80,
+          width: 780,
+          height: 400,
+          modal: true,
+          center: false,
+          pwnd: pwnd,
+          allow_close: true,
+          allow_minmax: true,
+          caption: `<b>${calc_order.presentation}</b>`
+        }
+      };
+
+      const wnd = $p.iface.dat_blank(null, options.wnd);
+
+      wnd.attachHTMLString(`<div style="display: table; width:100%; height: 28px; border-bottom: 1px silver dashed;">
+<div style="display: table-cell; width: 30%; vertical-align: top;">Вариант настроек:</div>
+<div style="display: table-cell" name="scheme"></div>
+<div style="display: table-cell; width: 15%" name="tb_top"></div>
+</div>`);
+
+      // поле выбора варианта
+      wnd.elmnts.scheme = new $p.iface.OCombo({
+        parent: wnd.cell.querySelector('[name=scheme]'),
+        obj: this,
+        field: "scheme",
+        width: 300
+      });
+
+      // тулбар
+      wnd.elmnts.tb_top = new $p.iface.OTooolBar({
+        wrapper: wnd.cell.querySelector('[name=scheme]'),
+        class_name: "",
+        top: '0px', right: '3px', name: 'top', width: '180px', height: '28px', image_path: 'dist/imgs/',
+        buttons: [
+          {name: 'data', text: "<i class='fa fa-calculator fa-fw'></i>", float: 'left', tooltip: 'Рассчитать'},
+          {name: 'print', text: "<i class='fa fa-print fa-fw'></i>", float: 'right', tooltip: 'Печать отчета'}
+        ],
+        onclick: (name) => {
+          if(name == 'data'){
+            this.fill_by_order()
+              .then(() => this.calculate());
+          }
+        }
+      });
+
+      const ts_captions = {
+        "fields":["price_type","nom_characteristic","date","price","currency"],
+        "headers":"Тип Цен,Характеристика,Дата,Цена,Валюта",
+        "widths":"200,*,150,120,100",
+        "min_widths":"150,200,100,100,100",
+        "aligns":"",
+        "sortings":"na,na,na,na,na",
+        "types":"ro,ro,dhxCalendar,ro,ro"
+      };
+
+
+      const observer = this.observer.bind(this);
+      wnd.attachEvent("onClose", () => {
+        Object.unobserve(this, observer);
+        return true;
+      });
+      Object.observe(this, observer);
+
+      // установим вариант
+      $p.cat.scheme_settings.get_scheme(_manager.class_name)
+        .then((scheme) => {
+        this.scheme = scheme;
+      });
+
+      return Promise.resolve({wnd: wnd, o: this});
+
+    }
+
+    save_scheme() {
+
+    }
+
+    observer(changes) {
+      changes.some((change) => {
+        if(change.name == "scheme"){
+          this.scheme_change();
+          return true;
+        }
+      })
+    }
+
+    scheme_change() {
+
+    }
+
     fill_by_order(row, _mgr) {
-      if (!row || !row._id) {
-        return;
+
+      let pdoc;
+
+      if(!row || !row._id){
+        if(this.calc_order.empty()){
+          return;
+        }
+        if(this.calc_order.is_new()){
+          pdoc = this.calc_order.load();
+        }
+        else{
+          pdoc = Promise.resolve(this.calc_order);
+        }
       }
-      const ids = row._id.split('|');
-      if (ids.length < 2) {
-        return
+      else{
+        const ids = row._id.split('|');
+        if (ids.length < 2) {
+          return
+        }
+        pdoc = _mgr.get(ids[1], 'promise');
       }
-      return _mgr.get(ids[1], 'promise')
+
+      return pdoc
         .then((doc) => {
           //this.production.clear()
           const rows = []
@@ -194,7 +309,8 @@ export default function ($p) {
               }
             }
           })
-          return $p.adapters.pouch.load_array($p.cat.characteristics, refs)
+
+          return ($p.adapters ? $p.adapters.pouch.load_array($p.cat.characteristics, refs) : $p.cat.characteristics.pouch_load_array(refs))
             .then(() => rows)
         })
         .then((rows) => {
@@ -203,11 +319,15 @@ export default function ($p) {
         })
     }
 
-    static resources = ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged']
+    static get resources() {
+      return ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'];
+    }
 
   }
 
-}
+
+})($p);
+
 
 
 

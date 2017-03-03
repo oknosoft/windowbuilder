@@ -33,7 +33,7 @@
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
 		this.font_size = builder.font_size || 60;
-    this.elm_font_size = builder.elm_font_size || 48;
+    this.elm_font_size = builder.elm_font_size || 40;
 
 		// в пределах этого угла, считаем элемент вертикальным или горизонтальным
 		this.orientation_delta = builder.orientation_delta || 30;

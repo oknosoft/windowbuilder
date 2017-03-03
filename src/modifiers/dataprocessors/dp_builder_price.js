@@ -8,6 +8,7 @@
 
 // переопределяем форму обработки в качестве отчета по ценам номенклатуры
 $p.DpBuilder_price.prototype.__define({
+
   form_obj: {
     value: function (pwnd, attr) {
 
@@ -71,7 +72,6 @@ $p.DpBuilder_price.prototype.__define({
           wnd.detachToolbar();
         }
       })
-
 
     }
   }

@@ -49,36 +49,40 @@ module.exports = function (package_data) {
 
 	function create_modules(_m){
 
-		var name,
-      sys_nsmes = ["log","meta_objs","meta_fields","scheme_settings"],
-      text = "$p.md.create_managers=function(){\n" +
+	  const fs = require('fs');
+	  const scheme_settings = fs.readFileSync('./node_modules/metadata-abstract-ui/src/scheme_settings.js', 'utf8');
+	  const sys_nsmes = ["log","meta_objs","meta_fields","scheme_settings"];
+	  const categoties = {
+      cch: {mgr: "ChartOfCharacteristicManager", obj: "CatObj"},
+      cacc: {mgr: "ChartOfAccountManager", obj: "CatObj"},
+      cat: {mgr: "CatManager", obj: "CatObj"},
+      bp: {mgr: "BusinessProcessManager", obj: "BusinessProcessObj"},
+      tsk: {mgr: "TaskManager", obj: "TaskObj"},
+      doc: {mgr: "DocManager", obj: "DocObj"},
+      ireg: {mgr: "InfoRegManager", obj: "RegisterRow"},
+      areg: {mgr: "AccumRegManager", obj: "RegisterRow"},
+      dp: {mgr: "DataProcessorsManager", obj: "DataProcessorObj"},
+      rep: {mgr: "DataProcessorsManager", obj: "DataProcessorObj"}
+    };
+
+		let text = "$p.md.create_managers=function(){\n" +
         "// создаём системные менеджеры (журнал регистрации, метаданные и настройки компоновки)\n" +
         "$p.ireg.log = new $p.LogManager();\n" +
 				"$p.cat.meta_objs = new $p.MetaObjManager();\n" +
-				"$p.cat.meta_fields = new $p.MetaFieldManager();\n" +
-				"$p.cat.scheme_settings = new $p.SchemeSettingsManager();\n",
-			categoties = {
-				cch: {mgr: "ChartOfCharacteristicManager", obj: "CatObj"},
-				cacc: {mgr: "ChartOfAccountManager", obj: "CatObj"},
-				cat: {mgr: "CatManager", obj: "CatObj"},
-				bp: {mgr: "BusinessProcessManager", obj: "BusinessProcessObj"},
-				tsk: {mgr: "TaskManager", obj: "TaskObj"},
-				doc: {mgr: "DocManager", obj: "DocObj"},
-				ireg: {mgr: "InfoRegManager", obj: "RegisterRow"},
-				areg: {mgr: "AccumRegManager", obj: "RegisterRow"},
-				dp: {mgr: "DataProcessorsManager", obj: "DataProcessorObj"},
-				rep: {mgr: "DataProcessorsManager", obj: "DataProcessorObj"}
-			};
-
+				"$p.cat.meta_fields = new $p.MetaFieldManager();\n\n" + scheme_settings + "\n" +
+				"scheme_settings.call($p);\n";
 
 		// менеджеры перечислений
-		for(name in _m.enm){
+		for(let name in _m.enm){
       text+= "$p.enm." + name + " = new $p.EnumManager('enm." + name + "');\n";
     }
 
 		// менеджеры объектов данных, отчетов и обработок
-		for(var category in categoties){
-			for(name in _m[category]){
+		for(let category in categoties){
+			for(let name in _m[category]){
+			  if(name == 'scheme_settings'){
+			    continue
+        }
         text+= obj_constructor_text(_m, category, name, categoties[category].obj);
         if(sys_nsmes.indexOf(name) == -1){
           text+= "$p." + category + "." + name + " = new $p." + categoties[category].mgr + "('" + category + "." + name + "');\n";

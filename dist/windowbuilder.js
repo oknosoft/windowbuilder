@@ -2030,7 +2030,7 @@ class Editor extends paper.PaperScope {
 
     _editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
 
-    _editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '300px',
+    _editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '320px',
       image_path: 'dist/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -2039,15 +2039,14 @@ class Editor extends paper.PaperScope {
         {name: 'pen', css: 'tb_cursor-pen-freehand', tooltip: 'Добавить профиль'},
         {name: 'lay_impost', css: 'tb_cursor-lay-impost', tooltip: 'Вставить раскладку или импосты'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
+        {name: 'cut', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
         {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
         {name: 'line', css: 'tb_line', tooltip: 'Произвольная линия'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'}
       ],
-      onclick: function (name) {
-        return _editor.select_tool(name);
-      },
-      on_popup: function (popup, bdiv) {
+      onclick: (name) => _editor.select_tool(name),
+      on_popup: (popup, bdiv) => {
         popup.show(dhx4.absLeft(bdiv), 0, bdiv.offsetWidth, _editor._wrapper.offsetHeight);
         popup.p.style.top = (dhx4.absTop(bdiv) - 20) + "px";
         popup.p.querySelector(".dhx_popup_arrow").style.top = "20px";
@@ -2162,14 +2161,13 @@ class Editor extends paper.PaperScope {
     _editor.tb_top.cell.style.boxShadow = "none";
 
 
-    $p.eve.attachEvent("characteristic_saved", function (scheme, attr) {
+    $p.eve.attachEvent("characteristic_saved", (scheme, attr) => {
       if(scheme == _editor.project && attr.close && pwnd._on_close)
         setTimeout(pwnd._on_close);
     });
 
-    $p.eve.attachEvent("scheme_changed", function (scheme) {
-      if(scheme == _editor.project){
-        if(attr.set_text && scheme._calc_order_row)
+    $p.eve.attachEvent("scheme_changed", (scheme) => {
+      if(scheme == _editor.project && attr.set_text && scheme._calc_order_row){
           attr.set_text(scheme.ox.prod_name(true) + " " + (scheme.ox._modified ? " *" : ""));
       }
     });
@@ -2201,6 +2199,8 @@ class Editor extends paper.PaperScope {
 
     new ToolArc();
 
+    new ToolCut();
+
     new ToolPen();
 
     new ToolLayImpost();
@@ -2214,42 +2214,42 @@ class Editor extends paper.PaperScope {
 
     (function () {
 
-      var _canvas = document.createElement('canvas'); 
+      const _canvas = document.createElement('canvas'); 
       _editor._wrapper.appendChild(_canvas);
       _canvas.style.backgroundColor = "#f9fbfa";
 
-      var _scheme = new Scheme(_canvas),
-        pwnd_resize_finish = function(){
+      const _scheme = new Scheme(_canvas);
+      const pwnd_resize_finish = () => {
           _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
           _editor._acc.resize_canvas();
         };
-
 
       _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
       _editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
       _editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
       _editor._layout.attachEvent("onExpand", pwnd_resize_finish);
 
-      if(_editor._pwnd instanceof  dhtmlXWindowsCell)
+      if(_editor._pwnd instanceof  dhtmlXWindowsCell){
         _editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
+      }
 
       pwnd_resize_finish();
 
-      var _mousepos = document.createElement('div');
+      const _mousepos = document.createElement('div');
       _editor._wrapper.appendChild(_mousepos);
       _mousepos.className = "mousepos";
-      _scheme.view.on('mousemove', function (event) {
-        var bounds = _scheme.bounds;
-        if(bounds)
+      _scheme.view.on('mousemove', (event) => {
+        const {bounds} = _scheme;
+        if(bounds){
           _mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
             " y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
+        }
       });
 
       var pan_zoom = new function StableZoom(){
 
         function changeZoom(oldZoom, delta) {
-          var factor;
-          factor = 1.05;
+          const factor = 1.05;
           if (delta < 0) {
             return oldZoom * factor;
           }
@@ -2259,47 +2259,38 @@ class Editor extends paper.PaperScope {
           return oldZoom;
         }
 
-        var panAndZoom = this;
+        dhtmlxEvent(_canvas, "mousewheel", (evt) => {
 
-        dhtmlxEvent(_canvas, "mousewheel", function(evt) {
-          var mousePosition, newZoom, offset, viewPosition, _ref1;
           if (evt.shiftKey || evt.ctrlKey) {
             if(evt.shiftKey && !evt.deltaX){
-              _editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
+              _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
             }
             else{
-              _editor.view.center = panAndZoom.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
+              _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
             }
-
             return evt.preventDefault();
-
-          }else if (evt.altKey) {
-            mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
-            viewPosition = _editor.view.viewToProject(mousePosition);
-            _ref1 = panAndZoom.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
-            newZoom = _ref1[0];
-            offset = _ref1[1];
-            _editor.view.zoom = newZoom;
-            _editor.view.center = _editor.view.center.add(offset);
+          }
+          else if (evt.altKey) {
+            const mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
+            const viewPosition = _editor.view.viewToProject(mousePosition);
+            const _ref1 = this.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
+            _editor.view.zoom = _ref1[0];
+            _editor.view.center = _editor.view.center.add(_ref1[1]);
             evt.preventDefault();
             return _editor.view.draw();
           }
         });
 
         this.changeZoom = function(oldZoom, delta, c, p) {
-          var a, beta, newZoom, pc;
-          newZoom = changeZoom.call(this, oldZoom, delta);
-          beta = oldZoom / newZoom;
-          pc = p.subtract(c);
-          a = p.subtract(pc.multiply(beta)).subtract(c);
-          return [newZoom, a];
+          const newZoom = changeZoom(oldZoom, delta);
+          const beta = oldZoom / newZoom;
+          const pc = p.subtract(c);
+          return [newZoom, p.subtract(pc.multiply(beta)).subtract(c)];
         };
 
         this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
-          var offset;
-          offset = new paper.Point(deltaX, -deltaY);
-          offset = offset.multiply(factor);
-          return oldCenter.add(offset);
+          const offset = new paper.Point(deltaX, -deltaY);
+          return oldCenter.add(offset.multiply(factor));
         };
       };
 
@@ -10132,7 +10123,7 @@ Sectional._extend(BuilderElement);
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
 		this.font_size = builder.font_size || 60;
-    this.elm_font_size = builder.elm_font_size || 48;
+    this.elm_font_size = builder.elm_font_size || 40;
 
 		this.orientation_delta = builder.orientation_delta || 30;
 
@@ -10239,7 +10230,6 @@ class ToolArc extends ToolElement{
       hitItem: null,
       originalContent: null,
       changed: false,
-      duplicates: null
     })
 
     this.on({
@@ -10385,6 +10375,91 @@ class ToolArc extends ToolElement{
       paper.canvas_cursor('cursor-arc');
     } else {
       paper.canvas_cursor('cursor-arc-arrow');
+    }
+
+    return true;
+  }
+
+}
+
+
+
+class ToolCut extends ToolElement{
+
+  constructor() {
+
+    super()
+
+    Object.assign(this, {
+      options: {name: 'cut'},
+      mouseStartPos: new paper.Point(),
+      mode: null,
+      hitItem: null,
+      originalContent: null,
+      changed: false,
+    })
+
+    this.on({
+
+      activate: function() {
+        this.on_activate('cursor-arrow-cut');
+      },
+
+      deactivate: function() {
+        paper.hide_selection_bounds();
+      },
+
+      mouseup: function(event) {
+
+        var item = this.hitItem ? this.hitItem.item : null;
+
+        if(item instanceof Filling && item.visible){
+          item.attache_wnd(paper._acc.elm.cells("a"));
+          item.selected = true;
+
+          if(item.selected && item.layer)
+            $p.eve.callEvent("layer_activated", [item.layer]);
+        }
+
+        if (this.mode && this.changed) {
+        }
+
+        paper.canvas_cursor('cursor-arrow-cut');
+
+      },
+
+      mousemove: function(event) {
+        this.hitTest(event);
+      }
+
+    })
+
+  }
+
+  do_cut(element, point){
+
+  }
+
+  do_uncut(element, point){
+
+  }
+
+  hitTest(event) {
+
+    const hitSize = 6;
+    this.hitItem = null;
+
+    if (event.point)
+      this.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
+    if(!this.hitItem)
+      this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+
+    if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+      && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
+      paper.canvas_cursor('cursor-arrow-do-cut');
+    }
+    else {
+      paper.canvas_cursor('cursor-arrow-cut');
     }
 
     return true;

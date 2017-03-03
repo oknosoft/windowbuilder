@@ -30,7 +30,6 @@ class ToolArc extends ToolElement{
       hitItem: null,
       originalContent: null,
       changed: false,
-      duplicates: null
     })
 
     this.on({
