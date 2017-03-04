@@ -13,6 +13,14 @@
   // переопределяем прототип
   $p.RepMaterials_demand = class RepMaterials_demand extends Proto {
 
+    get print_data() {
+      return this.calc_order.print_data.then((order) => {
+          return this.calculate()
+            .then((spec) => ({order, spec}))
+        })
+    }
+
+    // извлекает спецификацию изделий заказа, фильтрует и группирует
     calculate(_columns) {
 
       const {specification, production, scheme, _manager} = this;
@@ -167,7 +175,7 @@
 
             specification._rows.push(row);
           })
-
+          return specification._rows;
         })
     }
 
@@ -219,8 +227,9 @@
         ],
         onclick: (name) => {
           if(name == 'data'){
-            this.fill_by_order()
-              .then(() => this.calculate());
+            this.print_data.then((data) => {
+              console.log(data)
+            })
           }
         }
       });
@@ -236,18 +245,22 @@
       };
 
 
+      // следим за изменениями варианта настроек
       const observer = this.observer.bind(this);
+      Object.observe(this, observer);
       wnd.attachEvent("onClose", () => {
         Object.unobserve(this, observer);
         return true;
       });
-      Object.observe(this, observer);
 
       // установим вариант
-      $p.cat.scheme_settings.get_scheme(_manager.class_name)
+      $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
         .then((scheme) => {
         this.scheme = scheme;
       });
+
+      // заполняем табчасть изделий
+      this.fill_by_order();
 
       return Promise.resolve({wnd: wnd, o: this});
 
