@@ -3532,7 +3532,7 @@ Contour.prototype.__define({
 			if(!data._bounds || !data._bounds.width || !data._bounds.height){
 
 			  this.profiles.forEach((profile) => {
-          const path = profile.path || profile.generatrix;
+          const path = profile.path && profile.path.segments.length ? profile.path : profile.generatrix;
           if(path){
             data._bounds = data._bounds ? data._bounds.unite(path.bounds) : path.bounds
           }
@@ -7429,10 +7429,12 @@ ProfileItem.prototype.__define({
 
   default_inset: {
 	  value: function (all) {
+
+      const {orientation, project, data, elm_type} = this;
       const nearest = this.nearest(true);
-      const {orientation, data} = this;
+
       if(nearest || all){
-        let pos = nearest ? nearest.pos : this.pos;
+        let pos = nearest && project._dp.sys.flap_pos_by_impost && elm_type == $p.enm.elm_types.Створка ? nearest.pos : this.pos;
         if(pos == $p.enm.positions.Центр){
           if(orientation == $p.enm.orientations.vert){
             pos = [pos, $p.enm.positions.ЦентрВертикаль]

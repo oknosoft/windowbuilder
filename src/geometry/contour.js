@@ -440,7 +440,7 @@ Contour.prototype.__define({
 			if(!data._bounds || !data._bounds.width || !data._bounds.height){
 
 			  this.profiles.forEach((profile) => {
-          const path = profile.path || profile.generatrix;
+          const path = profile.path && profile.path.segments.length ? profile.path : profile.generatrix;
           if(path){
             data._bounds = data._bounds ? data._bounds.unite(path.bounds) : path.bounds
           }
