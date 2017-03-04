@@ -8561,6 +8561,8 @@ $p.doc.selling.on({
 
     form_obj(pwnd, attr) {
 
+      this._data._modified = false;
+
       const {specification, production, calc_order, _manager, _metadata} = this;
 
       const options = {
@@ -8581,35 +8583,54 @@ $p.doc.selling.on({
 
       const wnd = $p.iface.dat_blank(null, options.wnd);
 
-      wnd.attachHTMLString(`<div style="display: table; width:100%; height: 28px; border-bottom: 1px silver dashed;">
-<div style="display: table-cell; width: 30%; vertical-align: top;">Вариант настроек:</div>
-<div style="display: table-cell" name="scheme"></div>
-<div style="display: table-cell; width: 15%" name="tb_top"></div>
-</div>`);
-
-      wnd.elmnts.scheme = new $p.iface.OCombo({
-        parent: wnd.cell.querySelector('[name=scheme]'),
-        obj: this,
-        field: "scheme",
-        width: 300
-      });
-
-      wnd.elmnts.tb_top = new $p.iface.OTooolBar({
-        wrapper: wnd.cell.querySelector('[name=scheme]'),
-        class_name: "",
-        top: '0px', right: '3px', name: 'top', width: '180px', height: '28px', image_path: 'dist/imgs/',
-        buttons: [
-          {name: 'data', text: "<i class='fa fa-calculator fa-fw'></i>", float: 'left', tooltip: 'Рассчитать'},
-          {name: 'print', text: "<i class='fa fa-print fa-fw'></i>", float: 'right', tooltip: 'Печать отчета'}
+      wnd.attachToolbar({
+        items:[
+          {id: "info", type: "text", text: "Вариант настроек:"},
+          {id: "scheme", type: "text", text: "<div style='width: 300px' name='scheme'></div>"},
+          {id: "data", type: "button", text: "<i class='fa fa-calculator fa-fw'></i>", title: 'Рассчитать'},
+          {id: "sp", type: "spacer"},
+          {id: "print", type: "button", text: "<i class='fa fa-print fa-fw'></i>", title: 'Печать отчета'},
         ],
-        onclick: (name) => {
+        onClick: (name) => {
           if(name == 'data'){
             this.print_data.then((data) => {
               console.log(data)
             })
           }
         }
+      })
+
+      wnd.elmnts.scheme = new $p.iface.OCombo({
+        parent: wnd.cell.querySelector('[name=scheme]'),
+        obj: this,
+        field: "scheme",
+        width: 280
       });
+
+
+      wnd.attachTabbar({
+        arrows_mode: "auto",
+        tabs: [
+          {
+            id: "a",
+            text: "Продукция",
+            active:  true
+          },
+          {
+            id: "b",
+            text: "Состав"
+          },
+          {
+            id: "c",
+            text: "Колонки"
+          },
+          {
+            id: "d",
+            text: "Отбор"
+          }
+        ]
+      })
+
 
       const ts_captions = {
         "fields":["price_type","nom_characteristic","date","price","currency"],
