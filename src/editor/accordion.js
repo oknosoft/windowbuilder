@@ -10,126 +10,178 @@
 
 function EditorAccordion(_editor, cell_acc) {
 
-	cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);
+	//cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);
+
+  this.unload = function () {
+    tb_elm.unload();
+    tb_right.unload();
+    tree_layers.unload();
+    props.unload();
+    stv.unload();
+  };
+
+  this.attache = function (obj) {
+    // tree_layers.attache();
+    // props.attache(obj);
+  };
+
+  this.resize_canvas = function () {
+    // const scroller = $(cont, '.scroller').baron();
+    // scroller.update();
+    // this.elm.setSizes();
+    // props.layout.setSizes();
+    // stv.layout.setSizes();
+  };
+
+  const tabbar = cell_acc.attachTabbar({
+    arrows_mode: "auto",
+    tabs: [
+      {
+        id: 'lay',
+        text: '<i class="fa fa-sitemap fa-fw"></i>',
+        title: 'Слои изделия',
+      },
+      {
+        id: 'elm',
+        text: '<i class="fa fa-puzzle-piece fa-fw"></i>',
+        title: 'Свойства элемента',
+        active:  true,
+      },
+      {
+        id: "flap",
+        text: '<i class="fa fa-object-ungroup fa-fw"></i>',
+        title: 'Свойства створки',
+      },
+      {
+        id: "prod",
+        text: '<i class="fa fa-picture-o fa-fw"></i>',
+        title: 'Свойства изделия',
+      }
+    ]
+  });
+
+  /**
+   * ### Панель инструментов элемента
+   * @property tb_elm
+   * @for EditorAccordion
+   * @type {OTooolBar}
+   * @final
+   * @private
+   */
+  const tb_elm = new $p.iface.OTooolBar({
+    wrapper: tabbar.cells('elm').cell,
+    width: '100%',
+    height: '28px',
+    top: '2px',
+    left: '4px',
+    class_name: "",
+    name: 'aling_bottom',
+    buttons: [
+      {name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
+      {name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
+      {name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
+      {name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
+      {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
+      {name: 'sep_0', text: '', float: 'left'},
+      {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
+      {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
+      {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
+    ],
+    image_path: "dist/imgs/",
+    onclick: function (name) {
+      switch (name) {
+        case 'arc':
+          _editor.profile_radius();
+          break;
+
+        case 'additional_inserts':
+          _editor.additional_inserts('elm');
+          break;
+
+        default:
+          _editor.profile_align(name)
+      }
+    }
+  });
+
+  /**
+   * панель инструментов свойств изделия
+   */
+  const tb_right = new $p.iface.OTooolBar({
+    wrapper: tabbar.cells('lay').cell,
+    width: '100%',
+    height: '28px',
+    top: '2px',
+    left: '4px',
+    class_name: "",
+    name: 'right',
+    image_path: 'dist/imgs/',
+    buttons: [
+      {name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
+      {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
+      {name: 'sep_0', text: '', float: 'left'},
+      {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
+      {name: 'inserts_to_contour', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_contour, float: 'left'},
+      {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
+
+    ], onclick: function (name) {
+
+      switch(name) {
+
+        case 'new_stv':
+          const fillings = _editor.project.getItems({class: Filling, selected: true});
+          if(fillings.length){
+            fillings[0].create_leaf();
+          }
+          else{
+            $p.msg.show_msg({
+              type: "alert-warning",
+              text: $p.msg.bld_new_stv_no_filling,
+              title: $p.msg.bld_new_stv
+            });
+          }
+          break;
+
+        case 'drop_layer':
+          tree_layers.drop_layer();
+          break;
+
+        case 'new_layer':
+
+          // создаём пустой новый слой
+          new Contour( {parent: undefined});
+
+          // оповещаем мир о новых слоях
+          Object.getNotifier(_editor.project._noti).notify({
+            type: 'rows',
+            tabular: "constructions"
+          });
+          break;
+
+        case 'inserts_to_product':
+          // дополнительные вставки в изделие
+          _editor.additional_inserts();
+          break;
+
+        case 'inserts_to_contour':
+          // дополнительные вставки в контур
+          _editor.additional_inserts('contour');
+          break;
+
+        default:
+          $p.msg.show_msg(name);
+          break;
+      }
+
+      return false;
+    }
+  })
+
+  return;
 
 	const cont = cell_acc.cell.querySelector(".editor_accordion"),
 
-		/**
-		 * ### Панель инструментов элемента
-		 * @property tb_elm
-		 * @for EditorAccordion
-		 * @type {OTooolBar}
-		 * @final
-		 * @private
-		 */
-		tb_elm = new $p.iface.OTooolBar({
-			wrapper: cont.querySelector("[name=header_elm]"),
-			width: '100%',
-			height: '28px',
-			bottom: '2px',
-			left: '4px',
-			class_name: "",
-			name: 'aling_bottom',
-			buttons: [
-				{name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
-				{name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
-				{name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
-				{name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
-				{name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
-        {name: 'sep_0', text: '', float: 'left'},
-        {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
-        {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
-				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
-			],
-			image_path: "dist/imgs/",
-			onclick: function (name) {
-        switch (name) {
-          case 'arc':
-            _editor.profile_radius();
-            break;
 
-          case 'additional_inserts':
-            _editor.additional_inserts('elm');
-            break;
-
-          default:
-            _editor.profile_align(name)
-        }
-			}
-		}),
-
-		/**
-		 * панель инструментов свойств изделия
-		 */
-		tb_right = new $p.iface.OTooolBar({
-			wrapper: cont.querySelector("[name=header_layers]"),
-			width: '100%',
-			height: '28px',
-			bottom: '2px',
-			left: '4px',
-			class_name: "",
-			name: 'right',
-			image_path: 'dist/imgs/',
-			buttons: [
-				{name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
-				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
-        {name: 'sep_0', text: '', float: 'left'},
-        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
-        {name: 'inserts_to_contour', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_contour, float: 'left'},
-				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
-
-			], onclick: function (name) {
-
-				switch(name) {
-
-					case 'new_stv':
-						const fillings = _editor.project.getItems({class: Filling, selected: true});
-						if(fillings.length){
-              fillings[0].create_leaf();
-            }
-						else{
-              $p.msg.show_msg({
-                type: "alert-warning",
-                text: $p.msg.bld_new_stv_no_filling,
-                title: $p.msg.bld_new_stv
-              });
-            }
-						break;
-
-					case 'drop_layer':
-						tree_layers.drop_layer();
-						break;
-
-					case 'new_layer':
-
-						// создаём пустой новый слой
-						new Contour( {parent: undefined});
-
-						// оповещаем мир о новых слоях
-						Object.getNotifier(_editor.project._noti).notify({
-							type: 'rows',
-							tabular: "constructions"
-						});
-						break;
-
-          case 'inserts_to_product':
-            // дополнительные вставки в изделие
-            _editor.additional_inserts();
-            break;
-
-          case 'inserts_to_contour':
-            // дополнительные вставки в контур
-            _editor.additional_inserts('contour');
-            break;
-
-					default:
-						$p.msg.show_msg(name);
-						break;
-				}
-
-				return false;
-			}
-		}),
 
     /**
      * панель инструментов над парамтрами изделия
@@ -581,26 +633,7 @@ function EditorAccordion(_editor, cell_acc) {
     );
 
 
-	this.unload = function () {
-		tb_elm.unload();
-		tb_right.unload();
-		tree_layers.unload();
-		props.unload();
-		stv.unload();
-	};
 
-	this.attache = function (obj) {
-		tree_layers.attache();
-		props.attache(obj);
-	};
-
-	this.resize_canvas = function () {
-		const scroller = $(cont, '.scroller').baron();
-		scroller.update();
-		this.elm.setSizes();
-		props.layout.setSizes();
-		stv.layout.setSizes();
-	};
 
 	this.elm = new dhtmlXLayoutObject({
 		parent:     cont.querySelector("[name=content_elm]"),
@@ -621,6 +654,7 @@ function EditorAccordion(_editor, cell_acc) {
 	});
 
 	this.header_stv = cont.querySelector("[name=header_stv]");
+
 	this.header_props = cont.querySelector("[name=header_props]");
 
 	baron({

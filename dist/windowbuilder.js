@@ -1261,111 +1261,155 @@ baron.fn.log = function(level, msg, nodes) {
 
 function EditorAccordion(_editor, cell_acc) {
 
-	cell_acc.attachHTMLString($p.injected_data['tip_editor_right.html']);
+
+  this.unload = function () {
+    tb_elm.unload();
+    tb_right.unload();
+    tree_layers.unload();
+    props.unload();
+    stv.unload();
+  };
+
+  this.attache = function (obj) {
+  };
+
+  this.resize_canvas = function () {
+  };
+
+  const tabbar = cell_acc.attachTabbar({
+    arrows_mode: "auto",
+    tabs: [
+      {
+        id: 'lay',
+        text: '<i class="fa fa-sitemap fa-fw"></i>',
+        title: 'Слои изделия',
+      },
+      {
+        id: 'elm',
+        text: '<i class="fa fa-puzzle-piece fa-fw"></i>',
+        title: 'Свойства элемента',
+        active:  true,
+      },
+      {
+        id: "flap",
+        text: '<i class="fa fa-object-ungroup fa-fw"></i>',
+        title: 'Свойства створки',
+      },
+      {
+        id: "prod",
+        text: '<i class="fa fa-picture-o fa-fw"></i>',
+        title: 'Свойства изделия',
+      }
+    ]
+  });
+
+  const tb_elm = new $p.iface.OTooolBar({
+    wrapper: tabbar.cells('elm').cell,
+    width: '100%',
+    height: '28px',
+    top: '2px',
+    left: '4px',
+    class_name: "",
+    name: 'aling_bottom',
+    buttons: [
+      {name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
+      {name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
+      {name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
+      {name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
+      {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
+      {name: 'sep_0', text: '', float: 'left'},
+      {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
+      {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
+      {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
+    ],
+    image_path: "dist/imgs/",
+    onclick: function (name) {
+      switch (name) {
+        case 'arc':
+          _editor.profile_radius();
+          break;
+
+        case 'additional_inserts':
+          _editor.additional_inserts('elm');
+          break;
+
+        default:
+          _editor.profile_align(name)
+      }
+    }
+  });
+
+  const tb_right = new $p.iface.OTooolBar({
+    wrapper: tabbar.cells('lay').cell,
+    width: '100%',
+    height: '28px',
+    top: '2px',
+    left: '4px',
+    class_name: "",
+    name: 'right',
+    image_path: 'dist/imgs/',
+    buttons: [
+      {name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
+      {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
+      {name: 'sep_0', text: '', float: 'left'},
+      {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
+      {name: 'inserts_to_contour', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_contour, float: 'left'},
+      {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
+
+    ], onclick: function (name) {
+
+      switch(name) {
+
+        case 'new_stv':
+          const fillings = _editor.project.getItems({class: Filling, selected: true});
+          if(fillings.length){
+            fillings[0].create_leaf();
+          }
+          else{
+            $p.msg.show_msg({
+              type: "alert-warning",
+              text: $p.msg.bld_new_stv_no_filling,
+              title: $p.msg.bld_new_stv
+            });
+          }
+          break;
+
+        case 'drop_layer':
+          tree_layers.drop_layer();
+          break;
+
+        case 'new_layer':
+
+          new Contour( {parent: undefined});
+
+          Object.getNotifier(_editor.project._noti).notify({
+            type: 'rows',
+            tabular: "constructions"
+          });
+          break;
+
+        case 'inserts_to_product':
+          _editor.additional_inserts();
+          break;
+
+        case 'inserts_to_contour':
+          _editor.additional_inserts('contour');
+          break;
+
+        default:
+          $p.msg.show_msg(name);
+          break;
+      }
+
+      return false;
+    }
+  })
+
+  return;
 
 	const cont = cell_acc.cell.querySelector(".editor_accordion"),
 
-		tb_elm = new $p.iface.OTooolBar({
-			wrapper: cont.querySelector("[name=header_elm]"),
-			width: '100%',
-			height: '28px',
-			bottom: '2px',
-			left: '4px',
-			class_name: "",
-			name: 'aling_bottom',
-			buttons: [
-				{name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
-				{name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
-				{name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
-				{name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
-				{name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
-        {name: 'sep_0', text: '', float: 'left'},
-        {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
-        {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
-				{name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
-			],
-			image_path: "dist/imgs/",
-			onclick: function (name) {
-        switch (name) {
-          case 'arc':
-            _editor.profile_radius();
-            break;
 
-          case 'additional_inserts':
-            _editor.additional_inserts('elm');
-            break;
-
-          default:
-            _editor.profile_align(name)
-        }
-			}
-		}),
-
-		tb_right = new $p.iface.OTooolBar({
-			wrapper: cont.querySelector("[name=header_layers]"),
-			width: '100%',
-			height: '28px',
-			bottom: '2px',
-			left: '4px',
-			class_name: "",
-			name: 'right',
-			image_path: 'dist/imgs/',
-			buttons: [
-				{name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
-				{name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
-        {name: 'sep_0', text: '', float: 'left'},
-        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
-        {name: 'inserts_to_contour', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_contour, float: 'left'},
-				{name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
-
-			], onclick: function (name) {
-
-				switch(name) {
-
-					case 'new_stv':
-						const fillings = _editor.project.getItems({class: Filling, selected: true});
-						if(fillings.length){
-              fillings[0].create_leaf();
-            }
-						else{
-              $p.msg.show_msg({
-                type: "alert-warning",
-                text: $p.msg.bld_new_stv_no_filling,
-                title: $p.msg.bld_new_stv
-              });
-            }
-						break;
-
-					case 'drop_layer':
-						tree_layers.drop_layer();
-						break;
-
-					case 'new_layer':
-
-						new Contour( {parent: undefined});
-
-						Object.getNotifier(_editor.project._noti).notify({
-							type: 'rows',
-							tabular: "constructions"
-						});
-						break;
-
-          case 'inserts_to_product':
-            _editor.additional_inserts();
-            break;
-
-          case 'inserts_to_contour':
-            _editor.additional_inserts('contour');
-            break;
-
-					default:
-						$p.msg.show_msg(name);
-						break;
-				}
-
-				return false;
-			}
-		}),
 
     tb_bottom = new $p.iface.OTooolBar({
       wrapper: cont.querySelector("[name=header_props]"),
@@ -1776,26 +1820,7 @@ function EditorAccordion(_editor, cell_acc) {
     );
 
 
-	this.unload = function () {
-		tb_elm.unload();
-		tb_right.unload();
-		tree_layers.unload();
-		props.unload();
-		stv.unload();
-	};
 
-	this.attache = function (obj) {
-		tree_layers.attache();
-		props.attache(obj);
-	};
-
-	this.resize_canvas = function () {
-		const scroller = $(cont, '.scroller').baron();
-		scroller.update();
-		this.elm.setSizes();
-		props.layout.setSizes();
-		stv.layout.setSizes();
-	};
 
 	this.elm = new dhtmlXLayoutObject({
 		parent:     cont.querySelector("[name=content_elm]"),
@@ -1816,6 +1841,7 @@ function EditorAccordion(_editor, cell_acc) {
 	});
 
 	this.header_stv = cont.querySelector("[name=header_stv]");
+
 	this.header_props = cont.querySelector("[name=header_props]");
 
 	baron({
@@ -1960,6 +1986,411 @@ function Clipbrd(_editor) {
 
 	document.addEventListener('paste', onpaste);
 }
+
+;(function(root, factory) {
+  'use strict';
+  if (typeof define === 'function' && define.amd) {
+    define([], function() {
+      return factory();
+    });
+  } else if (typeof exports === 'object') {
+    module.exports = factory();
+  } else {
+    root.DeepDiff = factory();
+  }
+}(this, function(undefined) {
+  'use strict';
+
+  var $scope, conflict, conflictResolution = [];
+  if (typeof global === 'object' && global) {
+    $scope = global;
+  } else if (typeof window !== 'undefined') {
+    $scope = window;
+  } else {
+    $scope = {};
+  }
+  conflict = $scope.DeepDiff;
+  if (conflict) {
+    conflictResolution.push(
+      function() {
+        if ('undefined' !== typeof conflict && $scope.DeepDiff === accumulateDiff) {
+          $scope.DeepDiff = conflict;
+          conflict = undefined;
+        }
+      });
+  }
+
+  function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor;
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  }
+
+  function Diff(kind, path) {
+    Object.defineProperty(this, 'kind', {
+      value: kind,
+      enumerable: true
+    });
+    if (path && path.length) {
+      Object.defineProperty(this, 'path', {
+        value: path,
+        enumerable: true
+      });
+    }
+  }
+
+  function DiffEdit(path, origin, value) {
+    DiffEdit.super_.call(this, 'E', path);
+    Object.defineProperty(this, 'lhs', {
+      value: origin,
+      enumerable: true
+    });
+    Object.defineProperty(this, 'rhs', {
+      value: value,
+      enumerable: true
+    });
+  }
+  inherits(DiffEdit, Diff);
+
+  function DiffNew(path, value) {
+    DiffNew.super_.call(this, 'N', path);
+    Object.defineProperty(this, 'rhs', {
+      value: value,
+      enumerable: true
+    });
+  }
+  inherits(DiffNew, Diff);
+
+  function DiffDeleted(path, value) {
+    DiffDeleted.super_.call(this, 'D', path);
+    Object.defineProperty(this, 'lhs', {
+      value: value,
+      enumerable: true
+    });
+  }
+  inherits(DiffDeleted, Diff);
+
+  function DiffArray(path, index, item) {
+    DiffArray.super_.call(this, 'A', path);
+    Object.defineProperty(this, 'index', {
+      value: index,
+      enumerable: true
+    });
+    Object.defineProperty(this, 'item', {
+      value: item,
+      enumerable: true
+    });
+  }
+  inherits(DiffArray, Diff);
+
+  function arrayRemove(arr, from, to) {
+    var rest = arr.slice((to || from) + 1 || arr.length);
+    arr.length = from < 0 ? arr.length + from : from;
+    arr.push.apply(arr, rest);
+    return arr;
+  }
+
+  function realTypeOf(subject) {
+    var type = typeof subject;
+    if (type !== 'object') {
+      return type;
+    }
+
+    if (subject === Math) {
+      return 'math';
+    } else if (subject === null) {
+      return 'null';
+    } else if (Array.isArray(subject)) {
+      return 'array';
+    } else if (Object.prototype.toString.call(subject) === '[object Date]') {
+      return 'date';
+    } else if (typeof subject.toString !== 'undefined' && /^\/.*\//.test(subject.toString())) {
+      return 'regexp';
+    }
+    return 'object';
+  }
+
+  function deepDiff(lhs, rhs, changes, prefilter, path, key, stack) {
+    path = path || [];
+    var currentPath = path.slice(0);
+    if (typeof key !== 'undefined') {
+      if (prefilter) {
+        if (typeof(prefilter) === 'function' && prefilter(currentPath, key)) { return; }
+        else if (typeof(prefilter) === 'object') {
+          if (prefilter.prefilter && prefilter.prefilter(currentPath, key)) { return; }
+          if (prefilter.normalize) {
+            var alt = prefilter.normalize(currentPath, key, lhs, rhs);
+            if (alt) {
+              lhs = alt[0];
+              rhs = alt[1];
+            }
+          }
+        }
+      }
+      currentPath.push(key);
+    }
+
+    if (realTypeOf(lhs) === 'regexp' && realTypeOf(rhs) === 'regexp') {
+      lhs = lhs.toString();
+      rhs = rhs.toString();
+    }
+
+    var ltype = typeof lhs;
+    var rtype = typeof rhs;
+    if (ltype === 'undefined') {
+      if (rtype !== 'undefined') {
+        changes(new DiffNew(currentPath, rhs));
+      }
+    } else if (rtype === 'undefined') {
+      changes(new DiffDeleted(currentPath, lhs));
+    } else if (realTypeOf(lhs) !== realTypeOf(rhs)) {
+      changes(new DiffEdit(currentPath, lhs, rhs));
+    } else if (Object.prototype.toString.call(lhs) === '[object Date]' && Object.prototype.toString.call(rhs) === '[object Date]' && ((lhs - rhs) !== 0)) {
+      changes(new DiffEdit(currentPath, lhs, rhs));
+    } else if (ltype === 'object' && lhs !== null && rhs !== null) {
+      stack = stack || [];
+      if (stack.indexOf(lhs) < 0) {
+        stack.push(lhs);
+        if (Array.isArray(lhs)) {
+          var i, len = lhs.length;
+          for (i = 0; i < lhs.length; i++) {
+            if (i >= rhs.length) {
+              changes(new DiffArray(currentPath, i, new DiffDeleted(undefined, lhs[i])));
+            } else {
+              deepDiff(lhs[i], rhs[i], changes, prefilter, currentPath, i, stack);
+            }
+          }
+          while (i < rhs.length) {
+            changes(new DiffArray(currentPath, i, new DiffNew(undefined, rhs[i++])));
+          }
+        } else {
+          var akeys = Object.keys(lhs);
+          var pkeys = Object.keys(rhs);
+          akeys.forEach(function(k, i) {
+            var other = pkeys.indexOf(k);
+            if (other >= 0) {
+              deepDiff(lhs[k], rhs[k], changes, prefilter, currentPath, k, stack);
+              pkeys = arrayRemove(pkeys, other);
+            } else {
+              deepDiff(lhs[k], undefined, changes, prefilter, currentPath, k, stack);
+            }
+          });
+          pkeys.forEach(function(k) {
+            deepDiff(undefined, rhs[k], changes, prefilter, currentPath, k, stack);
+          });
+        }
+        stack.length = stack.length - 1;
+      }
+    } else if (lhs !== rhs) {
+      if (!(ltype === 'number' && isNaN(lhs) && isNaN(rhs))) {
+        changes(new DiffEdit(currentPath, lhs, rhs));
+      }
+    }
+  }
+
+  function accumulateDiff(lhs, rhs, prefilter, accum) {
+    accum = accum || [];
+    deepDiff(lhs, rhs,
+      function(diff) {
+        if (diff) {
+          accum.push(diff);
+        }
+      },
+      prefilter);
+    return (accum.length) ? accum : undefined;
+  }
+
+  function applyArrayChange(arr, index, change) {
+    if (change.path && change.path.length) {
+      var it = arr[index],
+          i, u = change.path.length - 1;
+      for (i = 0; i < u; i++) {
+        it = it[change.path[i]];
+      }
+      switch (change.kind) {
+        case 'A':
+          applyArrayChange(it[change.path[i]], change.index, change.item);
+          break;
+        case 'D':
+          delete it[change.path[i]];
+          break;
+        case 'E':
+        case 'N':
+          it[change.path[i]] = change.rhs;
+          break;
+      }
+    } else {
+      switch (change.kind) {
+        case 'A':
+          applyArrayChange(arr[index], change.index, change.item);
+          break;
+        case 'D':
+          arr = arrayRemove(arr, index);
+          break;
+        case 'E':
+        case 'N':
+          arr[index] = change.rhs;
+          break;
+      }
+    }
+    return arr;
+  }
+
+  function applyChange(target, source, change) {
+    if (target && source && change && change.kind) {
+      var it = target,
+          i = -1,
+          last = change.path ? change.path.length - 1 : 0;
+      while (++i < last) {
+        if (typeof it[change.path[i]] === 'undefined') {
+          it[change.path[i]] = (typeof change.path[i] === 'number') ? [] : {};
+        }
+        it = it[change.path[i]];
+      }
+      switch (change.kind) {
+        case 'A':
+          applyArrayChange(change.path ? it[change.path[i]] : it, change.index, change.item);
+          break;
+        case 'D':
+          delete it[change.path[i]];
+          break;
+        case 'E':
+        case 'N':
+          it[change.path[i]] = change.rhs;
+          break;
+      }
+    }
+  }
+
+  function revertArrayChange(arr, index, change) {
+    if (change.path && change.path.length) {
+      var it = arr[index],
+          i, u = change.path.length - 1;
+      for (i = 0; i < u; i++) {
+        it = it[change.path[i]];
+      }
+      switch (change.kind) {
+        case 'A':
+          revertArrayChange(it[change.path[i]], change.index, change.item);
+          break;
+        case 'D':
+          it[change.path[i]] = change.lhs;
+          break;
+        case 'E':
+          it[change.path[i]] = change.lhs;
+          break;
+        case 'N':
+          delete it[change.path[i]];
+          break;
+      }
+    } else {
+      switch (change.kind) {
+        case 'A':
+          revertArrayChange(arr[index], change.index, change.item);
+          break;
+        case 'D':
+          arr[index] = change.lhs;
+          break;
+        case 'E':
+          arr[index] = change.lhs;
+          break;
+        case 'N':
+          arr = arrayRemove(arr, index);
+          break;
+      }
+    }
+    return arr;
+  }
+
+  function revertChange(target, source, change) {
+    if (target && source && change && change.kind) {
+      var it = target,
+          i, u;
+      u = change.path.length - 1;
+      for (i = 0; i < u; i++) {
+        if (typeof it[change.path[i]] === 'undefined') {
+          it[change.path[i]] = {};
+        }
+        it = it[change.path[i]];
+      }
+      switch (change.kind) {
+        case 'A':
+          revertArrayChange(it[change.path[i]], change.index, change.item);
+          break;
+        case 'D':
+          it[change.path[i]] = change.lhs;
+          break;
+        case 'E':
+          it[change.path[i]] = change.lhs;
+          break;
+        case 'N':
+          delete it[change.path[i]];
+          break;
+      }
+    }
+  }
+
+  function applyDiff(target, source, filter) {
+    if (target && source) {
+      var onChange = function(change) {
+        if (!filter || filter(target, source, change)) {
+          applyChange(target, source, change);
+        }
+      };
+      deepDiff(target, source, onChange);
+    }
+  }
+
+  Object.defineProperties(accumulateDiff, {
+
+    diff: {
+      value: accumulateDiff,
+      enumerable: true
+    },
+    observableDiff: {
+      value: deepDiff,
+      enumerable: true
+    },
+    applyDiff: {
+      value: applyDiff,
+      enumerable: true
+    },
+    applyChange: {
+      value: applyChange,
+      enumerable: true
+    },
+    revertChange: {
+      value: revertChange,
+      enumerable: true
+    },
+    isConflict: {
+      value: function() {
+        return 'undefined' !== typeof conflict;
+      },
+      enumerable: true
+    },
+    noConflict: {
+      value: function() {
+        if (conflictResolution) {
+          conflictResolution.forEach(function(it) {
+            it();
+          });
+          conflictResolution = null;
+        }
+        return accumulateDiff;
+      },
+      enumerable: true
+    }
+  });
+
+  return accumulateDiff;
+}));
 
 
 class Editor extends paper.PaperScope {
