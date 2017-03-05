@@ -1270,7 +1270,7 @@ ProfileItem.prototype.__define({
 	 */
 	angle_hor: {
 		get : function(){
-			var res = (new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle.round(1);
+			var res = (new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle.round(2);
 			return res < 0 ? res + 360 : res;
 		}
 	},

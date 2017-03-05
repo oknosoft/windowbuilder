@@ -97,7 +97,7 @@ class ToolArc extends ToolElement{
 
           setTimeout(function () {
             r.layer.redraw();
-            r.parent.attache_wnd(paper._acc.elm.cells("a"));
+            r.parent.attache_wnd(paper._acc.elm);
             $p.eve.callEvent("layer_activated", [r.layer]);
           }, 10);
 
@@ -112,7 +112,7 @@ class ToolArc extends ToolElement{
         var item = this.hitItem ? this.hitItem.item : null;
 
         if(item instanceof Filling && item.visible){
-          item.attache_wnd(paper._acc.elm.cells("a"));
+          item.attache_wnd(paper._acc.elm);
           item.selected = true;
 
           if(item.selected && item.layer)

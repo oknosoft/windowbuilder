@@ -11,7 +11,7 @@ CACHE:
 
 # Эти позиции включаем только в продакшене
 #
-https://cdn.jsdelivr.net/g/momentjs@2.17,alasql@0.3,pouchdb@6.1,jquery@2.2,metadata@0.12.225(dhtmlx.min.js)
+https://cdn.jsdelivr.net/g/momentjs@2.17.1,alasql@0.3.7,pouchdb@6.1.2,metadata@0.12.225(dhtmlx.min.js)
 
 # На период отладки, берём metadata.min.js c нашего сайта
 lib/metadata.min.js

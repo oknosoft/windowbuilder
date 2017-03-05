@@ -480,9 +480,9 @@ BuilderElement.prototype.__define({
 					});
 			}
 
-			cell.layout.base.style.height = (Math.max(this.data._grid.rowsBuffer.length, 9) + 1) * 22 + "px";
-			cell.layout.setSizes();
-			this.data._grid.objBox.style.width = "100%";
+			// cell.layout.base.style.height = (Math.max(this.data._grid.rowsBuffer.length, 9) + 1) * 22 + "px";
+			// cell.layout.setSizes();
+			// this.data._grid.objBox.style.width = "100%";
 		}
 	},
 

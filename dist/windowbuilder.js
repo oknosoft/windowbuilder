@@ -7,1278 +7,330 @@
     root.Windowbuilder = factory();
   }
 }(this, function() {
-(function(window, undefined) {
-    'use strict';
-
-    if (!window) return; 
-
-    var $ = window.$;
-    var _baron = baron; 
-    var pos = ['left', 'top', 'right', 'bottom', 'width', 'height'];
-    var instances = [];
-    var origin = {
-        v: { 
-            x: 'Y', pos: pos[1], oppos: pos[3], crossPos: pos[0], crossOpPos: pos[2],
-            size: pos[5],
-            crossSize: pos[4], crossMinSize: 'min-' + pos[4], crossMaxSize: 'max-' + pos[4],
-            client: 'clientHeight', crossClient: 'clientWidth',
-            scrollEdge: 'scrollLeft',
-            offset: 'offsetHeight', crossOffset: 'offsetWidth', offsetPos: 'offsetTop',
-            scroll: 'scrollTop', scrollSize: 'scrollHeight'
-        },
-        h: { 
-            x: 'X', pos: pos[0], oppos: pos[2], crossPos: pos[1], crossOpPos: pos[3],
-            size: pos[4],
-            crossSize: pos[5], crossMinSize: 'min-' + pos[5], crossMaxSize: 'max-' + pos[5],
-            client: 'clientWidth', crossClient: 'clientHeight',
-            scrollEdge: 'scrollTop',
-            offset: 'offsetWidth', crossOffset: 'offsetHeight', offsetPos: 'offsetLeft',
-            scroll: 'scrollLeft', scrollSize: 'scrollWidth'
-        }
-    };
-
-    var opera12maxScrollbarSize = 17;
-    var macmsxffScrollbarSize = 15;
-    var macosxffRe = /[\s\S]*Macintosh[\s\S]*\) Gecko[\s\S]*/;
-    var isMacFF = macosxffRe.test(window.navigator.userAgent);
-
-    var log = function() {
-        baron.fn.log.apply(this, arguments);
-    };
-    var liveBarons = 0;
-    var shownErrors = {
-        liveTooMany: false,
-        allTooMany: false
-    };
-
-    function baron(params) {
-        var jQueryMode;
-        var roots;
-        var withParams = !!params;
-        var defaultParams = {
-            $: window.jQuery,
-            direction: 'v',
-            barOnCls: '_scrollbar',
-            resizeDebounce: 0,
-            event: function(elem, event, func, mode) {
-                params.$(elem)[mode || 'on'](event, func);
-            },
-            cssGuru: false,
-            impact: 'scroller',
-            position: 'static'
-        };
-
-        params = params || {};
-
-        for (var key in defaultParams) {
-            if (params[key] === undefined) {
-                params[key] = defaultParams[key];
-            }
-        };
-
-        if (!params.$) {
-            log('error', [
-                'no jQuery nor params.$ detected',
-                'https://github.com/Diokuz/baron/blob/master/docs/logs/no-jquery-detected.md'
-            ].join(', '), params);
-        }
-        if (params.position == 'absolute' && params.impact == 'clipper') {
-            log('error', [
-                'Simultaneous use of `absolute` position and `clipper` impact values detected.',
-                'Those values cannot be used together.',
-                'See more https://github.com/Diokuz/baron/issues/138'
-            ].join(' '), params);
-        }
-
-        jQueryMode = params.$ && this instanceof params.$;
-
-        if (params._chain) {
-            roots = params.root;
-        } else if (jQueryMode) {
-            params.root = roots = this;
-        } else if (params.$) {
-            roots = params.$(params.root || params.scroller);
-        } else {
-            roots = []; 
-        }
-
-        var instance = new baron.fn.constructor(roots, params, withParams);
-
-        if (instance.autoUpdate) {
-            instance.autoUpdate();
-        }
-
-        return instance;
-    }
-
-    function arrayEach(obj, iterator) {
-        var i = 0;
-
-        if (obj.length === undefined || obj === window) obj = [obj];
-
-        while (obj[i]) {
-            iterator.call(this, obj[i], i);
-            i++;
-        }
-    }
-
-    function getTime() {
-        return new Date().getTime();
-    }
-
-    baron._instances = instances;
-
-    baron.fn = {
-        constructor: function(roots, totalParams, withParams) {
-            var params = clone(totalParams);
-
-            params.event = function(elems, e, func, mode) {
-                arrayEach(elems, function(elem) {
-                    totalParams.event(elem, e, func, mode);
-                });
-            };
-
-            this.length = 0;
-
-            arrayEach.call(this, roots, function(root, i) {
-                var attr = manageAttr(root, params.direction);
-                var id = +attr; 
-
-                if (id == id && attr !== null && instances[id]) {
-                    if (withParams) {
-                        log('error', [
-                            'repeated initialization for html-node detected',
-                            'https://github.com/Diokuz/baron/blob/master/docs/logs/repeated.md'
-                        ].join(', '), totalParams.root);
-                    }
-
-                    this[i] = instances[id];
-                } else {
-                    var perInstanceParams = clone(params);
-
-                    if (params.root && params.scroller) {
-                        perInstanceParams.scroller = params.$(params.scroller, root);
-                        if (!perInstanceParams.scroller.length) {
-                            console.log('Scroller not found!', root, params.scroller);
-                            return;
-                        }
-                    } else {
-                        perInstanceParams.scroller = root;
-                    }
-
-                    perInstanceParams.root = root;
-                    this[i] = init(perInstanceParams);
-                }
-
-                this.length = i + 1;
-            });
-
-            this.params = params;
-        },
-
-        dispose: function() {
-            var params = this.params;
-
-            arrayEach(this, function(instance, index) {
-                instance.dispose(params);
-                instances[index] = null;
-            });
-
-            this.params = null;
-        },
-
-        update: function() {
-            var args = arguments;
-
-            arrayEach(this, function(instance, index) {
-                instance.update.apply(instance, args);
-            });
-        },
-
-        baron: function(params) {
-            params.root = [];
-            if (this.params.root) {
-                params.scroller = this.params.scroller;
-            }
-
-            arrayEach.call(this, this, function(elem) {
-                params.root.push(elem.root);
-            });
-            params.direction = (this.params.direction == 'v') ? 'h' : 'v';
-            params._chain = true;
-
-            return baron(params);
-        }
-    };
-
-    function manageEvents(item, eventManager, mode) {
-        item._eventHandlers = item._eventHandlers || [
-            {
-                element: item.scroller,
-
-                handler: function(e) {
-                    item.scroll(e);
-                },
-
-                type: 'scroll'
-            }, {
-                element: item.root,
-
-                handler: function() {
-                    item.update();
-                },
-
-                type: 'transitionend animationend'
-            }, {
-                element: item.scroller,
-
-                handler: function() {
-                    item.update();
-                },
-
-                type: 'keyup'
-            }, {
-                element: item.bar,
-
-                handler: function(e) {
-                    e.preventDefault(); 
-                    item.selection(); 
-                    item.drag.now = 1; 
-                    if (item.draggingCls) {
-                        $(item.root).addClass(item.draggingCls);
-                    }
-                },
-
-                type: 'touchstart mousedown'
-            }, {
-                element: document,
-
-                handler: function() {
-                    item.selection(1); 
-                    item.drag.now = 0;
-                    if (item.draggingCls) {
-                        $(item.root).removeClass(item.draggingCls);
-                    }
-                },
-
-                type: 'mouseup blur touchend'
-            }, {
-                element: document,
-
-                handler: function(e) {
-                    if (e.button != 2) { 
-                        item._pos0(e);
-                    }
-                },
-
-                type: 'touchstart mousedown'
-            }, {
-                element: document,
-
-                handler: function(e) {
-                    if (item.drag.now) {
-                        item.drag(e);
-                    }
-                },
-
-                type: 'mousemove touchmove'
-            }, {
-                element: window,
-
-                handler: function() {
-                    item.update();
-                },
-
-                type: 'resize'
-            }, {
-                element: item.root,
-
-                handler: function() {
-                    item.update();
-                },
-
-                type: 'sizeChange'
-            }, {
-                element: item.clipper,
-
-                handler: function() {
-                    item.clipperOnScroll();
-                },
-
-                type: 'scroll'
-            }
-        ];
-
-        arrayEach(item._eventHandlers, function(event) {
-            if (event.element) {
-                eventManager(event.element, event.type, event.handler, mode);
-            }
-        });
-
-    }
-
-    function manageAttr(node, direction, mode, id) {
-        var attrName = 'data-baron-' + direction + '-id';
-
-        if (mode == 'on') {
-            node.setAttribute(attrName, id);
-        } else if (mode == 'off') {
-            node.removeAttribute(attrName);
-        } else {
-            return node.getAttribute(attrName);
-        }
-    }
-
-    function init(params) {
-        var out = new item.prototype.constructor(params);
-
-        manageEvents(out, params.event, 'on');
-
-        manageAttr(out.root, params.direction, 'on', instances.length);
-        instances.push(out);
-
-        liveBarons++;
-        if (liveBarons > 100 && !shownErrors.liveTooMany) {
-            log('warn', [
-                'You have too many live baron instances on page (' + liveBarons + ')!',
-                'Are you forget to dispose some of them?',
-                'All baron instances can be found in baron._instances:'
-            ].join(' '), instances);
-            shownErrors.liveTooMany = true;
-        }
-        if (instances.length > 1000 && !shownErrors.allTooMany) {
-            log('warn', [
-                'You have too many inited baron instances on page (' + instances.length + ')!',
-                'Some of them are disposed, and thats good news.',
-                'but baron.init was call too many times, and thats is bad news.',
-                'All baron instances can be found in baron._instances:'
-            ].join(' '), instances);
-            shownErrors.allTooMany = true;
-        }
-
-        out.update();
-
-        return out;
-    }
-
-    function clone(input) {
-        var output = {};
-
-        input = input || {};
-
-        for (var key in input) {
-            if (input.hasOwnProperty(key)) {
-                output[key] = input[key];
-            }
-        }
-
-        return output;
-    }
-
-    function validate(input) {
-        var output = clone(input);
-
-        output.event = function(elems, e, func, mode) {
-            arrayEach(elems, function(elem) {
-                input.event(elem, e, func, mode);
-            });
-        };
-
-        return output;
-    }
-
-    function fire(eventName) {
-        if (this.events && this.events[eventName]) {
-            for (var i = 0 ; i < this.events[eventName].length ; i++) {
-                var args = Array.prototype.slice.call( arguments, 1 );
-
-                this.events[eventName][i].apply(this, args);
-            }
-        }
-    }
-
-    var item = {};
-
-    item.prototype = {
-        _debounce: function(func, wait) {
-            var self = this,
-                timeout,
-                timestamp;
-
-            var later = function() {
-                if (self._disposed) {
-                    clearTimeout(timeout);
-                    timeout = self = null;
-                    return;
-                }
-
-                var last = getTime() - timestamp;
-
-                if (last < wait && last >= 0) {
-                    timeout = setTimeout(later, wait - last);
-                } else {
-                    timeout = null;
-                    func();
-                }
-            };
-
-            return function() {
-                timestamp = getTime();
-
-                if (!timeout) {
-                    timeout = setTimeout(later, wait);
-                }
-
-            };
-        },
-
-        constructor: function(params) {
-            var $,
-                barPos,
-                scrollerPos0,
-                track,
-                resizePauseTimer,
-                scrollingTimer,
-                scrollLastFire,
-                resizeLastFire,
-                oldBarSize;
-
-            resizeLastFire = scrollLastFire = getTime();
-
-            $ = this.$ = params.$;
-            this.event = params.event;
-            this.events = {};
-
-            function getNode(sel, context) {
-                return $(sel, context)[0]; 
-            }
-
-            this.root = params.root; 
-            this.scroller = getNode(params.scroller);
-            this.bar = getNode(params.bar, this.root);
-            track = this.track = getNode(params.track, this.root);
-            if (!this.track && this.bar) {
-                track = this.bar.parentNode;
-            }
-            this.clipper = this.scroller.parentNode;
-
-            this.direction = params.direction;
-            this.rtl = params.rtl;
-            this.origin = origin[this.direction];
-            this.barOnCls = params.barOnCls;
-            this.scrollingCls = params.scrollingCls;
-            this.draggingCls = params.draggingCls;
-            this.impact = params.impact;
-            this.position = params.position;
-            this.rtl = params.rtl;
-            this.barTopLimit = 0;
-            this.resizeDebounce = params.resizeDebounce;
-
-            function setBarSize(size) {
-                var barMinSize = this.barMinSize || 20;
-
-                if (size > 0 && size < barMinSize) {
-                    size = barMinSize;
-                }
-
-                if (this.bar) {
-                    $(this.bar).css(this.origin.size, parseInt(size, 10) + 'px');
-                }
-            }
-
-            function posBar(pos) {
-                if (this.bar) {
-                    var was = $(this.bar).css(this.origin.pos),
-                        will = +pos + 'px';
-
-                    if (will && will != was) {
-                        $(this.bar).css(this.origin.pos, will);
-                    }
-                }
-            }
-
-            function k() {
-                return track[this.origin.client] - this.barTopLimit - this.bar[this.origin.offset];
-            }
-
-            function relToPos(r) {
-                return r * k.call(this) + this.barTopLimit;
-            }
-
-            function posToRel(t) {
-                return (t - this.barTopLimit) / k.call(this);
-            }
-
-            this.cursor = function(e) {
-                return e['client' + this.origin.x] ||
-                    (((e.originalEvent || e).touches || {})[0] || {})['page' + this.origin.x];
-            };
-
-            function dontPosSelect() {
-                return false;
-            }
-
-            this.pos = function(x) { 
-                var ie = 'page' + this.origin.x + 'Offset',
-                    key = (this.scroller[ie]) ? ie : this.origin.scroll;
-
-                if (x !== undefined) this.scroller[key] = x;
-
-                return this.scroller[key];
-            };
-
-            this.rpos = function(r) { 
-                var free = this.scroller[this.origin.scrollSize] - this.scroller[this.origin.client],
-                    x;
-
-                if (r) {
-                    x = this.pos(r * free);
-                } else {
-                    x = this.pos();
-                }
-
-                return x / (free || 1);
-            };
-
-            this.barOn = function(dispose) {
-                if (this.barOnCls) {
-                    if (dispose ||
-                        this.scroller[this.origin.client] >= this.scroller[this.origin.scrollSize])
-                    {
-                        if ($(this.root).hasClass(this.barOnCls)) {
-                            $(this.root).removeClass(this.barOnCls);
-                        }
-                    } else {
-                        if (!$(this.root).hasClass(this.barOnCls)) {
-                            $(this.root).addClass(this.barOnCls);
-                        }
-                    }
-                }
-            };
-
-            this._pos0 = function(e) {
-                scrollerPos0 = this.cursor(e) - barPos;
-            };
-
-            this.drag = function(e) {
-                var rel = posToRel.call(this, this.cursor(e) - scrollerPos0);
-                var k = (this.scroller[this.origin.scrollSize] - this.scroller[this.origin.client]);
-                this.scroller[this.origin.scroll] = rel * k;
-            };
-
-            this.selection = function(enable) {
-                this.event(document, 'selectpos selectstart', dontPosSelect, enable ? 'off' : 'on');
-            };
-
-            this.resize = function() {
-                var self = this;
-                var minPeriod = (self.resizeDebounce === undefined) ? 300 : self.resizeDebounce;
-                var delay = 0;
-
-                if (getTime() - resizeLastFire < minPeriod) {
-                    clearTimeout(resizePauseTimer);
-                    delay = minPeriod;
-                }
-
-                function upd() {
-                    var offset = self.scroller[self.origin.crossOffset];
-                    var client = self.scroller[self.origin.crossClient];
-                    var padding = 0;
-
-                    if (isMacFF) {
-                        padding = macmsxffScrollbarSize;
-
-                    } else if (client > 0 && offset === 0) {
-                        offset = client + opera12maxScrollbarSize;
-                    }
-
-                    if (offset) { 
-                        self.barOn();
-
-                        if (self.impact == 'scroller') { 
-                            var delta = offset - client + padding;
-
-                            if (self.position == 'static') { 
-                                var was = self.$(self.scroller).css(self.origin.crossSize);
-                                var will = self.clipper[self.origin.crossClient] + delta + 'px';
-
-                                if (was != will) {
-                                    self._setCrossSizes(self.scroller, will);
-                                }
-                            } else { 
-                                var css = {};
-                                var key = self.rtl ? 'Left' : 'Right';
-
-                                if (self.direction == 'h') {
-                                    key = 'Bottom';
-                                }
-
-                                css['padding' + key] = delta + 'px';
-                                self.$(self.scroller).css(css);
-                            }
-                        } else { 
-                            var was = $(self.clipper).css(self.origin.crossSize);
-                            var will = client + 'px';
-
-                            if (was != will) {
-                                self._setCrossSizes(self.clipper, will);
-                            }
-                        }
-                    } else {
-                    }
-
-                    Array.prototype.unshift.call(arguments, 'resize');
-                    fire.apply(self, arguments);
-
-                    resizeLastFire = getTime();
-                }
-
-                if (delay) {
-                    resizePauseTimer = setTimeout(upd, delay);
-                } else {
-                    upd();
-                }
-            };
-
-            this.updatePositions = function() {
-                var newBarSize,
-                    self = this;
-
-                if (self.bar) {
-                    newBarSize = (track[self.origin.client] - self.barTopLimit) *
-                        self.scroller[self.origin.client] / self.scroller[self.origin.scrollSize];
-
-                    if (parseInt(oldBarSize, 10) != parseInt(newBarSize, 10)) {
-                        setBarSize.call(self, newBarSize);
-                        oldBarSize = newBarSize;
-                    }
-
-                    barPos = relToPos.call(self, self.rpos());
-
-                    posBar.call(self, barPos);
-                }
-
-                Array.prototype.unshift.call( arguments, 'scroll' );
-                fire.apply(self, arguments);
-
-                scrollLastFire = getTime();
-            };
-
-            this.scroll = function() {
-                var self = this;
-
-                self.updatePositions();
-
-                if (self.scrollingCls) {
-                    if (!scrollingTimer) {
-                        self.$(self.root).addClass(self.scrollingCls);
-                    }
-                    clearTimeout(scrollingTimer);
-                    scrollingTimer = setTimeout(function() {
-                        self.$(self.root).removeClass(self.scrollingCls);
-                        scrollingTimer = undefined;
-                    }, 300);
-                }
-            };
-
-            this.clipperOnScroll = function() {
-
-                if (!this.rtl) {
-                    this.clipper[this.origin.scrollEdge] = 0;
-                } else {
-                    this.clipper[this.origin.scrollEdge] = this.clipper[this.origin.scrollSize];
-                }
-            };
-
-            this._setCrossSizes = function(node, size) {
-                var css = {};
-
-                css[this.origin.crossSize] = size;
-                css[this.origin.crossMinSize] = size;
-                css[this.origin.crossMaxSize] = size;
-
-                this.$(node).css(css);
-            };
-
-            this._dumbCss = function(on) {
-                if (params.cssGuru) return;
-
-                var overflow = on ? 'hidden' : null;
-                var msOverflowStyle = on ? 'none' : null;
-
-                this.$(this.clipper).css({
-                    overflow: overflow,
-                    msOverflowStyle: msOverflowStyle,
-                    position: this.position == 'static' ? '' : 'relative'
-                });
-
-                var scroll = on ? 'scroll' : null;
-                var axis = this.direction == 'v' ? 'y' : 'x';
-                var scrollerCss = {};
-
-                scrollerCss['overflow-' + axis] = scroll;
-                scrollerCss['box-sizing'] = 'border-box';
-                scrollerCss.margin = '0';
-                scrollerCss.border = '0';
-
-                if (this.position == 'absolute') {
-                    scrollerCss.position = 'absolute';
-                    scrollerCss.top = '0';
-
-                    if (this.direction == 'h') {
-                        scrollerCss.left = scrollerCss.right = '0';
-                    } else {
-                        scrollerCss.bottom = '0';
-                        scrollerCss.right = this.rtl ? '0' : '';
-                        scrollerCss.left = this.rtl ? '' : '0';
-                    }
-                }
-
-                this.$(this.scroller).css(scrollerCss);
-            };
-
-            this._dumbCss(true);
-
-            if (isMacFF) {
-                var padding = 'paddingRight';
-                var css = {};
-                var paddingWas = window.getComputedStyle(this.scroller)[[padding]];
-                var delta = this.scroller[this.origin.crossOffset] -
-                            this.scroller[this.origin.crossClient];
-
-                if (params.direction == 'h') {
-                    padding = 'paddingBottom';
-                } else if (params.rtl) {
-                    padding = 'paddingLeft';
-                }
-
-                var numWas = parseInt(paddingWas, 10);
-                if (numWas != numWas) numWas = 0;
-                css[padding] = (macmsxffScrollbarSize + numWas) + 'px';
-                $(this.scroller).css(css);
-            }
-
-            return this;
-        },
-
-        update: function(params) {
-            if (this._disposed) {
-                log('error', [
-                    'Update on disposed baron instance detected.',
-                    'You should clear your stored baron value for this instance:',
-                    this
-                ].join(' '), params);
-            }
-            fire.call(this, 'upd', params); 
-
-            this.resize(1);
-            this.updatePositions();
-
-            return this;
-        },
-
-        dispose: function(params) {
-            if (this._disposed) {
-                log('error', [
-                    'Already disposed:',
-                    this
-                ].join(' '), params);
-            }
-
-            manageEvents(this, this.event, 'off');
-            manageAttr(this.root, params.direction, 'off');
-            if (params.direction == 'v') {
-                this._setCrossSizes(this.scroller, '');
-            } else {
-                this._setCrossSizes(this.clipper, '');
-            }
-            this._dumbCss(false);
-            this.barOn(true);
-            fire.call(this, 'dispose');
-            this._disposed = true;
-        },
-
-        on: function(eventName, func, arg) {
-            var names = eventName.split(' ');
-
-            for (var i = 0 ; i < names.length ; i++) {
-                if (names[i] == 'init') {
-                    func.call(this, arg);
-                } else {
-                    this.events[names[i]] = this.events[names[i]] || [];
-
-                    this.events[names[i]].push(function(userArg) {
-                        func.call(this, userArg || arg);
-                    });
-                }
-            }
-        }
-    };
-
-    baron.fn.constructor.prototype = baron.fn;
-    item.prototype.constructor.prototype = item.prototype;
-
-    baron.noConflict = function() {
-        window.baron = _baron; 
-
-        return baron;
-    };
-
-    baron.version = '2.2.2';
-
-    if ($ && $.fn) { 
-        $.fn.baron = baron;
-    }
-
-    window.baron = baron; 
-    if (typeof module != 'undefined') {
-        module.exports = baron.noConflict();
-    }
-})(window);
-
-(function(window, undefined) {
-    var scopedBaron = window.baron;
-    var log = function() {
-        scopedBaron.fn.log.apply(this, arguments);
-    };
-
-    var fix = function(userParams) {
-        var elements, viewPortSize,
-            params = { 
-                outside: '',
-                inside: '',
-                before: '',
-                after: '',
-                past: '',
-                future: '',
-                radius: 0,
-                minView: 0
-            },
-            topFixHeights = [], 
-            topRealHeights = [], 
-            headerTops = [], 
-            scroller = this.scroller,
-            eventManager = this.event,
-            $ = this.$,
-            self = this;
-
-        if (this.position != 'static') {
-            log('error', [
-                'Fix plugin cannot work properly in non-static baron position.',
-                'See more https://github.com/Diokuz/baron/issues/135'
-            ].join(' '), this.params);
-        }
-
-        function fixElement(i, pos, flag) {
-            var ori = flag == 1 ? 'pos' : 'oppos';
-
-            if (viewPortSize < (params.minView || 0)) { 
-                pos = undefined;
-            }
-
-            this.$(elements[i]).css(this.origin.pos, '').css(this.origin.oppos, '').removeClass(params.outside);
-
-            if (pos !== undefined) {
-                pos += 'px';
-                this.$(elements[i]).css(this.origin[ori], pos).addClass(params.outside);
-            }
-        }
-
-        function bubbleWheel(e) {
-            try {
-                i = document.createEvent('WheelEvent'); 
-                i.initWebKitWheelEvent(e.originalEvent.wheelDeltaX, e.originalEvent.wheelDeltaY);
-                scroller.dispatchEvent(i);
-                e.preventDefault();
-            } catch (e) {}
-        }
-
-        function init(_params) {
-            var pos;
-
-            for (var key in _params) {
-                params[key] = _params[key];
-            }
-
-            elements = this.$(params.elements, this.scroller);
-
-            if (elements) {
-                viewPortSize = this.scroller[this.origin.client];
-                for (var i = 0 ; i < elements.length ; i++) {
-                    pos = {};
-                    pos[this.origin.size] = elements[i][this.origin.offset];
-                    if (elements[i].parentNode !== this.scroller) {
-                        this.$(elements[i].parentNode).css(pos);
-                    }
-                    pos = {};
-                    pos[this.origin.crossSize] = elements[i].parentNode[this.origin.crossClient];
-                    this.$(elements[i]).css(pos);
-
-                    viewPortSize -= elements[i][this.origin.offset];
-
-                    headerTops[i] = elements[i].parentNode[this.origin.offsetPos]; 
-
-                    topFixHeights[i] = (topFixHeights[i - 1] || 0); 
-                    topRealHeights[i] = (topRealHeights[i - 1] || Math.min(headerTops[i], 0));
-
-                    if (elements[i - 1]) {
-                        topFixHeights[i] += elements[i - 1][this.origin.offset];
-                        topRealHeights[i] += elements[i - 1][this.origin.offset];
-                    }
-
-                    if ( !(i == 0 && headerTops[i] == 0)) {
-                        this.event(elements[i], 'mousewheel', bubbleWheel, 'off');
-                        this.event(elements[i], 'mousewheel', bubbleWheel);
-                    }
-                }
-
-                if (params.limiter && elements[0]) { 
-                    if (this.track && this.track != this.scroller) {
-                        pos = {};
-                        pos[this.origin.pos] = elements[0].parentNode[this.origin.offset];
-                        this.$(this.track).css(pos);
-                    } else {
-                        this.barTopLimit = elements[0].parentNode[this.origin.offset];
-                    }
-                    this.scroll();
-                }
-
-                if (params.limiter === false) { 
-                    this.barTopLimit = 0;
-                }
-            }
-
-            var event = {
-                element: elements,
-
-                handler: function() {
-                    var parent = $(this)[0].parentNode,
-                        top = parent.offsetTop,
-                        num;
-
-                    for (var i = 0 ; i < elements.length ; i++ ) {
-                        if (elements[i] === this) num = i;
-                    }
-
-                    var pos = top - topFixHeights[num];
-
-                    if (params.scroll) { 
-                        params.scroll({
-                            x1: self.scroller.scrollTop,
-                            x2: pos
-                        });
-                    } else {
-                        self.scroller.scrollTop = pos;
-                    }
-                },
-
-                type: 'click'
-            };
-
-            if (params.clickable) {
-                this._eventHandlers.push(event); 
-                eventManager(event.element, event.type, event.handler, 'on');
-            }
-        }
-
-        this.on('init', init, userParams);
-
-        var fixFlag = [], 
-            gradFlag = [];
-        this.on('init scroll', function() {
-            var fixState, hTop, gradState;
-
-            if (elements) {
-                var change;
-
-                for (var i = 0 ; i < elements.length ; i++) {
-                    fixState = 0;
-                    if (headerTops[i] - this.pos() < topRealHeights[i] + params.radius) {
-                        fixState = 1;
-                        hTop = topFixHeights[i];
-                    } else if (headerTops[i] - this.pos() > topRealHeights[i] + viewPortSize - params.radius) {
-                        fixState = 2;
-                        hTop = this.scroller[this.origin.client] - elements[i][this.origin.offset] - topFixHeights[i] - viewPortSize;
-                    } else {
-                        fixState = 3;
-                        hTop = undefined;
-                    }
-
-                    gradState = false;
-                    if (headerTops[i] - this.pos() < topRealHeights[i] || headerTops[i] - this.pos() > topRealHeights[i] + viewPortSize) {
-                        gradState = true;
-                    }
-
-                    if (fixState != fixFlag[i] || gradState != gradFlag[i]) {
-                        fixElement.call(this, i, hTop, fixState);
-                        fixFlag[i] = fixState;
-                        gradFlag[i] = gradState;
-                        change = true;
-                    }
-                }
-
-                if (change) { 
-                    for (i = 0 ; i < elements.length ; i++) {
-                        if (fixFlag[i] == 1 && params.past) {
-                            this.$(elements[i]).addClass(params.past).removeClass(params.future);
-                        }
-
-                        if (fixFlag[i] == 2 && params.future) {
-                            this.$(elements[i]).addClass(params.future).removeClass(params.past);
-                        }
-
-                        if (fixFlag[i] == 3) {
-                            if (params.future || params.past) this.$(elements[i]).removeClass(params.past).removeClass(params.future);
-                            if (params.inside) this.$(elements[i]).addClass(params.inside);
-                        } else if (params.inside) {
-                            this.$(elements[i]).removeClass(params.inside);
-                        }
-
-                        if (fixFlag[i] != fixFlag[i + 1] && fixFlag[i] == 1 && params.before) {
-                            this.$(elements[i]).addClass(params.before).removeClass(params.after); 
-                        } else if (fixFlag[i] != fixFlag[i - 1] && fixFlag[i] == 2 && params.after) {
-                            this.$(elements[i]).addClass(params.after).removeClass(params.before); 
-                        } else {
-                            this.$(elements[i]).removeClass(params.before).removeClass(params.after);
-                        }
-
-                        if (params.grad) {
-                            if (gradFlag[i]) {
-                                this.$(elements[i]).addClass(params.grad);
-                            } else {
-                                this.$(elements[i]).removeClass(params.grad);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        this.on('resize upd', function(updParams) {
-            init.call(this, updParams && updParams.fix);
-        });
-    };
-
-    scopedBaron.fn.fix = function(params) {
-        var i = 0;
-
-        while (this[i]) {
-            fix.call(this[i], params);
-            i++;
-        }
-
-        return this;
-    };
-})(window);
-(function(window) {
-    var scopedBaron = window.baron;
-    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver || null;
-
-    var autoUpdate = function() {
-        var self = this;
-        var watcher;
-
-        if (this._au) {
-            return;
-        }
-
-        function actualizeWatcher() {
-            if (!self.root[self.origin.offset]) {
-                startWatch();
-            } else {
-                stopWatch();
-            }
-        }
-
-        function startWatch() {
-            if (watcher) return;
-
-            watcher = setInterval(function() {
-                if (self.root[self.origin.offset]) {
-                    stopWatch();
-                    self.update();
-                }
-            }, 300); 
-        }
-
-        function stopWatch() {
-            clearInterval(watcher);
-            watcher = null;
-        }
-
-        var debouncedUpdater = self._debounce(function() {
-            self.update();
-        }, 300);
-
-        this._observer = new MutationObserver(function() {
-            actualizeWatcher();
-            self.update();
-            debouncedUpdater();
-        });
-
-        this.on('init', function() {
-            self._observer.observe(self.root, {
-                childList: true,
-                subtree: true,
-                characterData: true
-            });
-
-            actualizeWatcher();
-        });
-
-        this.on('dispose', function() {
-            self._observer.disconnect();
-            stopWatch();
-            delete self._observer;
-        });
-
-        this._au = true;
-    };
-
-    scopedBaron.fn.autoUpdate = function(params) {
-        if (!MutationObserver) return this;
-
-        var i = 0;
-
-        while (this[i]) {
-            autoUpdate.call(this[i], params);
-            i++;
-        }
-
-        return this;
-    };
-})(window);
-
-(function(window, undefined) {
-    var scopedBaron = window.baron;
-
-    var controls = function(params) {
-        var forward, backward, track, screen,
-            self = this, 
-            event;
-
-        screen = params.screen || 0.9;
-
-        if (params.forward) {
-            forward = this.$(params.forward, this.clipper);
-
-            event = {
-                element: forward,
-
-                handler: function() {
-                    var y = self.pos() + (params.delta || 30);
-
-                    self.pos(y);
-                },
-
-                type: 'click'
-            };
-
-            this._eventHandlers.push(event); 
-            this.event(event.element, event.type, event.handler, 'on');
-        }
-
-        if (params.backward) {
-            backward = this.$(params.backward, this.clipper);
-
-            event = {
-                element: backward,
-
-                handler: function() {
-                    var y = self.pos() - (params.delta || 30);
-
-                    self.pos(y);
-                },
-
-                type: 'click'
-            };
-
-            this._eventHandlers.push(event); 
-            this.event(event.element, event.type, event.handler, 'on');
-        }
-
-        if (params.track) {
-            if (params.track === true) {
-                track = this.track;
-            } else {
-                track = this.$(params.track, this.clipper)[0];
-            }
-
-            if (track) {
-                event = {
-                    element: track,
-
-                    handler: function(e) {
-                        if (e.target != track) return;
-
-                        var x = e['offset' + self.origin.x],
-                            xBar = self.bar[self.origin.offsetPos],
-                            sign = 0;
-
-                        if (x < xBar) {
-                            sign = -1;
-                        } else if (x > xBar + self.bar[self.origin.offset]) {
-                            sign = 1;
-                        }
-
-                        var y = self.pos() + sign * screen * self.scroller[self.origin.client];
-                        self.pos(y);
-                    },
-
-                    type: 'mousedown'
-                };
-
-                this._eventHandlers.push(event); 
-                this.event(event.element, event.type, event.handler, 'on');
-            }
-        }
-    };
-
-    scopedBaron.fn.controls = function(params) {
-        var i = 0;
-
-        while (this[i]) {
-            controls.call(this[i], params);
-            i++;
-        }
-
-        return this;
-    };
-})(window);
-baron.fn.log = function(level, msg, nodes) {
-    var time = new Date().toString();
-    var func = console[level] || console.log;
-    var args = [
-        'Baron [ ' + time.substr(16, 8) + ' ]: ' + msg,
-        nodes
-    ];
-
-    Function.prototype.apply.call(func, console, args);
-};
-
 
 "use strict";
 
-function EditorAccordion(_editor, cell_acc) {
+class SchemeLayers {
 
+  constructor(cell, set_text) {
 
-  this.unload = function () {
-    tb_elm.unload();
-    tb_right.unload();
-    tree_layers.unload();
-    props.unload();
-    stv.unload();
-  };
+    this.observer = this.observer.bind(this);
 
-  this.attache = function (obj) {
-  };
+    this.tree = cell.attachTreeView({
+      checkboxes: true,
+      multiselect: false
+    });
 
-  this.resize_canvas = function () {
-  };
+    this.tree.attachEvent("onCheck", (id, state) => {
 
-  const tabbar = cell_acc.attachTabbar({
-    arrows_mode: "auto",
-    tabs: [
+      const pid = this.tree.getParentId(id);
+      const sub = this.tree.getSubItems(id);
+
+      let l;
+
+      if(pid && state && !this.tree.isItemChecked(pid)){
+        if(l = paper.project.getItem({cnstr: Number(pid)})){
+          l.visible = true;
+        }
+        this.tree.checkItem(pid);
+      }
+
+      if(l = paper.project.getItem({cnstr: Number(id)})){
+        l.visible = !!state;
+      }
+
+      if(typeof sub == "string"){
+        sub = sub.split(",");
+      }
+      sub.forEach((id) => {
+        state ? this.tree.checkItem(id) : this.tree.uncheckItem(id);
+        if(l = paper.project.getItem({cnstr: Number(id)})){
+          l.visible = !!state;
+        }
+      });
+
+      if(pid && state && !this.tree.isItemChecked(pid)){
+        this.tree.checkItem(pid);
+      }
+
+      paper.project.register_update();
+
+    });
+
+    this.tree.attachEvent("onSelect", (id, mode) => {
+      if(!mode){
+        return;
+      }
+      const contour = paper.project.getItem({cnstr: Number(id)});
+      if(contour){
+        if(contour.project.activeLayer != contour){
+          contour.activate(true);
+        }
+        set_text(this.layer_text(contour));
+      }
+    });
+
+    $p.eve.attachEvent("layer_activated", (contour) => {
+      if(contour && contour.cnstr && contour.cnstr != this.tree.getSelectedId()){
+        if(this.tree.items[contour.cnstr]){
+          this.tree.selectItem(contour.cnstr);
+          set_text(this.layer_text(contour));
+        }
+      }
+    });
+
+    $p.eve.attachEvent("contour_redrawed", (contour, bounds) => {
+
+      const text = this.layer_text(contour, bounds);
+
+      this.tree.setItemText(contour.cnstr, text);
+
+      if(contour.project.activeLayer == contour){
+        set_text(text);
+      }
+
+    });
+
+  }
+
+  layer_text(layer, bounds){
+    if(!bounds){
+      bounds = layer.bounds;
+    }
+    return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr +
+      (bounds ? " " + bounds.width.toFixed() + "х" + bounds.height.toFixed() : "");
+  }
+
+  load_layer(layer) {
+    this.tree.addItem(
+      layer.cnstr,
+      this.layer_text(layer),
+      layer.parent ? layer.parent.cnstr : 0);
+
+    layer.contours.forEach((l) => this.load_layer(l));
+  }
+
+  observer(changes) {
+
+    let synced;
+
+    changes.forEach((change) => {
+
+      if ("constructions" == change.tabular){
+
+        synced = true;
+
+        this.tree.clearAll();
+        paper.project.contours.forEach((l) => {
+          this.load_layer(l);
+          this.tree.checkItem(l.cnstr);
+          this.tree.openItem(l.cnstr);
+
+        });
+
+        this.tree.addItem("l_dimensions", "Размерные линии", 0);
+
+        this.tree.addItem("l_connective", "Соединители", 0);
+
+        this.tree.addItem("l_visualization", "Визуализация доп. элементов", 0);
+
+        this.tree.addItem("l_text", "Комментарии", 0);
+
+      }
+    });
+  }
+
+  drop_layer() {
+    let cnstr = this.tree.getSelectedId(), l;
+    if(cnstr){
+      l = paper.project.getItem({cnstr: Number(cnstr)});
+    }
+    else if(l = paper.project.activeLayer){
+      cnstr = l.cnstr;
+    }
+    if(cnstr && l){
+      this.tree.deleteItem(cnstr);
+      cnstr = l.parent ? l.parent.cnstr : 0;
+      l.remove();
+      setTimeout(() => {
+        paper.project.zoom_fit();
+        if(cnstr){
+          this.tree.selectItem(cnstr);
+        }
+      }, 100);
+    }
+  }
+
+  attache() {
+    Object.observe(paper.project._noti, this.observer, ["rows"]);
+  }
+
+  unload() {
+    Object.unobserve(paper.project._noti, this.observer);
+  }
+};
+
+class StvProps {
+
+  constructor(cell) {
+
+    this.layout = cell;
+
+    this._evts = [
+      $p.eve.attachEvent("layer_activated", this.attache.bind(this)),
+      $p.eve.attachEvent("furn_changed", this.reload.bind(this))
+    ];
+
+  }
+
+  attache(obj) {
+
+    if(!obj || !obj.cnstr || (this._grid && this._grid._obj === obj)){
+      return;
+    }
+
+    const attr = {
+      obj: obj,
+      oxml: {
+        "Фурнитура": ["furn", "direction", "h_ruch"],
+        "Параметры": []
+      },
+      ts: "params",
+      ts_title: "Параметры",
+      selection: {
+        cnstr: obj.cnstr || -9999,
+        inset: $p.utils.blank.guid,
+        hide: {not: true}
+      }
+    };
+
+    if(!this._grid){
+      this._grid = this.layout.attachHeadFields(attr);
+    }else{
+      this._grid.attach(attr);
+    }
+
+    if(!obj.parent){
+      const rids = this._grid.getAllRowIds();
+      if(rids){
+        this._grid.closeItem(rids.split(",")[0]);
+      }
+    }
+
+  }
+
+  reload() {
+    this._grid && this._grid.reload();
+  }
+
+  unload() {
+    this._evts.forEach((eid) => $p.eve.detachEvent(eid));
+    this.layout.unload();
+  }
+
+}
+
+class SchemeProps {
+
+  constructor(cell) {
+
+    this.layout = cell;
+    this.reflect_changes = this.reflect_changes.bind(this);
+
+    $p.eve.attachEvent("contour_redrawed", () => {
+      if(this._obj){
+        this._reflect_id && clearTimeout(this._reflect_id);
+        this._reflect_id = setTimeout(this.reflect_changes, 100);
+      }
+    });
+
+  }
+
+  reflect_changes() {
+    this._reflect_id = 0;
+    const {_obj} = this;
+    const {project} = paper;
+    _obj.len = project.bounds.width.round(0);
+    _obj.height = project.bounds.height.round(0);
+    _obj.s = project.area;
+  }
+
+  attache(_obj) {
+
+    this._obj = _obj;
+
+    $p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"), _obj);
+
+    this._grid && this._grid.destructor && this._grid.destructor();
+
+    const is_dialer = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") && !$p.current_acl.role_available("РедактированиеСкидок");
+    const oxml = {
+      "Свойства": ["sys","clr",
+        {id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
+        {id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
+        {id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro"}
+      ]
+    };
+
+    if($p.wsql.get_user_param("hide_price_dealer")){
+      oxml["Строка заказа"] = [
+        "quantity",
+        {id: "price", path: "o.price", synonym: "Цена", type: "ro"},
+        {id: "discount_percent", path: "o.discount_percent", synonym: "Скидка %", type: is_dialer ? "ro" : "calck"},
+        {id: "amount", path: "o.amount", synonym: "Сумма", type: "ro"},
+        "note"
+      ];
+    }else{
+      oxml["Строка заказа"] = [
+        "quantity",
+        {id: "price_internal", path: "o.price_internal", synonym: "Цена дилера", type: "ro"},
+        {id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка дил %", type: "calck"},
+        {id: "amount_internal", path: "o.amount_internal", synonym: "Сумма дилера", type: "ro"},
+        {id: "price", path: "o.price", synonym: "Цена пост", type: "ro"},
+        {id: "discount_percent", path: "o.discount_percent", synonym: "Скидка пост %", type: is_dialer ? "ro" : "calck"},
+        {id: "amount", path: "o.amount", synonym: "Сумма пост", type: "ro"},
+        "note"
+      ];
+    }
+
+    this._grid = this.layout.attachHeadFields({
+      obj: _obj,
+      oxml: oxml,
+      ts: "extra_fields",
+      ts_title: "Свойства",
+      selection: {
+        cnstr: 0,
+        inset: $p.utils.blank.guid,
+        hide: {not: true}
+      }
+    });
+
+    this._on_snapshot = $p.eve.attachEvent("scheme_snapshot", (scheme, attr) => {
+      if(scheme == paper.project && !attr.clipboard){
+        ["price_internal","amount_internal","price","amount"].forEach((fld) => {
+          _obj[fld] = scheme.data._calc_order_row[fld];
+        });
+      }
+    });
+  }
+
+  reload() {
+    this._grid && this._grid.reload();
+  }
+
+  unload() {
+    $p.eve.detachEvent(this._on_snapshot);
+    this.layout.unload();
+    this._obj = null;
+  }
+
+}
+
+class EditorAccordion {
+
+  constructor(_editor, cell_acc) {
+
+    const tabs = [
       {
         id: 'lay',
         text: '<i class="fa fa-sitemap fa-fw"></i>',
@@ -1291,7 +343,7 @@ function EditorAccordion(_editor, cell_acc) {
         active:  true,
       },
       {
-        id: "flap",
+        id: "stv",
         text: '<i class="fa fa-object-ungroup fa-fw"></i>',
         title: 'Свойства створки',
       },
@@ -1300,136 +352,122 @@ function EditorAccordion(_editor, cell_acc) {
         text: '<i class="fa fa-picture-o fa-fw"></i>',
         title: 'Свойства изделия',
       }
-    ]
-  });
+    ];
+    this.tabbar = cell_acc.attachTabbar({
+      arrows_mode: "auto",
+      tabs: tabs
+    });
 
-  const tb_elm = new $p.iface.OTooolBar({
-    wrapper: tabbar.cells('elm').cell,
-    width: '100%',
-    height: '28px',
-    top: '2px',
-    left: '4px',
-    class_name: "",
-    name: 'aling_bottom',
-    buttons: [
-      {name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
-      {name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
-      {name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
-      {name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
-      {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
-      {name: 'sep_0', text: '', float: 'left'},
-      {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
-      {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
-      {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
-    ],
-    image_path: "dist/imgs/",
-    onclick: function (name) {
-      switch (name) {
-        case 'arc':
-          _editor.profile_radius();
-          break;
+    const titles = this.tabbar.tabsArea.children[1].firstChild.children;
+    tabs.forEach((tab, index) => {
+      titles[index+1].title = tab.title;
+    })
 
-        case 'additional_inserts':
-          _editor.additional_inserts('elm');
-          break;
-
-        default:
-          _editor.profile_align(name)
-      }
-    }
-  });
-
-  const tb_right = new $p.iface.OTooolBar({
-    wrapper: tabbar.cells('lay').cell,
-    width: '100%',
-    height: '28px',
-    top: '2px',
-    left: '4px',
-    class_name: "",
-    name: 'right',
-    image_path: 'dist/imgs/',
-    buttons: [
-      {name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
-      {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
-      {name: 'sep_0', text: '', float: 'left'},
-      {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
-      {name: 'inserts_to_contour', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_contour, float: 'left'},
-      {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
-
-    ], onclick: function (name) {
-
-      switch(name) {
-
-        case 'new_stv':
-          const fillings = _editor.project.getItems({class: Filling, selected: true});
-          if(fillings.length){
-            fillings[0].create_leaf();
-          }
-          else{
-            $p.msg.show_msg({
-              type: "alert-warning",
-              text: $p.msg.bld_new_stv_no_filling,
-              title: $p.msg.bld_new_stv
-            });
-          }
-          break;
-
-        case 'drop_layer':
-          tree_layers.drop_layer();
-          break;
-
-        case 'new_layer':
-
-          new Contour( {parent: undefined});
-
-          Object.getNotifier(_editor.project._noti).notify({
-            type: 'rows',
-            tabular: "constructions"
-          });
-          break;
-
-        case 'inserts_to_product':
-          _editor.additional_inserts();
-          break;
-
-        case 'inserts_to_contour':
-          _editor.additional_inserts('contour');
-          break;
-
-        default:
-          $p.msg.show_msg(name);
-          break;
-      }
-
-      return false;
-    }
-  })
-
-  return;
-
-	const cont = cell_acc.cell.querySelector(".editor_accordion"),
-
-
-
-    tb_bottom = new $p.iface.OTooolBar({
-      wrapper: cont.querySelector("[name=header_props]"),
+    this.elm = this.tabbar.cells('elm');
+    this.elm._toolbar = this.elm.attachToolbar();
+    this.elm._otoolbar = new $p.iface.OTooolBar({
+      wrapper: this.elm.cell,
       width: '100%',
       height: '28px',
-      bottom: '2px',
+      top: '6px',
       left: '4px',
       class_name: "",
-      name: 'bottom',
+      name: 'aling_bottom',
+      buttons: [
+        {name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
+        {name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
+        {name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
+        {name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
+        {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
+        {name: 'sep_0', text: '', float: 'left'},
+        {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
+        {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
+        {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
+      ],
+      image_path: "dist/imgs/",
+      onclick: (name) => {
+        switch (name) {
+          case 'arc':
+            _editor.profile_radius();
+            break;
+
+          case 'additional_inserts':
+            _editor.additional_inserts('elm');
+            break;
+
+          case 'delete':
+            _editor.project.selectedItems.forEach((path) => {
+              const {parent} = path;
+              if(parent instanceof ProfileItem){
+                parent.removeChildren();
+                parent.remove();
+              }
+            });
+            break;
+
+          default:
+            _editor.profile_align(name)
+        }
+      }
+    });
+
+    this._layers = this.tabbar.cells('lay');
+    this._layers._toolbar = this._layers.attachToolbar();
+    this._layers._otoolbar = new $p.iface.OTooolBar({
+      wrapper: this._layers.cell,
+      width: '100%',
+      height: '28px',
+      top: '6px',
+      left: '4px',
+      class_name: "",
+      name: 'right',
       image_path: 'dist/imgs/',
       buttons: [
-        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
+        {name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
+        {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
+        {name: 'sep_0', text: '', float: 'left'},
+        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
+        {name: 'inserts_to_contour', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_contour, float: 'left'},
+        {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
 
-      ], onclick: function (name) {
+      ], onclick: (name) => {
 
         switch(name) {
 
-          case 'refill':
-            _editor.project._dp.sys.refill_prm(_editor.project.ox);
-            props.reload();
+          case 'new_stv':
+            const fillings = _editor.project.getItems({class: Filling, selected: true});
+            if(fillings.length){
+              fillings[0].create_leaf();
+            }
+            else{
+              $p.msg.show_msg({
+                type: "alert-warning",
+                text: $p.msg.bld_new_stv_no_filling,
+                title: $p.msg.bld_new_stv
+              });
+            }
+            break;
+
+          case 'drop_layer':
+            this.tree_layers.drop_layer();
+            break;
+
+          case 'new_layer':
+
+            new Contour( {parent: undefined});
+
+            Object.getNotifier(_editor.project._noti).notify({
+              type: 'rows',
+              tabular: "constructions"
+            });
+            break;
+
+          case 'inserts_to_product':
+            _editor.additional_inserts();
+            break;
+
+          case 'inserts_to_contour':
+            _editor.additional_inserts('contour');
             break;
 
           default:
@@ -1439,426 +477,72 @@ function EditorAccordion(_editor, cell_acc) {
 
         return false;
       }
-    }),
+    });
+    this.tree_layers = new SchemeLayers(this._layers, (text) => {
+      this._stv._toolbar.setItemText("info", text);
+    });
 
-		tree_layers = new function SchemeLayers() {
+    this._stv = this.tabbar.cells('stv');
+    this._stv._toolbar = this._stv.attachToolbar({
+      items:[
+        {id: "info", type: "text", text: ""},
+      ],
+    });
+    this.stv = new StvProps(this._stv);
 
-			const tree = new dhtmlXTreeView({
-				parent: cont.querySelector("[name=content_layers]"),
-				checkboxes: true,
-				multiselect: false
-			});
+    this._prod = this.tabbar.cells('prod');
+    this._prod._toolbar = this._prod.attachToolbar();
+    this._prod._otoolbar = new $p.iface.OTooolBar({
+      wrapper: this._prod.cell,
+      width: '100%',
+      height: '28px',
+      top: '6px',
+      left: '4px',
+      class_name: "",
+      name: 'bottom',
+      image_path: 'dist/imgs/',
+      buttons: [
+        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
 
-			function layer_text(layer, bounds){
-				if(!bounds){
-          bounds = layer.bounds;
-        }
-				return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr +
-					(bounds ? " " + bounds.width.toFixed() + "х" + bounds.height.toFixed() : "");
-			}
+      ], onclick: (name) => {
 
-			function load_layer(layer){
-				tree.addItem(
-					layer.cnstr,
-					layer_text(layer),
-					layer.parent ? layer.parent.cnstr : 0);
+        switch(name) {
 
-				layer.contours.forEach((l) => load_layer(l));
-			}
+          case 'refill':
+            _editor.project._dp.sys.refill_prm(_editor.project.ox);
+            this.props.reload();
+            break;
 
-			function observer(changes){
-
-				let synced;
-
-				changes.forEach((change) => {
-
-					if ("constructions" == change.tabular){
-
-						synced = true;
-
-						tree.clearAll();
-						_editor.project.contours.forEach((l) => {
-							load_layer(l);
-							tree.checkItem(l.cnstr);
-							tree.openItem(l.cnstr);
-
-						});
-
-						tree.addItem("l_dimensions", "Размерные линии", 0);
-
-            tree.addItem("l_connective", "Соединители", 0);
-
-						tree.addItem("l_visualization", "Визуализация доп. элементов", 0);
-
-						tree.addItem("l_text", "Комментарии", 0);
-
-					}
-				});
-			}
-
-
-			this.drop_layer = function () {
-				let cnstr = tree.getSelectedId(), l;
-				if(cnstr){
-					l = _editor.project.getItem({cnstr: Number(cnstr)});
-				}
-				else if(l = _editor.project.activeLayer){
-					cnstr = l.cnstr;
-				}
-				if(cnstr && l){
-					tree.deleteItem(cnstr);
-					cnstr = l.parent ? l.parent.cnstr : 0;
-					l.remove();
-					setTimeout(() => {
-						_editor.project.zoom_fit();
-						if(cnstr){
-              tree.selectItem(cnstr);
-            }
-					}, 100);
-				}
-			};
-
-			this.attache = function () {
-				Object.observe(_editor.project._noti, observer, ["rows"]);
-			};
-
-			this.unload = function () {
-				Object.unobserve(_editor.project._noti, observer);
-			};
-
-			tree.attachEvent("onCheck", (id, state) => {
-
-        const pid = tree.getParentId(id);
-        const sub = tree.getSubItems(id);
-
-				let l;
-
-				if(pid && state && !tree.isItemChecked(pid)){
-					if(l = _editor.project.getItem({cnstr: Number(pid)})){
-            l.visible = true;
-          }
-					tree.checkItem(pid);
-				}
-
-				if(l = _editor.project.getItem({cnstr: Number(id)})){
-          l.visible = !!state;
+          default:
+            $p.msg.show_msg(name);
+            break;
         }
 
-				if(typeof sub == "string"){
-          sub = sub.split(",");
-        }
-				sub.forEach((id) => {
-					state ? tree.checkItem(id) : tree.uncheckItem(id);
-					if(l = _editor.project.getItem({cnstr: Number(id)})){
-            l.visible = !!state;
-          }
-				});
-
-				if(pid && state && !tree.isItemChecked(pid)){
-          tree.checkItem(pid);
-        }
-
-				_editor.project.register_update();
-
-			});
-
-			tree.attachEvent("onSelect", (id, mode) => {
-				if(!mode){
-          return;
-        }
-				const contour = _editor.project.getItem({cnstr: Number(id)});
-				if(contour){
-					if(contour.project.activeLayer != contour){
-            contour.activate(true);
-          }
-					cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
-				}
-			});
-
-			$p.eve.attachEvent("layer_activated", (contour) => {
-				if(contour && contour.cnstr && contour.cnstr != tree.getSelectedId()){
-				  if(tree.items[contour.cnstr]){
-            tree.selectItem(contour.cnstr);
-            cont.querySelector("[name=header_stv]").innerHTML = layer_text(contour);
-          }
-				}
-			});
-
-			$p.eve.attachEvent("contour_redrawed", (contour, bounds) => {
-
-				const text = layer_text(contour, bounds);
-
-				tree.setItemText(contour.cnstr, text);
-
-				if(contour.project.activeLayer == contour){
-          cont.querySelector("[name=header_stv]").innerHTML = text;
-        }
-
-			});
-
-		},
-
-		props = new (function SchemeProps(layout) {
-
-			let _obj, _grid, _reflect_id;
-
-			function reflect_changes() {
-				_obj.len = _editor.project.bounds.width.round(0);
-				_obj.height = _editor.project.bounds.height.round(0);
-				_obj.s = _editor.project.area;
-			}
-
-			this.__define({
-
-				attache: {
-					value: function (obj) {
-
-						_obj = obj;
-						obj = null;
-
-						$p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"), _obj);
-
-						if(_grid && _grid.destructor)
-							_grid.destructor();
-
-						const is_dialer = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") && !$p.current_acl.role_available("РедактированиеСкидок");
-						const oxml = {
-								"Свойства": ["sys","clr",
-								{id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
-								{id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
-								{id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro"}
-							]
-							};
-
-						if($p.wsql.get_user_param("hide_price_dealer")){
-							oxml["Строка заказа"] = [
-								"quantity",
-								{id: "price", path: "o.price", synonym: "Цена", type: "ro"},
-								{id: "discount_percent", path: "o.discount_percent", synonym: "Скидка %", type: is_dialer ? "ro" : "calck"},
-								{id: "amount", path: "o.amount", synonym: "Сумма", type: "ro"},
-								"note"
-							];
-						}else{
-							oxml["Строка заказа"] = [
-								"quantity",
-								{id: "price_internal", path: "o.price_internal", synonym: "Цена дилера", type: "ro"},
-								{id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка дил %", type: "calck"},
-								{id: "amount_internal", path: "o.amount_internal", synonym: "Сумма дилера", type: "ro"},
-								{id: "price", path: "o.price", synonym: "Цена пост", type: "ro"},
-								{id: "discount_percent", path: "o.discount_percent", synonym: "Скидка пост %", type: is_dialer ? "ro" : "calck"},
-								{id: "amount", path: "o.amount", synonym: "Сумма пост", type: "ro"},
-								"note"
-							];
-						}
-
-						_grid = layout.cells("a").attachHeadFields({
-							obj: _obj,
-							oxml: oxml,
-							ts: "extra_fields",
-							ts_title: "Свойства",
-							selection: {
-							  cnstr: 0,
-                inset: $p.utils.blank.guid,
-                hide: {not: true}
-							}
-						});
-
-						_on_snapshot = $p.eve.attachEvent("scheme_snapshot", (scheme, attr) => {
-							if(scheme == _editor.project && !attr.clipboard){
-								["price_internal","amount_internal","price","amount"].forEach((fld) => {
-									_obj[fld] = scheme.data._calc_order_row[fld];
-								});
-							}
-						});
-					}
-				},
-
-				unload: {
-					value: function () {
-						layout.unload();
-						_obj = null;
-					}
-				},
-
-				layout: {
-					get: function () {
-						return layout;
-					}
-				},
-
-        reload: {
-				  value: function () {
-            _grid.reload();
-          }
-        }
-
-			});
-
-			$p.eve.attachEvent("contour_redrawed", () => {
-				if(_obj){
-					if(_reflect_id)
-						clearTimeout(_reflect_id);
-					_reflect_id = setTimeout(reflect_changes, 100);
-				}
-			});
+        return false;
+      }
+    });
+    this.props = new SchemeProps(this._prod);
 
 
-		})(new dhtmlXLayoutObject({
-			parent:     cont.querySelector("[name=content_props]"),
-			pattern:    "1C",
-			offsets: {
-				top:    0,
-				right:  0,
-				bottom: 0,
-				left:   0
-			},
-			cells: [
-				{
-					id:             "a",
-					header:         false,
-					height:         330
-				}
-			]
-		})),
+  }
 
-		stv = new (function StvProps(layout) {
+  attache(obj) {
+    this.tree_layers.attache();
+    this.props.attache(obj);
+  }
 
-			const t = this;
-			const _evts = [];
-			let _grid;
+  unload() {
+    this.elm._otoolbar.unload();
+    this._layers._otoolbar.unload();
+    this._prod._otoolbar.unload();
+    this.tree_layers.unload();
+    this.props.unload();
+    this.stv.unload();
+  }
 
-			this.__define({
-
-				attache: {
-					value: function (obj) {
-
-						if(!obj || !obj.cnstr || (_grid && _grid._obj === obj)){
-              return;
-            }
-
-						const attr = {
-							obj: obj,
-							oxml: {
-								"Фурнитура": ["furn", "direction", "h_ruch"],
-								"Параметры": []
-							},
-							ts: "params",
-							ts_title: "Параметры",
-							selection: {
-							  cnstr: obj.cnstr || -9999,
-                inset: $p.utils.blank.guid,
-                hide: {not: true}
-							}
-						};
-
-						if(!_grid){
-              _grid = layout.cells("a").attachHeadFields(attr);
-            }else{
-              _grid.attach(attr);
-            }
-
-						if(!obj.parent){
-							const rids = _grid.getAllRowIds();
-							if(rids){
-                _grid.closeItem(rids.split(",")[0]);
-              }
-						}
-
-						setTimeout(t.set_sizes, 200);
-					}
-				},
-
-				set_sizes: {
-
-					value: function (do_reload) {
-						do_reload && _grid.reload();
-						layout.base.style.height = (Math.max(_grid.rowsBuffer.length, 10) + 1) * 22 + "px";
-						layout.setSizes();
-						_grid.objBox.style.width = "100%";
-					}
-				},
-
-				unload: {
-					value: function () {
-						_evts.forEach((eid) => {
-							$p.eve.detachEvent(eid);
-						});
-						layout.unload();
-					}
-				},
-
-				layout: {
-					get: function () {
-						return layout;
-					}
-				}
-
-			});
-
-			_evts.push($p.eve.attachEvent("layer_activated", this.attache));
-			_evts.push($p.eve.attachEvent("furn_changed", this.set_sizes));
-
-		})(
-      new dhtmlXLayoutObject({
-        parent: cont.querySelector("[name=content_stv]"),
-        pattern: "1C",
-        offsets: {
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0
-        },
-        cells: [
-          {
-            id: "a",
-            header: false,
-            height: 200
-          }
-        ]
-      })
-
-    );
+};
 
 
-
-
-	this.elm = new dhtmlXLayoutObject({
-		parent:     cont.querySelector("[name=content_elm]"),
-		pattern:    "1C",
-		offsets: {
-			top:    0,
-			right:  0,
-			bottom: 0,
-			left:   0
-		},
-		cells: [
-			{
-				id:             "a",
-				header:         false,
-				height:         200
-			}
-		]
-	});
-
-	this.header_stv = cont.querySelector("[name=header_stv]");
-
-	this.header_props = cont.querySelector("[name=header_props]");
-
-	baron({
-		cssGuru: true,
-		root: cont,
-		scroller: '.scroller',
-		bar: '.scroller__bar',
-		barOnCls: 'baron'
-	}).fix({
-		elements: '.header__title',
-		outside: 'header__title_state_fixed',
-		before: 'header__title_position_top',
-		after: 'header__title_position_bottom',
-		clickable: true
-	});
-
-}
 
 
 function Clipbrd(_editor) {
@@ -1985,412 +669,8 @@ function Clipbrd(_editor) {
 	document.addEventListener('copy', oncopy);
 
 	document.addEventListener('paste', onpaste);
-}
+};
 
-;(function(root, factory) {
-  'use strict';
-  if (typeof define === 'function' && define.amd) {
-    define([], function() {
-      return factory();
-    });
-  } else if (typeof exports === 'object') {
-    module.exports = factory();
-  } else {
-    root.DeepDiff = factory();
-  }
-}(this, function(undefined) {
-  'use strict';
-
-  var $scope, conflict, conflictResolution = [];
-  if (typeof global === 'object' && global) {
-    $scope = global;
-  } else if (typeof window !== 'undefined') {
-    $scope = window;
-  } else {
-    $scope = {};
-  }
-  conflict = $scope.DeepDiff;
-  if (conflict) {
-    conflictResolution.push(
-      function() {
-        if ('undefined' !== typeof conflict && $scope.DeepDiff === accumulateDiff) {
-          $scope.DeepDiff = conflict;
-          conflict = undefined;
-        }
-      });
-  }
-
-  function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor;
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  }
-
-  function Diff(kind, path) {
-    Object.defineProperty(this, 'kind', {
-      value: kind,
-      enumerable: true
-    });
-    if (path && path.length) {
-      Object.defineProperty(this, 'path', {
-        value: path,
-        enumerable: true
-      });
-    }
-  }
-
-  function DiffEdit(path, origin, value) {
-    DiffEdit.super_.call(this, 'E', path);
-    Object.defineProperty(this, 'lhs', {
-      value: origin,
-      enumerable: true
-    });
-    Object.defineProperty(this, 'rhs', {
-      value: value,
-      enumerable: true
-    });
-  }
-  inherits(DiffEdit, Diff);
-
-  function DiffNew(path, value) {
-    DiffNew.super_.call(this, 'N', path);
-    Object.defineProperty(this, 'rhs', {
-      value: value,
-      enumerable: true
-    });
-  }
-  inherits(DiffNew, Diff);
-
-  function DiffDeleted(path, value) {
-    DiffDeleted.super_.call(this, 'D', path);
-    Object.defineProperty(this, 'lhs', {
-      value: value,
-      enumerable: true
-    });
-  }
-  inherits(DiffDeleted, Diff);
-
-  function DiffArray(path, index, item) {
-    DiffArray.super_.call(this, 'A', path);
-    Object.defineProperty(this, 'index', {
-      value: index,
-      enumerable: true
-    });
-    Object.defineProperty(this, 'item', {
-      value: item,
-      enumerable: true
-    });
-  }
-  inherits(DiffArray, Diff);
-
-  function arrayRemove(arr, from, to) {
-    var rest = arr.slice((to || from) + 1 || arr.length);
-    arr.length = from < 0 ? arr.length + from : from;
-    arr.push.apply(arr, rest);
-    return arr;
-  }
-
-  function realTypeOf(subject) {
-    var type = typeof subject;
-    if (type !== 'object') {
-      return type;
-    }
-
-    if (subject === Math) {
-      return 'math';
-    } else if (subject === null) {
-      return 'null';
-    } else if (Array.isArray(subject)) {
-      return 'array';
-    } else if (Object.prototype.toString.call(subject) === '[object Date]') {
-      return 'date';
-    } else if (typeof subject.toString !== 'undefined' && /^\/.*\//.test(subject.toString())) {
-      return 'regexp';
-    }
-    return 'object';
-  }
-
-  function deepDiff(lhs, rhs, changes, prefilter, path, key, stack) {
-    path = path || [];
-    var currentPath = path.slice(0);
-    if (typeof key !== 'undefined') {
-      if (prefilter) {
-        if (typeof(prefilter) === 'function' && prefilter(currentPath, key)) { return; }
-        else if (typeof(prefilter) === 'object') {
-          if (prefilter.prefilter && prefilter.prefilter(currentPath, key)) { return; }
-          if (prefilter.normalize) {
-            var alt = prefilter.normalize(currentPath, key, lhs, rhs);
-            if (alt) {
-              lhs = alt[0];
-              rhs = alt[1];
-            }
-          }
-        }
-      }
-      currentPath.push(key);
-    }
-
-    if (realTypeOf(lhs) === 'regexp' && realTypeOf(rhs) === 'regexp') {
-      lhs = lhs.toString();
-      rhs = rhs.toString();
-    }
-
-    var ltype = typeof lhs;
-    var rtype = typeof rhs;
-    if (ltype === 'undefined') {
-      if (rtype !== 'undefined') {
-        changes(new DiffNew(currentPath, rhs));
-      }
-    } else if (rtype === 'undefined') {
-      changes(new DiffDeleted(currentPath, lhs));
-    } else if (realTypeOf(lhs) !== realTypeOf(rhs)) {
-      changes(new DiffEdit(currentPath, lhs, rhs));
-    } else if (Object.prototype.toString.call(lhs) === '[object Date]' && Object.prototype.toString.call(rhs) === '[object Date]' && ((lhs - rhs) !== 0)) {
-      changes(new DiffEdit(currentPath, lhs, rhs));
-    } else if (ltype === 'object' && lhs !== null && rhs !== null) {
-      stack = stack || [];
-      if (stack.indexOf(lhs) < 0) {
-        stack.push(lhs);
-        if (Array.isArray(lhs)) {
-          var i, len = lhs.length;
-          for (i = 0; i < lhs.length; i++) {
-            if (i >= rhs.length) {
-              changes(new DiffArray(currentPath, i, new DiffDeleted(undefined, lhs[i])));
-            } else {
-              deepDiff(lhs[i], rhs[i], changes, prefilter, currentPath, i, stack);
-            }
-          }
-          while (i < rhs.length) {
-            changes(new DiffArray(currentPath, i, new DiffNew(undefined, rhs[i++])));
-          }
-        } else {
-          var akeys = Object.keys(lhs);
-          var pkeys = Object.keys(rhs);
-          akeys.forEach(function(k, i) {
-            var other = pkeys.indexOf(k);
-            if (other >= 0) {
-              deepDiff(lhs[k], rhs[k], changes, prefilter, currentPath, k, stack);
-              pkeys = arrayRemove(pkeys, other);
-            } else {
-              deepDiff(lhs[k], undefined, changes, prefilter, currentPath, k, stack);
-            }
-          });
-          pkeys.forEach(function(k) {
-            deepDiff(undefined, rhs[k], changes, prefilter, currentPath, k, stack);
-          });
-        }
-        stack.length = stack.length - 1;
-      }
-    } else if (lhs !== rhs) {
-      if (!(ltype === 'number' && isNaN(lhs) && isNaN(rhs))) {
-        changes(new DiffEdit(currentPath, lhs, rhs));
-      }
-    }
-  }
-
-  function accumulateDiff(lhs, rhs, prefilter, accum) {
-    accum = accum || [];
-    deepDiff(lhs, rhs,
-      function(diff) {
-        if (diff) {
-          accum.push(diff);
-        }
-      },
-      prefilter);
-    return (accum.length) ? accum : undefined;
-  }
-
-  function applyArrayChange(arr, index, change) {
-    if (change.path && change.path.length) {
-      var it = arr[index],
-          i, u = change.path.length - 1;
-      for (i = 0; i < u; i++) {
-        it = it[change.path[i]];
-      }
-      switch (change.kind) {
-        case 'A':
-          applyArrayChange(it[change.path[i]], change.index, change.item);
-          break;
-        case 'D':
-          delete it[change.path[i]];
-          break;
-        case 'E':
-        case 'N':
-          it[change.path[i]] = change.rhs;
-          break;
-      }
-    } else {
-      switch (change.kind) {
-        case 'A':
-          applyArrayChange(arr[index], change.index, change.item);
-          break;
-        case 'D':
-          arr = arrayRemove(arr, index);
-          break;
-        case 'E':
-        case 'N':
-          arr[index] = change.rhs;
-          break;
-      }
-    }
-    return arr;
-  }
-
-  function applyChange(target, source, change) {
-    if (target && source && change && change.kind) {
-      var it = target,
-          i = -1,
-          last = change.path ? change.path.length - 1 : 0;
-      while (++i < last) {
-        if (typeof it[change.path[i]] === 'undefined') {
-          it[change.path[i]] = (typeof change.path[i] === 'number') ? [] : {};
-        }
-        it = it[change.path[i]];
-      }
-      switch (change.kind) {
-        case 'A':
-          applyArrayChange(change.path ? it[change.path[i]] : it, change.index, change.item);
-          break;
-        case 'D':
-          delete it[change.path[i]];
-          break;
-        case 'E':
-        case 'N':
-          it[change.path[i]] = change.rhs;
-          break;
-      }
-    }
-  }
-
-  function revertArrayChange(arr, index, change) {
-    if (change.path && change.path.length) {
-      var it = arr[index],
-          i, u = change.path.length - 1;
-      for (i = 0; i < u; i++) {
-        it = it[change.path[i]];
-      }
-      switch (change.kind) {
-        case 'A':
-          revertArrayChange(it[change.path[i]], change.index, change.item);
-          break;
-        case 'D':
-          it[change.path[i]] = change.lhs;
-          break;
-        case 'E':
-          it[change.path[i]] = change.lhs;
-          break;
-        case 'N':
-          delete it[change.path[i]];
-          break;
-      }
-    } else {
-      switch (change.kind) {
-        case 'A':
-          revertArrayChange(arr[index], change.index, change.item);
-          break;
-        case 'D':
-          arr[index] = change.lhs;
-          break;
-        case 'E':
-          arr[index] = change.lhs;
-          break;
-        case 'N':
-          arr = arrayRemove(arr, index);
-          break;
-      }
-    }
-    return arr;
-  }
-
-  function revertChange(target, source, change) {
-    if (target && source && change && change.kind) {
-      var it = target,
-          i, u;
-      u = change.path.length - 1;
-      for (i = 0; i < u; i++) {
-        if (typeof it[change.path[i]] === 'undefined') {
-          it[change.path[i]] = {};
-        }
-        it = it[change.path[i]];
-      }
-      switch (change.kind) {
-        case 'A':
-          revertArrayChange(it[change.path[i]], change.index, change.item);
-          break;
-        case 'D':
-          it[change.path[i]] = change.lhs;
-          break;
-        case 'E':
-          it[change.path[i]] = change.lhs;
-          break;
-        case 'N':
-          delete it[change.path[i]];
-          break;
-      }
-    }
-  }
-
-  function applyDiff(target, source, filter) {
-    if (target && source) {
-      var onChange = function(change) {
-        if (!filter || filter(target, source, change)) {
-          applyChange(target, source, change);
-        }
-      };
-      deepDiff(target, source, onChange);
-    }
-  }
-
-  Object.defineProperties(accumulateDiff, {
-
-    diff: {
-      value: accumulateDiff,
-      enumerable: true
-    },
-    observableDiff: {
-      value: deepDiff,
-      enumerable: true
-    },
-    applyDiff: {
-      value: applyDiff,
-      enumerable: true
-    },
-    applyChange: {
-      value: applyChange,
-      enumerable: true
-    },
-    revertChange: {
-      value: revertChange,
-      enumerable: true
-    },
-    isConflict: {
-      value: function() {
-        return 'undefined' !== typeof conflict;
-      },
-      enumerable: true
-    },
-    noConflict: {
-      value: function() {
-        if (conflictResolution) {
-          conflictResolution.forEach(function(it) {
-            it();
-          });
-          conflictResolution = null;
-        }
-        return accumulateDiff;
-      },
-      enumerable: true
-    }
-  });
-
-  return accumulateDiff;
-}));
 
 
 class Editor extends paper.PaperScope {
@@ -2424,7 +704,7 @@ class Editor extends paper.PaperScope {
             id: "b",
             text: "Инструменты",
             collapsed_text: "Инструменты",
-            width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 460 : 260
+            width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 440 : 260
           }],
           offsets: { top: 28, right: 0, bottom: 0, left: 0}
         })
@@ -2652,7 +932,6 @@ class Editor extends paper.PaperScope {
       const _scheme = new Scheme(_canvas);
       const pwnd_resize_finish = () => {
           _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
-          _editor._acc.resize_canvas();
         };
 
       _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
@@ -3095,43 +1374,48 @@ class Editor extends paper.PaperScope {
 
       layer.profiles.forEach(function (profile) {
 
-        if(profile.angle_hor % 90 == 0)
-          return;
 
-        var mid;
+        let mid;
 
         if(profile.orientation == $p.enm.orientations.vert){
 
           mid = profile.b.x + profile.e.x / 2;
 
-          if(mid < layer.bounds.center.x)
-            profile.x1 = profile.x2 = Math.min(profile.x1, profile.x2);
-          else
-            profile.x1 = profile.x2 = Math.max(profile.x1, profile.x2);
+          if(mid < layer.bounds.center.x){
+            mid = Math.min(profile.x1, profile.x2);
+            profile.x1 = profile.x2 = mid;
+          }
+          else{
+            mid = Math.max(profile.x1, profile.x2);
+            profile.x1 = profile.x2 = mid;
+          }
 
         }else if(profile.orientation == $p.enm.orientations.hor){
 
           mid = profile.b.y + profile.e.y / 2;
 
-          if(mid < layer.bounds.center.y)
-            profile.y1 = profile.y2 = Math.max(profile.y1, profile.y2);
-          else
-            profile.y1 = profile.y2 = Math.min(profile.y1, profile.y2);
-
+          if(mid < layer.bounds.center.y){
+            mid = Math.max(profile.y1, profile.y2);
+            profile.y1 = profile.y2 = mid;
+          }
+          else{
+            mid = Math.min(profile.y1, profile.y2);
+            profile.y1 = profile.y2 = mid;
+          }
         }
-
       });
+    }
+    else{
 
-
-    }else{
-
-      var profiles = this.project.selected_profiles(),
-        contours = [], changed;
+      const profiles = this.project.selected_profiles();
+      const contours = [];
+      let changed;
 
       profiles.forEach(function (profile) {
 
-        if(profile.angle_hor % 90 == 0)
+        if(profile.angle_hor % 90 == 0){
           return;
+        }
 
         changed = true;
 
@@ -3145,46 +1429,50 @@ class Editor extends paper.PaperScope {
         minmax.max.dy = minmax.max.y - minmax.min.y;
 
         if(name == 'left' && minmax.max.dx < minmax.max.dy){
-          if(profile.x1 - minmax.min.x > 0)
+          if(profile.x1 - minmax.min.x > 0){
             profile.x1 = minmax.min.x;
-          if(profile.x2 - minmax.min.x > 0)
+          }
+          if(profile.x2 - minmax.min.x > 0){
             profile.x2 = minmax.min.x;
-
-        }else if(name == 'right' && minmax.max.dx < minmax.max.dy){
-          if(profile.x1 - minmax.max.x < 0)
+          }
+        }
+        else if(name == 'right' && minmax.max.dx < minmax.max.dy){
+          if(profile.x1 - minmax.max.x < 0){
             profile.x1 = minmax.max.x;
-          if(profile.x2 - minmax.max.x < 0)
+          }
+          if(profile.x2 - minmax.max.x < 0){
             profile.x2 = minmax.max.x;
-
-        }else if(name == 'top' && minmax.max.dx > minmax.max.dy){
-          if(profile.y1 - minmax.max.y < 0)
+          }
+        }
+        else if(name == 'top' && minmax.max.dx > minmax.max.dy){
+          if(profile.y1 - minmax.max.y < 0){
             profile.y1 = minmax.max.y;
-          if(profile.y2 - minmax.max.y < 0)
+          }
+          if(profile.y2 - minmax.max.y < 0){
             profile.y2 = minmax.max.y;
-
-        }else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
-          if (profile.y1 - minmax.min.y > 0)
+          }
+        }
+        else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
+          if (profile.y1 - minmax.min.y > 0){
             profile.y1 = minmax.min.y;
-          if (profile.y2 - minmax.min.y > 0)
+          }
+          if (profile.y2 - minmax.min.y > 0){
             profile.y2 = minmax.min.y;
-
-        }else if(name == 'delete') {
+          }
+        }
+        else if(name == 'delete') {
           profile.removeChildren();
           profile.remove();
-
-        }else
+        }
+        else{
           $p.msg.show_msg({type: "info", text: $p.msg.align_invalid_direction});
+        }
 
       });
 
       if(changed || profiles.length > 1){
-        profiles.forEach(function (p) {
-          if(contours.indexOf(p.layer) == -1)
-            contours.push(p.layer);
-        });
-        contours.forEach(function (l) {
-          l.clear_dimentions();
-        });
+        profiles.forEach((p) => contours.indexOf(p.layer) == -1 && contours.push(p.layer));
+        contours.forEach((l) => l.clear_dimentions());
       }
 
       if(name != 'delete' && profiles.length > 1){
@@ -3192,12 +1480,14 @@ class Editor extends paper.PaperScope {
         if(changed){
           this.project.register_change(true);
           setTimeout(this.profile_group_align.bind(this, name, profiles), 100);
-
-        }else
+        }
+        else{
           this.profile_group_align(name);
-
-      }else if(changed)
+        }
+      }
+      else if(changed){
         this.project.register_change(true);
+      }
     }
 
   }
@@ -3449,11 +1739,10 @@ class Editor extends paper.PaperScope {
 
   }
 
-}
+};
 
 
 $p.Editor = Editor;
-
 
 
 (function (msg){
@@ -3615,7 +1904,8 @@ class UndoRedo {
     }
   }
 
-}
+};
+
 
 
 
@@ -5987,9 +4277,6 @@ BuilderElement.prototype.__define({
 					});
 			}
 
-			cell.layout.base.style.height = (Math.max(this.data._grid.rowsBuffer.length, 9) + 1) * 22 + "px";
-			cell.layout.setSizes();
-			this.data._grid.objBox.style.width = "100%";
 		}
 	},
 
@@ -8122,7 +6409,7 @@ ProfileItem.prototype.__define({
 
 	angle_hor: {
 		get : function(){
-			var res = (new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle.round(1);
+			var res = (new paper.Point(this.e.x - this.b.x, this.b.y - this.e.y)).angle.round(2);
 			return res < 0 ? res + 360 : res;
 		}
 	},
@@ -10058,8 +8345,9 @@ Scheme.prototype.__define({
 
 	resize_canvas: {
 		value: function(w, h){
-			this.view.viewSize.width = w;
-			this.view.viewSize.height = h;
+		  const {viewSize} = this.view;
+			viewSize.width = w;
+			viewSize.height = h;
 		}
 	},
 
@@ -10727,7 +9015,7 @@ class ToolArc extends ToolElement{
 
           setTimeout(function () {
             r.layer.redraw();
-            r.parent.attache_wnd(paper._acc.elm.cells("a"));
+            r.parent.attache_wnd(paper._acc.elm);
             $p.eve.callEvent("layer_activated", [r.layer]);
           }, 10);
 
@@ -10741,7 +9029,7 @@ class ToolArc extends ToolElement{
         var item = this.hitItem ? this.hitItem.item : null;
 
         if(item instanceof Filling && item.visible){
-          item.attache_wnd(paper._acc.elm.cells("a"));
+          item.attache_wnd(paper._acc.elm);
           item.selected = true;
 
           if(item.selected && item.layer)
@@ -10847,7 +9135,7 @@ class ToolCut extends ToolElement{
         var item = this.hitItem ? this.hitItem.item : null;
 
         if(item instanceof Filling && item.visible){
-          item.attache_wnd(paper._acc.elm.cells("a"));
+          item.attache_wnd(paper._acc.elm);
           item.selected = true;
 
           if(item.selected && item.layer)
@@ -12295,12 +10583,12 @@ class ToolPen extends ToolElement {
       }
 
       if(item instanceof ProfileItem && item.isInserted()){
-        item.attache_wnd(paper._acc.elm.cells("a"));
+        item.attache_wnd(paper._acc.elm);
         whas_select = true;
         this._controls.blur();
 
       }else if(item instanceof Filling && item.visible){
-        item.attache_wnd(paper._acc.elm.cells("a"));
+        item.attache_wnd(paper._acc.elm);
         whas_select = true;
         this._controls.blur();
       }
@@ -13587,7 +11875,7 @@ class ToolSelectNode extends ToolElement {
           }
 
           if(item instanceof ProfileItem || item instanceof Filling){
-            item.attache_wnd(this._scope._acc.elm.cells("a"));
+            item.attache_wnd(this._scope._acc.elm);
             this.profile = item;
           }
 
@@ -14079,6 +12367,6 @@ class ToolText extends ToolElement {
 }
 
 
-$p.injected_data._mixin({"tip_editor_right.html":"<div class=\"clipper editor_accordion\">\r\n\r\n    <div class=\"scroller\">\r\n        <div class=\"container\">\r\n\r\n            <!-- РАЗДЕЛ 1 - дерево слоёв -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_layers\"></div>\r\n            </div>\r\n            <div name=\"content_layers\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 2 - реквизиты элемента -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_elm\"></div>\r\n            </div>\r\n            <div name=\"content_elm\" style=\"min-height: 260px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 3 - реквизиты створки -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_stv\">\r\n                    Створка\r\n                    <!--span name=\"title\"></span-->\r\n                </div>\r\n            </div>\r\n            <div name=\"content_stv\" style=\"min-height: 200px;\"></div>\r\n\r\n            <!-- РАЗДЕЛ 4 - реквизиты изделия -->\r\n            <div class=\"header\">\r\n                <div class=\"header__title\" name=\"header_props\">\r\n                    <span name=\"title\">Изделие</span>\r\n                </div>\r\n            </div>\r\n            <div name=\"content_props\" style=\"min-height: 330px;\"></div>\r\n\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"scroller__track\">\r\n        <div class=\"scroller__bar\" style=\"height: 26px; top: 0px;\"></div>\r\n    </div>\r\n\r\n</div>","tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
+$p.injected_data._mixin({"tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
 return Editor;
 }));

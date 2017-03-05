@@ -131,7 +131,7 @@ class ToolSelectNode extends ToolElement {
 
           // подключаем диадог свойств элемента
           if(item instanceof ProfileItem || item instanceof Filling){
-            item.attache_wnd(this._scope._acc.elm.cells("a"));
+            item.attache_wnd(this._scope._acc.elm);
             this.profile = item;
           }
 

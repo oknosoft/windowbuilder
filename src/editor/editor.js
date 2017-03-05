@@ -85,7 +85,7 @@ class Editor extends paper.PaperScope {
             id: "b",
             text: "Инструменты",
             collapsed_text: "Инструменты",
-            width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 460 : 260
+            width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 440 : 260
           }],
           offsets: { top: 28, right: 0, bottom: 0, left: 0}
         })
@@ -419,7 +419,6 @@ class Editor extends paper.PaperScope {
       const _scheme = new Scheme(_canvas);
       const pwnd_resize_finish = () => {
           _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
-          _editor._acc.resize_canvas();
         };
 
       /**
@@ -951,43 +950,51 @@ class Editor extends paper.PaperScope {
 
       layer.profiles.forEach(function (profile) {
 
-        if(profile.angle_hor % 90 == 0)
-          return;
+        // if(profile.angle_hor % 90 == 0){
+        //   return;
+        // }
 
-        var mid;
+        let mid;
 
         if(profile.orientation == $p.enm.orientations.vert){
 
           mid = profile.b.x + profile.e.x / 2;
 
-          if(mid < layer.bounds.center.x)
-            profile.x1 = profile.x2 = Math.min(profile.x1, profile.x2);
-          else
-            profile.x1 = profile.x2 = Math.max(profile.x1, profile.x2);
+          if(mid < layer.bounds.center.x){
+            mid = Math.min(profile.x1, profile.x2);
+            profile.x1 = profile.x2 = mid;
+          }
+          else{
+            mid = Math.max(profile.x1, profile.x2);
+            profile.x1 = profile.x2 = mid;
+          }
 
         }else if(profile.orientation == $p.enm.orientations.hor){
 
           mid = profile.b.y + profile.e.y / 2;
 
-          if(mid < layer.bounds.center.y)
-            profile.y1 = profile.y2 = Math.max(profile.y1, profile.y2);
-          else
-            profile.y1 = profile.y2 = Math.min(profile.y1, profile.y2);
-
+          if(mid < layer.bounds.center.y){
+            mid = Math.max(profile.y1, profile.y2);
+            profile.y1 = profile.y2 = mid;
+          }
+          else{
+            mid = Math.min(profile.y1, profile.y2);
+            profile.y1 = profile.y2 = mid;
+          }
         }
-
       });
+    }
+    else{
 
-
-    }else{
-
-      var profiles = this.project.selected_profiles(),
-        contours = [], changed;
+      const profiles = this.project.selected_profiles();
+      const contours = [];
+      let changed;
 
       profiles.forEach(function (profile) {
 
-        if(profile.angle_hor % 90 == 0)
+        if(profile.angle_hor % 90 == 0){
           return;
+        }
 
         changed = true;
 
@@ -1001,47 +1008,51 @@ class Editor extends paper.PaperScope {
         minmax.max.dy = minmax.max.y - minmax.min.y;
 
         if(name == 'left' && minmax.max.dx < minmax.max.dy){
-          if(profile.x1 - minmax.min.x > 0)
+          if(profile.x1 - minmax.min.x > 0){
             profile.x1 = minmax.min.x;
-          if(profile.x2 - minmax.min.x > 0)
+          }
+          if(profile.x2 - minmax.min.x > 0){
             profile.x2 = minmax.min.x;
-
-        }else if(name == 'right' && minmax.max.dx < minmax.max.dy){
-          if(profile.x1 - minmax.max.x < 0)
+          }
+        }
+        else if(name == 'right' && minmax.max.dx < minmax.max.dy){
+          if(profile.x1 - minmax.max.x < 0){
             profile.x1 = minmax.max.x;
-          if(profile.x2 - minmax.max.x < 0)
+          }
+          if(profile.x2 - minmax.max.x < 0){
             profile.x2 = minmax.max.x;
-
-        }else if(name == 'top' && minmax.max.dx > minmax.max.dy){
-          if(profile.y1 - minmax.max.y < 0)
+          }
+        }
+        else if(name == 'top' && minmax.max.dx > minmax.max.dy){
+          if(profile.y1 - minmax.max.y < 0){
             profile.y1 = minmax.max.y;
-          if(profile.y2 - minmax.max.y < 0)
+          }
+          if(profile.y2 - minmax.max.y < 0){
             profile.y2 = minmax.max.y;
-
-        }else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
-          if (profile.y1 - minmax.min.y > 0)
+          }
+        }
+        else if(name == 'bottom' && minmax.max.dx > minmax.max.dy) {
+          if (profile.y1 - minmax.min.y > 0){
             profile.y1 = minmax.min.y;
-          if (profile.y2 - minmax.min.y > 0)
+          }
+          if (profile.y2 - minmax.min.y > 0){
             profile.y2 = minmax.min.y;
-
-        }else if(name == 'delete') {
+          }
+        }
+        else if(name == 'delete') {
           profile.removeChildren();
           profile.remove();
-
-        }else
+        }
+        else{
           $p.msg.show_msg({type: "info", text: $p.msg.align_invalid_direction});
+        }
 
       });
 
       // прочищаем размерные линии
       if(changed || profiles.length > 1){
-        profiles.forEach(function (p) {
-          if(contours.indexOf(p.layer) == -1)
-            contours.push(p.layer);
-        });
-        contours.forEach(function (l) {
-          l.clear_dimentions();
-        });
+        profiles.forEach((p) => contours.indexOf(p.layer) == -1 && contours.push(p.layer));
+        contours.forEach((l) => l.clear_dimentions());
       }
 
       // если выделено несколько, запланируем групповое выравнивание
@@ -1050,12 +1061,14 @@ class Editor extends paper.PaperScope {
         if(changed){
           this.project.register_change(true);
           setTimeout(this.profile_group_align.bind(this, name, profiles), 100);
-
-        }else
+        }
+        else{
           this.profile_group_align(name);
-
-      }else if(changed)
+        }
+      }
+      else if(changed){
         this.project.register_change(true);
+      }
     }
 
   }
@@ -1328,7 +1341,7 @@ class Editor extends paper.PaperScope {
 
   }
 
-}
+};
 
 
 /**
@@ -1338,4 +1351,3 @@ class Editor extends paper.PaperScope {
  * @type {function}
  */
 $p.Editor = Editor;
-

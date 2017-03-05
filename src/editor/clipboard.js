@@ -140,4 +140,5 @@ function Clipbrd(_editor) {
 	document.addEventListener('copy', oncopy);
 
 	document.addEventListener('paste', onpaste);
-}
+};
+

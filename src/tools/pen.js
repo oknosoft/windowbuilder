@@ -542,12 +542,12 @@ class ToolPen extends ToolElement {
 
       // TODO: Выделяем элемент, если он подходящего типа
       if(item instanceof ProfileItem && item.isInserted()){
-        item.attache_wnd(paper._acc.elm.cells("a"));
+        item.attache_wnd(paper._acc.elm);
         whas_select = true;
         this._controls.blur();
 
       }else if(item instanceof Filling && item.visible){
-        item.attache_wnd(paper._acc.elm.cells("a"));
+        item.attache_wnd(paper._acc.elm);
         whas_select = true;
         this._controls.blur();
       }

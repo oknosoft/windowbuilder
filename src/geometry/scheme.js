@@ -869,8 +869,9 @@ Scheme.prototype.__define({
 	 */
 	resize_canvas: {
 		value: function(w, h){
-			this.view.viewSize.width = w;
-			this.view.viewSize.height = h;
+		  const {viewSize} = this.view;
+			viewSize.width = w;
+			viewSize.height = h;
 		}
 	},
 
