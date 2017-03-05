@@ -183,7 +183,7 @@
 
       this._data._modified = false;
 
-      const {specification, production, calc_order, _manager, _metadata} = this;
+      const {calc_order, _manager, _metadata} = this;
 
       // форма в модальном диалоге
       const options = {
@@ -202,9 +202,47 @@
         }
       };
 
-      const wnd = $p.iface.dat_blank(null, options.wnd);
+      this.wnd = $p.iface.dat_blank(null, options.wnd);
+      const {elmnts} = this.wnd;
 
-      // тулбар
+      // тулбар + закладки
+      this.draw_tabs(this.wnd);
+
+      // табчасть продукции
+      elmnts.grids.production = this.draw_production(elmnts.tabs.cells("prod"));
+
+      // табчасть состава отчета
+      elmnts.grids.composition = this.draw_composition(elmnts.tabs.cells("composition"));
+
+
+
+      // следим за изменениями варианта настроек
+      const observer = this.observer.bind(this);
+      Object.observe(this, observer);
+      this.wnd.attachEvent("onClose", () => {
+        Object.unobserve(this, observer);
+        elmnts.scheme.unload && elmnts.scheme.unload();
+        for(let grid in elmnts.grids){
+          elmnts.grids[grid].unload && elmnts.grids[grid].unload()
+        }
+        return true;
+      });
+
+      // установим вариант
+      $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
+        .then((scheme) => {
+        this.scheme = scheme;
+      });
+
+      // заполняем табчасть изделий
+      this.fill_by_order();
+
+      return Promise.resolve({wnd: this.wnd, o: this});
+
+    }
+
+    // тулбар
+    draw_tabs(wnd) {
       wnd.attachToolbar({
         items:[
           {id: "info", type: "text", text: "Вариант настроек:"},
@@ -233,59 +271,87 @@
 
 
       // закладки
-      wnd.attachTabbar({
+      wnd.elmnts.tabs = wnd.attachTabbar({
         arrows_mode: "auto",
         tabs: [
-          {
-            id: "a",
-            text: "Продукция",
-            active:  true
-          },
-          {
-            id: "b",
-            text: "Состав"
-          },
-          {
-            id: "c",
-            text: "Колонки"
-          },
-          {
-            id: "d",
-            text: "Отбор"
-          }
+          {id: "prod", text: "Продукция", active:  true},
+          {id: "composition", text: "Состав"},
+          {id: "columns", text: "Колонки"},
+          {id: "selection", text: "Отбор"}
         ]
+      });
+    }
+
+    draw_production(cell) {
+      return cell.attachTabular({
+        obj: this,
+        ts: "production",
+        ts_captions: {
+          "fields":["characteristic","qty"],
+          "headers":"Продукция,Штук",
+          "widths":"*,150",
+          "min_widths":"200,120",
+          "aligns":"",
+          "sortings":"na,na",
+          "types":"ref,calck"
+        }
+      })
+    }
+
+    draw_columns(cell) {
+
+      const grid = cell.attachTabular({
+        obj: this.scheme,
+        ts: "fields",
+        disable_add_del: true,
+        ts_captions: {
+          "fields":["use","field","caption"],
+          "headers":",Поле,Заголовок",
+          "widths":"40,200,*",
+          "min_widths":"40,200,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ro,ro"
+        }
+      });
+
+      cell.detachToolbar();
+
+      return grid;
+    }
+
+    draw_composition(cell) {
+
+      if(!this.composition.count()){
+        this.composition.load([
+          {use: true, elm: "Шапка"},
+          {use: true, elm: "Эскизы малые"},
+          {use: false, elm: "Эскизы большие"},
+          {use: false, elm: "Продукция"},
+          {use: true, elm: "Спецификация"},
+          {use: false, elm: "Пописи"},
+          {use: false, elm: "Подвал"},
+        ])
+      }
+
+      const grid = cell.attachTabular({
+        obj: this,
+        ts: "composition",
+        disable_add_del: true,
+        ts_captions: {
+          "fields":["use","elm"],
+          "headers":",Элемент",
+          "widths":"40,*",
+          "min_widths":"40,200",
+          "aligns":"",
+          "sortings":"na,na",
+          "types":"ch,ro"
+        }
       })
 
+      cell.detachToolbar();
 
-      const ts_captions = {
-        "fields":["price_type","nom_characteristic","date","price","currency"],
-        "headers":"Тип Цен,Характеристика,Дата,Цена,Валюта",
-        "widths":"200,*,150,120,100",
-        "min_widths":"150,200,100,100,100",
-        "aligns":"",
-        "sortings":"na,na,na,na,na",
-        "types":"ro,ro,dhxCalendar,ro,ro"
-      };
-
-
-      // следим за изменениями варианта настроек
-      const observer = this.observer.bind(this);
-      Object.observe(this, observer);
-      wnd.attachEvent("onClose", () => {
-        Object.unobserve(this, observer);
-        return true;
-      });
-
-      // установим вариант
-      $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
-        .then((scheme) => {
-        this.scheme = scheme;
-      });
-
-      // заполняем табчасть изделий
-      this.fill_by_order();
-
-      return Promise.resolve({wnd: wnd, o: this});
+      return grid;
 
     }
 
@@ -303,7 +369,12 @@
     }
 
     scheme_change() {
+      // обновляем табчасть колонок
+      const {grids, tabs} = this.wnd.elmnts;
 
+      grids.columns && grids.columns.unload && grids.columns.unload();
+
+      grids.columns = this.draw_columns(tabs.cells("columns"));
     }
 
     fill_by_order(row, _mgr) {
