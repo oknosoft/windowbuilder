@@ -23,29 +23,11 @@
     // извлекает спецификацию изделий заказа, фильтрует и группирует
     calculate(_columns) {
 
-      const {specification, production, scheme, _manager} = this;
+      const {specification, production, scheme, discard, _manager} = this;
       const arefs = [];
       const aobjs = [];
       const spec_flds = Object.keys($p.cat.characteristics.metadata('specification').fields);
       const rspec_flds = Object.keys(_manager.metadata('specification').fields);
-
-      function material(row) {
-
-        let res = row.nom.presentation;
-
-        if (!row.characteristic.empty()) {
-          res += ' ' + row.characteristic.presentation;
-        }
-
-        if (row.len && row.width)
-          res += ' ' + (1000 * row.len).toFixed(0) + "x" + (1000 * row.width).toFixed(0);
-        else if (row.len)
-          res += ' ' + (1000 * row.len).toFixed(0);
-        else if (row.width)
-          res += ' ' + (1000 * row.width).toFixed(0);
-
-        return res;
-      }
 
       // получаем массив объектов продукций
       production.each((row) => {
@@ -79,7 +61,7 @@
               aobjs.push(row.characteristic.calc_order.load())
             }
 
-            row.characteristic.specification.each(function (sprow) {
+            row.characteristic.specification.each((sprow) => {
               if (!sprow.characteristic.empty() && sprow.characteristic.is_new() && arefs.indexOf(sprow.characteristic.ref) == -1) {
                 arefs.push(sprow.characteristic.ref)
                 aobjs.push(sprow.characteristic.load())
@@ -94,12 +76,27 @@
 
         .then(() => {
 
+          // строки изделия в исходном заказе
           const prows = {};
 
+          // подготовим массив строк отбора
+          const selection = [];
+          scheme.selection.forEach((row) => {
+            if(row.use){
+              selection.push(row)
+            }
+          })
+
           // бежим по продукции и заполняем результат
-          production.each(function (row) {
+          production.each((row) => {
             if (!row.characteristic.empty()) {
               row.characteristic.specification.each((sprow) => {
+
+                // фильтруем
+                if(discard(sprow, selection)){
+                  return;
+                }
+
                 let resrow = {};
                 spec_flds.forEach(fld => {
                   if (rspec_flds.indexOf(fld) != -1) {
@@ -141,9 +138,7 @@
                 resrow.product = prows[row.characteristic.ref];
 
                 // свойства номенклатуры и группировки
-                resrow.nom_kind = resrow.nom.nom_kind;
-                resrow.material = material(resrow);
-                //resrow.grouping = resrow.nom.grouping;
+                this.material(resrow);
 
               })
             }
@@ -177,6 +172,58 @@
           })
           return specification._rows;
         })
+    }
+
+    // фильтрует строку спецификации
+    discard(row, selection) {
+      return selection.some((srow) => {
+
+        const left = srow.left_value.split('.');
+        let left_value = row[left[0]];
+        for(let i = 1; i < left.length; i++){
+          left_value = left_value[left[i]];
+        }
+
+        const {comparison_type, right_value} = srow;
+        const {comparison_types} = $p.enm;
+
+        switch (comparison_type) {
+          case comparison_types.eq:
+            return left_value != right_value;
+          case comparison_types.ne:
+            return left_value == right_value;
+          case comparison_types.lt:
+            return !(left_value < right_value);
+          case comparison_types.gt:
+            return !(left_value > right_value);
+        }
+
+      })
+    }
+
+    // подмешивает в наименование материала характеристику и размеры
+    material(row) {
+
+      const {nom, characteristic, len, width} = row;
+
+      let res = nom.presentation;
+
+      if (!characteristic.empty()) {
+        res += ' ' + characteristic.presentation;
+      }
+
+      if (len && width)
+        res += ' ' + (1000 * len).toFixed(0) + "x" + (1000 * width).toFixed(0);
+      else if (len)
+        res += ' ' + (1000 * len).toFixed(0);
+      else if (width)
+        res += ' ' + (1000 * width).toFixed(0);
+
+      row.nom_kind = nom.nom_kind;
+      row.grouping = nom.grouping;
+      row.material = res;
+
+      return res;
     }
 
     form_obj(pwnd, attr) {
@@ -213,7 +260,6 @@
 
       // табчасть состава отчета
       elmnts.grids.composition = this.draw_composition(elmnts.tabs.cells("composition"));
-
 
 
       // следим за изменениями варианта настроек
@@ -323,15 +369,7 @@
     draw_composition(cell) {
 
       if(!this.composition.count()){
-        this.composition.load([
-          {use: true, elm: "Шапка"},
-          {use: true, elm: "Эскизы малые"},
-          {use: false, elm: "Эскизы большие"},
-          {use: false, elm: "Продукция"},
-          {use: true, elm: "Спецификация"},
-          {use: false, elm: "Пописи"},
-          {use: false, elm: "Подвал"},
-        ])
+        this.composition.load(RepMaterials_demand.composition_parts)
       }
 
       const grid = cell.attachTabular({
@@ -355,6 +393,26 @@
 
     }
 
+    draw_selection(cell) {
+
+      const grid = cell.attachTabular({
+        obj: this.scheme,
+        ts: "selection",
+        ts_captions: {
+          "fields":["use","left_value","comparison_type,right_value"],
+          "headers":",Левое значение,Вид сравнения,Правое значение",
+          "widths":"40,200,100,*",
+          "min_widths":"40,200,100,200",
+          "aligns":"",
+          "sortings":"na,na,na,na",
+          "types":"ch,ed,ref,ed"
+        }
+      });
+
+      return grid;
+
+    }
+
     save_scheme() {
 
     }
@@ -369,12 +427,15 @@
     }
 
     scheme_change() {
-      // обновляем табчасть колонок
+
+      // обновляем табчасти колонок и отбора
       const {grids, tabs} = this.wnd.elmnts;
 
       grids.columns && grids.columns.unload && grids.columns.unload();
-
+      grids.selection && grids.selection.unload && grids.selection.unload();
       grids.columns = this.draw_columns(tabs.cells("columns"));
+      grids.selection = this.draw_selection(tabs.cells("selection"));
+
     }
 
     fill_by_order(row, _mgr) {
@@ -429,6 +490,19 @@
     static get resources() {
       return ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'];
     }
+
+    static get composition_parts() {
+      return [
+        {use: true, elm: "Шапка"},
+        {use: true, elm: "Эскизы малые"},
+        {use: false, elm: "Эскизы большие"},
+        {use: false, elm: "Продукция"},
+        {use: true, elm: "Спецификация"},
+        {use: false, elm: "Пописи"},
+        {use: false, elm: "Подвал"},
+      ];
+    }
+
 
   }
 

@@ -37,23 +37,29 @@ $p.CatNom.prototype.__define({
 	_price: {
 		value: function (attr) {
 
-			if(!attr)
-				attr = {};
+			if(!attr){
+        attr = {};
+      }
 
-			if(!attr.price_type)
-				attr.price_type = $p.job_prm.pricing.price_type_sale;
-			else if($p.utils.is_data_obj(attr.price_type))
-				attr.price_type = attr.price_type.ref;
+			if(!attr.price_type){
+        attr.price_type = $p.job_prm.pricing.price_type_sale;
+      }
+			else if($p.utils.is_data_obj(attr.price_type)){
+        attr.price_type = attr.price_type.ref;
+      }
 
-			if(!attr.characteristic)
-				attr.characteristic = $p.utils.blank.guid;
-			else if($p.utils.is_data_obj(attr.characteristic))
-				attr.characteristic = attr.characteristic.ref;
+			if(!attr.characteristic){
+        attr.characteristic = $p.utils.blank.guid;
+      }
+			else if($p.utils.is_data_obj(attr.characteristic)){
+        attr.characteristic = attr.characteristic.ref;
+      }
 
-			if(!attr.date)
-				attr.date = new Date();
+			if(!attr.date){
+        attr.date = new Date();
+      }
 
-			var price = 0, currency, start_date = $p.utils.blank.date;
+			let price = 0, currency, start_date = $p.utils.blank.date;
 
       // если для номенклатуры существует структура цен, ищем подходящую
 			if(this._data._price){
@@ -103,6 +109,20 @@ $p.CatNom.prototype.__define({
 
 		}
 	},
+
+  /**
+   * Возвращает значение допреквизита группировка
+   */
+  grouping: {
+	  get: function () {
+      if(!this.hasOwnProperty('_grouping')){
+        this.extra_fields.find_rows({property: $p.job_prm.properties.grouping}, (row) => {
+          this._grouping = row.value.name;
+        })
+      }
+      return this._grouping || '';
+    }
+  },
 
   /**
    * Представление объекта
