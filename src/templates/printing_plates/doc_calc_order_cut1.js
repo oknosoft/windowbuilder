@@ -63,7 +63,7 @@ function fake(obj) {
 	}
 
 	// получаем данные печати
-	return obj.print_data.then(function (res) {
+	return obj.print_data().then(function (res) {
 
 		print_data = res;
 

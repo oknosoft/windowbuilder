@@ -13,15 +13,23 @@
   // переопределяем прототип
   $p.RepMaterials_demand = class RepMaterials_demand extends Proto {
 
-    get print_data() {
-      return this.calc_order.print_data.then((order) => {
-          return this.calculate()
-            .then((spec) => ({order, spec}))
+    // формирует данные печати, склеивая их из данных заказа и текущего отчета
+    print_data() {
+      // получаем структуру данных заказа
+      return this.calc_order.print_data().then((order) => {
+        // получаем данные спецификации
+        return this.calculate()
+          .then((specification) => {
+            // дополняем описанием продукции
+
+            // возвращаем объединенную структуру
+            return Object.assign(order, {specification, _grouping: this.scheme.dimensions})
+          })
         })
     }
 
     // извлекает спецификацию изделий заказа, фильтрует и группирует
-    calculate(_columns) {
+    calculate() {
 
       const {specification, production, scheme, discard, _manager} = this;
       const arefs = [];
@@ -31,6 +39,9 @@
 
       // получаем массив объектов продукций
       production.each((row) => {
+        if(!row.use){
+          return;
+        }
         if (!row.characteristic.empty() && row.characteristic.is_new() && arefs.indexOf(row.characteristic.ref) == -1) {
           arefs.push(row.characteristic.ref)
           aobjs.push(row.characteristic.load())
@@ -54,20 +65,20 @@
           aobjs.length = 0;
 
           production.each((row) => {
-
+            if(!row.use){
+              return;
+            }
             if (!row.characteristic.empty() && !row.characteristic.calc_order.empty()
               && row.characteristic.calc_order.is_new() && arefs.indexOf(row.characteristic.calc_order.ref) == -1) {
               arefs.push(row.characteristic.calc_order.ref)
               aobjs.push(row.characteristic.calc_order.load())
             }
-
             row.characteristic.specification.each((sprow) => {
               if (!sprow.characteristic.empty() && sprow.characteristic.is_new() && arefs.indexOf(sprow.characteristic.ref) == -1) {
                 arefs.push(sprow.characteristic.ref)
                 aobjs.push(sprow.characteristic.load())
               }
             })
-
           });
 
           return Promise.all(aobjs)
@@ -89,6 +100,9 @@
 
           // бежим по продукции и заполняем результат
           production.each((row) => {
+            if(!row.use){
+              return;
+            }
             if (!row.characteristic.empty()) {
               row.characteristic.specification.each((sprow) => {
 
@@ -146,10 +160,7 @@
 
           // сворачиваем результат и сохраняем его в specification._rows
           const dimentions = [], resources = [];
-          if(!_columns){
-            _columns = scheme.columns('ts')
-          }
-          _columns.forEach(fld => {
+          scheme.columns('ts').forEach(fld => {
             const {key} = fld
             if ($p.RepMaterials_demand.resources.indexOf(key) != -1) {
               resources.push(key)
@@ -174,6 +185,25 @@
         })
     }
 
+    // формирует табличный докуменнт
+    generate() {
+
+      // получаем данные отчета
+      return this.print_data().then((data) => {
+
+        // создаём объект табличного документа
+        const doc = new $p.SpreadsheetDocument(void(0), {fill_template: this.on_fill_template.bind(this)});
+
+        // бежим по составу компоновки
+        this.scheme.composition.find_rows({use: true}, (row) => {
+          // выводим фрагмент
+          doc.append(this.templates(row.field), data);
+        });
+
+        return doc;
+      })
+    }
+
     // фильтрует строку спецификации
     discard(row, selection) {
       return selection.some((srow) => {
@@ -190,12 +220,21 @@
         switch (comparison_type) {
           case comparison_types.eq:
             return left_value != right_value;
+
           case comparison_types.ne:
             return left_value == right_value;
+
           case comparison_types.lt:
             return !(left_value < right_value);
+
           case comparison_types.gt:
             return !(left_value > right_value);
+
+          case comparison_types.in:
+            return !left_value || right_value.search(left_value.toString()) == -1;
+
+          case comparison_types.nin:
+            return right_value.search(left_value.toString()) != -1;
         }
 
       })
@@ -206,21 +245,22 @@
 
       const {nom, characteristic, len, width} = row;
 
-      let res = nom.presentation;
+      let res = nom.name;
 
       if (!characteristic.empty()) {
         res += ' ' + characteristic.presentation;
       }
 
       if (len && width)
-        res += ' ' + (1000 * len).toFixed(0) + "x" + (1000 * width).toFixed(0);
+        row.sz = (1000 * len).toFixed(0) + "x" + (1000 * width).toFixed(0);
       else if (len)
-        res += ' ' + (1000 * len).toFixed(0);
+        row.sz = + (1000 * len).toFixed(0);
       else if (width)
-        res += ' ' + (1000 * width).toFixed(0);
+        row.sz = + (1000 * width).toFixed(0);
 
       row.nom_kind = nom.nom_kind;
       row.grouping = nom.grouping;
+      row.article = nom.article;
       row.material = res;
 
       return res;
@@ -230,36 +270,23 @@
 
       this._data._modified = false;
 
-      const {calc_order, _manager, _metadata} = this;
+      const {calc_order, _manager} = this;
 
-      // форма в модальном диалоге
-      const options = {
-        name: 'wnd_obj_' + _manager.class_name,
-        wnd: {
-          top: 80 + Math.random()*40,
-          left: 120 + Math.random()*80,
-          width: 780,
-          height: 400,
-          modal: true,
-          center: false,
-          pwnd: pwnd,
-          allow_close: true,
-          allow_minmax: true,
-          caption: `<b>${calc_order.presentation}</b>`
-        }
-      };
-
-      this.wnd = $p.iface.dat_blank(null, options.wnd);
+      // окно + тулбар + закладки
+      this.wnd = this.draw_tabs($p.iface.dat_blank(null, {
+        width: 720,
+        height: 400,
+        modal: true,
+        center: true,
+        pwnd: pwnd,
+        allow_close: true,
+        allow_minmax: true,
+        caption: `<b>${calc_order.presentation}</b>`
+      }));
       const {elmnts} = this.wnd;
-
-      // тулбар + закладки
-      this.draw_tabs(this.wnd);
 
       // табчасть продукции
       elmnts.grids.production = this.draw_production(elmnts.tabs.cells("prod"));
-
-      // табчасть состава отчета
-      elmnts.grids.composition = this.draw_composition(elmnts.tabs.cells("composition"));
 
 
       // следим за изменениями варианта настроек
@@ -289,20 +316,48 @@
 
     // тулбар
     draw_tabs(wnd) {
+
+      const items = [
+        {id: "info", type: "text", text: "Вариант настроек:"},
+        {id: "scheme", type: "text", text: "<div style='width: 300px; margin-top: -2px;' name='scheme'></div>"}
+      ];
+      if($p.current_acl.role_available("ИзменениеТехнологическойНСИ")){
+        items.push(
+          {id: "save", type: "button", text: "<i class='fa fa-floppy-o fa-fw'></i>", title: 'Сохранить вариант'},
+          {id: "sep", type: "separator"},
+          {id: "saveas", type: "button", text: "<i class='fa fa-plus-square fa-fw'></i>", title: 'Сохранить как...'});
+      }
+      items.push(
+        {id: "sp", type: "spacer"},
+        {id: "print", type: "button", text: "<i class='fa fa-print fa-fw'></i>", title: 'Печать отчета'});
+
       wnd.attachToolbar({
-        items:[
-          {id: "info", type: "text", text: "Вариант настроек:"},
-          {id: "scheme", type: "text", text: "<div style='width: 300px; margin-top: -2px;' name='scheme'></div>"},
-          {id: "data", type: "button", text: "<i class='fa fa-calculator fa-fw'></i>", title: 'Рассчитать'},
-          //{id: "sep", type: "separator"},
-          {id: "sp", type: "spacer"},
-          {id: "print", type: "button", text: "<i class='fa fa-print fa-fw'></i>", title: 'Печать отчета'},
-        ],
+        items: items,
         onClick: (name) => {
-          if(name == 'data'){
-            this.print_data.then((data) => {
-              console.log(data)
-            })
+          if(this.scheme.empty()){
+            return $p.msg.show_msg({
+              type: "alert-warning",
+              text: "Не выбран вариант настроек",
+              title: $p.msg.main_title
+            });
+          }
+          if(name == 'print'){
+            this.generate().then((doc) => doc.print());
+          }
+          else if(name == 'save'){
+            this.scheme.save().then((scheme) => scheme.set_default());
+          }
+          else if(name == 'saveas'){
+            $p.iface.query_value(this.scheme.name.replace(/[0-9]/g, '') + Math.floor(10 + Math.random() * 21), 'Укажите название варианта')
+              .then((name) => {
+                const proto = this.scheme._obj._clone();
+                delete proto.ref;
+                proto.name = name;
+                return this.scheme._manager.create(proto);
+              })
+              .then((scheme) => scheme.save())
+              .then((scheme) => this.scheme = scheme.set_default())
+              .catch((err) => null);
           }
         }
       })
@@ -315,7 +370,6 @@
         width: 280
       });
 
-
       // закладки
       wnd.elmnts.tabs = wnd.attachTabbar({
         arrows_mode: "auto",
@@ -323,9 +377,12 @@
           {id: "prod", text: "Продукция", active:  true},
           {id: "composition", text: "Состав"},
           {id: "columns", text: "Колонки"},
-          {id: "selection", text: "Отбор"}
+          {id: "selection", text: "Отбор"},
+          {id: "dimensions", text: "Группировка"},
         ]
       });
+
+      return wnd;
     }
 
     draw_production(cell) {
@@ -333,23 +390,23 @@
         obj: this,
         ts: "production",
         ts_captions: {
-          "fields":["characteristic","qty"],
-          "headers":"Продукция,Штук",
-          "widths":"*,150",
-          "min_widths":"200,120",
+          "fields":["use","characteristic","qty"],
+          "headers":",Продукция,Штук",
+          "widths":"40,*,150",
+          "min_widths":"40,200,120",
           "aligns":"",
-          "sortings":"na,na",
-          "types":"ref,calck"
+          "sortings":"na,na,na",
+          "types":"ch,ref,calck"
         }
       })
     }
 
     draw_columns(cell) {
-
-      const grid = cell.attachTabular({
+      return cell.attachTabular({
         obj: this.scheme,
         ts: "fields",
-        disable_add_del: true,
+        reorder: true,
+        //disable_add_del: true,
         ts_captions: {
           "fields":["use","field","caption"],
           "headers":",Поле,Заголовок",
@@ -357,49 +414,37 @@
           "min_widths":"40,200,200",
           "aligns":"",
           "sortings":"na,na,na",
-          "types":"ch,ro,ro"
+          "types":"ch,ed,ed"
         }
       });
-
-      cell.detachToolbar();
-
-      return grid;
     }
 
     draw_composition(cell) {
-
-      if(!this.composition.count()){
-        this.composition.load(RepMaterials_demand.composition_parts)
-      }
-
-      const grid = cell.attachTabular({
-        obj: this,
+      this.composition_parts();
+      return cell.attachTabular({
+        obj: this.scheme,
         ts: "composition",
-        disable_add_del: true,
+        //disable_add_del: true,
+        reorder: true,
         ts_captions: {
-          "fields":["use","elm"],
-          "headers":",Элемент",
-          "widths":"40,*",
-          "min_widths":"40,200",
+          "fields":["use","field","definition"],
+          "headers":",Элемент,Описание",
+          "widths":"40,160,*",
+          "min_widths":"40,120,200",
           "aligns":"",
-          "sortings":"na,na",
-          "types":"ch,ro"
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
         }
-      })
-
-      cell.detachToolbar();
-
-      return grid;
-
+      });
     }
 
     draw_selection(cell) {
-
-      const grid = cell.attachTabular({
+      return cell.attachTabular({
         obj: this.scheme,
         ts: "selection",
+        reorder: true,
         ts_captions: {
-          "fields":["use","left_value","comparison_type,right_value"],
+          "fields":["use","left_value","comparison_type","right_value"],
           "headers":",Левое значение,Вид сравнения,Правое значение",
           "widths":"40,200,100,*",
           "min_widths":"40,200,100,200",
@@ -408,13 +453,74 @@
           "types":"ch,ed,ref,ed"
         }
       });
-
-      return grid;
-
     }
 
-    save_scheme() {
+    draw_dimensions(cell) {
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "dimensions",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","parent","field"],
+          "headers":",Таблица,Поле",
+          "widths":"40,200,*",
+          "min_widths":"40,200,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
+        }
+      });
+    }
 
+    // перезаполняет табчасть состава по данным макета
+    composition_parts(refill) {
+      const {composition} = this.scheme;
+      if(!composition.count()){
+        refill = true;
+      }
+      if(refill){
+        this.templates().forEach((template, index) => {
+          const {attributes} = template;
+          composition.add({
+            field: attributes.id ? attributes.id.value : index,
+            kind: attributes.kind ? attributes.kind.value : 'obj',
+            definition: attributes.definition ? attributes.definition.value : 'Описание отсутствует',
+          })
+        });
+      }
+    }
+
+    // возвращает массив шаблонов или конкретный шаблон
+    templates(name) {
+
+      const {children} = this.formula._template.content;
+
+      if(name){
+        return children.namedItem(name);
+      }
+      const res = [];
+      for(let i = 0; i < children.length; i++){
+        res.push(children.item(i))
+      }
+      return res;
+    }
+
+    // корректирует данные перед заполнением шаблона
+    on_fill_template(template, data) {
+
+      if(template.attributes.tabular && template.attributes.tabular.value == "specification"){
+        const specification = data.specification.map((row) => {
+          return {
+            product: row.product,
+            grouping: row.grouping,
+            Номенклатура: row.nom.article + ' ' + row.nom.name + (!row.clr.empty() && !row.clr.predefined_name ? ' ' + row.clr.name : ''),
+            Размеры: row.sz,
+            Количество: row.qty.toFixed(),
+          }
+        })
+        return {specification, _grouping: data._grouping}
+      }
+      return data;
     }
 
     observer(changes) {
@@ -433,8 +539,13 @@
 
       grids.columns && grids.columns.unload && grids.columns.unload();
       grids.selection && grids.selection.unload && grids.selection.unload();
+      grids.composition && grids.composition.unload && grids.composition.unload();
+      grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
+
       grids.columns = this.draw_columns(tabs.cells("columns"));
       grids.selection = this.draw_selection(tabs.cells("selection"));
+      grids.composition = this.draw_composition(tabs.cells("composition"));
+      grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
 
     }
 
@@ -469,6 +580,7 @@
           doc.production.forEach((row) => {
             if (!row.characteristic.empty()) {
               rows.push({
+                use: true,
                 characteristic: row.characteristic,
                 qty: row.qty,
               })
@@ -490,19 +602,6 @@
     static get resources() {
       return ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'];
     }
-
-    static get composition_parts() {
-      return [
-        {use: true, elm: "Шапка"},
-        {use: true, elm: "Эскизы малые"},
-        {use: false, elm: "Эскизы большие"},
-        {use: false, elm: "Продукция"},
-        {use: true, elm: "Спецификация"},
-        {use: false, elm: "Пописи"},
-        {use: false, elm: "Подвал"},
-      ];
-    }
-
 
   }
 

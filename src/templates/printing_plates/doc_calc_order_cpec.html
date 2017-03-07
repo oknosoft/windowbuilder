@@ -1,7 +1,11 @@
 <!-- Заказ с эскизами + печать спецификации -->
 
 <!-- Заголовок, шапка отчета -->
-<div id='header' class='container'>
+<div id='header'
+     class='container'
+     kind='obj'
+     definition='Заголовок'
+>
 
     <div style="font-weight: bold; font-size: 14pt; float: left; padding:4pt; clear: both">
         Счет № #ЗаказНомер# от #ДатаЗаказаФорматDD#
@@ -40,88 +44,135 @@
 </div>
 
 <!-- Эскиз изделия + ячейка описания -->
-<div id='product' style="clear: both; padding: 4pt; border-top: gainsboro 1px dashed; margin-top: 4pt;">
+<div id='scheme_small'
+     style="clear: both; padding: 4pt; border-top: gainsboro 1px dashed; margin-top: 4pt;"
+     kind='row'
+     tabular='production'
+     definition='Эскизы малые'
+>
     <div style="width: 40%; height: 180px; float: left">
         эскиз
     </div>
     <div style="width: 55%; float: left">
-        Описание
-    </div>
-</div>
-
-<!-- шаблон ячейки описание изделия -->
-<div id='product_description'>
-    <table width="100%">
+      <table width="100%">
         <tbody >
         <tr><td><b>Изделие №#НомерСтроки#</b></td><td><b>Количество: #Количество# #Ед#</b>, Цвет: #Цвет#</td></tr>
         <tr><td>Размеры:</td><td>#Размеры#</td></tr>
         <tr><td>Продукция:</td><td>#Номенклатура#</td></tr>
         <tr><td>Заполнения:</td><td>#Заполнения#</td></tr>
         </tbody>
+      </table>
+    </div>
+</div>
+
+
+<!-- Табличная часть продукции -->
+<div id='table_production'
+     kind='table'
+     tabular='production'
+     definition='Таблица продукции'
+>
+  <table class="border" width="100%" cellpadding="2" cellspacing="2">
+
+    <!-- Шапка табличной части -->
+    <thead>
+    <tr name="row">
+      <th style="width:11mm;">№</th>
+      <th>Товар</th>
+      <th style="width:15mm;">Кол-во</th>
+      <th style="width:13mm;">Ед.</th>
+      <th style="width:20mm;">Цена</th>
+      <th style="width:20mm;">Скидка %</th>
+      <th style="width:20mm;">Скидка</th>
+      <th style="width:20mm;">Сумма</th>
+    </tr>
+    </thead>
+
+    <!-- Подвал табличной части -->
+    <tfoot>
+    <tr>
+      <td></td>
+      <td colspan="6" style="font-weight:bold;  text-align:right;">Итого без скидки:</td colsp>
+      <td style="font-weight:bold;  text-align:right;">#СуммаДокументаБезСкидки#</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan="6" style="font-weight:bold;  text-align:right;">Сумма скидки:</td>
+      <td style="font-weight:bold;  text-align:right;">#СуммаСкидки#</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan="6" style="font-weight:bold;  text-align:right;">Итого к оплате:</td>
+      <td style="font-weight:bold;  text-align:right;">#СуммаДокумента#</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan="6" style="font-weight:bold;  text-align:right;">#ТекстНДС#</td>
+      <td style="font-weight:bold;  text-align:right;">#СуммаНДС#</td>
+    </tr>
+    </tfoot>
+
+    <!-- Строка табличной части -->
+    <tbody>
+    <tr>
+      <td align="center">#НомерСтроки#</td>
+      <td align="left">#Номенклатура# #Характеристика#</td>
+      <td align="right">#Количество#</td>
+      <td align="left">#Ед#</td>
+      <td align="right">#Цена#</td>
+      <td align="right">#СкидкаПроцент#</td>
+      <td align="right">#Скидка#</td>
+      <td align="right">#Сумма#</td>
+    </tr>
+    </tbody>
+
     </table>
 </div>
 
-<!-- шапка, заголовок и строка табличной части -->
-<div id='table_order'>
+<!-- Табличная часть спецификации -->
+<div id='table_specification'
+     kind='table'
+     tabular='specification'
+     definition='Состав изделий'
+>
+  <table class="border" width="100%" cellpadding="2" cellspacing="2">
 
-    <table class="border" width="100%" cellpadding="2" cellspacing="2">
-        <thead>
-        <tr>
-            <th style="width:11mm;">№</th>
-            <th>Товар</th>
-            <th style="width:15mm;">Кол-во</th>
-            <th style="width:13mm;">Ед.</th>
-            <th style="width:20mm;">Цена</th>
-            <th style="width:20mm;">Скидка %</th>
-            <th style="width:20mm;">Скидка</th>
-            <th style="width:20mm;">Сумма</th>
-        </tr>
-        </thead>
-        <tbody >
+    <!-- Шапка табличной части -->
+    <thead>
+    <tr>
+      <th style="width:11mm;">Изд.</th>
+      <th>Номенклатура</th>
+      <th style="width:28mm;">Размеры</th>
+      <th style="width:16mm;">Колич.</th>
+    </tr>
+    </thead>
 
-        <!-- Строка табличной части -->
-        <tr>
-            <td align="center">#НомерСтроки#</td>
-            <td align="left">#Номенклатура# #Характеристика#</td>
-            <td align="right">#Количество#</td>
-            <td align="left">#Ед#</td>
-            <td align="right">#Цена#</td>
-            <td align="right">#СкидкаПроцент#</td>
-            <td align="right">#Скидка#</td>
-            <td align="right">#Сумма#</td></tr>
-        </tbody>
-    </table>
+    <!-- Строка табличной части -->
+    <tbody>
 
+    <tr name="row">
+      <td align="center">#product#</td>
+      <td align="left">#Номенклатура#</td>
+      <td align="left">#Размеры#</td>
+      <td align="right">#Количество#</td>
+    </tr>
+
+    <!-- Строка группировки -->
+    <tr name="grouping">
+      <td colspan="4" align="left"><b>#grouping#</b></td>
+    </tr>
+
+    </tbody>
+
+  </table>
 </div>
 
-<!-- Строка итогов табличной части -->
-<div id='table_order_footer'>
-    <table border="0" width="100%" cellpadding="1" cellspacing="1">
-        <tr>
-            <td></td>
-            <td style="width:50mm; font-weight:bold;  text-align:right;">Итого без скидки:</td>
-            <td style="width:20mm; font-weight:bold;  text-align:right;">#СуммаДокументаБезСкидки#</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td style="font-weight:bold;  text-align:right;">Сумма скидки:</td>
-            <td style="font-weight:bold;  text-align:right;">#СуммаСкидки#</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td style="font-weight:bold;  text-align:right;">Итого к оплате:</td>
-            <td style="font-weight:bold;  text-align:right;">#СуммаДокумента#</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td style="font-weight:bold;  text-align:right;">#ТекстНДС#</td>
-            <td style="font-weight:bold;  text-align:right;">#СуммаНДС#</td>
-        </tr>
-    </table>
-</div>
 
 <!-- Подвал заказа -->
-<div id='order_footer'>
+<div id='footer'
+     kind='obj'
+     definition='Подвал заказа'
+>
 
     <div style="margin-bottom: 4mm">
         Всего наименований #ВсегоНаименований# на сумму #СуммаДокумента# #ВалютаДокумента#.<br />
@@ -156,5 +207,20 @@
         </tr>
 
     </table>
+
+</div>
+
+<!-- Подписи -->
+<div id='signatures'
+     kind='obj'
+     definition='Подписи сдал-принял'
+>
+
+  <table border="0" width="100%" cellpadding="1" cellspacing="1" style="margin-top: 16mm">
+    <tr>
+      <td style="width:50%; padding: 4mm; text-align:left;">Сдал:___________________________</td>
+      <td style="padding: 4mm; text-align:left;">Принял:___________________________</td>
+    </tr>
+  </table>
 
 </div>

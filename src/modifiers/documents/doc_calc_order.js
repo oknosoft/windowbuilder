@@ -301,22 +301,26 @@ $p.DocCalc_order.prototype.__define({
 	 * Возвращает данные для печати
 	 */
 	print_data: {
-		get: function () {
-			var our_bank_account = this.bank_account && !this.bank_account.empty() ? this.bank_account : this.organization.main_bank_account,
-				get_imgs = [];
+
+		value: function () {
+
+		  const {organization, bank_account, contract, manager} = this;
+			const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
+			const get_imgs = [];
+			const {contact_information_kinds} = $p.cat;
 
 			// заполняем res теми данными, которые доступны синхронно
-			var res = {
+			const res = {
 				АдресДоставки: this.shipping_address,
 				ВалютаДокумента: this.doc_currency.presentation,
 				ДатаЗаказаФорматD: $p.moment(this.date).format("L"),
 				ДатаЗаказаФорматDD: $p.moment(this.date).format("LL"),
 				ДатаТекущаяФорматD: $p.moment().format("L"),
 				ДатаТекущаяФорматDD: $p.moment().format("LL"),
-				ДоговорДатаФорматD: $p.moment(this.contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : this.contract.date).format("L"),
-				ДоговорДатаФорматDD: $p.moment(this.contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : this.contract.date).format("LL"),
-				ДоговорНомер: this.contract.number_doc ? this.contract.number_doc : this.number_doc,
-				ДоговорСрокДействия: $p.moment(this.contract.validity).format("L"),
+				ДоговорДатаФорматD: $p.moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format("L"),
+				ДоговорДатаФорматDD: $p.moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format("LL"),
+				ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
+				ДоговорСрокДействия: $p.moment(contract.validity).format("L"),
 				ЗаказНомер: this.number_doc,
 				Контрагент: this.partner.presentation,
 				КонтрагентОписание: this.partner.long_presentation,
@@ -336,66 +340,64 @@ $p.DocCalc_order.prototype.__define({
 				КурсВзаиморасчетов: this.settlements_course,
 				ЛистКомплектацииГруппы: "",
 				ЛистКомплектацииСтроки: "",
-				Организация: this.organization.presentation,
-				ОрганизацияГород: this.organization.contact_information._obj.reduce(function (val, row) { return val || row.city }, "") || "Москва",
-				ОрганизацияАдрес: this.organization.contact_information._obj.reduce(function (val, row) {
-
-					if(row.kind == $p.cat.contact_information_kinds.predefined("ЮрАдресОрганизации") && row.presentation)
-						return row.presentation;
-
-					else if(val)
-						return val;
-
-					else if(row.presentation && (
-							row.kind == $p.cat.contact_information_kinds.predefined("ФактАдресОрганизации") ||
-							row.kind == $p.cat.contact_information_kinds.predefined("ПочтовыйАдресОрганизации")
-						))
-						return row.presentation;
-
+				Организация: organization.presentation,
+				ОрганизацияГород: organization.contact_information._obj.reduce((val, row) => val || row.city, "") || "Москва",
+				ОрганизацияАдрес: organization.contact_information._obj.reduce((val, row) => {
+					if(row.kind == contact_information_kinds.predefined("ЮрАдресОрганизации") && row.presentation){
+            return row.presentation;
+          }
+          else if(val){
+            return val;
+          }
+          else if(row.presentation && (
+							row.kind == contact_information_kinds.predefined("ФактАдресОрганизации") ||
+							row.kind == contact_information_kinds.predefined("ПочтовыйАдресОрганизации")
+						)){
+            return row.presentation;
+          }
 				}, ""),
-				ОрганизацияТелефон: this.organization.contact_information._obj.reduce(function (val, row) {
-
-					if(row.kind == $p.cat.contact_information_kinds.predefined("ТелефонОрганизации") && row.presentation)
-						return row.presentation;
-
-					else if(val)
-						return val;
-
-					else if(row.kind == $p.cat.contact_information_kinds.predefined("ФаксОрганизации") && row.presentation)
-						return row.presentation;
-
+				ОрганизацияТелефон: organization.contact_information._obj.reduce((val, row) => {
+					if(row.kind == contact_information_kinds.predefined("ТелефонОрганизации") && row.presentation){
+            return row.presentation;
+          }
+          else if(val){
+            return val;
+          }
+          else if(row.kind == contact_information_kinds.predefined("ФаксОрганизации") && row.presentation){
+            return row.presentation;
+          }
 				}, ""),
 				ОрганизацияБанкБИК: our_bank_account.bank.id,
 				ОрганизацияБанкГород: our_bank_account.bank.city,
 				ОрганизацияБанкКоррСчет: our_bank_account.bank.correspondent_account,
 				ОрганизацияБанкНаименование: our_bank_account.bank.name,
 				ОрганизацияБанкНомерСчета: our_bank_account.account_number,
-				ОрганизацияИндивидуальныйПредприниматель: this.organization.individual_entrepreneur.presentation,
-				ОрганизацияИНН: this.organization.inn,
-				ОрганизацияКПП: this.organization.kpp,
-				ОрганизацияСвидетельствоДатаВыдачи: this.organization.certificate_date_issue,
-				ОрганизацияСвидетельствоКодОргана: this.organization.certificate_authority_code,
-				ОрганизацияСвидетельствоНаименованиеОргана: this.organization.certificate_authority_name,
-				ОрганизацияСвидетельствоСерияНомер: this.organization.certificate_series_number,
-				ОрганизацияЮрФизЛицо: this.organization.individual_legal.presentation,
+				ОрганизацияИндивидуальныйПредприниматель: organization.individual_entrepreneur.presentation,
+				ОрганизацияИНН: organization.inn,
+				ОрганизацияКПП: organization.kpp,
+				ОрганизацияСвидетельствоДатаВыдачи: organization.certificate_date_issue,
+				ОрганизацияСвидетельствоКодОргана: organization.certificate_authority_code,
+				ОрганизацияСвидетельствоНаименованиеОргана: organization.certificate_authority_name,
+				ОрганизацияСвидетельствоСерияНомер: organization.certificate_series_number,
+				ОрганизацияЮрФизЛицо: organization.individual_legal.presentation,
 				ПродукцияЭскизы: {},
 				Проект: this.project.presentation,
 				СистемыПрофилей: this.sys_profile,
 				СистемыФурнитуры: this.sys_furn,
-				Сотрудник: this.manager.presentation,
-				СотрудникДолжность: this.manager.individual_person.Должность || "менеджер",
-				СотрудникДолжностьРП: this.manager.individual_person.ДолжностьРП,
-				СотрудникИмя: this.manager.individual_person.Имя,
-				СотрудникИмяРП: this.manager.individual_person.ИмяРП,
-				СотрудникОснованиеРП: this.manager.individual_person.ОснованиеРП,
-				СотрудникОтчество: this.manager.individual_person.Отчество,
-				СотрудникОтчествоРП: this.manager.individual_person.ОтчествоРП,
-				СотрудникФамилия: this.manager.individual_person.Фамилия,
-				СотрудникФамилияРП: this.manager.individual_person.ФамилияРП,
-				СотрудникФИО: this.manager.individual_person.Фамилия +
-				(this.manager.individual_person.Имя ? " " + this.manager.individual_person.Имя[1].toUpperCase() + "." : "" )+
-				(this.manager.individual_person.Отчество ? " " + this.manager.individual_person.Отчество[1].toUpperCase() + "." : ""),
-				СотрудникФИОРП: this.manager.individual_person.ФамилияРП + " " + this.manager.individual_person.ИмяРП + " " + this.manager.individual_person.ОтчествоРП,
+				Сотрудник: manager.presentation,
+				СотрудникДолжность: manager.individual_person.Должность || "менеджер",
+				СотрудникДолжностьРП: manager.individual_person.ДолжностьРП,
+				СотрудникИмя: manager.individual_person.Имя,
+				СотрудникИмяРП: manager.individual_person.ИмяРП,
+				СотрудникОснованиеРП: manager.individual_person.ОснованиеРП,
+				СотрудникОтчество: manager.individual_person.Отчество,
+				СотрудникОтчествоРП: manager.individual_person.ОтчествоРП,
+				СотрудникФамилия: manager.individual_person.Фамилия,
+				СотрудникФамилияРП: manager.individual_person.ФамилияРП,
+				СотрудникФИО: manager.individual_person.Фамилия +
+				(manager.individual_person.Имя ? " " + manager.individual_person.Имя[1].toUpperCase() + "." : "" )+
+				(manager.individual_person.Отчество ? " " + manager.individual_person.Отчество[1].toUpperCase() + "." : ""),
+				СотрудникФИОРП: manager.individual_person.ФамилияРП + " " + manager.individual_person.ИмяРП + " " + manager.individual_person.ОтчествоРП,
 				СуммаДокумента: this.doc_amount.toFixed(2),
 				СуммаДокументаПрописью: this.doc_amount.in_words(),
 				СуммаДокументаБезСкидки: this.production._obj.reduce(function (val, row){
@@ -409,32 +411,29 @@ $p.DocCalc_order.prototype.__define({
 				}, 0).toFixed(2),
 				ТекстНДС: this.vat_consider ? (this.vat_included ? "В том числе НДС 18%" : "НДС 18% (сверху)") : "Без НДС",
 				ТелефонПоАдресуДоставки: this.phone,
-				СуммаВключаетНДС: this.contract.vat_included,
-				УчитыватьНДС: this.contract.vat_consider,
+				СуммаВключаетНДС: contract.vat_included,
+				УчитыватьНДС: contract.vat_consider,
 				ВсегоНаименований: this.production.count(),
 				ВсегоИзделий: 0,
 				ВсегоПлощадьИзделий: 0
 			};
 
 			// дополняем значениями свойств
-			this.extra_fields.forEach(function (row) {
+			this.extra_fields.forEach((row) => {
 				res["Свойство" + row.property.name.replace(/\s/g,"")] = row.value.presentation || row.value;
 			});
 
 			// TODO: дополнить датами доставки и монтажа
-			if(!this.shipping_address)
-				res.МонтажДоставкаСамовывоз = "Самовывоз";
-			else
-				res.МонтажДоставкаСамовывоз = "Монтаж по адресу: " + this.shipping_address;
+      res.МонтажДоставкаСамовывоз = !this.shipping_address ? "Самовывоз" : "Монтаж по адресу: " + this.shipping_address;
 
 			// получаем логотип организации
-			for(var key in this.organization._attachments){
+			for(let key in organization._attachments){
 				if(key.indexOf("logo") != -1){
-					get_imgs.push(this.organization.get_attachment(key)
-						.then(function (blob) {
+					get_imgs.push(organization.get_attachment(key)
+						.then((blob) => {
 							return $p.utils.blob_as_text(blob, blob.type.indexOf("svg") == -1 ? "data_url" : "")
 						})
-						.then(function (data_url) {
+						.then((data_url) => {
 							res.ОрганизацияЛоготип = data_url;
 						})
 						.catch($p.record_log));
@@ -443,7 +442,7 @@ $p.DocCalc_order.prototype.__define({
 			}
 
 			// получаем эскизы продукций, параллельно накапливаем количество и площадь изделий
-			this.production.forEach(function (row) {
+			this.production.forEach((row) => {
 
 				if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory){
 
@@ -451,10 +450,8 @@ $p.DocCalc_order.prototype.__define({
 					res.ВсегоПлощадьИзделий+= row.quantity * row.s;
 
 					get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, "svg")
-						.then(function (blob) {
-							return $p.utils.blob_as_text(blob)
-						})
-						.then(function (svg_text) {
+						.then((blob) => $p.utils.blob_as_text(blob))
+						.then((svg_text) => {
 							res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
 						})
 						.catch($p.record_log));
@@ -463,19 +460,19 @@ $p.DocCalc_order.prototype.__define({
 			res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
 			return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-				.then(function () {
+				.then(() => {
 
 					if(!window.QRCode)
-						return new Promise(function(resolve, reject){
+						return new Promise((resolve, reject) => {
 							$p.load_script("lib/qrcodejs/qrcode.js", "script", resolve);
 						});
 
 				})
-				.then(function () {
+				.then(() => {
 
-					var svg = document.createElement("SVG");
+					const svg = document.createElement("SVG");
 					svg.innerHTML = "<g />";
-					var qrcode = new QRCode(svg, {
+					const qrcode = new QRCode(svg, {
 						text: "http://www.oknosoft.ru/zd/",
 						width: 100,
 						height: 100,
@@ -497,15 +494,15 @@ $p.DocCalc_order.prototype.__define({
 	row_description: {
 		value: function (row) {
 
-			var product = row.characteristic,
-				res = {
+			const {characteristic, nom} = row;
+			const res = {
 					НомерСтроки: row.row,
 					Количество: row.quantity,
 					Ед: row.unit.name || "шт",
-					Цвет: product.clr.name,
+					Цвет: characteristic.clr.name,
 					Размеры: row.len + "x" + row.width + ", " + row.s + "м²",
-					Номенклатура: row.nom.name_full || row.nom.name,
-					Характеристика: product.name,
+					Номенклатура: nom.name_full || nom.name,
+					Характеристика: characteristic.name,
 					Заполнения: "",
 					Цена: row.price,
 					ЦенаВнутр: row.price_internal,
@@ -516,11 +513,13 @@ $p.DocCalc_order.prototype.__define({
 					СуммаВнутр: row.amount_internal.round(2)
 				};
 
-			product.glasses.forEach(function (row) {
-				if(res.Заполнения.indexOf(row.nom.name) == -1){
-					if(res.Заполнения)
-						res.Заполнения += ", ";
-					res.Заполнения += row.nom.name;
+			characteristic.glasses.forEach((row) => {
+			  const {name} = row.nom;
+				if(res.Заполнения.indexOf(name) == -1){
+					if(res.Заполнения){
+            res.Заполнения += ", ";
+          }
+					res.Заполнения += name;
 				}
 			});
 

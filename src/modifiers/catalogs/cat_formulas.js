@@ -22,12 +22,13 @@ $p.on({
 
 					// формируем списки печатных форм и внешних обработок
 					if(row.parent == $p.cat.formulas.predefined("printing_plates")){
-						row.params.find_rows({param: "destination"}, function (dest) {
-							var dmgr = $p.md.mgr_by_class_name(dest.value);
+						row.params.find_rows({param: "destination"}, (dest) => {
+							const dmgr = $p.md.mgr_by_class_name(dest.value);
 							if(dmgr){
-								if(!dmgr._printing_plates)
-									dmgr._printing_plates = {};
-								dmgr._printing_plates["prn_" + row.id] = row;
+								if(!dmgr._printing_plates){
+                  dmgr._printing_plates = {};
+                }
+								dmgr._printing_plates["prn_" + row.ref] = row;
 							}
 						})
 					}
@@ -61,51 +62,11 @@ $p.CatFormulas.prototype.__define({
           return Promise.resolve();
         }
 
-				// создаём blob из шаблона пустой страницы
-				if(!($p.injected_data['view_blank.html'] instanceof Blob)){
-          $p.injected_data['view_blank.html'] = new Blob([$p.injected_data['view_blank.html']], {type: 'text/html'});
-        }
-
 				// получаем HTMLDivElement с отчетом
 				return _formula(obj)
 
-				// показываем отчет в отдельном окне
-					.then(function (doc) {
-
-						if(doc && doc.content instanceof HTMLElement){
-
-							const url = window.URL.createObjectURL($p.injected_data['view_blank.html']);
-
-							try{
-                const	wnd_print = window.open(
-                  url, "wnd_print", "fullscreen,menubar=no,toolbar=no,location=no,status=no,directories=no,resizable=yes,scrollbars=yes");
-
-                if (wnd_print.outerWidth < screen.availWidth || wnd_print.outerHeight < screen.availHeight){
-                  wnd_print.moveTo(0,0);
-                  wnd_print.resizeTo(screen.availWidth, screen.availHeight);
-                }
-
-                wnd_print.onload = function(e) {
-                  window.URL.revokeObjectURL(url);
-                  wnd_print.document.body.appendChild(doc.content);
-                  if(doc.title){
-                    wnd_print.document.title = doc.title;
-                  }
-                  wnd_print.print();
-                };
-
-                return wnd_print;
-              }
-              catch(err){
-                $p.msg.show_msg({
-                  title: $p.msg.bld_title,
-                  type: "alert-error",
-                  text: err.message.match("outerWidth") ?
-                    "Ошибка открытия окна печати<br />Вероятно, в браузере заблокированы всплывающие окна" : err.message
-                });
-              }
-						}
-					});
+				  // показываем отчет в отдельном окне
+					.then((doc) => doc instanceof $p.SpreadsheetDocument && doc.print());
 
 			}
 			else{
