@@ -231,10 +231,10 @@
             return !(left_value > right_value);
 
           case comparison_types.in:
-            return !left_value || right_value.search(left_value.toString()) == -1;
+            return !left_value || right_value.indexOf(left_value.toString()) == -1;
 
           case comparison_types.nin:
-            return right_value.search(left_value.toString()) != -1;
+            return right_value.indexOf(left_value.toString()) != -1;
         }
 
       })
@@ -508,6 +508,7 @@
     // корректирует данные перед заполнением шаблона
     on_fill_template(template, data) {
 
+      // при выводе спецификации
       if(template.attributes.tabular && template.attributes.tabular.value == "specification"){
         const specification = data.specification.map((row) => {
           return {
@@ -519,6 +520,16 @@
           }
         })
         return {specification, _grouping: data._grouping}
+      }
+      // при выводе продукции
+      else if(template.attributes.tabular && template.attributes.tabular.value == "production"){
+        const production = [];
+        this.production.find_rows({use: true}, (row) => {
+          production.push(Object.assign(
+            this.calc_order.row_description(row),
+            {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)}))
+        })
+        return Object.assign({}, data, {production});
       }
       return data;
     }

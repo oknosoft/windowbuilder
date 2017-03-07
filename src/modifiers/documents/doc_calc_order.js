@@ -494,24 +494,31 @@ $p.DocCalc_order.prototype.__define({
 	row_description: {
 		value: function (row) {
 
+		  if(!(row instanceof $p.DocCalc_orderProductionRow) && row.characteristic){
+		    this.production.find_rows({characteristic: row.characteristic}, (prow) => {
+		      row = prow;
+		      return false;
+        })
+      }
 			const {characteristic, nom} = row;
 			const res = {
-					НомерСтроки: row.row,
-					Количество: row.quantity,
-					Ед: row.unit.name || "шт",
-					Цвет: characteristic.clr.name,
-					Размеры: row.len + "x" + row.width + ", " + row.s + "м²",
-					Номенклатура: nom.name_full || nom.name,
-					Характеристика: characteristic.name,
-					Заполнения: "",
-					Цена: row.price,
-					ЦенаВнутр: row.price_internal,
-					СкидкаПроцент: row.discount_percent,
-					СкидкаПроцентВнутр: row.discount_percent_internal,
-					Скидка: row.discount.round(2),
-					Сумма: row.amount.round(2),
-					СуммаВнутр: row.amount_internal.round(2)
-				};
+			  НомерСтроки: row.row,
+        Количество: row.quantity,
+        Ед: row.unit.name || "шт",
+        Цвет: characteristic.clr.name,
+        Размеры: row.len + "x" + row.width + ", " + row.s + "м²",
+        Номенклатура: nom.name_full || nom.name,
+        Характеристика: characteristic.name,
+        Заполнения: "",
+        Фурнитура: "",
+        Цена: row.price,
+        ЦенаВнутр: row.price_internal,
+        СкидкаПроцент: row.discount_percent,
+        СкидкаПроцентВнутр: row.discount_percent_internal,
+        Скидка: row.discount.round(2),
+        Сумма: row.amount.round(2),
+        СуммаВнутр: row.amount_internal.round(2)
+			};
 
 			characteristic.glasses.forEach((row) => {
 			  const {name} = row.nom;
@@ -522,6 +529,16 @@ $p.DocCalc_order.prototype.__define({
 					res.Заполнения += name;
 				}
 			});
+
+      characteristic.constructions.forEach((row) => {
+        const {name} = row.furn;
+        if(name && res.Фурнитура.indexOf(name) == -1){
+          if(res.Фурнитура){
+            res.Фурнитура += ", ";
+          }
+          res.Фурнитура += name;
+        }
+      });
 
 			return res;
 		}

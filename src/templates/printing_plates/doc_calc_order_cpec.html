@@ -51,7 +51,7 @@
      definition='Эскизы малые'
 >
     <div style="width: 40%; height: 180px; float: left">
-        эскиз
+      #svg#
     </div>
     <div style="width: 55%; float: left">
       <table width="100%">
@@ -60,11 +60,11 @@
         <tr><td>Размеры:</td><td>#Размеры#</td></tr>
         <tr><td>Продукция:</td><td>#Номенклатура#</td></tr>
         <tr><td>Заполнения:</td><td>#Заполнения#</td></tr>
+        <tr><td>Фурнитура:</td><td>#Фурнитура#</td></tr>
         </tbody>
       </table>
     </div>
 </div>
-
 
 <!-- Табличная часть продукции -->
 <div id='table_production'
@@ -72,11 +72,11 @@
      tabular='production'
      definition='Таблица продукции'
 >
-  <table class="border" width="100%" cellpadding="2" cellspacing="2">
+  <table class="border" width="100%" cellpadding="2" cellspacing="2" style="margin-top: 4mm">
 
     <!-- Шапка табличной части -->
     <thead>
-    <tr name="row">
+    <tr>
       <th style="width:11mm;">№</th>
       <th>Товар</th>
       <th style="width:15mm;">Кол-во</th>
@@ -89,7 +89,7 @@
     </thead>
 
     <!-- Подвал табличной части -->
-    <tfoot>
+    <!--tfoot>
     <tr>
       <td></td>
       <td colspan="6" style="font-weight:bold;  text-align:right;">Итого без скидки:</td colsp>
@@ -110,11 +110,11 @@
       <td colspan="6" style="font-weight:bold;  text-align:right;">#ТекстНДС#</td>
       <td style="font-weight:bold;  text-align:right;">#СуммаНДС#</td>
     </tr>
-    </tfoot>
+    </tfoot -->
 
     <!-- Строка табличной части -->
     <tbody>
-    <tr>
+    <tr name="row">
       <td align="center">#НомерСтроки#</td>
       <td align="left">#Номенклатура# #Характеристика#</td>
       <td align="right">#Количество#</td>
@@ -135,7 +135,7 @@
      tabular='specification'
      definition='Состав изделий'
 >
-  <table class="border" width="100%" cellpadding="2" cellspacing="2">
+  <table class="border" width="100%" cellpadding="2" cellspacing="2" style="margin-top: 4mm">
 
     <!-- Шапка табличной части -->
     <thead>
@@ -166,7 +166,6 @@
 
   </table>
 </div>
-
 
 <!-- Подвал заказа -->
 <div id='footer'
