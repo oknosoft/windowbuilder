@@ -435,14 +435,20 @@ Contour.prototype.__define({
 	bounds: {
 		get: function () {
 
-      const {data} = this;
+      const {data, parent} = this;
 
 			if(!data._bounds || !data._bounds.width || !data._bounds.height){
 
 			  this.profiles.forEach((profile) => {
           const path = profile.path && profile.path.segments.length ? profile.path : profile.generatrix;
           if(path){
-            data._bounds = data._bounds ? data._bounds.unite(path.bounds) : path.bounds
+            data._bounds = data._bounds ? data._bounds.unite(path.bounds) : path.bounds;
+            if(!parent){
+              const {d0} = profile;
+              if(d0){
+                data._bounds = data._bounds.unite(profile.generatrix.bounds)
+              }
+            }
           }
         });
 

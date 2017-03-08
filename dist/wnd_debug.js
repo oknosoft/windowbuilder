@@ -6403,17 +6403,17 @@ $p.DpBuyers_order.prototype.__define({
 			return this.characteristic.clr;
 		},
 		set: function (v) {
-
-			if(this.characteristic.clr == v)
-				return;
-
+      const {characteristic, _data} = this;
+			if((!v && characteristic.empty()) || characteristic.clr == v){
+        return;
+      }
 			Object.getNotifier(this).notify({
 				type: 'update',
 				name: 'clr',
-				oldValue: this.characteristic.clr
+				oldValue: characteristic.clr
 			});
-			this.characteristic.clr = v;
-			this._data._modified = true;
+      characteristic.clr = v;
+			_data._modified = true;
 		}
 	},
 
@@ -6422,17 +6422,17 @@ $p.DpBuyers_order.prototype.__define({
 			return this.characteristic.sys;
 		},
 		set: function (v) {
-
-			if(this.characteristic.sys == v)
-				return;
-
+		  const {characteristic, _data} = this;
+			if((!v && characteristic.empty()) || characteristic.sys == v){
+        return;
+      }
 			Object.getNotifier(this).notify({
 				type: 'update',
 				name: 'sys',
-				oldValue: this.characteristic.sys
+				oldValue: characteristic.sys
 			});
-			this.characteristic.sys = v;
-			this._data._modified = true;
+      characteristic.sys = v;
+			_data._modified = true;
 		}
 	}
 });

@@ -102,16 +102,18 @@ class ProfileConnective extends ProfileItem {
     super.move_points(delta, all_points, start_point);
 
     // двигаем примыкающие
-    nearests.forEach((np) => {
-      np.do_bind(this, null, null, moved);
-      // двигаем связанные с примыкающими
-      ['b', 'e'].forEach((node) => {
-        const cp = np.cnn_point(node);
-        if(cp.profile){
-          cp.profile.do_bind(np, cp.profile.cnn_point("b"), cp.profile.cnn_point("e"), moved);
-        }
+    if(all_points !== false){
+      nearests.forEach((np) => {
+        np.do_bind(this, null, null, moved);
+        // двигаем связанные с примыкающими
+        ['b', 'e'].forEach((node) => {
+          const cp = np.cnn_point(node);
+          if(cp.profile){
+            cp.profile.do_bind(np, cp.profile.cnn_point("b"), cp.profile.cnn_point("e"), moved);
+          }
+        });
       });
-    });
+    }
 
     this.project.register_change();
   }

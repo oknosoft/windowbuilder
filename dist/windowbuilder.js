@@ -2264,14 +2264,20 @@ Contour.prototype.__define({
 	bounds: {
 		get: function () {
 
-      const {data} = this;
+      const {data, parent} = this;
 
 			if(!data._bounds || !data._bounds.width || !data._bounds.height){
 
 			  this.profiles.forEach((profile) => {
           const path = profile.path && profile.path.segments.length ? profile.path : profile.generatrix;
           if(path){
-            data._bounds = data._bounds ? data._bounds.unite(path.bounds) : path.bounds
+            data._bounds = data._bounds ? data._bounds.unite(path.bounds) : path.bounds;
+            if(!parent){
+              const {d0} = profile;
+              if(d0){
+                data._bounds = data._bounds.unite(profile.generatrix.bounds)
+              }
+            }
           }
         });
 
@@ -3583,38 +3589,30 @@ class DimensionLine extends paper.Group {
       _bounds = {};
 
       if(this.pos == "top" || this.pos == "bottom"){
-
         const size = Math.abs(this.data.elm1[this.data.p1].x - this.data.elm2[this.data.p2].x);
-
         if(event.name == "right"){
           delta = new paper.Point(event.size - size, 0);
           _bounds[event.name] = Math.max(this.data.elm1[this.data.p1].x, this.data.elm2[this.data.p2].x);
-
-        }else{
+        }
+        else{
           delta = new paper.Point(size - event.size, 0);
           _bounds[event.name] = Math.min(this.data.elm1[this.data.p1].x, this.data.elm2[this.data.p2].x);
         }
-
-
-      }else{
-
+      }
+      else{
         const size = Math.abs(this.data.elm1[this.data.p1].y - this.data.elm2[this.data.p2].y);
-
         if(event.name == "bottom"){
           delta = new paper.Point(0, event.size - size);
           _bounds[event.name] = Math.max(this.data.elm1[this.data.p1].y, this.data.elm2[this.data.p2].y);
-
         }
         else{
           delta = new paper.Point(0, size - event.size);
           _bounds[event.name] = Math.min(this.data.elm1[this.data.p1].y, this.data.elm2[this.data.p2].y);
         }
       }
-
-    }else {
-
+    }
+    else {
       _bounds = this.layer.bounds;
-
       if(this.pos == "top" || this.pos == "bottom")
         if(event.name == "right")
           delta = new paper.Point(event.size - _bounds.width, 0);
@@ -3626,33 +3624,32 @@ class DimensionLine extends paper.Group {
         else
           delta = new paper.Point(0, _bounds.height - event.size);
       }
-
     }
 
     if(delta.length){
+      const {project} = this;
 
-      paper.project.deselect_all_points();
+      project.deselect_all_points();
 
-      paper.project.getItems({class: Profile}).forEach(function (p) {
-        if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0 && Math.abs(p.e[xy] - _bounds[event.name]) < consts.sticking0){
-          p.generatrix.segments.forEach(function (segm) {
-            segm.selected = true;
-          })
-
-        }else if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0){
-          p.generatrix.firstSegment.selected = true;
-
-        }else if(Math.abs(p.e[xy] - _bounds[event.name]) < consts.sticking0){
-          p.generatrix.lastSegment.selected = true;
-
+      project.getItems({class: ProfileConnective})
+        .concat(project.getItems({class: Profile}))
+        .forEach((p) => {
+        const {b, e, generatrix} = p;
+        if(Math.abs(b[xy] - _bounds[event.name]) < consts.sticking0 && Math.abs(e[xy] - _bounds[event.name]) < consts.sticking0){
+          generatrix.segments.forEach((segm) => segm.selected = true)
         }
-
+        else if(Math.abs(b[xy] - _bounds[event.name]) < consts.sticking0){
+          generatrix.firstSegment.selected = true;
+        }
+        else if(Math.abs(e[xy] - _bounds[event.name]) < consts.sticking0){
+          generatrix.lastSegment.selected = true;
+        }
       });
-      this.project.move_points(delta);
+      project.move_points(delta, false);
       setTimeout(function () {
         this.deselect_all_points(true);
         this.register_update();
-      }.bind(this.project), 200);
+      }.bind(project), 200);
     }
 
   }
@@ -7445,15 +7442,17 @@ class ProfileConnective extends ProfileItem {
 
     super.move_points(delta, all_points, start_point);
 
-    nearests.forEach((np) => {
-      np.do_bind(this, null, null, moved);
-      ['b', 'e'].forEach((node) => {
-        const cp = np.cnn_point(node);
-        if(cp.profile){
-          cp.profile.do_bind(np, cp.profile.cnn_point("b"), cp.profile.cnn_point("e"), moved);
-        }
+    if(all_points !== false){
+      nearests.forEach((np) => {
+        np.do_bind(this, null, null, moved);
+        ['b', 'e'].forEach((node) => {
+          const cp = np.cnn_point(node);
+          if(cp.profile){
+            cp.profile.do_bind(np, cp.profile.cnn_point("b"), cp.profile.cnn_point("e"), moved);
+          }
+        });
       });
-    });
+    }
 
     this.project.register_change();
   }
@@ -8191,23 +8190,25 @@ Scheme.prototype.__define({
 
 			this.selectedItems.forEach((item) => {
 
-				if(item instanceof paper.Path && item.parent instanceof ProfileItem){
+			  const {parent, layer} = item;
 
-				  if(profiles.indexOf(item.parent) != -1){
+				if(item instanceof paper.Path && parent instanceof ProfileItem){
+
+				  if(profiles.indexOf(parent) != -1){
 				    return;
           }
 
-          profiles.push(item.parent);
+          profiles.push(parent);
 
-				  if(item.parent._hatching){
-            item.parent._hatching.remove();
-            item.parent._hatching = null;
+				  if(parent._hatching){
+            parent._hatching.remove();
+            parent._hatching = null;
           }
 
-          if(item.layer instanceof ConnectiveLayer){
-            other.push.apply(other, item.parent.move_points(delta, all_points));
+          if(layer instanceof ConnectiveLayer){
+            other.push.apply(other, parent.move_points(delta, all_points));
           }
-          else if(!item.layer.parent || !item.parent.nearest || !item.parent.nearest()){
+          else if(!parent.nearest || !parent.nearest()){
 
 						let check_selected;
 						item.segments.forEach((segm) => {
@@ -8220,11 +8221,11 @@ Scheme.prototype.__define({
               return;
             }
 
-            other.push.apply(other, item.parent.move_points(delta, all_points));
+            other.push.apply(other, parent.move_points(delta, all_points));
 
-						if(layers.indexOf(item.layer) == -1){
-							layers.push(item.layer);
-							item.layer.clear_dimentions();
+						if(layers.indexOf(layer) == -1){
+							layers.push(layer);
+              layer.clear_dimentions();
 						}
 
 					}

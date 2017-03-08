@@ -116,38 +116,30 @@ class DimensionLine extends paper.Group {
       _bounds = {};
 
       if(this.pos == "top" || this.pos == "bottom"){
-
         const size = Math.abs(this.data.elm1[this.data.p1].x - this.data.elm2[this.data.p2].x);
-
         if(event.name == "right"){
           delta = new paper.Point(event.size - size, 0);
           _bounds[event.name] = Math.max(this.data.elm1[this.data.p1].x, this.data.elm2[this.data.p2].x);
-
-        }else{
+        }
+        else{
           delta = new paper.Point(size - event.size, 0);
           _bounds[event.name] = Math.min(this.data.elm1[this.data.p1].x, this.data.elm2[this.data.p2].x);
         }
-
-
-      }else{
-
+      }
+      else{
         const size = Math.abs(this.data.elm1[this.data.p1].y - this.data.elm2[this.data.p2].y);
-
         if(event.name == "bottom"){
           delta = new paper.Point(0, event.size - size);
           _bounds[event.name] = Math.max(this.data.elm1[this.data.p1].y, this.data.elm2[this.data.p2].y);
-
         }
         else{
           delta = new paper.Point(0, size - event.size);
           _bounds[event.name] = Math.min(this.data.elm1[this.data.p1].y, this.data.elm2[this.data.p2].y);
         }
       }
-
-    }else {
-
+    }
+    else {
       _bounds = this.layer.bounds;
-
       if(this.pos == "top" || this.pos == "bottom")
         if(event.name == "right")
           delta = new paper.Point(event.size - _bounds.width, 0);
@@ -159,34 +151,32 @@ class DimensionLine extends paper.Group {
         else
           delta = new paper.Point(0, _bounds.height - event.size);
       }
-
     }
 
     if(delta.length){
+      const {project} = this;
 
-      paper.project.deselect_all_points();
+      project.deselect_all_points();
 
-      paper.project.getItems({class: Profile}).forEach(function (p) {
-        if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0 && Math.abs(p.e[xy] - _bounds[event.name]) < consts.sticking0){
-          p.generatrix.segments.forEach(function (segm) {
-            segm.selected = true;
-          })
-
-        }else if(Math.abs(p.b[xy] - _bounds[event.name]) < consts.sticking0){
-          p.generatrix.firstSegment.selected = true;
-
-        }else if(Math.abs(p.e[xy] - _bounds[event.name]) < consts.sticking0){
-          p.generatrix.lastSegment.selected = true;
-
+      project.getItems({class: ProfileConnective})
+        .concat(project.getItems({class: Profile}))
+        .forEach((p) => {
+        const {b, e, generatrix} = p;
+        if(Math.abs(b[xy] - _bounds[event.name]) < consts.sticking0 && Math.abs(e[xy] - _bounds[event.name]) < consts.sticking0){
+          generatrix.segments.forEach((segm) => segm.selected = true)
         }
-
+        else if(Math.abs(b[xy] - _bounds[event.name]) < consts.sticking0){
+          generatrix.firstSegment.selected = true;
+        }
+        else if(Math.abs(e[xy] - _bounds[event.name]) < consts.sticking0){
+          generatrix.lastSegment.selected = true;
+        }
       });
-      this.project.move_points(delta);
+      project.move_points(delta, false);
       setTimeout(function () {
         this.deselect_all_points(true);
         this.register_update();
-        //this.zoom_fit();
-      }.bind(this.project), 200);
+      }.bind(project), 200);
     }
 
   }

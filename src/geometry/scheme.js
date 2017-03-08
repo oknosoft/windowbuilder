@@ -631,24 +631,26 @@ Scheme.prototype.__define({
 
 			this.selectedItems.forEach((item) => {
 
-				if(item instanceof paper.Path && item.parent instanceof ProfileItem){
+			  const {parent, layer} = item;
 
-				  if(profiles.indexOf(item.parent) != -1){
+				if(item instanceof paper.Path && parent instanceof ProfileItem){
+
+				  if(profiles.indexOf(parent) != -1){
 				    return;
           }
 
-          profiles.push(item.parent);
+          profiles.push(parent);
 
-				  if(item.parent._hatching){
-            item.parent._hatching.remove();
-            item.parent._hatching = null;
+				  if(parent._hatching){
+            parent._hatching.remove();
+            parent._hatching = null;
           }
 
-          if(item.layer instanceof ConnectiveLayer){
+          if(layer instanceof ConnectiveLayer){
             // двигаем и накапливаем связанные
-            other.push.apply(other, item.parent.move_points(delta, all_points));
+            other.push.apply(other, parent.move_points(delta, all_points));
           }
-          else if(!item.layer.parent || !item.parent.nearest || !item.parent.nearest()){
+          else if(!parent.nearest || !parent.nearest()){
 
 						let check_selected;
 						item.segments.forEach((segm) => {
@@ -663,12 +665,11 @@ Scheme.prototype.__define({
             }
 
 						// двигаем и накапливаем связанные
-            other.push.apply(other, item.parent.move_points(delta, all_points));
-						//other = other.concat(item.parent.move_points(delta, all_points));
+            other.push.apply(other, parent.move_points(delta, all_points));
 
-						if(layers.indexOf(item.layer) == -1){
-							layers.push(item.layer);
-							item.layer.clear_dimentions();
+						if(layers.indexOf(layer) == -1){
+							layers.push(layer);
+              layer.clear_dimentions();
 						}
 
 					}
