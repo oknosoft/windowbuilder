@@ -1372,14 +1372,30 @@ class Editor extends paper.PaperScope {
 
       const layer = this.project.rootLayer();
 
-      layer.profiles.forEach(function (profile) {
+      layer.profiles.forEach((profile) => {
 
+        const {b, e} = profile;
+        const bcnn = profile.cnn_point("b");
+        const ecnn = profile.cnn_point("e");
+
+        if(bcnn.profile){
+          const d = bcnn.profile.e.getDistance(b);
+          if(d && d < consts.sticking_l){
+            bcnn.profile.e = b;
+          }
+        }
+        if(ecnn.profile){
+          const d = ecnn.profile.b.getDistance(e);
+          if(d && d < consts.sticking_l){
+            ecnn.profile.b = e;
+          }
+        }
 
         let mid;
 
         if(profile.orientation == $p.enm.orientations.vert){
 
-          mid = profile.b.x + profile.e.x / 2;
+          mid = b.x + e.x / 2;
 
           if(mid < layer.bounds.center.x){
             mid = Math.min(profile.x1, profile.x2);
@@ -1392,7 +1408,7 @@ class Editor extends paper.PaperScope {
 
         }else if(profile.orientation == $p.enm.orientations.hor){
 
-          mid = profile.b.y + profile.e.y / 2;
+          mid = b.y + e.y / 2;
 
           if(mid < layer.bounds.center.y){
             mid = Math.max(profile.y1, profile.y2);
@@ -5894,25 +5910,25 @@ ProfileItem.prototype.__define({
 
 	b: {
 		get : function(){
-			if(this.data.generatrix)
-				return this.data.generatrix.firstSegment.point;
+		  const {generatrix} = this.data;
+		  return generatrix && generatrix.firstSegment.point;
 		},
 		set : function(v){
-			this.data._rays.clear();
-			if(this.data.generatrix)
-				this.data.generatrix.firstSegment.point = v;
+		  const {_rays, generatrix} = this.data;
+			_rays.clear();
+      if(generatrix) generatrix.firstSegment.point = v;
 		}
 	},
 
 	e: {
 		get : function(){
-			if(this.data.generatrix)
-				return this.data.generatrix.lastSegment.point;
+      const {generatrix} = this.data;
+			return generatrix && generatrix.lastSegment.point;
 		},
 		set : function(v){
-			this.data._rays.clear();
-			if(this.data.generatrix)
-				this.data.generatrix.lastSegment.point = v;
+      const {_rays, generatrix} = this.data;
+      _rays.clear();
+			if(generatrix) generatrix.lastSegment.point = v;
 		}
 	},
 
@@ -6746,7 +6762,6 @@ ProfileItem.prototype.__define({
 	}
 
 });
-
 
 
 function Profile(attr){

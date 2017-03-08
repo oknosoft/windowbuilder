@@ -579,13 +579,13 @@ ProfileItem.prototype.__define({
 	 */
 	b: {
 		get : function(){
-			if(this.data.generatrix)
-				return this.data.generatrix.firstSegment.point;
+		  const {generatrix} = this.data;
+		  return generatrix && generatrix.firstSegment.point;
 		},
 		set : function(v){
-			this.data._rays.clear();
-			if(this.data.generatrix)
-				this.data.generatrix.firstSegment.point = v;
+		  const {_rays, generatrix} = this.data;
+			_rays.clear();
+      if(generatrix) generatrix.firstSegment.point = v;
 		}
 	},
 
@@ -597,13 +597,13 @@ ProfileItem.prototype.__define({
 	 */
 	e: {
 		get : function(){
-			if(this.data.generatrix)
-				return this.data.generatrix.lastSegment.point;
+      const {generatrix} = this.data;
+			return generatrix && generatrix.lastSegment.point;
 		},
 		set : function(v){
-			this.data._rays.clear();
-			if(this.data.generatrix)
-				this.data.generatrix.lastSegment.point = v;
+      const {_rays, generatrix} = this.data;
+      _rays.clear();
+			if(generatrix) generatrix.lastSegment.point = v;
 		}
 	},
 
@@ -1728,7 +1728,6 @@ ProfileItem.prototype.__define({
 	}
 
 });
-
 
 
 /**

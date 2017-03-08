@@ -948,17 +948,30 @@ class Editor extends paper.PaperScope {
       // получаем текущий внешний контур
       const layer = this.project.rootLayer();
 
-      layer.profiles.forEach(function (profile) {
+      layer.profiles.forEach((profile) => {
 
-        // if(profile.angle_hor % 90 == 0){
-        //   return;
-        // }
+        const {b, e} = profile;
+        const bcnn = profile.cnn_point("b");
+        const ecnn = profile.cnn_point("e");
+
+        if(bcnn.profile){
+          const d = bcnn.profile.e.getDistance(b);
+          if(d && d < consts.sticking_l){
+            bcnn.profile.e = b;
+          }
+        }
+        if(ecnn.profile){
+          const d = ecnn.profile.b.getDistance(e);
+          if(d && d < consts.sticking_l){
+            ecnn.profile.b = e;
+          }
+        }
 
         let mid;
 
         if(profile.orientation == $p.enm.orientations.vert){
 
-          mid = profile.b.x + profile.e.x / 2;
+          mid = b.x + e.x / 2;
 
           if(mid < layer.bounds.center.x){
             mid = Math.min(profile.x1, profile.x2);
@@ -971,7 +984,7 @@ class Editor extends paper.PaperScope {
 
         }else if(profile.orientation == $p.enm.orientations.hor){
 
-          mid = profile.b.y + profile.e.y / 2;
+          mid = b.y + e.y / 2;
 
           if(mid < layer.bounds.center.y){
             mid = Math.max(profile.y1, profile.y2);
