@@ -571,6 +571,28 @@ ProfileItem.prototype.__define({
 		}
 	},
 
+  /**
+   * Расстояние от узла до внешнего ребра элемента
+   * для рамы, обычно = 0, для импоста 1/2 ширины, зависит от `d0` и `sizeb`
+   * @property d1
+   * @type Number
+   */
+  d1: {
+    get : function(){ return -(this.d0 - this.sizeb); }
+  },
+
+  /**
+   * Расстояние от узла до внутреннего ребра элемента
+   * зависит от ширины элементов и свойств примыкающих соединений
+   * @property d2
+   * @type Number
+   */
+  d2: {
+    get: function () {
+      return this.d1 - this.width;
+    }
+  },
+
 	/**
 	 * ### Координаты начала элемента
 	 * @property b
@@ -1757,489 +1779,441 @@ ProfileItem.prototype.__define({
  *       }
  *     });
  */
-function Profile(attr){
+class Profile extends ProfileItem {
 
-	Profile.superclass.constructor.call(this, attr);
+  constructor(attr) {
 
-	if(this.parent){
+    super(attr);
 
-		// Подключаем наблюдателя за событиями контура с именем _consts.move_points_
-		this._observer = this.observer.bind(this);
-		Object.observe(this.layer._noti, this._observer, [consts.move_points]);
+    if(this.parent){
 
-		// Информируем контур о том, что у него появился новый ребёнок
-		this.layer.on_insert_elm(this);
-	}
+      // Подключаем наблюдателя за событиями контура с именем _consts.move_points_
+      this._observer = this.observer.bind(this);
+      Object.observe(this.layer._noti, this._observer, [consts.move_points]);
 
-}
-Profile._extend(ProfileItem);
+      // Информируем контур о том, что у него появился новый ребёнок
+      this.layer.on_insert_elm(this);
+    }
 
-Profile.prototype.__define({
+  }
 
+  /**
+   * Расстояние от узла до опорной линии
+   * для сегментов створок и вложенных элементов зависит от ширины элементов и свойств примыкающих соединений
+   * @property d0
+   * @type Number
+   */
+  get d0() {
+    let res = 0, curr = this, nearest;
+    while(nearest = curr.nearest()){
+      res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
+      curr = nearest;
+    }
+    return res;
+  }
 
-	/**
-	 * Примыкающий внешний элемент - имеет смысл для сегментов створок или доборов
-	 * @property nearest
-	 * @type Profile
-	 */
-	nearest: {
-		value : function(ignore_cnn){
+  /**
+   * Возвращает тип элемента (рама, створка, импост)
+   */
+  get elm_type() {
+    const {_rays} = this.data;
 
-			const {b, e, data, layer, project} = this;
-			let {_nearest, _nearest_cnn} = data;
+    // если начало или конец элемента соединены с соседями по Т, значит это импост
+    if(_rays && (_rays.b.is_tt || _rays.e.is_tt)){
+      return $p.enm.elm_types.Импост;
+    }
 
-      const check_nearest = () => {
-				if(data._nearest){
-					const {generatrix} = data._nearest;
-					if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
-					  if(!ignore_cnn){
-					    if(!_nearest_cnn){
-                _nearest_cnn = project.connections.elm_cnn(this, data._nearest);
-              }
-              data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn);
+    // Если вложенный контур, значит это створка
+    if(this.layer.parent instanceof Contour){
+      return $p.enm.elm_types.Створка;
+    }
+
+    return $p.enm.elm_types.Рама;
+  }
+
+  /**
+   * Положение элемента в контуре
+   */
+  get pos() {
+    const by_side = this.layer.profiles_by_side();
+    if(by_side.top == this){
+      return $p.enm.positions.Верх;
+    }
+    if(by_side.bottom == this){
+      return $p.enm.positions.Низ;
+    }
+    if(by_side.left == this){
+      return $p.enm.positions.Лев;
+    }
+    if(by_side.right == this){
+      return $p.enm.positions.Прав;
+    }
+    // TODO: рассмотреть случай с выносом стоек и разрывами
+    return $p.enm.positions.Центр;
+  }
+
+  /**
+   * Примыкающий внешний элемент - имеет смысл для сегментов створок или доборов
+   * @property nearest
+   * @type Profile
+   */
+  nearest(ignore_cnn) {
+    const {b, e, data, layer, project} = this;
+    let {_nearest, _nearest_cnn} = data;
+
+    const check_nearest = () => {
+      if(data._nearest){
+        const {generatrix} = data._nearest;
+        if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
+          if(!ignore_cnn){
+            if(!_nearest_cnn){
+              _nearest_cnn = project.connections.elm_cnn(this, data._nearest);
             }
-            if(data._nearest.isInserted()){
-              return true;
-            }
-					}
-				}
-        data._nearest = null;
-        data._nearest_cnn = null;
-			};
-
-			const find_nearest = (children) => children.some((elm) => {
-        if(_nearest == elm || !elm.generatrix){
-          return
-        }
-        if(elm instanceof Profile || elm instanceof ProfileConnective){
-          data._nearest = elm;
-          if(check_nearest()){
-            return elm
+            data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn);
           }
-          else{
-            data._nearest = null
+          if(data._nearest.isInserted()){
+            return true;
           }
-        }
-      });
-
-      if(layer && !check_nearest()){
-        if(layer.parent){
-          find_nearest(layer.parent.children)
-        }else{
-          find_nearest(project.l_connective.children)
         }
       }
+      data._nearest = null;
+      data._nearest_cnn = null;
+    };
 
-			return data._nearest;
-		}
-	},
-
-	/**
-	 * Расстояние от узла до опорной линии
-	 * для сегментов створок и вложенных элементов зависит от ширины элементов и свойств примыкающих соединений
-	 * @property d0
-	 * @type Number
-	 */
-	d0: {
-		get : function(){
-			let res = 0, curr = this, nearest;
-
-			while(nearest = curr.nearest()){
-				res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
-				curr = nearest;
-			}
-			return res;
-		}
-	},
-
-	/**
-	 * Расстояние от узла до внешнего ребра элемента
-	 * для рамы, обычно = 0, для импоста 1/2 ширины, зависит от `d0` и `sizeb`
-	 * @property d1
-	 * @type Number
-	 */
-	d1: {
-		get : function(){ return -(this.d0 - this.sizeb); }
-	},
-
-	/**
-	 * Расстояние от узла до внутреннего ребра элемента
-	 * зависит от ширины элементов и свойств примыкающих соединений
-	 * @property d2
-	 * @type Number
-	 */
-	d2: {
-		get : function(){ return this.d1 - this.width; }
-	},
-
-	/**
-	 * Возвращает массив примыкающих ипостов
-	 */
-	joined_imposts: {
-
-		value : function(check_only){
-
-		  const {rays, generatrix} = this;
-      const tinner = [];
-      const touter = [];
-
-      // точки, в которых сходятся более 2 профилей
-      const candidates = {b: [], e: []};
-
-      function add_impost(ip, curr, point) {
-        const res = {point: generatrix.getNearestPoint(point), profile: curr};
-        if(check_outer(ip)){
-          touter.push(res);
+    const find_nearest = (children) => children.some((elm) => {
+      if(_nearest == elm || !elm.generatrix){
+        return
+      }
+      if(elm instanceof Profile || elm instanceof ProfileConnective){
+        data._nearest = elm;
+        if(check_nearest()){
+          return elm
         }
         else{
-          tinner.push(res);
+          data._nearest = null
         }
       }
+    });
 
-      // выясним, с какой стороны примыкающий профиль
-      function check_outer(ip) {
-        if(rays.inner.getNearestPoint(ip).getDistance(ip, true) > rays.outer.getNearestPoint(ip).getDistance(ip, true)){
-          return true
+    if(layer && !check_nearest()){
+      if(layer.parent){
+        find_nearest(layer.parent.children)
+      }else{
+        find_nearest(project.l_connective.children)
+      }
+    }
+
+    return data._nearest;
+  }
+
+  /**
+   * Возвращает массив примыкающих ипостов
+   */
+  joined_imposts(check_only) {
+
+    const {rays, generatrix} = this;
+    const tinner = [];
+    const touter = [];
+
+    // точки, в которых сходятся более 2 профилей
+    const candidates = {b: [], e: []};
+
+    function add_impost(ip, curr, point) {
+      const res = {point: generatrix.getNearestPoint(point), profile: curr};
+      if(check_outer(ip)){
+        touter.push(res);
+      }
+      else{
+        tinner.push(res);
+      }
+    }
+
+    // выясним, с какой стороны примыкающий профиль
+    function check_outer(ip) {
+      if(rays.inner.getNearestPoint(ip).getDistance(ip, true) > rays.outer.getNearestPoint(ip).getDistance(ip, true)){
+        return true
+      }
+    }
+
+    if(this.parent.profiles.some((curr) => {
+
+        if(curr == this){
+          return
         }
-      }
 
-      if(this.parent.profiles.some((curr) => {
+        const pb = curr.cnn_point("b");
+        if(pb.profile == this && pb.cnn){
 
-          if(curr == this){
-            return
-          }
-
-          const pb = curr.cnn_point("b");
-          if(pb.profile == this && pb.cnn){
-
-            if(pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
-              if(check_only){
-                return true;
-              }
-              add_impost(curr.corns(1), curr, pb.point);
+          if(pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+            if(check_only){
+              return true;
             }
-            else{
-              candidates.b.push(curr.corns(1))
+            add_impost(curr.corns(1), curr, pb.point);
+          }
+          else{
+            candidates.b.push(curr.corns(1))
+          }
+        }
+
+        const pe = curr.cnn_point("e");
+        if(pe.profile == this && pe.cnn){
+          if(pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+            if(check_only){
+              return true;
             }
+            add_impost(curr.corns(2), curr, pe.point);
           }
-
-          const pe = curr.cnn_point("e");
-          if(pe.profile == this && pe.cnn){
-            if(pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
-              if(check_only){
-                return true;
-              }
-              add_impost(curr.corns(2), curr, pe.point);
-            }
-            else{
-              candidates.e.push(curr.corns(2))
-            }
+          else{
+            candidates.e.push(curr.corns(2))
           }
+        }
 
-        })) {
-        return true;
-      }
+      })) {
+      return true;
+    }
 
-      if(candidates.b.length > 1){
-        candidates.b.some((ip) => {
-          if(check_outer(ip)){
-            this.cnn_point("b").is_cut = true;
-            return true;
-          }
-        })
-      }
-      if(candidates.e.length > 1){
-        candidates.e.forEach((ip) => {
-          if(check_outer(ip)){
-            this.cnn_point("e").is_cut = true;
-            return true;
-          }
-        })
-      }
+    if(candidates.b.length > 1){
+      candidates.b.some((ip) => {
+        if(check_outer(ip)){
+          this.cnn_point("b").is_cut = true;
+          return true;
+        }
+      })
+    }
+    if(candidates.e.length > 1){
+      candidates.e.forEach((ip) => {
+        if(check_outer(ip)){
+          this.cnn_point("e").is_cut = true;
+          return true;
+        }
+      })
+    }
 
-      return check_only ? false : {inner: tinner, outer: touter};
+    return check_only ? false : {inner: tinner, outer: touter};
 
-		}
-	},
+  }
 
   /**
    * Возвращает массив примыкающих створочных элементов
    */
-  joined_nearests: {
-	  value: function () {
+  joined_nearests() {
+    const res = [];
 
-	    const res = [];
-
-	    this.layer.contours.forEach((contour) => {
-        contour.profiles.forEach((profile) => {
-          if(profile.nearest(true) == this){
-            res.push(profile)
-          }
-        })
+    this.layer.contours.forEach((contour) => {
+      contour.profiles.forEach((profile) => {
+        if(profile.nearest(true) == this){
+          res.push(profile)
+        }
       })
+    })
 
-      return res;
+    return res;
+  }
+
+  /**
+   * ### Соединение конца профиля
+   * С этой функции начинается пересчет и перерисовка профиля
+   * Возвращает объект соединения конца профиля
+   * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
+   * - Попутно устанавливает признак `is_cut`, если в точке сходятся больше двух профилей
+   * - Не делает подмену соединения, хотя могла бы
+   * - Не делает подмену вставки, хотя могла бы
+   *
+   * @method cnn_point
+   * @for ProfileItem
+   * @param node {String} - имя узла профиля: "b" или "e"
+   * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
+   * @return {CnnPoint} - объект {point, profile, cnn_types}
+   */
+  cnn_point(node, point) {
+    const res = this.rays[node];
+    const {cnn, profile, profile_point} = res;
+
+    if(!point){
+      point = this[node];
     }
-  },
 
-	/**
-	 * Возвращает тип элемента (рама, створка, импост)
-	 */
-	elm_type: {
-		get : function(){
-		  const {_rays} = this.data;
-
-			// если начало или конец элемента соединены с соседями по Т, значит это импост
-			if(_rays && (_rays.b.is_tt || _rays.e.is_tt)){
-        return $p.enm.elm_types.Импост;
+    // Если привязка не нарушена, возвращаем предыдущее значение
+    if(profile && profile.children.length){
+      if(this.check_distance(profile, res, point, true) === false){
+        return res;
       }
-
-			// Если вложенный контур, значит это створка
-			if(this.layer.parent instanceof Contour){
-        return $p.enm.elm_types.Створка;
-      }
-
-			return $p.enm.elm_types.Рама;
-
-		}
-	},
-
-	/**
-	 * ### Соединение конца профиля
-	 * С этой функции начинается пересчет и перерисовка профиля
-	 * Возвращает объект соединения конца профиля
-	 * - Попутно проверяет корректность соединения. Если соединение не корректно, сбрасывает его в пустое значение и обновляет ограничитель типов доступных для узла соединений
-	 * - Попутно устанавливает признак `is_cut`, если в точке сходятся больше двух профилей
-	 * - Не делает подмену соединения, хотя могла бы
-	 * - Не делает подмену вставки, хотя могла бы
-	 *
-	 * @method cnn_point
-	 * @for ProfileItem
-	 * @param node {String} - имя узла профиля: "b" или "e"
-	 * @param [point] {paper.Point} - координаты точки, в окрестности которой искать
-	 * @return {CnnPoint} - объект {point, profile, cnn_types}
-	 */
-	cnn_point: {
-		value: function(node, point){
-
-			const res = this.rays[node];
-      const {cnn, profile, profile_point} = res;
-
-			if(!point){
-        point = this[node];
-      }
-
-			// Если привязка не нарушена, возвращаем предыдущее значение
-			if(profile && profile.children.length){
-        if(this.check_distance(profile, res, point, true) === false){
-          return res;
-        }
-      }
-
-			// TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
-			res.clear();
-			if(this.parent){
-				const profiles = this.parent.profiles;
-				const allow_open_cnn = this.project._dp.sys.allow_open_cnn;
-				const ares = [];
-
-				for(let i=0; i<profiles.length; i++){
-					if(this.check_distance(profiles[i], res, point, false) === false){
-
-						// для простых систем разрывы профиля не анализируем
-						if(!allow_open_cnn){
-						  if(res.profile == profile && res.profile_point == profile_point){
-						    if(cnn && !cnn.empty() && res.cnn != cnn){
-                  res.cnn = cnn;
-                }
-              }
-              return res;
-            }
-
-						ares.push({
-							profile_point: res.profile_point,
-							profile: res.profile,
-							cnn_types: res.cnn_types,
-							point: res.point});
-					}
-				}
-
-				if(ares.length == 1){
-					res._mixin(ares[0]);
-				}
-        // если в точке сходятся 3 и более профиля, ищем тот, который смотрит на нас под максимально прямым углом
-				else if(ares.length >= 2){
-          if(this.max_right_angle(ares)){
-            res._mixin(ares[0]);
-            res.is_cut = true;
-
-            // если установленное ранее соединение проходит по типу, нового не ищем
-            if(cnn && res.cnn_types && res.cnn_types.indexOf(cnn.cnn_type) != -1 ){
-              res.cnn = cnn;
-            }
-
-          }
-          // и среди соединений нет углового диагонального, вероятно, мы находимся в разрыве - выбираем соединение с пустотой
-          else{
-            res.clear();
-            res.is_cut = true;
-          }
-				}
-			}
-
-			return res;
-		}
-	},
-
-  max_right_angle: {
-	  value: function (ares) {
-	    const {generatrix} = this;
-	    let has_a = true;
-      ares.forEach((res) => {
-        res._angle = generatrix.angle_to(res.profile.generatrix, res.point);
-      });
-      ares.sort((a, b) => {
-        let aa = a._angle - 90;
-        let ab = b._angle - 90;
-        if(aa < 0){
-          aa += 180;
-        }
-        if(ab < 0){
-          ab += 180;
-        }
-        if(aa > 180){
-          aa -= 180;
-        }
-        if(ab > 180){
-          ab -= 180;
-        }
-        return aa - ab;
-      });
-      return has_a;
     }
-  },
 
-	/**
-	 * Положение элемента в контуре
-	 */
-	pos: {
-		get: function () {
-			const by_side = this.layer.profiles_by_side();
-			if(by_side.top == this){
-        return $p.enm.positions.Верх;
-      }
-			if(by_side.bottom == this){
-        return $p.enm.positions.Низ;
-      }
-			if(by_side.left == this){
-        return $p.enm.positions.Лев;
-      }
-			if(by_side.right == this){
-        return $p.enm.positions.Прав;
-      }
-			// TODO: рассмотреть случай с выносом стоек и разрывами
-			return $p.enm.positions.Центр;
-		}
-	},
+    // TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
+    res.clear();
+    if(this.parent){
+      const profiles = this.parent.profiles;
+      const allow_open_cnn = this.project._dp.sys.allow_open_cnn;
+      const ares = [];
 
+      for(let i=0; i<profiles.length; i++){
+        if(this.check_distance(profiles[i], res, point, false) === false){
 
-	/**
-	 * Вспомогательная функция обсервера, выполняет привязку узлов
-	 */
-	do_bind: {
-		value: function (p, bcnn, ecnn, moved) {
-
-			let moved_fact;
-
-      if(p instanceof ProfileConnective){
-        const {generatrix} = p;
-        this.data._rays.clear();
-        this.b = generatrix.getNearestPoint(this.b);
-        this.e = generatrix.getNearestPoint(this.e);
-        moved_fact = true;
-      }
-      else{
-        if(bcnn.cnn && bcnn.profile == p){
-          // обрабатываем угол
-          if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-            if(!this.b.is_nearest(p.e)){
-              if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
-                if(paper.Key.isDown('control')){
-                  console.log('control');
-                }else{
-                  if(this.b.getDistance(p.e, true) < this.b.getDistance(p.b, true)){
-                    this.b = p.e;
-                  }
-                  else{
-                    this.b = p.b;
-                  }
-                  moved_fact = true;
-                }
+          // для простых систем разрывы профиля не анализируем
+          if(!allow_open_cnn){
+            if(res.profile == profile && res.profile_point == profile_point){
+              if(cnn && !cnn.empty() && res.cnn != cnn){
+                res.cnn = cnn;
               }
+            }
+            return res;
+          }
+
+          ares.push({
+            profile_point: res.profile_point,
+            profile: res.profile,
+            cnn_types: res.cnn_types,
+            point: res.point});
+        }
+      }
+
+      if(ares.length == 1){
+        res._mixin(ares[0]);
+      }
+      // если в точке сходятся 3 и более профиля, ищем тот, который смотрит на нас под максимально прямым углом
+      else if(ares.length >= 2){
+        if(this.max_right_angle(ares)){
+          res._mixin(ares[0]);
+          res.is_cut = true;
+
+          // если установленное ранее соединение проходит по типу, нового не ищем
+          if(cnn && res.cnn_types && res.cnn_types.indexOf(cnn.cnn_type) != -1 ){
+            res.cnn = cnn;
+          }
+
+        }
+        // и среди соединений нет углового диагонального, вероятно, мы находимся в разрыве - выбираем соединение с пустотой
+        else{
+          res.clear();
+          res.is_cut = true;
+        }
+      }
+    }
+
+    return res;
+  }
+
+  max_right_angle(ares) {
+    const {generatrix} = this;
+    let has_a = true;
+    ares.forEach((res) => {
+      res._angle = generatrix.angle_to(res.profile.generatrix, res.point);
+    });
+    ares.sort((a, b) => {
+      let aa = a._angle - 90;
+      let ab = b._angle - 90;
+      if(aa < 0){
+        aa += 180;
+      }
+      if(ab < 0){
+        ab += 180;
+      }
+      if(aa > 180){
+        aa -= 180;
+      }
+      if(ab > 180){
+        ab -= 180;
+      }
+      return aa - ab;
+    });
+    return has_a;
+  }
+
+  /**
+   * Вспомогательная функция обсервера, выполняет привязку узлов
+   */
+  do_bind(p, bcnn, ecnn, moved) {
+
+    let moved_fact;
+
+    if(p instanceof ProfileConnective){
+      const {generatrix} = p;
+      this.data._rays.clear();
+      this.b = generatrix.getNearestPoint(this.b);
+      this.e = generatrix.getNearestPoint(this.e);
+      moved_fact = true;
+    }
+    else{
+      if(bcnn.cnn && bcnn.profile == p){
+        // обрабатываем угол
+        if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+          if(!this.b.is_nearest(p.e)){
+            if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+              if(paper.Key.isDown('control')){
+                console.log('control');
+              }else{
+                if(this.b.getDistance(p.e, true) < this.b.getDistance(p.b, true)){
+                  this.b = p.e;
+                }
+                else{
+                  this.b = p.b;
+                }
+                moved_fact = true;
+              }
+            }
+            // отрываем привязанный ранее профиль
+            else{
+              bcnn.clear();
+              this.data._rays.clear();
+            }
+          }
+        }
+        // обрабатываем T
+        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+          // импосты в створках и все остальные импосты
+          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
+          if(!mpoint.is_nearest(this.b)){
+            this.b = mpoint;
+            moved_fact = true;
+          }
+        }
+
+      }
+
+      if(ecnn.cnn && ecnn.profile == p){
+        // обрабатываем угол
+        if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+          if(!this.e.is_nearest(p.b)){
+            if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+              if(paper.Key.isDown('control')){
+                console.log('control');
+              }else{
+                if(this.e.getDistance(p.b, true) < this.e.getDistance(p.e, true))
+                  this.e = p.b;
+                else
+                  this.e = p.e;
+                moved_fact = true;
+              }
+            } else{
               // отрываем привязанный ранее профиль
-              else{
-                bcnn.clear();
-                this.data._rays.clear();
-              }
+              ecnn.clear();
+              this.data._rays.clear();
             }
           }
-          // обрабатываем T
-          else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-            // импосты в створках и все остальные импосты
-            const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
-            if(!mpoint.is_nearest(this.b)){
-              this.b = mpoint;
-              moved_fact = true;
-            }
-          }
-
         }
-
-        if(ecnn.cnn && ecnn.profile == p){
-          // обрабатываем угол
-          if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-            if(!this.e.is_nearest(p.b)){
-              if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
-                if(paper.Key.isDown('control')){
-                  console.log('control');
-                }else{
-                  if(this.e.getDistance(p.b, true) < this.e.getDistance(p.e, true))
-                    this.e = p.b;
-                  else
-                    this.e = p.e;
-                  moved_fact = true;
-                }
-              } else{
-                // отрываем привязанный ранее профиль
-                ecnn.clear();
-                this.data._rays.clear();
-              }
-            }
-          }
-          // обрабатываем T
-          else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-            // импосты в створках и все остальные импосты
-            const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
-            if(!mpoint.is_nearest(this.e)){
-              this.e = mpoint;
-              moved_fact = true;
-            }
+        // обрабатываем T
+        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+          // импосты в створках и все остальные импосты
+          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
+          if(!mpoint.is_nearest(this.e)){
+            this.e = mpoint;
+            moved_fact = true;
           }
         }
       }
+    }
 
-			// если мы в обсервере и есть T и в массиве обработанных есть примыкающий T - пересчитываем
-			if(moved && moved_fact){
-				const imposts = this.joined_imposts();
-        imposts.inner.concat(imposts.outer).forEach((impost) => {
-          if(moved.profiles.indexOf(impost) == -1){
-            impost.profile.observer(this);
-          }
-        })
-			}
-		}
-	}
-
-});
+    // если мы в обсервере и есть T и в массиве обработанных есть примыкающий T - пересчитываем
+    if(moved && moved_fact){
+      const imposts = this.joined_imposts();
+      imposts.inner.concat(imposts.outer).forEach((impost) => {
+        if(moved.profiles.indexOf(impost) == -1){
+          impost.profile.observer(this);
+        }
+      })
+    }
+  }
+}
 
 Editor.Profile = Profile;

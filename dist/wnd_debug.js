@@ -4764,27 +4764,27 @@ class Pricing {
 
   calc_amount (prm) {
 
-    var price_cost = $p.job_prm.pricing.marginality_in_spec ? prm.spec.aggregate([], ["amount_marged"]) : 0,
-      extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
+    const price_cost = $p.job_prm.pricing.marginality_in_spec ? prm.spec.aggregate([], ["amount_marged"]) : 0;
+    let extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
 
     if(!$p.current_acl.partners_uids.length || !extra_charge){
       extra_charge = prm.price_type.extra_charge_external;
     }
 
-    if(price_cost)
+    if(price_cost){
       prm.calc_order_row.price = price_cost.round(2);
-    else
+    }
+    else{
       prm.calc_order_row.price = (prm.calc_order_row.first_cost * prm.price_type.marginality).round(2);
+    }
 
     prm.calc_order_row.marginality = prm.calc_order_row.first_cost ?
       prm.calc_order_row.price * ((100 - prm.calc_order_row.discount_percent)/100) / prm.calc_order_row.first_cost : 0;
 
 
     if(extra_charge){
-
       prm.calc_order_row.price_internal = (prm.calc_order_row.price *
       (100 - prm.calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
-
 
     }
 
@@ -4799,8 +4799,8 @@ class Pricing {
     }
 
     if(prm.order_rows){
-      for(var rid in prm.order_rows){
-        var fake_prm = {
+      for(let rid in prm.order_rows){
+        const fake_prm = {
           spec: prm.order_rows[rid].characteristic.specification,
           calc_order_row: prm.order_rows[rid]
         }
@@ -4813,19 +4813,20 @@ class Pricing {
 
   from_currency_to_currency (amount, date, from, to) {
 
-    if(!to || to.empty())
+    if(!to || to.empty()){
       to = $p.job_prm.pricing.main_currency;
-
-    if(!from || from == to)
+    }
+    if(!from || from == to){
       return amount;
-
-    if(!date)
+    }
+    if(!date){
       date = new Date();
-
-    if(!this.cource_sql)
+    }
+    if(!this.cource_sql){
       this.cource_sql = $p.wsql.alasql.compile("select top 1 * from `ireg_currency_courses` where `currency` = ? and `period` <= ? order by `date` desc");
+    }
 
-    var cfrom = {course: 1, multiplicity: 1},
+    let cfrom = {course: 1, multiplicity: 1},
       cto = {course: 1, multiplicity: 1},
       tmp;
     if(from != $p.job_prm.pricing.main_currency){

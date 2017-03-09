@@ -5905,6 +5905,16 @@ ProfileItem.prototype.__define({
 		}
 	},
 
+  d1: {
+    get : function(){ return -(this.d0 - this.sizeb); }
+  },
+
+  d2: {
+    get: function () {
+      return this.d1 - this.width;
+    }
+  },
+
 	b: {
 		get : function(){
 		  const {generatrix} = this.data;
@@ -6761,415 +6771,379 @@ ProfileItem.prototype.__define({
 });
 
 
-function Profile(attr){
+class Profile extends ProfileItem {
 
-	Profile.superclass.constructor.call(this, attr);
+  constructor(attr) {
 
-	if(this.parent){
+    super(attr);
 
-		this._observer = this.observer.bind(this);
-		Object.observe(this.layer._noti, this._observer, [consts.move_points]);
+    if(this.parent){
 
-		this.layer.on_insert_elm(this);
-	}
+      this._observer = this.observer.bind(this);
+      Object.observe(this.layer._noti, this._observer, [consts.move_points]);
 
-}
-Profile._extend(ProfileItem);
+      this.layer.on_insert_elm(this);
+    }
 
-Profile.prototype.__define({
+  }
 
+  get d0() {
+    let res = 0, curr = this, nearest;
+    while(nearest = curr.nearest()){
+      res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
+      curr = nearest;
+    }
+    return res;
+  }
 
-	nearest: {
-		value : function(ignore_cnn){
+  get elm_type() {
+    const {_rays} = this.data;
 
-			const {b, e, data, layer, project} = this;
-			let {_nearest, _nearest_cnn} = data;
+    if(_rays && (_rays.b.is_tt || _rays.e.is_tt)){
+      return $p.enm.elm_types.Импост;
+    }
 
-      const check_nearest = () => {
-				if(data._nearest){
-					const {generatrix} = data._nearest;
-					if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
-					  if(!ignore_cnn){
-					    if(!_nearest_cnn){
-                _nearest_cnn = project.connections.elm_cnn(this, data._nearest);
-              }
-              data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn);
+    if(this.layer.parent instanceof Contour){
+      return $p.enm.elm_types.Створка;
+    }
+
+    return $p.enm.elm_types.Рама;
+  }
+
+  get pos() {
+    const by_side = this.layer.profiles_by_side();
+    if(by_side.top == this){
+      return $p.enm.positions.Верх;
+    }
+    if(by_side.bottom == this){
+      return $p.enm.positions.Низ;
+    }
+    if(by_side.left == this){
+      return $p.enm.positions.Лев;
+    }
+    if(by_side.right == this){
+      return $p.enm.positions.Прав;
+    }
+    return $p.enm.positions.Центр;
+  }
+
+  nearest(ignore_cnn) {
+    const {b, e, data, layer, project} = this;
+    let {_nearest, _nearest_cnn} = data;
+
+    const check_nearest = () => {
+      if(data._nearest){
+        const {generatrix} = data._nearest;
+        if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
+          if(!ignore_cnn){
+            if(!_nearest_cnn){
+              _nearest_cnn = project.connections.elm_cnn(this, data._nearest);
             }
-            if(data._nearest.isInserted()){
-              return true;
-            }
-					}
-				}
-        data._nearest = null;
-        data._nearest_cnn = null;
-			};
-
-			const find_nearest = (children) => children.some((elm) => {
-        if(_nearest == elm || !elm.generatrix){
-          return
-        }
-        if(elm instanceof Profile || elm instanceof ProfileConnective){
-          data._nearest = elm;
-          if(check_nearest()){
-            return elm
+            data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn);
           }
-          else{
-            data._nearest = null
+          if(data._nearest.isInserted()){
+            return true;
           }
-        }
-      });
-
-      if(layer && !check_nearest()){
-        if(layer.parent){
-          find_nearest(layer.parent.children)
-        }else{
-          find_nearest(project.l_connective.children)
         }
       }
+      data._nearest = null;
+      data._nearest_cnn = null;
+    };
 
-			return data._nearest;
-		}
-	},
-
-	d0: {
-		get : function(){
-			let res = 0, curr = this, nearest;
-
-			while(nearest = curr.nearest()){
-				res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
-				curr = nearest;
-			}
-			return res;
-		}
-	},
-
-	d1: {
-		get : function(){ return -(this.d0 - this.sizeb); }
-	},
-
-	d2: {
-		get : function(){ return this.d1 - this.width; }
-	},
-
-	joined_imposts: {
-
-		value : function(check_only){
-
-		  const {rays, generatrix} = this;
-      const tinner = [];
-      const touter = [];
-
-      const candidates = {b: [], e: []};
-
-      function add_impost(ip, curr, point) {
-        const res = {point: generatrix.getNearestPoint(point), profile: curr};
-        if(check_outer(ip)){
-          touter.push(res);
+    const find_nearest = (children) => children.some((elm) => {
+      if(_nearest == elm || !elm.generatrix){
+        return
+      }
+      if(elm instanceof Profile || elm instanceof ProfileConnective){
+        data._nearest = elm;
+        if(check_nearest()){
+          return elm
         }
         else{
-          tinner.push(res);
+          data._nearest = null
         }
       }
+    });
 
-      function check_outer(ip) {
-        if(rays.inner.getNearestPoint(ip).getDistance(ip, true) > rays.outer.getNearestPoint(ip).getDistance(ip, true)){
-          return true
-        }
+    if(layer && !check_nearest()){
+      if(layer.parent){
+        find_nearest(layer.parent.children)
+      }else{
+        find_nearest(project.l_connective.children)
       }
-
-      if(this.parent.profiles.some((curr) => {
-
-          if(curr == this){
-            return
-          }
-
-          const pb = curr.cnn_point("b");
-          if(pb.profile == this && pb.cnn){
-
-            if(pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
-              if(check_only){
-                return true;
-              }
-              add_impost(curr.corns(1), curr, pb.point);
-            }
-            else{
-              candidates.b.push(curr.corns(1))
-            }
-          }
-
-          const pe = curr.cnn_point("e");
-          if(pe.profile == this && pe.cnn){
-            if(pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
-              if(check_only){
-                return true;
-              }
-              add_impost(curr.corns(2), curr, pe.point);
-            }
-            else{
-              candidates.e.push(curr.corns(2))
-            }
-          }
-
-        })) {
-        return true;
-      }
-
-      if(candidates.b.length > 1){
-        candidates.b.some((ip) => {
-          if(check_outer(ip)){
-            this.cnn_point("b").is_cut = true;
-            return true;
-          }
-        })
-      }
-      if(candidates.e.length > 1){
-        candidates.e.forEach((ip) => {
-          if(check_outer(ip)){
-            this.cnn_point("e").is_cut = true;
-            return true;
-          }
-        })
-      }
-
-      return check_only ? false : {inner: tinner, outer: touter};
-
-		}
-	},
-
-  joined_nearests: {
-	  value: function () {
-
-	    const res = [];
-
-	    this.layer.contours.forEach((contour) => {
-        contour.profiles.forEach((profile) => {
-          if(profile.nearest(true) == this){
-            res.push(profile)
-          }
-        })
-      })
-
-      return res;
     }
-  },
 
-	elm_type: {
-		get : function(){
-		  const {_rays} = this.data;
+    return data._nearest;
+  }
 
-			if(_rays && (_rays.b.is_tt || _rays.e.is_tt)){
-        return $p.enm.elm_types.Импост;
-      }
+  joined_imposts(check_only) {
 
-			if(this.layer.parent instanceof Contour){
-        return $p.enm.elm_types.Створка;
-      }
+    const {rays, generatrix} = this;
+    const tinner = [];
+    const touter = [];
 
-			return $p.enm.elm_types.Рама;
+    const candidates = {b: [], e: []};
 
-		}
-	},
-
-	cnn_point: {
-		value: function(node, point){
-
-			const res = this.rays[node];
-      const {cnn, profile, profile_point} = res;
-
-			if(!point){
-        point = this[node];
-      }
-
-			if(profile && profile.children.length){
-        if(this.check_distance(profile, res, point, true) === false){
-          return res;
-        }
-      }
-
-			res.clear();
-			if(this.parent){
-				const profiles = this.parent.profiles;
-				const allow_open_cnn = this.project._dp.sys.allow_open_cnn;
-				const ares = [];
-
-				for(let i=0; i<profiles.length; i++){
-					if(this.check_distance(profiles[i], res, point, false) === false){
-
-						if(!allow_open_cnn){
-						  if(res.profile == profile && res.profile_point == profile_point){
-						    if(cnn && !cnn.empty() && res.cnn != cnn){
-                  res.cnn = cnn;
-                }
-              }
-              return res;
-            }
-
-						ares.push({
-							profile_point: res.profile_point,
-							profile: res.profile,
-							cnn_types: res.cnn_types,
-							point: res.point});
-					}
-				}
-
-				if(ares.length == 1){
-					res._mixin(ares[0]);
-				}
-				else if(ares.length >= 2){
-          if(this.max_right_angle(ares)){
-            res._mixin(ares[0]);
-            res.is_cut = true;
-
-            if(cnn && res.cnn_types && res.cnn_types.indexOf(cnn.cnn_type) != -1 ){
-              res.cnn = cnn;
-            }
-
-          }
-          else{
-            res.clear();
-            res.is_cut = true;
-          }
-				}
-			}
-
-			return res;
-		}
-	},
-
-  max_right_angle: {
-	  value: function (ares) {
-	    const {generatrix} = this;
-	    let has_a = true;
-      ares.forEach((res) => {
-        res._angle = generatrix.angle_to(res.profile.generatrix, res.point);
-      });
-      ares.sort((a, b) => {
-        let aa = a._angle - 90;
-        let ab = b._angle - 90;
-        if(aa < 0){
-          aa += 180;
-        }
-        if(ab < 0){
-          ab += 180;
-        }
-        if(aa > 180){
-          aa -= 180;
-        }
-        if(ab > 180){
-          ab -= 180;
-        }
-        return aa - ab;
-      });
-      return has_a;
-    }
-  },
-
-	pos: {
-		get: function () {
-			const by_side = this.layer.profiles_by_side();
-			if(by_side.top == this){
-        return $p.enm.positions.Верх;
-      }
-			if(by_side.bottom == this){
-        return $p.enm.positions.Низ;
-      }
-			if(by_side.left == this){
-        return $p.enm.positions.Лев;
-      }
-			if(by_side.right == this){
-        return $p.enm.positions.Прав;
-      }
-			return $p.enm.positions.Центр;
-		}
-	},
-
-
-	do_bind: {
-		value: function (p, bcnn, ecnn, moved) {
-
-			let moved_fact;
-
-      if(p instanceof ProfileConnective){
-        const {generatrix} = p;
-        this.data._rays.clear();
-        this.b = generatrix.getNearestPoint(this.b);
-        this.e = generatrix.getNearestPoint(this.e);
-        moved_fact = true;
+    function add_impost(ip, curr, point) {
+      const res = {point: generatrix.getNearestPoint(point), profile: curr};
+      if(check_outer(ip)){
+        touter.push(res);
       }
       else{
-        if(bcnn.cnn && bcnn.profile == p){
-          if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-            if(!this.b.is_nearest(p.e)){
-              if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
-                if(paper.Key.isDown('control')){
-                  console.log('control');
-                }else{
-                  if(this.b.getDistance(p.e, true) < this.b.getDistance(p.b, true)){
-                    this.b = p.e;
-                  }
-                  else{
-                    this.b = p.b;
-                  }
-                  moved_fact = true;
-                }
-              }
-              else{
-                bcnn.clear();
-                this.data._rays.clear();
-              }
-            }
-          }
-          else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-            const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
-            if(!mpoint.is_nearest(this.b)){
-              this.b = mpoint;
-              moved_fact = true;
-            }
-          }
+        tinner.push(res);
+      }
+    }
 
+    function check_outer(ip) {
+      if(rays.inner.getNearestPoint(ip).getDistance(ip, true) > rays.outer.getNearestPoint(ip).getDistance(ip, true)){
+        return true
+      }
+    }
+
+    if(this.parent.profiles.some((curr) => {
+
+        if(curr == this){
+          return
         }
 
-        if(ecnn.cnn && ecnn.profile == p){
-          if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-            if(!this.e.is_nearest(p.b)){
-              if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
-                if(paper.Key.isDown('control')){
-                  console.log('control');
-                }else{
-                  if(this.e.getDistance(p.b, true) < this.e.getDistance(p.e, true))
-                    this.e = p.b;
-                  else
-                    this.e = p.e;
-                  moved_fact = true;
-                }
-              } else{
-                ecnn.clear();
-                this.data._rays.clear();
+        const pb = curr.cnn_point("b");
+        if(pb.profile == this && pb.cnn){
+
+          if(pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+            if(check_only){
+              return true;
+            }
+            add_impost(curr.corns(1), curr, pb.point);
+          }
+          else{
+            candidates.b.push(curr.corns(1))
+          }
+        }
+
+        const pe = curr.cnn_point("e");
+        if(pe.profile == this && pe.cnn){
+          if(pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+            if(check_only){
+              return true;
+            }
+            add_impost(curr.corns(2), curr, pe.point);
+          }
+          else{
+            candidates.e.push(curr.corns(2))
+          }
+        }
+
+      })) {
+      return true;
+    }
+
+    if(candidates.b.length > 1){
+      candidates.b.some((ip) => {
+        if(check_outer(ip)){
+          this.cnn_point("b").is_cut = true;
+          return true;
+        }
+      })
+    }
+    if(candidates.e.length > 1){
+      candidates.e.forEach((ip) => {
+        if(check_outer(ip)){
+          this.cnn_point("e").is_cut = true;
+          return true;
+        }
+      })
+    }
+
+    return check_only ? false : {inner: tinner, outer: touter};
+
+  }
+
+  joined_nearests() {
+    const res = [];
+
+    this.layer.contours.forEach((contour) => {
+      contour.profiles.forEach((profile) => {
+        if(profile.nearest(true) == this){
+          res.push(profile)
+        }
+      })
+    })
+
+    return res;
+  }
+
+  cnn_point(node, point) {
+    const res = this.rays[node];
+    const {cnn, profile, profile_point} = res;
+
+    if(!point){
+      point = this[node];
+    }
+
+    if(profile && profile.children.length){
+      if(this.check_distance(profile, res, point, true) === false){
+        return res;
+      }
+    }
+
+    res.clear();
+    if(this.parent){
+      const profiles = this.parent.profiles;
+      const allow_open_cnn = this.project._dp.sys.allow_open_cnn;
+      const ares = [];
+
+      for(let i=0; i<profiles.length; i++){
+        if(this.check_distance(profiles[i], res, point, false) === false){
+
+          if(!allow_open_cnn){
+            if(res.profile == profile && res.profile_point == profile_point){
+              if(cnn && !cnn.empty() && res.cnn != cnn){
+                res.cnn = cnn;
               }
             }
+            return res;
           }
-          else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-            const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
-            if(!mpoint.is_nearest(this.e)){
-              this.e = mpoint;
-              moved_fact = true;
-            }
-          }
+
+          ares.push({
+            profile_point: res.profile_point,
+            profile: res.profile,
+            cnn_types: res.cnn_types,
+            point: res.point});
         }
       }
 
-			if(moved && moved_fact){
-				const imposts = this.joined_imposts();
-        imposts.inner.concat(imposts.outer).forEach((impost) => {
-          if(moved.profiles.indexOf(impost) == -1){
-            impost.profile.observer(this);
-          }
-        })
-			}
-		}
-	}
+      if(ares.length == 1){
+        res._mixin(ares[0]);
+      }
+      else if(ares.length >= 2){
+        if(this.max_right_angle(ares)){
+          res._mixin(ares[0]);
+          res.is_cut = true;
 
-});
+          if(cnn && res.cnn_types && res.cnn_types.indexOf(cnn.cnn_type) != -1 ){
+            res.cnn = cnn;
+          }
+
+        }
+        else{
+          res.clear();
+          res.is_cut = true;
+        }
+      }
+    }
+
+    return res;
+  }
+
+  max_right_angle(ares) {
+    const {generatrix} = this;
+    let has_a = true;
+    ares.forEach((res) => {
+      res._angle = generatrix.angle_to(res.profile.generatrix, res.point);
+    });
+    ares.sort((a, b) => {
+      let aa = a._angle - 90;
+      let ab = b._angle - 90;
+      if(aa < 0){
+        aa += 180;
+      }
+      if(ab < 0){
+        ab += 180;
+      }
+      if(aa > 180){
+        aa -= 180;
+      }
+      if(ab > 180){
+        ab -= 180;
+      }
+      return aa - ab;
+    });
+    return has_a;
+  }
+
+  do_bind(p, bcnn, ecnn, moved) {
+
+    let moved_fact;
+
+    if(p instanceof ProfileConnective){
+      const {generatrix} = p;
+      this.data._rays.clear();
+      this.b = generatrix.getNearestPoint(this.b);
+      this.e = generatrix.getNearestPoint(this.e);
+      moved_fact = true;
+    }
+    else{
+      if(bcnn.cnn && bcnn.profile == p){
+        if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+          if(!this.b.is_nearest(p.e)){
+            if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+              if(paper.Key.isDown('control')){
+                console.log('control');
+              }else{
+                if(this.b.getDistance(p.e, true) < this.b.getDistance(p.b, true)){
+                  this.b = p.e;
+                }
+                else{
+                  this.b = p.b;
+                }
+                moved_fact = true;
+              }
+            }
+            else{
+              bcnn.clear();
+              this.data._rays.clear();
+            }
+          }
+        }
+        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
+          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
+          if(!mpoint.is_nearest(this.b)){
+            this.b = mpoint;
+            moved_fact = true;
+          }
+        }
+
+      }
+
+      if(ecnn.cnn && ecnn.profile == p){
+        if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+          if(!this.e.is_nearest(p.b)){
+            if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+              if(paper.Key.isDown('control')){
+                console.log('control');
+              }else{
+                if(this.e.getDistance(p.b, true) < this.e.getDistance(p.e, true))
+                  this.e = p.b;
+                else
+                  this.e = p.e;
+                moved_fact = true;
+              }
+            } else{
+              ecnn.clear();
+              this.data._rays.clear();
+            }
+          }
+        }
+        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
+          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
+          if(!mpoint.is_nearest(this.e)){
+            this.e = mpoint;
+            moved_fact = true;
+          }
+        }
+      }
+    }
+
+    if(moved && moved_fact){
+      const imposts = this.joined_imposts();
+      imposts.inner.concat(imposts.outer).forEach((impost) => {
+        if(moved.profiles.indexOf(impost) == -1){
+          impost.profile.observer(this);
+        }
+      })
+    }
+  }
+}
 
 Editor.Profile = Profile;
 
@@ -7201,14 +7175,6 @@ class ProfileAddl extends ProfileItem {
   get d0() {
     this.nearest();
     return this.data._nearest_cnn ? -this.data._nearest_cnn.sz : 0;
-  }
-
-  get d1() {
-    return -(this.d0 - this.sizeb);
-  }
-
-  get d2() {
-    return this.d1 - this.width;
   }
 
   get outer() {
@@ -7419,14 +7385,6 @@ class ProfileConnective extends ProfileItem {
     return 0;
   }
 
-  get d1() {
-    return this.sizeb;
-  }
-
-  get d2() {
-    return this.d1 - this.width;
-  }
-
   get elm_type() {
     return $p.enm.elm_types.Соединитель;
   }
@@ -7548,14 +7506,6 @@ class Onlay extends ProfileItem {
 
   get d0() {
     return 0;
-  }
-
-  get d1() {
-    return this.sizeb;
-  }
-
-  get d2() {
-    return this.d1 - this.width;
   }
 
   get elm_type() {
