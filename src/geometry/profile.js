@@ -785,6 +785,26 @@ ProfileItem.prototype.__define({
 		}
 	},
 
+  /**
+   * Возвращает сторону соединения текущего профиля с указанным
+   */
+  cnn_side: {
+	  value: function (profile, interior, rays) {
+	    if(!interior){
+        const {generatrix} = profile;
+        interior = generatrix && generatrix.getPointAt(generatrix.length/2);
+      }
+      if(!rays){
+        rays = this.rays;
+      }
+      if(!rays || !interior){
+        return $p.enm.cnn_sides.Изнутри;
+      }
+      return rays.inner.getNearestPoint(interior).getDistance(interior, true) <
+        rays.outer.getNearestPoint(interior).getDistance(interior, true) ? $p.enm.cnn_sides.Изнутри : $p.enm.cnn_sides.Снаружи;
+    }
+  },
+
 	/**
 	 * информация для диалога свойств
 	 *
@@ -1055,8 +1075,8 @@ ProfileItem.prototype.__define({
 			function detect_side(){
 
 				if(cnn_point.profile instanceof ProfileItem){
-					var isinner = intersect_point(prays.inner, _profile.generatrix),
-						isouter = intersect_point(prays.outer, _profile.generatrix);
+					const isinner = intersect_point(prays.inner, _profile.generatrix);
+					const isouter = intersect_point(prays.outer, _profile.generatrix);
 					if(isinner != undefined && isouter == undefined)
 						return 1;
 					else if(isinner == undefined && isouter != undefined)
@@ -1487,6 +1507,15 @@ ProfileItem.prototype.__define({
 			}
 		}
 	},
+
+  /**
+   * Возвращает массив примыкающих профилей
+   */
+  joined_nearests: {
+	  value: function () {
+      return [];
+    }
+  },
 
 	/**
 	 * ### Формирует путь сегмента профиля
@@ -2217,3 +2246,4 @@ class Profile extends ProfileItem {
 }
 
 Editor.Profile = Profile;
+Editor.ProfileItem = ProfileItem;

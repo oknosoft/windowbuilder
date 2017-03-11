@@ -3995,7 +3995,7 @@ BuilderElement.prototype.__define({
 
 	_metadata: {
 		get : function(){
-			var t = this,
+			const t = this,
 				_meta = t.project.ox._metadata,
 				_xfields = _meta.tabular_sections.coordinates.fields, 
 				inset = _xfields.inset._clone(),
@@ -4005,18 +4005,18 @@ BuilderElement.prototype.__define({
 				info = _meta.fields.note._clone();
 
 			function cnn_choice_links(o, cnn_point){
+
 				var nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
 
 				if($p.utils.is_data_obj(o)){
-					return nom_cnns.some(function (cnn) {
-						return o == cnn;
-					});
-
-				}else{
-					var refs = "";
-					nom_cnns.forEach(function (cnn) {
-						if(refs)
-							refs += ", ";
+					return nom_cnns.some((cnn) => o == cnn);
+				}
+				else{
+					let refs = "";
+					nom_cnns.forEach((cnn) => {
+						if(refs){
+              refs += ", ";
+            }
 						refs += "'" + cnn.ref + "'";
 					});
 					return "_t_.ref in (" + refs + ")";
@@ -4030,46 +4030,50 @@ BuilderElement.prototype.__define({
 				name: ["selection",	"ref"],
 				path: [
 					function(o, f){
-						var selection;
+						let selection;
 
 						if(t instanceof Filling){
-
 							if($p.utils.is_data_obj(o)){
 								return $p.cat.inserts._inserts_types_filling.indexOf(o.insert_type) != -1 &&
 										o.thickness >= t.project._dp.sys.tmin && o.thickness <= t.project._dp.sys.tmax;
-
-							}else{
-								var refs = "";
-								$p.cat.inserts.by_thickness(t.project._dp.sys.tmin, t.project._dp.sys.tmax).forEach(function (row) {
-									if(refs)
-										refs += ", ";
+							}
+							else{
+								let refs = "";
+								$p.cat.inserts.by_thickness(t.project._dp.sys.tmin, t.project._dp.sys.tmax).forEach((row) => {
+									if(refs){
+                    refs += ", ";
+                  }
 									refs += "'" + row.ref + "'";
 								});
 								return "_t_.ref in (" + refs + ")";
 							}
-
-						}else if(t instanceof Profile){
-							if(t.nearest())
-								selection = {elm_type: {in: [$p.enm.elm_types.Створка, $p.enm.elm_types.Добор]}};
-							else
-								selection = {elm_type: {in: [$p.enm.elm_types.Рама, $p.enm.elm_types.Импост, $p.enm.elm_types.Добор]}};
-						}else
-							selection = {elm_type: t.nom.elm_type};
-
+						}
+						else if(t instanceof Profile){
+							if(t.nearest()){
+                selection = {elm_type: {in: [$p.enm.elm_types.Створка, $p.enm.elm_types.Добор]}};
+              }
+							else{
+                selection = {elm_type: {in: [$p.enm.elm_types.Рама, $p.enm.elm_types.Импост, $p.enm.elm_types.Добор]}};
+              }
+						}
+						else{
+              selection = {elm_type: t.nom.elm_type};
+            }
 
 						if($p.utils.is_data_obj(o)){
-							var ok = false;
+							let ok = false;
 							selection.nom = o;
-							t.project._dp.sys.elmnts.find_rows(selection, function (row) {
+							t.project._dp.sys.elmnts.find_rows(selection, (row) => {
 								ok = true;
 								return false;
 							});
 							return ok;
 						}else{
-							var refs = "";
-							t.project._dp.sys.elmnts.find_rows(selection, function (row) {
-								if(refs)
-									refs += ", ";
+							let refs = "";
+							t.project._dp.sys.elmnts.find_rows(selection, (row) => {
+								if(refs){
+                  refs += ", ";
+                }
 								refs += "'" + row.nom.ref + "'";
 							});
 							return "_t_.ref in (" + refs + ")";
@@ -4098,19 +4102,23 @@ BuilderElement.prototype.__define({
 				path: [
 					function(o){
 
-						var cnn_ii = t.selected_cnn_ii(), nom_cnns;
+						const cnn_ii = t.selected_cnn_ii();
+						let nom_cnns;
 
-						if(cnn_ii.elm instanceof Filling)
-							nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
-						else
-							nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
+						if(cnn_ii.elm instanceof Filling){
+              nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
+            }
+						else if(cnn_ii.elm_type == $p.enm.elm_types.Створка && t.elm_type != $p.enm.elm_types.Створка){
+              nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
+            }
+						else{
+              nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
+            }
 
 						if($p.utils.is_data_obj(o)){
-							return nom_cnns.some(function (cnn) {
-								return o == cnn;
-							});
-
-						}else{
+							return nom_cnns.some((cnn) => o == cnn);
+						}
+						else{
 							var refs = "";
 							nom_cnns.forEach(function (cnn) {
 								if(refs)
@@ -4292,12 +4300,13 @@ BuilderElement.prototype.__define({
 
 	selected_cnn_ii: {
 		value: function(){
-			var t = this,
-				sel = t.project.getSelectedItems(),
-				cnns = this.project.connections.cnns,
-				items = [], res;
+		  const {project, elm} = this;
+			const sel = project.getSelectedItems();
+      const {cnns} = project.connections;
+      const items = [];
+			let res;
 
-			sel.forEach(function (item) {
+			sel.forEach((item) => {
 				if(item.parent instanceof ProfileItem || item.parent instanceof Filling)
 					items.push(item.parent);
 				else if(item instanceof Filling)
@@ -4305,21 +4314,23 @@ BuilderElement.prototype.__define({
 			});
 
 			if(items.length > 1 &&
-				items.some(function (item) { return item == t; }) &&
-				items.some(function (item) {
-					if(item != t){
-						cnns.forEach(function (row) {
+				items.some((item) => item == this) &&
+				items.some((item) => {
+					if(item != this){
+						cnns.forEach((row) => {
 							if(!row.node1 && !row.node2 &&
-								((row.elm1 == t.elm && row.elm2 == item.elm) || (row.elm1 == item.elm && row.elm2 == t.elm))){
+								((row.elm1 == elm && row.elm2 == item.elm) || (row.elm1 == item.elm && row.elm2 == elm))){
 								res = {elm: item, row: row};
 								return false;
 							}
 						});
-						if(res)
-							return true;
+						if(res){
+              return true;
+            }
 					}
-				}))
-				return res;
+				})){
+        return res;
+      }
 		}
 	},
 
@@ -6025,6 +6036,23 @@ ProfileItem.prototype.__define({
 		}
 	},
 
+  cnn_side: {
+	  value: function (profile, interior, rays) {
+	    if(!interior){
+        const {generatrix} = profile;
+        interior = generatrix && generatrix.getPointAt(generatrix.length/2);
+      }
+      if(!rays){
+        rays = this.rays;
+      }
+      if(!rays || !interior){
+        return $p.enm.cnn_sides.Изнутри;
+      }
+      return rays.inner.getNearestPoint(interior).getDistance(interior, true) <
+        rays.outer.getNearestPoint(interior).getDistance(interior, true) ? $p.enm.cnn_sides.Изнутри : $p.enm.cnn_sides.Снаружи;
+    }
+  },
+
 	info: {
 		get : function(){
 			return "№" + this.elm + " α:" + this.angle_hor.toFixed(0) + "° l:" + this.length.toFixed(0);
@@ -6223,8 +6251,8 @@ ProfileItem.prototype.__define({
 			function detect_side(){
 
 				if(cnn_point.profile instanceof ProfileItem){
-					var isinner = intersect_point(prays.inner, _profile.generatrix),
-						isouter = intersect_point(prays.outer, _profile.generatrix);
+					const isinner = intersect_point(prays.inner, _profile.generatrix);
+					const isouter = intersect_point(prays.outer, _profile.generatrix);
 					if(isinner != undefined && isouter == undefined)
 						return 1;
 					else if(isinner == undefined && isouter != undefined)
@@ -6544,6 +6572,12 @@ ProfileItem.prototype.__define({
 			}
 		}
 	},
+
+  joined_nearests: {
+	  value: function () {
+      return [];
+    }
+  },
 
 	redraw: {
 		value: function () {
@@ -7134,6 +7168,7 @@ class Profile extends ProfileItem {
 }
 
 Editor.Profile = Profile;
+Editor.ProfileItem = ProfileItem;
 
 
 
@@ -7264,19 +7299,15 @@ class ProfileAddl extends ProfileItem {
       }
     }
 
-    function detect_side(){
-      return prays.inner.getNearestPoint(interior).getDistance(interior, true) <
-        prays.outer.getNearestPoint(interior).getDistance(interior, true) ? 1 : -1;
-    }
+    const {profile} = cnn_point;
+    const prays = profile.rays;
 
-    const prays = cnn_point.profile.rays;
-
-    if(!cnn_point.profile.path.segments.length){
-      cnn_point.profile.redraw();
+    if(!profile.path.segments.length){
+      profile.redraw();
     }
 
     if(profile_point == "b"){
-      if(detect_side() < 0){
+      if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
         intersect_point(prays.outer, rays.outer, 1);
         intersect_point(prays.outer, rays.inner, 4);
       }
@@ -7286,7 +7317,7 @@ class ProfileAddl extends ProfileItem {
       }
     }
     else if(profile_point == "e"){
-      if(detect_side() < 0){
+      if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
         intersect_point(prays.outer, rays.outer, 2);
         intersect_point(prays.outer, rays.inner, 3);
       }

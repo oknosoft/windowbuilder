@@ -193,23 +193,18 @@ class ProfileAddl extends ProfileItem {
       }
     }
 
-    // Определяем сторону примыкающего
-    function detect_side(){
-      return prays.inner.getNearestPoint(interior).getDistance(interior, true) <
-        prays.outer.getNearestPoint(interior).getDistance(interior, true) ? 1 : -1;
-    }
-
     // если пересечение в узлах, используем лучи профиля
-    const prays = cnn_point.profile.rays;
+    const {profile} = cnn_point;
+    const prays = profile.rays;
 
     // добор всегда Т. сначала определяем, изнутри или снаружи находится наш профиль
-    if(!cnn_point.profile.path.segments.length){
-      cnn_point.profile.redraw();
+    if(!profile.path.segments.length){
+      profile.redraw();
     }
 
     if(profile_point == "b"){
       // в зависимости от стороны соединения
-      if(detect_side() < 0){
+      if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
         intersect_point(prays.outer, rays.outer, 1);
         intersect_point(prays.outer, rays.inner, 4);
       }
@@ -220,7 +215,7 @@ class ProfileAddl extends ProfileItem {
     }
     else if(profile_point == "e"){
       // в зависимости от стороны соединения
-      if(detect_side() < 0){
+      if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
         intersect_point(prays.outer, rays.outer, 2);
         intersect_point(prays.outer, rays.inner, 3);
       }

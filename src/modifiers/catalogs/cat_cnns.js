@@ -32,8 +32,8 @@ $p.cat.cnns.__define({
     value: function(nom1, nom2, cnn_types){
 
       // если второй элемент вертикальный - меняем местами эл 1-2 при поиске
-      if(nom1 instanceof $p.Editor.Profile &&
-        nom2 instanceof $p.Editor.Profile &&
+      if(nom1 instanceof $p.Editor.ProfileItem &&
+        nom2 instanceof $p.Editor.ProfileItem &&
         cnn_types && cnn_types.indexOf($p.enm.cnn_types.УгловоеДиагональное) != -1 &&
         nom1.orientation != $p.enm.orientations.Вертикальная &&
         nom2.orientation == $p.enm.orientations.Вертикальная ){
@@ -41,44 +41,36 @@ $p.cat.cnns.__define({
         return this.nom_cnn(nom2, nom1, cnn_types);
       }
 
+      // если оба элемента - профили, определяем сторону
+      const side = nom1 instanceof $p.Editor.ProfileItem && nom2 instanceof $p.Editor.ProfileItem && nom2.cnn_side(nom1);
 
-      var onom1, onom2,
-        is_i = false, art1glass = false, art2glass = false,
-        a1, a2, ref1,
-        thickness1, thickness2;
+      let onom1, onom2, a1, a2, thickness1, thickness2, is_i = false, art1glass = false, art2glass = false;
 
       if(nom1 instanceof $p.Editor.BuilderElement){
         onom1 = nom1.nom;
-
-      }else if($p.utils.is_data_obj(nom1)){
+      }
+      else if($p.utils.is_data_obj(nom1)){
         onom1 = nom1;
-
-      }else{
+      }
+      else{
         onom1 = $p.cat.nom.get(nom1);
-
       }
 
-      if(!onom1 || onom1.empty())
-        ref1 = nom1.ref;
-      else
-        ref1 = onom1.ref;
-
+      const ref1 = (!onom1 || onom1.empty()) ? nom1.ref : onom1.ref;
 
       if(!nom2 || ($p.utils.is_data_obj(nom2) && nom2.empty())){
         is_i = true;
         onom2 = nom2 = $p.cat.nom.get();
-
-      }else{
-
+      }
+      else{
         if(nom2 instanceof $p.Editor.BuilderElement){
           onom2 = nom2.nom;
-
-        }else if($p.utils.is_data_obj(nom2)){
+        }
+        else if($p.utils.is_data_obj(nom2)){
           onom2 = nom2;
-
-        }else{
+        }
+        else{
           onom2 = $p.cat.nom.get(nom2);
-
         }
       }
 
@@ -86,12 +78,11 @@ $p.cat.cnns.__define({
         if(nom1 instanceof $p.Editor.Filling){
           art1glass = true;
           thickness1 = nom1.thickness;
-
-        }else if(nom2 instanceof $p.Editor.Filling){
+        }
+        else if(nom2 instanceof $p.Editor.Filling){
           art2glass = true;
           thickness2 = nom2.thickness;
         }
-
       }
 
       if(!this._nomcache[ref1]){
@@ -101,14 +92,15 @@ $p.cat.cnns.__define({
       if(!a1[onom2.ref]){
         a2 = (a1[onom2.ref] = []);
         // для всех элементов справочника соединения
-        this.each(function(оCnn){
+        this.each((оCnn) => {
           // если в строках соединяемых элементов есть наша - добавляем
-          var is_nom1 = art1glass ? (оCnn.art1glass && thickness1 >= Number(оCnn.tmin) && thickness1 <= Number(оCnn.tmax)) : false,
+          let is_nom1 = art1glass ? (оCnn.art1glass && thickness1 >= Number(оCnn.tmin) && thickness1 <= Number(оCnn.tmax)) : false,
             is_nom2 = art2glass ? (оCnn.art2glass && thickness2 >= Number(оCnn.tmin) && thickness2 <= Number(оCnn.tmax)) : false;
 
-          оCnn.cnn_elmnts.each(function(row){
-            if(is_nom1 && is_nom2)
+          оCnn.cnn_elmnts.each((row) => {
+            if(is_nom1 && is_nom2){
               return false;
+            }
             is_nom1 = is_nom1 || $p.utils.is_equal(row.nom1, onom1);
             is_nom2 = is_nom2 || $p.utils.is_equal(row.nom2, onom2);
           });
@@ -149,10 +141,20 @@ $p.cat.cnns.__define({
   elm_cnn: {
     value: function(elm1, elm2, cnn_types, curr_cnn){
 
+      // если установленное ранее соединение проходит по типу и стороне, нового не ищем
       if(curr_cnn && cnn_types && (cnn_types.indexOf(curr_cnn.cnn_type)!=-1)){
-        // если установленное ранее соединение проходит по типу, нового не ищем
+
         // TODO: проверить геометрию
-        return curr_cnn;
+
+        if(curr_cnn.sd1 == $p.enm.cnn_sides.Изнутри && elm2.cnn_side(elm1) == $p.enm.cnn_sides.Изнутри){
+          return curr_cnn;
+        }
+        else if(curr_cnn.sd1 == $p.enm.cnn_sides.Снаружи && elm2.cnn_side(elm1) == $p.enm.cnn_sides.Снаружи){
+          return curr_cnn;
+        }
+        else{
+          return curr_cnn;
+        }
       }
 
       const cnns = this.nom_cnn(elm1, elm2, cnn_types);
