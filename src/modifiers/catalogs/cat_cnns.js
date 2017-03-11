@@ -92,12 +92,12 @@ $p.cat.cnns.__define({
       if(!a1[onom2.ref]){
         a2 = (a1[onom2.ref] = []);
         // для всех элементов справочника соединения
-        this.each((оCnn) => {
+        this.each((cnn) => {
           // если в строках соединяемых элементов есть наша - добавляем
-          let is_nom1 = art1glass ? (оCnn.art1glass && thickness1 >= Number(оCnn.tmin) && thickness1 <= Number(оCnn.tmax)) : false,
-            is_nom2 = art2glass ? (оCnn.art2glass && thickness2 >= Number(оCnn.tmin) && thickness2 <= Number(оCnn.tmax)) : false;
+          let is_nom1 = art1glass ? (cnn.art1glass && thickness1 >= Number(cnn.tmin) && thickness1 <= Number(cnn.tmax)) : false,
+            is_nom2 = art2glass ? (cnn.art2glass && thickness2 >= Number(cnn.tmin) && thickness2 <= Number(cnn.tmax)) : false;
 
-          оCnn.cnn_elmnts.each((row) => {
+          cnn.cnn_elmnts.each((row) => {
             if(is_nom1 && is_nom2){
               return false;
             }
@@ -105,26 +105,31 @@ $p.cat.cnns.__define({
             is_nom2 = is_nom2 || $p.utils.is_equal(row.nom2, onom2);
           });
           if(is_nom1 && is_nom2){
-            a2.push(оCnn);
+            a2.push(cnn);
           }
         });
       }
 
       if(cnn_types){
-        var tmp = a1[onom2.ref], res = [], types;
-
-        if(Array.isArray(cnn_types))
-          types = cnn_types;
-        else if($p.enm.cnn_types.acn.a.indexOf(cnn_types) != -1)
-          types = $p.enm.cnn_types.acn.a;
-        else
-          types = [cnn_types];
-
-        tmp.forEach(function (c) {
-          if(types.indexOf(c.cnn_type) != -1)
-            res.push(c);
+        const types = Array.isArray(cnn_types) ? cnn_types : (
+            $p.enm.cnn_types.acn.a.indexOf(cnn_types) != -1 ? $p.enm.cnn_types.acn.a : [cnn_types]
+          );
+        return a1[onom2.ref].filter((cnn) => {
+          if(types.indexOf(cnn.cnn_type) != -1){
+            if(!side){
+              return true
+            }
+            if(cnn.sd1 == $p.enm.cnn_sides.Изнутри){
+              return side == $p.enm.cnn_sides.Изнутри;
+            }
+            else if(cnn.sd1 == $p.enm.cnn_sides.Снаружи){
+              return side == $p.enm.cnn_sides.Снаружи;
+            }
+            else{
+              return true;
+            }
+          }
         });
-        return res;
       }
 
       return a1[onom2.ref];
@@ -137,20 +142,23 @@ $p.cat.cnns.__define({
    * @param elm2
    * @param [cnn_types] {Array}
    * @param [curr_cnn] {_cat.cnns}
+   * @param [ign_side] {Boolean}
    */
   elm_cnn: {
-    value: function(elm1, elm2, cnn_types, curr_cnn){
+    value: function(elm1, elm2, cnn_types, curr_cnn, ign_side){
 
       // если установленное ранее соединение проходит по типу и стороне, нового не ищем
       if(curr_cnn && cnn_types && (cnn_types.indexOf(curr_cnn.cnn_type)!=-1)){
 
         // TODO: проверить геометрию
 
-        if(curr_cnn.sd1 == $p.enm.cnn_sides.Изнутри && elm2.cnn_side(elm1) == $p.enm.cnn_sides.Изнутри){
-          return curr_cnn;
+        if(!ign_side && curr_cnn.sd1 == $p.enm.cnn_sides.Изнутри){
+          if(elm2.cnn_side(elm1) == $p.enm.cnn_sides.Изнутри)
+            return curr_cnn;
         }
-        else if(curr_cnn.sd1 == $p.enm.cnn_sides.Снаружи && elm2.cnn_side(elm1) == $p.enm.cnn_sides.Снаружи){
-          return curr_cnn;
+        else if(!ign_side && curr_cnn.sd1 == $p.enm.cnn_sides.Снаружи){
+          if(elm2.cnn_side(elm1) == $p.enm.cnn_sides.Снаружи)
+            return curr_cnn;
         }
         else{
           return curr_cnn;
@@ -159,11 +167,30 @@ $p.cat.cnns.__define({
 
       const cnns = this.nom_cnn(elm1, elm2, cnn_types);
 
-      // для примера подставляем первое попавшееся соединение
+      // сортируем по непустой стороне и приоритету
       if(cnns.length){
+        const sides = [$p.enm.cnn_sides.Изнутри, $p.enm.cnn_sides.Снаружи];
         if(cnns.length > 1){
           cnns.sort((a, b) => {
-            return a.priority - b.priority;
+            if(sides.indexOf(a.sd1) != -1 && sides.indexOf(b.sd1) == -1){
+              return -1;
+            }
+            if(sides.indexOf(b.sd1) != -1 && sides.indexOf(a.sd1) == -1){
+              return 1;
+            }
+            if (a.priority > b.priority) {
+              return -1;
+            }
+            if (a.priority < b.priority) {
+              return 1;
+            }
+            if (a.name > b.name) {
+              return -1;
+            }
+            if (a.name < b.name) {
+              return 1;
+            }
+            return 0;
           });
         }
         return cnns[0];

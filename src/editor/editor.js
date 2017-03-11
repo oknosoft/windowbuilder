@@ -539,9 +539,10 @@ class Editor extends paper.PaperScope {
    * @param name {String} - имя инструмента
    */
   select_tool(name) {
-    for(var t in this.tools){
-      if(this.tools[t].options.name == name)
+    for(let t in this.tools){
+      if(this.tools[t].options.name == name){
         return this.tools[t].activate();
+      }
     }
   }
 
@@ -553,8 +554,7 @@ class Editor extends paper.PaperScope {
    * @param [ox] {String|DataObj} - ссылка или объект продукции
    */
   open(ox) {
-    if(ox)
-      this.project.load(ox);
+    ox && this.project.load(ox);
   }
 
   /**
@@ -574,10 +574,7 @@ class Editor extends paper.PaperScope {
         title: $p.msg.bld_from_blocks_title,
         text: $p.msg.bld_from_blocks,
         cancel: $p.msg.cancel,
-        callback: function(btn) {
-          if(btn)
-            this.load_stamp(true);
-        }.bind(this)
+        callback: (btn) => btn && this.load_stamp(true)
       });
       return;
     }
@@ -627,18 +624,19 @@ class Editor extends paper.PaperScope {
   }
 
   purge_selection(){
-    const deselect = [];
     let selected = this.project.selectedItems;
-
-    for (var i = 0; i < selected.length; i++) {
-      var path = selected[i];
-      if(path.parent instanceof ProfileItem && path != path.parent.generatrix)
-        deselect.push(path);
-    }
-
+    const deselect = selected.filter((path) => path.parent instanceof ProfileItem && path != path.parent.generatrix);
     while(selected = deselect.pop()){
       selected.selected = false;
     }
+  }
+
+  /**
+   * Возвращает элемент по номеру
+   * @param num
+   */
+  elm(num) {
+    return this.project.getItem({class: BuilderElement, elm: num});
   }
 
   // Returns serialized contents of selected items.

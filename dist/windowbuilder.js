@@ -1026,15 +1026,15 @@ class Editor extends paper.PaperScope {
   }
 
   select_tool(name) {
-    for(var t in this.tools){
-      if(this.tools[t].options.name == name)
+    for(let t in this.tools){
+      if(this.tools[t].options.name == name){
         return this.tools[t].activate();
+      }
     }
   }
 
   open(ox) {
-    if(ox)
-      this.project.load(ox);
+    ox && this.project.load(ox);
   }
 
   load_stamp(confirmed){
@@ -1044,10 +1044,7 @@ class Editor extends paper.PaperScope {
         title: $p.msg.bld_from_blocks_title,
         text: $p.msg.bld_from_blocks,
         cancel: $p.msg.cancel,
-        callback: function(btn) {
-          if(btn)
-            this.load_stamp(true);
-        }.bind(this)
+        callback: (btn) => btn && this.load_stamp(true)
       });
       return;
     }
@@ -1090,18 +1087,15 @@ class Editor extends paper.PaperScope {
   }
 
   purge_selection(){
-    const deselect = [];
     let selected = this.project.selectedItems;
-
-    for (var i = 0; i < selected.length; i++) {
-      var path = selected[i];
-      if(path.parent instanceof ProfileItem && path != path.parent.generatrix)
-        deselect.push(path);
-    }
-
+    const deselect = selected.filter((path) => path.parent instanceof ProfileItem && path != path.parent.generatrix);
     while(selected = deselect.pop()){
       selected.selected = false;
     }
+  }
+
+  elm(num) {
+    return this.project.getItem({class: BuilderElement, elm: num});
   }
 
   capture_selection_state() {
@@ -5628,11 +5622,10 @@ class ProfileRays {
     this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
 
     if(path.is_linear()){
-
       this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
       this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
-
-    }else{
+    }
+    else{
 
       this.outer.add(point_b.add(normal_b.multiply(d1)));
       this.inner.add(point_b.add(normal_b.multiply(d2)));
@@ -6039,8 +6032,7 @@ ProfileItem.prototype.__define({
   cnn_side: {
 	  value: function (profile, interior, rays) {
 	    if(!interior){
-        const {generatrix} = profile;
-        interior = generatrix && generatrix.getPointAt(generatrix.length/2);
+        interior = profile.interiorPoint();
       }
       if(!rays){
         rays = this.rays;
@@ -6261,7 +6253,6 @@ ProfileItem.prototype.__define({
 						return 1;
 				}else
 					return 1;
-
 			}
 
 			if(cnn_point.profile instanceof ProfileItem){
@@ -6389,14 +6380,12 @@ ProfileItem.prototype.__define({
 
 	interiorPoint: {
 		value: function () {
-			var gen = this.generatrix, igen;
-			if(gen.curves.length == 1)
-				igen = gen.firstCurve.getPointAt(0.5, true);
-			else if (gen.curves.length == 2)
-				igen = gen.firstCurve.point2;
-			else
-				igen = gen.curves[1].point2;
-			return this.rays.inner.getNearestPoint(igen).add(this.rays.outer.getNearestPoint(igen)).divide(2)
+			const {generatrix, d1, d2} = this;
+			const igen = generatrix.curves.length == 1 ? generatrix.firstCurve.getPointAt(0.5, true) : (
+          generatrix.curves.length == 2 ? generatrix.firstCurve.point2 : generatrix.curves[1].point2
+        );
+      const normal = generatrix.getNormalAt(generatrix.getOffsetOf(igen));
+      return igen.add(normal.multiply(d1).add(normal.multiply(d2)).divide(2));
 		}
 	},
 
@@ -6861,7 +6850,7 @@ class Profile extends ProfileItem {
             if(!_nearest_cnn){
               _nearest_cnn = project.connections.elm_cnn(this, data._nearest);
             }
-            data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn);
+            data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
           }
           if(data._nearest.isInserted()){
             return true;
