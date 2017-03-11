@@ -4494,38 +4494,42 @@ $p.CchProperties.prototype.__define({
         return;
       }
 
-      var ts = attr.obj._owner,
-        ox = ts._owner,
-        selection = attr.grid.selection._clone();
+      const ts = attr.obj._owner;
+      const ox = ts._owner;
+      const selection = attr.grid.selection._clone();
       if(selection.hasOwnProperty("hide")){
         delete selection.hide;
       }
-      var  prms = ts.find_rows(selection);
+      const prms = ts.find_rows(selection);
 
-      this._params_links.forEach(function (link) {
-        var ok = true;
-        link.master.params.forEach(function (row) {
-          ok = prms.some(function (prm) {
-            return prm.property == prm.property && prm.value == prm.value;
-          });
+      this._params_links.forEach((link) => {
+        let ok = true;
+        link.master.params.forEach((row) => {
+          if(row.property.is_calculated){
+            ok = row.value == row.property.calculated_value({
+              cnstr: selection.cnstr,
+              ox: ox
+            });
+          }
+          else{
+            ok = prms.some((prm) => row.property == prm.param && row.value == prm.value);
+          }
           if(!ok){
             return false;
           }
         });
-
         if(ok){
           if(!filter.ref){
             filter.ref = {in: []}
           }
           if(filter.ref.in){
-            link.values._obj.forEach(function (row) {
+            link.values._obj.forEach((row) => {
               if(filter.ref.in.indexOf(row.value) == -1){
                 filter.ref.in.push(row.value);
               }
             });
           }
         }
-
       });
 
     }
@@ -6439,6 +6443,288 @@ $p.DpBuyers_order.prototype.__define({
 });
 
 
+
+(function($p){
+
+	var _mgr = $p.enm.cnn_types;
+
+
+	_mgr.acn = {cache :{}};
+	_mgr.acn.__define({
+
+		ii: {
+			get : function(){
+				return this.cache.ii
+					|| ( this.cache.ii = [_mgr.Наложение] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		i: {
+			get : function(){
+				return this.cache.i
+					|| ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		a: {
+			get : function(){
+				return this.cache.a
+					|| ( this.cache.a = [
+						_mgr.УгловоеДиагональное,
+						_mgr.УгловоеКВертикальной,
+						_mgr.УгловоеКГоризонтальной,
+						_mgr.КрестВСтык] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		t: {
+			get : function(){
+				return this.cache.t
+					|| ( this.cache.t = [_mgr.ТОбразное] );
+			},
+			enumerable : false,
+			configurable : false
+		}
+	});
+
+
+	_mgr.tcn = {cache :{}};
+	_mgr.tcn.__define({
+		ad: {
+			get : function(){
+				return this.cache.ad || ( this.cache.ad = _mgr.УгловоеДиагональное );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		av: {
+			get : function(){
+				return this.cache.av || ( this.cache.av = _mgr.УгловоеКВертикальной );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		ah: {
+			get : function(){
+				return this.cache.ah || ( this.cache.ah = _mgr.УгловоеКГоризонтальной );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		t: {
+			get : function(){
+				return this.cache.t || ( this.cache.t = _mgr.ТОбразное );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		ii: {
+			get : function(){
+				return this.cache.ii || ( this.cache.ii = _mgr.Наложение );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		i: {
+			get : function(){
+				return this.cache.i || ( this.cache.i = _mgr.НезамкнутыйКонтур );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		xt: {
+			get : function(){
+				return this.cache.xt || ( this.cache.xt = _mgr.КрестПересечение );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		xx: {
+			get : function(){
+				return this.cache.xx || ( this.cache.xx = _mgr.КрестВСтык );
+			},
+			enumerable : false,
+			configurable : false
+		}
+	});
+
+})($p);
+
+
+(function($p){
+
+	var _mgr = $p.enm.elm_types,
+
+
+		cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			},
+			enumerable : false,
+			configurable : false
+		}
+
+	});
+
+
+})($p);
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
+			}
+		}
+
+
+	});
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
+
+
 $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
 
 $p.doc.calc_order.on({
@@ -8040,288 +8326,6 @@ $p.doc.selling.on({
 });
 
 
-
-
-
-(function($p){
-
-	var _mgr = $p.enm.cnn_types;
-
-
-	_mgr.acn = {cache :{}};
-	_mgr.acn.__define({
-
-		ii: {
-			get : function(){
-				return this.cache.ii
-					|| ( this.cache.ii = [_mgr.Наложение] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		i: {
-			get : function(){
-				return this.cache.i
-					|| ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		a: {
-			get : function(){
-				return this.cache.a
-					|| ( this.cache.a = [
-						_mgr.УгловоеДиагональное,
-						_mgr.УгловоеКВертикальной,
-						_mgr.УгловоеКГоризонтальной,
-						_mgr.КрестВСтык] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		t: {
-			get : function(){
-				return this.cache.t
-					|| ( this.cache.t = [_mgr.ТОбразное] );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
-
-
-	_mgr.tcn = {cache :{}};
-	_mgr.tcn.__define({
-		ad: {
-			get : function(){
-				return this.cache.ad || ( this.cache.ad = _mgr.УгловоеДиагональное );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		av: {
-			get : function(){
-				return this.cache.av || ( this.cache.av = _mgr.УгловоеКВертикальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		ah: {
-			get : function(){
-				return this.cache.ah || ( this.cache.ah = _mgr.УгловоеКГоризонтальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		t: {
-			get : function(){
-				return this.cache.t || ( this.cache.t = _mgr.ТОбразное );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		ii: {
-			get : function(){
-				return this.cache.ii || ( this.cache.ii = _mgr.Наложение );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		i: {
-			get : function(){
-				return this.cache.i || ( this.cache.i = _mgr.НезамкнутыйКонтур );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		xt: {
-			get : function(){
-				return this.cache.xt || ( this.cache.xt = _mgr.КрестПересечение );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		xx: {
-			get : function(){
-				return this.cache.xx || ( this.cache.xx = _mgr.КрестВСтык );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
-
-})($p);
-
-
-(function($p){
-
-	var _mgr = $p.enm.elm_types,
-
-
-		cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			},
-			enumerable : false,
-			configurable : false
-		}
-
-	});
-
-
-})($p);
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
 
 
 (($p) => {

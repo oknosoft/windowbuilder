@@ -216,6 +216,7 @@ class StvProps {
       this._grid.attach(attr);
     }
 
+    // прячем параметры фурнитуры во внешних слоях
     if(!obj.parent){
       const rids = this._grid.getAllRowIds();
       if(rids){

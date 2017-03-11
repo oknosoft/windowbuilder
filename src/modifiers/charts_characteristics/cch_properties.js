@@ -135,41 +135,45 @@ $p.CchProperties.prototype.__define({
         return;
       }
 
-      var ts = attr.obj._owner,
-        ox = ts._owner,
-        selection = attr.grid.selection._clone();
+      const ts = attr.obj._owner;
+      const ox = ts._owner;
+      const selection = attr.grid.selection._clone();
       if(selection.hasOwnProperty("hide")){
         delete selection.hide;
       }
-      var  prms = ts.find_rows(selection);
+      const prms = ts.find_rows(selection);
 
       // для всех возможных связей параметров
-      this._params_links.forEach(function (link) {
-        var ok = true;
+      this._params_links.forEach((link) => {
+        let ok = true;
         // для всех записей ключа параметров
-        link.master.params.forEach(function (row) {
-          ok = prms.some(function (prm) {
-            return prm.property == prm.property && prm.value == prm.value;
-          });
+        link.master.params.forEach((row) => {
+          if(row.property.is_calculated){
+            ok = row.value == row.property.calculated_value({
+              cnstr: selection.cnstr,
+              ox: ox
+            });
+          }
+          else{
+            ok = prms.some((prm) => row.property == prm.param && row.value == prm.value);
+          }
           if(!ok){
             return false;
           }
         });
-
         // если ключ найден в параметрах, добавляем фильтр
         if(ok){
           if(!filter.ref){
             filter.ref = {in: []}
           }
           if(filter.ref.in){
-            link.values._obj.forEach(function (row) {
+            link.values._obj.forEach((row) => {
               if(filter.ref.in.indexOf(row.value) == -1){
                 filter.ref.in.push(row.value);
               }
             });
           }
         }
-
       });
 
     }

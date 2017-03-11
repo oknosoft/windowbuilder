@@ -1159,18 +1159,18 @@ Contour.prototype.__define({
 
 			// при необходимости устанавливаем цвет
 			// если есть контуры с цветной фурнитурой, используем. иначе - цвет из фурнитуры
-			if(this.clr_furn.empty()){
-				this.project.ox.constructions.find_rows({clr_furn: {not: $p.cat.clrs.get()}}, function (row) {
-					this.clr_furn = row.clr_furn;
-					return false;
-				}.bind(this._row));
-			}
-			if(this.clr_furn.empty()){
-				this._row.furn.colors.each(function (row) {
-					this.clr_furn = row.clr;
-					return false;
-				}.bind(this._row));
-			}
+			// if(this.clr_furn.empty()){
+			// 	this.project.ox.constructions.find_rows({clr_furn: {not: $p.cat.clrs.get()}}, function (row) {
+			// 		this.clr_furn = row.clr_furn;
+			// 		return false;
+			// 	}.bind(this._row));
+			// }
+			// if(this.clr_furn.empty()){
+			// 	this._row.furn.colors.each(function (row) {
+			// 		this.clr_furn = row.clr;
+			// 		return false;
+			// 	}.bind(this._row));
+			// }
 
 			// перезаполняем параметры фурнитуры
 			this._row.furn.refill_prm(this);
