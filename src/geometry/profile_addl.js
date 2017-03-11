@@ -81,8 +81,9 @@ class ProfileAddl extends ProfileItem {
    * @type Profile
    */
   nearest() {
-    const {data, parent} = this;
-    data._nearest_cnn = $p.cat.cnns.elm_cnn(this, parent, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
+    const {data, parent, project} = this;
+    const _nearest_cnn = data._nearest_cnn || project.connections.elm_cnn(this, parent);
+    data._nearest_cnn = $p.cat.cnns.elm_cnn(this, parent, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
     return parent;
   }
 

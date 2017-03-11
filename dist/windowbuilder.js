@@ -6488,8 +6488,8 @@ ProfileItem.prototype.__define({
 
 	is_nearest: {
 		value : function(p){
-			return (this.b.is_nearest(p.b, true) && this.e.is_nearest(p.e, true)) ||
-				(this.generatrix.getNearestPoint(p.b).is_nearest(p.b) && this.generatrix.getNearestPoint(p.e).is_nearest(p.e));
+			return (this.b.is_nearest(p.b, true) || this.generatrix.getNearestPoint(p.b).is_nearest(p.b)) &&
+        (this.e.is_nearest(p.e, true) || this.generatrix.getNearestPoint(p.e).is_nearest(p.e));
 		}
 	},
 
@@ -6838,7 +6838,7 @@ class Profile extends ProfileItem {
     return $p.enm.positions.Центр;
   }
 
-  nearest(ignore_cnn) {
+  nearest(ign_cnn) {
     const {b, e, data, layer, project} = this;
     let {_nearest, _nearest_cnn} = data;
 
@@ -6846,7 +6846,7 @@ class Profile extends ProfileItem {
       if(data._nearest){
         const {generatrix} = data._nearest;
         if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
-          if(!ignore_cnn){
+          if(!ign_cnn){
             if(!_nearest_cnn){
               _nearest_cnn = project.connections.elm_cnn(this, data._nearest);
             }
@@ -7198,8 +7198,9 @@ class ProfileAddl extends ProfileItem {
   }
 
   nearest() {
-    const {data, parent} = this;
-    data._nearest_cnn = $p.cat.cnns.elm_cnn(this, parent, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
+    const {data, parent, project} = this;
+    const _nearest_cnn = data._nearest_cnn || project.connections.elm_cnn(this, parent);
+    data._nearest_cnn = $p.cat.cnns.elm_cnn(this, parent, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
     return parent;
   }
 

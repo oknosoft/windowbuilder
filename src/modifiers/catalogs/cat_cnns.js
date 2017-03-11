@@ -29,7 +29,7 @@ $p.cat.cnns.__define({
    * @return {Array}
    */
   nom_cnn: {
-    value: function(nom1, nom2, cnn_types){
+    value: function(nom1, nom2, cnn_types, ign_side){
 
       // если второй элемент вертикальный - меняем местами эл 1-2 при поиске
       if(nom1 instanceof $p.Editor.ProfileItem &&
@@ -42,7 +42,7 @@ $p.cat.cnns.__define({
       }
 
       // если оба элемента - профили, определяем сторону
-      const side = nom1 instanceof $p.Editor.ProfileItem && nom2 instanceof $p.Editor.ProfileItem && nom2.cnn_side(nom1);
+      const side = !ign_side && nom1 instanceof $p.Editor.ProfileItem && nom2 instanceof $p.Editor.ProfileItem && nom2.cnn_side(nom1);
 
       let onom1, onom2, a1, a2, thickness1, thickness2, is_i = false, art1glass = false, art2glass = false;
 
@@ -165,7 +165,7 @@ $p.cat.cnns.__define({
         }
       }
 
-      const cnns = this.nom_cnn(elm1, elm2, cnn_types);
+      const cnns = this.nom_cnn(elm1, elm2, cnn_types, ign_side);
 
       // сортируем по непустой стороне и приоритету
       if(cnns.length){
