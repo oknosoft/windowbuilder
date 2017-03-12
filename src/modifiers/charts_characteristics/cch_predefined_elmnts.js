@@ -98,8 +98,14 @@
 					// рассчеты, помеченные, как шаблоны, загрузим в память заранее
 					setTimeout(() => {
 
+            if(!$p.job_prm.builder){
+              $p.job_prm.builder = {};
+            }
 						if(!$p.job_prm.builder.base_block){
               $p.job_prm.builder.base_block = [];
+            }
+            if(!$p.job_prm.pricing){
+              $p.job_prm.pricing = {};
             }
 
 						// дополним base_block шаблонами из систем профилей
@@ -112,9 +118,7 @@
 								});
 						});
 
-						$p.job_prm.builder.base_block.forEach((o) => {
-							o.load();
-						});
+						$p.job_prm.builder.base_block.forEach((o) => o.load());
 
 					}, 1000);
 

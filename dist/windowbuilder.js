@@ -8810,7 +8810,7 @@ Sectional._extend(BuilderElement);
 
 	this.tune_paper = function (settings) {
 
-	  const {builder} = $p.job_prm;
+	  const builder = $p.job_prm.builder || {};
 
 		settings.handleSize = builder.handle_size;
 

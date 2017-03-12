@@ -4315,8 +4315,14 @@ $p.CatUsers_acl.prototype.__define({
 
 					setTimeout(() => {
 
+            if(!$p.job_prm.builder){
+              $p.job_prm.builder = {};
+            }
 						if(!$p.job_prm.builder.base_block){
               $p.job_prm.builder.base_block = [];
+            }
+            if(!$p.job_prm.pricing){
+              $p.job_prm.pricing = {};
             }
 
 						$p.cat.production_params.forEach((o) => {
@@ -4328,9 +4334,7 @@ $p.CatUsers_acl.prototype.__define({
 								});
 						});
 
-						$p.job_prm.builder.base_block.forEach((o) => {
-							o.load();
-						});
+						$p.job_prm.builder.base_block.forEach((o) => o.load());
 
 					}, 1000);
 

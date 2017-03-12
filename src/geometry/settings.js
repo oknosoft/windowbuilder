@@ -14,7 +14,7 @@
 
 	this.tune_paper = function (settings) {
 
-	  const {builder} = $p.job_prm;
+	  const builder = $p.job_prm.builder || {};
 
 		/**
 		 * Размер визуализации узла пути
