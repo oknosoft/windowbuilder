@@ -1343,11 +1343,12 @@ class Editor extends paper.PaperScope {
       wnd.elmnts.grids.radius = wnd.attachHeadFields({
         obj: elm,
         oxml: {
-          " ": ["r", "arc_ccw"]
+          " ": ["r", "arc_h", "arc_ccw"]
         }
       });
 
-    }else{
+    }
+    else{
       $p.msg.show_msg({
         type: "alert-info",
         text: $p.msg.arc_invalid_elm,
@@ -3980,15 +3981,16 @@ BuilderElement.prototype.__define({
 			const t = this,
 				_meta = t.project.ox._metadata,
 				_xfields = _meta.tabular_sections.coordinates.fields, 
-				inset = _xfields.inset._clone(),
-				cnn1 = _meta.tabular_sections.cnn_elmnts.fields.cnn._clone(),
-				cnn2 = cnn1._clone(),
-				cnn3 = cnn1._clone(),
-				info = _meta.fields.note._clone();
+				inset = Object.assign({}, _xfields.inset),
+        arc_h = Object.assign({}, _xfields.r, {synonym: "Высота дуги"}),
+        info = Object.assign({}, _meta.fields.note, {synonym: "Элемент"}),
+				cnn1 = Object.assign({}, _meta.tabular_sections.cnn_elmnts.fields.cnn),
+				cnn2 = Object.assign({}, cnn1),
+				cnn3 = Object.assign({}, cnn1);
 
 			function cnn_choice_links(o, cnn_point){
 
-				var nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
+				const nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
 
 				if($p.utils.is_data_obj(o)){
 					return nom_cnns.some((cnn) => o == cnn);
@@ -4005,7 +4007,6 @@ BuilderElement.prototype.__define({
 				}
 			}
 
-			info.synonym = "Элемент";
 
 
 			inset.choice_links = [{
@@ -4114,7 +4115,6 @@ BuilderElement.prototype.__define({
 
 			$p.cat.clrs.selection_exclude_service(_xfields.clr, t);
 
-
 			return {
 				fields: {
 					info: info,
@@ -4127,6 +4127,7 @@ BuilderElement.prototype.__define({
 					cnn1: cnn1,
 					cnn2: cnn2,
 					cnn3: cnn3,
+          arc_h: arc_h,
           r: _xfields.r,
           arc_ccw: _xfields.arc_ccw
 				}
@@ -5367,9 +5368,9 @@ paper.Point.prototype.__define({
 
 	arc_point: {
 		value: function(x1,y1, x2,y2, r, arc_ccw, more_180){
-			var point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
+			const point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
 			if (r>0){
-				var dx = x1-x2, dy = y1-y2, dr = r*r-(dx*dx+dy*dy)/4, l, h, centr;
+				let dx = x1-x2, dy = y1-y2, dr = r*r-(dx*dx+dy*dy)/4, l, h, centr;
 				if(dr >= 0){
 					centr = this.arc_cntr(x1,y1, x2,y2, r, arc_ccw);
 					dx = centr.x - point.x;
@@ -5389,6 +5390,16 @@ paper.Point.prototype.__define({
 		},
 		enumerable: false
 	},
+
+  arc_r: {
+	  value: function (x1,y1,x2,y2,h) {
+      if (!h){
+        return 0;
+      }
+	    const [dx, dy] = [(x1-x2), (y1-y2)];
+      return (h/2 + (dx * dx + dy * dy) / (8 * h)).round(1)
+    }
+  },
 
 	snap_to_angle: {
 		value: function(snapAngle) {
@@ -5787,10 +5798,15 @@ class ProfileItem extends BuilderElement {
     return this._row.r;
   }
   set r(v){
-    if(this._row.r != v){
-      this.data._rays.clear();
-      this._row.r = v;
+    const {_row, data} = this;
+    if(_row.r != v){
+      data._rays.clear();
+      _row.r = v;
       this.set_generatrix_radius();
+      Object.getNotifier(this).notify({
+        type: 'update',
+        name: 'arc_h'
+      });
     }
   }
 
@@ -5798,10 +5814,48 @@ class ProfileItem extends BuilderElement {
     return this._row.arc_ccw;
   }
   set arc_ccw(v){
-    if(this._row.arc_ccw != v){
-      this.data._rays.clear();
-      this._row.arc_ccw = v;
+    const {_row, data} = this;
+    if(_row.arc_ccw != v){
+      data._rays.clear();
+      _row.arc_ccw = v;
       this.set_generatrix_radius();
+      Object.getNotifier(this).notify({
+        type: 'update',
+        name: 'arc_h'
+      });
+    }
+  }
+
+  get arc_h() {
+    const {_row, b, e, generatrix} = this;
+    if(_row.r){
+      const p = generatrix.getPointAt(generatrix.length / 2);
+      return paper.Line.getSignedDistance(b.x, b.y, e.x, e.y, p.x, p.y).round(1);
+    }
+    return 0;
+  }
+  set arc_h(v) {
+    const {_row, data, b, e, arc_h} = this;
+    v = parseFloat(v);
+    if(arc_h != v){
+      data._rays.clear();
+      if(v < 0){
+        v = -v;
+        _row.arc_ccw = true;
+      }
+      else{
+        _row.arc_ccw = false;
+      }
+      _row.r = b.arc_r(b.x, b.y, e.x, e.y, v);
+      this.set_generatrix_radius();
+      Object.getNotifier(this).notify({
+        type: 'update',
+        name: 'r'
+      });
+      Object.getNotifier(this).notify({
+        type: 'update',
+        name: 'arc_ccw'
+      });
     }
   }
 
@@ -6115,19 +6169,18 @@ class ProfileItem extends BuilderElement {
   }
 
   set_generatrix_radius(h) {
-    const _row = this._row,
-      gen = this.data.generatrix,
-      b = gen.firstSegment.point.clone(),
-      e = gen.lastSegment.point.clone(),
-      min_radius = b.getDistance(e) / 2;
+    const {generatrix, _row, layer, project, selected} = this;
+    const b = generatrix.firstSegment.point.clone();
+    const e = generatrix.lastSegment.point.clone();
+    const min_radius = b.getDistance(e) / 2;
 
     if(!h){
-      h = this.project.bounds.height + this.project.bounds.y
+      h = project.bounds.height + project.bounds.y
     }
 
-    gen.removeSegments(1);
-    gen.firstSegment.handleIn = null;
-    gen.firstSegment.handleOut = null;
+    generatrix.removeSegments(1);
+    generatrix.firstSegment.handleIn = null;
+    generatrix.firstSegment.handleOut = null;
 
     if(_row.r < min_radius){
       _row.r = 0;
@@ -6135,24 +6188,30 @@ class ProfileItem extends BuilderElement {
       _row.r += 0.001;
     }
 
+    if(selected){
+      this.selected = false;
+    }
+
     if(_row.r){
       let p = new paper.Point(b.arc_point(b.x, b.y, e.x, e.y, _row.r, _row.arc_ccw, false));
       if(p.point_pos(b.x, b.y, e.x, e.y) > 0 && !_row.arc_ccw || p.point_pos(b.x, b.y, e.x, e.y) < 0 && _row.arc_ccw){
         p = new paper.Point(b.arc_point(b.x, b.y, e.x, e.y, _row.r, !_row.arc_ccw, false));
       }
-      gen.arcTo(p, e);
-
-    }else{
-
-      gen.lineTo(e);
-
+      generatrix.arcTo(p, e);
+    }
+    else{
+      generatrix.lineTo(e);
     }
 
-    gen.layer.notify({
+    layer.notify({
       type: consts.move_points,
       profiles: [this],
       points: []
     });
+
+    if(selected){
+      setTimeout(() => this.selected = selected, 100);
+    }
   }
 
   set_inset(v, ignore_select) {

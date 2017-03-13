@@ -914,11 +914,12 @@ class Editor extends paper.PaperScope {
       wnd.elmnts.grids.radius = wnd.attachHeadFields({
         obj: elm,
         oxml: {
-          " ": ["r", "arc_ccw"]
+          " ": ["r", "arc_h", "arc_ccw"]
         }
       });
 
-    }else{
+    }
+    else{
       $p.msg.show_msg({
         type: "alert-info",
         text: $p.msg.arc_invalid_elm,

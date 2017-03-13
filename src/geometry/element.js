@@ -173,15 +173,16 @@ BuilderElement.prototype.__define({
 			const t = this,
 				_meta = t.project.ox._metadata,
 				_xfields = _meta.tabular_sections.coordinates.fields, //_dgfields = t.project._dp._metadata.fields
-				inset = _xfields.inset._clone(),
-				cnn1 = _meta.tabular_sections.cnn_elmnts.fields.cnn._clone(),
-				cnn2 = cnn1._clone(),
-				cnn3 = cnn1._clone(),
-				info = _meta.fields.note._clone();
+				inset = Object.assign({}, _xfields.inset),
+        arc_h = Object.assign({}, _xfields.r, {synonym: "Высота дуги"}),
+        info = Object.assign({}, _meta.fields.note, {synonym: "Элемент"}),
+				cnn1 = Object.assign({}, _meta.tabular_sections.cnn_elmnts.fields.cnn),
+				cnn2 = Object.assign({}, cnn1),
+				cnn3 = Object.assign({}, cnn1);
 
 			function cnn_choice_links(o, cnn_point){
 
-				var nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
+				const nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
 
 				if($p.utils.is_data_obj(o)){
 					return nom_cnns.some((cnn) => o == cnn);
@@ -198,7 +199,6 @@ BuilderElement.prototype.__define({
 				}
 			}
 
-			info.synonym = "Элемент";
 
 			// динамические отборы для вставок и соединений
 
@@ -309,7 +309,6 @@ BuilderElement.prototype.__define({
 			// дополняем свойства поля цвет отбором по служебным цветам
 			$p.cat.clrs.selection_exclude_service(_xfields.clr, t);
 
-
 			return {
 				fields: {
 					info: info,
@@ -322,6 +321,7 @@ BuilderElement.prototype.__define({
 					cnn1: cnn1,
 					cnn2: cnn2,
 					cnn3: cnn3,
+          arc_h: arc_h,
           r: _xfields.r,
           arc_ccw: _xfields.arc_ccw
 				}

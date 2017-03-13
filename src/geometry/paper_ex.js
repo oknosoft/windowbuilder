@@ -379,9 +379,9 @@ paper.Point.prototype.__define({
 	 */
 	arc_point: {
 		value: function(x1,y1, x2,y2, r, arc_ccw, more_180){
-			var point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
+			const point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
 			if (r>0){
-				var dx = x1-x2, dy = y1-y2, dr = r*r-(dx*dx+dy*dy)/4, l, h, centr;
+				let dx = x1-x2, dy = y1-y2, dr = r*r-(dx*dx+dy*dy)/4, l, h, centr;
 				if(dr >= 0){
 					centr = this.arc_cntr(x1,y1, x2,y2, r, arc_ccw);
 					dx = centr.x - point.x;
@@ -401,6 +401,19 @@ paper.Point.prototype.__define({
 		},
 		enumerable: false
 	},
+
+  /**
+   * Рассчитывает радиус окружности по двум точкам и высоте
+   */
+  arc_r: {
+	  value: function (x1,y1,x2,y2,h) {
+      if (!h){
+        return 0;
+      }
+	    const [dx, dy] = [(x1-x2), (y1-y2)];
+      return (h/2 + (dx * dx + dy * dy) / (8 * h)).round(1)
+    }
+  },
 
 	/**
 	 * ### Привязка к углу
