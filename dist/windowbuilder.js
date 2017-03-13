@@ -4169,6 +4169,12 @@ BuilderElement.prototype.__define({
 		}
 	},
 
+  ref: {
+    get : function(){
+      return this.inset.ref;
+    },
+  },
+
   set_inset: {
 	  value: function(v){
       if(this._row.inset != v){

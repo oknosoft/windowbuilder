@@ -368,6 +368,13 @@ BuilderElement.prototype.__define({
 		}
 	},
 
+  // виртуальная ссылка
+  ref: {
+    get : function(){
+      return this.inset.ref;
+    },
+  },
+
   /**
    * Сеттер вставки с учетом выделенных элементов
    * @param v {CatInserts}

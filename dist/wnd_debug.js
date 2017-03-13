@@ -3201,15 +3201,15 @@ $p.cat.cnns.__define({
       if(!a1[onom2.ref]){
         a2 = (a1[onom2.ref] = []);
         this.each((cnn) => {
-          let is_nom1 = art1glass ? (cnn.art1glass && thickness1 >= Number(cnn.tmin) && thickness1 <= Number(cnn.tmax)) : false,
-            is_nom2 = art2glass ? (cnn.art2glass && thickness2 >= Number(cnn.tmin) && thickness2 <= Number(cnn.tmax)) : false;
+          let is_nom1 = art1glass ? (cnn.art1glass && thickness1 >= cnn.tmin && thickness1 <= cnn.tmax && cnn.cnn_type == $p.enm.cnn_types.Наложение) : false,
+            is_nom2 = art2glass ? (cnn.art2glass && thickness2 >= cnn.tmin && thickness2 <= cnn.tmax) : false;
 
           cnn.cnn_elmnts.each((row) => {
             if(is_nom1 && is_nom2){
               return false;
             }
-            is_nom1 = is_nom1 || $p.utils.is_equal(row.nom1, onom1);
-            is_nom2 = is_nom2 || $p.utils.is_equal(row.nom2, onom2);
+            is_nom1 = is_nom1 || (row.nom1 == ref1 && (row.nom2.empty() || row.nom2 == onom2));
+            is_nom2 = is_nom2 || (row.nom2 == onom2 && (row.nom1.empty() || row.nom1 == ref1));
           });
           if(is_nom1 && is_nom2){
             a2.push(cnn);
