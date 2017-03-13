@@ -353,7 +353,18 @@ function Scheme(_canvas){
 	 */
 	this.register_change = function (with_update) {
 		if(!_data._loading){
+
+		  // сбрасываем габариты
 			_data._bounds = null;
+
+			// сбрасываем d0 для всех профилей
+      this.getItems({class: Profile}).forEach((p) => {
+        if(p._data){
+          delete p._data.d0;
+        }
+      });
+
+			// регистрируем изменённость характеристики
 			this.ox._data._modified = true;
 			$p.eve.callEvent("scheme_changed", [this]);
 		}
@@ -1196,8 +1207,10 @@ Scheme.prototype.__define({
 
             // если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
-          }else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
+          }
+          else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1){
             return 1;
+          }
 
           res.point = bind_node ? element[node] : point;
           res.distance = distance;
@@ -1263,10 +1276,11 @@ Scheme.prototype.__define({
 
         if(distance < res.distance || bind_generatrix){
           if(element.d0 != 0 && element.rays.outer){
-            // для вложенных створок учтём смещение
+            // для вложенных створок и смещенных рам учтём смещение
             res.point = element.rays.outer.getNearestPoint(point);
             res.distance = 0;
-          }else{
+          }
+          else{
             res.point = gp;
             res.distance = distance;
           }

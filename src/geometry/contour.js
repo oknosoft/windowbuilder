@@ -701,51 +701,39 @@ Contour.prototype.__define({
 	 */
 	glass_segments: {
 		get: function(){
-			const	is_flap = !!this.parent;
+
 			const nodes = [];
+
+      function fn_sort(a, b) {
+        const da = this.getOffsetOf(a.point);
+        const db = this.getOffsetOf(b.point);
+        if (da < db){
+          return -1;
+        }
+        else if (da > db){
+          return 1;
+        }
+        return 0;
+      };
 
 			// для всех профилей контура
       this.profiles.forEach((p) => {
 
+        const sort = fn_sort.bind(p.generatrix);
+
 				// ищем примыкания T к текущему профилю
-				const ip = p.joined_imposts(),
-					gen = p.generatrix,
-					pb = p.cnn_point("b"),
-					pe = p.cnn_point("e"),
-          fn_sort = (a, b) => {
-            const da = gen.getOffsetOf(a.point),
-              db = gen.getOffsetOf(b.point);
-
-            if (da < db){
-              return -1;
-            }
-            else if (da > db){
-              return 1;
-            }
-            return 0;
-          };
-
-				let pbg, peg;
+				const ip = p.joined_imposts();
+        const pb = p.cnn_point("b");
+        const pe = p.cnn_point("e");
 
 				// для створочных импостов используем не координаты их b и e, а ближайшие точки примыкающих образующих
-				if(is_flap && pb.is_t){
-          pbg = pb.profile.generatrix.getNearestPoint(p.b);
-        }
-				else{
-          pbg = p.b;
-        }
-
-				if(is_flap && pe.is_t){
-          peg = pe.profile.generatrix.getNearestPoint(p.e);
-        }
-				else{
-          peg = p.e;
-        }
+        const pbg = pb.is_t && pb.profile.d0 ? pb.profile.generatrix.getNearestPoint(p.b) : p.b;
+        const peg = pe.is_t && pe.profile.d0 ? pe.profile.generatrix.getNearestPoint(p.e) : p.e;
 
 				// если есть примыкания T, добавляем сегменты, исключая соединения с пустотой
 				if(ip.inner.length){
 
-				  ip.inner.sort(fn_sort);
+				  ip.inner.sort(sort);
 
 					if(!pb.is_i){
             nodes.push(new GlassSegment(p, pbg, ip.inner[0].point));
@@ -762,7 +750,7 @@ Contour.prototype.__define({
 				}
 				if(ip.outer.length){
 
-					ip.outer.sort(fn_sort);
+					ip.outer.sort(sort);
 
 					if(!pb.is_i){
             nodes.push(new GlassSegment(p, ip.outer[0].point, pbg, true));

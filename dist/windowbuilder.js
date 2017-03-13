@@ -2465,47 +2465,35 @@ Contour.prototype.__define({
 
 	glass_segments: {
 		get: function(){
-			const	is_flap = !!this.parent;
+
 			const nodes = [];
+
+      function fn_sort(a, b) {
+        const da = this.getOffsetOf(a.point);
+        const db = this.getOffsetOf(b.point);
+        if (da < db){
+          return -1;
+        }
+        else if (da > db){
+          return 1;
+        }
+        return 0;
+      };
 
       this.profiles.forEach((p) => {
 
-				const ip = p.joined_imposts(),
-					gen = p.generatrix,
-					pb = p.cnn_point("b"),
-					pe = p.cnn_point("e"),
-          fn_sort = (a, b) => {
-            const da = gen.getOffsetOf(a.point),
-              db = gen.getOffsetOf(b.point);
+        const sort = fn_sort.bind(p.generatrix);
 
-            if (da < db){
-              return -1;
-            }
-            else if (da > db){
-              return 1;
-            }
-            return 0;
-          };
+				const ip = p.joined_imposts();
+        const pb = p.cnn_point("b");
+        const pe = p.cnn_point("e");
 
-				let pbg, peg;
-
-				if(is_flap && pb.is_t){
-          pbg = pb.profile.generatrix.getNearestPoint(p.b);
-        }
-				else{
-          pbg = p.b;
-        }
-
-				if(is_flap && pe.is_t){
-          peg = pe.profile.generatrix.getNearestPoint(p.e);
-        }
-				else{
-          peg = p.e;
-        }
+        const pbg = pb.is_t && pb.profile.d0 ? pb.profile.generatrix.getNearestPoint(p.b) : p.b;
+        const peg = pe.is_t && pe.profile.d0 ? pe.profile.generatrix.getNearestPoint(p.e) : p.e;
 
 				if(ip.inner.length){
 
-				  ip.inner.sort(fn_sort);
+				  ip.inner.sort(sort);
 
 					if(!pb.is_i){
             nodes.push(new GlassSegment(p, pbg, ip.inner[0].point));
@@ -2522,7 +2510,7 @@ Contour.prototype.__define({
 				}
 				if(ip.outer.length){
 
-					ip.outer.sort(fn_sort);
+					ip.outer.sort(sort);
 
 					if(!pb.is_i){
             nodes.push(new GlassSegment(p, ip.outer[0].point, pbg, true));
@@ -6705,12 +6693,16 @@ class Profile extends ProfileItem {
   }
 
   get d0() {
-    let res = 0, curr = this, nearest;
-    while(nearest = curr.nearest()){
-      res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
-      curr = nearest;
+    const {data} = this;
+    if(!data.hasOwnProperty('d0')){
+      data.d0 = 0;
+      let curr = this, nearest;
+      while(nearest = curr.nearest()){
+        data.d0 -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
+        curr = nearest;
+      }
     }
-    return res;
+    return data.d0;
   }
 
   get elm_type() {
@@ -6745,6 +6737,7 @@ class Profile extends ProfileItem {
   }
 
   nearest(ign_cnn) {
+
     const {b, e, data, layer, project} = this;
     let {_nearest, _nearest_cnn} = data;
 
@@ -6795,15 +6788,15 @@ class Profile extends ProfileItem {
 
   joined_imposts(check_only) {
 
-    const {rays, generatrix} = this;
+    const {rays, generatrix, layer} = this;
     const tinner = [];
     const touter = [];
 
     const candidates = {b: [], e: []};
 
-    function add_impost(ip, curr, point) {
+    const add_impost = (ip, curr, point) => {
       const res = {point: generatrix.getNearestPoint(point), profile: curr};
-      if(check_outer(ip)){
+      if(this.cnn_side(curr, ip, rays) == $p.enm.cnn_sides.Снаружи){
         touter.push(res);
       }
       else{
@@ -6811,13 +6804,7 @@ class Profile extends ProfileItem {
       }
     }
 
-    function check_outer(ip) {
-      if(rays.inner.getNearestPoint(ip).getDistance(ip, true) > rays.outer.getNearestPoint(ip).getDistance(ip, true)){
-        return true
-      }
-    }
-
-    if(this.parent.profiles.some((curr) => {
+    if(layer.profiles.some((curr) => {
 
         if(curr == this){
           return
@@ -6854,22 +6841,16 @@ class Profile extends ProfileItem {
       return true;
     }
 
-    if(candidates.b.length > 1){
-      candidates.b.some((ip) => {
-        if(check_outer(ip)){
-          this.cnn_point("b").is_cut = true;
-          return true;
-        }
-      })
-    }
-    if(candidates.e.length > 1){
-      candidates.e.forEach((ip) => {
-        if(check_outer(ip)){
-          this.cnn_point("e").is_cut = true;
-          return true;
-        }
-      })
-    }
+    ['b','e'].forEach((node) => {
+      if(candidates[node].length > 1){
+        candidates[node].some((ip) => {
+          if(this.cnn_side(null, ip, rays) == $p.enm.cnn_sides.Снаружи){
+            this.cnn_point(node).is_cut = true;
+            return true;
+          }
+        })
+      }
+    })
 
     return check_only ? false : {inner: tinner, outer: touter};
 
@@ -7843,7 +7824,15 @@ function Scheme(_canvas){
 
 	this.register_change = function (with_update) {
 		if(!_data._loading){
+
 			_data._bounds = null;
+
+      this.getItems({class: Profile}).forEach((p) => {
+        if(p._data){
+          delete p._data.d0;
+        }
+      });
+
 			this.ox._data._modified = true;
 			$p.eve.callEvent("scheme_changed", [this]);
 		}
@@ -8464,8 +8453,10 @@ Scheme.prototype.__define({
 
 
 
-          }else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)
+          }
+          else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1){
             return 1;
+          }
 
           res.point = bind_node ? element[node] : point;
           res.distance = distance;
@@ -8512,7 +8503,8 @@ Scheme.prototype.__define({
           if(element.d0 != 0 && element.rays.outer){
             res.point = element.rays.outer.getNearestPoint(point);
             res.distance = 0;
-          }else{
+          }
+          else{
             res.point = gp;
             res.distance = distance;
           }

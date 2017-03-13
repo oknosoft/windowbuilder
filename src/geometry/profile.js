@@ -1724,12 +1724,16 @@ class Profile extends ProfileItem {
    * @type Number
    */
   get d0() {
-    let res = 0, curr = this, nearest;
-    while(nearest = curr.nearest()){
-      res -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
-      curr = nearest;
+    const {data} = this;
+    if(!data.hasOwnProperty('d0')){
+      data.d0 = 0;
+      let curr = this, nearest;
+      while(nearest = curr.nearest()){
+        data.d0 -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
+        curr = nearest;
+      }
     }
-    return res;
+    return data.d0;
   }
 
   /**
@@ -1778,6 +1782,7 @@ class Profile extends ProfileItem {
    * @type Profile
    */
   nearest(ign_cnn) {
+
     const {b, e, data, layer, project} = this;
     let {_nearest, _nearest_cnn} = data;
 
@@ -1831,16 +1836,16 @@ class Profile extends ProfileItem {
    */
   joined_imposts(check_only) {
 
-    const {rays, generatrix} = this;
+    const {rays, generatrix, layer} = this;
     const tinner = [];
     const touter = [];
 
     // точки, в которых сходятся более 2 профилей
     const candidates = {b: [], e: []};
 
-    function add_impost(ip, curr, point) {
+    const add_impost = (ip, curr, point) => {
       const res = {point: generatrix.getNearestPoint(point), profile: curr};
-      if(check_outer(ip)){
+      if(this.cnn_side(curr, ip, rays) == $p.enm.cnn_sides.Снаружи){
         touter.push(res);
       }
       else{
@@ -1848,14 +1853,7 @@ class Profile extends ProfileItem {
       }
     }
 
-    // выясним, с какой стороны примыкающий профиль
-    function check_outer(ip) {
-      if(rays.inner.getNearestPoint(ip).getDistance(ip, true) > rays.outer.getNearestPoint(ip).getDistance(ip, true)){
-        return true
-      }
-    }
-
-    if(this.parent.profiles.some((curr) => {
+    if(layer.profiles.some((curr) => {
 
         if(curr == this){
           return
@@ -1892,22 +1890,17 @@ class Profile extends ProfileItem {
       return true;
     }
 
-    if(candidates.b.length > 1){
-      candidates.b.some((ip) => {
-        if(check_outer(ip)){
-          this.cnn_point("b").is_cut = true;
-          return true;
-        }
-      })
-    }
-    if(candidates.e.length > 1){
-      candidates.e.forEach((ip) => {
-        if(check_outer(ip)){
-          this.cnn_point("e").is_cut = true;
-          return true;
-        }
-      })
-    }
+    // если в точке примыкает более 1 профиля...
+    ['b','e'].forEach((node) => {
+      if(candidates[node].length > 1){
+        candidates[node].some((ip) => {
+          if(this.cnn_side(null, ip, rays) == $p.enm.cnn_sides.Снаружи){
+            this.cnn_point(node).is_cut = true;
+            return true;
+          }
+        })
+      }
+    })
 
     return check_only ? false : {inner: tinner, outer: touter};
 
