@@ -97,14 +97,13 @@ function ProductsBuilding(){
 	 */
 	function calc_qty_len(row_spec, row_base, len){
 
-		var nom = row_spec.nom;
+		const {nom} = row_spec;
 
 		if(nom.cutting_optimization_type == $p.enm.cutting_optimization_types.Нет ||
-			nom.cutting_optimization_type.empty() || nom.is_pieces){
-
-			if(!row_base.coefficient || !len)
-				row_spec.qty = row_base.quantity;
-
+			  nom.cutting_optimization_type.empty() || nom.is_pieces){
+			if(!row_base.coefficient || !len){
+        row_spec.qty = row_base.quantity;
+      }
 			else{
 				if(!nom.is_pieces){
 					row_spec.qty = row_base.quantity;
@@ -113,16 +112,16 @@ function ProductsBuilding(){
 						row_spec.qty = (row_spec.qty * row_spec.len).round(nom.rounding_quantity);
 						row_spec.len = 0;
 					};
-
-				}else if(!nom.rounding_quantity){
+				}
+				else if(!nom.rounding_quantity){
 					row_spec.qty = Math.round((len - row_base.sz) * row_base.coefficient * row_base.quantity - 0.5);
-
-				}else{
+				}
+				else{
 					row_spec.qty = ((len - row_base.sz) * row_base.coefficient * row_base.quantity).round(nom.rounding_quantity);
 				}
 			}
-
-		}else{
+		}
+		else{
 			row_spec.qty = row_base.quantity;
 			row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
 		}
@@ -135,12 +134,14 @@ function ProductsBuilding(){
 	 * @return {Number|DataObj}
 	 */
 	function cnn_row(elm1, elm2){
-		var res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
-		if(res.length)
-			return res[0].row;
+		let res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
+		if(res.length){
+      return res[0].row;
+    }
 		res = cnn_elmnts.find_rows({elm1: elm2, elm2: elm1});
-		if(res.length)
-			return res[0].row;
+		if(res.length){
+      return res[0].row;
+    }
 		return 0;
 	}
 
@@ -151,14 +152,13 @@ function ProductsBuilding(){
 	 * @param elm2
 	 */
 	function cnn_need_add_spec(cnn, elm1, elm2){
-
 		// соединения крест пересечение и крест в стык обрабатываем отдельно
-		if(cnn && cnn.cnn_type == $p.enm.cnn_types.КрестВСтык)
-			return false;
-
-		else if(!cnn || !elm1 || !elm2 || added_cnn_spec[elm1] == elm2 || added_cnn_spec[elm2] == elm1)
-			return false;
-
+		if(cnn && cnn.cnn_type == $p.enm.cnn_types.КрестВСтык){
+      return false;
+    }
+    else if(!cnn || !elm1 || !elm2 || added_cnn_spec[elm1] == elm2 || added_cnn_spec[elm2] == elm1){
+      return false;
+    }
 		added_cnn_spec[elm1] = elm2;
 		return true;
 	}
@@ -193,11 +193,9 @@ function ProductsBuilding(){
 	 * @param len_angl {Object}
 	 */
 	function cnn_add_spec(cnn, elm, len_angl){
-
 		if(!cnn){
       return;
     }
-
 		const sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
 
 		cnn_filter_spec(cnn, elm, len_angl).forEach((row_cnn_spec) => {
@@ -575,7 +573,7 @@ function ProductsBuilding(){
 			}
 		}
 
-		inset.specification.each(function (row) {
+		inset.specification.each((row) => {
 
 			// Проверяем ограничения строки вставки
 			if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl)){
@@ -757,36 +755,38 @@ function ProductsBuilding(){
 	 */
 	function furn_update_handle_height(contour, cache, furn_set){
 
-		if(!contour.furn.handle_side && furn_set.empty())
-			return;
+		if(!contour.furn.handle_side && furn_set.empty()){
+      return;
+    }
 
 		// получаем элемент, на котором ручка и длину элемента
-		var elm = contour.profile_by_furn_side(contour.furn.handle_side, cache),
-			len = elm._row.len;
+		const elm = contour.profile_by_furn_side(contour.furn.handle_side, cache);
+		const {len} = elm._row;
+
+    contour._row.fix_ruch = false;
 
 		// бежим по спецификации набора в поисках строки про ручку
-		furn_set.specification.find_rows({dop: 0}, function (row) {
+		furn_set.specification.find_rows({dop: 0}, (row) => {
 
 			// проверяем, проходит ли строка
-			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row))
-				return;
-
-			if(furn_set_handle_height(contour, row, len))
-				return false;
-
+			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row)){
+        return;
+      }
+			if(furn_set_handle_height(contour, row, len)){
+        return false;
+      }
 			if(row.is_set_row){
-				var ok = false;
-				furn_get_spec(contour, cache, row.nom_set, true).each(function (sub_row) {
-					if(furn_set_handle_height(contour, sub_row, len))
-						return !(ok = true);
+				let ok = false;
+				furn_get_spec(contour, cache, row.nom_set, true).each((sub_row) => {
+					if(furn_set_handle_height(contour, sub_row, len)){
+            return !(ok = true);
+          }
 				});
-				if(ok)
-					return false;
+				if(ok){
+          return false;
+        }
 			}
-
 		})
-
-
 	}
 
 	/**
@@ -796,17 +796,13 @@ function ProductsBuilding(){
 	 * @param len {Number}
 	 */
 	function furn_set_handle_height(contour, row, len){
-
 		if(row.handle_height_base == -1){
 			contour._row.h_ruch = (len / 2).round(0);
-			contour._row.fix_ruch = false;
-			return true;
-
-		}else if(row.handle_height_base > 0){
+			return contour._row.fix_ruch = true;
+		}
+		else if(row.handle_height_base > 0){
 			contour._row.h_ruch = row.handle_height_base;
-			contour._row.fix_ruch = true;
-			return true;
-
+			return contour._row.fix_ruch = true;
 		}
 	}
 
@@ -819,135 +815,131 @@ function ProductsBuilding(){
 	 */
 	function furn_get_spec(contour, cache, furn_set, exclude_dop) {
 
-		var res = $p.dp.buyers_order.create().specification;
+		const res = $p.dp.buyers_order.create().specification;
 
 		// бежим по всем строкам набора
-		furn_set.specification.find_rows({dop: 0}, function (row) {
+		furn_set.specification.find_rows({dop: 0}, (row) => {
 
 			// проверяем, проходит ли строка
-			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row))
-				return;
+			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row)){
+        return;
+      }
 
 			// ищем строки дополнительной спецификации
 			if(!exclude_dop){
-				furn_set.specification.find_rows({is_main_specification_row: false, elm: row.elm}, function (dop_row) {
+				furn_set.specification.find_rows({is_main_specification_row: false, elm: row.elm}, (dop_row) => {
 
-					if(!furn_check_row_restrictions(contour, cache, furn_set, dop_row))
-						return;
+					if(!furn_check_row_restrictions(contour, cache, furn_set, dop_row)){
+            return;
+          }
 
 					// расчет координаты и (или) визуализации
 					if(dop_row.is_procedure_row){
 
-						var invert = contour.direction == $p.enm.open_directions.Правое,
-							invert_nearest = false,
-							coordin = 0,
-							elm = contour.profile_by_furn_side(dop_row.side, cache),
-							len = elm._row.len,
-							sizefurn = elm.nom.sizefurn,
-							dx0 = (len - elm.data._len) / 2,
-							dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
-							faltz = len - 2 * sizefurn;
+					  const invert = contour.direction == $p.enm.open_directions.Правое,
+              elm = contour.profile_by_furn_side(dop_row.side, cache),
+              len = elm._row.len,
+              sizefurn = elm.nom.sizefurn,
+              dx0 = (len - elm.data._len) / 2,
+              dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
+              faltz = len - 2 * sizefurn;
+
+						let invert_nearest = false,
+							coordin = 0;
 
 						if(dop_row.offset_option == $p.enm.offset_options.Формула){
-
-
-						}else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
+              if(!dop_row.formula.empty()){
+                dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx0, dx1, faltz, invert, dop_row});
+              }
+						}
+						else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
 							coordin = faltz + dop_row.contraction;
-
-						}else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
+						}
+						else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
 							// строим горизонтальную линию от нижней границы контура, находим пересечение и offset
-							var bounds = contour.bounds,
-								by_side = contour.profiles_by_side(),
-								hor;
-							if(elm == by_side.top || elm == by_side.bottom){
-								hor = new paper.Path({
-									insert: false,
-									segments: [[bounds.left + contour.h_ruch, bounds.top - 200], [bounds.left + contour.h_ruch, bounds.bottom + 200]]
-								});
-							}else
-								hor = new paper.Path({
-									insert: false,
-									segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
-								});
+							const {bounds} = contour;
+              const by_side = contour.profiles_by_side();
+              const hor = (elm == by_side.top || elm == by_side.bottom) ?
+                new paper.Path({
+                  insert: false,
+                  segments: [[bounds.left + contour.h_ruch, bounds.top - 200], [bounds.left + contour.h_ruch, bounds.bottom + 200]]
+                }) :
+                new paper.Path({
+                  insert: false,
+                  segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
+                });
 
 							coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor)) -
 								elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
-
-						}else{
+						}
+						else{
 
 							if(invert){
-
 								if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
 									coordin = dop_row.contraction;
-
-								}else{
+								}
+								else{
 									coordin = len - dop_row.contraction;
 								}
-
-							}else{
-
+							}
+							else{
 								if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
 									coordin = len - dop_row.contraction;
-
-								}else{
+								}
+								else{
 									coordin = dop_row.contraction;
 								}
 							}
 						}
 
-						var procedure_row = res.add(dop_row);
+						const procedure_row = res.add(dop_row);
 						procedure_row.origin = furn_set;
 						procedure_row.handle_height_min = elm.elm;
 						procedure_row.handle_height_max = contour.cnstr;
 						procedure_row.coefficient = coordin;
 
 						return;
-
-					}else if(!dop_row.quantity)
-						return;
+					}
+					else if(!dop_row.quantity){
+            return;
+          }
 
 					// в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
 					if(dop_row.is_set_row){
-						furn_get_spec(contour, cache, dop_row.nom_set).each(function (sub_row) {
-
-							if(sub_row.is_procedure_row)
-								res.add(sub_row);
-
-							else if(!sub_row.quantity)
-								return;
-
+						furn_get_spec(contour, cache, dop_row.nom_set).each((sub_row) => {
+							if(sub_row.is_procedure_row){
+                res.add(sub_row);
+              }
+							else if(!sub_row.quantity){
+                return;
+              }
 							res.add(sub_row).quantity = row.quantity * sub_row.quantity;
-
 						});
-					}else{
+					}
+					else{
 						res.add(dop_row).origin = furn_set;
 					}
-
 				});
 			}
 
 			// в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
 			if(row.is_set_row){
-				furn_get_spec(contour, cache, row.nom_set).each(function (sub_row) {
-
-					if(sub_row.is_procedure_row)
-						res.add(sub_row);
-
-					else if(!sub_row.quantity)
-						return;
-
+				furn_get_spec(contour, cache, row.nom_set).each((sub_row) => {
+					if(sub_row.is_procedure_row){
+            res.add(sub_row);
+          }
+          else if(!sub_row.quantity){
+            return;
+          }
 					res.add(sub_row).quantity = row.quantity * sub_row.quantity;
-
 				});
-			}else{
+			}
+			else{
 				res.add(row).origin = furn_set;
 			}
-
 		});
-
 		return res;
 	}
-
 
 	/**
 	 * Спецификации соединений примыкающих профилей
@@ -1033,8 +1025,8 @@ function ProductsBuilding(){
 					row_cnn: row_cnn_prev,
 					row_spec: row_spec
 				});
-
-			}else if(row_cnn_next && !row_cnn_next.formula.empty()){
+			}
+			else if(row_cnn_next && !row_cnn_next.formula.empty()){
 				row_cnn_next.formula.execute({
 					ox: ox,
 					elm: elm,
@@ -1083,7 +1075,6 @@ function ProductsBuilding(){
 			// спецификацию с предыдущей стороны рассчитваем всегда
       len_angl.angle = len_angl.alp1;
 			cnn_add_spec(b.cnn, elm, len_angl);
-
 		}
 
 
@@ -1312,7 +1303,7 @@ function ProductsBuilding(){
 		added_cnn_spec = {};
 
 		// для всех контуров изделия
-    scheme.getItems({class: $p.Editor.Contour}).forEach(function (contour) {
+    scheme.getItems({class: $p.Editor.Contour}).forEach((contour) => {
 
 			// для всех профилей контура
 			contour.profiles.forEach(base_spec_profile);
@@ -1340,7 +1331,7 @@ function ProductsBuilding(){
 	/**
 	 * Пересчет спецификации при записи изделия
 	 */
-	$p.eve.attachEvent("save_coordinates", function (scheme, attr) {
+	$p.eve.attachEvent("save_coordinates", (scheme, attr) => {
 
 		//console.time("base_spec");
 		//console.profile();
@@ -1371,7 +1362,6 @@ function ProductsBuilding(){
 		//console.timeEnd("base_spec");
 		//console.profileEnd();
 
-
 		// информируем мир об окончании расчета координат
 		$p.eve.callEvent("coordinates_calculated", [scheme, attr]);
 
@@ -1379,7 +1369,7 @@ function ProductsBuilding(){
 		// рассчитываем цены
 
 		// типы цен получаем заранее, т.к. они пригодятся при расчете корректировки спецификации
-		var prm = {
+		const prm = {
 			calc_order_row: ox.calc_order_row,
 			spec: spec
 		};
@@ -1397,8 +1387,6 @@ function ProductsBuilding(){
 			$p.pricing.calc_amount(prm);
 		}
 
-
-
 		// информируем мир о завершении пересчета
 		if(attr.snapshot){
 			$p.eve.callEvent("scheme_snapshot", [scheme, attr]);
@@ -1406,7 +1394,6 @@ function ProductsBuilding(){
 
 		// информируем мир о записи продукции
 		if(attr.save){
-
 			// сохраняем картинку вместе с изделием
 			ox.save(undefined, undefined, {
 				svg: {
@@ -1414,13 +1401,13 @@ function ProductsBuilding(){
 					"data": new Blob([scheme.get_svg()], {type: "image/svg+xml"})
 				}
 			})
-				.then(function () {
+				.then(() => {
 					$p.msg.show_msg("Спецификация рассчитана");
 					delete scheme.data._saving;
 					$p.eve.callEvent("characteristic_saved", [scheme, attr]);
 				});
-
-		}else{
+		}
+		else{
 			delete scheme.data._saving;
 		}
 

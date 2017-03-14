@@ -311,7 +311,7 @@ class ToolRuler extends ToolElement {
       hitItem: null,
       hitPoint: null,
       changed: false,
-      minDistance: 10,
+      //minDistance: 10,
       selected: {
         a: [],
         b: []
@@ -461,8 +461,8 @@ class ToolRuler extends ToolElement {
           if(length){
             const normal = path.getNormalAt(0).multiply(120);
             path.insertSegments(1, [path.firstSegment.point.add(normal), path.lastSegment.point.add(normal)]);
-            path.firstSegment.selected = true;
-            path.lastSegment.selected = true;
+            // path.firstSegment.selected = true;
+            // path.lastSegment.selected = true;
 
             this.path_text.content = length.toFixed(0);
             //this.path_text.rotation = e.subtract(b).angle;
@@ -483,7 +483,7 @@ class ToolRuler extends ToolElement {
           if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
             return;
 
-          paper.project.selectedItems.some(function (path) {
+          paper.project.selectedItems.some((path) => {
             if(path.parent instanceof DimensionLineCustom){
               path.parent.remove();
               return true;
@@ -511,32 +511,22 @@ class ToolRuler extends ToolElement {
     if (event.point){
 
       // ловим профили, а точнее - заливку путей
-      this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
+      //this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
 
       // Hit test points
-      const hit = paper.project.hitPoints(event.point, 20);
+      const hit = paper.project.hitPoints(event.point, 16);
       if (hit && hit.item.parent instanceof ProfileItem){
         this.hitItem = hit;
       }
     }
 
     if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
-
       if(this.mode){
-        var elm = this.hitItem.item.parent,
-          corn = elm.corns(event.point);
-
-        if(corn.dist < consts.sticking){
-          paper.canvas_cursor('cursor-arrow-white-point');
-          this.hitPoint = corn;
-          elm.select_corn(event.point);
-        }
-        else{
-          paper.canvas_cursor('cursor-arrow-ruler');
-        }
+        paper.canvas_cursor('cursor-arrow-white-point');
+        this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
       }
-
-    } else {
+    }
+    else {
       if(this.mode){
         paper.canvas_cursor('cursor-text-select');
       }
@@ -685,21 +675,16 @@ class ToolRuler extends ToolElement {
         to_move = pos1 < pos2 ? this.selected.a : this.selected.b;
       }
 
-      to_move.forEach(function (p) {
-        p.generatrix.segments.forEach(function (segm) {
-          segm.selected = true;
-        })
+      to_move.forEach((p) => {
+        p.generatrix.segments.forEach((segm) => segm.selected = true)
       });
 
       paper.project.move_points(delta);
+
       setTimeout(() => {
         paper.project.deselectAll();
-        this.selected.a.forEach(function (p) {
-          p.path.selected = true;
-        });
-        this.selected.b.forEach(function (p) {
-          p.path.selected = true;
-        });
+        this.selected.a.forEach((p) => p.path.selected = true);
+        this.selected.b.forEach((p) => p.path.selected = true);
         paper.project.register_update();
       }, 200);
     }

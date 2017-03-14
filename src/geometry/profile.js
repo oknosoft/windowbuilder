@@ -378,46 +378,6 @@ class ProfileItem extends BuilderElement {
   }
 
   /**
-   * ### Точка corns(4)
-   *
-   * @property bi
-   * @type Point
-   */
-  get bi() {
-    return this.corns(4);
-  }
-
-  /**
-   * ### Точка corns(3)
-   *
-   * @property ei
-   * @type Point
-   */
-  get ei() {
-    return this.corns(3);
-  }
-
-  /**
-   * Точка, в которой касательная образующей импоста пересекается с опорным элементом
-   *
-   * @property bo
-   * @type Point
-   */
-  get bo() {
-    return this.b
-  }
-
-  /**
-   * Точка, в которой касательная образующей импоста пересекается с опорным элементом
-   *
-   * @property eo
-   * @type Point
-   */
-  get eo() {
-    return this.e
-  }
-
-  /**
    * ### Координата x начала профиля
    *
    * @property x1
@@ -1395,33 +1355,29 @@ class ProfileItem extends BuilderElement {
    * @param point {paper.Point}
    */
   select_corn(point) {
-    var res = {dist: Infinity},
-      dist;
+
+    const res = this.corns(point);
 
     this.path.segments.forEach((segm) => {
-      dist = segm.point.getDistance(point);
-      if(dist < res.dist){
-        res.dist = dist;
+      if(segm.point.is_nearest(res.point)){
         res.segm = segm;
       }
     });
 
-    dist = this.b.getDistance(point);
-    if(dist < res.dist){
-      res.dist = dist;
+    if(!res.segm && res.point == this.b){
       res.segm = this.generatrix.firstSegment;
     }
 
-    dist = this.e.getDistance(point);
-    if(dist < res.dist){
-      res.dist = dist;
+    if(!res.segm && res.point == this.e){
       res.segm = this.generatrix.lastSegment;
     }
 
-    if(res.dist < consts.sticking0){
+    if(res.segm && res.dist < consts.sticking0){
       this.project.deselectAll();
       res.segm.selected = true;
     }
+
+    return res
   }
 
   /**
@@ -1669,16 +1625,21 @@ class ProfileItem extends BuilderElement {
         }
       }
 
-      if(res.point.is_nearest(this.b)){
+      dist = this.b.getDistance(corn);
+      if(dist <= res.dist){
         res.dist = this.b.getDistance(corn);
         res.point = this.b;
         res.point_name = "b";
-
-      }else if(res.point.is_nearest(this.e)){
-        res.dist = this.e.getDistance(corn);
-        res.point = this.e;
-        res.point_name = "e";
       }
+      else{
+        dist = this.e.getDistance(corn);
+        if(dist <= res.dist){
+          res.dist = this.e.getDistance(corn);
+          res.point = this.e;
+          res.point_name = "e";
+        }
+      }
+
       return res;
     }
     else{

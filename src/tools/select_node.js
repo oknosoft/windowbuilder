@@ -39,7 +39,7 @@ class ToolSelectNode extends ToolElement {
       originalHandleIn: null,
       originalHandleOut: null,
       changed: false,
-      minDistance: 10
+      //minDistance: 10
     })
 
     this.on({
@@ -440,7 +440,7 @@ class ToolSelectNode extends ToolElement {
       }
 
       // Hit test points
-      hit = paper.project.hitPoints(event.point, 20);
+      hit = paper.project.hitPoints(event.point, 16, true);
 
       if (hit) {
         if (hit.item.parent instanceof ProfileItem) {

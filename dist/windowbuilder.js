@@ -5706,22 +5706,6 @@ class ProfileItem extends BuilderElement {
     return this.corns(2);
   }
 
-  get bi() {
-    return this.corns(4);
-  }
-
-  get ei() {
-    return this.corns(3);
-  }
-
-  get bo() {
-    return this.b
-  }
-
-  get eo() {
-    return this.e
-  }
-
   get x1() {
     const {bounds} = this.project;
     return bounds ? (this.b.x - bounds.x).round(1) : 0;
@@ -6481,33 +6465,29 @@ class ProfileItem extends BuilderElement {
   }
 
   select_corn(point) {
-    var res = {dist: Infinity},
-      dist;
+
+    const res = this.corns(point);
 
     this.path.segments.forEach((segm) => {
-      dist = segm.point.getDistance(point);
-      if(dist < res.dist){
-        res.dist = dist;
+      if(segm.point.is_nearest(res.point)){
         res.segm = segm;
       }
     });
 
-    dist = this.b.getDistance(point);
-    if(dist < res.dist){
-      res.dist = dist;
+    if(!res.segm && res.point == this.b){
       res.segm = this.generatrix.firstSegment;
     }
 
-    dist = this.e.getDistance(point);
-    if(dist < res.dist){
-      res.dist = dist;
+    if(!res.segm && res.point == this.e){
       res.segm = this.generatrix.lastSegment;
     }
 
-    if(res.dist < consts.sticking0){
+    if(res.segm && res.dist < consts.sticking0){
       this.project.deselectAll();
       res.segm.selected = true;
     }
+
+    return res
   }
 
   is_linear() {
@@ -6690,16 +6670,21 @@ class ProfileItem extends BuilderElement {
         }
       }
 
-      if(res.point.is_nearest(this.b)){
+      dist = this.b.getDistance(corn);
+      if(dist <= res.dist){
         res.dist = this.b.getDistance(corn);
         res.point = this.b;
         res.point_name = "b";
-
-      }else if(res.point.is_nearest(this.e)){
-        res.dist = this.e.getDistance(corn);
-        res.point = this.e;
-        res.point_name = "e";
       }
+      else{
+        dist = this.e.getDistance(corn);
+        if(dist <= res.dist){
+          res.dist = this.e.getDistance(corn);
+          res.point = this.e;
+          res.point_name = "e";
+        }
+      }
+
       return res;
     }
     else{
@@ -8681,34 +8666,30 @@ Scheme.prototype.__define({
   },
 
   hitPoints: {
-    value: function (point, tolerance) {
+    value: function (point, tolerance, selected_first) {
 
-      var item, hit;
+      let item, hit;
 
-      this.selectedItems.some(function (item) {
-        hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 });
-        if(hit)
-          return true;
-      });
-
-      if(!hit)
-        hit = this.hitTest(point, { segments: true, tolerance: tolerance || 6 });
-
-      if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
-        item = hit.item;
-        if(
-          (item.parent.b && item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
-          (item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1))
-          || (item.parent.e && item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
-          (item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1)))
-          return hit;
-
-        item.layer.parent.profiles.some(function (item) {
-          hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 });
-          if(hit)
-            return true;
-        });
+      if(selected_first){
+        this.selectedItems.some((item) => hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 }));
+        if(!hit){
+          hit = this.hitTest(point, { segments: true, tolerance: tolerance || 6 });
+        }
       }
+      else{
+        this.activeLayer.profiles.some((p) => {
+          const corn = p.corns(point);
+          if(corn.dist < consts.sticking){
+            hit = {
+              item: p.generatrix,
+              point: corn.point
+            }
+            return true;
+          }
+        })
+      }
+
+
       return hit;
     }
   },
@@ -11301,7 +11282,6 @@ class ToolRuler extends ToolElement {
       hitItem: null,
       hitPoint: null,
       changed: false,
-      minDistance: 10,
       selected: {
         a: [],
         b: []
@@ -11443,8 +11423,6 @@ class ToolRuler extends ToolElement {
           if(length){
             const normal = path.getNormalAt(0).multiply(120);
             path.insertSegments(1, [path.firstSegment.point.add(normal), path.lastSegment.point.add(normal)]);
-            path.firstSegment.selected = true;
-            path.lastSegment.selected = true;
 
             this.path_text.content = length.toFixed(0);
             this.path_text.point = path.curves[1].getPointAt(.5, true);
@@ -11463,7 +11441,7 @@ class ToolRuler extends ToolElement {
           if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
             return;
 
-          paper.project.selectedItems.some(function (path) {
+          paper.project.selectedItems.some((path) => {
             if(path.parent instanceof DimensionLineCustom){
               path.parent.remove();
               return true;
@@ -11489,31 +11467,20 @@ class ToolRuler extends ToolElement {
 
     if (event.point){
 
-      this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
 
-      const hit = paper.project.hitPoints(event.point, 20);
+      const hit = paper.project.hitPoints(event.point, 16);
       if (hit && hit.item.parent instanceof ProfileItem){
         this.hitItem = hit;
       }
     }
 
     if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
-
       if(this.mode){
-        var elm = this.hitItem.item.parent,
-          corn = elm.corns(event.point);
-
-        if(corn.dist < consts.sticking){
-          paper.canvas_cursor('cursor-arrow-white-point');
-          this.hitPoint = corn;
-          elm.select_corn(event.point);
-        }
-        else{
-          paper.canvas_cursor('cursor-arrow-ruler');
-        }
+        paper.canvas_cursor('cursor-arrow-white-point');
+        this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
       }
-
-    } else {
+    }
+    else {
       if(this.mode){
         paper.canvas_cursor('cursor-text-select');
       }
@@ -11659,21 +11626,16 @@ class ToolRuler extends ToolElement {
         to_move = pos1 < pos2 ? this.selected.a : this.selected.b;
       }
 
-      to_move.forEach(function (p) {
-        p.generatrix.segments.forEach(function (segm) {
-          segm.selected = true;
-        })
+      to_move.forEach((p) => {
+        p.generatrix.segments.forEach((segm) => segm.selected = true)
       });
 
       paper.project.move_points(delta);
+
       setTimeout(() => {
         paper.project.deselectAll();
-        this.selected.a.forEach(function (p) {
-          p.path.selected = true;
-        });
-        this.selected.b.forEach(function (p) {
-          p.path.selected = true;
-        });
+        this.selected.a.forEach((p) => p.path.selected = true);
+        this.selected.b.forEach((p) => p.path.selected = true);
         paper.project.register_update();
       }, 200);
     }
@@ -11732,7 +11694,6 @@ class ToolSelectNode extends ToolElement {
       originalHandleIn: null,
       originalHandleOut: null,
       changed: false,
-      minDistance: 10
     })
 
     this.on({
@@ -12108,7 +12069,7 @@ class ToolSelectNode extends ToolElement {
         this.hitItem = hit;
       }
 
-      hit = paper.project.hitPoints(event.point, 20);
+      hit = paper.project.hitPoints(event.point, 16, true);
 
       if (hit) {
         if (hit.item.parent instanceof ProfileItem) {

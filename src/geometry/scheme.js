@@ -1436,38 +1436,45 @@ Scheme.prototype.__define({
    * @returns {*}
    */
   hitPoints: {
-    value: function (point, tolerance) {
+    value: function (point, tolerance, selected_first) {
 
-      var item, hit;
+      let item, hit;
 
       // отдаём предпочтение сегментам выделенных путей
-      this.selectedItems.some(function (item) {
-        hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 });
-        if(hit)
-          return true;
-      });
-
-      // если нет в выделенных, ищем во всех
-      if(!hit)
-        hit = this.hitTest(point, { segments: true, tolerance: tolerance || 6 });
-
-      if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
-        item = hit.item;
-        // если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
-        if(
-          (item.parent.b && item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
-          (item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.b.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1))
-          || (item.parent.e && item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
-          (item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.ТОбразное) != -1 || item.parent.rays.e.cnn_types.indexOf($p.enm.cnn_types.НезамкнутыйКонтур) != -1)))
-          return hit;
-
-        item.layer.parent.profiles.some(function (item) {
-          hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 });
-          if(hit)
-            return true;
-        });
-        //item.selected = false;
+      if(selected_first){
+        this.selectedItems.some((item) => hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 }));
+        // если нет в выделенных, ищем во всех
+        if(!hit){
+          hit = this.hitTest(point, { segments: true, tolerance: tolerance || 6 });
+        }
       }
+      else{
+        this.activeLayer.profiles.some((p) => {
+          const corn = p.corns(point);
+          if(corn.dist < consts.sticking){
+            hit = {
+              item: p.generatrix,
+              point: corn.point
+            }
+            return true;
+          }
+        })
+      }
+
+
+      // if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
+      //   item = hit.item;
+      //   // если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
+      //   if((item.parent.b && item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
+      //     (item.parent.rays.b.is_t || item.parent.rays.b.is_i))
+      //     || (item.parent.e && item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
+      //     (item.parent.rays.e.is_t || item.parent.rays.e.is_i))){
+      //     return hit;
+      //   }
+      //
+      //   item.layer.parent.profiles.some((item) => hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 }));
+      //   //item.selected = false;
+      // }
       return hit;
     }
   },
