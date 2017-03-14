@@ -725,44 +725,53 @@ class ProfileItem extends BuilderElement {
 
     if(selection){
 
-      const {angle_hor, rays} = this;
-      const {inner, outer} = rays;
-      const delta = ((angle_hor > 20 && angle_hor < 70) || (angle_hor > 200 && angle_hor < 250)) ? [500, 500] : [500, -500];
-      this._hatching = new paper.CompoundPath({
-        parent: this,
-        guide: true,
-        strokeColor: 'grey',
-        strokeScaling: false
-      })
+      const {inner, outer} = this.rays;
+
+      if(this._hatching){
+        this._hatching.removeChildren();
+      }
+      else{
+        this._hatching = new paper.CompoundPath({
+          parent: this,
+          guide: true,
+          strokeColor: 'grey',
+          strokeScaling: false
+        })
+      }
 
       path.setSelection(0);
 
-      for(let t = 0; t < inner.length; t+=40){
+      for(let t = 0; t < inner.length; t+=50){
         const ip = inner.getPointAt(t);
+        const np = inner.getNormalAt(t).multiply(400).rotate(-35).negate();
         const fp = new paper.Path({
           insert: false,
-          segments: [
-            ip.add(delta),
-            ip.subtract(delta)
-          ]
+          segments: [ip, ip.add(np)]
         })
         const op = fp.intersect_point(outer, ip);
+
         if(ip && op){
-          const cip = path.contains(ip);
-          const cop = path.contains(op);
-          if(cip && cop){
-            this._hatching.moveTo(ip);
-            this._hatching.lineTo(op);
+          const cip = path.getNearestPoint(ip);
+          const cop = path.getNearestPoint(op);
+          const nip = cip.is_nearest(ip);
+          const nop = cop.is_nearest(op);
+          if(nip && nop){
+            this._hatching.moveTo(cip);
+            this._hatching.lineTo(cop);
           }
-          else if(cip && !cop){
+          else if(nip && !nop){
             const pp = fp.intersect_point(path, op);
-            this._hatching.moveTo(ip);
-            this._hatching.lineTo(pp);
+            if(pp){
+              this._hatching.moveTo(cip);
+              this._hatching.lineTo(pp);
+            }
           }
-          else if(!cip && cop){
+          else if(!nip && nop){
             const pp = fp.intersect_point(path, ip);
-            this._hatching.moveTo(pp);
-            this._hatching.lineTo(op);
+            if(pp){
+              this._hatching.moveTo(pp);
+              this._hatching.lineTo(cop);
+            }
           }
         }
       }

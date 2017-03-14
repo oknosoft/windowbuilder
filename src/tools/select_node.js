@@ -39,7 +39,7 @@ class ToolSelectNode extends ToolElement {
       originalHandleIn: null,
       originalHandleOut: null,
       changed: false,
-      //minDistance: 10
+      minDistance: 10
     })
 
     this.on({
