@@ -352,17 +352,16 @@ class ToolRuler extends ToolElement {
             if (this.selected.a.length && this.selected.b.length) {
               if (this.selected.a[0].orientation == this.selected.b[0].orientation) {
                 if (this.selected.a[0].orientation == $p.enm.orientations.Вертикальная) {
-                  this.wnd.size = Math.abs(this.selected.a[0].b.x - this.selected.b[0].b.x);
-
-                } else if (this.selected.a[0].orientation == $p.enm.orientations.Горизонтальная) {
-                  this.wnd.size = Math.abs(this.selected.a[0].b.y - this.selected.b[0].b.y);
-
-                } else {
+                  this.wnd.size = Math.abs(this.selected.a[0].ruler_line_coordin('x') - this.selected.b[0].ruler_line_coordin('x'));
+                }
+                else if (this.selected.a[0].orientation == $p.enm.orientations.Горизонтальная) {
+                  this.wnd.size = Math.abs(this.selected.a[0].ruler_line_coordin('y') - this.selected.b[0].ruler_line_coordin('y'));
+                }
+                else {
                   // для наклонной ориентации используем interiorpoint
 
                 }
               }
-
             }
             else if (this.wnd.size != 0) {
               this.wnd.size = 0;
@@ -497,6 +496,7 @@ class ToolRuler extends ToolElement {
         }
       }
     });
+
     $p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this))
   }
 
@@ -606,20 +606,7 @@ class ToolRuler extends ToolElement {
     }
 
     // обозначим выделение в зависимости от base_line
-    switch(this.base_line){
-
-      case 'inner':
-        item.path.selected = true;
-        break;
-
-      case 'outer':
-        item.path.selected = true;
-        break;
-
-      default:
-        item.generatrix.selected = true;
-        break;
-    }
+    item.ruler_line_select(this.base_line);
 
   }
 
@@ -642,14 +629,13 @@ class ToolRuler extends ToolElement {
 
     // сортируем группы выделенных элеметов по правл-лево или верх-низ
     // left_top == true, если элементы в массиве _a_ выше или левее элементов в массиве _b_
-    var pos1 = this.selected.a.reduce(function(sum, curr) {
-          return sum + curr.b[xy] + curr.e[xy];
-        }, 0) / (this.selected.a.length * 2),
-      pos2 = this.selected.b.reduce(function(sum, curr) {
-          return sum + curr.b[xy] + curr.e[xy];
-        }, 0) / (this.selected.b.length * 2),
-      delta = Math.abs(pos2 - pos1),
-      to_move;
+    const pos1 = this.selected.a.reduce((sum, curr) => {
+          return sum + curr.ruler_line_coordin(xy);
+        }, 0) / (this.selected.a.length);
+    const pos2 = this.selected.b.reduce((sum, curr) => {
+          return sum + curr.ruler_line_coordin(xy);
+        }, 0) / (this.selected.b.length);
+    let delta = Math.abs(pos2 - pos1);
 
     if(xy == "x"){
       if(event.name == "right")
@@ -666,11 +652,14 @@ class ToolRuler extends ToolElement {
 
     if(delta.length){
 
+      let to_move;
+
+      // TODO: запомнить ruler_line и восстановить после перемещения
+
       paper.project.deselectAll();
 
       if(event.name == "right" || event.name == "bottom"){
         to_move = pos1 < pos2 ? this.selected.b : this.selected.a;
-
       }else{
         to_move = pos1 < pos2 ? this.selected.a : this.selected.b;
       }
@@ -683,8 +672,8 @@ class ToolRuler extends ToolElement {
 
       setTimeout(() => {
         paper.project.deselectAll();
-        this.selected.a.forEach((p) => p.path.selected = true);
-        this.selected.b.forEach((p) => p.path.selected = true);
+        // this.selected.a.forEach((p) => p.path.selected = true);
+        // this.selected.b.forEach((p) => p.path.selected = true);
         paper.project.register_update();
       }, 200);
     }

@@ -5936,6 +5936,7 @@ class ProfileItem extends BuilderElement {
     const {generatrix, path} = this.data;
 
     generatrix.setSelection(selection);
+    this.ruler_line_select(false);
 
     if(selection){
 
@@ -5996,6 +5997,51 @@ class ProfileItem extends BuilderElement {
         this._hatching.remove();
         this._hatching = null;
       }
+    }
+  }
+
+  ruler_line_select(mode) {
+
+    const {data} = this;
+
+    if(data.ruler_line_path){
+      data.ruler_line_path.remove();
+      delete data.ruler_line_path;
+    }
+
+    if(mode){
+      switch(data.ruler_line = mode){
+
+        case 'inner':
+          data.ruler_line_path = this.path.get_subpath(this.corns(3), this.corns(4))
+          data.ruler_line_path.parent = this;
+          data.ruler_line_path.selected = true;
+          break;
+
+        case 'outer':
+          data.ruler_line_path = this.path.get_subpath(this.corns(1), this.corns(2))
+          data.ruler_line_path.parent = this;
+          data.ruler_line_path.selected = true;
+          break;
+
+        default:
+          this.generatrix.selected = true;
+          break;
+      }
+    }
+    else if(data.ruler_line) {
+      delete data.ruler_line;
+    }
+  }
+
+  ruler_line_coordin(xy) {
+    switch(this.data.ruler_line){
+      case 'inner':
+        return (this.corns(3)[xy] + this.corns(4)[xy]) / 2;
+      case 'outer':
+        return (this.corns(1)[xy] + this.corns(2)[xy]) / 2;
+      default:
+        return (this.b[xy] + this.e[xy]) / 2;
     }
   }
 
@@ -11330,16 +11376,15 @@ class ToolRuler extends ToolElement {
             if (this.selected.a.length && this.selected.b.length) {
               if (this.selected.a[0].orientation == this.selected.b[0].orientation) {
                 if (this.selected.a[0].orientation == $p.enm.orientations.Вертикальная) {
-                  this.wnd.size = Math.abs(this.selected.a[0].b.x - this.selected.b[0].b.x);
-
-                } else if (this.selected.a[0].orientation == $p.enm.orientations.Горизонтальная) {
-                  this.wnd.size = Math.abs(this.selected.a[0].b.y - this.selected.b[0].b.y);
-
-                } else {
+                  this.wnd.size = Math.abs(this.selected.a[0].ruler_line_coordin('x') - this.selected.b[0].ruler_line_coordin('x'));
+                }
+                else if (this.selected.a[0].orientation == $p.enm.orientations.Горизонтальная) {
+                  this.wnd.size = Math.abs(this.selected.a[0].ruler_line_coordin('y') - this.selected.b[0].ruler_line_coordin('y'));
+                }
+                else {
 
                 }
               }
-
             }
             else if (this.wnd.size != 0) {
               this.wnd.size = 0;
@@ -11464,6 +11509,7 @@ class ToolRuler extends ToolElement {
         }
       }
     });
+
     $p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this))
   }
 
@@ -11570,20 +11616,7 @@ class ToolRuler extends ToolElement {
       this.selected.a.push(item);
     }
 
-    switch(this.base_line){
-
-      case 'inner':
-        item.path.selected = true;
-        break;
-
-      case 'outer':
-        item.path.selected = true;
-        break;
-
-      default:
-        item.generatrix.selected = true;
-        break;
-    }
+    item.ruler_line_select(this.base_line);
 
   }
 
@@ -11604,14 +11637,13 @@ class ToolRuler extends ToolElement {
 
   _move_points(event, xy){
 
-    var pos1 = this.selected.a.reduce(function(sum, curr) {
-          return sum + curr.b[xy] + curr.e[xy];
-        }, 0) / (this.selected.a.length * 2),
-      pos2 = this.selected.b.reduce(function(sum, curr) {
-          return sum + curr.b[xy] + curr.e[xy];
-        }, 0) / (this.selected.b.length * 2),
-      delta = Math.abs(pos2 - pos1),
-      to_move;
+    const pos1 = this.selected.a.reduce((sum, curr) => {
+          return sum + curr.ruler_line_coordin(xy);
+        }, 0) / (this.selected.a.length);
+    const pos2 = this.selected.b.reduce((sum, curr) => {
+          return sum + curr.ruler_line_coordin(xy);
+        }, 0) / (this.selected.b.length);
+    let delta = Math.abs(pos2 - pos1);
 
     if(xy == "x"){
       if(event.name == "right")
@@ -11628,11 +11660,13 @@ class ToolRuler extends ToolElement {
 
     if(delta.length){
 
+      let to_move;
+
+
       paper.project.deselectAll();
 
       if(event.name == "right" || event.name == "bottom"){
         to_move = pos1 < pos2 ? this.selected.b : this.selected.a;
-
       }else{
         to_move = pos1 < pos2 ? this.selected.a : this.selected.b;
       }
@@ -11645,8 +11679,6 @@ class ToolRuler extends ToolElement {
 
       setTimeout(() => {
         paper.project.deselectAll();
-        this.selected.a.forEach((p) => p.path.selected = true);
-        this.selected.b.forEach((p) => p.path.selected = true);
         paper.project.register_update();
       }, 200);
     }

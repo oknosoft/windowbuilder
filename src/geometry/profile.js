@@ -722,6 +722,7 @@ class ProfileItem extends BuilderElement {
     const {generatrix, path} = this.data;
 
     generatrix.setSelection(selection);
+    this.ruler_line_select(false);
 
     if(selection){
 
@@ -782,6 +783,53 @@ class ProfileItem extends BuilderElement {
         this._hatching.remove();
         this._hatching = null;
       }
+    }
+  }
+
+  // выделяет внутреннее или внешнее ребро профиля
+  ruler_line_select(mode) {
+
+    const {data} = this;
+
+    if(data.ruler_line_path){
+      data.ruler_line_path.remove();
+      delete data.ruler_line_path;
+    }
+
+    if(mode){
+      switch(data.ruler_line = mode){
+
+        case 'inner':
+          data.ruler_line_path = this.path.get_subpath(this.corns(3), this.corns(4))
+          data.ruler_line_path.parent = this;
+          data.ruler_line_path.selected = true;
+          break;
+
+        case 'outer':
+          data.ruler_line_path = this.path.get_subpath(this.corns(1), this.corns(2))
+          data.ruler_line_path.parent = this;
+          data.ruler_line_path.selected = true;
+          break;
+
+        default:
+          this.generatrix.selected = true;
+          break;
+      }
+    }
+    else if(data.ruler_line) {
+      delete data.ruler_line;
+    }
+  }
+
+  // координата стороны или образующей профиля
+  ruler_line_coordin(xy) {
+    switch(this.data.ruler_line){
+      case 'inner':
+        return (this.corns(3)[xy] + this.corns(4)[xy]) / 2;
+      case 'outer':
+        return (this.corns(1)[xy] + this.corns(2)[xy]) / 2;
+      default:
+        return (this.b[xy] + this.e[xy]) / 2;
     }
   }
 
