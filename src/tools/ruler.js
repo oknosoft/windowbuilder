@@ -496,11 +496,8 @@ class ToolRuler extends ToolElement {
 
         }
       }
-
     });
-
     $p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this))
-
   }
 
   hitTest(event) {
@@ -510,13 +507,16 @@ class ToolRuler extends ToolElement {
 
     if (event.point){
 
-      // ловим профили, а точнее - заливку путей
-      //this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
-
-      // Hit test points
-      const hit = paper.project.hitPoints(event.point, 16);
-      if (hit && hit.item.parent instanceof ProfileItem){
-        this.hitItem = hit;
+      // если режим - расстояние между элементами, ловим профили, а точнее - заливку путей
+      if(!this.mode){
+        this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
+      }
+      else{
+        // Hit test points
+        const hit = paper.project.hitPoints(event.point, 16);
+        if (hit && hit.item.parent instanceof ProfileItem){
+          this.hitItem = hit;
+        }
       }
     }
 

@@ -849,7 +849,7 @@ function ProductsBuilding(){
 
 						if(dop_row.offset_option == $p.enm.offset_options.Формула){
               if(!dop_row.formula.empty()){
-                dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx0, dx1, faltz, invert, dop_row});
+                coordin = dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx0, dx1, faltz, invert, dop_row});
               }
 						}
 						else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){

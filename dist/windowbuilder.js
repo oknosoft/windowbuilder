@@ -7032,7 +7032,7 @@ class Profile extends ProfileItem {
     else{
       if(bcnn.cnn && bcnn.profile == p){
         if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-          if(!this.b.is_nearest(p.e)){
+          if(!this.b.equals(p.e)){
             if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
               if(paper.Key.isDown('control')){
                 console.log('control');
@@ -7054,7 +7054,7 @@ class Profile extends ProfileItem {
         }
         else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
           const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
-          if(!mpoint.is_nearest(this.b)){
+          if(!mpoint.equals(this.b)){
             this.b = mpoint;
             moved_fact = true;
           }
@@ -7064,7 +7064,7 @@ class Profile extends ProfileItem {
 
       if(ecnn.cnn && ecnn.profile == p){
         if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-          if(!this.e.is_nearest(p.b)){
+          if(!this.e.equals(p.b)){
             if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
               if(paper.Key.isDown('control')){
                 console.log('control');
@@ -7075,7 +7075,8 @@ class Profile extends ProfileItem {
                   this.e = p.e;
                 moved_fact = true;
               }
-            } else{
+            }
+            else{
               ecnn.clear();
               this.data._rays.clear();
             }
@@ -7083,7 +7084,7 @@ class Profile extends ProfileItem {
         }
         else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
           const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
-          if(!mpoint.is_nearest(this.e)){
+          if(!mpoint.equals(this.e)){
             this.e = mpoint;
             moved_fact = true;
           }
@@ -11462,11 +11463,8 @@ class ToolRuler extends ToolElement {
 
         }
       }
-
     });
-
     $p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this))
-
   }
 
   hitTest(event) {
@@ -11476,10 +11474,14 @@ class ToolRuler extends ToolElement {
 
     if (event.point){
 
-
-      const hit = paper.project.hitPoints(event.point, 16);
-      if (hit && hit.item.parent instanceof ProfileItem){
-        this.hitItem = hit;
+      if(!this.mode){
+        this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: 10 });
+      }
+      else{
+        const hit = paper.project.hitPoints(event.point, 16);
+        if (hit && hit.item.parent instanceof ProfileItem){
+          this.hitItem = hit;
+        }
       }
     }
 

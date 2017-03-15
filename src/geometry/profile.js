@@ -2074,7 +2074,7 @@ class Profile extends ProfileItem {
       if(bcnn.cnn && bcnn.profile == p){
         // обрабатываем угол
         if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-          if(!this.b.is_nearest(p.e)){
+          if(!this.b.equals(p.e)){
             if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
               if(paper.Key.isDown('control')){
                 console.log('control');
@@ -2099,7 +2099,7 @@ class Profile extends ProfileItem {
         else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
           // импосты в створках и все остальные импосты
           const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
-          if(!mpoint.is_nearest(this.b)){
+          if(!mpoint.equals(this.b)){
             this.b = mpoint;
             moved_fact = true;
           }
@@ -2110,7 +2110,7 @@ class Profile extends ProfileItem {
       if(ecnn.cnn && ecnn.profile == p){
         // обрабатываем угол
         if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-          if(!this.e.is_nearest(p.b)){
+          if(!this.e.equals(p.b)){
             if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
               if(paper.Key.isDown('control')){
                 console.log('control');
@@ -2121,7 +2121,8 @@ class Profile extends ProfileItem {
                   this.e = p.e;
                 moved_fact = true;
               }
-            } else{
+            }
+            else{
               // отрываем привязанный ранее профиль
               ecnn.clear();
               this.data._rays.clear();
@@ -2132,7 +2133,7 @@ class Profile extends ProfileItem {
         else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
           // импосты в створках и все остальные импосты
           const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
-          if(!mpoint.is_nearest(this.e)){
+          if(!mpoint.equals(this.e)){
             this.e = mpoint;
             moved_fact = true;
           }
