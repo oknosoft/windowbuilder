@@ -294,7 +294,7 @@ class ToolSelectNode extends ToolElement {
       },
 
       keydown: function(event) {
-        var selected, j, path, segment, index, point, handle;
+        let selected, j, path, segment, index, point, handle;
 
         if (event.key == '+' || event.key == 'insert') {
 
@@ -302,28 +302,26 @@ class ToolSelectNode extends ToolElement {
 
           // при зажатом ctrl или alt добавляем элемент иначе - узел
           if (event.modifiers.space) {
-
             for (let i = 0; i < selected.length; i++) {
               path = selected[i];
 
               if(path.parent instanceof Profile){
 
-                var cnn_point = path.parent.cnn_point("e");
-                if(cnn_point && cnn_point.profile)
+                const cnn_point = path.parent.cnn_point("e");
+                if(cnn_point && cnn_point.profile){
                   cnn_point.profile.rays.clear(true);
+                }
                 path.parent.rays.clear(true);
 
                 point = path.getPointAt(path.length * 0.5);
-                var newpath = path.split(path.length * 0.5);
+                const newpath = path.split(path.length * 0.5);
                 path.lastSegment.point = path.lastSegment.point.add(paper.Point.random());
                 newpath.firstSegment.point = path.lastSegment.point;
                 new Profile({generatrix: newpath, proto: path.parent});
               }
             }
-
           }
           else{
-
             for (let i = 0; i < selected.length; i++) {
               path = selected[i];
               let do_select = false;

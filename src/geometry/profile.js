@@ -1858,21 +1858,43 @@ class Profile extends ProfileItem {
     const {b, e, data, layer, project} = this;
     let {_nearest, _nearest_cnn} = data;
 
-    const check_nearest = () => {
-      if(data._nearest){
-        const {generatrix} = data._nearest;
-        if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
-          if(!ign_cnn){
-            if(!_nearest_cnn){
-              _nearest_cnn = project.connections.elm_cnn(this, data._nearest);
-            }
-            data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
+
+    const check_nearest = (elm) => {
+      if(!(elm instanceof Profile || elm instanceof ProfileConnective) || !elm.isInserted()){
+        return;
+      }
+      const {generatrix} = elm;
+      let is_nearest = [];
+      if(generatrix.getNearestPoint(b).is_nearest(b)){
+        is_nearest.push(b);
+      }
+      if(generatrix.getNearestPoint(e).is_nearest(e)){
+        is_nearest.push(e);
+      }
+      if(is_nearest.length < 2 && elm instanceof ProfileConnective){
+        if(this.generatrix.getNearestPoint(elm.b).is_nearest(elm.b)){
+          if(is_nearest.every((point) => !point.is_nearest(elm.b))){
+            is_nearest.push(elm.b);
           }
-          if(data._nearest.isInserted()){
-            return true;
+        }
+        if(this.generatrix.getNearestPoint(elm.e).is_nearest(elm.e)){
+          if(is_nearest.every((point) => !point.is_nearest(elm.e))){
+            is_nearest.push(elm.e);
           }
         }
       }
+
+      if(is_nearest.length > 1){
+        if(!ign_cnn){
+          if(!_nearest_cnn){
+            _nearest_cnn = project.connections.elm_cnn(this, elm);
+          }
+          data._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
+        }
+        data._nearest = elm;
+        return true;
+      }
+
       data._nearest = null;
       data._nearest_cnn = null;
     };
@@ -1881,18 +1903,15 @@ class Profile extends ProfileItem {
       if(_nearest == elm || !elm.generatrix){
         return
       }
-      if(elm instanceof Profile || elm instanceof ProfileConnective){
-        data._nearest = elm;
-        if(check_nearest()){
-          return elm
-        }
-        else{
-          data._nearest = null
-        }
+      if(check_nearest(elm)){
+        return true
+      }
+      else{
+        data._nearest = null
       }
     });
 
-    if(layer && !check_nearest()){
+    if(layer && !check_nearest(data._nearest)){
       if(layer.parent){
         find_nearest(layer.parent.children)
       }else{

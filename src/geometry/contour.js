@@ -537,6 +537,19 @@ Contour.prototype.__define({
 		}
 	},
 
+  move: {
+	  value: function (delta) {
+	    const {contours, profiles, project} = this;
+	    const crays = (p) => p.rays.clear();
+      this.translate(delta);
+      contours.forEach((c) => {
+        c.profiles.forEach(crays);
+      });
+      profiles.forEach(crays);
+      project.register_change();
+    }
+  },
+
 	/**
 	 * Вычисляемые поля в таблицах конструкций и координат
 	 * @method save_coordinates

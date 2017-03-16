@@ -397,10 +397,6 @@ class ToolRuler extends ToolElement {
               }
               else {
 
-                this.remove_path();
-
-                this.selected.b.push(this.hitPoint);
-
                 // создаём размерную линию
                 new DimensionLineCustom({
                   elm1: this.selected.a[0].profile,
@@ -410,9 +406,8 @@ class ToolRuler extends ToolElement {
                   parent: this.hitPoint.profile.layer.l_dimensions
                 });
 
-                this.mode = 2;
-
                 this.hitPoint.profile.project.register_change(true);
+                this.reset_selected();
 
               }
             }

@@ -479,13 +479,13 @@ class ToolPen extends ToolElement {
       }
       // рисуем соединительный профиль
       else if(this.profile.elm_type == $p.enm.elm_types.Соединитель && !this.profile.inset.empty()){
-        new ProfileConnective({
+        const connective = new ProfileConnective({
           generatrix: this.addl_hit.generatrix,
           proto: this.profile,
           parent: this.addl_hit.profile,
         });
+        connective.joined_nearests().forEach((p) => p.rays.clear());
       }
-
     }
     else if(this.mode == 'create' && this.path) {
 
@@ -904,14 +904,16 @@ class ToolPen extends ToolElement {
   hitTest_connective(event) {
 
     const hitSize = 16;
+    const {project} = this._scope;
+    const rootLayer = project.rootLayer();
 
     if (event.point){
-      this.hitItem = paper.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+      this.hitItem = rootLayer.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
     }
 
-    if (this.hitItem && !paper.project.activeLayer.parent) {
+    if (this.hitItem) {
 
-      if(this.hitItem.item.layer == paper.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+      if(this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
         // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
 
         const hit = {

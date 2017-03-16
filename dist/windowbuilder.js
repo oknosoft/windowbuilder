@@ -2341,6 +2341,19 @@ Contour.prototype.__define({
 		}
 	},
 
+  move: {
+	  value: function (delta) {
+	    const {contours, profiles, project} = this;
+	    const crays = (p) => p.rays.clear();
+      this.translate(delta);
+      contours.forEach((c) => {
+        c.profiles.forEach(crays);
+      });
+      profiles.forEach(crays);
+      project.register_change();
+    }
+  },
+
 	save_coordinates: {
 		value: function () {
 
@@ -6846,21 +6859,43 @@ class Profile extends ProfileItem {
     const {b, e, data, layer, project} = this;
     let {_nearest, _nearest_cnn} = data;
 
-    const check_nearest = () => {
-      if(data._nearest){
-        const {generatrix} = data._nearest;
-        if( generatrix.getNearestPoint(b).is_nearest(b) && generatrix.getNearestPoint(e).is_nearest(e)){
-          if(!ign_cnn){
-            if(!_nearest_cnn){
-              _nearest_cnn = project.connections.elm_cnn(this, data._nearest);
-            }
-            data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
+
+    const check_nearest = (elm) => {
+      if(!(elm instanceof Profile || elm instanceof ProfileConnective) || !elm.isInserted()){
+        return;
+      }
+      const {generatrix} = elm;
+      let is_nearest = [];
+      if(generatrix.getNearestPoint(b).is_nearest(b)){
+        is_nearest.push(b);
+      }
+      if(generatrix.getNearestPoint(e).is_nearest(e)){
+        is_nearest.push(e);
+      }
+      if(is_nearest.length < 2 && elm instanceof ProfileConnective){
+        if(this.generatrix.getNearestPoint(elm.b).is_nearest(elm.b)){
+          if(is_nearest.every((point) => !point.is_nearest(elm.b))){
+            is_nearest.push(elm.b);
           }
-          if(data._nearest.isInserted()){
-            return true;
+        }
+        if(this.generatrix.getNearestPoint(elm.e).is_nearest(elm.e)){
+          if(is_nearest.every((point) => !point.is_nearest(elm.e))){
+            is_nearest.push(elm.e);
           }
         }
       }
+
+      if(is_nearest.length > 1){
+        if(!ign_cnn){
+          if(!_nearest_cnn){
+            _nearest_cnn = project.connections.elm_cnn(this, elm);
+          }
+          data._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
+        }
+        data._nearest = elm;
+        return true;
+      }
+
       data._nearest = null;
       data._nearest_cnn = null;
     };
@@ -6869,18 +6904,15 @@ class Profile extends ProfileItem {
       if(_nearest == elm || !elm.generatrix){
         return
       }
-      if(elm instanceof Profile || elm instanceof ProfileConnective){
-        data._nearest = elm;
-        if(check_nearest()){
-          return elm
-        }
-        else{
-          data._nearest = null
-        }
+      if(check_nearest(elm)){
+        return true
+      }
+      else{
+        data._nearest = null
       }
     });
 
-    if(layer && !check_nearest()){
+    if(layer && !check_nearest(data._nearest)){
       if(layer.parent){
         find_nearest(layer.parent.children)
       }else{
@@ -8752,15 +8784,12 @@ Scheme.prototype.__define({
 
   rootLayer: {
     value: function (layer) {
-
       if(!layer){
         layer = this.activeLayer
       }
-
       while (layer.parent){
         layer = layer.parent
       }
-
       return layer
     }
   },
@@ -9968,10 +9997,11 @@ class ToolPan extends ToolElement {
 
     Object.assign(this, {
       options: {name: 'pan'},
-      distanceThreshold: 8,
+      distanceThreshold: 10,
+      minDistance: 10,
       mouseStartPos: new paper.Point(),
       mode: 'pan',
-      zoomFactor: 1.1
+      zoomFactor: 1.1,
     })
 
     this.on({
@@ -9984,49 +10014,67 @@ class ToolPan extends ToolElement {
       },
 
       mousedown: function(event) {
-        this.mouseStartPos = event.point.subtract(paper.view.center);
+        if (event.modifiers.shift) {
+          this.mouseStartPos = event.point;
+        }
+        else{
+          this.mouseStartPos = event.point.subtract(paper.view.center);
+        }
         this.mode = '';
         if (event.modifiers.control || event.modifiers.option) {
           this.mode = 'zoom';
-        } else {
+        }
+        else {
           paper.canvas_cursor('cursor-hand-grab');
           this.mode = 'pan';
         }
       },
 
       mouseup: function(event) {
+        const {view} = this._scope;
         if (this.mode == 'zoom') {
-          var zoomCenter = event.point.subtract(paper.view.center);
-          var moveFactor = this.zoomFactor - 1.0;
+          const zoomCenter = event.point.subtract(view.center);
+          const moveFactor = this.zoomFactor - 1.0;
           if (event.modifiers.control) {
-            paper.view.zoom *= this.zoomFactor;
-            paper.view.center = paper.view.center.add(zoomCenter.multiply(moveFactor / this.zoomFactor));
+            view.zoom *= this.zoomFactor;
+            view.center = view.center.add(zoomCenter.multiply(moveFactor / this.zoomFactor));
           } else if (event.modifiers.option) {
-            paper.view.zoom /= this.zoomFactor;
-            paper.view.center = paper.view.center.subtract(zoomCenter.multiply(moveFactor));
+            view.zoom /= this.zoomFactor;
+            view.center = view.center.subtract(zoomCenter.multiply(moveFactor));
           }
         } else if (this.mode == 'zoom-rect') {
-          var start = paper.view.center.add(this.mouseStartPos);
-          var end = event.point;
-          paper.view.center = start.add(end).multiply(0.5);
-          var dx = paper.view.bounds.width / Math.abs(end.x - start.x);
-          var dy = paper.view.bounds.height / Math.abs(end.y - start.y);
-          paper.view.zoom = Math.min(dx, dy) * paper.view.zoom;
+          const start = view.center.add(this.mouseStartPos);
+          const end = event.point;
+          view.center = start.add(end).multiply(0.5);
+          const dx = view.bounds.width / Math.abs(end.x - start.x);
+          const dy = view.bounds.height / Math.abs(end.y - start.y);
+          view.zoom = Math.min(dx, dy) * view.zoom;
         }
         this.hitTest(event);
         this.mode = '';
       },
 
       mousedrag: function(event) {
+        const {view} = this._scope;
         if (this.mode == 'zoom') {
           this.mode = 'zoom-rect';
-        } else if (this.mode == 'zoom-rect') {
-          paper.drag_rect(paper.view.center.add(this.mouseStartPos), event.point);
-        } else if (this.mode == 'pan') {
-          var pt = event.point.subtract(paper.view.center);
-          var delta = this.mouseStartPos.subtract(pt);
-          paper.view.scrollBy(delta);
-          this.mouseStartPos = pt;
+        }
+        else if (this.mode == 'zoom-rect') {
+          this._scope.drag_rect(view.center.add(this.mouseStartPos), event.point);
+        }
+        else if (this.mode == 'pan') {
+          if (event.modifiers.shift) {
+            const {project} = this._scope;
+            const delta = this.mouseStartPos.subtract(event.point);
+            this.mouseStartPos = event.point;
+            project.rootLayer().move(delta.negate());
+          }
+          else{
+            const pt = event.point.subtract(view.center);
+            const delta = this.mouseStartPos.subtract(pt);
+            this.mouseStartPos = pt;
+            view.scrollBy(delta);
+          }
         }
       },
 
@@ -10035,7 +10083,21 @@ class ToolPan extends ToolElement {
       },
 
       keydown: function(event) {
-        this.hitTest(event);
+        const rootLayer = this._scope.project.rootLayer();
+        switch (event.key) {
+          case 'left':
+            rootLayer.move(new paper.Point(-10, 0));
+            break;
+          case 'right':
+            rootLayer.move(new paper.Point(10, 0));
+            break;
+          case 'up':
+            rootLayer.move(new paper.Point(0, -10));
+            break;
+          case 'down':
+            rootLayer.move(new paper.Point(0, 10));
+            break;
+        }
       },
 
       keyup: function(event) {
@@ -10498,13 +10560,13 @@ class ToolPen extends ToolElement {
         });
       }
       else if(this.profile.elm_type == $p.enm.elm_types.Соединитель && !this.profile.inset.empty()){
-        new ProfileConnective({
+        const connective = new ProfileConnective({
           generatrix: this.addl_hit.generatrix,
           proto: this.profile,
           parent: this.addl_hit.profile,
         });
+        connective.joined_nearests().forEach((p) => p.rays.clear());
       }
-
     }
     else if(this.mode == 'create' && this.path) {
 
@@ -10898,14 +10960,16 @@ class ToolPen extends ToolElement {
   hitTest_connective(event) {
 
     const hitSize = 16;
+    const {project} = this._scope;
+    const rootLayer = project.rootLayer();
 
     if (event.point){
-      this.hitItem = paper.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+      this.hitItem = rootLayer.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
     }
 
-    if (this.hitItem && !paper.project.activeLayer.parent) {
+    if (this.hitItem) {
 
-      if(this.hitItem.item.layer == paper.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+      if(this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
 
         const hit = {
           point: this.hitItem.point,
@@ -11417,10 +11481,6 @@ class ToolRuler extends ToolElement {
               }
               else {
 
-                this.remove_path();
-
-                this.selected.b.push(this.hitPoint);
-
                 new DimensionLineCustom({
                   elm1: this.selected.a[0].profile,
                   elm2: this.hitPoint.profile,
@@ -11429,9 +11489,8 @@ class ToolRuler extends ToolElement {
                   parent: this.hitPoint.profile.layer.l_dimensions
                 });
 
-                this.mode = 2;
-
                 this.hitPoint.profile.project.register_change(true);
+                this.reset_selected();
 
               }
             }
@@ -11976,35 +12035,33 @@ class ToolSelectNode extends ToolElement {
       },
 
       keydown: function(event) {
-        var selected, j, path, segment, index, point, handle;
+        let selected, j, path, segment, index, point, handle;
 
         if (event.key == '+' || event.key == 'insert') {
 
           selected = paper.project.selectedItems;
 
           if (event.modifiers.space) {
-
             for (let i = 0; i < selected.length; i++) {
               path = selected[i];
 
               if(path.parent instanceof Profile){
 
-                var cnn_point = path.parent.cnn_point("e");
-                if(cnn_point && cnn_point.profile)
+                const cnn_point = path.parent.cnn_point("e");
+                if(cnn_point && cnn_point.profile){
                   cnn_point.profile.rays.clear(true);
+                }
                 path.parent.rays.clear(true);
 
                 point = path.getPointAt(path.length * 0.5);
-                var newpath = path.split(path.length * 0.5);
+                const newpath = path.split(path.length * 0.5);
                 path.lastSegment.point = path.lastSegment.point.add(paper.Point.random());
                 newpath.firstSegment.point = path.lastSegment.point;
                 new Profile({generatrix: newpath, proto: path.parent});
               }
             }
-
           }
           else{
-
             for (let i = 0; i < selected.length; i++) {
               path = selected[i];
               let do_select = false;

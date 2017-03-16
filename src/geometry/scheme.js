@@ -1484,15 +1484,12 @@ Scheme.prototype.__define({
    */
   rootLayer: {
     value: function (layer) {
-
       if(!layer){
         layer = this.activeLayer
       }
-
       while (layer.parent){
         layer = layer.parent
       }
-
       return layer
     }
   },
