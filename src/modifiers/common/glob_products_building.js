@@ -1402,7 +1402,7 @@ function ProductsBuilding(){
 				}
 			})
 				.then(() => {
-					$p.msg.show_msg("Спецификация рассчитана");
+					$p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
 					delete scheme.data._saving;
 					$p.eve.callEvent("characteristic_saved", [scheme, attr]);
 				});

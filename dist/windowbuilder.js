@@ -306,7 +306,7 @@ class SchemeProps {
     });
 
     this._on_snapshot = $p.eve.attachEvent("scheme_snapshot", (scheme, attr) => {
-      if(scheme == paper.project && !attr.clipboard){
+      if(scheme == paper.project && !attr.clipboard && scheme.data._calc_order_row){
         ["price_internal","amount_internal","price","amount"].forEach((fld) => {
           _obj[fld] = scheme.data._calc_order_row[fld];
         });
@@ -6283,25 +6283,27 @@ class ProfileItem extends BuilderElement {
     }
     if(this._row.inset != v){
 
-      const b = this.cnn_point('b');
-      const e = this.cnn_point('e');
+      if(this.data._rays){
+        const b = this.cnn_point('b');
+        const e = this.cnn_point('e');
 
-      if(b.profile && b.profile_point == 'e'){
-        const {_rays} = b.profile.data;
-        if(_rays){
-          _rays.clear();
-          _rays.e.cnn = null;
+        if(b.profile && b.profile_point == 'e'){
+          const {_rays} = b.profile.data;
+          if(_rays){
+            _rays.clear();
+            _rays.e.cnn = null;
+          }
         }
-      }
-      if(e.profile && e.profile_point == 'b'){
-        const {_rays} = e.profile.data;
-        if(_rays){
-          _rays.clear();
-          _rays.b.cnn = null;
+        if(e.profile && e.profile_point == 'b'){
+          const {_rays} = e.profile.data;
+          if(_rays){
+            _rays.clear();
+            _rays.b.cnn = null;
+          }
         }
-      }
 
-      this.joined_nearests().forEach((profile) => profile.data._rays && profile.data._rays.clear(true));
+        this.joined_nearests().forEach((profile) => profile.data._rays && profile.data._rays.clear(true));
+      }
 
       BuilderElement.prototype.set_inset.call(this, v);
     }

@@ -58,11 +58,14 @@ $p.iface.view_orders = function (cell) {
 
 		function show_builder(ref){
 
-			t.carousel.cells("builder").setActive();
-
-			// отвязываем ошибки открытия построителя от текущего контекста
-			setTimeout(t.editor.open.bind(t.editor, ref));
-
+		  const cell_builder = t.carousel.cells("builder");
+		  if(t.carousel.getActiveCell() != cell_builder){
+        t.carousel.cells("builder").setActive();
+      }
+      if(!t.editor.project || t.editor.project.ox != ref){
+        // отвязываем ошибки открытия построителя от текущего контекста
+        setTimeout(t.editor.open.bind(t.editor, ref));
+      }
 		}
 
 		function hash_route(hprm) {

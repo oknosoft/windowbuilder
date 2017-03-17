@@ -316,7 +316,7 @@ class SchemeProps {
 
     // при готовности снапшота, обновляем суммы и цены
     this._on_snapshot = $p.eve.attachEvent("scheme_snapshot", (scheme, attr) => {
-      if(scheme == paper.project && !attr.clipboard){
+      if(scheme == paper.project && !attr.clipboard && scheme.data._calc_order_row){
         ["price_internal","amount_internal","price","amount"].forEach((fld) => {
           _obj[fld] = scheme.data._calc_order_row[fld];
         });

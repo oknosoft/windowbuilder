@@ -18,22 +18,22 @@ class Pricing {
   constructor($p) {
 
     // виртуальный срез последних
-    function build_cache() {
+    function build_cache(startkey) {
 
       return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
         {
-          limit : 1000,
+          limit : 5000,
           include_docs: false,
-          startkey: [''],
+          startkey: startkey || [''],
           endkey: ['\uffff']
           // ,reduce: function(keys, values, rereduce) {
           // 	return values.length;
           // }
         })
-        .then(function (res) {
-          res.rows.forEach(function (row) {
+        .then((res) => {
+          res.rows.forEach((row) => {
 
-            var onom = $p.cat.nom.get(row.key[0], false, true);
+            const onom = $p.cat.nom.get(row.key[0], false, true);
 
             if(!onom || !onom._data)
               return;
@@ -52,8 +52,10 @@ class Pricing {
               price: row.value.price,
               currency: $p.cat.currencies.get(row.value.currency)
             });
-
           });
+          if(res.rows.length == 5000){
+            return build_cache(res.rows[res.rows.length-1].key);
+          }
         });
     }
 
@@ -250,7 +252,7 @@ class Pricing {
 
     // пытаемся рассчитать по спецификации
     if(prm.spec.count()){
-      prm.spec.each(function (row) {
+      prm.spec.each((row) => {
 
         $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_first_cost, prm, row);
         row.amount = row.price * row.totqty1;
