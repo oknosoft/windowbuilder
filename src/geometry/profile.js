@@ -1095,7 +1095,29 @@ class ProfileItem extends BuilderElement {
       });
     }
     if(this._row.inset != v){
-      this.joined_nearests().forEach((profile) => profile.data._rays.clear(true));
+
+      // прибиваем соединения в точках b и e
+      const b = this.cnn_point('b');
+      const e = this.cnn_point('e');
+
+      if(b.profile && b.profile_point == 'e'){
+        const {_rays} = b.profile.data;
+        if(_rays){
+          _rays.clear();
+          _rays.e.cnn = null;
+        }
+      }
+      if(e.profile && e.profile_point == 'b'){
+        const {_rays} = e.profile.data;
+        if(_rays){
+          _rays.clear();
+          _rays.b.cnn = null;
+        }
+      }
+
+      // для соединительных профилей, пересчитываем соседей
+      this.joined_nearests().forEach((profile) => profile.data._rays && profile.data._rays.clear(true));
+
       BuilderElement.prototype.set_inset.call(this, v);
     }
   }

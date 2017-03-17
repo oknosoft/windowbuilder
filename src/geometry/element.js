@@ -381,12 +381,13 @@ BuilderElement.prototype.__define({
    */
   set_inset: {
 	  value: function(v){
-      if(this._row.inset != v){
-        this._row.inset = v;
-        if(this.data && this.data._rays){
-          this.data._rays.clear(true);
+	    const {_row, data, project} = this;
+      if(_row.inset != v){
+        _row.inset = v;
+        if(data && data._rays){
+          data._rays.clear(true);
         }
-        this.project.register_change();
+        project.register_change();
       }
     }
   },

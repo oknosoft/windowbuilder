@@ -4190,12 +4190,13 @@ BuilderElement.prototype.__define({
 
   set_inset: {
 	  value: function(v){
-      if(this._row.inset != v){
-        this._row.inset = v;
-        if(this.data && this.data._rays){
-          this.data._rays.clear(true);
+	    const {_row, data, project} = this;
+      if(_row.inset != v){
+        _row.inset = v;
+        if(data && data._rays){
+          data._rays.clear(true);
         }
-        this.project.register_change();
+        project.register_change();
       }
     }
   },
@@ -6281,7 +6282,27 @@ class ProfileItem extends BuilderElement {
       });
     }
     if(this._row.inset != v){
-      this.joined_nearests().forEach((profile) => profile.data._rays.clear(true));
+
+      const b = this.cnn_point('b');
+      const e = this.cnn_point('e');
+
+      if(b.profile && b.profile_point == 'e'){
+        const {_rays} = b.profile.data;
+        if(_rays){
+          _rays.clear();
+          _rays.e.cnn = null;
+        }
+      }
+      if(e.profile && e.profile_point == 'b'){
+        const {_rays} = e.profile.data;
+        if(_rays){
+          _rays.clear();
+          _rays.b.cnn = null;
+        }
+      }
+
+      this.joined_nearests().forEach((profile) => profile.data._rays && profile.data._rays.clear(true));
+
       BuilderElement.prototype.set_inset.call(this, v);
     }
   }
