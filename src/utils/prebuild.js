@@ -14,34 +14,26 @@ var gutil = require('gulp-util');
 var PluginError = gutil.PluginError;
 var File = gutil.File;
 
-module.exports = function (package_data) {
+module.exports = function () {
 
-	if (!package_data) {
-		throw new PluginError('metadata-prebuild', 'Missing "package_data" option for metadata-prebuild');
-	}
+  // конфигурация подключения к CouchDB
+  const config = require('../../config/app.settings.js')();
 
-	var firstFile = null,
-		jstext = "",                    // в этой переменной будем накапливать текст модуля
-		$p = require('../../lib/metadata.core.js');    // подключим метадату 'metadata-js'
-
+  let $p = require('../../lib/metadata.core.js');    // подключим метадату 'metadata-js'
+	let firstFile = null;
+	let jstext = "";                    // в этой переменной будем накапливать текст модуля
 
 	// установим параметры
-	$p.on("settings", function (prm) {
+	$p.on("settings", (prm) => {
 
-		// разделитель для localStorage
-		prm.local_storage_prefix = package_data.config.prefix;
+    // разделитель для localStorage
+    prm.local_storage_prefix = config.local_storage_prefix;
 
-		// по умолчанию, обращаемся к зоне 0
-		prm.zone = package_data.config.zone;
+    // по умолчанию, обращаемся к зоне 0
+    prm.zone = config.zone;
 
-		// расположение couchdb
-		prm.couch_path = package_data.config.couchdb;
-
-		// логин гостевого пользователя couchdb
-		prm.guest_name = "guest";
-
-		// пароль гостевого пользователя couchdb
-		prm.guest_pwd = "meta";
+    // в качестве расположения couchdb используем couch_local
+    prm.couch_path = config.couch_local || config.couch_path;
 
 	});
 	$p.eve.init();

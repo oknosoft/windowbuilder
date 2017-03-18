@@ -11,9 +11,8 @@ var gulp = require('gulp'),
 	rename = require('gulp-rename'),
 	resources = require('./src/utils/resource-concat.js'),
 	prebuild = require('./src/utils/prebuild.js'),
-	umd = require('gulp-umd'),
+	umd = require('gulp-umd');
   //babel = require('gulp-babel'),
-	package_data = require('./package.json', 'utf8');  // данные файла package.json
 
 module.exports = gulp;
 
@@ -98,7 +97,7 @@ gulp.task('injected-templates', function(){
 gulp.task('injected-meta', function(){
 
 	return gulp.src(['./src/utils/default_settings.js'])
-		.pipe(prebuild(package_data))
+		.pipe(prebuild())
 		.pipe(gulp.dest('./data'))
 
 });

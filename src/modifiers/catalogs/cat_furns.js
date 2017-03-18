@@ -24,34 +24,32 @@ $p.CatFurns.prototype.__define({
 	 * Перезаполняет табчасть параметров указанного контура
 	 */
 	refill_prm: {
-		value: function (contour) {
+		value: function ({project, furn, cnstr}) {
 
-			var osys = contour.project._dp.sys,
-				fprms = contour.project.ox.params,
-				prm_direction = $p.job_prm.properties.direction;
+			const fprms = project.ox.params;
+			const {direction} = $p.job_prm.properties;
 
 			// формируем массив требуемых параметров по задействованным в contour.furn.furn_set
-			var aprm = contour.furn.furn_set.add_furn_prm();
+			const aprm = furn.furn_set.add_furn_prm();
 
-			// дозаполняем и приклеиваем значения по умолчанию
-			var prm_row, forcibly;
-			aprm.forEach(function(v){
+      // дозаполняем и приклеиваем значения по умолчанию
+			aprm.forEach((v) => {
 
 				// направления в табчасть не добавляем
-				if(v == prm_direction)
-					return;
+				if(v == direction){
+          return;
+        }
 
-				prm_row = null;
-				forcibly = true;
-				fprms.find_rows({param: v, cnstr: contour.cnstr}, function (row) {
+        let prm_row, forcibly = true;
+				fprms.find_rows({param: v, cnstr: cnstr}, (row) => {
 					prm_row = row;
 					return forcibly = false;
 				});
 				if(!prm_row){
-          prm_row = fprms.add({param: v, cnstr: contour.cnstr}, true);
+          prm_row = fprms.add({param: v, cnstr: cnstr}, true);
         }
 
-				osys.furn_params.each(function(row){
+        project._dp.sys.furn_params.each((row) => {
 					if(row.param == prm_row.param){
 						if(row.forcibly || forcibly){
               prm_row.value = row.value;
@@ -63,49 +61,35 @@ $p.CatFurns.prototype.__define({
 			});
 
 			// удаляем лишние строки
-			var adel = [];
-			fprms.find_rows({cnstr: contour.cnstr}, function (row) {
+			const adel = [];
+			fprms.find_rows({cnstr: cnstr}, (row) => {
 				if(aprm.indexOf(row.param) == -1)
 					adel.push(row);
 			});
-			adel.forEach(function (row) {
+			adel.forEach((row) => {
 				fprms.del(row, true);
 			});
 
-
-		},
-		enumerable: false
+		}
 	},
 
 	add_furn_prm: {
-		value: function (aprm, afurn_set) {
-
-			if(!aprm)
-				aprm = [];
-
-			if(!afurn_set)
-				afurn_set = [];
+		value: function (aprm = [], afurn_set = []) {
 
 			// если параметры этого набора уже обработаны - пропускаем
-			if(afurn_set.indexOf(this.ref)!=-1)
-				return;
+			if(afurn_set.indexOf(this.ref)!=-1){
+        return;
+      }
 
 			afurn_set.push(this.ref);
 
-			this.selection_params.each(function(row){
-				if(aprm.indexOf(row.param)==-1)
-					aprm.push(row.param);
-			});
+			this.selection_params.each((row) => aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param));
 
-			this.specification.each(function(row){
-				if(row.nom_set && row.nom_set._manager === $p.cat.furns)
-					row.nom_set.add_furn_prm(aprm, afurn_set);
-			});
+			this.specification.each((row) => row.nom_set instanceof $p.CatFurns && row.nom_set.add_furn_prm(aprm, afurn_set));
 
 			return aprm;
 
-		},
-		enumerable: false
+		}
 	}
 
 });

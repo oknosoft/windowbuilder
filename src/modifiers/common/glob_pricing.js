@@ -60,15 +60,16 @@ class Pricing {
     }
 
     // подписываемся на событие после загрузки из pouchdb-ram и готовности предопределенных
-    var init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", function () {
+    const init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", () => {
       $p.eve.detachEvent(init_event_id);
       build_cache();
     })
 
     // следим за изменениями документа установки цен, чтобы при необходимости обновить кеш
-    $p.eve.attachEvent("pouch_change", function (dbid, change) {
-      if (dbid != $p.doc.nom_prices_setup.cachable)
+    $p.eve.attachEvent("pouch_change", (dbid, change) => {
+      if (dbid != $p.doc.nom_prices_setup.cachable){
         return;
+      }
 
       // формируем новый
     })
@@ -90,7 +91,7 @@ class Pricing {
   nom_price(nom, characteristic, price_type, prm, row) {
 
     if (row && prm) {
-      var calc_order = prm.calc_order_row._owner._owner,
+      const calc_order = prm.calc_order_row._owner._owner,
         price_prm = {
           price_type: price_type,
           characteristic: characteristic,

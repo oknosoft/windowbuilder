@@ -4,9 +4,9 @@
  *
  * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
  */
-export default function settings(prm) {
+module.exports = function settings(prm) {
 
-  Object.assign(prm, {
+  return Object.assign(prm || {}, {
 
     // разделитель для localStorage
     local_storage_prefix: "wb_",
@@ -22,16 +22,18 @@ export default function settings(prm) {
 
     // расположение couchdb
     couch_path: "/couchdb/wb_",
-    //couch_path: "http://cou200:5984/wb_",
     //couch_path: "https://light.oknosoft.ru/couchdb/wb_",
+
+    // расположение couchdb для nodejs
+    couch_local: "http://cou200:5984/wb_",
 
     pouch_filter: {
       doc: "auth/by_partner",
       meta: "auth/meta"
     },
 
-    // по умолчанию, обращаемся к зоне 0
-    zone: 2,
+    // по умолчанию, обращаемся к зоне 1
+    zone: 1,
 
     // объявляем номер демо-зоны
     zone_demo: 1,

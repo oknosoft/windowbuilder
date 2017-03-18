@@ -120,7 +120,160 @@ $p.CchProperties.prototype.__define({
   },
 
   /**
+   * ### Проверяет условие в строке отбора
+   */
+  check_condition: {
+    value: function ({spec_row, prm_row, elm, cnstr, origin, ox, calc_order}) {
+
+      const {is_calculated} = this;
+
+      // значение параметра
+      const val = is_calculated ? this.calculated_value({
+          row: spec_row,
+          elm: elm,
+          cnstr: cnstr || 0,
+          ox: ox,
+          calc_order: calc_order
+        }) : prm_row.value;
+
+      let ok = false;
+
+      // если сравнение на равенство - решаем в лоб, если вычисляемый параметр типа массив - выясняем вхождение значения в параметр
+      if(ox && !Array.isArray(val) && (prm_row.comparison_type.empty() || prm_row.comparison_type == $p.enm.comparison_types.eq)){
+        if(is_calculated){
+          ok = val == prm_row.value;
+        }
+        else{
+          ox.params.find_rows({
+            cnstr: cnstr || 0,
+            inset: origin || $p.utils.blank.guid,
+            param: this,
+            value: val
+          }, () => {
+            ok = true;
+            return false;
+          });
+        }
+      }
+      // вычисляемый параметр - его значение уже рассчитано формулой (val) - сравниваем со значением в строке ограничений
+      else if(is_calculated){
+        const {value} = prm_row;
+        switch(prm_row.comparison_type) {
+
+          case $p.enm.comparison_types.ne:
+            ok = val != value;
+            break;
+
+          case $p.enm.comparison_types.gt:
+            ok = val > value;
+            break;
+
+          case $p.enm.comparison_types.gte:
+            ok = val >= value;
+            break;
+
+          case $p.enm.comparison_types.lt:
+            ok = val < value;
+            break;
+
+          case $p.enm.comparison_types.lte:
+            ok = val <= value;
+            break;
+
+          case $p.enm.comparison_types.nin:
+            if(Array.isArray(val) && !Array.isArray(value)){
+              ok = val.indexOf(value) == -1;
+            }
+            else if(Array.isArray(value) && !Array.isArray(val)){
+              ok = value.indexOf(val) == -1;
+            }
+            break;
+
+          case $p.enm.comparison_types.in:
+            if(Array.isArray(val) && !Array.isArray(value)){
+              ok = val.indexOf(value) != -1;
+            }
+            else if(Array.isArray(value) && !Array.isArray(val)){
+              ok = value.indexOf(val) != -1;
+            }
+            break;
+
+          case $p.enm.comparison_types.inh:
+            ok = val.parent == value;
+            break;
+
+          case $p.enm.comparison_types.ninh:
+            ok = val.parent != value;
+            break;
+        }
+      }
+      // параметр явно указан в табчасти параметров изделия
+      else{
+        ox.params.find_rows({
+          cnstr: cnstr || 0,
+          inset: origin || $p.utils.blank.guid,
+          param: this
+        }, ({value}) => {
+          // value - значение из строки параметра текущей продукции, val - знаяение из параметров отбора
+          switch(prm_row.comparison_type) {
+
+            case $p.enm.comparison_types.ne:
+              ok = value != val;
+              break;
+
+            case $p.enm.comparison_types.gt:
+              ok = value > val;
+              break;
+
+            case $p.enm.comparison_types.gte:
+              ok = value >= val;
+              break;
+
+            case $p.enm.comparison_types.lt:
+              ok = value < val;
+              break;
+
+            case $p.enm.comparison_types.lte:
+              ok = value <= val;
+              break;
+
+            case $p.enm.comparison_types.nin:
+              if(Array.isArray(val) && !Array.isArray(value)){
+                ok = val.indexOf(value) == -1;
+              }
+              else if(Array.isArray(value) && !Array.isArray(val)){
+                ok = value.indexOf(val) == -1;
+              }
+              break;
+
+            case $p.enm.comparison_types.in:
+              if(Array.isArray(val) && !Array.isArray(value)){
+                ok = val.indexOf(value) != -1;
+              }
+              else if(Array.isArray(value) && !Array.isArray(val)){
+                ok = value.indexOf(val) != -1;
+              }
+              break;
+
+            case $p.enm.comparison_types.inh:
+              ok = value.parent == val;
+              break;
+
+            case $p.enm.comparison_types.ninh:
+              ok = value.parent != val;
+              break;
+          }
+
+          return false;
+        });
+      }
+      return ok;
+    }
+  },
+
+  /**
    * ### Дополняет отбор фильтром по параметрам выбора
+   * Используется в полях ввода экранных форм
    * @param filter {Object} - дополняемый фильтр
    * @param attr {Object} - атрибуты OCombo
    */
@@ -135,31 +288,22 @@ $p.CchProperties.prototype.__define({
         return;
       }
 
-      const ts = attr.obj._owner;
-      const ox = ts._owner;
-      const selection = attr.grid.selection._clone();
-      if(selection.hasOwnProperty("hide")){
-        delete selection.hide;
-      }
-      const prms = ts.find_rows(selection);
-
       // для всех возможных связей параметров
       this._params_links.forEach((link) => {
         let ok = true;
         // для всех записей ключа параметров
         link.master.params.forEach((row) => {
-          if(row.property.is_calculated){
-            ok = row.value == row.property.calculated_value({
-              cnstr: selection.cnstr,
-              ox: ox
-            });
-          }
-          else{
-            ok = prms.some((prm) => row.property == prm.param && row.value == prm.value);
-          }
+
+          // выполнение условия рассчитывает объект CchProperties
+          ok = row.property.check_condition({
+            cnstr: attr.grid.selection.cnstr,
+            ox: attr.obj._owner._owner,
+            prm_row: row,
+          });
           if(!ok){
             return false;
           }
+
         });
         // если ключ найден в параметрах, добавляем фильтр
         if(ok){

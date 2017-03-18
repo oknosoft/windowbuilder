@@ -10,7 +10,7 @@ $p.iface.view_orders = function (cell) {
 
 	function OViewOrders(){
 
-		var t = this;
+		const t = this;
 
 		function show_list(){
 
@@ -26,7 +26,7 @@ $p.iface.view_orders = function (cell) {
 
 		function show_doc(ref){
 
-			var _cell = t.carousel.cells("doc");
+			const _cell = t.carousel.cells("doc");
 
 			_cell.setActive();
 
@@ -35,15 +35,8 @@ $p.iface.view_orders = function (cell) {
 				$p.doc.calc_order.form_obj(_cell, {
 						ref: ref,
 						bind_pwnd: true,
-						on_close: function () {
-							setTimeout(function () {
-								$p.iface.set_hash(undefined, "", "list");
-							});
-						},
-						set_text: function (text) {
-							if(t.carousel.getActiveCell() == _cell)
-								cell.setText({text: "<b>" + text + "</b>"});
-						}
+						on_close: () => setTimeout(() => $p.iface.set_hash(undefined, "", "list")),
+						set_text: (text) => (t.carousel.getActiveCell() == _cell) && cell.setText({text: "<b>" + text + "</b>"}),
 					})
 					.then(function (wnd) {
 						t.doc = wnd;
@@ -75,29 +68,21 @@ $p.iface.view_orders = function (cell) {
 				if(hprm.obj == "doc.calc_order" && !$p.utils.is_empty_guid(hprm.ref)){
 
 					if(hprm.frm != "doc")
-						setTimeout(function () {
-							$p.iface.set_hash(undefined, undefined, "doc");
-						});
+						setTimeout(() => $p.iface.set_hash(undefined, undefined, "doc"));
 					else
 						show_doc(hprm.ref);
-
 
 				} else if(hprm.obj == "cat.characteristics" && !$p.utils.is_empty_guid(hprm.ref)) {
 
 					if(hprm.frm != "builder")
-						setTimeout(function () {
-							$p.iface.set_hash(undefined, undefined, "builder");
-						});
+						setTimeout(() => $p.iface.set_hash(undefined, undefined, "builder"));
 					else
 						show_builder(hprm.ref);
-
 
 				}else{
 
 					if(hprm.obj != "doc.calc_order")
-						setTimeout(function () {
-							$p.iface.set_hash("doc.calc_order", "", "list");
-						});
+						setTimeout(() => $p.iface.set_hash("doc.calc_order", "", "list"));
 					else
 						show_list();
 				}
@@ -114,43 +99,45 @@ $p.iface.view_orders = function (cell) {
 			$p.off(create_elmnts);
 
 			// создадим экземпляр графического редактора
-			var _cell = t.carousel.cells("builder"),
-				obj = $p.job_prm.parse_url().obj || "doc.calc_order";
+			const _cell = t.carousel.cells("builder");
+			const obj = $p.job_prm.parse_url().obj || "doc.calc_order";
 
 			_cell._on_close = function (confirmed) {
 
-				if(t.editor.project.ox._modified && !confirmed){
+			  const {project} = t.editor;
+
+				if(project.ox._modified && !confirmed){
 					dhtmlx.confirm({
 						title: $p.msg.bld_title,
 						text: $p.msg.modified_close,
 						cancel: $p.msg.cancel,
-						callback: function(btn) {
+						callback: (btn) => {
 							if(btn){
 								// закрыть изменённый без сохранения - значит прочитать его из pouchdb
-								t.editor.project.data._loading = true;
-								if(t.editor.project.ox.is_new()){
+                project.data._loading = true;
+								if(project.ox.is_new()){
 									// если характеристика не была записана - удаляем её вместе со строкой заказа
-									var _row = t.editor.project.ox.calc_order_row;
+									const _row = project.ox.calc_order_row;
 									if(_row)
 										_row._owner.del(_row);
-									t.editor.project.ox.unload();
+                  project.ox.unload();
 									this._on_close(true);
 								}else{
-									t.editor.project.ox.load()
+                  project.ox.load()
 										.then(this._on_close.bind(this, true));
 								}
 							}
-						}.bind(this)
+						}
 					});
 					return;
 				}
 
-				t.editor.project.data._loading = true;
-				t.editor.project.data._opened = false;
-				t.editor.project.ox = null;
-				t.editor.project._dp.base_block = null;
+        project.data._loading = true;
+        project.data._opened = false;
+        project.ox = null;
+        project._dp.base_block = null;
 
-				var _cell = t.carousel.cells("doc");
+				const _cell = t.carousel.cells("doc");
 
 				$p.eve.callEvent("editor_closed", [t.editor]);
 
@@ -159,8 +146,8 @@ $p.iface.view_orders = function (cell) {
 
 				else{
 
-					var hprm = $p.job_prm.parse_url(),
-						obj = $p.cat.characteristics.get(hprm.ref, false, true);
+					const hprm = $p.job_prm.parse_url();
+          const obj = $p.cat.characteristics.get(hprm.ref, false, true);
 
 					if(obj && !obj.calc_order.empty())
 						$p.iface.set_hash("doc.calc_order", obj.calc_order.ref, "doc");
@@ -177,9 +164,7 @@ $p.iface.view_orders = function (cell) {
 				}
 			});
 
-			setTimeout(function () {
-				$p.iface.set_hash(obj);
-			});
+			setTimeout(() => $p.iface.set_hash(obj));
 		}
 
 		// Рисуем дополнительные элементы навигации
