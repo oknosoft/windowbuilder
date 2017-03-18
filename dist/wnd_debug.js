@@ -4584,11 +4584,11 @@ $p.CchProperties.prototype.__define({
             break;
 
           case $p.enm.comparison_types.inh:
-            ok = val.parent == value;
+            ok = $p.utils.is_data_obj(val) ? val.in_hierarchy(value) : val == value;
             break;
 
           case $p.enm.comparison_types.ninh:
-            ok = val.parent != value;
+            ok = $p.utils.is_data_obj(val) ? !val.in_hierarchy(value) : val != value;
             break;
         }
       }
@@ -4639,11 +4639,11 @@ $p.CchProperties.prototype.__define({
               break;
 
             case $p.enm.comparison_types.inh:
-              ok = value.parent == val;
+              ok = $p.utils.is_data_obj(value) ? value.in_hierarchy(val) : val == value;
               break;
 
             case $p.enm.comparison_types.ninh:
-              ok = value.parent != val;
+              ok = $p.utils.is_data_obj(value) ? !value.in_hierarchy(val) : val != value;
               break;
           }
 
