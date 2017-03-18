@@ -40,7 +40,7 @@ class ToolLayImpost extends ToolElement {
         changed: false
       });
 
-    var sys;
+    let sys;
 
     // подключает окно редактора
     function tool_wnd(){
@@ -52,7 +52,11 @@ class ToolLayImpost extends ToolElement {
 
       // восстанавливаем сохранённые параметры
       $p.wsql.restore_options("editor", tool.options);
-      tool.options.wnd.on_close = tool.on_close;
+      Object.assign(tool.options.wnd, {
+        on_close: tool.on_close,
+        height: 420,
+        width: 320,
+      });
 
       for(let prop in tool.profile._metadata.fields) {
         if(tool.options.wnd.hasOwnProperty(prop))
