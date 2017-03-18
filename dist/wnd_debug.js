@@ -3591,8 +3591,7 @@ $p.CatFurns.prototype.__define({
 				fprms.del(row, true);
 			});
 
-		},
-		enumerable: false
+		}
 	},
 
 	add_furn_prm: {
@@ -3610,8 +3609,7 @@ $p.CatFurns.prototype.__define({
 
 			return aprm;
 
-		},
-		enumerable: false
+		}
 	}
 
 });
@@ -4521,7 +4519,7 @@ $p.CchProperties.prototype.__define({
           cnstr: cnstr || 0,
           ox: ox,
           calc_order: calc_order
-        }) : prm_row.value;
+        }) : this.extract_value(prm_row);
 
       let ok = false;
 
@@ -4542,7 +4540,9 @@ $p.CchProperties.prototype.__define({
         }
       }
       else if(is_calculated){
-        const {value} = prm_row;
+
+        const value = this.extract_value(prm_row);
+
         switch(prm_row.comparison_type) {
 
           case $p.enm.comparison_types.ne:
@@ -4651,6 +4651,33 @@ $p.CchProperties.prototype.__define({
         });
       }
       return ok;
+    }
+  },
+
+  extract_value: {
+    value: function ({comparison_type, txt_row, value}) {
+
+      switch(comparison_type) {
+
+        case $p.enm.comparison_types.in:
+        case $p.enm.comparison_types.nin:
+
+          try{
+            const arr = JSON.parse(txt_row);
+            const {types} = this.type;
+            if(types.length == 1){
+              const mgr = $p.md.mgr_by_class_name(types[0]);
+              return arr.map((ref) => mgr.get(ref, false));
+            }
+            return arr;
+          }
+          catch(err){
+            return value;
+          }
+
+        default:
+          return value;
+      }
     }
   },
 
