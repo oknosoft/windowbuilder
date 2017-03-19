@@ -731,6 +731,17 @@ class Editor extends paper.PaperScope {
    */
   glass_inserts(elm){
 
+    if(!elm){
+      elm = this.project.selected_elm;
+    }
+    if(!(elm instanceof Filling)){
+      return $p.msg.show_msg({
+        type: "alert-info",
+        text: $p.msg.glass_invalid_elm,
+        title: $p.msg.glass_spec
+      });
+    }
+
     const options = {
       name: 'glass_inserts',
       wnd: {
@@ -795,14 +806,10 @@ class Editor extends paper.PaperScope {
       cnstr = 0;
       caption+= ' в изделие';
       meta_fields.inset.choice_params[0].path = ["Изделие"];
-
     }
     else if(cnstr == 'elm'){
       cnstr = this.project.selected_elm;
-      if(cnstr instanceof Filling){
-        return this.glass_inserts(cnstr);
-      }
-      else if(cnstr){
+      if(cnstr){
         // добавляем параметры вставки
         this.project.ox.add_inset_params(cnstr.inset, -cnstr.elm, $p.utils.blank.guid);
         caption+= ' элем. №' + cnstr.elm;
@@ -817,7 +824,6 @@ class Editor extends paper.PaperScope {
       cnstr = this.project.activeLayer.cnstr
       caption+= ' в контур №' + cnstr;
       meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Контур"];
-
     }
 
     const options = {

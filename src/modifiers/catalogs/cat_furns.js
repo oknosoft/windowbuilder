@@ -31,6 +31,15 @@ $p.CatFurns.prototype.__define({
 
 			// формируем массив требуемых параметров по задействованным в contour.furn.furn_set
 			const aprm = furn.furn_set.add_furn_prm();
+      aprm.sort((a, b) => {
+        if (a.presentation > b.presentation) {
+          return 1;
+        }
+        if (a.presentation < b.presentation) {
+          return -1;
+        }
+        return 0;
+      });
 
       // дозаполняем и приклеиваем значения по умолчанию
 			aprm.forEach((v) => {

@@ -351,7 +351,12 @@ class EditorAccordion {
         id: "prod",
         text: '<i class="fa fa-picture-o fa-fw"></i>',
         title: 'Свойства изделия',
-      }
+      },
+      {
+        id: "log",
+        text: '<i class="fa fa-clock-o fa-fw"></i>',
+        title: 'Журнал событий',
+      },
     ];
     this.tabbar = cell_acc.attachTabbar({
       arrows_mode: "auto",
@@ -381,6 +386,8 @@ class EditorAccordion {
         {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
+        {name: 'glass_spec', text: '<i class="fa fa-list-ul fa-fw"></i>', tooltip: $p.msg.glass_spec + ' ' + $p.msg.to_elm, float: 'left'},
+        {name: 'sep_1', text: '', float: 'left'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
         {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
       ],
@@ -393,6 +400,10 @@ class EditorAccordion {
 
           case 'additional_inserts':
             _editor.additional_inserts('elm');
+            break;
+
+          case 'glass_spec':
+            _editor.glass_inserts();
             break;
 
           case 'delete':
@@ -488,6 +499,36 @@ class EditorAccordion {
         {id: "info", type: "text", text: ""},
       ],
     });
+    this._stv._otoolbar = new $p.iface.OTooolBar({
+      wrapper: this._stv.cell,
+      width: '100%',
+      height: '28px',
+      top: '6px',
+      left: '4px',
+      class_name: "",
+      name: 'bottom',
+      image_path: 'dist/imgs/',
+      buttons: [
+        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
+
+      ], onclick: (name) => {
+
+        switch(name) {
+
+          case 'refill':
+            const {_obj} = this.stv._grid;
+            _obj.furn.refill_prm(_obj);
+            this.stv.reload();
+            break;
+
+          default:
+            $p.msg.show_msg(name);
+            break;
+        }
+
+        return false;
+      }
+    });
     this.stv = new StvProps(this._stv);
 
     this._prod = this.tabbar.cells('prod');
@@ -523,6 +564,10 @@ class EditorAccordion {
     });
     this.props = new SchemeProps(this._prod);
 
+    this.log = $p.ireg.log.form_list(this.tabbar.cells('log'), {
+      hide_header: true,
+      hide_text: true
+    });
 
   }
 
@@ -1171,6 +1216,17 @@ class Editor extends paper.PaperScope {
 
   glass_inserts(elm){
 
+    if(!elm){
+      elm = this.project.selected_elm;
+    }
+    if(!(elm instanceof Filling)){
+      return $p.msg.show_msg({
+        type: "alert-info",
+        text: $p.msg.glass_invalid_elm,
+        title: $p.msg.glass_spec
+      });
+    }
+
     const options = {
       name: 'glass_inserts',
       wnd: {
@@ -1230,14 +1286,10 @@ class Editor extends paper.PaperScope {
       cnstr = 0;
       caption+= ' в изделие';
       meta_fields.inset.choice_params[0].path = ["Изделие"];
-
     }
     else if(cnstr == 'elm'){
       cnstr = this.project.selected_elm;
-      if(cnstr instanceof Filling){
-        return this.glass_inserts(cnstr);
-      }
-      else if(cnstr){
+      if(cnstr){
         this.project.ox.add_inset_params(cnstr.inset, -cnstr.elm, $p.utils.blank.guid);
         caption+= ' элем. №' + cnstr.elm;
         cnstr = -cnstr.elm;
@@ -1251,7 +1303,6 @@ class Editor extends paper.PaperScope {
       cnstr = this.project.activeLayer.cnstr
       caption+= ' в контур №' + cnstr;
       meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Контур"];
-
     }
 
     const options = {
@@ -1770,6 +1821,8 @@ $p.Editor = Editor;
 	msg.align_all = "Установить прямые углы или уравнять по заполнениям";
 	msg.align_invalid_direction = "Неприменимо для элемента с данной ориентацией";
 
+  msg.arc_invalid_elm = "Укажите профиль на эскизе";
+
 	msg.bld_constructor = "Конструктор объектов графического построителя";
 	msg.bld_title = "Графический построитель";
 	msg.bld_empty_param = "Не заполнен обязательный параметр <br />";
@@ -1784,9 +1837,11 @@ $p.Editor = Editor;
 	msg.bld_new_stv = "Добавить створку";
 	msg.bld_new_stv_no_filling = "Перед добавлением створки, укажите заполнение,<br />в которое поместить створку";
   msg.bld_arc = "Радиус сегмента профиля";
-  msg.arc_invalid_elm = "Укажите профиль на эскизе";
 
 	msg.del_elm = "Удалить элемент";
+
+  msg.glass_spec = "Состав заполнения";
+  msg.glass_invalid_elm = "Укажите заполнение на эскизе";
 
   msg.to_contour = "в контур";
   msg.to_elm = "в элемент";

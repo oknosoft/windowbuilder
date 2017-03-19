@@ -3555,6 +3555,15 @@ $p.CatFurns.prototype.__define({
 			const {direction} = $p.job_prm.properties;
 
 			const aprm = furn.furn_set.add_furn_prm();
+      aprm.sort((a, b) => {
+        if (a.presentation > b.presentation) {
+          return 1;
+        }
+        if (a.presentation < b.presentation) {
+          return -1;
+        }
+        return 0;
+      });
 
 			aprm.forEach((v) => {
 
@@ -4000,9 +4009,7 @@ $p.CatPartners.prototype.__define({
 });
 
 
-
 $p.cat.production_params.__define({
-
 
 	slist: function(prop, is_furn){
 		var res = [], rt, at, pmgr,
@@ -4032,7 +4039,6 @@ $p.cat.production_params.__define({
 
 $p.CatProduction_params.prototype.__define({
 
-
 	noms: {
 		get: function(){
 			var __noms = [];
@@ -4043,7 +4049,6 @@ $p.CatProduction_params.prototype.__define({
 			return __noms;
 		}
 	},
-
 
 	inserts: {
 		value: function(elm_types, by_default){
@@ -4094,7 +4099,6 @@ $p.CatProduction_params.prototype.__define({
 		}
 	},
 
-
 	refill_prm: {
 		value: function (ox, cnstr) {
 
@@ -4137,7 +4141,7 @@ $p.CatProduction_params.prototype.__define({
 				ox.sys = this;
 				ox.owner = ox.prod_nom;
 
-				ox.constructions.forEach(function (row) {
+				ox.constructions.forEach((row) => {
 					if(!row.furn.empty())
 						ox.sys.refill_prm(ox, row.cnstr);
 				})

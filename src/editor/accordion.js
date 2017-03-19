@@ -361,7 +361,12 @@ class EditorAccordion {
         id: "prod",
         text: '<i class="fa fa-picture-o fa-fw"></i>',
         title: 'Свойства изделия',
-      }
+      },
+      {
+        id: "log",
+        text: '<i class="fa fa-clock-o fa-fw"></i>',
+        title: 'Журнал событий',
+      },
     ];
     this.tabbar = cell_acc.attachTabbar({
       arrows_mode: "auto",
@@ -394,6 +399,8 @@ class EditorAccordion {
         {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
+        {name: 'glass_spec', text: '<i class="fa fa-list-ul fa-fw"></i>', tooltip: $p.msg.glass_spec + ' ' + $p.msg.to_elm, float: 'left'},
+        {name: 'sep_1', text: '', float: 'left'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
         {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
       ],
@@ -406,6 +413,10 @@ class EditorAccordion {
 
           case 'additional_inserts':
             _editor.additional_inserts('elm');
+            break;
+
+          case 'glass_spec':
+            _editor.glass_inserts();
             break;
 
           case 'delete':
@@ -511,6 +522,36 @@ class EditorAccordion {
         {id: "info", type: "text", text: ""},
       ],
     });
+    this._stv._otoolbar = new $p.iface.OTooolBar({
+      wrapper: this._stv.cell,
+      width: '100%',
+      height: '28px',
+      top: '6px',
+      left: '4px',
+      class_name: "",
+      name: 'bottom',
+      image_path: 'dist/imgs/',
+      buttons: [
+        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
+
+      ], onclick: (name) => {
+
+        switch(name) {
+
+          case 'refill':
+            const {_obj} = this.stv._grid;
+            _obj.furn.refill_prm(_obj);
+            this.stv.reload();
+            break;
+
+          default:
+            $p.msg.show_msg(name);
+            break;
+        }
+
+        return false;
+      }
+    });
     this.stv = new StvProps(this._stv);
 
     /**
@@ -549,6 +590,13 @@ class EditorAccordion {
     });
     this.props = new SchemeProps(this._prod);
 
+    /**
+     * журнал событий
+     */
+    this.log = $p.ireg.log.form_list(this.tabbar.cells('log'), {
+      hide_header: true,
+      hide_text: true
+    });
 
   }
 

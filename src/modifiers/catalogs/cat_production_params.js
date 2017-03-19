@@ -169,7 +169,7 @@ $p.CatProduction_params.prototype.__define({
 				ox.owner = ox.prod_nom;
 
 				// одновременно, перезаполним параметры фурнитуры
-				ox.constructions.forEach(function (row) {
+				ox.constructions.forEach((row) => {
 					if(!row.furn.empty())
 						ox.sys.refill_prm(ox, row.cnstr);
 				})

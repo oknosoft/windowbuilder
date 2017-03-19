@@ -18,6 +18,8 @@ export default function ($p) {
     align_all: "Установить прямые углы",
     align_invalid_direction: "Неприменимо для элемента с данной ориентацией",
 
+    arc_invalid_elm = "Укажите профиль на эскизе",
+
     bld_constructor: "Конструктор объектов графического построителя",
     bld_title: "Графический построитель",
     bld_empty_param: "Не заполнен обязательный параметр <br />",
@@ -32,6 +34,9 @@ export default function ($p) {
     bld_new_stv_no_filling: "Перед добавлением створки, укажите заполнение,<br />в которое поместить створку",
 
     del_elm: "Удалить элемент",
+
+    glass_spec: "Состав заполнения",
+
     to_contour: "в контур",
     to_elm: "в элемент",
     to_product: "в изделие",
