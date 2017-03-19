@@ -3596,9 +3596,7 @@ $p.CatFurns.prototype.__define({
 				if(aprm.indexOf(row.param) == -1)
 					adel.push(row);
 			});
-			adel.forEach((row) => {
-				fprms.del(row, true);
-			});
+			adel.forEach((row) => fprms.del(row, true));
 
 		}
 	},
@@ -4685,20 +4683,16 @@ $p.CchProperties.prototype.__define({
     }
   },
 
-  filter_params_links: {
-    value: function (filter, attr) {
+  params_links: {
+    value: function (attr) {
 
       if(!this.hasOwnProperty("_params_links")){
         this._params_links = $p.cat.params_links.find_rows({slave: this})
       }
-      if(!this._params_links.length){
-        return;
-      }
 
-      this._params_links.forEach((link) => {
+      return this._params_links.filter((link) => {
         let ok = true;
         link.master.params.forEach((row) => {
-
           ok = row.property.check_condition({
             cnstr: attr.grid.selection.cnstr,
             ox: attr.obj._owner._owner,
@@ -4707,22 +4701,26 @@ $p.CchProperties.prototype.__define({
           if(!ok){
             return false;
           }
-
         });
-        if(ok){
-          if(!filter.ref){
-            filter.ref = {in: []}
-          }
-          if(filter.ref.in){
-            link.values._obj.forEach((row) => {
-              if(filter.ref.in.indexOf(row.value) == -1){
-                filter.ref.in.push(row.value);
-              }
-            });
-          }
+        return ok;
+      });
+    }
+  },
+
+  filter_params_links: {
+    value: function (filter, attr) {
+      this.params_links(attr).forEach((link) => {
+        if(!filter.ref){
+          filter.ref = {in: []}
+        }
+        if(filter.ref.in){
+          link.values._obj.forEach((row) => {
+            if(filter.ref.in.indexOf(row.value) == -1){
+              filter.ref.in.push(row.value);
+            }
+          });
         }
       });
-
     }
   }
 

@@ -75,13 +75,14 @@ $p.CatFurns.prototype.__define({
 				if(aprm.indexOf(row.param) == -1)
 					adel.push(row);
 			});
-			adel.forEach((row) => {
-				fprms.del(row, true);
-			});
+			adel.forEach((row) => fprms.del(row, true));
 
 		}
 	},
 
+  /**
+   * Вытягивает массив используемых фурнитурой и вложенными наборами параметров
+   */
 	add_furn_prm: {
 		value: function (aprm = [], afurn_set = []) {
 

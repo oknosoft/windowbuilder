@@ -212,6 +212,10 @@ class StvProps {
 
     if(!this._grid){
       this._grid = this.layout.attachHeadFields(attr);
+      this._grid.attachEvent("onPropertyChanged", (pname, new_value) => {
+        pname = this._grid && this._grid.getSelectedRowId();
+        setTimeout(() => this.on_prm_change(pname, new_value))
+      });
     }else{
       this._grid.attach(attr);
     }
@@ -223,6 +227,36 @@ class StvProps {
         this._grid.closeItem(rids.split(",")[0]);
       }
     }
+  }
+
+  on_prm_change(field, value) {
+
+    const pnames = field && field.split('|');
+    const {_grid} = this;
+
+    if(!field || !_grid || pnames.length < 2){
+      return;
+    }
+
+    const {_obj} = _grid;
+
+    // пробегаем по всем строкам
+    _obj.params.find_rows({
+      cnstr: _obj.cnstr || -9999,
+      inset: $p.utils.blank.guid,
+      hide: {not: true}
+    }, (row) => {
+      const hide = row.param.params_links({
+        grid: _grid,
+        obj: row
+      })
+        .some((link) => link.hide);
+
+      const hrow = _grid.getRowById('params|'+row.param);
+      if (hrow && ((hide && (hrow.style.display != "none")) || (!hide && (hrow.style.display == "none")))){
+        _grid.setRowHidden('params|'+row.param, hide);
+      }
+    })
 
   }
 

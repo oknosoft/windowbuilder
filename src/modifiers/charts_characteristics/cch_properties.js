@@ -301,28 +301,20 @@ $p.CchProperties.prototype.__define({
   },
 
   /**
-   * ### Дополняет отбор фильтром по параметрам выбора
-   * Используется в полях ввода экранных форм
-   * @param filter {Object} - дополняемый фильтр
-   * @param attr {Object} - атрибуты OCombo
+   * Возвращает массив связей текущего параметра
    */
-  filter_params_links: {
-    value: function (filter, attr) {
+  params_links: {
+    value: function (attr) {
 
       // первым делом, выясняем, есть ли ограничитель на текущий параметр
       if(!this.hasOwnProperty("_params_links")){
         this._params_links = $p.cat.params_links.find_rows({slave: this})
       }
-      if(!this._params_links.length){
-        return;
-      }
 
-      // для всех возможных связей параметров
-      this._params_links.forEach((link) => {
+      return this._params_links.filter((link) => {
         let ok = true;
         // для всех записей ключа параметров
         link.master.params.forEach((row) => {
-
           // выполнение условия рассчитывает объект CchProperties
           ok = row.property.check_condition({
             cnstr: attr.grid.selection.cnstr,
@@ -332,23 +324,34 @@ $p.CchProperties.prototype.__define({
           if(!ok){
             return false;
           }
-
         });
+        return ok;
+      });
+    }
+  },
+
+  /**
+   * ### Дополняет отбор фильтром по параметрам выбора
+   * Используется в полях ввода экранных форм
+   * @param filter {Object} - дополняемый фильтр
+   * @param attr {Object} - атрибуты OCombo
+   */
+  filter_params_links: {
+    value: function (filter, attr) {
+      // для всех отфильтрованных связей параметров
+      this.params_links(attr).forEach((link) => {
         // если ключ найден в параметрах, добавляем фильтр
-        if(ok){
-          if(!filter.ref){
-            filter.ref = {in: []}
-          }
-          if(filter.ref.in){
-            link.values._obj.forEach((row) => {
-              if(filter.ref.in.indexOf(row.value) == -1){
-                filter.ref.in.push(row.value);
-              }
-            });
-          }
+        if(!filter.ref){
+          filter.ref = {in: []}
+        }
+        if(filter.ref.in){
+          link.values._obj.forEach((row) => {
+            if(filter.ref.in.indexOf(row.value) == -1){
+              filter.ref.in.push(row.value);
+            }
+          });
         }
       });
-
     }
   }
 
