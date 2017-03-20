@@ -267,22 +267,7 @@ class StvProps {
       }
 
       if(realy_changed && links.length){
-        const values = [];
-        links.forEach((link) => link.values.forEach((row) => values.push(row)));
-        if(values.some((row) => row._obj.value == prow.value)){
-          return;
-        }
-        if(values.some((row) => {
-          if(row.by_default || row.forcibly){
-            prow.value = row._obj.value;
-            return true;
-          }
-        })){
-          return;
-        }
-        if(values.length){
-          prow.value = values[0]._obj.value;
-        }
+        param.linked_values(links, prow);
       }
     });
 
@@ -3111,21 +3096,23 @@ Contour.prototype.__define({
 
 	w: {
 		get : function(){
-			if(!this.is_rectangular){
+      const {is_rectangular, bounds} = this;
+			if(!is_rectangular){
         return 0;
       }
-      const profiles = this.profiles_by_side();
-			return this.bounds ? this.bounds.width - profiles.left.nom.sizefurn - profiles.right.nom.sizefurn : 0;
+      const {left, right} = this.profiles_by_side();
+			return bounds ? bounds.width - left.nom.sizefurn - right.nom.sizefurn : 0;
 		}
 	},
 
 	h: {
 		get : function(){
-			if(!this.is_rectangular){
+      const {is_rectangular, bounds} = this;
+			if(!is_rectangular){
         return 0;
       }
-      const profiles = this.profiles_by_side();
-			return this.bounds ? this.bounds.height - profiles.top.nom.sizefurn - profiles.bottom.nom.sizefurn : 0;
+      const {top, bottom} = this.profiles_by_side();
+			return bounds ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
 		}
 	},
 

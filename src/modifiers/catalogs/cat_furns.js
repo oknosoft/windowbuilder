@@ -58,15 +58,24 @@ $p.CatFurns.prototype.__define({
           prm_row = fprms.add({param: v, cnstr: cnstr}, true);
         }
 
+        // умолчания и скрытость по табчасти системы
+        const {param} = prm_row;
         project._dp.sys.furn_params.each((row) => {
-					if(row.param == prm_row.param){
+					if(row.param == param){
 						if(row.forcibly || forcibly){
               prm_row.value = row.value;
             }
-						prm_row.hide = row.hide || row.param.is_calculated;
+						prm_row.hide = row.hide || param.is_calculated;
 						return false;
 					}
 				});
+
+				// умолчания по связям параметров
+        param.linked_values(param.params_links({
+          grid: {selection: {cnstr: cnstr}},
+          obj: {_owner: {_owner: project.ox}}
+        }), prm_row);
+
 			});
 
 			// удаляем лишние строки

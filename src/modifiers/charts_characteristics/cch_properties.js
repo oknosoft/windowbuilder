@@ -330,6 +330,30 @@ $p.CchProperties.prototype.__define({
     }
   },
 
+  linked_values: {
+    value: function (links, prow) {
+      const values = [];
+      links.forEach((link) => link.values.forEach((row) => values.push(row)));
+      // если значение доступно в списке - спокойно уходим
+      if(values.some((row) => row._obj.value == prow.value)){
+        return;
+      }
+      // если есть явный default - устанавливаем
+      if(values.some((row) => {
+          if(row.by_default || row.forcibly){
+            prow.value = row._obj.value;
+            return true;
+          }
+        })){
+        return;
+      }
+      // если не нашли лучшего, установим первый попавшийся
+      if(values.length){
+        prow.value = values[0]._obj.value;
+      }
+    }
+  },
+
   /**
    * ### Дополняет отбор фильтром по параметрам выбора
    * Используется в полях ввода экранных форм
