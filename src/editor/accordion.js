@@ -210,11 +210,12 @@ class StvProps {
       }
     };
 
+    // создаём или переподключаем грид
     if(!this._grid){
       this._grid = this.layout.attachHeadFields(attr);
       this._grid.attachEvent("onPropertyChanged", (pname, new_value) => {
         pname = this._grid && this._grid.getSelectedRowId();
-        setTimeout(() => this.on_prm_change(pname, new_value))
+        setTimeout(() => this.on_prm_change(pname, new_value, true));
       });
     }else{
       this._grid.attach(attr);
@@ -227,9 +228,18 @@ class StvProps {
         this._grid.closeItem(rids.split(",")[0]);
       }
     }
+
+    // пробегаем в цикле по параметрам, чтобы спрятать скрытые строки
+    obj.params.find_rows({
+      cnstr: obj.cnstr || -9999,
+      inset: $p.utils.blank.guid,
+      hide: {not: true}
+    }, ({param}) => this.on_prm_change('params|'+param));
+    this._grid.setSizes();
+
   }
 
-  on_prm_change(field, value) {
+  on_prm_change(field, value, realy_changed) {
 
     const pnames = field && field.split('|');
     const {_grid} = this;
@@ -239,25 +249,60 @@ class StvProps {
     }
 
     const {_obj} = _grid;
+    let need_set_sizes;
 
     // пробегаем по всем строкам
     _obj.params.find_rows({
       cnstr: _obj.cnstr || -9999,
       inset: $p.utils.blank.guid,
       hide: {not: true}
-    }, (row) => {
-      const hide = row.param.params_links({
-        grid: _grid,
-        obj: row
-      })
-        .some((link) => link.hide);
-
-      const hrow = _grid.getRowById('params|'+row.param);
-      if (hrow && ((hide && (hrow.style.display != "none")) || (!hide && (hrow.style.display == "none")))){
-        _grid.setRowHidden('params|'+row.param, hide);
+    }, (prow) => {
+      const {param} = prow;
+      if(param == value){
+        return;
       }
-    })
+      const links = param.params_links({grid: _grid,obj: prow});
+      const hide = links.some((link) => link.hide);
+      const row = _grid.getRowById('params|'+param);
 
+      if (row){
+        if (hide && (row.style.display != "none")){
+          row.style.display="none";
+          need_set_sizes = realy_changed;
+        }
+        if (!hide && (row.style.display == "none")){
+          row.style.display="";
+          need_set_sizes = realy_changed;
+        }
+      }
+
+      // проверим вхождение значения в доступные и при необходимости изменим
+      if(realy_changed && links.length){
+        const values = [];
+        links.forEach((link) => link.values.forEach((row) => values.push(row)));
+        // если значение доступно в списке - спокойно уходим
+        if(values.some((row) => row._obj.value == prow.value)){
+          return;
+        }
+        // если есть явный default - устанавливаем
+        if(values.some((row) => {
+          if(row.by_default || row.forcibly){
+            prow.value = row._obj.value;
+            return true;
+          }
+        })){
+          return;
+        }
+        // если не нашли лучшего, установим первый попавшийся
+        if(values.length){
+          prow.value = values[0]._obj.value;
+        }
+      }
+    });
+
+    if(need_set_sizes){
+      _grid.setSizes();
+    }
   }
 
   reload() {
