@@ -277,16 +277,15 @@ class Pricing {
 
     // себестоимость вытянутых строк спецификации в заказ
     if(prm.order_rows){
-      for(var rid in prm.order_rows){
-        var fake_prm = {
-          spec: prm.order_rows[rid].characteristic.specification,
-          calc_order_row: prm.order_rows[rid]
+      prm.order_rows.forEach((value) => {
+        const fake_prm = {
+          spec: value.characteristic.specification,
+          calc_order_row: value
         }
         this.price_type(fake_prm)
         this.calc_first_cost(fake_prm)
-      }
+      })
     }
-
   }
 
   /**

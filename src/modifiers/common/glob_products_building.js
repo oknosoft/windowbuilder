@@ -1122,31 +1122,26 @@ function ProductsBuilding(){
   function inset_contour_spec(contour) {
 
     // во время расчетов возможна подмена объекта спецификации
-    var spec_tmp = spec;
+    const spec_tmp = spec;
 
-    ox.inserts.find_rows({cnstr: contour.cnstr}, function (irow) {
-      var elm = {
+    ox.inserts.find_rows({cnstr: contour.cnstr}, ({inset, clr}) => {
+
+      const elm = {
         _row: {},
         elm: 0,
         clr: ox.clr,
         get perimeter() {return contour.perimeter}
-      },
-        inset = irow.inset;
+      };
 
       // если во вставке указано создавать продукцию, создаём
       if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
-
-        // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём
-        var cx = find_create_cx(-contour.cnstr, inset.ref);
+        // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
+        const cx = find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
         ox._order_rows.push(cx);
-
-        // дозаполняем реквизиты характеристики
-        cx._mixin(inset.contour_attrs(contour));
-
       }
 
       // рассчитаем спецификацию вставки
-      var len_angl = {
+      const len_angl = {
         angle: 0,
         alp1: 0,
         alp2: 0,
@@ -1158,7 +1153,7 @@ function ProductsBuilding(){
       spec.clear();
       inset_spec(elm, inset, len_angl);
 
-    })
+    });
 
     // восстанавливаем исходную ссылку объекта спецификации
     spec = spec_tmp;
@@ -1241,6 +1236,8 @@ function ProductsBuilding(){
 
 		// типы цен получаем заранее, т.к. они пригодятся при расчете корректировки спецификации
 		const prm = {
+      scheme: scheme,
+      ox: ox,
 			calc_order_row: ox.calc_order_row,
 			spec: spec
 		};
