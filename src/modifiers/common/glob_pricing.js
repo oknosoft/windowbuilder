@@ -197,8 +197,6 @@ class Pricing {
     if(ares.length){
       ares.sort((a, b) => {
 
-        a.key.priority
-
         if (a.key.priority > b.key.priority) {
           return -1;
         }
@@ -245,8 +243,8 @@ class Pricing {
    */
   calc_first_cost(prm) {
 
-    var marginality_in_spec = $p.job_prm.pricing.marginality_in_spec,
-      fake_row = {}, tmp_price;
+    const marginality_in_spec = $p.job_prm.pricing.marginality_in_spec;
+    const fake_row = {};
 
     if(!prm.spec)
       return;
@@ -260,7 +258,7 @@ class Pricing {
 
         if(marginality_in_spec){
           fake_row._mixin(row, ["nom"]);
-          tmp_price = $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_sale, prm, fake_row);
+          const tmp_price = $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_sale, prm, fake_row);
           row.amount_marged = (tmp_price ? tmp_price : row.price) * row.totqty1;
         }
 
@@ -276,16 +274,14 @@ class Pricing {
     }
 
     // себестоимость вытянутых строк спецификации в заказ
-    if(prm.order_rows){
-      prm.order_rows.forEach((value) => {
-        const fake_prm = {
-          spec: value.characteristic.specification,
-          calc_order_row: value
-        }
-        this.price_type(fake_prm)
-        this.calc_first_cost(fake_prm)
-      })
-    }
+    prm.order_rows && prm.order_rows.forEach((value) => {
+      const fake_prm = {
+        spec: value.characteristic.specification,
+        calc_order_row: value
+      }
+      this.price_type(fake_prm);
+      this.calc_first_cost(fake_prm);
+    });
   }
 
   /**
@@ -339,16 +335,14 @@ class Pricing {
     }
 
     // Цены и суммы вытянутых строк спецификации в заказ
-    if(prm.order_rows){
-      for(let rid in prm.order_rows){
-        const fake_prm = {
-          spec: prm.order_rows[rid].characteristic.specification,
-          calc_order_row: prm.order_rows[rid]
-        }
-        this.price_type(fake_prm);
-        this.calc_amount(fake_prm);
+    prm.order_rows && prm.order_rows.forEach((value) => {
+      const fake_prm = {
+        spec: value.characteristic.specification,
+        calc_order_row: value
       }
-    }
+      this.price_type(fake_prm);
+      this.calc_amount(fake_prm);
+    });
 
   }
 
@@ -362,8 +356,10 @@ class Pricing {
    */
   from_currency_to_currency (amount, date, from, to) {
 
+    const {main_currency} = $p.job_prm.pricing;
+
     if(!to || to.empty()){
-      to = $p.job_prm.pricing.main_currency;
+      to = main_currency;
     }
     if(!from || from == to){
       return amount;
@@ -376,15 +372,14 @@ class Pricing {
     }
 
     let cfrom = {course: 1, multiplicity: 1},
-      cto = {course: 1, multiplicity: 1},
-      tmp;
-    if(from != $p.job_prm.pricing.main_currency){
-      tmp = this.cource_sql([from.ref, date]);
+      cto = {course: 1, multiplicity: 1};
+    if(from != main_currency){
+      const tmp = this.cource_sql([from.ref, date]);
       if(tmp.length)
         cfrom = tmp[0];
     }
-    if(to != $p.job_prm.pricing.main_currency){
-      tmp = this.cource_sql([to.ref, date]);
+    if(to != main_currency){
+      const tmp = this.cource_sql([to.ref, date]);
       if(tmp.length)
         cto = tmp[0];
     }
@@ -409,7 +404,7 @@ class Pricing {
     }
 
     function upload_acc() {
-      var mgrs = [
+      const mgrs = [
         "cat.users",
         "cat.individuals",
         "cat.organizations",
@@ -432,29 +427,27 @@ class Pricing {
       ];
 
       $p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
-        filter: function (doc) {
-          return mgrs.indexOf(doc._id.split("|")[0]) != -1;
-        }
+        filter: (doc) => mgrs.indexOf(doc._id.split("|")[0]) != -1
       })
-        .on('change', function (info) {
+        .on('change', (info) => {
           //handle change
 
         })
-        .on('paused', function (err) {
+        .on('paused', (err) => {
           // replication paused (e.g. replication up to date, user went offline)
 
         })
-        .on('active', function () {
+        .on('active', () => {
           // replicate resumed (e.g. new changes replicating, user went back online)
 
         })
-        .on('denied', function (err) {
+        .on('denied', (err) => {
           // a document failed to replicate (e.g. due to permissions)
           $p.msg.show_msg(err.reason);
           $p.record_log(err);
 
         })
-        .on('complete', function (info) {
+        .on('complete', (info) => {
 
           if($p.current_acl.role_available("ИзменениеТехнологическойНСИ"))
             upload_tech();
@@ -467,7 +460,7 @@ class Pricing {
             });
 
         })
-        .on('error', function (err) {
+        .on('error', (err) => {
           $p.msg.show_msg(err.reason);
           $p.record_log(err);
 
@@ -475,7 +468,7 @@ class Pricing {
     }
 
     function upload_tech() {
-      var mgrs = [
+      const mgrs = [
         "cat.units",
         "cat.nom",
         "cat.nom_groups",
@@ -500,29 +493,27 @@ class Pricing {
       ];
 
       $p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
-        filter: function (doc) {
-          return mgrs.indexOf(doc._id.split("|")[0]) != -1;
-        }
+        filter: (doc) => mgrs.indexOf(doc._id.split("|")[0]) != -1
       })
-        .on('change', function (info) {
+        .on('change', (info) => {
           //handle change
 
         })
-        .on('paused', function (err) {
+        .on('paused', (err) => {
           // replication paused (e.g. replication up to date, user went offline)
 
         })
-        .on('active', function () {
+        .on('active', () => {
           // replicate resumed (e.g. new changes replicating, user went back online)
 
         })
-        .on('denied', function (err) {
+        .on('denied', (err) => {
           // a document failed to replicate (e.g. due to permissions)
           $p.msg.show_msg(err.reason);
           $p.record_log(err);
 
         })
-        .on('complete', function (info) {
+        .on('complete', (info) => {
           $p.msg.show_msg({
             type: "alert-info",
             text: $p.msg.sync_complite,
@@ -530,13 +521,12 @@ class Pricing {
           });
 
         })
-        .on('error', function (err) {
+        .on('error', (err) => {
           $p.msg.show_msg(err.reason);
           $p.record_log(err);
 
         });
     }
-
 
     if($p.current_acl.role_available("СогласованиеРасчетовЗаказов"))
       upload_acc();

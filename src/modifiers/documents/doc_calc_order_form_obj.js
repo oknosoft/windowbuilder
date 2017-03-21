@@ -631,16 +631,10 @@
 		}
 
 		function open_spec(){
-			var selId, row;
-
-			if((selId = production_get_sel_index()) != undefined){
-				row = o.production.get(selId);
-				if(row && !$p.utils.is_empty_guid(row.characteristic.ref)){
-					row.characteristic.form_obj()
-						.then(function (w) {
-							w.wnd.maximize();
-						});
-				}
+		  const selId = production_get_sel_index();
+			if(selId != undefined){
+				const row = o.production.get(selId);
+        row && !row.characteristic.empty() && row.characteristic.form_obj().then((w) => w.wnd.maximize());
 			}
 		}
 
@@ -648,13 +642,13 @@
 		 * добавляет строку материала
 		 */
 		function add_material(){
-			var row = production_new_row(),
-				grid = wnd.elmnts.grids.production,
-				cell;
-			grid.selectCell(row.row-1, grid.getColIndexById("nom"), false, true, true);
-			cell = grid.cells();
-			cell.edit();
-			cell.open_selection();
+			const row = production_new_row().row-1;
+			setTimeout(() => {
+        const grid = wnd.elmnts.grids.production;
+        grid.selectRow(row);
+        grid.selectCell(row, grid.getColIndexById("nom"), false, true, true);
+        grid.cells().open_selection();
+      })
 		}
 
 		/**

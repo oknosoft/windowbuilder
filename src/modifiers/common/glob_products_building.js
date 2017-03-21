@@ -1012,12 +1012,12 @@ function ProductsBuilding(){
 	 */
 	function inset_spec(elm, inset, len_angl) {
 
-		var _row = elm._row;
+		const {_row} = elm;
 
 		if(!inset)
 			inset = elm.inset;
 
-		inset_filter_spec(inset, elm, true, len_angl).forEach(function (row_ins_spec) {
+		inset_filter_spec(inset, elm, true, len_angl).forEach((row_ins_spec) => {
 
 		  const origin = row_ins_spec._origin || inset;
 
@@ -1043,20 +1043,21 @@ function ProductsBuilding(){
 					row_ins: row_ins_spec,
 					row_spec: row_spec
 				});
-
-			}else if($p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1 ||
+			}
+			else if($p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1 ||
 				row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ДляЭлемента){
 				// для вставок в профиль способ расчета количество не учитывается
 				calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
-
-			}else{
+			}
+			else{
 
 				if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПлощади){
 					row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz)/1000;
 					row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz)/1000;
 					row_spec.s = _row.s;
 
-				}else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру){
+				}
+				else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру){
 					var row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
 					elm.perimeter.forEach(function (rib) {
 						row_prm._row._mixin(rib);
@@ -1068,30 +1069,30 @@ function ProductsBuilding(){
 						row_spec = null;
 					});
 
-				}else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоШагам){
+				}
+				else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоШагам){
 
 					var h = _row.y2 - _row.y1, w = _row.x2 - _row.x1;
 					if((row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьШагиВторогоНаправления ||
 						row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление) && row_ins_spec.step){
 
-						for(var i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
+						for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
 							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
 							calc_qty_len(row_spec, row_ins_spec, w);
 							calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
 						}
 						row_spec = null;
 					}
-
-				}else{
+				}
+				else{
 					throw new Error("count_calc_method: " + row_ins_spec.count_calc_method);
 				}
-
 			}
 
-			if(row_spec)
-				calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
-
-		});
+			if(row_spec){
+        calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
+      }
+		})
 	}
 
   /**
@@ -1232,27 +1233,14 @@ function ProductsBuilding(){
 		$p.eve.callEvent("coordinates_calculated", [scheme, attr]);
 
 
-		// рассчитываем цены
-
-		// типы цен получаем заранее, т.к. они пригодятся при расчете корректировки спецификации
-		const prm = {
-      scheme: scheme,
-      ox: ox,
-			calc_order_row: ox.calc_order_row,
-			spec: spec
-		};
-		if(prm.calc_order_row){
-
-			$p.pricing.price_type(prm);
-
-			// производим корректировку спецификации с возможным вытягиванием строк в заказ и удалением строк из заказа
-			$p.spec_building.specification_adjustment(prm);
-
-			// рассчитываем плановую себестоимость
-			$p.pricing.calc_first_cost(prm);
-
-			// рассчитываем стоимость продажи
-			$p.pricing.calc_amount(prm);
+    // производим корректировку спецификации с возможным вытягиванием строк в заказ и удалением строк из заказа
+    // внутри корректировки будут рассчитаны цены продажи и плановой себестоимости
+		if(ox.calc_order_row){
+			$p.spec_building.specification_adjustment({
+        scheme: scheme,
+        calc_order_row: ox.calc_order_row,
+        spec: spec
+      }, true);
 		}
 
 		// информируем мир о завершении пересчета

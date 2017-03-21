@@ -1,3 +1,4 @@
+/* eslint-disable no-multiple-empty-lines,space-infix-ops */
 /**
  * Аналог УПзП-шного __ФормированиеСпецификацийСервер__
  * Содержит методы расчета спецификации без привязки к построителю. Например, по регистру корректировки спецификации
@@ -26,34 +27,45 @@ class SpecBuilding {
 
   /**
    * Аналог УПзП-шного РассчитатьСпецификацию_ПривязкиВставок
-   * @param attr
+   * @param attr {Object}
+   * @param with_price {Boolean}
    */
-  specification_adjustment (attr) {
+  specification_adjustment (attr, with_price) {
 
-    const {scheme, ox, calc_order_row, spec} = attr;
-    const {calc_order} = ox;
+    const {scheme, calc_order_row, spec} = attr;
+    const calc_order = calc_order_row._owner._owner ;
     const order_rows = new Map();
     const adel = [];
+    const ox = calc_order_row.characteristic;
+    const nom = ox.empty() ? calc_order_row.nom : ox.owner;
 
-    // var calc_order = attr.calc_order_row._owner._owner,
+    // типы цен получаем заранее, т.к. они могут пригодиться при расчете корректировки спецификации
+    $p.pricing.price_type(attr);
 
     // удаляем из спецификации строки, добавленные предыдущими корректировками
-    spec.find_rows({ch: {in: [-1,-2]}}, (row) => adel.push(row));
+    spec.find_rows({ch: {in: [-1, -2]}}, (row) => adel.push(row));
     adel.forEach((row) => spec.del(row, true));
+
+    // находим привязанные к номенклатуре вставки и выполняем
+    $p.cat.insert_bind.insets(nom).forEach((inset) => {
+
+    });
 
     // синхронизируем состав строк - сначала удаляем лишние
     adel.length = 0;
     calc_order.production.forEach((row) => {
-      if(row.ordn == ox){
-        if(ox._order_rows.indexOf(row.characteristic) == -1){
+      if (row.ordn === ox){
+        if (ox._order_rows.indexOf(row.characteristic) === -1){
           adel.push(row);
-        }else {
+        }
+        else {
           order_rows.set(row.characteristic, row);
         }
       }
     });
     adel.forEach((row) => calc_order.production.del(row.row-1));
 
+    // затем, добавляем в заказ строки, назначенные к вытягиванию
     ox._order_rows.forEach((cx) => {
       const row = order_rows.get(cx) || calc_order.production.add({characteristic: cx});
       row.nom = cx.owner;
@@ -68,9 +80,16 @@ class SpecBuilding {
       cx.save();
       order_rows.set(cx, row);
     });
-
     if(order_rows.size){
       attr.order_rows = order_rows;
+    }
+
+    if(with_price){
+      // рассчитываем плановую себестоимость
+      $p.pricing.calc_first_cost(attr);
+
+      // рассчитываем стоимость продажи
+      $p.pricing.calc_amount(attr);
     }
   }
 
@@ -78,6 +97,3 @@ class SpecBuilding {
 
 // Экспортируем экземпляр модуля
 $p.spec_building = new SpecBuilding($p);
-
-
-
