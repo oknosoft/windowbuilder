@@ -1313,7 +1313,12 @@ class Editor extends paper.PaperScope {
       }
     });
     wnd.attachEvent("onClose", () => {
-      elm && elm.redraw && elm.redraw();
+      wnd.elmnts.grids.inserts && wnd.elmnts.grids.inserts.editStop();
+      this.project.register_change(true);
+      elm && Object.getNotifier(elm).notify({
+        type: 'update',
+        name: 'inset'
+      });
       return true;
     });
 
@@ -2419,8 +2424,7 @@ Contour.prototype.__define({
 
 			function on_child_contour_redrawed(){
 				llength--;
-				if(!llength && on_redrawed)
-					on_redrawed();
+				!llength && on_redrawed && on_redrawed();
 			}
 
 			this.data._bounds = null;
@@ -2437,10 +2441,14 @@ Contour.prototype.__define({
 
       this.draw_opening();
 
+      this.draw_cnn_errors();
+
       this.children.forEach((child_contour) => {
 				if (child_contour instanceof Contour){
 					llength++;
-					child_contour.redraw(on_child_contour_redrawed);
+          if(!this.project.has_changes()){
+            child_contour.redraw(on_child_contour_redrawed);
+          }
 				}
 			});
 
@@ -2826,10 +2834,11 @@ Contour.prototype.__define({
 			var curve_nodes = [], path_nodes = [],
 				ipoint = path.interiorPoint.negate(),
 				i, curve, findedb, findede,
-				d, d1, d2, node1, node2;
+				d, node1, node2;
 
-			if(!nodes)
-				nodes = this.nodes;
+			if(!nodes){
+        nodes = this.nodes;
+      }
 
 			if(bind){
 				path.data.curve_nodes = curve_nodes;
@@ -2839,8 +2848,9 @@ Contour.prototype.__define({
 			for(i in path.curves){
 				curve = path.curves[i];
 
-				d1 = 10e12; d2 = 10e12;
-				nodes.forEach(function (n) {
+				let d1 = Infinity;
+				let d2 = Infinity;
+				nodes.forEach((n) => {
 					if((d = n.getDistance(curve.point1, true)) < d1){
 						d1 = d;
 						node1 = n;
@@ -3252,6 +3262,40 @@ Contour.prototype.__define({
 
 		}
 	},
+
+  draw_cnn_errors: {
+    value: function () {
+
+      const {l_visualization} = this;
+
+      if(l_visualization._cnn){
+        l_visualization._cnn.removeChildren();
+      }
+      else{
+        l_visualization._cnn = new paper.Group({ parent: l_visualization });
+      }
+
+      this.glasses(false, true).forEach((elm) => {
+        let err;
+        elm.profiles.forEach(({cnn, sub_path}) => {
+          if(!cnn){
+            sub_path.parent = l_visualization._cnn;
+            sub_path.strokeWidth = 4;
+            sub_path.strokeScaling = false;
+            sub_path.strokeColor = 'red';
+            sub_path.strokeCap = 'round';
+            sub_path.dashArray = [20, 10];
+            err = true;
+          }
+        })
+        elm.path.fillColor = err ? new paper.Color({
+            stops: ["#fee", "#fcc", "#fdd"],
+            origin: elm.path.bounds.bottomLeft,
+            destination: elm.path.bounds.topRight
+          }) : BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+      })
+    }
+  },
 
 	draw_visualization: {
 		value: function () {
@@ -3987,536 +4031,497 @@ class DimensionLineCustom extends DimensionLine {
 
 
 
-function BuilderElement(attr){
+class BuilderElement extends paper.Group {
 
-	BuilderElement.superclass.constructor.call(this);
+  constructor(attr) {
 
-	if(!attr.row){
-    attr.row = this.project.ox.coordinates.add();
-  }
+    super(attr);
 
-	this._row = attr.row;
-
-	if(attr.proto){
-
-		if(attr.proto.inset){
-      this.inset = attr.proto.inset;
+    if(!attr.row){
+      attr.row = this.project.ox.coordinates.add();
     }
 
-		if(attr.parent){
+    this._row = attr.row;
+
+    if(attr.proto){
+
+      if(attr.proto.inset){
+        this.inset = attr.proto.inset;
+      }
+
+      if(attr.parent){
+        this.parent = attr.parent;
+      }
+      else if(attr.proto.parent){
+        this.parent = attr.proto.parent;
+      }
+
+      if(attr.proto instanceof Profile){
+        this.insertBelow(attr.proto);
+      }
+
+      this.clr = attr.proto.clr;
+
+    }
+    else if(attr.parent){
       this.parent = attr.parent;
     }
-		else if(attr.proto.parent){
-      this.parent = attr.proto.parent;
+
+    if(!this._row.cnstr && this.layer.cnstr){
+      this._row.cnstr = this.layer.cnstr;
     }
 
-		if(attr.proto instanceof Profile){
-      this.insertBelow(attr.proto);
+    if(!this._row.elm){
+      this._row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
     }
 
-		this.clr = attr.proto.clr;
+    if(this._row.elm_type.empty() && !this.inset.empty()){
+      this._row.elm_type = this.inset.nom().elm_type;
+    }
 
-	}
-	else if(attr.parent){
-    this.parent = attr.parent;
+    this.project.register_change();
+
   }
 
-	if(!this._row.cnstr && this.layer.cnstr){
-    this._row.cnstr = this.layer.cnstr;
+  get owner() {
+    return this.data.owner;
+  }
+  set owner(v) {
+    this.data.owner = v;
   }
 
-	if(!this._row.elm){
-    this._row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+  get generatrix() {
+    return this.data.generatrix;
+  }
+  set generatrix(attr) {
+    this.data.generatrix.removeSegments();
+
+    if(this.hasOwnProperty('rays')){
+      this.rays.clear();
+    }
+
+    if(Array.isArray(attr)){
+      this.data.generatrix.addSegments(attr);
+    }
+    else if(attr.proto &&  attr.p1 &&  attr.p2){
+
+      let tpath = attr.proto;
+      if(tpath.getDirectedAngle(attr.ipoint) < 0){
+        tpath.reverse();
+      }
+
+      let d1 = tpath.getOffsetOf(attr.p1);
+      let d2 = tpath.getOffsetOf(attr.p2), d3;
+      if(d1 > d2){
+        d3 = d2;
+        d2 = d1;
+        d1 = d3;
+      }
+      if(d1 > 0){
+        tpath = tpath.split(d1);
+        d2 = tpath.getOffsetOf(attr.p2);
+      }
+      if(d2 < tpath.length){
+        tpath.split(d2);
+      }
+
+      this.data.generatrix.remove();
+      this.data.generatrix = tpath;
+      this.data.generatrix.parent = this;
+
+      if(this.layer.parent){
+        this.data.generatrix.guide = true;
+      }
+    }
   }
 
-	if(this._row.elm_type.empty() && !this.inset.empty()){
-    this._row.elm_type = this.inset.nom().elm_type;
+  get path() {
+    return this.data.path;
+  }
+  set path(attr) {
+    if(attr instanceof paper.Path){
+      this.data.path.removeSegments();
+      this.data.path.addSegments(attr.segments);
+      if(!this.data.path.closed){
+        this.data.path.closePath(true);
+      }
+    }
   }
 
-	this.project.register_change();
+  get _metadata() {
+    const t = this,
+      _meta = t.project.ox._metadata,
+      _xfields = _meta.tabular_sections.coordinates.fields, 
+      inset = Object.assign({}, _xfields.inset),
+      arc_h = Object.assign({}, _xfields.r, {synonym: "Высота дуги"}),
+      info = Object.assign({}, _meta.fields.note, {synonym: "Элемент"}),
+      cnn1 = Object.assign({}, _meta.tabular_sections.cnn_elmnts.fields.cnn),
+      cnn2 = Object.assign({}, cnn1),
+      cnn3 = Object.assign({}, cnn1);
+
+    function cnn_choice_links(o, cnn_point){
+
+      const nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
+
+      if($p.utils.is_data_obj(o)){
+        return nom_cnns.some((cnn) => o == cnn);
+      }
+      else{
+        let refs = "";
+        nom_cnns.forEach((cnn) => {
+          if(refs){
+            refs += ", ";
+          }
+          refs += "'" + cnn.ref + "'";
+        });
+        return "_t_.ref in (" + refs + ")";
+      }
+    }
 
 
-}
 
-BuilderElement._extend(paper.Group);
+    inset.choice_links = [{
+      name: ["selection",	"ref"],
+      path: [
+        function(o, f){
+          let selection;
 
-BuilderElement.prototype.__define({
-
-	owner: {
-		get : function(){ return this.data.owner; },
-		set : function(v){ this.data.owner = v; }
-	},
-
-	generatrix: {
-		get : function(){ return this.data.generatrix; },
-		set : function(attr){
-
-			this.data.generatrix.removeSegments();
-
-			if(this.hasOwnProperty('rays'))
-				this.rays.clear();
-
-			if(Array.isArray(attr))
-				this.data.generatrix.addSegments(attr);
-
-			else if(attr.proto &&  attr.p1 &&  attr.p2){
-
-				var tpath = attr.proto;
-				if(tpath.getDirectedAngle(attr.ipoint) < 0)
-					tpath.reverse();
-
-				var d1 = tpath.getOffsetOf(attr.p1),
-					d2 = tpath.getOffsetOf(attr.p2), d3;
-				if(d1 > d2){
-					d3 = d2;
-					d2 = d1;
-					d1 = d3;
-				}
-				if(d1 > 0){
-					tpath = tpath.split(d1);
-					d2 = tpath.getOffsetOf(attr.p2);
-				}
-				if(d2 < tpath.length)
-					tpath.split(d2);
-
-				this.data.generatrix.remove();
-				this.data.generatrix = tpath;
-				this.data.generatrix.parent = this;
-
-				if(this.parent.parent)
-					this.data.generatrix.guide = true;
-			}
-		},
-		enumerable : true
-	},
-
-	path: {
-		get : function(){ return this.data.path; },
-		set : function(attr){
-			if(attr instanceof paper.Path){
-				this.data.path.removeSegments();
-				this.data.path.addSegments(attr.segments);
-				if(!this.data.path.closed)
-					this.data.path.closePath(true);
-			}
-		},
-		enumerable : true
-	},
-
-	_metadata: {
-		get : function(){
-			const t = this,
-				_meta = t.project.ox._metadata,
-				_xfields = _meta.tabular_sections.coordinates.fields, 
-				inset = Object.assign({}, _xfields.inset),
-        arc_h = Object.assign({}, _xfields.r, {synonym: "Высота дуги"}),
-        info = Object.assign({}, _meta.fields.note, {synonym: "Элемент"}),
-				cnn1 = Object.assign({}, _meta.tabular_sections.cnn_elmnts.fields.cnn),
-				cnn2 = Object.assign({}, cnn1),
-				cnn3 = Object.assign({}, cnn1);
-
-			function cnn_choice_links(o, cnn_point){
-
-				const nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
-
-				if($p.utils.is_data_obj(o)){
-					return nom_cnns.some((cnn) => o == cnn);
-				}
-				else{
-					let refs = "";
-					nom_cnns.forEach((cnn) => {
-						if(refs){
-              refs += ", ";
+          if(t instanceof Filling){
+            if($p.utils.is_data_obj(o)){
+              return $p.cat.inserts._inserts_types_filling.indexOf(o.insert_type) != -1 &&
+                o.thickness >= t.project._dp.sys.tmin && o.thickness <= t.project._dp.sys.tmax;
             }
-						refs += "'" + cnn.ref + "'";
-					});
-					return "_t_.ref in (" + refs + ")";
-				}
-			}
-
-
-
-			inset.choice_links = [{
-				name: ["selection",	"ref"],
-				path: [
-					function(o, f){
-						let selection;
-
-						if(t instanceof Filling){
-							if($p.utils.is_data_obj(o)){
-								return $p.cat.inserts._inserts_types_filling.indexOf(o.insert_type) != -1 &&
-										o.thickness >= t.project._dp.sys.tmin && o.thickness <= t.project._dp.sys.tmax;
-							}
-							else{
-								let refs = "";
-								$p.cat.inserts.by_thickness(t.project._dp.sys.tmin, t.project._dp.sys.tmax).forEach((row) => {
-									if(refs){
-                    refs += ", ";
-                  }
-									refs += "'" + row.ref + "'";
-								});
-								return "_t_.ref in (" + refs + ")";
-							}
-						}
-						else if(t instanceof Profile){
-							if(t.nearest()){
-                selection = {elm_type: {in: [$p.enm.elm_types.Створка, $p.enm.elm_types.Добор]}};
-              }
-							else{
-                selection = {elm_type: {in: [$p.enm.elm_types.Рама, $p.enm.elm_types.Импост, $p.enm.elm_types.Добор]}};
-              }
-						}
-						else{
-              selection = {elm_type: t.nom.elm_type};
-            }
-
-						if($p.utils.is_data_obj(o)){
-							let ok = false;
-							selection.nom = o;
-							t.project._dp.sys.elmnts.find_rows(selection, (row) => {
-								ok = true;
-								return false;
-							});
-							return ok;
-						}else{
-							let refs = "";
-							t.project._dp.sys.elmnts.find_rows(selection, (row) => {
-								if(refs){
+            else{
+              let refs = "";
+              $p.cat.inserts.by_thickness(t.project._dp.sys.tmin, t.project._dp.sys.tmax).forEach((row) => {
+                if(refs){
                   refs += ", ";
                 }
-								refs += "'" + row.nom.ref + "'";
-							});
-							return "_t_.ref in (" + refs + ")";
-						}
-				}]}
-			];
-
-			cnn1.choice_links = [{
-				name: ["selection",	"ref"],
-				path: [
-					function(o, f){
-						return cnn_choice_links(o, t.rays.b);
-					}]}
-			];
-
-			cnn2.choice_links = [{
-				name: ["selection",	"ref"],
-				path: [
-					function(o, f){
-						return cnn_choice_links(o, t.rays.e);
-					}]}
-			];
-
-			cnn3.choice_links = [{
-				name: ["selection",	"ref"],
-				path: [
-					function(o){
-
-						const cnn_ii = t.selected_cnn_ii();
-						let nom_cnns;
-
-						if(cnn_ii.elm instanceof Filling){
-              nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
+                refs += "'" + row.ref + "'";
+              });
+              return "_t_.ref in (" + refs + ")";
             }
-						else if(cnn_ii.elm_type == $p.enm.elm_types.Створка && t.elm_type != $p.enm.elm_types.Створка){
-              nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
+          }
+          else if(t instanceof Profile){
+            if(t.nearest()){
+              selection = {elm_type: {in: [$p.enm.elm_types.Створка, $p.enm.elm_types.Добор]}};
             }
-						else{
-              nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
+            else{
+              selection = {elm_type: {in: [$p.enm.elm_types.Рама, $p.enm.elm_types.Импост, $p.enm.elm_types.Добор]}};
             }
+          }
+          else{
+            selection = {elm_type: t.nom.elm_type};
+          }
 
-						if($p.utils.is_data_obj(o)){
-							return nom_cnns.some((cnn) => o == cnn);
-						}
-						else{
-							var refs = "";
-							nom_cnns.forEach(function (cnn) {
-								if(refs)
-									refs += ", ";
-								refs += "'" + cnn.ref + "'";
-							});
-							return "_t_.ref in (" + refs + ")";
-						}
-					}]}
-			];
+          if($p.utils.is_data_obj(o)){
+            let ok = false;
+            selection.nom = o;
+            t.project._dp.sys.elmnts.find_rows(selection, (row) => {
+              ok = true;
+              return false;
+            });
+            return ok;
+          }
+          else{
+            let refs = "";
+            t.project._dp.sys.elmnts.find_rows(selection, (row) => {
+              if(refs){
+                refs += ", ";
+              }
+              refs += "'" + row.nom.ref + "'";
+            });
+            return "_t_.ref in (" + refs + ")";
+          }
+        }]}
+    ];
 
-			$p.cat.clrs.selection_exclude_service(_xfields.clr, t);
+    cnn1.choice_links = [{
+      name: ["selection",	"ref"],
+      path: [
+        function(o, f){
+          return cnn_choice_links(o, t.rays.b);
+        }]}
+    ];
 
-			return {
-				fields: {
-					info: info,
-					inset: inset,
-					clr: _xfields.clr,
-					x1: _xfields.x1,
-					x2: _xfields.x2,
-					y1: _xfields.y1,
-					y2: _xfields.y2,
-					cnn1: cnn1,
-					cnn2: cnn2,
-					cnn3: cnn3,
-          arc_h: arc_h,
-          r: _xfields.r,
-          arc_ccw: _xfields.arc_ccw
-				}
-			};
-		}
-	},
+    cnn2.choice_links = [{
+      name: ["selection",	"ref"],
+      path: [
+        function(o, f){
+          return cnn_choice_links(o, t.rays.e);
+        }]}
+    ];
 
-	_manager: {
-		get: function () {
-			return this.project._dp._manager;
-		}
-	},
+    cnn3.choice_links = [{
+      name: ["selection",	"ref"],
+      path: [
+        function(o){
 
-	nom:{
-		get : function(){
-			return this.inset.nom(this);
-		}
-	},
+          const cnn_ii = t.selected_cnn_ii();
+          let nom_cnns;
 
-	elm: {
-		get : function(){
-			return this._row ? this._row.elm : 0;
-		}
-	},
+          if(cnn_ii.elm instanceof Filling){
+            nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
+          }
+          else if(cnn_ii.elm_type == $p.enm.elm_types.Створка && t.elm_type != $p.enm.elm_types.Створка){
+            nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
+          }
+          else{
+            nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
+          }
 
-	info: {
-		get : function(){
-			return "№" + this.elm;
-		},
-		enumerable : true
-	},
+          if($p.utils.is_data_obj(o)){
+            return nom_cnns.some((cnn) => o == cnn);
+          }
+          else{
+            var refs = "";
+            nom_cnns.forEach(function (cnn) {
+              if(refs)
+                refs += ", ";
+              refs += "'" + cnn.ref + "'";
+            });
+            return "_t_.ref in (" + refs + ")";
+          }
+        }]}
+    ];
 
-	inset: {
-		get : function(){
-			return (this._row ? this._row.inset : null) || $p.cat.inserts.get();
-		},
-		set : function(v){
-			this.set_inset(v);
-		}
-	},
+    $p.cat.clrs.selection_exclude_service(_xfields.clr, t);
 
-  ref: {
-    get : function(){
-      return this.inset.ref;
-    },
-  },
-
-  set_inset: {
-	  value: function(v){
-	    const {_row, data, project} = this;
-      if(_row.inset != v){
-        _row.inset = v;
-        if(data && data._rays){
-          data._rays.clear(true);
-        }
-        project.register_change();
+    return {
+      fields: {
+        info: info,
+        inset: inset,
+        clr: _xfields.clr,
+        x1: _xfields.x1,
+        x2: _xfields.x2,
+        y1: _xfields.y1,
+        y2: _xfields.y2,
+        cnn1: cnn1,
+        cnn2: cnn2,
+        cnn3: cnn3,
+        arc_h: arc_h,
+        r: _xfields.r,
+        arc_ccw: _xfields.arc_ccw
       }
-    }
-  },
+    };
+  }
 
-	clr: {
-		get : function(){
-			return this._row.clr;
-		},
-		set : function(v){
-			this.set_clr(v);
-		}
-	},
+  get _manager() {
+    return this.project._dp._manager;
+  }
 
-  set_clr: {
-    value: function (v) {
-      this._row.clr = v;
-      if(this.path instanceof paper.Path){
-        this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
+  get nom() {
+    return this.inset.nom(this);
+  }
+
+  get elm() {
+    return this._row ? this._row.elm : 0;
+  }
+
+  get info() {
+    return "№" + this.elm;
+  }
+
+  get ref() {
+    const {inset} = this;
+    const nom = inset.nom(this);
+    return nom && !nom.empty() ? nom.ref : inset.ref;
+  }
+
+  get width() {
+    return this.nom.width || 80;
+  }
+
+  get thickness() {
+    return this.inset.thickness;
+  }
+
+  get sizeb() {
+    return this.inset.sizeb || 0;
+  }
+
+  get sizefurn() {
+    return this.nom.sizefurn || 20;
+  }
+
+  get cnn3(){
+    const cnn_ii = this.selected_cnn_ii();
+    return cnn_ii ? cnn_ii.row.cnn : $p.cat.cnns.get();
+  }
+  set cnn3(v) {
+    const cnn_ii = this.selected_cnn_ii();
+    if(cnn_ii && cnn_ii.row.cnn != v){
+      cnn_ii.row.cnn = v;
+      if(this.data._nearest_cnn){
+        this.data._nearest_cnn = cnn_ii.row.cnn;
       }
-      this.project.register_change();
-    }
-  },
-
-	width: {
-		get : function(){
-			return this.nom.width || 80;
-		}
-	},
-
-	thickness: {
-		get : function(){
-			return this.inset.thickness;
-		}
-	},
-
-	sizeb: {
-		get : function(){
-			return this.inset.sizeb || 0;
-		}
-	},
-
-	sizefurn: {
-		get : function(){
-			return this.nom.sizefurn || 20;
-		}
-	},
-
-	cnn3: {
-		get : function(){
-			const cnn_ii = this.selected_cnn_ii();
-			return cnn_ii ? cnn_ii.row.cnn : $p.cat.cnns.get();
-		},
-		set: function(v){
-      const cnn_ii = this.selected_cnn_ii();
-			if(cnn_ii && cnn_ii.row.cnn != v){
-        cnn_ii.row.cnn = v;
-        if(this.data._nearest_cnn){
-          this.data._nearest_cnn = cnn_ii.row.cnn;
-        }
-        if(this.rays){
-          this.rays.clear();
-        }
-        this.project.register_change();
+      if(this.rays){
+        this.rays.clear();
       }
-		}
-	},
-
-	attache_wnd: {
-		value: function(cell){
-
-			if(!this.data._grid || !this.data._grid.cell){
-
-				this.data._grid = cell.attachHeadFields({
-					obj: this,
-					oxml: this.oxml
-				});
-				this.data._grid.attachEvent("onRowSelect", function(id){
-					if(["x1","y1","cnn1"].indexOf(id) != -1)
-						this._obj.select_node("b");
-
-					else if(["x2","y2","cnn2"].indexOf(id) != -1)
-						this._obj.select_node("e");
-				});
-
-			}else{
-				if(this.data._grid._obj != this)
-					this.data._grid.attach({
-						obj: this,
-						oxml: this.oxml
-					});
-			}
-
-		}
-	},
-
-	detache_wnd: {
-		value: function(){
-			if(this.data._grid && this.data._grid.destructor){
-				this.data._grid._owner_cell.detachObject(true);
-				delete this.data._grid;
-			}
-		}
-	},
-
-	selected_cnn_ii: {
-		value: function(){
-		  const {project, elm} = this;
-			const sel = project.getSelectedItems();
-      const {cnns} = project.connections;
-      const items = [];
-			let res;
-
-			sel.forEach((item) => {
-				if(item.parent instanceof ProfileItem || item.parent instanceof Filling)
-					items.push(item.parent);
-				else if(item instanceof Filling)
-					items.push(item);
-			});
-
-			if(items.length > 1 &&
-				items.some((item) => item == this) &&
-				items.some((item) => {
-					if(item != this){
-						cnns.forEach((row) => {
-							if(!row.node1 && !row.node2 &&
-								((row.elm1 == elm && row.elm2 == item.elm) || (row.elm1 == item.elm && row.elm2 == elm))){
-								res = {elm: item, row: row};
-								return false;
-							}
-						});
-						if(res){
-              return true;
-            }
-					}
-				})){
-        return res;
-      }
-		}
-	},
-
-  remove: {
-	  value: function () {
-
-      this.detache_wnd();
-
-      if(this.parent){
-        if (this.parent.on_remove_elm){
-          this.parent.on_remove_elm(this);
-        }
-        if (this.parent._noti && this._observer){
-          Object.unobserve(this.parent._noti, this._observer);
-          delete this._observer;
-        }
-      }
-
-      if(this.project.ox === this._row._owner._owner){
-        this._row._owner.del(this._row);
-      }
-
-      BuilderElement.superclass.remove.call(this);
       this.project.register_change();
     }
   }
 
-});
-
-BuilderElement.clr_by_clr = function (clr, view_out) {
-
-	var clr_str = clr.clr_str;
-
-	if(!view_out){
-		if(!clr.clr_in.empty() && clr.clr_in.clr_str)
-			clr_str = clr.clr_in.clr_str;
-	}else{
-		if(!clr.clr_out.empty() && clr.clr_out.clr_str)
-			clr_str = clr.clr_out.clr_str;
-	}
-
-	if(!clr_str){
-    clr_str = this.default_clr_str ? this.default_clr_str : "fff";
+  get inset() {
+    return (this._row ? this._row.inset : null) || $p.cat.inserts.get();
+  }
+  set inset(v) {
+    this.set_inset(v);
   }
 
-	if(clr_str){
-		clr = clr_str.split(",");
-		if(clr.length == 1){
-			if(clr_str[0] != "#")
-				clr_str = "#" + clr_str;
-			clr = new paper.Color(clr_str);
-			clr.alpha = 0.96;
+  get clr() {
+    return this._row.clr;
+  }
+  set clr(v) {
+    this.set_clr(v);
+  }
 
-		}else if(clr.length == 4){
-			clr = new paper.Color(clr[0], clr[1], clr[2], clr[3]);
+  set_inset(v, ignore_select) {
+    const {_row, data, project} = this;
+    if(_row.inset != v){
+      _row.inset = v;
+      if(data && data._rays){
+        data._rays.clear(true);
+      }
+      project.register_change();
+    }
+  }
 
-		}else if(clr.length == 3){
-			if(this.path && this.path.bounds)
-				clr = new paper.Color({
-					stops: [clr[0], clr[1], clr[2]],
-					origin: this.path.bounds.bottomLeft,
-					destination: this.path.bounds.topRight
-				});
-			else
-				clr = new paper.Color(clr[0]);
-		}
-		return clr;
-	}
-};
+  set_clr(v, ignore_select) {
+    this._row.clr = v;
+    if(this.path instanceof paper.Path){
+      this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
+    }
+    this.project.register_change();
+  }
+
+  attache_wnd(cell) {
+    if(!this.data._grid || !this.data._grid.cell){
+
+      this.data._grid = cell.attachHeadFields({
+        obj: this,
+        oxml: this.oxml
+      });
+      this.data._grid.attachEvent("onRowSelect", function(id){
+        if(["x1","y1","cnn1"].indexOf(id) != -1){
+          this._obj.select_node("b");
+        }
+        else if(["x2","y2","cnn2"].indexOf(id) != -1){
+          this._obj.select_node("e");
+        }
+      });
+    }
+    else if(this.data._grid._obj != this){
+      this.data._grid.attach({
+        obj: this,
+        oxml: this.oxml
+      });
+    }
+  }
+
+  detache_wnd() {
+    if(this.data._grid && this.data._grid.destructor){
+      this.data._grid._owner_cell.detachObject(true);
+      delete this.data._grid;
+    }
+  }
+
+  selected_cnn_ii() {
+    const {project, elm} = this;
+    const sel = project.getSelectedItems();
+    const {cnns} = project.connections;
+    const items = [];
+    let res;
+
+    sel.forEach((item) => {
+      if(item.parent instanceof ProfileItem || item.parent instanceof Filling)
+        items.push(item.parent);
+      else if(item instanceof Filling)
+        items.push(item);
+    });
+
+    if(items.length > 1 &&
+      items.some((item) => item == this) &&
+      items.some((item) => {
+        if(item != this){
+          cnns.forEach((row) => {
+            if(!row.node1 && !row.node2 &&
+              ((row.elm1 == elm && row.elm2 == item.elm) || (row.elm1 == item.elm && row.elm2 == elm))){
+              res = {elm: item, row: row};
+              return false;
+            }
+          });
+          if(res){
+            return true;
+          }
+        }
+      })){
+      return res;
+    }
+  }
+
+  remove() {
+    this.detache_wnd();
+
+    if(this.parent){
+      if (this.parent.on_remove_elm){
+        this.parent.on_remove_elm(this);
+      }
+      if (this.parent._noti && this._observer){
+        Object.unobserve(this.parent._noti, this._observer);
+        delete this._observer;
+      }
+    }
+
+    if(this._row && this._row._owner && this.project.ox === this._row._owner._owner){
+      this._row._owner.del(this._row);
+    }
+
+    super.remove();
+    this.project.register_change();
+  }
+
+  static clr_by_clr(clr, view_out) {
+    let {clr_str, clr_in, clr_out} = clr;
+
+    if(!view_out){
+      if(!clr_in.empty() && clr_in.clr_str)
+        clr_str = clr_in.clr_str;
+    }else{
+      if(!clr_out.empty() && clr_out.clr_str)
+        clr_str = clr_out.clr_str;
+    }
+
+    if(!clr_str){
+      clr_str = this.default_clr_str ? this.default_clr_str : "fff";
+    }
+
+    if(clr_str){
+      clr = clr_str.split(",");
+      if(clr.length == 1){
+        if(clr_str[0] != "#")
+          clr_str = "#" + clr_str;
+        clr = new paper.Color(clr_str);
+        clr.alpha = 0.96;
+      }
+      else if(clr.length == 4){
+        clr = new paper.Color(clr[0], clr[1], clr[2], clr[3]);
+      }
+      else if(clr.length == 3){
+        if(this.path && this.path.bounds)
+          clr = new paper.Color({
+            stops: [clr[0], clr[1], clr[2]],
+            origin: this.path.bounds.bottomLeft,
+            destination: this.path.bounds.topRight
+          });
+        else
+          clr = new paper.Color(clr[0]);
+      }
+      return clr;
+    }
+  }
+}
+
 
 Editor.BuilderElement = BuilderElement;
 
@@ -4544,45 +4549,51 @@ class Filling extends BuilderElement {
 
   initialize(attr) {
 
-    var _row = attr.row,
-      h = this.project.bounds.height + this.project.bounds.y;
+    const _row = attr.row;
+    const h = this.project.bounds.height + this.project.bounds.y;
 
-    if(_row.path_data)
+    if(_row.path_data){
       this.data.path = new paper.Path(_row.path_data);
+    }
 
     else if(attr.path){
-
       this.data.path = new paper.Path();
       this.path = attr.path;
-
-    }else
+    }
+    else{
       this.data.path = new paper.Path([
         [_row.x1, h - _row.y1],
         [_row.x1, h - _row.y2],
         [_row.x2, h - _row.y2],
         [_row.x2, h - _row.y1]
       ]);
+    }
+
     this.data.path.closePath(true);
     this.data.path.reduce();
     this.data.path.strokeWidth = 0;
 
-    if(_row.inset.empty())
+    if(_row.inset.empty()){
       _row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
+    }
 
-    if(_row.clr.empty())
-      this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, function (row) {
+    if(_row.clr.empty()){
+      this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, (row) => {
         _row.clr = row.clr;
         return false;
       });
-    if(_row.clr.empty())
-      this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, function (row) {
+    }
+    if(_row.clr.empty()){
+      this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, (row) => {
         _row.clr = row.clr;
         return false;
       });
+    }
     this.clr = _row.clr;
 
-    if(_row.elm_type.empty())
+    if(_row.elm_type.empty()){
       _row.elm_type = $p.enm.elm_types.Стекло;
+    }
 
     this.data.path.visible = false;
 
@@ -4592,23 +4603,18 @@ class Filling extends BuilderElement {
       cnstr: this.layer.cnstr,
       parent: this.elm,
       elm_type: $p.enm.elm_types.Раскладка
-    }, function(row){
-      new Onlay({row: row, parent: this});
-    }.bind(this));
+    }, (row) => new Onlay({row: row, parent: this}));
 
   }
 
   save_coordinates() {
 
-    var h = this.project.bounds.height + this.project.bounds.y,
-      _row = this._row,
-      bounds = this.bounds,
-      cnns = this.project.connections.cnns,
-      profiles = this.profiles,
-      length = profiles.length,
-      curr, prev,	next,
+    const {_row, project, profiles, bounds} = this;
+    const h = project.bounds.height + project.bounds.y;
+    const cnns = project.connections.cnns;
+    const length = profiles.length;
 
-      glass = this.project.ox.glasses.add({
+    this.project.ox.glasses.add({
         elm: _row.elm,
         nom: this.nom,
         width: bounds.width,
@@ -4618,14 +4624,15 @@ class Filling extends BuilderElement {
         thickness: this.thickness
       });
 
+    let curr, prev,	next
+
     _row.x1 = (bounds.bottomLeft.x - this.project.bounds.x).round(3);
     _row.y1 = (h - bounds.bottomLeft.y).round(3);
     _row.x2 = (bounds.topRight.x - this.project.bounds.x).round(3);
     _row.y2 = (h - bounds.topRight.y).round(3);
     _row.path_data = this.path.pathData;
 
-
-    for(var i=0; i<length; i++ ){
+    for(let i=0; i<length; i++ ){
 
       curr = profiles[i];
 
@@ -4636,17 +4643,18 @@ class Filling extends BuilderElement {
           return;
       }
 
-      curr.aperture_path = curr.profile.generatrix.get_subpath(curr.b, curr.e).data.reversed ? curr.profile.rays.outer : curr.profile.rays.inner;
+      curr.aperture_path = curr.profile.generatrix.get_subpath(curr.b, curr.e).data.reversed ?
+        curr.profile.rays.outer : curr.profile.rays.inner;
     }
 
-    for(var i=0; i<length; i++ ){
+    for(let i=0; i<length; i++ ){
 
-      prev = i==0 ? profiles[length-1] : profiles[i-1];
+      prev = i === 0 ? profiles[length-1] : profiles[i-1];
       curr = profiles[i];
-      next = i==length-1 ? profiles[0] : profiles[i+1];
+      next = i === length-1 ? profiles[0] : profiles[i+1];
 
-      var pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true),
-        pe = curr.aperture_path.intersect_point(next.aperture_path, curr.e, true);
+      const pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true);
+      const pe = curr.aperture_path.intersect_point(next.aperture_path, curr.e, true);
 
       if(!pb || !pe){
         if($p.job_prm.debug)
@@ -4666,18 +4674,15 @@ class Filling extends BuilderElement {
 
     }
 
-    for(var i=0; i<length; i++ ){
+    for(let i=0; i<length; i++ ){
       delete profiles[i].aperture_path;
     }
 
-
-    this.onlays.forEach(function (curr) {
-      curr.save_coordinates();
-    });
+    this.onlays.forEach((curr) => curr.save_coordinates());
   }
 
   create_leaf() {
-    var contour = new Contour( {parent: this.parent});
+    const contour = new Contour( {parent: this.parent});
 
     contour.path = this.profiles;
 
@@ -4694,20 +4699,28 @@ class Filling extends BuilderElement {
 
   select_node(v) {
     let point, segm, delta = Infinity;
-    if(v == "b"){
+    if(v === "b"){
       point = this.bounds.bottomLeft;
     }else{
       point = this.bounds.topRight;
     }
-    this.data.path.segments.forEach(function (curr) {
+    this.data.path.segments.forEach((curr) => {
       curr.selected = false;
       if(point.getDistance(curr.point) < delta){
         delta = point.getDistance(curr.point);
         segm = curr;
       }
     });
-    segm.selected = true;
-    this.view.update();
+    if(segm){
+      segm.selected = true;
+      this.view.update();
+    }
+  }
+
+  setSelection(selection) {
+    super.setSelection(selection);
+    const {_text} = this.data;
+    _text && _text.setSelection(0);
   }
 
   redraw() {
@@ -4743,7 +4756,7 @@ class Filling extends BuilderElement {
               data._text.content = text;
             }
             else{
-              data._text.content += ((index == atext.length - 1) ? '\n' : ' ') + text;
+              data._text.content += ((index === atext.length - 1) ? '\n' : ' ') + text;
             }
           })
           data._text.point.y -= elm_font_size;
@@ -4762,7 +4775,7 @@ class Filling extends BuilderElement {
       const proto = glass_specification.find_rows({elm: this.elm});
 
       this.project.selected_glasses().forEach((elm) => {
-        if(elm != this){
+        if(elm !== this){
           elm.set_inset(v, true);
           glass_specification.clear(true, {elm: elm.elm});
           proto.forEach((row) => glass_specification.add({
@@ -4779,7 +4792,7 @@ class Filling extends BuilderElement {
   set_clr(v, ignore_select) {
     if(!ignore_select && this.project.selectedItems.length > 1){
       this.project.selected_glasses().forEach((elm) => {
-        if(elm != this){
+        if(elm !== this){
           elm.set_clr(v, true);
         }
       });
@@ -4800,7 +4813,7 @@ class Filling extends BuilderElement {
   }
 
   get is_rectangular() {
-    return this.profiles.length == 4 && !this.data.path.hasHandles();
+    return this.profiles.length === 4 && !this.data.path.hasHandles();
   }
 
   get is_sandwich() {
@@ -4811,36 +4824,43 @@ class Filling extends BuilderElement {
     return this.data.path;
   }
   set path(attr) {
-    const data = this.data;
-    data.path.removeSegments();
+    let {data, path} = this;
+
+    if(path){
+      path.removeSegments();
+    }
+    else{
+      path = data.path = new paper.Path({parent: this});
+    }
+
     data._profiles = [];
 
     if(attr instanceof paper.Path){
 
       if(attr.data.curve_nodes){
-
-        data.path.addSegments(attr.segments);
-      }else{
-        data.path.addSegments(attr.segments);
+        path.addSegments(attr.segments);
       }
-
-
-    }else if(Array.isArray(attr)){
-      var length = attr.length, prev, curr, next, sub_path;
-      for(var i=0; i<length; i++ ){
+      else{
+        path.addSegments(attr.segments);
+      }
+    }
+    else if(Array.isArray(attr)){
+      const {length} = attr;
+      let prev, curr, next, sub_path;
+      for(let i=0; i<length; i++ ){
         curr = attr[i];
-        next = i==length-1 ? attr[0] : attr[i+1];
-        curr.cnn = $p.cat.cnns.elm_cnn(this, curr.profile);
+        next = i === length-1 ? attr[0] : attr[i+1];
         sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e);
+        curr.cnn = $p.cat.cnns.elm_cnn(this, curr.profile);
 
         curr.sub_path = sub_path.equidistant(
           (sub_path.data.reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
 
       }
-      for(var i=0; i<length; i++ ){
-        prev = i==0 ? attr[length-1] : attr[i-1];
+      for(let i=0; i<length; i++ ){
+        prev = i === 0 ? attr[length-1] : attr[i-1];
         curr = attr[i];
-        next = i==length-1 ? attr[0] : attr[i+1];
+        next = i === length-1 ? attr[0] : attr[i+1];
         if(!curr.pb)
           curr.pb = prev.pe = curr.sub_path.intersect_point(prev.sub_path, curr.b, true);
         if(!curr.pe)
@@ -4853,30 +4873,28 @@ class Filling extends BuilderElement {
         }
         curr.sub_path = curr.sub_path.get_subpath(curr.pb, curr.pe);
       }
-      for(var i=0; i<length; i++ ){
+      for(let i=0; i<length; i++ ){
         curr = attr[i];
-        data.path.addSegments(curr.sub_path.segments);
-        ["anext","pb","pe"].forEach(function (prop) {
-          delete curr[prop];
-        });
+        path.addSegments(curr.sub_path.segments);
+        ["anext","pb","pe"].forEach((prop) => { delete curr[prop] });
         data._profiles.push(curr);
       }
     }
 
-    if(data.path.segments.length && !data.path.closed)
-      data.path.closePath(true);
+    if(path.segments.length && !path.closed){
+      path.closePath(true);
+    }
 
-    data.path.reduce();
+    path.reduce();
   }
 
   get nodes() {
-    let res = [];
-    if(this.profiles.length){
-      this.profiles.forEach((curr) => {
-        res.push(curr.b);
-      });
-    }else{
-      res = this.parent.glass_nodes(this.path);
+    let res = this.profiles.map((curr) => curr.b);
+    if(!res.length){
+      const {path, parent} = this;
+      if(path){
+        res = parent.glass_nodes(path);
+      }
     }
     return res;
   }
@@ -4903,25 +4921,22 @@ class Filling extends BuilderElement {
   get x1() {
     return (this.bounds.left - this.project.bounds.x).round(1);
   }
-  set x1(v) {}
 
   get x2() {
     return (this.bounds.right - this.project.bounds.x).round(1);
   }
-  set x2(v) {}
 
   get y1() {
     return (this.project.bounds.height + this.project.bounds.y - this.bounds.bottom).round(1);
   }
-  set y1(v) {}
 
   get y2() {
     return (this.project.bounds.height + this.project.bounds.y - this.bounds.top).round(1);
   }
-  set y2(v) {}
 
   get info() {
-    return "№" + this.elm + " w:" + this.bounds.width.toFixed(0) + " h:" + this.bounds.height.toFixed(0);
+    const {elm, bounds, thickness} = this;
+    return "№" + elm + " w:" + bounds.width.toFixed(0) + " h:" + bounds.height.toFixed(0) + " z:" + thickness.toFixed(0);
   }
 
   get oxml() {
@@ -4951,11 +4966,8 @@ class Filling extends BuilderElement {
   }
 
   get formula() {
-
-    const {ox} = this.project;
     let res;
-
-    ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+    this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
       const aname = row.inset.name.split(' ');
       const name = aname.length ? aname[0] : ''
       if(!res){
@@ -4965,8 +4977,41 @@ class Filling extends BuilderElement {
         res += "x" + name;
       }
     });
-
     return res || this.inset.name;
+  }
+
+  get ref() {
+    return this.thickness.toFixed();
+  }
+
+  get inset() {
+    const ins = super.inset;
+    const {data} = this;
+    if(!data._ins_proxy || data._ins_proxy._ins !== ins){
+      data._ins_proxy = new Proxy(ins, {
+        get: (target, prop) => {
+          switch (prop){
+            case 'presentation':
+              return this.formula;
+
+            case 'thickness':
+              let res = 0;
+              this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+                res += row.inset.thickness;
+              });
+              return res || ins.thickness;
+
+            default:
+              return target[prop];
+          }
+        }
+      });
+      data._ins_proxy._ins = ins;
+    }
+    return data._ins_proxy;
+  }
+  set inset(v) {
+    this.set_inset(v);
   }
 
 }
@@ -4974,249 +5019,192 @@ class Filling extends BuilderElement {
 Editor.Filling = Filling;
 
 
+class FreeText extends paper.PointText {
 
+  constructor(attr) {
 
-function FreeText(attr){
+    if(!attr.fontSize){
+      attr.fontSize = consts.font_size;
+    }
 
-	var _row;
+    super(attr);
 
-	if(!attr.fontSize)
-		attr.fontSize = consts.font_size;
+    if(attr.row){
+      this._row = attr.row;
+    }
+    else{
+      this._row = attr.row = attr.parent.project.ox.coordinates.add();
+    }
 
-	if(attr.row)
-		_row = attr.row;
-	else{
-		_row = attr.row = attr.parent.project.ox.coordinates.add();
-	}
+    const {_row} = this;
 
-	if(!_row.cnstr)
-		_row.cnstr = attr.parent.layer.cnstr;
+    if(!_row.cnstr){
+      _row.cnstr = attr.parent.layer.cnstr;
+    }
 
-	if(!_row.elm)
-		_row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+    if(!_row.elm){
+      _row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+    }
 
+    if(attr.point){
+      if(attr.point instanceof paper.Point)
+        this.point = attr.point;
+      else
+        this.point = new paper.Point(attr.point);
+    }
+    else{
 
-	FreeText.superclass.constructor.call(this, attr);
+      this.clr = _row.clr;
+      this.angle = _row.angle_hor;
 
-	this.__define({
-		_row: {
-			get: function () {
-				return _row;
-			},
-			enumerable: false
-		}
-	});
+      if(_row.path_data){
+        var path_data = JSON.parse(_row.path_data);
+        this.x = _row.x1 + path_data.bounds_x || 0;
+        this.y = _row.y1 - path_data.bounds_y || 0;
+        this._mixin(path_data, null, ["bounds_x","bounds_y"]);
+      }else{
+        this.x = _row.x1;
+        this.y = _row.y1;
+      }
+    }
 
-	if(attr.point){
-		if(attr.point instanceof paper.Point)
-			this.point = attr.point;
-		else
-			this.point = new paper.Point(attr.point);
-	}else{
+    this.bringToFront();
 
+  }
 
-				this.clr = _row.clr;
-		this.angle = _row.angle_hor;
+  remove() {
+    this._row._owner.del(this._row);
+    this._row = null;
+    paper.PointText.prototype.remove.call(this);
+  }
 
-		if(_row.path_data){
-			var path_data = JSON.parse(_row.path_data);
-			this.x = _row.x1 + path_data.bounds_x || 0;
-			this.y = _row.y1 - path_data.bounds_y || 0;
-			this._mixin(path_data, null, ["bounds_x","bounds_y"]);
-		}else{
-			this.x = _row.x1;
-			this.y = _row.y1;
-		}
-	}
+  save_coordinates() {
+    const {_row} = this;
 
-	this.bringToFront();
+    _row.x1 = this.x;
+    _row.y1 = this.y;
+    _row.angle_hor = this.angle;
 
+    _row.elm_type = this.elm_type;
 
+    _row.path_data = JSON.stringify({
+      text: this.text,
+      font_family: this.font_family,
+      font_size: this.font_size,
+      bold: this.bold,
+      align: this.align.ref,
+      bounds_x: this.project.bounds.x,
+      bounds_y: this.project.bounds.y
+    });
+  }
 
-	this.remove = function () {
-		_row._owner.del(_row);
-		_row = null;
-		FreeText.superclass.remove.call(this);
-	};
+  move_points(point) {
+    this.point = point;
+
+    Object.getNotifier(this).notify({
+      type: 'update',
+      name: "x"
+    });
+    Object.getNotifier(this).notify({
+      type: 'update',
+      name: "y"
+    });
+  }
+
+  get elm_type() {
+    return $p.enm.elm_types.Текст;
+  }
+
+  get _metadata() {
+    return $p.dp.builder_text.metadata();
+  }
+
+  get _manager() {
+    return $p.dp.builder_text;
+  }
+
+  get clr() {
+    return this._row ? this._row.clr : $p.cat.clrs.get();
+  }
+  set clr(v) {
+    this._row.clr = v;
+    if(this._row.clr.clr_str.length == 6)
+      this.fillColor = "#" + this._row.clr.clr_str;
+    this.project.register_update();
+  }
+
+  get font_family() {
+    return this.fontFamily || "";
+  }
+  set font_family(v) {
+    this.fontFamily = v;
+    this.project.register_update();
+  }
+
+  get font_size() {
+    return this.fontSize || consts.font_size;
+  }
+  set font_size(v) {
+    this.fontSize = v;
+    this.project.register_update();
+  }
+
+  get bold() {
+    return this.fontWeight != 'normal';
+  }
+  set bold(v) {
+    this.fontWeight = v ? 'bold' : 'normal';
+  }
+
+  get x() {
+    return (this.point.x - this.project.bounds.x).round(1);
+  }
+  set x(v) {
+    this.point.x = parseFloat(v) + this.project.bounds.x;
+    this.project.register_update();
+  }
+
+  get y() {
+    return (this.project.bounds.height + this.project.bounds.y - this.point.y).round(1);
+  }
+  set y(v) {
+    this.point.y = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
+  }
+
+  get text() {
+    return this.content;
+  }
+  set text(v) {
+    if(v){
+      this.content = v;
+      this.project.register_update();
+    }
+    else{
+      Object.getNotifier(this).notify({
+        type: 'unload'
+      });
+      setTimeout(this.remove.bind(this), 50);
+    }
+  }
+
+  get angle() {
+    return Math.round(this.rotation);
+  }
+  set angle(v) {
+    this.rotation = v;
+    this.project.register_update();
+  }
+
+  get align() {
+    return $p.enm.text_aligns.get(this.justification);
+  }
+  set align(v) {
+    this.justification = $p.utils.is_data_obj(v) ? v.ref : v;
+    this.project.register_update();
+  }
 
 }
-FreeText._extend(paper.PointText);
 
-FreeText.prototype.__define({
-
-
-	save_coordinates: {
-		value: function () {
-
-			var _row = this._row;
-
-			_row.x1 = this.x;
-			_row.y1 = this.y;
-			_row.angle_hor = this.angle;
-
-			_row.elm_type = this.elm_type;
-
-			_row.path_data = JSON.stringify({
-				text: this.text,
-				font_family: this.font_family,
-				font_size: this.font_size,
-				bold: this.bold,
-				align: this.align.ref,
-				bounds_x: this.project.bounds.x,
-				bounds_y: this.project.bounds.y
-			});
-		}
-	},
-
-
-	elm_type: {
-		get : function(){
-
-			return $p.enm.elm_types.Текст;
-
-		}
-	},
-
-
-	move_points: {
-		value: function (point) {
-
-			this.point = point;
-
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: "x"
-			});
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: "y"
-			});
-		}
-	},
-
-	_metadata: {
-		get: function () {
-			return $p.dp.builder_text.metadata();
-		},
-		enumerable: false
-	},
-
-	_manager: {
-		get: function () {
-			return $p.dp.builder_text;
-		},
-		enumerable: false
-	},
-
-	clr: {
-		get: function () {
-			return this._row ? this._row.clr : $p.cat.clrs.get();
-		},
-		set: function (v) {
-			this._row.clr = v;
-			if(this._row.clr.clr_str.length == 6)
-				this.fillColor = "#" + this._row.clr.clr_str;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-	font_family: {
-		get: function () {
-			return this.fontFamily || "";
-		},
-		set: function (v) {
-			this.fontFamily = v;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-	font_size: {
-		get: function () {
-			return this.fontSize || consts.font_size;
-		},
-		set: function (v) {
-			this.fontSize = v;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-	bold: {
-		get: function () {
-			return this.fontWeight != 'normal';
-		},
-		set: function (v) {
-			this.fontWeight = v ? 'bold' : 'normal';
-		},
-		enumerable: false
-	},
-
-	x: {
-		get: function () {
-			return (this.point.x - this.project.bounds.x).round(1);
-		},
-		set: function (v) {
-			this.point.x = parseFloat(v) + this.project.bounds.x;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-	y: {
-		get: function () {
-			return (this.project.bounds.height + this.project.bounds.y - this.point.y).round(1);
-		},
-		set: function (v) {
-			this.point.y = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
-		},
-		enumerable: false
-	},
-
-	text: {
-		get: function () {
-			return this.content;
-		},
-		set: function (v) {
-			if(v){
-				this.content = v;
-				this.project.register_update();
-			}
-			else{
-				Object.getNotifier(this).notify({
-					type: 'unload'
-				});
-				setTimeout(this.remove.bind(this), 50);
-			}
-
-		},
-		enumerable: false
-	},
-
-	angle: {
-		get: function () {
-			return Math.round(this.rotation);
-		},
-		set: function (v) {
-			this.rotation = v;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-	align: {
-		get: function () {
-			return $p.enm.text_aligns.get(this.justification);
-		},
-		set: function (v) {
-			this.justification = $p.utils.is_data_obj(v) ? v.ref : v;
-			this.project.register_update();
-		},
-		enumerable: false
-	}
-
-});
 
 
 paper.Path.prototype.__define({
@@ -6059,7 +6047,7 @@ class ProfileItem extends BuilderElement {
 
 
   setSelection(selection) {
-    BuilderElement.prototype.setSelection.call(this, selection);
+    super.setSelection(selection);
 
     const {generatrix, path} = this.data;
 
@@ -8965,10 +8953,9 @@ Scheme.prototype.__define({
 });
 
 
-function Sectional(arg){
-	Sectional.superclass.constructor.call(this, arg);
+class Sectional extends BuilderElement {
+
 }
-Sectional._extend(BuilderElement);
 
 
 	const consts = new function Settings(){

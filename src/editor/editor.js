@@ -771,7 +771,12 @@ class Editor extends paper.PaperScope {
       }
     });
     wnd.attachEvent("onClose", () => {
-      elm && elm.redraw && elm.redraw();
+      wnd.elmnts.grids.inserts && wnd.elmnts.grids.inserts.editStop();
+      this.project.register_change(true);
+      elm && Object.getNotifier(elm).notify({
+        type: 'update',
+        name: 'inset'
+      });
       return true;
     });
 

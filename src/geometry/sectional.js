@@ -11,11 +11,10 @@
 
 /**
  * Вид в разрезе. например, водоотливы
- * @param arg {Object} - объект со свойствами создаваемого элемента
+ * @param attr {Object} - объект со свойствами создаваемого элемента
  * @constructor
  * @extends BuilderElement
  */
-function Sectional(arg){
-	Sectional.superclass.constructor.call(this, arg);
+class Sectional extends BuilderElement {
+
 }
-Sectional._extend(BuilderElement);

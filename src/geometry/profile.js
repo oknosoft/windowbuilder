@@ -717,7 +717,7 @@ class ProfileItem extends BuilderElement {
 
 
   setSelection(selection) {
-    BuilderElement.prototype.setSelection.call(this, selection);
+    super.setSelection(selection);
 
     const {generatrix, path} = this.data;
 

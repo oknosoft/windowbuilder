@@ -50,62 +50,64 @@ class Filling extends BuilderElement {
 
   initialize(attr) {
 
-    var _row = attr.row,
-      h = this.project.bounds.height + this.project.bounds.y;
+    const _row = attr.row;
+    const h = this.project.bounds.height + this.project.bounds.y;
 
-    if(_row.path_data)
+    if(_row.path_data){
       this.data.path = new paper.Path(_row.path_data);
+    }
 
     else if(attr.path){
-
       this.data.path = new paper.Path();
       this.path = attr.path;
-
-    }else
+    }
+    else{
       this.data.path = new paper.Path([
         [_row.x1, h - _row.y1],
         [_row.x1, h - _row.y2],
         [_row.x2, h - _row.y2],
         [_row.x2, h - _row.y1]
       ]);
+    }
+
     this.data.path.closePath(true);
-    //this.data.path.guide = true;
     this.data.path.reduce();
     this.data.path.strokeWidth = 0;
 
     // для нового устанавливаем вставку по умолчанию
-    if(_row.inset.empty())
+    if(_row.inset.empty()){
       _row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
+    }
 
     // для нового устанавливаем цвет по умолчанию
-    if(_row.clr.empty())
-      this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, function (row) {
+    if(_row.clr.empty()){
+      this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, (row) => {
         _row.clr = row.clr;
         return false;
       });
-    if(_row.clr.empty())
-      this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, function (row) {
+    }
+    if(_row.clr.empty()){
+      this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, (row) => {
         _row.clr = row.clr;
         return false;
       });
+    }
     this.clr = _row.clr;
 
-    if(_row.elm_type.empty())
+    if(_row.elm_type.empty()){
       _row.elm_type = $p.enm.elm_types.Стекло;
+    }
 
     this.data.path.visible = false;
 
     this.addChild(this.data.path);
-    //this.addChild(this.data.generatrix);
 
     // раскладки текущего заполнения
     this.project.ox.coordinates.find_rows({
       cnstr: this.layer.cnstr,
       parent: this.elm,
       elm_type: $p.enm.elm_types.Раскладка
-    }, function(row){
-      new Onlay({row: row, parent: this});
-    }.bind(this));
+    }, (row) => new Onlay({row: row, parent: this}));
 
   }
 
@@ -116,16 +118,13 @@ class Filling extends BuilderElement {
    */
   save_coordinates() {
 
-    var h = this.project.bounds.height + this.project.bounds.y,
-      _row = this._row,
-      bounds = this.bounds,
-      cnns = this.project.connections.cnns,
-      profiles = this.profiles,
-      length = profiles.length,
-      curr, prev,	next,
+    const {_row, project, profiles, bounds} = this;
+    const h = project.bounds.height + project.bounds.y;
+    const cnns = project.connections.cnns;
+    const length = profiles.length;
 
-      // строка в таблице заполнений продукции
-      glass = this.project.ox.glasses.add({
+    // строка в таблице заполнений продукции
+    this.project.ox.glasses.add({
         elm: _row.elm,
         nom: this.nom,
         width: bounds.width,
@@ -135,6 +134,8 @@ class Filling extends BuilderElement {
         thickness: this.thickness
       });
 
+    let curr, prev,	next
+
     // координаты bounds
     _row.x1 = (bounds.bottomLeft.x - this.project.bounds.x).round(3);
     _row.y1 = (h - bounds.bottomLeft.y).round(3);
@@ -142,9 +143,8 @@ class Filling extends BuilderElement {
     _row.y2 = (h - bounds.topRight.y).round(3);
     _row.path_data = this.path.pathData;
 
-
     // получаем пути граней профиля
-    for(var i=0; i<length; i++ ){
+    for(let i=0; i<length; i++ ){
 
       curr = profiles[i];
 
@@ -155,18 +155,19 @@ class Filling extends BuilderElement {
           return;
       }
 
-      curr.aperture_path = curr.profile.generatrix.get_subpath(curr.b, curr.e).data.reversed ? curr.profile.rays.outer : curr.profile.rays.inner;
+      curr.aperture_path = curr.profile.generatrix.get_subpath(curr.b, curr.e).data.reversed ?
+        curr.profile.rays.outer : curr.profile.rays.inner;
     }
 
     // получам пересечения
-    for(var i=0; i<length; i++ ){
+    for(let i=0; i<length; i++ ){
 
-      prev = i==0 ? profiles[length-1] : profiles[i-1];
+      prev = i === 0 ? profiles[length-1] : profiles[i-1];
       curr = profiles[i];
-      next = i==length-1 ? profiles[0] : profiles[i+1];
+      next = i === length-1 ? profiles[0] : profiles[i+1];
 
-      var pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true),
-        pe = curr.aperture_path.intersect_point(next.aperture_path, curr.e, true);
+      const pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true);
+      const pe = curr.aperture_path.intersect_point(next.aperture_path, curr.e, true);
 
       if(!pb || !pe){
         if($p.job_prm.debug)
@@ -188,15 +189,12 @@ class Filling extends BuilderElement {
     }
 
     // удаляем лишние ссылки
-    for(var i=0; i<length; i++ ){
+    for(let i=0; i<length; i++ ){
       delete profiles[i].aperture_path;
     }
 
-
     // дочерние раскладки
-    this.onlays.forEach(function (curr) {
-      curr.save_coordinates();
-    });
+    this.onlays.forEach((curr) => curr.save_coordinates());
   }
 
   /**
@@ -204,7 +202,7 @@ class Filling extends BuilderElement {
    */
   create_leaf() {
     // создаём пустой новый слой
-    var contour = new Contour( {parent: this.parent});
+    const contour = new Contour( {parent: this.parent});
 
     // задаём его путь - внутри будут созданы профили
     contour.path = this.profiles;
@@ -225,20 +223,28 @@ class Filling extends BuilderElement {
 
   select_node(v) {
     let point, segm, delta = Infinity;
-    if(v == "b"){
+    if(v === "b"){
       point = this.bounds.bottomLeft;
     }else{
       point = this.bounds.topRight;
     }
-    this.data.path.segments.forEach(function (curr) {
+    this.data.path.segments.forEach((curr) => {
       curr.selected = false;
       if(point.getDistance(curr.point) < delta){
         delta = point.getDistance(curr.point);
         segm = curr;
       }
     });
-    segm.selected = true;
-    this.view.update();
+    if(segm){
+      segm.selected = true;
+      this.view.update();
+    }
+  }
+
+  setSelection(selection) {
+    super.setSelection(selection);
+    const {_text} = this.data;
+    _text && _text.setSelection(0);
   }
 
   /**
@@ -278,7 +284,7 @@ class Filling extends BuilderElement {
               data._text.content = text;
             }
             else{
-              data._text.content += ((index == atext.length - 1) ? '\n' : ' ') + text;
+              data._text.content += ((index === atext.length - 1) ? '\n' : ' ') + text;
             }
           })
           data._text.point.y -= elm_font_size;
@@ -293,7 +299,7 @@ class Filling extends BuilderElement {
   /**
    * Сеттер вставки с учетом выделенных элементов
    * @param v {CatInserts}
-   * @param ignore_select {Boolean}
+   * @param [ignore_select] {Boolean}
    */
   set_inset(v, ignore_select) {
     if(!ignore_select && this.project.selectedItems.length > 1){
@@ -302,7 +308,7 @@ class Filling extends BuilderElement {
       const proto = glass_specification.find_rows({elm: this.elm});
 
       this.project.selected_glasses().forEach((elm) => {
-        if(elm != this){
+        if(elm !== this){
           // копируем вставку
           elm.set_inset(v, true);
           // копируем состав заполнения
@@ -326,7 +332,7 @@ class Filling extends BuilderElement {
   set_clr(v, ignore_select) {
     if(!ignore_select && this.project.selectedItems.length > 1){
       this.project.selected_glasses().forEach((elm) => {
-        if(elm != this){
+        if(elm !== this){
           elm.set_clr(v, true);
         }
       });
@@ -357,7 +363,7 @@ class Filling extends BuilderElement {
    * Признак прямоугольности
    */
   get is_rectangular() {
-    return this.profiles.length == 4 && !this.data.path.hasHandles();
+    return this.profiles.length === 4 && !this.data.path.hasHandles();
   }
 
   get is_sandwich() {
@@ -373,42 +379,46 @@ class Filling extends BuilderElement {
     return this.data.path;
   }
   set path(attr) {
-    const data = this.data;
-    data.path.removeSegments();
+    let {data, path} = this;
+
+    if(path){
+      path.removeSegments();
+    }
+    else{
+      path = data.path = new paper.Path({parent: this});
+    }
+
     data._profiles = [];
 
     if(attr instanceof paper.Path){
 
       // Если в передаваемом пути есть привязка к профилям контура - используем
       if(attr.data.curve_nodes){
-
-        data.path.addSegments(attr.segments);
-      }else{
-        data.path.addSegments(attr.segments);
+        path.addSegments(attr.segments);
       }
-
-
-    }else if(Array.isArray(attr)){
-      var length = attr.length, prev, curr, next, sub_path;
+      else{
+        path.addSegments(attr.segments);
+      }
+    }
+    else if(Array.isArray(attr)){
+      const {length} = attr;
+      let prev, curr, next, sub_path;
       // получам эквидистанты сегментов, смещенные на размер соединения
-      for(var i=0; i<length; i++ ){
+      for(let i=0; i<length; i++ ){
         curr = attr[i];
-        next = i==length-1 ? attr[0] : attr[i+1];
-        curr.cnn = $p.cat.cnns.elm_cnn(this, curr.profile);
+        next = i === length-1 ? attr[0] : attr[i+1];
         sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e);
+        curr.cnn = $p.cat.cnns.elm_cnn(this, curr.profile);
 
-        //sub_path.data.reversed = curr.profile.generatrix.getDirectedAngle(next.e) < 0;
-        //if(sub_path.data.reversed)
-        //	curr.outer = !curr.outer;
         curr.sub_path = sub_path.equidistant(
           (sub_path.data.reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
 
       }
       // получам пересечения
-      for(var i=0; i<length; i++ ){
-        prev = i==0 ? attr[length-1] : attr[i-1];
+      for(let i=0; i<length; i++ ){
+        prev = i === 0 ? attr[length-1] : attr[i-1];
         curr = attr[i];
-        next = i==length-1 ? attr[0] : attr[i+1];
+        next = i === length-1 ? attr[0] : attr[i+1];
         if(!curr.pb)
           curr.pb = prev.pe = curr.sub_path.intersect_point(prev.sub_path, curr.b, true);
         if(!curr.pe)
@@ -422,31 +432,29 @@ class Filling extends BuilderElement {
         curr.sub_path = curr.sub_path.get_subpath(curr.pb, curr.pe);
       }
       // формируем путь
-      for(var i=0; i<length; i++ ){
+      for(let i=0; i<length; i++ ){
         curr = attr[i];
-        data.path.addSegments(curr.sub_path.segments);
-        ["anext","pb","pe"].forEach(function (prop) {
-          delete curr[prop];
-        });
+        path.addSegments(curr.sub_path.segments);
+        ["anext","pb","pe"].forEach((prop) => { delete curr[prop] });
         data._profiles.push(curr);
       }
     }
 
-    if(data.path.segments.length && !data.path.closed)
-      data.path.closePath(true);
+    if(path.segments.length && !path.closed){
+      path.closePath(true);
+    }
 
-    data.path.reduce();
+    path.reduce();
   }
 
   // возвращает текущие (ранее установленные) узлы заполнения
   get nodes() {
-    let res = [];
-    if(this.profiles.length){
-      this.profiles.forEach((curr) => {
-        res.push(curr.b);
-      });
-    }else{
-      res = this.parent.glass_nodes(this.path);
+    let res = this.profiles.map((curr) => curr.b);
+    if(!res.length){
+      const {path, parent} = this;
+      if(path){
+        res = parent.glass_nodes(path);
+      }
     }
     return res;
   }
@@ -482,7 +490,6 @@ class Filling extends BuilderElement {
   get x1() {
     return (this.bounds.left - this.project.bounds.x).round(1);
   }
-  set x1(v) {}
 
   /**
    * Координата x правой границы (только для чтения)
@@ -490,7 +497,6 @@ class Filling extends BuilderElement {
   get x2() {
     return (this.bounds.right - this.project.bounds.x).round(1);
   }
-  set x2(v) {}
 
   /**
    * Координата y нижней границы (только для чтения)
@@ -498,7 +504,6 @@ class Filling extends BuilderElement {
   get y1() {
     return (this.project.bounds.height + this.project.bounds.y - this.bounds.bottom).round(1);
   }
-  set y1(v) {}
 
   /**
    * Координата y верхней (только для чтения)
@@ -506,13 +511,13 @@ class Filling extends BuilderElement {
   get y2() {
     return (this.project.bounds.height + this.project.bounds.y - this.bounds.top).round(1);
   }
-  set y2(v) {}
 
   /**
    * информация для редактора свойста
    */
   get info() {
-    return "№" + this.elm + " w:" + this.bounds.width.toFixed(0) + " h:" + this.bounds.height.toFixed(0);
+    const {elm, bounds, thickness} = this;
+    return "№" + elm + " w:" + bounds.width.toFixed(0) + " h:" + bounds.height.toFixed(0) + " z:" + thickness.toFixed(0);
   }
 
   /**
@@ -548,11 +553,8 @@ class Filling extends BuilderElement {
    * Возвращает формулу (код состава) заполнения
    */
   get formula() {
-
-    const {ox} = this.project;
     let res;
-
-    ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+    this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
       const aname = row.inset.name.split(' ');
       const name = aname.length ? aname[0] : ''
       if(!res){
@@ -562,8 +564,43 @@ class Filling extends BuilderElement {
         res += "x" + name;
       }
     });
-
     return res || this.inset.name;
+  }
+
+  // виртуальная ссылка для заполнений равна толщине
+  get ref() {
+    return this.thickness.toFixed();
+  }
+
+  // переопределяем геттер вставки
+  get inset() {
+    const ins = super.inset;
+    const {data} = this;
+    if(!data._ins_proxy || data._ins_proxy._ins !== ins){
+      data._ins_proxy = new Proxy(ins, {
+        get: (target, prop) => {
+          switch (prop){
+            case 'presentation':
+              return this.formula;
+
+            case 'thickness':
+              let res = 0;
+              this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+                res += row.inset.thickness;
+              });
+              return res || ins.thickness;
+
+            default:
+              return target[prop];
+          }
+        }
+      });
+      data._ins_proxy._ins = ins;
+    }
+    return data._ins_proxy;
+  }
+  set inset(v) {
+    this.set_inset(v);
   }
 
 }

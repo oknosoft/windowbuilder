@@ -491,8 +491,7 @@ Contour.prototype.__define({
 
 			function on_child_contour_redrawed(){
 				llength--;
-				if(!llength && on_redrawed)
-					on_redrawed();
+				!llength && on_redrawed && on_redrawed();
 			}
 
 			// сбрасываем кеш габаритов
@@ -514,6 +513,9 @@ Contour.prototype.__define({
 			// рисуем направление открывания
       this.draw_opening();
 
+      // рисуем ошибки соединений
+      this.draw_cnn_errors();
+
 			// перерисовываем вложенные контуры
       this.children.forEach((child_contour) => {
 				if (child_contour instanceof Contour){
@@ -522,7 +524,9 @@ Contour.prototype.__define({
 					//	if(!this.project.has_changes())
 					//		child_contour.redraw(on_child_contour_redrawed);
 					//});
-					child_contour.redraw(on_child_contour_redrawed);
+          if(!this.project.has_changes()){
+            child_contour.redraw(on_child_contour_redrawed);
+          }
 				}
 			});
 
@@ -993,10 +997,11 @@ Contour.prototype.__define({
 			var curve_nodes = [], path_nodes = [],
 				ipoint = path.interiorPoint.negate(),
 				i, curve, findedb, findede,
-				d, d1, d2, node1, node2;
+				d, node1, node2;
 
-			if(!nodes)
-				nodes = this.nodes;
+			if(!nodes){
+        nodes = this.nodes;
+      }
 
 			if(bind){
 				path.data.curve_nodes = curve_nodes;
@@ -1008,8 +1013,9 @@ Contour.prototype.__define({
 				curve = path.curves[i];
 
 				// в node1 и node2 получаем ближайший узел контура к узлам текущего сегмента
-				d1 = 10e12; d2 = 10e12;
-				nodes.forEach(function (n) {
+				let d1 = Infinity;
+				let d2 = Infinity;
+				nodes.forEach((n) => {
 					if((d = n.getDistance(curve.point1, true)) < d1){
 						d1 = d;
 						node1 = n;
@@ -1516,8 +1522,45 @@ Contour.prototype.__define({
 		}
 	},
 
+  /**
+   * Рисует ошибки соединений
+   */
+  draw_cnn_errors: {
+    value: function () {
+
+      const {l_visualization} = this;
+
+      if(l_visualization._cnn){
+        l_visualization._cnn.removeChildren();
+      }
+      else{
+        l_visualization._cnn = new paper.Group({ parent: l_visualization });
+      }
+
+      this.glasses(false, true).forEach((elm) => {
+        let err;
+        elm.profiles.forEach(({cnn, sub_path}) => {
+          if(!cnn){
+            sub_path.parent = l_visualization._cnn;
+            sub_path.strokeWidth = 4;
+            sub_path.strokeScaling = false;
+            sub_path.strokeColor = 'red';
+            sub_path.strokeCap = 'round';
+            sub_path.dashArray = [20, 10];
+            err = true;
+          }
+        })
+        elm.path.fillColor = err ? new paper.Color({
+            stops: ["#fee", "#fcc", "#fdd"],
+            origin: elm.path.bounds.bottomLeft,
+            destination: elm.path.bounds.topRight
+          }) : BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+      })
+    }
+  },
+
 	/**
-	 * Рисует дополнительную визуализацию. Данные берёт из спецификации
+	 * Рисует дополнительную визуализацию. Данные берёт из спецификации и проблемных соединений
 	 */
 	draw_visualization: {
 		value: function () {

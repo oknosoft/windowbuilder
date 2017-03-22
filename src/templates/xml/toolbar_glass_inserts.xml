@@ -2,6 +2,8 @@
 <toolbar>
   <item id="btn_add" type="button"  text="&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;" title="Добавить строку"  />
   <item id="btn_delete" type="button" text="&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;"  title="Удалить строку" />
+  <item id="btn_up" type="button" text="&lt;i class='fa fa-arrow-up fa-fw'&gt;&lt;/i&gt;"  title="Переместить строку вверх" />
+  <item id="btn_down" type="button" text="&lt;i class='fa fa-arrow-down fa-fw'&gt;&lt;/i&gt;"  title="Переместить строку вниз" />
   <item id="sep1" type="separator"/>
   <item id="btn_inset" type="button" text="&lt;i class='fa fa-plug fa-fw'&gt;&lt;/i&gt;"  title="Заполнить по вставке" />
 </toolbar>

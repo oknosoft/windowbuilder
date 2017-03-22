@@ -3,7 +3,7 @@
  * Created 21.08.2015<br />
  * &copy; http://www.oknosoft.ru 2014-2015
  * @author    Evgeniy Malyarov
- * 
+ *
  * @module geometry
  * @submodule freetext
  */
@@ -19,277 +19,220 @@
  * @menuorder 46
  * @tooltip Текст на эскизе
  */
-function FreeText(attr){
+class FreeText extends paper.PointText {
 
-	var _row;
+  constructor(attr) {
 
-	if(!attr.fontSize)
-		attr.fontSize = consts.font_size;
+    if(!attr.fontSize){
+      attr.fontSize = consts.font_size;
+    }
 
-	if(attr.row)
-		_row = attr.row;
-	else{
-		_row = attr.row = attr.parent.project.ox.coordinates.add();
-	}
+    super(attr);
 
-	if(!_row.cnstr)
-		_row.cnstr = attr.parent.layer.cnstr;
+    if(attr.row){
+      this._row = attr.row;
+    }
+    else{
+      this._row = attr.row = attr.parent.project.ox.coordinates.add();
+    }
 
-	if(!_row.elm)
-		_row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+    const {_row} = this;
 
-	// разберёмся с родителем
-	// if(attr.parent instanceof paper.path){
-	// 	attr.parent = attr.parent.layer.l_text;
-	// }
+    if(!_row.cnstr){
+      _row.cnstr = attr.parent.layer.cnstr;
+    }
 
-	FreeText.superclass.constructor.call(this, attr);
+    if(!_row.elm){
+      _row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+    }
 
-	this.__define({
-		_row: {
-			get: function () {
-				return _row;
-			},
-			enumerable: false
-		}
-	});
+    if(attr.point){
+      if(attr.point instanceof paper.Point)
+        this.point = attr.point;
+      else
+        this.point = new paper.Point(attr.point);
+    }
+    else{
 
-	if(attr.point){
-		if(attr.point instanceof paper.Point)
-			this.point = attr.point;
-		else
-			this.point = new paper.Point(attr.point);
-	}else{
+      this.clr = _row.clr;
+      this.angle = _row.angle_hor;
 
-		
-		this.clr = _row.clr;
-		this.angle = _row.angle_hor;
+      if(_row.path_data){
+        var path_data = JSON.parse(_row.path_data);
+        this.x = _row.x1 + path_data.bounds_x || 0;
+        this.y = _row.y1 - path_data.bounds_y || 0;
+        this._mixin(path_data, null, ["bounds_x","bounds_y"]);
+      }else{
+        this.x = _row.x1;
+        this.y = _row.y1;
+      }
+    }
 
-		if(_row.path_data){
-			var path_data = JSON.parse(_row.path_data);
-			this.x = _row.x1 + path_data.bounds_x || 0;
-			this.y = _row.y1 - path_data.bounds_y || 0;
-			this._mixin(path_data, null, ["bounds_x","bounds_y"]);
-		}else{
-			this.x = _row.x1;
-			this.y = _row.y1;
-		}
-	}
+    this.bringToFront();
 
-	this.bringToFront();
+  }
 
+  /**
+   * Удаляет элемент из контура и иерархии проекта
+   * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
+   * @method remove
+   */
+  remove() {
+    this._row._owner.del(this._row);
+    this._row = null;
+    paper.PointText.prototype.remove.call(this);
+  }
 
-	/**
-	 * Удаляет элемент из контура и иерархии проекта
-	 * Одновлеменно, удаляет строку из табчасти табчасти _Координаты_
-	 * @method remove
-	 */
-	this.remove = function () {
-		_row._owner.del(_row);
-		_row = null;
-		FreeText.superclass.remove.call(this);
-	};
+  /**
+   * Вычисляемые поля в таблице координат
+   * @method save_coordinates
+   */
+  save_coordinates() {
+    const {_row} = this;
+
+    _row.x1 = this.x;
+    _row.y1 = this.y;
+    _row.angle_hor = this.angle;
+
+    // устанавливаем тип элемента
+    _row.elm_type = this.elm_type;
+
+    // сериализованные данные
+    _row.path_data = JSON.stringify({
+      text: this.text,
+      font_family: this.font_family,
+      font_size: this.font_size,
+      bold: this.bold,
+      align: this.align.ref,
+      bounds_x: this.project.bounds.x,
+      bounds_y: this.project.bounds.y
+    });
+  }
+
+  /**
+   * ### Перемещает элемент и информирует об этом наблюдателя
+   * @method move_points
+   */
+  move_points(point) {
+    this.point = point;
+
+    Object.getNotifier(this).notify({
+      type: 'update',
+      name: "x"
+    });
+    Object.getNotifier(this).notify({
+      type: 'update',
+      name: "y"
+    });
+  }
+
+  /**
+   * Возвращает тип элемента (Текст)
+   * @property elm_type
+   * @for FreeText
+   */
+  get elm_type() {
+    return $p.enm.elm_types.Текст;
+  }
+
+  // виртуальные метаданные для автоформ
+  get _metadata() {
+    return $p.dp.builder_text.metadata();
+  }
+
+  // виртуальный датаменеджер для автоформ
+  get _manager() {
+    return $p.dp.builder_text;
+  }
+
+  // транслирует цвет из справочника в строку и обратно
+  get clr() {
+    return this._row ? this._row.clr : $p.cat.clrs.get();
+  }
+  set clr(v) {
+    this._row.clr = v;
+    if(this._row.clr.clr_str.length == 6)
+      this.fillColor = "#" + this._row.clr.clr_str;
+    this.project.register_update();
+  }
+
+  // семейство шрифта
+  get font_family() {
+    return this.fontFamily || "";
+  }
+  set font_family(v) {
+    this.fontFamily = v;
+    this.project.register_update();
+  }
+
+  // размер шрифта
+  get font_size() {
+    return this.fontSize || consts.font_size;
+  }
+  set font_size(v) {
+    this.fontSize = v;
+    this.project.register_update();
+  }
+
+  // жирность шрифта
+  get bold() {
+    return this.fontWeight != 'normal';
+  }
+  set bold(v) {
+    this.fontWeight = v ? 'bold' : 'normal';
+  }
+
+  // координата x
+  get x() {
+    return (this.point.x - this.project.bounds.x).round(1);
+  }
+  set x(v) {
+    this.point.x = parseFloat(v) + this.project.bounds.x;
+    this.project.register_update();
+  }
+
+  // координата y
+  get y() {
+    return (this.project.bounds.height + this.project.bounds.y - this.point.y).round(1);
+  }
+  set y(v) {
+    this.point.y = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
+  }
+
+  // текст элемента - при установке пустой строки, элемент удаляется
+  get text() {
+    return this.content;
+  }
+  set text(v) {
+    if(v){
+      this.content = v;
+      this.project.register_update();
+    }
+    else{
+      Object.getNotifier(this).notify({
+        type: 'unload'
+      });
+      setTimeout(this.remove.bind(this), 50);
+    }
+  }
+
+  // угол к горизонту
+  get angle() {
+    return Math.round(this.rotation);
+  }
+  set angle(v) {
+    this.rotation = v;
+    this.project.register_update();
+  }
+
+  // выравнивание текста
+  get align() {
+    return $p.enm.text_aligns.get(this.justification);
+  }
+  set align(v) {
+    this.justification = $p.utils.is_data_obj(v) ? v.ref : v;
+    this.project.register_update();
+  }
 
 }
-FreeText._extend(paper.PointText);
 
-FreeText.prototype.__define({
-
-	/**
-	 * Вычисляемые поля в таблице координат
-	 * @method save_coordinates
-	 * @for FreeText
-	 */
-	save_coordinates: {
-		value: function () {
-
-			var _row = this._row;
-
-			_row.x1 = this.x;
-			_row.y1 = this.y;
-			_row.angle_hor = this.angle;
-			
-			// устанавливаем тип элемента
-			_row.elm_type = this.elm_type;
-
-			// сериализованные данные
-			_row.path_data = JSON.stringify({
-				text: this.text,
-				font_family: this.font_family,
-				font_size: this.font_size,
-				bold: this.bold,
-				align: this.align.ref,
-				bounds_x: this.project.bounds.x,
-				bounds_y: this.project.bounds.y
-			});
-		}
-	},
-
-	/**
-	 * Возвращает тип элемента (Текст)
-	 * @property elm_type
-	 * @for FreeText
-	 */
-	elm_type: {
-		get : function(){
-
-			return $p.enm.elm_types.Текст;
-
-		}
-	},
-
-	/**
-	 * ### Перемещает элемент и информирует об этом наблюдателя 
-	 * @method move_points
-	 * @for FreeText
-	 */
-	move_points: {
-		value: function (point) {
-
-			this.point = point;
-
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: "x"
-			});
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: "y"
-			});
-		}
-	},
-
-	// виртуальные метаданные для автоформ
-	_metadata: {
-		get: function () {
-			return $p.dp.builder_text.metadata();
-		},
-		enumerable: false
-	},
-
-	// виртуальный датаменеджер для автоформ
-	_manager: {
-		get: function () {
-			return $p.dp.builder_text;
-		},
-		enumerable: false
-	},
-
-	// транслирует цвет из справочника в строку и обратно
-	clr: {
-		get: function () {
-			return this._row ? this._row.clr : $p.cat.clrs.get();
-		},
-		set: function (v) {
-			this._row.clr = v;
-			if(this._row.clr.clr_str.length == 6)
-				this.fillColor = "#" + this._row.clr.clr_str;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-	// семейство шрифта
-	font_family: {
-		get: function () {
-			return this.fontFamily || "";
-		},
-		set: function (v) {
-			this.fontFamily = v;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-	// размер шрифта
-	font_size: {
-		get: function () {
-			return this.fontSize || consts.font_size;
-		},
-		set: function (v) {
-			this.fontSize = v;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-	// жирность шрифта
-	bold: {
-		get: function () {
-			return this.fontWeight != 'normal';
-		},
-		set: function (v) {
-			this.fontWeight = v ? 'bold' : 'normal';
-		},
-		enumerable: false
-	},
-
-	// координата x
-	x: {
-		get: function () {
-			return (this.point.x - this.project.bounds.x).round(1);
-		},
-		set: function (v) {
-			this.point.x = parseFloat(v) + this.project.bounds.x;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-	// координата y
-	y: {
-		get: function () {
-			return (this.project.bounds.height + this.project.bounds.y - this.point.y).round(1);
-		},
-		set: function (v) {
-			this.point.y = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
-		},
-		enumerable: false
-	},
-
-	// текст элемента
-	text: {
-		get: function () {
-			return this.content;
-		},
-		set: function (v) {
-			if(v){
-				this.content = v;
-				this.project.register_update();
-			}
-			else{
-				Object.getNotifier(this).notify({
-					type: 'unload'
-				});
-				setTimeout(this.remove.bind(this), 50);
-			}
-
-		},
-		enumerable: false
-	},
-
-	// угол к горизонту
-	angle: {
-		get: function () {
-			return Math.round(this.rotation);
-		},
-		set: function (v) {
-			this.rotation = v;
-			this.project.register_update();
-		},
-		enumerable: false
-	},
-
-	// выравнивание текста
-	align: {
-		get: function () {
-			return $p.enm.text_aligns.get(this.justification);
-		},
-		set: function (v) {
-			this.justification = $p.utils.is_data_obj(v) ? v.ref : v;
-			this.project.register_update();
-		},
-		enumerable: false
-	}
-
-});

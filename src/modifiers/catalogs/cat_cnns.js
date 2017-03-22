@@ -24,7 +24,7 @@ $p.cat.cnns.__define({
    * Возвращает массив соединений, доступный для сочетания номенклатур.
    * Для соединений с заполнениями учитывается толщина. Контроль остальных геометрических особенностей выполняется на стороне рисовалки
    * @param nom1 {_cat.nom|BuilderElement}
-   * @param nom2 {_cat.nom|BuilderElement}
+   * @param [nom2] {_cat.nom|BuilderElement}
    * @param [cnn_types] {_enm.cnns|Array.<_enm.cnns>}
    * @return {Array}
    */
@@ -44,19 +44,7 @@ $p.cat.cnns.__define({
       // если оба элемента - профили, определяем сторону
       const side = !ign_side && nom1 instanceof $p.Editor.ProfileItem && nom2 instanceof $p.Editor.ProfileItem && nom2.cnn_side(nom1);
 
-      let onom1, onom2, a1, a2, thickness1, thickness2, is_i = false, art1glass = false, art2glass = false;
-
-      if(nom1 instanceof $p.Editor.BuilderElement){
-        onom1 = nom1.nom;
-      }
-      else if($p.utils.is_data_obj(nom1)){
-        onom1 = nom1;
-      }
-      else{
-        onom1 = $p.cat.nom.get(nom1);
-      }
-
-      const ref1 = (!onom1 || onom1.empty()) ? nom1.ref : onom1.ref;
+      let onom2, a1, a2, thickness1, thickness2, is_i = false, art1glass = false, art2glass = false;
 
       if(!nom2 || ($p.utils.is_data_obj(nom2) && nom2.empty())){
         is_i = true;
@@ -74,6 +62,9 @@ $p.cat.cnns.__define({
         }
       }
 
+      const ref1 = nom1.ref;
+      const ref2 = onom2.ref;
+
       if(!is_i){
         if(nom1 instanceof $p.Editor.Filling){
           art1glass = true;
@@ -89,8 +80,8 @@ $p.cat.cnns.__define({
         this._nomcache[ref1] = {};
       }
       a1 = this._nomcache[ref1];
-      if(!a1[onom2.ref]){
-        a2 = (a1[onom2.ref] = []);
+      if(!a1[ref2]){
+        a2 = (a1[ref2] = []);
         // для всех элементов справочника соединения
         this.each((cnn) => {
           // если в строках соединяемых элементов есть наша - добавляем
@@ -114,7 +105,7 @@ $p.cat.cnns.__define({
         const types = Array.isArray(cnn_types) ? cnn_types : (
             $p.enm.cnn_types.acn.a.indexOf(cnn_types) != -1 ? $p.enm.cnn_types.acn.a : [cnn_types]
           );
-        return a1[onom2.ref].filter((cnn) => {
+        return a1[ref2].filter((cnn) => {
           if(types.indexOf(cnn.cnn_type) != -1){
             if(!side){
               return true
@@ -132,7 +123,7 @@ $p.cat.cnns.__define({
         });
       }
 
-      return a1[onom2.ref];
+      return a1[ref2];
     }
   },
 
