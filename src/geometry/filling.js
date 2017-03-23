@@ -260,6 +260,9 @@ class Filling extends BuilderElement {
     path.visible = true;
     onlays.forEach((elm) => elm.redraw());
 
+    // прочистим пути
+    this.purge_path();
+
     // если текст не создан - добавляем
     if(!data._text){
       data._text = new paper.PointText({
@@ -338,6 +341,15 @@ class Filling extends BuilderElement {
       });
     }
     super.set_clr(v);
+  }
+
+  /**
+   * Прочищает паразитные пути
+   */
+  purge_path() {
+    const paths = this.children.filter((child) => child instanceof paper.Path);
+    const {path} = this;
+    paths.forEach((p) => p != path && p.remove());
   }
 
   get profiles() {

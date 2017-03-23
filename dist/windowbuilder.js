@@ -1714,6 +1714,8 @@ class Editor extends paper.PaperScope {
       }
     })
 
+    let medium = 0;
+
     glasses = glasses.map((glass) => {
       const {bounds, profiles} = glass;
       const res = {
@@ -1721,6 +1723,7 @@ class Editor extends paper.PaperScope {
         width: bounds.width,
         height: bounds.height,
       }
+      medium += bounds[name];
       profiles.forEach((curr) => {
         const profile = curr.profile.nearest() || curr.profile;
         if(shift.indexOf(profile) != -1){
@@ -1744,7 +1747,8 @@ class Editor extends paper.PaperScope {
         }
       });
       return res;
-    })
+    });
+    medium /= glasses.length;
 
     shift.forEach((impost, index) => {
       const res = {impost, dx: [], dy: []};
@@ -1759,29 +1763,23 @@ class Editor extends paper.PaperScope {
       shift[index] = res
     })
 
-    const res = []
+    const res = [];
+
     shift.forEach((curr) => {
-
-      let medium = 0;
       let delta = 0;
-
       if (name == 'width') {
         curr.dx.forEach((glass) => {
-          medium += glass.width
-        });
-        medium = medium / curr.dx.length;
-        curr.dx.forEach((glass) => {
+          const double = glass.left && glass.right ? 5.9 : 2.5;
           if(glass.right == curr.impost){
-            delta += (medium - glass.width) / (1.3 * curr.dx.length)
+            delta += (medium - glass.width) / double
           }
           else if(glass.left == curr.impost){
-            delta += (glass.width - medium) / (1.3 * curr.dx.length)
+            delta += (glass.width - medium) / double
           }
         });
         delta = new paper.Point([delta,0])
       }
       else {
-
         delta = new paper.Point([0, delta])
       }
 
@@ -1811,16 +1809,9 @@ class Editor extends paper.PaperScope {
       return
     }
 
-    if(shift.some((delta) => {
-      return delta.length > 0.8
-      })){
-
-      data._align_counter+= 1;
-
-      this.project.contours.forEach((l) => {
-        l.redraw();
-      });
-
+    if(shift.some((delta) => delta.length > 0.5)){
+      data._align_counter++;
+      this.project.contours.forEach((l) => l.redraw());
       return this.glass_align(name, glasses);
     }
     else{
@@ -2422,7 +2413,7 @@ Contour.prototype.__define({
 
 			let llength = 0;
 
-			function on_child_contour_redrawed(){
+			function on_flap_redrawed(){
 				llength--;
 				!llength && on_redrawed && on_redrawed();
 			}
@@ -2447,7 +2438,7 @@ Contour.prototype.__define({
 				if (child_contour instanceof Contour){
 					llength++;
           if(!this.project.has_changes()){
-            child_contour.redraw(on_child_contour_redrawed);
+            child_contour.redraw(on_flap_redrawed);
           }
 				}
 			});
@@ -3293,7 +3284,39 @@ Contour.prototype.__define({
             origin: elm.path.bounds.bottomLeft,
             destination: elm.path.bounds.topRight
           }) : BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
-      })
+      });
+
+      this.profiles.forEach((elm) => {
+        const {b, e} = elm.rays;
+        if(!b.cnn){
+          new paper.Path.Circle({
+            center: elm.corns(4).add(elm.corns(1)).divide(2),
+            radius: 80,
+            strokeColor: 'red',
+            strokeWidth: 2,
+            strokeCap: 'round',
+            strokeScaling: false,
+            dashOffset: 4,
+            dashArray: [4, 4],
+            guide: true,
+            parent: l_visualization._cnn
+          });
+        }
+        if(!e.cnn){
+          new paper.Path.Circle({
+            center: elm.corns(2).add(elm.corns(3)).divide(2),
+            radius: 80,
+            strokeColor: 'red',
+            strokeWidth: 2,
+            strokeCap: 'round',
+            strokeScaling: false,
+            dashOffset: 4,
+            dashArray: [4, 4],
+            guide: true,
+            parent: l_visualization._cnn
+          });
+        }
+      });
     }
   },
 
@@ -4094,14 +4117,16 @@ class BuilderElement extends paper.Group {
     return this.data.generatrix;
   }
   set generatrix(attr) {
-    this.data.generatrix.removeSegments();
+
+    const {data} = this;
+    data.generatrix.removeSegments();
 
     if(this.hasOwnProperty('rays')){
       this.rays.clear();
     }
 
     if(Array.isArray(attr)){
-      this.data.generatrix.addSegments(attr);
+      data.generatrix.addSegments(attr);
     }
     else if(attr.proto &&  attr.p1 &&  attr.p2){
 
@@ -4125,12 +4150,12 @@ class BuilderElement extends paper.Group {
         tpath.split(d2);
       }
 
-      this.data.generatrix.remove();
-      this.data.generatrix = tpath;
-      this.data.generatrix.parent = this;
+      data.generatrix.remove();
+      data.generatrix = tpath;
+      data.generatrix.parent = this;
 
       if(this.layer.parent){
-        this.data.generatrix.guide = true;
+        data.generatrix.guide = true;
       }
     }
   }
@@ -4477,8 +4502,9 @@ class BuilderElement extends paper.Group {
       this._row._owner.del(this._row);
     }
 
-    super.remove();
     this.project.register_change();
+
+    super.remove();
   }
 
   static clr_by_clr(clr, view_out) {
@@ -4733,6 +4759,8 @@ class Filling extends BuilderElement {
     path.visible = true;
     onlays.forEach((elm) => elm.redraw());
 
+    this.purge_path();
+
     if(!data._text){
       data._text = new paper.PointText({
         parent: this,
@@ -4798,6 +4826,12 @@ class Filling extends BuilderElement {
       });
     }
     super.set_clr(v);
+  }
+
+  purge_path() {
+    const paths = this.children.filter((child) => child instanceof paper.Path);
+    const {path} = this;
+    paths.forEach((p) => p != path && p.remove());
   }
 
   get profiles() {
@@ -5781,8 +5815,15 @@ class ProfileRays {
 
 class ProfileItem extends BuilderElement {
 
-  constructor(attr) {
+  constructor(attr = {}) {
+    const {generatrix} = attr;
+    if(generatrix){
+      delete attr.generatrix;
+    }
     super(attr);
+    if(generatrix){
+      attr.generatrix = generatrix;
+    }
     this.initialize(attr);
   }
 
@@ -8344,16 +8385,10 @@ Scheme.prototype.__define({
 							layers.push(layer);
               layer.clear_dimentions();
 						}
-
 					}
-
 				}
 				else if(item instanceof Filling){
-					while (item.children.length > 1){
-						if(!(item.children[1] instanceof Onlay)){
-              item.children[1].remove();
-            }
-					}
+          item.purge_path();
 				}
 			});
 		}
@@ -11961,7 +11996,7 @@ class ToolSelectNode extends ToolElement {
             item = item.nearest();
           }
 
-          if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
+          if (item && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
 
             if (event.modifiers.shift) {
               item.selected = !item.selected;

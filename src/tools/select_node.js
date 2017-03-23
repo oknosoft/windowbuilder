@@ -77,7 +77,7 @@ class ToolSelectNode extends ToolElement {
             item = item.nearest();
           }
 
-          if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
+          if (item && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
 
             if (event.modifiers.shift) {
               item.selected = !item.selected;

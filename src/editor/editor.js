@@ -1203,6 +1203,8 @@ class Editor extends paper.PaperScope {
       }
     })
 
+    let medium = 0;
+
     // модифицируем коллекцию заполнений - подклеиваем в неё импосты
     glasses = glasses.map((glass) => {
       const {bounds, profiles} = glass;
@@ -1211,6 +1213,7 @@ class Editor extends paper.PaperScope {
         width: bounds.width,
         height: bounds.height,
       }
+      medium += bounds[name];
       profiles.forEach((curr) => {
         const profile = curr.profile.nearest() || curr.profile;
         if(shift.indexOf(profile) != -1){
@@ -1234,7 +1237,8 @@ class Editor extends paper.PaperScope {
         }
       });
       return res;
-    })
+    });
+    medium /= glasses.length;
 
     // модифицируем коллекцию импостов - подклеиваем сдвиги
     shift.forEach((impost, index) => {
@@ -1252,29 +1256,23 @@ class Editor extends paper.PaperScope {
     })
 
     // рассчитываем, на сколько и в какую сторону двигать
-    const res = []
+    const res = [];
+
     shift.forEach((curr) => {
-
-      let medium = 0;
       let delta = 0;
-
       if (name == 'width') {
         curr.dx.forEach((glass) => {
-          medium += glass.width
-        });
-        medium = medium / curr.dx.length;
-        curr.dx.forEach((glass) => {
+          const double = glass.left && glass.right ? 5.9 : 2.5;
           if(glass.right == curr.impost){
-            delta += (medium - glass.width) / (1.3 * curr.dx.length)
+            delta += (medium - glass.width) / double
           }
           else if(glass.left == curr.impost){
-            delta += (glass.width - medium) / (1.3 * curr.dx.length)
+            delta += (glass.width - medium) / double
           }
         });
         delta = new paper.Point([delta,0])
       }
       else {
-
         delta = new paper.Point([0, delta])
       }
 
@@ -1307,16 +1305,9 @@ class Editor extends paper.PaperScope {
       return
     }
 
-    if(shift.some((delta) => {
-      return delta.length > 0.8
-      })){
-
-      data._align_counter+= 1;
-
-      this.project.contours.forEach((l) => {
-        l.redraw();
-      });
-
+    if(shift.some((delta) => delta.length > 0.5)){
+      data._align_counter++;
+      this.project.contours.forEach((l) => l.redraw());
       return this.glass_align(name, glasses);
     }
     else{

@@ -682,17 +682,10 @@ Scheme.prototype.__define({
 							layers.push(layer);
               layer.clear_dimentions();
 						}
-
 					}
-
 				}
 				else if(item instanceof Filling){
-					//item.position = item.position.add(delta);
-					while (item.children.length > 1){
-						if(!(item.children[1] instanceof Onlay)){
-              item.children[1].remove();
-            }
-					}
+          item.purge_path();
 				}
 			});
 			// TODO: возможно, здесь надо подвигать примыкающие контуры

@@ -302,8 +302,15 @@ class ProfileRays {
  */
 class ProfileItem extends BuilderElement {
 
-  constructor(attr) {
+  constructor(attr = {}) {
+    const {generatrix} = attr;
+    if(generatrix){
+      delete attr.generatrix;
+    }
     super(attr);
+    if(generatrix){
+      attr.generatrix = generatrix;
+    }
     this.initialize(attr);
   }
 

@@ -104,14 +104,16 @@ class BuilderElement extends paper.Group {
     return this.data.generatrix;
   }
   set generatrix(attr) {
-    this.data.generatrix.removeSegments();
+
+    const {data} = this;
+    data.generatrix.removeSegments();
 
     if(this.hasOwnProperty('rays')){
       this.rays.clear();
     }
 
     if(Array.isArray(attr)){
-      this.data.generatrix.addSegments(attr);
+      data.generatrix.addSegments(attr);
     }
     else if(attr.proto &&  attr.p1 &&  attr.p2){
 
@@ -137,12 +139,12 @@ class BuilderElement extends paper.Group {
         tpath.split(d2);
       }
 
-      this.data.generatrix.remove();
-      this.data.generatrix = tpath;
-      this.data.generatrix.parent = this;
+      data.generatrix.remove();
+      data.generatrix = tpath;
+      data.generatrix.parent = this;
 
       if(this.layer.parent){
-        this.data.generatrix.guide = true;
+        data.generatrix.guide = true;
       }
     }
   }
@@ -537,8 +539,9 @@ class BuilderElement extends paper.Group {
       this._row._owner.del(this._row);
     }
 
-    super.remove();
     this.project.register_change();
+
+    super.remove();
   }
 
   static clr_by_clr(clr, view_out) {

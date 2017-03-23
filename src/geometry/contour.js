@@ -489,7 +489,7 @@ Contour.prototype.__define({
 
 			let llength = 0;
 
-			function on_child_contour_redrawed(){
+			function on_flap_redrawed(){
 				llength--;
 				!llength && on_redrawed && on_redrawed();
 			}
@@ -522,10 +522,10 @@ Contour.prototype.__define({
 					llength++;
 					//setTimeout(function () {
 					//	if(!this.project.has_changes())
-					//		child_contour.redraw(on_child_contour_redrawed);
+					//		child_contour.redraw(on_flap_redrawed);
 					//});
           if(!this.project.has_changes()){
-            child_contour.redraw(on_child_contour_redrawed);
+            child_contour.redraw(on_flap_redrawed);
           }
 				}
 			});
@@ -1537,6 +1537,7 @@ Contour.prototype.__define({
         l_visualization._cnn = new paper.Group({ parent: l_visualization });
       }
 
+      // ошибки соединений с заполнениями
       this.glasses(false, true).forEach((elm) => {
         let err;
         elm.profiles.forEach(({cnn, sub_path}) => {
@@ -1555,7 +1556,40 @@ Contour.prototype.__define({
             origin: elm.path.bounds.bottomLeft,
             destination: elm.path.bounds.topRight
           }) : BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
-      })
+      });
+
+      // ошибки соединений профиля
+      this.profiles.forEach((elm) => {
+        const {b, e} = elm.rays;
+        if(!b.cnn){
+          new paper.Path.Circle({
+            center: elm.corns(4).add(elm.corns(1)).divide(2),
+            radius: 80,
+            strokeColor: 'red',
+            strokeWidth: 2,
+            strokeCap: 'round',
+            strokeScaling: false,
+            dashOffset: 4,
+            dashArray: [4, 4],
+            guide: true,
+            parent: l_visualization._cnn
+          });
+        }
+        if(!e.cnn){
+          new paper.Path.Circle({
+            center: elm.corns(2).add(elm.corns(3)).divide(2),
+            radius: 80,
+            strokeColor: 'red',
+            strokeWidth: 2,
+            strokeCap: 'round',
+            strokeScaling: false,
+            dashOffset: 4,
+            dashArray: [4, 4],
+            guide: true,
+            parent: l_visualization._cnn
+          });
+        }
+      });
     }
   },
 

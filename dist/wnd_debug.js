@@ -5879,10 +5879,6 @@ function ProductsBuilding(){
     const {b, e} = rays;
 
 		if(!b.cnn || !e.cnn){
-			$p.record_log({
-				note: "не найдено соединение",
-				obj: _row._obj
-			});
 			return;
 		}
 
