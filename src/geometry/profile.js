@@ -1601,6 +1601,7 @@ class ProfileItem extends BuilderElement {
    * @param [start_point] {paper.Point} - откуда началось движение
    */
   move_points(delta, all_points, start_point) {
+
     if(!delta.length){
       return;
     }

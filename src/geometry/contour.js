@@ -236,7 +236,7 @@ Contour.prototype.__define({
                 curr.binded = true;
                 need_bind--;
                 available_bind--;
-                if(!curr.b.is_nearest(elm.b)){
+                if(!curr.b.equals(elm.b)){
                   elm.rays.clear(true);
                   elm.b = curr.b;
                   if(noti.profiles.indexOf(elm) == -1){
@@ -245,7 +245,7 @@ Contour.prototype.__define({
                   }
                 }
 
-                if(!curr.e.is_nearest(elm.e)){
+                if(!curr.e.equals(elm.e)){
                   elm.rays.clear(true);
                   elm.e = curr.e;
                   if(noti.profiles.indexOf(elm) == -1){
@@ -524,9 +524,7 @@ Contour.prototype.__define({
 					//	if(!this.project.has_changes())
 					//		child_contour.redraw(on_flap_redrawed);
 					//});
-          if(!this.project.has_changes()){
-            child_contour.redraw(on_flap_redrawed);
-          }
+          child_contour.redraw(on_flap_redrawed);
 				}
 			});
 

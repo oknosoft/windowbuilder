@@ -1674,18 +1674,14 @@ class Editor extends paper.PaperScope {
 
   do_glass_align(name = 'auto', glasses) {
 
-    const shift = [];
-
     if(!glasses){
       glasses = this.project.selected_glasses();
     }
-
     if(glasses.length < 2){
       return
     }
 
     let layer;
-
     if(glasses.some((glass) => {
         const gl = this.project.rootLayer(glass.layer);
         if(!layer){
@@ -1700,7 +1696,7 @@ class Editor extends paper.PaperScope {
           return true
         }
       })){
-      return
+      return;
     }
 
     if(name == 'auto'){
@@ -1708,14 +1704,14 @@ class Editor extends paper.PaperScope {
     }
 
     const orientation = name == 'width' ? $p.enm.orientations.vert : $p.enm.orientations.hor;
-    layer.imposts.forEach((impost) => {
-      if(impost.orientation == orientation){
-        shift.push(impost)
-      }
-    })
+    const shift = layer.profiles.filter((impost) => {
+      const {b, e} = impost.rays;
+      return impost.orientation == orientation && (b.is_tt || e.is_tt || b.is_i || e.is_i);
+    });
 
     let medium = 0;
 
+    const glmap = new Map();
     glasses = glasses.map((glass) => {
       const {bounds, profiles} = glass;
       const res = {
@@ -1724,11 +1720,27 @@ class Editor extends paper.PaperScope {
         height: bounds.height,
       }
       medium += bounds[name];
+
       profiles.forEach((curr) => {
         const profile = curr.profile.nearest() || curr.profile;
+
         if(shift.indexOf(profile) != -1){
+
+          if(!glmap.has(profile)){
+            glmap.set(profile, {dx: new Set, dy: new Set});
+          }
+
+          const gl = glmap.get(profile);
+          if(curr.outer){
+            gl.is_outer = true;
+          }
+          else{
+            gl.is_inner = true;
+          }
+
           const point = curr.b.add(curr.e).divide(2);
           if(name == 'width'){
+            gl.dx.add(res);
             if(point.x < bounds.center.x){
               res.left = profile
             }
@@ -1737,6 +1749,7 @@ class Editor extends paper.PaperScope {
             }
           }
           else{
+            gl.dy.add(res);
             if(point.y < bounds.center.y){
               res.top = profile
             }
@@ -1749,6 +1762,21 @@ class Editor extends paper.PaperScope {
       return res;
     });
     medium /= glasses.length;
+
+    shift.forEach((impost) => {
+      const gl = glmap.get(impost);
+      gl.ok = (gl.is_inner && gl.is_outer);
+      gl.dx.forEach((glass) => {
+          if(glass.left == impost && !glass.right){
+            gl.delta = (glass.width - medium);
+            gl.ok = true;
+          }
+          if(glass.right == impost && !glass.left){
+            gl.delta = (medium - glass.width);
+            gl.ok = true;
+          }
+        });
+    });
 
     shift.forEach((impost, index) => {
       const res = {impost, dx: [], dy: []};
@@ -1766,21 +1794,42 @@ class Editor extends paper.PaperScope {
     const res = [];
 
     shift.forEach((curr) => {
-      let delta = 0;
+
+      const gl = glmap.get(curr.impost);
+      if(!gl.ok){
+        return;
+      }
+
+      let delta = gl.delta || 0;
+
       if (name == 'width') {
-        curr.dx.forEach((glass) => {
-          const double = glass.left && glass.right ? 5.9 : 2.5;
-          if(glass.right == curr.impost){
-            delta += (medium - glass.width) / double
-          }
-          else if(glass.left == curr.impost){
-            delta += (glass.width - medium) / double
-          }
-        });
-        delta = new paper.Point([delta,0])
+        if(!gl.hasOwnProperty('delta')){
+          curr.dx.some((glass) => {
+            const double = glass.left && glass.right ? 2.1 * curr.dx.length : 0;
+            if(glass.right == curr.impost){
+              if(double){
+                delta += (medium - glass.width) / double;
+              }
+              else{
+                delta = medium - glass.width;
+                return true;
+              }
+            }
+            else if(glass.left == curr.impost){
+              if(double){
+                delta += (glass.width - medium) / double;
+              }
+              else{
+                delta = glass.width - medium;
+                return true;
+              }
+            }
+          });
+        }
+        delta = new paper.Point([delta,0]);
       }
       else {
-        delta = new paper.Point([0, delta])
+        delta = new paper.Point([0, delta]);
       }
 
       if(delta.length){
@@ -1809,7 +1858,7 @@ class Editor extends paper.PaperScope {
       return
     }
 
-    if(shift.some((delta) => delta.length > 0.5)){
+    if(shift.some((delta) => delta.length > 0.3)){
       data._align_counter++;
       this.project.contours.forEach((l) => l.redraw());
       return this.glass_align(name, glasses);
@@ -2204,7 +2253,7 @@ Contour.prototype.__define({
                 curr.binded = true;
                 need_bind--;
                 available_bind--;
-                if(!curr.b.is_nearest(elm.b)){
+                if(!curr.b.equals(elm.b)){
                   elm.rays.clear(true);
                   elm.b = curr.b;
                   if(noti.profiles.indexOf(elm) == -1){
@@ -2213,7 +2262,7 @@ Contour.prototype.__define({
                   }
                 }
 
-                if(!curr.e.is_nearest(elm.e)){
+                if(!curr.e.equals(elm.e)){
                   elm.rays.clear(true);
                   elm.e = curr.e;
                   if(noti.profiles.indexOf(elm) == -1){
@@ -2437,9 +2486,7 @@ Contour.prototype.__define({
       this.children.forEach((child_contour) => {
 				if (child_contour instanceof Contour){
 					llength++;
-          if(!this.project.has_changes()){
-            child_contour.redraw(on_flap_redrawed);
-          }
+          child_contour.redraw(on_flap_redrawed);
 				}
 			});
 
@@ -6803,6 +6850,7 @@ class ProfileItem extends BuilderElement {
   }
 
   move_points(delta, all_points, start_point) {
+
     if(!delta.length){
       return;
     }
