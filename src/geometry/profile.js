@@ -138,6 +138,17 @@ class CnnPoint {
     this._profile = v;
   }
 
+  get npoint() {
+    if(!this.is_tt){
+      return this.point;
+    }
+    const {profile} = this;
+    if(!profile || !profile.nearest(true)){
+      return this.point;
+    }
+    return profile.nearest(true).generatrix.getNearestPoint(this.point);
+  }
+
   initialize() {
 
     const {_parent, _node} = this;
