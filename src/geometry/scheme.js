@@ -1189,12 +1189,19 @@ Scheme.prototype.__define({
           if(typeof res.distance == "number" && res.distance < distance)
             return 1;
 
-          if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
+          //if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
+          if(profile && !res.cnn){
 
             // а есть ли подходящее?
             cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
-            if(!cnns.length)
-              return 1;
+            if(!cnns.length){
+              if(!element.is_collinear(profile)){
+                cnns = $p.cat.cnns.nom_cnn(profile, element, $p.enm.cnn_types.acn.t);
+              }
+              if(!cnns.length){
+                return 1;
+              }
+            }
 
             // если в точке сходятся 2 профиля текущего контура - ок
 
@@ -1208,8 +1215,17 @@ Scheme.prototype.__define({
           res.point = bind_node ? element[node] : point;
           res.distance = distance;
           res.profile = element;
-          res.profile_point = node;
-          res.cnn_types = $p.enm.cnn_types.acn.a;
+          if(cnns && cnns.length && $p.enm.cnn_types.acn.t.indexOf(cnns[0].cnn_type) != -1){
+            res.profile_point = '';
+            res.cnn_types = $p.enm.cnn_types.acn.t;
+            if(!res.cnn){
+              res.cnn = cnns[0];
+            }
+          }
+          else{
+            res.profile_point = node;
+            res.cnn_types = $p.enm.cnn_types.acn.a;
+          }
 
           return 2;
         }
@@ -1225,7 +1241,8 @@ Scheme.prototype.__define({
         }
         return;
 
-      }else if(node_distance = check_node_distance("b")){
+      }
+      else if(node_distance = check_node_distance("b")){
         // Если мы находимся в окрестности начала соседнего элемента
         if(node_distance == 2)
           return false;

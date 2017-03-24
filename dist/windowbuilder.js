@@ -2281,9 +2281,76 @@ class Contour extends paper.Layer {
     project.register_change();
   }
 
+  get nodes () {
+    const nodes = [];
+    this.profiles.forEach((p) => {
+      let findedb;
+      let findede;
+      nodes.forEach((n) => {
+        if (p.b.is_nearest(n)) {
+          findedb = true
+        }
+        if (p.e.is_nearest(n)) {
+          findede = true
+        }
+      })
+      if (!findedb) {
+        nodes.push(p.b.clone())
+      }
+      if (!findede) {
+        nodes.push(p.e.clone())
+      }
+    })
+    return nodes;
+  }
+
+
   notify(obj) {
     this._notifier.notify(obj);
     this.project.register_change();
+  }
+
+  get outer_nodes() {
+    return this.outer_profiles.map((v) => v.elm);
+  }
+
+  get outer_profiles() {
+    const {profiles} = this;
+    const to_remove = [];
+    const res = [];
+
+    let findedb, findede;
+
+    for(let i=0; i<profiles.length; i++){
+      const elm = profiles[i];
+      if(elm.data.simulated)
+        continue;
+      findedb = false;
+      findede = false;
+      for(var j=0; j<profiles.length; j++){
+        if(profiles[j] == elm)
+          continue;
+        if(!findedb && elm.has_cnn(profiles[j], elm.b) && elm.b.is_nearest(profiles[j].e))
+          findedb = true;
+        if(!findede && elm.has_cnn(profiles[j], elm.e) && elm.e.is_nearest(profiles[j].b))
+          findede = true;
+      }
+      if(!findedb || !findede)
+        to_remove.push(elm);
+    }
+    for(let i=0; i<profiles.length; i++){
+      const elm = profiles[i];
+      if(to_remove.indexOf(elm) != -1)
+        continue;
+      elm.data.binded = false;
+      res.push({
+        elm: elm,
+        profile: elm.nearest(),
+        b: elm.b,
+        e: elm.e
+      });
+    }
+    return res;
   }
 
   profile_by_nodes(n1, n2, point) {
@@ -2647,83 +2714,6 @@ Contour.prototype.__define({
 		}
 	},
 
-	outer_nodes: {
-		get: function(){
-			return this.outer_profiles.map(function (v) {
-				return v.elm;
-			});
-		}
-	},
-
-	outer_profiles: {
-		get: function(){
-			const {profiles} = this;
-			const to_remove = [];
-			const res = [];
-
-			let findedb, findede;
-
-			for(let i=0; i<profiles.length; i++){
-				const elm = profiles[i];
-				if(elm.data.simulated)
-					continue;
-				findedb = false;
-				findede = false;
-				for(var j=0; j<profiles.length; j++){
-					if(profiles[j] == elm)
-						continue;
-					if(!findedb && elm.has_cnn(profiles[j], elm.b) && elm.b.is_nearest(profiles[j].e))
-						findedb = true;
-					if(!findede && elm.has_cnn(profiles[j], elm.e) && elm.e.is_nearest(profiles[j].b))
-						findede = true;
-				}
-				if(!findedb || !findede)
-					to_remove.push(elm);
-			}
-			for(let i=0; i<profiles.length; i++){
-				const elm = profiles[i];
-				if(to_remove.indexOf(elm) != -1)
-					continue;
-				elm.data.binded = false;
-				res.push({
-					elm: elm,
-					profile: elm.nearest(),
-					b: elm.b,
-					e: elm.e
-				});
-			}
-			return res;
-		}
-	},
-
-	nodes: {
-		get: function(){
-
-			const nodes = [];
-
-			this.profiles.forEach((p) => {
-				let findedb;
-				let findede;
-				nodes.forEach((n) => {
-					if(p.b.is_nearest(n)){
-            findedb = true;
-          }
-					if(p.e.is_nearest(n)){
-            findede = true;
-          }
-				});
-				if(!findedb){
-          nodes.push(p.b.clone());
-        }
-				if(!findede){
-          nodes.push(p.e.clone());
-        }
-			});
-
-			return nodes;
-		}
-	},
-
 	glass_segments: {
 		get: function(){
 
@@ -2756,7 +2746,7 @@ Contour.prototype.__define({
 
 				  ip.inner.sort(sort);
 
-					if(!pb.is_i){
+					if(!pb.is_i && !pbg.is_nearest(ip.inner[0].point)){
             nodes.push(new GlassSegment(p, pbg, ip.inner[0].point));
           }
 
@@ -2764,7 +2754,7 @@ Contour.prototype.__define({
             nodes.push(new GlassSegment(p, ip.inner[i-1].point, ip.inner[i].point));
           }
 
-					if(!pe.is_i){
+					if(!pe.is_i && !ip.inner[ip.inner.length-1].point.is_nearest(peg)){
             nodes.push(new GlassSegment(p, ip.inner[ip.inner.length-1].point, peg));
           }
 
@@ -2773,7 +2763,7 @@ Contour.prototype.__define({
 
 					ip.outer.sort(sort);
 
-					if(!pb.is_i){
+					if(!pb.is_i && !ip.outer[0].point.is_nearest(pbg)){
             nodes.push(new GlassSegment(p, ip.outer[0].point, pbg, true));
           }
 
@@ -2781,7 +2771,7 @@ Contour.prototype.__define({
             nodes.push(new GlassSegment(p, ip.outer[i].point, ip.outer[i-1].point, true));
           }
 
-					if(!pe.is_i){
+					if(!pe.is_i && !peg.is_nearest(ip.outer[ip.outer.length-1].point)){
             nodes.push(new GlassSegment(p, peg, ip.outer[ip.outer.length-1].point, true));
           }
 				}
@@ -2864,93 +2854,90 @@ Contour.prototype.__define({
 	glass_recalc: {
 		value: function () {
 
-			const _contour = this;
-      const contours = _contour.glass_contours;
-      const glasses = _contour.glasses(true);
+      const contours = this.glass_contours;
+      const glasses = this.glasses(true);
 
-			function bind_glass(glass_contour){
+			contours.forEach((glass_contour) => {
 
-				let rating = 0, glass, crating, cglass, gl_nodes, glass_path_center;
+        let rating = 0, glass, crating, cglass, gl_nodes, glass_path_center;
 
-				for(let g in glasses){
+        for(let g in glasses){
 
-					glass = glasses[g];
-					if(glass.visible){
+          glass = glasses[g];
+          if(glass.visible){
             continue;
           }
 
-					crating = 0;
-					gl_nodes = glass.outer_profiles;
-					if(gl_nodes.length){
-						for(let j = 0; j < glass_contour.length; j++){
-							for(let i = 0; i < gl_nodes.length; i++){
-								if(glass_contour[j].profile == gl_nodes[i].profile &&
-									glass_contour[j].b.is_nearest(gl_nodes[i].b) &&
-									glass_contour[j].e.is_nearest(gl_nodes[i].e)){
+          crating = 0;
+          gl_nodes = glass.outer_profiles;
+          if(gl_nodes.length){
+            for(let j = 0; j < glass_contour.length; j++){
+              for(let i = 0; i < gl_nodes.length; i++){
+                if(glass_contour[j].profile == gl_nodes[i].profile &&
+                  glass_contour[j].b.is_nearest(gl_nodes[i].b) &&
+                  glass_contour[j].e.is_nearest(gl_nodes[i].e)){
 
-									crating++;
-									break;
-								}
-							}
-							if(crating > 2)
-								break;
-						}
-					}
-					else{
-						gl_nodes = glass.nodes;
-						for(let j = 0; j < glass_contour.length; j++){
-							for(let i = 0; i < gl_nodes.length; i++){
-								if(glass_contour[j].b.is_nearest(gl_nodes[i])){
-									crating++;
-									break;
-								}
-							}
-							if(crating > 2){
+                  crating++;
+                  break;
+                }
+              }
+              if(crating > 2)
+                break;
+            }
+          }
+          else{
+            gl_nodes = glass.nodes;
+            for(let j = 0; j < glass_contour.length; j++){
+              for(let i = 0; i < gl_nodes.length; i++){
+                if(glass_contour[j].b.is_nearest(gl_nodes[i])){
+                  crating++;
+                  break;
+                }
+              }
+              if(crating > 2){
                 break;
               }
-						}
-					}
+            }
+          }
 
-					if(crating > rating || !cglass){
-						rating = crating;
-						cglass = glass;
-					}
-					if(crating == rating && cglass != glass){
-						if(!glass_path_center){
-							glass_path_center = glass_contour[0].b;
-							for(let i=1; i<glass_contour.length; i++){
+          if(crating > rating || !cglass){
+            rating = crating;
+            cglass = glass;
+          }
+          if(crating == rating && cglass != glass){
+            if(!glass_path_center){
+              glass_path_center = glass_contour[0].b;
+              for(let i=1; i<glass_contour.length; i++){
                 glass_path_center = glass_path_center.add(glass_contour[i].b);
               }
-							glass_path_center = glass_path_center.divide(glass_contour.length);
-						}
-						if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(cglass.bounds.center, true)){
+              glass_path_center = glass_path_center.divide(glass_contour.length);
+            }
+            if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(cglass.bounds.center, true)){
               cglass = glass;
             }
-					}
-				}
+          }
+        }
 
-				if(cglass || (cglass = _contour.getItem({class: Filling, visible: false}))) {
-					cglass.path = glass_contour;
-					cglass.visible = true;
-					if (cglass instanceof Filling) {
+        if(cglass || (cglass = this.getItem({class: Filling, visible: false}))) {
+          cglass.path = glass_contour;
+          cglass.visible = true;
+          if (cglass instanceof Filling) {
             cglass.redraw();
-					}
-				}else{
-					if(glass = _contour.getItem({class: Filling})){
+          }
+        }else{
+          if(glass = this.getItem({class: Filling})){
 
-					}
-					else if(glass = _contour.project.getItem({class: Filling})){
+          }
+          else if(glass = this.project.getItem({class: Filling})){
 
-					}
-					else{
+          }
+          else{
 
-					}
-					cglass = new Filling({proto: glass, parent: _contour, path: glass_contour});
+          }
+          cglass = new Filling({proto: glass, parent: this, path: glass_contour});
           cglass.redraw();
-				}
-			}
-
-			contours.forEach(bind_glass);
+        }
+      });
 
 		}
 	},
@@ -5671,14 +5658,15 @@ class CnnPoint {
   }
 
   get npoint() {
+    const point = this.point || this.parent[this.node];
     if(!this.is_tt){
-      return this.point;
+      return point;
     }
     const {profile} = this;
     if(!profile || !profile.nearest(true)){
-      return this.point;
+      return point;
     }
-    return profile.nearest(true).generatrix.getNearestPoint(this.point);
+    return profile.nearest(true).generatrix.getNearestPoint(point) || point;
   }
 
   initialize() {
@@ -6501,17 +6489,19 @@ class ProfileItem extends BuilderElement {
   }
 
   path_points(cnn_point, profile_point) {
-    var _profile = this,
-      _corns = this.data._corns,
-      rays = this.rays,
-      prays,  normal;
 
-    if(!this.generatrix.curves.length)
+    const {data, rays, generatrix} = this;
+    if(!generatrix.curves.length){
       return cnn_point;
+    }
+    const _profile = this;
+    const {_corns} = data;
+
+    let prays,  normal;
 
     function intersect_point(path1, path2, index){
-      var intersections = path1.getIntersections(path2),
-        delta = Infinity, tdelta, point, tpoint;
+      const intersections = path1.getIntersections(path2);
+      let delta = Infinity, tdelta, point, tpoint;
 
       if(intersections.length == 1)
         if(index)
@@ -6520,7 +6510,7 @@ class ProfileItem extends BuilderElement {
           return intersections[0].point.getDistance(cnn_point.point, true);
 
       else if(intersections.length > 1){
-        intersections.forEach(function(o){
+        intersections.forEach((o) => {
           tdelta = o.point.getDistance(cnn_point.point, true);
           if(tdelta < delta){
             delta = tdelta;
@@ -6534,25 +6524,10 @@ class ProfileItem extends BuilderElement {
       }
     }
 
-    function detect_side(){
-
-      if(cnn_point.profile instanceof ProfileItem){
-        const isinner = intersect_point(prays.inner, _profile.generatrix);
-        const isouter = intersect_point(prays.outer, _profile.generatrix);
-        if(isinner != undefined && isouter == undefined)
-          return 1;
-        else if(isinner == undefined && isouter != undefined)
-          return -1;
-        else
-          return 1;
-      }else
-        return 1;
-    }
-
     if(cnn_point.profile instanceof ProfileItem){
       prays = cnn_point.profile.rays;
-
-    }else if(cnn_point.profile instanceof Filling){
+    }
+    else if(cnn_point.profile instanceof Filling){
       prays = {
         inner: cnn_point.profile.path,
         outer: cnn_point.profile.path
@@ -6561,33 +6536,30 @@ class ProfileItem extends BuilderElement {
 
     if(cnn_point.is_t){
 
-      if(!cnn_point.profile.path.segments.length)
-        cnn_point.profile.redraw();
+      !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
 
       if(profile_point == "b"){
-        if(detect_side() < 0){
+        if(cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи){
           intersect_point(prays.outer, rays.outer, 1);
           intersect_point(prays.outer, rays.inner, 4);
-
-        }else{
+        }
+        else{
           intersect_point(prays.inner, rays.outer, 1);
           intersect_point(prays.inner, rays.inner, 4);
-
-        }
-
-      }else if(profile_point == "e"){
-        if(detect_side() < 0){
-          intersect_point(prays.outer, rays.outer, 2);
-          intersect_point(prays.outer, rays.inner, 3);
-
-        }else{
-          intersect_point(prays.inner, rays.outer, 2);
-          intersect_point(prays.inner, rays.inner, 3);
-
         }
       }
-
-    }else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.i){
+      else if(profile_point == "e"){
+        if(cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи){
+          intersect_point(prays.outer, rays.outer, 2);
+          intersect_point(prays.outer, rays.inner, 3);
+        }
+        else{
+          intersect_point(prays.inner, rays.outer, 2);
+          intersect_point(prays.inner, rays.inner, 3);
+        }
+      }
+    }
+    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.i){
       if(profile_point == "b"){
         normal = this.generatrix.firstCurve.getNormalAt(0, true);
         _corns[1] = this.b.add(normal.normalize(this.d1));
@@ -6598,8 +6570,8 @@ class ProfileItem extends BuilderElement {
         _corns[2] = this.e.add(normal.normalize(this.d1));
         _corns[3] = this.e.add(normal.normalize(this.d2));
       }
-
-    }else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+    }
+    else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
       if(profile_point == "b"){
         intersect_point(prays.outer, rays.outer, 1);
         intersect_point(prays.inner, rays.inner, 4);
@@ -6631,8 +6603,8 @@ class ProfileItem extends BuilderElement {
       }else{
         cnn_point.err = "orientation";
       }
-
-    }else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
+    }
+    else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
       if(this.orientation == $p.enm.orientations.vert){
         if(profile_point == "b"){
           intersect_point(prays.inner, rays.outer, 1);
@@ -6661,13 +6633,14 @@ class ProfileItem extends BuilderElement {
         _corns[1] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d1));
       if(!_corns[4])
         _corns[4] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d2));
-
-    }else if(profile_point == "e"){
+    }
+    else if(profile_point == "e"){
       if(!_corns[2])
         _corns[2] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d1));
       if(!_corns[3])
         _corns[3] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
     }
+
     return cnn_point;
   }
 
@@ -6730,7 +6703,7 @@ class ProfileItem extends BuilderElement {
 
   is_collinear(p) {
     let angl = p.e.subtract(p.b).getDirectedAngle(this.e.subtract(this.b));
-    if (angl < 0){
+    if (angl < -180){
       angl += 180;
     }
     return Math.abs(angl) < consts.orientation_delta;
@@ -7095,7 +7068,7 @@ class Profile extends ProfileItem {
 
     const add_impost = (ip, curr, point) => {
       const res = {point: generatrix.getNearestPoint(point), profile: curr};
-      if(this.cnn_side(curr, ip, rays) == $p.enm.cnn_sides.Снаружи){
+      if(this.cnn_side(curr, ip, rays) === $p.enm.cnn_sides.Снаружи){
         touter.push(res);
       }
       else{
@@ -8739,11 +8712,17 @@ Scheme.prototype.__define({
           if(typeof res.distance == "number" && res.distance < distance)
             return 1;
 
-          if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
+          if(profile && !res.cnn){
 
             cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
-            if(!cnns.length)
-              return 1;
+            if(!cnns.length){
+              if(!element.is_collinear(profile)){
+                cnns = $p.cat.cnns.nom_cnn(profile, element, $p.enm.cnn_types.acn.t);
+              }
+              if(!cnns.length){
+                return 1;
+              }
+            }
 
 
 
@@ -8755,8 +8734,17 @@ Scheme.prototype.__define({
           res.point = bind_node ? element[node] : point;
           res.distance = distance;
           res.profile = element;
-          res.profile_point = node;
-          res.cnn_types = $p.enm.cnn_types.acn.a;
+          if(cnns && cnns.length && $p.enm.cnn_types.acn.t.indexOf(cnns[0].cnn_type) != -1){
+            res.profile_point = '';
+            res.cnn_types = $p.enm.cnn_types.acn.t;
+            if(!res.cnn){
+              res.cnn = cnns[0];
+            }
+          }
+          else{
+            res.profile_point = node;
+            res.cnn_types = $p.enm.cnn_types.acn.a;
+          }
 
           return 2;
         }
@@ -8771,7 +8759,8 @@ Scheme.prototype.__define({
         }
         return;
 
-      }else if(node_distance = check_node_distance("b")){
+      }
+      else if(node_distance = check_node_distance("b")){
         if(node_distance == 2)
           return false;
         else
@@ -11336,7 +11325,6 @@ class RulerWnd {
         name: 'tb_mode',
         buttons: [
           {name: '0', img: 'ruler_elm.png', tooltip: $p.msg.ruler_elm, float: 'left'},
-          {name: '1', img: 'ruler_node.png', tooltip: $p.msg.ruler_node, float: 'left'},
           {name: '2', img: 'ruler_arrow.png', tooltip: $p.msg.ruler_new_line, float: 'left'},
 
           {name: 'sep_0', text: '', float: 'left'},

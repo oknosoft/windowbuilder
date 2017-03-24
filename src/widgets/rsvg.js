@@ -32,129 +32,170 @@ window.eXcell_rsvg = eXcell_rsvg;
  * Получает и отображает галерею эскизов объекта данных
  *
  * @class OSvgs
- * @param manager {DataManager}
  * @param layout {dhtmlXLayoutObject|dhtmlXWindowsCell}
  * @param area {HTMLElement}
  * @constructor
  */
-$p.iface.OSvgs = function (manager, layout, area) {
+class OSvgs {
 
-	var t = this,
-		minmax = document.createElement('div'),
-		pics_area = document.createElement('div'),
-		stack = [], reload_id,
-		area_hidden = $p.wsql.get_user_param("svgs_area_hidden", "boolean"),
-		area_text = area.querySelector(".dhx_cell_statusbar_text");
+  constructor (layout, area, handler) {
 
-	if(area_text && area_text.innerHTML == "<div></div>")
-		area_text.style.display = "none";
+    Object.assign(this, {
+      layout: layout,
+      minmax: document.createElement('div'),
+      pics_area: document.createElement('div'),
+      stack: [],
+      reload_id: 0,
+      area_hidden: $p.wsql.get_user_param("svgs_area_hidden", "boolean"),
+      area_text: area.querySelector(".dhx_cell_statusbar_text"),
+      onclick: this.onclick.bind(this),
+      ondblclick: this.ondblclick.bind(this),
+      handler: handler,
+    });
 
-	pics_area.className = 'svgs-area';
-	if(area.firstChild)
-		area.insertBefore(pics_area, area.firstChild);
-	else
-		area.appendChild(pics_area);
+    if(this.area_text && this.area_text.innerHTML == "<div></div>"){
+      this.area_text.style.display = "none";
+    }
 
-	minmax.className = 'svgs-minmax';
-	minmax.title="Скрыть/показать панель эскизов";
-	minmax.onclick = function () {
-		area_hidden = !area_hidden;
-		$p.wsql.set_user_param("svgs_area_hidden", area_hidden);
-		apply_area_hidden();
+    const {pics_area} = this;
+    pics_area.className = 'svgs-area';
+    if(area.firstChild){
+      area.insertBefore(pics_area, area.firstChild);
+    }
+    else{
+      area.appendChild(pics_area);
+    }
 
-		if(!area_hidden && stack.length)
-			t.reload();
+    area.appendChild(Object.assign(this.minmax, {
+      className: 'svgs-minmax',
+      title: "Скрыть/показать панель эскизов",
+      onclick: () => {
+        this.area_hidden = !this.area_hidden;
+        $p.wsql.set_user_param("svgs_area_hidden", area_hidden);
+        this.apply_area_hidden();
 
-	};
-	area.appendChild(minmax);
-	apply_area_hidden();
+        if(!this.area_hidden && this.stack.length){
+          this.reload();
+        }
+      }
+    }));
 
-	function apply_area_hidden(){
+    this.apply_area_hidden();
 
-		pics_area.style.display = area_hidden ? "none" : "";
+  }
 
-		if(layout.setSizes)
-			layout.setSizes();
+  apply_area_hidden () {
 
-		else if(layout.getDimension){
-			var dim = layout.getDimension();
-			layout.setDimension(dim[0], dim[1]);
-			if(!layout.do_not_maximize)
-				layout.maximize();
-		}
+    const {pics_area, area_hidden, layout, minmax} = this;
 
-		minmax.style.backgroundPositionX = area_hidden ? "-32px" : "0px";
-	}
+    pics_area.style.display = area_hidden ? 'none' : '';
 
-	function draw_svgs(res){
+    if (layout.setSizes){
+      layout.setSizes();
+    }
+    else if (layout.getDimension) {
+      const dim = layout.getDimension();
+      layout.setDimension(dim[0], dim[1]);
+      if (!layout.do_not_maximize){
+        layout.maximize();
+      }
+    }
 
-		$p.iface.clear_svgs(pics_area);
+    minmax.style.backgroundPositionX = area_hidden ? '-32px' : '0px'
+  }
 
-		res.forEach(function (svg) {
-			if(!svg || svg.substr(0, 1) != "<")
-				return;
-			var svg_elm = document.createElement("div");
-			pics_area.appendChild(svg_elm);
-			svg_elm.style.float = "left";
-			svg_elm.style.marginLeft = "4px";
-			svg_elm.innerHTML = $p.iface.scale_svg(svg, 88, 22);
-		});
+  draw_svgs(res){
 
-		if(!res.length){
-			// возможно, стоит показать надпись, что нет эскизов
-		}
-	}
+    const {pics_area} = this;
 
-	this.reload = function (ref) {
+    while (pics_area.firstChild){
+      pics_area.removeChild(pics_area.firstChild)
+    }
 
-		if(ref){
-			stack.push(ref);
-			ref = null;
-		}
+    res.forEach(({ref, svg}) => {
+      if(!svg || svg.substr(0, 1) != "<"){
+        return;
+      }
+      const svg_elm = document.createElement("div");
+      pics_area.appendChild(svg_elm);
+      svg_elm.style.float = "left";
+      svg_elm.style.marginLeft = "4px";
+      svg_elm.innerHTML = $p.iface.scale_svg(svg, 88, 22);
+      svg_elm.ref = ref;
+      svg_elm.onclick = this.onclick;
+      svg_elm.ondblclick = this.ondblclick;
+    });
 
-		if(reload_id)
-			clearTimeout(reload_id);
+    if(!res.length){
+      // возможно, стоит показать надпись, что нет эскизов
+    }
+  }
 
-		if(!area_hidden)
-			reload_id = setTimeout(function(){
-				if(stack.length){
+  onclick(event, dbl) {
+    if(event.currentTarget && event.currentTarget.ref && this.handler){
+      this.handler(event.currentTarget.ref, dbl);
+    }
+  }
 
-					// Получаем табчасть заказа
-					var _obj = stack.pop();
+  ondblclick(event){
+    this.onclick(event, true);
+  }
 
-					if (typeof _obj == "string")
-						_obj = $p.doc.calc_order.pouch_db.get(manager.class_name + "|" + _obj);
-					else
-						_obj = Promise.resolve({production: _obj.production._obj});
+  reload(ref) {
 
-					_obj.then(function (res) {
+    const {stack, reload_id, area_hidden} = this;
 
-						// Для продукций заказа получаем вложения
-						var aatt = [];
-						if(res.production)
-							res.production.forEach(function (row) {
-								if(!$p.utils.is_empty_guid(row.characteristic))
-									aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg")
-										.catch(function (err) {}));
-						});
-						_obj = null;
-						return Promise.all(aatt);
-					})
-					.then(function (res) {
-						// Извлекаем из блоба svg-текст эскизов
-						var aatt = [];
-						res.forEach(function (row) {
-							if(row instanceof Blob && row.size)
-								aatt.push($p.utils.blob_as_text(row));
-						});
-						return Promise.all(aatt);
-					})
-					.then(draw_svgs)
-					.catch($p.record_log);
+    ref && stack.push(ref);
+    reload_id && clearTimeout(reload_id);
 
-					stack.length = 0;
-				}
-			}, 300);
-	}
+    if(!area_hidden)
+      this.reload_id = setTimeout(() => {
 
-};
+        if(stack.length){
+
+          // Получаем табчасть заказа
+          let _obj = stack.pop();
+
+          if (typeof _obj == "string"){
+            _obj = $p.doc.calc_order.pouch_db.get("doc.calc_order|" + _obj);
+          }
+          else{
+            _obj = Promise.resolve({production: _obj.production._obj});
+          }
+
+          _obj.then((res) => {
+
+            // Для продукций заказа получаем вложения
+            const aatt = [];
+            if(res.production)
+              res.production.forEach((row) => {
+                if(!$p.utils.is_empty_guid(row.characteristic)){
+                  aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg")
+                    .then((att) => ({ref: row.characteristic, att: att}))
+                    .catch((err) => {}));
+                }
+              });
+            _obj = null;
+            return Promise.all(aatt);
+          })
+            .then((res) => {
+              // Извлекаем из блоба svg-текст эскизов
+              const aatt = [];
+              res.forEach((row) => {
+                if(row.att instanceof Blob && row.att.size)
+                  aatt.push($p.utils.blob_as_text(row.att)
+                    .then((svg) => ({ref: row.ref, svg})));
+              });
+              return Promise.all(aatt);
+            })
+            .then(this.draw_svgs.bind(this))
+            .catch($p.record_log);
+
+          stack.length = 0;
+        }
+      }, 300);
+  }
+
+}
+
+$p.iface.OSvgs = OSvgs;

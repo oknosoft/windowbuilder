@@ -19,10 +19,8 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
 
 	// картинка заказа в статусбаре
 	wnd.do_not_maximize = true;
-	wnd.elmnts.svgs = new $p.iface.OSvgs(this, wnd, wnd.elmnts.status_bar);
-	wnd.elmnts.grid.attachEvent("onRowSelect", function (rid) {
-		wnd.elmnts.svgs.reload(rid);
-	});
+	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar);
+	wnd.elmnts.grid.attachEvent("onRowSelect", (rid) => wnd.elmnts.svgs.reload(rid));
 
 
 	setTimeout(function () {

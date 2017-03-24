@@ -7143,7 +7143,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 		}
 	};
 
-	wnd.elmnts.svgs = new $p.iface.OSvgs(this, wnd, wnd.elmnts.status_bar);
+	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar);
 	wnd.elmnts.grid.attachEvent("onRowSelect", function (rid) {
 		wnd.elmnts.svgs.reload(rid);
 	});
@@ -7294,7 +7294,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 				});
 
 			wnd.elmnts.statusbar = wnd.attachStatusBar({text: "<div></div>"});
-			wnd.elmnts.svgs = new $p.iface.OSvgs($p.doc.calc_order, wnd, wnd.elmnts.statusbar);
+			wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar);
 			wnd.elmnts.svgs.reload(o);
 
 		};
@@ -7782,10 +7782,8 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
 	wnd.elmnts.filter.custom_selection._key = { get value() { return '' } };
 
 	wnd.do_not_maximize = true;
-	wnd.elmnts.svgs = new $p.iface.OSvgs(this, wnd, wnd.elmnts.status_bar);
-	wnd.elmnts.grid.attachEvent("onRowSelect", function (rid) {
-		wnd.elmnts.svgs.reload(rid);
-	});
+	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar);
+	wnd.elmnts.grid.attachEvent("onRowSelect", (rid) => wnd.elmnts.svgs.reload(rid));
 
 
 	setTimeout(function () {
@@ -8098,6 +8096,288 @@ $p.doc.selling.on({
 });
 
 
+
+
+
+(function($p){
+
+	var _mgr = $p.enm.cnn_types;
+
+
+	_mgr.acn = {cache :{}};
+	_mgr.acn.__define({
+
+		ii: {
+			get : function(){
+				return this.cache.ii
+					|| ( this.cache.ii = [_mgr.Наложение] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		i: {
+			get : function(){
+				return this.cache.i
+					|| ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		a: {
+			get : function(){
+				return this.cache.a
+					|| ( this.cache.a = [
+						_mgr.УгловоеДиагональное,
+						_mgr.УгловоеКВертикальной,
+						_mgr.УгловоеКГоризонтальной,
+						_mgr.КрестВСтык] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		t: {
+			get : function(){
+				return this.cache.t
+					|| ( this.cache.t = [_mgr.ТОбразное] );
+			},
+			enumerable : false,
+			configurable : false
+		}
+	});
+
+
+	_mgr.tcn = {cache :{}};
+	_mgr.tcn.__define({
+		ad: {
+			get : function(){
+				return this.cache.ad || ( this.cache.ad = _mgr.УгловоеДиагональное );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		av: {
+			get : function(){
+				return this.cache.av || ( this.cache.av = _mgr.УгловоеКВертикальной );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		ah: {
+			get : function(){
+				return this.cache.ah || ( this.cache.ah = _mgr.УгловоеКГоризонтальной );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		t: {
+			get : function(){
+				return this.cache.t || ( this.cache.t = _mgr.ТОбразное );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		ii: {
+			get : function(){
+				return this.cache.ii || ( this.cache.ii = _mgr.Наложение );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		i: {
+			get : function(){
+				return this.cache.i || ( this.cache.i = _mgr.НезамкнутыйКонтур );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		xt: {
+			get : function(){
+				return this.cache.xt || ( this.cache.xt = _mgr.КрестПересечение );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		xx: {
+			get : function(){
+				return this.cache.xx || ( this.cache.xx = _mgr.КрестВСтык );
+			},
+			enumerable : false,
+			configurable : false
+		}
+	});
+
+})($p);
+
+
+(function($p){
+
+	var _mgr = $p.enm.elm_types,
+
+
+		cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			},
+			enumerable : false,
+			configurable : false
+		}
+
+	});
+
+
+})($p);
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
+			}
+		}
+
+
+	});
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
 
 
 (($p) => {
@@ -8673,290 +8953,6 @@ $p.doc.selling.on({
 
 
 
-
-(function($p){
-
-	var _mgr = $p.enm.cnn_types;
-
-
-	_mgr.acn = {cache :{}};
-	_mgr.acn.__define({
-
-		ii: {
-			get : function(){
-				return this.cache.ii
-					|| ( this.cache.ii = [_mgr.Наложение] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		i: {
-			get : function(){
-				return this.cache.i
-					|| ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		a: {
-			get : function(){
-				return this.cache.a
-					|| ( this.cache.a = [
-						_mgr.УгловоеДиагональное,
-						_mgr.УгловоеКВертикальной,
-						_mgr.УгловоеКГоризонтальной,
-						_mgr.КрестВСтык] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		t: {
-			get : function(){
-				return this.cache.t
-					|| ( this.cache.t = [_mgr.ТОбразное] );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
-
-
-	_mgr.tcn = {cache :{}};
-	_mgr.tcn.__define({
-		ad: {
-			get : function(){
-				return this.cache.ad || ( this.cache.ad = _mgr.УгловоеДиагональное );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		av: {
-			get : function(){
-				return this.cache.av || ( this.cache.av = _mgr.УгловоеКВертикальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		ah: {
-			get : function(){
-				return this.cache.ah || ( this.cache.ah = _mgr.УгловоеКГоризонтальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		t: {
-			get : function(){
-				return this.cache.t || ( this.cache.t = _mgr.ТОбразное );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		ii: {
-			get : function(){
-				return this.cache.ii || ( this.cache.ii = _mgr.Наложение );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		i: {
-			get : function(){
-				return this.cache.i || ( this.cache.i = _mgr.НезамкнутыйКонтур );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		xt: {
-			get : function(){
-				return this.cache.xt || ( this.cache.xt = _mgr.КрестПересечение );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		xx: {
-			get : function(){
-				return this.cache.xx || ( this.cache.xx = _mgr.КрестВСтык );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
-
-})($p);
-
-
-(function($p){
-
-	var _mgr = $p.enm.elm_types,
-
-
-		cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			},
-			enumerable : false,
-			configurable : false
-		}
-
-	});
-
-
-})($p);
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
-
-
-
-
 function eXcell_rsvg(cell){ 
 	if (cell){                
 		this.cell = cell;
@@ -8972,124 +8968,166 @@ function eXcell_rsvg(cell){
 eXcell_rsvg.prototype = new eXcell();
 window.eXcell_rsvg = eXcell_rsvg;
 
+class OSvgs {
 
-$p.iface.OSvgs = function (manager, layout, area) {
+  constructor (layout, area, handler) {
 
-	var t = this,
-		minmax = document.createElement('div'),
-		pics_area = document.createElement('div'),
-		stack = [], reload_id,
-		area_hidden = $p.wsql.get_user_param("svgs_area_hidden", "boolean"),
-		area_text = area.querySelector(".dhx_cell_statusbar_text");
+    Object.assign(this, {
+      layout: layout,
+      minmax: document.createElement('div'),
+      pics_area: document.createElement('div'),
+      stack: [],
+      reload_id: 0,
+      area_hidden: $p.wsql.get_user_param("svgs_area_hidden", "boolean"),
+      area_text: area.querySelector(".dhx_cell_statusbar_text"),
+      onclick: this.onclick.bind(this),
+      ondblclick: this.ondblclick.bind(this),
+      handler: handler,
+    });
 
-	if(area_text && area_text.innerHTML == "<div></div>")
-		area_text.style.display = "none";
+    if(this.area_text && this.area_text.innerHTML == "<div></div>"){
+      this.area_text.style.display = "none";
+    }
 
-	pics_area.className = 'svgs-area';
-	if(area.firstChild)
-		area.insertBefore(pics_area, area.firstChild);
-	else
-		area.appendChild(pics_area);
+    const {pics_area} = this;
+    pics_area.className = 'svgs-area';
+    if(area.firstChild){
+      area.insertBefore(pics_area, area.firstChild);
+    }
+    else{
+      area.appendChild(pics_area);
+    }
 
-	minmax.className = 'svgs-minmax';
-	minmax.title="Скрыть/показать панель эскизов";
-	minmax.onclick = function () {
-		area_hidden = !area_hidden;
-		$p.wsql.set_user_param("svgs_area_hidden", area_hidden);
-		apply_area_hidden();
+    area.appendChild(Object.assign(this.minmax, {
+      className: 'svgs-minmax',
+      title: "Скрыть/показать панель эскизов",
+      onclick: () => {
+        this.area_hidden = !this.area_hidden;
+        $p.wsql.set_user_param("svgs_area_hidden", area_hidden);
+        this.apply_area_hidden();
 
-		if(!area_hidden && stack.length)
-			t.reload();
+        if(!this.area_hidden && this.stack.length){
+          this.reload();
+        }
+      }
+    }));
 
-	};
-	area.appendChild(minmax);
-	apply_area_hidden();
+    this.apply_area_hidden();
 
-	function apply_area_hidden(){
+  }
 
-		pics_area.style.display = area_hidden ? "none" : "";
+  apply_area_hidden () {
 
-		if(layout.setSizes)
-			layout.setSizes();
+    const {pics_area, area_hidden, layout, minmax} = this;
 
-		else if(layout.getDimension){
-			var dim = layout.getDimension();
-			layout.setDimension(dim[0], dim[1]);
-			if(!layout.do_not_maximize)
-				layout.maximize();
-		}
+    pics_area.style.display = area_hidden ? 'none' : '';
 
-		minmax.style.backgroundPositionX = area_hidden ? "-32px" : "0px";
-	}
+    if (layout.setSizes){
+      layout.setSizes();
+    }
+    else if (layout.getDimension) {
+      const dim = layout.getDimension();
+      layout.setDimension(dim[0], dim[1]);
+      if (!layout.do_not_maximize){
+        layout.maximize();
+      }
+    }
 
-	function draw_svgs(res){
+    minmax.style.backgroundPositionX = area_hidden ? '-32px' : '0px'
+  }
 
-		$p.iface.clear_svgs(pics_area);
+  draw_svgs(res){
 
-		res.forEach(function (svg) {
-			if(!svg || svg.substr(0, 1) != "<")
-				return;
-			var svg_elm = document.createElement("div");
-			pics_area.appendChild(svg_elm);
-			svg_elm.style.float = "left";
-			svg_elm.style.marginLeft = "4px";
-			svg_elm.innerHTML = $p.iface.scale_svg(svg, 88, 22);
-		});
+    const {pics_area} = this;
 
-		if(!res.length){
-		}
-	}
+    while (pics_area.firstChild){
+      pics_area.removeChild(pics_area.firstChild)
+    }
 
-	this.reload = function (ref) {
+    res.forEach(({ref, svg}) => {
+      if(!svg || svg.substr(0, 1) != "<"){
+        return;
+      }
+      const svg_elm = document.createElement("div");
+      pics_area.appendChild(svg_elm);
+      svg_elm.style.float = "left";
+      svg_elm.style.marginLeft = "4px";
+      svg_elm.innerHTML = $p.iface.scale_svg(svg, 88, 22);
+      svg_elm.ref = ref;
+      svg_elm.onclick = this.onclick;
+      svg_elm.ondblclick = this.ondblclick;
+    });
 
-		if(ref){
-			stack.push(ref);
-			ref = null;
-		}
+    if(!res.length){
+    }
+  }
 
-		if(reload_id)
-			clearTimeout(reload_id);
+  onclick(event, dbl) {
+    if(event.currentTarget && event.currentTarget.ref && this.handler){
+      this.handler(event.currentTarget.ref, dbl);
+    }
+  }
 
-		if(!area_hidden)
-			reload_id = setTimeout(function(){
-				if(stack.length){
+  ondblclick(event){
+    this.onclick(event, true);
+  }
 
-					var _obj = stack.pop();
+  reload(ref) {
 
-					if (typeof _obj == "string")
-						_obj = $p.doc.calc_order.pouch_db.get(manager.class_name + "|" + _obj);
-					else
-						_obj = Promise.resolve({production: _obj.production._obj});
+    const {stack, reload_id, area_hidden} = this;
 
-					_obj.then(function (res) {
+    ref && stack.push(ref);
+    reload_id && clearTimeout(reload_id);
 
-						var aatt = [];
-						if(res.production)
-							res.production.forEach(function (row) {
-								if(!$p.utils.is_empty_guid(row.characteristic))
-									aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg")
-										.catch(function (err) {}));
-						});
-						_obj = null;
-						return Promise.all(aatt);
-					})
-					.then(function (res) {
-						var aatt = [];
-						res.forEach(function (row) {
-							if(row instanceof Blob && row.size)
-								aatt.push($p.utils.blob_as_text(row));
-						});
-						return Promise.all(aatt);
-					})
-					.then(draw_svgs)
-					.catch($p.record_log);
+    if(!area_hidden)
+      this.reload_id = setTimeout(() => {
 
-					stack.length = 0;
-				}
-			}, 300);
-	}
+        if(stack.length){
 
-};
+          let _obj = stack.pop();
+
+          if (typeof _obj == "string"){
+            _obj = $p.doc.calc_order.pouch_db.get("doc.calc_order|" + _obj);
+          }
+          else{
+            _obj = Promise.resolve({production: _obj.production._obj});
+          }
+
+          _obj.then((res) => {
+
+            const aatt = [];
+            if(res.production)
+              res.production.forEach((row) => {
+                if(!$p.utils.is_empty_guid(row.characteristic)){
+                  aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg")
+                    .then((att) => ({ref: row.characteristic, att: att}))
+                    .catch((err) => {}));
+                }
+              });
+            _obj = null;
+            return Promise.all(aatt);
+          })
+            .then((res) => {
+              const aatt = [];
+              res.forEach((row) => {
+                if(row.att instanceof Blob && row.att.size)
+                  aatt.push($p.utils.blob_as_text(row.att)
+                    .then((svg) => ({ref: row.ref, svg})));
+              });
+              return Promise.all(aatt);
+            })
+            .then(this.draw_svgs.bind(this))
+            .catch($p.record_log);
+
+          stack.length = 0;
+        }
+      }, 300);
+  }
+
+}
+
+$p.iface.OSvgs = OSvgs;
+
 
 $p.iface.view_about = function (cell) {
 

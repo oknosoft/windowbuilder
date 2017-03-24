@@ -74,7 +74,7 @@ class RulerWnd {
         name: 'tb_mode',
         buttons: [
           {name: '0', img: 'ruler_elm.png', tooltip: $p.msg.ruler_elm, float: 'left'},
-          {name: '1', img: 'ruler_node.png', tooltip: $p.msg.ruler_node, float: 'left'},
+          //{name: '1', img: 'ruler_node.png', tooltip: $p.msg.ruler_node, float: 'left'},
           {name: '2', img: 'ruler_arrow.png', tooltip: $p.msg.ruler_new_line, float: 'left'},
 
           {name: 'sep_0', text: '', float: 'left'},

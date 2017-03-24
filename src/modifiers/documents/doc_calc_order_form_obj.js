@@ -91,7 +91,7 @@
 			 *	статусбар с картинками
 			 */
 			wnd.elmnts.statusbar = wnd.attachStatusBar({text: "<div></div>"});
-			wnd.elmnts.svgs = new $p.iface.OSvgs($p.doc.calc_order, wnd, wnd.elmnts.statusbar);
+			wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar);
 			wnd.elmnts.svgs.reload(o);
 
 		};

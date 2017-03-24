@@ -139,14 +139,15 @@ class CnnPoint {
   }
 
   get npoint() {
+    const point = this.point || this.parent[this.node];
     if(!this.is_tt){
-      return this.point;
+      return point;
     }
     const {profile} = this;
     if(!profile || !profile.nearest(true)){
-      return this.point;
+      return point;
     }
-    return profile.nearest(true).generatrix.getNearestPoint(this.point);
+    return profile.nearest(true).generatrix.getNearestPoint(point) || point;
   }
 
   initialize() {
@@ -262,7 +263,7 @@ class ProfileRays {
     this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
     this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
 
-    // для прямого пути, чуть наклоняем нормаль
+    // для прямого пути, строим в один проход
     if(path.is_linear()){
       this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
       this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
@@ -1231,19 +1232,21 @@ class ProfileItem extends BuilderElement {
    * @param cnn_point {CnnPoint}
    */
   path_points(cnn_point, profile_point) {
-    var _profile = this,
-      _corns = this.data._corns,
-      rays = this.rays,
-      prays,  normal;
 
-    if(!this.generatrix.curves.length)
+    const {data, rays, generatrix} = this;
+    if(!generatrix.curves.length){
       return cnn_point;
+    }
+    const _profile = this;
+    const {_corns} = data;
+
+    let prays,  normal;
 
     // ищет точку пересечения открытых путей
     // если указан индекс, заполняет точку в массиве _corns. иначе - возвращает расстояние от узла до пересечения
     function intersect_point(path1, path2, index){
-      var intersections = path1.getIntersections(path2),
-        delta = Infinity, tdelta, point, tpoint;
+      const intersections = path1.getIntersections(path2);
+      let delta = Infinity, tdelta, point, tpoint;
 
       if(intersections.length == 1)
         if(index)
@@ -1252,7 +1255,7 @@ class ProfileItem extends BuilderElement {
           return intersections[0].point.getDistance(cnn_point.point, true);
 
       else if(intersections.length > 1){
-        intersections.forEach(function(o){
+        intersections.forEach((o) => {
           tdelta = o.point.getDistance(cnn_point.point, true);
           if(tdelta < delta){
             delta = tdelta;
@@ -1266,27 +1269,11 @@ class ProfileItem extends BuilderElement {
       }
     }
 
-    //TODO учесть импосты, у которых образующая совпадает с ребром
-    function detect_side(){
-
-      if(cnn_point.profile instanceof ProfileItem){
-        const isinner = intersect_point(prays.inner, _profile.generatrix);
-        const isouter = intersect_point(prays.outer, _profile.generatrix);
-        if(isinner != undefined && isouter == undefined)
-          return 1;
-        else if(isinner == undefined && isouter != undefined)
-          return -1;
-        else
-          return 1;
-      }else
-        return 1;
-    }
-
     // если пересечение в узлах, используем лучи профиля
     if(cnn_point.profile instanceof ProfileItem){
       prays = cnn_point.profile.rays;
-
-    }else if(cnn_point.profile instanceof Filling){
+    }
+    else if(cnn_point.profile instanceof Filling){
       prays = {
         inner: cnn_point.profile.path,
         outer: cnn_point.profile.path
@@ -1296,35 +1283,32 @@ class ProfileItem extends BuilderElement {
     if(cnn_point.is_t){
 
       // для Т-соединений сначала определяем, изнутри или снаружи находится наш профиль
-      if(!cnn_point.profile.path.segments.length)
-        cnn_point.profile.redraw();
+      !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
 
       if(profile_point == "b"){
         // в зависимости от стороны соединения
-        if(detect_side() < 0){
+        if(cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи){
           intersect_point(prays.outer, rays.outer, 1);
           intersect_point(prays.outer, rays.inner, 4);
-
-        }else{
+        }
+        else{
           intersect_point(prays.inner, rays.outer, 1);
           intersect_point(prays.inner, rays.inner, 4);
-
-        }
-
-      }else if(profile_point == "e"){
-        // в зависимости от стороны соединения
-        if(detect_side() < 0){
-          intersect_point(prays.outer, rays.outer, 2);
-          intersect_point(prays.outer, rays.inner, 3);
-
-        }else{
-          intersect_point(prays.inner, rays.outer, 2);
-          intersect_point(prays.inner, rays.inner, 3);
-
         }
       }
-
-    }else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.i){
+      else if(profile_point == "e"){
+        // в зависимости от стороны соединения
+        if(cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи){
+          intersect_point(prays.outer, rays.outer, 2);
+          intersect_point(prays.outer, rays.inner, 3);
+        }
+        else{
+          intersect_point(prays.inner, rays.outer, 2);
+          intersect_point(prays.inner, rays.inner, 3);
+        }
+      }
+    }
+    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.i){
       // соединение с пустотой
       if(profile_point == "b"){
         normal = this.generatrix.firstCurve.getNormalAt(0, true);
@@ -1336,8 +1320,8 @@ class ProfileItem extends BuilderElement {
         _corns[2] = this.e.add(normal.normalize(this.d1));
         _corns[3] = this.e.add(normal.normalize(this.d2));
       }
-
-    }else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+    }
+    else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
       // угловое диагональное
       if(profile_point == "b"){
         intersect_point(prays.outer, rays.outer, 1);
@@ -1371,8 +1355,8 @@ class ProfileItem extends BuilderElement {
       }else{
         cnn_point.err = "orientation";
       }
-
-    }else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
+    }
+    else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
       // угловое к горизонтальной
       if(this.orientation == $p.enm.orientations.vert){
         if(profile_point == "b"){
@@ -1403,13 +1387,14 @@ class ProfileItem extends BuilderElement {
         _corns[1] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d1));
       if(!_corns[4])
         _corns[4] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d2));
-
-    }else if(profile_point == "e"){
+    }
+    else if(profile_point == "e"){
       if(!_corns[2])
         _corns[2] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d1));
       if(!_corns[3])
         _corns[3] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
     }
+
     return cnn_point;
   }
 
@@ -1514,7 +1499,7 @@ class ProfileItem extends BuilderElement {
    */
   is_collinear(p) {
     let angl = p.e.subtract(p.b).getDirectedAngle(this.e.subtract(this.b));
-    if (angl < 0){
+    if (angl < -180){
       angl += 180;
     }
     return Math.abs(angl) < consts.orientation_delta;
@@ -1980,7 +1965,7 @@ class Profile extends ProfileItem {
 
     const add_impost = (ip, curr, point) => {
       const res = {point: generatrix.getNearestPoint(point), profile: curr};
-      if(this.cnn_side(curr, ip, rays) == $p.enm.cnn_sides.Снаружи){
+      if(this.cnn_side(curr, ip, rays) === $p.enm.cnn_sides.Снаружи){
         touter.push(res);
       }
       else{

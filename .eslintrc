@@ -1,18 +1,25 @@
 {
   "parser"  : "babel-eslint",
   "extends" : [
-    "standard",
-    "standard-react"
+    "eslint:recommended"
   ],
   "plugins": [
     "babel",
-    "react",
-    "promise"
+    "react"
   ],
   "env"     : {
-    "browser" : true
+    "browser": true,
+    "es6": true
+  },
+  "parserOptions": {
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true,
+      "jsx": true
+    },
+    "sourceType": "module"
   },
   "globals" : {
+    "$p": true,
     "__DEV__"      : false,
     "__PROD__"     : false,
     "__DEBUG__"    : false,
@@ -20,7 +27,7 @@
     "__BASENAME__" : false
   },
   "rules": {
-    "semi" : [2, "never"],
+    "semi" : [2, "always"],
     "max-len": [2, 120, 2],
     "generator-star-spacing": 0,
     "babel/generator-star-spacing": 1,

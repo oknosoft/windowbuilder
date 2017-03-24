@@ -130,7 +130,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 	};
 
 	// картинка заказа в статусбаре
-	wnd.elmnts.svgs = new $p.iface.OSvgs(this, wnd, wnd.elmnts.status_bar);
+	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar);
 	wnd.elmnts.grid.attachEvent("onRowSelect", function (rid) {
 		wnd.elmnts.svgs.reload(rid);
 	});
