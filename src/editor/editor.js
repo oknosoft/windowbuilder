@@ -517,17 +517,16 @@ class Editor extends paper.PaperScope {
    * @param name {String} - имя css класса курсора
    */
   canvas_cursor(name) {
-    for(var p in this.projects){
-      var _scheme = this.projects[p];
-      for(var i=0; i<_scheme.view.element.classList.length; i++){
-        var class_name = _scheme.view.element.classList[i];
+    this.projects.forEach((_scheme) => {
+      for(let i=0; i<_scheme.view.element.classList.length; i++){
+        const class_name = _scheme.view.element.classList[i];
         if(class_name == name)
           return;
         else if((/\bcursor-\S+/g).test(class_name))
           _scheme.view.element.classList.remove(class_name);
       }
       _scheme.view.element.classList.add(name);
-    }
+    })
   }
 
   /**
@@ -539,11 +538,12 @@ class Editor extends paper.PaperScope {
    * @param name {String} - имя инструмента
    */
   select_tool(name) {
-    for(let t in this.tools){
-      if(this.tools[t].options.name == name){
-        return this.tools[t].activate();
+    this.tools.some((tool) => {
+      if(tool.options.name == name){
+        tool.activate();
+        return true;
       }
-    }
+    })
   }
 
   /**
@@ -1221,7 +1221,7 @@ class Editor extends paper.PaperScope {
           }
 
           const gl = glmap.get(profile);
-          if(curr.outer){
+          if(curr.outer || (profile != curr.profile && profile.cnn_side(curr.profile) == $p.enm.cnn_sides.Снаружи)){
             gl.is_outer = true;
           }
           else{
@@ -1253,9 +1253,8 @@ class Editor extends paper.PaperScope {
     });
     medium /= glasses.length;
 
-    // собираем в glmap структуры подходящих заполнений
+    // дополняем в glmap структуры подходящих заполнений
     shift.forEach((impost) => {
-      // ищем примыкающие заполнения
       // если примыкают с двух сторон или вторая сторона рамная - импост проходит
       const gl = glmap.get(impost);
       gl.ok = (gl.is_inner && gl.is_outer);
@@ -1271,27 +1270,12 @@ class Editor extends paper.PaperScope {
         });
     });
 
-    // модифицируем коллекцию импостов - подклеиваем сдвиги
-    shift.forEach((impost, index) => {
-      const res = {impost, dx: [], dy: []};
-      // находим все заполнения, примыкающие к импосту
-      glasses.forEach((curr) => {
-        if(curr.left == impost || curr.right == impost){
-          res.dx.push(curr)
-        }
-        else if(curr.top == impost || curr.bottom == impost){
-          res.dy.push(curr)
-        }
-      })
-      shift[index] = res
-    })
-
     // рассчитываем, на сколько и в какую сторону двигать
     const res = [];
 
-    shift.forEach((curr) => {
+    shift.forEach((impost) => {
 
-      const gl = glmap.get(curr.impost);
+      const gl = glmap.get(impost);
       if(!gl.ok){
         return;
       }
@@ -1300,25 +1284,13 @@ class Editor extends paper.PaperScope {
 
       if (name == 'width') {
         if(!gl.hasOwnProperty('delta')){
-          curr.dx.some((glass) => {
-            const double = glass.left && glass.right ? 2.1 * curr.dx.length : 0;
-            if(glass.right == curr.impost){
-              if(double){
-                delta += (medium - glass.width) / double;
-              }
-              else{
-                delta = medium - glass.width;
-                return true;
-              }
+          gl.dx.forEach((glass) => {
+            const double = 1.1 * gl.dx.size;
+            if(glass.right == impost){
+              delta += (medium - glass.width) / double;
             }
-            else if(glass.left == curr.impost){
-              if(double){
-                delta += (glass.width - medium) / double;
-              }
-              else{
-                delta = glass.width - medium;
-                return true;
-              }
+            else if(glass.left == impost){
+              delta += (glass.width - medium) / double;
             }
           });
         }
@@ -1328,10 +1300,10 @@ class Editor extends paper.PaperScope {
         delta = new paper.Point([0, delta]);
       }
 
-      if(delta.length){
-        curr.impost.move_points(delta, true);
+      if(delta.length > 0.01){
+        impost.move_points(delta, true);
+        res.push(delta);
       }
-      res.push(delta)
     })
 
     return res;
@@ -1343,17 +1315,16 @@ class Editor extends paper.PaperScope {
   glass_align(name = 'auto', glasses) {
 
     const shift = this.do_glass_align(name, glasses);
-    const {data} = this.project;
+    if(!shift){
+      return
+    }
 
+    const {data} = this.project;
     if(!data._align_counter){
       data._align_counter = 1;
     }
     if(data._align_counter > 12){
       data._align_counter = 0;
-      return
-    }
-
-    if(!shift){
       return
     }
 
@@ -1365,7 +1336,6 @@ class Editor extends paper.PaperScope {
     else{
       data._align_counter = 0;
     }
-
   }
 
 
@@ -1391,20 +1361,19 @@ class Editor extends paper.PaperScope {
    * @for Editor
    */
   unload() {
-
-    if(this.tool && this.tool._callbacks.deactivate.length)
-      this.tool._callbacks.deactivate[0].call(this.tool);
-
-    for(var t in this.tools){
-      if(this.tools[t].remove)
-        this.tools[t].remove();
-      this.tools[t] = null;
+    const {tool, tools, tb_left, tb_top, _acc} = this;
+    if(tool && tool._callbacks.deactivate.length){
+      tool._callbacks.deactivate[0].call(tool);
     }
-
-    this.tb_left.unload();
-    this.tb_top.unload();
-    this._acc.unload();
-
+    for(let t in tools){
+      if(tools[t].remove){
+        tools[t].remove();
+      }
+      tools[t] = null;
+    }
+    tb_left.unload();
+    tb_top.unload();
+    _acc.unload();
   }
 
 };
