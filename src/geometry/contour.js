@@ -192,6 +192,71 @@ class Contour extends paper.Layer {
   }
 
   /**
+   * Возвращает массив массивов сегментов - база для построения пути заполнений
+   * @property glass_contours
+   * @for Contour
+   * @type {Array}
+   */
+  get glass_contours() {
+    const segments = this.glass_segments;
+    const res = [];
+    let curr, acurr;
+
+    // возвращает массив сегментов, которые могут следовать за текущим
+    function find_next(curr){
+      if(!curr.anext){
+        curr.anext = [];
+        segments.forEach((segm) => {
+          if(segm == curr || segm.profile == curr.profile)
+            return;
+          // если конец нашего совпадает с началом следующего...
+          // и если существует соединение нашего со следующим
+          if(curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b)){
+
+            if(curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
+              curr.anext.push(segm);
+          }
+
+        });
+      }
+      return curr.anext;
+    }
+
+    // рекурсивно получает следующий сегмент, пока не уткнётся в текущий
+    function go_go(segm){
+      const anext = find_next(segm);
+      for(let i = 0; i < anext.length; i++){
+        if(anext[i] == curr){
+          return anext;
+        }
+        else if(acurr.every((el) => el != anext[i] )){
+          acurr.push(anext[i]);
+          return go_go(anext[i]);
+        }
+      }
+    }
+
+    while(segments.length){
+
+      curr = segments[0];
+      acurr = [curr];
+      if(go_go(curr) && acurr.length > 1){
+        res.push(acurr);
+      }
+
+      // удаляем из segments уже задействованные или не пригодившиеся сегменты
+      acurr.forEach((el) => {
+        const ind = segments.indexOf(el);
+        if(ind != -1){
+          segments.splice(ind, 1);
+        }
+      });
+    }
+
+    return res;
+  }
+
+  /**
    * Ищет и привязывает узлы профилей к пути заполнения
    * @method glass_nodes
    * @for Contour
@@ -267,6 +332,198 @@ class Contour extends paper.Layer {
     this.sort_nodes(curve_nodes);
 
     return path_nodes;
+  }
+
+  /**
+   * Получает замкнутые контуры, ищет подходящие створки или заполнения, при необходимости создаёт новые
+   * @method glass_recalc
+   * @for Contour
+   */
+  glass_recalc() {
+    const contours = this.glass_contours;
+    const glasses = this.glasses(true);
+
+    /**
+     * Бежим по найденным контурам заполнений и выполняем привязку
+     */
+    contours.forEach((glass_contour) => {
+
+      let rating = 0, glass, crating, cglass, gl_nodes, glass_path_center;
+
+      for (let g in glasses) {
+
+        glass = glasses[g];
+        if (glass.visible) {
+          continue;
+        }
+
+        // вычисляем рейтинг
+        crating = 0;
+        gl_nodes = glass.outer_profiles;
+        // если есть привязанные профили, используем их. иначе - координаты узлов
+        if (gl_nodes.length) {
+          for (let j = 0; j < glass_contour.length; j++) {
+            for (let i = 0; i < gl_nodes.length; i++) {
+              if (glass_contour[j].profile == gl_nodes[i].profile &&
+                glass_contour[j].b.is_nearest(gl_nodes[i].b) &&
+                glass_contour[j].e.is_nearest(gl_nodes[i].e)) {
+
+                crating++;
+                break;
+              }
+            }
+            if (crating > 2)
+              break;
+          }
+        }
+        else {
+          gl_nodes = glass.nodes;
+          for (let j = 0; j < glass_contour.length; j++) {
+            for (let i = 0; i < gl_nodes.length; i++) {
+              if (glass_contour[j].b.is_nearest(gl_nodes[i])) {
+                crating++;
+                break;
+              }
+            }
+            if (crating > 2) {
+              break;
+            }
+          }
+        }
+
+        if (crating > rating || !cglass) {
+          rating = crating;
+          cglass = glass;
+        }
+        if (crating == rating && cglass != glass) {
+          if (!glass_path_center) {
+            glass_path_center = glass_contour[0].b;
+            for (let i = 1; i < glass_contour.length; i++) {
+              glass_path_center = glass_path_center.add(glass_contour[i].b);
+            }
+            glass_path_center = glass_path_center.divide(glass_contour.length);
+          }
+          if (glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(cglass.bounds.center, true)) {
+            cglass = glass;
+          }
+        }
+      }
+
+      // TODO реализовать настоящее ранжирование
+      if (cglass || (cglass = this.getItem({class: Filling, visible: false}))) {
+        cglass.path = glass_contour;
+        cglass.visible = true;
+        if (cglass instanceof Filling) {
+          cglass.redraw();
+        }
+      }
+      else {
+        // добавляем заполнение
+        // 1. ищем в изделии любое заполнение
+        // 2. если не находим, используем умолчание системы
+        if (glass = this.getItem({class: Filling})) {
+
+        }
+        else if (glass = this.project.getItem({class: Filling})) {
+
+        }
+        else {
+
+        }
+        cglass = new Filling({proto: glass, parent: this, path: glass_contour});
+        cglass.redraw();
+      }
+    });
+  }
+
+  /**
+   * Возвращает массив отрезков, которые потенциально могут образовывать заполнения
+   * (соединения с пустотой отбрасываются)
+   * @property glass_segments
+   * @for Contour
+   * @type {Array}
+   */
+  get glass_segments() {
+    const nodes = [];
+
+    function fn_sort(a, b) {
+      const da = this.getOffsetOf(a.point);
+      const db = this.getOffsetOf(b.point);
+      if (da < db){
+        return -1;
+      }
+      else if (da > db){
+        return 1;
+      }
+      return 0;
+    };
+
+    // для всех профилей контура
+    this.profiles.forEach((p) => {
+
+      const sort = fn_sort.bind(p.generatrix);
+
+      // ищем примыкания T к текущему профилю
+      const ip = p.joined_imposts();
+      const pb = p.cnn_point("b");
+      const pe = p.cnn_point("e");
+
+      // для створочных импостов используем не координаты их b и e, а ближайшие точки примыкающих образующих
+      const pbg = pb.is_t && pb.profile.d0 ? pb.profile.generatrix.getNearestPoint(p.b) : p.b;
+      const peg = pe.is_t && pe.profile.d0 ? pe.profile.generatrix.getNearestPoint(p.e) : p.e;
+
+      // если есть примыкания T, добавляем сегменты, исключая соединения с пустотой
+      if(ip.inner.length){
+
+        ip.inner.sort(sort);
+
+        if(!pb.is_i && !pbg.is_nearest(ip.inner[0].point)){
+          nodes.push(new GlassSegment(p, pbg, ip.inner[0].point));
+        }
+
+        for(let i = 1; i < ip.inner.length; i++){
+          nodes.push(new GlassSegment(p, ip.inner[i-1].point, ip.inner[i].point));
+        }
+
+        if(!pe.is_i && !ip.inner[ip.inner.length-1].point.is_nearest(peg)){
+          nodes.push(new GlassSegment(p, ip.inner[ip.inner.length-1].point, peg));
+        }
+
+      }
+      if(ip.outer.length){
+
+        ip.outer.sort(sort);
+
+        if(!pb.is_i && !ip.outer[0].point.is_nearest(pbg)){
+          nodes.push(new GlassSegment(p, ip.outer[0].point, pbg, true));
+        }
+
+        for(let i = 1; i < ip.outer.length; i++){
+          nodes.push(new GlassSegment(p, ip.outer[i].point, ip.outer[i-1].point, true));
+        }
+
+        if(!pe.is_i && !peg.is_nearest(ip.outer[ip.outer.length-1].point)){
+          nodes.push(new GlassSegment(p, peg, ip.outer[ip.outer.length-1].point, true));
+        }
+      }
+
+      // добавляем, если нет соединений с пустотой
+      if(!ip.inner.length){
+        if(!pb.is_i && !pe.is_i){
+          nodes.push(new GlassSegment(p, pbg, peg));
+        }
+      }
+
+      // для импостов добавляем сегмент в обратном направлении
+      if(!ip.outer.length && (pb.is_cut || pe.is_cut || pb.is_t || pe.is_t)){
+        if(!pb.is_i && !pe.is_i){
+          nodes.push(new GlassSegment(p, peg, pbg, true));
+        }
+      }
+
+    });
+
+    return nodes;
   }
 
   /**
@@ -835,273 +1092,6 @@ class Contour extends paper.Layer {
 }
 
 Contour.prototype.__define({
-
-
-	/**
-	 * Возвращает массив отрезков, которые потенциально могут образовывать заполнения
-	 * (соединения с пустотой отбрасываются)
-	 * @property glass_segments
-	 * @for Contour
-	 * @type {Array}
-	 */
-	glass_segments: {
-		get: function(){
-
-			const nodes = [];
-
-      function fn_sort(a, b) {
-        const da = this.getOffsetOf(a.point);
-        const db = this.getOffsetOf(b.point);
-        if (da < db){
-          return -1;
-        }
-        else if (da > db){
-          return 1;
-        }
-        return 0;
-      };
-
-			// для всех профилей контура
-      this.profiles.forEach((p) => {
-
-        const sort = fn_sort.bind(p.generatrix);
-
-				// ищем примыкания T к текущему профилю
-				const ip = p.joined_imposts();
-        const pb = p.cnn_point("b");
-        const pe = p.cnn_point("e");
-
-				// для створочных импостов используем не координаты их b и e, а ближайшие точки примыкающих образующих
-        const pbg = pb.is_t && pb.profile.d0 ? pb.profile.generatrix.getNearestPoint(p.b) : p.b;
-        const peg = pe.is_t && pe.profile.d0 ? pe.profile.generatrix.getNearestPoint(p.e) : p.e;
-
-				// если есть примыкания T, добавляем сегменты, исключая соединения с пустотой
-				if(ip.inner.length){
-
-				  ip.inner.sort(sort);
-
-					if(!pb.is_i && !pbg.is_nearest(ip.inner[0].point)){
-            nodes.push(new GlassSegment(p, pbg, ip.inner[0].point));
-          }
-
-					for(let i = 1; i < ip.inner.length; i++){
-            nodes.push(new GlassSegment(p, ip.inner[i-1].point, ip.inner[i].point));
-          }
-
-					if(!pe.is_i && !ip.inner[ip.inner.length-1].point.is_nearest(peg)){
-            nodes.push(new GlassSegment(p, ip.inner[ip.inner.length-1].point, peg));
-          }
-
-				}
-				if(ip.outer.length){
-
-					ip.outer.sort(sort);
-
-					if(!pb.is_i && !ip.outer[0].point.is_nearest(pbg)){
-            nodes.push(new GlassSegment(p, ip.outer[0].point, pbg, true));
-          }
-
-					for(let i = 1; i < ip.outer.length; i++){
-            nodes.push(new GlassSegment(p, ip.outer[i].point, ip.outer[i-1].point, true));
-          }
-
-					if(!pe.is_i && !peg.is_nearest(ip.outer[ip.outer.length-1].point)){
-            nodes.push(new GlassSegment(p, peg, ip.outer[ip.outer.length-1].point, true));
-          }
-				}
-
-        // добавляем, если нет соединений с пустотой
-				if(!ip.inner.length){
-					if(!pb.is_i && !pe.is_i){
-            nodes.push(new GlassSegment(p, pbg, peg));
-          }
-				}
-
-        // для импостов добавляем сегмент в обратном направлении
-				if(!ip.outer.length && (pb.is_cut || pe.is_cut || pb.is_t || pe.is_t)){
-					if(!pb.is_i && !pe.is_i){
-            nodes.push(new GlassSegment(p, peg, pbg, true));
-          }
-				}
-
-			});
-
-			return nodes;
-		}
-	},
-
-	/**
-	 * Возвращает массив массивов сегментов - база для построения пути заполнений
-	 * @property glass_contours
-	 * @for Contour
-	 * @type {Array}
-	 */
-	glass_contours: {
-		get: function(){
-			const segments = this.glass_segments;
-      const res = [];
-			let curr, acurr;
-
-			// возвращает массив сегментов, которые могут следовать за текущим
-			function find_next(curr){
-				if(!curr.anext){
-					curr.anext = [];
-					segments.forEach((segm) => {
-						if(segm == curr || segm.profile == curr.profile)
-							return;
-						// если конец нашего совпадает с началом следующего...
-						// и если существует соединение нашего со следующим
-						if(curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b)){
-
-							if(curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
-								curr.anext.push(segm);
-						}
-
-					});
-				}
-				return curr.anext;
-			}
-
-			// рекурсивно получает следующий сегмент, пока не уткнётся в текущий
-			function go_go(segm){
-				const anext = find_next(segm);
-				for(let i = 0; i < anext.length; i++){
-					if(anext[i] == curr){
-            return anext;
-          }
-					else if(acurr.every((el) => el != anext[i] )){
-						acurr.push(anext[i]);
-						return go_go(anext[i]);
-					}
-				}
-			}
-
-			while(segments.length){
-
-				curr = segments[0];
-				acurr = [curr];
-				if(go_go(curr) && acurr.length > 1){
-					res.push(acurr);
-				}
-
-				// удаляем из segments уже задействованные или не пригодившиеся сегменты
-				acurr.forEach((el) => {
-					const ind = segments.indexOf(el);
-					if(ind != -1){
-            segments.splice(ind, 1);
-          }
-				});
-			}
-
-			return res;
-
-		}
-	},
-
-	/**
-	 * Получает замкнутые контуры, ищет подходящие створки или заполнения, при необходимости создаёт новые
-	 * @method glass_recalc
-	 * @for Contour
-	 */
-	glass_recalc: {
-		value: function () {
-
-      const contours = this.glass_contours;
-      const glasses = this.glasses(true);
-
-			/**
-			 * Бежим по найденным контурам заполнений и выполняем привязку
-			 */
-			contours.forEach((glass_contour) => {
-
-        let rating = 0, glass, crating, cglass, gl_nodes, glass_path_center;
-
-        for(let g in glasses){
-
-          glass = glasses[g];
-          if(glass.visible){
-            continue;
-          }
-
-          // вычисляем рейтинг
-          crating = 0;
-          gl_nodes = glass.outer_profiles;
-          // если есть привязанные профили, используем их. иначе - координаты узлов
-          if(gl_nodes.length){
-            for(let j = 0; j < glass_contour.length; j++){
-              for(let i = 0; i < gl_nodes.length; i++){
-                if(glass_contour[j].profile == gl_nodes[i].profile &&
-                  glass_contour[j].b.is_nearest(gl_nodes[i].b) &&
-                  glass_contour[j].e.is_nearest(gl_nodes[i].e)){
-
-                  crating++;
-                  break;
-                }
-              }
-              if(crating > 2)
-                break;
-            }
-          }
-          else{
-            gl_nodes = glass.nodes;
-            for(let j = 0; j < glass_contour.length; j++){
-              for(let i = 0; i < gl_nodes.length; i++){
-                if(glass_contour[j].b.is_nearest(gl_nodes[i])){
-                  crating++;
-                  break;
-                }
-              }
-              if(crating > 2){
-                break;
-              }
-            }
-          }
-
-          if(crating > rating || !cglass){
-            rating = crating;
-            cglass = glass;
-          }
-          if(crating == rating && cglass != glass){
-            if(!glass_path_center){
-              glass_path_center = glass_contour[0].b;
-              for(let i=1; i<glass_contour.length; i++){
-                glass_path_center = glass_path_center.add(glass_contour[i].b);
-              }
-              glass_path_center = glass_path_center.divide(glass_contour.length);
-            }
-            if(glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(cglass.bounds.center, true)){
-              cglass = glass;
-            }
-          }
-        }
-
-        // TODO реализовать настоящее ранжирование
-        if(cglass || (cglass = this.getItem({class: Filling, visible: false}))) {
-          cglass.path = glass_contour;
-          cglass.visible = true;
-          if (cglass instanceof Filling) {
-            cglass.redraw();
-          }
-        }else{
-          // добавляем заполнение
-          // 1. ищем в изделии любое заполнение
-          // 2. если не находим, используем умолчание системы
-          if(glass = this.getItem({class: Filling})){
-
-          }
-          else if(glass = this.project.getItem({class: Filling})){
-
-          }
-          else{
-
-          }
-          cglass = new Filling({proto: glass, parent: this, path: glass_contour});
-          cglass.redraw();
-        }
-      });
-
-		}
-	},
 
 
 	/**

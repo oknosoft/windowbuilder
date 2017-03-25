@@ -85,7 +85,7 @@
 					},
 
 					set: function (v) {
-						if(!v || this._obj.calc_order == v){
+						if(!v || v == this._obj.calc_order){
               return;
             }
             // если вместо заказа прибежала харакетристика - возвращаем её в качестве результата
@@ -232,7 +232,8 @@
 
 				$p.job_prm.builder.base_block.forEach((o) => {
 				  if(selection.presentation && selection.presentation.like){
-				    if(o.note.toLowerCase().match(selection.presentation.like.toLowerCase()) || o.presentation.toLowerCase().match(selection.presentation.like.toLowerCase())){
+				    if(o.note.toLowerCase().match(selection.presentation.like.toLowerCase()) ||
+                o.presentation.toLowerCase().match(selection.presentation.like.toLowerCase())){
               l.push({text: o.note || o.presentation, value: o.ref});
             }
           }else{
@@ -250,7 +251,7 @@
           else{
             return 0;
           }
-        })
+        });
 
 				resolve(l);
 			})
