@@ -2649,22 +2649,17 @@ $p.CatCharacteristics.prototype.__define({
 (function($p){
 
 	const _mgr = $p.cat.characteristics;
-  const _meta = $p.cat.characteristics.metadata()._clone();
+  const _meta = _mgr.metadata()._clone();
 	let selection_block, wnd;
 
-	_mgr.form_selection_block = function(pwnd, attr){
-
-		if(!attr)
-			attr = {};
+	_mgr.form_selection_block = function(pwnd, attr = {}){
 
 		if(!selection_block){
-
 			selection_block = {
 				_obj: {
 					_calc_order: $p.utils.blank.guid
 				}
 			};
-
 			_meta.form = {
 				selection: {
 					fields: ["presentation","svg"],
@@ -2703,12 +2698,18 @@ $p.CatCharacteristics.prototype.__define({
 					},
 
 					set: function (v) {
-						if(this._obj.calc_order == v)
-							return;
+						if(!v || this._obj.calc_order == v){
+              return;
+            }
+            if(v._block){
+              wnd && wnd.close();
+              return attr.on_select && attr.on_select(v._block);
+            }
 						$p.CatCharacteristics.prototype.__setter.call(this, "calc_order", v);
 
-						if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount())
-							wnd.elmnts.filter.call_event();
+						if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount()){
+              wnd.elmnts.filter.call_event();
+            }
 
 						if(!$p.utils.is_empty_guid(this._obj.calc_order) &&
 							$p.wsql.get_user_param("template_block_calc_order") != this._obj.calc_order){
@@ -2735,7 +2736,8 @@ $p.CatCharacteristics.prototype.__define({
 		attr.metadata = _meta;
 
 		attr.custom_selection = function (attr) {
-			var ares = [], crefs = [], calc_order;
+			const ares = [], crefs = [];
+			let calc_order;
 
 			attr.selection.some((o) => {
 				if(Object.keys(o).indexOf("calc_order") != -1){
@@ -2745,28 +2747,30 @@ $p.CatCharacteristics.prototype.__define({
 			});
 
 			return $p.doc.calc_order.get(calc_order, true, true)
-				.then(function (o) {
+				.then((o) => {
 
-					o.production.each(function (row) {
+					o.production.each((row) => {
 						if(!row.characteristic.empty()){
-							if(row.characteristic.is_new())
-								crefs.push(row.characteristic.ref);
-
+							if(row.characteristic.is_new()){
+                crefs.push(row.characteristic.ref);
+              }
 							else{
 								if(!row.characteristic.calc_order.empty() && row.characteristic.coordinates.count()){
 									if(row.characteristic._attachments &&
 										row.characteristic._attachments.svg &&
-										!row.characteristic._attachments.svg.stub)
-										ares.push(row.characteristic);
-									else
-										crefs.push(row.characteristic.ref);
+										!row.characteristic._attachments.svg.stub){
+                    ares.push(row.characteristic);
+                  }
+									else{
+                    crefs.push(row.characteristic.ref);
+                  }
 								}
 							}
 						}
 					});
 					return crefs.length ? _mgr.pouch_load_array(crefs, true) : crefs;
 				})
-				.then(function () {
+				.then(() => {
 
 					crefs.forEach((o) => {
 						o = _mgr.get(o, false, true);
@@ -2798,9 +2802,7 @@ $p.CatCharacteristics.prototype.__define({
 					return Promise.all(ares);
 
 				})
-				.then(function () {
-					return $p.iface.data_to_grid.call(_mgr, crefs, attr);
-				});
+				.then(() => $p.iface.data_to_grid.call(_mgr, crefs, attr));
 
 		};
 
@@ -2822,7 +2824,7 @@ $p.CatCharacteristics.prototype.__define({
 			obj: selection_block,
 			field: "calc_order",
 			width: 220,
-			get_option_list: (val, selection) => {
+			get_option_list: (val, selection) => new Promise((resolve, reject) => {
 
 				const l = [];
 
@@ -2848,8 +2850,8 @@ $p.CatCharacteristics.prototype.__define({
           }
         })
 
-				return Promise.resolve(l);
-			}
+				resolve(l);
+			})
 		});
 		wnd.elmnts.filter.custom_selection.calc_order.getBase().style.border = "none";
 
@@ -7035,10 +7037,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			hide_header: true,
 			date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
 			date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
-			on_new: function (o) {
+			on_new: (o) => {
 				$p.iface.set_hash(this.class_name, o.ref, "doc");
 			},
-			on_edit: function (_mgr, rId) {
+			on_edit: (_mgr, rId) => {
 				$p.iface.set_hash(_mgr.class_name, rId, "doc");
 			}
 		};
@@ -7046,7 +7048,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 
 
-	var layout = pwnd.attachLayout({
+	const layout = pwnd.attachLayout({
 			pattern: "2U",
 			cells: [{
 				id: "a",
@@ -7059,13 +7061,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 				header: false
 			}],
 			offsets: { top: 0, right: 0, bottom: 0, left: 0}
-		}),
-
-		tree = layout.cells("a").attachTreeView({
+		});
+	const tree = layout.cells("a").attachTreeView({
 			iconset: "font_awesome"
-		}),
-
-		carousel = layout.cells("b").attachCarousel({
+		});
+	const carousel = layout.cells("b").attachCarousel({
 			keys:           false,
 			touch_scroll:   false,
 			offset_left:    0,
@@ -7079,8 +7079,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 	carousel.conf.anim_step = 200;
 	carousel.conf.anim_slide = "left 0.1s";
 
-	var wnd = this.constructor.prototype.form_selection.call(this, carousel.cells("list"), attr),
-		report;
+	const wnd = this.constructor.prototype.form_selection.call(this, carousel.cells("list"), attr);
 
 	wnd.elmnts.filter.custom_selection._view = {
 		get value() {
@@ -7143,13 +7142,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 		}
 	};
 
-	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar);
-	wnd.elmnts.grid.attachEvent("onRowSelect", function (rid) {
-		wnd.elmnts.svgs.reload(rid);
-	});
+	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar,
+    (ref, dbl) => dbl && $p.iface.set_hash("cat.characteristics", ref, "builder"));
+	wnd.elmnts.grid.attachEvent("onRowSelect", (rid) => wnd.elmnts.svgs.reload(rid));
 
 	tree.loadStruct($p.injected_data["tree_filteres.xml"]);
-	tree.attachEvent("onSelect", function (rid, mode) {
+	tree.attachEvent("onSelect", (rid, mode) => {
 
 		if(!mode)
 			return;
@@ -7179,44 +7177,33 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 		carousel.cells("report").setActive();
 
 		function show_report() {
-
 			switch(rid) {
-
 				case 'execution':
-					$p.doc.calc_order.rep_invoice_execution(report);
+					$p.doc.calc_order.rep_invoice_execution(wnd.elmnts.report);
 					break;
 
 				case 'plan':
 				case 'underway':
 				case 'manufactured':
 				case 'executed':
-
-					$p.doc.calc_order.rep_planing(report, rid);
+					$p.doc.calc_order.rep_planing(wnd.elmnts.report, rid);
 					break;
 			}
-
 		}
 
-		if(!report){
+		if(!wnd.elmnts.report){
 
-			report = new $p.HandsontableDocument(carousel.cells("report"), {})
-
-				.then(function (rep) {
-
-					if(!rep._online)
-						return report = null;
-
+      wnd.elmnts.report = new $p.HandsontableDocument(carousel.cells("report"), {})
+				.then((rep) => {
+					if(!rep._online){
+            return wnd.elmnts.report = null;
+          }
 					show_report();
-
-
 				});
-
-		}else if(report._online){
-
+		}
+		else if(wnd.elmnts.report._online){
 			show_report();
 		}
-
-
 	}
 
 	return wnd;
@@ -7226,13 +7213,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 (function($p){
 
-	var _mgr = $p.doc.calc_order,
-		_meta_patched;
+	const _mgr = $p.doc.calc_order;
+	let _meta_patched;
 
 
 	_mgr.form_obj = function(pwnd, attr){
 
-		var o, wnd, evts = [], attr_on_close = attr.on_close;
+		let o, wnd, evts = [], attr_on_close = attr.on_close;
 
 		if(!_meta_patched){
 			(function(source){
@@ -7294,7 +7281,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 				});
 
 			wnd.elmnts.statusbar = wnd.attachStatusBar({text: "<div></div>"});
-			wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar);
+			wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar, rsvg_click);
 			wnd.elmnts.svgs.reload(o);
 
 		};
@@ -7371,7 +7358,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 		attr.on_close = frm_close;
 
 		return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-			.then(function (res) {
+			.then((res) => {
 				if(res){
 					o = res.o;
 					wnd = res.wnd;
@@ -7563,17 +7550,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 		function frm_close(){
 
-			["vault", "vault_pop", "discount", "discount_pop"].forEach(function (elm) {
-				if (wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload)
-					wnd.elmnts[elm].unload();
+			['vault','vault_pop','discount','discount_pop','svgs'].forEach((elm) => {
+				wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
 			});
 
-			evts.forEach(function (id) {
-				$p.eve.detachEvent(id);
-			});
+			evts.forEach((id) => $p.eve.detachEvent(id));
 
-			if(typeof attr_on_close == "function")
-				attr_on_close();
+			typeof attr_on_close == "function" && attr_on_close();
 
 			return true;
 		}
@@ -7702,23 +7685,19 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 					calc_order: o,
 					product: row.row
 				}, true)
-					.then(function (ox) {
+					.then((ox) => {
 
 						if(o.is_new())
-							return o.save()
-								.then(function () {
-									return ox;
-								});
+							return o.save().then(() => ox);
 						else
 							return ox;
 					})
-					.then(function (ox) {
+					.then((ox) => {
 						row.characteristic = ox;
 						$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
 					});
-
-			}else if((selId = production_get_sel_index()) != undefined){
-
+			}
+			else if((selId = production_get_sel_index()) != undefined){
 				row = o.production.get(selId);
 				if(row){
 					if(row.characteristic.empty() ||
@@ -7727,11 +7706,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 						row.characteristic.owner.is_service ||
 						row.characteristic.owner.is_accessory){
 						not_production();
-
-					}else if(row.characteristic.coordinates.count() == 0){
-
-					}else
-						$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+					}
+					else if(row.characteristic.coordinates.count() == 0){
+					}
+					else{
+            $p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+          }
 				}
 			}
 
@@ -7748,6 +7728,14 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			}
 		}
 
+		function rsvg_click(ref, dbl) {
+      o.production.find_rows({characteristic: ref}, (row) => {
+        wnd.elmnts.grids.production.selectRow(row.row-1);
+        dbl && open_builder();
+        return false;
+      })
+    }
+
 		function add_material(){
 			const row = production_new_row().row-1;
 			setTimeout(() => {
@@ -7755,7 +7743,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
         grid.selectRow(row);
         grid.selectCell(row, grid.getColIndexById("nom"), false, true, true);
         grid.cells().open_selection();
-      })
+      });
 		}
 
 		function process_add_product(ts){
@@ -7766,7 +7754,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			}
 		}
 
-	}
+	};
 
 })($p);
 
@@ -7774,19 +7762,23 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 $p.doc.calc_order.form_selection = function(pwnd, attr){
 
-
-	var wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr),
-		report;
+	const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
 	wnd.elmnts.filter.custom_selection._view = { get value() { return '' } };
 	wnd.elmnts.filter.custom_selection._key = { get value() { return '' } };
 
 	wnd.do_not_maximize = true;
-	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar);
+	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar,
+    (ref, dbl) => {
+	  if(dbl){
+      wnd && wnd.close();
+      return pwnd.on_select && pwnd.on_select({_block: ref});
+    }
+    });
 	wnd.elmnts.grid.attachEvent("onRowSelect", (rid) => wnd.elmnts.svgs.reload(rid));
 
 
-	setTimeout(function () {
+	setTimeout(() => {
 		wnd.setDimension(900, 580);
 		wnd.centerOnScreen();
 	})
@@ -9003,7 +8995,7 @@ class OSvgs {
       title: "Скрыть/показать панель эскизов",
       onclick: () => {
         this.area_hidden = !this.area_hidden;
-        $p.wsql.set_user_param("svgs_area_hidden", area_hidden);
+        $p.wsql.set_user_param("svgs_area_hidden", this.area_hidden);
         this.apply_area_hidden();
 
         if(!this.area_hidden && this.stack.length){
@@ -9033,7 +9025,7 @@ class OSvgs {
       }
     }
 
-    minmax.style.backgroundPositionX = area_hidden ? '-32px' : '0px'
+    minmax.style.backgroundPositionX = area_hidden ? '-32px' : '0px';
   }
 
   draw_svgs(res){
@@ -9052,6 +9044,7 @@ class OSvgs {
       pics_area.appendChild(svg_elm);
       svg_elm.style.float = "left";
       svg_elm.style.marginLeft = "4px";
+      svg_elm.style.cursor = "pointer";
       svg_elm.innerHTML = $p.iface.scale_svg(svg, 88, 22);
       svg_elm.ref = ref;
       svg_elm.onclick = this.onclick;
@@ -9122,6 +9115,16 @@ class OSvgs {
           stack.length = 0;
         }
       }, 300);
+  }
+
+  unload() {
+    this.draw_svgs([]);
+    for(let fld in this){
+      if(this[fld] instanceof HTMLElement && this[fld].parentNode){
+        this[fld].parentNode.removeChild(this[fld]);
+      }
+      this[fld] = null;
+    }
   }
 
 }
@@ -9248,7 +9251,7 @@ $p.iface.view_orders = function (cell) {
 						on_close: () => setTimeout(() => $p.iface.set_hash(undefined, "", "list")),
 						set_text: (text) => (t.carousel.getActiveCell() == _cell) && cell.setText({text: "<b>" + text + "</b>"}),
 					})
-					.then(function (wnd) {
+					.then((wnd) => {
 						t.doc = wnd;
 						setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 200);
 					});

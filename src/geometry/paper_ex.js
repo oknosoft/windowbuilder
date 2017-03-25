@@ -284,11 +284,14 @@ paper.Point.prototype.__define({
 	/**
 	 * Выясняет, расположена ли точка в окрестности точки
 	 * @param point {paper.Point}
-	 * @param [sticking] {Boolean}
+	 * @param [sticking] {Boolean|Number}
 	 * @return {Boolean}
 	 */
 	is_nearest: {
 		value: function (point, sticking) {
+		  if(sticking === 0){
+        return Math.abs(this.x - point.x) < 0.01 && Math.abs(this.y - point.y) < 0.01;
+      }
 			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 16);
 		},
 		enumerable: false

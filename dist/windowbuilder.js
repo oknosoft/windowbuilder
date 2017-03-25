@@ -2462,12 +2462,232 @@ class Contour extends paper.Layer {
     return this.project.ox.params;
   }
 
+  get path() {
+    return this.bounds;
+  }
+  set path(attr) {
+    if(!Array.isArray(attr)){
+      return;
+    }
+
+    const noti = {type: consts.move_points, profiles: [], points: []};
+    const {outer_nodes} = this;
+
+    let need_bind = attr.length,
+      available_bind = outer_nodes.length,
+      elm, curr;
+
+    if(need_bind){
+      for(let i = 0; i < attr.length; i++){
+        curr = attr[i];             
+        for(let j = 0; j < outer_nodes.length; j++){
+          elm = outer_nodes[j];   
+          if(elm.data.binded){
+            continue;
+          }
+          if(curr.profile.is_nearest(elm)){
+            elm.data.binded = true;
+            curr.binded = true;
+            need_bind--;
+            available_bind--;
+
+            if(!curr.b.is_nearest(elm.b, 0)){
+              elm.rays.clear(true);
+              elm.b = curr.b;
+              if(noti.profiles.indexOf(elm) == -1){
+                noti.profiles.push(elm);
+                noti.points.push(elm.b);
+              }
+            }
+
+            if(!curr.e.is_nearest(elm.e, 0)){
+              elm.rays.clear(true);
+              elm.e = curr.e;
+              if(noti.profiles.indexOf(elm) == -1){
+                noti.profiles.push(elm);
+                noti.points.push(elm.e);
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    if(need_bind){
+      for(let i = 0; i < attr.length; i++){
+        curr = attr[i];
+        if(curr.binded)
+          continue;
+        for(let j = 0; j < outer_nodes.length; j++){
+          elm = outer_nodes[j];
+          if(elm.data.binded)
+            continue;
+          if(curr.b.is_nearest(elm.b, true) || curr.e.is_nearest(elm.e, true)){
+            elm.data.binded = true;
+            curr.binded = true;
+            need_bind--;
+            available_bind--;
+            elm.rays.clear(true);
+            elm.b = curr.b;
+            elm.e = curr.e;
+            if(noti.profiles.indexOf(elm) == -1){
+              noti.profiles.push(elm);
+              noti.points.push(elm.b);
+              noti.points.push(elm.e);
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    if(need_bind && available_bind){
+      for(let i = 0; i < attr.length; i++){
+        curr = attr[i];
+        if(curr.binded)
+          continue;
+        for(let j = 0; j < outer_nodes.length; j++){
+          elm = outer_nodes[j];
+          if(elm.data.binded)
+            continue;
+          elm.data.binded = true;
+          curr.binded = true;
+          need_bind--;
+          available_bind--;
+          elm.rays.clear(true);
+          elm.b = curr.b;
+          elm.e = curr.e;
+          if(noti.profiles.indexOf(elm) == -1){
+            noti.profiles.push(elm);
+            noti.points.push(elm.b);
+            noti.points.push(elm.e);
+          }
+          break;
+        }
+      }
+    }
+
+    if(need_bind){
+      for(let i = 0; i < attr.length; i++){
+        curr = attr[i];
+        if(curr.binded)
+          continue;
+        elm = new Profile({
+          generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e),
+          proto: outer_nodes.length ? outer_nodes[0] : {
+            parent: this,
+            clr: this.project.default_clr()
+          }
+        });
+        curr.profile = elm;
+        if(curr.outer)
+          delete curr.outer;
+        curr.binded = true;
+
+        elm.data.binded = true;
+        elm.data.simulated = true;
+
+        noti.profiles.push(elm);
+        noti.points.push(elm.b);
+        noti.points.push(elm.e);
+
+        need_bind--;
+      }
+    }
+
+    if(available_bind){
+      outer_nodes.forEach((elm) => {
+        if(!elm.data.binded){
+          elm.rays.clear(true);
+          elm.remove();
+          available_bind--;
+        }
+      });
+    }
+
+    if(noti.points.length){
+      this.notify(noti);
+    }
+
+    this.profiles.forEach((p) => p.default_inset());
+    this.data._bounds = null;
+  }
+
   get pos() {
 
   }
 
   get profiles() {
     return this.children.filter((elm) => elm instanceof Profile);
+  }
+
+  redraw(on_redrawed) {
+    if(!this.visible){
+      return on_redrawed ? on_redrawed() : undefined;
+    }
+
+    let llength = 0;
+
+    function on_flap_redrawed(){
+      llength--;
+      !llength && on_redrawed && on_redrawed();
+    }
+
+    this.data._bounds = null;
+
+    if(!this.project.data._saving && this.l_visualization._by_spec){
+      this.l_visualization._by_spec.removeChildren();
+    }
+
+    this.profiles.forEach((elm) => {
+      elm.redraw();
+    });
+
+    this.glass_recalc();
+
+    this.draw_opening();
+
+    this.draw_cnn_errors();
+
+    this.children.forEach((child_contour) => {
+      if (child_contour instanceof Contour){
+        llength++;
+        child_contour.redraw(on_flap_redrawed);
+      }
+    });
+
+    $p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
+
+    if(!llength && on_redrawed){
+      on_redrawed();
+    }
+  }
+
+  save_coordinates() {
+    this.glasses(false, true).forEach((glass) => !glass.visible && glass.remove());
+
+    this.children.forEach((elm) => {
+      if(elm.save_coordinates){
+        elm.save_coordinates();
+      }
+      else if(elm instanceof paper.Group && (elm == elm.layer.l_text || elm == elm.layer.l_dimensions)){
+        elm.children.forEach((elm) => elm.save_coordinates && elm.save_coordinates());
+      }
+    });
+
+    const {bounds} = this;
+    this._row.x = bounds ? bounds.width : 0;
+    this._row.y = bounds ? bounds.height : 0;
+    this._row.is_rectangular = this.is_rectangular;
+    if(this.parent){
+      this._row.w = this.w;
+      this._row.h = this.h;
+    }
+    else{
+      this._row.w = 0;
+      this._row.h = 0;
+    }
   }
 
   get side_count() {
@@ -2478,241 +2698,6 @@ class Contour extends paper.Layer {
 
 Contour.prototype.__define({
 
-
-  path: {
-    get : function(){
-      return this.bounds;
-    },
-    set : function(attr){
-
-      if(Array.isArray(attr)){
-
-        const noti = {type: consts.move_points, profiles: [], points: []};
-        const {outer_nodes} = this;
-
-        let need_bind = attr.length,
-          available_bind = outer_nodes.length,
-          elm, curr;
-
-        if(need_bind){
-          for(let i in attr){
-            curr = attr[i];             
-            for(let j in outer_nodes){
-              elm = outer_nodes[j];   
-              if(elm.data.binded){
-                continue;
-              }
-              if(curr.profile.is_nearest(elm)){
-                elm.data.binded = true;
-                curr.binded = true;
-                need_bind--;
-                available_bind--;
-                if(!curr.b.equals(elm.b)){
-                  elm.rays.clear(true);
-                  elm.b = curr.b;
-                  if(noti.profiles.indexOf(elm) == -1){
-                    noti.profiles.push(elm);
-                    noti.points.push(elm.b);
-                  }
-                }
-
-                if(!curr.e.equals(elm.e)){
-                  elm.rays.clear(true);
-                  elm.e = curr.e;
-                  if(noti.profiles.indexOf(elm) == -1){
-                    noti.profiles.push(elm);
-                    noti.points.push(elm.e);
-                  }
-                }
-
-                break;
-              }
-            }
-          }
-        }
-
-        if(need_bind){
-          for(let i in attr){
-            curr = attr[i];
-            if(curr.binded)
-              continue;
-            for(let j in outer_nodes){
-              elm = outer_nodes[j];
-              if(elm.data.binded)
-                continue;
-              if(curr.b.is_nearest(elm.b, true) || curr.e.is_nearest(elm.e, true)){
-                elm.data.binded = true;
-                curr.binded = true;
-                need_bind--;
-                available_bind--;
-                elm.rays.clear(true);
-                elm.b = curr.b;
-                elm.e = curr.e;
-                if(noti.profiles.indexOf(elm) == -1){
-                  noti.profiles.push(elm);
-                  noti.points.push(elm.b);
-                  noti.points.push(elm.e);
-                }
-                break;
-              }
-            }
-          }
-        }
-
-        if(need_bind && available_bind){
-          for(let i in attr){
-            curr = attr[i];
-            if(curr.binded)
-              continue;
-            for(let j in outer_nodes){
-              elm = outer_nodes[j];
-              if(elm.data.binded)
-                continue;
-              elm.data.binded = true;
-              curr.binded = true;
-              need_bind--;
-              available_bind--;
-              elm.rays.clear(true);
-              elm.b = curr.b;
-              elm.e = curr.e;
-              if(noti.profiles.indexOf(elm) == -1){
-                noti.profiles.push(elm);
-                noti.points.push(elm.b);
-                noti.points.push(elm.e);
-              }
-              break;
-            }
-          }
-        }
-
-        if(need_bind){
-          for(let i in attr){
-            curr = attr[i];
-            if(curr.binded)
-              continue;
-            elm = new Profile({
-              generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e),
-              proto: outer_nodes.length ? outer_nodes[0] : {
-                  parent: this,
-                  clr: this.project.default_clr()
-                }
-            });
-            curr.profile = elm;
-            if(curr.outer)
-              delete curr.outer;
-            curr.binded = true;
-
-            elm.data.binded = true;
-            elm.data.simulated = true;
-
-            noti.profiles.push(elm);
-            noti.points.push(elm.b);
-            noti.points.push(elm.e);
-
-            need_bind--;
-          }
-        }
-
-        if(available_bind){
-          outer_nodes.forEach((elm) => {
-            if(!elm.data.binded){
-              elm.rays.clear(true);
-              elm.remove();
-              available_bind--;
-            }
-          });
-        }
-
-        if(noti.points.length){
-          this.notify(noti);
-        }
-
-        this.profiles.forEach((p) => p.default_inset());
-        this.data._bounds = null;
-      }
-    },
-    enumerable : true
-  },
-
-
-	redraw: {
-		value: function(on_redrawed){
-
-			if(!this.visible){
-        return on_redrawed ? on_redrawed() : undefined;
-      }
-
-			let llength = 0;
-
-			function on_flap_redrawed(){
-				llength--;
-				!llength && on_redrawed && on_redrawed();
-			}
-
-			this.data._bounds = null;
-
-			if(!this.project.data._saving && this.l_visualization._by_spec){
-        this.l_visualization._by_spec.removeChildren();
-      }
-
-      this.profiles.forEach((elm) => {
-				elm.redraw();
-			});
-
-      this.glass_recalc();
-
-      this.draw_opening();
-
-      this.draw_cnn_errors();
-
-      this.children.forEach((child_contour) => {
-				if (child_contour instanceof Contour){
-					llength++;
-          child_contour.redraw(on_flap_redrawed);
-				}
-			});
-
-			$p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
-
-			if(!llength && on_redrawed){
-        on_redrawed();
-      }
-
-		}
-	},
-
-	save_coordinates: {
-		value: function () {
-
-			this.glasses(false, true).forEach(function (glass) {
-				if(!glass.visible)
-					glass.remove();
-			});
-
-			this.children.forEach(function (elm) {
-				if(elm.save_coordinates){
-					elm.save_coordinates();
-
-				}else if(elm instanceof paper.Group && (elm == elm.layer.l_text || elm == elm.layer.l_dimensions)){
-					elm.children.forEach(function (elm) {
-						if(elm.save_coordinates)
-							elm.save_coordinates();
-					});
-				}
-			});
-
-			this._row.x = this.bounds ? this.bounds.width : 0;
-			this._row.y = this.bounds? this.bounds.height : 0;
-			this._row.is_rectangular = this.is_rectangular;
-			if(this.parent){
-				this._row.w = this.w;
-				this._row.h = this.h;
-			}else{
-				this._row.w = 0;
-				this._row.h = 0;
-			}
-		}
-	},
 
 	glass_segments: {
 		get: function(){
@@ -5438,6 +5423,9 @@ paper.Point.prototype.__define({
 
 	is_nearest: {
 		value: function (point, sticking) {
+		  if(sticking === 0){
+        return Math.abs(this.x - point.x) < 0.01 && Math.abs(this.y - point.y) < 0.01;
+      }
 			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 16);
 		},
 		enumerable: false

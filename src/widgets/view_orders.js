@@ -38,7 +38,7 @@ $p.iface.view_orders = function (cell) {
 						on_close: () => setTimeout(() => $p.iface.set_hash(undefined, "", "list")),
 						set_text: (text) => (t.carousel.getActiveCell() == _cell) && cell.setText({text: "<b>" + text + "</b>"}),
 					})
-					.then(function (wnd) {
+					.then((wnd) => {
 						t.doc = wnd;
 						setTimeout(t.doc.wnd.set_text.bind(t.doc.wnd, true), 200);
 					});

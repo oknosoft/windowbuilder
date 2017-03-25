@@ -14,10 +14,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			hide_header: true,
 			date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
 			date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
-			on_new: function (o) {
+			on_new: (o) => {
 				$p.iface.set_hash(this.class_name, o.ref, "doc");
 			},
-			on_edit: function (_mgr, rId) {
+			on_edit: (_mgr, rId) => {
 				$p.iface.set_hash(_mgr.class_name, rId, "doc");
 			}
 		};
@@ -30,7 +30,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 	//attr.status_bar = true;
 
 	// разбивка на 2 колонки - дерево и карусель
-	var layout = pwnd.attachLayout({
+	const layout = pwnd.attachLayout({
 			pattern: "2U",
 			cells: [{
 				id: "a",
@@ -43,13 +43,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 				header: false
 			}],
 			offsets: { top: 0, right: 0, bottom: 0, left: 0}
-		}),
-
-		tree = layout.cells("a").attachTreeView({
+		});
+	const tree = layout.cells("a").attachTreeView({
 			iconset: "font_awesome"
-		}),
-
-		carousel = layout.cells("b").attachCarousel({
+		});
+	const carousel = layout.cells("b").attachCarousel({
 			keys:           false,
 			touch_scroll:   false,
 			offset_left:    0,
@@ -64,8 +62,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 	carousel.conf.anim_step = 200;
 	carousel.conf.anim_slide = "left 0.1s";
 
-	var wnd = this.constructor.prototype.form_selection.call(this, carousel.cells("list"), attr),
-		report;
+	const wnd = this.constructor.prototype.form_selection.call(this, carousel.cells("list"), attr);
 
 	// настраиваем фильтр для списка заказов
 	wnd.elmnts.filter.custom_selection._view = {
@@ -130,14 +127,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 	};
 
 	// картинка заказа в статусбаре
-	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar);
-	wnd.elmnts.grid.attachEvent("onRowSelect", function (rid) {
-		wnd.elmnts.svgs.reload(rid);
-	});
+	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar,
+    (ref, dbl) => dbl && $p.iface.set_hash("cat.characteristics", ref, "builder"));
+	wnd.elmnts.grid.attachEvent("onRowSelect", (rid) => wnd.elmnts.svgs.reload(rid));
 
 	// настраиваем дерево
 	tree.loadStruct($p.injected_data["tree_filteres.xml"]);
-	tree.attachEvent("onSelect", function (rid, mode) {
+	tree.attachEvent("onSelect", (rid, mode) => {
 
 		if(!mode)
 			return;
@@ -168,44 +164,33 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 		carousel.cells("report").setActive();
 
 		function show_report() {
-
 			switch(rid) {
-
 				case 'execution':
-					$p.doc.calc_order.rep_invoice_execution(report);
+					$p.doc.calc_order.rep_invoice_execution(wnd.elmnts.report);
 					break;
 
 				case 'plan':
 				case 'underway':
 				case 'manufactured':
 				case 'executed':
-
-					$p.doc.calc_order.rep_planing(report, rid);
+					$p.doc.calc_order.rep_planing(wnd.elmnts.report, rid);
 					break;
 			}
-
 		}
 
-		if(!report){
+		if(!wnd.elmnts.report){
 
-			report = new $p.HandsontableDocument(carousel.cells("report"), {})
-
-				.then(function (rep) {
-
-					if(!rep._online)
-						return report = null;
-
+      wnd.elmnts.report = new $p.HandsontableDocument(carousel.cells("report"), {})
+				.then((rep) => {
+					if(!rep._online){
+            return wnd.elmnts.report = null;
+          }
 					show_report();
-
-
 				});
-
-		}else if(report._online){
-
+		}
+		else if(wnd.elmnts.report._online){
 			show_report();
 		}
-
-
 	}
 
 	return wnd;

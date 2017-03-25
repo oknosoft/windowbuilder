@@ -11,23 +11,18 @@
 (function($p){
 
 	const _mgr = $p.cat.characteristics;
-  const _meta = $p.cat.characteristics.metadata()._clone();
+  const _meta = _mgr.metadata()._clone();
 	let selection_block, wnd;
 
 	// попробуем подсунуть типовой форме выбора виртуальные метаданные - с деревом и ограниченным списком значений
-	_mgr.form_selection_block = function(pwnd, attr){
-
-		if(!attr)
-			attr = {};
+	_mgr.form_selection_block = function(pwnd, attr = {}){
 
 		if(!selection_block){
-
 			selection_block = {
 				_obj: {
 					_calc_order: $p.utils.blank.guid
 				}
 			};
-
 			_meta.form = {
 				selection: {
 					fields: ["presentation","svg"],
@@ -83,18 +78,26 @@
 					}
 				},
 
+				// при изменении заказа, обновляем табличную часть
 				calc_order: {
 					get: function () {
 						return $p.CatCharacteristics.prototype._getter.call(this, "calc_order");
 					},
 
 					set: function (v) {
-						if(this._obj.calc_order == v)
-							return;
+						if(!v || this._obj.calc_order == v){
+              return;
+            }
+            // если вместо заказа прибежала харакетристика - возвращаем её в качестве результата
+            if(v._block){
+              wnd && wnd.close();
+              return attr.on_select && attr.on_select(v._block);
+            }
 						$p.CatCharacteristics.prototype.__setter.call(this, "calc_order", v);
 
-						if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount())
-							wnd.elmnts.filter.call_event();
+						if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount()){
+              wnd.elmnts.filter.call_event();
+            }
 
 						if(!$p.utils.is_empty_guid(this._obj.calc_order) &&
 							$p.wsql.get_user_param("template_block_calc_order") != this._obj.calc_order){
@@ -125,7 +128,8 @@
 
 		// и еще, подсовываем форме собственный обработчик получения данных
 		attr.custom_selection = function (attr) {
-			var ares = [], crefs = [], calc_order;
+			const ares = [], crefs = [];
+			let calc_order;
 
 			// получаем ссылку на расчет из отбора
 			attr.selection.some((o) => {
@@ -137,30 +141,32 @@
 
 			// получаем документ расчет
 			return $p.doc.calc_order.get(calc_order, true, true)
-				.then(function (o) {
+				.then((o) => {
 
 					// получаем массив ссылок на характеристики в табчасти продукции
-					o.production.each(function (row) {
+					o.production.each((row) => {
 						if(!row.characteristic.empty()){
-							if(row.characteristic.is_new())
-								crefs.push(row.characteristic.ref);
-
+							if(row.characteristic.is_new()){
+                crefs.push(row.characteristic.ref);
+              }
 							else{
 								// если это характеристика продукции - добавляем
 								if(!row.characteristic.calc_order.empty() && row.characteristic.coordinates.count()){
 									if(row.characteristic._attachments &&
 										row.characteristic._attachments.svg &&
-										!row.characteristic._attachments.svg.stub)
-										ares.push(row.characteristic);
-									else
-										crefs.push(row.characteristic.ref);
+										!row.characteristic._attachments.svg.stub){
+                    ares.push(row.characteristic);
+                  }
+									else{
+                    crefs.push(row.characteristic.ref);
+                  }
 								}
 							}
 						}
 					});
 					return crefs.length ? _mgr.pouch_load_array(crefs, true) : crefs;
 				})
-				.then(function () {
+				.then(() => {
 
 					// если это характеристика продукции - добавляем
 					crefs.forEach((o) => {
@@ -195,10 +201,8 @@
 					return Promise.all(ares);
 
 				})
-				.then(function () {
-					// конвертируем в xml для вставки в грид
-					return $p.iface.data_to_grid.call(_mgr, crefs, attr);
-				});
+        // конвертируем в xml для вставки в грид
+				.then(() => $p.iface.data_to_grid.call(_mgr, crefs, attr));
 
 		};
 
@@ -222,7 +226,7 @@
 			obj: selection_block,
 			field: "calc_order",
 			width: 220,
-			get_option_list: (val, selection) => {
+			get_option_list: (val, selection) => new Promise((resolve, reject) => {
 
 				const l = [];
 
@@ -248,8 +252,8 @@
           }
         })
 
-				return Promise.resolve(l);
-			}
+				resolve(l);
+			})
 		});
 		wnd.elmnts.filter.custom_selection.calc_order.getBase().style.border = "none";
 

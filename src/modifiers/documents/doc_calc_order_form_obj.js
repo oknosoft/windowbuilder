@@ -8,13 +8,13 @@
 
 (function($p){
 
-	var _mgr = $p.doc.calc_order,
-		_meta_patched;
+	const _mgr = $p.doc.calc_order;
+	let _meta_patched;
 
 
 	_mgr.form_obj = function(pwnd, attr){
 
-		var o, wnd, evts = [], attr_on_close = attr.on_close;
+		let o, wnd, evts = [], attr_on_close = attr.on_close;
 
 		/**
 		 * структура заголовков табчасти продукции
@@ -91,7 +91,7 @@
 			 *	статусбар с картинками
 			 */
 			wnd.elmnts.statusbar = wnd.attachStatusBar({text: "<div></div>"});
-			wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar);
+			wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar, rsvg_click);
 			wnd.elmnts.svgs.reload(o);
 
 		};
@@ -197,7 +197,7 @@
 		attr.on_close = frm_close;
 
 		return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-			.then(function (res) {
+			.then((res) => {
 				if(res){
 					o = res.o;
 					wnd = res.wnd;
@@ -425,17 +425,13 @@
 		function frm_close(){
 
 			// выгружаем из памяти всплывающие окна скидки и связанных файлов
-			["vault", "vault_pop", "discount", "discount_pop"].forEach(function (elm) {
-				if (wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload)
-					wnd.elmnts[elm].unload();
+			['vault','vault_pop','discount','discount_pop','svgs'].forEach((elm) => {
+				wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
 			});
 
-			evts.forEach(function (id) {
-				$p.eve.detachEvent(id);
-			});
+			evts.forEach((id) => $p.eve.detachEvent(id));
 
-			if(typeof attr_on_close == "function")
-				attr_on_close();
+			typeof attr_on_close == "function" && attr_on_close();
 
 			return true;
 		}
@@ -590,24 +586,20 @@
 					calc_order: o,
 					product: row.row
 				}, true)
-					.then(function (ox) {
+					.then((ox) => {
 
 						// записываем расчет, если не сделали этого ранее
 						if(o.is_new())
-							return o.save()
-								.then(function () {
-									return ox;
-								});
+							return o.save().then(() => ox);
 						else
 							return ox;
 					})
-					.then(function (ox) {
+					.then((ox) => {
 						row.characteristic = ox;
 						$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
 					});
-
-			}else if((selId = production_get_sel_index()) != undefined){
-
+			}
+			else if((selId = production_get_sel_index()) != undefined){
 				row = o.production.get(selId);
 				if(row){
 					if(row.characteristic.empty() ||
@@ -616,12 +608,13 @@
 						row.characteristic.owner.is_service ||
 						row.characteristic.owner.is_accessory){
 						not_production();
-
-					}else if(row.characteristic.coordinates.count() == 0){
+					}
+					else if(row.characteristic.coordinates.count() == 0){
 						// возможно, это заготовка - проверим номенклатуру системы
-
-					}else
-						$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+					}
+					else{
+            $p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+          }
 				}
 			}
 
@@ -638,6 +631,14 @@
 			}
 		}
 
+		function rsvg_click(ref, dbl) {
+      o.production.find_rows({characteristic: ref}, (row) => {
+        wnd.elmnts.grids.production.selectRow(row.row-1);
+        dbl && open_builder();
+        return false;
+      })
+    }
+
 		/**
 		 * добавляет строку материала
 		 */
@@ -648,7 +649,7 @@
         grid.selectRow(row);
         grid.selectCell(row, grid.getColIndexById("nom"), false, true, true);
         grid.cells().open_selection();
-      })
+      });
 		}
 
 		/**
@@ -676,6 +677,6 @@
 			//});
 		}
 
-	}
+	};
 
 })($p);

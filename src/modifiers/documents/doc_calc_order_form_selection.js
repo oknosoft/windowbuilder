@@ -9,9 +9,7 @@
 
 $p.doc.calc_order.form_selection = function(pwnd, attr){
 
-
-	var wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr),
-		report;
+	const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
 	// настраиваем фильтр для списка заказов
 	wnd.elmnts.filter.custom_selection._view = { get value() { return '' } };
@@ -19,11 +17,17 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
 
 	// картинка заказа в статусбаре
 	wnd.do_not_maximize = true;
-	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar);
+	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar,
+    (ref, dbl) => {
+	  if(dbl){
+      wnd && wnd.close();
+      return pwnd.on_select && pwnd.on_select({_block: ref});
+    }
+    });
 	wnd.elmnts.grid.attachEvent("onRowSelect", (rid) => wnd.elmnts.svgs.reload(rid));
 
 
-	setTimeout(function () {
+	setTimeout(() => {
 		wnd.setDimension(900, 580);
 		wnd.centerOnScreen();
 	})

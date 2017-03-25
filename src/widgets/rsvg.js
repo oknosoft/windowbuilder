@@ -71,7 +71,7 @@ class OSvgs {
       title: "Скрыть/показать панель эскизов",
       onclick: () => {
         this.area_hidden = !this.area_hidden;
-        $p.wsql.set_user_param("svgs_area_hidden", area_hidden);
+        $p.wsql.set_user_param("svgs_area_hidden", this.area_hidden);
         this.apply_area_hidden();
 
         if(!this.area_hidden && this.stack.length){
@@ -101,7 +101,7 @@ class OSvgs {
       }
     }
 
-    minmax.style.backgroundPositionX = area_hidden ? '-32px' : '0px'
+    minmax.style.backgroundPositionX = area_hidden ? '-32px' : '0px';
   }
 
   draw_svgs(res){
@@ -120,6 +120,7 @@ class OSvgs {
       pics_area.appendChild(svg_elm);
       svg_elm.style.float = "left";
       svg_elm.style.marginLeft = "4px";
+      svg_elm.style.cursor = "pointer";
       svg_elm.innerHTML = $p.iface.scale_svg(svg, 88, 22);
       svg_elm.ref = ref;
       svg_elm.onclick = this.onclick;
@@ -194,6 +195,16 @@ class OSvgs {
           stack.length = 0;
         }
       }, 300);
+  }
+
+  unload() {
+    this.draw_svgs([]);
+    for(let fld in this){
+      if(this[fld] instanceof HTMLElement && this[fld].parentNode){
+        this[fld].parentNode.removeChild(this[fld]);
+      }
+      this[fld] = null;
+    }
   }
 
 }
