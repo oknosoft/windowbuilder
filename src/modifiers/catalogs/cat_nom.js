@@ -136,6 +136,53 @@ $p.CatNom.prototype.__define({
     },
     set : function(v){
     }
+  },
+
+  /**
+   * Возвращает номенклатуру по ключу цветового аналога
+   */
+  by_clr_key: {
+    value: function (clr) {
+
+      if(this.clr == clr){
+        return this;
+      }
+      if(!this._clr_keys){
+        this._clr_keys = new Map();
+      }
+      const {_clr_keys} = this;
+      if(_clr_keys.has(clr)){
+        return _clr_keys.get(clr);
+      }
+      if(_clr_keys.size){
+        return this;
+      }
+
+      // получаем ссылку на ключ цветового аналога
+      const clr_key = $p.job_prm.properties.clr_key && $p.job_prm.properties.clr_key.ref;
+      let clr_value;
+      this.extra_fields.find_rows({property: $p.job_prm.properties.clr_key}, (row) => clr_value = row.value);
+      if(!clr_value){
+        return this;
+      }
+
+      // находим все номенклатуры с подходящим ключем цветового аналога
+      this._manager.alatable.forEach((nom) => {
+        nom.extra_fields && nom.extra_fields.some((row) => {
+          row.property === clr_key && row.value === clr_value &&
+            _clr_keys.set($p.cat.clrs.get(nom.clr), $p.cat.nom.get(nom.ref));
+        })
+      });
+
+      // возарвщаем подходящую или себя
+      if(_clr_keys.has(clr)){
+        return _clr_keys.get(clr);
+      }
+      if(!_clr_keys.size){
+        _clr_keys.set(0, 0);
+      }
+      return this;
+    }
   }
 
 });

@@ -123,13 +123,13 @@ $p.CchProperties.prototype.__define({
    * ### Проверяет условие в строке отбора
    */
   check_condition: {
-    value: function ({spec_row, prm_row, elm, cnstr, origin, ox, calc_order}) {
+    value: function ({row_spec, prm_row, elm, cnstr, origin, ox, calc_order}) {
 
       const {is_calculated} = this;
 
       // значение параметра
       const val = is_calculated ? this.calculated_value({
-          row: spec_row,
+          row: row_spec,
           elm: elm,
           cnstr: cnstr || 0,
           ox: ox,

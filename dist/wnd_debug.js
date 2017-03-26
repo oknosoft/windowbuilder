@@ -3133,6 +3133,26 @@ $p.CatClrs.prototype.__define({
           return obj.save();
         })
     }
+  },
+
+  sides: {
+    get: function () {
+      const res = {is_in: false, is_out: false};
+      if(!this.empty() && !this.predefined_name){
+        if(this.clr_in.empty() && this.clr_out.empty()){
+          res.is_in = res.is_out = true;
+        }
+        else{
+          if(!this.clr_in.empty() && !this.clr_in.predefined_name){
+            res.is_in = true;
+          }
+          if(!this.clr_out.empty() && !this.clr_out.predefined_name){
+            res.is_out = true;
+          }
+        }
+      }
+      return res;
+    }
   }
 
 });
@@ -3942,6 +3962,47 @@ $p.CatNom.prototype.__define({
     },
     set : function(v){
     }
+  },
+
+  by_clr_key: {
+    value: function (clr) {
+
+      if(this.clr == clr){
+        return this;
+      }
+      if(!this._clr_keys){
+        this._clr_keys = new Map();
+      }
+      const {_clr_keys} = this;
+      if(_clr_keys.has(clr)){
+        return _clr_keys.get(clr);
+      }
+      if(_clr_keys.size){
+        return this;
+      }
+
+      const clr_key = $p.job_prm.properties.clr_key && $p.job_prm.properties.clr_key.ref;
+      let clr_value;
+      this.extra_fields.find_rows({property: $p.job_prm.properties.clr_key}, (row) => clr_value = row.value);
+      if(!clr_value){
+        return this;
+      }
+
+      this._manager.alatable.forEach((nom) => {
+        nom.extra_fields && nom.extra_fields.some((row) => {
+          row.property === clr_key && row.value === clr_value &&
+            _clr_keys.set($p.cat.clrs.get(nom.clr), $p.cat.nom.get(nom.ref));
+        })
+      });
+
+      if(_clr_keys.has(clr)){
+        return _clr_keys.get(clr);
+      }
+      if(!_clr_keys.size){
+        _clr_keys.set(0, 0);
+      }
+      return this;
+    }
   }
 
 });
@@ -4526,12 +4587,12 @@ $p.CchProperties.prototype.__define({
   },
 
   check_condition: {
-    value: function ({spec_row, prm_row, elm, cnstr, origin, ox, calc_order}) {
+    value: function ({row_spec, prm_row, elm, cnstr, origin, ox, calc_order}) {
 
       const {is_calculated} = this;
 
       const val = is_calculated ? this.calculated_value({
-          row: spec_row,
+          row: row_spec,
           elm: elm,
           cnstr: cnstr || 0,
           ox: ox,
@@ -5462,12 +5523,12 @@ function ProductsBuilding(){
 		return res;
 	}
 
-	function check_params(selection_params, spec_row, elm, cnstr, origin){
+	function check_params(selection_params, row_spec, elm, cnstr, origin){
 
 		let ok = true;
 
-		selection_params.find_rows({elm: spec_row.elm}, (prm_row) => {
-			ok = prm_row.param.check_condition({spec_row, prm_row, elm, cnstr, origin, ox});
+		selection_params.find_rows({elm: row_spec.elm}, (prm_row) => {
+			ok = prm_row.param.check_condition({row_spec, prm_row, elm, cnstr, origin, ox});
 			if(!ok){
 			  return false;
       }
@@ -5743,14 +5804,14 @@ function ProductsBuilding(){
 
 		const res = $p.dp.buyers_order.create().specification;
 
-		furn_set.specification.find_rows({dop: 0}, (row) => {
+		furn_set.specification.find_rows({dop: 0}, (row_furn) => {
 
-			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row)){
+			if(!row_furn.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row_furn)){
         return;
       }
 
 			if(!exclude_dop){
-				furn_set.specification.find_rows({is_main_specification_row: false, elm: row.elm}, (dop_row) => {
+				furn_set.specification.find_rows({is_main_specification_row: false, elm: row_furn.elm}, (dop_row) => {
 
 					if(!furn_check_row_restrictions(contour, cache, furn_set, dop_row)){
             return;
@@ -5833,7 +5894,7 @@ function ProductsBuilding(){
 							else if(!sub_row.quantity){
                 return;
               }
-							res.add(sub_row).quantity = row.quantity * sub_row.quantity;
+							res.add(sub_row).quantity = row_furn.quantity * sub_row.quantity;
 						});
 					}
 					else{
@@ -5842,19 +5903,23 @@ function ProductsBuilding(){
 				});
 			}
 
-			if(row.is_set_row){
-				furn_get_spec(contour, cache, row.nom_set).each((sub_row) => {
+			if(row_furn.is_set_row){
+				furn_get_spec(contour, cache, row_furn.nom_set).each((sub_row) => {
 					if(sub_row.is_procedure_row){
             res.add(sub_row);
           }
           else if(!sub_row.quantity){
             return;
           }
-					res.add(sub_row).quantity = row.quantity * sub_row.quantity;
+					res.add(sub_row).quantity = row_furn.quantity * sub_row.quantity;
 				});
 			}
 			else{
-				res.add(row).origin = furn_set;
+			  const row_spec = res.add(row_furn);
+        row_spec.origin = furn_set;
+			  if(!row_furn.formula.empty()){
+          row_furn.formula.execute({ox, contour, row_furn, row_spec});
+        }
 			}
 		});
 		return res;
@@ -6037,7 +6102,8 @@ function ProductsBuilding(){
           cnstr: len_angl && len_angl.cnstr || 0,
           inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
 					row_ins: row_ins_spec,
-					row_spec: row_spec
+					row_spec: row_spec,
+          len: len_angl ? len_angl.len : _row.len
 				});
 			}
 			else if($p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1 ||
@@ -6050,11 +6116,10 @@ function ProductsBuilding(){
 					row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz)/1000;
 					row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz)/1000;
 					row_spec.s = _row.s;
-
 				}
 				else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру){
 					var row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
-					elm.perimeter.forEach(function (rib) {
+					elm.perimeter.forEach((rib) => {
 						row_prm._row._mixin(rib);
 						if(inset_check(row_ins_spec, row_prm, true)){
 							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);

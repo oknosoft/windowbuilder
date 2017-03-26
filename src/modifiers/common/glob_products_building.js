@@ -316,18 +316,19 @@ function ProductsBuilding(){
 	/**
 	 * Проверяет соответствие параметров отбора параметрам изделия
 	 * @param selection_params {TabularSection} - табчасть параметров вставки, фурнитуры или соединения
-	 * @param spec_elm {Number} - идентификатор строки спецификации
+   * @param row_spec {TabularSectionRow}
+	 * @param elm {BuilderElement}
 	 * @param [cnstr] {Number} - номер конструкции или элемента
 	 * @return {boolean}
 	 */
-	function check_params(selection_params, spec_row, elm, cnstr, origin){
+	function check_params(selection_params, row_spec, elm, cnstr, origin){
 
 		let ok = true;
 
 		// режем параметры по элементу
-		selection_params.find_rows({elm: spec_row.elm}, (prm_row) => {
+		selection_params.find_rows({elm: row_spec.elm}, (prm_row) => {
 		  // выполнение условия рассчитывает объект CchProperties
-			ok = prm_row.param.check_condition({spec_row, prm_row, elm, cnstr, origin, ox});
+			ok = prm_row.param.check_condition({row_spec, prm_row, elm, cnstr, origin, ox});
 			if(!ok){
 			  return false;
       }
@@ -689,16 +690,16 @@ function ProductsBuilding(){
 		const res = $p.dp.buyers_order.create().specification;
 
 		// бежим по всем строкам набора
-		furn_set.specification.find_rows({dop: 0}, (row) => {
+		furn_set.specification.find_rows({dop: 0}, (row_furn) => {
 
 			// проверяем, проходит ли строка
-			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row)){
+			if(!row_furn.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row_furn)){
         return;
       }
 
 			// ищем строки дополнительной спецификации
 			if(!exclude_dop){
-				furn_set.specification.find_rows({is_main_specification_row: false, elm: row.elm}, (dop_row) => {
+				furn_set.specification.find_rows({is_main_specification_row: false, elm: row_furn.elm}, (dop_row) => {
 
 					if(!furn_check_row_restrictions(contour, cache, furn_set, dop_row)){
             return;
@@ -784,7 +785,7 @@ function ProductsBuilding(){
 							else if(!sub_row.quantity){
                 return;
               }
-							res.add(sub_row).quantity = row.quantity * sub_row.quantity;
+							res.add(sub_row).quantity = row_furn.quantity * sub_row.quantity;
 						});
 					}
 					else{
@@ -794,19 +795,23 @@ function ProductsBuilding(){
 			}
 
 			// в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
-			if(row.is_set_row){
-				furn_get_spec(contour, cache, row.nom_set).each((sub_row) => {
+			if(row_furn.is_set_row){
+				furn_get_spec(contour, cache, row_furn.nom_set).each((sub_row) => {
 					if(sub_row.is_procedure_row){
             res.add(sub_row);
           }
           else if(!sub_row.quantity){
             return;
           }
-					res.add(sub_row).quantity = row.quantity * sub_row.quantity;
+					res.add(sub_row).quantity = row_furn.quantity * sub_row.quantity;
 				});
 			}
 			else{
-				res.add(row).origin = furn_set;
+			  const row_spec = res.add(row_furn);
+        row_spec.origin = furn_set;
+			  if(!row_furn.formula.empty()){
+          row_furn.formula.execute({ox, contour, row_furn, row_spec});
+        }
 			}
 		});
 		return res;
@@ -1037,7 +1042,8 @@ function ProductsBuilding(){
           cnstr: len_angl && len_angl.cnstr || 0,
           inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
 					row_ins: row_ins_spec,
-					row_spec: row_spec
+					row_spec: row_spec,
+          len: len_angl ? len_angl.len : _row.len
 				});
 			}
 			else if($p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1 ||
@@ -1051,11 +1057,10 @@ function ProductsBuilding(){
 					row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz)/1000;
 					row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz)/1000;
 					row_spec.s = _row.s;
-
 				}
 				else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру){
 					var row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
-					elm.perimeter.forEach(function (rib) {
+					elm.perimeter.forEach((rib) => {
 						row_prm._row._mixin(rib);
 						if(inset_check(row_ins_spec, row_prm, true)){
 							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);

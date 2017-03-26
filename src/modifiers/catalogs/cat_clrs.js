@@ -298,6 +298,7 @@ $p.cat.clrs.__define({
 
 $p.CatClrs.prototype.__define({
 
+  // записывает элемент цвета на сервере
   register_on_server: {
     value: function () {
       return $p.wsql.pouch.save_obj(this, {
@@ -306,6 +307,27 @@ $p.CatClrs.prototype.__define({
         .then(function (obj) {
           return obj.save();
         })
+    }
+  },
+
+  // возвращает стороны, на которых цвет
+  sides: {
+    get: function () {
+      const res = {is_in: false, is_out: false};
+      if(!this.empty() && !this.predefined_name){
+        if(this.clr_in.empty() && this.clr_out.empty()){
+          res.is_in = res.is_out = true;
+        }
+        else{
+          if(!this.clr_in.empty() && !this.clr_in.predefined_name){
+            res.is_in = true;
+          }
+          if(!this.clr_out.empty() && !this.clr_out.predefined_name){
+            res.is_out = true;
+          }
+        }
+      }
+      return res;
     }
   }
 
