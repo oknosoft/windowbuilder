@@ -170,13 +170,13 @@ class BuilderElement extends paper.Group {
 
   // виртуальные метаданные для автоформ
   get _metadata() {
+    const {fields, tabular_sections} = this.project.ox._metadata;
     const t = this,
-      _meta = t.project.ox._metadata,
-      _xfields = _meta.tabular_sections.coordinates.fields, //_dgfields = t.project._dp._metadata.fields
+      _xfields = tabular_sections.coordinates.fields, //_dgfields = t.project._dp._metadata.fields
       inset = Object.assign({}, _xfields.inset),
       arc_h = Object.assign({}, _xfields.r, {synonym: "Высота дуги"}),
-      info = Object.assign({}, _meta.fields.note, {synonym: "Элемент"}),
-      cnn1 = Object.assign({}, _meta.tabular_sections.cnn_elmnts.fields.cnn),
+      info = Object.assign({}, fields.note, {synonym: "Элемент"}),
+      cnn1 = Object.assign({}, tabular_sections.cnn_elmnts.fields.cnn),
       cnn2 = Object.assign({}, cnn1),
       cnn3 = Object.assign({}, cnn1);
 
@@ -204,28 +204,32 @@ class BuilderElement extends paper.Group {
 
     inset.choice_links = [{
       name: ["selection",	"ref"],
-      path: [
-        function(o, f){
+      path: [(o, f) => {
+        const {sys} = this.project._dp;
+
           let selection;
 
-          if(t instanceof Filling){
+          if(this instanceof Filling){
             if($p.utils.is_data_obj(o)){
               return $p.cat.inserts._inserts_types_filling.indexOf(o.insert_type) != -1 &&
-                o.thickness >= t.project._dp.sys.tmin && o.thickness <= t.project._dp.sys.tmax;
+                o.thickness >= sys.tmin && o.thickness <= sys.tmax &&
+                (o.insert_glass_type.empty() || o.insert_glass_type == $p.enm.inserts_glass_types.Заполнение);
             }
             else{
               let refs = "";
-              $p.cat.inserts.by_thickness(t.project._dp.sys.tmin, t.project._dp.sys.tmax).forEach((row) => {
-                if(refs){
-                  refs += ", ";
+              $p.cat.inserts.by_thickness(sys.tmin, sys.tmax).forEach((o) => {
+                if(o.insert_glass_type.empty() || o.insert_glass_type == $p.enm.inserts_glass_types.Заполнение){
+                  if(refs){
+                    refs += ", ";
+                  }
+                  refs += "'" + o.ref + "'";
                 }
-                refs += "'" + row.ref + "'";
               });
               return "_t_.ref in (" + refs + ")";
             }
           }
-          else if(t instanceof Profile){
-            if(t.nearest()){
+          else if(this instanceof Profile){
+            if(this.nearest()){
               selection = {elm_type: {in: [$p.enm.elm_types.Створка, $p.enm.elm_types.Добор]}};
             }
             else{
@@ -233,13 +237,13 @@ class BuilderElement extends paper.Group {
             }
           }
           else{
-            selection = {elm_type: t.nom.elm_type};
+            selection = {elm_type: this.nom.elm_type};
           }
 
           if($p.utils.is_data_obj(o)){
             let ok = false;
             selection.nom = o;
-            t.project._dp.sys.elmnts.find_rows(selection, (row) => {
+            sys.elmnts.find_rows(selection, (row) => {
               ok = true;
               return false;
             });
@@ -247,7 +251,7 @@ class BuilderElement extends paper.Group {
           }
           else{
             let refs = "";
-            t.project._dp.sys.elmnts.find_rows(selection, (row) => {
+            sys.elmnts.find_rows(selection, (row) => {
               if(refs){
                 refs += ", ";
               }
@@ -260,55 +264,48 @@ class BuilderElement extends paper.Group {
 
     cnn1.choice_links = [{
       name: ["selection",	"ref"],
-      path: [
-        function(o, f){
-          return cnn_choice_links(o, t.rays.b);
-        }]}
-    ];
+      path: [(o, f) => cnn_choice_links(o, this.rays.b)]
+    }];
 
     cnn2.choice_links = [{
       name: ["selection",	"ref"],
-      path: [
-        function(o, f){
-          return cnn_choice_links(o, t.rays.e);
-        }]}
-    ];
+      path: [(o, f) => cnn_choice_links(o, this.rays.e)]
+    }];
 
     cnn3.choice_links = [{
       name: ["selection",	"ref"],
-      path: [
-        function(o){
+      path: [(o) => {
+        const cnn_ii = this.selected_cnn_ii();
+        let nom_cnns;
 
-          const cnn_ii = t.selected_cnn_ii();
-          let nom_cnns;
+        if (cnn_ii.elm instanceof Filling) {
+          nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
+        }
+        else if (cnn_ii.elm_type == $p.enm.elm_types.Створка && this.elm_type != $p.enm.elm_types.Створка) {
+          nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
+        }
+        else {
+          nom_cnns = $p.cat.cnns.nom_cnn(this, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
+        }
 
-          if(cnn_ii.elm instanceof Filling){
-            nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
-          }
-          else if(cnn_ii.elm_type == $p.enm.elm_types.Створка && t.elm_type != $p.enm.elm_types.Створка){
-            nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, t, $p.enm.cnn_types.acn.ii);
-          }
-          else{
-            nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
-          }
-
-          if($p.utils.is_data_obj(o)){
-            return nom_cnns.some((cnn) => o == cnn);
-          }
-          else{
-            var refs = "";
-            nom_cnns.forEach(function (cnn) {
-              if(refs)
-                refs += ", ";
-              refs += "'" + cnn.ref + "'";
-            });
-            return "_t_.ref in (" + refs + ")";
-          }
-        }]}
-    ];
+        if ($p.utils.is_data_obj(o)) {
+          return nom_cnns.some((cnn) => o == cnn);
+        }
+        else {
+          var refs = "";
+          nom_cnns.forEach((cnn) => {
+            if (refs) {
+              refs += ", ";
+            }
+            refs += "'" + cnn.ref + "'";
+          });
+          return "_t_.ref in (" + refs + ")";
+        }
+      }]
+    }];
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(_xfields.clr, t);
+    $p.cat.clrs.selection_exclude_service(_xfields.clr, this);
 
     return {
       fields: {
