@@ -19,90 +19,129 @@ class UndoRedo {
   constructor(_editor) {
 
     this._editor = _editor;
-    this._history = [];
     this._pos = -1;
 
+    this._diff = [];
+    this.run_snapshot = this.run_snapshot.bind(this);
+    this.scheme_changed = this.scheme_changed.bind(this);
+    this.scheme_snapshot = this.scheme_snapshot.bind(this);
+    this.clear = this.clear.bind(this);
+
     // обрабатываем изменения изделия
-    $p.eve.attachEvent("scheme_changed", this.scheme_changed.bind(this));
+    $p.eve.attachEvent("scheme_changed", this.scheme_changed);
 
     // при закрытии редактора чистим историю
-    $p.eve.attachEvent("editor_closed", this.clear.bind(this));
+    $p.eve.attachEvent("editor_closed", this.clear);
 
     // при готовности снапшота, добавляем его в историю
-    $p.eve.attachEvent("scheme_snapshot", this.scheme_snapshot.bind(this));
+    $p.eve.attachEvent("scheme_snapshot", this.scheme_snapshot);
 
   }
 
+  /**
+   * Инициализирует создание снапшота - запускает пересчет изделия
+   */
   run_snapshot() {
-
-    // запускаем короткий пересчет изделия
-    if (this._pos >= 0) {
-
-      // если pos < конца истории, отрезаем хвост истории
-      if (this._pos > 0 && this._pos < (this._history.length - 1)) {
-        this._history.splice(this._pos, this._history.length - this._pos - 1);
-      }
-
-      this._editor.project.save_coordinates({snapshot: true, clipboard: false});
-
-    }
-
+    this._pos >= 0 && this._editor.project.save_coordinates({snapshot: true, clipboard: false});
   }
 
+  /**
+   * Обрабатывает событие scheme_snapshot после пересчета спецификации
+   * @param scheme
+   * @param attr
+   */
   scheme_snapshot(scheme, attr) {
-    if (scheme == this._editor.project && !attr.clipboard) {
-      this.save_snapshot(scheme);
-    }
+    scheme === this._editor.project && !attr.clipboard && this.save_snapshot(scheme);
   }
 
+  /**
+   * При изменениях изделия, запускает таймер снапшота
+   * @param scheme
+   * @param attr
+   */
   scheme_changed(scheme, attr) {
-
-    if (scheme == this._editor.project) {
-
+    const snapshot = scheme.data._snapshot || (attr && attr.snapshot);
+    if (!snapshot && scheme == this._editor.project) {
       // при открытии изделия чистим историю
       if (scheme.data._loading) {
-        if (!scheme.data._snapshot) {
+        setTimeout(() => {
           this.clear();
           this.save_snapshot(scheme);
-        }
-
-      } else {
+        }, 700);
+      }
+      else {
         // при обычных изменениях, запускаем таймер снапшота
-        if (this._snap_timer)
-          clearTimeout(this._snap_timer);
-        this._snap_timer = setTimeout(this.run_snapshot.bind(this), 700);
-        this.enable_buttons();
+        this._snap_timer && clearTimeout(this._snap_timer);
+        this._snap_timer = setTimeout(this.run_snapshot, 700);
       }
     }
-
   }
 
+  /**
+   * Вычисляет состояние через diff
+   * @param pos
+   * @return {*}
+   */
+  calculate(pos) {
+    const {_diff} = this;
+    const curr = _diff[0]._clone();
+    for(let i = 1; i < _diff.length && i <= pos; i++){
+      _diff[i].forEach((change) => {
+        DeepDiff.applyChange(curr, true, change);
+      });
+    }
+    return curr;
+  }
+
+
   save_snapshot(scheme) {
-    this._history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields", "glasses", "specification", "predefined_name"])));
-    this._pos = this._history.length - 1;
+    const curr = scheme.ox._obj._clone(["_row", "extra_fields", "glasses", "specification", "predefined_name"]);
+    const {_diff, _pos} = this;
+    if(!_diff.length){
+      _diff.push(curr);
+    }
+    else{
+      const diff = DeepDiff.diff(this.calculate(Math.min(_diff.length-1, _pos)), curr);
+      if(diff && diff.length){
+        // если pos < конца истории, отрезаем хвост истории
+        if (_pos > 0 && _pos < (_diff.length - 1)) {
+          _diff.splice(_pos, _diff.length - _pos - 1);
+        }
+        _diff.push(diff);
+      }
+    }
+    this._pos = _diff.length - 1;
     this.enable_buttons();
   }
 
   apply_snapshot() {
-    this._editor.project.load_stamp(JSON.parse(this._history[this._pos]), true);
-    this.enable_buttons();
+    this.disable_buttons();
+    this._editor.project.load_stamp(this.calculate(this._pos), true);
+    setTimeout(() => this.enable_buttons());
   }
 
   enable_buttons() {
+    const {back, rewind} = this._editor.tb_top.buttons;
     if (this._pos < 1)
-      this._editor.tb_top.buttons.back.classList.add("disabledbutton");
+      back.classList.add("disabledbutton");
     else
-      this._editor.tb_top.buttons.back.classList.remove("disabledbutton");
+      back.classList.remove("disabledbutton");
 
-    if (this._pos < (this._history.length - 1))
-      this._editor.tb_top.buttons.rewind.classList.remove("disabledbutton");
+    if (this._pos < (this._diff.length - 1))
+      rewind.classList.remove("disabledbutton");
     else
-      this._editor.tb_top.buttons.rewind.classList.add("disabledbutton");
+      rewind.classList.add("disabledbutton");
 
   }
 
+  disable_buttons() {
+    const {back, rewind} = this._editor.tb_top.buttons;
+    back.classList.add("disabledbutton");
+    rewind.classList.add("disabledbutton");
+  }
+
   clear() {
-    this._history.length = 0;
+    this._diff.length = 0;
     this._pos = -1;
   }
 
@@ -116,7 +155,7 @@ class UndoRedo {
   }
 
   rewind() {
-    if (this._pos <= (this._history.length - 1)) {
+    if (this._pos <= (this._diff.length - 1)) {
       this._pos++;
       this.apply_snapshot();
     }

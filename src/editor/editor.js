@@ -1257,6 +1257,9 @@ class Editor extends paper.PaperScope {
     shift.forEach((impost) => {
       // если примыкают с двух сторон или вторая сторона рамная - импост проходит
       const gl = glmap.get(impost);
+      if(!gl){
+        return;
+      }
       gl.ok = (gl.is_inner && gl.is_outer);
       gl.dx.forEach((glass) => {
           if(glass.left == impost && !glass.right){
@@ -1276,7 +1279,7 @@ class Editor extends paper.PaperScope {
     shift.forEach((impost) => {
 
       const gl = glmap.get(impost);
-      if(!gl.ok){
+      if(!gl || !gl.ok){
         return;
       }
 

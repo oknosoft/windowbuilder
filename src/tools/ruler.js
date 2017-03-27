@@ -89,7 +89,7 @@ class RulerWnd {
 
             ['0','1','2'].forEach((btn) => {
               if(btn != name){
-                wnd.tb_mode.buttons[btn].classList.remove("muted");
+                wnd.tb_mode.buttons[btn] && wnd.tb_mode.buttons[btn].classList.remove("muted");
               }
             });
             wnd.tb_mode.buttons[name].classList.add("muted");
@@ -98,7 +98,7 @@ class RulerWnd {
           else{
             ['base','inner','outer'].forEach((btn) => {
               if(btn != name){
-                wnd.tb_mode.buttons[btn].classList.remove("muted");
+                wnd.tb_mode.buttons[btn] && wnd.tb_mode.buttons[btn].classList.remove("muted");
               }
             });
             wnd.tb_mode.buttons[name].classList.add("muted");

@@ -228,32 +228,35 @@
 			width: 220,
 			get_option_list: (val, selection) => new Promise((resolve, reject) => {
 
-				const l = [];
+			  setTimeout(() => {
+          const l = [];
 
-				$p.job_prm.builder.base_block.forEach((o) => {
-				  if(selection.presentation && selection.presentation.like){
-				    if(o.note.toLowerCase().match(selection.presentation.like.toLowerCase()) ||
-                o.presentation.toLowerCase().match(selection.presentation.like.toLowerCase())){
-              l.push({text: o.note || o.presentation, value: o.ref});
+          $p.job_prm.builder.base_block.forEach(({note, presentation, ref}) => {
+            if(selection.presentation && selection.presentation.like){
+              if(note.toLowerCase().match(selection.presentation.like.toLowerCase()) ||
+                presentation.toLowerCase().match(selection.presentation.like.toLowerCase())){
+                l.push({text: note || presentation, value: ref});
+              }
+            }else{
+              l.push({text: note || presentation, value: ref});
             }
-          }else{
-            l.push({text: o.note || o.presentation, value: o.ref});
-          }
-				});
+          });
 
-        l.sort((a, b) => {
-          if (a.text < b.text){
-            return -1;
-          }
-          else if (a.text > b.text){
-            return 1;
-          }
-          else{
-            return 0;
-          }
-        });
+          l.sort((a, b) => {
+            if (a.text < b.text){
+              return -1;
+            }
+            else if (a.text > b.text){
+              return 1;
+            }
+            else{
+              return 0;
+            }
+          });
 
-				resolve(l);
+          resolve(l);
+
+        }, $p.job_prm.builder.base_block ? 0 : 1000)
 			})
 		});
 		wnd.elmnts.filter.custom_selection.calc_order.getBase().style.border = "none";

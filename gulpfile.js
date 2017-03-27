@@ -39,6 +39,7 @@ gulp.task('build-iface', function(){
 // Cборка библиотеки рисовалки
 gulp.task('build-lib', function(){
 	return gulp.src([
+	  './lib/deepdiff.js',
 		'./src/editor/*.js',
 		'./src/geometry/*.js',
 		'./src/tools/*.js',

@@ -109,8 +109,9 @@ function Scheme(_canvas){
 		// наблюдатель за изменениями параметров створки
 		_papam_observer = function (changes) {
 
-			if(_data._loading || _data._snapshot)
-				return;
+			if(_data._loading || _data._snapshot){
+        return;
+      }
 
 			changes.some((change) => {
 				if(change.tabular == "params"){
@@ -462,7 +463,6 @@ function Scheme(_canvas){
         }
 
         delete _data._loading;
-        delete _data._snapshot;
 
         // виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
         setTimeout(() => {
@@ -471,14 +471,15 @@ function Scheme(_canvas){
               $p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
             }
             else{
-              // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок - запускаем пересчет
+              // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет
               _scheme.register_change(true);
             }
           }
           else{
             paper.load_stamp();
           }
-        }, 100);
+          delete _data._snapshot;
+        }, 20);
 
       }, 20);
 
@@ -571,9 +572,7 @@ function Scheme(_canvas){
 		if(_scheme != scheme){
       return;
     }
-		_scheme.contours.forEach((l) => {
-			l.draw_visualization();
-		});
+		_scheme.contours.forEach((l) => l.draw_visualization());
 		_scheme.view.update();
 	});
 
@@ -602,7 +601,7 @@ Scheme.prototype.__define({
    */
   clear: {
     value: function () {
-      const pnames = '_bounds,_update_timer,_loading';
+      const pnames = '_bounds,_update_timer,_loading,_snapshot';
       for(let fld in this.data){
         if(!pnames.match(fld)){
           delete this.data[fld];
@@ -826,8 +825,9 @@ Scheme.prototype.__define({
 				var ox = this.ox;
 
 				// сохраняем ссылку на типовой блок
-				if(!is_snapshot)
-					this._dp.base_block = obx;
+				if(!is_snapshot){
+          this._dp.base_block = obx;
+        }
 
 				// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
 				this.clear();
@@ -855,11 +855,11 @@ Scheme.prototype.__define({
 			if(is_snapshot){
 				this.data._snapshot = true;
 				do_load.call(this, obx);
-
-			}else
-				$p.cat.characteristics.get(obx, true, true)
-					.then(do_load.bind(this));
-
+			}
+			else{
+        $p.cat.characteristics.get(obx, true, true)
+          .then(do_load.bind(this));
+      }
 		}
 	},
 

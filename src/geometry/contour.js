@@ -1069,12 +1069,12 @@ class Contour extends paper.Layer {
 
     // ответственность за строку в таблице конструкций лежит на контуре
     const {bounds} = this;
-    this._row.x = bounds ? bounds.width : 0;
-    this._row.y = bounds ? bounds.height : 0;
+    this._row.x = bounds ? bounds.width.round(4) : 0;
+    this._row.y = bounds ? bounds.height.round(4) : 0;
     this._row.is_rectangular = this.is_rectangular;
     if(this.parent){
-      this._row.w = this.w;
-      this._row.h = this.h;
+      this._row.w = this.w.round(4);
+      this._row.h = this.h.round(4);
     }
     else{
       this._row.w = 0;

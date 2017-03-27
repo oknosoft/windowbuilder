@@ -7,6 +7,411 @@
     root.Windowbuilder = factory();
   }
 }(this, function() {
+;(function(root, factory) {
+  'use strict';
+  if (typeof define === 'function' && define.amd) {
+    define([], function() {
+      return factory();
+    });
+  } else if (typeof exports === 'object') {
+    module.exports = factory();
+  } else {
+    root.DeepDiff = factory();
+  }
+}(this, function(undefined) {
+  'use strict';
+
+  var $scope, conflict, conflictResolution = [];
+  if (typeof global === 'object' && global) {
+    $scope = global;
+  } else if (typeof window !== 'undefined') {
+    $scope = window;
+  } else {
+    $scope = {};
+  }
+  conflict = $scope.DeepDiff;
+  if (conflict) {
+    conflictResolution.push(
+      function() {
+        if ('undefined' !== typeof conflict && $scope.DeepDiff === accumulateDiff) {
+          $scope.DeepDiff = conflict;
+          conflict = undefined;
+        }
+      });
+  }
+
+  function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor;
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  }
+
+  function Diff(kind, path) {
+    Object.defineProperty(this, 'kind', {
+      value: kind,
+      enumerable: true
+    });
+    if (path && path.length) {
+      Object.defineProperty(this, 'path', {
+        value: path,
+        enumerable: true
+      });
+    }
+  }
+
+  function DiffEdit(path, origin, value) {
+    DiffEdit.super_.call(this, 'E', path);
+    Object.defineProperty(this, 'lhs', {
+      value: origin,
+      enumerable: true
+    });
+    Object.defineProperty(this, 'rhs', {
+      value: value,
+      enumerable: true
+    });
+  }
+  inherits(DiffEdit, Diff);
+
+  function DiffNew(path, value) {
+    DiffNew.super_.call(this, 'N', path);
+    Object.defineProperty(this, 'rhs', {
+      value: value,
+      enumerable: true
+    });
+  }
+  inherits(DiffNew, Diff);
+
+  function DiffDeleted(path, value) {
+    DiffDeleted.super_.call(this, 'D', path);
+    Object.defineProperty(this, 'lhs', {
+      value: value,
+      enumerable: true
+    });
+  }
+  inherits(DiffDeleted, Diff);
+
+  function DiffArray(path, index, item) {
+    DiffArray.super_.call(this, 'A', path);
+    Object.defineProperty(this, 'index', {
+      value: index,
+      enumerable: true
+    });
+    Object.defineProperty(this, 'item', {
+      value: item,
+      enumerable: true
+    });
+  }
+  inherits(DiffArray, Diff);
+
+  function arrayRemove(arr, from, to) {
+    var rest = arr.slice((to || from) + 1 || arr.length);
+    arr.length = from < 0 ? arr.length + from : from;
+    arr.push.apply(arr, rest);
+    return arr;
+  }
+
+  function realTypeOf(subject) {
+    var type = typeof subject;
+    if (type !== 'object') {
+      return type;
+    }
+
+    if (subject === Math) {
+      return 'math';
+    } else if (subject === null) {
+      return 'null';
+    } else if (Array.isArray(subject)) {
+      return 'array';
+    } else if (Object.prototype.toString.call(subject) === '[object Date]') {
+      return 'date';
+    } else if (typeof subject.toString !== 'undefined' && /^\/.*\//.test(subject.toString())) {
+      return 'regexp';
+    }
+    return 'object';
+  }
+
+  function deepDiff(lhs, rhs, changes, prefilter, path, key, stack) {
+    path = path || [];
+    var currentPath = path.slice(0);
+    if (typeof key !== 'undefined') {
+      if (prefilter) {
+        if (typeof(prefilter) === 'function' && prefilter(currentPath, key)) { return; }
+        else if (typeof(prefilter) === 'object') {
+          if (prefilter.prefilter && prefilter.prefilter(currentPath, key)) { return; }
+          if (prefilter.normalize) {
+            var alt = prefilter.normalize(currentPath, key, lhs, rhs);
+            if (alt) {
+              lhs = alt[0];
+              rhs = alt[1];
+            }
+          }
+        }
+      }
+      currentPath.push(key);
+    }
+
+    if (realTypeOf(lhs) === 'regexp' && realTypeOf(rhs) === 'regexp') {
+      lhs = lhs.toString();
+      rhs = rhs.toString();
+    }
+
+    var ltype = typeof lhs;
+    var rtype = typeof rhs;
+    if (ltype === 'undefined') {
+      if (rtype !== 'undefined') {
+        changes(new DiffNew(currentPath, rhs));
+      }
+    } else if (rtype === 'undefined') {
+      changes(new DiffDeleted(currentPath, lhs));
+    } else if (realTypeOf(lhs) !== realTypeOf(rhs)) {
+      changes(new DiffEdit(currentPath, lhs, rhs));
+    } else if (Object.prototype.toString.call(lhs) === '[object Date]' && Object.prototype.toString.call(rhs) === '[object Date]' && ((lhs - rhs) !== 0)) {
+      changes(new DiffEdit(currentPath, lhs, rhs));
+    } else if (ltype === 'object' && lhs !== null && rhs !== null) {
+      stack = stack || [];
+      if (stack.indexOf(lhs) < 0) {
+        stack.push(lhs);
+        if (Array.isArray(lhs)) {
+          var i, len = lhs.length;
+          for (i = 0; i < lhs.length; i++) {
+            if (i >= rhs.length) {
+              changes(new DiffArray(currentPath, i, new DiffDeleted(undefined, lhs[i])));
+            } else {
+              deepDiff(lhs[i], rhs[i], changes, prefilter, currentPath, i, stack);
+            }
+          }
+          while (i < rhs.length) {
+            changes(new DiffArray(currentPath, i, new DiffNew(undefined, rhs[i++])));
+          }
+        } else {
+          var akeys = Object.keys(lhs);
+          var pkeys = Object.keys(rhs);
+          akeys.forEach(function(k, i) {
+            var other = pkeys.indexOf(k);
+            if (other >= 0) {
+              deepDiff(lhs[k], rhs[k], changes, prefilter, currentPath, k, stack);
+              pkeys = arrayRemove(pkeys, other);
+            } else {
+              deepDiff(lhs[k], undefined, changes, prefilter, currentPath, k, stack);
+            }
+          });
+          pkeys.forEach(function(k) {
+            deepDiff(undefined, rhs[k], changes, prefilter, currentPath, k, stack);
+          });
+        }
+        stack.length = stack.length - 1;
+      }
+    } else if (lhs !== rhs) {
+      if (!(ltype === 'number' && isNaN(lhs) && isNaN(rhs))) {
+        changes(new DiffEdit(currentPath, lhs, rhs));
+      }
+    }
+  }
+
+  function accumulateDiff(lhs, rhs, prefilter, accum) {
+    accum = accum || [];
+    deepDiff(lhs, rhs,
+      function(diff) {
+        if (diff) {
+          accum.push(diff);
+        }
+      },
+      prefilter);
+    return (accum.length) ? accum : undefined;
+  }
+
+  function applyArrayChange(arr, index, change) {
+    if (change.path && change.path.length) {
+      var it = arr[index],
+          i, u = change.path.length - 1;
+      for (i = 0; i < u; i++) {
+        it = it[change.path[i]];
+      }
+      switch (change.kind) {
+        case 'A':
+          applyArrayChange(it[change.path[i]], change.index, change.item);
+          break;
+        case 'D':
+          delete it[change.path[i]];
+          break;
+        case 'E':
+        case 'N':
+          it[change.path[i]] = change.rhs;
+          break;
+      }
+    } else {
+      switch (change.kind) {
+        case 'A':
+          applyArrayChange(arr[index], change.index, change.item);
+          break;
+        case 'D':
+          arr = arrayRemove(arr, index);
+          break;
+        case 'E':
+        case 'N':
+          arr[index] = change.rhs;
+          break;
+      }
+    }
+    return arr;
+  }
+
+  function applyChange(target, source, change) {
+    if (target && source && change && change.kind) {
+      var it = target,
+          i = -1,
+          last = change.path ? change.path.length - 1 : 0;
+      while (++i < last) {
+        if (typeof it[change.path[i]] === 'undefined') {
+          it[change.path[i]] = (typeof change.path[i] === 'number') ? [] : {};
+        }
+        it = it[change.path[i]];
+      }
+      switch (change.kind) {
+        case 'A':
+          applyArrayChange(change.path ? it[change.path[i]] : it, change.index, change.item);
+          break;
+        case 'D':
+          delete it[change.path[i]];
+          break;
+        case 'E':
+        case 'N':
+          it[change.path[i]] = change.rhs;
+          break;
+      }
+    }
+  }
+
+  function revertArrayChange(arr, index, change) {
+    if (change.path && change.path.length) {
+      var it = arr[index],
+          i, u = change.path.length - 1;
+      for (i = 0; i < u; i++) {
+        it = it[change.path[i]];
+      }
+      switch (change.kind) {
+        case 'A':
+          revertArrayChange(it[change.path[i]], change.index, change.item);
+          break;
+        case 'D':
+          it[change.path[i]] = change.lhs;
+          break;
+        case 'E':
+          it[change.path[i]] = change.lhs;
+          break;
+        case 'N':
+          delete it[change.path[i]];
+          break;
+      }
+    } else {
+      switch (change.kind) {
+        case 'A':
+          revertArrayChange(arr[index], change.index, change.item);
+          break;
+        case 'D':
+          arr[index] = change.lhs;
+          break;
+        case 'E':
+          arr[index] = change.lhs;
+          break;
+        case 'N':
+          arr = arrayRemove(arr, index);
+          break;
+      }
+    }
+    return arr;
+  }
+
+  function revertChange(target, source, change) {
+    if (target && source && change && change.kind) {
+      var it = target,
+          i, u;
+      u = change.path.length - 1;
+      for (i = 0; i < u; i++) {
+        if (typeof it[change.path[i]] === 'undefined') {
+          it[change.path[i]] = {};
+        }
+        it = it[change.path[i]];
+      }
+      switch (change.kind) {
+        case 'A':
+          revertArrayChange(it[change.path[i]], change.index, change.item);
+          break;
+        case 'D':
+          it[change.path[i]] = change.lhs;
+          break;
+        case 'E':
+          it[change.path[i]] = change.lhs;
+          break;
+        case 'N':
+          delete it[change.path[i]];
+          break;
+      }
+    }
+  }
+
+  function applyDiff(target, source, filter) {
+    if (target && source) {
+      var onChange = function(change) {
+        if (!filter || filter(target, source, change)) {
+          applyChange(target, source, change);
+        }
+      };
+      deepDiff(target, source, onChange);
+    }
+  }
+
+  Object.defineProperties(accumulateDiff, {
+
+    diff: {
+      value: accumulateDiff,
+      enumerable: true
+    },
+    observableDiff: {
+      value: deepDiff,
+      enumerable: true
+    },
+    applyDiff: {
+      value: applyDiff,
+      enumerable: true
+    },
+    applyChange: {
+      value: applyChange,
+      enumerable: true
+    },
+    revertChange: {
+      value: revertChange,
+      enumerable: true
+    },
+    isConflict: {
+      value: function() {
+        return 'undefined' !== typeof conflict;
+      },
+      enumerable: true
+    },
+    noConflict: {
+      value: function() {
+        if (conflictResolution) {
+          conflictResolution.forEach(function(it) {
+            it();
+          });
+          conflictResolution = null;
+        }
+        return accumulateDiff;
+      },
+      enumerable: true
+    }
+  });
+
+  return accumulateDiff;
+}));
+
 
 "use strict";
 
@@ -1765,6 +2170,9 @@ class Editor extends paper.PaperScope {
 
     shift.forEach((impost) => {
       const gl = glmap.get(impost);
+      if(!gl){
+        return;
+      }
       gl.ok = (gl.is_inner && gl.is_outer);
       gl.dx.forEach((glass) => {
           if(glass.left == impost && !glass.right){
@@ -1783,7 +2191,7 @@ class Editor extends paper.PaperScope {
     shift.forEach((impost) => {
 
       const gl = glmap.get(impost);
-      if(!gl.ok){
+      if(!gl || !gl.ok){
         return;
       }
 
@@ -1948,83 +2356,105 @@ class UndoRedo {
   constructor(_editor) {
 
     this._editor = _editor;
-    this._history = [];
     this._pos = -1;
 
-    $p.eve.attachEvent("scheme_changed", this.scheme_changed.bind(this));
+    this._diff = [];
+    this.run_snapshot = this.run_snapshot.bind(this);
+    this.scheme_changed = this.scheme_changed.bind(this);
+    this.scheme_snapshot = this.scheme_snapshot.bind(this);
+    this.clear = this.clear.bind(this);
 
-    $p.eve.attachEvent("editor_closed", this.clear.bind(this));
+    $p.eve.attachEvent("scheme_changed", this.scheme_changed);
 
-    $p.eve.attachEvent("scheme_snapshot", this.scheme_snapshot.bind(this));
+    $p.eve.attachEvent("editor_closed", this.clear);
+
+    $p.eve.attachEvent("scheme_snapshot", this.scheme_snapshot);
 
   }
 
   run_snapshot() {
-
-    if (this._pos >= 0) {
-
-      if (this._pos > 0 && this._pos < (this._history.length - 1)) {
-        this._history.splice(this._pos, this._history.length - this._pos - 1);
-      }
-
-      this._editor.project.save_coordinates({snapshot: true, clipboard: false});
-
-    }
-
+    this._pos >= 0 && this._editor.project.save_coordinates({snapshot: true, clipboard: false});
   }
 
   scheme_snapshot(scheme, attr) {
-    if (scheme == this._editor.project && !attr.clipboard) {
-      this.save_snapshot(scheme);
-    }
+    scheme === this._editor.project && !attr.clipboard && this.save_snapshot(scheme);
   }
 
   scheme_changed(scheme, attr) {
-
-    if (scheme == this._editor.project) {
-
+    const snapshot = scheme.data._snapshot || (attr && attr.snapshot);
+    if (!snapshot && scheme == this._editor.project) {
       if (scheme.data._loading) {
-        if (!scheme.data._snapshot) {
+        setTimeout(() => {
           this.clear();
           this.save_snapshot(scheme);
-        }
-
-      } else {
-        if (this._snap_timer)
-          clearTimeout(this._snap_timer);
-        this._snap_timer = setTimeout(this.run_snapshot.bind(this), 700);
-        this.enable_buttons();
+        }, 700);
+      }
+      else {
+        this._snap_timer && clearTimeout(this._snap_timer);
+        this._snap_timer = setTimeout(this.run_snapshot, 700);
       }
     }
-
   }
 
+  calculate(pos) {
+    const {_diff} = this;
+    const curr = _diff[0]._clone();
+    for(let i = 1; i < _diff.length && i <= pos; i++){
+      _diff[i].forEach((change) => {
+        DeepDiff.applyChange(curr, true, change);
+      });
+    }
+    return curr;
+  }
+
+
   save_snapshot(scheme) {
-    this._history.push(JSON.stringify({}._mixin(scheme.ox._obj, [], ["extra_fields", "glasses", "specification", "predefined_name"])));
-    this._pos = this._history.length - 1;
+    const curr = scheme.ox._obj._clone(["_row", "extra_fields", "glasses", "specification", "predefined_name"]);
+    const {_diff, _pos} = this;
+    if(!_diff.length){
+      _diff.push(curr);
+    }
+    else{
+      const diff = DeepDiff.diff(this.calculate(Math.min(_diff.length-1, _pos)), curr);
+      if(diff && diff.length){
+        if (_pos > 0 && _pos < (_diff.length - 1)) {
+          _diff.splice(_pos, _diff.length - _pos - 1);
+        }
+        _diff.push(diff);
+      }
+    }
+    this._pos = _diff.length - 1;
     this.enable_buttons();
   }
 
   apply_snapshot() {
-    this._editor.project.load_stamp(JSON.parse(this._history[this._pos]), true);
-    this.enable_buttons();
+    this.disable_buttons();
+    this._editor.project.load_stamp(this.calculate(this._pos), true);
+    setTimeout(() => this.enable_buttons());
   }
 
   enable_buttons() {
+    const {back, rewind} = this._editor.tb_top.buttons;
     if (this._pos < 1)
-      this._editor.tb_top.buttons.back.classList.add("disabledbutton");
+      back.classList.add("disabledbutton");
     else
-      this._editor.tb_top.buttons.back.classList.remove("disabledbutton");
+      back.classList.remove("disabledbutton");
 
-    if (this._pos < (this._history.length - 1))
-      this._editor.tb_top.buttons.rewind.classList.remove("disabledbutton");
+    if (this._pos < (this._diff.length - 1))
+      rewind.classList.remove("disabledbutton");
     else
-      this._editor.tb_top.buttons.rewind.classList.add("disabledbutton");
+      rewind.classList.add("disabledbutton");
 
   }
 
+  disable_buttons() {
+    const {back, rewind} = this._editor.tb_top.buttons;
+    back.classList.add("disabledbutton");
+    rewind.classList.add("disabledbutton");
+  }
+
   clear() {
-    this._history.length = 0;
+    this._diff.length = 0;
     this._pos = -1;
   }
 
@@ -2038,7 +2468,7 @@ class UndoRedo {
   }
 
   rewind() {
-    if (this._pos <= (this._history.length - 1)) {
+    if (this._pos <= (this._diff.length - 1)) {
       this._pos++;
       this.apply_snapshot();
     }
@@ -2896,12 +3326,12 @@ class Contour extends paper.Layer {
     });
 
     const {bounds} = this;
-    this._row.x = bounds ? bounds.width : 0;
-    this._row.y = bounds ? bounds.height : 0;
+    this._row.x = bounds ? bounds.width.round(4) : 0;
+    this._row.y = bounds ? bounds.height.round(4) : 0;
     this._row.is_rectangular = this.is_rectangular;
     if(this.parent){
-      this._row.w = this.w;
-      this._row.h = this.h;
+      this._row.w = this.w.round(4);
+      this._row.h = this.h.round(4);
     }
     else{
       this._row.w = 0;
@@ -7883,8 +8313,9 @@ function Scheme(_canvas){
 
 		_papam_observer = function (changes) {
 
-			if(_data._loading || _data._snapshot)
-				return;
+			if(_data._loading || _data._snapshot){
+        return;
+      }
 
 			changes.some((change) => {
 				if(change.tabular == "params"){
@@ -8143,7 +8574,6 @@ function Scheme(_canvas){
         }
 
         delete _data._loading;
-        delete _data._snapshot;
 
         setTimeout(() => {
           if(_scheme.ox.coordinates.count()){
@@ -8157,7 +8587,8 @@ function Scheme(_canvas){
           else{
             paper.load_stamp();
           }
-        }, 100);
+          delete _data._snapshot;
+        }, 20);
 
       }, 20);
 
@@ -8237,9 +8668,7 @@ function Scheme(_canvas){
 		if(_scheme != scheme){
       return;
     }
-		_scheme.contours.forEach((l) => {
-			l.draw_visualization();
-		});
+		_scheme.contours.forEach((l) => l.draw_visualization());
 		_scheme.view.update();
 	});
 
@@ -8262,7 +8691,7 @@ Scheme.prototype.__define({
 
   clear: {
     value: function () {
-      const pnames = '_bounds,_update_timer,_loading';
+      const pnames = '_bounds,_update_timer,_loading,_snapshot';
       for(let fld in this.data){
         if(!pnames.match(fld)){
           delete this.data[fld];
@@ -8421,8 +8850,9 @@ Scheme.prototype.__define({
 
 				var ox = this.ox;
 
-				if(!is_snapshot)
-					this._dp.base_block = obx;
+				if(!is_snapshot){
+          this._dp.base_block = obx;
+        }
 
 				this.clear();
 
@@ -8447,11 +8877,11 @@ Scheme.prototype.__define({
 			if(is_snapshot){
 				this.data._snapshot = true;
 				do_load.call(this, obx);
-
-			}else
-				$p.cat.characteristics.get(obx, true, true)
-					.then(do_load.bind(this));
-
+			}
+			else{
+        $p.cat.characteristics.get(obx, true, true)
+          .then(do_load.bind(this));
+      }
 		}
 	},
 
@@ -11314,7 +11744,7 @@ class RulerWnd {
 
             ['0','1','2'].forEach((btn) => {
               if(btn != name){
-                wnd.tb_mode.buttons[btn].classList.remove("muted");
+                wnd.tb_mode.buttons[btn] && wnd.tb_mode.buttons[btn].classList.remove("muted");
               }
             });
             wnd.tb_mode.buttons[name].classList.add("muted");
@@ -11323,7 +11753,7 @@ class RulerWnd {
           else{
             ['base','inner','outer'].forEach((btn) => {
               if(btn != name){
-                wnd.tb_mode.buttons[btn].classList.remove("muted");
+                wnd.tb_mode.buttons[btn] && wnd.tb_mode.buttons[btn].classList.remove("muted");
               }
             });
             wnd.tb_mode.buttons[name].classList.add("muted");

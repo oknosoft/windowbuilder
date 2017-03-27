@@ -85,6 +85,7 @@ function ProductsBuilding(){
 		row_cpec.totqty1 = row_cpec.totqty * row_cpec.nom.loss_factor;
 
 		["len","width","s","qty","alp1","alp2"].forEach((fld) => row_cpec[fld] = row_cpec[fld].round(4));
+    ["totqty","totqty1"].forEach((fld) => row_cpec[fld] = row_cpec[fld].round(6));
 	}
 
 	/**
