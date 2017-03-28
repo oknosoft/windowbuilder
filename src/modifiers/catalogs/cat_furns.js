@@ -117,9 +117,146 @@ $p.CatFurns.prototype.__define({
 		}
 	},
 
-  handle_height_base: {
-	  value: function () {
+  /**
+   * Аналог УПзП-шного _ПолучитьСпецификациюФурнитурыСФильтром_
+   * @param contour {Contour}
+   * @param cache {Object}
+   * @param [exclude_dop] {Boolean}
+   */
+  get_spec: {
+	  value: function (contour, cache, exclude_dop) {
 
+      const res = $p.dp.buyers_order.create().specification;
+      const {ox} = contour.project;
+
+      // бежим по всем строкам набора
+      this.specification.find_rows({dop: 0}, (row_furn) => {
+
+        // проверяем, проходит ли строка
+        if(!row_furn.check_restrictions(contour, cache)){
+          return;
+        }
+
+        // ищем строки дополнительной спецификации
+        if(!exclude_dop){
+          this.specification.find_rows({is_main_specification_row: false, elm: row_furn.elm}, (dop_row) => {
+
+            if(!dop_row.check_restrictions(contour, cache)){
+              return;
+            }
+
+            // расчет координаты и (или) визуализации
+            if(dop_row.is_procedure_row){
+
+              const invert = contour.direction == $p.enm.open_directions.Правое,
+                elm = contour.profile_by_furn_side(dop_row.side, cache),
+                len = elm._row.len,
+                sizefurn = elm.nom.sizefurn,
+                dx0 = (len - elm.data._len) / 2,
+                dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
+                faltz = len - 2 * sizefurn;
+
+              let invert_nearest = false,
+                coordin = 0;
+
+              if(dop_row.offset_option == $p.enm.offset_options.Формула){
+                if(!dop_row.formula.empty()){
+                  coordin = dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx0, dx1, faltz, invert, dop_row});
+                }
+              }
+              else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
+                coordin = faltz + dop_row.contraction;
+              }
+              else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
+                // строим горизонтальную линию от нижней границы контура, находим пересечение и offset
+                const {bounds} = contour;
+                const by_side = contour.profiles_by_side();
+                const hor = (elm == by_side.top || elm == by_side.bottom) ?
+                  new paper.Path({
+                    insert: false,
+                    segments: [[bounds.left + contour.h_ruch, bounds.top - 200], [bounds.left + contour.h_ruch, bounds.bottom + 200]]
+                  }) :
+                  new paper.Path({
+                    insert: false,
+                    segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
+                  });
+
+                coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor)) -
+                  elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
+              }
+              else{
+
+                if(invert){
+                  if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+                    coordin = dop_row.contraction;
+                  }
+                  else{
+                    coordin = len - dop_row.contraction;
+                  }
+                }
+                else{
+                  if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+                    coordin = len - dop_row.contraction;
+                  }
+                  else{
+                    coordin = dop_row.contraction;
+                  }
+                }
+              }
+
+              const procedure_row = res.add(dop_row);
+              procedure_row.origin = this;
+              procedure_row.handle_height_min = elm.elm;
+              procedure_row.handle_height_max = contour.cnstr;
+              procedure_row.coefficient = coordin;
+
+              return;
+            }
+            else if(!dop_row.quantity){
+              return;
+            }
+
+            // в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
+            if(dop_row.is_set_row){
+              dop_row.nom_set.get_spec(contour, cache).each((sub_row) => {
+                if(sub_row.is_procedure_row){
+                  res.add(sub_row);
+                }
+                else if(sub_row.quantity) {
+                  res.add(sub_row).quantity = (row_furn.quantity || 1) * sub_row.quantity;
+                }
+              });
+            }
+            else{
+              res.add(dop_row).origin = this;
+            }
+          });
+        }
+
+        // в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
+        if(row_furn.is_set_row){
+          row_furn.nom_set.get_spec(contour, cache, exclude_dop).each((sub_row) => {
+            if(sub_row.is_procedure_row){
+              res.add(sub_row);
+            }
+            else if(!sub_row.quantity){
+              return;
+            }
+            res.add(sub_row).quantity = (row_furn.quantity || 1) * sub_row.quantity;
+          });
+        }
+        else{
+          if(row_furn.quantity){
+            const row_spec = res.add(row_furn);
+            row_spec.origin = this;
+            if(!row_furn.formula.empty()){
+              row_furn.formula.execute({ox, contour, row_furn, row_spec});
+            }
+          }
+        }
+      });
+
+      return res;
     }
   }
 
@@ -153,29 +290,13 @@ $p.CatFurnsSpecificationRow.prototype.__define({
 
       // по таблице параметров
       selection_params.find_rows({elm, dop}, (prm_row) => {
-        let ok = false;
-        if(prop_direction == prm_row.param){
-          ok = direction == prm_row.value;
-        }
-        else{
-
-          // TODO: учесть виды сравнений
-          cache.ox.params.find_rows({
-            cnstr: contour.cnstr,
-            inset: $p.utils.blank.guid,
-            param: prm_row.param,
-            value: prm_row.value
-          }, () => !(ok = true));
-
-          // выполнение условия рассчитывает объект CchProperties
-          ok = prm_row.param.check_condition({row_spec: this, prm_row, cnstr, ox: cache.ox});
-        }
-
+        // выполнение условия рассчитывает объект CchProperties
+        const ok = (prop_direction === prm_row.param) ?
+          direction === prm_row.value : prm_row.param.check_condition({row_spec: this, prm_row, cnstr, ox: cache.ox});
         if(!ok){
           return res = false;
         }
       });
-
 
       // по таблице ограничений
       if(res) {

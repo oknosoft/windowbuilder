@@ -3034,7 +3034,6 @@ class Contour extends paper.Layer {
   }
 
 
-
   get _manager() {
     return this.project._dp._manager;
   }
@@ -3340,6 +3339,96 @@ class Contour extends paper.Layer {
     }
   }
 
+  get furn_cache() {
+    return {
+      profiles: this.outer_nodes,
+      bottom: this.profiles_by_side("bottom"),
+      ox: this.project.ox,
+      w: this.w,
+      h: this.h,
+    }
+  }
+
+  update_handle_height(cache) {
+
+    if(!cache){
+      cache = this.furn_cache;
+    }
+
+    const {furn, _row} = this;
+    const {furn_set, handle_side} = furn;
+    if(!handle_side || furn_set.empty()){
+      return;
+    }
+
+    const elm = this.profile_by_furn_side(handle_side, cache);
+    const {len} = elm._row;
+
+    function set_handle_height(row){
+      const {handle_height_base} = row;
+      if(handle_height_base < 0){
+        if(handle_height_base == -2 || handle_height_base == -1 && _row.fix_ruch != -3){
+          _row.h_ruch = (len / 2).round(0);
+          return _row.fix_ruch = handle_height_base;
+        }
+      }
+      else if(handle_height_base > 0){
+        _row.h_ruch = handle_height_base;
+        return _row.fix_ruch = 1;
+      }
+    }
+
+    furn_set.specification.find_rows({dop: 0}, (row) => {
+
+      if(!row.quantity || !row.check_restrictions(this, cache)){
+        return;
+      }
+      if(set_handle_height(row)){
+        return false;
+      }
+      if(row.is_set_row){
+        let ok = false;
+        row.nom_set.get_spec(this, cache, true).each((sub_row) => {
+          if(set_handle_height(sub_row)){
+            return !(ok = true);
+          }
+        });
+        if(ok){
+          return false;
+        }
+      }
+    });
+
+  }
+
+  get h_ruch() {
+    const {layer, _row} = this;
+    return layer ? _row.h_ruch : 0;
+  }
+  set h_ruch(v) {
+    const {layer, _row, project} = this;
+    if(layer){
+      if(_row.fix_ruch == -3 && v == 0){
+        _row.fix_ruch = -1;
+      }
+      this.update_handle_height();
+      if(v != 0 && (_row.fix_ruch == 0 || _row.fix_ruch == -1 || _row.fix_ruch == -3)){
+          _row.h_ruch = v;
+        if(_row.fix_ruch == -1){
+          _row.fix_ruch = -3;
+        }
+      }
+      project.register_change();
+      Object.getNotifier(this).notify({
+        type: 'update',
+        name: 'h_ruch'
+      });
+    }
+    else{
+      _row.h_ruch = 0;
+    }
+  }
+
   get side_count() {
     return this.profiles.length;
   }
@@ -3429,23 +3518,6 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.direction = v;
 			this.project.register_change(true);
-		}
-	},
-
-	h_ruch: {
-		get: function () {
-		  const {layer, _row} = this;
-			return layer ? _row.h_ruch : 0;
-		},
-		set: function (v) {
-      const {layer, _row, project} = this;
-      if(layer){
-        _row.h_ruch = v;
-        project.register_change();
-      }
-      else{
-        _row.h_ruch = 0;
-      }
 		}
 	},
 

@@ -487,24 +487,18 @@ function ProductsBuilding(){
     }
 
 		// кеш сторон фурнитуры
-		const cache = {
-			profiles: contour.outer_nodes,
-			bottom: contour.profiles_by_side("bottom"),
-      ox: ox,
-      w: contour.w,
-      h: contour.h,
-		};
+		const {furn_cache, furn} = contour;
 
 		// проверяем, подходит ли фурнитура под геометрию контура
-		if(!furn_check_opening_restrictions(contour, cache)){
+		if(!furn_check_opening_restrictions(contour, furn_cache)){
       return;
     }
 
 		// уточняем высоту ручки, т.к. от неё зависят координаты в спецификации
-		furn_update_handle_height(contour, cache, contour.furn.furn_set);
+    contour.update_handle_height(furn_cache);
 
 		// получаем спецификацию фурнитуры и переносим её в спецификацию изделия
-		furn_get_spec(contour, cache, contour.furn.furn_set).each((row) => {
+    furn.furn_set.get_spec(contour, furn_cache).each((row) => {
 			const elm = {elm: -contour.cnstr, clr: contour.clr_furn};
 			const row_spec = new_spec_row(null, elm, row, row.nom_set, row.origin);
 
@@ -557,202 +551,6 @@ function ProductsBuilding(){
 		return ok;
 	}
 
-	/**
-	 * Уточняет высоту ручки
-	 * @param contour {Contour}
-	 * @param cache {Object}
-	 */
-	function furn_update_handle_height(contour, cache, furn_set){
-
-		if(!contour.furn.handle_side && furn_set.empty()){
-      return;
-    }
-
-		// получаем элемент, на котором ручка и длину элемента
-		const elm = contour.profile_by_furn_side(contour.furn.handle_side, cache);
-		const {len} = elm._row;
-
-    contour._row.fix_ruch = false;
-
-		// бежим по спецификации набора в поисках строки про ручку
-		furn_set.specification.find_rows({dop: 0}, (row) => {
-
-			// проверяем, проходит ли строка
-			if(!row.quantity || !row.check_restrictions(contour, cache)){
-        return;
-      }
-			if(furn_set_handle_height(contour, row, len)){
-        return false;
-      }
-			if(row.is_set_row){
-				let ok = false;
-				furn_get_spec(contour, cache, row.nom_set, true).each((sub_row) => {
-					if(furn_set_handle_height(contour, sub_row, len)){
-            return !(ok = true);
-          }
-				});
-				if(ok){
-          return false;
-        }
-			}
-		})
-	}
-
-	/**
-	 * Устанавливает высоту ручки в контуре, если этого требует текущая строка спецификации фкрнитуры
-	 * @param contour {Contour}
-	 * @param row {TabularSectionRow.cat.furns.specification}
-	 * @param len {Number}
-	 */
-	function furn_set_handle_height(contour, row, len){
-		if(row.handle_height_base == -1){
-			contour._row.h_ruch = (len / 2).round(0);
-			return contour._row.fix_ruch = true;
-		}
-		else if(row.handle_height_base > 0){
-			contour._row.h_ruch = row.handle_height_base;
-			return contour._row.fix_ruch = true;
-		}
-	}
-
-	/**
-	 * Аналог УПзП-шного _ПолучитьСпецификациюФурнитурыСФильтром_
-	 * @param contour {Contour}
-	 * @param cache {Object}
-	 * @param furn_set {_cat.furns}
-	 * @param [exclude_dop] {Boolean}
-	 */
-	function furn_get_spec(contour, cache, furn_set, exclude_dop) {
-
-		const res = $p.dp.buyers_order.create().specification;
-
-		// бежим по всем строкам набора
-		furn_set.specification.find_rows({dop: 0}, (row_furn) => {
-
-			// проверяем, проходит ли строка
-			if(!row_furn.quantity || !row_furn.check_restrictions(contour, cache)){
-        return;
-      }
-
-			// ищем строки дополнительной спецификации
-			if(!exclude_dop){
-				furn_set.specification.find_rows({is_main_specification_row: false, elm: row_furn.elm}, (dop_row) => {
-
-					if(!dop_row.check_restrictions(contour, cache)){
-            return;
-          }
-
-					// расчет координаты и (или) визуализации
-					if(dop_row.is_procedure_row){
-
-					  const invert = contour.direction == $p.enm.open_directions.Правое,
-              elm = contour.profile_by_furn_side(dop_row.side, cache),
-              len = elm._row.len,
-              sizefurn = elm.nom.sizefurn,
-              dx0 = (len - elm.data._len) / 2,
-              dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
-              faltz = len - 2 * sizefurn;
-
-						let invert_nearest = false,
-							coordin = 0;
-
-						if(dop_row.offset_option == $p.enm.offset_options.Формула){
-              if(!dop_row.formula.empty()){
-                coordin = dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx0, dx1, faltz, invert, dop_row});
-              }
-						}
-						else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
-							coordin = faltz + dop_row.contraction;
-						}
-						else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
-							// строим горизонтальную линию от нижней границы контура, находим пересечение и offset
-							const {bounds} = contour;
-              const by_side = contour.profiles_by_side();
-              const hor = (elm == by_side.top || elm == by_side.bottom) ?
-                new paper.Path({
-                  insert: false,
-                  segments: [[bounds.left + contour.h_ruch, bounds.top - 200], [bounds.left + contour.h_ruch, bounds.bottom + 200]]
-                }) :
-                new paper.Path({
-                  insert: false,
-                  segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
-                });
-
-							coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor)) -
-								elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
-						}
-						else{
-
-							if(invert){
-								if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
-									coordin = dop_row.contraction;
-								}
-								else{
-									coordin = len - dop_row.contraction;
-								}
-							}
-							else{
-								if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
-									coordin = len - dop_row.contraction;
-								}
-								else{
-									coordin = dop_row.contraction;
-								}
-							}
-						}
-
-						const procedure_row = res.add(dop_row);
-						procedure_row.origin = furn_set;
-						procedure_row.handle_height_min = elm.elm;
-						procedure_row.handle_height_max = contour.cnstr;
-						procedure_row.coefficient = coordin;
-
-						return;
-					}
-					else if(!dop_row.quantity){
-            return;
-          }
-
-					// в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
-					if(dop_row.is_set_row){
-						furn_get_spec(contour, cache, dop_row.nom_set).each((sub_row) => {
-							if(sub_row.is_procedure_row){
-                res.add(sub_row);
-              }
-							else if(!sub_row.quantity){
-                return;
-              }
-							res.add(sub_row).quantity = row_furn.quantity * sub_row.quantity;
-						});
-					}
-					else{
-						res.add(dop_row).origin = furn_set;
-					}
-				});
-			}
-
-			// в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
-			if(row_furn.is_set_row){
-				furn_get_spec(contour, cache, row_furn.nom_set).each((sub_row) => {
-					if(sub_row.is_procedure_row){
-            res.add(sub_row);
-          }
-          else if(!sub_row.quantity){
-            return;
-          }
-					res.add(sub_row).quantity = row_furn.quantity * sub_row.quantity;
-				});
-			}
-			else{
-			  const row_spec = res.add(row_furn);
-        row_spec.origin = furn_set;
-			  if(!row_furn.formula.empty()){
-          row_furn.formula.execute({ox, contour, row_furn, row_spec});
-        }
-			}
-		});
-		return res;
-	}
 
 	/**
 	 * Спецификации соединений примыкающих профилей
