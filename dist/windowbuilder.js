@@ -429,7 +429,7 @@ class SchemeLayers {
     this.tree.attachEvent("onCheck", (id, state) => {
 
       const pid = this.tree.getParentId(id);
-      const sub = this.tree.getSubItems(id);
+      let sub = this.tree.getSubItems(id);
 
       let l;
 
@@ -573,6 +573,7 @@ class SchemeLayers {
   unload() {
     Object.unobserve(paper.project._noti, this.observer);
   }
+
 };
 
 class StvProps {
@@ -828,7 +829,7 @@ class EditorAccordion {
     const titles = this.tabbar.tabsArea.children[1].firstChild.children;
     tabs.forEach((tab, index) => {
       titles[index+1].title = tab.title;
-    })
+    });
 
     this.elm = this.tabbar.cells('elm');
     this.elm._toolbar = this.elm.attachToolbar();
@@ -5081,6 +5082,9 @@ class Filling extends BuilderElement {
   }
 
   create_leaf() {
+
+    this.project.connections.cnns.clear(true, {elm1: this.elm});
+
     const contour = new Contour( {parent: this.parent});
 
     contour.path = this.profiles;
@@ -7399,6 +7403,9 @@ class Profile extends ProfileItem {
     const {b, e, data, layer, project} = this;
     let {_nearest, _nearest_cnn} = data;
 
+    if(!ign_cnn && this.inset.empty()){
+      ign_cnn = true;
+    }
 
     const check_nearest = (elm) => {
       if(!(elm instanceof Profile || elm instanceof ProfileConnective) || !elm.isInserted()){
@@ -7454,7 +7461,7 @@ class Profile extends ProfileItem {
 
     if(layer && !check_nearest(data._nearest)){
       if(layer.parent){
-        find_nearest(layer.parent.children)
+        find_nearest(layer.parent.profiles)
       }else{
         find_nearest(project.l_connective.children)
       }

@@ -23,7 +23,7 @@ class SchemeLayers {
     this.tree.attachEvent("onCheck", (id, state) => {
 
       const pid = this.tree.getParentId(id);
-      const sub = this.tree.getSubItems(id);
+      let sub = this.tree.getSubItems(id);
 
       let l;
 
@@ -174,6 +174,7 @@ class SchemeLayers {
   unload() {
     Object.unobserve(paper.project._noti, this.observer);
   }
+
 };
 
 class StvProps {
@@ -437,7 +438,7 @@ class EditorAccordion {
     const titles = this.tabbar.tabsArea.children[1].firstChild.children;
     tabs.forEach((tab, index) => {
       titles[index+1].title = tab.title;
-    })
+    });
 
     /**
      * ячейка для размещения свойств элемента

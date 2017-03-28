@@ -201,6 +201,10 @@ class Filling extends BuilderElement {
    * Создаёт створку в текущем заполнении
    */
   create_leaf() {
+
+    // прибиваем соединения текущего заполнения
+    this.project.connections.cnns.clear(true, {elm1: this.elm});
+
     // создаём пустой новый слой
     const contour = new Contour( {parent: this.parent});
 

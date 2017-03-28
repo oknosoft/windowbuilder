@@ -1887,6 +1887,9 @@ class Profile extends ProfileItem {
     const {b, e, data, layer, project} = this;
     let {_nearest, _nearest_cnn} = data;
 
+    if(!ign_cnn && this.inset.empty()){
+      ign_cnn = true;
+    }
 
     const check_nearest = (elm) => {
       if(!(elm instanceof Profile || elm instanceof ProfileConnective) || !elm.isInserted()){
@@ -1942,7 +1945,7 @@ class Profile extends ProfileItem {
 
     if(layer && !check_nearest(data._nearest)){
       if(layer.parent){
-        find_nearest(layer.parent.children)
+        find_nearest(layer.parent.profiles)
       }else{
         find_nearest(project.l_connective.children)
       }
