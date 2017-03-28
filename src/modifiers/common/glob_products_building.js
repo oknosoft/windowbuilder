@@ -314,7 +314,7 @@ function ProductsBuilding(){
 
 	/**
 	 * Проверяет соответствие параметров отбора параметрам изделия
-	 * @param selection_params {TabularSection} - табчасть параметров вставки, фурнитуры или соединения
+	 * @param selection_params {TabularSection} - табчасть параметров вставки или соединения
    * @param row_spec {TabularSectionRow}
 	 * @param elm {BuilderElement}
 	 * @param [cnstr] {Number} - номер конструкции или элемента
@@ -490,7 +490,9 @@ function ProductsBuilding(){
 		const cache = {
 			profiles: contour.outer_nodes,
 			bottom: contour.profiles_by_side("bottom"),
-			params: contour.project.ox.params
+      ox: ox,
+      w: contour.w,
+      h: contour.h,
 		};
 
 		// проверяем, подходит ли фурнитура под геометрию контура
@@ -556,70 +558,6 @@ function ProductsBuilding(){
 	}
 
 	/**
-	 * Проверяет ограничения строки фурнитуры
-	 * @param contour {Contour}
-	 * @param cache {Object}
-	 * @param furn_set {_cat.furns}
-	 * @param row {_cat.furns.specification.row}
-	 */
-	function furn_check_row_restrictions(contour, cache, furn_set, row) {
-
-		var res = true;
-
-		// по таблице параметров
-		furn_set.selection_params.find_rows({elm: row.elm, dop: row.dop}, function (row) {
-
-			var ok = false;
-
-			if($p.job_prm.properties.direction == row.param){
-				ok = contour.direction == row.value;
-
-			}else{
-				cache.params.find_rows({
-				  cnstr: contour.cnstr,
-          inset: $p.utils.blank.guid,
-          param: row.param,
-          value: row.value
-				}, function () {
-					return !(ok = true);
-				});
-			}
-
-			if(!ok)
-				return res = false;
-
-		});
-
-		// по таблице ограничений
-		if(res){
-			furn_set.specification_restrictions.find_rows({elm: row.elm, dop: row.dop}, function (row) {
-
-				var len;
-
-				if(contour.is_rectangular){
-					if(!cache.w)
-						cache.w = contour.w;
-					if(!cache.h)
-						cache.h = contour.h;
-
-					len = (row.side == 1 || row.side == 3) ? cache.w : cache.h;
-
-				}else{
-					var elm = contour.profile_by_furn_side(row.side, cache);
-					len = elm._row.len - 2 * elm.nom.sizefurn;
-				}
-
-				if(len < row.lmin || len > row.lmax ){
-					return res = false;
-
-				}
-			});
-		}
-
-		return res;
-	}
-
-	/**
 	 * Уточняет высоту ручки
 	 * @param contour {Contour}
 	 * @param cache {Object}
@@ -640,7 +578,7 @@ function ProductsBuilding(){
 		furn_set.specification.find_rows({dop: 0}, (row) => {
 
 			// проверяем, проходит ли строка
-			if(!row.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row)){
+			if(!row.quantity || !row.check_restrictions(contour, cache)){
         return;
       }
 			if(furn_set_handle_height(contour, row, len)){
@@ -692,7 +630,7 @@ function ProductsBuilding(){
 		furn_set.specification.find_rows({dop: 0}, (row_furn) => {
 
 			// проверяем, проходит ли строка
-			if(!row_furn.quantity || !furn_check_row_restrictions(contour, cache, furn_set, row_furn)){
+			if(!row_furn.quantity || !row_furn.check_restrictions(contour, cache)){
         return;
       }
 
@@ -700,7 +638,7 @@ function ProductsBuilding(){
 			if(!exclude_dop){
 				furn_set.specification.find_rows({is_main_specification_row: false, elm: row_furn.elm}, (dop_row) => {
 
-					if(!furn_check_row_restrictions(contour, cache, furn_set, dop_row)){
+					if(!dop_row.check_restrictions(contour, cache)){
             return;
           }
 

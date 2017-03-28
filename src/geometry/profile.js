@@ -1136,8 +1136,13 @@ class ProfileItem extends BuilderElement {
           }
         }
 
-        // для соединительных профилей, пересчитываем соседей
-        this.joined_nearests().forEach((profile) => profile.data._rays && profile.data._rays.clear(true));
+        // для соединительных профилей и элементов со створками, пересчитываем соседей
+        this.joined_nearests().forEach((profile) => {
+          const {data, project, elm} = profile;
+          data._rays && data._rays.clear(true);
+          data._nearest_cnn = null;
+          project.connections.cnns.clear({elm1: elm, elm2: this.elm});
+        });
       }
 
       BuilderElement.prototype.set_inset.call(this, v);

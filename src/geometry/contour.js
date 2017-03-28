@@ -1213,11 +1213,18 @@ Contour.prototype.__define({
 	 */
 	h_ruch: {
 		get: function () {
-			return this._row.h_ruch;
+		  const {layer, _row} = this;
+			return layer ? _row.h_ruch : 0;
 		},
 		set: function (v) {
-			this._row.h_ruch = v;
-			this.project.register_change();
+      const {layer, _row, project} = this;
+      if(layer){
+        _row.h_ruch = v;
+        project.register_change();
+      }
+      else{
+        _row.h_ruch = 0;
+      }
 		}
 	},
 

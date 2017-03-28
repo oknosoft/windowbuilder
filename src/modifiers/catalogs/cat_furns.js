@@ -7,6 +7,9 @@
  * @module cat_furns
  */
 
+/**
+ * Методы менеджера фурнитуры
+ */
 $p.cat.furns.__define({
 
 	sql_selection_list_flds: {
@@ -18,6 +21,9 @@ $p.cat.furns.__define({
 	}
 });
 
+/**
+ * Методы объекта фурнитуры
+ */
 $p.CatFurns.prototype.__define({
 
 	/**
@@ -109,6 +115,88 @@ $p.CatFurns.prototype.__define({
 			return aprm;
 
 		}
-	}
+	},
+
+  handle_height_base: {
+	  value: function () {
+
+    }
+  }
+
+});
+
+/**
+ * Методы строки спецификации
+ */
+$p.CatFurnsSpecificationRow.prototype.__define({
+
+  /**
+   * Проверяет ограничения строки фурнитуры
+   * @param contour {Contour}
+   * @param cache {Object}
+   */
+  check_restrictions: {
+    value: function (contour, cache) {
+
+      const {elm, dop, handle_height_min, handle_height_max} = this;
+      const {direction, h_ruch, cnstr} = contour;
+
+      if(h_ruch < handle_height_min || (handle_height_max && h_ruch > handle_height_max)){
+        return false;
+      }
+
+      // получаем связанные табличные части
+      const {selection_params, specification_restrictions} = this._owner._owner;
+      const prop_direction = $p.job_prm.properties.direction;
+
+      let res = true;
+
+      // по таблице параметров
+      selection_params.find_rows({elm, dop}, (prm_row) => {
+        let ok = false;
+        if(prop_direction == prm_row.param){
+          ok = direction == prm_row.value;
+        }
+        else{
+
+          // TODO: учесть виды сравнений
+          cache.ox.params.find_rows({
+            cnstr: contour.cnstr,
+            inset: $p.utils.blank.guid,
+            param: prm_row.param,
+            value: prm_row.value
+          }, () => !(ok = true));
+
+          // выполнение условия рассчитывает объект CchProperties
+          ok = prm_row.param.check_condition({row_spec: this, prm_row, cnstr, ox: cache.ox});
+        }
+
+        if(!ok){
+          return res = false;
+        }
+      });
+
+
+      // по таблице ограничений
+      if(res) {
+
+        specification_restrictions.find_rows({elm, dop}, (row) => {
+          let len;
+          if (contour.is_rectangular) {
+            len = (row.side == 1 || row.side == 3) ? cache.w : cache.h;
+          }
+          else {
+            const elm = contour.profile_by_furn_side(row.side, cache);
+            len = elm._row.len - 2 * elm.nom.sizefurn;
+          }
+          if (len < row.lmin || len > row.lmax) {
+            return res = false;
+          }
+        });
+      }
+
+      return res;
+    }
+  }
 
 });
