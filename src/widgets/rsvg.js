@@ -183,7 +183,7 @@ class OSvgs {
               // Извлекаем из блоба svg-текст эскизов
               const aatt = [];
               res.forEach((row) => {
-                if(row.att instanceof Blob && row.att.size)
+                if(row && row.att instanceof Blob && row.att.size)
                   aatt.push($p.utils.blob_as_text(row.att)
                     .then((svg) => ({ref: row.ref, svg})));
               });
