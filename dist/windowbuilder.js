@@ -3258,8 +3258,9 @@ class Contour extends paper.Layer {
     if(need_bind){
       for(let i = 0; i < attr.length; i++){
         curr = attr[i];
-        if(curr.binded)
+        if(curr.binded){
           continue;
+        }
         elm = new Profile({
           generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e),
           proto: outer_nodes.length ? outer_nodes[0] : {
@@ -3267,13 +3268,13 @@ class Contour extends paper.Layer {
             clr: this.project.default_clr()
           }
         });
-        curr.profile = elm;
-        if(curr.outer)
-          delete curr.outer;
-        curr.binded = true;
-
+        elm.data._nearest = curr.profile;
         elm.data.binded = true;
         elm.data.simulated = true;
+
+        curr.profile = elm;
+        delete curr.outer;
+        curr.binded = true;
 
         noti.profiles.push(elm);
         noti.points.push(elm.b);
@@ -3293,11 +3294,13 @@ class Contour extends paper.Layer {
       });
     }
 
+    this.profiles.forEach((p) => p.default_inset());
+
     if(noti.points.length){
+      this.profiles.forEach((p) => p._data._rays && p._data._rays.clear());
       this.notify(noti);
     }
 
-    this.profiles.forEach((p) => p.default_inset());
     this.data._bounds = null;
   }
 
