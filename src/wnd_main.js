@@ -141,7 +141,8 @@ class OrderDealerApp {
     const predefined = {
       aribaz: {zone: 2},
       ecookna: {zone: 21, host: "https://zakaz.ecookna.ru/"},
-      tmk: {zone: 23},
+      tmk: {zone: 23, host: "https://tmk-online.ru/"},
+      crystallit: {zone: 25, host: "https://crystallit.oknosoft.ru/"},
     }
     for(let elm in predefined){
       const prm = predefined[elm];

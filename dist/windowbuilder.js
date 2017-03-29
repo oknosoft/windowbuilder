@@ -2674,10 +2674,10 @@ class Contour extends paper.Layer {
   }
 
   glass_nodes(path, nodes, bind) {
-    var curve_nodes = [], path_nodes = [],
-      ipoint = path.interiorPoint.negate(),
-      i, curve, findedb, findede,
-      d, node1, node2;
+    const curve_nodes = [];
+    const path_nodes = [];
+    const ipoint = path.interiorPoint.negate();
+    let curve, findedb, findede, d, node1, node2;
 
     if(!nodes){
       nodes = this.nodes;
@@ -2688,7 +2688,7 @@ class Contour extends paper.Layer {
       path.data.path_nodes = path_nodes;
     }
 
-    for(i in path.curves){
+    for(let i in path.curves){
       curve = path.curves[i];
 
       let d1 = Infinity;
@@ -2715,7 +2715,7 @@ class Contour extends paper.Layer {
       if(node1 == node2)
         continue;
       findedb = false;
-      for(var n in curve_nodes){
+      for(let n in curve_nodes){
         if(curve_nodes[n].node1 == node1 && curve_nodes[n].node2 == node2){
           findedb = true;
           break;
@@ -2723,8 +2723,8 @@ class Contour extends paper.Layer {
       }
       if(!findedb){
         findedb = this.profile_by_nodes(node1, node2);
-        var loc1 = findedb.generatrix.getNearestLocation(node1),
-          loc2 = findedb.generatrix.getNearestLocation(node2);
+        const loc1 = findedb.generatrix.getNearestLocation(node1);
+        const loc2 = findedb.generatrix.getNearestLocation(node2);
         if(node1.add(ipoint).getDirectedAngle(node2.add(ipoint)) < 0)
           curve_nodes.push({node1: node2, node2: node1, profile: findedb, out: loc2.index == loc1.index ? loc2.parameter > loc1.parameter : loc2.index > loc1.index});
         else
@@ -2738,12 +2738,77 @@ class Contour extends paper.Layer {
   }
 
   glass_recalc() {
-    const contours = this.glass_contours;
-    const glasses = this.glasses(true);
+    const {glass_contours} = this;      
+    const glasses = this.glasses(true); 
+    const binded = new Set();
 
-    contours.forEach((glass_contour) => {
+    function calck_rating(glcontour, glass) {
 
-      let rating = 0, glass, crating, cglass, gl_nodes, glass_path_center;
+      const {outer_profiles} = glass;
+
+      let crating = 0;
+
+      if (outer_profiles.length) {
+        glcontour.some((cnt) => {
+          outer_profiles.some((curr) => {
+            if (cnt.profile == curr.profile &&
+              cnt.b.is_nearest(curr.b) &&
+              cnt.e.is_nearest(curr.e)) {
+              crating++;
+              return true;
+            }
+          });
+          if (crating > 2){
+            return true;
+          }
+        });
+      }
+      else{
+        const {nodes} = glass;
+        glcontour.some((cnt) => {
+          nodes.some((node) => {
+            if (cnt.b.is_nearest(node)) {
+              crating++;
+              return true;
+            }
+          });
+          if (crating > 2){
+            return true;
+          }
+        })
+      }
+
+      return crating;
+
+    }
+
+    glasses.forEach((glass) => {
+      if (glass.visible) {
+        return;
+      }
+      glass_contours.some((glcontour) => {
+        if(binded.has(glcontour)){
+          return;
+        }
+        if(calck_rating(glcontour, glass) > 2){
+          glass.path = glcontour;
+          glass.visible = true;
+          if (glass instanceof Filling) {
+            glass.redraw();
+          }
+          binded.add(glcontour);
+          return true;
+        }
+      });
+    });
+
+    glass_contours.forEach((glcontour) => {
+
+      if(binded.has(glcontour)){
+        return;
+      }
+
+      let rating = 0, glass, crating, cglass, glass_center;
 
       for (let g in glasses) {
 
@@ -2752,58 +2817,24 @@ class Contour extends paper.Layer {
           continue;
         }
 
-        crating = 0;
-        gl_nodes = glass.outer_profiles;
-        if (gl_nodes.length) {
-          for (let j = 0; j < glass_contour.length; j++) {
-            for (let i = 0; i < gl_nodes.length; i++) {
-              if (glass_contour[j].profile == gl_nodes[i].profile &&
-                glass_contour[j].b.is_nearest(gl_nodes[i].b) &&
-                glass_contour[j].e.is_nearest(gl_nodes[i].e)) {
-
-                crating++;
-                break;
-              }
-            }
-            if (crating > 2)
-              break;
-          }
-        }
-        else {
-          gl_nodes = glass.nodes;
-          for (let j = 0; j < glass_contour.length; j++) {
-            for (let i = 0; i < gl_nodes.length; i++) {
-              if (glass_contour[j].b.is_nearest(gl_nodes[i])) {
-                crating++;
-                break;
-              }
-            }
-            if (crating > 2) {
-              break;
-            }
-          }
-        }
+        crating = calck_rating(glcontour, glass);
 
         if (crating > rating || !cglass) {
           rating = crating;
           cglass = glass;
         }
         if (crating == rating && cglass != glass) {
-          if (!glass_path_center) {
-            glass_path_center = glass_contour[0].b;
-            for (let i = 1; i < glass_contour.length; i++) {
-              glass_path_center = glass_path_center.add(glass_contour[i].b);
-            }
-            glass_path_center = glass_path_center.divide(glass_contour.length);
+          if (!glass_center) {
+            glass_center = glcontour.reduce((sum, val) => sum.add(val.b), new paper.Point).divide(glcontour.length)
           }
-          if (glass_path_center.getDistance(glass.bounds.center, true) < glass_path_center.getDistance(cglass.bounds.center, true)) {
+          if (glass_center.getDistance(glass.bounds.center, true) < glass_center.getDistance(cglass.bounds.center, true)) {
             cglass = glass;
           }
         }
       }
 
       if (cglass || (cglass = this.getItem({class: Filling, visible: false}))) {
-        cglass.path = glass_contour;
+        cglass.path = glcontour;
         cglass.visible = true;
         if (cglass instanceof Filling) {
           cglass.redraw();
@@ -2819,7 +2850,7 @@ class Contour extends paper.Layer {
         else {
 
         }
-        cglass = new Filling({proto: glass, parent: this, path: glass_contour});
+        cglass = new Filling({proto: glass, parent: this, path: glcontour});
         cglass.redraw();
       }
     });
@@ -2838,7 +2869,7 @@ class Contour extends paper.Layer {
         return 1;
       }
       return 0;
-    };
+    }
 
     this.profiles.forEach((p) => {
 
@@ -2943,14 +2974,14 @@ class Contour extends paper.Layer {
         if (p.e.is_nearest(n)) {
           findede = true
         }
-      })
+      });
       if (!findedb) {
         nodes.push(p.b.clone())
       }
       if (!findede) {
         nodes.push(p.e.clone())
       }
-    })
+    });
     return nodes;
   }
 
@@ -2977,7 +3008,7 @@ class Contour extends paper.Layer {
         continue;
       findedb = false;
       findede = false;
-      for(var j=0; j<profiles.length; j++){
+      for(let j=0; j<profiles.length; j++){
         if(profiles[j] == elm)
           continue;
         if(!findedb && elm.has_cnn(profiles[j], elm.b) && elm.b.is_nearest(profiles[j].e))
@@ -3004,12 +3035,12 @@ class Contour extends paper.Layer {
   }
 
   profile_by_nodes(n1, n2, point) {
-    var profiles = this.profiles, g;
-    for(var i = 0; i < profiles.length; i++){
-      g = profiles[i].generatrix;
-      if(g.getNearestPoint(n1).is_nearest(n1) && g.getNearestPoint(n2).is_nearest(n2)){
-        if(!point || g.getNearestPoint(point).is_nearest(point))
-          return p;
+    const profiles = this.profiles;
+    for(let i = 0; i < profiles.length; i++){
+      const {generatrix} = profiles[i];
+      if(generatrix.getNearestPoint(n1).is_nearest(n1) && generatrix.getNearestPoint(n2).is_nearest(n2)){
+        if(!point || generatrix.getNearestPoint(point).is_nearest(point))
+          return profiles[i];
       }
     }
   }
@@ -3491,7 +3522,6 @@ Contour.prototype.__define({
 				}.bind(this._row));
 			}
 
-
 			this._row.furn.refill_prm(this);
 
 			this.project.register_change(true);
@@ -3777,7 +3807,7 @@ Contour.prototype.__define({
             sub_path.dashArray = [12, 8];
             err = true;
           }
-        })
+        });
         elm.path.fillColor = err ? new paper.Color({
             stops: ["#fee", "#fcc", "#fdd"],
             origin: elm.path.bounds.bottomLeft,

@@ -4480,6 +4480,530 @@ $p.CatUsers_acl.prototype.__define({
 });
 
 
+(function($p){
+
+	$p.on({
+		pouch_load_data_loaded: function predefined_elmnts_data_loaded() {
+
+			$p.off(predefined_elmnts_data_loaded);
+
+
+			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
+				.then((rows) => {
+
+					const parents = {};
+
+					rows.forEach((row) => {
+						if(row.is_folder && row.synonym){
+							var ref = row._id.split("|")[1];
+							parents[ref] = row.synonym;
+							$p.job_prm.__define(row.synonym, { value: {} });
+
+						}
+
+					});
+
+					rows.forEach((row) => {
+
+						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
+
+							let _mgr, tnames;
+
+							if(row.type.is_ref){
+								tnames = row.type.types[0].split(".");
+								_mgr = $p[tnames[0]][tnames[1]]
+							}
+
+							if(row.list == -1){
+
+								$p.job_prm[parents[row.parent]].__define(row.synonym, {
+									value: (() => {
+										const res = {};
+										row.elmnts.forEach((row) => {
+											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
+										});
+										return res;
+									})()
+								});
+
+							}
+							else if(row.list){
+
+								$p.job_prm[parents[row.parent]].__define(row.synonym, {
+									value: row.elmnts.map((row) => {
+									  if(_mgr){
+                      const value = _mgr.get(row.value, false);
+                      if(!$p.utils.is_empty_guid(row.elm)){
+                        value._formula = row.elm;
+                      }
+                      return value;
+                    }else{
+                      return row.value;
+                    }
+									})
+								});
+
+                if(row.synonym == "calculated"){
+
+                }
+
+							}else{
+
+								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym)){
+                  delete $p.job_prm[parents[row.parent]][row.synonym];
+                }
+
+								$p.job_prm[parents[row.parent]].__define(row.synonym, {
+									value: _mgr ? _mgr.get(row.value, false) : row.value,
+									configurable: true
+								});
+							}
+
+						}
+					});
+				})
+				.then(() => {
+
+					setTimeout(() => {
+
+            if(!$p.job_prm.builder){
+              $p.job_prm.builder = {};
+            }
+						if(!$p.job_prm.builder.base_block){
+              $p.job_prm.builder.base_block = [];
+            }
+            if(!$p.job_prm.pricing){
+              $p.job_prm.pricing = {};
+            }
+
+						$p.cat.production_params.forEach((o) => {
+							if(!o.is_folder)
+								o.base_blocks.forEach((row) => {
+									if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1){
+                    $p.job_prm.builder.base_block.push(row.calc_order);
+                  }
+								});
+						});
+
+						$p.job_prm.builder.base_block.forEach((o) => o.load());
+
+					}, 1000);
+
+					setTimeout(() => {
+						$p.eve.callEvent("predefined_elmnts_inited");
+					}, 200);
+
+				});
+
+		}
+	});
+
+	const _mgr = $p.cch.predefined_elmnts;
+
+
+	delete $p.CchPredefined_elmnts.prototype.value;
+	$p.CchPredefined_elmnts.prototype.__define({
+
+		value: {
+			get: function () {
+
+				const mf = this.type;
+				const res = this._obj ? this._obj.value : "";
+				let mgr, ref;
+
+				if(this._obj.is_folder){
+          return "";
+        }
+				if(typeof res == "object"){
+          return res;
+        }
+				else if(mf.is_ref){
+					if(mf.digits && typeof res === "number"){
+            return res;
+          }
+					if(mf.hasOwnProperty("str_len") && !$p.utils.is_guid(res)){
+            return res;
+          }
+					if(mgr = $p.md.value_mgr(this._obj, "value", mf)){
+						if($p.utils.is_data_mgr(mgr)){
+              return mgr.get(res, false);
+            }
+						else{
+              return $p.utils.fetch_type(res, mgr);
+            }
+					}
+					if(res){
+						console.log(["value", mf, this._obj]);
+						return null;
+					}
+				}
+				else if(mf.date_part){
+          return $p.utils.fix_date(this._obj.value, true);
+        }
+        else if(mf.digits){
+          return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
+        }
+        else if(mf.types[0]=="boolean"){
+          return $p.utils.fix_boolean(this._obj.value);
+        }
+				else{
+          return this._obj.value || "";
+        }
+
+				return this.characteristic.clr;
+			},
+
+			set: function (v) {
+
+				if(this._obj.value === v){
+          return;
+        }
+
+				Object.getNotifier(this).notify({
+					type: 'update',
+					name: 'value',
+					oldValue: this._obj.value
+				});
+				this._obj.value = $p.utils.is_data_obj(v) ? v.ref : v;
+				this._data._modified = true;
+			}
+		}
+	});
+
+	_mgr.form_obj = function(pwnd, attr){
+
+		let o, wnd;
+
+		return this.constructor.prototype.form_obj.call(this, pwnd, attr)
+			.then((res) => {
+				if(res){
+					o = res.o;
+					wnd = res.wnd;
+					return res;
+				}
+			});
+	}
+
+})($p);
+
+
+
+$p.cch.properties.__define({
+
+	check_mandatory: {
+		value: function(prms, title){
+
+			var t, row;
+
+			for(t in prms){
+				row = prms[t];
+				if(row.param.mandatory && (!row.value || row.value.empty())){
+					$p.msg.show_msg({
+						type: "alert-error",
+						text: $p.msg.bld_empty_param + row.param.presentation,
+						title: title || $p.msg.bld_title});
+					return true;
+				}
+			}
+		}
+	},
+
+	slist: {
+		value: function(prop, ret_mgr){
+
+			var res = [], rt, at, pmgr, op = this.get(prop);
+
+			if(op && op.type.is_ref){
+				for(rt in op.type.types)
+					if(op.type.types[rt].indexOf(".") > -1){
+						at = op.type.types[rt].split(".");
+						pmgr = $p[at[0]][at[1]];
+						if(pmgr){
+
+							if(ret_mgr)
+								ret_mgr.mgr = pmgr;
+
+							if(pmgr.class_name=="enm.open_directions")
+								pmgr.get_option_list().forEach(function(v){
+									if(v.value && v.value!=$p.enm.tso.folding)
+										res.push(v);
+								});
+
+							else if(pmgr.class_name.indexOf("enm.")!=-1 || !pmgr.metadata().has_owners)
+								res = pmgr.get_option_list();
+
+							else
+								pmgr.find_rows({owner: prop}, function(v){
+									res.push({value: v.ref, text: v.presentation});
+								});
+						}
+					}
+			}
+			return res;
+		}
+	}
+
+});
+
+$p.CchProperties.prototype.__define({
+
+  is_calculated: {
+    get: function () {
+      return ($p.job_prm.properties.calculated || []).indexOf(this) != -1;
+    }
+  },
+
+  calculated_value: {
+    value: function (obj) {
+      if(!this._calculated_value){
+        if(this._formula){
+          this._calculated_value = $p.cat.formulas.get(this._formula);
+        }else{
+          return;
+        }
+      }
+      return this._calculated_value.execute(obj)
+    }
+  },
+
+  check_condition: {
+    value: function ({row_spec, prm_row, elm, cnstr, origin, ox, calc_order}) {
+
+      const {is_calculated} = this;
+
+      const val = is_calculated ? this.calculated_value({
+          row: row_spec,
+          elm: elm,
+          cnstr: cnstr || 0,
+          ox: ox,
+          calc_order: calc_order
+        }) : this.extract_value(prm_row);
+
+      let ok = false;
+
+      if(ox && !Array.isArray(val) && (prm_row.comparison_type.empty() || prm_row.comparison_type == $p.enm.comparison_types.eq)){
+        if(is_calculated){
+          ok = val == prm_row.value;
+        }
+        else{
+          ox.params.find_rows({
+            cnstr: cnstr || 0,
+            inset: origin || $p.utils.blank.guid,
+            param: this,
+            value: val
+          }, () => {
+            ok = true;
+            return false;
+          });
+        }
+      }
+      else if(is_calculated){
+
+        const value = this.extract_value(prm_row);
+
+        switch(prm_row.comparison_type) {
+
+          case $p.enm.comparison_types.ne:
+            ok = val != value;
+            break;
+
+          case $p.enm.comparison_types.gt:
+            ok = val > value;
+            break;
+
+          case $p.enm.comparison_types.gte:
+            ok = val >= value;
+            break;
+
+          case $p.enm.comparison_types.lt:
+            ok = val < value;
+            break;
+
+          case $p.enm.comparison_types.lte:
+            ok = val <= value;
+            break;
+
+          case $p.enm.comparison_types.nin:
+            if(Array.isArray(val) && !Array.isArray(value)){
+              ok = val.indexOf(value) == -1;
+            }
+            else if(Array.isArray(value) && !Array.isArray(val)){
+              ok = value.indexOf(val) == -1;
+            }
+            break;
+
+          case $p.enm.comparison_types.in:
+            if(Array.isArray(val) && !Array.isArray(value)){
+              ok = val.indexOf(value) != -1;
+            }
+            else if(Array.isArray(value) && !Array.isArray(val)){
+              ok = value.indexOf(val) != -1;
+            }
+            break;
+
+          case $p.enm.comparison_types.inh:
+            ok = $p.utils.is_data_obj(val) ? val.in_hierarchy(value) : val == value;
+            break;
+
+          case $p.enm.comparison_types.ninh:
+            ok = $p.utils.is_data_obj(val) ? !val.in_hierarchy(value) : val != value;
+            break;
+        }
+      }
+      else{
+        ox.params.find_rows({
+          cnstr: cnstr || 0,
+          inset: origin || $p.utils.blank.guid,
+          param: this
+        }, ({value}) => {
+          switch(prm_row.comparison_type) {
+
+            case $p.enm.comparison_types.ne:
+              ok = value != val;
+              break;
+
+            case $p.enm.comparison_types.gt:
+              ok = value > val;
+              break;
+
+            case $p.enm.comparison_types.gte:
+              ok = value >= val;
+              break;
+
+            case $p.enm.comparison_types.lt:
+              ok = value < val;
+              break;
+
+            case $p.enm.comparison_types.lte:
+              ok = value <= val;
+              break;
+
+            case $p.enm.comparison_types.nin:
+              if(Array.isArray(val) && !Array.isArray(value)){
+                ok = val.indexOf(value) == -1;
+              }
+              else if(Array.isArray(value) && !Array.isArray(val)){
+                ok = value.indexOf(val) == -1;
+              }
+              break;
+
+            case $p.enm.comparison_types.in:
+              if(Array.isArray(val) && !Array.isArray(value)){
+                ok = val.indexOf(value) != -1;
+              }
+              else if(Array.isArray(value) && !Array.isArray(val)){
+                ok = value.indexOf(val) != -1;
+              }
+              break;
+
+            case $p.enm.comparison_types.inh:
+              ok = $p.utils.is_data_obj(value) ? value.in_hierarchy(val) : val == value;
+              break;
+
+            case $p.enm.comparison_types.ninh:
+              ok = $p.utils.is_data_obj(value) ? !value.in_hierarchy(val) : val != value;
+              break;
+          }
+
+          return false;
+        });
+      }
+      return ok;
+    }
+  },
+
+  extract_value: {
+    value: function ({comparison_type, txt_row, value}) {
+
+      switch(comparison_type) {
+
+        case $p.enm.comparison_types.in:
+        case $p.enm.comparison_types.nin:
+
+          try{
+            const arr = JSON.parse(txt_row);
+            const {types} = this.type;
+            if(types.length == 1){
+              const mgr = $p.md.mgr_by_class_name(types[0]);
+              return arr.map((ref) => mgr.get(ref, false));
+            }
+            return arr;
+          }
+          catch(err){
+            return value;
+          }
+
+        default:
+          return value;
+      }
+    }
+  },
+
+  params_links: {
+    value: function (attr) {
+
+      if(!this.hasOwnProperty("_params_links")){
+        this._params_links = $p.cat.params_links.find_rows({slave: this})
+      }
+
+      return this._params_links.filter((link) => {
+        let ok = true;
+        link.master.params.forEach((row) => {
+          ok = row.property.check_condition({
+            cnstr: attr.grid.selection.cnstr,
+            ox: attr.obj._owner._owner,
+            prm_row: row,
+          });
+          if(!ok){
+            return false;
+          }
+        });
+        return ok;
+      });
+    }
+  },
+
+  linked_values: {
+    value: function (links, prow) {
+      const values = [];
+      links.forEach((link) => link.values.forEach((row) => values.push(row)));
+      if(values.some((row) => row._obj.value == prow.value)){
+        return;
+      }
+      if(values.some((row) => {
+          if(row.by_default || row.forcibly){
+            prow.value = row._obj.value;
+            return true;
+          }
+        })){
+        return;
+      }
+      if(values.length){
+        prow.value = values[0]._obj.value;
+      }
+    }
+  },
+
+  filter_params_links: {
+    value: function (filter, attr) {
+      this.params_links(attr).forEach((link) => {
+        if(!filter.ref){
+          filter.ref = {in: []}
+        }
+        if(filter.ref.in){
+          link.values._obj.forEach((row) => {
+            if(filter.ref.in.indexOf(row.value) == -1){
+              filter.ref.in.push(row.value);
+            }
+          });
+        }
+      });
+    }
+  }
+
+});
+
+
 class Pricing {
 
   constructor($p) {
@@ -6000,528 +6524,286 @@ $p.DpBuyers_order.prototype.__define({
 });
 
 
+
 (function($p){
 
-	$p.on({
-		pouch_load_data_loaded: function predefined_elmnts_data_loaded() {
-
-			$p.off(predefined_elmnts_data_loaded);
+	var _mgr = $p.enm.cnn_types;
 
 
-			$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
-				.then((rows) => {
+	_mgr.acn = {cache :{}};
+	_mgr.acn.__define({
 
-					const parents = {};
-
-					rows.forEach((row) => {
-						if(row.is_folder && row.synonym){
-							var ref = row._id.split("|")[1];
-							parents[ref] = row.synonym;
-							$p.job_prm.__define(row.synonym, { value: {} });
-
-						}
-
-					});
-
-					rows.forEach((row) => {
-
-						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
-
-							let _mgr, tnames;
-
-							if(row.type.is_ref){
-								tnames = row.type.types[0].split(".");
-								_mgr = $p[tnames[0]][tnames[1]]
-							}
-
-							if(row.list == -1){
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: (() => {
-										const res = {};
-										row.elmnts.forEach((row) => {
-											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
-										});
-										return res;
-									})()
-								});
-
-							}
-							else if(row.list){
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: row.elmnts.map((row) => {
-									  if(_mgr){
-                      const value = _mgr.get(row.value, false);
-                      if(!$p.utils.is_empty_guid(row.elm)){
-                        value._formula = row.elm;
-                      }
-                      return value;
-                    }else{
-                      return row.value;
-                    }
-									})
-								});
-
-                if(row.synonym == "calculated"){
-
-                }
-
-							}else{
-
-								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym)){
-                  delete $p.job_prm[parents[row.parent]][row.synonym];
-                }
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: _mgr ? _mgr.get(row.value, false) : row.value,
-									configurable: true
-								});
-							}
-
-						}
-					});
-				})
-				.then(() => {
-
-					setTimeout(() => {
-
-            if(!$p.job_prm.builder){
-              $p.job_prm.builder = {};
-            }
-						if(!$p.job_prm.builder.base_block){
-              $p.job_prm.builder.base_block = [];
-            }
-            if(!$p.job_prm.pricing){
-              $p.job_prm.pricing = {};
-            }
-
-						$p.cat.production_params.forEach((o) => {
-							if(!o.is_folder)
-								o.base_blocks.forEach((row) => {
-									if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1){
-                    $p.job_prm.builder.base_block.push(row.calc_order);
-                  }
-								});
-						});
-
-						$p.job_prm.builder.base_block.forEach((o) => o.load());
-
-					}, 1000);
-
-					setTimeout(() => {
-						$p.eve.callEvent("predefined_elmnts_inited");
-					}, 200);
-
-				});
-
-		}
-	});
-
-	const _mgr = $p.cch.predefined_elmnts;
-
-
-	delete $p.CchPredefined_elmnts.prototype.value;
-	$p.CchPredefined_elmnts.prototype.__define({
-
-		value: {
-			get: function () {
-
-				const mf = this.type;
-				const res = this._obj ? this._obj.value : "";
-				let mgr, ref;
-
-				if(this._obj.is_folder){
-          return "";
-        }
-				if(typeof res == "object"){
-          return res;
-        }
-				else if(mf.is_ref){
-					if(mf.digits && typeof res === "number"){
-            return res;
-          }
-					if(mf.hasOwnProperty("str_len") && !$p.utils.is_guid(res)){
-            return res;
-          }
-					if(mgr = $p.md.value_mgr(this._obj, "value", mf)){
-						if($p.utils.is_data_mgr(mgr)){
-              return mgr.get(res, false);
-            }
-						else{
-              return $p.utils.fetch_type(res, mgr);
-            }
-					}
-					if(res){
-						console.log(["value", mf, this._obj]);
-						return null;
-					}
-				}
-				else if(mf.date_part){
-          return $p.utils.fix_date(this._obj.value, true);
-        }
-        else if(mf.digits){
-          return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
-        }
-        else if(mf.types[0]=="boolean"){
-          return $p.utils.fix_boolean(this._obj.value);
-        }
-				else{
-          return this._obj.value || "";
-        }
-
-				return this.characteristic.clr;
+		ii: {
+			get : function(){
+				return this.cache.ii
+					|| ( this.cache.ii = [_mgr.Наложение] );
 			},
+			enumerable : false,
+			configurable : false
+		},
 
-			set: function (v) {
+		i: {
+			get : function(){
+				return this.cache.i
+					|| ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
+			},
+			enumerable : false,
+			configurable : false
+		},
 
-				if(this._obj.value === v){
-          return;
-        }
+		a: {
+			get : function(){
+				return this.cache.a
+					|| ( this.cache.a = [
+						_mgr.УгловоеДиагональное,
+						_mgr.УгловоеКВертикальной,
+						_mgr.УгловоеКГоризонтальной,
+						_mgr.КрестВСтык] );
+			},
+			enumerable : false,
+			configurable : false
+		},
 
-				Object.getNotifier(this).notify({
-					type: 'update',
-					name: 'value',
-					oldValue: this._obj.value
-				});
-				this._obj.value = $p.utils.is_data_obj(v) ? v.ref : v;
-				this._data._modified = true;
-			}
+		t: {
+			get : function(){
+				return this.cache.t
+					|| ( this.cache.t = [_mgr.ТОбразное] );
+			},
+			enumerable : false,
+			configurable : false
 		}
 	});
 
-	_mgr.form_obj = function(pwnd, attr){
 
-		let o, wnd;
+	_mgr.tcn = {cache :{}};
+	_mgr.tcn.__define({
+		ad: {
+			get : function(){
+				return this.cache.ad || ( this.cache.ad = _mgr.УгловоеДиагональное );
+			},
+			enumerable : false,
+			configurable : false
+		},
 
-		return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-			.then((res) => {
-				if(res){
-					o = res.o;
-					wnd = res.wnd;
-					return res;
-				}
-			});
-	}
+		av: {
+			get : function(){
+				return this.cache.av || ( this.cache.av = _mgr.УгловоеКВертикальной );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		ah: {
+			get : function(){
+				return this.cache.ah || ( this.cache.ah = _mgr.УгловоеКГоризонтальной );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		t: {
+			get : function(){
+				return this.cache.t || ( this.cache.t = _mgr.ТОбразное );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		ii: {
+			get : function(){
+				return this.cache.ii || ( this.cache.ii = _mgr.Наложение );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		i: {
+			get : function(){
+				return this.cache.i || ( this.cache.i = _mgr.НезамкнутыйКонтур );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		xt: {
+			get : function(){
+				return this.cache.xt || ( this.cache.xt = _mgr.КрестПересечение );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		xx: {
+			get : function(){
+				return this.cache.xx || ( this.cache.xx = _mgr.КрестВСтык );
+			},
+			enumerable : false,
+			configurable : false
+		}
+	});
 
 })($p);
 
 
+(function($p){
 
-$p.cch.properties.__define({
+	var _mgr = $p.enm.elm_types,
 
-	check_mandatory: {
-		value: function(prms, title){
 
-			var t, row;
+		cache = {};
 
-			for(t in prms){
-				row = prms[t];
-				if(row.param.mandatory && (!row.value || row.value.empty())){
-					$p.msg.show_msg({
-						type: "alert-error",
-						text: $p.msg.bld_empty_param + row.param.presentation,
-						title: title || $p.msg.bld_title});
-					return true;
-				}
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			},
+			enumerable : false,
+			configurable : false
+		}
+
+	});
+
+
+})($p);
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
 			}
 		}
-	},
 
-	slist: {
-		value: function(prop, ret_mgr){
 
-			var res = [], rt, at, pmgr, op = this.get(prop);
+	});
 
-			if(op && op.type.is_ref){
-				for(rt in op.type.types)
-					if(op.type.types[rt].indexOf(".") > -1){
-						at = op.type.types[rt].split(".");
-						pmgr = $p[at[0]][at[1]];
-						if(pmgr){
+	$p.enm.orientations.__define({
 
-							if(ret_mgr)
-								ret_mgr.mgr = pmgr;
-
-							if(pmgr.class_name=="enm.open_directions")
-								pmgr.get_option_list().forEach(function(v){
-									if(v.value && v.value!=$p.enm.tso.folding)
-										res.push(v);
-								});
-
-							else if(pmgr.class_name.indexOf("enm.")!=-1 || !pmgr.metadata().has_owners)
-								res = pmgr.get_option_list();
-
-							else
-								pmgr.find_rows({owner: prop}, function(v){
-									res.push({value: v.ref, text: v.presentation});
-								});
-						}
-					}
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
 			}
-			return res;
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
 		}
-	}
+	});
 
-});
+	$p.enm.positions.__define({
 
-$p.CchProperties.prototype.__define({
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
 
-  is_calculated: {
-    get: function () {
-      return ($p.job_prm.properties.calculated || []).indexOf(this) != -1;
-    }
-  },
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
 
-  calculated_value: {
-    value: function (obj) {
-      if(!this._calculated_value){
-        if(this._formula){
-          this._calculated_value = $p.cat.formulas.get(this._formula);
-        }else{
-          return;
-        }
-      }
-      return this._calculated_value.execute(obj)
-    }
-  },
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
 
-  check_condition: {
-    value: function ({row_spec, prm_row, elm, cnstr, origin, ox, calc_order}) {
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
 
-      const {is_calculated} = this;
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
 
-      const val = is_calculated ? this.calculated_value({
-          row: row_spec,
-          elm: elm,
-          cnstr: cnstr || 0,
-          ox: ox,
-          calc_order: calc_order
-        }) : this.extract_value(prm_row);
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
 
-      let ok = false;
 
-      if(ox && !Array.isArray(val) && (prm_row.comparison_type.empty() || prm_row.comparison_type == $p.enm.comparison_types.eq)){
-        if(is_calculated){
-          ok = val == prm_row.value;
-        }
-        else{
-          ox.params.find_rows({
-            cnstr: cnstr || 0,
-            inset: origin || $p.utils.blank.guid,
-            param: this,
-            value: val
-          }, () => {
-            ok = true;
-            return false;
-          });
-        }
-      }
-      else if(is_calculated){
-
-        const value = this.extract_value(prm_row);
-
-        switch(prm_row.comparison_type) {
-
-          case $p.enm.comparison_types.ne:
-            ok = val != value;
-            break;
-
-          case $p.enm.comparison_types.gt:
-            ok = val > value;
-            break;
-
-          case $p.enm.comparison_types.gte:
-            ok = val >= value;
-            break;
-
-          case $p.enm.comparison_types.lt:
-            ok = val < value;
-            break;
-
-          case $p.enm.comparison_types.lte:
-            ok = val <= value;
-            break;
-
-          case $p.enm.comparison_types.nin:
-            if(Array.isArray(val) && !Array.isArray(value)){
-              ok = val.indexOf(value) == -1;
-            }
-            else if(Array.isArray(value) && !Array.isArray(val)){
-              ok = value.indexOf(val) == -1;
-            }
-            break;
-
-          case $p.enm.comparison_types.in:
-            if(Array.isArray(val) && !Array.isArray(value)){
-              ok = val.indexOf(value) != -1;
-            }
-            else if(Array.isArray(value) && !Array.isArray(val)){
-              ok = value.indexOf(val) != -1;
-            }
-            break;
-
-          case $p.enm.comparison_types.inh:
-            ok = $p.utils.is_data_obj(val) ? val.in_hierarchy(value) : val == value;
-            break;
-
-          case $p.enm.comparison_types.ninh:
-            ok = $p.utils.is_data_obj(val) ? !val.in_hierarchy(value) : val != value;
-            break;
-        }
-      }
-      else{
-        ox.params.find_rows({
-          cnstr: cnstr || 0,
-          inset: origin || $p.utils.blank.guid,
-          param: this
-        }, ({value}) => {
-          switch(prm_row.comparison_type) {
-
-            case $p.enm.comparison_types.ne:
-              ok = value != val;
-              break;
-
-            case $p.enm.comparison_types.gt:
-              ok = value > val;
-              break;
-
-            case $p.enm.comparison_types.gte:
-              ok = value >= val;
-              break;
-
-            case $p.enm.comparison_types.lt:
-              ok = value < val;
-              break;
-
-            case $p.enm.comparison_types.lte:
-              ok = value <= val;
-              break;
-
-            case $p.enm.comparison_types.nin:
-              if(Array.isArray(val) && !Array.isArray(value)){
-                ok = val.indexOf(value) == -1;
-              }
-              else if(Array.isArray(value) && !Array.isArray(val)){
-                ok = value.indexOf(val) == -1;
-              }
-              break;
-
-            case $p.enm.comparison_types.in:
-              if(Array.isArray(val) && !Array.isArray(value)){
-                ok = val.indexOf(value) != -1;
-              }
-              else if(Array.isArray(value) && !Array.isArray(val)){
-                ok = value.indexOf(val) != -1;
-              }
-              break;
-
-            case $p.enm.comparison_types.inh:
-              ok = $p.utils.is_data_obj(value) ? value.in_hierarchy(val) : val == value;
-              break;
-
-            case $p.enm.comparison_types.ninh:
-              ok = $p.utils.is_data_obj(value) ? !value.in_hierarchy(val) : val != value;
-              break;
-          }
-
-          return false;
-        });
-      }
-      return ok;
-    }
-  },
-
-  extract_value: {
-    value: function ({comparison_type, txt_row, value}) {
-
-      switch(comparison_type) {
-
-        case $p.enm.comparison_types.in:
-        case $p.enm.comparison_types.nin:
-
-          try{
-            const arr = JSON.parse(txt_row);
-            const {types} = this.type;
-            if(types.length == 1){
-              const mgr = $p.md.mgr_by_class_name(types[0]);
-              return arr.map((ref) => mgr.get(ref, false));
-            }
-            return arr;
-          }
-          catch(err){
-            return value;
-          }
-
-        default:
-          return value;
-      }
-    }
-  },
-
-  params_links: {
-    value: function (attr) {
-
-      if(!this.hasOwnProperty("_params_links")){
-        this._params_links = $p.cat.params_links.find_rows({slave: this})
-      }
-
-      return this._params_links.filter((link) => {
-        let ok = true;
-        link.master.params.forEach((row) => {
-          ok = row.property.check_condition({
-            cnstr: attr.grid.selection.cnstr,
-            ox: attr.obj._owner._owner,
-            prm_row: row,
-          });
-          if(!ok){
-            return false;
-          }
-        });
-        return ok;
-      });
-    }
-  },
-
-  linked_values: {
-    value: function (links, prow) {
-      const values = [];
-      links.forEach((link) => link.values.forEach((row) => values.push(row)));
-      if(values.some((row) => row._obj.value == prow.value)){
-        return;
-      }
-      if(values.some((row) => {
-          if(row.by_default || row.forcibly){
-            prow.value = row._obj.value;
-            return true;
-          }
-        })){
-        return;
-      }
-      if(values.length){
-        prow.value = values[0]._obj.value;
-      }
-    }
-  },
-
-  filter_params_links: {
-    value: function (filter, attr) {
-      this.params_links(attr).forEach((link) => {
-        if(!filter.ref){
-          filter.ref = {in: []}
-        }
-        if(filter.ref.in){
-          link.values._obj.forEach((row) => {
-            if(filter.ref.in.indexOf(row.value) == -1){
-              filter.ref.in.push(row.value);
-            }
-          });
-        }
-      });
-    }
-  }
-
-});
+})($p);
 
 
 $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
@@ -8109,288 +8391,6 @@ $p.doc.selling.on({
 
 
 
-
-(function($p){
-
-	var _mgr = $p.enm.cnn_types;
-
-
-	_mgr.acn = {cache :{}};
-	_mgr.acn.__define({
-
-		ii: {
-			get : function(){
-				return this.cache.ii
-					|| ( this.cache.ii = [_mgr.Наложение] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		i: {
-			get : function(){
-				return this.cache.i
-					|| ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		a: {
-			get : function(){
-				return this.cache.a
-					|| ( this.cache.a = [
-						_mgr.УгловоеДиагональное,
-						_mgr.УгловоеКВертикальной,
-						_mgr.УгловоеКГоризонтальной,
-						_mgr.КрестВСтык] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		t: {
-			get : function(){
-				return this.cache.t
-					|| ( this.cache.t = [_mgr.ТОбразное] );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
-
-
-	_mgr.tcn = {cache :{}};
-	_mgr.tcn.__define({
-		ad: {
-			get : function(){
-				return this.cache.ad || ( this.cache.ad = _mgr.УгловоеДиагональное );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		av: {
-			get : function(){
-				return this.cache.av || ( this.cache.av = _mgr.УгловоеКВертикальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		ah: {
-			get : function(){
-				return this.cache.ah || ( this.cache.ah = _mgr.УгловоеКГоризонтальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		t: {
-			get : function(){
-				return this.cache.t || ( this.cache.t = _mgr.ТОбразное );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		ii: {
-			get : function(){
-				return this.cache.ii || ( this.cache.ii = _mgr.Наложение );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		i: {
-			get : function(){
-				return this.cache.i || ( this.cache.i = _mgr.НезамкнутыйКонтур );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		xt: {
-			get : function(){
-				return this.cache.xt || ( this.cache.xt = _mgr.КрестПересечение );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		xx: {
-			get : function(){
-				return this.cache.xx || ( this.cache.xx = _mgr.КрестВСтык );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
-
-})($p);
-
-
-(function($p){
-
-	var _mgr = $p.enm.elm_types,
-
-
-		cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			},
-			enumerable : false,
-			configurable : false
-		}
-
-	});
-
-
-})($p);
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
-
-
 (($p) => {
 
   const Proto = $p.RepMaterials_demand
@@ -9463,7 +9463,7 @@ $p.iface.view_settings = function (cell) {
 
 			if($p.current_acl.partners_uids.length){
 
-			  var surcharge_internal = $p.wsql.get_user_param("surcharge_internal", "number"),
+			  let surcharge_internal = $p.wsql.get_user_param("surcharge_internal", "number"),
           discount_percent_internal = $p.wsql.get_user_param("discount_percent_internal", "number");
 
 			  if(!surcharge_internal){
@@ -9485,14 +9485,13 @@ $p.iface.view_settings = function (cell) {
 				t.form2.setItemValue("surcharge_internal", surcharge_internal);
         t.form2.setItemValue("discount_percent_internal", discount_percent_internal);
 
-
-			}else{
+			}
+			else{
 				t.form2.disableItem("surcharge_internal");
 				t.form2.disableItem("discount_percent_internal");
 			}
 
 			t.form2.attachEvent("onChange", (name, value, state) => {
-
 				if(name == "hide_price"){
 					if(value == "hide_price_dealer"){
 						$p.wsql.set_user_param("hide_price_dealer", true);
@@ -9506,14 +9505,14 @@ $p.iface.view_settings = function (cell) {
 						$p.wsql.set_user_param("hide_price_dealer", "");
 						$p.wsql.set_user_param("hide_price_manufacturer", "");
 					}
-				}else if(name == "surcharge_internal" || name == "discount_percent_internal"){
+				}
+				else if(name == "surcharge_internal" || name == "discount_percent_internal"){
           $p.wsql.set_user_param(name, parseFloat(value));
         }
+        else{
+          $p.wsql.set_user_param(name, typeof state == "boolean" ? state || "" : value);
+        }
 			});
-
-			t.form2.getInput("modifiers").onchange = () => {
-				$p.wsql.set_user_param("modifiers", this.value);
-			};
 
       if($p.current_acl.role_available("ИзменениеТехнологическойНСИ")){
         t.industry = {
@@ -9679,11 +9678,6 @@ $p.iface.view_settings = function (cell) {
       {type:"template", label:"",value:"", note: {text: "Работать онлайн, не задействовать базу данных браузера", width: 320}},
       {type:"template", label:"",value:"", note: {text: "", width: 320}},
 
-			{type: "label", labelWidth:320, label: "Сохранять пароль пользователя", className: "label_options"},
-			{type:"checkbox", name:"enable_save_pwd", label:"Разрешить:", checked: $p.wsql.get_user_param("enable_save_pwd", "boolean")},
-			{type:"template", label:"",value:"", note: {text: "Не рекомендуется, если к компьютеру имеют доступ посторонние лица", width: 320}},
-			{type:"template", label:"",value:"", note: {text: "", width: 320}},
-
 			{ type:"block", blockOffset: 0, name:"block_buttons", list:[
 				{type: "button", name: "save", value: "<i class='fa fa-floppy-o fa-fw'></i>", tooltip: "Применить настройки и перезагрузить программу"},
 				{type:"newcolumn"},
@@ -9725,7 +9719,6 @@ $p.iface.view_settings = function (cell) {
                 t.form1.enableItem(prm);
               });
               t.form1.enableItem("couch_direct");
-              t.form2.enableItem("modifiers");
             }
           }
         });
@@ -9765,9 +9758,15 @@ $p.iface.view_settings = function (cell) {
 			{type:"input" , labelWidth:180, inputWidth: 120, name:"discount_percent_internal", label:"Скидка дилера, %:", numberFormat: ["0", "", ""], validate:"NotEmpty,ValidInteger"},
 			{type:"template", label:"",value:"", note: {text: "Значения наценки и скидки по умолчанию, которые дилер предоставляет своим (конечным) покупателям", width: 320}},
 
-			{type: "label", labelWidth:320, label: "Подключаемые модули", className: "label_options"},
-			{type:"input" , position:"label-top", inputWidth: 320, disabled: true, name:"modifiers", label:"Модификаторы:", value: $p.wsql.get_user_param("modifiers"), rows: 3, style:"height:80px;"},
-			{type:"template", label:"",value:"", note: {text: "Список дополнительных модулей", width: 320}}
+      {type: "label", labelWidth:320, label: "Сохранять origin в спецификации", className: "label_options"},
+      {type:"checkbox", name:"save_origin", label:"Разрешить:", checked: $p.wsql.get_user_param("save_origin", "boolean")},
+      {type:"template", label:"",value:"", note: {text: "Упрощает анализ настроек технологом, но увелияивает трафик и размер спецификации", width: 320}},
+      {type:"template", label:"",value:"", note: {text: "", width: 320}},
+
+      {type: "label", labelWidth:320, label: "Сохранять пароль пользователя", className: "label_options"},
+      {type:"checkbox", name:"enable_save_pwd", label:"Разрешить:", checked: $p.wsql.get_user_param("enable_save_pwd", "boolean")},
+      {type:"template", label:"",value:"", note: {text: "Не рекомендуется, если к компьютеру имеют доступ посторонние лица", width: 320}},
+      {type:"template", label:"",value:"", note: {text: "", width: 320}},
 
 		]);
 		t.form2.cont.style.fontSize = "100%";
@@ -9910,7 +9909,8 @@ class OrderDealerApp {
     const predefined = {
       aribaz: {zone: 2},
       ecookna: {zone: 21, host: "https://zakaz.ecookna.ru/"},
-      tmk: {zone: 23},
+      tmk: {zone: 23, host: "https://tmk-online.ru/"},
+      crystallit: {zone: 25, host: "https://crystallit.oknosoft.ru/"},
     }
     for(let elm in predefined){
       const prm = predefined[elm];

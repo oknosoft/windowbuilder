@@ -47,7 +47,7 @@ $p.iface.view_settings = function (cell) {
 
 			if($p.current_acl.partners_uids.length){
 
-			  var surcharge_internal = $p.wsql.get_user_param("surcharge_internal", "number"),
+			  let surcharge_internal = $p.wsql.get_user_param("surcharge_internal", "number"),
           discount_percent_internal = $p.wsql.get_user_param("discount_percent_internal", "number");
 
 			  // если заданы параметры для текущего пользователя - используем их
@@ -70,15 +70,14 @@ $p.iface.view_settings = function (cell) {
 				t.form2.setItemValue("surcharge_internal", surcharge_internal);
         t.form2.setItemValue("discount_percent_internal", discount_percent_internal);
 
-
-			}else{
+			}
+			else{
 				t.form2.disableItem("surcharge_internal");
 				t.form2.disableItem("discount_percent_internal");
 			}
 
 			// подключаем обработчик изменения значений в форме
 			t.form2.attachEvent("onChange", (name, value, state) => {
-
 				if(name == "hide_price"){
 					if(value == "hide_price_dealer"){
 						$p.wsql.set_user_param("hide_price_dealer", true);
@@ -92,14 +91,14 @@ $p.iface.view_settings = function (cell) {
 						$p.wsql.set_user_param("hide_price_dealer", "");
 						$p.wsql.set_user_param("hide_price_manufacturer", "");
 					}
-				}else if(name == "surcharge_internal" || name == "discount_percent_internal"){
+				}
+				else if(name == "surcharge_internal" || name == "discount_percent_internal"){
           $p.wsql.set_user_param(name, parseFloat(value));
         }
+        else{
+          $p.wsql.set_user_param(name, typeof state == "boolean" ? state || "" : value);
+        }
 			});
-
-			t.form2.getInput("modifiers").onchange = () => {
-				$p.wsql.set_user_param("modifiers", this.value);
-			};
 
       // закладка технологии
       if($p.current_acl.role_available("ИзменениеТехнологическойНСИ")){
@@ -281,11 +280,6 @@ $p.iface.view_settings = function (cell) {
       {type:"template", label:"",value:"", note: {text: "Работать онлайн, не задействовать базу данных браузера", width: 320}},
       {type:"template", label:"",value:"", note: {text: "", width: 320}},
 
-			{type: "label", labelWidth:320, label: "Сохранять пароль пользователя", className: "label_options"},
-			{type:"checkbox", name:"enable_save_pwd", label:"Разрешить:", checked: $p.wsql.get_user_param("enable_save_pwd", "boolean")},
-			{type:"template", label:"",value:"", note: {text: "Не рекомендуется, если к компьютеру имеют доступ посторонние лица", width: 320}},
-			{type:"template", label:"",value:"", note: {text: "", width: 320}},
-
 			{ type:"block", blockOffset: 0, name:"block_buttons", list:[
 				{type: "button", name: "save", value: "<i class='fa fa-floppy-o fa-fw'></i>", tooltip: "Применить настройки и перезагрузить программу"},
 				{type:"newcolumn"},
@@ -328,7 +322,6 @@ $p.iface.view_settings = function (cell) {
                 t.form1.enableItem(prm);
               });
               t.form1.enableItem("couch_direct");
-              t.form2.enableItem("modifiers");
             }
           }
         });
@@ -369,9 +362,15 @@ $p.iface.view_settings = function (cell) {
 			{type:"input" , labelWidth:180, inputWidth: 120, name:"discount_percent_internal", label:"Скидка дилера, %:", numberFormat: ["0", "", ""], validate:"NotEmpty,ValidInteger"},
 			{type:"template", label:"",value:"", note: {text: "Значения наценки и скидки по умолчанию, которые дилер предоставляет своим (конечным) покупателям", width: 320}},
 
-			{type: "label", labelWidth:320, label: "Подключаемые модули", className: "label_options"},
-			{type:"input" , position:"label-top", inputWidth: 320, disabled: true, name:"modifiers", label:"Модификаторы:", value: $p.wsql.get_user_param("modifiers"), rows: 3, style:"height:80px;"},
-			{type:"template", label:"",value:"", note: {text: "Список дополнительных модулей", width: 320}}
+      {type: "label", labelWidth:320, label: "Сохранять origin в спецификации", className: "label_options"},
+      {type:"checkbox", name:"save_origin", label:"Разрешить:", checked: $p.wsql.get_user_param("save_origin", "boolean")},
+      {type:"template", label:"",value:"", note: {text: "Упрощает анализ настроек технологом, но увелияивает трафик и размер спецификации", width: 320}},
+      {type:"template", label:"",value:"", note: {text: "", width: 320}},
+
+      {type: "label", labelWidth:320, label: "Сохранять пароль пользователя", className: "label_options"},
+      {type:"checkbox", name:"enable_save_pwd", label:"Разрешить:", checked: $p.wsql.get_user_param("enable_save_pwd", "boolean")},
+      {type:"template", label:"",value:"", note: {text: "Не рекомендуется, если к компьютеру имеют доступ посторонние лица", width: 320}},
+      {type:"template", label:"",value:"", note: {text: "", width: 320}},
 
 		]);
 		t.form2.cont.style.fontSize = "100%";
