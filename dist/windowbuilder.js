@@ -928,7 +928,7 @@ class EditorAccordion {
 
           case 'new_layer':
 
-            new Contour( {parent: undefined});
+            new Contour({parent: undefined});
 
             Object.getNotifier(_editor.project._noti).notify({
               type: 'rows',
@@ -3064,7 +3064,6 @@ class Contour extends paper.Layer {
     super.remove();
   }
 
-
   get _manager() {
     return this.project._dp._manager;
   }
@@ -3129,6 +3128,14 @@ class Contour extends paper.Layer {
       bounds = bounds.unite(dl.bounds);
     });
     return bounds;
+  }
+
+  get direction() {
+    return this._row.direction;
+  }
+  set direction(v) {
+    this._row.direction = v;
+    this.project.register_change(true);
   }
 
   get imposts() {
@@ -3370,6 +3377,37 @@ class Contour extends paper.Layer {
     }
   }
 
+  sort_nodes(nodes) {
+    if (!nodes.length) {
+      return nodes;
+    }
+    let prev = nodes[0];
+    const res = [prev];
+    let couner = nodes.length + 1;
+
+    while (res.length < nodes.length && couner) {
+      couner--;
+      for (let i = 0; i < nodes.length; i++) {
+        const curr = nodes[i];
+        if (res.indexOf(curr) != -1)
+          continue;
+        if (prev.node2 == curr.node1) {
+          res.push(curr);
+          prev = curr;
+          break;
+        }
+      }
+    }
+    if (couner) {
+      nodes.length = 0;
+      for (let i = 0; i < res.length; i++) {
+        nodes.push(res[i]);
+      }
+      res.length = 0;
+    }
+  }
+
+
   get furn_cache() {
     return {
       profiles: this.outer_nodes,
@@ -3398,7 +3436,7 @@ class Contour extends paper.Layer {
     function set_handle_height(row){
       const {handle_height_base} = row;
       if(handle_height_base < 0){
-        if(handle_height_base == -2 || handle_height_base == -1 && _row.fix_ruch != -3){
+        if(handle_height_base == -2 || (handle_height_base == -1 && _row.fix_ruch != -3)){
           _row.h_ruch = (len / 2).round(0);
           return _row.fix_ruch = handle_height_base;
         }
@@ -3429,7 +3467,10 @@ class Contour extends paper.Layer {
         }
       }
     });
-
+    Object.getNotifier(this).notify({
+      type: 'update',
+      name: 'h_ruch'
+    });
   }
 
   get h_ruch() {
@@ -3450,13 +3491,13 @@ class Contour extends paper.Layer {
         }
       }
       project.register_change();
+    }
+    else{
+      _row.h_ruch = 0;
       Object.getNotifier(this).notify({
         type: 'update',
         name: 'h_ruch'
       });
-    }
-    else{
-      _row.h_ruch = 0;
     }
   }
 
@@ -3468,38 +3509,6 @@ class Contour extends paper.Layer {
 
 Contour.prototype.__define({
 
-
-	sort_nodes: {
-		value: function (nodes) {
-			if(!nodes.length){
-        return nodes;
-      }
-      let prev = nodes[0];
-      const res = [prev];
-			let couner = nodes.length + 1;
-
-			while (res.length < nodes.length && couner){
-				couner--;
-				for(let i = 0; i < nodes.length; i++){
-					const curr = nodes[i];
-					if(res.indexOf(curr) != -1)
-						continue;
-					if(prev.node2 == curr.node1){
-						res.push(curr);
-						prev = curr;
-						break;
-					}
-				}
-			}
-			if(couner){
-				nodes.length = 0;
-				for(let i = 0; i < res.length; i++){
-          nodes.push(res[i]);
-        }
-				res.length = 0;
-			}
-		}
-	},
 
 	furn: {
 		get: function () {
@@ -3538,16 +3547,6 @@ Contour.prototype.__define({
 		set: function (v) {
 			this._row.clr_furn = v;
 			this.project.register_change();
-		}
-	},
-
-	direction: {
-		get: function () {
-			return this._row.direction;
-		},
-		set: function (v) {
-			this._row.direction = v;
-			this.project.register_change(true);
 		}
 	},
 
@@ -5207,6 +5206,8 @@ class Filling extends BuilderElement {
       type: 'rows',
       tabular: "constructions"
     });
+
+    contour.activate();
   }
 
   select_node(v) {

@@ -223,6 +223,9 @@ class Filling extends BuilderElement {
       type: 'rows',
       tabular: "constructions"
     });
+
+    // делаем створку текущей
+    contour.activate();
   }
 
   select_node(v) {

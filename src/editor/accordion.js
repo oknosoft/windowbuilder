@@ -544,7 +544,7 @@ class EditorAccordion {
           case 'new_layer':
 
             // создаём пустой новый слой
-            new Contour( {parent: undefined});
+            new Contour({parent: undefined});
 
             // оповещаем мир о новых слоях
             Object.getNotifier(_editor.project._noti).notify({
