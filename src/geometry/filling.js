@@ -379,6 +379,17 @@ class Filling extends BuilderElement {
   }
 
   /**
+   * ### Точка внутри пути
+   * Возвращает точку, расположенную гарантированно внутри pfgjk
+   *
+   * @property interiorPoint
+   * @type paper.Point
+   */
+  interiorPoint() {
+    return this.path.interiorPoint;
+  }
+
+  /**
    * Признак прямоугольности
    */
   get is_rectangular() {
@@ -421,13 +432,16 @@ class Filling extends BuilderElement {
     }
     else if(Array.isArray(attr)){
       const {length} = attr;
+      const {connections} = this.project;
       let prev, curr, next, sub_path;
       // получам эквидистанты сегментов, смещенные на размер соединения
       for(let i=0; i<length; i++ ){
         curr = attr[i];
         next = i === length-1 ? attr[0] : attr[i+1];
         sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e);
-        curr.cnn = $p.cat.cnns.elm_cnn(this, curr.profile);
+
+        curr.cnn = $p.cat.cnns.elm_cnn(this, curr.profile, $p.enm.cnn_types.acn.ii,
+          curr.cnn || connections.elm_cnn(this, curr.profile), false, curr.outer);
 
         curr.sub_path = sub_path.equidistant(
           (sub_path.data.reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);

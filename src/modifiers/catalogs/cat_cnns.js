@@ -26,10 +26,12 @@ $p.cat.cnns.__define({
    * @param nom1 {_cat.nom|BuilderElement}
    * @param [nom2] {_cat.nom|BuilderElement}
    * @param [cnn_types] {_enm.cnns|Array.<_enm.cnns>}
+   * @param [ign_side] {Boolean}
+   * @param [is_outer] {Boolean}
    * @return {Array}
    */
   nom_cnn: {
-    value: function(nom1, nom2, cnn_types, ign_side){
+    value: function(nom1, nom2, cnn_types, ign_side, is_outer){
 
       // если второй элемент вертикальный - меняем местами эл 1-2 при поиске
       if(nom1 instanceof $p.Editor.ProfileItem &&
@@ -42,7 +44,8 @@ $p.cat.cnns.__define({
       }
 
       // если оба элемента - профили, определяем сторону
-      const side = !ign_side && nom1 instanceof $p.Editor.ProfileItem && nom2 instanceof $p.Editor.ProfileItem && nom2.cnn_side(nom1);
+      const side = is_outer ? $p.enm.cnn_sides.Снаружи :
+        (!ign_side && nom1 instanceof $p.Editor.ProfileItem && nom2 instanceof $p.Editor.ProfileItem && nom2.cnn_side(nom1));
 
       let onom2, a1, a2, thickness1, thickness2, is_i = false, art1glass = false, art2glass = false;
 
@@ -134,9 +137,10 @@ $p.cat.cnns.__define({
    * @param [cnn_types] {Array}
    * @param [curr_cnn] {_cat.cnns}
    * @param [ign_side] {Boolean}
+   * @param [is_outer] {Boolean}
    */
   elm_cnn: {
-    value: function(elm1, elm2, cnn_types, curr_cnn, ign_side){
+    value: function(elm1, elm2, cnn_types, curr_cnn, ign_side, is_outer){
 
       // если установленное ранее соединение проходит по типу и стороне, нового не ищем
       if(curr_cnn && cnn_types && (cnn_types.indexOf(curr_cnn.cnn_type)!=-1)){
@@ -144,11 +148,19 @@ $p.cat.cnns.__define({
         // TODO: проверить геометрию
 
         if(!ign_side && curr_cnn.sd1 == $p.enm.cnn_sides.Изнутри){
-          if(elm2.cnn_side(elm1) == $p.enm.cnn_sides.Изнутри)
-            return curr_cnn;
+          if(typeof is_outer == 'boolean'){
+            if(!is_outer){
+              return curr_cnn;
+            }
+          }
+          else{
+            if(elm2.cnn_side(elm1) == $p.enm.cnn_sides.Изнутри){
+              return curr_cnn;
+            }
+          }
         }
         else if(!ign_side && curr_cnn.sd1 == $p.enm.cnn_sides.Снаружи){
-          if(elm2.cnn_side(elm1) == $p.enm.cnn_sides.Снаружи)
+          if(is_outer || elm2.cnn_side(elm1) == $p.enm.cnn_sides.Снаружи)
             return curr_cnn;
         }
         else{
@@ -156,7 +168,7 @@ $p.cat.cnns.__define({
         }
       }
 
-      const cnns = this.nom_cnn(elm1, elm2, cnn_types, ign_side);
+      const cnns = this.nom_cnn(elm1, elm2, cnn_types, ign_side, is_outer);
 
       // сортируем по непустой стороне и приоритету
       if(cnns.length){
@@ -164,10 +176,10 @@ $p.cat.cnns.__define({
         if(cnns.length > 1){
           cnns.sort((a, b) => {
             if(sides.indexOf(a.sd1) != -1 && sides.indexOf(b.sd1) == -1){
-              return -1;
+              return 1;
             }
             if(sides.indexOf(b.sd1) != -1 && sides.indexOf(a.sd1) == -1){
-              return 1;
+              return -1;
             }
             if (a.priority > b.priority) {
               return -1;

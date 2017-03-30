@@ -157,12 +157,12 @@
 
 .rsvg_elm {
   float: left;
+  height: 86px;
   margin-left:  4px;
-  padding-left:  2px;
+  padding-left:  4px;
   cursor: pointer
 }
 .rsvg_selected {
-  border-left: 2px silver dotted;
-  border-right: 2px silver dotted;
+  border: 1px silver dotted;
   background-color: white;
 }

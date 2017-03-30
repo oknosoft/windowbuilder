@@ -178,6 +178,9 @@ function ProductsBuilding(){
 		row_spec.nom = nom || row_base.nom;
 		row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr);
 		row_spec.elm = elm.elm;
+    if(!row_spec.nom.visualization.empty()){
+      row_spec.dop = -1;
+    }
 		if(origin){
       row_spec.origin = origin;
     }
@@ -509,7 +512,6 @@ function ProductsBuilding(){
 				row_spec.qty = 0;
 				row_spec.totqty = 1;
 				row_spec.totqty1 = 1;
-        row_spec.dop = row_spec.nom.visualization.empty() ? 0 : -1;
 			}
 			else{
 				row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
@@ -541,7 +543,7 @@ function ProductsBuilding(){
 				len > row.lmax ||
 				(!elm.is_linear() && !row.arc_available)){
 
-				new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.job_prm.nom.furn_error, contour.furn).dop = -1;
+				new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.job_prm.nom.furn_error, contour.furn);
 				ok = false;
 			}
 

@@ -3176,7 +3176,7 @@ $p.cat.cnns.__define({
   },
 
   nom_cnn: {
-    value: function(nom1, nom2, cnn_types, ign_side){
+    value: function(nom1, nom2, cnn_types, ign_side, is_outer){
 
       if(nom1 instanceof $p.Editor.ProfileItem &&
         nom2 instanceof $p.Editor.ProfileItem &&
@@ -3187,7 +3187,8 @@ $p.cat.cnns.__define({
         return this.nom_cnn(nom2, nom1, cnn_types);
       }
 
-      const side = !ign_side && nom1 instanceof $p.Editor.ProfileItem && nom2 instanceof $p.Editor.ProfileItem && nom2.cnn_side(nom1);
+      const side = is_outer ? $p.enm.cnn_sides.Снаружи :
+        (!ign_side && nom1 instanceof $p.Editor.ProfileItem && nom2 instanceof $p.Editor.ProfileItem && nom2.cnn_side(nom1));
 
       let onom2, a1, a2, thickness1, thickness2, is_i = false, art1glass = false, art2glass = false;
 
@@ -3271,17 +3272,25 @@ $p.cat.cnns.__define({
   },
 
   elm_cnn: {
-    value: function(elm1, elm2, cnn_types, curr_cnn, ign_side){
+    value: function(elm1, elm2, cnn_types, curr_cnn, ign_side, is_outer){
 
       if(curr_cnn && cnn_types && (cnn_types.indexOf(curr_cnn.cnn_type)!=-1)){
 
 
         if(!ign_side && curr_cnn.sd1 == $p.enm.cnn_sides.Изнутри){
-          if(elm2.cnn_side(elm1) == $p.enm.cnn_sides.Изнутри)
-            return curr_cnn;
+          if(typeof is_outer == 'boolean'){
+            if(!is_outer){
+              return curr_cnn;
+            }
+          }
+          else{
+            if(elm2.cnn_side(elm1) == $p.enm.cnn_sides.Изнутри){
+              return curr_cnn;
+            }
+          }
         }
         else if(!ign_side && curr_cnn.sd1 == $p.enm.cnn_sides.Снаружи){
-          if(elm2.cnn_side(elm1) == $p.enm.cnn_sides.Снаружи)
+          if(is_outer || elm2.cnn_side(elm1) == $p.enm.cnn_sides.Снаружи)
             return curr_cnn;
         }
         else{
@@ -3289,17 +3298,17 @@ $p.cat.cnns.__define({
         }
       }
 
-      const cnns = this.nom_cnn(elm1, elm2, cnn_types, ign_side);
+      const cnns = this.nom_cnn(elm1, elm2, cnn_types, ign_side, is_outer);
 
       if(cnns.length){
         const sides = [$p.enm.cnn_sides.Изнутри, $p.enm.cnn_sides.Снаружи];
         if(cnns.length > 1){
           cnns.sort((a, b) => {
             if(sides.indexOf(a.sd1) != -1 && sides.indexOf(b.sd1) == -1){
-              return -1;
+              return 1;
             }
             if(sides.indexOf(b.sd1) != -1 && sides.indexOf(a.sd1) == -1){
-              return 1;
+              return -1;
             }
             if (a.priority > b.priority) {
               return -1;
@@ -5589,6 +5598,9 @@ function ProductsBuilding(){
 		row_spec.nom = nom || row_base.nom;
 		row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr);
 		row_spec.elm = elm.elm;
+    if(!row_spec.nom.visualization.empty()){
+      row_spec.dop = -1;
+    }
 		if(origin){
       row_spec.origin = origin;
     }
@@ -5843,7 +5855,6 @@ function ProductsBuilding(){
 				row_spec.qty = 0;
 				row_spec.totqty = 1;
 				row_spec.totqty1 = 1;
-        row_spec.dop = row_spec.nom.visualization.empty() ? 0 : -1;
 			}
 			else{
 				row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
@@ -5866,7 +5877,7 @@ function ProductsBuilding(){
 				len > row.lmax ||
 				(!elm.is_linear() && !row.arc_available)){
 
-				new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.job_prm.nom.furn_error, contour.furn).dop = -1;
+				new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.job_prm.nom.furn_error, contour.furn);
 				ok = false;
 			}
 
