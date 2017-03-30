@@ -118,9 +118,7 @@ class OSvgs {
       }
       const svg_elm = document.createElement("div");
       pics_area.appendChild(svg_elm);
-      svg_elm.style.float = "left";
-      svg_elm.style.marginLeft = "4px";
-      svg_elm.style.cursor = "pointer";
+      svg_elm.className = "rsvg_elm";
       svg_elm.innerHTML = $p.iface.scale_svg(svg, 88, 22);
       svg_elm.ref = ref;
       svg_elm.onclick = this.onclick;
@@ -133,8 +131,9 @@ class OSvgs {
   }
 
   onclick(event, dbl) {
-    if(event.currentTarget && event.currentTarget.ref && this.handler){
-      this.handler(event.currentTarget.ref, dbl);
+    if(event.currentTarget && event.currentTarget.ref){
+      this.handler && this.handler(event.currentTarget.ref, dbl);
+      this.select(event.currentTarget.ref);
     }
   }
 
@@ -195,6 +194,19 @@ class OSvgs {
           stack.length = 0;
         }
       }, 300);
+  }
+
+  select(ref) {
+    const {children} = this.pics_area;
+    for(let i = 0; i < children.length; i++){
+      const elm = children.item(i);
+      if(elm.ref == ref){
+        elm.classList.add("rsvg_selected");
+      }
+      else{
+        elm.classList.remove("rsvg_selected");
+      }
+    }
   }
 
   unload() {

@@ -103,3 +103,15 @@
 .dhtmlx_message_area {
   width: 380px;
 }
+
+.rsvg_elm {
+  float: left;
+  margin-left:  4px;
+  padding-left:  2px;
+  cursor: pointer
+}
+.rsvg_selected {
+  border-left: 2px silver dotted;
+  border-right: 2px silver dotted;
+  background-color: white;
+}

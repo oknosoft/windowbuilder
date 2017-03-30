@@ -53,19 +53,24 @@
 			/**
 			 * получим задействованные в заказе объекты характеристик
 			 */
-			var refs = [];
-			o.production.each(function (row) {
+			const refs = [];
+			o.production.each((row) => {
 				if(!$p.utils.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new())
 					refs.push(row._obj.characteristic);
 			});
 			$p.cat.characteristics.pouch_load_array(refs)
-				.then(function () {
+				.then(() => {
 
 					// табчасть продукции со специфическим набором кнопок
 					tabular_init("production", $p.injected_data["toolbar_calc_order_production.xml"]);
-          wnd.elmnts.grids.production.disable_sorting = true;
+					const {production} = wnd.elmnts.grids;
+          production.disable_sorting = true;
+          production.attachEvent("onRowSelect", (id, ind) => {
+            const row = o.production.get(id - 1);
+            wnd.elmnts.svgs.select(row.characteristic.ref);
+          });
 
-					var toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
+					let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
 					toolbar.addSpacer("btn_delete");
 					toolbar.attachEvent("onclick", toolbar_click);
 

@@ -498,8 +498,9 @@ function ProductsBuilding(){
     contour.update_handle_height(furn_cache);
 
 		// получаем спецификацию фурнитуры и переносим её в спецификацию изделия
+    const blank_clr = $p.cat.clrs.get();
     furn.furn_set.get_spec(contour, furn_cache).each((row) => {
-			const elm = {elm: -contour.cnstr, clr: contour.clr_furn};
+			const elm = {elm: -contour.cnstr, clr: blank_clr};
 			const row_spec = new_spec_row(null, elm, row, row.nom_set, row.origin);
 
 			if(row.is_procedure_row){
@@ -508,9 +509,7 @@ function ProductsBuilding(){
 				row_spec.qty = 0;
 				row_spec.totqty = 1;
 				row_spec.totqty1 = 1;
-				if(!row_spec.nom.visualization.empty()){
-          row_spec.dop = -1;
-        }
+        row_spec.dop = row_spec.nom.visualization.empty() ? 0 : -1;
 			}
 			else{
 				row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);

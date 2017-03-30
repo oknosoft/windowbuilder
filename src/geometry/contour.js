@@ -173,6 +173,37 @@ class Contour extends paper.Layer {
   }
 
   /**
+   * указатель на фурнитуру
+   */
+  get furn() {
+    return this._row.furn;
+  }
+  set furn(v) {
+    if(this._row.furn == v){
+      return;
+    }
+
+    this._row.furn = v;
+
+    // при необходимости устанавливаем направление открывания
+    if(this.direction.empty()){
+      this.project._dp.sys.furn_params.find_rows({
+        param: $p.job_prm.properties.direction
+      }, function (row) {
+        this.direction = row.value;
+        return false;
+      }.bind(this._row));
+    }
+
+    // перезаполняем параметры фурнитуры
+    this._row.furn.refill_prm(this);
+
+    this.project.register_change(true);
+
+    setTimeout($p.eve.callEvent.bind($p.eve, "furn_changed", [this]));
+  }
+
+  /**
    * Возвращает массив заполнений + створок текущего контура
    * @property glasses
    * @for Contour
@@ -578,6 +609,15 @@ class Contour extends paper.Layer {
     }
   }
 
+  /**
+   * Признак прямоугольности
+   */
+  get is_rectangular() {
+    return (this.side_count != 4) || !this.profiles.some((profile) => {
+        return !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 1);
+      });
+  }
+
   move(delta) {
     const {contours, profiles, project} = this;
     const crays = (p) => p.rays.clear();
@@ -683,6 +723,49 @@ class Contour extends paper.Layer {
   }
 
   /**
+   * Возвращает профиль по номеру стороны фурнитуры, учитывает направление открывания, по умолчанию - левое
+   * - первая первая сторона всегда нижняя
+   * - далее, по часовой стрелке 2 - левая, 3 - верхняя и т.д.
+   * - если направление правое, обход против часовой
+   * @param side {Number}
+   * @param cache {Object}
+   */
+  profile_by_furn_side(side, cache) {
+
+    if (!cache) {
+      cache = {
+        profiles: this.outer_nodes,
+        bottom: this.profiles_by_side("bottom")
+      };
+    }
+
+    const profile_node = this.direction == $p.enm.open_directions.Правое ? "b" : "e";
+    const other_node = profile_node == "b" ? "e" : "b";
+
+    let profile = cache.bottom;
+
+    const next = () => {
+      side--;
+      if (side <= 0) {
+        return profile;
+      }
+
+      cache.profiles.some((curr) => {
+        if (curr[other_node].is_nearest(profile[profile_node])) {
+          profile = curr;
+          return true;
+        }
+      });
+
+      return next();
+    };
+
+    return next();
+
+  }
+
+
+  /**
    * Возвращает ребро текущего контура по узлам
    * @param n1 {paper.Point} - первый узел
    * @param n2 {paper.Point} - второй узел
@@ -699,6 +782,44 @@ class Contour extends paper.Layer {
       }
     }
   }
+
+  /**
+   * Возвращает структуру профилей по сторонам
+   */
+  profiles_by_side(side) {
+    // получаем таблицу расстояний профилей от рёбер габаритов
+    const {profiles, bounds} = this;
+    const res = {};
+    const ares = [];
+
+    function by_side(name) {
+      ares.sort(function (a, b) {
+        return a[name] - b[name];
+      });
+      res[name] = ares[0].profile;
+    }
+
+    if (profiles.length) {
+      profiles.forEach((profile) => {
+        ares.push({
+          profile: profile,
+          left: Math.abs(profile.b.x + profile.e.x - bounds.left * 2),
+          top: Math.abs(profile.b.y + profile.e.y - bounds.top * 2),
+          bottom: Math.abs(profile.b.y + profile.e.y - bounds.bottom * 2),
+          right: Math.abs(profile.b.x + profile.e.x - bounds.right * 2)
+        });
+      });
+      if (side) {
+        by_side(side);
+        return res[side];
+      }
+
+      ["left", "top", "bottom", "right"].forEach(by_side);
+    }
+
+    return res;
+  }
+
 
   /**
    * Удаляет контур из иерархии проекта
@@ -745,7 +866,6 @@ class Contour extends paper.Layer {
     return {
       fields: {
         furn: _xfields.furn,
-        clr_furn: _xfields.clr_furn,
         direction: _xfields.direction,
         h_ruch: _xfields.h_ruch
       },
@@ -1275,6 +1395,7 @@ class Contour extends paper.Layer {
 
   /**
    * Количество сторон контура
+   * TODO: строго говоря, количество сторон != количеству палок
    */
   get side_count() {
     return this.profiles.length;
@@ -1284,148 +1405,6 @@ class Contour extends paper.Layer {
 
 Contour.prototype.__define({
 
-
-	/**
-	 * указатель на фурнитуру
-	 */
-	furn: {
-		get: function () {
-			return this._row.furn;
-		},
-		set: function (v) {
-
-			if(this._row.furn == v){
-        return;
-      }
-
-			this._row.furn = v;
-
-			// при необходимости устанавливаем направление открывания
-			if(this.direction.empty()){
-				this.project._dp.sys.furn_params.find_rows({
-					param: $p.job_prm.properties.direction
-				}, function (row) {
-					this.direction = row.value;
-					return false;
-				}.bind(this._row));
-			}
-
-			// перезаполняем параметры фурнитуры
-			this._row.furn.refill_prm(this);
-
-			this.project.register_change(true);
-
-			setTimeout($p.eve.callEvent.bind($p.eve, "furn_changed", [this]));
-
-		}
-	},
-
-	/**
-	 * Цвет фурнитуры
-	 */
-	clr_furn: {
-		get: function () {
-			return this._row.clr_furn;
-		},
-		set: function (v) {
-			this._row.clr_furn = v;
-			this.project.register_change();
-		}
-	},
-
-	/**
-	 * Возвращает структуру профилей по сторонам
-	 */
-	profiles_by_side: {
-		value: function (side) {
-			// получаем таблицу расстояний профилей от рёбер габаритов
-			const {profiles, bounds} = this;
-      const res = {};
-      const ares = [];
-
-			function by_side(name) {
-				ares.sort(function (a, b) {
-					return a[name] - b[name];
-				});
-				res[name] = ares[0].profile;
-			}
-
-			if(profiles.length){
-				profiles.forEach((profile) => {
-					ares.push({
-						profile: profile,
-						left: Math.abs(profile.b.x + profile.e.x - bounds.left * 2),
-						top: Math.abs(profile.b.y + profile.e.y - bounds.top * 2),
-						bottom: Math.abs(profile.b.y + profile.e.y - bounds.bottom * 2),
-						right: Math.abs(profile.b.x + profile.e.x - bounds.right * 2)
-					});
-				});
-				if(side){
-					by_side(side);
-					return res[side];
-				}
-
-				["left","top","bottom","right"].forEach(by_side);
-			}
-
-			return res;
-		}
-	},
-
-	/**
-	 * Возвращает профиль по номеру стороны фурнитуры, учитывает направление открывания, по умолчанию - левое
-	 * - первая первая сторона всегда нижняя
-	 * - далее, по часовой стрелке 2 - левая, 3 - верхняя и т.д.
-	 * - если направление правое, обход против часовой
-	 * @param side {Number}
-	 * @param cache {Object}
-	 */
-	profile_by_furn_side: {
-		value: function (side, cache) {
-
-			if(!cache){
-        cache = {
-          profiles: this.outer_nodes,
-          bottom: this.profiles_by_side("bottom")
-        };
-      }
-
-      const profile_node = this.direction == $p.enm.open_directions.Правое ? "b" : "e";
-      const other_node = profile_node == "b" ? "e" : "b";
-
-      let profile = cache.bottom;
-
-      const next = () => {
-					side--;
-					if(side <= 0){
-            return profile;
-          }
-
-					cache.profiles.some((curr) => {
-						if(curr[other_node].is_nearest(profile[profile_node])){
-							profile = curr;
-							return true;
-						}
-					});
-
-					return next();
-				};
-
-			return next();
-
-		}
-	},
-
-	/**
-	 * Признак прямоугольности
-	 */
-	is_rectangular: {
-		get : function(){
-			return (this.side_count != 4) || !this.profiles.some((profile) => {
-				return !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 1);
-			});
-		}
-	},
 
 	/**
 	 * Ширина контура по фальцу
