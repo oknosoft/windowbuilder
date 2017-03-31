@@ -3682,8 +3682,7 @@ $p.CatFurns.prototype.__define({
                 dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
                 faltz = len - 2 * sizefurn;
 
-              let invert_nearest = false,
-                coordin = 0;
+              let invert_nearest = false, coordin = 0;
 
               if(dop_row.offset_option == $p.enm.offset_options.Формула){
                 if(!dop_row.formula.empty()){
@@ -3747,7 +3746,7 @@ $p.CatFurns.prototype.__define({
                   res.add(sub_row);
                 }
                 else if(sub_row.quantity) {
-                  res.add(sub_row).quantity = (row_furn.quantity || 1) * sub_row.quantity;
+                  res.add(sub_row).quantity = (row_furn.quantity || 1) * (dop_row.quantity || 1) * sub_row.quantity;
                 }
               });
             }
@@ -3803,8 +3802,8 @@ $p.CatFurnsSpecificationRow.prototype.__define({
       let res = true;
 
       selection_params.find_rows({elm, dop}, (prm_row) => {
-        const ok = (prop_direction === prm_row.param) ?
-          direction === prm_row.value : prm_row.param.check_condition({row_spec: this, prm_row, cnstr, ox: cache.ox});
+        const ok = (prop_direction == prm_row.param) ?
+          direction == prm_row.value : prm_row.param.check_condition({row_spec: this, prm_row, cnstr, ox: cache.ox});
         if(!ok){
           return res = false;
         }
@@ -5865,18 +5864,15 @@ function ProductsBuilding(){
 
 	function furn_check_opening_restrictions(contour, cache) {
 
-		var ok = true;
+		let ok = true;
 
 
-		contour.furn.open_tunes.each(function (row) {
-			var elm = contour.profile_by_furn_side(row.side, cache),
-				len = elm._row.len - 2 * elm.nom.sizefurn;
+		contour.furn.open_tunes.each((row) => {
+			const elm = contour.profile_by_furn_side(row.side, cache);
+			const len = elm._row.len - 2 * elm.nom.sizefurn;
 
 
-			if(len < row.lmin ||
-				len > row.lmax ||
-				(!elm.is_linear() && !row.arc_available)){
-
+			if(len < row.lmin || len > row.lmax || (!elm.is_linear() && !row.arc_available)){
 				new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.job_prm.nom.furn_error, contour.furn);
 				ok = false;
 			}

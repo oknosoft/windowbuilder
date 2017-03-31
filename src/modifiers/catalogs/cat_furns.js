@@ -156,8 +156,7 @@ $p.CatFurns.prototype.__define({
                 dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
                 faltz = len - 2 * sizefurn;
 
-              let invert_nearest = false,
-                coordin = 0;
+              let invert_nearest = false, coordin = 0;
 
               if(dop_row.offset_option == $p.enm.offset_options.Формула){
                 if(!dop_row.formula.empty()){
@@ -223,7 +222,7 @@ $p.CatFurns.prototype.__define({
                   res.add(sub_row);
                 }
                 else if(sub_row.quantity) {
-                  res.add(sub_row).quantity = (row_furn.quantity || 1) * sub_row.quantity;
+                  res.add(sub_row).quantity = (row_furn.quantity || 1) * (dop_row.quantity || 1) * sub_row.quantity;
                 }
               });
             }
@@ -291,8 +290,8 @@ $p.CatFurnsSpecificationRow.prototype.__define({
       // по таблице параметров
       selection_params.find_rows({elm, dop}, (prm_row) => {
         // выполнение условия рассчитывает объект CchProperties
-        const ok = (prop_direction === prm_row.param) ?
-          direction === prm_row.value : prm_row.param.check_condition({row_spec: this, prm_row, cnstr, ox: cache.ox});
+        const ok = (prop_direction == prm_row.param) ?
+          direction == prm_row.value : prm_row.param.check_condition({row_spec: this, prm_row, cnstr, ox: cache.ox});
         if(!ok){
           return res = false;
         }

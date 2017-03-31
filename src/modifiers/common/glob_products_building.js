@@ -528,21 +528,18 @@ function ProductsBuilding(){
 	 */
 	function furn_check_opening_restrictions(contour, cache) {
 
-		var ok = true;
+		let ok = true;
 
 		// TODO: реализовать проверку по количеству сторон
 
 		// проверка геометрии
-		contour.furn.open_tunes.each(function (row) {
-			var elm = contour.profile_by_furn_side(row.side, cache),
-				len = elm._row.len - 2 * elm.nom.sizefurn;
+		contour.furn.open_tunes.each((row) => {
+			const elm = contour.profile_by_furn_side(row.side, cache);
+			const len = elm._row.len - 2 * elm.nom.sizefurn;
 
 			// angle_hor = elm.angle_hor; TODO: реализовать проверку углов
 
-			if(len < row.lmin ||
-				len > row.lmax ||
-				(!elm.is_linear() && !row.arc_available)){
-
+			if(len < row.lmin || len > row.lmax || (!elm.is_linear() && !row.arc_available)){
 				new_spec_row(null, elm, {clr: $p.cat.clrs.get()}, $p.job_prm.nom.furn_error, contour.furn);
 				ok = false;
 			}
