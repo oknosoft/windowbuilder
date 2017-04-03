@@ -9592,11 +9592,7 @@ class ToolElement extends paper.Tool {
   }
 
   on_close(wnd) {
-    if(wnd && wnd.cell){
-      setTimeout(() => {
-        paper.tools[1].activate();
-      })
-    }
+    wnd && wnd.cell && setTimeout(() => paper.tools[1].activate());
     return true;
   }
 
@@ -11791,11 +11787,11 @@ class RulerWnd {
         wnd: {
           caption: "Размеры и сдвиг",
           height: 200,
-          allow_close: true,
-          modal: true
+          modal: true,
         }
       }
     }
+    options.wnd.allow_close = true;
     $p.wsql.restore_options("editor", options);
     if(options.mode > 2){
       options.mode = 2;
@@ -11843,6 +11839,7 @@ class RulerWnd {
         name: 'tb_mode',
         buttons: [
           {name: '0', img: 'ruler_elm.png', tooltip: $p.msg.ruler_elm, float: 'left'},
+          {name: '1', img: 'ruler_node.png', tooltip: $p.msg.ruler_node, float: 'left'},
           {name: '2', img: 'ruler_arrow.png', tooltip: $p.msg.ruler_new_line, float: 'left'},
 
           {name: 'sep_0', text: '', float: 'left'},
@@ -11876,6 +11873,8 @@ class RulerWnd {
           return false;
         }
       });
+
+      wnd.tb_mode.buttons['1'].style.display = "none";
 
       wnd.tb_mode.buttons[tool.mode].classList.add("muted");
       wnd.tb_mode.buttons[tool.base_line].classList.add("muted");
@@ -11948,12 +11947,12 @@ class RulerWnd {
 
   on_keydown(ev) {
 
-    const {wnd} = this;
+    const {wnd, tool} = this;
 
     if(wnd){
       switch(ev.keyCode) {
         case 27:        
-          wnd.close();
+          !(tool instanceof ToolRuler) && wnd.close();
           break;
         case 37:        
           this.on_button_click({
@@ -12019,6 +12018,9 @@ class RulerWnd {
         delete this.options.wnd.on_close;
         this.wnd.wnd_options(this.options.wnd);
         $p.wsql.save_options("editor", this.options);
+      }
+      else{
+        setTimeout(() => paper.tools[1].activate());
       }
       delete this.options;
     }
