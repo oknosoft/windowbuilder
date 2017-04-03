@@ -6940,7 +6940,8 @@ $p.DocCalc_order.prototype.__define({
 						.then((svg_text) => {
 							res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
 						})
-						.catch($p.record_log));
+						.catch((err) => err && err.status != 404 && $p.record_log(err))
+          );
 				}
 			});
 			res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
@@ -8871,7 +8872,7 @@ $p.doc.selling.on({
             Размеры: row.sz,
             Количество: row.qty.toFixed(),
           }
-        })
+        });
         return {specification, _grouping: data._grouping}
       }
       else if(template.attributes.tabular && template.attributes.tabular.value == "production"){
@@ -8879,8 +8880,10 @@ $p.doc.selling.on({
         this.production.find_rows({use: true}, (row) => {
           production.push(Object.assign(
             this.calc_order.row_description(row),
-            {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)}))
-        })
+            data.ПродукцияЭскизы[row.characteristic.ref] ?
+              {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)} : {}
+            ))
+        });
         return Object.assign({}, data, {production});
       }
       return data;

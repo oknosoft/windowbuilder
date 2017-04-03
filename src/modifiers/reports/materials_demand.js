@@ -518,7 +518,7 @@
             Размеры: row.sz,
             Количество: row.qty.toFixed(),
           }
-        })
+        });
         return {specification, _grouping: data._grouping}
       }
       // при выводе продукции
@@ -527,8 +527,10 @@
         this.production.find_rows({use: true}, (row) => {
           production.push(Object.assign(
             this.calc_order.row_description(row),
-            {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)}))
-        })
+            data.ПродукцияЭскизы[row.characteristic.ref] ?
+              {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)} : {}
+            ))
+        });
         return Object.assign({}, data, {production});
       }
       return data;

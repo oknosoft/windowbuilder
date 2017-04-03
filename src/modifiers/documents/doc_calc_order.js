@@ -454,7 +454,8 @@ $p.DocCalc_order.prototype.__define({
 						.then((svg_text) => {
 							res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
 						})
-						.catch($p.record_log));
+						.catch((err) => err && err.status != 404 && $p.record_log(err))
+          );
 				}
 			});
 			res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
