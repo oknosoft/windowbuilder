@@ -595,6 +595,8 @@ class StvProps {
       return;
     }
 
+    obj.refresh_links();
+
     const attr = {
       obj: obj,
       oxml: {
@@ -627,11 +629,6 @@ class StvProps {
       }
     }
 
-    obj.params.find_rows({
-      cnstr: obj.cnstr || -9999,
-      inset: $p.utils.blank.guid,
-      hide: {not: true}
-    }, ({param}) => this.on_prm_change('params|'+param));
     this._grid.setSizes();
 
   }
@@ -657,7 +654,7 @@ class StvProps {
       if(param == value){
         return;
       }
-      const links = param.params_links({grid: _grid,obj: prow});
+      const links = param.params_links({grid: _grid, obj: prow});
       const hide = links.some((link) => link.hide);
       const row = _grid.getRowById('params|'+param);
 
@@ -672,9 +669,16 @@ class StvProps {
         }
       }
 
-      if(realy_changed && links.length){
-        param.linked_values(links, prow);
+      if(links.length && param.linked_values(links, prow)){
+        paper.project.register_change();
+        Object.getNotifier(_grid._obj).notify({
+          type: 'row',
+          row: prow,
+          tabular: prow._owner._name,
+          name: 'value'
+        });
       }
+
     });
 
     if(need_set_sizes){
@@ -2388,11 +2392,11 @@ class UndoRedo {
         setTimeout(() => {
           this.clear();
           this.save_snapshot(scheme);
-        }, 700);
+        }, 500);
       }
       else {
         this._snap_timer && clearTimeout(this._snap_timer);
-        this._snap_timer = setTimeout(this.run_snapshot, 700);
+        this._snap_timer = setTimeout(this.run_snapshot, 500);
       }
     }
   }
@@ -2977,6 +2981,36 @@ class Contour extends paper.Layer {
     }
   }
 
+  is_pos(pos) {
+    if(this.project.contours.count == 1 || this.parent){
+      return true;
+    }
+
+    let res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
+
+    if(!res){
+      let rect;
+      if(pos == "top"){
+        rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.topRight.add([0, -200]));
+      }
+      else if(pos == "left"){
+        rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.bottomLeft.add([-200, 0]));
+      }
+      else if(pos == "right"){
+        rect = new paper.Rectangle(this.bounds.topRight, this.bounds.bottomRight.add([200, 0]));
+      }
+      else if(pos == "bottom"){
+        rect = new paper.Rectangle(this.bounds.bottomLeft, this.bounds.bottomRight.add([0, 200]));
+      }
+
+      res = !this.project.contours.some((l) => {
+        return l != this && rect.intersects(l.bounds);
+      });
+    }
+
+    return res;
+  }
+
   get is_rectangular() {
     return (this.side_count != 4) || !this.profiles.some((profile) => {
         return !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 1);
@@ -3454,6 +3488,52 @@ class Contour extends paper.Layer {
     }
   }
 
+  refresh_links() {
+    this.params.find_rows({
+      cnstr: this.cnstr || -9999,
+      inset: $p.utils.blank.guid,
+      hide: {not: true}
+    }, ({param}) => {
+      this.on_prm_change('params|'+param, param)
+    });
+  }
+
+  on_prm_change(field, value) {
+
+    const pnames = field && field.split('|');
+
+    if(!field || pnames.length < 2){
+      return;
+    }
+
+    const {cnstr} = this;
+
+    this.params.find_rows({
+      cnstr: cnstr || -9999,
+      inset: $p.utils.blank.guid,
+      hide: {not: true}
+    }, (prow) => {
+      const {param} = prow;
+      if(param == value){
+        return;
+      }
+      const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
+      const hide = links.some((link) => link.hide);
+
+      if(links.length && param.linked_values(links, prow)){
+        this.project.register_change();
+        Object.getNotifier(this).notify({
+          type: 'row',
+          row: prow,
+          tabular: prow._owner._name,
+          name: 'value'
+        });
+      }
+
+    });
+
+  }
+
   save_coordinates() {
     this.glasses(false, true).forEach((glass) => !glass.visible && glass.remove());
 
@@ -3608,66 +3688,21 @@ class Contour extends paper.Layer {
     return this.profiles.length;
   }
 
+  get w() {
+    const {is_rectangular, bounds} = this;
+    const {left, right} = this.profiles_by_side();
+    return bounds ? bounds.width - left.nom.sizefurn - right.nom.sizefurn : 0;
+  }
+
+  get h() {
+    const {is_rectangular, bounds} = this;
+    const {top, bottom} = this.profiles_by_side();
+    return bounds ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
+  }
+
 }
 
 Contour.prototype.__define({
-
-
-	w: {
-		get : function(){
-      const {is_rectangular, bounds} = this;
-			if(!is_rectangular){
-        return 0;
-      }
-      const {left, right} = this.profiles_by_side();
-			return bounds ? bounds.width - left.nom.sizefurn - right.nom.sizefurn : 0;
-		}
-	},
-
-	h: {
-		get : function(){
-      const {is_rectangular, bounds} = this;
-			if(!is_rectangular){
-        return 0;
-      }
-      const {top, bottom} = this.profiles_by_side();
-			return bounds ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
-		}
-	},
-
-	is_pos: {
-		value: function (pos) {
-
-			if(this.project.contours.count == 1 || this.parent){
-        return true;
-      }
-
-			let res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
-
-			if(!res){
-			  let rect;
-				if(pos == "top"){
-					rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.topRight.add([0, -200]));
-				}
-				else if(pos == "left"){
-					rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.bottomLeft.add([-200, 0]));
-				}
-				else if(pos == "right"){
-					rect = new paper.Rectangle(this.bounds.topRight, this.bounds.bottomRight.add([200, 0]));
-				}
-				else if(pos == "bottom"){
-					rect = new paper.Rectangle(this.bounds.bottomLeft, this.bounds.bottomRight.add([0, 200]));
-				}
-
-				res = !this.project.contours.some((l) => {
-					return l != this && rect.intersects(l.bounds);
-				});
-			}
-
-			return res;
-
-		}
-	},
 
   l_text: {
     get: function () {
@@ -8738,10 +8773,19 @@ function Scheme(_canvas){
 
 					if(!llength){
 
+
 						_data._bounds = null;
 						_scheme.contours.forEach((l) => {
+              l.contours.forEach((l) => {
+                l.save_coordinates();
+                l.refresh_links();
+              });
 							l.draw_sizes();
 						});
+
+            if(_changes.length){
+              return;
+            }
 
 						_scheme.draw_sizes();
 

@@ -610,6 +610,41 @@ class Contour extends paper.Layer {
   }
 
   /**
+   * Тест положения контура в изделии
+   */
+  is_pos(pos) {
+    // если в изделии один контур или если контур является створкой, он занимает одновременно все положения
+    if(this.project.contours.count == 1 || this.parent){
+      return true;
+    }
+
+    // если контур реально верхний или правый и т.д. - возвращаем результат сразу
+    let res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
+
+    if(!res){
+      let rect;
+      if(pos == "top"){
+        rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.topRight.add([0, -200]));
+      }
+      else if(pos == "left"){
+        rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.bottomLeft.add([-200, 0]));
+      }
+      else if(pos == "right"){
+        rect = new paper.Rectangle(this.bounds.topRight, this.bounds.bottomRight.add([200, 0]));
+      }
+      else if(pos == "bottom"){
+        rect = new paper.Rectangle(this.bounds.bottomLeft, this.bounds.bottomRight.add([0, 200]));
+      }
+
+      res = !this.project.contours.some((l) => {
+        return l != this && rect.intersects(l.bounds);
+      });
+    }
+
+    return res;
+  }
+
+  /**
    * Признак прямоугольности
    */
   get is_rectangular() {
@@ -1210,6 +1245,54 @@ class Contour extends paper.Layer {
     }
   }
 
+  refresh_links() {
+    this.params.find_rows({
+      cnstr: this.cnstr || -9999,
+      inset: $p.utils.blank.guid,
+      hide: {not: true}
+    }, ({param}) => {
+      this.on_prm_change('params|'+param, param)
+    });
+  }
+
+  on_prm_change(field, value) {
+
+    const pnames = field && field.split('|');
+
+    if(!field || pnames.length < 2){
+      return;
+    }
+
+    const {cnstr} = this;
+
+    // пробегаем по всем строкам
+    this.params.find_rows({
+      cnstr: cnstr || -9999,
+      inset: $p.utils.blank.guid,
+      hide: {not: true}
+    }, (prow) => {
+      const {param} = prow;
+      if(param == value){
+        return;
+      }
+      const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
+      const hide = links.some((link) => link.hide);
+
+      // проверим вхождение значения в доступные и при необходимости изменим
+      if(links.length && param.linked_values(links, prow)){
+        this.project.register_change();
+        Object.getNotifier(this).notify({
+          type: 'row',
+          row: prow,
+          tabular: prow._owner._name,
+          name: 'value'
+        });
+      }
+
+    });
+
+  }
+
   /**
    * Вычисляемые поля в таблицах конструкций и координат
    * @method save_coordinates
@@ -1401,77 +1484,27 @@ class Contour extends paper.Layer {
     return this.profiles.length;
   }
 
+  /**
+   * Ширина контура по фальцу
+   */
+  get w() {
+    const {is_rectangular, bounds} = this;
+    const {left, right} = this.profiles_by_side();
+    return bounds ? bounds.width - left.nom.sizefurn - right.nom.sizefurn : 0;
+  }
+
+  /**
+   * Высота контура по фальцу
+   */
+  get h() {
+    const {is_rectangular, bounds} = this;
+    const {top, bottom} = this.profiles_by_side();
+    return bounds ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
+  }
+
 }
 
 Contour.prototype.__define({
-
-
-	/**
-	 * Ширина контура по фальцу
-	 */
-	w: {
-		get : function(){
-      const {is_rectangular, bounds} = this;
-			if(!is_rectangular){
-        return 0;
-      }
-      const {left, right} = this.profiles_by_side();
-			return bounds ? bounds.width - left.nom.sizefurn - right.nom.sizefurn : 0;
-		}
-	},
-
-	/**
-	 * Высота контура по фальцу
-	 */
-	h: {
-		get : function(){
-      const {is_rectangular, bounds} = this;
-			if(!is_rectangular){
-        return 0;
-      }
-      const {top, bottom} = this.profiles_by_side();
-			return bounds ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
-		}
-	},
-
-	/**
-	 * Тест положения контура в изделии
-	 */
-	is_pos: {
-		value: function (pos) {
-
-			// если в изделии один контур или если контур является створкой, он занимает одновременно все положения
-			if(this.project.contours.count == 1 || this.parent){
-        return true;
-      }
-
-			// если контур реально верхний или правый и т.д. - возвращаем результат сразу
-			let res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
-
-			if(!res){
-			  let rect;
-				if(pos == "top"){
-					rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.topRight.add([0, -200]));
-				}
-				else if(pos == "left"){
-					rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.bottomLeft.add([-200, 0]));
-				}
-				else if(pos == "right"){
-					rect = new paper.Rectangle(this.bounds.topRight, this.bounds.bottomRight.add([200, 0]));
-				}
-				else if(pos == "bottom"){
-					rect = new paper.Rectangle(this.bounds.bottomLeft, this.bounds.bottomRight.add([0, 200]));
-				}
-
-				res = !this.project.contours.some((l) => {
-					return l != this && rect.intersects(l.bounds);
-				});
-			}
-
-			return res;
-
-		}
-	},
 
   /**
    * Cлужебная группа текстовых комментариев

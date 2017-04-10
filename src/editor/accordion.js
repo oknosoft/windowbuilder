@@ -196,6 +196,9 @@ class StvProps {
       return;
     }
 
+    // пробегаем в цикле по параметрам, чтобы спрятать скрытые строки
+    obj.refresh_links();
+
     const attr = {
       obj: obj,
       oxml: {
@@ -230,16 +233,16 @@ class StvProps {
       }
     }
 
-    // пробегаем в цикле по параметрам, чтобы спрятать скрытые строки
-    obj.params.find_rows({
-      cnstr: obj.cnstr || -9999,
-      inset: $p.utils.blank.guid,
-      hide: {not: true}
-    }, ({param}) => this.on_prm_change('params|'+param));
     this._grid.setSizes();
 
   }
 
+  /**
+   * Обработчик при изменении параметра фурнитуры
+   * @param field
+   * @param value
+   * @param realy_changed
+   */
   on_prm_change(field, value, realy_changed) {
 
     const pnames = field && field.split('|');
@@ -262,7 +265,7 @@ class StvProps {
       if(param == value){
         return;
       }
-      const links = param.params_links({grid: _grid,obj: prow});
+      const links = param.params_links({grid: _grid, obj: prow});
       const hide = links.some((link) => link.hide);
       const row = _grid.getRowById('params|'+param);
 
@@ -278,9 +281,16 @@ class StvProps {
       }
 
       // проверим вхождение значения в доступные и при необходимости изменим
-      if(realy_changed && links.length){
-        param.linked_values(links, prow);
+      if(links.length && param.linked_values(links, prow)){
+        paper.project.register_change();
+        Object.getNotifier(_grid._obj).notify({
+          type: 'row',
+          row: prow,
+          tabular: prow._owner._name,
+          name: 'value'
+        });
       }
+
     });
 
     if(need_set_sizes){

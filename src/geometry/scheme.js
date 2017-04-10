@@ -521,11 +521,21 @@ function Scheme(_canvas){
 
 					if(!llength){
 
+					  // пересчитываем параметры изделия и фурнитур, т.к. они могут зависеть от размеров
+
 						// если перерисованы все контуры, перерисовываем их размерные линии
 						_data._bounds = null;
 						_scheme.contours.forEach((l) => {
+              l.contours.forEach((l) => {
+                l.save_coordinates();
+                l.refresh_links();
+              });
 							l.draw_sizes();
 						});
+
+            if(_changes.length){
+              return;
+            }
 
 						// перерисовываем габаритные размерные линии изделия
 						_scheme.draw_sizes();

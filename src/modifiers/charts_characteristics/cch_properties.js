@@ -273,6 +273,9 @@ $p.CchProperties.prototype.__define({
     }
   },
 
+  /**
+   * Извлекает значение параметра с учетом вычисляемости
+   */
   extract_value: {
     value: function ({comparison_type, txt_row, value}) {
 
@@ -333,6 +336,7 @@ $p.CchProperties.prototype.__define({
   linked_values: {
     value: function (links, prow) {
       const values = [];
+      // собираем все доступные значения в одном массиве
       links.forEach((link) => link.values.forEach((row) => values.push(row)));
       // если значение доступно в списке - спокойно уходим
       if(values.some((row) => row._obj.value == prow.value)){
@@ -345,11 +349,12 @@ $p.CchProperties.prototype.__define({
             return true;
           }
         })){
-        return;
+        return true;
       }
       // если не нашли лучшего, установим первый попавшийся
       if(values.length){
         prow.value = values[0]._obj.value;
+        return true;
       }
     }
   },
