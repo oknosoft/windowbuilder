@@ -84,7 +84,7 @@ class CnnPoint {
 
   /**
    * Имя точки соединения (b или e)
-   * @type {String}
+   * @type String
    */
   get node() {
     return this._node;
@@ -867,17 +867,16 @@ class ProfileItem extends BuilderElement {
     const cnns = project.connections.cnns;
     const b = rays.b;
     const e = rays.e;
-
-    let	row_b = cnns.add({
+    const	row_b = cnns.add({
         elm1: _row.elm,
         node1: "b",
-        cnn: b.cnn ? b.cnn.ref : "",
+        cnn: b.cnn,
         aperture_len: this.corns(1).getDistance(this.corns(4)).round(1)
-      }),
-      row_e = cnns.add({
+      });
+    const row_e = cnns.add({
         elm1: _row.elm,
         node1: "e",
-        cnn: e.cnn ? e.cnn.ref : "",
+        cnn: e.cnn,
         aperture_len: this.corns(2).getDistance(this.corns(3)).round(1)
       });
 
@@ -913,10 +912,11 @@ class ProfileItem extends BuilderElement {
     }
 
     // для створочных и доборных профилей добавляем соединения с внешними элементами
-    if(row_b = this.nearest()){
+    const nrst = this.nearest();
+    if(nrst){
       cnns.add({
         elm1: _row.elm,
-        elm2: row_b.elm,
+        elm2: nrst.elm,
         cnn: data._nearest_cnn,
         aperture_len: _row.len
       });
@@ -2178,16 +2178,13 @@ class Profile extends ProfileItem {
       if(bcnn.cnn && bcnn.profile == p){
         // обрабатываем угол
         if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
-          if(!this.b.equals(p.e)){
+          if(!this.b.is_nearest(p.e, 0)){
             if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
               if(paper.Key.isDown('control')){
                 console.log('control');
               }else{
-                if(this.b.getDistance(p.e, true) < this.b.getDistance(p.b, true)){
+                if(this.b.getDistance(p.e, true) < consts.sticking2){
                   this.b = p.e;
-                }
-                else{
-                  this.b = p.b;
                 }
                 moved_fact = true;
               }
@@ -2203,7 +2200,7 @@ class Profile extends ProfileItem {
         else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type)!=-1 ){
           // импосты в створках и все остальные импосты
           const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
-          if(!mpoint.equals(this.b)){
+          if(!mpoint.is_nearest(this.b, 0)){
             this.b = mpoint;
             moved_fact = true;
           }
@@ -2214,15 +2211,14 @@ class Profile extends ProfileItem {
       if(ecnn.cnn && ecnn.profile == p){
         // обрабатываем угол
         if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
-          if(!this.e.equals(p.b)){
+          if(!this.e.is_nearest(p.b, 0)){
             if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
               if(paper.Key.isDown('control')){
                 console.log('control');
               }else{
-                if(this.e.getDistance(p.b, true) < this.e.getDistance(p.e, true))
+                if(this.e.getDistance(p.b, true) < consts.sticking2){
                   this.e = p.b;
-                else
-                  this.e = p.e;
+                }
                 moved_fact = true;
               }
             }
@@ -2237,7 +2233,7 @@ class Profile extends ProfileItem {
         else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type)!=-1 ){
           // импосты в створках и все остальные импосты
           const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
-          if(!mpoint.equals(this.e)){
+          if(!mpoint.is_nearest(this.e, 0)){
             this.e = mpoint;
             moved_fact = true;
           }

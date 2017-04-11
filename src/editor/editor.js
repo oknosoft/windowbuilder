@@ -137,7 +137,7 @@ class Editor extends paper.PaperScope {
      *
      * @property clipbrd
      * @for Editor
-     * @type {Clipbrd}
+     * @type Clipbrd
      * @final
      * @private
      */
@@ -149,7 +149,7 @@ class Editor extends paper.PaperScope {
      *
      * @property keybrd
      * @for Editor
-     * @type {Keybrd}
+     * @type Keybrd
      * @final
      * @private
      */
@@ -161,7 +161,7 @@ class Editor extends paper.PaperScope {
      *
      * @property undo
      * @for Editor
-     * @type {UndoRedo}
+     * @type UndoRedo
      * @final
      * @private
      */
@@ -171,7 +171,7 @@ class Editor extends paper.PaperScope {
      * ### Aккордион со свойствами
      *
      * @property _acc
-     * @type {EditorAccordion}
+     * @type EditorAccordion
      * @private
      */
     _editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
@@ -451,7 +451,7 @@ class Editor extends paper.PaperScope {
 
       /**
        * Объект для реализации функций масштабирования
-       * @type {StableZoom}
+       * @type StableZoom
        */
       var pan_zoom = new function StableZoom(){
 
@@ -1386,6 +1386,6 @@ class Editor extends paper.PaperScope {
  * Экспортируем конструктор Editor, чтобы экземпляры построителя можно было создать снаружи
  * @property Editor
  * @for MetaEngine
- * @type {function}
+ * @type function
  */
 $p.Editor = Editor;

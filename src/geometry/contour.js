@@ -225,8 +225,7 @@ class Contour extends paper.Layer {
   /**
    * Возвращает массив массивов сегментов - база для построения пути заполнений
    * @property glass_contours
-   * @for Contour
-   * @type {Array}
+   * @type Array
    */
   get glass_contours() {
     const segments = this.glass_segments;
@@ -502,8 +501,7 @@ class Contour extends paper.Layer {
    * Возвращает массив отрезков, которые потенциально могут образовывать заполнения
    * (соединения с пустотой отбрасываются)
    * @property glass_segments
-   * @for Contour
-   * @type {Array}
+   * @type Array
    */
   get glass_segments() {
     const nodes = [];
@@ -667,8 +665,7 @@ class Contour extends paper.Layer {
   /**
    * Возвращает массив узлов текущего контура
    * @property nodes
-   * @for Contour
-   * @type {Array}
+   * @type Array
    */
   get nodes () {
     const nodes = [];
@@ -706,8 +703,7 @@ class Contour extends paper.Layer {
   /**
    * Возвращает массив внешних профилей текущего контура. Актуально для створок, т.к. они всегда замкнуты
    * @property outer_nodes
-   * @for Contour
-   * @type {Array}
+   * @type Array
    */
   get outer_nodes() {
     return this.outer_profiles.map((v) => v.elm);
@@ -1296,21 +1292,24 @@ class Contour extends paper.Layer {
   /**
    * Вычисляемые поля в таблицах конструкций и координат
    * @method save_coordinates
-   * @for Contour
+   * @param short {Boolean} - короткий вариант - только координаты контура
    */
-  save_coordinates() {
-    // удаляем скрытые заполнения
-    this.glasses(false, true).forEach((glass) => !glass.visible && glass.remove());
+  save_coordinates(short) {
 
-    // запись в таблице координат, каждый элемент пересчитывает самостоятельно
-    this.children.forEach((elm) => {
-      if(elm.save_coordinates){
-        elm.save_coordinates();
-      }
-      else if(elm instanceof paper.Group && (elm == elm.layer.l_text || elm == elm.layer.l_dimensions)){
-        elm.children.forEach((elm) => elm.save_coordinates && elm.save_coordinates());
-      }
-    });
+    if(!short){
+      // удаляем скрытые заполнения
+      this.glasses(false, true).forEach((glass) => !glass.visible && glass.remove());
+
+      // запись в таблице координат, каждый элемент пересчитывает самостоятельно
+      this.children.forEach((elm) => {
+        if(elm.save_coordinates){
+          elm.save_coordinates();
+        }
+        else if(elm instanceof paper.Group && (elm == elm.layer.l_text || elm == elm.layer.l_dimensions)){
+          elm.children.forEach((elm) => elm.save_coordinates && elm.save_coordinates());
+        }
+      });
+    }
 
     // ответственность за строку в таблице конструкций лежит на контуре
     const {bounds} = this;
@@ -1330,7 +1329,6 @@ class Contour extends paper.Layer {
   /**
    * Упорядочивает узлы, чтобы по ним можно было построить путь заполнения
    * @method sort_nodes
-   * @for Contour
    * @param [nodes] {Array}
    */
   sort_nodes(nodes) {
@@ -2034,7 +2032,7 @@ Contour.prototype.__define({
  * Экспортируем конструктор Contour, чтобы фильтровать инстанции этого типа
  * @property Contour
  * @for MetaEngine
- * @type {function}
+ * @type function
  */
 Editor.Contour = Contour;
 

@@ -543,6 +543,6 @@ class Pricing {
  * Аналог УПзП-шного __ЦенообразованиеСервер__ в контексте MetaEngine
  *
  * @property pricing
- * @type {Pricing}
+ * @type Pricing
  */
 $p.pricing = new Pricing($p);

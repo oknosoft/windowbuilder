@@ -527,7 +527,7 @@ function Scheme(_canvas){
 						_data._bounds = null;
 						_scheme.contours.forEach((l) => {
               l.contours.forEach((l) => {
-                l.save_coordinates();
+                l.save_coordinates(true);
                 l.refresh_links();
               });
 							l.draw_sizes();

@@ -10,7 +10,7 @@
 
 		/**
 		 * Массивы Типов элементов
-		 * @type {Object}
+		 * @type Object
 		 */
 		cache = {};
 

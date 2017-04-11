@@ -26,7 +26,7 @@ function ProductsBuilding(){
 	 * @param row_cpec
 	 * @param row_coord
 	 */
-	function calc_count_area_mass(row_cpec, row_coord, angle_calc_method_prev, angle_calc_method_next){
+	function calc_count_area_mass(row_cpec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2){
 
 		//TODO: учесть angle_calc_method
 		if(!angle_calc_method_next){
@@ -35,32 +35,32 @@ function ProductsBuilding(){
 
 		if(angle_calc_method_prev && !row_cpec.nom.is_pieces){
 
-		  const angle_method = $p.enm.angle_calculating_ways;
+		  const {Основной, СварнойШов, СоединениеПополам, Соединение, _90} = $p.enm.angle_calculating_ways;
 
-			if((angle_calc_method_prev == angle_method.Основной) || (angle_calc_method_prev == angle_method.СварнойШов)){
+			if((angle_calc_method_prev == Основной) || (angle_calc_method_prev == СварнойШов)){
 				row_cpec.alp1 = row_coord.alp1;
 			}
-			else if(angle_calc_method_prev == angle_method._90){
+			else if(angle_calc_method_prev == _90){
 				row_cpec.alp1 = 90;
 			}
-			else if(angle_calc_method_prev == angle_method.СоединениеПополам){
-				row_cpec.alp1 = row_coord.alp1 / 2;
+			else if(angle_calc_method_prev == СоединениеПополам){
+				row_cpec.alp1 = (alp1 || row_coord.alp1) / 2;
 			}
-			else if(angle_calc_method_prev == angle_method.Соединение){
-				row_cpec.alp1 = row_coord.alp1;
+			else if(angle_calc_method_prev == Соединение){
+				row_cpec.alp1 = (alp1 || row_coord.alp1);
 			}
 
-			if((angle_calc_method_next == angle_method.Основной) || (angle_calc_method_next == angle_method.СварнойШов)){
+			if((angle_calc_method_next == Основной) || (angle_calc_method_next == СварнойШов)){
 				row_cpec.alp2 = row_coord.alp2;
 			}
-			else if(angle_calc_method_next == angle_method._90){
+			else if(angle_calc_method_next == _90){
 				row_cpec.alp2 = 90;
 			}
-			else if(angle_calc_method_next == angle_method.СоединениеПополам){
-				row_cpec.alp2 = row_coord.alp2 / 2;
+			else if(angle_calc_method_next == СоединениеПополам){
+				row_cpec.alp2 = (alp2 || row_coord.alp2) / 2;
 			}
-			else if(angle_calc_method_next == angle_method.Соединение){
-				row_cpec.alp2 = row_coord.alp2;
+			else if(angle_calc_method_next == Соединение){
+				row_cpec.alp2 = (alp2 || row_coord.alp2);
 			}
 		}
 
@@ -643,7 +643,17 @@ function ProductsBuilding(){
 			}
 
 			// РассчитатьКоличествоПлощадьМассу
-			calc_count_area_mass(row_spec, _row, row_cnn_prev ? row_cnn_prev.angle_calc_method : null, row_cnn_next ? row_cnn_next.angle_calc_method : null);
+      const angle_calc_method_prev = row_cnn_prev ? row_cnn_prev.angle_calc_method : null;
+      const angle_calc_method_next = row_cnn_next ? row_cnn_next.angle_calc_method : null;
+      const {СоединениеПополам, Соединение} = $p.enm.angle_calculating_ways;
+			calc_count_area_mass(
+			  row_spec,
+        _row,
+        angle_calc_method_prev,
+        angle_calc_method_next,
+        angle_calc_method_prev == СоединениеПополам || angle_calc_method_prev == Соединение ? prev.generatrix.angle_to(elm.generatrix, b.point) : 0,
+        angle_calc_method_next == СоединениеПополам || angle_calc_method_next == Соединение ? elm.generatrix.angle_to(next.generatrix, e.point) : 0
+      );
 		}
 
 		// НадоДобавитьСпецификациюСоединения

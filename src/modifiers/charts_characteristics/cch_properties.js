@@ -91,7 +91,7 @@ $p.CchProperties.prototype.__define({
    * ### Является ли значение параметра вычисляемым
    *
    * @property is_calculated
-   * @type {Boolean}
+   * @type Boolean
    */
   is_calculated: {
     get: function () {

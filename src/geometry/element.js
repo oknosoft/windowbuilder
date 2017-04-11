@@ -331,7 +331,11 @@ class BuilderElement extends paper.Group {
     return this.project._dp._manager;
   }
 
-  // номенклатура - свойство только для чтения, т.к. вычисляется во вставке
+  /**
+   * ### Номенклатура
+   * свойство только для чтения, т.к. вычисляется во вставке
+   * @type CatNom
+   */
   get nom() {
     return this.inset.nom(this);
   }

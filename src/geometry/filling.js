@@ -228,6 +228,13 @@ class Filling extends BuilderElement {
     contour.activate();
   }
 
+  /**
+   * Возвращает сторону соединения заполнения с профилем раскладки
+   */
+  cnn_side() {
+    return $p.enm.cnn_sides.Изнутри;
+  }
+
   select_node(v) {
     let point, segm, delta = Infinity;
     if(v === "b"){
@@ -584,6 +591,7 @@ class Filling extends BuilderElement {
 
   /**
    * Возвращает формулу (код состава) заполнения
+   * @type String
    */
   get formula() {
     let res;

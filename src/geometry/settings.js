@@ -19,14 +19,14 @@
 		/**
 		 * Размер визуализации узла пути
 		 * @property handleSize
-		 * @type {number}
+		 * @type number
 		 */
 		settings.handleSize = builder.handle_size;
 
 		/**
 		 * Прилипание. На этом расстоянии узел пытается прилепиться к другому узлу или элементу
 		 * @property sticking
-		 * @type {number}
+		 * @type number
 		 */
 		this.sticking = builder.sticking || 90;
 		this.sticking_l = builder.sticking_l || 9;

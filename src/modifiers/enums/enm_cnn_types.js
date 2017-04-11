@@ -13,7 +13,7 @@
 
 	/**
 	 * Массивы Типов соединений
-	 * @type {Object}
+	 * @type Object
 	 */
 	_mgr.acn = {cache :{}};
 	_mgr.acn.__define({
@@ -61,7 +61,7 @@
 
 	/**
 	 * Короткие псевдонимы перечисления "Типы соединений"
-	 * @type {Object}
+	 * @type Object
 	 */
 	_mgr.tcn = {cache :{}};
 	_mgr.tcn.__define({
