@@ -3515,6 +3515,7 @@ class Contour extends paper.Layer {
       const hide = links.some((link) => link.hide);
 
       if(links.length && param.linked_values(links, prow)){
+        this.project.register_change();
         notify = true;
         Object.getNotifier(this).notify({
           type: 'row',
@@ -3526,14 +3527,11 @@ class Contour extends paper.Layer {
       if(!notify){
         notify = hide;
       }
-
     });
 
     if(notify){
-      this.project.register_change(true);
       $p.eve.callEvent("refresh_links", [this]);
     }
-
   }
 
   save_coordinates(short) {

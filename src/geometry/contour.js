@@ -1258,6 +1258,7 @@ class Contour extends paper.Layer {
 
       // проверим вхождение значения в доступные и при необходимости изменим
       if(links.length && param.linked_values(links, prow)){
+        this.project.register_change();
         notify = true;
         Object.getNotifier(this).notify({
           type: 'row',
@@ -1269,15 +1270,12 @@ class Contour extends paper.Layer {
       if(!notify){
         notify = hide;
       }
-
     });
 
+    // информируем мир о новых размерах нашего контура
     if(notify){
-      this.project.register_change(true);
-      // информируем мир о новых размерах нашего контура
       $p.eve.callEvent("refresh_links", [this]);
     }
-
   }
 
   /**
