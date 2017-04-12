@@ -584,7 +584,8 @@ class StvProps {
 
     this._evts = [
       $p.eve.attachEvent("layer_activated", this.attache.bind(this)),
-      $p.eve.attachEvent("furn_changed", this.reload.bind(this))
+      $p.eve.attachEvent("furn_changed", this.reload.bind(this)),
+      $p.eve.attachEvent("refresh_links", this.on_refresh_links.bind(this))
     ];
 
   }
@@ -629,8 +630,16 @@ class StvProps {
       }
     }
 
+    this.on_prm_change('0|0');
     this._grid.setSizes();
 
+  }
+
+  on_refresh_links(contour) {
+    const {_grid} = this;
+    if(_grid && contour == _grid._obj){
+      this.on_prm_change('0|0', null, true);
+    }
   }
 
   on_prm_change(field, value, realy_changed) {
@@ -687,7 +696,10 @@ class StvProps {
   }
 
   reload() {
-    this._grid && this._grid.reload();
+    if(this._grid){
+      this._grid.reload();
+      this.on_prm_change('0|0', null, true);
+    }
   }
 
   unload() {
@@ -2392,11 +2404,11 @@ class UndoRedo {
         setTimeout(() => {
           this.clear();
           this.save_snapshot(scheme);
-        }, 500);
+        }, 600);
       }
       else {
         this._snap_timer && clearTimeout(this._snap_timer);
-        this._snap_timer = setTimeout(this.run_snapshot, 500);
+        this._snap_timer = setTimeout(this.run_snapshot, 600);
       }
     }
   }
@@ -3489,24 +3501,9 @@ class Contour extends paper.Layer {
   }
 
   refresh_links() {
-    this.params.find_rows({
-      cnstr: this.cnstr || -9999,
-      inset: $p.utils.blank.guid,
-      hide: {not: true}
-    }, ({param}) => {
-      this.on_prm_change('params|'+param, param)
-    });
-  }
-
-  on_prm_change(field, value) {
-
-    const pnames = field && field.split('|');
-
-    if(!field || pnames.length < 2){
-      return;
-    }
 
     const {cnstr} = this;
+    let notify;
 
     this.params.find_rows({
       cnstr: cnstr || -9999,
@@ -3514,14 +3511,11 @@ class Contour extends paper.Layer {
       hide: {not: true}
     }, (prow) => {
       const {param} = prow;
-      if(param == value){
-        return;
-      }
       const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
       const hide = links.some((link) => link.hide);
 
       if(links.length && param.linked_values(links, prow)){
-        this.project.register_change();
+        notify = true;
         Object.getNotifier(this).notify({
           type: 'row',
           row: prow,
@@ -3529,8 +3523,16 @@ class Contour extends paper.Layer {
           name: 'value'
         });
       }
+      if(!notify){
+        notify = hide;
+      }
 
     });
+
+    if(notify){
+      this.project.register_change(true);
+      $p.eve.callEvent("refresh_links", [this]);
+    }
 
   }
 

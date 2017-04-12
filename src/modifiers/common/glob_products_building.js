@@ -883,6 +883,8 @@ function ProductsBuilding(){
         // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
         const cx = find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
         ox._order_rows.push(cx);
+        spec = cx.specification;
+        spec.clear();
       }
 
       // рассчитаем спецификацию вставки
@@ -894,8 +896,6 @@ function ProductsBuilding(){
         origin: inset,
         cnstr: contour.cnstr
       }
-      spec = cx.specification;
-      spec.clear();
       inset_spec(elm, inset, len_angl);
 
     });

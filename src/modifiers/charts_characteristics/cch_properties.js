@@ -336,6 +336,7 @@ $p.CchProperties.prototype.__define({
   linked_values: {
     value: function (links, prow) {
       const values = [];
+      let changed;
       // собираем все доступные значения в одном массиве
       links.forEach((link) => link.values.forEach((row) => values.push(row)));
       // если значение доступно в списке - спокойно уходим
@@ -344,14 +345,21 @@ $p.CchProperties.prototype.__define({
       }
       // если есть явный default - устанавливаем
       if(values.some((row) => {
-          if(row.by_default || row.forcibly){
+          if(row.forcibly){
             prow.value = row._obj.value;
             return true;
+          }
+          if(row.by_default && (!prow.value || prow.value.empty && prow.value.empty())){
+            prow.value = row._obj.value;
+            changed = true;
           }
         })){
         return true;
       }
       // если не нашли лучшего, установим первый попавшийся
+      if(changed){
+        return true;
+      }
       if(values.length){
         prow.value = values[0]._obj.value;
         return true;

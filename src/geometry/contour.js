@@ -1242,24 +1242,9 @@ class Contour extends paper.Layer {
   }
 
   refresh_links() {
-    this.params.find_rows({
-      cnstr: this.cnstr || -9999,
-      inset: $p.utils.blank.guid,
-      hide: {not: true}
-    }, ({param}) => {
-      this.on_prm_change('params|'+param, param)
-    });
-  }
-
-  on_prm_change(field, value) {
-
-    const pnames = field && field.split('|');
-
-    if(!field || pnames.length < 2){
-      return;
-    }
 
     const {cnstr} = this;
+    let notify;
 
     // пробегаем по всем строкам
     this.params.find_rows({
@@ -1268,15 +1253,12 @@ class Contour extends paper.Layer {
       hide: {not: true}
     }, (prow) => {
       const {param} = prow;
-      if(param == value){
-        return;
-      }
       const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
       const hide = links.some((link) => link.hide);
 
       // проверим вхождение значения в доступные и при необходимости изменим
       if(links.length && param.linked_values(links, prow)){
-        this.project.register_change();
+        notify = true;
         Object.getNotifier(this).notify({
           type: 'row',
           row: prow,
@@ -1284,8 +1266,17 @@ class Contour extends paper.Layer {
           name: 'value'
         });
       }
+      if(!notify){
+        notify = hide;
+      }
 
     });
+
+    if(notify){
+      this.project.register_change(true);
+      // информируем мир о новых размерах нашего контура
+      $p.eve.callEvent("refresh_links", [this]);
+    }
 
   }
 

@@ -185,7 +185,8 @@ class StvProps {
 
     this._evts = [
       $p.eve.attachEvent("layer_activated", this.attache.bind(this)),
-      $p.eve.attachEvent("furn_changed", this.reload.bind(this))
+      $p.eve.attachEvent("furn_changed", this.reload.bind(this)),
+      $p.eve.attachEvent("refresh_links", this.on_refresh_links.bind(this))
     ];
 
   }
@@ -233,8 +234,16 @@ class StvProps {
       }
     }
 
+    this.on_prm_change('0|0');
     this._grid.setSizes();
 
+  }
+
+  on_refresh_links(contour) {
+    const {_grid} = this;
+    if(_grid && contour == _grid._obj){
+      this.on_prm_change('0|0', null, true);
+    }
   }
 
   /**
@@ -299,7 +308,10 @@ class StvProps {
   }
 
   reload() {
-    this._grid && this._grid.reload();
+    if(this._grid){
+      this._grid.reload();
+      this.on_prm_change('0|0', null, true);
+    }
   }
 
   unload() {
