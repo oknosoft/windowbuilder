@@ -1106,17 +1106,26 @@ class ProfileItem extends BuilderElement {
    * @param ignore_select {Boolean}
    */
   set_inset(v, ignore_select) {
-    if(!ignore_select && this.project.selectedItems.length > 1){
-      this.project.selected_profiles(true).forEach((elm) => {
+
+    const {_row, data, project} = this;
+
+    if(!ignore_select && project.selectedItems.length > 1){
+      project.selected_profiles(true).forEach((elm) => {
         if(elm != this && elm.elm_type == this.elm_type){
           elm.set_inset(v, true);
         }
       });
     }
-    if(this._row.inset != v){
+
+    if(_row.inset != v){
+
+      _row.inset = v;
 
       // для уже нарисованных элементов...
-      if(this.data._rays){
+      if(data && data._rays){
+
+        data._rays.clear(true);
+
         // прибиваем соединения в точках b и e
         const b = this.cnn_point('b');
         const e = this.cnn_point('e');
@@ -1138,14 +1147,14 @@ class ProfileItem extends BuilderElement {
 
         // для соединительных профилей и элементов со створками, пересчитываем соседей
         this.joined_nearests().forEach((profile) => {
-          const {data, project, elm} = profile;
+          const {data, elm} = profile;
           data._rays && data._rays.clear(true);
           data._nearest_cnn = null;
           project.connections.cnns.clear({elm1: elm, elm2: this.elm});
         });
       }
 
-      BuilderElement.prototype.set_inset.call(this, v);
+      project.register_change();
     }
   }
 
@@ -1926,7 +1935,7 @@ class Profile extends ProfileItem {
           if(!_nearest_cnn){
             _nearest_cnn = project.connections.elm_cnn(this, elm);
           }
-          data._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
+          data._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, false, Math.abs(elm.angle_hor - this.angle_hor) > 60);
         }
         data._nearest = elm;
         return true;
