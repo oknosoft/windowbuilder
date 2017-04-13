@@ -1155,7 +1155,7 @@ class ProfileItem extends BuilderElement {
         });
 
         // так же, пересчитываем соединения с примыкающими заполнениями
-        this.parent.glasses(false, true).forEach((glass) => {
+        this.layer.glasses(false, true).forEach((glass) => {
           cnns.clear({elm1: glass.elm, elm2: this.elm});
         })
       }
@@ -1234,7 +1234,7 @@ class ProfileItem extends BuilderElement {
         }
       }
       this.set_inset(this.project.default_inset({
-        elm_type: this.elm_type,
+        elm_type: elm_type,
         pos: pos,
         inset: this.inset
       }), true);
@@ -1692,9 +1692,7 @@ class ProfileItem extends BuilderElement {
 
       this.data._rays.clear();
 
-      if(this.parent.notify){
-        this.parent.notify(noti);
-      }
+      this.layer && this.layer.notify && this.layer.notify(noti);
 
       const notifier = Object.getNotifier(this);
       notifier.notify({ type: 'update', name: "x1" });

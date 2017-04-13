@@ -3159,25 +3159,48 @@ class Contour extends paper.Layer {
   }
 
   profiles_by_side(side) {
-    const {profiles, bounds} = this;
+    const {profiles} = this;
+    const bounds = {
+      left: Infinity,
+      top: Infinity,
+      bottom: -Infinity,
+      right: -Infinity
+    }
     const res = {};
     const ares = [];
 
     function by_side(name) {
-      ares.sort(function (a, b) {
-        return a[name] - b[name];
-      });
-      res[name] = ares[0].profile;
+      ares.some((elm) => {
+        if(elm[name] == bounds[name]){
+          res[name] = elm.profile;
+          return true;
+        }
+      })
     }
 
     if (profiles.length) {
       profiles.forEach((profile) => {
+        const {b, e} = profile;
+        const x = b.x + e.x;
+        const y = b.y + e.y;
+        if(x < bounds.left){
+          bounds.left = x;
+        }
+        if(x > bounds.right){
+          bounds.right = x;
+        }
+        if(y < bounds.top){
+          bounds.top = y;
+        }
+        if(y > bounds.bottom){
+          bounds.bottom = y;
+        }
         ares.push({
           profile: profile,
-          left: Math.abs(profile.b.x + profile.e.x - bounds.left * 2),
-          top: Math.abs(profile.b.y + profile.e.y - bounds.top * 2),
-          bottom: Math.abs(profile.b.y + profile.e.y - bounds.bottom * 2),
-          right: Math.abs(profile.b.x + profile.e.x - bounds.right * 2)
+          left: x,
+          top: y,
+          bottom: y,
+          right: x
         });
       });
       if (side) {
@@ -3185,7 +3208,7 @@ class Contour extends paper.Layer {
         return res[side];
       }
 
-      ["left", "top", "bottom", "right"].forEach(by_side);
+      Object.keys(bounds).forEach(by_side);
     }
 
     return res;
@@ -6997,7 +7020,7 @@ class ProfileItem extends BuilderElement {
           cnns.clear({elm1: elm, elm2: this.elm});
         });
 
-        this.parent.glasses(false, true).forEach((glass) => {
+        this.layer.glasses(false, true).forEach((glass) => {
           cnns.clear({elm1: glass.elm, elm2: this.elm});
         })
       }
@@ -7049,7 +7072,7 @@ class ProfileItem extends BuilderElement {
         }
       }
       this.set_inset(this.project.default_inset({
-        elm_type: this.elm_type,
+        elm_type: elm_type,
         pos: pos,
         inset: this.inset
       }), true);
@@ -7412,9 +7435,7 @@ class ProfileItem extends BuilderElement {
 
       this.data._rays.clear();
 
-      if(this.parent.notify){
-        this.parent.notify(noti);
-      }
+      this.layer && this.layer.notify && this.layer.notify(noti);
 
       const notifier = Object.getNotifier(this);
       notifier.notify({ type: 'update', name: "x1" });
