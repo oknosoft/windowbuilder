@@ -6989,12 +6989,17 @@ class ProfileItem extends BuilderElement {
           }
         }
 
+        const {cnns} = project.connections;
         this.joined_nearests().forEach((profile) => {
           const {data, elm} = profile;
           data._rays && data._rays.clear(true);
           data._nearest_cnn = null;
-          project.connections.cnns.clear({elm1: elm, elm2: this.elm});
+          cnns.clear({elm1: elm, elm2: this.elm});
         });
+
+        this.parent.glasses(false, true).forEach((glass) => {
+          cnns.clear({elm1: glass.elm, elm2: this.elm});
+        })
       }
 
       project.register_change();
