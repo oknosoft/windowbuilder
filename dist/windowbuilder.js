@@ -4734,7 +4734,7 @@ class BuilderElement extends paper.Group {
     }
 
 
-
+    const {_inserts_types_filling} = $p.cat.inserts;
     inset.choice_links = [{
       name: ["selection",	"ref"],
       path: [(o, f) => {
@@ -4744,9 +4744,10 @@ class BuilderElement extends paper.Group {
 
           if(this instanceof Filling){
             if($p.utils.is_data_obj(o)){
-              return $p.cat.inserts._inserts_types_filling.indexOf(o.insert_type) != -1 &&
-                o.thickness >= sys.tmin && o.thickness <= sys.tmax &&
-                (o.insert_glass_type.empty() || o.insert_glass_type == $p.enm.inserts_glass_types.Заполнение);
+              const {thickness, insert_type, insert_glass_type} = o;
+              return _inserts_types_filling.indexOf(insert_type) != -1 &&
+                thickness >= sys.tmin && thickness <= sys.tmax &&
+                (insert_glass_type.empty() || insert_glass_type == $p.enm.inserts_glass_types.Заполнение);
             }
             else{
               let refs = "";
@@ -5485,7 +5486,8 @@ class Filling extends BuilderElement {
     this.profiles.forEach((curr) => {
       const tmp = {
         len: curr.sub_path.length,
-        angle: curr.e.subtract(curr.b).angle
+        angle: curr.e.subtract(curr.b).angle,
+        profile: curr.profile
       }
       res.push(tmp);
       if(tmp.angle < 0){

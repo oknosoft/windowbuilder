@@ -350,7 +350,8 @@ function ProductsBuilding(){
 	function inset_check(inset, elm, by_perimetr, len_angl){
 
 	  const {_row} = elm;
-	  const len = len_angl ? len_angl.len : _row.len
+	  const len = len_angl ? len_angl.len : _row.len;
+	  const is_linear = elm.is_linear ? elm.is_linear() : true;
 		let is_tabular = true;
 
 		// проверяем площадь
@@ -363,12 +364,12 @@ function ProductsBuilding(){
       return false;
     }
 
-		if($p.utils.is_data_obj(inset)){
+    // только для прямых или только для кривых профилей
+    if((inset.for_direct_profile_only > 0 && !is_linear) || (inset.for_direct_profile_only < 0 && is_linear)){
+      return false;
+    }
 
-			// только для прямых или только для кривых профилей
-			if((inset.for_direct_profile_only > 0 && !elm.is_linear()) || (inset.for_direct_profile_only < 0 &&elm.is_linear())){
-        return false;
-      }
+		if($p.utils.is_data_obj(inset)){
 
 			if(inset.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
 				if(!elm.joined_imposts(true)){
@@ -420,21 +421,6 @@ function ProductsBuilding(){
 			glass_specification.find_rows({elm: elm.elm}, (row) => {
         glass_rows.push(row);
 			});
-
-			// if(!glass_rows.length){
-			// 	// заполняем спецификацию заполнений по умолчанию, чтобы склеить формулу
-			// 	inset.specification.each((row) => {
-			// 		glass_rows.push(
-			// 			glass_specification.add({
-			// 				elm: elm.elm,
-			// 				gno: 0,
-			// 				inset: row.nom,
-			// 				clr: row.clr
-			// 			})
-			// 		);
-			// 	});
-			// }
-
 
       // если спецификация верхнего уровня задана в изделии, используем её, параллельно формируем формулу
 			if(glass_rows.length){
@@ -802,9 +788,10 @@ function ProductsBuilding(){
 					row_spec.s = _row.s;
 				}
 				else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру){
-					var row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
+					const row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
 					elm.perimeter.forEach((rib) => {
 						row_prm._row._mixin(rib);
+            row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
 						if(inset_check(row_ins_spec, row_prm, true)){
 							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
 							calc_qty_len(row_spec, row_ins_spec, rib.len);

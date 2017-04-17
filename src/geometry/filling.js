@@ -514,7 +514,8 @@ class Filling extends BuilderElement {
     this.profiles.forEach((curr) => {
       const tmp = {
         len: curr.sub_path.length,
-        angle: curr.e.subtract(curr.b).angle
+        angle: curr.e.subtract(curr.b).angle,
+        profile: curr.profile
       }
       res.push(tmp);
       if(tmp.angle < 0){
