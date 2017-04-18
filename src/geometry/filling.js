@@ -525,6 +525,11 @@ class Filling extends BuilderElement {
     return res;
   }
 
+  get bounds() {
+    const {path} = this;
+    return path ? path.bounds : new paper.Rectangle();
+  }
+
   /**
    * Координата x левой границы (только для чтения)
    */

@@ -194,7 +194,7 @@ function ProductsBuilding(){
 	 * @param elm {BuilderElement}
 	 * @param len_angl {Object}
 	 */
-	function cnn_add_spec(cnn, elm, len_angl){
+	function cnn_add_spec(cnn, elm, len_angl, cnn_other){
 		if(!cnn){
       return;
     }
@@ -233,7 +233,18 @@ function ProductsBuilding(){
 					row_spec.qty = row_cnn_spec.quantity;
 
 					if(row_cnn_spec.sz || row_cnn_spec.coefficient){
-            row_spec.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
+            let sz = row_cnn_spec.sz;
+            let finded;
+            if(cnn_other){
+              cnn_other.specification.find_rows({nom}, (row) => {
+                sz += row.sz;
+                return !(finded = true);
+              })
+            }
+            if(!finded){
+              sz *= 2;
+            }
+            row_spec.len = (len_angl.len - sign * sz) * (row_cnn_spec.coefficient || 0.001);
           }
 				}
 
@@ -575,10 +586,12 @@ function ProductsBuilding(){
     const row_cnn_prev = b.cnn.main_row(elm);
     const row_cnn_next = e.cnn.main_row(elm);
 
+    let row_spec;
+
 		// добавляем строку спецификации
 		if(row_cnn_prev || row_cnn_next){
 
-			const row_spec = new_spec_row(null, elm, row_cnn_prev || row_cnn_next, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
+			row_spec = new_spec_row(null, elm, row_cnn_prev || row_cnn_next, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
 
 			// уточняем размер
       const seam = $p.enm.angle_calculating_ways.СварнойШов;
@@ -648,7 +661,8 @@ function ProductsBuilding(){
 			const len_angl = {
 				angle: 0,
 				alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
-				alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90
+				alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
+        len: row_spec ? row_spec.len * 1000 : _row.len,
 				// art1: true TODO: учесть art-1-2
 			};
 
@@ -659,7 +673,7 @@ function ProductsBuilding(){
 				if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm)){
 					//	TODO: ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
           len_angl.angle = len_angl.alp2;
-          cnn_add_spec(e.cnn, elm, len_angl);
+          cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
 				}
 			}
 
@@ -675,7 +689,7 @@ function ProductsBuilding(){
 
 			// спецификацию с предыдущей стороны рассчитваем всегда
       len_angl.angle = len_angl.alp1;
-			cnn_add_spec(b.cnn, elm, len_angl);
+			cnn_add_spec(b.cnn, elm, len_angl, e.cnn);
 		}
 
 

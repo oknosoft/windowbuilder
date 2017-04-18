@@ -5497,6 +5497,11 @@ class Filling extends BuilderElement {
     return res;
   }
 
+  get bounds() {
+    const {path} = this;
+    return path ? path.bounds : new paper.Rectangle();
+  }
+
   get x1() {
     return (this.bounds.left - this.project.bounds.x).round(1);
   }
