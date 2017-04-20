@@ -574,7 +574,7 @@ class SchemeLayers {
     Object.unobserve(paper.project._noti, this.observer);
   }
 
-};
+}
 
 class StvProps {
 

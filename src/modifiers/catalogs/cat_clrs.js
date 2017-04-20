@@ -86,43 +86,47 @@ $p.cat.clrs.__define({
 				mf.choice_params.push({
 					name: "ref",
 					get path(){
+            const res = [];
+						let clr_group, elm;
 
-						var clr_group, elm, res = [];
+						function add_by_clr(clr) {
+              if(clr instanceof $p.CatClrs){
+                const {ref} = clr;
+                if(clr.is_folder){
+                  $p.cat.clrs.alatable.forEach((row) => row.parent == ref && res.push(row.ref))
+                }
+                else{
+                  res.push(ref)
+                }
+              }
+              else if(clr instanceof $p.CatColor_price_groups){
+                clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1))
+              }
+            }
 
 						if(sys instanceof $p.Editor.BuilderElement){
 							clr_group = sys.inset.clr_group;
-							if(clr_group.empty() && !(sys instanceof $p.Editor.Filling))
-								clr_group = sys.project._dp.sys.clr_group;
-
-						}else if(sys instanceof $p.DataProcessorObj){
+							if(clr_group.empty() && !(sys instanceof $p.Editor.Filling)){
+                clr_group = sys.project._dp.sys.clr_group;
+              }
+						}
+						else if(sys instanceof $p.DataProcessorObj){
 							clr_group = sys.sys.clr_group;
-
-						}else{
+						}
+						else{
 							clr_group = sys.clr_group;
-
 						}
 
 						if(clr_group.empty() || !clr_group.clr_conformity.count()){
-							$p.cat.clrs.alatable.forEach(function (row) {
-								if(!row.is_folder)
-									res.push(row.ref);
-							})
-						}else{
-							$p.cat.clrs.alatable.forEach(function (row) {
-								if(!row.is_folder){
-									if(clr_group.clr_conformity._obj.some(function (cg) {
-											return row.parent == cg.clr1 || row.ref == cg.clr1;
-										}))
-										res.push(row.ref);
-								}
-							})
+              return {not: ''};
+						}
+						else{
+              add_by_clr(clr_group)
 						}
 						return {in: res};
 					}
 				});
 			}
-
-
 		}
 	},
 
