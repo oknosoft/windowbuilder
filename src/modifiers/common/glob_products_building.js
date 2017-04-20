@@ -23,69 +23,73 @@ function ProductsBuilding(){
 
 	/**
 	 * РассчитатьКоличествоПлощадьМассу
-	 * @param row_cpec
+	 * @param row_spec
 	 * @param row_coord
 	 */
-	function calc_count_area_mass(row_cpec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2){
+	function calc_count_area_mass(row_spec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2){
+
+    if(!row_spec.qty && !row_spec.len){
+      return spec.del(row_spec.row-1, true);
+    }
 
 		//TODO: учесть angle_calc_method
 		if(!angle_calc_method_next){
       angle_calc_method_next = angle_calc_method_prev;
     }
 
-		if(angle_calc_method_prev && !row_cpec.nom.is_pieces){
+		if(angle_calc_method_prev && !row_spec.nom.is_pieces){
 
 		  const {Основной, СварнойШов, СоединениеПополам, Соединение, _90} = $p.enm.angle_calculating_ways;
 
 			if((angle_calc_method_prev == Основной) || (angle_calc_method_prev == СварнойШов)){
-				row_cpec.alp1 = row_coord.alp1;
+				row_spec.alp1 = row_coord.alp1;
 			}
 			else if(angle_calc_method_prev == _90){
-				row_cpec.alp1 = 90;
+				row_spec.alp1 = 90;
 			}
 			else if(angle_calc_method_prev == СоединениеПополам){
-				row_cpec.alp1 = (alp1 || row_coord.alp1) / 2;
+				row_spec.alp1 = (alp1 || row_coord.alp1) / 2;
 			}
 			else if(angle_calc_method_prev == Соединение){
-				row_cpec.alp1 = (alp1 || row_coord.alp1);
+				row_spec.alp1 = (alp1 || row_coord.alp1);
 			}
 
 			if((angle_calc_method_next == Основной) || (angle_calc_method_next == СварнойШов)){
-				row_cpec.alp2 = row_coord.alp2;
+				row_spec.alp2 = row_coord.alp2;
 			}
 			else if(angle_calc_method_next == _90){
-				row_cpec.alp2 = 90;
+				row_spec.alp2 = 90;
 			}
 			else if(angle_calc_method_next == СоединениеПополам){
-				row_cpec.alp2 = (alp2 || row_coord.alp2) / 2;
+				row_spec.alp2 = (alp2 || row_coord.alp2) / 2;
 			}
 			else if(angle_calc_method_next == Соединение){
-				row_cpec.alp2 = (alp2 || row_coord.alp2);
+				row_spec.alp2 = (alp2 || row_coord.alp2);
 			}
 		}
 
-		if(row_cpec.len){
-			if(row_cpec.width && !row_cpec.s)
-				row_cpec.s = row_cpec.len * row_cpec.width;
+		if(row_spec.len){
+			if(row_spec.width && !row_spec.s)
+				row_spec.s = row_spec.len * row_spec.width;
 		}else
-			row_cpec.s = 0;
+			row_spec.s = 0;
 
-		if(!row_cpec.qty && (row_cpec.len || row_cpec.width))
-			row_cpec.qty = 1;
+		if(!row_spec.qty && (row_spec.len || row_spec.width))
+			row_spec.qty = 1;
 
-		if(row_cpec.s)
-			row_cpec.totqty = row_cpec.qty * row_cpec.s;
+		if(row_spec.s)
+			row_spec.totqty = row_spec.qty * row_spec.s;
 
-		else if(row_cpec.len)
-			row_cpec.totqty = row_cpec.qty * row_cpec.len;
+		else if(row_spec.len)
+			row_spec.totqty = row_spec.qty * row_spec.len;
 
 		else
-			row_cpec.totqty = row_cpec.qty;
+			row_spec.totqty = row_spec.qty;
 
-		row_cpec.totqty1 = row_cpec.totqty * row_cpec.nom.loss_factor;
+		row_spec.totqty1 = row_spec.totqty * row_spec.nom.loss_factor;
 
-		["len","width","s","qty","alp1","alp2"].forEach((fld) => row_cpec[fld] = row_cpec[fld].round(4));
-    ["totqty","totqty1"].forEach((fld) => row_cpec[fld] = row_cpec[fld].round(6));
+		["len","width","s","qty","alp1","alp2"].forEach((fld) => row_spec[fld] = row_spec[fld].round(4));
+    ["totqty","totqty1"].forEach((fld) => row_spec[fld] = row_spec[fld].round(6));
 	}
 
 	/**
@@ -261,12 +265,7 @@ function ProductsBuilding(){
 					});
 				}
 
-				if(!row_spec.qty){
-          spec.del(row_spec.row-1);
-        }
-				else{
-          calc_count_area_mass(row_spec, len_angl, row_cnn_spec.angle_calc_method);
-        }
+        calc_count_area_mass(row_spec, len_angl, row_cnn_spec.angle_calc_method);
 			}
 
 		});
@@ -457,7 +456,7 @@ function ProductsBuilding(){
       }
 
 			// Добавляем или разузловываем дальше
-			if(row.nom._manager == $p.cat.inserts){
+			if(row.nom instanceof $p.CatInserts){
         inset_filter_spec(row.nom, elm, false, len_angl).forEach((subrow) => {
           const fakerow = {}._mixin(subrow, ['angle_calc_method','clr','count_calc_method','elm','formula','is_main_elm','is_order_row','nom','sz']);
           fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
