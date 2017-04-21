@@ -335,6 +335,10 @@ class Editor extends paper.PaperScope {
       }
     });
 
+    // Обработчик события при удалении строки
+    this.on_del_row = this.on_del_row.bind(this);
+    $p.cat.characteristics.on("del_row", this.on_del_row);
+
 
     // Создаём инструменты
 
@@ -855,6 +859,7 @@ class Editor extends paper.PaperScope {
 
     const wnd = cell || $p.iface.dat_blank(null, options.wnd);
     const elmnts = wnd.elmnts;
+    const {project} = this;
 
     function get_selection() {
       const {inserts} = elmnts.grids;
@@ -896,7 +901,7 @@ class Editor extends paper.PaperScope {
     elmnts.layout.cells("a").setHeight(160);
 
     elmnts.grids.inserts = elmnts.layout.cells("a").attachTabular({
-      obj: this.project.ox,
+      obj: project.ox,
       ts: "inserts",
       selection: {cnstr: cnstr},
       toolbar_struct: $p.injected_data["toolbar_add_del_compact.xml"],
@@ -913,7 +918,7 @@ class Editor extends paper.PaperScope {
     });
 
     elmnts.grids.params = elmnts.layout.cells("b").attachHeadFields({
-      obj: this.project.ox,
+      obj: project.ox,
       ts: "params",
       selection: get_selection(),
       oxml: {
@@ -930,10 +935,9 @@ class Editor extends paper.PaperScope {
     elmnts.grids.inserts.attachEvent("onRowSelect", refill_prms);
     wnd.elmnts.grids.inserts.attachEvent("onEditCell", (stage, rId, cInd) => {
       !cInd && setTimeout(refill_prms);
+      project.register_change();
     });
-    elmnts.grids.inserts.attachEvent("onBeforeRowDeleted", (id, pid) => {
-      setTimeout(refill_prms);
-    });
+
   }
 
   /**
@@ -1378,6 +1382,20 @@ class Editor extends paper.PaperScope {
     }
   }
 
+  /**
+   * Обработчик события при удалении строки
+   * @param obj
+   * @param prm
+   */
+  on_del_row({grid, tabular_section}) {
+    const {project} = this;
+    const {obj} = grid.get_cell_field();
+    if(obj && obj._owner._owner == project.ox){
+      if(tabular_section == 'inserts'){
+        project.register_change();
+      }
+    }
+  }
 
   clear_selection_bounds() {
     if (this._selectionBoundsShape) {

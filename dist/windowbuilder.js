@@ -1425,6 +1425,9 @@ class Editor extends paper.PaperScope {
       }
     });
 
+    this.on_del_row = this.on_del_row.bind(this);
+    $p.cat.characteristics.on("del_row", this.on_del_row);
+
 
 
     new function ZoomFit() {
@@ -1831,6 +1834,7 @@ class Editor extends paper.PaperScope {
 
     const wnd = cell || $p.iface.dat_blank(null, options.wnd);
     const elmnts = wnd.elmnts;
+    const {project} = this;
 
     function get_selection() {
       const {inserts} = elmnts.grids;
@@ -1872,7 +1876,7 @@ class Editor extends paper.PaperScope {
     elmnts.layout.cells("a").setHeight(160);
 
     elmnts.grids.inserts = elmnts.layout.cells("a").attachTabular({
-      obj: this.project.ox,
+      obj: project.ox,
       ts: "inserts",
       selection: {cnstr: cnstr},
       toolbar_struct: $p.injected_data["toolbar_add_del_compact.xml"],
@@ -1889,7 +1893,7 @@ class Editor extends paper.PaperScope {
     });
 
     elmnts.grids.params = elmnts.layout.cells("b").attachHeadFields({
-      obj: this.project.ox,
+      obj: project.ox,
       ts: "params",
       selection: get_selection(),
       oxml: {
@@ -1905,10 +1909,9 @@ class Editor extends paper.PaperScope {
     elmnts.grids.inserts.attachEvent("onRowSelect", refill_prms);
     wnd.elmnts.grids.inserts.attachEvent("onEditCell", (stage, rId, cInd) => {
       !cInd && setTimeout(refill_prms);
+      project.register_change();
     });
-    elmnts.grids.inserts.attachEvent("onBeforeRowDeleted", (id, pid) => {
-      setTimeout(refill_prms);
-    });
+
   }
 
   profile_radius(){
@@ -2322,6 +2325,15 @@ class Editor extends paper.PaperScope {
     }
   }
 
+  on_del_row({grid, tabular_section}) {
+    const {project} = this;
+    const {obj} = grid.get_cell_field();
+    if(obj && obj._owner._owner == project.ox){
+      if(tabular_section == 'inserts'){
+        project.register_change();
+      }
+    }
+  }
 
   clear_selection_bounds() {
     if (this._selectionBoundsShape) {
@@ -3433,11 +3445,12 @@ class Contour extends paper.Layer {
         const props = {
           parent: new paper.Group({parent: l_visualization._by_spec}),
           strokeColor: 'grey',
-          strokeWidth: 2,
+          strokeWidth: 3,
           dashArray: [6, 4],
           strokeScaling: false,
-        }
+        };
         const perimetr = [];
+        let imposts;
         row.inset.specification.forEach((rspec) => {
           if(!perimetr.length && rspec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру && rspec.nom.elm_type == $p.enm.elm_types.Рама){
             this.outer_profiles.forEach((curr) => {
@@ -3448,17 +3461,23 @@ class Contour extends paper.Layer {
               perimetr.push(Object.assign(segm, props));
             });
           }
-
+          if(!imposts && rspec.count_calc_method == $p.enm.count_calculating_ways.ПоШагам && rspec.nom.elm_type == $p.enm.elm_types.Импост){
+            imposts = rspec;
+          }
         });
         const count = perimetr.length - 1;
         perimetr.forEach((curr, index) => {
           const prev = index == 0 ? perimetr[count] : perimetr[index - 1];
           const next = index == count ? perimetr[0] : perimetr[index + 1];
-          const b = curr.intersect_point(prev, curr.firstSegment.point, true);
-          const e = curr.intersect_point(next, curr.lastSegment.point, true);
-          curr.firstSegment.point = b;
-          curr.lastSegment.point = e;
-        })
+          const b = curr.getIntersections(prev);
+          const e = curr.getIntersections(next);
+          if(b.length){
+            curr.firstSegment.point = b[0].point;
+          }
+          if(e.length){
+            curr.lastSegment.point = e[0].point;
+          }
+        });
 
         const {elm_font_size} = consts;
         const {bounds} = props.parent;
@@ -3470,6 +3489,45 @@ class Contour extends paper.Layer {
           content: row.inset.presentation,
           point: bounds.bottomLeft.add([elm_font_size * 1.2, -elm_font_size * 0.6]),
         });
+
+        if(imposts){
+          const {offsets, do_center, step} = imposts;
+
+          function add_impost(y) {
+            const impost = Object.assign(new paper.Path({
+              insert: false,
+              segments: [[bounds.left, y], [bounds.right, y]]
+          }), props);
+            const {length} = impost;
+            perimetr.forEach((curr) => {
+              const aloc = curr.getIntersections(impost);
+              if(aloc.length){
+                const l1 = impost.firstSegment.point.getDistance(aloc[0].point);
+                const l2 = impost.lastSegment.point.getDistance(aloc[0].point);
+                if(l1 < length / 2){
+                  impost.firstSegment.point = aloc[0].point;
+                }
+                if(l2 < length / 2){
+                  impost.lastSegment.point = aloc[0].point;
+                }
+              }
+            });
+          }
+
+          if(step){
+            const height = bounds.height - offsets;
+            if(height >= step){
+              if(do_center){
+                add_impost(bounds.centerY);
+              }
+              else{
+                for(let y = step; y < height; y += step){
+                  add_impost(y);
+                }
+              }
+            }
+          }
+        }
 
         return false;
       }
