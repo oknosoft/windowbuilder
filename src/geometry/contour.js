@@ -1000,6 +1000,416 @@ class Contour extends paper.Layer {
   }
 
   /**
+   * Рисует ошибки соединений
+   */
+  draw_cnn_errors() {
+
+    const {l_visualization} = this;
+
+    if(l_visualization._cnn){
+      l_visualization._cnn.removeChildren();
+    }
+    else{
+      l_visualization._cnn = new paper.Group({ parent: l_visualization });
+    }
+
+    // ошибки соединений с заполнениями
+    this.glasses(false, true).forEach((elm) => {
+      let err;
+      elm.profiles.forEach(({cnn, sub_path}) => {
+        if(!cnn){
+          sub_path.parent = l_visualization._cnn;
+          sub_path.strokeWidth = 2;
+          sub_path.strokeScaling = false;
+          sub_path.strokeColor = 'red';
+          sub_path.strokeCap = 'round';
+          sub_path.dashArray = [12, 8];
+          err = true;
+        }
+      });
+      elm.path.fillColor = err ? new paper.Color({
+        stops: ["#fee", "#fcc", "#fdd"],
+        origin: elm.path.bounds.bottomLeft,
+        destination: elm.path.bounds.topRight
+      }) : BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+    });
+
+    // ошибки соединений профиля
+    this.profiles.forEach((elm) => {
+      const {b, e} = elm.rays;
+      if(!b.cnn){
+        new paper.Path.Circle({
+          center: elm.corns(4).add(elm.corns(1)).divide(2),
+          radius: 80,
+          strokeColor: 'red',
+          strokeWidth: 2,
+          strokeCap: 'round',
+          strokeScaling: false,
+          dashOffset: 4,
+          dashArray: [4, 4],
+          guide: true,
+          parent: l_visualization._cnn
+        });
+      }
+      if(!e.cnn){
+        new paper.Path.Circle({
+          center: elm.corns(2).add(elm.corns(3)).divide(2),
+          radius: 80,
+          strokeColor: 'red',
+          strokeWidth: 2,
+          strokeCap: 'round',
+          strokeScaling: false,
+          dashOffset: 4,
+          dashArray: [4, 4],
+          guide: true,
+          parent: l_visualization._cnn
+        });
+      }
+    });
+  }
+
+  /**
+   * Рисут визуализацию москитки
+   */
+  draw_mosquito() {
+    const {l_visualization} = this;
+    this.project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
+      if(row.inset.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
+        const ms_path = new paper.CompoundPath({parent: l_visualization._by_spec, strokeColor: 'blue'});
+        row.inset.specification.forEach((rspec) => {
+          if(rspec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру && rspec.nom.elm_type == $p.enm.elm_types.Рама){
+            this.outer_profiles.forEach((curr) => {
+              // получаем внешнюю палку, на которую будет повешена москитка
+              const profile = curr.profile || curr.elm;
+              let angle = curr.e.subtract(curr.b).angle;
+              if(angle < 0){
+                angle += 360;
+              }
+              const is_outer = Math.abs(profile.angle_hor - angle) > 60;
+
+              ms_path.moveTo(curr.b);
+              ms_path.lineTo(curr.e)
+            });
+          }
+        });
+
+        // габариты
+
+        // поперечина
+
+      }
+    });
+  }
+
+  /**
+   * Рисует направление открывания
+   */
+  draw_opening() {
+
+    const _contour = this;
+    const {l_visualization, furn} = this;
+
+    if(!this.parent || !$p.enm.open_types.is_opening(furn.open_type)){
+      if(l_visualization._opening && l_visualization._opening.visible)
+        l_visualization._opening.visible = false;
+      return;
+    }
+
+    // создаём кеш элементов по номеру фурнитуры
+    const cache = {
+      profiles: this.outer_nodes,
+      bottom: this.profiles_by_side("bottom")
+    };
+
+    // рисует линии открывания на поворотной, поворотнооткидной и фрамужной фурнитуре
+    function rotary_folding() {
+
+      const {_opening} = l_visualization;
+      const {side_count} = _contour;
+
+      furn.open_tunes.forEach((row) => {
+
+        if(row.rotation_axis){
+          const axis = _contour.profile_by_furn_side(row.side, cache);
+          const other = _contour.profile_by_furn_side(
+            row.side + 2 <= side_count ? row.side + 2 : row.side - 2, cache);
+
+          _opening.moveTo(axis.corns(3));
+          _opening.lineTo(other.rays.inner.getPointAt(other.rays.inner.length / 2));
+          _opening.lineTo(axis.corns(4));
+
+        }
+      });
+    }
+
+    // рисует линии открывания на раздвижке
+    function sliding() {
+      // находим центр
+      const {center} = _contour.bounds;
+      const {_opening} = l_visualization;
+
+      if(_contour.direction == $p.enm.open_directions.Правое) {
+        _opening.moveTo(center.add([-100,0]));
+        _opening.lineTo(center.add([100,0]));
+        _opening.moveTo(center.add([30,30]));
+        _opening.lineTo(center.add([100,0]));
+        _opening.lineTo(center.add([30,-30]));
+      }
+      else {
+        _opening.moveTo(center.add([100,0]));
+        _opening.lineTo(center.add([-100,0]));
+        _opening.moveTo(center.add([-30,30]));
+        _opening.lineTo(center.add([-100,0]));
+        _opening.lineTo(center.add([-30,-30]));
+      }
+    }
+
+    // подготавливаем слой для рисования
+    if(!l_visualization._opening){
+      l_visualization._opening = new paper.CompoundPath({
+        parent: _contour.l_visualization,
+        strokeColor: 'black'
+      });
+    }
+    else{
+      l_visualization._opening.removeChildren();
+    }
+
+    // рисуем раправление открывания
+    return furn.is_sliding ? sliding() : rotary_folding();
+
+  }
+
+  /**
+   * формирует авторазмерные линии
+   */
+  draw_sizes() {
+
+    const {contours, parent, l_dimensions, bounds} = this;
+
+    // сначала, перерисовываем размерные линии вложенных контуров, чтобы получить отступы
+    contours.forEach((l) => l.draw_sizes());
+
+    // для внешних контуров строим авторазмерные линии
+    if(!parent){
+
+      const by_side = this.profiles_by_side();
+
+      // сначала, строим размерные линии импостов
+
+      // получаем все профили контура, делим их на вертикальные и горизонтальные
+      const ihor = [{
+        point: bounds.top.round(0),
+        elm: by_side.top,
+        p: by_side.top.b.y < by_side.top.e.y ? "b" : "e"
+      }, {
+        point: bounds.bottom.round(0),
+        elm: by_side.bottom,
+        p: by_side.bottom.b.y < by_side.bottom.e.y ? "b" : "e"
+      }];
+      const ivert = [{
+        point: bounds.left.round(0),
+        elm: by_side.left,
+        p: by_side.left.b.x > by_side.left.e.x ? "b" : "e"
+      }, {
+        point: bounds.right.round(0),
+        elm: by_side.right,
+        p: by_side.right.b.x > by_side.right.e.x ? "b" : "e"
+      }];
+
+      const profiles = new Set(this.profiles);
+      this.imposts.forEach((elm) => profiles.add(elm));
+
+      profiles.forEach((elm) => {
+
+        const eb = elm.layer === this ? elm.b : elm.rays.b.npoint;
+        const ee = elm.layer === this ? elm.e : elm.rays.e.npoint;
+
+        if(ihor.every((v) => v.point != eb.y.round(0))){
+          ihor.push({
+            point: eb.y.round(0),
+            elm: elm,
+            p: "b"
+          });
+        }
+        if(ihor.every((v) => v.point != ee.y.round(0))){
+          ihor.push({
+            point: ee.y.round(0),
+            elm: elm,
+            p: "e"
+          });
+        }
+        if(ivert.every((v) => v.point != eb.x.round(0))){
+          ivert.push({
+            point: eb.x.round(0),
+            elm: elm,
+            p: "b"
+          });
+        }
+        if(ivert.every((v) => v.point != ee.x.round(0))){
+          ivert.push({
+            point: ee.x.round(0),
+            elm: elm,
+            p: "e"
+          });
+        }
+      });
+
+      if(ihor.length > 2 || ivert.length > 2){
+
+        ihor.sort((a, b) => b.point - a.point);
+        ivert.sort((a, b) => a.point - b.point);
+
+        // для ihor добавляем по вертикали
+        if(!l_dimensions.ihor){
+          l_dimensions.ihor = {};
+        }
+        if(this.is_pos("right")){
+          this.imposts_dimensions(ihor, l_dimensions.ihor, "right");
+        }
+        else if(this.is_pos("left")){
+          this.imposts_dimensions(ihor, l_dimensions.ihor, "left");
+        }
+
+        // для ivert добавляем по горизонтали
+        if(!l_dimensions.ivert){
+          l_dimensions.ivert = {};
+        }
+        if(this.is_pos("bottom")){
+          this.imposts_dimensions(ivert, l_dimensions.ivert, "bottom");
+        }
+        else if(this.is_pos("top")){
+          this.imposts_dimensions(ivert, l_dimensions.ivert, "top");
+        }
+      }
+
+      // далее - размерные линии контура
+      this.draw_sizes_contour(ihor, ivert);
+
+    }
+
+    // перерисовываем размерные линии текущего контура
+    l_dimensions.children.forEach((dl) => dl.redraw && dl.redraw());
+
+  }
+
+  /**
+   * ### Формирует размерные линии контура
+   */
+  draw_sizes_contour (ihor, ivert) {
+
+    const {project, l_dimensions} = this;
+
+    if (project.contours.length > 1) {
+
+      if(this.is_pos("left") && !this.is_pos("right") && project.bounds.height != this.bounds.height){
+        if(!l_dimensions.left){
+          l_dimensions.left = new DimensionLine({
+            pos: "left",
+            parent: l_dimensions,
+            offset: ihor.length > 2 ? 220 : 90,
+            contour: true
+          });
+        }else
+          l_dimensions.left.offset = ihor.length > 2 ? 220 : 90;
+
+      }else{
+        if(l_dimensions.left){
+          l_dimensions.left.remove();
+          l_dimensions.left = null;
+        }
+      }
+
+      if(this.is_pos("right") && project.bounds.height != this.bounds.height){
+        if(!l_dimensions.right){
+          l_dimensions.right = new DimensionLine({
+            pos: "right",
+            parent: l_dimensions,
+            offset: ihor.length > 2 ? -260 : -130,
+            contour: true
+          });
+        }else
+          l_dimensions.right.offset = ihor.length > 2 ? -260 : -130;
+
+      }else{
+        if(l_dimensions.right){
+          l_dimensions.right.remove();
+          l_dimensions.right = null;
+        }
+      }
+
+      if(this.is_pos("top") && !this.is_pos("bottom") && project.bounds.width != this.bounds.width){
+        if(!l_dimensions.top){
+          l_dimensions.top = new DimensionLine({
+            pos: "top",
+            parent: l_dimensions,
+            offset: ivert.length > 2 ? 220 : 90,
+            contour: true
+          });
+        }else
+          l_dimensions.top.offset = ivert.length > 2 ? 220 : 90;
+      }else{
+        if(l_dimensions.top){
+          l_dimensions.top.remove();
+          l_dimensions.top = null;
+        }
+      }
+
+      if(this.is_pos("bottom") && project.bounds.width != this.bounds.width){
+        if(!l_dimensions.bottom){
+          l_dimensions.bottom = new DimensionLine({
+            pos: "bottom",
+            parent: l_dimensions,
+            offset: ivert.length > 2 ? -260 : -130,
+            contour: true
+          });
+        }else
+          l_dimensions.bottom.offset = ivert.length > 2 ? -260 : -130;
+
+      }else{
+        if(l_dimensions.bottom){
+          l_dimensions.bottom.remove();
+          l_dimensions.bottom = null;
+        }
+      }
+
+    }
+  }
+
+  /**
+   * Рисует дополнительную визуализацию. Данные берёт из спецификации и проблемных соединений
+   */
+  draw_visualization() {
+
+    const {profiles, l_visualization} = this;
+
+    if(l_visualization._by_spec){
+      l_visualization._by_spec.removeChildren();
+    }
+    else{
+      l_visualization._by_spec = new paper.Group({ parent: l_visualization });
+    }
+
+    // получаем строки спецификации с визуализацией
+    this.project.ox.specification.find_rows({dop: -1}, (row) => {
+      profiles.some((elm) => {
+        if(row.elm == elm.elm){
+          // есть визуализация для текущего профиля
+          row.nom.visualization.draw(elm, l_visualization, row.len * 1000);
+          return true;
+        }
+      });
+    });
+
+    // перерисовываем вложенные контуры
+    this.children.forEach((l) => l instanceof Contour && l.draw_visualization());
+
+    // рисуем москитки
+    this.draw_mosquito();
+
+  }
+
+  /**
    * Возвращает массив импостов текущего + вложенных контуров
    * @property imposts
    * @for Contour
@@ -1185,6 +1595,28 @@ class Contour extends paper.Layer {
     }
 
     this.data._bounds = null;
+  }
+
+  /**
+   * Массив с рёбрами периметра
+   */
+  get perimeter () {
+    const res = [];
+    this.outer_profiles.forEach((curr) => {
+      const tmp = curr.sub_path ? {
+        len: curr.sub_path.length,
+        angle: curr.e.subtract(curr.b).angle
+      } : {
+        len: curr.elm.length,
+        angle: curr.elm.angle_hor
+      };
+      res.push(tmp);
+      if(tmp.angle < 0){
+        tmp.angle += 360;
+      }
+      tmp.profile = curr.profile || curr.elm;
+    });
+    return res;
   }
 
   /**
@@ -1512,6 +1944,8 @@ class Contour extends paper.Layer {
     return bounds ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
   }
 
+
+
 }
 
 Contour.prototype.__define({
@@ -1547,417 +1981,6 @@ Contour.prototype.__define({
         _layers.dimensions.bringToFront();
       }
       return _layers.dimensions;
-    }
-  },
-
-	/**
-	 * Рисует направление открывания
-	 */
-	draw_opening: {
-		value: function () {
-
-      const _contour = this;
-      const {l_visualization, furn} = this;
-
-			if(!this.parent || !$p.enm.open_types.is_opening(furn.open_type)){
-				if(l_visualization._opening && l_visualization._opening.visible)
-					l_visualization._opening.visible = false;
-				return;
-			}
-
-      // создаём кеш элементов по номеру фурнитуры
-      const cache = {
-        profiles: this.outer_nodes,
-        bottom: this.profiles_by_side("bottom")
-      };
-
-			// рисует линии открывания на поворотной, поворотнооткидной и фрамужной фурнитуре
-			function rotary_folding() {
-
-        const {_opening} = l_visualization;
-        const {side_count} = _contour;
-
-				furn.open_tunes.forEach((row) => {
-
-					if(row.rotation_axis){
-						const axis = _contour.profile_by_furn_side(row.side, cache);
-            const other = _contour.profile_by_furn_side(
-								row.side + 2 <= side_count ? row.side + 2 : row.side - 2, cache);
-
-						_opening.moveTo(axis.corns(3));
-						_opening.lineTo(other.rays.inner.getPointAt(other.rays.inner.length / 2));
-						_opening.lineTo(axis.corns(4));
-
-					}
-				});
-			}
-
-			// рисует линии открывания на раздвижке
-			function sliding() {
-			  // находим центр
-        const {center} = _contour.bounds;
-        const {_opening} = l_visualization;
-
-        if(_contour.direction == $p.enm.open_directions.Правое) {
-          _opening.moveTo(center.add([-100,0]));
-          _opening.lineTo(center.add([100,0]));
-          _opening.moveTo(center.add([30,30]));
-          _opening.lineTo(center.add([100,0]));
-          _opening.lineTo(center.add([30,-30]));
-        }
-        else {
-          _opening.moveTo(center.add([100,0]));
-          _opening.lineTo(center.add([-100,0]));
-          _opening.moveTo(center.add([-30,30]));
-          _opening.lineTo(center.add([-100,0]));
-          _opening.lineTo(center.add([-30,-30]));
-        }
-			}
-
-			// подготавливаем слой для рисования
-			if(!l_visualization._opening){
-        l_visualization._opening = new paper.CompoundPath({
-          parent: _contour.l_visualization,
-          strokeColor: 'black'
-        });
-      }
-			else{
-        l_visualization._opening.removeChildren();
-      }
-
-			// рисуем раправление открывания
-      return furn.is_sliding ? sliding() : rotary_folding();
-
-		}
-	},
-
-  /**
-   * Рисует ошибки соединений
-   */
-  draw_cnn_errors: {
-    value: function () {
-
-      const {l_visualization} = this;
-
-      if(l_visualization._cnn){
-        l_visualization._cnn.removeChildren();
-      }
-      else{
-        l_visualization._cnn = new paper.Group({ parent: l_visualization });
-      }
-
-      // ошибки соединений с заполнениями
-      this.glasses(false, true).forEach((elm) => {
-        let err;
-        elm.profiles.forEach(({cnn, sub_path}) => {
-          if(!cnn){
-            sub_path.parent = l_visualization._cnn;
-            sub_path.strokeWidth = 2;
-            sub_path.strokeScaling = false;
-            sub_path.strokeColor = 'red';
-            sub_path.strokeCap = 'round';
-            sub_path.dashArray = [12, 8];
-            err = true;
-          }
-        });
-        elm.path.fillColor = err ? new paper.Color({
-            stops: ["#fee", "#fcc", "#fdd"],
-            origin: elm.path.bounds.bottomLeft,
-            destination: elm.path.bounds.topRight
-          }) : BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
-      });
-
-      // ошибки соединений профиля
-      this.profiles.forEach((elm) => {
-        const {b, e} = elm.rays;
-        if(!b.cnn){
-          new paper.Path.Circle({
-            center: elm.corns(4).add(elm.corns(1)).divide(2),
-            radius: 80,
-            strokeColor: 'red',
-            strokeWidth: 2,
-            strokeCap: 'round',
-            strokeScaling: false,
-            dashOffset: 4,
-            dashArray: [4, 4],
-            guide: true,
-            parent: l_visualization._cnn
-          });
-        }
-        if(!e.cnn){
-          new paper.Path.Circle({
-            center: elm.corns(2).add(elm.corns(3)).divide(2),
-            radius: 80,
-            strokeColor: 'red',
-            strokeWidth: 2,
-            strokeCap: 'round',
-            strokeScaling: false,
-            dashOffset: 4,
-            dashArray: [4, 4],
-            guide: true,
-            parent: l_visualization._cnn
-          });
-        }
-      });
-    }
-  },
-
-	/**
-	 * Рисует дополнительную визуализацию. Данные берёт из спецификации и проблемных соединений
-	 */
-	draw_visualization: {
-		value: function () {
-
-		  const {profiles, l_visualization} = this;
-
-			if(l_visualization._by_spec){
-        l_visualization._by_spec.removeChildren();
-      }
-			else{
-        l_visualization._by_spec = new paper.Group({ parent: l_visualization });
-      }
-
-			// получаем строки спецификации с визуализацией
-			this.project.ox.specification.find_rows({dop: -1}, (row) => {
-				profiles.some((elm) => {
-					if(row.elm == elm.elm){
-
-						// есть визуализация для текущего профиля
-						row.nom.visualization.draw(elm, l_visualization, row.len * 1000);
-
-						return true;
-					}
-				});
-			});
-
-			// перерисовываем вложенные контуры
-			this.children.forEach((l) => l instanceof Contour && l.draw_visualization());
-
-		}
-	},
-
-  /**
-   * Массив с рёбрами периметра
-   */
-  perimeter: {
-    get: function () {
-      const res = [];
-      this.outer_profiles.forEach((curr) => {
-        const tmp = curr.sub_path ? {
-            len: curr.sub_path.length,
-            angle: curr.e.subtract(curr.b).angle
-          } : {
-            len: curr.elm.length,
-            angle: curr.elm.angle_hor
-          };
-        res.push(tmp);
-        if(tmp.angle < 0){
-          tmp.angle += 360;
-        }
-      });
-      return res;
-    }
-  },
-
-	/**
-	 * формирует авторазмерные линии
-	 */
-	draw_sizes: {
-
-		value: function () {
-
-		  const {contours, parent, l_dimensions, bounds} = this;
-
-			// сначала, перерисовываем размерные линии вложенных контуров, чтобы получить отступы
-      contours.forEach((l) => l.draw_sizes());
-
-			// для внешних контуров строим авторазмерные линии
-			if(!parent){
-
-        const by_side = this.profiles_by_side();
-
-				// сначала, строим размерные линии импостов
-
-				// получаем все профили контура, делим их на вертикальные и горизонтальные
-				const ihor = [{
-				  point: bounds.top.round(0),
-          elm: by_side.top,
-          p: by_side.top.b.y < by_side.top.e.y ? "b" : "e"
-				}, {
-				  point: bounds.bottom.round(0),
-          elm: by_side.bottom,
-          p: by_side.bottom.b.y < by_side.bottom.e.y ? "b" : "e"
-        }];
-				const ivert = [{
-				  point: bounds.left.round(0),
-          elm: by_side.left,
-          p: by_side.left.b.x > by_side.left.e.x ? "b" : "e"
-        }, {
-				  point: bounds.right.round(0),
-          elm: by_side.right,
-          p: by_side.right.b.x > by_side.right.e.x ? "b" : "e"
-        }];
-
-        const profiles = new Set(this.profiles);
-        this.imposts.forEach((elm) => profiles.add(elm));
-
-				profiles.forEach((elm) => {
-
-				  const eb = elm.layer === this ? elm.b : elm.rays.b.npoint;
-				  const ee = elm.layer === this ? elm.e : elm.rays.e.npoint;
-
-          if(ihor.every((v) => v.point != eb.y.round(0))){
-            ihor.push({
-              point: eb.y.round(0),
-              elm: elm,
-              p: "b"
-            });
-          }
-          if(ihor.every((v) => v.point != ee.y.round(0))){
-            ihor.push({
-              point: ee.y.round(0),
-              elm: elm,
-              p: "e"
-            });
-          }
-          if(ivert.every((v) => v.point != eb.x.round(0))){
-            ivert.push({
-              point: eb.x.round(0),
-              elm: elm,
-              p: "b"
-            });
-          }
-          if(ivert.every((v) => v.point != ee.x.round(0))){
-            ivert.push({
-              point: ee.x.round(0),
-              elm: elm,
-              p: "e"
-            });
-          }
-				});
-
-				if(ihor.length > 2 || ivert.length > 2){
-
-          ihor.sort((a, b) => b.point - a.point);
-          ivert.sort((a, b) => a.point - b.point);
-
-					// для ihor добавляем по вертикали
-					if(!l_dimensions.ihor){
-            l_dimensions.ihor = {};
-          }
-          if(this.is_pos("right")){
-            this.imposts_dimensions(ihor, l_dimensions.ihor, "right");
-          }
-          else if(this.is_pos("left")){
-            this.imposts_dimensions(ihor, l_dimensions.ihor, "left");
-          }
-
-					// для ivert добавляем по горизонтали
-					if(!l_dimensions.ivert){
-            l_dimensions.ivert = {};
-          }
-          if(this.is_pos("bottom")){
-            this.imposts_dimensions(ivert, l_dimensions.ivert, "bottom");
-          }
-          else if(this.is_pos("top")){
-            this.imposts_dimensions(ivert, l_dimensions.ivert, "top");
-          }
-				}
-
-				// далее - размерные линии контура
-        this.draw_sizes_contour(ihor, ivert);
-
-			}
-
-			// перерисовываем размерные линии текущего контура
-      l_dimensions.children.forEach((dl) => dl.redraw && dl.redraw());
-
-		}
-	},
-
-  /**
-   * ### Формирует размерные линии контура
-   */
-  draw_sizes_contour: {
-
-    value: function (ihor, ivert) {
-
-      const {project, l_dimensions} = this;
-
-      if (project.contours.length > 1) {
-
-        if(this.is_pos("left") && !this.is_pos("right") && project.bounds.height != this.bounds.height){
-          if(!l_dimensions.left){
-            l_dimensions.left = new DimensionLine({
-              pos: "left",
-              parent: l_dimensions,
-              offset: ihor.length > 2 ? 220 : 90,
-              contour: true
-            });
-          }else
-            l_dimensions.left.offset = ihor.length > 2 ? 220 : 90;
-
-        }else{
-          if(l_dimensions.left){
-            l_dimensions.left.remove();
-            l_dimensions.left = null;
-          }
-        }
-
-        if(this.is_pos("right") && project.bounds.height != this.bounds.height){
-          if(!l_dimensions.right){
-            l_dimensions.right = new DimensionLine({
-              pos: "right",
-              parent: l_dimensions,
-              offset: ihor.length > 2 ? -260 : -130,
-              contour: true
-            });
-          }else
-            l_dimensions.right.offset = ihor.length > 2 ? -260 : -130;
-
-        }else{
-          if(l_dimensions.right){
-            l_dimensions.right.remove();
-            l_dimensions.right = null;
-          }
-        }
-
-        if(this.is_pos("top") && !this.is_pos("bottom") && project.bounds.width != this.bounds.width){
-          if(!l_dimensions.top){
-            l_dimensions.top = new DimensionLine({
-              pos: "top",
-              parent: l_dimensions,
-              offset: ivert.length > 2 ? 220 : 90,
-              contour: true
-            });
-          }else
-            l_dimensions.top.offset = ivert.length > 2 ? 220 : 90;
-        }else{
-          if(l_dimensions.top){
-            l_dimensions.top.remove();
-            l_dimensions.top = null;
-          }
-        }
-
-        if(this.is_pos("bottom") && project.bounds.width != this.bounds.width){
-          if(!l_dimensions.bottom){
-            l_dimensions.bottom = new DimensionLine({
-              pos: "bottom",
-              parent: l_dimensions,
-              offset: ivert.length > 2 ? -260 : -130,
-              contour: true
-            });
-          }else
-            l_dimensions.bottom.offset = ivert.length > 2 ? -260 : -130;
-
-        }else{
-          if(l_dimensions.bottom){
-            l_dimensions.bottom.remove();
-            l_dimensions.bottom = null;
-          }
-        }
-
-      }
     }
   },
 

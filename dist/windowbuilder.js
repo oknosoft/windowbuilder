@@ -421,7 +421,16 @@ class SchemeLayers {
 
     this.observer = this.observer.bind(this);
 
-    this.tree = cell.attachTreeView({
+    this.layout = cell.attachLayout({
+      pattern: "2E",
+      cells: [
+        {id: "a", text: "tree", header: false, height: 200},
+        {id: "b", text: "Доп. вставки в контур", header: true}
+      ],
+      offsets: {top: 0, right: 0, bottom: 0, left: 0},
+    });
+
+    this.tree = this.layout.cells("a").attachTreeView({
       checkboxes: true,
       multiselect: false
     });
@@ -495,6 +504,10 @@ class SchemeLayers {
       }
 
     });
+
+    this.layout.cells("a").setMinHeight(180);
+    this.layout.cells("b").setMinHeight(180);
+    this.layout.cells("a").setHeight(200);
 
   }
 
@@ -917,7 +930,6 @@ class EditorAccordion {
         {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
-        {name: 'inserts_to_contour', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_contour, float: 'left'},
         {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
 
       ], onclick: (name) => {
@@ -970,6 +982,7 @@ class EditorAccordion {
     });
     this.tree_layers = new SchemeLayers(this._layers, (text) => {
       this._stv._toolbar.setItemText("info", text);
+      _editor.additional_inserts('contour', this.tree_layers.layout.cells('b'));
     });
 
     this._stv = this.tabbar.cells('stv');
@@ -1022,6 +1035,7 @@ class EditorAccordion {
       name: 'bottom',
       image_path: 'dist/imgs/',
       buttons: [
+        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
         {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
 
       ], onclick: (name) => {
@@ -1031,6 +1045,10 @@ class EditorAccordion {
           case 'refill':
             _editor.project._dp.sys.refill_prm(_editor.project.ox);
             this.props.reload();
+            break;
+
+          case 'inserts_to_product':
+            _editor.additional_inserts();
             break;
 
           default:
@@ -1761,7 +1779,7 @@ class Editor extends paper.PaperScope {
 
   }
 
-  additional_inserts(cnstr){
+  additional_inserts(cnstr, cell){
 
     const meta_fields = $p.cat.characteristics.metadata("inserts").fields._clone();
     let caption = $p.msg.additional_inserts;
@@ -1784,8 +1802,9 @@ class Editor extends paper.PaperScope {
       }
     }
     else if(cnstr == 'contour'){
-      cnstr = this.project.activeLayer.cnstr
-      caption+= ' в контур №' + cnstr;
+      const {activeLayer} = this.project
+      cnstr = activeLayer.cnstr
+      caption+= ` в ${activeLayer.layer ? 'створку' : 'раму'} №${cnstr}`;
       meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Контур"];
     }
 
@@ -1800,9 +1819,35 @@ class Editor extends paper.PaperScope {
       }
     };
 
-    const wnd = $p.iface.dat_blank(null, options.wnd);
+    if(cell){
+      if(!cell.elmnts){
+        cell.elmnts = {grids: {}};
+      }
+      if(cell.elmnts.grids.inserts && cell.elmnts.grids.inserts.selection.cnstr == cnstr){
+        return;
+      }
+      cell.detachObject(true);
+    }
 
-    wnd.elmnts.layout = wnd.attachLayout({
+    const wnd = cell || $p.iface.dat_blank(null, options.wnd);
+    const elmnts = wnd.elmnts;
+
+    function get_selection() {
+      const {inserts} = elmnts.grids;
+      if(inserts){
+        const row = elmnts.grids.inserts.get_cell_field();
+        if(row && row.obj.inset && row.obj.inset != $p.utils.blank.guid){
+          return {cnstr: cnstr, inset: row.obj.inset}
+        }
+      }
+      return {cnstr: cnstr, inset: $p.utils.generate_guid()}
+    }
+
+    function refill_prms(){
+      elmnts.grids.params.selection = get_selection();
+    }
+
+    elmnts.layout = wnd.attachLayout({
       pattern: "2E",
       cells: [{
         id: "a",
@@ -1814,10 +1859,12 @@ class Editor extends paper.PaperScope {
         text: "Параметры",
         header: false
       }],
-      offsets: { top: 0, right: 0, bottom: 0, left: 0}
+      offsets: {top: 0, right: 0, bottom: 0, left: 0}
     });
+    elmnts.layout.cells("a").setMinHeight(140);
+    elmnts.layout.cells("a").setHeight(160);
 
-    wnd.elmnts.grids.inserts = wnd.elmnts.layout.cells("a").attachTabular({
+    elmnts.grids.inserts = elmnts.layout.cells("a").attachTabular({
       obj: this.project.ox,
       ts: "inserts",
       selection: {cnstr: cnstr},
@@ -1834,25 +1881,26 @@ class Editor extends paper.PaperScope {
       }
     });
 
-    wnd.elmnts.grids.params = wnd.elmnts.layout.cells("b").attachHeadFields({
+    elmnts.grids.params = elmnts.layout.cells("b").attachHeadFields({
       obj: this.project.ox,
       ts: "params",
-      selection: {cnstr: cnstr, inset: $p.utils.blank.guid},
+      selection: get_selection(),
       oxml: {
         "Параметры": []
       },
       ts_title: "Параметры"
     });
 
-    function refill_prms(){
-      var row = wnd.elmnts.grids.inserts.get_cell_field();
-      wnd.elmnts.grids.params.selection = {cnstr: cnstr, inset: row.obj.inset};
+    if(cell){
+      elmnts.layout.cells("a").getAttachedToolbar().addText($p.utils.generate_guid(), 3, options.wnd.caption);
     }
-    wnd.elmnts.grids.inserts.attachEvent("onRowSelect", refill_prms);
-    wnd.elmnts.grids.inserts.attachEvent("onEditCell", function (stage, rId, cInd) {
-      if(!cInd){
-        setTimeout(refill_prms)
-      }
+
+    elmnts.grids.inserts.attachEvent("onRowSelect", refill_prms);
+    wnd.elmnts.grids.inserts.attachEvent("onEditCell", (stage, rId, cInd) => {
+      !cInd && setTimeout(refill_prms);
+    });
+    elmnts.grids.inserts.attachEvent("onBeforeRowDeleted", (id, pid) => {
+      setTimeout(refill_prms);
     });
   }
 
@@ -3307,6 +3355,375 @@ class Contour extends paper.Layer {
     this.project.register_change(true);
   }
 
+  draw_cnn_errors() {
+
+    const {l_visualization} = this;
+
+    if(l_visualization._cnn){
+      l_visualization._cnn.removeChildren();
+    }
+    else{
+      l_visualization._cnn = new paper.Group({ parent: l_visualization });
+    }
+
+    this.glasses(false, true).forEach((elm) => {
+      let err;
+      elm.profiles.forEach(({cnn, sub_path}) => {
+        if(!cnn){
+          sub_path.parent = l_visualization._cnn;
+          sub_path.strokeWidth = 2;
+          sub_path.strokeScaling = false;
+          sub_path.strokeColor = 'red';
+          sub_path.strokeCap = 'round';
+          sub_path.dashArray = [12, 8];
+          err = true;
+        }
+      });
+      elm.path.fillColor = err ? new paper.Color({
+        stops: ["#fee", "#fcc", "#fdd"],
+        origin: elm.path.bounds.bottomLeft,
+        destination: elm.path.bounds.topRight
+      }) : BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+    });
+
+    this.profiles.forEach((elm) => {
+      const {b, e} = elm.rays;
+      if(!b.cnn){
+        new paper.Path.Circle({
+          center: elm.corns(4).add(elm.corns(1)).divide(2),
+          radius: 80,
+          strokeColor: 'red',
+          strokeWidth: 2,
+          strokeCap: 'round',
+          strokeScaling: false,
+          dashOffset: 4,
+          dashArray: [4, 4],
+          guide: true,
+          parent: l_visualization._cnn
+        });
+      }
+      if(!e.cnn){
+        new paper.Path.Circle({
+          center: elm.corns(2).add(elm.corns(3)).divide(2),
+          radius: 80,
+          strokeColor: 'red',
+          strokeWidth: 2,
+          strokeCap: 'round',
+          strokeScaling: false,
+          dashOffset: 4,
+          dashArray: [4, 4],
+          guide: true,
+          parent: l_visualization._cnn
+        });
+      }
+    });
+  }
+
+  draw_mosquito() {
+    const {l_visualization} = this;
+    this.project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
+      if(row.inset.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
+        const ms_path = new paper.CompoundPath({parent: l_visualization._by_spec, strokeColor: 'blue'});
+        row.inset.specification.forEach((rspec) => {
+          if(rspec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру && rspec.nom.elm_type == $p.enm.elm_types.Рама){
+            this.outer_profiles.forEach((curr) => {
+              const profile = curr.profile || curr.elm;
+              let angle = curr.e.subtract(curr.b).angle;
+              if(angle < 0){
+                angle += 360;
+              }
+              const is_outer = Math.abs(profile.angle_hor - angle) > 60;
+
+              ms_path.moveTo(curr.b);
+              ms_path.lineTo(curr.e)
+            });
+          }
+        });
+
+
+
+      }
+    });
+  }
+
+  draw_opening() {
+
+    const _contour = this;
+    const {l_visualization, furn} = this;
+
+    if(!this.parent || !$p.enm.open_types.is_opening(furn.open_type)){
+      if(l_visualization._opening && l_visualization._opening.visible)
+        l_visualization._opening.visible = false;
+      return;
+    }
+
+    const cache = {
+      profiles: this.outer_nodes,
+      bottom: this.profiles_by_side("bottom")
+    };
+
+    function rotary_folding() {
+
+      const {_opening} = l_visualization;
+      const {side_count} = _contour;
+
+      furn.open_tunes.forEach((row) => {
+
+        if(row.rotation_axis){
+          const axis = _contour.profile_by_furn_side(row.side, cache);
+          const other = _contour.profile_by_furn_side(
+            row.side + 2 <= side_count ? row.side + 2 : row.side - 2, cache);
+
+          _opening.moveTo(axis.corns(3));
+          _opening.lineTo(other.rays.inner.getPointAt(other.rays.inner.length / 2));
+          _opening.lineTo(axis.corns(4));
+
+        }
+      });
+    }
+
+    function sliding() {
+      const {center} = _contour.bounds;
+      const {_opening} = l_visualization;
+
+      if(_contour.direction == $p.enm.open_directions.Правое) {
+        _opening.moveTo(center.add([-100,0]));
+        _opening.lineTo(center.add([100,0]));
+        _opening.moveTo(center.add([30,30]));
+        _opening.lineTo(center.add([100,0]));
+        _opening.lineTo(center.add([30,-30]));
+      }
+      else {
+        _opening.moveTo(center.add([100,0]));
+        _opening.lineTo(center.add([-100,0]));
+        _opening.moveTo(center.add([-30,30]));
+        _opening.lineTo(center.add([-100,0]));
+        _opening.lineTo(center.add([-30,-30]));
+      }
+    }
+
+    if(!l_visualization._opening){
+      l_visualization._opening = new paper.CompoundPath({
+        parent: _contour.l_visualization,
+        strokeColor: 'black'
+      });
+    }
+    else{
+      l_visualization._opening.removeChildren();
+    }
+
+    return furn.is_sliding ? sliding() : rotary_folding();
+
+  }
+
+  draw_sizes() {
+
+    const {contours, parent, l_dimensions, bounds} = this;
+
+    contours.forEach((l) => l.draw_sizes());
+
+    if(!parent){
+
+      const by_side = this.profiles_by_side();
+
+
+      const ihor = [{
+        point: bounds.top.round(0),
+        elm: by_side.top,
+        p: by_side.top.b.y < by_side.top.e.y ? "b" : "e"
+      }, {
+        point: bounds.bottom.round(0),
+        elm: by_side.bottom,
+        p: by_side.bottom.b.y < by_side.bottom.e.y ? "b" : "e"
+      }];
+      const ivert = [{
+        point: bounds.left.round(0),
+        elm: by_side.left,
+        p: by_side.left.b.x > by_side.left.e.x ? "b" : "e"
+      }, {
+        point: bounds.right.round(0),
+        elm: by_side.right,
+        p: by_side.right.b.x > by_side.right.e.x ? "b" : "e"
+      }];
+
+      const profiles = new Set(this.profiles);
+      this.imposts.forEach((elm) => profiles.add(elm));
+
+      profiles.forEach((elm) => {
+
+        const eb = elm.layer === this ? elm.b : elm.rays.b.npoint;
+        const ee = elm.layer === this ? elm.e : elm.rays.e.npoint;
+
+        if(ihor.every((v) => v.point != eb.y.round(0))){
+          ihor.push({
+            point: eb.y.round(0),
+            elm: elm,
+            p: "b"
+          });
+        }
+        if(ihor.every((v) => v.point != ee.y.round(0))){
+          ihor.push({
+            point: ee.y.round(0),
+            elm: elm,
+            p: "e"
+          });
+        }
+        if(ivert.every((v) => v.point != eb.x.round(0))){
+          ivert.push({
+            point: eb.x.round(0),
+            elm: elm,
+            p: "b"
+          });
+        }
+        if(ivert.every((v) => v.point != ee.x.round(0))){
+          ivert.push({
+            point: ee.x.round(0),
+            elm: elm,
+            p: "e"
+          });
+        }
+      });
+
+      if(ihor.length > 2 || ivert.length > 2){
+
+        ihor.sort((a, b) => b.point - a.point);
+        ivert.sort((a, b) => a.point - b.point);
+
+        if(!l_dimensions.ihor){
+          l_dimensions.ihor = {};
+        }
+        if(this.is_pos("right")){
+          this.imposts_dimensions(ihor, l_dimensions.ihor, "right");
+        }
+        else if(this.is_pos("left")){
+          this.imposts_dimensions(ihor, l_dimensions.ihor, "left");
+        }
+
+        if(!l_dimensions.ivert){
+          l_dimensions.ivert = {};
+        }
+        if(this.is_pos("bottom")){
+          this.imposts_dimensions(ivert, l_dimensions.ivert, "bottom");
+        }
+        else if(this.is_pos("top")){
+          this.imposts_dimensions(ivert, l_dimensions.ivert, "top");
+        }
+      }
+
+      this.draw_sizes_contour(ihor, ivert);
+
+    }
+
+    l_dimensions.children.forEach((dl) => dl.redraw && dl.redraw());
+
+  }
+
+  draw_sizes_contour (ihor, ivert) {
+
+    const {project, l_dimensions} = this;
+
+    if (project.contours.length > 1) {
+
+      if(this.is_pos("left") && !this.is_pos("right") && project.bounds.height != this.bounds.height){
+        if(!l_dimensions.left){
+          l_dimensions.left = new DimensionLine({
+            pos: "left",
+            parent: l_dimensions,
+            offset: ihor.length > 2 ? 220 : 90,
+            contour: true
+          });
+        }else
+          l_dimensions.left.offset = ihor.length > 2 ? 220 : 90;
+
+      }else{
+        if(l_dimensions.left){
+          l_dimensions.left.remove();
+          l_dimensions.left = null;
+        }
+      }
+
+      if(this.is_pos("right") && project.bounds.height != this.bounds.height){
+        if(!l_dimensions.right){
+          l_dimensions.right = new DimensionLine({
+            pos: "right",
+            parent: l_dimensions,
+            offset: ihor.length > 2 ? -260 : -130,
+            contour: true
+          });
+        }else
+          l_dimensions.right.offset = ihor.length > 2 ? -260 : -130;
+
+      }else{
+        if(l_dimensions.right){
+          l_dimensions.right.remove();
+          l_dimensions.right = null;
+        }
+      }
+
+      if(this.is_pos("top") && !this.is_pos("bottom") && project.bounds.width != this.bounds.width){
+        if(!l_dimensions.top){
+          l_dimensions.top = new DimensionLine({
+            pos: "top",
+            parent: l_dimensions,
+            offset: ivert.length > 2 ? 220 : 90,
+            contour: true
+          });
+        }else
+          l_dimensions.top.offset = ivert.length > 2 ? 220 : 90;
+      }else{
+        if(l_dimensions.top){
+          l_dimensions.top.remove();
+          l_dimensions.top = null;
+        }
+      }
+
+      if(this.is_pos("bottom") && project.bounds.width != this.bounds.width){
+        if(!l_dimensions.bottom){
+          l_dimensions.bottom = new DimensionLine({
+            pos: "bottom",
+            parent: l_dimensions,
+            offset: ivert.length > 2 ? -260 : -130,
+            contour: true
+          });
+        }else
+          l_dimensions.bottom.offset = ivert.length > 2 ? -260 : -130;
+
+      }else{
+        if(l_dimensions.bottom){
+          l_dimensions.bottom.remove();
+          l_dimensions.bottom = null;
+        }
+      }
+
+    }
+  }
+
+  draw_visualization() {
+
+    const {profiles, l_visualization} = this;
+
+    if(l_visualization._by_spec){
+      l_visualization._by_spec.removeChildren();
+    }
+    else{
+      l_visualization._by_spec = new paper.Group({ parent: l_visualization });
+    }
+
+    this.project.ox.specification.find_rows({dop: -1}, (row) => {
+      profiles.some((elm) => {
+        if(row.elm == elm.elm){
+          row.nom.visualization.draw(elm, l_visualization, row.len * 1000);
+          return true;
+        }
+      });
+    });
+
+    this.children.forEach((l) => l instanceof Contour && l.draw_visualization());
+
+    this.draw_mosquito();
+
+  }
+
   get imposts() {
     return this.getItems({class: Profile}).filter((elm) => {
       const {b, e} = elm.rays;
@@ -3471,6 +3888,25 @@ class Contour extends paper.Layer {
     }
 
     this.data._bounds = null;
+  }
+
+  get perimeter () {
+    const res = [];
+    this.outer_profiles.forEach((curr) => {
+      const tmp = curr.sub_path ? {
+        len: curr.sub_path.length,
+        angle: curr.e.subtract(curr.b).angle
+      } : {
+        len: curr.elm.length,
+        angle: curr.elm.angle_hor
+      };
+      res.push(tmp);
+      if(tmp.angle < 0){
+        tmp.angle += 360;
+      }
+      tmp.profile = curr.profile || curr.elm;
+    });
+    return res;
   }
 
   get pos() {
@@ -3726,6 +4162,8 @@ class Contour extends paper.Layer {
     return bounds ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
   }
 
+
+
 }
 
 Contour.prototype.__define({
@@ -3752,380 +4190,6 @@ Contour.prototype.__define({
         _layers.dimensions.bringToFront();
       }
       return _layers.dimensions;
-    }
-  },
-
-	draw_opening: {
-		value: function () {
-
-      const _contour = this;
-      const {l_visualization, furn} = this;
-
-			if(!this.parent || !$p.enm.open_types.is_opening(furn.open_type)){
-				if(l_visualization._opening && l_visualization._opening.visible)
-					l_visualization._opening.visible = false;
-				return;
-			}
-
-      const cache = {
-        profiles: this.outer_nodes,
-        bottom: this.profiles_by_side("bottom")
-      };
-
-			function rotary_folding() {
-
-        const {_opening} = l_visualization;
-        const {side_count} = _contour;
-
-				furn.open_tunes.forEach((row) => {
-
-					if(row.rotation_axis){
-						const axis = _contour.profile_by_furn_side(row.side, cache);
-            const other = _contour.profile_by_furn_side(
-								row.side + 2 <= side_count ? row.side + 2 : row.side - 2, cache);
-
-						_opening.moveTo(axis.corns(3));
-						_opening.lineTo(other.rays.inner.getPointAt(other.rays.inner.length / 2));
-						_opening.lineTo(axis.corns(4));
-
-					}
-				});
-			}
-
-			function sliding() {
-        const {center} = _contour.bounds;
-        const {_opening} = l_visualization;
-
-        if(_contour.direction == $p.enm.open_directions.Правое) {
-          _opening.moveTo(center.add([-100,0]));
-          _opening.lineTo(center.add([100,0]));
-          _opening.moveTo(center.add([30,30]));
-          _opening.lineTo(center.add([100,0]));
-          _opening.lineTo(center.add([30,-30]));
-        }
-        else {
-          _opening.moveTo(center.add([100,0]));
-          _opening.lineTo(center.add([-100,0]));
-          _opening.moveTo(center.add([-30,30]));
-          _opening.lineTo(center.add([-100,0]));
-          _opening.lineTo(center.add([-30,-30]));
-        }
-			}
-
-			if(!l_visualization._opening){
-        l_visualization._opening = new paper.CompoundPath({
-          parent: _contour.l_visualization,
-          strokeColor: 'black'
-        });
-      }
-			else{
-        l_visualization._opening.removeChildren();
-      }
-
-      return furn.is_sliding ? sliding() : rotary_folding();
-
-		}
-	},
-
-  draw_cnn_errors: {
-    value: function () {
-
-      const {l_visualization} = this;
-
-      if(l_visualization._cnn){
-        l_visualization._cnn.removeChildren();
-      }
-      else{
-        l_visualization._cnn = new paper.Group({ parent: l_visualization });
-      }
-
-      this.glasses(false, true).forEach((elm) => {
-        let err;
-        elm.profiles.forEach(({cnn, sub_path}) => {
-          if(!cnn){
-            sub_path.parent = l_visualization._cnn;
-            sub_path.strokeWidth = 2;
-            sub_path.strokeScaling = false;
-            sub_path.strokeColor = 'red';
-            sub_path.strokeCap = 'round';
-            sub_path.dashArray = [12, 8];
-            err = true;
-          }
-        });
-        elm.path.fillColor = err ? new paper.Color({
-            stops: ["#fee", "#fcc", "#fdd"],
-            origin: elm.path.bounds.bottomLeft,
-            destination: elm.path.bounds.topRight
-          }) : BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
-      });
-
-      this.profiles.forEach((elm) => {
-        const {b, e} = elm.rays;
-        if(!b.cnn){
-          new paper.Path.Circle({
-            center: elm.corns(4).add(elm.corns(1)).divide(2),
-            radius: 80,
-            strokeColor: 'red',
-            strokeWidth: 2,
-            strokeCap: 'round',
-            strokeScaling: false,
-            dashOffset: 4,
-            dashArray: [4, 4],
-            guide: true,
-            parent: l_visualization._cnn
-          });
-        }
-        if(!e.cnn){
-          new paper.Path.Circle({
-            center: elm.corns(2).add(elm.corns(3)).divide(2),
-            radius: 80,
-            strokeColor: 'red',
-            strokeWidth: 2,
-            strokeCap: 'round',
-            strokeScaling: false,
-            dashOffset: 4,
-            dashArray: [4, 4],
-            guide: true,
-            parent: l_visualization._cnn
-          });
-        }
-      });
-    }
-  },
-
-	draw_visualization: {
-		value: function () {
-
-		  const {profiles, l_visualization} = this;
-
-			if(l_visualization._by_spec){
-        l_visualization._by_spec.removeChildren();
-      }
-			else{
-        l_visualization._by_spec = new paper.Group({ parent: l_visualization });
-      }
-
-			this.project.ox.specification.find_rows({dop: -1}, (row) => {
-				profiles.some((elm) => {
-					if(row.elm == elm.elm){
-
-						row.nom.visualization.draw(elm, l_visualization, row.len * 1000);
-
-						return true;
-					}
-				});
-			});
-
-			this.children.forEach((l) => l instanceof Contour && l.draw_visualization());
-
-		}
-	},
-
-  perimeter: {
-    get: function () {
-      const res = [];
-      this.outer_profiles.forEach((curr) => {
-        const tmp = curr.sub_path ? {
-            len: curr.sub_path.length,
-            angle: curr.e.subtract(curr.b).angle
-          } : {
-            len: curr.elm.length,
-            angle: curr.elm.angle_hor
-          };
-        res.push(tmp);
-        if(tmp.angle < 0){
-          tmp.angle += 360;
-        }
-      });
-      return res;
-    }
-  },
-
-	draw_sizes: {
-
-		value: function () {
-
-		  const {contours, parent, l_dimensions, bounds} = this;
-
-      contours.forEach((l) => l.draw_sizes());
-
-			if(!parent){
-
-        const by_side = this.profiles_by_side();
-
-
-				const ihor = [{
-				  point: bounds.top.round(0),
-          elm: by_side.top,
-          p: by_side.top.b.y < by_side.top.e.y ? "b" : "e"
-				}, {
-				  point: bounds.bottom.round(0),
-          elm: by_side.bottom,
-          p: by_side.bottom.b.y < by_side.bottom.e.y ? "b" : "e"
-        }];
-				const ivert = [{
-				  point: bounds.left.round(0),
-          elm: by_side.left,
-          p: by_side.left.b.x > by_side.left.e.x ? "b" : "e"
-        }, {
-				  point: bounds.right.round(0),
-          elm: by_side.right,
-          p: by_side.right.b.x > by_side.right.e.x ? "b" : "e"
-        }];
-
-        const profiles = new Set(this.profiles);
-        this.imposts.forEach((elm) => profiles.add(elm));
-
-				profiles.forEach((elm) => {
-
-				  const eb = elm.layer === this ? elm.b : elm.rays.b.npoint;
-				  const ee = elm.layer === this ? elm.e : elm.rays.e.npoint;
-
-          if(ihor.every((v) => v.point != eb.y.round(0))){
-            ihor.push({
-              point: eb.y.round(0),
-              elm: elm,
-              p: "b"
-            });
-          }
-          if(ihor.every((v) => v.point != ee.y.round(0))){
-            ihor.push({
-              point: ee.y.round(0),
-              elm: elm,
-              p: "e"
-            });
-          }
-          if(ivert.every((v) => v.point != eb.x.round(0))){
-            ivert.push({
-              point: eb.x.round(0),
-              elm: elm,
-              p: "b"
-            });
-          }
-          if(ivert.every((v) => v.point != ee.x.round(0))){
-            ivert.push({
-              point: ee.x.round(0),
-              elm: elm,
-              p: "e"
-            });
-          }
-				});
-
-				if(ihor.length > 2 || ivert.length > 2){
-
-          ihor.sort((a, b) => b.point - a.point);
-          ivert.sort((a, b) => a.point - b.point);
-
-					if(!l_dimensions.ihor){
-            l_dimensions.ihor = {};
-          }
-          if(this.is_pos("right")){
-            this.imposts_dimensions(ihor, l_dimensions.ihor, "right");
-          }
-          else if(this.is_pos("left")){
-            this.imposts_dimensions(ihor, l_dimensions.ihor, "left");
-          }
-
-					if(!l_dimensions.ivert){
-            l_dimensions.ivert = {};
-          }
-          if(this.is_pos("bottom")){
-            this.imposts_dimensions(ivert, l_dimensions.ivert, "bottom");
-          }
-          else if(this.is_pos("top")){
-            this.imposts_dimensions(ivert, l_dimensions.ivert, "top");
-          }
-				}
-
-        this.draw_sizes_contour(ihor, ivert);
-
-			}
-
-      l_dimensions.children.forEach((dl) => dl.redraw && dl.redraw());
-
-		}
-	},
-
-  draw_sizes_contour: {
-
-    value: function (ihor, ivert) {
-
-      const {project, l_dimensions} = this;
-
-      if (project.contours.length > 1) {
-
-        if(this.is_pos("left") && !this.is_pos("right") && project.bounds.height != this.bounds.height){
-          if(!l_dimensions.left){
-            l_dimensions.left = new DimensionLine({
-              pos: "left",
-              parent: l_dimensions,
-              offset: ihor.length > 2 ? 220 : 90,
-              contour: true
-            });
-          }else
-            l_dimensions.left.offset = ihor.length > 2 ? 220 : 90;
-
-        }else{
-          if(l_dimensions.left){
-            l_dimensions.left.remove();
-            l_dimensions.left = null;
-          }
-        }
-
-        if(this.is_pos("right") && project.bounds.height != this.bounds.height){
-          if(!l_dimensions.right){
-            l_dimensions.right = new DimensionLine({
-              pos: "right",
-              parent: l_dimensions,
-              offset: ihor.length > 2 ? -260 : -130,
-              contour: true
-            });
-          }else
-            l_dimensions.right.offset = ihor.length > 2 ? -260 : -130;
-
-        }else{
-          if(l_dimensions.right){
-            l_dimensions.right.remove();
-            l_dimensions.right = null;
-          }
-        }
-
-        if(this.is_pos("top") && !this.is_pos("bottom") && project.bounds.width != this.bounds.width){
-          if(!l_dimensions.top){
-            l_dimensions.top = new DimensionLine({
-              pos: "top",
-              parent: l_dimensions,
-              offset: ivert.length > 2 ? 220 : 90,
-              contour: true
-            });
-          }else
-            l_dimensions.top.offset = ivert.length > 2 ? 220 : 90;
-        }else{
-          if(l_dimensions.top){
-            l_dimensions.top.remove();
-            l_dimensions.top = null;
-          }
-        }
-
-        if(this.is_pos("bottom") && project.bounds.width != this.bounds.width){
-          if(!l_dimensions.bottom){
-            l_dimensions.bottom = new DimensionLine({
-              pos: "bottom",
-              parent: l_dimensions,
-              offset: ivert.length > 2 ? -260 : -130,
-              contour: true
-            });
-          }else
-            l_dimensions.bottom.offset = ivert.length > 2 ? -260 : -130;
-
-        }else{
-          if(l_dimensions.bottom){
-            l_dimensions.bottom.remove();
-            l_dimensions.bottom = null;
-          }
-        }
-
-      }
     }
   },
 

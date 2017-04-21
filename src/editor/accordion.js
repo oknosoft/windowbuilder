@@ -14,7 +14,16 @@ class SchemeLayers {
 
     this.observer = this.observer.bind(this);
 
-    this.tree = cell.attachTreeView({
+    this.layout = cell.attachLayout({
+      pattern: "2E",
+      cells: [
+        {id: "a", text: "tree", header: false, height: 200},
+        {id: "b", text: "Доп. вставки в контур", header: true}
+      ],
+      offsets: {top: 0, right: 0, bottom: 0, left: 0},
+    });
+
+    this.tree = this.layout.cells("a").attachTreeView({
       checkboxes: true,
       multiselect: false
     });
@@ -91,6 +100,10 @@ class SchemeLayers {
       }
 
     });
+
+    this.layout.cells("a").setMinHeight(180);
+    this.layout.cells("b").setMinHeight(180);
+    this.layout.cells("a").setHeight(200);
 
   }
 
@@ -538,7 +551,6 @@ class EditorAccordion {
         {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
-        {name: 'inserts_to_contour', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_contour, float: 'left'},
         {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
 
       ], onclick: (name) => {
@@ -595,6 +607,7 @@ class EditorAccordion {
     });
     this.tree_layers = new SchemeLayers(this._layers, (text) => {
       this._stv._toolbar.setItemText("info", text);
+      _editor.additional_inserts('contour', this.tree_layers.layout.cells('b'));
     });
 
     /**
@@ -653,6 +666,7 @@ class EditorAccordion {
       name: 'bottom',
       image_path: 'dist/imgs/',
       buttons: [
+        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
         {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
 
       ], onclick: (name) => {
@@ -662,6 +676,11 @@ class EditorAccordion {
           case 'refill':
             _editor.project._dp.sys.refill_prm(_editor.project.ox);
             this.props.reload();
+            break;
+
+          case 'inserts_to_product':
+            // дополнительные вставки в изделие
+            _editor.additional_inserts();
             break;
 
           default:

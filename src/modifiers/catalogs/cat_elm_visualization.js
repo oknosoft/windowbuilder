@@ -13,14 +13,11 @@ $p.CatElm_visualization.prototype.__define({
 	draw: {
 		value: function (elm, layer, offset) {
 
-			var subpath;
+			let subpath;
 
 			if(this.svg_path.indexOf('{"method":') == 0){
 
-				if(!layer._by_spec)
-					layer._by_spec = new paper.Group({ parent: l_vis });
-
-				var attr = JSON.parse(this.svg_path);
+				const attr = JSON.parse(this.svg_path);
 
 				if(attr.method == "subpath_outer"){
 
@@ -35,7 +32,8 @@ $p.CatElm_visualization.prototype.__define({
 
 				}
 
-			}else if(this.svg_path){
+			}
+			else if(this.svg_path){
 
 				subpath = new paper.CompoundPath({
 					pathData: this.svg_path,
@@ -62,11 +60,12 @@ $p.CatElm_visualization.prototype.__define({
 
 				offset += elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
 
-				var p0 = elm.generatrix.getPointAt(offset > elm.generatrix.length ? elm.generatrix.length : offset || 0);
+				const p0 = elm.generatrix.getPointAt(offset > elm.generatrix.length ? elm.generatrix.length : offset || 0);
+
 				if(this.elm_side == -1){
 					// в середине элемента
-					var p1 = elm.rays.inner.getNearestPoint(p0),
-						p2 = elm.rays.outer.getNearestPoint(p0);
+          const p1 = elm.rays.inner.getNearestPoint(p0);
+          const p2 = elm.rays.outer.getNearestPoint(p0);
 
 					subpath.position = p1.add(p2).divide(2);
 
@@ -78,10 +77,6 @@ $p.CatElm_visualization.prototype.__define({
 					// снаружи
 					subpath.position = elm.rays.outer.getNearestPoint(p0);
 				}
-
-
-
-
 			}
 
 		}

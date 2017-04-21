@@ -802,7 +802,7 @@ class Editor extends paper.PaperScope {
    *
    * @param [cnstr] {Number} - номер элемента или контура
    */
-  additional_inserts(cnstr){
+  additional_inserts(cnstr, cell){
 
     const meta_fields = $p.cat.characteristics.metadata("inserts").fields._clone();
     let caption = $p.msg.additional_inserts;
@@ -826,8 +826,9 @@ class Editor extends paper.PaperScope {
       }
     }
     else if(cnstr == 'contour'){
-      cnstr = this.project.activeLayer.cnstr
-      caption+= ' в контур №' + cnstr;
+      const {activeLayer} = this.project
+      cnstr = activeLayer.cnstr
+      caption+= ` в ${activeLayer.layer ? 'створку' : 'раму'} №${cnstr}`;
       meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Контур"];
     }
 
@@ -842,9 +843,35 @@ class Editor extends paper.PaperScope {
       }
     };
 
-    const wnd = $p.iface.dat_blank(null, options.wnd);
+    if(cell){
+      if(!cell.elmnts){
+        cell.elmnts = {grids: {}};
+      }
+      if(cell.elmnts.grids.inserts && cell.elmnts.grids.inserts.selection.cnstr == cnstr){
+        return;
+      }
+      cell.detachObject(true);
+    }
 
-    wnd.elmnts.layout = wnd.attachLayout({
+    const wnd = cell || $p.iface.dat_blank(null, options.wnd);
+    const elmnts = wnd.elmnts;
+
+    function get_selection() {
+      const {inserts} = elmnts.grids;
+      if(inserts){
+        const row = elmnts.grids.inserts.get_cell_field();
+        if(row && row.obj.inset && row.obj.inset != $p.utils.blank.guid){
+          return {cnstr: cnstr, inset: row.obj.inset}
+        }
+      }
+      return {cnstr: cnstr, inset: $p.utils.generate_guid()}
+    }
+
+    function refill_prms(){
+      elmnts.grids.params.selection = get_selection();
+    }
+
+    elmnts.layout = wnd.attachLayout({
       pattern: "2E",
       cells: [{
         id: "a",
@@ -856,10 +883,12 @@ class Editor extends paper.PaperScope {
         text: "Параметры",
         header: false
       }],
-      offsets: { top: 0, right: 0, bottom: 0, left: 0}
+      offsets: {top: 0, right: 0, bottom: 0, left: 0}
     });
+    elmnts.layout.cells("a").setMinHeight(140);
+    elmnts.layout.cells("a").setHeight(160);
 
-    wnd.elmnts.grids.inserts = wnd.elmnts.layout.cells("a").attachTabular({
+    elmnts.grids.inserts = elmnts.layout.cells("a").attachTabular({
       obj: this.project.ox,
       ts: "inserts",
       selection: {cnstr: cnstr},
@@ -876,26 +905,27 @@ class Editor extends paper.PaperScope {
       }
     });
 
-    wnd.elmnts.grids.params = wnd.elmnts.layout.cells("b").attachHeadFields({
+    elmnts.grids.params = elmnts.layout.cells("b").attachHeadFields({
       obj: this.project.ox,
       ts: "params",
-      selection: {cnstr: cnstr, inset: $p.utils.blank.guid},
+      selection: get_selection(),
       oxml: {
         "Параметры": []
       },
       ts_title: "Параметры"
     });
 
-    // фильтруем параметры при выборе вставки
-    function refill_prms(){
-      var row = wnd.elmnts.grids.inserts.get_cell_field();
-      wnd.elmnts.grids.params.selection = {cnstr: cnstr, inset: row.obj.inset};
+    if(cell){
+      elmnts.layout.cells("a").getAttachedToolbar().addText($p.utils.generate_guid(), 3, options.wnd.caption);
     }
-    wnd.elmnts.grids.inserts.attachEvent("onRowSelect", refill_prms);
-    wnd.elmnts.grids.inserts.attachEvent("onEditCell", function (stage, rId, cInd) {
-      if(!cInd){
-        setTimeout(refill_prms)
-      }
+
+    // фильтруем параметры при выборе вставки
+    elmnts.grids.inserts.attachEvent("onRowSelect", refill_prms);
+    wnd.elmnts.grids.inserts.attachEvent("onEditCell", (stage, rId, cInd) => {
+      !cInd && setTimeout(refill_prms);
+    });
+    elmnts.grids.inserts.attachEvent("onBeforeRowDeleted", (id, pid) => {
+      setTimeout(refill_prms);
     });
   }
 
