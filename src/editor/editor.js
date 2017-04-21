@@ -859,8 +859,8 @@ class Editor extends paper.PaperScope {
     function get_selection() {
       const {inserts} = elmnts.grids;
       if(inserts){
-        const row = elmnts.grids.inserts.get_cell_field();
-        if(row && row.obj.inset && row.obj.inset != $p.utils.blank.guid){
+        const row = inserts.get_cell_field();
+        if(row && !row.obj.inset.empty()){
           return {cnstr: cnstr, inset: row.obj.inset}
         }
       }
@@ -868,7 +868,14 @@ class Editor extends paper.PaperScope {
     }
 
     function refill_prms(){
-      elmnts.grids.params.selection = get_selection();
+      const {inserts, params} = elmnts.grids;
+      if(params && inserts){
+        params.selection = get_selection();
+        const row = inserts.get_cell_field();
+        if(row && !row.obj.inset.empty()){
+          $p.cat.clrs.selection_exclude_service(meta_fields.clr, row.obj.inset);
+        }
+      }
     }
 
     elmnts.layout = wnd.attachLayout({
