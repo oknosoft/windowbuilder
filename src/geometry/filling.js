@@ -291,7 +291,7 @@ class Filling extends BuilderElement {
     if(is_rectangular){
       const {bounds} = path;
       data._text.content = this.formula;
-      data._text.point = bounds.bottomLeft.add([elm_font_size,-elm_font_size]);
+      data._text.point = bounds.bottomLeft.add([elm_font_size * 0.6, -elm_font_size]);
       if(data._text.bounds.width > (bounds.width - 2 * elm_font_size)){
         const atext = data._text.content.split(' ');
         if(atext.length > 1){

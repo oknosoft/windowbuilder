@@ -3430,25 +3430,48 @@ class Contour extends paper.Layer {
     const {l_visualization} = this;
     this.project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
       if(row.inset.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
-        const ms_path = new paper.CompoundPath({parent: l_visualization._by_spec, strokeColor: 'blue'});
+        const props = {
+          parent: new paper.Group({parent: l_visualization._by_spec}),
+          strokeColor: 'grey',
+          strokeWidth: 2,
+          dashArray: [6, 4],
+          strokeScaling: false,
+        }
+        const perimetr = [];
         row.inset.specification.forEach((rspec) => {
-          if(rspec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру && rspec.nom.elm_type == $p.enm.elm_types.Рама){
+          if(!perimetr.length && rspec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру && rspec.nom.elm_type == $p.enm.elm_types.Рама){
             this.outer_profiles.forEach((curr) => {
               const profile = curr.profile || curr.elm;
-              let angle = curr.e.subtract(curr.b).angle;
-              if(angle < 0){
-                angle += 360;
-              }
-              const is_outer = Math.abs(profile.angle_hor - angle) > 60;
-
-              ms_path.moveTo(curr.b);
-              ms_path.lineTo(curr.e)
+              const is_outer = Math.abs(profile.angle_hor - curr.elm.angle_hor) > 60;
+              const ray = is_outer ? profile.rays.outer : profile.rays.inner;
+              const segm = ray.get_subpath(curr.b, curr.e).equidistant(rspec.sz);
+              perimetr.push(Object.assign(segm, props));
             });
           }
+
+        });
+        const count = perimetr.length - 1;
+        perimetr.forEach((curr, index) => {
+          const prev = index == 0 ? perimetr[count] : perimetr[index - 1];
+          const next = index == count ? perimetr[0] : perimetr[index + 1];
+          const b = curr.intersect_point(prev, curr.firstSegment.point, true);
+          const e = curr.intersect_point(next, curr.lastSegment.point, true);
+          curr.firstSegment.point = b;
+          curr.lastSegment.point = e;
+        })
+
+        const {elm_font_size} = consts;
+        const {bounds} = props.parent;
+        new paper.PointText({
+          parent: props.parent,
+          fillColor: 'black',
+          fontSize: consts.elm_font_size,
+          guide: true,
+          content: row.inset.presentation,
+          point: bounds.bottomLeft.add([elm_font_size * 1.2, -elm_font_size * 0.6]),
         });
 
-
-
+        return false;
       }
     });
   }
@@ -5382,7 +5405,7 @@ class Filling extends BuilderElement {
     if(is_rectangular){
       const {bounds} = path;
       data._text.content = this.formula;
-      data._text.point = bounds.bottomLeft.add([elm_font_size,-elm_font_size]);
+      data._text.point = bounds.bottomLeft.add([elm_font_size * 0.6, -elm_font_size]);
       if(data._text.bounds.width > (bounds.width - 2 * elm_font_size)){
         const atext = data._text.content.split(' ');
         if(atext.length > 1){
@@ -5913,20 +5936,19 @@ paper.Path.prototype.__define({
 
 	get_subpath: {
 		value: function (point1, point2) {
-			var tmp;
+			let tmp;
 
 			if(!this.length || (point1.is_nearest(this.firstSegment.point) && point2.is_nearest(this.lastSegment.point))){
 				tmp = this.clone(false);
-
-			}else if(point2.is_nearest(this.firstSegment.point) && point1.is_nearest(this.lastSegment.point)){
+			}
+			else if(point2.is_nearest(this.firstSegment.point) && point1.is_nearest(this.lastSegment.point)){
 				tmp = this.clone(false);
 				tmp.reverse();
 				tmp.data.reversed = true;
-
-			} else{
-
-				var loc1 = this.getLocationOf(point1),
-					loc2 = this.getLocationOf(point2);
+			}
+			else{
+				let loc1 = this.getLocationOf(point1);
+				let loc2 = this.getLocationOf(point2);
 				if(!loc1)
 					loc1 = this.getNearestLocation(point1);
 				if(!loc2)
@@ -5937,13 +5959,14 @@ paper.Path.prototype.__define({
 						segments: [loc1.point, loc2.point],
 						insert: false
 					});
+				}
+				else{
+					const step = (loc2.offset - loc1.offset) * 0.02;
 
-				}else{
-					var step = (loc2.offset - loc1.offset) * 0.02,
-						tmp = new paper.Path({
-							segments: [point1],
-							insert: false
-						});
+					tmp = new paper.Path({
+            segments: [point1],
+            insert: false
+					});
 
 					if(step < 0){
 						tmp.data.reversed = true;

@@ -83,20 +83,19 @@ paper.Path.prototype.__define({
 	 */
 	get_subpath: {
 		value: function (point1, point2) {
-			var tmp;
+			let tmp;
 
 			if(!this.length || (point1.is_nearest(this.firstSegment.point) && point2.is_nearest(this.lastSegment.point))){
 				tmp = this.clone(false);
-
-			}else if(point2.is_nearest(this.firstSegment.point) && point1.is_nearest(this.lastSegment.point)){
+			}
+			else if(point2.is_nearest(this.firstSegment.point) && point1.is_nearest(this.lastSegment.point)){
 				tmp = this.clone(false);
 				tmp.reverse();
 				tmp.data.reversed = true;
-
-			} else{
-
-				var loc1 = this.getLocationOf(point1),
-					loc2 = this.getLocationOf(point2);
+			}
+			else{
+				let loc1 = this.getLocationOf(point1);
+				let loc2 = this.getLocationOf(point2);
 				if(!loc1)
 					loc1 = this.getNearestLocation(point1);
 				if(!loc2)
@@ -108,14 +107,15 @@ paper.Path.prototype.__define({
 						segments: [loc1.point, loc2.point],
 						insert: false
 					});
-
-				}else{
+				}
+				else{
 					// для кривого строим по точкам, наподобие эквидистанты
-					var step = (loc2.offset - loc1.offset) * 0.02,
-						tmp = new paper.Path({
-							segments: [point1],
-							insert: false
-						});
+					const step = (loc2.offset - loc1.offset) * 0.02;
+
+					tmp = new paper.Path({
+            segments: [point1],
+            insert: false
+					});
 
 					if(step < 0){
 						tmp.data.reversed = true;
