@@ -1082,23 +1082,30 @@ class Contour extends paper.Layer {
           dashArray: [6, 4],
           strokeScaling: false,
         };
-        const perimetr = [];
-        let imposts;
+        let sz, imposts;
         row.inset.specification.forEach((rspec) => {
-          if(!perimetr.length && rspec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру && rspec.nom.elm_type == $p.enm.elm_types.Рама){
-            this.outer_profiles.forEach((curr) => {
-              // получаем внешнюю палку, на которую будет повешена москитка
-              const profile = curr.profile || curr.elm;
-              const is_outer = Math.abs(profile.angle_hor - curr.elm.angle_hor) > 60;
-              const ray = is_outer ? profile.rays.outer : profile.rays.inner;
-              const segm = ray.get_subpath(curr.b, curr.e).equidistant(rspec.sz);
-              perimetr.push(Object.assign(segm, props));
-            });
+          if(!sz && rspec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру && rspec.nom.elm_type == $p.enm.elm_types.Рама){
+            sz = rspec.sz;
           }
           if(!imposts && rspec.count_calc_method == $p.enm.count_calculating_ways.ПоШагам && rspec.nom.elm_type == $p.enm.elm_types.Импост){
             imposts = rspec;
           }
         });
+
+        // рисуем контур
+        const perimetr = [];
+        if(typeof sz != 'number'){
+          sz = 20;
+        }
+        this.outer_profiles.forEach((curr) => {
+          // получаем внешнюю палку, на которую будет повешена москитка
+          const profile = curr.profile || curr.elm;
+          const is_outer = Math.abs(profile.angle_hor - curr.elm.angle_hor) > 60;
+          const ray = is_outer ? profile.rays.outer : profile.rays.inner;
+          const segm = ray.get_subpath(curr.b, curr.e).equidistant(sz);
+          perimetr.push(Object.assign(segm, props));
+        });
+
         const count = perimetr.length - 1;
         perimetr.forEach((curr, index) => {
           const prev = index == 0 ? perimetr[count] : perimetr[index - 1];
@@ -1125,7 +1132,7 @@ class Contour extends paper.Layer {
           point: bounds.bottomLeft.add([elm_font_size * 1.2, -elm_font_size * 0.6]),
         });
 
-        // поперечина
+        // рисуем поперечину
         if(imposts){
           const {offsets, do_center, step} = imposts;
 
