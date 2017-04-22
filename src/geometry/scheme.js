@@ -460,7 +460,7 @@ function Scheme(_canvas){
         _scheme.zoom_fit();
 
         // виртуальное событие, чтобы UndoRedo сделал начальный снапшот
-        $p.eve.callEvent("scheme_changed", [_scheme]);
+        !_data._snapshot && $p.eve.callEvent("scheme_changed", [_scheme]);
 
         // регистрируем изменение, чтобы отрисовались размерные линии
         _scheme.register_change(true);
@@ -480,7 +480,7 @@ function Scheme(_canvas){
             }
             else{
               // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет
-              _scheme.register_change(true);
+              $p.eve.callEvent("save_coordinates", [_scheme, {}]);
             }
           }
           else{

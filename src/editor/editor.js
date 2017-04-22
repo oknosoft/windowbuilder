@@ -247,8 +247,10 @@ class Editor extends paper.PaperScope {
             break;
 
           case 'close':
-            if(pwnd._on_close)
+            if(pwnd._on_close){
               pwnd._on_close();
+            }
+            _editor._acc.tree_layers.layout.cells('b').detachObject(true);
             _editor.select_tool('select_node');
             break;
 
@@ -809,6 +811,7 @@ class Editor extends paper.PaperScope {
   additional_inserts(cnstr, cell){
 
     const meta_fields = $p.cat.characteristics.metadata("inserts").fields._clone();
+    const {project} = this;
     let caption = $p.msg.additional_inserts;
 
     if(!cnstr){
@@ -817,10 +820,10 @@ class Editor extends paper.PaperScope {
       meta_fields.inset.choice_params[0].path = ["Изделие"];
     }
     else if(cnstr == 'elm'){
-      cnstr = this.project.selected_elm;
+      cnstr = project.selected_elm;
       if(cnstr){
         // добавляем параметры вставки
-        this.project.ox.add_inset_params(cnstr.inset, -cnstr.elm, $p.utils.blank.guid);
+        project.ox.add_inset_params(cnstr.inset, -cnstr.elm, $p.utils.blank.guid);
         caption+= ' элем. №' + cnstr.elm;
         cnstr = -cnstr.elm;
         meta_fields.inset.choice_params[0].path = ["Элемент"];
@@ -830,8 +833,8 @@ class Editor extends paper.PaperScope {
       }
     }
     else if(cnstr == 'contour'){
-      const {activeLayer} = this.project
-      cnstr = activeLayer.cnstr
+      const {activeLayer} = project;
+      cnstr = activeLayer.cnstr;
       caption+= ` в ${activeLayer.layer ? 'створку' : 'раму'} №${cnstr}`;
       meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Подоконник", "Откос", "Контур"];
     }
@@ -851,15 +854,17 @@ class Editor extends paper.PaperScope {
       if(!cell.elmnts){
         cell.elmnts = {grids: {}};
       }
-      if(cell.elmnts.grids.inserts && cell.elmnts.grids.inserts.selection.cnstr == cnstr){
+      const {grids} = cell.elmnts;
+      if(grids.inserts && grids.inserts._obj && grids.inserts._obj == project.ox && grids.inserts.selection.cnstr == cnstr){
         return;
       }
+      delete grids.inserts;
+      delete grids.params;
       cell.detachObject(true);
     }
 
     const wnd = cell || $p.iface.dat_blank(null, options.wnd);
     const elmnts = wnd.elmnts;
-    const {project} = this;
 
     function get_selection() {
       const {inserts} = elmnts.grids;

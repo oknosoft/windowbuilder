@@ -9391,11 +9391,10 @@ $p.iface.view_orders = function (cell) {
 
 				$p.eve.callEvent("editor_closed", [t.editor]);
 
-				if(!$p.utils.is_empty_guid(_cell.ref))
-					$p.iface.set_hash("doc.calc_order", _cell.ref, "doc");
-
-				else{
-
+				if(!$p.utils.is_empty_guid(_cell.ref)){
+          $p.iface.set_hash("doc.calc_order", _cell.ref, "doc");
+        }
+        else{
 					const hprm = $p.job_prm.parse_url();
           const obj = $p.cat.characteristics.get(hprm.ref, false, true);
 
@@ -9408,7 +9407,7 @@ $p.iface.view_orders = function (cell) {
 			}.bind(_cell);
 
 			t.editor = new $p.Editor(_cell, {
-				set_text: function (text) {
+				set_text: (text) => {
 					cell.setText({text: "<b>" + text + "</b>"});
 				}
 			});

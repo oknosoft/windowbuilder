@@ -27,13 +27,13 @@ class UndoRedo {
     this.scheme_snapshot = this.scheme_snapshot.bind(this);
     this.clear = this.clear.bind(this);
 
-    // обрабатываем изменения изделия
+    // При изменениях изделия, запускаем таймер снапшота
     $p.eve.attachEvent("scheme_changed", this.scheme_changed);
 
-    // при закрытии редактора чистим историю
+    // При закрытии редактора чистим историю
     $p.eve.attachEvent("editor_closed", this.clear);
 
-    // при готовности снапшота, добавляем его в историю
+    // При готовности снапшота, добавляем его в историю
     $p.eve.attachEvent("scheme_snapshot", this.scheme_snapshot);
 
   }
