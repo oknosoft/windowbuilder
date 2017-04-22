@@ -3362,8 +3362,8 @@ class Contour extends paper.Layer {
       bounds = bounds.unite(dl.bounds);
     });
     const ib = l_visualization._by_insets.bounds;
-    if(ib.height){
-      const delta = ib.bottom - bounds.bottom;
+    if(ib.height && ib.bottom > bounds.bottom){
+      const delta = ib.bottom - bounds.bottom + 10;
       bounds = bounds.unite(
         new paper.Rectangle(bounds.bottomLeft, bounds.bottomRight.add([0, delta < 250 ? delta * 1.1 : delta * 1.2]))
       );
@@ -8840,8 +8840,8 @@ function Scheme(_canvas){
 				});
 				this.contours.forEach(({l_visualization}) => {
           const ib = l_visualization._by_insets.bounds;
-          if(ib.height){
-            const delta = ib.bottom - bounds.bottom;
+          if(ib.height && ib.bottom > bounds.bottom){
+            const delta = ib.bottom - bounds.bottom + 10;
             bounds = bounds.unite(
               new paper.Rectangle(bounds.bottomLeft, bounds.bottomRight.add([0, delta < 250 ? delta * 1.1 : delta * 1.2]))
             );
