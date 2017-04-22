@@ -655,9 +655,7 @@ class Contour extends paper.Layer {
     const {contours, profiles, project} = this;
     const crays = (p) => p.rays.clear();
     this.translate(delta);
-    contours.forEach((c) => {
-      c.profiles.forEach(crays);
-    });
+    contours.forEach((elm) => elm.profiles.forEach(crays));
     profiles.forEach(crays);
     project.register_change();
   }
@@ -981,10 +979,17 @@ class Contour extends paper.Layer {
    * Габариты с учетом пользовательских размерных линий, чтобы рассчитать отступы автолиний
    */
   get dimension_bounds() {
-    let {bounds} = this;
+    let {bounds, l_visualization} = this;
     this.getItems({class: DimensionLineCustom}).forEach((dl) => {
       bounds = bounds.unite(dl.bounds);
     });
+    const ib = l_visualization._by_insets.bounds;
+    if(ib.height){
+      const delta = ib.bottom - bounds.bottom;
+      bounds = bounds.unite(
+        new paper.Rectangle(bounds.bottomLeft, bounds.bottomRight.add([0, delta < 250 ? delta * 1.1 : delta * 1.2]))
+      );
+    }
     return bounds;
   }
 
@@ -1076,7 +1081,7 @@ class Contour extends paper.Layer {
     this.project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
       if(row.inset.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
         const props = {
-          parent: new paper.Group({parent: l_visualization._by_spec}),
+          parent: new paper.Group({parent: l_visualization._by_insets}),
           strokeColor: 'grey',
           strokeWidth: 3,
           dashArray: [6, 4],
@@ -1129,7 +1134,7 @@ class Contour extends paper.Layer {
           fontSize: consts.elm_font_size,
           guide: true,
           content: row.inset.presentation,
-          point: bounds.bottomLeft.add([elm_font_size * 1.2, -elm_font_size * 0.6]),
+          point: bounds.bottomLeft.add([elm_font_size * 1.2, -elm_font_size * 0.4]),
         });
 
         // рисуем поперечину
@@ -1171,6 +1176,63 @@ class Contour extends paper.Layer {
             }
           }
         }
+
+        return false;
+      }
+    });
+  }
+
+  /**
+   * Рисут визуализацию подоконника
+   */
+  draw_sill() {
+    const {l_visualization, project, cnstr} = this;
+    const {ox} = project;
+    ox.inserts.find_rows({cnstr}, (row) => {
+      if (row.inset.insert_type == $p.enm.inserts_types.Подоконник) {
+
+        // ищем длину и ширину
+        const {length, width} = $p.job_prm.properties;
+        const bottom = this.profiles_by_side("bottom");
+        let vlen, vwidth;
+        ox.params.find_rows({cnstr: cnstr, inset: row.inset}, (prow) => {
+          if(prow.param == length){
+            vlen = prow.value;
+          }
+          if(prow.param == width){
+            vwidth = prow.value;
+          }
+        });
+        if(!vlen){
+          vlen = bottom.length + 160;
+        }
+        if(vwidth){
+          vwidth = vwidth * 0.7;
+        }
+        else{
+          vwidth = 200;
+        }
+        const delta = (vlen - bottom.length) / 2;
+
+        new paper.Path({
+          parent: new paper.Group({parent: l_visualization._by_insets}),
+          strokeColor: 'grey',
+          fillColor: BuilderElement.clr_by_clr(row.clr),
+          shadowColor: 'grey',
+          shadowBlur: 20,
+          shadowOffset: [10, 20],
+          // opacity: 0.8,
+          strokeWidth: 1,
+          //dashArray: [4, 4],
+          strokeScaling: false,
+          closed: true,
+          segments: [
+            bottom.b.add([delta, 0]),
+            bottom.e.add([-delta, 0]),
+            bottom.e.add([-delta - vwidth, vwidth]),
+            bottom.b.add([delta - vwidth, vwidth]),
+          ]
+        });
 
         return false;
       }
@@ -1264,7 +1326,7 @@ class Contour extends paper.Layer {
     const {contours, parent, l_dimensions, bounds} = this;
 
     // сначала, перерисовываем размерные линии вложенных контуров, чтобы получить отступы
-    contours.forEach((l) => l.draw_sizes());
+    contours.forEach((elm) => elm.draw_sizes());
 
     // для внешних контуров строим авторазмерные линии
     if(!parent){
@@ -1458,13 +1520,7 @@ class Contour extends paper.Layer {
   draw_visualization() {
 
     const {profiles, l_visualization} = this;
-
-    if(l_visualization._by_spec){
-      l_visualization._by_spec.removeChildren();
-    }
-    else{
-      l_visualization._by_spec = new paper.Group({ parent: l_visualization });
-    }
+    l_visualization._by_spec.removeChildren();
 
     // получаем строки спецификации с визуализацией
     this.project.ox.specification.find_rows({dop: -1}, (row) => {
@@ -1478,10 +1534,7 @@ class Contour extends paper.Layer {
     });
 
     // перерисовываем вложенные контуры
-    this.children.forEach((l) => l instanceof Contour && l.draw_visualization());
-
-    // рисуем москитки
-    this.draw_mosquito();
+    this.contours.forEach((l) => l.draw_visualization());
 
   }
 
@@ -1718,29 +1771,29 @@ class Contour extends paper.Layer {
    * @for Contour
    */
   redraw(on_redrawed) {
+
     if(!this.visible){
       return on_redrawed ? on_redrawed() : undefined;
     }
 
-    let llength = 0;
-
-    function on_flap_redrawed(){
-      llength--;
-      !llength && on_redrawed && on_redrawed();
-    }
+    // let llength = 0;
+    //
+    // function on_flap_redrawed(){
+    //   llength--;
+    //   !llength && on_redrawed && on_redrawed();
+    // }
 
     // сбрасываем кеш габаритов
     this.data._bounds = null;
 
     // чистим визуализацию
-    if(!this.project.data._saving && this.l_visualization._by_spec){
-      this.l_visualization._by_spec.removeChildren();
-    }
+    const {l_visualization} = this;
+
+    l_visualization._by_insets.removeChildren();
+    !this.project.data._saving && l_visualization._by_spec.removeChildren();
 
     // сначала перерисовываем все профили контура
-    this.profiles.forEach((elm) => {
-      elm.redraw();
-    });
+    this.profiles.forEach((elm) => elm.redraw());
 
     // затем, создаём и перерисовываем заполнения, которые перерисуют свои раскладки
     this.glass_recalc();
@@ -1748,28 +1801,24 @@ class Contour extends paper.Layer {
     // рисуем направление открывания
     this.draw_opening();
 
+    // перерисовываем вложенные контуры
+    this.contours.forEach((elm) => elm.redraw());
+
     // рисуем ошибки соединений
     this.draw_cnn_errors();
 
-    // перерисовываем вложенные контуры
-    this.children.forEach((child_contour) => {
-      if (child_contour instanceof Contour){
-        llength++;
-        //setTimeout(function () {
-        //	if(!this.project.has_changes())
-        //		child_contour.redraw(on_flap_redrawed);
-        //});
-        child_contour.redraw(on_flap_redrawed);
-      }
-    });
+    // рисуем москитки
+    this.draw_mosquito();
+
+    // рисуем подоконники
+    this.draw_sill();
 
     // информируем мир о новых размерах нашего контура
     $p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
 
     // если нет вложенных контуров, информируем проект о завершении перерисовки контура
-    if(!llength && on_redrawed){
-      on_redrawed();
-    }
+    on_redrawed && on_redrawed();
+
   }
 
   refresh_links() {
@@ -2020,45 +2069,42 @@ class Contour extends paper.Layer {
     return bounds ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
   }
 
-
-
-}
-
-Contour.prototype.__define({
-
   /**
    * Cлужебная группа текстовых комментариев
    */
-  l_text: {
-    get: function () {
-      const {_layers} = this;
-      return _layers.text || (_layers.text = new paper.Group({ parent: this }));
-    }
-  },
+  get l_text() {
+    const {_layers} = this;
+    return _layers.text || (_layers.text = new paper.Group({ parent: this }));
+  }
 
   /**
    * Cлужебная группа визуализации допов,  петель и ручек
    */
-  l_visualization: {
-    get: function () {
-      const {_layers} = this;
-      return _layers.visualization || (_layers.visualization = new paper.Group({ parent: this, guide: true }));
+  get l_visualization() {
+    const {_layers} = this;
+    if(!_layers.visualization){
+      _layers.visualization = new paper.Group({parent: this, guide: true});
+      _layers.visualization._by_insets = new paper.Group({parent: _layers.visualization});
+      _layers.visualization._by_spec = new paper.Group({parent: _layers.visualization});
     }
-  },
+    return _layers.visualization;
+  }
 
   /**
    * Cлужебная группа размерных линий
    */
-  l_dimensions: {
-    get: function () {
-      const {_layers} = this;
-      if(!_layers.dimensions){
-        _layers.dimensions = new paper.Group({ parent: this });
-        _layers.dimensions.bringToFront();
-      }
-      return _layers.dimensions;
+  get l_dimensions() {
+    const {_layers} = this;
+    if(!_layers.dimensions){
+      _layers.dimensions = new paper.Group({ parent: this });
+      _layers.dimensions.bringToFront();
     }
-  },
+    return _layers.dimensions;
+  }
+
+}
+
+Contour.prototype.__define({
 
 
 	/**

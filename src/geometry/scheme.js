@@ -279,13 +279,21 @@ function Scheme(_canvas){
 		dimension_bounds: {
 
 			get: function(){
-				var bounds = this.bounds;
-				this.getItems({class: DimensionLine}).forEach(function (dl) {
-
-					if(dl instanceof DimensionLineCustom || dl.data.impost || dl.data.contour)
-						bounds = bounds.unite(dl.bounds);
-
+				let {bounds} = this;
+				this.getItems({class: DimensionLine}).forEach((dl) => {
+					if(dl instanceof DimensionLineCustom || dl.data.impost || dl.data.contour){
+            bounds = bounds.unite(dl.bounds);
+          }
 				});
+				this.contours.forEach(({l_visualization}) => {
+          const ib = l_visualization._by_insets.bounds;
+          if(ib.height){
+            const delta = ib.bottom - bounds.bottom;
+            bounds = bounds.unite(
+              new paper.Rectangle(bounds.bottomLeft, bounds.bottomRight.add([0, delta < 250 ? delta * 1.1 : delta * 1.2]))
+            );
+          }
+        });
 				return bounds;
 			}
 		}

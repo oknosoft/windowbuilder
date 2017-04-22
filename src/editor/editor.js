@@ -833,7 +833,7 @@ class Editor extends paper.PaperScope {
       const {activeLayer} = this.project
       cnstr = activeLayer.cnstr
       caption+= ` в ${activeLayer.layer ? 'створку' : 'раму'} №${cnstr}`;
-      meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Контур"];
+      meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Подоконник", "Откос", "Контур"];
     }
 
     const options = {
