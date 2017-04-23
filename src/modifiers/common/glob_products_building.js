@@ -709,7 +709,7 @@ function ProductsBuilding(){
 	 */
 	function base_spec_glass(glass) {
 
-    const {profiles, _row} = glass;
+    const {profiles, onlays, _row} = glass;
 
     if(_row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
       return;
@@ -746,7 +746,8 @@ function ProductsBuilding(){
 		// добавляем спецификацию вставки в заполнение
 		inset_spec(glass);
 
-		// TODO: для всех раскладок заполнения
+		// для всех раскладок заполнения
+    onlays.forEach(base_spec_profile);
 	}
 
 	/**
@@ -849,15 +850,25 @@ function ProductsBuilding(){
     if(!find_cx_sql){
       find_cx_sql = $p.wsql.alasql.compile("select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?")
     }
-    var aref = find_cx_sql([ox.ref, elm, origin]);
-    if(aref.length){
-      return $p.cat.characteristics.get(aref[0].ref, false);
-    }
-    return $p.cat.characteristics.create({
-      leading_product: ox,
-      leading_elm: elm,
-      origin: origin
-    }, false, true)._set_loaded();
+    const aref = find_cx_sql([ox.ref, elm, origin]);
+    const cx = aref.length ? $p.cat.characteristics.get(aref[0].ref, false) :
+      $p.cat.characteristics.create({
+        leading_product: ox,
+        leading_elm: elm,
+        origin: origin
+      }, false, true)._set_loaded();
+
+    // переносим в cx параметры
+    cx.params.clear(true);
+    ox.params.find_rows({cnstr: -elm, inset: origin}, (row) => {
+      cx.params.add({param: row.param, value: row.value})
+    });
+    // переносим в cx цвет
+    ox.inserts.find_rows({cnstr: -elm, inset: origin}, (row) => {
+      cx.clr = row.clr;
+    });
+    cx.prod_name();
+    return cx;
   }
 
   /**
@@ -920,7 +931,7 @@ function ProductsBuilding(){
 			contour.profiles.forEach(base_spec_profile);
 
 			// для всех заполнений контура
-			contour.glasses(false, true).forEach(base_spec_glass);
+      contour.glasses(false, true).forEach(base_spec_glass);
 
 			// фурнитура контура
 			furn_spec(contour);
@@ -983,7 +994,8 @@ function ProductsBuilding(){
 			$p.spec_building.specification_adjustment({
         scheme: scheme,
         calc_order_row: ox.calc_order_row,
-        spec: spec
+        spec: spec,
+        save: attr.save,
       }, true);
 		}
 

@@ -32,7 +32,7 @@ class SpecBuilding {
    */
   specification_adjustment (attr, with_price) {
 
-    const {scheme, calc_order_row, spec} = attr;
+    const {scheme, calc_order_row, spec, save} = attr;
     const calc_order = calc_order_row._owner._owner ;
     const order_rows = new Map();
     const adel = [];
@@ -77,7 +77,7 @@ class SpecBuilding {
       row.qty = calc_order_row.qty;
       row.quantity = calc_order_row.quantity;
 
-      cx.save();
+      save && cx.save();
       order_rows.set(cx, row);
     });
     if(order_rows.size){

@@ -1221,9 +1221,8 @@ class Contour extends paper.Layer {
           shadowColor: 'grey',
           shadowBlur: 20,
           shadowOffset: [10, 20],
-          // opacity: 0.8,
+          opacity: 0.7,
           strokeWidth: 1,
-          //dashArray: [4, 4],
           strokeScaling: false,
           closed: true,
           segments: [

@@ -28,37 +28,25 @@ $p.cat.characteristics.on({
 	before_save: function (attr) {
 
 		// уточняем номенклатуру системы
-		var nom = this.prod_nom;
+    const {prod_nom, calc_order} = this;
 
 		// пересчитываем наименование
-		var name = this.prod_name();
-		if(name)
-			this.name = name;
+		const name = this.prod_name();
+		if(name){
+      this.name = name;
+    }
 
 		// дублируем контрагента для целей RLS
-		this.partner = this.calc_order.partner;
+		this.partner = calc_order.partner;
 
 	},
 
   // при изменении реквизита
   value_change: function (attr) {
-
-	  if(attr.field != 'inset' || attr.tabular_section != 'inserts'){
-	    return;
+	  // для вложенных вставок перезаполняем параметры
+	  if(attr.field == 'inset' && attr.tabular_section == 'inserts'){
+      this.add_inset_params(attr.value, attr.row.cnstr);
     }
-
-    this.add_inset_params(attr.value, attr.row.cnstr);
-
-    // {
-    //   field: cell_field.field,
-    //   value: nValue,
-    //   tabular_section: _tsname,
-    //   grid: _grid,
-    //   row: cell_field.obj,
-    //   cell: (rId && cInd) ? _grid.cells(rId, cInd) : (_grid.getSelectedCellIndex() >=0 ? _grid.cells() : null),
-    //   wnd: _pwnd.pwnd
-    // }
-
   }
 
 
@@ -116,38 +104,36 @@ $p.CatCharacteristics.prototype.__define({
 
 	calc_order_row: {
 		get: function () {
-			var _calc_order_row;
-			this.calc_order.production.find_rows({characteristic: this}, function (_row) {
+			let _calc_order_row;
+			this.calc_order.production.find_rows({characteristic: this}, (_row) => {
 				_calc_order_row = _row;
 				return false;
 			});
 			return _calc_order_row;
-		},
-		enumerable: false
+		}
 	},
 
 	prod_name: {
 		value: function (short) {
 
-			var _row = this.calc_order_row,
-				name = "";
+			const {calc_order_row, calc_order, leading_product, sys, clr} = this;
+			let name = "";
 
-			if(_row){
+			if(calc_order_row){
 
-				if(this.calc_order.number_internal)
-					name = this.calc_order.number_internal.trim();
+				if(calc_order.number_internal)
+					name = calc_order.number_internal.trim();
 
 				else{
 					// убираем нули из середины номера
-					var num0 = this.calc_order.number_doc,
-						part = "";
-					for(var i = 0; i<num0.length; i++){
+					let num0 = calc_order.number_doc, part = "";
+					for(let i = 0; i<num0.length; i++){
 						if(isNaN(parseInt(num0[i])))
 							name += num0[i];
 						else
 							break;
 					}
-					for(var i = num0.length-1; i>0; i--){
+					for(let i = num0.length-1; i>0; i--){
 						if(isNaN(parseInt(num0[i])))
 							break;
 						part = num0[i] + part;
@@ -155,17 +141,24 @@ $p.CatCharacteristics.prototype.__define({
 					name += parseInt(part || 0).toFixed(0);
 				}
 
-				name += "/" + _row.row.pad();
+				name += "/" + calc_order_row.row.pad();
+
+				// для подчиненных, номер строки родителя
+        if(!leading_product.empty()){
+          name += ":" + leading_product.calc_order_row.row.pad();
+        }
 
 				// добавляем название системы
-				if(!this.sys.empty())
-					name += "/" + this.sys.name;
+				if(!sys.empty()){
+          name += "/" + sys.name;
+        }
 
 				if(!short){
 
 					// добавляем название цвета
-					if(this.clr.name)
-						name += "/" + this.clr.name;
+					if(!clr.empty()){
+            name += "/" + this.clr.name;
+          }
 
 					// добавляем размеры
 					if(this.x && this.y)
@@ -182,8 +175,21 @@ $p.CatCharacteristics.prototype.__define({
 							name += "/" + this.z.toFixed(0);
 					}
 
-					if(this.s)
-						name += "/S:" + this.s.toFixed(3);
+					if(this.s){
+            name += "/S:" + this.s.toFixed(3);
+          }
+
+					// подмешиваем значения параметров
+          let sprm = "";
+          this.params.find_rows({cnstr: 0}, (row) => {
+            if(row.param.include_to_name && sprm.indexOf(String(row.value)) == -1){
+              sprm && (sprm += ';');
+              sprm += String(row.value);
+            }
+          });
+          if(sprm){
+            name += "|" + sprm;
+          }
 				}
 			}
 			return name;
