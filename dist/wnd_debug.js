@@ -6138,9 +6138,12 @@ function ProductsBuilding(){
         origin: origin
       }, false, true)._set_loaded();
 
+    const {length, width} = $p.job_prm.properties;
     cx.params.clear(true);
     ox.params.find_rows({cnstr: -elm, inset: origin}, (row) => {
-      cx.params.add({param: row.param, value: row.value})
+      if(row.param != length && row.param != width){
+        cx.params.add({param: row.param, value: row.value});
+      }
     });
     ox.inserts.find_rows({cnstr: -elm, inset: origin}, (row) => {
       cx.clr = row.clr;
