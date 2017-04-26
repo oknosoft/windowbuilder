@@ -30,6 +30,16 @@ $p.cat.characteristics.on({
 		// уточняем номенклатуру системы
     const {prod_nom, calc_order} = this;
 
+    // контроль прав на запись характеристики
+    if(calc_order.is_read_only){
+      this._data._err = {
+        title: 'Права доступа',
+        type: 'alert-error',
+        text: `Запрещено изменять заказ в статусе ${calc_order.obj_delivery_state}`
+      };
+      return false;
+    }
+
 		// пересчитываем наименование
 		const name = this.prod_name();
 		if(name){

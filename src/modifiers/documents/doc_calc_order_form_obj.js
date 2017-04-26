@@ -343,7 +343,6 @@
 		}
 
 
-
 		/**
 		 * вспомогательные функции
 		 */
@@ -444,28 +443,12 @@
 		// устанавливает видимость и доступность
 		function set_editable(){
 
-			// статусы
-			var st_draft = $p.enm.obj_delivery_states.Черновик,
-				st_retrieve = $p.enm.obj_delivery_states.Отозван,
-				retrieve_enabed, detales_toolbar;
-
 			wnd.elmnts.pg_right.cells("vat_consider", 1).setDisabled(true);
 			wnd.elmnts.pg_right.cells("vat_included", 1).setDisabled(true);
 
-			wnd.elmnts.ro = false;
+			wnd.elmnts.ro = o.is_read_only;
 
-			// технолог может изменять шаблоны
-			if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон){
-				wnd.elmnts.ro = !$p.current_acl.role_available("ИзменениеТехнологическойНСИ");
-
-				// ведущий менеджер может изменять проведенные
-			}else if(o.posted || o._deleted){
-				wnd.elmnts.ro = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов");
-
-			}else if(!wnd.elmnts.ro && !o.obj_delivery_state.empty())
-				wnd.elmnts.ro = o.obj_delivery_state != st_draft && o.obj_delivery_state != st_retrieve;
-
-			retrieve_enabed = !o._deleted &&
+			const retrieve_enabed = !o._deleted &&
 				(o.obj_delivery_state == $p.enm.obj_delivery_states.Отправлен || o.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен);
 
 			wnd.elmnts.grids.production.setEditable(!wnd.elmnts.ro);
@@ -489,17 +472,13 @@
 				wnd.elmnts.frm_toolbar.disableItem("btn_sent");
 				wnd.elmnts.frm_toolbar.disableItem("btn_save");
 
-				detales_toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
-				detales_toolbar.forEachItem(function(itemId){
-					detales_toolbar.disableItem(itemId);
-				});
+				let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
+				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
 
-				detales_toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
-				detales_toolbar.forEachItem(function(itemId){
-					detales_toolbar.disableItem(itemId);
-				});
-
-			}else{
+				toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
+				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
+			}
+			else{
 				// шаблоны никогда не надо отправлять
 				if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон)
 					wnd.elmnts.frm_toolbar.disableItem("btn_sent");
@@ -508,15 +487,11 @@
 
 				wnd.elmnts.frm_toolbar.enableItem("btn_save");
 
-				detales_toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
-				detales_toolbar.forEachItem(function(itemId){
-					detales_toolbar.enableItem(itemId);
-				});
+				let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
+				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
 
-				detales_toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
-				detales_toolbar.forEachItem(function(itemId){
-					detales_toolbar.enableItem(itemId);
-				});
+				toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
+				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
 			}
 			if(retrieve_enabed)
 				wnd.elmnts.frm_toolbar.enableListOption("bs_more", "btn_retrieve");

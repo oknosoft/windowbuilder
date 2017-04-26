@@ -2376,6 +2376,15 @@ $p.cat.characteristics.on({
 
     const {prod_nom, calc_order} = this;
 
+    if(calc_order.is_read_only){
+      this._data._err = {
+        title: 'Права доступа',
+        type: 'alert-error',
+        text: `Запрещено изменять заказ в статусе ${calc_order.obj_delivery_state}`
+      };
+      return false;
+    }
+
 		const name = this.prod_name();
 		if(name){
       this.name = name;
@@ -6266,7 +6275,16 @@ function ProductsBuilding(){
 					$p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
 					delete scheme.data._saving;
 					$p.eve.callEvent("characteristic_saved", [scheme, attr]);
-				});
+				})
+        .catch((ox) => {
+          $p.record_log(ox);
+          delete scheme.data._saving;
+          const {_err} = ox._data;
+          if(_err){
+            $p.msg.show_msg(_err);
+            delete ox._data._err;
+          }
+        });
 		}
 		else{
 			delete scheme.data._saving;
@@ -6333,7 +6351,7 @@ class SpecBuilding {
       row.qty = calc_order_row.qty;
       row.quantity = calc_order_row.quantity;
 
-      save && cx.save();
+      save && cx.save().catch($p.record_log);
       order_rows.set(cx, row);
     });
     if(order_rows.size){
@@ -7492,8 +7510,25 @@ $p.DocCalc_order.prototype.__define({
 			this.planning.clear();
 
 		}
-	}
+	},
 
+  is_read_only: {
+	  get: function () {
+	    const {obj_delivery_state, posted, _deleted} = this;
+      const {Черновик, Шаблон, Отозван} = $p.enm.obj_delivery_states;
+      let ro = false;
+      if(obj_delivery_state == Шаблон){
+        ro = !$p.current_acl.role_available("ИзменениеТехнологическойНСИ");
+      }
+      else if(posted || _deleted){
+        ro = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов");
+      }
+      else if(!obj_delivery_state.empty()){
+        ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван;
+      }
+      return ro;
+    }
+  }
 
 });
 
@@ -7854,7 +7889,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 
 
-
 		function production_new_row(){
 			var row = o["production"].add({
 				qty: 1,
@@ -7946,25 +7980,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 		function set_editable(){
 
-			var st_draft = $p.enm.obj_delivery_states.Черновик,
-				st_retrieve = $p.enm.obj_delivery_states.Отозван,
-				retrieve_enabed, detales_toolbar;
-
 			wnd.elmnts.pg_right.cells("vat_consider", 1).setDisabled(true);
 			wnd.elmnts.pg_right.cells("vat_included", 1).setDisabled(true);
 
-			wnd.elmnts.ro = false;
+			wnd.elmnts.ro = o.is_read_only;
 
-			if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон){
-				wnd.elmnts.ro = !$p.current_acl.role_available("ИзменениеТехнологическойНСИ");
-
-			}else if(o.posted || o._deleted){
-				wnd.elmnts.ro = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов");
-
-			}else if(!wnd.elmnts.ro && !o.obj_delivery_state.empty())
-				wnd.elmnts.ro = o.obj_delivery_state != st_draft && o.obj_delivery_state != st_retrieve;
-
-			retrieve_enabed = !o._deleted &&
+			const retrieve_enabed = !o._deleted &&
 				(o.obj_delivery_state == $p.enm.obj_delivery_states.Отправлен || o.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен);
 
 			wnd.elmnts.grids.production.setEditable(!wnd.elmnts.ro);
@@ -7985,17 +8006,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 				wnd.elmnts.frm_toolbar.disableItem("btn_sent");
 				wnd.elmnts.frm_toolbar.disableItem("btn_save");
 
-				detales_toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
-				detales_toolbar.forEachItem(function(itemId){
-					detales_toolbar.disableItem(itemId);
-				});
+				let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
+				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
 
-				detales_toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
-				detales_toolbar.forEachItem(function(itemId){
-					detales_toolbar.disableItem(itemId);
-				});
-
-			}else{
+				toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
+				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
+			}
+			else{
 				if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон)
 					wnd.elmnts.frm_toolbar.disableItem("btn_sent");
 				else
@@ -8003,15 +8020,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 				wnd.elmnts.frm_toolbar.enableItem("btn_save");
 
-				detales_toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
-				detales_toolbar.forEachItem(function(itemId){
-					detales_toolbar.enableItem(itemId);
-				});
+				let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
+				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
 
-				detales_toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
-				detales_toolbar.forEachItem(function(itemId){
-					detales_toolbar.enableItem(itemId);
-				});
+				toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
+				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
 			}
 			if(retrieve_enabed)
 				wnd.elmnts.frm_toolbar.enableListOption("bs_more", "btn_retrieve");

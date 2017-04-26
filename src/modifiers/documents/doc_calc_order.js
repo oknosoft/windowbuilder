@@ -569,8 +569,27 @@ $p.DocCalc_order.prototype.__define({
 			this.planning.clear();
 
 		}
-	}
+	},
 
+  is_read_only: {
+	  get: function () {
+	    const {obj_delivery_state, posted, _deleted} = this;
+      const {Черновик, Шаблон, Отозван} = $p.enm.obj_delivery_states;
+      let ro = false;
+      // технолог может изменять шаблоны
+      if(obj_delivery_state == Шаблон){
+        ro = !$p.current_acl.role_available("ИзменениеТехнологическойНСИ");
+      }
+      // ведущий менеджер может изменять проведенные
+      else if(posted || _deleted){
+        ro = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов");
+      }
+      else if(!obj_delivery_state.empty()){
+        ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван;
+      }
+      return ro;
+    }
+  }
 
 });
 

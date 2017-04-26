@@ -77,7 +77,7 @@ class SpecBuilding {
       row.qty = calc_order_row.qty;
       row.quantity = calc_order_row.quantity;
 
-      save && cx.save();
+      save && cx.save().catch($p.record_log);
       order_rows.set(cx, row);
     });
     if(order_rows.size){

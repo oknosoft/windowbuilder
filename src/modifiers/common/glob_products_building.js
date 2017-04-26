@@ -1023,7 +1023,16 @@ function ProductsBuilding(){
 					$p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
 					delete scheme.data._saving;
 					$p.eve.callEvent("characteristic_saved", [scheme, attr]);
-				});
+				})
+        .catch((ox) => {
+          $p.record_log(ox);
+          delete scheme.data._saving;
+          const {_err} = ox._data;
+          if(_err){
+            $p.msg.show_msg(_err);
+            delete ox._data._err;
+          }
+        });
 		}
 		else{
 			delete scheme.data._saving;
