@@ -462,6 +462,9 @@ function ProductsBuilding(){
           fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
           fakerow.coefficient = (subrow.coefficient || 1) * (row.coefficient || 1);
           fakerow._origin = row.nom;
+          if(fakerow.clr.empty()){
+            fakerow.clr = row.clr;
+          }
           res.push(fakerow);
         });
       }
