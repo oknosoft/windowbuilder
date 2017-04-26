@@ -443,60 +443,65 @@
 		// устанавливает видимость и доступность
 		function set_editable(){
 
-			wnd.elmnts.pg_right.cells("vat_consider", 1).setDisabled(true);
-			wnd.elmnts.pg_right.cells("vat_included", 1).setDisabled(true);
+		  const {pg_left, pg_right, frm_toolbar, grids, tabs} = wnd.elmnts;
+
+      pg_right.cells("vat_consider", 1).setDisabled(true);
+      pg_right.cells("vat_included", 1).setDisabled(true);
 
 			wnd.elmnts.ro = o.is_read_only;
 
 			const retrieve_enabed = !o._deleted &&
 				(o.obj_delivery_state == $p.enm.obj_delivery_states.Отправлен || o.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен);
 
-			wnd.elmnts.grids.production.setEditable(!wnd.elmnts.ro);
-			wnd.elmnts.grids.planning.setEditable(!wnd.elmnts.ro);
-			wnd.elmnts.pg_left.setEditable(!wnd.elmnts.ro);
-			wnd.elmnts.pg_right.setEditable(!wnd.elmnts.ro);
+      grids.production.setEditable(!wnd.elmnts.ro);
+      grids.planning.setEditable(!wnd.elmnts.ro);
+      pg_left.setEditable(!wnd.elmnts.ro);
+      pg_right.setEditable(!wnd.elmnts.ro);
 
 			// гасим кнопки проведения, если недоступна роль
 			if(!$p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
-				wnd.elmnts.frm_toolbar.hideItem("btn_post");
-				wnd.elmnts.frm_toolbar.hideItem("btn_unpost");
+        frm_toolbar.hideItem("btn_post");
+        frm_toolbar.hideItem("btn_unpost");
 			}
 
 			// если не технологи и не менеджер - запрещаем менять статусы
 			if(!$p.current_acl.role_available("ИзменениеТехнологическойНСИ") && !$p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
-				wnd.elmnts.pg_left.cells("obj_delivery_state", 1).setDisabled(true);
+        pg_left.cells("obj_delivery_state", 1).setDisabled(true);
 			}
 
 			// кнопки записи и отправки гасим в зависимости от статуса
 			if(wnd.elmnts.ro){
-				wnd.elmnts.frm_toolbar.disableItem("btn_sent");
-				wnd.elmnts.frm_toolbar.disableItem("btn_save");
-
-				let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
-				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
-
-				toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
-				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
+        frm_toolbar.disableItem("btn_sent");
+        frm_toolbar.disableItem("btn_save");
+        let toolbar;
+        const disable = (itemId) => toolbar.disableItem(itemId);
+        toolbar = tabs.tab_production.getAttachedToolbar();
+        toolbar.forEachItem(disable);
+        toolbar = tabs.tab_planning.getAttachedToolbar();
+        toolbar.forEachItem(disable);
 			}
 			else{
 				// шаблоны никогда не надо отправлять
-				if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон)
-					wnd.elmnts.frm_toolbar.disableItem("btn_sent");
-				else
-					wnd.elmnts.frm_toolbar.enableItem("btn_sent");
-
-				wnd.elmnts.frm_toolbar.enableItem("btn_save");
-
-				let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
-				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
-
-				toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
-				toolbar.forEachItem((itemId) => toolbar.disableItem(itemId));
+				if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон){
+          frm_toolbar.disableItem("btn_sent");
+        }
+				else{
+          frm_toolbar.enableItem("btn_sent");
+        }
+        frm_toolbar.enableItem("btn_save");
+				let toolbar;
+				const enable = (itemId) => toolbar.enableItem(itemId);
+        toolbar = tabs.tab_production.getAttachedToolbar();
+        toolbar.forEachItem(enable);
+        toolbar = tabs.tab_planning.getAttachedToolbar();
+        toolbar.forEachItem(enable);
 			}
-			if(retrieve_enabed)
-				wnd.elmnts.frm_toolbar.enableListOption("bs_more", "btn_retrieve");
-			else
-				wnd.elmnts.frm_toolbar.disableListOption("bs_more", "btn_retrieve");
+			if(retrieve_enabed){
+        frm_toolbar.enableListOption("bs_more", "btn_retrieve");
+      }
+			else{
+        frm_toolbar.disableListOption("bs_more", "btn_retrieve");
+      }
 		}
 
 		/**

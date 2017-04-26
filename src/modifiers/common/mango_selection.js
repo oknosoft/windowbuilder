@@ -14,10 +14,13 @@ class MangoSelection {
     this._attr = attr;
     this._pwnd = pwnd || attr.pwnd || {};
     this._meta = attr.metadata || mgr.metadata();
-    this._frm_close = $p.eve.attachEvent("frm_close", this.other_frm_close.bind(this));
     this._prev_filter = {};
     this._sort = [{date: 'asc'}];
+
     this.select = this.select.bind(this);
+    this.body_keydown = this.body_keydown.bind(this);
+    this.other_frm_close = this.other_frm_close.bind(this);
+    this._frm_close = $p.eve.attachEvent("frm_close", this.other_frm_close);
 
     // создаём и настраиваем форму
     if (this.has_tree && attr.initial_value && attr.initial_value != $p.utils.blank.guid && !attr.parent) {
@@ -84,7 +87,7 @@ class MangoSelection {
       wnd.button('park').hide();
       wnd.button('minmax').show();
       wnd.button('minmax').enable();
-      wnd.attachEvent("onClose", frm_close);
+      wnd.attachEvent("onClose", this.frm_close.bind(this));
     }
 
     const {wnd} = this;
@@ -95,7 +98,7 @@ class MangoSelection {
       wnd.setText('Список ' + (_mgr.class_name.indexOf("doc.") == -1 ? 'справочника "' : 'документов "') + (_meta["list_presentation"] || _meta.synonym) + '"');
     }
 
-    document.body.addEventListener("keydown", this.body_keydown.bind(this), false);
+    document.body.addEventListener("keydown", this.body_keydown, false);
 
     wnd.elmnts = {};
     wnd._mgr = _mgr;
@@ -224,7 +227,7 @@ class MangoSelection {
     const grid = wnd.elmnts.grid = cell_grid.attachGrid();
     grid.setIconsPath(dhtmlx.image_path);
     grid.setImagePath(dhtmlx.image_path);
-    grid.attachEvent("onBeforeSorting", this.customColumnSort.bind(this));
+    grid.attachEvent("onBeforeSorting", this.custom_column_sort.bind(this));
     grid.attachEvent("onXLE", () => cell_grid.progressOff());
     grid.attachEvent("onXLS", () => cell_grid.progressOn());
     grid.attachEvent("onRowDblClicked", (rId, cInd) => {
@@ -273,7 +276,6 @@ class MangoSelection {
           if (!this._contextCallTimer) {
             this.callEvent("onXLE", [this, 0, 0, xml.xmlDoc]);
           }
-          typeof call === 'function' && call();
         };
       }
 
@@ -312,6 +314,8 @@ class MangoSelection {
 
           const sort = that._sort[0];
           this.setSortImgState(true, 0, sort[Object.keys(sort)[0]]);
+
+          typeof call === 'function' && call();
         });
     }
   }
@@ -394,6 +398,76 @@ class MangoSelection {
    */
   toolbar_click(btn_id) {
 
+    const {_attr, wnd, _mgr} = this;
+
+    // если внешний обработчик вернул false - выходим
+    if(_attr.toolbar_click && _attr.toolbar_click(btn_id, wnd, _mgr) === false){
+      return;
+    }
+
+    switch (btn_id) {
+      case "btn_select":
+        this.select();
+        break;
+
+      case "btn_new":
+        _mgr.create({}, true)
+          .then((o) => {
+            if(_attr.on_new){
+              _attr.on_new(o, wnd);
+            }
+            else if($p.job_prm.keep_hash){
+              o.form_obj(wnd);
+            }
+            else{
+              o._set_loaded(o.ref);
+              $p.iface.set_hash(_mgr.class_name, o.ref);
+            }
+          });
+        break;
+
+      case "btn_edit":
+        const rId = wnd.elmnts.grid.getSelectedRowId();
+        if (rId){
+          if(_attr.on_edit){
+            _attr.on_edit(_mgr, rId, wnd);
+          }
+          else if($p.job_prm.keep_hash){
+            _mgr.form_obj(wnd, {ref: rId});
+          }
+          else{
+            $p.iface.set_hash(_mgr.class_name, rId);
+          }
+        }
+        else{
+          $p.msg.show_msg({
+            type: "alert-warning",
+            text: $p.msg.no_selected_row.replace("%1", ""),
+            title: $p.msg.main_title
+          });
+        }
+        break;
+
+      case "btn_delete":
+        this.mark_deleted();
+        break;
+
+      case "btn_import":
+        _mgr.import();
+        break;
+
+      case "btn_export":
+        _mgr.export(wnd.elmnts.grid.getSelectedRowId());
+        break;
+
+      case "btn_requery":
+        this.reload(true);
+        break;
+
+      default:
+        btn_id.substr(0,4) == "prn_" && this.print(btn_id);
+
+    }
   }
 
   input_filter_change(flt) {
@@ -409,15 +483,118 @@ class MangoSelection {
     }
   }
 
-  select(id) {
+  /**
+   * выбор значения в гриде
+   * @param rId - идентификтор строки грида или дерева
+   */
+  select(rId) {
+    const {_attr, wnd, _pwnd, _mgr} = this;
 
+    if(!rId){
+      rId = wnd.elmnts.grid.getSelectedRowId();
+    }
+
+    let folders;
+    if(_attr.selection){
+      _attr.selection.forEach((sel) => {
+        for(let key in sel){
+          if(key=="is_folder"){
+            folders = sel[key];
+          }
+        }
+      });
+    }
+
+    // запрещаем выбирать папки
+    if(wnd.elmnts.tree &&
+      wnd.elmnts.tree.items[rId] &&
+      wnd.elmnts.tree.getSelectedId() != rId){
+      wnd.elmnts.tree.selectItem(rId, true);
+      return;
+    }
+
+    // запрещаем выбирать элементы, если в метаданных указано выбирать только папки
+    // TODO: спозиционировать сообщение над выбранным элементом
+    if(rId && folders === true && wnd.elmnts.grid.cells(rId, 0).cell.classList.contains("cell_ref_elm")){
+      $p.msg.show_msg($p.msg.select_grp);
+      return;
+    }
+
+
+    if((!rId && wnd.elmnts.tree) || (wnd.elmnts.tree && wnd.elmnts.tree.getSelectedId() == rId)){
+      if(folders === false){
+        $p.msg.show_msg($p.msg.select_elm);
+        return;
+      }
+      rId = wnd.elmnts.tree.getSelectedId();
+    }
+
+    if(rId){
+      if(_attr.on_edit){
+        _attr.on_edit(_mgr, rId, wnd);
+      }
+      else if(on_select){
+        _mgr.get(rId, true)
+          .then((selv) => {
+            wnd.close();
+            on_select.call(_pwnd.grid || _pwnd, selv);
+          });
+
+      }
+      else if($p.job_prm.keep_hash){
+        _mgr.form_obj(wnd, {ref: rId});
+      }
+      else{
+        $p.iface.set_hash(_mgr.class_name, rId);
+      }
+    }
+  }
+
+  /**
+   * Установки или снятие пометки удаления
+   */
+  mark_deleted() {
+    const {wnd, _mgr} = this;
+    const rId = wnd.elmnts.grid.getSelectedRowId();
+    if(rId){
+      _mgr.get(rId, true, true)
+        .then((o) => dhtmlx.confirm({
+          title: $p.msg.main_title,
+          text: o._deleted ? $p.msg.mark_undelete_confirm.replace("%1", o.presentation) : $p.msg.mark_delete_confirm.replace("%1", o.presentation),
+          cancel: "Отмена",
+          callback: (btn) => btn && o.mark_deleted(!o._deleted)
+        }));
+    }
+    else{
+      $p.msg.show_msg({
+        type: "alert-warning",
+        text: $p.msg.no_selected_row.replace("%1", ""),
+        title: $p.msg.main_title
+      });
+    }
+  }
+
+  /**
+   *	Печатает документ
+   */
+  print(pid) {
+    const {wnd, _mgr} = this;
+    const rId = wnd.elmnts.grid.getSelectedRowId();
+    if(rId){
+      _mgr.print(rId, pid, wnd);
+    }
+    else{
+      $p.msg.show_msg({type: "alert-warning",
+        text: $p.msg.no_selected_row.replace("%1", ""),
+        title: $p.msg.main_title});
+    }
   }
 
   reload(force, call) {
     this.wnd.elmnts.grid.clearAndLoad('pouch', call);
   }
 
-  customColumnSort(ind, type, direction) {
+  custom_column_sort(ind, type, direction) {
     const {grid} = this.wnd.elmnts;
     //const a_state = this.wnd.elmnts.grid.getSortingState();
 
@@ -427,8 +604,41 @@ class MangoSelection {
     return false;
   }
 
+  /**
+   * освобождает переменные после закрытия формы
+   */
+  frm_unload(on_create) {
+    const {_attr} = this;
+    document.body.removeEventListener("keydown", this.body_keydown);
+    if (_attr && _attr.on_close && !on_create){
+      _attr.on_close();
+    }
+    delete this.select;
+    delete this.body_keydown;
+    delete this.other_frm_close;
+  }
+
+  frm_close(){
+    const {_pwnd, _frm_close} = this;
+
+    setTimeout(this.frm_unload.bind, 10);
+
+    // если в родительском установлен обработчик выгрузки нашего - вызываем с контекстом грида
+    if(_pwnd.on_unload){
+      _pwnd.on_unload.call(_pwnd.grid || _pwnd);
+    }
+
+    if(_frm_close){
+      $p.eve.detachEvent(_frm_close);
+      _frm_close = null;
+    }
+
+    return true;
+  }
+
   other_frm_close(class_name, ref) {
     const {wnd, _mgr} = this;
+    const rId = wnd.elmnts.grid.getSelectedRowId();
     if (_mgr && _mgr.class_name == class_name && wnd && wnd.elmnts) {
       this.reload(true, () => {
         if (!$p.utils.is_empty_guid(ref) && wnd.elmnts && wnd.elmnts.grid){

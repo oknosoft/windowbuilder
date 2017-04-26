@@ -48,8 +48,40 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
       const {elmnts} = wnd;
 
+      // добавляем отбор по подразделению
+      const builder_price = $p.dp.builder_price.create();
+      const pos = elmnts.toolbar.getPosition("input_filter");
+      const id = `txt_${dhx4.newId()}`;
+      elmnts.toolbar.addText(id, pos, "");
+      const text = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + id].obj;
+      const department = new $p.iface.OCombo({
+        parent: text,
+        obj: builder_price,
+        field: "department",
+        width: 200,
+        hide_frm: true,
+        //get_option_list: get_option_list,
+      });
+      text.style.border = "1px solid #ccc";
+      text.style.borderRadius = "3px";
+      text.style.padding = "3px 2px 1px 2px";
+      text.style.margin = "1px 5px 1px 1px";
+      department.DOMelem_input.placeholder = "Подразделение";
+      // {
+      //   border-right-width: 1px;
+      //   border: 1px solid rgb(204, 204, 204);
+      //   padding: 3px 2px 1px 2px;
+      //   margin: 1px 5px 1px 1px;
+      // }
+
       // настраиваем фильтр для списка заказов
       elmnts.filter.custom_selection.__define({
+        department: {
+          get: function () {
+            return {$ne: ''};
+          },
+          enumerable: true
+        },
         state: {
           get: function(){
             const state = (tree && tree.getSelectedId()) || 'draft';
@@ -67,28 +99,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
       // настраиваем дерево
       tree.loadStruct($p.injected_data["tree_filteres.xml"]);
-      tree.attachEvent("onSelect", (rid, mode) => {
-
-        if(!mode)
-          return;
-
-        // переключаем страницу карусели
-        switch(rid) {
-
-          case 'draft':
-          case 'sent':
-          case 'declined':
-          case 'confirmed':
-          case 'service':
-          case 'complaints':
-          case 'template':
-          case 'zarchive':
-          case 'all':
-            elmnts.filter.call_event();
-            return;
-        }
-
-      });
+      tree.attachEvent("onSelect", (rid, mode) => mode && elmnts.filter.call_event());
 
       resolve(wnd);
     }
