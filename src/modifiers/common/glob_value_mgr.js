@@ -8,21 +8,17 @@
  */
 
 (function (md) {
-
-	var value_mgr = md.value_mgr;
-
-	md.value_mgr = function(row, f, mf, array_enabled, v){
-
-		var tmp = value_mgr(row, f, mf, array_enabled, v);
-
-		if(tmp)
-			return tmp;
-
-		if(f == 'trans')
-			return $p.doc.calc_order;
-
-		else if(f == 'partner')
-			return $p.cat.partners;
+	const value_mgr = md.value_mgr;
+	md.value_mgr = (row, f, mf, array_enabled, v) => {
+		const tmp = value_mgr(row, f, mf, array_enabled, v);
+		if(tmp){
+      return tmp;
+    }
+		if(f == 'trans'){
+      return $p.doc.calc_order;
+    }
+		else if(f == 'partner'){
+      return $p.cat.partners;
+    }
 	}
-
 })($p.md);

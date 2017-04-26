@@ -53,9 +53,6 @@ class OSvgs {
       handler: handler,
     });
 
-    if(this.area_text && this.area_text.innerHTML == "<div></div>"){
-      this.area_text.style.display = "none";
-    }
 
     const {pics_area} = this;
     pics_area.className = 'svgs-area';
@@ -86,12 +83,16 @@ class OSvgs {
 
   apply_area_hidden () {
 
-    const {pics_area, area_hidden, layout, minmax} = this;
+    const {pics_area, area_hidden, area_text, layout, minmax} = this;
 
     pics_area.style.display = area_hidden ? 'none' : '';
+    area_text.style.display = area_hidden ? '' : 'none';
 
     if (layout.setSizes){
       layout.setSizes();
+    }
+    else if (layout.layout && layout.layout.setSizes) {
+      layout.layout.setSizes();
     }
     else if (layout.getDimension) {
       const dim = layout.getDimension();

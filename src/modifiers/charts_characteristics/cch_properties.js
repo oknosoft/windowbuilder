@@ -284,6 +284,9 @@ $p.CchProperties.prototype.__define({
         case $p.enm.comparison_types.in:
         case $p.enm.comparison_types.nin:
 
+          if(!txt_row){
+            return value;
+          }
           try{
             const arr = JSON.parse(txt_row);
             const {types} = this.type;

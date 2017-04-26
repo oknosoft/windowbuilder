@@ -23,12 +23,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 		};
 	}
 
-	// вместо пагинации используем умную загрузку
-	//attr.smart_rendering = true;
-
-	// несмотря на отсутствие пагинации, показываем стстусбар
-	//attr.status_bar = true;
-
 	// разбивка на 2 колонки - дерево и карусель
 	const layout = pwnd.attachLayout({
 			pattern: "2U",
@@ -47,152 +41,61 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 	const tree = layout.cells("a").attachTreeView({
 			iconset: "font_awesome"
 		});
-	const carousel = layout.cells("b").attachCarousel({
-			keys:           false,
-			touch_scroll:   false,
-			offset_left:    0,
-			offset_top:     0,
-			offset_item:    0
-		});
 
-	// страницы карусели
-	carousel.hideControls();
-	carousel.addCell("list");
-	carousel.addCell("report");
-	carousel.conf.anim_step = 200;
-	carousel.conf.anim_slide = "left 0.1s";
+  return new Promise((resolve, reject) => {
 
-	const wnd = this.constructor.prototype.form_selection.call(this, carousel.cells("list"), attr);
+    attr.on_create = (wnd) => {
 
-	// настраиваем фильтр для списка заказов
-	wnd.elmnts.filter.custom_selection._view = {
-		get value() {
-			switch(tree.getSelectedId()) {
+      const {elmnts} = wnd;
 
-				case 'draft':
-				case 'sent':
-				case 'declined':
-				case 'confirmed':
-				case 'service':
-				case 'complaints':
-				case 'template':
-				case 'zarchive':
-					return 'doc/by_date';
+      // настраиваем фильтр для списка заказов
+      elmnts.filter.custom_selection.__define({
+        state: {
+          get: function(){
+            const state = (tree && tree.getSelectedId()) || 'draft';
+            return state == 'all' ? {$ne: ''} : {$eq: state};
+          },
+          enumerable: true
+        }
+      });
 
-				case 'execution':
-				case 'plan':
-				case 'underway':
-				case 'manufactured':
-				case 'executed':
-				case 'all':
-					return '';
-			}
-		}
-	};
-	wnd.elmnts.filter.custom_selection._key = {
-		get value(){
-			var key, id;
+      // картинка заказа в статусбаре
+      elmnts.status_bar = wnd.attachStatusBar();
+      elmnts.svgs = new $p.iface.OSvgs(wnd, elmnts.status_bar,
+        (ref, dbl) => dbl && $p.iface.set_hash("cat.characteristics", ref, "builder"));
+      elmnts.grid.attachEvent("onRowSelect", (rid) => elmnts.svgs.reload(rid));
 
-			switch(id = tree.getSelectedId()) {
+      // настраиваем дерево
+      tree.loadStruct($p.injected_data["tree_filteres.xml"]);
+      tree.attachEvent("onSelect", (rid, mode) => {
 
-				case 'draft':
-				case 'sent':
-				case 'declined':
-				case 'confirmed':
-				case 'service':
-				case 'complaints':
-				case 'template':
-				case 'zarchive':
-					key = id;
-					break;
+        if(!mode)
+          return;
 
-				case 'execution':
-				case 'plan':
-				case 'underway':
-				case 'manufactured':
-				case 'executed':
-				case 'all':
-					return '';
-			}
+        // переключаем страницу карусели
+        switch(rid) {
 
-			var filter = wnd.elmnts.filter.get_filter(true);
-			return {
-				startkey: [key, filter.date_from.getFullYear(), filter.date_from.getMonth()+1, filter.date_from.getDate()],
-				endkey: [key, filter.date_till.getFullYear(), filter.date_till.getMonth()+1, filter.date_till.getDate()],
-				_drop_date: true,
-				_order_by: true,
-				_search: filter.filter.toLowerCase()
-			};
-		}
-	};
+          case 'draft':
+          case 'sent':
+          case 'declined':
+          case 'confirmed':
+          case 'service':
+          case 'complaints':
+          case 'template':
+          case 'zarchive':
+          case 'all':
+            elmnts.filter.call_event();
+            return;
+        }
 
-	// картинка заказа в статусбаре
-	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar,
-    (ref, dbl) => dbl && $p.iface.set_hash("cat.characteristics", ref, "builder"));
-	wnd.elmnts.grid.attachEvent("onRowSelect", (rid) => wnd.elmnts.svgs.reload(rid));
+      });
 
-	// настраиваем дерево
-	tree.loadStruct($p.injected_data["tree_filteres.xml"]);
-	tree.attachEvent("onSelect", (rid, mode) => {
+      resolve(wnd);
+    }
 
-		if(!mode)
-			return;
+    const frm = this.mango_selection(layout.cells("b"), attr);
 
-		// переключаем страницу карусели
-		switch(rid) {
+  });
 
-			case 'draft':
-			case 'sent':
-			case 'declined':
-			case 'confirmed':
-			case 'service':
-			case 'complaints':
-			case 'template':
-			case 'zarchive':
-			case 'all':
-				carousel.cells("list").setActive();
-				wnd.elmnts.filter.call_event();
-				return;
-		}
-
-		build_report(rid);
-
-	});
-
-	function build_report(rid) {
-
-		carousel.cells("report").setActive();
-
-		function show_report() {
-			switch(rid) {
-				case 'execution':
-					$p.doc.calc_order.rep_invoice_execution(wnd.elmnts.report);
-					break;
-
-				case 'plan':
-				case 'underway':
-				case 'manufactured':
-				case 'executed':
-					$p.doc.calc_order.rep_planing(wnd.elmnts.report, rid);
-					break;
-			}
-		}
-
-		if(!wnd.elmnts.report){
-
-      wnd.elmnts.report = new $p.HandsontableDocument(carousel.cells("report"), {})
-				.then((rep) => {
-					if(!rep._online){
-            return wnd.elmnts.report = null;
-          }
-					show_report();
-				});
-		}
-		else if(wnd.elmnts.report._online){
-			show_report();
-		}
-	}
-
-	return wnd;
 };
 
