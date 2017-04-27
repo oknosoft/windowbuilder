@@ -7769,28 +7769,56 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
       const {elmnts} = wnd;
 
-      const builder_price = $p.dp.builder_price.create();
+      const dp = $p.dp.builder_price.create();
       const pos = elmnts.toolbar.getPosition("input_filter");
-      const id = `txt_${dhx4.newId()}`;
-      elmnts.toolbar.addText(id, pos, "");
-      const text = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + id].obj;
-      const department = new $p.iface.OCombo({
-        parent: text,
-        obj: builder_price,
+      const txt_id = `txt_${dhx4.newId()}`;
+      elmnts.toolbar.addText(txt_id, pos, "");
+      const txt_div = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + txt_id].obj;
+      const dep = new $p.iface.OCombo({
+        parent: txt_div,
+        obj: dp,
         field: "department",
-        width: 200,
+        width: 180,
         hide_frm: true,
+        get_option_list: function(val, selection){
+          const {guid} = $p.utils.blank;
+          return this.get_option_list(val, selection)
+            .then((list) => {
+            if(!list.some((item) => item.value == guid)){
+              list.splice(0, 0, {text: "", value: guid})
+            };
+            return list;
+          })
+        },
       });
-      text.style.border = "1px solid #ccc";
-      text.style.borderRadius = "3px";
-      text.style.padding = "3px 2px 1px 2px";
-      text.style.margin = "1px 5px 1px 1px";
-      department.DOMelem_input.placeholder = "Подразделение";
+      txt_div.style.border = "1px solid #ccc";
+      txt_div.style.borderRadius = "3px";
+      txt_div.style.padding = "3px 2px 1px 2px";
+      txt_div.style.margin = "1px 5px 1px 1px";
+      dep.DOMelem_input.placeholder = "Подразделение";
+
+      Object.observe(dp, (changes) => {
+        changes.forEach((change) => {
+          if(change.name == "department"){
+            elmnts.filter.call_event();
+          }
+        });
+      });
 
       elmnts.filter.custom_selection.__define({
         department: {
           get: function () {
-            return {$ne: ''};
+            const {department} = dp;
+            if(department.empty()){
+              return {$ne: ''};
+            }
+            const depts = [];
+            $p.cat.divisions.forEach((o) =>{
+              if(o.in_hierarchy(department)){
+                depts.push(o.ref)
+              }
+            });
+            return {$in: depts};
           },
           enumerable: true
         },
@@ -7892,7 +7920,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 					});
 					wnd.elmnts.discount_pop.attachEvent("onShow", show_discount);
 
-					setTimeout(set_editable, 50);
+          set_editable();
 
 				});
 
@@ -8237,28 +8265,31 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 		function characteristic_saved(scheme, sattr){
 
-			var ox = scheme.ox,
-				dp = scheme._dp,
-				row = ox.calc_order_row;
+		  const {ox, _dp} = scheme;
+		  const row = ox.calc_order_row;
 
-			if(!row || ox.calc_order != o)
-				return;
+			if(!row || ox.calc_order != o){
+        return;
+      }
 
 
 			ox._data._silent = true;
 
 			row.nom = ox.owner;
-			row.note = dp.note;
-			row.quantity = dp.quantity || 1;
+			row.note = _dp.note;
+			row.quantity = _dp.quantity || 1;
 			row.len = ox.x;
 			row.width = ox.y;
 			row.s = ox.s;
-			row.discount_percent = dp.discount_percent;
-			row.discount_percent_internal = dp.discount_percent_internal;
-			if(row.unit.owner != row.nom)
-				row.unit = row.nom.storage_unit;
+			row.discount_percent = _dp.discount_percent;
+			row.discount_percent_internal = _dp.discount_percent_internal;
+			if(row.unit.owner != row.nom){
+        row.unit = row.nom.storage_unit;
+      }
 
-			wnd.elmnts.grids.production.refresh_row(row);
+      const {production} = wnd.elmnts.grids;
+			production.refresh_row(row);
+      o.production.find_rows({ordn: ox}, (row) => production.refresh_row(row));
 
 			wnd.elmnts.svgs.reload(o);
 

@@ -87,8 +87,8 @@
 					});
 					wnd.elmnts.discount_pop.attachEvent("onShow", show_discount);
 
-					// в зависимости от статуса
-					setTimeout(set_editable, 50);
+          // в зависимости от статуса
+          set_editable();
 
 				});
 
@@ -188,11 +188,6 @@
 			// 	}
 			// });
 
-			//wnd.elmnts.pg_header = wnd.elmnts.tabs.tab_header.attachHeadFields({
-			//	obj: o,
-			//	pwnd: wnd,
-			//	read_only: wnd.elmnts.ro    // TODO: учитывать права для каждой роли на каждый объект
-			//});
 		};
 
 		attr.toolbar_struct = $p.injected_data["toolbar_calc_order_obj.xml"];
@@ -511,12 +506,12 @@
 		 */
 		function characteristic_saved(scheme, sattr){
 
-			var ox = scheme.ox,
-				dp = scheme._dp,
-				row = ox.calc_order_row;
+		  const {ox, _dp} = scheme;
+		  const row = ox.calc_order_row;
 
-			if(!row || ox.calc_order != o)
-				return;
+			if(!row || ox.calc_order != o){
+        return;
+      }
 
 			//nom,characteristic,note,quantity,unit,qty,len,width,s,first_cost,marginality,price,discount_percent,discount_percent_internal,
 			//discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,ordn,changed
@@ -525,18 +520,21 @@
 			ox._data._silent = true;
 
 			row.nom = ox.owner;
-			row.note = dp.note;
-			row.quantity = dp.quantity || 1;
+			row.note = _dp.note;
+			row.quantity = _dp.quantity || 1;
 			row.len = ox.x;
 			row.width = ox.y;
 			row.s = ox.s;
-			row.discount_percent = dp.discount_percent;
-			row.discount_percent_internal = dp.discount_percent_internal;
-			if(row.unit.owner != row.nom)
-				row.unit = row.nom.storage_unit;
+			row.discount_percent = _dp.discount_percent;
+			row.discount_percent_internal = _dp.discount_percent_internal;
+			if(row.unit.owner != row.nom){
+        row.unit = row.nom.storage_unit;
+      }
 
 			// обновляем табчасть
-			wnd.elmnts.grids.production.refresh_row(row);
+      const {production} = wnd.elmnts.grids;
+			production.refresh_row(row);
+      o.production.find_rows({ordn: ox}, (row) => production.refresh_row(row));
 
 			// обновляем эскизы
 			wnd.elmnts.svgs.reload(o);

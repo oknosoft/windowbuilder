@@ -49,36 +49,57 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
       const {elmnts} = wnd;
 
       // добавляем отбор по подразделению
-      const builder_price = $p.dp.builder_price.create();
+      const dp = $p.dp.builder_price.create();
       const pos = elmnts.toolbar.getPosition("input_filter");
-      const id = `txt_${dhx4.newId()}`;
-      elmnts.toolbar.addText(id, pos, "");
-      const text = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + id].obj;
-      const department = new $p.iface.OCombo({
-        parent: text,
-        obj: builder_price,
+      const txt_id = `txt_${dhx4.newId()}`;
+      elmnts.toolbar.addText(txt_id, pos, "");
+      const txt_div = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + txt_id].obj;
+      const dep = new $p.iface.OCombo({
+        parent: txt_div,
+        obj: dp,
         field: "department",
-        width: 200,
+        width: 180,
         hide_frm: true,
-        //get_option_list: get_option_list,
+        get_option_list: function(val, selection){
+          const {guid} = $p.utils.blank;
+          return this.get_option_list(val, selection)
+            .then((list) => {
+            if(!list.some((item) => item.value == guid)){
+              list.splice(0, 0, {text: "", value: guid})
+            };
+            return list;
+          })
+        },
       });
-      text.style.border = "1px solid #ccc";
-      text.style.borderRadius = "3px";
-      text.style.padding = "3px 2px 1px 2px";
-      text.style.margin = "1px 5px 1px 1px";
-      department.DOMelem_input.placeholder = "Подразделение";
-      // {
-      //   border-right-width: 1px;
-      //   border: 1px solid rgb(204, 204, 204);
-      //   padding: 3px 2px 1px 2px;
-      //   margin: 1px 5px 1px 1px;
-      // }
+      txt_div.style.border = "1px solid #ccc";
+      txt_div.style.borderRadius = "3px";
+      txt_div.style.padding = "3px 2px 1px 2px";
+      txt_div.style.margin = "1px 5px 1px 1px";
+      dep.DOMelem_input.placeholder = "Подразделение";
+
+      Object.observe(dp, (changes) => {
+        changes.forEach((change) => {
+          if(change.name == "department"){
+            elmnts.filter.call_event();
+          }
+        });
+      });
 
       // настраиваем фильтр для списка заказов
       elmnts.filter.custom_selection.__define({
         department: {
           get: function () {
-            return {$ne: ''};
+            const {department} = dp;
+            if(department.empty()){
+              return {$ne: ''};
+            }
+            const depts = [];
+            $p.cat.divisions.forEach((o) =>{
+              if(o.in_hierarchy(department)){
+                depts.push(o.ref)
+              }
+            });
+            return {$in: depts};
           },
           enumerable: true
         },
