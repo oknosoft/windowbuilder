@@ -5596,6 +5596,10 @@ class Filling extends BuilderElement {
     return false;
   }
 
+  get generatrix() {
+    return this.path;
+  }
+
   get path() {
     return this.data.path;
   }
@@ -8478,6 +8482,10 @@ class Onlay extends ProfileItem {
 
   get elm_type() {
     return $p.enm.elm_types.Раскладка;
+  }
+
+  nearest() {
+
   }
 
   save_coordinates() {

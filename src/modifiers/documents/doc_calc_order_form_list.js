@@ -91,7 +91,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
           get: function () {
             const {department} = dp;
             if(department.empty()){
-              return {$ne: ''};
+              return {$ne: '0'};
             }
             const depts = [];
             $p.cat.divisions.forEach((o) =>{

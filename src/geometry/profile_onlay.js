@@ -43,6 +43,13 @@ class Onlay extends ProfileItem {
   }
 
   /**
+   * У раскладки не бывает ведущих элементов
+   */
+  nearest() {
+
+  }
+
+  /**
    * Вычисляемые поля в таблице координат
    * @method save_coordinates
    * @for Onlay

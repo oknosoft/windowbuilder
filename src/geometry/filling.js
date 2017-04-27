@@ -407,6 +407,10 @@ class Filling extends BuilderElement {
     return false;
   }
 
+  get generatrix() {
+    return this.path;
+  }
+
   /**
    * путь элемента - состоит из кривых, соединяющих вершины элемента
    * @property path
