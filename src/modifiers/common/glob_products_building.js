@@ -281,12 +281,12 @@ function ProductsBuilding(){
 
 		const res = [];
 		const {angle_hor} = elm;
+		const {art1, art2} = $p.job_prm.nom;
+    const {САртикулом1, САртикулом2} = $p.enm.specification_installation_methods;
 
 		cnn.specification.each((row) => {
 			const {nom} = row;
-			if(!nom || nom.empty() ||
-				  nom == $p.job_prm.nom.art1 ||
-				  nom == $p.job_prm.nom.art2){
+			if(!nom || nom.empty() || nom == art1 || nom == art2){
         return;
       }
 
@@ -308,10 +308,7 @@ function ProductsBuilding(){
 			}
 
 			// "Устанавливать с" проверяем только для соединений профиля
-			if(($p.enm.cnn_types.acn.a.indexOf(cnn.cnn_type) != -1) && (
-					(row.set_specification == $p.enm.specification_installation_methods.САртикулом1 && !len_angl.art1) ||
-					(row.set_specification == $p.enm.specification_installation_methods.САртикулом2 && !len_angl.art2)
-				)){
+			if((row.set_specification == САртикулом1 && len_angl.art2) || (row.set_specification == САртикулом2 && len_angl.art1)){
         return;
       }
 
@@ -591,9 +588,11 @@ function ProductsBuilding(){
     let row_spec;
 
 		// добавляем строку спецификации
-		if(row_cnn_prev || row_cnn_next){
+    const row_cnn = row_cnn_prev || row_cnn_next;
+		if(row_cnn){
 
-			row_spec = new_spec_row(null, elm, row_cnn_prev || row_cnn_next, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
+			row_spec = new_spec_row(null, elm, row_cnn, _row.nom, cnn_row(_row.elm, prev ? prev.elm : 0));
+      row_spec.qty = row_cnn.quantity;
 
 			// уточняем размер
       const seam = $p.enm.angle_calculating_ways.СварнойШов;
@@ -665,32 +664,24 @@ function ProductsBuilding(){
 				alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
 				alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
         len: row_spec ? row_spec.len * 1000 : _row.len,
-				// art1: true TODO: учесть art-1-2
+				art1: false
 			};
 
 			if(b.cnn.cnn_type == $p.enm.cnn_types.ТОбразное || b.cnn.cnn_type == $p.enm.cnn_types.НезамкнутыйКонтур){
-				// соединение Т-образное или незамкнутый контур: для них арт 1-2 не используется
 
 				// для него надо рассчитать еще и с другой стороны
 				if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm)){
 					//	TODO: ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
           len_angl.angle = len_angl.alp2;
+          len_angl.art2 = true;
           cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
 				}
 			}
 
-			// для раскладок доппроверка
-			//Если СтрК.ТипЭлемента = Перечисления.пзТипыЭлементов.Раскладка И (СоедСлед != Неопределено)
-			//	И (СоедСлед.ТипСоединения = Перечисления.пзТипыСоединений.ТОбразное
-			//	Или СоедСлед.ТипСоединения = Перечисления.пзТипыСоединений.НезамкнутыйКонтур) Тогда
-			//	Если НадоДобавитьСпецификациюСоединения(СтруктураПараметров, СоедСлед, СтрК, След) Тогда
-			//		ДлиныУглыСлед.Вставить("ДлинаСоединения", СтрК.Длина);
-			//		ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
-			//	КонецЕсли;
-			//КонецЕсли;
-
 			// спецификацию с предыдущей стороны рассчитваем всегда
       len_angl.angle = len_angl.alp1;
+      len_angl.art2 = false;
+      len_angl.art1 = true;
 			cnn_add_spec(b.cnn, elm, len_angl, e.cnn);
 		}
 
