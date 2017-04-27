@@ -40,13 +40,6 @@ class MangoSelection {
     return this._meta["hierarchical"] && !(this._mgr instanceof $p.ChartOfAccountManager);
   }
 
-  get filter() {
-
-  }
-
-  get selector() {
-
-  }
 
   // указатель на dhtmlXGridObject
   get grid() {
@@ -366,27 +359,26 @@ class MangoSelection {
    * @return {Boolean}
    */
   body_keydown(evt) {
-    const {wnd, grid, filter} = this;
+    const {wnd} = this;
     const {iface, job_prm} = $p;
 
     if (wnd && wnd.is_visible && wnd.is_visible()) {
       if (evt.ctrlKey && evt.keyCode == 70) { // фокус на поиск по {Ctrl+F}
         if (!iface.check_exit(wnd)) {
           setTimeout(() => {
-            filter.input_filter && job_prm.device_type == "desktop" && filter.input_filter.focus();
+            wnd.elmnts.filter.input_filter && job_prm.device_type == "desktop" && wnd.elmnts.filter.input_filter.focus();
           });
-          return iface.cancel_bubble(evt);
+          return iface.cancel_bubble(evt, true);
         }
 
       } else if (evt.shiftKey && evt.keyCode == 116) { // requery по {Shift+F5}
         if (!iface.check_exit(wnd)) {
           setTimeout(() => this.reload());
-          evt.preventDefault && evt.preventDefault();
-          return iface.cancel_bubble(evt);
+          return iface.cancel_bubble(evt, true);
         }
 
       } else if (evt.keyCode == 27) { // закрытие по {ESC}
-        if (!iface.check_exit(wnd)) {
+        if (wnd instanceof dhtmlXWindowsCell && !iface.check_exit(wnd)) {
           setTimeout(() => wnd.close());
         }
       }
