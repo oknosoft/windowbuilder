@@ -6400,7 +6400,7 @@ class MangoSelection {
     this._pwnd = pwnd || attr.pwnd || {};
     this._meta = attr.metadata || mgr.metadata();
     this._prev_filter = {};
-    this._sort = [{date: 'asc'}];
+    this._sort = [{date: 'desc'}];
 
     this.select = this.select.bind(this);
     this.body_keydown = this.body_keydown.bind(this);
@@ -6660,6 +6660,12 @@ class MangoSelection {
 
       that._mgr.pouch_db.find(filter)
         .then(({docs}) => {
+
+          if(that._need_reload){
+            that._need_reload = false;
+            return this.load(url, call);
+          }
+
           const xml = {
             xmlDoc: $p.iface.data_to_grid.call(that._mgr, docs.map(v => {
               v.ref = v._id.substr(15);
@@ -6681,6 +6687,9 @@ class MangoSelection {
           this.setSortImgState(true, 0, sort[Object.keys(sort)[0]]);
 
           typeof call === 'function' && call();
+
+          that._loading = false;
+
         });
     }
   }
@@ -6720,6 +6729,10 @@ class MangoSelection {
 
     if(_sort){
       filter.sort = _sort;
+    }
+
+    if(eflt.custom_selection._index){
+      filter.use_index = eflt.custom_selection._index;
     }
 
     return filter;
@@ -6933,6 +6946,10 @@ class MangoSelection {
   }
 
   reload(force, call) {
+    if(this._loading){
+      this._need_reload = true;
+    }
+    this._loading = true;
     this.wnd.elmnts.grid.clearAndLoad('pouch', call);
   }
 
@@ -7753,6 +7770,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			}],
 			offsets: { top: 0, right: 0, bottom: 0, left: 0}
 		});
+
 	const tree = layout.cells("a").attachTreeView({
 			iconset: "font_awesome"
 		});
@@ -7804,7 +7822,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
           get: function () {
             const {department} = dp;
             if(department.empty()){
-              return {$ne: '0'};
+              return {$ne: ''};
             }
             const depts = [];
             $p.cat.divisions.forEach((o) =>{
@@ -7819,11 +7837,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
         state: {
           get: function(){
             const state = (tree && tree.getSelectedId()) || 'draft';
-            return state == 'all' ? {$ne: ''} : {$eq: state};
+            return state == 'all' ? {$in: 'draft,sent,confirmed,declined,service,complaints,template,zarchive'.split(',')} : {$eq: state};
           },
           enumerable: true
         }
       });
+      elmnts.filter.custom_selection._index = 'mango_calc_order';
 
       elmnts.status_bar = wnd.attachStatusBar();
       elmnts.svgs = new $p.iface.OSvgs(wnd, elmnts.status_bar,
