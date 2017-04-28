@@ -17,44 +17,37 @@ $p.doc.calc_order.on({
 	// после создания надо заполнить реквизиты по умолчанию: контрагент, организация, договор
 	after_create: function (attr) {
 
-		var acl = $p.current_acl.acl_objs,
-			obj = this;
+	  const {acl_objs} = $p.current_acl;
 
 		//Организация
-		acl.find_rows({
-			by_default: true,
-			type: $p.cat.organizations.metadata().obj_presentation || $p.cat.organizations.metadata().name}, function (row) {
-			obj.organization = row.acl_obj;
+		acl_objs.find_rows({by_default: true, type: $p.cat.organizations.metadata().obj_presentation}, (row) => {
+      this.organization = row.acl_obj;
 			return false;
 		});
 
 		//Подразделение
-		acl.find_rows({
-			by_default: true,
-			type: $p.cat.divisions.metadata().obj_presentation || $p.cat.divisions.metadata().name}, function (row) {
-			obj.department = row.acl_obj;
+		acl_objs.find_rows({by_default: true, type: $p.cat.divisions.metadata().obj_presentation}, (row) => {
+      this.department = row.acl_obj;
 			return false;
 		});
 
 		//Контрагент
-		acl.find_rows({
-			by_default: true,
-			type: $p.cat.partners.metadata().obj_presentation || $p.cat.partners.metadata().name}, function (row) {
-			obj.partner = row.acl_obj;
+		acl_objs.find_rows({by_default: true, type: $p.cat.partners.metadata().obj_presentation}, (row) => {
+      this.partner = row.acl_obj;
 			return false;
 		});
 
 		//Договор
-		this.contract = $p.cat.contracts.by_partner_and_org(obj.partner, obj.organization);
+		this.contract = $p.cat.contracts.by_partner_and_org(this.partner, this.organization);
 
 		//Менеджер
-		obj.manager = $p.current_user;
+    this.manager = $p.current_user;
 
 		//СостояниеТранспорта
-		obj.obj_delivery_state = $p.enm.obj_delivery_states.Черновик;
+    this.obj_delivery_state = $p.enm.obj_delivery_states.Черновик;
 
 		//Номер документа
-		return obj.new_number_doc();
+		return this.new_number_doc();
 
 	},
 

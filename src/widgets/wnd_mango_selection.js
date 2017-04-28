@@ -1,7 +1,7 @@
 /**
  * Абстрактная форма списка и выбора выбора объектов ссылочного типа (документов и справочников) с использованием mango-селектора
  *
- * @module mango_selection
+ * @module wnd_mango_selection
  *
  * Created by Evgeniy Malyarov on 24.04.2017.
  */

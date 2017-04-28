@@ -86,12 +86,26 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
         });
       });
 
+      function set_department() {
+        $p.current_acl.acl_objs && $p.current_acl.acl_objs.find_rows({by_default: true, type: $p.cat.divisions.metadata().obj_presentation}, (row) => {
+          if(dp.department != row.acl_obj){
+            dp.department = row.acl_obj;
+          }
+          return false;
+        });
+      }
+      set_department();
+      if(!$p.wsql.get_user_param('couch_direct')){
+        $p.on({user_log_in: set_department});
+      }
+
       // настраиваем фильтр для списка заказов
       elmnts.filter.custom_selection.__define({
         department: {
           get: function () {
             const {department} = dp;
-            if(department.empty()){
+            const state = (tree && tree.getSelectedId()) || 'draft';
+            if(department.empty() || state == 'template'){
               return {$ne: ''};
             }
             const depts = [];
@@ -100,7 +114,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
                 depts.push(o.ref)
               }
             });
-            return {$in: depts};
+            return depts.length == 1 ?  {$eq: depts[0]} : {$in: depts};
           },
           enumerable: true
         },
