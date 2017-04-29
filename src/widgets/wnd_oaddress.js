@@ -423,40 +423,40 @@ class WndAddress {
         $p.ipinfo = new IPInfo();
 
       if(window.google && window.google.maps){
-        resolve();
+        return resolve();
       }
-      else{
-        $p.load_script("//maps.google.com/maps/api/js?callback=$p.ipinfo.location_callback", "script", function(){});
 
-        let google_ready = $p.eve.attachEvent("geo_google_ready", () => {
+      $p.load_script("https://maps.google.com/maps/api/js?key=" + $p.job_prm.use_google_geo + "&callback=$p.ipinfo.location_callback", "script", function(){});
 
-          if(watch_dog)
-            clearTimeout(watch_dog);
+      let google_ready = $p.eve.attachEvent("geo_google_ready", () => {
 
-          if(google_ready){
-            $p.eve.detachEvent(google_ready);
-            google_ready = null;
-            resolve();
-          }
+        if(watch_dog)
+          clearTimeout(watch_dog);
+
+        if(google_ready){
+          $p.eve.detachEvent(google_ready);
+          google_ready = null;
+          resolve();
+        }
+      });
+
+      // Если Google не ответил - информируем об ошибке и продолжаем
+      let watch_dog = setTimeout(() => {
+
+        if(google_ready){
+          $p.eve.detachEvent(google_ready);
+          google_ready = null;
+        }
+        $p.msg.show_msg({
+          type: "alert-warning",
+          text: $p.msg.error_geocoding + " Google",
+          title: $p.msg.main_title
         });
 
-        // Если Google не ответил - информируем об ошибке и продолжаем
-        let watch_dog = setTimeout(() => {
+        reject();
 
-          if(google_ready){
-            $p.eve.detachEvent(google_ready);
-            google_ready = null;
-          }
-          $p.msg.show_msg({
-            type: "alert-warning",
-            text: $p.msg.error_geocoding + " Google",
-            title: $p.msg.main_title
-          });
+      }, 10000);
 
-          reject();
-
-        }, 10000);
-      }
 
     })
       .then(() => {
@@ -617,7 +617,7 @@ class eXcell_addr extends eXcell {
   }
 
   ti_keydown(e) {
-    return super.input_keydown(e, this);
+    return eXcell_ocombo.prototype.input_keydown(e, this);
   }
 
   open_selection(e) {

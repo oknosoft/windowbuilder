@@ -6391,473 +6391,6 @@ $p.spec_building = new SpecBuilding($p);
 })($p.md);
 
 
-$p.dp.builder_pen.on({
-
-	value_change: function(attr){
-		if(attr.field == "elm_type") {
-			this.inset = paper.project.default_inset({elm_type: this.elm_type});
-			this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
-		}
-	}
-});
-
-$p.dp.builder_lay_impost.on({
-
-	value_change: function(attr){
-		if(attr.field == "elm_type") {
-			this.inset_by_y = paper.project.default_inset({
-				elm_type: this.elm_type,
-				pos: $p.enm.positions.ЦентрГоризонталь
-			});
-			this.inset_by_x = paper.project.default_inset({
-				elm_type: this.elm_type,
-				pos: $p.enm.positions.ЦентрВертикаль
-			});
-			this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
-		}
-	}
-});
-
-
-$p.DpBuilder_price.prototype.__define({
-
-  form_obj: {
-    value: function (pwnd, attr) {
-
-      const {nom, goods, _manager, _metadata} = this;
-
-      const options = {
-        name: 'wnd_obj_' + _manager.class_name,
-        wnd: {
-          top: 80 + Math.random()*40,
-          left: 120 + Math.random()*80,
-          width: 780,
-          height: 400,
-          modal: true,
-          center: false,
-          pwnd: pwnd,
-          allow_close: true,
-          allow_minmax: true,
-          caption: `Цены: <b>${nom.name}</b>`
-        }
-      };
-
-      const wnd = $p.iface.dat_blank(null, options.wnd);
-
-      const ts_captions = {
-        "fields":["price_type","nom_characteristic","date","price","currency"],
-        "headers":"Тип Цен,Характеристика,Дата,Цена,Валюта",
-        "widths":"200,*,150,120,100",
-        "min_widths":"150,200,100,100,100",
-        "aligns":"",
-        "sortings":"na,na,na,na,na",
-        "types":"ro,ro,dhxCalendar,ro,ro"
-      };
-
-      return $p.wsql.pouch.local.doc.query('doc/doc_nom_prices_setup_slice_last', {
-        limit : 1000,
-        include_docs: false,
-        startkey: [nom.ref, ''],
-        endkey: [nom.ref, '\uffff']
-      })
-        .then((data) => {
-        if(data && data.rows){
-          data.rows.forEach((row) => {
-            goods.add({
-              nom_characteristic: row.key[1],
-              price_type: row.key[2],
-              date: row.value.date,
-              price: row.value.price,
-              currency: row.value.currency
-            })
-          });
-
-          goods.sort(["price_type","nom_characteristic","date"]);
-
-          wnd.elmnts.grids.goods = wnd.attachTabular({
-            obj: this,
-            ts: "goods",
-            pwnd: wnd,
-            ts_captions: ts_captions
-          });
-          wnd.detachToolbar();
-        }
-      })
-
-    }
-  }
-});
-
-
-
-$p.dp.buyers_order.__define({
-
-	unload_obj: {
-		value: function () {
-
-		}
-	},
-
-	form_product_list: {
-		value: function (pwnd, callback) {
-
-			var o = this.create(),
-				wnd,
-				attr = {
-
-					toolbar_struct: $p.injected_data["toolbar_product_list.xml"],
-
-					toolbar_click: function (btn_id) {
-						if(btn_id == "btn_ok"){
-							o._data._modified = false;
-							wnd.close();
-							callback(o.production);
-						}
-					},
-
-					draw_pg_header: function (o, wnd) {
-						wnd.elmnts.tabs.tab_header.hide();
-						wnd.elmnts.frm_tabs.tabsArea.classList.add("tabs_hidden");
-						wnd.elmnts.frm_toolbar.hideItem("bs_print");
-					}
-				};
-
-
-
-			o.presentation = "Добавление продукции с параметрами";
-
-			o.form_obj(pwnd, attr)
-				.then(function (res) {
-					wnd = res.wnd
-				});
-
-		}
-	}
-});
-
-delete $p.DpBuyers_order.prototype.clr;
-delete $p.DpBuyers_order.prototype.sys;
-$p.DpBuyers_order.prototype.__define({
-
-	clr: {
-		get: function () {
-			return this.characteristic.clr;
-		},
-		set: function (v) {
-      const {characteristic, _data} = this;
-			if((!v && characteristic.empty()) || characteristic.clr == v){
-        return;
-      }
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: 'clr',
-				oldValue: characteristic.clr
-			});
-      characteristic.clr = v;
-			_data._modified = true;
-		}
-	},
-
-	sys: {
-		get: function () {
-			return this.characteristic.sys;
-		},
-		set: function (v) {
-		  const {characteristic, _data} = this;
-			if((!v && characteristic.empty()) || characteristic.sys == v){
-        return;
-      }
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: 'sys',
-				oldValue: characteristic.sys
-			});
-      characteristic.sys = v;
-			_data._modified = true;
-		}
-	}
-});
-
-
-(function($p){
-
-	var _mgr = $p.enm.cnn_types;
-
-	_mgr.acn = {cache :{}};
-	_mgr.acn.__define({
-
-		ii: {
-			get : function(){
-				return this.cache.ii
-					|| ( this.cache.ii = [_mgr.Наложение] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		i: {
-			get : function(){
-				return this.cache.i
-					|| ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		a: {
-			get : function(){
-				return this.cache.a
-					|| ( this.cache.a = [
-						_mgr.УгловоеДиагональное,
-						_mgr.УгловоеКВертикальной,
-						_mgr.УгловоеКГоризонтальной,
-						_mgr.КрестВСтык] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		t: {
-			get : function(){
-				return this.cache.t
-					|| ( this.cache.t = [_mgr.ТОбразное] );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
-
-	_mgr.tcn = {cache :{}};
-	_mgr.tcn.__define({
-		ad: {
-			get : function(){
-				return this.cache.ad || ( this.cache.ad = _mgr.УгловоеДиагональное );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		av: {
-			get : function(){
-				return this.cache.av || ( this.cache.av = _mgr.УгловоеКВертикальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		ah: {
-			get : function(){
-				return this.cache.ah || ( this.cache.ah = _mgr.УгловоеКГоризонтальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		t: {
-			get : function(){
-				return this.cache.t || ( this.cache.t = _mgr.ТОбразное );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		ii: {
-			get : function(){
-				return this.cache.ii || ( this.cache.ii = _mgr.Наложение );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		i: {
-			get : function(){
-				return this.cache.i || ( this.cache.i = _mgr.НезамкнутыйКонтур );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		xt: {
-			get : function(){
-				return this.cache.xt || ( this.cache.xt = _mgr.КрестПересечение );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		xx: {
-			get : function(){
-				return this.cache.xx || ( this.cache.xx = _mgr.КрестВСтык );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
-
-})($p);
-
-
-(function($p){
-
-	var _mgr = $p.enm.elm_types,
-
-		cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			},
-			enumerable : false,
-			configurable : false
-		}
-
-	});
-
-
-})($p);
-
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
-
-
 $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
 
 $p.doc.calc_order.on({
@@ -8399,6 +7932,473 @@ $p.doc.selling.on({
 });
 
 
+
+
+$p.dp.builder_pen.on({
+
+	value_change: function(attr){
+		if(attr.field == "elm_type") {
+			this.inset = paper.project.default_inset({elm_type: this.elm_type});
+			this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
+		}
+	}
+});
+
+$p.dp.builder_lay_impost.on({
+
+	value_change: function(attr){
+		if(attr.field == "elm_type") {
+			this.inset_by_y = paper.project.default_inset({
+				elm_type: this.elm_type,
+				pos: $p.enm.positions.ЦентрГоризонталь
+			});
+			this.inset_by_x = paper.project.default_inset({
+				elm_type: this.elm_type,
+				pos: $p.enm.positions.ЦентрВертикаль
+			});
+			this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
+		}
+	}
+});
+
+
+$p.DpBuilder_price.prototype.__define({
+
+  form_obj: {
+    value: function (pwnd, attr) {
+
+      const {nom, goods, _manager, _metadata} = this;
+
+      const options = {
+        name: 'wnd_obj_' + _manager.class_name,
+        wnd: {
+          top: 80 + Math.random()*40,
+          left: 120 + Math.random()*80,
+          width: 780,
+          height: 400,
+          modal: true,
+          center: false,
+          pwnd: pwnd,
+          allow_close: true,
+          allow_minmax: true,
+          caption: `Цены: <b>${nom.name}</b>`
+        }
+      };
+
+      const wnd = $p.iface.dat_blank(null, options.wnd);
+
+      const ts_captions = {
+        "fields":["price_type","nom_characteristic","date","price","currency"],
+        "headers":"Тип Цен,Характеристика,Дата,Цена,Валюта",
+        "widths":"200,*,150,120,100",
+        "min_widths":"150,200,100,100,100",
+        "aligns":"",
+        "sortings":"na,na,na,na,na",
+        "types":"ro,ro,dhxCalendar,ro,ro"
+      };
+
+      return $p.wsql.pouch.local.doc.query('doc/doc_nom_prices_setup_slice_last', {
+        limit : 1000,
+        include_docs: false,
+        startkey: [nom.ref, ''],
+        endkey: [nom.ref, '\uffff']
+      })
+        .then((data) => {
+        if(data && data.rows){
+          data.rows.forEach((row) => {
+            goods.add({
+              nom_characteristic: row.key[1],
+              price_type: row.key[2],
+              date: row.value.date,
+              price: row.value.price,
+              currency: row.value.currency
+            })
+          });
+
+          goods.sort(["price_type","nom_characteristic","date"]);
+
+          wnd.elmnts.grids.goods = wnd.attachTabular({
+            obj: this,
+            ts: "goods",
+            pwnd: wnd,
+            ts_captions: ts_captions
+          });
+          wnd.detachToolbar();
+        }
+      })
+
+    }
+  }
+});
+
+
+
+$p.dp.buyers_order.__define({
+
+	unload_obj: {
+		value: function () {
+
+		}
+	},
+
+	form_product_list: {
+		value: function (pwnd, callback) {
+
+			var o = this.create(),
+				wnd,
+				attr = {
+
+					toolbar_struct: $p.injected_data["toolbar_product_list.xml"],
+
+					toolbar_click: function (btn_id) {
+						if(btn_id == "btn_ok"){
+							o._data._modified = false;
+							wnd.close();
+							callback(o.production);
+						}
+					},
+
+					draw_pg_header: function (o, wnd) {
+						wnd.elmnts.tabs.tab_header.hide();
+						wnd.elmnts.frm_tabs.tabsArea.classList.add("tabs_hidden");
+						wnd.elmnts.frm_toolbar.hideItem("bs_print");
+					}
+				};
+
+
+
+			o.presentation = "Добавление продукции с параметрами";
+
+			o.form_obj(pwnd, attr)
+				.then(function (res) {
+					wnd = res.wnd
+				});
+
+		}
+	}
+});
+
+delete $p.DpBuyers_order.prototype.clr;
+delete $p.DpBuyers_order.prototype.sys;
+$p.DpBuyers_order.prototype.__define({
+
+	clr: {
+		get: function () {
+			return this.characteristic.clr;
+		},
+		set: function (v) {
+      const {characteristic, _data} = this;
+			if((!v && characteristic.empty()) || characteristic.clr == v){
+        return;
+      }
+			Object.getNotifier(this).notify({
+				type: 'update',
+				name: 'clr',
+				oldValue: characteristic.clr
+			});
+      characteristic.clr = v;
+			_data._modified = true;
+		}
+	},
+
+	sys: {
+		get: function () {
+			return this.characteristic.sys;
+		},
+		set: function (v) {
+		  const {characteristic, _data} = this;
+			if((!v && characteristic.empty()) || characteristic.sys == v){
+        return;
+      }
+			Object.getNotifier(this).notify({
+				type: 'update',
+				name: 'sys',
+				oldValue: characteristic.sys
+			});
+      characteristic.sys = v;
+			_data._modified = true;
+		}
+	}
+});
+
+
+(function($p){
+
+	var _mgr = $p.enm.cnn_types;
+
+	_mgr.acn = {cache :{}};
+	_mgr.acn.__define({
+
+		ii: {
+			get : function(){
+				return this.cache.ii
+					|| ( this.cache.ii = [_mgr.Наложение] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		i: {
+			get : function(){
+				return this.cache.i
+					|| ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		a: {
+			get : function(){
+				return this.cache.a
+					|| ( this.cache.a = [
+						_mgr.УгловоеДиагональное,
+						_mgr.УгловоеКВертикальной,
+						_mgr.УгловоеКГоризонтальной,
+						_mgr.КрестВСтык] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		t: {
+			get : function(){
+				return this.cache.t
+					|| ( this.cache.t = [_mgr.ТОбразное] );
+			},
+			enumerable : false,
+			configurable : false
+		}
+	});
+
+	_mgr.tcn = {cache :{}};
+	_mgr.tcn.__define({
+		ad: {
+			get : function(){
+				return this.cache.ad || ( this.cache.ad = _mgr.УгловоеДиагональное );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		av: {
+			get : function(){
+				return this.cache.av || ( this.cache.av = _mgr.УгловоеКВертикальной );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		ah: {
+			get : function(){
+				return this.cache.ah || ( this.cache.ah = _mgr.УгловоеКГоризонтальной );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		t: {
+			get : function(){
+				return this.cache.t || ( this.cache.t = _mgr.ТОбразное );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		ii: {
+			get : function(){
+				return this.cache.ii || ( this.cache.ii = _mgr.Наложение );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		i: {
+			get : function(){
+				return this.cache.i || ( this.cache.i = _mgr.НезамкнутыйКонтур );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		xt: {
+			get : function(){
+				return this.cache.xt || ( this.cache.xt = _mgr.КрестПересечение );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		xx: {
+			get : function(){
+				return this.cache.xx || ( this.cache.xx = _mgr.КрестВСтык );
+			},
+			enumerable : false,
+			configurable : false
+		}
+	});
+
+})($p);
+
+
+(function($p){
+
+	var _mgr = $p.enm.elm_types,
+
+		cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			},
+			enumerable : false,
+			configurable : false
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			},
+			enumerable : false,
+			configurable : false
+		}
+
+	});
+
+
+})($p);
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
+			}
+		}
+
+
+	});
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
 
 
 (($p) => {
@@ -10823,39 +10823,39 @@ class WndAddress {
         $p.ipinfo = new IPInfo();
 
       if(window.google && window.google.maps){
-        resolve();
+        return resolve();
       }
-      else{
-        $p.load_script("//maps.google.com/maps/api/js?callback=$p.ipinfo.location_callback", "script", function(){});
 
-        let google_ready = $p.eve.attachEvent("geo_google_ready", () => {
+      $p.load_script("https://maps.google.com/maps/api/js?key=" + $p.job_prm.use_google_geo + "&callback=$p.ipinfo.location_callback", "script", function(){});
 
-          if(watch_dog)
-            clearTimeout(watch_dog);
+      let google_ready = $p.eve.attachEvent("geo_google_ready", () => {
 
-          if(google_ready){
-            $p.eve.detachEvent(google_ready);
-            google_ready = null;
-            resolve();
-          }
+        if(watch_dog)
+          clearTimeout(watch_dog);
+
+        if(google_ready){
+          $p.eve.detachEvent(google_ready);
+          google_ready = null;
+          resolve();
+        }
+      });
+
+      let watch_dog = setTimeout(() => {
+
+        if(google_ready){
+          $p.eve.detachEvent(google_ready);
+          google_ready = null;
+        }
+        $p.msg.show_msg({
+          type: "alert-warning",
+          text: $p.msg.error_geocoding + " Google",
+          title: $p.msg.main_title
         });
 
-        let watch_dog = setTimeout(() => {
+        reject();
 
-          if(google_ready){
-            $p.eve.detachEvent(google_ready);
-            google_ready = null;
-          }
-          $p.msg.show_msg({
-            type: "alert-warning",
-            text: $p.msg.error_geocoding + " Google",
-            title: $p.msg.main_title
-          });
+      }, 10000);
 
-          reject();
-
-        }, 10000);
-      }
 
     })
       .then(() => {
@@ -11004,7 +11004,7 @@ class eXcell_addr extends eXcell {
   }
 
   ti_keydown(e) {
-    return super.input_keydown(e, this);
+    return eXcell_ocombo.prototype.input_keydown(e, this);
   }
 
   open_selection(e) {
@@ -11310,6 +11310,10 @@ $p.on({
 
 			use_ip_geo: {
 				value: true
+			},
+
+      use_google_geo: {
+			  value: "AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM"
 			}
 
 		});

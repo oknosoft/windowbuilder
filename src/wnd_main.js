@@ -308,6 +308,11 @@ $p.on({
 			// используем геокодер
 			use_ip_geo: {
 				value: true
+			},
+
+			// используем карты google
+      use_google_geo: {
+			  value: "AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM"
 			}
 
 		});
