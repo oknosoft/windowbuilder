@@ -16,10 +16,8 @@ $p.on({
 
 		// читаем элементы из pouchdb и создаём формулы
 		$p.cat.formulas.pouch_find_rows({ _top: 500, _skip: 0 })
-			.then(function (rows) {
-
-				rows.forEach(function (row) {
-
+			.then((rows) =>{
+				rows.forEach((row) => {
 					// формируем списки печатных форм и внешних обработок
 					if(row.parent == $p.cat.formulas.predefined("printing_plates")){
 						row.params.find_rows({param: "destination"}, (dest) => {
@@ -33,9 +31,7 @@ $p.on({
 						})
 					}
 				});
-
 			});
-
 	}
 });
 

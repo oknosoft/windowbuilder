@@ -15,9 +15,6 @@
 
 			$p.off(predefined_elmnts_data_loaded);
 
-			// читаем подразделения. они хранятся в doc, но нужны оперативно в ram
-			$p.cat.divisions.pouch_find_rows({_top: 500, _skip: 0 });
-
 			// читаем элементы из pouchdb и создаём свойства
 			$p.cch.predefined_elmnts.pouch_find_rows({_raw: true, _top: 500, _skip: 0})
 				.then((rows) => {
