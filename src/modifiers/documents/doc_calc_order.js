@@ -59,60 +59,55 @@ $p.doc.calc_order.on({
       sys_profile = "",
       sys_furn = "";
 
+		const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
+
 		// если установлен признак проведения, проверим состояние транспорта
 		if(this.posted){
-			if (this.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен ||
-				this.obj_delivery_state == $p.enm.obj_delivery_states.Отозван ||
-				this.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон){
-
+			if (this.obj_delivery_state == Отклонен || this.obj_delivery_state == Отозван || this.obj_delivery_state == Шаблон){
 				$p.msg.show_msg({
 					type: "alert-warning",
 					text: "Нельзя провести заказ со статусом<br/>'Отклонён', 'Отозван' или 'Шаблон'",
 					title: this.presentation
 				});
-
 				return false;
-
-			}else if(this.obj_delivery_state != $p.enm.obj_delivery_states.Подтвержден){
-				this.obj_delivery_state = $p.enm.obj_delivery_states.Подтвержден;
-
 			}
-		}else if(this.obj_delivery_state == $p.enm.obj_delivery_states.Подтвержден){
-			this.obj_delivery_state = $p.enm.obj_delivery_states.Отправлен;
+			else if(this.obj_delivery_state != Подтвержден){
+				this.obj_delivery_state = Подтвержден;
+			}
+		}else if(this.obj_delivery_state == Подтвержден){
+			this.obj_delivery_state = Отправлен;
 		}
 
-		this.production.each(function (row) {
+		this.production.each((row) => {
 
 			doc_amount += row.amount;
 			amount_internal += row.amount_internal;
 
-			var name;
 			if(!row.characteristic.calc_order.empty()){
-
-				name = row.nom.article || row.nom.nom_group.name || row.nom.id.substr(0, 3);
+				const name = row.nom.article || row.nom.nom_group.name || row.nom.id.substr(0, 3);
 				if(sys_profile.indexOf(name) == -1){
 					if(sys_profile)
 						sys_profile += " ";
 					sys_profile += name;
 				}
 
-				row.characteristic.constructions.each(function (row) {
-					if(row.parent && !row.furn.empty()){
-						name = row.furn.name_short || row.furn.name;
-						if(sys_furn.indexOf(name) == -1){
-							if(sys_furn)
-								sys_furn += " ";
-							sys_furn += name;
-						}
-					}
-				});
+				// row.characteristic.constructions.each((row) => {
+				// 	if(row.parent && !row.furn.empty()){
+				// 		const name = row.furn.name_short || row.furn.name;
+				// 		if(sys_furn.indexOf(name) == -1){
+				// 			if(sys_furn)
+				// 				sys_furn += " ";
+				// 			sys_furn += name;
+				// 		}
+				// 	}
+				// });
 			}
 		});
 
 		this.doc_amount = doc_amount.round(2);
 		this.amount_internal = amount_internal.round(2);
 		this.sys_profile = sys_profile;
-		this.sys_furn = sys_furn;
+		//this.sys_furn = sys_furn;
 		this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(2);
 
 		const {_obj, obj_delivery_state, category, number_internal, partner, client_of_dealer, note} = this;
