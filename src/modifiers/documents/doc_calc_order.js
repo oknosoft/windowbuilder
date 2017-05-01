@@ -54,7 +54,7 @@ $p.doc.calc_order.on({
 	// перед записью надо присвоить номер для нового и рассчитать итоги
 	before_save: function (attr) {
 
-		var doc_amount = 0,
+		let doc_amount = 0,
       amount_internal = 0,
       sys_profile = "",
       sys_furn = "";
@@ -115,7 +115,8 @@ $p.doc.calc_order.on({
 		this.sys_furn = sys_furn;
 		this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(2);
 
-		const {_obj, obj_delivery_state, category, number_internal, partner, note} = this;
+		const {_obj, obj_delivery_state, category, number_internal, partner, client_of_dealer, note} = this;
+
 		// фильтр по статусу
     if(obj_delivery_state=='Шаблон'){
       _obj.state = 'template'
@@ -145,8 +146,10 @@ $p.doc.calc_order.on({
 		// строка поиска
 		_obj.search = (this.number_doc +
       (number_internal ? " " + number_internal : "") +
+      (client_of_dealer ? " " + client_of_dealer : "") +
       (partner.name ? " " + partner.name : "") +
       (note ? " " + note : "")).toLowerCase();
+
 	},
 
 	// при изменении реквизита
