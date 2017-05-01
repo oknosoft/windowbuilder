@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<V8Exch:_1CV8DtUD xmlns:V8Exch="http://www.1c.ru/V8/1CV8DtUD/" xmlns:core="http://v8.1c.ru/data" xmlns:v8="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<V8Exch:Data>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>true</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">3220e25a-ffcd-11e5-8303-e67fda7f6b46</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:Parent>
+			<v8:Description>Фурнитура</v8:Description>
+			<v8:PredefinedDataName>furns</v8:PredefinedDataName>
+			<v8:zone>0</v8:zone>
+		</v8:CatalogObject.Формулы>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>false</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">0b8725ee-f779-11e6-8f35-9527474f7b44</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">3220e25a-ffcd-11e5-8303-e67fda7f6b46</v8:Parent>
+			<v8:Description>Координата по центру</v8:Description>
+			<v8:Формула>// на входе в переменной obj имеем:
+// {
+//	ox 		-	объект характеристики текущей продукции
+//	contour    -	текущий элемент, обычно - профиль
+//    elm 	   -	текущий профиль
+//	len 	   -	длина элемента
+//	sizefurn   -	размер фурн. паза текущей створки
+//	dx0		-	припуск длины на сварку
+//	dx1		-	sizefurn или 0, в зависимости от параметра builder.add_d
+//	faltz	  -	len - 2 * sizefurn
+//	invert	 -	признак инвертирования координаты для правого направления открывания
+//	dop_row	-	строка допспецификации фурнитуры
+// }
+	
+const {len, dx0} = obj;
+return len / 2 + dx0;</v8:Формула>
+			<v8:ВедущаяФормула xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:ВедущаяФормула>
+			<v8:ФормулаУсловия>false</v8:ФормулаУсловия>
+			<v8:Описание>&lt;!DOCTYPE html&gt;
+&lt;html lang='ru'&gt;
+&lt;head&gt;
+&lt;meta http-equiv=X-UA-Compatible content='IE=edge'&gt;
+
+&lt;style&gt;
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;    
+	color: rgb(48, 57, 66);	
+	/*
+	font-family: Segoe UI, Tahoma, sans-serif;
+	overflow: hidden;
+	font-family: 'Open Sans', sans-serif; 
+	*/
+	font-family: Arial, sans-serif;
+	font-size: 100%;
+	line-height: 19px;
+	text-rendering: optimizeLegibility;
+}
+&lt;/style&gt;
+
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h3&gt;Координата по центру&lt;/h3&gt;
+&lt;p&gt;Рассчитывает координату середины створочного элемента в фурнитуре
+
+&lt;/body&gt;&lt;/html&gt;</v8:Описание>
+			<v8:Шаблон/>
+			<v8:zone>0</v8:zone>
+		</v8:CatalogObject.Формулы>
+	</V8Exch:Data>
+	<PredefinedData>
+		<Справочник.Формулы>
+			<item Ссылка="3220e25a-ffcd-11e5-8303-e67fda7f6b46" ИмяПредопределенныхДанных="furns"/>
+		</Справочник.Формулы>
+	</PredefinedData>
+</V8Exch:_1CV8DtUD>

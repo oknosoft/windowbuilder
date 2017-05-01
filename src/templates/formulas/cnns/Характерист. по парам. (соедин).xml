@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<V8Exch:_1CV8DtUD xmlns:V8Exch="http://www.1c.ru/V8/1CV8DtUD/" xmlns:core="http://v8.1c.ru/data" xmlns:v8="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<V8Exch:Data>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>true</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">3220e259-ffcd-11e5-8303-e67fda7f6b46</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:Parent>
+			<v8:Description>Соединения</v8:Description>
+			<v8:PredefinedDataName>cnns</v8:PredefinedDataName>
+			<v8:zone>0</v8:zone>
+		</v8:CatalogObject.Формулы>
+		<v8:ChartOfCharacteristicTypesObject.ДополнительныеРеквизитыИСведения>
+			<v8:Ref xsi:type="v8:ChartOfCharacteristicTypesRef.ДополнительныеРеквизитыИСведения">6717f5fc-1799-11e6-8960-d901403dc345</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Description>Материал бруса</v8:Description>
+			<v8:ValueType>
+				<Type xmlns="http://v8.1c.ru/8.1/data/core">v8:CatalogRef.ЗначенияСвойствОбъектов</Type>
+			</v8:ValueType>
+			<v8:Виден>true</v8:Виден>
+			<v8:ВладелецДополнительныхЗначений xsi:type="v8:ChartOfCharacteristicTypesRef.ДополнительныеРеквизитыИСведения">00000000-0000-0000-0000-000000000000</v8:ВладелецДополнительныхЗначений>
+			<v8:ДополнительныеЗначенияИспользуются>true</v8:ДополнительныеЗначенияИспользуются>
+			<v8:ДополнительныеЗначенияСВесом>false</v8:ДополнительныеЗначенияСВесом>
+			<v8:Доступен>true</v8:Доступен>
+			<v8:Заголовок>Материал бруса</v8:Заголовок>
+			<v8:ЗаголовокФормыВыбораЗначения/>
+			<v8:ЗаголовокФормыЗначения/>
+			<v8:ЗаполнятьОбязательно>false</v8:ЗаполнятьОбязательно>
+			<v8:Комментарий/>
+			<v8:МногострочноеПолеВвода>0</v8:МногострочноеПолеВвода>
+			<v8:НаборСвойств xsi:type="v8:CatalogRef.НаборыДополнительныхРеквизитовИСведений">00000000-0000-0000-0000-000000000000</v8:НаборСвойств>
+			<v8:Подсказка/>
+			<v8:УдалитьСклоненияПредмета/>
+			<v8:ФорматСвойства/>
+			<v8:ЭтоДополнительноеСведение>false</v8:ЭтоДополнительноеСведение>
+			<v8:Список>0</v8:Список>
+			<v8:РеквизитДопУпорядочивания>0</v8:РеквизитДопУпорядочивания>
+			<v8:ВключатьВНаименование>false</v8:ВключатьВНаименование>
+		</v8:ChartOfCharacteristicTypesObject.ДополнительныеРеквизитыИСведения>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>false</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">ec994bb6-2763-11e6-aab7-9f165767b845</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">3220e259-ffcd-11e5-8303-e67fda7f6b46</v8:Parent>
+			<v8:Description>Характерист. по парам. (соедин)</v8:Description>
+			<v8:Формула>// на входе в переменной obj имеем:
+// {
+//	ox: ox,			-	объект характеристики текущей продукции
+//	elm: elm,		-	текущий элемент, обычно - профиль
+//	row_cnn: row_cnn_prev,	-	строка спецификации соединения, из которой произведён вызов формулы
+//	row_spec: row_spec		-	строка спецификации изделия, в которой надо установить характеристику
+//	}
+						
+// получаем ссылку параметра, значение которого используем при поиске характеристики
+var	param = this.params.get(0).param, finded;
+
+// получим значение параметра в продукции
+obj.ox.params.find_rows({cnstr: 0, param: param}, function(row){
+
+	// ищем характеристику текущего материала с подходящими параметрами
+	$p.cat.characteristics.find_rows({owner: obj.row_spec.nom}, function(ox){
+	
+		// если в текущей характеристике параметры совпадают с нашими, подставляем и прерываем
+		ox.params.find_rows({param: param, value: row.value}, function(){
+			obj.row_spec.characteristic = ox;
+			finded = true;
+			return false;
+		});
+		
+		if(finded)
+			return false;
+	});
+	
+	return false;
+});</v8:Формула>
+			<v8:ВедущаяФормула xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:ВедущаяФормула>
+			<v8:ФормулаУсловия>false</v8:ФормулаУсловия>
+			<v8:Описание>&lt;!DOCTYPE html&gt;
+&lt;html lang='ru'&gt;
+&lt;head&gt;
+&lt;meta http-equiv=X-UA-Compatible content='IE=edge'&gt;
+
+&lt;style&gt;
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;    
+	color: rgb(48, 57, 66);	
+	/*
+	font-family: Segoe UI, Tahoma, sans-serif;
+	overflow: hidden;
+	font-family: 'Open Sans', sans-serif; 
+	*/
+	font-family: Arial, sans-serif;
+	font-size: 100%;
+	line-height: 19px;
+	text-rendering: optimizeLegibility;
+}
+&lt;/style&gt;
+
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h3&gt;Характеристика по параметру&lt;/h3&gt;
+&lt;p&gt;Заполняет характеристику спецификации по значению параметра в изделии &lt;/p&gt;
+
+&lt;/body&gt;&lt;/html&gt;</v8:Описание>
+			<v8:Шаблон/>
+			<v8:zone>0</v8:zone>
+			<v8:Параметры>
+				<v8:Параметр xsi:type="v8:ChartOfCharacteristicTypesRef.ДополнительныеРеквизитыИСведения">6717f5fc-1799-11e6-8960-d901403dc345</v8:Параметр>
+				<v8:Значение xsi:nil="true"/>
+			</v8:Параметры>
+		</v8:CatalogObject.Формулы>
+	</V8Exch:Data>
+	<PredefinedData>
+		<Справочник.Формулы>
+			<item Ссылка="3220e259-ffcd-11e5-8303-e67fda7f6b46" ИмяПредопределенныхДанных="cnns"/>
+		</Справочник.Формулы>
+	</PredefinedData>
+</V8Exch:_1CV8DtUD>
