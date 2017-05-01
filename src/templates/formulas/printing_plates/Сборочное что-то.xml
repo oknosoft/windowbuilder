@@ -1,0 +1,527 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<V8Exch:_1CV8DtUD xmlns:V8Exch="http://www.1c.ru/V8/1CV8DtUD/" xmlns:core="http://v8.1c.ru/data" xmlns:v8="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<V8Exch:Data>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>true</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">3220e252-ffcd-11e5-8303-e67fda7f6b46</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:Parent>
+			<v8:Description>Печатные формы</v8:Description>
+			<v8:PredefinedDataName>printing_plates</v8:PredefinedDataName>
+			<v8:zone>0</v8:zone>
+		</v8:CatalogObject.Формулы>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>false</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">240b1e1a-ff1f-11e6-a4bb-f62a66dd0b46</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">3220e252-ffcd-11e5-8303-e67fda7f6b46</v8:Parent>
+			<v8:Description>Сборочное что-то</v8:Description>
+			<v8:Формула>var templates = this._template.content.children,
+		doc = new $p.SpreadsheetDocument(),
+		print_data;
+// в temlplate у нас лежит структура html документа 
+// doc - Табличный документ 
+// print_data - относится к документу, откуда мы адресуем печатную форму - т.е. к doc.calc_order 
+// описан в документе doc_calc_order в котором уже есть функция print_data
+// на будущее - print_data формуирует JSON объекты.
+// т.к. им пофигу какими быть, то им присвоили рускоязычные названия,
+// например #Контрагент# - которому соответсвует некоторые вычисляемое значение. 
+// Так же я могу в процедуре создать json объект и обращаться к нему по имени свойства, которое должно быть отправлено на печать
+// т.е. я могу прям здесь создать допустим некоторый #Материал#, сложить в него все что захочу.
+// А при использовании процедуры put (doc.put) - вывести json объекты в html документ
+
+	function draw_profiles(o, table_div, quantity) {
+
+		// сворачиваем по номенклатурам с профиль + армирование
+		var noms = $p.wsql.alasql("select nom, characteristic, article from ? " +
+			"where len &gt; 0 and width = 0 group by nom, characteristic", [o.specification._obj]),
+		// [o.specification._obj] будет подставлен вместо вопроса "?"
+			//profiles = ["Рама","Створка","Импост","Штульп","Штапик","Порог","Арматура","Подставочник","Добор","Соединитель"];
+			profiles = ["Профиль"];
+
+		noms.forEach(function (row) {
+			// Добавляем строку в таблице (внимание к идентификаторам!)
+			//var tpl_table_row_nom = document.createElement("TR"),
+			//создаем переменные
+			var nom = $p.cat.nom.get(row.nom),
+				name = nom.name,
+				article = nom.article,
+				//row.characteristic,
+				//row.qty,
+				//row.name = nom.name,
+				cx = $p.utils.is_empty_guid(row.characteristic) ? "" : " " + $p.cat.nom.get(row.characteristic, false, true),
+				len = (row.len + (row.qty + 1) * nom.saw_width).round(2);
+			//завершаем создание переменных точкой с запятой. 
+			//Как вариант мы можем создать JSON объект, описав его свойства.
+
+				//row_data = {
+				//	Материал:(nom.article || nom.name) + " " + cx + "&lt;/b&gt; &lt;span style='float: right;'&gt;" +
+				//		len * quantity + " м.п., " + row.qty * quantity + " шт., " + (len * quantity * 1000 / nom.len).round(1) + " хлыст.&lt;/span&gt;"
+				//};
+
+			//Если спецификация относится к заданному типу элементов - профили.
+			//indexOf - вернет номер элемента, если отличен от -1, то он присутствует. 
+			//profiles - перечисляет типы элементов которые нам необходимо вывести в таблицу 
+			//if(profiles.indexOf(nom.elm_type.ref) != -1){
+			if(profiles.indexOf(nom.grouping) != -1){
+//				var rows = $p.wsql.alasql("select article, len, alp1, alp2, sum(qty) as qty from ? " +
+//						"where nom = ? and characteristic = ? group by len, alp1, alp2 order by len desc",
+
+				var rows = $p.wsql.alasql("select article, len, alp1, alp2, qty from ? " +
+						"where nom = ? and characteristic = ? group by len, alp1, alp2 order by len desc",
+					[o.specification._obj, row.nom, row.characteristic]);
+
+
+				var table_row = document.createElement("TR");
+					table_row.innerHTML=`&lt;td align='center' colspan='1'&gt;#prof_name#&lt;/td&gt;
+										 &lt;td align='center' colspan='1'&gt;#prof_article#&lt;/td&gt;
+										 &lt;td align='center' colspan='5'&gt; &lt;/td&gt;`;
+					//&lt;td align='center'&gt;#len#&lt;/td&gt;`;
+				prof = {prof_name: name,
+						prof_article: article};
+
+				table_row.innerHTML = dhx4.template(table_row.innerHTML, prof);
+				table_div.appendChild(table_row);
+
+
+					rows.forEach(function (line) {
+						line.qty = quantity;//row.qty * quantity;
+						//line.len = (row.len * 1000 / line.qty).round(0);
+						line.len = (line.len * 1000).round(0);
+						line.article = row.article;
+						line.alp1;
+						line.alp2;
+						var table_row = document.createElement("TR");
+							table_row.innerHTML=`&lt;td align='center'&gt; &lt;/td&gt;
+							&lt;td align='center'&gt;#article#&lt;/td&gt;
+							&lt;td align='center'&gt;#len#&lt;/td&gt;
+							&lt;td align='center'&gt;#alp1#&lt;/td&gt;
+							&lt;td align='center'&gt;#alp2#&lt;/td&gt;
+							&lt;td align='center'&gt;#qty#&lt;/td&gt; `;	
+
+						table_row.innerHTML = dhx4.template(table_row.innerHTML, line);
+						table_div.appendChild(table_row);
+					});
+
+
+			}//if(profiles.indexOf(nom.elm_type.ref) != -1)
+
+		});
+	}
+
+
+	function draw_findings(o, table_div, quantity) {
+		// 	var noms = $p.wsql.alasql("select nom, characteristic, sum(qty) as qty, sum(len * qty) as len from ? " +
+		// 		"where len &gt; 0 and width = 0 group by nom, characteristic", [o.specification._obj]),
+		// 		findings = ["Фурнитура","Раскладка"];
+		// сворачиваем по номенклатурам с профиль + армирование
+		var noms = $p.wsql.alasql("select nom, characteristic, sum(qty) as qty, sum(len * qty) as len from ? " +
+			"where len = 0 and width = 0 group by nom, characteristic", [o.specification._obj]),
+		// [o.specification._obj] будет подставлен вместо вопроса "?"
+			findings = ["Фурнитура"];
+
+		noms.forEach(function (row) {
+			// Добавляем строку в таблице (внимание к идентификаторам!)
+			//var tpl_table_row_nom = document.createElement("TR"),
+			//создаем переменные
+			var nom = $p.cat.nom.get(row.nom),
+				name = nom.name,
+				article = nom.article,
+				//row.characteristic,
+				//row.qty,
+				//row.name = nom.name,
+				cx = $p.utils.is_empty_guid(row.characteristic) ? "" : " " + $p.cat.nom.get(row.characteristic, false, true);
+
+				//len = (row.len + (row.qty + 1) * nom.saw_width).round(2);
+			//завершаем создание переменных точкой с запятой. 
+			//Как вариант мы можем создать JSON объект, описав его свойства.
+				//row_data = {
+				//	Материал: "&lt;b&gt;" + (nom.article || nom.name) + " " + cx + "&lt;/b&gt; &lt;span style='float: right;'&gt;" +
+				//		len * quantity + " м.п., " + row.qty * quantity + " шт., " + (len * quantity * 1000 / nom.len).round(1) + " хлыст.&lt;/span&gt;"
+				//};
+
+			//Если спецификация относится к заданному типу элементов - профили.
+			//indexOf - вернет номер элемента, если отличен от -1, то он присутствует. 
+			//findings - перечисляет типы элементов которые нам необходимо вывести в таблицу 
+			if(findings.indexOf(nom.grouping) != -1){
+				var rows = $p.wsql.alasql("select len, sum(qty) as qty from ? " +
+						"where nom = ? and characteristic = ? group by len order by len desc",
+					[o.specification._obj, row.nom, row.characteristic]);
+
+
+				var table_row = document.createElement("TR");
+					table_row.innerHTML=`&lt;td align='center' colspan='1'&gt;#find_name#&lt;/td&gt;
+										 &lt;td align='center' colspan='1'&gt;#find_article#&lt;/td&gt;
+										 &lt;td align='center' colspan='1'&gt;#find_qty#&lt;/td&gt;`;
+					//&lt;td align='center'&gt;#len#&lt;/td&gt;`;
+				find = {find_name: name,
+					find_article: article,
+					find_qty: row.qty * quantity};
+				table_row.innerHTML = dhx4.template(table_row.innerHTML, find);
+				table_div.appendChild(table_row);
+
+
+					// rows.forEach(function (line) {
+					// 	line.qty = row.qty * quantity;
+					// 	line.len = (row.len * 1000 / line.qty).round(0);
+					// 	line.article = row.article;
+					// 	line.alp1;
+					// 	line.alp2;
+					// 	var table_row = document.createElement("TR");
+					// 		table_row.innerHTML=`&lt;td align='center' colspan='2'&gt; &lt;/td&gt;
+					// 		 &lt;!-- &lt;td align='center'&gt;#article#&lt;/td&gt; --&gt;
+					// 		&lt;td align='center'&gt;#qty#&lt;/td&gt; `;	
+
+					// 	table_row.innerHTML = dhx4.template(table_row.innerHTML, line);
+					// 	table_div.appendChild(table_row);
+					// });
+
+
+			}//if(profiles.indexOf(nom.elm_type.ref) != -1)
+
+		});
+	}
+
+
+	function draw_zaklad(o, table_div, quantity) {
+		// 	var noms = $p.wsql.alasql("select nom, characteristic, sum(qty) as qty, sum(len * qty) as len from ? " +
+		// 		"where len &gt; 0 and width = 0 group by nom, characteristic", [o.specification._obj]),
+		// 		findings = ["Фурнитура","Раскладка"];
+		// сворачиваем по номенклатурам с профиль + армирование
+		var noms = $p.wsql.alasql("select nom, characteristic, sum(qty) as qty, sum(len * qty) as len from ? " +
+			"where len = 0 and width = 0 group by nom, characteristic", [o.specification._obj]),
+		// [o.specification._obj] будет подставлен вместо вопроса "?"
+			findings = ["Закладные"];
+
+		noms.forEach(function (row) {
+			// Добавляем строку в таблице (внимание к идентификаторам!)
+			//var tpl_table_row_nom = document.createElement("TR"),
+			//создаем переменные
+			var nom = $p.cat.nom.get(row.nom),
+				name = nom.name,
+				article = nom.article,
+				//row.characteristic,
+				//row.qty,
+				//row.name = nom.name,
+				cx = $p.utils.is_empty_guid(row.characteristic) ? "" : " " + $p.cat.nom.get(row.characteristic, false, true);
+
+				//len = (row.len + (row.qty + 1) * nom.saw_width).round(2);
+			//завершаем создание переменных точкой с запятой. 
+			//Как вариант мы можем создать JSON объект, описав его свойства.
+				//row_data = {
+				//	Материал: "&lt;b&gt;" + (nom.article || nom.name) + " " + cx + "&lt;/b&gt; &lt;span style='float: right;'&gt;" +
+				//		len * quantity + " м.п., " + row.qty * quantity + " шт., " + (len * quantity * 1000 / nom.len).round(1) + " хлыст.&lt;/span&gt;"
+				//};
+
+			//Если спецификация относится к заданному типу элементов - профили.
+			//indexOf - вернет номер элемента, если отличен от -1, то он присутствует. 
+			//findings - перечисляет типы элементов которые нам необходимо вывести в таблицу 
+			if(findings.indexOf(nom.grouping) != -1){
+				var rows = $p.wsql.alasql("select len, sum(qty) as qty from ? " +
+						"where nom = ? and characteristic = ? group by len order by len desc",
+					[o.specification._obj, row.nom, row.characteristic]);
+
+
+				var table_row = document.createElement("TR");
+					table_row.innerHTML=`&lt;td align='center' colspan='1'&gt;#find_name#&lt;/td&gt;
+										 &lt;td align='center' colspan='1'&gt;#find_article#&lt;/td&gt;
+										 &lt;td align='center' colspan='1'&gt;#find_qty#&lt;/td&gt;`;
+					//&lt;td align='center'&gt;#len#&lt;/td&gt;`;
+				find = {find_name: name,
+					find_article: article,
+					find_qty: row.qty * quantity};
+				table_row.innerHTML = dhx4.template(table_row.innerHTML, find);
+				table_div.appendChild(table_row);
+
+
+					// rows.forEach(function (line) {
+					// 	line.qty = row.qty * quantity;
+					// 	line.len = (row.len * 1000 / line.qty).round(0);
+					// 	line.article = row.article;
+					// 	line.alp1;
+					// 	line.alp2;
+					// 	var table_row = document.createElement("TR");
+					// 		table_row.innerHTML=`&lt;td align='center' colspan='2'&gt; &lt;/td&gt;
+					// 		 &lt;!-- &lt;td align='center'&gt;#article#&lt;/td&gt; --&gt;
+					// 		&lt;td align='center'&gt;#qty#&lt;/td&gt; `;	
+
+					// 	table_row.innerHTML = dhx4.template(table_row.innerHTML, line);
+					// 	table_div.appendChild(table_row);
+					// });
+
+
+			}//if(profiles.indexOf(nom.elm_type.ref) != -1)
+
+		});
+	}
+
+
+
+
+	function draw_buffers(o, table_div, quantity) {
+		var noms = $p.wsql.alasql("select nom, characteristic, sum(qty) as qty, sum(len * qty) as len from ? " +
+			"where len &gt; 0 and width = 0 group by nom, characteristic", [o.specification._obj]),
+		// [o.specification._obj] будет подставлен вместо вопроса "?"
+			buffers = ["Уплотнитель"];
+
+		noms.forEach(function (row) {
+			// Добавляем строку в таблице (внимание к идентификаторам!)
+			//var tpl_table_row_nom = document.createElement("TR"),
+			//создаем переменные
+			var nom = $p.cat.nom.get(row.nom),
+				name = nom.name,
+				len = nom.len,
+				article = nom.article;
+
+			if(buffers.indexOf(nom.grouping) != -1){
+				var rows = $p.wsql.alasql("select len, sum(qty) as qty from ? " +
+						"where nom = ? and characteristic = ? group by len order by len desc",
+					[o.specification._obj, row.nom, row.characteristic]);
+
+				var table_row = document.createElement("TR");
+					table_row.innerHTML=`&lt;td align='center' colspan='1'&gt;#buffer_name#&lt;/td&gt;
+										 &lt;td align='center' colspan='1'&gt;#buffer_article#&lt;/td&gt;
+										 &lt;td align='center' colspan='1'&gt;#buffer_len#&lt;/td&gt;
+										 &lt;td align='center' colspan='1'&gt;#buffer_qty#&lt;/td&gt;`;
+					//&lt;td align='center'&gt;#len#&lt;/td&gt;`;
+				buf = {buffer_name: name,
+					buffer_article: article,
+					buffer_len: row.len,
+					buffer_qty: row.qty * quantity};
+				table_row.innerHTML = dhx4.template(table_row.innerHTML, buf);
+				table_div.appendChild(table_row);
+
+
+			}//if(profiles.indexOf(nom.elm_type.ref) != -1)
+
+		});
+	}
+
+
+
+	// получаем данные печати
+	return obj.print_data().then((res) =&gt; {
+
+		print_data = res;
+
+		// выводим заголовок
+		// в print_data у нас есть запись допустим с #Контрагент# и если она будет в header то она подставит его на правььное мест
+		doc.put(dhx4.template(templates.header.innerHTML, print_data), templates.header.attributes);
+
+		// получаем объекты продукций
+		var aobjs = [];
+		obj.production.forEach(function (row) {
+			if(!row.characteristic.empty())
+				aobjs.push($p.cat.characteristics.get(row.characteristic.ref, true, true));
+		});
+
+   	 	return Promise.all(aobjs)
+     		.then(() =&gt; res)
+
+	})
+
+
+//	templates.header.innerHTML
+//  &lt;div style="font-weight: bold; font-size: 14pt; float: left; padding:4pt; clear: both"&gt;
+//        Сборочная спецификация #ЗаказНомер# от #ДатаЗаказаФорматD#
+//  &lt;/div&gt;
+
+    .then((print_data) =&gt; {
+
+		var orignal_template_product = templates;
+		
+		obj.production.forEach((row) =&gt; {
+			
+			//tpl_product = templates.product;
+			
+			//Создаем новый элемент. Без этого tpl_product будет перенесен как Child, соотв не сделает копию, а поменяет 
+			//сслыки, в результате мы запортим шаблон.
+			var tpl_product = document.createElement('div');
+				tpl_product = templates.product;
+			
+			//var tpl_product = orignal_template_product.product;
+
+			// выводим эскизы и описания продукций
+			var tpl_sketch_picture = tpl_product.children.sketch_product.children.sketch_picture;
+			// получили div product, в котором указаны эскиз - sketch_product , sketch_info table_profile и т.д.
+				if(!row.characteristic.empty() &amp;&amp; !row.nom.is_procedure &amp;&amp; !row.nom.is_service &amp;&amp; !row.nom.is_accessory){
+					if(print_data.ПродукцияЭскизы[row.characteristic.ref]){
+						tpl_sketch_picture.innerHTML =  $p.iface.scale_svg(print_data.ПродукцияЭскизы[row.characteristic.ref], 450, 0);
+					}else
+						tpl_sketch_picture.innerHTML = "";
+				}
+			var tpl_sketch_info = tpl_product.children.sketch_product.children.sketch_info;
+				tpl_sketch_info.innerHTML = dhx4.template(tpl_product.children.sketch_product.children.sketch_info.innerHTML, print_data);
+
+			var tpl_order_info = tpl_product.children.sketch_product.children.order_info;
+				tpl_order_info.innerHTML = dhx4.template(tpl_product.children.sketch_product.children.order_info.innerHTML, print_data);
+
+			//Вывод эскиза, информации о заказе и профильной системы в документ
+			//doc.put(tpl_sketch_picture.innerHTML, tpl_sketch_picture.attributes);
+			//doc.put(tpl_sketch_info.innerHTML, tpl_sketch_info.attributes);
+			//doc.put(tpl_order_info.innerHTML, tpl_order_info.attributes);
+				
+			var tpl_profile = tpl_product.children.table_profile.children[0].children[1];
+				tpl_profile.innerHTML = "";
+			// табличная часть профилей
+			draw_profiles(row.characteristic, tpl_profile, row.quantity);
+
+			var tpl_findings = tpl_product.children.table_findings.children[0].children[1];
+				tpl_findings.innerHTML = "";
+			// табличная часть фурнитуры
+			draw_findings(row.characteristic, tpl_findings, row.quantity);
+
+			var tpl_zaklad = tpl_product.children.table_zaklad.children[0].children[1];
+				tpl_zaklad.innerHTML = "";
+			// табличная часть закладных
+			draw_zaklad(row.characteristic, tpl_zaklad, row.quantity);
+			
+			var tpl_buffer = tpl_product.children.table_buffer.children[0].children[1];
+				tpl_buffer.innerHTML = "";
+			// табличная часть фурнитуры
+			draw_buffers(row.characteristic, tpl_buffer, row.quantity);
+
+
+			// вывод документа
+			doc.put(tpl_product.innerHTML, tpl_product.attributes);
+
+			});
+		return doc;
+	});</v8:Формула>
+			<v8:ВедущаяФормула xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:ВедущаяФормула>
+			<v8:ФормулаУсловия>false</v8:ФормулаУсловия>
+			<v8:Описание/>
+			<v8:Шаблон>    &lt;!-- Заголовок, шапка отчета --&gt;
+    &lt;div id='header' class='header'&gt;
+      &lt;div style="font-weight: bold; font-size: 14pt; float: left; padding:10pt; clear: both"&gt;
+        Сборочная спецификация #ЗаказНомер# от #ДатаЗаказаФорматD#
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+&lt;div id = 'product' class = 'container' style = "page-break-after: always;"&gt;
+&lt;!-- Эскиз изделия + строка с и информацией --&gt;
+&lt;!-- TODO На будущее скомпоновать сюда таблицу --&gt;
+  &lt;div id='sketch_product' class ='container'
+ style="clear: both; padding: 4pt; border-top: gainsboro 1px dashed; margin-top: 4pt;"&gt;  
+&lt;!-- style="clear: both; padding: 4pt; margin-top: 4pt;"&gt; --&gt;
+
+      &lt;div id = 'sketch_picture' class ='container' 
+        style = "
+          margin: 0 auto;
+          padding:5px ;
+          width: 60% ;
+          height: 100% ;
+          min-height: 200px;
+          align: center ;
+          background-color: #fff;
+          border-radius: 3px;
+        "&gt;
+          эскиз
+      &lt;/div&gt;
+      
+      &lt;div id = 'sketch_info' class ='container' style = "align:center"&gt;
+        Профиль: #СистемыПрофилей# &lt;br /&gt;
+        Фурнитура: #СистемыФурнитуры#
+      &lt;/div&gt;     
+
+      &lt;div id='order_info' class='container' style = "align:center"&gt;
+        &lt;div style="font-size: 12pt; float: center; padding:4pt; clear: both"&gt;
+          Заказ № #ЗаказНомер#, от #ДатаЗаказаФорматD# Изделий: #ВсегоИзделий# Общая площадь: #ВсегоПлощадьИзделий#
+        &lt;/div&gt;
+      &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Табличная часть профилей --&gt;
+  &lt;div id='table_profile' class = 'container'&gt;
+    &lt;table class="border" width="100%" cellpadding="2" cellspacing="2"&gt;
+        &lt;thead&gt;
+        &lt;tr class="profile_head"&gt;
+            &lt;th style="width:40%;"&gt;Номенклатура&lt;/th&gt;
+            &lt;th style="width:15%;"&gt;Артикул&lt;/th&gt;
+            &lt;th style="width:15%;"&gt;Размер&lt;/th&gt;
+            &lt;th style="width:10%;"&gt;Угол 1&lt;/th&gt;
+            &lt;th style="width:10%;"&gt;Угол 2&lt;/th&gt;
+            &lt;th style="width:10%;"&gt;Кол-во&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+        &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/div&gt;
+&lt;!-- Разделитель --&gt;
+  &lt;div id = "space" margin="5"&gt;
+ &lt;p&gt;  &lt;/p&gt;
+  &lt;/div&gt;
+&lt;!-- Табличная часть фурнитуры --&gt;
+  &lt;div id='table_findings' class = 'container'&gt;
+    &lt;table class="border" width="100%" cellpadding="2" cellspacing="2"&gt;
+        &lt;thead&gt;
+        &lt;tr class="findins_head"&gt;
+            &lt;th style="width:40%;"&gt;Фурнитура&lt;/th&gt;
+            &lt;th style="width:15%;"&gt;Артикул&lt;/th&gt;
+            &lt;th style="width:10%;"&gt;Кол-во&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+        &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/div&gt;
+
+&lt;!-- Разделитель --&gt;
+  &lt;div id = "space" margin="5"&gt;
+ &lt;p&gt;  &lt;/p&gt;
+  &lt;/div&gt;
+&lt;!-- Табличная часть закладных --&gt;
+  &lt;div id='table_zaklad' class = 'container'&gt;
+    &lt;table class="border" width="100%" cellpadding="2" cellspacing="2"&gt;
+        &lt;thead&gt;
+        &lt;tr class="zaklad_head"&gt;
+            &lt;th style="width:40%;"&gt;Закладные&lt;/th&gt;
+            &lt;th style="width:15%;"&gt;Артикул&lt;/th&gt;
+            &lt;th style="width:10%;"&gt;Кол-во&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+        &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/div&gt;
+
+&lt;!-- Разделитель --&gt;
+  &lt;div id = "space" margin="5"&gt;
+ &lt;p&gt;  &lt;/p&gt;
+  &lt;/div&gt;
+&lt;!-- Табличная часть уплотнителей --&gt;
+  &lt;div id='table_buffer' class = 'container'&gt;
+    &lt;table class="border" width="100%" cellpadding="2" cellspacing="2"&gt;
+        &lt;thead&gt;
+        &lt;tr class="buffer_head"&gt;
+            &lt;th style="width:40%;"&gt;Уплотнитель&lt;/th&gt;
+            &lt;th style="width:15%;"&gt;Артикул&lt;/th&gt;
+            &lt;th style="width:15%;"&gt;Размеры&lt;/th&gt;
+            &lt;th style="width:10%;"&gt;Кол-во&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+        &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/div&gt;
+
+&lt;/div&gt;
+
+&lt;!--      &lt;div id="sketch"&gt;&lt;/div&gt; --&gt;
+      &lt;div id="fotter"&gt;
+        &lt;p&gt;Подвал&lt;/p&gt;
+      &lt;/div&gt;</v8:Шаблон>
+			<v8:zone>0</v8:zone>
+			<v8:Параметры>
+				<v8:Параметр xsi:type="xs:string">destination</v8:Параметр>
+				<v8:Значение xsi:type="xs:string">doc.calc_order</v8:Значение>
+			</v8:Параметры>
+		</v8:CatalogObject.Формулы>
+	</V8Exch:Data>
+	<PredefinedData>
+		<Справочник.Формулы>
+			<item Ссылка="3220e252-ffcd-11e5-8303-e67fda7f6b46" ИмяПредопределенныхДанных="printing_plates"/>
+		</Справочник.Формулы>
+	</PredefinedData>
+</V8Exch:_1CV8DtUD>

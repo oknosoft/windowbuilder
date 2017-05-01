@@ -9045,6 +9045,10 @@ class OSvgs {
 
     const {pics_area} = this;
 
+    if(!pics_area){
+      return;
+    }
+
     while (pics_area.firstChild){
       pics_area.removeChild(pics_area.firstChild)
     }

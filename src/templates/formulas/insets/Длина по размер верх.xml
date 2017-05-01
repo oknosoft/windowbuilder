@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<V8Exch:_1CV8DtUD xmlns:V8Exch="http://www.1c.ru/V8/1CV8DtUD/" xmlns:core="http://v8.1c.ru/data" xmlns:v8="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<V8Exch:Data>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>true</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">3220e24b-ffcd-11e5-8303-e67fda7f6b46</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:Parent>
+			<v8:Description>Вставки</v8:Description>
+			<v8:PredefinedDataName>inserts</v8:PredefinedDataName>
+			<v8:zone>0</v8:zone>
+		</v8:CatalogObject.Формулы>
+		<v8:ChartOfCharacteristicTypesObject.ДополнительныеРеквизитыИСведения>
+			<v8:Ref xsi:type="v8:ChartOfCharacteristicTypesRef.ДополнительныеРеквизитыИСведения">67232540-b6f8-11e6-9862-afdec152d845</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Description>Размер верх</v8:Description>
+			<v8:ValueType>
+				<Type xmlns="http://v8.1c.ru/8.1/data/core">xs:decimal</Type>
+				<NumberQualifiers xmlns="http://v8.1c.ru/8.1/data/core">
+					<Digits>8</Digits>
+					<FractionDigits>1</FractionDigits>
+					<AllowedSign>Any</AllowedSign>
+				</NumberQualifiers>
+			</v8:ValueType>
+			<v8:Виден>true</v8:Виден>
+			<v8:ВладелецДополнительныхЗначений xsi:type="v8:ChartOfCharacteristicTypesRef.ДополнительныеРеквизитыИСведения">00000000-0000-0000-0000-000000000000</v8:ВладелецДополнительныхЗначений>
+			<v8:ДополнительныеЗначенияИспользуются>false</v8:ДополнительныеЗначенияИспользуются>
+			<v8:ДополнительныеЗначенияСВесом>false</v8:ДополнительныеЗначенияСВесом>
+			<v8:Доступен>true</v8:Доступен>
+			<v8:Заголовок>Размер верх</v8:Заголовок>
+			<v8:ЗаголовокФормыВыбораЗначения/>
+			<v8:ЗаголовокФормыЗначения/>
+			<v8:ЗаполнятьОбязательно>false</v8:ЗаполнятьОбязательно>
+			<v8:Комментарий>Используется, во вставках в изделия и контуры для ручного указания размера</v8:Комментарий>
+			<v8:МногострочноеПолеВвода>0</v8:МногострочноеПолеВвода>
+			<v8:НаборСвойств xsi:type="v8:CatalogRef.НаборыДополнительныхРеквизитовИСведений">00000000-0000-0000-0000-000000000000</v8:НаборСвойств>
+			<v8:Подсказка/>
+			<v8:УдалитьСклоненияПредмета/>
+			<v8:ФорматСвойства/>
+			<v8:ЭтоДополнительноеСведение>false</v8:ЭтоДополнительноеСведение>
+			<v8:Список>0</v8:Список>
+			<v8:РеквизитДопУпорядочивания>0</v8:РеквизитДопУпорядочивания>
+			<v8:ВключатьВНаименование>false</v8:ВключатьВНаименование>
+		</v8:ChartOfCharacteristicTypesObject.ДополнительныеРеквизитыИСведения>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>false</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">e1cd41ae-b6f8-11e6-9862-afdec152d845</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">3220e24b-ffcd-11e5-8303-e67fda7f6b46</v8:Parent>
+			<v8:Description>Длина по размер верх</v8:Description>
+			<v8:Формула>// на входе в переменной obj имеем:
+// {
+//	ox: ox,			-	объект характеристики текущей продукции
+//	elm: elm,		-	текущий элемент, обычно - профиль
+//  cnstr: 0,		-	номер конструкции или элемента для привязки параметров
+//  inset: inset,	-	вставка элемента или допвставка
+//	row_ins: row_ins,	-	строка спецификации вставки, из которой произведён вызов формулы
+//	row_spec: row_spec	-	строка спецификации изделия, в которой заполняем длину
+//	}
+						
+// получаем ссылку параметра, значение которого используем при поиске характеристики
+var	param = this.params.get(0).param;
+
+// получим значение параметра в продукции
+obj.ox.params.find_rows({cnstr: obj.cnstr, inset: obj.inset, param: param}, function(row){
+
+	obj.row_spec.len = (row.value + obj.row_ins.sz) * (obj.row_ins.coefficient || 0.001);
+	
+	return false;
+});</v8:Формула>
+			<v8:ВедущаяФормула xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:ВедущаяФормула>
+			<v8:ФормулаУсловия>false</v8:ФормулаУсловия>
+			<v8:Описание>&lt;!DOCTYPE html&gt;
+&lt;html lang='ru'&gt;
+&lt;head&gt;
+&lt;meta http-equiv=X-UA-Compatible content='IE=edge'&gt;
+
+&lt;style&gt;
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;    
+	color: rgb(48, 57, 66);	
+	/*
+	font-family: Segoe UI, Tahoma, sans-serif;
+	overflow: hidden;
+	font-family: 'Open Sans', sans-serif; 
+	*/
+	font-family: Arial, sans-serif;
+	font-size: 100%;
+	line-height: 19px;
+	text-rendering: optimizeLegibility;
+}
+&lt;/style&gt;
+
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h3&gt;По параметру "размер верх"&lt;/h3&gt;
+&lt;p&gt;Заполняет в спецификации изделия поле &lt;i&gt;len&lt;/i&gt; из параметра &lt;i&gt;Размер верх&lt;/i&gt;, заданного для текущей вставки&lt;/p&gt;
+
+&lt;/body&gt;&lt;/html&gt;</v8:Описание>
+			<v8:Шаблон/>
+			<v8:zone>0</v8:zone>
+			<v8:Параметры>
+				<v8:Параметр xsi:type="v8:ChartOfCharacteristicTypesRef.ДополнительныеРеквизитыИСведения">67232540-b6f8-11e6-9862-afdec152d845</v8:Параметр>
+				<v8:Значение xsi:type="xs:decimal">0</v8:Значение>
+			</v8:Параметры>
+		</v8:CatalogObject.Формулы>
+	</V8Exch:Data>
+	<PredefinedData>
+		<Справочник.Формулы>
+			<item Ссылка="3220e24b-ffcd-11e5-8303-e67fda7f6b46" ИмяПредопределенныхДанных="inserts"/>
+		</Справочник.Формулы>
+	</PredefinedData>
+</V8Exch:_1CV8DtUD>

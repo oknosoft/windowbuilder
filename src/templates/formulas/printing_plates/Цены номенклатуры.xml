@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<V8Exch:_1CV8DtUD xmlns:V8Exch="http://www.1c.ru/V8/1CV8DtUD/" xmlns:core="http://v8.1c.ru/data" xmlns:v8="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<V8Exch:Data>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>true</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">3220e252-ffcd-11e5-8303-e67fda7f6b46</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:Parent>
+			<v8:Description>Печатные формы</v8:Description>
+			<v8:PredefinedDataName>printing_plates</v8:PredefinedDataName>
+			<v8:zone>0</v8:zone>
+		</v8:CatalogObject.Формулы>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>false</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">456dde5c-20e1-11e6-aab7-9f165767b845</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">3220e252-ffcd-11e5-8303-e67fda7f6b46</v8:Parent>
+			<v8:Description>Цены номенклатуры</v8:Description>
+			<v8:Формула>
+// создаём объект обработки "цены номенклатуры"
+var dp = $p.dp.builder_price.create();
+
+// передаём в обработку указатель на текущую номенклатуру
+dp.nom = obj;
+dp._data._modified = false;
+
+// показываем форму
+return dp.form_obj();</v8:Формула>
+			<v8:ВедущаяФормула xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:ВедущаяФормула>
+			<v8:ФормулаУсловия>false</v8:ФормулаУсловия>
+			<v8:Описание/>
+			<v8:Шаблон/>
+			<v8:zone>0</v8:zone>
+			<v8:Параметры>
+				<v8:Параметр xsi:type="xs:string">destination</v8:Параметр>
+				<v8:Значение xsi:type="xs:string">cat.nom</v8:Значение>
+			</v8:Параметры>
+		</v8:CatalogObject.Формулы>
+	</V8Exch:Data>
+	<PredefinedData>
+		<Справочник.Формулы>
+			<item Ссылка="3220e252-ffcd-11e5-8303-e67fda7f6b46" ИмяПредопределенныхДанных="printing_plates"/>
+		</Справочник.Формулы>
+	</PredefinedData>
+</V8Exch:_1CV8DtUD>

@@ -1,0 +1,254 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<V8Exch:_1CV8DtUD xmlns:V8Exch="http://www.1c.ru/V8/1CV8DtUD/" xmlns:core="http://v8.1c.ru/data" xmlns:v8="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<V8Exch:Data>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>true</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">3220e252-ffcd-11e5-8303-e67fda7f6b46</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:Parent>
+			<v8:Description>Печатные формы</v8:Description>
+			<v8:PredefinedDataName>printing_plates</v8:PredefinedDataName>
+			<v8:zone>0</v8:zone>
+		</v8:CatalogObject.Формулы>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>false</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">34ef9590-fdb3-11e6-a4bb-f62a66dd0b46</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">3220e252-ffcd-11e5-8303-e67fda7f6b46</v8:Parent>
+			<v8:Description>Комплектация заказа</v8:Description>
+			<v8:Формула>var templates = this._template.content.children,
+		doc = new $p.SpreadsheetDocument(),
+		print_data;
+
+	// получаем данные печати
+	return obj.print_data().then((res) =&gt; {
+
+		print_data = res;
+
+		// выводим заголовок
+		doc.put(dhx4.template(templates.header.innerHTML, print_data), templates.header.attributes);
+
+		// получаем объекты продукций
+		var aobjs = [];
+		obj.production.forEach(function (row) {
+			if(!row.characteristic.empty())
+				aobjs.push($p.cat.characteristics.get(row.characteristic.ref, true, true));
+		});
+		
+		return Promise.all(aobjs);
+
+	})
+		.then(function () {
+
+			// выводим эскизы и описания продукций
+			var tpl_product = templates.product;
+			obj.production.forEach(function (row) {
+
+				if(!row.characteristic.empty() &amp;&amp; !row.nom.is_procedure &amp;&amp; !row.nom.is_service &amp;&amp; !row.nom.is_accessory){
+
+					if(print_data.ПродукцияЭскизы[row.characteristic.ref]){
+						tpl_product.children[0].innerHTML =  $p.iface.scale_svg(print_data.ПродукцияЭскизы[row.characteristic.ref], 170, 0);
+
+					}else
+						tpl_product.children[0].innerHTML = "";
+
+					tpl_product.children[1].innerHTML = dhx4.template(templates.product_description.innerHTML, obj.row_description(row));
+
+					doc.put(tpl_product.innerHTML, tpl_product.attributes);
+				}
+			});
+
+			// выводим табличную часть
+			var table_div = document.createElement("div"),
+				table_footer = document.createElement("div");
+			
+			table_div.innerHTML = templates.table.innerHTML;
+			var table_table = table_div.querySelector("table"),
+				tpl_table_row = table_table.querySelector("tbody").querySelector("tr");
+
+			tpl_table_row.parentElement.removeChild(tpl_table_row);
+			
+			obj.production.forEach(function (row) {
+				
+				var table_row = document.createElement("TR");
+				table_row.innerHTML = dhx4.template(tpl_table_row.innerHTML, obj.row_description(row));
+				table_table.appendChild(table_row);
+				
+			});
+
+
+			// выводим подвал табличной части в table_div
+			table_footer.innerHTML = dhx4.template(templates.table_footer.innerHTML, print_data);
+			table_div.appendChild(table_footer);
+
+			// собственно, вывод табличной части в отчет
+			doc.put(table_div.innerHTML, table_div.attributes);
+
+
+			// выводим подвал отчета
+			doc.put(dhx4.template(templates.footer.innerHTML, print_data), templates.footer.attributes);
+
+			// возаращаем сформированный документ
+			return doc;
+
+		});
+                </v8:Формула>
+			<v8:ВедущаяФормула xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:ВедущаяФормула>
+			<v8:ФормулаУсловия>false</v8:ФормулаУсловия>
+			<v8:Описание/>
+			<v8:Шаблон>&lt;!-- Заголовок, шапка отчета --&gt;
+&lt;div id='header' class='container'&gt;
+
+    &lt;img src="#ОрганизацияЛоготип#" /&gt;
+
+    &lt;svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width: 100px; height: 100px; float: right; padding-bottom: 4px;"&gt;
+        #qrcode#
+    &lt;/svg&gt;
+
+    &lt;div style="font-weight: bold; font-size: 14pt; float: left; padding:4pt; clear: both"&gt;
+        Счет № #ЗаказНомер# от #ДатаЗаказаФорматDD#
+    &lt;/div&gt;
+    &lt;div style="font-size: 10pt; float: right; text-align: right; padding-top: 4pt;"&gt;
+        Счет действителен 3 дня. Распечатано: #ДатаТекущаяФорматD#
+    &lt;/div&gt;
+
+    &lt;div style="background-color:#000000; width:100%; font-size:1px; height:2px; clear: both"&gt;&amp;nbsp;&lt;/div&gt;
+
+    &lt;table width="100%"&gt;
+        &lt;tr&gt;
+            &lt;td style="width: 30mm;"&gt;
+                &lt;div style=" padding-left:2px;"&gt;Поставщик:&lt;/div&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+                #Организация#, ИНН #ОрганизацияИНН#, #ОрганизацияАдрес#, тел: #ОрганизацияТелефон#,
+                р/с #ОрганизацияБанкНомерСчета# в #ОрганизацияБанкНаименование#, БИК #ОрганизацияБанкБИК#, к/с #ОрганизацияБанкКоррСчет#
+            &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style="width: 30mm;"&gt;
+                &lt;div style="padding-left:2px;"&gt;Покупатель:&lt;/div&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+                #КонтрагентОписание#
+            &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td colspan="2"&gt;
+                &lt;div style="padding-left:2px;"&gt;#МонтажДоставкаСамовывоз#&lt;/div&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+
+&lt;/div&gt;
+
+&lt;!-- Эскиз изделия + ячейка описания --&gt;
+&lt;div id='product' style="clear: both; padding: 4pt; border-top: gainsboro 1px dashed; margin-top: 4pt;"&gt;
+
+    &lt;div style="width: 40%; height: 180px; float: left"&gt;
+        эскиз
+    &lt;/div&gt;
+
+    &lt;div style="width: 55%; float: left"&gt;
+        Описание
+    &lt;/div&gt;
+
+&lt;/div&gt;
+
+&lt;!-- шаблон ячейки описание изделия --&gt;
+&lt;div id='product_description'&gt;
+    &lt;table width="100%"&gt;
+        &lt;tbody &gt;
+        &lt;tr&gt;&lt;td&gt;&lt;b&gt;Изделие №#НомерСтроки#&lt;/b&gt;&lt;/td&gt;&lt;td&gt;&lt;b&gt;Количество: #Количество# #Ед#&lt;/b&gt;, Цвет: #Цвет#&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;Размеры:&lt;/td&gt;&lt;td&gt;#Размеры#&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;Продукция:&lt;/td&gt;&lt;td&gt;#Номенклатура#&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;Заполнения:&lt;/td&gt;&lt;td&gt;#Заполнения#&lt;/td&gt;&lt;/tr&gt;
+        &lt;/tbody&gt;
+    &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;!-- Заголовок и шапка табличной части --&gt;
+&lt;div id='table'&gt;
+
+    &lt;table class="border" width="100%" cellpadding="2" cellspacing="2"&gt;
+        &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th style="width:11mm;"&gt;№&lt;/th&gt;
+            &lt;th&gt;Товар&lt;/th&gt;
+            &lt;th style="width:15mm;"&gt;Кол-во&lt;/th&gt;
+            &lt;th style="width:13mm;"&gt;Ед.&lt;/th&gt;
+            &lt;th style="width:20mm;"&gt;Цена&lt;/th&gt;
+            &lt;th style="width:20mm;"&gt;Скидка %&lt;/th&gt;
+            &lt;th style="width:20mm;"&gt;Скидка&lt;/th&gt;
+            &lt;th style="width:20mm;"&gt;Сумма&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody &gt;
+
+        &lt;!-- Строка табличной части --&gt;
+        &lt;tr&gt;
+            &lt;td align="center"&gt;#НомерСтроки#&lt;/td&gt;
+            &lt;td align="left"&gt;#Номенклатура# #Характеристика#&lt;/td&gt;
+            &lt;td align="right"&gt;#Количество#&lt;/td&gt;
+            &lt;td align="left"&gt;#Ед#&lt;/td&gt;
+            &lt;td align="right"&gt;#Цена#&lt;/td&gt;
+            &lt;td align="right"&gt;#СкидкаПроцент#&lt;/td&gt;
+            &lt;td align="right"&gt;#Скидка#&lt;/td&gt;
+            &lt;td align="right"&gt;#Сумма#&lt;/td&gt;&lt;/tr&gt;
+        &lt;/tbody&gt;
+    &lt;/table&gt;
+
+&lt;/div&gt;
+
+
+
+&lt;!-- Строка итогов табличной части --&gt;
+&lt;div id='table_footer'&gt;
+    &lt;table border="0" width="100%" cellpadding="1" cellspacing="1"&gt;
+        &lt;tr&gt;
+            &lt;td&gt;&lt;/td&gt;
+            &lt;td style="width:50mm; font-weight:bold;  text-align:right;"&gt;Итого без скидки:&lt;/td&gt;
+            &lt;td style="width:20mm; font-weight:bold;  text-align:right;"&gt;#СуммаДокументаБезСкидки#&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;&lt;/td&gt;
+            &lt;td style="font-weight:bold;  text-align:right;"&gt;Сумма скидки:&lt;/td&gt;
+            &lt;td style="font-weight:bold;  text-align:right;"&gt;#СуммаСкидки#&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;&lt;/td&gt;
+            &lt;td style="font-weight:bold;  text-align:right;"&gt;Итого к оплате:&lt;/td&gt;
+            &lt;td style="font-weight:bold;  text-align:right;"&gt;#СуммаДокумента#&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;&lt;/td&gt;
+            &lt;td style="font-weight:bold;  text-align:right;"&gt;#ТекстНДС#&lt;/td&gt;
+            &lt;td style="font-weight:bold;  text-align:right;"&gt;#СуммаНДС#&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;!-- Подвал отчета --&gt;
+&lt;div id='footer'&gt;
+
+    &lt;div style="margin-bottom: 4mm"&gt;
+        Всего наименований #ВсегоНаименований# на сумму #СуммаДокумента# #ВалютаДокумента#.&lt;br /&gt;
+        #СуммаДокументаПрописью#
+        &lt;br&gt;
+        Изделия и комплектация мною проверены, претензий к внешнему виду не имею.
+    &lt;/div&gt;
+
+    
+&lt;/div&gt;</v8:Шаблон>
+			<v8:zone>0</v8:zone>
+			<v8:Параметры>
+				<v8:Параметр xsi:type="xs:string">destination</v8:Параметр>
+				<v8:Значение xsi:nil="true"/>
+			</v8:Параметры>
+		</v8:CatalogObject.Формулы>
+	</V8Exch:Data>
+	<PredefinedData>
+		<Справочник.Формулы>
+			<item Ссылка="3220e252-ffcd-11e5-8303-e67fda7f6b46" ИмяПредопределенныхДанных="printing_plates"/>
+		</Справочник.Формулы>
+	</PredefinedData>
+</V8Exch:_1CV8DtUD>
