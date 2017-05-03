@@ -791,8 +791,8 @@ function ProductsBuilding(){
 			else{
 
 				if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПлощади){
-					row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz)/1000;
-					row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz)/1000;
+					row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+					row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
 					row_spec.s = _row.s;
 				}
 				else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру){
