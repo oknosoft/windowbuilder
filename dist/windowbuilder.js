@@ -3898,6 +3898,19 @@ class Contour extends paper.Layer {
       available_bind = outer_nodes.length,
       elm, curr;
 
+    function set_node(n) {
+      if(!curr[n].is_nearest(elm[n], 0)){
+        elm.rays.clear(true);
+        elm[n] = curr[n];
+        if(noti.profiles.indexOf(elm) == -1){
+          noti.profiles.push(elm);
+        }
+        if(!noti.points.some((point) => point.is_nearest(elm[n], 0))){
+          noti.points.push(elm[n]);
+        }
+      }
+    }
+
     if(need_bind){
       for(let i = 0; i < attr.length; i++){
         curr = attr[i];             
@@ -3912,23 +3925,9 @@ class Contour extends paper.Layer {
             need_bind--;
             available_bind--;
 
-            if(!curr.b.is_nearest(elm.b, 0)){
-              elm.rays.clear(true);
-              elm.b = curr.b;
-              if(noti.profiles.indexOf(elm) == -1){
-                noti.profiles.push(elm);
-                noti.points.push(elm.b);
-              }
-            }
+            set_node('b');
+            set_node('e');
 
-            if(!curr.e.is_nearest(elm.e, 0)){
-              elm.rays.clear(true);
-              elm.e = curr.e;
-              if(noti.profiles.indexOf(elm) == -1){
-                noti.profiles.push(elm);
-                noti.points.push(elm.e);
-              }
-            }
             break;
           }
         }
@@ -3949,14 +3948,10 @@ class Contour extends paper.Layer {
             curr.binded = true;
             need_bind--;
             available_bind--;
-            elm.rays.clear(true);
-            elm.b = curr.b;
-            elm.e = curr.e;
-            if(noti.profiles.indexOf(elm) == -1){
-              noti.profiles.push(elm);
-              noti.points.push(elm.b);
-              noti.points.push(elm.e);
-            }
+
+            set_node('b');
+            set_node('e');
+
             break;
           }
         }
@@ -3976,14 +3971,10 @@ class Contour extends paper.Layer {
           curr.binded = true;
           need_bind--;
           available_bind--;
-          elm.rays.clear(true);
-          elm.b = curr.b;
-          elm.e = curr.e;
-          if(noti.profiles.indexOf(elm) == -1){
-            noti.profiles.push(elm);
-            noti.points.push(elm.b);
-            noti.points.push(elm.e);
-          }
+
+          set_node('b');
+          set_node('e');
+
           break;
         }
       }
@@ -5011,16 +5002,18 @@ class BuilderElement extends paper.Group {
       name: ["selection",	"ref"],
       path: [(o) => {
         const cnn_ii = this.selected_cnn_ii();
-        let nom_cnns;
+        let nom_cnns = [$p.utils.blank.guid];
 
-        if (cnn_ii.elm instanceof Filling) {
-          nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
-        }
-        else if (cnn_ii.elm_type == $p.enm.elm_types.Створка && this.elm_type != $p.enm.elm_types.Створка) {
-          nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
-        }
-        else {
-          nom_cnns = $p.cat.cnns.nom_cnn(this, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
+        if(cnn_ii){
+          if (cnn_ii.elm instanceof Filling) {
+            nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
+          }
+          else if (cnn_ii.elm_type == $p.enm.elm_types.Створка && this.elm_type != $p.enm.elm_types.Створка) {
+            nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
+          }
+          else {
+            nom_cnns = $p.cat.cnns.nom_cnn(this, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
+          }
         }
 
         if ($p.utils.is_data_obj(o)) {
@@ -7753,10 +7746,9 @@ class Profile extends ProfileItem {
     const {data} = this;
     if(!data.hasOwnProperty('d0')){
       data.d0 = 0;
-      let curr = this, nearest;
-      while(nearest = curr.nearest()){
-        data.d0 -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
-        curr = nearest;
+      const nearest = this.nearest();
+      if(nearest){
+        data.d0 -= nearest.d2 + (data._nearest_cnn ? data._nearest_cnn.sz : 20);
       }
     }
     return data.d0;
@@ -9060,7 +9052,7 @@ function Scheme(_canvas){
 			}
 
 
-			if(_changes.length){
+			if(_changes.length && !_data._saving){
 				_changes.length = 0;
 
 				if(_scheme.contours.length){

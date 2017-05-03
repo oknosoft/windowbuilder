@@ -1846,10 +1846,9 @@ class Profile extends ProfileItem {
     const {data} = this;
     if(!data.hasOwnProperty('d0')){
       data.d0 = 0;
-      let curr = this, nearest;
-      while(nearest = curr.nearest()){
-        data.d0 -= nearest.d2 + (curr.data._nearest_cnn ? curr.data._nearest_cnn.sz : 20);
-        curr = nearest;
+      const nearest = this.nearest();
+      if(nearest){
+        data.d0 -= nearest.d2 + (data._nearest_cnn ? data._nearest_cnn.sz : 20);
       }
     }
     return data.d0;

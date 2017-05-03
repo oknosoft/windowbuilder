@@ -1577,6 +1577,19 @@ class Contour extends paper.Layer {
       available_bind = outer_nodes.length,
       elm, curr;
 
+    function set_node(n) {
+      if(!curr[n].is_nearest(elm[n], 0)){
+        elm.rays.clear(true);
+        elm[n] = curr[n];
+        if(noti.profiles.indexOf(elm) == -1){
+          noti.profiles.push(elm);
+        }
+        if(!noti.points.some((point) => point.is_nearest(elm[n], 0))){
+          noti.points.push(elm[n]);
+        }
+      }
+    }
+
     // первый проход: по двум узлам либо примыканию к образующей
     if(need_bind){
       for(let i = 0; i < attr.length; i++){
@@ -1592,23 +1605,9 @@ class Contour extends paper.Layer {
             need_bind--;
             available_bind--;
 
-            if(!curr.b.is_nearest(elm.b, 0)){
-              elm.rays.clear(true);
-              elm.b = curr.b;
-              if(noti.profiles.indexOf(elm) == -1){
-                noti.profiles.push(elm);
-                noti.points.push(elm.b);
-              }
-            }
+            set_node('b');
+            set_node('e');
 
-            if(!curr.e.is_nearest(elm.e, 0)){
-              elm.rays.clear(true);
-              elm.e = curr.e;
-              if(noti.profiles.indexOf(elm) == -1){
-                noti.profiles.push(elm);
-                noti.points.push(elm.e);
-              }
-            }
             break;
           }
         }
@@ -1630,14 +1629,10 @@ class Contour extends paper.Layer {
             curr.binded = true;
             need_bind--;
             available_bind--;
-            elm.rays.clear(true);
-            elm.b = curr.b;
-            elm.e = curr.e;
-            if(noti.profiles.indexOf(elm) == -1){
-              noti.profiles.push(elm);
-              noti.points.push(elm.b);
-              noti.points.push(elm.e);
-            }
+
+            set_node('b');
+            set_node('e');
+
             break;
           }
         }
@@ -1659,14 +1654,10 @@ class Contour extends paper.Layer {
           need_bind--;
           available_bind--;
           // TODO заменить на клонирование образующей
-          elm.rays.clear(true);
-          elm.b = curr.b;
-          elm.e = curr.e;
-          if(noti.profiles.indexOf(elm) == -1){
-            noti.profiles.push(elm);
-            noti.points.push(elm.b);
-            noti.points.push(elm.e);
-          }
+
+          set_node('b');
+          set_node('e');
+
           break;
         }
       }

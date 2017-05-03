@@ -558,10 +558,11 @@ function Scheme(_canvas){
 				}
 			}
 
-			// if(_data._saving || _data._loading)
-			// 	return;
+      // if(_data._saving || _data._loading){
+      //   return;
+      // }
 
-			if(_changes.length){
+			if(_changes.length && !_data._saving){
 				//console.log(_changes.length);
 				_changes.length = 0;
 

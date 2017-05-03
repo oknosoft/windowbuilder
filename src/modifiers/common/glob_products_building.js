@@ -1003,6 +1003,10 @@ function ProductsBuilding(){
 
 		// информируем мир о записи продукции
 		if(attr.save){
+
+      // console.time("save");
+      // console.profile();
+
 			// сохраняем картинку вместе с изделием
 			ox.save(undefined, undefined, {
 				svg: {
@@ -1014,8 +1018,16 @@ function ProductsBuilding(){
 					$p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
 					delete scheme.data._saving;
 					$p.eve.callEvent("characteristic_saved", [scheme, attr]);
+
+          // console.timeEnd("save");
+          // console.profileEnd();
+
 				})
         .catch((ox) => {
+
+          // console.timeEnd("save");
+          // console.profileEnd();
+
           $p.record_log(ox);
           delete scheme.data._saving;
           const {_err} = ox._data;
@@ -1028,6 +1040,8 @@ function ProductsBuilding(){
 		else{
 			delete scheme.data._saving;
 		}
+
+
 
 	});
 
