@@ -6060,6 +6060,8 @@ function ProductsBuilding(){
 	function inset_spec(elm, inset, len_angl) {
 
 		const {_row} = elm;
+		const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади} = $p.enm.count_calculating_ways;
+    const {profile_items} = $p.enm.elm_types;
 
 		if(!inset)
 			inset = elm.inset;
@@ -6070,12 +6072,11 @@ function ProductsBuilding(){
 
 			let row_spec;
 
-			if((row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру
-				&& row_ins_spec.count_calc_method != $p.enm.count_calculating_ways.ПоШагам) ||
-				$p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1)
-				row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
+			if((row_ins_spec.count_calc_method != ПоПериметру && row_ins_spec.count_calc_method != ПоШагам) || profile_items.indexOf(_row.elm_type) != -1){
+        row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
+      }
 
-			if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !row_ins_spec.formula.empty()){
+			if(row_ins_spec.count_calc_method == ПоФормуле && !row_ins_spec.formula.empty()){
 
 				row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, origin);
 
@@ -6089,18 +6090,17 @@ function ProductsBuilding(){
           len: len_angl ? len_angl.len : _row.len
 				});
 			}
-			else if($p.enm.elm_types.profile_items.indexOf(_row.elm_type) != -1 ||
-				row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ДляЭлемента){
+			else if(profile_items.indexOf(_row.elm_type) != -1 || row_ins_spec.count_calc_method == ДляЭлемента){
 				calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
 			}
 			else{
 
-				if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПлощади){
+				if(row_ins_spec.count_calc_method == ПоПлощади){
 					row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
 					row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
 					row_spec.s = _row.s;
 				}
-				else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру){
+				else if(row_ins_spec.count_calc_method == ПоПериметру){
 					const row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
 					elm.perimeter.forEach((rib) => {
 						row_prm._row._mixin(rib);
@@ -6114,12 +6114,9 @@ function ProductsBuilding(){
 					});
 
 				}
-				else if(row_ins_spec.count_calc_method == $p.enm.count_calculating_ways.ПоШагам){
-
-					var h = _row.y2 - _row.y1, w = _row.x2 - _row.x1;
-					if((row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьШагиВторогоНаправления ||
-						row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление) && row_ins_spec.step){
-
+				else if(row_ins_spec.count_calc_method == ПоШагам){
+					const h = _row.y2 - _row.y1, w = _row.x2 - _row.x1;
+					if(row_ins_spec.step){
 						for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
 							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
 							calc_qty_len(row_spec, row_ins_spec, w);
