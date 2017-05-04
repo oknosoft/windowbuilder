@@ -5473,7 +5473,7 @@ function ProductsBuilding(){
 
 	function calc_count_area_mass(row_spec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2){
 
-    if(!row_spec.qty && !row_spec.len){
+    if(!row_spec.qty){
       return spec.del(row_spec.row-1, true);
     }
 
@@ -5515,11 +5515,9 @@ function ProductsBuilding(){
 		if(row_spec.len){
 			if(row_spec.width && !row_spec.s)
 				row_spec.s = row_spec.len * row_spec.width;
-		}else
-			row_spec.s = 0;
-
-		if(!row_spec.qty && (row_spec.len || row_spec.width))
-			row_spec.qty = 1;
+		}else{
+      row_spec.s = 0;
+    }
 
 		if(row_spec.s)
 			row_spec.totqty = row_spec.qty * row_spec.s;
@@ -5643,16 +5641,19 @@ function ProductsBuilding(){
 					row_spec.qty = row_cnn_spec.quantity;
 
 					if(row_cnn_spec.sz || row_cnn_spec.coefficient){
-            let sz = row_cnn_spec.sz;
-            let finded;
+            let sz = row_cnn_spec.sz, finded, qty;
             if(cnn_other){
               cnn_other.specification.find_rows({nom}, (row) => {
                 sz += row.sz;
+                qty = row.quantity;
                 return !(finded = true);
               })
             }
             if(!finded){
               sz *= 2;
+            }
+            if(!row_spec.qty && finded && len_angl.art1){
+              row_spec.qty = qty;
             }
             row_spec.len = (len_angl.len - sign * sz) * (row_cnn_spec.coefficient || 0.001);
           }
@@ -5707,7 +5708,7 @@ function ProductsBuilding(){
 			if((row.set_specification == САртикулом1 && len_angl.art2) || (row.set_specification == САртикулом2 && len_angl.art1)){
         return;
       }
-      if(len_angl.art2 && $p.enm.cnn_types.acn.a.indexOf(cnn.cnn.cnn_type) != -1 && row.set_specification != САртикулом2){
+      if(len_angl.art2 && $p.enm.cnn_types.acn.a.indexOf(cnn.cnn_type) != -1 && row.set_specification != САртикулом2){
         return;
       }
 
