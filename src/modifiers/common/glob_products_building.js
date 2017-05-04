@@ -233,9 +233,9 @@ function ProductsBuilding(){
           }
 				}
 				else{
-					// TODO: Строго говоря, нужно брать не размер соединения, а размеры предыдущего и последующего
 					row_spec.qty = row_cnn_spec.quantity;
 
+          // если указано cnn_other, берём не размер соединения, а размеры предыдущего и последующего
 					if(row_cnn_spec.sz || row_cnn_spec.coefficient){
             let sz = row_cnn_spec.sz;
             let finded;
@@ -307,12 +307,16 @@ function ProductsBuilding(){
         }
 			}
 
-			// "Устанавливать с" проверяем только для соединений профиля
+			// "устанавливать с" проверяем только для соединений профиля
 			if((row.set_specification == САртикулом1 && len_angl.art2) || (row.set_specification == САртикулом2 && len_angl.art1)){
         return;
       }
+      // для угловых, разрешаем art2 только явно для art2
+      if(len_angl.art2 && $p.enm.cnn_types.acn.a.indexOf(cnn.cnn.cnn_type) != -1 && row.set_specification != САртикулом2){
+        return;
+      }
 
-			// Проверяем параметры изделия и добавляем, если проходит по ограничениям
+			// проверяем параметры изделия и добавляем, если проходит по ограничениям
 			if(check_params(cnn.selection_params, row, elm)){
         res.push(row);
       }
@@ -664,19 +668,21 @@ function ProductsBuilding(){
 				alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
 				alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
         len: row_spec ? row_spec.len * 1000 : _row.len,
-				art1: false
+				art1: false,
+        art2: true
 			};
+      len_angl.angle = len_angl.alp2;
 
+      // для ТОбразного и Незамкнутого контура надо рассчитать еще и с другой стороны
 			if(b.cnn.cnn_type == $p.enm.cnn_types.ТОбразное || b.cnn.cnn_type == $p.enm.cnn_types.НезамкнутыйКонтур){
-
-				// для него надо рассчитать еще и с другой стороны
 				if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm)){
-					//	TODO: ДополнитьСпецификациюСпецификациейСоединения(СтруктураПараметров, СтрК, ДлиныУглыСлед, СоедСлед, След);
-          len_angl.angle = len_angl.alp2;
-          len_angl.art2 = true;
           cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
 				}
 			}
+			// для угловых, добавляем из e.cnn строки с {art2: true}
+			else{
+        cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
+      }
 
 			// спецификацию с предыдущей стороны рассчитваем всегда
       len_angl.angle = len_angl.alp1;

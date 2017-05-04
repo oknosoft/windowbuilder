@@ -5707,6 +5707,9 @@ function ProductsBuilding(){
 			if((row.set_specification == САртикулом1 && len_angl.art2) || (row.set_specification == САртикулом2 && len_angl.art1)){
         return;
       }
+      if(len_angl.art2 && $p.enm.cnn_types.acn.a.indexOf(cnn.cnn.cnn_type) != -1 && row.set_specification != САртикулом2){
+        return;
+      }
 
 			if(check_params(cnn.selection_params, row, elm)){
         res.push(row);
@@ -5991,17 +5994,19 @@ function ProductsBuilding(){
 				alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
 				alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
         len: row_spec ? row_spec.len * 1000 : _row.len,
-				art1: false
+				art1: false,
+        art2: true
 			};
+      len_angl.angle = len_angl.alp2;
 
 			if(b.cnn.cnn_type == $p.enm.cnn_types.ТОбразное || b.cnn.cnn_type == $p.enm.cnn_types.НезамкнутыйКонтур){
-
 				if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm)){
-          len_angl.angle = len_angl.alp2;
-          len_angl.art2 = true;
           cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
 				}
 			}
+			else{
+        cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
+      }
 
       len_angl.angle = len_angl.alp1;
       len_angl.art2 = false;
