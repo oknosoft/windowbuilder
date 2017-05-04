@@ -5988,16 +5988,17 @@ function ProductsBuilding(){
       );
 		}
 
+    const len_angl = {
+      angle: 0,
+      alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
+      alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
+      len: row_spec ? row_spec.len * 1000 : _row.len,
+      art1: false,
+      art2: true
+    };
 		if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
 
-			const len_angl = {
-				angle: 0,
-				alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
-				alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
-        len: row_spec ? row_spec.len * 1000 : _row.len,
-				art1: false,
-        art2: true
-			};
+
       len_angl.angle = len_angl.alp2;
 
 			if(b.cnn.cnn_type == $p.enm.cnn_types.ТОбразное || b.cnn.cnn_type == $p.enm.cnn_types.НезамкнутыйКонтур){
@@ -6015,12 +6016,26 @@ function ProductsBuilding(){
 			cnn_add_spec(b.cnn, elm, len_angl, e.cnn);
 		}
 
-
 		inset_spec(elm);
 
 		cnn_spec_nearest(elm);
 
 		elm.addls.forEach(base_spec_profile);
+
+    ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
+
+      if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
+        $p.record_log("inset_elm_spec: specification_order_row_types.Продукция");
+      }
+
+      len_angl.origin = inset;
+      len_angl.angle = elm.angle_hor;
+      len_angl.cnstr = elm.layer.cnstr;
+      delete len_angl.art1;
+      delete len_angl.art2;
+      inset_spec(elm, inset, len_angl);
+
+    });
 
 	}
 
@@ -6061,6 +6076,16 @@ function ProductsBuilding(){
 		inset_spec(glass);
 
     onlays.forEach(base_spec_profile);
+
+    ox.inserts.find_rows({cnstr: -glass.elm}, ({inset, clr}) => {
+
+      if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
+        $p.record_log("inset_elm_spec: specification_order_row_types.Продукция");
+      }
+
+      inset_spec(glass, inset);
+
+    });
 	}
 
 	function inset_spec(elm, inset, len_angl) {
@@ -6069,8 +6094,9 @@ function ProductsBuilding(){
 		const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади} = $p.enm.count_calculating_ways;
     const {profile_items} = $p.enm.elm_types;
 
-		if(!inset)
-			inset = elm.inset;
+		if(!inset){
+      inset = elm.inset;
+    }
 
 		inset_filter_spec(inset, elm, true, len_angl).forEach((row_ins_spec) => {
 
@@ -6172,14 +6198,14 @@ function ProductsBuilding(){
 
     const spec_tmp = spec;
 
-    ox.inserts.find_rows({cnstr: contour.cnstr}, ({inset, clr}) => {
+    const elm = {
+      _row: {},
+      elm: 0,
+      clr: ox.clr,
+      get perimeter() {return contour.perimeter}
+    };
 
-      const elm = {
-        _row: {},
-        elm: 0,
-        clr: ox.clr,
-        get perimeter() {return contour.perimeter}
-      };
+    ox.inserts.find_rows({cnstr: contour.cnstr}, ({inset, clr}) => {
 
       if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
         const cx = find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
