@@ -6109,18 +6109,7 @@ function ProductsBuilding(){
       }
 
 			if(row_ins_spec.count_calc_method == ПоФормуле && !row_ins_spec.formula.empty()){
-
 				row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, origin);
-
-				row_ins_spec.formula.execute({
-					ox: ox,
-					elm: elm,
-          cnstr: len_angl && len_angl.cnstr || 0,
-          inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
-					row_ins: row_ins_spec,
-					row_spec: row_spec,
-          len: len_angl ? len_angl.len : _row.len
-				});
 			}
 			else if(profile_items.indexOf(_row.elm_type) != -1 || row_ins_spec.count_calc_method == ДляЭлемента){
 				calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
@@ -6128,7 +6117,8 @@ function ProductsBuilding(){
 			else{
 
 				if(row_ins_spec.count_calc_method == ПоПлощади){
-					row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+          row_spec.qty = row_ins_spec.quantity;
+				  row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
 					row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
 					row_spec.s = _row.s;
 				}
@@ -6163,6 +6153,17 @@ function ProductsBuilding(){
 			}
 
 			if(row_spec){
+			  if(!row_ins_spec.formula.empty()){
+          row_ins_spec.formula.execute({
+            ox: ox,
+            elm: elm,
+            cnstr: len_angl && len_angl.cnstr || 0,
+            inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
+            row_ins: row_ins_spec,
+            row_spec: row_spec,
+            len: len_angl ? len_angl.len : _row.len
+          });
+        }
         calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
       }
 		})
@@ -6420,194 +6421,6 @@ $p.spec_building = new SpecBuilding($p);
     }
 	}
 })($p.md);
-
-
-$p.dp.builder_pen.on({
-
-	value_change: function(attr){
-		if(attr.field == "elm_type") {
-			this.inset = paper.project.default_inset({elm_type: this.elm_type});
-			this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
-		}
-	}
-});
-
-$p.dp.builder_lay_impost.on({
-
-	value_change: function(attr){
-		if(attr.field == "elm_type") {
-			this.inset_by_y = paper.project.default_inset({
-				elm_type: this.elm_type,
-				pos: $p.enm.positions.ЦентрГоризонталь
-			});
-			this.inset_by_x = paper.project.default_inset({
-				elm_type: this.elm_type,
-				pos: $p.enm.positions.ЦентрВертикаль
-			});
-			this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
-		}
-	}
-});
-
-
-$p.DpBuilder_price.prototype.__define({
-
-  form_obj: {
-    value: function (pwnd, attr) {
-
-      const {nom, goods, _manager, _metadata} = this;
-
-      const options = {
-        name: 'wnd_obj_' + _manager.class_name,
-        wnd: {
-          top: 80 + Math.random()*40,
-          left: 120 + Math.random()*80,
-          width: 780,
-          height: 400,
-          modal: true,
-          center: false,
-          pwnd: pwnd,
-          allow_close: true,
-          allow_minmax: true,
-          caption: `Цены: <b>${nom.name}</b>`
-        }
-      };
-
-      const wnd = $p.iface.dat_blank(null, options.wnd);
-
-      const ts_captions = {
-        "fields":["price_type","nom_characteristic","date","price","currency"],
-        "headers":"Тип Цен,Характеристика,Дата,Цена,Валюта",
-        "widths":"200,*,150,120,100",
-        "min_widths":"150,200,100,100,100",
-        "aligns":"",
-        "sortings":"na,na,na,na,na",
-        "types":"ro,ro,dhxCalendar,ro,ro"
-      };
-
-      return $p.wsql.pouch.local.doc.query('doc/doc_nom_prices_setup_slice_last', {
-        limit : 1000,
-        include_docs: false,
-        startkey: [nom.ref, ''],
-        endkey: [nom.ref, '\uffff']
-      })
-        .then((data) => {
-        if(data && data.rows){
-          data.rows.forEach((row) => {
-            goods.add({
-              nom_characteristic: row.key[1],
-              price_type: row.key[2],
-              date: row.value.date,
-              price: row.value.price,
-              currency: row.value.currency
-            })
-          });
-
-          goods.sort(["price_type","nom_characteristic","date"]);
-
-          wnd.elmnts.grids.goods = wnd.attachTabular({
-            obj: this,
-            ts: "goods",
-            pwnd: wnd,
-            ts_captions: ts_captions
-          });
-          wnd.detachToolbar();
-        }
-      })
-
-    }
-  }
-});
-
-
-
-$p.dp.buyers_order.__define({
-
-	unload_obj: {
-		value: function () {
-
-		}
-	},
-
-	form_product_list: {
-		value: function (pwnd, callback) {
-
-			var o = this.create(),
-				wnd,
-				attr = {
-
-					toolbar_struct: $p.injected_data["toolbar_product_list.xml"],
-
-					toolbar_click: function (btn_id) {
-						if(btn_id == "btn_ok"){
-							o._data._modified = false;
-							wnd.close();
-							callback(o.production);
-						}
-					},
-
-					draw_pg_header: function (o, wnd) {
-						wnd.elmnts.tabs.tab_header.hide();
-						wnd.elmnts.frm_tabs.tabsArea.classList.add("tabs_hidden");
-						wnd.elmnts.frm_toolbar.hideItem("bs_print");
-					}
-				};
-
-
-
-			o.presentation = "Добавление продукции с параметрами";
-
-			o.form_obj(pwnd, attr)
-				.then(function (res) {
-					wnd = res.wnd
-				});
-
-		}
-	}
-});
-
-delete $p.DpBuyers_order.prototype.clr;
-delete $p.DpBuyers_order.prototype.sys;
-$p.DpBuyers_order.prototype.__define({
-
-	clr: {
-		get: function () {
-			return this.characteristic.clr;
-		},
-		set: function (v) {
-      const {characteristic, _data} = this;
-			if((!v && characteristic.empty()) || characteristic.clr == v){
-        return;
-      }
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: 'clr',
-				oldValue: characteristic.clr
-			});
-      characteristic.clr = v;
-			_data._modified = true;
-		}
-	},
-
-	sys: {
-		get: function () {
-			return this.characteristic.sys;
-		},
-		set: function (v) {
-		  const {characteristic, _data} = this;
-			if((!v && characteristic.empty()) || characteristic.sys == v){
-        return;
-      }
-			Object.getNotifier(this).notify({
-				type: 'update',
-				name: 'sys',
-				oldValue: characteristic.sys
-			});
-      characteristic.sys = v;
-			_data._modified = true;
-		}
-	}
-});
 
 
 $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
@@ -8138,6 +7951,194 @@ $p.doc.selling.on({
 });
 
 
+
+
+$p.dp.builder_pen.on({
+
+	value_change: function(attr){
+		if(attr.field == "elm_type") {
+			this.inset = paper.project.default_inset({elm_type: this.elm_type});
+			this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
+		}
+	}
+});
+
+$p.dp.builder_lay_impost.on({
+
+	value_change: function(attr){
+		if(attr.field == "elm_type") {
+			this.inset_by_y = paper.project.default_inset({
+				elm_type: this.elm_type,
+				pos: $p.enm.positions.ЦентрГоризонталь
+			});
+			this.inset_by_x = paper.project.default_inset({
+				elm_type: this.elm_type,
+				pos: $p.enm.positions.ЦентрВертикаль
+			});
+			this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
+		}
+	}
+});
+
+
+$p.DpBuilder_price.prototype.__define({
+
+  form_obj: {
+    value: function (pwnd, attr) {
+
+      const {nom, goods, _manager, _metadata} = this;
+
+      const options = {
+        name: 'wnd_obj_' + _manager.class_name,
+        wnd: {
+          top: 80 + Math.random()*40,
+          left: 120 + Math.random()*80,
+          width: 780,
+          height: 400,
+          modal: true,
+          center: false,
+          pwnd: pwnd,
+          allow_close: true,
+          allow_minmax: true,
+          caption: `Цены: <b>${nom.name}</b>`
+        }
+      };
+
+      const wnd = $p.iface.dat_blank(null, options.wnd);
+
+      const ts_captions = {
+        "fields":["price_type","nom_characteristic","date","price","currency"],
+        "headers":"Тип Цен,Характеристика,Дата,Цена,Валюта",
+        "widths":"200,*,150,120,100",
+        "min_widths":"150,200,100,100,100",
+        "aligns":"",
+        "sortings":"na,na,na,na,na",
+        "types":"ro,ro,dhxCalendar,ro,ro"
+      };
+
+      return $p.wsql.pouch.local.doc.query('doc/doc_nom_prices_setup_slice_last', {
+        limit : 1000,
+        include_docs: false,
+        startkey: [nom.ref, ''],
+        endkey: [nom.ref, '\uffff']
+      })
+        .then((data) => {
+        if(data && data.rows){
+          data.rows.forEach((row) => {
+            goods.add({
+              nom_characteristic: row.key[1],
+              price_type: row.key[2],
+              date: row.value.date,
+              price: row.value.price,
+              currency: row.value.currency
+            })
+          });
+
+          goods.sort(["price_type","nom_characteristic","date"]);
+
+          wnd.elmnts.grids.goods = wnd.attachTabular({
+            obj: this,
+            ts: "goods",
+            pwnd: wnd,
+            ts_captions: ts_captions
+          });
+          wnd.detachToolbar();
+        }
+      })
+
+    }
+  }
+});
+
+
+
+$p.dp.buyers_order.__define({
+
+	unload_obj: {
+		value: function () {
+
+		}
+	},
+
+	form_product_list: {
+		value: function (pwnd, callback) {
+
+			var o = this.create(),
+				wnd,
+				attr = {
+
+					toolbar_struct: $p.injected_data["toolbar_product_list.xml"],
+
+					toolbar_click: function (btn_id) {
+						if(btn_id == "btn_ok"){
+							o._data._modified = false;
+							wnd.close();
+							callback(o.production);
+						}
+					},
+
+					draw_pg_header: function (o, wnd) {
+						wnd.elmnts.tabs.tab_header.hide();
+						wnd.elmnts.frm_tabs.tabsArea.classList.add("tabs_hidden");
+						wnd.elmnts.frm_toolbar.hideItem("bs_print");
+					}
+				};
+
+
+
+			o.presentation = "Добавление продукции с параметрами";
+
+			o.form_obj(pwnd, attr)
+				.then(function (res) {
+					wnd = res.wnd
+				});
+
+		}
+	}
+});
+
+delete $p.DpBuyers_order.prototype.clr;
+delete $p.DpBuyers_order.prototype.sys;
+$p.DpBuyers_order.prototype.__define({
+
+	clr: {
+		get: function () {
+			return this.characteristic.clr;
+		},
+		set: function (v) {
+      const {characteristic, _data} = this;
+			if((!v && characteristic.empty()) || characteristic.clr == v){
+        return;
+      }
+			Object.getNotifier(this).notify({
+				type: 'update',
+				name: 'clr',
+				oldValue: characteristic.clr
+			});
+      characteristic.clr = v;
+			_data._modified = true;
+		}
+	},
+
+	sys: {
+		get: function () {
+			return this.characteristic.sys;
+		},
+		set: function (v) {
+		  const {characteristic, _data} = this;
+			if((!v && characteristic.empty()) || characteristic.sys == v){
+        return;
+      }
+			Object.getNotifier(this).notify({
+				type: 'update',
+				name: 'sys',
+				oldValue: characteristic.sys
+			});
+      characteristic.sys = v;
+			_data._modified = true;
+		}
+	}
+});
 
 
 (function($p){

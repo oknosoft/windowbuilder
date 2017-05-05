@@ -806,20 +806,8 @@ function ProductsBuilding(){
       }
 
 			if(row_ins_spec.count_calc_method == ПоФормуле && !row_ins_spec.formula.empty()){
-
 				// если строка спецификации не добавлена на предыдущем шаге, делаем это сейчас
 				row_spec = new_spec_row(row_spec, elm, row_ins_spec, null, origin);
-
-				// выполняем формулу
-				row_ins_spec.formula.execute({
-					ox: ox,
-					elm: elm,
-          cnstr: len_angl && len_angl.cnstr || 0,
-          inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
-					row_ins: row_ins_spec,
-					row_spec: row_spec,
-          len: len_angl ? len_angl.len : _row.len
-				});
 			}
       // для вставок в профиль способ расчета количество не учитывается
 			else if(profile_items.indexOf(_row.elm_type) != -1 || row_ins_spec.count_calc_method == ДляЭлемента){
@@ -828,7 +816,8 @@ function ProductsBuilding(){
 			else{
 
 				if(row_ins_spec.count_calc_method == ПоПлощади){
-					row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+          row_spec.qty = row_ins_spec.quantity;
+				  row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
 					row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
 					row_spec.s = _row.s;
 				}
@@ -865,6 +854,18 @@ function ProductsBuilding(){
 			}
 
 			if(row_spec){
+        // выполняем формулу
+			  if(!row_ins_spec.formula.empty()){
+          row_ins_spec.formula.execute({
+            ox: ox,
+            elm: elm,
+            cnstr: len_angl && len_angl.cnstr || 0,
+            inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
+            row_ins: row_ins_spec,
+            row_spec: row_spec,
+            len: len_angl ? len_angl.len : _row.len
+          });
+        }
         calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
       }
 		})
