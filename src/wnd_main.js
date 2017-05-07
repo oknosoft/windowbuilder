@@ -60,6 +60,16 @@ class OrderDealerApp {
       }
     };
 
+    window.onerror = (errorMsg, url, line, col, err) => {
+      console && console.log(err);
+      $p.record_log({
+        class: "error",
+        obj: {url, line, col},
+        note: errorMsg
+      });
+      return true;
+    };
+
     // корректируем параметры подключения
     this.patch_cnn();
 

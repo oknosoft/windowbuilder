@@ -21,369 +21,316 @@
  * @menuorder 20
  * @tooltip Изделие
  */
-function Scheme(_canvas){
 
-	// создаём объект проекта paperjs
-	Scheme.superclass.constructor.call(this, _canvas);
+class Scheme extends paper.Project {
 
-	const _scheme = paper.project = this,
-		_data = _scheme.data = {
-			_bounds: null,
-			_calc_order_row: null,
-			_update_timer: 0
-		},
-		_changes = [],
+  constructor(_canvas, _editor) {
 
-		// наблюдатель за изменениями свойств изделия
-		_dp_observer = function (changes) {
+    // создаём объект проекта paperjs
+    super(_canvas);
 
-			if(_data._loading || _data._snapshot){
-        return;
-      }
+    const _scheme = _editor.project = this;
 
-			const scheme_changed_names = ["clr","sys"];
-      const row_changed_names = ["quantity","discount_percent","discount_percent_internal"];
-			let evented
+    const _data = this.data = {
+        _bounds: null,
+        _calc_order_row: null,
+        _update_timer: 0
+      };
 
-			changes.forEach((change) => {
+    // массив с моментами времени изменений изделия
+    const _changes = this._ch = [];
 
-				if(scheme_changed_names.indexOf(change.name) != -1){
+    // наблюдатель за изменениями свойств изделия
+    this._dp_observer = (changes) => {
 
-					if(change.name == "clr"){
-						_scheme.ox.clr = change.object.clr;
-						_scheme.getItems({class: ProfileItem}).forEach((p) => {
-							if(!(p instanceof Onlay)){
-                p.clr = change.object.clr;
-              }
-						})
-					}
-
-					if(change.name == "sys" && !change.object.sys.empty()){
-
-						change.object.sys.refill_prm(_scheme.ox);
-
-						// обновляем свойства изделия
-						Object.getNotifier(change.object).notify({
-							type: 'rows',
-							tabular: 'extra_fields'
-						});
-
-						// обновляем свойства створки
-						if(_scheme.activeLayer)
-							Object.getNotifier(_scheme.activeLayer).notify({
-								type: 'rows',
-								tabular: 'params'
-							});
-
-						// информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
-						_scheme.contours.forEach((l) => l.on_sys_changed());
-
-
-						if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
-							$p.wsql.set_user_param("editor_last_sys", change.object.sys.ref);
-
-						if(_scheme.ox.clr.empty())
-							_scheme.ox.clr = change.object.sys.default_clr;
-
-						_scheme.register_change(true);
-					}
-
-					if(!evented){
-						// информируем мир об изменениях
-						$p.eve.callEvent("scheme_changed", [_scheme]);
-						evented = true;
-					}
-
-				}
-				else if(row_changed_names.indexOf(change.name) != -1){
-
-					_data._calc_order_row[change.name] = change.object[change.name];
-
-					_scheme.register_change(true);
-
-				}
-
-			});
-		},
-
-		// наблюдатель за изменениями параметров створки
-		_papam_observer = function (changes) {
-
-			if(_data._loading || _data._snapshot){
-        return;
-      }
-
-			changes.some((change) => {
-				if(change.tabular == "params"){
-					_scheme.register_change();
-					return true;
-				}
-			});
-		};
-
-
-
-	// Определяем свойства и методы изделия
-	this.__define({
-
-		/**
-		 * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
-		 */
-		_noti: {
-			value: {}
-		},
-
-		/**
-		 * Формирует оповещение для тех, кто следит за this._noti
-		 * @param obj
-		 */
-		notify: {
-			value: 	function (obj) {
-				Object.getNotifier(this._noti).notify(obj);
-			}
-		},
-
-		/**
-		 * Объект обработки с табличными частями
-		 */
-		_dp: {
-			value: $p.dp.buyers_order.create()
-		},
-
-		/**
-		 * ХарактеристикаОбъект текущего изделия
-		 * @property ox
-		 * @type _cat.characteristics
-		 */
-		ox: {
-			get: function () {
-				return this._dp.characteristic;
-			},
-			set: function (v) {
-
-			  const {_dp} = this;
-			  let setted;
-
-				// пытаемся отключить обсервер от табчасти
-				Object.unobserve(_dp.characteristic, _papam_observer);
-
-				// устанавливаем в _dp характеристику
-				_dp.characteristic = v;
-
-        const ox = _dp.characteristic;
-
-				_dp.len = ox.x;
-				_dp.height = ox.y;
-				_dp.s = ox.s;
-
-				// устанавливаем строку заказа
-        _data._calc_order_row = ox.calc_order_row;
-
-				// устанавливаем в _dp свойства строки заказа
-				if(_data._calc_order_row){
-					"quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach(function (fld) {
-						_dp[fld] = _data._calc_order_row[fld];
-					});
-				}else{
-					// TODO: установить режим только просмотр, если не найдена строка заказа
-				}
-
-
-				// устанавливаем в _dp систему профилей
-				if(ox.empty())
-					_dp.sys = "";
-
-				else if(ox.owner.empty()){
-
-					// для пустой номенклатуры, ставим предыдущую выбранную систему
-					_dp.sys = $p.wsql.get_user_param("editor_last_sys");
-					setted = !_dp.sys.empty();
-
-				}else if(_dp.sys.empty()){
-
-					// ищем первую подходящую систему
-					$p.cat.production_params.find_rows({is_folder: false}, (o) => {
-						if(setted){
-              return false;
-            }
-						o.production.find_rows({nom: ox.owner}, () => {
-							_dp.sys = o;
-							setted = true;
-							return false;
-						});
-					});
-				}
-
-				// пересчитываем параметры изделия при установке системы
-				if(setted){
-					_dp.sys.refill_prm(ox);
-				}
-
-				// устанавливаем в _dp цвет по умолчанию
-				if(_dp.clr.empty()){
-          _dp.clr = _dp.sys.default_clr;
+        if(_data._loading || _data._snapshot){
+          return;
         }
 
-				// оповещаем о новых слоях и свойствах изделия
-				Object.getNotifier(_scheme._noti).notify({
-					type: 'rows',
-					tabular: 'constructions'
-				});
-				Object.getNotifier(_dp).notify({
-					type: 'rows',
-					tabular: 'extra_fields'
-				});
+        const scheme_changed_names = ["clr","sys"];
+        const row_changed_names = ["quantity","discount_percent","discount_percent_internal"];
+        let evented
 
-				// начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
-				Object.observe(ox, _papam_observer, ["row", "rows"]);
+        changes.forEach((change) => {
 
-			}
-		},
+          if(scheme_changed_names.indexOf(change.name) != -1){
 
-		/**
-		 * Строка табчасти продукция текущего заказа, соответствующая редактируемому изделию
-		 */
-		_calc_order_row: {
-			get: function () {
-				if(!_data._calc_order_row && !this.ox.empty()){
-					_data._calc_order_row = this.ox.calc_order_row;
-				}
-				return _data._calc_order_row;
-			}
-		},
+            if(change.name == "clr"){
+              _scheme.ox.clr = change.object.clr;
+              _scheme.getItems({class: ProfileItem}).forEach((p) => {
+                if(!(p instanceof Onlay)){
+                  p.clr = change.object.clr;
+                }
+              })
+            }
 
-		/**
-		 * Габариты изделия. Рассчитываются, как объединение габаритов всех слоёв типа Contour
-		 * @property bounds
-		 * @type Rectangle
-		 */
-		bounds: {
-			get : function(){
+            if(change.name == "sys" && !change.object.sys.empty()){
 
-				if(!_data._bounds){
-					_scheme.contours.forEach(function(l){
-						if(!_data._bounds)
-							_data._bounds = l.bounds;
-						else
-							_data._bounds = _data._bounds.unite(l.bounds);
-					});
-				}
+              change.object.sys.refill_prm(_scheme.ox);
 
-				return _data._bounds;
-			}
-		},
+              // обновляем свойства изделия
+              Object.getNotifier(change.object).notify({
+                type: 'rows',
+                tabular: 'extra_fields'
+              });
 
-		/**
-		 * Габариты с учетом пользовательских размерных линий, чтобы рассчитать отступы автолиний
-		 */
-		dimension_bounds: {
+              // обновляем свойства створки
+              if(_scheme.activeLayer)
+                Object.getNotifier(_scheme.activeLayer).notify({
+                  type: 'rows',
+                  tabular: 'params'
+                });
 
-			get: function(){
-				let {bounds} = this;
-				this.getItems({class: DimensionLine}).forEach((dl) => {
-					if(dl instanceof DimensionLineCustom || dl.data.impost || dl.data.contour){
-            bounds = bounds.unite(dl.bounds);
+              // информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
+              _scheme.contours.forEach((l) => l.on_sys_changed());
+
+
+              if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
+                $p.wsql.set_user_param("editor_last_sys", change.object.sys.ref);
+
+              if(_scheme.ox.clr.empty())
+                _scheme.ox.clr = change.object.sys.default_clr;
+
+              _scheme.register_change(true);
+            }
+
+            if(!evented){
+              // информируем мир об изменениях
+              $p.eve.callEvent("scheme_changed", [_scheme]);
+              evented = true;
+            }
+
           }
-				});
-				this.contours.forEach(({l_visualization}) => {
-          const ib = l_visualization._by_insets.bounds;
-          if(ib.height && ib.bottom > bounds.bottom){
-            const delta = ib.bottom - bounds.bottom + 10;
-            bounds = bounds.unite(
-              new paper.Rectangle(bounds.bottomLeft, bounds.bottomRight.add([0, delta < 250 ? delta * 1.1 : delta * 1.2]))
-            );
+          else if(row_changed_names.indexOf(change.name) != -1){
+
+            _data._calc_order_row[change.name] = change.object[change.name];
+
+            _scheme.register_change(true);
+
+          }
+
+        });
+      };
+
+    // наблюдатель за изменениями параметров створки
+    this._papam_observer = (changes) => {
+        if(_data._loading || _data._snapshot){
+          return;
+        }
+        changes.some((change) => {
+          if(change.tabular == "params"){
+            _scheme.register_change();
+            return true;
           }
         });
-				return bounds;
-			}
-		}
-	});
+      };
+
+    /**
+     * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
+     */
+    this._noti = {};
+
+    /**
+     * Объект обработки с табличными частями
+     */
+    this._dp = $p.dp.buyers_order.create();
+
+    /**
+     * Менеджер соединений изделия
+     * Хранит информацию о соединениях элементов и предоставляет методы для поиска-манипуляции
+     * @property connections
+     * @type Connections
+     */
+    this.connections = {
+
+      get cnns() {
+        return _scheme.ox.cnn_elmnts;
+      },
+
+      elm_cnn(elm1, elm2) {
+        let res;
+        this.cnns.find_rows({
+          elm1: elm1.elm,
+          elm2: elm2.elm
+        }, (row) => {
+          res = row.cnn;
+          return false;
+        });
+        return res;
+      }
+
+    };
 
 
-	/**
-	 * Виртуальная табличная часть параметров изделия
-	 */
-	this._dp.__define({
+    /**
+     * Перерисовывает все контуры изделия. Не занимается биндингом.
+     * Предполагается, что взаимное перемещение профилей уже обработано
+     */
+    this.redraw = () => {
 
-		extra_fields: {
-				get: function(){
-					return _scheme.ox.params;
-				}
-			}
-	});
+      function process_redraw(){
 
-	// начинаем следить за _dp, чтобы обработать изменения цвета и параметров
-	Object.observe(this._dp, _dp_observer, ["update"]);
+        let llength = 0;
 
+        // вызывается после перерисовки очередного контура
+        function on_contour_redrawed(){
+          if(!_changes.length){
+            llength--;
 
-	/**
-	 * Менеджер соединений изделия
-	 * Хранит информацию о соединениях элементов и предоставляет методы для поиска-манипуляции
-	 * @property connections
-	 * @type Connections
-	 */
-	this.connections = new function Connections() {
+            if(!llength){
 
-		this.__define({
+              // пересчитываем параметры изделия и фурнитур, т.к. они могут зависеть от размеров
 
-			cnns: {
-				get : function(){
-					return _scheme.ox.cnn_elmnts;
-				}
-			},
+              // если перерисованы все контуры, перерисовываем их размерные линии
+              _data._bounds = null;
+              _scheme.contours.forEach((l) => {
+                l.contours.forEach((l) => {
+                  l.save_coordinates(true);
+                  l.refresh_links();
+                });
+                l.draw_sizes();
+              });
 
-      elm_cnn: {
-			  value: function (elm1, elm2) {
-			    let res;
-          this.cnns.find_rows({
-            elm1: elm1.elm,
-            elm2: elm2.elm
-          }, (row) => {
-            res = row.cnn;
-            return false;
-          });
-          return res;
+              if(_changes.length){
+                return;
+              }
+
+              // перерисовываем габаритные размерные линии изделия
+              _scheme.draw_sizes();
+
+              // перерисовываем соединительные профили
+              _scheme.l_connective.redraw();
+
+              // обновляем изображение на эуране
+              _scheme.view.update();
+
+            }
+          }
+        }
+
+        // if(_data._saving || _data._loading){
+        //   return;
+        // }
+
+        if(_changes.length && !_data._saving){
+          //console.log(_changes.length);
+          _changes.length = 0;
+
+          if(_scheme.contours.length){
+            _scheme.contours.forEach((l) => {
+              llength++;
+              l.redraw(on_contour_redrawed);
+            });
+          }
+          else{
+            _scheme.draw_sizes();
+          }
         }
       }
 
-		});
+      if(_data._opened){
+        requestAnimationFrame(_scheme.redraw);
+      }
 
-	};
+      process_redraw();
 
-	/**
-	 * информирует о наличии изменений
-	 */
-	this.has_changes = function () {
-		return _changes.length > 0;
-	};
-
-	/**
-	 * Регистрирует факты изменения элемнтов
-	 */
-	this.register_change = function (with_update) {
-		if(!_data._loading){
-
-		  // сбрасываем габариты
-			_data._bounds = null;
-
-			// сбрасываем d0 для всех профилей
-      this.getItems({class: Profile}).forEach((p) => {
-        if(p._data){
-          delete p._data.d0;
-        }
-      });
-
-			// регистрируем изменённость характеристики
-			this.ox._data._modified = true;
-			$p.eve.callEvent("scheme_changed", [this]);
-		}
-		_changes.push(Date.now());
-
-		if(with_update){
-      this.register_update();
     }
-	};
 
+    // начинаем следить за _dp, чтобы обработать изменения цвета и параметров
+    Object.observe(this._dp, this._dp_observer, ["update"]);
+
+    // следим за событием _coordinates_calculated_ и обновляем визуализацию
+    $p.eve && $p.eve.attachEvent("coordinates_calculated", (scheme, attr) => {
+      if(_scheme != scheme){
+        return;
+      }
+      _scheme.contours.forEach((l) => l.draw_visualization());
+      _scheme.view.update();
+    });
+  }
+
+  /**
+   * ХарактеристикаОбъект текущего изделия
+   * @property ox
+   * @type _cat.characteristics
+   */
+  get ox() {
+    return this._dp.characteristic;
+  }
+  set ox(v) {
+    const {_dp, data, _papam_observer} = this;
+    let setted;
+
+    // пытаемся отключить обсервер от табчасти
+    Object.unobserve(_dp.characteristic, _papam_observer);
+
+    // устанавливаем в _dp характеристику
+    _dp.characteristic = v;
+
+    const ox = _dp.characteristic;
+
+    _dp.len = ox.x;
+    _dp.height = ox.y;
+    _dp.s = ox.s;
+
+    // устанавливаем строку заказа
+    data._calc_order_row = ox.calc_order_row;
+
+    // устанавливаем в _dp свойства строки заказа
+    if(data._calc_order_row){
+      "quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach((fld) => _dp[fld] = data._calc_order_row[fld]);
+    }else{
+      // TODO: установить режим только просмотр, если не найдена строка заказа
+    }
+
+
+    // устанавливаем в _dp систему профилей
+    if(ox.empty()){
+      _dp.sys = "";
+    }
+    // для пустой номенклатуры, ставим предыдущую выбранную систему
+    else if(ox.owner.empty()){
+      _dp.sys = $p.wsql.get_user_param("editor_last_sys");
+      setted = !_dp.sys.empty();
+    }
+    // иначе, ищем первую подходящую систему
+    else if(_dp.sys.empty()){
+      $p.cat.production_params.find_rows({is_folder: false}, (o) => {
+        if(setted){
+          return false;
+        }
+        o.production.find_rows({nom: ox.owner}, () => {
+          _dp.sys = o;
+          setted = true;
+          return false;
+        });
+      });
+    }
+
+    // пересчитываем параметры изделия при установке системы
+    if(setted){
+      _dp.sys.refill_prm(ox);
+    }
+
+    // устанавливаем в _dp цвет по умолчанию
+    if(_dp.clr.empty()){
+      _dp.clr = _dp.sys.default_clr;
+    }
+
+    // оповещаем о новых слоях и свойствах изделия
+    Object.getNotifier(this._noti).notify({
+      type: 'rows',
+      tabular: 'constructions'
+    });
+    Object.getNotifier(_dp).notify({
+      type: 'rows',
+      tabular: 'extra_fields'
+    });
+
+    // начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
+    Object.observe(ox, _papam_observer, ["row", "rows"]);
+
+  }
 
   /**
    * ### Читает изделие по ссылке или объекту продукции
@@ -399,11 +346,12 @@ function Scheme(_canvas){
    * - Рисует дополнительные элементы визуализации
    *
    * @method load
-   * @for Scheme
    * @param id {String|CatObj} - идентификатор или объект продукции
    * @async
    */
-  this.load = function(id){
+  load(id) {
+    const {data} = this;
+    const _scheme = this;
 
     /**
      * Рекурсивно создаёт контуры изделия
@@ -433,751 +381,700 @@ function Scheme(_canvas){
       _scheme.ox = o;
 
       // включаем перерисовку
-      _data._opened = true;
-      requestAnimationFrame(redraw);
-
-      _data._bounds = new paper.Rectangle({
+      data._opened = true;
+      data._bounds = new paper.Rectangle({
         point: [0, 0],
         size: [o.x, o.y]
       });
 
       // первым делом создаём соединители
-      o.coordinates.find_rows({cnstr: 0, elm_type: $p.enm.elm_types.Соединитель}, (row) =>
-        new ProfileConnective({row: row}));
+      o.coordinates.find_rows({cnstr: 0, elm_type: $p.enm.elm_types.Соединитель}, (row) => new ProfileConnective({row: row}));
       o = null;
 
       // создаём семейство конструкций
       load_contour(null);
 
-      setTimeout(() => {
+      // перерисовываем каркас
+      _scheme.redraw();
 
-        _data._bounds = null;
+      // запускаем таймер, чтобы нарисовать размерные линии и визуализацию
+      return new Promise((resolve, reject) => {
+
+        data._bounds = null;
 
         // згружаем пользовательские размерные линии
         load_dimension_lines();
 
-        _data._bounds = null;
-        _scheme.zoom_fit();
-
-        // виртуальное событие, чтобы UndoRedo сделал начальный снапшот
-        !_data._snapshot && $p.eve.callEvent("scheme_changed", [_scheme]);
-
-        // регистрируем изменение, чтобы отрисовались размерные линии
-        _scheme.register_change(true);
-
-        // виртуальное событие, чтобы активировать слой в дереве слоёв
-        if(_scheme.contours.length){
-          $p.eve.callEvent("layer_activated", [_scheme.contours[0], true]);
-        }
-
-        delete _data._loading;
-
-        // виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
         setTimeout(() => {
-          if(_scheme.ox.coordinates.count()){
-            if(_scheme.ox.specification.count()){
-              $p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+
+          data._bounds = null;
+          _scheme.zoom_fit();
+
+          // виртуальное событие, чтобы UndoRedo сделал начальный снапшот
+          !data._snapshot && $p.eve.callEvent("scheme_changed", [_scheme]);
+
+          // регистрируем изменение, чтобы отрисовались размерные линии
+          _scheme.register_change(true);
+
+          // виртуальное событие, чтобы активировать слой в дереве слоёв
+          if(_scheme.contours.length){
+            $p.eve.callEvent("layer_activated", [_scheme.contours[0], true]);
+          }
+
+          delete data._loading;
+
+          // виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
+          setTimeout(() => {
+            if(_scheme.ox.coordinates.count()){
+              if(_scheme.ox.specification.count()){
+                $p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+              }
+              else{
+                // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет
+                $p.eve.callEvent("save_coordinates", [_scheme, {}]);
+              }
             }
             else{
-              // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет
-              $p.eve.callEvent("save_coordinates", [_scheme, {}]);
+              paper.load_stamp && paper.load_stamp();
             }
-          }
-          else{
-            paper.load_stamp();
-          }
-          delete _data._snapshot;
+            delete data._snapshot;
+
+            resolve();
+
+          }, 20);
+
         }, 20);
 
-      }, 20);
+      });
 
     }
 
-    _data._loading = true;
-    if(id != _scheme.ox){
-      _scheme.ox = null;
+    data._loading = true;
+    if(id != this.ox){
+      this.ox = null;
     }
-    _scheme.clear();
+    this.clear();
 
     if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new()){
-      load_object(id);
+      return load_object(id);
     }
     else if($p.utils.is_guid(id) || $p.utils.is_data_obj(id)){
-      $p.cat.characteristics.get(id, true, true)
-        .then((ox) => {
+      return $p.cat.characteristics.get(id, true, true)
+        .then((ox) =>
           $p.doc.calc_order.get(ox.calc_order, true, true)
             .then(() => load_object(ox))
-        });
+        );
     }
-  };
+  }
 
-
-	/**
-	 * Перерисовывает все контуры изделия. Не занимается биндингом.
-	 * Предполагается, что взаимное перемещение профилей уже обработано
-	 */
-	function redraw () {
-
-		function process_redraw(){
-
-			let llength = 0;
-
-			// вызывается после перерисовки очередного контура
-			function on_contour_redrawed(){
-				if(!_changes.length){
-					llength--;
-
-					if(!llength){
-
-					  // пересчитываем параметры изделия и фурнитур, т.к. они могут зависеть от размеров
-
-						// если перерисованы все контуры, перерисовываем их размерные линии
-						_data._bounds = null;
-						_scheme.contours.forEach((l) => {
-              l.contours.forEach((l) => {
-                l.save_coordinates(true);
-                l.refresh_links();
-              });
-							l.draw_sizes();
-						});
-
-            if(_changes.length){
-              return;
-            }
-
-						// перерисовываем габаритные размерные линии изделия
-						_scheme.draw_sizes();
-
-            // перерисовываем соединительные профили
-            _scheme.l_connective.redraw();
-
-						// обновляем изображение на эуране
-						_scheme.view.update();
-
-					}
-				}
-			}
-
-      // if(_data._saving || _data._loading){
-      //   return;
-      // }
-
-			if(_changes.length && !_data._saving){
-				//console.log(_changes.length);
-				_changes.length = 0;
-
-				if(_scheme.contours.length){
-					_scheme.contours.forEach((l) => {
-						llength++;
-						l.redraw(on_contour_redrawed);
-					});
-				}
-				else{
-					_scheme.draw_sizes();
-				}
-			}
-		}
-
-		if(_data._opened){
-      requestAnimationFrame(redraw);
-    }
-
-		process_redraw();
-
-	}
-
-	// следим за событием _coordinates_calculated_ и обновляем визуализацию
-	$p.eve.attachEvent("coordinates_calculated", (scheme, attr) => {
-		if(_scheme != scheme){
-      return;
-    }
-		_scheme.contours.forEach((l) => l.draw_visualization());
-		_scheme.view.update();
-	});
-
-}
-Scheme._extend(paper.Project);
-
-Scheme.prototype.__define({
+  /**
+   * информирует о наличии изменений
+   */
+  has_changes() {
+    return this._ch.length > 0;
+  }
 
   /**
    * Регистрирует необходимость обновить изображение
    */
-  register_update: {
-    value: function () {
-      if(this.data._update_timer){
-        clearTimeout(this.data._update_timer);
-      }
-      this.data._update_timer = setTimeout(() => {
-        this.view.update();
-        this.data._update_timer = 0;
-      }, 100);
+  register_update() {
+    const {data} = this;
+    if(data._update_timer){
+      clearTimeout(data._update_timer);
     }
-  },
+    data._update_timer = setTimeout(() => {
+      this.view.update();
+      data._update_timer = 0;
+    }, 100);
+  }
 
   /**
-   * Деструктор
+   * Регистрирует факты изменения элемнтов
    */
-  clear: {
-    value: function () {
-      const pnames = '_bounds,_update_timer,_loading,_snapshot';
-      for(let fld in this.data){
-        if(!pnames.match(fld)){
-          delete this.data[fld];
+  register_change(with_update) {
+
+    const {data, _ch} = this;
+
+    if(!data._loading){
+
+      // сбрасываем габариты
+      data._bounds = null;
+
+      // сбрасываем d0 для всех профилей
+      this.getItems({class: Profile}).forEach((p) => {
+        if(p._data){
+          delete p._data.d0;
         }
-      }
-      paper.Project.prototype.clear.call(this);
+      });
+
+      // регистрируем изменённость характеристики
+      this.ox._data._modified = true;
+      $p.eve.callEvent("scheme_changed", [this]);
     }
-  },
+    _ch.push(Date.now());
+
+    if(with_update){
+      this.register_update();
+    }
+  }
+
+  /**
+   * Габариты изделия. Рассчитываются, как объединение габаритов всех слоёв типа Contour
+   * @property bounds
+   * @type Rectangle
+   */
+  get bounds() {
+    const {data} = this;
+    if(!data._bounds){
+      this.contours.forEach((l) => {
+        if(!data._bounds)
+          data._bounds = l.bounds;
+        else
+          data._bounds = data._bounds.unite(l.bounds);
+      });
+    }
+    return data._bounds;
+  }
+
+  /**
+   * Габариты с учетом пользовательских размерных линий, чтобы рассчитать отступы автолиний
+   */
+  get dimension_bounds() {
+    let {bounds} = this;
+    this.getItems({class: DimensionLine}).forEach((dl) => {
+      if(dl instanceof DimensionLineCustom || dl.data.impost || dl.data.contour){
+        bounds = bounds.unite(dl.bounds);
+      }
+    });
+    this.contours.forEach(({l_visualization}) => {
+      const ib = l_visualization._by_insets.bounds;
+      if(ib.height && ib.bottom > bounds.bottom){
+        const delta = ib.bottom - bounds.bottom + 10;
+        bounds = bounds.unite(
+          new paper.Rectangle(bounds.bottomLeft, bounds.bottomRight.add([0, delta < 250 ? delta * 1.1 : delta * 1.2]))
+        );
+      }
+    });
+    return bounds;
+  }
+
+  /**
+   * ### Габариты эскиза со всеми видимыми дополнениями
+   * В свойстве `strokeBounds` учтены все видимые дополнения - размерные линии, визуализация и т.д.
+   *
+   * @property strokeBounds
+   */
+  get strokeBounds() {
+    let bounds = new paper.Rectangle();
+    this.contours.forEach((l) => bounds = bounds.unite(l.strokeBounds));
+    return bounds;
+  }
+
+  /**
+   * Строка табчасти продукция текущего заказа, соответствующая редактируемому изделию
+   */
+  get _calc_order_row() {
+    const {data, ox} = this;
+    if(!data._calc_order_row && !ox.empty()){
+      data._calc_order_row = ox.calc_order_row;
+    }
+    return data._calc_order_row;
+  }
+
+  /**
+   * Формирует оповещение для тех, кто следит за this._noti
+   * @param obj
+   */
+  notify(obj) {
+    Object.getNotifier(this._noti).notify(obj);
+  }
+
+  /**
+   * Чистит изображение
+   */
+  clear() {
+    const pnames = '_bounds,_update_timer,_loading,_snapshot';
+    for(let fld in this.data){
+      if(!pnames.match(fld)){
+        delete this.data[fld];
+      }
+    }
+    super.clear();
+  }
 
   /**
    * Деструктор
    */
-  unload: {
-    value: function () {
-      this.data._loading = true;
-      this.clear();
-      this.remove();
-      Object.unobserve(this._dp, _dp_observer);
-      Object.unobserve(this._dp.characteristic, _papam_observer);
-      this.data._calc_order_row = null;
-    }
-  },
+  unload() {
+    const {_dp, data, _papam_observer, _dp_observer} = this;
+    data._loading = true;
+    this.clear();
+    this.remove();
+    Object.unobserve(_dp, _dp_observer);
+    Object.unobserve(_dp.characteristic, _papam_observer);
+    this.data._calc_order_row = null;
+  }
 
-	/**
-	 * Двигает выделенные точки путей либо все точки выделенных элементов
-	 * @method move_points
-	 * @for Scheme
-	 * @param delta {paper.Point}
-	 * @param [all_points] {Boolean}
-	 */
-	move_points: {
-		value: function (delta, all_points) {
+  /**
+   * Двигает выделенные точки путей либо все точки выделенных элементов
+   * @method move_points
+   * @param delta {paper.Point}
+   * @param [all_points] {Boolean}
+   */
+  move_points(delta, all_points) {
+    const other = [];
+    const layers = [];
+    const profiles = [];
 
-      const other = [];
-			const layers = [];
-      const profiles = [];
+    this.selectedItems.forEach((item) => {
 
-			this.selectedItems.forEach((item) => {
+      const {parent, layer} = item;
 
-			  const {parent, layer} = item;
+      if(item instanceof paper.Path && parent instanceof ProfileItem){
 
-				if(item instanceof paper.Path && parent instanceof ProfileItem){
+        if(profiles.indexOf(parent) != -1){
+          return;
+        }
 
-				  if(profiles.indexOf(parent) != -1){
-				    return;
-          }
+        profiles.push(parent);
 
-          profiles.push(parent);
+        if(parent._hatching){
+          parent._hatching.remove();
+          parent._hatching = null;
+        }
 
-				  if(parent._hatching){
-            parent._hatching.remove();
-            parent._hatching = null;
-          }
+        if(layer instanceof ConnectiveLayer){
+          // двигаем и накапливаем связанные
+          other.push.apply(other, parent.move_points(delta, all_points));
+        }
+        else if(!parent.nearest || !parent.nearest()){
 
-          if(layer instanceof ConnectiveLayer){
-            // двигаем и накапливаем связанные
-            other.push.apply(other, parent.move_points(delta, all_points));
-          }
-          else if(!parent.nearest || !parent.nearest()){
-
-						let check_selected;
-						item.segments.forEach((segm) => {
-							if(segm.selected && other.indexOf(segm) != -1){
-                check_selected = !(segm.selected = false);
-              }
-						});
-
-						// если уже двигали и не осталось ни одного выделенного - выходим
-						if(check_selected && !item.segments.some((segm) => segm.selected)){
-              return;
+          let check_selected;
+          item.segments.forEach((segm) => {
+            if(segm.selected && other.indexOf(segm) != -1){
+              check_selected = !(segm.selected = false);
             }
+          });
 
-						// двигаем и накапливаем связанные
-            other.push.apply(other, parent.move_points(delta, all_points));
+          // если уже двигали и не осталось ни одного выделенного - выходим
+          if(check_selected && !item.segments.some((segm) => segm.selected)){
+            return;
+          }
 
-						if(layers.indexOf(layer) == -1){
-							layers.push(layer);
-              layer.clear_dimentions();
-						}
-					}
-				}
-				else if(item instanceof Filling){
-          item.purge_path();
-				}
-			});
-			// TODO: возможно, здесь надо подвигать примыкающие контуры
-		}
-	},
+          // двигаем и накапливаем связанные
+          other.push.apply(other, parent.move_points(delta, all_points));
 
-	/**
-	 * Сохраняет координаты и пути элементов в табличных частях характеристики
-	 * @method save_coordinates
-	 * @for Scheme
-	 */
-	save_coordinates: {
-		value: function (attr) {
-
-			if(!this.bounds)
-				return;
-
-			var ox = this.ox;
-
-			// переводим характеристику в тихий режим, чтобы она не создавала лишнего шума при изменениях
-			ox._silent();
-
-			this.data._saving = true;
-
-			// устанавливаем размеры в характеристике
-			ox.x = this.bounds.width.round(1);
-			ox.y = this.bounds.height.round(1);
-			ox.s = this.area;
-
-			// чистим табчасти, которые будут перезаполнены
-			ox.cnn_elmnts.clear();
-			ox.glasses.clear();
-
-			// смещаем слои, чтобы расположить изделие в начале координат
-			//var bpoint = this.bounds.point;
-			//if(bpoint.length > consts.sticking0){
-			//	this.getItems({class: Contour}).forEach(function (contour) {
-			//		contour.position = contour.position.subtract(bpoint);
-			//	});
-			//	this.data._bounds = null;
-			//};
-
-			// вызываем метод save_coordinates в дочерних слоях
-			this.contours.forEach((contour) => contour.save_coordinates());
-
-      // вызываем метод save_coordinates в слое соединителей
-      this.l_connective.save_coordinates();
-
-			$p.eve.callEvent("save_coordinates", [this, attr]);
-
-		}
-	},
-
-	/**
-	 * ### Габариты эскиза со всеми видимыми дополнениями
-	 * В свойстве `strokeBounds` учтены все видимые дополнения - размерные линии, визуализация и т.д.
-	 *
-	 * @property strokeBounds
-	 * @for Scheme
-	 */
-	strokeBounds: {
-		get: function () {
-			let bounds = new paper.Rectangle();
-			this.contours.forEach((l) => bounds = bounds.unite(l.strokeBounds));
-			return bounds;
-		}
-	},
-
-	/**
-	 * ### Изменяет центр и масштаб, чтобы изделие вписалось в размер окна
-	 * Используется инструментом {{#crossLink "ZoomFit"}}{{/crossLink}}, вызывается при открытии изделия и после загрузки типового блока
-	 *
-	 * @method zoom_fit
-	 * @for Scheme
-	 */
-	zoom_fit: {
-		value: function (bounds) {
-
-			if(!bounds)
-				bounds = this.strokeBounds;
-
-			var height = (bounds.height < 1000 ? 1000 : bounds.height) + 320,
-				width = (bounds.width < 1000 ? 1000 : bounds.width) + 320,
-				shift;
-
-			if(bounds){
-				this.view.zoom = Math.min((this.view.viewSize.height - 20) / height, (this.view.viewSize.width - 20) / width);
-				shift = (this.view.viewSize.width - bounds.width * this.view.zoom) / 2;
-				if(shift < 200)
-					shift = 0;
-				this.view.center = bounds.center.add([shift, 40]);
-			}
-		}
-	},
-
-	/**
-	 * ### Bозвращает строку svg эскиза изделия
-	 * Вызывается при записи изделия. Полученный эскиз сохраняется во вложении к характеристике
-	 *
-	 * @method get_svg
-	 * @for Scheme
-	 * @param [attr] {Object} - указывает видимость слоёв и элементов, используется для формирования эскиза части изделия
-	 */
-	get_svg: {
-
-		value: function (attr) {
-
-      this.deselectAll();
-
-			const svg = this.exportSVG({excludeData: true});
-			const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
-
-			svg.setAttribute("x", bounds.x);
-			svg.setAttribute("y", bounds.y);
-			svg.setAttribute("width", bounds.width);
-			svg.setAttribute("height", bounds.height);
-			svg.querySelector("g").removeAttribute("transform");
-      //svg.querySelector("g").setAttribute("transform", "scale(1)");
-
-			return svg.outerHTML;
-		}
-	},
-
-	/**
-	 * ### Перезаполняет изделие данными типового блока или снапшота
-	 * Вызывается, обычно, из формы выбора типового блока, но может быть вызван явно в скриптах тестирования или групповых обработках
-	 *
-	 * @method load_stamp
-	 * @for Scheme
-	 * @param obx {String|CatObj|Object} - идентификатор или объект-основание (характеристика продукции либо снапшот)
-	 * @param is_snapshot {Boolean}
-	 */
-	load_stamp: {
-		value: function(obx, is_snapshot){
-
-			function do_load(obx){
-
-				var ox = this.ox;
-
-				// сохраняем ссылку на типовой блок
-				if(!is_snapshot){
-          this._dp.base_block = obx;
+          if(layers.indexOf(layer) == -1){
+            layers.push(layer);
+            layer.clear_dimentions();
+          }
         }
-
-				// если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
-				this.clear();
-
-				// переприсваиваем номенклатуру, цвет и размеры
-				ox._mixin(obx, ["owner","sys","clr","x","y","s","s"]);
-
-				// очищаем табчасти, перезаполняем контуры и координаты
-				ox.constructions.load(obx.constructions);
-				ox.coordinates.load(obx.coordinates);
-				ox.params.load(obx.params);
-				ox.cnn_elmnts.load(obx.cnn_elmnts);
-        ox.inserts.load(obx.inserts);
-
-				ox.specification.clear();
-				ox.glass_specification.clear();
-				ox.glasses.clear();
-
-				this.load(ox);
-
-			}
-
-			this.data._loading = true;
-
-			if(is_snapshot){
-				this.data._snapshot = true;
-				do_load.call(this, obx);
-			}
-			else{
-        $p.cat.characteristics.get(obx, true, true)
-          .then(do_load.bind(this));
       }
-		}
-	},
-
-	/**
-	 * ### Вписывает канвас в указанные размеры
-	 * Используется при создании проекта и при изменении размеров области редактирования
-	 *
-	 * @method resize_canvas
-	 * @for Scheme
-	 * @param w {Number} - ширина, в которую будет вписан канвас
-	 * @param h {Number} - высота, в которую будет вписан канвас
-	 */
-	resize_canvas: {
-		value: function(w, h){
-		  const {viewSize} = this.view;
-			viewSize.width = w;
-			viewSize.height = h;
-		}
-	},
-
-	/**
-	 * Возвращает массив РАМНЫХ контуров текущего изделия
-	 * @property contours
-	 * @for Scheme
-	 * @type Array
-	 */
-	contours: {
-		get: function () {
-			return this.layers.filter((l) => l instanceof Contour);
-		}
-	},
-
-	/**
-	 * ### Площадь изделия
-	 * TODO: переделать с учетом пустот, наклонов и криволинейностей
-	 *
-	 * @property area
-	 * @for Scheme
-	 * @type Number
-	 * @final
-	 */
-	area: {
-		get: function () {
-			return (this.bounds.width * this.bounds.height / 1000000).round(3);
-		}
-	},
-
-	/**
-	 * ### Цвет текущего изделия
-	 *
-	 * @property clr
-	 * @for Scheme
-	 * @type _cat.clrs
-	 */
-	clr: {
-		get: function () {
-			return this._dp.characteristic.clr;
-		},
-		set: function (v) {
-			this._dp.characteristic.clr = v;
-		}
-	},
-
-	/**
-	 * ### Служебный слой размерных линий
-	 *
-	 * @property l_dimensions
-	 * @for Scheme
-	 * @type DimensionLayer
-	 * @final
-	 */
-	l_dimensions: {
-		get: function () {
-
-      const {activeLayer, data} = this;
-
-      if(!data.l_dimensions){
-				data.l_dimensions = new DimensionLayer();
+      else if(item instanceof Filling){
+        item.purge_path();
       }
-      if(!data.l_dimensions.isInserted()){
-        this.addLayer(data.l_dimensions);
-      }
-      if(activeLayer){
-        this._activeLayer = activeLayer;
+    });
+    // TODO: возможно, здесь надо подвигать примыкающие контуры
+  }
+
+  /**
+   * Сохраняет координаты и пути элементов в табличных частях характеристики
+   * @method save_coordinates
+   */
+  save_coordinates(attr) {
+
+    const {data, bounds, ox} = this;
+
+    if(!bounds){
+      return;
+    }
+
+    // переводим характеристику в тихий режим, чтобы она не создавала лишнего шума при изменениях
+    ox._silent();
+
+    data._saving = true;
+
+    // устанавливаем размеры в характеристике
+    ox.x = bounds.width.round(1);
+    ox.y = bounds.height.round(1);
+    ox.s = this.area;
+
+    // чистим табчасти, которые будут перезаполнены
+    ox.cnn_elmnts.clear();
+    ox.glasses.clear();
+
+    // смещаем слои, чтобы расположить изделие в начале координат
+    //var bpoint = this.bounds.point;
+    //if(bpoint.length > consts.sticking0){
+    //	this.getItems({class: Contour}).forEach(function (contour) {
+    //		contour.position = contour.position.subtract(bpoint);
+    //	});
+    //	this.data._bounds = null;
+    //};
+
+    // вызываем метод save_coordinates в дочерних слоях
+    this.contours.forEach((contour) => contour.save_coordinates());
+
+    // вызываем метод save_coordinates в слое соединителей
+    this.l_connective.save_coordinates();
+
+    $p.eve.callEvent("save_coordinates", [this, attr]);
+  }
+
+  /**
+   * ### Изменяет центр и масштаб, чтобы изделие вписалось в размер окна
+   * Используется инструментом {{#crossLink "ZoomFit"}}{{/crossLink}}, вызывается при открытии изделия и после загрузки типового блока
+   *
+   * @method zoom_fit
+   */
+  zoom_fit(bounds) {
+    if(!bounds)
+      bounds = this.strokeBounds;
+
+    var height = (bounds.height < 1000 ? 1000 : bounds.height) + 320,
+      width = (bounds.width < 1000 ? 1000 : bounds.width) + 320,
+      shift;
+
+    if(bounds){
+      this.view.zoom = Math.min((this.view.viewSize.height - 20) / height, (this.view.viewSize.width - 20) / width);
+      shift = (this.view.viewSize.width - bounds.width * this.view.zoom) / 2;
+      if(shift < 200)
+        shift = 0;
+      this.view.center = bounds.center.add([shift, 40]);
+    }
+  }
+
+  /**
+   * ### Bозвращает строку svg эскиза изделия
+   * Вызывается при записи изделия. Полученный эскиз сохраняется во вложении к характеристике
+   *
+   * @method get_svg
+   * @param [attr] {Object} - указывает видимость слоёв и элементов, используется для формирования эскиза части изделия
+   */
+  get_svg(attr) {
+    this.deselectAll();
+
+    const svg = this.exportSVG({excludeData: true});
+    const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
+
+    svg.setAttribute("x", bounds.x);
+    svg.setAttribute("y", bounds.y);
+    svg.setAttribute("width", bounds.width);
+    svg.setAttribute("height", bounds.height);
+    svg.querySelector("g").removeAttribute("transform");
+    //svg.querySelector("g").setAttribute("transform", "scale(1)");
+
+    return svg.outerHTML;
+  }
+
+  /**
+   * ### Перезаполняет изделие данными типового блока или снапшота
+   * Вызывается, обычно, из формы выбора типового блока, но может быть вызван явно в скриптах тестирования или групповых обработках
+   *
+   * @method load_stamp
+   * @param obx {String|CatObj|Object} - идентификатор или объект-основание (характеристика продукции либо снапшот)
+   * @param is_snapshot {Boolean}
+   */
+  load_stamp(obx, is_snapshot) {
+
+    const do_load = (obx) => {
+
+      const {ox} = this;
+
+      // сохраняем ссылку на типовой блок
+      if(!is_snapshot){
+        this._dp.base_block = obx;
       }
 
-			return data.l_dimensions;
-		}
-	},
+      // если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
+      this.clear();
+
+      // переприсваиваем номенклатуру, цвет и размеры
+      ox._mixin(obx, ["owner","sys","clr","x","y","s","s"]);
+
+      // очищаем табчасти, перезаполняем контуры и координаты
+      ox.constructions.load(obx.constructions);
+      ox.coordinates.load(obx.coordinates);
+      ox.params.load(obx.params);
+      ox.cnn_elmnts.load(obx.cnn_elmnts);
+      ox.inserts.load(obx.inserts);
+
+      ox.specification.clear();
+      ox.glass_specification.clear();
+      ox.glasses.clear();
+
+      this.load(ox);
+
+    }
+
+    this.data._loading = true;
+
+    if(is_snapshot){
+      this.data._snapshot = true;
+      do_load(obx);
+    }
+    else{
+      $p.cat.characteristics.get(obx, true, true).then(do_load);
+    }
+  }
+
+  /**
+   * ### Вписывает канвас в указанные размеры
+   * Используется при создании проекта и при изменении размеров области редактирования
+   *
+   * @method resize_canvas
+   * @param w {Number} - ширина, в которую будет вписан канвас
+   * @param h {Number} - высота, в которую будет вписан канвас
+   */
+  resize_canvas(w, h){
+    const {viewSize} = this.view;
+    viewSize.width = w;
+    viewSize.height = h;
+  }
+
+  /**
+   * Возвращает массив РАМНЫХ контуров текущего изделия
+   * @property contours
+   * @type Array
+   */
+  get contours() {
+    return this.layers.filter((l) => l instanceof Contour);
+  }
+
+  /**
+   * ### Площадь изделия
+   * TODO: переделать с учетом пустот, наклонов и криволинейностей
+   *
+   * @property area
+   * @type Number
+   * @final
+   */
+  get area() {
+    return (this.bounds.width * this.bounds.height / 1000000).round(3);
+  }
+
+  /**
+   * ### Цвет текущего изделия
+   *
+   * @property clr
+   * @type _cat.clrs
+   */
+  get clr() {
+    return this.ox.clr;
+  }
+  set clr(v) {
+    this.ox.clr = v;
+  }
+
+  /**
+   * ### Служебный слой размерных линий
+   *
+   * @property l_dimensions
+   * @type DimensionLayer
+   * @final
+   */
+  get l_dimensions() {
+    const {activeLayer, data} = this;
+
+    if(!data.l_dimensions){
+      data.l_dimensions = new DimensionLayer();
+    }
+    if(!data.l_dimensions.isInserted()){
+      this.addLayer(data.l_dimensions);
+    }
+    if(activeLayer){
+      this._activeLayer = activeLayer;
+    }
+
+    return data.l_dimensions;
+  }
 
   /**
    * ### Служебный слой соединительных профилей
    *
    * @property l_connective
-   * @for Scheme
    * @type ConnectiveLayer
    * @final
    */
-  l_connective: {
-    get: function () {
+  get l_connective() {
+    const {activeLayer, data} = this;
 
-      const {activeLayer, data} = this;
-
-      if(!data.l_connective){
-        data.l_connective = new ConnectiveLayer();
-      }
-      if(!data.l_connective.isInserted()){
-        this.addLayer(data.l_connective);
-      }
-      if(activeLayer){
-        this._activeLayer = activeLayer;
-      }
-
-      return data.l_connective;
+    if(!data.l_connective){
+      data.l_connective = new ConnectiveLayer();
     }
-  },
+    if(!data.l_connective.isInserted()){
+      this.addLayer(data.l_connective);
+    }
+    if(activeLayer){
+      this._activeLayer = activeLayer;
+    }
 
-	/**
-	 * ### Создаёт и перерисовавает габаритные линии изделия
-	 * Отвечает только за габариты изделия.<br />
-	 * Авторазмерные линии контуров и пользовательские размерные линии, контуры рисуют самостоятельно
-	 *
-	 * @method draw_sizes
-	 * @for Scheme
-	 */
-	draw_sizes: {
-		value: function () {
+    return data.l_connective;
+  }
 
-			var bounds = this.bounds;
+  /**
+   * ### Создаёт и перерисовавает габаритные линии изделия
+   * Отвечает только за габариты изделия.<br />
+   * Авторазмерные линии контуров и пользовательские размерные линии, контуры рисуют самостоятельно
+   *
+   * @method draw_sizes
+   */
+  draw_sizes() {
+    const {bounds} = this;
 
-			if(bounds){
+    if(bounds){
 
-				if(!this.l_dimensions.bottom)
-					this.l_dimensions.bottom = new DimensionLine({
-						pos: "bottom",
-						parent: this.l_dimensions,
-						offset: -120
-					});
-				else
-					this.l_dimensions.bottom.offset = -120;
-
-				if(!this.l_dimensions.right)
-					this.l_dimensions.right = new DimensionLine({
-						pos: "right",
-						parent: this.l_dimensions,
-						offset: -120
-					});
-				else
-					this.l_dimensions.right.offset = -120;
-
-
-
-				// если среди размеров, сформированных контурами есть габарит - второй раз не выводим
-
-				if(this.contours.some(function(l){
-						return l.l_dimensions.children.some(function (dl) {
-							if(dl.pos == "right" && Math.abs(dl.size - bounds.height) < consts.sticking_l ){
-								return true;
-							}
-						});
-					})){
-					this.l_dimensions.right.visible = false;
-				}else
-					this.l_dimensions.right.redraw();
-
-
-				if(this.contours.some(function(l){
-						return l.l_dimensions.children.some(function (dl) {
-							if(dl.pos == "bottom" && Math.abs(dl.size - bounds.width) < consts.sticking_l ){
-								return true;
-							}
-						});
-					})){
-					this.l_dimensions.bottom.visible = false;
-				}else
-					this.l_dimensions.bottom.redraw();
-
-			}else{
-				if(this.l_dimensions.bottom)
-					this.l_dimensions.bottom.visible = false;
-				if(this.l_dimensions.right)
-					this.l_dimensions.right.visible = false;
-			}
-		}
-	},
-
-	/**
-	 * ### Вставка по умолчанию
-	 * Возвращает вставку по умолчанию с учетом свойств системы и положения элемента
-	 *
-	 * @method default_inset
-	 * @for Scheme
-	 * @param [attr] {Object}
-	 * @param [attr.pos] {_enm.positions} - положение элемента
-	 * @param [attr.elm_type] {_enm.elm_types} - тип элемента
-	 * @returns {Array.<ProfileItem>}
-	 */
-	default_inset: {
-		value: function (attr) {
-
-			let rows;
-
-			if(!attr.pos){
-				rows = this._dp.sys.inserts(attr.elm_type, true);
-				// если доступна текущая, возвращаем её
-				if(attr.inset && rows.some((row) => attr.inset == row)){
-					return attr.inset;
-				}
-				return rows[0];
-			}
-
-			rows = this._dp.sys.inserts(attr.elm_type, "rows");
-
-			// если без вариантов, возвращаем без вариантов
-			if(rows.length == 1){
-        return rows[0].nom;
-      }
-
-      const pos_array = Array.isArray(attr.pos);
-      function check_pos(pos) {
-        if(pos_array){
-          return attr.pos.some((v) => v == pos);
-        }
-        return attr.pos == pos;
-      }
-
-			// если подходит текущая, возвращаем текущую
-			if(attr.inset && rows.some((row) => attr.inset == row.nom && (check_pos(row.pos) || row.pos == $p.enm.positions.Любое))){
-				return attr.inset;
-			}
-
-			let inset;
-			// ищем по умолчанию + pos
-			rows.some((row) => {
-				if(check_pos(row.pos) && row.by_default)
-					return inset = row.nom;
-			});
-			// ищем по pos без умолчания
-			if(!inset){
-        rows.some((row) => {
-          if(check_pos(row.pos))
-            return inset = row.nom;
+      if(!this.l_dimensions.bottom)
+        this.l_dimensions.bottom = new DimensionLine({
+          pos: "bottom",
+          parent: this.l_dimensions,
+          offset: -120
         });
-      }
-			// ищем по умолчанию + любое
-			if(!inset){
-        rows.some((row) => {
-          if(row.pos == $p.enm.positions.Любое && row.by_default)
-            return inset = row.nom;
+      else
+        this.l_dimensions.bottom.offset = -120;
+
+      if(!this.l_dimensions.right)
+        this.l_dimensions.right = new DimensionLine({
+          pos: "right",
+          parent: this.l_dimensions,
+          offset: -120
         });
+      else
+        this.l_dimensions.right.offset = -120;
+
+
+      // если среди размеров, сформированных контурами есть габарит - второй раз не выводим
+
+      if(this.contours.some((l) => l.l_dimensions.children.some((dl) =>
+          dl.pos == "right" && Math.abs(dl.size - bounds.height) < consts.sticking_l))){
+        this.l_dimensions.right.visible = false;
       }
-			// ищем любое без умолчаний
-			if(!inset){
-        rows.some((row) => {
-          if(row.pos == $p.enm.positions.Любое)
-            return inset = row.nom;
-        });
+      else{
+        this.l_dimensions.right.redraw();
       }
 
-			return inset;
-		}
-	},
+      if(this.contours.some((l) => l.l_dimensions.children.some((dl) =>
+          dl.pos == "bottom" && Math.abs(dl.size - bounds.width) < consts.sticking_l))){
+        this.l_dimensions.bottom.visible = false;
+      }
+      else{
+        this.l_dimensions.bottom.redraw();
+      }
+    }
+    else{
+      if(this.l_dimensions.bottom)
+        this.l_dimensions.bottom.visible = false;
+      if(this.l_dimensions.right)
+        this.l_dimensions.right.visible = false;
+    }
+  }
 
-	/**
-	 * ### Контроль вставки
-	 * Проверяет, годится ли текущая вставка для данного типа элемента и положения
-	 */
-	check_inset: {
-		value: function (attr) {
+  /**
+   * ### Вставка по умолчанию
+   * Возвращает вставку по умолчанию с учетом свойств системы и положения элемента
+   *
+   * @method default_inset
+   * @param [attr] {Object}
+   * @param [attr.pos] {_enm.positions} - положение элемента
+   * @param [attr.elm_type] {_enm.elm_types} - тип элемента
+   * @returns {Array.<ProfileItem>}
+   */
+  default_inset(attr) {
 
-			const inset = attr.inset ? attr.inset : attr.elm.inset;
-      const elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type;
-      const nom = inset.nom();
-      const rows = [];
+    let rows;
 
-			// если номенклатура пустая, выходим без проверки
-			if(!nom || nom.empty()){
+    if(!attr.pos){
+      rows = this._dp.sys.inserts(attr.elm_type, true);
+      // если доступна текущая, возвращаем её
+      if(attr.inset && rows.some((row) => attr.inset == row)){
+        return attr.inset;
+      }
+      return rows[0];
+    }
+
+    rows = this._dp.sys.inserts(attr.elm_type, "rows");
+
+    // если без вариантов, возвращаем без вариантов
+    if(rows.length == 1){
+      return rows[0].nom;
+    }
+
+    const pos_array = Array.isArray(attr.pos);
+    function check_pos(pos) {
+      if(pos_array){
+        return attr.pos.some((v) => v == pos);
+      }
+      return attr.pos == pos;
+    }
+
+    // если подходит текущая, возвращаем текущую
+    if(attr.inset && rows.some((row) => attr.inset == row.nom && (check_pos(row.pos) || row.pos == $p.enm.positions.Любое))){
+      return attr.inset;
+    }
+
+    let inset;
+    // ищем по умолчанию + pos
+    rows.some((row) => {
+      if(check_pos(row.pos) && row.by_default)
+        return inset = row.nom;
+    });
+    // ищем по pos без умолчания
+    if(!inset){
+      rows.some((row) => {
+        if(check_pos(row.pos))
+          return inset = row.nom;
+      });
+    }
+    // ищем по умолчанию + любое
+    if(!inset){
+      rows.some((row) => {
+        if(row.pos == $p.enm.positions.Любое && row.by_default)
+          return inset = row.nom;
+      });
+    }
+    // ищем любое без умолчаний
+    if(!inset){
+      rows.some((row) => {
+        if(row.pos == $p.enm.positions.Любое)
+          return inset = row.nom;
+      });
+    }
+
+    return inset;
+  }
+
+  /**
+   * ### Контроль вставки
+   * Проверяет, годится ли текущая вставка для данного типа элемента и положения
+   */
+  check_inset(attr) {
+    const inset = attr.inset ? attr.inset : attr.elm.inset;
+    const elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type;
+    const nom = inset.nom();
+    const rows = [];
+
+    // если номенклатура пустая, выходим без проверки
+    if(!nom || nom.empty()){
+      return inset;
+    }
+
+    // получаем список вставок с той же номенклатурой, что и наша
+    this._dp.sys.elmnts.each(function(row){
+      if((elm_type ? row.elm_type == elm_type : true) && row.nom.nom() == nom)
+        rows.push(row);
+    });
+
+    // TODO: отфильтровать по положению attr.pos
+
+    // если в списке есть наша, возвращаем её, иначе - первую из списка
+    for(var i=0; i<rows.length; i++){
+      if(rows[i].nom == inset)
         return inset;
-      }
+    }
 
-			// получаем список вставок с той же номенклатурой, что и наша
-			this._dp.sys.elmnts.each(function(row){
-				if((elm_type ? row.elm_type == elm_type : true) && row.nom.nom() == nom)
-					rows.push(row);
-			});
-
-			// TODO: отфильтровать по положению attr.pos
-
-			// если в списке есть наша, возвращаем её, иначе - первую из списка
-			for(var i=0; i<rows.length; i++){
-				if(rows[i].nom == inset)
-					return inset;
-			}
-
-			if(rows.length)
-				return rows[0].nom;
-
-		}
-	},
+    if(rows.length)
+      return rows[0].nom;
+  }
 
   /**
    * Находит точку на примыкающем профиле и проверяет расстояние до неё от текущей точки
@@ -1190,222 +1087,210 @@ Scheme.prototype.__define({
    * @param check_only {Boolean|String} - указывает, выполнять только проверку или привязывать точку к узлам или профилю или к узлам и профилю
    * @returns {Boolean|undefined}
    */
-  check_distance: {
-	  value: function(element, profile, res, point, check_only){
+  check_distance(element, profile, res, point, check_only) {
+    const _scheme = this;
 
-	    const _scheme = this;
+    let distance, gp, cnns, addls,
+      bind_node = typeof check_only == "string" && check_only.indexOf("node") != -1,
+      bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only,
+      node_distance;
 
-      let distance, gp, cnns, addls,
-        bind_node = typeof check_only == "string" && check_only.indexOf("node") != -1,
-        bind_generatrix = typeof check_only == "string" ? check_only.indexOf("generatrix") != -1 : check_only,
-        node_distance;
+    // Проверяет дистанцию в окрестности начала или конца соседнего элемента
+    function check_node_distance(node) {
 
-      // Проверяет дистанцию в окрестности начала или конца соседнего элемента
-      function check_node_distance(node) {
+      if((distance = element[node].getDistance(point)) < (_scheme._dp.sys.allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)){
 
-        if((distance = element[node].getDistance(point)) < (_scheme._dp.sys.allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)){
+        if(typeof res.distance == "number" && res.distance < distance)
+          return 1;
 
-          if(typeof res.distance == "number" && res.distance < distance)
-            return 1;
+        //if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
+        if(profile && !res.cnn){
 
-          //if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
-          if(profile && !res.cnn){
-
-            // а есть ли подходящее?
-            cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
+          // а есть ли подходящее?
+          cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
+          if(!cnns.length){
+            if(!element.is_collinear(profile)){
+              cnns = $p.cat.cnns.nom_cnn(profile, element, $p.enm.cnn_types.acn.t);
+            }
             if(!cnns.length){
-              if(!element.is_collinear(profile)){
-                cnns = $p.cat.cnns.nom_cnn(profile, element, $p.enm.cnn_types.acn.t);
-              }
-              if(!cnns.length){
-                return 1;
-              }
-            }
-
-            // если в точке сходятся 2 профиля текущего контура - ок
-
-            // если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
-
-          }
-          else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1){
-            return 1;
-          }
-
-          res.point = bind_node ? element[node] : point;
-          res.distance = distance;
-          res.profile = element;
-          if(cnns && cnns.length && $p.enm.cnn_types.acn.t.indexOf(cnns[0].cnn_type) != -1){
-            res.profile_point = '';
-            res.cnn_types = $p.enm.cnn_types.acn.t;
-            if(!res.cnn){
-              res.cnn = cnns[0];
+              return 1;
             }
           }
-          else{
-            res.profile_point = node;
-            res.cnn_types = $p.enm.cnn_types.acn.a;
-          }
 
-          return 2;
+          // если в точке сходятся 2 профиля текущего контура - ок
+
+          // если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
+
+        }
+        else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1){
+          return 1;
         }
 
+        res.point = bind_node ? element[node] : point;
+        res.distance = distance;
+        res.profile = element;
+        if(cnns && cnns.length && $p.enm.cnn_types.acn.t.indexOf(cnns[0].cnn_type) != -1){
+          res.profile_point = '';
+          res.cnn_types = $p.enm.cnn_types.acn.t;
+          if(!res.cnn){
+            res.cnn = cnns[0];
+          }
+        }
+        else{
+          res.profile_point = node;
+          res.cnn_types = $p.enm.cnn_types.acn.a;
+        }
+
+        return 2;
       }
 
-      if(element === profile){
-        if(profile.is_linear())
-          return;
-        else{
-          // проверяем другой узел, затем - Т
+    }
 
-        }
+    if(element === profile){
+      if(profile.is_linear())
+        return;
+      else{
+        // проверяем другой узел, затем - Т
+
+      }
+      return;
+
+    }
+    else if(node_distance = check_node_distance("b")){
+      // Если мы находимся в окрестности начала соседнего элемента
+      if(node_distance == 2)
+        return false;
+      else
         return;
 
-      }
-      else if(node_distance = check_node_distance("b")){
-        // Если мы находимся в окрестности начала соседнего элемента
-        if(node_distance == 2)
-          return false;
-        else
-          return;
+    }else if(node_distance = check_node_distance("e")){
+      // Если мы находимся в окрестности конца соседнего элемента
+      if(node_distance == 2)
+        return false;
+      else
+        return;
 
-      }else if(node_distance = check_node_distance("e")){
-        // Если мы находимся в окрестности конца соседнего элемента
-        if(node_distance == 2)
-          return false;
-        else
-          return;
+    }
 
-      }
+    // это соединение с пустотой или T
+    res.profile_point = '';
 
-      // это соединение с пустотой или T
-      res.profile_point = '';
+    // // если возможна привязка к добору, используем её
+    // element.addls.forEach(function (addl) {
+    // 	gp = addl.generatrix.getNearestPoint(point);
+    // 	distance = gp.getDistance(point);
+    //
+    // 	if(distance < res.distance){
+    // 		res.point = addl.rays.outer.getNearestPoint(point);
+    // 		res.distance = distance;
+    // 		res.point = gp;
+    // 		res.profile = addl;
+    // 		res.cnn_types = $p.enm.cnn_types.acn.t;
+    // 	}
+    // });
+    // if(res.distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
+    // 	return false;
+    // }
 
-      // // если возможна привязка к добору, используем её
-      // element.addls.forEach(function (addl) {
-      // 	gp = addl.generatrix.getNearestPoint(point);
-      // 	distance = gp.getDistance(point);
-      //
-      // 	if(distance < res.distance){
-      // 		res.point = addl.rays.outer.getNearestPoint(point);
-      // 		res.distance = distance;
-      // 		res.point = gp;
-      // 		res.profile = addl;
-      // 		res.cnn_types = $p.enm.cnn_types.acn.t;
-      // 	}
-      // });
-      // if(res.distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
-      // 	return false;
-      // }
+    // если к доборам не привязались - проверяем профиль
+    gp = element.generatrix.getNearestPoint(point);
+    distance = gp.getDistance(point);
 
-      // если к доборам не привязались - проверяем профиль
-      gp = element.generatrix.getNearestPoint(point);
-      distance = gp.getDistance(point);
+    if(distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
 
-      if(distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
-
-        if(distance < res.distance || bind_generatrix){
-          if(element.d0 != 0 && element.rays.outer){
-            // для вложенных створок и смещенных рам учтём смещение
-            res.point = element.rays.outer.getNearestPoint(point);
-            res.distance = 0;
-          }
-          else{
-            res.point = gp;
-            res.distance = distance;
-          }
-          res.profile = element;
-          res.cnn_types = $p.enm.cnn_types.acn.t;
+      if(distance < res.distance || bind_generatrix){
+        if(element.d0 != 0 && element.rays.outer){
+          // для вложенных створок и смещенных рам учтём смещение
+          res.point = element.rays.outer.getNearestPoint(point);
+          res.distance = 0;
         }
-        if(bind_generatrix){
-          return false;
+        else{
+          res.point = gp;
+          res.distance = distance;
         }
+        res.profile = element;
+        res.cnn_types = $p.enm.cnn_types.acn.t;
+      }
+      if(bind_generatrix){
+        return false;
       }
     }
-  },
+  }
 
-	/**
-	 * ### Цвет по умолчанию
-	 * Возвращает цвет по умолчанию с учетом свойств системы и элемента
-	 *
-	 * @property default_clr
-	 * @for Scheme
-	 * @final
-	 */
-	default_clr: {
-		value: function (attr) {
-			return this.ox.clr;
-		}
-	},
+  /**
+   * ### Цвет по умолчанию
+   * Возвращает цвет по умолчанию с учетом свойств системы и элемента
+   *
+   * @property default_clr
+   * @final
+   */
+  default_clr(attr) {
+    return this.ox.clr;
+  }
 
-	/**
-	 * ### Фурнитура по умолчанию
-	 * Возвращает фурнитуру текущего изделия по умолчанию с учетом свойств системы и контура
-	 *
-	 * @property default_furn
-	 * @for Scheme
-	 * @final
-	 */
-	default_furn: {
-		get: function () {
-			// ищем ранее выбранную фурнитуру для системы
-			var sys = this._dp.sys,
-				res;
-			while (true){
-				if(res = $p.job_prm.builder.base_furn[sys.ref])
-					break;
-				if(sys.empty())
-					break;
-				sys = sys.parent;
-			}
-			if(!res){
-				res = $p.job_prm.builder.base_furn.null;
-			}
-			if(!res){
-				$p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ""}}, (row) => {
-					res = row;
-					return false;
-				});
-			}
-			return res;
-		}
-	},
+  /**
+   * ### Фурнитура по умолчанию
+   * Возвращает фурнитуру текущего изделия по умолчанию с учетом свойств системы и контура
+   *
+   * @property default_furn
+   * @final
+   */
+  get default_furn() {
+    // ищем ранее выбранную фурнитуру для системы
+    var sys = this._dp.sys,
+      res;
+    while (true){
+      if(res = $p.job_prm.builder.base_furn[sys.ref])
+        break;
+      if(sys.empty())
+        break;
+      sys = sys.parent;
+    }
+    if(!res){
+      res = $p.job_prm.builder.base_furn.null;
+    }
+    if(!res){
+      $p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ""}}, (row) => {
+        res = row;
+        return false;
+      });
+    }
+    return res;
+  }
 
-	/**
-	 * ### Выделенные профили
-	 * Возвращает массив выделенных профилей. Выделенным считаем профиль, у которого выделены `b` и `e` или выделен сам профиль при невыделенных узлах
-	 *
-	 * @method selected_profiles
-	 * @param [all] {Boolean} - если true, возвращает все выделенные профили. Иначе, только те, которе можно двигать
-	 * @returns {Array.<ProfileItem>}
-	 */
-	selected_profiles: {
-		value: function (all) {
+  /**
+   * ### Выделенные профили
+   * Возвращает массив выделенных профилей. Выделенным считаем профиль, у которого выделены `b` и `e` или выделен сам профиль при невыделенных узлах
+   *
+   * @method selected_profiles
+   * @param [all] {Boolean} - если true, возвращает все выделенные профили. Иначе, только те, которе можно двигать
+   * @returns {Array.<ProfileItem>}
+   */
+  selected_profiles(all) {
+    const res = [];
+    const count = this.selectedItems.length;
 
-			const res = [];
-			const count = this.selectedItems.length;
+    this.selectedItems.forEach((item) => {
 
-			this.selectedItems.forEach((item) => {
+      const p = item.parent;
 
-        const p = item.parent;
+      if(p instanceof ProfileItem){
+        if(all || !item.layer.parent || !p.nearest || !p.nearest()){
 
-				if(p instanceof ProfileItem){
-					if(all || !item.layer.parent || !p.nearest || !p.nearest()){
+          if(res.indexOf(p) != -1){
+            return;
+          }
 
-						if(res.indexOf(p) != -1){
-              return;
-            }
+          if(count < 2 || !(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected)){
+            res.push(p);
+          }
 
-						if(count < 2 || !(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected)){
-              res.push(p);
-            }
+        }
+      }
+    });
 
-					}
-				}
-			});
-
-			return res;
-		}
-	},
+    return res;
+  }
 
   /**
    * ### Выделенные заполнения
@@ -1413,156 +1298,135 @@ Scheme.prototype.__define({
    * @method selected_glasses
    * @returns {Array.<Filling>}
    */
-  selected_glasses: {
-    value: function () {
+  selected_glasses() {
+    const res = [];
 
-      const res = [];
+    this.selectedItems.forEach((item) => {
 
-      this.selectedItems.forEach((item) => {
+      if(item instanceof Filling && res.indexOf(item) == -1){
+        res.push(item);
+      }
+      else if(item.parent instanceof Filling && res.indexOf(item.parent) == -1){
+        res.push(item.parent);
+      }
+    });
 
-        if(item instanceof Filling && res.indexOf(item) == -1){
-          res.push(item);
-        }
-        else if(item.parent instanceof Filling && res.indexOf(item.parent) == -1){
-          res.push(item.parent);
-        }
-      });
-
-      return res;
-    }
-  },
+    return res;
+  }
 
   /**
    * ### Выделенный элемент
    * Возвращает первый из найденных выделенных элементов
    *
    * @property selected_elm
-   * @for Scheme
    * @returns {BuilderElement}
    */
-  selected_elm: {
-    get: function () {
+  get selected_elm() {
+    let res;
+    this.selectedItems.some((item) => {
+      if(item instanceof BuilderElement){
+        return res = item;
 
-      var res;
-
-      this.selectedItems.some(function (item) {
-
-        if(item instanceof BuilderElement){
-          return res = item;
-
-        }else if(item.parent instanceof BuilderElement){
-          return res = item.parent;
-        }
-      });
-
-      return res;
-    }
-  },
+      }else if(item.parent instanceof BuilderElement){
+        return res = item.parent;
+      }
+    });
+    return res;
+  }
 
   /**
    * Ищет точки в выделенных элементах. Если не находит, то во всём проекте
    * @param point {paper.Point}
    * @returns {*}
    */
-  hitPoints: {
-    value: function (point, tolerance, selected_first) {
+  hitPoints(point, tolerance, selected_first) {
+    let item, hit;
 
-      let item, hit;
-
-      // отдаём предпочтение сегментам выделенных путей
-      if(selected_first){
-        this.selectedItems.some((item) => hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 }));
-        // если нет в выделенных, ищем во всех
-        if(!hit){
-          hit = this.hitTest(point, { segments: true, tolerance: tolerance || 6 });
-        }
+    // отдаём предпочтение сегментам выделенных путей
+    if(selected_first){
+      this.selectedItems.some((item) => hit = item.hitTest(point, { segments: true, tolerance: tolerance || 8 }));
+      // если нет в выделенных, ищем во всех
+      if(!hit){
+        hit = this.hitTest(point, { segments: true, tolerance: tolerance || 6 });
       }
-      else{
-        this.activeLayer.profiles.some((p) => {
-          const corn = p.corns(point);
-          if(corn.dist < consts.sticking){
-            hit = {
-              item: p.generatrix,
-              point: corn.point
-            }
-            return true;
-          }
-        })
-      }
-
-
-      // if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
-      //   item = hit.item;
-      //   // если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
-      //   if((item.parent.b && item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
-      //     (item.parent.rays.b.is_t || item.parent.rays.b.is_i))
-      //     || (item.parent.e && item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
-      //     (item.parent.rays.e.is_t || item.parent.rays.e.is_i))){
-      //     return hit;
-      //   }
-      //
-      //   item.layer.parent.profiles.some((item) => hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 }));
-      //   //item.selected = false;
-      // }
-      return hit;
     }
-  },
+    else{
+      this.activeLayer.profiles.some((p) => {
+        const corn = p.corns(point);
+        if(corn.dist < consts.sticking){
+          hit = {
+            item: p.generatrix,
+            point: corn.point
+          }
+          return true;
+        }
+      })
+    }
+
+
+    // if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
+    //   item = hit.item;
+    //   // если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
+    //   if((item.parent.b && item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
+    //     (item.parent.rays.b.is_t || item.parent.rays.b.is_i))
+    //     || (item.parent.e && item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
+    //     (item.parent.rays.e.is_t || item.parent.rays.e.is_i))){
+    //     return hit;
+    //   }
+    //
+    //   item.layer.parent.profiles.some((item) => hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 }));
+    //   //item.selected = false;
+    // }
+    return hit;
+  }
 
   /**
    * Корневой слой для текущего слоя
    */
-  rootLayer: {
-    value: function (layer) {
-      if(!layer){
-        layer = this.activeLayer
-      }
-      while (layer.parent){
-        layer = layer.parent
-      }
-      return layer
+  rootLayer(layer) {
+    if(!layer){
+      layer = this.activeLayer
     }
-  },
+    while (layer.parent){
+      layer = layer.parent
+    }
+    return layer
+  }
 
   /**
    * Снимает выделение со всех узлов всех путей
    * В отличии от deselectAll() сами пути могут оставаться выделенными
    * учитываются узлы всех путей, в том числе и не выделенных
    */
-  deselect_all_points: {
-    value: function(with_items) {
-      this.getItems({class: paper.Path}).forEach(function (item) {
-        item.segments.forEach(function (s) {
-          if (s.selected)
-            s.selected = false;
-        });
-        if(with_items && item.selected)
-          item.selected = false;
+  deselect_all_points(with_items) {
+    this.getItems({class: paper.Path}).forEach(function (item) {
+      item.segments.forEach(function (s) {
+        if (s.selected)
+          s.selected = false;
       });
-    }
-  },
+      if(with_items && item.selected)
+        item.selected = false;
+    });
+  }
 
   /**
    * Массив с рёбрами периметра
    */
-  perimeter: {
-    get: function () {
+  get perimeter() {
+    let res = [],
+      contours = this.contours,
+      tmp;
 
-      let res = [],
-        contours = this.contours,
-        tmp;
-
-      // если в изделии один рамный контур - просто возвращаем его периметр
-      if(contours.length == 1){
-        return contours[0].perimeter;
-      }
-
-      // находим самый нижний правый контур
-
-      // бежим по всем контурам, находим примыкания, исключаем их из результата
-
-      return res;
+    // если в изделии один рамный контур - просто возвращаем его периметр
+    if(contours.length == 1){
+      return contours[0].perimeter;
     }
+
+    // находим самый нижний правый контур
+
+    // бежим по всем контурам, находим примыкания, исключаем их из результата
+
+    return res;
   }
 
-
-});
+}

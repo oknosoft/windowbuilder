@@ -28,7 +28,6 @@ module.exports = function settings(prm) {
     couch_local: "http://cou200:5984/wb_",
 
     pouch_filter: {
-      doc: "auth/by_partner",
       meta: "auth/meta"
     },
 

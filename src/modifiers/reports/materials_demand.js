@@ -8,7 +8,7 @@
 
 (($p) => {
 
-  const Proto = $p.RepMaterials_demand
+  const Proto = $p.RepMaterials_demand;
 
   // переопределяем прототип
   $p.RepMaterials_demand = class RepMaterials_demand extends Proto {

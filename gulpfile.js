@@ -65,6 +65,18 @@ gulp.task('build-lib', function(){
 
 });
 
+// Cборка библиотеки рисовалки
+gulp.task('build-lib-node', function(){
+  return gulp.src([
+    './report_server/builder/import.js',
+    './src/geometry/*.js',
+    './report_server/builder/export.js',
+  ])
+    .pipe(concat('index.js'))
+    .pipe(gulp.dest('./report_server/builder'))
+
+});
+
 
 // Сборка ресурсов рисовалки
 gulp.task('injected-tips', function(){

@@ -13,7 +13,7 @@ const path = require('path')
 const settings = fs.readFileSync('config/app.settings.js', 'utf8')
 
 // конфигурация подключения к CouchDB
-const config = require('../../config/metadata.config.js')
+const config = require('../../config/app.settings')()
 
 // конструктор metadata-core и плагин metadata-pouchdb
 const MetaEngine = require('metadata-core').default
@@ -29,21 +29,21 @@ var jstext = "",            // в этой переменной будем на�
 $p.wsql.init(function (prm) {
 
   // разделитель для localStorage
-  prm.local_storage_prefix = config.prefix;
+  prm.local_storage_prefix = config.local_storage_prefix;
 
   // по умолчанию, обращаемся к зоне 0
   prm.zone = config.zone;
 
   // расположение 1C
-  if(config.rest_1c)
-    prm.rest_path = config.rest_1c;
+  if(config.rest_path)
+    prm.rest_path = config.rest_path;
 
   // расположение couchdb
-  prm.couch_path = config.couchdb;
+  prm.couch_path = config.couch_local;
 
 }, function ($p) {
 
-  const db = new $p.classes.PouchDB(config.couchdb + "meta", {
+  const db = new $p.classes.PouchDB(config.couch_local + "meta", {
     skip_setup: true,
   });
 
@@ -97,7 +97,7 @@ $p.wsql.init(function (prm) {
       // получаем скрипт таблиц
       $p.md.create_tables(function (sql) {
 
-        text = "export default function meta($p) {\n\n"
+        text = "module.exports = function meta($p) {\n\n"
           + "$p.wsql.alasql('" + sql + "', []);\n\n"
           + "$p.md.init(" + JSON.stringify(_m) + ");\n\n"
           + text + "\n}";

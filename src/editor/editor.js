@@ -1,9 +1,7 @@
 /**
  * ### Графический редактор
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
- *
- * Created 24.07.2015
+ * Created by Evgeniy Malyarov 24.07.2015
  *
  * @module  editor
  */
@@ -101,21 +99,6 @@ class Editor extends paper.PaperScope {
        */
       _wrapper: {
         value: document.createElement('div')
-      },
-
-      /**
-       * ### Локальный dhtmlXWindows
-       * Нужен для привязки окон инструментов к области редактирования
-       *
-       * @property _dxw
-       * @type dhtmlXWindows
-       * @final
-       * @private
-       */
-      _dxw: {
-        get: function () {
-          return this._layout.dhxWins;
-        }
       }
 
     });
@@ -124,8 +107,7 @@ class Editor extends paper.PaperScope {
     _editor._dxw.attachViewportTo(_editor._wrapper);
 
     _editor._wrapper.oncontextmenu = function (event) {
-      event.preventDefault();
-      return $p.iface.cancel_bubble(event);
+      return $p.iface.cancel_bubble(event, true);
     };
 
 
@@ -330,14 +312,14 @@ class Editor extends paper.PaperScope {
         setTimeout(pwnd._on_close);
     });
 
-    // Обработчик события при изменениях изделия
+    // При изменениях изделия обновляем текст заголовка окна
     $p.eve.attachEvent("scheme_changed", (scheme) => {
       if(scheme == _editor.project && attr.set_text && scheme._calc_order_row){
           attr.set_text(scheme.ox.prod_name(true) + " " + (scheme.ox._modified ? " *" : ""));
       }
     });
 
-    // Обработчик события при удалении строки
+    // Обработчик события при удалении строки некой табчасти продукции
     this.on_del_row = this.on_del_row.bind(this);
     $p.cat.characteristics.on("del_row", this.on_del_row);
 
@@ -355,13 +337,13 @@ class Editor extends paper.PaperScope {
      */
     new function ZoomFit() {
 
-      var tool = new paper.Tool();
+      const tool = new paper.Tool();
       tool.options = {name: 'zoom_fit'};
       tool.on({
         activate: function () {
           _editor.project.zoom_fit();
 
-          var previous = _editor.tb_left.get_selected();
+          const previous = _editor.tb_left.get_selected();
 
           if(previous){
             return _editor.select_tool(previous.replace("left_", ""));
@@ -416,103 +398,117 @@ class Editor extends paper.PaperScope {
 
 
     // Создаём экземпляр проекта Scheme
-    (function () {
-
-      const _canvas = document.createElement('canvas'); // собственно, канвас
-      _editor._wrapper.appendChild(_canvas);
-      _canvas.style.backgroundColor = "#f9fbfa";
-
-      const _scheme = new Scheme(_canvas);
-      const pwnd_resize_finish = () => {
-          _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
-        };
-
-      /**
-       * Подписываемся на события изменения размеров
-       */
-      _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
-      _editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
-      _editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
-      _editor._layout.attachEvent("onExpand", pwnd_resize_finish);
-
-      if(_editor._pwnd instanceof  dhtmlXWindowsCell){
-        _editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
-      }
-
-      pwnd_resize_finish();
-
-      /**
-       * Подписываемся на событие смещения мыши, чтобы показать текущие координаты
-       */
-      const _mousepos = document.createElement('div');
-      _editor._wrapper.appendChild(_mousepos);
-      _mousepos.className = "mousepos";
-      _scheme.view.on('mousemove', (event) => {
-        const {bounds} = _scheme;
-        if(bounds){
-          _mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
-            " y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
-        }
-      });
-
-      /**
-       * Объект для реализации функций масштабирования
-       * @type StableZoom
-       */
-      var pan_zoom = new function StableZoom(){
-
-        function changeZoom(oldZoom, delta) {
-          const factor = 1.05;
-          if (delta < 0) {
-            return oldZoom * factor;
-          }
-          if (delta > 0) {
-            return oldZoom / factor;
-          }
-          return oldZoom;
-        }
-
-        dhtmlxEvent(_canvas, "mousewheel", (evt) => {
-
-          if (evt.shiftKey || evt.ctrlKey) {
-            if(evt.shiftKey && !evt.deltaX){
-              _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
-            }
-            else{
-              _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
-            }
-            return evt.preventDefault();
-          }
-          else if (evt.altKey) {
-            const mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
-            const viewPosition = _editor.view.viewToProject(mousePosition);
-            const _ref1 = this.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
-            _editor.view.zoom = _ref1[0];
-            _editor.view.center = _editor.view.center.add(_ref1[1]);
-            evt.preventDefault();
-            return _editor.view.draw();
-          }
-        });
-
-        this.changeZoom = function(oldZoom, delta, c, p) {
-          const newZoom = changeZoom(oldZoom, delta);
-          const beta = oldZoom / newZoom;
-          const pc = p.subtract(c);
-          return [newZoom, p.subtract(pc.multiply(beta)).subtract(c)];
-        };
-
-        this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
-          const offset = new paper.Point(deltaX, -deltaY);
-          return oldCenter.add(offset.multiply(factor));
-        };
-      };
-
-      _editor._acc.attache(_editor.project._dp);
-
-    })();
+    this.create_scheme();
 
   }
 
+  /**
+   * ### Локальный dhtmlXWindows
+   * Нужен для привязки окон инструментов к области редактирования
+   *
+   * @property _dxw
+   * @type dhtmlXWindows
+   * @final
+   * @private
+   */
+  get _dxw() {
+    return this._layout.dhxWins;
+  }
+
+  create_scheme() {
+
+    const _editor = this;
+    const _canvas = document.createElement('canvas'); // собственно, канвас
+    _editor._wrapper.appendChild(_canvas);
+    _canvas.style.backgroundColor = "#f9fbfa";
+
+    const _scheme = new Scheme(_canvas, _editor);
+    const pwnd_resize_finish = () => {
+      _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
+    };
+
+    /**
+     * Подписываемся на события изменения размеров
+     */
+    _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
+    _editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
+    _editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
+    _editor._layout.attachEvent("onExpand", pwnd_resize_finish);
+
+    if(_editor._pwnd instanceof  dhtmlXWindowsCell){
+      _editor._pwnd.attachEvent("onResizeFinish", pwnd_resize_finish);
+    }
+
+    pwnd_resize_finish();
+
+    /**
+     * Подписываемся на событие смещения мыши, чтобы показать текущие координаты
+     */
+    const _mousepos = document.createElement('div');
+    _editor._wrapper.appendChild(_mousepos);
+    _mousepos.className = "mousepos";
+    _scheme.view.on('mousemove', (event) => {
+      const {bounds} = _scheme;
+      if(bounds){
+        _mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
+          " y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
+      }
+    });
+
+    /**
+     * Объект для реализации функций масштабирования
+     * @type StableZoom
+     */
+    var pan_zoom = new function StableZoom(){
+
+      function changeZoom(oldZoom, delta) {
+        const factor = 1.05;
+        if (delta < 0) {
+          return oldZoom * factor;
+        }
+        if (delta > 0) {
+          return oldZoom / factor;
+        }
+        return oldZoom;
+      }
+
+      dhtmlxEvent(_canvas, "mousewheel", (evt) => {
+
+        if (evt.shiftKey || evt.ctrlKey) {
+          if(evt.shiftKey && !evt.deltaX){
+            _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
+          }
+          else{
+            _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
+          }
+          return evt.preventDefault();
+        }
+        else if (evt.altKey) {
+          const mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
+          const viewPosition = _editor.view.viewToProject(mousePosition);
+          const _ref1 = this.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
+          _editor.view.zoom = _ref1[0];
+          _editor.view.center = _editor.view.center.add(_ref1[1]);
+          evt.preventDefault();
+          return _editor.view.draw();
+        }
+      });
+
+      this.changeZoom = function(oldZoom, delta, c, p) {
+        const newZoom = changeZoom(oldZoom, delta);
+        const beta = oldZoom / newZoom;
+        const pc = p.subtract(c);
+        return [newZoom, p.subtract(pc.multiply(beta)).subtract(c)];
+      };
+
+      this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
+        const offset = new paper.Point(deltaX, -deltaY);
+        return oldCenter.add(offset.multiply(factor));
+      };
+    };
+
+    _editor._acc.attache(_editor.project._dp);
+  }
 
   /**
    * ### Устанавливает икону курсора

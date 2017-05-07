@@ -2092,88 +2092,69 @@ class Contour extends paper.Layer {
     return _layers.dimensions;
   }
 
+  /**
+   * ### Непрозрачность без учета вложенных контуров
+   * В отличии от прототипа `opacity`, затрагивает только элементы текущего слоя
+   */
+  get opacity() {
+    return this.children.length ? this.children[0].opacity : 1;
+  }
+  set opacity(v) {
+    this.children.forEach((elm) => {
+      if(elm instanceof BuilderElement)
+        elm.opacity = v;
+    });
+  }
+
+  /**
+   * Обработчик события при удалении элемента
+   */
+  on_remove_elm(elm) {
+    // при удалении любого профиля, удаляем размрные линии импостов
+    if(this.parent){
+      this.parent.on_remove_elm(elm);
+    }
+    if (elm instanceof Profile && !this.project.data._loading){
+      this.clear_dimentions();
+    }
+  }
+
+  /**
+   * Обработчик события при вставке элемента
+   */
+  on_insert_elm(elm) {
+    // при вставке любого профиля, удаляем размрные линии импостов
+    if(this.parent)
+      this.parent.on_remove_elm(elm);
+
+    if (elm instanceof Profile && !this.project.data._loading)
+      this.clear_dimentions();
+  }
+
+  /**
+   * Обработчик при изменении системы
+   */
+  on_sys_changed() {
+    this.profiles.forEach((elm) => elm.default_inset(true));
+
+    this.glasses().forEach((elm) => {
+      if (elm instanceof Contour){
+        elm.on_sys_changed();
+      }
+      else{
+        // заполнения проверяем по толщине
+        if(elm.thickness < elm.project._dp.sys.tmin || elm.thickness > elm.project._dp.sys.tmax)
+          elm._row.inset = elm.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
+        // проверяем-изменяем соединения заполнений с профилями
+        elm.profiles.forEach((curr) => {
+          if(!curr.cnn || !curr.cnn.check_nom2(curr.profile))
+            curr.cnn = $p.cat.cnns.elm_cnn(elm, curr.profile, $p.enm.cnn_types.acn.ii);
+        });
+      }
+    });
+  }
+
 }
-
-Contour.prototype.__define({
-
-
-	/**
-	 * ### Непрозрачность без учета вложенных контуров
-	 * В отличии от прототипа `opacity`, затрагивает только элементы текущего слоя
-	 */
-	opacity: {
-		get: function () {
-			return this.children.length ? this.children[0].opacity : 1;
-		},
-
-		set: function (v) {
-			this.children.forEach(function(elm){
-				if(elm instanceof BuilderElement)
-					elm.opacity = v;
-			});
-		}
-	},
-
-	/**
-	 * Обработчик события при удалении элемента
-	 */
-	on_remove_elm: {
-
-		value: function (elm) {
-			// при удалении любого профиля, удаляем размрные линии импостов
-			if(this.parent){
-        this.parent.on_remove_elm(elm);
-      }
-			if (elm instanceof Profile && !this.project.data._loading){
-        this.clear_dimentions();
-      }
-		}
-	},
-
-	/**
-	 * Обработчик события при вставке элемента
-	 */
-	on_insert_elm: {
-
-		value: function (elm) {
-
-			// при вставке любого профиля, удаляем размрные линии импостов
-			if(this.parent)
-				this.parent.on_remove_elm(elm);
-
-			if (elm instanceof Profile && !this.project.data._loading)
-				this.clear_dimentions();
-
-		}
-	},
-
-	/**
-	 * Обработчик при изменении системы
-	 */
-	on_sys_changed: {
-		value: function () {
-
-			this.profiles.forEach((elm) => elm.default_inset(true));
-
-			this.glasses().forEach((elm) => {
-				if (elm instanceof Contour){
-          elm.on_sys_changed();
-        }
-				else{
-					// заполнения проверяем по толщине
-					if(elm.thickness < elm.project._dp.sys.tmin || elm.thickness > elm.project._dp.sys.tmax)
-						elm._row.inset = elm.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
-					// проверяем-изменяем соединения заполнений с профилями
-					elm.profiles.forEach((curr) => {
-						if(!curr.cnn || !curr.cnn.check_nom2(curr.profile))
-							curr.cnn = $p.cat.cnns.elm_cnn(elm, curr.profile, $p.enm.cnn_types.acn.ii);
-					});
-				}
-			});
-		}
-	}
-
-});
 
 /**
  * Экспортируем конструктор Contour, чтобы фильтровать инстанции этого типа
