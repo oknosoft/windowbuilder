@@ -26,7 +26,7 @@ class Filling extends BuilderElement {
 
   constructor(attr) {
 
-    super(attr);
+    super({proto: attr.proto, parent: attr.parent, row: attr.row});
 
     /**
      * За этим полем будут "следить" элементы раскладок и пересчитывать - перерисовывать себя при изменениях соседей
@@ -51,18 +51,19 @@ class Filling extends BuilderElement {
   initialize(attr) {
 
     const _row = attr.row;
-    const h = this.project.bounds.height + this.project.bounds.y;
+    const {_attr, project} = this;
+    const h = project.bounds.height + project.bounds.y;
 
     if(_row.path_data){
-      this.data.path = new paper.Path(_row.path_data);
+      _attr.path = new paper.Path(_row.path_data);
     }
 
     else if(attr.path){
-      this.data.path = new paper.Path();
+      _attr.path = new paper.Path();
       this.path = attr.path;
     }
     else{
-      this.data.path = new paper.Path([
+      _attr.path = new paper.Path([
         [_row.x1, h - _row.y1],
         [_row.x1, h - _row.y2],
         [_row.x2, h - _row.y2],
@@ -70,24 +71,24 @@ class Filling extends BuilderElement {
       ]);
     }
 
-    this.data.path.closePath(true);
-    this.data.path.reduce();
-    this.data.path.strokeWidth = 0;
+    _attr.path.closePath(true);
+    _attr.path.reduce();
+    _attr.path.strokeWidth = 0;
 
     // для нового устанавливаем вставку по умолчанию
     if(_row.inset.empty()){
-      _row.inset = this.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
+      _row.inset = project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
     }
 
     // для нового устанавливаем цвет по умолчанию
     if(_row.clr.empty()){
-      this.project._dp.sys.elmnts.find_rows({nom: _row.inset}, (row) => {
+      project._dp.sys.elmnts.find_rows({nom: _row.inset}, (row) => {
         _row.clr = row.clr;
         return false;
       });
     }
     if(_row.clr.empty()){
-      this.project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, (row) => {
+      project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, (row) => {
         _row.clr = row.clr;
         return false;
       });
@@ -98,12 +99,12 @@ class Filling extends BuilderElement {
       _row.elm_type = $p.enm.elm_types.Стекло;
     }
 
-    this.data.path.visible = false;
+    _attr.path.visible = false;
 
-    this.addChild(this.data.path);
+    this.addChild(_attr.path);
 
     // раскладки текущего заполнения
-    this.project.ox.coordinates.find_rows({
+    project.ox.coordinates.find_rows({
       cnstr: this.layer.cnstr,
       parent: this.elm,
       elm_type: $p.enm.elm_types.Раскладка
@@ -124,7 +125,7 @@ class Filling extends BuilderElement {
     const length = profiles.length;
 
     // строка в таблице заполнений продукции
-    this.project.ox.glasses.add({
+    project.ox.glasses.add({
         elm: _row.elm,
         nom: this.nom,
         width: bounds.width,
@@ -137,9 +138,9 @@ class Filling extends BuilderElement {
     let curr, prev,	next
 
     // координаты bounds
-    _row.x1 = (bounds.bottomLeft.x - this.project.bounds.x).round(3);
+    _row.x1 = (bounds.bottomLeft.x - project.bounds.x).round(3);
     _row.y1 = (h - bounds.bottomLeft.y).round(3);
-    _row.x2 = (bounds.topRight.x - this.project.bounds.x).round(3);
+    _row.x2 = (bounds.topRight.x - project.bounds.x).round(3);
     _row.y2 = (h - bounds.topRight.y).round(3);
     _row.path_data = this.path.pathData;
 
@@ -155,7 +156,7 @@ class Filling extends BuilderElement {
           return;
       }
 
-      curr.aperture_path = curr.profile.generatrix.get_subpath(curr.b, curr.e).data.reversed ?
+      curr.aperture_path = curr.profile.generatrix.get_subpath(curr.b, curr.e)._reversed ?
         curr.profile.rays.outer : curr.profile.rays.inner;
     }
 
@@ -242,7 +243,7 @@ class Filling extends BuilderElement {
     }else{
       point = this.bounds.topRight;
     }
-    this.data.path.segments.forEach((curr) => {
+    this._attr.path.segments.forEach((curr) => {
       curr.selected = false;
       if(point.getDistance(curr.point) < delta){
         delta = point.getDistance(curr.point);
@@ -257,7 +258,7 @@ class Filling extends BuilderElement {
 
   setSelection(selection) {
     super.setSelection(selection);
-    const {_text} = this.data;
+    const {_text} = this._attr;
     _text && _text.setSelection(0);
   }
 
@@ -268,7 +269,7 @@ class Filling extends BuilderElement {
 
     this.sendToBack();
 
-    const {path, onlays, data, is_rectangular} = this;
+    const {path, onlays, _attr, is_rectangular} = this;
     const {elm_font_size} = consts;
 
     path.visible = true;
@@ -278,33 +279,33 @@ class Filling extends BuilderElement {
     this.purge_path();
 
     // если текст не создан - добавляем
-    if(!data._text){
-      data._text = new paper.PointText({
+    if(!_attr._text){
+      _attr._text = new paper.PointText({
         parent: this,
         fillColor: 'black',
         fontSize: elm_font_size,
         guide: true,
       });
     }
-    data._text.visible = is_rectangular;
+    _attr._text.visible = is_rectangular;
 
     if(is_rectangular){
       const {bounds} = path;
-      data._text.content = this.formula;
-      data._text.point = bounds.bottomLeft.add([elm_font_size * 0.6, -elm_font_size]);
-      if(data._text.bounds.width > (bounds.width - 2 * elm_font_size)){
-        const atext = data._text.content.split(' ');
+      _attr._text.content = this.formula;
+      _attr._text.point = bounds.bottomLeft.add([elm_font_size * 0.6, -elm_font_size]);
+      if(_attr._text.bounds.width > (bounds.width - 2 * elm_font_size)){
+        const atext = _attr._text.content.split(' ');
         if(atext.length > 1){
-          data._text.content = '';
+          _attr._text.content = '';
           atext.forEach((text, index) => {
-            if(!data._text.content){
-              data._text.content = text;
+            if(!_attr._text.content){
+              _attr._text.content = text;
             }
             else{
-              data._text.content += ((index === atext.length - 1) ? '\n' : ' ') + text;
+              _attr._text.content += ((index === atext.length - 1) ? '\n' : ' ') + text;
             }
           })
-          data._text.point.y -= elm_font_size;
+          _attr._text.point.y -= elm_font_size;
         }
       }
     }
@@ -367,7 +368,7 @@ class Filling extends BuilderElement {
   }
 
   get profiles() {
-    return this.data._profiles || [];
+    return this._attr._profiles || [];
   }
 
   /**
@@ -400,7 +401,7 @@ class Filling extends BuilderElement {
    * Признак прямоугольности
    */
   get is_rectangular() {
-    return this.profiles.length === 4 && !this.data.path.hasHandles();
+    return this.profiles.length === 4 && !this._attr.path.hasHandles();
   }
 
   get is_sandwich() {
@@ -417,29 +418,22 @@ class Filling extends BuilderElement {
    * @type paper.Path
    */
   get path() {
-    return this.data.path;
+    return this._attr.path;
   }
   set path(attr) {
-    let {data, path} = this;
+    let {_attr, path} = this;
 
     if(path){
       path.removeSegments();
     }
     else{
-      path = data.path = new paper.Path({parent: this});
+      path = _attr.path = new paper.Path({parent: this});
     }
 
-    data._profiles = [];
+    _attr._profiles = [];
 
     if(attr instanceof paper.Path){
-
-      // Если в передаваемом пути есть привязка к профилям контура - используем
-      if(attr.data.curve_nodes){
-        path.addSegments(attr.segments);
-      }
-      else{
-        path.addSegments(attr.segments);
-      }
+      path.addSegments(attr.segments);
     }
     else if(Array.isArray(attr)){
       const {length} = attr;
@@ -455,7 +449,7 @@ class Filling extends BuilderElement {
           curr.cnn || connections.elm_cnn(this, curr.profile), false, curr.outer);
 
         curr.sub_path = sub_path.equidistant(
-          (sub_path.data.reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
+          (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
 
       }
       // получам пересечения
@@ -480,7 +474,7 @@ class Filling extends BuilderElement {
         curr = attr[i];
         path.addSegments(curr.sub_path.segments);
         ["anext","pb","pe"].forEach((prop) => { delete curr[prop] });
-        data._profiles.push(curr);
+        _attr._profiles.push(curr);
       }
     }
 
@@ -626,9 +620,9 @@ class Filling extends BuilderElement {
   // переопределяем геттер вставки
   get inset() {
     const ins = super.inset;
-    const {data} = this;
-    if(!data._ins_proxy || data._ins_proxy._ins !== ins){
-      data._ins_proxy = new Proxy(ins, {
+    const {_attr} = this;
+    if(!_attr._ins_proxy || _attr._ins_proxy._ins !== ins){
+      _attr._ins_proxy = new Proxy(ins, {
         get: (target, prop) => {
           switch (prop){
             case 'presentation':
@@ -646,9 +640,9 @@ class Filling extends BuilderElement {
           }
         }
       });
-      data._ins_proxy._ins = ins;
+      _attr._ins_proxy._ins = ins;
     }
-    return data._ins_proxy;
+    return _attr._ins_proxy;
   }
   set inset(v) {
     this.set_inset(v);

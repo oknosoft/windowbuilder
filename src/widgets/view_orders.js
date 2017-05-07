@@ -114,7 +114,7 @@ $p.iface.view_orders = function (cell) {
 						callback: (btn) => {
 							if(btn){
 								// закрыть изменённый без сохранения - значит прочитать его из pouchdb
-                project.data._loading = true;
+                project._attr._loading = true;
 								if(project.ox.is_new()){
 									// если характеристика не была записана - удаляем её вместе со строкой заказа
 									const _row = project.ox.calc_order_row;
@@ -132,8 +132,8 @@ $p.iface.view_orders = function (cell) {
 					return;
 				}
 
-        project.data._loading = true;
-        project.data._opened = false;
+        project._attr._loading = true;
+        project._attr._opened = false;
         project.ox = null;
         project._dp.base_block = null;
 

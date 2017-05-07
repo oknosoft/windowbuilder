@@ -5895,12 +5895,12 @@ function ProductsBuilding(){
 
 	function cnn_spec_nearest(elm) {
 		const nearest = elm.nearest();
-		if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm.data._nearest_cnn)
-			cnn_add_spec(elm.data._nearest_cnn, elm, {
+		if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm._attr._nearest_cnn)
+			cnn_add_spec(elm._attr._nearest_cnn, elm, {
 				angle:  0,
 				alp1:   0,
 				alp2:   0,
-				len:    elm.data._len,
+				len:    elm._attr._len,
 				origin: cnn_row(elm.elm, nearest.elm)
 			});
 	}
@@ -5944,7 +5944,7 @@ function ProductsBuilding(){
       row_spec.len = (_row.len - dprev - dnext)
 				* ((row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
 
-			elm.data._len = _row.len;
+			elm._attr._len = _row.len;
 			_row.len = (_row.len
 				- (!row_cnn_prev || row_cnn_prev.angle_calc_method == seam ? 0 : row_cnn_prev.sz)
 				- (!row_cnn_next || row_cnn_next.angle_calc_method == seam ? 0 : row_cnn_next.sz))
@@ -6303,7 +6303,7 @@ function ProductsBuilding(){
 			})
 				.then(() => {
 					$p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
-					delete scheme.data._saving;
+					delete scheme._attr._saving;
 					$p.eve.callEvent("characteristic_saved", [scheme, attr]);
 
 
@@ -6312,7 +6312,7 @@ function ProductsBuilding(){
 
 
           $p.record_log(ox);
-          delete scheme.data._saving;
+          delete scheme._attr._saving;
           const {_err} = ox._data;
           if(_err){
             $p.msg.show_msg(_err);
@@ -6321,7 +6321,7 @@ function ProductsBuilding(){
         });
 		}
 		else{
-			delete scheme.data._saving;
+			delete scheme._attr._saving;
 		}
 
 
@@ -9400,7 +9400,7 @@ $p.iface.view_orders = function (cell) {
 						cancel: $p.msg.cancel,
 						callback: (btn) => {
 							if(btn){
-                project.data._loading = true;
+                project._attr._loading = true;
 								if(project.ox.is_new()){
 									const _row = project.ox.calc_order_row;
 									if(_row)
@@ -9417,8 +9417,8 @@ $p.iface.view_orders = function (cell) {
 					return;
 				}
 
-        project.data._loading = true;
-        project.data._opened = false;
+        project._attr._loading = true;
+        project._attr._opened = false;
         project.ox = null;
         project._dp.base_block = null;
 

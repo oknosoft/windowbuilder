@@ -26,7 +26,9 @@ class DimensionLine extends paper.Group {
 
   constructor(attr) {
 
-    super(attr);
+    super({parent: attr.parent});
+
+    const _attr = this._attr = {};
 
     this._row = attr.row;
 
@@ -40,22 +42,22 @@ class DimensionLine extends paper.Group {
       }
     }
 
-    this.data.pos = attr.pos;
-    this.data.elm1 = attr.elm1;
-    this.data.elm2 = attr.elm2 || this.data.elm1;
-    this.data.p1 = attr.p1 || "b";
-    this.data.p2 = attr.p2 || "e";
-    this.data.offset = attr.offset;
+    _attr.pos = attr.pos;
+    _attr.elm1 = attr.elm1;
+    _attr.elm2 = attr.elm2 || _attr.elm1;
+    _attr.p1 = attr.p1 || "b";
+    _attr.p2 = attr.p2 || "e";
+    _attr.offset = attr.offset;
 
     if(attr.impost){
-      this.data.impost = true;
+      _attr.impost = true;
     }
 
     if(attr.contour){
-      this.data.contour = true;
+      _attr.contour = true;
     }
 
-    if(!this.data.pos && (!this.data.elm1 || !this.data.elm2)){
+    if(!_attr.pos && (!_attr.elm1 || !_attr.elm2)){
       this.remove();
       return null;
     }
@@ -109,32 +111,34 @@ class DimensionLine extends paper.Group {
 
     let _bounds, delta;
 
+    const {_attr} = this;
+
     // получаем дельту - на сколько смещать
-    if(this.data.elm1){
+    if(_attr.elm1){
 
       // в _bounds[event.name] надо поместить координату по x или у (в зависисмости от xy), которую будем двигать
       _bounds = {};
 
       if(this.pos == "top" || this.pos == "bottom"){
-        const size = Math.abs(this.data.elm1[this.data.p1].x - this.data.elm2[this.data.p2].x);
+        const size = Math.abs(_attr.elm1[_attr.p1].x - _attr.elm2[_attr.p2].x);
         if(event.name == "right"){
           delta = new paper.Point(event.size - size, 0);
-          _bounds[event.name] = Math.max(this.data.elm1[this.data.p1].x, this.data.elm2[this.data.p2].x);
+          _bounds[event.name] = Math.max(_attr.elm1[_attr.p1].x, _attr.elm2[_attr.p2].x);
         }
         else{
           delta = new paper.Point(size - event.size, 0);
-          _bounds[event.name] = Math.min(this.data.elm1[this.data.p1].x, this.data.elm2[this.data.p2].x);
+          _bounds[event.name] = Math.min(_attr.elm1[_attr.p1].x, _attr.elm2[_attr.p2].x);
         }
       }
       else{
-        const size = Math.abs(this.data.elm1[this.data.p1].y - this.data.elm2[this.data.p2].y);
+        const size = Math.abs(_attr.elm1[_attr.p1].y - _attr.elm2[_attr.p2].y);
         if(event.name == "bottom"){
           delta = new paper.Point(0, event.size - size);
-          _bounds[event.name] = Math.max(this.data.elm1[this.data.p1].y, this.data.elm2[this.data.p2].y);
+          _bounds[event.name] = Math.max(_attr.elm1[_attr.p1].y, _attr.elm2[_attr.p2].y);
         }
         else{
           delta = new paper.Point(0, size - event.size);
-          _bounds[event.name] = Math.min(this.data.elm1[this.data.p1].y, this.data.elm2[this.data.p2].y);
+          _bounds[event.name] = Math.min(_attr.elm1[_attr.p1].y, _attr.elm2[_attr.p2].y);
         }
       }
     }
@@ -213,7 +217,7 @@ class DimensionLine extends paper.Group {
 
   redraw() {
 
-    const {layer, project, children, data, pos} = this;
+    const {layer, project, children, _attr, pos} = this;
     if(!children.length){
       return;
     }
@@ -222,8 +226,8 @@ class DimensionLine extends paper.Group {
     let offset = 0, b, e, bs, es;
 
     if(!pos){
-      b = typeof data.p1 == "number" ? data.elm1.corns(data.p1) : data.elm1[data.p1];
-      e = typeof data.p2 == "number" ? data.elm2.corns(data.p2) : data.elm2[data.p2];
+      b = typeof _attr.p1 == "number" ? _attr.elm1.corns(_attr.p1) : _attr.elm1[_attr.p1];
+      e = typeof _attr.p2 == "number" ? _attr.elm2.corns(_attr.p2) : _attr.elm2[_attr.p2];
     }
     else if(pos == "top"){
       b = _bounds.topLeft;
@@ -254,9 +258,9 @@ class DimensionLine extends paper.Group {
 
     const tmp = new paper.Path({ insert: false, segments: [b, e] });
 
-    if(data.elm1 && pos){
-      b = tmp.getNearestPoint(data.elm1[data.p1]);
-      e = tmp.getNearestPoint(data.elm2[data.p2]);
+    if(_attr.elm1 && pos){
+      b = tmp.getNearestPoint(_attr.elm1[_attr.p1]);
+      e = tmp.getNearestPoint(_attr.elm2[_attr.p2]);
       if(tmp.getOffsetOf(b) > tmp.getOffsetOf(e)){
         [b, e] = [e, b]
       }
@@ -325,21 +329,21 @@ class DimensionLine extends paper.Group {
 
   // расположение относительно контура $p.enm.pos
   get pos() {
-    return this.data.pos || "";
+    return this._attr.pos || "";
   }
   set pos(v) {
-    this.data.pos = v;
+    this._attr.pos = v;
     this.redraw();
   }
 
   // отступ от внешней границы изделия
   get offset() {
-    return this.data.offset || 90;
+    return this._attr.offset || 90;
   }
   set offset(v) {
     const offset = (parseInt(v) || 90).round(0);
-    if(this.data.offset != offset){
-      this.data.offset = offset;
+    if(this._attr.offset != offset){
+      this._attr.offset = offset;
       this.project.register_change(true);
     }
   }
@@ -425,22 +429,22 @@ class DimensionLineCustom extends DimensionLine {
    * @method save_coordinates
    */
   save_coordinates() {
-    const _row = this._row;
+    const {_row, _attr, elm_type, pos, offset, size} = this;
 
     // сохраняем размер
-    _row.len = this.size;
+    _row.len = size;
 
     // устанавливаем тип элемента
-    _row.elm_type = this.elm_type;
+    _row.elm_type = elm_type;
 
     // сериализованные данные
     _row.path_data = JSON.stringify({
-      pos: this.pos,
-      elm1: this.data.elm1.elm,
-      elm2: this.data.elm2.elm,
-      p1: this.data.p1,
-      p2: this.data.p2,
-      offset: this.offset
+      pos: pos,
+      elm1: _attr.elm1.elm,
+      elm2: _attr.elm2.elm,
+      p1: _attr.p1,
+      p2: _attr.p2,
+      offset: offset
     });
   }
 

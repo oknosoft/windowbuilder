@@ -77,6 +77,8 @@ class Contour extends paper.Layer {
 
     super({parent: attr.parent});
 
+    this._attr = {};
+
     // за этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
     this._noti = {};
 
@@ -292,7 +294,7 @@ class Contour extends paper.Layer {
    * @for Contour
    * @param path {paper.Path} - массив ограничивается узлами, примыкающими к пути
    * @param [nodes] {Array} - если указано, позволяет не вычислять исходный массив узлов контура, а использовать переданный
-   * @param [bind] {Boolean} - если указано, сохраняет пары узлов в path.data.curve_nodes
+   * @param [bind] {Boolean} - если указано, сохраняет пары узлов в path._attr.curve_nodes
    * @returns {Array}
    */
   glass_nodes(path, nodes, bind) {
@@ -303,11 +305,6 @@ class Contour extends paper.Layer {
 
     if(!nodes){
       nodes = this.nodes;
-    }
-
-    if(bind){
-      path.data.curve_nodes = curve_nodes;
-      path.data.path_nodes = path_nodes;
     }
 
     // имеем путь и контур.
@@ -328,7 +325,7 @@ class Contour extends paper.Layer {
         }
       });
 
-// в path_nodes просто накапливаем узлы. наверное, позже они будут упорядочены
+      // в path_nodes просто накапливаем узлы. наверное, позже они будут упорядочены
       if(path_nodes.indexOf(node1) == -1)
         path_nodes.push(node1);
       if(path_nodes.indexOf(node2) == -1)
@@ -337,7 +334,7 @@ class Contour extends paper.Layer {
       if(!bind)
         continue;
 
-// заполнение может иметь больше курв, чем профиль
+      // заполнение может иметь больше курв, чем профиль
       if(node1 == node2)
         continue;
       findedb = false;
@@ -721,7 +718,7 @@ class Contour extends paper.Layer {
     // прочищаем, выкидывая такие, начало или конец которых соединениы не в узле
     for(let i=0; i<profiles.length; i++){
       const elm = profiles[i];
-      if(elm.data.simulated)
+      if(elm._attr.simulated)
         continue;
       findedb = false;
       findede = false;
@@ -740,7 +737,7 @@ class Contour extends paper.Layer {
       const elm = profiles[i];
       if(to_remove.indexOf(elm) != -1)
         continue;
-      elm.data.binded = false;
+      elm._attr.binded = false;
       res.push({
         elm: elm,
         profile: elm.nearest(),
@@ -932,27 +929,27 @@ class Contour extends paper.Layer {
    * Габариты по внешним краям профилей контура
    */
   get bounds() {
-    const {data, parent} = this;
-    if(!data._bounds || !data._bounds.width || !data._bounds.height){
+    const {_attr, parent} = this;
+    if(!_attr._bounds || !_attr._bounds.width || !_attr._bounds.height){
 
       this.profiles.forEach((profile) => {
         const path = profile.path && profile.path.segments.length ? profile.path : profile.generatrix;
         if(path){
-          data._bounds = data._bounds ? data._bounds.unite(path.bounds) : path.bounds;
+          _attr._bounds = _attr._bounds ? _attr._bounds.unite(path.bounds) : path.bounds;
           if(!parent){
             const {d0} = profile;
             if(d0){
-              data._bounds = data._bounds.unite(profile.generatrix.bounds)
+              _attr._bounds = _attr._bounds.unite(profile.generatrix.bounds)
             }
           }
         }
       });
 
-      if(!data._bounds){
-        data._bounds = new paper.Rectangle();
+      if(!_attr._bounds){
+        _attr._bounds = new paper.Rectangle();
       }
     }
-    return data._bounds;
+    return _attr._bounds;
   }
 
   /**
@@ -1596,11 +1593,11 @@ class Contour extends paper.Layer {
         curr = attr[i];             // curr.profile - сегмент внешнего профиля
         for(let j = 0; j < outer_nodes.length; j++){
           elm = outer_nodes[j];   // elm - сегмент профиля текущего контура
-          if(elm.data.binded){
+          if(elm._attr.binded){
             continue;
           }
           if(curr.profile.is_nearest(elm)){
-            elm.data.binded = true;
+            elm._attr.binded = true;
             curr.binded = true;
             need_bind--;
             available_bind--;
@@ -1622,10 +1619,10 @@ class Contour extends paper.Layer {
           continue;
         for(let j = 0; j < outer_nodes.length; j++){
           elm = outer_nodes[j];
-          if(elm.data.binded)
+          if(elm._attr.binded)
             continue;
           if(curr.b.is_nearest(elm.b, true) || curr.e.is_nearest(elm.e, true)){
-            elm.data.binded = true;
+            elm._attr.binded = true;
             curr.binded = true;
             need_bind--;
             available_bind--;
@@ -1647,9 +1644,9 @@ class Contour extends paper.Layer {
           continue;
         for(let j = 0; j < outer_nodes.length; j++){
           elm = outer_nodes[j];
-          if(elm.data.binded)
+          if(elm._attr.binded)
             continue;
-          elm.data.binded = true;
+          elm._attr.binded = true;
           curr.binded = true;
           need_bind--;
           available_bind--;
@@ -1677,9 +1674,9 @@ class Contour extends paper.Layer {
             clr: this.project.default_clr()
           }
         });
-        elm.data._nearest = curr.profile;
-        elm.data.binded = true;
-        elm.data.simulated = true;
+        elm._attr._nearest = curr.profile;
+        elm._attr.binded = true;
+        elm._attr.simulated = true;
 
         curr.profile = elm;
         delete curr.outer;
@@ -1696,7 +1693,7 @@ class Contour extends paper.Layer {
     // удаляем лишнее
     if(available_bind){
       outer_nodes.forEach((elm) => {
-        if(!elm.data.binded){
+        if(!elm._attr.binded){
           elm.rays.clear(true);
           elm.remove();
           available_bind--;
@@ -1709,11 +1706,11 @@ class Contour extends paper.Layer {
 
     // информируем систему об изменениях
     if(noti.points.length){
-      this.profiles.forEach((p) => p._data._rays && p._data._rays.clear());
+      this.profiles.forEach((p) => p._attr._rays && p._attr._rays.clear());
       this.notify(noti);
     }
 
-    this.data._bounds = null;
+    this._attr._bounds = null;
   }
 
   /**
@@ -1774,13 +1771,13 @@ class Contour extends paper.Layer {
     // }
 
     // сбрасываем кеш габаритов
-    this.data._bounds = null;
+    this._attr._bounds = null;
 
     // чистим визуализацию
     const {l_visualization} = this;
 
     l_visualization._by_insets.removeChildren();
-    !this.project.data._saving && l_visualization._by_spec.removeChildren();
+    !this.project._attr._saving && l_visualization._by_spec.removeChildren();
 
     // сначала перерисовываем все профили контура
     this.profiles.forEach((elm) => elm.redraw());
@@ -1804,7 +1801,7 @@ class Contour extends paper.Layer {
     this.draw_sill();
 
     // информируем мир о новых размерах нашего контура
-    $p.eve.callEvent("contour_redrawed", [this, this.data._bounds]);
+    $p.eve.callEvent("contour_redrawed", [this, this._attr._bounds]);
 
     // если нет вложенных контуров, информируем проект о завершении перерисовки контура
     on_redrawed && on_redrawed();
@@ -2114,7 +2111,7 @@ class Contour extends paper.Layer {
     if(this.parent){
       this.parent.on_remove_elm(elm);
     }
-    if (elm instanceof Profile && !this.project.data._loading){
+    if (elm instanceof Profile && !this.project._attr._loading){
       this.clear_dimentions();
     }
   }
@@ -2127,7 +2124,7 @@ class Contour extends paper.Layer {
     if(this.parent)
       this.parent.on_remove_elm(elm);
 
-    if (elm instanceof Profile && !this.project.data._loading)
+    if (elm instanceof Profile && !this.project._attr._loading)
       this.clear_dimentions();
   }
 

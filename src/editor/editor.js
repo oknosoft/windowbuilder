@@ -1364,22 +1364,22 @@ class Editor extends paper.PaperScope {
       return
     }
 
-    const {data} = this.project;
-    if(!data._align_counter){
-      data._align_counter = 1;
+    const {_attr} = this.project;
+    if(!_attr._align_counter){
+      _attr._align_counter = 1;
     }
-    if(data._align_counter > 12){
-      data._align_counter = 0;
+    if(_attr._align_counter > 12){
+      _attr._align_counter = 0;
       return
     }
 
     if(shift.some((delta) => delta.length > 0.3)){
-      data._align_counter++;
+      _attr._align_counter++;
       this.project.contours.forEach((l) => l.redraw());
       return this.glass_align(name, glasses);
     }
     else{
-      data._align_counter = 0;
+      _attr._align_counter = 0;
     }
   }
 

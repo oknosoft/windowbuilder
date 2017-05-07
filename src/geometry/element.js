@@ -40,6 +40,8 @@ class BuilderElement extends paper.Group {
 
     this._row = attr.row;
 
+    this._attr = {};
+
     if(attr.proto){
 
       if(attr.proto.inset){
@@ -87,10 +89,10 @@ class BuilderElement extends paper.Group {
    * @type BuilderElement
    */
   get owner() {
-    return this.data.owner;
+    return this._attr.owner;
   }
   set owner(v) {
-    this.data.owner = v;
+    this._attr.owner = v;
   }
 
   /**
@@ -101,19 +103,19 @@ class BuilderElement extends paper.Group {
    * @type paper.Path
    */
   get generatrix() {
-    return this.data.generatrix;
+    return this._attr.generatrix;
   }
   set generatrix(attr) {
 
-    const {data} = this;
-    data.generatrix.removeSegments();
+    const {_attr} = this;
+    _attr.generatrix.removeSegments();
 
     if(this.hasOwnProperty('rays')){
       this.rays.clear();
     }
 
     if(Array.isArray(attr)){
-      data.generatrix.addSegments(attr);
+      _attr.generatrix.addSegments(attr);
     }
     else if(attr.proto &&  attr.p1 &&  attr.p2){
 
@@ -139,12 +141,12 @@ class BuilderElement extends paper.Group {
         tpath.split(d2);
       }
 
-      data.generatrix.remove();
-      data.generatrix = tpath;
-      data.generatrix.parent = this;
+      _attr.generatrix.remove();
+      _attr.generatrix = tpath;
+      _attr.generatrix.parent = this;
 
       if(this.layer.parent){
-        data.generatrix.guide = true;
+        _attr.generatrix.guide = true;
       }
     }
   }
@@ -156,14 +158,15 @@ class BuilderElement extends paper.Group {
    * @type paper.Path
    */
   get path() {
-    return this.data.path;
+    return this._attr.path;
   }
   set path(attr) {
     if(attr instanceof paper.Path){
-      this.data.path.removeSegments();
-      this.data.path.addSegments(attr.segments);
-      if(!this.data.path.closed){
-        this.data.path.closePath(true);
+      const {_attr} = this;
+      _attr.path.removeSegments();
+      _attr.path.addSegments(attr.segments);
+      if(!_attr.path.closed){
+        _attr.path.closePath(true);
       }
     }
   }
@@ -391,8 +394,8 @@ class BuilderElement extends paper.Group {
     const cnn_ii = this.selected_cnn_ii();
     if(cnn_ii && cnn_ii.row.cnn != v){
       cnn_ii.row.cnn = v;
-      if(this.data._nearest_cnn){
-        this.data._nearest_cnn = cnn_ii.row.cnn;
+      if(this._attr._nearest_cnn){
+        this._attr._nearest_cnn = cnn_ii.row.cnn;
       }
       if(this.rays){
         this.rays.clear();
@@ -423,11 +426,11 @@ class BuilderElement extends paper.Group {
    * @param [ignore_select] {Boolean}
    */
   set_inset(v, ignore_select) {
-    const {_row, data, project} = this;
+    const {_row, _attr, project} = this;
     if(_row.inset != v){
       _row.inset = v;
-      if(data && data._rays){
-        data._rays.clear(true);
+      if(_attr && _attr._rays){
+        _attr._rays.clear(true);
       }
       project.register_change();
     }
@@ -451,13 +454,13 @@ class BuilderElement extends paper.Group {
    * Подключает окно редактор свойств текущего элемента, выбранного инструментом
    */
   attache_wnd(cell) {
-    if(!this.data._grid || !this.data._grid.cell){
+    if(!this._attr._grid || !this._attr._grid.cell){
 
-      this.data._grid = cell.attachHeadFields({
+      this._attr._grid = cell.attachHeadFields({
         obj: this,
         oxml: this.oxml
       });
-      this.data._grid.attachEvent("onRowSelect", function(id){
+      this._attr._grid.attachEvent("onRowSelect", function(id){
         if(["x1","y1","cnn1"].indexOf(id) != -1){
           this._obj.select_node("b");
         }
@@ -466,8 +469,8 @@ class BuilderElement extends paper.Group {
         }
       });
     }
-    else if(this.data._grid._obj != this){
-      this.data._grid.attach({
+    else if(this._attr._grid._obj != this){
+      this._attr._grid.attach({
         obj: this,
         oxml: this.oxml
       });
@@ -478,9 +481,10 @@ class BuilderElement extends paper.Group {
    * Отключает и выгружает из памяти окно свойств элемента
    */
   detache_wnd() {
-    if(this.data._grid && this.data._grid.destructor){
-      this.data._grid._owner_cell.detachObject(true);
-      delete this.data._grid;
+    const {_grid} = this._attr;
+    if(_grid && _grid.destructor){
+      _grid._owner_cell.detachObject(true);
+      delete this._attr._grid;
     }
   }
 

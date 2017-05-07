@@ -131,7 +131,7 @@ class ProfileConnective extends ProfileItem {
    */
   save_coordinates() {
 
-    if(!this.data.generatrix){
+    if(!this._attr.generatrix){
       return;
     }
 
@@ -181,15 +181,15 @@ class ProfileConnective extends ProfileItem {
    */
   remove() {
     this.joined_nearests().forEach((np) => {
-      const {data} = np;
-      if(data._rays){
-        data._rays.clear()
+      const {_attr} = np;
+      if(_attr._rays){
+        _attr._rays.clear()
       }
-      if(data._nearest){
-        data._nearest = null
+      if(_attr._nearest){
+        _attr._nearest = null
       }
-      if(data._nearest_cnn){
-        data._nearest_cnn = null
+      if(_attr._nearest_cnn){
+        _attr._nearest_cnn = null
       }
     });
     super.remove()

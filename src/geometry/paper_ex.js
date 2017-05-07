@@ -89,7 +89,7 @@ Object.defineProperties(paper.Path.prototype, {
         else if(point2.is_nearest(this.firstSegment.point) && point1.is_nearest(this.lastSegment.point)){
           tmp = this.clone(false);
           tmp.reverse();
-          tmp.data.reversed = true;
+          tmp._reversed = true;
         }
         else{
           let loc1 = this.getLocationOf(point1);
@@ -116,7 +116,7 @@ Object.defineProperties(paper.Path.prototype, {
             });
 
             if(step < 0){
-              tmp.data.reversed = true;
+              tmp._reversed = true;
               for(var i = loc1.offset; i>=loc2.offset; i+=step)
                 tmp.add(this.getPointAt(i));
             }else if(step > 0){
@@ -128,7 +128,7 @@ Object.defineProperties(paper.Path.prototype, {
           }
 
           if(loc1.offset > loc2.offset)
-            tmp.data.reversed = true;
+            tmp._reversed = true;
         }
 
         return tmp;

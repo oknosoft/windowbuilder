@@ -56,7 +56,7 @@ class Onlay extends ProfileItem {
    */
   save_coordinates() {
 
-    if(!this.data.generatrix){
+    if(!this._attr.generatrix){
       return;
     }
 

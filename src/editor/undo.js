@@ -60,10 +60,10 @@ class UndoRedo {
    * @param attr
    */
   scheme_changed(scheme, attr) {
-    const snapshot = scheme.data._snapshot || (attr && attr.snapshot);
+    const snapshot = scheme._attr._snapshot || (attr && attr.snapshot);
     if (!snapshot && scheme == this._editor.project) {
       // при открытии изделия чистим историю
-      if (scheme.data._loading) {
+      if (scheme._attr._loading) {
         setTimeout(() => {
           this.clear();
           this.save_snapshot(scheme);

@@ -31,7 +31,7 @@ class Scheme extends paper.Project {
 
     const _scheme = _editor.project = this;
 
-    const _data = this.data = {
+    const _attr = this._attr = {
         _bounds: null,
         _calc_order_row: null,
         _update_timer: 0
@@ -43,7 +43,7 @@ class Scheme extends paper.Project {
     // наблюдатель за изменениями свойств изделия
     this._dp_observer = (changes) => {
 
-        if(_data._loading || _data._snapshot){
+        if(_attr._loading || _attr._snapshot){
           return;
         }
 
@@ -103,7 +103,7 @@ class Scheme extends paper.Project {
           }
           else if(row_changed_names.indexOf(change.name) != -1){
 
-            _data._calc_order_row[change.name] = change.object[change.name];
+            _attr._calc_order_row[change.name] = change.object[change.name];
 
             _scheme.register_change(true);
 
@@ -114,7 +114,7 @@ class Scheme extends paper.Project {
 
     // наблюдатель за изменениями параметров створки
     this._papam_observer = (changes) => {
-        if(_data._loading || _data._snapshot){
+        if(_attr._loading || _attr._snapshot){
           return;
         }
         changes.some((change) => {
@@ -182,7 +182,7 @@ class Scheme extends paper.Project {
               // пересчитываем параметры изделия и фурнитур, т.к. они могут зависеть от размеров
 
               // если перерисованы все контуры, перерисовываем их размерные линии
-              _data._bounds = null;
+              _attr._bounds = null;
               _scheme.contours.forEach((l) => {
                 l.contours.forEach((l) => {
                   l.save_coordinates(true);
@@ -208,11 +208,11 @@ class Scheme extends paper.Project {
           }
         }
 
-        // if(_data._saving || _data._loading){
+        // if(_attr._saving || _attr._loading){
         //   return;
         // }
 
-        if(_changes.length && !_data._saving){
+        if(_changes.length && !_attr._saving){
           //console.log(_changes.length);
           _changes.length = 0;
 
@@ -228,7 +228,7 @@ class Scheme extends paper.Project {
         }
       }
 
-      if(_data._opened){
+      if(_attr._opened){
         requestAnimationFrame(_scheme.redraw);
       }
 
@@ -258,7 +258,7 @@ class Scheme extends paper.Project {
     return this._dp.characteristic;
   }
   set ox(v) {
-    const {_dp, data, _papam_observer} = this;
+    const {_dp, _attr, _papam_observer} = this;
     let setted;
 
     // пытаемся отключить обсервер от табчасти
@@ -274,11 +274,11 @@ class Scheme extends paper.Project {
     _dp.s = ox.s;
 
     // устанавливаем строку заказа
-    data._calc_order_row = ox.calc_order_row;
+    _attr._calc_order_row = ox.calc_order_row;
 
     // устанавливаем в _dp свойства строки заказа
-    if(data._calc_order_row){
-      "quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach((fld) => _dp[fld] = data._calc_order_row[fld]);
+    if(_attr._calc_order_row){
+      "quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note".split(",").forEach((fld) => _dp[fld] = _attr._calc_order_row[fld]);
     }else{
       // TODO: установить режим только просмотр, если не найдена строка заказа
     }
@@ -350,7 +350,7 @@ class Scheme extends paper.Project {
    * @async
    */
   load(id) {
-    const {data} = this;
+    const {_attr} = this;
     const _scheme = this;
 
     /**
@@ -381,8 +381,8 @@ class Scheme extends paper.Project {
       _scheme.ox = o;
 
       // включаем перерисовку
-      data._opened = true;
-      data._bounds = new paper.Rectangle({
+      _attr._opened = true;
+      _attr._bounds = new paper.Rectangle({
         point: [0, 0],
         size: [o.x, o.y]
       });
@@ -400,18 +400,18 @@ class Scheme extends paper.Project {
       // запускаем таймер, чтобы нарисовать размерные линии и визуализацию
       return new Promise((resolve, reject) => {
 
-        data._bounds = null;
+        _attr._bounds = null;
 
         // згружаем пользовательские размерные линии
         load_dimension_lines();
 
         setTimeout(() => {
 
-          data._bounds = null;
+          _attr._bounds = null;
           _scheme.zoom_fit();
 
           // виртуальное событие, чтобы UndoRedo сделал начальный снапшот
-          !data._snapshot && $p.eve.callEvent("scheme_changed", [_scheme]);
+          !_attr._snapshot && $p.eve.callEvent("scheme_changed", [_scheme]);
 
           // регистрируем изменение, чтобы отрисовались размерные линии
           _scheme.register_change(true);
@@ -421,7 +421,7 @@ class Scheme extends paper.Project {
             $p.eve.callEvent("layer_activated", [_scheme.contours[0], true]);
           }
 
-          delete data._loading;
+          delete _attr._loading;
 
           // виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
           setTimeout(() => {
@@ -437,7 +437,7 @@ class Scheme extends paper.Project {
             else{
               paper.load_stamp && paper.load_stamp();
             }
-            delete data._snapshot;
+            delete _attr._snapshot;
 
             resolve();
 
@@ -449,7 +449,7 @@ class Scheme extends paper.Project {
 
     }
 
-    data._loading = true;
+    _attr._loading = true;
     if(id != this.ox){
       this.ox = null;
     }
@@ -478,13 +478,13 @@ class Scheme extends paper.Project {
    * Регистрирует необходимость обновить изображение
    */
   register_update() {
-    const {data} = this;
-    if(data._update_timer){
-      clearTimeout(data._update_timer);
+    const {_attr} = this;
+    if(_attr._update_timer){
+      clearTimeout(_attr._update_timer);
     }
-    data._update_timer = setTimeout(() => {
+    _attr._update_timer = setTimeout(() => {
       this.view.update();
-      data._update_timer = 0;
+      _attr._update_timer = 0;
     }, 100);
   }
 
@@ -493,18 +493,16 @@ class Scheme extends paper.Project {
    */
   register_change(with_update) {
 
-    const {data, _ch} = this;
+    const {_attr, _ch} = this;
 
-    if(!data._loading){
+    if(!_attr._loading){
 
       // сбрасываем габариты
-      data._bounds = null;
+      _attr._bounds = null;
 
       // сбрасываем d0 для всех профилей
       this.getItems({class: Profile}).forEach((p) => {
-        if(p._data){
-          delete p._data.d0;
-        }
+        delete p._attr.d0;
       });
 
       // регистрируем изменённость характеристики
@@ -524,16 +522,16 @@ class Scheme extends paper.Project {
    * @type Rectangle
    */
   get bounds() {
-    const {data} = this;
-    if(!data._bounds){
+    const {_attr} = this;
+    if(!_attr._bounds){
       this.contours.forEach((l) => {
-        if(!data._bounds)
-          data._bounds = l.bounds;
+        if(!_attr._bounds)
+          _attr._bounds = l.bounds;
         else
-          data._bounds = data._bounds.unite(l.bounds);
+          _attr._bounds = _attr._bounds.unite(l.bounds);
       });
     }
-    return data._bounds;
+    return _attr._bounds;
   }
 
   /**
@@ -542,7 +540,7 @@ class Scheme extends paper.Project {
   get dimension_bounds() {
     let {bounds} = this;
     this.getItems({class: DimensionLine}).forEach((dl) => {
-      if(dl instanceof DimensionLineCustom || dl.data.impost || dl.data.contour){
+      if(dl instanceof DimensionLineCustom || dl._attr.impost || dl._attr.contour){
         bounds = bounds.unite(dl.bounds);
       }
     });
@@ -574,11 +572,11 @@ class Scheme extends paper.Project {
    * Строка табчасти продукция текущего заказа, соответствующая редактируемому изделию
    */
   get _calc_order_row() {
-    const {data, ox} = this;
-    if(!data._calc_order_row && !ox.empty()){
-      data._calc_order_row = ox.calc_order_row;
+    const {_attr, ox} = this;
+    if(!_attr._calc_order_row && !ox.empty()){
+      _attr._calc_order_row = ox.calc_order_row;
     }
-    return data._calc_order_row;
+    return _attr._calc_order_row;
   }
 
   /**
@@ -594,9 +592,9 @@ class Scheme extends paper.Project {
    */
   clear() {
     const pnames = '_bounds,_update_timer,_loading,_snapshot';
-    for(let fld in this.data){
+    for(let fld in this._attr){
       if(!pnames.match(fld)){
-        delete this.data[fld];
+        delete this._attr[fld];
       }
     }
     super.clear();
@@ -606,13 +604,13 @@ class Scheme extends paper.Project {
    * Деструктор
    */
   unload() {
-    const {_dp, data, _papam_observer, _dp_observer} = this;
-    data._loading = true;
+    const {_dp, _attr, _papam_observer, _dp_observer} = this;
+    _attr._loading = true;
     this.clear();
     this.remove();
     Object.unobserve(_dp, _dp_observer);
     Object.unobserve(_dp.characteristic, _papam_observer);
-    this.data._calc_order_row = null;
+    this._attr._calc_order_row = null;
   }
 
   /**
@@ -683,7 +681,7 @@ class Scheme extends paper.Project {
    */
   save_coordinates(attr) {
 
-    const {data, bounds, ox} = this;
+    const {_attr, bounds, ox} = this;
 
     if(!bounds){
       return;
@@ -692,7 +690,7 @@ class Scheme extends paper.Project {
     // переводим характеристику в тихий режим, чтобы она не создавала лишнего шума при изменениях
     ox._silent();
 
-    data._saving = true;
+    _attr._saving = true;
 
     // устанавливаем размеры в характеристике
     ox.x = bounds.width.round(1);
@@ -709,7 +707,7 @@ class Scheme extends paper.Project {
     //	this.getItems({class: Contour}).forEach(function (contour) {
     //		contour.position = contour.position.subtract(bpoint);
     //	});
-    //	this.data._bounds = null;
+    //	this._attr._bounds = null;
     //};
 
     // вызываем метод save_coordinates в дочерних слоях
@@ -754,7 +752,7 @@ class Scheme extends paper.Project {
   get_svg(attr) {
     this.deselectAll();
 
-    const svg = this.exportSVG({excludeData: true});
+    const svg = this.exportSVG();
     const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
 
     svg.setAttribute("x", bounds.x);
@@ -807,10 +805,10 @@ class Scheme extends paper.Project {
 
     }
 
-    this.data._loading = true;
+    this._attr._loading = true;
 
     if(is_snapshot){
-      this.data._snapshot = true;
+      this._attr._snapshot = true;
       do_load(obx);
     }
     else{
@@ -874,19 +872,19 @@ class Scheme extends paper.Project {
    * @final
    */
   get l_dimensions() {
-    const {activeLayer, data} = this;
+    const {activeLayer, _attr} = this;
 
-    if(!data.l_dimensions){
-      data.l_dimensions = new DimensionLayer();
+    if(!_attr.l_dimensions){
+      _attr.l_dimensions = new DimensionLayer();
     }
-    if(!data.l_dimensions.isInserted()){
-      this.addLayer(data.l_dimensions);
+    if(!_attr.l_dimensions.isInserted()){
+      this.addLayer(_attr.l_dimensions);
     }
     if(activeLayer){
       this._activeLayer = activeLayer;
     }
 
-    return data.l_dimensions;
+    return _attr.l_dimensions;
   }
 
   /**
@@ -897,19 +895,19 @@ class Scheme extends paper.Project {
    * @final
    */
   get l_connective() {
-    const {activeLayer, data} = this;
+    const {activeLayer, _attr} = this;
 
-    if(!data.l_connective){
-      data.l_connective = new ConnectiveLayer();
+    if(!_attr.l_connective){
+      _attr.l_connective = new ConnectiveLayer();
     }
-    if(!data.l_connective.isInserted()){
-      this.addLayer(data.l_connective);
+    if(!_attr.l_connective.isInserted()){
+      this.addLayer(_attr.l_connective);
     }
     if(activeLayer){
       this._activeLayer = activeLayer;
     }
 
-    return data.l_connective;
+    return _attr.l_connective;
   }
 
   /**
@@ -1281,7 +1279,7 @@ class Scheme extends paper.Project {
             return;
           }
 
-          if(count < 2 || !(p.data.generatrix.firstSegment.selected ^ p.data.generatrix.lastSegment.selected)){
+          if(count < 2 || !(p._attr.generatrix.firstSegment.selected ^ p._attr.generatrix.lastSegment.selected)){
             res.push(p);
           }
 

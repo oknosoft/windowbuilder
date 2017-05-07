@@ -34,13 +34,13 @@ class ProfileAddl extends ProfileItem {
 
     super(attr);
 
-    this.data.generatrix.strokeWidth = 0;
+    this._attr.generatrix.strokeWidth = 0;
 
     if(!attr.side && this._row.parent < 0){
       attr.side = "outer";
     }
 
-    this.data.side = attr.side || "inner";
+    this._attr.side = attr.side || "inner";
 
     if(!this._row.parent){
       this._row.parent = this.parent.elm;
@@ -58,14 +58,14 @@ class ProfileAddl extends ProfileItem {
    */
   get d0() {
     this.nearest();
-    return this.data._nearest_cnn ? -this.data._nearest_cnn.sz : 0;
+    return this._attr._nearest_cnn ? -this._attr._nearest_cnn.sz : 0;
   }
 
   /**
    * Возвращает истина, если соединение с наружной стороны
    */
   get outer() {
-    return this.data.side == "outer";
+    return this._attr.side == "outer";
   }
 
   /**
@@ -81,9 +81,9 @@ class ProfileAddl extends ProfileItem {
    * @type Profile
    */
   nearest() {
-    const {data, parent, project} = this;
-    const _nearest_cnn = data._nearest_cnn || project.connections.elm_cnn(this, parent);
-    data._nearest_cnn = $p.cat.cnns.elm_cnn(this, parent, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
+    const {_attr, parent, project} = this;
+    const _nearest_cnn = _attr._nearest_cnn || project.connections.elm_cnn(this, parent);
+    _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, parent, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
     return parent;
   }
 
@@ -161,7 +161,7 @@ class ProfileAddl extends ProfileItem {
     const interior = generatrix.getPointAt(generatrix.length/2);
 
     const _profile = this;
-    const _corns = this.data._corns;
+    const _corns = this._attr._corns;
 
     if(!generatrix.curves.length){
       return cnn_point;

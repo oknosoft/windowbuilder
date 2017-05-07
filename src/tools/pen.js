@@ -345,7 +345,7 @@ class ToolPen extends ToolElement {
 
     if(!this.on_layer_activated){
       this.on_layer_activated = $p.eve.attachEvent("layer_activated", (contour, virt) => {
-        if(!virt && contour.project == paper.project && !paper.project.data._loading && !paper.project.data._snapshot){
+        if(!virt && contour.project == paper.project && !paper.project._attr._loading && !paper.project._attr._snapshot){
           this.decorate_layers();
         }
       });

@@ -352,11 +352,11 @@ class ProfileItem extends BuilderElement {
    * @type paper.Point
    */
   get b() {
-    const {generatrix} = this.data;
+    const {generatrix} = this._attr;
     return generatrix && generatrix.firstSegment.point;
   }
   set b(v) {
-    const {_rays, generatrix} = this.data;
+    const {_rays, generatrix} = this._attr;
     _rays.clear();
     if(generatrix) generatrix.firstSegment.point = v;
   }
@@ -367,11 +367,11 @@ class ProfileItem extends BuilderElement {
    * @type Point
    */
   get e() {
-    const {generatrix} = this.data;
+    const {generatrix} = this._attr;
     return generatrix && generatrix.lastSegment.point;
   }
   set e(v) {
-    const {_rays, generatrix} = this.data;
+    const {_rays, generatrix} = this._attr;
     _rays.clear();
     if(generatrix) generatrix.lastSegment.point = v;
   }
@@ -530,9 +530,9 @@ class ProfileItem extends BuilderElement {
     return this._row.r;
   }
   set r(v){
-    const {_row, data} = this;
+    const {_row, _attr} = this;
     if(_row.r != v){
-      data._rays.clear();
+      _attr._rays.clear();
       _row.r = v;
       this.set_generatrix_radius();
       Object.getNotifier(this).notify({
@@ -552,9 +552,9 @@ class ProfileItem extends BuilderElement {
     return this._row.arc_ccw;
   }
   set arc_ccw(v){
-    const {_row, data} = this;
+    const {_row, _attr} = this;
     if(_row.arc_ccw != v){
-      data._rays.clear();
+      _attr._rays.clear();
       _row.arc_ccw = v;
       this.set_generatrix_radius();
       Object.getNotifier(this).notify({
@@ -579,10 +579,10 @@ class ProfileItem extends BuilderElement {
     return 0;
   }
   set arc_h(v) {
-    const {_row, data, b, e, arc_h} = this;
+    const {_row, _attr, b, e, arc_h} = this;
     v = parseFloat(v);
     if(arc_h != v){
-      data._rays.clear();
+      _attr._rays.clear();
       if(v < 0){
         v = -v;
         _row.arc_ccw = true;
@@ -679,7 +679,7 @@ class ProfileItem extends BuilderElement {
    * @final
    */
   get rays() {
-    const {_rays} = this.data;
+    const {_rays} = this._attr;
     if(!_rays.inner.segments.length || !_rays.outer.segments.length){
       _rays.recalc();
     }
@@ -738,7 +738,7 @@ class ProfileItem extends BuilderElement {
   setSelection(selection) {
     super.setSelection(selection);
 
-    const {generatrix, path} = this.data;
+    const {generatrix, path} = this._attr;
 
     generatrix.setSelection(selection);
     this.ruler_line_select(false);
@@ -808,26 +808,26 @@ class ProfileItem extends BuilderElement {
   // выделяет внутреннее или внешнее ребро профиля
   ruler_line_select(mode) {
 
-    const {data} = this;
+    const {_attr} = this;
 
-    if(data.ruler_line_path){
-      data.ruler_line_path.remove();
-      delete data.ruler_line_path;
+    if(_attr.ruler_line_path){
+      _attr.ruler_line_path.remove();
+      delete _attr.ruler_line_path;
     }
 
     if(mode){
-      switch(data.ruler_line = mode){
+      switch(_attr.ruler_line = mode){
 
         case 'inner':
-          data.ruler_line_path = this.path.get_subpath(this.corns(3), this.corns(4))
-          data.ruler_line_path.parent = this;
-          data.ruler_line_path.selected = true;
+          _attr.ruler_line_path = this.path.get_subpath(this.corns(3), this.corns(4))
+          _attr.ruler_line_path.parent = this;
+          _attr.ruler_line_path.selected = true;
           break;
 
         case 'outer':
-          data.ruler_line_path = this.path.get_subpath(this.corns(1), this.corns(2))
-          data.ruler_line_path.parent = this;
-          data.ruler_line_path.selected = true;
+          _attr.ruler_line_path = this.path.get_subpath(this.corns(1), this.corns(2))
+          _attr.ruler_line_path.parent = this;
+          _attr.ruler_line_path.selected = true;
           break;
 
         default:
@@ -835,14 +835,14 @@ class ProfileItem extends BuilderElement {
           break;
       }
     }
-    else if(data.ruler_line) {
-      delete data.ruler_line;
+    else if(_attr.ruler_line) {
+      delete _attr.ruler_line;
     }
   }
 
   // координата стороны или образующей профиля
   ruler_line_coordin(xy) {
-    switch(this.data.ruler_line){
+    switch(this._attr.ruler_line){
       case 'inner':
         return (this.corns(3)[xy] + this.corns(4)[xy]) / 2;
       case 'outer':
@@ -858,7 +858,7 @@ class ProfileItem extends BuilderElement {
    */
   save_coordinates() {
 
-    const {data, _row, rays, generatrix, project} = this;
+    const {_attr, _row, rays, generatrix, project} = this;
 
     if(!generatrix){
       return;
@@ -917,7 +917,7 @@ class ProfileItem extends BuilderElement {
       cnns.add({
         elm1: _row.elm,
         elm2: nrst.elm,
-        cnn: data._nearest_cnn,
+        cnn: _attr._nearest_cnn,
         aperture_len: _row.len
       });
     }
@@ -954,7 +954,7 @@ class ProfileItem extends BuilderElement {
    */
   initialize(attr) {
 
-    const {project, data, _row} = this;
+    const {project, _attr, _row} = this;
     const h = project.bounds.height + project.bounds.y;
 
     if(attr.r){
@@ -962,47 +962,47 @@ class ProfileItem extends BuilderElement {
     }
 
     if(attr.generatrix) {
-      data.generatrix = attr.generatrix;
-      if(data.generatrix.data.reversed){
-        delete data.generatrix.data.reversed;
+      _attr.generatrix = attr.generatrix;
+      if(_attr.generatrix._reversed){
+        delete _attr.generatrix._reversed;
       }
     }
     else {
       if(_row.path_data) {
-        data.generatrix = new paper.Path(_row.path_data);
+        _attr.generatrix = new paper.Path(_row.path_data);
       }
       else{
         const first_point = new paper.Point([_row.x1, h - _row.y1]);
-        data.generatrix = new paper.Path(first_point);
+        _attr.generatrix = new paper.Path(first_point);
         if(_row.r){
-          data.generatrix.arcTo(
+          _attr.generatrix.arcTo(
             first_point.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2,
               _row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
         }
         else{
-          data.generatrix.lineTo([_row.x2, h - _row.y2]);
+          _attr.generatrix.lineTo([_row.x2, h - _row.y2]);
         }
       }
     }
 
     // точки пересечения профиля с соседями с внутренней стороны
-    data._corns = [];
+    _attr._corns = [];
 
     // кеш лучей в узлах профиля
-    data._rays = new ProfileRays(this);
+    _attr._rays = new ProfileRays(this);
 
-    data.generatrix.strokeColor = 'grey';
+    _attr.generatrix.strokeColor = 'grey';
 
-    data.path = new paper.Path();
-    data.path.strokeColor = 'black';
-    data.path.strokeWidth = 1;
-    data.path.strokeScaling = false;
+    _attr.path = new paper.Path();
+    _attr.path.strokeColor = 'black';
+    _attr.path.strokeWidth = 1;
+    _attr.path.strokeScaling = false;
 
     this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
-    //data.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
+    //_attr.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
-    this.addChild(data.path);
-    this.addChild(data.generatrix);
+    this.addChild(_attr.path);
+    this.addChild(_attr.generatrix);
 
   }
 
@@ -1107,7 +1107,7 @@ class ProfileItem extends BuilderElement {
    */
   set_inset(v, ignore_select) {
 
-    const {_row, data, project} = this;
+    const {_row, _attr, project} = this;
 
     if(!ignore_select && project.selectedItems.length > 1){
       project.selected_profiles(true).forEach((elm) => {
@@ -1122,23 +1122,23 @@ class ProfileItem extends BuilderElement {
       _row.inset = v;
 
       // для уже нарисованных элементов...
-      if(data && data._rays){
+      if(_attr && _attr._rays){
 
-        data._rays.clear(true);
+        _attr._rays.clear(true);
 
         // прибиваем соединения в точках b и e
         const b = this.cnn_point('b');
         const e = this.cnn_point('e');
 
         if(b.profile && b.profile_point == 'e'){
-          const {_rays} = b.profile.data;
+          const {_rays} = b.profile._attr;
           if(_rays){
             _rays.clear();
             _rays.e.cnn = null;
           }
         }
         if(e.profile && e.profile_point == 'b'){
-          const {_rays} = e.profile.data;
+          const {_rays} = e.profile._attr;
           if(_rays){
             _rays.clear();
             _rays.b.cnn = null;
@@ -1148,9 +1148,9 @@ class ProfileItem extends BuilderElement {
         const {cnns} = project.connections;
         // для соединительных профилей и элементов со створками, пересчитываем соседей
         this.joined_nearests().forEach((profile) => {
-          const {data, elm} = profile;
-          data._rays && data._rays.clear(true);
-          data._nearest_cnn = null;
+          const {_attr, elm} = profile;
+          _attr._rays && _attr._rays.clear(true);
+          _attr._nearest_cnn = null;
           cnns.clear({elm1: elm, elm2: this.elm});
         });
 
@@ -1220,7 +1220,7 @@ class ProfileItem extends BuilderElement {
    * @param all {Boolean} - пересчитывать для любых (не только створочных) элементов
    */
   default_inset(all) {
-    const {orientation, project, data, elm_type} = this;
+    const {orientation, project, _attr, elm_type} = this;
     const nearest = this.nearest(true);
 
     if(nearest || all){
@@ -1240,7 +1240,7 @@ class ProfileItem extends BuilderElement {
       }), true);
     }
     if(nearest){
-      data._nearest_cnn = $p.cat.cnns.elm_cnn(this, data._nearest, $p.enm.cnn_types.acn.ii, data._nearest_cnn);
+      _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, _attr._nearest, $p.enm.cnn_types.acn.ii, _attr._nearest_cnn);
     }
   }
 
@@ -1253,12 +1253,12 @@ class ProfileItem extends BuilderElement {
    */
   path_points(cnn_point, profile_point) {
 
-    const {data, rays, generatrix} = this;
+    const {_attr, rays, generatrix} = this;
     if(!generatrix.curves.length){
       return cnn_point;
     }
     const _profile = this;
-    const {_corns} = data;
+    const {_corns} = _attr;
 
     let prays,  normal;
 
@@ -1441,9 +1441,9 @@ class ProfileItem extends BuilderElement {
    * @param node {String} b, e - начало или конец элемента
    */
   select_node(node) {
-    const {generatrix, project, data, view} = this;
+    const {generatrix, project, _attr, view} = this;
     project.deselect_all_points();
-    data.path.selected = false;
+    _attr.path.selected = false;
     if(node == "b"){
       generatrix.firstSegment.selected = true;
     }
@@ -1667,7 +1667,7 @@ class ProfileItem extends BuilderElement {
           // если соединение угловое диагональное, тянем тянем соседние узлы сразу
           if(cnn_point && !paper.Key.isDown('control')){
             if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
-              other.push(cnn_point.profile_point == "b" ? cnn_point.profile.data.generatrix.firstSegment : cnn_point.profile.data.generatrix.lastSegment );
+              other.push(cnn_point.profile_point == "b" ? cnn_point.profile._attr.generatrix.firstSegment : cnn_point.profile._attr.generatrix.lastSegment );
               cnn_point.profile[cnn_point.profile_point] = free_point;
               noti.profiles.push(cnn_point.profile);
             }
@@ -1690,7 +1690,7 @@ class ProfileItem extends BuilderElement {
     // информируем систему об изменениях
     if(changed){
 
-      this.data._rays.clear();
+      this._attr._rays.clear();
 
       this.layer && this.layer.notify && this.layer.notify(noti);
 
@@ -1713,7 +1713,7 @@ class ProfileItem extends BuilderElement {
    */
   corns(corn) {
     if(typeof corn == "number"){
-      return this.data._corns[corn];
+      return this._attr._corns[corn];
     }
     else if(corn instanceof paper.Point){
 
@@ -1721,10 +1721,10 @@ class ProfileItem extends BuilderElement {
       let dist;
 
       for(let i = 1; i<5; i++){
-        dist = this.data._corns[i].getDistance(corn);
+        dist = this._attr._corns[i].getDistance(corn);
         if(dist < res.dist){
           res.dist = dist;
-          res.point = this.data._corns[i];
+          res.point = this._attr._corns[i];
           res.point_name = i;
         }
       }
@@ -1749,7 +1749,7 @@ class ProfileItem extends BuilderElement {
     else{
       const index = corn.substr(corn.length-1, 1);
       const axis = corn.substr(corn.length-2, 1);
-      return this.data._corns[index][axis];
+      return this._attr._corns[index][axis];
     }
   }
 
@@ -1843,22 +1843,22 @@ class Profile extends ProfileItem {
    * @type Number
    */
   get d0() {
-    const {data} = this;
-    if(!data.hasOwnProperty('d0')){
-      data.d0 = 0;
+    const {_attr} = this;
+    if(!_attr.hasOwnProperty('d0')){
+      _attr.d0 = 0;
       const nearest = this.nearest();
       if(nearest){
-        data.d0 -= nearest.d2 + (data._nearest_cnn ? data._nearest_cnn.sz : 20);
+        _attr.d0 -= nearest.d2 + (_attr._nearest_cnn ? _attr._nearest_cnn.sz : 20);
       }
     }
-    return data.d0;
+    return _attr.d0;
   }
 
   /**
    * Возвращает тип элемента (рама, створка, импост)
    */
   get elm_type() {
-    const {_rays} = this.data;
+    const {_rays} = this._attr;
 
     // если начало или конец элемента соединены с соседями по Т, значит это импост
     if(_rays && (_rays.b.is_tt || _rays.e.is_tt)){
@@ -1901,8 +1901,8 @@ class Profile extends ProfileItem {
    */
   nearest(ign_cnn) {
 
-    const {b, e, data, layer, project} = this;
-    let {_nearest, _nearest_cnn} = data;
+    const {b, e, _attr, layer, project} = this;
+    let {_nearest, _nearest_cnn} = _attr;
 
     if(!ign_cnn && this.inset.empty()){
       ign_cnn = true;
@@ -1938,14 +1938,14 @@ class Profile extends ProfileItem {
           if(!_nearest_cnn){
             _nearest_cnn = project.connections.elm_cnn(this, elm);
           }
-          data._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, false, Math.abs(elm.angle_hor - this.angle_hor) > 60);
+          _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, false, Math.abs(elm.angle_hor - this.angle_hor) > 60);
         }
-        data._nearest = elm;
+        _attr._nearest = elm;
         return true;
       }
 
-      data._nearest = null;
-      data._nearest_cnn = null;
+      _attr._nearest = null;
+      _attr._nearest_cnn = null;
     };
 
     const find_nearest = (children) => children.some((elm) => {
@@ -1956,11 +1956,11 @@ class Profile extends ProfileItem {
         return true
       }
       else{
-        data._nearest = null
+        _attr._nearest = null
       }
     });
 
-    if(layer && !check_nearest(data._nearest)){
+    if(layer && !check_nearest(_attr._nearest)){
       if(layer.parent){
         find_nearest(layer.parent.profiles)
       }else{
@@ -1968,7 +1968,7 @@ class Profile extends ProfileItem {
       }
     }
 
-    return data._nearest;
+    return _attr._nearest;
   }
 
   /**
@@ -2181,7 +2181,7 @@ class Profile extends ProfileItem {
 
     if(p instanceof ProfileConnective){
       const {generatrix} = p;
-      this.data._rays.clear();
+      this._attr._rays.clear();
       this.b = generatrix.getNearestPoint(this.b);
       this.e = generatrix.getNearestPoint(this.e);
       moved_fact = true;
@@ -2204,7 +2204,7 @@ class Profile extends ProfileItem {
             // отрываем привязанный ранее профиль
             else{
               bcnn.clear();
-              this.data._rays.clear();
+              this._attr._rays.clear();
             }
           }
         }
@@ -2237,7 +2237,7 @@ class Profile extends ProfileItem {
             else{
               // отрываем привязанный ранее профиль
               ecnn.clear();
-              this.data._rays.clear();
+              this._attr._rays.clear();
             }
           }
         }
