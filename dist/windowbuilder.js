@@ -1473,6 +1473,10 @@ class Editor extends paper.PaperScope {
 
   create_scheme() {
 
+    if(this.project){
+      this.project.unload ? this.project.unload() : this.project.remove();
+    }
+
     const _editor = this;
     const _canvas = document.createElement('canvas'); 
     _editor._wrapper.appendChild(_canvas);
@@ -3379,6 +3383,27 @@ class Contour extends paper.Layer {
     this.project.register_change(true);
   }
 
+  zoom_fit() {
+    const {strokeBounds, view} = this;
+    if(strokeBounds){
+      let {width, height, center} = strokeBounds;
+      if(width < 600){
+        width = 600;
+      }
+      if(height < 600){
+        height = 600;
+      }
+      width += 60;
+      height += 60;
+      view.zoom = Math.min((view.viewSize.height - 20) / height, (view.viewSize.width - 20) / width);
+      const shift = (view.viewSize.width - width * view.zoom) / 2;
+      if(shift < 200){
+        shift = 0;
+      }
+      view.center = center.add([shift, 20]);
+    }
+  }
+
   draw_cnn_errors() {
 
     const {l_visualization} = this;
@@ -3667,13 +3692,13 @@ class Contour extends paper.Layer {
 
   }
 
-  draw_sizes() {
+  draw_sizes(forse) {
 
     const {contours, parent, l_dimensions, bounds} = this;
 
     contours.forEach((elm) => elm.draw_sizes());
 
-    if(!parent){
+    if(!parent || forse){
 
       const by_side = this.profiles_by_side();
 
@@ -3761,7 +3786,7 @@ class Contour extends paper.Layer {
         }
       }
 
-      this.draw_sizes_contour(ihor, ivert);
+      this.draw_sizes_contour(ihor, ivert, !parent && forse);
 
     }
 
@@ -3769,11 +3794,11 @@ class Contour extends paper.Layer {
 
   }
 
-  draw_sizes_contour (ihor, ivert) {
+  draw_sizes_contour (ihor, ivert, forse) {
 
     const {project, l_dimensions} = this;
 
-    if (project.contours.length > 1) {
+    if (project.contours.length > 1 || forse) {
 
       if(this.is_pos("left") && !this.is_pos("right") && project.bounds.height != this.bounds.height){
         if(!l_dimensions.left){
@@ -3793,7 +3818,7 @@ class Contour extends paper.Layer {
         }
       }
 
-      if(this.is_pos("right") && project.bounds.height != this.bounds.height){
+      if(this.is_pos("right") && ((project.bounds.height != this.bounds.height) || (forse && ihor.length > 2))){
         if(!l_dimensions.right){
           l_dimensions.right = new DimensionLine({
             pos: "right",
@@ -3828,7 +3853,7 @@ class Contour extends paper.Layer {
         }
       }
 
-      if(this.is_pos("bottom") && project.bounds.width != this.bounds.width){
+      if(this.is_pos("bottom") && ((project.bounds.width != this.bounds.width) || (forse && ivert.length > 2))){
         if(!l_dimensions.bottom){
           l_dimensions.bottom = new DimensionLine({
             pos: "bottom",
@@ -3865,6 +3890,27 @@ class Contour extends paper.Layer {
 
     this.contours.forEach((l) => l.draw_visualization());
 
+  }
+
+  show() {
+    this.hide(false)
+  }
+
+  hide(v) {
+    const visible = v === false ? true : false;
+    this.children.forEach((elm) => {
+      if(elm instanceof BuilderElement){
+        elm.visible = visible;
+      }
+    })
+    this.l_visualization.visible = visible;
+    this.l_dimensions.visible = visible;
+  }
+
+  hide_generatrix() {
+    this.profiles.forEach((elm) => {
+      elm.generatrix.visible = false;
+    })
   }
 
   get imposts() {
@@ -7054,7 +7100,7 @@ class ProfileItem extends BuilderElement {
 
     _attr._rays = new ProfileRays(this);
 
-    _attr.generatrix.strokeColor = 'grey';
+    _attr.generatrix.strokeColor = 'lightgray';
 
     _attr.path = new paper.Path();
     _attr.path.strokeColor = 'black';
@@ -8947,6 +8993,32 @@ class Scheme extends paper.Project {
           $p.doc.calc_order.get(ox.calc_order, true, true)
             .then(() => load_object(ox))
         );
+    }
+  }
+
+  draw_fragment(attr) {
+
+    const {l_dimensions, l_connective} = this;
+
+    const contours = this.getItems({class: Contour});
+    contours.forEach((l) => l.hide());
+    l_dimensions.visible = false;
+    l_connective.visible = false;
+
+    if(attr.elm > 0){
+
+    }
+    else if(attr.elm < 0){
+      const cnstr = -attr.elm;
+      contours.some((l) => {
+        if(l.cnstr == cnstr){
+          l.show();
+          l.hide_generatrix();
+          l.draw_sizes(true);
+          l.zoom_fit();
+          return true;
+        }
+      })
     }
   }
 

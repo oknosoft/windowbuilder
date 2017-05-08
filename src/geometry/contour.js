@@ -1002,6 +1002,33 @@ class Contour extends paper.Layer {
   }
 
   /**
+   * ### Изменяет центр и масштаб, чтобы слой вписался в размер окна
+   * Используется инструментом {{#crossLink "ZoomFit"}}{{/crossLink}}, вызывается при открытии изделия и после загрузки типового блока
+   *
+   * @method zoom_fit
+   */
+  zoom_fit() {
+    const {strokeBounds, view} = this;
+    if(strokeBounds){
+      let {width, height, center} = strokeBounds;
+      if(width < 600){
+        width = 600;
+      }
+      if(height < 600){
+        height = 600;
+      }
+      width += 60;
+      height += 60;
+      view.zoom = Math.min((view.viewSize.height - 20) / height, (view.viewSize.width - 20) / width);
+      const shift = (view.viewSize.width - width * view.zoom) / 2;
+      if(shift < 200){
+        shift = 0;
+      }
+      view.center = center.add([shift, 20]);
+    }
+  }
+
+  /**
    * Рисует ошибки соединений
    */
   draw_cnn_errors() {
@@ -1317,7 +1344,7 @@ class Contour extends paper.Layer {
   /**
    * формирует авторазмерные линии
    */
-  draw_sizes() {
+  draw_sizes(forse) {
 
     const {contours, parent, l_dimensions, bounds} = this;
 
@@ -1325,7 +1352,7 @@ class Contour extends paper.Layer {
     contours.forEach((elm) => elm.draw_sizes());
 
     // для внешних контуров строим авторазмерные линии
-    if(!parent){
+    if(!parent || forse){
 
       const by_side = this.profiles_by_side();
 
@@ -1418,7 +1445,7 @@ class Contour extends paper.Layer {
       }
 
       // далее - размерные линии контура
-      this.draw_sizes_contour(ihor, ivert);
+      this.draw_sizes_contour(ihor, ivert, !parent && forse);
 
     }
 
@@ -1430,11 +1457,11 @@ class Contour extends paper.Layer {
   /**
    * ### Формирует размерные линии контура
    */
-  draw_sizes_contour (ihor, ivert) {
+  draw_sizes_contour (ihor, ivert, forse) {
 
     const {project, l_dimensions} = this;
 
-    if (project.contours.length > 1) {
+    if (project.contours.length > 1 || forse) {
 
       if(this.is_pos("left") && !this.is_pos("right") && project.bounds.height != this.bounds.height){
         if(!l_dimensions.left){
@@ -1454,7 +1481,7 @@ class Contour extends paper.Layer {
         }
       }
 
-      if(this.is_pos("right") && project.bounds.height != this.bounds.height){
+      if(this.is_pos("right") && ((project.bounds.height != this.bounds.height) || (forse && ihor.length > 2))){
         if(!l_dimensions.right){
           l_dimensions.right = new DimensionLine({
             pos: "right",
@@ -1489,7 +1516,7 @@ class Contour extends paper.Layer {
         }
       }
 
-      if(this.is_pos("bottom") && project.bounds.width != this.bounds.width){
+      if(this.is_pos("bottom") && ((project.bounds.width != this.bounds.width) || (forse && ivert.length > 2))){
         if(!l_dimensions.bottom){
           l_dimensions.bottom = new DimensionLine({
             pos: "bottom",
@@ -1532,6 +1559,27 @@ class Contour extends paper.Layer {
     // перерисовываем вложенные контуры
     this.contours.forEach((l) => l.draw_visualization());
 
+  }
+
+  show() {
+    this.hide(false)
+  }
+
+  hide(v) {
+    const visible = v === false ? true : false;
+    this.children.forEach((elm) => {
+      if(elm instanceof BuilderElement){
+        elm.visible = visible;
+      }
+    })
+    this.l_visualization.visible = visible;
+    this.l_dimensions.visible = visible;
+  }
+
+  hide_generatrix() {
+    this.profiles.forEach((elm) => {
+      elm.generatrix.visible = false;
+    })
   }
 
   /**

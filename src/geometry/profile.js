@@ -991,7 +991,7 @@ class ProfileItem extends BuilderElement {
     // кеш лучей в узлах профиля
     _attr._rays = new ProfileRays(this);
 
-    _attr.generatrix.strokeColor = 'grey';
+    _attr.generatrix.strokeColor = 'lightgray';
 
     _attr.path = new paper.Path();
     _attr.path.strokeColor = 'black';

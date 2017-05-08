@@ -417,6 +417,10 @@ class Editor extends paper.PaperScope {
 
   create_scheme() {
 
+    if(this.project){
+      this.project.unload ? this.project.unload() : this.project.remove();
+    }
+
     const _editor = this;
     const _canvas = document.createElement('canvas'); // собственно, канвас
     _editor._wrapper.appendChild(_canvas);

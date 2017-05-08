@@ -468,6 +468,51 @@ class Scheme extends paper.Project {
   }
 
   /**
+   * ### Рисует фрагмент загруженного изделия
+   * @param attr {Object}
+   * @param [attr.elm] {Number} - Элемент или Контур
+   *        = 0, формируется эскиз изделия,
+   *        > 0, эскиз элемента (заполнения или палки)
+   *        < 0, эскиз контура (рамы или створки)
+   * @param [attr.width] {Number} - если указано, эскиз будет вписан в данную ширину (по умолчению - 600px)
+   * @param [attr.height] {Number} - если указано, эскиз будет вписан в данную высоту (по умолчению - 600px)
+   * @param [attr.sz_lines] {enm.ТипыРазмерныхЛиний} - правила формирования размерных линий (по умолчению - Обычные)
+   * @param [attr.txt_cnstr] {Boolean} - выводить текст, привязанный к слоям изделия (по умолчению - Да)
+   * @param [attr.txt_elm] {Boolean} - выводить текст, привязанный к элементам (например, формулы заполнений, по умолчению - Да)
+   * @param [attr.visualisation] {Boolean} - выводить визуализацию (по умолчению - Да)
+   * @param [attr.opening] {Boolean} - выводить направление открывания (по умолчению - Да)
+   * @param [attr.select] {Number} - выделить на эскизе элемент по номеру (по умолчению - 0)
+   * @param [attr.format] {String} - [svg, png, pdf] - (по умолчению - png)
+   * @param [attr.children] {Boolean} - выводить вложенные контуры (по умолчению - Нет)
+   */
+  draw_fragment(attr) {
+
+    const {l_dimensions, l_connective} = this;
+
+    // скрываем все слои
+    const contours = this.getItems({class: Contour});
+    contours.forEach((l) => l.hide());
+    l_dimensions.visible = false;
+    l_connective.visible = false;
+
+    if(attr.elm > 0){
+
+    }
+    else if(attr.elm < 0){
+      const cnstr = -attr.elm;
+      contours.some((l) => {
+        if(l.cnstr == cnstr){
+          l.show();
+          l.hide_generatrix();
+          l.draw_sizes(true);
+          l.zoom_fit();
+          return true;
+        }
+      })
+    }
+  }
+
+  /**
    * информирует о наличии изменений
    */
   has_changes() {
