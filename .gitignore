@@ -1,0 +1,25 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea/
+build/
+config/report.settings.js
+data/.idea/
+data/11.js
+data/_design.json
+data/imgs/
+data/mango.js
+data/merged_wb_templates.js
+data/merged_wb_tips.js
+data/meta.json
+data/meta_patch.json
+data/sync.json
+doc/out/
+lib
+localstorage/
+node_modules/
+report_server/builder/index.js
+src/metadata-ui
+src/templates/imgs
+src/templates/printing_plates/20160408/
+src/templates/printing_plates/invoice_signature.png
+src/zarchive/socket_1c/
+v2/
