@@ -5311,7 +5311,16 @@ class Filling extends BuilderElement {
 
   constructor(attr) {
 
-    super({proto: attr.proto, parent: attr.parent, row: attr.row});
+    const {path} = attr;
+    if(path){
+      delete attr.path;
+    }
+
+    super(attr);
+
+    if(path){
+      attr.path = path;
+    }
 
     this._noti = {};
 
@@ -5556,6 +5565,10 @@ class Filling extends BuilderElement {
     else{
 
     }
+  }
+
+  draw_sizes() {
+
   }
 
   set_inset(v, ignore_select) {

@@ -26,7 +26,16 @@ class Filling extends BuilderElement {
 
   constructor(attr) {
 
-    super({proto: attr.proto, parent: attr.parent, row: attr.row});
+    const {path} = attr;
+    if(path){
+      delete attr.path;
+    }
+
+    super(attr);
+
+    if(path){
+      attr.path = path;
+    }
 
     /**
      * За этим полем будут "следить" элементы раскладок и пересчитывать - перерисовывать себя при изменениях соседей
@@ -312,6 +321,13 @@ class Filling extends BuilderElement {
     else{
 
     }
+  }
+
+  /**
+   * формирует авторазмерные линии
+   */
+  draw_sizes() {
+
   }
 
   /**
