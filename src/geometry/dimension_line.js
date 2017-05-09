@@ -217,70 +217,30 @@ class DimensionLine extends paper.Group {
 
   redraw() {
 
-    const {layer, project, children, _attr, pos} = this;
+    const {children} = this;
     if(!children.length){
       return;
     }
-    const _bounds = layer.bounds;
-    const _dim_bounds = layer instanceof DimensionLayer ? project.dimension_bounds : layer.dimension_bounds;
-    let offset = 0, b, e, bs, es;
 
-    if(!pos){
-      b = typeof _attr.p1 == "number" ? _attr.elm1.corns(_attr.p1) : _attr.elm1[_attr.p1];
-      e = typeof _attr.p2 == "number" ? _attr.elm2.corns(_attr.p2) : _attr.elm2[_attr.p2];
-    }
-    else if(pos == "top"){
-      b = _bounds.topLeft;
-      e = _bounds.topRight;
-      offset = _bounds[pos] - _dim_bounds[pos];
-    }
-    else if(pos == "left"){
-      b = _bounds.bottomLeft;
-      e = _bounds.topLeft;
-      offset = _bounds[pos] - _dim_bounds[pos];
-    }
-    else if(pos == "bottom"){
-      b = _bounds.bottomLeft;
-      e = _bounds.bottomRight;
-      offset = _bounds[pos] - _dim_bounds[pos];
-    }
-    else if(pos == "right"){
-      b = _bounds.bottomRight;
-      e = _bounds.topRight;
-      offset = _bounds[pos] - _dim_bounds[pos];
-    }
-
-    // если точки профиля еще не нарисованы - выходим
-    if(!b || !e){
+    const {path} = this;
+    if(!path){
       this.visible = false;
       return;
     }
 
-    const tmp = new paper.Path({ insert: false, segments: [b, e] });
-
-    if(_attr.elm1 && pos){
-      b = tmp.getNearestPoint(_attr.elm1[_attr.p1]);
-      e = tmp.getNearestPoint(_attr.elm2[_attr.p2]);
-      if(tmp.getOffsetOf(b) > tmp.getOffsetOf(e)){
-        [b, e] = [e, b]
-      }
-      tmp.firstSegment.point = b;
-      tmp.lastSegment.point = e;
-    }
-
     // прячем крошечные размеры
-    const length = tmp.length;
+    const length = path.length;
     if(length < consts.sticking_l){
       this.visible = false;
       return;
     }
-
     this.visible = true;
 
-    const normal = tmp.getNormalAt(0).multiply(this.offset + offset);
-
-    bs = b.add(normal.multiply(0.8));
-    es = e.add(normal.multiply(0.8));
+    const b = path.firstSegment.point;
+    const e = path.lastSegment.point;
+    const normal = path.getNormalAt(0).multiply(this.offset + path.offset);
+    const bs = b.add(normal.multiply(0.8));
+    const es = e.add(normal.multiply(0.8));
 
     if(children.callout1.segments.length){
       children.callout1.firstSegment.point = b;
@@ -309,6 +269,62 @@ class DimensionLine extends paper.Group {
     children.text.content = length.toFixed(0);
     children.text.rotation = e.subtract(b).angle;
     children.text.point = bs.add(es).divide(2);
+  }
+
+  get path() {
+
+    const {layer, project, children, _attr, pos} = this;
+    if(!children.length){
+      return;
+    }
+    const _bounds = layer.bounds;
+    const _dim_bounds = layer instanceof DimensionLayer ? project.dimension_bounds : layer.dimension_bounds;
+    let offset = 0, b, e;
+
+    if(!pos){
+      b = typeof _attr.p1 == "number" ? _attr.elm1.corns(_attr.p1) : _attr.elm1[_attr.p1];
+      e = typeof _attr.p2 == "number" ? _attr.elm2.corns(_attr.p2) : _attr.elm2[_attr.p2];
+    }
+    else if(pos == "top"){
+      b = _bounds.topLeft;
+      e = _bounds.topRight;
+      offset = _bounds[pos] - _dim_bounds[pos];
+    }
+    else if(pos == "left"){
+      b = _bounds.bottomLeft;
+      e = _bounds.topLeft;
+      offset = _bounds[pos] - _dim_bounds[pos];
+    }
+    else if(pos == "bottom"){
+      b = _bounds.bottomLeft;
+      e = _bounds.bottomRight;
+      offset = _bounds[pos] - _dim_bounds[pos];
+    }
+    else if(pos == "right"){
+      b = _bounds.bottomRight;
+      e = _bounds.topRight;
+      offset = _bounds[pos] - _dim_bounds[pos];
+    }
+
+    // если точки профиля еще не нарисованы - выходим
+    if(!b || !e){
+      return;
+    }
+
+    const path = new paper.Path({ insert: false, segments: [b, e] });
+
+    if(_attr.elm1 && pos){
+      b = path.getNearestPoint(_attr.elm1[_attr.p1]);
+      e = path.getNearestPoint(_attr.elm2[_attr.p2]);
+      if(path.getOffsetOf(b) > path.getOffsetOf(e)){
+        [b, e] = [e, b]
+      }
+      path.firstSegment.point = b;
+      path.lastSegment.point = e;
+    }
+    path.offset = offset;
+
+    return path;
   }
 
   // размер
@@ -363,6 +379,26 @@ class DimensionLine extends paper.Group {
   }
 }
 
+class DimensionGroup {
+
+  clear(){
+    for(let key in this){
+      this[key].removeChildren();
+      this[key].remove();
+      delete this[key];
+    }
+  }
+
+  has_size(size) {
+    for(let key in this){
+      const {path} = this[key];
+      if(path && Math.abs(path.length - size) < 1){
+        return true;
+      }
+    }
+  }
+
+}
 
 /**
  * ### Служебный слой размерных линий

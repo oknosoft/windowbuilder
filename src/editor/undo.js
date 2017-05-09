@@ -67,12 +67,12 @@ class UndoRedo {
         setTimeout(() => {
           this.clear();
           this.save_snapshot(scheme);
-        }, 600);
+        }, 700);
       }
       else {
         // при обычных изменениях, запускаем таймер снапшота
         this._snap_timer && clearTimeout(this._snap_timer);
-        this._snap_timer = setTimeout(this.run_snapshot, 600);
+        this._snap_timer = setTimeout(this.run_snapshot, 700);
       }
     }
   }

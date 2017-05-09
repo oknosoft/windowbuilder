@@ -30,39 +30,11 @@ class SchemeLayers {
 
     // гасим-включаем слой по чекбоксу
     this.tree.attachEvent("onCheck", (id, state) => {
-
-      const pid = this.tree.getParentId(id);
-      let sub = this.tree.getSubItems(id);
-
-      let l;
-
-      if(pid && state && !this.tree.isItemChecked(pid)){
-        if(l = paper.project.getItem({cnstr: Number(pid)})){
-          l.visible = true;
-        }
-        this.tree.checkItem(pid);
+      const contour = paper.project.getItem({cnstr: Number(id)});
+      if(contour){
+        contour.hidden = !state;
       }
-
-      if(l = paper.project.getItem({cnstr: Number(id)})){
-        l.visible = !!state;
-      }
-
-      if(typeof sub == "string"){
-        sub = sub.split(",");
-      }
-      sub.forEach((id) => {
-        state ? this.tree.checkItem(id) : this.tree.uncheckItem(id);
-        if(l = paper.project.getItem({cnstr: Number(id)})){
-          l.visible = !!state;
-        }
-      });
-
-      if(pid && state && !this.tree.isItemChecked(pid)){
-        this.tree.checkItem(pid);
-      }
-
       paper.project.register_update();
-
     });
 
     // делаем выделенный слой активным
@@ -116,11 +88,8 @@ class SchemeLayers {
   }
 
   load_layer(layer) {
-    this.tree.addItem(
-      layer.cnstr,
-      this.layer_text(layer),
-      layer.parent ? layer.parent.cnstr : 0);
-
+    this.tree.addItem(layer.cnstr, this.layer_text(layer), layer.parent ? layer.parent.cnstr : 0);
+    this.tree.checkItem(layer.cnstr);
     layer.contours.forEach((l) => this.load_layer(l));
   }
 
@@ -136,10 +105,9 @@ class SchemeLayers {
 
         // добавляем слои изделия
         this.tree.clearAll();
-        paper.project.contours.forEach((l) => {
-          this.load_layer(l);
-          this.tree.checkItem(l.cnstr);
-          this.tree.openItem(l.cnstr);
+        paper.project.contours.forEach((layer) => {
+          this.load_layer(layer);
+          this.tree.openItem(layer.cnstr);
 
         });
 

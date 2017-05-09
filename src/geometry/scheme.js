@@ -491,7 +491,7 @@ class Scheme extends paper.Project {
 
     // скрываем все слои
     const contours = this.getItems({class: Contour});
-    contours.forEach((l) => l.hide());
+    contours.forEach((l) => l.hidden = true);
     l_dimensions.visible = false;
     l_connective.visible = false;
 
@@ -502,7 +502,7 @@ class Scheme extends paper.Project {
       const cnstr = -attr.elm;
       contours.some((l) => {
         if(l.cnstr == cnstr){
-          l.show();
+          l.hidden = false;
           l.hide_generatrix();
           l.draw_sizes(true);
           l.zoom_fit();

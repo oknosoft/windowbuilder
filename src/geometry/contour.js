@@ -158,16 +158,8 @@ class Contour extends paper.Layer {
       }
     }
 
-    for(let key in l_dimensions.ihor){
-      l_dimensions.ihor[key].removeChildren();
-      l_dimensions.ihor[key].remove();
-      delete l_dimensions.ihor[key];
-    }
-    for(let key in l_dimensions.ivert){
-      l_dimensions.ivert[key].removeChildren();
-      l_dimensions.ivert[key].remove();
-      delete l_dimensions.ivert[key];
-    }
+    l_dimensions.ihor && l_dimensions.ihor.clear();
+    l_dimensions.ivert && l_dimensions.ivert.clear();
 
     ['bottom','top','right','left'].forEach(clear_pos);
 
@@ -1348,6 +1340,10 @@ class Contour extends paper.Layer {
 
     const {contours, parent, l_dimensions, bounds} = this;
 
+    if(forse){
+      this.clear_dimentions();
+    }
+
     // сначала, перерисовываем размерные линии вложенных контуров, чтобы получить отступы
     contours.forEach((elm) => elm.draw_sizes());
 
@@ -1379,10 +1375,11 @@ class Contour extends paper.Layer {
       }];
 
       const profiles = new Set(this.profiles);
-      this.imposts.forEach((elm) => profiles.add(elm));
+      this.imposts.forEach((elm) => !elm.layer.hidden && profiles.add(elm));
 
       profiles.forEach((elm) => {
 
+        // получаем точки начала и конца элемента
         const eb = elm.layer === this ? elm.b : elm.rays.b.npoint;
         const ee = elm.layer === this ? elm.e : elm.rays.e.npoint;
 
@@ -1416,14 +1413,11 @@ class Contour extends paper.Layer {
         }
       });
 
-      if(ihor.length > 2 || ivert.length > 2){
-
+      // для ihor добавляем по вертикали
+      if(ihor.length > 2){
         ihor.sort((a, b) => b.point - a.point);
-        ivert.sort((a, b) => a.point - b.point);
-
-        // для ihor добавляем по вертикали
         if(!l_dimensions.ihor){
-          l_dimensions.ihor = {};
+          l_dimensions.ihor = new DimensionGroup();
         }
         if(this.is_pos("right")){
           this.imposts_dimensions(ihor, l_dimensions.ihor, "right");
@@ -1431,10 +1425,18 @@ class Contour extends paper.Layer {
         else if(this.is_pos("left")){
           this.imposts_dimensions(ihor, l_dimensions.ihor, "left");
         }
+      }
+      else{
+        ihor.length = 0;
+      }
 
-        // для ivert добавляем по горизонтали
+      // для ivert добавляем по горизонтали
+      if(ivert.length > 2){
+
+        ivert.sort((a, b) => a.point - b.point);
+
         if(!l_dimensions.ivert){
-          l_dimensions.ivert = {};
+          l_dimensions.ivert = new DimensionGroup();
         }
         if(this.is_pos("bottom")){
           this.imposts_dimensions(ivert, l_dimensions.ivert, "bottom");
@@ -1443,9 +1445,12 @@ class Contour extends paper.Layer {
           this.imposts_dimensions(ivert, l_dimensions.ivert, "top");
         }
       }
+      else{
+        ivert.length = 0;
+      }
 
       // далее - размерные линии контура
-      this.draw_sizes_contour(ihor, ivert, !parent && forse);
+      this.draw_sizes_contour(ihor, ivert, forse);
 
     }
 
@@ -1459,75 +1464,92 @@ class Contour extends paper.Layer {
    */
   draw_sizes_contour (ihor, ivert, forse) {
 
-    const {project, l_dimensions} = this;
+    const {project, l_dimensions, bounds} = this;
+
 
     if (project.contours.length > 1 || forse) {
 
-      if(this.is_pos("left") && !this.is_pos("right") && project.bounds.height != this.bounds.height){
-        if(!l_dimensions.left){
-          l_dimensions.left = new DimensionLine({
-            pos: "left",
-            parent: l_dimensions,
-            offset: ihor.length > 2 ? 220 : 90,
-            contour: true
-          });
-        }else
-          l_dimensions.left.offset = ihor.length > 2 ? 220 : 90;
-
-      }else{
+      if(this.is_pos("left") && !this.is_pos("right") && project.bounds.height != bounds.height){
+        if(!l_dimensions.ihor || !l_dimensions.ihor.has_size(bounds.height)){
+          if(!l_dimensions.left){
+            l_dimensions.left = new DimensionLine({
+              pos: "left",
+              parent: l_dimensions,
+              offset: ihor.length > 2 ? 220 : 90,
+              contour: true
+            });
+          }
+          else{
+            l_dimensions.left.offset = ihor.length > 2 ? 220 : 90;
+          }
+        }
+      }
+      else{
         if(l_dimensions.left){
           l_dimensions.left.remove();
           l_dimensions.left = null;
         }
       }
 
-      if(this.is_pos("right") && ((project.bounds.height != this.bounds.height) || (forse && ihor.length > 2))){
-        if(!l_dimensions.right){
-          l_dimensions.right = new DimensionLine({
-            pos: "right",
-            parent: l_dimensions,
-            offset: ihor.length > 2 ? -260 : -130,
-            contour: true
-          });
-        }else
-          l_dimensions.right.offset = ihor.length > 2 ? -260 : -130;
-
-      }else{
+      if(this.is_pos("right") && (project.bounds.height != bounds.height || forse)){
+        if(!l_dimensions.ihor || !l_dimensions.ihor.has_size(bounds.height)){
+          if(!l_dimensions.right){
+            l_dimensions.right = new DimensionLine({
+              pos: "right",
+              parent: l_dimensions,
+              offset: ihor.length > 2 ? -260 : -130,
+              contour: true
+            });
+          }
+          else{
+            l_dimensions.right.offset = ihor.length > 2 ? -260 : -130;
+          }
+        }
+      }
+      else{
         if(l_dimensions.right){
           l_dimensions.right.remove();
           l_dimensions.right = null;
         }
       }
 
-      if(this.is_pos("top") && !this.is_pos("bottom") && project.bounds.width != this.bounds.width){
-        if(!l_dimensions.top){
-          l_dimensions.top = new DimensionLine({
-            pos: "top",
-            parent: l_dimensions,
-            offset: ivert.length > 2 ? 220 : 90,
-            contour: true
-          });
-        }else
-          l_dimensions.top.offset = ivert.length > 2 ? 220 : 90;
-      }else{
+      if(this.is_pos("top") && !this.is_pos("bottom") && project.bounds.width != bounds.width){
+        if(!l_dimensions.ivert || !l_dimensions.ivert.has_size(bounds.width)){
+          if(!l_dimensions.top){
+            l_dimensions.top = new DimensionLine({
+              pos: "top",
+              parent: l_dimensions,
+              offset: ivert.length > 2 ? 220 : 90,
+              contour: true
+            });
+          }
+          else{
+            l_dimensions.top.offset = ivert.length > 2 ? 220 : 90;
+          }
+        }
+      }
+      else{
         if(l_dimensions.top){
           l_dimensions.top.remove();
           l_dimensions.top = null;
         }
       }
 
-      if(this.is_pos("bottom") && ((project.bounds.width != this.bounds.width) || (forse && ivert.length > 2))){
-        if(!l_dimensions.bottom){
-          l_dimensions.bottom = new DimensionLine({
-            pos: "bottom",
-            parent: l_dimensions,
-            offset: ivert.length > 2 ? -260 : -130,
-            contour: true
-          });
-        }else
-          l_dimensions.bottom.offset = ivert.length > 2 ? -260 : -130;
-
-      }else{
+      if(this.is_pos("bottom") && (project.bounds.width != bounds.width || forse)){
+        if(!l_dimensions.ivert || !l_dimensions.ivert.has_size(bounds.width)){
+          if(!l_dimensions.bottom){
+            l_dimensions.bottom = new DimensionLine({
+              pos: "bottom",
+              parent: l_dimensions,
+              offset: ivert.length > 2 ? -260 : -130,
+              contour: true
+            });
+          }else{
+            l_dimensions.bottom.offset = ivert.length > 2 ? -260 : -130;
+          }
+        }
+      }
+      else{
         if(l_dimensions.bottom){
           l_dimensions.bottom.remove();
           l_dimensions.bottom = null;
@@ -1561,19 +1583,22 @@ class Contour extends paper.Layer {
 
   }
 
-  show() {
-    this.hide(false)
+  get hidden() {
+    return !!this._hidden;
   }
+  set hidden(v) {
+    if(this.hidden != v){
+      this._hidden = v;
+      const visible = !this._hidden;
+      this.children.forEach((elm) => {
+        if(elm instanceof BuilderElement){
+          elm.visible = visible;
+        }
+      })
+      this.l_visualization.visible = visible;
+      this.l_dimensions.visible = visible;
+    }
 
-  hide(v) {
-    const visible = v === false ? true : false;
-    this.children.forEach((elm) => {
-      if(elm instanceof BuilderElement){
-        elm.visible = visible;
-      }
-    })
-    this.l_visualization.visible = visible;
-    this.l_dimensions.visible = visible;
   }
 
   hide_generatrix() {
