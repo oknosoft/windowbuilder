@@ -1,7 +1,10 @@
 
 const $p = require('../metadata');
 
+const debug = require('debug')('wb:paper');
+
 const paper = require('paper/dist/paper-core.js');
+debug('required');
 
 class Editor extends paper.PaperScope {
 

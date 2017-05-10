@@ -1,6 +1,7 @@
 'use strict';
 
-//const metadata = require('./metadata');
+const debug = require('debug')('wb:router');
+debug('start');
 
 const builder = require('./builder');
 
@@ -8,18 +9,14 @@ const Router = require('koa-better-router');
 const rep = Router({ prefix: '/r' });
 
 rep.loadMethods()
-  .get('/', (ctx, next) => {
-    ctx.body = 'reports';
-    return next()
-  }, (ctx, next) => {
-    ctx.body = `${ctx.body} Try out <a href="/r/img">/r/img</a> too`
-    return next()
+  .get('/', async (ctx, next) => {
+    await next();
+    ctx.body = `Reports: try out <a href="/r/img">/r/img</a> too`
   })
-
-rep.get('/img', async (ctx, next) => {
-  await next();
-  ctx.body = `Prefix: ${ctx.route.prefix}, path: ${ctx.route.path}`;
-  console.log(metadata[0]);
-})
+  .get('/img/:class/:ref', async (ctx, next) => {
+    await next();
+    //ctx.body = `Prefix: ${ctx.route.prefix}, path: ${ctx.route.path}`;
+    ctx.body = await builder(ctx.params);
+  });
 
 module.exports = rep;

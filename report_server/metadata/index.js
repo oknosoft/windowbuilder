@@ -1,6 +1,8 @@
 
 require('./observe');
 
+const debug = require('debug')('wb:meta');
+
 // функция установки параметров сеанса
 const config_init = require('../../config/report.settings');
 
@@ -8,26 +10,29 @@ const config_init = require('../../config/report.settings');
 const meta_init = require('../../src/metadata/init');
 
 // конструктор MetaEngine
-const MetaEngine = require('metadata-core').default
-  .plugin(require('metadata-pouchdb').default);
+const MetaEngine = require('../../node_modules/metadata-core').default
+  .plugin(require('../../node_modules/metadata-pouchdb').default);
+debug('required');
 
 const doc_calc_order = require('./documents/doc_calc_order.js');
 
-const request = require('request');
-
 // подключим метадату
 const $p = new MetaEngine();
+debug('created');
 
 // подключаем модификаторы
 //doc_calc_order($p);
 
 // инициализируем параметры сеанса и метаданные
-const {user_node} = config_init();
-$p.wsql.init(config_init, meta_init);
-$p.adapters.pouch.log_in(user_node.username, user_node.password);
+(async () => {
+  const {user_node} = config_init();
+  $p.wsql.init(config_init, meta_init);
+  debug('inited');
+  await $p.adapters.pouch.log_in(user_node.username, user_node.password);
+  debug('logged in');
+})();
 
 module.exports = $p;
-
 
 const tmp = async (ctx, next) => {
 

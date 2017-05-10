@@ -1,7 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 .idea/
 build/
-config/report.settings.js
 data/.idea/
 data/11.js
 data/_design.json
