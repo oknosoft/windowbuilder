@@ -418,10 +418,23 @@ function ProductsBuilding(){
 	 * @param [is_high_level_call] {Boolean} - вызов верхнего уровня - специфично для стеклопакетов
    * @param [len_angl] {BuilderElement} - элемент, к которому привязана вставка
 	 */
-	function inset_filter_spec(inset, elm, is_high_level_call, len_angl){
+	function inset_filter_spec(inset, elm, is_high_level_call, len_angl, own_row){
 
 		const res = [];
 		const glass_rows = [];
+
+		function fake_row(row) {
+		  if(row._metadata){
+        const res = {};
+        for(let fld in row._metadata.fields){
+          res[fld] = row[fld];
+        }
+        return res;
+      }
+      else{
+		    return Object.assign({}, row);
+      }
+    }
 
 		if(!inset || inset.empty()){
       return res;
@@ -453,14 +466,18 @@ function ProductsBuilding(){
       }
 
 			// Проверяем параметры изделия, контура или элемента
+      if(own_row && row.clr.empty() && !own_row.clr.empty()){
+        row = fake_row(row);
+        row.clr = own_row.clr;
+      }
 			if(!check_params(inset.selection_params, row, elm, len_angl && len_angl.cnstr, len_angl && len_angl.origin)){
         return;
       }
 
 			// Добавляем или разузловываем дальше
 			if(row.nom instanceof $p.CatInserts){
-        inset_filter_spec(row.nom, elm, false, len_angl).forEach((subrow) => {
-          const fakerow = {}._mixin(subrow, ['angle_calc_method','clr','count_calc_method','elm','formula','is_main_elm','is_order_row','nom','sz']);
+        inset_filter_spec(row.nom, elm, false, len_angl, row).forEach((subrow) => {
+          const fakerow = fake_row(subrow);
           fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
           fakerow.coefficient = (subrow.coefficient || 1) * (row.coefficient || 1);
           fakerow._origin = row.nom;

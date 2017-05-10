@@ -7141,7 +7141,7 @@ class ProfileItem extends BuilderElement {
 
     _attr._rays = new ProfileRays(this);
 
-    _attr.generatrix.strokeColor = 'lightgray';
+    _attr.generatrix.strokeColor = 'gray';
 
     _attr.path = new paper.Path();
     _attr.path.strokeColor = 'black';
