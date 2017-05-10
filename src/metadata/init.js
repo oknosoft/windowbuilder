@@ -56,7 +56,7 @@ $p.enm.individual_legal = new EnumManager('enm.individual_legal')
 * Хранит значения настроек и параметров подсистем
 * @class CchPredefined_elmnts
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CchPredefined_elmnts = class CchPredefined_elmnts extends CatObj{}
 _define($p.CchPredefined_elmnts.prototype, {value: {get: function(){return this._getter('value')}, set: function(v){this._setter('value',v)}, enumerable: true, configurable: true},
@@ -78,7 +78,7 @@ $p.cch.predefined_elmnts = new ChartOfCharacteristicManager('cch.predefined_elmn
 * Дополнительные реквизиты и сведения
 * @class CchProperties
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CchProperties = class CchProperties extends CatObj{}
 _define($p.CchProperties.prototype, {shown: {get: function(){return this._getter('shown')}, set: function(v){this._setter('shown',v)}, enumerable: true, configurable: true},
@@ -108,7 +108,7 @@ $p.cch.properties = new ChartOfCharacteristicManager('cch.properties')
 * Подчиненные параметры
 * @class CatParams_links
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatParams_links = class CatParams_links extends CatObj{}
 _define($p.CatParams_links.prototype, {master: {get: function(){return this._getter('master')}, set: function(v){this._setter('master',v)}, enumerable: true, configurable: true},
@@ -130,7 +130,7 @@ $p.cat.params_links = new CatManager('cat.params_links')
 * Банковские счета сторонних контрагентов и физических лиц.
 * @class CatPartner_bank_accounts
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatPartner_bank_accounts = class CatPartner_bank_accounts extends CatObj{}
 _define($p.CatPartner_bank_accounts.prototype, {account_number: {get: function(){return this._getter('account_number')}, set: function(v){this._setter('account_number',v)}, enumerable: true, configurable: true},
@@ -154,10 +154,10 @@ $p.cat.partner_bank_accounts = new CatManager('cat.partner_bank_accounts')
 
 /**
 * ### Справочник БанковскиеСчетаОрганизаций
-* Банковские счета собственных организаций.
+* Банковские счета собственных организаций. 
 * @class CatOrganization_bank_accounts
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatOrganization_bank_accounts = class CatOrganization_bank_accounts extends CatObj{}
 _define($p.CatOrganization_bank_accounts.prototype, {bank: {get: function(){return this._getter('bank')}, set: function(v){this._setter('bank',v)}, enumerable: true, configurable: true},
@@ -176,7 +176,7 @@ $p.cat.organization_bank_accounts = new CatManager('cat.organization_bank_accoun
 * Дополнительные значения (иерархия)
 * @class CatProperty_values_hierarchy
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatProperty_values_hierarchy = class CatProperty_values_hierarchy extends CatObj{}
 _define($p.CatProperty_values_hierarchy.prototype, {heft: {get: function(){return this._getter('heft')}, set: function(v){this._setter('heft',v)}, enumerable: true, configurable: true},
@@ -191,7 +191,7 @@ $p.cat.property_values_hierarchy = new CatManager('cat.property_values_hierarchy
 * Классификатор банков РФ
 * @class CatBanks_qualifier
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatBanks_qualifier = class CatBanks_qualifier extends CatObj{}
 _define($p.CatBanks_qualifier.prototype, {correspondent_account: {get: function(){return this._getter('correspondent_account')}, set: function(v){this._setter('correspondent_account',v)}, enumerable: true, configurable: true},
@@ -210,7 +210,7 @@ $p.cat.banks_qualifier = new CatManager('cat.banks_qualifier')
 * Наборы дополнительных реквизитов и сведений
 * @class CatDestinations
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatDestinations = class CatDestinations extends CatObj{}
 _define($p.CatDestinations.prototype, {КоличествоРеквизитов: {get: function(){return this._getter('КоличествоРеквизитов')}, set: function(v){this._setter('КоличествоРеквизитов',v)}, enumerable: true, configurable: true},
@@ -233,7 +233,7 @@ $p.cat.destinations = new CatManager('cat.destinations')
 * Страны мира
 * @class CatCountries
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatCountries = class CatCountries extends CatObj{}
 _define($p.CatCountries.prototype, {name_full: {get: function(){return this._getter('name_full')}, set: function(v){this._setter('name_full',v)}, enumerable: true, configurable: true},
@@ -247,7 +247,7 @@ $p.cat.countries = new CatManager('cat.countries')
 * Формулы пользователя, для выполнения при расчете спецификаций в справочниках Вставки, Соединения, Фурнитура и регистре Корректировки спецификации
 * @class CatFormulas
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatFormulas = class CatFormulas extends CatObj{}
 _define($p.CatFormulas.prototype, {formula: {get: function(){return this._getter('formula')}, set: function(v){this._setter('formula',v)}, enumerable: true, configurable: true},
@@ -269,7 +269,7 @@ $p.cat.formulas = new CatManager('cat.formulas')
 * Строки svg для рисования петель, ручек и графических примитивов
 * @class CatElm_visualization
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatElm_visualization = class CatElm_visualization extends CatObj{}
 _define($p.CatElm_visualization.prototype, {svg_path: {get: function(){return this._getter('svg_path')}, set: function(v){this._setter('svg_path',v)}, enumerable: true, configurable: true},
@@ -290,7 +290,7 @@ $p.cat.elm_visualization = new CatManager('cat.elm_visualization')
 * Валюты, используемые при расчетах
 * @class CatCurrencies
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatCurrencies = class CatCurrencies extends CatObj{}
 _define($p.CatCurrencies.prototype, {name_full: {get: function(){return this._getter('name_full')}, set: function(v){this._setter('name_full',v)}, enumerable: true, configurable: true},
@@ -305,7 +305,7 @@ $p.cat.currencies = new CatManager('cat.currencies')
 * Виды контактной информации
 * @class CatContact_information_kinds
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatContact_information_kinds = class CatContact_information_kinds extends CatObj{}
 _define($p.CatContact_information_kinds.prototype, {type: {get: function(){return this._getter('type')}, set: function(v){this._setter('type',v)}, enumerable: true, configurable: true},
@@ -321,7 +321,7 @@ $p.cat.contact_information_kinds = new CatManager('cat.contact_information_kinds
 * Виды номенклатуры
 * @class CatNom_kinds
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatNom_kinds = class CatNom_kinds extends CatObj{}
 _define($p.CatNom_kinds.prototype, {nom_type: {get: function(){return this._getter('nom_type')}, set: function(v){this._setter('nom_type',v)}, enumerable: true, configurable: true},
@@ -336,7 +336,7 @@ $p.cat.nom_kinds = new CatManager('cat.nom_kinds')
 * Перечень договоров, заключенных с контрагентами
 * @class CatContracts
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatContracts = class CatContracts extends CatObj{}
 _define($p.CatContracts.prototype, {settlements_currency: {get: function(){return this._getter('settlements_currency')}, set: function(v){this._setter('settlements_currency',v)}, enumerable: true, configurable: true},
@@ -371,7 +371,7 @@ $p.cat.contracts = new CatManager('cat.contracts')
 * Перечень единиц измерения номенклатуры и номенклатурных групп
 * @class CatNom_units
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatNom_units = class CatNom_units extends CatObj{}
 _define($p.CatNom_units.prototype, {qualifier_unit: {get: function(){return this._getter('qualifier_unit')}, set: function(v){this._setter('qualifier_unit',v)}, enumerable: true, configurable: true},
@@ -389,7 +389,7 @@ $p.cat.nom_units = new CatManager('cat.nom_units')
 * Дополнительные значения
 * @class CatProperty_values
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatProperty_values = class CatProperty_values extends CatObj{}
 _define($p.CatProperty_values.prototype, {heft: {get: function(){return this._getter('heft')}, set: function(v){this._setter('heft',v)}, enumerable: true, configurable: true},
@@ -404,7 +404,7 @@ $p.cat.property_values = new CatManager('cat.property_values')
 * Идентификаторы объектов метаданных для использования в базе данных.
 * @class CatMeta_ids
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatMeta_ids = class CatMeta_ids extends CatObj{}
 _define($p.CatMeta_ids.prototype, {full_moniker: {get: function(){return this._getter('full_moniker')}, set: function(v){this._setter('full_moniker',v)}, enumerable: true, configurable: true},
@@ -414,10 +414,10 @@ $p.cat.meta_ids = new CatManager('cat.meta_ids')
 
 /**
 * ### Справочник Кассы
-* Список мест фактического хранения и движения наличных денежных средств предприятия. Кассы разделены по организациям и валютам денежных средств.
+* Список мест фактического хранения и движения наличных денежных средств предприятия. Кассы разделены по организациям и валютам денежных средств. 
 * @class CatCashboxes
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatCashboxes = class CatCashboxes extends CatObj{}
 _define($p.CatCashboxes.prototype, {funds_currency: {get: function(){return this._getter('funds_currency')}, set: function(v){this._setter('funds_currency',v)}, enumerable: true, configurable: true},
@@ -432,7 +432,7 @@ $p.cat.cashboxes = new CatManager('cat.cashboxes')
 * Классификатор единиц измерения
 * @class CatUnits
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatUnits = class CatUnits extends CatObj{}
 _define($p.CatUnits.prototype, {name_full: {get: function(){return this._getter('name_full')}, set: function(v){this._setter('name_full',v)}, enumerable: true, configurable: true},
@@ -445,7 +445,7 @@ $p.cat.units = new CatManager('cat.units')
 * Список юридических или физических лиц клиентов (поставщиков, покупателей).
 * @class CatPartners
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatPartners = class CatPartners extends CatObj{}
 _define($p.CatPartners.prototype, {name_full: {get: function(){return this._getter('name_full')}, set: function(v){this._setter('name_full',v)}, enumerable: true, configurable: true},
@@ -488,7 +488,7 @@ $p.cat.partners = new CatManager('cat.partners')
 * Перечень товаров, продукции, материалов, полуфабрикатов, тары, услуг
 * @class CatNom
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatNom = class CatNom extends CatObj{}
 _define($p.CatNom.prototype, {article: {get: function(){return this._getter('article')}, set: function(v){this._setter('article',v)}, enumerable: true, configurable: true},
@@ -540,7 +540,7 @@ $p.cat.nom = new CatManager('cat.nom')
 * Организации
 * @class CatOrganizations
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatOrganizations = class CatOrganizations extends CatObj{}
 _define($p.CatOrganizations.prototype, {prefix: {get: function(){return this._getter('prefix')}, set: function(v){this._setter('prefix',v)}, enumerable: true, configurable: true},
@@ -583,7 +583,7 @@ $p.cat.organizations = new CatManager('cat.organizations')
 * Армирование, пленки, вставки - дополнение спецификации, которое зависит от одного элемента
 * @class CatInserts
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatInserts = class CatInserts extends CatObj{}
 _define($p.CatInserts.prototype, {insert_type: {get: function(){return this._getter('insert_type')}, set: function(v){this._setter('insert_type',v)}, enumerable: true, configurable: true},
@@ -651,7 +651,7 @@ $p.cat.inserts = new CatManager('cat.inserts')
 
 * @class CatParameters_keys
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatParameters_keys = class CatParameters_keys extends CatObj{}
 _define($p.CatParameters_keys.prototype, {priority: {get: function(){return this._getter('priority')}, set: function(v){this._setter('priority',v)}, enumerable: true, configurable: true},
@@ -671,7 +671,7 @@ $p.cat.parameters_keys = new CatManager('cat.parameters_keys')
 * Настройки системы профилей и фурнитуры
 * @class CatProduction_params
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatProduction_params = class CatProduction_params extends CatObj{}
 _define($p.CatProduction_params.prototype, {default_clr: {get: function(){return this._getter('default_clr')}, set: function(v){this._setter('default_clr',v)}, enumerable: true, configurable: true},
@@ -717,7 +717,7 @@ $p.cat.production_params = new CatManager('cat.production_params')
 * Права внешних пользователей
 * @class CatUsers_acl
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatUsers_acl = class CatUsers_acl extends CatObj{}
 _define($p.CatUsers_acl.prototype, {prefix: {get: function(){return this._getter('prefix')}, set: function(v){this._setter('prefix',v)}, enumerable: true, configurable: true},
@@ -736,7 +736,7 @@ $p.cat.users_acl = new CatManager('cat.users_acl')
 * Районы доставки
 * @class CatDelivery_areas
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatDelivery_areas = class CatDelivery_areas extends CatObj{}
 _define($p.CatDelivery_areas.prototype, {country: {get: function(){return this._getter('country')}, set: function(v){this._setter('country',v)}, enumerable: true, configurable: true},
@@ -755,7 +755,7 @@ $p.cat.delivery_areas = new CatManager('cat.delivery_areas')
 * Спецификации соединений элементов
 * @class CatCnns
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatCnns = class CatCnns extends CatObj{}
 _define($p.CatCnns.prototype, {priority: {get: function(){return this._getter('priority')}, set: function(v){this._setter('priority',v)}, enumerable: true, configurable: true},
@@ -821,7 +821,7 @@ $p.cat.cnns = new CatManager('cat.cnns')
 * Описывает ограничения и правила формирования спецификаций фурнитуры
 * @class CatFurns
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatFurns = class CatFurns extends CatObj{}
 _define($p.CatFurns.prototype, {flap_weight_max: {get: function(){return this._getter('flap_weight_max')}, set: function(v){this._setter('flap_weight_max',v)}, enumerable: true, configurable: true},
@@ -899,7 +899,7 @@ $p.cat.furns = new CatManager('cat.furns')
 * Цвета
 * @class CatClrs
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatClrs = class CatClrs extends CatObj{}
 _define($p.CatClrs.prototype, {ral: {get: function(){return this._getter('ral')}, set: function(v){this._setter('ral',v)}, enumerable: true, configurable: true},
@@ -916,7 +916,7 @@ $p.cat.clrs = new CatManager('cat.clrs')
 * Цвето-ценовые группы
 * @class CatColor_price_groups
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatColor_price_groups = class CatColor_price_groups extends CatObj{}
 _define($p.CatColor_price_groups.prototype, {color_price_group_destination: {get: function(){return this._getter('color_price_group_destination')}, set: function(v){this._setter('color_price_group_destination',v)}, enumerable: true, configurable: true},
@@ -935,7 +935,7 @@ $p.cat.color_price_groups = new CatManager('cat.color_price_groups')
 * Перечень подразделений предприятия
 * @class CatDivisions
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatDivisions = class CatDivisions extends CatObj{}
 _define($p.CatDivisions.prototype, {main_project: {get: function(){return this._getter('main_project')}, set: function(v){this._setter('main_project',v)}, enumerable: true, configurable: true},
@@ -954,7 +954,7 @@ $p.cat.divisions = new CatManager('cat.divisions')
 * Пользователи
 * @class CatUsers
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatUsers = class CatUsers extends CatObj{}
 _define($p.CatUsers.prototype, {user_ib_uid: {get: function(){return this._getter('user_ib_uid')}, set: function(v){this._setter('user_ib_uid',v)}, enumerable: true, configurable: true},
@@ -992,7 +992,7 @@ $p.cat.users = new CatManager('cat.users')
 * Проекты
 * @class CatProjects
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatProjects = class CatProjects extends CatObj{}
 _define($p.CatProjects.prototype, {start: {get: function(){return this._getter('start')}, set: function(v){this._setter('start',v)}, enumerable: true, configurable: true},
@@ -1016,7 +1016,7 @@ $p.cat.projects = new CatManager('cat.projects')
 * Сведения о местах хранения товаров (складах), их структуре и физических лицах, назначенных материально ответственными (МОЛ) за тот или иной склад
 * @class CatStores
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatStores = class CatStores extends CatObj{}
 _define($p.CatStores.prototype, {note: {get: function(){return this._getter('note')}, set: function(v){this._setter('note',v)}, enumerable: true, configurable: true},
@@ -1035,7 +1035,7 @@ $p.cat.stores = new CatManager('cat.stores')
 * Перечень рабочих смен предприятия
 * @class CatWork_shifts
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatWork_shifts = class CatWork_shifts extends CatObj{}
 _define($p.CatWork_shifts.prototype, {predefined_name: {get: function(){return this._getter('predefined_name')}, set: function(v){this._setter('predefined_name',v)}, enumerable: true, configurable: true}});
@@ -1047,10 +1047,10 @@ $p.cat.work_shifts = new CatManager('cat.work_shifts')
 
 /**
 * ### Справочник СтатьиДвиженияДенежныхСредств
-* Перечень статей движения денежных средств (ДДС), используемых в предприятии для проведения анализа поступлений и расходов в разрезе статей движения денежных средств.
+* Перечень статей движения денежных средств (ДДС), используемых в предприятии для проведения анализа поступлений и расходов в разрезе статей движения денежных средств. 
 * @class CatCash_flow_articles
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatCash_flow_articles = class CatCash_flow_articles extends CatObj{}
 _define($p.CatCash_flow_articles.prototype, {definition: {get: function(){return this._getter('definition')}, set: function(v){this._setter('definition',v)}, enumerable: true, configurable: true},
@@ -1064,7 +1064,7 @@ $p.cat.cash_flow_articles = new CatManager('cat.cash_flow_articles')
 * Перечень типов отпускных цен предприятия
 * @class CatNom_prices_types
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatNom_prices_types = class CatNom_prices_types extends CatObj{}
 _define($p.CatNom_prices_types.prototype, {price_currency: {get: function(){return this._getter('price_currency')}, set: function(v){this._setter('price_currency',v)}, enumerable: true, configurable: true},
@@ -1081,7 +1081,7 @@ $p.cat.nom_prices_types = new CatManager('cat.nom_prices_types')
 * Физические лица
 * @class CatIndividuals
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatIndividuals = class CatIndividuals extends CatObj{}
 _define($p.CatIndividuals.prototype, {birth_date: {get: function(){return this._getter('birth_date')}, set: function(v){this._setter('birth_date',v)}, enumerable: true, configurable: true},
@@ -1124,7 +1124,7 @@ $p.cat.individuals = new CatManager('cat.individuals')
 * Дополнительные характеристики элементов номенклатуры: цвет, размер и т.п.
 * @class CatCharacteristics
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatCharacteristics = class CatCharacteristics extends CatObj{}
 _define($p.CatCharacteristics.prototype, {x: {get: function(){return this._getter('x')}, set: function(v){this._setter('x',v)}, enumerable: true, configurable: true},
@@ -1251,7 +1251,7 @@ $p.cat.characteristics = new CatManager('cat.characteristics')
 * Ценовые группы
 * @class CatPrice_groups
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatPrice_groups = class CatPrice_groups extends CatObj{}
 _define($p.CatPrice_groups.prototype, {definition: {get: function(){return this._getter('definition')}, set: function(v){this._setter('definition',v)}, enumerable: true, configurable: true},
@@ -1263,7 +1263,7 @@ $p.cat.price_groups = new CatManager('cat.price_groups')
 * Перечень номенклатурных групп для учета затрат и укрупненного планирования продаж, закупок и производства
 * @class CatNom_groups
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatNom_groups = class CatNom_groups extends CatObj{}
 _define($p.CatNom_groups.prototype, {vat_rate: {get: function(){return this._getter('vat_rate')}, set: function(v){this._setter('vat_rate',v)}, enumerable: true, configurable: true},
@@ -1276,7 +1276,7 @@ $p.cat.nom_groups = new CatManager('cat.nom_groups')
 * Замена регистра "Корректировка спецификации"
 * @class CatInsert_bind
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatInsert_bind = class CatInsert_bind extends CatObj{}
 _define($p.CatInsert_bind.prototype, {inset: {get: function(){return this._getter('inset')}, set: function(v){this._setter('inset',v)}, enumerable: true, configurable: true},
@@ -1293,7 +1293,7 @@ $p.cat.insert_bind = new CatManager('cat.insert_bind')
 * Признаки нестандартов
 * @class CatNonstandard_attributes
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatNonstandard_attributes = class CatNonstandard_attributes extends CatObj{}
 _define($p.CatNonstandard_attributes.prototype, {crooked: {get: function(){return this._getter('crooked')}, set: function(v){this._setter('crooked',v)}, enumerable: true, configurable: true},
@@ -1309,7 +1309,7 @@ $p.cat.nonstandard_attributes = new CatManager('cat.nonstandard_attributes')
 * Объединяет районы, территории или подразделения продаж
 * @class CatDelivery_directions
 * @extends CatObj
-* @constructor
+* @constructor 
 */
 $p.CatDelivery_directions = class CatDelivery_directions extends CatObj{}
 _define($p.CatDelivery_directions.prototype, {predefined_name: {get: function(){return this._getter('predefined_name')}, set: function(v){this._setter('predefined_name',v)}, enumerable: true, configurable: true}});
@@ -1323,7 +1323,7 @@ $p.cat.delivery_directions = new CatManager('cat.delivery_directions')
 * Корректировка регистров
 * @class DocRegisters_correction
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocRegisters_correction = class DocRegisters_correction extends DocObj{}
 _define($p.DocRegisters_correction.prototype, {original_doc_type: {get: function(){return this._getter('original_doc_type')}, set: function(v){this._setter('original_doc_type',v)}, enumerable: true, configurable: true},
@@ -1340,7 +1340,7 @@ $p.doc.registers_correction = new DocManager('doc.registers_correction')
 * Документы отражают поступление товаров и услуг
 * @class DocPurchase
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocPurchase = class DocPurchase extends DocObj{}
 _define($p.DocPurchase.prototype, {organization: {get: function(){return this._getter('organization')}, set: function(v){this._setter('organization',v)}, enumerable: true, configurable: true},
@@ -1386,7 +1386,7 @@ $p.doc.purchase = new DocManager('doc.purchase')
 * Задание рабочему центру
 * @class DocWork_centers_task
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocWork_centers_task = class DocWork_centers_task extends DocObj{}
 _define($p.DocWork_centers_task.prototype, {responsible: {get: function(){return this._getter('responsible')}, set: function(v){this._setter('responsible',v)}, enumerable: true, configurable: true},
@@ -1455,7 +1455,7 @@ $p.doc.work_centers_task = new DocManager('doc.work_centers_task')
 Содержит инструменты для формирования спецификаций и подготовки данных производства и диспетчеризации
 * @class DocCalc_order
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocCalc_order = class DocCalc_order extends DocObj{}
 _define($p.DocCalc_order.prototype, {number_internal: {get: function(){return this._getter('number_internal')}, set: function(v){this._setter('number_internal',v)}, enumerable: true, configurable: true},
@@ -1548,7 +1548,7 @@ $p.doc.calc_order = new DocManager('doc.calc_order')
 * Оплата от покупателя платежной картой
 * @class DocCredit_card_order
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocCredit_card_order = class DocCredit_card_order extends DocObj{}
 _define($p.DocCredit_card_order.prototype, {organization: {get: function(){return this._getter('organization')}, set: function(v){this._setter('organization',v)}, enumerable: true, configurable: true},
@@ -1574,7 +1574,7 @@ $p.doc.credit_card_order = new DocManager('doc.credit_card_order')
 * Мощности рабочих центров
 * @class DocWork_centers_performance
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocWork_centers_performance = class DocWork_centers_performance extends DocObj{}
 _define($p.DocWork_centers_performance.prototype, {start_date: {get: function(){return this._getter('start_date')}, set: function(v){this._setter('start_date',v)}, enumerable: true, configurable: true},
@@ -1593,7 +1593,7 @@ $p.doc.work_centers_performance = new DocManager('doc.work_centers_performance')
 * Платежное поручение входящее
 * @class DocDebit_bank_order
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocDebit_bank_order = class DocDebit_bank_order extends DocObj{}
 _define($p.DocDebit_bank_order.prototype, {organization: {get: function(){return this._getter('organization')}, set: function(v){this._setter('organization',v)}, enumerable: true, configurable: true},
@@ -1619,7 +1619,7 @@ $p.doc.debit_bank_order = new DocManager('doc.debit_bank_order')
 * Платежное поручение исходящее
 * @class DocCredit_bank_order
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocCredit_bank_order = class DocCredit_bank_order extends DocObj{}
 _define($p.DocCredit_bank_order.prototype, {organization: {get: function(){return this._getter('organization')}, set: function(v){this._setter('organization',v)}, enumerable: true, configurable: true},
@@ -1645,7 +1645,7 @@ $p.doc.credit_bank_order = new DocManager('doc.credit_bank_order')
 * Приходный кассовый ордер
 * @class DocDebit_cash_order
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocDebit_cash_order = class DocDebit_cash_order extends DocObj{}
 _define($p.DocDebit_cash_order.prototype, {organization: {get: function(){return this._getter('organization')}, set: function(v){this._setter('organization',v)}, enumerable: true, configurable: true},
@@ -1672,7 +1672,7 @@ $p.doc.debit_cash_order = new DocManager('doc.debit_cash_order')
 * Расходный кассовый ордер
 * @class DocCredit_cash_order
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocCredit_cash_order = class DocCredit_cash_order extends DocObj{}
 _define($p.DocCredit_cash_order.prototype, {organization: {get: function(){return this._getter('organization')}, set: function(v){this._setter('organization',v)}, enumerable: true, configurable: true},
@@ -1699,7 +1699,7 @@ $p.doc.credit_cash_order = new DocManager('doc.credit_cash_order')
 * Документы отражают факт реализации (отгрузки) товаров
 * @class DocSelling
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocSelling = class DocSelling extends DocObj{}
 _define($p.DocSelling.prototype, {organization: {get: function(){return this._getter('organization')}, set: function(v){this._setter('organization',v)}, enumerable: true, configurable: true},
@@ -1743,7 +1743,7 @@ $p.doc.selling = new DocManager('doc.selling')
 * Установка цен номенклатуры
 * @class DocNom_prices_setup
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocNom_prices_setup = class DocNom_prices_setup extends DocObj{}
 _define($p.DocNom_prices_setup.prototype, {price_type: {get: function(){return this._getter('price_type')}, set: function(v){this._setter('price_type',v)}, enumerable: true, configurable: true},
@@ -1764,7 +1764,7 @@ $p.doc.nom_prices_setup = new DocManager('doc.nom_prices_setup')
 * Событие планирования
 * @class DocPlanning_event
 * @extends DocObj
-* @constructor
+* @constructor 
 */
 $p.DocPlanning_event = class DocPlanning_event extends DocObj{}
 _define($p.DocPlanning_event.prototype, {phase: {get: function(){return this._getter('phase')}, set: function(v){this._setter('phase',v)}, enumerable: true, configurable: true},
@@ -1795,7 +1795,7 @@ $p.doc.planning_event = new DocManager('doc.planning_event')
 * Состояния заказов клиентов
 * @class IregBuyers_order_states
 * @extends RegisterRow
-* @constructor
+* @constructor 
 */
 $p.IregBuyers_order_states = class IregBuyers_order_states extends RegisterRow{}
 _define($p.IregBuyers_order_states.prototype, {invoice: {get: function(){return this._getter('invoice')}, set: function(v){this._setter('invoice',v)}, enumerable: true, configurable: true},
@@ -1815,7 +1815,7 @@ $p.ireg.buyers_order_states = new InfoRegManager('ireg.buyers_order_states')
 * Курсы валют
 * @class IregCurrency_courses
 * @extends RegisterRow
-* @constructor
+* @constructor 
 */
 $p.IregCurrency_courses = class IregCurrency_courses extends RegisterRow{}
 _define($p.IregCurrency_courses.prototype, {currency: {get: function(){return this._getter('currency')}, set: function(v){this._setter('currency',v)}, enumerable: true, configurable: true},
@@ -1829,7 +1829,7 @@ $p.ireg.currency_courses = new InfoRegManager('ireg.currency_courses')
 * Маржинальные коэффициенты
 * @class IregMargin_coefficients
 * @extends RegisterRow
-* @constructor
+* @constructor 
 */
 $p.IregMargin_coefficients = class IregMargin_coefficients extends RegisterRow{}
 _define($p.IregMargin_coefficients.prototype, {price_group: {get: function(){return this._getter('price_group')}, set: function(v){this._setter('price_group',v)}, enumerable: true, configurable: true},
@@ -1856,7 +1856,7 @@ $p.ireg.margin_coefficients = new InfoRegManager('ireg.margin_coefficients')
 * Метаданные карточки цен номенклатуры
 * @class DpBuilder_price
 * @extends DataProcessorObj
-* @constructor
+* @constructor 
 */
 $p.DpBuilder_price = class DpBuilder_price extends DataProcessorObj{}
 _define($p.DpBuilder_price.prototype, {nom: {get: function(){return this._getter('nom')}, set: function(v){this._setter('nom',v)}, enumerable: true, configurable: true},
@@ -1875,7 +1875,7 @@ $p.dp.builder_price = new DataProcessorsManager('dp.builder_price')
 * УПзП: Заказ покупателя
 * @class DpBuyers_order
 * @extends DataProcessorObj
-* @constructor
+* @constructor 
 */
 $p.DpBuyers_order = class DpBuyers_order extends DataProcessorObj{}
 _define($p.DpBuyers_order.prototype, {nom: {get: function(){return this._getter('nom')}, set: function(v){this._setter('nom',v)}, enumerable: true, configurable: true},
@@ -1963,7 +1963,7 @@ $p.dp.buyers_order = new DataProcessorsManager('dp.buyers_order')
 * Импосты и раскладки
 * @class DpBuilder_lay_impost
 * @extends DataProcessorObj
-* @constructor
+* @constructor 
 */
 $p.DpBuilder_lay_impost = class DpBuilder_lay_impost extends DataProcessorObj{}
 _define($p.DpBuilder_lay_impost.prototype, {elm_type: {get: function(){return this._getter('elm_type')}, set: function(v){this._setter('elm_type',v)}, enumerable: true, configurable: true},
@@ -1986,7 +1986,7 @@ $p.dp.builder_lay_impost = new DataProcessorsManager('dp.builder_lay_impost')
 * Метаданные инструмента pen (рисование профилей) графического построителя
 * @class DpBuilder_pen
 * @extends DataProcessorObj
-* @constructor
+* @constructor 
 */
 $p.DpBuilder_pen = class DpBuilder_pen extends DataProcessorObj{}
 _define($p.DpBuilder_pen.prototype, {elm_type: {get: function(){return this._getter('elm_type')}, set: function(v){this._setter('elm_type',v)}, enumerable: true, configurable: true},
@@ -2001,7 +2001,7 @@ $p.dp.builder_pen = new DataProcessorsManager('dp.builder_pen')
 * Метаданные инструмента text графического построителя
 * @class DpBuilder_text
 * @extends DataProcessorObj
-* @constructor
+* @constructor 
 */
 $p.DpBuilder_text = class DpBuilder_text extends DataProcessorObj{}
 _define($p.DpBuilder_text.prototype, {text: {get: function(){return this._getter('text')}, set: function(v){this._setter('text',v)}, enumerable: true, configurable: true},
@@ -2020,7 +2020,7 @@ $p.dp.builder_text = new DataProcessorsManager('dp.builder_text')
 * Потребность в материалах
 * @class RepMaterials_demand
 * @extends DataProcessorObj
-* @constructor
+* @constructor 
 */
 $p.RepMaterials_demand = class RepMaterials_demand extends DataProcessorObj{}
 _define($p.RepMaterials_demand.prototype, {calc_order: {get: function(){return this._getter('calc_order')}, set: function(v){this._setter('calc_order',v)}, enumerable: true, configurable: true},

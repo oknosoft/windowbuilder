@@ -6,11 +6,11 @@
 
 "use strict";
 
-const fs = require('fs')
-const path = require('path')
+const fs = require('fs');
+const path = require('path');
 
 // текст модуля начальных настроек приложения для включения в итоговый скрипт
-const settings = fs.readFileSync('config/app.settings.js', 'utf8')
+const settings = fs.readFileSync('config/app.settings.js', 'utf8');
 
 // конфигурация подключения к CouchDB
 const config = require('../../config/app.settings')()

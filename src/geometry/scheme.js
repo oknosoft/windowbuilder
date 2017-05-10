@@ -168,71 +168,49 @@ class Scheme extends paper.Project {
      */
     this.redraw = () => {
 
-      function process_redraw(){
+      _attr._opened && typeof requestAnimationFrame == 'function' && requestAnimationFrame(_scheme.redraw);
 
-        let llength = 0;
+      if(_attr._saving || !_changes.length){
+        return;
+      }
 
-        // вызывается после перерисовки очередного контура
-        function on_contour_redrawed(){
-          if(!_changes.length){
-            llength--;
+      _changes.length = 0;
 
-            if(!llength){
+      if(_scheme.contours.length){
 
-              // пересчитываем параметры изделия и фурнитур, т.к. они могут зависеть от размеров
-
-              // если перерисованы все контуры, перерисовываем их размерные линии
-              _attr._bounds = null;
-              _scheme.contours.forEach((l) => {
-                l.contours.forEach((l) => {
-                  l.save_coordinates(true);
-                  l.refresh_links();
-                });
-                l.draw_sizes();
-              });
-
-              if(_changes.length){
-                return;
-              }
-
-              // перерисовываем габаритные размерные линии изделия
-              _scheme.draw_sizes();
-
-              // перерисовываем соединительные профили
-              _scheme.l_connective.redraw();
-
-              // обновляем изображение на эуране
-              _scheme.view.update();
-
-            }
+        // перерисовываем все контуры
+        for(let contour of _scheme.contours){
+          contour.redraw();
+          if(_changes.length && typeof requestAnimationFrame == 'function'){
+            return;
           }
         }
 
-        // if(_attr._saving || _attr._loading){
-        //   return;
-        // }
+        // пересчитываем параметры изделия и фурнитур, т.к. они могут зависеть от размеров
 
-        if(_changes.length && !_attr._saving){
-          //console.log(_changes.length);
-          _changes.length = 0;
+        // если перерисованы все контуры, перерисовываем их размерные линии
+        _attr._bounds = null;
+        _scheme.contours.forEach((l) => {
+          l.contours.forEach((l) => {
+            l.save_coordinates(true);
+            l.refresh_links();
+          });
+          l.draw_sizes();
+        });
 
-          if(_scheme.contours.length){
-            _scheme.contours.forEach((l) => {
-              llength++;
-              l.redraw(on_contour_redrawed);
-            });
-          }
-          else{
-            _scheme.draw_sizes();
-          }
-        }
+        // перерисовываем габаритные размерные линии изделия
+        _scheme.draw_sizes();
+
+        // перерисовываем соединительные профили
+        _scheme.l_connective.redraw();
+
+        // обновляем изображение на эуране
+        _scheme.view.update();
+
       }
-
-      if(_attr._opened){
-        requestAnimationFrame(_scheme.redraw);
+      else{
+        _scheme.draw_sizes();
       }
-
-      process_redraw();
 
     }
 
@@ -240,7 +218,7 @@ class Scheme extends paper.Project {
     Object.observe(this._dp, this._dp_observer, ["update"]);
 
     // следим за событием _coordinates_calculated_ и обновляем визуализацию
-    $p.eve && $p.eve.attachEvent("coordinates_calculated", (scheme, attr) => {
+    $p.eve.attachEvent("coordinates_calculated", (scheme, attr) => {
       if(_scheme != scheme){
         return;
       }
@@ -441,9 +419,9 @@ class Scheme extends paper.Project {
 
             resolve();
 
-          }, 20);
+          }, 10);
 
-        }, 20);
+        }, 10);
 
       });
 
@@ -528,7 +506,7 @@ class Scheme extends paper.Project {
       clearTimeout(_attr._update_timer);
     }
     _attr._update_timer = setTimeout(() => {
-      this.view.update();
+      this.view && this.view.update();
       _attr._update_timer = 0;
     }, 100);
   }

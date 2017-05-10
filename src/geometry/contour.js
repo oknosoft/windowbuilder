@@ -1012,7 +1012,7 @@ class Contour extends paper.Layer {
       width += 60;
       height += 60;
       view.zoom = Math.min((view.viewSize.height - 20) / height, (view.viewSize.width - 20) / width);
-      const shift = (view.viewSize.width - width * view.zoom) / 2;
+      let shift = (view.viewSize.width - width * view.zoom) / 2;
       if(shift < 200){
         shift = 0;
       }
@@ -1833,15 +1833,8 @@ class Contour extends paper.Layer {
   redraw(on_redrawed) {
 
     if(!this.visible){
-      return on_redrawed ? on_redrawed() : undefined;
+      return;
     }
-
-    // let llength = 0;
-    //
-    // function on_flap_redrawed(){
-    //   llength--;
-    //   !llength && on_redrawed && on_redrawed();
-    // }
 
     // сбрасываем кеш габаритов
     this._attr._bounds = null;
@@ -1875,9 +1868,6 @@ class Contour extends paper.Layer {
 
     // информируем мир о новых размерах нашего контура
     $p.eve.callEvent("contour_redrawed", [this, this._attr._bounds]);
-
-    // если нет вложенных контуров, информируем проект о завершении перерисовки контура
-    on_redrawed && on_redrawed();
 
   }
 

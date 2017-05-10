@@ -4092,9 +4092,8 @@ class Contour extends paper.Layer {
   redraw(on_redrawed) {
 
     if(!this.visible){
-      return on_redrawed ? on_redrawed() : undefined;
+      return;
     }
-
 
     this._attr._bounds = null;
 
@@ -4118,8 +4117,6 @@ class Contour extends paper.Layer {
     this.draw_sill();
 
     $p.eve.callEvent("contour_redrawed", [this, this._attr._bounds]);
-
-    on_redrawed && on_redrawed();
 
   }
 
@@ -8301,30 +8298,32 @@ class ProfileAddl extends ProfileItem {
     }
 
     const {profile} = cnn_point;
-    const prays = profile.rays;
+    if(profile){
+      const prays = profile.rays;
 
-    if(!profile.path.segments.length){
-      profile.redraw();
-    }
+      if(!profile.path.segments.length){
+        profile.redraw();
+      }
 
-    if(profile_point == "b"){
-      if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
-        intersect_point(prays.outer, rays.outer, 1);
-        intersect_point(prays.outer, rays.inner, 4);
+      if(profile_point == "b"){
+        if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
+          intersect_point(prays.outer, rays.outer, 1);
+          intersect_point(prays.outer, rays.inner, 4);
+        }
+        else{
+          intersect_point(prays.inner, rays.outer, 1);
+          intersect_point(prays.inner, rays.inner, 4);
+        }
       }
-      else{
-        intersect_point(prays.inner, rays.outer, 1);
-        intersect_point(prays.inner, rays.inner, 4);
-      }
-    }
-    else if(profile_point == "e"){
-      if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
-        intersect_point(prays.outer, rays.outer, 2);
-        intersect_point(prays.outer, rays.inner, 3);
-      }
-      else{
-        intersect_point(prays.inner, rays.outer, 2);
-        intersect_point(prays.inner, rays.inner, 3);
+      else if(profile_point == "e"){
+        if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
+          intersect_point(prays.outer, rays.outer, 2);
+          intersect_point(prays.outer, rays.inner, 3);
+        }
+        else{
+          intersect_point(prays.inner, rays.outer, 2);
+          intersect_point(prays.inner, rays.inner, 3);
+        }
       }
     }
 
@@ -8397,8 +8396,8 @@ class ProfileAddl extends ProfileItem {
 class ProfileConnective extends ProfileItem {
 
   constructor(attr) {
-    attr.parent = paper.project.l_connective;
     super(attr);
+    this.parent = this.project.l_connective;
   }
 
   get d0() {
@@ -8805,67 +8804,49 @@ class Scheme extends paper.Project {
 
     this.redraw = () => {
 
-      function process_redraw(){
+      _attr._opened && typeof requestAnimationFrame == 'function' && requestAnimationFrame(_scheme.redraw);
 
-        let llength = 0;
+      if(_attr._saving || !_changes.length){
+        return;
+      }
 
-        function on_contour_redrawed(){
-          if(!_changes.length){
-            llength--;
+      _changes.length = 0;
 
-            if(!llength){
+      if(_scheme.contours.length){
 
-
-              _attr._bounds = null;
-              _scheme.contours.forEach((l) => {
-                l.contours.forEach((l) => {
-                  l.save_coordinates(true);
-                  l.refresh_links();
-                });
-                l.draw_sizes();
-              });
-
-              if(_changes.length){
-                return;
-              }
-
-              _scheme.draw_sizes();
-
-              _scheme.l_connective.redraw();
-
-              _scheme.view.update();
-
-            }
+        for(let contour of _scheme.contours){
+          contour.redraw();
+          if(_changes.length && typeof requestAnimationFrame == 'function'){
+            return;
           }
         }
 
 
-        if(_changes.length && !_attr._saving){
-          _changes.length = 0;
+        _attr._bounds = null;
+        _scheme.contours.forEach((l) => {
+          l.contours.forEach((l) => {
+            l.save_coordinates(true);
+            l.refresh_links();
+          });
+          l.draw_sizes();
+        });
 
-          if(_scheme.contours.length){
-            _scheme.contours.forEach((l) => {
-              llength++;
-              l.redraw(on_contour_redrawed);
-            });
-          }
-          else{
-            _scheme.draw_sizes();
-          }
-        }
+        _scheme.draw_sizes();
+
+        _scheme.l_connective.redraw();
+
+        _scheme.view.update();
+
       }
-
-      if(_attr._opened){
-        requestAnimationFrame(_scheme.redraw);
+      else{
+        _scheme.draw_sizes();
       }
-
-      process_redraw();
 
     }
 
     Object.observe(this._dp, this._dp_observer, ["update"]);
 
-    $p.eve && $p.eve.attachEvent("coordinates_calculated", (scheme, attr) => {
+    $p.eve.attachEvent("coordinates_calculated", (scheme, attr) => {
       if(_scheme != scheme){
         return;
       }
@@ -9011,9 +8992,9 @@ class Scheme extends paper.Project {
 
             resolve();
 
-          }, 20);
+          }, 10);
 
-        }, 20);
+        }, 10);
 
       });
 
@@ -9073,7 +9054,7 @@ class Scheme extends paper.Project {
       clearTimeout(_attr._update_timer);
     }
     _attr._update_timer = setTimeout(() => {
-      this.view.update();
+      this.view && this.view.update();
       _attr._update_timer = 0;
     }, 100);
   }

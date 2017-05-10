@@ -30,8 +30,8 @@
 class ProfileConnective extends ProfileItem {
 
   constructor(attr) {
-    attr.parent = paper.project.l_connective;
     super(attr);
+    this.parent = this.project.l_connective;
   }
 
   /**

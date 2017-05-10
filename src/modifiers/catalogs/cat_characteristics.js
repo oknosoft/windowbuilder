@@ -63,7 +63,7 @@ $p.cat.characteristics.on({
 });
 
 // свойства менеджера характеристики
-$p.cat.characteristics.__define({
+Object.defineProperties($p.cat.characteristics, {
 
   form_obj: {
     value: function(pwnd, attr){
@@ -107,89 +107,90 @@ $p.cat.characteristics.__define({
     }
   }
 
-})
+});
+
 
 // свойства объекта характеристики
-$p.CatCharacteristics.prototype.__define({
+Object.defineProperties($p.CatCharacteristics.prototype, {
 
-	calc_order_row: {
-		get: function () {
-			let _calc_order_row;
-			this.calc_order.production.find_rows({characteristic: this}, (_row) => {
-				_calc_order_row = _row;
-				return false;
-			});
-			return _calc_order_row;
-		}
-	},
+  calc_order_row: {
+    get: function () {
+      let _calc_order_row;
+      this.calc_order.production.find_rows({characteristic: this}, (_row) => {
+        _calc_order_row = _row;
+        return false;
+      });
+      return _calc_order_row;
+    }
+  },
 
-	prod_name: {
-		value: function (short) {
+  prod_name: {
+    value: function (short) {
 
-			const {calc_order_row, calc_order, leading_product, sys, clr} = this;
-			let name = "";
+      const {calc_order_row, calc_order, leading_product, sys, clr} = this;
+      let name = "";
 
-			if(calc_order_row){
+      if(calc_order_row){
 
-				if(calc_order.number_internal)
-					name = calc_order.number_internal.trim();
+        if(calc_order.number_internal)
+          name = calc_order.number_internal.trim();
 
-				else{
-					// убираем нули из середины номера
-					let num0 = calc_order.number_doc, part = "";
-					for(let i = 0; i<num0.length; i++){
-						if(isNaN(parseInt(num0[i])))
-							name += num0[i];
-						else
-							break;
-					}
-					for(let i = num0.length-1; i>0; i--){
-						if(isNaN(parseInt(num0[i])))
-							break;
-						part = num0[i] + part;
-					}
-					name += parseInt(part || 0).toFixed(0);
-				}
+        else{
+          // убираем нули из середины номера
+          let num0 = calc_order.number_doc, part = "";
+          for(let i = 0; i<num0.length; i++){
+            if(isNaN(parseInt(num0[i])))
+              name += num0[i];
+            else
+              break;
+          }
+          for(let i = num0.length-1; i>0; i--){
+            if(isNaN(parseInt(num0[i])))
+              break;
+            part = num0[i] + part;
+          }
+          name += parseInt(part || 0).toFixed(0);
+        }
 
-				name += "/" + calc_order_row.row.pad();
+        name += "/" + calc_order_row.row.pad();
 
-				// для подчиненных, номер строки родителя
+        // для подчиненных, номер строки родителя
         if(!leading_product.empty()){
           name += ":" + leading_product.calc_order_row.row.pad();
         }
 
-				// добавляем название системы
-				if(!sys.empty()){
+        // добавляем название системы
+        if(!sys.empty()){
           name += "/" + sys.name;
         }
 
-				if(!short){
+        if(!short){
 
-					// добавляем название цвета
-					if(!clr.empty()){
+          // добавляем название цвета
+          if(!clr.empty()){
             name += "/" + this.clr.name;
           }
 
-					// добавляем размеры
-					if(this.x && this.y)
-						name += "/" + this.x.toFixed(0) + "x" + this.y.toFixed(0);
-					else if(this.x)
-						name += "/" + this.x.toFixed(0);
-					else if(this.y)
-						name += "/" + this.y.toFixed(0);
+          // добавляем размеры
+          if(this.x && this.y)
+            name += "/" + this.x.toFixed(0) + "x" + this.y.toFixed(0);
+          else if(this.x)
+            name += "/" + this.x.toFixed(0);
+          else if(this.y)
+            name += "/" + this.y.toFixed(0);
 
-					if(this.z){
-						if(this.x || this.y)
-							name += "x" + this.z.toFixed(0);
-						else
-							name += "/" + this.z.toFixed(0);
-					}
+          if(this.z){
+            if(this.x || this.y)
+              name += "x" + this.z.toFixed(0);
+            else
+              name += "/" + this.z.toFixed(0);
+          }
 
-					if(this.s){
+          if(this.s){
             name += "/S:" + this.s.toFixed(3);
           }
 
-					// подмешиваем значения параметров
+          // подмешиваем значения параметров
           let sprm = "";
           this.params.find_rows({cnstr: 0}, (row) => {
             if(row.param.include_to_name && sprm.indexOf(String(row.value)) == -1){
@@ -200,59 +201,59 @@ $p.CatCharacteristics.prototype.__define({
           if(sprm){
             name += "|" + sprm;
           }
-				}
-			}
-			return name;
-		}
-	},
+        }
+      }
+      return name;
+    }
+  },
 
-	/**
-	 * Возвращает номенклатуру продукции по системе
-	 */
-	prod_nom: {
+  /**
+   * Возвращает номенклатуру продукции по системе
+   */
+  prod_nom: {
 
-		get: function () {
+    get: function () {
 
-			if(!this.sys.empty()){
+      if(!this.sys.empty()){
 
-				var setted,
-					param = this.params;
+        var setted,
+          param = this.params;
 
-				if(this.sys.production.count() == 1){
-					this.owner = this.sys.production.get(0).nom;
+        if(this.sys.production.count() == 1){
+          this.owner = this.sys.production.get(0).nom;
 
-				}else if(this.sys.production.count() > 1){
-					this.sys.production.each(function (row) {
+        }else if(this.sys.production.count() > 1){
+          this.sys.production.each(function (row) {
 
-						if(setted)
-							return false;
+            if(setted)
+              return false;
 
-						if(row.param && !row.param.empty()){
-							param.find_rows({cnstr: 0, param: row.param, value: row.value}, function () {
-								setted = true;
-								param._owner.owner = row.nom;
-								return false;
-							});
-						}
+            if(row.param && !row.param.empty()){
+              param.find_rows({cnstr: 0, param: row.param, value: row.value}, function () {
+                setted = true;
+                param._owner.owner = row.nom;
+                return false;
+              });
+            }
 
-					});
-					if(!setted){
-						this.sys.production.find_rows({param: $p.utils.blank.guid}, function (row) {
-							setted = true;
-							param._owner.owner = row.nom;
-							return false;
-						});
-					}
-					if(!setted){
-						this.owner = this.sys.production.get(0).nom;
-					}
-				}
-			}
+          });
+          if(!setted){
+            this.sys.production.find_rows({param: $p.utils.blank.guid}, function (row) {
+              setted = true;
+              param._owner.owner = row.nom;
+              return false;
+            });
+          }
+          if(!setted){
+            this.owner = this.sys.production.get(0).nom;
+          }
+        }
+      }
 
-			return this.owner;
-		}
+      return this.owner;
+    }
 
-	},
+  },
 
   /**
    * Добавляет параметры вставки

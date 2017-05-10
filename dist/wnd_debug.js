@@ -2404,7 +2404,7 @@ $p.cat.characteristics.on({
 
 });
 
-$p.cat.characteristics.__define({
+Object.defineProperties($p.cat.characteristics, {
 
   form_obj: {
     value: function(pwnd, attr){
@@ -2447,79 +2447,80 @@ $p.cat.characteristics.__define({
     }
   }
 
-})
+});
 
-$p.CatCharacteristics.prototype.__define({
 
-	calc_order_row: {
-		get: function () {
-			let _calc_order_row;
-			this.calc_order.production.find_rows({characteristic: this}, (_row) => {
-				_calc_order_row = _row;
-				return false;
-			});
-			return _calc_order_row;
-		}
-	},
+Object.defineProperties($p.CatCharacteristics.prototype, {
 
-	prod_name: {
-		value: function (short) {
+  calc_order_row: {
+    get: function () {
+      let _calc_order_row;
+      this.calc_order.production.find_rows({characteristic: this}, (_row) => {
+        _calc_order_row = _row;
+        return false;
+      });
+      return _calc_order_row;
+    }
+  },
 
-			const {calc_order_row, calc_order, leading_product, sys, clr} = this;
-			let name = "";
+  prod_name: {
+    value: function (short) {
 
-			if(calc_order_row){
+      const {calc_order_row, calc_order, leading_product, sys, clr} = this;
+      let name = "";
 
-				if(calc_order.number_internal)
-					name = calc_order.number_internal.trim();
+      if(calc_order_row){
 
-				else{
-					let num0 = calc_order.number_doc, part = "";
-					for(let i = 0; i<num0.length; i++){
-						if(isNaN(parseInt(num0[i])))
-							name += num0[i];
-						else
-							break;
-					}
-					for(let i = num0.length-1; i>0; i--){
-						if(isNaN(parseInt(num0[i])))
-							break;
-						part = num0[i] + part;
-					}
-					name += parseInt(part || 0).toFixed(0);
-				}
+        if(calc_order.number_internal)
+          name = calc_order.number_internal.trim();
 
-				name += "/" + calc_order_row.row.pad();
+        else{
+          let num0 = calc_order.number_doc, part = "";
+          for(let i = 0; i<num0.length; i++){
+            if(isNaN(parseInt(num0[i])))
+              name += num0[i];
+            else
+              break;
+          }
+          for(let i = num0.length-1; i>0; i--){
+            if(isNaN(parseInt(num0[i])))
+              break;
+            part = num0[i] + part;
+          }
+          name += parseInt(part || 0).toFixed(0);
+        }
+
+        name += "/" + calc_order_row.row.pad();
 
         if(!leading_product.empty()){
           name += ":" + leading_product.calc_order_row.row.pad();
         }
 
-				if(!sys.empty()){
+        if(!sys.empty()){
           name += "/" + sys.name;
         }
 
-				if(!short){
+        if(!short){
 
-					if(!clr.empty()){
+          if(!clr.empty()){
             name += "/" + this.clr.name;
           }
 
-					if(this.x && this.y)
-						name += "/" + this.x.toFixed(0) + "x" + this.y.toFixed(0);
-					else if(this.x)
-						name += "/" + this.x.toFixed(0);
-					else if(this.y)
-						name += "/" + this.y.toFixed(0);
+          if(this.x && this.y)
+            name += "/" + this.x.toFixed(0) + "x" + this.y.toFixed(0);
+          else if(this.x)
+            name += "/" + this.x.toFixed(0);
+          else if(this.y)
+            name += "/" + this.y.toFixed(0);
 
-					if(this.z){
-						if(this.x || this.y)
-							name += "x" + this.z.toFixed(0);
-						else
-							name += "/" + this.z.toFixed(0);
-					}
+          if(this.z){
+            if(this.x || this.y)
+              name += "x" + this.z.toFixed(0);
+            else
+              name += "/" + this.z.toFixed(0);
+          }
 
-					if(this.s){
+          if(this.s){
             name += "/S:" + this.s.toFixed(3);
           }
 
@@ -2533,56 +2534,56 @@ $p.CatCharacteristics.prototype.__define({
           if(sprm){
             name += "|" + sprm;
           }
-				}
-			}
-			return name;
-		}
-	},
+        }
+      }
+      return name;
+    }
+  },
 
-	prod_nom: {
+  prod_nom: {
 
-		get: function () {
+    get: function () {
 
-			if(!this.sys.empty()){
+      if(!this.sys.empty()){
 
-				var setted,
-					param = this.params;
+        var setted,
+          param = this.params;
 
-				if(this.sys.production.count() == 1){
-					this.owner = this.sys.production.get(0).nom;
+        if(this.sys.production.count() == 1){
+          this.owner = this.sys.production.get(0).nom;
 
-				}else if(this.sys.production.count() > 1){
-					this.sys.production.each(function (row) {
+        }else if(this.sys.production.count() > 1){
+          this.sys.production.each(function (row) {
 
-						if(setted)
-							return false;
+            if(setted)
+              return false;
 
-						if(row.param && !row.param.empty()){
-							param.find_rows({cnstr: 0, param: row.param, value: row.value}, function () {
-								setted = true;
-								param._owner.owner = row.nom;
-								return false;
-							});
-						}
+            if(row.param && !row.param.empty()){
+              param.find_rows({cnstr: 0, param: row.param, value: row.value}, function () {
+                setted = true;
+                param._owner.owner = row.nom;
+                return false;
+              });
+            }
 
-					});
-					if(!setted){
-						this.sys.production.find_rows({param: $p.utils.blank.guid}, function (row) {
-							setted = true;
-							param._owner.owner = row.nom;
-							return false;
-						});
-					}
-					if(!setted){
-						this.owner = this.sys.production.get(0).nom;
-					}
-				}
-			}
+          });
+          if(!setted){
+            this.sys.production.find_rows({param: $p.utils.blank.guid}, function (row) {
+              setted = true;
+              param._owner.owner = row.nom;
+              return false;
+            });
+          }
+          if(!setted){
+            this.owner = this.sys.production.get(0).nom;
+          }
+        }
+      }
 
-			return this.owner;
-		}
+      return this.owner;
+    }
 
-	},
+  },
 
   add_inset_params: {
     value: function (inset, cnstr, blank_inset) {
@@ -6826,115 +6827,110 @@ $p.doc.calc_order.on({
 	}
 });
 
-delete $p.DocCalc_order.prototype.contract;
-$p.DocCalc_order.prototype.__define({
+(() => {
 
+  const Proto = $p.DocCalc_order;
+  delete Proto.prototype.contract;
 
-	doc_currency: {
-		get: function () {
-			var currency = this.contract.settlements_currency;
-			return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
-		}
-	},
+  $p.DocCalc_order = class DocCalc_order extends Proto {
 
-	contract: {
-		get: function(){return this._getter('contract')},
-		set: function(v){
-			this._setter('contract',v);
-			this.vat_consider = this.contract.vat_consider;
-			this.vat_included = this.contract.vat_included;
-		}
-	},
+    get doc_currency() {
+      const currency = this.contract.settlements_currency;
+      return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
+    }
 
-	dispatching_totals: {
-		value: function () {
+    get contract() {
+      return this._getter('contract')
+    }
+    set contract(v) {
+      this._setter('contract',v);
+      this.vat_consider = this.contract.vat_consider;
+      this.vat_included = this.contract.vat_included;
+    }
 
-			var options = {
-				reduce: true,
-				limit: 10000,
-				group: true,
-				keys: []
-			};
-			this.production.forEach(function (row) {
-				if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory){
-					options.keys.push([row.characteristic.ref, "305e374b-3aa9-11e6-bf30-82cf9717e145", 1, 0])
-				}
-			});
+    dispatching_totals() {
+      var options = {
+        reduce: true,
+        limit: 10000,
+        group: true,
+        keys: []
+      };
+      this.production.forEach(function (row) {
+        if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory){
+          options.keys.push([row.characteristic.ref, "305e374b-3aa9-11e6-bf30-82cf9717e145", 1, 0])
+        }
+      });
 
-			return $p.wsql.pouch.remote.doc.query('server/dispatching', options)
-				.then(function (result) {
-					var res = {};
-					result.rows.forEach(function (row) {
-						if(row.value.plan){
-							row.value.plan = $p.moment(row.value.plan).format("L")
-						}
-						if(row.value.fact){
-							row.value.fact = $p.moment(row.value.fact).format("L")
-						}
-						res[row.key[0]] = row.value
-					});
-					return res;
-				});
-		}
-	},
+      return $p.wsql.pouch.remote.doc.query('server/dispatching', options)
+        .then(function (result) {
+          var res = {};
+          result.rows.forEach(function (row) {
+            if(row.value.plan){
+              row.value.plan = $p.moment(row.value.plan).format("L")
+            }
+            if(row.value.fact){
+              row.value.fact = $p.moment(row.value.fact).format("L")
+            }
+            res[row.key[0]] = row.value
+          });
+          return res;
+        });
+    }
 
-	print_data: {
+    print_data() {
+      const {organization, bank_account, contract, manager} = this;
+      const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
+      const get_imgs = [];
+      const {contact_information_kinds} = $p.cat;
 
-		value: function () {
-
-		  const {organization, bank_account, contract, manager} = this;
-			const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
-			const get_imgs = [];
-			const {contact_information_kinds} = $p.cat;
-
-			const res = {
-				АдресДоставки: this.shipping_address,
-				ВалютаДокумента: this.doc_currency.presentation,
-				ДатаЗаказаФорматD: $p.moment(this.date).format("L"),
-				ДатаЗаказаФорматDD: $p.moment(this.date).format("LL"),
-				ДатаТекущаяФорматD: $p.moment().format("L"),
-				ДатаТекущаяФорматDD: $p.moment().format("LL"),
-				ДоговорДатаФорматD: $p.moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format("L"),
-				ДоговорДатаФорматDD: $p.moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format("LL"),
-				ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
-				ДоговорСрокДействия: $p.moment(contract.validity).format("L"),
-				ЗаказНомер: this.number_doc,
-				Контрагент: this.partner.presentation,
-				КонтрагентОписание: this.partner.long_presentation,
-				КонтрагентДокумент: "",
-				КонтрагентКЛДолжность: "",
-				КонтрагентКЛДолжностьРП: "",
-				КонтрагентКЛИмя: "",
-				КонтрагентКЛИмяРП: "",
-				КонтрагентКЛК: "",
-				КонтрагентКЛОснованиеРП: "",
-				КонтрагентКЛОтчество: "",
-				КонтрагентКЛОтчествоРП: "",
-				КонтрагентКЛФамилия: "",
-				КонтрагентКЛФамилияРП: "",
-				КонтрагентЮрФизЛицо: "",
-				КратностьВзаиморасчетов: this.settlements_multiplicity,
-				КурсВзаиморасчетов: this.settlements_course,
-				ЛистКомплектацииГруппы: "",
-				ЛистКомплектацииСтроки: "",
-				Организация: organization.presentation,
-				ОрганизацияГород: organization.contact_information._obj.reduce((val, row) => val || row.city, "") || "Москва",
-				ОрганизацияАдрес: organization.contact_information._obj.reduce((val, row) => {
-					if(row.kind == contact_information_kinds.predefined("ЮрАдресОрганизации") && row.presentation){
+      const res = {
+        АдресДоставки: this.shipping_address,
+        ВалютаДокумента: this.doc_currency.presentation,
+        ДатаЗаказаФорматD: $p.moment(this.date).format("L"),
+        ДатаЗаказаФорматDD: $p.moment(this.date).format("LL"),
+        ДатаТекущаяФорматD: $p.moment().format("L"),
+        ДатаТекущаяФорматDD: $p.moment().format("LL"),
+        ДоговорДатаФорматD: $p.moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format("L"),
+        ДоговорДатаФорматDD: $p.moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format("LL"),
+        ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
+        ДоговорСрокДействия: $p.moment(contract.validity).format("L"),
+        ЗаказНомер: this.number_doc,
+        Контрагент: this.partner.presentation,
+        КонтрагентОписание: this.partner.long_presentation,
+        КонтрагентДокумент: "",
+        КонтрагентКЛДолжность: "",
+        КонтрагентКЛДолжностьРП: "",
+        КонтрагентКЛИмя: "",
+        КонтрагентКЛИмяРП: "",
+        КонтрагентКЛК: "",
+        КонтрагентКЛОснованиеРП: "",
+        КонтрагентКЛОтчество: "",
+        КонтрагентКЛОтчествоРП: "",
+        КонтрагентКЛФамилия: "",
+        КонтрагентКЛФамилияРП: "",
+        КонтрагентЮрФизЛицо: "",
+        КратностьВзаиморасчетов: this.settlements_multiplicity,
+        КурсВзаиморасчетов: this.settlements_course,
+        ЛистКомплектацииГруппы: "",
+        ЛистКомплектацииСтроки: "",
+        Организация: organization.presentation,
+        ОрганизацияГород: organization.contact_information._obj.reduce((val, row) => val || row.city, "") || "Москва",
+        ОрганизацияАдрес: organization.contact_information._obj.reduce((val, row) => {
+          if(row.kind == contact_information_kinds.predefined("ЮрАдресОрганизации") && row.presentation){
             return row.presentation;
           }
           else if(val){
             return val;
           }
           else if(row.presentation && (
-							row.kind == contact_information_kinds.predefined("ФактАдресОрганизации") ||
-							row.kind == contact_information_kinds.predefined("ПочтовыйАдресОрганизации")
-						)){
+              row.kind == contact_information_kinds.predefined("ФактАдресОрганизации") ||
+              row.kind == contact_information_kinds.predefined("ПочтовыйАдресОрганизации")
+            )){
             return row.presentation;
           }
-				}, ""),
-				ОрганизацияТелефон: organization.contact_information._obj.reduce((val, row) => {
-					if(row.kind == contact_information_kinds.predefined("ТелефонОрганизации") && row.presentation){
+        }, ""),
+        ОрганизацияТелефон: organization.contact_information._obj.reduce((val, row) => {
+          if(row.kind == contact_information_kinds.predefined("ТелефонОрганизации") && row.presentation){
             return row.presentation;
           }
           else if(val){
@@ -6943,137 +6939,135 @@ $p.DocCalc_order.prototype.__define({
           else if(row.kind == contact_information_kinds.predefined("ФаксОрганизации") && row.presentation){
             return row.presentation;
           }
-				}, ""),
-				ОрганизацияБанкБИК: our_bank_account.bank.id,
-				ОрганизацияБанкГород: our_bank_account.bank.city,
-				ОрганизацияБанкКоррСчет: our_bank_account.bank.correspondent_account,
-				ОрганизацияБанкНаименование: our_bank_account.bank.name,
-				ОрганизацияБанкНомерСчета: our_bank_account.account_number,
-				ОрганизацияИндивидуальныйПредприниматель: organization.individual_entrepreneur.presentation,
-				ОрганизацияИНН: organization.inn,
-				ОрганизацияКПП: organization.kpp,
-				ОрганизацияСвидетельствоДатаВыдачи: organization.certificate_date_issue,
-				ОрганизацияСвидетельствоКодОргана: organization.certificate_authority_code,
-				ОрганизацияСвидетельствоНаименованиеОргана: organization.certificate_authority_name,
-				ОрганизацияСвидетельствоСерияНомер: organization.certificate_series_number,
-				ОрганизацияЮрФизЛицо: organization.individual_legal.presentation,
-				ПродукцияЭскизы: {},
-				Проект: this.project.presentation,
-				СистемыПрофилей: this.sys_profile,
-				СистемыФурнитуры: this.sys_furn,
-				Сотрудник: manager.presentation,
-				СотрудникДолжность: manager.individual_person.Должность || "менеджер",
-				СотрудникДолжностьРП: manager.individual_person.ДолжностьРП,
-				СотрудникИмя: manager.individual_person.Имя,
-				СотрудникИмяРП: manager.individual_person.ИмяРП,
-				СотрудникОснованиеРП: manager.individual_person.ОснованиеРП,
-				СотрудникОтчество: manager.individual_person.Отчество,
-				СотрудникОтчествоРП: manager.individual_person.ОтчествоРП,
-				СотрудникФамилия: manager.individual_person.Фамилия,
-				СотрудникФамилияРП: manager.individual_person.ФамилияРП,
-				СотрудникФИО: manager.individual_person.Фамилия +
-				(manager.individual_person.Имя ? " " + manager.individual_person.Имя[1].toUpperCase() + "." : "" )+
-				(manager.individual_person.Отчество ? " " + manager.individual_person.Отчество[1].toUpperCase() + "." : ""),
-				СотрудникФИОРП: manager.individual_person.ФамилияРП + " " + manager.individual_person.ИмяРП + " " + manager.individual_person.ОтчествоРП,
-				СуммаДокумента: this.doc_amount.toFixed(2),
-				СуммаДокументаПрописью: this.doc_amount.in_words(),
-				СуммаДокументаБезСкидки: this.production._obj.reduce(function (val, row){
-					return val + row.quantity * row.price;
-				}, 0).toFixed(2),
-				СуммаСкидки: this.production._obj.reduce(function (val, row){
-					return val + row.discount;
-				}, 0).toFixed(2),
-				СуммаНДС: this.production._obj.reduce(function (val, row){
-					return val + row.vat_amount;
-				}, 0).toFixed(2),
-				ТекстНДС: this.vat_consider ? (this.vat_included ? "В том числе НДС 18%" : "НДС 18% (сверху)") : "Без НДС",
-				ТелефонПоАдресуДоставки: this.phone,
-				СуммаВключаетНДС: contract.vat_included,
-				УчитыватьНДС: contract.vat_consider,
-				ВсегоНаименований: this.production.count(),
-				ВсегоИзделий: 0,
-				ВсегоПлощадьИзделий: 0
-			};
+        }, ""),
+        ОрганизацияБанкБИК: our_bank_account.bank.id,
+        ОрганизацияБанкГород: our_bank_account.bank.city,
+        ОрганизацияБанкКоррСчет: our_bank_account.bank.correspondent_account,
+        ОрганизацияБанкНаименование: our_bank_account.bank.name,
+        ОрганизацияБанкНомерСчета: our_bank_account.account_number,
+        ОрганизацияИндивидуальныйПредприниматель: organization.individual_entrepreneur.presentation,
+        ОрганизацияИНН: organization.inn,
+        ОрганизацияКПП: organization.kpp,
+        ОрганизацияСвидетельствоДатаВыдачи: organization.certificate_date_issue,
+        ОрганизацияСвидетельствоКодОргана: organization.certificate_authority_code,
+        ОрганизацияСвидетельствоНаименованиеОргана: organization.certificate_authority_name,
+        ОрганизацияСвидетельствоСерияНомер: organization.certificate_series_number,
+        ОрганизацияЮрФизЛицо: organization.individual_legal.presentation,
+        ПродукцияЭскизы: {},
+        Проект: this.project.presentation,
+        СистемыПрофилей: this.sys_profile,
+        СистемыФурнитуры: this.sys_furn,
+        Сотрудник: manager.presentation,
+        СотрудникДолжность: manager.individual_person.Должность || "менеджер",
+        СотрудникДолжностьРП: manager.individual_person.ДолжностьРП,
+        СотрудникИмя: manager.individual_person.Имя,
+        СотрудникИмяРП: manager.individual_person.ИмяРП,
+        СотрудникОснованиеРП: manager.individual_person.ОснованиеРП,
+        СотрудникОтчество: manager.individual_person.Отчество,
+        СотрудникОтчествоРП: manager.individual_person.ОтчествоРП,
+        СотрудникФамилия: manager.individual_person.Фамилия,
+        СотрудникФамилияРП: manager.individual_person.ФамилияРП,
+        СотрудникФИО: manager.individual_person.Фамилия +
+        (manager.individual_person.Имя ? " " + manager.individual_person.Имя[1].toUpperCase() + "." : "" )+
+        (manager.individual_person.Отчество ? " " + manager.individual_person.Отчество[1].toUpperCase() + "." : ""),
+        СотрудникФИОРП: manager.individual_person.ФамилияРП + " " + manager.individual_person.ИмяРП + " " + manager.individual_person.ОтчествоРП,
+        СуммаДокумента: this.doc_amount.toFixed(2),
+        СуммаДокументаПрописью: this.doc_amount.in_words(),
+        СуммаДокументаБезСкидки: this.production._obj.reduce(function (val, row){
+          return val + row.quantity * row.price;
+        }, 0).toFixed(2),
+        СуммаСкидки: this.production._obj.reduce(function (val, row){
+          return val + row.discount;
+        }, 0).toFixed(2),
+        СуммаНДС: this.production._obj.reduce(function (val, row){
+          return val + row.vat_amount;
+        }, 0).toFixed(2),
+        ТекстНДС: this.vat_consider ? (this.vat_included ? "В том числе НДС 18%" : "НДС 18% (сверху)") : "Без НДС",
+        ТелефонПоАдресуДоставки: this.phone,
+        СуммаВключаетНДС: contract.vat_included,
+        УчитыватьНДС: contract.vat_consider,
+        ВсегоНаименований: this.production.count(),
+        ВсегоИзделий: 0,
+        ВсегоПлощадьИзделий: 0
+      };
 
-			this.extra_fields.forEach((row) => {
-				res["Свойство" + row.property.name.replace(/\s/g,"")] = row.value.presentation || row.value;
-			});
+      this.extra_fields.forEach((row) => {
+        res["Свойство" + row.property.name.replace(/\s/g,"")] = row.value.presentation || row.value;
+      });
 
       res.МонтажДоставкаСамовывоз = !this.shipping_address ? "Самовывоз" : "Монтаж по адресу: " + this.shipping_address;
 
-			for(let key in organization._attachments){
-				if(key.indexOf("logo") != -1){
-					get_imgs.push(organization.get_attachment(key)
-						.then((blob) => {
-							return $p.utils.blob_as_text(blob, blob.type.indexOf("svg") == -1 ? "data_url" : "")
-						})
-						.then((data_url) => {
-							res.ОрганизацияЛоготип = data_url;
-						})
-						.catch($p.record_log));
-					break;
-				}
-			}
+      for(let key in organization._attachments){
+        if(key.indexOf("logo") != -1){
+          get_imgs.push(organization.get_attachment(key)
+            .then((blob) => {
+              return $p.utils.blob_as_text(blob, blob.type.indexOf("svg") == -1 ? "data_url" : "")
+            })
+            .then((data_url) => {
+              res.ОрганизацияЛоготип = data_url;
+            })
+            .catch($p.record_log));
+          break;
+        }
+      }
 
-			this.production.forEach((row) => {
+      this.production.forEach((row) => {
 
-				if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory){
+        if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory){
 
-					res.ВсегоИзделий+= row.quantity;
-					res.ВсегоПлощадьИзделий+= row.quantity * row.s;
+          res.ВсегоИзделий+= row.quantity;
+          res.ВсегоПлощадьИзделий+= row.quantity * row.s;
 
-					get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, "svg")
-						.then((blob) => $p.utils.blob_as_text(blob))
-						.then((svg_text) => {
-							res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
-						})
-						.catch((err) => err && err.status != 404 && $p.record_log(err))
+          get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, "svg")
+            .then((blob) => $p.utils.blob_as_text(blob))
+            .then((svg_text) => {
+              res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
+            })
+            .catch((err) => err && err.status != 404 && $p.record_log(err))
           );
-				}
-			});
-			res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
+        }
+      });
+      res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
-			return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-				.then(() => {
+      return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
+        .then(() => {
 
-					if(!window.QRCode)
-						return new Promise((resolve, reject) => {
-							$p.load_script("lib/qrcodejs/qrcode.js", "script", resolve);
-						});
+          if(!window.QRCode)
+            return new Promise((resolve, reject) => {
+              $p.load_script("lib/qrcodejs/qrcode.js", "script", resolve);
+            });
 
-				})
-				.then(() => {
+        })
+        .then(() => {
 
-					const svg = document.createElement("SVG");
-					svg.innerHTML = "<g />";
-					const qrcode = new QRCode(svg, {
-						text: "http://www.oknosoft.ru/zd/",
-						width: 100,
-						height: 100,
-						colorDark : "#000000",
-						colorLight : "#ffffff",
-						correctLevel : QRCode.CorrectLevel.H,
-						useSVG: true
-					});
-					res.qrcode = svg.innerHTML;
+          const svg = document.createElement("SVG");
+          svg.innerHTML = "<g />";
+          const qrcode = new QRCode(svg, {
+            text: "http://www.oknosoft.ru/zd/",
+            width: 100,
+            height: 100,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H,
+            useSVG: true
+          });
+          res.qrcode = svg.innerHTML;
 
-					return res;
-				});
-		}
-	},
+          return res;
+        });
+    }
 
-	row_description: {
-		value: function (row) {
+    row_description(row) {
 
-		  if(!(row instanceof $p.DocCalc_orderProductionRow) && row.characteristic){
-		    this.production.find_rows({characteristic: row.characteristic}, (prow) => {
-		      row = prow;
-		      return false;
+      if(!(row instanceof $p.DocCalc_orderProductionRow) && row.characteristic){
+        this.production.find_rows({characteristic: row.characteristic}, (prow) => {
+          row = prow;
+          return false;
         })
       }
-			const {characteristic, nom} = row;
-			const res = {
-			  НомерСтроки: row.row,
+      const {characteristic, nom} = row;
+      const res = {
+        НомерСтроки: row.row,
         Количество: row.quantity,
         Ед: row.unit.name || "шт",
         Цвет: characteristic.clr.name,
@@ -7089,17 +7083,17 @@ $p.DocCalc_order.prototype.__define({
         Скидка: row.discount.round(2),
         Сумма: row.amount.round(2),
         СуммаВнутр: row.amount_internal.round(2)
-			};
+      };
 
-			characteristic.glasses.forEach((row) => {
-			  const {name} = row.nom;
-				if(res.Заполнения.indexOf(name) == -1){
-					if(res.Заполнения){
+      characteristic.glasses.forEach((row) => {
+        const {name} = row.nom;
+        if(res.Заполнения.indexOf(name) == -1){
+          if(res.Заполнения){
             res.Заполнения += ", ";
           }
-					res.Заполнения += name;
-				}
-			});
+          res.Заполнения += name;
+        }
+      });
 
       characteristic.constructions.forEach((row) => {
         const {name} = row.furn;
@@ -7111,35 +7105,31 @@ $p.DocCalc_order.prototype.__define({
         }
       });
 
-			return res;
-		}
-	},
+      return res;
+    }
 
-	fill_plan: {
-		value: function (confirmed) {
+    fill_plan(confirmed) {
 
-			if(this.planning.count() && !confirmed){
-				dhtmlx.confirm({
-					title: $p.msg.main_title,
-					text: $p.msg.tabular_will_cleared.replace('%1', "Планирование"),
-					cancel: $p.msg.cancel,
-					callback: function(btn) {
-						if(btn){
-							this.fill_plan(true);
-						}
-					}.bind(this)
-				});
-				return;
-			}
+      if(this.planning.count() && !confirmed){
+        dhtmlx.confirm({
+          title: $p.msg.main_title,
+          text: $p.msg.tabular_will_cleared.replace('%1', "Планирование"),
+          cancel: $p.msg.cancel,
+          callback: function(btn) {
+            if(btn){
+              this.fill_plan(true);
+            }
+          }.bind(this)
+        });
+        return;
+      }
 
-			this.planning.clear();
+      this.planning.clear();
 
-		}
-	},
+    }
 
-  is_read_only: {
-	  get: function () {
-	    const {obj_delivery_state, posted, _deleted} = this;
+    get is_read_only() {
+      const {obj_delivery_state, posted, _deleted} = this;
       const {Черновик, Шаблон, Отозван} = $p.enm.obj_delivery_states;
       let ro = false;
       if(obj_delivery_state == Шаблон){
@@ -7153,9 +7143,25 @@ $p.DocCalc_order.prototype.__define({
       }
       return ro;
     }
-  }
 
-});
+    load_production() {
+      const prod = [];
+      this.production.forEach((row) => {
+        const {nom, characteristic} = row;
+        if (!characteristic.empty() && characteristic.is_new() && !nom.is_procedure && !nom.is_service && !nom.is_accessory) {
+          prod.push(characteristic.ref);
+        }
+      });
+      const mgr = $p.cat.characteristics;
+      if(mgr.pouch_load_array){
+        return mgr.pouch_load_array(prod);
+      }
+      return mgr.adapter.load_array(mgr, prod)
+        .then(() => prod.map((ref) => mgr.get(ref)));
+    }
+
+  }
+})();
 
 
 
@@ -8167,129 +8173,79 @@ $p.doc.selling.on({
 
 
 
-(function($p){
-
-	var _mgr = $p.enm.cnn_types;
-
-	_mgr.acn = {cache :{}};
-	_mgr.acn.__define({
-
-		ii: {
-			get : function(){
-				return this.cache.ii
-					|| ( this.cache.ii = [_mgr.Наложение] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		i: {
-			get : function(){
-				return this.cache.i
-					|| ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		a: {
-			get : function(){
-				return this.cache.a
-					|| ( this.cache.a = [
-						_mgr.УгловоеДиагональное,
-						_mgr.УгловоеКВертикальной,
-						_mgr.УгловоеКГоризонтальной,
-						_mgr.КрестВСтык] );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		t: {
-			get : function(){
-				return this.cache.t
-					|| ( this.cache.t = [_mgr.ТОбразное] );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
-
-	_mgr.tcn = {cache :{}};
-	_mgr.tcn.__define({
-		ad: {
-			get : function(){
-				return this.cache.ad || ( this.cache.ad = _mgr.УгловоеДиагональное );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		av: {
-			get : function(){
-				return this.cache.av || ( this.cache.av = _mgr.УгловоеКВертикальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		ah: {
-			get : function(){
-				return this.cache.ah || ( this.cache.ah = _mgr.УгловоеКГоризонтальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		t: {
-			get : function(){
-				return this.cache.t || ( this.cache.t = _mgr.ТОбразное );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		ii: {
-			get : function(){
-				return this.cache.ii || ( this.cache.ii = _mgr.Наложение );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		i: {
-			get : function(){
-				return this.cache.i || ( this.cache.i = _mgr.НезамкнутыйКонтур );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		xt: {
-			get : function(){
-				return this.cache.xt || ( this.cache.xt = _mgr.КрестПересечение );
-			},
-			enumerable : false,
-			configurable : false
-		},
-
-		xx: {
-			get : function(){
-				return this.cache.xx || ( this.cache.xx = _mgr.КрестВСтык );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
-
-})($p);
+(function(_mgr){
 
 
-(function($p){
+	_mgr.acn = {
 
-	var _mgr = $p.enm.elm_types,
+	  cache: {},
 
-		cache = {};
+    get ii() {
+      return this.cache.ii || ( this.cache.ii = [_mgr.Наложение] );
+    },
+
+    get i() {
+      return this.cache.i || ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
+    },
+
+    get a() {
+      return this.cache.a
+        || ( this.cache.a = [
+          _mgr.УгловоеДиагональное,
+          _mgr.УгловоеКВертикальной,
+          _mgr.УгловоеКГоризонтальной,
+          _mgr.КрестВСтык] );
+    },
+
+    get t() {
+      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное] );
+    }
+
+	};
+
+
+	_mgr.tcn = {
+
+    get ad() {
+      return _mgr.УгловоеДиагональное;
+    },
+
+    get av() {
+      return _mgr.УгловоеКВертикальной;
+    },
+
+    get ah() {
+      return _mgr.УгловоеКГоризонтальной;
+    },
+
+    get t() {
+      return _mgr.ТОбразное;
+    },
+
+    get ii() {
+      return _mgr.Наложение;
+    },
+
+    get i() {
+      return _mgr.НезамкнутыйКонтур;
+    },
+
+    get xt() {
+      return _mgr.КрестПересечение;
+    },
+
+    get xx() {
+      return _mgr.КрестВСтык;
+    }
+
+	};
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
 
 	_mgr.__define({
 
@@ -8301,9 +8257,7 @@ $p.doc.selling.on({
 						_mgr.Створка,
 						_mgr.Импост,
 						_mgr.Штульп] );
-			},
-			enumerable : false,
-			configurable : false
+			}
 		},
 
 		profile_items: {
@@ -8318,50 +8272,40 @@ $p.doc.selling.on({
 						_mgr.Соединитель,
 						_mgr.Раскладка
 					] );
-			},
-			enumerable : false,
-			configurable : false
+			}
 		},
 
 		rama_impost: {
 			get : function(){
 				return cache.rama_impost
 					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			},
-			enumerable : false,
-			configurable : false
+			}
 		},
 
 		impost_lay: {
 			get : function(){
 				return cache.impost_lay
 					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			},
-			enumerable : false,
-			configurable : false
+			}
 		},
 
 		stvs: {
 			get : function(){
 				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			},
-			enumerable : false,
-			configurable : false
+			}
 		},
 
 		glasses: {
 			get : function(){
 				return cache.glasses
 					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			},
-			enumerable : false,
-			configurable : false
+			}
 		}
 
 	});
 
 
-})($p);
+})($p.enm.elm_types);
 
 
 (function($p){

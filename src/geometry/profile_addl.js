@@ -196,33 +196,35 @@ class ProfileAddl extends ProfileItem {
 
     // если пересечение в узлах, используем лучи профиля
     const {profile} = cnn_point;
-    const prays = profile.rays;
+    if(profile){
+      const prays = profile.rays;
 
-    // добор всегда Т. сначала определяем, изнутри или снаружи находится наш профиль
-    if(!profile.path.segments.length){
-      profile.redraw();
-    }
+      // добор всегда Т. сначала определяем, изнутри или снаружи находится наш профиль
+      if(!profile.path.segments.length){
+        profile.redraw();
+      }
 
-    if(profile_point == "b"){
-      // в зависимости от стороны соединения
-      if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
-        intersect_point(prays.outer, rays.outer, 1);
-        intersect_point(prays.outer, rays.inner, 4);
+      if(profile_point == "b"){
+        // в зависимости от стороны соединения
+        if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
+          intersect_point(prays.outer, rays.outer, 1);
+          intersect_point(prays.outer, rays.inner, 4);
+        }
+        else{
+          intersect_point(prays.inner, rays.outer, 1);
+          intersect_point(prays.inner, rays.inner, 4);
+        }
       }
-      else{
-        intersect_point(prays.inner, rays.outer, 1);
-        intersect_point(prays.inner, rays.inner, 4);
-      }
-    }
-    else if(profile_point == "e"){
-      // в зависимости от стороны соединения
-      if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
-        intersect_point(prays.outer, rays.outer, 2);
-        intersect_point(prays.outer, rays.inner, 3);
-      }
-      else{
-        intersect_point(prays.inner, rays.outer, 2);
-        intersect_point(prays.inner, rays.inner, 3);
+      else if(profile_point == "e"){
+        // в зависимости от стороны соединения
+        if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
+          intersect_point(prays.outer, rays.outer, 2);
+          intersect_point(prays.outer, rays.inner, 3);
+        }
+        else{
+          intersect_point(prays.inner, rays.outer, 2);
+          intersect_point(prays.inner, rays.inner, 3);
+        }
       }
     }
 

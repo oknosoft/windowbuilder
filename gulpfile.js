@@ -4,14 +4,15 @@
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2016
  */
 
-var gulp = require('gulp'),
+const gulp = require('gulp'),
 	base64 = require('gulp-base64'),
 	concat = require('gulp-concat'),
   strip = require('gulp-strip-comments'),
 	rename = require('gulp-rename'),
 	resources = require('./src/utils/resource-concat.js'),
 	prebuild = require('./src/utils/prebuild.js'),
-	umd = require('gulp-umd');
+	umd = require('gulp-umd'),
+  wrap = require("gulp-wrap");
   //babel = require('gulp-babel'),
 
 module.exports = gulp;
@@ -65,7 +66,7 @@ gulp.task('build-lib', function(){
 
 });
 
-// Cборка библиотеки рисовалки
+// Cборка библиотеки рисовалки для report_server
 gulp.task('build-lib-node', function(){
   return gulp.src([
     './report_server/builder/import.js',
@@ -77,6 +78,20 @@ gulp.task('build-lib-node', function(){
 
 });
 
+// Cборка модификаторов для report_server
+gulp.task('modifiers-node', function(){
+  return gulp.src([
+    './src/modifiers/enums/*.js',
+    './src/modifiers/catalogs/*.js',
+    './src/modifiers/charts_characteristics/*.js',
+    './src/modifiers/dataprocessors/*.js',
+    './src/modifiers/documents/doc_calc_order.js',
+  ])
+    .pipe(concat('modifiers.js'))
+    .pipe(wrap({ src: './report_server/metadata/modifiers.txt'}))
+    .pipe(gulp.dest('./report_server/metadata'))
+
+});
 
 // Сборка ресурсов рисовалки
 gulp.task('injected-tips', function(){

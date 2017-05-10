@@ -16,6 +16,7 @@ rep.loadMethods()
   .get('/img/:class/:ref', async (ctx, next) => {
     await next();
     //ctx.body = `Prefix: ${ctx.route.prefix}, path: ${ctx.route.path}`;
+    ctx.type = 'image/png';
     ctx.body = await builder(ctx.params);
   });
 

@@ -7,127 +7,79 @@
  * @module enm_cnn_types
  */
 
-(function($p){
+(function(_mgr){
 
-	var _mgr = $p.enm.cnn_types;
 
 	/**
 	 * Массивы Типов соединений
 	 * @type Object
 	 */
-	_mgr.acn = {cache :{}};
-	_mgr.acn.__define({
+	_mgr.acn = {
 
-		ii: {
-			get : function(){
-				return this.cache.ii
-					|| ( this.cache.ii = [_mgr.Наложение] );
-			},
-			enumerable : false,
-			configurable : false
-		},
+	  cache: {},
 
-		i: {
-			get : function(){
-				return this.cache.i
-					|| ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
-			},
-			enumerable : false,
-			configurable : false
-		},
+    get ii() {
+      return this.cache.ii || ( this.cache.ii = [_mgr.Наложение] );
+    },
 
-		a: {
-			get : function(){
-				return this.cache.a
-					|| ( this.cache.a = [
-						_mgr.УгловоеДиагональное,
-						_mgr.УгловоеКВертикальной,
-						_mgr.УгловоеКГоризонтальной,
-						_mgr.КрестВСтык] );
-			},
-			enumerable : false,
-			configurable : false
-		},
+    get i() {
+      return this.cache.i || ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
+    },
 
-		t: {
-			get : function(){
-				return this.cache.t
-					|| ( this.cache.t = [_mgr.ТОбразное] );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
+    get a() {
+      return this.cache.a
+        || ( this.cache.a = [
+          _mgr.УгловоеДиагональное,
+          _mgr.УгловоеКВертикальной,
+          _mgr.УгловоеКГоризонтальной,
+          _mgr.КрестВСтык] );
+    },
+
+    get t() {
+      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное] );
+    }
+
+	};
+
 
 	/**
 	 * Короткие псевдонимы перечисления "Типы соединений"
 	 * @type Object
 	 */
-	_mgr.tcn = {cache :{}};
-	_mgr.tcn.__define({
-		ad: {
-			get : function(){
-				return this.cache.ad || ( this.cache.ad = _mgr.УгловоеДиагональное );
-			},
-			enumerable : false,
-			configurable : false
-		},
+	_mgr.tcn = {
 
-		av: {
-			get : function(){
-				return this.cache.av || ( this.cache.av = _mgr.УгловоеКВертикальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
+    get ad() {
+      return _mgr.УгловоеДиагональное;
+    },
 
-		ah: {
-			get : function(){
-				return this.cache.ah || ( this.cache.ah = _mgr.УгловоеКГоризонтальной );
-			},
-			enumerable : false,
-			configurable : false
-		},
+    get av() {
+      return _mgr.УгловоеКВертикальной;
+    },
 
-		t: {
-			get : function(){
-				return this.cache.t || ( this.cache.t = _mgr.ТОбразное );
-			},
-			enumerable : false,
-			configurable : false
-		},
+    get ah() {
+      return _mgr.УгловоеКГоризонтальной;
+    },
 
-		ii: {
-			get : function(){
-				return this.cache.ii || ( this.cache.ii = _mgr.Наложение );
-			},
-			enumerable : false,
-			configurable : false
-		},
+    get t() {
+      return _mgr.ТОбразное;
+    },
 
-		i: {
-			get : function(){
-				return this.cache.i || ( this.cache.i = _mgr.НезамкнутыйКонтур );
-			},
-			enumerable : false,
-			configurable : false
-		},
+    get ii() {
+      return _mgr.Наложение;
+    },
 
-		xt: {
-			get : function(){
-				return this.cache.xt || ( this.cache.xt = _mgr.КрестПересечение );
-			},
-			enumerable : false,
-			configurable : false
-		},
+    get i() {
+      return _mgr.НезамкнутыйКонтур;
+    },
 
-		xx: {
-			get : function(){
-				return this.cache.xx || ( this.cache.xx = _mgr.КрестВСтык );
-			},
-			enumerable : false,
-			configurable : false
-		}
-	});
+    get xt() {
+      return _mgr.КрестПересечение;
+    },
 
-})($p);
+    get xx() {
+      return _mgr.КрестВСтык;
+    }
+
+	};
+
+})($p.enm.cnn_types);

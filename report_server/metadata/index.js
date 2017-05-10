@@ -1,108 +1,75 @@
 
+// дополняем прототип Object методами observe
 require('./observe');
 
 const debug = require('debug')('wb:meta');
-
-// функция установки параметров сеанса
-const config_init = require('../../config/report.settings');
-
-// функция инициализации структуры метаданных
-const meta_init = require('../../src/metadata/init');
 
 // конструктор MetaEngine
 const MetaEngine = require('../../node_modules/metadata-core').default
   .plugin(require('../../node_modules/metadata-pouchdb').default);
 debug('required');
 
-const doc_calc_order = require('./documents/doc_calc_order.js');
-
-// подключим метадату
+// создаём контекст MetaEngine
 const $p = new MetaEngine();
 debug('created');
 
-// подключаем модификаторы
-//doc_calc_order($p);
+// эмулируем излучатель событий dhtmlx
+$p.eve = {
+
+  cache: {},
+
+  callEvent(type, args) {
+    $p.md.emit(type, args);
+  },
+
+  attachEvent(type, listener) {
+    $p.md.on(type, listener);
+    const id = $p.utils.generate_guid();
+    this.cache[id] = [type, listener];
+    return id;
+  },
+
+  detachEvent(id) {
+    const ev = this.cache[id];
+    if(ev){
+      $p.md.off(ev[0], ev[1]);
+      delete this.cache[id];
+    }
+  }
+
+};
+
 
 // инициализируем параметры сеанса и метаданные
 (async () => {
+
+  // функция установки параметров сеанса
+  const config_init = require('../../config/report.settings');
+
+  // функция инициализации структуры метаданных
+  const meta_init = require('../../src/metadata/init');
+
+  // модификаторы data-объектов
+  const modifiers = require('./modifiers');
+
+  // реквизиты подключения к couchdb
   const {user_node} = config_init();
+
+  // инициализируем метаданные
   $p.wsql.init(config_init, meta_init);
-  debug('inited');
+
+  // подключим модификаторы
+  modifiers($p);
+  debug('inited & modified');
+
+  // загружаем кешируемые справочники в ram
   await $p.adapters.pouch.log_in(user_node.username, user_node.password);
   debug('logged in');
+
 })();
 
 module.exports = $p;
 
-const tmp = async (ctx, next) => {
-
-
-  /**
-   * Формируем отчеты /r/{zone}/{type}/{uid}?{query}
-   * @param zone - область данных
-   * @param type - тип отчета
-   * @param uid - идентификатор объекта, зависит от `type`
-   * @param query - дополнительные необязательные параметры
-   *
-   * http://localhost:3000/r/11/0/ae6365b7-0585-4f4e-d5d2-59c4c588bf72
-   * http://localhost:3000/report/debug.html?11/ae6365b7-0585-4f4e-d5d2-59c4c588bf72
-   * http://localhost:3000/r/11/x/8f684a73-50bb-4f84-cb55-d5b1b10a5c31?att=svg
-   */
-  ctx.app.get('/r/:zone/:type/:uid', function(req, res, next) {
-
-    const $p = engines[req.params.zone];
-
-    function passthrough(url, att) {
-      request.get(att ? url+'/'+att : url, {
-        auth: {
-          'user': config_init.dbServer.user,
-          'pass': config_init.dbServer.password
-        }
-      })
-        .pipe(res);
-    }
-
-    if(!$p)
-      return next();
-
-    switch (req.params.type){
-      case '0':
-        // получаем документ расчет объект
-        return $p.doc.calc_order.get(req.params.uid, 'promise')
-          .then(function(calc_order) {
-            calc_order.print_data.then(function (print_data) {
-
-              res.status(200).json(print_data);
-
-              // calc_order.production.forEach(function (row) {
-              // 	if(!row.characteristic.empty()){
-              // 		row.characteristic.unload();
-              // 	}
-              // })
-              // calc_order.unload();
-            })
-          })
-          .catch(function(err) {
-            console.log(err);
-            return next(err);
-          });
-
-      case 'x':
-        // проксируем характеристики и вложения характеристик
-        passthrough($p.adapters.pouch.remote.doc._db_name + '/cat.characteristics|' + req.params.uid, req.query.att)
-        break;
-
-      case 'o':
-        // проксируем организации и вложения организаций
-        passthrough($p.adapters.pouch.remote.ram._db_name + '/cat.organizations|' + req.params.uid, req.query.att)
-        break;
-
-      default:
-        return next();
-    }
-
-  });
-}
 
 
 
