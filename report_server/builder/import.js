@@ -1,3 +1,4 @@
+'use strict';
 
 const $p = require('../metadata');
 
@@ -9,13 +10,18 @@ debug('required');
 class Editor extends paper.PaperScope {
 
   constructor(format = 'png'){
+
     super();
-    // Создаём экземпляр проекта Scheme
+
+    // уточняем константы
+    consts.tune_paper(this.settings);
+
+    // создаём экземпляр проекта Scheme
     this.create_scheme(format);
   }
 
   create_scheme(format = 'png') {
-    const _canvas = paper.createCanvas(600, 600, format); // собственно, канвас
+    const _canvas = paper.createCanvas(480, 480, format); // собственно, канвас
     _canvas.style.backgroundColor = "#f9fbfa";
     this.setup(_canvas);
     new Scheme(_canvas, this);

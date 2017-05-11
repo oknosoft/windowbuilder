@@ -4,52 +4,100 @@ Contour.prototype.refresh_links = function () {
 
 }
 
-module.exports = async (attr = {}) => {
+delete Scheme.prototype.zoom_fit;
+Scheme.prototype.zoom_fit = function () {
+  Contour.prototype.zoom_fit.call(this);
+}
 
-  if(attr.class == 'doc.calc_order'){
+// формирует json описания продукции с эскизами
+async function prod(ctx, next) {
+  const editor = new Editor();
 
-    const editor = new Editor();
+  const calc_order = await $p.doc.calc_order.get(ctx.params.ref, 'promise');
 
-    const calc_order = await $p.doc.calc_order.get(attr.ref, 'promise');
+  const prod = await calc_order.load_production();
 
-    const prod = await calc_order.load_production();
+  const res = {number_doc: calc_order.number_doc};
 
-    const res = {number_doc: calc_order.number_doc};
+  const {project, view} = editor;
 
-    const {project, view} = editor;
+  for(let ox of prod){
 
-    for(let ox of prod){
+    await project.load(ox);
 
-      await project.load(ox);
+    // project.draw_fragment({elm: -1});
+    // view.update();
+    // ctx.type = 'image/png';
+    // ctx.body = return view.element.toBuffer();
 
-      project.draw_fragment({elm: -2});
+    const {_obj} = ox;
 
-      view.update();
+    res[ox.ref] = {
+      imgs: {
+        'l0': view.element.toBuffer().toString('base64')
+      },
+      constructions: _obj.constructions,
+      coordinates: _obj.coordinates,
+      specification: _obj.specification,
+      glasses: _obj.glasses,
+      params: _obj.params,
+      clr: _obj.clr,
+      sys: _obj.sys,
+      x: _obj.x,
+      y: _obj.y,
+      z: _obj.z,
+      s: _obj.s,
+      weight: _obj.weight,
+      origin: _obj.origin,
+      leading_elm: _obj.leading_elm,
+      leading_product: _obj.leading_product,
+      product: _obj.product,
+    };
 
-      return view.element.toBuffer();
-
-      res[ox.ref] = {
-        imgs: {
-          '0': view.element.toBuffer().toString('base64')
-        },
-        constructions: ox._obj.constructions,
-        coordinates: ox._obj.coordinates,
-        specification: ox._obj.specification,
-        glasses: ox._obj.glasses,
-        params: ox._obj.params,
-      };
-    }
-
-    setTimeout(() => {
-      calc_order.unload();
-      editor.project.unload();
-      for(let ox of prod){
-        ox.unload();
-      }
-    });
-
-    return JSON.stringify(res);
+    ox.constructions.forEach(({cnstr}) => {
+      project.draw_fragment({elm: -cnstr});
+      res[ox.ref].imgs[`l${cnstr}`] = view.element.toBuffer().toString('base64');
+    })
   }
-  return attr;
+
+  setTimeout(() => {
+    calc_order.unload();
+    editor.project.unload();
+    for(let ox of prod){
+      ox.unload();
+    }
+  });
+
+  //ctx.body = `Prefix: ${ctx.route.prefix}, path: ${ctx.route.path}`;
+  ctx.body = res;
+}
+
+// формирует массив эскизов по параметрам запроса
+async function array(ctx, next) {
+
+}
+
+// формирует единичный эскиз по параметрам запроса
+async function png(ctx, next) {
+
+}
+
+// формирует единичный эскиз по параметрам запроса
+async function svg(ctx, next) {
+
+}
+
+module.exports = async (ctx, next) => {
+
+  switch (ctx.params.class){
+    case 'doc.calc_order':
+      return prod(ctx, next);
+    case 'array':
+      return array(ctx, next);
+    case 'png':
+      return png(ctx, next);
+    case 'svg':
+      return svg(ctx, next);
+  }
 
 };

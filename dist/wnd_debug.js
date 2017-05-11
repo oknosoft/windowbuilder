@@ -3411,6 +3411,8 @@ $p.CatElm_visualization.prototype.__define({
 	draw: {
 		value: function (elm, layer, offset) {
 
+		  const {CompoundPath} = elm.project._scope;
+
 			let subpath;
 
 			if(this.svg_path.indexOf('{"method":') == 0){
@@ -3433,7 +3435,7 @@ $p.CatElm_visualization.prototype.__define({
 			}
 			else if(this.svg_path){
 
-				subpath = new paper.CompoundPath({
+				subpath = new CompoundPath({
 					pathData: this.svg_path,
 					parent: layer._by_spec,
 					strokeColor: 'black',
@@ -6294,6 +6296,7 @@ function ProductsBuilding(){
 
 
 
+    scheme.draw_visualization();
 		$p.eve.callEvent("coordinates_calculated", [scheme, attr]);
 
 
@@ -7153,11 +7156,17 @@ $p.doc.calc_order.on({
         }
       });
       const mgr = $p.cat.characteristics;
-      if(mgr.pouch_load_array){
-        return mgr.pouch_load_array(prod);
-      }
-      return mgr.adapter.load_array(mgr, prod)
-        .then(() => prod.map((ref) => mgr.get(ref)));
+      return (mgr.pouch_load_array ? mgr.pouch_load_array(prod) : mgr.adapter.load_array(mgr, prod))
+        .then(() => {
+        prod.length = 0;
+        this.production.forEach((row) => {
+          const {nom, characteristic} = row;
+          if (!characteristic.empty() && !nom.is_procedure && !nom.is_service && !nom.is_accessory) {
+            prod.push(characteristic);
+          }
+        });
+        return prod;
+      });
     }
 
   }

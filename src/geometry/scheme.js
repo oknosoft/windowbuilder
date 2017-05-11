@@ -217,14 +217,6 @@ class Scheme extends paper.Project {
     // начинаем следить за _dp, чтобы обработать изменения цвета и параметров
     Object.observe(this._dp, this._dp_observer, ["update"]);
 
-    // следим за событием _coordinates_calculated_ и обновляем визуализацию
-    $p.eve.attachEvent("coordinates_calculated", (scheme, attr) => {
-      if(_scheme != scheme){
-        return;
-      }
-      _scheme.contours.forEach((l) => l.draw_visualization());
-      _scheme.view.update();
-    });
   }
 
   /**
@@ -405,6 +397,7 @@ class Scheme extends paper.Project {
           setTimeout(() => {
             if(_scheme.ox.coordinates.count()){
               if(_scheme.ox.specification.count()){
+                _scheme.draw_visualization();
                 $p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
               }
               else{
@@ -419,9 +412,9 @@ class Scheme extends paper.Project {
 
             resolve();
 
-          }, 10);
+          });
 
-        }, 10);
+        });
 
       });
 
@@ -488,6 +481,7 @@ class Scheme extends paper.Project {
         }
       })
     }
+    this.view.update();
   }
 
   /**
@@ -759,8 +753,9 @@ class Scheme extends paper.Project {
     if(bounds){
       this.view.zoom = Math.min((this.view.viewSize.height - 20) / height, (this.view.viewSize.width - 20) / width);
       shift = (this.view.viewSize.width - bounds.width * this.view.zoom) / 2;
-      if(shift < 200)
+      if(shift < 180){
         shift = 0;
+      }
       this.view.center = bounds.center.add([shift, 40]);
     }
   }
@@ -988,6 +983,16 @@ class Scheme extends paper.Project {
       if(this.l_dimensions.right)
         this.l_dimensions.right.visible = false;
     }
+  }
+
+  /**
+   * Перерисовавает визуализацию контуров изделия
+   */
+  draw_visualization() {
+    for(let contour of this.contours){
+      contour.draw_visualization()
+    }
+    this.view.update();
   }
 
   /**

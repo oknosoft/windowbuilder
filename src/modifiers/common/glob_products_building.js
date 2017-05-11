@@ -1036,6 +1036,7 @@ function ProductsBuilding(){
 		//console.profileEnd();
 
 		// информируем мир об окончании расчета координат
+    scheme.draw_visualization();
 		$p.eve.callEvent("coordinates_calculated", [scheme, attr]);
 
 

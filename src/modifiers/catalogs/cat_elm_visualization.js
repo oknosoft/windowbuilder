@@ -13,6 +13,8 @@ $p.CatElm_visualization.prototype.__define({
 	draw: {
 		value: function (elm, layer, offset) {
 
+		  const {CompoundPath} = elm.project._scope;
+
 			let subpath;
 
 			if(this.svg_path.indexOf('{"method":') == 0){
@@ -35,7 +37,7 @@ $p.CatElm_visualization.prototype.__define({
 			}
 			else if(this.svg_path){
 
-				subpath = new paper.CompoundPath({
+				subpath = new CompoundPath({
 					pathData: this.svg_path,
 					parent: layer._by_spec,
 					strokeColor: 'black',

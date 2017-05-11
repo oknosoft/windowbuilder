@@ -13,11 +13,6 @@ rep.loadMethods()
     await next();
     ctx.body = `Reports: try out <a href="/r/img">/r/img</a> too`
   })
-  .get('/img/:class/:ref', async (ctx, next) => {
-    await next();
-    //ctx.body = `Prefix: ${ctx.route.prefix}, path: ${ctx.route.path}`;
-    ctx.type = 'image/png';
-    ctx.body = await builder(ctx.params);
-  });
+  .get('/img/:class/:ref', builder);
 
 module.exports = rep;

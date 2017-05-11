@@ -3347,20 +3347,17 @@ class Contour extends paper.Layer {
     const {strokeBounds, view} = this;
     if(strokeBounds){
       let {width, height, center} = strokeBounds;
-      if(width < 600){
-        width = 600;
+      if(width < 800){
+        width = 800;
       }
-      if(height < 600){
-        height = 600;
+      if(height < 800){
+        height = 800;
       }
-      width += 60;
-      height += 60;
-      view.zoom = Math.min((view.viewSize.height - 20) / height, (view.viewSize.width - 20) / width);
-      const shift = (view.viewSize.width - width * view.zoom) / 2;
-      if(shift < 200){
-        shift = 0;
-      }
-      view.center = center.add([shift, 20]);
+      width += 120;
+      height += 120;
+      view.zoom = Math.min(view.viewSize.height / height, view.viewSize.width / width);
+      const shift = (view.viewSize.width - width * view.zoom);
+      view.center = center.add([shift, 40]);
     }
   }
 
@@ -8846,13 +8843,6 @@ class Scheme extends paper.Project {
 
     Object.observe(this._dp, this._dp_observer, ["update"]);
 
-    $p.eve.attachEvent("coordinates_calculated", (scheme, attr) => {
-      if(_scheme != scheme){
-        return;
-      }
-      _scheme.contours.forEach((l) => l.draw_visualization());
-      _scheme.view.update();
-    });
   }
 
   get ox() {
@@ -8979,6 +8969,7 @@ class Scheme extends paper.Project {
           setTimeout(() => {
             if(_scheme.ox.coordinates.count()){
               if(_scheme.ox.specification.count()){
+                _scheme.draw_visualization();
                 $p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
               }
               else{
@@ -8992,9 +8983,9 @@ class Scheme extends paper.Project {
 
             resolve();
 
-          }, 10);
+          });
 
-        }, 10);
+        });
 
       });
 
@@ -9042,6 +9033,7 @@ class Scheme extends paper.Project {
         }
       })
     }
+    this.view.update();
   }
 
   has_changes() {
@@ -9241,8 +9233,9 @@ class Scheme extends paper.Project {
     if(bounds){
       this.view.zoom = Math.min((this.view.viewSize.height - 20) / height, (this.view.viewSize.width - 20) / width);
       shift = (this.view.viewSize.width - bounds.width * this.view.zoom) / 2;
-      if(shift < 200)
+      if(shift < 180){
         shift = 0;
+      }
       this.view.center = bounds.center.add([shift, 40]);
     }
   }
@@ -9401,6 +9394,13 @@ class Scheme extends paper.Project {
       if(this.l_dimensions.right)
         this.l_dimensions.right.visible = false;
     }
+  }
+
+  draw_visualization() {
+    for(let contour of this.contours){
+      contour.draw_visualization()
+    }
+    this.view.update();
   }
 
   default_inset(attr) {

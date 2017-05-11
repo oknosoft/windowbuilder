@@ -24,7 +24,7 @@ module.exports = (prm) => {
     couch_path: base.couch_local,
 
     // по умолчанию, обращаемся к зоне 0
-    zone: process.env.ZONE || 2
+    zone: process.env.ZONE || 2,
 
   })
 }

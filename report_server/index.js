@@ -9,6 +9,6 @@ const app = new Koa();
 const rep = require('./router');
 app.use(rep.middleware());
 
-app.listen(3000);
+app.listen(process.env.PORT || 3000);
 
 module.exports = app;
