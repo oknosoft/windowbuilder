@@ -17,7 +17,6 @@
     "lint": "eslint src tests server",
     "lint:fix": "npm run lint -- --fix",
     "start:v2": "better-npm-run start",
-    "start:rep": "node ./report_server",
     "dev": "better-npm-run dev",
     "dev:no-debug": "npm run dev -- --no_debug",
     "test": "better-npm-run test",

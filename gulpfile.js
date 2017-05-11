@@ -66,32 +66,6 @@ gulp.task('build-lib', function(){
 
 });
 
-// Cборка библиотеки рисовалки для report_server
-gulp.task('build-lib-node', function(){
-  return gulp.src([
-    './report_server/builder/import.js',
-    './src/geometry/*.js',
-    './report_server/builder/export.js',
-  ])
-    .pipe(concat('index.js'))
-    .pipe(gulp.dest('./report_server/builder'))
-
-});
-
-// Cборка модификаторов для report_server
-gulp.task('modifiers-node', function(){
-  return gulp.src([
-    './src/modifiers/enums/*.js',
-    './src/modifiers/catalogs/*.js',
-    './src/modifiers/charts_characteristics/*.js',
-    './src/modifiers/dataprocessors/*.js',
-    './src/modifiers/documents/doc_calc_order.js',
-  ])
-    .pipe(concat('modifiers.js'))
-    .pipe(wrap({ src: './report_server/metadata/modifiers.txt'}))
-    .pipe(gulp.dest('./report_server/metadata'))
-
-});
 
 // Сборка ресурсов рисовалки
 gulp.task('injected-tips', function(){
