@@ -273,12 +273,11 @@ class DimensionLine extends paper.Group {
 
   get path() {
 
-    const {layer, project, children, _attr, pos} = this;
+    const {parent, project, children, _attr, pos} = this;
     if(!children.length){
       return;
     }
-    const _bounds = layer.bounds;
-    const _dim_bounds = layer instanceof DimensionLayer ? project.dimension_bounds : layer.dimension_bounds;
+    const {owner_bounds, dimension_bounds} = parent;
     let offset = 0, b, e;
 
     if(!pos){
@@ -286,24 +285,24 @@ class DimensionLine extends paper.Group {
       e = typeof _attr.p2 == "number" ? _attr.elm2.corns(_attr.p2) : _attr.elm2[_attr.p2];
     }
     else if(pos == "top"){
-      b = _bounds.topLeft;
-      e = _bounds.topRight;
-      offset = _bounds[pos] - _dim_bounds[pos];
+      b = owner_bounds.topLeft;
+      e = owner_bounds.topRight;
+      offset = owner_bounds[pos] - dimension_bounds[pos];
     }
     else if(pos == "left"){
-      b = _bounds.bottomLeft;
-      e = _bounds.topLeft;
-      offset = _bounds[pos] - _dim_bounds[pos];
+      b = owner_bounds.bottomLeft;
+      e = owner_bounds.topLeft;
+      offset = owner_bounds[pos] - dimension_bounds[pos];
     }
     else if(pos == "bottom"){
-      b = _bounds.bottomLeft;
-      e = _bounds.bottomRight;
-      offset = _bounds[pos] - _dim_bounds[pos];
+      b = owner_bounds.bottomLeft;
+      e = owner_bounds.bottomRight;
+      offset = owner_bounds[pos] - dimension_bounds[pos];
     }
     else if(pos == "right"){
-      b = _bounds.bottomRight;
-      e = _bounds.topRight;
-      offset = _bounds[pos] - _dim_bounds[pos];
+      b = owner_bounds.bottomRight;
+      e = owner_bounds.topRight;
+      offset = owner_bounds[pos] - dimension_bounds[pos];
     }
 
     // если точки профиля еще не нарисованы - выходим
@@ -377,44 +376,6 @@ class DimensionLine extends paper.Group {
     }
     super.remove();
   }
-}
-
-class DimensionGroup {
-
-  clear(){
-    for(let key in this){
-      this[key].removeChildren();
-      this[key].remove();
-      delete this[key];
-    }
-  }
-
-  has_size(size) {
-    for(let key in this){
-      const {path} = this[key];
-      if(path && Math.abs(path.length - size) < 1){
-        return true;
-      }
-    }
-  }
-
-}
-
-/**
- * ### Служебный слой размерных линий
- * Унаследован от [paper.Layer](http://paperjs.org/reference/layer/)
- *
- * @class DimensionLayer
- * @extends paper.Layer
- * @param attr
- * @constructor
- */
-class DimensionLayer extends paper.Layer {
-
-  get bounds() {
-    return this.project.bounds;
-  }
-
 }
 
 

@@ -6061,7 +6061,7 @@ function ProductsBuilding(){
 
 	function base_spec_glass(glass) {
 
-    const {profiles, onlays, _row} = glass;
+    const {profiles, imposts, _row} = glass;
 
     if(_row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
       return;
@@ -6095,7 +6095,7 @@ function ProductsBuilding(){
 
 		inset_spec(glass);
 
-    onlays.forEach(base_spec_profile);
+    imposts.forEach(base_spec_profile);
 
     ox.inserts.find_rows({cnstr: -glass.elm}, ({inset, clr}) => {
 

@@ -208,7 +208,7 @@ class Onlay extends ProfileItem {
       }
 
       // затем, если не привязалось - к сегментам раскладок текущего заполнения
-      glass.onlays.some((elm) => {
+      glass.imposts.some((elm) => {
         if (elm.project.check_distance(elm, null, res, point, "node_generatrix") === false ){
           return true;
         }

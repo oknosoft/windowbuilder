@@ -195,7 +195,7 @@ class Scheme extends paper.Project {
             l.save_coordinates(true);
             l.refresh_links();
           });
-          l.draw_sizes();
+          l.l_dimensions.redraw();
         });
 
         // перерисовываем габаритные размерные линии изделия
@@ -475,7 +475,7 @@ class Scheme extends paper.Project {
         if(l.cnstr == cnstr){
           l.hidden = false;
           l.hide_generatrix();
-          l.draw_sizes(true);
+          l.l_dimensions.redraw(true);
           l.zoom_fit();
           return true;
         }
@@ -681,7 +681,7 @@ class Scheme extends paper.Project {
 
           if(layers.indexOf(layer) == -1){
             layers.push(layer);
-            layer.clear_dimentions();
+            layer.l_dimensions.clear();
           }
         }
       }
@@ -936,52 +936,53 @@ class Scheme extends paper.Project {
    * @method draw_sizes
    */
   draw_sizes() {
-    const {bounds} = this;
+
+    const {bounds, l_dimensions} = this;
 
     if(bounds){
 
-      if(!this.l_dimensions.bottom)
-        this.l_dimensions.bottom = new DimensionLine({
+      if(!l_dimensions.bottom)
+        l_dimensions.bottom = new DimensionLine({
           pos: "bottom",
-          parent: this.l_dimensions,
+          parent: l_dimensions,
           offset: -120
         });
       else
-        this.l_dimensions.bottom.offset = -120;
+        l_dimensions.bottom.offset = -120;
 
-      if(!this.l_dimensions.right)
-        this.l_dimensions.right = new DimensionLine({
+      if(!l_dimensions.right)
+        l_dimensions.right = new DimensionLine({
           pos: "right",
-          parent: this.l_dimensions,
+          parent: l_dimensions,
           offset: -120
         });
       else
-        this.l_dimensions.right.offset = -120;
+        l_dimensions.right.offset = -120;
 
 
       // если среди размеров, сформированных контурами есть габарит - второй раз не выводим
 
       if(this.contours.some((l) => l.l_dimensions.children.some((dl) =>
           dl.pos == "right" && Math.abs(dl.size - bounds.height) < consts.sticking_l))){
-        this.l_dimensions.right.visible = false;
+        l_dimensions.right.visible = false;
       }
       else{
-        this.l_dimensions.right.redraw();
+        l_dimensions.right.redraw();
       }
 
       if(this.contours.some((l) => l.l_dimensions.children.some((dl) =>
           dl.pos == "bottom" && Math.abs(dl.size - bounds.width) < consts.sticking_l))){
-        this.l_dimensions.bottom.visible = false;
+        l_dimensions.bottom.visible = false;
       }
       else{
-        this.l_dimensions.bottom.redraw();
+        l_dimensions.bottom.redraw();
       }
     }
     else{
-      if(this.l_dimensions.bottom)
-        this.l_dimensions.bottom.visible = false;
-      if(this.l_dimensions.right)
-        this.l_dimensions.right.visible = false;
+      if(l_dimensions.bottom)
+        l_dimensions.bottom.visible = false;
+      if(l_dimensions.right)
+        l_dimensions.right.visible = false;
     }
   }
 

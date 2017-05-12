@@ -1120,8 +1120,8 @@ class Editor extends paper.PaperScope {
 
       // прочищаем размерные линии
       if(changed || profiles.length > 1){
-        profiles.forEach((p) => contours.indexOf(p.layer) == -1 && contours.push(p.layer));
-        contours.forEach((l) => l.clear_dimentions());
+        profiles.forEach(({layer}) => contours.indexOf(layer) == -1 && contours.push(layer));
+        contours.forEach(({l_dimensions}) => l_dimensions.clear());
       }
 
       // если выделено несколько, запланируем групповое выравнивание

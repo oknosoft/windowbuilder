@@ -22,7 +22,7 @@
  * @tooltip Заполнение
  */
 
-class Filling extends BuilderElement {
+class Filling extends AbstractFilling(BuilderElement) {
 
   constructor(attr) {
 
@@ -128,7 +128,7 @@ class Filling extends BuilderElement {
    */
   save_coordinates() {
 
-    const {_row, project, profiles, bounds} = this;
+    const {_row, project, profiles, bounds, imposts} = this;
     const h = project.bounds.height + project.bounds.y;
     const cnns = project.connections.cnns;
     const length = profiles.length;
@@ -204,7 +204,7 @@ class Filling extends BuilderElement {
     }
 
     // дочерние раскладки
-    this.onlays.forEach((curr) => curr.save_coordinates());
+    imposts.forEach((curr) => curr.save_coordinates());
   }
 
   /**
@@ -278,11 +278,11 @@ class Filling extends BuilderElement {
 
     this.sendToBack();
 
-    const {path, onlays, _attr, is_rectangular} = this;
+    const {path, imposts, _attr, is_rectangular} = this;
     const {elm_font_size} = consts;
 
     path.visible = true;
-    onlays.forEach((elm) => elm.redraw());
+    imposts.forEach((elm) => elm.redraw());
 
     // прочистим пути
     this.purge_path();
@@ -390,7 +390,7 @@ class Filling extends BuilderElement {
   /**
    * Массив раскладок
    */
-  get onlays() {
+  get imposts() {
     return this.getItems({class: Onlay});
   }
 
