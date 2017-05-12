@@ -467,7 +467,8 @@ class Scheme extends paper.Project {
     l_connective.visible = false;
 
     if(attr.elm > 0){
-
+      const elm = this.getItem({class: BuilderElement, elm: attr.elm});
+      elm.draw_fragment && elm.draw_fragment();
     }
     else if(attr.elm < 0){
       const cnstr = -attr.elm;

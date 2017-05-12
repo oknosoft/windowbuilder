@@ -59,6 +59,24 @@ class GlassSegment {
     }
 
   }
+
+  get _sub() {
+    const {sub_path} = this;
+    return {
+      get b() {
+        return sub_path ? sub_path.firstSegment.point : new paper.Point()
+      },
+      set b(v) {
+        sub_path && (sub_path.firstSegment.point = v);
+      },
+      get e() {
+        return sub_path ? sub_path.lastSegment.point : new paper.Point()
+      },
+      set e(v) {
+        sub_path && (sub_path.lastSegment.point = v);
+      }
+    }
+  }
 }
 
 /**

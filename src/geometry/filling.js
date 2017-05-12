@@ -267,8 +267,14 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   setSelection(selection) {
     super.setSelection(selection);
-    const {_text} = this._attr;
-    _text && _text.setSelection(0);
+    if(selection){
+      const {path} = this;
+      for(let elm of this.children){
+        if(elm != path){
+          elm.selected = false;
+        }
+      }
+    }
   }
 
   /**
@@ -324,10 +330,19 @@ class Filling extends AbstractFilling(BuilderElement) {
   }
 
   /**
-   * формирует авторазмерные линии
+   * ### Рисует заполнение отдельным элементом
    */
-  draw_sizes() {
-
+  draw_fragment() {
+    const {l_dimensions, layer, path} = this;
+    this.visible = true;
+    path.set({
+      strokeColor: 'black',
+      strokeWidth: 1,
+      strokeScaling: false,
+      opacity: 0.6,
+    });
+    l_dimensions.redraw(true);
+    layer.zoom_fit();
   }
 
   /**

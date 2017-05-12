@@ -2688,6 +2688,24 @@ class GlassSegment {
     }
 
   }
+
+  get _sub() {
+    const {sub_path} = this;
+    return {
+      get b() {
+        return sub_path ? sub_path.firstSegment.point : new paper.Point()
+      },
+      set b(v) {
+        sub_path && (sub_path.firstSegment.point = v);
+      },
+      get e() {
+        return sub_path ? sub_path.lastSegment.point : new paper.Point()
+      },
+      set e(v) {
+        sub_path && (sub_path.lastSegment.point = v);
+      }
+    }
+  }
 }
 
 class Contour extends AbstractFilling(paper.Layer) {
@@ -4255,7 +4273,7 @@ class DimensionDrawer extends paper.Group {
         }];
 
       const profiles = new Set(parent.profiles);
-      parent.imposts.forEach((elm) => !elm.layer.hidden && profiles.add(elm));
+      parent.imposts.forEach((elm) => elm.visible && profiles.add(elm));
 
       for(let elm of profiles){
 
@@ -4555,26 +4573,29 @@ class DimensionLine extends paper.Group {
 
       _bounds = {};
 
+      const p1 = (_attr.elm1._sub || _attr.elm1)[_attr.p1];
+      const p2 = (_attr.elm2._sub || _attr.elm2)[_attr.p2];
+
       if(this.pos == "top" || this.pos == "bottom"){
-        const size = Math.abs(_attr.elm1[_attr.p1].x - _attr.elm2[_attr.p2].x);
+        const size = Math.abs(p1.x - p2.x);
         if(event.name == "right"){
           delta = new paper.Point(event.size - size, 0);
-          _bounds[event.name] = Math.max(_attr.elm1[_attr.p1].x, _attr.elm2[_attr.p2].x);
+          _bounds[event.name] = Math.max(p1.x, p2.x);
         }
         else{
           delta = new paper.Point(size - event.size, 0);
-          _bounds[event.name] = Math.min(_attr.elm1[_attr.p1].x, _attr.elm2[_attr.p2].x);
+          _bounds[event.name] = Math.min(p1.x, p2.x);
         }
       }
       else{
-        const size = Math.abs(_attr.elm1[_attr.p1].y - _attr.elm2[_attr.p2].y);
+        const size = Math.abs(p1.y - p2.y);
         if(event.name == "bottom"){
           delta = new paper.Point(0, event.size - size);
-          _bounds[event.name] = Math.max(_attr.elm1[_attr.p1].y, _attr.elm2[_attr.p2].y);
+          _bounds[event.name] = Math.max(p1.y, p2.y);
         }
         else{
           delta = new paper.Point(0, size - event.size);
-          _bounds[event.name] = Math.min(_attr.elm1[_attr.p1].y, _attr.elm2[_attr.p2].y);
+          _bounds[event.name] = Math.min(p1.y, p2.y);
         }
       }
     }
@@ -4595,22 +4616,19 @@ class DimensionLine extends paper.Group {
 
     if(delta.length){
       const {project} = this;
-
       project.deselect_all_points();
-
-      project.getItems({class: ProfileConnective})
-        .concat(project.getItems({class: Profile}))
-        .forEach((p) => {
-        const {b, e, generatrix} = p;
-        if(Math.abs(b[xy] - _bounds[event.name]) < consts.sticking0 && Math.abs(e[xy] - _bounds[event.name]) < consts.sticking0){
-          generatrix.segments.forEach((segm) => segm.selected = true)
-        }
-        else if(Math.abs(b[xy] - _bounds[event.name]) < consts.sticking0){
-          generatrix.firstSegment.selected = true;
-        }
-        else if(Math.abs(e[xy] - _bounds[event.name]) < consts.sticking0){
-          generatrix.lastSegment.selected = true;
-        }
+      project.getItems({class: ProfileItem})
+        .forEach(({b, e, generatrix, width}) => {
+          width /= 2;
+          if(Math.abs(b[xy] - _bounds[event.name]) < width && Math.abs(e[xy] - _bounds[event.name]) < width){
+            generatrix.segments.forEach((segm) => segm.selected = true)
+          }
+          else if(Math.abs(b[xy] - _bounds[event.name]) < width){
+            generatrix.firstSegment.selected = true;
+          }
+          else if(Math.abs(e[xy] - _bounds[event.name]) < width){
+            generatrix.lastSegment.selected = true;
+          }
       });
       project.move_points(delta, false);
       setTimeout(function () {
@@ -5576,8 +5594,14 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   setSelection(selection) {
     super.setSelection(selection);
-    const {_text} = this._attr;
-    _text && _text.setSelection(0);
+    if(selection){
+      const {path} = this;
+      for(let elm of this.children){
+        if(elm != path){
+          elm.selected = false;
+        }
+      }
+    }
   }
 
   redraw() {
@@ -5627,8 +5651,17 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
   }
 
-  draw_sizes() {
-
+  draw_fragment() {
+    const {l_dimensions, layer, path} = this;
+    this.visible = true;
+    path.set({
+      strokeColor: 'black',
+      strokeWidth: 1,
+      strokeScaling: false,
+      opacity: 0.6,
+    });
+    l_dimensions.redraw(true);
+    layer.zoom_fit();
   }
 
   set_inset(v, ignore_select) {
@@ -9057,7 +9090,8 @@ class Scheme extends paper.Project {
     l_connective.visible = false;
 
     if(attr.elm > 0){
-
+      const elm = this.getItem({class: BuilderElement, elm: attr.elm});
+      elm.draw_fragment && elm.draw_fragment();
     }
     else if(attr.elm < 0){
       const cnstr = -attr.elm;

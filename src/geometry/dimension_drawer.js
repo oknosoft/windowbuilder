@@ -140,7 +140,7 @@ class DimensionDrawer extends paper.Group {
 
       // подмешиваем импосты вложенных контуров
       const profiles = new Set(parent.profiles);
-      parent.imposts.forEach((elm) => !elm.layer.hidden && profiles.add(elm));
+      parent.imposts.forEach((elm) => elm.visible && profiles.add(elm));
 
       for(let elm of profiles){
 

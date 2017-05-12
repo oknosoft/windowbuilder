@@ -119,26 +119,29 @@ class DimensionLine extends paper.Group {
       // в _bounds[event.name] надо поместить координату по x или у (в зависисмости от xy), которую будем двигать
       _bounds = {};
 
+      const p1 = (_attr.elm1._sub || _attr.elm1)[_attr.p1];
+      const p2 = (_attr.elm2._sub || _attr.elm2)[_attr.p2];
+
       if(this.pos == "top" || this.pos == "bottom"){
-        const size = Math.abs(_attr.elm1[_attr.p1].x - _attr.elm2[_attr.p2].x);
+        const size = Math.abs(p1.x - p2.x);
         if(event.name == "right"){
           delta = new paper.Point(event.size - size, 0);
-          _bounds[event.name] = Math.max(_attr.elm1[_attr.p1].x, _attr.elm2[_attr.p2].x);
+          _bounds[event.name] = Math.max(p1.x, p2.x);
         }
         else{
           delta = new paper.Point(size - event.size, 0);
-          _bounds[event.name] = Math.min(_attr.elm1[_attr.p1].x, _attr.elm2[_attr.p2].x);
+          _bounds[event.name] = Math.min(p1.x, p2.x);
         }
       }
       else{
-        const size = Math.abs(_attr.elm1[_attr.p1].y - _attr.elm2[_attr.p2].y);
+        const size = Math.abs(p1.y - p2.y);
         if(event.name == "bottom"){
           delta = new paper.Point(0, event.size - size);
-          _bounds[event.name] = Math.max(_attr.elm1[_attr.p1].y, _attr.elm2[_attr.p2].y);
+          _bounds[event.name] = Math.max(p1.y, p2.y);
         }
         else{
           delta = new paper.Point(0, size - event.size);
-          _bounds[event.name] = Math.min(_attr.elm1[_attr.p1].y, _attr.elm2[_attr.p2].y);
+          _bounds[event.name] = Math.min(p1.y, p2.y);
         }
       }
     }
@@ -159,22 +162,19 @@ class DimensionLine extends paper.Group {
 
     if(delta.length){
       const {project} = this;
-
       project.deselect_all_points();
-
-      project.getItems({class: ProfileConnective})
-        .concat(project.getItems({class: Profile}))
-        .forEach((p) => {
-        const {b, e, generatrix} = p;
-        if(Math.abs(b[xy] - _bounds[event.name]) < consts.sticking0 && Math.abs(e[xy] - _bounds[event.name]) < consts.sticking0){
-          generatrix.segments.forEach((segm) => segm.selected = true)
-        }
-        else if(Math.abs(b[xy] - _bounds[event.name]) < consts.sticking0){
-          generatrix.firstSegment.selected = true;
-        }
-        else if(Math.abs(e[xy] - _bounds[event.name]) < consts.sticking0){
-          generatrix.lastSegment.selected = true;
-        }
+      project.getItems({class: ProfileItem})
+        .forEach(({b, e, generatrix, width}) => {
+          width /= 2;
+          if(Math.abs(b[xy] - _bounds[event.name]) < width && Math.abs(e[xy] - _bounds[event.name]) < width){
+            generatrix.segments.forEach((segm) => segm.selected = true)
+          }
+          else if(Math.abs(b[xy] - _bounds[event.name]) < width){
+            generatrix.firstSegment.selected = true;
+          }
+          else if(Math.abs(e[xy] - _bounds[event.name]) < width){
+            generatrix.lastSegment.selected = true;
+          }
       });
       project.move_points(delta, false);
       setTimeout(function () {
