@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<V8Exch:_1CV8DtUD xmlns:V8Exch="http://www.1c.ru/V8/1CV8DtUD/" xmlns:core="http://v8.1c.ru/data" xmlns:v8="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<V8Exch:Data>
+		<v8:CatalogObject.Формулы>
+			<v8:IsFolder>false</v8:IsFolder>
+			<v8:Ref xsi:type="v8:CatalogRef.Формулы">764b7922-3813-11e7-9b5c-f2ca90e9fe45</v8:Ref>
+			<v8:DeletionMark>false</v8:DeletionMark>
+			<v8:Parent xsi:type="v8:CatalogRef.Формулы">3220e252-ffcd-11e5-8303-e67fda7f6b46</v8:Parent>
+			<v8:Description>Договор docx</v8:Description>
+			<v8:Формула>// если у контрагента индивидуальный шаблон, используем его, иначе - шаблон по умолчанию из формулы
+const tmpl_name = 'contract.docx';	
+const template = obj.partner._attachments &amp;&amp; obj.partner._attachments[tmpl_name] ?
+	await obj.partner.get_attachment(tmpl_name) :
+	await this.get_attachment(tmpl_name);
+
+// получаем word-шаблон из двоичных данных вложения
+const docx = await $p.utils.docxtemplater(template);
+
+// заполняем docx данными печати, полученными из документа Расчет
+docx.setData(await obj.print_data());
+docx.render();
+
+// сохраняем файл договора, подмешивая номер документа в имя файла
+docx.saveAs(`Договор ${obj.number_doc + (obj.number_internal ? ' ' + obj.number_internal : '')}.docx`);
+</v8:Формула>
+			<v8:ВедущаяФормула xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:ВедущаяФормула>
+			<v8:ФормулаУсловия>false</v8:ФормулаУсловия>
+			<v8:Описание>&lt;!DOCTYPE html&gt;
+&lt;html lang='ru'&gt;
+&lt;head&gt;
+&lt;meta http-equiv=X-UA-Compatible content='IE=edge'&gt;
+
+&lt;style&gt;
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;    
+	color: rgb(48, 57, 66);	
+	/*
+	font-family: Segoe UI, Tahoma, sans-serif;
+	overflow: hidden;
+	font-family: 'Open Sans', sans-serif; 
+	*/
+	font-family: Arial, sans-serif;
+	font-size: 100%;
+	line-height: 19px;
+	text-rendering: optimizeLegibility;
+}
+&lt;/style&gt;
+
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h3&gt;Договор на основе шаблона docx&lt;/h3&gt;
+&lt;p&gt;Если у контрагента есть вложение с именем 'contract.docx',&lt;br /&gt;используется шаблон контрагента, иначе - общий шаблон из формулы&lt;/p&gt;
+&lt;/body&gt;&lt;/html&gt;</v8:Описание>
+			<v8:Шаблон/>
+			<v8:async>true</v8:async>
+			<v8:zone>0</v8:zone>
+			<v8:Параметры>
+				<v8:Параметр xsi:type="xs:string">destination</v8:Параметр>
+				<v8:Значение xsi:type="xs:string">doc.calc_order</v8:Значение>
+			</v8:Параметры>
+		</v8:CatalogObject.Формулы>
+	</V8Exch:Data>
+	<PredefinedData/>
+</V8Exch:_1CV8DtUD>

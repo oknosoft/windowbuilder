@@ -250,7 +250,7 @@
 					break;
 
 				case 'btn_add_product':
-					$p.dp.buyers_order.form_product_list(wnd, process_add_product);
+					$p.dp.buyers_order.form_product_list(wnd, o, process_add_product);
 					break;
 
 				case 'btn_add_material':

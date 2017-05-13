@@ -405,8 +405,10 @@ $p.doc.calc_order.on({
         УчитыватьНДС: contract.vat_consider,
         ВсегоНаименований: this.production.count(),
         ВсегоИзделий: 0,
-        ВсегоПлощадьИзделий: 0
+        ВсегоПлощадьИзделий: 0,
+        Продукция: [],
       };
+
 
       // дополняем значениями свойств
       this.extra_fields.forEach((row) => {
@@ -435,6 +437,8 @@ $p.doc.calc_order.on({
       this.production.forEach((row) => {
 
         if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory){
+
+          res.Продукция.push(this.row_description(row));
 
           res.ВсегоИзделий+= row.quantity;
           res.ВсегоПлощадьИзделий+= row.quantity * row.s;

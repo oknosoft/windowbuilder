@@ -75,44 +75,80 @@ $p.dp.buyers_order.__define({
 	 * @param attr
 	 */
 	form_product_list: {
-		value: function (pwnd, callback) {
+		value: async function (pwnd, calc_order, callback) {
 
-			var o = this.create(),
-				wnd,
-				attr = {
+			const dp = this.create();
 
-					// командная панель формы
-					toolbar_struct: $p.injected_data["toolbar_product_list.xml"],
+      const attr = {
+        // командная панель формы
+				toolbar_struct: $p.injected_data["toolbar_product_list.xml"],
 
-					// переопределяем обработчики кнопок командной панели формы
-					toolbar_click: function (btn_id) {
-						if(btn_id == "btn_ok"){
-							o._data._modified = false;
-							wnd.close();
-							callback(o.production);
-						}
-					},
+				// переопределяем обработчики кнопок командной панели формы
+				toolbar_click(btn_id) {
+				  if(btn_id == "btn_ok"){
+				    dp._data._modified = false;
+            attr.wnd.close();
+				    callback(dp.production);
+				  }
+        },
 
-					// переопределяем метод отрисовки шапки документа, т.к. мы хотим разместить табчасть на первой странице без закладок
-					draw_pg_header: function (o, wnd) {
-						wnd.elmnts.tabs.tab_header.hide();
-						wnd.elmnts.frm_tabs.tabsArea.classList.add("tabs_hidden");
-						wnd.elmnts.frm_toolbar.hideItem("bs_print");
-					}
-				};
+				// переопределяем метод отрисовки шапки документа, т.к. мы хотим разместить табчасть на первой странице без закладок
+				draw_pg_header(o, wnd) {
 
-			// переопределяем метод отрисовки табличных частей, т.к. мы хотим разместить табчасть на первой странице без закладок
-			// attr.draw_tabular_sections = function (o, wnd, tabular_init) {
-			//
-			// };
+        },
 
+        // переопределяем метод отрисовки табличных частей, т.к. мы хотим разместить табчасть на первой странице без закладок
+        draw_tabular_sections(dp, wnd, tabular_init) {
 
-			o.presentation = "Добавление продукции с параметрами";
+          attr.wnd = wnd;
 
-			o.form_obj(pwnd, attr)
-				.then(function (res) {
-					wnd = res.wnd
-				});
+          const {elmnts} = wnd;
+          elmnts.frm_toolbar.hideItem("bs_print");
+
+          // добавляем layout на первую страницу
+          wnd.detachObject(true);
+          wnd.maximize();
+          elmnts.layout = wnd.attachLayout({
+            pattern: "2E",
+            cells: [{
+              id: "a",
+              text: "Продукция",
+              header: false,
+            }, {
+              id: "b",
+              text: "Параметры",
+              header: false,
+            }],
+            offsets: {top: 0, right: 0, bottom: 0, left: 0}
+          });
+
+          // добавляем табчасть продукции
+          elmnts.grids.production = elmnts.layout.cells('a').attachTabular({
+            obj: dp,
+            ts: 'production',
+            pwnd: wnd,
+          });
+
+          // добавляем табчасть пареметров
+          elmnts.grids.params = elmnts.layout.cells('b').attachHeadFields({
+            obj: dp,
+            ts: 'product_params',
+            pwnd: wnd,
+            selection: {elm: -1},
+            oxml: {'Параметры продукции': []},
+          });
+
+          const height = elmnts.layout.cells('a').getHeight() + elmnts.layout.cells('b').getHeight();
+          elmnts.layout.cells('a').setHeight(height * 0.7);
+        }
+
+      };
+
+			dp.presentation = calc_order.presentation + " - добавление продукции";
+
+			dp.form_obj(pwnd, attr).then((res) => {
+			  res.wnd.maximize();
+			});
 
 		}
 	}
