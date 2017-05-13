@@ -3512,7 +3512,8 @@ $p.CatFormulas.prototype.__define({
 		value: function (obj) {
 
 			if(!this._data._formula && this.formula){
-        this._data._formula = (new Function("obj", this.formula)).bind(this);
+			  const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+        this._data._formula = (new AsyncFunction("obj", this.formula)).bind(this);
       }
 
       const {_formula} = this._data;
