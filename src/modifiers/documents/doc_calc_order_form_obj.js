@@ -250,7 +250,7 @@
 					break;
 
 				case 'btn_add_product':
-					$p.dp.buyers_order.form_product_list(wnd, o, process_add_product);
+					new CalcOrderFormProductList(wnd, o);
 					break;
 
 				case 'btn_add_material':
@@ -633,31 +633,6 @@
         grid.selectCell(row, grid.getColIndexById("nom"), false, true, true);
         grid.cells().open_selection();
       });
-		}
-
-		/**
-		 * ОбработатьДобавитьПродукцию()
-		 */
-		function process_add_product(ts){
-
-			if(ts && ts.count()){
-
-				ts.clear();
-			}
-			//wnd.progressOn();
-			// TODO: _mgr.save
-			//_mgr.save({
-			//	ref: o.ref,
-			//	row: 0,
-			//	o: o._obj,
-			//	action: "calc",
-			//	specify: "product_list",
-			//	new_rows: new_rows
-			//}).then(function(res){
-			//	if(!$p.msg.check_soap_result(res))
-			//		wnd.reflect_characteristic_change(res);
-			//	wnd.progressOff();
-			//});
 		}
 
 	};

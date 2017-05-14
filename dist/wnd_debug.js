@@ -3872,30 +3872,30 @@ $p.cat.inserts.__define({
 
 });
 
-$p.CatInserts.prototype.__define({
+(($p) => {
 
-	nom: {
-		value: function (elm, strict) {
+  const Proto = $p.CatInserts;
 
-			const main_rows = [];
-			let _nom;
+  $p.CatInserts = class CatInserts extends Proto {
 
-			this.specification.find_rows({is_main_elm: true}, function (row) {
-				main_rows.push(row);
-			});
+    nom(elm, strict) {
 
-			if(!this._cache)
-				this._cache = {};
+      const main_rows = [];
+      let _nom;
 
-			if(this._cache.nom)
-				return this._cache.nom;
+      this.specification.find_rows({is_main_elm: true}, function (row) {
+        main_rows.push(row);
+      });
 
-			if(!main_rows.length && !strict && this.specification.count()){
+      if(this._data.nom)
+        return this._data.nom;
+
+      if(!main_rows.length && !strict && this.specification.count()){
         main_rows.push(this.specification.get(0))
       }
 
-			if(main_rows.length && main_rows[0].nom instanceof $p.CatInserts){
-			  if(main_rows[0].nom == this){
+      if(main_rows.length && main_rows[0].nom instanceof $p.CatInserts){
+        if(main_rows[0].nom == this){
           _nom = $p.cat.nom.get()
         }
         else{
@@ -3909,19 +3909,17 @@ $p.CatInserts.prototype.__define({
         _nom = $p.cat.nom.get()
       }
 
-			if(main_rows.length < 2){
-        this._cache.nom = _nom;
+      if(main_rows.length < 2){
+        this._data.nom = _nom;
       }
       else{
-        this._cache.nom = _nom;
+        this._data.nom = _nom;
       }
 
-			return _nom;
-		}
-	},
+      return _nom;
+    }
 
-  contour_attrs: {
-    value: function (contour) {
+    contour_attrs(contour) {
 
       var main_rows = [],
         res = {calc_order: contour.project.ox.calc_order};
@@ -3980,49 +3978,133 @@ $p.CatInserts.prototype.__define({
       return res;
 
     }
-  },
 
-	thickness: {
-		get: function () {
+    check_params({row_spec, elm, cnstr, origin, ox}) {
+      let ok = true;
 
-			if(!this._cache){
-        this._cache = {};
+      this.selection_params.find_rows({elm: row_spec.elm}, (prm_row) => {
+        ok = prm_row.param.check_condition({row_spec, prm_row, elm, cnstr, origin, ox});
+        if(!ok){
+          return false;
+        }
+      });
+
+      return ok;
+    }
+
+    filtered_spec({elm, is_high_level_call, len_angl, own_row, ox}) {
+
+      const res = [];
+
+      if(this.empty()){
+        return res;
       }
 
-			const {_cache} = this;
+      function fake_row(row) {
+        if(row._metadata){
+          const res = {};
+          for(let fld in row._metadata.fields){
+            res[fld] = row[fld];
+          }
+          return res;
+        }
+        else{
+          return Object.assign({}, row);
+        }
+      }
 
-			if(!_cache.hasOwnProperty("thickness")){
-				_cache.thickness = 0;
-				const nom = this.nom(null, true);
-				if(nom && !nom.empty()){
-          _cache.thickness = nom.thickness;
+      const {insert_type} = this;
+
+      if(is_high_level_call && (insert_type == "Заполнение" || insert_type == "Стеклопакет" || insert_type == "ТиповойСтеклопакет")){
+
+        const glass_rows = [];
+        ox.glass_specification.find_rows({elm: elm.elm}, (row) => {
+          glass_rows.push(row);
+        });
+
+        if(glass_rows.length){
+          glass_rows.forEach((row) => {
+            row.inset.filtered_spec({elm, len_angl, ox}).forEach((row) => {
+              res.push(row);
+            });
+          });
+          return res;
+        }
+      }
+
+      this.specification.each((row) => {
+
+        if(!inset_check(row, elm, insert_type == $p.enm.inserts_types.Профиль, len_angl)){
+          return;
+        }
+
+        if(own_row && row.clr.empty() && !own_row.clr.empty()){
+          row = fake_row(row);
+          row.clr = own_row.clr;
+        }
+        if(!this.check_params({
+            ox: ox,
+            elm: elm,
+            row_spec: row,
+            cnstr: len_angl && len_angl.cnstr,
+            origin: len_angl && len_angl.origin,
+        })){
+          return;
+        }
+
+        if(row.nom instanceof $p.CatInserts){
+          row.nom.filtered_spec({elm, len_angl, own_row, ox}).forEach((subrow) => {
+            const fakerow = fake_row(subrow);
+            fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
+            fakerow.coefficient = (subrow.coefficient || 1) * (row.coefficient || 1);
+            fakerow._origin = row.nom;
+            if(fakerow.clr.empty()){
+              fakerow.clr = row.clr;
+            }
+            res.push(fakerow);
+          });
+        }
+        else{
+          res.push(row);
+        }
+
+      });
+
+      return res;
+    }
+
+    get thickness() {
+
+      const {_data} = this;
+
+      if(!_data.hasOwnProperty("thickness")){
+        _data.thickness = 0;
+        const nom = this.nom(null, true);
+        if(nom && !nom.empty()){
+          _data.thickness = nom.thickness;
         }
         else{
           this.specification.forEach((row) => {
-            _cache.thickness += row.nom.thickness;
+            _data.thickness += row.nom.thickness;
           });
         }
-			}
+      }
 
-			return _cache.thickness;
-		}
-	},
+      return _data.thickness;
+    }
 
-  used_params: {
-	  get: function () {
-      var res = [];
-
-      this.selection_params.each(function (row) {
+    get used_params() {
+      const res = [];
+      this.selection_params.each((row) => {
         if(!row.param.empty() && res.indexOf(row.param) == -1){
           res.push(row.param)
         }
-      })
-
+      });
       return res;
     }
   }
 
-});
+})($p);
 
 
 
@@ -5469,6 +5551,10 @@ class Pricing {
 $p.pricing = new Pricing($p);
 
 
+class SpecCalc {
+
+}
+
 function ProductsBuilding(){
 
   let added_cnn_spec,
@@ -6601,86 +6687,89 @@ $p.DpBuilder_price.prototype.__define({
 
 })($p);
 
-$p.dp.buyers_order.__define({
 
-	unload_obj: {
-		value: function () {
+class CalcOrderFormProductList {
 
-		}
-	},
+  constructor(pwnd, calc_order) {
 
-	form_product_list: {
-		value: async function (pwnd, calc_order, callback) {
+    this.calc_order = calc_order;
+    this.dp = $p.dp.buyers_order.create();
 
-			const dp = this.create();
+    this.attr = {
+      toolbar_struct: $p.injected_data["toolbar_product_list.xml"],
 
-      const attr = {
-				toolbar_struct: $p.injected_data["toolbar_product_list.xml"],
+      toolbar_click: this.toolbar_click.bind(this),
 
-				toolbar_click(btn_id) {
-				  if(btn_id == "btn_ok"){
-				    dp._data._modified = false;
-            attr.wnd.close();
-				    callback(dp.production);
-				  }
-        },
+      draw_pg_header: this.draw_pg_header.bind(this),
 
-				draw_pg_header(o, wnd) {
+      draw_tabular_sections: this.draw_tabular_sections.bind(this)
 
-        },
+    };
 
-        draw_tabular_sections(dp, wnd, tabular_init) {
+    this.dp.presentation = calc_order.presentation + " - добавление продукции";
 
-          attr.wnd = wnd;
+    this.dp.form_obj(pwnd, this.attr);
 
-          const {elmnts} = wnd;
-          elmnts.frm_toolbar.hideItem("bs_print");
 
-          wnd.detachObject(true);
-          wnd.maximize();
-          elmnts.layout = wnd.attachLayout({
-            pattern: "2E",
-            cells: [{
-              id: "a",
-              text: "Продукция",
-              header: false,
-            }, {
-              id: "b",
-              text: "Параметры",
-              header: false,
-            }],
-            offsets: {top: 0, right: 0, bottom: 0, left: 0}
-          });
+  }
 
-          elmnts.grids.production = elmnts.layout.cells('a').attachTabular({
-            obj: dp,
-            ts: 'production',
-            pwnd: wnd,
-          });
+  draw_pg_header(dp, wnd) {
 
-          elmnts.grids.params = elmnts.layout.cells('b').attachHeadFields({
-            obj: dp,
-            ts: 'product_params',
-            pwnd: wnd,
-            selection: {elm: -1},
-            oxml: {'Параметры продукции': []},
-          });
+  }
 
-          const height = elmnts.layout.cells('a').getHeight() + elmnts.layout.cells('b').getHeight();
-          elmnts.layout.cells('a').setHeight(height * 0.7);
-        }
+  draw_tabular_sections(dp, wnd, tabular_init) {
 
-      };
+    this.wnd = wnd;
+    wnd.maximize();
 
-			dp.presentation = calc_order.presentation + " - добавление продукции";
+    const {elmnts} = wnd;
+    elmnts.frm_toolbar.hideItem("bs_print");
 
-			dp.form_obj(pwnd, attr).then((res) => {
-			  res.wnd.maximize();
-			});
+    wnd.detachObject(true);
+    wnd.maximize();
+    elmnts.layout = wnd.attachLayout({
+      pattern: "2E",
+      cells: [{
+        id: "a",
+        text: "Продукция",
+        header: false,
+      }, {
+        id: "b",
+        text: "Параметры",
+        header: false,
+      }],
+      offsets: {top: 0, right: 0, bottom: 0, left: 0}
+    });
 
-		}
-	}
-});
+    elmnts.grids.production = elmnts.layout.cells('a').attachTabular({
+      obj: dp,
+      ts: 'production',
+      pwnd: wnd,
+    });
+
+    elmnts.grids.params = elmnts.layout.cells('b').attachHeadFields({
+      obj: dp,
+      ts: 'product_params',
+      pwnd: wnd,
+      selection: {elm: -1},
+      oxml: {'Параметры продукции': []},
+    });
+
+    const height = elmnts.layout.cells('a').getHeight() + elmnts.layout.cells('b').getHeight();
+    elmnts.layout.cells('a').setHeight(height * 0.7);
+
+  }
+
+  toolbar_click(btn_id) {
+    if(btn_id == "btn_ok"){
+      this.dp._data._modified = false;
+      this.wnd.close();
+      this.calc_order.process_add_product_list(this.dp);
+      this.calc_order = this.wnd = this.dp = this.attr = null;
+    }
+  }
+
+}
 
 
 
@@ -7217,6 +7306,13 @@ $p.doc.calc_order.on({
       });
     }
 
+    process_add_product_list(dp) {
+      dp.production.forEach((row) => {
+
+
+      });
+    }
+
   }
 })();
 
@@ -7562,7 +7658,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 					break;
 
 				case 'btn_add_product':
-					$p.dp.buyers_order.form_product_list(wnd, o, process_add_product);
+					new CalcOrderFormProductList(wnd, o);
 					break;
 
 				case 'btn_add_material':
@@ -7884,14 +7980,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
         grid.selectCell(row, grid.getColIndexById("nom"), false, true, true);
         grid.cells().open_selection();
       });
-		}
-
-		function process_add_product(ts){
-
-			if(ts && ts.count()){
-
-				ts.clear();
-			}
 		}
 
 	};

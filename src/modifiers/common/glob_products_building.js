@@ -8,6 +8,10 @@
  * Created 26.05.2015
  */
 
+class SpecCalc {
+
+}
+
 function ProductsBuilding(){
 
   let added_cnn_spec,
@@ -890,9 +894,9 @@ function ProductsBuilding(){
 
   /**
    * Ищет характеристику в озу, в indexeddb не лезет, если нет в озу - создаёт
-   * @param elm
-   * @param origin
-   * @return {$p.CatCharacteristics}
+   * @param elm {Number}
+   * @param origin {CatInserts}
+   * @return {CatCharacteristics}
    */
 	function find_create_cx(elm, origin) {
     if(!find_cx_sql){

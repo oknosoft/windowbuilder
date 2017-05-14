@@ -581,6 +581,10 @@ $p.doc.calc_order.on({
       return ro;
     }
 
+    /**
+     * Загружает в RAM данные характеристик продукций заказа
+     * @return {Promise.<TResult>|*}
+     */
     load_production() {
       const prod = [];
       this.production.forEach((row) => {
@@ -600,6 +604,16 @@ $p.doc.calc_order.on({
           }
         });
         return prod;
+      });
+    }
+
+    process_add_product_list(dp) {
+      dp.production.forEach((row) => {
+        // создаём строку заказа с уникальной харктеристикой
+
+        // рассчитываем спецификацию по текущей вставке
+
+        // рассчитываем цены
       });
     }
 
