@@ -21,8 +21,7 @@ function ProductsBuilding(){
 		coordinates,
 		cnn_elmnts,
 		glass_specification,
-		params,
-    find_cx_sql;
+		params;
 
 
 	/**
@@ -355,65 +354,6 @@ function ProductsBuilding(){
 		return ok;
 	}
 
-	/**
-	 * ПроверитьОграниченияВставки
-	 * TODO: перенести в прототип объекта вставки
-	 * @param inset
-	 * @param elm
-	 * @param by_perimetr
-	 * @return {boolean}
-	 */
-	function inset_check(inset, elm, by_perimetr, len_angl){
-
-	  const {_row} = elm;
-	  const len = len_angl ? len_angl.len : _row.len;
-	  const is_linear = elm.is_linear ? elm.is_linear() : true;
-		let is_tabular = true;
-
-		// проверяем площадь
-		if(inset.smin > _row.s || (_row.s && inset.smax && inset.smax < _row.s)){
-      return false;
-    }
-
-		// Главный элемент с нулевым количеством не включаем
-		if(inset.is_main_elm && !inset.quantity){
-      return false;
-    }
-
-    // только для прямых или только для кривых профилей
-    if((inset.for_direct_profile_only > 0 && !is_linear) || (inset.for_direct_profile_only < 0 && is_linear)){
-      return false;
-    }
-
-		if($p.utils.is_data_obj(inset)){
-
-			if(inset.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
-				if(!elm.joined_imposts(true)){
-          return false;
-        }
-
-			}else if(inset.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
-				if(elm.joined_imposts(true)){
-          return false;
-        }
-			}
-			is_tabular = false;
-		}
-
-
-		if(!is_tabular || by_perimetr || inset.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
-			if(inset.lmin > len || (inset.lmax < len && inset.lmax > 0)){
-        return false;
-      }
-			if(inset.ahmin > _row.angle_hor || inset.ahmax < _row.angle_hor){
-        return false;
-      }
-		}
-
-		//// Включить проверку размеров и углов, поля "Устанавливать с..." и т.д.
-
-		return true;
-	}
 
 	/**
 	 * ПолучитьСпецификациюВставкиСФильтром
@@ -465,7 +405,7 @@ function ProductsBuilding(){
 		inset.specification.each((row) => {
 
 			// Проверяем ограничения строки вставки
-			if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl)){
+			if(!inset.check_restrictions(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl)){
         return;
       }
 
@@ -847,7 +787,7 @@ function ProductsBuilding(){
 					elm.perimeter.forEach((rib) => {
 						row_prm._row._mixin(rib);
             row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
-						if(inset_check(row_ins_spec, row_prm, true)){
+						if(inset.check_restrictions(row_ins_spec, row_prm, true)){
 							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
 							calc_qty_len(row_spec, row_ins_spec, rib.len);
 							calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
@@ -892,39 +832,8 @@ function ProductsBuilding(){
 		})
 	}
 
-  /**
-   * Ищет характеристику в озу, в indexeddb не лезет, если нет в озу - создаёт
-   * @param elm {Number}
-   * @param origin {CatInserts}
-   * @return {CatCharacteristics}
-   */
-	function find_create_cx(elm, origin) {
-    if(!find_cx_sql){
-      find_cx_sql = $p.wsql.alasql.compile("select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?")
-    }
-    const aref = find_cx_sql([ox.ref, elm, origin]);
-    const cx = aref.length ? $p.cat.characteristics.get(aref[0].ref, false) :
-      $p.cat.characteristics.create({
-        leading_product: ox,
-        leading_elm: elm,
-        origin: origin
-      }, false, true)._set_loaded();
 
-    // переносим в cx параметры
-    const {length, width} = $p.job_prm.properties;
-    cx.params.clear(true);
-    ox.params.find_rows({cnstr: -elm, inset: origin}, (row) => {
-      if(row.param != length && row.param != width){
-        cx.params.add({param: row.param, value: row.value});
-      }
-    });
-    // переносим в cx цвет
-    ox.inserts.find_rows({cnstr: -elm, inset: origin}, (row) => {
-      cx.clr = row.clr;
-    });
-    cx.prod_name();
-    return cx;
-  }
+
 
   /**
    * Спецификация вставок в контур
@@ -947,7 +856,7 @@ function ProductsBuilding(){
       // если во вставке указано создавать продукцию, создаём
       if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
         // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
-        const cx = find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
+        const cx = ox.find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
         ox._order_rows.push(cx);
         spec = cx.specification;
         spec.clear();

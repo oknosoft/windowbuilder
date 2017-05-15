@@ -607,13 +607,99 @@ $p.doc.calc_order.on({
       });
     }
 
+    create_product_row({row_spec, params, create, grid}) {
+
+      const row = this.production.add({
+        qty: 1,
+        quantity: 1,
+        discount_percent_internal: $p.wsql.get_user_param("discount_percent_internal", "number")
+      });
+
+      if(grid){
+        this.production.sync_grid(grid);
+        grid.selectRowById(row.row);
+      }
+
+      if(!create){
+        return row;
+      }
+
+      // объект продукции создаём, но из базы не читаем и пока не записываем
+      return $p.cat.characteristics.create({
+        ref: $p.utils.generate_guid(),
+        calc_order: this,
+        product: row.row
+      }, true)
+        .then((ox) => {
+          // устанавливаем характеристику в строке заказа
+          row.characteristic = ox;
+          // записываем расчет, если не сделали этого ранее, чтобы не погибла ссылка на расчет в характеристике
+          return this.is_new() ? this.save().then(() => ox) : ox;
+      })
+        .then((ox) => {
+          // если указана строка-генератор, заполняем реквизиты
+          if(row_spec instanceof $p.DpBuyers_orderProductionRow){
+            ox.owner = row.nom = row_spec.inset.nom();
+            ox.origin = row_spec.inset;
+            ox.x = row.len = row_spec.len;
+            ox.y = row.width = row_spec.height;
+            ox.z = row_spec.depth;
+            ox.s = row.s = row_spec.s;
+            ox.clr = row_spec.clr;
+            row.qty = row.quantity = row_spec.quantity;
+            ox.note = row.note = row_spec.note;
+
+            if(params){
+              params.find_rows({elm: row_spec.row}, (prow) => {
+                ox.params.add(prow, true);
+              });
+            }
+
+            ox.name = ox.prod_name();
+          }
+          return row;
+      });
+
+    }
+
+    /**
+     * Создаёт продукции заказа по массиву строк и параметров
+     * @method process_add_product_list
+     * @param dp {DpBuyers_order} - экземпляр обработки с заполненными табличными частями
+     */
     process_add_product_list(dp) {
-      dp.production.forEach((row) => {
+      dp.production.forEach(async (row_spec) => {
+        if(row_spec.inset.empty()){
+          return;
+        }
+
         // создаём строку заказа с уникальной харктеристикой
+        const row_prod = await this.create_product_row({row_spec, params: dp.product_params, create: true});
 
         // рассчитываем спецификацию по текущей вставке
+        const len_angl = {
+          angle: 0,
+          alp1: 0,
+          alp2: 0,
+          len: row_spec.len,
+          origin: row_spec.inset,
+          cnstr: 0
+        };
+        const elm = {
+          get _row() {return this},
+          elm: 0,
+          clr: row_spec.clr,
+          get len() {return row_spec.len},
+          get height() {return row_spec.height},
+          get depth() {return row_spec.depth},
+          get s() {return row_spec.s},
+          get perimeter() {return [row_spec.len]}
+        };
+        row_spec.inset.filtered_spec({elm, len_angl, ox: row_prod.characteristic});
 
         // рассчитываем цены
+
+
       });
     }
 

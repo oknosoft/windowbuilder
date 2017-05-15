@@ -8,6 +8,30 @@
  * @module dp_buyers_order
  */
 
+
+
+$p.dp.buyers_order.on({
+
+  add_row: function ({row, tabular_section, field}) {
+    // установим валюту и тип цен по умолчению при добавлении строки
+    if(tabular_section == "production"){
+      row.qty = row.quantity = 1;
+    }
+  },
+
+  value_change: function({row, tabular_section, field, value}){
+    if(tabular_section == "production"){
+      if(field == "len" || field == "height" ) {
+        row[field] = value;
+      }
+      if(row.height != 0 && row.height != 0) {
+        row.s = (row.height * row.len / 1000000).round(3);
+      }
+    }
+  },
+
+});
+
 class CalcOrderFormProductList {
 
   constructor(pwnd, calc_order) {

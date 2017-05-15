@@ -21,7 +21,7 @@ $p.on({
 
 });
 
-// подписки на события
+// перед записью объекта и при изменении реквизита в форме
 $p.cat.characteristics.on({
 
 	// перед записью надо пересчитать наименование и рассчитать итоги
@@ -65,6 +65,7 @@ $p.cat.characteristics.on({
 // свойства менеджера характеристики
 Object.defineProperties($p.cat.characteristics, {
 
+  // индивидуальная форма объекта
   form_obj: {
     value: function(pwnd, attr){
 
@@ -107,12 +108,16 @@ Object.defineProperties($p.cat.characteristics, {
     }
   }
 
+
 });
 
 
 // свойства объекта характеристики
 Object.defineProperties($p.CatCharacteristics.prototype, {
 
+  /**
+   * Возврвщает строку заказа, которой принадлежит продукция
+   */
   calc_order_row: {
     get: function () {
       let _calc_order_row;
@@ -124,6 +129,9 @@ Object.defineProperties($p.CatCharacteristics.prototype, {
     }
   },
 
+  /**
+   * Рассчитывает наименование продукции
+   */
   prod_name: {
     value: function (short) {
 
@@ -309,7 +317,45 @@ Object.defineProperties($p.CatCharacteristics.prototype, {
         $p.record_log(err);
       }
     }
-  }
+  },
+
+  /**
+   * Ищет характеристику в озу, в indexeddb не лезет, если нет в озу - создаёт
+   * @param elm {Number} - номер элемента или контура
+   * @param origin {CatInserts} - порождающая вставка
+   * @return {CatCharacteristics}
+   */
+  find_create_cx: {
+    value: function (elm, origin) {
+      const {_manager, ref, calc_order, params, inserts} = this;
+      if(!_manager._find_cx_sql){
+        _manager._find_cx_sql = $p.wsql.alasql.compile("select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?")
+      }
+      const aref = _manager._find_cx_sql([ref, elm, origin]);
+      const cx = aref.length ? $p.cat.characteristics.get(aref[0].ref, false) :
+        $p.cat.characteristics.create({
+          calc_order: calc_order,
+          leading_product: this,
+          leading_elm: elm,
+          origin: origin
+        }, false, true)._set_loaded();
+
+      // переносим в cx параметры
+      const {length, width} = $p.job_prm.properties;
+      cx.params.clear(true);
+      params.find_rows({cnstr: -elm, inset: origin}, (row) => {
+        if(row.param != length && row.param != width){
+          cx.params.add({param: row.param, value: row.value});
+        }
+      });
+      // переносим в cx цвет
+      inserts.find_rows({cnstr: -elm, inset: origin}, (row) => {
+        cx.clr = row.clr;
+      });
+      cx.name = cx.prod_name();
+      return cx;
+    }
+  },
 
 });
 

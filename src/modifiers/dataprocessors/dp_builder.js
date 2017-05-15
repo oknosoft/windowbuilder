@@ -15,7 +15,8 @@ $p.dp.builder_pen.on({
 			this.inset = paper.project.default_inset({elm_type: this.elm_type});
 			this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
 		}
-	}
+	},
+
 });
 
 $p.dp.builder_lay_impost.on({

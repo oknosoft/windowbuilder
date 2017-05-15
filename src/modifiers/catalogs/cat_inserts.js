@@ -61,15 +61,14 @@ $p.cat.inserts.__define({
      */
     nom(elm, strict) {
 
+      if(!strict && this._data.nom){
+        return this._data.nom;
+      }
+
       const main_rows = [];
       let _nom;
 
-      this.specification.find_rows({is_main_elm: true}, function (row) {
-        main_rows.push(row);
-      });
-
-      if(this._data.nom)
-        return this._data.nom;
+      this.specification.find_rows({is_main_elm: true}, (row) => main_rows.push(row));
 
       if(!main_rows.length && !strict && this.specification.count()){
         main_rows.push(this.specification.get(0))
@@ -182,12 +181,71 @@ $p.cat.inserts.__define({
     }
 
     /**
+     * Проверяет ограничения вставки или строки вставки
+     * @param elm
+     * @param by_perimetr
+     * @return {boolean}
+     */
+    check_restrictions(row, elm, by_perimetr, len_angl) {
+
+      const {_row} = elm;
+      const len = len_angl ? len_angl.len : _row.len;
+      const is_linear = elm.is_linear ? elm.is_linear() : true;
+      let is_tabular = true;
+
+      // проверяем площадь
+      if(row.smin > _row.s || (_row.s && row.smax && row.smax < _row.s)){
+        return false;
+      }
+
+      // Главный элемент с нулевым количеством не включаем
+      if(row.is_main_elm && !row.quantity){
+        return false;
+      }
+
+      // только для прямых или только для кривых профилей
+      if((row.for_direct_profile_only > 0 && !is_linear) || (row.for_direct_profile_only < 0 && is_linear)){
+        return false;
+      }
+
+      if($p.utils.is_data_obj(row)){
+
+        if(row.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
+          if(!elm.joined_imposts(true)){
+            return false;
+          }
+
+        }else if(row.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
+          if(elm.joined_imposts(true)){
+            return false;
+          }
+        }
+        is_tabular = false;
+      }
+
+
+      if(!is_tabular || by_perimetr || row.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
+        if(row.lmin > len || (row.lmax < len && row.lmax > 0)){
+          return false;
+        }
+        if(row.ahmin > _row.angle_hor || row.ahmax < _row.angle_hor){
+          return false;
+        }
+      }
+
+      //// Включить проверку размеров и углов, поля "Устанавливать с..." и т.д.
+
+      return true;
+    }
+
+    /**
      * ПолучитьСпецификациюВставкиСФильтром
      * @param elm {BuilderElement|Object} - элемент, к которому привязана вставка
      * @param ox {CatCharacteristics} - текущая продукция
      * @param [is_high_level_call] {Boolean} - вызов верхнего уровня - специфично для стеклопакетов
      * @param [len_angl] {Object} - контекст размеров элемента
      * @param [own_row] {CatInsertsSpecificationRow} - родительская строка для вложенных вставок
+     * @return {Array}
      */
     filtered_spec({elm, is_high_level_call, len_angl, own_row, ox}) {
 
@@ -210,7 +268,7 @@ $p.cat.inserts.__define({
         }
       }
 
-      const {insert_type} = this;
+      const {insert_type, check_restrictions} = this;
 
       // для заполнений, можно переопределить состав верхнего уровня
       if(is_high_level_call && (insert_type == "Заполнение" || insert_type == "Стеклопакет" || insert_type == "ТиповойСтеклопакет")){
@@ -234,7 +292,7 @@ $p.cat.inserts.__define({
       this.specification.each((row) => {
 
         // Проверяем ограничения строки вставки
-        if(!inset_check(row, elm, insert_type == $p.enm.inserts_types.Профиль, len_angl)){
+        if(!check_restrictions(row, elm, insert_type == $p.enm.inserts_types.Профиль, len_angl)){
           return;
         }
 
@@ -273,6 +331,10 @@ $p.cat.inserts.__define({
       });
 
       return res;
+    }
+
+    calculate_spec() {
+
     }
 
     /**
@@ -315,6 +377,7 @@ $p.cat.inserts.__define({
       });
       return res;
     }
+
   }
 
 })($p);

@@ -2449,6 +2449,7 @@ Object.defineProperties($p.cat.characteristics, {
     }
   }
 
+
 });
 
 
@@ -2633,7 +2634,37 @@ Object.defineProperties($p.CatCharacteristics.prototype, {
         $p.record_log(err);
       }
     }
-  }
+  },
+
+  find_create_cx: {
+    value: function (elm, origin) {
+      const {_manager, ref, calc_order, params, inserts} = this;
+      if(!_manager._find_cx_sql){
+        _manager._find_cx_sql = $p.wsql.alasql.compile("select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?")
+      }
+      const aref = _manager._find_cx_sql([ref, elm, origin]);
+      const cx = aref.length ? $p.cat.characteristics.get(aref[0].ref, false) :
+        $p.cat.characteristics.create({
+          calc_order: calc_order,
+          leading_product: this,
+          leading_elm: elm,
+          origin: origin
+        }, false, true)._set_loaded();
+
+      const {length, width} = $p.job_prm.properties;
+      cx.params.clear(true);
+      params.find_rows({cnstr: -elm, inset: origin}, (row) => {
+        if(row.param != length && row.param != width){
+          cx.params.add({param: row.param, value: row.value});
+        }
+      });
+      inserts.find_rows({cnstr: -elm, inset: origin}, (row) => {
+        cx.clr = row.clr;
+      });
+      cx.name = cx.prod_name();
+      return cx;
+    }
+  },
 
 });
 
@@ -3880,15 +3911,14 @@ $p.cat.inserts.__define({
 
     nom(elm, strict) {
 
+      if(!strict && this._data.nom){
+        return this._data.nom;
+      }
+
       const main_rows = [];
       let _nom;
 
-      this.specification.find_rows({is_main_elm: true}, function (row) {
-        main_rows.push(row);
-      });
-
-      if(this._data.nom)
-        return this._data.nom;
+      this.specification.find_rows({is_main_elm: true}, (row) => main_rows.push(row));
 
       if(!main_rows.length && !strict && this.specification.count()){
         main_rows.push(this.specification.get(0))
@@ -3992,6 +4022,54 @@ $p.cat.inserts.__define({
       return ok;
     }
 
+    check_restrictions(row, elm, by_perimetr, len_angl) {
+
+      const {_row} = elm;
+      const len = len_angl ? len_angl.len : _row.len;
+      const is_linear = elm.is_linear ? elm.is_linear() : true;
+      let is_tabular = true;
+
+      if(row.smin > _row.s || (_row.s && row.smax && row.smax < _row.s)){
+        return false;
+      }
+
+      if(row.is_main_elm && !row.quantity){
+        return false;
+      }
+
+      if((row.for_direct_profile_only > 0 && !is_linear) || (row.for_direct_profile_only < 0 && is_linear)){
+        return false;
+      }
+
+      if($p.utils.is_data_obj(row)){
+
+        if(row.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
+          if(!elm.joined_imposts(true)){
+            return false;
+          }
+
+        }else if(row.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
+          if(elm.joined_imposts(true)){
+            return false;
+          }
+        }
+        is_tabular = false;
+      }
+
+
+      if(!is_tabular || by_perimetr || row.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
+        if(row.lmin > len || (row.lmax < len && row.lmax > 0)){
+          return false;
+        }
+        if(row.ahmin > _row.angle_hor || row.ahmax < _row.angle_hor){
+          return false;
+        }
+      }
+
+
+      return true;
+    }
+
     filtered_spec({elm, is_high_level_call, len_angl, own_row, ox}) {
 
       const res = [];
@@ -4013,7 +4091,7 @@ $p.cat.inserts.__define({
         }
       }
 
-      const {insert_type} = this;
+      const {insert_type, check_restrictions} = this;
 
       if(is_high_level_call && (insert_type == "Заполнение" || insert_type == "Стеклопакет" || insert_type == "ТиповойСтеклопакет")){
 
@@ -4034,7 +4112,7 @@ $p.cat.inserts.__define({
 
       this.specification.each((row) => {
 
-        if(!inset_check(row, elm, insert_type == $p.enm.inserts_types.Профиль, len_angl)){
+        if(!check_restrictions(row, elm, insert_type == $p.enm.inserts_types.Профиль, len_angl)){
           return;
         }
 
@@ -4073,6 +4151,10 @@ $p.cat.inserts.__define({
       return res;
     }
 
+    calculate_spec() {
+
+    }
+
     get thickness() {
 
       const {_data} = this;
@@ -4102,6 +4184,7 @@ $p.cat.inserts.__define({
       });
       return res;
     }
+
   }
 
 })($p);
@@ -5564,8 +5647,7 @@ function ProductsBuilding(){
 		coordinates,
 		cnn_elmnts,
 		glass_specification,
-		params,
-    find_cx_sql;
+		params;
 
 
 	function calc_count_area_mass(row_spec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2){
@@ -5832,53 +5914,6 @@ function ProductsBuilding(){
 		return ok;
 	}
 
-	function inset_check(inset, elm, by_perimetr, len_angl){
-
-	  const {_row} = elm;
-	  const len = len_angl ? len_angl.len : _row.len;
-	  const is_linear = elm.is_linear ? elm.is_linear() : true;
-		let is_tabular = true;
-
-		if(inset.smin > _row.s || (_row.s && inset.smax && inset.smax < _row.s)){
-      return false;
-    }
-
-		if(inset.is_main_elm && !inset.quantity){
-      return false;
-    }
-
-    if((inset.for_direct_profile_only > 0 && !is_linear) || (inset.for_direct_profile_only < 0 && is_linear)){
-      return false;
-    }
-
-		if($p.utils.is_data_obj(inset)){
-
-			if(inset.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
-				if(!elm.joined_imposts(true)){
-          return false;
-        }
-
-			}else if(inset.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
-				if(elm.joined_imposts(true)){
-          return false;
-        }
-			}
-			is_tabular = false;
-		}
-
-
-		if(!is_tabular || by_perimetr || inset.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
-			if(inset.lmin > len || (inset.lmax < len && inset.lmax > 0)){
-        return false;
-      }
-			if(inset.ahmin > _row.angle_hor || inset.ahmax < _row.angle_hor){
-        return false;
-      }
-		}
-
-
-		return true;
-	}
 
 	function inset_filter_spec(inset, elm, is_high_level_call, len_angl, own_row){
 
@@ -5920,7 +5955,7 @@ function ProductsBuilding(){
 
 		inset.specification.each((row) => {
 
-			if(!inset_check(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl)){
+			if(!inset.check_restrictions(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl)){
         return;
       }
 
@@ -6241,7 +6276,7 @@ function ProductsBuilding(){
 					elm.perimeter.forEach((rib) => {
 						row_prm._row._mixin(rib);
             row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
-						if(inset_check(row_ins_spec, row_prm, true)){
+						if(inset.check_restrictions(row_ins_spec, row_prm, true)){
 							row_spec = new_spec_row(null, elm, row_ins_spec, null, origin);
 							calc_qty_len(row_spec, row_ins_spec, rib.len);
 							calc_count_area_mass(row_spec, _row, row_ins_spec.angle_calc_method);
@@ -6283,31 +6318,8 @@ function ProductsBuilding(){
 		})
 	}
 
-	function find_create_cx(elm, origin) {
-    if(!find_cx_sql){
-      find_cx_sql = $p.wsql.alasql.compile("select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?")
-    }
-    const aref = find_cx_sql([ox.ref, elm, origin]);
-    const cx = aref.length ? $p.cat.characteristics.get(aref[0].ref, false) :
-      $p.cat.characteristics.create({
-        leading_product: ox,
-        leading_elm: elm,
-        origin: origin
-      }, false, true)._set_loaded();
 
-    const {length, width} = $p.job_prm.properties;
-    cx.params.clear(true);
-    ox.params.find_rows({cnstr: -elm, inset: origin}, (row) => {
-      if(row.param != length && row.param != width){
-        cx.params.add({param: row.param, value: row.value});
-      }
-    });
-    ox.inserts.find_rows({cnstr: -elm, inset: origin}, (row) => {
-      cx.clr = row.clr;
-    });
-    cx.prod_name();
-    return cx;
-  }
+
 
   function inset_contour_spec(contour) {
 
@@ -6323,7 +6335,7 @@ function ProductsBuilding(){
     ox.inserts.find_rows({cnstr: contour.cnstr}, ({inset, clr}) => {
 
       if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
-        const cx = find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
+        const cx = ox.find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
         ox._order_rows.push(cx);
         spec = cx.specification;
         spec.clear();
@@ -6545,7 +6557,8 @@ $p.dp.builder_pen.on({
 			this.inset = paper.project.default_inset({elm_type: this.elm_type});
 			this.rama_impost = paper.project._dp.sys.inserts([this.elm_type]);
 		}
-	}
+	},
+
 });
 
 $p.dp.builder_lay_impost.on({
@@ -6687,6 +6700,29 @@ $p.DpBuilder_price.prototype.__define({
 
 })($p);
 
+
+
+
+$p.dp.buyers_order.on({
+
+  add_row: function ({row, tabular_section, field}) {
+    if(tabular_section == "production"){
+      row.qty = row.quantity = 1;
+    }
+  },
+
+  value_change: function({row, tabular_section, field, value}){
+    if(tabular_section == "production"){
+      if(field == "len" || field == "height" ) {
+        row[field] = value;
+      }
+      if(row.height != 0 && row.height != 0) {
+        row.s = (row.height * row.len / 1000000).round(3);
+      }
+    }
+  },
+
+});
 
 class CalcOrderFormProductList {
 
@@ -7306,8 +7342,85 @@ $p.doc.calc_order.on({
       });
     }
 
+    create_product_row({row_spec, params, create, grid}) {
+
+      const row = this.production.add({
+        qty: 1,
+        quantity: 1,
+        discount_percent_internal: $p.wsql.get_user_param("discount_percent_internal", "number")
+      });
+
+      if(grid){
+        this.production.sync_grid(grid);
+        grid.selectRowById(row.row);
+      }
+
+      if(!create){
+        return row;
+      }
+
+      return $p.cat.characteristics.create({
+        ref: $p.utils.generate_guid(),
+        calc_order: this,
+        product: row.row
+      }, true)
+        .then((ox) => {
+          row.characteristic = ox;
+          return this.is_new() ? this.save().then(() => ox) : ox;
+      })
+        .then((ox) => {
+          if(row_spec instanceof $p.DpBuyers_orderProductionRow){
+            ox.owner = row.nom = row_spec.inset.nom();
+            ox.origin = row_spec.inset;
+            ox.x = row.len = row_spec.len;
+            ox.y = row.width = row_spec.height;
+            ox.z = row_spec.depth;
+            ox.s = row.s = row_spec.s;
+            ox.clr = row_spec.clr;
+            row.qty = row.quantity = row_spec.quantity;
+            ox.note = row.note = row_spec.note;
+
+            if(params){
+              params.find_rows({elm: row_spec.row}, (prow) => {
+                ox.params.add(prow, true);
+              });
+            }
+
+            ox.name = ox.prod_name();
+          }
+          return row;
+      });
+
+    }
+
     process_add_product_list(dp) {
-      dp.production.forEach((row) => {
+      dp.production.forEach(async (row_spec) => {
+        if(row_spec.inset.empty()){
+          return;
+        }
+
+        const row_prod = await this.create_product_row({row_spec, params: dp.product_params, create: true});
+
+        const len_angl = {
+          angle: 0,
+          alp1: 0,
+          alp2: 0,
+          len: row_spec.len,
+          origin: row_spec.inset,
+          cnstr: 0
+        };
+        const elm = {
+          get _row() {return this},
+          elm: 0,
+          clr: row_spec.clr,
+          get len() {return row_spec.len},
+          get height() {return row_spec.height},
+          get depth() {return row_spec.depth},
+          get s() {return row_spec.s},
+          get perimeter() {return [row_spec.len]}
+        };
+        row_spec.inset.filtered_spec({elm, len_angl, ox: row_prod.characteristic});
+
 
 
       });
@@ -7721,17 +7834,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 
 
 
-		function production_new_row(){
-			var row = o["production"].add({
-				qty: 1,
-				quantity: 1,
-				discount_percent_internal: $p.wsql.get_user_param("discount_percent_internal", "number")
-			});
-			o["production"].sync_grid(wnd.elmnts.grids.production);
-			wnd.elmnts.grids.production.selectRowById(row.row);
-			return row;
-		}
-
 		function production_get_sel_index(){
 			var selId = wnd.elmnts.grids.production.getSelectedRowId();
 			if(selId && !isNaN(Number(selId)))
@@ -7910,46 +8012,32 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 		}
 
 		function open_builder(create_new){
-			var selId, row;
+			var selId;
 
 			if(create_new){
-
-				row = production_new_row();
-
-				$p.cat.characteristics.create({
-					ref: $p.utils.generate_guid(),
-					calc_order: o,
-					product: row.row
-				}, true)
-					.then((ox) => {
-
-						if(o.is_new())
-							return o.save().then(() => ox);
-						else
-							return ox;
-					})
-					.then((ox) => {
-						row.characteristic = ox;
-						$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
-					});
+        o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
+          .then((row) => $p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder"));
 			}
-			else if((selId = production_get_sel_index()) != undefined){
-				row = o.production.get(selId);
-				if(row){
-					if(row.characteristic.empty() ||
-						row.characteristic.calc_order.empty() ||
-						row.characteristic.owner.is_procedure ||
-						row.characteristic.owner.is_service ||
-						row.characteristic.owner.is_accessory){
-						not_production();
-					}
-					else if(row.characteristic.coordinates.count() == 0){
-					}
-					else{
-            $p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+			else{
+			  const selId = production_get_sel_index();
+        if(selId != undefined){
+          const row = o.production.get(selId);
+          if(row){
+            const {owner, calc_order} = row.characteristic;
+            if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory){
+              not_production();
+            }
+            else if(row.characteristic.coordinates.count() == 0){
+              if(row.characteristic.leading_product.calc_order == calc_order){
+                $p.iface.set_hash("cat.characteristics", row.characteristic.leading_product.ref, "builder");
+              }
+            }
+            else{
+              $p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+            }
           }
-				}
-			}
+        }
+      }
 
 			if(!evts.length){
 				evts.push($p.eve.attachEvent("characteristic_saved", characteristic_saved));
@@ -7973,7 +8061,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
     }
 
 		function add_material(){
-			const row = production_new_row().row-1;
+			const row = o.create_product_row({grid: wnd.elmnts.grids.production}).row-1;
 			setTimeout(() => {
         const grid = wnd.elmnts.grids.production;
         grid.selectRow(row);

@@ -342,17 +342,6 @@
 		 * вспомогательные функции
 		 */
 
-		function production_new_row(){
-			var row = o["production"].add({
-				qty: 1,
-				quantity: 1,
-				discount_percent_internal: $p.wsql.get_user_param("discount_percent_internal", "number")
-			});
-			o["production"].sync_grid(wnd.elmnts.grids.production);
-			wnd.elmnts.grids.production.selectRowById(row.row);
-			return row;
-		}
-
 		function production_get_sel_index(){
 			var selId = wnd.elmnts.grids.production.getSelectedRowId();
 			if(selId && !isNaN(Number(selId)))
@@ -557,49 +546,33 @@
 		 * @param [create_new] {Boolean} - создавать новое изделие или открывать в текущей строке
 		 */
 		function open_builder(create_new){
-			var selId, row;
+			var selId;
 
 			if(create_new){
-
-				row = production_new_row();
-
-				// объект продукции создаём, но из базы не читаем и пока не записываем
-				$p.cat.characteristics.create({
-					ref: $p.utils.generate_guid(),
-					calc_order: o,
-					product: row.row
-				}, true)
-					.then((ox) => {
-
-						// записываем расчет, если не сделали этого ранее
-						if(o.is_new())
-							return o.save().then(() => ox);
-						else
-							return ox;
-					})
-					.then((ox) => {
-						row.characteristic = ox;
-						$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
-					});
+        o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
+          .then((row) => $p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder"));
 			}
-			else if((selId = production_get_sel_index()) != undefined){
-				row = o.production.get(selId);
-				if(row){
-					if(row.characteristic.empty() ||
-						row.characteristic.calc_order.empty() ||
-						row.characteristic.owner.is_procedure ||
-						row.characteristic.owner.is_service ||
-						row.characteristic.owner.is_accessory){
-						not_production();
-					}
-					else if(row.characteristic.coordinates.count() == 0){
-						// возможно, это заготовка - проверим номенклатуру системы
-					}
-					else{
-            $p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+			else{
+			  const selId = production_get_sel_index();
+        if(selId != undefined){
+          const row = o.production.get(selId);
+          if(row){
+            const {owner, calc_order} = row.characteristic;
+            if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory){
+              not_production();
+            }
+            else if(row.characteristic.coordinates.count() == 0){
+              // возможно, это заготовка - проверим номенклатуру системы
+              if(row.characteristic.leading_product.calc_order == calc_order){
+                $p.iface.set_hash("cat.characteristics", row.characteristic.leading_product.ref, "builder");
+              }
+            }
+            else{
+              $p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+            }
           }
-				}
-			}
+        }
+      }
 
 			if(!evts.length){
 				evts.push($p.eve.attachEvent("characteristic_saved", characteristic_saved));
@@ -626,7 +599,7 @@
 		 * добавляет строку материала
 		 */
 		function add_material(){
-			const row = production_new_row().row-1;
+			const row = o.create_product_row({grid: wnd.elmnts.grids.production}).row-1;
 			setTimeout(() => {
         const grid = wnd.elmnts.grids.production;
         grid.selectRow(row);
