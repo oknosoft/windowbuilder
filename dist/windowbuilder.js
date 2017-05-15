@@ -1882,7 +1882,7 @@ class Editor extends paper.PaperScope {
     }
 
     elmnts.grids.inserts.attachEvent("onRowSelect", refill_prms);
-    wnd.elmnts.grids.inserts.attachEvent("onEditCell", (stage, rId, cInd) => {
+    elmnts.grids.inserts.attachEvent("onEditCell", (stage, rId, cInd) => {
       !cInd && setTimeout(refill_prms);
       project.register_change();
     });
@@ -2301,10 +2301,11 @@ class Editor extends paper.PaperScope {
   }
 
   on_del_row({grid, tabular_section}) {
-    const {project} = this;
-    const {obj} = grid.get_cell_field();
-    if(obj && obj._owner._owner == project.ox){
-      if(tabular_section == 'inserts'){
+    if(tabular_section == 'inserts'){
+      const {project} = this;
+      const {obj} = grid.get_cell_field() || {};
+      if(obj && obj._owner._owner == project.ox){
+        project.ox.params.clear(false, {cnstr: obj.cnstr, inset: obj.inset});
         project.register_change();
       }
     }

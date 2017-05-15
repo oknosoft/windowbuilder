@@ -165,26 +165,13 @@ $p.cat.inserts.__define({
 
     }
 
-    check_params({row_spec, elm, cnstr, origin, ox}) {
-      let ok = true;
-
-      // режем параметры по элементу
-      this.selection_params.find_rows({elm: row_spec.elm}, (prm_row) => {
-        // выполнение условия рассчитывает объект CchProperties
-        ok = prm_row.param.check_condition({row_spec, prm_row, elm, cnstr, origin, ox});
-        if(!ok){
-          return false;
-        }
-      });
-
-      return ok;
-    }
-
     /**
      * Проверяет ограничения вставки или строки вставки
-     * @param elm
-     * @param by_perimetr
-     * @return {boolean}
+     * @param row {CatInserts|CatInsertsSpecificationRow}
+     * @param elm {BuilderElement}
+     * @param by_perimetr {Boolean}
+     * @param len_angl {Object}
+     * @return {Boolean}
      */
     check_restrictions(row, elm, by_perimetr, len_angl) {
 
@@ -239,7 +226,8 @@ $p.cat.inserts.__define({
     }
 
     /**
-     * ПолучитьСпецификациюВставкиСФильтром
+     * Возвращает спецификацию вставки с фильтром
+     * @method filtered_spec
      * @param elm {BuilderElement|Object} - элемент, к которому привязана вставка
      * @param ox {CatCharacteristics} - текущая продукция
      * @param [is_high_level_call] {Boolean} - вызов верхнего уровня - специфично для стеклопакетов
@@ -269,9 +257,11 @@ $p.cat.inserts.__define({
       }
 
       const {insert_type, check_restrictions} = this;
+      const {Профиль, Заполнение} = $p.enm.inserts_types;
+      const {check_params} = ProductsBuilding;
 
       // для заполнений, можно переопределить состав верхнего уровня
-      if(is_high_level_call && (insert_type == "Заполнение" || insert_type == "Стеклопакет" || insert_type == "ТиповойСтеклопакет")){
+      if(is_high_level_call && (insert_type == Заполнение)){
 
         const glass_rows = [];
         ox.glass_specification.find_rows({elm: elm.elm}, (row) => {
@@ -292,7 +282,7 @@ $p.cat.inserts.__define({
       this.specification.each((row) => {
 
         // Проверяем ограничения строки вставки
-        if(!check_restrictions(row, elm, insert_type == $p.enm.inserts_types.Профиль, len_angl)){
+        if(!check_restrictions(row, elm, insert_type == Профиль, len_angl)){
           return;
         }
 
@@ -301,7 +291,8 @@ $p.cat.inserts.__define({
           row = fake_row(row);
           row.clr = own_row.clr;
         }
-        if(!this.check_params({
+        if(!check_params({
+            params: this.selection_params,
             ox: ox,
             elm: elm,
             row_spec: row,
@@ -333,8 +324,96 @@ $p.cat.inserts.__define({
       return res;
     }
 
-    calculate_spec() {
+    /**
+     * Дополняет спецификацию изделия спецификацией текущей вставки
+     * @method calculate_spec
+     * @param elm {BuilderElement}
+     * @param len_angl {Object}
+     * @param ox {CatCharacteristics}
+     */
+    calculate_spec(elm, len_angl, ox) {
 
+      const {_row} = elm;
+      const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади} = $p.enm.count_calculating_ways;
+      const {profile_items} = $p.enm.elm_types;
+      const spec = ox.specification;
+      const {new_spec_row, calc_qty_len, calc_count_area_mass} = ProductsBuilding;
+
+      this.filtered_spec({elm, is_high_level_call: true, len_angl, ox}).forEach((row_ins_spec) => {
+
+        const origin = row_ins_spec._origin || this;
+
+        let row_spec;
+
+        // добавляем строку спецификации, если профиль или не про шагам
+        if((row_ins_spec.count_calc_method != ПоПериметру && row_ins_spec.count_calc_method != ПоШагам) || profile_items.indexOf(_row.elm_type) != -1){
+          row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
+        }
+
+        if(row_ins_spec.count_calc_method == ПоФормуле && !row_ins_spec.formula.empty()){
+          // если строка спецификации не добавлена на предыдущем шаге, делаем это сейчас
+          row_spec = new_spec_row({row_spec, elm, row_base: row_ins_spec, origin, spec, ox});
+        }
+        // для вставок в профиль способ расчета количество не учитывается
+        else if(profile_items.indexOf(_row.elm_type) != -1 || row_ins_spec.count_calc_method == ДляЭлемента){
+          calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
+        }
+        else{
+
+          if(row_ins_spec.count_calc_method == ПоПлощади){
+            row_spec.qty = row_ins_spec.quantity;
+            row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+            row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+            row_spec.s = _row.s;
+          }
+          else if(row_ins_spec.count_calc_method == ПоПериметру){
+            const row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
+            elm.perimeter.forEach((rib) => {
+              row_prm._row._mixin(rib);
+              row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
+              if(this.check_restrictions(row_ins_spec, row_prm, true)){
+                row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
+                calc_qty_len(row_spec, row_ins_spec, rib.len);
+                calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
+              }
+              row_spec = null;
+            });
+
+          }
+          else if(row_ins_spec.count_calc_method == ПоШагам){
+            const h = _row.y2 - _row.y1, w = _row.x2 - _row.x1;
+            // (row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьШагиВторогоНаправления ||
+            // row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление)
+            if(row_ins_spec.step){
+              for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
+                row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
+                calc_qty_len(row_spec, row_ins_spec, w);
+                calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
+              }
+              row_spec = null;
+            }
+          }
+          else{
+            throw new Error("count_calc_method: " + row_ins_spec.count_calc_method);
+          }
+        }
+
+        if(row_spec){
+          // выполняем формулу
+          if(!row_ins_spec.formula.empty()){
+            row_ins_spec.formula.execute({
+              ox: ox,
+              elm: elm,
+              cnstr: len_angl && len_angl.cnstr || 0,
+              inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
+              row_ins: row_ins_spec,
+              row_spec: row_spec,
+              len: len_angl ? len_angl.len : _row.len
+            });
+          }
+          calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
+        }
+      })
     }
 
     /**

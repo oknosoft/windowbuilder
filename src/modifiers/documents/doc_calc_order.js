@@ -668,37 +668,52 @@ $p.doc.calc_order.on({
      * @param dp {DpBuyers_order} - экземпляр обработки с заполненными табличными частями
      */
     process_add_product_list(dp) {
-      dp.production.forEach(async (row_spec) => {
-        if(row_spec.inset.empty()){
-          return;
-        }
 
-        // создаём строку заказа с уникальной харктеристикой
-        const row_prod = await this.create_product_row({row_spec, params: dp.product_params, create: true});
+      return new Promise((resolve, reject) => {
 
-        // рассчитываем спецификацию по текущей вставке
-        const len_angl = {
-          angle: 0,
-          alp1: 0,
-          alp2: 0,
-          len: row_spec.len,
-          origin: row_spec.inset,
-          cnstr: 0
-        };
-        const elm = {
-          get _row() {return this},
-          elm: 0,
-          clr: row_spec.clr,
-          get len() {return row_spec.len},
-          get height() {return row_spec.height},
-          get depth() {return row_spec.depth},
-          get s() {return row_spec.s},
-          get perimeter() {return [row_spec.len]}
-        };
-        row_spec.inset.filtered_spec({elm, len_angl, ox: row_prod.characteristic});
+        dp.production.forEach(async (row_spec) => {
+          if(row_spec.inset.empty()){
+            return;
+          }
 
-        // рассчитываем цены
+          // создаём строку заказа с уникальной харктеристикой
+          const row_prod = await this.create_product_row({row_spec, params: dp.product_params, create: true});
 
+          // рассчитываем спецификацию по текущей вставке
+          const len_angl = {
+            angle: 0,
+            alp1: 0,
+            alp2: 0,
+            len: row_spec.len,
+            origin: row_spec.inset,
+            cnstr: 0
+          };
+          const elm = {
+            get _row() {return this},
+            elm: 0,
+            clr: row_spec.clr,
+            get len() {return row_spec.len},
+            get height() {return row_spec.height},
+            get depth() {return row_spec.depth},
+            get s() {return row_spec.s},
+            get perimeter() {return [row_spec.len]}
+          };
+          row_spec.inset.calculate_spec(elm, len_angl, row_prod.characteristic);
+
+          // сворачиваем
+          row_prod.characteristic.specification.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop", "qty,totqty,totqty1");
+
+          // производим дополнительную корректировку спецификации и рассчитываем цены
+          $p.spec_building.specification_adjustment({
+            //scheme: scheme,
+            calc_order_row: row_prod,
+            spec: row_prod.characteristic.specification,
+            save: true,
+          }, true);
+
+        });
+
+        resolve();
 
       });
     }

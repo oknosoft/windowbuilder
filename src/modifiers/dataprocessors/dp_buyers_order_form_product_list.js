@@ -36,10 +36,11 @@ class CalcOrderFormProductList {
 
   constructor(pwnd, calc_order) {
 
-    this.calc_order = calc_order;
     this.dp = $p.dp.buyers_order.create();
+    this.dp.calc_order = calc_order;
 
     this.attr = {
+
       // командная панель формы
       toolbar_struct: $p.injected_data["toolbar_product_list.xml"],
 
@@ -63,7 +64,12 @@ class CalcOrderFormProductList {
 
   // навешиваем обработчики событий на элементы управления
   draw_pg_header(dp, wnd) {
-
+    const {production} = wnd.elmnts.grids;
+    const refill_prms = this.refill_prms.bind(this);
+    production.attachEvent("onRowSelect", refill_prms);
+    production.attachEvent("onEditCell", (stage, rId, cInd) => {
+      !cInd && setTimeout(refill_prms);
+    });
   }
 
   // переопределяем страницы формы
@@ -93,7 +99,9 @@ class CalcOrderFormProductList {
     });
 
     // добавляем табчасть продукции
+    this.meta_production = $p.dp.buyers_order.metadata("production").fields._clone();
     elmnts.grids.production = elmnts.layout.cells('a').attachTabular({
+      metadata: this.meta_production,
       obj: dp,
       ts: 'production',
       pwnd: wnd,
@@ -117,9 +125,28 @@ class CalcOrderFormProductList {
   toolbar_click(btn_id) {
     if(btn_id == "btn_ok"){
       this.dp._data._modified = false;
-      this.wnd.close();
-      this.calc_order.process_add_product_list(this.dp);
-      this.calc_order = this.wnd = this.dp = this.attr = null;
+      this.dp.calc_order.process_add_product_list(this.dp)
+        .then(() => {
+          this.wnd.close();
+          this.wnd = this.dp = this.attr = null;
+        })
+        .catch((err) => {
+
+        });
+    }
+  }
+
+  refill_prms() {
+    const {meta_production, wnd} = this;
+    const {production, params} = wnd.elmnts.grids;
+    if (production && params) {
+      const row = production.get_cell_field();
+      if(row){
+        params.selection = {elm: row.obj.row};
+        if (!row.obj.inset.empty()) {
+          $p.cat.clrs.selection_exclude_service(meta_production.clr, row.obj.inset);
+        }
+      }
     }
   }
 
