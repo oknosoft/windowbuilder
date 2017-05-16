@@ -11,7 +11,7 @@ CACHE:
 
 # Эти позиции включаем только в продакшене
 #
-https://cdn.jsdelivr.net/g/momentjs@2.18.1,alasql@0.3.9,pouchdb@6.2.0
+https://cdn.jsdelivr.net/combine/gh/moment/moment@2.18/min/moment.min.js,gh/moment/moment@2.18/locale/ru.min.js,gh/agershun/alasql@0.4.0/dist/alasql.min.js,gh/pouchdb/pouchdb@6.2.0/dist/pouchdb.min.js,gh/pouchdb/pouchdb@6.2.0/dist/pouchdb.find.min.js,gh/nolanlawson/pouchdb-authentication@v0.5.5/dist/pouchdb.authentication.min.js,gh/paperjs/paper.js@v0.11.3/dist/paper-core.min.js
 
 # На период отладки, берём metadata.min.js c нашего сайта
 lib/metadata.min.js
@@ -20,9 +20,6 @@ lib/metadata.min.js
 # //metadata.js.org/lib/dhtmlxscheduler/dhtmlxscheduler.min.js
 # //metadata.js.org/lib/dhtmlxscheduler/dhtmlxscheduler.css
 lib/dhtmlx.min.js
-lib/paper-core.min.js
-lib/pouchdb/pouchdb.authentication.min.js
-lib/pouchdb/pouchdb.find.min.js
 lib/qrcodejs/qrcode.js
 dist/windowbuilder.js
 dist/wnd_debug.js

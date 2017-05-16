@@ -323,7 +323,7 @@ class ProductsBuilding {
       const blank_clr = $p.cat.clrs.get();
       furn.furn_set.get_spec(contour, furn_cache).each((row) => {
         const elm = {elm: -contour.cnstr, clr: blank_clr};
-        const row_spec = new_spec_row({elm, row_base: row, nom: row.nom_set, origin: row.origin, spec, ox});
+        const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, spec, ox});
 
         if(row.is_procedure_row){
           row_spec.elm = row.handle_height_min;
@@ -360,7 +360,7 @@ class ProductsBuilding {
         // angle_hor = elm.angle_hor; TODO: реализовать проверку углов
 
         if(len < row.lmin || len > row.lmax || (!elm.is_linear() && !row.arc_available)){
-          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get()}, nom: $p.job_prm.nom.furn_error, origin: contour.furn, spec, ox});
+          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: contour.furn, spec, ox});
           ok = false;
         }
 
@@ -917,11 +917,15 @@ class ProductsBuilding {
       row_spec = spec.add();
     }
     row_spec.nom = nom || row_base.nom;
-    row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr);
-    row_spec.elm = elm.elm;
     if(!row_spec.nom.visualization.empty()){
       row_spec.dop = -1;
     }
+    row_spec.characteristic = row_base.nom_characteristic;
+    if(!row_spec.characteristic.empty() && row_spec.characteristic.owner != row_spec.nom){
+      row_spec.characteristic = $p.utils.blank.guid;
+    }
+    row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr);
+    row_spec.elm = elm.elm;
     if(origin){
       row_spec.origin = origin;
     }

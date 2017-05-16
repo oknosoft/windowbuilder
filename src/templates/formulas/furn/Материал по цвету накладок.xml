@@ -50,7 +50,7 @@
 // row_furn	-	строка спецификации фурнитуры, из которой произведён вызов формулы
 // row_spec	-	строка спецификации изделия
 // }
-	
+
 // получаем ссылку параметра, значение которого используем при поиске характеристики
 const param = this.params.get(0).param;
 
@@ -59,10 +59,10 @@ const {ox, contour, row_furn, row_spec} = obj;
 
 // получим значение параметра в продукции
 ox.params.find_rows({cnstr: contour.cnstr, param: param}, (row_prm) =&gt; {
-	
+
 	// получаем номенклатуру по ключу цветового аналога
-	row_spec.nom_set = row_spec.nom_set.by_clr_key &amp;&amp; row_spec.nom_set.by_clr_key(row_prm.value);
-	
+	row_spec.nom = row_spec.nom.by_clr_key &amp;&amp; row_spec.nom.by_clr_key(row_prm.value);
+
 	return false;
 });</v8:Формула>
 			<v8:ВедущаяФормула xsi:type="v8:CatalogRef.Формулы">00000000-0000-0000-0000-000000000000</v8:ВедущаяФормула>
@@ -77,12 +77,12 @@ html, body {
     width: 100%;
     height: 100%;
     margin: 0;
-    padding: 0;    
-	color: rgb(48, 57, 66);	
+    padding: 0;
+	color: rgb(48, 57, 66);
 	/*
 	font-family: Segoe UI, Tahoma, sans-serif;
 	overflow: hidden;
-	font-family: 'Open Sans', sans-serif; 
+	font-family: 'Open Sans', sans-serif;
 	*/
 	font-family: Arial, sans-serif;
 	font-size: 100%;

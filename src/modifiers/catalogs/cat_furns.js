@@ -21,22 +21,25 @@ $p.cat.furns.__define({
 	}
 });
 
-/**
- * Методы объекта фурнитуры
- */
-$p.CatFurns.prototype.__define({
 
-	/**
-	 * Перезаполняет табчасть параметров указанного контура
-	 */
-	refill_prm: {
-		value: function ({project, furn, cnstr}) {
+(($p) => {
 
-			const fprms = project.ox.params;
-			const {direction} = $p.job_prm.properties;
+  /**
+   * Методы объекта фурнитуры
+   */
+  const Proto = $p.CatFurns;
+  $p.CatFurns = class CatFurns extends Proto {
 
-			// формируем массив требуемых параметров по задействованным в contour.furn.furn_set
-			const aprm = furn.furn_set.add_furn_prm();
+    /**
+     * Перезаполняет табчасть параметров указанного контура
+     */
+    refill_prm({project, furn, cnstr}) {
+
+      const fprms = project.ox.params;
+      const {direction} = $p.job_prm.properties;
+
+      // формируем массив требуемых параметров по задействованным в contour.furn.furn_set
+      const aprm = furn.furn_set.add_furn_prm();
       aprm.sort((a, b) => {
         if (a.presentation > b.presentation) {
           return 1;
@@ -48,83 +51,79 @@ $p.CatFurns.prototype.__define({
       });
 
       // дозаполняем и приклеиваем значения по умолчанию
-			aprm.forEach((v) => {
+      aprm.forEach((v) => {
 
-				// направления в табчасть не добавляем
-				if(v == direction){
+        // направления в табчасть не добавляем
+        if(v == direction){
           return;
         }
 
         let prm_row, forcibly = true;
-				fprms.find_rows({param: v, cnstr: cnstr}, (row) => {
-					prm_row = row;
-					return forcibly = false;
-				});
-				if(!prm_row){
+        fprms.find_rows({param: v, cnstr: cnstr}, (row) => {
+          prm_row = row;
+          return forcibly = false;
+        });
+        if(!prm_row){
           prm_row = fprms.add({param: v, cnstr: cnstr}, true);
         }
 
         // умолчания и скрытость по табчасти системы
         const {param} = prm_row;
         project._dp.sys.furn_params.each((row) => {
-					if(row.param == param){
-						if(row.forcibly || forcibly){
+          if(row.param == param){
+            if(row.forcibly || forcibly){
               prm_row.value = row.value;
             }
-						prm_row.hide = row.hide || param.is_calculated;
-						return false;
-					}
-				});
+            prm_row.hide = row.hide || param.is_calculated;
+            return false;
+          }
+        });
 
-				// умолчания по связям параметров
+        // умолчания по связям параметров
         param.linked_values(param.params_links({
           grid: {selection: {cnstr: cnstr}},
           obj: {_owner: {_owner: project.ox}}
         }), prm_row);
 
-			});
+      });
 
-			// удаляем лишние строки
-			const adel = [];
-			fprms.find_rows({cnstr: cnstr}, (row) => {
-				if(aprm.indexOf(row.param) == -1)
-					adel.push(row);
-			});
-			adel.forEach((row) => fprms.del(row, true));
+      // удаляем лишние строки
+      const adel = [];
+      fprms.find_rows({cnstr: cnstr}, (row) => {
+        if(aprm.indexOf(row.param) == -1)
+          adel.push(row);
+      });
+      adel.forEach((row) => fprms.del(row, true));
 
-		}
-	},
+    }
 
-  /**
-   * Вытягивает массив используемых фурнитурой и вложенными наборами параметров
-   */
-	add_furn_prm: {
-		value: function (aprm = [], afurn_set = []) {
+    /**
+     * Вытягивает массив используемых фурнитурой и вложенными наборами параметров
+     */
+    add_furn_prm(aprm = [], afurn_set = []) {
 
-			// если параметры этого набора уже обработаны - пропускаем
-			if(afurn_set.indexOf(this.ref)!=-1){
+      // если параметры этого набора уже обработаны - пропускаем
+      if(afurn_set.indexOf(this.ref)!=-1){
         return;
       }
 
-			afurn_set.push(this.ref);
+      afurn_set.push(this.ref);
 
-			this.selection_params.each((row) => aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param));
+      this.selection_params.each((row) => aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param));
 
-			this.specification.each((row) => row.nom_set instanceof $p.CatFurns && row.nom_set.add_furn_prm(aprm, afurn_set));
+      this.specification.each((row) => row.nom instanceof $p.CatFurns && row.nom.add_furn_prm(aprm, afurn_set));
 
-			return aprm;
+      return aprm;
 
-		}
-	},
+    }
 
-  /**
-   * Аналог УПзП-шного _ПолучитьСпецификациюФурнитурыСФильтром_
-   * @param contour {Contour}
-   * @param cache {Object}
-   * @param [exclude_dop] {Boolean}
-   */
-  get_spec: {
-	  value: function (contour, cache, exclude_dop) {
+    /**
+     * Аналог УПзП-шного _ПолучитьСпецификациюФурнитурыСФильтром_
+     * @param contour {Contour}
+     * @param cache {Object}
+     * @param [exclude_dop] {Boolean}
+     */
+    get_spec(contour, cache, exclude_dop) {
 
       const res = $p.dp.buyers_order.create().specification;
       const {ox} = contour.project;
@@ -217,7 +216,7 @@ $p.CatFurns.prototype.__define({
 
             // в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
             if(dop_row.is_set_row){
-              dop_row.nom_set.get_spec(contour, cache).each((sub_row) => {
+              dop_row.nom.get_spec(contour, cache).each((sub_row) => {
                 if(sub_row.is_procedure_row){
                   res.add(sub_row);
                 }
@@ -234,7 +233,7 @@ $p.CatFurns.prototype.__define({
 
         // в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
         if(row_furn.is_set_row){
-          row_furn.nom_set.get_spec(contour, cache, exclude_dop).each((sub_row) => {
+          row_furn.nom.get_spec(contour, cache, exclude_dop).each((sub_row) => {
             if(sub_row.is_procedure_row){
               res.add(sub_row);
             }
@@ -257,23 +256,29 @@ $p.CatFurns.prototype.__define({
 
       return res;
     }
+
   }
 
-});
-
-/**
- * Методы строки спецификации
- */
-$p.CatFurnsSpecificationRow.prototype.__define({
-
   /**
-   * Проверяет ограничения строки фурнитуры
-   * @param contour {Contour}
-   * @param cache {Object}
+   * Методы строки спецификации
    */
-  check_restrictions: {
-    value: function (contour, cache) {
+  const ProtoRow = $p.CatFurnsSpecificationRow;
 
+  // переопределяем свойства nom и nom_set
+  delete ProtoRow.prototype.nom;
+
+  const {fields} = $p.md.get("cat.furns").tabular_sections.specification;
+  fields.nom_set = fields.nom;
+
+  // переопределяем прототип
+  $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends ProtoRow {
+
+    /**
+     * Проверяет ограничения строки фурнитуры
+     * @param contour {Contour}
+     * @param cache {Object}
+     */
+    check_restrictions(contour, cache) {
       const {elm, dop, handle_height_min, handle_height_max} = this;
       const {direction, h_ruch, cnstr} = contour;
 
@@ -317,6 +322,23 @@ $p.CatFurnsSpecificationRow.prototype.__define({
 
       return res;
     }
+
+    get nom() {
+      return this._getter('nom')
+    }
+    set nom (v) {
+      if(v !== ""){
+        this._setter('nom', v)
+      }
+    }
+
+    get nom_set() {
+      return this.nom;
+    }
+    set nom_set (v) {
+      this.nom = v;
+    }
+
   }
 
-});
+})($p);
