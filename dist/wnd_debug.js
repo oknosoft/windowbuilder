@@ -5771,13 +5771,13 @@ class ProductsBuilding {
 
         const {nom} = row_cnn_spec;
 
-        if(nom._manager == $p.cat.inserts){
+        if(nom instanceof $p.CatInserts){
           if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)){
             const tmp_len_angl = len_angl._clone();
             tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
-            inset_spec(elm, nom, tmp_len_angl);
+            nom.calculate_spec(elm, tmp_len_angl, ox);
           }else{
-            inset_spec(elm, nom, len_angl);
+            nom.calculate_spec(elm, len_angl, ox);
           }
         }
         else {
@@ -5878,89 +5878,6 @@ class ProductsBuilding {
       return res;
     }
 
-
-
-
-    function inset_filter_spec(inset, elm, is_high_level_call, len_angl, own_row){
-
-      const res = [];
-      const glass_rows = [];
-      const {check_params} = ProductsBuilding;
-
-      function fake_row(row) {
-        if(row._metadata){
-          const res = {};
-          for(let fld in row._metadata.fields){
-            res[fld] = row[fld];
-          }
-          return res;
-        }
-        else{
-          return Object.assign({}, row);
-        }
-      }
-
-      if(!inset || inset.empty()){
-        return res;
-      }
-
-      if(is_high_level_call && (inset.insert_type == "Заполнение" || inset.insert_type == "Стеклопакет" || inset.insert_type == "ТиповойСтеклопакет")){
-
-        glass_specification.find_rows({elm: elm.elm}, (row) => {
-          glass_rows.push(row);
-        });
-
-        if(glass_rows.length){
-          glass_rows.forEach((row) => {
-            inset_filter_spec(row.inset, elm, false, len_angl).forEach((row) => {
-              res.push(row);
-            });
-          });
-          return res;
-        }
-      }
-
-      inset.specification.each((row) => {
-
-        if(!inset.check_restrictions(row, elm, inset.insert_type == $p.enm.inserts_types.Профиль, len_angl)){
-          return;
-        }
-
-        if(own_row && row.clr.empty() && !own_row.clr.empty()){
-          row = fake_row(row);
-          row.clr = own_row.clr;
-        }
-        if(!check_params({
-            params: inset.selection_params,
-            row_spec: row,
-            cnstr: len_angl && len_angl.cnstr,
-            origin: len_angl && len_angl.origin,
-            elm,
-            ox
-          })){
-          return;
-        }
-
-        if(row.nom instanceof $p.CatInserts){
-          inset_filter_spec(row.nom, elm, false, len_angl, row).forEach((subrow) => {
-            const fakerow = fake_row(subrow);
-            fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
-            fakerow.coefficient = (subrow.coefficient || 1) * (row.coefficient || 1);
-            fakerow._origin = row.nom;
-            if(fakerow.clr.empty()){
-              fakerow.clr = row.clr;
-            }
-            res.push(fakerow);
-          });
-        }
-        else{
-          res.push(row);
-        }
-
-      });
-
-      return res;
-    }
 
     function furn_spec(contour) {
 
@@ -6143,7 +6060,7 @@ class ProductsBuilding {
         cnn_add_spec(b.cnn, elm, len_angl, e.cnn);
       }
 
-      inset_spec(elm);
+      elm.inset.calculate_spec(elm, null, ox);
 
       cnn_spec_nearest(elm);
 
@@ -6160,7 +6077,7 @@ class ProductsBuilding {
         len_angl.cnstr = elm.layer.cnstr;
         delete len_angl.art1;
         delete len_angl.art2;
-        inset_spec(elm, inset, len_angl);
+        inset.calculate_spec(elm, len_angl, ox);
 
       });
 
@@ -6200,7 +6117,7 @@ class ProductsBuilding {
 
       }
 
-      inset_spec(glass);
+      glass.inset.calculate_spec(elm, null, ox);
 
       imposts.forEach(base_spec_profile);
 
@@ -6210,94 +6127,11 @@ class ProductsBuilding {
           $p.record_log("inset_elm_spec: specification_order_row_types.Продукция");
         }
 
-        inset_spec(glass, inset);
+        inset.calculate_spec(glass, null, ox);
+
 
       });
     }
-
-    function inset_spec(elm, inset, len_angl) {
-
-      const {_row} = elm;
-      const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади} = $p.enm.count_calculating_ways;
-      const {profile_items} = $p.enm.elm_types;
-      const {calc_qty_len, new_spec_row, calc_count_area_mass} = ProductsBuilding;
-
-      if(!inset){
-        inset = elm.inset;
-      }
-
-      inset_filter_spec(inset, elm, true, len_angl).forEach((row_ins_spec) => {
-
-        const origin = row_ins_spec._origin || inset;
-
-        let row_spec;
-
-        if((row_ins_spec.count_calc_method != ПоПериметру && row_ins_spec.count_calc_method != ПоШагам) || profile_items.indexOf(_row.elm_type) != -1){
-          row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
-        }
-
-        if(row_ins_spec.count_calc_method == ПоФормуле && !row_ins_spec.formula.empty()){
-          row_spec = new_spec_row({row_spec, elm, row_base: row_ins_spec, origin, spec, ox});
-        }
-        else if(profile_items.indexOf(_row.elm_type) != -1 || row_ins_spec.count_calc_method == ДляЭлемента){
-          calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
-        }
-        else{
-
-          if(row_ins_spec.count_calc_method == ПоПлощади){
-            row_spec.qty = row_ins_spec.quantity;
-            row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
-            row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
-            row_spec.s = _row.s;
-          }
-          else if(row_ins_spec.count_calc_method == ПоПериметру){
-            const row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
-            elm.perimeter.forEach((rib) => {
-              row_prm._row._mixin(rib);
-              row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
-              if(inset.check_restrictions(row_ins_spec, row_prm, true)){
-                row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
-                calc_qty_len(row_spec, row_ins_spec, rib.len);
-                calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
-              }
-              row_spec = null;
-            });
-
-          }
-          else if(row_ins_spec.count_calc_method == ПоШагам){
-            const h = _row.y2 - _row.y1, w = _row.x2 - _row.x1;
-            if(row_ins_spec.step){
-              for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
-                row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
-                calc_qty_len(row_spec, row_ins_spec, w);
-                calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
-              }
-              row_spec = null;
-            }
-          }
-          else{
-            throw new Error("count_calc_method: " + row_ins_spec.count_calc_method);
-          }
-        }
-
-        if(row_spec){
-          if(!row_ins_spec.formula.empty()){
-            row_ins_spec.formula.execute({
-              ox: ox,
-              elm: elm,
-              cnstr: len_angl && len_angl.cnstr || 0,
-              inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
-              row_ins: row_ins_spec,
-              row_spec: row_spec,
-              len: len_angl ? len_angl.len : _row.len
-            });
-          }
-          calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
-        }
-      })
-    }
-
-
 
 
     function inset_contour_spec(contour) {
@@ -6328,7 +6162,7 @@ class ProductsBuilding {
           origin: inset,
           cnstr: contour.cnstr
         }
-        inset_spec(elm, inset, len_angl);
+        inset.calculate_spec(elm, len_angl, ox);
 
       });
 
