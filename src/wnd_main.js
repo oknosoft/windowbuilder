@@ -54,9 +54,8 @@ class OrderDealerApp {
 
     // запрещаем масштабировать колёсиком мыши, т.к. для масштабирования у канваса свой инструмент
     window.onmousewheel = (e) => {
-      if(e.ctrlKey){
-        e.preventDefault();
-        return false;
+      if(e.ctrlKey || e.shiftKey || e.altKey){
+        return $p.iface.cancel_bubble(e, true);
       }
     };
 

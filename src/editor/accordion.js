@@ -337,7 +337,7 @@ class SchemeProps {
 
     this._grid && this._grid.destructor && this._grid.destructor();
 
-    const is_dialer = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") && !$p.current_acl.role_available("РедактированиеСкидок");
+    const is_dialer = !$p.current_user.role_available("СогласованиеРасчетовЗаказов") && !$p.current_user.role_available("РедактированиеСкидок");
     const oxml = {
       "Свойства": ["sys","clr",
         {id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},

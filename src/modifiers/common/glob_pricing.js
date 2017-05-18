@@ -298,7 +298,7 @@ class Pricing {
     let extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
 
     // если пересчет выполняется менеджером, используем наценку по умолчанию
-    if(!$p.current_acl.partners_uids.length || !extra_charge){
+    if(!$p.current_user.partners_uids.length || !extra_charge){
       extra_charge = prm.price_type.extra_charge_external;
     }
 
@@ -392,9 +392,7 @@ class Pricing {
    */
   cut_upload () {
 
-    if(!$p.current_acl || (
-      !$p.current_acl.role_available("СогласованиеРасчетовЗаказов") &&
-      !$p.current_acl.role_available("ИзменениеТехнологическойНСИ"))){
+    if(!$p.current_user.role_available("СогласованиеРасчетовЗаказов") && !$p.current_user.role_available("ИзменениеТехнологическойНСИ")){
       $p.msg.show_msg({
         type: "alert-error",
         text: $p.msg.error_low_acl,
@@ -449,7 +447,7 @@ class Pricing {
         })
         .on('complete', (info) => {
 
-          if($p.current_acl.role_available("ИзменениеТехнологическойНСИ"))
+          if($p.current_user.role_available("ИзменениеТехнологическойНСИ"))
             upload_tech();
 
           else
@@ -528,7 +526,7 @@ class Pricing {
         });
     }
 
-    if($p.current_acl.role_available("СогласованиеРасчетовЗаказов"))
+    if($p.current_user.role_available("СогласованиеРасчетовЗаказов"))
       upload_acc();
     else
       upload_tech();

@@ -488,7 +488,7 @@ class ProductsBuilding {
       }
 
       // добавляем спецификацию вставки в заполнение
-      glass.inset.calculate_spec(elm, null, ox);
+      glass.inset.calculate_spec(glass, null, ox);
 
       // для всех раскладок заполнения
       imposts.forEach(base_spec_profile);

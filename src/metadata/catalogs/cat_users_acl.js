@@ -7,7 +7,7 @@
 
 export default function ($p) {
 
-	$p.cat.users_acl.__define({
+	$p.cat.users.__define({
 
 		load_array: {
 			value: function(aattr, forse){
@@ -23,7 +23,7 @@ export default function ($p) {
 						delete aattr[i].acl;
 
 					if(!(obj = this.by_ref[ref])){
-						obj = new $p.CatUsers_acl(aattr[i], this);
+						obj = new $p.CatUsers(aattr[i], this);
 						if(forse)
 							obj._set_loaded();
 
@@ -62,7 +62,7 @@ export default function ($p) {
 		}
 	});
 
-	$p.CatUsers_acl.prototype.__define({
+	$p.CatUsers.prototype.__define({
 
 		/**
 		 * ### Идентификаторы доступных контрагентов

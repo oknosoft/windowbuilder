@@ -43,107 +43,120 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			iconset: "font_awesome"
 		});
 
-  return new Promise((resolve, reject) => {
-
-    attr.on_create = (wnd) => {
-
-      const {elmnts} = wnd;
-
-      // добавляем отбор по подразделению
-      const dp = $p.dp.builder_price.create();
-      const pos = elmnts.toolbar.getPosition("input_filter");
-      const txt_id = `txt_${dhx4.newId()}`;
-      elmnts.toolbar.addText(txt_id, pos, "");
-      const txt_div = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + txt_id].obj;
-      const dep = new $p.iface.OCombo({
-        parent: txt_div,
-        obj: dp,
-        field: "department",
-        width: 180,
-        hide_frm: true,
-        get_option_list: function(val, selection){
-          const {guid} = $p.utils.blank;
-          return this.get_option_list(val, selection)
-            .then((list) => {
-            if(!list.some((item) => item.value == guid)){
-              list.splice(0, 0, {text: "", value: guid})
-            };
-            return list;
-          })
-        },
-      });
-      txt_div.style.border = "1px solid #ccc";
-      txt_div.style.borderRadius = "3px";
-      txt_div.style.padding = "3px 2px 1px 2px";
-      txt_div.style.margin = "1px 5px 1px 1px";
-      dep.DOMelem_input.placeholder = "Подразделение";
-
-      Object.observe(dp, (changes) => {
-        changes.forEach((change) => {
-          if(change.name == "department"){
-            elmnts.filter.call_event();
-          }
-        });
-      });
-
-      function set_department() {
-        $p.current_acl.acl_objs && $p.current_acl.acl_objs.find_rows({by_default: true, type: $p.cat.divisions.metadata().obj_presentation}, (row) => {
-          if(dp.department != row.acl_obj){
-            dp.department = row.acl_obj;
-          }
-          return false;
-        });
+  return this.pouch_db.getIndexes()
+    .then(({indexes}) => {
+      attr._index = {
+        ddoc: "mango_calc_order",
+        fields: ["department", "state", "date", "search"],
+        name: 'list',
+        type: 'json',
+      };
+      if(!indexes.some(({ddoc}) => ddoc && ddoc.indexOf(attr._index.ddoc) != -1)){
+        return this.pouch_db.createIndex(attr._index);
       }
-      set_department();
-      if(!$p.wsql.get_user_param('couch_direct')){
-        $p.on({user_log_in: set_department});
-      }
+    })
+    .then(() => {
+      return new Promise((resolve, reject) => {
 
-      // настраиваем фильтр для списка заказов
-      elmnts.filter.custom_selection.__define({
-        department: {
-          get: function () {
-            const {department} = dp;
-            const state = (tree && tree.getSelectedId()) || 'draft';
-            if(department.empty() || state == 'template'){
-              return {$ne: ''};
-            }
-            const depts = [];
-            $p.cat.divisions.forEach((o) =>{
-              if(o.in_hierarchy(department)){
-                depts.push(o.ref)
+        attr.on_create = (wnd) => {
+
+          const {elmnts} = wnd;
+
+          // добавляем отбор по подразделению
+          const dp = $p.dp.builder_price.create();
+          const pos = elmnts.toolbar.getPosition("input_filter");
+          const txt_id = `txt_${dhx4.newId()}`;
+          elmnts.toolbar.addText(txt_id, pos, "");
+          const txt_div = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + txt_id].obj;
+          const dep = new $p.iface.OCombo({
+            parent: txt_div,
+            obj: dp,
+            field: "department",
+            width: 180,
+            hide_frm: true,
+            // get_option_list: function(val, selection){
+            //   return this.get_option_list(val, selection)
+            //     .then((list) => {
+            //       const {guid} = $p.utils.blank;
+            //       if(!list.some((item) => item.value == guid)){
+            //         list.splice(0, 0, {text: "", value: guid})
+            //       };
+            //       return list;
+            //     })
+            // },
+          });
+          txt_div.style.border = "1px solid #ccc";
+          txt_div.style.borderRadius = "3px";
+          txt_div.style.padding = "3px 2px 1px 2px";
+          txt_div.style.margin = "1px 5px 1px 1px";
+          dep.DOMelem_input.placeholder = "Подразделение";
+
+          Object.observe(dp, (changes) => {
+            changes.forEach((change) => {
+              if(change.name == "department"){
+                elmnts.filter.call_event();
+                $p.wsql.set_user_param("current_department", dp.department.ref);
               }
             });
-            return depts.length == 1 ?  {$eq: depts[0]} : {$in: depts};
-          },
-          enumerable: true
-        },
-        state: {
-          get: function(){
-            const state = (tree && tree.getSelectedId()) || 'draft';
-            return state == 'all' ? {$in: 'draft,sent,confirmed,declined,service,complaints,template,zarchive'.split(',')} : {$eq: state};
-          },
-          enumerable: true
+          });
+
+          function set_department() {
+            $p.current_user.acl_objs && $p.current_user.acl_objs.find_rows({by_default: true, type: $p.cat.divisions.class_name}, (row) => {
+              if(dp.department != row.acl_obj){
+                dp.department = row.acl_obj;
+              }
+              return false;
+            });
+          }
+          set_department();
+          if(!$p.wsql.get_user_param('couch_direct')){
+            $p.on({user_log_in: set_department});
+          }
+
+          // настраиваем фильтр для списка заказов
+          elmnts.filter.custom_selection.__define({
+            department: {
+              get: function () {
+                const {department} = dp;
+                const state = (tree && tree.getSelectedId()) || 'draft';
+                return state == 'template' ? {$eq: $p.utils.blank.guid} : {$eq: department.ref};
+                // const depts = [];
+                // $p.cat.divisions.forEach((o) =>{
+                //   if(o.in_hierarchy(department)){
+                //     depts.push(o.ref)
+                //   }
+                // });
+                // return depts.length == 1 ?  {$eq: depts[0]} : {$in: depts};
+              },
+              enumerable: true
+            },
+            state: {
+              get: function(){
+                const state = (tree && tree.getSelectedId()) || 'draft';
+                return state == 'all' ? {$in: 'draft,sent,confirmed,declined,service,complaints,template,zarchive'.split(',')} : {$eq: state};
+              },
+              enumerable: true
+            }
+          });
+          elmnts.filter.custom_selection._index = attr._index;
+
+          // картинка заказа в статусбаре
+          elmnts.status_bar = wnd.attachStatusBar();
+          elmnts.svgs = new $p.iface.OSvgs(wnd, elmnts.status_bar,
+            (ref, dbl) => dbl && $p.iface.set_hash("cat.characteristics", ref, "builder"));
+          elmnts.grid.attachEvent("onRowSelect", (rid) => elmnts.svgs.reload(rid));
+
+          // настраиваем дерево
+          tree.loadStruct($p.injected_data["tree_filteres.xml"]);
+          tree.attachEvent("onSelect", (rid, mode) => mode && elmnts.filter.call_event());
+
+          resolve(wnd);
         }
+
+        this.mango_selection(layout.cells("b"), attr);
+
       });
-      elmnts.filter.custom_selection._index = 'mango_calc_order';
-
-      // картинка заказа в статусбаре
-      elmnts.status_bar = wnd.attachStatusBar();
-      elmnts.svgs = new $p.iface.OSvgs(wnd, elmnts.status_bar,
-        (ref, dbl) => dbl && $p.iface.set_hash("cat.characteristics", ref, "builder"));
-      elmnts.grid.attachEvent("onRowSelect", (rid) => elmnts.svgs.reload(rid));
-
-      // настраиваем дерево
-      tree.loadStruct($p.injected_data["tree_filteres.xml"]);
-      tree.attachEvent("onSelect", (rid, mode) => mode && elmnts.filter.call_event());
-
-      resolve(wnd);
-    }
-
-    const frm = this.mango_selection(layout.cells("b"), attr);
-
-  });
+    });
 
 };
 

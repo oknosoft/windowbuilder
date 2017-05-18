@@ -15,7 +15,7 @@ class MangoSelection {
     this._pwnd = pwnd || attr.pwnd || {};
     this._meta = attr.metadata || mgr.metadata();
     this._prev_filter = {};
-    this._sort = [{date: 'desc'}];
+    this._sort = [{department: 'desc'}, {state: 'desc'}, {date: 'desc'}];
 
     this.select = this.select.bind(this);
     this.body_keydown = this.body_keydown.bind(this);
@@ -140,7 +140,7 @@ class MangoSelection {
 
 
       // учтём права для каждой роли на каждый объект
-      const _acl = $p.current_acl.get_acl(_mgr.class_name);
+      const _acl = $p.current_user.get_acl(_mgr.class_name);
 
       if (_acl.indexOf("i") == -1)
         toolbar.hideItem("btn_new");
@@ -324,7 +324,7 @@ class MangoSelection {
 
   get_filter(start, count) {
 
-    const {wnd, _mgr, _sort} = this;
+    const {wnd, _mgr, _sort, _attr} = this;
     const fields = _mgr.caption_flds({}).acols.map(v => v.id);
     fields.push("_id");
     fields.push("posted");
@@ -333,21 +333,33 @@ class MangoSelection {
     const eflt = wnd.elmnts.filter;
     const flt = eflt.get_filter(true);
 
+    const date = {
+      $gte: moment(flt.date_from).format('YYYY-MM-DD'),
+      $lt: moment(flt.date_till).format('YYYY-MM-DD') + '\uffff'
+    };
     const filter = {
-      selector: {
-        date: {
-          $gte: moment(flt.date_from).format('YYYY-MM-DD'),
-          $lt: moment(flt.date_till).format('YYYY-MM-DD') + '\uffff'
-        }
-      },
+      selector: {},
       fields: fields,
       skip: start,
       limit: count
     }
 
-    for(let sfld in eflt.custom_selection){
-      if(sfld[0] != '_'){
-        filter.selector[sfld] = eflt.custom_selection[sfld];
+    if(_attr._index.fields){
+      for(let sfld of _attr._index.fields){
+        if(sfld == 'date'){
+          filter.selector.date = date;
+        }
+        else if(eflt.custom_selection[sfld]){
+          filter.selector[sfld] = eflt.custom_selection[sfld];
+        }
+      }
+    }
+    else{
+      filter.selector.date = date;
+      for(let sfld in eflt.custom_selection){
+        if(sfld[0] != '_'){
+          filter.selector[sfld] = eflt.custom_selection[sfld];
+        }
       }
     }
 
@@ -360,7 +372,7 @@ class MangoSelection {
     }
 
     if(eflt.custom_selection._index){
-      filter.use_index = eflt.custom_selection._index;
+      filter.use_index = eflt.custom_selection._index.ddoc;
     }
 
     return filter;
@@ -556,7 +568,7 @@ class MangoSelection {
   }
 
   /**
-   * Установки или снятие пометки удаления
+   * Установка или снятие пометки удаления
    */
   mark_deleted() {
     const {wnd, _mgr} = this;
@@ -605,10 +617,10 @@ class MangoSelection {
 
   custom_column_sort(ind, type, direction) {
     const {grid} = this.wnd.elmnts;
-    //const a_state = this.wnd.elmnts.grid.getSortingState();
-
     const fld = this._mgr.caption_flds({}).acols[ind];
-    this._sort = [{[fld.id]: direction == 'des' ? 'desc' : direction}];
+    const dir = direction == 'des' ? 'desc' : direction;
+    this._sort = [{department: dir}, {state: dir}, {[fld.id]: dir}];
+    //this._sort = [{[fld.id]: dir}];
     this.reload();
     return false;
   }

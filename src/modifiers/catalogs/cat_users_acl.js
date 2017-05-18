@@ -7,64 +7,64 @@
  */
 
 
-$p.cat.users_acl.__define({
+$p.cat.users.__define({
 
+  // при загрузке пользователей, морозим объект, чтобы его невозможно было изменить из интерфейса
 	load_array: {
 		value: function(aattr, forse){
-
-			var ref, obj, res = [], acl;
-
-			for(var i in aattr){
-
-				ref = $p.utils.fix_guid(aattr[i]);
-
-				acl = aattr[i].acl;
-				if(acl)
-					delete aattr[i].acl;
-
-				if(!(obj = this.by_ref[ref])){
-					obj = new $p.CatUsers_acl(aattr[i], this);
-					if(forse)
-						obj._set_loaded();
-
-				}else if(obj.is_new() || forse){
-					obj._mixin(aattr[i]);
-					obj._set_loaded();
-				}
-
-				if(acl && !obj._acl){
-					var _acl = {};
-					for(var i in acl){
-						_acl.__define(i, {
-							value: {},
-							writable: false
-						});
-						for(var j in acl[i]){
-							_acl[i].__define(j, {
-								value: acl[i][j],
-								writable: false
-							});
-						}
-					}
-					obj.__define({
-						_acl: {
-							value: _acl,
-							writable: false
-						}
-					});
-				}
-
+			const res = [];
+			for(let aobj of aattr){
+			  if(!aobj.acl_objs){
+          aobj.acl_objs = [];
+        }
+        const {acl} = aobj;
+			  delete aobj.acl;
+        const obj = new $p.CatUsers(aobj, this);
+        const {_obj} = obj;
+        _obj._acl = acl;
+        obj._set_loaded();
+        Object.freeze(obj);
+        Object.freeze(_obj);
+        for(let j in _obj){
+          if(typeof _obj[j] == "object"){
+            Object.freeze(_obj[j]);
+            for(let k in _obj[j]){
+              typeof _obj[j][k] == "object" && Object.freeze(_obj[j][k]);
+            }
+          }
+        }
 				res.push(obj);
 			}
-
 			return res;
-		}
+		},
+    configurable: false
 	}
+
 });
 
-$p.CatUsers_acl.prototype.__define({
+$p.CatUsers.prototype.__define({
 
+  /**
+   * ### Роль доступна
+   *
+   * @param name {String}
+   * @returns {Boolean}
+   */
+  role_available: {
+    value: function (name) {
+      return this.acl_objs._obj.some(function (row) {
+        return row.type == name;
+      });
+    }
+  },
 
+  get_acl: {
+    value: function(class_name) {
+      const acn = class_name.split(".");
+      const {_acl} = this._obj;
+      return _acl && _acl[acn[0]] && _acl[acn[0]][acn[1]] ? _acl[acn[0]][acn[1]] : "e";
+    }
+  },
 
 	/**
 	 * ### Идентификаторы доступных контрагентов

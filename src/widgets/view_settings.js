@@ -45,7 +45,7 @@ $p.iface.view_settings = function (cell) {
 				t.form2.checkItem("hide_price", "hide_price_no");
 			}
 
-			if($p.current_acl.partners_uids.length){
+			if($p.current_user.partners_uids.length){
 
 			  let surcharge_internal = $p.wsql.get_user_param("surcharge_internal", "number"),
           discount_percent_internal = $p.wsql.get_user_param("discount_percent_internal", "number");
@@ -53,7 +53,7 @@ $p.iface.view_settings = function (cell) {
 			  // если заданы параметры для текущего пользователя - используем их
 			  if(!surcharge_internal){
 
-          var partner = $p.cat.partners.get($p.current_acl.partners_uids[0]),
+          var partner = $p.cat.partners.get($p.current_user.partners_uids[0]),
             prm = {calc_order_row: {
               nom: $p.cat.nom.get(),
               characteristic: {params: {find_rows: () => null}},
@@ -101,7 +101,7 @@ $p.iface.view_settings = function (cell) {
 			});
 
       // закладка технологии
-      if($p.current_acl.role_available("ИзменениеТехнологическойНСИ")){
+      if($p.current_user.role_available("ИзменениеТехнологическойНСИ")){
         t.industry = {
           layout: t.tabs.cells("industry").attachLayout({
             pattern: "2U",
@@ -130,7 +130,7 @@ $p.iface.view_settings = function (cell) {
       }
 
       // закладка ценообразования
-      if($p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
+      if($p.current_user.role_available("СогласованиеРасчетовЗаказов")){
         t.price = {
           layout: t.tabs.cells("price").attachLayout({
             pattern: "2U",
@@ -184,7 +184,7 @@ $p.iface.view_settings = function (cell) {
       });
 
       // закладка планирования
-      if($p.current_acl.role_available("СогласованиеРасчетовЗаказов") || $p.current_acl.role_available("ИзменениеТехнологическойНСИ")){
+      if($p.current_user.role_available("СогласованиеРасчетовЗаказов") || $p.current_user.role_available("ИзменениеТехнологическойНСИ")){
         t.events = {
           layout: t.tabs.cells("events").attachLayout({
             pattern: "2U",
@@ -376,7 +376,7 @@ $p.iface.view_settings = function (cell) {
 		t.form2.cont.style.fontSize = "100%";
 
 		// если основной контрагент уже в озу, устанавливаем умолчания. иначе, setReadonly и подписываемся на событие окончания загрузки
-		if(!$p.cat.partners.alatable.length || !$p.current_acl){
+		if(!$p.cat.partners.alatable.length || !$p.current_user){
 			t.form2.lock();
 			deferred_id = $p.eve.attachEvent("predefined_elmnts_inited", deferred_init);
 		}else {

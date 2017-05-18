@@ -321,7 +321,7 @@
         {id: "info", type: "text", text: "Вариант настроек:"},
         {id: "scheme", type: "text", text: "<div style='width: 300px; margin-top: -2px;' name='scheme'></div>"}
       ];
-      if($p.current_acl.role_available("ИзменениеТехнологическойНСИ")){
+      if($p.current_user.role_available("ИзменениеТехнологическойНСИ")){
         items.push(
           {id: "save", type: "button", text: "<i class='fa fa-floppy-o fa-fw'></i>", title: 'Сохранить вариант'},
           {id: "sep", type: "separator"},

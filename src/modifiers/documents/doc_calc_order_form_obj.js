@@ -39,7 +39,7 @@
 					source.min_widths = "30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70";
 				}
 
-				if($p.current_acl.role_available("СогласованиеРасчетовЗаказов") || $p.current_acl.role_available("РедактированиеСкидок"))
+				if($p.current_user.role_available("СогласованиеРасчетовЗаказов") || $p.current_user.role_available("РедактированиеСкидок"))
 					source.types = "cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro";
 				else
 					source.types = "cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro";
@@ -443,13 +443,13 @@
       pg_right.setEditable(!wnd.elmnts.ro);
 
 			// гасим кнопки проведения, если недоступна роль
-			if(!$p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
+			if(!$p.current_user.role_available("СогласованиеРасчетовЗаказов")){
         frm_toolbar.hideItem("btn_post");
         frm_toolbar.hideItem("btn_unpost");
 			}
 
 			// если не технологи и не менеджер - запрещаем менять статусы
-			if(!$p.current_acl.role_available("ИзменениеТехнологическойНСИ") && !$p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
+			if(!$p.current_user.role_available("ИзменениеТехнологическойНСИ") && !$p.current_user.role_available("СогласованиеРасчетовЗаказов")){
         pg_left.cells("obj_delivery_state", 1).setDisabled(true);
 			}
 

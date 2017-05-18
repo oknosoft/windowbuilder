@@ -39,10 +39,10 @@ $p.doc.calc_order.__define({
 					//minSpareRows: 1
 				};
 
-			if(!$p.current_acl.role_available("СогласованиеРасчетовЗаказов")){
+			if(!$p.current_user.role_available("СогласованиеРасчетовЗаказов")){
 				//query_options.group_level = 3;
-				query_options.startkey = [$p.current_acl.partners_uids[0],""];
-				query_options.endkey = [$p.current_acl.partners_uids[0],"\uffff"];
+				query_options.startkey = [$p.current_user.partners_uids[0],""];
+				query_options.endkey = [$p.current_user.partners_uids[0],"\uffff"];
 			}
 
 			return $p.wsql.pouch.remote.doc.query("server/invoice_execution", query_options)
@@ -132,7 +132,7 @@ $p.doc.calc_order.__define({
 
 					if(data.rows){
 
-						var include_detales = $p.current_acl.role_available("СогласованиеРасчетовЗаказов");
+						var include_detales = $p.current_user.role_available("СогласованиеРасчетовЗаказов");
 
 						data.rows.forEach(function (row) {
 

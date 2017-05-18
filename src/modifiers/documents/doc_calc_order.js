@@ -17,22 +17,22 @@ $p.doc.calc_order.on({
 	// после создания надо заполнить реквизиты по умолчанию: контрагент, организация, договор
 	after_create: function (attr) {
 
-	  const {acl_objs} = $p.current_acl;
+	  const {acl_objs} = $p.current_user;
 
 		//Организация
-		acl_objs.find_rows({by_default: true, type: $p.cat.organizations.metadata().obj_presentation}, (row) => {
+		acl_objs.find_rows({by_default: true, type: $p.cat.organizations.class_name}, (row) => {
       this.organization = row.acl_obj;
 			return false;
 		});
 
 		//Подразделение
-		acl_objs.find_rows({by_default: true, type: $p.cat.divisions.metadata().obj_presentation}, (row) => {
+		acl_objs.find_rows({by_default: true, type: $p.cat.divisions.class_name}, (row) => {
       this.department = row.acl_obj;
 			return false;
 		});
 
 		//Контрагент
-		acl_objs.find_rows({by_default: true, type: $p.cat.partners.metadata().obj_presentation}, (row) => {
+		acl_objs.find_rows({by_default: true, type: $p.cat.partners.class_name}, (row) => {
       this.partner = row.acl_obj;
 			return false;
 		});
@@ -77,6 +77,18 @@ $p.doc.calc_order.on({
 		}else if(this.obj_delivery_state == Подтвержден){
 			this.obj_delivery_state = Отправлен;
 		}
+
+		// проверим заполненность подразделения
+    if(this.obj_delivery_state == Шаблон){
+      this.department = $p.utils.blank.guid;
+    }else if(this.department.empty()){
+      $p.msg.show_msg({
+        type: "alert-warning",
+        text: "Не заполнен реквизит 'офис продаж' (подразделение)",
+        title: this.presentation
+      });
+      return false;
+    }
 
 		this.production.each((row) => {
 
@@ -177,7 +189,7 @@ $p.doc.calc_order.on({
             extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
 
 					// если пересчет выполняется менеджером, используем наценку по умолчанию
-          if(!$p.current_acl.partners_uids.length || !extra_charge){
+          if(!$p.current_user.partners_uids.length || !extra_charge){
             $p.pricing.price_type(prm);
             extra_charge = prm.price_type.extra_charge_external;
           }
@@ -569,11 +581,11 @@ $p.doc.calc_order.on({
       let ro = false;
       // технолог может изменять шаблоны
       if(obj_delivery_state == Шаблон){
-        ro = !$p.current_acl.role_available("ИзменениеТехнологическойНСИ");
+        ro = !$p.current_user.role_available("ИзменениеТехнологическойНСИ");
       }
       // ведущий менеджер может изменять проведенные
       else if(posted || _deleted){
-        ro = !$p.current_acl.role_available("СогласованиеРасчетовЗаказов");
+        ro = !$p.current_user.role_available("СогласованиеРасчетовЗаказов");
       }
       else if(!obj_delivery_state.empty()){
         ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван;
