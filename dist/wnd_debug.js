@@ -5263,56 +5263,91 @@ class Pricing {
 
   constructor($p) {
 
-    function build_cache(startkey) {
-
-      return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
-        {
-          limit : 5000,
-          include_docs: false,
-          startkey: startkey || [''],
-          endkey: ['\uffff']
-        })
-        .then((res) => {
-          res.rows.forEach((row) => {
-
-            const onom = $p.cat.nom.get(row.key[0], false, true);
-
-            if(!onom || !onom._data)
-              return;
-
-            if(!onom._data._price)
-              onom._data._price = {};
-
-            if(!onom._data._price[row.key[1]])
-              onom._data._price[row.key[1]] = {};
-
-            if(!onom._data._price[row.key[1]][row.key[2]])
-              onom._data._price[row.key[1]][row.key[2]] = [];
-
-            onom._data._price[row.key[1]][row.key[2]].push({
-              date: new Date(row.value.date),
-              price: row.value.price,
-              currency: $p.cat.currencies.get(row.value.currency)
-            });
-          });
-          if(res.rows.length == 5000){
-            return build_cache(res.rows[res.rows.length-1].key);
-          }
-        });
-    }
-
     const init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", () => {
       $p.eve.detachEvent(init_event_id);
-      build_cache();
-    })
 
-    $p.eve.attachEvent("pouch_change", (dbid, change) => {
-      if (dbid != $p.doc.nom_prices_setup.cachable){
+      this.by_range()
+        .then(() => {
+          $p.doc.nom_prices_setup.pouch_db.changes({
+            since: 'now',
+            live: true,
+            include_docs: true,
+            selector: {class_name: {
+              '$in': ['doc.nom_prices_setup', 'cat.formulas']
+            }}
+          }).on('change', (change) => {
+            if(change.doc.class_name == 'doc.nom_prices_setup'){
+              this.by_doc(change.doc)
+            }
+          });
+        })
+
+    });
+
+  }
+
+  build_cache(rows) {
+    rows.forEach(({key, value}) => {
+      const onom = $p.cat.nom.get(key[0], false, true);
+      if (!onom || !onom._data){
         return;
       }
+      if (!onom._data._price){
+        onom._data._price = {};
+      }
+      const {_price} = onom._data;
 
-    })
+      if (!_price[key[1]]){
+        _price[key[1]] = {};
+      }
+      if (!_price[key[1]][key[2]]){
+        _price[key[1]][key[2]] = [];
+      }
+      const cache = _price[key[1]][key[2]];
 
+      const date = new Date(value.date);
+      const currency = $p.cat.currencies.get(value.currency);
+      for(let row of cache){
+        if(row.date.valueOf() == date.valueOf() && row.currency == currency){
+          row.price = value.price;
+          return;
+        }
+      };
+      cache.push({
+        date: date,
+        price: value.price,
+        currency: currency
+      });
+    });
+  }
+
+  by_range(startkey) {
+
+    return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
+      {
+        limit: 5000,
+        include_docs: false,
+        startkey: startkey || [''],
+        endkey: ['\uffff']
+      })
+      .then((res) => {
+        this.build_cache(res.rows);
+        if (res.rows.length == 5000) {
+          return this.by_range(res.rows[res.rows.length - 1].key);
+        }
+      });
+  }
+
+  by_doc(doc) {
+    const keys = doc.goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
+    return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
+      {
+        include_docs: false,
+        keys: keys
+      })
+      .then((res) => {
+        this.build_cache(res.rows);
+      });
   }
 
   nom_price(nom, characteristic, price_type, prm, row) {
@@ -6238,9 +6273,8 @@ class ProductsBuilding {
 
               $p.record_log(ox);
               delete scheme._attr._saving;
-              const {_err} = ox._data;
-              if(_err){
-                $p.msg.show_msg(_err);
+              if(ox._data && ox._data._err){
+                $p.msg.show_msg(ox._data._err);
                 delete ox._data._err;
               }
             });
@@ -6248,8 +6282,6 @@ class ProductsBuilding {
         else{
           delete scheme._attr._saving;
         }
-
-
 
       });
 

@@ -671,9 +671,8 @@ class ProductsBuilding {
 
               $p.record_log(ox);
               delete scheme._attr._saving;
-              const {_err} = ox._data;
-              if(_err){
-                $p.msg.show_msg(_err);
+              if(ox._data && ox._data._err){
+                $p.msg.show_msg(ox._data._err);
                 delete ox._data._err;
               }
             });
@@ -681,8 +680,6 @@ class ProductsBuilding {
         else{
           delete scheme._attr._saving;
         }
-
-
 
       });
 
