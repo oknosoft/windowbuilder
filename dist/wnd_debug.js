@@ -5277,17 +5277,23 @@ class Pricing {
             }}
           }).on('change', (change) => {
             if(change.doc.class_name == 'doc.nom_prices_setup'){
-              this.by_doc(change.doc)
+              setTimeout(() => {
+                this.by_doc(change.doc)
+              }, 1000);
             }
           });
         })
-
     });
 
   }
 
   build_cache(rows) {
     rows.forEach(({key, value}) => {
+
+      if(!Array.isArray(value)){
+        return setTimeout(() => $p.iface.do_reload('', 'Индекс цен номенклатуры'), 1000);
+      }
+
       const onom = $p.cat.nom.get(key[0], false, true);
       if (!onom || !onom._data){
         return;
@@ -5300,24 +5306,11 @@ class Pricing {
       if (!_price[key[1]]){
         _price[key[1]] = {};
       }
-      if (!_price[key[1]][key[2]]){
-        _price[key[1]][key[2]] = [];
-      }
-      const cache = _price[key[1]][key[2]];
-
-      const date = new Date(value.date);
-      const currency = $p.cat.currencies.get(value.currency);
-      for(let row of cache){
-        if(row.date.valueOf() == date.valueOf() && row.currency == currency){
-          row.price = value.price;
-          return;
-        }
-      };
-      cache.push({
-        date: date,
-        price: value.price,
-        currency: currency
-      });
+      _price[key[1]][key[2]] = value.map((v) => ({
+        date: new Date(v.date),
+        currency: $p.cat.currencies.get(v.currency),
+        price: v.price
+      }));
     });
   }
 
@@ -5328,7 +5321,9 @@ class Pricing {
         limit: 5000,
         include_docs: false,
         startkey: startkey || [''],
-        endkey: ['\uffff']
+        endkey: ['\uffff'],
+        reduce: true,
+        group: true,
       })
       .then((res) => {
         this.build_cache(res.rows);
@@ -5343,7 +5338,9 @@ class Pricing {
     return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
       {
         include_docs: false,
-        keys: keys
+        keys: keys,
+        reduce: true,
+        group: true,
       })
       .then((res) => {
         this.build_cache(res.rows);
@@ -5353,12 +5350,12 @@ class Pricing {
   nom_price(nom, characteristic, price_type, prm, row) {
 
     if (row && prm) {
-      const calc_order = prm.calc_order_row._owner._owner,
+      const {_owner} = prm.calc_order_row._owner,
         price_prm = {
           price_type: price_type,
           characteristic: characteristic,
-          date: calc_order.date,
-          currency: calc_order.doc_currency
+          date: _owner.date,
+          currency: _owner.doc_currency
         };
       if (price_type == prm.price_type.price_type_first_cost && !prm.price_type.formula.empty()) {
         price_prm.formula = prm.price_type.formula;
@@ -6812,10 +6809,7 @@ $p.doc.calc_order.on({
 			return false;
 		});
 
-		acl_objs.find_rows({by_default: true, type: $p.cat.divisions.class_name}, (row) => {
-      this.department = row.acl_obj;
-			return false;
-		});
+    $p.DocCalc_order.set_department.call(this)
 
 		acl_objs.find_rows({by_default: true, type: $p.cat.partners.class_name}, (row) => {
       this.partner = row.acl_obj;
@@ -7439,6 +7433,21 @@ $p.doc.calc_order.on({
       });
     }
 
+    static set_department() {
+      const department = $p.wsql.get_user_param("current_department");
+      if(department){
+        this.department = department;
+      }
+      if(this.department.empty() || this.department.is_new()){
+        $p.current_user.acl_objs && $p.current_user.acl_objs.find_rows({by_default: true, type: $p.cat.divisions.class_name}, (row) => {
+          if(this.department != row.acl_obj){
+            this.department = row.acl_obj;
+          }
+          return false;
+        });
+      }
+    }
+
   }
 })();
 
@@ -7526,14 +7535,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
             });
           });
 
-          function set_department() {
-            $p.current_user.acl_objs && $p.current_user.acl_objs.find_rows({by_default: true, type: $p.cat.divisions.class_name}, (row) => {
-              if(dp.department != row.acl_obj){
-                dp.department = row.acl_obj;
-              }
-              return false;
-            });
-          }
+          const set_department = $p.DocCalc_order.set_department.bind(dp);
           set_department();
           if(!$p.wsql.get_user_param('couch_direct')){
             $p.on({user_log_in: set_department});

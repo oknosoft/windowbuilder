@@ -26,10 +26,7 @@ $p.doc.calc_order.on({
 		});
 
 		//Подразделение
-		acl_objs.find_rows({by_default: true, type: $p.cat.divisions.class_name}, (row) => {
-      this.department = row.acl_obj;
-			return false;
-		});
+    $p.DocCalc_order.set_department.call(this)
 
 		//Контрагент
 		acl_objs.find_rows({by_default: true, type: $p.cat.partners.class_name}, (row) => {
@@ -728,6 +725,24 @@ $p.doc.calc_order.on({
         resolve();
 
       });
+    }
+
+    /**
+     * Устанавливает подразделение по умолчанию
+     */
+    static set_department() {
+      const department = $p.wsql.get_user_param("current_department");
+      if(department){
+        this.department = department;
+      }
+      if(this.department.empty() || this.department.is_new()){
+        $p.current_user.acl_objs && $p.current_user.acl_objs.find_rows({by_default: true, type: $p.cat.divisions.class_name}, (row) => {
+          if(this.department != row.acl_obj){
+            this.department = row.acl_obj;
+          }
+          return false;
+        });
+      }
     }
 
   }

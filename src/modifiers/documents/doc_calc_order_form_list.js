@@ -100,14 +100,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
             });
           });
 
-          function set_department() {
-            $p.current_user.acl_objs && $p.current_user.acl_objs.find_rows({by_default: true, type: $p.cat.divisions.class_name}, (row) => {
-              if(dp.department != row.acl_obj){
-                dp.department = row.acl_obj;
-              }
-              return false;
-            });
-          }
+          const set_department = $p.DocCalc_order.set_department.bind(dp);
           set_department();
           if(!$p.wsql.get_user_param('couch_direct')){
             $p.on({user_log_in: set_department});
