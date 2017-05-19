@@ -1379,14 +1379,17 @@ class Scheme extends paper.Project {
       }
     }
     else{
-      this.activeLayer.profiles.some((p) => {
+      let dist = Infinity;
+      this.activeLayer.profiles.forEach((p) => {
         const corn = p.corns(point);
-        if(corn.dist < consts.sticking){
-          hit = {
-            item: p.generatrix,
-            point: corn.point
+        if(corn.dist < dist){
+          dist = corn.dist;
+          if(corn.dist < consts.sticking){
+            hit = {
+              item: p.generatrix,
+              point: corn.point
+            }
           }
-          return true;
         }
       })
     }

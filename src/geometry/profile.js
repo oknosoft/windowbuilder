@@ -1712,8 +1712,9 @@ class ProfileItem extends BuilderElement {
    * @return {Point|Number} - координата или точка
    */
   corns(corn) {
+    const {_corns} = this._attr;
     if(typeof corn == "number"){
-      return this._attr._corns[corn];
+      return _corns[corn];
     }
     else if(corn instanceof paper.Point){
 
@@ -1721,10 +1722,10 @@ class ProfileItem extends BuilderElement {
       let dist;
 
       for(let i = 1; i<5; i++){
-        dist = this._attr._corns[i].getDistance(corn);
+        dist = _corns[i].getDistance(corn);
         if(dist < res.dist){
           res.dist = dist;
-          res.point = this._attr._corns[i];
+          res.point = _corns[i];
           res.point_name = i;
         }
       }
@@ -1749,7 +1750,7 @@ class ProfileItem extends BuilderElement {
     else{
       const index = corn.substr(corn.length-1, 1);
       const axis = corn.substr(corn.length-2, 1);
-      return this._attr._corns[index][axis];
+      return _corns[index][axis];
     }
   }
 

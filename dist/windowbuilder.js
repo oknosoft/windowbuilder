@@ -7775,8 +7775,9 @@ class ProfileItem extends BuilderElement {
   }
 
   corns(corn) {
+    const {_corns} = this._attr;
     if(typeof corn == "number"){
-      return this._attr._corns[corn];
+      return _corns[corn];
     }
     else if(corn instanceof paper.Point){
 
@@ -7784,10 +7785,10 @@ class ProfileItem extends BuilderElement {
       let dist;
 
       for(let i = 1; i<5; i++){
-        dist = this._attr._corns[i].getDistance(corn);
+        dist = _corns[i].getDistance(corn);
         if(dist < res.dist){
           res.dist = dist;
-          res.point = this._attr._corns[i];
+          res.point = _corns[i];
           res.point_name = i;
         }
       }
@@ -7812,7 +7813,7 @@ class ProfileItem extends BuilderElement {
     else{
       const index = corn.substr(corn.length-1, 1);
       const axis = corn.substr(corn.length-2, 1);
-      return this._attr._corns[index][axis];
+      return _corns[index][axis];
     }
   }
 
@@ -9753,14 +9754,17 @@ class Scheme extends paper.Project {
       }
     }
     else{
-      this.activeLayer.profiles.some((p) => {
+      let dist = Infinity;
+      this.activeLayer.profiles.forEach((p) => {
         const corn = p.corns(point);
-        if(corn.dist < consts.sticking){
-          hit = {
-            item: p.generatrix,
-            point: corn.point
+        if(corn.dist < dist){
+          dist = corn.dist;
+          if(corn.dist < consts.sticking){
+            hit = {
+              item: p.generatrix,
+              point: corn.point
+            }
           }
-          return true;
         }
       })
     }
