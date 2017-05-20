@@ -7,6 +7,8 @@
 .tb_align_left { background-image: url(/imgs/align_left.png); opacity: 0.9;}
 .tb_align_right { background-image: url(/imgs/align_right.png); opacity: 0.9;}
 .tb_align_top { background-image: url(/imgs/align_top.png); opacity: 0.9;}
+.tb_align_vert { background-image: url(/imgs/align_vert.png); opacity: 0.9;}
+.tb_align_hor { background-image: url(/imgs/align_hor.png); opacity: 0.9;}
 
 .tb_icon-hand { background-image: url(/imgs/icon-hand.png);}
 .tb_icon-arrow-white { background-image: url(/imgs/icon-arrow-white.png);}

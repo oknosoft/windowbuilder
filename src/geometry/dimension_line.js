@@ -406,12 +406,6 @@ class DimensionLineCustom extends DimensionLine {
 
     super(attr);
 
-    this.on({
-      mouseenter: this._mouseenter,
-      mouseleave: this._mouseleave,
-      click: this._click
-    });
-
   }
 
   /**
@@ -447,7 +441,18 @@ class DimensionLineCustom extends DimensionLine {
 
   _click(event) {
     event.stop();
-    this.selected = true;
+    if(paper.tool instanceof ToolRuler){
+      this.selected = true;
+    }
+  }
+
+  _mouseenter() {
+    if(paper.tool instanceof ToolRuler){
+      paper.canvas_cursor('cursor-arrow-ruler');
+    }
+    else{
+      paper.canvas_cursor('cursor-arrow-ruler-dis');
+    }
   }
 
 

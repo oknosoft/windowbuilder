@@ -7,6 +7,7 @@
 .cursor-arrow-lay       { cursor: url('cursor-arrow-lay.png') 1 1, default; }
 .cursor-arrow-ruler     { cursor: url('cursor-arrow-ruler.png') 3 1, default; }
 .cursor-arrow-ruler-light { cursor: url('cursor-arrow-ruler-light.png') 3 1, default; }
+.cursor-arrow-ruler-dis { cursor: url('cursor-arrow-ruler-dis.png') 3 1, default; }
 .cursor-pen-adjust      { cursor: url('cursor-pen-adjust.png') 5 2, default; }
 .cursor-zoom-in         { cursor: url('cursor-zoom-in.png') 7 7, default; }
 .cursor-zoom-out        { cursor: url('cursor-zoom-out.png') 7 7, default; }

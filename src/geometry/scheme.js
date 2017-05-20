@@ -744,20 +744,23 @@ class Scheme extends paper.Project {
    * @method zoom_fit
    */
   zoom_fit(bounds) {
-    if(!bounds)
-      bounds = this.strokeBounds;
 
-    var height = (bounds.height < 1000 ? 1000 : bounds.height) + 320,
-      width = (bounds.width < 1000 ? 1000 : bounds.width) + 320,
-      shift;
+    if(!bounds){
+      bounds = this.strokeBounds;
+    }
+
+    const height = (bounds.height < 1000 ? 1000 : bounds.height) + 320;
+    const width = (bounds.width < 1000 ? 1000 : bounds.width) + 320;
+    let shift;
 
     if(bounds){
-      this.view.zoom = Math.min((this.view.viewSize.height - 20) / height, (this.view.viewSize.width - 20) / width);
-      shift = (this.view.viewSize.width - bounds.width * this.view.zoom) / 2;
+      const {view} = this;
+      view.zoom = Math.min((view.viewSize.height - 40) / height, (view.viewSize.width - 40) / width);
+      shift = (view.viewSize.width - bounds.width * view.zoom) / 2;
       if(shift < 180){
         shift = 0;
       }
-      this.view.center = bounds.center.add([shift, 40]);
+      view.center = bounds.center.add([shift, 60]);
     }
   }
 

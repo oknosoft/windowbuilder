@@ -52,13 +52,13 @@ class RulerWnd {
     this.table = div.firstChild.childNodes;
 
     $p.iface.add_button(this.table[0].childNodes[1], null,
-      {name: "top", css: 'tb_align_top', tooltip: $p.msg.align_set_top}).onclick = this.on_button_click;
+      {name: "top", css: 'tb_align_vert', tooltip: $p.msg.align_set_top}).onclick = this.on_button_click;
     $p.iface.add_button(this.table[1].childNodes[0], null,
-      {name: "left", css: 'tb_align_left', tooltip: $p.msg.align_set_left}).onclick = this.on_button_click;
+      {name: "left", css: 'tb_align_hor', tooltip: $p.msg.align_set_left}).onclick = this.on_button_click;
     $p.iface.add_button(this.table[1].childNodes[2], null,
-      {name: "right", css: 'tb_align_right', tooltip: $p.msg.align_set_right}).onclick = this.on_button_click;
+      {name: "right", css: 'tb_align_hor', tooltip: $p.msg.align_set_right}).onclick = this.on_button_click;
     $p.iface.add_button(this.table[2].childNodes[1], null,
-      {name: "bottom", css: 'tb_align_bottom', tooltip: $p.msg.align_set_bottom}).onclick = this.on_button_click;
+      {name: "bottom", css: 'tb_align_vert', tooltip: $p.msg.align_set_bottom}).onclick = this.on_button_click;
 
     wnd.attachObject(div);
 

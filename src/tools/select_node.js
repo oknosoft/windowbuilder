@@ -452,27 +452,25 @@ class ToolSelectNode extends ToolElement {
       }
     }
 
-    if (this.hitItem) {
-      if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
+    const {hitItem} = this;
+    if (hitItem) {
+      if (hitItem.type == 'fill' || hitItem.type == 'stroke') {
 
-        if (this.hitItem.item instanceof paper.PointText) {
-          if(this.hitItem.item.parent instanceof DimensionLineCustom){
-            this.hitItem = null;
-            paper.canvas_cursor('cursor-arrow-white');
-          }
-          else{
-            paper.canvas_cursor('cursor-text');     // указатель с черным Т
-          }
+        if (hitItem.item.parent instanceof DimensionLine) {
+          // размерные линии сами разберутся со своими курсорами
         }
-        else if (this.hitItem.item.selected) {
+        else if (hitItem.item instanceof paper.PointText) {
+          paper.canvas_cursor('cursor-text');     // указатель с черным Т
+        }
+        else if (hitItem.item.selected) {
           paper.canvas_cursor('cursor-arrow-small');
         }
         else {
           paper.canvas_cursor('cursor-arrow-white-shape');
         }
       }
-      else if (this.hitItem.type == 'segment' || this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
-        if (this.hitItem.segment.selected) {
+      else if (hitItem.type == 'segment' || hitItem.type == 'handle-in' || hitItem.type == 'handle-out') {
+        if (hitItem.segment.selected) {
           paper.canvas_cursor('cursor-arrow-small-point');
         }
         else {
