@@ -5578,7 +5578,7 @@ class Pricing {
       date = new Date();
     }
     if(!this.cource_sql){
-      this.cource_sql = $p.wsql.alasql.compile("select top 1 * from `ireg_currency_courses` where `currency` = ? and `period` <= ? order by `date` desc");
+      this.cource_sql = $p.wsql.alasql.compile("select top 1 * from `ireg_currency_courses` where `currency` = ? and `period` <= ? order by `period` desc");
     }
 
     let cfrom = {course: 1, multiplicity: 1},
