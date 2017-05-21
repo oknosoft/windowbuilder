@@ -330,14 +330,18 @@ $p.cat.inserts.__define({
      * @param elm {BuilderElement}
      * @param len_angl {Object}
      * @param ox {CatCharacteristics}
+     * @param spec {TabularSection}
      */
-    calculate_spec(elm, len_angl, ox) {
+    calculate_spec({elm, len_angl, ox, spec}) {
 
       const {_row} = elm;
       const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади} = $p.enm.count_calculating_ways;
       const {profile_items} = $p.enm.elm_types;
-      const spec = ox.specification;
       const {new_spec_row, calc_qty_len, calc_count_area_mass} = ProductsBuilding;
+
+      if(!spec){
+        spec = ox.specification;
+      }
 
       this.filtered_spec({elm, is_high_level_call: true, len_angl, ox}).forEach((row_ins_spec) => {
 

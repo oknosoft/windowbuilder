@@ -707,7 +707,7 @@ $p.doc.calc_order.on({
             get s() {return row_spec.s},
             get perimeter() {return [row_spec.len]}
           };
-          row_spec.inset.calculate_spec(elm, len_angl, row_prod.characteristic);
+          row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
 
           // сворачиваем
           row_prod.characteristic.specification.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop", "qty,totqty,totqty1");

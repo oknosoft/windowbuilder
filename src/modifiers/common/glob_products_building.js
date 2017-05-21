@@ -83,9 +83,9 @@ class ProductsBuilding {
           if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)){
             const tmp_len_angl = len_angl._clone();
             tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
-            nom.calculate_spec(elm, tmp_len_angl, ox);
+            nom.calculate_spec({elm, len_angl: tmp_len_angl, ox});
           }else{
-            nom.calculate_spec(elm, len_angl, ox);
+            nom.calculate_spec({elm, len_angl, ox});
           }
         }
         else {
@@ -420,7 +420,7 @@ class ProductsBuilding {
       }
 
       // спецификация вставки
-      elm.inset.calculate_spec(elm, null, ox);
+      elm.inset.calculate_spec({elm, ox});
 
       // если у профиля есть примыкающий родительский элемент, добавим спецификацию II соединения
       cnn_spec_nearest(elm);
@@ -441,7 +441,7 @@ class ProductsBuilding {
         len_angl.cnstr = elm.layer.cnstr;
         delete len_angl.art1;
         delete len_angl.art2;
-        inset.calculate_spec(elm, len_angl, ox);
+        inset.calculate_spec({elm, len_angl, ox});
 
       });
 
@@ -488,7 +488,7 @@ class ProductsBuilding {
       }
 
       // добавляем спецификацию вставки в заполнение
-      glass.inset.calculate_spec(glass, null, ox);
+      glass.inset.calculate_spec({elm: glass, ox});
 
       // для всех раскладок заполнения
       imposts.forEach(base_spec_profile);
@@ -500,10 +500,7 @@ class ProductsBuilding {
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
           $p.record_log("inset_elm_spec: specification_order_row_types.Продукция");
         }
-
-        inset.calculate_spec(glass, null, ox);
-
-
+        inset.calculate_spec({elm: glass, ox});
       });
     }
 
@@ -544,7 +541,7 @@ class ProductsBuilding {
           origin: inset,
           cnstr: contour.cnstr
         }
-        inset.calculate_spec(elm, len_angl, ox);
+        inset.calculate_spec({elm, len_angl, ox, spec});
 
       });
 
