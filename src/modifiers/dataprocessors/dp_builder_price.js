@@ -46,6 +46,7 @@ $p.DpBuilder_price.prototype.__define({
       return $p.wsql.pouch.local.doc.query('doc/doc_nom_prices_setup_slice_last', {
         limit : 1000,
         include_docs: false,
+        reduce: false,
         startkey: [nom.ref, ''],
         endkey: [nom.ref, '\uffff']
       })
