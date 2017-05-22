@@ -1,0 +1,1894 @@
+{
+  "_id": "meta_patch",
+  "_rev": "10-2bc99e5c37904c31fecc8c79ecd1afba",
+  "enm": {},
+  "cat": {
+    "nom": {
+      "form": {
+        "selection": {
+          "fields": [],
+          "cols": [
+            {
+              "id": "id",
+              "width": "140",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Код"
+            },
+            {
+              "id": "article",
+              "width": "150",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Артикул"
+            },
+            {
+              "id": "presentation",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Наименование"
+            },
+            {
+              "id": "nom_unit",
+              "width": "70",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Ед"
+            },
+            {
+              "id": "thickness",
+              "width": "70",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Толщина"
+            }
+          ]
+        }
+      }
+    },
+    "production_params": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              "id",
+              "name",
+              "parent",
+              "clr_group",
+              "tmin",
+              "tmax",
+              "allow_open_cnn"
+            ]
+          },
+          "tabular_sections": {
+            "elmnts": {
+              "fields": [
+                "by_default",
+                "elm_type",
+                "nom",
+                "clr",
+                "pos"
+              ],
+              "headers": "√,Тип,Номенклатура,Цвет,Положение",
+              "widths": "70,160,*,160,160",
+              "min_widths": "70,160,200,160,160",
+              "aligns": "",
+              "sortings": "na,na,na,na,na",
+              "types": "ch,ref,ref,ref,ref"
+            },
+            "production": {
+              "fields": [
+                "nom",
+                "param",
+                "value"
+              ],
+              "headers": "Номенклатура,Параметр,Значение",
+              "widths": "*,160,160",
+              "min_widths": "200,160,160",
+              "aligns": "",
+              "sortings": "na,na,na",
+              "types": "ref,ro,ro"
+            },
+            "product_params": {
+              "fields": [
+                "param",
+                "value",
+                "hide",
+                "forcibly"
+              ],
+              "headers": "Параметр,Значение,Скрыть,Принудительно",
+              "widths": "*,*,80,80",
+              "min_widths": "200,200,80,80",
+              "aligns": "",
+              "sortings": "na,na,na,na",
+              "types": "ro,ro,ch,ch"
+            },
+            "furn_params": {
+              "fields": [
+                "param",
+                "value",
+                "hide",
+                "forcibly"
+              ],
+              "headers": "Параметр,Значение,Скрыть,Принудительно",
+              "widths": "*,*,80,80",
+              "min_widths": "200,200,80,80",
+              "aligns": "",
+              "sortings": "na,na,na,na",
+              "types": "ro,ro,ch,ch"
+            },
+            "base_blocks": {
+              "fields": [
+                "calc_order"
+              ],
+              "headers": "Расчет",
+              "widths": "*",
+              "min_widths": "200",
+              "aligns": "",
+              "sortings": "na",
+              "types": "ref"
+            }
+          },
+          "tabular_sections_order": [
+            "elmnts",
+            "production",
+            "product_params",
+            "furn_params",
+            "base_blocks"
+          ]
+        }
+      }
+    },
+    "characteristics": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              "name",
+              "owner",
+              "calc_order",
+              "product",
+              "leading_product",
+              "leading_elm"
+            ],
+            "Дополнительно": [
+              "x",
+              "y",
+              "z",
+              "s",
+              "clr",
+              "weight",
+              "condition_products"
+            ]
+          },
+          "tabular_sections": {
+            "specification": {
+              "fields": [
+                "elm",
+                "nom",
+                "clr",
+                "characteristic",
+                "qty",
+                "len",
+                "width",
+                "s",
+                "alp1",
+                "alp2",
+                "totqty1",
+                "price",
+                "amount",
+                "amount_marged"
+              ],
+              "headers": "Эл.,Номенклатура,Цвет,Характеристика,Колич.,Длина&nbsp;выс.,Ширина,Площадь,Угол1,Угол2,Колич++,Цена,Сумма,Сумма++",
+              "widths": "50,*,70,*,50,70,70,80,70,70,70,70,70,80",
+              "min_widths": "50,180,70,180,50,80,70,70,70,70,70,70,70,70",
+              "aligns": "",
+              "sortings": "na,na,na,na,na,na,na,na,na,na,na,na,na,na",
+              "types": "ron,ref,ref,ref,calck,calck,calck,calck,calck,calck,ron,ron,ron,ron"
+            },
+            "constructions": {
+              "fields": [
+                "cnstr",
+                "parent",
+                "x",
+                "y",
+                "w",
+                "h",
+                "furn",
+                "clr_furn",
+                "direction",
+                "h_ruch"
+              ],
+              "headers": "Констр.,Внешн.,Ширина,Высота,Ширина фурн.,Высота фурн.,Фурнитура,Цвет фурн.,Открывание,Высота ручки",
+              "widths": "50,50,70,70,70,70,*,80,80,70",
+              "min_widths": "50,50,70,70,70,70,120,80,80,70",
+              "aligns": "",
+              "sortings": "na,na,na,na,na,na,na,na,na,na",
+              "types": "ron,ron,ron,ron,ron,ron,ref,ro,ro,ro"
+            },
+            "coordinates": {
+              "fields": [
+                "cnstr",
+                "parent",
+                "elm",
+                "elm_type",
+                "clr",
+                "inset",
+                "path_data",
+                "x1",
+                "y1",
+                "x2",
+                "y2",
+                "len",
+                "alp1",
+                "alp2",
+                "angle_hor",
+                "s",
+                "pos",
+                "orientation"
+              ],
+              "headers": "Констр.,Внешн.,Эл.,Тип,Цвет,Вставка,Путь,x1,y1,x2,y2,Длина,Угол1,Угол2,Горизонт,Площадь,Положение,Ориентация",
+              "widths": "50,50,50,70,80,*,70,70,70,70,70,70,70,70,70,70,70,70",
+              "min_widths": "50,50,50,70,80,120,70,70,70,70,70,70,70,70,70,70,70,70",
+              "aligns": "",
+              "sortings": "na,na,na,na,na,na,na,na,na,na,na,na,na,na,na,na,na,na",
+              "types": "ron,ron,ron,ref,ref,ref,ro,ron,ron,ron,ron,ron,ron,ron,ron,ron,ro,ro"
+            },
+            "inserts": {
+              "fields": [
+                "cnstr",
+                "inset",
+                "clr"
+              ],
+              "headers": "Констр.,Вставка,Цвет",
+              "widths": "50,*,*",
+              "min_widths": "50,100,100",
+              "aligns": "",
+              "sortings": "na,na,na",
+              "types": "calck,ref,ref"
+            },
+            "cnn_elmnts": {
+              "fields": [
+                "elm1",
+                "elm2",
+                "node1",
+                "node2",
+                "aperture_len",
+                "cnn"
+              ],
+              "headers": "Эл1,Эл2,Узел1,Узел2,Длина,Соединение",
+              "widths": "50,50,50,50,160,*",
+              "min_widths": "50,50,50,50,100,200",
+              "aligns": "",
+              "sortings": "na,na,na,na,na,na",
+              "types": "calck,calck,ed,ed,calck,ref"
+            },
+            "params": {
+              "fields": [
+                "cnstr",
+                "inset",
+                "param",
+                "value",
+                "hide"
+              ],
+              "headers": "Констр.,Вставка,Параметр,Значение,Скрыть",
+              "widths": "50,80,*,*,50",
+              "min_widths": "50,70,200,200,50",
+              "aligns": "",
+              "sortings": "na,na,na,na,na",
+              "types": "ron,ro,ro,ro,ch"
+            }
+          },
+          "tabular_sections_order": [
+            "specification",
+            "constructions",
+            "coordinates",
+            "inserts",
+            "cnn_elmnts",
+            "params"
+          ]
+        }
+      }
+    },
+    "furns": {
+      "form": {
+        "selection": {
+          "fields": [],
+          "cols": [
+            {
+              "id": "id",
+              "width": "140",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Код"
+            },
+            {
+              "id": "open_type",
+              "width": "150",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Тип открывания"
+            },
+            {
+              "id": "presentation",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Наименование"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              "id",
+              "name",
+              "name_short",
+              "parent",
+              "open_type",
+              "is_set",
+              "furn_set"
+            ],
+            "Дополнительно": [
+              "side_count",
+              "left_right",
+              "handle_side",
+              "is_sliding"
+            ]
+          },
+          "tabular_sections": {
+            "open_tunes": {
+              "fields": [
+                "side",
+                "lmin",
+                "lmax",
+                "amin",
+                "amax",
+                "rotation_axis",
+                "partial_opening",
+                "arc_available",
+                "shtulp_available",
+                "shtulp_fix_here"
+              ],
+              "headers": "Сторона,L min,L max,Угол min,Угол max,Ось поворота,Неполн. откр.,Дуга,Разрешен штульп,Крепится штульп",
+              "widths": "*,*,*,*,*,100,100,100,100,100",
+              "min_widths": "100,100,100,100,100,100,100,100,100,100",
+              "aligns": "",
+              "sortings": "na,na,na,na,na,na,na,na,na,na",
+              "types": "calck,calck,calck,calck,calck,ch,ch,ch,ch,ch"
+            },
+            "specification": {
+              "fields": [
+                "elm",
+                "dop",
+                "nom",
+                "clr",
+                "quantity",
+                "coefficient",
+                "side",
+                "cnn_side",
+                "offset_option",
+                "formula",
+                "transfer_option"
+              ],
+              "headers": "Элемент,Доп,Материал,Цвет,Колич.,Коэфф.,Сторона,Строна соед.,Смещ. от,Формула,Перенос опер.",
+              "widths": "80,80,*,140,100,100,100,140,140,140,140",
+              "min_widths": "80,80,200,140,100,100,100,140,140,140,140",
+              "aligns": "",
+              "sortings": "na,na,na,na,na,na,na,na,na,na,na",
+              "types": "ron,ron,ref,ref,calck,calck,calck,ref,ref,ref,ref"
+            }
+          },
+          "tabular_sections_order": [
+            "open_tunes",
+            "specification"
+          ]
+        }
+      }
+    },
+    "cnns": {
+      "form": {
+        "selection": {
+          "fields": [],
+          "cols": [
+            {
+              "id": "id",
+              "width": "140",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Код"
+            },
+            {
+              "id": "cnn_type",
+              "width": "200",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Тип"
+            },
+            {
+              "id": "presentation",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Наименование"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              "id",
+              "name",
+              "cnn_type",
+              "sz",
+              "priority"
+            ],
+            "Дополнительно": [
+              "sd1",
+              "amin",
+              "amax",
+              "ahmin",
+              "ahmax",
+              "lmin",
+              "lmax",
+              "tmin",
+              "tmax",
+              "var_layers",
+              "for_direct_profile_only",
+              "art1vert",
+              "art1glass",
+              "art2glass"
+            ]
+          },
+          "tabular_sections": {
+            "specification": {
+              "fields": [
+                "nom",
+                "clr",
+                "quantity",
+                "sz",
+                "coefficient",
+                "angle_calc_method",
+                "formula",
+                "is_order_row",
+                "sz_min",
+                "sz_max",
+                "amin",
+                "amax",
+                "set_specification",
+                "for_direct_profile_only"
+              ],
+              "headers": "Номенклатура,Цвет,Колич.,Размер,Коэфф.,Расч.угла,Формула,↑ В заказ,Размер min,Размер max,Угол min,Угол max,Устанавливать,Для прямых",
+              "widths": "*,160,100,100,100,140,160,140,100,100,100,100,140,140",
+              "min_widths": "200,160,100,100,100,140,160,140,100,100,100,100,140,140",
+              "aligns": "",
+              "sortings": "na,na,na,na,na,na,na,na,na,na,na,na,na,na",
+              "types": "ref,ref,calck,calck,calck,ref,ref,ref,calck,calck,calck,calck,ref,calck"
+            },
+            "cnn_elmnts": {
+              "fields": [
+                "nom1",
+                "clr1",
+                "nom2",
+                "clr2",
+                "varclr",
+                "is_nom_combinations_row"
+              ],
+              "headers": "Номенклатура1,Цвет1,Номенклатура2,Цвет2,Разные цвета",
+              "widths": "*,*,*,*,100",
+              "min_widths": "160,160,160,160,100",
+              "aligns": "",
+              "sortings": "na,na,na,na,na",
+              "types": "ref,ref,ref,ref,ch"
+            }
+          },
+          "tabular_sections_order": [
+            "specification",
+            "cnn_elmnts"
+          ]
+        }
+      }
+    },
+    "inserts": {
+      "form": {
+        "selection": {
+          "fields": [],
+          "cols": [
+            {
+              "id": "id",
+              "width": "140",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Код"
+            },
+            {
+              "id": "insert_type",
+              "width": "200",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Тип вставки"
+            },
+            {
+              "id": "presentation",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Наименование"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              "id",
+              "name",
+              "insert_type",
+              "sizeb",
+              "clr",
+              "clr_group",
+              "is_order_row",
+              "priority"
+            ],
+            "Дополнительно": [
+              "lmin",
+              "lmax",
+              "hmin",
+              "hmax",
+              "smin",
+              "smax",
+              "ahmin",
+              "ahmax",
+              "mmin",
+              "mmax",
+              "for_direct_profile_only",
+              "impost_fixation",
+              "shtulp_fixation",
+              "can_rotate"
+            ]
+          },
+          "tabular_sections": {
+            "specification": {
+              "fields": [
+                "nom",
+                "clr",
+                "quantity",
+                "sz",
+                "coefficient",
+                "angle_calc_method",
+                "count_calc_method",
+                "formula",
+                "is_order_row",
+                "is_main_elm",
+                "lmin",
+                "lmax",
+                "ahmin",
+                "ahmax",
+                "smin",
+                "smax"
+              ],
+              "headers": "Номенклатура,Цвет,Колич.,Размер,Коэфф.,Расч.угла,Расч.колич.,Формула,↑ В заказ,Осн. мат.,Длина min,Длина max,Угол min,Угол max,S min, S max",
+              "widths": "*,160,100,100,100,140,140,160,80,80,100,100,100,100,100,100",
+              "min_widths": "200,160,100,100,100,140,140,160,140,80,100,100,100,100,100,100",
+              "aligns": "",
+              "sortings": "na,na,na,na,na,na,na,na,na,na,na,na,na,na,na,na",
+              "types": "ref,ref,calck,calck,calck,ref,ref,ref,ref,ch,calck,calck,calck,calck,calck,calck"
+            }
+          },
+          "tabular_sections_order": [
+            "specification"
+          ]
+        }
+      }
+    },
+    "contracts": {
+      "form": {
+        "selection": {
+          "fields": [
+            "is_folder",
+            "id",
+            "_t_.name as presentation",
+            "enm_contract_kinds.synonym as contract_kind",
+            "enm_mutual_settlements.synonym as mutual_settlements",
+            "cat_organizations.name as organization",
+            "cat_partners.name as partner"
+          ],
+          "cols": [
+            {
+              "id": "partner",
+              "width": "180",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Контрагент"
+            },
+            {
+              "id": "organization",
+              "width": "180",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Организация"
+            },
+            {
+              "id": "presentation",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Наименование"
+            },
+            {
+              "id": "contract_kind",
+              "width": "150",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Вид договора"
+            },
+            {
+              "id": "mutual_settlements",
+              "width": "150",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Ведение расчетов"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "id",
+                "path": "o.id",
+                "synonym": "Код",
+                "type": "ro"
+              },
+              "parent",
+              "name",
+              "number_doc",
+              "date",
+              "validity",
+              "owner",
+              "organization",
+              "contract_kind",
+              "mutual_settlements",
+              "settlements_currency"
+            ],
+            "Дополнительно": [
+              "accounting_reflect",
+              "tax_accounting_reflect",
+              "vat_consider",
+              "vat_included",
+              "price_type",
+              "main_project",
+              "main_cash_flow_article",
+              "check_debts_amount",
+              "check_debts_days",
+              "check_days_without_pay",
+              "prepayment_percent",
+              "allowable_debts_amount",
+              "allowable_debts_days",
+              "note"
+            ]
+          }
+        }
+      }
+    },
+    "currencies": {
+      "form": {
+        "selection": {
+          "fields": [
+            "ref",
+            "_deleted",
+            "id",
+            "name as presentation",
+            "name_full"
+          ],
+          "cols": [
+            {
+              "id": "id",
+              "width": "120",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Код"
+            },
+            {
+              "id": "presentation",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Обозначение"
+            },
+            {
+              "id": "name_full",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Наименование"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              "id",
+              "name",
+              "name_full",
+              "parameters_russian_recipe"
+            ],
+            "Дополнительно": [
+              "main_currency",
+              "extra_charge"
+            ]
+          },
+          "tabular_sections": {},
+          "tabular_sections_order": []
+        }
+      }
+    },
+    "users": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              "id",
+              "name",
+              "individual_person"
+            ],
+            "Дополнительно": [
+              "ancillary",
+              "invalid",
+              {
+                "id": "user_ib_uid",
+                "path": "o.user_ib_uid",
+                "synonym": "Идентификатор пользователя ИБ",
+                "type": "ro"
+              },
+              {
+                "id": "user_fresh_uid",
+                "path": "o.user_fresh_uid",
+                "synonym": "Идентификатор пользователя сервиса",
+                "type": "ro"
+              },
+              "note"
+            ]
+          },
+          "tabular_sections": {
+            "contact_information": {
+              "fields": [
+                "kind",
+                "presentation"
+              ],
+              "headers": "Вид,Представление",
+              "widths": "200,*",
+              "min_widths": "100,200",
+              "aligns": "",
+              "sortings": "na,na",
+              "types": "ref,txt"
+            }
+          },
+          "tabular_sections_order": [
+            "contact_information"
+          ]
+        }
+      }
+    },
+    "individuals": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "id",
+                "path": "o.id",
+                "synonym": "Код",
+                "type": "ro"
+              },
+              "name",
+              "sex",
+              "birth_date",
+              {
+                "id": "parent",
+                "path": "o.parent",
+                "synonym": "Группа",
+                "type": "ref"
+              }
+            ],
+            "Коды": [
+              "inn",
+              "imns_code",
+              "pfr_number"
+            ],
+            "Для печатных форм": [
+              "Фамилия",
+              "Имя",
+              "Отчество",
+              "ФамилияРП",
+              "ИмяРП",
+              "ОтчествоРП",
+              "Должность",
+              "ДолжностьРП",
+              "ОснованиеРП"
+            ]
+          },
+          "tabular_sections": {
+            "contact_information": {
+              "fields": [
+                "kind",
+                "presentation"
+              ],
+              "headers": "Вид,Представление",
+              "widths": "200,*",
+              "min_widths": "100,200",
+              "aligns": "",
+              "sortings": "na,na",
+              "types": "ref,txt"
+            }
+          },
+          "tabular_sections_order": [
+            "contact_information"
+          ]
+        }
+      }
+    },
+    "organizations": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "id",
+                "path": "o.id",
+                "synonym": "Код",
+                "type": "ro"
+              },
+              {
+                "id": "prefix",
+                "path": "o.prefix",
+                "synonym": "Префикс",
+                "type": "ro"
+              },
+              "name",
+              "individual_legal",
+              "individual_entrepreneur",
+              "main_bank_account",
+              "main_cashbox"
+            ],
+            "Коды": [
+              "inn",
+              "kpp",
+              "certificate_series_number",
+              "certificate_date_issue",
+              "certificate_authority_name",
+              "certificate_authority_code"
+            ]
+          },
+          "tabular_sections": {
+            "contact_information": {
+              "fields": [
+                "kind",
+                "presentation"
+              ],
+              "headers": "Вид,Представление",
+              "widths": "200,*",
+              "min_widths": "100,200",
+              "aligns": "",
+              "sortings": "na,na",
+              "types": "ref,txt"
+            }
+          },
+          "tabular_sections_order": [
+            "contact_information"
+          ]
+        }
+      }
+    },
+    "organization_bank_accounts": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              "name",
+              "owner",
+              "account_number",
+              "funds_currency",
+              "bank_bic",
+              "bank",
+              "settlements_bank_bic",
+              "settlements_bank"
+            ]
+          }
+        }
+      }
+    },
+    "partner_bank_accounts": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              "name",
+              "owner",
+              "account_number",
+              "funds_currency",
+              "bank_bic",
+              "bank",
+              "settlements_bank_bic",
+              "settlements_bank"
+            ]
+          }
+        }
+      }
+    },
+    "cashboxes": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "id",
+                "path": "o.id",
+                "synonym": "Код",
+                "type": "ro"
+              },
+              "name",
+              "owner",
+              "funds_currency"
+            ]
+          }
+        }
+      }
+    },
+    "partners": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "id",
+                "path": "o.id",
+                "synonym": "Код",
+                "type": "ro"
+              },
+              "parent",
+              "name",
+              "name_full",
+              "is_buyer",
+              "is_supplier",
+              "individual_legal",
+              "inn",
+              "kpp",
+              "okpo",
+              "main_bank_account",
+              "main_contract",
+              "primary_contact",
+              "buyer_main_manager"
+            ],
+            "Дополнительные реквизиты": []
+          },
+          "tabular_sections": {
+            "contact_information": {
+              "fields": [
+                "kind",
+                "presentation"
+              ],
+              "headers": "Вид,Представление",
+              "widths": "200,*",
+              "min_widths": "100,200",
+              "aligns": "",
+              "sortings": "na,na",
+              "types": "ref,txt"
+            }
+          },
+          "tabular_sections_order": [
+            "contact_information"
+          ]
+        }
+      }
+    }
+  },
+  "doc": {
+    "calc_order": {
+      "form": {
+        "selection": {
+          "fields": [
+            "posted",
+            "date",
+            "number_doc",
+            "number_internal",
+            "partner",
+            "client_of_dealer",
+            "doc_amount",
+            "obj_delivery_state",
+            "sys_profile",
+            "note"
+          ],
+          "cols": [
+            {
+              "id": "date",
+              "width": "160",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Дата"
+            },
+            {
+              "id": "number_doc",
+              "width": "120",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "№"
+            },
+            {
+              "id": "number_internal",
+              "width": "100",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "№ внутр"
+            },
+            {
+              "id": "partner",
+              "width": "170",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Контрагент"
+            },
+            {
+              "id": "client_of_dealer",
+              "width": "170",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Клиент"
+            },
+            {
+              "id": "doc_amount",
+              "width": "120",
+              "type": "ron",
+              "align": "right",
+              "sort": "na",
+              "caption": "Сумма"
+            },
+            {
+              "id": "obj_delivery_state",
+              "width": "120",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Статус"
+            },
+            {
+              "id": "note",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Комментарий"
+            },
+            {
+              "id": "sys_profile",
+              "width": "120",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Профиль"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              "name",
+              "owner",
+              "calc_order",
+              "product",
+              "leading_product",
+              "leading_elm"
+            ]
+          },
+          "tabular_sections": {
+            "production": {
+              "fields": [
+                "row",
+                "nom",
+                "characteristic",
+                "note",
+                "qty",
+                "len",
+                "width",
+                "s",
+                "quantity",
+                "unit",
+                "discount_percent",
+                "price",
+                "amount",
+                "discount_percent_internal",
+                "price_internal",
+                "amount_internal"
+              ],
+              "aligns": "center,left,left,left,right,right,right,right,right,left,right,right,right,right,right,right",
+              "sortings": "na,na,na,na,na,na,na,na,na,na,na,na,na,na,na,na",
+              "types": ""
+            },
+            "planning": {
+              "fields": [
+                "obj",
+                "elm",
+                "specimen",
+                "key",
+                "date",
+                "performance"
+              ],
+              "aligns": "left,right,right,left,left,right",
+              "sortings": "na,na,na,na,na,na",
+              "headers": "Продукция,Элемент,Экземпляр,Ключ,Дата,Мощность",
+              "widths": "*,70,70,*,120,90",
+              "min_widths": "180,60,60,180,110,80",
+              "types": "ref,calck,calck,ref,dhxCalendar,calck"
+            }
+          },
+          "tabular_sections_order": [
+            "production",
+            "planning"
+          ]
+        }
+      }
+    },
+    "nom_prices_setup": {
+      "form": {
+        "selection": {
+          "fields": [
+            "posted",
+            "date",
+            "number_doc",
+            "price_type",
+            "currency",
+            "note"
+          ],
+          "cols": [
+            {
+              "id": "date",
+              "width": "160",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Дата"
+            },
+            {
+              "id": "number_doc",
+              "width": "120",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "№"
+            },
+            {
+              "id": "price_type",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Тип цен"
+            },
+            {
+              "id": "currency",
+              "width": "120",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Валюта"
+            },
+            {
+              "id": "note",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Комментарий"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "number_doc",
+                "path": "o.number_doc",
+                "type": "ro",
+                "synonym": "Номер"
+              },
+              "date",
+              "responsible",
+              "note",
+              "price_type",
+              "currency"
+            ]
+          },
+          "tabular_sections": {
+            "goods": {
+              "fields": [
+                "row",
+                "nom",
+                "nom_characteristic",
+                "price_type",
+                "price"
+              ],
+              "headers": "№,Номенклатура,Характеристика,Тип цен,Цена",
+              "aligns": "center,left,left,left,right",
+              "sortings": "na,na,na,na,na",
+              "types": "cntr,ref,ref,ref,calck",
+              "widths": "50,*,*,80,90",
+              "min_widths": "40,200,140,0,80"
+            }
+          }
+        }
+      }
+    },
+    "debit_cash_order": {
+      "form": {
+        "selection": {
+          "fields": [
+            "posted",
+            "date",
+            "number_doc",
+            "organization",
+            "partner",
+            "doc_amount",
+            "note"
+          ],
+          "cols": [
+            {
+              "id": "date",
+              "width": "160",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Дата"
+            },
+            {
+              "id": "number_doc",
+              "width": "120",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "№"
+            },
+            {
+              "id": "organization",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Организация"
+            },
+            {
+              "id": "partner",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Контрагент"
+            },
+            {
+              "id": "doc_amount",
+              "width": "160",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Сумма"
+            },
+            {
+              "id": "note",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Комментарий"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "number_doc",
+                "path": "o.number_doc",
+                "type": "ro",
+                "synonym": "Номер"
+              },
+              "date",
+              "organization",
+              "partner",
+              "department",
+              "cashbox",
+              "responsible",
+              "note",
+              {
+                "id": "doc_amount",
+                "path": "o.doc_amount",
+                "type": "ro",
+                "synonym": "Сумма документа"
+              }
+            ]
+          },
+          "tabular_sections": {
+            "payment_details": {
+              "fields": [
+                "row",
+                "cash_flow_article",
+                "trans",
+                "amount"
+              ],
+              "headers": "№,Статья,Заказ,Сумма",
+              "aligns": "center,left,left,right",
+              "sortings": "na,na,na,na",
+              "types": "cntr,ref,ref,calck",
+              "widths": "50,*,*,120",
+              "min_widths": "40,140,140,80"
+            }
+          }
+        }
+      }
+    },
+    "credit_card_order": {
+      "form": {
+        "selection": {
+          "fields": [
+            "posted",
+            "date",
+            "number_doc",
+            "organization",
+            "partner",
+            "doc_amount",
+            "note"
+          ],
+          "cols": [
+            {
+              "id": "date",
+              "width": "160",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Дата"
+            },
+            {
+              "id": "number_doc",
+              "width": "120",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "№"
+            },
+            {
+              "id": "organization",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Организация"
+            },
+            {
+              "id": "partner",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Контрагент"
+            },
+            {
+              "id": "doc_amount",
+              "width": "160",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Сумма"
+            },
+            {
+              "id": "note",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Комментарий"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "number_doc",
+                "path": "o.number_doc",
+                "type": "ro",
+                "synonym": "Номер"
+              },
+              "date",
+              "organization",
+              "partner",
+              "department",
+              "responsible",
+              "note",
+              {
+                "id": "doc_amount",
+                "path": "o.doc_amount",
+                "type": "ro",
+                "synonym": "Сумма документа"
+              }
+            ]
+          },
+          "tabular_sections": {
+            "payment_details": {
+              "fields": [
+                "row",
+                "cash_flow_article",
+                "trans",
+                "amount"
+              ],
+              "headers": "№,Статья,Заказ,Сумма",
+              "aligns": "center,left,left,right",
+              "sortings": "na,na,na,na",
+              "types": "cntr,ref,ref,calck",
+              "widths": "50,*,*,120",
+              "min_widths": "40,140,140,80"
+            }
+          }
+        }
+      }
+    },
+    "debit_bank_order": {
+      "form": {
+        "selection": {
+          "fields": [
+            "posted",
+            "date",
+            "number_doc",
+            "organization",
+            "partner",
+            "doc_amount",
+            "note"
+          ],
+          "cols": [
+            {
+              "id": "date",
+              "width": "160",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Дата"
+            },
+            {
+              "id": "number_doc",
+              "width": "120",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "№"
+            },
+            {
+              "id": "organization",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Организация"
+            },
+            {
+              "id": "partner",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Контрагент"
+            },
+            {
+              "id": "doc_amount",
+              "width": "160",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Сумма"
+            },
+            {
+              "id": "note",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Комментарий"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "number_doc",
+                "path": "o.number_doc",
+                "type": "ro",
+                "synonym": "Номер"
+              },
+              "date",
+              "organization",
+              "partner",
+              "department",
+              "responsible",
+              "note",
+              {
+                "id": "doc_amount",
+                "path": "o.doc_amount",
+                "type": "ro",
+                "synonym": "Сумма документа"
+              }
+            ]
+          },
+          "tabular_sections": {
+            "payment_details": {
+              "fields": [
+                "row",
+                "cash_flow_article",
+                "trans",
+                "amount"
+              ],
+              "headers": "№,Статья,Заказ,Сумма",
+              "aligns": "center,left,left,right",
+              "sortings": "na,na,na,na",
+              "types": "cntr,ref,ref,calck",
+              "widths": "50,*,*,120",
+              "min_widths": "40,140,140,80"
+            }
+          }
+        }
+      }
+    },
+    "selling": {
+      "form": {
+        "selection": {
+          "fields": [
+            "posted",
+            "date",
+            "number_doc",
+            "organization",
+            "partner",
+            "doc_amount",
+            "note"
+          ],
+          "cols": [
+            {
+              "id": "date",
+              "width": "160",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Дата"
+            },
+            {
+              "id": "number_doc",
+              "width": "120",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "№"
+            },
+            {
+              "id": "organization",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Организация"
+            },
+            {
+              "id": "partner",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Контрагент"
+            },
+            {
+              "id": "doc_amount",
+              "width": "160",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Сумма"
+            },
+            {
+              "id": "note",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Комментарий"
+            }
+          ]
+        },
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "number_doc",
+                "path": "o.number_doc",
+                "type": "ro",
+                "synonym": "Номер"
+              },
+              "date",
+              "organization",
+              "partner",
+              "department",
+              "warehouse",
+              "responsible",
+              "note",
+              {
+                "id": "doc_amount",
+                "path": "o.doc_amount",
+                "type": "ro",
+                "synonym": "Сумма документа"
+              }
+            ]
+          },
+          "tabular_sections": {
+            "goods": {
+              "fields": [
+                "row",
+                "nom",
+                "quantity",
+                "unit",
+                "price",
+                "discount_percent",
+                "vat_rate",
+                "amount",
+                "vat_amount",
+                "trans"
+              ],
+              "headers": "№,Номенклатура,Количество,Ед.,Цена,Скидка,Ставка НДС,Сумма,Сумма НДС,Заказ",
+              "aligns": "center,left,right,left,right,right,left,right,right,left",
+              "sortings": "na,na,na,na,na,na,na,na,na,na",
+              "types": "cntr,ref,calck,ref,calck,calck,ref,calck,ron,ref",
+              "widths": "50,*,100,100,100,100,100,100,100,*",
+              "min_widths": "40,160,80,80,80,80,80,80,80,80,160"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ireg": {
+    "margin_coefficients": {
+      "form": {
+        "selection": {
+          "fields": [
+            "cat_price_groups.name as price_group",
+            "cat_parameters_keys.name as key",
+            "cat_formulas.name as condition_formula"
+          ],
+          "cols": [
+            {
+              "id": "price_group",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Ценовая группа"
+            },
+            {
+              "id": "key",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Ключ параметров"
+            },
+            {
+              "id": "condition_formula",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Формула условия"
+            }
+          ]
+        }
+      }
+    },
+    "currency_courses": {
+      "form": {
+        "selection": {
+          "fields": [
+            "cat_currencies.name as currency",
+            "period",
+            "course"
+          ],
+          "cols": [
+            {
+              "id": "currency",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Валюта"
+            },
+            {
+              "id": "period",
+              "width": "*",
+              "type": "ro",
+              "align": "left",
+              "sort": "server",
+              "caption": "Дата курса"
+            },
+            {
+              "id": "course",
+              "width": "*",
+              "type": "ron",
+              "align": "right",
+              "sort": "server",
+              "caption": "Курс"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "areg": {},
+  "dp": {
+    "buyers_order": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              "calc_order"
+            ]
+          },
+          "tabular_sections": {
+            "production": {
+              "fields": [
+                "row",
+                "inset",
+                "clr",
+                "len",
+                "height",
+                "depth",
+                "s",
+                "quantity",
+                "note"
+              ],
+              "headers": "№,Продукция,Цвет,Длина,Высота,Глубина,Площадь,Колич.,Комментарий",
+              "widths": "40,*,120,80,75,75,75,75,*",
+              "min_widths": "30,200,100,70,70,70,70,70,80",
+              "aligns": "center,left,left,right,right,right,right,right,left",
+              "sortings": "na,na,na,na,na,na,na,na,na",
+              "types": "cntr,ref,ref,calck,calck,calck,calck,calck,txt"
+            },
+            "inserts": {
+              "fields": [
+                "inset",
+                "clr"
+              ],
+              "headers": "Вставка,Цвет",
+              "widths": "*,*",
+              "min_widths": "90,90",
+              "aligns": "",
+              "sortings": "na,na",
+              "types": "ref,ref"
+            }
+          }
+        }
+      }
+    },
+    "builder_lay_impost": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              "elm_type",
+              "clr",
+              "split"
+            ],
+            "Деление Y": [
+              "inset_by_y",
+              "elm_by_y",
+              "step_by_y",
+              "align_by_y"
+            ],
+            "Деление X": [
+              "inset_by_x",
+              "elm_by_x",
+              "step_by_x",
+              "align_by_x"
+            ],
+            "Габариты": [
+              "w",
+              "h"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "rep": {
+    "materials_demand": {
+      "tabular_sections": {
+        "production": {
+          "name": "Продукция",
+          "synonym": "Продукция",
+          "tooltip": "",
+          "fields": {
+            "characteristic": {
+              "choice_params": [
+                {
+                  "name": "calc_order",
+                  "path": {
+                    "not": "00000000-0000-0000-0000-000000000000"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "cch": {
+    "predefined_elmnts": {
+      "form": {
+        "obj": {
+          "head": {
+            " ": [
+              {
+                "id": "name",
+                "path": "o.name",
+                "synonym": "Наименование",
+                "type": "ro"
+              },
+              {
+                "id": "synonym",
+                "path": "o.synonym",
+                "synonym": "Синоним",
+                "type": "ro"
+              },
+              "list",
+              "zone",
+              "value"
+            ]
+          },
+          "tabular_sections": {
+            "elmnts": {
+              "fields": [
+                "elm",
+                "value"
+              ],
+              "headers": "Элемент,Значение",
+              "widths": "*,*",
+              "min_widths": "150,150",
+              "aligns": "",
+              "sortings": "na,na",
+              "types": "ref,ref"
+            }
+          }
+        }
+      }
+    }
+  },
+  "cacc": {}
+}
