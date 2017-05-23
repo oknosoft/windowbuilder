@@ -17,4 +17,27 @@
  */
 class Sectional extends BuilderElement {
 
+  constructor(attr) {
+    super(attr);
+
+  }
+
+  /**
+   * ### Формирует путь разреза
+   *
+   * @method redraw
+   * @return {Sectional}
+   * @chainable
+   */
+  redraw() {
+
+    return this;
+  }
+
+  /**
+   * Возвращает тип элемента (Водоотлив)
+   */
+  get elm_type() {
+    return $p.enm.elm_types.Водоотлив;
+  }
 }

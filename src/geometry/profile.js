@@ -377,23 +377,42 @@ class ProfileItem extends BuilderElement {
   }
 
   /**
-   * ### Точка corns(1)
+   * ### Точка проекции высоты ручки на внутреннее ребро профиля
    *
-   * @property bc
-   * @type Point
+   * @param side
+   * @return Point|undefined
    */
-  get bc() {
-    return this.corns(1);
+  hhpoint(side) {
+    const {layer, rays} = this;
+    const {h_ruch, furn} = layer;
+    const {furn_set, handle_side} = furn;
+    if(!h_ruch || !handle_side || furn_set.empty()){
+      return;
+    }
+    // получаем элемент, на котором ручка и длину элемента
+    if(layer.profile_by_furn_side(handle_side) == this){
+      return rays[side].intersect_point(layer.handle_line(this));
+    }
   }
 
   /**
-   * ### Точка corns(2)
+   * ### Точка проекции высоты ручки на внутреннее ребро профиля
    *
-   * @property ec
-   * @type Point
+   * @property hhi
+   * @type Point|undefined
    */
-  get ec() {
-    return this.corns(2);
+  get hhi() {
+    return this.hhpoint('inner');
+  }
+
+  /**
+   * ### Точка проекции высоты ручки на внешнее ребро профиля
+   *
+   * @property hho
+   * @type Point|undefined
+   */
+  get hho() {
+    return this.hhpoint('outer');
   }
 
   /**
@@ -1185,7 +1204,7 @@ class ProfileItem extends BuilderElement {
    *
    * @method postcalc_cnn
    * @param node {String} b, e - начало или конец элемента
-   * @returns CnnPoint
+   * @return CnnPoint
    */
   postcalc_cnn(node) {
     const cnn_point = this.cnn_point(node);
@@ -1490,7 +1509,7 @@ class ProfileItem extends BuilderElement {
    * Вычисляется, как `is_linear()` {{#crossLink "BuilderElement/generatrix:property"}}образующей{{/crossLink}}
    *
    * @method is_linear
-   * @returns Boolean
+   * @return Boolean
    */
   is_linear() {
     return this.generatrix.is_linear();
@@ -1502,7 +1521,7 @@ class ProfileItem extends BuilderElement {
    *
    * @method is_nearest
    * @param p {ProfileItem}
-   * @returns Boolean
+   * @return Boolean
    */
   is_nearest(p) {
     return (this.b.is_nearest(p.b, true) || this.generatrix.getNearestPoint(p.b).is_nearest(p.b)) &&
@@ -1515,7 +1534,7 @@ class ProfileItem extends BuilderElement {
    *
    * @method is_collinear
    * @param p {ProfileItem}
-   * @returns Boolean
+   * @return Boolean
    */
   is_collinear(p) {
     let angl = p.e.subtract(p.b).getDirectedAngle(this.e.subtract(this.b));
@@ -1727,6 +1746,23 @@ class ProfileItem extends BuilderElement {
           res.dist = dist;
           res.point = _corns[i];
           res.point_name = i;
+        }
+      }
+
+      const {hhi} = this;
+      if(hhi){
+        dist = hhi.getDistance(corn);
+        if(dist <= res.dist){
+          res.dist = hhi.getDistance(corn);
+          res.point = hhi;
+          res.point_name = "hhi";
+        }
+        const {hho} = this;
+        dist = hho.getDistance(corn);
+        if(dist <= res.dist){
+          res.dist = hho.getDistance(corn);
+          res.point = hho;
+          res.point_name = "hho";
         }
       }
 

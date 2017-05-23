@@ -167,20 +167,11 @@ $p.cat.furns.__define({
               }
               else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
                 // строим горизонтальную линию от нижней границы контура, находим пересечение и offset
-                const {bounds} = contour;
-                const by_side = contour.profiles_by_side();
-                const hor = (elm == by_side.top || elm == by_side.bottom) ?
-                  new paper.Path({
-                    insert: false,
-                    segments: [[bounds.left + contour.h_ruch, bounds.top - 200], [bounds.left + contour.h_ruch, bounds.bottom + 200]]
-                  }) :
-                  new paper.Path({
-                    insert: false,
-                    segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
-                  });
-
-                coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor)) -
-                  elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
+                const {generatrix} = elm;
+                const hor = contour.handle_line(elm);
+                coordin = generatrix.getOffsetOf(generatrix.intersect_point(hor)) -
+                  generatrix.getOffsetOf(generatrix.getNearestPoint(elm.corns(1))) +
+                  (invert ? dop_row.contraction : -dop_row.contraction);
               }
               else{
 

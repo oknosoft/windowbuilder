@@ -1629,14 +1629,32 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   /**
+   * Возаращает линию, проходящую через ручку
+   *
+   * @param elm {Profile}
+   */
+  handle_line(elm) {
+
+    // строим горизонтальную линию от нижней границы контура, находим пересечение и offset
+    const {bounds, h_ruch} = this;
+    const by_side = this.profiles_by_side();
+    return (elm == by_side.top || elm == by_side.bottom) ?
+      new paper.Path({
+        insert: false,
+        segments: [[bounds.left + h_ruch, bounds.top - 200], [bounds.left + h_ruch, bounds.bottom + 200]]
+      }) :
+      new paper.Path({
+        insert: false,
+        segments: [[bounds.left - 200, bounds.bottom - h_ruch], [bounds.right + 200, bounds.bottom - h_ruch]]
+      });
+
+  }
+
+  /**
    * Уточняет высоту ручки
    * @param cache {Object}
    */
   update_handle_height(cache) {
-
-    if(!cache){
-      cache = this.furn_cache;
-    }
 
     const {furn, _row} = this;
     const {furn_set, handle_side} = furn;
@@ -1644,8 +1662,16 @@ class Contour extends AbstractFilling(paper.Layer) {
       return;
     }
 
+    if(!cache){
+      cache = this.furn_cache;
+    }
+
     // получаем элемент, на котором ручка и длину элемента
     const elm = this.profile_by_furn_side(handle_side, cache);
+    if(!elm){
+      return;
+    }
+
     const {len} = elm._row;
 
     function set_handle_height(row){
@@ -1663,7 +1689,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
 
     // бежим по спецификации набора в поисках строки про ручку
-    furn_set.specification.find_rows({dop: 0}, (row) => {
+    furn.furn_set.specification.find_rows({dop: 0}, (row) => {
 
       // проверяем, проходит ли строка
       if(!row.quantity || !row.check_restrictions(this, cache)){
