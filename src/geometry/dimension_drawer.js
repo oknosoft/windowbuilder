@@ -111,6 +111,9 @@ class DimensionDrawer extends paper.Group {
     if(!parent.parent || forse){
 
       const by_side = parent.profiles_by_side();
+      if(!Object.keys(by_side).length){
+        return this.clear();
+      }
 
       // сначала, строим размерные линии импостов
 

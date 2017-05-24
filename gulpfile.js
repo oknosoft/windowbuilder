@@ -12,8 +12,8 @@ const gulp = require('gulp'),
 	resources = require('./src/utils/resource-concat.js'),
 	prebuild = require('./src/utils/prebuild.js'),
 	umd = require('gulp-umd'),
-  wrap = require("gulp-wrap");
-  //babel = require('gulp-babel'),
+  wrap = require("gulp-wrap"),
+  uglify = require('gulp-uglify');
 
 module.exports = gulp;
 
@@ -47,22 +47,16 @@ gulp.task('build-lib', function(){
 		'./data/merged_wb_tips.js'
 	])
 		.pipe(concat('windowbuilder.js'))
-
-    // .pipe(babel({
-    //   presets: ['es2016', "stage-0"],
-    //   plugins: ['transform-es2015-modules-commonjs'],
-    //   compact: true,
-    //   comments: false
-    // }))
-
     .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
 				return 'Editor';
 			}
 		}))
-
 		.pipe(gulp.dest('./dist'))
+    // .pipe(rename('windowbuilder.min.js'))
+    // .pipe(uglify())
+    // .pipe(gulp.dest('./dist'))
 
 });
 

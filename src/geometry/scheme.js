@@ -646,7 +646,7 @@ class Scheme extends paper.Project {
 
       const {parent, layer} = item;
 
-      if(item instanceof paper.Path && parent instanceof ProfileItem){
+      if(item instanceof paper.Path && parent instanceof GeneratrixElement){
 
         if(profiles.indexOf(parent) != -1){
           return;

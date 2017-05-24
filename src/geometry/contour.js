@@ -120,13 +120,10 @@ class Contour extends AbstractFilling(paper.Layer) {
 
       // профили и доборы
       coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => {
-
         const profile = new Profile({row: row, parent: this});
-
         coordinates.find_rows({cnstr: row.cnstr, parent: {in: [row.elm, -row.elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => {
           new ProfileAddl({row: row,	parent: profile});
         });
-
       });
 
       // заполнения
@@ -134,12 +131,14 @@ class Contour extends AbstractFilling(paper.Layer) {
         new Filling({row: row,	parent: this});
       });
 
+      // разрезы
+      coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Водоотлив}, (row) => {
+        new Sectional({row: row, parent: this});
+      });
+
       // остальные элементы (текст)
       coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, (row) => {
-
-        if(row.elm_type == $p.enm.elm_types.Текст){
-          new FreeText({row: row, parent: this.l_text});
-        }
+        new FreeText({row: row, parent: this.l_text});
       });
     }
 
@@ -1457,6 +1456,10 @@ class Contour extends AbstractFilling(paper.Layer) {
     return this.children.filter((elm) => elm instanceof Profile);
   }
 
+  get sectionals() {
+    return this.children.filter((elm) => elm instanceof Sectional);
+  }
+
   /**
    * Перерисовывает элементы контура
    * @method redraw
@@ -1497,6 +1500,9 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     // рисуем подоконники
     this.draw_sill();
+
+    // перерисовываем все водоотливы контура
+    this.sectionals.forEach((elm) => elm.redraw());
 
     // информируем мир о новых размерах нашего контура
     $p.eve.callEvent("contour_redrawed", [this, this._attr._bounds]);
