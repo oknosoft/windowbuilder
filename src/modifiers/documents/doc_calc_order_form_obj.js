@@ -506,7 +506,7 @@
 			//discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,ordn,changed
 
 			// т.к. табчасть мы будем перерисовывать в любом случае, отключаем обсерверы
-			ox._data._silent = true;
+			ox._silent();
 
 			row.nom = ox.owner;
 			row.note = _dp.note;
