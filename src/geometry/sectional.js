@@ -33,7 +33,10 @@ class Sectional extends GeneratrixElement {
       clear() {},
     };
 
-    _attr._children = [];
+    _attr.children = [];
+
+    _attr.zoom = 5;
+    _attr.radius = 40;
 
     if(attr.generatrix) {
       _attr.generatrix = attr.generatrix;
@@ -75,12 +78,12 @@ class Sectional extends GeneratrixElement {
    * @chainable
    */
   redraw() {
-    const radius = 25;
     const {layer, generatrix, _attr} = this;
+    const {children, zoom, radius} = _attr;
     const {segments, curves} = generatrix;
 
     // чистим углы и длины
-    for(let child of _attr._children){
+    for(let child of children){
       child.remove();
     }
 
@@ -93,9 +96,9 @@ class Sectional extends GeneratrixElement {
     for(let curve of curves){
       const loc = curve.getLocationAtTime(0.5);
       const normal = loc.normal.normalize(radius);
-      _attr._children.push(new paper.PointText({
+      children.push(new paper.PointText({
         point: loc.point.add(normal).add([0, normal.y < 0 ? 0 : normal.y / 2]),
-        content: curve.length.toFixed(0),
+        content: (curve.length / zoom).toFixed(0),
         fillColor: 'black',
         fontSize: radius,
         justification: 'center',
@@ -108,8 +111,13 @@ class Sectional extends GeneratrixElement {
     return this;
   }
 
-  draw_angle(ind, radius) {
+  /**
+   * Рисует дуги и текст в углах
+   * @param ind
+   */
+  draw_angle(ind) {
     const {layer, generatrix, _attr} = this;
+    const {children, zoom, radius} = _attr;
     const {curves} = generatrix;
     const c1 = curves[ind - 1];
     const c2 = curves[ind];
@@ -131,7 +139,7 @@ class Sectional extends GeneratrixElement {
     const from = c1.getLocationAt(c1.length - radius).point;
     const to = c2.getLocationAt(radius).point;
     const end = center.subtract(from.add(to).divide(2)).normalize(radius).negate();
-    _attr._children.push(new paper.Path.Arc({
+    children.push(new paper.Path.Arc({
       from,
       through: center.add(end),
       to,
@@ -141,7 +149,7 @@ class Sectional extends GeneratrixElement {
     }));
 
     // Angle Label
-    _attr._children.push(new paper.PointText({
+    children.push(new paper.PointText({
       point: center.add(end.multiply(angle < 40 ? 3 : 2).add([0, -end.y / 2])),
       content: angle.toFixed(0) + '°',
       fillColor: 'black',
@@ -159,7 +167,7 @@ class Sectional extends GeneratrixElement {
    */
   save_coordinates() {
 
-    const {_attr, _row, generatrix, project} = this;
+    const {_row, generatrix} = this;
 
     if(!generatrix){
       return;
@@ -174,7 +182,7 @@ class Sectional extends GeneratrixElement {
 
 
     // добавляем припуски соединений
-    _row.len = generatrix.length.round(1);
+    _row.len = this.length.round(1);
 
     // устанавливаем тип элемента
     _row.elm_type = this.elm_type;
@@ -188,6 +196,19 @@ class Sectional extends GeneratrixElement {
 
   }
 
+  /**
+   * Длина разреза
+   * @return {number}
+   */
+  get length() {
+    const {generatrix, zoom} = this._attr;
+    return generatrix.length / zoom;
+  }
+
+  /**
+   * Виртуальные лучи для совместимости с профилем
+   * @return {{b: {}, e: {}, clear: (function())}|*|ProfileRays}
+   */
   get rays() {
     return this._attr._rays;
   }
