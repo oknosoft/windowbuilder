@@ -115,7 +115,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
                 return state == 'template' ? {$eq: $p.utils.blank.guid} : {$eq: department.ref};
                 // const depts = [];
                 // $p.cat.divisions.forEach((o) =>{
-                //   if(o.in_hierarchy(department)){
+                //   if(o._hierarchy(department)){
                 //     depts.push(o.ref)
                 //   }
                 // });

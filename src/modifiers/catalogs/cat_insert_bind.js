@@ -16,7 +16,7 @@ $p.cat.insert_bind.__define({
       this.forEach((o) => {
         o.production.forEach((row) => {
           const {nom} = row;
-          if(sys.in_hierarchy(nom) || owner.in_hierarchy(nom)){
+          if(sys._hierarchy(nom) || owner._hierarchy(nom)){
             o.inserts.forEach(({inset, elm_type}) => {
               if(!res.some((irow) => irow.inset == inset &&  irow.elm_type == elm_type)){
                 res.push({inset, elm_type});

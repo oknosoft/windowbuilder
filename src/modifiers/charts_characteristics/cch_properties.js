@@ -201,11 +201,11 @@ $p.CchProperties.prototype.__define({
             break;
 
           case $p.enm.comparison_types.inh:
-            ok = $p.utils.is_data_obj(val) ? val.in_hierarchy(value) : val == value;
+            ok = $p.utils.is_data_obj(val) ? val._hierarchy(value) : val == value;
             break;
 
           case $p.enm.comparison_types.ninh:
-            ok = $p.utils.is_data_obj(val) ? !val.in_hierarchy(value) : val != value;
+            ok = $p.utils.is_data_obj(val) ? !val._hierarchy(value) : val != value;
             break;
         }
       }
@@ -258,11 +258,11 @@ $p.CchProperties.prototype.__define({
               break;
 
             case $p.enm.comparison_types.inh:
-              ok = $p.utils.is_data_obj(value) ? value.in_hierarchy(val) : val == value;
+              ok = $p.utils.is_data_obj(value) ? value._hierarchy(val) : val == value;
               break;
 
             case $p.enm.comparison_types.ninh:
-              ok = $p.utils.is_data_obj(value) ? !value.in_hierarchy(val) : val != value;
+              ok = $p.utils.is_data_obj(value) ? !value._hierarchy(val) : val != value;
               break;
           }
 
