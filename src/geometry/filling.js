@@ -128,21 +128,23 @@ class Filling extends AbstractFilling(BuilderElement) {
    */
   save_coordinates() {
 
-    const {_row, project, profiles, bounds, imposts} = this;
+    const {_row, project, profiles, bounds, imposts, nom} = this;
     const h = project.bounds.height + project.bounds.y;
     const cnns = project.connections.cnns;
     const length = profiles.length;
 
     // строка в таблице заполнений продукции
     project.ox.glasses.add({
-        elm: _row.elm,
-        nom: this.nom,
-        width: bounds.width,
-        height: bounds.height,
-        s: this.s,
-        is_rectangular: this.is_rectangular,
-        thickness: this.thickness
-      });
+      elm: _row.elm,
+      nom: nom,
+      formula: this.formula,
+      width: bounds.width,
+      height: bounds.height,
+      s: this.s,
+      is_rectangular: this.is_rectangular,
+      is_sandwich: nom.elm_type == $p.enm.elm_types.Заполнение,
+      thickness: this.thickness,
+    });
 
     let curr, prev,	next
 
@@ -433,10 +435,6 @@ class Filling extends AbstractFilling(BuilderElement) {
    */
   get is_rectangular() {
     return this.profiles.length === 4 && !this._attr.path.hasHandles();
-  }
-
-  get is_sandwich() {
-    return false;
   }
 
   get generatrix() {
