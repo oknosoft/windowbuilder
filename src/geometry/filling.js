@@ -400,6 +400,15 @@ class Filling extends AbstractFilling(BuilderElement) {
     paths.forEach((p) => p != path && p.remove());
   }
 
+  fill_error() {
+    const {path} = this;
+    path.fillColor = new paper.Color({
+      stops: ["#fee", "#fcc", "#fdd"],
+      origin: path.bounds.bottomLeft,
+      destination: path.bounds.topRight
+    });
+  }
+
   get profiles() {
     return this._attr._profiles || [];
   }

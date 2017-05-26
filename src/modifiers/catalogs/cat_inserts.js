@@ -105,10 +105,10 @@ $p.cat.inserts.__define({
      */
     contour_attrs(contour) {
 
-      var main_rows = [],
-        res = {calc_order: contour.project.ox.calc_order};
+      const main_rows = [];
+      const res = {calc_order: contour.project.ox.calc_order};
 
-      this.specification.find_rows({is_main_elm: true}, function (row) {
+      this.specification.find_rows({is_main_elm: true}, (row) => {
         main_rows.push(row);
         return false;
       });
@@ -117,8 +117,8 @@ $p.cat.inserts.__define({
         var irow = main_rows[0],
           sizes = {},
           sz_keys = {},
-          sz_prms = ['length', 'width', 'thickness'].map(function (name) {
-            var prm = $p.job_prm.properties[name];
+          sz_prms = ['length', 'width', 'thickness'].map((name) => {
+            const prm = $p.job_prm.properties[name];
             sz_keys[prm.ref] = name;
             return prm;
           });
@@ -131,7 +131,7 @@ $p.cat.inserts.__define({
           cnstr: contour.cnstr,
           inset: this,
           param: {in: sz_prms}
-        }, function (row) {
+        }, (row) => {
           sizes[sz_keys[row.param.ref]] = row.value
         });
 
@@ -140,9 +140,8 @@ $p.cat.inserts.__define({
           res.y = sizes.width ? (sizes.width + irow.sz) * (irow.coefficient * 1000 || 1) : 0;
           res.s = ((res.x * res.y) / 1000000).round(3);
           res.z = sizes.thickness * (irow.coefficient * 1000 || 1);
-
-        }else{
-
+        }
+        else{
           if(irow.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !irow.formula.empty()){
             irow.formula.execute({
               ox: contour.project.ox,
@@ -151,12 +150,11 @@ $p.cat.inserts.__define({
               row_ins: irow,
               res: res
             });
-
-          }else{
+          }
+          else{
             res.x = contour.w + irow.sz;
             res.y = contour.h + irow.sz;
             res.s = ((res.x * res.y) / 1000000).round(3)
-
           }
         }
       }
@@ -405,7 +403,7 @@ $p.cat.inserts.__define({
         if(row_spec){
           // выполняем формулу
           if(!row_ins_spec.formula.empty()){
-            row_ins_spec.formula.execute({
+            const qty = row_ins_spec.formula.execute({
               ox: ox,
               elm: elm,
               cnstr: len_angl && len_angl.cnstr || 0,
@@ -414,6 +412,9 @@ $p.cat.inserts.__define({
               row_spec: row_spec,
               len: len_angl ? len_angl.len : _row.len
             });
+            if(row_ins_spec.count_calc_method == ПоФормуле){
+              row_spec.qty = qty;
+            }
           }
           calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
         }

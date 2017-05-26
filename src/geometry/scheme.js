@@ -466,8 +466,9 @@ class Scheme extends paper.Project {
     l_dimensions.visible = false;
     l_connective.visible = false;
 
+    let elm;
     if(attr.elm > 0){
-      const elm = this.getItem({class: BuilderElement, elm: attr.elm});
+      elm = this.getItem({class: BuilderElement, elm: attr.elm});
       elm.draw_fragment && elm.draw_fragment();
     }
     else if(attr.elm < 0){
@@ -483,6 +484,7 @@ class Scheme extends paper.Project {
       })
     }
     this.view.update();
+    return elm;
   }
 
   /**
@@ -1461,6 +1463,13 @@ class Scheme extends paper.Project {
     // бежим по всем контурам, находим примыкания, исключаем их из результата
 
     return res;
+  }
+
+  /**
+   * Возвращает массив заполнений изделия
+   */
+  get glasses() {
+    return this.getItems({class: Filling});
   }
 
 }

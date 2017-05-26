@@ -905,11 +905,12 @@ class Contour extends AbstractFilling(paper.Layer) {
           err = true;
         }
       });
-      elm.path.fillColor = err ? new paper.Color({
-        stops: ["#fee", "#fcc", "#fdd"],
-        origin: elm.path.bounds.bottomLeft,
-        destination: elm.path.bounds.topRight
-      }) : BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+      if(err){
+        elm.fill_error();
+      }
+      else{
+        elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+      }
     });
 
     // ошибки соединений профиля
@@ -944,6 +945,9 @@ class Contour extends AbstractFilling(paper.Layer) {
         });
       }
     });
+
+    // ошибки примыкающих соединений
+    // TODO
   }
 
   /**

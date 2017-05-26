@@ -514,13 +514,6 @@ class ProductsBuilding {
       // во время расчетов возможна подмена объекта спецификации
       const spec_tmp = spec;
 
-      const elm = {
-        _row: {},
-        elm: 0,
-        clr: ox.clr,
-        get perimeter() {return contour.perimeter}
-      };
-
       ox.inserts.find_rows({cnstr: contour.cnstr}, ({inset, clr}) => {
 
         // если во вставке указано создавать продукцию, создаём
@@ -528,11 +521,16 @@ class ProductsBuilding {
           // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
           const cx = ox.find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
           ox._order_rows.push(cx);
-          spec = cx.specification;
-          spec.clear();
+          spec = cx.specification.clear();
         }
 
         // рассчитаем спецификацию вставки
+        const elm = {
+          _row: {},
+          elm: 0,
+          clr: clr,
+          get perimeter() {return contour.perimeter},
+        };
         const len_angl = {
           angle: 0,
           alp1: 0,

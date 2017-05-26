@@ -7,8 +7,8 @@
   "private": true,
   "main": "electron.js",
   "engines": {
-    "node": "^6.9",
-    "npm": "^3.5"
+    "node": "^7.10",
+    "npm": "^4.2"
   },
   "scripts": {
     "clean": "rimraf v2",
