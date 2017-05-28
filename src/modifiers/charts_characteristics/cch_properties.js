@@ -336,6 +336,9 @@ $p.CchProperties.prototype.__define({
     }
   },
 
+  /**
+   * Проверяет и при необходимости перезаполняет или устанваливает умолчание value в prow
+   */
   linked_values: {
     value: function (links, prow) {
       const values = [];
