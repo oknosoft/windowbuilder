@@ -182,7 +182,7 @@ class OrderDealerApp {
       setTimeout(function () {
         $p.iface.frm_auth({
           modal_dialog: true,
-          try_auto: true
+          try_auto: false
         });
       }, 100);
     }
@@ -205,7 +205,7 @@ class OrderDealerApp {
         setTimeout(function () {
           $p.iface.frm_auth({
             modal_dialog: true,
-            try_auto: true
+            try_auto: false
           });
         }, 100);
 

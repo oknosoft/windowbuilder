@@ -129,12 +129,12 @@ $p.CchProperties.prototype.__define({
 
       // значение параметра
       const val = is_calculated ? this.calculated_value({
-          row: row_spec,
-          elm: elm,
-          cnstr: cnstr || 0,
-          ox: ox,
-          calc_order: calc_order
-        }) : this.extract_value(prm_row);
+        row: row_spec,
+        cnstr: cnstr || 0,
+        elm,
+        ox,
+        calc_order
+      }) : this.extract_value(prm_row);
 
       let ok = false;
 
@@ -326,6 +326,7 @@ $p.CchProperties.prototype.__define({
             cnstr: attr.grid.selection.cnstr,
             ox: attr.obj._owner._owner,
             prm_row: row,
+            elm: attr.obj,
           });
           if(!ok){
             return false;
