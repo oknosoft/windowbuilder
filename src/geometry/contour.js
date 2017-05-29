@@ -227,7 +227,7 @@ class Contour extends AbstractFilling(paper.Layer) {
           // и если существует соединение нашего со следующим
           if(curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b)){
 
-            if(curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
+            if(segments.length < 3 || curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
               curr.anext.push(segm);
           }
 
