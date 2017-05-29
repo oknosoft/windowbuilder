@@ -170,6 +170,7 @@ Object.defineProperties($p.cat.furns, {
 
       const res = $p.dp.buyers_order.create().specification;
       const {ox} = contour.project;
+      const {НаПримыкающий} = $p.enm.transfer_operations_options;
 
       // бежим по всем строкам набора
       this.specification.find_rows({dop: 0}, (row_furn) => {
@@ -217,7 +218,6 @@ Object.defineProperties($p.cat.furns, {
                   (invert ? dop_row.contraction : -dop_row.contraction);
               }
               else{
-
                 if(invert){
                   if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
                     coordin = dop_row.contraction;
@@ -238,10 +238,19 @@ Object.defineProperties($p.cat.furns, {
 
               const procedure_row = res.add(dop_row);
               procedure_row.origin = this;
-              procedure_row.handle_height_min = elm.elm;
               procedure_row.handle_height_max = contour.cnstr;
-              procedure_row.coefficient = coordin;
-
+              if(dop_row.transfer_option == НаПримыкающий){
+                const nearest = elm.nearest();
+                const {outer} = elm.rays;
+                const nouter = nearest.rays.outer;
+                const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
+                procedure_row.handle_height_min = nearest.elm;
+                procedure_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
+              }
+              else{
+                procedure_row.handle_height_min = elm.elm;
+                procedure_row.coefficient = coordin;
+              }
               return;
             }
             else if(!dop_row.quantity){
