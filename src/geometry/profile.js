@@ -495,7 +495,7 @@ class ProfileItem extends GeneratrixElement {
         _row.arc_ccw = false;
       }
       _row.r = b.arc_r(b.x, b.y, e.x, e.y, v);
-      this.set_generatrix_radius();
+      this.set_generatrix_radius(v);
       Object.getNotifier(this).notify({
         type: 'update',
         name: 'r'
@@ -958,24 +958,27 @@ class ProfileItem extends GeneratrixElement {
   /**
    * Искривляет образующую в соответствии с радиусом
    */
-  set_generatrix_radius(h) {
+  set_generatrix_radius(height) {
     const {generatrix, _row, layer, project, selected} = this;
     const b = generatrix.firstSegment.point.clone();
     const e = generatrix.lastSegment.point.clone();
     const min_radius = b.getDistance(e) / 2;
 
-    if(!h){
-      h = project.bounds.height + project.bounds.y
-    }
-
     generatrix.removeSegments(1);
     generatrix.firstSegment.handleIn = null;
     generatrix.firstSegment.handleOut = null;
 
-    if(_row.r < min_radius){
-      _row.r = 0;
-    }else if(_row.r == min_radius){
-      _row.r += 0.001;
+    let full;
+    if(_row.r && _row.r <= min_radius){
+      _row.r = min_radius + 0.0001;
+      full = true;
+    }
+    if(height && height > min_radius){
+      height = min_radius;
+      Object.getNotifier(this).notify({
+        type: 'update',
+        name: 'arc_h'
+      });
     }
 
     if(selected){
@@ -986,6 +989,12 @@ class ProfileItem extends GeneratrixElement {
       let p = new paper.Point(b.arc_point(b.x, b.y, e.x, e.y, _row.r, _row.arc_ccw, false));
       if(p.point_pos(b.x, b.y, e.x, e.y) > 0 && !_row.arc_ccw || p.point_pos(b.x, b.y, e.x, e.y) < 0 && _row.arc_ccw){
         p = new paper.Point(b.arc_point(b.x, b.y, e.x, e.y, _row.r, !_row.arc_ccw, false));
+      }
+      if(full || height){
+        const start = b.add(e).divide(2);
+        const vector = p.subtract(start);
+        vector.normalize(height || min_radius);
+        p = start.add(vector);
       }
       generatrix.arcTo(p, e);
     }

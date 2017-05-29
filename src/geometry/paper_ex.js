@@ -404,7 +404,7 @@ Object.defineProperties(paper.Point.prototype, {
         return 0;
       }
 	    const [dx, dy] = [(x1-x2), (y1-y2)];
-      return (h/2 + (dx * dx + dy * dy) / (8 * h)).round(1)
+      return (h/2 + (dx * dx + dy * dy) / (8 * h)).round(3);
     }
   },
 
