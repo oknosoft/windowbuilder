@@ -891,17 +891,23 @@ class Contour extends AbstractFilling(paper.Layer) {
       l_visualization._cnn = new paper.Group({ parent: l_visualization });
     }
 
+    const err_attrs = {
+      strokeColor: 'red',
+      strokeWidth: 2,
+      strokeCap: 'round',
+      strokeScaling: false,
+      dashOffset: 4,
+      dashArray: [4, 4],
+      guide: true,
+      parent: l_visualization._cnn,
+    }
+
     // ошибки соединений с заполнениями
     this.glasses(false, true).forEach((elm) => {
       let err;
       elm.profiles.forEach(({cnn, sub_path}) => {
         if(!cnn){
-          sub_path.parent = l_visualization._cnn;
-          sub_path.strokeWidth = 2;
-          sub_path.strokeScaling = false;
-          sub_path.strokeColor = 'red';
-          sub_path.strokeCap = 'round';
-          sub_path.dashArray = [12, 8];
+          Object.assign(sub_path, err_attrs);
           err = true;
         }
       });
@@ -917,37 +923,29 @@ class Contour extends AbstractFilling(paper.Layer) {
     this.profiles.forEach((elm) => {
       const {b, e} = elm.rays;
       if(!b.cnn){
-        new paper.Path.Circle({
+        Object.assign(new paper.Path.Circle({
           center: elm.corns(4).add(elm.corns(1)).divide(2),
           radius: 80,
-          strokeColor: 'red',
-          strokeWidth: 2,
-          strokeCap: 'round',
-          strokeScaling: false,
-          dashOffset: 4,
-          dashArray: [4, 4],
-          guide: true,
-          parent: l_visualization._cnn
-        });
+        }), err_attrs);
       }
       if(!e.cnn){
-        new paper.Path.Circle({
+        Object.assign(new paper.Path.Circle({
           center: elm.corns(2).add(elm.corns(3)).divide(2),
           radius: 80,
-          strokeColor: 'red',
-          strokeWidth: 2,
-          strokeCap: 'round',
-          strokeScaling: false,
-          dashOffset: 4,
-          dashArray: [4, 4],
-          guide: true,
-          parent: l_visualization._cnn
-        });
+        }), err_attrs);
       }
+      // ошибки примыкающих соединений
+      if(elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())){
+        Object.assign(elm.path.get_subpath(elm.corns(1), elm.corns(2)), err_attrs);
+      }
+      // если у профиля есть доборы, проверим их соединения
+      elm.addls.forEach((elm) => {
+        if(elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())){
+          Object.assign(elm.path.get_subpath(elm.corns(1), elm.corns(2)), err_attrs);
+        }
+      })
     });
 
-    // ошибки примыкающих соединений
-    // TODO
   }
 
   /**
