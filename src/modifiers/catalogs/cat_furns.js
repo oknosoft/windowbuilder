@@ -26,38 +26,41 @@ Object.defineProperties($p.cat.furns, {
 
       const {characteristic, sys} = paper.project._dp;
       const {furn} = $p.job_prm.properties;
-      if(!furn || !sys || sys.empty()){
-        return $p.CatManager.prototype.get_option_list.call(this, val, selection);
-      }
 
-      const links = furn.params_links({
-        grid: {selection: {cnstr: 0}},
-        obj: {_owner: {_owner: characteristic}}
-      });
+      if(furn && sys && !sys.empty()){
 
-      // собираем все доступные значения в одном массиве
-      const list = [];
-      links.forEach((link) => link.values.forEach((row) => list.push(this.get(row._obj.value))));
+        const links = furn.params_links({
+          grid: {selection: {cnstr: 0}},
+          obj: {_owner: {_owner: characteristic}}
+        });
 
-      function check(v){
-        if($p.utils.is_equal(v.value, val))
-          v.selected = true;
-        return v;
-      }
+        if(links.length){
+          // собираем все доступные значения в одном массиве
+          const list = [];
+          links.forEach((link) => link.values.forEach((row) => list.push(this.get(row._obj.value))));
 
-      const l = [];
-      $p._find_rows.call(this, list, selection, (v) => l.push(check({text: v.presentation, value: v.ref})));
+          function check(v){
+            if($p.utils.is_equal(v.value, val))
+              v.selected = true;
+            return v;
+          }
 
-      l.sort(function(a, b) {
-        if (a.text < b.text){
-          return -1;
+          const l = [];
+          $p._find_rows.call(this, list, selection, (v) => l.push(check({text: v.presentation, value: v.ref})));
+
+          l.sort((a, b) => {
+            if (a.text < b.text){
+              return -1;
+            }
+            else if (a.text > b.text){
+              return 1;
+            }
+            return 0;
+          });
+          return Promise.resolve(l);
         }
-        else if (a.text > b.text){
-          return 1;
-        }
-        return 0;
-      })
-      return Promise.resolve(l);
+      }
+      return $p.CatManager.prototype.get_option_list.call(this, val, selection);
     },
     configurable: true
   }
