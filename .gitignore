@@ -24,3 +24,5 @@ src/templates/printing_plates/invoice_signature.png
 src/zarchive/socket_1c/
 v2/
 imgs/
+imgs
+lib
