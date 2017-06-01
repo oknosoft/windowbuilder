@@ -9,6 +9,7 @@ data/mango.js
 data/merged_wb_templates.js
 data/merged_wb_tips.js
 data/sync.json
+data/tsconfig.json
 dist/windowbuilder.css
 dist/windowbuilder.js
 dist/wnd_debug.js
@@ -23,3 +24,4 @@ src/templates/printing_plates/20160408/
 src/templates/printing_plates/invoice_signature.png
 src/zarchive/socket_1c/
 v2/
+

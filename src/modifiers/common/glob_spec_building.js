@@ -110,6 +110,10 @@ class SpecBuilding {
       // рассчитываем стоимость продажи
       $p.pricing.calc_amount(attr);
     }
+
+    if(attr.save && (ox.is_new() || ox._modified)){
+      ox.save().catch($p.record_log);
+    }
   }
 
 }

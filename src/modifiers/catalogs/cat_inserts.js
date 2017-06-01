@@ -79,18 +79,18 @@ $p.cat.inserts.__define({
           _nom = $p.cat.nom.get()
         }
         else{
-          _nom = main_rows[0].nom.nom()
+          _nom = main_rows[0].nom.nom(elm, strict)
         }
       }
       else if(main_rows.length){
-        _nom = main_rows[0].nom
+        _nom = elm && !main_rows[0].formula.empty() ? main_rows[0].formula.execute({elm}) : main_rows[0].nom
       }
       else{
         _nom = $p.cat.nom.get()
       }
 
       if(main_rows.length < 2){
-        this._data.nom = _nom;
+        this._data.nom = typeof _nom == 'string' ? $p.cat.nom.get(_nom) : _nom;
       }
       else{
         // TODO: реализовать фильтр

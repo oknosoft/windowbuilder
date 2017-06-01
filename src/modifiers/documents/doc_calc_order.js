@@ -616,7 +616,7 @@ $p.doc.calc_order.on({
       });
     }
 
-    create_product_row({row_spec, params, create, grid}) {
+    create_product_row({row_spec, elm, len_angl, params, create, grid}) {
 
       const row = this.production.add({
         qty: 1,
@@ -648,7 +648,7 @@ $p.doc.calc_order.on({
         .then((ox) => {
           // если указана строка-генератор, заполняем реквизиты
           if(row_spec instanceof $p.DpBuyers_orderProductionRow){
-            ox.owner = row.nom = row_spec.inset.nom();
+            ox.owner = row.nom = row_spec.inset.nom(elm);
             ox.origin = row_spec.inset;
             ox.x = row.len = row_spec.len;
             ox.y = row.width = row_spec.height;
@@ -685,9 +685,6 @@ $p.doc.calc_order.on({
             return;
           }
 
-          // создаём строку заказа с уникальной харктеристикой
-          const row_prod = await this.create_product_row({row_spec, params: dp.product_params, create: true});
-
           // рассчитываем спецификацию по текущей вставке
           const len_angl = {
             angle: 0,
@@ -707,6 +704,8 @@ $p.doc.calc_order.on({
             get s() {return row_spec.s},
             get perimeter() {return [row_spec.len]}
           };
+          // создаём строку заказа с уникальной харктеристикой
+          const row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
           row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
 
           // сворачиваем
