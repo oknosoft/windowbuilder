@@ -695,14 +695,19 @@ $p.doc.calc_order.on({
             cnstr: 0
           };
           const elm = {
-            get _row() {return this},
             elm: 0,
-            clr: row_spec.clr,
+            angle_hor: 0,
+            get _row() {return this},
+            get clr() {return row_spec.clr},
             get len() {return row_spec.len},
             get height() {return row_spec.height},
             get depth() {return row_spec.depth},
             get s() {return row_spec.s},
-            get perimeter() {return [row_spec.len]}
+            get perimeter() {return [{len: row_spec.len, angle: 0}, {len: row_spec.height, angle: 90}]},
+            get x1() {return 0},
+            get y1() {return 0},
+            get x2() {return row_spec.height},
+            get y2() {return row_spec.len},
           };
           // создаём строку заказа с уникальной харктеристикой
           const row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});

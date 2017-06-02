@@ -186,8 +186,11 @@ $p.CchProperties.prototype.__define({
             if(Array.isArray(val) && !Array.isArray(value)){
               ok = val.indexOf(value) == -1;
             }
-            else if(Array.isArray(value) && !Array.isArray(val)){
+            else if(!Array.isArray(val) && Array.isArray(value)){
               ok = value.indexOf(val) == -1;
+            }
+            else if(!Array.isArray(val) && !Array.isArray(value)){
+              ok = value != val;
             }
             break;
 
@@ -195,8 +198,11 @@ $p.CchProperties.prototype.__define({
             if(Array.isArray(val) && !Array.isArray(value)){
               ok = val.indexOf(value) != -1;
             }
-            else if(Array.isArray(value) && !Array.isArray(val)){
+            else if(!Array.isArray(val) && Array.isArray(value)){
               ok = value.indexOf(val) != -1;
+            }
+            else if(!Array.isArray(val) && !Array.isArray(value)){
+              ok = val == value;
             }
             break;
 
@@ -243,8 +249,11 @@ $p.CchProperties.prototype.__define({
               if(Array.isArray(val) && !Array.isArray(value)){
                 ok = val.indexOf(value) == -1;
               }
-              else if(Array.isArray(value) && !Array.isArray(val)){
+              else if(!Array.isArray(val) && Array.isArray(value)){
                 ok = value.indexOf(val) == -1;
+              }
+              else if(!Array.isArray(val) && !Array.isArray(value)){
+                ok = value != val;
               }
               break;
 
@@ -252,8 +261,11 @@ $p.CchProperties.prototype.__define({
               if(Array.isArray(val) && !Array.isArray(value)){
                 ok = val.indexOf(value) != -1;
               }
-              else if(Array.isArray(value) && !Array.isArray(val)){
+              else if(!Array.isArray(val) && Array.isArray(value)){
                 ok = value.indexOf(val) != -1;
+              }
+              else if(!Array.isArray(val) && !Array.isArray(value)){
+                ok = value == val;
               }
               break;
 
