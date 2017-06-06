@@ -241,10 +241,10 @@ class Pricing {
           return 1;
         }
 
-        if (a.price_group.ref < b.price_group.ref) {
+        if (a.price_group.ref > b.price_group.ref) {
           return -1;
         }
-        if (a.price_group.ref > b.price_group.ref) {
+        if (a.price_group.ref < b.price_group.ref) {
           return 1;
         }
 
@@ -280,7 +280,7 @@ class Pricing {
    */
   calc_first_cost(prm) {
 
-    const marginality_in_spec = $p.job_prm.pricing.marginality_in_spec;
+    const {marginality_in_spec} = $p.job_prm.pricing;
     const fake_row = {};
 
     if(!prm.spec)
@@ -307,7 +307,7 @@ class Pricing {
       // расчет себестомиости по номенклатуре строки расчета
       fake_row.nom = prm.calc_order_row.nom;
       fake_row.characteristic = prm.calc_order_row.characteristic;
-      prm.calc_order_row.first_cost = $p.pricing.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
+      prm.calc_order_row.first_cost = this.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
     }
 
     // себестоимость вытянутых строк спецификации в заказ

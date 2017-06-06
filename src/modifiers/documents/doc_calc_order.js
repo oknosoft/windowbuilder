@@ -162,18 +162,30 @@ $p.doc.calc_order.on({
 		// реквизиты шапки
 		if(attr.field == "organization"){
 			this.new_number_doc();
-			if(this.contract.organization != attr.value)
-				this.contract = $p.cat.contracts.by_partner_and_org(this.partner, attr.value);
-
-		}else if(attr.field == "partner" && this.contract.owner != attr.value){
+			if(this.contract.organization != attr.value){
+        this.contract = $p.cat.contracts.by_partner_and_org(this.partner, attr.value);
+      }
+		}
+		else if(attr.field == "partner" && this.contract.owner != attr.value){
 			this.contract = $p.cat.contracts.by_partner_and_org(attr.value, this.organization);
 
-		// табчасть продукции
-		}else if(attr.tabular_section == "production"){
+		}
+    // табчасть продукции
+		else if(attr.tabular_section == "production"){
 
-			if(attr.field == "nom" || attr.field == "characteristic"){
+			if(attr.field == "nom" || attr.field == "characteristic" || attr.field == "quantity"){
+			  if(attr.row.characteristic.empty() || attr.row.characteristic.calc_order.empty()){
+          const fake_prm = {
+            spec: attr.row.characteristic.specification,
+            calc_order_row: attr.row
+          }
+          $p.pricing.price_type(fake_prm);
+          $p.pricing.calc_first_cost(fake_prm);
+          $p.pricing.calc_amount(fake_prm);
+        }
+			}
 
-			}else if(attr.field == "price" || attr.field == "price_internal" || attr.field == "quantity" ||
+			if(attr.field == "price" || attr.field == "price_internal" || attr.field == "quantity" ||
 				attr.field == "discount_percent" || attr.field == "discount_percent_internal"){
 
 				attr.row[attr.field] = attr.value;
@@ -200,29 +212,31 @@ $p.doc.calc_order.on({
 
 				// ставка и сумма НДС
 				if(this.vat_consider){
-					attr.row.vat_rate = attr.row.nom.vat_rate.empty() ? $p.enm.vat_rates.НДС18 : attr.row.nom.vat_rate;
+          const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
+					attr.row.vat_rate = attr.row.nom.vat_rate.empty() ? НДС18 : attr.row.nom.vat_rate;
 					switch (attr.row.vat_rate){
-						case $p.enm.vat_rates.НДС18:
-						case $p.enm.vat_rates.НДС18_118:
+						case НДС18:
+						case НДС18_118:
 							attr.row.vat_amount = (attr.row.amount * 18 / 118).round(2);
 							break;
-						case $p.enm.vat_rates.НДС10:
-						case $p.enm.vat_rates.НДС10_110:
+						case НДС10:
+						case НДС10_110:
 							attr.row.vat_amount = (attr.row.amount * 10 / 110).round(2);
 							break;
-						case $p.enm.vat_rates.НДС20:
-						case $p.enm.vat_rates.НДС20_120:
+						case НДС20:
+						case НДС20_120:
 							attr.row.vat_amount = (attr.row.amount * 20 / 120).round(2);
 							break;
-						case $p.enm.vat_rates.НДС0:
-						case $p.enm.vat_rates.БезНДС:
+						case НДС0:
+						case БезНДС:
 							attr.row.vat_amount = 0;
 							break;
 					}
 					if(!this.vat_included){
 						attr.row.amount = (attr.row.amount + attr.row.vat_amount).round(2);
 					}
-				}else{
+				}
+				else{
 					attr.row.vat_rate = $p.enm.vat_rates.БезНДС;
 					attr.row.vat_amount = 0;
 				}
