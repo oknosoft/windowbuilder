@@ -83,7 +83,19 @@ $p.cat.inserts.__define({
         }
       }
       else if(main_rows.length){
-        _nom = elm && !main_rows[0].formula.empty() ? main_rows[0].formula.execute({elm}) : main_rows[0].nom
+        if(elm && !main_rows[0].formula.empty()){
+          try{
+            _nom = main_rows[0].formula.execute({elm});
+            if(!_nom){
+              _nom = main_rows[0].nom
+            }
+          }catch(e){
+            _nom = main_rows[0].nom
+          }
+        }
+        else{
+          _nom = main_rows[0].nom
+        }
       }
       else{
         _nom = $p.cat.nom.get()

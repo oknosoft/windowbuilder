@@ -518,6 +518,7 @@ $p.doc.calc_order.on({
       }
       const {characteristic, nom} = row;
       const res = {
+        ref: characteristic.ref,
         НомерСтроки: row.row,
         Количество: row.quantity,
         Ед: row.unit.name || "шт",
@@ -527,6 +528,7 @@ $p.doc.calc_order.on({
         Характеристика: characteristic.name,
         Заполнения: "",
         Фурнитура: "",
+        Параметры: [],
         Цена: row.price,
         ЦенаВнутр: row.price_internal,
         СкидкаПроцент: row.discount_percent,
@@ -536,6 +538,7 @@ $p.doc.calc_order.on({
         СуммаВнутр: row.amount_internal.round(2)
       };
 
+      // формируем описание заполнений
       characteristic.glasses.forEach((row) => {
         const {name} = row.nom;
         if(res.Заполнения.indexOf(name) == -1){
@@ -546,6 +549,7 @@ $p.doc.calc_order.on({
         }
       });
 
+      // наименования фурнитур
       characteristic.constructions.forEach((row) => {
         const {name} = row.furn;
         if(name && res.Фурнитура.indexOf(name) == -1){
@@ -555,6 +559,20 @@ $p.doc.calc_order.on({
           res.Фурнитура += name;
         }
       });
+
+      // параметры, помеченные к включению в описание
+      const params = new Map();
+      characteristic.params.forEach((row) => {
+        if(row.param.include_to_description){
+          params.set(row.param, row.value);
+        }
+      });
+      for (let [param, value] of params) {
+        res.Параметры.push({
+          param: param.presentation,
+          value: value.presentation || value
+        });
+      }
 
       return res;
     }
