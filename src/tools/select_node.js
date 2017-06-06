@@ -331,7 +331,7 @@ class ToolSelectNode extends ToolElement {
             }
             else{
               let do_select = false;
-              if(path.parent instanceof GeneratrixElement){
+              if(path.parent instanceof GeneratrixElement && !(path instanceof ProfileAddl)){
                 for (let j = 0; j < path.segments.length; j++) {
                   segment = path.segments[j];
                   if (segment.selected){
@@ -379,22 +379,28 @@ class ToolSelectNode extends ToolElement {
               return true;
             }
             else if(path.parent instanceof GeneratrixElement){
-              for (let j = 0; j < path.segments.length; j++) {
-                segment = path.segments[j];
-                do_select = do_select || segment.selected;
-                if (segment.selected && segment != path.firstSegment && segment != path.lastSegment ){
-                  path.removeSegment(j);
-
-                  // пересчитываем
-                  path.parent.x1 = path.parent.x1;
-                  break;
-                }
-              }
-              // если не было обработки узлов - удаляем элемент
-              if(!do_select){
-                path = path.parent;
+              if(path instanceof ProfileAddl){
                 path.removeChildren();
                 path.remove();
+              }
+              else{
+                for (let j = 0; j < path.segments.length; j++) {
+                  segment = path.segments[j];
+                  do_select = do_select || segment.selected;
+                  if (segment.selected && segment != path.firstSegment && segment != path.lastSegment ){
+                    path.removeSegment(j);
+
+                    // пересчитываем
+                    path.parent.x1 = path.parent.x1;
+                    break;
+                  }
+                }
+                // если не было обработки узлов - удаляем элемент
+                if(!do_select){
+                  path = path.parent;
+                  path.removeChildren();
+                  path.remove();
+                }
               }
             }
           });
