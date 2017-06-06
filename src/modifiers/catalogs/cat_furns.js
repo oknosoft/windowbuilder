@@ -198,7 +198,7 @@ Object.defineProperties($p.cat.furns, {
                 elm = contour.profile_by_furn_side(dop_row.side, cache),
                 len = elm._row.len,
                 sizefurn = elm.nom.sizefurn,
-                dx0 = (len - elm.data._len) / 2,
+                dx0 = (len - elm._attr._len) / 2,
                 dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
                 faltz = len - 2 * sizefurn;
 
@@ -253,6 +253,10 @@ Object.defineProperties($p.cat.furns, {
               else{
                 procedure_row.handle_height_min = elm.elm;
                 procedure_row.coefficient = coordin;
+              }
+              // если сказано учесть припуск - добавляем dx0
+              if(dop_row.overmeasure){
+                procedure_row.coefficient += dx0;
               }
               return;
             }

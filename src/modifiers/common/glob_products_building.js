@@ -724,6 +724,9 @@ class ProductsBuilding {
     if(!row_spec.nom.visualization.empty()){
       row_spec.dop = -1;
     }
+    else if(row_spec.nom.is_procedure){
+      row_spec.dop = -2;
+    }
     row_spec.characteristic = row_base.nom_characteristic;
     if(!row_spec.characteristic.empty() && row_spec.characteristic.owner != row_spec.nom){
       row_spec.characteristic = $p.utils.blank.guid;
@@ -782,7 +785,11 @@ class ProductsBuilding {
   static calc_count_area_mass(row_spec, spec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2){
 
     if(!row_spec.qty){
-      return spec.del(row_spec.row-1, true);
+      // dop=-1 - визуализация, dop=-2 - техоперация,
+      if(row_spec.dop >= 0){
+        spec.del(row_spec.row-1, true);
+      }
+      return;
     }
 
     //TODO: учесть angle_calc_method
@@ -845,6 +852,6 @@ class ProductsBuilding {
 
 }
 
-
+$p.ProductsBuilding = ProductsBuilding;
 $p.products_building = new ProductsBuilding(true);
 
