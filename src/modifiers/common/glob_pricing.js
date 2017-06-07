@@ -174,7 +174,8 @@ class Pricing {
       external_formula: empty_formula
     };
 
-    const {nom, characteristic} = prm.calc_order_row;
+    const {calc_order_row} = prm;
+    const {nom, characteristic} = calc_order_row;
     const filter = nom.price_group.empty() ?
         {price_group: nom.price_group} :
         {price_group: {in: [nom.price_group, $p.cat.price_groups.get()]}};
@@ -187,34 +188,23 @@ class Pricing {
       if(!row.key.empty()){
         row.key.params.forEach((row_prm) => {
 
+          const {property} = row_prm;
           // для вычисляемых параметров выполняем формулу
-          if(row_prm.property.is_calculated){
-
+          if(property.is_calculated){
+            ok = property.check_compare(property.calculated_value({calc_order_row}), property.extract_value(row_prm), row_prm.comparison_type);
           }
           // обычные параметры ищем в параметрах изделия
           else{
             let finded;
             characteristic.params.find_rows({
               cnstr: 0,
-              param: row_prm.property
+              param: property
             }, (row_x) => {
               finded = row_x;
               return false;
             });
-
             if(finded){
-              if(row_prm.comparison_type == $p.enm.comparison_types.in){
-                ok = row_prm.txt_row.match(finded.value.ref);
-              }
-              else if(row_prm.comparison_type == $p.enm.comparison_types.nin){
-                ok = !row_prm.txt_row.match(finded.value.ref);
-              }
-              else if(row_prm.comparison_type.empty() || row_prm.comparison_type == $p.enm.comparison_types.eq){
-                ok = row_prm.value == finded.value;
-              }
-              else if(row_prm.comparison_type.empty() || row_prm.comparison_type == $p.enm.comparison_types.ne){
-                ok = row_prm.value != finded.value;
-              }
+              ok = property.check_compare(finded.value, property.extract_value(row_prm), row_prm.comparison_type);
             }
             else{
               ok = false;
@@ -234,10 +224,10 @@ class Pricing {
     if(ares.length){
       ares.sort((a, b) => {
 
-        if (a.key.priority > b.key.priority) {
+        if ((!a.key.empty() && b.key.empty()) || (a.key.priority > b.key.priority)) {
           return -1;
         }
-        if (a.key.priority < b.key.priority) {
+        if ((a.key.empty() && !b.key.empty()) || (a.key.priority < b.key.priority)) {
           return 1;
         }
 
