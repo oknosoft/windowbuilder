@@ -37,6 +37,10 @@
 
     get t() {
       return this.cache.t || ( this.cache.t = [_mgr.ТОбразное] );
+    },
+
+    get lay() {
+      return this.cache.lay || ( this.cache.lay = [_mgr.ТОбразное, _mgr.КрестВСтык] );
     }
 
 	};

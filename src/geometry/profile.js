@@ -334,7 +334,6 @@ class ProfileItem extends GeneratrixElement {
     return this.d1 - this.width
   }
 
-
   /**
    * ### Точка проекции высоты ручки на внутреннее ребро профиля
    *
@@ -1213,11 +1212,14 @@ class ProfileItem extends GeneratrixElement {
       };
     }
 
-    if(cnn_point.is_t){
+    const {cnn_type} = cnn_point.cnn;
+    // импосты и раскладку рисуем одинаково
+    if(cnn_point.is_t || cnn_type == $p.enm.cnn_types.tcn.xx){
+
+      // при необходимости, перерисовываем ведущий элемент
+      !$p.enm.cnn_types.tcn.xx && !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
 
       // для Т-соединений сначала определяем, изнутри или снаружи находится наш профиль
-      !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
-
       if(profile_point == "b"){
         // в зависимости от стороны соединения
         if(cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи){
@@ -1241,8 +1243,8 @@ class ProfileItem extends GeneratrixElement {
         }
       }
     }
-    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.i){
-      // соединение с пустотой
+    // соединение с пустотой
+    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == $p.enm.cnn_types.tcn.i){
       if(profile_point == "b"){
         normal = this.generatrix.firstCurve.getNormalAt(0, true);
         _corns[1] = this.b.add(normal.normalize(this.d1));
@@ -1254,8 +1256,8 @@ class ProfileItem extends GeneratrixElement {
         _corns[3] = this.e.add(normal.normalize(this.d2));
       }
     }
-    else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
-      // угловое диагональное
+    // угловое диагональное
+    else if(cnn_type == $p.enm.cnn_types.tcn.ad){
       if(profile_point == "b"){
         intersect_point(prays.outer, rays.outer, 1);
         intersect_point(prays.inner, rays.inner, 4);
@@ -1265,8 +1267,9 @@ class ProfileItem extends GeneratrixElement {
         intersect_point(prays.inner, rays.inner, 3);
       }
 
-    }else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.av){
-      // угловое к вертикальной
+    }
+    // угловое к вертикальной
+    else if(cnn_type == $p.enm.cnn_types.tcn.av){
       if(this.orientation == $p.enm.orientations.vert){
         if(profile_point == "b"){
           intersect_point(prays.outer, rays.outer, 1);
@@ -1289,8 +1292,8 @@ class ProfileItem extends GeneratrixElement {
         cnn_point.err = "orientation";
       }
     }
-    else if(cnn_point.cnn.cnn_type == $p.enm.cnn_types.tcn.ah){
-      // угловое к горизонтальной
+    // угловое к горизонтальной
+    else if(cnn_type == $p.enm.cnn_types.tcn.ah){
       if(this.orientation == $p.enm.orientations.vert){
         if(profile_point == "b"){
           intersect_point(prays.inner, rays.outer, 1);
@@ -1605,6 +1608,32 @@ class ProfileItem extends GeneratrixElement {
     return this.project.check_distance(element, this, res, point, check_only);
   }
 
+  max_right_angle(ares) {
+    const {generatrix} = this;
+    let has_a = true;
+    ares.forEach((res) => {
+      res._angle = generatrix.angle_to(res.profile.generatrix, res.point);
+    });
+    ares.sort((a, b) => {
+      let aa = a._angle - 90;
+      let ab = b._angle - 90;
+      if(aa < 0){
+        aa += 180;
+      }
+      if(ab < 0){
+        ab += 180;
+      }
+      if(aa > 180){
+        aa -= 180;
+      }
+      if(ab > 180){
+        ab -= 180;
+      }
+      return aa - ab;
+    });
+    return has_a;
+  }
+
 }
 
 
@@ -1912,8 +1941,8 @@ class Profile extends ProfileItem {
     // TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
     res.clear();
     if(this.parent){
-      const profiles = this.parent.profiles;
-      const allow_open_cnn = this.project._dp.sys.allow_open_cnn;
+      const {profiles} = this.parent;
+      const {allow_open_cnn} = this.project._dp.sys;
       const ares = [];
 
       for(let i=0; i<profiles.length; i++){
@@ -1944,49 +1973,20 @@ class Profile extends ProfileItem {
       else if(ares.length >= 2){
         if(this.max_right_angle(ares)){
           res._mixin(ares[0]);
-          res.is_cut = true;
-
           // если установленное ранее соединение проходит по типу, нового не ищем
           if(cnn && res.cnn_types && res.cnn_types.indexOf(cnn.cnn_type) != -1 ){
             res.cnn = cnn;
           }
-
         }
         // и среди соединений нет углового диагонального, вероятно, мы находимся в разрыве - выбираем соединение с пустотой
         else{
           res.clear();
-          res.is_cut = true;
         }
+        res.is_cut = true;
       }
     }
 
     return res;
-  }
-
-  max_right_angle(ares) {
-    const {generatrix} = this;
-    let has_a = true;
-    ares.forEach((res) => {
-      res._angle = generatrix.angle_to(res.profile.generatrix, res.point);
-    });
-    ares.sort((a, b) => {
-      let aa = a._angle - 90;
-      let ab = b._angle - 90;
-      if(aa < 0){
-        aa += 180;
-      }
-      if(ab < 0){
-        ab += 180;
-      }
-      if(aa > 180){
-        aa -= 180;
-      }
-      if(ab > 180){
-        ab -= 180;
-      }
-      return aa - ab;
-    });
-    return has_a;
   }
 
   /**
