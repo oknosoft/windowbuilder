@@ -208,7 +208,7 @@ class Onlay extends ProfileItem {
       }
 
       // затем, если не привязалось - к сегментам раскладок текущего заполнения
-      res.cnn_types = $p.enm.cnn_types.acn.lay;
+      res.cnn_types = $p.enm.cnn_types.acn.t;
       const ares = [];
       for(let elm of glass.imposts){
         if (elm !== this && elm.project.check_distance(elm, null, res, point, "node_generatrix") === false ){
@@ -238,6 +238,20 @@ class Onlay extends ProfileItem {
     }
 
     return res;
+  }
+
+  move_nodes(from, to) {
+    for(let elm of this.parent.imposts){
+      if(elm == this){
+        continue;
+      }
+      if(elm.b.is_nearest(from)){
+        elm.b = to;
+      }
+      if(elm.e.is_nearest(from)){
+        elm.e = to;
+      }
+    }
   }
 
 }

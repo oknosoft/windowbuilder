@@ -1121,7 +1121,7 @@ class Scheme extends paper.Project {
    * @returns {Boolean|undefined}
    */
   check_distance(element, profile, res, point, check_only) {
-    const _scheme = this;
+    const {allow_open_cnn} = this._dp.sys;
 
     let distance, gp, cnns, addls,
       bind_node = typeof check_only == "string" && check_only.indexOf("node") != -1,
@@ -1131,7 +1131,7 @@ class Scheme extends paper.Project {
     // Проверяет дистанцию в окрестности начала или конца соседнего элемента
     function check_node_distance(node) {
 
-      if((distance = element[node].getDistance(point)) < (_scheme._dp.sys.allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)){
+      if((distance = element[node].getDistance(point)) < (allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)){
 
         if(typeof res.distance == "number" && res.distance < distance)
           return 1;
@@ -1189,20 +1189,9 @@ class Scheme extends paper.Project {
       return;
 
     }
-    else if(node_distance = check_node_distance("b")){
-      // Если мы находимся в окрестности начала соседнего элемента
-      if(node_distance == 2)
-        return false;
-      else
-        return;
-
-    }else if(node_distance = check_node_distance("e")){
-      // Если мы находимся в окрестности конца соседнего элемента
-      if(node_distance == 2)
-        return false;
-      else
-        return;
-
+    // если мы находимся в окрестности начала соседнего элемента
+    else if((node_distance = check_node_distance("b")) || (node_distance = check_node_distance("e"))){
+      return node_distance == 2 ? false : void(0);
     }
 
     // это соединение с пустотой или T

@@ -403,6 +403,9 @@ class ToolSelectNode extends ToolElement {
                 }
               }
             }
+            else if(path instanceof Filling){
+              path.remove_onlays();
+            }
           });
 
           // Prevent the key event from bubbling

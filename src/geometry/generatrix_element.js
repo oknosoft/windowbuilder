@@ -65,9 +65,9 @@ class GeneratrixElement extends BuilderElement {
   }
   set x1(v) {
     const {bounds} = this.project;
-    if(bounds){
+    if(bounds && (v = parseFloat(v) + bounds.x - this.b.x)){
       this.select_node("b");
-      this.move_points(new paper.Point(parseFloat(v) + bounds.x - this.b.x, 0));
+      this.move_points(new paper.Point(v, 0));
     }
   }
 
@@ -83,10 +83,9 @@ class GeneratrixElement extends BuilderElement {
   }
   set y1(v) {
     const {bounds} = this.project;
-    if(bounds){
-      v = bounds.height + bounds.y - parseFloat(v);
+    if(bounds && (v = bounds.height + bounds.y - parseFloat(v) - this.b.y)){
       this.select_node("b");
-      this.move_points(new paper.Point(0, v - this.b.y));
+      this.move_points(new paper.Point(0, v));
     }
   }
 
@@ -102,9 +101,9 @@ class GeneratrixElement extends BuilderElement {
   }
   set x2(v) {
     const {bounds} = this.project;
-    if(bounds){
+    if(bounds && (v = parseFloat(v) + bounds.x - this.e.x)){
       this.select_node("e");
-      this.move_points(new paper.Point(parseFloat(v) + bounds.x - this.e.x, 0));
+      this.move_points(new paper.Point(v, 0));
     }
   }
 
@@ -120,10 +119,9 @@ class GeneratrixElement extends BuilderElement {
   }
   set y2(v) {
     const {bounds} = this.project;
-    if(bounds){
-      v = bounds.height + bounds.y - parseFloat(v);
+    if(bounds && (v = bounds.height + bounds.y - parseFloat(v) - this.e.y)){
       this.select_node("e");
-      this.move_points(new paper.Point(0, v - this.e.y));
+      this.move_points(new paper.Point(0, v));
     }
   }
 
@@ -208,9 +206,14 @@ class GeneratrixElement extends BuilderElement {
           // если соединение угловое диагональное, тянем тянем соседние узлы сразу
           if(cnn_point && !paper.Key.isDown('control')){
             if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
-              other.push(cnn_point.profile_point == "b" ? cnn_point.profile._attr.generatrix.firstSegment : cnn_point.profile._attr.generatrix.lastSegment );
-              cnn_point.profile[cnn_point.profile_point] = free_point;
-              noti.profiles.push(cnn_point.profile);
+              if(this instanceof Onlay){
+                this.move_nodes(noti_points.old, free_point);
+              }
+              else{
+                other.push(cnn_point.profile_point == "b" ? cnn_point.profile._attr.generatrix.firstSegment : cnn_point.profile._attr.generatrix.lastSegment );
+                cnn_point.profile[cnn_point.profile_point] = free_point;
+                noti.profiles.push(cnn_point.profile);
+              }
             }
           }
         }

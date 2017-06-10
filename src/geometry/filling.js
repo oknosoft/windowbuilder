@@ -420,6 +420,12 @@ class Filling extends AbstractFilling(BuilderElement) {
     return this.getItems({class: Onlay});
   }
 
+  remove_onlays() {
+    for(let onlay of this.imposts){
+      onlay.remove();
+    }
+  }
+
   /**
    * Площадь заполнения
    * @return {number}

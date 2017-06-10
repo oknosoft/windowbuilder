@@ -101,7 +101,7 @@ class CnnPoint {
     this.err = null;
     this.distance = Infinity;
     this.cnn_types = $p.enm.cnn_types.acn.i;
-    if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.tcn.i){
+    if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.i){
       this.cnn = null;
     }
   }
@@ -335,7 +335,7 @@ class ProfileItem extends GeneratrixElement {
   }
 
   /**
-   * ### Точка проекции высоты ручки на внутреннее ребро профиля
+   * ### Точка проекции высоты ручки на ребро профиля
    *
    * @param side
    * @return Point|undefined
@@ -1212,12 +1212,12 @@ class ProfileItem extends GeneratrixElement {
       };
     }
 
-    const {cnn_type} = cnn_point.cnn;
+    const {cnn_type} = cnn_point.cnn || {};
     // импосты и раскладку рисуем одинаково
-    if(cnn_point.is_t || cnn_type == $p.enm.cnn_types.tcn.xx){
+    if(cnn_point.is_t || cnn_type == $p.enm.cnn_types.xx){
 
       // при необходимости, перерисовываем ведущий элемент
-      !$p.enm.cnn_types.tcn.xx && !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
+      !$p.enm.cnn_types.xx && !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
 
       // для Т-соединений сначала определяем, изнутри или снаружи находится наш профиль
       if(profile_point == "b"){
@@ -1244,7 +1244,7 @@ class ProfileItem extends GeneratrixElement {
       }
     }
     // соединение с пустотой
-    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == $p.enm.cnn_types.tcn.i){
+    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == $p.enm.cnn_types.i){
       if(profile_point == "b"){
         normal = this.generatrix.firstCurve.getNormalAt(0, true);
         _corns[1] = this.b.add(normal.normalize(this.d1));
@@ -1257,7 +1257,7 @@ class ProfileItem extends GeneratrixElement {
       }
     }
     // угловое диагональное
-    else if(cnn_type == $p.enm.cnn_types.tcn.ad){
+    else if(cnn_type == $p.enm.cnn_types.ad){
       if(profile_point == "b"){
         intersect_point(prays.outer, rays.outer, 1);
         intersect_point(prays.inner, rays.inner, 4);
@@ -1269,7 +1269,7 @@ class ProfileItem extends GeneratrixElement {
 
     }
     // угловое к вертикальной
-    else if(cnn_type == $p.enm.cnn_types.tcn.av){
+    else if(cnn_type == $p.enm.cnn_types.av){
       if(this.orientation == $p.enm.orientations.vert){
         if(profile_point == "b"){
           intersect_point(prays.outer, rays.outer, 1);
@@ -1293,7 +1293,7 @@ class ProfileItem extends GeneratrixElement {
       }
     }
     // угловое к горизонтальной
-    else if(cnn_type == $p.enm.cnn_types.tcn.ah){
+    else if(cnn_type == $p.enm.cnn_types.ah){
       if(this.orientation == $p.enm.orientations.vert){
         if(profile_point == "b"){
           intersect_point(prays.inner, rays.outer, 1);
@@ -1613,22 +1613,13 @@ class ProfileItem extends GeneratrixElement {
     let has_a = true;
     ares.forEach((res) => {
       res._angle = generatrix.angle_to(res.profile.generatrix, res.point);
+      if(res._angle > 180){
+        res._angle = 360 - res._angle;
+      }
     });
     ares.sort((a, b) => {
-      let aa = a._angle - 90;
-      let ab = b._angle - 90;
-      if(aa < 0){
-        aa += 180;
-      }
-      if(ab < 0){
-        ab += 180;
-      }
-      if(aa > 180){
-        aa -= 180;
-      }
-      if(ab > 180){
-        ab -= 180;
-      }
+      const aa = Math.abs(a._angle - 90);
+      const ab = Math.abs(b._angle - 90);
       return aa - ab;
     });
     return has_a;
@@ -1848,7 +1839,7 @@ class Profile extends ProfileItem {
         const pb = curr.cnn_point("b");
         if(pb.profile == this && pb.cnn){
 
-          if(pb.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+          if(pb.cnn.cnn_type == $p.enm.cnn_types.t){
             if(check_only){
               return true;
             }
@@ -1861,7 +1852,7 @@ class Profile extends ProfileItem {
 
         const pe = curr.cnn_point("e");
         if(pe.profile == this && pe.cnn){
-          if(pe.cnn.cnn_type == $p.enm.cnn_types.tcn.t){
+          if(pe.cnn.cnn_type == $p.enm.cnn_types.t){
             if(check_only){
               return true;
             }
@@ -1946,17 +1937,17 @@ class Profile extends ProfileItem {
       const ares = [];
 
       for(let i=0; i<profiles.length; i++){
-        if(this.check_distance(profiles[i], res, point, false) === false){
+        if(this.check_distance(profiles[i], res, point, false) === false || (res.distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l))){
 
           // для простых систем разрывы профиля не анализируем
-          if(!allow_open_cnn){
-            if(res.profile == profile && res.profile_point == profile_point){
-              if(cnn && !cnn.empty() && res.cnn != cnn){
-                res.cnn = cnn;
-              }
-            }
-            return res;
-          }
+          // if(!allow_open_cnn){
+          //   if(res.profile == profile && res.profile_point == profile_point){
+          //     if(cnn && !cnn.empty() && res.cnn != cnn){
+          //       res.cnn = cnn;
+          //     }
+          //   }
+          //   return res;
+          // }
 
           ares.push({
             profile_point: res.profile_point,
@@ -2008,7 +1999,7 @@ class Profile extends ProfileItem {
         // обрабатываем угол
         if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type)!=-1 ){
           if(!this.b.is_nearest(p.e, 0)){
-            if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+            if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.ad){
               if(paper.Key.isDown('control')){
                 console.log('control');
               }else{
@@ -2041,7 +2032,7 @@ class Profile extends ProfileItem {
         // обрабатываем угол
         if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type)!=-1 ){
           if(!this.e.is_nearest(p.b, 0)){
-            if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.tcn.ad){
+            if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.ad){
               if(paper.Key.isDown('control')){
                 console.log('control');
               }else{

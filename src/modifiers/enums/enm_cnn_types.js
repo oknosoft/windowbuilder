@@ -36,12 +36,8 @@
     },
 
     get t() {
-      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное] );
+      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное, _mgr.КрестВСтык] );
     },
-
-    get lay() {
-      return this.cache.lay || ( this.cache.lay = [_mgr.ТОбразное, _mgr.КрестВСтык] );
-    }
 
 	};
 
@@ -50,40 +46,48 @@
 	 * Короткие псевдонимы перечисления "Типы соединений"
 	 * @type Object
 	 */
-	_mgr.tcn = {
-
-    get ad() {
-      return _mgr.УгловоеДиагональное;
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get: function () {
+        return _mgr.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get: function () {
+        return _mgr.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get: function () {
+        return _mgr.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get: function () {
+        return _mgr.ТОбразное;
+      }
+    },
+    ii: {
+      get: function () {
+        return _mgr.Наложение;
+      }
+    },
+    i: {
+      get: function () {
+        return _mgr.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get: function () {
+        return _mgr.КрестПересечение;
+      }
+    },
+    xx: {
+      get: function () {
+        return _mgr.КрестВСтык;
+      }
     },
 
-    get av() {
-      return _mgr.УгловоеКВертикальной;
-    },
-
-    get ah() {
-      return _mgr.УгловоеКГоризонтальной;
-    },
-
-    get t() {
-      return _mgr.ТОбразное;
-    },
-
-    get ii() {
-      return _mgr.Наложение;
-    },
-
-    get i() {
-      return _mgr.НезамкнутыйКонтур;
-    },
-
-    get xt() {
-      return _mgr.КрестПересечение;
-    },
-
-    get xx() {
-      return _mgr.КрестВСтык;
-    }
-
-	};
+  });
 
 })($p.enm.cnn_types);
