@@ -159,7 +159,7 @@ class Onlay extends ProfileItem {
         }
       }
       else{
-        if(this.check_distance(res.profile, res, point, true) === false){
+        if(this.check_distance(res.profile, res, point, true) === false || res.distance < consts.epsilon){
           return res;
         }
       }

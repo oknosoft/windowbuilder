@@ -1213,11 +1213,11 @@ class ProfileItem extends GeneratrixElement {
     }
 
     const {cnn_type} = cnn_point.cnn || {};
-    // импосты и раскладку рисуем одинаково
-    if(cnn_point.is_t || cnn_type == $p.enm.cnn_types.xx){
+    // импосты рисуем с учетом стороны примыкания
+    if(cnn_point.is_t){
 
       // при необходимости, перерисовываем ведущий элемент
-      !$p.enm.cnn_types.xx && !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
+      !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
 
       // для Т-соединений сначала определяем, изнутри или снаружи находится наш профиль
       if(profile_point == "b"){
@@ -1241,6 +1241,25 @@ class ProfileItem extends GeneratrixElement {
           intersect_point(prays.inner, rays.outer, 2);
           intersect_point(prays.inner, rays.inner, 3);
         }
+      }
+    }
+    // для соединения крест в стык, отступаем ширину профиля
+    else if(cnn_type == $p.enm.cnn_types.xx) {
+      const {width} = this;
+      const l = profile_point == "b" ? width : generatrix.length - width;
+      const p = generatrix.getPointAt(l);
+      const n = generatrix.getNormalAt(l).normalize(width);
+      const np = new paper.Path({
+        insert: false,
+        segments: [p.subtract(n), p.add(n)],
+      });
+      if(profile_point == "b"){
+        intersect_point(np, rays.outer, 1);
+        intersect_point(np, rays.inner, 4);
+      }
+      else if(profile_point == "e"){
+        intersect_point(np, rays.outer, 2);
+        intersect_point(np, rays.inner, 3);
       }
     }
     // соединение с пустотой
@@ -1924,7 +1943,7 @@ class Profile extends ProfileItem {
 
     // Если привязка не нарушена, возвращаем предыдущее значение
     if(profile && profile.children.length){
-      if(this.check_distance(profile, res, point, true) === false){
+      if(this.check_distance(profile, res, point, true) === false || res.distance < consts.epsilon){
         return res;
       }
     }

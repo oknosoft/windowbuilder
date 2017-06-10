@@ -1152,7 +1152,7 @@ class Editor extends paper.PaperScope {
         delta = new paper.Point([0, delta]);
       }
 
-      if(delta.length > 0.01){
+      if(delta.length > consts.epsilon){
         impost.move_points(delta, true);
         res.push(delta);
       }
