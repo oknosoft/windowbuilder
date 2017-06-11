@@ -1363,6 +1363,20 @@ class Scheme extends paper.Project {
    */
   hitPoints(point, tolerance, selected_first) {
     let item, hit;
+    let dist = Infinity;
+
+    function check_corns(elm) {
+      const corn = elm.corns(point);
+      if(corn.dist < dist){
+        dist = corn.dist;
+        if(corn.dist < consts.sticking){
+          hit = {
+            item: elm.generatrix,
+            point: corn.point
+          }
+        }
+      }
+    }
 
     // отдаём предпочтение сегментам выделенных путей
     if(selected_first){
@@ -1373,21 +1387,13 @@ class Scheme extends paper.Project {
       }
     }
     else{
-      let dist = Infinity;
-      this.activeLayer.profiles.forEach((p) => {
-        const corn = p.corns(point);
-        if(corn.dist < dist){
-          dist = corn.dist;
-          if(corn.dist < consts.sticking){
-            hit = {
-              item: p.generatrix,
-              point: corn.point
-            }
-          }
+      for(let elm of this.activeLayer.profiles){
+        check_corns(elm);
+        for(let addl of elm.addls){
+          check_corns(addl);
         }
-      })
+      };
     }
-
 
     // if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
     //   item = hit.item;
