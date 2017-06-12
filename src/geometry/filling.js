@@ -659,7 +659,7 @@ class Filling extends AbstractFilling(BuilderElement) {
         res = name;
       }
       else{
-        res += (by_art ? '.' : 'x') + name;
+        res += (by_art ? '*' : 'x') + name;
       }
     });
     return res || (by_art ? this.inset.article || this.inset.name : this.inset.name);
