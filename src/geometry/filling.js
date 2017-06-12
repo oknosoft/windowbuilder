@@ -137,7 +137,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     project.ox.glasses.add({
       elm: _row.elm,
       nom: nom,
-      formula: this.formula,
+      formula: this.formula(),
       width: bounds.width,
       height: bounds.height,
       s: this.s,
@@ -308,7 +308,7 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     if(is_rectangular){
       const {bounds} = path;
-      _attr._text.content = this.formula;
+      _attr._text.content = this.formula();
       _attr._text.point = bounds.bottomLeft.add([elm_font_size * 0.6, -elm_font_size]);
       if(_attr._text.bounds.width > (bounds.width - 2 * elm_font_size)){
         const atext = _attr._text.content.split(' ');
@@ -420,6 +420,9 @@ class Filling extends AbstractFilling(BuilderElement) {
     return this.getItems({class: Onlay});
   }
 
+  /**
+   * Удаляет все раскладки заполнения
+   */
   remove_onlays() {
     for(let onlay of this.imposts){
       onlay.remove();
@@ -641,19 +644,25 @@ class Filling extends AbstractFilling(BuilderElement) {
    * Возвращает формулу (код состава) заполнения
    * @type String
    */
-  get formula() {
+  formula(by_art) {
     let res;
     this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+      let {name, article} = row.inset;
       const aname = row.inset.name.split(' ');
-      const name = aname.length ? aname[0] : ''
+      if(by_art && article){
+        name = article;
+      }
+      else if(aname.length){
+        name = aname[0];
+      }
       if(!res){
         res = name;
       }
       else{
-        res += "x" + name;
+        res += (by_art ? '.' : 'x') + name;
       }
     });
-    return res || this.inset.name;
+    return res || (by_art ? this.inset.article || this.inset.name : this.inset.name);
   }
 
   // виртуальная ссылка для заполнений равна толщине
@@ -670,7 +679,7 @@ class Filling extends AbstractFilling(BuilderElement) {
         get: (target, prop) => {
           switch (prop){
             case 'presentation':
-              return this.formula;
+              return this.formula();
 
             case 'thickness':
               let res = 0;
