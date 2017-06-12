@@ -46,10 +46,19 @@ class ProductsBuilding {
      * @param elm1
      * @param elm2
      */
-    function cnn_need_add_spec(cnn, elm1, elm2){
-      // соединения крест пересечение и крест в стык обрабатываем отдельно
-      if(cnn && cnn.cnn_type == $p.enm.cnn_types.КрестВСтык){
-        return false;
+    function cnn_need_add_spec(cnn, elm1, elm2, point){
+      // соединения крест в стык обрабатываем по координатам, остальные - по паре элементов
+      if(cnn && cnn.cnn_type == $p.enm.cnn_types.xx){
+        if(!added_cnn_spec.points){
+          added_cnn_spec.points = [];
+        }
+        for(let p of added_cnn_spec.points){
+          if(p.is_nearest(point, true)){
+            return false;
+          }
+        }
+        added_cnn_spec.points.push(point);
+        return true;
       }
       else if(!cnn || !elm1 || !elm2 || added_cnn_spec[elm1] == elm2 || added_cnn_spec[elm2] == elm1){
         return false;
@@ -158,7 +167,10 @@ class ProductsBuilding {
       const {САртикулом1, САртикулом2} = $p.enm.specification_installation_methods;
       const {check_params} = ProductsBuilding;
 
-      cnn.specification.each((row) => {
+      const {cnn_type, specification, selection_params} = cnn;
+      const {ii, xx, acn} = $p.enm.cnn_types;
+
+      specification.each((row) => {
         const {nom} = row;
         if(!nom || nom.empty() || nom == art1 || nom == art2){
           return;
@@ -171,7 +183,7 @@ class ProductsBuilding {
         }
 
         //TODO: реализовать фильтрацию
-        if(cnn.cnn_type == $p.enm.cnn_types.Наложение){
+        if(cnn_type == ii){
           if(row.amin > angle_hor || row.amax < angle_hor || row.sz_min > len_angl.len || row.sz_max < len_angl.len){
             return;
           }
@@ -186,12 +198,12 @@ class ProductsBuilding {
           return;
         }
         // для угловых, разрешаем art2 только явно для art2
-        if(len_angl.art2 && $p.enm.cnn_types.acn.a.indexOf(cnn.cnn_type) != -1 && row.set_specification != САртикулом2){
+        if(len_angl.art2 && acn.a.indexOf(cnn_type) != -1 && row.set_specification != САртикулом2 && cnn_type != xx){
           return;
         }
 
         // проверяем параметры изделия и добавляем, если проходит по ограничениям
-        if(check_params({params: cnn.selection_params, row_spec: row, elm, ox})){
+        if(check_params({params: selection_params, row_spec: row, elm, ox})){
           res.push(row);
         }
 
@@ -396,14 +408,14 @@ class ProductsBuilding {
         art1: false,
         art2: true
       };
-      if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0)){
+      if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0, b.point)){
 
 
         len_angl.angle = len_angl.alp2;
 
         // для ТОбразного и Незамкнутого контура надо рассчитать еще и с другой стороны
-        if(b.cnn.cnn_type == $p.enm.cnn_types.ТОбразное || b.cnn.cnn_type == $p.enm.cnn_types.НезамкнутыйКонтур){
-          if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm)){
+        if(b.cnn.cnn_type == $p.enm.cnn_types.t || b.cnn.cnn_type == $p.enm.cnn_types.i || b.cnn.cnn_type == $p.enm.cnn_types.xx){
+          if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm, e.point)){
             cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
           }
         }
