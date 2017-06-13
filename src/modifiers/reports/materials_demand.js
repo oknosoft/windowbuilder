@@ -517,6 +517,8 @@
             Номенклатура: row.nom.article + ' ' + row.nom.name + (!row.clr.empty() && !row.clr.predefined_name ? ' ' + row.clr.name : ''),
             Размеры: row.sz,
             Количество: row.qty.toFixed(),
+            Угол1: row.alp1,
+            Угол2: row.alp2,
           }
         });
         return {specification, _grouping: data._grouping}
