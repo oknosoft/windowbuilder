@@ -25,8 +25,7 @@
 						if(row.is_folder && row.synonym){
 							var ref = row._id.split("|")[1];
 							parents[ref] = row.synonym;
-							$p.job_prm.__define(row.synonym, { value: {} });
-
+              !$p.job_prm[row.synonym] && $p.job_prm.__define(row.synonym, { value: {} });
 						}
 
 					});
@@ -35,10 +34,10 @@
 
 						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
 
-							let _mgr, tnames;
+							let _mgr;
 
 							if(row.type.is_ref){
-								tnames = row.type.types[0].split(".");
+								const tnames = row.type.types[0].split(".");
 								_mgr = $p[tnames[0]][tnames[1]]
 							}
 
@@ -74,8 +73,8 @@
                 if(row.synonym == "calculated"){
 
                 }
-
-							}else{
+							}
+							else{
 
 								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym)){
                   delete $p.job_prm[parents[row.parent]][row.synonym];

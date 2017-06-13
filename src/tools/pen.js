@@ -494,10 +494,8 @@ class ToolPen extends ToolElement {
       }
 
       if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
-
         // находим заполнение под линией
         paper.project.activeLayer.glasses(false, true).some((glass) => {
-
           if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
             new Onlay({
               generatrix: this.path,
@@ -509,8 +507,12 @@ class ToolPen extends ToolElement {
           }
         });
       }
+      else if(this.profile.elm_type == $p.enm.elm_types.Водоотлив){
+        // рисуем разрез
+        this.last_profile = new Sectional({generatrix: this.path, proto: this.profile});
+      }
       else{
-        // Рисуем профиль
+        // рисуем профиль
         this.last_profile = new Profile({generatrix: this.path, proto: this.profile});
       }
 

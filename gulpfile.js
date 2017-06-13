@@ -12,8 +12,8 @@ const gulp = require('gulp'),
 	resources = require('./src/utils/resource-concat.js'),
 	prebuild = require('./src/utils/prebuild.js'),
 	umd = require('gulp-umd'),
-  wrap = require("gulp-wrap");
-  //babel = require('gulp-babel'),
+  wrap = require("gulp-wrap"),
+  uglify = require('gulp-uglify');
 
 module.exports = gulp;
 
@@ -35,6 +35,9 @@ gulp.task('build-iface', function(){
 			}
 		}))
     .pipe(gulp.dest('./dist'))
+    // .pipe(rename('wnd_debug.min.js'))
+    // .pipe(uglify())
+    // .pipe(gulp.dest('./dist'))
 });
 
 // Cборка библиотеки рисовалки
@@ -47,22 +50,16 @@ gulp.task('build-lib', function(){
 		'./data/merged_wb_tips.js'
 	])
 		.pipe(concat('windowbuilder.js'))
-
-    // .pipe(babel({
-    //   presets: ['es2016', "stage-0"],
-    //   plugins: ['transform-es2015-modules-commonjs'],
-    //   compact: true,
-    //   comments: false
-    // }))
-
     .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
 				return 'Editor';
 			}
 		}))
-
 		.pipe(gulp.dest('./dist'))
+    // .pipe(rename('windowbuilder.min.js'))
+    // .pipe(uglify())
+    // .pipe(gulp.dest('./dist'))
 
 });
 
@@ -86,8 +83,9 @@ gulp.task('injected-templates', function(){
 		'./src/templates/xml/toolbar_product_list.xml',
     './src/templates/xml/toolbar_characteristics_specification.xml',
     './src/templates/xml/toolbar_glass_inserts.xml',
+    './src/templates/xml/form_auth.xml',
 		'./src/templates/xml/tree_*.xml',
-		'./src/templates/view_*.html'
+		'./src/templates/view_*.html',
 	])
 		.pipe(resources('merged_wb_templates.js', function (data) {
 			return new Buffer('$p.injected_data._mixin(' + JSON.stringify(data) + ');');

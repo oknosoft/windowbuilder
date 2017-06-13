@@ -119,6 +119,52 @@ $p.CchProperties.prototype.__define({
     }
   },
 
+  check_compare: {
+    value: function (left, right, comparison_type) {
+      const {eq, ne, gt, gte, lt, lte, nin, inh, ninh} = $p.enm.comparison_types;
+      switch(comparison_type) {
+        case ne:
+          return left != right;
+        case gt:
+          return left > right;
+        case gte:
+          return left >= right;
+        case lt:
+          return left < right;
+        case lte:
+          return left <= right;
+        case nin:
+          if(Array.isArray(left) && !Array.isArray(right)){
+            return left.indexOf(right) == -1;
+          }
+          else if(!Array.isArray(left) && Array.isArray(right)){
+            return right.indexOf(left) == -1;
+          }
+          else if(!Array.isArray(left) && !Array.isArray(right)){
+            return right != left;
+          }
+          break;
+        case $p.enm.comparison_types.in:
+          if(Array.isArray(left) && !Array.isArray(right)){
+            return left.indexOf(right) != -1;
+          }
+          else if(!Array.isArray(left) && Array.isArray(right)){
+            return right.indexOf(left) != -1;
+          }
+          else if(!Array.isArray(left) && !Array.isArray(right)){
+            return left == right;
+          }
+          break;
+        case inh:
+          return $p.utils.is_data_obj(left) ? left._hierarchy(right) : left == right;
+        case ninh:
+          return $p.utils.is_data_obj(left) ? !left._hierarchy(right) : left != right;
+        default:
+          return left == right;
+      }
+    }
+  },
+
   /**
    * ### Проверяет условие в строке отбора
    */
@@ -129,12 +175,12 @@ $p.CchProperties.prototype.__define({
 
       // значение параметра
       const val = is_calculated ? this.calculated_value({
-          row: row_spec,
-          elm: elm,
-          cnstr: cnstr || 0,
-          ox: ox,
-          calc_order: calc_order
-        }) : this.extract_value(prm_row);
+        row: row_spec,
+        cnstr: cnstr || 0,
+        elm,
+        ox,
+        calc_order
+      }) : this.extract_value(prm_row);
 
       let ok = false;
 
@@ -157,57 +203,8 @@ $p.CchProperties.prototype.__define({
       }
       // вычисляемый параметр - его значение уже рассчитано формулой (val) - сравниваем со значением в строке ограничений
       else if(is_calculated){
-
         const value = this.extract_value(prm_row);
-
-        switch(prm_row.comparison_type) {
-
-          case $p.enm.comparison_types.ne:
-            ok = val != value;
-            break;
-
-          case $p.enm.comparison_types.gt:
-            ok = val > value;
-            break;
-
-          case $p.enm.comparison_types.gte:
-            ok = val >= value;
-            break;
-
-          case $p.enm.comparison_types.lt:
-            ok = val < value;
-            break;
-
-          case $p.enm.comparison_types.lte:
-            ok = val <= value;
-            break;
-
-          case $p.enm.comparison_types.nin:
-            if(Array.isArray(val) && !Array.isArray(value)){
-              ok = val.indexOf(value) == -1;
-            }
-            else if(Array.isArray(value) && !Array.isArray(val)){
-              ok = value.indexOf(val) == -1;
-            }
-            break;
-
-          case $p.enm.comparison_types.in:
-            if(Array.isArray(val) && !Array.isArray(value)){
-              ok = val.indexOf(value) != -1;
-            }
-            else if(Array.isArray(value) && !Array.isArray(val)){
-              ok = value.indexOf(val) != -1;
-            }
-            break;
-
-          case $p.enm.comparison_types.inh:
-            ok = $p.utils.is_data_obj(val) ? val.in_hierarchy(value) : val == value;
-            break;
-
-          case $p.enm.comparison_types.ninh:
-            ok = $p.utils.is_data_obj(val) ? !val.in_hierarchy(value) : val != value;
-            break;
-        }
+        ok = this.check_compare(val, this.extract_value(prm_row), prm_row.comparison_type);
       }
       // параметр явно указан в табчасти параметров изделия
       else{
@@ -217,55 +214,7 @@ $p.CchProperties.prototype.__define({
           param: this
         }, ({value}) => {
           // value - значение из строки параметра текущей продукции, val - знаяение из параметров отбора
-          switch(prm_row.comparison_type) {
-
-            case $p.enm.comparison_types.ne:
-              ok = value != val;
-              break;
-
-            case $p.enm.comparison_types.gt:
-              ok = value > val;
-              break;
-
-            case $p.enm.comparison_types.gte:
-              ok = value >= val;
-              break;
-
-            case $p.enm.comparison_types.lt:
-              ok = value < val;
-              break;
-
-            case $p.enm.comparison_types.lte:
-              ok = value <= val;
-              break;
-
-            case $p.enm.comparison_types.nin:
-              if(Array.isArray(val) && !Array.isArray(value)){
-                ok = val.indexOf(value) == -1;
-              }
-              else if(Array.isArray(value) && !Array.isArray(val)){
-                ok = value.indexOf(val) == -1;
-              }
-              break;
-
-            case $p.enm.comparison_types.in:
-              if(Array.isArray(val) && !Array.isArray(value)){
-                ok = val.indexOf(value) != -1;
-              }
-              else if(Array.isArray(value) && !Array.isArray(val)){
-                ok = value.indexOf(val) != -1;
-              }
-              break;
-
-            case $p.enm.comparison_types.inh:
-              ok = $p.utils.is_data_obj(value) ? value.in_hierarchy(val) : val == value;
-              break;
-
-            case $p.enm.comparison_types.ninh:
-              ok = $p.utils.is_data_obj(value) ? !value.in_hierarchy(val) : val != value;
-              break;
-          }
-
+          ok = this.check_compare(value, val, prm_row.comparison_type);
           return false;
         });
       }
@@ -326,6 +275,7 @@ $p.CchProperties.prototype.__define({
             cnstr: attr.grid.selection.cnstr,
             ox: attr.obj._owner._owner,
             prm_row: row,
+            elm: attr.obj,
           });
           if(!ok){
             return false;
@@ -336,6 +286,9 @@ $p.CchProperties.prototype.__define({
     }
   },
 
+  /**
+   * Проверяет и при необходимости перезаполняет или устанваливает умолчание value в prow
+   */
   linked_values: {
     value: function (links, prow) {
       const values = [];

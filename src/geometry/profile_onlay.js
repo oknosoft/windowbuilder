@@ -159,7 +159,7 @@ class Onlay extends ProfileItem {
         }
       }
       else{
-        if(this.check_distance(res.profile, res, point, true) === false){
+        if(this.check_distance(res.profile, res, point, true) === false || res.distance < consts.epsilon){
           return res;
         }
       }
@@ -208,11 +208,28 @@ class Onlay extends ProfileItem {
       }
 
       // затем, если не привязалось - к сегментам раскладок текущего заполнения
-      glass.imposts.some((elm) => {
-        if (elm.project.check_distance(elm, null, res, point, "node_generatrix") === false ){
-          return true;
+      res.cnn_types = $p.enm.cnn_types.acn.t;
+      const ares = [];
+      for(let elm of glass.imposts){
+        if (elm !== this && elm.project.check_distance(elm, null, res, point, "node_generatrix") === false ){
+          ares.push({
+            profile_point: res.profile_point,
+            profile: res.profile,
+            cnn_types: res.cnn_types,
+            point: res.point});
         }
-      });
+      }
+
+      if(ares.length == 1){
+        res._mixin(ares[0]);
+      }
+      // если в точке сходятся 3 и более профиля, ищем тот, который смотрит на нас под максимально прямым углом
+      else if(ares.length >= 2){
+        if(this.max_right_angle(ares)){
+          res._mixin(ares[0]);
+        }
+        res.is_cut = true;
+      }
 
     });
 
@@ -221,6 +238,20 @@ class Onlay extends ProfileItem {
     }
 
     return res;
+  }
+
+  move_nodes(from, to) {
+    for(let elm of this.parent.imposts){
+      if(elm == this){
+        continue;
+      }
+      if(elm.b.is_nearest(from)){
+        elm.b = to;
+      }
+      if(elm.e.is_nearest(from)){
+        elm.e = to;
+      }
+    }
   }
 
 }

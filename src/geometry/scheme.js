@@ -466,8 +466,9 @@ class Scheme extends paper.Project {
     l_dimensions.visible = false;
     l_connective.visible = false;
 
+    let elm;
     if(attr.elm > 0){
-      const elm = this.getItem({class: BuilderElement, elm: attr.elm});
+      elm = this.getItem({class: BuilderElement, elm: attr.elm});
       elm.draw_fragment && elm.draw_fragment();
     }
     else if(attr.elm < 0){
@@ -483,6 +484,7 @@ class Scheme extends paper.Project {
       })
     }
     this.view.update();
+    return elm;
   }
 
   /**
@@ -646,7 +648,7 @@ class Scheme extends paper.Project {
 
       const {parent, layer} = item;
 
-      if(item instanceof paper.Path && parent instanceof ProfileItem){
+      if(item instanceof paper.Path && parent instanceof GeneratrixElement){
 
         if(profiles.indexOf(parent) != -1){
           return;
@@ -1119,7 +1121,7 @@ class Scheme extends paper.Project {
    * @returns {Boolean|undefined}
    */
   check_distance(element, profile, res, point, check_only) {
-    const _scheme = this;
+    const {allow_open_cnn} = this._dp.sys;
 
     let distance, gp, cnns, addls,
       bind_node = typeof check_only == "string" && check_only.indexOf("node") != -1,
@@ -1129,7 +1131,7 @@ class Scheme extends paper.Project {
     // Проверяет дистанцию в окрестности начала или конца соседнего элемента
     function check_node_distance(node) {
 
-      if((distance = element[node].getDistance(point)) < (_scheme._dp.sys.allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)){
+      if((distance = element[node].getDistance(point)) < (allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)){
 
         if(typeof res.distance == "number" && res.distance < distance)
           return 1;
@@ -1187,20 +1189,9 @@ class Scheme extends paper.Project {
       return;
 
     }
-    else if(node_distance = check_node_distance("b")){
-      // Если мы находимся в окрестности начала соседнего элемента
-      if(node_distance == 2)
-        return false;
-      else
-        return;
-
-    }else if(node_distance = check_node_distance("e")){
-      // Если мы находимся в окрестности конца соседнего элемента
-      if(node_distance == 2)
-        return false;
-      else
-        return;
-
+    // если мы находимся в окрестности начала соседнего элемента
+    else if((node_distance = check_node_distance("b")) || (node_distance = check_node_distance("e"))){
+      return node_distance == 2 ? false : void(0);
     }
 
     // это соединение с пустотой или T
@@ -1372,6 +1363,20 @@ class Scheme extends paper.Project {
    */
   hitPoints(point, tolerance, selected_first) {
     let item, hit;
+    let dist = Infinity;
+
+    function check_corns(elm) {
+      const corn = elm.corns(point);
+      if(corn.dist < dist){
+        dist = corn.dist;
+        if(corn.dist < consts.sticking){
+          hit = {
+            item: elm.generatrix,
+            point: corn.point
+          }
+        }
+      }
+    }
 
     // отдаём предпочтение сегментам выделенных путей
     if(selected_first){
@@ -1382,21 +1387,13 @@ class Scheme extends paper.Project {
       }
     }
     else{
-      let dist = Infinity;
-      this.activeLayer.profiles.forEach((p) => {
-        const corn = p.corns(point);
-        if(corn.dist < dist){
-          dist = corn.dist;
-          if(corn.dist < consts.sticking){
-            hit = {
-              item: p.generatrix,
-              point: corn.point
-            }
-          }
+      for(let elm of this.activeLayer.profiles){
+        check_corns(elm);
+        for(let addl of elm.addls){
+          check_corns(addl);
         }
-      })
+      };
     }
-
 
     // if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
     //   item = hit.item;
@@ -1461,6 +1458,13 @@ class Scheme extends paper.Project {
     // бежим по всем контурам, находим примыкания, исключаем их из результата
 
     return res;
+  }
+
+  /**
+   * Возвращает массив заполнений изделия
+   */
+  get glasses() {
+    return this.getItems({class: Filling});
   }
 
 }

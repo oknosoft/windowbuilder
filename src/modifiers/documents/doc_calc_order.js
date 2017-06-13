@@ -162,18 +162,30 @@ $p.doc.calc_order.on({
 		// реквизиты шапки
 		if(attr.field == "organization"){
 			this.new_number_doc();
-			if(this.contract.organization != attr.value)
-				this.contract = $p.cat.contracts.by_partner_and_org(this.partner, attr.value);
-
-		}else if(attr.field == "partner" && this.contract.owner != attr.value){
+			if(this.contract.organization != attr.value){
+        this.contract = $p.cat.contracts.by_partner_and_org(this.partner, attr.value);
+      }
+		}
+		else if(attr.field == "partner" && this.contract.owner != attr.value){
 			this.contract = $p.cat.contracts.by_partner_and_org(attr.value, this.organization);
 
-		// табчасть продукции
-		}else if(attr.tabular_section == "production"){
+		}
+    // табчасть продукции
+		else if(attr.tabular_section == "production"){
 
-			if(attr.field == "nom" || attr.field == "characteristic"){
+			if(attr.field == "nom" || attr.field == "characteristic" || attr.field == "quantity"){
+			  if(attr.row.characteristic.empty() || attr.row.characteristic.calc_order.empty()){
+          const fake_prm = {
+            spec: attr.row.characteristic.specification,
+            calc_order_row: attr.row
+          }
+          $p.pricing.price_type(fake_prm);
+          $p.pricing.calc_first_cost(fake_prm);
+          $p.pricing.calc_amount(fake_prm);
+        }
+			}
 
-			}else if(attr.field == "price" || attr.field == "price_internal" || attr.field == "quantity" ||
+			if(attr.field == "price" || attr.field == "price_internal" || attr.field == "quantity" ||
 				attr.field == "discount_percent" || attr.field == "discount_percent_internal"){
 
 				attr.row[attr.field] = attr.value;
@@ -200,29 +212,31 @@ $p.doc.calc_order.on({
 
 				// ставка и сумма НДС
 				if(this.vat_consider){
-					attr.row.vat_rate = attr.row.nom.vat_rate.empty() ? $p.enm.vat_rates.НДС18 : attr.row.nom.vat_rate;
+          const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
+					attr.row.vat_rate = attr.row.nom.vat_rate.empty() ? НДС18 : attr.row.nom.vat_rate;
 					switch (attr.row.vat_rate){
-						case $p.enm.vat_rates.НДС18:
-						case $p.enm.vat_rates.НДС18_118:
+						case НДС18:
+						case НДС18_118:
 							attr.row.vat_amount = (attr.row.amount * 18 / 118).round(2);
 							break;
-						case $p.enm.vat_rates.НДС10:
-						case $p.enm.vat_rates.НДС10_110:
+						case НДС10:
+						case НДС10_110:
 							attr.row.vat_amount = (attr.row.amount * 10 / 110).round(2);
 							break;
-						case $p.enm.vat_rates.НДС20:
-						case $p.enm.vat_rates.НДС20_120:
+						case НДС20:
+						case НДС20_120:
 							attr.row.vat_amount = (attr.row.amount * 20 / 120).round(2);
 							break;
-						case $p.enm.vat_rates.НДС0:
-						case $p.enm.vat_rates.БезНДС:
+						case НДС0:
+						case БезНДС:
 							attr.row.vat_amount = 0;
 							break;
 					}
 					if(!this.vat_included){
 						attr.row.amount = (attr.row.amount + attr.row.vat_amount).round(2);
 					}
-				}else{
+				}
+				else{
 					attr.row.vat_rate = $p.enm.vat_rates.БезНДС;
 					attr.row.vat_amount = 0;
 				}
@@ -504,6 +518,7 @@ $p.doc.calc_order.on({
       }
       const {characteristic, nom} = row;
       const res = {
+        ref: characteristic.ref,
         НомерСтроки: row.row,
         Количество: row.quantity,
         Ед: row.unit.name || "шт",
@@ -513,6 +528,7 @@ $p.doc.calc_order.on({
         Характеристика: characteristic.name,
         Заполнения: "",
         Фурнитура: "",
+        Параметры: [],
         Цена: row.price,
         ЦенаВнутр: row.price_internal,
         СкидкаПроцент: row.discount_percent,
@@ -522,6 +538,7 @@ $p.doc.calc_order.on({
         СуммаВнутр: row.amount_internal.round(2)
       };
 
+      // формируем описание заполнений
       characteristic.glasses.forEach((row) => {
         const {name} = row.nom;
         if(res.Заполнения.indexOf(name) == -1){
@@ -532,6 +549,7 @@ $p.doc.calc_order.on({
         }
       });
 
+      // наименования фурнитур
       characteristic.constructions.forEach((row) => {
         const {name} = row.furn;
         if(name && res.Фурнитура.indexOf(name) == -1){
@@ -541,6 +559,20 @@ $p.doc.calc_order.on({
           res.Фурнитура += name;
         }
       });
+
+      // параметры, помеченные к включению в описание
+      const params = new Map();
+      characteristic.params.forEach((row) => {
+        if(row.param.include_to_description){
+          params.set(row.param, row.value);
+        }
+      });
+      for (let [param, value] of params) {
+        res.Параметры.push({
+          param: param.presentation,
+          value: value.presentation || value
+        });
+      }
 
       return res;
     }
@@ -616,7 +648,7 @@ $p.doc.calc_order.on({
       });
     }
 
-    create_product_row({row_spec, params, create, grid}) {
+    create_product_row({row_spec, elm, len_angl, params, create, grid}) {
 
       const row = this.production.add({
         qty: 1,
@@ -648,7 +680,7 @@ $p.doc.calc_order.on({
         .then((ox) => {
           // если указана строка-генератор, заполняем реквизиты
           if(row_spec instanceof $p.DpBuyers_orderProductionRow){
-            ox.owner = row.nom = row_spec.inset.nom();
+            ox.owner = row.nom = row_spec.inset.nom(elm);
             ox.origin = row_spec.inset;
             ox.x = row.len = row_spec.len;
             ox.y = row.width = row_spec.height;
@@ -685,9 +717,6 @@ $p.doc.calc_order.on({
             return;
           }
 
-          // создаём строку заказа с уникальной харктеристикой
-          const row_prod = await this.create_product_row({row_spec, params: dp.product_params, create: true});
-
           // рассчитываем спецификацию по текущей вставке
           const len_angl = {
             angle: 0,
@@ -698,15 +727,22 @@ $p.doc.calc_order.on({
             cnstr: 0
           };
           const elm = {
-            get _row() {return this},
             elm: 0,
-            clr: row_spec.clr,
+            angle_hor: 0,
+            get _row() {return this},
+            get clr() {return row_spec.clr},
             get len() {return row_spec.len},
             get height() {return row_spec.height},
             get depth() {return row_spec.depth},
             get s() {return row_spec.s},
-            get perimeter() {return [row_spec.len]}
+            get perimeter() {return [{len: row_spec.len, angle: 0}, {len: row_spec.height, angle: 90}]},
+            get x1() {return 0},
+            get y1() {return 0},
+            get x2() {return row_spec.height},
+            get y2() {return row_spec.len},
           };
+          // создаём строку заказа с уникальной харктеристикой
+          const row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
           row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
 
           // сворачиваем

@@ -10,15 +10,61 @@
 /**
  * Методы менеджера фурнитуры
  */
-$p.cat.furns.__define({
 
-	sql_selection_list_flds: {
-		value: function(initial_value){
-			return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.parent, case when _t_.is_folder then '' else _t_.id end as id, _t_.name as presentation, _k_.synonym as open_type, \
+Object.defineProperties($p.cat.furns, {
+
+  sql_selection_list_flds: {
+    value: function(initial_value){
+      return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.parent, case when _t_.is_folder then '' else _t_.id end as id, _t_.name as presentation, _k_.synonym as open_type, \
 					 case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_furns AS _t_ \
 					 left outer join enm_open_types as _k_ on _k_.ref = _t_.open_type %3 %4 LIMIT 300";
-		}
-	}
+    }
+  },
+
+  get_option_list: {
+    value: function (val, selection) {
+
+      const {characteristic, sys} = paper.project._dp;
+      const {furn} = $p.job_prm.properties;
+
+      if(furn && sys && !sys.empty()){
+
+        const links = furn.params_links({
+          grid: {selection: {cnstr: 0}},
+          obj: {_owner: {_owner: characteristic}}
+        });
+
+        if(links.length){
+          // собираем все доступные значения в одном массиве
+          const list = [];
+          links.forEach((link) => link.values.forEach((row) => list.push(this.get(row._obj.value))));
+
+          function check(v){
+            if($p.utils.is_equal(v.value, val))
+              v.selected = true;
+            return v;
+          }
+
+          const l = [];
+          $p._find_rows.call(this, list, selection, (v) => l.push(check({text: v.presentation, value: v.ref})));
+
+          l.sort((a, b) => {
+            if (a.text < b.text){
+              return -1;
+            }
+            else if (a.text > b.text){
+              return 1;
+            }
+            return 0;
+          });
+          return Promise.resolve(l);
+        }
+      }
+      return $p.CatManager.prototype.get_option_list.call(this, val, selection);
+    },
+    configurable: true
+  }
+
 });
 
 
@@ -127,6 +173,7 @@ $p.cat.furns.__define({
 
       const res = $p.dp.buyers_order.create().specification;
       const {ox} = contour.project;
+      const {НаПримыкающий} = $p.enm.transfer_operations_options;
 
       // бежим по всем строкам набора
       this.specification.find_rows({dop: 0}, (row_furn) => {
@@ -151,7 +198,7 @@ $p.cat.furns.__define({
                 elm = contour.profile_by_furn_side(dop_row.side, cache),
                 len = elm._row.len,
                 sizefurn = elm.nom.sizefurn,
-                dx0 = (len - elm.data._len) / 2,
+                dx0 = (len - elm._attr._len) / 2,
                 dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
                 faltz = len - 2 * sizefurn;
 
@@ -167,23 +214,13 @@ $p.cat.furns.__define({
               }
               else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
                 // строим горизонтальную линию от нижней границы контура, находим пересечение и offset
-                const {bounds} = contour;
-                const by_side = contour.profiles_by_side();
-                const hor = (elm == by_side.top || elm == by_side.bottom) ?
-                  new paper.Path({
-                    insert: false,
-                    segments: [[bounds.left + contour.h_ruch, bounds.top - 200], [bounds.left + contour.h_ruch, bounds.bottom + 200]]
-                  }) :
-                  new paper.Path({
-                    insert: false,
-                    segments: [[bounds.left - 200, bounds.bottom - contour.h_ruch], [bounds.right + 200, bounds.bottom - contour.h_ruch]]
-                  });
-
-                coordin = elm.generatrix.getOffsetOf(elm.generatrix.intersect_point(hor)) -
-                  elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
+                const {generatrix} = elm;
+                const hor = contour.handle_line(elm);
+                coordin = generatrix.getOffsetOf(generatrix.intersect_point(hor)) -
+                  generatrix.getOffsetOf(generatrix.getNearestPoint(elm.corns(1))) +
+                  (invert ? dop_row.contraction : -dop_row.contraction);
               }
               else{
-
                 if(invert){
                   if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
                     coordin = dop_row.contraction;
@@ -204,10 +241,23 @@ $p.cat.furns.__define({
 
               const procedure_row = res.add(dop_row);
               procedure_row.origin = this;
-              procedure_row.handle_height_min = elm.elm;
               procedure_row.handle_height_max = contour.cnstr;
-              procedure_row.coefficient = coordin;
-
+              if(dop_row.transfer_option == НаПримыкающий){
+                const nearest = elm.nearest();
+                const {outer} = elm.rays;
+                const nouter = nearest.rays.outer;
+                const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
+                procedure_row.handle_height_min = nearest.elm;
+                procedure_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
+              }
+              else{
+                procedure_row.handle_height_min = elm.elm;
+                procedure_row.coefficient = coordin;
+              }
+              // если сказано учесть припуск - добавляем dx0
+              if(dop_row.overmeasure){
+                procedure_row.coefficient += dx0;
+              }
               return;
             }
             else if(!dop_row.quantity){

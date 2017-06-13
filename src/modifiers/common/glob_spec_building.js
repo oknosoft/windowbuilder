@@ -46,8 +46,27 @@ class SpecBuilding {
     spec.find_rows({ch: {in: [-1, -2]}}, (row) => adel.push(row));
     adel.forEach((row) => spec.del(row, true));
 
-    // находим привязанные к номенклатуре вставки и выполняем
-    $p.cat.insert_bind.insets(nom).forEach((inset) => {
+    // находим привязанные к продукции вставки и выполняем
+    // здесь может быть как расчет допспецификации, так и доппроверки корректности параметров и геометрии
+    $p.cat.insert_bind.insets(ox).forEach(({inset, elm_type}) => {
+
+      const elm = {
+        _row: {},
+        elm: 0,
+        get perimeter() {return scheme ? scheme.perimeter : []},
+        clr: ox.clr,
+        project: scheme,
+      };
+      const len_angl = {
+        angle: 0,
+        alp1: 0,
+        alp2: 0,
+        len: 0,
+        cnstr: 0,
+        origin: inset,
+      };
+      // рассчитаем спецификацию вставки
+      inset.calculate_spec({elm, len_angl, ox, spec});
 
     });
 
@@ -90,6 +109,10 @@ class SpecBuilding {
 
       // рассчитываем стоимость продажи
       $p.pricing.calc_amount(attr);
+    }
+
+    if(attr.save && !attr.scheme && (ox.is_new() || ox._modified)){
+      ox.save().catch($p.record_log);
     }
   }
 

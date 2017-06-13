@@ -37,6 +37,8 @@ $p.CatNom.prototype.__define({
 	_price: {
 		value: function (attr) {
 
+      let price = 0, currency, start_date = $p.utils.blank.date;
+
 			if(!attr){
         attr = {};
       }
@@ -54,18 +56,16 @@ $p.CatNom.prototype.__define({
 			else if($p.utils.is_data_obj(attr.characteristic)){
         attr.characteristic = attr.characteristic.ref;
       }
-
 			if(!attr.date){
         attr.date = new Date();
       }
 
-			let price = 0, currency, start_date = $p.utils.blank.date;
-
       // если для номенклатуры существует структура цен, ищем подходящую
-			if(this._data._price){
-				if(this._data._price[attr.characteristic]){
-					if(this._data._price[attr.characteristic][attr.price_type]){
-						this._data._price[attr.characteristic][attr.price_type].forEach(function (row) {
+      const {_price} = this._data;
+			if(_price){
+				if(_price[attr.characteristic]){
+					if(_price[attr.characteristic][attr.price_type]){
+            _price[attr.characteristic][attr.price_type].forEach((row) => {
 							if(row.date > start_date && row.date <= attr.date){
 								price = row.price;
 								currency = row.currency;
@@ -73,11 +73,26 @@ $p.CatNom.prototype.__define({
 							}
 						})
 					}
-
-				}else if(attr.clr){
-
+				}
+				// если нет цены на характеристику, ищем по цвету
+				else if(attr.clr){
+          const {characteristics} = $p.cat;
+				  for(let clrx in _price){
+            const cx = characteristics.get(clrx, false, true);
+            if(cx && cx.clr == attr.clr){
+              if(_price[clrx][attr.price_type]){
+                _price[clrx][attr.price_type].forEach((row) => {
+                  if(row.date > start_date && row.date <= attr.date){
+                    price = row.price;
+                    currency = row.currency;
+                    start_date = row.date;
+                  }
+                })
+                break;
+              }
+            }
+          }
         }
-
       }
 
       // если есть формула - выполняем вне зависимости от установленной цены
@@ -85,8 +100,8 @@ $p.CatNom.prototype.__define({
 
         // если нет цены на характеристику, ищем цену без характеристики
         if(!price){
-          if(this._data._price[$p.utils.blank.guid][attr.price_type]){
-            this._data._price[$p.utils.blank.guid][attr.price_type].forEach(function (row) {
+          if(_price[$p.utils.blank.guid][attr.price_type]){
+            _price[$p.utils.blank.guid][attr.price_type].forEach((row) => {
               if(row.date > start_date && row.date <= attr.date){
                 price = row.price;
                 currency = row.currency;

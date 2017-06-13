@@ -120,13 +120,10 @@ class Contour extends AbstractFilling(paper.Layer) {
 
       // профили и доборы
       coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => {
-
         const profile = new Profile({row: row, parent: this});
-
         coordinates.find_rows({cnstr: row.cnstr, parent: {in: [row.elm, -row.elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => {
           new ProfileAddl({row: row,	parent: profile});
         });
-
       });
 
       // заполнения
@@ -134,12 +131,14 @@ class Contour extends AbstractFilling(paper.Layer) {
         new Filling({row: row,	parent: this});
       });
 
+      // разрезы
+      coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Водоотлив}, (row) => {
+        new Sectional({row: row, parent: this});
+      });
+
       // остальные элементы (текст)
       coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, (row) => {
-
-        if(row.elm_type == $p.enm.elm_types.Текст){
-          new FreeText({row: row, parent: this.l_text});
-        }
+        new FreeText({row: row, parent: this.l_text});
       });
     }
 
@@ -228,7 +227,7 @@ class Contour extends AbstractFilling(paper.Layer) {
           // и если существует соединение нашего со следующим
           if(curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b)){
 
-            if(curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
+            if(segments.length < 3 || curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
               curr.anext.push(segm);
           }
 
@@ -892,59 +891,61 @@ class Contour extends AbstractFilling(paper.Layer) {
       l_visualization._cnn = new paper.Group({ parent: l_visualization });
     }
 
+    const err_attrs = {
+      strokeColor: 'red',
+      strokeWidth: 2,
+      strokeCap: 'round',
+      strokeScaling: false,
+      dashOffset: 4,
+      dashArray: [4, 4],
+      guide: true,
+      parent: l_visualization._cnn,
+    }
+
     // ошибки соединений с заполнениями
     this.glasses(false, true).forEach((elm) => {
       let err;
       elm.profiles.forEach(({cnn, sub_path}) => {
         if(!cnn){
-          sub_path.parent = l_visualization._cnn;
-          sub_path.strokeWidth = 2;
-          sub_path.strokeScaling = false;
-          sub_path.strokeColor = 'red';
-          sub_path.strokeCap = 'round';
-          sub_path.dashArray = [12, 8];
+          Object.assign(sub_path, err_attrs);
           err = true;
         }
       });
-      elm.path.fillColor = err ? new paper.Color({
-        stops: ["#fee", "#fcc", "#fdd"],
-        origin: elm.path.bounds.bottomLeft,
-        destination: elm.path.bounds.topRight
-      }) : BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+      if(err){
+        elm.fill_error();
+      }
+      else{
+        elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+      }
     });
 
     // ошибки соединений профиля
     this.profiles.forEach((elm) => {
       const {b, e} = elm.rays;
       if(!b.cnn){
-        new paper.Path.Circle({
+        Object.assign(new paper.Path.Circle({
           center: elm.corns(4).add(elm.corns(1)).divide(2),
           radius: 80,
-          strokeColor: 'red',
-          strokeWidth: 2,
-          strokeCap: 'round',
-          strokeScaling: false,
-          dashOffset: 4,
-          dashArray: [4, 4],
-          guide: true,
-          parent: l_visualization._cnn
-        });
+        }), err_attrs);
       }
       if(!e.cnn){
-        new paper.Path.Circle({
+        Object.assign(new paper.Path.Circle({
           center: elm.corns(2).add(elm.corns(3)).divide(2),
           radius: 80,
-          strokeColor: 'red',
-          strokeWidth: 2,
-          strokeCap: 'round',
-          strokeScaling: false,
-          dashOffset: 4,
-          dashArray: [4, 4],
-          guide: true,
-          parent: l_visualization._cnn
-        });
+        }), err_attrs);
       }
+      // ошибки примыкающих соединений
+      if(elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())){
+        Object.assign(elm.path.get_subpath(elm.corns(1), elm.corns(2)), err_attrs);
+      }
+      // если у профиля есть доборы, проверим их соединения
+      elm.addls.forEach((elm) => {
+        if(elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())){
+          Object.assign(elm.path.get_subpath(elm.corns(1), elm.corns(2)), err_attrs);
+        }
+      })
     });
+
   }
 
   /**
@@ -1457,6 +1458,10 @@ class Contour extends AbstractFilling(paper.Layer) {
     return this.children.filter((elm) => elm instanceof Profile);
   }
 
+  get sectionals() {
+    return this.children.filter((elm) => elm instanceof Sectional);
+  }
+
   /**
    * Перерисовывает элементы контура
    * @method redraw
@@ -1497,6 +1502,9 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     // рисуем подоконники
     this.draw_sill();
+
+    // перерисовываем все водоотливы контура
+    this.sectionals.forEach((elm) => elm.redraw());
 
     // информируем мир о новых размерах нашего контура
     $p.eve.callEvent("contour_redrawed", [this, this._attr._bounds]);
@@ -1629,14 +1637,32 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   /**
+   * Возаращает линию, проходящую через ручку
+   *
+   * @param elm {Profile}
+   */
+  handle_line(elm) {
+
+    // строим горизонтальную линию от нижней границы контура, находим пересечение и offset
+    const {bounds, h_ruch} = this;
+    const by_side = this.profiles_by_side();
+    return (elm == by_side.top || elm == by_side.bottom) ?
+      new paper.Path({
+        insert: false,
+        segments: [[bounds.left + h_ruch, bounds.top - 200], [bounds.left + h_ruch, bounds.bottom + 200]]
+      }) :
+      new paper.Path({
+        insert: false,
+        segments: [[bounds.left - 200, bounds.bottom - h_ruch], [bounds.right + 200, bounds.bottom - h_ruch]]
+      });
+
+  }
+
+  /**
    * Уточняет высоту ручки
    * @param cache {Object}
    */
   update_handle_height(cache) {
-
-    if(!cache){
-      cache = this.furn_cache;
-    }
 
     const {furn, _row} = this;
     const {furn_set, handle_side} = furn;
@@ -1644,8 +1670,16 @@ class Contour extends AbstractFilling(paper.Layer) {
       return;
     }
 
+    if(!cache){
+      cache = this.furn_cache;
+    }
+
     // получаем элемент, на котором ручка и длину элемента
     const elm = this.profile_by_furn_side(handle_side, cache);
+    if(!elm){
+      return;
+    }
+
     const {len} = elm._row;
 
     function set_handle_height(row){
@@ -1663,7 +1697,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
 
     // бежим по спецификации набора в поисках строки про ручку
-    furn_set.specification.find_rows({dop: 0}, (row) => {
+    furn.furn_set.specification.find_rows({dop: 0}, (row) => {
 
       // проверяем, проходит ли строка
       if(!row.quantity || !row.check_restrictions(this, cache)){

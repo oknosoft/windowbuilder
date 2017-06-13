@@ -65,7 +65,7 @@ Object.defineProperties(paper.Path.prototype, {
             da = curves[0].point1.getDirectedAngle(curves[0].point2), dc;
           for(var i = 1; i < curves.lenght; i++){
             dc = curves[i].point1.getDirectedAngle(curves[i].point2);
-            if(Math.abs(dc - da) > 0.01)
+            if(Math.abs(dc - da) > consts.epsilon)
               return false;
           }
         }
@@ -284,7 +284,7 @@ Object.defineProperties(paper.Point.prototype, {
 	is_nearest: {
 		value: function (point, sticking) {
 		  if(sticking === 0){
-        return Math.abs(this.x - point.x) < 0.01 && Math.abs(this.y - point.y) < 0.01;
+        return Math.abs(this.x - point.x) < consts.epsilon && Math.abs(this.y - point.y) < consts.epsilon;
       }
 			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 16);
 		}
@@ -404,7 +404,7 @@ Object.defineProperties(paper.Point.prototype, {
         return 0;
       }
 	    const [dx, dy] = [(x1-x2), (y1-y2)];
-      return (h/2 + (dx * dx + dy * dy) / (8 * h)).round(1)
+      return (h/2 + (dx * dx + dy * dy) / (8 * h)).round(3);
     }
   },
 

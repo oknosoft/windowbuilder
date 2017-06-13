@@ -179,12 +179,10 @@ class OrderDealerApp {
       $p.wsql.get_user_param("user_name") &&
       $p.wsql.get_user_param("user_pwd")){
 
-      setTimeout(function () {
-        $p.iface.frm_auth({
-          modal_dialog: true,
-          try_auto: true
-        });
-      }, 100);
+      setTimeout(() => $p.iface.frm_auth({
+        modal_dialog: true,
+        try_auto: false
+      }), 100);
     }
 
     $p.eve.detachEvent(this.predefined_elmnts_inited);
@@ -202,12 +200,10 @@ class OrderDealerApp {
         $p.wsql.set_user_param("user_name", $p.job_prm.guests[0].username);
         $p.wsql.set_user_param("user_pwd", $p.job_prm.guests[0].password);
 
-        setTimeout(function () {
-          $p.iface.frm_auth({
-            modal_dialog: true,
-            try_auto: true
-          });
-        }, 100);
+        setTimeout(() => $p.iface.frm_auth({
+          modal_dialog: true,
+          try_auto: false
+        }), 100);
 
       }else{
         $p.iface.frm_auth({
@@ -263,7 +259,7 @@ $p.on({
 	 *
 	 * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
 	 */
-	settings: function (prm) {
+	settings: (prm) => {
 
 		prm.__define({
 
@@ -279,15 +275,7 @@ $p.on({
 
 			// фильтр для репликации с CouchDB
 			pouch_filter: {
-				value: (function () {
-					// filter.__define({
-					// 	doc: {
-					// 		value: "auth/by_partner",
-					// 		writable: false
-					// 	}
-					// });
-					return {};
-				})(),
+				value: {},
 				writable: false
 			},
 
@@ -349,13 +337,18 @@ $p.on({
 	 *
 	 */
 	iface_init: () => {
-    $p.iface.main = new OrderDealerApp($p);
+	  if(!$p.iface.main){
+      $p.iface.main = new OrderDealerApp($p);
+    }
 	},
 
 	/**
 	 * ### Обработчик маршрутизации
 	 */
 	hash_route: (hprm) => {
+    if(!$p.iface.main){
+      $p.iface.main = new OrderDealerApp($p);
+    }
 	  return $p.iface.main.hash_route(hprm);
 	}
 

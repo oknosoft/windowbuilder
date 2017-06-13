@@ -391,6 +391,11 @@ $p.iface.view_settings = function (cell) {
 		 */
 		$p.on("hash_route", hash_route);
 
+		if($p.iface.auth && $p.iface.auth.close){
+      $p.iface.auth.close();
+      setTimeout($p.iface.main.sidebar.progressOff.bind($p.iface.main.sidebar), 100);
+    }
+
 	}
 
 	return $p.iface._settings || ($p.iface._settings = new OViewSettings());

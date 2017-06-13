@@ -28,9 +28,7 @@ class Pricing {
             since: 'now',
             live: true,
             include_docs: true,
-            selector: {class_name: {
-              '$in': ['doc.nom_prices_setup', 'cat.formulas']
-            }}
+            selector: {class_name: {$in: ['doc.nom_prices_setup', 'cat.formulas']}}
           }).on('change', (change) => {
             // формируем новый
             if(change.doc.class_name == 'doc.nom_prices_setup'){
@@ -45,13 +43,14 @@ class Pricing {
   }
 
   build_cache(rows) {
+    const {nom, currencies} = $p.cat;
     rows.forEach(({key, value}) => {
 
       if(!Array.isArray(value)){
         return setTimeout(() => $p.iface.do_reload('', 'Индекс цен номенклатуры'), 1000);
       }
 
-      const onom = $p.cat.nom.get(key[0], false, true);
+      const onom = nom.get(key[0], false, true);
       if (!onom || !onom._data){
         return;
       }
@@ -65,7 +64,7 @@ class Pricing {
       }
       _price[key[1]][key[2]] = value.map((v) => ({
         date: new Date(v.date),
-        currency: $p.cat.currencies.get(v.currency),
+        currency: currencies.get(v.currency),
         price: v.price
       }));
     });
@@ -137,8 +136,15 @@ class Pricing {
           date: _owner.date,
           currency: _owner.doc_currency
         };
+
       if (price_type == prm.price_type.price_type_first_cost && !prm.price_type.formula.empty()) {
         price_prm.formula = prm.price_type.formula;
+      }
+      else if(price_type == prm.price_type.price_type_sale && !prm.price_type.sale_formula.empty()){
+        price_prm.formula = prm.price_type.sale_formula;
+      }
+      if(!characteristic.clr.empty()){
+        price_prm.clr = characteristic.clr;
       }
       row.price = nom._price(price_prm);
 
@@ -176,7 +182,9 @@ class Pricing {
       external_formula: empty_formula
     };
 
-    const {nom, characteristic} = prm.calc_order_row;
+    const {calc_order_row} = prm;
+    const {nom, characteristic} = calc_order_row;
+    const {partner} = calc_order_row._owner._owner;
     const filter = nom.price_group.empty() ?
         {price_group: nom.price_group} :
         {price_group: {in: [nom.price_group, $p.cat.price_groups.get()]}};
@@ -189,34 +197,30 @@ class Pricing {
       if(!row.key.empty()){
         row.key.params.forEach((row_prm) => {
 
+          const {property} = row_prm;
           // для вычисляемых параметров выполняем формулу
-          if(row_prm.property.is_calculated){
-
+          if(property.is_calculated){
+            ok = property.check_compare(property.calculated_value({calc_order_row}), property.extract_value(row_prm), row_prm.comparison_type);
+          }
+          // заглушка для совместимости с УПзП
+          else if(property.empty()){
+            const vpartner = $p.cat.partners.get(row_prm._obj.value, false, true);
+            if(vpartner && !vpartner.empty()){
+              ok = vpartner == partner;
+            }
           }
           // обычные параметры ищем в параметрах изделия
           else{
             let finded;
             characteristic.params.find_rows({
               cnstr: 0,
-              param: row_prm.property
+              param: property
             }, (row_x) => {
               finded = row_x;
               return false;
             });
-
             if(finded){
-              if(row_prm.comparison_type == $p.enm.comparison_types.in){
-                ok = row_prm.txt_row.match(finded.value.ref);
-              }
-              else if(row_prm.comparison_type == $p.enm.comparison_types.nin){
-                ok = !row_prm.txt_row.match(finded.value.ref);
-              }
-              else if(row_prm.comparison_type.empty() || row_prm.comparison_type == $p.enm.comparison_types.eq){
-                ok = row_prm.value == finded.value;
-              }
-              else if(row_prm.comparison_type.empty() || row_prm.comparison_type == $p.enm.comparison_types.ne){
-                ok = row_prm.value != finded.value;
-              }
+              ok = property.check_compare(finded.value, property.extract_value(row_prm), row_prm.comparison_type);
             }
             else{
               ok = false;
@@ -236,17 +240,17 @@ class Pricing {
     if(ares.length){
       ares.sort((a, b) => {
 
-        if (a.key.priority > b.key.priority) {
+        if ((!a.key.empty() && b.key.empty()) || (a.key.priority > b.key.priority)) {
           return -1;
         }
-        if (a.key.priority < b.key.priority) {
+        if ((a.key.empty() && !b.key.empty()) || (a.key.priority < b.key.priority)) {
           return 1;
         }
 
-        if (a.price_group.ref < b.price_group.ref) {
+        if (a.price_group.ref > b.price_group.ref) {
           return -1;
         }
-        if (a.price_group.ref > b.price_group.ref) {
+        if (a.price_group.ref < b.price_group.ref) {
           return 1;
         }
 
@@ -259,7 +263,7 @@ class Pricing {
     }
 
     // если для контрагента установлена индивидуальная наценка, подмешиваем её в prm
-    prm.calc_order_row._owner._owner.partner.extra_fields.find_rows({
+    partner.extra_fields.find_rows({
       property: $p.job_prm.pricing.dealer_surcharge
     }, (row) => {
       const val = parseFloat(row.value);
@@ -282,7 +286,7 @@ class Pricing {
    */
   calc_first_cost(prm) {
 
-    const marginality_in_spec = $p.job_prm.pricing.marginality_in_spec;
+    const {marginality_in_spec} = $p.job_prm.pricing;
     const fake_row = {};
 
     if(!prm.spec)
@@ -292,24 +296,23 @@ class Pricing {
     if(prm.spec.count()){
       prm.spec.each((row) => {
 
-        $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_first_cost, prm, row);
+        this.nom_price(row.nom, row.characteristic, prm.price_type.price_type_first_cost, prm, row);
         row.amount = row.price * row.totqty1;
 
         if(marginality_in_spec){
           fake_row._mixin(row, ["nom"]);
-          const tmp_price = $p.pricing.nom_price(row.nom, row.characteristic, prm.price_type.price_type_sale, prm, fake_row);
+          const tmp_price = this.nom_price(row.nom, row.characteristic, prm.price_type.price_type_sale, prm, fake_row);
           row.amount_marged = (tmp_price ? tmp_price : row.price) * row.totqty1;
         }
 
       });
       prm.calc_order_row.first_cost = prm.spec.aggregate([], ["amount"]).round(2);
-
-    }else{
-
+    }
+    else{
       // расчет себестомиости по номенклатуре строки расчета
       fake_row.nom = prm.calc_order_row.nom;
       fake_row.characteristic = prm.calc_order_row.characteristic;
-      prm.calc_order_row.first_cost = $p.pricing.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
+      prm.calc_order_row.first_cost = this.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
     }
 
     // себестоимость вытянутых строк спецификации в заказ
@@ -333,7 +336,10 @@ class Pricing {
   calc_amount (prm) {
 
     // TODO: реализовать расчет цены продажи по номенклатуре строки расчета
-    const price_cost = $p.job_prm.pricing.marginality_in_spec ? prm.spec.aggregate([], ["amount_marged"]) : 0;
+    const price_cost = $p.job_prm.pricing.marginality_in_spec ?
+      prm.spec.aggregate([], ["amount_marged"]) :
+      this.nom_price(prm.calc_order_row.nom, prm.calc_order_row.characteristic, prm.price_type.price_type_sale, prm, {});
+
     let extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
 
     // если пересчет выполняется менеджером, используем наценку по умолчанию
@@ -400,7 +406,10 @@ class Pricing {
     if(!to || to.empty()){
       to = main_currency;
     }
-    if(!from || from == to){
+    if(!from || from.empty()){
+      from = main_currency;
+    }
+    if(from == to){
       return amount;
     }
     if(!date){

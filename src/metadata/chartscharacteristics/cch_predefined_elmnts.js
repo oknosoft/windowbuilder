@@ -15,51 +15,46 @@ $p.on({
 
 		// читаем элементы из pouchdb и создаём свойства
 		$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
-			.then(function (rows) {
+			.then((rows) => {
 
-				var parents = {};
+        const parents = {};
 
-				rows.forEach(function (row) {
+				rows.forEach((row) => {
 					if(row.is_folder && row.synonym){
-						var ref = row._id.split("|")[1];
+						const ref = row._id.split("|")[1];
 						parents[ref] = row.synonym;
-						$p.job_prm.__define(row.synonym, { value: {} });
+						!$p.job_prm[row.synonym] && $p.job_prm.__define(row.synonym, { value: {} });
 					}
 				});
 
-				rows.forEach(function (row) {
+				rows.forEach((row) => {
 
 					if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
-
-						var _mgr, tnames;
-
+						let _mgr;
 						if(row.type.is_ref){
-							tnames = row.type.types[0].split(".");
+              const tnames = row.type.types[0].split(".");
 							_mgr = $p[tnames[0]][tnames[1]]
 						}
 
 						if(row.list == -1){
-
 							$p.job_prm[parents[row.parent]].__define(row.synonym, {
 								value: function () {
 									var res = {};
-									row.elmnts.forEach(function (row) {
+									row.elmnts.forEach((row) => {
 										res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
 									});
 									return res;
 								}()
 							});
-
-						}else if(row.list){
-
+						}
+						else if(row.list){
 							$p.job_prm[parents[row.parent]].__define(row.synonym, {
-								value: row.elmnts.map(function (row) {
+								value: row.elmnts.map((row) => {
 									return _mgr ? _mgr.get(row.value, false) : row.value;
 								})
 							});
-
-						}else{
-
+						}
+						else{
 							if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
 								delete $p.job_prm[parents[row.parent]][row.synonym];
 
@@ -68,7 +63,6 @@ $p.on({
 								configurable: true
 							});
 						}
-
 					}
 				});
 			})

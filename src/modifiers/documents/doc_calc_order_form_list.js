@@ -74,16 +74,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
             field: "department",
             width: 180,
             hide_frm: true,
-            // get_option_list: function(val, selection){
-            //   return this.get_option_list(val, selection)
-            //     .then((list) => {
-            //       const {guid} = $p.utils.blank;
-            //       if(!list.some((item) => item.value == guid)){
-            //         list.splice(0, 0, {text: "", value: guid})
-            //       };
-            //       return list;
-            //     })
-            // },
           });
           txt_div.style.border = "1px solid #ccc";
           txt_div.style.borderRadius = "3px";
@@ -115,7 +105,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
                 return state == 'template' ? {$eq: $p.utils.blank.guid} : {$eq: department.ref};
                 // const depts = [];
                 // $p.cat.divisions.forEach((o) =>{
-                //   if(o.in_hierarchy(department)){
+                //   if(o._hierarchy(department)){
                 //     depts.push(o.ref)
                 //   }
                 // });

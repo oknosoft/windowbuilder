@@ -51,6 +51,10 @@ $p.iface.view_orders = function (cell) {
 
 		function show_builder(ref){
 
+      if(!t.editor){
+        return location.reload(true);
+      }
+
 		  const cell_builder = t.carousel.cells("builder");
 		  if(t.carousel.getActiveCell() != cell_builder){
         t.carousel.cells("builder").setActive();

@@ -22,7 +22,7 @@ class ToolSelectNode extends ToolElement {
 
   constructor() {
 
-    super()
+    super();
 
     Object.assign(this, {
       options: {
@@ -40,7 +40,7 @@ class ToolSelectNode extends ToolElement {
       originalHandleOut: null,
       changed: false,
       minDistance: 10
-    })
+    });
 
     this.on({
 
@@ -57,6 +57,8 @@ class ToolSelectNode extends ToolElement {
       },
 
       mousedown: function(event) {
+
+        const {project} = this._scope;
 
         this.mode = null;
         this.changed = false;
@@ -82,12 +84,12 @@ class ToolSelectNode extends ToolElement {
             if (event.modifiers.shift) {
               item.selected = !item.selected;
             } else {
-              paper.project.deselectAll();
+              project.deselectAll();
               item.selected = true;
             }
             if (item.selected) {
               this.mode = consts.move_shapes;
-              paper.project.deselect_all_points();
+              project.deselect_all_points();
               this.mouseStartPos = event.point.clone();
               this.originalContent = paper.capture_selection_state();
 
@@ -101,8 +103,8 @@ class ToolSelectNode extends ToolElement {
               this.hitItem.segment.selected = !this.hitItem.segment.selected;
             } else {
               if (!this.hitItem.segment.selected){
-                paper.project.deselect_all_points();
-                paper.project.deselectAll();
+                project.deselect_all_points();
+                project.deselectAll();
               }
               this.hitItem.segment.selected = true;
             }
@@ -152,6 +154,8 @@ class ToolSelectNode extends ToolElement {
 
       mouseup: function(event) {
 
+        const {project} = this._scope;
+
         if (this.mode == consts.move_shapes) {
           if (this.changed) {
             paper.clear_selection_bounds();
@@ -174,7 +178,7 @@ class ToolSelectNode extends ToolElement {
           var box = new paper.Rectangle(this.mouseStartPos, event.point);
 
           if (!event.modifiers.shift){
-            paper.project.deselectAll();
+            project.deselectAll();
           }
 
           // при зажатом ctrl добавляем элемент иначе - узел
@@ -233,6 +237,8 @@ class ToolSelectNode extends ToolElement {
 
       mousedrag: function(event) {
 
+        const {project} = this._scope;
+
         this.changed = true;
 
         if (this.mode == consts.move_shapes) {
@@ -243,7 +249,7 @@ class ToolSelectNode extends ToolElement {
             delta = delta.snap_to_angle(Math.PI*2/4);
           }
           paper.restore_selection_state(this.originalContent);
-          paper.project.move_points(delta, true);
+          project.move_points(delta, true);
           paper.clear_selection_bounds();
         }
         else if (this.mode == consts.move_points) {
@@ -254,7 +260,7 @@ class ToolSelectNode extends ToolElement {
             delta = delta.snap_to_angle(Math.PI*2/4);
           }
           paper.restore_selection_state(this.originalContent);
-          paper.project.move_points(delta);
+          project.move_points(delta);
           paper.purge_selection();
         }
         else if (this.mode == consts.move_handle) {
@@ -294,17 +300,20 @@ class ToolSelectNode extends ToolElement {
       },
 
       keydown: function(event) {
-        let selected, j, path, segment, index, point, handle;
 
-        if (event.key == '+' || event.key == 'insert') {
+        const {project} = this._scope;
+        const {key, modifiers} = event;
 
-          selected = paper.project.selectedItems;
+        let j, path, segment, index, point, handle;
 
-          // при зажатом ctrl или alt добавляем элемент иначе - узел
-          if (event.modifiers.space) {
-            for (let i = 0; i < selected.length; i++) {
-              path = selected[i];
+        const step = modifiers.shift ? 1 : 10;
 
+        if (key == '+' || key == 'insert') {
+
+
+          for(let path of project.selectedItems){
+            // при зажатом ctrl или alt добавляем элемент иначе - узел
+            if (modifiers.space) {
               if(path.parent instanceof Profile){
 
                 const cnn_point = path.parent.cnn_point("e");
@@ -320,12 +329,9 @@ class ToolSelectNode extends ToolElement {
                 new Profile({generatrix: newpath, proto: path.parent});
               }
             }
-          }
-          else{
-            for (let i = 0; i < selected.length; i++) {
-              path = selected[i];
+            else{
               let do_select = false;
-              if(path.parent instanceof ProfileItem){
+              if(path.parent instanceof GeneratrixElement && !(path instanceof ProfileAddl)){
                 for (let j = 0; j < path.segments.length; j++) {
                   segment = path.segments[j];
                   if (segment.selected){
@@ -342,8 +348,13 @@ class ToolSelectNode extends ToolElement {
               if(do_select){
                 index = (j < (path.segments.length - 1) ? j + 1 : j);
                 point = segment.curve.getPointAt(0.5, true);
-                handle = segment.curve.getTangentAt(0.5, true).normalize(segment.curve.length / 4);
-                path.insert(index, new paper.Segment(point, handle.negate(), handle));
+                if(path.parent instanceof Sectional){
+                  paper.Path.prototype.insert.call(path, index, new paper.Segment(point));
+                }
+                else{
+                  handle = segment.curve.getTangentAt(0.5, true).normalize(segment.curve.length / 4);
+                  paper.Path.prototype.insert.call(path, index, new paper.Segment(point, handle.negate(), handle));
+                }
               }
             }
           }
@@ -354,37 +365,46 @@ class ToolSelectNode extends ToolElement {
 
 
         } // удаление сегмента или элемента
-        else if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+        else if (key == '-' || key == 'delete' || key == 'backspace') {
 
           if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
             return;
 
-          paper.project.selectedItems.some((path) => {
+          project.selectedItems.some((path) => {
 
             let do_select = false;
 
             if(path.parent instanceof DimensionLineCustom){
               path.parent.remove();
               return true;
-
-            }else if(path.parent instanceof ProfileItem){
-              for (let j = 0; j < path.segments.length; j++) {
-                segment = path.segments[j];
-                do_select = do_select || segment.selected;
-                if (segment.selected && segment != path.firstSegment && segment != path.lastSegment ){
-                  path.removeSegment(j);
-
-                  // пересчитываем
-                  path.parent.x1 = path.parent.x1;
-                  break;
-                }
-              }
-              // если не было обработки узлов - удаляем элемент
-              if(!do_select){
-                path = path.parent;
+            }
+            else if(path.parent instanceof GeneratrixElement){
+              if(path instanceof ProfileAddl){
                 path.removeChildren();
                 path.remove();
               }
+              else{
+                for (let j = 0; j < path.segments.length; j++) {
+                  segment = path.segments[j];
+                  do_select = do_select || segment.selected;
+                  if (segment.selected && segment != path.firstSegment && segment != path.lastSegment ){
+                    path.removeSegment(j);
+
+                    // пересчитываем
+                    path.parent.x1 = path.parent.x1;
+                    break;
+                  }
+                }
+                // если не было обработки узлов - удаляем элемент
+                if(!do_select){
+                  path = path.parent;
+                  path.removeChildren();
+                  path.remove();
+                }
+              }
+            }
+            else if(path instanceof Filling){
+              path.remove_onlays();
             }
           });
 
@@ -393,17 +413,17 @@ class ToolSelectNode extends ToolElement {
           return false;
 
         }
-        else if (event.key == 'left') {
-          paper.project.move_points(new paper.Point(-10, 0));
+        else if (key == 'left') {
+          project.move_points(new paper.Point(-step, 0));
         }
-        else if (event.key == 'right') {
-          paper.project.move_points(new paper.Point(10, 0));
+        else if (key == 'right') {
+          project.move_points(new paper.Point(step, 0));
         }
-        else if (event.key == 'up') {
-          paper.project.move_points(new paper.Point(0, -10));
+        else if (key == 'up') {
+          project.move_points(new paper.Point(0, -step));
         }
-        else if (event.key == 'down') {
-          paper.project.move_points(new paper.Point(0, 10));
+        else if (key == 'down') {
+          project.move_points(new paper.Point(0, step));
         }
       }
     });
@@ -419,26 +439,27 @@ class ToolSelectNode extends ToolElement {
   hitTest(event) {
 
     const hitSize = 6;
+    const {project} = this._scope;
     this.hitItem = null;
 
     if (event.point) {
 
       // отдаём предпочтение выделенным ранее элементам
-      this.hitItem = paper.project.hitTest(event.point, {selected: true, fill: true, tolerance: hitSize});
+      this.hitItem = project.hitTest(event.point, {selected: true, fill: true, tolerance: hitSize});
 
       // во вторую очередь - тем элементам, которые не скрыты
       if (!this.hitItem){
-        this.hitItem = paper.project.hitTest(event.point, {fill: true, visible: true, tolerance: hitSize});
+        this.hitItem = project.hitTest(event.point, {fill: true, visible: true, tolerance: hitSize});
       }
 
       // Hit test selected handles
-      let hit = paper.project.hitTest(event.point, {selected: true, handles: true, tolerance: hitSize});
+      let hit = project.hitTest(event.point, {selected: true, handles: true, tolerance: hitSize});
       if (hit){
         this.hitItem = hit;
       }
 
       // Hit test points
-      hit = paper.project.hitPoints(event.point, 16, true);
+      hit = project.hitPoints(event.point, 16, true);
 
       if (hit) {
         if (hit.item.parent instanceof ProfileItem) {
@@ -479,7 +500,15 @@ class ToolSelectNode extends ToolElement {
       }
     }
     else {
-      paper.canvas_cursor('cursor-arrow-white');
+      // возможно, выделен разрез
+      const hit = project.hitTest(event.point, {stroke: true, visible: true, tolerance: 16});
+      if (hit && hit.item.parent instanceof Sectional){
+        this.hitItem = hit;
+        paper.canvas_cursor('cursor-arrow-white-shape');
+      }
+      else{
+        paper.canvas_cursor('cursor-arrow-white');
+      }
     }
 
     return true;

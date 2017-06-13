@@ -736,71 +736,7 @@ class Editor extends paper.PaperScope {
    * @param [cnstr] {Number} - номер элемента или контура
    */
   glass_inserts(elm){
-
-    if(!elm){
-      elm = this.project.selected_elm;
-    }
-    if(!(elm instanceof Filling)){
-      return $p.msg.show_msg({
-        type: "alert-info",
-        text: $p.msg.glass_invalid_elm,
-        title: $p.msg.glass_spec
-      });
-    }
-
-    const options = {
-      name: 'glass_inserts',
-      wnd: {
-        caption: 'Составной пакет №' + elm.elm,
-        allow_close: true,
-        width: 460,
-        height: 320,
-        modal: true
-      }
-    };
-
-    const wnd = $p.iface.dat_blank(null, options.wnd);
-
-    wnd.elmnts.grids.inserts = wnd.attachTabular({
-      obj: this.project.ox,
-      ts: "glass_specification",
-      selection: {elm: elm.elm},
-      toolbar_struct: $p.injected_data["toolbar_glass_inserts.xml"],
-      ts_captions: {
-        fields: ["inset", "clr"],
-        headers: "Вставка,Цвет",
-        widths: "*,*",
-        min_widths: "100,100",
-        aligns: "",
-        sortings: "na,na",
-        types: "ref,ref"
-      }
-    });
-    wnd.attachEvent("onClose", () => {
-      wnd.elmnts.grids.inserts && wnd.elmnts.grids.inserts.editStop();
-      this.project.register_change(true);
-      elm && Object.getNotifier(elm).notify({
-        type: 'update',
-        name: 'inset'
-      });
-      return true;
-    });
-
-    const toolbar = wnd.getAttachedToolbar();
-    toolbar.attachEvent("onclick", (btn_id) => {
-      if(btn_id == "btn_inset"){
-        const {project, inset} = elm;
-        project.ox.glass_specification.clear(true, {elm: elm.elm});
-        inset.specification.forEach((row) => {
-          project.ox.glass_specification.add({
-            elm: elm.elm,
-            inset: row.nom,
-            clr: row.clr
-          })
-        });
-      }
-    });
-
+    new GlassInserts(elm || this.project.selected_elm)
   }
 
   /**
@@ -809,140 +745,7 @@ class Editor extends paper.PaperScope {
    * @param [cnstr] {Number} - номер элемента или контура
    */
   additional_inserts(cnstr, cell){
-
-    const meta_fields = $p.cat.characteristics.metadata("inserts").fields._clone();
-    const {project} = this;
-    let caption = $p.msg.additional_inserts;
-
-    if(!cnstr){
-      cnstr = 0;
-      caption+= ' в изделие';
-      meta_fields.inset.choice_params[0].path = ["Изделие"];
-    }
-    else if(cnstr == 'elm'){
-      cnstr = project.selected_elm;
-      if(cnstr){
-        // добавляем параметры вставки
-        project.ox.add_inset_params(cnstr.inset, -cnstr.elm, $p.utils.blank.guid);
-        caption+= ' элем. №' + cnstr.elm;
-        cnstr = -cnstr.elm;
-        meta_fields.inset.choice_params[0].path = ["Элемент"];
-      }
-      else{
-        return;
-      }
-    }
-    else if(cnstr == 'contour'){
-      const {activeLayer} = project;
-      cnstr = activeLayer.cnstr;
-      caption+= ` в ${activeLayer.layer ? 'створку' : 'раму'} №${cnstr}`;
-      meta_fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Подоконник", "Откос", "Контур"];
-    }
-
-    const options = {
-      name: 'additional_inserts',
-      wnd: {
-        caption: caption,
-        allow_close: true,
-        width: 460,
-        height: 420,
-        modal: true
-      }
-    };
-
-    if(cell){
-      if(!cell.elmnts){
-        cell.elmnts = {grids: {}};
-      }
-      const {grids} = cell.elmnts;
-      if(grids.inserts && grids.inserts._obj && grids.inserts._obj == project.ox && grids.inserts.selection.cnstr == cnstr){
-        return;
-      }
-      delete grids.inserts;
-      delete grids.params;
-      cell.detachObject(true);
-    }
-
-    const wnd = cell || $p.iface.dat_blank(null, options.wnd);
-    const elmnts = wnd.elmnts;
-
-    function get_selection() {
-      const {inserts} = elmnts.grids;
-      if(inserts){
-        const row = inserts.get_cell_field();
-        if(row && !row.obj.inset.empty()){
-          return {cnstr: cnstr, inset: row.obj.inset}
-        }
-      }
-      return {cnstr: cnstr, inset: $p.utils.generate_guid()}
-    }
-
-    function refill_prms(){
-      const {inserts, params} = elmnts.grids;
-      if(params && inserts){
-        params.selection = get_selection();
-        const row = inserts.get_cell_field();
-        if(row && !row.obj.inset.empty()){
-          $p.cat.clrs.selection_exclude_service(meta_fields.clr, row.obj.inset);
-        }
-      }
-    }
-
-    elmnts.layout = wnd.attachLayout({
-      pattern: "2E",
-      cells: [{
-        id: "a",
-        text: "Вставки",
-        header: false,
-        height: 160
-      }, {
-        id: "b",
-        text: "Параметры",
-        header: false
-      }],
-      offsets: {top: 0, right: 0, bottom: 0, left: 0}
-    });
-    elmnts.layout.cells("a").setMinHeight(140);
-    elmnts.layout.cells("a").setHeight(160);
-
-    elmnts.grids.inserts = elmnts.layout.cells("a").attachTabular({
-      obj: project.ox,
-      ts: "inserts",
-      selection: {cnstr: cnstr},
-      toolbar_struct: $p.injected_data["toolbar_add_del_compact.xml"],
-      metadata: meta_fields,
-      ts_captions: {
-        fields: ["inset", "clr"],
-        headers: "Вставка,Цвет",
-        widths: "*,*",
-        min_widths: "100,100",
-        aligns: "",
-        sortings: "na,na",
-        types: "ref,ref"
-      }
-    });
-
-    elmnts.grids.params = elmnts.layout.cells("b").attachHeadFields({
-      obj: project.ox,
-      ts: "params",
-      selection: get_selection(),
-      oxml: {
-        "Параметры": []
-      },
-      ts_title: "Параметры"
-    });
-
-    if(cell){
-      elmnts.layout.cells("a").getAttachedToolbar().addText($p.utils.generate_guid(), 3, options.wnd.caption);
-    }
-
-    // фильтруем параметры при выборе вставки
-    elmnts.grids.inserts.attachEvent("onRowSelect", refill_prms);
-    elmnts.grids.inserts.attachEvent("onEditCell", (stage, rId, cInd) => {
-      !cInd && setTimeout(refill_prms);
-      project.register_change();
-    });
-
+    new AdditionalInserts(cnstr, this.project, cell)
   }
 
   /**
@@ -1349,7 +1152,7 @@ class Editor extends paper.PaperScope {
         delta = new paper.Point([0, delta]);
       }
 
-      if(delta.length > 0.01){
+      if(delta.length > consts.epsilon){
         impost.move_points(delta, true);
         res.push(delta);
       }

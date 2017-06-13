@@ -358,7 +358,7 @@ class ToolLayImpost extends ToolElement {
 
         tool.paths.forEach((p) => {
 
-          let p1, p2, iter = 0, angle, proto = {clr: tool.profile.clr};
+          let iter = 0, angle, proto = {clr: tool.profile.clr};
 
           function do_bind() {
 
@@ -366,44 +366,41 @@ class ToolLayImpost extends ToolElement {
               correctedp2 = false;
 
             // пытаемся вязать к профилям контура
-            lgeneratics.forEach(function (gen) {
-              let np = gen.getNearestPoint(p1);
-              if(!correctedp1 && np.getDistance(p1) < consts.sticking){
+            for(let gen of lgeneratics){
+              let np = gen.getNearestPoint(p.b);
+              if(!correctedp1 && np.getDistance(p.b) < consts.sticking){
                 correctedp1 = true;
-                p1 = np;
+                p.b = np;
               }
-              np = gen.getNearestPoint(p2);
-              if(!correctedp2 && np.getDistance(p2) < consts.sticking){
+              np = gen.getNearestPoint(p.e);
+              if(!correctedp2 && np.getDistance(p.e) < consts.sticking){
                 correctedp2 = true;
-                p2 = np;
+                p.e = np;
               }
-            });
+            }
 
             // если не привязалось - ищем точки на вновь добавленных профилях
             if(tool.profile.split != $p.enm.lay_split_types.КрестВСтык && (!correctedp1 || !correctedp2)){
-              nprofiles.forEach((p) => {
-                let np = p.generatrix.getNearestPoint(p1);
-                if(!correctedp1 && np.getDistance(p1) < consts.sticking){
+              for(let profile of nprofiles){
+                let np = profile.generatrix.getNearestPoint(p.b);
+                if(!correctedp1 && np.getDistance(p.b) < consts.sticking){
                   correctedp1 = true;
-                  p1 = np;
+                  p.b = np;
                 }
-                np = p.generatrix.getNearestPoint(p2);
-                if(!correctedp2 && np.getDistance(p2) < consts.sticking){
+                np = profile.generatrix.getNearestPoint(p.e);
+                if(!correctedp2 && np.getDistance(p.e) < consts.sticking){
                   correctedp2 = true;
-                  p2 = np;
+                  p.e = np;
                 }
-              });
+              }
             }
           }
 
           p.remove();
           if(p.segments.length){
 
-            p1 = n1(p);
-            p2 = n2(p);
-
             // в зависимости от наклона разные вставки
-            angle = p2.subtract(p1).angle;
+            angle = p.e.subtract(p.b).angle;
             if((angle > -40 && angle < 40) || (angle > 180-40 && angle < 180+40)){
               proto.inset = p._inset || tool.profile.inset_by_y;
             }else{
@@ -414,19 +411,20 @@ class ToolLayImpost extends ToolElement {
 
               nprofiles.push(new Onlay({
                 generatrix: new paper.Path({
-                  segments: [p1, p2]
+                  segments: [p.b, p.e]
                 }),
                 parent: tool.hitItem,
                 proto: proto
               }));
 
-            }else{
+            }
+            else{
 
               while (iter < 10){
 
                 iter++;
                 do_bind();
-                angle = p2.subtract(p1).angle;
+                angle = p.e.subtract(p.b).angle;
                 let delta = Math.abs(angle % 90);
 
                 if(delta > 45){
@@ -443,10 +441,10 @@ class ToolLayImpost extends ToolElement {
                 }
 
                 if((angle > -40 && angle < 40) || (angle > 180-40 && angle < 180+40)){
-                  p1.y = p2.y = (p1.y + p2.y) / 2;
+                  p.b.y = p.e.y = (p.b.y + p.e.y) / 2;
                 }
                 else if((angle > 90-40 && angle < 90+40) || (angle > 270-40 && angle < 270+40)){
-                  p1.x = p2.x = (p1.x + p2.x) / 2;
+                  p.b.x = p.e.x = (p.b.x + p.e.x) / 2;
                 }
                 else{
                   break;
@@ -454,10 +452,10 @@ class ToolLayImpost extends ToolElement {
               }
 
               // создаём новые профили
-              if(p2.getDistance(p1) > proto.inset.nom().width){
+              if(p.e.getDistance(p.b) > proto.inset.nom().width){
                 nprofiles.push(new Profile({
                   generatrix: new paper.Path({
-                    segments: [p1, p2]
+                    segments: [p.b, p.e]
                   }),
                   parent: layer,
                   proto: proto
@@ -521,14 +519,15 @@ class ToolLayImpost extends ToolElement {
           clr = BuilderElement.clr_by_clr(this.profile.clr, false),
           by_x = [], by_y = [], base, pos, path, i, j, pts;
 
-        function get_path() {
+        function get_path(segments, b, e) {
           base++;
           if(base < tool.paths.length){
             path = tool.paths[base];
             path.fillColor = clr;
             if(!path.isInserted())
               path.parent = tool.hitItem ? tool.hitItem.layer : paper.project.activeLayer;
-          }else{
+          }
+          else{
             path = new paper.Path({
               strokeColor: 'black',
               fillColor: clr,
@@ -538,6 +537,9 @@ class ToolLayImpost extends ToolElement {
             });
             tool.paths.push(path);
           }
+          path.addSegments(segments);
+          path.b = b.clone();
+          path.e = e.clone();
           return path;
         }
 
@@ -556,41 +558,44 @@ class ToolLayImpost extends ToolElement {
           var intersect = gen.getIntersections(new paper.Path({ insert: false, segments: [res.p1, res.p2] }));
 
           if(c1){
-            intersect.reduce(function (sum, curr) {
-              var dist = sum.point.getDistance(curr.point);
+            intersect.reduce((sum, curr) => {
+              const dist = sum.point.getDistance(curr.point);
               if(dist < sum.dist){
                 res.p2 = curr.point;
                 sum.dist = dist;
               }
               return sum;
             }, {dist: Infinity, point: res.p2});
-          }else if(c2){
-            intersect.reduce(function (sum, curr) {
-              var dist = sum.point.getDistance(curr.point);
+          }
+          else if(c2){
+            intersect.reduce((sum, curr) => {
+              const dist = sum.point.getDistance(curr.point);
               if(dist < sum.dist){
                 res.p1 = curr.point;
                 sum.dist = dist;
               }
               return sum;
             }, {dist: Infinity, point: res.p1});
-          }else if(intersect.length > 1){
-            intersect.reduce(function (sum, curr) {
-              var dist = sum.point.getDistance(curr.point);
+          }
+          else if(intersect.length > 1){
+            intersect.reduce((sum, curr) => {
+              const dist = sum.point.getDistance(curr.point);
               if(dist < sum.dist){
                 res.p2 = curr.point;
                 sum.dist = dist;
               }
               return sum;
             }, {dist: Infinity, point: res.p2});
-            intersect.reduce(function (sum, curr) {
-              var dist = sum.point.getDistance(curr.point);
+            intersect.reduce((sum, curr) => {
+              const dist = sum.point.getDistance(curr.point);
               if(dist < sum.dist){
                 res.p1 = curr.point;
                 sum.dist = dist;
               }
               return sum;
             }, {dist: Infinity, point: res.p1});
-          }else{
+          }
+          else{
             return null;
           }
 
@@ -606,28 +611,23 @@ class ToolLayImpost extends ToolElement {
               tool.profile.split == $p.enm.lay_split_types.КрестПересечение){
 
               if(pts = get_points([by_x[i], bounds.bottom], [by_x[i], bounds.top]))
-                get_path().addSegments([[pts.p1.x-w2x, pts.p1.y], [pts.p2.x-w2x, pts.p2.y], [pts.p2.x+w2x, pts.p2.y], [pts.p1.x+w2x, pts.p1.y]]);
-
-            }else{
-              by_y.sort(function (a,b) { return b-a; });
+                get_path([[pts.p1.x-w2x, pts.p1.y], [pts.p2.x-w2x, pts.p2.y], [pts.p2.x+w2x, pts.p2.y], [pts.p1.x+w2x, pts.p1.y]], pts.p1, pts.p2);
+            }
+            else{
+              by_y.sort((a, b) => b - a);
               for(j = 0; j < by_y.length; j++){
-
                 if(j == 0){
                   if(hit && (pts = get_points([by_x[i], bounds.bottom], [by_x[i], by_y[j]])))
-                    get_path().addSegments([[pts.p1.x-w2x, pts.p1.y], [pts.p2.x-w2x, pts.p2.y+w2x], [pts.p2.x+w2x, pts.p2.y+w2x], [pts.p1.x+w2x, pts.p1.y]]);
-
-                }else{
-                  if(pts = get_points([by_x[i], by_y[j-1]], [by_x[i], by_y[j]]))
-                    get_path().addSegments([[pts.p1.x-w2x, pts.p1.y-w2x], [pts.p2.x-w2x, pts.p2.y+w2x], [pts.p2.x+w2x, pts.p2.y+w2x], [pts.p1.x+w2x, pts.p1.y-w2x]]);
-
+                    get_path([[pts.p1.x-w2x, pts.p1.y], [pts.p2.x-w2x, pts.p2.y+w2x], [pts.p2.x+w2x, pts.p2.y+w2x], [pts.p1.x+w2x, pts.p1.y]], pts.p1, pts.p2);
                 }
-
+                else{
+                  if(pts = get_points([by_x[i], by_y[j-1]], [by_x[i], by_y[j]]))
+                    get_path([[pts.p1.x-w2x, pts.p1.y-w2x], [pts.p2.x-w2x, pts.p2.y+w2x], [pts.p2.x+w2x, pts.p2.y+w2x], [pts.p1.x+w2x, pts.p1.y-w2x]], pts.p1, pts.p2);
+                }
                 if(j == by_y.length -1){
                   if(hit && (pts = get_points([by_x[i], by_y[j]], [by_x[i], bounds.top])))
-                    get_path().addSegments([[pts.p1.x-w2x, pts.p1.y-w2x], [pts.p2.x-w2x, pts.p2.y], [pts.p2.x+w2x, pts.p2.y], [pts.p1.x+w2x, pts.p1.y-w2x]]);
-
+                    get_path([[pts.p1.x-w2x, pts.p1.y-w2x], [pts.p2.x-w2x, pts.p2.y], [pts.p2.x+w2x, pts.p2.y], [pts.p1.x+w2x, pts.p1.y-w2x]], pts.p1, pts.p2);
                 }
-
               }
             }
           }
@@ -642,28 +642,23 @@ class ToolLayImpost extends ToolElement {
               tool.profile.split == $p.enm.lay_split_types.КрестПересечение){
 
               if(pts = get_points([bounds.left, by_y[i]], [bounds.right, by_y[i]]))
-                get_path().addSegments([[pts.p1.x, pts.p1.y-w2y], [pts.p2.x, pts.p2.y-w2y], [pts.p2.x, pts.p2.y+w2y], [pts.p1.x, pts.p1.y+w2y]]);
-
-            }else{
-              by_x.sort(function (a,b) { return a-b; });
+                get_path([[pts.p1.x, pts.p1.y-w2y], [pts.p2.x, pts.p2.y-w2y], [pts.p2.x, pts.p2.y+w2y], [pts.p1.x, pts.p1.y+w2y]], pts.p1, pts.p2);
+            }
+            else{
+              by_x.sort((a, b) => a - b);
               for(j = 0; j < by_x.length; j++){
-
                 if(j == 0){
                   if(hit && (pts = get_points([bounds.left, by_y[i]], [by_x[j], by_y[i]])))
-                    get_path().addSegments([[pts.p1.x, pts.p1.y-w2y], [pts.p2.x-w2y, pts.p2.y-w2y], [pts.p2.x-w2y, pts.p2.y+w2y], [pts.p1.x, pts.p1.y+w2y]]);
-
-                }else{
-                  if(pts = get_points([by_x[j-1], by_y[i]], [by_x[j], by_y[i]]))
-                    get_path().addSegments([[pts.p1.x+w2y, pts.p1.y-w2y], [pts.p2.x-w2y, pts.p2.y-w2y], [pts.p2.x-w2y, pts.p2.y+w2y], [pts.p1.x+w2y, pts.p1.y+w2y]]);
-
+                    get_path([[pts.p1.x, pts.p1.y-w2y], [pts.p2.x-w2y, pts.p2.y-w2y], [pts.p2.x-w2y, pts.p2.y+w2y], [pts.p1.x, pts.p1.y+w2y]], pts.p1, pts.p2);
                 }
-
+                else{
+                  if(pts = get_points([by_x[j-1], by_y[i]], [by_x[j], by_y[i]]))
+                    get_path([[pts.p1.x+w2y, pts.p1.y-w2y], [pts.p2.x-w2y, pts.p2.y-w2y], [pts.p2.x-w2y, pts.p2.y+w2y], [pts.p1.x+w2y, pts.p1.y+w2y]], pts.p1, pts.p2);
+                }
                 if(j == by_x.length -1){
                   if(hit && (pts = get_points([by_x[j], by_y[i]], [bounds.right, by_y[i]])))
-                    get_path().addSegments([[pts.p1.x+w2y, pts.p1.y-w2y], [pts.p2.x, pts.p2.y-w2y], [pts.p2.x, pts.p2.y+w2y], [pts.p1.x+w2y, pts.p1.y+w2y]]);
-
+                    get_path([[pts.p1.x+w2y, pts.p1.y-w2y], [pts.p2.x, pts.p2.y-w2y], [pts.p2.x, pts.p2.y+w2y], [pts.p1.x+w2y, pts.p1.y+w2y]], pts.p1, pts.p2);
                 }
-
               }
             }
           }
