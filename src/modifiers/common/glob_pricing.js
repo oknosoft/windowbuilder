@@ -82,7 +82,7 @@ class Pricing {
         limit: 5000,
         include_docs: false,
         startkey: startkey || [''],
-        endkey: ['\uffff'],
+        endkey: ['\ufff0'],
         reduce: true,
         group: true,
       })

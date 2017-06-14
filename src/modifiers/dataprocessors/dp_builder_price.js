@@ -48,7 +48,7 @@ $p.DpBuilder_price.prototype.__define({
         include_docs: false,
         reduce: false,
         startkey: [nom.ref, ''],
-        endkey: [nom.ref, '\uffff']
+        endkey: [nom.ref, '\ufff0']
       })
         .then((data) => {
         if(data && data.rows){
