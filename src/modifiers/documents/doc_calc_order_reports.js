@@ -42,7 +42,7 @@ $p.doc.calc_order.__define({
 			if(!$p.current_user.role_available("СогласованиеРасчетовЗаказов")){
 				//query_options.group_level = 3;
 				query_options.startkey = [$p.current_user.partners_uids[0],""];
-				query_options.endkey = [$p.current_user.partners_uids[0],"\uffff"];
+				query_options.endkey = [$p.current_user.partners_uids[0],"\ufff0"];
 			}
 
 			return $p.wsql.pouch.remote.doc.query("server/invoice_execution", query_options)
@@ -114,7 +114,7 @@ $p.doc.calc_order.__define({
 					group: true,
 					group_level: 5,
 					startkey: [date_from.getFullYear(), date_from.getMonth()+1, date_from.getDate(), ""],
-					endkey: [date_till.getFullYear(), date_till.getMonth()+1, date_till.getDate(),"\uffff"]
+					endkey: [date_till.getFullYear(), date_till.getMonth()+1, date_till.getDate(),"\ufff0"]
 				},
 				res = {
 					data: [],

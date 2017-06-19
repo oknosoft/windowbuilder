@@ -335,7 +335,7 @@ class MangoSelection {
 
     const date = {
       $gte: moment(flt.date_from).format('YYYY-MM-DD'),
-      $lt: moment(flt.date_till).format('YYYY-MM-DD') + '\uffff'
+      $lt: moment(flt.date_till).format('YYYY-MM-DD') + '\ufff0'
     };
     const filter = {
       selector: {},

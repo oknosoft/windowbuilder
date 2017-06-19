@@ -1245,7 +1245,7 @@ class ProfileItem extends GeneratrixElement {
     }
     // для соединения крест в стык, отступаем ширину профиля
     else if(cnn_type == $p.enm.cnn_types.xx) {
-      const {width} = this;
+      const width = this.width * 0.7;
       const l = profile_point == "b" ? width : generatrix.length - width;
       const p = generatrix.getPointAt(l);
       const n = generatrix.getNormalAt(l).normalize(width);
