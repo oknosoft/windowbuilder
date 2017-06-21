@@ -460,6 +460,59 @@ class ProductsBuilding {
     }
 
     /**
+     * Спецификация сечения (водоотлива)
+     * @param elm {Profile}
+     */
+    function base_spec_sectionals(elm) {
+
+      const {_row, generatrix, _attr} = elm;
+      const {inset, clr} = elm;
+      const {zoom} = _attr;
+      const {curves} = generatrix;
+
+      if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+        return;
+      }
+      /* 
+      * В отличии от профилей, разрез определяется кривыми от образующей
+      * Сумма в цикле (elm.generatrix.curves[0].length / elm._attr.zoom).round(0)
+      * for(let curve of curves){
+      *   (curve.length / zoom).toFixed(0)
+      * }
+      */
+      /*
+      * Рассчет водоотливов идет по вставкам! Строку спецификации на сам водоотлив нам получать не надо.
+      */
+      // const {new_spec_row} = ProductsBuilding;
+      // let row_spec;
+      // row_spec = new_spec_row({row_base: _row, origin: elm.inset, elm, ox, spec: ox.specification});
+      // row_spec.width = (elm.width).toFixed(2);
+      // row_spec.qty = 1; 
+      // row_spec.s = row_spec.len  * row_spec.width;
+
+      // спецификация вставки
+      elm.inset.calculate_spec({elm, ox});
+
+      // спецификация вложенных в элемент вставок
+      ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
+
+        // если во вставке указано создавать продукцию, создаём
+        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
+          $p.record_log("inset_elm_spec: specification_order_row_types.Продукция");
+        }
+
+        len_angl.origin = inset;
+        len_angl.angle = elm.angle_hor;
+        len_angl.cnstr = elm.layer.cnstr;
+        delete len_angl.art1;
+        delete len_angl.art2;
+        inset.calculate_spec({elm, len_angl, ox});
+
+      });
+
+    }
+
+    /**
      * Спецификация заполнения
      * @param glass {Filling}
      */
@@ -573,6 +626,9 @@ class ProductsBuilding {
 
         // для всех профилей контура
         contour.profiles.forEach(base_spec_profile);
+
+        // для всех разрезов (водоотливов)
+        contour.sectionals.forEach(base_spec_sectionals);
 
         // для всех заполнений контура
         contour.glasses(false, true).forEach(base_spec_glass);
