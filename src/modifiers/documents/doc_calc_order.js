@@ -690,6 +690,9 @@ $p.doc.calc_order.on({
       const mgr = $p.cat.characteristics;
       let cx;
       mgr.find_rows({calc_order: this, product: row.row}, (ox) => {
+        for(let ts in mgr.metadata().tabular_sections){
+          ox[ts].clear(true);
+        }
         cx = Promise.resolve(ox);
       });
 

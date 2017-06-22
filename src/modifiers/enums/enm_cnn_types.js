@@ -1,9 +1,10 @@
 /**
  * Дополнительные методы перечисления Типы соединений
  *
- * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
- * @author Evgeniy Malyarov
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
+ * Created 23.12.2015
+ *
  * @module enm_cnn_types
  */
 
