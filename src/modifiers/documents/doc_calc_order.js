@@ -686,12 +686,19 @@ $p.doc.calc_order.on({
         return row;
       }
 
+      // ищем объект продукции в RAM
+      const mgr = $p.cat.characteristics;
+      let cx;
+      mgr.find_rows({calc_order: this, product: row.row}, (ox) => {
+        cx = Promise.resolve(ox);
+      });
+
       // объект продукции создаём, но из базы не читаем и пока не записываем
-      return $p.cat.characteristics.create({
+      return (cx || mgr.create({
         ref: $p.utils.generate_guid(),
         calc_order: this,
         product: row.row
-      }, true)
+      }, true))
         .then((ox) => {
           // устанавливаем характеристику в строке заказа
           row.characteristic = ox;
