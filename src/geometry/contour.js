@@ -1063,11 +1063,16 @@ class Contour extends AbstractFilling(paper.Layer) {
   draw_sill() {
     const {l_visualization, project, cnstr} = this;
     const {ox} = project;
+    const {properties} = $p.job_prm;
+    if(!properties){
+      return;
+    }
+    // указатели на параметры длина и ширина
+    const {length, width} = $p.job_prm.properties;
+
     ox.inserts.find_rows({cnstr}, (row) => {
       if (row.inset.insert_type == $p.enm.inserts_types.Подоконник) {
 
-        // ищем длину и ширину
-        const {length, width} = $p.job_prm.properties;
         const bottom = this.profiles_by_side("bottom");
         let vlen, vwidth;
         ox.params.find_rows({cnstr: cnstr, inset: row.inset}, (prow) => {

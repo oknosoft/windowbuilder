@@ -45,10 +45,10 @@ $p.CatFormulas.prototype.__define({
 			if(!this._data._formula && this.formula){
 			  if(this.async){
           const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-          this._data._formula = (new AsyncFunction("obj", this.formula)).bind(this);
+          this._data._formula = (new AsyncFunction("obj,$p", this.formula)).bind(this);
         }
         else{
-          this._data._formula = (new Function("obj", this.formula)).bind(this);
+          this._data._formula = (new Function("obj,$p", this.formula)).bind(this);
         }
       }
 
@@ -66,14 +66,14 @@ $p.CatFormulas.prototype.__define({
         }
 
 				// получаем HTMLDivElement с отчетом
-				return _formula(obj)
+				return _formula(obj, $p)
 
 				  // показываем отчет в отдельном окне
 					.then((doc) => doc instanceof $p.SpreadsheetDocument && doc.print());
 
 			}
 			else{
-        return _formula && _formula(obj)
+        return _formula && _formula(obj, $p)
       }
 
 		}
