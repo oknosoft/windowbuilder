@@ -174,15 +174,21 @@ $p.doc.calc_order.on({
 	// при изменении реквизита
 	value_change: function (attr) {
 
+    let obj = this;
+    if(attr instanceof $p.DocCalc_order){
+      obj = attr;
+      attr = arguments[1];
+    }
+
 		// реквизиты шапки
 		if(attr.field == "organization"){
-			this.new_number_doc();
-			if(this.contract.organization != attr.value){
-        this.contract = $p.cat.contracts.by_partner_and_org(this.partner, attr.value);
+      obj.new_number_doc();
+			if(obj.contract.organization != attr.value){
+        obj.contract = $p.cat.contracts.by_partner_and_org(obj.partner, attr.value);
       }
 		}
-		else if(attr.field == "partner" && this.contract.owner != attr.value){
-			this.contract = $p.cat.contracts.by_partner_and_org(attr.value, this.organization);
+		else if(attr.field == "partner" && obj.contract.owner != attr.value){
+      obj.contract = $p.cat.contracts.by_partner_and_org(attr.value, obj.organization);
 
 		}
     // табчасть продукции
@@ -226,7 +232,7 @@ $p.doc.calc_order.on({
 				attr.row.amount_internal = (attr.row.price_internal * ((100 - attr.row.discount_percent_internal)/100) * attr.row.quantity).round(2);
 
 				// ставка и сумма НДС
-				if(this.vat_consider){
+				if(obj.vat_consider){
           const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
 					attr.row.vat_rate = attr.row.nom.vat_rate.empty() ? НДС18 : attr.row.nom.vat_rate;
 					switch (attr.row.vat_rate){
@@ -247,7 +253,7 @@ $p.doc.calc_order.on({
 							attr.row.vat_amount = 0;
 							break;
 					}
-					if(!this.vat_included){
+					if(!obj.vat_included){
 						attr.row.amount = (attr.row.amount + attr.row.vat_amount).round(2);
 					}
 				}
@@ -256,8 +262,8 @@ $p.doc.calc_order.on({
 					attr.row.vat_amount = 0;
 				}
 
-				this.doc_amount = this.production.aggregate([], ["amount"]).round(2);
-				this.amount_internal = this.production.aggregate([], ["amount_internal"]).round(2);
+        obj.doc_amount = obj.production.aggregate([], ["amount"]).round(2);
+        obj.amount_internal = obj.production.aggregate([], ["amount_internal"]).round(2);
 
 				// TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation
 
@@ -725,9 +731,10 @@ $p.doc.calc_order.on({
      */
     process_add_product_list(dp) {
 
-      return new Promise((resolve, reject) => {
+      return new Promise(async (resolve, reject) => {
 
-        dp.production.forEach(async (row_spec) => {
+        for(let i = 0; i < dp.production.count(); i++){
+          const row_spec = dp.production.get(i);
           if(row_spec.inset.empty()){
             return;
           }
@@ -771,7 +778,7 @@ $p.doc.calc_order.on({
             save: true,
           }, true);
 
-        });
+        }
 
         resolve();
 

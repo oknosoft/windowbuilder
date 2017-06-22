@@ -11,9 +11,9 @@
 
 	// Подписываемся на событие окончания загрузки локальных данных
 	$p.on({
-		pouch_load_data_loaded: function predefined_elmnts_data_loaded() {
+    pouch_data_loaded: function predefined_elmnts_data_loaded() {
 
-			$p.off('pouch_load_data_loaded', predefined_elmnts_data_loaded);
+			$p.off('pouch_data_loaded', predefined_elmnts_data_loaded);
 
 			// читаем элементы из pouchdb и создаём свойства
 			$p.cch.predefined_elmnts.pouch_find_rows({_raw: true, _top: 500, _skip: 0})

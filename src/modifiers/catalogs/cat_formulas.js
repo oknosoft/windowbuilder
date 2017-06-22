@@ -11,9 +11,9 @@
 $p.on({
 
   // обработчик события после загрузки данных в озу
-	pouch_load_data_loaded: function cat_formulas_data_loaded () {
+	pouch_data_loaded: function cat_formulas_data_loaded () {
 
-    $p.off('pouch_load_data_loaded', cat_formulas_data_loaded);
+    $p.off('pouch_data_loaded', cat_formulas_data_loaded);
 
 		// читаем элементы из pouchdb и создаём формулы
 		$p.cat.formulas.pouch_find_rows({ _top: 500, _skip: 0 })

@@ -9,7 +9,7 @@
 
 // Подписываемся на событие окончания загрузки локальных данных
 $p.on({
-	pouch_load_data_loaded: function predefined_elmnts_loaded() {
+	pouch_data_loaded: function predefined_elmnts_loaded() {
 
 		$p.off(predefined_elmnts_loaded);
 
