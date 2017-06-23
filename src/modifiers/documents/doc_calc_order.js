@@ -17,77 +17,92 @@ $p.doc.calc_order.on({
 	// после создания надо заполнить реквизиты по умолчанию: контрагент, организация, договор
 	after_create: function (attr) {
 
-	  const {acl_objs} = $p.current_user;
+    const {enm, cat, current_user, DocCalc_order} = $p;
+	  const {acl_objs} = current_user;
+
+    let obj = this;
+	  if(attr instanceof DocCalc_order){
+      obj = attr;
+      attr = arguments[1];
+    }
 
 		//Организация
-		acl_objs.find_rows({by_default: true, type: $p.cat.organizations.class_name}, (row) => {
-      this.organization = row.acl_obj;
+		acl_objs.find_rows({by_default: true, type: cat.organizations.class_name}, (row) => {
+      obj.organization = row.acl_obj;
 			return false;
 		});
 
 		//Подразделение
-    $p.DocCalc_order.set_department.call(this)
+    DocCalc_order.set_department.call(obj);
 
 		//Контрагент
-		acl_objs.find_rows({by_default: true, type: $p.cat.partners.class_name}, (row) => {
-      this.partner = row.acl_obj;
+		acl_objs.find_rows({by_default: true, type: cat.partners.class_name}, (row) => {
+      obj.partner = row.acl_obj;
 			return false;
 		});
 
 		//Договор
-		this.contract = $p.cat.contracts.by_partner_and_org(this.partner, this.organization);
+    obj.contract = cat.contracts.by_partner_and_org(obj.partner, obj.organization);
 
 		//Менеджер
-    this.manager = $p.current_user;
+    obj.manager = current_user;
 
 		//СостояниеТранспорта
-    this.obj_delivery_state = $p.enm.obj_delivery_states.Черновик;
+    obj.obj_delivery_state = enm.obj_delivery_states.Черновик;
 
 		//Номер документа
-		return this.new_number_doc();
+		return obj.new_number_doc();
 
 	},
 
 	// перед записью надо присвоить номер для нового и рассчитать итоги
 	before_save: function (attr) {
 
+    const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
+
+    let obj = this;
+    if(attr instanceof $p.DocCalc_order){
+      obj = attr;
+      attr = arguments[1];
+    }
+
 		let doc_amount = 0,
       amount_internal = 0,
       sys_profile = "",
       sys_furn = "";
 
-		const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
 
 		// если установлен признак проведения, проверим состояние транспорта
-		if(this.posted){
-			if (this.obj_delivery_state == Отклонен || this.obj_delivery_state == Отозван || this.obj_delivery_state == Шаблон){
-				$p.msg.show_msg({
+		if(obj.posted){
+			if (obj.obj_delivery_state == Отклонен || obj.obj_delivery_state == Отозван || obj.obj_delivery_state == Шаблон){
+        $p.msg.show_msg && $p.msg.show_msg({
 					type: "alert-warning",
 					text: "Нельзя провести заказ со статусом<br/>'Отклонён', 'Отозван' или 'Шаблон'",
-					title: this.presentation
+					title: obj.presentation
 				});
 				return false;
 			}
-			else if(this.obj_delivery_state != Подтвержден){
-				this.obj_delivery_state = Подтвержден;
+			else if(obj.obj_delivery_state != Подтвержден){
+        obj.obj_delivery_state = Подтвержден;
 			}
-		}else if(this.obj_delivery_state == Подтвержден){
-			this.obj_delivery_state = Отправлен;
+		}
+		else if(obj.obj_delivery_state == Подтвержден){
+      obj.obj_delivery_state = Отправлен;
 		}
 
 		// проверим заполненность подразделения
-    if(this.obj_delivery_state == Шаблон){
-      this.department = $p.utils.blank.guid;
-    }else if(this.department.empty()){
-      $p.msg.show_msg({
+    if(obj.obj_delivery_state == Шаблон){
+      obj.department = $p.utils.blank.guid;
+    }else if(obj.department.empty()){
+      $p.msg.show_msg && $p.msg.show_msg({
         type: "alert-warning",
         text: "Не заполнен реквизит 'офис продаж' (подразделение)",
-        title: this.presentation
+        title: obj.presentation
       });
       return false;
     }
 
-		this.production.each((row) => {
+    obj.production.each((row) => {
 
 			doc_amount += row.amount;
 			amount_internal += row.amount_internal;
@@ -113,13 +128,13 @@ $p.doc.calc_order.on({
 			}
 		});
 
-		this.doc_amount = doc_amount.round(2);
-		this.amount_internal = amount_internal.round(2);
-		this.sys_profile = sys_profile;
-		//this.sys_furn = sys_furn;
-		this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(2);
+    obj.doc_amount = doc_amount.round(2);
+    obj.amount_internal = amount_internal.round(2);
+    obj.sys_profile = sys_profile;
+		//obj.sys_furn = sys_furn;
+    obj.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, obj.date, obj.doc_currency).round(2);
 
-		const {_obj, obj_delivery_state, category, number_internal, partner, client_of_dealer, note} = this;
+		const {_obj, obj_delivery_state, category, number_internal, partner, client_of_dealer, note} = obj;
 
 		// фильтр по статусу
     if(obj_delivery_state=='Шаблон'){
@@ -148,7 +163,7 @@ $p.doc.calc_order.on({
     }
 
 		// строка поиска
-		_obj.search = (this.number_doc +
+		_obj.search = (obj.number_doc +
       (number_internal ? " " + number_internal : "") +
       (client_of_dealer ? " " + client_of_dealer : "") +
       (partner.name ? " " + partner.name : "") +
@@ -159,15 +174,21 @@ $p.doc.calc_order.on({
 	// при изменении реквизита
 	value_change: function (attr) {
 
+    let obj = this;
+    if(attr instanceof $p.DocCalc_order){
+      obj = attr;
+      attr = arguments[1];
+    }
+
 		// реквизиты шапки
 		if(attr.field == "organization"){
-			this.new_number_doc();
-			if(this.contract.organization != attr.value){
-        this.contract = $p.cat.contracts.by_partner_and_org(this.partner, attr.value);
+      obj.new_number_doc();
+			if(obj.contract.organization != attr.value){
+        obj.contract = $p.cat.contracts.by_partner_and_org(obj.partner, attr.value);
       }
 		}
-		else if(attr.field == "partner" && this.contract.owner != attr.value){
-			this.contract = $p.cat.contracts.by_partner_and_org(attr.value, this.organization);
+		else if(attr.field == "partner" && obj.contract.owner != attr.value){
+      obj.contract = $p.cat.contracts.by_partner_and_org(attr.value, obj.organization);
 
 		}
     // табчасть продукции
@@ -211,7 +232,7 @@ $p.doc.calc_order.on({
 				attr.row.amount_internal = (attr.row.price_internal * ((100 - attr.row.discount_percent_internal)/100) * attr.row.quantity).round(2);
 
 				// ставка и сумма НДС
-				if(this.vat_consider){
+				if(obj.vat_consider){
           const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
 					attr.row.vat_rate = attr.row.nom.vat_rate.empty() ? НДС18 : attr.row.nom.vat_rate;
 					switch (attr.row.vat_rate){
@@ -232,7 +253,7 @@ $p.doc.calc_order.on({
 							attr.row.vat_amount = 0;
 							break;
 					}
-					if(!this.vat_included){
+					if(!obj.vat_included){
 						attr.row.amount = (attr.row.amount + attr.row.vat_amount).round(2);
 					}
 				}
@@ -241,8 +262,8 @@ $p.doc.calc_order.on({
 					attr.row.vat_amount = 0;
 				}
 
-				this.doc_amount = this.production.aggregate([], ["amount"]).round(2);
-				this.amount_internal = this.production.aggregate([], ["amount_internal"]).round(2);
+        obj.doc_amount = obj.production.aggregate([], ["amount"]).round(2);
+        obj.amount_internal = obj.production.aggregate([], ["amount_internal"]).round(2);
 
 				// TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation
 
@@ -666,12 +687,22 @@ $p.doc.calc_order.on({
         return row;
       }
 
+      // ищем объект продукции в RAM
+      const mgr = $p.cat.characteristics;
+      let cx;
+      mgr.find_rows({calc_order: this, product: row.row}, (ox) => {
+        for(let ts in mgr.metadata().tabular_sections){
+          ox[ts].clear(true);
+        }
+        cx = Promise.resolve(ox);
+      });
+
       // объект продукции создаём, но из базы не читаем и пока не записываем
-      return $p.cat.characteristics.create({
+      return (cx || mgr.create({
         ref: $p.utils.generate_guid(),
         calc_order: this,
         product: row.row
-      }, true)
+      }, true))
         .then((ox) => {
           // устанавливаем характеристику в строке заказа
           row.characteristic = ox;
@@ -711,9 +742,10 @@ $p.doc.calc_order.on({
      */
     process_add_product_list(dp) {
 
-      return new Promise((resolve, reject) => {
+      return new Promise(async (resolve, reject) => {
 
-        dp.production.forEach(async (row_spec) => {
+        for(let i = 0; i < dp.production.count(); i++){
+          const row_spec = dp.production.get(i);
           if(row_spec.inset.empty()){
             return;
           }
@@ -757,7 +789,7 @@ $p.doc.calc_order.on({
             save: true,
           }, true);
 
-        });
+        }
 
         resolve();
 
@@ -772,8 +804,9 @@ $p.doc.calc_order.on({
       if(department){
         this.department = department;
       }
+      const {current_user, cat} = $p;
       if(this.department.empty() || this.department.is_new()){
-        $p.current_user.acl_objs && $p.current_user.acl_objs.find_rows({by_default: true, type: $p.cat.divisions.class_name}, (row) => {
+        current_user.acl_objs && current_user.acl_objs.find_rows({by_default: true, type: cat.divisions.class_name}, (row) => {
           if(this.department != row.acl_obj){
             this.department = row.acl_obj;
           }

@@ -27,12 +27,18 @@ $p.cat.characteristics.on({
 	// перед записью надо пересчитать наименование и рассчитать итоги
 	before_save: function (attr) {
 
+    let obj = this;
+    if(attr instanceof $p.CatCharacteristics){
+      obj = attr;
+      attr = arguments[1];
+    }
+
 		// уточняем номенклатуру системы
-    const {prod_nom, calc_order} = this;
+    const {prod_nom, calc_order} = obj;
 
     // контроль прав на запись характеристики
     if(calc_order.is_read_only){
-      this._data._err = {
+      obj._data._err = {
         title: 'Права доступа',
         type: 'alert-error',
         text: `Запрещено изменять заказ в статусе ${calc_order.obj_delivery_state}`
@@ -41,13 +47,13 @@ $p.cat.characteristics.on({
     }
 
 		// пересчитываем наименование
-		const name = this.prod_name();
+		const name = obj.prod_name();
 		if(name){
-      this.name = name;
+      obj.name = name;
     }
 
 		// дублируем контрагента для целей RLS
-		this.partner = calc_order.partner;
+    obj.partner = calc_order.partner;
 
 	},
 

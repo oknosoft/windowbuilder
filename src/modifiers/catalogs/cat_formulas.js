@@ -11,9 +11,9 @@
 $p.on({
 
   // обработчик события после загрузки данных в озу
-	pouch_load_data_loaded: function cat_formulas_data_loaded () {
+	pouch_data_loaded: function cat_formulas_data_loaded () {
 
-    $p.off('pouch_load_data_loaded', cat_formulas_data_loaded);
+    $p.off('pouch_data_loaded', cat_formulas_data_loaded);
 
 		// читаем элементы из pouchdb и создаём формулы
 		$p.cat.formulas.pouch_find_rows({ _top: 500, _skip: 0 })
@@ -45,10 +45,10 @@ $p.CatFormulas.prototype.__define({
 			if(!this._data._formula && this.formula){
 			  if(this.async){
           const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-          this._data._formula = (new AsyncFunction("obj", this.formula)).bind(this);
+          this._data._formula = (new AsyncFunction("obj,$p", this.formula)).bind(this);
         }
         else{
-          this._data._formula = (new Function("obj", this.formula)).bind(this);
+          this._data._formula = (new Function("obj,$p", this.formula)).bind(this);
         }
       }
 
@@ -66,14 +66,14 @@ $p.CatFormulas.prototype.__define({
         }
 
 				// получаем HTMLDivElement с отчетом
-				return _formula(obj)
+				return _formula(obj, $p)
 
 				  // показываем отчет в отдельном окне
 					.then((doc) => doc instanceof $p.SpreadsheetDocument && doc.print());
 
 			}
 			else{
-        return _formula && _formula(obj)
+        return _formula && _formula(obj, $p)
       }
 
 		}

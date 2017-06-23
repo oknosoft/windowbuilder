@@ -1,6 +1,7 @@
 /**
  * ### Раскладка
- * &copy; http://www.oknosoft.ru 2014-2015<br />
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * 
  * Created 16.05.2016
  *
  * @module geometry

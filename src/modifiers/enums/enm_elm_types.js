@@ -1,6 +1,8 @@
 /**
  * Дополнительные методы перечисления Типы элементов
- * @author Evgeniy Malyarov
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ *
  * @module enm_elm_types
  */
 

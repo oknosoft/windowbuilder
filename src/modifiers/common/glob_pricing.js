@@ -335,46 +335,46 @@ class Pricing {
    */
   calc_amount (prm) {
 
-    // TODO: реализовать расчет цены продажи по номенклатуре строки расчета
+    const {calc_order_row, price_type} = prm;
     const price_cost = $p.job_prm.pricing.marginality_in_spec ?
       prm.spec.aggregate([], ["amount_marged"]) :
-      this.nom_price(prm.calc_order_row.nom, prm.calc_order_row.characteristic, prm.price_type.price_type_sale, prm, {});
+      this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
 
     let extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
 
     // если пересчет выполняется менеджером, используем наценку по умолчанию
     if(!$p.current_user.partners_uids.length || !extra_charge){
-      extra_charge = prm.price_type.extra_charge_external;
+      extra_charge = price_type.extra_charge_external;
     }
 
     // цена продажи
     if(price_cost){
-      prm.calc_order_row.price = price_cost.round(2);
+      calc_order_row.price = price_cost.round(2);
     }
     else{
-      prm.calc_order_row.price = (prm.calc_order_row.first_cost * prm.price_type.marginality).round(2);
+      calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(2);
     }
 
     // КМарж в строке расчета
-    prm.calc_order_row.marginality = prm.calc_order_row.first_cost ?
-      prm.calc_order_row.price * ((100 - prm.calc_order_row.discount_percent)/100) / prm.calc_order_row.first_cost : 0;
+    calc_order_row.marginality = calc_order_row.first_cost ?
+      calc_order_row.price * ((100 - calc_order_row.discount_percent)/100) / calc_order_row.first_cost : 0;
 
 
     // TODO: Рассчитаем цену и сумму ВНУТР или ДИЛЕРСКУЮ цену и скидку
     if(extra_charge){
-      prm.calc_order_row.price_internal = (prm.calc_order_row.price *
-      (100 - prm.calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
+      calc_order_row.price_internal = (calc_order_row.price *
+      (100 - calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
 
       // TODO: учесть формулу
     }
 
     // Эмулируем событие окончания редактирования, чтобы единообразно пересчитать строку табчасти
     if(!prm.hand_start){
-      $p.doc.calc_order.handle_event(prm.calc_order_row._owner._owner, "value_change", {
+      $p.doc.calc_order.handle_event(calc_order_row._owner._owner, "value_change", {
         field: "price",
-        value: prm.calc_order_row.price,
+        value: calc_order_row.price,
         tabular_section: "production",
-        row: prm.calc_order_row,
+        row: calc_order_row,
         no_extra_charge: true
       });
     }

@@ -2,7 +2,7 @@
  * Дополнительные методы справочника Фурнитура
  *
  * Created 23.12.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2015
+ * &copy; http://www.oknosoft.ru 2014-2017
  * @author Evgeniy Malyarov
  * @module cat_furns
  */
