@@ -711,7 +711,7 @@ $p.doc.calc_order.on({
         .then((ox) => {
           // если указана строка-генератор, заполняем реквизиты
           if(row_spec instanceof $p.DpBuyers_orderProductionRow){
-            ox.owner = row.nom = row_spec.inset.nom(elm);
+            ox.owner = row.nom = row_spec.inset.nom(elm, true);
             ox.origin = row_spec.inset;
             ox.x = row.len = row_spec.len;
             ox.y = row.width = row_spec.height;
@@ -742,6 +742,8 @@ $p.doc.calc_order.on({
     process_add_product_list(dp) {
 
       return new Promise(async (resolve, reject) => {
+
+        const ax = [];
 
         for(let i = 0; i < dp.production.count(); i++){
           const row_spec = dp.production.get(i);
@@ -781,16 +783,16 @@ $p.doc.calc_order.on({
           row_prod.characteristic.specification.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop", "qty,totqty,totqty1");
 
           // производим дополнительную корректировку спецификации и рассчитываем цены
-          $p.spec_building.specification_adjustment({
+          [].push.apply(ax, $p.spec_building.specification_adjustment({
             //scheme: scheme,
             calc_order_row: row_prod,
             spec: row_prod.characteristic.specification,
             save: true,
-          }, true);
+          }, true));
 
         }
 
-        resolve();
+        resolve(ax);
 
       });
     }

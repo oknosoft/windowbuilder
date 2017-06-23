@@ -84,6 +84,8 @@ class SpecBuilding {
     });
     adel.forEach((row) => calc_order.production.del(row.row-1));
 
+    const ax = [];
+
     // затем, добавляем в заказ строки, назначенные к вытягиванию
     ox._order_rows && ox._order_rows.forEach((cx) => {
       const row = order_rows.get(cx) || calc_order.production.add({characteristic: cx});
@@ -96,7 +98,7 @@ class SpecBuilding {
       row.qty = calc_order_row.qty;
       row.quantity = calc_order_row.quantity;
 
-      save && cx.save().catch($p.record_log);
+      save && ax.push(cx.save().catch($p.record_log));
       order_rows.set(cx, row);
     });
     if(order_rows.size){
@@ -111,9 +113,11 @@ class SpecBuilding {
       $p.pricing.calc_amount(attr);
     }
 
-    if(attr.save && !attr.scheme && (ox.is_new() || ox._modified)){
-      ox.save().catch($p.record_log);
+    if(save && !attr.scheme && (ox.is_new() || ox._modified)){
+      ax.push(ox.save().catch($p.record_log));
     }
+
+    return ax;
   }
 
 }
