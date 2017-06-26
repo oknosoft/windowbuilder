@@ -61,8 +61,9 @@ $p.cat.inserts.__define({
      */
     nom(elm, strict) {
 
-      if(!strict && this._data.nom){
-        return this._data.nom;
+      const {_data} = this;
+      if(!strict && _data.nom){
+        return _data.nom;
       }
 
       const main_rows = [];
@@ -102,14 +103,14 @@ $p.cat.inserts.__define({
       }
 
       if(main_rows.length < 2){
-        this._data.nom = typeof _nom == 'string' ? $p.cat.nom.get(_nom) : _nom;
+        _data.nom = typeof _nom == 'string' ? $p.cat.nom.get(_nom) : _nom;
       }
       else{
         // TODO: реализовать фильтр
-        this._data.nom = _nom;
+        _data.nom = _nom;
       }
 
-      return _nom;
+      return _data.nom;
     }
 
     /**
