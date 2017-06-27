@@ -460,12 +460,59 @@ class ProductsBuilding {
     }
 
     /**
-     * Спецификация заполнения
-     * @param glass {Filling}
+     * Спецификация сечения (водоотлива)
+     * @param elm {Sectional}
      */
-    function base_spec_glass(glass) {
+    function base_spec_sectional(elm) {
 
-      const {profiles, imposts, _row} = glass;
+      const {_row, _attr, inset, layer} = elm;
+
+      if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+        return;
+      }
+
+      // во время расчетов возможна подмена объекта спецификации
+      const spec_tmp = spec;
+
+      // спецификация вставки
+      inset.calculate_spec({elm, ox});
+
+      // спецификация вложенных в элемент вставок
+      ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
+
+        // если во вставке указано создавать продукцию, создаём
+        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
+          // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
+          const cx = ox.find_create_cx(elm.elm, inset.ref)._mixin(inset.contour_attrs(layer));
+          ox._order_rows.push(cx);
+          spec = cx.specification.clear(true);
+        }
+
+        // рассчитаем спецификацию вставки
+        const len_angl = {
+          angle: 0,
+          alp1: 0,
+          alp2: 0,
+          len: 0,
+          origin: inset,
+          cnstr: layer.cnstr
+        }
+        inset.calculate_spec({elm, len_angl, ox, spec});
+
+      });
+
+      // восстанавливаем исходную ссылку объекта спецификации
+      spec = spec_tmp;
+
+    }
+
+    /**
+     * Спецификация заполнения
+     * @param elm {Filling}
+     */
+    function base_spec_glass(elm) {
+
+      const {profiles, imposts, _row} = elm;
 
       if(_row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
         return;
@@ -500,19 +547,18 @@ class ProductsBuilding {
       }
 
       // добавляем спецификацию вставки в заполнение
-      glass.inset.calculate_spec({elm: glass, ox});
+      elm.inset.calculate_spec({elm, ox});
 
       // для всех раскладок заполнения
       imposts.forEach(base_spec_profile);
 
       // спецификация вложенных в элемент вставок
-      ox.inserts.find_rows({cnstr: -glass.elm}, ({inset, clr}) => {
-
+      ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
         // если во вставке указано создавать продукцию, создаём
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
           $p.record_log("inset_elm_spec: specification_order_row_types.Продукция");
         }
-        inset.calculate_spec({elm: glass, ox});
+        inset.calculate_spec({elm, ox});
       });
     }
 
@@ -573,6 +619,9 @@ class ProductsBuilding {
 
         // для всех профилей контура
         contour.profiles.forEach(base_spec_profile);
+
+        // для всех разрезов (водоотливов)
+        contour.sectionals.forEach(base_spec_sectional);
 
         // для всех заполнений контура
         contour.glasses(false, true).forEach(base_spec_glass);
