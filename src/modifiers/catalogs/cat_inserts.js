@@ -127,7 +127,7 @@ $p.cat.inserts.__define({
       });
 
       if(main_rows.length){
-        var irow = main_rows[0],
+        const irow = main_rows[0],
           sizes = {},
           sz_keys = {},
           sz_prms = ['length', 'width', 'thickness'].map((name) => {
@@ -164,10 +164,26 @@ $p.cat.inserts.__define({
               res: res
             });
           }
+          if(irow.count_calc_method == $p.enm.count_calculating_ways.ПоПлощади && this.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
+            // получаем смещенный периметр
+            const perimeter = contour.perimeter_inner(irow.sz);
+            const path = new paper.Path({insert: false});
+            for(let curr of perimeter){
+              path.addSegments(curr.sub_path.segments);
+            }
+            if(path.segments.length && !path.closed){
+              path.closePath(true);
+            }
+            path.reduce();
+            const {bounds} = path;
+            res.x = bounds.width.round(1);
+            res.y = bounds.height.round(1);
+            res.s = ((res.x * res.y) / 1000000).round(3);
+          }
           else{
             res.x = contour.w + irow.sz;
             res.y = contour.h + irow.sz;
-            res.s = ((res.x * res.y) / 1000000).round(3)
+            res.s = ((res.x * res.y) / 1000000).round(3);
           }
         }
       }
@@ -383,7 +399,10 @@ $p.cat.inserts.__define({
           }
           else if(row_ins_spec.count_calc_method == ПоПериметру){
             const row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
-            elm.perimeter.forEach((rib) => {
+            const perimeter = elm.perimeter ? elm.perimeter : (
+              this.insert_type == $p.enm.inserts_types.МоскитнаяСетка ? elm.layer.perimeter_inner(row_ins_spec.sz) : elm.layer.perimeter
+            )
+            perimeter.forEach((rib) => {
               row_prm._row._mixin(rib);
               row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
               if(this.check_restrictions(row_ins_spec, row_prm, true)){

@@ -533,7 +533,7 @@ class ProductsBuilding {
           // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
           const cx = ox.find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
           ox._order_rows.push(cx);
-          spec = cx.specification.clear();
+          spec = cx.specification.clear(true);
         }
 
         // рассчитаем спецификацию вставки
@@ -541,7 +541,7 @@ class ProductsBuilding {
           _row: {},
           elm: 0,
           clr: clr,
-          get perimeter() {return contour.perimeter},
+          layer: contour,
         };
         const len_angl = {
           angle: 0,
@@ -581,7 +581,7 @@ class ProductsBuilding {
         furn_spec(contour);
 
         // спецификация вставок в контур
-        inset_contour_spec(contour)
+        inset_contour_spec(contour);
 
       });
 
