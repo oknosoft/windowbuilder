@@ -545,6 +545,7 @@ $p.doc.calc_order.on({
         Ед: row.unit.name || "шт",
         Цвет: characteristic.clr.name,
         Размеры: row.len + "x" + row.width + ", " + row.s + "м²",
+        Площадь: row.s,
         Номенклатура: nom.name_full || nom.name,
         Характеристика: characteristic.name,
         Заполнения: "",
