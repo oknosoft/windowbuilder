@@ -1491,6 +1491,23 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   /**
+   * Габариты по рёбрам периметра внутренней стороны профилей
+   * @param size
+   * @return {Rectangle}
+   */
+  bounds_inner (size) {
+    const path = new paper.Path({insert: false});
+    for(let curr of this.perimeter_inner(size)){
+      path.addSegments(curr.sub_path.segments);
+    }
+    if(path.segments.length && !path.closed){
+      path.closePath(true);
+    }
+    path.reduce();
+    return path.bounds;
+  }
+
+  /**
    * Положение контура в изделии или створки в контуре
    */
   get pos() {

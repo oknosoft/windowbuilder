@@ -165,17 +165,8 @@ $p.cat.inserts.__define({
             });
           }
           if(irow.count_calc_method == $p.enm.count_calculating_ways.ПоПлощади && this.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
-            // получаем смещенный периметр
-            const perimeter = contour.perimeter_inner(irow.sz);
-            const path = new paper.Path({insert: false});
-            for(let curr of perimeter){
-              path.addSegments(curr.sub_path.segments);
-            }
-            if(path.segments.length && !path.closed){
-              path.closePath(true);
-            }
-            path.reduce();
-            const {bounds} = path;
+            // получаем габариты смещенного периметра
+            const bounds = contour.bounds_inner(irow.sz);
             res.x = bounds.width.round(1);
             res.y = bounds.height.round(1);
             res.s = ((res.x * res.y) / 1000000).round(3);
@@ -393,9 +384,17 @@ $p.cat.inserts.__define({
 
           if(row_ins_spec.count_calc_method == ПоПлощади){
             row_spec.qty = row_ins_spec.quantity;
-            row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
-            row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
-            row_spec.s = _row.s;
+            if(this.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
+              const bounds = elm.layer.bounds_inner(row_ins_spec.sz);
+              row_spec.len = bounds.height * (row_ins_spec.coefficient || 0.001);
+              row_spec.width = bounds.width * (row_ins_spec.coefficient || 0.001);
+              row_spec.s = (row_spec.len * row_spec.width).round(3);
+            }
+            else{
+              row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+              row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+              row_spec.s = _row.s;
+            }
           }
           else if(row_ins_spec.count_calc_method == ПоПериметру){
             const row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
