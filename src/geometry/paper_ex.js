@@ -185,7 +185,7 @@ Object.defineProperties(paper.Path.prototype, {
       value: function (delta) {
 
         if(delta){
-          var tangent = this.getTangentAt(0);
+          let tangent = this.getTangentAt(0);
           if(this.is_linear()) {
             this.firstSegment.point = this.firstSegment.point.add(tangent.multiply(-delta));
             this.lastSegment.point = this.lastSegment.point.add(tangent.multiply(delta));
@@ -195,9 +195,7 @@ Object.defineProperties(paper.Path.prototype, {
             this.add(this.lastSegment.point.add(tangent.multiply(delta)));
           }
         }
-
         return this;
-
       }
     },
 

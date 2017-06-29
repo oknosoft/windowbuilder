@@ -842,9 +842,8 @@ class ProfileItem extends GeneratrixElement {
     _row.elm_type = this.elm_type;
 
     // TODO: Рассчитать положение и ориентацию
-
-    // вероятно, импост, всегда занимает положение "центр"
-
+    _row.orientation = this.orientation;
+    _row.pos = this.pos;
 
     // координаты доборов
     this.addls.forEach((addl) => addl.save_coordinates());
@@ -2007,10 +2006,10 @@ class Profile extends ProfileItem {
     let moved_fact;
 
     if(p instanceof ProfileConnective){
-      const {generatrix} = p;
+      const gen = p.generatrix.clone({insert: false}).elongation(1000);
       this._attr._rays.clear();
-      this.b = generatrix.getNearestPoint(this.b);
-      this.e = generatrix.getNearestPoint(this.e);
+      this.b = gen.getNearestPoint(this.b);
+      this.e = gen.getNearestPoint(this.e);
       moved_fact = true;
     }
     else{
