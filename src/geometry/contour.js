@@ -1749,16 +1749,20 @@ class Contour extends AbstractFilling(paper.Layer) {
     const {len} = elm._row;
 
     function set_handle_height(row){
-      const {handle_height_base} = row;
+      const {handle_height_base, fix_ruch} = row;
       if(handle_height_base < 0){
-        if(handle_height_base == -2 || (handle_height_base == -1 && _row.fix_ruch != -3)){
+        // если fix_ruch - устанавливаем по центру
+        if(fix_ruch || _row.fix_ruch != -3){
           _row.h_ruch = (len / 2).round(0);
-          return _row.fix_ruch = handle_height_base;
+          return _row.fix_ruch = fix_ruch ? -2 : -1;
         }
       }
       else if(handle_height_base > 0){
-        _row.h_ruch = handle_height_base;
-        return _row.fix_ruch = 1;
+        // если fix_ruch - устанавливаем по базовой высоте
+        if(fix_ruch || _row.fix_ruch != -3){
+          _row.h_ruch = handle_height_base;
+          return _row.fix_ruch = fix_ruch ? -2 : -1;
+        }
       }
     }
 
