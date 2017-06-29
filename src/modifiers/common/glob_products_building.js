@@ -611,20 +611,28 @@ class ProductsBuilding {
      */
     function base_spec(scheme) {
 
+      const {Contour, Filling, Sectional, Profile, ProfileConnective} = $p.Editor;
+
       // сбрасываем структуру обработанных соединений
       added_cnn_spec = {};
 
       // для всех контуров изделия
-      scheme.getItems({class: $p.Editor.Contour}).forEach((contour) => {
+      scheme.getItems({class: Contour}).forEach((contour) => {
 
-        // для всех профилей контура
-        contour.profiles.forEach(base_spec_profile);
-
-        // для всех разрезов (водоотливов)
-        contour.sectionals.forEach(base_spec_sectional);
-
-        // для всех заполнений контура
-        contour.glasses(false, true).forEach(base_spec_glass);
+        for(let elm of contour.children){
+          if(elm instanceof Filling){
+            // для всех заполнений контура
+            base_spec_glass(elm);
+          }
+          else if(elm instanceof Sectional){
+            // для всех разрезов (водоотливов)
+            base_spec_sectional(elm);
+          }
+          else if(elm instanceof Profile){
+            // для всех профилей контура
+            base_spec_profile(elm);
+          }
+        }
 
         // фурнитура контура
         furn_spec(contour);
@@ -633,6 +641,13 @@ class ProductsBuilding {
         inset_contour_spec(contour);
 
       });
+
+      // для всех соединительных профилей
+      for(let elm of scheme.l_connective.children){
+        if(elm instanceof ProfileConnective){
+          base_spec_profile(elm);
+        }
+      }
 
       // спецификация вставок в изделие
       inset_contour_spec({

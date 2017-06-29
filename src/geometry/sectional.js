@@ -220,3 +220,5 @@ class Sectional extends GeneratrixElement {
     return $p.enm.elm_types.Водоотлив;
   }
 }
+
+Editor.Sectional = Sectional;

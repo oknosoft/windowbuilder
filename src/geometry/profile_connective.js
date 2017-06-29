@@ -213,3 +213,5 @@ class ConnectiveLayer extends paper.Layer {
     return [];
   }
 }
+
+Editor.ProfileConnective = ProfileConnective;
