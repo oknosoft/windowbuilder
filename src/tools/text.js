@@ -142,19 +142,12 @@ class ToolText extends ToolElement {
   }
 
   hitTest(event) {
-    const hitSize = 6;
+    var hitSize = 6;
 
     // хит над текстом обрабатываем особо
     this.hitItem = paper.project.hitTest(event.point, { class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize });
-    if(!this.hitItem){
+    if(!this.hitItem)
       this.hitItem = paper.project.hitTest(event.point, { fill: true, stroke: false, tolerance: hitSize });
-    }
-    if(!this.hitItem){
-      const hit = paper.project.hitTest(event.point, { fill: false, stroke: true, tolerance: hitSize });
-      if(hit && hit.item.parent instanceof Sectional){
-        this.hitItem = hit;
-      }
-    }
 
     if (this.hitItem){
       if(this.hitItem.item instanceof paper.PointText)

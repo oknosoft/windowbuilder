@@ -178,9 +178,6 @@ class Scheme extends paper.Project {
 
       if(_scheme.contours.length){
 
-        // перерисовываем соединительные профили
-        _scheme.l_connective.redraw();
-
         // перерисовываем все контуры
         for(let contour of _scheme.contours){
           contour.redraw();
@@ -188,6 +185,8 @@ class Scheme extends paper.Project {
             return;
           }
         }
+
+        // пересчитываем параметры изделия и фурнитур, т.к. они могут зависеть от размеров
 
         // если перерисованы все контуры, перерисовываем их размерные линии
         _attr._bounds = null;
@@ -201,6 +200,9 @@ class Scheme extends paper.Project {
 
         // перерисовываем габаритные размерные линии изделия
         _scheme.draw_sizes();
+
+        // перерисовываем соединительные профили
+        _scheme.l_connective.redraw();
 
         // обновляем изображение на эуране
         _scheme.view.update();
@@ -356,7 +358,7 @@ class Scheme extends paper.Project {
       });
 
       // первым делом создаём соединители
-      o.coordinates.find_rows({elm_type: $p.enm.elm_types.Соединитель}, (row) => new ProfileConnective({row: row}));
+      o.coordinates.find_rows({cnstr: 0, elm_type: $p.enm.elm_types.Соединитель}, (row) => new ProfileConnective({row: row}));
       o = null;
 
       // создаём семейство конструкций

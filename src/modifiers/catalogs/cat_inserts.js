@@ -127,7 +127,7 @@ $p.cat.inserts.__define({
       });
 
       if(main_rows.length){
-        const irow = main_rows[0],
+        var irow = main_rows[0],
           sizes = {},
           sz_keys = {},
           sz_prms = ['length', 'width', 'thickness'].map((name) => {
@@ -164,17 +164,10 @@ $p.cat.inserts.__define({
               res: res
             });
           }
-          if(irow.count_calc_method == $p.enm.count_calculating_ways.ПоПлощади && this.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
-            // получаем габариты смещенного периметра
-            const bounds = contour.bounds_inner(irow.sz);
-            res.x = bounds.width.round(1);
-            res.y = bounds.height.round(1);
-            res.s = ((res.x * res.y) / 1000000).round(3);
-          }
           else{
             res.x = contour.w + irow.sz;
             res.y = contour.h + irow.sz;
-            res.s = ((res.x * res.y) / 1000000).round(3);
+            res.s = ((res.x * res.y) / 1000000).round(3)
           }
         }
       }
@@ -384,24 +377,13 @@ $p.cat.inserts.__define({
 
           if(row_ins_spec.count_calc_method == ПоПлощади){
             row_spec.qty = row_ins_spec.quantity;
-            if(this.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
-              const bounds = elm.layer.bounds_inner(row_ins_spec.sz);
-              row_spec.len = bounds.height * (row_ins_spec.coefficient || 0.001);
-              row_spec.width = bounds.width * (row_ins_spec.coefficient || 0.001);
-              row_spec.s = (row_spec.len * row_spec.width).round(3);
-            }
-            else{
-              row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
-              row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
-              row_spec.s = _row.s;
-            }
+            row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+            row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+            row_spec.s = _row.s;
           }
           else if(row_ins_spec.count_calc_method == ПоПериметру){
             const row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
-            const perimeter = elm.perimeter ? elm.perimeter : (
-              this.insert_type == $p.enm.inserts_types.МоскитнаяСетка ? elm.layer.perimeter_inner(row_ins_spec.sz) : elm.layer.perimeter
-            )
-            perimeter.forEach((rib) => {
+            elm.perimeter.forEach((rib) => {
               row_prm._row._mixin(rib);
               row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
               if(this.check_restrictions(row_ins_spec, row_prm, true)){

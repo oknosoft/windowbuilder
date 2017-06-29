@@ -81,7 +81,7 @@ class ProfileConnective extends ProfileItem {
     super.move_points(delta, all_points, start_point);
 
     // двигаем примыкающие
-    if(all_points !== false && !paper.Key.isDown('control')){
+    if(all_points !== false){
       nearests.forEach((np) => {
         np.do_bind(this, null, null, moved);
         // двигаем связанные с примыкающими
@@ -137,6 +137,13 @@ class ProfileConnective extends ProfileItem {
 
     const {_row, rays, project, generatrix} = this;
     const {cnns} = project.connections;
+
+    // row_b = cnns.add({
+    //   elm1: _row.elm,
+    //   node1: "b",
+    //   cnn: b.cnn ? b.cnn.ref : "",
+    //   aperture_len: this.corns(1).getDistance(this.corns(4))
+    // })
 
     _row.x1 = this.x1;
     _row.y1 = this.y1;
@@ -207,9 +214,5 @@ class ConnectiveLayer extends paper.Layer {
 
   save_coordinates() {
     this.children.forEach((elm) => elm.save_coordinates())
-  }
-
-  glasses() {
-    return [];
   }
 }
