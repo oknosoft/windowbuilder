@@ -451,6 +451,7 @@ $p.doc.calc_order.on({
         ВсегоИзделий: 0,
         ВсегоПлощадьИзделий: 0,
         Продукция: [],
+        Подразделение: this.department.presentation
       };
 
 
