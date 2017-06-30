@@ -33,19 +33,19 @@ $p.cat.cnns.__define({
   nom_cnn: {
     value: function(nom1, nom2, cnn_types, ign_side, is_outer){
 
-      // если второй элемент вертикальный - меняем местами эл 1-2 при поиске
-      if(nom1 instanceof $p.Editor.ProfileItem &&
-        nom2 instanceof $p.Editor.ProfileItem &&
-        cnn_types && cnn_types.indexOf($p.enm.cnn_types.УгловоеДиагональное) != -1 &&
-        nom1.orientation != $p.enm.orientations.Вертикальная &&
-        nom2.orientation == $p.enm.orientations.Вертикальная ){
+      const {ProfileItem, BuilderElement, Filling} = $p.Editor;
+      const {Вертикальная} = $p.enm.orientations
 
+      // если второй элемент вертикальный - меняем местами эл 1-2 при поиске
+      if(nom1 instanceof ProfileItem && nom2 instanceof ProfileItem &&
+        cnn_types && cnn_types.indexOf($p.enm.cnn_types.УгловоеДиагональное) != -1 &&
+        nom1.orientation != Вертикальная && nom2.orientation == Вертикальная ){
         return this.nom_cnn(nom2, nom1, cnn_types);
       }
 
       // если оба элемента - профили, определяем сторону
       const side = is_outer ? $p.enm.cnn_sides.Снаружи :
-        (!ign_side && nom1 instanceof $p.Editor.ProfileItem && nom2 instanceof $p.Editor.ProfileItem && nom2.cnn_side(nom1));
+        (!ign_side && nom1 instanceof ProfileItem && nom2 instanceof ProfileItem && nom2.cnn_side(nom1));
 
       let onom2, a1, a2, thickness1, thickness2, is_i = false, art1glass = false, art2glass = false;
 
@@ -54,7 +54,7 @@ $p.cat.cnns.__define({
         onom2 = nom2 = $p.cat.nom.get();
       }
       else{
-        if(nom2 instanceof $p.Editor.BuilderElement){
+        if(nom2 instanceof BuilderElement){
           onom2 = nom2.nom;
         }
         else if($p.utils.is_data_obj(nom2)){
@@ -69,11 +69,11 @@ $p.cat.cnns.__define({
       const ref2 = onom2.ref;
 
       if(!is_i){
-        if(nom1 instanceof $p.Editor.Filling){
+        if(nom1 instanceof Filling){
           art1glass = true;
           thickness1 = nom1.thickness;
         }
-        else if(nom2 instanceof $p.Editor.Filling){
+        else if(nom2 instanceof Filling){
           art2glass = true;
           thickness2 = nom2.thickness;
         }
@@ -143,7 +143,7 @@ $p.cat.cnns.__define({
     value: function(elm1, elm2, cnn_types, curr_cnn, ign_side, is_outer){
 
       // если установленное ранее соединение проходит по типу и стороне, нового не ищем
-      if(curr_cnn && cnn_types && (cnn_types.indexOf(curr_cnn.cnn_type)!=-1)){
+      if(curr_cnn && cnn_types && (cnn_types.indexOf(curr_cnn.cnn_type) != -1) && (cnn_types != $p.enm.cnn_types.acn.ii)){
 
         // TODO: проверить геометрию
 
