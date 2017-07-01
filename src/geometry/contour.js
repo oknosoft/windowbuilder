@@ -921,31 +921,21 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     // ошибки соединений профиля
     this.profiles.forEach((elm) => {
-      const {b, e} = elm.rays;
-      if(!b.cnn){
-        Object.assign(new paper.Path.Circle({
-          center: elm.corns(4).add(elm.corns(1)).divide(2),
-          radius: 80,
-        }), err_attrs);
-      }
-      if(!e.cnn){
-        Object.assign(new paper.Path.Circle({
-          center: elm.corns(2).add(elm.corns(3)).divide(2),
-          radius: 80,
-        }), err_attrs);
-      }
+      const {_corns, _rays} = elm._attr;
+      // ошибки угловых соединений
+      _rays.b.check_err(err_attrs);
+      _rays.e.check_err(err_attrs);
       // ошибки примыкающих соединений
       if(elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())){
-        Object.assign(elm.path.get_subpath(elm.corns(1), elm.corns(2)), err_attrs);
+        Object.assign(elm.path.get_subpath(_corns[1], _corns[2]), err_attrs);
       }
       // если у профиля есть доборы, проверим их соединения
       elm.addls.forEach((elm) => {
         if(elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())){
-          Object.assign(elm.path.get_subpath(elm.corns(1), elm.corns(2)), err_attrs);
+          Object.assign(elm.path.get_subpath(_corns[1], _corns[2]), err_attrs);
         }
       })
     });
-
   }
 
   /**

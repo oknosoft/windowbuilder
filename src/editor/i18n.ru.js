@@ -39,6 +39,9 @@
 
 	msg.del_elm = "Удалить элемент";
 
+  msg.err_no_cnn = "не найдено соединение";
+  msg.err_seam_len = "длина шва";
+
   msg.glass_spec = "Состав заполнения";
   msg.glass_invalid_elm = "Укажите заполнение на эскизе";
 

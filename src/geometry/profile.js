@@ -123,6 +123,27 @@ class CnnPoint {
   }
 
   /**
+   * Проверяет ошибки в узле профиля
+   * @param style
+   */
+  check_err(style) {
+    const {_node, _parent, cnn} = this;
+    const {_corns, _rays} = _parent._attr;
+    const len = _node == 'b' ? _corns[1].getDistance(_corns[4]) : _corns[2].getDistance(_corns[3]);
+    if(!cnn || (cnn.lmin > 0 && cnn.lmin > len) || (cnn.lmax > 0 && cnn.lmax < len)){
+      if(style){
+        Object.assign(new paper.Path.Circle({
+          center: _node == 'b' ? _corns[4].add(_corns[1]).divide(2) : _corns[2].add(_corns[3]).divide(2),
+          radius: 80,
+        }), style);
+      }
+      else{
+        _parent.err_spec_row($p.job_prm.nom.critical_error, cnn ? $p.msg.err_seam_len : $p.msg.err_no_cnn);
+      }
+    }
+  }
+
+  /**
    * Профиль, с которым пересекается наш элемент в точке соединения
    * @property profile
    * @type Profile

@@ -320,6 +320,8 @@ class ProductsBuilding {
       if(!b.cnn || !e.cnn){
         return;
       }
+      b.check_err();
+      e.check_err();
 
       const prev = b.profile;
       const next = e.profile;
