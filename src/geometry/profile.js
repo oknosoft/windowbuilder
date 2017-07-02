@@ -1061,6 +1061,7 @@ class ProfileItem extends GeneratrixElement {
         // прибиваем соединения в точках b и e
         const b = this.cnn_point('b');
         const e = this.cnn_point('e');
+        const {cnns} = project.connections;
 
         if(b.profile && b.profile_point == 'e'){
           const {_rays} = b.profile._attr;
@@ -1077,18 +1078,25 @@ class ProfileItem extends GeneratrixElement {
           }
         }
 
-        const {cnns} = project.connections;
+        // прибиваем соединения примыкающих к текущему импостов
+        const imposts = this.joined_imposts();
+        const elm2 = this.elm;
+        for(const {profile} of imposts.inner.concat(imposts.outer)){
+          const {b, e} = profile.rays;
+          b.profile == this && b.clear(true);
+          e.profile == this && e.clear(true);
+        }
+
         // для соединительных профилей и элементов со створками, пересчитываем соседей
-        this.joined_nearests().forEach((profile) => {
-          const {_attr, elm} = profile;
+        for(const {_attr, elm} of this.joined_nearests()){
           _attr._rays && _attr._rays.clear(true);
           _attr._nearest_cnn = null;
-          cnns.clear({elm1: elm, elm2: this.elm});
-        });
+          cnns.clear({elm1: elm, elm2});
+        }
 
         // так же, пересчитываем соединения с примыкающими заполнениями
         this.layer.glasses(false, true).forEach((glass) => {
-          cnns.clear({elm1: glass.elm, elm2: this.elm});
+          cnns.clear({elm1: glass.elm, elm2});
         })
       }
 
