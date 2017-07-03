@@ -220,6 +220,10 @@ Object.defineProperties($p.cat.furns, {
                   generatrix.getOffsetOf(generatrix.getNearestPoint(elm.corns(1))) +
                   (invert ? dop_row.contraction : -dop_row.contraction);
               }
+              else if(dop_row.offset_option == $p.enm.offset_options.ОтСередины){
+                // не мудрствуя, присваиваем половину длины
+                coordin = len / 2 + (invert ? dop_row.contraction : -dop_row.contraction);
+              }
               else{
                 if(invert){
                   if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){

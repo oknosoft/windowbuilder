@@ -37,7 +37,7 @@ class SpecBuilding {
     const order_rows = new Map();
     const adel = [];
     const ox = calc_order_row.characteristic;
-    const nom = ox.empty() ? calc_order_row.nom : ox.owner;
+    const nom = ox.empty() ? calc_order_row.nom : (calc_order_row.nom = ox.owner);
 
     // типы цен получаем заранее, т.к. они могут пригодиться при расчете корректировки спецификации
     $p.pricing.price_type(attr);

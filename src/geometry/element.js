@@ -552,6 +552,30 @@ class BuilderElement extends paper.Group {
     super.remove();
   }
 
+  /**
+   * ### добавляет информацию об ошибке в спецификацию, если таковой нет для текущего элемента
+   * @param critical {Boolean}
+   * @param text {String}
+   */
+  err_spec_row(nom, text) {
+    if(!nom){
+      nom = $p.job_prm.nom.info_error;
+    }
+    const {ox} = this.project;
+    if(!ox.specification.find_rows({elm: this.elm, nom}).length){
+      $p.ProductsBuilding.new_spec_row({
+        elm: this,
+        row_base: {clr: $p.cat.clrs.get(), nom},
+        spec: ox.specification,
+        ox,
+      });
+    };
+    if(text){
+
+    }
+  }
+
+
   static clr_by_clr(clr, view_out) {
     let {clr_str, clr_in, clr_out} = clr;
 

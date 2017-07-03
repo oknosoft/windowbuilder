@@ -104,8 +104,16 @@ class PenControls {
 
   mousemove(event, ignore_pos) {
 
-    const {elm_type} = this._tool.profile;
+    const {_scope, profile} = this._tool;
 
+    if(!profile){
+      return;
+    }
+
+    const {bounds, view} = _scope.project;
+    const pos = ignore_pos || view.projectToView(event.point);
+
+    const {elm_type} = profile;
     if(elm_type == $p.enm.elm_types.Добор || elm_type == $p.enm.elm_types.Соединитель){
       this._cont.style.display = "none";
       return;
@@ -113,9 +121,6 @@ class PenControls {
     else{
       this._cont.style.display = "";
     }
-
-    const bounds = paper.project.bounds;
-    const pos = ignore_pos || paper.project.view.projectToView(event.point);
 
     if (!ignore_pos) {
       this._cont.style.top = pos.y + 16 + "px";

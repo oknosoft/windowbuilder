@@ -6,6 +6,47 @@
  * @module  wnd_oaddress
  */
 
+class WndAddressData {
+
+  constructor(owner){
+    this.owner = owner;
+    this.country = "Россия";
+    this.region = "";
+    this.city = "";
+    this.street =	"";
+    this.postal_code = "";
+    this.marker = {};
+    this.flat = "";
+
+    this._house = "";
+    this._housing = "";
+
+    // если координаты есть в Расчете, используем их
+    const {coordinates} = this;
+    this.latitude = coordinates.length ? coordinates[0] : 0;
+    this.longitude = coordinates.length ? coordinates[1] : 0;
+  }
+
+  get delivery_area() {
+    return this.owner.obj.delivery_area;
+  }
+  set delivery_area(v) {
+    this.owner.pgrid_on_select(v);
+  }
+
+  get house() {
+    return this._house + (this._housing ? " " + this._housing : "");
+  }
+  set house(v) {
+    this._house = v;
+  }
+
+  get coordinates() {
+    const {coordinates} = this.owner.obj;
+    return coordinates ? JSON.parse(coordinates) : []
+  }
+
+}
 
 /**
  *  Окно ввода адреса
@@ -13,25 +54,11 @@
 class WndAddress {
 
   constructor(source) {
-    const t = this;
     this.obj = source.obj;
     this.pwnd = source.pwnd;
     this.grid = source.grid;
-    this.v = {		// реквизиты формы
-      coordinates: t.obj.coordinates ? JSON.parse(t.obj.coordinates) : [],
-      country: "Россия",
-      region: "",
-      city: "",
-      street:	"",
-      postal_code: "",
-      marker: {},
-      get delivery_area() {
-        return t.obj.delivery_area
-      },
-      set delivery_area(v) {
-        t.pgrid_on_select(v);
-      }
-    };
+    // реквизиты формы
+    this.v = new WndAddressData(this);
     this.process_address_fields().then(() => this.frm_create());
   }
 
@@ -71,28 +98,51 @@ class WndAddress {
     //TODO: компактная кнопка выбора в заголовке формы
     // wnd.cell.parentElement.querySelector(".dhxwin_text")
 
-    elmnts.layout = wnd.attachLayout('2E');
-    elmnts.cell_frm = elmnts.layout.cells('a');
-    elmnts.cell_frm.setHeight('110');
-    elmnts.cell_frm.hideHeader();
-    elmnts.cell_frm.fixSize(0, 1);
+    elmnts.layout = wnd.attachLayout('3U');
+    elmnts.cell_frm1 = elmnts.layout.cells('a');
+    elmnts.cell_frm1.setHeight('52');
+    elmnts.cell_frm1.hideHeader();
+    elmnts.cell_frm1.fixSize(0, 1);
 
     // TODO: переделать на OHeadFields
-    elmnts.pgrid = elmnts.cell_frm.attachPropertyGrid();
+    elmnts.pgrid = elmnts.cell_frm1.attachPropertyGrid();
     elmnts.pgrid.init();
     elmnts.pgrid.parse(obj._manager.get_property_grid_xml({
       " ": [
-        {id: "delivery_area", path: "o.delivery_area", synonym: "Район доставки", type: "ref"},
-        {id: "region", path: "o.region", synonym: "Регион", type: "ro", txt: v.region},
-        {id: "city", path: "o.city", synonym: "Населенный пункт", type: "ed", txt: v.city},
-        {id: "street", path: "o.street", synonym: "Улица, дом, корп., лит., кварт.", type: "ed", txt: v.street}
+        {id: "city", path: "o.city", synonym: "Насел. пункт", type: "ed", txt: v.city},
+        {id: "street", path: "o.street", synonym: "Улица", type: "ed", txt: v.street}
       ]
     }, v), () => {
       elmnts.pgrid.enableAutoHeight(true);
       elmnts.pgrid.setInitWidthsP("40,60");
       elmnts.pgrid.setSizes();
-      elmnts.pgrid.attachEvent("onPropertyChanged", this.pgrid_on_changed.bind(this));
+      elmnts.pgrid.attachEvent("onPropertyChanged", (pname, new_value, old_value) => {
+        this.pgrid_on_changed(elmnts.pgrid.getSelectedRowId(), new_value, old_value)
+      });
     }, "xml");
+
+    elmnts.cell_frm2 = elmnts.layout.cells('b');
+    elmnts.cell_frm2.hideHeader();
+    elmnts.pgrid2 = elmnts.cell_frm2.attachPropertyGrid();
+    elmnts.pgrid2.init();
+    elmnts.pgrid2.parse(obj._manager.get_property_grid_xml({
+      " ": [
+        {id: "house", path: "o.house", synonym: "Дом, корп., лит.", type: "ed", txt: v.house},
+        {id: "flat", path: "o.flat", synonym: "Кварт., оф.", type: "ed", txt: v.flat}
+      ]
+    }, v), () => {
+      elmnts.pgrid2.enableAutoHeight(true);
+      elmnts.pgrid2.setInitWidthsP("40,60");
+      elmnts.pgrid2.setSizes();
+      elmnts.pgrid2.attachEvent("onPropertyChanged", (pname, new_value, old_value) => {
+        this.pgrid_on_changed(elmnts.pgrid2.getSelectedRowId(), new_value, old_value)
+      });
+    }, "xml");
+
+
+    // начинаем следить за объектом и, его табчастью допреквизитов
+    this.observer = this.observer.bind(this)
+    Object.observe(obj, this.observer, ["update", "unload"]);
 
     elmnts.pgrid.get_cell_field = () => {
       return {
@@ -115,14 +165,35 @@ class WndAddress {
     };
 
     const toolbar_click = this.toolbar_click.bind(this);
-    elmnts.toolbar = wnd.attachToolbar({
-      icons_path: dhtmlx.image_path + 'dhxtoolbar' + dhtmlx.skin_suffix()
+    elmnts.toolbar = wnd.attachToolbar({icons_path: dhtmlx.image_path + 'dhxtoolbar' + dhtmlx.skin_suffix()});
+    elmnts.toolbar.loadStruct('<toolbar><item id="btn_select" type="button" title="Установить адрес" text="&lt;b&gt;Выбрать&lt;/b&gt;" /><item type="separator"  id="sep1"	/></toolbar>', function(){
+
+      this.attachEvent("onclick", toolbar_click);
+
+      const delivery_area_id = `txt_${dhx4.newId()}`;
+      this.addText(delivery_area_id);
+      this.addSeparator("sep2");
+      this.addText("txt_region");
+
+      const txt_div = this.objPull[this.idPrefix + delivery_area_id].obj;
+      const delivery_area = new $p.iface.OCombo({
+        parent: txt_div,
+        obj: obj,
+        field: "delivery_area",
+        width: 200,
+        hide_frm: true,
+      });
+      txt_div.style.border = "1px solid #ccc";
+      txt_div.style.borderRadius = "3px";
+      txt_div.style.padding = "3px 2px 1px 2px";
+      txt_div.style.margin = "1px 5px 1px 1px";
+      delivery_area.DOMelem_input.placeholder = "Район доставки";
+
+      this.setItemText('txt_region', v.region);
+
     });
-    elmnts.toolbar.loadStruct('<toolbar><item id="btn_select" type="button" title="Установить адрес" text="&lt;b&gt;Выбрать&lt;/b&gt;" /></toolbar>',
-      function(){this.attachEvent("onclick", toolbar_click)});
 
-
-    elmnts.cell_map = elmnts.layout.cells('b');
+    elmnts.cell_map = elmnts.layout.cells('c');
     elmnts.cell_map.hideHeader();
 
     // если координаты есть в Расчете, используем их
@@ -156,12 +227,8 @@ class WndAddress {
     if(selv===undefined){
       return;
     }
-    const {v, obj, wnd} = this;
-    const old = v.delivery_area;
-
     obj.delivery_area = selv;
-    wnd.elmnts.pgrid.cells().setValue(v.delivery_area.presentation);
-    this.delivery_area_changed(old != v.delivery_area);
+    this.delivery_area_changed();
   }
 
   /**
@@ -176,28 +243,54 @@ class WndAddress {
     }
   }
 
-  delivery_area_changed(clear_street){
+  observer(changes) {
+    const {obj, v, wnd, observer} = this;
+    const names = ['delivery_area','city','street','house','flat']
+    if (!obj) {
+      const stack = [];
+      changes.forEach((change) => {
+        if (stack.indexOf[change.object] == -1) {
+          stack.push(change.object);
+          Object.unobserve(change.object, observer);
+        }
+      });
+    }
+    else{
+      changes.forEach((change) => {
+        if (change.type == "unload") {
+
+        }
+        else{
+          if(names.indexOf(change.name) != -1){
+            this.pgrid_on_changed(change.name, v[change.name], change.oldValue);
+          }
+        }
+      });
+    }
+  }
+
+  delivery_area_changed(){
 
     const {v, wnd} = this;
 
     // получим город и район из "района доставки"
-    if(!v.delivery_area.empty() && clear_street){
+    if(!v.delivery_area.empty()){
       v.street = "";
     }
 
     if(v.delivery_area.region){
       v.region = v.delivery_area.region;
-      wnd.elmnts.pgrid.cells("region", 1).setValue(v.region);
     }
-    else if(clear_street){
+    else {
       v.region = "";
     }
+    wnd.elmnts.toolbar.setItemText('txt_region', v.region);
 
     if(v.delivery_area.city){
       v.city = v.delivery_area.city;
       wnd.elmnts.pgrid.cells("city", 1).setValue(v.city);
     }
-    else if(clear_street){
+    else{
       v.city = "";
     }
 
@@ -211,11 +304,12 @@ class WndAddress {
   }
 
   refresh_grid(){
-    const {pgrid} = this.wnd.elmnts;
-    const {region, city, street} = this.v;
-    pgrid.cells("region", 1).setValue(region);
+    const {pgrid, pgrid2} = this.wnd.elmnts;
+    const {region, city, street, house, flat} = this.v;
     pgrid.cells("city", 1).setValue(city);
     pgrid.cells("street", 1).setValue(street);
+    pgrid2.cells("house", 1).setValue(house);
+    pgrid2.cells("flat", 1).setValue(flat);
   }
 
   addr_changed() {
@@ -238,20 +332,29 @@ class WndAddress {
     });
   }
 
-  assemble_addr(){
-    const {country, region, city, street, postal_code} = this.v;
+  /**
+   * Сворачивает все поля адреса в строку
+   * @return {string}
+   */
+  assemble_addr(with_flat){
+    const {country, region, city, street, postal_code, house, flat} = this.v;
     return (street ? (street.replace(/,/g," ") + ", ") : "") +
+      (house ? (house + ", ") : "") +
+      (with_flat && flat ? (flat + ", ") : "") +
       (city ? (city + ", ") : "") +
       (region ? (region + ", ") : "") + country +
       (postal_code ? (", " + postal_code) : "");
   }
 
+  /**
+   * Устанавливает поля адреса в документе
+   */
   assemble_address_fields(){
 
     const {obj, v} = this;
     const {fias} = WndAddress;
 
-    obj.shipping_address = this.assemble_addr();
+    obj.shipping_address = this.assemble_addr(true);
 
     let fields = '<КонтактнаяИнформация  \
 				xmlns="http://www.v8.1c.ru/ssl/contactinfo" \
@@ -274,69 +377,59 @@ class WndAddress {
     }
 
     if(v.street){
-      let street = (v.street.replace(/,/g," ")),
-        suffix, index, house, bld, house_type, flat_type, bld_type;
+      fields += '\n<Улица>' + (v.street.replace(/,/g," ")) + '</Улица>';
+    }
 
+    let suffix, index, house_type, flat_type;
+
+    let house = v.house;
+    if(house){
       // отделяем улицу от дома, корпуса и квартиры
       for(let i in fias){
         if(fias[i].type == 1){
-          for(let j in fias[i].syn){
-            if((index = street.indexOf(fias[i].syn[j])) != -1){
+          for(let syn of fias[i].syn){
+            if((index = house.indexOf(syn.trimLeft())) != -1){
               house_type = i;
-              suffix = street.substr(index + fias[i].syn[j].length).trim();
-              street = street.substr(0, index).trim();
+              house = house.substr(index + syn.trimLeft().length).trim();
               break;
             }
           }
+          if(house_type)
+            break;
         }
-        if(house_type)
-          break;
       }
       if(!house_type){
         house_type = "1010";
-        if((index = street.indexOf(" ")) != -1){
-          suffix = street.substr(index);
-          street = street.substr(0, index);
+        if((index = house.indexOf(" ")) != -1){
+          house = house.substr(index);
         }
       }
-      fields += '\n<Улица>' + street.trim() + '</Улица>';
+      fields += '\n<ДопАдрЭл><Номер Тип="' + house_type +  '" Значение="' + house.trim() + '"/></ДопАдрЭл>';
+    }
 
-      // отделяем корпус и квартиру от дома
-      if(suffix){
-
-        house = suffix.toLowerCase();
-        suffix = "";
-
-        for(let i in fias){
-          if(fias[i].type == 3){
-            for(var j in fias[i].syn){
-              if((index = house.indexOf(fias[i].syn[j])) != -1){
-                flat_type = i;
-                suffix = house.substr(index + fias[i].syn[j].length);
-                house = house.substr(0, index);
-                break;
-              }
+    // квартира и тип квартиры (офиса)
+    let flat = v.flat;
+    if(flat){
+      for(let i in fias){
+        if(fias[i].type == 3){
+          for(let syn of fias[i].syn){
+            if((index = flat.indexOf(syn)) != -1){
+              flat_type = i;
+              flat = flat.substr(index + syn.length);
+              break;
             }
           }
           if(flat_type)
             break;
         }
-
-        if(!flat_type){
-          flat_type = "2010";
-          if((index = house.indexOf(" ")) != -1){
-            suffix = house.substr(index);
-            house = house.substr(0, index);
-          }
-        }
-
-        fields += '\n<ДопАдрЭл><Номер Тип="' + house_type +  '" Значение="' + house.trim() + '"/></ДопАдрЭл>';
-
       }
-
-      if(suffix)
-        fields += '\n<ДопАдрЭл><Номер Тип="' + flat_type +  '" Значение="' + suffix.trim() + '"/></ДопАдрЭл>';
-
+      if(!flat_type){
+        flat_type = "2010";
+        if((index = flat.indexOf(" ")) != -1){
+          flat = flat.substr(index);
+        }
+      }
+      fields += '\n<ДопАдрЭл><Номер Тип="' + flat_type +  '" Значение="' + flat.trim() + '"/></ДопАдрЭл>';
     }
 
     if(v.postal_code)
@@ -348,6 +441,10 @@ class WndAddress {
     obj.address_fields = fields;
   }
 
+  /**
+   * Заполняет структуру адреса v по данным полей адреса документа
+   * @return {Promise.<TResult>}
+   */
   process_address_fields(){
 
     const {obj, v} = this;
@@ -355,7 +452,7 @@ class WndAddress {
 
     if(obj.address_fields){
       v.xml = ( new DOMParser() ).parseFromString(obj.address_fields, "text/xml");
-      let tmp = {}, res = {"building_room": ""}, tattr, building_room = [],
+      let tmp = {}, res = {}, tattr,
         nss = "СубъектРФ,Округ,СвРайМО,СвРайМО,ВнутригРайон,НаселПункт,Улица,Город,ДопАдрЭл,Адрес_по_документу,Местоположение".split(",");
 
       function get_aatributes(ca){
@@ -399,7 +496,15 @@ class WndAddress {
           if(j.length != 4)
             continue;
           if(res["ДопАдрЭл"][i][j])
-            building_room[fias[j].type] = fias[j].name + " " + res["ДопАдрЭл"][i][j];
+            if(fias[j].type == 1){
+              v._house = fias[j].name + " " + res["ДопАдрЭл"][i][j];
+            }
+            else if(fias[j].type == 2){
+              v._housing = fias[j].name + " " + res["ДопАдрЭл"][i][j];
+            }
+            else if(fias[j].type == 3){
+              v.flat = fias[j].name + " " + res["ДопАдрЭл"][i][j];
+            }
         }
 
         if(res["ДопАдрЭл"][i]["10100000"])
@@ -412,9 +517,6 @@ class WndAddress {
       v.region = res["СубъектРФ"] || res["Округ"] || "";
       v.city = res["Город"] || res["НаселПункт"] || "";
       v.street = (res["Улица"] || "");
-      for(let i in building_room){
-        v.street += " " + building_room[i];
-      }
     }
 
     return new Promise(function(resolve, reject){
@@ -461,30 +563,27 @@ class WndAddress {
     })
       .then(() => {
 
-        // если есть координаты $p.ipinfo, используем их
-        // иначе - Москва
-        if(v.coordinates.length){
+        // если есть координаты $p.ipinfo, используем их, иначе - Москва
+        if(!v.latitude || !v.longitude){
           // если координаты есть в Расчете, используем их
-          v.latitude = v.coordinates[0];
-          v.longitude = v.coordinates[1];
-        }
-        else if(obj.shipping_address){
-          // если есть строка адреса, пытаемся геокодировать
-          this.do_geocoding((results, status) => {
-            if (status == google.maps.GeocoderStatus.OK) {
-              v.latitude = results[0].geometry.location.lat();
-              v.longitude = results[0].geometry.location.lng();
-            }
-          });
-        }
-        else if($p.ipinfo.latitude && $p.ipinfo.longitude ){
-          v.latitude = $p.ipinfo.latitude;
-          v.longitude = $p.ipinfo.longitude;
-        }
-        else{
-          v.latitude = 55.635924;
-          v.longitude = 37.6066379;
-          $p.msg.show_msg($p.msg.empty_geocoding);
+          if(obj.shipping_address){
+            // если есть строка адреса, пытаемся геокодировать
+            this.do_geocoding((results, status) => {
+              if (status == google.maps.GeocoderStatus.OK) {
+                v.latitude = results[0].geometry.location.lat();
+                v.longitude = results[0].geometry.location.lng();
+              }
+            });
+          }
+          else if($p.ipinfo.latitude && $p.ipinfo.longitude ){
+            v.latitude = $p.ipinfo.latitude;
+            v.longitude = $p.ipinfo.longitude;
+          }
+          else{
+            v.latitude = 55.635924;
+            v.longitude = 37.6066379;
+            $p.msg.show_msg($p.msg.empty_geocoding);
+          }
         }
       });
   }
@@ -530,7 +629,6 @@ class WndAddress {
 
   pgrid_on_changed(pname, new_value, old_value){
     const {v, wnd} = this;
-    pname = wnd.elmnts.pgrid.getSelectedRowId();
     if(pname){
       if(v.delivery_area.empty()){
         new_value = old_value;
@@ -541,7 +639,7 @@ class WndAddress {
         setTimeout(() => wnd.elmnts.pgrid.selectRowById("delivery_area"), 50);
       }
       else if(pname == "delivery_area"){
-        this.pgrid_on_select(new_value);
+        this.delivery_area_changed();
       }
       else{
         v[pname] = new_value;
@@ -551,7 +649,9 @@ class WndAddress {
   }
 
   frm_close(win){
-    this.grid.editStop();
+    const {grid, obj, observer} = this;
+    grid && grid.editStop();
+    obj && Object.unobserve(obj, observer);
     const {event} = google.maps;
     event.removeListener(this._marker_toggle_bounce);
     event.removeListener(this._marker_dragend);
@@ -569,17 +669,18 @@ WndAddress.fias = {
   // Код, Наименование, Тип, Порядок, КодФИАС
   "1010": {name: "дом",			type: 1, order: 1, fid: 2, syn: [" д.", " д ", " дом"]},
   "1020": {name: "владение",		type: 1, order: 2, fid: 1, syn: [" вл.", " вл ", " влад.", " влад ", " владен.", " владен ", " владение"]},
-  "1030": {name: "домовладение",	type: 1, order: 3, fid: 3},
+  "1030": {name: "домовладение",	type: 1, order: 3, fid: 3, syn: [" домовлад"]},
 
   "1050": {name: "корпус",		type: 2, order: 1, syn: [" к.", " к ", " корп.", " корп ", "корпус"]},
   "1060": {name: "строение",	type: 2, order: 2, fid: 1, syn: [" стр.", " стр ", " строен.", " строен ", "строение"]},
   "1080": {name: "литера",		type: 2, order: 3, fid: 3, syn: [" л.", " л ", " лит.", " лит ", "литера"]},
   "1070": {name: "сооружение",	type: 2, order: 4, fid: 2, syn: [" соор.", " соор ", " сооруж.", " сооруж ", "сооружение"]},
   "1040": {name: "участок",	type: 2, order: 5, syn: [" уч.", " уч ", "участок"]},
+
   "2010": {name: "квартира",	type: 3, order: 1, syn: ["кв.", "кв ", "кварт.", "кварт ", "квартира", "-"]},
   "2030": {name: "офис",		type: 3, order: 2, syn: ["оф.", "оф ", "офис", "-"]},
-  "2040": {name: "бокс",		type: 3, order: 3},
-  "2020": {name: "помещение",	type: 3, order: 4},
+  "2040": {name: "бокс",		type: 3, order: 3, syn: ["бокс", "бкс"]},
+  "2020": {name: "помещение",	type: 3, order: 4, syn: ["помещение", "пом", "помещ"]},
   "2050": {name: "комната",	type: 3, order: 5, syn: ["комн.", "комн ", "комната"]},
 
   // Уточняющие объекты
@@ -590,6 +691,7 @@ WndAddress.fias = {
   "10500000": {name: "Промышленная зона"},
   "10600000": {name: "Гаражно-строительный кооператив"},
   "10700000": {name: "Территория"},
+
 }
 
 /**

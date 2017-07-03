@@ -40,15 +40,17 @@ class ToolLayImpost extends ToolElement {
         changed: false
       });
 
-    let sys;
-
     // подключает окно редактора
     function tool_wnd(){
 
-      sys = paper.project._dp.sys;
+      tool.sys = tool._scope.project._dp.sys;
 
       // создаём экземпляр обработки
-      tool.profile = $p.dp.builder_lay_impost.create();
+      const profile = tool.profile = $p.dp.builder_lay_impost.create();
+
+
+      profile.elm_type_change = tool.elm_type_change.bind(tool);
+      Object.observe(profile, profile.elm_type_change, ["update"]);
 
       // восстанавливаем сохранённые параметры
       $p.wsql.restore_options("editor", tool.options);
@@ -58,44 +60,48 @@ class ToolLayImpost extends ToolElement {
         width: 320,
       });
 
-      for(let prop in tool.profile._metadata.fields) {
+      for(let prop in profile._metadata.fields) {
         if(tool.options.wnd.hasOwnProperty(prop))
-          tool.profile[prop] = tool.options.wnd[prop];
+          profile[prop] = tool.options.wnd[prop];
       }
 
       // если в текущем слое есть профили, выбираем импост
-      if(tool.profile.elm_type.empty()){
-        tool.profile.elm_type = $p.enm.elm_types.Импост;
+      if(profile.elm_type.empty()){
+        profile.elm_type = $p.enm.elm_types.Импост;
       }
 
       // вставку по умолчанию получаем эмулируя событие изменения типа элемента
-      $p.dp.builder_lay_impost.handle_event(tool.profile, "value_change", {
+      $p.dp.builder_lay_impost.handle_event(profile, "value_change", {
         field: "elm_type"
       });
 
       // выравнивание по умолчанию
-      if(tool.profile.align_by_y.empty()){
-        tool.profile.align_by_y = $p.enm.positions.Центр;
+      if(profile.align_by_y.empty()){
+        profile.align_by_y = $p.enm.positions.Центр;
       }
-      if(tool.profile.align_by_x.empty()){
-        tool.profile.align_by_x = $p.enm.positions.Центр;
+      if(profile.align_by_x.empty()){
+        profile.align_by_x = $p.enm.positions.Центр;
       }
 
       // цвет по умолчанию
-      if(tool.profile.clr.empty()){
-        tool.profile.clr = paper.project.clr;
+      if(profile.clr.empty()){
+        profile.clr = paper.project.clr;
       }
 
+      // параметры отбора для выбора цвета
+      tool.choice_links_clr()
+
+
       // параметры отбора для выбора вставок
-      tool.profile._metadata.fields.inset_by_x.choice_links = tool.profile._metadata.fields.inset_by_y.choice_links = [{
+      profile._metadata.fields.inset_by_x.choice_links = profile._metadata.fields.inset_by_y.choice_links = [{
         name: ["selection",	"ref"],
         path: [(o, f) => {
             if($p.utils.is_data_obj(o)){
-              return tool.profile.rama_impost.indexOf(o) != -1;
+              return profile.rama_impost.indexOf(o) != -1;
             }
             else{
               let refs = "";
-              tool.profile.rama_impost.forEach((o) => {
+              profile.rama_impost.forEach((o) => {
                 if(refs){
                   refs += ", ";
                 }
@@ -106,12 +112,10 @@ class ToolLayImpost extends ToolElement {
           }]
       }];
 
-      // дополняем свойства поля цвет отбором по служебным цветам
-      $p.cat.clrs.selection_exclude_service(tool.profile._metadata.fields.clr, sys);
 
       tool.wnd = $p.iface.dat_blank(paper._dxw, tool.options.wnd);
       tool._grid = tool.wnd.attachHeadFields({
-        obj: tool.profile
+        obj: profile
       });
 
       if(!tool.options.wnd.bounds_open){
@@ -130,24 +134,24 @@ class ToolLayImpost extends ToolElement {
           tool.wnd.elmnts._btns.forEach(function (val, ind) {
             if(val.id == bar){
               var suffix = (ind == 0) ? "y" : "x";
-              tool.profile["step_by_" + suffix] = 0;
+              profile["step_by_" + suffix] = 0;
 
               if(btn == "clear"){
-                tool.profile["elm_by_" + suffix] = 0;
+                profile["elm_by_" + suffix] = 0;
 
               }else if(btn == "del"){
 
-                if(tool.profile["elm_by_" + suffix] > 0)
-                  tool.profile["elm_by_" + suffix] = tool.profile["elm_by_" + suffix] - 1;
-                else if(tool.profile["elm_by_" + suffix] < 0)
-                  tool.profile["elm_by_" + suffix] = 0;
+                if(profile["elm_by_" + suffix] > 0)
+                  profile["elm_by_" + suffix] = profile["elm_by_" + suffix] - 1;
+                else if(profile["elm_by_" + suffix] < 0)
+                  profile["elm_by_" + suffix] = 0;
 
               }else if(btn == "add"){
 
-                if(tool.profile["elm_by_" + suffix] < 1)
-                  tool.profile["elm_by_" + suffix] = 1;
+                if(profile["elm_by_" + suffix] < 1)
+                  profile["elm_by_" + suffix] = 1;
                 else
-                  tool.profile["elm_by_" + suffix] = tool.profile["elm_by_" + suffix] + 1;
+                  profile["elm_by_" + suffix] = profile["elm_by_" + suffix] + 1;
               }
 
             }
@@ -195,7 +199,7 @@ class ToolLayImpost extends ToolElement {
                   {name: 'clear', text: '<i class="fa fa-trash-o"></i>', title: 'Очистить габариты', class_name: "md_otooolbar_grid_button"},
                 ],
                 onclick: function () {
-                  tool.profile.w = tool.profile.h = 0;
+                  profile.w = profile.h = 0;
                 }
               })
             });
@@ -210,9 +214,9 @@ class ToolLayImpost extends ToolElement {
       tool.wnd.wnd_options = function (opt) {
         wnd_options.call(tool.wnd, opt);
 
-        for(var prop in tool.profile._metadata.fields) {
+        for(var prop in profile._metadata.fields) {
           if(prop.indexOf("step") == -1 && prop.indexOf("inset") == -1 && prop != "clr" && prop != "w" && prop != "h"){
-            var val = tool.profile[prop];
+            var val = profile[prop];
             opt[prop] = $p.utils.is_data_obj(val) ? val.ref : val;
           }
         }
@@ -243,11 +247,13 @@ class ToolLayImpost extends ToolElement {
 
         paper.canvas_cursor('cursor-arrow-lay');
 
-        if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty()){
+        const {profile} = this;
+
+        if(profile.inset_by_y.empty() && profile.inset_by_x.empty()){
           return;
         }
 
-        if(!this.hitItem && (this.profile.elm_type == $p.enm.elm_types.Раскладка || !this.profile.w || !this.profile.h)){
+        if(!this.hitItem && (profile.elm_type == $p.enm.elm_types.Раскладка || !profile.w || !profile.h)){
           return;
         }
 
@@ -320,10 +326,10 @@ class ToolLayImpost extends ToolElement {
                 }
 
                 if(name == "left" || name == "right"){
-                  p.profile._inset = check_inset(tool.profile.inset_by_x, $p.enm.positions[name]);
+                  p.profile._inset = check_inset(profile.inset_by_x, $p.enm.positions[name]);
                 }
                 else{
-                  p.profile._inset = check_inset(tool.profile.inset_by_y, $p.enm.positions[name]);
+                  p.profile._inset = check_inset(profile.inset_by_y, $p.enm.positions[name]);
                 }
               }
             });
@@ -358,7 +364,7 @@ class ToolLayImpost extends ToolElement {
 
         tool.paths.forEach((p) => {
 
-          let iter = 0, angle, proto = {clr: tool.profile.clr};
+          let iter = 0, angle, proto = {clr: profile.clr};
 
           function do_bind() {
 
@@ -380,7 +386,7 @@ class ToolLayImpost extends ToolElement {
             }
 
             // если не привязалось - ищем точки на вновь добавленных профилях
-            if(tool.profile.split != $p.enm.lay_split_types.КрестВСтык && (!correctedp1 || !correctedp2)){
+            if(profile.split != $p.enm.lay_split_types.КрестВСтык && (!correctedp1 || !correctedp2)){
               for(let profile of nprofiles){
                 let np = profile.generatrix.getNearestPoint(p.b);
                 if(!correctedp1 && np.getDistance(p.b) < consts.sticking){
@@ -402,12 +408,12 @@ class ToolLayImpost extends ToolElement {
             // в зависимости от наклона разные вставки
             angle = p.e.subtract(p.b).angle;
             if((angle > -40 && angle < 40) || (angle > 180-40 && angle < 180+40)){
-              proto.inset = p._inset || tool.profile.inset_by_y;
+              proto.inset = p._inset || profile.inset_by_y;
             }else{
-              proto.inset = p._inset || tool.profile.inset_by_x;
+              proto.inset = p._inset || profile.inset_by_x;
             }
 
-            if(tool.profile.elm_type == $p.enm.elm_types.Раскладка){
+            if(profile.elm_type == $p.enm.elm_types.Раскладка){
 
               nprofiles.push(new Onlay({
                 generatrix: new paper.Path({
@@ -487,7 +493,8 @@ class ToolLayImpost extends ToolElement {
           p.removeSegments();
         });
 
-        if(this.profile.inset_by_y.empty() && this.profile.inset_by_x.empty()){
+        const {profile} = this;
+        if(profile.inset_by_y.empty() && profile.inset_by_x.empty()){
           return;
         }
 
@@ -497,10 +504,10 @@ class ToolLayImpost extends ToolElement {
           bounds = this.hitItem.bounds;
           gen = this.hitItem.path;
         }
-        else if(this.profile.w && this.profile.h) {
+        else if(profile.w && profile.h) {
           gen = new paper.Path({
             insert: false,
-            segments: [[0,0], [0, -this.profile.h], [this.profile.w, -this.profile.h], [this.profile.w, 0]],
+            segments: [[0,0], [0, -profile.h], [profile.w, -profile.h], [profile.w, 0]],
             closed: true
           });
           bounds = gen.bounds;
@@ -510,13 +517,13 @@ class ToolLayImpost extends ToolElement {
         else
           return;
 
-        var stepy = this.profile.step_by_y || (this.profile.elm_by_y && bounds.height / (this.profile.elm_by_y + ((hit || this.profile.elm_by_y < 2) ? 1 : -1))),
-          county = this.profile.elm_by_y > 0 ? this.profile.elm_by_y.round(0) : Math.round(bounds.height / stepy) - 1,
-          stepx = this.profile.step_by_x || (this.profile.elm_by_x && bounds.width / (this.profile.elm_by_x + ((hit || this.profile.elm_by_x < 2) ? 1 : -1))),
-          countx = this.profile.elm_by_x > 0 ? this.profile.elm_by_x.round(0) : Math.round(bounds.width / stepx) - 1,
-          w2x = this.profile.inset_by_x.nom().width / 2,
-          w2y = this.profile.inset_by_y.nom().width / 2,
-          clr = BuilderElement.clr_by_clr(this.profile.clr, false),
+        var stepy = profile.step_by_y || (profile.elm_by_y && bounds.height / (profile.elm_by_y + ((hit || profile.elm_by_y < 2) ? 1 : -1))),
+          county = profile.elm_by_y > 0 ? profile.elm_by_y.round(0) : Math.round(bounds.height / stepy) - 1,
+          stepx = profile.step_by_x || (profile.elm_by_x && bounds.width / (profile.elm_by_x + ((hit || profile.elm_by_x < 2) ? 1 : -1))),
+          countx = profile.elm_by_x > 0 ? profile.elm_by_x.round(0) : Math.round(bounds.width / stepx) - 1,
+          w2x = profile.inset_by_x.nom().width / 2,
+          w2y = profile.inset_by_y.nom().width / 2,
+          clr = BuilderElement.clr_by_clr(profile.clr, false),
           by_x = [], by_y = [], base, pos, path, i, j, pts;
 
         function get_path(segments, b, e) {
@@ -606,9 +613,9 @@ class ToolLayImpost extends ToolElement {
           for(i = 0; i < by_x.length; i++){
 
             // в зависимости от типа деления, рисуем прямые или разорванные отрезки
-            if(!by_y.length || tool.profile.split.empty() ||
-              tool.profile.split == $p.enm.lay_split_types.ДелениеГоризонтальных ||
-              tool.profile.split == $p.enm.lay_split_types.КрестПересечение){
+            if(!by_y.length || profile.split.empty() ||
+              profile.split == $p.enm.lay_split_types.ДелениеГоризонтальных ||
+              profile.split == $p.enm.lay_split_types.КрестПересечение){
 
               if(pts = get_points([by_x[i], bounds.bottom], [by_x[i], bounds.top]))
                 get_path([[pts.p1.x-w2x, pts.p1.y], [pts.p2.x-w2x, pts.p2.y], [pts.p2.x+w2x, pts.p2.y], [pts.p1.x+w2x, pts.p1.y]], pts.p1, pts.p2);
@@ -637,9 +644,9 @@ class ToolLayImpost extends ToolElement {
           for(i = 0; i < by_y.length; i++){
 
             // в зависимости от типа деления, рисуем прямые или разорванные отрезки
-            if(!by_x.length || tool.profile.split.empty() ||
-              tool.profile.split == $p.enm.lay_split_types.ДелениеВертикальных ||
-              tool.profile.split == $p.enm.lay_split_types.КрестПересечение){
+            if(!by_x.length || profile.split.empty() ||
+              profile.split == $p.enm.lay_split_types.ДелениеВертикальных ||
+              profile.split == $p.enm.lay_split_types.КрестПересечение){
 
               if(pts = get_points([bounds.left, by_y[i]], [bounds.right, by_y[i]]))
                 get_path([[pts.p1.x, pts.p1.y-w2y], [pts.p2.x, pts.p2.y-w2y], [pts.p2.x, pts.p2.y+w2y], [pts.p1.x, pts.p1.y+w2y]], pts.p1, pts.p2);
@@ -665,7 +672,7 @@ class ToolLayImpost extends ToolElement {
         }
 
         if(stepy){
-          if(tool.profile.align_by_y == $p.enm.positions.Центр){
+          if(profile.align_by_y == $p.enm.positions.Центр){
 
             base = bounds.top + bounds.height / 2;
             if(county % 2){
@@ -690,7 +697,7 @@ class ToolLayImpost extends ToolElement {
                 by_y.push(pos);
             }
 
-          }else if(tool.profile.align_by_y == $p.enm.positions.Верх){
+          }else if(profile.align_by_y == $p.enm.positions.Верх){
 
             if(hit){
               for(i = 1; i <= county; i++){
@@ -706,7 +713,7 @@ class ToolLayImpost extends ToolElement {
               }
             }
 
-          }else if(tool.profile.align_by_y == $p.enm.positions.Низ){
+          }else if(profile.align_by_y == $p.enm.positions.Низ){
 
             if(hit){
               for(i = 1; i <= county; i++){
@@ -725,7 +732,7 @@ class ToolLayImpost extends ToolElement {
         }
 
         if(stepx){
-          if(tool.profile.align_by_x == $p.enm.positions.Центр){
+          if(profile.align_by_x == $p.enm.positions.Центр){
 
             base = bounds.left + bounds.width / 2;
             if(countx % 2){
@@ -750,7 +757,7 @@ class ToolLayImpost extends ToolElement {
                 by_x.push(pos);
             }
 
-          }else if(tool.profile.align_by_x == $p.enm.positions.Лев){
+          }else if(profile.align_by_x == $p.enm.positions.Лев){
 
             if(hit){
               for(i = 1; i <= countx; i++){
@@ -767,7 +774,7 @@ class ToolLayImpost extends ToolElement {
             }
 
 
-          }else if(tool.profile.align_by_x == $p.enm.positions.Прав){
+          }else if(profile.align_by_x == $p.enm.positions.Прав){
 
             if(hit){
               for(i = 1; i <= countx; i++){
@@ -786,7 +793,7 @@ class ToolLayImpost extends ToolElement {
         }
 
         base = 0;
-        if(tool.profile.split == $p.enm.lay_split_types.ДелениеВертикальных){
+        if(profile.split == $p.enm.lay_split_types.ДелениеВертикальных){
           do_y();
           do_x();
         }else{
@@ -820,12 +827,86 @@ class ToolLayImpost extends ToolElement {
   }
 
   detache_wnd(){
+    if(this.profile){
+      Object.unobserve(this.profile, this.profile.elm_type_change);
+    }
     if(this.wnd && this.wnd.elmnts){
       this.wnd.elmnts._btns.forEach((btn) => {
         btn.bar && btn.bar.unload && btn.bar.unload()
       });
     }
     ToolElement.prototype.detache_wnd.call(this)
+  }
+
+  // возвращает конкатенацию ограничений цвета всех вставок текущего типа
+  elm_type_clrs(profile, sys) {
+    if(!profile._elm_type_clrs){
+      const {inset_by_x, inset_by_y} = profile;
+      profile._elm_type_clrs = [];
+
+      let clr_group, elm;
+
+      function add_by_clr(clr) {
+        if(clr instanceof $p.CatClrs){
+          const {ref} = clr;
+          if(clr.is_folder){
+            $p.cat.clrs.alatable.forEach((row) => row.parent == ref && profile._elm_type_clrs.push(row.ref))
+          }
+          else{
+            profile._elm_type_clrs.push(ref)
+          }
+        }
+        else if(clr instanceof $p.CatColor_price_groups){
+          clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1))
+        }
+      }
+
+      if(inset_by_x.clr_group.empty() && inset_by_y.clr_group.empty()){
+        add_by_clr(sys.clr_group);
+      }
+      else{
+        if(!inset_by_x.clr_group.empty()){
+          add_by_clr(inset_by_x.clr_group);
+        }
+        if(!inset_by_y.clr_group.empty() && inset_by_y.clr_group != inset_by_x.clr_group){
+          add_by_clr(inset_by_y.clr_group);
+        }
+      }
+    }
+    if(profile._elm_type_clrs.length && profile._elm_type_clrs.indexOf(profile.clr.ref) == -1){
+      profile.clr = profile._elm_type_clrs[0];
+    }
+    return profile._elm_type_clrs;
+  }
+
+  // при изменении типа элемента, чистим отбор по цвету
+  elm_type_change(changes) {
+    for(let change of changes){
+      if(['inset_by_y', 'inset_by_y', 'elm_type'].indexOf(change.name) != -1){
+        const {profile, sys} = this;
+        delete profile._elm_type_clrs;
+        this.elm_type_clrs(profile, sys);
+        break;
+      }
+    }
+  }
+
+  choice_links_clr() {
+
+    const {profile, sys, elm_type_clrs} = this;
+
+    // дополняем свойства поля цвет отбором по служебным цветам
+    $p.cat.clrs.selection_exclude_service(profile._metadata.fields.clr);
+
+    profile._metadata.fields.clr.choice_params.push({
+      name: "ref",
+      get path(){
+        const res = elm_type_clrs(profile, sys);
+        return res.length ? {in: res} : {not: ''};
+      }
+    });
+
+
   }
 
 }

@@ -921,31 +921,21 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     // ошибки соединений профиля
     this.profiles.forEach((elm) => {
-      const {b, e} = elm.rays;
-      if(!b.cnn){
-        Object.assign(new paper.Path.Circle({
-          center: elm.corns(4).add(elm.corns(1)).divide(2),
-          radius: 80,
-        }), err_attrs);
-      }
-      if(!e.cnn){
-        Object.assign(new paper.Path.Circle({
-          center: elm.corns(2).add(elm.corns(3)).divide(2),
-          radius: 80,
-        }), err_attrs);
-      }
+      const {_corns, _rays} = elm._attr;
+      // ошибки угловых соединений
+      _rays.b.check_err(err_attrs);
+      _rays.e.check_err(err_attrs);
       // ошибки примыкающих соединений
       if(elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())){
-        Object.assign(elm.path.get_subpath(elm.corns(1), elm.corns(2)), err_attrs);
+        Object.assign(elm.path.get_subpath(_corns[1], _corns[2]), err_attrs);
       }
       // если у профиля есть доборы, проверим их соединения
       elm.addls.forEach((elm) => {
         if(elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())){
-          Object.assign(elm.path.get_subpath(elm.corns(1), elm.corns(2)), err_attrs);
+          Object.assign(elm.path.get_subpath(_corns[1], _corns[2]), err_attrs);
         }
       })
     });
-
   }
 
   /**
@@ -1426,6 +1416,7 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   /**
    * Массив с рёбрами периметра
+   * @return {Array}
    */
   get perimeter () {
     const res = [];
@@ -1444,6 +1435,66 @@ class Contour extends AbstractFilling(paper.Layer) {
       tmp.profile = curr.profile || curr.elm;
     });
     return res;
+  }
+
+  /**
+   * Массив с рёбрами периметра по внутренней стороне профилей
+   * @return {Array}
+   */
+  perimeter_inner (size) {
+    // накопим в res пути внутренних рёбер профилей
+    const {center} = this.bounds;
+    const res = this.outer_profiles.map((curr) => {
+      const profile = curr.profile || curr.elm;
+      const {inner, outer} = profile.rays;
+      const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true) ?
+        inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) : outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
+      const tmp = {
+        profile,
+        sub_path,
+        angle: curr.e.subtract(curr.b).angle,
+        b: curr.b,
+        e: curr.e,
+      };
+      if(tmp.angle < 0){
+        tmp.angle += 360;
+      };
+      return tmp;
+    });
+    const ubound = res.length - 1;
+    return res.map((curr, index) => {
+      let sub_path = curr.sub_path.equidistant(size);
+      const prev = !index ? res[ubound] : res[index - 1];
+      const next = (index == ubound) ? res[0] : res[index + 1];
+      const b = sub_path.intersect_point(prev.sub_path.equidistant(size), curr.b, true);
+      const e = sub_path.intersect_point(next.sub_path.equidistant(size), curr.e, true);
+      if(b && e){
+        sub_path = sub_path.get_subpath(b, e);
+      }
+      return {
+        profile: curr.profile,
+        angle: curr.angle,
+        len: sub_path.length,
+        sub_path,
+      }
+    })
+  }
+
+  /**
+   * Габариты по рёбрам периметра внутренней стороны профилей
+   * @param size
+   * @return {Rectangle}
+   */
+  bounds_inner (size) {
+    const path = new paper.Path({insert: false});
+    for(let curr of this.perimeter_inner(size)){
+      path.addSegments(curr.sub_path.segments);
+    }
+    if(path.segments.length && !path.closed){
+      path.closePath(true);
+    }
+    path.reduce();
+    return path.bounds;
   }
 
   /**
@@ -1688,16 +1739,20 @@ class Contour extends AbstractFilling(paper.Layer) {
     const {len} = elm._row;
 
     function set_handle_height(row){
-      const {handle_height_base} = row;
+      const {handle_height_base, fix_ruch} = row;
       if(handle_height_base < 0){
-        if(handle_height_base == -2 || (handle_height_base == -1 && _row.fix_ruch != -3)){
+        // если fix_ruch - устанавливаем по центру
+        if(fix_ruch || _row.fix_ruch != -3){
           _row.h_ruch = (len / 2).round(0);
-          return _row.fix_ruch = handle_height_base;
+          return _row.fix_ruch = fix_ruch ? -2 : -1;
         }
       }
       else if(handle_height_base > 0){
-        _row.h_ruch = handle_height_base;
-        return _row.fix_ruch = 1;
+        // если fix_ruch - устанавливаем по базовой высоте
+        if(fix_ruch || _row.fix_ruch != -3){
+          _row.h_ruch = handle_height_base;
+          return _row.fix_ruch = fix_ruch ? -2 : -1;
+        }
       }
     }
 

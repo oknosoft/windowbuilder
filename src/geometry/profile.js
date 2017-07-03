@@ -123,6 +123,27 @@ class CnnPoint {
   }
 
   /**
+   * Проверяет ошибки в узле профиля
+   * @param style
+   */
+  check_err(style) {
+    const {_node, _parent, cnn} = this;
+    const {_corns, _rays} = _parent._attr;
+    const len = _node == 'b' ? _corns[1].getDistance(_corns[4]) : _corns[2].getDistance(_corns[3]);
+    if(!cnn || (cnn.lmin > 0 && cnn.lmin > len) || (cnn.lmax > 0 && cnn.lmax < len)){
+      if(style){
+        Object.assign(new paper.Path.Circle({
+          center: _node == 'b' ? _corns[4].add(_corns[1]).divide(2) : _corns[2].add(_corns[3]).divide(2),
+          radius: 80,
+        }), style);
+      }
+      else{
+        _parent.err_spec_row($p.job_prm.nom.critical_error, cnn ? $p.msg.err_seam_len : $p.msg.err_no_cnn);
+      }
+    }
+  }
+
+  /**
    * Профиль, с которым пересекается наш элемент в точке соединения
    * @property profile
    * @type Profile
@@ -842,9 +863,8 @@ class ProfileItem extends GeneratrixElement {
     _row.elm_type = this.elm_type;
 
     // TODO: Рассчитать положение и ориентацию
-
-    // вероятно, импост, всегда занимает положение "центр"
-
+    _row.orientation = this.orientation;
+    _row.pos = this.pos;
 
     // координаты доборов
     this.addls.forEach((addl) => addl.save_coordinates());
@@ -1041,6 +1061,7 @@ class ProfileItem extends GeneratrixElement {
         // прибиваем соединения в точках b и e
         const b = this.cnn_point('b');
         const e = this.cnn_point('e');
+        const {cnns} = project.connections;
 
         if(b.profile && b.profile_point == 'e'){
           const {_rays} = b.profile._attr;
@@ -1057,18 +1078,25 @@ class ProfileItem extends GeneratrixElement {
           }
         }
 
-        const {cnns} = project.connections;
+        // прибиваем соединения примыкающих к текущему импостов
+        const imposts = this.joined_imposts();
+        const elm2 = this.elm;
+        for(const {profile} of imposts.inner.concat(imposts.outer)){
+          const {b, e} = profile.rays;
+          b.profile == this && b.clear(true);
+          e.profile == this && e.clear(true);
+        }
+
         // для соединительных профилей и элементов со створками, пересчитываем соседей
-        this.joined_nearests().forEach((profile) => {
-          const {_attr, elm} = profile;
+        for(const {_attr, elm} of this.joined_nearests()){
           _attr._rays && _attr._rays.clear(true);
           _attr._nearest_cnn = null;
-          cnns.clear({elm1: elm, elm2: this.elm});
-        });
+          cnns.clear({elm1: elm, elm2});
+        }
 
         // так же, пересчитываем соединения с примыкающими заполнениями
         this.layer.glasses(false, true).forEach((glass) => {
-          cnns.clear({elm1: glass.elm, elm2: this.elm});
+          cnns.clear({elm1: glass.elm, elm2});
         })
       }
 
@@ -2007,10 +2035,10 @@ class Profile extends ProfileItem {
     let moved_fact;
 
     if(p instanceof ProfileConnective){
-      const {generatrix} = p;
+      const gen = p.generatrix.clone({insert: false}).elongation(1000);
       this._attr._rays.clear();
-      this.b = generatrix.getNearestPoint(this.b);
-      this.e = generatrix.getNearestPoint(this.e);
+      this.b = gen.getNearestPoint(this.b);
+      this.e = gen.getNearestPoint(this.e);
       moved_fact = true;
     }
     else{

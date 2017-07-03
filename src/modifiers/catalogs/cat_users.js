@@ -21,19 +21,21 @@ $p.cat.users.__define({
 			  delete aobj.acl;
         const obj = new $p.CatUsers(aobj, this);
         const {_obj} = obj;
-        _obj._acl = acl;
-        obj._set_loaded();
-        Object.freeze(obj);
-        Object.freeze(_obj);
-        for(let j in _obj){
-          if(typeof _obj[j] == "object"){
-            Object.freeze(_obj[j]);
-            for(let k in _obj[j]){
-              typeof _obj[j][k] == "object" && Object.freeze(_obj[j][k]);
+        if(_obj){
+          _obj._acl = acl;
+          obj._set_loaded();
+          Object.freeze(obj);
+          Object.freeze(_obj);
+          for(let j in _obj){
+            if(typeof _obj[j] == "object"){
+              Object.freeze(_obj[j]);
+              for(let k in _obj[j]){
+                typeof _obj[j][k] == "object" && Object.freeze(_obj[j][k]);
+              }
             }
           }
+          res.push(obj);
         }
-				res.push(obj);
 			}
 			return res;
 		},
