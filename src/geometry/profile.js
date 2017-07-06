@@ -1742,10 +1742,10 @@ class Profile extends ProfileItem {
    * Возвращает тип элемента (рама, створка, импост)
    */
   get elm_type() {
-    const {_rays} = this._attr;
+    const {_rays, _nearest} = this._attr;
 
     // если начало или конец элемента соединены с соседями по Т, значит это импост
-    if(_rays && (_rays.b.is_tt || _rays.e.is_tt)){
+    if(_rays && !_nearest && (_rays.b.is_tt || _rays.e.is_tt)){
       return $p.enm.elm_types.Импост;
     }
 

@@ -1370,10 +1370,7 @@ class Contour extends AbstractFilling(paper.Layer) {
         }
         elm = new Profile({
           generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e),
-          proto: outer_nodes.length ? outer_nodes[0] : {
-            parent: this,
-            clr: this.project.default_clr()
-          }
+          proto: outer_nodes.length ? outer_nodes[0] : {parent: this, clr: curr.profile.clr}
         });
         elm._attr._nearest = curr.profile;
         elm._attr.binded = true;
