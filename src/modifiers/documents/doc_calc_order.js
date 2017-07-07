@@ -694,6 +694,8 @@ $p.doc.calc_order.on({
         for(let ts in mgr.metadata().tabular_sections){
           ox[ts].clear(true);
         }
+        ox.leading_elm = 0;
+        ox.leading_product = '';
         cx = Promise.resolve(ox);
       });
 
