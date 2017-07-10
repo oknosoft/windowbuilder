@@ -414,13 +414,46 @@ $p.cat.inserts.__define({
 
           }
           else if(row_ins_spec.count_calc_method == ПоШагам){
-            const h = _row.y2 - _row.y1, w = _row.x2 - _row.x1;
+
+            const bounds = this.insert_type == $p.enm.inserts_types.МоскитнаяСетка ?
+              elm.layer.bounds_inner(row_ins_spec.sz) : {height: _row.y2 - _row.y1, width: _row.x2 - _row.x1};
+
+            const h = (!row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.height : bounds.width);
+            const w = !row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.width : bounds.height;
             // (row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьШагиВторогоНаправления ||
             // row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление)
             if(row_ins_spec.step){
-              for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
+              let qty = 0;
+              let pos;
+              if(row_ins_spec.do_center && h >= row_ins_spec.step ){
+                pos = h / 2;
+                if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                  qty++;
+                }
+                for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
+                  pos = h / 2 + i * row_ins_spec.step;
+                  if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                    qty++;
+                  }
+                  pos = h / 2 - i * row_ins_spec.step;
+                  if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                    qty++;
+                  }
+                }
+              }
+              else{
+                for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
+                  pos = i * row_ins_spec.step;
+                  if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                    qty++;
+                  }
+                }
+              }
+
+              if(qty){
                 row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
                 calc_qty_len(row_spec, row_ins_spec, w);
+                row_spec.qty *= qty;
                 calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
               }
               row_spec = null;
