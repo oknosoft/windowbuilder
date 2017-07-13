@@ -16,21 +16,25 @@ $p.on({
     $p.off('pouch_data_loaded', cat_formulas_data_loaded);
 
 		// читаем элементы из pouchdb и создаём формулы
-		$p.cat.formulas.pouch_find_rows({ _top: 500, _skip: 0 })
-			.then((rows) =>{
-				rows.forEach((row) => {
+    const {formulas} = $p.cat;
+    formulas.pouch_find_rows({ _top: 500, _skip: 0 })
+			.then((rows) => {
+				rows.forEach((formula) => {
 					// формируем списки печатных форм и внешних обработок
-					if(row.parent == $p.cat.formulas.predefined("printing_plates")){
-						row.params.find_rows({param: "destination"}, (dest) => {
+					if(formula.parent == formulas.predefined("printing_plates")){
+						formula.params.find_rows({param: "destination"}, (dest) => {
 							const dmgr = $p.md.mgr_by_class_name(dest.value);
 							if(dmgr){
 								if(!dmgr._printing_plates){
                   dmgr._printing_plates = {};
                 }
-								dmgr._printing_plates["prn_" + row.ref] = row;
+								dmgr._printing_plates["prn_" + formula.ref] = formula;
 							}
 						})
 					}
+					else if(formula.parent == formulas.predefined("modifiers")){
+            formula.execute();
+          }
 				});
 			});
 	}

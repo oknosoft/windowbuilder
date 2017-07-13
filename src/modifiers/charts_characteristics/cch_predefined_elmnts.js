@@ -92,36 +92,10 @@
 				.then(() => {
 
 					// рассчеты, помеченные, как шаблоны, загрузим в память заранее
-					setTimeout(() => {
-
-            if(!$p.job_prm.builder){
-              $p.job_prm.builder = {};
-            }
-						if(!$p.job_prm.builder.base_block){
-              $p.job_prm.builder.base_block = [];
-            }
-            if(!$p.job_prm.pricing){
-              $p.job_prm.pricing = {};
-            }
-
-						// дополним base_block шаблонами из систем профилей
-						$p.cat.production_params.forEach((o) => {
-							if(!o.is_folder)
-								o.base_blocks.forEach((row) => {
-									if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1){
-                    $p.job_prm.builder.base_block.push(row.calc_order);
-                  }
-								});
-						});
-
-						$p.job_prm.builder.base_block.forEach((o) => o.load());
-
-					}, 1000);
+					setTimeout($p.doc.calc_order.load_templates.bind($p.doc.calc_order), 1000);
 
 					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-					setTimeout(() => {
-						$p.eve.callEvent("predefined_elmnts_inited");
-					}, 200);
+					setTimeout(() => $p.eve.callEvent("predefined_elmnts_inited"), 200);
 
 				});
 

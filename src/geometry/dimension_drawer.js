@@ -87,7 +87,7 @@ class DimensionDrawer extends paper.Group {
       }
     }
 
-    this.layer.parent && this.layer.parent.l_dimensions.clear();
+    this.layer && this.layer.parent && this.layer.parent.l_dimensions.clear();
   }
 
   /**

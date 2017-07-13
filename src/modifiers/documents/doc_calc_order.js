@@ -273,6 +273,43 @@ $p.doc.calc_order.on({
 	}
 });
 
+// метод загрузки шаблонов
+$p.doc.calc_order.load_templates = async function () {
+
+  if(!$p.job_prm.builder){
+    $p.job_prm.builder = {};
+  }
+  if(!$p.job_prm.builder.base_block){
+    $p.job_prm.builder.base_block = [];
+  }
+  if(!$p.job_prm.pricing){
+    $p.job_prm.pricing = {};
+  }
+
+  // дополним base_block шаблонами из систем профилей
+  $p.cat.production_params.forEach((o) => {
+    if(!o.is_folder)
+      o.base_blocks.forEach((row) => {
+        if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1){
+          $p.job_prm.builder.base_block.push(row.calc_order);
+        }
+      });
+  });
+
+  // загрузим шаблоны пачками по 10 документов
+  const refs = [];
+  for(let o of $p.job_prm.builder.base_block){
+    refs.push(o.ref);
+    if(refs.length > 9){
+      await $p.doc.calc_order.pouch_load_array(refs);
+      refs.length = 0;
+    }
+  }
+  return refs.length ? $p.doc.calc_order.pouch_load_array(refs) : undefined;
+
+  //$p.job_prm.builder.base_block.forEach((o) => o.load());
+};
+
 // свойства и методы объекта
 (() => {
 
@@ -697,6 +734,8 @@ $p.doc.calc_order.on({
         for(let ts in mgr.metadata().tabular_sections){
           ox[ts].clear(true);
         }
+        ox.leading_elm = 0;
+        ox.leading_product = '';
         cx = Promise.resolve(ox);
       });
 
