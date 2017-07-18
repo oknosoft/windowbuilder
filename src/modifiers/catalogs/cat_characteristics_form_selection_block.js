@@ -37,7 +37,7 @@
 
 				// виртуальные метаданные для поля фильтра по заказу
 				_metadata: {
-					get : function(){
+					value : function(){
 
 						// возвращаем типовые метаданные зарактеристики, но могли бы вернуть изменённый клон
 						//var calc_order = $p.cat.characteristics.metadata().fields.calc_order._clone();

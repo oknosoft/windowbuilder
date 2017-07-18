@@ -60,7 +60,7 @@ class ToolLayImpost extends ToolElement {
         width: 320,
       });
 
-      for(let prop in profile._metadata.fields) {
+      for(let prop in profile._metadata().fields) {
         if(tool.options.wnd.hasOwnProperty(prop))
           profile[prop] = tool.options.wnd[prop];
       }
@@ -71,9 +71,7 @@ class ToolLayImpost extends ToolElement {
       }
 
       // вставку по умолчанию получаем эмулируя событие изменения типа элемента
-      $p.dp.builder_lay_impost.handle_event(profile, "value_change", {
-        field: "elm_type"
-      });
+      $p.dp.builder_lay_impost.emit("value_change", {field: "elm_type"}, profile);
 
       // выравнивание по умолчанию
       if(profile.align_by_y.empty()){
@@ -93,7 +91,7 @@ class ToolLayImpost extends ToolElement {
 
 
       // параметры отбора для выбора вставок
-      profile._metadata.fields.inset_by_x.choice_links = profile._metadata.fields.inset_by_y.choice_links = [{
+      profile._metadata('inset_by_x').choice_links = profile._metadata('inset_by_y').choice_links = [{
         name: ["selection",	"ref"],
         path: [(o, f) => {
             if($p.utils.is_data_obj(o)){
@@ -214,7 +212,7 @@ class ToolLayImpost extends ToolElement {
       tool.wnd.wnd_options = function (opt) {
         wnd_options.call(tool.wnd, opt);
 
-        for(var prop in profile._metadata.fields) {
+        for(var prop in profile._metadata().fields) {
           if(prop.indexOf("step") == -1 && prop.indexOf("inset") == -1 && prop != "clr" && prop != "w" && prop != "h"){
             var val = profile[prop];
             opt[prop] = $p.utils.is_data_obj(val) ? val.ref : val;
@@ -896,9 +894,9 @@ class ToolLayImpost extends ToolElement {
     const {profile, sys, elm_type_clrs} = this;
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata.fields.clr);
+    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'));
 
-    profile._metadata.fields.clr.choice_params.push({
+    profile._metadata('clr').choice_params.push({
       name: "ref",
       get path(){
         const res = elm_type_clrs(profile, sys);

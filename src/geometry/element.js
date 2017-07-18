@@ -173,7 +173,7 @@ class BuilderElement extends paper.Group {
 
   // виртуальные метаданные для автоформ
   get _metadata() {
-    const {fields, tabular_sections} = this.project.ox._metadata;
+    const {fields, tabular_sections} = this.project.ox._metadata();
     const t = this,
       _xfields = tabular_sections.coordinates.fields, //_dgfields = t.project._dp._metadata.fields
       inset = Object.assign({}, _xfields.inset),

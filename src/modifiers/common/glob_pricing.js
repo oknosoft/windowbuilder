@@ -370,13 +370,13 @@ class Pricing {
 
     // Эмулируем событие окончания редактирования, чтобы единообразно пересчитать строку табчасти
     if(!prm.hand_start){
-      $p.doc.calc_order.handle_event(calc_order_row._owner._owner, "value_change", {
+      $p.doc.calc_order.emit("value_change", {
         field: "price",
         value: calc_order_row.price,
         tabular_section: "production",
         row: calc_order_row,
-        no_extra_charge: true
-      });
+        no_extra_charge: true,
+      }, calc_order_row._owner._owner);
     }
 
     // Цены и суммы вытянутых строк спецификации в заказ

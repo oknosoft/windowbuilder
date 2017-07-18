@@ -133,7 +133,7 @@
 				read_only: wnd.elmnts.ro,
 				oxml: {
 					" ": [{id: "number_doc", path: "o.number_doc", synonym: "Номер", type: "ro", txt: o.number_doc},
-						{id: "date", path: "o.date", synonym: "Дата", type: "ro", txt: $p.moment(o.date).format($p.moment._masks.date_time)},
+						{id: "date", path: "o.date", synonym: "Дата", type: "ro", txt: moment(o.date).format(moment._masks.date_time)},
 						"number_internal"
 					],
 					"Контактная информация": ["partner", "client_of_dealer", "phone",

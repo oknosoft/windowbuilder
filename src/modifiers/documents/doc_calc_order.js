@@ -172,23 +172,19 @@ $p.doc.calc_order.on({
 	},
 
 	// при изменении реквизита
-	value_change: function (attr) {
+	value_change: function (attr, _obj) {
 
-    let obj = this;
-    if(attr instanceof $p.DocCalc_order){
-      obj = attr;
-      attr = arguments[1];
-    }
+    const o = _obj || this;
 
 		// реквизиты шапки
 		if(attr.field == "organization"){
-      obj.new_number_doc();
-			if(obj.contract.organization != attr.value){
-        obj.contract = $p.cat.contracts.by_partner_and_org(obj.partner, attr.value);
+      o.new_number_doc();
+			if(o.contract.organization != attr.value){
+        o.contract = $p.cat.contracts.by_partner_and_org(o.partner, attr.value);
       }
 		}
-		else if(attr.field == "partner" && obj.contract.owner != attr.value){
-      obj.contract = $p.cat.contracts.by_partner_and_org(attr.value, obj.organization);
+		else if(attr.field == "partner" && o.contract.owner != attr.value){
+      o.contract = $p.cat.contracts.by_partner_and_org(attr.value, o.organization);
 
 		}
     // табчасть продукции
@@ -232,7 +228,7 @@ $p.doc.calc_order.on({
 				attr.row.amount_internal = (attr.row.price_internal * ((100 - attr.row.discount_percent_internal)/100) * attr.row.quantity).round(2);
 
 				// ставка и сумма НДС
-				if(obj.vat_consider){
+				if(o.vat_consider){
           const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
 					attr.row.vat_rate = attr.row.nom.vat_rate.empty() ? НДС18 : attr.row.nom.vat_rate;
 					switch (attr.row.vat_rate){
@@ -253,7 +249,7 @@ $p.doc.calc_order.on({
 							attr.row.vat_amount = 0;
 							break;
 					}
-					if(!obj.vat_included){
+					if(!o.vat_included){
 						attr.row.amount = (attr.row.amount + attr.row.vat_amount).round(2);
 					}
 				}
@@ -262,8 +258,8 @@ $p.doc.calc_order.on({
 					attr.row.vat_amount = 0;
 				}
 
-        obj.doc_amount = obj.production.aggregate([], ["amount"]).round(2);
-        obj.amount_internal = obj.production.aggregate([], ["amount_internal"]).round(2);
+        o.doc_amount = o.production.aggregate([], ["amount"]).round(2);
+        o.amount_internal = o.production.aggregate([], ["amount_internal"]).round(2);
 
 				// TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation
 
@@ -360,10 +356,10 @@ $p.doc.calc_order.load_templates = async function () {
           var res = {};
           result.rows.forEach(function (row) {
             if(row.value.plan){
-              row.value.plan = $p.moment(row.value.plan).format("L")
+              row.value.plan = moment(row.value.plan).format("L")
             }
             if(row.value.fact){
-              row.value.fact = $p.moment(row.value.fact).format("L")
+              row.value.fact = moment(row.value.fact).format("L")
             }
             res[row.key[0]] = row.value
           });
@@ -384,14 +380,14 @@ $p.doc.calc_order.load_templates = async function () {
       const res = {
         АдресДоставки: this.shipping_address,
         ВалютаДокумента: this.doc_currency.presentation,
-        ДатаЗаказаФорматD: $p.moment(this.date).format("L"),
-        ДатаЗаказаФорматDD: $p.moment(this.date).format("LL"),
-        ДатаТекущаяФорматD: $p.moment().format("L"),
-        ДатаТекущаяФорматDD: $p.moment().format("LL"),
-        ДоговорДатаФорматD: $p.moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format("L"),
-        ДоговорДатаФорматDD: $p.moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format("LL"),
+        ДатаЗаказаФорматD: moment(this.date).format("L"),
+        ДатаЗаказаФорматDD: moment(this.date).format("LL"),
+        ДатаТекущаяФорматD: moment().format("L"),
+        ДатаТекущаяФорматDD: moment().format("LL"),
+        ДоговорДатаФорматD: moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format("L"),
+        ДоговорДатаФорматDD: moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format("LL"),
         ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
-        ДоговорСрокДействия: $p.moment(contract.validity).format("L"),
+        ДоговорСрокДействия: moment(contract.validity).format("L"),
         ЗаказНомер: this.number_doc,
         Контрагент: this.partner.presentation,
         КонтрагентОписание: this.partner.long_presentation,

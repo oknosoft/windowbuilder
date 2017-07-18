@@ -10,16 +10,8 @@
  * Created 16.03.2016
  */
 
-// при старте приложения
-$p.on({
-
-	// загружаем в ОЗУ обычные характеристики (без ссылок на заказы)
-	predefined_elmnts_inited: function common_characteristics() {
-		$p.off(common_characteristics);
-		return $p.cat.characteristics.pouch_load_view("doc/nom_characteristics");
-	}
-
-});
+// при старте приложения, загружаем в ОЗУ обычные характеристики (без ссылок на заказы)
+$p.md.once('predefined_elmnts_inited', () => $p.cat.characteristics.pouch_load_view("doc/nom_characteristics"));
 
 // перед записью объекта и при изменении реквизита в форме
 $p.cat.characteristics.on({
@@ -58,10 +50,10 @@ $p.cat.characteristics.on({
 	},
 
   // при изменении реквизита
-  value_change: function (attr) {
+  value_change: function (attr, _obj) {
 	  // для вложенных вставок перезаполняем параметры
 	  if(attr.field == 'inset' && attr.tabular_section == 'inserts'){
-      this.add_inset_params(attr.value, attr.row.cnstr);
+      (_obj || this).add_inset_params(attr.value, attr.row.cnstr);
     }
   }
 
