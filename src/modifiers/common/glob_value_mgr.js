@@ -7,10 +7,10 @@
  * Created 10.10.2016
  */
 
-(function (md) {
-	const value_mgr = md.value_mgr;
-	md.value_mgr = (row, f, mf, array_enabled, v) => {
-		const tmp = value_mgr(row, f, mf, array_enabled, v);
+(function ({prototype}) {
+  const {value_mgr} = prototype;
+  prototype.value_mgr = function(row, f, mf, array_enabled, v) {
+		const tmp = value_mgr.call(this, row, f, mf, array_enabled, v);
 		if(tmp){
       return tmp;
     }
@@ -21,4 +21,4 @@
       return $p.cat.partners;
     }
 	}
-})($p.md);
+})($p.classes.DataManager);

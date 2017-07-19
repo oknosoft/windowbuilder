@@ -42,7 +42,7 @@ module.exports = function () {
 	function create_modules(_m){
 
 	  const fs = require('fs');
-	  const scheme_settings = fs.readFileSync('./node_modules/metadata-abstract-ui/src/scheme_settings.js', 'utf8');
+	  const scheme_settings = fs.readFileSync('./node_modules/metadata-abstract-ui/src/scheme_settings.js', 'utf8').replace('export default ', '');
 	  const sys_nsmes = ["log","meta_objs","meta_fields","scheme_settings"];
 	  const categoties = {
       cch: {mgr: "ChartOfCharacteristicManager", obj: "CatObj"},

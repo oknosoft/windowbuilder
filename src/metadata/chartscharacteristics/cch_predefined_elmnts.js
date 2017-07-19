@@ -8,75 +8,70 @@
  */
 
 // Подписываемся на событие окончания загрузки локальных данных
-$p.on({
-	pouch_data_loaded: function predefined_elmnts_loaded() {
+$p.adapters.pouch.once('pouch_data_loaded', () => {
 
-		$p.off(predefined_elmnts_loaded);
+  // читаем элементы из pouchdb и создаём свойства
+  $p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
+    .then((rows) => {
 
-		// читаем элементы из pouchdb и создаём свойства
-		$p.cch.predefined_elmnts.pouch_find_rows({ _raw: true, _top: 500, _skip: 0 })
-			.then((rows) => {
+      const parents = {};
 
-        const parents = {};
+      rows.forEach((row) => {
+        if(row.is_folder && row.synonym){
+          const ref = row._id.split("|")[1];
+          parents[ref] = row.synonym;
+          !$p.job_prm[row.synonym] && $p.job_prm.__define(row.synonym, { value: {} });
+        }
+      });
 
-				rows.forEach((row) => {
-					if(row.is_folder && row.synonym){
-						const ref = row._id.split("|")[1];
-						parents[ref] = row.synonym;
-						!$p.job_prm[row.synonym] && $p.job_prm.__define(row.synonym, { value: {} });
-					}
-				});
+      rows.forEach((row) => {
 
-				rows.forEach((row) => {
+        if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
+          let _mgr;
+          if(row.type.is_ref){
+            const tnames = row.type.types[0].split(".");
+            _mgr = $p[tnames[0]][tnames[1]]
+          }
 
-					if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
-						let _mgr;
-						if(row.type.is_ref){
-              const tnames = row.type.types[0].split(".");
-							_mgr = $p[tnames[0]][tnames[1]]
-						}
+          if(row.list == -1){
+            $p.job_prm[parents[row.parent]].__define(row.synonym, {
+              value: function () {
+                var res = {};
+                row.elmnts.forEach((row) => {
+                  res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
+                });
+                return res;
+              }()
+            });
+          }
+          else if(row.list){
+            $p.job_prm[parents[row.parent]].__define(row.synonym, {
+              value: row.elmnts.map((row) => {
+                return _mgr ? _mgr.get(row.value, false, false) : row.value;
+              })
+            });
+          }
+          else{
+            if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
+              delete $p.job_prm[parents[row.parent]][row.synonym];
 
-						if(row.list == -1){
-							$p.job_prm[parents[row.parent]].__define(row.synonym, {
-								value: function () {
-									var res = {};
-									row.elmnts.forEach((row) => {
-										res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
-									});
-									return res;
-								}()
-							});
-						}
-						else if(row.list){
-							$p.job_prm[parents[row.parent]].__define(row.synonym, {
-								value: row.elmnts.map((row) => {
-									return _mgr ? _mgr.get(row.value, false) : row.value;
-								})
-							});
-						}
-						else{
-							if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym))
-								delete $p.job_prm[parents[row.parent]][row.synonym];
+            $p.job_prm[parents[row.parent]].__define(row.synonym, {
+              value: _mgr ? _mgr.get(row.value, false, false) : row.value,
+              configurable: true
+            });
+          }
+        }
+      });
+    })
+    .then(function () {
 
-							$p.job_prm[parents[row.parent]].__define(row.synonym, {
-								value: _mgr ? _mgr.get(row.value, false) : row.value,
-								configurable: true
-							});
-						}
-					}
-				});
-			})
-			.then(function () {
-
-				// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-				setTimeout(function () {
-					$p.eve.callEvent("predefined_elmnts_inited");
-				}, 100);
+      // даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
+      setTimeout(function () {
+        $p.eve.callEvent("predefined_elmnts_inited");
+      }, 100);
 
 
-			});
-
-	}
+    });
 });
 
 

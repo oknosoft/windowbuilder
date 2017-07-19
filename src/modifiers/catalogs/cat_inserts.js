@@ -264,7 +264,7 @@ $p.cat.inserts.__define({
       function fake_row(row) {
         if(row._metadata){
           const res = {};
-          for(let fld in row._metadata.fields){
+          for(let fld in row._metadata().fields){
             res[fld] = row[fld];
           }
           return res;

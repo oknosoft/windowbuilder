@@ -21,7 +21,8 @@ module.exports = gulp;
 gulp.task('build-iface', function(){
 	return gulp.src([
 	  //'./dist/worker.js',
-		'./data/prebuild.js',
+    './src/metadata/init.js',
+		//'./data/prebuild.js',
 		'./data/merged_wb_templates.js',
 		'./src/modifiers/**/*.js',
 		'./src/widgets/*.js',

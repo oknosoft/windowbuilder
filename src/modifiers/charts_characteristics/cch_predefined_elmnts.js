@@ -9,100 +9,98 @@
 
 (function($p){
 
+  const {job_prm, adapters, cch, doc} = $p;
+
 	// Подписываемся на событие окончания загрузки локальных данных
-	$p.on({
-    pouch_data_loaded: function predefined_elmnts_data_loaded() {
+  adapters.pouch.once('pouch_data_loaded', () => {
 
-			$p.off('pouch_data_loaded', predefined_elmnts_data_loaded);
+    // читаем элементы из pouchdb и создаём свойства
+    cch.predefined_elmnts.pouch_find_rows({_raw: true, _top: 500, _skip: 0})
+      .then((rows) => {
 
-			// читаем элементы из pouchdb и создаём свойства
-			$p.cch.predefined_elmnts.pouch_find_rows({_raw: true, _top: 500, _skip: 0})
-				.then((rows) => {
+        const parents = {};
 
-					const parents = {};
+        rows.forEach((row) => {
+          if(row.is_folder && row.synonym){
+            var ref = row._id.split("|")[1];
+            parents[ref] = row.synonym;
+            !job_prm[row.synonym] && job_prm.__define(row.synonym, { value: {} });
+          }
 
-					rows.forEach((row) => {
-						if(row.is_folder && row.synonym){
-							var ref = row._id.split("|")[1];
-							parents[ref] = row.synonym;
-              !$p.job_prm[row.synonym] && $p.job_prm.__define(row.synonym, { value: {} });
-						}
+        });
 
-					});
+        rows.forEach((row) => {
 
-					rows.forEach((row) => {
+          if(!row.is_folder && row.synonym && parents[row.parent] && !job_prm[parents[row.parent]][row.synonym]){
 
-						if(!row.is_folder && row.synonym && parents[row.parent] && !$p.job_prm[parents[row.parent]][row.synonym]){
+            let _mgr;
 
-							let _mgr;
+            if(row.type.is_ref){
+              const tnames = row.type.types[0].split(".");
+              _mgr = $p[tnames[0]][tnames[1]]
+            }
 
-							if(row.type.is_ref){
-								const tnames = row.type.types[0].split(".");
-								_mgr = $p[tnames[0]][tnames[1]]
-							}
+            if(row.list == -1){
 
-							if(row.list == -1){
+              job_prm[parents[row.parent]].__define(row.synonym, {
+                value: (() => {
+                  const res = {};
+                  row.elmnts.forEach((row) => {
+                    res[row.elm] = _mgr ? _mgr.get(row.value, false, false) : row.value;
+                  });
+                  return res;
+                })()
+              });
 
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: (() => {
-										const res = {};
-										row.elmnts.forEach((row) => {
-											res[row.elm] = _mgr ? _mgr.get(row.value, false) : row.value;
-										});
-										return res;
-									})()
-								});
+            }
+            else if(row.list){
 
-							}
-							else if(row.list){
-
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: row.elmnts.map((row) => {
-									  if(_mgr){
-                      const value = _mgr.get(row.value, false);
-                      if(!$p.utils.is_empty_guid(row.elm)){
-                        value._formula = row.elm;
-                      }
-                      return value;
-                    }else{
-                      return row.value;
+              job_prm[parents[row.parent]].__define(row.synonym, {
+                value: row.elmnts.map((row) => {
+                  if(_mgr){
+                    const value = _mgr.get(row.value, false, false);
+                    if(!$p.utils.is_empty_guid(row.elm)){
+                      value._formula = row.elm;
                     }
-									})
-								});
+                    return value;
+                  }else{
+                    return row.value;
+                  }
+                })
+              });
 
-                if(row.synonym == "calculated"){
+              if(row.synonym == "calculated"){
 
-                }
-							}
-							else{
+              }
+            }
+            else{
 
-								if($p.job_prm[parents[row.parent]].hasOwnProperty(row.synonym)){
-                  delete $p.job_prm[parents[row.parent]][row.synonym];
-                }
+              if(job_prm[parents[row.parent]].hasOwnProperty(row.synonym)){
+                delete job_prm[parents[row.parent]][row.synonym];
+              }
 
-								$p.job_prm[parents[row.parent]].__define(row.synonym, {
-									value: _mgr ? _mgr.get(row.value, false) : row.value,
-									configurable: true
-								});
-							}
+              job_prm[parents[row.parent]].__define(row.synonym, {
+                value: _mgr ? _mgr.get(row.value, false, false) : row.value,
+                configurable: true
+              });
+            }
 
-						}
-					});
-				})
-				.then(() => {
+          }
+        });
+      })
+      .then(() => {
 
-					// рассчеты, помеченные, как шаблоны, загрузим в память заранее
-					setTimeout($p.doc.calc_order.load_templates.bind($p.doc.calc_order), 1000);
+        // рассчеты, помеченные, как шаблоны, загрузим в память заранее
+        setTimeout(doc.calc_order.load_templates.bind(doc.calc_order), 1000);
 
-					// даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-					setTimeout(() => $p.eve.callEvent("predefined_elmnts_inited"), 200);
+        // даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
+        setTimeout(() => $p.eve.callEvent("predefined_elmnts_inited"), 200);
 
-				});
+      });
 
-		}
-	});
+  });
 
-	const _mgr = $p.cch.predefined_elmnts;
+	const _mgr = cch.predefined_elmnts;
 
 
 	/**

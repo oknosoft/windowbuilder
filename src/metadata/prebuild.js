@@ -4,29 +4,32 @@
  * @module  metadata-prebuild
  */
 
-"use strict";
+'use strict';
 
 const fs = require('fs');
 const path = require('path');
 
+// путь настроек приложения
+const settings_path = path.resolve(__dirname, '../../config/app.settings.js');
+
 // текст модуля начальных настроек приложения для включения в итоговый скрипт
-const settings = fs.readFileSync('config/app.settings.js', 'utf8');
+const settings = fs.readFileSync(settings_path, 'utf8');
 
 // конфигурация подключения к CouchDB
-const config = require('../../config/app.settings')()
+const config = require(settings_path)();
 
 // конструктор metadata-core и плагин metadata-pouchdb
-const MetaEngine = require('metadata-core').default
-	.plugin(require('metadata-pouchdb').default)
-  .plugin(require('metadata-abstract-ui/meta').default)
-  .plugin(require('metadata-abstract-ui').default)
+const MetaEngine = require('metadata-core')
+  .plugin(require('metadata-pouchdb'))
+  .plugin(require('metadata-abstract-ui/meta'))
+  .plugin(require('metadata-abstract-ui'));
 
 
-var jstext = "",            // в этой переменной будем накапливать текст модуля
+var jstext = '',            // в этой переменной будем накапливать текст модуля
   $p = new MetaEngine();    // подключим метадату
 
 // инициализация и установка параметров
-$p.wsql.init(function (prm) {
+$p.wsql.init((prm) => {
 
   // разделитель для localStorage
   prm.local_storage_prefix = config.local_storage_prefix;
@@ -35,31 +38,28 @@ $p.wsql.init(function (prm) {
   prm.zone = config.zone;
 
   // расположение 1C
-  if(config.rest_path)
+  if (config.rest_path)
     prm.rest_path = config.rest_path;
 
   // расположение couchdb
   prm.couch_path = config.couch_local;
 
-}, function ($p) {
+}, ($p) => {
 
-  const db = new $p.classes.PouchDB(config.couch_local + "meta", {
+  const db = new MetaEngine.classes.PouchDB(config.couch_local + 'meta', {
     skip_setup: true,
   });
 
   let _m;
 
   return db.info()
-    .then(function () {
-      return db.get('meta');
-
-    })
-    .then(function (doc) {
+    .then(() => db.get('meta'))
+    .then((doc) => {
       _m = doc;
       doc = null;
       return db.get('meta_patch');
 
-    }).then(function (doc) {
+    }).then((doc) => {
       $p.utils._patch(_m, doc);
       doc = null;
       delete _m._id;
@@ -84,9 +84,9 @@ $p.wsql.init(function (prm) {
       //   }
       // }
 
-      return $p.md.init(_m)
+      return $p.md.init(_m);
     })
-    .then( (_m) => {
+    .then((_m) => {
 
       // создаём текст модуля конструкторов данных
       var text = create_modules(_m);
@@ -95,150 +95,141 @@ $p.wsql.init(function (prm) {
       eval(text);
 
       // получаем скрипт таблиц
-      $p.md.create_tables(function (sql) {
+      $p.md.create_tables((sql) => {
 
-        text = "module.exports = function meta($p) {\n\n"
-          + "$p.wsql.alasql('" + sql + "', []);\n\n"
-          + "$p.md.init(" + JSON.stringify(_m) + ");\n\n"
-          + text + "\n}";
+        text = 'module.exports = function meta($p) {\n\n'
+          + '$p.wsql.alasql(\'' + sql + '\', []);\n\n'
+          + '$p.md.init(' + JSON.stringify(_m) + ');\n\n'
+          + text + '\n}';
 
 
         // записываем результат
-        fs.writeFile(__dirname + '/init.js', text, 'utf8', function (err) {
-          if (err){
-            console.log(err)
-            process.exit(1)
-          }else{
-            console.log('metadata > init.js')
-            process.exit(0)
+        fs.writeFile(__dirname + '/init.js', text, 'utf8', (err) => {
+          if (err) {
+            console.log(err);
+            process.exit(1);
+          } else {
+            console.log('metadata > init.js');
+            process.exit(0);
           }
         });
 
         $p = null;
 
-      })
+      });
 
-    } )
-    .catch(function (err) {
-      console.log(err);
-      process.exit(1)
     })
-})
+    .catch((err) => {
+      console.log(err);
+      process.exit(1);
+    });
+});
 
 
-function create_modules(_m){
+function create_modules(_m) {
 
-  var name,
-    sys_nsmes = ["log","meta_objs","meta_fields","scheme_settings"],
-    text = "(function(){\n" +
-      "const {EnumManager,CatManager,DocManager,DataProcessorsManager,ChartOfCharacteristicManager,ChartOfAccountManager, \
-      InfoRegManager,AccumRegManager,BusinessProcessManager,TaskManager,CatObj, DocObj, TabularSectionRow, DataProcessorObj, \
-      RegisterRow, BusinessProcessObj, TaskObj} = $p.classes\n" +
-      "const _define = Object.defineProperties\n\n",
+  let name,
+    sys_nsmes = ['log', 'meta_objs', 'meta_fields', 'scheme_settings'],
     categoties = {
-      cch: {mgr: "ChartOfCharacteristicManager", obj: "CatObj"},
-      cacc: {mgr: "ChartOfAccountManager", obj: "CatObj"},
-      cat: {mgr: "CatManager", obj: "CatObj"},
-      bp: {mgr: "BusinessProcessManager", obj: "BusinessProcessObj"},
-      tsk: {mgr: "TaskManager", obj: "TaskObj"},
-      doc: {mgr: "DocManager", obj: "DocObj"},
-      ireg: {mgr: "InfoRegManager", obj: "RegisterRow"},
-      areg: {mgr: "AccumRegManager", obj: "RegisterRow"},
-      dp: {mgr: "DataProcessorsManager", obj: "DataProcessorObj"},
-      rep: {mgr: "DataProcessorsManager", obj: "DataProcessorObj"}
-    };
+      cch: {mgr: 'ChartOfCharacteristicManager', obj: 'CatObj'},
+      cacc: {mgr: 'ChartOfAccountManager', obj: 'CatObj'},
+      cat: {mgr: 'CatManager', obj: 'CatObj'},
+      bp: {mgr: 'BusinessProcessManager', obj: 'BusinessProcessObj'},
+      tsk: {mgr: 'TaskManager', obj: 'TaskObj'},
+      doc: {mgr: 'DocManager', obj: 'DocObj'},
+      ireg: {mgr: 'InfoRegManager', obj: 'RegisterRow'},
+      areg: {mgr: 'AccumRegManager', obj: 'RegisterRow'},
+      dp: {mgr: 'DataProcessorsManager', obj: 'DataProcessorObj'},
+      rep: {mgr: 'DataProcessorsManager', obj: 'DataProcessorObj'},
+    },
+    text = `(function(){
+  const {EnumManager,CatManager,DocManager,DataProcessorsManager,ChartOfCharacteristicManager,ChartOfAccountManager,
+    InfoRegManager,AccumRegManager,BusinessProcessManager,TaskManager,CatObj, DocObj, TabularSectionRow, DataProcessorObj,
+    RegisterRow, BusinessProcessObj, TaskObj} = $p.constructor.classes;
+    
+  const _define = Object.defineProperties;
+    
+  function conf(target, key, descriptor) {
+    descriptor.configurable = true;
+    return descriptor;
+  }\n\n`;
 
 
   // менеджеры перечислений
-  for(name in _m.enm)
-    text+= "$p.enm." + name + " = new EnumManager('enm." + name + "')\n";
+  for (name in _m.enm){
+    text += `$p.enm.create('${name}');\n`;
+  }
 
   // менеджеры объектов данных, отчетов и обработок
-  for(var category in categoties){
-    for(name in _m[category]){
-      if(sys_nsmes.indexOf(name) == -1){
-	      text+= obj_constructor_text(_m, category, name, categoties[category].obj);
-	      text+= "$p." + category + "." + name + " = new " + categoties[category].mgr + "('" + category + "." + name + "')\n";
+  for (var category in categoties) {
+    for (name in _m[category]) {
+      if (sys_nsmes.indexOf(name) == -1) {
+        text += obj_constructor_text(_m, category, name, categoties[category].obj);
+        text += `$p.${category}.create('${name}');\n`;
       }
     }
   }
 
-  return text + "})()\n";
+  return text + '})()\n';
 
 }
 
 function obj_constructor_text(_m, category, name, proto) {
 
-  var meta = _m[category][name],
-    fn_name = $p.classes.DataManager.prototype.obj_constructor.call({class_name: category + "." + name, constructor_names: {}}),
-    text = "\n/**\n* ### " + $p.msg('meta')[category] + " " + meta.name,
-    f, props = "";
+  const {DataManager} = MetaEngine.classes;
+  let meta = _m[category][name],
+    fn_name = DataManager.prototype.obj_constructor.call({class_name: category + '.' + name, constructor_names: {}}),
+    text = '\n/**\n* ### ' + $p.msg('meta')[category] + ' ' + meta.name,
+    f, props = '';
 
-  text += "\n* " + (meta.illustration || meta.synonym);
-  text += "\n* @class " + fn_name;
-  text += "\n* @extends " + proto;
-  text += "\n* @constructor \n*/\n";
-  text += "$p." + fn_name +  " = class " + fn_name + " extends " + proto + "{}\n";
+  text += '\n* ' + (meta.illustration || meta.synonym);
+  text += '\n* @class ' + fn_name;
+  text += '\n* @extends ' + proto;
+  text += '\n* @constructor \n*/\n';
+  text += `class ${fn_name} extends ${proto}{\n`;
 
   // реквизиты по метаданным
-  if(meta.fields){
-    for(f in meta.fields){
-      if(props)
-        props += ",\n";
-      props += f + ": {get: function(){return this._getter('"+f+"')}, " +
-        "set: function(v){this._setter('"+f+"',v)}, enumerable: true, configurable: true}";
+  if (meta.fields) {
+    for (f in meta.fields) {
+      text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n\n`;
     }
-  }else{
-    for(f in meta.dimensions){
-      if(props)
-        props += ",\n";
-      props += f + ": {get: function(){return this._getter('"+f+"')}, " +
-        "set: function(v){this._setter('"+f+"',v)}, enumerable: true, configurable: true}";
+  }
+  else {
+    for (f in meta.dimensions) {
+      text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n\n`;
     }
-    for(f in meta.resources){
-      if(props)
-        props += ",\n";
-      props += f + ": {get: function(){return this._getter('"+f+"')}, " +
-        "set: function(v){this._setter('"+f+"',v)}, enumerable: true, configurable: true}";
+    for (f in meta.resources) {
+      text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n\n`;
     }
-    for(f in meta.attributes){
-      if(props)
-        props += ",\n";
-      props += f + ": {get: function(){return this._getter('"+f+"')}, " +
-        "set: function(v){this._setter('"+f+"',v)}, enumerable: true, configurable: true}";
+    for (f in meta.attributes) {
+      text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n\n`;
     }
   }
 
-  if(props)
-    text += "_define($p." + fn_name + ".prototype, {" + props + "});\n";
+  // табличные части по метаданным - устанавливаем геттер и сеттер для табличной части
+  for (let ts in meta.tabular_sections) {
+    text += `get ${ts}(){return this._getter_ts('${ts}')}\nset ${ts}(v){this._setter_ts('${ts}',v)}\n`;
+  }
+
+  text += `};\n`;
+  text += `$p.${fn_name} = ${fn_name};\n`;
 
 
   // табличные части по метаданным
-  for(var ts in meta.tabular_sections){
-
-	props = "";
+  for (let ts in meta.tabular_sections) {
 
     // создаём конструктор строки табчасти
-    var row_fn_name = $p.classes.DataManager.prototype.obj_constructor.call({class_name: category + "." + name, constructor_names: {}}, ts);
+    let row_fn_name = DataManager.prototype.obj_constructor.call({class_name: category + '.' + name, constructor_names: {}}, ts);
 
-    text+= "$p." + row_fn_name + " = class " + row_fn_name + " extends TabularSectionRow{}\n";
+    text += `class ${row_fn_name} extends TabularSectionRow{\n`;
 
     // в прототипе строки табчасти создаём свойства в соответствии с полями табчасти
-    for(var rf in meta.tabular_sections[ts].fields){
-
-      if(props)
-        props += ",\n";
-
-      props += rf + ": {get: function(){return this._getter('"+rf+"')}, " +
-        "set: function(v){this._setter('"+rf+"',v)}, enumerable: true, configurable: true}";
+    for (var rf in meta.tabular_sections[ts].fields) {
+      text += `get ${rf}(){return this._getter('${rf}')}\nset ${rf}(v){this._setter('${rf}',v)}\n\n`;
     }
 
-    if(props)
-      text += "_define($p." + row_fn_name + ".prototype, {" + props + "});\n";
-
-    // устанавливаем геттер и сеттер для табличной части
-    text += "_define($p." + fn_name + ".prototype, { '"+ts+"': {get: function(){return this._getter_ts('"+ts+"')}, " +
-      "set: function(v){this._setter_ts('"+ts+"',v)}, enumerable: true, configurable: true}})\n";
+    text += `}\n`;
+    text += `$p.${row_fn_name} = ${row_fn_name};\n`;
 
   }
 

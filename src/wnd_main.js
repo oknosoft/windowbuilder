@@ -24,7 +24,7 @@ class OrderDealerApp {
     this.btn_auth_sync = new $p.iface.OBtnAuthSync();
 
     // Подписываемся на событие окончания загрузки предопределённых элементов
-    this.predefined_elmnts_inited = $p.eve.attachEvent("predefined_elmnts_inited", this.predefined_elmnts_inited.bind(this));
+    $p.md.once("predefined_elmnts_inited", this.predefined_elmnts_inited.bind(this));
 
     // Назначаем обработчик ошибки загрузки локальных данных
     this.pouch_load_data_error = $p.eve.attachEvent("pouch_load_data_error", this.pouch_load_data_error.bind(this));
@@ -184,9 +184,6 @@ class OrderDealerApp {
         try_auto: false
       }), 100);
     }
-
-    $p.eve.detachEvent(this.predefined_elmnts_inited);
-
   }
 
   pouch_load_data_error(err) {
@@ -251,84 +248,84 @@ class OrderDealerApp {
   }
 }
 
+/**
+ * ### При установке параметров сеанса
+ * Процедура устанавливает параметры работы программы, специфичные для текущей сборки
+ *
+ * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
+ */
+$p.wsql.init((prm) => {
+
+  prm.__define({
+
+    // разделитель для localStorage
+    local_storage_prefix: {
+      value: "wb_"
+    },
+
+    // скин по умолчанию
+    skin: {
+      value: "dhx_terrace"
+    },
+
+    // фильтр для репликации с CouchDB
+    pouch_filter: {
+      value: {},
+      writable: false
+    },
+
+    // гостевые пользователи для демо-режима
+    guests: {
+      value: [{
+        username: "Дилер",
+        password: "1gNjzYQKBlcD"
+      }]
+    },
+
+    // если понадобится обратиться к 1С, будем использовать irest
+    irest_enabled: {
+      value: true
+    },
+
+    // расположение rest-сервиса 1c по умолчанию
+    rest_path: {
+      value: "/a/zd/%1/odata/standard.odata/"
+    },
+
+    // не шевелить hash url при открытии подчиненных форм
+    keep_hash: {
+      value: true
+    },
+
+    // используем геокодер
+    use_ip_geo: {
+      value: true
+    },
+
+    // используем карты google
+    use_google_geo: {
+      value: "AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM"
+    }
+
+  });
+
+  // по умолчанию, обращаемся к зоне 1
+  prm.zone = 1;
+
+  // объявляем номер демо-зоны
+  prm.zone_demo = 1;
+
+  // расположение couchdb
+  //prm.couch_path = "http://cou206:5984/wb_";
+  //prm.couch_path = "https://kint.oknosoft.ru/couchdb2/wb_";
+  prm.couch_path = "/couchdb/wb_";
+
+  // разрешаем сохранение пароля
+  prm.enable_save_pwd = true;
+
+})
+
 $p.on({
-
-	/**
-	 * ### При установке параметров сеанса
-	 * Процедура устанавливает параметры работы программы, специфичные для текущей сборки
-	 *
-	 * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
-	 */
-	settings: (prm) => {
-
-		prm.__define({
-
-			// разделитель для localStorage
-			local_storage_prefix: {
-				value: "wb_"
-			},
-
-			// скин по умолчанию
-			skin: {
-				value: "dhx_terrace"
-			},
-
-			// фильтр для репликации с CouchDB
-			pouch_filter: {
-				value: {},
-				writable: false
-			},
-
-			// гостевые пользователи для демо-режима
-			guests: {
-				value: [{
-					username: "Дилер",
-					password: "1gNjzYQKBlcD"
-				}]
-			},
-
-			// если понадобится обратиться к 1С, будем использовать irest
-			irest_enabled: {
-				value: true
-			},
-
-			// расположение rest-сервиса 1c по умолчанию
-			rest_path: {
-				value: "/a/zd/%1/odata/standard.odata/"
-			},
-
-			// не шевелить hash url при открытии подчиненных форм
-			keep_hash: {
-				value: true
-			},
-
-			// используем геокодер
-			use_ip_geo: {
-				value: true
-			},
-
-			// используем карты google
-      use_google_geo: {
-			  value: "AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM"
-			}
-
-		});
-
-		// по умолчанию, обращаемся к зоне 1
-		prm.zone = 1;
-
-		// объявляем номер демо-зоны
-		prm.zone_demo = 1;
-
-		// расположение couchdb
-		//prm.couch_path = "http://cou206:5984/wb_";
-    //prm.couch_path = "https://kint.oknosoft.ru/couchdb2/wb_";
-		prm.couch_path = "/couchdb/wb_";
-
-		// разрешаем сохранение пароля
-		prm.enable_save_pwd = true;
-
-	},
 
 	/**
 	 * ### При инициализации интерфейса

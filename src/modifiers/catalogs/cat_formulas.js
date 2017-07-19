@@ -8,37 +8,32 @@
  *
  */
 
-$p.on({
-
-  // обработчик события после загрузки данных в озу
-	pouch_data_loaded: function cat_formulas_data_loaded () {
-
-    $p.off('pouch_data_loaded', cat_formulas_data_loaded);
-
-		// читаем элементы из pouchdb и создаём формулы
-    const {formulas} = $p.cat;
-    formulas.pouch_find_rows({ _top: 500, _skip: 0 })
-			.then((rows) => {
-				rows.forEach((formula) => {
-					// формируем списки печатных форм и внешних обработок
-					if(formula.parent == formulas.predefined("printing_plates")){
-						formula.params.find_rows({param: "destination"}, (dest) => {
-							const dmgr = $p.md.mgr_by_class_name(dest.value);
-							if(dmgr){
-								if(!dmgr._printing_plates){
-                  dmgr._printing_plates = {};
-                }
-								dmgr._printing_plates["prn_" + formula.ref] = formula;
-							}
-						})
-					}
-					else if(formula.parent == formulas.predefined("modifiers")){
-            formula.execute();
-          }
-				});
-			});
-	}
+// обработчик события после загрузки данных в озу
+$p.adapters.pouch.once('pouch_data_loaded', () => {
+  // читаем элементы из pouchdb и создаём формулы
+  const {formulas} = $p.cat;
+  formulas.pouch_find_rows({ _top: 500, _skip: 0 })
+    .then((rows) => {
+      rows.forEach((formula) => {
+        // формируем списки печатных форм и внешних обработок
+        if(formula.parent == formulas.predefined("printing_plates")){
+          formula.params.find_rows({param: "destination"}, (dest) => {
+            const dmgr = $p.md.mgr_by_class_name(dest.value);
+            if(dmgr){
+              if(!dmgr._printing_plates){
+                dmgr._printing_plates = {};
+              }
+              dmgr._printing_plates["prn_" + formula.ref] = formula;
+            }
+          })
+        }
+        else if(formula.parent == formulas.predefined("modifiers")){
+          formula.execute();
+        }
+      });
+    });
 });
+
 
 $p.CatFormulas.prototype.__define({
 

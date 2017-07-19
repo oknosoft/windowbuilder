@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 000000000294
+# 000000000295
 
 # Additional resources to cache
 # https://github.com/oknosoft/metadata.js/pull/180
@@ -11,7 +11,7 @@ CACHE:
 
 # Эти позиции включаем только в продакшене
 #
-https://cdn.jsdelivr.net/combine/gh/moment/moment@2.18/min/moment.min.js,gh/moment/moment@2.18/locale/ru.min.js,gh/agershun/alasql@0.4.0/dist/alasql.min.js,gh/pouchdb/pouchdb@6.2.0/dist/pouchdb.min.js,gh/pouchdb/pouchdb@6.2.0/dist/pouchdb.find.min.js,gh/nolanlawson/pouchdb-authentication@v0.5.5/dist/pouchdb.authentication.min.js,gh/paperjs/paper.js@v0.11.3/dist/paper-core.min.js
+https://cdn.jsdelivr.net/combine/gh/moment/moment@2.18/min/moment.min.js,gh/moment/moment@2.18/locale/ru.min.js,gh/agershun/alasql@0.4.0/dist/alasql.min.js,gh/pouchdb/pouchdb@6.3.4/dist/pouchdb.min.js,gh/pouchdb/pouchdb@6.3.4/dist/pouchdb.find.min.js,gh/nolanlawson/pouchdb-authentication@v0.5.5/dist/pouchdb.authentication.min.js,gh/paperjs/paper.js@v0.11.4/dist/paper-core.min.js
 
 # На период отладки, берём metadata.min.js c нашего сайта
 lib/metadata.min.js

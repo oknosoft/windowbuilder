@@ -772,12 +772,12 @@ class Contour extends AbstractFilling(paper.Layer) {
   /**
    * виртуальные метаданные для автоформ
    */
-  get _metadata() {
+  _metadata(fld) {
 
-    const {tabular_sections} = this.project.ox._metadata;
+    const {tabular_sections} = this.project.ox._metadata();
     const _xfields = tabular_sections.constructions.fields;
 
-    return {
+    return fld ? (_xfields[fld] || tabular_sections[fld]) : {
       fields: {
         furn: _xfields.furn,
         direction: _xfields.direction,

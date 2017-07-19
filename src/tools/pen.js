@@ -261,15 +261,13 @@ class ToolPen extends ToolElement {
     }
 
     // вставку по умолчанию получаем эмулируя событие изменения типа элемента
-    $p.dp.builder_pen.handle_event(this.profile, "value_change", {
-      field: "elm_type"
-    });
+    $p.dp.builder_pen.emit("value_change", {field: "elm_type"}, this.profile);
 
     // цвет по умолчанию
     this.profile.clr = paper.project.clr;
 
     // параметры отбора для выбора вставок
-    this.profile._metadata.fields.inset.choice_links = [{
+    this.profile._metadata('inset').choice_links = [{
       name: ["selection",	"ref"],
       path: [(o, f) => {
           if($p.utils.is_data_obj(o)){
@@ -289,7 +287,7 @@ class ToolPen extends ToolElement {
     }];
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(this.profile._metadata.fields.clr, this.sys);
+    $p.cat.clrs.selection_exclude_service(this.profile._metadata('clr'), this.sys);
 
     this.wnd = $p.iface.dat_blank(paper._dxw, this.options.wnd);
     this._grid = this.wnd.attachHeadFields({
@@ -360,7 +358,7 @@ class ToolPen extends ToolElement {
     if(!this.on_scheme_changed){
       this.on_scheme_changed = $p.eve.attachEvent("scheme_changed", (scheme) => {
         if(scheme == paper.project && this.sys != scheme._dp.sys){
-          delete this.profile._metadata.fields.inset.choice_links;
+          delete this.profile._metadata('inset').choice_links;
           this.detache_wnd();
           tool_wnd();
         }
@@ -385,7 +383,7 @@ class ToolPen extends ToolElement {
 
     this.decorate_layers(true);
 
-    delete this.profile._metadata.fields.inset.choice_links;
+    delete this.profile._metadata('inset').choice_links;
 
     this.detache_wnd();
 

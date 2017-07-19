@@ -100,7 +100,7 @@ $p.iface.view_orders = function (cell) {
 
 		function create_elmnts(){
 
-			$p.off(create_elmnts);
+			$p.off('predefined_elmnts_inited', create_elmnts);
 
 			// создадим экземпляр графического редактора
 			const _cell = t.carousel.cells("builder");

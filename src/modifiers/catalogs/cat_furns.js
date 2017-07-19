@@ -46,7 +46,7 @@ Object.defineProperties($p.cat.furns, {
           }
 
           const l = [];
-          $p._find_rows.call(this, list, selection, (v) => l.push(check({text: v.presentation, value: v.ref})));
+          $p.utils._find_rows.call(this, list, selection, (v) => l.push(check({text: v.presentation, value: v.ref})));
 
           l.sort((a, b) => {
             if (a.text < b.text){

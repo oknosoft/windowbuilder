@@ -12,7 +12,8 @@ $p.DpBuilder_price.prototype.__define({
   form_obj: {
     value: function (pwnd, attr) {
 
-      const {nom, goods, _manager, _metadata} = this;
+      const {nom, goods, _manager} = this;
+      const _metadata = this._metadata();
 
       // форма в модальном диалоге
       const options = {
