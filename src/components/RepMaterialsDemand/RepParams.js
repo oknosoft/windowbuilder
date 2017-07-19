@@ -25,10 +25,10 @@ class SettingsToolbar extends Component{
 
       <Toolbar>
         <ToolbarGroup className={"meta-toolbar-group"} firstChild={true}>
-          <IconButton touch={true} tooltip="Добавить строку" tooltipPosition="bottom-right" onTouchTap={handleAdd}>
+          <IconButton touch={true} tooltip="Добавить строку" tooltipPosition="bottom-right" onClick={handleAdd}>
             <AddIcon />
           </IconButton>
-          <IconButton touch={true} tooltip="Удалить строку" onTouchTap={handleRemove}>
+          <IconButton touch={true} tooltip="Удалить строку" onClick={handleRemove}>
             <RemoveIcon />
           </IconButton>
           <ToolbarSeparator />

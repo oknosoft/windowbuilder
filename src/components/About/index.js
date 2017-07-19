@@ -1,3 +1,3 @@
-import FrmAbout from "./FrmAbout";
+import About from './About';
 
-export default FrmAbout
+export default About;

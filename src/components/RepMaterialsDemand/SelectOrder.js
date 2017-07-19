@@ -51,7 +51,7 @@ export default class SelectOrder extends MetaComponent {
     return (
       <div>
 
-        <IconButton touch={true} tooltip="Заполнить по заказу" onTouchTap={this.handleTouchTap}>
+        <IconButton touch={true} tooltip="Заполнить по заказу" onClick={this.handleTouchTap}>
           <IconWork />
         </IconButton>
 

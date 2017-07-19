@@ -1,36 +1,41 @@
 {
-  "parser"  : "babel-eslint",
-  "extends" : [
-    "eslint:recommended"
-  ],
-  "plugins": [
-    "babel",
-    "react"
-  ],
-  "env"     : {
+  "parser": "babel-eslint", // https://github.com/babel/babel-eslint,
+  "parserOptions": {
+    "ecmaVersion": 7,
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "env": {
     "browser": true,
+    "node": true,
+    "mocha": true,
     "es6": true
   },
-  "parserOptions": {
-    "ecmaFeatures": {
-      "experimentalObjectRestSpread": true,
-      "jsx": true
-    },
-    "sourceType": "module"
-  },
-  "globals" : {
+  "plugins": [
+    "react"
+  ],
+  "globals": {
     "$p": true,
-    "__DEV__"      : false,
-    "__PROD__"     : false,
-    "__DEBUG__"    : false,
-    "__COVERAGE__" : false,
-    "__BASENAME__" : false
+    "expect": true,
+    "sinon": true,
+    "__DEV__": true
   },
+  "extends": ["eslint:recommended", "plugin:react/recommended"],
   "rules": {
-    "semi" : [2, "always"],
-    "max-len": [2, 140, 2],
-    "generator-star-spacing": 0,
-    "babel/generator-star-spacing": 1,
-    "jsx-quotes": [2, "prefer-single"]
+    "strict": [2, "global"],
+    "no-undef": 1,
+    "no-unused-vars": 1,
+    "semi": [1, "always"],
+    "semi-spacing": [1, {"before": false, "after": true}],
+    "no-case-declarations": 1,
+    "no-extra-semi": 1,
+    "no-unexpected-multiline": 1,
+    "no-useless-escape": 1,
+    "no-mixed-spaces-and-tabs": 1,
+    "quotes": [1, "single", "avoid-escape"],
+    "indent": [0, 2, { "SwitchCase": 1 }],
+    "react/prop-types": 1,
+    "react/display-name": 1
   }
 }

@@ -90,7 +90,7 @@ export default class NavUserButtons extends MetaComponent{
 
         <FlatButton
           label={button_label}
-          onTouchTap={this.handleLogin}
+          onClick={this.handleLogin}
           className="meta-appbar-button"
         />
 
