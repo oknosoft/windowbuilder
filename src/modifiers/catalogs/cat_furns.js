@@ -60,7 +60,7 @@ Object.defineProperties($p.cat.furns, {
           return Promise.resolve(l);
         }
       }
-      return $p.CatManager.prototype.get_option_list.call(this, val, selection);
+      return this.constructor.prototype.get_option_list.call(this, val, selection);
     },
     configurable: true
   }

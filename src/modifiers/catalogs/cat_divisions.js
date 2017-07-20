@@ -22,7 +22,7 @@ Object.defineProperties($p.cat.divisions, {
         }
       });
       if(!list.length){
-        return $p.CatManager.prototype.get_option_list.call(this, val, selection);
+        return this.constructor.prototype.get_option_list.call(this, val, selection);
       }
 
       function check(v){

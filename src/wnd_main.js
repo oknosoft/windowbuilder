@@ -9,7 +9,7 @@
 
 class OrderDealerApp {
 
-  constructor($p) {
+  constructor($p, dhtmlxRoot) {
 
     // разделы интерфейса
     this.sidebar_items = [
@@ -31,7 +31,7 @@ class OrderDealerApp {
 
     // основной сайдбар
     this.sidebar = new dhtmlXSideBar({
-        parent: document.body,
+        parent: dhtmlxRoot || document.body,
         icons_path: "dist/imgs/",
         width: 180,
         header: true,
@@ -53,21 +53,9 @@ class OrderDealerApp {
     this.sidebar.progressOn();
 
     // запрещаем масштабировать колёсиком мыши, т.к. для масштабирования у канваса свой инструмент
-    window.onmousewheel = (e) => {
-      if(e.ctrlKey || e.shiftKey || e.altKey){
-        return $p.iface.cancel_bubble(e, true);
-      }
-    };
+    window.addEventListener('onmousewheel', this.onmousewheel, false);
 
-    window.onerror = (errorMsg, url, line, col, err) => {
-      console && console.log(err);
-      $p.record_log({
-        class: "error",
-        obj: {url, line, col},
-        note: errorMsg
-      });
-      return true;
-    };
+    window.addEventListener('onerror', this.onerror, false);
 
     // корректируем параметры подключения
     this.patch_cnn();
@@ -80,6 +68,30 @@ class OrderDealerApp {
       setTimeout($p.iface.hash_route);
     }
 
+  }
+
+  unload() {
+    window.removeEventListener('onmousewheel', this.onmousewheel);
+    window.removeEventListener('onerror', this.onerror);
+    $p.eve.detachEvent(this.pouch_load_data_error);
+    this.btn_auth_sync.unload();
+    this.sidebar.unload();
+  }
+
+  onmousewheel(e) {
+    if(e.ctrlKey || e.shiftKey || e.altKey){
+      return $p.iface.cancel_bubble(e, true);
+    }
+  }
+
+  onerror(errorMsg, url, line, col, err) {
+    console && console.log(err);
+    $p.record_log({
+      class: "error",
+      obj: {url, line, col},
+      note: errorMsg
+    });
+    return true;
   }
 
   btns_nav(wrapper) {
@@ -248,105 +260,112 @@ class OrderDealerApp {
   }
 }
 
-/**
- * ### При установке параметров сеанса
- * Процедура устанавливает параметры работы программы, специфичные для текущей сборки
- *
- * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
- */
-$p.wsql.init((prm) => {
+$p.iface.OrderDealerApp = OrderDealerApp;
 
-  prm.__define({
+// /**
+//  * ### При установке параметров сеанса
+//  * Процедура устанавливает параметры работы программы, специфичные для текущей сборки
+//  *
+//  * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
+//  */
+// $p.wsql.init((prm) => {
+//
+//   prm.__define({
+//
+//     // разделитель для localStorage
+//     local_storage_prefix: {
+//       value: "wb_"
+//     },
+//
+//     // скин dhtmlx по умолчанию
+//     skin: {
+//       value: "dhx_terrace"
+//     },
+//
+//     // фильтр для репликации с CouchDB
+//     pouch_filter: {
+//       value: {},
+//       writable: false
+//     },
+//
+//     // гостевые пользователи для демо-режима
+//     guests: {
+//       value: [{
+//         username: "Дилер",
+//         password: "1gNjzYQKBlcD"
+//       }]
+//     },
+//
+//     // если понадобится обратиться к 1С, будем использовать irest
+//     irest_enabled: {
+//       value: true
+//     },
+//
+//     // расположение rest-сервиса 1c по умолчанию
+//     rest_path: {
+//       value: "/a/zd/%1/odata/standard.odata/"
+//     },
+//
+//     // не шевелить hash url при открытии подчиненных форм
+//     keep_hash: {
+//       value: true
+//     },
+//
+//     // используем геокодер
+//     use_ip_geo: {
+//       value: true
+//     },
+//
+//     // используем карты google
+//     use_google_geo: {
+//       value: "AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM"
+//     }
+//
+//   });
+//
+//   // по умолчанию, обращаемся к зоне 1
+//   prm.zone = 1;
+//
+//   // объявляем номер демо-зоны
+//   prm.zone_demo = 1;
+//
+//   // расположение couchdb
+//   //prm.couch_path = "http://cou206:5984/wb_";
+//   //prm.couch_path = "https://kint.oknosoft.ru/couchdb2/wb_";
+//   prm.couch_path = "/couchdb/wb_";
+//
+//   // разрешаем сохранение пароля
+//   prm.enable_save_pwd = true;
+//
+// })
+//
+// $p.on({
+//
+// 	/**
+// 	 * ### При инициализации интерфейса
+// 	 * Вызывается после готовности DOM и установки параметров сеанса, до готовности метаданных
+// 	 * рисуем интерфейс
+// 	 *
+// 	 */
+// 	iface_init: () => {
+// 	  if(!$p.iface.main){
+//       $p.iface.main = new OrderDealerApp($p);
+//     }
+// 	},
+//
+// 	/**
+// 	 * ### Обработчик маршрутизации
+// 	 */
+// 	hash_route: (hprm) => {
+//     if(!$p.iface.main){
+//       $p.iface.main = new OrderDealerApp($p);
+//     }
+// 	  return $p.iface.main.hash_route(hprm);
+// 	}
+//
+// });
 
-    // разделитель для localStorage
-    local_storage_prefix: {
-      value: "wb_"
-    },
-
-    // скин по умолчанию
-    skin: {
-      value: "dhx_terrace"
-    },
-
-    // фильтр для репликации с CouchDB
-    pouch_filter: {
-      value: {},
-      writable: false
-    },
-
-    // гостевые пользователи для демо-режима
-    guests: {
-      value: [{
-        username: "Дилер",
-        password: "1gNjzYQKBlcD"
-      }]
-    },
-
-    // если понадобится обратиться к 1С, будем использовать irest
-    irest_enabled: {
-      value: true
-    },
-
-    // расположение rest-сервиса 1c по умолчанию
-    rest_path: {
-      value: "/a/zd/%1/odata/standard.odata/"
-    },
-
-    // не шевелить hash url при открытии подчиненных форм
-    keep_hash: {
-      value: true
-    },
-
-    // используем геокодер
-    use_ip_geo: {
-      value: true
-    },
-
-    // используем карты google
-    use_google_geo: {
-      value: "AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM"
-    }
-
-  });
-
-  // по умолчанию, обращаемся к зоне 1
-  prm.zone = 1;
-
-  // объявляем номер демо-зоны
-  prm.zone_demo = 1;
-
-  // расположение couchdb
-  //prm.couch_path = "http://cou206:5984/wb_";
-  //prm.couch_path = "https://kint.oknosoft.ru/couchdb2/wb_";
-  prm.couch_path = "/couchdb/wb_";
-
-  // разрешаем сохранение пароля
-  prm.enable_save_pwd = true;
-
-})
-
-$p.on({
-
-	/**
-	 * ### При инициализации интерфейса
-	 * Вызывается после готовности DOM и установки параметров сеанса, до готовности метаданных
-	 * рисуем интерфейс
-	 *
-	 */
-	iface_init: () => {
-	  if(!$p.iface.main){
-      $p.iface.main = new OrderDealerApp($p);
-    }
-	},
-
-	/**
-	 * ### Обработчик маршрутизации
-	 */
-	hash_route: (hprm) => {
-    if(!$p.iface.main){
-      $p.iface.main = new OrderDealerApp($p);
-    }
-	  return $p.iface.main.hash_route(hprm);
-	}
-
-});
+// Object.defineProperty(exports, "__esModule", {
+//   value: true
+// });
+// exports.default = OrderDealerApp;

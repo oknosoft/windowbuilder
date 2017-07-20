@@ -2,8 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {Switch, Route} from 'react-router';
 
+// статусы "загружено и т.д." в ствойствах компонента
+import withNavigateAndMeta from './withNavigateAndMeta';
+
+// заставка "загрузка занных"
+import DumbScreen from '../../metadata-ui/DumbLoader/DumbScreen';
+
 import HeaderContainer from '../Header';
-import HomePage from '../HomePage';
 import AboutPage from '../About';
 import Builder from '../Builder';
 import DataRoute from '../DataRoute';
@@ -12,13 +17,8 @@ import NotFoundPage from '../NotFoundPage';
 //import SchemeSettingsWrapper from '../../metadata-react-ui/SchemeSettings/SchemeSettingsWrapper';
 //import AuthService from '../../utils/AuthService'
 
-/* global $p */
 
-// заставка "загрузка занных"
-import DumbScreen from '../../metadata-ui/DumbLoader/DumbScreen';
-
-
-class App extends React.Component {
+class AppRoot extends React.Component {
 
   //authService = new AuthService()
 
@@ -44,28 +44,23 @@ class App extends React.Component {
     // })
   }
 
-  componentWillReceiveProps(props) {
-    // если это первый запуск...
-    if (props.data_empty && !props.location.pathname.match(/[\/login|\/builder]$/)) {
+  shouldComponentUpdate(props) {
+    const {user, data_empty, path_log_in, couch_direct, offline} = props;
+    let res = true;
 
-      // если это гостевая зона и задан пользователь по умолчанию - пытаемся авторизоваться
-      if ($p.job_prm.guests.length && $p.job_prm.zone_demo == $p.wsql.get_user_param('zone')) {
-        if (!$p.wsql.get_user_param('user_name')) {
-          props.try_log_in();
-        }
-      }
-      // если зона не гостевая, перемещаемся на страницу авторизации
-      else if (props.match.path.indexOf('/login') == -1) {
-        props.navigate('/login');
-      }
+    // если есть сохранённый пароль и online, пытаемся авторизоваться
+    if(!user.logged_in && user.has_login && !user.try_log_in && !offline){
+      props.handleLogin();
+      res = false;
     }
-  }
 
-  componentDidUpdate(params) {
+    // если это первый запуск или couch_direct и offline, переходим на страницу login
+    if ((data_empty && !path_log_in && !user.try_log_in) || (couch_direct && offline)) {
+      props.navigate('/login');
+      res = false;
+    }
 
-    const {props} = this;
-
-
+    return res;
   }
 
   render() {
@@ -83,40 +78,30 @@ class App extends React.Component {
     // if(data_empty && route.path != '/login') - перебросить в login
     // if(fetch_local && !data_loaded)
 
-    if (!props.meta_loaded) {
-      return (
-        <DumbScreen />
-      );
-    }
-
     return (
       <div>
-        <HeaderContainer authService={this.authService}/>
+        <HeaderContainer authService={this.authService} />
         {
           (!props.data_loaded && props.fetch_local) ?
-            <DumbScreen title="Загрузка данных из IndexedDB..." page={props.page}/>
+            <DumbScreen title="Загрузка данных из IndexedDB..." page={props.page} />
             :
             <Switch>
-              <Route exact path="/" component={HomePage}/>
-              <Route path="/about" component={AboutPage}/>
-              <Route path="/builder" component={Builder}/>
-              <Route path="/meta" component={MetaTreePage}/>
-              <Route path="/:area(doc|cat|ireg|cch).:name" component={DataRoute}/>
-              <Route component={NotFoundPage}/>
+              <Route path="/about" component={AboutPage} />
+              <Route path="/builder" component={Builder} />
+              <Route path="/meta" component={MetaTreePage} />
+              <Route path="/:area(doc|cat|ireg|cch).:name" component={DataRoute} />
+              <Route component={NotFoundPage} />
             </Switch>
         }
       </div>
     );
   }
 }
-
-App.propTypes = {
+AppRoot.propTypes = {
   history: PropTypes.shape({
     push: PropTypes.func.isRequired,
   }).isRequired,
-  loginSuccess: PropTypes.func.isRequired,
-  loginError: PropTypes.func.isRequired,
 };
 
-export default App;
+export default withNavigateAndMeta(AppRoot);
 

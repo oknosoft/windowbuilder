@@ -21,7 +21,7 @@ module.exports = gulp;
 gulp.task('build-iface', function(){
 	return gulp.src([
 	  //'./dist/worker.js',
-    './src/metadata/init.js',
+    //'./src/metadata/init.js',
 		//'./data/prebuild.js',
 		'./data/merged_wb_templates.js',
 		'./src/modifiers/**/*.js',
@@ -32,7 +32,7 @@ gulp.task('build-iface', function(){
     .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
-				return 'undefined';
+				return 'OrderDealerApp';
 			}
 		}))
     .pipe(gulp.dest('./dist'))

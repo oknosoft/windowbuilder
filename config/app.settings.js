@@ -12,7 +12,12 @@ module.exports = function settings(prm) {
     local_storage_prefix: "wb_",
 
     // гостевые пользователи для демо-режима
-    guests: [],
+    guests: {
+      value: [{
+        username: "Дилер",
+        password: "1gNjzYQKBlcD"
+      }]
+    },
 
     // если понадобится обратиться к 1С, будем использовать irest
     irest_enabled: true,
@@ -21,12 +26,14 @@ module.exports = function settings(prm) {
     rest_path: "",
 
     // расположение couchdb для сайта
-    couch_path: "/couchdb/wb_",
+    //couch_path: "/couchdb/wb_",
     //couch_path: "https://light.oknosoft.ru/couchdb/wb_",
+    couch_path: "http://cou206:5984/wb_",
 
     // расположение couchdb для nodejs
     couch_local: "http://cou200:5984/wb_",
 
+    // фильтр для репликации с CouchDB не используем
     pouch_filter: {
       meta: "auth/meta"
     },
@@ -41,7 +48,15 @@ module.exports = function settings(prm) {
     attachment_max_size: 10000000,
 
     // разрешаем сохранение пароля
-    enable_save_pwd: true
+    enable_save_pwd: true,
+
+    // используем геокодер
+    use_ip_geo: true,
+
+    // используем карты google
+    use_google_geo: "AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM"
+
+
 
   })
 

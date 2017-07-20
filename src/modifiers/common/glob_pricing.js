@@ -44,12 +44,10 @@ class Pricing {
 
   build_cache(rows) {
     const {nom, currencies} = $p.cat;
-    rows.forEach(({key, value}) => {
-
+    for(const {key, value} of rows){
       if(!Array.isArray(value)){
         return setTimeout(() => $p.iface.do_reload('', 'Индекс цен номенклатуры'), 1000);
       }
-
       const onom = nom.get(key[0], false, true);
       if (!onom || !onom._data){
         return;
@@ -67,7 +65,7 @@ class Pricing {
         currency: currencies.get(v.currency),
         price: v.price
       }));
-    });
+    }
   }
 
   /**
