@@ -20,7 +20,7 @@ module.exports = function settings(prm) {
     // расположение rest-сервиса 1c по умолчанию
     rest_path: "",
 
-    // расположение couchdb
+    // расположение couchdb для сайта
     couch_path: "/couchdb/wb_",
     //couch_path: "https://light.oknosoft.ru/couchdb/wb_",
 
