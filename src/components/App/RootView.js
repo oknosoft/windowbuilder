@@ -31,7 +31,7 @@ class RootView extends Component {
     }
 
     // если это первый запуск или couch_direct и offline, переходим на страницу login
-    if ((data_empty === false && !path_log_in && !user.try_log_in) || (couch_direct && offline)) {
+    if ((data_empty === true && !path_log_in && !user.try_log_in) || (couch_direct && offline)) {
       history.push('/login');
       res = false;
     }
@@ -43,18 +43,22 @@ class RootView extends Component {
   render() {
 
     const {props} = this;
+    const {meta_loaded, data_empty, data_loaded, sync_started, user, couch_direct, offline, history} = props;
+    const show_dumb = !meta_loaded ||
+      (data_empty === undefined) ||
+      (sync_started && !data_loaded);
 
     return <MuiThemeProvider muiTheme={theme}>
       {
-        props.meta_loaded ?
-          <Router history={props.history}>
+        show_dumb ?
+          <DumbScreen {...props} />
+          :
+          <Router history={history}>
             <Switch>
               <Route exact path="/" component={DhtmlxRoot}/>
               <Route component={AppRoot}/>
             </Switch>
           </Router>
-          :
-          <DumbScreen {...props} />
       }
     </MuiThemeProvider>;
   }

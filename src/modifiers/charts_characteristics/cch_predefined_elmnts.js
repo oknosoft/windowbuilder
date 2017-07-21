@@ -12,7 +12,7 @@
   const {job_prm, adapters, cch, doc} = $p;
 
 	// Подписываемся на событие окончания загрузки локальных данных
-  adapters.pouch.once('pouch_data_loaded', () => {
+  adapters.pouch.once('pouch_doc_ram_loaded', () => {
 
     // читаем элементы из pouchdb и создаём свойства
     cch.predefined_elmnts.pouch_find_rows({_raw: true, _top: 500, _skip: 0})

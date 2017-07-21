@@ -1,17 +1,18 @@
 
-import {createMuiTheme} from 'material-ui/styles';
+import {createMuiTheme } from 'material-ui/styles';
+import colors from 'material-ui/colors/common';
 
-export default createMuiTheme({
-
-  dialog: {
-    titleFontSize: 18,
+const theme = createMuiTheme({
+  overrides: {
+    MuiAppBar: {
+      root: {
+        background: colors.lightBlack,
+      }
+    },
   },
-
-  MuiToolbar: {
-    root: {
-      height: 48,
-      titleFontSize: 18,
-    }
-  },
-
 });
+theme.palette.primary1Color = colors.lightBlack;
+theme.palette.primary2Color = colors.minBlack;
+
+export default theme;
+

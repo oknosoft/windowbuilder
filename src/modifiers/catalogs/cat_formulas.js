@@ -9,7 +9,7 @@
  */
 
 // обработчик события после загрузки данных в озу
-$p.adapters.pouch.once('pouch_data_loaded', () => {
+$p.adapters.pouch.once('pouch_doc_ram_loaded', () => {
   // читаем элементы из pouchdb и создаём формулы
   const {formulas} = $p.cat;
   formulas.pouch_find_rows({ _top: 500, _skip: 0 })

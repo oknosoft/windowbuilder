@@ -13,7 +13,7 @@ const store = configureStore();
 
 class RootProvider extends Component {
 
-  componentDidMount() {
+  componentWillMount() {
     init(store)
       .catch((err) => {
         //console.log(err)

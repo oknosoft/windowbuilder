@@ -48,18 +48,6 @@ class AppRoot extends React.Component {
     const {user, data_empty, path_log_in, couch_direct, offline} = props;
     let res = true;
 
-    // если есть сохранённый пароль и online, пытаемся авторизоваться
-    if(!user.logged_in && user.has_login && !user.try_log_in && !offline){
-      props.handleLogin();
-      res = false;
-    }
-
-    // если это первый запуск или couch_direct и offline, переходим на страницу login
-    if ((data_empty && !path_log_in && !user.try_log_in) || (couch_direct && offline)) {
-      props.navigate('/login');
-      res = false;
-    }
-
     return res;
   }
 

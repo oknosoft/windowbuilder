@@ -42,8 +42,8 @@ class DhtmlxRoot extends Component {
   checkSizes(props) {
     const {windowHeight, windowWidth} = props;
     const {el, layout} = this;
-    const height = (windowHeight > 560 ? windowHeight - 4 : 558).toFixed() + 'px';
-    const width = (windowWidth > 800 ? windowWidth - (height < 560 ? 20 : 0) : 800).toFixed() + 'px';
+    const height = (windowHeight > 480 ? windowHeight - 4 : 480).toFixed() + 'px';
+    const width = (windowWidth > 720 ? windowWidth : 720).toFixed() + 'px';
     if(el.style.height != height || el.style.width != width){
       el.style.height = height;
       el.style.width = width;

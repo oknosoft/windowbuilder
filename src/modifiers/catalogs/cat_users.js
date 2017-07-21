@@ -44,6 +44,8 @@ $p.cat.users.__define({
 
 });
 
+delete $p.CatUsers.prototype.role_available;
+delete $p.CatUsers.prototype.get_acl;
 $p.CatUsers.prototype.__define({
 
   /**
@@ -54,9 +56,7 @@ $p.CatUsers.prototype.__define({
    */
   role_available: {
     value: function (name) {
-      return this.acl_objs._obj.some(function (row) {
-        return row.type == name;
-      });
+      return this.acl_objs._obj.some((row) => row.type == name);
     }
   },
 
@@ -76,10 +76,11 @@ $p.CatUsers.prototype.__define({
 	 */
 	partners_uids: {
 		get: function () {
-			var res = [];
-			this.acl_objs.each(function (row) {
-				if(row.acl_obj instanceof $p.CatPartners)
-					res.push(row.acl_obj.ref)
+			const res = [];
+			this.acl_objs.each((row) => {
+				if(row.acl_obj instanceof $p.CatPartners){
+          res.push(row.acl_obj.ref)
+        }
 			});
 			return res;
 		}
