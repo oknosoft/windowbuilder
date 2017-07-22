@@ -59,6 +59,7 @@
     "react-select": "^1.0.0-rc.5",
     "react-static-container": "^1.0.1",
     "react-virtualized": "^9.9.0",
+    "recompose": "^0.24.0",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
     "xlsx": "^0.10.8"

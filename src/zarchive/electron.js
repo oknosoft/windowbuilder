@@ -5,7 +5,7 @@
  * Created 04.07.2016
  */
 
-const electron = require('src/utils/electron')
+const electron = require('electron')
 // Модуль, контролирующий основное: сам Electron.
 const app = electron.app
 // Модуль, создающий окно приложения.

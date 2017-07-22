@@ -21,11 +21,11 @@ class RootView extends Component {
 
   shouldComponentUpdate(props) {
     const {user, data_empty, couch_direct, offline, history} = props;
-    const path_log_in = !!history.location.pathname.match(/\/login$/)
+    const path_log_in = !!history.location.pathname.match(/\/login$/);
     let res = true;
 
     // если есть сохранённый пароль и online, пытаемся авторизоваться
-    if(!user.logged_in && user.has_login && !user.try_log_in && !offline){
+    if (!user.logged_in && user.has_login && !user.try_log_in && !offline) {
       props.handleLogin();
       res = false;
     }
@@ -35,7 +35,6 @@ class RootView extends Component {
       history.push('/login');
       res = false;
     }
-
 
     return res;
   }

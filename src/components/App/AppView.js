@@ -14,6 +14,7 @@ import Builder from '../Builder';
 import DataRoute from '../DataRoute';
 import MetaTreePage from '../MetaTreePage';
 import NotFoundPage from '../NotFoundPage';
+import FrmLogin from '../../metadata-ui/FrmLogin';
 //import SchemeSettingsWrapper from '../../metadata-react-ui/SchemeSettings/SchemeSettingsWrapper';
 //import AuthService from '../../utils/AuthService'
 
@@ -77,6 +78,7 @@ class AppRoot extends React.Component {
               <Route path="/about" component={AboutPage} />
               <Route path="/builder" component={Builder} />
               <Route path="/meta" component={MetaTreePage} />
+              <Route path="/login" component={FrmLogin} />
               <Route path="/:area(doc|cat|ireg|cch).:name" component={DataRoute} />
               <Route component={NotFoundPage} />
             </Switch>

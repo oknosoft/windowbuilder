@@ -28,7 +28,7 @@ module.exports = function settings(prm) {
     // расположение couchdb для сайта
     //couch_path: "/couchdb/wb_",
     //couch_path: "https://light.oknosoft.ru/couchdb/wb_",
-    couch_path: "http://cou206:5984/wb_",
+    couch_path: "http://cou200:5984/wb_",
 
     // расположение couchdb для nodejs
     couch_local: "http://cou200:5984/wb_",
