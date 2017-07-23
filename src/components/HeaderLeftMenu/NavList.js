@@ -98,8 +98,6 @@ class NavList extends Component {
     const {props} = this;
     const {classes} = props;
 
-    const order_expand = this.handleExpanded('order');
-
     return (
       <List className={classes.list}>
         {this._list}

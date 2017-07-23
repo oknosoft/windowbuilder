@@ -1,9 +1,5 @@
-import React, {Component, PropTypes} from 'react';
-import Paper from 'material-ui/Paper';
-import Divider from 'material-ui/Divider';
-import Subheader from 'material-ui/Subheader';
-import CircularProgress from 'material-ui/CircularProgress';
-
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 
 export default class DumbScreen extends Component {
 
@@ -28,6 +24,21 @@ export default class DumbScreen extends Component {
 
     return (
       <div className='splash'>
+
+        <div className="description">
+          <h1 itemProp="name">Окнософт: Заказ дилера</h1>
+          <p>Категория: <span itemProp="applicationSubCategory">CRM, CAD, E-Commerce</span></p>
+          <p>Платформа: браузер <i className="fa fa-chrome" aria-hidden="true"></i> Chrome для <span itemProp="operatingSystem">Windows 8, 10 | Android | Mac | iOS</span></p>
+          <div itemProp="description">
+            <p>Заказ дилера - это веб-сервис компании <a href="http://www.oknosoft.ru/" title="Программы для оконных заводов и дилеров" target="_blank" rel="noopener noreferrer">Окнософт</a>, предназначенный для:</p>
+            <ul>
+              <li>Расчета геометрии, спецификации и стоимости оконных и витражных конструкций (ПВХ, Дерево, Алюминий)</li>
+              <li>Aвтоматизации работы менеджеров и дилеров</li>
+              <li>Ускорения и упрощения подготовки производства</li>
+              <li>Планирования и контроля на всех этапах</li>
+            </ul>
+          </div>
+        </div>
 
         <div style={{position: 'absolute', bottom: '-20px'}}>{title}</div>
 

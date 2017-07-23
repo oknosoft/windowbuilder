@@ -14,7 +14,7 @@ import LeftMenuDrawer from '../HeaderLeftMenu';
 import withStyles from '../../styles/toolbar';
 import withIface from '../../redux/withIface';
 
-import items from './navlist_items';
+import items from './navlist_items'; // массив элементов меню
 
 class Header extends Component {
 
@@ -35,7 +35,7 @@ class Header extends Component {
 }
 Header.propTypes = {
   title: PropTypes.string.isRequired, // заголовок AppBar
-  items: PropTypes.array.isRequired,  // массив элементов меню
+  handleNavigate: PropTypes.func.isRequired,
 };
 
 export default withStyles(withIface(Header));

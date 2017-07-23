@@ -8,12 +8,11 @@ import meta_init from './init';
 
 import {metaActions} from 'metadata-redux';
 
+// параметры сеанса и метаданные инициализируем без лишних проволочек
+$p.wsql.init(settings, meta_init);
 
 // скрипт инициализации в привязке к store приложения
 export function init(store) {
-
-  // инициализируем параметры сеанса и метаданные
-  $p.wsql.init(settings, meta_init);
 
   return $p.load_script('/dist/windowbuilder.js', 'script')
     .then(() => $p.load_script('/dist/wnd_debug.js', 'script'))

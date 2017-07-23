@@ -41,8 +41,6 @@ class NavUserButtons extends Component {
     const {handleLogin, props} = this;
     const {
       sync_started,
-      sync_tooltip,
-      notifications_tooltip,
       button_label,
       classes,
       fetch,
@@ -50,6 +48,8 @@ class NavUserButtons extends Component {
       couch_direct,
       user,
     } = props;
+    const sync_tooltip = `Синхронизация ${sync_started ? 'выполняется' : 'отключена'}`;
+    const notifications_tooltip = 'Нет непрочитанных сообщений';
 
     return (
       <div>
@@ -84,20 +84,14 @@ class NavUserButtons extends Component {
         </IconButton>
 
 
-
       </div>
     );
   }
 }
 NavUserButtons.propTypes = {
-
   sync_started: PropTypes.bool, // выполняется синхронизация
-  sync_tooltip: PropTypes.string.isRequired, // текст всплывающей подсказки синхронизации
-  notifications_tooltip: PropTypes.string.isRequired, // текст всплывающей подсказки оповещений
   user: PropTypes.object,  // пользователь
-
   handleNavigate: PropTypes.func.isRequired,
-
   classes: PropTypes.object.isRequired,
 
 };

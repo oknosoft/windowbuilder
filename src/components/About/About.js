@@ -22,7 +22,7 @@ function About(props) {
         <Grid item xs={12} sm={12} md={11} lg={10} xl={8}>
 
           <h1>Окнософт: Заказ дилера</h1>
-          <p>Заказ дилера - это веб-приложение с открытым исходным кодом, разработанное компанией <a href="http://www.oknosoft.ru/" target="_blank" rel="noopener noreferrer">Окнософт</a> на базе фреймворка <a href="http://www.oknosoft.ru/metadata/" target="_blank" rel="noopener noreferrer">Metadata.js</a><br />
+          <p>Заказ дилера - это веб-приложение, разработанное компанией <a href="http://www.oknosoft.ru/" target="_blank" rel="noopener noreferrer">Окнософт</a> на базе фреймворка <a href="http://www.oknosoft.ru/metadata/" target="_blank" rel="noopener noreferrer">Metadata.js</a><br />
             Исходный код и документация доступны в <a href="https://github.com/oknosoft/windowbuilder" target="_blank" rel="noopener noreferrer">GitHub <i className="fa fa-github-alt"></i></a>.<br />
           </p>
 

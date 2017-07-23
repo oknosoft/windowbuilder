@@ -12,12 +12,12 @@ class DhtmlxRoot extends Component {
 
     const {el} = this;
 
-    if(!this.layout){
+    if (!this.layout) {
       $p.iface.w = new dhtmlXWindows();
       $p.iface.w.attachViewportTo(el);
       $p.iface.main = this.layout = new $p.iface.OrderDealerApp($p, el);
       $p.on('hash_route', this.hash_route);
-     }
+    }
 
   }
 
@@ -29,7 +29,7 @@ class DhtmlxRoot extends Component {
     $p.iface.w = null;
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     return !!this.checkSizes(nextProps);
   }
 
@@ -46,10 +46,10 @@ class DhtmlxRoot extends Component {
     const {el, layout} = this;
     const height = (windowHeight > 480 ? windowHeight - 4 : 480).toFixed() + 'px';
     const width = (windowWidth > 720 ? windowWidth : 720).toFixed() + 'px';
-    if(el.style.height != height || el.style.width != width){
+    if (el.style.height != height || el.style.width != width) {
       el.style.height = height;
       el.style.width = width;
-      if(layout){
+      if (layout) {
         layout.sidebar.setSizes();
         this.onReize();
       }
@@ -57,13 +57,14 @@ class DhtmlxRoot extends Component {
   }
 
   render() {
-    return <div ref={el => this.el = el} />;
+    return <div ref={el => this.el = el}/>;
   }
 }
+
 DhtmlxRoot.propTypes = {
   windowHeight: PropTypes.number.isRequired,
   windowWidth: PropTypes.number.isRequired,
-}
+};
 
 
 export default WindowSizer(DhtmlxRoot);
