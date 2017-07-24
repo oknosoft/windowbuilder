@@ -124,7 +124,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           resolve(wnd);
         }
 
-        this.mango_selection(pwnd, attr);
+        return this.mango_selection(pwnd, attr);
 
       });
     });

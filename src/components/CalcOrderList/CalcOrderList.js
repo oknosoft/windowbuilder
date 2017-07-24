@@ -14,6 +14,10 @@ class CalcOrderList extends DhtmlxCell {
 
   componentWillUnmount() {
     //$p.off('hash_route', this.hash_route);
+    const {cell, handlers} = this;
+    if(cell && cell.close){
+      cell.close();
+    }
     super.componentWillUnmount();
   }
 
