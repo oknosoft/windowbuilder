@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 
 import {ConnectedRouter as Router} from 'react-router-redux';
-import {Route, Switch} from 'react-router';
+import {Route} from 'react-router';
 
 // статусы "загружено и т.д." в ствойствах компонента
 import withMeta from 'metadata-redux/src/withMeta';
@@ -11,7 +11,6 @@ import DumbScreen from '../DumbLoader/DumbScreen';
 
 // корневые контейнеры
 import AppRoot from './AppView';
-import DhtmlxRoot from '../DhtmlxRoot';
 
 // тема для material-ui
 import {MuiThemeProvider} from 'material-ui/styles';
@@ -47,16 +46,13 @@ class RootView extends Component {
       (data_empty === undefined) ||
       (sync_started && !data_loaded);
 
-    return <MuiThemeProvider muiTheme={theme}>
+    return <MuiThemeProvider theme={theme}>
       {
         show_dumb ?
           <DumbScreen {...props} />
           :
           <Router history={history}>
-            <Switch>
-              <Route exact path="/" component={DhtmlxRoot}/>
-              <Route component={AppRoot}/>
-            </Switch>
+            <Route component={AppRoot}/>
           </Router>
       }
     </MuiThemeProvider>;

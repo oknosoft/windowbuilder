@@ -15,10 +15,10 @@ export default withStyles(createStyleSheet('toolbar', {
     top: 8,
   },
   bar: {
-    height: 48,
+    minHeight: 48,
   },
   appbar: {
-    backgroundColor: colors.lightBlack,
+    //backgroundColor: colors.lightBlack,
   },
   white: {
     color: colors.white

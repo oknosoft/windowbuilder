@@ -7,7 +7,7 @@
  */
 
 
-$p.doc.calc_order.form_list = function(pwnd, attr){
+$p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
 	if(!attr){
 		attr = {
@@ -15,33 +15,15 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
 			date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
 			date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
 			on_new: (o) => {
-				$p.iface.set_hash(this.class_name, o.ref, "doc");
+        handlers.handleNavigate(`/${this.class_name}/${o.ref}`);
+			  //$p.iface.set_hash(this.class_name, o.ref, "doc");
 			},
 			on_edit: (_mgr, rId) => {
-				$p.iface.set_hash(_mgr.class_name, rId, "doc");
+        handlers.handleNavigate(`/${_mgr.class_name}/${rId}`);
+				//$p.iface.set_hash(_mgr.class_name, rId, "doc");
 			}
 		};
 	}
-
-	// разбивка на 2 колонки - дерево и карусель
-	const layout = pwnd.attachLayout({
-			pattern: "2U",
-			cells: [{
-				id: "a",
-				text: "Фильтр",
-				collapsed_text: "Фильтр",
-				width: 180
-			}, {
-				id: "b",
-				text: "Заказы",
-				header: false
-			}],
-			offsets: { top: 0, right: 0, bottom: 0, left: 0}
-		});
-
-	const tree = layout.cells("a").attachTreeView({
-			iconset: "font_awesome"
-		});
 
   return this.pouch_db.getIndexes()
     .then(({indexes}) => {
@@ -61,6 +43,18 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
         attr.on_create = (wnd) => {
 
           const {elmnts} = wnd;
+
+          // добавляем слушателя внешних событий
+          if(handlers){
+            const {custom_selection} = elmnts.filter;
+            custom_selection._state = handlers.props.state_filter;
+            handlers.onProps = (props) => {
+              if(custom_selection._state != props.state_filter){
+                custom_selection._state = props.state_filter;
+                elmnts.filter.call_event();
+              }
+            }
+          }
 
           // добавляем отбор по подразделению
           const dp = $p.dp.builder_price.create();
@@ -93,7 +87,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
           const set_department = $p.DocCalc_order.set_department.bind(dp);
           set_department();
           if(!$p.wsql.get_user_param('couch_direct')){
-            $p.on({user_log_in: set_department});
+            $p.once({user_log_in: set_department});
           }
 
           // настраиваем фильтр для списка заказов
@@ -101,8 +95,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
             department: {
               get: function () {
                 const {department} = dp;
-                const state = (tree && tree.getSelectedId()) || 'draft';
-                return state == 'template' ? {$eq: $p.utils.blank.guid} : {$eq: department.ref};
+                return this._state == 'template' ? {$eq: $p.utils.blank.guid} : {$eq: department.ref};
                 // const depts = [];
                 // $p.cat.divisions.forEach((o) =>{
                 //   if(o._hierarchy(department)){
@@ -115,8 +108,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
             },
             state: {
               get: function(){
-                const state = (tree && tree.getSelectedId()) || 'draft';
-                return state == 'all' ? {$in: 'draft,sent,confirmed,declined,service,complaints,template,zarchive'.split(',')} : {$eq: state};
+                return this._state == 'all' ? {$in: 'draft,sent,confirmed,declined,service,complaints,template,zarchive'.split(',')} : {$eq: this._state};
               },
               enumerable: true
             }
@@ -129,14 +121,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr){
             (ref, dbl) => dbl && $p.iface.set_hash("cat.characteristics", ref, "builder"));
           elmnts.grid.attachEvent("onRowSelect", (rid) => elmnts.svgs.reload(rid));
 
-          // настраиваем дерево
-          tree.loadStruct($p.injected_data["tree_filteres.xml"]);
-          tree.attachEvent("onSelect", (rid, mode) => mode && elmnts.filter.call_event());
-
           resolve(wnd);
         }
 
-        this.mango_selection(layout.cells("b"), attr);
+        this.mango_selection(pwnd, attr);
 
       });
     });

@@ -171,7 +171,7 @@ $p.iface.view_orders = function (cell) {
 		}
 
 		// Рисуем дополнительные элементы навигации
-		t.tb_nav = $p.iface.main.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
+		//t.tb_nav = $p.iface.main.btns_nav(cell.cell.querySelector(".dhx_cell_sidebar_hdr"));
 
 		// страницы карусели
 		t.carousel = cell.attachCarousel({

@@ -18,14 +18,14 @@ class NavDrawer extends Component {
   constructor(props) {
     super(props);
 
-    this.handleToggle = this.handleClose = props.handleIfaceState.bind(this, {
-      component: NavDrawer.name,
+    this.handleToggle = props.handleIfaceState.bind(this, {
+      component: this.constructor.name,
       name: 'open',
       value: 'invert',
     });
 
     this.handleClose = props.handleIfaceState.bind(this, {
-      component: NavDrawer.name,
+      component: this.constructor.name,
       name: 'open',
       value: false,
     });

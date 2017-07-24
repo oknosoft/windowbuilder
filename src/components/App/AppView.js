@@ -8,7 +8,7 @@ import withNavigateAndMeta from './withNavigateAndMeta';
 // заставка "загрузка занных"
 import DumbScreen from '../../metadata-ui/DumbLoader/DumbScreen';
 
-import HeaderContainer from '../Header';
+import Header from '../Header';
 import AboutPage from '../About';
 import Builder from '../Builder';
 import DataRoute from '../DataRoute';
@@ -16,34 +16,12 @@ import MetaTreePage from '../MetaTreePage';
 import NotFoundPage from '../NotFoundPage';
 import FrmLogin from '../../metadata-ui/FrmLogin';
 //import SchemeSettingsWrapper from '../../metadata-react-ui/SchemeSettings/SchemeSettingsWrapper';
-//import AuthService from '../../utils/AuthService'
+
+
+import DhtmlxRoot from '../CalcOrderList';
 
 
 class AppRoot extends React.Component {
-
-  //authService = new AuthService()
-
-  componentWillMount() {
-
-    this.authService = {};
-
-    // Add callback for lock's `authenticated` event
-    // this.authService.lock.on('authenticated', (authResult) => {
-    //   this.authService.lock.getProfile(authResult.idToken, (error, profile) => {
-    //     if (error)
-    //       return this.props.loginError(error)
-    //     AuthService.setToken(authResult.idToken) // static method
-    //     AuthService.setProfile(profile) // static method
-    //     this.props.loginSuccess(profile)
-    //     return this.props.history.push({ pathname: '/' })
-    //   })
-    // })
-    // // Add callback for lock's `authorization_error` event
-    // this.authService.lock.on('authorization_error', (error) => {
-    //   this.props.loginError(error)
-    //   return this.props.history.push({ pathname: '/' })
-    // })
-  }
 
   shouldComponentUpdate(props) {
     const {user, data_empty, path_log_in, couch_direct, offline} = props;
@@ -69,12 +47,13 @@ class AppRoot extends React.Component {
 
     return (
       <div>
-        <HeaderContainer authService={this.authService} />
+        <Header />
         {
           (!props.data_loaded && props.fetch_local) ?
             <DumbScreen title="Загрузка данных из IndexedDB..." page={props.page} />
             :
             <Switch>
+              <Route exact path="/" component={DhtmlxRoot}/>
               <Route path="/about" component={AboutPage} />
               <Route path="/builder" component={Builder} />
               <Route path="/meta" component={MetaTreePage} />

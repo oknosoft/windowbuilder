@@ -7,6 +7,7 @@ import Collapse from 'material-ui/transitions/Collapse';
 
 import classnames from 'classnames';
 import withStyles from '../../styles/menu';
+import withIface from '../../redux/withIface';
 
 import IconPerson from 'material-ui-icons/Person';
 import IconExpandMore from 'material-ui-icons/ExpandMore';
@@ -24,12 +25,15 @@ class NavList extends Component {
       },
     };
 
-    this.key = 0;
-    this._list = [];
-    for (let item of props.items) {
-      this.addItem(item, this._list);
-    }
+  }
 
+  getItems() {
+    this.key = 0;
+    const items = [];
+    for (const item of this.props.items) {
+      this.addItem(item, items);
+    }
+    return items;
   }
 
   addItem(item, recipient) {
@@ -47,36 +51,37 @@ class NavList extends Component {
   }
 
   menuItem(item) {
-    return <ListItem button key={this.key} onClick={this.handleNavigate(item.navigate)}>
+    return <ListItem button key={this.key} onClick={this.handleNavigate(item.navigate, item.id)}>
       <ListItemIcon>{item.icon}</ListItemIcon>
       <ListItemText primary={item.text}/>
     </ListItem>;
   }
 
   menuGroup(item, items) {
-    const {classes} = this.props;
+    const {props} = this;
+    const {list, expand, expandOpen, bold} = props.classes;
+    const expanded = props[item.id];
     const expander = this.handleExpanded(item.id);
-    const {expanded} = this.state;
-    return <div className={classes.list}>
+    return <div className={list}>
       <ListItem button key={this.key} onClick={expander}>
         <ListItemIcon>{item.icon}</ListItemIcon>
-        <ListItemText primary={item.text}/>
+        <ListItemText disableTypography className={bold} primary={item.text}/>
         <ListItemSecondaryAction>
-          <IconButton className={classnames(classes.expand, {[classes.expandOpen]: expanded[item.id]})} onClick={expander}>
+          <IconButton className={classnames(expand, {[expandOpen]: expanded})} onClick={expander}>
             <IconExpandMore/>
           </IconButton>
         </ListItemSecondaryAction>
       </ListItem>
-      <Collapse in={expanded[item.id]} transitionDuration="auto" unmountOnExit>
+      <Collapse in={expanded} transitionDuration="auto" unmountOnExit>
         {items}
       </Collapse>
     </div>;
   }
 
-  handleNavigate(path) {
+  handleNavigate(path, id) {
 
     if (typeof path == 'function') {
-      return path.bind(this);
+      return path.bind(this, id);
     }
 
     return () => {
@@ -86,11 +91,11 @@ class NavList extends Component {
   }
 
   handleExpanded(name) {
-    return (function () {
-      const expanded = Object.assign({}, this.state.expanded);
-      expanded[name] = !expanded[name];
-      this.setState({expanded});
-    }).bind(this);
+    return this.props.handleIfaceState.bind(this, {
+        component: this.constructor.name,
+        name: name,
+        value: 'invert',
+      });
   }
 
   render() {
@@ -100,7 +105,7 @@ class NavList extends Component {
 
     return (
       <List className={classes.list}>
-        {this._list}
+        {this.getItems()}
       </List>
     );
   }
@@ -113,5 +118,6 @@ NavList.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(NavList);
+
+export default withStyles(withIface(NavList));
 

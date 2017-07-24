@@ -17,6 +17,9 @@ export default withStyles(createStyleSheet('menu', theme => ({
   bar: {
     height: 48,
   },
+  bold: {
+    fontWeight: 'bold',
+  },
   expand: {
     transform: 'rotate(0deg)',
     transition: theme.transitions.create('transform', {

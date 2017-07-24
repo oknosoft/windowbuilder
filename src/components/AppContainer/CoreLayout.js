@@ -7,7 +7,6 @@ import {connect} from "react-redux";
 import {AutoSizer} from "react-virtualized";
 import Header from "./Header";
 import navlist_items from "./navlist_items";
-import {navlist_open} from "store/ifaceReducer";
 import {muiTheme} from "./AppMuiTheme";
 
 
@@ -86,7 +85,6 @@ class CoreLayout extends Component {
 
 const mapDispatchToProps = {
 
-  handleNavlistOpen: navlist_open
 
 }
 
@@ -103,7 +101,6 @@ function mapStateToProps(state, props) {
     show_indicator: meta.fetch_remote || meta.fetch_local,
     logged_in: meta.user.logged_in,
     data_empty: meta.data_empty,
-    navlist_open: iface.navlist_open,
     show_notifications: false,
 
     title: "Заказ дилера",

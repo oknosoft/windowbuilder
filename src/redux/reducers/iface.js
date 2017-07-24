@@ -60,6 +60,9 @@ const initialState = {
   'common': {
     title: 'Заказ дилера',
   },
+  CalcOrderList: {
+    state_filter: 'draft',
+  },
   NavDrawer: {
     open: false,
   },
@@ -69,7 +72,6 @@ const initialState = {
   LogDrawer: {
     open: false,
   },
-  navlist_open: false,
 };
 
 export default function ifaceReducer(state = initialState, action) {

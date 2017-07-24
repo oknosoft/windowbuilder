@@ -24,10 +24,8 @@ class OrderDealerApp {
     this.btn_auth_sync = new $p.iface.OBtnAuthSync();
 
     // Подписываемся на событие окончания загрузки предопределённых элементов
-    $p.md.once("predefined_elmnts_inited", this.predefined_elmnts_inited.bind(this));
+    $p.md.once("predefined_elmnts_inited", () => {this.sidebar.progressOff()});
 
-    // Назначаем обработчик ошибки загрузки локальных данных
-    this.pouch_load_data_error = $p.eve.attachEvent("pouch_load_data_error", this.pouch_load_data_error.bind(this));
 
     // основной сайдбар
     this.sidebar = new dhtmlXSideBar({
@@ -73,7 +71,6 @@ class OrderDealerApp {
   unload() {
     window.removeEventListener('onmousewheel', this.onmousewheel);
     window.removeEventListener('onerror', this.onerror);
-    $p.eve.detachEvent(this.pouch_load_data_error);
     this.btn_auth_sync.unload();
     this.sidebar.unload();
   }
@@ -181,59 +178,7 @@ class OrderDealerApp {
     }
   }
 
-  predefined_elmnts_inited(err) {
-
-    this.sidebar.progressOff();
-
-    // если разрешено сохранение пароля - сразу пытаемся залогиниться
-    if(!$p.wsql.pouch.authorized && navigator.onLine &&
-      $p.wsql.get_user_param("enable_save_pwd") &&
-      $p.wsql.get_user_param("user_name") &&
-      $p.wsql.get_user_param("user_pwd")){
-
-      setTimeout(() => $p.iface.frm_auth({
-        modal_dialog: true,
-        try_auto: false
-      }), 100);
-    }
-  }
-
-  pouch_load_data_error(err) {
-
-    // если это первый запуск, показываем диалог авторизации
-    if(err.db_name && err.hasOwnProperty("doc_count") && err.doc_count < 10 && navigator.onLine){
-
-      // если это демо (zone === zone_demo), устанавливаем логин и пароль
-      if($p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && !$p.wsql.get_user_param("user_name")){
-        $p.wsql.set_user_param("enable_save_pwd", true);
-        $p.wsql.set_user_param("user_name", $p.job_prm.guests[0].username);
-        $p.wsql.set_user_param("user_pwd", $p.job_prm.guests[0].password);
-
-        setTimeout(() => $p.iface.frm_auth({
-          modal_dialog: true,
-          try_auto: false
-        }), 100);
-
-      }else{
-        $p.iface.frm_auth({
-          modal_dialog: true,
-          try_auto: $p.wsql.get_user_param("zone") == $p.job_prm.zone_demo && $p.wsql.get_user_param("enable_save_pwd")
-        });
-      }
-
-    }
-
-    this.sidebar.progressOff();
-    $p.eve.detachEvent(this.pouch_load_data_error);
-
-  }
-
   sidebar_select(id) {
-
-    if(id == "v2"){
-      $p.eve.redirect = true;
-      return location.replace("/v2/");
-    }
 
     const hprm = $p.job_prm.parse_url();
     if(hprm.view != id){

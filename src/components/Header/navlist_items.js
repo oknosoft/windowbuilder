@@ -17,9 +17,28 @@ import IconPuzzle from 'material-ui-icons/Extension';
 import IconFileDownload from 'material-ui-icons/FileDownload';
 import IconFileShuffle from 'material-ui-icons/Shuffle';
 
+function state_filter(id) {
+  const {handleIfaceState, handleClose, handleNavigate} = this.props;
+  handleClose();
+  handleNavigate('/');
+  handleIfaceState({
+    component: 'CalcOrderList',
+    name: 'state_filter',
+    value: id,
+  });
+  for(const item of items[0].items){
+    if(item.id == id){
+      handleIfaceState({
+        component: '',
+        name: 'title',
+        value: `Заказы (${item.text})`,
+      });
+      break;
+    }
+  }
+}
 
-
-export default [
+const items = [
   {
     text: 'Заказы',
     icon: <IconBusinessCenter />,
@@ -28,63 +47,63 @@ export default [
     items: [
       {
         text: 'Черновики',
-        navigate: '/rep.cash_moving/main',
+        navigate: state_filter,
         icon: <IconDrafts />,
         id: 'draft',
         title: 'Предварительные расчеты'
       },
       {
         text: 'Отправлено',
-        navigate: '/rep.cash_moving/main',
+        navigate: state_filter,
         icon: <IconSend />,
         id: 'sent',
         title: 'Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в \'черновики\')'
       },
       {
         text: 'Согласовано',
-        navigate: '/rep.cash_moving/main',
+        navigate: state_filter,
         icon: <IconConfitmed />,
         id: 'confirmed',
         title: 'Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером'
       },
       {
         text: 'Отклонено',
-        navigate: '/rep.cash_moving/main',
+        navigate: state_filter,
         icon: <IconDeclined />,
         id: 'declined',
         title: 'Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации'
       },
       {
         text: 'Сервис',
-        navigate: '/rep.cash_moving/main',
+        navigate: state_filter,
         icon: <IconService />,
         id: 'service',
         title: 'Заказы на сервисное обслуживание'
       },
       {
         text: 'Рекламации',
-        navigate: '/rep.cash_moving/main',
+        navigate: state_filter,
         icon: <IconComplaints />,
         id: 'complaints',
         title: 'Жалобы и рекламации'
       },
       {
         text: 'Шаблоны',
-        navigate: '/rep.cash_moving/main',
+        navigate: state_filter,
         icon: <IconPuzzle />,
         id: 'template',
         title: 'Типовые блоки'
       },
       {
         text: 'Архив',
-        navigate: '/rep.cash_moving/main',
+        navigate: state_filter,
         icon: <IconFileDownload />,
         id: 'zarchive',
         title: 'Старые заказы'
       },
       {
         text: 'Все',
-        navigate: '/rep.cash_moving/main',
+        navigate: state_filter,
         icon: <IconFileShuffle />,
         id: 'all',
         title: 'Отключить фильтр по статусам заказов'
@@ -119,4 +138,6 @@ export default [
     navigate: '/about',
     icon: <IconInfo />,
   },
-];
+]
+
+export default items;
