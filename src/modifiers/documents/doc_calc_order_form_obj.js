@@ -11,8 +11,7 @@
 	const _mgr = $p.doc.calc_order;
 	let _meta_patched;
 
-
-	_mgr.form_obj = function(pwnd, attr){
+	_mgr.form_obj = function(pwnd, attr, handlers){
 
 		let o, wnd, evts = [], attr_on_close = attr.on_close;
 
@@ -48,7 +47,7 @@
 			_meta_patched = true;
 		}
 
-		attr.draw_tabular_sections = function (o, wnd, tabular_init) {
+		attr.draw_tabular_sections = (o, wnd, tabular_init) => {
 
 			/**
 			 * получим задействованные в заказе объекты характеристик
@@ -101,7 +100,7 @@
 
 		};
 
-		attr.draw_pg_header = function (o, wnd) {
+		attr.draw_pg_header = (o, wnd) => {
 
 			function layout_resize_finish() {
 				setTimeout(function () {

@@ -18,7 +18,7 @@ function About(props) {
   return (
     <div className={classes.root}>
       <Grid container gutter={24}>
-        <Grid item xs={0} sm={0} md={1} lg={2} xl={3} />
+        <Grid item md={1} lg={2} xl={3} />
         <Grid item xs={12} sm={12} md={11} lg={10} xl={8}>
 
           <h1>Окнософт: Заказ дилера</h1>

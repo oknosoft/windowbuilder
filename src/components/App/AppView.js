@@ -55,7 +55,7 @@ class AppRoot extends React.Component {
             <Switch>
               <Route exact path="/" component={DhtmlxRoot}/>
               <Route path="/about" component={AboutPage} />
-              <Route path="/builder" component={Builder} />
+              <Route path="/builder/:guid([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})" component={Builder} />
               <Route path="/meta" component={MetaTreePage} />
               <Route path="/login" component={FrmLogin} />
               <Route path="/:area(doc|cat|ireg|cch).:name" component={DataRoute} />

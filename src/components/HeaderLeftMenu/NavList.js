@@ -15,18 +15,6 @@ import IconExpandMore from 'material-ui-icons/ExpandMore';
 
 class NavList extends Component {
 
-  constructor(props) {
-
-    super(props);
-
-    this.state = {
-      expanded: {
-        orders: false,
-      },
-    };
-
-  }
-
   getItems() {
     this.key = 0;
     const items = [];
@@ -62,8 +50,8 @@ class NavList extends Component {
     const {list, expand, expandOpen, bold} = props.classes;
     const expanded = props[item.id];
     const expander = this.handleExpanded(item.id);
-    return <div className={list}>
-      <ListItem button key={this.key} onClick={expander}>
+    return <div key={this.key} className={list}>
+      <ListItem button onClick={expander}>
         <ListItemIcon>{item.icon}</ListItemIcon>
         <ListItemText disableTypography className={bold} primary={item.text}/>
         <ListItemSecondaryAction>
