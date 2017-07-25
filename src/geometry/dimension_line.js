@@ -79,7 +79,8 @@ class DimensionLine extends paper.Group {
       click: this._click
     });
 
-    $p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this));
+    this._sizes_wnd = this._sizes_wnd.bind(this);
+    $p.eve.attachEvent("sizes_wnd", this._sizes_wnd);
 
   }
 
@@ -369,6 +370,7 @@ class DimensionLine extends paper.Group {
    * @method remove
    */
   remove() {
+    $p.eve.detachEvent("sizes_wnd", this._sizes_wnd);
     if(this._row){
       this._row._owner.del(this._row);
       this._row = null;

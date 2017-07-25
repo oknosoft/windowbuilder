@@ -37,81 +37,77 @@
  */
 class Editor extends paper.PaperScope {
 
-  constructor(pwnd, attr){
+  constructor(pwnd, attr, handlers){
 
     super();
 
     const _editor = this;
 
-    _editor.activate();
+    this.activate();
 
-    consts.tune_paper(_editor.settings);
+    consts.tune_paper(this.settings);
 
-    _editor.__define({
-
-      /**
-       * ### Ячейка родительского окна
-       * [dhtmlXCell](http://docs.dhtmlx.com/cell__index.html), в которой размещен редактор
-       *
-       * @property _pwnd
-       * @type dhtmlXCellObject
-       * @final
-       * @private
-       */
-      _pwnd: {
-        get: function () {
-          return pwnd;
-        }
-      },
-
-      /**
-       * ### Разбивка на канвас и аккордион
-       *
-       * @property _layout
-       * @type dhtmlXLayoutObject
-       * @final
-       * @private
-       */
-      _layout: {
-        value: pwnd.attachLayout({
-          pattern: "2U",
-          cells: [{
-            id: "a",
-            text: "Изделие",
-            header: false
-          }, {
-            id: "b",
-            text: "Инструменты",
-            collapsed_text: "Инструменты",
-            width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 440 : 260
-          }],
-          offsets: { top: 28, right: 0, bottom: 0, left: 0}
-        })
-      },
-
-      /**
-       * ### Контейнер канваса
-       *
-       * @property _wrapper
-       * @type HTMLDivElement
-       * @final
-       * @private
-       */
-      _wrapper: {
-        value: document.createElement('div')
+    /**
+     * ### Ячейка родительского окна, в которой размещен редактор
+     *
+     * @property _pwnd
+     * @type dhtmlXCellObject
+     * @final
+     * @private
+     */
+    this.__define('_pwnd', {
+      get: function () {
+        return pwnd;
       }
-
     });
 
-    _editor._layout.cells("a").attachObject(_editor._wrapper);
-    _editor._dxw.attachViewportTo(_editor._wrapper);
+    /**
+     * Собственный излучатель событий для уменьшения утечек памяти
+     */
+    this.eve = new (Object.getPrototypeOf($p.md.constructor))();
 
-    _editor._wrapper.oncontextmenu = function (event) {
+    /**
+     * ### Разбивка на канвас и аккордион
+     *
+     * @property _layout
+     * @type dhtmlXLayoutObject
+     * @final
+     * @private
+     */
+    this._layout = pwnd.attachLayout({
+      pattern: "2U",
+      cells: [{
+        id: "a",
+        text: "Изделие",
+        header: false
+      }, {
+        id: "b",
+        text: "Инструменты",
+        collapsed_text: "Инструменты",
+        width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 440 : 260
+      }],
+      offsets: { top: 28, right: 0, bottom: 0, left: 0}
+    })
+
+    /**
+     * ### Контейнер канваса
+     *
+     * @property _wrapper
+     * @type HTMLDivElement
+     * @final
+     * @private
+     */
+    this._wrapper = document.createElement('div');
+
+    this._layout.cells("a").attachObject(_editor._wrapper);
+    this._dxw.attachViewportTo(_editor._wrapper);
+
+    this._wrapper.oncontextmenu = function (event) {
       return $p.iface.cancel_bubble(event, true);
     };
 
 
-    _editor._drawSelectionBounds = 0;
+    this._drawSelectionBounds = 0;
 
     /**
      * ### Буфер обмена
@@ -123,7 +119,7 @@ class Editor extends paper.PaperScope {
      * @final
      * @private
      */
-    _editor._clipbrd = new Clipbrd(this);
+    this._clipbrd = new Clipbrd(this);
 
     /**
      * ### Клавиатура
@@ -135,7 +131,7 @@ class Editor extends paper.PaperScope {
      * @final
      * @private
      */
-    _editor._keybrd = new Keybrd(this);
+    this._keybrd = new Keybrd(this);
 
     /**
      * ### История редактирования
@@ -147,7 +143,7 @@ class Editor extends paper.PaperScope {
      * @final
      * @private
      */
-    _editor._undo = new UndoRedo(this);
+    this._undo = new UndoRedo(this);
 
     /**
      * ### Aккордион со свойствами
@@ -156,7 +152,7 @@ class Editor extends paper.PaperScope {
      * @type EditorAccordion
      * @private
      */
-    _editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
+    this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
 
     /**
      * ### Панель выбора инструментов рисовалки
@@ -165,7 +161,7 @@ class Editor extends paper.PaperScope {
      * @type OTooolBar
      * @private
      */
-    _editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '320px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '320px',
       image_path: 'dist/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -195,7 +191,7 @@ class Editor extends paper.PaperScope {
      * @type OTooolBar
      * @private
      */
-    _editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
+    this.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
       image_path: 'dist/imgs/',
       buttons: [
 
@@ -203,7 +199,7 @@ class Editor extends paper.PaperScope {
         {name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
         {name: 'sep_0', text: '', float: 'left'},
-        {name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
+        {name: 'stamp',  css: 'tb_stamp', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
 
         {name: 'sep_1', text: '', float: 'left'},
         {name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
@@ -300,24 +296,30 @@ class Editor extends paper.PaperScope {
         }
       }});
 
-    _editor._layout.base.style.backgroundColor = "#f5f5f5";
+    this.tb_top.buttons.paste.classList.add("disabledbutton");
+    this.tb_top.buttons.paste_prop.classList.add("disabledbutton");
+
+    this._layout.base.style.backgroundColor = "#f5f5f5";
     //_editor._layout.base.parentNode.parentNode.style.top = "0px";
-    _editor.tb_top.cell.style.background = "transparent";
-    _editor.tb_top.cell.style.boxShadow = "none";
+    this.tb_top.cell.style.background = "transparent";
+    this.tb_top.cell.style.boxShadow = "none";
 
 
-    // Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
-    $p.eve.attachEvent("characteristic_saved", (scheme, attr) => {
-      if(scheme == _editor.project && attr.close && pwnd._on_close)
-        setTimeout(pwnd._on_close);
-    });
+    this._evts = [
+      // Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
+      $p.eve.attachEvent("characteristic_saved", (scheme, attr) => {
+        if(scheme == _editor.project && attr.close && pwnd._on_close)
+          setTimeout(pwnd._on_close);
+      }),
 
-    // При изменениях изделия обновляем текст заголовка окна
-    $p.eve.attachEvent("scheme_changed", (scheme) => {
-      if(scheme == _editor.project && attr.set_text && scheme._calc_order_row){
+      // При изменениях изделия обновляем текст заголовка окна
+      $p.eve.attachEvent("scheme_changed", (scheme) => {
+        if(scheme == _editor.project && attr.set_text && scheme._calc_order_row){
           attr.set_text(scheme.ox.prod_name(true) + " " + (scheme.ox._modified ? " *" : ""));
-      }
-    });
+        }
+      }),
+
+    ];
 
     // Обработчик события при удалении строки некой табчасти продукции
     this.on_del_row = this.on_del_row.bind(this);
@@ -399,6 +401,11 @@ class Editor extends paper.PaperScope {
 
     // Создаём экземпляр проекта Scheme
     this.create_scheme();
+
+    if(handlers){
+      this.handlers = handlers;
+      handlers.props.match.params.ref && this.open(handlers.props.match.params.ref);
+    }
 
   }
 
@@ -1228,7 +1235,13 @@ class Editor extends paper.PaperScope {
    * @for Editor
    */
   unload() {
-    const {tool, tools, tb_left, tb_top, _acc} = this;
+    const {tool, tools, tb_left, tb_top, _acc, _pwnd, _evts, eve} = this;
+
+    this._evts.forEach((eid) => $p.eve.detachEvent(eid));
+    this._evts.length = 0;
+
+    eve.removeAllListeners();
+
     if(tool && tool._callbacks.deactivate.length){
       tool._callbacks.deactivate[0].call(tool);
     }
@@ -1241,6 +1254,8 @@ class Editor extends paper.PaperScope {
     tb_left.unload();
     tb_top.unload();
     _acc.unload();
+    _pwnd.detachAllEvents();
+    _pwnd.detachObject(true);
   }
 
 };

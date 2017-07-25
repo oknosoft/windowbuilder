@@ -118,7 +118,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           // картинка заказа в статусбаре
           elmnts.status_bar = wnd.attachStatusBar();
           elmnts.svgs = new $p.iface.OSvgs(wnd, elmnts.status_bar,
-            (ref, dbl) => dbl && $p.iface.set_hash("cat.characteristics", ref, "builder"));
+            (ref, dbl) => {
+              //dbl && $p.iface.set_hash("cat.characteristics", ref, "builder")
+              dbl && handlers.handleNavigate(`/builder/${ref}`);
+            });
           elmnts.grid.attachEvent("onRowSelect", (rid) => elmnts.svgs.reload(rid));
 
           resolve(wnd);

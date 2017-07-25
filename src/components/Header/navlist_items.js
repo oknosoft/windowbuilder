@@ -17,10 +17,7 @@ import IconPuzzle from 'material-ui-icons/Extension';
 import IconFileDownload from 'material-ui-icons/FileDownload';
 import IconFileShuffle from 'material-ui-icons/Shuffle';
 
-function state_filter(id) {
-  const {handleIfaceState, handleClose, handleNavigate} = this.props;
-  handleClose();
-  handleNavigate('/');
+export function set_state_and_title(id, handleIfaceState) {
   handleIfaceState({
     component: 'CalcOrderList',
     name: 'state_filter',
@@ -36,6 +33,13 @@ function state_filter(id) {
       break;
     }
   }
+}
+
+function state_filter(id) {
+  const {handleIfaceState, handleClose, handleNavigate} = this.props;
+  handleClose();
+  handleNavigate('/');
+  set_state_and_title(id, handleIfaceState)
 }
 
 const items = [

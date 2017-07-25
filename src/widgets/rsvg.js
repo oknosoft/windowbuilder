@@ -158,38 +158,29 @@ class OSvgs {
 
         if(stack.length){
 
-          // Получаем табчасть заказа
+          // Получаем идентификаторы продукций с вложениями
           let _obj = stack.pop();
-
-          if (typeof _obj == "string"){
-            _obj = $p.doc.calc_order.pouch_db.get("doc.calc_order|" + _obj);
-          }
-          else{
-            _obj = Promise.resolve({production: _obj.production._obj});
-          }
-
-          _obj.then((res) => {
-
-            // Для продукций заказа получаем вложения
-            const aatt = [];
-            if(res.production)
-              res.production.forEach((row) => {
-                if(!$p.utils.is_empty_guid(row.characteristic)){
-                  aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg")
-                    .then((att) => ({ref: row.characteristic, att: att}))
-                    .catch((err) => {}));
-                }
-              });
-            _obj = null;
-            return Promise.all(aatt);
+          const db = $p.adapters.pouch.local.doc;
+          db.query('svgs', {
+            key: typeof _obj == "string" ? _obj : _obj.ref
           })
+            .then((res) => {
+              // Для продукций заказа получаем вложения
+              const aatt = [];
+              for(const {id} of res.rows){
+                aatt.push(db.getAttachment(id, "svg")
+                  .then((att) => ({ref: id.substr(20), att: att}))
+                  .catch((err) => {}));
+              };
+              return Promise.all(aatt);
+            })
             .then((res) => {
               // Извлекаем из блоба svg-текст эскизов
               const aatt = [];
-              res.forEach((row) => {
-                if(row && row.att instanceof Blob && row.att.size)
-                  aatt.push($p.utils.blob_as_text(row.att)
-                    .then((svg) => ({ref: row.ref, svg})));
+              res.forEach(({ref, att}) => {
+                if(att instanceof Blob && att.size)
+                  aatt.push($p.utils.blob_as_text(att)
+                    .then((svg) => ({ref, svg})));
               });
               return Promise.all(aatt);
             })

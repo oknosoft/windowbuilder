@@ -14,6 +14,7 @@ class SchemeLayers {
 
     this.observer = this.observer.bind(this);
 
+    this._cell = cell;
     this.layout = cell.attachLayout({
       pattern: "2E",
       cells: [
@@ -51,27 +52,27 @@ class SchemeLayers {
       }
     });
 
-    $p.eve.attachEvent("layer_activated", (contour) => {
-      if(contour && contour.cnstr && contour.cnstr != this.tree.getSelectedId()){
-        if(this.tree.items[contour.cnstr]){
-          this.tree.selectItem(contour.cnstr);
-          set_text(this.layer_text(contour));
+    this._evts = [
+
+      $p.eve.attachEvent("layer_activated", (contour) => {
+        if(contour && contour.cnstr && contour.cnstr != this.tree.getSelectedId()){
+          if(this.tree.items[contour.cnstr]){
+            this.tree.selectItem(contour.cnstr);
+            set_text(this.layer_text(contour));
+          }
         }
-      }
-    });
+      }),
 
-    // начинаем следить за изменениями размеров при перерисовке контуров
-    $p.eve.attachEvent("contour_redrawed", (contour, bounds) => {
+      // начинаем следить за изменениями размеров при перерисовке контуров
+      $p.eve.attachEvent("contour_redrawed", (contour, bounds) => {
+        const text = this.layer_text(contour, bounds);
+        this.tree.setItemText(contour.cnstr, text);
+        if(contour.project.activeLayer == contour){
+          set_text(text);
+        };
+      }),
 
-      const text = this.layer_text(contour, bounds);
-
-      this.tree.setItemText(contour.cnstr, text);
-
-      if(contour.project.activeLayer == contour){
-        set_text(text);
-      }
-
-    });
+    ];
 
     this.layout.cells("a").setMinHeight(180);
     this.layout.cells("b").setMinHeight(180);
@@ -154,6 +155,9 @@ class SchemeLayers {
 
   unload() {
     Object.unobserve(paper.project._noti, this.observer);
+    this._evts.forEach((eid) => $p.eve.detachEvent(eid));
+    this._evts.length = 0;
+    this._cell.detachObject(true);
   }
 
 }
@@ -161,13 +165,11 @@ class SchemeLayers {
 class StvProps {
 
   constructor(cell) {
-
     this.layout = cell;
-
     this._evts = [
       $p.eve.attachEvent("layer_activated", this.attache.bind(this)),
       $p.eve.attachEvent("furn_changed", this.reload.bind(this)),
-      $p.eve.attachEvent("refresh_links", this.on_refresh_links.bind(this))
+      $p.eve.attachEvent("refresh_links", this.on_refresh_links.bind(this)),
     ];
 
   }
@@ -297,7 +299,8 @@ class StvProps {
 
   unload() {
     this._evts.forEach((eid) => $p.eve.detachEvent(eid));
-    this.layout.unload();
+    this._evts.length = 0;
+    this.layout.detachObject(true);
   }
 
 }
@@ -309,13 +312,28 @@ class SchemeProps {
     this.layout = cell;
     this.reflect_changes = this.reflect_changes.bind(this);
 
-    // начинаем следить за изменениями размеров при перерисовке контуров
-    $p.eve.attachEvent("contour_redrawed", () => {
-      if(this._obj){
-        this._reflect_id && clearTimeout(this._reflect_id);
-        this._reflect_id = setTimeout(this.reflect_changes, 100);
-      }
-    });
+    this._evts = [
+
+      // начинаем следить за изменениями размеров при перерисовке контуров
+      $p.eve.attachEvent("contour_redrawed", () => {
+        const {_obj, _reflect_id} = this;
+        if(_obj){
+          _reflect_id && clearTimeout(_reflect_id);
+          this._reflect_id = setTimeout(this.reflect_changes, 100);
+        }
+      }),
+
+      // при готовности снапшота, обновляем суммы и цены
+      $p.eve.attachEvent("scheme_snapshot", (scheme, attr) => {
+        const {_obj, _reflect_id} = this;
+        const {_calc_order_row} = scheme._attr;
+        if(_obj && scheme == paper.project && !attr.clipboard && _calc_order_row){
+          ["price_internal","amount_internal","price","amount"].forEach((fld) => {
+            _obj[fld] = _calc_order_row[fld];
+          });
+        }
+      })
+    ];
 
   }
 
@@ -379,14 +397,6 @@ class SchemeProps {
       }
     });
 
-    // при готовности снапшота, обновляем суммы и цены
-    this._on_snapshot = $p.eve.attachEvent("scheme_snapshot", (scheme, attr) => {
-      if(scheme == paper.project && !attr.clipboard && scheme._attr._calc_order_row){
-        ["price_internal","amount_internal","price","amount"].forEach((fld) => {
-          _obj[fld] = scheme._attr._calc_order_row[fld];
-        });
-      }
-    });
   }
 
   reload() {
@@ -394,8 +404,9 @@ class SchemeProps {
   }
 
   unload() {
-    $p.eve.detachEvent(this._on_snapshot);
-    this.layout.unload();
+    this._evts.forEach((eid) => $p.eve.detachEvent(eid));
+    this._evts.length = 0;
+    this.layout.detachObject(true);
     this._obj = null;
   }
 
@@ -405,6 +416,7 @@ class EditorAccordion {
 
   constructor(_editor, cell_acc) {
 
+    this._cell = cell_acc;
     const tabs = [
       {
         id: 'lay',
@@ -426,11 +438,6 @@ class EditorAccordion {
         id: "prod",
         text: '<i class="fa fa-picture-o fa-fw"></i>',
         title: 'Свойства изделия',
-      },
-      {
-        id: "log",
-        text: '<i class="fa fa-clock-o fa-fw"></i>',
-        title: 'Журнал событий',
       },
     ];
     this.tabbar = cell_acc.attachTabbar({
@@ -664,10 +671,10 @@ class EditorAccordion {
     /**
      * журнал событий
      */
-    this.log = $p.ireg.log.form_list(this.tabbar.cells('log'), {
-      hide_header: true,
-      hide_text: true
-    });
+    // this.log = $p.ireg.log.form_list(this.tabbar.cells('log'), {
+    //   hide_header: true,
+    //   hide_text: true
+    // });
 
   }
 
@@ -683,6 +690,7 @@ class EditorAccordion {
     this.tree_layers.unload();
     this.props.unload();
     this.stv.unload();
+    this._cell.detachObject(true);
   }
 
 };

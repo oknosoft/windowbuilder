@@ -87,7 +87,7 @@
 					wnd.elmnts.discount_pop.attachEvent("onShow", show_discount);
 
           // в зависимости от статуса
-          set_editable();
+          set_editable(o, wnd);
 
 				});
 
@@ -103,8 +103,8 @@
 		attr.draw_pg_header = (o, wnd) => {
 
 			function layout_resize_finish() {
-				setTimeout(function () {
-					if(wnd.elmnts.layout_header.setSizes){
+				setTimeout(() => {
+					if(wnd.elmnts && wnd.elmnts.layout_header && wnd.elmnts.layout_header.setSizes){
 						wnd.elmnts.layout_header.setSizes();
 						wnd.elmnts.pg_left.objBox.style.width = "100%";
 						wnd.elmnts.pg_right.objBox.style.width = "100%";
@@ -178,14 +178,7 @@
 			wnd.elmnts.cell_note = wnd.elmnts.layout_header.cells('c');
 			wnd.elmnts.cell_note.hideHeader();
 			wnd.elmnts.cell_note.setHeight(100);
-			wnd.elmnts.cell_note.attachHTMLString("<textarea class='textarea_editor'>" + o.note + "</textarea>");
-			// wnd.elmnts.note_editor = wnd.elmnts.cell_note.attachEditor({
-			// 	content: o.note,
-			// 	onFocusChanged: function(name, ev){
-			// 		if(!wnd.elmnts.ro && name == "blur")
-			// 			o.note = this.getContent().replace(/&nbsp;/g, " ").replace(/<.*?>/g, "").replace(/&.{2,6};/g, "");
-			// 	}
-			// });
+			wnd.elmnts.cell_note.attachHTMLString("<textarea placeholder='Комментарий к заказу' class='textarea_editor'>" + o.note + "</textarea>");
 
 		};
 
@@ -369,7 +362,7 @@
 							wnd.close();
 						else{
 							wnd.set_text();
-							set_editable();
+							set_editable(o, wnd);
 						}
 
 					})
@@ -412,34 +405,34 @@
 		function frm_close(){
 
 			// выгружаем из памяти всплывающие окна скидки и связанных файлов
-			['vault','vault_pop','discount','discount_pop','svgs'].forEach((elm) => {
+			['vault','vault_pop','discount','discount_pop','svgs', 'layout_header'].forEach((elm) => {
 				wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
 			});
 
 			evts.forEach((id) => $p.eve.detachEvent(id));
 
-			typeof attr_on_close == "function" && attr_on_close();
+			typeof attr_on_close == "function" && attr_on_close(o);
 
 			return true;
 		}
 
 		// устанавливает видимость и доступность
-		function set_editable(){
+		function set_editable(o, wnd){
 
 		  const {pg_left, pg_right, frm_toolbar, grids, tabs} = wnd.elmnts;
 
       pg_right.cells("vat_consider", 1).setDisabled(true);
       pg_right.cells("vat_included", 1).setDisabled(true);
 
-			wnd.elmnts.ro = o.is_read_only;
+			const ro = wnd.elmnts.ro = o.is_read_only;
 
 			const retrieve_enabed = !o._deleted &&
 				(o.obj_delivery_state == $p.enm.obj_delivery_states.Отправлен || o.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен);
 
-      grids.production.setEditable(!wnd.elmnts.ro);
-      grids.planning.setEditable(!wnd.elmnts.ro);
-      pg_left.setEditable(!wnd.elmnts.ro);
-      pg_right.setEditable(!wnd.elmnts.ro);
+      grids.production.setEditable(!ro);
+      grids.planning.setEditable(!ro);
+      pg_left.setEditable(!ro);
+      pg_right.setEditable(!ro);
 
 			// гасим кнопки проведения, если недоступна роль
 			if(!$p.current_user.role_available("СогласованиеРасчетовЗаказов")){
@@ -453,7 +446,7 @@
 			}
 
 			// кнопки записи и отправки гасим в зависимости от статуса
-			if(wnd.elmnts.ro){
+			if(ro){
         frm_toolbar.disableItem("btn_sent");
         frm_toolbar.disableItem("btn_save");
         let toolbar;
@@ -549,7 +542,10 @@
 
 			if(create_new){
         o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
-          .then((row) => $p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder"));
+          .then((row) => {
+            //$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder")
+            handlers.handleNavigate(`/builder/${row.characteristic.ref}`);
+          });
 			}
 			else{
 			  const selId = production_get_sel_index();
@@ -563,11 +559,13 @@
             else if(row.characteristic.coordinates.count() == 0){
               // возможно, это заготовка - проверим номенклатуру системы
               if(row.characteristic.leading_product.calc_order == calc_order){
-                $p.iface.set_hash("cat.characteristics", row.characteristic.leading_product.ref, "builder");
+                //$p.iface.set_hash("cat.characteristics", row.characteristic.leading_product.ref, "builder");
+                handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}`);
               }
             }
             else{
-              $p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+              //$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
+              handlers.handleNavigate(`/builder/${row.characteristic.ref}`);
             }
           }
         }

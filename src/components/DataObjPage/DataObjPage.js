@@ -19,9 +19,20 @@ class DataObjPage extends DhtmlxCell {
           name: 'title',
           value: title,
         });
-      }
+      },
+      on_close(o) {
+        if(o && o._obj){
+          const {ref, state} = o._obj;
+          setTimeout(() => handlers.handleNavigate(`/?ref=${ref}&state_filter=${state || 'draft'}`));
+        }
+        else{
+          setTimeout(() => handlers.handleNavigate(`/`));
+        }
+      },
     }, handlers);
   }
+
+
 
   componentWillUnmount() {
     //$p.off('hash_route', this.hash_route);
