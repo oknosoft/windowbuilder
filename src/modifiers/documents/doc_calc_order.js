@@ -518,7 +518,7 @@ $p.doc.calc_order.load_templates = async function () {
       res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
       return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-        .then(() => $p.load_script("/dist/qrcode.min.js", "script"))
+        .then(() => $p.load_script("/lib/qrcodejs/qrcode.min.js", "script"))
         .then(() => {
 
           const svg = document.createElement("SVG");
