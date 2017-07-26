@@ -731,6 +731,7 @@ class ProductsBuilding {
             .then(() => {
               $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
               delete scheme._attr._saving;
+              ox.calc_order.characteristic_saved(scheme, attr);
               $p.eve.callEvent("characteristic_saved", [scheme, attr]);
 
               // console.timeEnd("save");

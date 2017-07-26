@@ -17,13 +17,7 @@ $p.md.once('predefined_elmnts_inited', () => $p.cat.characteristics.pouch_load_v
 $p.cat.characteristics.on({
 
 	// перед записью надо пересчитать наименование и рассчитать итоги
-	before_save: function (attr) {
-
-    let obj = this;
-    if(attr instanceof $p.CatCharacteristics){
-      obj = attr;
-      attr = arguments[1];
-    }
+	before_save: function (attr, obj) {
 
 		// уточняем номенклатуру системы
     const {prod_nom, calc_order} = obj;
@@ -50,10 +44,10 @@ $p.cat.characteristics.on({
 	},
 
   // при изменении реквизита
-  value_change: function (attr, _obj) {
+  value_change: function (attr, obj) {
 	  // для вложенных вставок перезаполняем параметры
 	  if(attr.field == 'inset' && attr.tabular_section == 'inserts'){
-      (_obj || this).add_inset_params(attr.value, attr.row.cnstr);
+      (obj || this).add_inset_params(attr.value, attr.row.cnstr);
     }
   }
 

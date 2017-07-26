@@ -6,7 +6,7 @@ import {Switch, Route} from 'react-router';
 import withNavigateAndMeta from './withNavigateAndMeta';
 
 // заставка "загрузка занных"
-import DumbScreen from '../../metadata-ui/DumbLoader/DumbScreen';
+import DumbScreen from '../DumbLoader/DumbScreen';
 
 import Header from '../Header';
 import AboutPage from '../About';
@@ -49,8 +49,8 @@ class AppRoot extends React.Component {
       <div>
         <Header />
         {
-          (!props.data_loaded && props.fetch_local) ?
-            <DumbScreen title="Загрузка данных из IndexedDB..." page={props.page} />
+          (!props.path_log_in && !props.doc_ram_loaded) ?
+            <DumbScreen title="Загрузка данных из IndexedDB..." page={props.page} top={92} />
             :
             <Switch>
               <Route exact path="/" component={DhtmlxRoot}/>

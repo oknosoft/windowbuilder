@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import PropTypes from 'prop-types';
+// import React, {Component} from 'react';
+// import PropTypes from 'prop-types';
 import DhtmlxCell from '../../metadata-ui/DhtmlxCell';
 import WindowSizer from '../../metadata-ui/WindowSize';
 import withIface from '../../redux/withIface';
@@ -11,7 +11,7 @@ class Builder extends DhtmlxCell {
     const {cell, handlers} = this;
     this._editor = new $p.Editor(cell, {
       set_text(title) {
-        handlers.handleIfaceState({
+        handlers.props.title != title && handlers.handleIfaceState({
           component: '',
           name: 'title',
           value: title,
@@ -22,8 +22,9 @@ class Builder extends DhtmlxCell {
 
   componentWillUnmount() {
     //$p.off('hash_route', this.hash_route);
-    if(this._editor && this._editor.unload){
-      this._editor.unload();
+    const {cell, _editor} = this;
+    cell.detachObject(true);
+    if(_editor){
       delete this._editor;
     }
     super.componentWillUnmount();

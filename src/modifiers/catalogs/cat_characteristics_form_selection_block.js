@@ -37,7 +37,7 @@
 
 				// виртуальные метаданные для поля фильтра по заказу
 				_metadata: {
-					value : function(){
+					value : function(f){
 
 						// возвращаем типовые метаданные зарактеристики, но могли бы вернуть изменённый клон
 						//var calc_order = $p.cat.characteristics.metadata().fields.calc_order._clone();
@@ -61,7 +61,7 @@
 						// 		}]}
 						// ];
 
-						return {
+						return f ? _meta.fields.calc_order : {
 							fields: {
 								calc_order: _meta.fields.calc_order
 							}
@@ -73,6 +73,7 @@
 				_manager: {
 					get: function () {
 						return {
+              value_mgr: $p.md.value_mgr,
 							class_name: "dp.fake"
 						};
 					}

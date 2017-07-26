@@ -106,7 +106,6 @@ class Editor extends paper.PaperScope {
       return $p.iface.cancel_bubble(event, true);
     };
 
-
     this._drawSelectionBounds = 0;
 
     /**
@@ -225,11 +224,14 @@ class Editor extends paper.PaperScope {
             break;
 
           case 'close':
-            if(pwnd._on_close){
-              pwnd._on_close();
+            const {calc_order} = _editor.project.ox || {};
+            _editor.unload();
+            if(calc_order){
+              handlers.handleNavigate(`/${calc_order.class_name}/${calc_order.ref}`);
             }
-            _editor._acc.tree_layers.layout.cells('b').detachObject(true);
-            _editor.select_tool('select_node');
+            else{
+              handlers.handleNavigate(`/`);
+            }
             break;
 
           case 'calck':
@@ -268,10 +270,7 @@ class Editor extends paper.PaperScope {
             break;
 
           case 'open_spec':
-            _editor.project.ox.form_obj()
-              .then(function (w) {
-                w.wnd.maximize();
-              });
+            _editor.project.ox.form_obj();
             break;
 
           case 'square':
@@ -470,7 +469,7 @@ class Editor extends paper.PaperScope {
      * Объект для реализации функций масштабирования
      * @type StableZoom
      */
-    var pan_zoom = new function StableZoom(){
+    new function StableZoom(){
 
       function changeZoom(oldZoom, delta) {
         const factor = 1.05;
@@ -1235,7 +1234,7 @@ class Editor extends paper.PaperScope {
    * @for Editor
    */
   unload() {
-    const {tool, tools, tb_left, tb_top, _acc, _pwnd, _evts, eve} = this;
+    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, _evts, eve, project} = this;
 
     this._evts.forEach((eid) => $p.eve.detachEvent(eid));
     this._evts.length = 0;
@@ -1245,17 +1244,22 @@ class Editor extends paper.PaperScope {
     if(tool && tool._callbacks.deactivate.length){
       tool._callbacks.deactivate[0].call(tool);
     }
-    for(let t in tools){
-      if(tools[t].remove){
-        tools[t].remove();
+    for(const fld in tools){
+      if(tools[fld].remove){
+        tools[fld].remove();
       }
-      tools[t] = null;
+      tools[fld] = null;
     }
+    _acc.unload();
+    _undo.unload();
+    project.unload();
     tb_left.unload();
     tb_top.unload();
-    _acc.unload();
     _pwnd.detachAllEvents();
     _pwnd.detachObject(true);
+    for(const fld in this){
+      delete this[fld];
+    }
   }
 
 };

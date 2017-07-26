@@ -15,16 +15,10 @@ $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._
 $p.doc.calc_order.on({
 
 	// после создания надо заполнить реквизиты по умолчанию: контрагент, организация, договор
-	after_create: function (attr) {
+	after_create: function (attr, obj) {
 
     const {enm, cat, current_user, DocCalc_order} = $p;
 	  const {acl_objs} = current_user;
-
-    let obj = this;
-	  if(attr instanceof DocCalc_order){
-      obj = attr;
-      attr = arguments[1];
-    }
 
 		//Организация
 		acl_objs.find_rows({by_default: true, type: cat.organizations.class_name}, (row) => {
@@ -56,15 +50,9 @@ $p.doc.calc_order.on({
 	},
 
 	// перед записью надо присвоить номер для нового и рассчитать итоги
-	before_save: function (attr) {
+	before_save: function (attr, obj) {
 
     const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
-
-    let obj = this;
-    if(attr instanceof $p.DocCalc_order){
-      obj = attr;
-      attr = arguments[1];
-    }
 
 		let doc_amount = 0,
       amount_internal = 0,
@@ -172,19 +160,17 @@ $p.doc.calc_order.on({
 	},
 
 	// при изменении реквизита
-	value_change: function (attr, _obj) {
-
-    const o = _obj || this;
+	value_change: function (attr, obj) {
 
 		// реквизиты шапки
 		if(attr.field == "organization"){
-      o.new_number_doc();
-			if(o.contract.organization != attr.value){
-        o.contract = $p.cat.contracts.by_partner_and_org(o.partner, attr.value);
+      obj.new_number_doc();
+			if(obj.contract.organization != attr.value){
+        obj.contract = $p.cat.contracts.by_partner_and_org(obj.partner, attr.value);
       }
 		}
-		else if(attr.field == "partner" && o.contract.owner != attr.value){
-      o.contract = $p.cat.contracts.by_partner_and_org(attr.value, o.organization);
+		else if(attr.field == "partner" && obj.contract.owner != attr.value){
+      obj.contract = $p.cat.contracts.by_partner_and_org(attr.value, obj.organization);
 
 		}
     // табчасть продукции
@@ -228,7 +214,7 @@ $p.doc.calc_order.on({
 				attr.row.amount_internal = (attr.row.price_internal * ((100 - attr.row.discount_percent_internal)/100) * attr.row.quantity).round(2);
 
 				// ставка и сумма НДС
-				if(o.vat_consider){
+				if(obj.vat_consider){
           const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
 					attr.row.vat_rate = attr.row.nom.vat_rate.empty() ? НДС18 : attr.row.nom.vat_rate;
 					switch (attr.row.vat_rate){
@@ -249,7 +235,7 @@ $p.doc.calc_order.on({
 							attr.row.vat_amount = 0;
 							break;
 					}
-					if(!o.vat_included){
+					if(!obj.vat_included){
 						attr.row.amount = (attr.row.amount + attr.row.vat_amount).round(2);
 					}
 				}
@@ -258,8 +244,8 @@ $p.doc.calc_order.on({
 					attr.row.vat_amount = 0;
 				}
 
-        o.doc_amount = o.production.aggregate([], ["amount"]).round(2);
-        o.amount_internal = o.production.aggregate([], ["amount_internal"]).round(2);
+        obj.doc_amount = obj.production.aggregate([], ["amount"]).round(2);
+        obj.amount_internal = obj.production.aggregate([], ["amount_internal"]).round(2);
 
 				// TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation
 
@@ -532,14 +518,7 @@ $p.doc.calc_order.load_templates = async function () {
       res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
       return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-        .then(() => {
-
-          if(!window.QRCode)
-            return new Promise((resolve, reject) => {
-              $p.load_script("lib/qrcodejs/qrcode.js", "script", resolve);
-            });
-
-        })
+        .then(() => $p.load_script("/dist/qrcode.min.js", "script"))
         .then(() => {
 
           const svg = document.createElement("SVG");
@@ -703,6 +682,45 @@ $p.doc.calc_order.load_templates = async function () {
       });
     }
 
+    /**
+     * Обработчик события _ЗаписанаХарактеристикаПостроителя_
+     * @param scheme
+     * @param sattr
+     */
+    characteristic_saved(scheme, sattr) {
+      const {ox, _dp} = scheme;
+      const row = ox.calc_order_row;
+
+      if(!row || ox.calc_order != this){
+        return;
+      }
+
+      //nom,characteristic,note,quantity,unit,qty,len,width,s,first_cost,marginality,price,discount_percent,discount_percent_internal,
+      //discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,ordn,changed
+
+      row.nom = ox.owner;
+      row.note = _dp.note;
+      row.quantity = _dp.quantity || 1;
+      row.len = ox.x;
+      row.width = ox.y;
+      row.s = ox.s;
+      row.discount_percent = _dp.discount_percent;
+      row.discount_percent_internal = _dp.discount_percent_internal;
+      if(row.unit.owner != row.nom){
+        row.unit = row.nom.storage_unit;
+      }
+    }
+
+    /**
+     * Создаёт строку заказа с уникальной характеристикой
+     * @param row_spec
+     * @param elm
+     * @param len_angl
+     * @param params
+     * @param create
+     * @param grid
+     * @return {Promise.<TResult>}
+     */
     create_product_row({row_spec, elm, len_angl, params, create, grid}) {
 
       const row = this.production.add({

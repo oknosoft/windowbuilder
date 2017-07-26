@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import PropTypes from 'prop-types';
+// import React, {Component} from 'react';
+// import PropTypes from 'prop-types';
 import DhtmlxCell from '../../metadata-ui/DhtmlxCell';
 import WindowSizer from '../../metadata-ui/WindowSize';
 import withIface from '../../redux/withIface';
@@ -14,7 +14,7 @@ class DataObjPage extends DhtmlxCell {
       bind_pwnd: true,
       hide_header: true,
       set_text(title) {
-        handlers.handleIfaceState({
+        handlers.props.title != title && handlers.handleIfaceState({
           component: '',
           name: 'title',
           value: title,
@@ -36,6 +36,8 @@ class DataObjPage extends DhtmlxCell {
 
   componentWillUnmount() {
     //$p.off('hash_route', this.hash_route);
+    const {cell} = this;
+    cell && cell.close && cell.close();
     super.componentWillUnmount();
   }
 

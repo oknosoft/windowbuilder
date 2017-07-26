@@ -12,9 +12,13 @@ class SchemeLayers {
 
   constructor(cell, set_text) {
 
-    this.observer = this.observer.bind(this);
+    this._observer = this.observer.bind(this);
+    this._layer_activated = this.layer_activated.bind(this);
+    this._contour_redrawed = this.contour_redrawed.bind(this);
 
     this._cell = cell;
+    this._set_text = set_text;
+
     this.layout = cell.attachLayout({
       pattern: "2E",
       cells: [
@@ -52,32 +56,35 @@ class SchemeLayers {
       }
     });
 
-    this._evts = [
-
-      $p.eve.attachEvent("layer_activated", (contour) => {
-        if(contour && contour.cnstr && contour.cnstr != this.tree.getSelectedId()){
-          if(this.tree.items[contour.cnstr]){
-            this.tree.selectItem(contour.cnstr);
-            set_text(this.layer_text(contour));
-          }
-        }
-      }),
-
-      // начинаем следить за изменениями размеров при перерисовке контуров
-      $p.eve.attachEvent("contour_redrawed", (contour, bounds) => {
-        const text = this.layer_text(contour, bounds);
-        this.tree.setItemText(contour.cnstr, text);
-        if(contour.project.activeLayer == contour){
-          set_text(text);
-        };
-      }),
-
-    ];
+    // начинаем следить за изменениями размеров при перерисовке контуров
+    $p.eve.on({
+      layer_activated: this._layer_activated,
+      contour_redrawed: this._contour_redrawed,
+    });
 
     this.layout.cells("a").setMinHeight(180);
     this.layout.cells("b").setMinHeight(180);
     this.layout.cells("a").setHeight(200);
 
+  }
+
+  layer_activated(contour) {
+    if(contour && contour.cnstr && this.tree && this.tree.getSelectedId && contour.cnstr != this.tree.getSelectedId()){
+      if(this.tree.items[contour.cnstr]){
+        this.tree.selectItem(contour.cnstr);
+        this._set_text(this.layer_text(contour));
+      }
+    };
+  }
+
+  contour_redrawed(contour, bounds) {
+    if(this.tree && this.tree.setItemText){
+      const text = this.layer_text(contour, bounds);
+      this.tree.setItemText(contour.cnstr, text);
+      if(contour.project.activeLayer == contour){
+        this._set_text(text);
+      };
+    }
   }
 
   layer_text(layer, bounds){
@@ -95,12 +102,10 @@ class SchemeLayers {
   }
 
   observer(changes) {
-
     let synced;
-
     changes.forEach((change) => {
 
-      if ("constructions" == change.tabular){
+      if (!synced && "constructions" == change.tabular && this.tree && this.tree.clearAll){
 
         synced = true;
 
@@ -150,14 +155,18 @@ class SchemeLayers {
   }
 
   attache() {
-    Object.observe(paper.project._noti, this.observer, ["rows"]);
+    Object.observe(paper.project._noti, this._observer, ["rows"]);
   }
 
   unload() {
-    Object.unobserve(paper.project._noti, this.observer);
-    this._evts.forEach((eid) => $p.eve.detachEvent(eid));
-    this._evts.length = 0;
+    Object.unobserve(paper.project._noti, this._observer);
+    $p.eve.off('layer_activated', this._layer_activated);
+    $p.eve.off('contour_redrawed', this._contour_redrawed);
+    this.layout.cells("a").detachObject(true);
     this._cell.detachObject(true);
+    for(const fld in this){
+      delete this[fld];
+    }
   }
 
 }
@@ -175,6 +184,10 @@ class StvProps {
   }
 
   attache(obj) {
+
+    if(!this.layout || !this.layout.attachHeadFields){
+      return;
+    }
 
     if(!obj || !obj.cnstr || (this._grid && this._grid._obj === obj)){
       return;
@@ -210,7 +223,7 @@ class StvProps {
     }
 
     // прячем параметры фурнитуры во внешних слоях
-    if(!obj.parent){
+    if(!obj.parent && this._grid.getAllRowIds){
       const rids = this._grid.getAllRowIds();
       if(rids){
         this._grid.closeItem(rids.split(",")[0]);
@@ -301,6 +314,9 @@ class StvProps {
     this._evts.forEach((eid) => $p.eve.detachEvent(eid));
     this._evts.length = 0;
     this.layout.detachObject(true);
+    for(const fld in this){
+      delete this[fld];
+    }
   }
 
 }
@@ -347,6 +363,10 @@ class SchemeProps {
   }
 
   attache(_obj) {
+
+    if(!this.layout || !this.layout.attachHeadFields){
+      return;
+    }
 
     this._obj = _obj;
 
@@ -691,6 +711,9 @@ class EditorAccordion {
     this.props.unload();
     this.stv.unload();
     this._cell.detachObject(true);
+    for(const fld in this){
+      delete this[fld];
+    }
   }
 
 };

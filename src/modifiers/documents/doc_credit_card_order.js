@@ -11,9 +11,8 @@
 $p.doc.credit_card_order.on({
 
 	// перед записью рассчитываем итоги
-	before_save: function (attr) {
-
-		this.doc_amount = this.payment_details.aggregate([], "amount");
+	before_save: function (attr, obj) {
+    obj.doc_amount = obj.payment_details.aggregate([], "amount");
 
 	},
 

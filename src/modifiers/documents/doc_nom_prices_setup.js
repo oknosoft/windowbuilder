@@ -17,30 +17,26 @@ $p.doc.nom_prices_setup.on({
 	/**
 	 * Обработчик при создании документа
 	 */
-	after_create: function (attr) {
-
+	after_create: function (attr, obj) {
 		//Номер документа
-		return this.new_number_doc();
-
+		return obj.new_number_doc();
 	},
 
 	/**
 	 * Обработчик события "при изменении свойства" в шапке или табличной части при редактировании в форме объекта
 	 * @this {DataObj} - обработчик вызывается в контексте текущего объекта
 	 */
-	add_row: function (attr) {
-
+	add_row: function ({row, tabular_section}, obj) {
 		// установим валюту и тип цен по умолчению при добавлении строки
-		if(attr.tabular_section == "goods"){
-			attr.row.price_type = this.price_type;
-			attr.row.currency = this.price_type.price_currency;
+		if(tabular_section == "goods"){
+			row.price_type = obj.price_type;
+			row.currency = obj.price_type.price_currency;
 		}
-
 	},
 
 	// перед записью проверяем уникальность ключа
-	before_save: function (attr) {
-		var aggr = this.goods.aggregate(["nom","nom_characteristic","price_type"], ["price"], "COUNT", true),
+	before_save: function (attr, obj) {
+		let aggr = obj.goods.aggregate(["nom","nom_characteristic","price_type"], ["price"], "COUNT", true),
 			err;
 		if(aggr.some(function (row) {
 			if(row.price > 1){

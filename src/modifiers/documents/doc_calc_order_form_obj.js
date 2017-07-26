@@ -480,46 +480,13 @@
       }
 		}
 
-		/**
-		 * Обработчик события _ЗаписанаХарактеристикаПостроителя_
-		 * @param scheme
-		 * @param sattr
-		 */
+
 		function characteristic_saved(scheme, sattr){
-
-		  const {ox, _dp} = scheme;
-		  const row = ox.calc_order_row;
-
-			if(!row || ox.calc_order != o){
-        return;
+		  const {ox} = scheme;
+			if(wnd && ox.calc_order_row && ox.calc_order == o){
+        // обновляем эскизы
+        wnd.elmnts.svgs.reload(o);
       }
-
-			//nom,characteristic,note,quantity,unit,qty,len,width,s,first_cost,marginality,price,discount_percent,discount_percent_internal,
-			//discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,ordn,changed
-
-			// т.к. табчасть мы будем перерисовывать в любом случае, отключаем обсерверы
-			ox._silent();
-
-			row.nom = ox.owner;
-			row.note = _dp.note;
-			row.quantity = _dp.quantity || 1;
-			row.len = ox.x;
-			row.width = ox.y;
-			row.s = ox.s;
-			row.discount_percent = _dp.discount_percent;
-			row.discount_percent_internal = _dp.discount_percent_internal;
-			if(row.unit.owner != row.nom){
-        row.unit = row.nom.storage_unit;
-      }
-
-			// обновляем табчасть
-      const {production} = wnd.elmnts.grids;
-			production.refresh_row(row);
-      o.production.find_rows({ordn: ox}, (row) => production.refresh_row(row));
-
-			// обновляем эскизы
-			wnd.elmnts.svgs.reload(o);
-
 		}
 
 		/**

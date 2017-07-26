@@ -10,7 +10,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 const mapStateToProps = (state, props) => ({
-  path_log_in: !!props.location.pathname.match(/\/login$/)
+  path_log_in: !!props.location.pathname.match(/\/(login|about|settings)$/)
 });
 
 

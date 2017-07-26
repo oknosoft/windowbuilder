@@ -623,8 +623,8 @@ class Scheme extends paper.Project {
    */
   unload() {
     const {_dp, _attr, _papam_observer, _dp_observer} = this;
-    _attr._loading = true;
     this.clear();
+    _attr._loading = _attr._saving = true;
     this.remove();
     Object.unobserve(_dp, _dp_observer);
     Object.unobserve(_dp.characteristic, _papam_observer);

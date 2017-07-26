@@ -23,8 +23,8 @@ export function set_state_and_title(id, handleIfaceState) {
     name: 'state_filter',
     value: id,
   });
-  for(const item of items[0].items){
-    if(item.id == id){
+  for (const item of items[0].items) {
+    if (item.id == id) {
       handleIfaceState({
         component: '',
         name: 'title',
@@ -39,109 +39,109 @@ function state_filter(id) {
   const {handleIfaceState, handleClose, handleNavigate} = this.props;
   handleClose();
   handleNavigate('/');
-  set_state_and_title(id, handleIfaceState)
+  set_state_and_title(id, handleIfaceState);
 }
 
 const items = [
   {
     text: 'Заказы',
-    icon: <IconBusinessCenter />,
+    icon: <IconBusinessCenter/>,
     open: true,
     id: 'orders',
     items: [
       {
         text: 'Черновики',
         navigate: state_filter,
-        icon: <IconDrafts />,
+        icon: <IconDrafts/>,
         id: 'draft',
-        title: 'Предварительные расчеты'
+        title: 'Предварительные расчеты',
       },
       {
         text: 'Отправлено',
         navigate: state_filter,
-        icon: <IconSend />,
+        icon: <IconSend/>,
         id: 'sent',
-        title: 'Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в \'черновики\')'
+        title: 'Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в \'черновики\')',
       },
       {
         text: 'Согласовано',
         navigate: state_filter,
-        icon: <IconConfitmed />,
+        icon: <IconConfitmed/>,
         id: 'confirmed',
-        title: 'Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером'
+        title: 'Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером',
       },
       {
         text: 'Отклонено',
         navigate: state_filter,
-        icon: <IconDeclined />,
+        icon: <IconDeclined/>,
         id: 'declined',
-        title: 'Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации'
+        title: 'Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации',
       },
       {
         text: 'Сервис',
         navigate: state_filter,
-        icon: <IconService />,
+        icon: <IconService/>,
         id: 'service',
-        title: 'Заказы на сервисное обслуживание'
+        title: 'Заказы на сервисное обслуживание',
       },
       {
         text: 'Рекламации',
         navigate: state_filter,
-        icon: <IconComplaints />,
+        icon: <IconComplaints/>,
         id: 'complaints',
-        title: 'Жалобы и рекламации'
+        title: 'Жалобы и рекламации',
       },
       {
         text: 'Шаблоны',
         navigate: state_filter,
-        icon: <IconPuzzle />,
+        icon: <IconPuzzle/>,
         id: 'template',
-        title: 'Типовые блоки'
+        title: 'Типовые блоки',
       },
       {
         text: 'Архив',
         navigate: state_filter,
-        icon: <IconFileDownload />,
+        icon: <IconFileDownload/>,
         id: 'zarchive',
-        title: 'Старые заказы'
+        title: 'Старые заказы',
       },
       {
         text: 'Все',
         navigate: state_filter,
-        icon: <IconFileShuffle />,
+        icon: <IconFileShuffle/>,
         id: 'all',
-        title: 'Отключить фильтр по статусам заказов'
+        title: 'Отключить фильтр по статусам заказов',
       },
     ],
   },
   {
     text: 'Отчеты',
-    icon: <IconInbox />,
+    icon: <IconInbox/>,
     open: false,
     id: 'reports',
     items: [
       {
         text: 'Движение денег',
         navigate: '/rep.cash_moving/main',
-        icon: <IconList />,
+        icon: <IconList/>,
       },
     ],
   },
   {
     text: 'Профиль',
     navigate: '/login',
-    icon: <IconPerson />,
+    icon: <IconPerson/>,
   },
   {
     text: 'Настройки',
     navigate: '/settings',
-    icon: <IconSettings />,
+    icon: <IconSettings/>,
   },
   {
     text: 'О программе',
     navigate: '/about',
-    icon: <IconInfo />,
+    icon: <IconInfo/>,
   },
-]
+];
 
 export default items;

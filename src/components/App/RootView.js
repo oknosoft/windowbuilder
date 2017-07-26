@@ -30,7 +30,7 @@ class RootView extends Component {
     }
 
     // если это первый запуск или couch_direct и offline, переходим на страницу login
-    if ((data_empty === true && !path_log_in && !user.try_log_in) || (couch_direct && offline)) {
+    if (!path_log_in && ((data_empty === true && !user.try_log_in) || (couch_direct && offline))) {
       history.push('/login');
       res = false;
     }
@@ -41,7 +41,7 @@ class RootView extends Component {
   render() {
 
     const {props} = this;
-    const {meta_loaded, data_empty, data_loaded, sync_started, user, couch_direct, offline, history} = props;
+    const {meta_loaded, data_empty, data_loaded, sync_started, history} = props;
     const show_dumb = !meta_loaded ||
       (data_empty === undefined) ||
       (sync_started && !data_loaded);

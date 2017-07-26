@@ -10,11 +10,10 @@
 
 $p.dp.builder_pen.on({
 
-	value_change: function(attr, _obj){
-	  const o = _obj || this;
+	value_change: function(attr, obj){
 		if(attr.field == "elm_type") {
-      o.inset = paper.project.default_inset({elm_type: o.elm_type});
-      o.rama_impost = paper.project._dp.sys.inserts([o.elm_type]);
+      obj.inset = paper.project.default_inset({elm_type: obj.elm_type});
+      obj.rama_impost = paper.project._dp.sys.inserts([obj.elm_type]);
 		}
 	},
 
@@ -22,18 +21,17 @@ $p.dp.builder_pen.on({
 
 $p.dp.builder_lay_impost.on({
 
-	value_change: function(attr, _obj){
-    const o = _obj || this;
+	value_change: function(attr, obj){
 		if(attr.field == "elm_type") {
-      o.inset_by_y = paper.project.default_inset({
-				elm_type: o.elm_type,
+      obj.inset_by_y = paper.project.default_inset({
+				elm_type: obj.elm_type,
 				pos: $p.enm.positions.ЦентрГоризонталь
 			});
-      o.inset_by_x = paper.project.default_inset({
-				elm_type: o.elm_type,
+      obj.inset_by_x = paper.project.default_inset({
+				elm_type: obj.elm_type,
 				pos: $p.enm.positions.ЦентрВертикаль
 			});
-      o.rama_impost = paper.project._dp.sys.inserts([o.elm_type]);
+      obj.rama_impost = paper.project._dp.sys.inserts([obj.elm_type]);
 		}
 	}
 });

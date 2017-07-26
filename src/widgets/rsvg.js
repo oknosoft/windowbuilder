@@ -138,7 +138,7 @@ class OSvgs {
   onclick(event, dbl) {
     if(event.currentTarget && event.currentTarget.ref){
       this.handler && this.handler(event.currentTarget.ref, dbl);
-      this.select(event.currentTarget.ref);
+      this.pics_area && this.select(event.currentTarget.ref);
     }
   }
 
@@ -193,6 +193,9 @@ class OSvgs {
   }
 
   select(ref) {
+    if(!this.pics_area){
+      return;
+    }
     const {children} = this.pics_area;
     for(let i = 0; i < children.length; i++){
       const elm = children.item(i);

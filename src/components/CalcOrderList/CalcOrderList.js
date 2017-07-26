@@ -1,9 +1,9 @@
-import React, {Component} from 'react';
-import PropTypes from 'prop-types';
+// import React, {Component} from 'react';
+// import PropTypes from 'prop-types';
 import DhtmlxCell from '../../metadata-ui/DhtmlxCell';
 import WindowSizer from '../../metadata-ui/WindowSize';
 import withIface from '../../redux/withIface';
-import {set_state_and_title} from '../Header/navlist_items'
+import {set_state_and_title} from '../Header/navlist_items';
 
 class CalcOrderList extends DhtmlxCell {
 
@@ -11,10 +11,10 @@ class CalcOrderList extends DhtmlxCell {
 
     const {location, state_filter, handleIfaceState} = this.props;
     const search = $p.job_prm.parse_url_str(location.search);
-    if(search.state_filter && search.state_filter != state_filter){
+    if (search.state_filter && search.state_filter != state_filter) {
       set_state_and_title(search.state_filter, handleIfaceState);
     }
-    else if(!state_filter){
+    else if (!state_filter) {
       set_state_and_title('draft', handleIfaceState);
     }
 
@@ -25,8 +25,8 @@ class CalcOrderList extends DhtmlxCell {
 
   componentWillUnmount() {
     //$p.off('hash_route', this.hash_route);
-    const {cell, handlers} = this;
-    if(cell && cell.close){
+    const {cell} = this;
+    if (cell && cell.close) {
       cell.close();
     }
     super.componentWillUnmount();

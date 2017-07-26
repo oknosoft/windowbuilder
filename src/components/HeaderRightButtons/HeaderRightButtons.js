@@ -6,10 +6,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
-import Button from 'material-ui/Button';
-
 import IconButton from 'material-ui/IconButton';
-import {CircularProgress} from 'material-ui/Progress';
 
 import CloudQueue from 'material-ui-icons/CloudQueue';
 import CloudOff from 'material-ui-icons/CloudOff';
@@ -17,8 +14,8 @@ import CloudOff from 'material-ui-icons/CloudOff';
 import SyncIcon from 'material-ui-icons/Sync';
 import SyncIconDisabled from 'material-ui-icons/SyncDisabled';
 
-import NotificationsIcon from 'material-ui-icons/Notifications';
-import NotificationsIconActive from 'material-ui-icons/NotificationsActive';
+// import NotificationsIcon from 'material-ui-icons/Notifications';
+// import NotificationsIconActive from 'material-ui-icons/NotificationsActive';
 import NotificationsIconNone from 'material-ui-icons/NotificationsNone';
 
 import PersonOutline from 'material-ui-icons/PersonOutline';
@@ -41,7 +38,6 @@ class NavUserButtons extends Component {
     const {handleLogin, props} = this;
     const {
       sync_started,
-      button_label,
       classes,
       fetch,
       offline,
