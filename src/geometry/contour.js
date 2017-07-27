@@ -97,12 +97,6 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     this._attr = {};
 
-    // за этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
-    this._noti = {};
-
-    // метод - нотификатор
-    this._notifier = Object.getNotifier(this._noti);
-
     // строка в таблице конструкций
     if(attr.row){
       this._row = attr.row;
@@ -616,8 +610,8 @@ class Contour extends AbstractFilling(paper.Layer) {
    * Формирует оповещение для тех, кто следит за this._noti
    * @param obj
    */
-  notify(obj) {
-    this._notifier.notify(obj);
+  notify(obj, type = 'update') {
+    this._scope.emit_async(type, obj);
     this.project.register_change();
   }
 

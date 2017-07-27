@@ -44,6 +44,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
           const {elmnts} = wnd;
 
+          wnd.dep_observer = (obj, fields) => {
+            if(obj == dp && fields.department){
+              elmnts.filter.call_event();
+              $p.wsql.set_user_param("current_department", dp.department.ref);
+            }
+          }
+
           // добавляем слушателя внешних событий
           if(handlers){
             const {custom_selection} = elmnts.filter;
@@ -75,14 +82,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           txt_div.style.margin = "1px 5px 1px 1px";
           dep.DOMelem_input.placeholder = "Подразделение";
 
-          Object.observe(dp, (changes) => {
-            changes.forEach((change) => {
-              if(change.name == "department"){
-                elmnts.filter.call_event();
-                $p.wsql.set_user_param("current_department", dp.department.ref);
-              }
-            });
-          });
+          dp._manager.on('update', wnd.dep_observer);
 
           const set_department = $p.DocCalc_order.set_department.bind(dp);
           set_department();

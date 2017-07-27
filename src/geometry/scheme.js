@@ -213,7 +213,7 @@ class Scheme extends paper.Project {
     }
 
     // начинаем следить за _dp, чтобы обработать изменения цвета и параметров
-    Object.observe(this._dp, this._dp_observer, ["update"]);
+    this._dp._manager.on('update', this._dp_observer);
 
   }
 
