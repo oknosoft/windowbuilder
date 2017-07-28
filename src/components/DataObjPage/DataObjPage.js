@@ -1,8 +1,10 @@
-// import React, {Component} from 'react';
+import React from 'react';
 // import PropTypes from 'prop-types';
 import DhtmlxCell from '../../metadata-ui/DhtmlxCell';
 import WindowSizer from '../../metadata-ui/WindowSize';
 import withIface from '../../redux/withIface';
+
+import {Prompt} from 'react-router-dom';
 
 class DataObjPage extends DhtmlxCell {
 
@@ -32,13 +34,23 @@ class DataObjPage extends DhtmlxCell {
     }, handlers);
   }
 
-
-
   componentWillUnmount() {
     //$p.off('hash_route', this.hash_route);
     const {cell} = this;
     cell && cell.close && cell.close();
     super.componentWillUnmount();
+  }
+
+  render() {
+    return <div>
+      <Prompt
+        when={false}
+        message={location => (
+          `Are you sure you want to go to ${location.pathname}`
+        )}
+      />
+      <div ref={el => this.el = el}/>
+    </div>;
   }
 
 }

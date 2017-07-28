@@ -19,8 +19,7 @@ import theme from '../../styles/muiTheme';
 class RootView extends Component {
 
   shouldComponentUpdate(props) {
-    const {user, data_empty, couch_direct, offline, history} = props;
-    const path_log_in = !!history.location.pathname.match(/\/login$/);
+    const {user, data_empty, couch_direct, offline, history, path_log_in} = props;
     let res = true;
 
     // если есть сохранённый пароль и online, пытаемся авторизоваться
@@ -44,7 +43,7 @@ class RootView extends Component {
     const {meta_loaded, data_empty, data_loaded, sync_started, history} = props;
     const show_dumb = !meta_loaded ||
       (data_empty === undefined) ||
-      (sync_started && !data_loaded);
+      (data_empty === false && !data_loaded);
 
     return <MuiThemeProvider theme={theme}>
       {

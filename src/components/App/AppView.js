@@ -24,8 +24,20 @@ import DhtmlxRoot from '../CalcOrderList';
 class AppRoot extends React.Component {
 
   shouldComponentUpdate(props) {
-    const {user, data_empty, path_log_in, couch_direct, offline} = props;
+    const {user, data_empty, couch_direct, offline, history, path_log_in} = props;
     let res = true;
+
+    // если есть сохранённый пароль и online, пытаемся авторизоваться
+    if (!user.logged_in && user.has_login && !user.try_log_in && !offline) {
+      props.handleLogin();
+      res = false;
+    }
+
+    // если это первый запуск или couch_direct и offline, переходим на страницу login
+    if (!path_log_in && ((data_empty === true && !user.try_log_in) || (couch_direct && offline))) {
+      history.push('/login');
+      res = false;
+    }
 
     return res;
   }
