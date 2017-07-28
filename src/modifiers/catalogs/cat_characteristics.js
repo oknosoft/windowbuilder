@@ -334,7 +334,7 @@ Object.defineProperties($p.CatCharacteristics.prototype, {
 
       // переносим в cx параметры
       const {length, width} = $p.job_prm.properties;
-      cx.params.clear(true);
+      cx.params.clear();
       params.find_rows({cnstr: -elm, inset: origin}, (row) => {
         if(row.param != length && row.param != width){
           cx.params.add({param: row.param, value: row.value});

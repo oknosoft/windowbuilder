@@ -17,9 +17,9 @@ var File = gutil.File;
 module.exports = function () {
 
   // конфигурация подключения к CouchDB
-  const config = require('../../config/app.settings.js')();
+  const config = require('../config/app.settings.js')();
 
-  let $p = require('../../lib/metadata.core.js');    // подключим метадату 'metadata-js'
+  let $p = require('../lib/metadata.core.js');    // подключим метадату 'metadata-js'
 	let firstFile = null;
 	let jstext = "";                    // в этой переменной будем накапливать текст модуля
 

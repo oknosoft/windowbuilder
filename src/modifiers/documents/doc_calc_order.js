@@ -743,7 +743,7 @@ $p.doc.calc_order.load_templates = async function () {
       let cx;
       mgr.find_rows({calc_order: this, product: row.row}, (ox) => {
         for(let ts in mgr.metadata().tabular_sections){
-          ox[ts].clear(true);
+          ox[ts].clear();
         }
         ox.leading_elm = 0;
         ox.leading_product = '';

@@ -261,7 +261,7 @@ class ToolPen extends ToolElement {
     }
 
     // вставку по умолчанию получаем эмулируя событие изменения типа элемента
-    $p.dp.builder_pen.emit("value_change", {field: "elm_type"}, this.profile);
+    $p.dp.builder_pen.emit("value_change", this.profile, {field: "elm_type"});
 
     // цвет по умолчанию
     this.profile.clr = paper.project.clr;

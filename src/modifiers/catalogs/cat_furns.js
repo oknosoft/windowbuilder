@@ -22,7 +22,7 @@ Object.defineProperties($p.cat.furns, {
   },
 
   get_option_list: {
-    value: function (val, selection) {
+    value: function (selection, val) {
 
       const {characteristic, sys} = paper.project._dp;
       const {furn} = $p.job_prm.properties;
@@ -60,7 +60,7 @@ Object.defineProperties($p.cat.furns, {
           return Promise.resolve(l);
         }
       }
-      return this.constructor.prototype.get_option_list.call(this, val, selection);
+      return this.constructor.prototype.get_option_list.call(this, selection, val);
     },
     configurable: true
   }

@@ -63,7 +63,7 @@ class GlassInserts {
   btn_click(id) {
     if(id == "btn_inset"){
       const {project, inset, elm} = this.elm;
-      project.ox.glass_specification.clear(true, {elm: elm});
+      project.ox.glass_specification.clear({elm: elm});
       inset.specification.forEach((row) => {
         project.ox.glass_specification.add({
           elm: elm,

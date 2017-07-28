@@ -50,7 +50,7 @@ class ToolLayImpost extends ToolElement {
 
 
       profile.elm_type_change = tool.elm_type_change.bind(tool);
-      Object.observe(profile, profile.elm_type_change, ["update"]);
+      profile._manager.on('update', profile.elm_type_change);
 
       // восстанавливаем сохранённые параметры
       $p.wsql.restore_options("editor", tool.options);
@@ -71,7 +71,7 @@ class ToolLayImpost extends ToolElement {
       }
 
       // вставку по умолчанию получаем эмулируя событие изменения типа элемента
-      $p.dp.builder_lay_impost.emit("value_change", {field: "elm_type"}, profile);
+      $p.dp.builder_lay_impost.emit("value_change", profile, {field: "elm_type"});
 
       // выравнивание по умолчанию
       if(profile.align_by_y.empty()){
@@ -825,11 +825,13 @@ class ToolLayImpost extends ToolElement {
   }
 
   detache_wnd(){
-    if(this.profile){
-      Object.unobserve(this.profile, this.profile.elm_type_change);
+    const {profile, wnd} = this;
+    if(profile){
+      profile._manager.off('update', profile.elm_type_change);
+      delete profile.elm_type_change;
     }
-    if(this.wnd && this.wnd.elmnts){
-      this.wnd.elmnts._btns.forEach((btn) => {
+    if(wnd && wnd.elmnts){
+      wnd.elmnts._btns.forEach((btn) => {
         btn.bar && btn.bar.unload && btn.bar.unload()
       });
     }

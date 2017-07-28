@@ -39,7 +39,8 @@ class RulerWnd {
 
     this.on_keydown = this.on_keydown.bind(this);
     this.on_button_click = this.on_button_click.bind(this);
-    this.wnd_keydown = $p.eve.attachEvent("keydown", this.on_keydown);
+
+    tool.eve.on("keydown", this.on_keydown);
 
     const div = document.createElement("table");
     div.innerHTML='<tr><td ></td><td align="center"></td><td></td></tr>' +
@@ -120,12 +121,12 @@ class RulerWnd {
     this.input = this.table[1].childNodes[1];
     this.input.grid = {
       editStop: (v) => {
-        $p.eve.callEvent("sizes_wnd", [{
+        tool.eve.emit("sizes_wnd", {
           wnd: wnd,
           name: "size_change",
           size: this.size,
           tool: tool
-        }]);
+        });
       },
       getPosition: (v) => {
         let {offsetLeft, offsetTop} = v;
@@ -172,12 +173,12 @@ class RulerWnd {
         }
       })){
 
-      $p.eve.callEvent("sizes_wnd", [{
+      tool.eve.emit("sizes_wnd", {
         wnd: wnd,
         name: ev.currentTarget.name,
         size: size,
         tool: tool
-      }]);
+      });
     }
   }
 
@@ -237,23 +238,25 @@ class RulerWnd {
 
   on_close() {
 
-    if(this.wnd && this.wnd.elmnts.calck && this.wnd.elmnts.calck.obj && this.wnd.elmnts.calck.obj.removeSelf){
-      this.wnd.elmnts.calck.obj.removeSelf();
+    const {tool, size, wnd} = this;
+
+    if(wnd && wnd.elmnts.calck && wnd.elmnts.calck.obj && wnd.elmnts.calck.obj.removeSelf){
+      wnd.elmnts.calck.obj.removeSelf();
     }
 
-    $p.eve.detachEvent(this.wnd_keydown);
+    tool.eve.off("keydown", this.on_keydown)
 
-    $p.eve.callEvent("sizes_wnd", [{
-      wnd: this.wnd,
+    tool.eve.emit("sizes_wnd", {
+      wnd: wnd,
       name: "close",
-      size: this.size,
-      tool: this.tool
-    }]);
+      size: size,
+      tool: tool
+    });
 
     if (this.options){
-      if(this.tool instanceof DimensionLine) {
+      if(tool instanceof DimensionLine) {
         delete this.options.wnd.on_close;
-        this.wnd.wnd_options(this.options.wnd);
+        wnd.wnd_options(this.options.wnd);
         $p.wsql.save_options("editor", this.options);
       }
       else{
@@ -498,7 +501,8 @@ class ToolRuler extends ToolElement {
       }
     });
 
-    $p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this))
+    this._sizes_wnd = this._sizes_wnd.bind(this);
+    this.eve.on("sizes_wnd", this._sizes_wnd);
   }
 
   hitTest(event) {

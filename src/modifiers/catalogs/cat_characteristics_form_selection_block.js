@@ -227,7 +227,7 @@
 			obj: selection_block,
 			field: "calc_order",
 			width: 220,
-			get_option_list: (val, selection) => new Promise((resolve, reject) => {
+			get_option_list: (selection, val) => new Promise((resolve, reject) => {
 
 			  setTimeout(() => {
           const l = [];

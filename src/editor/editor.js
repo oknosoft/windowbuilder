@@ -304,21 +304,18 @@ class Editor extends paper.PaperScope {
     this.tb_top.cell.style.boxShadow = "none";
 
 
-    this._evts = [
-      // Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
-      $p.eve.attachEvent("characteristic_saved", (scheme, attr) => {
-        if(scheme == _editor.project && attr.close && pwnd._on_close)
-          setTimeout(pwnd._on_close);
-      }),
+    // Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
+    this.eve.on("characteristic_saved", (scheme, attr) => {
+      if(scheme == _editor.project && attr.close && pwnd._on_close)
+        setTimeout(pwnd._on_close);
+    });
 
-      // При изменениях изделия обновляем текст заголовка окна
-      $p.eve.attachEvent("scheme_changed", (scheme) => {
-        if(scheme == _editor.project && attr.set_text && scheme._calc_order_row){
-          attr.set_text(scheme.ox.prod_name(true) + " " + (scheme.ox._modified ? " *" : ""));
-        }
-      }),
-
-    ];
+    // При изменениях изделия обновляем текст заголовка окна
+    this.eve.on("scheme_changed", (scheme) => {
+      if(scheme == _editor.project && attr.set_text && scheme._calc_order_row){
+        attr.set_text(scheme.ox.prod_name(true) + " " + (scheme.ox._modified ? " *" : ""));
+      }
+    });
 
     // Обработчик события при удалении строки некой табчасти продукции
     this.on_del_row = this.on_del_row.bind(this);
@@ -1234,10 +1231,7 @@ class Editor extends paper.PaperScope {
    * @for Editor
    */
   unload() {
-    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, _evts, eve, project} = this;
-
-    this._evts.forEach((eid) => $p.eve.detachEvent(eid));
-    this._evts.length = 0;
+    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project} = this;
 
     eve.removeAllListeners();
 
@@ -1245,9 +1239,7 @@ class Editor extends paper.PaperScope {
       tool._callbacks.deactivate[0].call(tool);
     }
     for(const fld in tools){
-      if(tools[fld].remove){
-        tools[fld].remove();
-      }
+      tools[fld] && tools[fld].remove && tools[fld].remove();
       tools[fld] = null;
     }
     _acc.unload();

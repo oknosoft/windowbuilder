@@ -141,8 +141,8 @@ class WndAddress {
 
 
     // начинаем следить за объектом и, его табчастью допреквизитов
-    this.observer = this.observer.bind(this)
-    Object.observe(obj, this.observer, ["update", "unload"]);
+    this.listener = this.listener.bind(this);
+    obj._manager.on('update', this.listener);
 
     elmnts.pgrid.get_cell_field = () => {
       return {
@@ -243,29 +243,13 @@ class WndAddress {
     }
   }
 
-  observer(changes) {
-    const {obj, v, wnd, observer} = this;
+  listener(_obj, fields) {
+    const {obj, v, wnd, listener} = this;
     const names = ['delivery_area','city','street','house','flat']
-    if (!obj) {
-      const stack = [];
-      changes.forEach((change) => {
-        if (stack.indexOf[change.object] == -1) {
-          stack.push(change.object);
-          Object.unobserve(change.object, observer);
-        }
-      });
-    }
-    else{
-      changes.forEach((change) => {
-        if (change.type == "unload") {
-
-        }
-        else{
-          if(names.indexOf(change.name) != -1){
-            this.pgrid_on_changed(change.name, v[change.name], change.oldValue);
-          }
-        }
-      });
+    if (obj == _obj) {
+      for(let name of names){
+        fields.hasOwnProperty(name) && this.pgrid_on_changed(name, v[name], fields[name]);
+      }
     }
   }
 
@@ -649,9 +633,9 @@ class WndAddress {
   }
 
   frm_close(win){
-    const {grid, obj, observer} = this;
+    const {grid, obj, listener} = this;
     grid && grid.editStop();
-    obj && Object.unobserve(obj, observer);
+    obj && obj._manager.off('update', listener);
     const {event} = google.maps;
     event.removeListener(this._marker_toggle_bounce);
     event.removeListener(this._marker_dragend);

@@ -183,8 +183,7 @@ $p.cat.clrs.__define({
 
       const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
-
-			function get_option_list(val, selection) {
+			function get_option_list(selection, val) {
 
 				selection.clr_in = $p.utils.blank.guid;
 				selection.clr_out = $p.utils.blank.guid;
@@ -200,7 +199,7 @@ $p.cat.clrs.__define({
 					});
 				}
 
-				return this.constructor.prototype.get_option_list.call(this, val, selection);
+				return this.constructor.prototype.get_option_list.call(this, selection, val);
 			}
 
 			return (wnd instanceof Promise ? wnd : Promise.resolve(wnd))
@@ -236,7 +235,6 @@ $p.cat.clrs.__define({
 						return true;
 					});
 
-					Object.unobserve(eclr);
 
 					eclr.clr_in = $p.utils.blank.guid;
 					eclr.clr_out = $p.utils.blank.guid;

@@ -611,7 +611,10 @@ class Contour extends AbstractFilling(paper.Layer) {
    * @param obj
    */
   notify(obj, type = 'update') {
-    this._scope.emit_async(type, obj);
+    if(obj.type){
+      type = obj.type;
+    }
+    this.project._scope.eve.emit_async(type, obj);
     this.project.register_change();
   }
 
@@ -1575,14 +1578,8 @@ class Contour extends AbstractFilling(paper.Layer) {
 
       // проверим вхождение значения в доступные и при необходимости изменим
       if(links.length && param.linked_values(links, prow)){
-        this.project.register_change();
         notify = true;
-        Object.getNotifier(this).notify({
-          type: 'row',
-          row: prow,
-          tabular: prow._owner._name,
-          name: 'value'
-        });
+        prow._manager.emit_async('update', prow, {value: prow._obj.value});
       }
       if(!notify){
         notify = hide;
@@ -1590,9 +1587,8 @@ class Contour extends AbstractFilling(paper.Layer) {
     });
 
     // информируем мир о новых размерах нашего контура
-    if(notify){
-      $p.eve.callEvent("refresh_links", [this]);
-    }
+    notify && this.notify(this, "refresh_links");
+
   }
 
   /**

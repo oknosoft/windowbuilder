@@ -44,7 +44,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
           const {elmnts} = wnd;
 
-          wnd.dep_observer = (obj, fields) => {
+          wnd.dep_listener = (obj, fields) => {
             if(obj == dp && fields.department){
               elmnts.filter.call_event();
               $p.wsql.set_user_param("current_department", dp.department.ref);
@@ -82,7 +82,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           txt_div.style.margin = "1px 5px 1px 1px";
           dep.DOMelem_input.placeholder = "Подразделение";
 
-          dp._manager.on('update', wnd.dep_observer);
+          dp._manager.on('update', wnd.dep_listener);
 
           const set_department = $p.DocCalc_order.set_department.bind(dp);
           set_department();
@@ -123,6 +123,30 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               dbl && handlers.handleNavigate(`/builder/${ref}`);
             });
           elmnts.grid.attachEvent("onRowSelect", (rid) => elmnts.svgs.reload(rid));
+
+          wnd.attachEvent("onClose", (win) => {
+            dep && dep.unload();
+            return true;
+          });
+
+          attr.on_close = () => {
+            elmnts.svgs && elmnts.svgs.unload();
+            dep && dep.unload();
+          }
+
+          // wnd.close = (on_create) => {
+          //
+          //   if (wnd) {
+          //     wnd.getAttachedToolbar().clearAll();
+          //     wnd.detachToolbar();
+          //     wnd.detachStatusBar();
+          //     if (wnd.conf) {
+          //       wnd.conf.unloading = true;
+          //     }
+          //     wnd.detachObject(true);
+          //   }
+          //   this.frm_unload(on_create);
+          // }
 
           resolve(wnd);
         }

@@ -1712,7 +1712,7 @@ class Profile extends ProfileItem {
 
       // Подключаем наблюдателя за событиями контура с именем _consts.move_points_
       this._observer = this.observer.bind(this);
-      Object.observe(this.layer._noti, this._observer, [consts.move_points]);
+      this.project._scope.eve.on(consts.move_points, this._observer)
 
       // Информируем контур о том, что у него появился новый ребёнок
       this.layer.on_insert_elm(this);

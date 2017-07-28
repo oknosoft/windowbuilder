@@ -41,94 +41,68 @@ class Scheme extends paper.Project {
     const _changes = this._ch = [];
 
     // наблюдатель за изменениями свойств изделия
-    this._dp_observer = (changes) => {
+    this._dp_listener = (obj, fields) => {
 
-        if(_attr._loading || _attr._snapshot){
+        if(_attr._loading || _attr._snapshot || obj != this._dp){
           return;
         }
 
         const scheme_changed_names = ["clr","sys"];
         const row_changed_names = ["quantity","discount_percent","discount_percent_internal"];
-        let evented
 
-        changes.forEach((change) => {
+        if(fields.hasOwnProperty('clr') || fields.hasOwnProperty('sys')){
+          // информируем мир об изменениях
+          _editor.eve.emit_async("scheme_changed", _scheme);
+        }
 
-          if(scheme_changed_names.indexOf(change.name) != -1){
-
-            if(change.name == "clr"){
-              _scheme.ox.clr = change.object.clr;
-              _scheme.getItems({class: ProfileItem}).forEach((p) => {
-                if(!(p instanceof Onlay)){
-                  p.clr = change.object.clr;
-                }
-              })
+        if(fields.hasOwnProperty('clr')){
+          _scheme.ox.clr = obj.clr;
+          _scheme.getItems({class: ProfileItem}).forEach((p) => {
+            if(!(p instanceof Onlay)){
+              p.clr = obj.clr;
             }
+          })
+        }
 
-            if(change.name == "sys" && !change.object.sys.empty()){
+      if(fields.hasOwnProperty('sys') && !obj.sys.empty()){
 
-              change.object.sys.refill_prm(_scheme.ox);
+        obj.sys.refill_prm(_scheme.ox);
 
-              // обновляем свойства изделия
-              Object.getNotifier(change.object).notify({
-                type: 'rows',
-                tabular: 'extra_fields'
-              });
+        // обновляем свойства изделия и створки
+        _editor.eve.emit_async("rows", _scheme.ox, {extra_fields: true, params: true});
 
-              // обновляем свойства створки
-              if(_scheme.activeLayer)
-                Object.getNotifier(_scheme.activeLayer).notify({
-                  type: 'rows',
-                  tabular: 'params'
-                });
+        // информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
+        for(const contour of _scheme.contours){
+          contour.on_sys_changed();
+        }
 
-              // информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
-              _scheme.contours.forEach((l) => l.on_sys_changed());
+        if(obj.sys != $p.wsql.get_user_param("editor_last_sys"))
+          $p.wsql.set_user_param("editor_last_sys", obj.sys.ref);
 
+        if(_scheme.ox.clr.empty())
+          _scheme.ox.clr = obj.sys.default_clr;
 
-              if(change.object.sys != $p.wsql.get_user_param("editor_last_sys"))
-                $p.wsql.set_user_param("editor_last_sys", change.object.sys.ref);
+        _scheme.register_change(true);
+      }
 
-              if(_scheme.ox.clr.empty())
-                _scheme.ox.clr = change.object.sys.default_clr;
+      for(const name of row_changed_names){
+        if(fields.hasOwnProperty(name)){
+          _attr._calc_order_row[name] = obj[name];
+          _scheme.register_change(true);
+        }
+      }
 
-              _scheme.register_change(true);
-            }
-
-            if(!evented){
-              // информируем мир об изменениях
-              $p.eve.callEvent("scheme_changed", [_scheme]);
-              evented = true;
-            }
-
-          }
-          else if(row_changed_names.indexOf(change.name) != -1){
-
-            _attr._calc_order_row[change.name] = change.object[change.name];
-
-            _scheme.register_change(true);
-
-          }
-
-        });
-      };
+    };
 
     // наблюдатель за изменениями параметров створки
-    this._papam_observer = (changes) => {
-        if(_attr._loading || _attr._snapshot){
-          return;
-        }
-        changes.some((change) => {
-          if(change.tabular == "params"){
-            _scheme.register_change();
-            return true;
-          }
-        });
-      };
-
-    /**
-     * За этим полем будут "следить" элементы контура и пересчитывать - перерисовывать себя при изменениях соседей
-     */
-    this._noti = {};
+    this._papam_listener = (obj, fields) => {
+      if(_attr._loading || _attr._snapshot){
+        return;
+      }
+      if(fields.hasOwnProperty('params') || obj._owner && obj._owner._name == 'params'){
+        _scheme.register_change();
+      }
+    };
 
     /**
      * Объект обработки с табличными частями
@@ -213,7 +187,7 @@ class Scheme extends paper.Project {
     }
 
     // начинаем следить за _dp, чтобы обработать изменения цвета и параметров
-    this._dp._manager.on('update', this._dp_observer);
+    this._dp._manager.on('update', this._dp_listener);
 
   }
 
@@ -226,11 +200,12 @@ class Scheme extends paper.Project {
     return this._dp.characteristic;
   }
   set ox(v) {
-    const {_dp, _attr, _papam_observer} = this;
+    const {_dp, _attr, _papam_listener} = this;
     let setted;
 
     // пытаемся отключить обсервер от табчасти
-    Object.unobserve(_dp.characteristic, _papam_observer);
+    _dp.characteristic._manager.off('update', _papam_listener);
+    _dp.characteristic._manager.off('rows', _papam_listener);
 
     // устанавливаем в _dp характеристику
     _dp.characteristic = v;
@@ -286,17 +261,14 @@ class Scheme extends paper.Project {
     }
 
     // оповещаем о новых слоях и свойствах изделия
-    Object.getNotifier(this._noti).notify({
-      type: 'rows',
-      tabular: 'constructions'
-    });
-    Object.getNotifier(_dp).notify({
-      type: 'rows',
-      tabular: 'extra_fields'
-    });
+    this._scope.eve.emit_async('rows', ox, {constructions: true});
+    _dp._manager.emit_async('rows', _dp, {extra_fields: true});
 
     // начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
-    Object.observe(ox, _papam_observer, ["row", "rows"]);
+    _dp.characteristic._manager.on({
+      update: _papam_listener,
+      rows: _papam_listener,
+    });
 
   }
 
@@ -601,8 +573,11 @@ class Scheme extends paper.Project {
    * Формирует оповещение для тех, кто следит за this._noti
    * @param obj
    */
-  notify(obj) {
-    Object.getNotifier(this._noti).notify(obj);
+  notify(obj, type = 'update') {
+    if(obj.type){
+      type = obj.type;
+    }
+    this._scope.eve.emit_async(type, obj);
   }
 
   /**
@@ -622,12 +597,13 @@ class Scheme extends paper.Project {
    * Деструктор
    */
   unload() {
-    const {_dp, _attr, _papam_observer, _dp_observer} = this;
+    const {_dp, _attr, _papam_listener, _dp_listener} = this;
     this.clear();
     _attr._loading = _attr._saving = true;
+    _dp._manager.off('update', _dp_listener);
+    _dp.characteristic._manager.off('update', _papam_listener);
+    _dp.characteristic._manager.off('rows', _papam_listener);
     this.remove();
-    Object.unobserve(_dp, _dp_observer);
-    Object.unobserve(_dp.characteristic, _papam_observer);
     this._attr._calc_order_row = null;
   }
 
@@ -704,9 +680,6 @@ class Scheme extends paper.Project {
     if(!bounds){
       return;
     }
-
-    // переводим характеристику в тихий режим, чтобы она не создавала лишнего шума при изменениях
-    ox._silent();
 
     _attr._saving = true;
 

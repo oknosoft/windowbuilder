@@ -215,7 +215,7 @@ class Filling extends AbstractFilling(BuilderElement) {
   create_leaf() {
 
     // прибиваем соединения текущего заполнения
-    this.project.connections.cnns.clear(true, {elm1: this.elm});
+    this.project.connections.cnns.clear({elm1: this.elm});
 
     // создаём пустой новый слой
     const contour = new Contour( {parent: this.parent});
@@ -363,7 +363,7 @@ class Filling extends AbstractFilling(BuilderElement) {
           // копируем вставку
           elm.set_inset(v, true);
           // копируем состав заполнения
-          glass_specification.clear(true, {elm: elm.elm});
+          glass_specification.clear({elm: elm.elm});
           proto.forEach((row) => glass_specification.add({
             elm: elm.elm,
             inset: row.inset,

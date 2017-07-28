@@ -327,6 +327,10 @@ class DimensionLine extends paper.Group {
     return path;
   }
 
+  get eve() {
+    return this.project._scope.eve;
+  }
+
   // размер
   get size() {
     return parseFloat(this.children.text.content) || 0;

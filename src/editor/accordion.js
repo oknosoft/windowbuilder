@@ -10,11 +10,7 @@
 
 class SchemeLayers {
 
-  constructor(cell, set_text) {
-
-    this._observer = this.observer.bind(this);
-    this._layer_activated = this.layer_activated.bind(this);
-    this._contour_redrawed = this.contour_redrawed.bind(this);
+  constructor(cell, set_text, eve) {
 
     this._cell = cell;
     this._set_text = set_text;
@@ -57,9 +53,13 @@ class SchemeLayers {
     });
 
     // начинаем следить за изменениями размеров при перерисовке контуров
-    $p.eve.on({
-      layer_activated: this._layer_activated,
-      contour_redrawed: this._contour_redrawed,
+    this.listener = this.listener.bind(this);
+    this.layer_activated = this.layer_activated.bind(this);
+    this.contour_redrawed = this.contour_redrawed.bind(this);
+    this.eve = eve.on({
+      layer_activated: this.layer_activated,
+      contour_redrawed: this.contour_redrawed,
+      rows: this.listener,
     });
 
     this.layout.cells("a").setMinHeight(180);
@@ -101,36 +101,30 @@ class SchemeLayers {
     layer.contours.forEach((l) => this.load_layer(l));
   }
 
-  observer(changes) {
-    let synced;
-    changes.forEach((change) => {
+  listener(obj, fields) {
+    if (this.tree && this.tree.clearAll && fields.constructions){
 
-      if (!synced && "constructions" == change.tabular && this.tree && this.tree.clearAll){
+      // добавляем слои изделия
+      this.tree.clearAll();
+      paper.project.contours.forEach((layer) => {
+        this.load_layer(layer);
+        this.tree.openItem(layer.cnstr);
 
-        synced = true;
+      });
 
-        // добавляем слои изделия
-        this.tree.clearAll();
-        paper.project.contours.forEach((layer) => {
-          this.load_layer(layer);
-          this.tree.openItem(layer.cnstr);
+      // служебный слой размеров
+      this.tree.addItem("l_dimensions", "Размерные линии", 0);
 
-        });
+      // служебный слой соединителей
+      this.tree.addItem("l_connective", "Соединители", 0);
 
-        // служебный слой размеров
-        this.tree.addItem("l_dimensions", "Размерные линии", 0);
+      // служебный слой визуализации
+      this.tree.addItem("l_visualization", "Визуализация доп. элементов", 0);
 
-        // служебный слой соединителей
-        this.tree.addItem("l_connective", "Соединители", 0);
+      // служебный слой текстовых комментариев
+      this.tree.addItem("l_text", "Комментарии", 0);
 
-        // служебный слой визуализации
-        this.tree.addItem("l_visualization", "Визуализация доп. элементов", 0);
-
-        // служебный слой текстовых комментариев
-        this.tree.addItem("l_text", "Комментарии", 0);
-
-      }
-    });
+    }
   }
 
   drop_layer() {
@@ -155,13 +149,13 @@ class SchemeLayers {
   }
 
   attache() {
-    Object.observe(paper.project._noti, this._observer, ["rows"]);
+
   }
 
   unload() {
-    Object.unobserve(paper.project._noti, this._observer);
-    $p.eve.off('layer_activated', this._layer_activated);
-    $p.eve.off('contour_redrawed', this._contour_redrawed);
+    this.eve.off('layer_activated', this.layer_activated);
+    this.eve.off('contour_redrawed', this.contour_redrawed);
+    this.eve.off('rows', this.listener);
     this.layout.cells("a").detachObject(true);
     this._cell.detachObject(true);
     for(const fld in this){
@@ -288,12 +282,7 @@ class StvProps {
       // проверим вхождение значения в доступные и при необходимости изменим
       if(links.length && param.linked_values(links, prow)){
         paper.project.register_change();
-        Object.getNotifier(_grid._obj).notify({
-          type: 'row',
-          row: prow,
-          tabular: prow._owner._name,
-          name: 'value'
-        });
+        _grid._obj._manager.emit_async('update', prow, {value: prow._obj.value});
       }
 
     });
@@ -576,10 +565,7 @@ class EditorAccordion {
             new Contour({parent: undefined});
 
             // оповещаем мир о новых слоях
-            Object.getNotifier(_editor.project._noti).notify({
-              type: 'rows',
-              tabular: "constructions"
-            });
+            _editor.eve.emit_async('rows', _editor.project.ox, {constructions: true});
             break;
 
           case 'inserts_to_product':
@@ -600,10 +586,11 @@ class EditorAccordion {
         return false;
       }
     });
+
     this.tree_layers = new SchemeLayers(this._layers, (text) => {
       this._stv._toolbar.setItemText("info", text);
       _editor.additional_inserts('contour', this.tree_layers.layout.cells('b'));
-    });
+    }, _editor.eve);
 
     /**
      * свойства створки

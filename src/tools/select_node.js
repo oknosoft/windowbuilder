@@ -318,9 +318,9 @@ class ToolSelectNode extends ToolElement {
 
                 const cnn_point = path.parent.cnn_point("e");
                 if(cnn_point && cnn_point.profile){
-                  cnn_point.profile.rays.clear(true);
+                  cnn_point.profile.rays.clear();
                 }
-                path.parent.rays.clear(true);
+                path.parent.rays.clear();
 
                 point = path.getPointAt(path.length * 0.5);
                 const newpath = path.split(path.length * 0.5);
