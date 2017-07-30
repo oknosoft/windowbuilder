@@ -44,9 +44,7 @@ $p.cat.users.__define({
 
 });
 
-delete $p.CatUsers.prototype.role_available;
-delete $p.CatUsers.prototype.get_acl;
-$p.CatUsers.prototype.__define({
+$p.CatUsers = class CatUsers extends $p.CatUsers {
 
   /**
    * ### Роль доступна
@@ -54,35 +52,30 @@ $p.CatUsers.prototype.__define({
    * @param name {String}
    * @returns {Boolean}
    */
-  role_available: {
-    value: function (name) {
-      return this.acl_objs._obj.some((row) => row.type == name);
-    }
-  },
+  role_available(name) {
+    return this.acl_objs._obj.some((row) => row.type == name);
+  }
 
-  get_acl: {
-    value: function(class_name) {
-      const acn = class_name.split(".");
-      const {_acl} = this._obj;
-      return _acl && _acl[acn[0]] && _acl[acn[0]][acn[1]] ? _acl[acn[0]][acn[1]] : "e";
-    }
-  },
+  get_acl(class_name) {
+    const acn = class_name.split(".");
+    const {_acl} = this._obj;
+    return _acl && _acl[acn[0]] && _acl[acn[0]][acn[1]] ? _acl[acn[0]][acn[1]] : "e";
+  }
 
-	/**
-	 * ### Идентификаторы доступных контрагентов
-	 * Для пользователей с ограниченным доступом
-	 *
-	 * @returns {Array}
-	 */
-	partners_uids: {
-		get: function () {
-			const res = [];
-			this.acl_objs.each((row) => {
-				if(row.acl_obj instanceof $p.CatPartners){
-          res.push(row.acl_obj.ref)
-        }
-			});
-			return res;
-		}
-	}
-});
+  /**
+   * ### Идентификаторы доступных контрагентов
+   * Для пользователей с ограниченным доступом
+   *
+   * @returns {Array}
+   */
+  partners_uids() {
+    const res = [];
+    this.acl_objs.each((row) => {
+      if(row.acl_obj instanceof $p.CatPartners){
+        res.push(row.acl_obj.ref)
+      }
+    });
+    return res;
+  }
+};
+

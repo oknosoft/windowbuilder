@@ -699,13 +699,15 @@ class EditorAccordion {
   }
 
   unload() {
-    this.elm._otoolbar.unload();
-    this._layers._otoolbar.unload();
-    this._prod._otoolbar.unload();
-    this.tree_layers.unload();
-    this.props.unload();
-    this.stv.unload();
-    this._cell.detachObject(true);
+    if(this.elm) {
+      this.elm._otoolbar.unload();
+      this._layers._otoolbar.unload();
+      this._prod._otoolbar.unload();
+      this.tree_layers.unload();
+      this.props.unload();
+      this.stv.unload();
+      this._cell.detachObject(true);
+    }
     for(const fld in this){
       delete this[fld];
     }
