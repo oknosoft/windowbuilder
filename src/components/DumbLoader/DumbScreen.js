@@ -31,10 +31,7 @@ class DumbScreen extends Component {
       <div style={{position: 'absolute', bottom: '-20px'}}>{title}</div>
 
       {page ? <div style={{position: 'absolute', bottom: '-44px'}}>{
-        page.doc_ram_loaded ?
-          `Цены и характеристики...`
-          :
-          `Страница №${page.page}, загружено ${Math.min(page.page * page.limit, page.total_rows)} из ${page.total_rows} объектов`
+        page.text || `Страница №${page.page}, загружено ${Math.min(page.page * page.limit, page.total_rows)} из ${page.total_rows} объектов`
       }</div> : null}
     </div>;
   }

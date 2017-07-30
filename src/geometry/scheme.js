@@ -146,7 +146,7 @@ class Scheme extends paper.Project {
 
       _attr._opened && typeof requestAnimationFrame == 'function' && requestAnimationFrame(_scheme.redraw);
 
-      if(_attr._saving || !_changes.length){
+      if(!_attr._opened || _attr._saving || !_changes.length){
         return;
       }
 
@@ -588,13 +588,21 @@ class Scheme extends paper.Project {
   /**
    * Чистит изображение
    */
-  clear() {
-    const pnames = '_bounds,_update_timer,_loading,_snapshot';
-    for(let fld in this._attr){
-      if(!pnames.match(fld)){
-        delete this._attr[fld];
+  clear(_attr) {
+
+    if(_attr){
+      _attr._loading = _attr._saving = true;
+    }
+    else{
+      const pnames = '_bounds,_update_timer,_loading,_snapshot';
+      _attr = this._attr;
+      for(let fld in _attr){
+        if(!pnames.match(fld)){
+          delete _attr[fld];
+        }
       }
     }
+
     super.clear();
   }
 
@@ -603,13 +611,14 @@ class Scheme extends paper.Project {
    */
   unload() {
     const {_dp, _attr, _papam_listener, _dp_listener} = this;
-    _attr._loading = _attr._saving = true;
     _dp._manager.off('update', _dp_listener);
     _dp.characteristic._manager.off('update', _papam_listener);
     _dp.characteristic._manager.off('rows', _papam_listener);
-    this.clear();
+    this.clear(_attr);
     this.remove();
-    this._attr._calc_order_row = null;
+    for(let fld in _attr){
+      delete _attr[fld];
+    }
   }
 
   /**

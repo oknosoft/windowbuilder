@@ -77,7 +77,7 @@ class AppRoot extends Component {
           (!props.path_log_in && !props.complete_loaded) ?
             <DumbScreen
               title={props.doc_ram_loaded ? "Подготовка данных в памяти..." : "Загрузка из IndexedDB..."}
-              page={props.doc_ram_loaded ? {doc_ram_loaded: true} : props.page}
+              page={props.doc_ram_loaded ? {text: 'Цены и характеристики...'} : {text: 'Почти готово...'}}
               top={92} />
             :
             <Switch>

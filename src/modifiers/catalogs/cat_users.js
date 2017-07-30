@@ -19,7 +19,7 @@ $p.cat.users.__define({
         }
         const {acl} = aobj;
 			  delete aobj.acl;
-        const obj = new $p.CatUsers(aobj, this);
+        const obj = new $p.CatUsers(aobj, this, true);
         const {_obj} = obj;
         if(_obj){
           _obj._acl = acl;
