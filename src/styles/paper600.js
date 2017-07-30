@@ -1,5 +1,5 @@
 import {createStyleSheet, withStyles} from 'material-ui/styles';
-import colors from 'material-ui/colors/common';
+//import colors from 'material-ui/colors/common';
 
 export default withStyles(createStyleSheet('menu', theme => ({
   root: theme.mixins.gutters({

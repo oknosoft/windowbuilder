@@ -118,7 +118,7 @@ class Editor extends paper.PaperScope {
      * @final
      * @private
      */
-    this._clipbrd = new Clipbrd(this);
+    //this._clipbrd = new Clipbrd(this);
 
     /**
      * ### Клавиатура
@@ -258,11 +258,11 @@ class Editor extends paper.PaperScope {
             break;
 
           case 'copy':
-            _editor._clipbrd.copy();
+            //_editor._clipbrd.copy();
             break;
 
           case 'paste':
-            _editor._clipbrd.paste();
+            //_editor._clipbrd.paste();
             break;
 
           case 'paste_prop':

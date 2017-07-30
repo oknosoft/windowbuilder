@@ -233,14 +233,10 @@ class GeneratrixElement extends BuilderElement {
 
     // информируем систему об изменениях
     if(changed){
-
       const {_attr, layer, project} = this;
-
       _attr._rays.clear();
-
       layer && layer.notify && layer.notify(noti);
-
-      project._scope.eve.emit_async('update', this, {x1: true, x2: true, y1: true, y2: true});
+      project.notify(this, 'update', {x1: true, x2: true, y1: true, y2: true});
     }
 
     return other;

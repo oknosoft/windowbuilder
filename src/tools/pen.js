@@ -228,7 +228,10 @@ class ToolPen extends ToolElement {
       mouseup: this.on_mouseup,
       mousemove: this.on_mousemove,
       keydown: this.on_keydown,
-    })
+    });
+
+    this.scheme_changed = this.scheme_changed.bind(this);
+    this.layer_activated = this.layer_activated.bind(this);
 
   }
 
@@ -346,40 +349,35 @@ class ToolPen extends ToolElement {
 
     this.tool_wnd();
 
-    if(!this.on_layer_activated){
-      this.on_layer_activated = $p.eve.attachEvent("layer_activated", (contour, virt) => {
-        if(!virt && contour.project == paper.project && !paper.project._attr._loading && !paper.project._attr._snapshot){
-          this.decorate_layers();
-        }
-      });
-    }
+    // при активации слоя выделяем его в дереве
+    this.eve.on("layer_activated", this.layer_activated);
 
     // при изменении системы, переоткрываем окно доступных вставок
-    if(!this.on_scheme_changed){
-      this.on_scheme_changed = $p.eve.attachEvent("scheme_changed", (scheme) => {
-        if(scheme == paper.project && this.sys != scheme._dp.sys){
-          delete this.profile._metadata('inset').choice_links;
-          this.detache_wnd();
-          tool_wnd();
-        }
-      });
-    }
+    this.eve.on("scheme_changed", this.scheme_changed);
 
     this.decorate_layers();
+  }
+
+  layer_activated(contour, virt) {
+    const {_attr} = this._scope.project;
+    if(!virt && !project._attr._loading && !project._attr._snapshot){
+      this.decorate_layers();
+    }
+  }
+
+  scheme_changed(scheme) {
+    if(this.sys != scheme._dp.sys){
+      delete this.profile._metadata('inset').choice_links;
+      this.detache_wnd();
+      this.tool_wnd();
+    }
   }
 
   on_deactivate() {
     paper.clear_selection_bounds();
 
-    if(this.on_layer_activated){
-      $p.eve.detachEvent(this.on_layer_activated);
-      this.on_layer_activated = null;
-    }
-
-    if(this.on_scheme_changed){
-      $p.eve.detachEvent(this.on_scheme_changed);
-      this.on_scheme_changed = null;
-    }
+    this.eve.off("scheme_changed", this.scheme_changed);
+    this.eve.off("layer_activated", this.layer_activated);
 
     this.decorate_layers(true);
 

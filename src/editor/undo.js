@@ -28,13 +28,10 @@ class UndoRedo {
     this.clear = this.clear.bind(this);
 
     // При изменениях изделия, запускаем таймер снапшота
-    $p.eve.attachEvent('scheme_changed', this.scheme_changed);
-
-    // При закрытии редактора чистим историю
-    $p.eve.attachEvent('editor_closed', this.clear);
+    _editor.eve.on('scheme_changed', this.scheme_changed);
 
     // При готовности снапшота, добавляем его в историю
-    $p.eve.attachEvent('scheme_snapshot', this.scheme_snapshot);
+    _editor.eve.on('scheme_snapshot', this.scheme_snapshot);
 
   }
 
@@ -162,10 +159,10 @@ class UndoRedo {
   }
 
   unload() {
+    this.clear();
     this._snap_timer && clearTimeout(this._snap_timer);
-    $p.eve.off('scheme_changed', this.scheme_changed);
-    $p.eve.off('editor_closed', this.clear);
-    $p.eve.off('scheme_snapshot', this.scheme_snapshot);
+    this._editor.eve.off('scheme_changed', this.scheme_changed);
+    this._editor.eve.off('scheme_snapshot', this.scheme_snapshot);
     for (const fld in this) {
       delete this[fld];
     }

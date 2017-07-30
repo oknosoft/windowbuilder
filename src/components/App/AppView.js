@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {Switch, Route} from 'react-router';
 
@@ -18,10 +18,23 @@ import FrmLogin from '../../metadata-ui/FrmLogin';
 //import SchemeSettingsWrapper from '../../metadata-react-ui/SchemeSettings/SchemeSettingsWrapper';
 
 
-import DhtmlxRoot from '../CalcOrderList';
+import CalcOrderList from '../CalcOrderList';
 
 
-class AppRoot extends React.Component {
+class AppRoot extends Component {
+
+  componentDidMount() {
+    const {handleOffline} = this.props;
+    this._online = handleOffline.bind(this, false);
+    this._offline = handleOffline.bind(this, true);
+    window.addEventListener('online', this._online, false);
+    window.addEventListener('offline', this._offline, false);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('online', this._online);
+    window.removeEventListener('offline', this._offline);
+  }
 
   shouldComponentUpdate(props) {
     const {user, data_empty, couch_direct, offline, history, path_log_in} = props;
@@ -61,11 +74,14 @@ class AppRoot extends React.Component {
       <div>
         <Header />
         {
-          (!props.path_log_in && !props.doc_ram_loaded) ?
-            <DumbScreen title="Загрузка данных из IndexedDB..." page={props.page} top={92} />
+          (!props.path_log_in && !props.complete_loaded) ?
+            <DumbScreen
+              title={props.doc_ram_loaded ? "Подготовка данных в памяти..." : "Загрузка из IndexedDB..."}
+              page={props.doc_ram_loaded ? {doc_ram_loaded: true} : props.page}
+              top={92} />
             :
             <Switch>
-              <Route exact path="/" component={DhtmlxRoot}/>
+              <Route exact path="/" component={CalcOrderList}/>
               <Route path="/about" component={AboutPage} />
               <Route path="/builder/:ref([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})" component={Builder} />
               <Route path="/meta" component={MetaTreePage} />
@@ -82,6 +98,7 @@ AppRoot.propTypes = {
   history: PropTypes.shape({
     push: PropTypes.func.isRequired,
   }).isRequired,
+  handleOffline: PropTypes.func.isRequired,
 };
 
 export default withNavigateAndMeta(AppRoot);

@@ -110,7 +110,7 @@ $p.cat.clrs.__define({
                 clr_group = sys.project._dp.sys.clr_group;
               }
 						}
-						else if(sys instanceof $p.DataProcessorObj){
+						else if(sys instanceof $p.classes.DataProcessorObj){
 							clr_group = sys.sys.clr_group;
 						}
 						else{
@@ -292,7 +292,7 @@ $p.cat.clrs.__define({
 				delete attr.initial_value;
 			}
 
-			return $p.DataManager.prototype.sync_grid.call(this, attr, grid);
+			return $p.classes.DataManager.prototype.sync_grid.call(this, attr, grid);
 		}
 	}
 });

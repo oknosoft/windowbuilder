@@ -167,14 +167,17 @@ class SchemeLayers {
 
 class StvProps {
 
-  constructor(cell) {
+  constructor(cell, eve) {
     this.layout = cell;
-    this._evts = [
-      $p.eve.attachEvent("layer_activated", this.attache.bind(this)),
-      $p.eve.attachEvent("furn_changed", this.reload.bind(this)),
-      $p.eve.attachEvent("refresh_links", this.on_refresh_links.bind(this)),
-    ];
+    this.attache = this.attache.bind(this);
+    this.reload = this.reload.bind(this);
+    this.on_refresh_links = this.on_refresh_links.bind(this);
 
+    this.eve = eve.on({
+      layer_activated: this.attache,
+      furn_changed: this.reload,
+      refresh_links: this.on_refresh_links,
+    });
   }
 
   attache(obj) {
@@ -300,8 +303,9 @@ class StvProps {
   }
 
   unload() {
-    this._evts.forEach((eid) => $p.eve.detachEvent(eid));
-    this._evts.length = 0;
+    this.eve.off('layer_activated', this.attache);
+    this.eve.off('furn_changed', this.reload);
+    this.eve.off('refresh_links', this.on_refresh_links);
     this.layout.detachObject(true);
     for(const fld in this){
       delete this[fld];
@@ -312,34 +316,38 @@ class StvProps {
 
 class SchemeProps {
 
-  constructor(cell) {
+  constructor(cell, eve) {
 
     this.layout = cell;
+
     this.reflect_changes = this.reflect_changes.bind(this);
+    this.contour_redrawed = this.contour_redrawed.bind(this);
+    this.scheme_snapshot = this.scheme_snapshot.bind(this);
 
-    this._evts = [
-
+    this.eve = eve.on({
       // начинаем следить за изменениями размеров при перерисовке контуров
-      $p.eve.attachEvent("contour_redrawed", () => {
-        const {_obj, _reflect_id} = this;
-        if(_obj){
-          _reflect_id && clearTimeout(_reflect_id);
-          this._reflect_id = setTimeout(this.reflect_changes, 100);
-        }
-      }),
-
+      contour_redrawed: this.contour_redrawed,
       // при готовности снапшота, обновляем суммы и цены
-      $p.eve.attachEvent("scheme_snapshot", (scheme, attr) => {
-        const {_obj, _reflect_id} = this;
-        const {_calc_order_row} = scheme._attr;
-        if(_obj && scheme == paper.project && !attr.clipboard && _calc_order_row){
-          ["price_internal","amount_internal","price","amount"].forEach((fld) => {
-            _obj[fld] = _calc_order_row[fld];
-          });
-        }
-      })
-    ];
+      scheme_snapshot: this.scheme_snapshot,
+    });
+  }
 
+  contour_redrawed() {
+    const {_obj, _reflect_id} = this;
+    if(_obj){
+      _reflect_id && clearTimeout(_reflect_id);
+      this._reflect_id = setTimeout(this.reflect_changes, 100);
+    }
+  }
+
+  scheme_snapshot(scheme, attr) {
+    const {_obj, _reflect_id} = this;
+    const {_calc_order_row} = scheme._attr;
+    if(_obj && scheme == paper.project && !attr.clipboard && _calc_order_row){
+      ["price_internal","amount_internal","price","amount"].forEach((fld) => {
+        _obj[fld] = _calc_order_row[fld];
+      });
+    }
   }
 
   reflect_changes() {
@@ -413,8 +421,8 @@ class SchemeProps {
   }
 
   unload() {
-    this._evts.forEach((eid) => $p.eve.detachEvent(eid));
-    this._evts.length = 0;
+    this.eve.off('contour_redrawed', this.contour_redrawed);
+    this.eve.off('scheme_snapshot', this.scheme_snapshot);
     this.layout.detachObject(true);
     this._obj = null;
   }
@@ -631,7 +639,7 @@ class EditorAccordion {
         return false;
       }
     });
-    this.stv = new StvProps(this._stv);
+    this.stv = new StvProps(this._stv, _editor.eve);
 
     /**
      * свойства изделия
@@ -673,7 +681,7 @@ class EditorAccordion {
         return false;
       }
     });
-    this.props = new SchemeProps(this._prod);
+    this.props = new SchemeProps(this._prod, _editor.eve);
 
     /**
      * журнал событий

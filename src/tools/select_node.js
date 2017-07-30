@@ -93,8 +93,9 @@ class ToolSelectNode extends ToolElement {
               this.mouseStartPos = event.point.clone();
               this.originalContent = paper.capture_selection_state();
 
-              if(item.layer)
-                $p.eve.callEvent("layer_activated", [item.layer]);
+              if(item.layer){
+                this.eve.emit("layer_activated", item.layer);
+              }
             }
 
           }

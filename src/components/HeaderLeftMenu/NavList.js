@@ -9,9 +9,7 @@ import classnames from 'classnames';
 import withStyles from '../../styles/menu';
 import withIface from '../../redux/withIface';
 
-import IconPerson from 'material-ui-icons/Person';
 import IconExpandMore from 'material-ui-icons/ExpandMore';
-
 
 class NavList extends Component {
 
@@ -102,6 +100,7 @@ class NavList extends Component {
 NavList.propTypes = {
   handleClose: PropTypes.func.isRequired,
   handleNavigate: PropTypes.func.isRequired,
+  handleIfaceState: PropTypes.func.isRequired,
   items: PropTypes.array.isRequired,
   classes: PropTypes.object.isRequired,
 };

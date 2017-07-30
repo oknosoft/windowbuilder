@@ -454,15 +454,12 @@ class ProfileItem extends GeneratrixElement {
     return this._row.r;
   }
   set r(v){
-    const {_row, _attr} = this;
+    const {_row, _attr, project} = this;
     if(_row.r != v){
       _attr._rays.clear();
       _row.r = v;
       this.set_generatrix_radius();
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'arc_h'
-      });
+      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -476,15 +473,12 @@ class ProfileItem extends GeneratrixElement {
     return this._row.arc_ccw;
   }
   set arc_ccw(v){
-    const {_row, _attr} = this;
+    const {_row, _attr, project} = this;
     if(_row.arc_ccw != v){
       _attr._rays.clear();
       _row.arc_ccw = v;
       this.set_generatrix_radius();
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'arc_h'
-      });
+      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -516,14 +510,7 @@ class ProfileItem extends GeneratrixElement {
       }
       _row.r = b.arc_r(b.x, b.y, e.x, e.y, v);
       this.set_generatrix_radius(v);
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'r'
-      });
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'arc_ccw'
-      });
+      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -994,10 +981,6 @@ class ProfileItem extends GeneratrixElement {
     }
     if(height && height > min_radius){
       height = min_radius;
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'arc_h'
-      });
     }
 
     if(selected){

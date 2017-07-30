@@ -144,7 +144,7 @@ class Contour extends AbstractFilling(paper.Layer) {
   activate(custom) {
     this.project._activeLayer = this;
     if(this._row){
-      $p.eve.callEvent("layer_activated", [this, !custom]);
+      this.notify(this, "layer_activated", !custom);
       this.project.register_update();
     }
   }
@@ -615,7 +615,7 @@ class Contour extends AbstractFilling(paper.Layer) {
       type = obj.type;
     }
     this.project._scope.eve.emit_async(type, obj);
-    this.project.register_change();
+    type === 'update' && this.project.register_change();
   }
 
   /**
@@ -1707,7 +1707,7 @@ class Contour extends AbstractFilling(paper.Layer) {
    */
   update_handle_height(cache) {
 
-    const {furn, _row} = this;
+    const {furn, _row, project} = this;
     const {furn_set, handle_side} = furn;
     if(!handle_side || furn_set.empty()){
       return;
@@ -1765,10 +1765,8 @@ class Contour extends AbstractFilling(paper.Layer) {
         }
       }
     });
-    Object.getNotifier(this).notify({
-      type: 'update',
-      name: 'h_ruch'
-    });
+
+    project.notify(this, 'update', {h_ruch: true});
   }
 
   /**
@@ -1800,10 +1798,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
     else{
       _row.h_ruch = 0;
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'h_ruch'
-      });
+      project.notify(this, 'update', {h_ruch: true});
     }
   }
 

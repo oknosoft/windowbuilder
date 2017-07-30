@@ -41,7 +41,6 @@ class NavUserButtons extends Component {
       classes,
       fetch,
       offline,
-      couch_direct,
       user,
     } = props;
     const sync_tooltip = `Синхронизация ${sync_started ? 'выполняется' : 'отключена'}`;

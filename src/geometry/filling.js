@@ -37,21 +37,6 @@ class Filling extends AbstractFilling(BuilderElement) {
       attr.path = path;
     }
 
-    /**
-     * За этим полем будут "следить" элементы раскладок и пересчитывать - перерисовывать себя при изменениях соседей
-     */
-    this._noti = {};
-
-    /**
-     * Формирует оповещение для тех, кто следит за this._noti
-     * @param obj
-     */
-    this.notify = function (obj) {
-      Object.getNotifier(this._noti).notify(obj);
-      this.project.register_change();
-    }.bind(this);
-
-
     // initialize
     this.initialize(attr);
 
@@ -214,8 +199,10 @@ class Filling extends AbstractFilling(BuilderElement) {
    */
   create_leaf() {
 
+    const {project} = this;
+
     // прибиваем соединения текущего заполнения
-    this.project.connections.cnns.clear({elm1: this.elm});
+    project.connections.cnns.clear({elm1: this.elm});
 
     // создаём пустой новый слой
     const contour = new Contour( {parent: this.parent});
@@ -228,13 +215,10 @@ class Filling extends AbstractFilling(BuilderElement) {
     this._row.cnstr = contour.cnstr;
 
     // фурнитура и параметры по умолчанию
-    contour.furn = this.project.default_furn;
+    contour.furn = project.default_furn;
 
     // оповещаем мир о новых слоях
-    Object.getNotifier(this.project._noti).notify({
-      type: 'rows',
-      tabular: "constructions"
-    });
+    project.notify(contour, 'rows', {constructions: true});
 
     // делаем створку текущей
     contour.activate();

@@ -87,7 +87,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           const set_department = $p.DocCalc_order.set_department.bind(dp);
           set_department();
           if(!$p.wsql.get_user_param('couch_direct')){
-            $p.once({user_log_in: set_department});
+            $p.md.once('user_log_in', set_department);
           }
 
           // настраиваем фильтр для списка заказов

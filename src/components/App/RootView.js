@@ -40,7 +40,7 @@ class RootView extends Component {
   render() {
 
     const {props} = this;
-    const {meta_loaded, data_empty, data_loaded, sync_started, history} = props;
+    const {meta_loaded, data_empty, data_loaded, history} = props;
     const show_dumb = !meta_loaded ||
       (data_empty === undefined) ||
       (data_empty === false && !data_loaded);

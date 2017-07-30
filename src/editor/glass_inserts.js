@@ -53,10 +53,7 @@ class GlassInserts {
     const {elm} = this;
     grids.inserts && grids.inserts.editStop();
     elm.project.register_change(true);
-    elm && Object.getNotifier(elm).notify({
-      type: 'update',
-      name: 'inset'
-    });
+    elm.project.notify(elm, update, {inset: true});
     return true;
   }
 

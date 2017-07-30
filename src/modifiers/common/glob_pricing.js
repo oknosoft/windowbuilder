@@ -18,11 +18,13 @@ class Pricing {
   constructor($p) {
 
     // подписываемся на событие после загрузки из pouchdb-ram и готовности предопределенных
-    const init_event_id = $p.eve.attachEvent("predefined_elmnts_inited", () => {
-      $p.eve.detachEvent(init_event_id);
+    $p.md.once("predefined_elmnts_inited", () => {
 
+      // грузим в ram цены номенклатуры
       this.by_range()
         .then(() => {
+          // излучаем событие "можно открывать формы"
+          $p.adapters.pouch.emit('pouch_complete_loaded');
           // следим за изменениями документа установки цен, чтобы при необходимости обновить кеш
           $p.doc.nom_prices_setup.pouch_db.changes({
             since: 'now',
@@ -292,15 +294,17 @@ class Pricing {
 
     // пытаемся рассчитать по спецификации
     if(prm.spec.count()){
-      prm.spec.each((row) => {
+      prm.spec.forEach((row) => {
 
-        this.nom_price(row.nom, row.characteristic, prm.price_type.price_type_first_cost, prm, row);
-        row.amount = row.price * row.totqty1;
+        const {_obj, nom, characteristic} = row;
+
+        this.nom_price(nom, characteristic, prm.price_type.price_type_first_cost, prm, _obj);
+        _obj.amount = _obj.price * _obj.totqty1;
 
         if(marginality_in_spec){
-          fake_row._mixin(row, ["nom"]);
-          const tmp_price = this.nom_price(row.nom, row.characteristic, prm.price_type.price_type_sale, prm, fake_row);
-          row.amount_marged = (tmp_price ? tmp_price : row.price) * row.totqty1;
+          fake_row.nom = nom;
+          const tmp_price = this.nom_price(nom, characteristic, prm.price_type.price_type_sale, prm, fake_row);
+          _obj.amount_marged = (tmp_price ? tmp_price : _obj.price) * _obj.totqty1;
         }
 
       });
@@ -367,15 +371,7 @@ class Pricing {
     }
 
     // Эмулируем событие окончания редактирования, чтобы единообразно пересчитать строку табчасти
-    if(!prm.hand_start){
-      $p.doc.calc_order.emit("value_change", calc_order_row._owner._owner, {
-        field: "price",
-        value: calc_order_row.price,
-        tabular_section: "production",
-        row: calc_order_row,
-        no_extra_charge: true,
-      });
-    }
+    !prm.hand_start && calc_order_row.value_change("price", {}, calc_order_row.price, true);
 
     // Цены и суммы вытянутых строк спецификации в заказ
     prm.order_rows && prm.order_rows.forEach((value) => {

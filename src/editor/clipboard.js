@@ -131,8 +131,8 @@ function Clipbrd(_editor) {
 	};
 
 	// при готовности снапшота, помещаем результат в буфер обмена
-	$p.eve.attachEvent("scheme_snapshot", function (scheme, attr) {
-		if(scheme == _editor.project && attr.clipboard){
+  _editor.eve.on("scheme_snapshot", function (scheme, attr) {
+		if(attr.clipboard){
 			attr.callback(scheme);
 		}
 	});

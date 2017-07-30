@@ -95,10 +95,10 @@ class ToolArc extends ToolElement{
 
           }
 
-          setTimeout(function () {
+          setTimeout(() => {
             r.layer.redraw();
             r.parent.attache_wnd(paper._acc.elm);
-            $p.eve.callEvent("layer_activated", [r.layer]);
+            this.eve.emit("layer_activated", r.layer);
           }, 10);
 
         }else{
@@ -115,8 +115,9 @@ class ToolArc extends ToolElement{
           item.attache_wnd(paper._acc.elm);
           item.selected = true;
 
-          if(item.selected && item.layer)
-            $p.eve.callEvent("layer_activated", [item.layer]);
+          if(item.selected && item.layer){
+            this.eve.emit("layer_activated", item.layer);
+          }
         }
 
         if (this.mode && this.changed) {

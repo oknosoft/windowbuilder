@@ -47,8 +47,7 @@ class ToolCut extends ToolElement{
           item.attache_wnd(paper._acc.elm);
           item.selected = true;
 
-          if(item.selected && item.layer)
-            $p.eve.callEvent("layer_activated", [item.layer]);
+          item.selected && item.layer && this.eve.emit("layer_activated", item.layer);
         }
 
         if (this.mode && this.changed) {

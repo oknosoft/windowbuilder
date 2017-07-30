@@ -80,7 +80,7 @@ class DimensionLine extends paper.Group {
     });
 
     this._sizes_wnd = this._sizes_wnd.bind(this);
-    $p.eve.attachEvent("sizes_wnd", this._sizes_wnd);
+    this.eve.on("sizes_wnd", this._sizes_wnd);
 
   }
 

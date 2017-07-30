@@ -52,7 +52,7 @@ class Scheme extends paper.Project {
 
         if(fields.hasOwnProperty('clr') || fields.hasOwnProperty('sys')){
           // информируем мир об изменениях
-          _editor.eve.emit_async("scheme_changed", _scheme);
+          _scheme.notify(_scheme, "scheme_changed");
         }
 
         if(fields.hasOwnProperty('clr')){
@@ -94,20 +94,22 @@ class Scheme extends paper.Project {
 
     };
 
+    /**
+     * Объект обработки с табличными частями
+     */
+    this._dp = $p.dp.buyers_order.create();
+
     // наблюдатель за изменениями параметров створки
     this._papam_listener = (obj, fields) => {
       if(_attr._loading || _attr._snapshot){
         return;
       }
-      if(fields.hasOwnProperty('params') || obj._owner && obj._owner._name == 'params'){
+      const {characteristic} = this._dp;
+      if(obj._owner === characteristic.params || (obj === characteristic && fields.hasOwnProperty('params'))){
         _scheme.register_change();
       }
     };
 
-    /**
-     * Объект обработки с табличными частями
-     */
-    this._dp = $p.dp.buyers_order.create();
 
     /**
      * Менеджер соединений изделия
@@ -351,14 +353,17 @@ class Scheme extends paper.Project {
           _scheme.zoom_fit();
 
           // виртуальное событие, чтобы UndoRedo сделал начальный снапшот
-          !_attr._snapshot && $p.eve.callEvent("scheme_changed", [_scheme]);
+          if(!_attr._snapshot) {
+            _scheme._scope._undo.clear();
+            _scheme._scope._undo.save_snapshot(_scheme);
+          }
 
           // регистрируем изменение, чтобы отрисовались размерные линии
           _scheme.register_change(true);
 
           // виртуальное событие, чтобы активировать слой в дереве слоёв
           if(_scheme.contours.length){
-            $p.eve.callEvent("layer_activated", [_scheme.contours[0], true]);
+            _scheme.notify(_scheme.contours[0], "layer_activated", true);
           }
 
           delete _attr._loading;
@@ -368,11 +373,11 @@ class Scheme extends paper.Project {
             if(_scheme.ox.coordinates.count()){
               if(_scheme.ox.specification.count()){
                 _scheme.draw_visualization();
-                $p.eve.callEvent("coordinates_calculated", [_scheme, {onload: true}]);
+                _scheme.notify(_scheme, "coordinates_calculated", {onload: true});
               }
               else{
                 // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет
-                $p.eve.callEvent("save_coordinates", [_scheme, {}]);
+                $p.products_building.recalc(_scheme, {});
               }
             }
             else{
@@ -497,7 +502,7 @@ class Scheme extends paper.Project {
 
       // регистрируем изменённость характеристики
       this.ox._data._modified = true;
-      $p.eve.callEvent("scheme_changed", [this]);
+      this.notify(this, "scheme_changed");
     }
     _ch.push(Date.now());
 
@@ -573,11 +578,11 @@ class Scheme extends paper.Project {
    * Формирует оповещение для тех, кто следит за this._noti
    * @param obj
    */
-  notify(obj, type = 'update') {
+  notify(obj, type = 'update', fields) {
     if(obj.type){
       type = obj.type;
     }
-    this._scope.eve.emit_async(type, obj);
+    this._scope.eve.emit_async(type, obj, fields);
   }
 
   /**
@@ -598,11 +603,11 @@ class Scheme extends paper.Project {
    */
   unload() {
     const {_dp, _attr, _papam_listener, _dp_listener} = this;
-    this.clear();
     _attr._loading = _attr._saving = true;
     _dp._manager.off('update', _dp_listener);
     _dp.characteristic._manager.off('update', _papam_listener);
     _dp.characteristic._manager.off('rows', _papam_listener);
+    this.clear();
     this.remove();
     this._attr._calc_order_row = null;
   }
@@ -707,7 +712,7 @@ class Scheme extends paper.Project {
     // вызываем метод save_coordinates в слое соединителей
     this.l_connective.save_coordinates();
 
-    $p.eve.callEvent("save_coordinates", [this, attr]);
+    $p.products_building.recalc(this, attr);
   }
 
   /**

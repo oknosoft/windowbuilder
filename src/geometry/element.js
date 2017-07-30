@@ -482,7 +482,7 @@ class BuilderElement extends paper.Group {
    */
   detache_wnd() {
     const {_grid} = this._attr;
-    if(_grid && _grid.destructor){
+    if(_grid && _grid.destructor && _grid._owner_cell){
       _grid._owner_cell.detachObject(true);
       delete this._attr._grid;
     }

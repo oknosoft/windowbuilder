@@ -485,7 +485,7 @@ class ProductsBuilding {
         // если во вставке указано создавать продукцию, создаём
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
           // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
-          const cx = ox.find_create_cx(elm.elm, inset.ref)._mixin(inset.contour_attrs(layer));
+          const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(layer));
           ox._order_rows.push(cx);
           spec = cx.specification.clear();
         }
@@ -579,7 +579,7 @@ class ProductsBuilding {
         // если во вставке указано создавать продукцию, создаём
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
           // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
-          const cx = ox.find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
+          const cx = Object.assign(ox.find_create_cx(-contour.cnstr, inset.ref), inset.contour_attrs(contour));
           ox._order_rows.push(cx);
           spec = cx.specification.clear();
         }
@@ -663,7 +663,7 @@ class ProductsBuilding {
     /**
      * Пересчет спецификации при записи изделия
      */
-    this.save_coordinates = function (scheme, attr) {
+    this.recalc = function (scheme, attr) {
 
       //console.time("base_spec");
       //console.profile();
@@ -696,7 +696,7 @@ class ProductsBuilding {
 
       // информируем мир об окончании расчета координат
       scheme.draw_visualization();
-      scheme._scope.eve.emit("coordinates_calculated", scheme, attr);
+      scheme.notify(scheme, "coordinates_calculated", attr);
 
 
       // производим корректировку спецификации с возможным вытягиванием строк в заказ и удалением строк из заказа
@@ -712,7 +712,7 @@ class ProductsBuilding {
 
       // информируем мир о завершении пересчета
       if(attr.snapshot){
-        scheme._scope.eve.emit("scheme_snapshot", scheme, attr);
+        scheme.notify(scheme, "scheme_snapshot", attr);
       }
 
       // информируем мир о записи продукции

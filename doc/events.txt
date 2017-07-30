@@ -1,4 +1,4 @@
-editor_closed
+-editor_closed
 scheme_changed
 layer_activated
 coordinates_calculated
