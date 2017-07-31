@@ -168,12 +168,8 @@
           return;
         }
 
-				Object.getNotifier(this).notify({
-					type: 'update',
-					name: 'value',
-					oldValue: this._obj.value
-				});
-				this._obj.value = $p.utils.is_data_obj(v) ? v.ref : v;
+        _mgr.emit_async('update', this, {value: this._obj.value})
+				this._obj.value = v.valueOf();
 				this._data._modified = true;
 			}
 		}

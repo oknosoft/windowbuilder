@@ -924,20 +924,15 @@ class ProfileItem extends GeneratrixElement {
    * @private
    */
   observer(an) {
-    if(Array.isArray(an)){
-
-      const moved = an[an.length-1];
-
-      if(moved.profiles.indexOf(this) == -1){
-
+    const {profiles} = an;
+    if(profiles){
+      if(profiles.indexOf(this) == -1){
         // если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
-        moved.profiles.forEach((p) => {
-          this.do_bind(p, this.cnn_point("b"), this.cnn_point("e"), moved);
+        profiles.forEach((p) => {
+          this.do_bind(p, this.cnn_point("b"), this.cnn_point("e"), an);
         });
-
-        moved.profiles.push(this);
+        profiles.push(this);
       }
-
     }
     else if(an instanceof Profile || an instanceof ProfileConnective){
       this.do_bind(an, this.cnn_point("b"), this.cnn_point("e"));
@@ -1694,8 +1689,8 @@ class Profile extends ProfileItem {
     if(this.parent){
 
       // Подключаем наблюдателя за событиями контура с именем _consts.move_points_
-      this._observer = this.observer.bind(this);
-      this.project._scope.eve.on(consts.move_points, this._observer)
+      this.observer = this.observer.bind(this);
+      this.project._scope.eve.on(consts.move_points, this.observer)
 
       // Информируем контур о том, что у него появился новый ребёнок
       this.layer.on_insert_elm(this);

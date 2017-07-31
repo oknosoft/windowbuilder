@@ -8,29 +8,22 @@
  * @module dp_buyers_order
  */
 
+// установим количество по умолчению при добавлении строки
+$p.DpBuyers_order.prototype.add_row = function (row) {
+  if (row._owner.name === 'production') {
+    row.qty = row.quantity = 1;
+  }
+};
 
+$p.DpBuyers_orderProductionRow.prototype.value_change = function (field, type, value) {
+  if (field == 'len' || field == 'height') {
+    this[field] = value;
+  }
+  if (this.height != 0 && this.height != 0) {
+    this.s = (this.height * this.len / 1000000).round(3);
+  }
+};
 
-$p.dp.buyers_order.on({
-
-  add_row: function ({row, tabular_section, field}) {
-    // установим валюту и тип цен по умолчению при добавлении строки
-    if(tabular_section == "production"){
-      row.qty = row.quantity = 1;
-    }
-  },
-
-  value_change: function({row, tabular_section, field, value}){
-    if(tabular_section == "production"){
-      if(field == "len" || field == "height" ) {
-        row[field] = value;
-      }
-      if(row.height != 0 && row.height != 0) {
-        row.s = (row.height * row.len / 1000000).round(3);
-      }
-    }
-  },
-
-});
 
 class CalcOrderFormProductList {
 
@@ -42,7 +35,7 @@ class CalcOrderFormProductList {
     this.attr = {
 
       // командная панель формы
-      toolbar_struct: $p.injected_data["toolbar_product_list.xml"],
+      toolbar_struct: $p.injected_data['toolbar_product_list.xml'],
 
       // переопределяем обработчики кнопок командной панели формы
       toolbar_click: this.toolbar_click.bind(this),
@@ -51,11 +44,11 @@ class CalcOrderFormProductList {
       draw_pg_header: this.draw_pg_header.bind(this),
 
       // переопределяем метод отрисовки табличных частей, т.к. мы хотим разместить табчасть на первой странице без закладок
-      draw_tabular_sections: this.draw_tabular_sections.bind(this)
+      draw_tabular_sections: this.draw_tabular_sections.bind(this),
 
     };
 
-    this.dp.presentation = calc_order.presentation + " - добавление продукции";
+    this.dp.presentation = calc_order.presentation + ' - добавление продукции';
 
     this.dp.form_obj(pwnd, this.attr);
 
@@ -66,8 +59,8 @@ class CalcOrderFormProductList {
   draw_pg_header(dp, wnd) {
     const {production} = wnd.elmnts.grids;
     const refill_prms = this.refill_prms.bind(this);
-    production.attachEvent("onRowSelect", refill_prms);
-    production.attachEvent("onEditCell", (stage, rId, cInd) => {
+    production.attachEvent('onRowSelect', refill_prms);
+    production.attachEvent('onEditCell', (stage, rId, cInd) => {
       !cInd && setTimeout(refill_prms);
     });
   }
@@ -79,27 +72,27 @@ class CalcOrderFormProductList {
     wnd.maximize();
 
     const {elmnts} = wnd;
-    elmnts.frm_toolbar.hideItem("bs_print");
+    elmnts.frm_toolbar.hideItem('bs_print');
 
     // добавляем layout на первую страницу
     wnd.detachObject(true);
     wnd.maximize();
     elmnts.layout = wnd.attachLayout({
-      pattern: "2E",
+      pattern: '2E',
       cells: [{
-        id: "a",
-        text: "Продукция",
+        id: 'a',
+        text: 'Продукция',
         header: false,
       }, {
-        id: "b",
-        text: "Параметры",
+        id: 'b',
+        text: 'Параметры',
         header: false,
       }],
-      offsets: {top: 0, right: 0, bottom: 0, left: 0}
+      offsets: {top: 0, right: 0, bottom: 0, left: 0},
     });
 
     // добавляем табчасть продукции
-    this.meta_production = $p.dp.buyers_order.metadata("production").fields._clone();
+    this.meta_production = $p.dp.buyers_order.metadata('production').fields._clone();
     elmnts.grids.production = elmnts.layout.cells('a').attachTabular({
       metadata: this.meta_production,
       obj: dp,
@@ -123,7 +116,7 @@ class CalcOrderFormProductList {
 
   // команды формы
   toolbar_click(btn_id) {
-    if(btn_id == "btn_ok"){
+    if (btn_id == 'btn_ok') {
       this.dp._data._modified = false;
       this.dp.calc_order.process_add_product_list(this.dp)
         .then(() => {
@@ -141,7 +134,7 @@ class CalcOrderFormProductList {
     const {production, params} = wnd.elmnts.grids;
     if (production && params) {
       const row = production.get_cell_field();
-      if(row){
+      if (row) {
         params.selection = {elm: row.obj.row};
         if (!row.obj.inset.empty()) {
           $p.cat.clrs.selection_exclude_service(meta_production.clr, row.obj.inset);
@@ -150,6 +143,5 @@ class CalcOrderFormProductList {
     }
   }
 
-}
-
+};
 

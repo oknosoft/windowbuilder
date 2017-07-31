@@ -374,7 +374,7 @@ class DimensionLine extends paper.Group {
    * @method remove
    */
   remove() {
-    $p.eve.detachEvent("sizes_wnd", this._sizes_wnd);
+    this.eve.off("sizes_wnd", this._sizes_wnd);
     if(this._row){
       this._row._owner.del(this._row);
       this._row = null;

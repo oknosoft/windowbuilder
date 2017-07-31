@@ -755,6 +755,8 @@ class ProductsBuilding {
         delete scheme._attr._saving;
       }
 
+      ox._data._loading = false;
+
     }
 
   }

@@ -162,19 +162,20 @@ class ToolSelectNode extends ToolElement {
             paper.clear_selection_bounds();
             //undo.snapshot("Move Shapes");
           }
-
-        } else if (this.mode == consts.move_points) {
+        }
+        else if (this.mode == consts.move_points) {
           if (this.changed) {
             paper.clear_selection_bounds();
             //undo.snapshot("Move Points");
           }
-
-        } else if (this.mode == consts.move_handle) {
+        }
+        else if (this.mode == consts.move_handle) {
           if (this.changed) {
             paper.clear_selection_bounds();
             //undo.snapshot("Move Handle");
           }
-        } else if (this.mode == 'box-select') {
+        }
+        else if (this.mode == 'box-select') {
 
           var box = new paper.Rectangle(this.mouseStartPos, event.point);
 

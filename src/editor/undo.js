@@ -39,7 +39,13 @@ class UndoRedo {
    * Инициализирует создание снапшота - запускает пересчет изделия
    */
   run_snapshot() {
-    this._pos >= 0 && this._editor.project.save_coordinates({snapshot: true, clipboard: false});
+    const {project} = this._editor;
+    if(project._ch.length){
+      this._snap_timer = setTimeout(this.run_snapshot, 600);
+    }
+    else{
+      this._pos >= 0 && project.save_coordinates({snapshot: true, clipboard: false});
+    }
   }
 
   /**
@@ -59,17 +65,18 @@ class UndoRedo {
   scheme_changed(scheme, attr) {
     const snapshot = scheme._attr._snapshot || (attr && attr.snapshot);
     this._snap_timer && clearTimeout(this._snap_timer);
+    this._snap_timer = 0;
     if (!snapshot && scheme == this._editor.project) {
       // при открытии изделия чистим историю
       if (scheme._attr._loading) {
         this._snap_timer = setTimeout(() => {
           this.clear();
           this.save_snapshot(scheme);
-        }, 700);
+        }, 600);
       }
       else {
         // при обычных изменениях, запускаем таймер снапшота
-        this._snap_timer = setTimeout(this.run_snapshot, 700);
+        this._snap_timer = setTimeout(this.run_snapshot, 600);
       }
     }
   }

@@ -82,7 +82,7 @@ class ToolArc extends ToolElement{
             r.parent.rays.clear();
             r.parent._row.r = 0;
             r.selected = true;
-            r.layer.notify({type: consts.move_points, profiles: [r.parent], points: []});
+            r.layer.notify({profiles: [r.parent], points: []}, consts.move_points);
 
           } else {
             paper.project.deselectAll();
@@ -165,7 +165,7 @@ class ToolArc extends ToolElement{
     element.parent.rays.clear();
     element.selected = true;
 
-    element.layer.notify({type: consts.move_points, profiles: [element.parent], points: []});
+    element.layer.notify({profiles: [element.parent], points: []}, consts.move_points);
   }
 
   hitTest(event) {

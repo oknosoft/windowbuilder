@@ -148,7 +148,7 @@ class SchemeLayers {
     }
   }
 
-  attache() {
+  attach() {
 
   }
 
@@ -169,18 +169,18 @@ class StvProps {
 
   constructor(cell, eve) {
     this.layout = cell;
-    this.attache = this.attache.bind(this);
+    this.attach = this.attach.bind(this);
     this.reload = this.reload.bind(this);
-    this.on_refresh_links = this.on_refresh_links.bind(this);
+    this.on_refresh_prm_links = this.on_refresh_prm_links.bind(this);
 
     this.eve = eve.on({
-      layer_activated: this.attache,
+      layer_activated: this.attach,
       furn_changed: this.reload,
-      refresh_links: this.on_refresh_links,
+      refresh_prm_links: this.on_refresh_prm_links,
     });
   }
 
-  attache(obj) {
+  attach(obj) {
 
     if(!this.layout || !this.layout.attachHeadFields){
       return;
@@ -191,7 +191,7 @@ class StvProps {
     }
 
     // пробегаем в цикле по параметрам, чтобы спрятать скрытые строки
-    obj.refresh_links();
+    obj.refresh_prm_links();
 
     const attr = {
       obj: obj,
@@ -232,7 +232,7 @@ class StvProps {
 
   }
 
-  on_refresh_links(contour) {
+  on_refresh_prm_links(contour) {
     const {_grid} = this;
     if(_grid && contour == _grid._obj){
       this.on_prm_change('0|0', null, true);
@@ -303,9 +303,9 @@ class StvProps {
   }
 
   unload() {
-    this.eve.off('layer_activated', this.attache);
+    this.eve.off('layer_activated', this.attach);
     this.eve.off('furn_changed', this.reload);
-    this.eve.off('refresh_links', this.on_refresh_links);
+    this.eve.off('refresh_prm_links', this.on_refresh_prm_links);
     this.layout.detachObject(true);
     for(const fld in this){
       delete this[fld];
@@ -359,7 +359,7 @@ class SchemeProps {
     _obj.s = project.area;
   }
 
-  attache(_obj) {
+  attach(_obj) {
 
     if(!this.layout || !this.layout.attachHeadFields){
       return;
@@ -693,9 +693,9 @@ class EditorAccordion {
 
   }
 
-  attache(obj) {
-    this.tree_layers.attache();
-    this.props.attache(obj);
+  attach(obj) {
+    this.tree_layers.attach();
+    this.props.attach(obj);
   }
 
   unload() {

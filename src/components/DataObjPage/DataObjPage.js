@@ -22,15 +22,6 @@ class DataObjPage extends DhtmlxCell {
           value: title,
         });
       },
-      on_close(o) {
-        if(o && o._obj){
-          const {ref, state} = o._obj;
-          setTimeout(() => handlers.handleNavigate(`/?ref=${ref}&state_filter=${state || 'draft'}`));
-        }
-        else{
-          setTimeout(() => handlers.handleNavigate(`/`));
-        }
-      },
     }, handlers);
   }
 
@@ -41,14 +32,21 @@ class DataObjPage extends DhtmlxCell {
     super.componentWillUnmount();
   }
 
+  /**
+   * проверка, можно ли покидать страницу
+   * @param loc
+   * @return {*}
+   */
+  prompt(loc) {
+    if(loc.pathname.match(/builder/)){
+      return true;
+    }
+    return this.cell.prompt(loc);
+  }
+
   render() {
     return <div>
-      <Prompt
-        when={false}
-        message={location => (
-          `Are you sure you want to go to ${location.pathname}`
-        )}
-      />
+      <Prompt when message={this.prompt.bind(this)} />
       <div ref={el => this.el = el}/>
     </div>;
   }

@@ -7,15 +7,7 @@
  * Created 10.10.2016
  */
 
-// подписки на события
-$p.doc.credit_card_order.on({
-
-	// перед записью рассчитываем итоги
-	before_save: function (attr, obj) {
-    obj.doc_amount = obj.payment_details.aggregate([], "amount");
-
-	},
-
-});
-
-
+// перед записью рассчитываем итоги
+$p.DocCredit_card_order.prototype.before_save = function () {
+  this.doc_amount = this.payment_details.aggregate([], 'amount');
+};

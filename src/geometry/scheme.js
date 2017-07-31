@@ -170,7 +170,7 @@ class Scheme extends paper.Project {
         _scheme.contours.forEach((l) => {
           l.contours.forEach((l) => {
             l.save_coordinates(true);
-            l.refresh_links();
+            l.refresh_prm_links();
           });
           l.l_dimensions.redraw();
         });
@@ -352,10 +352,11 @@ class Scheme extends paper.Project {
           _attr._bounds = null;
           _scheme.zoom_fit();
 
-          // виртуальное событие, чтобы UndoRedo сделал начальный снапшот
+          // заставляем UndoRedo сделать начальный снапшот, одновременно, обновляем заголовок
           if(!_attr._snapshot) {
             _scheme._scope._undo.clear();
             _scheme._scope._undo.save_snapshot(_scheme);
+            _scheme._scope.set_text();
           }
 
           // регистрируем изменение, чтобы отрисовались размерные линии
@@ -588,18 +589,12 @@ class Scheme extends paper.Project {
   /**
    * Чистит изображение
    */
-  clear(_attr) {
-
-    if(_attr){
-      _attr._loading = _attr._saving = true;
-    }
-    else{
-      const pnames = '_bounds,_update_timer,_loading,_snapshot';
-      _attr = this._attr;
-      for(let fld in _attr){
-        if(!pnames.match(fld)){
-          delete _attr[fld];
-        }
+  clear() {
+    const {_attr} = this;
+    const pnames = '_bounds,_update_timer,_loading,_snapshot';
+    for(let fld in _attr){
+      if(!pnames.match(fld)){
+        delete _attr[fld];
       }
     }
 
@@ -610,11 +605,35 @@ class Scheme extends paper.Project {
    * Деструктор
    */
   unload() {
-    const {_dp, _attr, _papam_listener, _dp_listener} = this;
+    const {_dp, _attr, _papam_listener, _dp_listener, _calc_order_row} = this;
+    const pnames = '_loading,_saving';
+    for(let fld in _attr){
+      if(pnames.match(fld)){
+        _attr[fld] = true;
+      }
+      else{
+        delete _attr[fld];
+      }
+    }
+    //this.clear(_attr);
+
     _dp._manager.off('update', _dp_listener);
-    _dp.characteristic._manager.off('update', _papam_listener);
-    _dp.characteristic._manager.off('rows', _papam_listener);
-    this.clear(_attr);
+
+    const ox = _dp.characteristic;
+    ox._manager.off('update', _papam_listener);
+    ox._manager.off('rows', _papam_listener);
+    if(ox && ox._modified){
+      if(ox.is_new()){
+        if(_calc_order_row){
+          ox.calc_order.production.del(_calc_order_row);
+        }
+        ox.unload();
+      }
+      else{
+        setTimeout(ox.load.bind(ox), 100);
+      }
+    }
+
     this.remove();
     for(let fld in _attr){
       delete _attr[fld];
@@ -696,6 +715,7 @@ class Scheme extends paper.Project {
     }
 
     _attr._saving = true;
+    ox._data._loading = true;
 
     // устанавливаем размеры в характеристике
     ox.x = bounds.width.round(1);
@@ -706,15 +726,6 @@ class Scheme extends paper.Project {
     ox.cnn_elmnts.clear();
     ox.glasses.clear();
 
-    // смещаем слои, чтобы расположить изделие в начале координат
-    //var bpoint = this.bounds.point;
-    //if(bpoint.length > consts.sticking0){
-    //	this.getItems({class: Contour}).forEach(function (contour) {
-    //		contour.position = contour.position.subtract(bpoint);
-    //	});
-    //	this._attr._bounds = null;
-    //};
-
     // вызываем метод save_coordinates в дочерних слоях
     this.contours.forEach((contour) => contour.save_coordinates());
 
@@ -722,6 +733,7 @@ class Scheme extends paper.Project {
     this.l_connective.save_coordinates();
 
     $p.products_building.recalc(this, attr);
+
   }
 
   /**

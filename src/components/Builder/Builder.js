@@ -1,33 +1,44 @@
-// import React, {Component} from 'react';
+import React from 'react';
 // import PropTypes from 'prop-types';
 import DhtmlxCell from '../../metadata-ui/DhtmlxCell';
 import WindowSizer from '../../metadata-ui/WindowSize';
 import withIface from '../../redux/withIface';
+
+import {Prompt} from 'react-router-dom';
 
 class Builder extends DhtmlxCell {
 
   componentDidMount() {
     super.componentDidMount();
     const {cell, handlers} = this;
-    this._editor = new $p.Editor(cell, {
-      set_text(title) {
-        handlers.props.title != title && handlers.handleIfaceState({
-          component: '',
-          name: 'title',
-          value: title,
-        });
-      }
-    }, handlers);
+    this._editor = new $p.Editor(cell, handlers);
   }
 
   componentWillUnmount() {
     //$p.off('hash_route', this.hash_route);
     const {cell, _editor} = this;
-    cell.detachObject(true);
     if(_editor){
+      _editor.unload();
       delete this._editor;
     }
+    cell.detachObject(true);
     super.componentWillUnmount();
+  }
+
+  /**
+   * проверка, можно ли покидать страницу
+   * @param loc
+   * @return {*}
+   */
+  prompt(loc) {
+    return this._editor.prompt(loc);
+  }
+
+  render() {
+    return <div>
+      <Prompt when message={this.prompt.bind(this)} />
+      <div ref={el => this.el = el}/>
+    </div>;
   }
 
 }

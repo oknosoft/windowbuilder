@@ -13,7 +13,7 @@
 
 	_mgr.form_obj = function(pwnd, attr, handlers){
 
-		let o, wnd, evts = [], attr_on_close = attr.on_close;
+		let o, wnd, evts = [];
 
 		/**
 		 * структура заголовков табчасти продукции
@@ -193,9 +193,33 @@
 				if(res){
 					o = res.o;
 					wnd = res.wnd;
+          wnd.prompt = prompt;
+          wnd.close_confirmed = true;
 					return res;
 				}
 			});
+
+    /**
+     * проверка, можно ли покидать страницу
+     * @param loc
+     * @return {*}
+     */
+    function prompt(loc) {
+      if(loc.pathname.match(/builder/)){
+        return true;
+      }
+      return (o && o._modified) ? `${o.presentation} изменён.\n\nЗакрыть без сохранения?` : true;
+    }
+
+    function close() {
+      if(o && o._obj){
+        const {ref, state} = o._obj;
+        handlers.handleNavigate(`/?ref=${ref}&state_filter=${state || 'draft'}`);
+      }
+      else{
+        handlers.handleNavigate(`/`);
+      }
+    }
 
 
 		/**
@@ -234,7 +258,7 @@
 					break;
 
 				case 'btn_close':
-					wnd.close();
+          close();
 					break;
 
 				case 'btn_add_builder':
@@ -357,9 +381,8 @@
 
 				o.save(post)
 					.then(function(){
-
 						if(action == "sent" || action == "close")
-							wnd.close();
+							close();
 						else{
 							wnd.set_text();
 							set_editable(o, wnd);
@@ -371,38 +394,50 @@
 					});
 			}
 
-			if(action == "sent"){
-				// показать диалог и обработать возврат
-				dhtmlx.confirm({
-					title: $p.msg.order_sent_title,
-					text: $p.msg.order_sent_message,
-					cancel: $p.msg.cancel,
-					callback: function(btn) {
-						if(btn){
-							// установить транспорт в "отправлено" и записать
-							o.obj_delivery_state = $p.enm.obj_delivery_states.Отправлен;
-							do_save();
-						}
-					}
-				});
+			switch (action) {
+        case "sent":
+          // показать диалог и обработать возврат
+          dhtmlx.confirm({
+            title: $p.msg.order_sent_title,
+            text: $p.msg.order_sent_message,
+            cancel: $p.msg.cancel,
+            callback: function(btn) {
+              if(btn){
+                // установить транспорт в "отправлено" и записать
+                o.obj_delivery_state = $p.enm.obj_delivery_states.Отправлен;
+                do_save();
+              }
+            }
+          });
+          break;
 
-			} else if(action == "retrieve"){
-				// установить транспорт в "отозвано" и записать
-				o.obj_delivery_state =  $p.enm.obj_delivery_states.Отозван;
-				do_save();
+        case "retrieve":
+          // установить транспорт в "отозвано" и записать
+          o.obj_delivery_state = $p.enm.obj_delivery_states.Отозван;
+          do_save();
+          break;
 
-			} else if(action == "save" || action == "close"){
-				do_save();
+        case "post":
+          do_save(true);
 
-			}else if(action == "post"){
-				do_save(true);
+        case "unpost":
+          do_save(true);
 
-			}else if(action == "unpost"){
-				do_save(false);
-			}
+        default:
+          do_save();
+      }
 		}
 
 		function frm_close(){
+
+		  if(o && o._modified){
+        if(o.is_new()){
+          o.unload();
+        }
+        else{
+          setTimeout(o.load.bind(o), 100);
+        }
+      }
 
 			// выгружаем из памяти всплывающие окна скидки и связанных файлов
 			['vault','vault_pop','discount','discount_pop','svgs', 'layout_header'].forEach((elm) => {
@@ -410,8 +445,6 @@
 			});
 
 			evts.forEach((id) => $p.eve.detachEvent(id));
-
-			typeof attr_on_close == "function" && attr_on_close(o);
 
 			return true;
 		}

@@ -20,12 +20,7 @@
  * @example
  *
  *     // создаём экземпляр графического редактора
- *     // передаём в конструктор указатель на ячейку _cell и дополнительные реквизиты с функцией set_text()
- *     var editor = new $p.Editor(_cell, {
- *       set_text: function (text) {
- *         cell.setText({text: "<b>" + text + "</b>"});
- *       }
- *     });
+ *     // передаём в конструктор указатель на ячейку _cell и дополнительные реквизиты
  *
  * @class Editor
  * @constructor
@@ -37,7 +32,7 @@
  */
 class Editor extends paper.PaperScope {
 
-  constructor(pwnd, attr, handlers){
+  constructor(pwnd, handlers){
 
     super();
 
@@ -102,9 +97,7 @@ class Editor extends paper.PaperScope {
     this._layout.cells("a").attachObject(_editor._wrapper);
     this._dxw.attachViewportTo(_editor._wrapper);
 
-    this._wrapper.oncontextmenu = function (event) {
-      return $p.iface.cancel_bubble(event, true);
-    };
+    this._wrapper.oncontextmenu = (event) => $p.iface.cancel_bubble(event, true);
 
     this._drawSelectionBounds = 0;
 
@@ -224,14 +217,7 @@ class Editor extends paper.PaperScope {
             break;
 
           case 'close':
-            const {calc_order} = _editor.project.ox || {};
-            _editor.unload();
-            if(calc_order){
-              handlers.handleNavigate(`/${calc_order.class_name}/${calc_order.ref}`);
-            }
-            else{
-              handlers.handleNavigate(`/`);
-            }
+            _editor.close()
             break;
 
           case 'calck':
@@ -303,19 +289,24 @@ class Editor extends paper.PaperScope {
     this.tb_top.cell.style.background = "transparent";
     this.tb_top.cell.style.boxShadow = "none";
 
+    /**
+     * слушаем события клавиатуры
+     */
+    this.on_keydown = this.on_keydown.bind(this);
+    document.body.addEventListener('keydown', this.on_keydown, false);
 
     // Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
     this.eve.on("characteristic_saved", (scheme, attr) => {
-      if(scheme == _editor.project && attr.close && pwnd._on_close)
-        setTimeout(pwnd._on_close);
+      if(attr.close){
+        this.close();
+      }
+      else{
+        this.set_text();
+      }
     });
 
     // При изменениях изделия обновляем текст заголовка окна
-    this.eve.on("scheme_changed", (scheme) => {
-      if(scheme == _editor.project && attr.set_text && scheme._calc_order_row){
-        attr.set_text(scheme.ox.prod_name(true) + " " + (scheme.ox._modified ? " *" : ""));
-      }
-    });
+    this.eve.on("coordinates_calculated", this.set_text.bind(this));
 
     // Обработчик события при удалении строки некой табчасти продукции
     this.on_del_row = this.on_del_row.bind(this);
@@ -403,6 +394,19 @@ class Editor extends paper.PaperScope {
       handlers.props.match.params.ref && this.open(handlers.props.match.params.ref);
     }
 
+  }
+
+  set_text() {
+    const {handlers, project} = this;
+    const {props, handleIfaceState} = handlers;
+    if(project._calc_order_row){
+      const title = project.ox.prod_name(true) + " " + (project.ox._modified ? " *" : "");
+      props.title != title && handleIfaceState({
+        component: '',
+        name: 'title',
+        value: title,
+      });
+    }
   }
 
   /**
@@ -514,7 +518,7 @@ class Editor extends paper.PaperScope {
       };
     };
 
-    _editor._acc.attache(_editor.project._dp);
+    _editor._acc.attach(_editor.project._dp);
   }
 
   /**
@@ -1203,10 +1207,14 @@ class Editor extends paper.PaperScope {
       const {project} = this;
       const {obj} = grid.get_cell_field() || {};
       if(obj && obj._owner._owner == project.ox){
-        project.ox.params.clear(false, {cnstr: obj.cnstr, inset: obj.inset});
+        project.ox.params.clear({cnstr: obj.cnstr, inset: obj.inset});
         project.register_change();
       }
     }
+  }
+
+  on_keydown(ev) {
+    this.eve.emit('keydown', ev);
   }
 
   clear_selection_bounds() {
@@ -1226,14 +1234,35 @@ class Editor extends paper.PaperScope {
   }
 
   /**
+   * проверка, можно ли покидать страницу
+   * @param loc
+   * @return {*}
+   */
+  prompt(loc) {
+    const {ox} = this.project;
+    return (ox && ox._modified) ? `Изделие ${ox.prod_name(true)} изменено.\n\nЗакрыть без сохранения?` : true;
+  }
+
+  close() {
+    const {calc_order} = this.project.ox || {};
+    if(calc_order){
+      this.handlers.handleNavigate(`/${calc_order.class_name}/${calc_order.ref}`);
+    }
+    else{
+      this.handlers.handleNavigate(`/`);
+    }
+  }
+
+  /**
    * ### Деструктор
    * @method unload
    * @for Editor
    */
   unload() {
-    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project} = this;
+    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project, on_keydown} = this;
 
     eve.removeAllListeners();
+    document.body.removeEventListener('keydown', on_keydown);
 
     if(tool && tool._callbacks.deactivate.length){
       tool._callbacks.deactivate[0].call(tool);
@@ -1244,9 +1273,9 @@ class Editor extends paper.PaperScope {
     }
     _acc.unload();
     _undo.unload();
-    project.unload();
     tb_left.unload();
     tb_top.unload();
+    project.unload();
     _pwnd.detachAllEvents();
     _pwnd.detachObject(true);
     for(const fld in this){
