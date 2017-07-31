@@ -312,10 +312,13 @@ class Scheme extends paper.Project {
      * Этот код нельзя выполнить внутри load_contour, т.к. линия может ссылаться на элементы разных контуров
      */
     function load_dimension_lines() {
-      _scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, (row) => new DimensionLineCustom({
-        parent: _scheme.getItem({cnstr: row.cnstr}).l_dimensions,
-        row: row
-      }));
+      _scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, (row) => {
+        const layer = _scheme.getItem({cnstr: row.cnstr});
+        layer && new DimensionLineCustom({
+          parent: layer.l_dimensions,
+          row: row
+        })
+      });
     }
 
     function load_object(o){

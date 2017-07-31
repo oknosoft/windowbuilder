@@ -151,7 +151,7 @@
 					// фильтруем по подстроке
 					crefs.length = 0;
 					ares.forEach((o) => {
-            const presentation = (o.calc_order_row.note || o.note || o.name) + "<br />" + o.owner.name;
+            const presentation = ((o.calc_order_row && o.calc_order_row.note) || o.note || o.name) + "<br />" + o.owner.name;
 						if(!attr.filter || presentation.toLowerCase().match(attr.filter.toLowerCase()))
 							crefs.push({
 								ref: o.ref,
