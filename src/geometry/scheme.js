@@ -812,18 +812,20 @@ class Scheme extends paper.Project {
       this.clear();
 
       // переприсваиваем номенклатуру, цвет и размеры
-      ox._mixin(obx, ["owner","sys","clr","x","y","s","s"]);
+      ox._data._loading = true;
+      $p.utils._mixin(ox, obx, null, ['calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'note', 'partner'], true);
+      ox._data._loading = false;
 
-      // очищаем табчасти, перезаполняем контуры и координаты
-      ox.constructions.load(obx.constructions);
-      ox.coordinates.load(obx.coordinates);
-      ox.params.load(obx.params);
-      ox.cnn_elmnts.load(obx.cnn_elmnts);
-      ox.inserts.load(obx.inserts);
-
-      ox.specification.clear();
-      ox.glass_specification.clear();
-      ox.glasses.clear();
+      // // очищаем табчасти, перезаполняем контуры и координаты
+      // ox.constructions.load(obx.constructions);
+      // ox.coordinates.load(obx.coordinates);
+      // ox.params.load(obx.params);
+      // ox.cnn_elmnts.load(obx.cnn_elmnts);
+      // ox.inserts.load(obx.inserts);
+      //
+      // ox.specification.clear();
+      // ox.glass_specification.clear();
+      // ox.glasses.clear();
 
       this.load(ox);
 

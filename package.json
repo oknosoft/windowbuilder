@@ -24,7 +24,7 @@
     "alasql": "^0.4.1",
     "clipboard": "^1.7",
     "history": "^4.6.3",
-    "material-ui": "^1.0.0-beta.2",
+    "material-ui": "^1.0.0-beta.3",
     "material-ui-icons": "^1.0.0-alpha.19",
     "metadata-abstract-ui": "^2.0.1-beta.19",
     "metadata-core": "^2.0.1-beta.19",
@@ -62,7 +62,7 @@
     "recompose": "^0.24.0",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
-    "xlsx": "^0.10.8"
+    "xlsx": "^0.10.9"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

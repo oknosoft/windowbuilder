@@ -179,7 +179,7 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     this.project.register_change(true);
 
-    this.notify('furn_changed', this);
+    this.notify(this, 'furn_changed');
   }
 
   /**
