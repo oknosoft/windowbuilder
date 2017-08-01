@@ -201,7 +201,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   // при изменении реквизита
   value_change (field, type, value) {
-
     if(field == "organization"){
       this.new_number_doc();
       if(this.contract.organization != value){
@@ -210,8 +209,10 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
     else if(field == "partner" && this.contract.owner != value){
       this.contract = $p.cat.contracts.by_partner_and_org(value, this.organization);
-
     }
+    // если изменение инициировано человеком, дополним список изменённых полей
+    this._manager.emit_add_fields(this, ['contract']);
+
   }
 
 

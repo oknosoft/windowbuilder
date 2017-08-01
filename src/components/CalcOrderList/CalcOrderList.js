@@ -9,14 +9,15 @@ class CalcOrderList extends DhtmlxCell {
 
   componentDidMount() {
 
-    const {location, state_filter, handleIfaceState} = this.props;
+    let {location, state_filter, handleIfaceState} = this.props;
     const search = $p.job_prm.parse_url_str(location.search);
     if (search.state_filter && search.state_filter != state_filter) {
-      set_state_and_title(search.state_filter, handleIfaceState);
+      state_filter = search.state_filter;
     }
     else if (!state_filter) {
-      set_state_and_title('draft', handleIfaceState);
+      state_filter = 'draft';
     }
+    set_state_and_title(state_filter, handleIfaceState);
 
     super.componentDidMount();
     const {cell, handlers} = this;

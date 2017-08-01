@@ -1244,8 +1244,8 @@ class Editor extends paper.PaperScope {
   }
 
   close() {
-    const {calc_order} = this.project.ox || {};
-    if(calc_order){
+    const {calc_order} = this.project.ox;
+    if(calc_order && !calc_order.empty()){
       this.handlers.handleNavigate(`/${calc_order.class_name}/${calc_order.ref}`);
     }
     else{
