@@ -291,6 +291,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
       ДоговорСрокДействия: moment(contract.validity).format("L"),
       ЗаказНомер: this.number_doc,
+      //Примечание (комментарий) к расчету  и внутренний номер расчет-заказа
+      Примечание: this.note,
+      НомерВнутренний: this.number_internal,
       Контрагент: this.partner.presentation,
       КонтрагентОписание: this.partner.long_presentation,
       КонтрагентДокумент: "",
@@ -474,6 +477,11 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Цвет: characteristic.clr.name,
       Размеры: row.len + "x" + row.width + ", " + row.s + "м²",
       Площадь: row.s,
+      //Отдено длиина, ширина,  общая площадь позиции и примечание (комментарий к позиции)
+      Длинна: row.len,
+      Ширина: row.width,
+      ВсегоПлощадь: row.s*row.quantity,
+      Примечание: row.note,
       Номенклатура: nom.name_full || nom.name,
       Характеристика: characteristic.name,
       Заполнения: "",
