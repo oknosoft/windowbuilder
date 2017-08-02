@@ -47,7 +47,7 @@ class AppRoot extends Component {
     }
 
     // если это первый запуск или couch_direct и offline, переходим на страницу login
-    if (!path_log_in && ((data_empty === true && !user.try_log_in) || (couch_direct && offline))) {
+    if (!path_log_in && ((data_empty === true && !user.try_log_in) || (couch_direct && !user.logged_in))) {
       history.push('/login');
       res = false;
     }

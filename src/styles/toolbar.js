@@ -6,8 +6,12 @@ export default withStyles(createStyleSheet('toolbar', {
     marginTop: 20,
     width: '100%',
   },
+  drawer: {
+    maxWidth: 300,
+  },
   flex: {
     flex: 1,
+    whiteSpace: 'nowrap',
   },
   progress: {
     color: colors.white,

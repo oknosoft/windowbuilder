@@ -1,3 +1,4 @@
+/* eslint-disable */
 module.exports = function meta($p) {
 
 $p.wsql.alasql('USE md; CREATE TABLE IF NOT EXISTS `ireg_margin_coefficients` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, `price_group` CHAR, `key` CHAR, `condition_formula` CHAR, `marginality` FLOAT, `marginality_min` FLOAT, `marginality_internal` FLOAT, `price_type_first_cost` CHAR, `price_type_sale` CHAR, `price_type_internal` CHAR, `formula` CHAR, `sale_formula` CHAR, `internal_formula` CHAR, `external_formula` CHAR, `extra_charge_external` FLOAT, `discount_external` FLOAT, `discount` FLOAT, `note` CHAR); CREATE TABLE IF NOT EXISTS `ireg_currency_courses` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, `currency` CHAR, `period` Date, `course` FLOAT, `multiplicity` INT); CREATE TABLE IF NOT EXISTS `ireg_buyers_order_states` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, `invoice` CHAR, `state` CHAR, `event_date` Date, `СуммаОплаты` FLOAT, `ПроцентОплаты` INT, `СуммаОтгрузки` FLOAT, `ПроцентОтгрузки` INT, `СуммаДолга` FLOAT, `ПроцентДолга` INT, `ЕстьРасхожденияОрдерНакладная` BOOLEAN); CREATE TABLE IF NOT EXISTS `ireg_log` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, `date` INT, `sequence` INT, `class` CHAR, `note` CHAR, `obj` CHAR); CREATE TABLE IF NOT EXISTS `doc_planning_event` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `phase` CHAR, `key` CHAR, `recipient` CHAR, `calc_order` CHAR, `partner` CHAR, `project` CHAR, `Основание` CHAR, `note` CHAR, `ts_executors` JSON, `ts_planning` JSON); CREATE TABLE IF NOT EXISTS `doc_nom_prices_setup` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `price_type` CHAR, `currency` CHAR, `responsible` CHAR, `note` CHAR, `ts_goods` JSON); CREATE TABLE IF NOT EXISTS `doc_selling` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `warehouse` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_goods` JSON, `ts_services` JSON, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `doc_credit_cash_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `cashbox` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_payment_details` JSON, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `doc_debit_cash_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `cashbox` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_payment_details` JSON, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `doc_credit_bank_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_payment_details` JSON, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `doc_debit_bank_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_payment_details` JSON, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `doc_work_centers_performance` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `start_date` Date, `expiration_date` Date, `responsible` CHAR, `note` CHAR, `ts_planning` JSON); CREATE TABLE IF NOT EXISTS `doc_credit_card_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_payment_details` JSON, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `doc_calc_order` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `number_internal` CHAR, `project` CHAR, `organization` CHAR, `partner` CHAR, `client_of_dealer` CHAR, `contract` CHAR, `bank_account` CHAR, `note` CHAR, `manager` CHAR, `leading_manager` CHAR, `department` CHAR, `warehouse` CHAR, `doc_amount` FLOAT, `amount_operation` FLOAT, `amount_internal` FLOAT, `accessory_characteristic` CHAR, `sys_profile` CHAR, `sys_furn` CHAR, `phone` CHAR, `delivery_area` CHAR, `shipping_address` CHAR, `coordinates` CHAR, `address_fields` CHAR, `difficult` BOOLEAN, `vat_consider` BOOLEAN, `vat_included` BOOLEAN, `settlements_course` FLOAT, `settlements_multiplicity` INT, `extra_charge_external` FLOAT, `obj_delivery_state` CHAR, `category` CHAR, `ts_production` JSON, `ts_extra_fields` JSON, `ts_contact_information` JSON, `ts_planning` JSON); CREATE TABLE IF NOT EXISTS `doc_work_centers_task` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `responsible` CHAR, `key` CHAR, `note` CHAR, `recipient` CHAR, `ДеловаяОбрезь` INT, `ts_planning` JSON, `ts_Потребность` JSON, `ts_Обрезь` JSON, `ts_Раскрой` JSON); CREATE TABLE IF NOT EXISTS `doc_purchase` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `organization` CHAR, `partner` CHAR, `department` CHAR, `warehouse` CHAR, `doc_amount` FLOAT, `responsible` CHAR, `note` CHAR, `ts_goods` JSON, `ts_services` JSON, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `doc_registers_correction` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, posted boolean, date Date, number_doc CHAR, `original_doc_type` CHAR, `responsible` CHAR, `note` CHAR, `partner` CHAR, `ts_registers_table` JSON); CREATE TABLE IF NOT EXISTS `cat_delivery_directions` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `predefined_name` CHAR, `ts_composition` JSON); CREATE TABLE IF NOT EXISTS `cat_nonstandard_attributes` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `crooked` BOOLEAN, `colored` BOOLEAN, `lay` BOOLEAN, `made_to_order` BOOLEAN, `packing` BOOLEAN, `predefined_name` CHAR); CREATE TABLE IF NOT EXISTS `cat_insert_bind` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `key` CHAR, `zone` INT, `predefined_name` CHAR, `ts_production` JSON, `ts_inserts` JSON); CREATE TABLE IF NOT EXISTS `cat_nom_groups` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `vat_rate` CHAR, `predefined_name` CHAR, `parent` CHAR); CREATE TABLE IF NOT EXISTS `cat_price_groups` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `definition` CHAR, `predefined_name` CHAR); CREATE TABLE IF NOT EXISTS `cat_characteristics` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `x` FLOAT, `y` FLOAT, `z` FLOAT, `s` FLOAT, `clr` CHAR, `weight` FLOAT, `calc_order` CHAR, `product` INT, `leading_product` CHAR, `leading_elm` INT, `origin` CHAR, `note` CHAR, `partner` CHAR, `sys` CHAR, `predefined_name` CHAR, `owner` CHAR, `ts_constructions` JSON, `ts_coordinates` JSON, `ts_inserts` JSON, `ts_params` JSON, `ts_cnn_elmnts` JSON, `ts_glass_specification` JSON, `ts_extra_fields` JSON, `ts_glasses` JSON, `ts_specification` JSON); CREATE TABLE IF NOT EXISTS `cat_individuals` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `birth_date` Date, `inn` CHAR, `imns_code` CHAR, `note` CHAR, `pfr_number` CHAR, `sex` CHAR, `birth_place` CHAR, `ОсновноеИзображение` CHAR, `Фамилия` CHAR, `Имя` CHAR, `Отчество` CHAR, `ФамилияРП` CHAR, `ИмяРП` CHAR, `ОтчествоРП` CHAR, `ОснованиеРП` CHAR, `ДолжностьРП` CHAR, `Должность` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_contact_information` JSON); CREATE TABLE IF NOT EXISTS `cat_nom_prices_types` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `price_currency` CHAR, `discount_percent` FLOAT, `vat_price_included` BOOLEAN, `rounding_order` CHAR, `rounding_in_a_big_way` BOOLEAN, `note` CHAR, `predefined_name` CHAR); CREATE TABLE IF NOT EXISTS `cat_cash_flow_articles` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `definition` CHAR, `sorting_field` INT, `predefined_name` CHAR, `parent` CHAR); CREATE TABLE IF NOT EXISTS `cat_work_shifts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `predefined_name` CHAR, `ts_work_shift_periodes` JSON); CREATE TABLE IF NOT EXISTS `cat_stores` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `note` CHAR, `department` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `cat_projects` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `start` Date, `finish` Date, `launch` Date, `readiness` Date, `finished` BOOLEAN, `responsible` CHAR, `note` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `cat_users` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `user_ib_uid` CHAR, `department` CHAR, `individual_person` CHAR, `note` CHAR, `user_fresh_uid` CHAR, `invalid` BOOLEAN, `ancillary` BOOLEAN, `id` CHAR, `prefix` CHAR, `suffix` CHAR, `direct` BOOLEAN, `predefined_name` CHAR, `ts_extra_fields` JSON, `ts_contact_information` JSON, `ts_acl_objs` JSON); CREATE TABLE IF NOT EXISTS `cat_divisions` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `main_project` CHAR, `sorting` INT, `predefined_name` CHAR, `parent` CHAR, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `cat_color_price_groups` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `color_price_group_destination` CHAR, `predefined_name` CHAR, `ts_price_groups` JSON, `ts_clr_conformity` JSON); CREATE TABLE IF NOT EXISTS `cat_clrs` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `ral` CHAR, `machine_tools_clr` CHAR, `clr_str` CHAR, `clr_out` CHAR, `clr_in` CHAR, `predefined_name` CHAR, `parent` CHAR); CREATE TABLE IF NOT EXISTS `cat_furns` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `flap_weight_max` INT, `left_right` BOOLEAN, `is_set` BOOLEAN, `is_sliding` BOOLEAN, `furn_set` CHAR, `side_count` INT, `handle_side` INT, `open_type` CHAR, `name_short` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_open_tunes` JSON, `ts_specification` JSON, `ts_selection_params` JSON, `ts_specification_restrictions` JSON, `ts_colors` JSON); CREATE TABLE IF NOT EXISTS `cat_cnns` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `priority` INT, `amin` INT, `amax` INT, `sd1` CHAR, `sz` FLOAT, `cnn_type` CHAR, `ahmin` INT, `ahmax` INT, `lmin` INT, `lmax` INT, `tmin` INT, `tmax` INT, `var_layers` BOOLEAN, `for_direct_profile_only` INT, `art1vert` BOOLEAN, `art1glass` BOOLEAN, `art2glass` BOOLEAN, `note` CHAR, `predefined_name` CHAR, `ts_specification` JSON, `ts_cnn_elmnts` JSON, `ts_selection_params` JSON); CREATE TABLE IF NOT EXISTS `cat_delivery_areas` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `country` CHAR, `region` CHAR, `city` CHAR, `latitude` FLOAT, `longitude` FLOAT, `ind` CHAR, `delivery_area` CHAR, `specify_area_by_geocoder` BOOLEAN, `predefined_name` CHAR); CREATE TABLE IF NOT EXISTS `cat_production_params` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `default_clr` CHAR, `clr_group` CHAR, `tmin` INT, `tmax` INT, `allow_open_cnn` BOOLEAN, `flap_pos_by_impost` BOOLEAN, `predefined_name` CHAR, `parent` CHAR, `ts_elmnts` JSON, `ts_production` JSON, `ts_product_params` JSON, `ts_furn_params` JSON, `ts_base_blocks` JSON); CREATE TABLE IF NOT EXISTS `cat_parameters_keys` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `priority` INT, `note` CHAR, `sorting_field` INT, `applying` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_params` JSON); CREATE TABLE IF NOT EXISTS `cat_inserts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `article` CHAR, `insert_type` CHAR, `clr` CHAR, `lmin` INT, `lmax` INT, `hmin` INT, `hmax` INT, `smin` FLOAT, `smax` FLOAT, `for_direct_profile_only` INT, `ahmin` INT, `ahmax` INT, `priority` INT, `mmin` INT, `mmax` INT, `impost_fixation` CHAR, `shtulp_fixation` BOOLEAN, `can_rotate` BOOLEAN, `sizeb` FLOAT, `clr_group` CHAR, `is_order_row` CHAR, `note` CHAR, `insert_glass_type` CHAR, `available` BOOLEAN, `predefined_name` CHAR, `ts_specification` JSON, `ts_selection_params` JSON); CREATE TABLE IF NOT EXISTS `cat_organizations` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `prefix` CHAR, `individual_legal` CHAR, `individual_entrepreneur` CHAR, `inn` CHAR, `kpp` CHAR, `main_bank_account` CHAR, `main_cashbox` CHAR, `certificate_series_number` CHAR, `certificate_date_issue` Date, `certificate_authority_name` CHAR, `certificate_authority_code` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_contact_information` JSON, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `cat_nom` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `article` CHAR, `name_full` CHAR, `base_unit` CHAR, `storage_unit` CHAR, `nom_kind` CHAR, `nom_group` CHAR, `vat_rate` CHAR, `note` CHAR, `price_group` CHAR, `elm_type` CHAR, `len` FLOAT, `width` FLOAT, `thickness` FLOAT, `sizefurn` FLOAT, `sizefaltz` FLOAT, `density` FLOAT, `volume` FLOAT, `arc_elongation` FLOAT, `loss_factor` FLOAT, `rounding_quantity` INT, `clr` CHAR, `cutting_optimization_type` CHAR, `crooked` BOOLEAN, `colored` BOOLEAN, `lay` BOOLEAN, `made_to_order` BOOLEAN, `days_to_execution` INT, `days_from_execution` INT, `pricing` CHAR, `visualization` CHAR, `complete_list_sorting` INT, `is_accessory` BOOLEAN, `is_procedure` BOOLEAN, `is_service` BOOLEAN, `is_pieces` BOOLEAN, `predefined_name` CHAR, `parent` CHAR, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `cat_partners` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `main_bank_account` CHAR, `note` CHAR, `kpp` CHAR, `okpo` CHAR, `inn` CHAR, `individual_legal` CHAR, `main_contract` CHAR, `identification_document` CHAR, `buyer_main_manager` CHAR, `is_buyer` BOOLEAN, `is_supplier` BOOLEAN, `primary_contact` CHAR, `predefined_name` CHAR, `parent` CHAR, `ts_contact_information` JSON, `ts_extra_fields` JSON); CREATE TABLE IF NOT EXISTS `cat_units` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `international_short` CHAR, `predefined_name` CHAR); CREATE TABLE IF NOT EXISTS `cat_cashboxes` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `funds_currency` CHAR, `department` CHAR, `current_account` CHAR, `predefined_name` CHAR, `owner` CHAR); CREATE TABLE IF NOT EXISTS `cat_meta_ids` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `full_moniker` CHAR, `predefined_name` CHAR, `parent` CHAR); CREATE TABLE IF NOT EXISTS `cat_property_values` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `heft` FLOAT, `ПолноеНаименование` CHAR, `predefined_name` CHAR, `owner` CHAR, `parent` CHAR); CREATE TABLE IF NOT EXISTS `cat_nom_units` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `qualifier_unit` CHAR, `heft` FLOAT, `volume` FLOAT, `coefficient` FLOAT, `rounding_threshold` INT, `ПредупреждатьОНецелыхМестах` BOOLEAN, `predefined_name` CHAR, `owner` CHAR); CREATE TABLE IF NOT EXISTS `cat_contracts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `settlements_currency` CHAR, `mutual_settlements` CHAR, `contract_kind` CHAR, `date` Date, `check_days_without_pay` BOOLEAN, `allowable_debts_amount` FLOAT, `allowable_debts_days` INT, `note` CHAR, `check_debts_amount` BOOLEAN, `check_debts_days` BOOLEAN, `number_doc` CHAR, `organization` CHAR, `main_cash_flow_article` CHAR, `main_project` CHAR, `accounting_reflect` BOOLEAN, `tax_accounting_reflect` BOOLEAN, `prepayment_percent` FLOAT, `validity` Date, `vat_included` BOOLEAN, `price_type` CHAR, `vat_consider` BOOLEAN, `days_without_pay` INT, `predefined_name` CHAR, `owner` CHAR, `parent` CHAR); CREATE TABLE IF NOT EXISTS `cat_nom_kinds` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `nom_type` CHAR, `НаборСвойствНоменклатура` CHAR, `НаборСвойствХарактеристика` CHAR, `predefined_name` CHAR, `parent` CHAR); CREATE TABLE IF NOT EXISTS `cat_contact_information_kinds` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `type` CHAR, `ВидПоляДругое` CHAR, `Используется` BOOLEAN, `mandatory_fields` BOOLEAN, `predefined_name` CHAR, `parent` CHAR); CREATE TABLE IF NOT EXISTS `cat_currencies` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `extra_charge` FLOAT, `main_currency` CHAR, `parameters_russian_recipe` CHAR, `predefined_name` CHAR); CREATE TABLE IF NOT EXISTS `cat_elm_visualization` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `svg_path` CHAR, `note` CHAR, `attributes` CHAR, `rotate` INT, `offset` INT, `side` CHAR, `elm_side` INT, `cx` INT, `cy` INT, `angle_hor` INT, `predefined_name` CHAR); CREATE TABLE IF NOT EXISTS `cat_formulas` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `formula` CHAR, `leading_formula` CHAR, `condition_formula` BOOLEAN, `definition` CHAR, `template` CHAR, `async` BOOLEAN, `zone` INT, `predefined_name` CHAR, `parent` CHAR, `ts_params` JSON); CREATE TABLE IF NOT EXISTS `cat_countries` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `name_full` CHAR, `alpha2` CHAR, `alpha3` CHAR, `predefined_name` CHAR); CREATE TABLE IF NOT EXISTS `cat_destinations` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `КоличествоРеквизитов` CHAR, `КоличествоСведений` CHAR, `Используется` BOOLEAN, `predefined_name` CHAR, `parent` CHAR, `ts_extra_fields` JSON, `ts_extra_properties` JSON); CREATE TABLE IF NOT EXISTS `cat_banks_qualifier` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `correspondent_account` CHAR, `city` CHAR, `address` CHAR, `phone_numbers` CHAR, `activity_ceased` BOOLEAN, `swift` CHAR, `inn` CHAR, `predefined_name` CHAR, `parent` CHAR); CREATE TABLE IF NOT EXISTS `cat_property_values_hierarchy` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `heft` FLOAT, `ПолноеНаименование` CHAR, `predefined_name` CHAR, `owner` CHAR, `parent` CHAR); CREATE TABLE IF NOT EXISTS `cat_organization_bank_accounts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `bank` CHAR, `bank_bic` CHAR, `funds_currency` CHAR, `account_number` CHAR, `settlements_bank` CHAR, `settlements_bank_bic` CHAR, `department` CHAR, `predefined_name` CHAR, `owner` CHAR); CREATE TABLE IF NOT EXISTS `cat_partner_bank_accounts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `account_number` CHAR, `bank` CHAR, `settlements_bank` CHAR, `correspondent_text` CHAR, `appointments_text` CHAR, `funds_currency` CHAR, `bank_bic` CHAR, `bank_name` CHAR, `bank_correspondent_account` CHAR, `bank_city` CHAR, `bank_address` CHAR, `bank_phone_numbers` CHAR, `settlements_bank_bic` CHAR, `settlements_bank_correspondent_account` CHAR, `settlements_bank_city` CHAR, `predefined_name` CHAR, `owner` CHAR); CREATE TABLE IF NOT EXISTS `cat_params_links` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `master` CHAR, `slave` CHAR, `hide` BOOLEAN, `note` CHAR, `zone` INT, `predefined_name` CHAR, `parent` CHAR, `ts_values` JSON); CREATE TABLE IF NOT EXISTS `cat_scheme_settings` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `obj` CHAR, `user` CHAR, `order` INT, `query` CHAR, `date_from` Date, `date_till` Date, `formula` CHAR, `tag` CHAR, `ts_fields` JSON, `ts_sorting` JSON, `ts_dimensions` JSON, `ts_resources` JSON, `ts_selection` JSON, `ts_params` JSON, `ts_composition` JSON); CREATE TABLE IF NOT EXISTS `cat_meta_fields` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN); CREATE TABLE IF NOT EXISTS `cat_meta_objs` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN); CREATE TABLE IF NOT EXISTS `cch_properties` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `sorting_field` INT, `available` BOOLEAN, `shown` BOOLEAN, `note` CHAR, `destination` CHAR, `tooltip` CHAR, `is_extra_property` BOOLEAN, `extra_values_owner` CHAR, `list` INT, `caption` CHAR, `mandatory` BOOLEAN, `include_to_name` BOOLEAN, `include_to_description` BOOLEAN, `predefined_name` CHAR, `type` JSON, `ts_extra_fields_dependencies` JSON); CREATE TABLE IF NOT EXISTS `cch_predefined_elmnts` (ref CHAR PRIMARY KEY NOT NULL, `_deleted` BOOLEAN, id CHAR, name CHAR, is_folder BOOLEAN, `value` CHAR, `definition` CHAR, `synonym` CHAR, `list` INT, `zone` INT, `predefined_name` CHAR, `parent` CHAR, `type` CHAR, `ts_elmnts` JSON); CREATE TABLE IF NOT EXISTS `enm_individual_legal` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_planning_phases` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_elm_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_specification_order_row_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_cnn_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_sz_line_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_open_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_cutting_optimization_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_nom_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_contact_information_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_lay_split_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_inserts_glass_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_inserts_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_vat_rates` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_specification_installation_methods` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_angle_calculating_ways` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_count_calculating_ways` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_buyers_order_states` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_gender` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_positions` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_cnn_sides` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_open_directions` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_text_aligns` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_orientations` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_color_price_group_destinations` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_order_categories` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_caching_type` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_obj_delivery_states` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_planning_detailing` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_contract_kinds` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_mutual_contract_settlements` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_align_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_contraction_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_offset_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_transfer_operations_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_impost_mount_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_inset_attrs_options` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_data_field_kinds` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_label_positions` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_comparison_types` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_sort_directions` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); CREATE TABLE IF NOT EXISTS `enm_accumulation_record_type` (ref CHAR PRIMARY KEY NOT NULL, sequence INT, synonym CHAR); ', []);
@@ -67,31 +68,31 @@ $p.enm.create('individual_legal');
 * @constructor 
 */
 class CchPredefined_elmnts extends CatObj{
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get definition(){return this._getter('definition');}
-set definition(v){this._setter('definition',v);}
-get synonym(){return this._getter('synonym');}
-set synonym(v){this._setter('synonym',v);}
-get list(){return this._getter('list');}
-set list(v){this._setter('list',v);}
-get zone(){return this._getter('zone');}
-set zone(v){this._setter('zone',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get type(){return this._getter('type');}
-set type(v){this._setter('type',v);}
-get elmnts(){return this._getter_ts('elmnts');}
-set elmnts(v){this._setter_ts('elmnts',v);}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get definition(){return this._getter('definition')}
+set definition(v){this._setter('definition',v)}
+get synonym(){return this._getter('synonym')}
+set synonym(v){this._setter('synonym',v)}
+get list(){return this._getter('list')}
+set list(v){this._setter('list',v)}
+get zone(){return this._getter('zone')}
+set zone(v){this._setter('zone',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get type(){return this._getter('type')}
+set type(v){this._setter('type',v)}
+get elmnts(){return this._getter_ts('elmnts')}
+set elmnts(v){this._setter_ts('elmnts',v)}
 }
 $p.CchPredefined_elmnts = CchPredefined_elmnts;
 class CchPredefined_elmntsElmntsRow extends TabularSectionRow{
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
 }
 $p.CchPredefined_elmntsElmntsRow = CchPredefined_elmntsElmntsRow;
 $p.cch.create('predefined_elmnts');
@@ -104,49 +105,49 @@ $p.cch.create('predefined_elmnts');
 * @constructor 
 */
 class CchProperties extends CatObj{
-get sorting_field(){return this._getter('sorting_field');}
-set sorting_field(v){this._setter('sorting_field',v);}
-get available(){return this._getter('available');}
-set available(v){this._setter('available',v);}
-get shown(){return this._getter('shown');}
-set shown(v){this._setter('shown',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get destination(){return this._getter('destination');}
-set destination(v){this._setter('destination',v);}
-get tooltip(){return this._getter('tooltip');}
-set tooltip(v){this._setter('tooltip',v);}
-get is_extra_property(){return this._getter('is_extra_property');}
-set is_extra_property(v){this._setter('is_extra_property',v);}
-get extra_values_owner(){return this._getter('extra_values_owner');}
-set extra_values_owner(v){this._setter('extra_values_owner',v);}
-get list(){return this._getter('list');}
-set list(v){this._setter('list',v);}
-get caption(){return this._getter('caption');}
-set caption(v){this._setter('caption',v);}
-get mandatory(){return this._getter('mandatory');}
-set mandatory(v){this._setter('mandatory',v);}
-get include_to_name(){return this._getter('include_to_name');}
-set include_to_name(v){this._setter('include_to_name',v);}
-get include_to_description(){return this._getter('include_to_description');}
-set include_to_description(v){this._setter('include_to_description',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get type(){return this._getter('type');}
-set type(v){this._setter('type',v);}
-get extra_fields_dependencies(){return this._getter_ts('extra_fields_dependencies');}
-set extra_fields_dependencies(v){this._setter_ts('extra_fields_dependencies',v);}
+get sorting_field(){return this._getter('sorting_field')}
+set sorting_field(v){this._setter('sorting_field',v)}
+get available(){return this._getter('available')}
+set available(v){this._setter('available',v)}
+get shown(){return this._getter('shown')}
+set shown(v){this._setter('shown',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get destination(){return this._getter('destination')}
+set destination(v){this._setter('destination',v)}
+get tooltip(){return this._getter('tooltip')}
+set tooltip(v){this._setter('tooltip',v)}
+get is_extra_property(){return this._getter('is_extra_property')}
+set is_extra_property(v){this._setter('is_extra_property',v)}
+get extra_values_owner(){return this._getter('extra_values_owner')}
+set extra_values_owner(v){this._setter('extra_values_owner',v)}
+get list(){return this._getter('list')}
+set list(v){this._setter('list',v)}
+get caption(){return this._getter('caption')}
+set caption(v){this._setter('caption',v)}
+get mandatory(){return this._getter('mandatory')}
+set mandatory(v){this._setter('mandatory',v)}
+get include_to_name(){return this._getter('include_to_name')}
+set include_to_name(v){this._setter('include_to_name',v)}
+get include_to_description(){return this._getter('include_to_description')}
+set include_to_description(v){this._setter('include_to_description',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get type(){return this._getter('type')}
+set type(v){this._setter('type',v)}
+get extra_fields_dependencies(){return this._getter_ts('extra_fields_dependencies')}
+set extra_fields_dependencies(v){this._setter_ts('extra_fields_dependencies',v)}
 }
 $p.CchProperties = CchProperties;
 class CchPropertiesExtra_fields_dependenciesRow extends TabularSectionRow{
-get ЗависимоеСвойство(){return this._getter('ЗависимоеСвойство');}
-set ЗависимоеСвойство(v){this._setter('ЗависимоеСвойство',v);}
-get field(){return this._getter('field');}
-set field(v){this._setter('field',v);}
-get condition(){return this._getter('condition');}
-set condition(v){this._setter('condition',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
+get ЗависимоеСвойство(){return this._getter('ЗависимоеСвойство')}
+set ЗависимоеСвойство(v){this._setter('ЗависимоеСвойство',v)}
+get field(){return this._getter('field')}
+set field(v){this._setter('field',v)}
+get condition(){return this._getter('condition')}
+set condition(v){this._setter('condition',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
 }
 $p.CchPropertiesExtra_fields_dependenciesRow = CchPropertiesExtra_fields_dependenciesRow;
 $p.cch.create('properties');
@@ -159,31 +160,31 @@ $p.cch.create('properties');
 * @constructor 
 */
 class CatParams_links extends CatObj{
-get master(){return this._getter('master');}
-set master(v){this._setter('master',v);}
-get slave(){return this._getter('slave');}
-set slave(v){this._setter('slave',v);}
-get hide(){return this._getter('hide');}
-set hide(v){this._setter('hide',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get zone(){return this._getter('zone');}
-set zone(v){this._setter('zone',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get values(){return this._getter_ts('values');}
-set values(v){this._setter_ts('values',v);}
+get master(){return this._getter('master')}
+set master(v){this._setter('master',v)}
+get slave(){return this._getter('slave')}
+set slave(v){this._setter('slave',v)}
+get hide(){return this._getter('hide')}
+set hide(v){this._setter('hide',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get zone(){return this._getter('zone')}
+set zone(v){this._setter('zone',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get values(){return this._getter_ts('values')}
+set values(v){this._setter_ts('values',v)}
 }
 $p.CatParams_links = CatParams_links;
 class CatParams_linksValuesRow extends TabularSectionRow{
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get by_default(){return this._getter('by_default');}
-set by_default(v){this._setter('by_default',v);}
-get forcibly(){return this._getter('forcibly');}
-set forcibly(v){this._setter('forcibly',v);}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get by_default(){return this._getter('by_default')}
+set by_default(v){this._setter('by_default',v)}
+get forcibly(){return this._getter('forcibly')}
+set forcibly(v){this._setter('forcibly',v)}
 }
 $p.CatParams_linksValuesRow = CatParams_linksValuesRow;
 $p.cat.create('params_links');
@@ -196,40 +197,40 @@ $p.cat.create('params_links');
 * @constructor 
 */
 class CatPartner_bank_accounts extends CatObj{
-get account_number(){return this._getter('account_number');}
-set account_number(v){this._setter('account_number',v);}
-get bank(){return this._getter('bank');}
-set bank(v){this._setter('bank',v);}
-get settlements_bank(){return this._getter('settlements_bank');}
-set settlements_bank(v){this._setter('settlements_bank',v);}
-get correspondent_text(){return this._getter('correspondent_text');}
-set correspondent_text(v){this._setter('correspondent_text',v);}
-get appointments_text(){return this._getter('appointments_text');}
-set appointments_text(v){this._setter('appointments_text',v);}
-get funds_currency(){return this._getter('funds_currency');}
-set funds_currency(v){this._setter('funds_currency',v);}
-get bank_bic(){return this._getter('bank_bic');}
-set bank_bic(v){this._setter('bank_bic',v);}
-get bank_name(){return this._getter('bank_name');}
-set bank_name(v){this._setter('bank_name',v);}
-get bank_correspondent_account(){return this._getter('bank_correspondent_account');}
-set bank_correspondent_account(v){this._setter('bank_correspondent_account',v);}
-get bank_city(){return this._getter('bank_city');}
-set bank_city(v){this._setter('bank_city',v);}
-get bank_address(){return this._getter('bank_address');}
-set bank_address(v){this._setter('bank_address',v);}
-get bank_phone_numbers(){return this._getter('bank_phone_numbers');}
-set bank_phone_numbers(v){this._setter('bank_phone_numbers',v);}
-get settlements_bank_bic(){return this._getter('settlements_bank_bic');}
-set settlements_bank_bic(v){this._setter('settlements_bank_bic',v);}
-get settlements_bank_correspondent_account(){return this._getter('settlements_bank_correspondent_account');}
-set settlements_bank_correspondent_account(v){this._setter('settlements_bank_correspondent_account',v);}
-get settlements_bank_city(){return this._getter('settlements_bank_city');}
-set settlements_bank_city(v){this._setter('settlements_bank_city',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get owner(){return this._getter('owner');}
-set owner(v){this._setter('owner',v);}
+get account_number(){return this._getter('account_number')}
+set account_number(v){this._setter('account_number',v)}
+get bank(){return this._getter('bank')}
+set bank(v){this._setter('bank',v)}
+get settlements_bank(){return this._getter('settlements_bank')}
+set settlements_bank(v){this._setter('settlements_bank',v)}
+get correspondent_text(){return this._getter('correspondent_text')}
+set correspondent_text(v){this._setter('correspondent_text',v)}
+get appointments_text(){return this._getter('appointments_text')}
+set appointments_text(v){this._setter('appointments_text',v)}
+get funds_currency(){return this._getter('funds_currency')}
+set funds_currency(v){this._setter('funds_currency',v)}
+get bank_bic(){return this._getter('bank_bic')}
+set bank_bic(v){this._setter('bank_bic',v)}
+get bank_name(){return this._getter('bank_name')}
+set bank_name(v){this._setter('bank_name',v)}
+get bank_correspondent_account(){return this._getter('bank_correspondent_account')}
+set bank_correspondent_account(v){this._setter('bank_correspondent_account',v)}
+get bank_city(){return this._getter('bank_city')}
+set bank_city(v){this._setter('bank_city',v)}
+get bank_address(){return this._getter('bank_address')}
+set bank_address(v){this._setter('bank_address',v)}
+get bank_phone_numbers(){return this._getter('bank_phone_numbers')}
+set bank_phone_numbers(v){this._setter('bank_phone_numbers',v)}
+get settlements_bank_bic(){return this._getter('settlements_bank_bic')}
+set settlements_bank_bic(v){this._setter('settlements_bank_bic',v)}
+get settlements_bank_correspondent_account(){return this._getter('settlements_bank_correspondent_account')}
+set settlements_bank_correspondent_account(v){this._setter('settlements_bank_correspondent_account',v)}
+get settlements_bank_city(){return this._getter('settlements_bank_city')}
+set settlements_bank_city(v){this._setter('settlements_bank_city',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get owner(){return this._getter('owner')}
+set owner(v){this._setter('owner',v)}
 }
 $p.CatPartner_bank_accounts = CatPartner_bank_accounts;
 $p.cat.create('partner_bank_accounts');
@@ -242,24 +243,24 @@ $p.cat.create('partner_bank_accounts');
 * @constructor 
 */
 class CatOrganization_bank_accounts extends CatObj{
-get bank(){return this._getter('bank');}
-set bank(v){this._setter('bank',v);}
-get bank_bic(){return this._getter('bank_bic');}
-set bank_bic(v){this._setter('bank_bic',v);}
-get funds_currency(){return this._getter('funds_currency');}
-set funds_currency(v){this._setter('funds_currency',v);}
-get account_number(){return this._getter('account_number');}
-set account_number(v){this._setter('account_number',v);}
-get settlements_bank(){return this._getter('settlements_bank');}
-set settlements_bank(v){this._setter('settlements_bank',v);}
-get settlements_bank_bic(){return this._getter('settlements_bank_bic');}
-set settlements_bank_bic(v){this._setter('settlements_bank_bic',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get owner(){return this._getter('owner');}
-set owner(v){this._setter('owner',v);}
+get bank(){return this._getter('bank')}
+set bank(v){this._setter('bank',v)}
+get bank_bic(){return this._getter('bank_bic')}
+set bank_bic(v){this._setter('bank_bic',v)}
+get funds_currency(){return this._getter('funds_currency')}
+set funds_currency(v){this._setter('funds_currency',v)}
+get account_number(){return this._getter('account_number')}
+set account_number(v){this._setter('account_number',v)}
+get settlements_bank(){return this._getter('settlements_bank')}
+set settlements_bank(v){this._setter('settlements_bank',v)}
+get settlements_bank_bic(){return this._getter('settlements_bank_bic')}
+set settlements_bank_bic(v){this._setter('settlements_bank_bic',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get owner(){return this._getter('owner')}
+set owner(v){this._setter('owner',v)}
 }
 $p.CatOrganization_bank_accounts = CatOrganization_bank_accounts;
 $p.cat.create('organization_bank_accounts');
@@ -272,16 +273,16 @@ $p.cat.create('organization_bank_accounts');
 * @constructor 
 */
 class CatProperty_values_hierarchy extends CatObj{
-get heft(){return this._getter('heft');}
-set heft(v){this._setter('heft',v);}
-get ПолноеНаименование(){return this._getter('ПолноеНаименование');}
-set ПолноеНаименование(v){this._setter('ПолноеНаименование',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get owner(){return this._getter('owner');}
-set owner(v){this._setter('owner',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
+get heft(){return this._getter('heft')}
+set heft(v){this._setter('heft',v)}
+get ПолноеНаименование(){return this._getter('ПолноеНаименование')}
+set ПолноеНаименование(v){this._setter('ПолноеНаименование',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get owner(){return this._getter('owner')}
+set owner(v){this._setter('owner',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
 }
 $p.CatProperty_values_hierarchy = CatProperty_values_hierarchy;
 $p.cat.create('property_values_hierarchy');
@@ -294,24 +295,24 @@ $p.cat.create('property_values_hierarchy');
 * @constructor 
 */
 class CatBanks_qualifier extends CatObj{
-get correspondent_account(){return this._getter('correspondent_account');}
-set correspondent_account(v){this._setter('correspondent_account',v);}
-get city(){return this._getter('city');}
-set city(v){this._setter('city',v);}
-get address(){return this._getter('address');}
-set address(v){this._setter('address',v);}
-get phone_numbers(){return this._getter('phone_numbers');}
-set phone_numbers(v){this._setter('phone_numbers',v);}
-get activity_ceased(){return this._getter('activity_ceased');}
-set activity_ceased(v){this._setter('activity_ceased',v);}
-get swift(){return this._getter('swift');}
-set swift(v){this._setter('swift',v);}
-get inn(){return this._getter('inn');}
-set inn(v){this._setter('inn',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
+get correspondent_account(){return this._getter('correspondent_account')}
+set correspondent_account(v){this._setter('correspondent_account',v)}
+get city(){return this._getter('city')}
+set city(v){this._setter('city',v)}
+get address(){return this._getter('address')}
+set address(v){this._setter('address',v)}
+get phone_numbers(){return this._getter('phone_numbers')}
+set phone_numbers(v){this._setter('phone_numbers',v)}
+get activity_ceased(){return this._getter('activity_ceased')}
+set activity_ceased(v){this._setter('activity_ceased',v)}
+get swift(){return this._getter('swift')}
+set swift(v){this._setter('swift',v)}
+get inn(){return this._getter('inn')}
+set inn(v){this._setter('inn',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
 }
 $p.CatBanks_qualifier = CatBanks_qualifier;
 $p.cat.create('banks_qualifier');
@@ -324,34 +325,34 @@ $p.cat.create('banks_qualifier');
 * @constructor 
 */
 class CatDestinations extends CatObj{
-get КоличествоРеквизитов(){return this._getter('КоличествоРеквизитов');}
-set КоличествоРеквизитов(v){this._setter('КоличествоРеквизитов',v);}
-get КоличествоСведений(){return this._getter('КоличествоСведений');}
-set КоличествоСведений(v){this._setter('КоличествоСведений',v);}
-get Используется(){return this._getter('Используется');}
-set Используется(v){this._setter('Используется',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
-get extra_properties(){return this._getter_ts('extra_properties');}
-set extra_properties(v){this._setter_ts('extra_properties',v);}
+get КоличествоРеквизитов(){return this._getter('КоличествоРеквизитов')}
+set КоличествоРеквизитов(v){this._setter('КоличествоРеквизитов',v)}
+get КоличествоСведений(){return this._getter('КоличествоСведений')}
+set КоличествоСведений(v){this._setter('КоличествоСведений',v)}
+get Используется(){return this._getter('Используется')}
+set Используется(v){this._setter('Используется',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
+get extra_properties(){return this._getter_ts('extra_properties')}
+set extra_properties(v){this._setter_ts('extra_properties',v)}
 }
 $p.CatDestinations = CatDestinations;
 class CatDestinationsExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get _deleted(){return this._getter('_deleted');}
-set _deleted(v){this._setter('_deleted',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get _deleted(){return this._getter('_deleted')}
+set _deleted(v){this._setter('_deleted',v)}
 }
 $p.CatDestinationsExtra_fieldsRow = CatDestinationsExtra_fieldsRow;
 class CatDestinationsExtra_propertiesRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get _deleted(){return this._getter('_deleted');}
-set _deleted(v){this._setter('_deleted',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get _deleted(){return this._getter('_deleted')}
+set _deleted(v){this._setter('_deleted',v)}
 }
 $p.CatDestinationsExtra_propertiesRow = CatDestinationsExtra_propertiesRow;
 $p.cat.create('destinations');
@@ -364,14 +365,14 @@ $p.cat.create('destinations');
 * @constructor 
 */
 class CatCountries extends CatObj{
-get name_full(){return this._getter('name_full');}
-set name_full(v){this._setter('name_full',v);}
-get alpha2(){return this._getter('alpha2');}
-set alpha2(v){this._setter('alpha2',v);}
-get alpha3(){return this._getter('alpha3');}
-set alpha3(v){this._setter('alpha3',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
+get name_full(){return this._getter('name_full')}
+set name_full(v){this._setter('name_full',v)}
+get alpha2(){return this._getter('alpha2')}
+set alpha2(v){this._setter('alpha2',v)}
+get alpha3(){return this._getter('alpha3')}
+set alpha3(v){this._setter('alpha3',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
 }
 $p.CatCountries = CatCountries;
 $p.cat.create('countries');
@@ -384,33 +385,33 @@ $p.cat.create('countries');
 * @constructor 
 */
 class CatFormulas extends CatObj{
-get formula(){return this._getter('formula');}
-set formula(v){this._setter('formula',v);}
-get leading_formula(){return this._getter('leading_formula');}
-set leading_formula(v){this._setter('leading_formula',v);}
-get condition_formula(){return this._getter('condition_formula');}
-set condition_formula(v){this._setter('condition_formula',v);}
-get definition(){return this._getter('definition');}
-set definition(v){this._setter('definition',v);}
-get template(){return this._getter('template');}
-set template(v){this._setter('template',v);}
-get async(){return this._getter('async');}
-set async(v){this._setter('async',v);}
-get zone(){return this._getter('zone');}
-set zone(v){this._setter('zone',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get params(){return this._getter_ts('params');}
-set params(v){this._setter_ts('params',v);}
+get formula(){return this._getter('formula')}
+set formula(v){this._setter('formula',v)}
+get leading_formula(){return this._getter('leading_formula')}
+set leading_formula(v){this._setter('leading_formula',v)}
+get condition_formula(){return this._getter('condition_formula')}
+set condition_formula(v){this._setter('condition_formula',v)}
+get definition(){return this._getter('definition')}
+set definition(v){this._setter('definition',v)}
+get template(){return this._getter('template')}
+set template(v){this._setter('template',v)}
+get async(){return this._getter('async')}
+set async(v){this._setter('async',v)}
+get zone(){return this._getter('zone')}
+set zone(v){this._setter('zone',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get params(){return this._getter_ts('params')}
+set params(v){this._setter_ts('params',v)}
 }
 $p.CatFormulas = CatFormulas;
 class CatFormulasParamsRow extends TabularSectionRow{
-get param(){return this._getter('param');}
-set param(v){this._setter('param',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
+get param(){return this._getter('param')}
+set param(v){this._setter('param',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
 }
 $p.CatFormulasParamsRow = CatFormulasParamsRow;
 $p.cat.create('formulas');
@@ -423,28 +424,28 @@ $p.cat.create('formulas');
 * @constructor 
 */
 class CatElm_visualization extends CatObj{
-get svg_path(){return this._getter('svg_path');}
-set svg_path(v){this._setter('svg_path',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get attributes(){return this._getter('attributes');}
-set attributes(v){this._setter('attributes',v);}
-get rotate(){return this._getter('rotate');}
-set rotate(v){this._setter('rotate',v);}
-get offset(){return this._getter('offset');}
-set offset(v){this._setter('offset',v);}
-get side(){return this._getter('side');}
-set side(v){this._setter('side',v);}
-get elm_side(){return this._getter('elm_side');}
-set elm_side(v){this._setter('elm_side',v);}
-get cx(){return this._getter('cx');}
-set cx(v){this._setter('cx',v);}
-get cy(){return this._getter('cy');}
-set cy(v){this._setter('cy',v);}
-get angle_hor(){return this._getter('angle_hor');}
-set angle_hor(v){this._setter('angle_hor',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
+get svg_path(){return this._getter('svg_path')}
+set svg_path(v){this._setter('svg_path',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get attributes(){return this._getter('attributes')}
+set attributes(v){this._setter('attributes',v)}
+get rotate(){return this._getter('rotate')}
+set rotate(v){this._setter('rotate',v)}
+get offset(){return this._getter('offset')}
+set offset(v){this._setter('offset',v)}
+get side(){return this._getter('side')}
+set side(v){this._setter('side',v)}
+get elm_side(){return this._getter('elm_side')}
+set elm_side(v){this._setter('elm_side',v)}
+get cx(){return this._getter('cx')}
+set cx(v){this._setter('cx',v)}
+get cy(){return this._getter('cy')}
+set cy(v){this._setter('cy',v)}
+get angle_hor(){return this._getter('angle_hor')}
+set angle_hor(v){this._setter('angle_hor',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
 }
 $p.CatElm_visualization = CatElm_visualization;
 $p.cat.create('elm_visualization');
@@ -457,16 +458,16 @@ $p.cat.create('elm_visualization');
 * @constructor 
 */
 class CatCurrencies extends CatObj{
-get name_full(){return this._getter('name_full');}
-set name_full(v){this._setter('name_full',v);}
-get extra_charge(){return this._getter('extra_charge');}
-set extra_charge(v){this._setter('extra_charge',v);}
-get main_currency(){return this._getter('main_currency');}
-set main_currency(v){this._setter('main_currency',v);}
-get parameters_russian_recipe(){return this._getter('parameters_russian_recipe');}
-set parameters_russian_recipe(v){this._setter('parameters_russian_recipe',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
+get name_full(){return this._getter('name_full')}
+set name_full(v){this._setter('name_full',v)}
+get extra_charge(){return this._getter('extra_charge')}
+set extra_charge(v){this._setter('extra_charge',v)}
+get main_currency(){return this._getter('main_currency')}
+set main_currency(v){this._setter('main_currency',v)}
+get parameters_russian_recipe(){return this._getter('parameters_russian_recipe')}
+set parameters_russian_recipe(v){this._setter('parameters_russian_recipe',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
 }
 $p.CatCurrencies = CatCurrencies;
 $p.cat.create('currencies');
@@ -479,18 +480,18 @@ $p.cat.create('currencies');
 * @constructor 
 */
 class CatContact_information_kinds extends CatObj{
-get type(){return this._getter('type');}
-set type(v){this._setter('type',v);}
-get ВидПоляДругое(){return this._getter('ВидПоляДругое');}
-set ВидПоляДругое(v){this._setter('ВидПоляДругое',v);}
-get Используется(){return this._getter('Используется');}
-set Используется(v){this._setter('Используется',v);}
-get mandatory_fields(){return this._getter('mandatory_fields');}
-set mandatory_fields(v){this._setter('mandatory_fields',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
+get type(){return this._getter('type')}
+set type(v){this._setter('type',v)}
+get ВидПоляДругое(){return this._getter('ВидПоляДругое')}
+set ВидПоляДругое(v){this._setter('ВидПоляДругое',v)}
+get Используется(){return this._getter('Используется')}
+set Используется(v){this._setter('Используется',v)}
+get mandatory_fields(){return this._getter('mandatory_fields')}
+set mandatory_fields(v){this._setter('mandatory_fields',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
 }
 $p.CatContact_information_kinds = CatContact_information_kinds;
 $p.cat.create('contact_information_kinds');
@@ -503,16 +504,16 @@ $p.cat.create('contact_information_kinds');
 * @constructor 
 */
 class CatNom_kinds extends CatObj{
-get nom_type(){return this._getter('nom_type');}
-set nom_type(v){this._setter('nom_type',v);}
-get НаборСвойствНоменклатура(){return this._getter('НаборСвойствНоменклатура');}
-set НаборСвойствНоменклатура(v){this._setter('НаборСвойствНоменклатура',v);}
-get НаборСвойствХарактеристика(){return this._getter('НаборСвойствХарактеристика');}
-set НаборСвойствХарактеристика(v){this._setter('НаборСвойствХарактеристика',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
+get nom_type(){return this._getter('nom_type')}
+set nom_type(v){this._setter('nom_type',v)}
+get НаборСвойствНоменклатура(){return this._getter('НаборСвойствНоменклатура')}
+set НаборСвойствНоменклатура(v){this._setter('НаборСвойствНоменклатура',v)}
+get НаборСвойствХарактеристика(){return this._getter('НаборСвойствХарактеристика')}
+set НаборСвойствХарактеристика(v){this._setter('НаборСвойствХарактеристика',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
 }
 $p.CatNom_kinds = CatNom_kinds;
 $p.cat.create('nom_kinds');
@@ -525,56 +526,56 @@ $p.cat.create('nom_kinds');
 * @constructor 
 */
 class CatContracts extends CatObj{
-get settlements_currency(){return this._getter('settlements_currency');}
-set settlements_currency(v){this._setter('settlements_currency',v);}
-get mutual_settlements(){return this._getter('mutual_settlements');}
-set mutual_settlements(v){this._setter('mutual_settlements',v);}
-get contract_kind(){return this._getter('contract_kind');}
-set contract_kind(v){this._setter('contract_kind',v);}
-get date(){return this._getter('date');}
-set date(v){this._setter('date',v);}
-get check_days_without_pay(){return this._getter('check_days_without_pay');}
-set check_days_without_pay(v){this._setter('check_days_without_pay',v);}
-get allowable_debts_amount(){return this._getter('allowable_debts_amount');}
-set allowable_debts_amount(v){this._setter('allowable_debts_amount',v);}
-get allowable_debts_days(){return this._getter('allowable_debts_days');}
-set allowable_debts_days(v){this._setter('allowable_debts_days',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get check_debts_amount(){return this._getter('check_debts_amount');}
-set check_debts_amount(v){this._setter('check_debts_amount',v);}
-get check_debts_days(){return this._getter('check_debts_days');}
-set check_debts_days(v){this._setter('check_debts_days',v);}
-get number_doc(){return this._getter('number_doc');}
-set number_doc(v){this._setter('number_doc',v);}
-get organization(){return this._getter('organization');}
-set organization(v){this._setter('organization',v);}
-get main_cash_flow_article(){return this._getter('main_cash_flow_article');}
-set main_cash_flow_article(v){this._setter('main_cash_flow_article',v);}
-get main_project(){return this._getter('main_project');}
-set main_project(v){this._setter('main_project',v);}
-get accounting_reflect(){return this._getter('accounting_reflect');}
-set accounting_reflect(v){this._setter('accounting_reflect',v);}
-get tax_accounting_reflect(){return this._getter('tax_accounting_reflect');}
-set tax_accounting_reflect(v){this._setter('tax_accounting_reflect',v);}
-get prepayment_percent(){return this._getter('prepayment_percent');}
-set prepayment_percent(v){this._setter('prepayment_percent',v);}
-get validity(){return this._getter('validity');}
-set validity(v){this._setter('validity',v);}
-get vat_included(){return this._getter('vat_included');}
-set vat_included(v){this._setter('vat_included',v);}
-get price_type(){return this._getter('price_type');}
-set price_type(v){this._setter('price_type',v);}
-get vat_consider(){return this._getter('vat_consider');}
-set vat_consider(v){this._setter('vat_consider',v);}
-get days_without_pay(){return this._getter('days_without_pay');}
-set days_without_pay(v){this._setter('days_without_pay',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get owner(){return this._getter('owner');}
-set owner(v){this._setter('owner',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
+get settlements_currency(){return this._getter('settlements_currency')}
+set settlements_currency(v){this._setter('settlements_currency',v)}
+get mutual_settlements(){return this._getter('mutual_settlements')}
+set mutual_settlements(v){this._setter('mutual_settlements',v)}
+get contract_kind(){return this._getter('contract_kind')}
+set contract_kind(v){this._setter('contract_kind',v)}
+get date(){return this._getter('date')}
+set date(v){this._setter('date',v)}
+get check_days_without_pay(){return this._getter('check_days_without_pay')}
+set check_days_without_pay(v){this._setter('check_days_without_pay',v)}
+get allowable_debts_amount(){return this._getter('allowable_debts_amount')}
+set allowable_debts_amount(v){this._setter('allowable_debts_amount',v)}
+get allowable_debts_days(){return this._getter('allowable_debts_days')}
+set allowable_debts_days(v){this._setter('allowable_debts_days',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get check_debts_amount(){return this._getter('check_debts_amount')}
+set check_debts_amount(v){this._setter('check_debts_amount',v)}
+get check_debts_days(){return this._getter('check_debts_days')}
+set check_debts_days(v){this._setter('check_debts_days',v)}
+get number_doc(){return this._getter('number_doc')}
+set number_doc(v){this._setter('number_doc',v)}
+get organization(){return this._getter('organization')}
+set organization(v){this._setter('organization',v)}
+get main_cash_flow_article(){return this._getter('main_cash_flow_article')}
+set main_cash_flow_article(v){this._setter('main_cash_flow_article',v)}
+get main_project(){return this._getter('main_project')}
+set main_project(v){this._setter('main_project',v)}
+get accounting_reflect(){return this._getter('accounting_reflect')}
+set accounting_reflect(v){this._setter('accounting_reflect',v)}
+get tax_accounting_reflect(){return this._getter('tax_accounting_reflect')}
+set tax_accounting_reflect(v){this._setter('tax_accounting_reflect',v)}
+get prepayment_percent(){return this._getter('prepayment_percent')}
+set prepayment_percent(v){this._setter('prepayment_percent',v)}
+get validity(){return this._getter('validity')}
+set validity(v){this._setter('validity',v)}
+get vat_included(){return this._getter('vat_included')}
+set vat_included(v){this._setter('vat_included',v)}
+get price_type(){return this._getter('price_type')}
+set price_type(v){this._setter('price_type',v)}
+get vat_consider(){return this._getter('vat_consider')}
+set vat_consider(v){this._setter('vat_consider',v)}
+get days_without_pay(){return this._getter('days_without_pay')}
+set days_without_pay(v){this._setter('days_without_pay',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get owner(){return this._getter('owner')}
+set owner(v){this._setter('owner',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
 }
 $p.CatContracts = CatContracts;
 $p.cat.create('contracts');
@@ -587,22 +588,22 @@ $p.cat.create('contracts');
 * @constructor 
 */
 class CatNom_units extends CatObj{
-get qualifier_unit(){return this._getter('qualifier_unit');}
-set qualifier_unit(v){this._setter('qualifier_unit',v);}
-get heft(){return this._getter('heft');}
-set heft(v){this._setter('heft',v);}
-get volume(){return this._getter('volume');}
-set volume(v){this._setter('volume',v);}
-get coefficient(){return this._getter('coefficient');}
-set coefficient(v){this._setter('coefficient',v);}
-get rounding_threshold(){return this._getter('rounding_threshold');}
-set rounding_threshold(v){this._setter('rounding_threshold',v);}
-get ПредупреждатьОНецелыхМестах(){return this._getter('ПредупреждатьОНецелыхМестах');}
-set ПредупреждатьОНецелыхМестах(v){this._setter('ПредупреждатьОНецелыхМестах',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get owner(){return this._getter('owner');}
-set owner(v){this._setter('owner',v);}
+get qualifier_unit(){return this._getter('qualifier_unit')}
+set qualifier_unit(v){this._setter('qualifier_unit',v)}
+get heft(){return this._getter('heft')}
+set heft(v){this._setter('heft',v)}
+get volume(){return this._getter('volume')}
+set volume(v){this._setter('volume',v)}
+get coefficient(){return this._getter('coefficient')}
+set coefficient(v){this._setter('coefficient',v)}
+get rounding_threshold(){return this._getter('rounding_threshold')}
+set rounding_threshold(v){this._setter('rounding_threshold',v)}
+get ПредупреждатьОНецелыхМестах(){return this._getter('ПредупреждатьОНецелыхМестах')}
+set ПредупреждатьОНецелыхМестах(v){this._setter('ПредупреждатьОНецелыхМестах',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get owner(){return this._getter('owner')}
+set owner(v){this._setter('owner',v)}
 }
 $p.CatNom_units = CatNom_units;
 $p.cat.create('nom_units');
@@ -615,16 +616,16 @@ $p.cat.create('nom_units');
 * @constructor 
 */
 class CatProperty_values extends CatObj{
-get heft(){return this._getter('heft');}
-set heft(v){this._setter('heft',v);}
-get ПолноеНаименование(){return this._getter('ПолноеНаименование');}
-set ПолноеНаименование(v){this._setter('ПолноеНаименование',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get owner(){return this._getter('owner');}
-set owner(v){this._setter('owner',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
+get heft(){return this._getter('heft')}
+set heft(v){this._setter('heft',v)}
+get ПолноеНаименование(){return this._getter('ПолноеНаименование')}
+set ПолноеНаименование(v){this._setter('ПолноеНаименование',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get owner(){return this._getter('owner')}
+set owner(v){this._setter('owner',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
 }
 $p.CatProperty_values = CatProperty_values;
 $p.cat.create('property_values');
@@ -637,12 +638,12 @@ $p.cat.create('property_values');
 * @constructor 
 */
 class CatMeta_ids extends CatObj{
-get full_moniker(){return this._getter('full_moniker');}
-set full_moniker(v){this._setter('full_moniker',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
+get full_moniker(){return this._getter('full_moniker')}
+set full_moniker(v){this._setter('full_moniker',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
 }
 $p.CatMeta_ids = CatMeta_ids;
 $p.cat.create('meta_ids');
@@ -655,16 +656,16 @@ $p.cat.create('meta_ids');
 * @constructor 
 */
 class CatCashboxes extends CatObj{
-get funds_currency(){return this._getter('funds_currency');}
-set funds_currency(v){this._setter('funds_currency',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get current_account(){return this._getter('current_account');}
-set current_account(v){this._setter('current_account',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get owner(){return this._getter('owner');}
-set owner(v){this._setter('owner',v);}
+get funds_currency(){return this._getter('funds_currency')}
+set funds_currency(v){this._setter('funds_currency',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get current_account(){return this._getter('current_account')}
+set current_account(v){this._setter('current_account',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get owner(){return this._getter('owner')}
+set owner(v){this._setter('owner',v)}
 }
 $p.CatCashboxes = CatCashboxes;
 $p.cat.create('cashboxes');
@@ -677,12 +678,12 @@ $p.cat.create('cashboxes');
 * @constructor 
 */
 class CatUnits extends CatObj{
-get name_full(){return this._getter('name_full');}
-set name_full(v){this._setter('name_full',v);}
-get international_short(){return this._getter('international_short');}
-set international_short(v){this._setter('international_short',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
+get name_full(){return this._getter('name_full')}
+set name_full(v){this._setter('name_full',v)}
+get international_short(){return this._getter('international_short')}
+set international_short(v){this._setter('international_short',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
 }
 $p.CatUnits = CatUnits;
 $p.cat.create('units');
@@ -695,74 +696,74 @@ $p.cat.create('units');
 * @constructor 
 */
 class CatPartners extends CatObj{
-get name_full(){return this._getter('name_full');}
-set name_full(v){this._setter('name_full',v);}
-get main_bank_account(){return this._getter('main_bank_account');}
-set main_bank_account(v){this._setter('main_bank_account',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get kpp(){return this._getter('kpp');}
-set kpp(v){this._setter('kpp',v);}
-get okpo(){return this._getter('okpo');}
-set okpo(v){this._setter('okpo',v);}
-get inn(){return this._getter('inn');}
-set inn(v){this._setter('inn',v);}
-get individual_legal(){return this._getter('individual_legal');}
-set individual_legal(v){this._setter('individual_legal',v);}
-get main_contract(){return this._getter('main_contract');}
-set main_contract(v){this._setter('main_contract',v);}
-get identification_document(){return this._getter('identification_document');}
-set identification_document(v){this._setter('identification_document',v);}
-get buyer_main_manager(){return this._getter('buyer_main_manager');}
-set buyer_main_manager(v){this._setter('buyer_main_manager',v);}
-get is_buyer(){return this._getter('is_buyer');}
-set is_buyer(v){this._setter('is_buyer',v);}
-get is_supplier(){return this._getter('is_supplier');}
-set is_supplier(v){this._setter('is_supplier',v);}
-get primary_contact(){return this._getter('primary_contact');}
-set primary_contact(v){this._setter('primary_contact',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get contact_information(){return this._getter_ts('contact_information');}
-set contact_information(v){this._setter_ts('contact_information',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get name_full(){return this._getter('name_full')}
+set name_full(v){this._setter('name_full',v)}
+get main_bank_account(){return this._getter('main_bank_account')}
+set main_bank_account(v){this._setter('main_bank_account',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get kpp(){return this._getter('kpp')}
+set kpp(v){this._setter('kpp',v)}
+get okpo(){return this._getter('okpo')}
+set okpo(v){this._setter('okpo',v)}
+get inn(){return this._getter('inn')}
+set inn(v){this._setter('inn',v)}
+get individual_legal(){return this._getter('individual_legal')}
+set individual_legal(v){this._setter('individual_legal',v)}
+get main_contract(){return this._getter('main_contract')}
+set main_contract(v){this._setter('main_contract',v)}
+get identification_document(){return this._getter('identification_document')}
+set identification_document(v){this._setter('identification_document',v)}
+get buyer_main_manager(){return this._getter('buyer_main_manager')}
+set buyer_main_manager(v){this._setter('buyer_main_manager',v)}
+get is_buyer(){return this._getter('is_buyer')}
+set is_buyer(v){this._setter('is_buyer',v)}
+get is_supplier(){return this._getter('is_supplier')}
+set is_supplier(v){this._setter('is_supplier',v)}
+get primary_contact(){return this._getter('primary_contact')}
+set primary_contact(v){this._setter('primary_contact',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get contact_information(){return this._getter_ts('contact_information')}
+set contact_information(v){this._setter_ts('contact_information',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.CatPartners = CatPartners;
 class CatPartnersContact_informationRow extends TabularSectionRow{
-get type(){return this._getter('type');}
-set type(v){this._setter('type',v);}
-get kind(){return this._getter('kind');}
-set kind(v){this._setter('kind',v);}
-get presentation(){return this._getter('presentation');}
-set presentation(v){this._setter('presentation',v);}
-get values_fields(){return this._getter('values_fields');}
-set values_fields(v){this._setter('values_fields',v);}
-get country(){return this._getter('country');}
-set country(v){this._setter('country',v);}
-get region(){return this._getter('region');}
-set region(v){this._setter('region',v);}
-get city(){return this._getter('city');}
-set city(v){this._setter('city',v);}
-get email_address(){return this._getter('email_address');}
-set email_address(v){this._setter('email_address',v);}
-get server_domain_name(){return this._getter('server_domain_name');}
-set server_domain_name(v){this._setter('server_domain_name',v);}
-get phone_number(){return this._getter('phone_number');}
-set phone_number(v){this._setter('phone_number',v);}
-get phone_without_codes(){return this._getter('phone_without_codes');}
-set phone_without_codes(v){this._setter('phone_without_codes',v);}
+get type(){return this._getter('type')}
+set type(v){this._setter('type',v)}
+get kind(){return this._getter('kind')}
+set kind(v){this._setter('kind',v)}
+get presentation(){return this._getter('presentation')}
+set presentation(v){this._setter('presentation',v)}
+get values_fields(){return this._getter('values_fields')}
+set values_fields(v){this._setter('values_fields',v)}
+get country(){return this._getter('country')}
+set country(v){this._setter('country',v)}
+get region(){return this._getter('region')}
+set region(v){this._setter('region',v)}
+get city(){return this._getter('city')}
+set city(v){this._setter('city',v)}
+get email_address(){return this._getter('email_address')}
+set email_address(v){this._setter('email_address',v)}
+get server_domain_name(){return this._getter('server_domain_name')}
+set server_domain_name(v){this._setter('server_domain_name',v)}
+get phone_number(){return this._getter('phone_number')}
+set phone_number(v){this._setter('phone_number',v)}
+get phone_without_codes(){return this._getter('phone_without_codes')}
+set phone_without_codes(v){this._setter('phone_without_codes',v)}
 }
 $p.CatPartnersContact_informationRow = CatPartnersContact_informationRow;
 class CatPartnersExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatPartnersExtra_fieldsRow = CatPartnersExtra_fieldsRow;
 $p.cat.create('partners');
@@ -775,91 +776,91 @@ $p.cat.create('partners');
 * @constructor 
 */
 class CatNom extends CatObj{
-get article(){return this._getter('article');}
-set article(v){this._setter('article',v);}
-get name_full(){return this._getter('name_full');}
-set name_full(v){this._setter('name_full',v);}
-get base_unit(){return this._getter('base_unit');}
-set base_unit(v){this._setter('base_unit',v);}
-get storage_unit(){return this._getter('storage_unit');}
-set storage_unit(v){this._setter('storage_unit',v);}
-get nom_kind(){return this._getter('nom_kind');}
-set nom_kind(v){this._setter('nom_kind',v);}
-get nom_group(){return this._getter('nom_group');}
-set nom_group(v){this._setter('nom_group',v);}
-get vat_rate(){return this._getter('vat_rate');}
-set vat_rate(v){this._setter('vat_rate',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get price_group(){return this._getter('price_group');}
-set price_group(v){this._setter('price_group',v);}
-get elm_type(){return this._getter('elm_type');}
-set elm_type(v){this._setter('elm_type',v);}
-get len(){return this._getter('len');}
-set len(v){this._setter('len',v);}
-get width(){return this._getter('width');}
-set width(v){this._setter('width',v);}
-get thickness(){return this._getter('thickness');}
-set thickness(v){this._setter('thickness',v);}
-get sizefurn(){return this._getter('sizefurn');}
-set sizefurn(v){this._setter('sizefurn',v);}
-get sizefaltz(){return this._getter('sizefaltz');}
-set sizefaltz(v){this._setter('sizefaltz',v);}
-get density(){return this._getter('density');}
-set density(v){this._setter('density',v);}
-get volume(){return this._getter('volume');}
-set volume(v){this._setter('volume',v);}
-get arc_elongation(){return this._getter('arc_elongation');}
-set arc_elongation(v){this._setter('arc_elongation',v);}
-get loss_factor(){return this._getter('loss_factor');}
-set loss_factor(v){this._setter('loss_factor',v);}
-get rounding_quantity(){return this._getter('rounding_quantity');}
-set rounding_quantity(v){this._setter('rounding_quantity',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get cutting_optimization_type(){return this._getter('cutting_optimization_type');}
-set cutting_optimization_type(v){this._setter('cutting_optimization_type',v);}
-get crooked(){return this._getter('crooked');}
-set crooked(v){this._setter('crooked',v);}
-get colored(){return this._getter('colored');}
-set colored(v){this._setter('colored',v);}
-get lay(){return this._getter('lay');}
-set lay(v){this._setter('lay',v);}
-get made_to_order(){return this._getter('made_to_order');}
-set made_to_order(v){this._setter('made_to_order',v);}
-get days_to_execution(){return this._getter('days_to_execution');}
-set days_to_execution(v){this._setter('days_to_execution',v);}
-get days_from_execution(){return this._getter('days_from_execution');}
-set days_from_execution(v){this._setter('days_from_execution',v);}
-get pricing(){return this._getter('pricing');}
-set pricing(v){this._setter('pricing',v);}
-get visualization(){return this._getter('visualization');}
-set visualization(v){this._setter('visualization',v);}
-get complete_list_sorting(){return this._getter('complete_list_sorting');}
-set complete_list_sorting(v){this._setter('complete_list_sorting',v);}
-get is_accessory(){return this._getter('is_accessory');}
-set is_accessory(v){this._setter('is_accessory',v);}
-get is_procedure(){return this._getter('is_procedure');}
-set is_procedure(v){this._setter('is_procedure',v);}
-get is_service(){return this._getter('is_service');}
-set is_service(v){this._setter('is_service',v);}
-get is_pieces(){return this._getter('is_pieces');}
-set is_pieces(v){this._setter('is_pieces',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get article(){return this._getter('article')}
+set article(v){this._setter('article',v)}
+get name_full(){return this._getter('name_full')}
+set name_full(v){this._setter('name_full',v)}
+get base_unit(){return this._getter('base_unit')}
+set base_unit(v){this._setter('base_unit',v)}
+get storage_unit(){return this._getter('storage_unit')}
+set storage_unit(v){this._setter('storage_unit',v)}
+get nom_kind(){return this._getter('nom_kind')}
+set nom_kind(v){this._setter('nom_kind',v)}
+get nom_group(){return this._getter('nom_group')}
+set nom_group(v){this._setter('nom_group',v)}
+get vat_rate(){return this._getter('vat_rate')}
+set vat_rate(v){this._setter('vat_rate',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get price_group(){return this._getter('price_group')}
+set price_group(v){this._setter('price_group',v)}
+get elm_type(){return this._getter('elm_type')}
+set elm_type(v){this._setter('elm_type',v)}
+get len(){return this._getter('len')}
+set len(v){this._setter('len',v)}
+get width(){return this._getter('width')}
+set width(v){this._setter('width',v)}
+get thickness(){return this._getter('thickness')}
+set thickness(v){this._setter('thickness',v)}
+get sizefurn(){return this._getter('sizefurn')}
+set sizefurn(v){this._setter('sizefurn',v)}
+get sizefaltz(){return this._getter('sizefaltz')}
+set sizefaltz(v){this._setter('sizefaltz',v)}
+get density(){return this._getter('density')}
+set density(v){this._setter('density',v)}
+get volume(){return this._getter('volume')}
+set volume(v){this._setter('volume',v)}
+get arc_elongation(){return this._getter('arc_elongation')}
+set arc_elongation(v){this._setter('arc_elongation',v)}
+get loss_factor(){return this._getter('loss_factor')}
+set loss_factor(v){this._setter('loss_factor',v)}
+get rounding_quantity(){return this._getter('rounding_quantity')}
+set rounding_quantity(v){this._setter('rounding_quantity',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get cutting_optimization_type(){return this._getter('cutting_optimization_type')}
+set cutting_optimization_type(v){this._setter('cutting_optimization_type',v)}
+get crooked(){return this._getter('crooked')}
+set crooked(v){this._setter('crooked',v)}
+get colored(){return this._getter('colored')}
+set colored(v){this._setter('colored',v)}
+get lay(){return this._getter('lay')}
+set lay(v){this._setter('lay',v)}
+get made_to_order(){return this._getter('made_to_order')}
+set made_to_order(v){this._setter('made_to_order',v)}
+get days_to_execution(){return this._getter('days_to_execution')}
+set days_to_execution(v){this._setter('days_to_execution',v)}
+get days_from_execution(){return this._getter('days_from_execution')}
+set days_from_execution(v){this._setter('days_from_execution',v)}
+get pricing(){return this._getter('pricing')}
+set pricing(v){this._setter('pricing',v)}
+get visualization(){return this._getter('visualization')}
+set visualization(v){this._setter('visualization',v)}
+get complete_list_sorting(){return this._getter('complete_list_sorting')}
+set complete_list_sorting(v){this._setter('complete_list_sorting',v)}
+get is_accessory(){return this._getter('is_accessory')}
+set is_accessory(v){this._setter('is_accessory',v)}
+get is_procedure(){return this._getter('is_procedure')}
+set is_procedure(v){this._setter('is_procedure',v)}
+get is_service(){return this._getter('is_service')}
+set is_service(v){this._setter('is_service',v)}
+get is_pieces(){return this._getter('is_pieces')}
+set is_pieces(v){this._setter('is_pieces',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.CatNom = CatNom;
 class CatNomExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatNomExtra_fieldsRow = CatNomExtra_fieldsRow;
 $p.cat.create('nom');
@@ -872,74 +873,74 @@ $p.cat.create('nom');
 * @constructor 
 */
 class CatOrganizations extends CatObj{
-get prefix(){return this._getter('prefix');}
-set prefix(v){this._setter('prefix',v);}
-get individual_legal(){return this._getter('individual_legal');}
-set individual_legal(v){this._setter('individual_legal',v);}
-get individual_entrepreneur(){return this._getter('individual_entrepreneur');}
-set individual_entrepreneur(v){this._setter('individual_entrepreneur',v);}
-get inn(){return this._getter('inn');}
-set inn(v){this._setter('inn',v);}
-get kpp(){return this._getter('kpp');}
-set kpp(v){this._setter('kpp',v);}
-get main_bank_account(){return this._getter('main_bank_account');}
-set main_bank_account(v){this._setter('main_bank_account',v);}
-get main_cashbox(){return this._getter('main_cashbox');}
-set main_cashbox(v){this._setter('main_cashbox',v);}
-get certificate_series_number(){return this._getter('certificate_series_number');}
-set certificate_series_number(v){this._setter('certificate_series_number',v);}
-get certificate_date_issue(){return this._getter('certificate_date_issue');}
-set certificate_date_issue(v){this._setter('certificate_date_issue',v);}
-get certificate_authority_name(){return this._getter('certificate_authority_name');}
-set certificate_authority_name(v){this._setter('certificate_authority_name',v);}
-get certificate_authority_code(){return this._getter('certificate_authority_code');}
-set certificate_authority_code(v){this._setter('certificate_authority_code',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get contact_information(){return this._getter_ts('contact_information');}
-set contact_information(v){this._setter_ts('contact_information',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get prefix(){return this._getter('prefix')}
+set prefix(v){this._setter('prefix',v)}
+get individual_legal(){return this._getter('individual_legal')}
+set individual_legal(v){this._setter('individual_legal',v)}
+get individual_entrepreneur(){return this._getter('individual_entrepreneur')}
+set individual_entrepreneur(v){this._setter('individual_entrepreneur',v)}
+get inn(){return this._getter('inn')}
+set inn(v){this._setter('inn',v)}
+get kpp(){return this._getter('kpp')}
+set kpp(v){this._setter('kpp',v)}
+get main_bank_account(){return this._getter('main_bank_account')}
+set main_bank_account(v){this._setter('main_bank_account',v)}
+get main_cashbox(){return this._getter('main_cashbox')}
+set main_cashbox(v){this._setter('main_cashbox',v)}
+get certificate_series_number(){return this._getter('certificate_series_number')}
+set certificate_series_number(v){this._setter('certificate_series_number',v)}
+get certificate_date_issue(){return this._getter('certificate_date_issue')}
+set certificate_date_issue(v){this._setter('certificate_date_issue',v)}
+get certificate_authority_name(){return this._getter('certificate_authority_name')}
+set certificate_authority_name(v){this._setter('certificate_authority_name',v)}
+get certificate_authority_code(){return this._getter('certificate_authority_code')}
+set certificate_authority_code(v){this._setter('certificate_authority_code',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get contact_information(){return this._getter_ts('contact_information')}
+set contact_information(v){this._setter_ts('contact_information',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.CatOrganizations = CatOrganizations;
 class CatOrganizationsContact_informationRow extends TabularSectionRow{
-get type(){return this._getter('type');}
-set type(v){this._setter('type',v);}
-get kind(){return this._getter('kind');}
-set kind(v){this._setter('kind',v);}
-get presentation(){return this._getter('presentation');}
-set presentation(v){this._setter('presentation',v);}
-get values_fields(){return this._getter('values_fields');}
-set values_fields(v){this._setter('values_fields',v);}
-get country(){return this._getter('country');}
-set country(v){this._setter('country',v);}
-get region(){return this._getter('region');}
-set region(v){this._setter('region',v);}
-get city(){return this._getter('city');}
-set city(v){this._setter('city',v);}
-get email_address(){return this._getter('email_address');}
-set email_address(v){this._setter('email_address',v);}
-get server_domain_name(){return this._getter('server_domain_name');}
-set server_domain_name(v){this._setter('server_domain_name',v);}
-get phone_number(){return this._getter('phone_number');}
-set phone_number(v){this._setter('phone_number',v);}
-get phone_without_codes(){return this._getter('phone_without_codes');}
-set phone_without_codes(v){this._setter('phone_without_codes',v);}
-get ВидДляСписка(){return this._getter('ВидДляСписка');}
-set ВидДляСписка(v){this._setter('ВидДляСписка',v);}
-get ДействуетС(){return this._getter('ДействуетС');}
-set ДействуетС(v){this._setter('ДействуетС',v);}
+get type(){return this._getter('type')}
+set type(v){this._setter('type',v)}
+get kind(){return this._getter('kind')}
+set kind(v){this._setter('kind',v)}
+get presentation(){return this._getter('presentation')}
+set presentation(v){this._setter('presentation',v)}
+get values_fields(){return this._getter('values_fields')}
+set values_fields(v){this._setter('values_fields',v)}
+get country(){return this._getter('country')}
+set country(v){this._setter('country',v)}
+get region(){return this._getter('region')}
+set region(v){this._setter('region',v)}
+get city(){return this._getter('city')}
+set city(v){this._setter('city',v)}
+get email_address(){return this._getter('email_address')}
+set email_address(v){this._setter('email_address',v)}
+get server_domain_name(){return this._getter('server_domain_name')}
+set server_domain_name(v){this._setter('server_domain_name',v)}
+get phone_number(){return this._getter('phone_number')}
+set phone_number(v){this._setter('phone_number',v)}
+get phone_without_codes(){return this._getter('phone_without_codes')}
+set phone_without_codes(v){this._setter('phone_without_codes',v)}
+get ВидДляСписка(){return this._getter('ВидДляСписка')}
+set ВидДляСписка(v){this._setter('ВидДляСписка',v)}
+get ДействуетС(){return this._getter('ДействуетС')}
+set ДействуетС(v){this._setter('ДействуетС',v)}
 }
 $p.CatOrganizationsContact_informationRow = CatOrganizationsContact_informationRow;
 class CatOrganizationsExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatOrganizationsExtra_fieldsRow = CatOrganizationsExtra_fieldsRow;
 $p.cat.create('organizations');
@@ -952,126 +953,126 @@ $p.cat.create('organizations');
 * @constructor 
 */
 class CatInserts extends CatObj{
-get article(){return this._getter('article');}
-set article(v){this._setter('article',v);}
-get insert_type(){return this._getter('insert_type');}
-set insert_type(v){this._setter('insert_type',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get lmin(){return this._getter('lmin');}
-set lmin(v){this._setter('lmin',v);}
-get lmax(){return this._getter('lmax');}
-set lmax(v){this._setter('lmax',v);}
-get hmin(){return this._getter('hmin');}
-set hmin(v){this._setter('hmin',v);}
-get hmax(){return this._getter('hmax');}
-set hmax(v){this._setter('hmax',v);}
-get smin(){return this._getter('smin');}
-set smin(v){this._setter('smin',v);}
-get smax(){return this._getter('smax');}
-set smax(v){this._setter('smax',v);}
-get for_direct_profile_only(){return this._getter('for_direct_profile_only');}
-set for_direct_profile_only(v){this._setter('for_direct_profile_only',v);}
-get ahmin(){return this._getter('ahmin');}
-set ahmin(v){this._setter('ahmin',v);}
-get ahmax(){return this._getter('ahmax');}
-set ahmax(v){this._setter('ahmax',v);}
-get priority(){return this._getter('priority');}
-set priority(v){this._setter('priority',v);}
-get mmin(){return this._getter('mmin');}
-set mmin(v){this._setter('mmin',v);}
-get mmax(){return this._getter('mmax');}
-set mmax(v){this._setter('mmax',v);}
-get impost_fixation(){return this._getter('impost_fixation');}
-set impost_fixation(v){this._setter('impost_fixation',v);}
-get shtulp_fixation(){return this._getter('shtulp_fixation');}
-set shtulp_fixation(v){this._setter('shtulp_fixation',v);}
-get can_rotate(){return this._getter('can_rotate');}
-set can_rotate(v){this._setter('can_rotate',v);}
-get sizeb(){return this._getter('sizeb');}
-set sizeb(v){this._setter('sizeb',v);}
-get clr_group(){return this._getter('clr_group');}
-set clr_group(v){this._setter('clr_group',v);}
-get is_order_row(){return this._getter('is_order_row');}
-set is_order_row(v){this._setter('is_order_row',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get insert_glass_type(){return this._getter('insert_glass_type');}
-set insert_glass_type(v){this._setter('insert_glass_type',v);}
-get available(){return this._getter('available');}
-set available(v){this._setter('available',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get specification(){return this._getter_ts('specification');}
-set specification(v){this._setter_ts('specification',v);}
-get selection_params(){return this._getter_ts('selection_params');}
-set selection_params(v){this._setter_ts('selection_params',v);}
+get article(){return this._getter('article')}
+set article(v){this._setter('article',v)}
+get insert_type(){return this._getter('insert_type')}
+set insert_type(v){this._setter('insert_type',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get lmin(){return this._getter('lmin')}
+set lmin(v){this._setter('lmin',v)}
+get lmax(){return this._getter('lmax')}
+set lmax(v){this._setter('lmax',v)}
+get hmin(){return this._getter('hmin')}
+set hmin(v){this._setter('hmin',v)}
+get hmax(){return this._getter('hmax')}
+set hmax(v){this._setter('hmax',v)}
+get smin(){return this._getter('smin')}
+set smin(v){this._setter('smin',v)}
+get smax(){return this._getter('smax')}
+set smax(v){this._setter('smax',v)}
+get for_direct_profile_only(){return this._getter('for_direct_profile_only')}
+set for_direct_profile_only(v){this._setter('for_direct_profile_only',v)}
+get ahmin(){return this._getter('ahmin')}
+set ahmin(v){this._setter('ahmin',v)}
+get ahmax(){return this._getter('ahmax')}
+set ahmax(v){this._setter('ahmax',v)}
+get priority(){return this._getter('priority')}
+set priority(v){this._setter('priority',v)}
+get mmin(){return this._getter('mmin')}
+set mmin(v){this._setter('mmin',v)}
+get mmax(){return this._getter('mmax')}
+set mmax(v){this._setter('mmax',v)}
+get impost_fixation(){return this._getter('impost_fixation')}
+set impost_fixation(v){this._setter('impost_fixation',v)}
+get shtulp_fixation(){return this._getter('shtulp_fixation')}
+set shtulp_fixation(v){this._setter('shtulp_fixation',v)}
+get can_rotate(){return this._getter('can_rotate')}
+set can_rotate(v){this._setter('can_rotate',v)}
+get sizeb(){return this._getter('sizeb')}
+set sizeb(v){this._setter('sizeb',v)}
+get clr_group(){return this._getter('clr_group')}
+set clr_group(v){this._setter('clr_group',v)}
+get is_order_row(){return this._getter('is_order_row')}
+set is_order_row(v){this._setter('is_order_row',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get insert_glass_type(){return this._getter('insert_glass_type')}
+set insert_glass_type(v){this._setter('insert_glass_type',v)}
+get available(){return this._getter('available')}
+set available(v){this._setter('available',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get specification(){return this._getter_ts('specification')}
+set specification(v){this._setter_ts('specification',v)}
+get selection_params(){return this._getter_ts('selection_params')}
+set selection_params(v){this._setter_ts('selection_params',v)}
 }
 $p.CatInserts = CatInserts;
 class CatInsertsSpecificationRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get nom_characteristic(){return this._getter('nom_characteristic');}
-set nom_characteristic(v){this._setter('nom_characteristic',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get sz(){return this._getter('sz');}
-set sz(v){this._setter('sz',v);}
-get coefficient(){return this._getter('coefficient');}
-set coefficient(v){this._setter('coefficient',v);}
-get angle_calc_method(){return this._getter('angle_calc_method');}
-set angle_calc_method(v){this._setter('angle_calc_method',v);}
-get count_calc_method(){return this._getter('count_calc_method');}
-set count_calc_method(v){this._setter('count_calc_method',v);}
-get formula(){return this._getter('formula');}
-set formula(v){this._setter('formula',v);}
-get lmin(){return this._getter('lmin');}
-set lmin(v){this._setter('lmin',v);}
-get lmax(){return this._getter('lmax');}
-set lmax(v){this._setter('lmax',v);}
-get ahmin(){return this._getter('ahmin');}
-set ahmin(v){this._setter('ahmin',v);}
-get ahmax(){return this._getter('ahmax');}
-set ahmax(v){this._setter('ahmax',v);}
-get smin(){return this._getter('smin');}
-set smin(v){this._setter('smin',v);}
-get smax(){return this._getter('smax');}
-set smax(v){this._setter('smax',v);}
-get for_direct_profile_only(){return this._getter('for_direct_profile_only');}
-set for_direct_profile_only(v){this._setter('for_direct_profile_only',v);}
-get step(){return this._getter('step');}
-set step(v){this._setter('step',v);}
-get step_angle(){return this._getter('step_angle');}
-set step_angle(v){this._setter('step_angle',v);}
-get offsets(){return this._getter('offsets');}
-set offsets(v){this._setter('offsets',v);}
-get do_center(){return this._getter('do_center');}
-set do_center(v){this._setter('do_center',v);}
-get attrs_option(){return this._getter('attrs_option');}
-set attrs_option(v){this._setter('attrs_option',v);}
-get end_mount(){return this._getter('end_mount');}
-set end_mount(v){this._setter('end_mount',v);}
-get is_order_row(){return this._getter('is_order_row');}
-set is_order_row(v){this._setter('is_order_row',v);}
-get is_main_elm(){return this._getter('is_main_elm');}
-set is_main_elm(v){this._setter('is_main_elm',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get nom_characteristic(){return this._getter('nom_characteristic')}
+set nom_characteristic(v){this._setter('nom_characteristic',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get sz(){return this._getter('sz')}
+set sz(v){this._setter('sz',v)}
+get coefficient(){return this._getter('coefficient')}
+set coefficient(v){this._setter('coefficient',v)}
+get angle_calc_method(){return this._getter('angle_calc_method')}
+set angle_calc_method(v){this._setter('angle_calc_method',v)}
+get count_calc_method(){return this._getter('count_calc_method')}
+set count_calc_method(v){this._setter('count_calc_method',v)}
+get formula(){return this._getter('formula')}
+set formula(v){this._setter('formula',v)}
+get lmin(){return this._getter('lmin')}
+set lmin(v){this._setter('lmin',v)}
+get lmax(){return this._getter('lmax')}
+set lmax(v){this._setter('lmax',v)}
+get ahmin(){return this._getter('ahmin')}
+set ahmin(v){this._setter('ahmin',v)}
+get ahmax(){return this._getter('ahmax')}
+set ahmax(v){this._setter('ahmax',v)}
+get smin(){return this._getter('smin')}
+set smin(v){this._setter('smin',v)}
+get smax(){return this._getter('smax')}
+set smax(v){this._setter('smax',v)}
+get for_direct_profile_only(){return this._getter('for_direct_profile_only')}
+set for_direct_profile_only(v){this._setter('for_direct_profile_only',v)}
+get step(){return this._getter('step')}
+set step(v){this._setter('step',v)}
+get step_angle(){return this._getter('step_angle')}
+set step_angle(v){this._setter('step_angle',v)}
+get offsets(){return this._getter('offsets')}
+set offsets(v){this._setter('offsets',v)}
+get do_center(){return this._getter('do_center')}
+set do_center(v){this._setter('do_center',v)}
+get attrs_option(){return this._getter('attrs_option')}
+set attrs_option(v){this._setter('attrs_option',v)}
+get end_mount(){return this._getter('end_mount')}
+set end_mount(v){this._setter('end_mount',v)}
+get is_order_row(){return this._getter('is_order_row')}
+set is_order_row(v){this._setter('is_order_row',v)}
+get is_main_elm(){return this._getter('is_main_elm')}
+set is_main_elm(v){this._setter('is_main_elm',v)}
 }
 $p.CatInsertsSpecificationRow = CatInsertsSpecificationRow;
 class CatInsertsSelection_paramsRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get param(){return this._getter('param');}
-set param(v){this._setter('param',v);}
-get comparison_type(){return this._getter('comparison_type');}
-set comparison_type(v){this._setter('comparison_type',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get param(){return this._getter('param')}
+set param(v){this._setter('param',v)}
+get comparison_type(){return this._getter('comparison_type')}
+set comparison_type(v){this._setter('comparison_type',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatInsertsSelection_paramsRow = CatInsertsSelection_paramsRow;
 $p.cat.create('inserts');
@@ -1085,31 +1086,31 @@ $p.cat.create('inserts');
 * @constructor 
 */
 class CatParameters_keys extends CatObj{
-get priority(){return this._getter('priority');}
-set priority(v){this._setter('priority',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get sorting_field(){return this._getter('sorting_field');}
-set sorting_field(v){this._setter('sorting_field',v);}
-get applying(){return this._getter('applying');}
-set applying(v){this._setter('applying',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get params(){return this._getter_ts('params');}
-set params(v){this._setter_ts('params',v);}
+get priority(){return this._getter('priority')}
+set priority(v){this._setter('priority',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get sorting_field(){return this._getter('sorting_field')}
+set sorting_field(v){this._setter('sorting_field',v)}
+get applying(){return this._getter('applying')}
+set applying(v){this._setter('applying',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get params(){return this._getter_ts('params')}
+set params(v){this._setter_ts('params',v)}
 }
 $p.CatParameters_keys = CatParameters_keys;
 class CatParameters_keysParamsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get comparison_type(){return this._getter('comparison_type');}
-set comparison_type(v){this._setter('comparison_type',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get comparison_type(){return this._getter('comparison_type')}
+set comparison_type(v){this._setter('comparison_type',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatParameters_keysParamsRow = CatParameters_keysParamsRow;
 $p.cat.create('parameters_keys');
@@ -1122,81 +1123,81 @@ $p.cat.create('parameters_keys');
 * @constructor 
 */
 class CatProduction_params extends CatObj{
-get default_clr(){return this._getter('default_clr');}
-set default_clr(v){this._setter('default_clr',v);}
-get clr_group(){return this._getter('clr_group');}
-set clr_group(v){this._setter('clr_group',v);}
-get tmin(){return this._getter('tmin');}
-set tmin(v){this._setter('tmin',v);}
-get tmax(){return this._getter('tmax');}
-set tmax(v){this._setter('tmax',v);}
-get allow_open_cnn(){return this._getter('allow_open_cnn');}
-set allow_open_cnn(v){this._setter('allow_open_cnn',v);}
-get flap_pos_by_impost(){return this._getter('flap_pos_by_impost');}
-set flap_pos_by_impost(v){this._setter('flap_pos_by_impost',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get elmnts(){return this._getter_ts('elmnts');}
-set elmnts(v){this._setter_ts('elmnts',v);}
-get production(){return this._getter_ts('production');}
-set production(v){this._setter_ts('production',v);}
-get product_params(){return this._getter_ts('product_params');}
-set product_params(v){this._setter_ts('product_params',v);}
-get furn_params(){return this._getter_ts('furn_params');}
-set furn_params(v){this._setter_ts('furn_params',v);}
-get base_blocks(){return this._getter_ts('base_blocks');}
-set base_blocks(v){this._setter_ts('base_blocks',v);}
+get default_clr(){return this._getter('default_clr')}
+set default_clr(v){this._setter('default_clr',v)}
+get clr_group(){return this._getter('clr_group')}
+set clr_group(v){this._setter('clr_group',v)}
+get tmin(){return this._getter('tmin')}
+set tmin(v){this._setter('tmin',v)}
+get tmax(){return this._getter('tmax')}
+set tmax(v){this._setter('tmax',v)}
+get allow_open_cnn(){return this._getter('allow_open_cnn')}
+set allow_open_cnn(v){this._setter('allow_open_cnn',v)}
+get flap_pos_by_impost(){return this._getter('flap_pos_by_impost')}
+set flap_pos_by_impost(v){this._setter('flap_pos_by_impost',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get elmnts(){return this._getter_ts('elmnts')}
+set elmnts(v){this._setter_ts('elmnts',v)}
+get production(){return this._getter_ts('production')}
+set production(v){this._setter_ts('production',v)}
+get product_params(){return this._getter_ts('product_params')}
+set product_params(v){this._setter_ts('product_params',v)}
+get furn_params(){return this._getter_ts('furn_params')}
+set furn_params(v){this._setter_ts('furn_params',v)}
+get base_blocks(){return this._getter_ts('base_blocks')}
+set base_blocks(v){this._setter_ts('base_blocks',v)}
 }
 $p.CatProduction_params = CatProduction_params;
 class CatProduction_paramsElmntsRow extends TabularSectionRow{
-get by_default(){return this._getter('by_default');}
-set by_default(v){this._setter('by_default',v);}
-get elm_type(){return this._getter('elm_type');}
-set elm_type(v){this._setter('elm_type',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get pos(){return this._getter('pos');}
-set pos(v){this._setter('pos',v);}
+get by_default(){return this._getter('by_default')}
+set by_default(v){this._setter('by_default',v)}
+get elm_type(){return this._getter('elm_type')}
+set elm_type(v){this._setter('elm_type',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get pos(){return this._getter('pos')}
+set pos(v){this._setter('pos',v)}
 }
 $p.CatProduction_paramsElmntsRow = CatProduction_paramsElmntsRow;
 class CatProduction_paramsProductionRow extends TabularSectionRow{
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get param(){return this._getter('param');}
-set param(v){this._setter('param',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get param(){return this._getter('param')}
+set param(v){this._setter('param',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
 }
 $p.CatProduction_paramsProductionRow = CatProduction_paramsProductionRow;
 class CatProduction_paramsProduct_paramsRow extends TabularSectionRow{
-get param(){return this._getter('param');}
-set param(v){this._setter('param',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get hide(){return this._getter('hide');}
-set hide(v){this._setter('hide',v);}
-get forcibly(){return this._getter('forcibly');}
-set forcibly(v){this._setter('forcibly',v);}
+get param(){return this._getter('param')}
+set param(v){this._setter('param',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get hide(){return this._getter('hide')}
+set hide(v){this._setter('hide',v)}
+get forcibly(){return this._getter('forcibly')}
+set forcibly(v){this._setter('forcibly',v)}
 }
 $p.CatProduction_paramsProduct_paramsRow = CatProduction_paramsProduct_paramsRow;
 class CatProduction_paramsFurn_paramsRow extends TabularSectionRow{
-get param(){return this._getter('param');}
-set param(v){this._setter('param',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get hide(){return this._getter('hide');}
-set hide(v){this._setter('hide',v);}
-get forcibly(){return this._getter('forcibly');}
-set forcibly(v){this._setter('forcibly',v);}
+get param(){return this._getter('param')}
+set param(v){this._setter('param',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get hide(){return this._getter('hide')}
+set hide(v){this._setter('hide',v)}
+get forcibly(){return this._getter('forcibly')}
+set forcibly(v){this._setter('forcibly',v)}
 }
 $p.CatProduction_paramsFurn_paramsRow = CatProduction_paramsFurn_paramsRow;
 class CatProduction_paramsBase_blocksRow extends TabularSectionRow{
-get calc_order(){return this._getter('calc_order');}
-set calc_order(v){this._setter('calc_order',v);}
+get calc_order(){return this._getter('calc_order')}
+set calc_order(v){this._setter('calc_order',v)}
 }
 $p.CatProduction_paramsBase_blocksRow = CatProduction_paramsBase_blocksRow;
 $p.cat.create('production_params');
@@ -1209,24 +1210,24 @@ $p.cat.create('production_params');
 * @constructor 
 */
 class CatDelivery_areas extends CatObj{
-get country(){return this._getter('country');}
-set country(v){this._setter('country',v);}
-get region(){return this._getter('region');}
-set region(v){this._setter('region',v);}
-get city(){return this._getter('city');}
-set city(v){this._setter('city',v);}
-get latitude(){return this._getter('latitude');}
-set latitude(v){this._setter('latitude',v);}
-get longitude(){return this._getter('longitude');}
-set longitude(v){this._setter('longitude',v);}
-get ind(){return this._getter('ind');}
-set ind(v){this._setter('ind',v);}
-get delivery_area(){return this._getter('delivery_area');}
-set delivery_area(v){this._setter('delivery_area',v);}
-get specify_area_by_geocoder(){return this._getter('specify_area_by_geocoder');}
-set specify_area_by_geocoder(v){this._setter('specify_area_by_geocoder',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
+get country(){return this._getter('country')}
+set country(v){this._setter('country',v)}
+get region(){return this._getter('region')}
+set region(v){this._setter('region',v)}
+get city(){return this._getter('city')}
+set city(v){this._setter('city',v)}
+get latitude(){return this._getter('latitude')}
+set latitude(v){this._setter('latitude',v)}
+get longitude(){return this._getter('longitude')}
+set longitude(v){this._setter('longitude',v)}
+get ind(){return this._getter('ind')}
+set ind(v){this._setter('ind',v)}
+get delivery_area(){return this._getter('delivery_area')}
+set delivery_area(v){this._setter('delivery_area',v)}
+get specify_area_by_geocoder(){return this._getter('specify_area_by_geocoder')}
+set specify_area_by_geocoder(v){this._setter('specify_area_by_geocoder',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
 }
 $p.CatDelivery_areas = CatDelivery_areas;
 $p.cat.create('delivery_areas');
@@ -1239,121 +1240,121 @@ $p.cat.create('delivery_areas');
 * @constructor 
 */
 class CatCnns extends CatObj{
-get priority(){return this._getter('priority');}
-set priority(v){this._setter('priority',v);}
-get amin(){return this._getter('amin');}
-set amin(v){this._setter('amin',v);}
-get amax(){return this._getter('amax');}
-set amax(v){this._setter('amax',v);}
-get sd1(){return this._getter('sd1');}
-set sd1(v){this._setter('sd1',v);}
-get sz(){return this._getter('sz');}
-set sz(v){this._setter('sz',v);}
-get cnn_type(){return this._getter('cnn_type');}
-set cnn_type(v){this._setter('cnn_type',v);}
-get ahmin(){return this._getter('ahmin');}
-set ahmin(v){this._setter('ahmin',v);}
-get ahmax(){return this._getter('ahmax');}
-set ahmax(v){this._setter('ahmax',v);}
-get lmin(){return this._getter('lmin');}
-set lmin(v){this._setter('lmin',v);}
-get lmax(){return this._getter('lmax');}
-set lmax(v){this._setter('lmax',v);}
-get tmin(){return this._getter('tmin');}
-set tmin(v){this._setter('tmin',v);}
-get tmax(){return this._getter('tmax');}
-set tmax(v){this._setter('tmax',v);}
-get var_layers(){return this._getter('var_layers');}
-set var_layers(v){this._setter('var_layers',v);}
-get for_direct_profile_only(){return this._getter('for_direct_profile_only');}
-set for_direct_profile_only(v){this._setter('for_direct_profile_only',v);}
-get art1vert(){return this._getter('art1vert');}
-set art1vert(v){this._setter('art1vert',v);}
-get art1glass(){return this._getter('art1glass');}
-set art1glass(v){this._setter('art1glass',v);}
-get art2glass(){return this._getter('art2glass');}
-set art2glass(v){this._setter('art2glass',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get specification(){return this._getter_ts('specification');}
-set specification(v){this._setter_ts('specification',v);}
-get cnn_elmnts(){return this._getter_ts('cnn_elmnts');}
-set cnn_elmnts(v){this._setter_ts('cnn_elmnts',v);}
-get selection_params(){return this._getter_ts('selection_params');}
-set selection_params(v){this._setter_ts('selection_params',v);}
+get priority(){return this._getter('priority')}
+set priority(v){this._setter('priority',v)}
+get amin(){return this._getter('amin')}
+set amin(v){this._setter('amin',v)}
+get amax(){return this._getter('amax')}
+set amax(v){this._setter('amax',v)}
+get sd1(){return this._getter('sd1')}
+set sd1(v){this._setter('sd1',v)}
+get sz(){return this._getter('sz')}
+set sz(v){this._setter('sz',v)}
+get cnn_type(){return this._getter('cnn_type')}
+set cnn_type(v){this._setter('cnn_type',v)}
+get ahmin(){return this._getter('ahmin')}
+set ahmin(v){this._setter('ahmin',v)}
+get ahmax(){return this._getter('ahmax')}
+set ahmax(v){this._setter('ahmax',v)}
+get lmin(){return this._getter('lmin')}
+set lmin(v){this._setter('lmin',v)}
+get lmax(){return this._getter('lmax')}
+set lmax(v){this._setter('lmax',v)}
+get tmin(){return this._getter('tmin')}
+set tmin(v){this._setter('tmin',v)}
+get tmax(){return this._getter('tmax')}
+set tmax(v){this._setter('tmax',v)}
+get var_layers(){return this._getter('var_layers')}
+set var_layers(v){this._setter('var_layers',v)}
+get for_direct_profile_only(){return this._getter('for_direct_profile_only')}
+set for_direct_profile_only(v){this._setter('for_direct_profile_only',v)}
+get art1vert(){return this._getter('art1vert')}
+set art1vert(v){this._setter('art1vert',v)}
+get art1glass(){return this._getter('art1glass')}
+set art1glass(v){this._setter('art1glass',v)}
+get art2glass(){return this._getter('art2glass')}
+set art2glass(v){this._setter('art2glass',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get specification(){return this._getter_ts('specification')}
+set specification(v){this._setter_ts('specification',v)}
+get cnn_elmnts(){return this._getter_ts('cnn_elmnts')}
+set cnn_elmnts(v){this._setter_ts('cnn_elmnts',v)}
+get selection_params(){return this._getter_ts('selection_params')}
+set selection_params(v){this._setter_ts('selection_params',v)}
 }
 $p.CatCnns = CatCnns;
 class CatCnnsSpecificationRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get nom_characteristic(){return this._getter('nom_characteristic');}
-set nom_characteristic(v){this._setter('nom_characteristic',v);}
-get coefficient(){return this._getter('coefficient');}
-set coefficient(v){this._setter('coefficient',v);}
-get sz(){return this._getter('sz');}
-set sz(v){this._setter('sz',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get formula(){return this._getter('formula');}
-set formula(v){this._setter('formula',v);}
-get sz_min(){return this._getter('sz_min');}
-set sz_min(v){this._setter('sz_min',v);}
-get sz_max(){return this._getter('sz_max');}
-set sz_max(v){this._setter('sz_max',v);}
-get amin(){return this._getter('amin');}
-set amin(v){this._setter('amin',v);}
-get amax(){return this._getter('amax');}
-set amax(v){this._setter('amax',v);}
-get set_specification(){return this._getter('set_specification');}
-set set_specification(v){this._setter('set_specification',v);}
-get for_direct_profile_only(){return this._getter('for_direct_profile_only');}
-set for_direct_profile_only(v){this._setter('for_direct_profile_only',v);}
-get by_contour(){return this._getter('by_contour');}
-set by_contour(v){this._setter('by_contour',v);}
-get contraction_by_contour(){return this._getter('contraction_by_contour');}
-set contraction_by_contour(v){this._setter('contraction_by_contour',v);}
-get on_aperture(){return this._getter('on_aperture');}
-set on_aperture(v){this._setter('on_aperture',v);}
-get angle_calc_method(){return this._getter('angle_calc_method');}
-set angle_calc_method(v){this._setter('angle_calc_method',v);}
-get contour_number(){return this._getter('contour_number');}
-set contour_number(v){this._setter('contour_number',v);}
-get is_order_row(){return this._getter('is_order_row');}
-set is_order_row(v){this._setter('is_order_row',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get nom_characteristic(){return this._getter('nom_characteristic')}
+set nom_characteristic(v){this._setter('nom_characteristic',v)}
+get coefficient(){return this._getter('coefficient')}
+set coefficient(v){this._setter('coefficient',v)}
+get sz(){return this._getter('sz')}
+set sz(v){this._setter('sz',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get formula(){return this._getter('formula')}
+set formula(v){this._setter('formula',v)}
+get sz_min(){return this._getter('sz_min')}
+set sz_min(v){this._setter('sz_min',v)}
+get sz_max(){return this._getter('sz_max')}
+set sz_max(v){this._setter('sz_max',v)}
+get amin(){return this._getter('amin')}
+set amin(v){this._setter('amin',v)}
+get amax(){return this._getter('amax')}
+set amax(v){this._setter('amax',v)}
+get set_specification(){return this._getter('set_specification')}
+set set_specification(v){this._setter('set_specification',v)}
+get for_direct_profile_only(){return this._getter('for_direct_profile_only')}
+set for_direct_profile_only(v){this._setter('for_direct_profile_only',v)}
+get by_contour(){return this._getter('by_contour')}
+set by_contour(v){this._setter('by_contour',v)}
+get contraction_by_contour(){return this._getter('contraction_by_contour')}
+set contraction_by_contour(v){this._setter('contraction_by_contour',v)}
+get on_aperture(){return this._getter('on_aperture')}
+set on_aperture(v){this._setter('on_aperture',v)}
+get angle_calc_method(){return this._getter('angle_calc_method')}
+set angle_calc_method(v){this._setter('angle_calc_method',v)}
+get contour_number(){return this._getter('contour_number')}
+set contour_number(v){this._setter('contour_number',v)}
+get is_order_row(){return this._getter('is_order_row')}
+set is_order_row(v){this._setter('is_order_row',v)}
 }
 $p.CatCnnsSpecificationRow = CatCnnsSpecificationRow;
 class CatCnnsCnn_elmntsRow extends TabularSectionRow{
-get nom1(){return this._getter('nom1');}
-set nom1(v){this._setter('nom1',v);}
-get clr1(){return this._getter('clr1');}
-set clr1(v){this._setter('clr1',v);}
-get nom2(){return this._getter('nom2');}
-set nom2(v){this._setter('nom2',v);}
-get clr2(){return this._getter('clr2');}
-set clr2(v){this._setter('clr2',v);}
-get varclr(){return this._getter('varclr');}
-set varclr(v){this._setter('varclr',v);}
-get is_nom_combinations_row(){return this._getter('is_nom_combinations_row');}
-set is_nom_combinations_row(v){this._setter('is_nom_combinations_row',v);}
+get nom1(){return this._getter('nom1')}
+set nom1(v){this._setter('nom1',v)}
+get clr1(){return this._getter('clr1')}
+set clr1(v){this._setter('clr1',v)}
+get nom2(){return this._getter('nom2')}
+set nom2(v){this._setter('nom2',v)}
+get clr2(){return this._getter('clr2')}
+set clr2(v){this._setter('clr2',v)}
+get varclr(){return this._getter('varclr')}
+set varclr(v){this._setter('varclr',v)}
+get is_nom_combinations_row(){return this._getter('is_nom_combinations_row')}
+set is_nom_combinations_row(v){this._setter('is_nom_combinations_row',v)}
 }
 $p.CatCnnsCnn_elmntsRow = CatCnnsCnn_elmntsRow;
 class CatCnnsSelection_paramsRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get param(){return this._getter('param');}
-set param(v){this._setter('param',v);}
-get comparison_type(){return this._getter('comparison_type');}
-set comparison_type(v){this._setter('comparison_type',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get param(){return this._getter('param')}
+set param(v){this._setter('param',v)}
+get comparison_type(){return this._getter('comparison_type')}
+set comparison_type(v){this._setter('comparison_type',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatCnnsSelection_paramsRow = CatCnnsSelection_paramsRow;
 $p.cat.create('cnns');
@@ -1366,153 +1367,153 @@ $p.cat.create('cnns');
 * @constructor 
 */
 class CatFurns extends CatObj{
-get flap_weight_max(){return this._getter('flap_weight_max');}
-set flap_weight_max(v){this._setter('flap_weight_max',v);}
-get left_right(){return this._getter('left_right');}
-set left_right(v){this._setter('left_right',v);}
-get is_set(){return this._getter('is_set');}
-set is_set(v){this._setter('is_set',v);}
-get is_sliding(){return this._getter('is_sliding');}
-set is_sliding(v){this._setter('is_sliding',v);}
-get furn_set(){return this._getter('furn_set');}
-set furn_set(v){this._setter('furn_set',v);}
-get side_count(){return this._getter('side_count');}
-set side_count(v){this._setter('side_count',v);}
-get handle_side(){return this._getter('handle_side');}
-set handle_side(v){this._setter('handle_side',v);}
-get open_type(){return this._getter('open_type');}
-set open_type(v){this._setter('open_type',v);}
-get name_short(){return this._getter('name_short');}
-set name_short(v){this._setter('name_short',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get open_tunes(){return this._getter_ts('open_tunes');}
-set open_tunes(v){this._setter_ts('open_tunes',v);}
-get specification(){return this._getter_ts('specification');}
-set specification(v){this._setter_ts('specification',v);}
-get selection_params(){return this._getter_ts('selection_params');}
-set selection_params(v){this._setter_ts('selection_params',v);}
-get specification_restrictions(){return this._getter_ts('specification_restrictions');}
-set specification_restrictions(v){this._setter_ts('specification_restrictions',v);}
-get colors(){return this._getter_ts('colors');}
-set colors(v){this._setter_ts('colors',v);}
+get flap_weight_max(){return this._getter('flap_weight_max')}
+set flap_weight_max(v){this._setter('flap_weight_max',v)}
+get left_right(){return this._getter('left_right')}
+set left_right(v){this._setter('left_right',v)}
+get is_set(){return this._getter('is_set')}
+set is_set(v){this._setter('is_set',v)}
+get is_sliding(){return this._getter('is_sliding')}
+set is_sliding(v){this._setter('is_sliding',v)}
+get furn_set(){return this._getter('furn_set')}
+set furn_set(v){this._setter('furn_set',v)}
+get side_count(){return this._getter('side_count')}
+set side_count(v){this._setter('side_count',v)}
+get handle_side(){return this._getter('handle_side')}
+set handle_side(v){this._setter('handle_side',v)}
+get open_type(){return this._getter('open_type')}
+set open_type(v){this._setter('open_type',v)}
+get name_short(){return this._getter('name_short')}
+set name_short(v){this._setter('name_short',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get open_tunes(){return this._getter_ts('open_tunes')}
+set open_tunes(v){this._setter_ts('open_tunes',v)}
+get specification(){return this._getter_ts('specification')}
+set specification(v){this._setter_ts('specification',v)}
+get selection_params(){return this._getter_ts('selection_params')}
+set selection_params(v){this._setter_ts('selection_params',v)}
+get specification_restrictions(){return this._getter_ts('specification_restrictions')}
+set specification_restrictions(v){this._setter_ts('specification_restrictions',v)}
+get colors(){return this._getter_ts('colors')}
+set colors(v){this._setter_ts('colors',v)}
 }
 $p.CatFurns = CatFurns;
 class CatFurnsOpen_tunesRow extends TabularSectionRow{
-get side(){return this._getter('side');}
-set side(v){this._setter('side',v);}
-get lmin(){return this._getter('lmin');}
-set lmin(v){this._setter('lmin',v);}
-get lmax(){return this._getter('lmax');}
-set lmax(v){this._setter('lmax',v);}
-get amin(){return this._getter('amin');}
-set amin(v){this._setter('amin',v);}
-get amax(){return this._getter('amax');}
-set amax(v){this._setter('amax',v);}
-get arc_available(){return this._getter('arc_available');}
-set arc_available(v){this._setter('arc_available',v);}
-get shtulp_available(){return this._getter('shtulp_available');}
-set shtulp_available(v){this._setter('shtulp_available',v);}
-get shtulp_fix_here(){return this._getter('shtulp_fix_here');}
-set shtulp_fix_here(v){this._setter('shtulp_fix_here',v);}
-get rotation_axis(){return this._getter('rotation_axis');}
-set rotation_axis(v){this._setter('rotation_axis',v);}
-get partial_opening(){return this._getter('partial_opening');}
-set partial_opening(v){this._setter('partial_opening',v);}
-get outline(){return this._getter('outline');}
-set outline(v){this._setter('outline',v);}
+get side(){return this._getter('side')}
+set side(v){this._setter('side',v)}
+get lmin(){return this._getter('lmin')}
+set lmin(v){this._setter('lmin',v)}
+get lmax(){return this._getter('lmax')}
+set lmax(v){this._setter('lmax',v)}
+get amin(){return this._getter('amin')}
+set amin(v){this._setter('amin',v)}
+get amax(){return this._getter('amax')}
+set amax(v){this._setter('amax',v)}
+get arc_available(){return this._getter('arc_available')}
+set arc_available(v){this._setter('arc_available',v)}
+get shtulp_available(){return this._getter('shtulp_available')}
+set shtulp_available(v){this._setter('shtulp_available',v)}
+get shtulp_fix_here(){return this._getter('shtulp_fix_here')}
+set shtulp_fix_here(v){this._setter('shtulp_fix_here',v)}
+get rotation_axis(){return this._getter('rotation_axis')}
+set rotation_axis(v){this._setter('rotation_axis',v)}
+get partial_opening(){return this._getter('partial_opening')}
+set partial_opening(v){this._setter('partial_opening',v)}
+get outline(){return this._getter('outline')}
+set outline(v){this._setter('outline',v)}
 }
 $p.CatFurnsOpen_tunesRow = CatFurnsOpen_tunesRow;
 class CatFurnsSpecificationRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get dop(){return this._getter('dop');}
-set dop(v){this._setter('dop',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get nom_characteristic(){return this._getter('nom_characteristic');}
-set nom_characteristic(v){this._setter('nom_characteristic',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get handle_height_base(){return this._getter('handle_height_base');}
-set handle_height_base(v){this._setter('handle_height_base',v);}
-get fix_ruch(){return this._getter('fix_ruch');}
-set fix_ruch(v){this._setter('fix_ruch',v);}
-get handle_height_min(){return this._getter('handle_height_min');}
-set handle_height_min(v){this._setter('handle_height_min',v);}
-get handle_height_max(){return this._getter('handle_height_max');}
-set handle_height_max(v){this._setter('handle_height_max',v);}
-get contraction(){return this._getter('contraction');}
-set contraction(v){this._setter('contraction',v);}
-get contraction_option(){return this._getter('contraction_option');}
-set contraction_option(v){this._setter('contraction_option',v);}
-get coefficient(){return this._getter('coefficient');}
-set coefficient(v){this._setter('coefficient',v);}
-get flap_weight_min(){return this._getter('flap_weight_min');}
-set flap_weight_min(v){this._setter('flap_weight_min',v);}
-get flap_weight_max(){return this._getter('flap_weight_max');}
-set flap_weight_max(v){this._setter('flap_weight_max',v);}
-get side(){return this._getter('side');}
-set side(v){this._setter('side',v);}
-get cnn_side(){return this._getter('cnn_side');}
-set cnn_side(v){this._setter('cnn_side',v);}
-get offset_option(){return this._getter('offset_option');}
-set offset_option(v){this._setter('offset_option',v);}
-get formula(){return this._getter('formula');}
-set formula(v){this._setter('formula',v);}
-get transfer_option(){return this._getter('transfer_option');}
-set transfer_option(v){this._setter('transfer_option',v);}
-get overmeasure(){return this._getter('overmeasure');}
-set overmeasure(v){this._setter('overmeasure',v);}
-get is_main_specification_row(){return this._getter('is_main_specification_row');}
-set is_main_specification_row(v){this._setter('is_main_specification_row',v);}
-get is_set_row(){return this._getter('is_set_row');}
-set is_set_row(v){this._setter('is_set_row',v);}
-get is_procedure_row(){return this._getter('is_procedure_row');}
-set is_procedure_row(v){this._setter('is_procedure_row',v);}
-get is_order_row(){return this._getter('is_order_row');}
-set is_order_row(v){this._setter('is_order_row',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get dop(){return this._getter('dop')}
+set dop(v){this._setter('dop',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get nom_characteristic(){return this._getter('nom_characteristic')}
+set nom_characteristic(v){this._setter('nom_characteristic',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get handle_height_base(){return this._getter('handle_height_base')}
+set handle_height_base(v){this._setter('handle_height_base',v)}
+get fix_ruch(){return this._getter('fix_ruch')}
+set fix_ruch(v){this._setter('fix_ruch',v)}
+get handle_height_min(){return this._getter('handle_height_min')}
+set handle_height_min(v){this._setter('handle_height_min',v)}
+get handle_height_max(){return this._getter('handle_height_max')}
+set handle_height_max(v){this._setter('handle_height_max',v)}
+get contraction(){return this._getter('contraction')}
+set contraction(v){this._setter('contraction',v)}
+get contraction_option(){return this._getter('contraction_option')}
+set contraction_option(v){this._setter('contraction_option',v)}
+get coefficient(){return this._getter('coefficient')}
+set coefficient(v){this._setter('coefficient',v)}
+get flap_weight_min(){return this._getter('flap_weight_min')}
+set flap_weight_min(v){this._setter('flap_weight_min',v)}
+get flap_weight_max(){return this._getter('flap_weight_max')}
+set flap_weight_max(v){this._setter('flap_weight_max',v)}
+get side(){return this._getter('side')}
+set side(v){this._setter('side',v)}
+get cnn_side(){return this._getter('cnn_side')}
+set cnn_side(v){this._setter('cnn_side',v)}
+get offset_option(){return this._getter('offset_option')}
+set offset_option(v){this._setter('offset_option',v)}
+get formula(){return this._getter('formula')}
+set formula(v){this._setter('formula',v)}
+get transfer_option(){return this._getter('transfer_option')}
+set transfer_option(v){this._setter('transfer_option',v)}
+get overmeasure(){return this._getter('overmeasure')}
+set overmeasure(v){this._setter('overmeasure',v)}
+get is_main_specification_row(){return this._getter('is_main_specification_row')}
+set is_main_specification_row(v){this._setter('is_main_specification_row',v)}
+get is_set_row(){return this._getter('is_set_row')}
+set is_set_row(v){this._setter('is_set_row',v)}
+get is_procedure_row(){return this._getter('is_procedure_row')}
+set is_procedure_row(v){this._setter('is_procedure_row',v)}
+get is_order_row(){return this._getter('is_order_row')}
+set is_order_row(v){this._setter('is_order_row',v)}
 }
 $p.CatFurnsSpecificationRow = CatFurnsSpecificationRow;
 class CatFurnsSelection_paramsRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get dop(){return this._getter('dop');}
-set dop(v){this._setter('dop',v);}
-get param(){return this._getter('param');}
-set param(v){this._setter('param',v);}
-get comparison_type(){return this._getter('comparison_type');}
-set comparison_type(v){this._setter('comparison_type',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get dop(){return this._getter('dop')}
+set dop(v){this._setter('dop',v)}
+get param(){return this._getter('param')}
+set param(v){this._setter('param',v)}
+get comparison_type(){return this._getter('comparison_type')}
+set comparison_type(v){this._setter('comparison_type',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatFurnsSelection_paramsRow = CatFurnsSelection_paramsRow;
 class CatFurnsSpecification_restrictionsRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get dop(){return this._getter('dop');}
-set dop(v){this._setter('dop',v);}
-get side(){return this._getter('side');}
-set side(v){this._setter('side',v);}
-get lmin(){return this._getter('lmin');}
-set lmin(v){this._setter('lmin',v);}
-get lmax(){return this._getter('lmax');}
-set lmax(v){this._setter('lmax',v);}
-get amin(){return this._getter('amin');}
-set amin(v){this._setter('amin',v);}
-get amax(){return this._getter('amax');}
-set amax(v){this._setter('amax',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get dop(){return this._getter('dop')}
+set dop(v){this._setter('dop',v)}
+get side(){return this._getter('side')}
+set side(v){this._setter('side',v)}
+get lmin(){return this._getter('lmin')}
+set lmin(v){this._setter('lmin',v)}
+get lmax(){return this._getter('lmax')}
+set lmax(v){this._setter('lmax',v)}
+get amin(){return this._getter('amin')}
+set amin(v){this._setter('amin',v)}
+get amax(){return this._getter('amax')}
+set amax(v){this._setter('amax',v)}
 }
 $p.CatFurnsSpecification_restrictionsRow = CatFurnsSpecification_restrictionsRow;
 class CatFurnsColorsRow extends TabularSectionRow{
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
 }
 $p.CatFurnsColorsRow = CatFurnsColorsRow;
 $p.cat.create('furns');
@@ -1525,20 +1526,20 @@ $p.cat.create('furns');
 * @constructor 
 */
 class CatClrs extends CatObj{
-get ral(){return this._getter('ral');}
-set ral(v){this._setter('ral',v);}
-get machine_tools_clr(){return this._getter('machine_tools_clr');}
-set machine_tools_clr(v){this._setter('machine_tools_clr',v);}
-get clr_str(){return this._getter('clr_str');}
-set clr_str(v){this._setter('clr_str',v);}
-get clr_out(){return this._getter('clr_out');}
-set clr_out(v){this._setter('clr_out',v);}
-get clr_in(){return this._getter('clr_in');}
-set clr_in(v){this._setter('clr_in',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
+get ral(){return this._getter('ral')}
+set ral(v){this._setter('ral',v)}
+get machine_tools_clr(){return this._getter('machine_tools_clr')}
+set machine_tools_clr(v){this._setter('machine_tools_clr',v)}
+get clr_str(){return this._getter('clr_str')}
+set clr_str(v){this._setter('clr_str',v)}
+get clr_out(){return this._getter('clr_out')}
+set clr_out(v){this._setter('clr_out',v)}
+get clr_in(){return this._getter('clr_in')}
+set clr_in(v){this._setter('clr_in',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
 }
 $p.CatClrs = CatClrs;
 $p.cat.create('clrs');
@@ -1551,26 +1552,26 @@ $p.cat.create('clrs');
 * @constructor 
 */
 class CatColor_price_groups extends CatObj{
-get color_price_group_destination(){return this._getter('color_price_group_destination');}
-set color_price_group_destination(v){this._setter('color_price_group_destination',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get price_groups(){return this._getter_ts('price_groups');}
-set price_groups(v){this._setter_ts('price_groups',v);}
-get clr_conformity(){return this._getter_ts('clr_conformity');}
-set clr_conformity(v){this._setter_ts('clr_conformity',v);}
+get color_price_group_destination(){return this._getter('color_price_group_destination')}
+set color_price_group_destination(v){this._setter('color_price_group_destination',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get price_groups(){return this._getter_ts('price_groups')}
+set price_groups(v){this._setter_ts('price_groups',v)}
+get clr_conformity(){return this._getter_ts('clr_conformity')}
+set clr_conformity(v){this._setter_ts('clr_conformity',v)}
 }
 $p.CatColor_price_groups = CatColor_price_groups;
 class CatColor_price_groupsPrice_groupsRow extends TabularSectionRow{
-get price_group(){return this._getter('price_group');}
-set price_group(v){this._setter('price_group',v);}
+get price_group(){return this._getter('price_group')}
+set price_group(v){this._setter('price_group',v)}
 }
 $p.CatColor_price_groupsPrice_groupsRow = CatColor_price_groupsPrice_groupsRow;
 class CatColor_price_groupsClr_conformityRow extends TabularSectionRow{
-get clr1(){return this._getter('clr1');}
-set clr1(v){this._setter('clr1',v);}
-get clr2(){return this._getter('clr2');}
-set clr2(v){this._setter('clr2',v);}
+get clr1(){return this._getter('clr1')}
+set clr1(v){this._setter('clr1',v)}
+get clr2(){return this._getter('clr2')}
+set clr2(v){this._setter('clr2',v)}
 }
 $p.CatColor_price_groupsClr_conformityRow = CatColor_price_groupsClr_conformityRow;
 $p.cat.create('color_price_groups');
@@ -1583,25 +1584,25 @@ $p.cat.create('color_price_groups');
 * @constructor 
 */
 class CatDivisions extends CatObj{
-get main_project(){return this._getter('main_project');}
-set main_project(v){this._setter('main_project',v);}
-get sorting(){return this._getter('sorting');}
-set sorting(v){this._setter('sorting',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get main_project(){return this._getter('main_project')}
+set main_project(v){this._setter('main_project',v)}
+get sorting(){return this._getter('sorting')}
+set sorting(v){this._setter('sorting',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.CatDivisions = CatDivisions;
 class CatDivisionsExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatDivisionsExtra_fieldsRow = CatDivisionsExtra_fieldsRow;
 $p.cat.create('divisions');
@@ -1614,81 +1615,81 @@ $p.cat.create('divisions');
 * @constructor 
 */
 class CatUsers extends CatObj{
-get user_ib_uid(){return this._getter('user_ib_uid');}
-set user_ib_uid(v){this._setter('user_ib_uid',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get individual_person(){return this._getter('individual_person');}
-set individual_person(v){this._setter('individual_person',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get user_fresh_uid(){return this._getter('user_fresh_uid');}
-set user_fresh_uid(v){this._setter('user_fresh_uid',v);}
-get invalid(){return this._getter('invalid');}
-set invalid(v){this._setter('invalid',v);}
-get ancillary(){return this._getter('ancillary');}
-set ancillary(v){this._setter('ancillary',v);}
-get id(){return this._getter('id');}
-set id(v){this._setter('id',v);}
-get prefix(){return this._getter('prefix');}
-set prefix(v){this._setter('prefix',v);}
-get suffix(){return this._getter('suffix');}
-set suffix(v){this._setter('suffix',v);}
-get direct(){return this._getter('direct');}
-set direct(v){this._setter('direct',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
-get contact_information(){return this._getter_ts('contact_information');}
-set contact_information(v){this._setter_ts('contact_information',v);}
-get acl_objs(){return this._getter_ts('acl_objs');}
-set acl_objs(v){this._setter_ts('acl_objs',v);}
+get user_ib_uid(){return this._getter('user_ib_uid')}
+set user_ib_uid(v){this._setter('user_ib_uid',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get individual_person(){return this._getter('individual_person')}
+set individual_person(v){this._setter('individual_person',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get user_fresh_uid(){return this._getter('user_fresh_uid')}
+set user_fresh_uid(v){this._setter('user_fresh_uid',v)}
+get invalid(){return this._getter('invalid')}
+set invalid(v){this._setter('invalid',v)}
+get ancillary(){return this._getter('ancillary')}
+set ancillary(v){this._setter('ancillary',v)}
+get id(){return this._getter('id')}
+set id(v){this._setter('id',v)}
+get prefix(){return this._getter('prefix')}
+set prefix(v){this._setter('prefix',v)}
+get suffix(){return this._getter('suffix')}
+set suffix(v){this._setter('suffix',v)}
+get direct(){return this._getter('direct')}
+set direct(v){this._setter('direct',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
+get contact_information(){return this._getter_ts('contact_information')}
+set contact_information(v){this._setter_ts('contact_information',v)}
+get acl_objs(){return this._getter_ts('acl_objs')}
+set acl_objs(v){this._setter_ts('acl_objs',v)}
 }
 $p.CatUsers = CatUsers;
 class CatUsersExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatUsersExtra_fieldsRow = CatUsersExtra_fieldsRow;
 class CatUsersContact_informationRow extends TabularSectionRow{
-get type(){return this._getter('type');}
-set type(v){this._setter('type',v);}
-get kind(){return this._getter('kind');}
-set kind(v){this._setter('kind',v);}
-get presentation(){return this._getter('presentation');}
-set presentation(v){this._setter('presentation',v);}
-get values_fields(){return this._getter('values_fields');}
-set values_fields(v){this._setter('values_fields',v);}
-get country(){return this._getter('country');}
-set country(v){this._setter('country',v);}
-get region(){return this._getter('region');}
-set region(v){this._setter('region',v);}
-get city(){return this._getter('city');}
-set city(v){this._setter('city',v);}
-get email_address(){return this._getter('email_address');}
-set email_address(v){this._setter('email_address',v);}
-get server_domain_name(){return this._getter('server_domain_name');}
-set server_domain_name(v){this._setter('server_domain_name',v);}
-get phone_number(){return this._getter('phone_number');}
-set phone_number(v){this._setter('phone_number',v);}
-get phone_without_codes(){return this._getter('phone_without_codes');}
-set phone_without_codes(v){this._setter('phone_without_codes',v);}
-get ВидДляСписка(){return this._getter('ВидДляСписка');}
-set ВидДляСписка(v){this._setter('ВидДляСписка',v);}
+get type(){return this._getter('type')}
+set type(v){this._setter('type',v)}
+get kind(){return this._getter('kind')}
+set kind(v){this._setter('kind',v)}
+get presentation(){return this._getter('presentation')}
+set presentation(v){this._setter('presentation',v)}
+get values_fields(){return this._getter('values_fields')}
+set values_fields(v){this._setter('values_fields',v)}
+get country(){return this._getter('country')}
+set country(v){this._setter('country',v)}
+get region(){return this._getter('region')}
+set region(v){this._setter('region',v)}
+get city(){return this._getter('city')}
+set city(v){this._setter('city',v)}
+get email_address(){return this._getter('email_address')}
+set email_address(v){this._setter('email_address',v)}
+get server_domain_name(){return this._getter('server_domain_name')}
+set server_domain_name(v){this._setter('server_domain_name',v)}
+get phone_number(){return this._getter('phone_number')}
+set phone_number(v){this._setter('phone_number',v)}
+get phone_without_codes(){return this._getter('phone_without_codes')}
+set phone_without_codes(v){this._setter('phone_without_codes',v)}
+get ВидДляСписка(){return this._getter('ВидДляСписка')}
+set ВидДляСписка(v){this._setter('ВидДляСписка',v)}
 }
 $p.CatUsersContact_informationRow = CatUsersContact_informationRow;
 class CatUsersAcl_objsRow extends TabularSectionRow{
-get acl_obj(){return this._getter('acl_obj');}
-set acl_obj(v){this._setter('acl_obj',v);}
-get type(){return this._getter('type');}
-set type(v){this._setter('type',v);}
-get by_default(){return this._getter('by_default');}
-set by_default(v){this._setter('by_default',v);}
+get acl_obj(){return this._getter('acl_obj')}
+set acl_obj(v){this._setter('acl_obj',v)}
+get type(){return this._getter('type')}
+set type(v){this._setter('type',v)}
+get by_default(){return this._getter('by_default')}
+set by_default(v){this._setter('by_default',v)}
 }
 $p.CatUsersAcl_objsRow = CatUsersAcl_objsRow;
 $p.cat.create('users');
@@ -1701,35 +1702,35 @@ $p.cat.create('users');
 * @constructor 
 */
 class CatProjects extends CatObj{
-get start(){return this._getter('start');}
-set start(v){this._setter('start',v);}
-get finish(){return this._getter('finish');}
-set finish(v){this._setter('finish',v);}
-get launch(){return this._getter('launch');}
-set launch(v){this._setter('launch',v);}
-get readiness(){return this._getter('readiness');}
-set readiness(v){this._setter('readiness',v);}
-get finished(){return this._getter('finished');}
-set finished(v){this._setter('finished',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get start(){return this._getter('start')}
+set start(v){this._setter('start',v)}
+get finish(){return this._getter('finish')}
+set finish(v){this._setter('finish',v)}
+get launch(){return this._getter('launch')}
+set launch(v){this._setter('launch',v)}
+get readiness(){return this._getter('readiness')}
+set readiness(v){this._setter('readiness',v)}
+get finished(){return this._getter('finished')}
+set finished(v){this._setter('finished',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.CatProjects = CatProjects;
 class CatProjectsExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatProjectsExtra_fieldsRow = CatProjectsExtra_fieldsRow;
 $p.cat.create('projects');
@@ -1742,25 +1743,25 @@ $p.cat.create('projects');
 * @constructor 
 */
 class CatStores extends CatObj{
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.CatStores = CatStores;
 class CatStoresExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatStoresExtra_fieldsRow = CatStoresExtra_fieldsRow;
 $p.cat.create('stores');
@@ -1773,17 +1774,17 @@ $p.cat.create('stores');
 * @constructor 
 */
 class CatWork_shifts extends CatObj{
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get work_shift_periodes(){return this._getter_ts('work_shift_periodes');}
-set work_shift_periodes(v){this._setter_ts('work_shift_periodes',v);}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get work_shift_periodes(){return this._getter_ts('work_shift_periodes')}
+set work_shift_periodes(v){this._setter_ts('work_shift_periodes',v)}
 }
 $p.CatWork_shifts = CatWork_shifts;
 class CatWork_shiftsWork_shift_periodesRow extends TabularSectionRow{
-get begin_time(){return this._getter('begin_time');}
-set begin_time(v){this._setter('begin_time',v);}
-get end_time(){return this._getter('end_time');}
-set end_time(v){this._setter('end_time',v);}
+get begin_time(){return this._getter('begin_time')}
+set begin_time(v){this._setter('begin_time',v)}
+get end_time(){return this._getter('end_time')}
+set end_time(v){this._setter('end_time',v)}
 }
 $p.CatWork_shiftsWork_shift_periodesRow = CatWork_shiftsWork_shift_periodesRow;
 $p.cat.create('work_shifts');
@@ -1796,14 +1797,14 @@ $p.cat.create('work_shifts');
 * @constructor 
 */
 class CatCash_flow_articles extends CatObj{
-get definition(){return this._getter('definition');}
-set definition(v){this._setter('definition',v);}
-get sorting_field(){return this._getter('sorting_field');}
-set sorting_field(v){this._setter('sorting_field',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
+get definition(){return this._getter('definition')}
+set definition(v){this._setter('definition',v)}
+get sorting_field(){return this._getter('sorting_field')}
+set sorting_field(v){this._setter('sorting_field',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
 }
 $p.CatCash_flow_articles = CatCash_flow_articles;
 $p.cat.create('cash_flow_articles');
@@ -1816,20 +1817,20 @@ $p.cat.create('cash_flow_articles');
 * @constructor 
 */
 class CatNom_prices_types extends CatObj{
-get price_currency(){return this._getter('price_currency');}
-set price_currency(v){this._setter('price_currency',v);}
-get discount_percent(){return this._getter('discount_percent');}
-set discount_percent(v){this._setter('discount_percent',v);}
-get vat_price_included(){return this._getter('vat_price_included');}
-set vat_price_included(v){this._setter('vat_price_included',v);}
-get rounding_order(){return this._getter('rounding_order');}
-set rounding_order(v){this._setter('rounding_order',v);}
-get rounding_in_a_big_way(){return this._getter('rounding_in_a_big_way');}
-set rounding_in_a_big_way(v){this._setter('rounding_in_a_big_way',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
+get price_currency(){return this._getter('price_currency')}
+set price_currency(v){this._setter('price_currency',v)}
+get discount_percent(){return this._getter('discount_percent')}
+set discount_percent(v){this._setter('discount_percent',v)}
+get vat_price_included(){return this._getter('vat_price_included')}
+set vat_price_included(v){this._setter('vat_price_included',v)}
+get rounding_order(){return this._getter('rounding_order')}
+set rounding_order(v){this._setter('rounding_order',v)}
+get rounding_in_a_big_way(){return this._getter('rounding_in_a_big_way')}
+set rounding_in_a_big_way(v){this._setter('rounding_in_a_big_way',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
 }
 $p.CatNom_prices_types = CatNom_prices_types;
 $p.cat.create('nom_prices_types');
@@ -1842,73 +1843,73 @@ $p.cat.create('nom_prices_types');
 * @constructor 
 */
 class CatIndividuals extends CatObj{
-get birth_date(){return this._getter('birth_date');}
-set birth_date(v){this._setter('birth_date',v);}
-get inn(){return this._getter('inn');}
-set inn(v){this._setter('inn',v);}
-get imns_code(){return this._getter('imns_code');}
-set imns_code(v){this._setter('imns_code',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get pfr_number(){return this._getter('pfr_number');}
-set pfr_number(v){this._setter('pfr_number',v);}
-get sex(){return this._getter('sex');}
-set sex(v){this._setter('sex',v);}
-get birth_place(){return this._getter('birth_place');}
-set birth_place(v){this._setter('birth_place',v);}
-get ОсновноеИзображение(){return this._getter('ОсновноеИзображение');}
-set ОсновноеИзображение(v){this._setter('ОсновноеИзображение',v);}
-get Фамилия(){return this._getter('Фамилия');}
-set Фамилия(v){this._setter('Фамилия',v);}
-get Имя(){return this._getter('Имя');}
-set Имя(v){this._setter('Имя',v);}
-get Отчество(){return this._getter('Отчество');}
-set Отчество(v){this._setter('Отчество',v);}
-get ФамилияРП(){return this._getter('ФамилияРП');}
-set ФамилияРП(v){this._setter('ФамилияРП',v);}
-get ИмяРП(){return this._getter('ИмяРП');}
-set ИмяРП(v){this._setter('ИмяРП',v);}
-get ОтчествоРП(){return this._getter('ОтчествоРП');}
-set ОтчествоРП(v){this._setter('ОтчествоРП',v);}
-get ОснованиеРП(){return this._getter('ОснованиеРП');}
-set ОснованиеРП(v){this._setter('ОснованиеРП',v);}
-get ДолжностьРП(){return this._getter('ДолжностьРП');}
-set ДолжностьРП(v){this._setter('ДолжностьРП',v);}
-get Должность(){return this._getter('Должность');}
-set Должность(v){this._setter('Должность',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get contact_information(){return this._getter_ts('contact_information');}
-set contact_information(v){this._setter_ts('contact_information',v);}
+get birth_date(){return this._getter('birth_date')}
+set birth_date(v){this._setter('birth_date',v)}
+get inn(){return this._getter('inn')}
+set inn(v){this._setter('inn',v)}
+get imns_code(){return this._getter('imns_code')}
+set imns_code(v){this._setter('imns_code',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get pfr_number(){return this._getter('pfr_number')}
+set pfr_number(v){this._setter('pfr_number',v)}
+get sex(){return this._getter('sex')}
+set sex(v){this._setter('sex',v)}
+get birth_place(){return this._getter('birth_place')}
+set birth_place(v){this._setter('birth_place',v)}
+get ОсновноеИзображение(){return this._getter('ОсновноеИзображение')}
+set ОсновноеИзображение(v){this._setter('ОсновноеИзображение',v)}
+get Фамилия(){return this._getter('Фамилия')}
+set Фамилия(v){this._setter('Фамилия',v)}
+get Имя(){return this._getter('Имя')}
+set Имя(v){this._setter('Имя',v)}
+get Отчество(){return this._getter('Отчество')}
+set Отчество(v){this._setter('Отчество',v)}
+get ФамилияРП(){return this._getter('ФамилияРП')}
+set ФамилияРП(v){this._setter('ФамилияРП',v)}
+get ИмяРП(){return this._getter('ИмяРП')}
+set ИмяРП(v){this._setter('ИмяРП',v)}
+get ОтчествоРП(){return this._getter('ОтчествоРП')}
+set ОтчествоРП(v){this._setter('ОтчествоРП',v)}
+get ОснованиеРП(){return this._getter('ОснованиеРП')}
+set ОснованиеРП(v){this._setter('ОснованиеРП',v)}
+get ДолжностьРП(){return this._getter('ДолжностьРП')}
+set ДолжностьРП(v){this._setter('ДолжностьРП',v)}
+get Должность(){return this._getter('Должность')}
+set Должность(v){this._setter('Должность',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get contact_information(){return this._getter_ts('contact_information')}
+set contact_information(v){this._setter_ts('contact_information',v)}
 }
 $p.CatIndividuals = CatIndividuals;
 class CatIndividualsContact_informationRow extends TabularSectionRow{
-get type(){return this._getter('type');}
-set type(v){this._setter('type',v);}
-get kind(){return this._getter('kind');}
-set kind(v){this._setter('kind',v);}
-get presentation(){return this._getter('presentation');}
-set presentation(v){this._setter('presentation',v);}
-get values_fields(){return this._getter('values_fields');}
-set values_fields(v){this._setter('values_fields',v);}
-get country(){return this._getter('country');}
-set country(v){this._setter('country',v);}
-get region(){return this._getter('region');}
-set region(v){this._setter('region',v);}
-get city(){return this._getter('city');}
-set city(v){this._setter('city',v);}
-get email_address(){return this._getter('email_address');}
-set email_address(v){this._setter('email_address',v);}
-get server_domain_name(){return this._getter('server_domain_name');}
-set server_domain_name(v){this._setter('server_domain_name',v);}
-get phone_number(){return this._getter('phone_number');}
-set phone_number(v){this._setter('phone_number',v);}
-get phone_without_codes(){return this._getter('phone_without_codes');}
-set phone_without_codes(v){this._setter('phone_without_codes',v);}
-get ВидДляСписка(){return this._getter('ВидДляСписка');}
-set ВидДляСписка(v){this._setter('ВидДляСписка',v);}
+get type(){return this._getter('type')}
+set type(v){this._setter('type',v)}
+get kind(){return this._getter('kind')}
+set kind(v){this._setter('kind',v)}
+get presentation(){return this._getter('presentation')}
+set presentation(v){this._setter('presentation',v)}
+get values_fields(){return this._getter('values_fields')}
+set values_fields(v){this._setter('values_fields',v)}
+get country(){return this._getter('country')}
+set country(v){this._setter('country',v)}
+get region(){return this._getter('region')}
+set region(v){this._setter('region',v)}
+get city(){return this._getter('city')}
+set city(v){this._setter('city',v)}
+get email_address(){return this._getter('email_address')}
+set email_address(v){this._setter('email_address',v)}
+get server_domain_name(){return this._getter('server_domain_name')}
+set server_domain_name(v){this._setter('server_domain_name',v)}
+get phone_number(){return this._getter('phone_number')}
+set phone_number(v){this._setter('phone_number',v)}
+get phone_without_codes(){return this._getter('phone_without_codes')}
+set phone_without_codes(v){this._setter('phone_without_codes',v)}
+get ВидДляСписка(){return this._getter('ВидДляСписка')}
+set ВидДляСписка(v){this._setter('ВидДляСписка',v)}
 }
 $p.CatIndividualsContact_informationRow = CatIndividualsContact_informationRow;
 $p.cat.create('individuals');
@@ -1921,249 +1922,249 @@ $p.cat.create('individuals');
 * @constructor 
 */
 class CatCharacteristics extends CatObj{
-get x(){return this._getter('x');}
-set x(v){this._setter('x',v);}
-get y(){return this._getter('y');}
-set y(v){this._setter('y',v);}
-get z(){return this._getter('z');}
-set z(v){this._setter('z',v);}
-get s(){return this._getter('s');}
-set s(v){this._setter('s',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get weight(){return this._getter('weight');}
-set weight(v){this._setter('weight',v);}
-get calc_order(){return this._getter('calc_order');}
-set calc_order(v){this._setter('calc_order',v);}
-get product(){return this._getter('product');}
-set product(v){this._setter('product',v);}
-get leading_product(){return this._getter('leading_product');}
-set leading_product(v){this._setter('leading_product',v);}
-get leading_elm(){return this._getter('leading_elm');}
-set leading_elm(v){this._setter('leading_elm',v);}
-get origin(){return this._getter('origin');}
-set origin(v){this._setter('origin',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get sys(){return this._getter('sys');}
-set sys(v){this._setter('sys',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get owner(){return this._getter('owner');}
-set owner(v){this._setter('owner',v);}
-get constructions(){return this._getter_ts('constructions');}
-set constructions(v){this._setter_ts('constructions',v);}
-get coordinates(){return this._getter_ts('coordinates');}
-set coordinates(v){this._setter_ts('coordinates',v);}
-get inserts(){return this._getter_ts('inserts');}
-set inserts(v){this._setter_ts('inserts',v);}
-get params(){return this._getter_ts('params');}
-set params(v){this._setter_ts('params',v);}
-get cnn_elmnts(){return this._getter_ts('cnn_elmnts');}
-set cnn_elmnts(v){this._setter_ts('cnn_elmnts',v);}
-get glass_specification(){return this._getter_ts('glass_specification');}
-set glass_specification(v){this._setter_ts('glass_specification',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
-get glasses(){return this._getter_ts('glasses');}
-set glasses(v){this._setter_ts('glasses',v);}
-get specification(){return this._getter_ts('specification');}
-set specification(v){this._setter_ts('specification',v);}
+get x(){return this._getter('x')}
+set x(v){this._setter('x',v)}
+get y(){return this._getter('y')}
+set y(v){this._setter('y',v)}
+get z(){return this._getter('z')}
+set z(v){this._setter('z',v)}
+get s(){return this._getter('s')}
+set s(v){this._setter('s',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get weight(){return this._getter('weight')}
+set weight(v){this._setter('weight',v)}
+get calc_order(){return this._getter('calc_order')}
+set calc_order(v){this._setter('calc_order',v)}
+get product(){return this._getter('product')}
+set product(v){this._setter('product',v)}
+get leading_product(){return this._getter('leading_product')}
+set leading_product(v){this._setter('leading_product',v)}
+get leading_elm(){return this._getter('leading_elm')}
+set leading_elm(v){this._setter('leading_elm',v)}
+get origin(){return this._getter('origin')}
+set origin(v){this._setter('origin',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get sys(){return this._getter('sys')}
+set sys(v){this._setter('sys',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get owner(){return this._getter('owner')}
+set owner(v){this._setter('owner',v)}
+get constructions(){return this._getter_ts('constructions')}
+set constructions(v){this._setter_ts('constructions',v)}
+get coordinates(){return this._getter_ts('coordinates')}
+set coordinates(v){this._setter_ts('coordinates',v)}
+get inserts(){return this._getter_ts('inserts')}
+set inserts(v){this._setter_ts('inserts',v)}
+get params(){return this._getter_ts('params')}
+set params(v){this._setter_ts('params',v)}
+get cnn_elmnts(){return this._getter_ts('cnn_elmnts')}
+set cnn_elmnts(v){this._setter_ts('cnn_elmnts',v)}
+get glass_specification(){return this._getter_ts('glass_specification')}
+set glass_specification(v){this._setter_ts('glass_specification',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
+get glasses(){return this._getter_ts('glasses')}
+set glasses(v){this._setter_ts('glasses',v)}
+get specification(){return this._getter_ts('specification')}
+set specification(v){this._setter_ts('specification',v)}
 }
 $p.CatCharacteristics = CatCharacteristics;
 class CatCharacteristicsConstructionsRow extends TabularSectionRow{
-get cnstr(){return this._getter('cnstr');}
-set cnstr(v){this._setter('cnstr',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get x(){return this._getter('x');}
-set x(v){this._setter('x',v);}
-get y(){return this._getter('y');}
-set y(v){this._setter('y',v);}
-get z(){return this._getter('z');}
-set z(v){this._setter('z',v);}
-get w(){return this._getter('w');}
-set w(v){this._setter('w',v);}
-get h(){return this._getter('h');}
-set h(v){this._setter('h',v);}
-get furn(){return this._getter('furn');}
-set furn(v){this._setter('furn',v);}
-get clr_furn(){return this._getter('clr_furn');}
-set clr_furn(v){this._setter('clr_furn',v);}
-get direction(){return this._getter('direction');}
-set direction(v){this._setter('direction',v);}
-get h_ruch(){return this._getter('h_ruch');}
-set h_ruch(v){this._setter('h_ruch',v);}
-get fix_ruch(){return this._getter('fix_ruch');}
-set fix_ruch(v){this._setter('fix_ruch',v);}
-get is_rectangular(){return this._getter('is_rectangular');}
-set is_rectangular(v){this._setter('is_rectangular',v);}
+get cnstr(){return this._getter('cnstr')}
+set cnstr(v){this._setter('cnstr',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get x(){return this._getter('x')}
+set x(v){this._setter('x',v)}
+get y(){return this._getter('y')}
+set y(v){this._setter('y',v)}
+get z(){return this._getter('z')}
+set z(v){this._setter('z',v)}
+get w(){return this._getter('w')}
+set w(v){this._setter('w',v)}
+get h(){return this._getter('h')}
+set h(v){this._setter('h',v)}
+get furn(){return this._getter('furn')}
+set furn(v){this._setter('furn',v)}
+get clr_furn(){return this._getter('clr_furn')}
+set clr_furn(v){this._setter('clr_furn',v)}
+get direction(){return this._getter('direction')}
+set direction(v){this._setter('direction',v)}
+get h_ruch(){return this._getter('h_ruch')}
+set h_ruch(v){this._setter('h_ruch',v)}
+get fix_ruch(){return this._getter('fix_ruch')}
+set fix_ruch(v){this._setter('fix_ruch',v)}
+get is_rectangular(){return this._getter('is_rectangular')}
+set is_rectangular(v){this._setter('is_rectangular',v)}
 }
 $p.CatCharacteristicsConstructionsRow = CatCharacteristicsConstructionsRow;
 class CatCharacteristicsCoordinatesRow extends TabularSectionRow{
-get cnstr(){return this._getter('cnstr');}
-set cnstr(v){this._setter('cnstr',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get elm_type(){return this._getter('elm_type');}
-set elm_type(v){this._setter('elm_type',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get inset(){return this._getter('inset');}
-set inset(v){this._setter('inset',v);}
-get path_data(){return this._getter('path_data');}
-set path_data(v){this._setter('path_data',v);}
-get x1(){return this._getter('x1');}
-set x1(v){this._setter('x1',v);}
-get y1(){return this._getter('y1');}
-set y1(v){this._setter('y1',v);}
-get x2(){return this._getter('x2');}
-set x2(v){this._setter('x2',v);}
-get y2(){return this._getter('y2');}
-set y2(v){this._setter('y2',v);}
-get r(){return this._getter('r');}
-set r(v){this._setter('r',v);}
-get arc_ccw(){return this._getter('arc_ccw');}
-set arc_ccw(v){this._setter('arc_ccw',v);}
-get s(){return this._getter('s');}
-set s(v){this._setter('s',v);}
-get angle_hor(){return this._getter('angle_hor');}
-set angle_hor(v){this._setter('angle_hor',v);}
-get alp1(){return this._getter('alp1');}
-set alp1(v){this._setter('alp1',v);}
-get alp2(){return this._getter('alp2');}
-set alp2(v){this._setter('alp2',v);}
-get len(){return this._getter('len');}
-set len(v){this._setter('len',v);}
-get pos(){return this._getter('pos');}
-set pos(v){this._setter('pos',v);}
-get orientation(){return this._getter('orientation');}
-set orientation(v){this._setter('orientation',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
+get cnstr(){return this._getter('cnstr')}
+set cnstr(v){this._setter('cnstr',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get elm_type(){return this._getter('elm_type')}
+set elm_type(v){this._setter('elm_type',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get inset(){return this._getter('inset')}
+set inset(v){this._setter('inset',v)}
+get path_data(){return this._getter('path_data')}
+set path_data(v){this._setter('path_data',v)}
+get x1(){return this._getter('x1')}
+set x1(v){this._setter('x1',v)}
+get y1(){return this._getter('y1')}
+set y1(v){this._setter('y1',v)}
+get x2(){return this._getter('x2')}
+set x2(v){this._setter('x2',v)}
+get y2(){return this._getter('y2')}
+set y2(v){this._setter('y2',v)}
+get r(){return this._getter('r')}
+set r(v){this._setter('r',v)}
+get arc_ccw(){return this._getter('arc_ccw')}
+set arc_ccw(v){this._setter('arc_ccw',v)}
+get s(){return this._getter('s')}
+set s(v){this._setter('s',v)}
+get angle_hor(){return this._getter('angle_hor')}
+set angle_hor(v){this._setter('angle_hor',v)}
+get alp1(){return this._getter('alp1')}
+set alp1(v){this._setter('alp1',v)}
+get alp2(){return this._getter('alp2')}
+set alp2(v){this._setter('alp2',v)}
+get len(){return this._getter('len')}
+set len(v){this._setter('len',v)}
+get pos(){return this._getter('pos')}
+set pos(v){this._setter('pos',v)}
+get orientation(){return this._getter('orientation')}
+set orientation(v){this._setter('orientation',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
 }
 $p.CatCharacteristicsCoordinatesRow = CatCharacteristicsCoordinatesRow;
 class CatCharacteristicsInsertsRow extends TabularSectionRow{
-get cnstr(){return this._getter('cnstr');}
-set cnstr(v){this._setter('cnstr',v);}
-get inset(){return this._getter('inset');}
-set inset(v){this._setter('inset',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
+get cnstr(){return this._getter('cnstr')}
+set cnstr(v){this._setter('cnstr',v)}
+get inset(){return this._getter('inset')}
+set inset(v){this._setter('inset',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
 }
 $p.CatCharacteristicsInsertsRow = CatCharacteristicsInsertsRow;
 class CatCharacteristicsParamsRow extends TabularSectionRow{
-get cnstr(){return this._getter('cnstr');}
-set cnstr(v){this._setter('cnstr',v);}
-get inset(){return this._getter('inset');}
-set inset(v){this._setter('inset',v);}
-get param(){return this._getter('param');}
-set param(v){this._setter('param',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get hide(){return this._getter('hide');}
-set hide(v){this._setter('hide',v);}
+get cnstr(){return this._getter('cnstr')}
+set cnstr(v){this._setter('cnstr',v)}
+get inset(){return this._getter('inset')}
+set inset(v){this._setter('inset',v)}
+get param(){return this._getter('param')}
+set param(v){this._setter('param',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get hide(){return this._getter('hide')}
+set hide(v){this._setter('hide',v)}
 }
 $p.CatCharacteristicsParamsRow = CatCharacteristicsParamsRow;
 class CatCharacteristicsCnn_elmntsRow extends TabularSectionRow{
-get elm1(){return this._getter('elm1');}
-set elm1(v){this._setter('elm1',v);}
-get node1(){return this._getter('node1');}
-set node1(v){this._setter('node1',v);}
-get elm2(){return this._getter('elm2');}
-set elm2(v){this._setter('elm2',v);}
-get node2(){return this._getter('node2');}
-set node2(v){this._setter('node2',v);}
-get cnn(){return this._getter('cnn');}
-set cnn(v){this._setter('cnn',v);}
-get aperture_len(){return this._getter('aperture_len');}
-set aperture_len(v){this._setter('aperture_len',v);}
+get elm1(){return this._getter('elm1')}
+set elm1(v){this._setter('elm1',v)}
+get node1(){return this._getter('node1')}
+set node1(v){this._setter('node1',v)}
+get elm2(){return this._getter('elm2')}
+set elm2(v){this._setter('elm2',v)}
+get node2(){return this._getter('node2')}
+set node2(v){this._setter('node2',v)}
+get cnn(){return this._getter('cnn')}
+set cnn(v){this._setter('cnn',v)}
+get aperture_len(){return this._getter('aperture_len')}
+set aperture_len(v){this._setter('aperture_len',v)}
 }
 $p.CatCharacteristicsCnn_elmntsRow = CatCharacteristicsCnn_elmntsRow;
 class CatCharacteristicsGlass_specificationRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get gno(){return this._getter('gno');}
-set gno(v){this._setter('gno',v);}
-get inset(){return this._getter('inset');}
-set inset(v){this._setter('inset',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get gno(){return this._getter('gno')}
+set gno(v){this._setter('gno',v)}
+get inset(){return this._getter('inset')}
+set inset(v){this._setter('inset',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
 }
 $p.CatCharacteristicsGlass_specificationRow = CatCharacteristicsGlass_specificationRow;
 class CatCharacteristicsExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.CatCharacteristicsExtra_fieldsRow = CatCharacteristicsExtra_fieldsRow;
 class CatCharacteristicsGlassesRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get formula(){return this._getter('formula');}
-set formula(v){this._setter('formula',v);}
-get width(){return this._getter('width');}
-set width(v){this._setter('width',v);}
-get height(){return this._getter('height');}
-set height(v){this._setter('height',v);}
-get s(){return this._getter('s');}
-set s(v){this._setter('s',v);}
-get is_rectangular(){return this._getter('is_rectangular');}
-set is_rectangular(v){this._setter('is_rectangular',v);}
-get is_sandwich(){return this._getter('is_sandwich');}
-set is_sandwich(v){this._setter('is_sandwich',v);}
-get thickness(){return this._getter('thickness');}
-set thickness(v){this._setter('thickness',v);}
-get coffer(){return this._getter('coffer');}
-set coffer(v){this._setter('coffer',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get formula(){return this._getter('formula')}
+set formula(v){this._setter('formula',v)}
+get width(){return this._getter('width')}
+set width(v){this._setter('width',v)}
+get height(){return this._getter('height')}
+set height(v){this._setter('height',v)}
+get s(){return this._getter('s')}
+set s(v){this._setter('s',v)}
+get is_rectangular(){return this._getter('is_rectangular')}
+set is_rectangular(v){this._setter('is_rectangular',v)}
+get is_sandwich(){return this._getter('is_sandwich')}
+set is_sandwich(v){this._setter('is_sandwich',v)}
+get thickness(){return this._getter('thickness')}
+set thickness(v){this._setter('thickness',v)}
+get coffer(){return this._getter('coffer')}
+set coffer(v){this._setter('coffer',v)}
 }
 $p.CatCharacteristicsGlassesRow = CatCharacteristicsGlassesRow;
 class CatCharacteristicsSpecificationRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get characteristic(){return this._getter('characteristic');}
-set characteristic(v){this._setter('characteristic',v);}
-get qty(){return this._getter('qty');}
-set qty(v){this._setter('qty',v);}
-get len(){return this._getter('len');}
-set len(v){this._setter('len',v);}
-get width(){return this._getter('width');}
-set width(v){this._setter('width',v);}
-get s(){return this._getter('s');}
-set s(v){this._setter('s',v);}
-get alp1(){return this._getter('alp1');}
-set alp1(v){this._setter('alp1',v);}
-get alp2(){return this._getter('alp2');}
-set alp2(v){this._setter('alp2',v);}
-get totqty(){return this._getter('totqty');}
-set totqty(v){this._setter('totqty',v);}
-get totqty1(){return this._getter('totqty1');}
-set totqty1(v){this._setter('totqty1',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
-get amount_marged(){return this._getter('amount_marged');}
-set amount_marged(v){this._setter('amount_marged',v);}
-get origin(){return this._getter('origin');}
-set origin(v){this._setter('origin',v);}
-get changed(){return this._getter('changed');}
-set changed(v){this._setter('changed',v);}
-get dop(){return this._getter('dop');}
-set dop(v){this._setter('dop',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get characteristic(){return this._getter('characteristic')}
+set characteristic(v){this._setter('characteristic',v)}
+get qty(){return this._getter('qty')}
+set qty(v){this._setter('qty',v)}
+get len(){return this._getter('len')}
+set len(v){this._setter('len',v)}
+get width(){return this._getter('width')}
+set width(v){this._setter('width',v)}
+get s(){return this._getter('s')}
+set s(v){this._setter('s',v)}
+get alp1(){return this._getter('alp1')}
+set alp1(v){this._setter('alp1',v)}
+get alp2(){return this._getter('alp2')}
+set alp2(v){this._setter('alp2',v)}
+get totqty(){return this._getter('totqty')}
+set totqty(v){this._setter('totqty',v)}
+get totqty1(){return this._getter('totqty1')}
+set totqty1(v){this._setter('totqty1',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
+get amount_marged(){return this._getter('amount_marged')}
+set amount_marged(v){this._setter('amount_marged',v)}
+get origin(){return this._getter('origin')}
+set origin(v){this._setter('origin',v)}
+get changed(){return this._getter('changed')}
+set changed(v){this._setter('changed',v)}
+get dop(){return this._getter('dop')}
+set dop(v){this._setter('dop',v)}
 }
 $p.CatCharacteristicsSpecificationRow = CatCharacteristicsSpecificationRow;
 $p.cat.create('characteristics');
@@ -2176,10 +2177,10 @@ $p.cat.create('characteristics');
 * @constructor 
 */
 class CatPrice_groups extends CatObj{
-get definition(){return this._getter('definition');}
-set definition(v){this._setter('definition',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
+get definition(){return this._getter('definition')}
+set definition(v){this._setter('definition',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
 }
 $p.CatPrice_groups = CatPrice_groups;
 $p.cat.create('price_groups');
@@ -2192,12 +2193,12 @@ $p.cat.create('price_groups');
 * @constructor 
 */
 class CatNom_groups extends CatObj{
-get vat_rate(){return this._getter('vat_rate');}
-set vat_rate(v){this._setter('vat_rate',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get parent(){return this._getter('parent');}
-set parent(v){this._setter('parent',v);}
+get vat_rate(){return this._getter('vat_rate')}
+set vat_rate(v){this._setter('vat_rate',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get parent(){return this._getter('parent')}
+set parent(v){this._setter('parent',v)}
 }
 $p.CatNom_groups = CatNom_groups;
 $p.cat.create('nom_groups');
@@ -2210,28 +2211,28 @@ $p.cat.create('nom_groups');
 * @constructor 
 */
 class CatInsert_bind extends CatObj{
-get key(){return this._getter('key');}
-set key(v){this._setter('key',v);}
-get zone(){return this._getter('zone');}
-set zone(v){this._setter('zone',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get production(){return this._getter_ts('production');}
-set production(v){this._setter_ts('production',v);}
-get inserts(){return this._getter_ts('inserts');}
-set inserts(v){this._setter_ts('inserts',v);}
+get key(){return this._getter('key')}
+set key(v){this._setter('key',v)}
+get zone(){return this._getter('zone')}
+set zone(v){this._setter('zone',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get production(){return this._getter_ts('production')}
+set production(v){this._setter_ts('production',v)}
+get inserts(){return this._getter_ts('inserts')}
+set inserts(v){this._setter_ts('inserts',v)}
 }
 $p.CatInsert_bind = CatInsert_bind;
 class CatInsert_bindProductionRow extends TabularSectionRow{
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
 }
 $p.CatInsert_bindProductionRow = CatInsert_bindProductionRow;
 class CatInsert_bindInsertsRow extends TabularSectionRow{
-get inset(){return this._getter('inset');}
-set inset(v){this._setter('inset',v);}
-get elm_type(){return this._getter('elm_type');}
-set elm_type(v){this._setter('elm_type',v);}
+get inset(){return this._getter('inset')}
+set inset(v){this._setter('inset',v)}
+get elm_type(){return this._getter('elm_type')}
+set elm_type(v){this._setter('elm_type',v)}
 }
 $p.CatInsert_bindInsertsRow = CatInsert_bindInsertsRow;
 $p.cat.create('insert_bind');
@@ -2244,18 +2245,18 @@ $p.cat.create('insert_bind');
 * @constructor 
 */
 class CatNonstandard_attributes extends CatObj{
-get crooked(){return this._getter('crooked');}
-set crooked(v){this._setter('crooked',v);}
-get colored(){return this._getter('colored');}
-set colored(v){this._setter('colored',v);}
-get lay(){return this._getter('lay');}
-set lay(v){this._setter('lay',v);}
-get made_to_order(){return this._getter('made_to_order');}
-set made_to_order(v){this._setter('made_to_order',v);}
-get packing(){return this._getter('packing');}
-set packing(v){this._setter('packing',v);}
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
+get crooked(){return this._getter('crooked')}
+set crooked(v){this._setter('crooked',v)}
+get colored(){return this._getter('colored')}
+set colored(v){this._setter('colored',v)}
+get lay(){return this._getter('lay')}
+set lay(v){this._setter('lay',v)}
+get made_to_order(){return this._getter('made_to_order')}
+set made_to_order(v){this._setter('made_to_order',v)}
+get packing(){return this._getter('packing')}
+set packing(v){this._setter('packing',v)}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
 }
 $p.CatNonstandard_attributes = CatNonstandard_attributes;
 $p.cat.create('nonstandard_attributes');
@@ -2268,15 +2269,15 @@ $p.cat.create('nonstandard_attributes');
 * @constructor 
 */
 class CatDelivery_directions extends CatObj{
-get predefined_name(){return this._getter('predefined_name');}
-set predefined_name(v){this._setter('predefined_name',v);}
-get composition(){return this._getter_ts('composition');}
-set composition(v){this._setter_ts('composition',v);}
+get predefined_name(){return this._getter('predefined_name')}
+set predefined_name(v){this._setter('predefined_name',v)}
+get composition(){return this._getter_ts('composition')}
+set composition(v){this._setter_ts('composition',v)}
 }
 $p.CatDelivery_directions = CatDelivery_directions;
 class CatDelivery_directionsCompositionRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
 }
 $p.CatDelivery_directionsCompositionRow = CatDelivery_directionsCompositionRow;
 $p.cat.create('delivery_directions');
@@ -2289,21 +2290,21 @@ $p.cat.create('delivery_directions');
 * @constructor 
 */
 class DocRegisters_correction extends DocObj{
-get original_doc_type(){return this._getter('original_doc_type');}
-set original_doc_type(v){this._setter('original_doc_type',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get registers_table(){return this._getter_ts('registers_table');}
-set registers_table(v){this._setter_ts('registers_table',v);}
+get original_doc_type(){return this._getter('original_doc_type')}
+set original_doc_type(v){this._setter('original_doc_type',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get registers_table(){return this._getter_ts('registers_table')}
+set registers_table(v){this._setter_ts('registers_table',v)}
 }
 $p.DocRegisters_correction = DocRegisters_correction;
 class DocRegisters_correctionRegisters_tableRow extends TabularSectionRow{
-get Имя(){return this._getter('Имя');}
-set Имя(v){this._setter('Имя',v);}
+get Имя(){return this._getter('Имя')}
+set Имя(v){this._setter('Имя',v)}
 }
 $p.DocRegisters_correctionRegisters_tableRow = DocRegisters_correctionRegisters_tableRow;
 $p.doc.create('registers_correction');
@@ -2316,81 +2317,81 @@ $p.doc.create('registers_correction');
 * @constructor 
 */
 class DocPurchase extends DocObj{
-get organization(){return this._getter('organization');}
-set organization(v){this._setter('organization',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get warehouse(){return this._getter('warehouse');}
-set warehouse(v){this._setter('warehouse',v);}
-get doc_amount(){return this._getter('doc_amount');}
-set doc_amount(v){this._setter('doc_amount',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get goods(){return this._getter_ts('goods');}
-set goods(v){this._setter_ts('goods',v);}
-get services(){return this._getter_ts('services');}
-set services(v){this._setter_ts('services',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get organization(){return this._getter('organization')}
+set organization(v){this._setter('organization',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get warehouse(){return this._getter('warehouse')}
+set warehouse(v){this._setter('warehouse',v)}
+get doc_amount(){return this._getter('doc_amount')}
+set doc_amount(v){this._setter('doc_amount',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get goods(){return this._getter_ts('goods')}
+set goods(v){this._setter_ts('goods',v)}
+get services(){return this._getter_ts('services')}
+set services(v){this._setter_ts('services',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocPurchase = DocPurchase;
 class DocPurchaseGoodsRow extends TabularSectionRow{
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get unit(){return this._getter('unit');}
-set unit(v){this._setter('unit',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
-get vat_rate(){return this._getter('vat_rate');}
-set vat_rate(v){this._setter('vat_rate',v);}
-get vat_amount(){return this._getter('vat_amount');}
-set vat_amount(v){this._setter('vat_amount',v);}
-get trans(){return this._getter('trans');}
-set trans(v){this._setter('trans',v);}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get unit(){return this._getter('unit')}
+set unit(v){this._setter('unit',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
+get vat_rate(){return this._getter('vat_rate')}
+set vat_rate(v){this._setter('vat_rate',v)}
+get vat_amount(){return this._getter('vat_amount')}
+set vat_amount(v){this._setter('vat_amount',v)}
+get trans(){return this._getter('trans')}
+set trans(v){this._setter('trans',v)}
 }
 $p.DocPurchaseGoodsRow = DocPurchaseGoodsRow;
 class DocPurchaseServicesRow extends TabularSectionRow{
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get content(){return this._getter('content');}
-set content(v){this._setter('content',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
-get vat_rate(){return this._getter('vat_rate');}
-set vat_rate(v){this._setter('vat_rate',v);}
-get vat_amount(){return this._getter('vat_amount');}
-set vat_amount(v){this._setter('vat_amount',v);}
-get nom_group(){return this._getter('nom_group');}
-set nom_group(v){this._setter('nom_group',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get cost_item(){return this._getter('cost_item');}
-set cost_item(v){this._setter('cost_item',v);}
-get project(){return this._getter('project');}
-set project(v){this._setter('project',v);}
-get buyers_order(){return this._getter('buyers_order');}
-set buyers_order(v){this._setter('buyers_order',v);}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get content(){return this._getter('content')}
+set content(v){this._setter('content',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
+get vat_rate(){return this._getter('vat_rate')}
+set vat_rate(v){this._setter('vat_rate',v)}
+get vat_amount(){return this._getter('vat_amount')}
+set vat_amount(v){this._setter('vat_amount',v)}
+get nom_group(){return this._getter('nom_group')}
+set nom_group(v){this._setter('nom_group',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get cost_item(){return this._getter('cost_item')}
+set cost_item(v){this._setter('cost_item',v)}
+get project(){return this._getter('project')}
+set project(v){this._setter('project',v)}
+get buyers_order(){return this._getter('buyers_order')}
+set buyers_order(v){this._setter('buyers_order',v)}
 }
 $p.DocPurchaseServicesRow = DocPurchaseServicesRow;
 class DocPurchaseExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.DocPurchaseExtra_fieldsRow = DocPurchaseExtra_fieldsRow;
 $p.doc.create('purchase');
@@ -2403,126 +2404,126 @@ $p.doc.create('purchase');
 * @constructor 
 */
 class DocWork_centers_task extends DocObj{
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get key(){return this._getter('key');}
-set key(v){this._setter('key',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get recipient(){return this._getter('recipient');}
-set recipient(v){this._setter('recipient',v);}
-get ДеловаяОбрезь(){return this._getter('ДеловаяОбрезь');}
-set ДеловаяОбрезь(v){this._setter('ДеловаяОбрезь',v);}
-get planning(){return this._getter_ts('planning');}
-set planning(v){this._setter_ts('planning',v);}
-get Потребность(){return this._getter_ts('Потребность');}
-set Потребность(v){this._setter_ts('Потребность',v);}
-get Обрезь(){return this._getter_ts('Обрезь');}
-set Обрезь(v){this._setter_ts('Обрезь',v);}
-get Раскрой(){return this._getter_ts('Раскрой');}
-set Раскрой(v){this._setter_ts('Раскрой',v);}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get key(){return this._getter('key')}
+set key(v){this._setter('key',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get recipient(){return this._getter('recipient')}
+set recipient(v){this._setter('recipient',v)}
+get ДеловаяОбрезь(){return this._getter('ДеловаяОбрезь')}
+set ДеловаяОбрезь(v){this._setter('ДеловаяОбрезь',v)}
+get planning(){return this._getter_ts('planning')}
+set planning(v){this._setter_ts('planning',v)}
+get Потребность(){return this._getter_ts('Потребность')}
+set Потребность(v){this._setter_ts('Потребность',v)}
+get Обрезь(){return this._getter_ts('Обрезь')}
+set Обрезь(v){this._setter_ts('Обрезь',v)}
+get Раскрой(){return this._getter_ts('Раскрой')}
+set Раскрой(v){this._setter_ts('Раскрой',v)}
 }
 $p.DocWork_centers_task = DocWork_centers_task;
 class DocWork_centers_taskPlanningRow extends TabularSectionRow{
-get obj(){return this._getter('obj');}
-set obj(v){this._setter('obj',v);}
-get specimen(){return this._getter('specimen');}
-set specimen(v){this._setter('specimen',v);}
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get performance(){return this._getter('performance');}
-set performance(v){this._setter('performance',v);}
+get obj(){return this._getter('obj')}
+set obj(v){this._setter('obj',v)}
+get specimen(){return this._getter('specimen')}
+set specimen(v){this._setter('specimen',v)}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get performance(){return this._getter('performance')}
+set performance(v){this._setter('performance',v)}
 }
 $p.DocWork_centers_taskPlanningRow = DocWork_centers_taskPlanningRow;
 class DocWork_centers_taskПотребностьRow extends TabularSectionRow{
-get production(){return this._getter('production');}
-set production(v){this._setter('production',v);}
-get specimen(){return this._getter('specimen');}
-set specimen(v){this._setter('specimen',v);}
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get НоменклатураСП(){return this._getter('НоменклатураСП');}
-set НоменклатураСП(v){this._setter('НоменклатураСП',v);}
-get ХарактеристикаСП(){return this._getter('ХарактеристикаСП');}
-set ХарактеристикаСП(v){this._setter('ХарактеристикаСП',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get characteristic(){return this._getter('characteristic');}
-set characteristic(v){this._setter('characteristic',v);}
-get ОстатокПотребности(){return this._getter('ОстатокПотребности');}
-set ОстатокПотребности(v){this._setter('ОстатокПотребности',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get Закрыть(){return this._getter('Закрыть');}
-set Закрыть(v){this._setter('Закрыть',v);}
-get ИзОбрези(){return this._getter('ИзОбрези');}
-set ИзОбрези(v){this._setter('ИзОбрези',v);}
+get production(){return this._getter('production')}
+set production(v){this._setter('production',v)}
+get specimen(){return this._getter('specimen')}
+set specimen(v){this._setter('specimen',v)}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get НоменклатураСП(){return this._getter('НоменклатураСП')}
+set НоменклатураСП(v){this._setter('НоменклатураСП',v)}
+get ХарактеристикаСП(){return this._getter('ХарактеристикаСП')}
+set ХарактеристикаСП(v){this._setter('ХарактеристикаСП',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get characteristic(){return this._getter('characteristic')}
+set characteristic(v){this._setter('characteristic',v)}
+get ОстатокПотребности(){return this._getter('ОстатокПотребности')}
+set ОстатокПотребности(v){this._setter('ОстатокПотребности',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get Закрыть(){return this._getter('Закрыть')}
+set Закрыть(v){this._setter('Закрыть',v)}
+get ИзОбрези(){return this._getter('ИзОбрези')}
+set ИзОбрези(v){this._setter('ИзОбрези',v)}
 }
 $p.DocWork_centers_taskПотребностьRow = DocWork_centers_taskПотребностьRow;
 class DocWork_centers_taskОбрезьRow extends TabularSectionRow{
-get ВидДвижения(){return this._getter('ВидДвижения');}
-set ВидДвижения(v){this._setter('ВидДвижения',v);}
-get Хлыст(){return this._getter('Хлыст');}
-set Хлыст(v){this._setter('Хлыст',v);}
-get НомерПары(){return this._getter('НомерПары');}
-set НомерПары(v){this._setter('НомерПары',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get characteristic(){return this._getter('characteristic');}
-set characteristic(v){this._setter('characteristic',v);}
-get len(){return this._getter('len');}
-set len(v){this._setter('len',v);}
-get width(){return this._getter('width');}
-set width(v){this._setter('width',v);}
-get КоординатаX(){return this._getter('КоординатаX');}
-set КоординатаX(v){this._setter('КоординатаX',v);}
-get КоординатаY(){return this._getter('КоординатаY');}
-set КоординатаY(v){this._setter('КоординатаY',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get cell(){return this._getter('cell');}
-set cell(v){this._setter('cell',v);}
+get ВидДвижения(){return this._getter('ВидДвижения')}
+set ВидДвижения(v){this._setter('ВидДвижения',v)}
+get Хлыст(){return this._getter('Хлыст')}
+set Хлыст(v){this._setter('Хлыст',v)}
+get НомерПары(){return this._getter('НомерПары')}
+set НомерПары(v){this._setter('НомерПары',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get characteristic(){return this._getter('characteristic')}
+set characteristic(v){this._setter('characteristic',v)}
+get len(){return this._getter('len')}
+set len(v){this._setter('len',v)}
+get width(){return this._getter('width')}
+set width(v){this._setter('width',v)}
+get КоординатаX(){return this._getter('КоординатаX')}
+set КоординатаX(v){this._setter('КоординатаX',v)}
+get КоординатаY(){return this._getter('КоординатаY')}
+set КоординатаY(v){this._setter('КоординатаY',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get cell(){return this._getter('cell')}
+set cell(v){this._setter('cell',v)}
 }
 $p.DocWork_centers_taskОбрезьRow = DocWork_centers_taskОбрезьRow;
 class DocWork_centers_taskРаскройRow extends TabularSectionRow{
-get production(){return this._getter('production');}
-set production(v){this._setter('production',v);}
-get specimen(){return this._getter('specimen');}
-set specimen(v){this._setter('specimen',v);}
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get characteristic(){return this._getter('characteristic');}
-set characteristic(v){this._setter('characteristic',v);}
-get len(){return this._getter('len');}
-set len(v){this._setter('len',v);}
-get width(){return this._getter('width');}
-set width(v){this._setter('width',v);}
-get Хлыст(){return this._getter('Хлыст');}
-set Хлыст(v){this._setter('Хлыст',v);}
-get НомерПары(){return this._getter('НомерПары');}
-set НомерПары(v){this._setter('НомерПары',v);}
-get orientation(){return this._getter('orientation');}
-set orientation(v){this._setter('orientation',v);}
-get elm_type(){return this._getter('elm_type');}
-set elm_type(v){this._setter('elm_type',v);}
-get Угол1(){return this._getter('Угол1');}
-set Угол1(v){this._setter('Угол1',v);}
-get Угол2(){return this._getter('Угол2');}
-set Угол2(v){this._setter('Угол2',v);}
-get cell(){return this._getter('cell');}
-set cell(v){this._setter('cell',v);}
-get Партия(){return this._getter('Партия');}
-set Партия(v){this._setter('Партия',v);}
-get КоординатаX(){return this._getter('КоординатаX');}
-set КоординатаX(v){this._setter('КоординатаX',v);}
-get КоординатаY(){return this._getter('КоординатаY');}
-set КоординатаY(v){this._setter('КоординатаY',v);}
-get Поворот(){return this._getter('Поворот');}
-set Поворот(v){this._setter('Поворот',v);}
-get ЭтоНестандарт(){return this._getter('ЭтоНестандарт');}
-set ЭтоНестандарт(v){this._setter('ЭтоНестандарт',v);}
+get production(){return this._getter('production')}
+set production(v){this._setter('production',v)}
+get specimen(){return this._getter('specimen')}
+set specimen(v){this._setter('specimen',v)}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get characteristic(){return this._getter('characteristic')}
+set characteristic(v){this._setter('characteristic',v)}
+get len(){return this._getter('len')}
+set len(v){this._setter('len',v)}
+get width(){return this._getter('width')}
+set width(v){this._setter('width',v)}
+get Хлыст(){return this._getter('Хлыст')}
+set Хлыст(v){this._setter('Хлыст',v)}
+get НомерПары(){return this._getter('НомерПары')}
+set НомерПары(v){this._setter('НомерПары',v)}
+get orientation(){return this._getter('orientation')}
+set orientation(v){this._setter('orientation',v)}
+get elm_type(){return this._getter('elm_type')}
+set elm_type(v){this._setter('elm_type',v)}
+get Угол1(){return this._getter('Угол1')}
+set Угол1(v){this._setter('Угол1',v)}
+get Угол2(){return this._getter('Угол2')}
+set Угол2(v){this._setter('Угол2',v)}
+get cell(){return this._getter('cell')}
+set cell(v){this._setter('cell',v)}
+get Партия(){return this._getter('Партия')}
+set Партия(v){this._setter('Партия',v)}
+get КоординатаX(){return this._getter('КоординатаX')}
+set КоординатаX(v){this._setter('КоординатаX',v)}
+get КоординатаY(){return this._getter('КоординатаY')}
+set КоординатаY(v){this._setter('КоординатаY',v)}
+get Поворот(){return this._getter('Поворот')}
+set Поворот(v){this._setter('Поворот',v)}
+get ЭтоНестандарт(){return this._getter('ЭтоНестандарт')}
+set ЭтоНестандарт(v){this._setter('ЭтоНестандарт',v)}
 }
 $p.DocWork_centers_taskРаскройRow = DocWork_centers_taskРаскройRow;
 $p.doc.create('work_centers_task');
@@ -2536,176 +2537,176 @@ $p.doc.create('work_centers_task');
 * @constructor 
 */
 class DocCalc_order extends DocObj{
-get number_internal(){return this._getter('number_internal');}
-set number_internal(v){this._setter('number_internal',v);}
-get project(){return this._getter('project');}
-set project(v){this._setter('project',v);}
-get organization(){return this._getter('organization');}
-set organization(v){this._setter('organization',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get client_of_dealer(){return this._getter('client_of_dealer');}
-set client_of_dealer(v){this._setter('client_of_dealer',v);}
-get contract(){return this._getter('contract');}
-set contract(v){this._setter('contract',v);}
-get bank_account(){return this._getter('bank_account');}
-set bank_account(v){this._setter('bank_account',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get manager(){return this._getter('manager');}
-set manager(v){this._setter('manager',v);}
-get leading_manager(){return this._getter('leading_manager');}
-set leading_manager(v){this._setter('leading_manager',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get warehouse(){return this._getter('warehouse');}
-set warehouse(v){this._setter('warehouse',v);}
-get doc_amount(){return this._getter('doc_amount');}
-set doc_amount(v){this._setter('doc_amount',v);}
-get amount_operation(){return this._getter('amount_operation');}
-set amount_operation(v){this._setter('amount_operation',v);}
-get amount_internal(){return this._getter('amount_internal');}
-set amount_internal(v){this._setter('amount_internal',v);}
-get accessory_characteristic(){return this._getter('accessory_characteristic');}
-set accessory_characteristic(v){this._setter('accessory_characteristic',v);}
-get sys_profile(){return this._getter('sys_profile');}
-set sys_profile(v){this._setter('sys_profile',v);}
-get sys_furn(){return this._getter('sys_furn');}
-set sys_furn(v){this._setter('sys_furn',v);}
-get phone(){return this._getter('phone');}
-set phone(v){this._setter('phone',v);}
-get delivery_area(){return this._getter('delivery_area');}
-set delivery_area(v){this._setter('delivery_area',v);}
-get shipping_address(){return this._getter('shipping_address');}
-set shipping_address(v){this._setter('shipping_address',v);}
-get coordinates(){return this._getter('coordinates');}
-set coordinates(v){this._setter('coordinates',v);}
-get address_fields(){return this._getter('address_fields');}
-set address_fields(v){this._setter('address_fields',v);}
-get difficult(){return this._getter('difficult');}
-set difficult(v){this._setter('difficult',v);}
-get vat_consider(){return this._getter('vat_consider');}
-set vat_consider(v){this._setter('vat_consider',v);}
-get vat_included(){return this._getter('vat_included');}
-set vat_included(v){this._setter('vat_included',v);}
-get settlements_course(){return this._getter('settlements_course');}
-set settlements_course(v){this._setter('settlements_course',v);}
-get settlements_multiplicity(){return this._getter('settlements_multiplicity');}
-set settlements_multiplicity(v){this._setter('settlements_multiplicity',v);}
-get extra_charge_external(){return this._getter('extra_charge_external');}
-set extra_charge_external(v){this._setter('extra_charge_external',v);}
-get obj_delivery_state(){return this._getter('obj_delivery_state');}
-set obj_delivery_state(v){this._setter('obj_delivery_state',v);}
-get category(){return this._getter('category');}
-set category(v){this._setter('category',v);}
-get production(){return this._getter_ts('production');}
-set production(v){this._setter_ts('production',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
-get contact_information(){return this._getter_ts('contact_information');}
-set contact_information(v){this._setter_ts('contact_information',v);}
-get planning(){return this._getter_ts('planning');}
-set planning(v){this._setter_ts('planning',v);}
+get number_internal(){return this._getter('number_internal')}
+set number_internal(v){this._setter('number_internal',v)}
+get project(){return this._getter('project')}
+set project(v){this._setter('project',v)}
+get organization(){return this._getter('organization')}
+set organization(v){this._setter('organization',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get client_of_dealer(){return this._getter('client_of_dealer')}
+set client_of_dealer(v){this._setter('client_of_dealer',v)}
+get contract(){return this._getter('contract')}
+set contract(v){this._setter('contract',v)}
+get bank_account(){return this._getter('bank_account')}
+set bank_account(v){this._setter('bank_account',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get manager(){return this._getter('manager')}
+set manager(v){this._setter('manager',v)}
+get leading_manager(){return this._getter('leading_manager')}
+set leading_manager(v){this._setter('leading_manager',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get warehouse(){return this._getter('warehouse')}
+set warehouse(v){this._setter('warehouse',v)}
+get doc_amount(){return this._getter('doc_amount')}
+set doc_amount(v){this._setter('doc_amount',v)}
+get amount_operation(){return this._getter('amount_operation')}
+set amount_operation(v){this._setter('amount_operation',v)}
+get amount_internal(){return this._getter('amount_internal')}
+set amount_internal(v){this._setter('amount_internal',v)}
+get accessory_characteristic(){return this._getter('accessory_characteristic')}
+set accessory_characteristic(v){this._setter('accessory_characteristic',v)}
+get sys_profile(){return this._getter('sys_profile')}
+set sys_profile(v){this._setter('sys_profile',v)}
+get sys_furn(){return this._getter('sys_furn')}
+set sys_furn(v){this._setter('sys_furn',v)}
+get phone(){return this._getter('phone')}
+set phone(v){this._setter('phone',v)}
+get delivery_area(){return this._getter('delivery_area')}
+set delivery_area(v){this._setter('delivery_area',v)}
+get shipping_address(){return this._getter('shipping_address')}
+set shipping_address(v){this._setter('shipping_address',v)}
+get coordinates(){return this._getter('coordinates')}
+set coordinates(v){this._setter('coordinates',v)}
+get address_fields(){return this._getter('address_fields')}
+set address_fields(v){this._setter('address_fields',v)}
+get difficult(){return this._getter('difficult')}
+set difficult(v){this._setter('difficult',v)}
+get vat_consider(){return this._getter('vat_consider')}
+set vat_consider(v){this._setter('vat_consider',v)}
+get vat_included(){return this._getter('vat_included')}
+set vat_included(v){this._setter('vat_included',v)}
+get settlements_course(){return this._getter('settlements_course')}
+set settlements_course(v){this._setter('settlements_course',v)}
+get settlements_multiplicity(){return this._getter('settlements_multiplicity')}
+set settlements_multiplicity(v){this._setter('settlements_multiplicity',v)}
+get extra_charge_external(){return this._getter('extra_charge_external')}
+set extra_charge_external(v){this._setter('extra_charge_external',v)}
+get obj_delivery_state(){return this._getter('obj_delivery_state')}
+set obj_delivery_state(v){this._setter('obj_delivery_state',v)}
+get category(){return this._getter('category')}
+set category(v){this._setter('category',v)}
+get production(){return this._getter_ts('production')}
+set production(v){this._setter_ts('production',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
+get contact_information(){return this._getter_ts('contact_information')}
+set contact_information(v){this._setter_ts('contact_information',v)}
+get planning(){return this._getter_ts('planning')}
+set planning(v){this._setter_ts('planning',v)}
 }
 $p.DocCalc_order = DocCalc_order;
 class DocCalc_orderProductionRow extends TabularSectionRow{
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get characteristic(){return this._getter('characteristic');}
-set characteristic(v){this._setter('characteristic',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get unit(){return this._getter('unit');}
-set unit(v){this._setter('unit',v);}
-get qty(){return this._getter('qty');}
-set qty(v){this._setter('qty',v);}
-get len(){return this._getter('len');}
-set len(v){this._setter('len',v);}
-get width(){return this._getter('width');}
-set width(v){this._setter('width',v);}
-get s(){return this._getter('s');}
-set s(v){this._setter('s',v);}
-get first_cost(){return this._getter('first_cost');}
-set first_cost(v){this._setter('first_cost',v);}
-get marginality(){return this._getter('marginality');}
-set marginality(v){this._setter('marginality',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
-get discount_percent(){return this._getter('discount_percent');}
-set discount_percent(v){this._setter('discount_percent',v);}
-get discount_percent_internal(){return this._getter('discount_percent_internal');}
-set discount_percent_internal(v){this._setter('discount_percent_internal',v);}
-get discount(){return this._getter('discount');}
-set discount(v){this._setter('discount',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
-get margin(){return this._getter('margin');}
-set margin(v){this._setter('margin',v);}
-get price_internal(){return this._getter('price_internal');}
-set price_internal(v){this._setter('price_internal',v);}
-get amount_internal(){return this._getter('amount_internal');}
-set amount_internal(v){this._setter('amount_internal',v);}
-get vat_rate(){return this._getter('vat_rate');}
-set vat_rate(v){this._setter('vat_rate',v);}
-get vat_amount(){return this._getter('vat_amount');}
-set vat_amount(v){this._setter('vat_amount',v);}
-get ordn(){return this._getter('ordn');}
-set ordn(v){this._setter('ordn',v);}
-get changed(){return this._getter('changed');}
-set changed(v){this._setter('changed',v);}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get characteristic(){return this._getter('characteristic')}
+set characteristic(v){this._setter('characteristic',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get unit(){return this._getter('unit')}
+set unit(v){this._setter('unit',v)}
+get qty(){return this._getter('qty')}
+set qty(v){this._setter('qty',v)}
+get len(){return this._getter('len')}
+set len(v){this._setter('len',v)}
+get width(){return this._getter('width')}
+set width(v){this._setter('width',v)}
+get s(){return this._getter('s')}
+set s(v){this._setter('s',v)}
+get first_cost(){return this._getter('first_cost')}
+set first_cost(v){this._setter('first_cost',v)}
+get marginality(){return this._getter('marginality')}
+set marginality(v){this._setter('marginality',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
+get discount_percent(){return this._getter('discount_percent')}
+set discount_percent(v){this._setter('discount_percent',v)}
+get discount_percent_internal(){return this._getter('discount_percent_internal')}
+set discount_percent_internal(v){this._setter('discount_percent_internal',v)}
+get discount(){return this._getter('discount')}
+set discount(v){this._setter('discount',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
+get margin(){return this._getter('margin')}
+set margin(v){this._setter('margin',v)}
+get price_internal(){return this._getter('price_internal')}
+set price_internal(v){this._setter('price_internal',v)}
+get amount_internal(){return this._getter('amount_internal')}
+set amount_internal(v){this._setter('amount_internal',v)}
+get vat_rate(){return this._getter('vat_rate')}
+set vat_rate(v){this._setter('vat_rate',v)}
+get vat_amount(){return this._getter('vat_amount')}
+set vat_amount(v){this._setter('vat_amount',v)}
+get ordn(){return this._getter('ordn')}
+set ordn(v){this._setter('ordn',v)}
+get changed(){return this._getter('changed')}
+set changed(v){this._setter('changed',v)}
 }
 $p.DocCalc_orderProductionRow = DocCalc_orderProductionRow;
 class DocCalc_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.DocCalc_orderExtra_fieldsRow = DocCalc_orderExtra_fieldsRow;
 class DocCalc_orderContact_informationRow extends TabularSectionRow{
-get type(){return this._getter('type');}
-set type(v){this._setter('type',v);}
-get kind(){return this._getter('kind');}
-set kind(v){this._setter('kind',v);}
-get presentation(){return this._getter('presentation');}
-set presentation(v){this._setter('presentation',v);}
-get values_fields(){return this._getter('values_fields');}
-set values_fields(v){this._setter('values_fields',v);}
-get country(){return this._getter('country');}
-set country(v){this._setter('country',v);}
-get region(){return this._getter('region');}
-set region(v){this._setter('region',v);}
-get city(){return this._getter('city');}
-set city(v){this._setter('city',v);}
-get email_address(){return this._getter('email_address');}
-set email_address(v){this._setter('email_address',v);}
-get server_domain_name(){return this._getter('server_domain_name');}
-set server_domain_name(v){this._setter('server_domain_name',v);}
-get phone_number(){return this._getter('phone_number');}
-set phone_number(v){this._setter('phone_number',v);}
-get phone_without_codes(){return this._getter('phone_without_codes');}
-set phone_without_codes(v){this._setter('phone_without_codes',v);}
+get type(){return this._getter('type')}
+set type(v){this._setter('type',v)}
+get kind(){return this._getter('kind')}
+set kind(v){this._setter('kind',v)}
+get presentation(){return this._getter('presentation')}
+set presentation(v){this._setter('presentation',v)}
+get values_fields(){return this._getter('values_fields')}
+set values_fields(v){this._setter('values_fields',v)}
+get country(){return this._getter('country')}
+set country(v){this._setter('country',v)}
+get region(){return this._getter('region')}
+set region(v){this._setter('region',v)}
+get city(){return this._getter('city')}
+set city(v){this._setter('city',v)}
+get email_address(){return this._getter('email_address')}
+set email_address(v){this._setter('email_address',v)}
+get server_domain_name(){return this._getter('server_domain_name')}
+set server_domain_name(v){this._setter('server_domain_name',v)}
+get phone_number(){return this._getter('phone_number')}
+set phone_number(v){this._setter('phone_number',v)}
+get phone_without_codes(){return this._getter('phone_without_codes')}
+set phone_without_codes(v){this._setter('phone_without_codes',v)}
 }
 $p.DocCalc_orderContact_informationRow = DocCalc_orderContact_informationRow;
 class DocCalc_orderPlanningRow extends TabularSectionRow{
-get phase(){return this._getter('phase');}
-set phase(v){this._setter('phase',v);}
-get date(){return this._getter('date');}
-set date(v){this._setter('date',v);}
-get key(){return this._getter('key');}
-set key(v){this._setter('key',v);}
-get obj(){return this._getter('obj');}
-set obj(v){this._setter('obj',v);}
-get specimen(){return this._getter('specimen');}
-set specimen(v){this._setter('specimen',v);}
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get performance(){return this._getter('performance');}
-set performance(v){this._setter('performance',v);}
+get phase(){return this._getter('phase')}
+set phase(v){this._setter('phase',v)}
+get date(){return this._getter('date')}
+set date(v){this._setter('date',v)}
+get key(){return this._getter('key')}
+set key(v){this._setter('key',v)}
+get obj(){return this._getter('obj')}
+set obj(v){this._setter('obj',v)}
+get specimen(){return this._getter('specimen')}
+set specimen(v){this._setter('specimen',v)}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get performance(){return this._getter('performance')}
+set performance(v){this._setter('performance',v)}
 }
 $p.DocCalc_orderPlanningRow = DocCalc_orderPlanningRow;
 $p.doc.create('calc_order');
@@ -2718,40 +2719,40 @@ $p.doc.create('calc_order');
 * @constructor 
 */
 class DocCredit_card_order extends DocObj{
-get organization(){return this._getter('organization');}
-set organization(v){this._setter('organization',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get doc_amount(){return this._getter('doc_amount');}
-set doc_amount(v){this._setter('doc_amount',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get payment_details(){return this._getter_ts('payment_details');}
-set payment_details(v){this._setter_ts('payment_details',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get organization(){return this._getter('organization')}
+set organization(v){this._setter('organization',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get doc_amount(){return this._getter('doc_amount')}
+set doc_amount(v){this._setter('doc_amount',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get payment_details(){return this._getter_ts('payment_details')}
+set payment_details(v){this._setter_ts('payment_details',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocCredit_card_order = DocCredit_card_order;
 class DocCredit_card_orderPayment_detailsRow extends TabularSectionRow{
-get cash_flow_article(){return this._getter('cash_flow_article');}
-set cash_flow_article(v){this._setter('cash_flow_article',v);}
-get trans(){return this._getter('trans');}
-set trans(v){this._setter('trans',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
+get cash_flow_article(){return this._getter('cash_flow_article')}
+set cash_flow_article(v){this._setter('cash_flow_article',v)}
+get trans(){return this._getter('trans')}
+set trans(v){this._setter('trans',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
 }
 $p.DocCredit_card_orderPayment_detailsRow = DocCredit_card_orderPayment_detailsRow;
 class DocCredit_card_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.DocCredit_card_orderExtra_fieldsRow = DocCredit_card_orderExtra_fieldsRow;
 $p.doc.create('credit_card_order');
@@ -2764,25 +2765,25 @@ $p.doc.create('credit_card_order');
 * @constructor 
 */
 class DocWork_centers_performance extends DocObj{
-get start_date(){return this._getter('start_date');}
-set start_date(v){this._setter('start_date',v);}
-get expiration_date(){return this._getter('expiration_date');}
-set expiration_date(v){this._setter('expiration_date',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get planning(){return this._getter_ts('planning');}
-set planning(v){this._setter_ts('planning',v);}
+get start_date(){return this._getter('start_date')}
+set start_date(v){this._setter('start_date',v)}
+get expiration_date(){return this._getter('expiration_date')}
+set expiration_date(v){this._setter('expiration_date',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get planning(){return this._getter_ts('planning')}
+set planning(v){this._setter_ts('planning',v)}
 }
 $p.DocWork_centers_performance = DocWork_centers_performance;
 class DocWork_centers_performancePlanningRow extends TabularSectionRow{
-get date(){return this._getter('date');}
-set date(v){this._setter('date',v);}
-get key(){return this._getter('key');}
-set key(v){this._setter('key',v);}
-get performance(){return this._getter('performance');}
-set performance(v){this._setter('performance',v);}
+get date(){return this._getter('date')}
+set date(v){this._setter('date',v)}
+get key(){return this._getter('key')}
+set key(v){this._setter('key',v)}
+get performance(){return this._getter('performance')}
+set performance(v){this._setter('performance',v)}
 }
 $p.DocWork_centers_performancePlanningRow = DocWork_centers_performancePlanningRow;
 $p.doc.create('work_centers_performance');
@@ -2795,40 +2796,40 @@ $p.doc.create('work_centers_performance');
 * @constructor 
 */
 class DocDebit_bank_order extends DocObj{
-get organization(){return this._getter('organization');}
-set organization(v){this._setter('organization',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get doc_amount(){return this._getter('doc_amount');}
-set doc_amount(v){this._setter('doc_amount',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get payment_details(){return this._getter_ts('payment_details');}
-set payment_details(v){this._setter_ts('payment_details',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get organization(){return this._getter('organization')}
+set organization(v){this._setter('organization',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get doc_amount(){return this._getter('doc_amount')}
+set doc_amount(v){this._setter('doc_amount',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get payment_details(){return this._getter_ts('payment_details')}
+set payment_details(v){this._setter_ts('payment_details',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocDebit_bank_order = DocDebit_bank_order;
 class DocDebit_bank_orderPayment_detailsRow extends TabularSectionRow{
-get cash_flow_article(){return this._getter('cash_flow_article');}
-set cash_flow_article(v){this._setter('cash_flow_article',v);}
-get trans(){return this._getter('trans');}
-set trans(v){this._setter('trans',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
+get cash_flow_article(){return this._getter('cash_flow_article')}
+set cash_flow_article(v){this._setter('cash_flow_article',v)}
+get trans(){return this._getter('trans')}
+set trans(v){this._setter('trans',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
 }
 $p.DocDebit_bank_orderPayment_detailsRow = DocDebit_bank_orderPayment_detailsRow;
 class DocDebit_bank_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.DocDebit_bank_orderExtra_fieldsRow = DocDebit_bank_orderExtra_fieldsRow;
 $p.doc.create('debit_bank_order');
@@ -2841,40 +2842,40 @@ $p.doc.create('debit_bank_order');
 * @constructor 
 */
 class DocCredit_bank_order extends DocObj{
-get organization(){return this._getter('organization');}
-set organization(v){this._setter('organization',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get doc_amount(){return this._getter('doc_amount');}
-set doc_amount(v){this._setter('doc_amount',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get payment_details(){return this._getter_ts('payment_details');}
-set payment_details(v){this._setter_ts('payment_details',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get organization(){return this._getter('organization')}
+set organization(v){this._setter('organization',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get doc_amount(){return this._getter('doc_amount')}
+set doc_amount(v){this._setter('doc_amount',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get payment_details(){return this._getter_ts('payment_details')}
+set payment_details(v){this._setter_ts('payment_details',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocCredit_bank_order = DocCredit_bank_order;
 class DocCredit_bank_orderPayment_detailsRow extends TabularSectionRow{
-get cash_flow_article(){return this._getter('cash_flow_article');}
-set cash_flow_article(v){this._setter('cash_flow_article',v);}
-get trans(){return this._getter('trans');}
-set trans(v){this._setter('trans',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
+get cash_flow_article(){return this._getter('cash_flow_article')}
+set cash_flow_article(v){this._setter('cash_flow_article',v)}
+get trans(){return this._getter('trans')}
+set trans(v){this._setter('trans',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
 }
 $p.DocCredit_bank_orderPayment_detailsRow = DocCredit_bank_orderPayment_detailsRow;
 class DocCredit_bank_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.DocCredit_bank_orderExtra_fieldsRow = DocCredit_bank_orderExtra_fieldsRow;
 $p.doc.create('credit_bank_order');
@@ -2887,42 +2888,42 @@ $p.doc.create('credit_bank_order');
 * @constructor 
 */
 class DocDebit_cash_order extends DocObj{
-get organization(){return this._getter('organization');}
-set organization(v){this._setter('organization',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get cashbox(){return this._getter('cashbox');}
-set cashbox(v){this._setter('cashbox',v);}
-get doc_amount(){return this._getter('doc_amount');}
-set doc_amount(v){this._setter('doc_amount',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get payment_details(){return this._getter_ts('payment_details');}
-set payment_details(v){this._setter_ts('payment_details',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get organization(){return this._getter('organization')}
+set organization(v){this._setter('organization',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get cashbox(){return this._getter('cashbox')}
+set cashbox(v){this._setter('cashbox',v)}
+get doc_amount(){return this._getter('doc_amount')}
+set doc_amount(v){this._setter('doc_amount',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get payment_details(){return this._getter_ts('payment_details')}
+set payment_details(v){this._setter_ts('payment_details',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocDebit_cash_order = DocDebit_cash_order;
 class DocDebit_cash_orderPayment_detailsRow extends TabularSectionRow{
-get cash_flow_article(){return this._getter('cash_flow_article');}
-set cash_flow_article(v){this._setter('cash_flow_article',v);}
-get trans(){return this._getter('trans');}
-set trans(v){this._setter('trans',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
+get cash_flow_article(){return this._getter('cash_flow_article')}
+set cash_flow_article(v){this._setter('cash_flow_article',v)}
+get trans(){return this._getter('trans')}
+set trans(v){this._setter('trans',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
 }
 $p.DocDebit_cash_orderPayment_detailsRow = DocDebit_cash_orderPayment_detailsRow;
 class DocDebit_cash_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.DocDebit_cash_orderExtra_fieldsRow = DocDebit_cash_orderExtra_fieldsRow;
 $p.doc.create('debit_cash_order');
@@ -2935,42 +2936,42 @@ $p.doc.create('debit_cash_order');
 * @constructor 
 */
 class DocCredit_cash_order extends DocObj{
-get organization(){return this._getter('organization');}
-set organization(v){this._setter('organization',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get cashbox(){return this._getter('cashbox');}
-set cashbox(v){this._setter('cashbox',v);}
-get doc_amount(){return this._getter('doc_amount');}
-set doc_amount(v){this._setter('doc_amount',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get payment_details(){return this._getter_ts('payment_details');}
-set payment_details(v){this._setter_ts('payment_details',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get organization(){return this._getter('organization')}
+set organization(v){this._setter('organization',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get cashbox(){return this._getter('cashbox')}
+set cashbox(v){this._setter('cashbox',v)}
+get doc_amount(){return this._getter('doc_amount')}
+set doc_amount(v){this._setter('doc_amount',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get payment_details(){return this._getter_ts('payment_details')}
+set payment_details(v){this._setter_ts('payment_details',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocCredit_cash_order = DocCredit_cash_order;
 class DocCredit_cash_orderPayment_detailsRow extends TabularSectionRow{
-get cash_flow_article(){return this._getter('cash_flow_article');}
-set cash_flow_article(v){this._setter('cash_flow_article',v);}
-get trans(){return this._getter('trans');}
-set trans(v){this._setter('trans',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
+get cash_flow_article(){return this._getter('cash_flow_article')}
+set cash_flow_article(v){this._setter('cash_flow_article',v)}
+get trans(){return this._getter('trans')}
+set trans(v){this._setter('trans',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
 }
 $p.DocCredit_cash_orderPayment_detailsRow = DocCredit_cash_orderPayment_detailsRow;
 class DocCredit_cash_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.DocCredit_cash_orderExtra_fieldsRow = DocCredit_cash_orderExtra_fieldsRow;
 $p.doc.create('credit_cash_order');
@@ -2983,77 +2984,77 @@ $p.doc.create('credit_cash_order');
 * @constructor 
 */
 class DocSelling extends DocObj{
-get organization(){return this._getter('organization');}
-set organization(v){this._setter('organization',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get warehouse(){return this._getter('warehouse');}
-set warehouse(v){this._setter('warehouse',v);}
-get doc_amount(){return this._getter('doc_amount');}
-set doc_amount(v){this._setter('doc_amount',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get goods(){return this._getter_ts('goods');}
-set goods(v){this._setter_ts('goods',v);}
-get services(){return this._getter_ts('services');}
-set services(v){this._setter_ts('services',v);}
-get extra_fields(){return this._getter_ts('extra_fields');}
-set extra_fields(v){this._setter_ts('extra_fields',v);}
+get organization(){return this._getter('organization')}
+set organization(v){this._setter('organization',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get warehouse(){return this._getter('warehouse')}
+set warehouse(v){this._setter('warehouse',v)}
+get doc_amount(){return this._getter('doc_amount')}
+set doc_amount(v){this._setter('doc_amount',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get goods(){return this._getter_ts('goods')}
+set goods(v){this._setter_ts('goods',v)}
+get services(){return this._getter_ts('services')}
+set services(v){this._setter_ts('services',v)}
+get extra_fields(){return this._getter_ts('extra_fields')}
+set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocSelling = DocSelling;
 class DocSellingGoodsRow extends TabularSectionRow{
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get unit(){return this._getter('unit');}
-set unit(v){this._setter('unit',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
-get discount_percent(){return this._getter('discount_percent');}
-set discount_percent(v){this._setter('discount_percent',v);}
-get vat_rate(){return this._getter('vat_rate');}
-set vat_rate(v){this._setter('vat_rate',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
-get vat_amount(){return this._getter('vat_amount');}
-set vat_amount(v){this._setter('vat_amount',v);}
-get trans(){return this._getter('trans');}
-set trans(v){this._setter('trans',v);}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get unit(){return this._getter('unit')}
+set unit(v){this._setter('unit',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
+get discount_percent(){return this._getter('discount_percent')}
+set discount_percent(v){this._setter('discount_percent',v)}
+get vat_rate(){return this._getter('vat_rate')}
+set vat_rate(v){this._setter('vat_rate',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
+get vat_amount(){return this._getter('vat_amount')}
+set vat_amount(v){this._setter('vat_amount',v)}
+get trans(){return this._getter('trans')}
+set trans(v){this._setter('trans',v)}
 }
 $p.DocSellingGoodsRow = DocSellingGoodsRow;
 class DocSellingServicesRow extends TabularSectionRow{
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get content(){return this._getter('content');}
-set content(v){this._setter('content',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
-get discount_percent(){return this._getter('discount_percent');}
-set discount_percent(v){this._setter('discount_percent',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
-get vat_rate(){return this._getter('vat_rate');}
-set vat_rate(v){this._setter('vat_rate',v);}
-get vat_amount(){return this._getter('vat_amount');}
-set vat_amount(v){this._setter('vat_amount',v);}
-get trans(){return this._getter('trans');}
-set trans(v){this._setter('trans',v);}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get content(){return this._getter('content')}
+set content(v){this._setter('content',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
+get discount_percent(){return this._getter('discount_percent')}
+set discount_percent(v){this._setter('discount_percent',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
+get vat_rate(){return this._getter('vat_rate')}
+set vat_rate(v){this._setter('vat_rate',v)}
+get vat_amount(){return this._getter('vat_amount')}
+set vat_amount(v){this._setter('vat_amount',v)}
+get trans(){return this._getter('trans')}
+set trans(v){this._setter('trans',v)}
 }
 $p.DocSellingServicesRow = DocSellingServicesRow;
 class DocSellingExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property');}
-set property(v){this._setter('property',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get txt_row(){return this._getter('txt_row');}
-set txt_row(v){this._setter('txt_row',v);}
+get property(){return this._getter('property')}
+set property(v){this._setter('property',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get txt_row(){return this._getter('txt_row')}
+set txt_row(v){this._setter('txt_row',v)}
 }
 $p.DocSellingExtra_fieldsRow = DocSellingExtra_fieldsRow;
 $p.doc.create('selling');
@@ -3066,27 +3067,27 @@ $p.doc.create('selling');
 * @constructor 
 */
 class DocNom_prices_setup extends DocObj{
-get price_type(){return this._getter('price_type');}
-set price_type(v){this._setter('price_type',v);}
-get currency(){return this._getter('currency');}
-set currency(v){this._setter('currency',v);}
-get responsible(){return this._getter('responsible');}
-set responsible(v){this._setter('responsible',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get goods(){return this._getter_ts('goods');}
-set goods(v){this._setter_ts('goods',v);}
+get price_type(){return this._getter('price_type')}
+set price_type(v){this._setter('price_type',v)}
+get currency(){return this._getter('currency')}
+set currency(v){this._setter('currency',v)}
+get responsible(){return this._getter('responsible')}
+set responsible(v){this._setter('responsible',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get goods(){return this._getter_ts('goods')}
+set goods(v){this._setter_ts('goods',v)}
 }
 $p.DocNom_prices_setup = DocNom_prices_setup;
 class DocNom_prices_setupGoodsRow extends TabularSectionRow{
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get nom_characteristic(){return this._getter('nom_characteristic');}
-set nom_characteristic(v){this._setter('nom_characteristic',v);}
-get price_type(){return this._getter('price_type');}
-set price_type(v){this._setter('price_type',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get nom_characteristic(){return this._getter('nom_characteristic')}
+set nom_characteristic(v){this._setter('nom_characteristic',v)}
+get price_type(){return this._getter('price_type')}
+set price_type(v){this._setter('price_type',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
 }
 $p.DocNom_prices_setupGoodsRow = DocNom_prices_setupGoodsRow;
 $p.doc.create('nom_prices_setup');
@@ -3099,50 +3100,50 @@ $p.doc.create('nom_prices_setup');
 * @constructor 
 */
 class DocPlanning_event extends DocObj{
-get phase(){return this._getter('phase');}
-set phase(v){this._setter('phase',v);}
-get key(){return this._getter('key');}
-set key(v){this._setter('key',v);}
-get recipient(){return this._getter('recipient');}
-set recipient(v){this._setter('recipient',v);}
-get calc_order(){return this._getter('calc_order');}
-set calc_order(v){this._setter('calc_order',v);}
-get partner(){return this._getter('partner');}
-set partner(v){this._setter('partner',v);}
-get project(){return this._getter('project');}
-set project(v){this._setter('project',v);}
-get Основание(){return this._getter('Основание');}
-set Основание(v){this._setter('Основание',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get executors(){return this._getter_ts('executors');}
-set executors(v){this._setter_ts('executors',v);}
-get planning(){return this._getter_ts('planning');}
-set planning(v){this._setter_ts('planning',v);}
+get phase(){return this._getter('phase')}
+set phase(v){this._setter('phase',v)}
+get key(){return this._getter('key')}
+set key(v){this._setter('key',v)}
+get recipient(){return this._getter('recipient')}
+set recipient(v){this._setter('recipient',v)}
+get calc_order(){return this._getter('calc_order')}
+set calc_order(v){this._setter('calc_order',v)}
+get partner(){return this._getter('partner')}
+set partner(v){this._setter('partner',v)}
+get project(){return this._getter('project')}
+set project(v){this._setter('project',v)}
+get Основание(){return this._getter('Основание')}
+set Основание(v){this._setter('Основание',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get executors(){return this._getter_ts('executors')}
+set executors(v){this._setter_ts('executors',v)}
+get planning(){return this._getter_ts('planning')}
+set planning(v){this._setter_ts('planning',v)}
 }
 $p.DocPlanning_event = DocPlanning_event;
 class DocPlanning_eventExecutorsRow extends TabularSectionRow{
-get executor(){return this._getter('executor');}
-set executor(v){this._setter('executor',v);}
-get coefficient(){return this._getter('coefficient');}
-set coefficient(v){this._setter('coefficient',v);}
+get executor(){return this._getter('executor')}
+set executor(v){this._setter('executor',v)}
+get coefficient(){return this._getter('coefficient')}
+set coefficient(v){this._setter('coefficient',v)}
 }
 $p.DocPlanning_eventExecutorsRow = DocPlanning_eventExecutorsRow;
 class DocPlanning_eventPlanningRow extends TabularSectionRow{
-get obj(){return this._getter('obj');}
-set obj(v){this._setter('obj',v);}
-get specimen(){return this._getter('specimen');}
-set specimen(v){this._setter('specimen',v);}
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get performance(){return this._getter('performance');}
-set performance(v){this._setter('performance',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get begin_time(){return this._getter('begin_time');}
-set begin_time(v){this._setter('begin_time',v);}
-get end_time(){return this._getter('end_time');}
-set end_time(v){this._setter('end_time',v);}
+get obj(){return this._getter('obj')}
+set obj(v){this._setter('obj',v)}
+get specimen(){return this._getter('specimen')}
+set specimen(v){this._setter('specimen',v)}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get performance(){return this._getter('performance')}
+set performance(v){this._setter('performance',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get begin_time(){return this._getter('begin_time')}
+set begin_time(v){this._setter('begin_time',v)}
+get end_time(){return this._getter('end_time')}
+set end_time(v){this._setter('end_time',v)}
 }
 $p.DocPlanning_eventPlanningRow = DocPlanning_eventPlanningRow;
 $p.doc.create('planning_event');
@@ -3155,26 +3156,26 @@ $p.doc.create('planning_event');
 * @constructor 
 */
 class IregBuyers_order_states extends RegisterRow{
-get invoice(){return this._getter('invoice');}
-set invoice(v){this._setter('invoice',v);}
-get state(){return this._getter('state');}
-set state(v){this._setter('state',v);}
-get event_date(){return this._getter('event_date');}
-set event_date(v){this._setter('event_date',v);}
-get СуммаОплаты(){return this._getter('СуммаОплаты');}
-set СуммаОплаты(v){this._setter('СуммаОплаты',v);}
-get ПроцентОплаты(){return this._getter('ПроцентОплаты');}
-set ПроцентОплаты(v){this._setter('ПроцентОплаты',v);}
-get СуммаОтгрузки(){return this._getter('СуммаОтгрузки');}
-set СуммаОтгрузки(v){this._setter('СуммаОтгрузки',v);}
-get ПроцентОтгрузки(){return this._getter('ПроцентОтгрузки');}
-set ПроцентОтгрузки(v){this._setter('ПроцентОтгрузки',v);}
-get СуммаДолга(){return this._getter('СуммаДолга');}
-set СуммаДолга(v){this._setter('СуммаДолга',v);}
-get ПроцентДолга(){return this._getter('ПроцентДолга');}
-set ПроцентДолга(v){this._setter('ПроцентДолга',v);}
-get ЕстьРасхожденияОрдерНакладная(){return this._getter('ЕстьРасхожденияОрдерНакладная');}
-set ЕстьРасхожденияОрдерНакладная(v){this._setter('ЕстьРасхожденияОрдерНакладная',v);}
+get invoice(){return this._getter('invoice')}
+set invoice(v){this._setter('invoice',v)}
+get state(){return this._getter('state')}
+set state(v){this._setter('state',v)}
+get event_date(){return this._getter('event_date')}
+set event_date(v){this._setter('event_date',v)}
+get СуммаОплаты(){return this._getter('СуммаОплаты')}
+set СуммаОплаты(v){this._setter('СуммаОплаты',v)}
+get ПроцентОплаты(){return this._getter('ПроцентОплаты')}
+set ПроцентОплаты(v){this._setter('ПроцентОплаты',v)}
+get СуммаОтгрузки(){return this._getter('СуммаОтгрузки')}
+set СуммаОтгрузки(v){this._setter('СуммаОтгрузки',v)}
+get ПроцентОтгрузки(){return this._getter('ПроцентОтгрузки')}
+set ПроцентОтгрузки(v){this._setter('ПроцентОтгрузки',v)}
+get СуммаДолга(){return this._getter('СуммаДолга')}
+set СуммаДолга(v){this._setter('СуммаДолга',v)}
+get ПроцентДолга(){return this._getter('ПроцентДолга')}
+set ПроцентДолга(v){this._setter('ПроцентДолга',v)}
+get ЕстьРасхожденияОрдерНакладная(){return this._getter('ЕстьРасхожденияОрдерНакладная')}
+set ЕстьРасхожденияОрдерНакладная(v){this._setter('ЕстьРасхожденияОрдерНакладная',v)}
 }
 $p.IregBuyers_order_states = IregBuyers_order_states;
 $p.ireg.create('buyers_order_states');
@@ -3187,14 +3188,14 @@ $p.ireg.create('buyers_order_states');
 * @constructor 
 */
 class IregCurrency_courses extends RegisterRow{
-get currency(){return this._getter('currency');}
-set currency(v){this._setter('currency',v);}
-get period(){return this._getter('period');}
-set period(v){this._setter('period',v);}
-get course(){return this._getter('course');}
-set course(v){this._setter('course',v);}
-get multiplicity(){return this._getter('multiplicity');}
-set multiplicity(v){this._setter('multiplicity',v);}
+get currency(){return this._getter('currency')}
+set currency(v){this._setter('currency',v)}
+get period(){return this._getter('period')}
+set period(v){this._setter('period',v)}
+get course(){return this._getter('course')}
+set course(v){this._setter('course',v)}
+get multiplicity(){return this._getter('multiplicity')}
+set multiplicity(v){this._setter('multiplicity',v)}
 }
 $p.IregCurrency_courses = IregCurrency_courses;
 $p.ireg.create('currency_courses');
@@ -3207,40 +3208,40 @@ $p.ireg.create('currency_courses');
 * @constructor 
 */
 class IregMargin_coefficients extends RegisterRow{
-get price_group(){return this._getter('price_group');}
-set price_group(v){this._setter('price_group',v);}
-get key(){return this._getter('key');}
-set key(v){this._setter('key',v);}
-get condition_formula(){return this._getter('condition_formula');}
-set condition_formula(v){this._setter('condition_formula',v);}
-get marginality(){return this._getter('marginality');}
-set marginality(v){this._setter('marginality',v);}
-get marginality_min(){return this._getter('marginality_min');}
-set marginality_min(v){this._setter('marginality_min',v);}
-get marginality_internal(){return this._getter('marginality_internal');}
-set marginality_internal(v){this._setter('marginality_internal',v);}
-get price_type_first_cost(){return this._getter('price_type_first_cost');}
-set price_type_first_cost(v){this._setter('price_type_first_cost',v);}
-get price_type_sale(){return this._getter('price_type_sale');}
-set price_type_sale(v){this._setter('price_type_sale',v);}
-get price_type_internal(){return this._getter('price_type_internal');}
-set price_type_internal(v){this._setter('price_type_internal',v);}
-get formula(){return this._getter('formula');}
-set formula(v){this._setter('formula',v);}
-get sale_formula(){return this._getter('sale_formula');}
-set sale_formula(v){this._setter('sale_formula',v);}
-get internal_formula(){return this._getter('internal_formula');}
-set internal_formula(v){this._setter('internal_formula',v);}
-get external_formula(){return this._getter('external_formula');}
-set external_formula(v){this._setter('external_formula',v);}
-get extra_charge_external(){return this._getter('extra_charge_external');}
-set extra_charge_external(v){this._setter('extra_charge_external',v);}
-get discount_external(){return this._getter('discount_external');}
-set discount_external(v){this._setter('discount_external',v);}
-get discount(){return this._getter('discount');}
-set discount(v){this._setter('discount',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
+get price_group(){return this._getter('price_group')}
+set price_group(v){this._setter('price_group',v)}
+get key(){return this._getter('key')}
+set key(v){this._setter('key',v)}
+get condition_formula(){return this._getter('condition_formula')}
+set condition_formula(v){this._setter('condition_formula',v)}
+get marginality(){return this._getter('marginality')}
+set marginality(v){this._setter('marginality',v)}
+get marginality_min(){return this._getter('marginality_min')}
+set marginality_min(v){this._setter('marginality_min',v)}
+get marginality_internal(){return this._getter('marginality_internal')}
+set marginality_internal(v){this._setter('marginality_internal',v)}
+get price_type_first_cost(){return this._getter('price_type_first_cost')}
+set price_type_first_cost(v){this._setter('price_type_first_cost',v)}
+get price_type_sale(){return this._getter('price_type_sale')}
+set price_type_sale(v){this._setter('price_type_sale',v)}
+get price_type_internal(){return this._getter('price_type_internal')}
+set price_type_internal(v){this._setter('price_type_internal',v)}
+get formula(){return this._getter('formula')}
+set formula(v){this._setter('formula',v)}
+get sale_formula(){return this._getter('sale_formula')}
+set sale_formula(v){this._setter('sale_formula',v)}
+get internal_formula(){return this._getter('internal_formula')}
+set internal_formula(v){this._setter('internal_formula',v)}
+get external_formula(){return this._getter('external_formula')}
+set external_formula(v){this._setter('external_formula',v)}
+get extra_charge_external(){return this._getter('extra_charge_external')}
+set extra_charge_external(v){this._setter('extra_charge_external',v)}
+get discount_external(){return this._getter('discount_external')}
+set discount_external(v){this._setter('discount_external',v)}
+get discount(){return this._getter('discount')}
+set discount(v){this._setter('discount',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
 }
 $p.IregMargin_coefficients = IregMargin_coefficients;
 $p.ireg.create('margin_coefficients');
@@ -3253,25 +3254,25 @@ $p.ireg.create('margin_coefficients');
 * @constructor 
 */
 class DpBuilder_price extends DataProcessorObj{
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get department(){return this._getter('department');}
-set department(v){this._setter('department',v);}
-get goods(){return this._getter_ts('goods');}
-set goods(v){this._setter_ts('goods',v);}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get department(){return this._getter('department')}
+set department(v){this._setter('department',v)}
+get goods(){return this._getter_ts('goods')}
+set goods(v){this._setter_ts('goods',v)}
 }
 $p.DpBuilder_price = DpBuilder_price;
 class DpBuilder_priceGoodsRow extends TabularSectionRow{
-get price_type(){return this._getter('price_type');}
-set price_type(v){this._setter('price_type',v);}
-get date(){return this._getter('date');}
-set date(v){this._setter('date',v);}
-get nom_characteristic(){return this._getter('nom_characteristic');}
-set nom_characteristic(v){this._setter('nom_characteristic',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
-get currency(){return this._getter('currency');}
-set currency(v){this._setter('currency',v);}
+get price_type(){return this._getter('price_type')}
+set price_type(v){this._setter('price_type',v)}
+get date(){return this._getter('date')}
+set date(v){this._setter('date',v)}
+get nom_characteristic(){return this._getter('nom_characteristic')}
+set nom_characteristic(v){this._setter('nom_characteristic',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
+get currency(){return this._getter('currency')}
+set currency(v){this._setter('currency',v)}
 }
 $p.DpBuilder_priceGoodsRow = DpBuilder_priceGoodsRow;
 $p.dp.create('builder_price');
@@ -3284,168 +3285,168 @@ $p.dp.create('builder_price');
 * @constructor 
 */
 class DpBuyers_order extends DataProcessorObj{
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get characteristic(){return this._getter('characteristic');}
-set characteristic(v){this._setter('characteristic',v);}
-get sys(){return this._getter('sys');}
-set sys(v){this._setter('sys',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get len(){return this._getter('len');}
-set len(v){this._setter('len',v);}
-get height(){return this._getter('height');}
-set height(v){this._setter('height',v);}
-get depth(){return this._getter('depth');}
-set depth(v){this._setter('depth',v);}
-get s(){return this._getter('s');}
-set s(v){this._setter('s',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get first_cost(){return this._getter('first_cost');}
-set first_cost(v){this._setter('first_cost',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
-get discount_percent(){return this._getter('discount_percent');}
-set discount_percent(v){this._setter('discount_percent',v);}
-get discount_percent_internal(){return this._getter('discount_percent_internal');}
-set discount_percent_internal(v){this._setter('discount_percent_internal',v);}
-get discount(){return this._getter('discount');}
-set discount(v){this._setter('discount',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
-get shipping_date(){return this._getter('shipping_date');}
-set shipping_date(v){this._setter('shipping_date',v);}
-get client_number(){return this._getter('client_number');}
-set client_number(v){this._setter('client_number',v);}
-get inn(){return this._getter('inn');}
-set inn(v){this._setter('inn',v);}
-get shipping_address(){return this._getter('shipping_address');}
-set shipping_address(v){this._setter('shipping_address',v);}
-get phone(){return this._getter('phone');}
-set phone(v){this._setter('phone',v);}
-get price_internal(){return this._getter('price_internal');}
-set price_internal(v){this._setter('price_internal',v);}
-get amount_internal(){return this._getter('amount_internal');}
-set amount_internal(v){this._setter('amount_internal',v);}
-get base_block(){return this._getter('base_block');}
-set base_block(v){this._setter('base_block',v);}
-get product_params(){return this._getter_ts('product_params');}
-set product_params(v){this._setter_ts('product_params',v);}
-get production(){return this._getter_ts('production');}
-set production(v){this._setter_ts('production',v);}
-get glass_specification(){return this._getter_ts('glass_specification');}
-set glass_specification(v){this._setter_ts('glass_specification',v);}
-get specification(){return this._getter_ts('specification');}
-set specification(v){this._setter_ts('specification',v);}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get characteristic(){return this._getter('characteristic')}
+set characteristic(v){this._setter('characteristic',v)}
+get sys(){return this._getter('sys')}
+set sys(v){this._setter('sys',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get len(){return this._getter('len')}
+set len(v){this._setter('len',v)}
+get height(){return this._getter('height')}
+set height(v){this._setter('height',v)}
+get depth(){return this._getter('depth')}
+set depth(v){this._setter('depth',v)}
+get s(){return this._getter('s')}
+set s(v){this._setter('s',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get first_cost(){return this._getter('first_cost')}
+set first_cost(v){this._setter('first_cost',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
+get discount_percent(){return this._getter('discount_percent')}
+set discount_percent(v){this._setter('discount_percent',v)}
+get discount_percent_internal(){return this._getter('discount_percent_internal')}
+set discount_percent_internal(v){this._setter('discount_percent_internal',v)}
+get discount(){return this._getter('discount')}
+set discount(v){this._setter('discount',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
+get shipping_date(){return this._getter('shipping_date')}
+set shipping_date(v){this._setter('shipping_date',v)}
+get client_number(){return this._getter('client_number')}
+set client_number(v){this._setter('client_number',v)}
+get inn(){return this._getter('inn')}
+set inn(v){this._setter('inn',v)}
+get shipping_address(){return this._getter('shipping_address')}
+set shipping_address(v){this._setter('shipping_address',v)}
+get phone(){return this._getter('phone')}
+set phone(v){this._setter('phone',v)}
+get price_internal(){return this._getter('price_internal')}
+set price_internal(v){this._setter('price_internal',v)}
+get amount_internal(){return this._getter('amount_internal')}
+set amount_internal(v){this._setter('amount_internal',v)}
+get base_block(){return this._getter('base_block')}
+set base_block(v){this._setter('base_block',v)}
+get product_params(){return this._getter_ts('product_params')}
+set product_params(v){this._setter_ts('product_params',v)}
+get production(){return this._getter_ts('production')}
+set production(v){this._setter_ts('production',v)}
+get glass_specification(){return this._getter_ts('glass_specification')}
+set glass_specification(v){this._setter_ts('glass_specification',v)}
+get specification(){return this._getter_ts('specification')}
+set specification(v){this._setter_ts('specification',v)}
 }
 $p.DpBuyers_order = DpBuyers_order;
 class DpBuyers_orderProduct_paramsRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get param(){return this._getter('param');}
-set param(v){this._setter('param',v);}
-get value(){return this._getter('value');}
-set value(v){this._setter('value',v);}
-get hide(){return this._getter('hide');}
-set hide(v){this._setter('hide',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get param(){return this._getter('param')}
+set param(v){this._setter('param',v)}
+get value(){return this._getter('value')}
+set value(v){this._setter('value',v)}
+get hide(){return this._getter('hide')}
+set hide(v){this._setter('hide',v)}
 }
 $p.DpBuyers_orderProduct_paramsRow = DpBuyers_orderProduct_paramsRow;
 class DpBuyers_orderProductionRow extends TabularSectionRow{
-get inset(){return this._getter('inset');}
-set inset(v){this._setter('inset',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get characteristic(){return this._getter('characteristic');}
-set characteristic(v){this._setter('characteristic',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get len(){return this._getter('len');}
-set len(v){this._setter('len',v);}
-get height(){return this._getter('height');}
-set height(v){this._setter('height',v);}
-get depth(){return this._getter('depth');}
-set depth(v){this._setter('depth',v);}
-get s(){return this._getter('s');}
-set s(v){this._setter('s',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get note(){return this._getter('note');}
-set note(v){this._setter('note',v);}
-get first_cost(){return this._getter('first_cost');}
-set first_cost(v){this._setter('first_cost',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
-get discount_percent(){return this._getter('discount_percent');}
-set discount_percent(v){this._setter('discount_percent',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
-get ordn(){return this._getter('ordn');}
-set ordn(v){this._setter('ordn',v);}
-get qty(){return this._getter('qty');}
-set qty(v){this._setter('qty',v);}
+get inset(){return this._getter('inset')}
+set inset(v){this._setter('inset',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get characteristic(){return this._getter('characteristic')}
+set characteristic(v){this._setter('characteristic',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get len(){return this._getter('len')}
+set len(v){this._setter('len',v)}
+get height(){return this._getter('height')}
+set height(v){this._setter('height',v)}
+get depth(){return this._getter('depth')}
+set depth(v){this._setter('depth',v)}
+get s(){return this._getter('s')}
+set s(v){this._setter('s',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get note(){return this._getter('note')}
+set note(v){this._setter('note',v)}
+get first_cost(){return this._getter('first_cost')}
+set first_cost(v){this._setter('first_cost',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
+get discount_percent(){return this._getter('discount_percent')}
+set discount_percent(v){this._setter('discount_percent',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
+get ordn(){return this._getter('ordn')}
+set ordn(v){this._setter('ordn',v)}
+get qty(){return this._getter('qty')}
+set qty(v){this._setter('qty',v)}
 }
 $p.DpBuyers_orderProductionRow = DpBuyers_orderProductionRow;
 class DpBuyers_orderGlass_specificationRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get sorting(){return this._getter('sorting');}
-set sorting(v){this._setter('sorting',v);}
-get inset(){return this._getter('inset');}
-set inset(v){this._setter('inset',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get sorting(){return this._getter('sorting')}
+set sorting(v){this._setter('sorting',v)}
+get inset(){return this._getter('inset')}
+set inset(v){this._setter('inset',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
 }
 $p.DpBuyers_orderGlass_specificationRow = DpBuyers_orderGlass_specificationRow;
 class DpBuyers_orderSpecificationRow extends TabularSectionRow{
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get dop(){return this._getter('dop');}
-set dop(v){this._setter('dop',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get quantity(){return this._getter('quantity');}
-set quantity(v){this._setter('quantity',v);}
-get handle_height_base(){return this._getter('handle_height_base');}
-set handle_height_base(v){this._setter('handle_height_base',v);}
-get handle_height_min(){return this._getter('handle_height_min');}
-set handle_height_min(v){this._setter('handle_height_min',v);}
-get handle_height_max(){return this._getter('handle_height_max');}
-set handle_height_max(v){this._setter('handle_height_max',v);}
-get contraction(){return this._getter('contraction');}
-set contraction(v){this._setter('contraction',v);}
-get contraction_option(){return this._getter('contraction_option');}
-set contraction_option(v){this._setter('contraction_option',v);}
-get coefficient(){return this._getter('coefficient');}
-set coefficient(v){this._setter('coefficient',v);}
-get flap_weight_min(){return this._getter('flap_weight_min');}
-set flap_weight_min(v){this._setter('flap_weight_min',v);}
-get flap_weight_max(){return this._getter('flap_weight_max');}
-set flap_weight_max(v){this._setter('flap_weight_max',v);}
-get side(){return this._getter('side');}
-set side(v){this._setter('side',v);}
-get cnn_side(){return this._getter('cnn_side');}
-set cnn_side(v){this._setter('cnn_side',v);}
-get offset_option(){return this._getter('offset_option');}
-set offset_option(v){this._setter('offset_option',v);}
-get formula(){return this._getter('formula');}
-set formula(v){this._setter('formula',v);}
-get transfer_option(){return this._getter('transfer_option');}
-set transfer_option(v){this._setter('transfer_option',v);}
-get is_main_specification_row(){return this._getter('is_main_specification_row');}
-set is_main_specification_row(v){this._setter('is_main_specification_row',v);}
-get is_set_row(){return this._getter('is_set_row');}
-set is_set_row(v){this._setter('is_set_row',v);}
-get is_procedure_row(){return this._getter('is_procedure_row');}
-set is_procedure_row(v){this._setter('is_procedure_row',v);}
-get is_order_row(){return this._getter('is_order_row');}
-set is_order_row(v){this._setter('is_order_row',v);}
-get origin(){return this._getter('origin');}
-set origin(v){this._setter('origin',v);}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get dop(){return this._getter('dop')}
+set dop(v){this._setter('dop',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get quantity(){return this._getter('quantity')}
+set quantity(v){this._setter('quantity',v)}
+get handle_height_base(){return this._getter('handle_height_base')}
+set handle_height_base(v){this._setter('handle_height_base',v)}
+get handle_height_min(){return this._getter('handle_height_min')}
+set handle_height_min(v){this._setter('handle_height_min',v)}
+get handle_height_max(){return this._getter('handle_height_max')}
+set handle_height_max(v){this._setter('handle_height_max',v)}
+get contraction(){return this._getter('contraction')}
+set contraction(v){this._setter('contraction',v)}
+get contraction_option(){return this._getter('contraction_option')}
+set contraction_option(v){this._setter('contraction_option',v)}
+get coefficient(){return this._getter('coefficient')}
+set coefficient(v){this._setter('coefficient',v)}
+get flap_weight_min(){return this._getter('flap_weight_min')}
+set flap_weight_min(v){this._setter('flap_weight_min',v)}
+get flap_weight_max(){return this._getter('flap_weight_max')}
+set flap_weight_max(v){this._setter('flap_weight_max',v)}
+get side(){return this._getter('side')}
+set side(v){this._setter('side',v)}
+get cnn_side(){return this._getter('cnn_side')}
+set cnn_side(v){this._setter('cnn_side',v)}
+get offset_option(){return this._getter('offset_option')}
+set offset_option(v){this._setter('offset_option',v)}
+get formula(){return this._getter('formula')}
+set formula(v){this._setter('formula',v)}
+get transfer_option(){return this._getter('transfer_option')}
+set transfer_option(v){this._setter('transfer_option',v)}
+get is_main_specification_row(){return this._getter('is_main_specification_row')}
+set is_main_specification_row(v){this._setter('is_main_specification_row',v)}
+get is_set_row(){return this._getter('is_set_row')}
+set is_set_row(v){this._setter('is_set_row',v)}
+get is_procedure_row(){return this._getter('is_procedure_row')}
+set is_procedure_row(v){this._setter('is_procedure_row',v)}
+get is_order_row(){return this._getter('is_order_row')}
+set is_order_row(v){this._setter('is_order_row',v)}
+get origin(){return this._getter('origin')}
+set origin(v){this._setter('origin',v)}
 }
 $p.DpBuyers_orderSpecificationRow = DpBuyers_orderSpecificationRow;
 $p.dp.create('buyers_order');
@@ -3458,32 +3459,32 @@ $p.dp.create('buyers_order');
 * @constructor 
 */
 class DpBuilder_lay_impost extends DataProcessorObj{
-get elm_type(){return this._getter('elm_type');}
-set elm_type(v){this._setter('elm_type',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get split(){return this._getter('split');}
-set split(v){this._setter('split',v);}
-get elm_by_y(){return this._getter('elm_by_y');}
-set elm_by_y(v){this._setter('elm_by_y',v);}
-get step_by_y(){return this._getter('step_by_y');}
-set step_by_y(v){this._setter('step_by_y',v);}
-get align_by_y(){return this._getter('align_by_y');}
-set align_by_y(v){this._setter('align_by_y',v);}
-get inset_by_y(){return this._getter('inset_by_y');}
-set inset_by_y(v){this._setter('inset_by_y',v);}
-get elm_by_x(){return this._getter('elm_by_x');}
-set elm_by_x(v){this._setter('elm_by_x',v);}
-get step_by_x(){return this._getter('step_by_x');}
-set step_by_x(v){this._setter('step_by_x',v);}
-get align_by_x(){return this._getter('align_by_x');}
-set align_by_x(v){this._setter('align_by_x',v);}
-get inset_by_x(){return this._getter('inset_by_x');}
-set inset_by_x(v){this._setter('inset_by_x',v);}
-get w(){return this._getter('w');}
-set w(v){this._setter('w',v);}
-get h(){return this._getter('h');}
-set h(v){this._setter('h',v);}
+get elm_type(){return this._getter('elm_type')}
+set elm_type(v){this._setter('elm_type',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get split(){return this._getter('split')}
+set split(v){this._setter('split',v)}
+get elm_by_y(){return this._getter('elm_by_y')}
+set elm_by_y(v){this._setter('elm_by_y',v)}
+get step_by_y(){return this._getter('step_by_y')}
+set step_by_y(v){this._setter('step_by_y',v)}
+get align_by_y(){return this._getter('align_by_y')}
+set align_by_y(v){this._setter('align_by_y',v)}
+get inset_by_y(){return this._getter('inset_by_y')}
+set inset_by_y(v){this._setter('inset_by_y',v)}
+get elm_by_x(){return this._getter('elm_by_x')}
+set elm_by_x(v){this._setter('elm_by_x',v)}
+get step_by_x(){return this._getter('step_by_x')}
+set step_by_x(v){this._setter('step_by_x',v)}
+get align_by_x(){return this._getter('align_by_x')}
+set align_by_x(v){this._setter('align_by_x',v)}
+get inset_by_x(){return this._getter('inset_by_x')}
+set inset_by_x(v){this._setter('inset_by_x',v)}
+get w(){return this._getter('w')}
+set w(v){this._setter('w',v)}
+get h(){return this._getter('h')}
+set h(v){this._setter('h',v)}
 }
 $p.DpBuilder_lay_impost = DpBuilder_lay_impost;
 $p.dp.create('builder_lay_impost');
@@ -3496,16 +3497,16 @@ $p.dp.create('builder_lay_impost');
 * @constructor 
 */
 class DpBuilder_pen extends DataProcessorObj{
-get elm_type(){return this._getter('elm_type');}
-set elm_type(v){this._setter('elm_type',v);}
-get inset(){return this._getter('inset');}
-set inset(v){this._setter('inset',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get bind_generatrix(){return this._getter('bind_generatrix');}
-set bind_generatrix(v){this._setter('bind_generatrix',v);}
-get bind_node(){return this._getter('bind_node');}
-set bind_node(v){this._setter('bind_node',v);}
+get elm_type(){return this._getter('elm_type')}
+set elm_type(v){this._setter('elm_type',v)}
+get inset(){return this._getter('inset')}
+set inset(v){this._setter('inset',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get bind_generatrix(){return this._getter('bind_generatrix')}
+set bind_generatrix(v){this._setter('bind_generatrix',v)}
+get bind_node(){return this._getter('bind_node')}
+set bind_node(v){this._setter('bind_node',v)}
 }
 $p.DpBuilder_pen = DpBuilder_pen;
 $p.dp.create('builder_pen');
@@ -3518,24 +3519,24 @@ $p.dp.create('builder_pen');
 * @constructor 
 */
 class DpBuilder_text extends DataProcessorObj{
-get text(){return this._getter('text');}
-set text(v){this._setter('text',v);}
-get font_family(){return this._getter('font_family');}
-set font_family(v){this._setter('font_family',v);}
-get bold(){return this._getter('bold');}
-set bold(v){this._setter('bold',v);}
-get font_size(){return this._getter('font_size');}
-set font_size(v){this._setter('font_size',v);}
-get angle(){return this._getter('angle');}
-set angle(v){this._setter('angle',v);}
-get align(){return this._getter('align');}
-set align(v){this._setter('align',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get x(){return this._getter('x');}
-set x(v){this._setter('x',v);}
-get y(){return this._getter('y');}
-set y(v){this._setter('y',v);}
+get text(){return this._getter('text')}
+set text(v){this._setter('text',v)}
+get font_family(){return this._getter('font_family')}
+set font_family(v){this._setter('font_family',v)}
+get bold(){return this._getter('bold')}
+set bold(v){this._setter('bold',v)}
+get font_size(){return this._getter('font_size')}
+set font_size(v){this._setter('font_size',v)}
+get angle(){return this._getter('angle')}
+set angle(v){this._setter('angle',v)}
+get align(){return this._getter('align')}
+set align(v){this._setter('align',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get x(){return this._getter('x')}
+set x(v){this._setter('x',v)}
+get y(){return this._getter('y')}
+set y(v){this._setter('y',v)}
 }
 $p.DpBuilder_text = DpBuilder_text;
 $p.dp.create('builder_text');
@@ -3548,74 +3549,74 @@ $p.dp.create('builder_text');
 * @constructor 
 */
 class RepMaterials_demand extends DataProcessorObj{
-get calc_order(){return this._getter('calc_order');}
-set calc_order(v){this._setter('calc_order',v);}
-get formula(){return this._getter('formula');}
-set formula(v){this._setter('formula',v);}
-get scheme(){return this._getter('scheme');}
-set scheme(v){this._setter('scheme',v);}
-get production(){return this._getter_ts('production');}
-set production(v){this._setter_ts('production',v);}
-get specification(){return this._getter_ts('specification');}
-set specification(v){this._setter_ts('specification',v);}
+get calc_order(){return this._getter('calc_order')}
+set calc_order(v){this._setter('calc_order',v)}
+get formula(){return this._getter('formula')}
+set formula(v){this._setter('formula',v)}
+get scheme(){return this._getter('scheme')}
+set scheme(v){this._setter('scheme',v)}
+get production(){return this._getter_ts('production')}
+set production(v){this._setter_ts('production',v)}
+get specification(){return this._getter_ts('specification')}
+set specification(v){this._setter_ts('specification',v)}
 }
 $p.RepMaterials_demand = RepMaterials_demand;
 class RepMaterials_demandProductionRow extends TabularSectionRow{
-get use(){return this._getter('use');}
-set use(v){this._setter('use',v);}
-get characteristic(){return this._getter('characteristic');}
-set characteristic(v){this._setter('characteristic',v);}
-get qty(){return this._getter('qty');}
-set qty(v){this._setter('qty',v);}
+get use(){return this._getter('use')}
+set use(v){this._setter('use',v)}
+get characteristic(){return this._getter('characteristic')}
+set characteristic(v){this._setter('characteristic',v)}
+get qty(){return this._getter('qty')}
+set qty(v){this._setter('qty',v)}
 }
 $p.RepMaterials_demandProductionRow = RepMaterials_demandProductionRow;
 class RepMaterials_demandSpecificationRow extends TabularSectionRow{
-get calc_order(){return this._getter('calc_order');}
-set calc_order(v){this._setter('calc_order',v);}
-get product(){return this._getter('product');}
-set product(v){this._setter('product',v);}
-get cnstr(){return this._getter('cnstr');}
-set cnstr(v){this._setter('cnstr',v);}
-get elm(){return this._getter('elm');}
-set elm(v){this._setter('elm',v);}
-get nom(){return this._getter('nom');}
-set nom(v){this._setter('nom',v);}
-get article(){return this._getter('article');}
-set article(v){this._setter('article',v);}
-get clr(){return this._getter('clr');}
-set clr(v){this._setter('clr',v);}
-get characteristic(){return this._getter('characteristic');}
-set characteristic(v){this._setter('characteristic',v);}
-get nom_kind(){return this._getter('nom_kind');}
-set nom_kind(v){this._setter('nom_kind',v);}
-get qty(){return this._getter('qty');}
-set qty(v){this._setter('qty',v);}
-get len(){return this._getter('len');}
-set len(v){this._setter('len',v);}
-get width(){return this._getter('width');}
-set width(v){this._setter('width',v);}
-get s(){return this._getter('s');}
-set s(v){this._setter('s',v);}
-get material(){return this._getter('material');}
-set material(v){this._setter('material',v);}
-get grouping(){return this._getter('grouping');}
-set grouping(v){this._setter('grouping',v);}
-get totqty(){return this._getter('totqty');}
-set totqty(v){this._setter('totqty',v);}
-get totqty1(){return this._getter('totqty1');}
-set totqty1(v){this._setter('totqty1',v);}
-get alp1(){return this._getter('alp1');}
-set alp1(v){this._setter('alp1',v);}
-get alp2(){return this._getter('alp2');}
-set alp2(v){this._setter('alp2',v);}
-get sz(){return this._getter('sz');}
-set sz(v){this._setter('sz',v);}
-get price(){return this._getter('price');}
-set price(v){this._setter('price',v);}
-get amount(){return this._getter('amount');}
-set amount(v){this._setter('amount',v);}
-get amount_marged(){return this._getter('amount_marged');}
-set amount_marged(v){this._setter('amount_marged',v);}
+get calc_order(){return this._getter('calc_order')}
+set calc_order(v){this._setter('calc_order',v)}
+get product(){return this._getter('product')}
+set product(v){this._setter('product',v)}
+get cnstr(){return this._getter('cnstr')}
+set cnstr(v){this._setter('cnstr',v)}
+get elm(){return this._getter('elm')}
+set elm(v){this._setter('elm',v)}
+get nom(){return this._getter('nom')}
+set nom(v){this._setter('nom',v)}
+get article(){return this._getter('article')}
+set article(v){this._setter('article',v)}
+get clr(){return this._getter('clr')}
+set clr(v){this._setter('clr',v)}
+get characteristic(){return this._getter('characteristic')}
+set characteristic(v){this._setter('characteristic',v)}
+get nom_kind(){return this._getter('nom_kind')}
+set nom_kind(v){this._setter('nom_kind',v)}
+get qty(){return this._getter('qty')}
+set qty(v){this._setter('qty',v)}
+get len(){return this._getter('len')}
+set len(v){this._setter('len',v)}
+get width(){return this._getter('width')}
+set width(v){this._setter('width',v)}
+get s(){return this._getter('s')}
+set s(v){this._setter('s',v)}
+get material(){return this._getter('material')}
+set material(v){this._setter('material',v)}
+get grouping(){return this._getter('grouping')}
+set grouping(v){this._setter('grouping',v)}
+get totqty(){return this._getter('totqty')}
+set totqty(v){this._setter('totqty',v)}
+get totqty1(){return this._getter('totqty1')}
+set totqty1(v){this._setter('totqty1',v)}
+get alp1(){return this._getter('alp1')}
+set alp1(v){this._setter('alp1',v)}
+get alp2(){return this._getter('alp2')}
+set alp2(v){this._setter('alp2',v)}
+get sz(){return this._getter('sz')}
+set sz(v){this._setter('sz',v)}
+get price(){return this._getter('price')}
+set price(v){this._setter('price',v)}
+get amount(){return this._getter('amount')}
+set amount(v){this._setter('amount',v)}
+get amount_marged(){return this._getter('amount_marged')}
+set amount_marged(v){this._setter('amount_marged',v)}
 }
 $p.RepMaterials_demandSpecificationRow = RepMaterials_demandSpecificationRow;
 $p.rep.create('materials_demand');

@@ -97,7 +97,7 @@ $p.wsql.init((prm) => {
       // получаем скрипт таблиц
       $p.md.create_tables((sql) => {
 
-        text = 'module.exports = function meta($p) {\n\n'
+        text = '/* eslint-disable */\nmodule.exports = function meta($p) {\n\n'
           + '$p.wsql.alasql(\'' + sql + '\', []);\n\n'
           + '$p.md.init(' + JSON.stringify(_m) + ');\n\n'
           + text + '};';
@@ -191,24 +191,24 @@ function obj_constructor_text(_m, category, name, proto) {
   // реквизиты по метаданным
   if (meta.fields) {
     for (f in meta.fields) {
-      text += `get ${f}(){return this._getter('${f}');}\nset ${f}(v){this._setter('${f}',v);}\n`;
+      text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n`;
     }
   }
   else {
     for (f in meta.dimensions) {
-      text += `get ${f}(){return this._getter('${f}');}\nset ${f}(v){this._setter('${f}',v);}\n`;
+      text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n`;
     }
     for (f in meta.resources) {
-      text += `get ${f}(){return this._getter('${f}');}\nset ${f}(v){this._setter('${f}',v);}\n`;
+      text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n`;
     }
     for (f in meta.attributes) {
-      text += `get ${f}(){return this._getter('${f}');}\nset ${f}(v){this._setter('${f}',v);}\n`;
+      text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n`;
     }
   }
 
   // табличные части по метаданным - устанавливаем геттер и сеттер для табличной части
   for (let ts in meta.tabular_sections) {
-    text += `get ${ts}(){return this._getter_ts('${ts}');}\nset ${ts}(v){this._setter_ts('${ts}',v);}\n`;
+    text += `get ${ts}(){return this._getter_ts('${ts}')}\nset ${ts}(v){this._setter_ts('${ts}',v)}\n`;
   }
 
   text += `}\n`;
@@ -225,7 +225,7 @@ function obj_constructor_text(_m, category, name, proto) {
 
     // в прототипе строки табчасти создаём свойства в соответствии с полями табчасти
     for (var rf in meta.tabular_sections[ts].fields) {
-      text += `get ${rf}(){return this._getter('${rf}');}\nset ${rf}(v){this._setter('${rf}',v);}\n`;
+      text += `get ${rf}(){return this._getter('${rf}')}\nset ${rf}(v){this._setter('${rf}',v)}\n`;
     }
 
     text += `}\n`;

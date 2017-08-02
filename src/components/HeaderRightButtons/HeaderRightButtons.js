@@ -43,13 +43,15 @@ class NavUserButtons extends Component {
       offline,
       user,
     } = props;
-    const sync_tooltip = `Синхронизация ${sync_started ? 'выполняется' : 'отключена'}`;
+    const offline_tooltip = offline ? 'Сервер недоступен' : 'Подключение установлено';
+    const sync_tooltip = `Синхронизация ${user.logged_in && sync_started ? 'выполняется' : 'отключена'}`;
     const notifications_tooltip = 'Нет непрочитанных сообщений';
+    const login_tooltip = `${user.name}${user.logged_in ? '\n(подключен к серверу)' : '\n(автономный режим)'}`;
 
     return (
       <div>
 
-        <IconButton title={notifications_tooltip}>
+        <IconButton title={offline_tooltip}>
           {offline ?
             <CloudOff className={classes.white}/>
             :
@@ -58,14 +60,14 @@ class NavUserButtons extends Component {
         </IconButton>
 
         <IconButton title={sync_tooltip}>
-          {sync_started ?
+          {user.logged_in && sync_started ?
             <SyncIcon className={classnames(classes.white, {[classes.rotation]: fetch || user.try_log_in})} />
             :
             <SyncIconDisabled className={classes.white}/>
           }
         </IconButton>
 
-        <IconButton title={user.name} onClick={handleLogin}>
+        <IconButton title={login_tooltip} onClick={handleLogin}>
           {
             user.logged_in ?
               <PersonOutline className={classes.white}/>

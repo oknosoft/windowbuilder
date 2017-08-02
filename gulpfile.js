@@ -26,13 +26,13 @@ gulp.task('build-iface', function(){
 		'./data/merged_wb_templates.js',
 		'./src/modifiers/**/*.js',
 		'./src/widgets/*.js',
-		'./src/wnd_main.js'
+		//'./src/wnd_main.js'
 	])
 		.pipe(concat('wnd_debug.js'))
     .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
-				return 'OrderDealerApp';
+				return undefined;
 			}
 		}))
     .pipe(gulp.dest('./dist'))

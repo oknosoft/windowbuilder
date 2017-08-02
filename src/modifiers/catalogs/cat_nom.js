@@ -99,7 +99,7 @@ $p.CatNom.prototype.__define({
       if(attr.formula){
 
         // если нет цены на характеристику, ищем цену без характеристики
-        if(!price){
+        if(!price && _price){
           if(_price[$p.utils.blank.guid][attr.price_type]){
             _price[$p.utils.blank.guid][attr.price_type].forEach((row) => {
               if(row.date > start_date && row.date <= attr.date){

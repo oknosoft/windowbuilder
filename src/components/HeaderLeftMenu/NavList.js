@@ -90,7 +90,7 @@ class NavList extends Component {
     const {classes} = props;
 
     return (
-      <List className={classes.list}>
+      <List dense className={classes.list}>
         {this.getItems()}
       </List>
     );

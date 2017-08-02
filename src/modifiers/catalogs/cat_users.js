@@ -44,38 +44,3 @@ $p.cat.users.__define({
 
 });
 
-$p.CatUsers = class CatUsers extends $p.CatUsers {
-
-  /**
-   * ### Роль доступна
-   *
-   * @param name {String}
-   * @returns {Boolean}
-   */
-  role_available(name) {
-    return this.acl_objs._obj.some((row) => row.type == name);
-  }
-
-  get_acl(class_name) {
-    const acn = class_name.split(".");
-    const {_acl} = this._obj;
-    return _acl && _acl[acn[0]] && _acl[acn[0]][acn[1]] ? _acl[acn[0]][acn[1]] : "e";
-  }
-
-  /**
-   * ### Идентификаторы доступных контрагентов
-   * Для пользователей с ограниченным доступом
-   *
-   * @returns {Array}
-   */
-  partners_uids() {
-    const res = [];
-    this.acl_objs.each((row) => {
-      if(row.acl_obj instanceof $p.CatPartners){
-        res.push(row.acl_obj.ref)
-      }
-    });
-    return res;
-  }
-};
-
