@@ -13,7 +13,7 @@
 
 	_mgr.form_obj = function(pwnd, attr, handlers){
 
-		let o, wnd, evts = [];
+		let o, wnd;
 
 		/**
 		 * структура заголовков табчасти продукции
@@ -434,7 +434,7 @@
         if(o.is_new()){
           o.unload();
         }
-        else{
+        else if(!location.pathname.match(/builder/)){
           setTimeout(o.load.bind(o), 100);
         }
       }
@@ -443,8 +443,6 @@
 			['vault','vault_pop','discount','discount_pop','svgs', 'layout_header'].forEach((elm) => {
 				wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
 			});
-
-			evts.forEach((id) => $p.eve.detachEvent(id));
 
 			return true;
 		}
@@ -513,15 +511,6 @@
       }
 		}
 
-
-		function characteristic_saved(scheme, sattr){
-		  const {ox} = scheme;
-			if(wnd && ox.calc_order_row && ox.calc_order == o){
-        // обновляем эскизы
-        wnd.elmnts.svgs.reload(o);
-      }
-		}
-
 		/**
 		 * показывает диалог с сообщением "это не продукция"
 		 */
@@ -571,9 +560,6 @@
         }
       }
 
-			if(!evts.length){
-				evts.push($p.eve.attachEvent("characteristic_saved", characteristic_saved));
-			}
 		}
 
 		function open_spec(){
