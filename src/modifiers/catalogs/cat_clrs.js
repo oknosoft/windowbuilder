@@ -310,7 +310,7 @@ $p.CatClrs = class CatClrs extends $p.CatClrs {
   }
 
   // возвращает стороны, на которых цвет
-  sides() {
+  get sides() {
     const res = {is_in: false, is_out: false};
     if(!this.empty() && !this.predefined_name){
       if(this.clr_in.empty() && this.clr_out.empty()){

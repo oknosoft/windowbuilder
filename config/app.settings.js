@@ -4,9 +4,9 @@
  *
  * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
  */
-module.exports = function settings(prm) {
+module.exports = function settings(prm = {}) {
 
-  Object.assign(prm || {}, {
+  return Object.assign(prm, {
 
     // разделитель для localStorage
     local_storage_prefix: 'wb_',
@@ -55,7 +55,5 @@ module.exports = function settings(prm) {
     use_google_geo: 'AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM',
 
   });
-
-  return prm;
 
 };

@@ -2,7 +2,6 @@
  * Action types - имена типов действий - это просто константы
  */
 
-export const NAVLIST_OPEN = 'NAVLIST_OPEN';       // Видимость панели навигации
 export const IFACE_STATE = 'IFACE_STATE';         // Устанавливает состояние интерфейса
 
 
@@ -26,19 +25,11 @@ export function iface_state(state) {
   };
 }
 
-export function navlist_open(open) {
-  return {
-    type: NAVLIST_OPEN,
-    payload: open,
-  };
-}
-
 /**
  * Action Handlers - обработчики событий - их задача изменить state
  */
 
 const ACTION_HANDLERS = {
-  [NAVLIST_OPEN]: (state, action) => Object.assign({}, state, {navlist_open: action.payload}),
   [IFACE_STATE]: (state, action) => {
     const {component, name, value} = action.payload;
     const area = component || 'common';

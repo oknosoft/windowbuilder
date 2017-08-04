@@ -9,6 +9,11 @@
 const fs = require('fs');
 const path = require('path');
 
+process.env.DEBUG = 'prebuild:,-not_this';
+const debug = require('debug')('prebuild:');
+
+debug('Читаем конструктор и плагины');
+
 // путь настроек приложения
 const settings_path = path.resolve(__dirname, '../config/app.settings.js');
 
@@ -24,9 +29,12 @@ const MetaEngine = require('metadata-core')
   .plugin(require('metadata-abstract-ui/meta'))
   .plugin(require('metadata-abstract-ui'));
 
+debug('Создаём объект MetaEngine');
 
-var jstext = '',            // в этой переменной будем накапливать текст модуля
-  $p = new MetaEngine();    // подключим метадату
+const $p = new MetaEngine();    // подключим метадату
+let jstext = '';            // в этой переменной будем накапливать текст модуля
+
+debug('Настраиваем MetaEngine');
 
 // инициализация и установка параметров
 $p.wsql.init((prm) => {
@@ -52,14 +60,22 @@ $p.wsql.init((prm) => {
 
   let _m;
 
+  debug('Читаем описание метаданных из CouchDB');
   return db.info()
     .then(() => db.get('meta'))
+    .catch((err) => {
+      debug('Не удалось получить объект meta из CouchDB\nПроверьте логин, пароль и строку подключения');
+      debug(err);
+      process.exit(1);
+    })
     .then((doc) => {
       _m = doc;
       doc = null;
-      return db.get('meta_patch');
-
-    }).then((doc) => {
+      return db.get('meta_patch')
+        .catch((err) => ({}))
+        .then((doc) => doc);
+    })
+    .then((doc) => {
       $p.utils._patch(_m, doc);
       doc = null;
       delete _m._id;
@@ -88,13 +104,13 @@ $p.wsql.init((prm) => {
     })
     .then((_m) => {
 
-      // создаём текст модуля конструкторов данных
-      var text = create_modules(_m);
+      debug('Создаём текст модуля конструкторов данных');
+      let text = create_modules(_m);
 
-      // выполняем текст модуля, чтобы появились менеджеры
+      debug('Выполняем текст модуля, чтобы создать менеджеры данных');
       eval(text);
 
-      // получаем скрипт таблиц
+      debug('Получаем скрипт таблиц alasql');
       $p.md.create_tables((sql) => {
 
         text = '/* eslint-disable */\nmodule.exports = function meta($p) {\n\n'
@@ -102,14 +118,14 @@ $p.wsql.init((prm) => {
           + '$p.md.init(' + JSON.stringify(_m) + ');\n\n'
           + text + '};';
 
-
-        // записываем результат
-        fs.writeFile(path.resolve(__dirname, '../src/metadata/init.js'), text, 'utf8', (err) => {
+        debug('Записываем результат');
+        const fname = path.resolve(__dirname, '../src/metadata/init.js');
+        fs.writeFile(fname, text, 'utf8', (err) => {
           if (err) {
-            console.log(err);
+            debug(err);
             process.exit(1);
           } else {
-            console.log('metadata > init.js');
+            debug(`Успешно записан > ${fname}`);
             process.exit(0);
           }
         });
@@ -120,7 +136,7 @@ $p.wsql.init((prm) => {
 
     })
     .catch((err) => {
-      console.log(err);
+      debug(err);
       process.exit(1);
     });
 });

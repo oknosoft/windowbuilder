@@ -17,7 +17,7 @@ import MetaTreePage from '../MetaTreePage';
 import NotFoundPage from '../NotFoundPage';
 import FrmLogin from '../../metadata-ui/FrmLogin';
 
-import withNavigateAndMeta from './withNavigateAndMeta';
+import withNavigateAndMeta from '../../redux/withNavigateAndMeta';
 
 import CalcOrderList from '../CalcOrderList';
 
