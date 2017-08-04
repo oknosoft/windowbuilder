@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
-  "homepage": "http://www.oknosoft.ru/zd/",
+  "homepage": "http://light.oknosoft.ru/",
   "dependencies": {
     "alasql": "^0.4.1",
     "clipboard": "^1.7",
@@ -45,8 +45,8 @@
     "pouchdb-replication": "^6.3.4",
     "react": "^15.6.1",
     "react-click-outside": "^2.3.1",
-    "react-data-grid": "^2.0.54",
-    "react-data-grid-addons": "^2.0.54",
+    "react-data-grid": "^2.0.55",
+    "react-data-grid-addons": "^2.0.55",
     "react-dev-utils": "^3.0.2",
     "react-dom": "^15.6.1",
     "react-error-overlay": "^1.0.9",
@@ -62,7 +62,7 @@
     "recompose": "^0.24.0",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
-    "xlsx": "^0.10.9"
+    "xlsx": "^0.11.0"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
@@ -92,7 +92,7 @@
     "eslint-plugin-react": "7.1.0",
     "extract-text-webpack-plugin": "2.1.2",
     "file-loader": "^0.11.2",
-    "fs-extra": "^4.0",
+    "fs-extra": "^4.0.1",
     "gulp": "^3.9",
     "gulp-base64": "^0.1",
     "gulp-concat": "^2.6",
@@ -116,7 +116,7 @@
     "url-loader": "^0.5.9",
     "webpack": "^2.7.0",
     "webpack-dev-server": "2.5.0",
-    "webpack-manifest-plugin": "^1.2"
+    "webpack-manifest-plugin": "^1.2.1"
   },
   "scripts": {
     "start": "node scripts/start.js",

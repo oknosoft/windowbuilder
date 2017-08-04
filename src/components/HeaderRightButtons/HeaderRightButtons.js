@@ -26,6 +26,7 @@ import withStyles from '../../styles/toolbar';
 
 import withMeta from 'metadata-redux/src/withMeta';
 
+
 class NavUserButtons extends Component {
 
   constructor(props) {

@@ -5,10 +5,16 @@ class DumbScreen extends Component {
 
   render() {
 
-    let {title, page, top} = this.props;
+    let {title, page, top, first_run} = this.props;
+    const over = page && page.limit * page.page > page.total_rows;
     if (!title) {
-      title = 'Загрузка модулей...';
+      title = (first_run || over) ? 'Первый запуск требует дополнительного времени...' : 'Загрузка модулей...';
     }
+    const footer = page ? (over ?
+      <div>{`Такт №${page.page}, загружено ${page.total_rows} объектов - чтение изменений `} <i className="fa fa-spinner fa-pulse"></i></div>
+      :
+      page.text || `Такт №${page.page}, загружено ${Math.min(page.page * page.limit, page.total_rows)} из ${page.total_rows} объектов`)
+    : '';
 
     return <div className='splash' style={{marginTop: top}}>
       <div className="description">
@@ -28,11 +34,9 @@ class DumbScreen extends Component {
         </div>
       </div>
 
-      <div style={{position: 'absolute', bottom: '-20px'}}>{title}</div>
+      <div style={{position: 'absolute', bottom: '-24px'}}>{title}</div>
+      {page && <div style={{position: 'absolute', bottom: '-52px'}}>{footer}</div>}
 
-      {page ? <div style={{position: 'absolute', bottom: '-44px'}}>{
-        page.text || `Страница №${page.page}, загружено ${Math.min(page.page * page.limit, page.total_rows)} из ${page.total_rows} объектов`
-      }</div> : null}
     </div>;
   }
 }
@@ -42,7 +46,7 @@ DumbScreen.propTypes = {
   step_size: PropTypes.number,
   count_all: PropTypes.number,
   top: PropTypes.number,
-
+  first_run: PropTypes.bool,
   title: PropTypes.string,
   processed: PropTypes.string,
   current: PropTypes.string,

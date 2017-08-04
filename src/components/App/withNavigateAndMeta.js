@@ -9,9 +9,11 @@ const mapDispatchToProps = (dispatch) => ({
   navigate: (path) => dispatch(push(path)),
 });
 
-const mapStateToProps = (state, props) => ({
-  path_log_in: !!props.location.pathname.match(/\/(login|about|settings)$/)
-});
+const mapStateToProps = (state, props) => {
+  return {
+    path_log_in: !!props.location.pathname.match(/\/(login|about|settings)$/),
+  };
+};
 
 
 export default (View) => {

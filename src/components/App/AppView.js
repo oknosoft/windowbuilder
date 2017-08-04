@@ -2,11 +2,12 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {Switch, Route} from 'react-router';
 
-// статусы "загружено и т.д." в ствойствах компонента
-import withNavigateAndMeta from './withNavigateAndMeta';
-
 // заставка "загрузка занных"
 import DumbScreen from '../DumbLoader/DumbScreen';
+
+// сообщения вверху страницы
+import Snackbar from 'material-ui/Snackbar';
+import Button from 'material-ui/Button';
 
 import Header from '../Header';
 import AboutPage from '../About';
@@ -15,8 +16,8 @@ import DataRoute from '../DataRoute';
 import MetaTreePage from '../MetaTreePage';
 import NotFoundPage from '../NotFoundPage';
 import FrmLogin from '../../metadata-ui/FrmLogin';
-//import SchemeSettingsWrapper from '../../metadata-react-ui/SchemeSettings/SchemeSettingsWrapper';
 
+import withNavigateAndMeta from './withNavigateAndMeta';
 
 import CalcOrderList from '../CalcOrderList';
 
@@ -55,20 +56,20 @@ class AppRoot extends Component {
     return res;
   }
 
+  handleNavigate() {
+    const {handleNavigate, first_run} = this.props;
+    if (first_run) {
+      $p.eve.redirect = true;
+      location.replace('/');
+    }
+    else {
+      handleNavigate('/');
+    }
+  }
+
   render() {
 
     const {props} = this;
-
-    // при первом старте и при загрузке данных, минуя роутинг показываем заставку
-    // если пустые данные, перебрасываем на страницу авторизации
-    //
-    // TODO: если гостевая зона и указан пользователь по умолчанию - делаем попытку входа в программу
-    //
-    // TODO: все строки сообщений переместить в i18.js
-    //
-    // if(!meta_loaded) - заглушка заставка
-    // if(data_empty && route.path != '/login') - перебросить в login
-    // if(fetch_local && !data_loaded)
 
     return (
       <div>
@@ -90,6 +91,14 @@ class AppRoot extends Component {
               <Route component={NotFoundPage} />
             </Switch>
         }
+
+        <Snackbar
+          anchorOrigin={{vertical: 'top', horizontal: 'center'}}
+          open={props.first_run && props.doc_ram_loaded}
+          message={<span>Требуется перезагрузить страницу после первой синхронизации данных</span>}
+          action={<Button color="accent" onClick={this.handleNavigate.bind(this)}>Выполнить</Button>}
+        />
+
       </div>
     );
   }
@@ -99,6 +108,8 @@ AppRoot.propTypes = {
     push: PropTypes.func.isRequired,
   }).isRequired,
   handleOffline: PropTypes.func.isRequired,
+  handleNavigate: PropTypes.func.isRequired,
+  first_run: PropTypes.bool.isRequired,
 };
 
 export default withNavigateAndMeta(AppRoot);

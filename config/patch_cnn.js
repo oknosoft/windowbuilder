@@ -39,7 +39,8 @@ export default function patch_cnn() {
   // предопределенные зоны
   const predefined = {
     aribaz: {zone: 2, host: "https://aribaz.oknosoft.ru/"},
-    ecookna: {zone: 21, host: "https://eco.oknosoft.ru/"},
+    'eco.': {zone: 21, host: "https://eco.oknosoft.ru/"},
+    //ecookna: {zone: 21, host: "https://zakaz.ecookna.ru/"},
     tmk: {zone: 23, host: "https://tmk-online.ru/"},
     crystallit: {zone: 25, host: "https://crystallit.oknosoft.ru/"},
   }

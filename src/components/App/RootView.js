@@ -10,7 +10,7 @@ import withMeta from 'metadata-redux/src/withMeta';
 import DumbScreen from '../DumbLoader/DumbScreen';
 
 // корневые контейнеры
-import AppRoot from './AppView';
+import AppView from './AppView';
 
 // тема для material-ui
 import {MuiThemeProvider} from 'material-ui/styles';
@@ -18,9 +18,20 @@ import theme from '../../styles/muiTheme';
 
 class RootView extends Component {
 
-  shouldComponentUpdate(props) {
-    const {user, data_empty, couch_direct, offline, history, path_log_in} = props;
+  constructor(props) {
+    super(props);
+    this.state = {path_log_in: this.isPathLogIn()};
+  }
+
+  shouldComponentUpdate(props, state) {
+    const {user, data_empty, couch_direct, offline, history} = props;
+    const {path_log_in} = state;
     let res = true;
+
+    if (path_log_in != this.isPathLogIn()) {
+      this.setState({path_log_in: this.isPathLogIn()});
+      res = false;
+    }
 
     // если есть сохранённый пароль и online, пытаемся авторизоваться
     if (!user.logged_in && user.has_login && !user.try_log_in && !offline) {
@@ -37,6 +48,10 @@ class RootView extends Component {
     return res;
   }
 
+  isPathLogIn() {
+    return !!location.pathname.match(/\/(login|about|settings)$/);
+  }
+
   render() {
 
     const {props} = this;
@@ -51,7 +66,7 @@ class RootView extends Component {
           <DumbScreen {...props} />
           :
           <Router history={history}>
-            <Route component={AppRoot}/>
+            <Route component={AppView}/>
           </Router>
       }
     </MuiThemeProvider>;
