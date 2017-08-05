@@ -3,7 +3,7 @@
 import DhtmlxCell from '../../metadata-ui/DhtmlxCell';
 import WindowSizer from '../../metadata-ui/WindowSize';
 import withIface from '../../redux/withIface';
-import {set_state_and_title} from '../Header/navlist_items';
+import {set_state_and_title} from '../App/menu_items';
 
 class CalcOrderList extends DhtmlxCell {
 

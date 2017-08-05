@@ -7,7 +7,7 @@ import {Route} from 'react-router';
 import withMeta from 'metadata-redux/src/withMeta';
 
 // заставка "загрузка занных"
-import DumbScreen from '../DumbLoader/DumbScreen';
+import DumbScreen from '../DumbScreen/DumbScreen';
 
 // корневые контейнеры
 import AppView from './AppView';

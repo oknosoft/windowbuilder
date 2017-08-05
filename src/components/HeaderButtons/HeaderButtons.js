@@ -19,13 +19,11 @@ import SyncIconDisabled from 'material-ui-icons/SyncDisabled';
 import NotificationsIconNone from 'material-ui-icons/NotificationsNone';
 
 import PersonOutline from 'material-ui-icons/PersonOutline';
-import AccountOff from '../../styles/icons/AccountOff';
+
+import AccountOff from './AccountOff';
 
 import classnames from 'classnames';
-import withStyles from '../../styles/toolbar';
-
-import withMeta from 'metadata-redux/src/withMeta';
-
+import withStyles from '../Header/toolbar';
 
 class NavUserButtons extends Component {
 
@@ -94,4 +92,4 @@ NavUserButtons.propTypes = {
 
 };
 
-export default withStyles(withMeta(NavUserButtons));
+export default withStyles(NavUserButtons);

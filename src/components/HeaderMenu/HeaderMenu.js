@@ -9,7 +9,8 @@ import IconNavigationMenu from 'material-ui-icons/Menu';
 
 import NavList from './NavList';
 
-import withStyles from '../../styles/toolbar';
+import withStyles from '../Header/toolbar';
+
 import withIface from '../../redux/withIface';
 
 

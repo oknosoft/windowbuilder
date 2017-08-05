@@ -92,7 +92,7 @@ class About extends Component {
               <li><a href="https://fortawesome.github.io/Font-Awesome/" target="_blank" rel="noopener noreferrer">fontawesome</a>, набор шрифтовых иконок</li>
             </ul>
 
-            <h2><i className="fa fa-question-circle"></i> Вопросы</h2>
+            <h3><i className="fa fa-question-circle"></i> Вопросы</h3>
             <p>Если обнаружили ошибку, пожалуйста, <a href="https://github.com/oknosoft/windowbuilder/issues/new" target="_blank" rel="noopener noreferrer">зарегистрируйте вопрос в GitHub</a> или <a href="http://www.oknosoft.ru/metadata/#page-118" target="_blank" rel="noopener noreferrer">свяжитесь с разработчиком</a> напрямую<br /></p>
 
           </Grid>

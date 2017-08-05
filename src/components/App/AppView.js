@@ -3,13 +3,15 @@ import PropTypes from 'prop-types';
 import {Switch, Route} from 'react-router';
 
 // заставка "загрузка занных"
-import DumbScreen from '../DumbLoader/DumbScreen';
+import DumbScreen from '../DumbScreen';
 
 // сообщения вверху страницы
 import Snackbar from 'material-ui/Snackbar';
 import Button from 'material-ui/Button';
 
 import Header from '../Header';
+import items from './menu_items'; // массив элементов меню
+
 import AboutPage from '../About';
 import Builder from '../Builder';
 import DataRoute from '../DataRoute';
@@ -73,7 +75,7 @@ class AppRoot extends Component {
 
     return (
       <div>
-        <Header />
+        <Header items={items} {...props} />
         {
           (!props.path_log_in && !props.complete_loaded) ?
             <DumbScreen

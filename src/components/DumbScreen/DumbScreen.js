@@ -7,14 +7,14 @@ class DumbScreen extends Component {
 
     let {title, page, top, first_run} = this.props;
     const over = page && page.limit * page.page > page.total_rows;
-    if (!title) {
+    if(!title) {
       title = (first_run || over) ? 'Первый запуск требует дополнительного времени...' : 'Загрузка модулей...';
     }
     const footer = page ? (over ?
       <div>{`Такт №${page.page}, загружено ${page.total_rows} объектов - чтение изменений `} <i className="fa fa-spinner fa-pulse"></i></div>
       :
       page.text || `Такт №${page.page}, загружено ${Math.min(page.page * page.limit, page.total_rows)} из ${page.total_rows} объектов`)
-    : '';
+      : '';
 
     return <div className='splash' style={{marginTop: top}}>
       <div className="description">

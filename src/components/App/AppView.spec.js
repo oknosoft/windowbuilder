@@ -2,7 +2,7 @@ import React from 'react';
 import {expect} from 'chai';
 import {shallow} from 'enzyme';
 import AppView from './AppView';
-import HeaderContainer from '../Header/HeaderContainer';
+import HeaderContainer from '../Header';
 
 describe('(Component) <App />', () => {
   it('should render a header container', () => {

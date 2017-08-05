@@ -8,33 +8,34 @@ import AppBar from 'material-ui/AppBar';
 import Toolbar from 'material-ui/Toolbar';
 import Typography from 'material-ui/Typography';
 
-import RightButtons from '../HeaderRightButtons';
-import LeftMenuDrawer from '../HeaderLeftMenu';
+import HeaderButtons from '../HeaderButtons';
+import HeaderMenu from '../HeaderMenu';
 
-import withStyles from '../../styles/toolbar';
+import withStyles from './toolbar';
 import withIface from '../../redux/withIface';
-
-import items from './navlist_items'; // массив элементов меню
 
 class Header extends Component {
 
   render() {
 
     const {props} = this;
-    const {classes, title, handleNavigate} = props;
+    const {classes, title} = this.props;
 
-    return (<AppBar position="static" className={classes.appbar}>
-      <Toolbar className={classes.bar}>
-        <LeftMenuDrawer items={items} />
-        <Typography type="title" color="inherit" className={classes.flex}>{title}</Typography>
-        <RightButtons handleNavigate={handleNavigate}/>
-      </Toolbar>
-    </AppBar>);
+    return (
+      <AppBar position="static" className={classes.appbar}>
+        <Toolbar className={classes.bar}>
+          <HeaderMenu {...props} />
+          <Typography type="title" color="inherit" className={classes.flex}>{title}</Typography>
+          <HeaderButtons {...props} />
+        </Toolbar>
+      </AppBar>
+    );
   }
-
 }
 Header.propTypes = {
   title: PropTypes.string.isRequired, // заголовок AppBar
+  items: PropTypes.array.isRequired,   // массив элементов меню
+  classes: PropTypes.object.isRequired,   // css
   handleNavigate: PropTypes.func.isRequired,
 };
 
