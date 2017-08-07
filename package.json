@@ -24,7 +24,7 @@
     "alasql": "^0.4.1",
     "clipboard": "^1.7",
     "history": "^4.6.3",
-    "material-ui": "^1.0.0-beta.3",
+    "material-ui": "^1.0.0-beta.4",
     "material-ui-icons": "^1.0.0-alpha.19",
     "metadata-abstract-ui": "^2.0.1-beta.19",
     "metadata-core": "^2.0.1-beta.19",
@@ -62,7 +62,7 @@
     "recompose": "^0.24.0",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
-    "xlsx": "^0.11.0"
+    "xlsx": "^0.11.1"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
@@ -76,13 +76,13 @@
     "babel-preset-stage-0": "^6.24",
     "babel-runtime": "^6.25.0",
     "case-sensitive-paths-webpack-plugin": "2.1.1",
-    "chai": "^4.1.0",
+    "chai": "^4.1.1",
     "chalk": "^2.0.1",
     "css-loader": "0.28.4",
     "debug": "^2.6",
     "dotenv": "4.0.0",
     "enzyme": "^2.9",
-    "eslint": "^4.3.0",
+    "eslint": "^4.4.0",
     "eslint-config-react-app": "^1.0.5",
     "eslint-loader": "^1.9.0",
     "eslint-plugin-babel": "^4.1.2",

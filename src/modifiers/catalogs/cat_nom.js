@@ -50,18 +50,42 @@ $p.CatNom.prototype.__define({
         attr.price_type = attr.price_type.ref;
       }
 
+      const {_price} = this._data;
+
 			if(!attr.characteristic){
         attr.characteristic = $p.utils.blank.guid;
       }
 			else if($p.utils.is_data_obj(attr.characteristic)){
-        attr.characteristic = attr.characteristic.ref;
-      }
+			  // если передали уникальную характеристику продкции - ищем простую с тем же цветом и размерами
+        // TODO: здесь было бы полезно учесть соответствие цветов??
+        const {x, y, z, clr, ref, calc_order} = attr.characteristic;
+        attr.characteristic = ref;
+        if(!calc_order.empty()){
+          const tmp = [];
+          const {by_ref} = $p.cat.characteristics;
+          for(let clrx in _price) {
+            const cx = by_ref[clrx];
+            if(cx && cx.clr == clr){
+              // если на подходящую характеристику есть цена по нашему типу цен - запоминаем
+              if(_price[clrx][attr.price_type]){
+                tmp.push({
+                  cx,
+                  rate: (cx.x == x ? 1 : 0) + (cx.y == y ? 1 : 0) + (cx.z == z ? 1 : 0)
+                })
+              }
+            }
+          }
+          if(tmp.length){
+            tmp.sort((a, b) => b.rate - a.rate);
+            attr.characteristic = tmp[0].cx.ref;
+          }
+        }
+			}
 			if(!attr.date){
         attr.date = new Date();
       }
 
       // если для номенклатуры существует структура цен, ищем подходящую
-      const {_price} = this._data;
 			if(_price){
 				if(_price[attr.characteristic]){
 					if(_price[attr.characteristic][attr.price_type]){
@@ -76,9 +100,9 @@ $p.CatNom.prototype.__define({
 				}
 				// если нет цены на характеристику, ищем по цвету
 				else if(attr.clr){
-          const {characteristics} = $p.cat;
+          const {by_ref} = $p.cat.characteristics;
 				  for(let clrx in _price){
-            const cx = characteristics.get(clrx, false, true);
+            const cx = by_ref[clrx];
             if(cx && cx.clr == attr.clr){
               if(_price[clrx][attr.price_type]){
                 _price[clrx][attr.price_type].forEach((row) => {
@@ -99,7 +123,7 @@ $p.CatNom.prototype.__define({
       if(attr.formula){
 
         // если нет цены на характеристику, ищем цену без характеристики
-        if(!price && _price){
+        if(!price && _price && _price[$p.utils.blank.guid]){
           if(_price[$p.utils.blank.guid][attr.price_type]){
             _price[$p.utils.blank.guid][attr.price_type].forEach((row) => {
               if(row.date > start_date && row.date <= attr.date){
@@ -110,6 +134,7 @@ $p.CatNom.prototype.__define({
             })
           }
         }
+        // формулу выполняем в любом случае - она может и не опираться на цены из регистра
         price = attr.formula.execute({
           nom: this,
           characteristic: $p.cat.characteristics.get(attr.characteristic, false),

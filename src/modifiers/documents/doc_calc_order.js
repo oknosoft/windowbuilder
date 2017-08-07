@@ -673,23 +673,28 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       product: row.row
     }, true))
       .then((ox) => {
-        // устанавливаем характеристику в строке заказа
-        row.characteristic = ox;
-        // записываем расчет, если не сделали этого ранее, чтобы не погибла ссылка на расчет в характеристике
-        return this.is_new() ? this.save().then(() => ox) : ox;
-      })
-      .then((ox) => {
         // если указана строка-генератор, заполняем реквизиты
         if(row_spec instanceof $p.DpBuyers_orderProductionRow){
-          ox.owner = row.nom = row_spec.inset.nom(elm, true);
+          ox.owner = row_spec.inset.nom(elm, true);
           ox.origin = row_spec.inset;
-          ox.x = row.len = row_spec.len;
-          ox.y = row.width = row_spec.height;
+          ox.x = row_spec.len;
+          ox.y = row_spec.height;
           ox.z = row_spec.depth;
-          ox.s = row.s = row_spec.s;
+          ox.s = row_spec.s;
           ox.clr = row_spec.clr;
-          row.qty = row.quantity = row_spec.quantity;
-          ox.note = row.note = row_spec.note;
+          ox.note = row_spec.note;
+
+          // устанавливаем свойства в строке заказа
+          Object.assign(row._obj, {
+            characteristic: ox.ref,
+            nom: ox.owner.ref,
+            len: ox.x,
+            width: ox.y,
+            s: ox.s,
+            qty: row_spec.quantity || 1,
+            quantity: row_spec.quantity || 1,
+            note: ox.note,
+          });
 
           if(params){
             params.find_rows({elm: row_spec.row}, (prow) => {
@@ -699,7 +704,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
           ox.name = ox.prod_name();
         }
-        return row;
+
+        // записываем расчет, если не сделали этого ранее, чтобы не погибла ссылка на расчет в характеристике
+        return this.is_new() ? this.save().then(() => row) : row;
       });
 
   }
