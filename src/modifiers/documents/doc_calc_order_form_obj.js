@@ -434,9 +434,11 @@
 
       case 'post':
         do_save(true);
+        break;
 
       case 'unpost':
-        do_save(true);
+        do_save(false);
+        break;
 
       default:
         do_save();
@@ -544,7 +546,7 @@
     function open_builder(create_new) {
       var selId;
 
-      if(create_new == 'clone'){
+      if(create_new == 'clone') {
         const selId = production_get_sel_index();
         if(selId == undefined) {
           not_production();
@@ -564,9 +566,9 @@
                   characteristic._mixin(row.characteristic._obj, null,
                     ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'note', 'partner'], true);
                   handlers.handleNavigate(`/builder/${characteristic.ref}`);
-              });
+                });
             }
-            else{
+            else {
               not_production();
             }
           }
@@ -629,7 +631,7 @@
       setTimeout(() => {
         const grid = wnd.elmnts.grids.production;
         grid.selectRow(row);
-        grid.selectCell(row, grid.getColIndexById("nom"), false, true, true);
+        grid.selectCell(row, grid.getColIndexById('nom'), false, true, true);
         grid.cells().open_selection();
       });
     }

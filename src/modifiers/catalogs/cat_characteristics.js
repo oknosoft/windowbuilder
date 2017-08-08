@@ -11,19 +11,19 @@
  */
 
 // при старте приложения, загружаем в ОЗУ обычные характеристики (без ссылок на заказы)
-$p.md.once('predefined_elmnts_inited', () => $p.cat.characteristics.pouch_load_view("doc/nom_characteristics"));
+$p.md.once('predefined_elmnts_inited', () => $p.cat.characteristics.pouch_load_view('doc/nom_characteristics'));
 
 // свойства объекта характеристики
 $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
   // перед записью надо пересчитать наименование и рассчитать итоги
-  before_save (attr) {
+  before_save(attr) {
 
     // уточняем номенклатуру системы
     const {prod_nom, calc_order, _data} = this;
 
     // контроль прав на запись характеристики
-    if(calc_order.is_read_only){
+    if(calc_order.is_read_only) {
       _data._err = {
         title: 'Права доступа',
         type: 'alert-error',
@@ -34,7 +34,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
     // пересчитываем наименование
     const name = this.prod_name();
-    if(name){
+    if(name) {
       this.name = name;
     }
 
@@ -58,15 +58,15 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     });
 
     inset.used_params.forEach((param) => {
-      if(params.indexOf(param) == -1){
+      if(params.indexOf(param) == -1) {
         ts_params.add({
           cnstr: cnstr,
           inset: blank_inset || inset,
           param: param
-        })
-        params.push(param)
+        });
+        params.push(param);
       }
-    })
+    });
   }
 
   /**
@@ -74,78 +74,86 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
    */
   prod_name(short) {
     const {calc_order_row, calc_order, leading_product, sys, clr} = this;
-    let name = "";
+    let name = '';
 
-    if(calc_order_row){
+    if(calc_order_row) {
 
-      if(calc_order.number_internal)
+      if(calc_order.number_internal) {
         name = calc_order.number_internal.trim();
-
-      else{
+      }
+      else {
         // убираем нули из середины номера
-        let num0 = calc_order.number_doc, part = "";
-        for(let i = 0; i<num0.length; i++){
-          if(isNaN(parseInt(num0[i])))
+        let num0 = calc_order.number_doc, part = '';
+        for (let i = 0; i < num0.length; i++) {
+          if(isNaN(parseInt(num0[i]))) {
             name += num0[i];
-          else
+          }
+          else {
             break;
+          }
         }
-        for(let i = num0.length-1; i>0; i--){
-          if(isNaN(parseInt(num0[i])))
+        for (let i = num0.length - 1; i > 0; i--) {
+          if(isNaN(parseInt(num0[i]))) {
             break;
+          }
           part = num0[i] + part;
         }
         name += parseInt(part || 0).toFixed(0);
       }
 
-      name += "/" + calc_order_row.row.pad();
+      name += '/' + calc_order_row.row.pad();
 
       // для подчиненных, номер строки родителя
-      if(!leading_product.empty()){
-        name += ":" + leading_product.calc_order_row.row.pad();
+      if(!leading_product.empty()) {
+        name += ':' + leading_product.calc_order_row.row.pad();
       }
 
       // добавляем название системы
-      if(!sys.empty()){
-        name += "/" + sys.name;
+      if(!sys.empty()) {
+        name += '/' + sys.name;
       }
 
-      if(!short){
+      if(!short) {
 
         // добавляем название цвета
-        if(!clr.empty()){
-          name += "/" + this.clr.name;
+        if(!clr.empty()) {
+          name += '/' + this.clr.name;
         }
 
         // добавляем размеры
-        if(this.x && this.y)
-          name += "/" + this.x.toFixed(0) + "x" + this.y.toFixed(0);
-        else if(this.x)
-          name += "/" + this.x.toFixed(0);
-        else if(this.y)
-          name += "/" + this.y.toFixed(0);
-
-        if(this.z){
-          if(this.x || this.y)
-            name += "x" + this.z.toFixed(0);
-          else
-            name += "/" + this.z.toFixed(0);
+        if(this.x && this.y) {
+          name += '/' + this.x.toFixed(0) + 'x' + this.y.toFixed(0);
+        }
+        else if(this.x) {
+          name += '/' + this.x.toFixed(0);
+        }
+        else if(this.y) {
+          name += '/' + this.y.toFixed(0);
         }
 
-        if(this.s){
-          name += "/S:" + this.s.toFixed(3);
+        if(this.z) {
+          if(this.x || this.y) {
+            name += 'x' + this.z.toFixed(0);
+          }
+          else {
+            name += '/' + this.z.toFixed(0);
+          }
+        }
+
+        if(this.s) {
+          name += '/S:' + this.s.toFixed(3);
         }
 
         // подмешиваем значения параметров
-        let sprm = "";
+        let sprm = '';
         this.params.find_rows({cnstr: 0}, (row) => {
-          if(row.param.include_to_name && sprm.indexOf(String(row.value)) == -1){
+          if(row.param.include_to_name && sprm.indexOf(String(row.value)) == -1) {
             sprm && (sprm += ';');
             sprm += String(row.value);
           }
         });
-        if(sprm){
-          name += "|" + sprm;
+        if(sprm) {
+          name += '|' + sprm;
         }
       }
     }
@@ -156,21 +164,21 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
    * Открывает форму происхождения строки спецификации
    */
   open_origin(row_id) {
-    try{
+    try {
       let {origin} = this.specification.get(row_id);
-      if(typeof origin == "number"){
-        origin = this.cnn_elmnts.get(origin-1).cnn;
+      if(typeof origin == 'number') {
+        origin = this.cnn_elmnts.get(origin - 1).cnn;
       }
-      if(origin.is_new()){
+      if(origin.is_new()) {
         return $p.msg.show_msg({
-          type: "alert-warning",
-          text: `Пустая ссылка на настройки в строке №${row_id+1}`,
+          type: 'alert-warning',
+          text: `Пустая ссылка на настройки в строке №${row_id + 1}`,
           title: o.presentation
         });
       }
       origin.form_obj();
     }
-    catch (err){
+    catch (err) {
       $p.record_log(err);
     }
   }
@@ -183,8 +191,8 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
    */
   find_create_cx(elm, origin) {
     const {_manager, ref, calc_order, params, inserts} = this;
-    if(!_manager._find_cx_sql){
-      _manager._find_cx_sql = $p.wsql.alasql.compile("select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?")
+    if(!_manager._find_cx_sql) {
+      _manager._find_cx_sql = $p.wsql.alasql.compile('select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?');
     }
     const aref = _manager._find_cx_sql([ref, elm, origin]);
     const cx = aref.length ? $p.cat.characteristics.get(aref[0].ref, false) :
@@ -199,7 +207,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     const {length, width} = $p.job_prm.properties;
     cx.params.clear();
     params.find_rows({cnstr: -elm, inset: origin}, (row) => {
-      if(row.param != length && row.param != width){
+      if(row.param != length && row.param != width) {
         cx.params.add({param: row.param, value: row.value});
       }
     });
@@ -227,21 +235,23 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
    * Возвращает номенклатуру продукции по системе
    */
   get prod_nom() {
-    if(!this.sys.empty()){
+    if(!this.sys.empty()) {
 
       var setted,
         param = this.params;
 
-      if(this.sys.production.count() == 1){
+      if(this.sys.production.count() == 1) {
         this.owner = this.sys.production.get(0).nom;
 
-      }else if(this.sys.production.count() > 1){
+      }
+      else if(this.sys.production.count() > 1) {
         this.sys.production.each(function (row) {
 
-          if(setted)
+          if(setted) {
             return false;
+          }
 
-          if(row.param && !row.param.empty()){
+          if(row.param && !row.param.empty()) {
             param.find_rows({cnstr: 0, param: row.param, value: row.value}, function () {
               setted = true;
               param._owner.owner = row.nom;
@@ -250,14 +260,14 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
           }
 
         });
-        if(!setted){
+        if(!setted) {
           this.sys.production.find_rows({param: $p.utils.blank.guid}, function (row) {
             setted = true;
             param._owner.owner = row.nom;
             return false;
           });
         }
-        if(!setted){
+        if(!setted) {
           this.owner = this.sys.production.get(0).nom;
         }
       }
@@ -265,12 +275,12 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
     return this.owner;
   }
-}
+};
 
 // при изменении реквизита табчасти вставок
 $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, value) {
   // для вложенных вставок перезаполняем параметры
-  if(field == 'inset'){
+  if(field == 'inset') {
     this._owner._owner.add_inset_params(this.inset, this.cnstr);
   }
 }
