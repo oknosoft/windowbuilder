@@ -688,27 +688,27 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           ox.clr = row_spec.clr;
           ox.note = row_spec.note;
 
-          // устанавливаем свойства в строке заказа
-          Object.assign(row._obj, {
-            characteristic: ox.ref,
-            nom: ox.owner.ref,
-            unit: ox.owner.storage_unit.ref,
-            len: ox.x,
-            width: ox.y,
-            s: ox.s,
-            qty: row_spec.quantity || 1,
-            quantity: row_spec.quantity || 1,
-            note: ox.note,
-          });
-
           if(params) {
             params.find_rows({elm: row_spec.row}, (prow) => {
               ox.params.add(prow, true);
             });
           }
-
-          ox.name = ox.prod_name();
         }
+
+        // устанавливаем свойства в строке заказа
+        Object.assign(row._obj, {
+          characteristic: ox.ref,
+          nom: ox.owner.ref,
+          unit: ox.owner.storage_unit.ref,
+          len: ox.x,
+          width: ox.y,
+          s: ox.s,
+          qty: row_spec.quantity || 1,
+          quantity: row_spec.quantity || 1,
+          note: ox.note,
+        });
+
+        ox.name = ox.prod_name();
 
         // записываем расчет, если не сделали этого ранее, чтобы не погибла ссылка на расчет в характеристике
         return this.is_new() ? this.save().then(() => row) : row;
