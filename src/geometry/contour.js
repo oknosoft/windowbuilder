@@ -1441,6 +1441,7 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (tmp.angle < 0) {
         tmp.angle += 360;
       }
+      tmp.angle_hor = tmp.angle;
       tmp.profile = curr.profile || curr.elm;
     });
     return res;

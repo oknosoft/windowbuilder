@@ -724,8 +724,8 @@ class ProductsBuilding {
         // сохраняем картинку вместе с изделием
         ox.save(undefined, undefined, {
           svg: {
-            "content_type": "image/svg+xml",
-            "data": new Blob([scheme.get_svg()], {type: "image/svg+xml"})
+            content_type: "image/svg+xml",
+            data: new Blob([scheme.get_svg()], {type: "image/svg+xml"})
           }
         })
           .then(() => {

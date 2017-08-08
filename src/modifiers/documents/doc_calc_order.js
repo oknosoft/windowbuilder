@@ -390,6 +390,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ВсегоИзделий: 0,
       ВсегоПлощадьИзделий: 0,
       Продукция: [],
+      НомерВнутр: this.number_internal,
+      КлиентДилера: this.client_of_dealer,
+      Комментарий: this.note,
     };
 
 
@@ -703,8 +706,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           len: ox.x,
           width: ox.y,
           s: ox.s,
-          qty: row_spec.quantity || 1,
-          quantity: row_spec.quantity || 1,
+          qty: (row_spec && row_spec.quantity) || 1,
+          quantity: (row_spec && row_spec.quantity) || 1,
           note: ox.note,
         });
 

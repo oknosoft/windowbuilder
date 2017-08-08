@@ -37,7 +37,7 @@ class About extends Component {
 
     return (
       <div className={classes.root}>
-        <Grid container gutter={24}>
+        <Grid container spacing={24}>
           <Grid item md={1} lg={2} xl={3} />
           <Grid item xs={12} sm={12} md={11} lg={10} xl={8}>
 
