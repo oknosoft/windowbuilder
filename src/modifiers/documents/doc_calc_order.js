@@ -96,10 +96,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
 
     let doc_amount = 0,
-      amount_internal = 0,
-      sys_profile = '',
-      sys_furn = '';
-
+      amount_internal = 0;
 
     // если установлен признак проведения, проверим состояние транспорта
     if(this.posted) {
@@ -137,33 +134,35 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       doc_amount += row.amount;
       amount_internal += row.amount_internal;
 
-      if(!row.characteristic.calc_order.empty()) {
-        const name = row.nom.article || row.nom.nom_group.name || row.nom.id.substr(0, 3);
-        if(sys_profile.indexOf(name) == -1) {
-          if(sys_profile) {
-            sys_profile += ' ';
-          }
-          sys_profile += name;
-        }
-
-        // row.characteristic.constructions.each((row) => {
-        // 	if(row.parent && !row.furn.empty()){
-        // 		const name = row.furn.name_short || row.furn.name;
-        // 		if(sys_furn.indexOf(name) == -1){
-        // 			if(sys_furn)
-        // 				sys_furn += " ";
-        // 			sys_furn += name;
-        // 		}
-        // 	}
-        // });
-      }
+      // if(!row.characteristic.calc_order.empty()) {
+      //   const name = row.nom.article || row.nom.nom_group.name || row.nom.id.substr(0, 3);
+      //   if(sys_profile.indexOf(name) == -1) {
+      //     if(sys_profile) {
+      //       sys_profile += ' ';
+      //     }
+      //     sys_profile += name;
+      //   }
+      //
+      //   row.characteristic.constructions.each((row) => {
+      //   	if(row.parent && !row.furn.empty()){
+      //   		const name = row.furn.name_short || row.furn.name;
+      //   		if(sys_furn.indexOf(name) == -1){
+      //   			if(sys_furn)
+      //   				sys_furn += " ";
+      //   			sys_furn += name;
+      //   		}
+      //   	}
+      //   });
+      // }
     });
 
-    this.doc_amount = doc_amount.round(2);
-    this.amount_internal = amount_internal.round(2);
-    this.sys_profile = sys_profile;
+    const {rounding} = this;
+
+    this.doc_amount = doc_amount.round(rounding);
+    this.amount_internal = amount_internal.round(rounding);
+    //this.sys_profile = sys_profile;
     //this.sys_furn = sys_furn;
-    this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(2);
+    this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
 
     const {_obj, obj_delivery_state, category, number_internal, partner, client_of_dealer, note} = this;
 
@@ -225,6 +224,18 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   get doc_currency() {
     const currency = this.contract.settlements_currency;
     return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
+  }
+
+  get rounding() {
+    const {pricing} = $p.job_prm;
+    if(!pricing.hasOwnProperty('rounding')){
+      const parts = this.doc_currency.parameters_russian_recipe.split(',');
+      pricing.rounding = parseInt(parts[parts.length - 1]);
+      if(isNaN(pricing.rounding)){
+        pricing.rounding = 2;
+      }
+    }
+    return pricing.rounding;
   }
 
   /**
@@ -845,6 +856,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
   value_change(field, type, value, no_extra_charge) {
 
     const {_obj, _owner} = this;
+    const {rounding} = _owner._owner;
 
     if(field == 'nom' || field == 'characteristic' || field == 'quantity') {
       if(field != 'quantity') {
@@ -867,7 +879,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
 
       _obj[field] = parseFloat(value);
 
-      _obj.amount = (_obj.price * ((100 - _obj.discount_percent) / 100) * _obj.quantity).round(2);
+      _obj.amount = (_obj.price * ((100 - _obj.discount_percent) / 100) * _obj.quantity).round(rounding);
 
       // если есть внешняя цена дилера, получим текущую дилерскую наценку
       if(!no_extra_charge) {
@@ -881,11 +893,11 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
 
         if(field != 'price_internal' && extra_charge && _obj.price) {
-          _obj.price_internal = (_obj.price * (100 - _obj.discount_percent) / 100 * (100 + extra_charge) / 100).round(2);
+          _obj.price_internal = (_obj.price * (100 - _obj.discount_percent) / 100 * (100 + extra_charge) / 100).round(rounding);
         }
       }
 
-      _obj.amount_internal = (_obj.price_internal * ((100 - _obj.discount_percent_internal) / 100) * _obj.quantity).round(2);
+      _obj.amount_internal = (_obj.price_internal * ((100 - _obj.discount_percent_internal) / 100) * _obj.quantity).round(rounding);
 
       // ставка и сумма НДС
       const doc = _owner._owner;
@@ -919,8 +931,8 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         _obj.vat_amount = 0;
       }
 
-      doc.doc_amount = _owner.aggregate([], ['amount']).round(2);
-      doc.amount_internal = _owner.aggregate([], ['amount_internal']).round(2);
+      doc.doc_amount = _owner.aggregate([], ['amount']).round(rounding);
+      doc.amount_internal = _owner.aggregate([], ['amount_internal']).round(rounding);
 
       // TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation
 

@@ -68,15 +68,21 @@ $p.CatNom.prototype.__define({
             if(cx && cx.clr == clr){
               // если на подходящую характеристику есть цена по нашему типу цен - запоминаем
               if(_price[clrx][attr.price_type]){
+                if(cx.x && x && cx.x - x < -10){
+                  continue;
+                }
+                if(cx.y && y && cx.y - y < -10){
+                  continue;
+                }
                 tmp.push({
                   cx,
-                  rate: (cx.x == x ? 1 : 0) + (cx.y == y ? 1 : 0) + (cx.z == z ? 1 : 0)
+                  rate: (cx.x && x ? Math.abs(cx.x - x) : 0) + (cx.y && y ? Math.abs(cx.y - y) : 0) + (cx.z && z && cx.z == z ? 1 : 0)
                 })
               }
             }
           }
           if(tmp.length){
-            tmp.sort((a, b) => b.rate - a.rate);
+            tmp.sort((a, b) => a.rate - b.rate);
             attr.characteristic = tmp[0].cx.ref;
           }
         }

@@ -162,7 +162,8 @@ class OSvgs {
           let _obj = stack.pop();
           const db = $p.adapters.pouch.local.doc;
           db.query('svgs', {
-            key: typeof _obj == "string" ? _obj : _obj.ref
+            startkey: [typeof _obj == "string" ? _obj : _obj.ref, 0],
+            endkey: [typeof _obj == "string" ? _obj : _obj.ref, 10e9]
           })
             .then((res) => {
               // Для продукций заказа получаем вложения
