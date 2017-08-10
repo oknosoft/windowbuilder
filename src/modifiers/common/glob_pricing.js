@@ -174,7 +174,7 @@ class Pricing {
       discount_external: 10,
       extra_charge_external: 0,
       price_type_first_cost: $p.job_prm.pricing.price_type_first_cost,
-      price_type_sale: $p.job_prm.pricing.price_type_first_cost,
+      price_type_sale: $p.job_prm.pricing.price_type_sale,
       price_type_internal: $p.job_prm.pricing.price_type_first_cost,
       formula: empty_formula,
       sale_formula: empty_formula,

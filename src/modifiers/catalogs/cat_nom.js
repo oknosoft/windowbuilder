@@ -51,6 +51,7 @@ $p.CatNom.prototype.__define({
       }
 
       const {_price} = this._data;
+      const {x, y, z, clr, ref, calc_order} = (attr.characteristic || {});
 
 			if(!attr.characteristic){
         attr.characteristic = $p.utils.blank.guid;
@@ -58,7 +59,6 @@ $p.CatNom.prototype.__define({
 			else if($p.utils.is_data_obj(attr.characteristic)){
 			  // если передали уникальную характеристику продкции - ищем простую с тем же цветом и размерами
         // TODO: здесь было бы полезно учесть соответствие цветов??
-        const {x, y, z, clr, ref, calc_order} = attr.characteristic;
         attr.characteristic = ref;
         if(!calc_order.empty()){
           const tmp = [];
@@ -139,8 +139,7 @@ $p.CatNom.prototype.__define({
           nom: this,
           characteristic: $p.cat.characteristics.get(attr.characteristic, false),
           date: attr.date,
-          price: price,
-          currency: currency
+          price, currency, x, y, z, clr, calc_order,
         })
       }
 
