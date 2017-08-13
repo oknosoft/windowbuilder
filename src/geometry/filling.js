@@ -656,10 +656,9 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   // переопределяем геттер вставки
   get inset() {
-    const ins = super.inset;
-    const {_attr} = this;
-    if(!_attr._ins_proxy || _attr._ins_proxy._ins !== ins){
-      _attr._ins_proxy = new Proxy(ins, {
+    const {_attr, _row} = this;
+    if(!_attr._ins_proxy || _attr._ins_proxy.ref != _row.inset){
+      _attr._ins_proxy = new Proxy(_row.inset, {
         get: (target, prop) => {
           switch (prop){
             case 'presentation':
@@ -670,14 +669,13 @@ class Filling extends AbstractFilling(BuilderElement) {
               this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
                 res += row.inset.thickness;
               });
-              return res || ins.thickness;
+              return res || _row.inset.thickness;
 
             default:
               return target[prop];
           }
         }
       });
-      _attr._ins_proxy._ins = ins;
     }
     return _attr._ins_proxy;
   }
