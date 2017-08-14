@@ -1259,9 +1259,10 @@ class Editor extends paper.PaperScope {
    * @for Editor
    */
   unload() {
-    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project, on_keydown} = this;
+    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project, on_keydown, on_del_row} = this;
 
     eve.removeAllListeners();
+    $p.cat.characteristics.off("del_row", on_del_row);
     document.body.removeEventListener('keydown', on_keydown);
 
     if(tool && tool._callbacks.deactivate.length){

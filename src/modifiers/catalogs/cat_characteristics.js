@@ -281,7 +281,11 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, value) {
   // для вложенных вставок перезаполняем параметры
   if(field == 'inset') {
-    this._owner._owner.add_inset_params(this.inset, this.cnstr);
+    if(value != this.inset){
+      this._obj.inset = value;
+      const {_owner} = this._owner;
+      _owner.add_inset_params(this.inset, this.cnstr);
+    }
   }
 }
 
