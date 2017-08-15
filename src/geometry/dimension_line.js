@@ -79,7 +79,8 @@ class DimensionLine extends paper.Group {
       click: this._click
     });
 
-    $p.eve.attachEvent("sizes_wnd", this._sizes_wnd.bind(this));
+    this._sizes_wnd = this._sizes_wnd.bind(this);
+    this.eve.on("sizes_wnd", this._sizes_wnd);
 
   }
 
@@ -326,6 +327,10 @@ class DimensionLine extends paper.Group {
     return path;
   }
 
+  get eve() {
+    return this.project._scope.eve;
+  }
+
   // размер
   get size() {
     return parseFloat(this.children.text.content) || 0;
@@ -369,6 +374,7 @@ class DimensionLine extends paper.Group {
    * @method remove
    */
   remove() {
+    this.eve.off("sizes_wnd", this._sizes_wnd);
     if(this._row){
       this._row._owner.del(this._row);
       this._row = null;

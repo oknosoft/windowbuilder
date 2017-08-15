@@ -192,7 +192,7 @@ $p.CchProperties.prototype.__define({
         else{
           ox.params.find_rows({
             cnstr: cnstr || 0,
-            inset: origin || $p.utils.blank.guid,
+            inset: (typeof origin !== 'number' && origin) || $p.utils.blank.guid,
             param: this,
             value: val
           }, () => {
@@ -210,7 +210,7 @@ $p.CchProperties.prototype.__define({
       else{
         ox.params.find_rows({
           cnstr: cnstr || 0,
-          inset: origin || $p.utils.blank.guid,
+          inset: (typeof origin !== 'number' && origin) || $p.utils.blank.guid,
           param: this
         }, ({value}) => {
           // value - значение из строки параметра текущей продукции, val - знаяение из параметров отбора

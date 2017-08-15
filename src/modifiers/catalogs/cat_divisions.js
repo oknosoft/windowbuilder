@@ -9,7 +9,7 @@
 
 Object.defineProperties($p.cat.divisions, {
   get_option_list: {
-    value: function (val, selection) {
+    value: function (selection, val) {
       const list = [];
       $p.current_user.acl_objs.find_rows({type: "cat.divisions"}, (row) => {
         if(list.indexOf(row.acl_obj) == -1){
@@ -22,7 +22,7 @@ Object.defineProperties($p.cat.divisions, {
         }
       });
       if(!list.length){
-        return $p.CatManager.prototype.get_option_list.call(this, val, selection);
+        return this.constructor.prototype.get_option_list.call(this, selection, val);
       }
 
       function check(v){

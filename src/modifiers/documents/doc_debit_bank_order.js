@@ -7,16 +7,7 @@
  * Created 10.10.2016
  */
 
-// подписки на события
-$p.doc.debit_bank_order.on({
-
-	// перед записью рассчитываем итоги
-	before_save: function (attr) {
-
-		this.doc_amount = this.payment_details.aggregate([], "amount");
-
-	},
-
-});
-
-
+// перед записью рассчитываем итоги
+$p.DocDebit_bank_order.prototype.before_save = function () {
+  this.doc_amount = this.payment_details.aggregate([], 'amount');
+};

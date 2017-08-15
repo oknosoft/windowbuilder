@@ -290,10 +290,11 @@
 
 
       // следим за изменениями варианта настроек
-      const observer = this.observer.bind(this);
-      Object.observe(this, observer);
+      this.listener = this.listener.bind(this);
+      this._manager.on('update', this.listener);
+
       this.wnd.attachEvent("onClose", () => {
-        Object.unobserve(this, observer);
+        this._manager.off('update', this.listener);
         elmnts.scheme.unload && elmnts.scheme.unload();
         for(let grid in elmnts.grids){
           elmnts.grids[grid].unload && elmnts.grids[grid].unload()
@@ -538,13 +539,10 @@
       return data;
     }
 
-    observer(changes) {
-      changes.some((change) => {
-        if(change.name == "scheme"){
-          this.scheme_change();
-          return true;
-        }
-      })
+    listener(obj, fields) {
+      if(obj === this && fields.hasOwnProperty('scheme')){
+        this.scheme_change();
+      }
     }
 
     scheme_change() {

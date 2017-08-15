@@ -37,21 +37,6 @@ class Filling extends AbstractFilling(BuilderElement) {
       attr.path = path;
     }
 
-    /**
-     * За этим полем будут "следить" элементы раскладок и пересчитывать - перерисовывать себя при изменениях соседей
-     */
-    this._noti = {};
-
-    /**
-     * Формирует оповещение для тех, кто следит за this._noti
-     * @param obj
-     */
-    this.notify = function (obj) {
-      Object.getNotifier(this._noti).notify(obj);
-      this.project.register_change();
-    }.bind(this);
-
-
     // initialize
     this.initialize(attr);
 
@@ -214,8 +199,10 @@ class Filling extends AbstractFilling(BuilderElement) {
    */
   create_leaf() {
 
+    const {project} = this;
+
     // прибиваем соединения текущего заполнения
-    this.project.connections.cnns.clear(true, {elm1: this.elm});
+    project.connections.cnns.clear({elm1: this.elm});
 
     // создаём пустой новый слой
     const contour = new Contour( {parent: this.parent});
@@ -228,13 +215,10 @@ class Filling extends AbstractFilling(BuilderElement) {
     this._row.cnstr = contour.cnstr;
 
     // фурнитура и параметры по умолчанию
-    contour.furn = this.project.default_furn;
+    contour.furn = project.default_furn;
 
     // оповещаем мир о новых слоях
-    Object.getNotifier(this.project._noti).notify({
-      type: 'rows',
-      tabular: "constructions"
-    });
+    project.notify(contour, 'rows', {constructions: true});
 
     // делаем створку текущей
     contour.activate();
@@ -363,7 +347,7 @@ class Filling extends AbstractFilling(BuilderElement) {
           // копируем вставку
           elm.set_inset(v, true);
           // копируем состав заполнения
-          glass_specification.clear(true, {elm: elm.elm});
+          glass_specification.clear({elm: elm.elm});
           proto.forEach((row) => glass_specification.add({
             elm: elm.elm,
             inset: row.inset,
@@ -672,10 +656,9 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   // переопределяем геттер вставки
   get inset() {
-    const ins = super.inset;
-    const {_attr} = this;
-    if(!_attr._ins_proxy || _attr._ins_proxy._ins !== ins){
-      _attr._ins_proxy = new Proxy(ins, {
+    const {_attr, _row} = this;
+    if(!_attr._ins_proxy || _attr._ins_proxy.ref != _row.inset){
+      _attr._ins_proxy = new Proxy(_row.inset, {
         get: (target, prop) => {
           switch (prop){
             case 'presentation':
@@ -686,14 +669,13 @@ class Filling extends AbstractFilling(BuilderElement) {
               this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
                 res += row.inset.thickness;
               });
-              return res || ins.thickness;
+              return res || _row.inset.thickness;
 
             default:
               return target[prop];
           }
         }
       });
-      _attr._ins_proxy._ins = ins;
     }
     return _attr._ins_proxy;
   }

@@ -4,31 +4,36 @@
  *
  * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
  */
-module.exports = function settings(prm) {
+module.exports = function settings(prm = {}) {
 
-  return Object.assign(prm || {}, {
+  return Object.assign(prm, {
 
     // разделитель для localStorage
-    local_storage_prefix: "wb_",
+    local_storage_prefix: 'wb_',
 
     // гостевые пользователи для демо-режима
-    guests: [],
+    guests: [{
+      username: 'Дилер',
+      password: '1gNjzYQKBlcD',
+    }],
 
     // если понадобится обратиться к 1С, будем использовать irest
     irest_enabled: true,
 
     // расположение rest-сервиса 1c по умолчанию
-    rest_path: "",
+    rest_path: '',
 
     // расположение couchdb для сайта
     couch_path: "/couchdb/wb_",
     //couch_path: "https://light.oknosoft.ru/couchdb/wb_",
+    //couch_path: 'http://cou200:5984/wb_',
 
     // расположение couchdb для nodejs
-    couch_local: "http://cou200:5984/wb_",
+    couch_local: 'http://cou200:5984/wb_',
 
+    // фильтр для репликации с CouchDB не используем
     pouch_filter: {
-      meta: "auth/meta"
+      meta: 'auth/meta',
     },
 
     // по умолчанию, обращаемся к зоне 1
@@ -38,11 +43,17 @@ module.exports = function settings(prm) {
     zone_demo: 1,
 
     // размер вложений
-    attachment_max_size: 10000000,
+    attachment_max_size: 2000000,
 
     // разрешаем сохранение пароля
-    enable_save_pwd: true
+    enable_save_pwd: true,
 
-  })
+    // используем геокодер
+    use_ip_geo: true,
 
-}
+    // используем карты google
+    use_google_geo: 'AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM',
+
+  });
+
+};

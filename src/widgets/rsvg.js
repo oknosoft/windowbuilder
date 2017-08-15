@@ -138,7 +138,7 @@ class OSvgs {
   onclick(event, dbl) {
     if(event.currentTarget && event.currentTarget.ref){
       this.handler && this.handler(event.currentTarget.ref, dbl);
-      this.select(event.currentTarget.ref);
+      this.pics_area && this.select(event.currentTarget.ref);
     }
   }
 
@@ -158,38 +158,30 @@ class OSvgs {
 
         if(stack.length){
 
-          // Получаем табчасть заказа
+          // Получаем идентификаторы продукций с вложениями
           let _obj = stack.pop();
-
-          if (typeof _obj == "string"){
-            _obj = $p.doc.calc_order.pouch_db.get("doc.calc_order|" + _obj);
-          }
-          else{
-            _obj = Promise.resolve({production: _obj.production._obj});
-          }
-
-          _obj.then((res) => {
-
-            // Для продукций заказа получаем вложения
-            const aatt = [];
-            if(res.production)
-              res.production.forEach((row) => {
-                if(!$p.utils.is_empty_guid(row.characteristic)){
-                  aatt.push($p.cat.characteristics.get_attachment(row.characteristic, "svg")
-                    .then((att) => ({ref: row.characteristic, att: att}))
-                    .catch((err) => {}));
-                }
-              });
-            _obj = null;
-            return Promise.all(aatt);
+          const db = $p.adapters.pouch.local.doc;
+          db.query('svgs', {
+            startkey: [typeof _obj == "string" ? _obj : _obj.ref, 0],
+            endkey: [typeof _obj == "string" ? _obj : _obj.ref, 10e9]
           })
+            .then((res) => {
+              // Для продукций заказа получаем вложения
+              const aatt = [];
+              for(const {id} of res.rows){
+                aatt.push(db.getAttachment(id, "svg")
+                  .then((att) => ({ref: id.substr(20), att: att}))
+                  .catch((err) => {}));
+              };
+              return Promise.all(aatt);
+            })
             .then((res) => {
               // Извлекаем из блоба svg-текст эскизов
               const aatt = [];
-              res.forEach((row) => {
-                if(row && row.att instanceof Blob && row.att.size)
-                  aatt.push($p.utils.blob_as_text(row.att)
-                    .then((svg) => ({ref: row.ref, svg})));
+              res.forEach(({ref, att}) => {
+                if(att instanceof Blob && att.size)
+                  aatt.push($p.utils.blob_as_text(att)
+                    .then((svg) => ({ref, svg})));
               });
               return Promise.all(aatt);
             })
@@ -202,6 +194,9 @@ class OSvgs {
   }
 
   select(ref) {
+    if(!this.pics_area){
+      return;
+    }
     const {children} = this.pics_area;
     for(let i = 0; i < children.length; i++){
       const elm = children.item(i);

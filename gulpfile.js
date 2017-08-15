@@ -9,8 +9,8 @@ const gulp = require('gulp'),
 	concat = require('gulp-concat'),
   strip = require('gulp-strip-comments'),
 	rename = require('gulp-rename'),
-	resources = require('./src/utils/resource-concat.js'),
-	prebuild = require('./src/utils/prebuild.js'),
+	resources = require('./scripts/resource-concat.js'),
+	prebuild = require('./scripts/prebuild.js'),
 	umd = require('gulp-umd'),
   wrap = require("gulp-wrap"),
   uglify = require('gulp-uglify');
@@ -21,18 +21,18 @@ module.exports = gulp;
 gulp.task('build-iface', function(){
 	return gulp.src([
 	  //'./dist/worker.js',
-    './src/metadata/init.js',
+    //'./src/metadata/init.js',
 		//'./data/prebuild.js',
 		'./data/merged_wb_templates.js',
 		'./src/modifiers/**/*.js',
 		'./src/widgets/*.js',
-		'./src/wnd_main.js'
+		//'./src/wnd_main.js'
 	])
 		.pipe(concat('wnd_debug.js'))
     .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
-				return 'undefined';
+				return undefined;
 			}
 		}))
     .pipe(gulp.dest('./dist'))

@@ -19,7 +19,7 @@ $p.cat.users.__define({
         }
         const {acl} = aobj;
 			  delete aobj.acl;
-        const obj = new $p.CatUsers(aobj, this);
+        const obj = new $p.CatUsers(aobj, this, true);
         const {_obj} = obj;
         if(_obj){
           _obj._acl = acl;
@@ -44,44 +44,3 @@ $p.cat.users.__define({
 
 });
 
-$p.CatUsers.prototype.__define({
-
-  /**
-   * ### Роль доступна
-   *
-   * @param name {String}
-   * @returns {Boolean}
-   */
-  role_available: {
-    value: function (name) {
-      return this.acl_objs._obj.some(function (row) {
-        return row.type == name;
-      });
-    }
-  },
-
-  get_acl: {
-    value: function(class_name) {
-      const acn = class_name.split(".");
-      const {_acl} = this._obj;
-      return _acl && _acl[acn[0]] && _acl[acn[0]][acn[1]] ? _acl[acn[0]][acn[1]] : "e";
-    }
-  },
-
-	/**
-	 * ### Идентификаторы доступных контрагентов
-	 * Для пользователей с ограниченным доступом
-	 *
-	 * @returns {Array}
-	 */
-	partners_uids: {
-		get: function () {
-			var res = [];
-			this.acl_objs.each(function (row) {
-				if(row.acl_obj instanceof $p.CatPartners)
-					res.push(row.acl_obj.ref)
-			});
-			return res;
-		}
-	}
-});

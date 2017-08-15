@@ -20,12 +20,7 @@
  * @example
  *
  *     // создаём экземпляр графического редактора
- *     // передаём в конструктор указатель на ячейку _cell и дополнительные реквизиты с функцией set_text()
- *     var editor = new $p.Editor(_cell, {
- *       set_text: function (text) {
- *         cell.setText({text: "<b>" + text + "</b>"});
- *       }
- *     });
+ *     // передаём в конструктор указатель на ячейку _cell и дополнительные реквизиты
  *
  * @class Editor
  * @constructor
@@ -37,81 +32,74 @@
  */
 class Editor extends paper.PaperScope {
 
-  constructor(pwnd, attr){
+  constructor(pwnd, handlers){
 
     super();
 
     const _editor = this;
 
-    _editor.activate();
+    this.activate();
 
-    consts.tune_paper(_editor.settings);
+    consts.tune_paper(this.settings);
 
-    _editor.__define({
-
-      /**
-       * ### Ячейка родительского окна
-       * [dhtmlXCell](http://docs.dhtmlx.com/cell__index.html), в которой размещен редактор
-       *
-       * @property _pwnd
-       * @type dhtmlXCellObject
-       * @final
-       * @private
-       */
-      _pwnd: {
-        get: function () {
-          return pwnd;
-        }
-      },
-
-      /**
-       * ### Разбивка на канвас и аккордион
-       *
-       * @property _layout
-       * @type dhtmlXLayoutObject
-       * @final
-       * @private
-       */
-      _layout: {
-        value: pwnd.attachLayout({
-          pattern: "2U",
-          cells: [{
-            id: "a",
-            text: "Изделие",
-            header: false
-          }, {
-            id: "b",
-            text: "Инструменты",
-            collapsed_text: "Инструменты",
-            width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 440 : 260
-          }],
-          offsets: { top: 28, right: 0, bottom: 0, left: 0}
-        })
-      },
-
-      /**
-       * ### Контейнер канваса
-       *
-       * @property _wrapper
-       * @type HTMLDivElement
-       * @final
-       * @private
-       */
-      _wrapper: {
-        value: document.createElement('div')
+    /**
+     * ### Ячейка родительского окна, в которой размещен редактор
+     *
+     * @property _pwnd
+     * @type dhtmlXCellObject
+     * @final
+     * @private
+     */
+    this.__define('_pwnd', {
+      get: function () {
+        return pwnd;
       }
-
     });
 
-    _editor._layout.cells("a").attachObject(_editor._wrapper);
-    _editor._dxw.attachViewportTo(_editor._wrapper);
+    /**
+     * Собственный излучатель событий для уменьшения утечек памяти
+     */
+    this.eve = new (Object.getPrototypeOf($p.md.constructor))();
 
-    _editor._wrapper.oncontextmenu = function (event) {
-      return $p.iface.cancel_bubble(event, true);
-    };
+    /**
+     * ### Разбивка на канвас и аккордион
+     *
+     * @property _layout
+     * @type dhtmlXLayoutObject
+     * @final
+     * @private
+     */
+    this._layout = pwnd.attachLayout({
+      pattern: "2U",
+      cells: [{
+        id: "a",
+        text: "Изделие",
+        header: false
+      }, {
+        id: "b",
+        text: "Инструменты",
+        collapsed_text: "Инструменты",
+        width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 440 : 260
+      }],
+      offsets: { top: 28, right: 0, bottom: 0, left: 0}
+    })
 
+    /**
+     * ### Контейнер канваса
+     *
+     * @property _wrapper
+     * @type HTMLDivElement
+     * @final
+     * @private
+     */
+    this._wrapper = document.createElement('div');
 
-    _editor._drawSelectionBounds = 0;
+    this._layout.cells("a").attachObject(_editor._wrapper);
+    this._dxw.attachViewportTo(_editor._wrapper);
+
+    this._wrapper.oncontextmenu = (event) => $p.iface.cancel_bubble(event, true);
+
+    this._drawSelectionBounds = 0;
 
     /**
      * ### Буфер обмена
@@ -123,7 +111,7 @@ class Editor extends paper.PaperScope {
      * @final
      * @private
      */
-    _editor._clipbrd = new Clipbrd(this);
+    //this._clipbrd = new Clipbrd(this);
 
     /**
      * ### Клавиатура
@@ -135,7 +123,7 @@ class Editor extends paper.PaperScope {
      * @final
      * @private
      */
-    _editor._keybrd = new Keybrd(this);
+    this._keybrd = new Keybrd(this);
 
     /**
      * ### История редактирования
@@ -147,7 +135,7 @@ class Editor extends paper.PaperScope {
      * @final
      * @private
      */
-    _editor._undo = new UndoRedo(this);
+    this._undo = new UndoRedo(this);
 
     /**
      * ### Aккордион со свойствами
@@ -156,7 +144,7 @@ class Editor extends paper.PaperScope {
      * @type EditorAccordion
      * @private
      */
-    _editor._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
+    this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
 
     /**
      * ### Панель выбора инструментов рисовалки
@@ -165,7 +153,7 @@ class Editor extends paper.PaperScope {
      * @type OTooolBar
      * @private
      */
-    _editor.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '320px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '320px',
       image_path: 'dist/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -195,7 +183,7 @@ class Editor extends paper.PaperScope {
      * @type OTooolBar
      * @private
      */
-    _editor.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
+    this.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
       image_path: 'dist/imgs/',
       buttons: [
 
@@ -203,7 +191,7 @@ class Editor extends paper.PaperScope {
         {name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
         {name: 'sep_0', text: '', float: 'left'},
-        {name: 'stamp', img: 'stamp.png', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
+        {name: 'stamp',  css: 'tb_stamp', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
 
         {name: 'sep_1', text: '', float: 'left'},
         {name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
@@ -229,11 +217,7 @@ class Editor extends paper.PaperScope {
             break;
 
           case 'close':
-            if(pwnd._on_close){
-              pwnd._on_close();
-            }
-            _editor._acc.tree_layers.layout.cells('b').detachObject(true);
-            _editor.select_tool('select_node');
+            _editor.close()
             break;
 
           case 'calck':
@@ -260,11 +244,11 @@ class Editor extends paper.PaperScope {
             break;
 
           case 'copy':
-            _editor._clipbrd.copy();
+            //_editor._clipbrd.copy();
             break;
 
           case 'paste':
-            _editor._clipbrd.paste();
+            //_editor._clipbrd.paste();
             break;
 
           case 'paste_prop':
@@ -272,10 +256,7 @@ class Editor extends paper.PaperScope {
             break;
 
           case 'open_spec':
-            _editor.project.ox.form_obj()
-              .then(function (w) {
-                w.wnd.maximize();
-              });
+            _editor.project.ox.form_obj();
             break;
 
           case 'square':
@@ -300,24 +281,32 @@ class Editor extends paper.PaperScope {
         }
       }});
 
-    _editor._layout.base.style.backgroundColor = "#f5f5f5";
-    //_editor._layout.base.parentNode.parentNode.style.top = "0px";
-    _editor.tb_top.cell.style.background = "transparent";
-    _editor.tb_top.cell.style.boxShadow = "none";
+    this.tb_top.buttons.paste.classList.add("disabledbutton");
+    this.tb_top.buttons.paste_prop.classList.add("disabledbutton");
 
+    this._layout.base.style.backgroundColor = "#f5f5f5";
+    //_editor._layout.base.parentNode.parentNode.style.top = "0px";
+    this.tb_top.cell.style.background = "transparent";
+    this.tb_top.cell.style.boxShadow = "none";
+
+    /**
+     * слушаем события клавиатуры
+     */
+    this.on_keydown = this.on_keydown.bind(this);
+    document.body.addEventListener('keydown', this.on_keydown, false);
 
     // Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
-    $p.eve.attachEvent("characteristic_saved", (scheme, attr) => {
-      if(scheme == _editor.project && attr.close && pwnd._on_close)
-        setTimeout(pwnd._on_close);
+    this.eve.on("characteristic_saved", (scheme, attr) => {
+      if(attr.close){
+        this.close();
+      }
+      else{
+        this.set_text();
+      }
     });
 
     // При изменениях изделия обновляем текст заголовка окна
-    $p.eve.attachEvent("scheme_changed", (scheme) => {
-      if(scheme == _editor.project && attr.set_text && scheme._calc_order_row){
-          attr.set_text(scheme.ox.prod_name(true) + " " + (scheme.ox._modified ? " *" : ""));
-      }
-    });
+    this.eve.on("coordinates_calculated", this.set_text.bind(this));
 
     // Обработчик события при удалении строки некой табчасти продукции
     this.on_del_row = this.on_del_row.bind(this);
@@ -400,6 +389,24 @@ class Editor extends paper.PaperScope {
     // Создаём экземпляр проекта Scheme
     this.create_scheme();
 
+    if(handlers){
+      this.handlers = handlers;
+      handlers.props.match.params.ref && this.open(handlers.props.match.params.ref);
+    }
+
+  }
+
+  set_text() {
+    const {handlers, project} = this;
+    const {props, handleIfaceState} = handlers;
+    if(project._calc_order_row){
+      const title = project.ox.prod_name(true) + " " + (project.ox._modified ? " *" : "");
+      props.title != title && handleIfaceState({
+        component: '',
+        name: 'title',
+        value: title,
+      });
+    }
   }
 
   /**
@@ -463,7 +470,7 @@ class Editor extends paper.PaperScope {
      * Объект для реализации функций масштабирования
      * @type StableZoom
      */
-    var pan_zoom = new function StableZoom(){
+    new function StableZoom(){
 
       function changeZoom(oldZoom, delta) {
         const factor = 1.05;
@@ -511,7 +518,7 @@ class Editor extends paper.PaperScope {
       };
     };
 
-    _editor._acc.attache(_editor.project._dp);
+    _editor._acc.attach(_editor.project._dp);
   }
 
   /**
@@ -1200,10 +1207,14 @@ class Editor extends paper.PaperScope {
       const {project} = this;
       const {obj} = grid.get_cell_field() || {};
       if(obj && obj._owner._owner == project.ox){
-        project.ox.params.clear(false, {cnstr: obj.cnstr, inset: obj.inset});
+        project.ox.params.clear({cnstr: obj.cnstr, inset: obj.inset});
         project.register_change();
       }
     }
+  }
+
+  on_keydown(ev) {
+    this.eve.emit('keydown', ev);
   }
 
   clear_selection_bounds() {
@@ -1223,24 +1234,54 @@ class Editor extends paper.PaperScope {
   }
 
   /**
+   * проверка, можно ли покидать страницу
+   * @param loc
+   * @return {*}
+   */
+  prompt(loc) {
+    const {ox} = this.project;
+    return (ox && ox._modified) ? `Изделие ${ox.prod_name(true)} изменено.\n\nЗакрыть без сохранения?` : true;
+  }
+
+  close() {
+    const {calc_order} = this.project.ox;
+    if(calc_order && !calc_order.empty()){
+      this.handlers.handleNavigate(`/${calc_order.class_name}/${calc_order.ref}`);
+    }
+    else{
+      this.handlers.handleNavigate(`/`);
+    }
+  }
+
+  /**
    * ### Деструктор
    * @method unload
    * @for Editor
    */
   unload() {
-    const {tool, tools, tb_left, tb_top, _acc} = this;
+    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project, on_keydown, on_del_row} = this;
+
+    eve.removeAllListeners();
+    $p.cat.characteristics.off("del_row", on_del_row);
+    document.body.removeEventListener('keydown', on_keydown);
+
     if(tool && tool._callbacks.deactivate.length){
       tool._callbacks.deactivate[0].call(tool);
     }
-    for(let t in tools){
-      if(tools[t].remove){
-        tools[t].remove();
-      }
-      tools[t] = null;
+    for(const fld in tools){
+      tools[fld] && tools[fld].remove && tools[fld].remove();
+      tools[fld] = null;
     }
+    _acc.unload();
+    _undo.unload();
     tb_left.unload();
     tb_top.unload();
-    _acc.unload();
+    project.unload();
+    _pwnd.detachAllEvents();
+    _pwnd.detachObject(true);
+    for(const fld in this){
+      delete this[fld];
+    }
   }
 
 };

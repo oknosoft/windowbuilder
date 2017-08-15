@@ -115,15 +115,7 @@ class FreeText extends paper.PointText {
    */
   move_points(point) {
     this.point = point;
-
-    Object.getNotifier(this).notify({
-      type: 'update',
-      name: "x"
-    });
-    Object.getNotifier(this).notify({
-      type: 'update',
-      name: "y"
-    });
+    project.notify(this, 'update', {x: true, y: true});
   }
 
   /**
@@ -209,9 +201,7 @@ class FreeText extends paper.PointText {
       this.project.register_update();
     }
     else{
-      Object.getNotifier(this).notify({
-        type: 'unload'
-      });
+      project.notify(this, 'unload');
       setTimeout(this.remove.bind(this), 50);
     }
   }

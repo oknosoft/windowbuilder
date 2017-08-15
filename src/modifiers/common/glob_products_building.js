@@ -485,9 +485,9 @@ class ProductsBuilding {
         // если во вставке указано создавать продукцию, создаём
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
           // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
-          const cx = ox.find_create_cx(elm.elm, inset.ref)._mixin(inset.contour_attrs(layer));
+          const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(layer));
           ox._order_rows.push(cx);
-          spec = cx.specification.clear(true);
+          spec = cx.specification.clear();
         }
 
         // рассчитаем спецификацию вставки
@@ -579,9 +579,9 @@ class ProductsBuilding {
         // если во вставке указано создавать продукцию, создаём
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
           // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
-          const cx = ox.find_create_cx(-contour.cnstr, inset.ref)._mixin(inset.contour_attrs(contour));
+          const cx = Object.assign(ox.find_create_cx(-contour.cnstr, inset.ref), inset.contour_attrs(contour));
           ox._order_rows.push(cx);
-          spec = cx.specification.clear(true);
+          spec = cx.specification.clear();
         }
 
         // рассчитаем спецификацию вставки
@@ -663,99 +663,101 @@ class ProductsBuilding {
     /**
      * Пересчет спецификации при записи изделия
      */
-    listen && $p.eve.attachEvent("save_coordinates", (scheme, attr) => {
+    this.recalc = function (scheme, attr) {
 
-        //console.time("base_spec");
-        //console.profile();
-
-
-        // ссылки для быстрого доступа к свойствам объекта продукции
-        ox = scheme.ox;
-        spec = ox.specification;
-        constructions = ox.constructions;
-        coordinates = ox.coordinates;
-        cnn_elmnts = ox.cnn_elmnts;
-        glass_specification = ox.glass_specification;
-        params = ox.params;
-
-        // чистим спецификацию
-        spec.clear();
-
-        // массив продукций к добавлению в заказ
-        ox._order_rows = [];
-
-        // рассчитываем базовую сецификацию
-        base_spec(scheme);
-
-        // сворачиваем
-        spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop", "qty,totqty,totqty1");
+      //console.time("base_spec");
+      //console.profile();
 
 
-        //console.timeEnd("base_spec");
-        //console.profileEnd();
+      // ссылки для быстрого доступа к свойствам объекта продукции
+      ox = scheme.ox;
+      spec = ox.specification;
+      constructions = ox.constructions;
+      coordinates = ox.coordinates;
+      cnn_elmnts = ox.cnn_elmnts;
+      glass_specification = ox.glass_specification;
+      params = ox.params;
 
-        // информируем мир об окончании расчета координат
-        scheme.draw_visualization();
-        $p.eve.callEvent("coordinates_calculated", [scheme, attr]);
+      // чистим спецификацию
+      spec.clear();
+
+      // массив продукций к добавлению в заказ
+      ox._order_rows = [];
+
+      // рассчитываем базовую сецификацию
+      base_spec(scheme);
+
+      // сворачиваем
+      spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop", "qty,totqty,totqty1");
 
 
-        // производим корректировку спецификации с возможным вытягиванием строк в заказ и удалением строк из заказа
-        // внутри корректировки будут рассчитаны цены продажи и плановой себестоимости
-        if(ox.calc_order_row){
-          $p.spec_building.specification_adjustment({
-            scheme: scheme,
-            calc_order_row: ox.calc_order_row,
-            spec: spec,
-            save: attr.save,
-          }, true);
-        }
+      //console.timeEnd("base_spec");
+      //console.profileEnd();
 
-        // информируем мир о завершении пересчета
-        if(attr.snapshot){
-          $p.eve.callEvent("scheme_snapshot", [scheme, attr]);
-        }
+      // информируем мир об окончании расчета координат
+      scheme.draw_visualization();
+      scheme.notify(scheme, "coordinates_calculated", attr);
 
-        // информируем мир о записи продукции
-        if(attr.save){
 
-          // console.time("save");
-          // console.profile();
+      // производим корректировку спецификации с возможным вытягиванием строк в заказ и удалением строк из заказа
+      // внутри корректировки будут рассчитаны цены продажи и плановой себестоимости
+      if(ox.calc_order_row){
+        $p.spec_building.specification_adjustment({
+          scheme: scheme,
+          calc_order_row: ox.calc_order_row,
+          spec: spec,
+          save: attr.save,
+        }, true);
+      }
 
-          // сохраняем картинку вместе с изделием
-          ox.save(undefined, undefined, {
-            svg: {
-              "content_type": "image/svg+xml",
-              "data": new Blob([scheme.get_svg()], {type: "image/svg+xml"})
-            }
+      // информируем мир о завершении пересчета
+      if(attr.snapshot){
+        scheme.notify(scheme, "scheme_snapshot", attr);
+      }
+
+      // информируем мир о записи продукции
+      if(attr.save){
+
+        // console.time("save");
+        // console.profile();
+
+        // сохраняем картинку вместе с изделием
+        ox.save(undefined, undefined, {
+          svg: {
+            content_type: "image/svg+xml",
+            data: new Blob([scheme.get_svg()], {type: "image/svg+xml"})
+          }
+        })
+          .then(() => {
+            $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
+            delete scheme._attr._saving;
+            ox.calc_order.characteristic_saved(scheme, attr);
+            scheme._scope.eve.emit("characteristic_saved", scheme, attr);
+
+            // console.timeEnd("save");
+            // console.profileEnd();
+
           })
-            .then(() => {
-              $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
-              delete scheme._attr._saving;
-              $p.eve.callEvent("characteristic_saved", [scheme, attr]);
+          .catch((ox) => {
 
-              // console.timeEnd("save");
-              // console.profileEnd();
+            // console.timeEnd("save");
+            // console.profileEnd();
 
-            })
-            .catch((ox) => {
+            $p.record_log(ox);
+            delete scheme._attr._saving;
+            if(ox._data && ox._data._err){
+              $p.msg.show_msg(ox._data._err);
+              delete ox._data._err;
+            }
+          });
+      }
+      else{
+        delete scheme._attr._saving;
+      }
 
-              // console.timeEnd("save");
-              // console.profileEnd();
+      ox._data._loading = false;
 
-              $p.record_log(ox);
-              delete scheme._attr._saving;
-              if(ox._data && ox._data._err){
-                $p.msg.show_msg(ox._data._err);
-                delete ox._data._err;
-              }
-            });
-        }
-        else{
-          delete scheme._attr._saving;
-        }
-
-      });
-
+    }
 
   }
 

@@ -1,6 +1,6 @@
 {
   "_id": "meta_patch",
-  "_rev": "10-2bc99e5c37904c31fecc8c79ecd1afba",
+  "_rev": "12-cbd254c7aec4fe01e1b5d6bb4d7f226f",
   "enm": {},
   "cat": {
     "nom": {
@@ -1018,7 +1018,6 @@
             "client_of_dealer",
             "doc_amount",
             "obj_delivery_state",
-            "sys_profile",
             "note"
           ],
           "cols": [
@@ -1040,7 +1039,7 @@
             },
             {
               "id": "number_internal",
-              "width": "100",
+              "width": "160",
               "type": "ro",
               "align": "left",
               "sort": "na",
@@ -1048,7 +1047,7 @@
             },
             {
               "id": "partner",
-              "width": "170",
+              "width": "180",
               "type": "ro",
               "align": "left",
               "sort": "na",
@@ -1056,7 +1055,7 @@
             },
             {
               "id": "client_of_dealer",
-              "width": "170",
+              "width": "*",
               "type": "ro",
               "align": "left",
               "sort": "na",
@@ -1085,14 +1084,6 @@
               "align": "left",
               "sort": "na",
               "caption": "Комментарий"
-            },
-            {
-              "id": "sys_profile",
-              "width": "120",
-              "type": "ro",
-              "align": "left",
-              "sort": "na",
-              "caption": "Профиль"
             }
           ]
         },

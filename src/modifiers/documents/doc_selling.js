@@ -7,16 +7,10 @@
  * Created 10.10.2016
  */
 
-// подписки на события
-$p.doc.selling.on({
 
-	// перед записью рассчитываем итоги
-	before_save: function (attr) {
-
-		this.doc_amount = this.goods.aggregate([], "amount") + this.services.aggregate([], "amount");
-
-	},
-
-});
+// перед записью рассчитываем итоги
+$p.DocSelling.prototype.before_save = function () {
+  this.doc_amount = this.goods.aggregate([], 'amount') + this.services.aggregate([], 'amount');
+};
 
 

@@ -82,7 +82,7 @@ class ToolArc extends ToolElement{
             r.parent.rays.clear();
             r.parent._row.r = 0;
             r.selected = true;
-            r.layer.notify({type: consts.move_points, profiles: [r.parent], points: []});
+            r.layer.notify({profiles: [r.parent], points: []}, consts.move_points);
 
           } else {
             paper.project.deselectAll();
@@ -95,10 +95,10 @@ class ToolArc extends ToolElement{
 
           }
 
-          setTimeout(function () {
+          setTimeout(() => {
             r.layer.redraw();
             r.parent.attache_wnd(paper._acc.elm);
-            $p.eve.callEvent("layer_activated", [r.layer]);
+            this.eve.emit("layer_activated", r.layer);
           }, 10);
 
         }else{
@@ -115,8 +115,9 @@ class ToolArc extends ToolElement{
           item.attache_wnd(paper._acc.elm);
           item.selected = true;
 
-          if(item.selected && item.layer)
-            $p.eve.callEvent("layer_activated", [item.layer]);
+          if(item.selected && item.layer){
+            this.eve.emit("layer_activated", item.layer);
+          }
         }
 
         if (this.mode && this.changed) {
@@ -164,7 +165,7 @@ class ToolArc extends ToolElement{
     element.parent.rays.clear();
     element.selected = true;
 
-    element.layer.notify({type: consts.move_points, profiles: [element.parent], points: []});
+    element.layer.notify({profiles: [element.parent], points: []}, consts.move_points);
   }
 
   hitTest(event) {

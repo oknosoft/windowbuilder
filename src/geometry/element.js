@@ -482,7 +482,7 @@ class BuilderElement extends paper.Group {
    */
   detache_wnd() {
     const {_grid} = this._attr;
-    if(_grid && _grid.destructor){
+    if(_grid && _grid.destructor && _grid._owner_cell){
       _grid._owner_cell.detachObject(true);
       delete this._attr._grid;
     }
@@ -532,22 +532,20 @@ class BuilderElement extends paper.Group {
    */
   remove() {
     this.detache_wnd();
+    const {parent, project, observer, _row} = this;
 
-    if(this.parent){
-      if (this.parent.on_remove_elm){
-        this.parent.on_remove_elm(this);
-      }
-      if (this.parent._noti && this._observer){
-        Object.unobserve(this.parent._noti, this._observer);
-        delete this._observer;
-      }
+    parent && parent.on_remove_elm && parent.on_remove_elm(this);
+
+    if (observer){
+      project._scope.eve.off(consts.move_points, observer);
+      delete this.observer;
     }
 
-    if(this._row && this._row._owner && this.project.ox === this._row._owner._owner){
-      this._row._owner.del(this._row);
+    if(_row && _row._owner && project.ox === _row._owner._owner){
+      _row._owner.del(_row);
     }
 
-    this.project.register_change();
+    project.register_change();
 
     super.remove();
   }

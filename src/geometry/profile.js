@@ -454,15 +454,12 @@ class ProfileItem extends GeneratrixElement {
     return this._row.r;
   }
   set r(v){
-    const {_row, _attr} = this;
+    const {_row, _attr, project} = this;
     if(_row.r != v){
       _attr._rays.clear();
       _row.r = v;
       this.set_generatrix_radius();
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'arc_h'
-      });
+      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -476,15 +473,12 @@ class ProfileItem extends GeneratrixElement {
     return this._row.arc_ccw;
   }
   set arc_ccw(v){
-    const {_row, _attr} = this;
+    const {_row, _attr, project} = this;
     if(_row.arc_ccw != v){
       _attr._rays.clear();
       _row.arc_ccw = v;
       this.set_generatrix_radius();
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'arc_h'
-      });
+      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -516,14 +510,7 @@ class ProfileItem extends GeneratrixElement {
       }
       _row.r = b.arc_r(b.x, b.y, e.x, e.y, v);
       this.set_generatrix_radius(v);
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'r'
-      });
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'arc_ccw'
-      });
+      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -937,20 +924,15 @@ class ProfileItem extends GeneratrixElement {
    * @private
    */
   observer(an) {
-    if(Array.isArray(an)){
-
-      const moved = an[an.length-1];
-
-      if(moved.profiles.indexOf(this) == -1){
-
+    const {profiles} = an;
+    if(profiles){
+      if(profiles.indexOf(this) == -1){
         // если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
-        moved.profiles.forEach((p) => {
-          this.do_bind(p, this.cnn_point("b"), this.cnn_point("e"), moved);
+        profiles.forEach((p) => {
+          this.do_bind(p, this.cnn_point("b"), this.cnn_point("e"), an);
         });
-
-        moved.profiles.push(this);
+        profiles.push(this);
       }
-
     }
     else if(an instanceof Profile || an instanceof ProfileConnective){
       this.do_bind(an, this.cnn_point("b"), this.cnn_point("e"));
@@ -994,10 +976,6 @@ class ProfileItem extends GeneratrixElement {
     }
     if(height && height > min_radius){
       height = min_radius;
-      Object.getNotifier(this).notify({
-        type: 'update',
-        name: 'arc_h'
-      });
     }
 
     if(selected){
@@ -1711,8 +1689,8 @@ class Profile extends ProfileItem {
     if(this.parent){
 
       // Подключаем наблюдателя за событиями контура с именем _consts.move_points_
-      this._observer = this.observer.bind(this);
-      Object.observe(this.layer._noti, this._observer, [consts.move_points]);
+      this.observer = this.observer.bind(this);
+      this.project._scope.eve.on(consts.move_points, this.observer)
 
       // Информируем контур о том, что у него появился новый ребёнок
       this.layer.on_insert_elm(this);

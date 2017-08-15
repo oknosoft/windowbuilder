@@ -93,8 +93,9 @@ class ToolSelectNode extends ToolElement {
               this.mouseStartPos = event.point.clone();
               this.originalContent = paper.capture_selection_state();
 
-              if(item.layer)
-                $p.eve.callEvent("layer_activated", [item.layer]);
+              if(item.layer){
+                this.eve.emit("layer_activated", item.layer);
+              }
             }
 
           }
@@ -161,19 +162,20 @@ class ToolSelectNode extends ToolElement {
             paper.clear_selection_bounds();
             //undo.snapshot("Move Shapes");
           }
-
-        } else if (this.mode == consts.move_points) {
+        }
+        else if (this.mode == consts.move_points) {
           if (this.changed) {
             paper.clear_selection_bounds();
             //undo.snapshot("Move Points");
           }
-
-        } else if (this.mode == consts.move_handle) {
+        }
+        else if (this.mode == consts.move_handle) {
           if (this.changed) {
             paper.clear_selection_bounds();
             //undo.snapshot("Move Handle");
           }
-        } else if (this.mode == 'box-select') {
+        }
+        else if (this.mode == 'box-select') {
 
           var box = new paper.Rectangle(this.mouseStartPos, event.point);
 
@@ -318,9 +320,9 @@ class ToolSelectNode extends ToolElement {
 
                 const cnn_point = path.parent.cnn_point("e");
                 if(cnn_point && cnn_point.profile){
-                  cnn_point.profile.rays.clear(true);
+                  cnn_point.profile.rays.clear();
                 }
-                path.parent.rays.clear(true);
+                path.parent.rays.clear();
 
                 point = path.getPointAt(path.length * 0.5);
                 const newpath = path.split(path.length * 0.5);

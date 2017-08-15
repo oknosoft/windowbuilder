@@ -12,7 +12,7 @@
   const {job_prm, adapters, cch, doc} = $p;
 
 	// Подписываемся на событие окончания загрузки локальных данных
-  adapters.pouch.once('pouch_data_loaded', () => {
+  adapters.pouch.once('pouch_doc_ram_loaded', () => {
 
     // читаем элементы из pouchdb и создаём свойства
     cch.predefined_elmnts.pouch_find_rows({_raw: true, _top: 500, _skip: 0})
@@ -94,7 +94,7 @@
         setTimeout(doc.calc_order.load_templates.bind(doc.calc_order), 1000);
 
         // даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-        setTimeout(() => $p.eve.callEvent("predefined_elmnts_inited"), 200);
+        setTimeout(() => $p.md.emit("predefined_elmnts_inited"), 100);
 
       });
 
@@ -168,12 +168,8 @@
           return;
         }
 
-				Object.getNotifier(this).notify({
-					type: 'update',
-					name: 'value',
-					oldValue: this._obj.value
-				});
-				this._obj.value = $p.utils.is_data_obj(v) ? v.ref : v;
+        _mgr.emit_async('update', this, {value: this._obj.value})
+				this._obj.value = v.valueOf();
 				this._data._modified = true;
 			}
 		}

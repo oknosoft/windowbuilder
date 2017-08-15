@@ -110,7 +110,7 @@ $p.cat.clrs.__define({
                 clr_group = sys.project._dp.sys.clr_group;
               }
 						}
-						else if(sys instanceof $p.DataProcessorObj){
+						else if(sys instanceof $p.classes.DataProcessorObj){
 							clr_group = sys.sys.clr_group;
 						}
 						else{
@@ -183,8 +183,7 @@ $p.cat.clrs.__define({
 
       const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
-
-			function get_option_list(val, selection) {
+			function get_option_list(selection, val) {
 
 				selection.clr_in = $p.utils.blank.guid;
 				selection.clr_out = $p.utils.blank.guid;
@@ -200,7 +199,7 @@ $p.cat.clrs.__define({
 					});
 				}
 
-				return this.constructor.prototype.get_option_list.call(this, val, selection);
+				return this.constructor.prototype.get_option_list.call(this, selection, val);
 			}
 
 			return (wnd instanceof Promise ? wnd : Promise.resolve(wnd))
@@ -236,7 +235,6 @@ $p.cat.clrs.__define({
 						return true;
 					});
 
-					Object.unobserve(eclr);
 
 					eclr.clr_in = $p.utils.blank.guid;
 					eclr.clr_out = $p.utils.blank.guid;
@@ -294,46 +292,41 @@ $p.cat.clrs.__define({
 				delete attr.initial_value;
 			}
 
-			return $p.DataManager.prototype.sync_grid.call(this, attr, grid);
+			return $p.classes.DataManager.prototype.sync_grid.call(this, attr, grid);
 		}
 	}
 });
 
-
-$p.CatClrs.prototype.__define({
+$p.CatClrs = class CatClrs extends $p.CatClrs {
 
   // записывает элемент цвета на сервере
-  register_on_server: {
-    value: function () {
-      return $p.wsql.pouch.save_obj(this, {
-        db: $p.wsql.pouch.remote.ram
+  register_on_server() {
+    return $p.wsql.pouch.save_obj(this, {
+      db: $p.wsql.pouch.remote.ram
+    })
+      .then(function (obj) {
+        return obj.save();
       })
-        .then(function (obj) {
-          return obj.save();
-        })
-    }
-  },
-
-  // возвращает стороны, на которых цвет
-  sides: {
-    get: function () {
-      const res = {is_in: false, is_out: false};
-      if(!this.empty() && !this.predefined_name){
-        if(this.clr_in.empty() && this.clr_out.empty()){
-          res.is_in = res.is_out = true;
-        }
-        else{
-          if(!this.clr_in.empty() && !this.clr_in.predefined_name){
-            res.is_in = true;
-          }
-          if(!this.clr_out.empty() && !this.clr_out.predefined_name){
-            res.is_out = true;
-          }
-        }
-      }
-      return res;
-    }
   }
 
-});
+  // возвращает стороны, на которых цвет
+  get sides() {
+    const res = {is_in: false, is_out: false};
+    if(!this.empty() && !this.predefined_name){
+      if(this.clr_in.empty() && this.clr_out.empty()){
+        res.is_in = res.is_out = true;
+      }
+      else{
+        if(!this.clr_in.empty() && !this.clr_in.predefined_name){
+          res.is_in = true;
+        }
+        if(!this.clr_out.empty() && !this.clr_out.predefined_name){
+          res.is_out = true;
+        }
+      }
+    }
+    return res;
+  }
+};
+
 

@@ -233,16 +233,10 @@ class GeneratrixElement extends BuilderElement {
 
     // информируем систему об изменениях
     if(changed){
-
-      this._attr._rays.clear();
-
-      this.layer && this.layer.notify && this.layer.notify(noti);
-
-      const notifier = Object.getNotifier(this);
-      notifier.notify({ type: 'update', name: "x1" });
-      notifier.notify({ type: 'update', name: "y1" });
-      notifier.notify({ type: 'update', name: "x2" });
-      notifier.notify({ type: 'update', name: "y2" });
+      const {_attr, layer, project} = this;
+      _attr._rays.clear();
+      layer && layer.notify && layer.notify(noti);
+      project.notify(this, 'update', {x1: true, x2: true, y1: true, y2: true});
     }
 
     return other;

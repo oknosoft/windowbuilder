@@ -28,13 +28,10 @@ class UndoRedo {
     this.clear = this.clear.bind(this);
 
     // При изменениях изделия, запускаем таймер снапшота
-    $p.eve.attachEvent("scheme_changed", this.scheme_changed);
-
-    // При закрытии редактора чистим историю
-    $p.eve.attachEvent("editor_closed", this.clear);
+    _editor.eve.on('scheme_changed', this.scheme_changed);
 
     // При готовности снапшота, добавляем его в историю
-    $p.eve.attachEvent("scheme_snapshot", this.scheme_snapshot);
+    _editor.eve.on('scheme_snapshot', this.scheme_snapshot);
 
   }
 
@@ -42,7 +39,13 @@ class UndoRedo {
    * Инициализирует создание снапшота - запускает пересчет изделия
    */
   run_snapshot() {
-    this._pos >= 0 && this._editor.project.save_coordinates({snapshot: true, clipboard: false});
+    const {project} = this._editor;
+    if(project._ch.length){
+      this._snap_timer = setTimeout(this.run_snapshot, 600);
+    }
+    else{
+      this._pos >= 0 && project.save_coordinates({snapshot: true, clipboard: false});
+    }
   }
 
   /**
@@ -61,18 +64,19 @@ class UndoRedo {
    */
   scheme_changed(scheme, attr) {
     const snapshot = scheme._attr._snapshot || (attr && attr.snapshot);
+    this._snap_timer && clearTimeout(this._snap_timer);
+    this._snap_timer = 0;
     if (!snapshot && scheme == this._editor.project) {
       // при открытии изделия чистим историю
       if (scheme._attr._loading) {
-        setTimeout(() => {
+        this._snap_timer = setTimeout(() => {
           this.clear();
           this.save_snapshot(scheme);
-        }, 700);
+        }, 600);
       }
       else {
         // при обычных изменениях, запускаем таймер снапшота
-        this._snap_timer && clearTimeout(this._snap_timer);
-        this._snap_timer = setTimeout(this.run_snapshot, 700);
+        this._snap_timer = setTimeout(this.run_snapshot, 600);
       }
     }
   }
@@ -85,7 +89,7 @@ class UndoRedo {
   calculate(pos) {
     const {_diff} = this;
     const curr = _diff[0]._clone();
-    for(let i = 1; i < _diff.length && i <= pos; i++){
+    for (let i = 1; i < _diff.length && i <= pos; i++) {
       _diff[i].forEach((change) => {
         DeepDiff.applyChange(curr, true, change);
       });
@@ -95,14 +99,14 @@ class UndoRedo {
 
 
   save_snapshot(scheme) {
-    const curr = scheme.ox._obj._clone(["_row", "extra_fields", "glasses", "specification", "predefined_name"]);
+    const curr = scheme.ox._obj._clone(['_row', 'extra_fields', 'glasses', 'specification', 'predefined_name']);
     const {_diff, _pos} = this;
-    if(!_diff.length){
+    if (!_diff.length) {
       _diff.push(curr);
     }
-    else{
-      const diff = DeepDiff.diff(this.calculate(Math.min(_diff.length-1, _pos)), curr);
-      if(diff && diff.length){
+    else {
+      const diff = DeepDiff.diff(this.calculate(Math.min(_diff.length - 1, _pos)), curr);
+      if (diff && diff.length) {
         // если pos < конца истории, отрезаем хвост истории
         if (_pos > 0 && _pos < (_diff.length - 1)) {
           _diff.splice(_pos, _diff.length - _pos - 1);
@@ -117,27 +121,27 @@ class UndoRedo {
   apply_snapshot() {
     this.disable_buttons();
     this._editor.project.load_stamp(this.calculate(this._pos), true);
-    setTimeout(() => this.enable_buttons());
+    this.enable_buttons();
   }
 
   enable_buttons() {
     const {back, rewind} = this._editor.tb_top.buttons;
     if (this._pos < 1)
-      back.classList.add("disabledbutton");
+      back.classList.add('disabledbutton');
     else
-      back.classList.remove("disabledbutton");
+      back.classList.remove('disabledbutton');
 
     if (this._pos < (this._diff.length - 1))
-      rewind.classList.remove("disabledbutton");
+      rewind.classList.remove('disabledbutton');
     else
-      rewind.classList.add("disabledbutton");
+      rewind.classList.add('disabledbutton');
 
   }
 
   disable_buttons() {
     const {back, rewind} = this._editor.tb_top.buttons;
-    back.classList.add("disabledbutton");
-    rewind.classList.add("disabledbutton");
+    back.classList.add('disabledbutton');
+    rewind.classList.add('disabledbutton');
   }
 
   clear() {
@@ -158,6 +162,16 @@ class UndoRedo {
     if (this._pos <= (this._diff.length - 1)) {
       this._pos++;
       this.apply_snapshot();
+    }
+  }
+
+  unload() {
+    this.clear();
+    this._snap_timer && clearTimeout(this._snap_timer);
+    this._editor.eve.off('scheme_changed', this.scheme_changed);
+    this._editor.eve.off('scheme_snapshot', this.scheme_snapshot);
+    for (const fld in this) {
+      delete this[fld];
     }
   }
 

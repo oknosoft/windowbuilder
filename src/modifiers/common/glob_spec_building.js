@@ -33,7 +33,7 @@ class SpecBuilding {
   specification_adjustment (attr, with_price) {
 
     const {scheme, calc_order_row, spec, save} = attr;
-    const calc_order = calc_order_row._owner._owner ;
+    const calc_order = calc_order_row._owner._owner;
     const order_rows = new Map();
     const adel = [];
     const ox = calc_order_row.characteristic;
@@ -71,18 +71,20 @@ class SpecBuilding {
     });
 
     // синхронизируем состав строк - сначала удаляем лишние
-    adel.length = 0;
-    calc_order.production.forEach((row) => {
-      if (row.ordn === ox){
-        if (ox._order_rows.indexOf(row.characteristic) === -1){
-          adel.push(row);
+    if(!ox.empty()){
+      adel.length = 0;
+      calc_order.production.forEach((row) => {
+        if (row.ordn === ox){
+          if (ox._order_rows.indexOf(row.characteristic) === -1){
+            adel.push(row);
+          }
+          else {
+            order_rows.set(row.characteristic, row);
+          }
         }
-        else {
-          order_rows.set(row.characteristic, row);
-        }
-      }
-    });
-    adel.forEach((row) => calc_order.production.del(row.row-1));
+      });
+      adel.forEach((row) => calc_order.production.del(row.row-1));
+    }
 
     const ax = [];
 

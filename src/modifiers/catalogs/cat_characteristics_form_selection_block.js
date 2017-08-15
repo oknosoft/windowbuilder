@@ -11,111 +11,83 @@
 (function($p){
 
 	const _mgr = $p.cat.characteristics;
-  const _meta = _mgr.metadata()._clone();
 	let selection_block, wnd;
+
+	class SelectionBlock {
+
+	  constructor(_mgr) {
+
+	    this._obj = {
+        calc_order: $p.wsql.get_user_param("template_block_calc_order")
+      }
+
+      this._meta = Object.assign(_mgr.metadata()._clone(), {
+        form: {
+          selection: {
+            fields: ["presentation","svg"],
+            cols: [
+              {"id": "presentation", "width": "320", "type": "ro", "align": "left", "sort": "na", "caption": "Наименование"},
+              {"id": "svg", "width": "*", "type": "rsvg", "align": "left", "sort": "na", "caption": "Эскиз"}
+            ]
+          }
+        }
+      });
+    }
+
+    // виртуальные метаданные для поля фильтра по заказу
+    _metadata(f) {
+	    const {calc_order} = this._meta.fields;
+      return f ? calc_order : {fields: {calc_order}};
+    }
+
+    get _manager() {
+	    return {
+        value_mgr: $p.md.value_mgr,
+        class_name: "dp.fake"
+      }
+    }
+
+    get calc_order() {
+      return $p.CatCharacteristics.prototype._getter.call(this, "calc_order");
+    }
+    set calc_order(v) {
+
+	    const {_obj, attr} = this;
+
+      if(!v || v == _obj.calc_order){
+        return;
+      }
+      // если вместо заказа прибежала харакетристика - возвращаем её в качестве результата
+      if(v._block){
+        wnd && wnd.close();
+        return attr.on_select && attr.on_select(v._block);
+      }
+      _obj.calc_order = v.valueOf();
+
+      if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount()){
+        wnd.elmnts.filter.call_event();
+      }
+
+      if(!$p.utils.is_empty_guid(_obj.calc_order) &&
+        $p.wsql.get_user_param("template_block_calc_order") != _obj.calc_order){
+        $p.wsql.set_user_param("template_block_calc_order", _obj.calc_order);
+      }
+    }
+
+  }
 
 	// попробуем подсунуть типовой форме выбора виртуальные метаданные - с деревом и ограниченным списком значений
 	_mgr.form_selection_block = function(pwnd, attr = {}){
 
 		if(!selection_block){
-			selection_block = {
-				_obj: {
-					_calc_order: $p.utils.blank.guid
-				}
-			};
-			_meta.form = {
-				selection: {
-					fields: ["presentation","svg"],
-					cols: [
-						{"id": "presentation", "width": "320", "type": "ro", "align": "left", "sort": "na", "caption": "Наименование"},
-						{"id": "svg", "width": "*", "type": "rsvg", "align": "left", "sort": "na", "caption": "Эскиз"}
-					]
-				}
-			};
-
-			selection_block.__define({
-
-				// виртуальные метаданные для поля фильтра по заказу
-				_metadata: {
-					value : function(){
-
-						// возвращаем типовые метаданные зарактеристики, но могли бы вернуть изменённый клон
-						//var calc_order = $p.cat.characteristics.metadata().fields.calc_order._clone();
-						// calc_order.choice_links = [{
-						// 	name: ["selection",	"s"],
-						// 	path: [
-						// 		function(o, f){
-						//
-						// 			if($p.utils.is_data_obj(o)){
-						// 				return o.s > 0;
-						//
-						// 			}else{
-						// 				var refs = "";
-						// 				t.project._dp.sys.elmnts.find_rows(selection, function (row) {
-						// 					if(refs)
-						// 						refs += ", ";
-						// 					refs += "'" + row.nom.ref + "'";
-						// 				});
-						// 				return "_t_.ref in (" + refs + ")";
-						// 			}
-						// 		}]}
-						// ];
-
-						return {
-							fields: {
-								calc_order: _meta.fields.calc_order
-							}
-						};
-					}
-				},
-
-				// виртуальный датаменеджер для поля фильтра по заказу
-				_manager: {
-					get: function () {
-						return {
-							class_name: "dp.fake"
-						};
-					}
-				},
-
-				// при изменении заказа, обновляем табличную часть
-				calc_order: {
-					get: function () {
-						return $p.CatCharacteristics.prototype._getter.call(this, "calc_order");
-					},
-
-					set: function (v) {
-						if(!v || v == this._obj.calc_order){
-              return;
-            }
-            // если вместо заказа прибежала харакетристика - возвращаем её в качестве результата
-            if(v._block){
-              wnd && wnd.close();
-              return attr.on_select && attr.on_select(v._block);
-            }
-						$p.CatCharacteristics.prototype.__setter.call(this, "calc_order", v);
-
-						if(wnd && wnd.elmnts && wnd.elmnts.filter && wnd.elmnts.grid && wnd.elmnts.grid.getColumnCount()){
-              wnd.elmnts.filter.call_event();
-            }
-
-						if(!$p.utils.is_empty_guid(this._obj.calc_order) &&
-							$p.wsql.get_user_param("template_block_calc_order") != this._obj.calc_order){
-							$p.wsql.set_user_param("template_block_calc_order", this._obj.calc_order);
-						}
-					}
-				}
-			});
+			selection_block = new SelectionBlock(_mgr);
 		}
+    selection_block.attr = attr;
 
 		// объект отбора по ссылке на расчет в продукции
-		if(selection_block.calc_order.empty()){
-			selection_block.calc_order = $p.wsql.get_user_param("template_block_calc_order");
-		}
 		if($p.job_prm.builder.base_block && (selection_block.calc_order.empty() || selection_block.calc_order.is_new())){
 			$p.job_prm.builder.base_block.some((o) => {
 				selection_block.calc_order = o;
-				$p.wsql.set_user_param("template_block_calc_order", selection_block.calc_order.ref);
 				return true;
 			});
 		}
@@ -124,7 +96,7 @@
 		attr.initial_value = $p.wsql.get_user_param("template_block_initial_value");
 
 		// подсовываем типовой форме списка изменённые метаданные
-		attr.metadata = _meta;
+		attr.metadata = selection_block._meta;
 
 		// и еще, подсовываем форме собственный обработчик получения данных
 		attr.custom_selection = function (attr) {
@@ -179,7 +151,7 @@
 					// фильтруем по подстроке
 					crefs.length = 0;
 					ares.forEach((o) => {
-            const presentation = (o.calc_order_row.note || o.note || o.name) + "<br />" + o.owner.name;
+            const presentation = ((o.calc_order_row && o.calc_order_row.note) || o.note || o.name) + "<br />" + o.owner.name;
 						if(!attr.filter || presentation.toLowerCase().match(attr.filter.toLowerCase()))
 							crefs.push({
 								ref: o.ref,
@@ -226,7 +198,7 @@
 			obj: selection_block,
 			field: "calc_order",
 			width: 220,
-			get_option_list: (val, selection) => new Promise((resolve, reject) => {
+			get_option_list: (selection, val) => new Promise((resolve, reject) => {
 
 			  setTimeout(() => {
           const l = [];
