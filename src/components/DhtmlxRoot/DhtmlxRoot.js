@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import WindowSizer from '../../metadata-ui/WindowSize';
+import WindowSizer from 'metadata-react/WindowSize';
 
 /* global dhtmlXWindows */
 

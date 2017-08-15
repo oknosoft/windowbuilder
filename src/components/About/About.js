@@ -1,17 +1,17 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import {withStyles, createStyleSheet} from 'material-ui/styles';
+import withStyles from 'material-ui/styles/withStyles';
 import Grid from 'material-ui/Grid';
 
 import withIface from '../../redux/withIface';
 
-const styleSheet = createStyleSheet('About', {
+const styleSheet = {
   root: {
     flexGrow: 1,
     marginLeft: 12,
     marginRight: 16,
   },
-});
+};
 
 class About extends Component {
 

@@ -3,7 +3,7 @@ import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from "material-ui
 import IconButton from "material-ui/IconButton";
 import AddIcon from "material-ui/svg-icons/content/add-circle-outline";
 import RemoveIcon from "material-ui/svg-icons/action/delete";
-import TabularSection from "metadata-ui/TabularSection";
+import TabularSection from "metadata-react/TabularSection";
 import SelectOrder from "./SelectOrder";
 
 

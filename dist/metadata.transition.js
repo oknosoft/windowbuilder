@@ -1,1 +1,0 @@
-../../git-osde/lib/metadata.transition.js

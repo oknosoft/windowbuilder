@@ -27,15 +27,15 @@ const pages = [];
 
 const nonCriticalAssets =
   [
-    'dist/imgs/fav-wnd.ico',
-    'dist/imgs/fav-okn144.png',
-    'dist/imgs/splash.gif',
+    'imgs/fav-wnd.ico',
+    'imgs/fav-okn144.png',
+    'imgs/splash.gif',
 
-    'dist/imgs/stamp.png',
-    'dist/imgs/about_48.png',
-    'dist/imgs/settings_48.png',
-    'dist/imgs/events_48.png',
-    'dist/imgs/projects_48.png',
+    'imgs/stamp.png',
+    'imgs/about_48.png',
+    'imgs/settings_48.png',
+    'imgs/events_48.png',
+    'imgs/projects_48.png',
   ]
     .concat(pages);
 		// .filter((file) => {

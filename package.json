@@ -24,13 +24,14 @@
     "alasql": "^0.4.1",
     "clipboard": "^1.7",
     "history": "^4.6.3",
-    "material-ui": "^1.0.0-beta.4",
+    "material-ui": "^1.0.0-beta.5",
     "material-ui-icons": "^1.0.0-alpha.19",
-    "metadata-abstract-ui": "^2.0.1-beta.23",
-    "metadata-core": "^2.0.1-beta.23",
-    "metadata-pouchdb": "^2.0.1-beta.23",
-    "metadata-react": "^2.0.1-beta.23",
-    "metadata-redux": "^2.0.1-beta.23",
+    "metadata-abstract-ui": "^2.0.2-beta.25",
+    "metadata-core": "^2.0.2-beta.25",
+    "metadata-dhtmlx": "^2.0.2-beta.25",
+    "metadata-pouchdb": "^2.0.2-beta.25",
+    "metadata-react": "^2.0.2-beta.25",
+    "metadata-redux": "^2.0.2-beta.25",
     "moment": "^2.18",
     "paper-jsdom-canvas": "^0.11.4",
     "pouchdb": "^6.3.4",
@@ -45,8 +46,8 @@
     "pouchdb-replication": "^6.3.4",
     "react": "^15.6.1",
     "react-click-outside": "^2.3.1",
-    "react-data-grid": "^2.0.55",
-    "react-data-grid-addons": "^2.0.55",
+    "react-data-grid": "^2.0.56",
+    "react-data-grid-addons": "^2.0.56",
     "react-dev-utils": "^3.1.1",
     "react-dom": "^15.6.1",
     "react-error-overlay": "^1.0.10",
@@ -89,7 +90,7 @@
     "eslint-plugin-flowtype": "^2.35.0",
     "eslint-plugin-import": "^2.7",
     "eslint-plugin-jsx-a11y": "^6.0.2",
-    "eslint-plugin-react": "^7.2.0",
+    "eslint-plugin-react": "^7.2.1",
     "extract-text-webpack-plugin": "2.1.2",
     "file-loader": "^0.11.2",
     "fs-extra": "^4.0.1",
@@ -105,7 +106,7 @@
     "gulp-wrap": "^0.13.0",
     "html-webpack-plugin": "2.29.0",
     "jest": "20.0.4",
-    "postcss-flexbugs-fixes": "^3.2",
+    "postcss-flexbugs-fixes": "^3.2.0",
     "postcss-loader": "2.0.6",
     "react-addons-test-utils": "^15.6",
     "react-test-renderer": "^15.6",
@@ -116,7 +117,7 @@
     "url-loader": "^0.5.9",
     "webpack": "^2.7.0",
     "webpack-dev-server": "2.5.0",
-    "webpack-manifest-plugin": "^1.3.0"
+    "webpack-manifest-plugin": "^1.3.1"
   },
   "scripts": {
     "start": "node scripts/start.js",
@@ -124,7 +125,7 @@
     "test": "node scripts/test.js --env=jsdom",
     "lint": "eslint .",
     "meta:prebuild": "node scripts/prebuild.meta.js",
-    "meta:link": "npm link metadata-core metadata-redux metadata-pouchdb metadata-abstract-ui metadata-react"
+    "meta:link": "npm link metadata-core metadata-dhtmlx metadata-redux metadata-pouchdb metadata-abstract-ui metadata-react"
   },
   "jest": {
     "collectCoverageFrom": [

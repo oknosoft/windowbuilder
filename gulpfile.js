@@ -35,7 +35,7 @@ gulp.task('build-iface', function(){
 				return undefined;
 			}
 		}))
-    .pipe(gulp.dest('./dist'))
+    .pipe(gulp.dest('./public/dist'))
     // .pipe(rename('wnd_debug.min.js'))
     // .pipe(uglify())
     // .pipe(gulp.dest('./dist'))
@@ -44,7 +44,6 @@ gulp.task('build-iface', function(){
 // Cборка библиотеки рисовалки
 gulp.task('build-lib', function(){
 	return gulp.src([
-	  './lib/deepdiff.js',
 		'./src/editor/*.js',
 		'./src/geometry/*.js',
 		'./src/tools/*.js',
@@ -57,7 +56,7 @@ gulp.task('build-lib', function(){
 				return 'Editor';
 			}
 		}))
-		.pipe(gulp.dest('./dist'))
+		.pipe(gulp.dest('./public/dist'))
     // .pipe(rename('windowbuilder.min.js'))
     // .pipe(uglify())
     // .pipe(gulp.dest('./dist'))
@@ -94,15 +93,6 @@ gulp.task('injected-templates', function(){
 		.pipe(gulp.dest('./data'))
 });
 
-// Сборка метаданных
-gulp.task('injected-meta', function(){
-
-	return gulp.src(['./src/utils/default_settings.js'])
-		.pipe(prebuild())
-		.pipe(gulp.dest('./data'))
-
-});
-
 // Сборка css
 gulp.task('css-base64', function () {
 	return gulp.src([
@@ -112,6 +102,6 @@ gulp.task('css-base64', function () {
 	])
 		.pipe(base64())
 		.pipe(concat('windowbuilder.css'))
-		.pipe(gulp.dest('./dist'))
+		.pipe(gulp.dest('./public/dist'))
 });
 

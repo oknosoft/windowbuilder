@@ -9,7 +9,7 @@ import DumbScreen from '../DumbScreen';
 import Snackbar from 'material-ui/Snackbar';
 import Button from 'material-ui/Button';
 
-import Header from '../Header';
+import Header from 'metadata-react/Header';
 import items from './menu_items'; // массив элементов меню
 
 import AboutPage from '../About';
@@ -17,7 +17,7 @@ import Builder from '../Builder';
 import DataRoute from '../DataRoute';
 import MetaTreePage from '../MetaTreePage';
 import NotFoundPage from '../NotFoundPage';
-import FrmLogin from '../../metadata-ui/FrmLogin';
+import FrmLogin from 'metadata-react/FrmLogin';
 
 import withNavigateAndMeta from '../../redux/withNavigateAndMeta';
 

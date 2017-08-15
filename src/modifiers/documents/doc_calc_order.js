@@ -452,7 +452,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
     return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-      .then(() => $p.load_script('/lib/qrcodejs/qrcode.min.js', 'script'))
+      .then(() => $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
       .then(() => {
 
         const svg = document.createElement('SVG');
@@ -859,9 +859,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
     const {rounding} = _owner._owner;
 
     if(field == 'nom' || field == 'characteristic' || field == 'quantity') {
-      if(field != 'quantity') {
-        _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
-      }
+      _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
       const {characteristic} = this;
       if(!characteristic.empty() && !characteristic.calc_order.empty()) {
         const fake_prm = {

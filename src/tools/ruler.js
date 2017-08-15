@@ -83,7 +83,7 @@ class RulerWnd {
           {name: 'inner', img: 'ruler_inner.png', tooltip: $p.msg.ruler_inner, float: 'left'},
           {name: 'outer', img: 'ruler_outer.png', tooltip: $p.msg.ruler_outer, float: 'left'},
         ],
-        image_path: 'dist/imgs/',
+        image_path: 'imgs/',
         onclick: (name) => {
 
           if (['0', '1', '2'].indexOf(name) != -1) {

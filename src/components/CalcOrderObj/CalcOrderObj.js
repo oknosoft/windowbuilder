@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import DhtmlxCell from '../../metadata-ui/DhtmlxCell';
+import DhtmlxCell from '../DhtmlxCell';
 
 class CalcOrderObj extends DhtmlxCell {
 

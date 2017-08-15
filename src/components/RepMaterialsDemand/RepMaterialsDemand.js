@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 
-import FrmReport from "metadata-ui/FrmReport";
+import FrmReport from "metadata-react/FrmReport";
 import RepParams from "./RepParams";
 
 // используем типовой отчет, в котором переопределяем закладку параметров и обработчик при изменении схемы компоновки

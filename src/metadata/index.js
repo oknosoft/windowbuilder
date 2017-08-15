@@ -1,4 +1,4 @@
-// конструктор metadata.js
+// модуль создаёт и настраивает MetaEngine
 
 // функция установки параметров сеанса
 import settings from '../../config/app.settings';
@@ -15,6 +15,10 @@ import modifiers from './modifiers';
 // генератор события META_LOADED для redux
 import {metaActions} from 'metadata-redux';
 
+// загружаем metadata.transition и экспортируем $p глобально
+import $p from 'metadata-dhtmlx';
+global.$p = $p;
+
 // параметры сеанса и метаданные инициализируем без лишних проволочек
 $p.wsql.init(settings, meta_init);
 patch_cnn();
@@ -25,6 +29,10 @@ export function init(store) {
   return $p.load_script('/dist/windowbuilder.js', 'script')
     .then(() => $p.load_script('/dist/wnd_debug.js', 'script'))
     .then(() => {
+
+      // подгружаем дополнительные стили
+      $p.utils.load_script('https://cdn.jsdelivr.net/fontawesome/4.7.0/css/font-awesome.min.css', 'link');
+      $p.utils.load_script('https://fonts.googleapis.com/css?family=Roboto', 'link');
 
       // выполняем модификаторы
       modifiers($p);
@@ -38,5 +46,4 @@ export function init(store) {
     });
 }
 
-// экспортируем $p и PouchDB глобально
-//global.$p = $p;
+

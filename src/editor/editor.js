@@ -154,7 +154,7 @@ class Editor extends paper.PaperScope {
      * @private
      */
     this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '320px',
-      image_path: 'dist/imgs/',
+      image_path: 'imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
         {name: 'pan', css: 'tb_icon-hand', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
@@ -184,7 +184,7 @@ class Editor extends paper.PaperScope {
      * @private
      */
     this.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
-      image_path: 'dist/imgs/',
+      image_path: 'imgs/',
       buttons: [
 
         {name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '34px'},

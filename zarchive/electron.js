@@ -20,7 +20,7 @@ function createWindow () {
 	mainWindow = new BrowserWindow({
 		width: 1200,
 		height: 800,
-		icon:	'dist/imgs/fav-wnd.ico'
+		icon:	'imgs/fav-wnd.ico'
 	})
 
 	// и загружаем index.html приложения.

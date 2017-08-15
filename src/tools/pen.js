@@ -326,7 +326,7 @@ class ToolPen extends ToolElement {
               {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
         },
       ],
-      image_path: "dist/imgs/",
+      image_path: "imgs/",
       onclick: (name) => this.standard_form(name)
     });
     this.wnd.tb_mode.cell.style.backgroundColor = "#f5f5f5";

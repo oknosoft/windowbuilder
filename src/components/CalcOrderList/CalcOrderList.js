@@ -1,7 +1,7 @@
 // import React, {Component} from 'react';
 // import PropTypes from 'prop-types';
-import DhtmlxCell from '../../metadata-ui/DhtmlxCell';
-import WindowSizer from '../../metadata-ui/WindowSize';
+import DhtmlxCell from '../DhtmlxCell';
+import WindowSizer from 'metadata-react/WindowSize';
 import withIface from '../../redux/withIface';
 import {set_state_and_title} from '../App/menu_items';
 
