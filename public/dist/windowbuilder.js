@@ -8577,13 +8577,14 @@ class Onlay extends ProfileItem {
 
 class Scheme extends paper.Project {
 
-  constructor(_canvas, _editor) {
+  constructor(_canvas, _editor, _silent) {
 
     super(_canvas);
 
     const _scheme = _editor.project = this;
 
     const _attr = this._attr = {
+      _silent,
       _bounds: null,
       _calc_order_row: null,
       _update_timer: 0
@@ -8635,7 +8636,7 @@ class Scheme extends paper.Project {
       }
 
       for (const name of row_changed_names) {
-        if(fields.hasOwnProperty(name)) {
+        if(_attr._calc_order_row && fields.hasOwnProperty(name)) {
           _attr._calc_order_row[name] = obj[name];
           _scheme.register_change(true);
         }
@@ -8718,8 +8719,9 @@ class Scheme extends paper.Project {
 
     };
 
-    this._dp._manager.on('update', this._dp_listener);
-
+    if(!_attr._silent){
+      this._dp._manager.on('update', this._dp_listener);
+    }
   }
 
   get ox() {
@@ -8730,8 +8732,8 @@ class Scheme extends paper.Project {
     const {_dp, _attr, _papam_listener} = this;
     let setted;
 
-    _dp.characteristic._manager.off('update', _papam_listener);
-    _dp.characteristic._manager.off('rows', _papam_listener);
+    !_attr._silent && _dp.characteristic._manager.off('update', _papam_listener);
+    !_attr._silent && _dp.characteristic._manager.off('rows', _papam_listener);
 
     _dp.characteristic = v;
 
@@ -8778,13 +8780,15 @@ class Scheme extends paper.Project {
       _dp.clr = _dp.sys.default_clr;
     }
 
-    this._scope.eve.emit_async('rows', ox, {constructions: true});
-    _dp._manager.emit_async('rows', _dp, {extra_fields: true});
+    if(!_attr._silent){
+      this._scope.eve.emit_async('rows', ox, {constructions: true});
+      _dp._manager.emit_async('rows', _dp, {extra_fields: true});
 
-    _dp.characteristic._manager.on({
-      update: _papam_listener,
-      rows: _papam_listener,
-    });
+      _dp.characteristic._manager.on({
+        update: _papam_listener,
+        rows: _papam_listener,
+      });
+    }
 
   }
 

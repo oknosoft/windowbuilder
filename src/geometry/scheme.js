@@ -24,7 +24,7 @@
 
 class Scheme extends paper.Project {
 
-  constructor(_canvas, _editor) {
+  constructor(_canvas, _editor, _silent) {
 
     // создаём объект проекта paperjs
     super(_canvas);
@@ -32,6 +32,7 @@ class Scheme extends paper.Project {
     const _scheme = _editor.project = this;
 
     const _attr = this._attr = {
+      _silent,
       _bounds: null,
       _calc_order_row: null,
       _update_timer: 0
@@ -88,7 +89,7 @@ class Scheme extends paper.Project {
       }
 
       for (const name of row_changed_names) {
-        if(fields.hasOwnProperty(name)) {
+        if(_attr._calc_order_row && fields.hasOwnProperty(name)) {
           _attr._calc_order_row[name] = obj[name];
           _scheme.register_change(true);
         }
@@ -191,8 +192,9 @@ class Scheme extends paper.Project {
     };
 
     // начинаем следить за _dp, чтобы обработать изменения цвета и параметров
-    this._dp._manager.on('update', this._dp_listener);
-
+    if(!_attr._silent){
+      this._dp._manager.on('update', this._dp_listener);
+    }
   }
 
   /**
@@ -209,8 +211,8 @@ class Scheme extends paper.Project {
     let setted;
 
     // пытаемся отключить обсервер от табчасти
-    _dp.characteristic._manager.off('update', _papam_listener);
-    _dp.characteristic._manager.off('rows', _papam_listener);
+    !_attr._silent && _dp.characteristic._manager.off('update', _papam_listener);
+    !_attr._silent && _dp.characteristic._manager.off('rows', _papam_listener);
 
     // устанавливаем в _dp характеристику
     _dp.characteristic = v;
@@ -267,14 +269,16 @@ class Scheme extends paper.Project {
     }
 
     // оповещаем о новых слоях и свойствах изделия
-    this._scope.eve.emit_async('rows', ox, {constructions: true});
-    _dp._manager.emit_async('rows', _dp, {extra_fields: true});
+    if(!_attr._silent){
+      this._scope.eve.emit_async('rows', ox, {constructions: true});
+      _dp._manager.emit_async('rows', _dp, {extra_fields: true});
 
-    // начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
-    _dp.characteristic._manager.on({
-      update: _papam_listener,
-      rows: _papam_listener,
-    });
+      // начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
+      _dp.characteristic._manager.on({
+        update: _papam_listener,
+        rows: _papam_listener,
+      });
+    }
 
   }
 

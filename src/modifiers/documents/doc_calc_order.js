@@ -594,21 +594,21 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    * Загружает в RAM данные характеристик продукций заказа
    * @return {Promise.<TResult>|*}
    */
-  load_production() {
+  load_production(forse) {
     const prod = [];
+    const mgr = $p.cat.characteristics;
     this.production.forEach((row) => {
       const {nom, characteristic} = row;
-      if(!characteristic.empty() && characteristic.is_new() && !nom.is_procedure && !nom.is_service && !nom.is_accessory) {
+      if(!characteristic.empty() && (forse || characteristic.is_new()) && !nom.is_procedure && !nom.is_accessory) {
         prod.push(characteristic.ref);
       }
     });
-    const mgr = $p.cat.characteristics;
-    return (mgr.pouch_load_array ? mgr.pouch_load_array(prod) : mgr.adapter.load_array(mgr, prod))
+    return (mgr.adapter.load_array(mgr, prod))
       .then(() => {
         prod.length = 0;
         this.production.forEach((row) => {
           const {nom, characteristic} = row;
-          if(!characteristic.empty() && !nom.is_procedure && !nom.is_service && !nom.is_accessory) {
+          if(!characteristic.empty() && !nom.is_procedure && !nom.is_accessory) {
             prod.push(characteristic);
           }
         });
