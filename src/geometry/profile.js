@@ -645,6 +645,14 @@ class ProfileItem extends GeneratrixElement {
     this.path && (this.path.opacity = v);
   }
 
+  /**
+   * Припуск для соединения "сварной шов"
+   */
+  get dx0() {
+    const {cnn} = this.rays.b;
+    const main_row = cnn && cnn.main_row(elm);
+    return main_row && main_row.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? -main_row.sz : 0;
+  }
 
   setSelection(selection) {
     super.setSelection(selection);

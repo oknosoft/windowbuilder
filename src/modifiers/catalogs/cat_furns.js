@@ -169,7 +169,6 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
     const res = $p.dp.buyers_order.create().specification;
     const {ox} = contour.project;
     const {НаПримыкающий} = $p.enm.transfer_operations_options;
-    const {СварнойШов} = $p.enm.angle_calculating_ways;
 
     // бежим по всем строкам набора
     this.specification.find_rows({dop: 0}, (row_furn) => {
@@ -190,20 +189,26 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
           // расчет координаты и (или) визуализации
           if(dop_row.is_procedure_row){
 
-            const invert = contour.direction == $p.enm.open_directions.Правое,
-              elm = contour.profile_by_furn_side(dop_row.side, cache),
-              len = elm._row.len,
-              sizefurn = elm.nom.sizefurn,
-              main_row = elm.rays.b.cnn && elm.rays.b.cnn.main_row(elm),
-              dx0 = main_row && main_row.angle_calc_method == СварнойШов ? -main_row.sz : 0,
-              dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
-              faltz = len - 2 * sizefurn;
+            // для правого открывания, инвертируем координату
+            const invert = contour.direction == $p.enm.open_directions.Правое;
+            // получаем элемент через сторону фурнитуры
+            const elm = contour.profile_by_furn_side(dop_row.side, cache);
+            // profile._len - то, что получится после обработки
+            // row_spec.len - сколько взять (отрезать)
+            // len - геометрическая длина без учета припусков на обработку
+            const {len} = elm._row;
+            // свойство номенклатуры размер до фурнпаза
+            const {sizefurn} = elm.nom;
+            // в зависимости от значения константы add_d, вычисляем dx1
+            const dx1 = $p.job_prm.builder.add_d ? sizefurn : 0;
+            // длина с поправкой на фурнпаз
+            const faltz = len - 2 * sizefurn;
 
             let invert_nearest = false, coordin = 0;
 
             if(dop_row.offset_option == $p.enm.offset_options.Формула){
               if(!dop_row.formula.empty()){
-                coordin = dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx0, dx1, faltz, invert, dop_row});
+                coordin = dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx1, faltz, invert, dop_row});
               }
             }
             else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
@@ -250,15 +255,20 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
               const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
               procedure_row.handle_height_min = nearest.elm;
               procedure_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
+              // если сказано учесть припуск - добавляем dx0
+              if(dop_row.overmeasure){
+                procedure_row.coefficient +=  nearest.dx0;
+              }
             }
             else{
               procedure_row.handle_height_min = elm.elm;
               procedure_row.coefficient = coordin;
+              // если сказано учесть припуск - добавляем dx0
+              if(dop_row.overmeasure){
+                procedure_row.coefficient +=  elm.dx0;
+              }
             }
-            // если сказано учесть припуск - добавляем dx0
-            if(dop_row.overmeasure){
-              procedure_row.coefficient += dx0;
-            }
+
             return;
           }
           else if(!dop_row.quantity){

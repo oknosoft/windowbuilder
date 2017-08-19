@@ -1377,7 +1377,6 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
     const res = $p.dp.buyers_order.create().specification;
     const {ox} = contour.project;
     const {НаПримыкающий} = $p.enm.transfer_operations_options;
-    const {СварнойШов} = $p.enm.angle_calculating_ways;
 
     this.specification.find_rows({dop: 0}, (row_furn) => {
 
@@ -1394,20 +1393,18 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
           if(dop_row.is_procedure_row){
 
-            const invert = contour.direction == $p.enm.open_directions.Правое,
-              elm = contour.profile_by_furn_side(dop_row.side, cache),
-              len = elm._row.len,
-              sizefurn = elm.nom.sizefurn,
-              main_row = elm.rays.b.cnn && elm.rays.b.cnn.main_row(elm),
-              dx0 = main_row && main_row.angle_calc_method == СварнойШов ? -main_row.sz : 0,
-              dx1 = $p.job_prm.builder.add_d ? sizefurn : 0,
-              faltz = len - 2 * sizefurn;
+            const invert = contour.direction == $p.enm.open_directions.Правое;
+            const elm = contour.profile_by_furn_side(dop_row.side, cache);
+            const {len} = elm._row;
+            const {sizefurn} = elm.nom;
+            const dx1 = $p.job_prm.builder.add_d ? sizefurn : 0;
+            const faltz = len - 2 * sizefurn;
 
             let invert_nearest = false, coordin = 0;
 
             if(dop_row.offset_option == $p.enm.offset_options.Формула){
               if(!dop_row.formula.empty()){
-                coordin = dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx0, dx1, faltz, invert, dop_row});
+                coordin = dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx1, faltz, invert, dop_row});
               }
             }
             else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
@@ -1452,14 +1449,18 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
               const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
               procedure_row.handle_height_min = nearest.elm;
               procedure_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
+              if(dop_row.overmeasure){
+                procedure_row.coefficient +=  nearest.dx0;
+              }
             }
             else{
               procedure_row.handle_height_min = elm.elm;
               procedure_row.coefficient = coordin;
+              if(dop_row.overmeasure){
+                procedure_row.coefficient +=  elm.dx0;
+              }
             }
-            if(dop_row.overmeasure){
-              procedure_row.coefficient += dx0;
-            }
+
             return;
           }
           else if(!dop_row.quantity){
@@ -4575,231 +4576,6 @@ class CalcOrderFormProductList {
 
 
 
-(function(_mgr){
-
-
-	_mgr.acn = {
-
-	  cache: {},
-
-    get ii() {
-      return this.cache.ii || ( this.cache.ii = [_mgr.Наложение] );
-    },
-
-    get i() {
-      return this.cache.i || ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
-    },
-
-    get a() {
-      return this.cache.a
-        || ( this.cache.a = [
-          _mgr.УгловоеДиагональное,
-          _mgr.УгловоеКВертикальной,
-          _mgr.УгловоеКГоризонтальной,
-          _mgr.КрестВСтык] );
-    },
-
-    get t() {
-      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное, _mgr.КрестВСтык] );
-    },
-
-	};
-
-
-	Object.defineProperties(_mgr, {
-	  ad: {
-	    get: function () {
-        return _mgr.УгловоеДиагональное;
-      }
-    },
-    av: {
-      get: function () {
-        return _mgr.УгловоеКВертикальной;
-      }
-    },
-    ah: {
-      get: function () {
-        return _mgr.УгловоеКГоризонтальной;
-      }
-    },
-    t: {
-      get: function () {
-        return _mgr.ТОбразное;
-      }
-    },
-    ii: {
-      get: function () {
-        return _mgr.Наложение;
-      }
-    },
-    i: {
-      get: function () {
-        return _mgr.НезамкнутыйКонтур;
-      }
-    },
-    xt: {
-      get: function () {
-        return _mgr.КрестПересечение;
-      }
-    },
-    xx: {
-      get: function () {
-        return _mgr.КрестВСтык;
-      }
-    },
-
-  });
-
-})($p.enm.cnn_types);
-
-
-(function(_mgr){
-
-	const cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			}
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			}
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			}
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			}
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			}
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			}
-		}
-
-	});
-
-
-})($p.enm.elm_types);
-
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
-
-
 $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
 
 
@@ -6584,6 +6360,231 @@ $p.DocSelling.prototype.before_save = function () {
 };
 
 
+
+
+(function(_mgr){
+
+
+	_mgr.acn = {
+
+	  cache: {},
+
+    get ii() {
+      return this.cache.ii || ( this.cache.ii = [_mgr.Наложение] );
+    },
+
+    get i() {
+      return this.cache.i || ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
+    },
+
+    get a() {
+      return this.cache.a
+        || ( this.cache.a = [
+          _mgr.УгловоеДиагональное,
+          _mgr.УгловоеКВертикальной,
+          _mgr.УгловоеКГоризонтальной,
+          _mgr.КрестВСтык] );
+    },
+
+    get t() {
+      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное, _mgr.КрестВСтык] );
+    },
+
+	};
+
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get: function () {
+        return _mgr.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get: function () {
+        return _mgr.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get: function () {
+        return _mgr.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get: function () {
+        return _mgr.ТОбразное;
+      }
+    },
+    ii: {
+      get: function () {
+        return _mgr.Наложение;
+      }
+    },
+    i: {
+      get: function () {
+        return _mgr.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get: function () {
+        return _mgr.КрестПересечение;
+      }
+    },
+    xx: {
+      get: function () {
+        return _mgr.КрестВСтык;
+      }
+    },
+
+  });
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
+			}
+		}
+
+
+	});
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
 
 
 (($p) => {
