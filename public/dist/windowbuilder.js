@@ -470,7 +470,7 @@ class EditorAccordion {
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
         {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
       ],
-      image_path: "imgs/",
+      image_path: "/imgs/",
       onclick: (name) => {
         switch (name) {
           case 'arc':
@@ -511,7 +511,7 @@ class EditorAccordion {
       left: '4px',
       class_name: "",
       name: 'right',
-      image_path: 'imgs/',
+      image_path: '/imgs/',
       buttons: [
         {name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
         {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
@@ -584,7 +584,7 @@ class EditorAccordion {
       left: '4px',
       class_name: "",
       name: 'bottom',
-      image_path: 'imgs/',
+      image_path: '/imgs/',
       buttons: [
         {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
 
@@ -618,7 +618,7 @@ class EditorAccordion {
       left: '4px',
       class_name: "",
       name: 'bottom',
-      image_path: 'imgs/',
+      image_path: '/imgs/',
       buttons: [
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
         {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
@@ -1004,7 +1004,7 @@ class Editor extends paper.PaperScope {
     this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
 
     this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '320px',
-      image_path: 'imgs/',
+      image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
         {name: 'pan', css: 'tb_icon-hand', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
@@ -1027,7 +1027,7 @@ class Editor extends paper.PaperScope {
     });
 
     this.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
-      image_path: 'imgs/',
+      image_path: '/imgs/',
       buttons: [
 
         {name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '34px'},
@@ -1915,9 +1915,10 @@ class Editor extends paper.PaperScope {
   }
 
   close() {
-    const {calc_order} = this.project.ox;
+    const {ox} = this.project;
+    const {calc_order} = ox;
     if(calc_order && !calc_order.empty()){
-      this.handlers.handleNavigate(`/${calc_order.class_name}/${calc_order.ref}`);
+      this.handlers.handleNavigate(`/${calc_order.class_name}/${calc_order.ref}/?ref=${ox.ref}`);
     }
     else{
       this.handlers.handleNavigate(`/`);
@@ -11516,7 +11517,7 @@ class ToolPen extends ToolElement {
               {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
         },
       ],
-      image_path: "imgs/",
+      image_path: "/imgs/",
       onclick: (name) => this.standard_form(name)
     });
     this.wnd.tb_mode.cell.style.backgroundColor = "#f5f5f5";
@@ -12289,7 +12290,7 @@ class RulerWnd {
           {name: 'inner', img: 'ruler_inner.png', tooltip: $p.msg.ruler_inner, float: 'left'},
           {name: 'outer', img: 'ruler_outer.png', tooltip: $p.msg.ruler_outer, float: 'left'},
         ],
-        image_path: 'imgs/',
+        image_path: '/imgs/',
         onclick: (name) => {
 
           if (['0', '1', '2'].indexOf(name) != -1) {

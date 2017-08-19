@@ -4,7 +4,7 @@
 import settings from '../../config/app.settings';
 
 // принудительный редирект и установка зоны для абонентов с выделенными серверами
-import patch_cnn from '../../config/patch_cnn';
+import {patch_prm, patch_cnn} from '../../config/patch_cnn';
 
 // скрипт инициализации метаданных
 import meta_init from './init';
@@ -20,7 +20,7 @@ import $p from 'metadata-dhtmlx';
 global.$p = $p;
 
 // параметры сеанса и метаданные инициализируем без лишних проволочек
-$p.wsql.init(settings, meta_init);
+$p.wsql.init(patch_prm(settings), meta_init);
 patch_cnn();
 
 // скрипт инициализации в привязке к store приложения
