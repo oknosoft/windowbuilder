@@ -65,15 +65,14 @@ export default class SelectOrder extends Component {
         >
 
           <DataList
+            _mgr={$p.doc.calc_order}
             width={680}
             height={320}
-            _mgr={context.$p.doc.calc_order}
             selection_mode
-            deny_add_del
+            denyAddDel
             show_variants
             show_search
             handleSelect={handleSelect}
-
           />
 
         </Dialog>
