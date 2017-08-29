@@ -2965,6 +2965,271 @@ $p.CchProperties.prototype.__define({
 });
 
 
+$p.dp.builder_pen.on({
+
+	value_change: function(attr, obj){
+		if(attr.field == "elm_type") {
+      obj.inset = paper.project.default_inset({elm_type: obj.elm_type});
+      obj.rama_impost = paper.project._dp.sys.inserts([obj.elm_type]);
+		}
+	},
+
+});
+
+$p.dp.builder_lay_impost.on({
+
+	value_change: function(attr, obj){
+		if(attr.field == "elm_type") {
+      obj.inset_by_y = paper.project.default_inset({
+				elm_type: obj.elm_type,
+				pos: $p.enm.positions.ЦентрГоризонталь
+			});
+      obj.inset_by_x = paper.project.default_inset({
+				elm_type: obj.elm_type,
+				pos: $p.enm.positions.ЦентрВертикаль
+			});
+      obj.rama_impost = paper.project._dp.sys.inserts([obj.elm_type]);
+		}
+	}
+});
+
+
+$p.DpBuilder_price.prototype.__define({
+
+  form_obj: {
+    value: function (pwnd, attr) {
+
+      const {nom, goods, _manager} = this;
+      const _metadata = this._metadata();
+
+      const options = {
+        name: 'wnd_obj_' + _manager.class_name,
+        wnd: {
+          top: 80 + Math.random()*40,
+          left: 120 + Math.random()*80,
+          width: 780,
+          height: 400,
+          modal: true,
+          center: false,
+          pwnd: pwnd,
+          allow_close: true,
+          allow_minmax: true,
+          caption: `Цены: <b>${nom.name}</b>`
+        }
+      };
+
+      const wnd = $p.iface.dat_blank(null, options.wnd);
+
+      const ts_captions = {
+        "fields":["price_type","nom_characteristic","date","price","currency"],
+        "headers":"Тип Цен,Характеристика,Дата,Цена,Валюта",
+        "widths":"200,*,150,120,100",
+        "min_widths":"150,200,100,100,100",
+        "aligns":"",
+        "sortings":"na,na,na,na,na",
+        "types":"ro,ro,dhxCalendar,ro,ro"
+      };
+
+      return $p.wsql.pouch.local.doc.query('doc/doc_nom_prices_setup_slice_last', {
+        limit : 1000,
+        include_docs: false,
+        reduce: false,
+        startkey: [nom.ref, ''],
+        endkey: [nom.ref, '\ufff0']
+      })
+        .then((data) => {
+        if(data && data.rows){
+          data.rows.forEach((row) => {
+            goods.add({
+              nom_characteristic: row.key[1],
+              price_type: row.key[2],
+              date: row.value.date,
+              price: row.value.price,
+              currency: row.value.currency
+            })
+          });
+
+          goods.sort(["price_type","nom_characteristic","date"]);
+
+          wnd.elmnts.grids.goods = wnd.attachTabular({
+            obj: this,
+            ts: "goods",
+            pwnd: wnd,
+            ts_captions: ts_captions
+          });
+          wnd.detachToolbar();
+        }
+      })
+
+    }
+  }
+});
+
+
+
+$p.DpBuyers_order = class DpBuyers_order extends $p.DpBuyers_order {
+
+  get clr() {
+    return this.characteristic.clr;
+  }
+  set clr(v) {
+    const {characteristic, _data} = this;
+    if((!v && characteristic.empty()) || characteristic.clr == v){
+      return;
+    }
+    this._manager.emit_async('update', this, {clr: characteristic.clr});
+    characteristic.clr = v;
+    _data._modified = true;
+  }
+
+  get sys() {
+    return this.characteristic.sys;
+  }
+  set sys(v) {
+    const {characteristic, _data} = this;
+    if((!v && characteristic.empty()) || characteristic.sys == v){
+      return;
+    }
+    this._manager.emit_async('update', this, {sys: characteristic.sys});
+    characteristic.sys = v;
+    _data._modified = true;
+  }
+
+  get extra_fields() {
+    return this.characteristic.params;
+  }
+}
+
+
+
+$p.DpBuyers_order.prototype.add_row = function (row) {
+  if (row._owner.name === 'production') {
+    row.qty = row.quantity = 1;
+  }
+};
+
+$p.DpBuyers_orderProductionRow.prototype.value_change = function (field, type, value) {
+  if (field == 'len' || field == 'height') {
+    this[field] = value;
+  }
+  if (this.height != 0 && this.height != 0) {
+    this.s = (this.height * this.len / 1000000).round(3);
+  }
+};
+
+
+class CalcOrderFormProductList {
+
+  constructor(pwnd, calc_order) {
+
+    this.dp = $p.dp.buyers_order.create();
+    this.dp.calc_order = calc_order;
+
+    this.attr = {
+
+      toolbar_struct: $p.injected_data['toolbar_product_list.xml'],
+
+      toolbar_click: this.toolbar_click.bind(this),
+
+      draw_pg_header: this.draw_pg_header.bind(this),
+
+      draw_tabular_sections: this.draw_tabular_sections.bind(this),
+
+    };
+
+    this.dp.presentation = calc_order.presentation + ' - добавление продукции';
+
+    this.dp.form_obj(pwnd, this.attr);
+
+
+  }
+
+  draw_pg_header(dp, wnd) {
+    const {production} = wnd.elmnts.grids;
+    const refill_prms = this.refill_prms.bind(this);
+    production.attachEvent('onRowSelect', refill_prms);
+    production.attachEvent('onEditCell', (stage, rId, cInd) => {
+      !cInd && setTimeout(refill_prms);
+    });
+  }
+
+  draw_tabular_sections(dp, wnd, tabular_init) {
+
+    this.wnd = wnd;
+    wnd.maximize();
+
+    const {elmnts} = wnd;
+    elmnts.frm_toolbar.hideItem('bs_print');
+
+    wnd.detachObject(true);
+    wnd.maximize();
+    elmnts.layout = wnd.attachLayout({
+      pattern: '2E',
+      cells: [{
+        id: 'a',
+        text: 'Продукция',
+        header: false,
+      }, {
+        id: 'b',
+        text: 'Параметры',
+        header: false,
+      }],
+      offsets: {top: 0, right: 0, bottom: 0, left: 0},
+    });
+
+    this.meta_production = $p.dp.buyers_order.metadata('production').fields._clone();
+    elmnts.grids.production = elmnts.layout.cells('a').attachTabular({
+      metadata: this.meta_production,
+      obj: dp,
+      ts: 'production',
+      pwnd: wnd,
+    });
+
+    elmnts.grids.params = elmnts.layout.cells('b').attachHeadFields({
+      obj: dp,
+      ts: 'product_params',
+      pwnd: wnd,
+      selection: {elm: -1},
+      oxml: {'Параметры продукции': []},
+    });
+
+    const height = elmnts.layout.cells('a').getHeight() + elmnts.layout.cells('b').getHeight();
+    elmnts.layout.cells('a').setHeight(height * 0.7);
+
+  }
+
+  toolbar_click(btn_id) {
+    if (btn_id == 'btn_ok') {
+      this.dp._data._modified = false;
+      this.dp.calc_order.process_add_product_list(this.dp)
+        .then(() => {
+          this.wnd.close();
+          this.wnd = this.dp = this.attr = null;
+        })
+        .catch((err) => {
+
+        });
+    }
+  }
+
+  refill_prms() {
+    const {meta_production, wnd} = this;
+    const {production, params} = wnd.elmnts.grids;
+    if (production && params) {
+      const row = production.get_cell_field();
+      if (row) {
+        params.selection = {elm: row.obj.row};
+        if (!row.obj.inset.empty()) {
+          $p.cat.clrs.selection_exclude_service(meta_production.clr, row.obj.inset);
+        }
+      }
+    }
+  }
+
+};
+
+
+
 class Pricing {
 
   constructor($p) {
@@ -4311,271 +4576,6 @@ $p.spec_building = new SpecBuilding($p);
 })($p.classes.DataManager);
 
 
-$p.dp.builder_pen.on({
-
-	value_change: function(attr, obj){
-		if(attr.field == "elm_type") {
-      obj.inset = paper.project.default_inset({elm_type: obj.elm_type});
-      obj.rama_impost = paper.project._dp.sys.inserts([obj.elm_type]);
-		}
-	},
-
-});
-
-$p.dp.builder_lay_impost.on({
-
-	value_change: function(attr, obj){
-		if(attr.field == "elm_type") {
-      obj.inset_by_y = paper.project.default_inset({
-				elm_type: obj.elm_type,
-				pos: $p.enm.positions.ЦентрГоризонталь
-			});
-      obj.inset_by_x = paper.project.default_inset({
-				elm_type: obj.elm_type,
-				pos: $p.enm.positions.ЦентрВертикаль
-			});
-      obj.rama_impost = paper.project._dp.sys.inserts([obj.elm_type]);
-		}
-	}
-});
-
-
-$p.DpBuilder_price.prototype.__define({
-
-  form_obj: {
-    value: function (pwnd, attr) {
-
-      const {nom, goods, _manager} = this;
-      const _metadata = this._metadata();
-
-      const options = {
-        name: 'wnd_obj_' + _manager.class_name,
-        wnd: {
-          top: 80 + Math.random()*40,
-          left: 120 + Math.random()*80,
-          width: 780,
-          height: 400,
-          modal: true,
-          center: false,
-          pwnd: pwnd,
-          allow_close: true,
-          allow_minmax: true,
-          caption: `Цены: <b>${nom.name}</b>`
-        }
-      };
-
-      const wnd = $p.iface.dat_blank(null, options.wnd);
-
-      const ts_captions = {
-        "fields":["price_type","nom_characteristic","date","price","currency"],
-        "headers":"Тип Цен,Характеристика,Дата,Цена,Валюта",
-        "widths":"200,*,150,120,100",
-        "min_widths":"150,200,100,100,100",
-        "aligns":"",
-        "sortings":"na,na,na,na,na",
-        "types":"ro,ro,dhxCalendar,ro,ro"
-      };
-
-      return $p.wsql.pouch.local.doc.query('doc/doc_nom_prices_setup_slice_last', {
-        limit : 1000,
-        include_docs: false,
-        reduce: false,
-        startkey: [nom.ref, ''],
-        endkey: [nom.ref, '\ufff0']
-      })
-        .then((data) => {
-        if(data && data.rows){
-          data.rows.forEach((row) => {
-            goods.add({
-              nom_characteristic: row.key[1],
-              price_type: row.key[2],
-              date: row.value.date,
-              price: row.value.price,
-              currency: row.value.currency
-            })
-          });
-
-          goods.sort(["price_type","nom_characteristic","date"]);
-
-          wnd.elmnts.grids.goods = wnd.attachTabular({
-            obj: this,
-            ts: "goods",
-            pwnd: wnd,
-            ts_captions: ts_captions
-          });
-          wnd.detachToolbar();
-        }
-      })
-
-    }
-  }
-});
-
-
-
-$p.DpBuyers_order = class DpBuyers_order extends $p.DpBuyers_order {
-
-  get clr() {
-    return this.characteristic.clr;
-  }
-  set clr(v) {
-    const {characteristic, _data} = this;
-    if((!v && characteristic.empty()) || characteristic.clr == v){
-      return;
-    }
-    this._manager.emit_async('update', this, {clr: characteristic.clr});
-    characteristic.clr = v;
-    _data._modified = true;
-  }
-
-  get sys() {
-    return this.characteristic.sys;
-  }
-  set sys(v) {
-    const {characteristic, _data} = this;
-    if((!v && characteristic.empty()) || characteristic.sys == v){
-      return;
-    }
-    this._manager.emit_async('update', this, {sys: characteristic.sys});
-    characteristic.sys = v;
-    _data._modified = true;
-  }
-
-  get extra_fields() {
-    return this.characteristic.params;
-  }
-}
-
-
-
-$p.DpBuyers_order.prototype.add_row = function (row) {
-  if (row._owner.name === 'production') {
-    row.qty = row.quantity = 1;
-  }
-};
-
-$p.DpBuyers_orderProductionRow.prototype.value_change = function (field, type, value) {
-  if (field == 'len' || field == 'height') {
-    this[field] = value;
-  }
-  if (this.height != 0 && this.height != 0) {
-    this.s = (this.height * this.len / 1000000).round(3);
-  }
-};
-
-
-class CalcOrderFormProductList {
-
-  constructor(pwnd, calc_order) {
-
-    this.dp = $p.dp.buyers_order.create();
-    this.dp.calc_order = calc_order;
-
-    this.attr = {
-
-      toolbar_struct: $p.injected_data['toolbar_product_list.xml'],
-
-      toolbar_click: this.toolbar_click.bind(this),
-
-      draw_pg_header: this.draw_pg_header.bind(this),
-
-      draw_tabular_sections: this.draw_tabular_sections.bind(this),
-
-    };
-
-    this.dp.presentation = calc_order.presentation + ' - добавление продукции';
-
-    this.dp.form_obj(pwnd, this.attr);
-
-
-  }
-
-  draw_pg_header(dp, wnd) {
-    const {production} = wnd.elmnts.grids;
-    const refill_prms = this.refill_prms.bind(this);
-    production.attachEvent('onRowSelect', refill_prms);
-    production.attachEvent('onEditCell', (stage, rId, cInd) => {
-      !cInd && setTimeout(refill_prms);
-    });
-  }
-
-  draw_tabular_sections(dp, wnd, tabular_init) {
-
-    this.wnd = wnd;
-    wnd.maximize();
-
-    const {elmnts} = wnd;
-    elmnts.frm_toolbar.hideItem('bs_print');
-
-    wnd.detachObject(true);
-    wnd.maximize();
-    elmnts.layout = wnd.attachLayout({
-      pattern: '2E',
-      cells: [{
-        id: 'a',
-        text: 'Продукция',
-        header: false,
-      }, {
-        id: 'b',
-        text: 'Параметры',
-        header: false,
-      }],
-      offsets: {top: 0, right: 0, bottom: 0, left: 0},
-    });
-
-    this.meta_production = $p.dp.buyers_order.metadata('production').fields._clone();
-    elmnts.grids.production = elmnts.layout.cells('a').attachTabular({
-      metadata: this.meta_production,
-      obj: dp,
-      ts: 'production',
-      pwnd: wnd,
-    });
-
-    elmnts.grids.params = elmnts.layout.cells('b').attachHeadFields({
-      obj: dp,
-      ts: 'product_params',
-      pwnd: wnd,
-      selection: {elm: -1},
-      oxml: {'Параметры продукции': []},
-    });
-
-    const height = elmnts.layout.cells('a').getHeight() + elmnts.layout.cells('b').getHeight();
-    elmnts.layout.cells('a').setHeight(height * 0.7);
-
-  }
-
-  toolbar_click(btn_id) {
-    if (btn_id == 'btn_ok') {
-      this.dp._data._modified = false;
-      this.dp.calc_order.process_add_product_list(this.dp)
-        .then(() => {
-          this.wnd.close();
-          this.wnd = this.dp = this.attr = null;
-        })
-        .catch((err) => {
-
-        });
-    }
-  }
-
-  refill_prms() {
-    const {meta_production, wnd} = this;
-    const {production, params} = wnd.elmnts.grids;
-    if (production && params) {
-      const row = production.get_cell_field();
-      if (row) {
-        params.selection = {elm: row.obj.row};
-        if (!row.obj.inset.empty()) {
-          $p.cat.clrs.selection_exclude_service(meta_production.clr, row.obj.inset);
-        }
-      }
-    }
-  }
-
-};
-
-
-
 $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
 
 
@@ -4654,7 +4654,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       if(this.obj_delivery_state == Отклонен || this.obj_delivery_state == Отозван || this.obj_delivery_state == Шаблон) {
         $p.msg.show_msg && $p.msg.show_msg({
           type: 'alert-warning',
-          text: 'Нельзя провести заказ со статусом<br/>\'Отклонён\', \'Отозван\' или \'Шаблон\'',
+          text: 'Нельзя провести заказ со статусом<br/>"Отклонён", "Отозван" или "Шаблон"',
           title: this.presentation
         });
         return false;
@@ -4673,7 +4673,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     else if(this.department.empty()) {
       $p.msg.show_msg && $p.msg.show_msg({
         type: 'alert-warning',
-        text: 'Не заполнен реквизит \'офис продаж\' (подразделение)',
+        text: 'Не заполнен реквизит "офис продаж" (подразделение)',
         title: this.presentation
       });
       return false;
@@ -4749,10 +4749,10 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   get rounding() {
     const {pricing} = $p.job_prm;
-    if(!pricing.hasOwnProperty('rounding')){
+    if(!pricing.hasOwnProperty('rounding')) {
       const parts = this.doc_currency.parameters_russian_recipe.split(',');
       pricing.rounding = parseInt(parts[parts.length - 1]);
-      if(isNaN(pricing.rounding)){
+      if(isNaN(pricing.rounding)) {
         pricing.rounding = 2;
       }
     }
@@ -5304,20 +5304,35 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
 
   value_change(field, type, value, no_extra_charge) {
 
-    const {_obj, _owner} = this;
+    const {_obj, _owner, nom, characteristic, unit} = this;
     const {rounding} = _owner._owner;
 
     if(field == 'nom' || field == 'characteristic' || field == 'quantity') {
       _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
-      const {characteristic} = this;
-      if(!characteristic.empty() && !characteristic.calc_order.empty()) {
-        const fake_prm = {
-          spec: characteristic.specification,
-          calc_order_row: this
-        };
-        $p.pricing.price_type(fake_prm);
-        $p.pricing.calc_first_cost(fake_prm);
-        $p.pricing.calc_amount(fake_prm);
+
+      if(!characteristic.empty()) {
+        if(!characteristic.calc_order.empty() && characteristic.owner != nom) {
+          characteristic.owner = nom;
+        }
+        else if(characteristic.owner != nom) {
+          _obj.characteristic = $p.utils.blank.guid;
+        }
+      }
+
+      if(unit.owner != nom) {
+        _obj.unit = nom.storage_unit;
+      }
+
+      const fake_prm = {calc_order_row: this};
+      if(_obj.characteristic != $p.utils.blank.guid){
+        fake_prm.spec = characteristic.specification;
+      }
+      const {price} = _obj;
+      $p.pricing.price_type(fake_prm);
+      $p.pricing.calc_first_cost(fake_prm);
+      $p.pricing.calc_amount(fake_prm);
+      if(price && !_obj.price){
+        _obj.price = price;
       }
     }
 
@@ -5326,7 +5341,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
 
       _obj[field] = parseFloat(value);
 
-      _obj.amount = (_obj.price * ((100 - _obj.discount_percent) / 100) * _obj.quantity).round(rounding);
+      _obj.amount = ((_obj.price || 0) * ((100 - (_obj.discount_percent || 0)) / 100) * _obj.quantity).round(rounding);
 
       if(!no_extra_charge) {
         const prm = {calc_order_row: this};
@@ -5342,13 +5357,13 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
       }
 
-      _obj.amount_internal = (_obj.price_internal * ((100 - _obj.discount_percent_internal) / 100) * _obj.quantity).round(rounding);
+      _obj.amount_internal = ((_obj.price_internal || 0) * ((100 - (_obj.discount_percent_internal || 0)) / 100) * _obj.quantity).round(rounding);
 
       const doc = _owner._owner;
       if(doc.vat_consider) {
         const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
-        _obj.vat_rate = this.nom.vat_rate.empty() ? НДС18 : this.nom.vat_rate;
-        switch (_obj.vat_rate) {
+        _obj.vat_rate = (nom.vat_rate.empty() ? НДС18 : nom.vat_rate).ref;
+        switch (this.vat_rate) {
         case НДС18:
         case НДС18_118:
           _obj.vat_amount = (_obj.amount * 18 / 118).round(2);
@@ -5363,6 +5378,8 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
           break;
         case НДС0:
         case БезНДС:
+        case '_':
+        case '':
           _obj.vat_amount = 0;
           break;
         }
@@ -5371,7 +5388,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
       }
       else {
-        _obj.vat_rate = $p.enm.vat_rates.БезНДС;
+        _obj.vat_rate = '';
         _obj.vat_amount = 0;
       }
 
@@ -5383,7 +5400,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
     }
   }
 
-}
+};
 
 
 
@@ -5543,8 +5560,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70';
         }
 
-        if($p.current_user.role_available('СогласованиеРасчетовЗаказов') || $p.current_user.role_available('РедактированиеСкидок')) {
+        if($p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro';
+        }
+        else if($p.current_user.role_available('РедактированиеСкидок')) {
+          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro';
         }
         else {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro';
