@@ -9910,15 +9910,10 @@ class ToolElement extends paper.Tool {
   }
 
   check_layer() {
-    if (!this._scope.project.contours.length) {
-
+    const {_scope} = this;
+    if (!_scope.project.contours.length) {
       new Contour({parent: undefined});
-
-      Object.getNotifier(this._scope.project._noti).notify({
-        type: 'rows',
-        tabular: "constructions"
-      });
-
+      _scope.eve.emit_async('rows', _scope.project.ox, {constructions: true});
     }
   }
 
