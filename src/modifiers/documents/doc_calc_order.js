@@ -855,10 +855,12 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
   // при изменении реквизита
   value_change(field, type, value, no_extra_charge) {
 
-    const {_obj, _owner, nom, characteristic, unit} = this;
+    let {_obj, _owner, nom, characteristic, unit} = this;
+    let recalc;
     const {rounding} = _owner._owner;
 
     if(field == 'nom' || field == 'characteristic' || field == 'quantity') {
+
       _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
 
       // проверим владельца характеристики
@@ -871,29 +873,34 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
       }
 
+      nom = this.nom;
+      characteristic = this.characteristic;
+
       // проверим единицу измерения
       if(unit.owner != nom) {
-        _obj.unit = nom.storage_unit;
+        _obj.unit = nom.storage_unit.ref;
       }
 
       // рассчитаем цены
-      const fake_prm = {calc_order_row: this};
-      if(_obj.characteristic != $p.utils.blank.guid){
-        fake_prm.spec = characteristic.specification;
-      }
+      const fake_prm = {
+        calc_order_row: this,
+        spec: characteristic.specification
+      };
       const {price} = _obj;
       $p.pricing.price_type(fake_prm);
       $p.pricing.calc_first_cost(fake_prm);
       $p.pricing.calc_amount(fake_prm);
       if(price && !_obj.price){
         _obj.price = price;
+        recalc = true;
       }
     }
 
-    if(field == 'price' || field == 'price_internal' || field == 'quantity' ||
-      field == 'discount_percent' || field == 'discount_percent_internal') {
+    if('price_internal,quantity,discount_percent_internal'.indexOf(field) != -1 || recalc) {
 
-      _obj[field] = parseFloat(value);
+      if(!recalc){
+        _obj[field] = parseFloat(value);
+      }
 
       _obj.amount = ((_obj.price || 0) * ((100 - (_obj.discount_percent || 0)) / 100) * _obj.quantity).round(rounding);
 
