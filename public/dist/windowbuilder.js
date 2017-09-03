@@ -9198,7 +9198,7 @@ class Scheme extends paper.Project {
 
       this.clear();
 
-      ox._mixin(obx._obj, null, ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'note', 'partner'], true);
+      ox._mixin(is_snapshot ? obx : obx._obj, null, ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'note', 'partner'], true);
 
       this.load(ox);
       ox._data._modified = true;
