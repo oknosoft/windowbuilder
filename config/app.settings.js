@@ -30,7 +30,7 @@ module.exports = function settings(prm = {}) {
     //couch_path: 'http://cou200:5984/wb_',
 
     // расположение couchdb для nodejs
-    couch_local: 'http://cou200:5984/wb_',
+    couch_local: 'http://cou221:5984/wb_',
 
     // фильтр для репликации с CouchDB не используем
     pouch_filter: {

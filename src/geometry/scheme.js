@@ -192,7 +192,7 @@ class Scheme extends paper.Project {
     };
 
     // начинаем следить за _dp, чтобы обработать изменения цвета и параметров
-    if(!_attr._silent){
+    if(!_attr._silent) {
       this._dp._manager.on('update', this._dp_listener);
     }
   }
@@ -269,7 +269,7 @@ class Scheme extends paper.Project {
     }
 
     // оповещаем о новых слоях и свойствах изделия
-    if(!_attr._silent){
+    if(!_attr._silent) {
       this._scope.eve.emit_async('rows', ox, {constructions: true});
       _dp._manager.emit_async('rows', _dp, {extra_fields: true});
 
@@ -380,29 +380,28 @@ class Scheme extends paper.Project {
 
           delete _attr._loading;
 
-          // виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
-          setTimeout(() => {
-            if(_scheme.ox.coordinates.count()) {
-              if(_scheme.ox.specification.count()) {
-                _scheme.draw_visualization();
-                _scheme.notify(_scheme, 'coordinates_calculated', {onload: true});
+          // при необходимости загружаем типовой блок
+          ((_scheme.ox.base_block.empty() || !_scheme.ox.base_block.is_new()) ? Promise.resolve() : _scheme.ox.base_block.load())
+            .then(() => {
+              if(_scheme.ox.coordinates.count()) {
+                if(_scheme.ox.specification.count()) {
+                  _scheme.draw_visualization();
+                  // виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
+                  _scheme.notify(_scheme, 'coordinates_calculated', {onload: true});
+                }
+                else {
+                  // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет
+                  $p.products_building.recalc(_scheme, {});
+                }
               }
               else {
-                // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет
-                $p.products_building.recalc(_scheme, {});
+                paper.load_stamp && paper.load_stamp();
               }
-            }
-            else {
-              paper.load_stamp && paper.load_stamp();
-            }
-            delete _attr._snapshot;
+              delete _attr._snapshot;
 
-            resolve();
-
-          });
-
+              resolve();
+            });
         });
-
       });
 
     }
@@ -660,21 +659,19 @@ class Scheme extends paper.Project {
    * @param [all_points] {Boolean}
    */
   move_points(delta, all_points) {
+
     const other = [];
     const layers = [];
-    const profiles = [];
+    const profiles = new Set;
 
-    this.selectedItems.forEach((item) => {
+    const {auto_align} = this;
 
+    for (const item of this.selectedItems) {
       const {parent, layer} = item;
 
-      if(item instanceof paper.Path && parent instanceof GeneratrixElement) {
+      if(item instanceof paper.Path && parent instanceof GeneratrixElement && !profiles.has(parent)) {
 
-        if(profiles.indexOf(parent) != -1) {
-          return;
-        }
-
-        profiles.push(parent);
+        profiles.add(parent);
 
         if(parent._hatching) {
           parent._hatching.remove();
@@ -687,6 +684,11 @@ class Scheme extends paper.Project {
         }
         else if(!parent.nearest || !parent.nearest()) {
 
+          // автоуравнивание $p.enm.align_types.Геометрически
+          if(auto_align && parent.elm_type == $p.enm.elm_types.Импост) {
+            continue;
+          }
+
           let check_selected;
           item.segments.forEach((segm) => {
             if(segm.selected && other.indexOf(segm) != -1) {
@@ -696,7 +698,7 @@ class Scheme extends paper.Project {
 
           // если уже двигали и не осталось ни одного выделенного - выходим
           if(check_selected && !item.segments.some((segm) => segm.selected)) {
-            return;
+            continue;
           }
 
           // двигаем и накапливаем связанные
@@ -711,7 +713,11 @@ class Scheme extends paper.Project {
       else if(item instanceof Filling) {
         item.purge_path();
       }
-    });
+    }
+
+    // при необходимости двигаем импосты
+    other.length && this.do_align(auto_align, profiles);
+
     // TODO: возможно, здесь надо подвигать примыкающие контуры
   }
 
@@ -813,16 +819,17 @@ class Scheme extends paper.Project {
 
       const {ox} = this;
 
-      // сохраняем ссылку на типовой блок
-      if(!is_snapshot) {
-        this._dp.base_block = obx;
-      }
-
       // если отложить очитску на потом - получим лажу, т.к. будут стёрты новые хорошие строки
       this.clear();
 
       // переприсваиваем номенклатуру, цвет и размеры
-      ox._mixin(is_snapshot ? obx : obx._obj, null, ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'note', 'partner'], true);
+      ox._mixin(is_snapshot ? obx :
+        obx._obj, null, ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'base_block', 'note', 'partner'], true);
+
+      // сохраняем ссылку на типовой блок
+      if(!is_snapshot) {
+        ox.base_block = obx.base_block.empty() ? obx : obx.base_block;
+      }
 
       this.load(ox);
       ox._data._modified = true;
@@ -838,6 +845,67 @@ class Scheme extends paper.Project {
     else {
       $p.cat.characteristics.get(obx, true, true).then(do_load);
     }
+  }
+
+  /**
+   * ### Выясняет, надо ли автоуравнивать изделие при сдвиге точек
+   * @return {boolean}
+   */
+  get auto_align() {
+    const {calc_order, base_block} = this.ox;
+    const {Шаблон} = $p.enm.obj_delivery_states;
+    if(base_block.empty() || calc_order.obj_delivery_state == Шаблон || base_block.calc_order.obj_delivery_state != Шаблон) {
+      return false;
+    }
+    const {auto_align} = $p.job_prm.properties;
+    let align;
+    if(auto_align) {
+      base_block.params.find_rows({param: auto_align}, (row) => {
+        align = row.value;
+        return false;
+      });
+      return align && align != '_' && align;
+    }
+  }
+
+  /**
+   * ### Уравнивает геометрически или по заполнениям
+   * @param auto_align
+   */
+  do_align(auto_align, profiles) {
+
+    if(!auto_align || !profiles.size) {
+      return;
+    }
+
+    // получаем слои, в которых двигались элементы
+    const layers = new Set();
+    for (const profile of profiles) {
+      layers.add(profile.layer);
+    }
+
+    if(this._attr._align_timer) {
+      clearTimeout(this._attr._align_timer);
+    }
+
+    this._attr._align_timer = setTimeout(() => {
+
+      delete this._attr._align_timer;
+
+      // получаем массив заполнений изменённых контуров
+      const glasses = [];
+      for (const layer of layers) {
+        for(const filling of layer.fillings){
+          glasses.indexOf(filling) == -1 && glasses.push(filling);
+        }
+      }
+      this._scope.do_glass_align('width', glasses);
+
+      if(auto_align == $p.enm.align_types.ПоЗаполнениям) {
+
+      }
+    }, 100);
+
   }
 
   /**

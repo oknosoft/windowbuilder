@@ -49,7 +49,7 @@
     "react-click-outside": "^2.3.1",
     "react-data-grid": "^2.0.58",
     "react-data-grid-addons": "^2.0.58",
-    "react-datepicker": "^0.53.0",
+    "react-datepicker": "^0.54.0",
     "react-dom": "^15.6.1",
     "react-error-overlay": "^1.0.10",
     "react-flex-layout": "^0.9",

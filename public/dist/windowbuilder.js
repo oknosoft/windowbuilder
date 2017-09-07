@@ -1707,8 +1707,10 @@ class Editor extends paper.PaperScope {
 
   do_glass_align(name = 'auto', glasses) {
 
+    const {project, Point} = this;
+
     if(!glasses){
-      glasses = this.project.selected_glasses();
+      glasses = project.selected_glasses();
     }
     if(glasses.length < 2){
       return
@@ -1716,7 +1718,7 @@ class Editor extends paper.PaperScope {
 
     let layer;
     if(glasses.some((glass) => {
-        const gl = this.project.rootLayer(glass.layer);
+        const gl = project.rootLayer(glass.layer);
         if(!layer){
           layer = gl;
         }
@@ -1742,6 +1744,7 @@ class Editor extends paper.PaperScope {
       return impost.orientation == orientation && (b.is_tt || e.is_tt || b.is_i || e.is_i);
     });
 
+    const galign = project.auto_align == $p.enm.align_types.Геометрически;
     let medium = 0;
 
     const glmap = new Map();
@@ -1752,7 +1755,15 @@ class Editor extends paper.PaperScope {
         width: bounds.width,
         height: bounds.height,
       }
-      medium += bounds[name];
+      if(galign){
+        const by_side = glass.profiles_by_side(null, profiles);
+        res.width = (by_side.right.b.x + by_side.right.e.x - by_side.left.b.x - by_side.left.e.x) / 2;
+        res.height = (by_side.bottom.b.y + by_side.bottom.e.y - by_side.top.b.y - by_side.top.e.y) / 2;
+        medium += name == 'width' ? res.width : res.height;
+      }
+      else{
+        medium += bounds[name];
+      }
 
       profiles.forEach((curr) => {
         const profile = curr.profile.nearest() || curr.profile;
@@ -1837,10 +1848,10 @@ class Editor extends paper.PaperScope {
             }
           });
         }
-        delta = new paper.Point([delta,0]);
+        delta = new Point([delta,0]);
       }
       else {
-        delta = new paper.Point([0, delta]);
+        delta = new Point([0, delta]);
       }
 
       if(delta.length > consts.epsilon){
@@ -2215,8 +2226,10 @@ const AbstractFilling = (superclass) => class extends superclass {
     return res;
   }
 
-  profiles_by_side(side) {
-    const {profiles} = this;
+  profiles_by_side(side, profiles) {
+    if(!profiles){
+      profiles = this.profiles;
+    }
     const bounds = {
       left: Infinity,
       top: Infinity,
@@ -2441,6 +2454,19 @@ class Contour extends AbstractFilling(paper.Layer) {
         return true;
       }
     });
+  }
+
+  get fillings() {
+    const fillings = [];
+    for(const glass of this.glasses()){
+      if(glass instanceof Contour){
+        fillings.push.apply(fillings, glass.fillings);
+      }
+      else{
+        fillings.push(glass);
+      }
+    }
+    return fillings;
   }
 
   get glass_contours() {
@@ -8725,7 +8751,7 @@ class Scheme extends paper.Project {
 
     };
 
-    if(!_attr._silent){
+    if(!_attr._silent) {
       this._dp._manager.on('update', this._dp_listener);
     }
   }
@@ -8786,7 +8812,7 @@ class Scheme extends paper.Project {
       _dp.clr = _dp.sys.default_clr;
     }
 
-    if(!_attr._silent){
+    if(!_attr._silent) {
       this._scope.eve.emit_async('rows', ox, {constructions: true});
       _dp._manager.emit_async('rows', _dp, {extra_fields: true});
 
@@ -8860,27 +8886,25 @@ class Scheme extends paper.Project {
 
           delete _attr._loading;
 
-          setTimeout(() => {
-            if(_scheme.ox.coordinates.count()) {
-              if(_scheme.ox.specification.count()) {
-                _scheme.draw_visualization();
-                _scheme.notify(_scheme, 'coordinates_calculated', {onload: true});
+          ((_scheme.ox.base_block.empty() || !_scheme.ox.base_block.is_new()) ? Promise.resolve() : _scheme.ox.base_block.load())
+            .then(() => {
+              if(_scheme.ox.coordinates.count()) {
+                if(_scheme.ox.specification.count()) {
+                  _scheme.draw_visualization();
+                  _scheme.notify(_scheme, 'coordinates_calculated', {onload: true});
+                }
+                else {
+                  $p.products_building.recalc(_scheme, {});
+                }
               }
               else {
-                $p.products_building.recalc(_scheme, {});
+                paper.load_stamp && paper.load_stamp();
               }
-            }
-            else {
-              paper.load_stamp && paper.load_stamp();
-            }
-            delete _attr._snapshot;
+              delete _attr._snapshot;
 
-            resolve();
-
-          });
-
+              resolve();
+            });
         });
-
       });
 
     }
@@ -9073,21 +9097,19 @@ class Scheme extends paper.Project {
   }
 
   move_points(delta, all_points) {
+
     const other = [];
     const layers = [];
-    const profiles = [];
+    const profiles = new Set;
 
-    this.selectedItems.forEach((item) => {
+    const {auto_align} = this;
 
+    for (const item of this.selectedItems) {
       const {parent, layer} = item;
 
-      if(item instanceof paper.Path && parent instanceof GeneratrixElement) {
+      if(item instanceof paper.Path && parent instanceof GeneratrixElement && !profiles.has(parent)) {
 
-        if(profiles.indexOf(parent) != -1) {
-          return;
-        }
-
-        profiles.push(parent);
+        profiles.add(parent);
 
         if(parent._hatching) {
           parent._hatching.remove();
@@ -9099,6 +9121,10 @@ class Scheme extends paper.Project {
         }
         else if(!parent.nearest || !parent.nearest()) {
 
+          if(auto_align && parent.elm_type == $p.enm.elm_types.Импост) {
+            continue;
+          }
+
           let check_selected;
           item.segments.forEach((segm) => {
             if(segm.selected && other.indexOf(segm) != -1) {
@@ -9107,7 +9133,7 @@ class Scheme extends paper.Project {
           });
 
           if(check_selected && !item.segments.some((segm) => segm.selected)) {
-            return;
+            continue;
           }
 
           other.push.apply(other, parent.move_points(delta, all_points));
@@ -9121,7 +9147,10 @@ class Scheme extends paper.Project {
       else if(item instanceof Filling) {
         item.purge_path();
       }
-    });
+    }
+
+    other.length && this.do_align(auto_align, profiles);
+
   }
 
   save_coordinates(attr) {
@@ -9192,13 +9221,14 @@ class Scheme extends paper.Project {
 
       const {ox} = this;
 
-      if(!is_snapshot) {
-        this._dp.base_block = obx;
-      }
-
       this.clear();
 
-      ox._mixin(is_snapshot ? obx : obx._obj, null, ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'note', 'partner'], true);
+      ox._mixin(is_snapshot ? obx :
+        obx._obj, null, ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'base_block', 'note', 'partner'], true);
+
+      if(!is_snapshot) {
+        ox.base_block = obx.base_block.empty() ? obx : obx.base_block;
+      }
 
       this.load(ox);
       ox._data._modified = true;
@@ -9214,6 +9244,57 @@ class Scheme extends paper.Project {
     else {
       $p.cat.characteristics.get(obx, true, true).then(do_load);
     }
+  }
+
+  get auto_align() {
+    const {calc_order, base_block} = this.ox;
+    const {Шаблон} = $p.enm.obj_delivery_states;
+    if(base_block.empty() || calc_order.obj_delivery_state == Шаблон || base_block.calc_order.obj_delivery_state != Шаблон) {
+      return false;
+    }
+    const {auto_align} = $p.job_prm.properties;
+    let align;
+    if(auto_align) {
+      base_block.params.find_rows({param: auto_align}, (row) => {
+        align = row.value;
+        return false;
+      });
+      return align && align != '_' && align;
+    }
+  }
+
+  do_align(auto_align, profiles) {
+
+    if(!auto_align || !profiles.size) {
+      return;
+    }
+
+    const layers = new Set();
+    for (const profile of profiles) {
+      layers.add(profile.layer);
+    }
+
+    if(this._attr._align_timer) {
+      clearTimeout(this._attr._align_timer);
+    }
+
+    this._attr._align_timer = setTimeout(() => {
+
+      delete this._attr._align_timer;
+
+      const glasses = [];
+      for (const layer of layers) {
+        for(const filling of layer.fillings){
+          glasses.indexOf(filling) == -1 && glasses.push(filling);
+        }
+      }
+      this._scope.do_glass_align('width', glasses);
+
+      if(auto_align == $p.enm.align_types.ПоЗаполнениям) {
+
+      }
+    }, 100);
+
   }
 
   resize_canvas(w, h) {
