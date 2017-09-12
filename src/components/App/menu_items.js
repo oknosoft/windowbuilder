@@ -121,8 +121,8 @@ const items = [
     id: 'reports',
     items: [
       {
-        text: 'Движение денег',
-        navigate: '/rep.cash_moving/main',
+        text: 'Анализ спецификации',
+        navigate: '/rep.materials_demand/main',
         icon: <IconList/>,
       },
     ],

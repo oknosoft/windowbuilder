@@ -1,7 +1,7 @@
 import React from 'react';
 // import PropTypes from 'prop-types';
 import DhtmlxCell from '../DhtmlxCell';
-import WindowSizer from 'metadata-react/WindowSize';
+
 import withIface from '../../redux/withIface';
 
 import {Prompt} from 'react-router-dom';
@@ -11,7 +11,7 @@ class DataObjPage extends DhtmlxCell {
   componentDidMount() {
     super.componentDidMount();
     const {cell, handlers, props} = this;
-    props._mngr.form_obj(cell, {
+    props._mgr.form_obj(cell, {
       ref: props.match.params.ref,
       bind_pwnd: true,
       hide_header: true,
@@ -53,6 +53,6 @@ class DataObjPage extends DhtmlxCell {
 
 }
 
-export default WindowSizer(withIface(DataObjPage));
+export default withIface(DataObjPage);
 
 

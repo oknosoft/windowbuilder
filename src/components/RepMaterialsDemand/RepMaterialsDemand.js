@@ -1,7 +1,7 @@
-import React, {Component} from "react";
+import React, {Component} from 'react';
 
-import FrmReport from "metadata-react/FrmReport";
-import RepParams from "./RepParams";
+import FrmReport from 'metadata-react/FrmReport';
+import RepParams from './RepParams';
 
 // используем типовой отчет, в котором переопределяем закладку параметров и обработчик при изменении схемы компоновки
 export default class Report extends Component {
@@ -12,7 +12,7 @@ export default class Report extends Component {
       {...props}
       TabParams={RepParams}
       _tabular="specification"
-    />
+    />;
   }
 
 }
