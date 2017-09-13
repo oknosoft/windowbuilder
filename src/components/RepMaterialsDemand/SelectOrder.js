@@ -40,7 +40,7 @@ export default class SelectOrder extends Component {
 
     return (
       <div>
-        <IconButton touch={true} tooltip="Заполнить по заказу" onClick={this.handleTouchTap}>
+        <IconButton title="Заполнить по заказу" onClick={this.handleTouchTap}>
           <IconWork/>
         </IconButton>
         {state.open && <DnR title="Заполнить по заказу" onClose={handleRequestClose}>

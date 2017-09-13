@@ -1,5 +1,8 @@
 // модуль создаёт и настраивает MetaEngine
 
+// подгрузим стили асинхронно
+import('metadata-react/styles/react-data-grid.css');
+
 // функция установки параметров сеанса
 import settings from '../../config/app.settings';
 

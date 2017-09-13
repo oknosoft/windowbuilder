@@ -2,7 +2,7 @@ import React from 'react';
 // import PropTypes from 'prop-types';
 import DhtmlxCell from '../DhtmlxCell';
 import WindowSizer from 'metadata-react/WindowSize';
-import withIface from '../../redux/withIface';
+import withIface from 'metadata-redux/src/withIface';
 
 import {Prompt} from 'react-router-dom';
 

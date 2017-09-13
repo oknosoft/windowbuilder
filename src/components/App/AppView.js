@@ -22,6 +22,9 @@ import DataRoute from '../DataRoute';
 // информация о программе
 import AboutPage from '../About';
 
+// настройки
+import Settings from '../Settings';
+
 // 404
 import NotFoundPage from '../NotFoundPage';
 
@@ -112,6 +115,7 @@ class AppRoot extends Component {
               <Route path="/about" component={AboutPage} />
               <Route path="/meta" component={MetaTreePage} />
               <Route path="/login" component={FrmLogin} />
+              <Route path="/settings" component={Settings} />
               <Route component={NotFoundPage} />
             </Switch>
         }

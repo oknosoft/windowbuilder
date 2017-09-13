@@ -6622,21 +6622,19 @@ $p.DocSelling.prototype.before_save = function () {
 
 (($p) => {
 
-  const Proto = $p.RepMaterials_demand;
-
-  $p.RepMaterials_demand = class RepMaterials_demand extends Proto {
+  Object.assign($p.RepMaterials_demand.prototype, {
 
     print_data() {
       return this.calc_order.print_data().then((order) => {
-        return this.calculate()
+        return this.calculate012()
           .then((specification) => {
 
             return Object.assign(order, {specification, _grouping: this.scheme.dimensions})
           })
-        })
-    }
+      })
+    },
 
-    calculate() {
+    calculate012() {
 
       const {specification, production, scheme, discard, _manager} = this;
       const arefs = [];
@@ -6775,7 +6773,7 @@ $p.DocSelling.prototype.before_save = function () {
           })
           return specification._rows;
         })
-    }
+    },
 
     generate() {
 
@@ -6789,7 +6787,7 @@ $p.DocSelling.prototype.before_save = function () {
 
         return doc;
       })
-    }
+    },
 
     discard(row, selection) {
       return selection.some((srow) => {
@@ -6804,27 +6802,27 @@ $p.DocSelling.prototype.before_save = function () {
         const {comparison_types} = $p.enm;
 
         switch (comparison_type) {
-          case comparison_types.eq:
-            return left_value != right_value;
+        case comparison_types.eq:
+          return left_value != right_value;
 
-          case comparison_types.ne:
-            return left_value == right_value;
+        case comparison_types.ne:
+          return left_value == right_value;
 
-          case comparison_types.lt:
-            return !(left_value < right_value);
+        case comparison_types.lt:
+          return !(left_value < right_value);
 
-          case comparison_types.gt:
-            return !(left_value > right_value);
+        case comparison_types.gt:
+          return !(left_value > right_value);
 
-          case comparison_types.in:
-            return !left_value || right_value.indexOf(left_value.toString()) == -1;
+        case comparison_types.in:
+          return !left_value || right_value.indexOf(left_value.toString()) == -1;
 
-          case comparison_types.nin:
-            return right_value.indexOf(left_value.toString()) != -1;
+        case comparison_types.nin:
+          return right_value.indexOf(left_value.toString()) != -1;
         }
 
       })
-    }
+    },
 
     material(row) {
 
@@ -6849,7 +6847,7 @@ $p.DocSelling.prototype.before_save = function () {
       row.material = res;
 
       return res;
-    }
+    },
 
     form_obj(pwnd, attr) {
 
@@ -6886,14 +6884,14 @@ $p.DocSelling.prototype.before_save = function () {
 
       $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
         .then((scheme) => {
-        this.scheme = scheme;
-      });
+          this.scheme = scheme;
+        });
 
       this.fill_by_order();
 
       return Promise.resolve({wnd: this.wnd, o: this});
 
-    }
+    },
 
     draw_tabs(wnd) {
 
@@ -6961,7 +6959,7 @@ $p.DocSelling.prototype.before_save = function () {
       });
 
       return wnd;
-    }
+    },
 
     draw_production(cell) {
       return cell.attachTabular({
@@ -6977,7 +6975,7 @@ $p.DocSelling.prototype.before_save = function () {
           "types":"ch,ref,calck"
         }
       })
-    }
+    },
 
     draw_columns(cell) {
       return cell.attachTabular({
@@ -6994,7 +6992,7 @@ $p.DocSelling.prototype.before_save = function () {
           "types":"ch,ed,ed"
         }
       });
-    }
+    },
 
     draw_composition(cell) {
       this.composition_parts();
@@ -7012,7 +7010,7 @@ $p.DocSelling.prototype.before_save = function () {
           "types":"ch,ed,ed"
         }
       });
-    }
+    },
 
     draw_selection(cell) {
       return cell.attachTabular({
@@ -7029,7 +7027,7 @@ $p.DocSelling.prototype.before_save = function () {
           "types":"ch,ed,ref,ed"
         }
       });
-    }
+    },
 
     draw_dimensions(cell) {
       return cell.attachTabular({
@@ -7046,7 +7044,7 @@ $p.DocSelling.prototype.before_save = function () {
           "types":"ch,ed,ed"
         }
       });
-    }
+    },
 
     composition_parts(refill) {
       const {composition} = this.scheme;
@@ -7063,7 +7061,7 @@ $p.DocSelling.prototype.before_save = function () {
           })
         });
       }
-    }
+    },
 
     templates(name) {
 
@@ -7077,7 +7075,7 @@ $p.DocSelling.prototype.before_save = function () {
         res.push(children.item(i))
       }
       return res;
-    }
+    },
 
     on_fill_template(template, data) {
 
@@ -7102,34 +7100,28 @@ $p.DocSelling.prototype.before_save = function () {
             this.calc_order.row_description(row),
             data.ПродукцияЭскизы[row.characteristic.ref] ?
               {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)} : {}
-            ))
+          ))
         });
         return Object.assign({}, data, {production});
       }
       return data;
-    }
+    },
 
     listener(obj, fields) {
-      if(obj === this && fields.hasOwnProperty('scheme')){
-        this.scheme_change();
+      if(obj === this && fields.hasOwnProperty('scheme') && this.wnd && this.wnd.elmnts){
+        const {grids, tabs} = this.wnd.elmnts;
+
+        grids.columns && grids.columns.unload && grids.columns.unload();
+        grids.selection && grids.selection.unload && grids.selection.unload();
+        grids.composition && grids.composition.unload && grids.composition.unload();
+        grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
+
+        grids.columns = this.draw_columns(tabs.cells("columns"));
+        grids.selection = this.draw_selection(tabs.cells("selection"));
+        grids.composition = this.draw_composition(tabs.cells("composition"));
+        grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
       }
-    }
-
-    scheme_change() {
-
-      const {grids, tabs} = this.wnd.elmnts;
-
-      grids.columns && grids.columns.unload && grids.columns.unload();
-      grids.selection && grids.selection.unload && grids.selection.unload();
-      grids.composition && grids.composition.unload && grids.composition.unload();
-      grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
-
-      grids.columns = this.draw_columns(tabs.cells("columns"));
-      grids.selection = this.draw_selection(tabs.cells("selection"));
-      grids.composition = this.draw_composition(tabs.cells("composition"));
-      grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
-
-    }
+    },
 
     fill_by_order(row, _mgr) {
 
@@ -7178,14 +7170,14 @@ $p.DocSelling.prototype.before_save = function () {
           this.production.load(rows)
           return rows
         })
-    }
+    },
 
-    static get resources() {
-      return ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'];
-    }
+  });
 
-  }
+  Object.assign($p.RepMaterials_demand, {
 
+    resources: ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'],
+  });
 
 })($p);
 

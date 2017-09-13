@@ -44,11 +44,9 @@ const StyledToolbar = withStyles(SettingsToolbar);
 export default class RepParams extends Component {
 
   static propTypes = {
-
     handleAdd: PropTypes.func,             // обработчик добавления объекта
     handleRemove: PropTypes.func,          // обработчик удаления строки
     _obj: PropTypes.object.isRequired,
-
   };
 
   handleCustom = (row, _mgr) => {
