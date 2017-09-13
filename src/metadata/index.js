@@ -17,6 +17,11 @@ import {metaActions} from 'metadata-redux';
 
 // загружаем metadata.transition и экспортируем $p глобально
 import $p from 'metadata-dhtmlx';
+
+// подключаем react-специфичные методы
+import plugin_react from 'metadata-react/plugin';
+plugin_react.constructor.call($p);
+
 global.$p = $p;
 
 // параметры сеанса и метаданные инициализируем без лишних проволочек
