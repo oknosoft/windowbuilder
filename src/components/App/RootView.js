@@ -55,7 +55,7 @@ class RootView extends Component {
   }
 
   isPathLogIn() {
-    return !!location.pathname.match(/\/(login|about|settings)$/);
+    return !!location.pathname.match(/\/(login|about)$/);
   }
 
   render() {

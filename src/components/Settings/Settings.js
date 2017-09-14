@@ -1,39 +1,21 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
-import Grid from 'material-ui/Grid';
 import Paper from 'material-ui/Paper';
-import Card, {CardHeader, CardContent} from 'material-ui/Card';
+import Typography from 'material-ui/Typography';
 import Radio, {RadioGroup} from 'material-ui/Radio';
-import {FormLabel, FormControl, FormControlLabel} from 'material-ui/Form';
-
+import {FormGroup, FormHelperText, FormControl, FormControlLabel} from 'material-ui/Form';
 import TextField from 'material-ui/TextField';
 import Button from 'material-ui/Button';
 import Switch from 'material-ui/Switch';
 import Divider from 'material-ui/Divider';
-import Confirm from 'metadata-react/Confirm';
+import {DialogActions} from 'material-ui/Dialog';
 
-import withStyles from 'material-ui/styles/withStyles';
+import Confirm from 'metadata-react/Confirm';
+import withStyles from 'metadata-react/styles/paper600';
+
 import withIface from 'metadata-redux/src/withIface';
 import withPrm from 'metadata-redux/src/withPrm';
-
-const styles = theme => ({
-  root: {
-    flexGrow: 1,
-    margin: theme.spacing.unit * 2,
-  },
-  demo: {
-    minHeight: 240,
-    height: '100%',
-  },
-  paper: {
-    padding: theme.spacing.unit * 2,
-    height: '100%',
-  },
-  control: {
-    padding: theme.spacing.unit * 2,
-  },
-});
 
 class Settings extends Component {
 
@@ -42,59 +24,48 @@ class Settings extends Component {
     const {zone, couch_path, enable_save_pwd, couch_suffix, couch_direct} = props;
 
     let hide_price;
-    if($p.wsql.get_user_param("hide_price_dealer")){
-      hide_price = "dealer";
+    if($p.wsql.get_user_param('hide_price_dealer')) {
+      hide_price = 'dealer';
     }
-    else if($p.wsql.get_user_param("hide_price_manufacturer")){
-      hide_price = "manufacturer";
+    else if($p.wsql.get_user_param('hide_price_manufacturer')) {
+      hide_price = 'manufacturer';
     }
-    else{
-      hide_price = "none";
+    else {
+      hide_price = 'none';
     }
 
-    let surcharge_internal = $p.wsql.get_user_param("surcharge_internal", "number");
-    let discount_percent_internal = $p.wsql.get_user_param("discount_percent_internal", "number");
-    let surcharge_disabled;
-    if($p.current_user.partners_uids.length){
+    let surcharge_internal = $p.wsql.get_user_param('surcharge_internal', 'number');
+    let discount_percent_internal = $p.wsql.get_user_param('discount_percent_internal', 'number');
+    let surcharge_disabled = false;
+
+    if($p.current_user.partners_uids.length) {
 
       // если заданы параметры для текущего пользователя - используем их
-      if(!surcharge_internal){
+      if(!surcharge_internal) {
 
         let partner = $p.cat.partners.get($p.current_user.partners_uids[0]);
-        let prm = {calc_order_row: {
+        let prm = {
+          calc_order_row: {
             nom: $p.cat.nom.get(),
             characteristic: {params: {find_rows: () => null}},
             _owner: {_owner: {partner: partner}}
-          }};
+          }
+        };
 
         $p.pricing.price_type(prm);
 
-        $p.wsql.set_user_param("surcharge_internal", surcharge_internal = prm.price_type.extra_charge_external);
-        $p.wsql.set_user_param("discount_percent_internal", discount_percent_internal = prm.price_type.discount_external);
+        $p.wsql.set_user_param('surcharge_internal', surcharge_internal = prm.price_type.extra_charge_external);
+        $p.wsql.set_user_param('discount_percent_internal', discount_percent_internal = prm.price_type.discount_external);
       }
     }
-    else{
+    else {
       surcharge_disabled = true;
     }
 
-    this.state = {zone, couch_path, couch_suffix, enable_save_pwd, couch_direct, hide_price,
-      confirm_reset: false, surcharge_internal, discount_percent_internal, surcharge_disabled};
-  }
-
-  handleSetPrm = () => this.props.handleSetPrm(this.state);
-
-  openConfirm = () => this.setState({confirm_reset: true});
-
-  closeConfirm = () => this.setState({confirm_reset: false});
-
-  resetData = () => {
-    this.closeConfirm();
-    $p.eve && ($p.eve.redirect = true);
-    $p.adapters.pouch.reset_local_data();
-  };
-
-  valueToState(name) {
-    return (event) => this.setState({[name]: event.target.value});
+    this.state = {
+      zone, couch_path, couch_suffix, enable_save_pwd, couch_direct, hide_price,
+      confirm_reset: false, surcharge_internal, discount_percent_internal, surcharge_disabled
+    };
   }
 
   componentDidMount() {
@@ -114,124 +85,148 @@ class Settings extends Component {
     return true;
   }
 
+  handleSetPrm = () => {
+    const {hide_price, ...state} = this.state;
+    if(hide_price == 'dealer') {
+      state.hide_price_dealer = true;
+      state.hide_price_manufacturer = '';
+    }
+    else if(hide_price == 'manufacturer') {
+      state.hide_price_dealer = '';
+      state.hide_price_manufacturer = true;
+    }
+    else {
+      state.hide_price_dealer = '';
+      state.hide_price_manufacturer = '';
+    }
+    this.props.handleSetPrm(state);
+  };
+
+  handleHidePriceChange = (event, value) => {
+    this.setState({hide_price: value});
+  };
+
+  openConfirm = () => this.setState({confirm_reset: true});
+
+  closeConfirm = () => this.setState({confirm_reset: false});
+
+  resetData = () => {
+    this.closeConfirm();
+    $p.eve && ($p.eve.redirect = true);
+    $p.adapters.pouch.reset_local_data();
+  };
+
+  valueToState(name) {
+    return ({target}) => {
+      const value = ['discount_percent_internal', 'surcharge_internal'].indexOf(name) != -1 ? (parseFloat(target.value) || 0) : target.value;
+      this.setState({[name]: value});
+    };
+  }
+
   render() {
     const {classes} = this.props;
-    const {zone, couch_path, enable_save_pwd, couch_suffix, couch_direct, confirm_reset, hide_price,
-      surcharge_internal, discount_percent_internal, surcharge_disabled} = this.state;
-
-
+    const {
+      zone, couch_path, enable_save_pwd, couch_suffix, couch_direct, confirm_reset, hide_price,
+      surcharge_internal, discount_percent_internal, surcharge_disabled
+    } = this.state;
 
     return (
-      <div>
-        <Grid container className={classes.root}>
+      <Paper className={classes.root} elevation={4}>
 
-          <Grid item sm={12} md={6}>
-            <Grid
-              container
-              className={classes.demo}
-              align="stretch"
-              justify="center"
-            >
-              <Card className={classes.paper}>
-                <CardHeader title="Подключение к базе данных" />
-                <TextField
-                  fullWidth
-                  margin="dense"
-                  label="Адрес CouchDB"
-                  InputProps={{placeholder: 'couch_path'}}
-                  helperText="Абсолютный либо относительный путь CouchDB"
-                  onChange={this.valueToState('couch_path')}
-                  value={couch_path}/>
+        <Typography type="title" style={{paddingTop: 16}}>Подключение к базе данных</Typography>
 
-                <TextField
-                  fullWidth
-                  margin="dense"
-                  label="Область данных"
-                  InputProps={{placeholder: 'zone'}}
-                  helperText="Значение разделителя данных"
-                  onChange={this.valueToState('zone')}
-                  value={zone}/>
+        <TextField
+          fullWidth
+          margin="dense"
+          label="Адрес CouchDB"
+          InputProps={{placeholder: 'couch_path'}}
+          helperText="Абсолютный либо относительный путь CouchDB"
+          onChange={this.valueToState('couch_path')}
+          value={couch_path}/>
 
-                <TextField
-                  fullWidth
-                  margin="dense"
-                  label="Суффикс пользователя"
-                  InputProps={{placeholder: 'couch_suffix'}}
-                  helperText="Назначается дилеру при регистрации"
-                  onChange={this.valueToState('couch_suffix')}
-                  value={couch_suffix}/>
+        <TextField
+          fullWidth
+          margin="dense"
+          label="Область данных"
+          InputProps={{placeholder: 'zone'}}
+          helperText="Значение разделителя данных"
+          onChange={this.valueToState('zone')}
+          value={zone}/>
 
-                <FormControlLabel
-                  control={
-                    <Switch
-                      onChange={(event, checked) => this.setState({couch_direct: checked})}
-                      checked={couch_direct}/>
-                  }
-                  label="Прямое подключение без кеширования"
-                />
+        <TextField
+          fullWidth
+          margin="dense"
+          label="Суффикс пользователя"
+          InputProps={{placeholder: 'couch_suffix'}}
+          helperText="Назначается дилеру при регистрации"
+          onChange={this.valueToState('couch_suffix')}
+          value={couch_suffix}/>
 
-                <FormControlLabel
-                  control={
-                    <Switch
-                      onChange={(event, checked) => this.setState({enable_save_pwd: checked})}
-                      checked={enable_save_pwd}/>
-                  }
-                  label="Разрешить сохранение пароля"
-                />
-              </Card>
-            </Grid>
-          </Grid>
+        <FormGroup>
+          <FormControl>
+            <FormControlLabel
+              control={<Switch
+                onChange={(event, checked) => this.setState({couch_direct: checked})}
+                checked={couch_direct}/>}
+              label="Прямое подключение без кеширования"
+            />
+            <FormHelperText style={{marginTop: -4}}>Отключает режим оффлайн</FormHelperText>
+          </FormControl>
 
-          <Grid item sm={12} md={6}>
-            <Grid
-              container
-              className={classes.demo}
-              align="stretch"
-              justify="center"
-            >
-              <Card className={classes.paper}>
-                <CardHeader
-                  title="Колонки цен"
-                  subheader="Настройка видимости колонок в документе 'Расчет' и графическом построителе"
-                />
-                <CardContent>
-                  <RadioGroup
-                    className={classes.group}
-                    value={hide_price}
-                    onChange={this.handleChange}
-                  >
-                    <FormControlLabel value="none" control={<Radio/>} label="Показывать все цены"/>
-                    <FormControlLabel value="dealer" control={<Radio/>} label="Скрыть цены дилера"/>
-                    <FormControlLabel value="manufacturer" control={<Radio/>} label="Скрыть цены завода"/>
+          <FormControl>
+            <FormControlLabel
+              control={<Switch
+                onChange={(event, checked) => this.setState({enable_save_pwd: checked})}
+                checked={enable_save_pwd}/>}
+              label="Разрешить сохранение пароля"
+            />
+            <FormHelperText style={{marginTop: -4}}>Не треповать повторного ввода пароля</FormHelperText>
+          </FormControl>
+        </FormGroup>
 
-                  </RadioGroup>
-                </CardContent>
-              </Card>
+        <Typography type="title" style={{paddingTop: 16}}>Колонки цен</Typography>
+        <Typography>Настройка видимости колонок в документе &quot;Расчет&quot; и графическом построителе</Typography>
 
-              <Card className={classes.paper}>
-                <CardHeader
-                  title="Наценки и скидки"
-                  subheader="Значения наценки и скидки по умолчанию, которые дилер предоставляет своим (конечным) покупателям"
-                />
-                <CardContent>
+        <RadioGroup
+          className={classes.group}
+          value={hide_price}
+          onChange={this.handleHidePriceChange}
+        >
+          <FormControlLabel value="none" control={<Radio/>} label="Показывать все цены"/>
+          <FormControlLabel value="dealer" control={<Radio/>} label="Скрыть цены дилера"/>
+          <FormControlLabel value="manufacturer" control={<Radio/>} label="Скрыть цены завода"/>
 
-                  <TextField
-                    fullWidth
-                    margin="dense"
-                    label="Наценка дилера, %"
-                    InputProps={{placeholder: 'surcharge_internal'}}
-                    helperText="Наценка относительно цены производителя"
-                    onChange={this.valueToState('surcharge_internal')}
-                    value={surcharge_internal}
-                    disabled={surcharge_disabled}
-                  />
+        </RadioGroup>
 
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+        <Typography type="title" style={{paddingTop: 16}}>Наценки и скидки</Typography>
+        <Typography>Значения наценки и скидки по умолчанию, которые дилер предоставляет своим (конечным) покупателям</Typography>
 
-        </Grid>
+        <TextField
+          fullWidth
+          margin="dense"
+          label="Наценка дилера, %"
+          InputProps={{placeholder: 'surcharge_internal'}}
+          helperText="Наценка относительно цены производителя"
+          onChange={this.valueToState('surcharge_internal')}
+          value={surcharge_internal}
+          disabled={surcharge_disabled}
+        />
+
+        <TextField
+          fullWidth
+          margin="dense"
+          label="Скидка дилера, %"
+          InputProps={{placeholder: 'discount_percent_internal'}}
+          helperText="Скидка конечного клиента относительно цены дилера"
+          onChange={this.valueToState('discount_percent_internal')}
+          value={discount_percent_internal}
+          disabled={surcharge_disabled}
+        />
+
+        <DialogActions style={{marginBottom: 0, marginRight: 0}}>
+          <Button dense className={classes.button} onClick={this.handleSetPrm}>Сохранить настройки</Button>
+          <Button dense className={classes.button} onClick={this.openConfirm}>Сбросить данные</Button>
+        </DialogActions>
 
         <Confirm
           title="Сброс данных"
@@ -240,7 +235,7 @@ class Settings extends Component {
           handleCancel={this.closeConfirm}
           open={confirm_reset}
         />
-      </div>
+      </Paper>
     );
   }
 }
@@ -250,4 +245,4 @@ Settings.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(withIface(withPrm(Settings)));
+export default withStyles(withIface(withPrm(Settings)));

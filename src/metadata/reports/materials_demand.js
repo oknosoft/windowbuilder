@@ -37,6 +37,7 @@ export default function ($p) {
    * @return {Promise.<TResult>}
    */
   $p.RepMaterials_demand.prototype.calculate = function () {
+
     const {specification, production, constructor, scheme, _manager} = this;
 
     const _columns = scheme.rx_columns({
