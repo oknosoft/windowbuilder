@@ -61,17 +61,12 @@ class ToolElement extends paper.Tool {
    * @for ToolElement
    */
   check_layer() {
-    if (!this._scope.project.contours.length) {
-
+    const {_scope} = this;
+    if (!_scope.project.contours.length) {
       // создаём пустой новый слой
       new Contour({parent: undefined});
-
       // оповещаем мир о новых слоях
-      Object.getNotifier(this._scope.project._noti).notify({
-        type: 'rows',
-        tabular: "constructions"
-      });
-
+      _scope.eve.emit_async('rows', _scope.project.ox, {constructions: true});
     }
   }
 

@@ -48,9 +48,11 @@ const AbstractFilling = (superclass) => class extends superclass {
   /**
    * Возвращает структуру профилей по сторонам
    */
-  profiles_by_side(side) {
+  profiles_by_side(side, profiles) {
     // получаем таблицу расстояний профилей от рёбер габаритов
-    const {profiles} = this;
+    if(!profiles){
+      profiles = this.profiles;
+    }
     const bounds = {
       left: Infinity,
       top: Infinity,

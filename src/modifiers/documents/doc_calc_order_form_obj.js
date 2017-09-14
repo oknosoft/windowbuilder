@@ -40,8 +40,11 @@
           source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70';
         }
 
-        if($p.current_user.role_available('СогласованиеРасчетовЗаказов') || $p.current_user.role_available('РедактированиеСкидок')) {
+        if($p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro';
+        }
+        else if($p.current_user.role_available('РедактированиеСкидок')) {
+          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro';
         }
         else {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro';
@@ -200,6 +203,14 @@
           wnd = res.wnd;
           wnd.prompt = prompt;
           wnd.close_confirmed = true;
+
+          const search = $p.job_prm.parse_url_str(location.search);
+          if(search.ref){
+            setTimeout(() => {
+              wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
+              rsvg_click(search.ref, 0);
+            }, 200);
+          }
           return res;
         }
       });
@@ -617,7 +628,7 @@
 
     function rsvg_click(ref, dbl) {
       o.production.find_rows({characteristic: ref}, (row) => {
-        wnd.elmnts.grids.production.selectRow(row.row - 1);
+        wnd.elmnts.grids.production.selectRow(row.row - 1, dbl === 0);
         dbl && open_builder();
         return false;
       });

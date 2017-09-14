@@ -103,7 +103,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       if(this.obj_delivery_state == Отклонен || this.obj_delivery_state == Отозван || this.obj_delivery_state == Шаблон) {
         $p.msg.show_msg && $p.msg.show_msg({
           type: 'alert-warning',
-          text: 'Нельзя провести заказ со статусом<br/>\'Отклонён\', \'Отозван\' или \'Шаблон\'',
+          text: 'Нельзя провести заказ со статусом<br/>"Отклонён", "Отозван" или "Шаблон"',
           title: this.presentation
         });
         return false;
@@ -123,7 +123,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     else if(this.department.empty()) {
       $p.msg.show_msg && $p.msg.show_msg({
         type: 'alert-warning',
-        text: 'Не заполнен реквизит \'офис продаж\' (подразделение)',
+        text: 'Не заполнен реквизит "офис продаж" (подразделение)',
         title: this.presentation
       });
       return false;
@@ -228,10 +228,10 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   get rounding() {
     const {pricing} = $p.job_prm;
-    if(!pricing.hasOwnProperty('rounding')){
+    if(!pricing.hasOwnProperty('rounding')) {
       const parts = this.doc_currency.parameters_russian_recipe.split(',');
       pricing.rounding = parseInt(parts[parts.length - 1]);
-      if(isNaN(pricing.rounding)){
+      if(isNaN(pricing.rounding)) {
         pricing.rounding = 2;
       }
     }
@@ -594,21 +594,21 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    * Загружает в RAM данные характеристик продукций заказа
    * @return {Promise.<TResult>|*}
    */
-  load_production() {
+  load_production(forse) {
     const prod = [];
+    const mgr = $p.cat.characteristics;
     this.production.forEach((row) => {
       const {nom, characteristic} = row;
-      if(!characteristic.empty() && characteristic.is_new() && !nom.is_procedure && !nom.is_service && !nom.is_accessory) {
+      if(!characteristic.empty() && (forse || characteristic.is_new()) && !nom.is_procedure && !nom.is_accessory) {
         prod.push(characteristic.ref);
       }
     });
-    const mgr = $p.cat.characteristics;
-    return (mgr.pouch_load_array ? mgr.pouch_load_array(prod) : mgr.adapter.load_array(mgr, prod))
+    return (mgr.adapter.load_array(mgr, prod))
       .then(() => {
         prod.length = 0;
         this.production.forEach((row) => {
           const {nom, characteristic} = row;
-          if(!characteristic.empty() && !nom.is_procedure && !nom.is_service && !nom.is_accessory) {
+          if(!characteristic.empty() && !nom.is_procedure && !nom.is_accessory) {
             prod.push(characteristic);
           }
         });
@@ -855,29 +855,54 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
   // при изменении реквизита
   value_change(field, type, value, no_extra_charge) {
 
-    const {_obj, _owner} = this;
+    let {_obj, _owner, nom, characteristic, unit} = this;
+    let recalc;
     const {rounding} = _owner._owner;
 
     if(field == 'nom' || field == 'characteristic' || field == 'quantity') {
+
       _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
-      const {characteristic} = this;
-      if(!characteristic.empty() && !characteristic.calc_order.empty()) {
-        const fake_prm = {
-          spec: characteristic.specification,
-          calc_order_row: this
-        };
-        $p.pricing.price_type(fake_prm);
-        $p.pricing.calc_first_cost(fake_prm);
-        $p.pricing.calc_amount(fake_prm);
+
+      // проверим владельца характеристики
+      if(!characteristic.empty()) {
+        if(!characteristic.calc_order.empty() && characteristic.owner != nom) {
+          characteristic.owner = nom;
+        }
+        else if(characteristic.owner != nom) {
+          _obj.characteristic = $p.utils.blank.guid;
+        }
+      }
+
+      nom = this.nom;
+      characteristic = this.characteristic;
+
+      // проверим единицу измерения
+      if(unit.owner != nom) {
+        _obj.unit = nom.storage_unit.ref;
+      }
+
+      // рассчитаем цены
+      const fake_prm = {
+        calc_order_row: this,
+        spec: characteristic.specification
+      };
+      const {price} = _obj;
+      $p.pricing.price_type(fake_prm);
+      $p.pricing.calc_first_cost(fake_prm);
+      $p.pricing.calc_amount(fake_prm);
+      if(price && !_obj.price){
+        _obj.price = price;
+        recalc = true;
       }
     }
 
-    if(field == 'price' || field == 'price_internal' || field == 'quantity' ||
-      field == 'discount_percent' || field == 'discount_percent_internal') {
+    if('price_internal,quantity,discount_percent_internal'.indexOf(field) != -1 || recalc) {
 
-      _obj[field] = parseFloat(value);
+      if(!recalc){
+        _obj[field] = parseFloat(value);
+      }
 
-      _obj.amount = (_obj.price * ((100 - _obj.discount_percent) / 100) * _obj.quantity).round(rounding);
+      _obj.amount = ((_obj.price || 0) * ((100 - (_obj.discount_percent || 0)) / 100) * _obj.quantity).round(rounding);
 
       // если есть внешняя цена дилера, получим текущую дилерскую наценку
       if(!no_extra_charge) {
@@ -895,14 +920,14 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
       }
 
-      _obj.amount_internal = (_obj.price_internal * ((100 - _obj.discount_percent_internal) / 100) * _obj.quantity).round(rounding);
+      _obj.amount_internal = ((_obj.price_internal || 0) * ((100 - (_obj.discount_percent_internal || 0)) / 100) * _obj.quantity).round(rounding);
 
       // ставка и сумма НДС
       const doc = _owner._owner;
       if(doc.vat_consider) {
         const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
-        _obj.vat_rate = this.nom.vat_rate.empty() ? НДС18 : this.nom.vat_rate;
-        switch (_obj.vat_rate) {
+        _obj.vat_rate = (nom.vat_rate.empty() ? НДС18 : nom.vat_rate).ref;
+        switch (this.vat_rate) {
         case НДС18:
         case НДС18_118:
           _obj.vat_amount = (_obj.amount * 18 / 118).round(2);
@@ -917,6 +942,8 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
           break;
         case НДС0:
         case БезНДС:
+        case '_':
+        case '':
           _obj.vat_amount = 0;
           break;
         }
@@ -925,7 +952,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
       }
       else {
-        _obj.vat_rate = $p.enm.vat_rates.БезНДС;
+        _obj.vat_rate = '';
         _obj.vat_amount = 0;
       }
 
@@ -938,5 +965,5 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
     }
   }
 
-}
+};
 

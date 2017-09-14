@@ -3,5 +3,13 @@
   <item id="sep0" type="separator"/>
   <item type="button" id="btn_origin" text="&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt; Происхождение" title="Ссылка на настройки" />
   <item id="sp" type="spacer"/>
+
   <item id="input_filter" type="buttonInput" width="200" title="Поиск по подстроке" />
+
+  <item id="sep2" type="separator"/>
+  <item type="buttonSelect"   id="bs_more"  text="&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt;"  title="Экспорт" openAll="true">
+    <item type="button" id="btn_csv" text="&lt;i class='fa fa-file-text-o fa-fw'&gt;&lt;/i&gt; Скопировать в CSV" />
+    <item type="button" id="btn_json" text="&lt;i class='fa fa-file-code-o fa-fw'&gt;&lt;/i&gt; Скопировать в JSON" />
+    <item type="button" id="btn_xls" text="&lt;i class='fa fa-file-excel-o fa-fw'&gt;&lt;/i&gt; Выгрузить в XLS" />
+  </item>
 </toolbar>

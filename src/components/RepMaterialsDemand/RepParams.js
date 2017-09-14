@@ -1,66 +1,62 @@
-import React, {Component, PropTypes} from "react";
-import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from "material-ui/Toolbar";
-import IconButton from "material-ui/IconButton";
-import AddIcon from "material-ui/svg-icons/content/add-circle-outline";
-import RemoveIcon from "material-ui/svg-icons/action/delete";
-import TabularSection from "metadata-react/TabularSection";
-import SelectOrder from "./SelectOrder";
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 
+import Toolbar from 'material-ui/Toolbar';
+import Typography from 'material-ui/Typography';
+import IconButton from 'material-ui/IconButton';
+import AddIcon from 'material-ui-icons/AddCircleOutline';
+import RemoveIcon from 'material-ui-icons/Delete';
+import TabularSection from 'metadata-react/TabularSection';
+import SelectOrder from './SelectOrder';
 
-class SettingsToolbar extends Component{
+import withStyles from 'metadata-react/Header/toolbar';
+
+class SettingsToolbar extends Component {
 
   static propTypes = {
-
     handleAdd: PropTypes.func,             // обработчик добавления объекта
     handleRemove: PropTypes.func,          // обработчик удаления строки
-    handleCustom: PropTypes.func
+    handleCustom: PropTypes.func,
+    classes: PropTypes.object.isRequired,
+  };
 
-  }
+  render() {
 
-  render(){
-
-    const {handleAdd, handleRemove, handleCustom} = this.props;
+    const {handleAdd, handleRemove, handleCustom, classes} = this.props;
 
     return (
 
-      <Toolbar>
-        <ToolbarGroup className={"meta-toolbar-group"} firstChild={true}>
-          <IconButton touch={true} tooltip="Добавить строку" tooltipPosition="bottom-right" onClick={handleAdd}>
-            <AddIcon />
-          </IconButton>
-          <IconButton touch={true} tooltip="Удалить строку" onClick={handleRemove}>
-            <RemoveIcon />
-          </IconButton>
-          <ToolbarSeparator />
+      <Toolbar className={classes.bar}>
+        <IconButton title="Добавить строку" onClick={handleAdd}><AddIcon/></IconButton>
+        <IconButton title="Удалить строку" onClick={handleRemove}><RemoveIcon/></IconButton>
 
-          <SelectOrder
-            handleSelect={handleCustom}
-          />
+        <Typography type="title" color="inherit" className={classes.flex}> </Typography>
 
-        </ToolbarGroup>
+        <SelectOrder handleSelect={handleCustom}/>
+
       </Toolbar>
-    )
+    );
   }
 }
 
-export default class RepParams extends Component{
+const StyledToolbar = withStyles(SettingsToolbar);
+
+export default class RepParams extends Component {
 
   static propTypes = {
-
     handleAdd: PropTypes.func,             // обработчик добавления объекта
     handleRemove: PropTypes.func,          // обработчик удаления строки
     _obj: PropTypes.object.isRequired,
-
-  }
+  };
 
   handleCustom = (row, _mgr) => {
     this.props._obj.fill_by_order(row, _mgr)
       .then((objs) => {
-        this.refs.production.forceUpdate()
-      })
-  }
+        this.production.forceUpdate();
+      });
+  };
 
-  render(){
+  render() {
 
     const {handleAdd, handleRemove, _obj} = this.props;
 
@@ -69,14 +65,14 @@ export default class RepParams extends Component{
       <TabularSection
         _obj={_obj}
         _tabular="production"
-        ref="production"
+        ref={(el) => this.production = el}
         minHeight={308}
-        Toolbar={SettingsToolbar}
+        Toolbar={StyledToolbar}
         handleAdd={handleAdd}
         handleRemove={handleRemove}
         handleCustom={this.handleCustom}
       />
-    )
+    );
   }
 
 }

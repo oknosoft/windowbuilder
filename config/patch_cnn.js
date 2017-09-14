@@ -30,20 +30,41 @@ function reset_replace(prm) {
 }
 
 /**
+ * предопределенные зоны
+ */
+export const predefined = {
+  'aribaz.': {zone: 2, host: "https://aribaz.oknosoft.ru/"},
+  'eco.': {zone: 21, host: "https://eco.oknosoft.ru/"},
+  //'ecookna.': {zone: 21, host: "https://zakaz.ecookna.ru/"},
+  'tmk.': {zone: 23, host: "https://tmk-online.ru/"},
+  'crystallit.': {zone: 25, host: "https://crystallit.oknosoft.ru/"},
+  'nrus.': {zone: 40, host: "https://nrus.oknosoft.ru/"},
+}
+
+/**
+ * патч зоны по умолчанию
+ */
+export function patch_prm(settings) {
+  return (prm) => {
+    settings(prm);
+    for(let elm in predefined){
+      if(location.host.match(elm)){
+        prm.zone = predefined[elm].zone;
+        break;
+      }
+    }
+    return prm;
+  }
+}
+
+/**
  * патч параметров подключения
  */
-export default function patch_cnn() {
+export function patch_cnn() {
 
   const {job_prm, wsql} = $p;
 
-  // предопределенные зоны
-  const predefined = {
-    aribaz: {zone: 2, host: "https://aribaz.oknosoft.ru/"},
-    'eco.': {zone: 21, host: "https://eco.oknosoft.ru/"},
-    //ecookna: {zone: 21, host: "https://zakaz.ecookna.ru/"},
-    tmk: {zone: 23, host: "https://tmk-online.ru/"},
-    crystallit: {zone: 25, host: "https://crystallit.oknosoft.ru/"},
-  }
+
   for(let elm in predefined){
     const prm = predefined[elm];
     if(location.host.match(elm) && wsql.get_user_param("zone") != prm.zone){

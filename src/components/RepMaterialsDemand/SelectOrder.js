@@ -1,83 +1,61 @@
-
-import React, {Component} from "react";
-import PropTypes from "prop-types";
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 
 import IconButton from 'material-ui/IconButton';
-import IconWork from 'material-ui/svg-icons/action/work';
-import Dialog from 'material-ui/Dialog';
-import DataList from "metadata-react/DataList"
-
+import IconWork from 'material-ui-icons/Work';
+import DnR from 'metadata-react/DnR/Dialog';
+import DataList from 'metadata-react/DataList';
 
 export default class SelectOrder extends Component {
 
   static propTypes = {
-    handleSelect: React.PropTypes.func.isRequired
-  }
+    handleSelect: PropTypes.func.isRequired,
+  };
 
-  constructor(props) {
-
-    super(props);
-
-    this.state = {
-      open: false
-    }
+  constructor(props, context) {
+    super(props, context);
+    this.state = {open: false};
   }
 
   handleTouchTap = (event) => {
     // This prevents ghost click.
     event.preventDefault();
 
-    this.setState({
-      open: true
-    })
-  }
+    this.setState({open: true});
+  };
 
   handleRequestClose = () => {
-    this.setState({
-      open: false,
-    })
-  }
+    this.setState({open: false});
+  };
 
   handleSelect = (row, _mgr) => {
-    this.handleRequestClose()
-    this.props.handleSelect(row, _mgr)
-  }
+    this.handleRequestClose();
+    this.props.handleSelect(row, _mgr);
+  };
 
 
-  render () {
+  render() {
 
-    const {handleSelect, handleRequestClose, context, state} = this
+    const {handleSelect, handleRequestClose, props, state} = this;
 
     return (
       <div>
-
-        <IconButton touch={true} tooltip="Заполнить по заказу" onClick={this.handleTouchTap}>
-          <IconWork />
+        <IconButton title="Заполнить по заказу" onClick={this.handleTouchTap}>
+          <IconWork/>
         </IconButton>
-
-        <Dialog
-          title="Заполнить по заказу"
-          //actions={actions}
-          modal={false}
-          open={state.open}
-          onRequestClose={handleRequestClose}
-          autoScrollBodyContent={true}
-        >
-
+        {state.open && <DnR title="Заполнить по заказу" onClose={handleRequestClose}>
           <DataList
-            width={680}
-            height={320}
-            _mgr={context.$p.doc.calc_order}
+            _mgr={$p.doc.calc_order}
+            _acl={props._acl}
+            handlers={props.handlers}
+            handleSelect={handleSelect}
             selection_mode
-            deny_add_del
+            denyAddDel
             show_variants
             show_search
-            handleSelect={handleSelect}
-
           />
-
-        </Dialog>
+        </DnR>}
       </div>
-      )
+    );
   }
 }

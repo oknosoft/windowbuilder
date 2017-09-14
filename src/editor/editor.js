@@ -154,7 +154,7 @@ class Editor extends paper.PaperScope {
      * @private
      */
     this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '320px',
-      image_path: 'imgs/',
+      image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
         {name: 'pan', css: 'tb_icon-hand', tooltip: 'Панорама и масштаб {Crtl}, {Alt}, {Alt + колёсико мыши}'},
@@ -184,7 +184,7 @@ class Editor extends paper.PaperScope {
      * @private
      */
     this.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
-      image_path: 'imgs/',
+      image_path: '/imgs/',
       buttons: [
 
         {name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '34px'},
@@ -1013,10 +1013,18 @@ class Editor extends paper.PaperScope {
 
   }
 
+  /**
+   * Двигает импосты, чтобы получить одинаковые размеры заполнений
+   * @param name
+   * @param glasses
+   * @return {Array}
+   */
   do_glass_align(name = 'auto', glasses) {
 
+    const {project, Point} = this;
+
     if(!glasses){
-      glasses = this.project.selected_glasses();
+      glasses = project.selected_glasses();
     }
     if(glasses.length < 2){
       return
@@ -1025,7 +1033,7 @@ class Editor extends paper.PaperScope {
     // получаем текущий внешний контур
     let layer;
     if(glasses.some((glass) => {
-        const gl = this.project.rootLayer(glass.layer);
+        const gl = project.rootLayer(glass.layer);
         if(!layer){
           layer = gl;
         }
@@ -1054,6 +1062,8 @@ class Editor extends paper.PaperScope {
       return impost.orientation == orientation && (b.is_tt || e.is_tt || b.is_i || e.is_i);
     });
 
+    // признак уравнивания геометрически, а не по заполнению
+    const galign = project.auto_align == $p.enm.align_types.Геометрически;
     let medium = 0;
 
     // модифицируем коллекцию заполнений - подклеиваем в неё импосты, одновременно, вычиляем средний размер
@@ -1065,7 +1075,16 @@ class Editor extends paper.PaperScope {
         width: bounds.width,
         height: bounds.height,
       }
-      medium += bounds[name];
+      if(galign){
+        // находим левый-правый-верхний-нижний профили
+        const by_side = glass.profiles_by_side(null, profiles);
+        res.width = (by_side.right.b.x + by_side.right.e.x - by_side.left.b.x - by_side.left.e.x) / 2;
+        res.height = (by_side.bottom.b.y + by_side.bottom.e.y - by_side.top.b.y - by_side.top.e.y) / 2;
+        medium += name == 'width' ? res.width : res.height;
+      }
+      else{
+        medium += bounds[name];
+      }
 
       profiles.forEach((curr) => {
         const profile = curr.profile.nearest() || curr.profile;
@@ -1153,10 +1172,10 @@ class Editor extends paper.PaperScope {
             }
           });
         }
-        delta = new paper.Point([delta,0]);
+        delta = new Point([delta,0]);
       }
       else {
-        delta = new paper.Point([0, delta]);
+        delta = new Point([0, delta]);
       }
 
       if(delta.length > consts.epsilon){
@@ -1244,9 +1263,10 @@ class Editor extends paper.PaperScope {
   }
 
   close() {
-    const {calc_order} = this.project.ox;
+    const {ox} = this.project;
+    const {calc_order} = ox;
     if(calc_order && !calc_order.empty()){
-      this.handlers.handleNavigate(`/${calc_order.class_name}/${calc_order.ref}`);
+      this.handlers.handleNavigate(`/${calc_order.class_name}/${calc_order.ref}/?ref=${ox.ref}`);
     }
     else{
       this.handlers.handleNavigate(`/`);

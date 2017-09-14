@@ -202,6 +202,22 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   /**
+   * Возвращает массив заполнений текущего и вложенного контуров
+   */
+  get fillings() {
+    const fillings = [];
+    for(const glass of this.glasses()){
+      if(glass instanceof Contour){
+        fillings.push.apply(fillings, glass.fillings);
+      }
+      else{
+        fillings.push(glass);
+      }
+    }
+    return fillings;
+  }
+
+  /**
    * Возвращает массив массивов сегментов - база для построения пути заполнений
    * @property glass_contours
    * @type Array

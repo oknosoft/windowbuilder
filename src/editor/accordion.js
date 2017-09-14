@@ -493,7 +493,7 @@ class EditorAccordion {
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
         {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
       ],
-      image_path: "imgs/",
+      image_path: "/imgs/",
       onclick: (name) => {
         switch (name) {
           case 'arc':
@@ -537,7 +537,7 @@ class EditorAccordion {
       left: '4px',
       class_name: "",
       name: 'right',
-      image_path: 'imgs/',
+      image_path: '/imgs/',
       buttons: [
         {name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
         {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
@@ -617,7 +617,7 @@ class EditorAccordion {
       left: '4px',
       class_name: "",
       name: 'bottom',
-      image_path: 'imgs/',
+      image_path: '/imgs/',
       buttons: [
         {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
 
@@ -654,7 +654,7 @@ class EditorAccordion {
       left: '4px',
       class_name: "",
       name: 'bottom',
-      image_path: 'imgs/',
+      image_path: '/imgs/',
       buttons: [
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
         {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}

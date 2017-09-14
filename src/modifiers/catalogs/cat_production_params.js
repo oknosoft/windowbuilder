@@ -124,55 +124,61 @@ $p.CatProduction_params.prototype.__define({
 	 * @param cnstr {Nomber} - номер конструкции. Если 0 - перезаполняем параметры изделия, иначе - фурнитуры
 	 */
 	refill_prm: {
-		value: function (ox, cnstr) {
+		value: function (ox, cnstr = 0) {
 
-			var prm_ts = !cnstr ? this.product_params : this.furn_params,
-				adel = [];
+			const prm_ts = !cnstr ? this.product_params : this.furn_params;
+			const adel = [];
+			const auto_align = ox.calc_order.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон && $p.job_prm.properties.auto_align;
+			const {params} = ox;
+
+			function add_prm(default_row) {
+        let row;
+        params.find_rows({cnstr: cnstr, param: default_row.param}, (_row) => {
+          row = _row;
+          return false;
+        });
+
+        // если не найден параметр изделия - добавляем. если нет параметра фурнитуры - пропускаем
+        if(!row){
+          if(cnstr){
+            return;
+          }
+          row = params.add({cnstr: cnstr, param: default_row.param, value: default_row.value});
+        }
+
+        if(row.hide != default_row.hide){
+          row.hide = default_row.hide;
+        }
+
+        if(default_row.forcibly && row.value != default_row.value){
+          row.value = default_row.value;
+        }
+      }
 
 			// если в характеристике есть лишние параметры - удаляем
 			if(!cnstr){
-				cnstr = 0;
-				ox.params.find_rows({cnstr: cnstr}, function (row) {
-					if(prm_ts.find_rows({param: row.param}).length == 0)
-						adel.push(row);
+        params.find_rows({cnstr: cnstr}, (row) => {
+				  const {param} = row;
+					if(param !== auto_align && prm_ts.find_rows({param}).length == 0){
+            adel.push(row);
+          }
 				});
-				adel.forEach(function (row) {
-					ox.params.del(row);
-				});
+				adel.forEach((row) => params.del(row));
 			}
 
 			// бежим по параметрам. при необходимости, добавляем или перезаполняем и устанавливаем признак hide
-			prm_ts.forEach(function (default_row) {
+			prm_ts.forEach(add_prm);
 
-				var row;
-				ox.params.find_rows({cnstr: cnstr, param: default_row.param}, function (_row) {
-					row = _row;
-					return false;
-				});
+			// для шаблонов, добавляем параметр автоуравнивание
+      !cnstr && auto_align && add_prm({param: auto_align, value: '', hide: false});
 
-				// если не найден параметр изделия - добавляем. если нет параметра фурнитуры - пропускаем
-				if(!row){
-					if(cnstr)
-						return;
-					row = ox.params.add({cnstr: cnstr, param: default_row.param, value: default_row.value});
-				}
-
-				if(row.hide != default_row.hide)
-					row.hide = default_row.hide;
-
-				if(default_row.forcibly && row.value != default_row.value)
-					row.value = default_row.value;
-			});
-
+      // устанавливаем систему и номенклатуру продукции
 			if(!cnstr){
 				ox.sys = this;
 				ox.owner = ox.prod_nom;
 
 				// одновременно, перезаполним параметры фурнитуры
-				ox.constructions.forEach((row) => {
-					if(!row.furn.empty())
-						ox.sys.refill_prm(ox, row.cnstr);
-				})
+				ox.constructions.forEach((row) => !row.furn.empty() && ox.sys.refill_prm(ox, row.cnstr))
 			}
 		}
 	}

@@ -8,28 +8,26 @@
 
 (($p) => {
 
-  const Proto = $p.RepMaterials_demand;
-
-  // переопределяем прототип
-  $p.RepMaterials_demand = class RepMaterials_demand extends Proto {
+  // дополняем прототип отчета
+  Object.assign($p.RepMaterials_demand.prototype, {
 
     // формирует данные печати, склеивая их из данных заказа и текущего отчета
     print_data() {
       // получаем структуру данных заказа
       return this.calc_order.print_data().then((order) => {
         // получаем данные спецификации
-        return this.calculate()
+        return this.calculate012()
           .then((specification) => {
             // дополняем описанием продукции
 
             // возвращаем объединенную структуру
             return Object.assign(order, {specification, _grouping: this.scheme.dimensions})
           })
-        })
-    }
+      })
+    },
 
     // извлекает спецификацию изделий заказа, фильтрует и группирует
-    calculate() {
+    calculate012() {
 
       const {specification, production, scheme, discard, _manager} = this;
       const arefs = [];
@@ -183,7 +181,7 @@
           })
           return specification._rows;
         })
-    }
+    },
 
     // формирует табличный докуменнт
     generate() {
@@ -202,7 +200,7 @@
 
         return doc;
       })
-    }
+    },
 
     // фильтрует строку спецификации
     discard(row, selection) {
@@ -218,27 +216,27 @@
         const {comparison_types} = $p.enm;
 
         switch (comparison_type) {
-          case comparison_types.eq:
-            return left_value != right_value;
+        case comparison_types.eq:
+          return left_value != right_value;
 
-          case comparison_types.ne:
-            return left_value == right_value;
+        case comparison_types.ne:
+          return left_value == right_value;
 
-          case comparison_types.lt:
-            return !(left_value < right_value);
+        case comparison_types.lt:
+          return !(left_value < right_value);
 
-          case comparison_types.gt:
-            return !(left_value > right_value);
+        case comparison_types.gt:
+          return !(left_value > right_value);
 
-          case comparison_types.in:
-            return !left_value || right_value.indexOf(left_value.toString()) == -1;
+        case comparison_types.in:
+          return !left_value || right_value.indexOf(left_value.toString()) == -1;
 
-          case comparison_types.nin:
-            return right_value.indexOf(left_value.toString()) != -1;
+        case comparison_types.nin:
+          return right_value.indexOf(left_value.toString()) != -1;
         }
 
       })
-    }
+    },
 
     // подмешивает в наименование материала характеристику и размеры
     material(row) {
@@ -264,8 +262,9 @@
       row.material = res;
 
       return res;
-    }
+    },
 
+    // деструктор
     form_obj(pwnd, attr) {
 
       this._data._modified = false;
@@ -305,17 +304,17 @@
       // установим вариант
       $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
         .then((scheme) => {
-        this.scheme = scheme;
-      });
+          this.scheme = scheme;
+        });
 
       // заполняем табчасть изделий
       this.fill_by_order();
 
       return Promise.resolve({wnd: this.wnd, o: this});
 
-    }
+    },
 
-    // тулбар
+    // рисует тулбар и закладки
     draw_tabs(wnd) {
 
       const items = [
@@ -384,7 +383,7 @@
       });
 
       return wnd;
-    }
+    },
 
     draw_production(cell) {
       return cell.attachTabular({
@@ -400,7 +399,7 @@
           "types":"ch,ref,calck"
         }
       })
-    }
+    },
 
     draw_columns(cell) {
       return cell.attachTabular({
@@ -418,7 +417,7 @@
           "types":"ch,ed,ed"
         }
       });
-    }
+    },
 
     draw_composition(cell) {
       this.composition_parts();
@@ -437,7 +436,7 @@
           "types":"ch,ed,ed"
         }
       });
-    }
+    },
 
     draw_selection(cell) {
       return cell.attachTabular({
@@ -454,7 +453,7 @@
           "types":"ch,ed,ref,ed"
         }
       });
-    }
+    },
 
     draw_dimensions(cell) {
       return cell.attachTabular({
@@ -471,7 +470,7 @@
           "types":"ch,ed,ed"
         }
       });
-    }
+    },
 
     // перезаполняет табчасть состава по данным макета
     composition_parts(refill) {
@@ -489,7 +488,7 @@
           })
         });
       }
-    }
+    },
 
     // возвращает массив шаблонов или конкретный шаблон
     templates(name) {
@@ -504,7 +503,7 @@
         res.push(children.item(i))
       }
       return res;
-    }
+    },
 
     // корректирует данные перед заполнением шаблона
     on_fill_template(template, data) {
@@ -532,36 +531,37 @@
             this.calc_order.row_description(row),
             data.ПродукцияЭскизы[row.characteristic.ref] ?
               {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)} : {}
-            ))
+          ))
         });
         return Object.assign({}, data, {production});
       }
       return data;
-    }
+    },
 
+    // слушатель изменений реквизитов обработки
     listener(obj, fields) {
-      if(obj === this && fields.hasOwnProperty('scheme')){
-        this.scheme_change();
+      if(obj === this && fields.hasOwnProperty('scheme') && this.wnd && this.wnd.elmnts){
+        // обновляем табчасти колонок и отбора
+        const {grids, tabs} = this.wnd.elmnts;
+
+        grids.columns && grids.columns.unload && grids.columns.unload();
+        grids.selection && grids.selection.unload && grids.selection.unload();
+        grids.composition && grids.composition.unload && grids.composition.unload();
+        grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
+
+        grids.columns = this.draw_columns(tabs.cells("columns"));
+        grids.selection = this.draw_selection(tabs.cells("selection"));
+        grids.composition = this.draw_composition(tabs.cells("composition"));
+        grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
       }
-    }
+    },
 
-    scheme_change() {
-
-      // обновляем табчасти колонок и отбора
-      const {grids, tabs} = this.wnd.elmnts;
-
-      grids.columns && grids.columns.unload && grids.columns.unload();
-      grids.selection && grids.selection.unload && grids.selection.unload();
-      grids.composition && grids.composition.unload && grids.composition.unload();
-      grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
-
-      grids.columns = this.draw_columns(tabs.cells("columns"));
-      grids.selection = this.draw_selection(tabs.cells("selection"));
-      grids.composition = this.draw_composition(tabs.cells("composition"));
-      grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
-
-    }
-
+    /**
+     * Дополняет табчасть продукциями выбранного заказа
+     * @param row
+     * @param _mgr
+     * @return {Promise.<TResult>}
+     */
     fill_by_order(row, _mgr) {
 
       let pdoc;
@@ -610,14 +610,16 @@
           this.production.load(rows)
           return rows
         })
-    }
+    },
 
-    static get resources() {
-      return ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'];
-    }
+  });
 
-  }
+  // реализуем статические свойства и методы
+  Object.assign($p.RepMaterials_demand, {
 
+    // список ресурсов по умолчанию
+    resources: ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'],
+  });
 
 })($p);
 
