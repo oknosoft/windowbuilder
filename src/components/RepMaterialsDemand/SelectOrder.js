@@ -47,11 +47,10 @@ export default class SelectOrder extends Component {
           <DataList
             _mgr={$p.doc.calc_order}
             _acl={props._acl}
-            handlers={props.handlers}
-            handleSelect={handleSelect}
+            handlers={{handleSelect}}
             selection_mode
             denyAddDel
-            show_variants
+            //show_variants
             show_search
           />
         </DnR>}
