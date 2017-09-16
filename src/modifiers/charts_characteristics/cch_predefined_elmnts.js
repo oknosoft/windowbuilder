@@ -68,10 +68,6 @@
                   }
                 })
               });
-
-              if(row.synonym == "calculated"){
-
-              }
             }
             else{
 
@@ -89,6 +85,19 @@
         });
       })
       .then(() => {
+
+        // дополним автовычисляемыми свойствами
+        let prm = job_prm.properties.width;
+        const {calculated} = job_prm.properties;
+        if(prm && calculated.indexOf(prm) == -1){
+          calculated.push(prm);
+          prm._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.width || 0};
+        }
+        prm = job_prm.properties.length;
+        if(prm && calculated.indexOf(prm) == -1){
+          calculated.push(prm);
+          prm._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.len || 0};
+        }
 
         // рассчеты, помеченные, как шаблоны, загрузим в память заранее
         setTimeout(doc.calc_order.load_templates.bind(doc.calc_order), 1000);

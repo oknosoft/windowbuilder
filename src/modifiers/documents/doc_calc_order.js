@@ -902,7 +902,12 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         _obj[field] = parseFloat(value);
       }
 
-      _obj.amount = ((_obj.price || 0) * ((100 - (_obj.discount_percent || 0)) / 100) * _obj.quantity).round(rounding);
+      isNaN(_obj.price) && (_obj.price = 0);
+      isNaN(_obj.price_internal) && (_obj.price_internal = 0);
+      isNaN(_obj.discount_percent) && (_obj.discount_percent = 0);
+      isNaN(_obj.discount_percent_internal) && (_obj.discount_percent_internal = 0);
+
+      _obj.amount = (_obj.price * ((100 - _obj.discount_percent) / 100) * _obj.quantity).round(rounding);
 
       // если есть внешняя цена дилера, получим текущую дилерскую наценку
       if(!no_extra_charge) {
@@ -920,7 +925,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
       }
 
-      _obj.amount_internal = ((_obj.price_internal || 0) * ((100 - (_obj.discount_percent_internal || 0)) / 100) * _obj.quantity).round(rounding);
+      _obj.amount_internal = (_obj.price_internal * ((100 - _obj.discount_percent_internal) / 100) * _obj.quantity).round(rounding);
 
       // ставка и сумма НДС
       const doc = _owner._owner;

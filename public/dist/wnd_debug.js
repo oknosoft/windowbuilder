@@ -2577,10 +2577,6 @@ $p.cat.users.__define({
                   }
                 })
               });
-
-              if(row.synonym == "calculated"){
-
-              }
             }
             else{
 
@@ -2598,6 +2594,18 @@ $p.cat.users.__define({
         });
       })
       .then(() => {
+
+        let prm = job_prm.properties.width;
+        const {calculated} = job_prm.properties;
+        if(prm && calculated.indexOf(prm) == -1){
+          calculated.push(prm);
+          prm._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.width || 0};
+        }
+        prm = job_prm.properties.length;
+        if(prm && calculated.indexOf(prm) == -1){
+          calculated.push(prm);
+          prm._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.len || 0};
+        }
 
         setTimeout(doc.calc_order.load_templates.bind(doc.calc_order), 1000);
 
@@ -3170,7 +3178,6 @@ class Pricing {
         }
 
         return 0;
-
       });
       Object.keys(prm.price_type).forEach((key) => {
         prm.price_type[key] = ares[0][key];
@@ -5354,7 +5361,12 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         _obj[field] = parseFloat(value);
       }
 
-      _obj.amount = ((_obj.price || 0) * ((100 - (_obj.discount_percent || 0)) / 100) * _obj.quantity).round(rounding);
+      isNaN(_obj.price) && (_obj.price = 0);
+      isNaN(_obj.price_internal) && (_obj.price_internal = 0);
+      isNaN(_obj.discount_percent) && (_obj.discount_percent = 0);
+      isNaN(_obj.discount_percent_internal) && (_obj.discount_percent_internal = 0);
+
+      _obj.amount = (_obj.price * ((100 - _obj.discount_percent) / 100) * _obj.quantity).round(rounding);
 
       if(!no_extra_charge) {
         const prm = {calc_order_row: this};
@@ -5370,7 +5382,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
       }
 
-      _obj.amount_internal = ((_obj.price_internal || 0) * ((100 - (_obj.discount_percent_internal || 0)) / 100) * _obj.quantity).round(rounding);
+      _obj.amount_internal = (_obj.price_internal * ((100 - _obj.discount_percent_internal) / 100) * _obj.quantity).round(rounding);
 
       const doc = _owner._owner;
       if(doc.vat_consider) {

@@ -255,7 +255,6 @@ class Pricing {
         }
 
         return 0;
-
       });
       Object.keys(prm.price_type).forEach((key) => {
         prm.price_type[key] = ares[0][key];
