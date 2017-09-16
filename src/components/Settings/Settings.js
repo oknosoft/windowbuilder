@@ -8,7 +8,6 @@ import {FormGroup, FormHelperText, FormControl, FormControlLabel} from 'material
 import TextField from 'material-ui/TextField';
 import Button from 'material-ui/Button';
 import Switch from 'material-ui/Switch';
-import Divider from 'material-ui/Divider';
 import {DialogActions} from 'material-ui/Dialog';
 
 import Confirm from 'metadata-react/Confirm';
@@ -16,6 +15,8 @@ import withStyles from 'metadata-react/styles/paper600';
 
 import withIface from 'metadata-redux/src/withIface';
 import withPrm from 'metadata-redux/src/withPrm';
+
+import compose from 'recompose/compose';
 
 class Settings extends Component {
 
@@ -100,6 +101,9 @@ class Settings extends Component {
       state.hide_price_manufacturer = '';
     }
     this.props.handleSetPrm(state);
+
+    this.props.handleIfaceState({component: '', name: 'snack',
+      value: {open: true, reset: true, message: 'Требуется перезагрузить страницу после изменения параматров'}});
   };
 
   handleHidePriceChange = (event, value) => {
@@ -240,9 +244,4 @@ class Settings extends Component {
   }
 }
 
-
-Settings.propTypes = {
-  classes: PropTypes.object.isRequired,
-};
-
-export default withStyles(withIface(withPrm(Settings)));
+export default compose(withStyles, withIface, withPrm)(Settings);

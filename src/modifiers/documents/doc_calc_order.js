@@ -956,8 +956,12 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         _obj.vat_amount = 0;
       }
 
-      doc.doc_amount = _owner.aggregate([], ['amount']).round(rounding);
-      doc.amount_internal = _owner.aggregate([], ['amount_internal']).round(rounding);
+      const amount = _owner.aggregate([], ['amount', 'amount_internal']);
+      amount.doc_amount = amount.amount.round(rounding);
+      amount.amount_internal = amount.amount_internal.round(rounding);
+      delete amount.amount;
+      Object.assign(doc, amount);
+      doc._manager.emit_async('update', doc, amount);
 
       // TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation
 

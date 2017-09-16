@@ -79,8 +79,8 @@ class AppRoot extends Component {
   }
 
   handleReset = () => {
-    const {handleNavigate, first_run} = this.props;
-    if(first_run) {
+    const {handleNavigate, first_run, snack} = this.props;
+    if(first_run || (snack && snack.reset)) {
       $p.eve && ($p.eve.redirect = true);
       location.replace('/');
     }
@@ -126,7 +126,7 @@ class AppRoot extends Component {
           message={snack && snack.open ? snack.message : 'Требуется перезагрузить страницу после первой синхронизации данных'}
           action={<Button
             color="accent"
-            onClick={snack && snack.open ? this.handleDialogClose.bind(this, 'snack') : this.handleReset}
+            onClick={snack && snack.open && !snack.reset ? this.handleDialogClose.bind(this, 'snack') : this.handleReset}
           >Выполнить</Button>}
         />}
 
