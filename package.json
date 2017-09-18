@@ -44,7 +44,7 @@
     "pouchdb-find": "^6.3.4",
     "pouchdb-mapreduce": "^6.3.4",
     "pouchdb-replication": "^6.3.4",
-    "rc-calendar": "^9.1.5",
+    "rc-calendar": "^9.1.6",
     "rc-cascader": "^0.11.5",
     "react": "^15.6.1",
     "react-autosuggest": "^9.3.2",
@@ -61,7 +61,7 @@
     "react-router-redux": "^5.0.0-alpha.6",
     "react-select": "^1.0.0-rc.5",
     "react-static-container": "^1.0.1",
-    "react-virtualized": "^9.9.0",
+    "react-virtualized": "^9.10.0",
     "recompose": "^0.25.0",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0"
