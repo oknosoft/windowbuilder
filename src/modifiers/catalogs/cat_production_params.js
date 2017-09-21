@@ -80,11 +80,9 @@ $p.CatProduction_params.prototype.__define({
 			else if(!Array.isArray(elm_types))
 				elm_types = [elm_types];
 
-			this.elmnts.each(function(row){
+			this.elmnts.each((row) => {
 				if(!row.nom.empty() && elm_types.indexOf(row.elm_type) != -1 &&
-					(by_default == "rows" || !__noms.some(function (e) {
-						return row.nom == e.nom;
-					})))
+					(by_default == "rows" || !__noms.some((e) => row.nom == e.nom)))
 					__noms.push(row);
 			});
 
@@ -111,9 +109,7 @@ $p.CatProduction_params.prototype.__define({
 						return 0;
 				}
 			});
-			return __noms.map(function (e) {
-				return e.nom;
-			});
+			return __noms.map((e) => e.nom);
 		}
 	},
 

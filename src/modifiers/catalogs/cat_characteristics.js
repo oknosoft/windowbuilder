@@ -245,14 +245,14 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
       }
       else if(this.sys.production.count() > 1) {
-        this.sys.production.each(function (row) {
+        this.sys.production.each((row) => {
 
           if(setted) {
             return false;
           }
 
           if(row.param && !row.param.empty()) {
-            param.find_rows({cnstr: 0, param: row.param, value: row.value}, function () {
+            param.find_rows({cnstr: 0, param: row.param, value: row.value}, () => {
               setted = true;
               param._owner.owner = row.nom;
               return false;
@@ -261,7 +261,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
         });
         if(!setted) {
-          this.sys.production.find_rows({param: $p.utils.blank.guid}, function (row) {
+          this.sys.production.find_rows({param: $p.utils.blank.guid}, (row) => {
             setted = true;
             param._owner.owner = row.nom;
             return false;
