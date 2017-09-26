@@ -4755,6 +4755,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     const currency = this.contract.settlements_currency;
     return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
   }
+  set doc_currency(v) {
+
+  }
 
   get rounding() {
     const {pricing} = $p.job_prm;

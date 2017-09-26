@@ -184,7 +184,7 @@ class Settings extends Component {
                 checked={enable_save_pwd}/>}
               label="Разрешить сохранение пароля"
             />
-            <FormHelperText style={{marginTop: -4}}>Не треповать повторного ввода пароля</FormHelperText>
+            <FormHelperText style={{marginTop: -4}}>Не требовать повторного ввода пароля</FormHelperText>
           </FormControl>
         </FormGroup>
 
