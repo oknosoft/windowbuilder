@@ -129,7 +129,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       return false;
     }
 
-    this.production.each((row) => {
+    this.production.forEach((row) => {
 
       doc_amount += row.amount;
       amount_internal += row.amount_internal;
@@ -143,7 +143,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       //     sys_profile += name;
       //   }
       //
-      //   row.characteristic.constructions.each((row) => {
+      //   row.characteristic.constructions.forEach((row) => {
       //   	if(row.parent && !row.furn.empty()){
       //   		const name = row.furn.name_short || row.furn.name;
       //   		if(sys_furn.indexOf(name) == -1){
@@ -199,6 +199,25 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       (partner.name ? ' ' + partner.name : '') +
       (note ? ' ' + note : '')).toLowerCase();
 
+    // пометим на удаление неиспользуемые характеристики
+    this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
+      .then(({rows}) => {
+      const deleted = [];
+      for (const {id} of rows) {
+        const ref = id.substr(20);
+        if(this.production.find_rows({characteristic: ref}).length) {
+          continue;
+        }
+        deleted.push($p.cat.characteristics.get(ref, 'promise')
+          .then((ox) => !ox._deleted && ox.mark_deleted(true)));
+      }
+      return Promise.all(deleted);
+    })
+      .then((res) => {
+        res.length && this._manager.emit_async('svgs', this);
+      })
+      .catch((err) => null);
+
   }
 
   // при изменении реквизита
@@ -225,6 +244,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     const currency = this.contract.settlements_currency;
     return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
   }
+
   set doc_currency(v) {
 
   }
@@ -635,6 +655,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     //nom,characteristic,note,quantity,unit,qty,len,width,s,first_cost,marginality,price,discount_percent,discount_percent_internal,
     //discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,ordn,changed
 
+    row._data._loading = true;
     row.nom = ox.owner;
     row.note = _dp.note;
     row.quantity = _dp.quantity || 1;
@@ -646,6 +667,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     if(row.unit.owner != row.nom) {
       row.unit = row.nom.storage_unit;
     }
+    row._data._loading = false;
   }
 
   /**
@@ -866,6 +888,9 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
 
       _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
 
+      nom = this.nom;
+      characteristic = this.characteristic;
+
       // проверим владельца характеристики
       if(!characteristic.empty()) {
         if(!characteristic.calc_order.empty() && characteristic.owner != nom) {
@@ -873,11 +898,9 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
         else if(characteristic.owner != nom) {
           _obj.characteristic = $p.utils.blank.guid;
+          characteristic = this.characteristic;
         }
       }
-
-      nom = this.nom;
-      characteristic = this.characteristic;
 
       // проверим единицу измерения
       if(unit.owner != nom) {
@@ -893,7 +916,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       $p.pricing.price_type(fake_prm);
       $p.pricing.calc_first_cost(fake_prm);
       $p.pricing.calc_amount(fake_prm);
-      if(price && !_obj.price){
+      if(price && !_obj.price) {
         _obj.price = price;
         recalc = true;
       }
@@ -901,7 +924,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
 
     if('price_internal,quantity,discount_percent_internal'.indexOf(field) != -1 || recalc) {
 
-      if(!recalc){
+      if(!recalc) {
         _obj[field] = parseFloat(value);
       }
 

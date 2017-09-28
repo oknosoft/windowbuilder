@@ -104,8 +104,6 @@
        */
       wnd.elmnts.statusbar = wnd.attachStatusBar();
       wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar, rsvg_click);
-      wnd.elmnts.svgs.reload(o);
-
     };
 
     attr.draw_pg_header = (o, wnd) => {
@@ -204,13 +202,17 @@
           wnd.prompt = prompt;
           wnd.close_confirmed = true;
 
+          rsvg_reload();
+          o._manager.on('svgs', rsvg_reload);
+
           const search = $p.job_prm.parse_url_str(location.search);
           if(search.ref){
             setTimeout(() => {
               wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
               rsvg_click(search.ref, 0);
             }, 200);
-          }
+          };
+
           return res;
         }
       });
@@ -235,8 +237,8 @@
       else {
         handlers.handleNavigate(`/`);
       }
+      $p.doc.calc_order.off('svgs', rsvg_reload);
     }
-
 
     /**
      * обработчик нажатия кнопок командных панелей
@@ -624,6 +626,10 @@
         const row = o.production.get(selId);
         row && !row.characteristic.empty() && row.characteristic.form_obj().then((w) => w.wnd.maximize());
       }
+    }
+
+    function rsvg_reload() {
+      o && wnd && wnd.elmnts && wnd.elmnts.svgs && wnd.elmnts.svgs.reload(o);
     }
 
     function rsvg_click(ref, dbl) {

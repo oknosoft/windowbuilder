@@ -4688,7 +4688,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       return false;
     }
 
-    this.production.each((row) => {
+    this.production.forEach((row) => {
 
       doc_amount += row.amount;
       amount_internal += row.amount_internal;
@@ -4734,6 +4734,24 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       (partner.name ? ' ' + partner.name : '') +
       (note ? ' ' + note : '')).toLowerCase();
 
+    this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
+      .then(({rows}) => {
+      const deleted = [];
+      for (const {id} of rows) {
+        const ref = id.substr(20);
+        if(this.production.find_rows({characteristic: ref}).length) {
+          continue;
+        }
+        deleted.push($p.cat.characteristics.get(ref, 'promise')
+          .then((ox) => !ox._deleted && ox.mark_deleted(true)));
+      }
+      return Promise.all(deleted);
+    })
+      .then((res) => {
+        res.length && this._manager.emit_async('svgs', this);
+      })
+      .catch((err) => null);
+
   }
 
   value_change(field, type, value) {
@@ -4755,6 +4773,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     const currency = this.contract.settlements_currency;
     return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
   }
+
   set doc_currency(v) {
 
   }
@@ -5124,6 +5143,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
 
 
+    row._data._loading = true;
     row.nom = ox.owner;
     row.note = _dp.note;
     row.quantity = _dp.quantity || 1;
@@ -5135,6 +5155,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     if(row.unit.owner != row.nom) {
       row.unit = row.nom.storage_unit;
     }
+    row._data._loading = false;
   }
 
   create_product_row({row_spec, elm, len_angl, params, create, grid}) {
@@ -5324,17 +5345,18 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
 
       _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
 
+      nom = this.nom;
+      characteristic = this.characteristic;
+
       if(!characteristic.empty()) {
         if(!characteristic.calc_order.empty() && characteristic.owner != nom) {
           characteristic.owner = nom;
         }
         else if(characteristic.owner != nom) {
           _obj.characteristic = $p.utils.blank.guid;
+          characteristic = this.characteristic;
         }
       }
-
-      nom = this.nom;
-      characteristic = this.characteristic;
 
       if(unit.owner != nom) {
         _obj.unit = nom.storage_unit.ref;
@@ -5348,7 +5370,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       $p.pricing.price_type(fake_prm);
       $p.pricing.calc_first_cost(fake_prm);
       $p.pricing.calc_amount(fake_prm);
-      if(price && !_obj.price){
+      if(price && !_obj.price) {
         _obj.price = price;
         recalc = true;
       }
@@ -5356,7 +5378,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
 
     if('price_internal,quantity,discount_percent_internal'.indexOf(field) != -1 || recalc) {
 
-      if(!recalc){
+      if(!recalc) {
         _obj[field] = parseFloat(value);
       }
 
@@ -5642,8 +5664,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
       wnd.elmnts.statusbar = wnd.attachStatusBar();
       wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar, rsvg_click);
-      wnd.elmnts.svgs.reload(o);
-
     };
 
     attr.draw_pg_header = (o, wnd) => {
@@ -5725,13 +5745,17 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           wnd.prompt = prompt;
           wnd.close_confirmed = true;
 
+          rsvg_reload();
+          o._manager.on('svgs', rsvg_reload);
+
           const search = $p.job_prm.parse_url_str(location.search);
           if(search.ref){
             setTimeout(() => {
               wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
               rsvg_click(search.ref, 0);
             }, 200);
-          }
+          };
+
           return res;
         }
       });
@@ -5751,8 +5775,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       else {
         handlers.handleNavigate(`/`);
       }
+      $p.doc.calc_order.off('svgs', rsvg_reload);
     }
-
 
     function toolbar_click(btn_id) {
 
@@ -6087,6 +6111,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         const row = o.production.get(selId);
         row && !row.characteristic.empty() && row.characteristic.form_obj().then((w) => w.wnd.maximize());
       }
+    }
+
+    function rsvg_reload() {
+      o && wnd && wnd.elmnts && wnd.elmnts.svgs && wnd.elmnts.svgs.reload(o);
     }
 
     function rsvg_click(ref, dbl) {
