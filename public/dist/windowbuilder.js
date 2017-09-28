@@ -1199,7 +1199,7 @@ class Editor extends paper.PaperScope {
     const {handlers, project} = this;
     const {props, handleIfaceState} = handlers;
     if(project._calc_order_row){
-      const title = project.ox.prod_name(true) + " " + (project.ox._modified ? " *" : "");
+      const title = project.ox.prod_name(true) + (project.ox._modified ? " *" : "");
       props.title != title && handleIfaceState({
         component: '',
         name: 'title',
@@ -8890,8 +8890,7 @@ class Scheme extends paper.Project {
             .then(() => {
               if(_scheme.ox.coordinates.count()) {
                 if(_scheme.ox.specification.count()) {
-                  _scheme.draw_visualization();
-                  _scheme.notify(_scheme, 'coordinates_calculated', {onload: true});
+                  setTimeout(() => _scheme.draw_visualization());
                 }
                 else {
                   $p.products_building.recalc(_scheme, {});

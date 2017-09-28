@@ -400,7 +400,7 @@ class Editor extends paper.PaperScope {
     const {handlers, project} = this;
     const {props, handleIfaceState} = handlers;
     if(project._calc_order_row){
-      const title = project.ox.prod_name(true) + " " + (project.ox._modified ? " *" : "");
+      const title = project.ox.prod_name(true) + (project.ox._modified ? " *" : "");
       props.title != title && handleIfaceState({
         component: '',
         name: 'title',
