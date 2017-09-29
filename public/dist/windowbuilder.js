@@ -8890,7 +8890,7 @@ class Scheme extends paper.Project {
             .then(() => {
               if(_scheme.ox.coordinates.count()) {
                 if(_scheme.ox.specification.count()) {
-                  setTimeout(() => _scheme.draw_visualization());
+                  setTimeout(() => _scheme.draw_visualization(), 100);
                 }
                 else {
                   $p.products_building.recalc(_scheme, {});

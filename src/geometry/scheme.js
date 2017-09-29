@@ -385,7 +385,7 @@ class Scheme extends paper.Project {
             .then(() => {
               if(_scheme.ox.coordinates.count()) {
                 if(_scheme.ox.specification.count()) {
-                  setTimeout(() => _scheme.draw_visualization());
+                  setTimeout(() => _scheme.draw_visualization(), 100);
                 }
                 else {
                   // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет

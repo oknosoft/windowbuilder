@@ -52,6 +52,9 @@ class AppRoot extends Component {
     this._offline = handleOffline.bind(this, true);
     window.addEventListener('online', this._online, false);
     window.addEventListener('offline', this._offline, false);
+    // window.addEventListener('error', event => {
+    //   $p.record_log({class: 'info', note: `ошибка перехвачена: ${event.error.toString()}`, obj: event.error})
+    // });
   }
 
   componentWillUnmount() {

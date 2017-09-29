@@ -811,7 +811,7 @@ class ProductsBuilding {
     if(!row_spec.characteristic.empty() && row_spec.characteristic.owner != row_spec.nom){
       row_spec.characteristic = $p.utils.blank.guid;
     }
-    row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr);
+    row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr, elm);
     row_spec.elm = elm.elm;
     if(origin){
       row_spec.origin = origin;

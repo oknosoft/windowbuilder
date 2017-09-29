@@ -510,36 +510,42 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 
 $p.cat.clrs.__define({
 
-	by_predefined: {
-		value: function(clr, clr_elm, clr_sch){
-		  const {predefined_name} = clr;
-			if(predefined_name){
-			  switch (predefined_name){
-          case 'КакЭлемент':
-            return clr_elm;
-          case 'КакИзделие':
-            return clr_sch;
-          case 'КакЭлементСнаружи':
-            return clr_elm.clr_out.empty() ? clr_elm : clr_elm.clr_out;
-          case 'КакЭлементИзнутри':
-            return clr_elm.clr_in.empty() ? clr_elm : clr_elm.clr_in;
-          case 'КакИзделиеСнаружи':
-            return clr_sch.clr_out.empty() ? clr_sch : clr_sch.clr_out;
-          case 'КакИзделиеИзнутри':
-            return clr_sch.clr_in.empty() ? clr_sch : clr_sch.clr_in;
-          case 'КакЭлементИнверсный':
-            return this.inverted(clr_elm);
-          case 'КакИзделиеИнверсный':
-            return this.inverted(clr_sch);
-          case 'БезЦвета':
-            return this.get();
-          default :
-            return clr_elm;
+  by_predefined: {
+    value: function (clr, clr_elm, clr_sch, elm) {
+      const {predefined_name} = clr;
+      if(predefined_name) {
+        switch (predefined_name) {
+        case 'КакЭлемент':
+          return clr_elm;
+        case 'КакИзделие':
+          return clr_sch;
+        case 'КакЭлементСнаружи':
+          return clr_elm.clr_out.empty() ? clr_elm : clr_elm.clr_out;
+        case 'КакЭлементИзнутри':
+          return clr_elm.clr_in.empty() ? clr_elm : clr_elm.clr_in;
+        case 'КакИзделиеСнаружи':
+          return clr_sch.clr_out.empty() ? clr_sch : clr_sch.clr_out;
+        case 'КакИзделиеИзнутри':
+          return clr_sch.clr_in.empty() ? clr_sch : clr_sch.clr_in;
+        case 'КакЭлементИнверсный':
+          return this.inverted(clr_elm);
+        case 'КакИзделиеИнверсный':
+          return this.inverted(clr_sch);
+        case 'БезЦвета':
+          return this.get();
+        case 'КакВедущий':
+        case 'КакВедущийИзнутри':
+        case 'КакВедущийСнаружи':
+        case 'КакВедущийИнверсный':
+          return this.get();
+
+        default :
+          return clr_elm;
         }
-			}
-      return clr.empty() ? clr_elm : clr
-		}
-	},
+      }
+      return clr.empty() ? clr_elm : clr;
+    }
+  },
 
   inverted: {
     value: function(clr){
@@ -4092,7 +4098,7 @@ class ProductsBuilding {
     if(!row_spec.characteristic.empty() && row_spec.characteristic.owner != row_spec.nom){
       row_spec.characteristic = $p.utils.blank.guid;
     }
-    row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr);
+    row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr, elm);
     row_spec.elm = elm.elm;
     if(origin){
       row_spec.origin = origin;
@@ -5591,18 +5597,16 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
     let o, wnd;
 
     if(!_meta_patched) {
-      (function (source) {
+      (function (source, user) {
         if($p.wsql.get_user_param('hide_price_dealer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
           source.widths = '40,200,*,220,0,70,70,70,70,40,70,70,70,0,0,0';
           source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,0,0,0';
-
         }
         else if($p.wsql.get_user_param('hide_price_manufacturer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма';
           source.widths = '40,200,*,220,0,70,70,70,70,40,0,0,0,70,70,70';
           source.min_widths = '30,200,220,150,0,70,40,70,70,70,0,0,0,70,70,70';
-
         }
         else {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
@@ -5610,18 +5614,19 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70';
         }
 
-        if($p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
+        if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен')) {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro';
         }
-        else if($p.current_user.role_available('РедактированиеСкидок')) {
+        else if(user.role_available('РедактированиеСкидок')) {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro';
         }
         else {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro';
         }
 
-      })($p.doc.calc_order.metadata().form.obj.tabular_sections.production);
-      _meta_patched = true;
+        _meta_patched = true;
+
+      })($p.doc.calc_order.metadata().form.obj.tabular_sections.production, $p.current_user);
     }
 
     attr.draw_tabular_sections = (o, wnd, tabular_init) => {

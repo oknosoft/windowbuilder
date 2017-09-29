@@ -17,36 +17,42 @@ $p.cat.clrs.__define({
 	 * @param clr_sch {CatClrs} - цвет изделия
 	 * @return {*}
 	 */
-	by_predefined: {
-		value: function(clr, clr_elm, clr_sch){
-		  const {predefined_name} = clr;
-			if(predefined_name){
-			  switch (predefined_name){
-          case 'КакЭлемент':
-            return clr_elm;
-          case 'КакИзделие':
-            return clr_sch;
-          case 'КакЭлементСнаружи':
-            return clr_elm.clr_out.empty() ? clr_elm : clr_elm.clr_out;
-          case 'КакЭлементИзнутри':
-            return clr_elm.clr_in.empty() ? clr_elm : clr_elm.clr_in;
-          case 'КакИзделиеСнаружи':
-            return clr_sch.clr_out.empty() ? clr_sch : clr_sch.clr_out;
-          case 'КакИзделиеИзнутри':
-            return clr_sch.clr_in.empty() ? clr_sch : clr_sch.clr_in;
-          case 'КакЭлементИнверсный':
-            return this.inverted(clr_elm);
-          case 'КакИзделиеИнверсный':
-            return this.inverted(clr_sch);
-          case 'БезЦвета':
-            return this.get();
-          default :
-            return clr_elm;
+  by_predefined: {
+    value: function (clr, clr_elm, clr_sch, elm) {
+      const {predefined_name} = clr;
+      if(predefined_name) {
+        switch (predefined_name) {
+        case 'КакЭлемент':
+          return clr_elm;
+        case 'КакИзделие':
+          return clr_sch;
+        case 'КакЭлементСнаружи':
+          return clr_elm.clr_out.empty() ? clr_elm : clr_elm.clr_out;
+        case 'КакЭлементИзнутри':
+          return clr_elm.clr_in.empty() ? clr_elm : clr_elm.clr_in;
+        case 'КакИзделиеСнаружи':
+          return clr_sch.clr_out.empty() ? clr_sch : clr_sch.clr_out;
+        case 'КакИзделиеИзнутри':
+          return clr_sch.clr_in.empty() ? clr_sch : clr_sch.clr_in;
+        case 'КакЭлементИнверсный':
+          return this.inverted(clr_elm);
+        case 'КакИзделиеИнверсный':
+          return this.inverted(clr_sch);
+        case 'БезЦвета':
+          return this.get();
+        case 'КакВедущий':
+        case 'КакВедущийИзнутри':
+        case 'КакВедущийСнаружи':
+        case 'КакВедущийИнверсный':
+          return this.get();
+
+        default :
+          return clr_elm;
         }
-			}
-      return clr.empty() ? clr_elm : clr
-		}
-	},
+      }
+      return clr.empty() ? clr_elm : clr;
+    }
+  },
 
   /**
    * ### Инверсный цвет

@@ -20,19 +20,17 @@
      * @param source
      */
     if(!_meta_patched) {
-      (function (source) {
+      (function (source, user) {
         // TODO: штуки сейчас спрятаны в ro и имеют нулевую ширину
         if($p.wsql.get_user_param('hide_price_dealer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
           source.widths = '40,200,*,220,0,70,70,70,70,40,70,70,70,0,0,0';
           source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,0,0,0';
-
         }
         else if($p.wsql.get_user_param('hide_price_manufacturer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма';
           source.widths = '40,200,*,220,0,70,70,70,70,40,0,0,0,70,70,70';
           source.min_widths = '30,200,220,150,0,70,40,70,70,70,0,0,0,70,70,70';
-
         }
         else {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
@@ -40,18 +38,19 @@
           source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70';
         }
 
-        if($p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
+        if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен')) {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro';
         }
-        else if($p.current_user.role_available('РедактированиеСкидок')) {
+        else if(user.role_available('РедактированиеСкидок')) {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro';
         }
         else {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro';
         }
 
-      })($p.doc.calc_order.metadata().form.obj.tabular_sections.production);
-      _meta_patched = true;
+        _meta_patched = true;
+
+      })($p.doc.calc_order.metadata().form.obj.tabular_sections.production, $p.current_user);
     }
 
     attr.draw_tabular_sections = (o, wnd, tabular_init) => {
