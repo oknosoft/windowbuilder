@@ -1,18 +1,33 @@
+import {createMuiTheme} from 'material-ui/styles';
+import teal from 'material-ui/colors/blueGrey';
 
-import {createMuiTheme } from 'material-ui/styles';
-import colors from 'material-ui/colors/common';
 
 const theme = createMuiTheme({
-  overrides: {
-    MuiAppBar: {
-      root: {
-        background: colors.lightBlack,
-      }
-    },
+
+  palette: {
+    primary: teal, // Purple and green play nicely together.
   },
+
+  mixins: {
+    toolbar: {
+      minHeight: 48,
+    }
+  },
+
+  // overrides: {
+  //   MuiToolbar: {
+  //     root: {
+  //       minHeight: 48,
+  //     },
+  //   },
+  //   MuiAppBar: {
+  //     root: {
+  //       backgroundColor: colors.lightBlack,
+  //     }
+  //   },
+  // },
+
 });
-theme.palette.primary1Color = colors.lightBlack;
-theme.palette.primary2Color = colors.minBlack;
 
 export default theme;
 
