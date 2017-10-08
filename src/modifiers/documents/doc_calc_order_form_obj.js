@@ -86,13 +86,6 @@
           toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
           toolbar.attachEvent('onclick', toolbar_click);
 
-          // попап для присоединенных файлов
-          wnd.elmnts.discount_pop = new dhtmlXPopup({
-            toolbar: toolbar,
-            id: 'btn_discount'
-          });
-          wnd.elmnts.discount_pop.attachEvent('onShow', show_discount);
-
           // в зависимости от статуса
           set_editable(o, wnd);
 
@@ -205,12 +198,13 @@
           o._manager.on('svgs', rsvg_reload);
 
           const search = $p.job_prm.parse_url_str(location.search);
-          if(search.ref){
+          if(search.ref) {
             setTimeout(() => {
               wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
               rsvg_click(search.ref, 0);
             }, 200);
-          };
+          }
+          ;
 
           return res;
         }
@@ -304,7 +298,7 @@
         break;
 
       case 'btn_discount':
-
+        show_discount();
         break;
 
       case 'btn_calendar':
@@ -339,43 +333,77 @@
      * создаёт и показывает диалог групповых скидок
      */
     function show_discount() {
-      if(!wnd.elmnts.discount) {
 
-        wnd.elmnts.discount = wnd.elmnts.discount_pop.attachForm([
-          {
-            type: 'fieldset', name: 'discounts', label: 'Скидки по группам', width: 220, list: [
-            {type: 'settings', position: 'label-left', labelWidth: 100, inputWidth: 50},
-            {type: 'input', label: 'На продукцию', name: 'production', numberFormat: ['0.0 %', '', '.']},
-            {type: 'input', label: 'На аксессуары', name: 'accessories', numberFormat: ['0.0 %', '', '.']},
-            {type: 'input', label: 'На услуги', name: 'services', numberFormat: ['0.0 %', '', '.']}
-          ]
-          },
-          {type: 'button', name: 'btn_discounts', value: 'Ок', tooltip: 'Установить скидки'}
-        ]);
-        wnd.elmnts.discount.setItemValue('production', 0);
-        wnd.elmnts.discount.setItemValue('accessories', 0);
-        wnd.elmnts.discount.setItemValue('services', 0);
-        wnd.elmnts.discount.attachEvent('onButtonClick', function (name) {
-          wnd.progressOn();
-          // TODO: _mgr.save
-          //_mgr.save({
-          //	ref: o.ref,
-          //	discounts: {
-          //		production: $p.utils.fix_number(wnd.elmnts.discount.getItemValue("production"), true),
-          //		accessories: $p.utils.fix_number(wnd.elmnts.discount.getItemValue("accessories"), true),
-          //		services: $p.utils.fix_number(wnd.elmnts.discount.getItemValue("services"), true)
-          //	},
-          //	o: o._obj,
-          //	action: "calc",
-          //	specify: "discounts"
-          //}).then(function(res){
-          //	if(!$p.msg.check_soap_result(res))
-          //		wnd.reflect_characteristic_change(res); // - перезаполнить шапку и табчасть
-          //	wnd.progressOff();
-          //	wnd.elmnts.discount_pop.hide();
-          //});
-        });
+      if(!wnd.elmnts.discount) {
+        wnd.elmnts.discount = $p.dp.buyers_order.create();
       }
+      // перезаполняем
+      refill_discount(wnd.elmnts.discount);
+
+      const discount = $p.iface.dat_blank(null, {
+        width: 300,
+        height: 220,
+        allow_close: true,
+        allow_minmax: false,
+        caption: 'Скидки по группам'
+      });
+      discount.setModal(true);
+
+      discount.attachTabular({
+        obj: wnd.elmnts.discount,
+        ts: 'charges_discounts',
+        reorder: false,
+        disable_add_del: true,
+        toolbar_struct: $p.injected_data['toolbar_discounts.xml'],
+        ts_captions: {
+          'fields': ['nom_kind', 'discount_percent'],
+          'headers': 'Группа,Скидка',
+          'widths': '*,80',
+          'min_widths': '120,70',
+          'aligns': '',
+          'sortings': 'na,na',
+          'types': 'ro,calck'
+        },
+      });
+      const toolbar = discount.getAttachedToolbar();
+      toolbar.attachEvent('onclick', (btn) => {
+        wnd.elmnts.discount._mode = btn;
+        refill_discount(wnd.elmnts.discount);
+        toolbar.setItemText('bs', toolbar.getListOptionText('bs', btn));
+      });
+      if(wnd.elmnts.discount._disable_internal) {
+        toolbar.disableListOption('bs', 'discount_percent');
+        toolbar.setItemText('bs', toolbar.getListOptionText('bs', wnd.elmnts.discount._mode));
+      }
+    }
+
+    function refill_discount(dp) {
+
+      if(!dp._mode) {
+        dp._disable_internal = !$p.current_user.role_available('РедактированиеСкидок');
+        dp._mode = dp._disable_internal ? 'discount_percent_internal' : 'discount_percent';
+        dp._calc_order = o;
+      }
+
+      const {charges_discounts} = dp;
+      const groups = new Set();
+      dp._data._loading = true;
+      charges_discounts.clear();
+      o.production.forEach((row) => {
+        const group = {nom_kind: row.nom.nom_kind};
+        if(!groups.has(group.nom_kind)) {
+          groups.add(group.nom_kind);
+          charges_discounts.add(group);
+        }
+        charges_discounts.find_rows(group, (sub) => {
+          const percent = row[dp._mode];
+          if(percent > sub.discount_percent) {
+            sub.discount_percent = percent;
+          }
+        });
+      });
+      dp._data._loading = false;
+      dp._manager.emit_async('rows', dp, {'charges_discounts': true});
     }
 
 
@@ -469,7 +497,7 @@
       }
 
       // выгружаем из памяти всплывающие окна скидки и связанных файлов
-      ['vault', 'vault_pop', 'discount', 'discount_pop', 'svgs', 'layout_header'].forEach((elm) => {
+      ['vault', 'vault_pop', 'discount', 'svgs', 'layout_header'].forEach((elm) => {
         wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
       });
 

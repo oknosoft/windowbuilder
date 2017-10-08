@@ -7,7 +7,7 @@
     root.Wnd_debug = factory();
   }
 }(this, function() {
-$p.injected_data._mixin({"toolbar_calc_order_production.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_grp_add\" text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку заказа\" openAll=\"true\" >\n    <item type=\"button\" id=\"btn_add_builder\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt; Изделие построителя\" />\n    <item type=\"button\" id=\"btn_add_product\" text=\"&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Продукцию или услугу\" />\n    <item type=\"button\" id=\"btn_add_material\" text=\"&lt;i class='fa fa-cube fa-fw'&gt;&lt;/i&gt; Материал\" />\n    <item type=\"button\" id=\"btn_clone\" text=\"&lt;i class='fa fa-clone fa-fw'&gt;&lt;/i&gt; Скопировать изделие\" />\n  </item>\n\n  <item type=\"button\" id=\"btn_edit\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt;\" title=\"Редактировать изделие построителя\" />\n  <item type=\"button\" id=\"btn_spec\" text=\"&lt;i class='fa fa-table fa-fw'&gt;&lt;/i&gt;\" title=\"Открыть спецификацию изделия\" />\n  <item type=\"button\" id=\"btn_delete\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Удалить строку заказа\" />\n  <item type=\"button\" id=\"btn_discount\" text=\"&lt;i class='fa fa-percent fa-fw'&gt;&lt;/i&gt;\" title=\"Скидки по типам строк заказа\"/>\n  <item id=\"sep1\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_calc_order_obj.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_save_close\" text=\"&lt;i class='fa fa-caret-square-o-down fa-fw'&gt;&lt;/i&gt;\" title=\"Записать и закрыть\"/>\r\n    <item type=\"button\" id=\"btn_save\" text=\"&lt;i class='fa fa-floppy-o fa-fw'&gt;&lt;/i&gt;\" title=\"Записать\"/>\r\n    <item type=\"button\" id=\"btn_sent\" text=\"&lt;i class='fa fa-paper-plane-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отправить заказ\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Провести документ\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"&lt;i class='fa fa-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отмена проведения\" />\r\n\r\n    <item type=\"button\" id=\"btn_files\" text=\"&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;\" title=\"Присоединенные файлы\"/>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt;\" title=\"Печать\" openAll=\"true\">\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_message\" enabled=\"false\" text=\"Сообщение\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;\"  title=\"Дополнительно\" openAll=\"true\">\r\n        <item type=\"button\"     id=\"btn_retrieve\"    text=\"&lt;i class='fa fa-undo fa-fw'&gt;&lt;/i&gt; Отозвать\" title=\"Отозвать заказ\" />\r\n        <item type=\"separator\"  id=\"sep_export\" />\r\n        <item type=\"button\" id=\"btn_import\" text=\"&lt;i class='fa fa-upload fa-fw'&gt;&lt;/i&gt; Загрузить из файла\" />\r\n        <item type=\"button\" id=\"btn_export\" text=\"&lt;i class='fa fa-download fa-fw'&gt;&lt;/i&gt; Выгрузить в файл\" />\r\n    </item>\r\n\r\n    <item id=\"sep_close_1\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_close\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Закрыть форму\"/>\r\n    <item id=\"sep_close_2\" type=\"separator\"/>\r\n\r\n</toolbar>","toolbar_product_list.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"btn_ok\"   type=\"button\"   text=\"&lt;b&gt;Рассчитать и закрыть&lt;/b&gt;\" title=\"Рассчитать, записать и закрыть\"  />\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item id=\"btn_xls\"  type=\"button\"\ttext=\"Загрузить из XLS\" title=\"Загрузить список продукции из файла xls\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"buttonSelect\" id=\"bs_print\" enabled=\"false\" text=\"\" title=\"\" openAll=\"true\">\r\n    </item>\r\n\r\n</toolbar>","toolbar_characteristics_specification.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_origin\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt; Происхождение\" title=\"Ссылка на настройки\" />\n  <item id=\"sp\" type=\"spacer\"/>\n\n  <item id=\"input_filter\" type=\"buttonInput\" width=\"200\" title=\"Поиск по подстроке\" />\n\n  <item id=\"sep2\" type=\"separator\"/>\n  <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt;\"  title=\"Экспорт\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_csv\" text=\"&lt;i class='fa fa-file-text-o fa-fw'&gt;&lt;/i&gt; Скопировать в CSV\" />\n    <item type=\"button\" id=\"btn_json\" text=\"&lt;i class='fa fa-file-code-o fa-fw'&gt;&lt;/i&gt; Скопировать в JSON\" />\n    <item type=\"button\" id=\"btn_xls\" text=\"&lt;i class='fa fa-file-excel-o fa-fw'&gt;&lt;/i&gt; Выгрузить в XLS\" />\n  </item>\n</toolbar>\n","toolbar_glass_inserts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"btn_add\" type=\"button\"  text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку\"  />\n  <item id=\"btn_delete\" type=\"button\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\"  title=\"Удалить строку\" />\n  <item id=\"btn_up\" type=\"button\" text=\"&lt;i class='fa fa-arrow-up fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вверх\" />\n  <item id=\"btn_down\" type=\"button\" text=\"&lt;i class='fa fa-arrow-down fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вниз\" />\n  <item id=\"sep1\" type=\"separator\"/>\n  <item id=\"btn_inset\" type=\"button\" text=\"&lt;i class='fa fa-plug fa-fw'&gt;&lt;/i&gt;\"  title=\"Заполнить по вставке\" />\n</toolbar>\n","form_auth.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<items>\n<item type=\"settings\" position=\"label-left\" labelWidth=\"80\" inputWidth=\"180\" noteWidth=\"180\"/>\n<item type=\"fieldset\" name=\"data\" inputWidth=\"auto\" label=\"Авторизация\">\n\n  <item type=\"radio\" name=\"type\" labelWidth=\"auto\" position=\"label-right\" checked=\"true\" value=\"guest\" label=\"Гостевой (демо) режим\">\n    <item type=\"select\" name=\"guest\" label=\"Роль\">\n      <option value=\"Дилер\" label=\"Дилер\"/>\n    </item>\n  </item>\n\n  <item type=\"radio\" name=\"type\" labelWidth=\"auto\" position=\"label-right\" value=\"auth\" label=\"Есть учетная запись\">\n    <item type=\"input\" value=\"\" name=\"login\" label=\"Логин\" validate=\"NotEmpty\" />\n    <item type=\"password\" value=\"\" name=\"password\" label=\"Пароль\" validate=\"NotEmpty\" />\n  </item>\n\n  <item type=\"button\" value=\"Войти\" name=\"submit\"/>\n\n  <item type=\"template\" name=\"text_options\" className=\"order_dealer_options\" inputWidth=\"170\"\n        value=\"&lt;a href='#' onclick='$p.iface.open_settings();' title='Страница настроек программы' &gt; &lt;i class='fa fa-cog fa-lg'&gt;&lt;/i&gt; Настройки &lt;/a&gt; &lt;a href='https://github.com/oknosoft/windowbuilder/issues' target='_blank' style='margin-left: 9px;' title='Задать вопрос через форму обратной связи' &gt; &lt;i class='fa fa-question-circle fa-lg'&gt;&lt;/i&gt; Вопрос &lt;/a&gt;\"  />\n\n</item>\n</items>\n","tree_balance.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"doc.debit_cash_order\" text=\"Приходный кассовый ордер\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.credit_card_order\" text=\"Оплата от покупателя платежной картой\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.debit_bank_order\" text=\"Платежное поручение входящее\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.selling\" text=\"Реализация товаров и услуг\"><icons file=\"icon_1c_doc\" /></item>\r\n</tree>\r\n","tree_events.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.stores\" text=\"Склады\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.divisions\" text=\"Подразделения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"doc.work_centers_performance\" select=\"1\" text=\"Мощности рабочих центров\"><icons file=\"icon_1c_doc\" /></item>\r\n    <!--\r\n    <item id=\"doc.planning_event\" text=\"Событие планирования\"><icons file=\"icon_1c_doc\" /></item>\r\n    -->\r\n</tree>\r\n","tree_filteres.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<tree id=\"0\">\n    <item id=\"draft\" text=\"Черновики\" select=\"1\" tooltip=\"Предварительные расчеты\"><icons file=\"fa-pencil\" /></item>\n    <item id=\"sent\" text=\"Отправлено\" tooltip=\"Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в 'черновики')\"><icons file=\"fa-paper-plane-o\" /></item>\n    <item id=\"confirmed\" text=\"Согласовано\" tooltip=\"Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером\"><icons file=\"fa-thumbs-o-up\" /></item>\n    <item id=\"declined\" text=\"Отклонено\" tooltip=\"Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации\"><icons file=\"fa-thumbs-o-down\" /></item>\n\n    <!--item id=\"execution\" text=\"Долги\" tooltip=\"Оплата, отгрузка\"><icons file=\"fa-money\" /></item>\n    <item id=\"plan\" text=\"План\" tooltip=\"Согласованы, но еще не запущены в работу\"><icons file=\"fa-calendar-check-o\" /></item>\n    <item id=\"underway\" text=\"В работе\" tooltip=\"Включены в задания на производство, но еще не изготовлены\"><icons file=\"fa-industry\" /></item>\n    <item id=\"manufactured\" text=\"Изготовлено\" tooltip=\"Изготовлены, но еще не отгружены\"><icons file=\"fa-gavel\" /></item>\n    <item id=\"executed\" text=\"Исполнено\" tooltip=\"Отгружены клиенту\"><icons file=\"fa-truck\" /></item -->\n\n    <item id=\"service\" text=\"Сервис\" tooltip=\"Сервисное обслуживание\"><icons file=\"fa-medkit\" /></item>\n    <item id=\"complaints\" text=\"Рекламации\" tooltip=\"Жалобы и рекламации\"><icons file=\"fa-frown-o\" /></item>\n\n    <item id=\"template\" text=\"Шаблоны\" tooltip=\"Типовые блоки\"><icons file=\"fa-puzzle-piece\" /></item>\n    <item id=\"zarchive\" text=\"Архив\" tooltip=\"Старые заказы\"><icons file=\"fa-archive\" /></item>\n    <item id=\"all\" text=\"Все\" tooltip=\"Отключить фильтрацию\"><icons file=\"fa-expand\" /></item>\n</tree>\n","tree_industry.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.nom_kinds\" text=\"Виды номенклатуры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_groups\" text=\"Номенклатурные группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom\" text=\"Номенклатура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.production_params\" text=\"Параметры продукции\" select=\"1\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.cnns\" text=\"Соединения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.inserts\" text=\"Вставки\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.furns\" text=\"Фурнитура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.clrs\" text=\"Цвета\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.color_price_groups\" text=\"Цвето-ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.params_links\" text=\"Связи параметров\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.elm_visualization\" text=\"Визуализация элементов\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.insert_bind\" text=\"Привязки вставок\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.formulas\" text=\"Формулы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cch.properties\" text=\"Дополнительные реквизиты\"><icons file=\"icon_1c_cch\" /></item>\r\n</tree>\r\n","tree_price.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.users\" text=\"Пользователи\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.individuals\" text=\"Физические лица\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.organizations\" text=\"Организации\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.partners\" text=\"Контрагенты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.contracts\" text=\"Договоры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_prices_types\" text=\"Виды цен\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.price_groups\" text=\"Ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.currencies\" text=\"Валюты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"ireg.currency_courses\" text=\"Курсы валют\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"ireg.margin_coefficients\" text=\"Маржинальные коэффициенты\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"doc.nom_prices_setup\" text=\"Установка цен номенклатуры\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"cch.predefined_elmnts\" text=\"Константы и списки\"><icons file=\"icon_1c_cch\" /></item>\r\n\r\n</tree>\r\n","view_about.html":"<div class=\"md_column1300\">\n    <h1><i class=\"fa fa-info-circle\"></i> Окнософт: Заказ дилера</h1>\n    <p>Заказ дилера - это веб-приложение с открытым исходным кодом, разработанное компанией <a href=\"http://www.oknosoft.ru/\" target=\"_blank\" rel=\"noopener noreferrer\">Окнософт</a> на базе фреймворка <a href=\"http://www.oknosoft.ru/metadata/\" target=\"_blank\" rel=\"noopener noreferrer\">Metadata.js</a><br />\n        Исходный код и документация доступны на <a href=\"https://github.com/oknosoft/windowbuilder\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub <i class=\"fa fa-github-alt\"></i></a>.<br />\n    </p>\n\n    <h3>Назначение и возможности</h3>\n    <ul>\n        <li>Построение и редактирование эскизов изделий в графическом 2D редакторе</li>\n        <li>Экстремальная поддержка нестандартных изделий (многоугольники, сложные перегибы профиля)</li>\n        <li>Расчет спецификации и координат технологических операций</li>\n        <li>Расчет цены и плановой себестоимости изделий по произвольным формулам с учетом индивидуальных дилерских скидок и наценок</li>\n        <li>Формирование печатных форм для заказчика и производства</li>\n        <li>Поддержка автономной работы при отсутствии доступа в Интернет и прозрачного обмена с сервером при возобновлении соединения</li>\n    </ul>\n\n    <p>Использованы следующие библиотеки и инструменты:</p>\n\n    <h3>Серверная часть</h3>\n    <ul>\n\t\t<li><a href=\"http://couchdb.apache.org/\" target=\"_blank\" rel=\"noopener noreferrer\">couchDB</a>, NoSQL база данных с поддержкой master-master репликации</li>\n\t\t<li><a href=\"http://nginx.org/ru/\" target=\"_blank\" rel=\"noopener noreferrer\">nginx</a>, высокопроизводительный HTTP-сервер</li>\n      <li><a href=\"https://nodejs.org/en/\" target=\"_blank\" rel=\"noopener noreferrer\">NodeJS</a>, JavaScript runtime built on Chrome`s V8 JavaScript engine\n      </li>\n      {/*\n      <li><a href=\"https://github.com/colinskow/superlogin\" target=\"_blank\" rel=\"noopener noreferrer\">SuperLogin</a>, библиотека oAuth авторизации</li>\n      */}\n    </ul>\n\n    <h3>Управление данными в памяти браузера</h3>\n    <ul>\n      <li><a href=\"http://www.oknosoft.ru/metadata/\" target=\"_blank\" rel=\"noopener noreferrer\">Metadata.js</a>, движок ссылочной типизации для браузера и Node.js</li>\n      <li><a href=\"https://pouchdb.com/\" target=\"_blank\" rel=\"noopener noreferrer\">PouchDB</a>, клиентская NoSQL база данных с поддержкой автономной работы и репликации с CouchDB</li>\n      <li><a href=\"https://github.com/agershun/alasql\" target=\"_blank\" rel=\"noopener noreferrer\">AlaSQL</a>, SQL-интерфейс к массивам javascript в памяти браузера и Node.js</li>\n      <li><a href=\"http://www.movable-type.co.uk/scripts/aes.html\" target=\"_blank\" rel=\"noopener noreferrer\">Aes</a>, библиотека шифрования/дешифрования строк</li>\n      <li><a href=\"https://github.com/reactjs/redux\" target=\"_blank\" rel=\"noopener noreferrer\">Redux</a>, диспетчер состояния веб-приложения</li>\n    </ul>\n\n    <h3>UI библиотеки и компоненты интерфейса</h3>\n    <ul>\n      <li><a href=\"http://paperjs.org/\" target=\"_blank\" rel=\"noopener noreferrer\">paper.js</a>, фреймворк векторной графики для HTML5 Canvas</li>\n      <li><a href=\"http://www.material-ui.com/\" target=\"_blank\" rel=\"noopener noreferrer\">Material-ui</a>, компоненты React UI в стиле Google`s material design</li>\n      <li><a href=\"https://github.com/bvaughn/react-virtualized\" target=\"_blank\" rel=\"noopener noreferrer\">React virtualized</a>, компоненты React для динамических списков</li>\n      <li><a href=\"https://github.com/adazzle/react-data-grid\" target=\"_blank\" rel=\"noopener noreferrer\">React data grid</a>, React компонент табличной части</li>\n      <li><a href=\"http://dhtmlx.com/\" target=\"_blank\" rel=\"noopener noreferrer\">dhtmlx</a>, кроссбраузерная javascript библиотека компонентов ui</li>\n      <li><a href=\"http://momentjs.com/\" target=\"_blank\" rel=\"noopener noreferrer\">Moment.js</a>, библиотека форматирования интервалов и дат</li>\n      <li><a href=\"http://meritt.github.io/rubles/\" target=\"_blank\" rel=\"noopener noreferrer\">Rubles.js</a>, библиотека форматирования чисел - сумма прописью</li>\n      <li><a href=\"https://github.com/SheetJS/js-xlsx\" target=\"_blank\" rel=\"noopener noreferrer\">xlsx</a>, библиотека для чтения и записи XLSX / XLSM / XLSB / XLS / ODS</li>\n      <li><a href=\"https://github.com/open-xml-templating/docxtemplater\" target=\"_blank\" rel=\"noopener noreferrer\">docxtemplater</a>, библиотека формирования файлов DOCX по шаблону</li>\n      <li><a href=\"https://fortawesome.github.io/Font-Awesome/\" target=\"_blank\" rel=\"noopener noreferrer\">fontawesome</a>, набор шрифтовых иконок</li>\n    </ul>\n\n    <h2><i class=\"fa fa-question-circle\"></i> Вопросы</h2>\n    <p>Если обнаружили ошибку, пожалуйста,\n        <a href=\"https://github.com/oknosoft/windowbuilder/issues/new\" target=\"_blank\" rel=\"noopener noreferrer\">зарегистрируйте вопрос в GitHub</a> или\n        <a href=\"http://www.oknosoft.ru/metadata/#page-118\" target=\"_blank\" rel=\"noopener noreferrer\">свяжитесь с разработчиком</a> напрямую<br /></p>\n    <p>&nbsp;</p>\n\n</div>\n","view_blank.html":"<!DOCTYPE html>\r\n<html lang=\"ru\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"/>\r\n    <title>Документ</title>\r\n    <style>\r\n\r\n        html {\r\n            width: 100%;\r\n            height: 100%;\r\n            margin: 0;\r\n            padding: 0;\r\n            overflow: auto;\r\n\r\n        }\r\n        body {\r\n            width: 210mm;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n            overflow: hidden;\r\n            color: rgb(48, 57, 66);\r\n            font-family: Arial, sans-serif;\r\n            font-size: 11pt;\r\n            text-rendering: optimizeLegibility;\r\n        }\r\n\r\n        /* Таблица */\r\n        table.border {\r\n            border-collapse: collapse; border: 1px solid;\r\n        }\r\n        table.border > tbody > tr > td,\r\n        table.border > tr > td,\r\n        table.border th{\r\n            border: 1px solid;\r\n        }\r\n        .noborder{\r\n            border: none;\r\n        }\r\n\r\n        /* Многоуровневый список */\r\n        ol {\r\n            counter-reset: li;\r\n            list-style: none;\r\n            padding: 0;\r\n        }\r\n        li {\r\n            margin-top: 8px;\r\n        }\r\n        li:before {\r\n            counter-increment: li;\r\n            content: counters(li,\".\") \".\";\r\n            padding-right: 8px;\r\n        }\r\n        li.flex {\r\n            display: flex;\r\n            text-align: left;\r\n            list-style-position: outside;\r\n            font-weight: normal;\r\n        }\r\n\r\n        .container {\r\n            width: 100%;\r\n            position: relative;\r\n        }\r\n\r\n        .margin-top-20 {\r\n            margin-top: 20px;\r\n        }\r\n\r\n        .column-50-percent {\r\n            width: 48%;\r\n            min-width: 40%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .column-30-percent {\r\n            width: 31%;\r\n            min-width: 30%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .block-left {\r\n            display: block;\r\n            float: left;\r\n        }\r\n\r\n        .block-center {\r\n            display: block;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n        }\r\n\r\n        .block-right {\r\n            display: block;\r\n            float: right;\r\n        }\r\n\r\n        .list-center {\r\n            text-align: center;\r\n            list-style-position: inside;\r\n            font-weight: bold;\r\n        }\r\n\r\n        .clear-both {\r\n            clear: both;\r\n        }\r\n\r\n        .small {\r\n            font-size: small;\r\n        }\r\n\r\n        .text-center {\r\n            text-align: center;\r\n        }\r\n\r\n        .text-justify {\r\n            text-align: justify;\r\n        }\r\n\r\n        .text-right {\r\n            text-align: right;\r\n        }\r\n\r\n        .muted-color {\r\n            color: #636773;\r\n        }\r\n\r\n        .accent-color {\r\n            color: #f30000;\r\n        }\r\n\r\n        .note {\r\n            background: #eaf3f8;\r\n            color: #2980b9;\r\n            font-style: italic;\r\n            padding: 12px 20px;\r\n        }\r\n\r\n        .note:before {\r\n            content: 'Замечание: ';\r\n            font-weight: 500;\r\n        }\r\n        *, *:before, *:after {\r\n            box-sizing: inherit;\r\n        }\r\n\r\n    </style>\r\n</head>\r\n<body>\r\n\r\n</body>\r\n</html>","view_settings.html":"<div class=\"md_column1300\">\r\n\r\n    <div class=\"md_column320\" name=\"form1\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n    <div class=\"md_column320\" name=\"form2\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n</div>"});
+$p.injected_data._mixin({"toolbar_calc_order_production.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_grp_add\" text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку заказа\" openAll=\"true\" >\n    <item type=\"button\" id=\"btn_add_builder\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt; Изделие построителя\" />\n    <item type=\"button\" id=\"btn_add_product\" text=\"&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Продукцию или услугу\" />\n    <item type=\"button\" id=\"btn_add_material\" text=\"&lt;i class='fa fa-cube fa-fw'&gt;&lt;/i&gt; Материал\" />\n    <item type=\"button\" id=\"btn_clone\" text=\"&lt;i class='fa fa-clone fa-fw'&gt;&lt;/i&gt; Скопировать изделие\" />\n  </item>\n\n  <item type=\"button\" id=\"btn_edit\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt;\" title=\"Редактировать изделие построителя\" />\n  <item type=\"button\" id=\"btn_spec\" text=\"&lt;i class='fa fa-table fa-fw'&gt;&lt;/i&gt;\" title=\"Открыть спецификацию изделия\" />\n  <item type=\"button\" id=\"btn_delete\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Удалить строку заказа\" />\n  <item type=\"button\" id=\"btn_discount\" text=\"&lt;i class='fa fa-percent fa-fw'&gt;&lt;/i&gt;\" title=\"Скидки по типам строк заказа\"/>\n  <item id=\"sep1\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_calc_order_obj.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_save_close\" text=\"&lt;i class='fa fa-caret-square-o-down fa-fw'&gt;&lt;/i&gt;\" title=\"Записать и закрыть\"/>\r\n    <item type=\"button\" id=\"btn_save\" text=\"&lt;i class='fa fa-floppy-o fa-fw'&gt;&lt;/i&gt;\" title=\"Записать\"/>\r\n    <item type=\"button\" id=\"btn_sent\" text=\"&lt;i class='fa fa-paper-plane-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отправить заказ\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Провести документ\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"&lt;i class='fa fa-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отмена проведения\" />\r\n\r\n    <item type=\"button\" id=\"btn_files\" text=\"&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;\" title=\"Присоединенные файлы\"/>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt;\" title=\"Печать\" openAll=\"true\">\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_message\" enabled=\"false\" text=\"Сообщение\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;\"  title=\"Дополнительно\" openAll=\"true\">\r\n        <item type=\"button\"     id=\"btn_retrieve\"    text=\"&lt;i class='fa fa-undo fa-fw'&gt;&lt;/i&gt; Отозвать\" title=\"Отозвать заказ\" />\r\n        <item type=\"separator\"  id=\"sep_export\" />\r\n        <item type=\"button\" id=\"btn_import\" text=\"&lt;i class='fa fa-upload fa-fw'&gt;&lt;/i&gt; Загрузить из файла\" />\r\n        <item type=\"button\" id=\"btn_export\" text=\"&lt;i class='fa fa-download fa-fw'&gt;&lt;/i&gt; Выгрузить в файл\" />\r\n    </item>\r\n\r\n    <item id=\"sep_close_1\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_close\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Закрыть форму\"/>\r\n    <item id=\"sep_close_2\" type=\"separator\"/>\r\n\r\n</toolbar>","toolbar_product_list.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"btn_ok\"   type=\"button\"   text=\"&lt;b&gt;Рассчитать и закрыть&lt;/b&gt;\" title=\"Рассчитать, записать и закрыть\"  />\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item id=\"btn_xls\"  type=\"button\"\ttext=\"Загрузить из XLS\" title=\"Загрузить список продукции из файла xls\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"buttonSelect\" id=\"bs_print\" enabled=\"false\" text=\"\" title=\"\" openAll=\"true\">\r\n    </item>\r\n\r\n</toolbar>","toolbar_characteristics_specification.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_origin\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt; Происхождение\" title=\"Ссылка на настройки\" />\n  <item id=\"sp\" type=\"spacer\"/>\n\n  <item id=\"input_filter\" type=\"buttonInput\" width=\"200\" title=\"Поиск по подстроке\" />\n\n  <item id=\"sep2\" type=\"separator\"/>\n  <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt;\"  title=\"Экспорт\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_csv\" text=\"&lt;i class='fa fa-file-text-o fa-fw'&gt;&lt;/i&gt; Скопировать в CSV\" />\n    <item type=\"button\" id=\"btn_json\" text=\"&lt;i class='fa fa-file-code-o fa-fw'&gt;&lt;/i&gt; Скопировать в JSON\" />\n    <item type=\"button\" id=\"btn_xls\" text=\"&lt;i class='fa fa-file-excel-o fa-fw'&gt;&lt;/i&gt; Выгрузить в XLS\" />\n  </item>\n</toolbar>\n","toolbar_glass_inserts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"btn_add\" type=\"button\"  text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку\"  />\n  <item id=\"btn_delete\" type=\"button\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\"  title=\"Удалить строку\" />\n  <item id=\"btn_up\" type=\"button\" text=\"&lt;i class='fa fa-arrow-up fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вверх\" />\n  <item id=\"btn_down\" type=\"button\" text=\"&lt;i class='fa fa-arrow-down fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вниз\" />\n  <item id=\"sep1\" type=\"separator\"/>\n  <item id=\"btn_inset\" type=\"button\" text=\"&lt;i class='fa fa-plug fa-fw'&gt;&lt;/i&gt;\"  title=\"Заполнить по вставке\" />\n</toolbar>\n","toolbar_discounts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item type=\"buttonSelect\"   id=\"bs\"  text=\"Скидки производителя\"  title=\"Режим\" openAll=\"true\">\n    <item type=\"button\" id=\"discount_percent\" text=\"Скидки производителя\" />\n    <item type=\"button\" id=\"discount_percent_internal\" text=\"Скидки дилера\" />\n  </item>\n</toolbar>\n","form_auth.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<items>\n<item type=\"settings\" position=\"label-left\" labelWidth=\"80\" inputWidth=\"180\" noteWidth=\"180\"/>\n<item type=\"fieldset\" name=\"data\" inputWidth=\"auto\" label=\"Авторизация\">\n\n  <item type=\"radio\" name=\"type\" labelWidth=\"auto\" position=\"label-right\" checked=\"true\" value=\"guest\" label=\"Гостевой (демо) режим\">\n    <item type=\"select\" name=\"guest\" label=\"Роль\">\n      <option value=\"Дилер\" label=\"Дилер\"/>\n    </item>\n  </item>\n\n  <item type=\"radio\" name=\"type\" labelWidth=\"auto\" position=\"label-right\" value=\"auth\" label=\"Есть учетная запись\">\n    <item type=\"input\" value=\"\" name=\"login\" label=\"Логин\" validate=\"NotEmpty\" />\n    <item type=\"password\" value=\"\" name=\"password\" label=\"Пароль\" validate=\"NotEmpty\" />\n  </item>\n\n  <item type=\"button\" value=\"Войти\" name=\"submit\"/>\n\n  <item type=\"template\" name=\"text_options\" className=\"order_dealer_options\" inputWidth=\"170\"\n        value=\"&lt;a href='#' onclick='$p.iface.open_settings();' title='Страница настроек программы' &gt; &lt;i class='fa fa-cog fa-lg'&gt;&lt;/i&gt; Настройки &lt;/a&gt; &lt;a href='https://github.com/oknosoft/windowbuilder/issues' target='_blank' style='margin-left: 9px;' title='Задать вопрос через форму обратной связи' &gt; &lt;i class='fa fa-question-circle fa-lg'&gt;&lt;/i&gt; Вопрос &lt;/a&gt;\"  />\n\n</item>\n</items>\n","tree_balance.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"doc.debit_cash_order\" text=\"Приходный кассовый ордер\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.credit_card_order\" text=\"Оплата от покупателя платежной картой\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.debit_bank_order\" text=\"Платежное поручение входящее\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.selling\" text=\"Реализация товаров и услуг\"><icons file=\"icon_1c_doc\" /></item>\r\n</tree>\r\n","tree_events.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.stores\" text=\"Склады\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.divisions\" text=\"Подразделения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"doc.work_centers_performance\" select=\"1\" text=\"Мощности рабочих центров\"><icons file=\"icon_1c_doc\" /></item>\r\n    <!--\r\n    <item id=\"doc.planning_event\" text=\"Событие планирования\"><icons file=\"icon_1c_doc\" /></item>\r\n    -->\r\n</tree>\r\n","tree_filteres.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<tree id=\"0\">\n    <item id=\"draft\" text=\"Черновики\" select=\"1\" tooltip=\"Предварительные расчеты\"><icons file=\"fa-pencil\" /></item>\n    <item id=\"sent\" text=\"Отправлено\" tooltip=\"Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в 'черновики')\"><icons file=\"fa-paper-plane-o\" /></item>\n    <item id=\"confirmed\" text=\"Согласовано\" tooltip=\"Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером\"><icons file=\"fa-thumbs-o-up\" /></item>\n    <item id=\"declined\" text=\"Отклонено\" tooltip=\"Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации\"><icons file=\"fa-thumbs-o-down\" /></item>\n\n    <!--item id=\"execution\" text=\"Долги\" tooltip=\"Оплата, отгрузка\"><icons file=\"fa-money\" /></item>\n    <item id=\"plan\" text=\"План\" tooltip=\"Согласованы, но еще не запущены в работу\"><icons file=\"fa-calendar-check-o\" /></item>\n    <item id=\"underway\" text=\"В работе\" tooltip=\"Включены в задания на производство, но еще не изготовлены\"><icons file=\"fa-industry\" /></item>\n    <item id=\"manufactured\" text=\"Изготовлено\" tooltip=\"Изготовлены, но еще не отгружены\"><icons file=\"fa-gavel\" /></item>\n    <item id=\"executed\" text=\"Исполнено\" tooltip=\"Отгружены клиенту\"><icons file=\"fa-truck\" /></item -->\n\n    <item id=\"service\" text=\"Сервис\" tooltip=\"Сервисное обслуживание\"><icons file=\"fa-medkit\" /></item>\n    <item id=\"complaints\" text=\"Рекламации\" tooltip=\"Жалобы и рекламации\"><icons file=\"fa-frown-o\" /></item>\n\n    <item id=\"template\" text=\"Шаблоны\" tooltip=\"Типовые блоки\"><icons file=\"fa-puzzle-piece\" /></item>\n    <item id=\"zarchive\" text=\"Архив\" tooltip=\"Старые заказы\"><icons file=\"fa-archive\" /></item>\n    <item id=\"all\" text=\"Все\" tooltip=\"Отключить фильтрацию\"><icons file=\"fa-expand\" /></item>\n</tree>\n","tree_industry.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.nom_kinds\" text=\"Виды номенклатуры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_groups\" text=\"Номенклатурные группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom\" text=\"Номенклатура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.production_params\" text=\"Параметры продукции\" select=\"1\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.cnns\" text=\"Соединения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.inserts\" text=\"Вставки\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.furns\" text=\"Фурнитура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.clrs\" text=\"Цвета\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.color_price_groups\" text=\"Цвето-ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.params_links\" text=\"Связи параметров\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.elm_visualization\" text=\"Визуализация элементов\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.insert_bind\" text=\"Привязки вставок\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.formulas\" text=\"Формулы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cch.properties\" text=\"Дополнительные реквизиты\"><icons file=\"icon_1c_cch\" /></item>\r\n</tree>\r\n","tree_price.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.users\" text=\"Пользователи\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.individuals\" text=\"Физические лица\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.organizations\" text=\"Организации\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.partners\" text=\"Контрагенты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.contracts\" text=\"Договоры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_prices_types\" text=\"Виды цен\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.price_groups\" text=\"Ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.currencies\" text=\"Валюты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"ireg.currency_courses\" text=\"Курсы валют\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"ireg.margin_coefficients\" text=\"Маржинальные коэффициенты\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"doc.nom_prices_setup\" text=\"Установка цен номенклатуры\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"cch.predefined_elmnts\" text=\"Константы и списки\"><icons file=\"icon_1c_cch\" /></item>\r\n\r\n</tree>\r\n","view_blank.html":"<!DOCTYPE html>\r\n<html lang=\"ru\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"/>\r\n    <title>Документ</title>\r\n    <style>\r\n\r\n        html {\r\n            width: 100%;\r\n            height: 100%;\r\n            margin: 0;\r\n            padding: 0;\r\n            overflow: auto;\r\n\r\n        }\r\n        body {\r\n            width: 210mm;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n            overflow: hidden;\r\n            color: rgb(48, 57, 66);\r\n            font-family: Arial, sans-serif;\r\n            font-size: 11pt;\r\n            text-rendering: optimizeLegibility;\r\n        }\r\n\r\n        /* Таблица */\r\n        table.border {\r\n            border-collapse: collapse; border: 1px solid;\r\n        }\r\n        table.border > tbody > tr > td,\r\n        table.border > tr > td,\r\n        table.border th{\r\n            border: 1px solid;\r\n        }\r\n        .noborder{\r\n            border: none;\r\n        }\r\n\r\n        /* Многоуровневый список */\r\n        ol {\r\n            counter-reset: li;\r\n            list-style: none;\r\n            padding: 0;\r\n        }\r\n        li {\r\n            margin-top: 8px;\r\n        }\r\n        li:before {\r\n            counter-increment: li;\r\n            content: counters(li,\".\") \".\";\r\n            padding-right: 8px;\r\n        }\r\n        li.flex {\r\n            display: flex;\r\n            text-align: left;\r\n            list-style-position: outside;\r\n            font-weight: normal;\r\n        }\r\n\r\n        .container {\r\n            width: 100%;\r\n            position: relative;\r\n        }\r\n\r\n        .margin-top-20 {\r\n            margin-top: 20px;\r\n        }\r\n\r\n        .column-50-percent {\r\n            width: 48%;\r\n            min-width: 40%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .column-30-percent {\r\n            width: 31%;\r\n            min-width: 30%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .block-left {\r\n            display: block;\r\n            float: left;\r\n        }\r\n\r\n        .block-center {\r\n            display: block;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n        }\r\n\r\n        .block-right {\r\n            display: block;\r\n            float: right;\r\n        }\r\n\r\n        .list-center {\r\n            text-align: center;\r\n            list-style-position: inside;\r\n            font-weight: bold;\r\n        }\r\n\r\n        .clear-both {\r\n            clear: both;\r\n        }\r\n\r\n        .small {\r\n            font-size: small;\r\n        }\r\n\r\n        .text-center {\r\n            text-align: center;\r\n        }\r\n\r\n        .text-justify {\r\n            text-align: justify;\r\n        }\r\n\r\n        .text-right {\r\n            text-align: right;\r\n        }\r\n\r\n        .muted-color {\r\n            color: #636773;\r\n        }\r\n\r\n        .accent-color {\r\n            color: #f30000;\r\n        }\r\n\r\n        .note {\r\n            background: #eaf3f8;\r\n            color: #2980b9;\r\n            font-style: italic;\r\n            padding: 12px 20px;\r\n        }\r\n\r\n        .note:before {\r\n            content: 'Замечание: ';\r\n            font-weight: 500;\r\n        }\r\n        *, *:before, *:after {\r\n            box-sizing: inherit;\r\n        }\r\n\r\n    </style>\r\n</head>\r\n<body>\r\n\r\n</body>\r\n</html>","view_settings.html":"<div class=\"md_column1300\">\r\n\r\n    <div class=\"md_column320\" name=\"form1\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n    <div class=\"md_column320\" name=\"form2\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n</div>"});
 
 $p.md.once('predefined_elmnts_inited', () => $p.cat.characteristics.pouch_load_view('doc/nom_characteristics'));
 
@@ -4461,6 +4461,21 @@ $p.DpBuyers_order = class DpBuyers_order extends $p.DpBuyers_order {
   }
 }
 
+$p.DpBuyers_orderCharges_discountsRow = class DpBuyers_orderCharges_discountsRow extends $p.DpBuyers_orderCharges_discountsRow {
+
+  value_change(field, type, value, no_extra_charge) {
+    if(field == 'discount_percent'){
+      const {_obj, _owner, nom_kind, discount_percent} = this;
+      const {_mode, _calc_order} = _owner._owner
+      _calc_order.production.forEach((row) => {
+        if(row.nom.nom_kind == nom_kind){
+          row[_mode] = parseFloat(value || 0);
+        }
+      })
+    }
+  }
+
+};
 
 
 $p.DpBuyers_order.prototype.add_row = function (row) {
@@ -4588,798 +4603,6 @@ class CalcOrderFormProductList {
   }
 
 };
-
-
-
-(function(_mgr){
-
-
-	_mgr.acn = {
-
-	  cache: {},
-
-    get ii() {
-      return this.cache.ii || ( this.cache.ii = [_mgr.Наложение] );
-    },
-
-    get i() {
-      return this.cache.i || ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
-    },
-
-    get a() {
-      return this.cache.a
-        || ( this.cache.a = [
-          _mgr.УгловоеДиагональное,
-          _mgr.УгловоеКВертикальной,
-          _mgr.УгловоеКГоризонтальной,
-          _mgr.КрестВСтык] );
-    },
-
-    get t() {
-      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное, _mgr.КрестВСтык] );
-    },
-
-	};
-
-
-	Object.defineProperties(_mgr, {
-	  ad: {
-	    get: function () {
-        return _mgr.УгловоеДиагональное;
-      }
-    },
-    av: {
-      get: function () {
-        return _mgr.УгловоеКВертикальной;
-      }
-    },
-    ah: {
-      get: function () {
-        return _mgr.УгловоеКГоризонтальной;
-      }
-    },
-    t: {
-      get: function () {
-        return _mgr.ТОбразное;
-      }
-    },
-    ii: {
-      get: function () {
-        return _mgr.Наложение;
-      }
-    },
-    i: {
-      get: function () {
-        return _mgr.НезамкнутыйКонтур;
-      }
-    },
-    xt: {
-      get: function () {
-        return _mgr.КрестПересечение;
-      }
-    },
-    xx: {
-      get: function () {
-        return _mgr.КрестВСтык;
-      }
-    },
-
-  });
-
-})($p.enm.cnn_types);
-
-
-(function(_mgr){
-
-	const cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			}
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			}
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			}
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			}
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			}
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			}
-		}
-
-	});
-
-
-})($p.enm.elm_types);
-
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
-
-
-(($p) => {
-
-  Object.assign($p.RepMaterials_demand.prototype, {
-
-    print_data() {
-      return this.calc_order.print_data().then((order) => {
-        return this.calculate012()
-          .then((specification) => {
-
-            return Object.assign(order, {specification, _grouping: this.scheme.dimensions})
-          })
-      })
-    },
-
-    calculate012() {
-
-      const {specification, production, scheme, discard, _manager} = this;
-      const arefs = [];
-      const aobjs = [];
-      const spec_flds = Object.keys($p.cat.characteristics.metadata('specification').fields);
-      const rspec_flds = Object.keys(_manager.metadata('specification').fields);
-
-      production.each((row) => {
-        if(!row.use){
-          return;
-        }
-        if (!row.characteristic.empty() && row.characteristic.is_new() && arefs.indexOf(row.characteristic.ref) == -1) {
-          arefs.push(row.characteristic.ref)
-          aobjs.push(row.characteristic.load())
-        }
-      })
-
-      specification.clear();
-      if (!specification._rows) {
-        specification._rows = []
-      } else {
-        specification._rows.length = 0;
-      }
-
-      return Promise.all(aobjs)
-
-        .then((ares) => {
-
-          arefs.length = 0;
-          aobjs.length = 0;
-
-          production.each((row) => {
-            if(!row.use){
-              return;
-            }
-            if (!row.characteristic.empty() && !row.characteristic.calc_order.empty()
-              && row.characteristic.calc_order.is_new() && arefs.indexOf(row.characteristic.calc_order.ref) == -1) {
-              arefs.push(row.characteristic.calc_order.ref)
-              aobjs.push(row.characteristic.calc_order.load())
-            }
-            row.characteristic.specification.each((sprow) => {
-              if (!sprow.characteristic.empty() && sprow.characteristic.is_new() && arefs.indexOf(sprow.characteristic.ref) == -1) {
-                arefs.push(sprow.characteristic.ref)
-                aobjs.push(sprow.characteristic.load())
-              }
-            })
-          });
-
-          return Promise.all(aobjs)
-
-        })
-
-        .then(() => {
-
-          const prows = {};
-
-          const selection = [];
-          scheme.selection.forEach((row) => {
-            if(row.use){
-              selection.push(row)
-            }
-          })
-
-          production.each((row) => {
-            if(!row.use){
-              return;
-            }
-            if (!row.characteristic.empty()) {
-              row.characteristic.specification.each((sprow) => {
-
-                if(discard(sprow, selection)){
-                  return;
-                }
-
-                let resrow = {};
-                spec_flds.forEach(fld => {
-                  if (rspec_flds.indexOf(fld) != -1) {
-                    resrow[fld] = sprow[fld]
-                  }
-                });
-                resrow = specification.add(resrow)
-
-                resrow.qty = resrow.qty * row.qty;
-                resrow.totqty = resrow.totqty * row.qty;
-                resrow.totqty1 = resrow.totqty1 * row.qty;
-                resrow.amount = resrow.amount * row.qty;
-                resrow.amount_marged = resrow.amount_marged * row.qty;
-
-
-                if (resrow.elm > 0) {
-                  resrow.cnstr = row.characteristic.coordinates.find_rows({elm: resrow.elm})[0].cnstr;
-                }
-                else if (resrow.elm < 0) {
-                  resrow.cnstr = -resrow.elm;
-                }
-
-                resrow.calc_order = row.characteristic;
-
-                if (!prows[row.characteristic.ref]) {
-                  prows[row.characteristic.ref] = row.characteristic.calc_order.production.find_rows({characteristic: row.characteristic});
-                  if (prows[row.characteristic.ref].length) {
-                    prows[row.characteristic.ref] = prows[row.characteristic.ref][0].row
-                  }
-                  else {
-                    prows[row.characteristic.ref] = 1
-                  }
-                }
-                resrow.product = prows[row.characteristic.ref];
-
-                this.material(resrow);
-
-              })
-            }
-          })
-
-          const dimentions = [], resources = [];
-          scheme.columns('ts').forEach(fld => {
-            const {key} = fld
-            if ($p.RepMaterials_demand.resources.indexOf(key) != -1) {
-              resources.push(key)
-            } else {
-              dimentions.push(key)
-            }
-          })
-          specification.group_by(dimentions, resources);
-          specification.forEach((row) => {
-
-            row.qty = row.qty.round(3);
-            row.totqty = row.totqty.round(3);
-            row.totqty1 = row.totqty1.round(3);
-            row.price = row.price.round(3);
-            row.amount = row.amount.round(3);
-            row.amount_marged = row.amount_marged.round(3);
-
-            specification._rows.push(row);
-          })
-          return specification._rows;
-        })
-    },
-
-    generate() {
-
-      return this.print_data().then((data) => {
-
-        const doc = new $p.SpreadsheetDocument(void(0), {fill_template: this.on_fill_template.bind(this)});
-
-        this.scheme.composition.find_rows({use: true}, (row) => {
-          doc.append(this.templates(row.field), data);
-        });
-
-        return doc;
-      })
-    },
-
-    discard(row, selection) {
-      return selection.some((srow) => {
-
-        const left = srow.left_value.split('.');
-        let left_value = row[left[0]];
-        for(let i = 1; i < left.length; i++){
-          left_value = left_value[left[i]];
-        }
-
-        const {comparison_type, right_value} = srow;
-        const {comparison_types} = $p.enm;
-
-        switch (comparison_type) {
-        case comparison_types.eq:
-          return left_value != right_value;
-
-        case comparison_types.ne:
-          return left_value == right_value;
-
-        case comparison_types.lt:
-          return !(left_value < right_value);
-
-        case comparison_types.gt:
-          return !(left_value > right_value);
-
-        case comparison_types.in:
-          return !left_value || right_value.indexOf(left_value.toString()) == -1;
-
-        case comparison_types.nin:
-          return right_value.indexOf(left_value.toString()) != -1;
-        }
-
-      })
-    },
-
-    material(row) {
-
-      const {nom, characteristic, len, width} = row;
-
-      let res = nom.name;
-
-      if (!characteristic.empty()) {
-        res += ' ' + characteristic.presentation;
-      }
-
-      if (len && width)
-        row.sz = (1000 * len).toFixed(0) + "x" + (1000 * width).toFixed(0);
-      else if (len)
-        row.sz = + (1000 * len).toFixed(0);
-      else if (width)
-        row.sz = + (1000 * width).toFixed(0);
-
-      row.nom_kind = nom.nom_kind;
-      row.grouping = nom.grouping;
-      row.article = nom.article;
-      row.material = res;
-
-      return res;
-    },
-
-    form_obj(pwnd, attr) {
-
-      this._data._modified = false;
-
-      const {calc_order, _manager} = this;
-
-      this.wnd = this.draw_tabs($p.iface.dat_blank(null, {
-        width: 720,
-        height: 400,
-        modal: true,
-        center: true,
-        pwnd: pwnd,
-        allow_close: true,
-        allow_minmax: true,
-        caption: `<b>${calc_order.presentation}</b>`
-      }));
-      const {elmnts} = this.wnd;
-
-      elmnts.grids.production = this.draw_production(elmnts.tabs.cells("prod"));
-
-
-      this.listener = this.listener.bind(this);
-      this._manager.on('update', this.listener);
-
-      this.wnd.attachEvent("onClose", () => {
-        this._manager.off('update', this.listener);
-        elmnts.scheme.unload && elmnts.scheme.unload();
-        for(let grid in elmnts.grids){
-          elmnts.grids[grid].unload && elmnts.grids[grid].unload()
-        }
-        return true;
-      });
-
-      $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
-        .then((scheme) => {
-          this.scheme = scheme;
-        });
-
-      this.fill_by_order();
-
-      return Promise.resolve({wnd: this.wnd, o: this});
-
-    },
-
-    draw_tabs(wnd) {
-
-      const items = [
-        {id: "info", type: "text", text: "Вариант настроек:"},
-        {id: "scheme", type: "text", text: "<div style='width: 300px; margin-top: -2px;' name='scheme'></div>"}
-      ];
-      if($p.current_user.role_available("ИзменениеТехнологическойНСИ")){
-        items.push(
-          {id: "save", type: "button", text: "<i class='fa fa-floppy-o fa-fw'></i>", title: 'Сохранить вариант'},
-          {id: "sep", type: "separator"},
-          {id: "saveas", type: "button", text: "<i class='fa fa-plus-square fa-fw'></i>", title: 'Сохранить как...'});
-      }
-      items.push(
-        {id: "sp", type: "spacer"},
-        {id: "print", type: "button", text: "<i class='fa fa-print fa-fw'></i>", title: 'Печать отчета'});
-
-      wnd.attachToolbar({
-        items: items,
-        onClick: (name) => {
-          if(this.scheme.empty()){
-            return $p.msg.show_msg({
-              type: "alert-warning",
-              text: "Не выбран вариант настроек",
-              title: $p.msg.main_title
-            });
-          }
-          if(name == 'print'){
-            this.generate().then((doc) => doc.print());
-          }
-          else if(name == 'save'){
-            this.scheme.save().then((scheme) => scheme.set_default());
-          }
-          else if(name == 'saveas'){
-            $p.iface.query_value(this.scheme.name.replace(/[0-9]/g, '') + Math.floor(10 + Math.random() * 21), 'Укажите название варианта')
-              .then((name) => {
-                const proto = this.scheme._obj._clone();
-                delete proto.ref;
-                proto.name = name;
-                return this.scheme._manager.create(proto);
-              })
-              .then((scheme) => scheme.save())
-              .then((scheme) => this.scheme = scheme.set_default())
-              .catch((err) => null);
-          }
-        }
-      })
-
-      wnd.elmnts.scheme = new $p.iface.OCombo({
-        parent: wnd.cell.querySelector('[name=scheme]'),
-        obj: this,
-        field: "scheme",
-        width: 280
-      });
-
-      wnd.elmnts.tabs = wnd.attachTabbar({
-        arrows_mode: "auto",
-        tabs: [
-          {id: "prod", text: "Продукция", active:  true},
-          {id: "composition", text: "Состав"},
-          {id: "columns", text: "Колонки"},
-          {id: "selection", text: "Отбор"},
-          {id: "dimensions", text: "Группировка"},
-        ]
-      });
-
-      return wnd;
-    },
-
-    draw_production(cell) {
-      return cell.attachTabular({
-        obj: this,
-        ts: "production",
-        ts_captions: {
-          "fields":["use","characteristic","qty"],
-          "headers":",Продукция,Штук",
-          "widths":"40,*,150",
-          "min_widths":"40,200,120",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ref,calck"
-        }
-      })
-    },
-
-    draw_columns(cell) {
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "fields",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","field","caption"],
-          "headers":",Поле,Заголовок",
-          "widths":"40,200,*",
-          "min_widths":"40,200,200",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ed,ed"
-        }
-      });
-    },
-
-    draw_composition(cell) {
-      this.composition_parts();
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "composition",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","field","definition"],
-          "headers":",Элемент,Описание",
-          "widths":"40,160,*",
-          "min_widths":"40,120,200",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ed,ed"
-        }
-      });
-    },
-
-    draw_selection(cell) {
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "selection",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","left_value","comparison_type","right_value"],
-          "headers":",Левое значение,Вид сравнения,Правое значение",
-          "widths":"40,200,100,*",
-          "min_widths":"40,200,100,200",
-          "aligns":"",
-          "sortings":"na,na,na,na",
-          "types":"ch,ed,ref,ed"
-        }
-      });
-    },
-
-    draw_dimensions(cell) {
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "dimensions",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","parent","field"],
-          "headers":",Таблица,Поле",
-          "widths":"40,200,*",
-          "min_widths":"40,200,200",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ed,ed"
-        }
-      });
-    },
-
-    composition_parts(refill) {
-      const {composition} = this.scheme;
-      if(!composition.count()){
-        refill = true;
-      }
-      if(refill){
-        this.templates().forEach((template, index) => {
-          const {attributes} = template;
-          composition.add({
-            field: attributes.id ? attributes.id.value : index,
-            kind: attributes.kind ? attributes.kind.value : 'obj',
-            definition: attributes.definition ? attributes.definition.value : 'Описание отсутствует',
-          })
-        });
-      }
-    },
-
-    templates(name) {
-
-      const {children} = this.formula._template.content;
-
-      if(name){
-        return children.namedItem(name);
-      }
-      const res = [];
-      for(let i = 0; i < children.length; i++){
-        res.push(children.item(i))
-      }
-      return res;
-    },
-
-    on_fill_template(template, data) {
-
-      if(template.attributes.tabular && template.attributes.tabular.value == "specification"){
-        const specification = data.specification.map((row) => {
-          return {
-            product: row.product,
-            grouping: row.grouping,
-            Номенклатура: row.nom.article + ' ' + row.nom.name + (!row.clr.empty() && !row.clr.predefined_name ? ' ' + row.clr.name : ''),
-            Размеры: row.sz,
-            Количество: row.qty.toFixed(),
-            Угол1: row.alp1,
-            Угол2: row.alp2,
-          }
-        });
-        return {specification, _grouping: data._grouping}
-      }
-      else if(template.attributes.tabular && template.attributes.tabular.value == "production"){
-        const production = [];
-        this.production.find_rows({use: true}, (row) => {
-          production.push(Object.assign(
-            this.calc_order.row_description(row),
-            data.ПродукцияЭскизы[row.characteristic.ref] ?
-              {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)} : {}
-          ))
-        });
-        return Object.assign({}, data, {production});
-      }
-      return data;
-    },
-
-    listener(obj, fields) {
-      if(obj === this && fields.hasOwnProperty('scheme') && this.wnd && this.wnd.elmnts){
-        const {grids, tabs} = this.wnd.elmnts;
-
-        grids.columns && grids.columns.unload && grids.columns.unload();
-        grids.selection && grids.selection.unload && grids.selection.unload();
-        grids.composition && grids.composition.unload && grids.composition.unload();
-        grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
-
-        grids.columns = this.draw_columns(tabs.cells("columns"));
-        grids.selection = this.draw_selection(tabs.cells("selection"));
-        grids.composition = this.draw_composition(tabs.cells("composition"));
-        grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
-      }
-    },
-
-    fill_by_order(row, _mgr) {
-
-      let pdoc;
-
-      if(!row || !row._id){
-        if(this.calc_order.empty()){
-          return;
-        }
-        if(this.calc_order.is_new()){
-          pdoc = this.calc_order.load();
-        }
-        else{
-          pdoc = Promise.resolve(this.calc_order);
-        }
-      }
-      else{
-        const ids = row._id.split('|');
-        if (ids.length < 2) {
-          return
-        }
-        pdoc = _mgr.get(ids[1], 'promise');
-      }
-
-      return pdoc
-        .then((doc) => {
-          const rows = []
-          const refs = []
-          doc.production.forEach((row) => {
-            if (!row.characteristic.empty()) {
-              rows.push({
-                use: true,
-                characteristic: row.characteristic,
-                qty: row.qty,
-              })
-              if (row.characteristic.is_new()) {
-                refs.push(row.characteristic.ref)
-              }
-            }
-          })
-
-          return ($p.adapters ? $p.adapters.pouch.load_array($p.cat.characteristics, refs) : $p.cat.characteristics.pouch_load_array(refs))
-            .then(() => rows)
-        })
-        .then((rows) => {
-          this.production.load(rows)
-          return rows
-        })
-    },
-
-  });
-
-  Object.assign($p.RepMaterials_demand, {
-
-    resources: ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'],
-  });
-
-})($p);
-
-
-
-
 
 
 
@@ -6450,12 +5673,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
           toolbar.attachEvent('onclick', toolbar_click);
 
-          wnd.elmnts.discount_pop = new dhtmlXPopup({
-            toolbar: toolbar,
-            id: 'btn_discount'
-          });
-          wnd.elmnts.discount_pop.attachEvent('onShow', show_discount);
-
           set_editable(o, wnd);
 
         });
@@ -6547,12 +5764,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           o._manager.on('svgs', rsvg_reload);
 
           const search = $p.job_prm.parse_url_str(location.search);
-          if(search.ref){
+          if(search.ref) {
             setTimeout(() => {
               wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
               rsvg_click(search.ref, 0);
             }, 200);
-          };
+          }
+          ;
 
           return res;
         }
@@ -6638,7 +5856,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'btn_discount':
-
+        show_discount();
         break;
 
       case 'btn_calendar':
@@ -6664,26 +5882,76 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
     }
 
     function show_discount() {
-      if(!wnd.elmnts.discount) {
 
-        wnd.elmnts.discount = wnd.elmnts.discount_pop.attachForm([
-          {
-            type: 'fieldset', name: 'discounts', label: 'Скидки по группам', width: 220, list: [
-            {type: 'settings', position: 'label-left', labelWidth: 100, inputWidth: 50},
-            {type: 'input', label: 'На продукцию', name: 'production', numberFormat: ['0.0 %', '', '.']},
-            {type: 'input', label: 'На аксессуары', name: 'accessories', numberFormat: ['0.0 %', '', '.']},
-            {type: 'input', label: 'На услуги', name: 'services', numberFormat: ['0.0 %', '', '.']}
-          ]
-          },
-          {type: 'button', name: 'btn_discounts', value: 'Ок', tooltip: 'Установить скидки'}
-        ]);
-        wnd.elmnts.discount.setItemValue('production', 0);
-        wnd.elmnts.discount.setItemValue('accessories', 0);
-        wnd.elmnts.discount.setItemValue('services', 0);
-        wnd.elmnts.discount.attachEvent('onButtonClick', function (name) {
-          wnd.progressOn();
-        });
+      if(!wnd.elmnts.discount) {
+        wnd.elmnts.discount = $p.dp.buyers_order.create();
       }
+      refill_discount(wnd.elmnts.discount);
+
+      const discount = $p.iface.dat_blank(null, {
+        width: 300,
+        height: 220,
+        allow_close: true,
+        allow_minmax: false,
+        caption: 'Скидки по группам'
+      });
+      discount.setModal(true);
+
+      discount.attachTabular({
+        obj: wnd.elmnts.discount,
+        ts: 'charges_discounts',
+        reorder: false,
+        disable_add_del: true,
+        toolbar_struct: $p.injected_data['toolbar_discounts.xml'],
+        ts_captions: {
+          'fields': ['nom_kind', 'discount_percent'],
+          'headers': 'Группа,Скидка',
+          'widths': '*,80',
+          'min_widths': '120,70',
+          'aligns': '',
+          'sortings': 'na,na',
+          'types': 'ro,calck'
+        },
+      });
+      const toolbar = discount.getAttachedToolbar();
+      toolbar.attachEvent('onclick', (btn) => {
+        wnd.elmnts.discount._mode = btn;
+        refill_discount(wnd.elmnts.discount);
+        toolbar.setItemText('bs', toolbar.getListOptionText('bs', btn));
+      });
+      if(wnd.elmnts.discount._disable_internal) {
+        toolbar.disableListOption('bs', 'discount_percent');
+        toolbar.setItemText('bs', toolbar.getListOptionText('bs', wnd.elmnts.discount._mode));
+      }
+    }
+
+    function refill_discount(dp) {
+
+      if(!dp._mode) {
+        dp._disable_internal = !$p.current_user.role_available('РедактированиеСкидок');
+        dp._mode = dp._disable_internal ? 'discount_percent_internal' : 'discount_percent';
+        dp._calc_order = o;
+      }
+
+      const {charges_discounts} = dp;
+      const groups = new Set();
+      dp._data._loading = true;
+      charges_discounts.clear();
+      o.production.forEach((row) => {
+        const group = {nom_kind: row.nom.nom_kind};
+        if(!groups.has(group.nom_kind)) {
+          groups.add(group.nom_kind);
+          charges_discounts.add(group);
+        }
+        charges_discounts.find_rows(group, (sub) => {
+          const percent = row[dp._mode];
+          if(percent > sub.discount_percent) {
+            sub.discount_percent = percent;
+          }
+        });
+      });
+      dp._data._loading = false;
+      dp._manager.emit_async('rows', dp, {'charges_discounts': true});
     }
 
 
@@ -6770,7 +6038,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
       }
 
-      ['vault', 'vault_pop', 'discount', 'discount_pop', 'svgs', 'layout_header'].forEach((elm) => {
+      ['vault', 'vault_pop', 'discount', 'svgs', 'layout_header'].forEach((elm) => {
         wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
       });
 
@@ -7232,6 +6500,798 @@ $p.on('tabular_paste', (clip) => {
 $p.DocSelling.prototype.before_save = function () {
   this.doc_amount = this.goods.aggregate([], 'amount') + this.services.aggregate([], 'amount');
 };
+
+
+
+
+(function(_mgr){
+
+
+	_mgr.acn = {
+
+	  cache: {},
+
+    get ii() {
+      return this.cache.ii || ( this.cache.ii = [_mgr.Наложение] );
+    },
+
+    get i() {
+      return this.cache.i || ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
+    },
+
+    get a() {
+      return this.cache.a
+        || ( this.cache.a = [
+          _mgr.УгловоеДиагональное,
+          _mgr.УгловоеКВертикальной,
+          _mgr.УгловоеКГоризонтальной,
+          _mgr.КрестВСтык] );
+    },
+
+    get t() {
+      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное, _mgr.КрестВСтык] );
+    },
+
+	};
+
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get: function () {
+        return _mgr.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get: function () {
+        return _mgr.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get: function () {
+        return _mgr.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get: function () {
+        return _mgr.ТОбразное;
+      }
+    },
+    ii: {
+      get: function () {
+        return _mgr.Наложение;
+      }
+    },
+    i: {
+      get: function () {
+        return _mgr.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get: function () {
+        return _mgr.КрестПересечение;
+      }
+    },
+    xx: {
+      get: function () {
+        return _mgr.КрестВСтык;
+      }
+    },
+
+  });
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
+			}
+		}
+
+
+	});
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
+
+
+(($p) => {
+
+  Object.assign($p.RepMaterials_demand.prototype, {
+
+    print_data() {
+      return this.calc_order.print_data().then((order) => {
+        return this.calculate012()
+          .then((specification) => {
+
+            return Object.assign(order, {specification, _grouping: this.scheme.dimensions})
+          })
+      })
+    },
+
+    calculate012() {
+
+      const {specification, production, scheme, discard, _manager} = this;
+      const arefs = [];
+      const aobjs = [];
+      const spec_flds = Object.keys($p.cat.characteristics.metadata('specification').fields);
+      const rspec_flds = Object.keys(_manager.metadata('specification').fields);
+
+      production.each((row) => {
+        if(!row.use){
+          return;
+        }
+        if (!row.characteristic.empty() && row.characteristic.is_new() && arefs.indexOf(row.characteristic.ref) == -1) {
+          arefs.push(row.characteristic.ref)
+          aobjs.push(row.characteristic.load())
+        }
+      })
+
+      specification.clear();
+      if (!specification._rows) {
+        specification._rows = []
+      } else {
+        specification._rows.length = 0;
+      }
+
+      return Promise.all(aobjs)
+
+        .then((ares) => {
+
+          arefs.length = 0;
+          aobjs.length = 0;
+
+          production.each((row) => {
+            if(!row.use){
+              return;
+            }
+            if (!row.characteristic.empty() && !row.characteristic.calc_order.empty()
+              && row.characteristic.calc_order.is_new() && arefs.indexOf(row.characteristic.calc_order.ref) == -1) {
+              arefs.push(row.characteristic.calc_order.ref)
+              aobjs.push(row.characteristic.calc_order.load())
+            }
+            row.characteristic.specification.each((sprow) => {
+              if (!sprow.characteristic.empty() && sprow.characteristic.is_new() && arefs.indexOf(sprow.characteristic.ref) == -1) {
+                arefs.push(sprow.characteristic.ref)
+                aobjs.push(sprow.characteristic.load())
+              }
+            })
+          });
+
+          return Promise.all(aobjs)
+
+        })
+
+        .then(() => {
+
+          const prows = {};
+
+          const selection = [];
+          scheme.selection.forEach((row) => {
+            if(row.use){
+              selection.push(row)
+            }
+          })
+
+          production.each((row) => {
+            if(!row.use){
+              return;
+            }
+            if (!row.characteristic.empty()) {
+              row.characteristic.specification.each((sprow) => {
+
+                if(discard(sprow, selection)){
+                  return;
+                }
+
+                let resrow = {};
+                spec_flds.forEach(fld => {
+                  if (rspec_flds.indexOf(fld) != -1) {
+                    resrow[fld] = sprow[fld]
+                  }
+                });
+                resrow = specification.add(resrow)
+
+                resrow.qty = resrow.qty * row.qty;
+                resrow.totqty = resrow.totqty * row.qty;
+                resrow.totqty1 = resrow.totqty1 * row.qty;
+                resrow.amount = resrow.amount * row.qty;
+                resrow.amount_marged = resrow.amount_marged * row.qty;
+
+
+                if (resrow.elm > 0) {
+                  resrow.cnstr = row.characteristic.coordinates.find_rows({elm: resrow.elm})[0].cnstr;
+                }
+                else if (resrow.elm < 0) {
+                  resrow.cnstr = -resrow.elm;
+                }
+
+                resrow.calc_order = row.characteristic;
+
+                if (!prows[row.characteristic.ref]) {
+                  prows[row.characteristic.ref] = row.characteristic.calc_order.production.find_rows({characteristic: row.characteristic});
+                  if (prows[row.characteristic.ref].length) {
+                    prows[row.characteristic.ref] = prows[row.characteristic.ref][0].row
+                  }
+                  else {
+                    prows[row.characteristic.ref] = 1
+                  }
+                }
+                resrow.product = prows[row.characteristic.ref];
+
+                this.material(resrow);
+
+              })
+            }
+          })
+
+          const dimentions = [], resources = [];
+          scheme.columns('ts').forEach(fld => {
+            const {key} = fld
+            if ($p.RepMaterials_demand.resources.indexOf(key) != -1) {
+              resources.push(key)
+            } else {
+              dimentions.push(key)
+            }
+          })
+          specification.group_by(dimentions, resources);
+          specification.forEach((row) => {
+
+            row.qty = row.qty.round(3);
+            row.totqty = row.totqty.round(3);
+            row.totqty1 = row.totqty1.round(3);
+            row.price = row.price.round(3);
+            row.amount = row.amount.round(3);
+            row.amount_marged = row.amount_marged.round(3);
+
+            specification._rows.push(row);
+          })
+          return specification._rows;
+        })
+    },
+
+    generate() {
+
+      return this.print_data().then((data) => {
+
+        const doc = new $p.SpreadsheetDocument(void(0), {fill_template: this.on_fill_template.bind(this)});
+
+        this.scheme.composition.find_rows({use: true}, (row) => {
+          doc.append(this.templates(row.field), data);
+        });
+
+        return doc;
+      })
+    },
+
+    discard(row, selection) {
+      return selection.some((srow) => {
+
+        const left = srow.left_value.split('.');
+        let left_value = row[left[0]];
+        for(let i = 1; i < left.length; i++){
+          left_value = left_value[left[i]];
+        }
+
+        const {comparison_type, right_value} = srow;
+        const {comparison_types} = $p.enm;
+
+        switch (comparison_type) {
+        case comparison_types.eq:
+          return left_value != right_value;
+
+        case comparison_types.ne:
+          return left_value == right_value;
+
+        case comparison_types.lt:
+          return !(left_value < right_value);
+
+        case comparison_types.gt:
+          return !(left_value > right_value);
+
+        case comparison_types.in:
+          return !left_value || right_value.indexOf(left_value.toString()) == -1;
+
+        case comparison_types.nin:
+          return right_value.indexOf(left_value.toString()) != -1;
+        }
+
+      })
+    },
+
+    material(row) {
+
+      const {nom, characteristic, len, width} = row;
+
+      let res = nom.name;
+
+      if (!characteristic.empty()) {
+        res += ' ' + characteristic.presentation;
+      }
+
+      if (len && width)
+        row.sz = (1000 * len).toFixed(0) + "x" + (1000 * width).toFixed(0);
+      else if (len)
+        row.sz = + (1000 * len).toFixed(0);
+      else if (width)
+        row.sz = + (1000 * width).toFixed(0);
+
+      row.nom_kind = nom.nom_kind;
+      row.grouping = nom.grouping;
+      row.article = nom.article;
+      row.material = res;
+
+      return res;
+    },
+
+    form_obj(pwnd, attr) {
+
+      this._data._modified = false;
+
+      const {calc_order, _manager} = this;
+
+      this.wnd = this.draw_tabs($p.iface.dat_blank(null, {
+        width: 720,
+        height: 400,
+        modal: true,
+        center: true,
+        pwnd: pwnd,
+        allow_close: true,
+        allow_minmax: true,
+        caption: `<b>${calc_order.presentation}</b>`
+      }));
+      const {elmnts} = this.wnd;
+
+      elmnts.grids.production = this.draw_production(elmnts.tabs.cells("prod"));
+
+
+      this.listener = this.listener.bind(this);
+      this._manager.on('update', this.listener);
+
+      this.wnd.attachEvent("onClose", () => {
+        this._manager.off('update', this.listener);
+        elmnts.scheme.unload && elmnts.scheme.unload();
+        for(let grid in elmnts.grids){
+          elmnts.grids[grid].unload && elmnts.grids[grid].unload()
+        }
+        return true;
+      });
+
+      $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
+        .then((scheme) => {
+          this.scheme = scheme;
+        });
+
+      this.fill_by_order();
+
+      return Promise.resolve({wnd: this.wnd, o: this});
+
+    },
+
+    draw_tabs(wnd) {
+
+      const items = [
+        {id: "info", type: "text", text: "Вариант настроек:"},
+        {id: "scheme", type: "text", text: "<div style='width: 300px; margin-top: -2px;' name='scheme'></div>"}
+      ];
+      if($p.current_user.role_available("ИзменениеТехнологическойНСИ")){
+        items.push(
+          {id: "save", type: "button", text: "<i class='fa fa-floppy-o fa-fw'></i>", title: 'Сохранить вариант'},
+          {id: "sep", type: "separator"},
+          {id: "saveas", type: "button", text: "<i class='fa fa-plus-square fa-fw'></i>", title: 'Сохранить как...'});
+      }
+      items.push(
+        {id: "sp", type: "spacer"},
+        {id: "print", type: "button", text: "<i class='fa fa-print fa-fw'></i>", title: 'Печать отчета'});
+
+      wnd.attachToolbar({
+        items: items,
+        onClick: (name) => {
+          if(this.scheme.empty()){
+            return $p.msg.show_msg({
+              type: "alert-warning",
+              text: "Не выбран вариант настроек",
+              title: $p.msg.main_title
+            });
+          }
+          if(name == 'print'){
+            this.generate().then((doc) => doc.print());
+          }
+          else if(name == 'save'){
+            this.scheme.save().then((scheme) => scheme.set_default());
+          }
+          else if(name == 'saveas'){
+            $p.iface.query_value(this.scheme.name.replace(/[0-9]/g, '') + Math.floor(10 + Math.random() * 21), 'Укажите название варианта')
+              .then((name) => {
+                const proto = this.scheme._obj._clone();
+                delete proto.ref;
+                proto.name = name;
+                return this.scheme._manager.create(proto);
+              })
+              .then((scheme) => scheme.save())
+              .then((scheme) => this.scheme = scheme.set_default())
+              .catch((err) => null);
+          }
+        }
+      })
+
+      wnd.elmnts.scheme = new $p.iface.OCombo({
+        parent: wnd.cell.querySelector('[name=scheme]'),
+        obj: this,
+        field: "scheme",
+        width: 280
+      });
+
+      wnd.elmnts.tabs = wnd.attachTabbar({
+        arrows_mode: "auto",
+        tabs: [
+          {id: "prod", text: "Продукция", active:  true},
+          {id: "composition", text: "Состав"},
+          {id: "columns", text: "Колонки"},
+          {id: "selection", text: "Отбор"},
+          {id: "dimensions", text: "Группировка"},
+        ]
+      });
+
+      return wnd;
+    },
+
+    draw_production(cell) {
+      return cell.attachTabular({
+        obj: this,
+        ts: "production",
+        ts_captions: {
+          "fields":["use","characteristic","qty"],
+          "headers":",Продукция,Штук",
+          "widths":"40,*,150",
+          "min_widths":"40,200,120",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ref,calck"
+        }
+      })
+    },
+
+    draw_columns(cell) {
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "fields",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","field","caption"],
+          "headers":",Поле,Заголовок",
+          "widths":"40,200,*",
+          "min_widths":"40,200,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
+        }
+      });
+    },
+
+    draw_composition(cell) {
+      this.composition_parts();
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "composition",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","field","definition"],
+          "headers":",Элемент,Описание",
+          "widths":"40,160,*",
+          "min_widths":"40,120,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
+        }
+      });
+    },
+
+    draw_selection(cell) {
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "selection",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","left_value","comparison_type","right_value"],
+          "headers":",Левое значение,Вид сравнения,Правое значение",
+          "widths":"40,200,100,*",
+          "min_widths":"40,200,100,200",
+          "aligns":"",
+          "sortings":"na,na,na,na",
+          "types":"ch,ed,ref,ed"
+        }
+      });
+    },
+
+    draw_dimensions(cell) {
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "dimensions",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","parent","field"],
+          "headers":",Таблица,Поле",
+          "widths":"40,200,*",
+          "min_widths":"40,200,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
+        }
+      });
+    },
+
+    composition_parts(refill) {
+      const {composition} = this.scheme;
+      if(!composition.count()){
+        refill = true;
+      }
+      if(refill){
+        this.templates().forEach((template, index) => {
+          const {attributes} = template;
+          composition.add({
+            field: attributes.id ? attributes.id.value : index,
+            kind: attributes.kind ? attributes.kind.value : 'obj',
+            definition: attributes.definition ? attributes.definition.value : 'Описание отсутствует',
+          })
+        });
+      }
+    },
+
+    templates(name) {
+
+      const {children} = this.formula._template.content;
+
+      if(name){
+        return children.namedItem(name);
+      }
+      const res = [];
+      for(let i = 0; i < children.length; i++){
+        res.push(children.item(i))
+      }
+      return res;
+    },
+
+    on_fill_template(template, data) {
+
+      if(template.attributes.tabular && template.attributes.tabular.value == "specification"){
+        const specification = data.specification.map((row) => {
+          return {
+            product: row.product,
+            grouping: row.grouping,
+            Номенклатура: row.nom.article + ' ' + row.nom.name + (!row.clr.empty() && !row.clr.predefined_name ? ' ' + row.clr.name : ''),
+            Размеры: row.sz,
+            Количество: row.qty.toFixed(),
+            Угол1: row.alp1,
+            Угол2: row.alp2,
+          }
+        });
+        return {specification, _grouping: data._grouping}
+      }
+      else if(template.attributes.tabular && template.attributes.tabular.value == "production"){
+        const production = [];
+        this.production.find_rows({use: true}, (row) => {
+          production.push(Object.assign(
+            this.calc_order.row_description(row),
+            data.ПродукцияЭскизы[row.characteristic.ref] ?
+              {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)} : {}
+          ))
+        });
+        return Object.assign({}, data, {production});
+      }
+      return data;
+    },
+
+    listener(obj, fields) {
+      if(obj === this && fields.hasOwnProperty('scheme') && this.wnd && this.wnd.elmnts){
+        const {grids, tabs} = this.wnd.elmnts;
+
+        grids.columns && grids.columns.unload && grids.columns.unload();
+        grids.selection && grids.selection.unload && grids.selection.unload();
+        grids.composition && grids.composition.unload && grids.composition.unload();
+        grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
+
+        grids.columns = this.draw_columns(tabs.cells("columns"));
+        grids.selection = this.draw_selection(tabs.cells("selection"));
+        grids.composition = this.draw_composition(tabs.cells("composition"));
+        grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
+      }
+    },
+
+    fill_by_order(row, _mgr) {
+
+      let pdoc;
+
+      if(!row || !row._id){
+        if(this.calc_order.empty()){
+          return;
+        }
+        if(this.calc_order.is_new()){
+          pdoc = this.calc_order.load();
+        }
+        else{
+          pdoc = Promise.resolve(this.calc_order);
+        }
+      }
+      else{
+        const ids = row._id.split('|');
+        if (ids.length < 2) {
+          return
+        }
+        pdoc = _mgr.get(ids[1], 'promise');
+      }
+
+      return pdoc
+        .then((doc) => {
+          const rows = []
+          const refs = []
+          doc.production.forEach((row) => {
+            if (!row.characteristic.empty()) {
+              rows.push({
+                use: true,
+                characteristic: row.characteristic,
+                qty: row.qty,
+              })
+              if (row.characteristic.is_new()) {
+                refs.push(row.characteristic.ref)
+              }
+            }
+          })
+
+          return ($p.adapters ? $p.adapters.pouch.load_array($p.cat.characteristics, refs) : $p.cat.characteristics.pouch_load_array(refs))
+            .then(() => rows)
+        })
+        .then((rows) => {
+          this.production.load(rows)
+          return rows
+        })
+    },
+
+  });
+
+  Object.assign($p.RepMaterials_demand, {
+
+    resources: ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'],
+  });
+
+})($p);
+
+
+
 
 
 

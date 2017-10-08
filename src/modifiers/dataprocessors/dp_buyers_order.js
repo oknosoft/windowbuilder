@@ -43,3 +43,20 @@ $p.DpBuyers_order = class DpBuyers_order extends $p.DpBuyers_order {
   }
 }
 
+// свойства и методы табчасти продукции
+$p.DpBuyers_orderCharges_discountsRow = class DpBuyers_orderCharges_discountsRow extends $p.DpBuyers_orderCharges_discountsRow {
+
+  // при изменении реквизита
+  value_change(field, type, value, no_extra_charge) {
+    if(field == 'discount_percent'){
+      const {_obj, _owner, nom_kind, discount_percent} = this;
+      const {_mode, _calc_order} = _owner._owner
+      _calc_order.production.forEach((row) => {
+        if(row.nom.nom_kind == nom_kind){
+          row[_mode] = parseFloat(value || 0);
+        }
+      })
+    }
+  }
+
+};

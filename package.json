@@ -34,7 +34,7 @@
     "metadata-react": "^2.0.2-beta.30",
     "metadata-redux": "^2.0.2-beta.30",
     "moment": "^2.18",
-    "paper-jsdom-canvas": "^0.11.4",
+    "paper-jsdom-canvas": "^0.11.5",
     "pouchdb": "^6.3.4",
     "pouchdb-adapter-http": "^6.3.4",
     "pouchdb-adapter-idb": "^6.3.4",

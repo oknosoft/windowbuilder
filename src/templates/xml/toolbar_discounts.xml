@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding='utf-8'?>
+<toolbar>
+  <item type="buttonSelect"   id="bs"  text="Скидки производителя"  title="Режим" openAll="true">
+    <item type="button" id="discount_percent" text="Скидки производителя" />
+    <item type="button" id="discount_percent_internal" text="Скидки дилера" />
+  </item>
+</toolbar>
