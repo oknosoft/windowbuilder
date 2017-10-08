@@ -41,6 +41,17 @@ import CalcOrderList from '../CalcOrderList';
 
 class AppRoot extends Component {
 
+  static propTypes = {
+    history: PropTypes.shape({
+      push: PropTypes.func.isRequired,
+    }).isRequired,
+    handleOffline: PropTypes.func.isRequired,
+    handleNavigate: PropTypes.func.isRequired,
+    handleIfaceState: PropTypes.func.isRequired,
+    first_run: PropTypes.bool.isRequired,
+    snack: PropTypes.object,
+  };
+
   constructor(props, context) {
     super(props, context);
     this.handleAlertClose = this.handleDialogClose.bind(this, 'alert');
@@ -155,16 +166,6 @@ class AppRoot extends Component {
     );
   }
 }
-
-AppRoot.propTypes = {
-  history: PropTypes.shape({
-    push: PropTypes.func.isRequired,
-  }).isRequired,
-  handleOffline: PropTypes.func.isRequired,
-  handleNavigate: PropTypes.func.isRequired,
-  handleIfaceState: PropTypes.func.isRequired,
-  first_run: PropTypes.bool.isRequired,
-};
 
 export default withNavigateAndMeta(AppRoot);
 

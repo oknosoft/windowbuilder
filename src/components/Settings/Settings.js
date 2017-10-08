@@ -20,6 +20,17 @@ import compose from 'recompose/compose';
 
 class Settings extends Component {
 
+  static propTypes = {
+    zone: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),             // обработчик добавления объекта
+    couch_path: PropTypes.string,          // обработчик удаления строки
+    couch_suffix: PropTypes.string,
+    couch_direct: PropTypes.bool,
+    enable_save_pwd: PropTypes.bool,
+    handleSetPrm: PropTypes.func.isRequired,
+    handleIfaceState: PropTypes.func.isRequired,
+    classes: PropTypes.object,
+  };
+
   constructor(props) {
     super(props);
     const {zone, couch_path, enable_save_pwd, couch_suffix, couch_direct} = props;
