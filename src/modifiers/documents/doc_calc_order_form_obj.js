@@ -373,8 +373,8 @@
       });
       if(wnd.elmnts.discount._disable_internal) {
         toolbar.disableListOption('bs', 'discount_percent');
-        toolbar.setItemText('bs', toolbar.getListOptionText('bs', wnd.elmnts.discount._mode));
       }
+      toolbar.setItemText('bs', toolbar.getListOptionText('bs', wnd.elmnts.discount._mode));
     }
 
     function refill_discount(dp) {
