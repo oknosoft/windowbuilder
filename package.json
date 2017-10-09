@@ -25,7 +25,7 @@
     "alasql": "^0.4.3",
     "clipboard": "^1.7",
     "history": "^4.7.2",
-    "material-ui": "^1.0.0-beta.13",
+    "material-ui": "^1.0.0-beta.16",
     "material-ui-icons": "^1.0.0-beta.15",
     "metadata-abstract-ui": "^2.0.2-beta.30",
     "metadata-core": "^2.0.2-beta.30",

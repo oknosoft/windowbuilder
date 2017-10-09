@@ -282,8 +282,12 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
   // для вложенных вставок перезаполняем параметры
   if(field == 'inset') {
     if(value != this.inset){
-      this._obj.inset = value;
       const {_owner} = this._owner;
+      // удаляем параметры старой вставки
+      _owner.params.clear({inset: this.inset, cnstr: this.cnstr});
+      // устанавливаем значение новой вставки
+      this._obj.inset = value;
+      // заполняем параметры по умолчанию
       _owner.add_inset_params(this.inset, this.cnstr);
     }
   }
