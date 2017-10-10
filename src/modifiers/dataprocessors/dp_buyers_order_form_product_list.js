@@ -8,21 +8,6 @@
  * @module dp_buyers_order
  */
 
-// установим количество по умолчению при добавлении строки
-$p.DpBuyers_order.prototype.add_row = function (row) {
-  if (row._owner.name === 'production') {
-    row.qty = row.quantity = 1;
-  }
-};
-
-$p.DpBuyers_orderProductionRow.prototype.value_change = function (field, type, value) {
-  if (field == 'len' || field == 'height') {
-    this[field] = value;
-  }
-  if (this.height != 0 && this.height != 0) {
-    this.s = (this.height * this.len / 1000000).round(3);
-  }
-};
 
 
 class CalcOrderFormProductList {

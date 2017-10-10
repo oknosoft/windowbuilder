@@ -4490,20 +4490,42 @@ $p.DpBuyers_orderCharges_discountsRow = class DpBuyers_orderCharges_discountsRow
 };
 
 
+$p.DpBuyers_orderProductionRow = class DpBuyers_orderProductionRow extends $p.DpBuyers_orderProductionRow {
+
+  value_change(field, type, value) {
+
+    if (field == 'len' || field == 'height') {
+      this[field] = value;
+      if (this.len != 0 && this.height != 0) {
+        this.s = (this.height * this.len / 1000000).round(3);
+      }
+    }
+
+    if(field == 'inset'){
+      const {_obj, _owner, row} = this;
+      if(this.inset != value){
+        this.inset = value;
+        const {product_params} = _owner._owner;
+        product_params.clear({elm: row});
+        this.inset.used_params.forEach((param) => product_params.add({
+          elm: row,
+          param: param
+        }));
+        this._manager.emit_async('rows', _owner._owner, {product_params: true});
+      }
+    }
+  }
+
+}
+
+
 $p.DpBuyers_order.prototype.add_row = function (row) {
   if (row._owner.name === 'production') {
     row.qty = row.quantity = 1;
   }
 };
 
-$p.DpBuyers_orderProductionRow.prototype.value_change = function (field, type, value) {
-  if (field == 'len' || field == 'height') {
-    this[field] = value;
-  }
-  if (this.height != 0 && this.height != 0) {
-    this.s = (this.height * this.len / 1000000).round(3);
-  }
-};
+
 
 
 class CalcOrderFormProductList {

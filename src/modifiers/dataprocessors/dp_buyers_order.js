@@ -41,6 +41,20 @@ $p.DpBuyers_order = class DpBuyers_order extends $p.DpBuyers_order {
   get extra_fields() {
     return this.characteristic.params;
   }
+
+  // установим количество по умолчению при добавлении строки
+  add_row(row) {
+    if (row._owner.name === 'production') {
+      row.qty = row.quantity = 1;
+    }
+  }
+
+  // TODO пробежать по всем строкам ниже удаляемой и заменить elm в параметрах
+  del_row(row) {
+    if (row._owner.name === 'production') {
+
+    }
+  }
 }
 
 // свойства и методы табчасти продукции
@@ -60,3 +74,33 @@ $p.DpBuyers_orderCharges_discountsRow = class DpBuyers_orderCharges_discountsRow
   }
 
 };
+
+
+$p.DpBuyers_orderProductionRow = class DpBuyers_orderProductionRow extends $p.DpBuyers_orderProductionRow {
+
+  // при изменении вставки перезаполним параметры
+  value_change(field, type, value) {
+
+    if (field == 'len' || field == 'height') {
+      this[field] = value;
+      if (this.len != 0 && this.height != 0) {
+        this.s = (this.height * this.len / 1000000).round(3);
+      }
+    }
+
+    if(field == 'inset'){
+      const {_obj, _owner, row} = this;
+      if(this.inset != value){
+        this.inset = value;
+        const {product_params} = _owner._owner;
+        product_params.clear({elm: row});
+        this.inset.used_params.forEach((param) => product_params.add({
+          elm: row,
+          param: param
+        }));
+        this._manager.emit_async('rows', _owner._owner, {product_params: true});
+      }
+    }
+  }
+
+}
