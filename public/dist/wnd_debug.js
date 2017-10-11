@@ -512,7 +512,8 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 $p.cat.clrs.__define({
 
   by_predefined: {
-    value: function (clr, clr_elm, clr_sch, elm) {
+    value: function (clr, clr_elm, clr_sch, elm, spec) {
+
       const {predefined_name} = clr;
       if(predefined_name) {
         switch (predefined_name) {
@@ -538,7 +539,17 @@ $p.cat.clrs.__define({
         case 'КакВедущийИзнутри':
         case 'КакВедущийСнаружи':
         case 'КакВедущийИнверсный':
-          return this.get();
+          const sub_clr = this.predefined(predefined_name.replace('КакВедущий', 'КакЭлемент'));
+          const t_parent = elm && elm.t_parent();
+          if(!elm || elm === t_parent){
+            return this.by_predefined(sub_clr,  clr_elm);
+          }
+          let finded = false;
+          spec && spec.find_rows({elm: t_parent.elm, nom: t_parent.nom}, (row) => {
+            finded = this.by_predefined(sub_clr,  row.clr);
+            return false;
+          });
+          return finded || clr_elm;
 
         default :
           return clr_elm;
@@ -3486,32 +3497,32 @@ class ProductsBuilding {
       params;
 
 
-    function cnn_row(elm1, elm2){
+    function cnn_row(elm1, elm2) {
       let res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
-      if(res.length){
+      if(res.length) {
         return res[0].row;
       }
       res = cnn_elmnts.find_rows({elm1: elm2, elm2: elm1});
-      if(res.length){
+      if(res.length) {
         return res[0].row;
       }
       return 0;
     }
 
-    function cnn_need_add_spec(cnn, elm1, elm2, point){
-      if(cnn && cnn.cnn_type == $p.enm.cnn_types.xx){
-        if(!added_cnn_spec.points){
+    function cnn_need_add_spec(cnn, elm1, elm2, point) {
+      if(cnn && cnn.cnn_type == $p.enm.cnn_types.xx) {
+        if(!added_cnn_spec.points) {
           added_cnn_spec.points = [];
         }
-        for(let p of added_cnn_spec.points){
-          if(p.is_nearest(point, true)){
+        for (let p of added_cnn_spec.points) {
+          if(p.is_nearest(point, true)) {
             return false;
           }
         }
         added_cnn_spec.points.push(point);
         return true;
       }
-      else if(!cnn || !elm1 || !elm2 || added_cnn_spec[elm1] == elm2 || added_cnn_spec[elm2] == elm1){
+      else if(!cnn || !elm1 || !elm2 || added_cnn_spec[elm1] == elm2 || added_cnn_spec[elm2] == elm1) {
         return false;
       }
       added_cnn_spec[elm1] = elm2;
@@ -3519,9 +3530,8 @@ class ProductsBuilding {
     }
 
 
-
-    function cnn_add_spec(cnn, elm, len_angl, cnn_other){
-      if(!cnn){
+    function cnn_add_spec(cnn, elm, len_angl, cnn_other) {
+      if(!cnn) {
         return;
       }
       const sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
@@ -3531,12 +3541,13 @@ class ProductsBuilding {
 
         const {nom} = row_cnn_spec;
 
-        if(nom instanceof $p.CatInserts){
-          if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)){
+        if(nom instanceof $p.CatInserts) {
+          if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)) {
             const tmp_len_angl = len_angl._clone();
             tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
             nom.calculate_spec({elm, len_angl: tmp_len_angl, ox});
-          }else{
+          }
+          else {
             nom.calculate_spec({elm, len_angl, ox});
           }
         }
@@ -3544,31 +3555,31 @@ class ProductsBuilding {
 
           const row_spec = new_spec_row({row_base: row_cnn_spec, origin: len_angl.origin || cnn, elm, nom, spec, ox});
 
-          if(nom.is_pieces){
-            if(!row_cnn_spec.coefficient){
+          if(nom.is_pieces) {
+            if(!row_cnn_spec.coefficient) {
               row_spec.qty = row_cnn_spec.quantity;
             }
-            else{
+            else {
               row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
                 .round(nom.rounding_quantity);
             }
           }
-          else{
+          else {
             row_spec.qty = row_cnn_spec.quantity;
 
-            if(row_cnn_spec.sz || row_cnn_spec.coefficient){
+            if(row_cnn_spec.sz || row_cnn_spec.coefficient) {
               let sz = row_cnn_spec.sz, finded, qty;
-              if(cnn_other){
+              if(cnn_other) {
                 cnn_other.specification.find_rows({nom}, (row) => {
                   sz += row.sz;
                   qty = row.quantity;
                   return !(finded = true);
-                })
+                });
               }
-              if(!finded){
+              if(!finded) {
                 sz *= 2;
               }
-              if(!row_spec.qty && finded && len_angl.art1){
+              if(!row_spec.qty && finded && len_angl.art1) {
                 row_spec.qty = qty;
               }
               row_spec.len = (len_angl.len - sign * sz) * (row_cnn_spec.coefficient || 0.001);
@@ -3593,7 +3604,7 @@ class ProductsBuilding {
       });
     }
 
-    function cnn_filter_spec(cnn, elm, len_angl){
+    function cnn_filter_spec(cnn, elm, len_angl) {
 
       const res = [];
       const {angle_hor} = elm;
@@ -3606,33 +3617,34 @@ class ProductsBuilding {
 
       specification.each((row) => {
         const {nom} = row;
-        if(!nom || nom.empty() || nom == art1 || nom == art2){
+        if(!nom || nom.empty() || nom == art1 || nom == art2) {
           return;
         }
 
         if((row.for_direct_profile_only > 0 && !elm.is_linear()) ||
-          (row.for_direct_profile_only < 0 && elm.is_linear())){
+          (row.for_direct_profile_only < 0 && elm.is_linear())) {
           return;
         }
 
-        if(cnn_type == ii){
-          if(row.amin > angle_hor || row.amax < angle_hor || row.sz_min > len_angl.len || row.sz_max < len_angl.len){
-            return;
-          }
-        }else{
-          if(row.amin > len_angl.angle || row.amax < len_angl.angle){
+        if(cnn_type == ii) {
+          if(row.amin > angle_hor || row.amax < angle_hor || row.sz_min > len_angl.len || row.sz_max < len_angl.len) {
             return;
           }
         }
-
-        if((row.set_specification == САртикулом1 && len_angl.art2) || (row.set_specification == САртикулом2 && len_angl.art1)){
-          return;
-        }
-        if(len_angl.art2 && acn.a.indexOf(cnn_type) != -1 && row.set_specification != САртикулом2 && cnn_type != xx){
-          return;
+        else {
+          if(row.amin > len_angl.angle || row.amax < len_angl.angle) {
+            return;
+          }
         }
 
-        if(check_params({params: selection_params, row_spec: row, elm, ox})){
+        if((row.set_specification == САртикулом1 && len_angl.art2) || (row.set_specification == САртикулом2 && len_angl.art1)) {
+          return;
+        }
+        if(len_angl.art2 && acn.a.indexOf(cnn_type) != -1 && row.set_specification != САртикулом2 && cnn_type != xx) {
+          return;
+        }
+
+        if(check_params({params: selection_params, row_spec: row, elm, ox})) {
           res.push(row);
         }
 
@@ -3644,14 +3656,14 @@ class ProductsBuilding {
 
     function furn_spec(contour) {
 
-      if(!contour.parent){
+      if(!contour.parent) {
         return false;
       }
 
       const {furn_cache, furn} = contour;
       const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
 
-      if(!furn_check_opening_restrictions(contour, furn_cache)){
+      if(!furn_check_opening_restrictions(contour, furn_cache)) {
         return;
       }
 
@@ -3662,14 +3674,14 @@ class ProductsBuilding {
         const elm = {elm: -contour.cnstr, clr: blank_clr};
         const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, spec, ox});
 
-        if(row.is_procedure_row){
+        if(row.is_procedure_row) {
           row_spec.elm = row.handle_height_min;
           row_spec.len = row.coefficient / 1000;
           row_spec.qty = 0;
           row_spec.totqty = 1;
           row_spec.totqty1 = 1;
         }
-        else{
+        else {
           row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
           calc_count_area_mass(row_spec, spec);
         }
@@ -3687,7 +3699,7 @@ class ProductsBuilding {
         const len = elm._row.len - 2 * elm.nom.sizefurn;
 
 
-        if(len < row.lmin || len > row.lmax || (!elm.is_linear() && !row.arc_available)){
+        if(len < row.lmin || len > row.lmax || (!elm.is_linear() && !row.arc_available)) {
           new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: contour.furn, spec, ox});
           ok = false;
         }
@@ -3700,27 +3712,28 @@ class ProductsBuilding {
 
     function cnn_spec_nearest(elm) {
       const nearest = elm.nearest();
-      if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm._attr._nearest_cnn)
+      if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm._attr._nearest_cnn) {
         cnn_add_spec(elm._attr._nearest_cnn, elm, {
-          angle:  0,
-          alp1:   0,
-          alp2:   0,
-          len:    elm._attr._len,
+          angle: 0,
+          alp1: 0,
+          alp2: 0,
+          len: elm._attr._len,
           origin: cnn_row(elm.elm, nearest.elm)
         });
+      }
     }
 
     function base_spec_profile(elm) {
 
       const {_row, rays} = elm;
 
-      if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+      if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
         return;
       }
 
       const {b, e} = rays;
 
-      if(!b.cnn || !e.cnn){
+      if(!b.cnn || !e.cnn) {
         return;
       }
       b.check_err();
@@ -3735,7 +3748,7 @@ class ProductsBuilding {
       let row_spec;
 
       const row_cnn = row_cnn_prev || row_cnn_next;
-      if(row_cnn){
+      if(row_cnn) {
 
         row_spec = new_spec_row({elm, row_base: row_cnn, nom: _row.nom, origin: cnn_row(_row.elm, prev ? prev.elm : 0), spec, ox});
         row_spec.qty = row_cnn.quantity;
@@ -3758,11 +3771,11 @@ class ProductsBuilding {
           - (!row_cnn_next || row_cnn_next.angle_calc_method == seam ? 0 : row_cnn_next.sz))
           * 1000 * ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
 
-        if(!elm.is_linear()){
+        if(!elm.is_linear()) {
           row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
         }
 
-        if(row_cnn_prev && !row_cnn_prev.formula.empty()){
+        if(row_cnn_prev && !row_cnn_prev.formula.empty()) {
           row_cnn_prev.formula.execute({
             ox: ox,
             elm: elm,
@@ -3772,7 +3785,7 @@ class ProductsBuilding {
             row_spec: row_spec
           });
         }
-        else if(row_cnn_next && !row_cnn_next.formula.empty()){
+        else if(row_cnn_next && !row_cnn_next.formula.empty()) {
           row_cnn_next.formula.execute({
             ox: ox,
             elm: elm,
@@ -3805,17 +3818,17 @@ class ProductsBuilding {
         art1: false,
         art2: true
       };
-      if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0, b.point)){
+      if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0, b.point)) {
 
 
         len_angl.angle = len_angl.alp2;
 
-        if(b.cnn.cnn_type == $p.enm.cnn_types.t || b.cnn.cnn_type == $p.enm.cnn_types.i || b.cnn.cnn_type == $p.enm.cnn_types.xx){
-          if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm, e.point)){
+        if(b.cnn.cnn_type == $p.enm.cnn_types.t || b.cnn.cnn_type == $p.enm.cnn_types.i || b.cnn.cnn_type == $p.enm.cnn_types.xx) {
+          if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm, e.point)) {
             cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
           }
         }
-        else{
+        else {
           cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
         }
 
@@ -3833,8 +3846,8 @@ class ProductsBuilding {
 
       ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
 
-        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
-          $p.record_log("inset_elm_spec: specification_order_row_types.Продукция");
+        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
+          $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
         }
 
         len_angl.origin = inset;
@@ -3852,7 +3865,7 @@ class ProductsBuilding {
 
       const {_row, _attr, inset, layer} = elm;
 
-      if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+      if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
         return;
       }
 
@@ -3862,7 +3875,7 @@ class ProductsBuilding {
 
       ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
 
-        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
+        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
           const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(layer));
           ox._order_rows.push(cx);
           spec = cx.specification.clear();
@@ -3875,7 +3888,7 @@ class ProductsBuilding {
           len: 0,
           origin: inset,
           cnstr: layer.cnstr
-        }
+        };
         inset.calculate_spec({elm, len_angl, ox, spec});
 
       });
@@ -3888,21 +3901,21 @@ class ProductsBuilding {
 
       const {profiles, imposts, _row} = elm;
 
-      if(_row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+      if(_row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
         return;
       }
 
       const glength = profiles.length;
 
-      for(let i=0; i<glength; i++ ){
+      for (let i = 0; i < glength; i++) {
         const curr = profiles[i];
 
-        if(curr.profile && curr.profile._row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')){
+        if(curr.profile && curr.profile._row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
           return;
         }
 
-        const prev = (i==0 ? profiles[glength-1] : profiles[i-1]).profile;
-        const next = (i==glength-1 ? profiles[0] : profiles[i+1]).profile;
+        const prev = (i == 0 ? profiles[glength - 1] : profiles[i - 1]).profile;
+        const next = (i == glength - 1 ? profiles[0] : profiles[i + 1]).profile;
         const row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});
 
         const len_angl = {
@@ -3923,8 +3936,8 @@ class ProductsBuilding {
       imposts.forEach(base_spec_profile);
 
       ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
-        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
-          $p.record_log("inset_elm_spec: specification_order_row_types.Продукция");
+        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
+          $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
         }
         inset.calculate_spec({elm, ox});
       });
@@ -3937,7 +3950,7 @@ class ProductsBuilding {
 
       ox.inserts.find_rows({cnstr: contour.cnstr}, ({inset, clr}) => {
 
-        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция){
+        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
           const cx = Object.assign(ox.find_create_cx(-contour.cnstr, inset.ref), inset.contour_attrs(contour));
           ox._order_rows.push(cx);
           spec = cx.specification.clear();
@@ -3956,7 +3969,7 @@ class ProductsBuilding {
           len: 0,
           origin: inset,
           cnstr: contour.cnstr
-        }
+        };
         inset.calculate_spec({elm, len_angl, ox, spec});
 
       });
@@ -3970,17 +3983,18 @@ class ProductsBuilding {
 
       added_cnn_spec = {};
 
-      scheme.getItems({class: Contour}).forEach((contour) => {
+      for (const contour of scheme.getItems({class: Contour})) {
 
-        for(let elm of contour.children){
-          if(elm instanceof Filling){
+        for (const elm of contour.children) {
+          elm instanceof Profile && base_spec_profile(elm);
+        }
+
+        for (const elm of contour.children) {
+          if(elm instanceof Filling) {
             base_spec_glass(elm);
           }
-          else if(elm instanceof Sectional){
+          else if(elm instanceof Sectional) {
             base_spec_sectional(elm);
-          }
-          else if(elm instanceof Profile){
-            base_spec_profile(elm);
           }
         }
 
@@ -3988,18 +4002,20 @@ class ProductsBuilding {
 
         inset_contour_spec(contour);
 
-      });
+      }
 
-      for(let elm of scheme.l_connective.children){
-        if(elm instanceof ProfileConnective){
+      for (const elm of scheme.l_connective.children) {
+        if(elm instanceof ProfileConnective) {
           base_spec_profile(elm);
         }
       }
 
       inset_contour_spec({
-        cnstr:0,
+        cnstr: 0,
         project: scheme,
-        get perimeter() {return this.project.perimeter}
+        get perimeter() {
+          return this.project.perimeter;
+        }
       });
 
     }
@@ -4022,15 +4038,15 @@ class ProductsBuilding {
 
       base_spec(scheme);
 
-      spec.group_by("nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop", "qty,totqty,totqty1");
+      spec.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
 
 
 
       scheme.draw_visualization();
-      scheme.notify(scheme, "coordinates_calculated", attr);
+      scheme.notify(scheme, 'coordinates_calculated', attr);
 
 
-      if(ox.calc_order_row){
+      if(ox.calc_order_row) {
         $p.spec_building.specification_adjustment({
           scheme: scheme,
           calc_order_row: ox.calc_order_row,
@@ -4039,24 +4055,24 @@ class ProductsBuilding {
         }, true);
       }
 
-      if(attr.snapshot){
-        scheme.notify(scheme, "scheme_snapshot", attr);
+      if(attr.snapshot) {
+        scheme.notify(scheme, 'scheme_snapshot', attr);
       }
 
-      if(attr.save){
+      if(attr.save) {
 
 
         ox.save(undefined, undefined, {
           svg: {
-            content_type: "image/svg+xml",
-            data: new Blob([scheme.get_svg()], {type: "image/svg+xml"})
+            content_type: 'image/svg+xml',
+            data: new Blob([scheme.get_svg()], {type: 'image/svg+xml'})
           }
         })
           .then(() => {
             $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
             delete scheme._attr._saving;
             ox.calc_order.characteristic_saved(scheme, attr);
-            scheme._scope.eve.emit("characteristic_saved", scheme, attr);
+            scheme._scope.eve.emit('characteristic_saved', scheme, attr);
 
 
           })
@@ -4065,29 +4081,29 @@ class ProductsBuilding {
 
             $p.record_log(ox);
             delete scheme._attr._saving;
-            if(ox._data && ox._data._err){
+            if(ox._data && ox._data._err) {
               $p.msg.show_msg(ox._data._err);
               delete ox._data._err;
             }
           });
       }
-      else{
+      else {
         delete scheme._attr._saving;
       }
 
       ox._data._loading = false;
 
-    }
+    };
 
   }
 
-  static check_params({params, row_spec, elm, cnstr, origin, ox}){
+  static check_params({params, row_spec, elm, cnstr, origin, ox}) {
 
     let ok = true;
 
     params.find_rows({elm: row_spec.elm}, (prm_row) => {
       ok = prm_row.param.check_condition({row_spec, prm_row, elm, cnstr, origin, ox});
-      if(!ok){
+      if(!ok) {
         return false;
       }
     });
@@ -4095,125 +4111,129 @@ class ProductsBuilding {
     return ok;
   }
 
-  static new_spec_row({row_spec, elm, row_base, nom, origin, spec, ox}){
-    if(!row_spec){
+  static new_spec_row({row_spec, elm, row_base, nom, origin, spec, ox}) {
+    if(!row_spec) {
       row_spec = spec.add();
     }
     row_spec.nom = nom || row_base.nom;
-    if(!row_spec.nom.visualization.empty()){
+    if(!row_spec.nom.visualization.empty()) {
       row_spec.dop = -1;
     }
-    else if(row_spec.nom.is_procedure){
+    else if(row_spec.nom.is_procedure) {
       row_spec.dop = -2;
     }
     row_spec.characteristic = row_base.nom_characteristic;
-    if(!row_spec.characteristic.empty() && row_spec.characteristic.owner != row_spec.nom){
+    if(!row_spec.characteristic.empty() && row_spec.characteristic.owner != row_spec.nom) {
       row_spec.characteristic = $p.utils.blank.guid;
     }
-    row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr, elm);
+    row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr, elm, spec);
     row_spec.elm = elm.elm;
-    if(origin){
+    if(origin) {
       row_spec.origin = origin;
     }
     return row_spec;
   }
 
-  static calc_qty_len(row_spec, row_base, len){
+  static calc_qty_len(row_spec, row_base, len) {
 
     const {nom} = row_spec;
 
     if(nom.cutting_optimization_type == $p.enm.cutting_optimization_types.Нет ||
-      nom.cutting_optimization_type.empty() || nom.is_pieces){
-      if(!row_base.coefficient || !len){
+      nom.cutting_optimization_type.empty() || nom.is_pieces) {
+      if(!row_base.coefficient || !len) {
         row_spec.qty = row_base.quantity;
       }
-      else{
-        if(!nom.is_pieces){
+      else {
+        if(!nom.is_pieces) {
           row_spec.qty = row_base.quantity;
           row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
-          if(nom.rounding_quantity){
+          if(nom.rounding_quantity) {
             row_spec.qty = (row_spec.qty * row_spec.len).round(nom.rounding_quantity);
             row_spec.len = 0;
-          };
+          }
+          ;
         }
-        else if(!nom.rounding_quantity){
+        else if(!nom.rounding_quantity) {
           row_spec.qty = Math.round((len - row_base.sz) * row_base.coefficient * row_base.quantity - 0.5);
         }
-        else{
+        else {
           row_spec.qty = ((len - row_base.sz) * row_base.coefficient * row_base.quantity).round(nom.rounding_quantity);
         }
       }
     }
-    else{
+    else {
       row_spec.qty = row_base.quantity;
       row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
     }
   }
 
-  static calc_count_area_mass(row_spec, spec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2){
+  static calc_count_area_mass(row_spec, spec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2) {
 
-    if(!row_spec.qty){
-      if(row_spec.dop >= 0){
-        spec.del(row_spec.row-1, true);
+    if(!row_spec.qty) {
+      if(row_spec.dop >= 0) {
+        spec.del(row_spec.row - 1, true);
       }
       return;
     }
 
-    if(!angle_calc_method_next){
+    if(!angle_calc_method_next) {
       angle_calc_method_next = angle_calc_method_prev;
     }
 
-    if(angle_calc_method_prev && !row_spec.nom.is_pieces){
+    if(angle_calc_method_prev && !row_spec.nom.is_pieces) {
 
       const {Основной, СварнойШов, СоединениеПополам, Соединение, _90} = $p.enm.angle_calculating_ways;
 
-      if((angle_calc_method_prev == Основной) || (angle_calc_method_prev == СварнойШов)){
+      if((angle_calc_method_prev == Основной) || (angle_calc_method_prev == СварнойШов)) {
         row_spec.alp1 = row_coord.alp1;
       }
-      else if(angle_calc_method_prev == _90){
+      else if(angle_calc_method_prev == _90) {
         row_spec.alp1 = 90;
       }
-      else if(angle_calc_method_prev == СоединениеПополам){
+      else if(angle_calc_method_prev == СоединениеПополам) {
         row_spec.alp1 = (alp1 || row_coord.alp1) / 2;
       }
-      else if(angle_calc_method_prev == Соединение){
+      else if(angle_calc_method_prev == Соединение) {
         row_spec.alp1 = (alp1 || row_coord.alp1);
       }
 
-      if((angle_calc_method_next == Основной) || (angle_calc_method_next == СварнойШов)){
+      if((angle_calc_method_next == Основной) || (angle_calc_method_next == СварнойШов)) {
         row_spec.alp2 = row_coord.alp2;
       }
-      else if(angle_calc_method_next == _90){
+      else if(angle_calc_method_next == _90) {
         row_spec.alp2 = 90;
       }
-      else if(angle_calc_method_next == СоединениеПополам){
+      else if(angle_calc_method_next == СоединениеПополам) {
         row_spec.alp2 = (alp2 || row_coord.alp2) / 2;
       }
-      else if(angle_calc_method_next == Соединение){
+      else if(angle_calc_method_next == Соединение) {
         row_spec.alp2 = (alp2 || row_coord.alp2);
       }
     }
 
-    if(row_spec.len){
-      if(row_spec.width && !row_spec.s)
+    if(row_spec.len) {
+      if(row_spec.width && !row_spec.s) {
         row_spec.s = row_spec.len * row_spec.width;
-    }else{
+      }
+    }
+    else {
       row_spec.s = 0;
     }
 
-    if(row_spec.s)
+    if(row_spec.s) {
       row_spec.totqty = row_spec.qty * row_spec.s;
-
-    else if(row_spec.len)
+    }
+    else if(row_spec.len) {
       row_spec.totqty = row_spec.qty * row_spec.len;
-
-    else
+    }
+    else {
       row_spec.totqty = row_spec.qty;
+    }
 
     row_spec.totqty1 = row_spec.totqty * row_spec.nom.loss_factor;
 
-    ["len","width","s","qty","alp1","alp2"].forEach((fld) => row_spec[fld] = row_spec[fld].round(4));
-    ["totqty","totqty1"].forEach((fld) => row_spec[fld] = row_spec[fld].round(6));
+    ['len', 'width', 's', 'qty', 'alp1', 'alp2'].forEach((fld) => row_spec[fld] = row_spec[fld].round(4));
+    ['totqty', 'totqty1'].forEach((fld) => row_spec[fld] = row_spec[fld].round(6));
   }
 
 }
@@ -4471,6 +4491,18 @@ $p.DpBuyers_order = class DpBuyers_order extends $p.DpBuyers_order {
   get extra_fields() {
     return this.characteristic.params;
   }
+
+  add_row(row) {
+    if (row._owner.name === 'production') {
+      row.qty = row.quantity = 1;
+    }
+  }
+
+  del_row(row) {
+    if (row._owner.name === 'production') {
+
+    }
+  }
 }
 
 $p.DpBuyers_orderCharges_discountsRow = class DpBuyers_orderCharges_discountsRow extends $p.DpBuyers_orderCharges_discountsRow {
@@ -4517,13 +4549,6 @@ $p.DpBuyers_orderProductionRow = class DpBuyers_orderProductionRow extends $p.Dp
   }
 
 }
-
-
-$p.DpBuyers_order.prototype.add_row = function (row) {
-  if (row._owner.name === 'production') {
-    row.qty = row.quantity = 1;
-  }
-};
 
 
 

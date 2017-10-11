@@ -18,7 +18,8 @@ $p.cat.clrs.__define({
 	 * @return {*}
 	 */
   by_predefined: {
-    value: function (clr, clr_elm, clr_sch, elm) {
+    value: function (clr, clr_elm, clr_sch, elm, spec) {
+
       const {predefined_name} = clr;
       if(predefined_name) {
         switch (predefined_name) {
@@ -44,7 +45,17 @@ $p.cat.clrs.__define({
         case 'КакВедущийИзнутри':
         case 'КакВедущийСнаружи':
         case 'КакВедущийИнверсный':
-          return this.get();
+          const sub_clr = this.predefined(predefined_name.replace('КакВедущий', 'КакЭлемент'));
+          const t_parent = elm && elm.t_parent();
+          if(!elm || elm === t_parent){
+            return this.by_predefined(sub_clr,  clr_elm);
+          }
+          let finded = false;
+          spec && spec.find_rows({elm: t_parent.elm, nom: t_parent.nom}, (row) => {
+            finded = this.by_predefined(sub_clr,  row.clr);
+            return false;
+          });
+          return finded || clr_elm;
 
         default :
           return clr_elm;

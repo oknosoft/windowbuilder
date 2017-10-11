@@ -5007,6 +5007,10 @@ class BuilderElement extends paper.Group {
     this.project.register_change();
   }
 
+  t_parent(be) {
+    return this;
+  }
+
   attache_wnd(cell) {
     if(!this._attr._grid || !this._attr._grid.cell){
 
@@ -8051,6 +8055,20 @@ class Profile extends ProfileItem {
         }
       })
     }
+  }
+
+  t_parent(be) {
+    if(this.elm_type != $p.enm.elm_types.Импост){
+      return this;
+    }
+    const {_rays} = this._attr;
+    if(be === 'b'){
+      return _rays && _rays.b.profile;
+    }
+    if(be === 'e'){
+      return _rays && _rays.e.profile;
+    }
+    return _rays && (_rays.b.profile || _rays.e.profile);
   }
 }
 

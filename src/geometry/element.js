@@ -451,6 +451,14 @@ class BuilderElement extends paper.Group {
   }
 
   /**
+   * тот, к кому примыкает импост
+   * @return {BuilderElement}
+   */
+  t_parent(be) {
+    return this;
+  }
+
+  /**
    * Подключает окно редактор свойств текущего элемента, выбранного инструментом
    */
   attache_wnd(cell) {
