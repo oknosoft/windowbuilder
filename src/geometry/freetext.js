@@ -185,10 +185,12 @@ class FreeText extends paper.PointText {
 
   // координата y
   get y() {
-    return (this.project.bounds.height + this.project.bounds.y - this.point.y).round(1);
+    const {bounds} = this.project;
+    return (bounds.height + bounds.y - this.point.y).round(1);
   }
   set y(v) {
-    this.point.y = this.project.bounds.height + this.project.bounds.y - parseFloat(v);
+    const {bounds} = this.project;
+    this.point.y = bounds.height + bounds.y - parseFloat(v);
   }
 
   // текст элемента - при установке пустой строки, элемент удаляется
@@ -196,9 +198,10 @@ class FreeText extends paper.PointText {
     return this.content;
   }
   set text(v) {
+    const {project} = this;
     if(v){
       this.content = v;
-      this.project.register_update();
+      project.register_update();
     }
     else{
       project.notify(this, 'unload');

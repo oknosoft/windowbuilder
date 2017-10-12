@@ -14,6 +14,18 @@ $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._
 // переопределяем объекты назначения дополнительных реквизитов
 $p.doc.calc_order._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
 
+// индивидуальная строка поиска
+$p.doc.calc_order.build_search = function (tmp, obj) {
+
+  const {number_internal, client_of_dealer, partner, note} = obj;
+
+  tmp.search = (obj.number_doc +
+    (number_internal ? ' ' + number_internal : '') +
+    (client_of_dealer ? ' ' + client_of_dealer : '') +
+    (partner.name ? ' ' + partner.name : '') +
+    (note ? ' ' + note : '')).toLowerCase();
+}
+
 // метод загрузки шаблонов
 $p.doc.calc_order.load_templates = async function () {
 
@@ -166,7 +178,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     //this.sys_furn = sys_furn;
     this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
 
-    const {_obj, obj_delivery_state, category, number_internal, partner, client_of_dealer, note} = this;
+    const {_obj, obj_delivery_state, category} = this;
 
     // фильтр по статусу
     if(obj_delivery_state == 'Шаблон') {
@@ -193,13 +205,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     else {
       _obj.state = 'draft';
     }
-
-    // строка поиска
-    _obj.search = (this.number_doc +
-      (number_internal ? ' ' + number_internal : '') +
-      (client_of_dealer ? ' ' + client_of_dealer : '') +
-      (partner.name ? ' ' + partner.name : '') +
-      (note ? ' ' + note : '')).toLowerCase();
 
     // пометим на удаление неиспользуемые характеристики
     this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})

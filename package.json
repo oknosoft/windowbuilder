@@ -33,7 +33,7 @@
     "metadata-pouchdb": "^2.0.2-beta.30",
     "metadata-react": "^2.0.2-beta.30",
     "metadata-redux": "^2.0.2-beta.30",
-    "moment": "2.18.1",
+    "moment": "^2.19.1",
     "paper-jsdom-canvas": "^0.11.5",
     "pouchdb": "^6.3.4",
     "pouchdb-adapter-http": "^6.3.4",
@@ -49,8 +49,6 @@
     "rc-cascader": "^0.11.6",
     "rc-time-picker": "^2.4.1",
     "react": "^15.6.2",
-    "react-data-grid": "^2.0.60",
-    "react-data-grid-addons": "^2.0.60",
     "react-dom": "^15.6.2",
     "react-error-overlay": "^1.0.10",
     "react-flex-layout": "^0.9",
@@ -62,7 +60,7 @@
     "react-select": "^1.0.0-rc.10",
     "react-static-container": "^1.0.1",
     "react-virtualized": "^9.10.1",
-    "recompose": "^0.25.1",
+    "recompose": "^0.26.0",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0"
   },
@@ -126,8 +124,7 @@
     "test": "node scripts/test.js --env=jsdom",
     "lint": "eslint .",
     "meta:prebuild": "node scripts/prebuild.meta.js",
-    "meta:link": "npm link metadata-core metadata-dhtmlx metadata-redux metadata-pouchdb metadata-abstract-ui metadata-react",
-    "react-data-grid:link": "npm link react-data-grid react-data-grid-addons"
+    "meta:link": "npm link metadata-core metadata-dhtmlx metadata-redux metadata-pouchdb metadata-abstract-ui metadata-react"
   },
   "jest": {
     "collectCoverageFrom": [

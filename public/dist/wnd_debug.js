@@ -4459,15 +4459,15 @@ $p.DpBuilder_price.prototype.__define({
 });
 
 
-
 $p.DpBuyers_order = class DpBuyers_order extends $p.DpBuyers_order {
 
   get clr() {
     return this.characteristic.clr;
   }
+
   set clr(v) {
     const {characteristic, _data} = this;
-    if((!v && characteristic.empty()) || characteristic.clr == v){
+    if((!v && characteristic.empty()) || characteristic.clr == v) {
       return;
     }
     this._manager.emit_async('update', this, {clr: characteristic.clr});
@@ -4478,9 +4478,10 @@ $p.DpBuyers_order = class DpBuyers_order extends $p.DpBuyers_order {
   get sys() {
     return this.characteristic.sys;
   }
+
   set sys(v) {
     const {characteristic, _data} = this;
-    if((!v && characteristic.empty()) || characteristic.sys == v){
+    if((!v && characteristic.empty()) || characteristic.sys == v) {
       return;
     }
     this._manager.emit_async('update', this, {sys: characteristic.sys});
@@ -4493,49 +4494,48 @@ $p.DpBuyers_order = class DpBuyers_order extends $p.DpBuyers_order {
   }
 
   add_row(row) {
-    if (row._owner.name === 'production') {
+    if(row._owner.name === 'production') {
       row.qty = row.quantity = 1;
     }
   }
 
   del_row(row) {
-    if (row._owner.name === 'production') {
+    if(row._owner.name === 'production') {
 
     }
   }
-}
+};
 
 $p.DpBuyers_orderCharges_discountsRow = class DpBuyers_orderCharges_discountsRow extends $p.DpBuyers_orderCharges_discountsRow {
 
   value_change(field, type, value, no_extra_charge) {
-    if(field == 'discount_percent'){
+    if(field == 'discount_percent') {
       const {_obj, _owner, nom_kind, discount_percent} = this;
-      const {_mode, _calc_order} = _owner._owner
+      const {_mode, _calc_order} = _owner._owner;
       _calc_order.production.forEach((row) => {
-        if(row.nom.nom_kind == nom_kind){
+        if(row.nom.nom_kind == nom_kind) {
           row[_mode] = parseFloat(value || 0);
         }
-      })
+      });
     }
   }
 
 };
 
-
 $p.DpBuyers_orderProductionRow = class DpBuyers_orderProductionRow extends $p.DpBuyers_orderProductionRow {
 
   value_change(field, type, value) {
 
-    if (field == 'len' || field == 'height') {
+    if(field == 'len' || field == 'height') {
       this[field] = value;
-      if (this.len != 0 && this.height != 0) {
+      if(this.len != 0 && this.height != 0) {
         this.s = (this.height * this.len / 1000000).round(3);
       }
     }
 
-    if(field == 'inset'){
+    if(field == 'inset') {
       const {_obj, _owner, row} = this;
-      if(this.inset != value){
+      if(this.inset != value) {
         this.inset = value;
         const {product_params} = _owner._owner;
         product_params.clear({elm: row});
@@ -4548,7 +4548,8 @@ $p.DpBuyers_orderProductionRow = class DpBuyers_orderProductionRow extends $p.Dp
     }
   }
 
-}
+};
+
 
 
 
@@ -4669,6 +4670,17 @@ $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._
 
 $p.doc.calc_order._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
 
+$p.doc.calc_order.build_search = function (tmp, obj) {
+
+  const {number_internal, client_of_dealer, partner, note} = obj;
+
+  tmp.search = (obj.number_doc +
+    (number_internal ? ' ' + number_internal : '') +
+    (client_of_dealer ? ' ' + client_of_dealer : '') +
+    (partner.name ? ' ' + partner.name : '') +
+    (note ? ' ' + note : '')).toLowerCase();
+}
+
 $p.doc.calc_order.load_templates = async function () {
 
   if(!$p.job_prm.builder) {
@@ -4782,7 +4794,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     this.amount_internal = amount_internal.round(rounding);
     this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
 
-    const {_obj, obj_delivery_state, category, number_internal, partner, client_of_dealer, note} = this;
+    const {_obj, obj_delivery_state, category} = this;
 
     if(obj_delivery_state == 'Шаблон') {
       _obj.state = 'template';
@@ -4808,12 +4820,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     else {
       _obj.state = 'draft';
     }
-
-    _obj.search = (this.number_doc +
-      (number_internal ? ' ' + number_internal : '') +
-      (client_of_dealer ? ' ' + client_of_dealer : '') +
-      (partner.name ? ' ' + partner.name : '') +
-      (note ? ' ' + note : '')).toLowerCase();
 
     this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
       .then(({rows}) => {
