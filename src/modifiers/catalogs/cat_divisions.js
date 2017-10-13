@@ -14,7 +14,7 @@ Object.defineProperties($p.cat.divisions, {
       $p.current_user.acl_objs.find_rows({type: "cat.divisions"}, (row) => {
         if(list.indexOf(row.acl_obj) == -1){
           list.push(row.acl_obj);
-          row.acl_obj._children.forEach((o) => {
+          row.acl_obj._children().forEach((o) => {
             if(list.indexOf(o) == -1){
               list.push(o);
             }
