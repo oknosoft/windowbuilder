@@ -27,12 +27,13 @@
     "history": "^4.7.2",
     "material-ui": "^1.0.0-beta.16",
     "material-ui-icons": "^1.0.0-beta.15",
-    "metadata-abstract-ui": "^2.0.2-beta.30",
-    "metadata-core": "^2.0.2-beta.30",
-    "metadata-dhtmlx": "^2.0.2-beta.30",
-    "metadata-pouchdb": "^2.0.2-beta.30",
-    "metadata-react": "^2.0.2-beta.30",
-    "metadata-redux": "^2.0.2-beta.30",
+    "metadata-abstract-ui": "^2.0.2-beta.31",
+    "metadata-core": "^2.0.2-beta.31",
+    "metadata-dhtmlx": "^2.0.2-beta.31",
+    "metadata-external": "^2.0.2-beta.31",
+    "metadata-pouchdb": "^2.0.2-beta.31",
+    "metadata-react": "^2.0.2-beta.31",
+    "metadata-redux": "^2.0.2-beta.31",
     "moment": "^2.19.1",
     "paper-jsdom-canvas": "^0.11.5",
     "pouchdb": "^6.3.4",
@@ -59,7 +60,7 @@
     "react-router-redux": "^5.0.0-alpha.6",
     "react-select": "^1.0.0-rc.10",
     "react-static-container": "^1.0.1",
-    "react-virtualized": "^9.10.1",
+    "react-virtualized": "^9.11.0",
     "recompose": "^0.26.0",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0"
@@ -82,7 +83,7 @@
     "debug": "^3.1.0",
     "dotenv": "4.0.0",
     "enzyme": "^3.1.0",
-    "eslint": "^4.8.0",
+    "eslint": "^4.9.0",
     "eslint-config-react-app": "^2.0.1",
     "eslint-loader": "^1.9.0",
     "eslint-plugin-babel": "^4.1.2",
@@ -124,7 +125,7 @@
     "test": "node scripts/test.js --env=jsdom",
     "lint": "eslint .",
     "meta:prebuild": "node scripts/prebuild.meta.js",
-    "meta:link": "npm link metadata-core metadata-dhtmlx metadata-redux metadata-pouchdb metadata-abstract-ui metadata-react"
+    "meta:link": "npm link metadata-core metadata-dhtmlx metadata-redux metadata-pouchdb metadata-abstract-ui metadata-react metadata-external"
   },
   "jest": {
     "collectCoverageFrom": [
