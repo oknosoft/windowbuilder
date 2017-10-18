@@ -1190,7 +1190,9 @@ $p.adapters.pouch.once('pouch_data_loaded', () => {
   const {formulas} = $p.cat;
   formulas.pouch_find_rows({ _top: 500, _skip: 0 })
     .then((rows) => {
-      rows.forEach((formula) => {
+    const parents = [formulas.predefined("printing_plates"), formulas.predefined("modifiers")];
+    const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);
+    filtered.sort((a, b) => a.sorting_field - b.sorting_field).forEach((formula) => {
         if(formula.parent == formulas.predefined("printing_plates")){
           formula.params.find_rows({param: "destination"}, (dest) => {
             const dmgr = $p.md.mgr_by_class_name(dest.value);
@@ -1518,7 +1520,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
         if(row_furn.quantity){
           const row_spec = res.add(row_furn);
           row_spec.origin = this;
-          if(!row_furn.formula.empty()){
+          if(!row_furn.formula.empty() && !row_furn.formula.condition_formula){
             row_furn.formula.execute({ox, contour, row_furn, row_spec});
           }
         }
@@ -1533,10 +1535,14 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurnsSpecificationRow {
 
   check_restrictions(contour, cache) {
-    const {elm, dop, handle_height_min, handle_height_max} = this;
+    const {elm, dop, handle_height_min, handle_height_max, formula} = this;
     const {direction, h_ruch, cnstr} = contour;
 
     if(h_ruch < handle_height_min || (handle_height_max && h_ruch > handle_height_max)){
+      return false;
+    }
+
+    if(!cache.ignore_formulas && !formula.empty() && formula.condition_formula && !formula.execute({ox: cache.ox, contour, row_furn: this})) {
       return false;
     }
 

@@ -14,9 +14,11 @@ $p.adapters.pouch.once('pouch_data_loaded', () => {
   const {formulas} = $p.cat;
   formulas.pouch_find_rows({ _top: 500, _skip: 0 })
     .then((rows) => {
-      rows.forEach((formula) => {
+    const parents = [formulas.predefined("printing_plates"), formulas.predefined("modifiers")];
+    const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);
+    filtered.sort((a, b) => a.sorting_field - b.sorting_field).forEach((formula) => {
         // формируем списки печатных форм и внешних обработок
-        if(formula.parent == formulas.predefined("printing_plates")){
+        if(formula.parent == parents[0]){
           formula.params.find_rows({param: "destination"}, (dest) => {
             const dmgr = $p.md.mgr_by_class_name(dest.value);
             if(dmgr){
@@ -27,7 +29,8 @@ $p.adapters.pouch.once('pouch_data_loaded', () => {
             }
           })
         }
-        else if(formula.parent == formulas.predefined("modifiers")){
+        else {
+          // выполняем модификаторы
           formula.execute();
         }
       });
