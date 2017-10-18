@@ -1,7 +1,7 @@
 /**
  * ### Раскладка
  * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
- * 
+ *
  * Created 16.05.2016
  *
  * @module geometry
@@ -47,6 +47,66 @@ class Onlay extends ProfileItem {
    * У раскладки не бывает ведущих элементов
    */
   nearest() {
+
+  }
+
+  /**
+   * Возвращает массив примыкающих ипостов
+   */
+  joined_imposts(check_only) {
+
+    const {rays, generatrix, parent} = this;
+    const tinner = [];
+    const touter = [];
+
+    // точки, в которых сходятся более 2 профилей
+    const candidates = {b: [], e: []};
+
+    const add_impost = (ip, curr, point) => {
+      const res = {point: generatrix.getNearestPoint(point), profile: curr};
+      if(this.cnn_side(curr, ip, rays) === $p.enm.cnn_sides.Снаружи) {
+        touter.push(res);
+      }
+      else {
+        tinner.push(res);
+      }
+    };
+
+    if(parent.imposts.some((curr) => {
+        if(curr != this) {
+          for(const pn of ['b', 'e']) {
+            const p = curr.cnn_point(pn);
+            if(p.profile == this && p.cnn) {
+
+              if(p.cnn.cnn_type == $p.enm.cnn_types.t) {
+                if(check_only) {
+                  return true;
+                }
+                add_impost(curr.corns(1), curr, p.point);
+              }
+              else {
+                candidates[pn].push(curr.corns(1));
+              }
+            }
+          }
+        }
+      })) {
+      return true;
+    }
+
+    // если в точке примыкает более 1 профиля...
+    ['b', 'e'].forEach((node) => {
+      if(candidates[node].length > 1) {
+        candidates[node].some((ip) => {
+          if(this.cnn_side(null, ip, rays) == $p.enm.cnn_sides.Снаружи) {
+            this.cnn_point(node).is_cut = true;
+            return true;
+          }
+        });
+      }
+    });
+
+    return check_only ? false : {inner: tinner, outer: touter};
 
   }
 
