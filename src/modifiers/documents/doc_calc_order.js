@@ -736,7 +736,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
           if(params) {
             params.find_rows({elm: row_spec.row}, (prow) => {
-              ox.params.add(prow, true);
+              ox.params.add(prow, true).inset = row_spec.inset;
             });
           }
         }

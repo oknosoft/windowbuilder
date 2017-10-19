@@ -1193,7 +1193,7 @@ $p.adapters.pouch.once('pouch_data_loaded', () => {
     const parents = [formulas.predefined("printing_plates"), formulas.predefined("modifiers")];
     const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);
     filtered.sort((a, b) => a.sorting_field - b.sorting_field).forEach((formula) => {
-        if(formula.parent == formulas.predefined("printing_plates")){
+        if(formula.parent == parents[0]){
           formula.params.find_rows({param: "destination"}, (dest) => {
             const dmgr = $p.md.mgr_by_class_name(dest.value);
             if(dmgr){
@@ -1204,7 +1204,7 @@ $p.adapters.pouch.once('pouch_data_loaded', () => {
             }
           })
         }
-        else if(formula.parent == formulas.predefined("modifiers")){
+        else {
           formula.execute();
         }
       });
@@ -5297,7 +5297,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
           if(params) {
             params.find_rows({elm: row_spec.row}, (prow) => {
-              ox.params.add(prow, true);
+              ox.params.add(prow, true).inset = row_spec.inset;
             });
           }
         }
