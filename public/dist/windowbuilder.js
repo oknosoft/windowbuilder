@@ -1707,7 +1707,7 @@ class Editor extends paper.PaperScope {
 
   do_glass_align(name = 'auto', glasses) {
 
-    const {project, Point} = this;
+    const {project, Point, Key} = this;
 
     if(!glasses){
       glasses = project.selected_glasses();
@@ -1744,7 +1744,7 @@ class Editor extends paper.PaperScope {
       return impost.orientation == orientation && (b.is_tt || e.is_tt || b.is_i || e.is_i);
     });
 
-    const galign = project.auto_align == $p.enm.align_types.Геометрически;
+    const galign = Key.modifiers.control || project.auto_align == $p.enm.align_types.Геометрически;
     let medium = 0;
 
     const glmap = new Map();
@@ -9385,7 +9385,7 @@ class Scheme extends paper.Project {
 
     this._attr._align_timer = setTimeout(() => {
 
-      delete this._attr._align_timer;
+      this._attr._align_timer = 0;
 
       const glasses = [];
       for (const layer of layers) {

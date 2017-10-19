@@ -888,7 +888,7 @@ class Scheme extends paper.Project {
 
     this._attr._align_timer = setTimeout(() => {
 
-      delete this._attr._align_timer;
+      this._attr._align_timer = 0;
 
       // получаем массив заполнений изменённых контуров
       const glasses = [];

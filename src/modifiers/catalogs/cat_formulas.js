@@ -45,12 +45,18 @@ $p.CatFormulas.prototype.__define({
 
 			// создаём функцию из текста формулы
 			if(!this._data._formula && this.formula){
-			  if(this.async){
-          const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-          this._data._formula = (new AsyncFunction("obj,$p", this.formula)).bind(this);
+			  try{
+          if(this.async){
+            const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+            this._data._formula = (new AsyncFunction("obj,$p", this.formula)).bind(this);
+          }
+          else{
+            this._data._formula = (new Function("obj,$p", this.formula)).bind(this);
+          }
         }
-        else{
-          this._data._formula = (new Function("obj,$p", this.formula)).bind(this);
+        catch(err){
+          this._data._formula = () => false;
+          $p.record_log(err);
         }
       }
 

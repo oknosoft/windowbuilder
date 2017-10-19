@@ -1021,7 +1021,7 @@ class Editor extends paper.PaperScope {
    */
   do_glass_align(name = 'auto', glasses) {
 
-    const {project, Point} = this;
+    const {project, Point, Key} = this;
 
     if(!glasses){
       glasses = project.selected_glasses();
@@ -1063,7 +1063,7 @@ class Editor extends paper.PaperScope {
     });
 
     // признак уравнивания геометрически, а не по заполнению
-    const galign = project.auto_align == $p.enm.align_types.Геометрически;
+    const galign = Key.modifiers.control || Key.modifiers.shift || project.auto_align == $p.enm.align_types.Геометрически;
     let medium = 0;
 
     // модифицируем коллекцию заполнений - подклеиваем в неё импосты, одновременно, вычиляем средний размер
