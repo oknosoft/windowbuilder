@@ -11,7 +11,22 @@
  */
 
 // при старте приложения, загружаем в ОЗУ обычные характеристики (без ссылок на заказы)
-$p.md.once('predefined_elmnts_inited', () => $p.cat.characteristics.pouch_load_view('doc/nom_characteristics'));
+$p.md.once('predefined_elmnts_inited', () => {
+  $p.cat.characteristics.pouch_load_view('doc/nom_characteristics')
+    // и корректируем метаданные формы спецификации с учетом ролей пользователя
+    .then(() => {
+    const {current_user} = $p;
+      if(current_user && (
+          current_user.role_available('СогласованиеРасчетовЗаказов') ||
+          current_user.role_available('ИзменениеТехнологическойНСИ') ||
+          current_user.role_available('РедактированиеСкидок') ||
+          current_user.role_available('РедактированиеЦен')
+        )) {
+        return
+      };
+      $p.cat.characteristics.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
+    })
+});
 
 // свойства объекта характеристики
 $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {

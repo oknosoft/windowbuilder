@@ -1744,7 +1744,7 @@ class Editor extends paper.PaperScope {
       return impost.orientation == orientation && (b.is_tt || e.is_tt || b.is_i || e.is_i);
     });
 
-    const galign = Key.modifiers.control || project.auto_align == $p.enm.align_types.Геометрически;
+    const galign = Key.modifiers.control || Key.modifiers.shift || project.auto_align == $p.enm.align_types.Геометрически;
     let medium = 0;
 
     const glmap = new Map();
