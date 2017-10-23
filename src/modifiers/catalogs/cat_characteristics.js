@@ -22,7 +22,7 @@ $p.md.once('predefined_elmnts_inited', () => {
           current_user.role_available('РедактированиеСкидок') ||
           current_user.role_available('РедактированиеЦен')
         )) {
-        return
+        return;
       };
       $p.cat.characteristics.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
     })

@@ -487,6 +487,9 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
           if(row_ins_spec.count_calc_method == ПоФормуле){
             row_spec.qty = qty;
           }
+          else if(row_ins_spec.formula.condition_formula && !qty){
+            row_spec.qty = 0;
+          }
         }
         calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
       }

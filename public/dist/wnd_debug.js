@@ -19,7 +19,7 @@ $p.md.once('predefined_elmnts_inited', () => {
           current_user.role_available('РедактированиеСкидок') ||
           current_user.role_available('РедактированиеЦен')
         )) {
-        return
+        return;
       };
       $p.cat.characteristics.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
     })
@@ -2050,6 +2050,9 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
           if(row_ins_spec.count_calc_method == ПоФормуле){
             row_spec.qty = qty;
           }
+          else if(row_ins_spec.formula.condition_formula && !qty){
+            row_spec.qty = 0;
+          }
         }
         calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
       }
@@ -3613,7 +3616,7 @@ class ProductsBuilding {
           }
 
           if(!row_cnn_spec.formula.empty()) {
-            row_cnn_spec.formula.execute({
+            const qty = row_cnn_spec.formula.execute({
               ox,
               elm,
               len_angl,
@@ -3622,8 +3625,10 @@ class ProductsBuilding {
               row_cnn: row_cnn_spec,
               row_spec: row_spec
             });
+            if(row_cnn_spec.formula.condition_formula && !qty){
+              row_spec.qty = 0;
+            }
           }
-
           calc_count_area_mass(row_spec, spec, len_angl, row_cnn_spec.angle_calc_method);
         }
 

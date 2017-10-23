@@ -136,7 +136,7 @@ class ProductsBuilding {
 
           // если указана формула - выполняем
           if(!row_cnn_spec.formula.empty()) {
-            row_cnn_spec.formula.execute({
+            const qty = row_cnn_spec.formula.execute({
               ox,
               elm,
               len_angl,
@@ -145,8 +145,11 @@ class ProductsBuilding {
               row_cnn: row_cnn_spec,
               row_spec: row_spec
             });
+            // если формула является формулой условия, используем результат, как фильтр
+            if(row_cnn_spec.formula.condition_formula && !qty){
+              row_spec.qty = 0;
+            }
           }
-
           calc_count_area_mass(row_spec, spec, len_angl, row_cnn_spec.angle_calc_method);
         }
 
