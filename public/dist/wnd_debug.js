@@ -256,7 +256,7 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
   if(field == 'inset') {
     if(value != this.inset){
       const {_owner} = this._owner;
-      _owner.params.clear({inset: this.inset, cnstr: this.cnstr});
+      !this.inset.empty() && _owner.params.clear({inset: this.inset, cnstr: this.cnstr});
       this._obj.inset = value;
       _owner.add_inset_params(this.inset, this.cnstr);
     }

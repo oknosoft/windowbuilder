@@ -299,7 +299,7 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
     if(value != this.inset){
       const {_owner} = this._owner;
       // удаляем параметры старой вставки
-      _owner.params.clear({inset: this.inset, cnstr: this.cnstr});
+      !this.inset.empty() && _owner.params.clear({inset: this.inset, cnstr: this.cnstr});
       // устанавливаем значение новой вставки
       this._obj.inset = value;
       // заполняем параметры по умолчанию
