@@ -37,11 +37,15 @@ export function init(dispatch) {
       const {wsql, job_prm, adapters} = $p;
       adapters.pouch.init(wsql, job_prm);
 
-      // читаем скрипт рисовалки
-      return $p.load_script('/dist/windowbuilder.js', 'script');
+      // читаем paperjs и deep-diff
+      return $p.load_script('/dist/paperjs-deep-diff.min.js', 'script');
     })
+    // читаем скрипт рисовалки
+    .then(() => $p.load_script('/dist/windowbuilder.js', 'script'))
+
     // читаем скрипт расчетной части построителя
     .then(() => $p.load_script('/dist/wnd_debug.js', 'script'))
+
     // читаем скрипты модификаторов DataObj`s и DataManager`s
     .then(() => import('./modifiers'))
     .then((modifiers) => {
