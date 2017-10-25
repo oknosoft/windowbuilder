@@ -1214,7 +1214,7 @@ $p.adapters.pouch.once('pouch_data_loaded', () => {
               if(!dmgr._printing_plates){
                 dmgr._printing_plates = {};
               }
-              dmgr._printing_plates["prn_" + formula.ref] = formula;
+              dmgr._printing_plates[`prn_${formula.ref}`] = formula;
             }
           })
         }
@@ -5933,7 +5933,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       case 'btn_clone':
         open_builder('clone');
         break;
-
 
       case 'btn_add_product':
         new CalcOrderFormProductList(wnd, o);

@@ -25,7 +25,7 @@ $p.adapters.pouch.once('pouch_data_loaded', () => {
               if(!dmgr._printing_plates){
                 dmgr._printing_plates = {};
               }
-              dmgr._printing_plates["prn_" + formula.ref] = formula;
+              dmgr._printing_plates[`prn_${formula.ref}`] = formula;
             }
           })
         }

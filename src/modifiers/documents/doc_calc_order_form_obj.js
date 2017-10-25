@@ -280,7 +280,6 @@
         open_builder('clone');
         break;
 
-
       case 'btn_add_product':
         new CalcOrderFormProductList(wnd, o);
         break;
