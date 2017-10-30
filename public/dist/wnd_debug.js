@@ -16,7 +16,6 @@ $p.md.once('predefined_elmnts_inited', () => {
       if(current_user && (
           current_user.role_available('СогласованиеРасчетовЗаказов') ||
           current_user.role_available('ИзменениеТехнологическойНСИ') ||
-          current_user.role_available('РедактированиеСкидок') ||
           current_user.role_available('РедактированиеЦен')
         )) {
         return;
