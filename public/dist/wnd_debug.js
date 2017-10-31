@@ -668,19 +668,13 @@ $p.cat.clrs.__define({
               name: eclr.clr_in.name + " \\ " + eclr.clr_out.name,
               parent: $p.job_prm.builder.composite_clr_folder
             })
-              .then(function (obj) {
-                return obj.register_on_server()
-              })
-              .then(function (obj) {
-                pwnd.on_select.call(pwnd, obj);
-              })
-              .catch(function (err) {
-                $p.msg.show_msg({
-                  type: "alert-warning",
-                  text: "Недостаточно прав для добавления составного цвета",
-                  title: "Составной цвет"
-                });
-              })
+              .then((obj) => obj.register_on_server())
+              .then((obj) => pwnd.on_select.call(pwnd, obj))
+              .catch((err) => $p.msg.show_msg({
+                type: "alert-warning",
+                text: "Недостаточно прав для добавления составного цвета",
+                title: "Составной цвет"
+              }));
           }
 
           wnd.close();
@@ -4709,7 +4703,7 @@ $p.doc.calc_order.build_search = function (tmp, obj) {
     (client_of_dealer ? ' ' + client_of_dealer : '') +
     (partner.name ? ' ' + partner.name : '') +
     (note ? ' ' + note : '')).toLowerCase();
-}
+};
 
 $p.doc.calc_order.load_templates = async function () {
 
@@ -4853,17 +4847,17 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
       .then(({rows}) => {
-      const deleted = [];
-      for (const {id} of rows) {
-        const ref = id.substr(20);
-        if(this.production.find_rows({characteristic: ref}).length) {
-          continue;
+        const deleted = [];
+        for (const {id} of rows) {
+          const ref = id.substr(20);
+          if(this.production.find_rows({characteristic: ref}).length) {
+            continue;
+          }
+          deleted.push($p.cat.characteristics.get(ref, 'promise')
+            .then((ox) => !ox._deleted && ox.mark_deleted(true)));
         }
-        deleted.push($p.cat.characteristics.get(ref, 'promise')
-          .then((ox) => !ox._deleted && ox.mark_deleted(true)));
-      }
-      return Promise.all(deleted);
-    })
+        return Promise.all(deleted);
+      })
       .then((res) => {
         res.length && this._manager.emit_async('svgs', this);
       })
@@ -5193,23 +5187,47 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     return res;
   }
 
-  fill_plan(confirmed) {
-
-    if(this.planning.count() && !confirmed) {
-      dhtmlx.confirm({
-        title: $p.msg.main_title,
-        text: $p.msg.tabular_will_cleared.replace('%1', 'Планирование'),
-        cancel: $p.msg.cancel,
-        callback: function (btn) {
-          if(btn) {
-            this.fill_plan(true);
-          }
-        }.bind(this)
-      });
-      return;
-    }
+  fill_plan() {
 
     this.planning.clear();
+
+    const url = ($p.wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
+
+    const post_data = this._obj._clone();
+    post_data.characteristics = {};
+
+    this.load_production()
+      .then((prod) => {
+        for (const cx of prod) {
+          post_data.characteristics[cx.ref] = cx._obj._clone();
+        }
+      })
+      .then(() => {
+        const headers = new Headers();
+        headers.append('Accept', 'application/json');
+        headers.append('Content-Type', 'application/json');
+        headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
+          $p.wsql.get_user_param('user_name') + ':' + $p.aes.Ctr.decrypt($p.wsql.get_user_param('user_pwd'))))));
+        const suffix = $p.current_user.suffix || $p.wsql.get_user_param('couch_suffix', 'string');
+        if(suffix){
+          headers.append('suffix', suffix);
+        }
+        fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(post_data)
+        })
+          .then(response => response.json())
+          .then(json => console.log(json))
+          .catch(err => {
+            $p.msg.show_msg({
+              type: "alert-warning",
+              text: err.message,
+              title: "Сервис планирования"
+            });
+            $p.record_log(err);
+          });
+      });
 
   }
 
@@ -6083,9 +6101,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             }
 
           })
-          .catch(function (err) {
-            $p.record_log(err);
-          });
+          .catch($p.record_log);
       }
 
       switch (action) {

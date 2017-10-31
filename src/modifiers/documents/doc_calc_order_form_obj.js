@@ -443,9 +443,7 @@
             }
 
           })
-          .catch(function (err) {
-            $p.record_log(err);
-          });
+          .catch($p.record_log);
       }
 
       switch (action) {

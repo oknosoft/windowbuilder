@@ -177,20 +177,14 @@ $p.cat.clrs.__define({
               name: eclr.clr_in.name + " \\ " + eclr.clr_out.name,
               parent: $p.job_prm.builder.composite_clr_folder
             })
-              .then(function (obj) {
-                // регистрируем цвет в couchdb
-                return obj.register_on_server()
-              })
-              .then(function (obj) {
-                pwnd.on_select.call(pwnd, obj);
-              })
-              .catch(function (err) {
-                $p.msg.show_msg({
-                  type: "alert-warning",
-                  text: "Недостаточно прав для добавления составного цвета",
-                  title: "Составной цвет"
-                });
-              })
+            // регистрируем цвет в couchdb
+              .then((obj) => obj.register_on_server())
+              .then((obj) => pwnd.on_select.call(pwnd, obj))
+              .catch((err) => $p.msg.show_msg({
+                type: "alert-warning",
+                text: "Недостаточно прав для добавления составного цвета",
+                title: "Составной цвет"
+              }));
           }
 
           wnd.close();

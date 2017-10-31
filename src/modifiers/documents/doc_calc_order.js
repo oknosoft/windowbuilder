@@ -24,7 +24,7 @@ $p.doc.calc_order.build_search = function (tmp, obj) {
     (client_of_dealer ? ' ' + client_of_dealer : '') +
     (partner.name ? ' ' + partner.name : '') +
     (note ? ' ' + note : '')).toLowerCase();
-}
+};
 
 // метод загрузки шаблонов
 $p.doc.calc_order.load_templates = async function () {
@@ -209,17 +209,17 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     // пометим на удаление неиспользуемые характеристики
     this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
       .then(({rows}) => {
-      const deleted = [];
-      for (const {id} of rows) {
-        const ref = id.substr(20);
-        if(this.production.find_rows({characteristic: ref}).length) {
-          continue;
+        const deleted = [];
+        for (const {id} of rows) {
+          const ref = id.substr(20);
+          if(this.production.find_rows({characteristic: ref}).length) {
+            continue;
+          }
+          deleted.push($p.cat.characteristics.get(ref, 'promise')
+            .then((ox) => !ox._deleted && ox.mark_deleted(true)));
         }
-        deleted.push($p.cat.characteristics.get(ref, 'promise')
-          .then((ox) => !ox._deleted && ox.mark_deleted(true)));
-      }
-      return Promise.all(deleted);
-    })
+        return Promise.all(deleted);
+      })
       .then((res) => {
         res.length && this._manager.emit_async('svgs', this);
       })
@@ -576,26 +576,55 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   }
 
   /**
-   * Заполняет табчасть планирования данными по умолчанию
+   * Заполняет табчасть планирования запросом к сервису windowbuilder-planning
    */
-  fill_plan(confirmed) {
+  fill_plan() {
 
-    // если табчасть не пустая - задаём вопрос
-    if(this.planning.count() && !confirmed) {
-      dhtmlx.confirm({
-        title: $p.msg.main_title,
-        text: $p.msg.tabular_will_cleared.replace('%1', 'Планирование'),
-        cancel: $p.msg.cancel,
-        callback: function (btn) {
-          if(btn) {
-            this.fill_plan(true);
-          }
-        }.bind(this)
-      });
-      return;
-    }
-
+    // чистим не стесняясь - при записи всё равно перезаполнять
     this.planning.clear();
+
+    // получаем url сервиса
+    const url = ($p.wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
+
+    // сериализуем документ и характеристики
+    const post_data = this._obj._clone();
+    post_data.characteristics = {};
+
+    // получаем объекты характеристик и подклеиваем их сериализацию к post_data
+    this.load_production()
+      .then((prod) => {
+        for (const cx of prod) {
+          post_data.characteristics[cx.ref] = cx._obj._clone();
+        }
+      })
+      // выполняем запрос к сервису
+      .then(() => {
+        const headers = new Headers();
+        headers.append('Accept', 'application/json');
+        headers.append('Content-Type', 'application/json');
+        headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
+          $p.wsql.get_user_param('user_name') + ':' + $p.aes.Ctr.decrypt($p.wsql.get_user_param('user_pwd'))))));
+        const suffix = $p.current_user.suffix || $p.wsql.get_user_param('couch_suffix', 'string');
+        if(suffix){
+          headers.append('suffix', suffix);
+        }
+        fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(post_data)
+        })
+          .then(response => response.json())
+          // заполняем табчасть
+          .then(json => console.log(json))
+          .catch(err => {
+            $p.msg.show_msg({
+              type: "alert-warning",
+              text: err.message,
+              title: "Сервис планирования"
+            });
+            $p.record_log(err);
+          });
+      });
 
   }
 
