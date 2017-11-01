@@ -4823,10 +4823,10 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     if(obj_delivery_state == 'Шаблон') {
       _obj.state = 'template';
     }
-    else if(category == 'Сервис') {
+    else if(category == 'service') {
       _obj.state = 'service';
     }
-    else if(category == 'Рекламация') {
+    else if(category == 'complaints') {
       _obj.state = 'complaints';
     }
     else if(obj_delivery_state == 'Отправлен') {
@@ -5769,12 +5769,40 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       $p.cat.characteristics.pouch_load_array(refs)
         .then(() => {
 
-          tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml']);
+          const footer = {
+            columns: ",,,,#stat_total,,,#stat_s,,,,,#stat_total,,,#stat_total",
+            _in_header_stat_s: function(tag,index,data){
+              const calck=function(){
+                let sum=0;
+                o.production.each((row) => {
+                  sum += row.s * row.quantity;
+                });
+                return sum.toFixed(2);
+              }
+              this._stat_in_header(tag,calck,index,data);
+            }
+          }
+
+          tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
           const {production} = wnd.elmnts.grids;
           production.disable_sorting = true;
           production.attachEvent('onRowSelect', (id, ind) => {
             const row = o.production.get(id - 1);
             wnd.elmnts.svgs.select(row.characteristic.ref);
+          });
+          production.attachEvent('onEditCell', (stage,rId,cInd,nValue,oValue,fake) => {
+            if(stage == 2 && fake !== true){
+              if(production._edit_timer){
+                clearTimeout(production._edit_timer);
+              }
+              production._edit_timer = setTimeout(() => {
+                if(wnd && wnd.elmnts){
+                  production.callEvent('onEditCell', [2, 0, 7, null, null, true]);
+                  production.callEvent('onEditCell', [2, 0, 12, null, null, true]);
+                  production.callEvent('onEditCell', [2, 0, 15, null, null, true]);
+                }
+              }, 300);
+            }
           });
 
           let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
@@ -5882,8 +5910,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
               rsvg_click(search.ref, 0);
             }, 200);
-          }
-          ;
+          };
 
           return res;
         }

@@ -184,10 +184,10 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     if(obj_delivery_state == 'Шаблон') {
       _obj.state = 'template';
     }
-    else if(category == 'Сервис') {
+    else if(category == 'service') {
       _obj.state = 'service';
     }
-    else if(category == 'Рекламация') {
+    else if(category == 'complaints') {
       _obj.state = 'complaints';
     }
     else if(obj_delivery_state == 'Отправлен') {
