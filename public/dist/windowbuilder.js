@@ -3318,21 +3318,36 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   }
 
-  draw_visualization() {
+  draw_visualization(rows) {
 
-    const {profiles, l_visualization} = this;
+    const {profiles, l_visualization, contours} = this;
+    const glasses = this.glasses(false, true);
     l_visualization._by_spec.removeChildren();
 
-    this.project.ox.specification.find_rows({dop: -1}, (row) => {
-      profiles.some((elm) => {
-        if (row.elm == elm.elm) {
-          row.nom.visualization.draw(elm, l_visualization, row.len * 1000);
-          return true;
-        }
-      });
-    });
+    if(!rows){
+      rows = [];
+      this.project.ox.specification.find_rows({dop: -1}, (row) => rows.push(row));
+    }
 
-    this.contours.forEach((l) => l.draw_visualization());
+    for(const row of rows){
+      if(!profiles.some((elm) => {
+          if (row.elm == elm.elm) {
+            row.nom.visualization.draw(elm, l_visualization, row.len * 1000);
+            return true;
+          }
+        })){
+        glasses.some((elm) => {
+          if (row.elm == elm.elm) {
+            row.nom.visualization.draw(elm, l_visualization, row.len * 1000, row.width * 1000);
+            return true;
+          }
+        })
+      }
+    }
+
+    for(const contour of contours){
+      contour.draw_visualization(rows);
+    }
 
   }
 
