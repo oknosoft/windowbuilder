@@ -11,7 +11,21 @@
  */
 
 // при старте приложения, загружаем в ОЗУ обычные характеристики (без ссылок на заказы)
-$p.md.once('predefined_elmnts_inited', () => $p.cat.characteristics.pouch_load_view('doc/nom_characteristics'));
+$p.md.once('predefined_elmnts_inited', () => {
+  $p.cat.characteristics.pouch_load_view('doc/nom_characteristics')
+    // и корректируем метаданные формы спецификации с учетом ролей пользователя
+    .then(() => {
+    const {current_user} = $p;
+      if(current_user && (
+          current_user.role_available('СогласованиеРасчетовЗаказов') ||
+          current_user.role_available('ИзменениеТехнологическойНСИ') ||
+          current_user.role_available('РедактированиеЦен')
+        )) {
+        return;
+      };
+      $p.cat.characteristics.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
+    })
+});
 
 // свойства объекта характеристики
 $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
@@ -245,14 +259,14 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
       }
       else if(this.sys.production.count() > 1) {
-        this.sys.production.each(function (row) {
+        this.sys.production.each((row) => {
 
           if(setted) {
             return false;
           }
 
           if(row.param && !row.param.empty()) {
-            param.find_rows({cnstr: 0, param: row.param, value: row.value}, function () {
+            param.find_rows({cnstr: 0, param: row.param, value: row.value}, () => {
               setted = true;
               param._owner.owner = row.nom;
               return false;
@@ -261,7 +275,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
         });
         if(!setted) {
-          this.sys.production.find_rows({param: $p.utils.blank.guid}, function (row) {
+          this.sys.production.find_rows({param: $p.utils.blank.guid}, (row) => {
             setted = true;
             param._owner.owner = row.nom;
             return false;
@@ -282,8 +296,12 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
   // для вложенных вставок перезаполняем параметры
   if(field == 'inset') {
     if(value != this.inset){
-      this._obj.inset = value;
       const {_owner} = this._owner;
+      // удаляем параметры старой вставки
+      !this.inset.empty() && _owner.params.clear({inset: this.inset, cnstr: this.cnstr});
+      // устанавливаем значение новой вставки
+      this._obj.inset = value;
+      // заполняем параметры по умолчанию
       _owner.add_inset_params(this.inset, this.cnstr);
     }
   }

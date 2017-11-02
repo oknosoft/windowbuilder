@@ -35,10 +35,10 @@ function reset_replace(prm) {
 export const predefined = {
   'aribaz.': {zone: 2, host: "https://aribaz.oknosoft.ru/"},
   'eco.': {zone: 21, host: "https://eco.oknosoft.ru/"},
-  //'ecookna.': {zone: 21, host: "https://zakaz.ecookna.ru/"},
+  'ecookna.': {zone: 21, host: "https://zakaz.ecookna.ru/"},
   'tmk.': {zone: 23, host: "https://tmk-online.ru/"},
   'crystallit.': {zone: 25, host: "https://crystallit.oknosoft.ru/"},
-  'nrus.': {zone: 40, host: "https://nrus.oknosoft.ru/"},
+  'okna-stolicy.': {zone: 22, host: "https://okna-stolicy.oknosoft.ru/"},
 }
 
 /**
@@ -47,7 +47,7 @@ export const predefined = {
 export function patch_prm(settings) {
   return (prm) => {
     settings(prm);
-    for(let elm in predefined){
+    for(const elm in predefined){
       if(location.host.match(elm)){
         prm.zone = predefined[elm].zone;
         break;
@@ -64,15 +64,14 @@ export function patch_cnn() {
 
   const {job_prm, wsql} = $p;
 
-
-  for(let elm in predefined){
+  for(const elm in predefined){
     const prm = predefined[elm];
     if(location.host.match(elm) && wsql.get_user_param("zone") != prm.zone){
       wsql.set_user_param("zone", prm.zone);
     }
   }
   if(!location.host.match("localhost")){
-    for(let elm in predefined){
+    for(const elm in predefined){
       const prm = predefined[elm];
       if(prm.host && wsql.get_user_param("zone") == prm.zone && !location.host.match(elm)){
         reset_replace(prm);

@@ -8,7 +8,6 @@ import {FormGroup, FormHelperText, FormControl, FormControlLabel} from 'material
 import TextField from 'material-ui/TextField';
 import Button from 'material-ui/Button';
 import Switch from 'material-ui/Switch';
-import Divider from 'material-ui/Divider';
 import {DialogActions} from 'material-ui/Dialog';
 
 import Confirm from 'metadata-react/Confirm';
@@ -17,7 +16,20 @@ import withStyles from 'metadata-react/styles/paper600';
 import withIface from 'metadata-redux/src/withIface';
 import withPrm from 'metadata-redux/src/withPrm';
 
+import compose from 'recompose/compose';
+
 class Settings extends Component {
+
+  static propTypes = {
+    zone: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),             // обработчик добавления объекта
+    couch_path: PropTypes.string,          // обработчик удаления строки
+    couch_suffix: PropTypes.string,
+    couch_direct: PropTypes.bool,
+    enable_save_pwd: PropTypes.bool,
+    handleSetPrm: PropTypes.func.isRequired,
+    handleIfaceState: PropTypes.func.isRequired,
+    classes: PropTypes.object,
+  };
 
   constructor(props) {
     super(props);
@@ -100,6 +112,9 @@ class Settings extends Component {
       state.hide_price_manufacturer = '';
     }
     this.props.handleSetPrm(state);
+
+    this.props.handleIfaceState({component: '', name: 'snack',
+      value: {open: true, reset: true, message: 'Требуется перезагрузить страницу после изменения параматров'}});
   };
 
   handleHidePriceChange = (event, value) => {
@@ -180,7 +195,7 @@ class Settings extends Component {
                 checked={enable_save_pwd}/>}
               label="Разрешить сохранение пароля"
             />
-            <FormHelperText style={{marginTop: -4}}>Не треповать повторного ввода пароля</FormHelperText>
+            <FormHelperText style={{marginTop: -4}}>Не требовать повторного ввода пароля</FormHelperText>
           </FormControl>
         </FormGroup>
 
@@ -240,9 +255,4 @@ class Settings extends Component {
   }
 }
 
-
-Settings.propTypes = {
-  classes: PropTypes.object.isRequired,
-};
-
-export default withStyles(withIface(withPrm(Settings)));
+export default compose(withStyles, withIface, withPrm)(Settings);

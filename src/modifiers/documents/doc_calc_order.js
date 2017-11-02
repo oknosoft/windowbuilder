@@ -11,6 +11,20 @@
 // переопределяем формирование списка выбора
 $p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
 
+// переопределяем объекты назначения дополнительных реквизитов
+$p.doc.calc_order._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
+
+// индивидуальная строка поиска
+$p.doc.calc_order.build_search = function (tmp, obj) {
+
+  const {number_internal, client_of_dealer, partner, note} = obj;
+
+  tmp.search = (obj.number_doc +
+    (number_internal ? ' ' + number_internal : '') +
+    (client_of_dealer ? ' ' + client_of_dealer : '') +
+    (partner.name ? ' ' + partner.name : '') +
+    (note ? ' ' + note : '')).toLowerCase();
+};
 
 // метод загрузки шаблонов
 $p.doc.calc_order.load_templates = async function () {
@@ -129,7 +143,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       return false;
     }
 
-    this.production.each((row) => {
+    this.production.forEach((row) => {
 
       doc_amount += row.amount;
       amount_internal += row.amount_internal;
@@ -143,7 +157,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       //     sys_profile += name;
       //   }
       //
-      //   row.characteristic.constructions.each((row) => {
+      //   row.characteristic.constructions.forEach((row) => {
       //   	if(row.parent && !row.furn.empty()){
       //   		const name = row.furn.name_short || row.furn.name;
       //   		if(sys_furn.indexOf(name) == -1){
@@ -164,16 +178,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     //this.sys_furn = sys_furn;
     this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
 
-    const {_obj, obj_delivery_state, category, number_internal, partner, client_of_dealer, note} = this;
+    const {_obj, obj_delivery_state, category} = this;
 
     // фильтр по статусу
     if(obj_delivery_state == 'Шаблон') {
       _obj.state = 'template';
     }
-    else if(category == 'Сервис') {
+    else if(category == 'service') {
       _obj.state = 'service';
     }
-    else if(category == 'Рекламация') {
+    else if(category == 'complaints') {
       _obj.state = 'complaints';
     }
     else if(obj_delivery_state == 'Отправлен') {
@@ -192,12 +206,24 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       _obj.state = 'draft';
     }
 
-    // строка поиска
-    _obj.search = (this.number_doc +
-      (number_internal ? ' ' + number_internal : '') +
-      (client_of_dealer ? ' ' + client_of_dealer : '') +
-      (partner.name ? ' ' + partner.name : '') +
-      (note ? ' ' + note : '')).toLowerCase();
+    // пометим на удаление неиспользуемые характеристики
+    this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
+      .then(({rows}) => {
+        const deleted = [];
+        for (const {id} of rows) {
+          const ref = id.substr(20);
+          if(this.production.find_rows({characteristic: ref}).length) {
+            continue;
+          }
+          deleted.push($p.cat.characteristics.get(ref, 'promise')
+            .then((ox) => !ox._deleted && ox.mark_deleted(true)));
+        }
+        return Promise.all(deleted);
+      })
+      .then((res) => {
+        res.length && this._manager.emit_async('svgs', this);
+      })
+      .catch((err) => null);
 
   }
 
@@ -224,6 +250,10 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   get doc_currency() {
     const currency = this.contract.settlements_currency;
     return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
+  }
+
+  set doc_currency(v) {
+
   }
 
   get rounding() {
@@ -306,6 +336,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
       ДоговорСрокДействия: moment(contract.validity).format('L'),
       ЗаказНомер: this.number_doc,
+      //Примечание (комментарий) к расчету  и внутренний номер расчет-заказа
+      Примечание: this.note,
+      НомерВнутренний: this.number_internal,
       Контрагент: this.partner.presentation,
       КонтрагентОписание: this.partner.long_presentation,
       КонтрагентДокумент: '',
@@ -492,6 +525,11 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Цвет: characteristic.clr.name,
       Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
       Площадь: row.s,
+      //Отдено длиина, ширина,  общая площадь позиции и примечание (комментарий к позиции)
+      Длинна: row.len,
+      Ширина: row.width,
+      ВсегоПлощадь: row.s*row.quantity,
+      Примечание: row.note,
       Номенклатура: nom.name_full || nom.name,
       Характеристика: characteristic.name,
       Заполнения: '',
@@ -546,26 +584,55 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   }
 
   /**
-   * Заполняет табчасть планирования данными по умолчанию
+   * Заполняет табчасть планирования запросом к сервису windowbuilder-planning
    */
-  fill_plan(confirmed) {
+  fill_plan() {
 
-    // если табчасть не пустая - задаём вопрос
-    if(this.planning.count() && !confirmed) {
-      dhtmlx.confirm({
-        title: $p.msg.main_title,
-        text: $p.msg.tabular_will_cleared.replace('%1', 'Планирование'),
-        cancel: $p.msg.cancel,
-        callback: function (btn) {
-          if(btn) {
-            this.fill_plan(true);
-          }
-        }.bind(this)
-      });
-      return;
-    }
-
+    // чистим не стесняясь - при записи всё равно перезаполнять
     this.planning.clear();
+
+    // получаем url сервиса
+    const url = ($p.wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
+
+    // сериализуем документ и характеристики
+    const post_data = this._obj._clone();
+    post_data.characteristics = {};
+
+    // получаем объекты характеристик и подклеиваем их сериализацию к post_data
+    this.load_production()
+      .then((prod) => {
+        for (const cx of prod) {
+          post_data.characteristics[cx.ref] = cx._obj._clone();
+        }
+      })
+      // выполняем запрос к сервису
+      .then(() => {
+        const headers = new Headers();
+        headers.append('Accept', 'application/json');
+        headers.append('Content-Type', 'application/json');
+        headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
+          $p.wsql.get_user_param('user_name') + ':' + $p.aes.Ctr.decrypt($p.wsql.get_user_param('user_pwd'))))));
+        const suffix = $p.current_user.suffix || $p.wsql.get_user_param('couch_suffix', 'string');
+        if(suffix){
+          headers.append('suffix', suffix);
+        }
+        fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(post_data)
+        })
+          .then(response => response.json())
+          // заполняем табчасть
+          .then(json => console.log(json))
+          .catch(err => {
+            $p.msg.show_msg({
+              type: "alert-warning",
+              text: err.message,
+              title: "Сервис планирования"
+            });
+            $p.record_log(err);
+          });
+      });
 
   }
 
@@ -603,7 +670,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         prod.push(characteristic.ref);
       }
     });
-    return (mgr.adapter.load_array(mgr, prod))
+    return mgr.adapter.load_array(mgr, prod)
       .then(() => {
         prod.length = 0;
         this.production.forEach((row) => {
@@ -632,6 +699,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     //nom,characteristic,note,quantity,unit,qty,len,width,s,first_cost,marginality,price,discount_percent,discount_percent_internal,
     //discount,amount,margin,price_internal,amount_internal,vat_rate,vat_amount,ordn,changed
 
+    row._data._loading = true;
     row.nom = ox.owner;
     row.note = _dp.note;
     row.quantity = _dp.quantity || 1;
@@ -643,6 +711,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     if(row.unit.owner != row.nom) {
       row.unit = row.nom.storage_unit;
     }
+    row._data._loading = false;
   }
 
   /**
@@ -704,7 +773,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
           if(params) {
             params.find_rows({elm: row_spec.row}, (prow) => {
-              ox.params.add(prow, true);
+              ox.params.add(prow, true).inset = row_spec.inset;
             });
           }
         }
@@ -725,7 +794,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         ox.name = ox.prod_name();
 
         // записываем расчет, если не сделали этого ранее, чтобы не погибла ссылка на расчет в характеристике
-        return this.is_new() ? this.save().then(() => row) : row;
+        return this.is_new() && !$p.wsql.alasql.utils.isNode ? this.save().then(() => row) : row;
       });
 
   }
@@ -863,6 +932,9 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
 
       _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
 
+      nom = this.nom;
+      characteristic = this.characteristic;
+
       // проверим владельца характеристики
       if(!characteristic.empty()) {
         if(!characteristic.calc_order.empty() && characteristic.owner != nom) {
@@ -870,11 +942,9 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
         else if(characteristic.owner != nom) {
           _obj.characteristic = $p.utils.blank.guid;
+          characteristic = this.characteristic;
         }
       }
-
-      nom = this.nom;
-      characteristic = this.characteristic;
 
       // проверим единицу измерения
       if(unit.owner != nom) {
@@ -890,7 +960,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       $p.pricing.price_type(fake_prm);
       $p.pricing.calc_first_cost(fake_prm);
       $p.pricing.calc_amount(fake_prm);
-      if(price && !_obj.price){
+      if(price && !_obj.price) {
         _obj.price = price;
         recalc = true;
       }
@@ -898,11 +968,16 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
 
     if('price_internal,quantity,discount_percent_internal'.indexOf(field) != -1 || recalc) {
 
-      if(!recalc){
+      if(!recalc) {
         _obj[field] = parseFloat(value);
       }
 
-      _obj.amount = ((_obj.price || 0) * ((100 - (_obj.discount_percent || 0)) / 100) * _obj.quantity).round(rounding);
+      isNaN(_obj.price) && (_obj.price = 0);
+      isNaN(_obj.price_internal) && (_obj.price_internal = 0);
+      isNaN(_obj.discount_percent) && (_obj.discount_percent = 0);
+      isNaN(_obj.discount_percent_internal) && (_obj.discount_percent_internal = 0);
+
+      _obj.amount = (_obj.price * ((100 - _obj.discount_percent) / 100) * _obj.quantity).round(rounding);
 
       // если есть внешняя цена дилера, получим текущую дилерскую наценку
       if(!no_extra_charge) {
@@ -920,7 +995,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         }
       }
 
-      _obj.amount_internal = ((_obj.price_internal || 0) * ((100 - (_obj.discount_percent_internal || 0)) / 100) * _obj.quantity).round(rounding);
+      _obj.amount_internal = (_obj.price_internal * ((100 - _obj.discount_percent_internal) / 100) * _obj.quantity).round(rounding);
 
       // ставка и сумма НДС
       const doc = _owner._owner;
@@ -956,8 +1031,12 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         _obj.vat_amount = 0;
       }
 
-      doc.doc_amount = _owner.aggregate([], ['amount']).round(rounding);
-      doc.amount_internal = _owner.aggregate([], ['amount_internal']).round(rounding);
+      const amount = _owner.aggregate([], ['amount', 'amount_internal']);
+      amount.doc_amount = amount.amount.round(rounding);
+      amount.amount_internal = amount.amount_internal.round(rounding);
+      delete amount.amount;
+      Object.assign(doc, amount);
+      doc._manager.emit_async('update', doc, amount);
 
       // TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation
 

@@ -41,6 +41,17 @@ import CalcOrderList from '../CalcOrderList';
 
 class AppRoot extends Component {
 
+  static propTypes = {
+    history: PropTypes.shape({
+      push: PropTypes.func.isRequired,
+    }).isRequired,
+    handleOffline: PropTypes.func.isRequired,
+    handleNavigate: PropTypes.func.isRequired,
+    handleIfaceState: PropTypes.func.isRequired,
+    first_run: PropTypes.bool.isRequired,
+    snack: PropTypes.object,
+  };
+
   constructor(props, context) {
     super(props, context);
     this.handleAlertClose = this.handleDialogClose.bind(this, 'alert');
@@ -52,6 +63,9 @@ class AppRoot extends Component {
     this._offline = handleOffline.bind(this, true);
     window.addEventListener('online', this._online, false);
     window.addEventListener('offline', this._offline, false);
+    // window.addEventListener('error', event => {
+    //   $p.record_log({class: 'info', note: `ошибка перехвачена: ${event.error.toString()}`, obj: event.error})
+    // });
   }
 
   componentWillUnmount() {
@@ -60,7 +74,7 @@ class AppRoot extends Component {
   }
 
   shouldComponentUpdate(props) {
-    const {user, data_empty, couch_direct, offline, history, path_log_in} = props;
+    const {user, data_empty, couch_direct, offline, alert, path_log_in} = props;
     let res = true;
 
     // если есть сохранённый пароль и online, пытаемся авторизоваться
@@ -71,7 +85,13 @@ class AppRoot extends Component {
 
     // если это первый запуск или couch_direct и offline, переходим на страницу login
     if(!path_log_in && ((data_empty === true && !user.try_log_in) || (couch_direct && !user.logged_in))) {
-      history.push('/login');
+      props.handleNavigate('/login');
+      res = false;
+    }
+
+    if(res && user.log_error && (!alert || !alert.open)) {
+      props.handleIfaceState({component: '', name: 'alert', value: {open: true, title: $p.msg.login.title, text: user.log_error}});
+      props.handleLogOut();
       res = false;
     }
 
@@ -79,8 +99,8 @@ class AppRoot extends Component {
   }
 
   handleReset = () => {
-    const {handleNavigate, first_run} = this.props;
-    if(first_run) {
+    const {handleNavigate, first_run, snack} = this.props;
+    if(first_run || (snack && snack.reset)) {
       $p.eve && ($p.eve.redirect = true);
       location.replace('/');
     }
@@ -126,7 +146,7 @@ class AppRoot extends Component {
           message={snack && snack.open ? snack.message : 'Требуется перезагрузить страницу после первой синхронизации данных'}
           action={<Button
             color="accent"
-            onClick={snack && snack.open ? this.handleDialogClose.bind(this, 'snack') : this.handleReset}
+            onClick={snack && snack.open && !snack.reset ? this.handleDialogClose.bind(this, 'snack') : this.handleReset}
           >Выполнить</Button>}
         />}
 
@@ -152,16 +172,6 @@ class AppRoot extends Component {
     );
   }
 }
-
-AppRoot.propTypes = {
-  history: PropTypes.shape({
-    push: PropTypes.func.isRequired,
-  }).isRequired,
-  handleOffline: PropTypes.func.isRequired,
-  handleNavigate: PropTypes.func.isRequired,
-  handleIfaceState: PropTypes.func.isRequired,
-  first_run: PropTypes.bool.isRequired,
-};
 
 export default withNavigateAndMeta(AppRoot);
 

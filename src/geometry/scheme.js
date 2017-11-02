@@ -385,9 +385,7 @@ class Scheme extends paper.Project {
             .then(() => {
               if(_scheme.ox.coordinates.count()) {
                 if(_scheme.ox.specification.count()) {
-                  _scheme.draw_visualization();
-                  // виртуальное событие, чтобы нарисовать визуализацию или открыть шаблоны
-                  _scheme.notify(_scheme, 'coordinates_calculated', {onload: true});
+                  setTimeout(() => _scheme.draw_visualization(), 100);
                 }
                 else {
                   // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет
@@ -890,7 +888,7 @@ class Scheme extends paper.Project {
 
     this._attr._align_timer = setTimeout(() => {
 
-      delete this._attr._align_timer;
+      this._attr._align_timer = 0;
 
       // получаем массив заполнений изменённых контуров
       const glasses = [];

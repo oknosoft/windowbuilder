@@ -1,0 +1,16 @@
+CACHE MANIFEST
+# 000000000002
+
+# Additional resources to cache
+# https://github.com/oknosoft/metadata.js/pull/180
+CACHE:
+
+# Заголовок и библиотеки
+# ./
+
+
+# All other resources (e.g. sites) require the user to be online.
+NETWORK:
+*
+http://*
+https://*

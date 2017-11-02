@@ -708,7 +708,7 @@ class Contour extends AbstractFilling(paper.Layer) {
    */
   profile_by_furn_side(side, cache) {
 
-    if (!cache) {
+    if (!cache || !cache.profiles) {
       cache = {
         profiles: this.outer_nodes,
         bottom: this.profiles_by_side('bottom'),
@@ -1748,6 +1748,7 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     if (!cache) {
       cache = this.furn_cache;
+      cache.ignore_formulas = true;
     }
 
     // получаем элемент, на котором ручка и длину элемента
@@ -1757,21 +1758,22 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
 
     const {len} = elm._row;
+    let handle_height;
 
     function set_handle_height(row) {
       const {handle_height_base, fix_ruch} = row;
       if (handle_height_base < 0) {
         // если fix_ruch - устанавливаем по центру
         if (fix_ruch || _row.fix_ruch != -3) {
-          _row.h_ruch = (len / 2).round(0);
-          return _row.fix_ruch = fix_ruch ? -2 : -1;
+          _row.fix_ruch = fix_ruch ? -2 : -1;
+          return handle_height = (len / 2).round(0);
         }
       }
       else if (handle_height_base > 0) {
         // если fix_ruch - устанавливаем по базовой высоте
         if (fix_ruch || _row.fix_ruch != -3) {
-          _row.h_ruch = handle_height_base;
-          return _row.fix_ruch = fix_ruch ? -2 : -1;
+          _row.fix_ruch = fix_ruch ? -2 : -1
+          return handle_height = handle_height_base;
         }
       }
     }
@@ -1800,6 +1802,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     });
 
     project.notify(this, 'update', {h_ruch: true});
+    return handle_height;
   }
 
   /**
@@ -1812,19 +1815,24 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   set h_ruch(v) {
     const {layer, _row, project} = this;
+
     if (layer) {
-      if (_row.fix_ruch == -3 && v == 0) {
+      const old_fix_ruch = _row.fix_ruch;
+      if (old_fix_ruch == -3) {
         _row.fix_ruch = -1;
       }
-      this.update_handle_height();
+      const h_ruch = this.update_handle_height();
+      if(h_ruch && (old_fix_ruch != -3 || v == 0)){
+        _row.h_ruch = h_ruch;
+      }
+
       // Высота ручки по умолчению
       // >0: фиксированная высота
       // =0: Высоту задаёт оператор
-      // -1: Ручка по центру, но можно редактировать
-      // -2: Ручка по центру, нельзя редактировать
-      if (v != 0 && (_row.fix_ruch == 0 || _row.fix_ruch == -1 || _row.fix_ruch == -3)) {
+      // <1: Ручка по центру, можно ли редактировать, зависит от реквизита fix_ruch
+      if (v != 0 && [0, -1, -3].indexOf(_row.fix_ruch) != -1) {
         _row.h_ruch = v;
-        if (_row.fix_ruch == -1) {
+        if (_row.fix_ruch == -1 && v != h_ruch) {
           _row.fix_ruch = -3;
         }
       }

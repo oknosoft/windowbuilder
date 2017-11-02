@@ -1,7 +1,11 @@
 # Created by .ignore support plugin (hsz.mobi)
-.idea/
+
+# Editor files
+.idea
+.vscode
+
+# Exclude compiled files
 build/
-data/.idea/
 data/11.js
 data/_design.json
 data/imgs/
@@ -16,12 +20,15 @@ dist/wnd_debug.js
 dist/worker.js
 doc/out/
 lib/
-localstorage/
-node_modules/
+/public/dist/dhtmlx_debug.js
 src/metadata-ui
 src/templates/imgs
 src/templates/printing_plates/20160408/
 src/templates/printing_plates/invoice_signature.png
 src/zarchive/socket_1c/
-v2/
 zarchive/
+
+# npm files
+node_modules
+package-lock.json
+*.log

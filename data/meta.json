@@ -1,6 +1,6 @@
 ﻿{
   "_id": "meta",
-  "_rev": "94-400545c940f30797e091931f44ca4424",
+  "_rev": "151-d1e67a71fa3cbc530830f429fec00ab6",
   "enm": {
     "inset_attrs_options": [
       {
@@ -49,6 +49,72 @@
         "order": 2,
         "name": "ДолжныБытьКрепленияИмпостов",
         "synonym": "Должны быть крепления импостов"
+      }
+    ],
+    "transfer_operations_options": [
+      {
+        "order": 0,
+        "name": "НетПереноса",
+        "synonym": "Нет переноса"
+      },
+      {
+        "order": 1,
+        "name": "НаПримыкающий",
+        "synonym": "На примыкающий"
+      }
+    ],
+    "offset_options": [
+      {
+        "order": 0,
+        "name": "ОтНачалаСтороны",
+        "synonym": "От начала стороны"
+      },
+      {
+        "order": 1,
+        "name": "ОтКонцаСтороны",
+        "synonym": "От конца стороны"
+      },
+      {
+        "order": 2,
+        "name": "ОтСередины",
+        "synonym": "От середины"
+      },
+      {
+        "order": 3,
+        "name": "ОтРучки",
+        "synonym": "От ручки"
+      },
+      {
+        "order": 4,
+        "name": "РазмерПоФальцу",
+        "synonym": "Размер по фальцу"
+      },
+      {
+        "order": 5,
+        "name": "Формула",
+        "synonym": "Формула"
+      }
+    ],
+    "contraction_options": [
+      {
+        "order": 0,
+        "name": "ОтДлиныСтороны",
+        "synonym": "От длины стороны"
+      },
+      {
+        "order": 1,
+        "name": "ОтВысотыРучки",
+        "synonym": "От высоты ручки"
+      },
+      {
+        "order": 2,
+        "name": "ОтДлиныСтороныМинусВысотыРучки",
+        "synonym": "От длины стороны минус высота ручки"
+      },
+      {
+        "order": 3,
+        "name": "ФиксированнаяДлина",
+        "synonym": "Фиксированная длина"
       }
     ],
     "align_types": [
@@ -105,6 +171,23 @@
         "order": 4,
         "name": "Прочее",
         "synonym": "Прочее"
+      }
+    ],
+    "text_aligns": [
+      {
+        "order": 0,
+        "name": "left",
+        "synonym": "Лево"
+      },
+      {
+        "order": 1,
+        "name": "right",
+        "synonym": "Право"
+      },
+      {
+        "order": 2,
+        "name": "center",
+        "synonym": "Центр"
       }
     ],
     "planning_detailing": [
@@ -262,6 +345,23 @@
         "synonym": "Для ограничения доступности"
       }
     ],
+    "open_directions": [
+      {
+        "order": 0,
+        "name": "Левое",
+        "synonym": "Левое"
+      },
+      {
+        "order": 1,
+        "name": "Правое",
+        "synonym": "Правое"
+      },
+      {
+        "order": 2,
+        "name": "Откидное",
+        "synonym": "Откидное"
+      }
+    ],
     "orientations": [
       {
         "order": 0,
@@ -279,99 +379,152 @@
         "synonym": "Наклонная"
       }
     ],
-    "transfer_operations_options": [
+    "positions": [
       {
         "order": 0,
-        "name": "НетПереноса",
-        "synonym": "Нет переноса"
+        "name": "Любое",
+        "synonym": "Любое"
       },
       {
         "order": 1,
-        "name": "НаПримыкающий",
-        "synonym": "На примыкающий"
-      }
-    ],
-    "offset_options": [
-      {
-        "order": 0,
-        "name": "ОтНачалаСтороны",
-        "synonym": "От начала стороны"
-      },
-      {
-        "order": 1,
-        "name": "ОтКонцаСтороны",
-        "synonym": "От конца стороны"
+        "name": "Верх",
+        "synonym": "Верх"
       },
       {
         "order": 2,
-        "name": "ОтРучки",
-        "synonym": "От ручки"
+        "name": "Низ",
+        "synonym": "Низ"
       },
       {
         "order": 3,
-        "name": "РазмерПоФальцу",
-        "synonym": "Размер по фальцу"
+        "name": "Лев",
+        "synonym": "Лев"
       },
       {
         "order": 4,
-        "name": "Формула",
-        "synonym": "Формула"
+        "name": "Прав",
+        "synonym": "Прав"
+      },
+      {
+        "order": 5,
+        "name": "ЦентрВертикаль",
+        "synonym": "Центр вертикаль"
+      },
+      {
+        "order": 6,
+        "name": "ЦентрГоризонталь",
+        "synonym": "Центр горизонталь"
+      },
+      {
+        "order": 7,
+        "name": "Центр",
+        "synonym": "Центр"
+      },
+      {
+        "order": 8,
+        "name": "ЛевВерх",
+        "synonym": "Лев верх"
+      },
+      {
+        "order": 9,
+        "name": "ЛевНиз",
+        "synonym": "Лев низ"
+      },
+      {
+        "order": 10,
+        "name": "ПравВерх",
+        "synonym": "Прав верх"
+      },
+      {
+        "order": 11,
+        "name": "ПравНиз",
+        "synonym": "Прав низ"
       }
     ],
-    "contraction_options": [
+    "gender": [
       {
         "order": 0,
-        "name": "ОтДлиныСтороны",
-        "synonym": "От длины стороны"
+        "name": "Мужской",
+        "synonym": "Мужской"
       },
       {
         "order": 1,
-        "name": "ОтВысотыРучки",
-        "synonym": "От высоты ручки"
+        "name": "Женский",
+        "synonym": "Женский"
+      }
+    ],
+    "parameters_keys_applying": [
+      {
+        "order": 0,
+        "name": "НаправлениеДоставки",
+        "synonym": "Направление доставки"
+      },
+      {
+        "order": 1,
+        "name": "РабочийЦентр",
+        "synonym": "Рабочий центр"
       },
       {
         "order": 2,
-        "name": "ОтДлиныСтороныМинусВысотыРучки",
-        "synonym": "От длины стороны минус высота ручки"
+        "name": "Технология",
+        "synonym": "Технология"
       },
       {
         "order": 3,
-        "name": "ФиксированнаяДлина",
-        "synonym": "Фиксированная длина"
+        "name": "Ценообразование",
+        "synonym": "Ценообразование"
       }
     ],
-    "text_aligns": [
+    "buyers_order_states": [
       {
         "order": 0,
-        "name": "left",
-        "synonym": "Лево"
+        "name": "ОжидаетсяСогласование",
+        "synonym": "Ожидается согласование"
       },
       {
         "order": 1,
-        "name": "right",
-        "synonym": "Право"
+        "name": "ОжидаетсяАвансДоОбеспечения",
+        "synonym": "Ожидается аванс (до обеспечения)"
       },
       {
         "order": 2,
-        "name": "center",
-        "synonym": "Центр"
-      }
-    ],
-    "open_directions": [
-      {
-        "order": 0,
-        "name": "Левое",
-        "synonym": "Левое"
+        "name": "ГотовКОбеспечению",
+        "synonym": "Готов к обеспечению"
       },
       {
-        "order": 1,
-        "name": "Правое",
-        "synonym": "Правое"
+        "order": 3,
+        "name": "ОжидаетсяПредоплатаДоОтгрузки",
+        "synonym": "Ожидается предоплата (до отгрузки)"
       },
       {
-        "order": 2,
-        "name": "Откидное",
-        "synonym": "Откидное"
+        "order": 4,
+        "name": "ОжидаетсяОбеспечение",
+        "synonym": "Ожидается обеспечение"
+      },
+      {
+        "order": 5,
+        "name": "ГотовКОтгрузке",
+        "synonym": "Готов к отгрузке"
+      },
+      {
+        "order": 6,
+        "name": "ВПроцессеОтгрузки",
+        "synonym": "В процессе отгрузки"
+      },
+      {
+        "order": 7,
+        "name": "ОжидаетсяОплатаПослеОтгрузки",
+        "synonym": "Ожидается оплата (после отгрузки)"
+      },
+      {
+        "order": 8,
+        "name": "ГотовКЗакрытию",
+        "synonym": "Готов к закрытию"
+      },
+      {
+        "order": 9,
+        "name": "Закрыт",
+        "synonym": "Закрыт"
       }
     ],
     "count_calculating_ways": [
@@ -450,382 +603,6 @@
         "synonym": "с Арт2"
       }
     ],
-    "cnn_sides": [
-      {
-        "order": 0,
-        "name": "Изнутри",
-        "synonym": "Изнутри"
-      },
-      {
-        "order": 1,
-        "name": "Снаружи",
-        "synonym": "Снаружи"
-      },
-      {
-        "order": 2,
-        "name": "Любая",
-        "synonym": "Любая"
-      }
-    ],
-    "lay_split_types": [
-      {
-        "order": 0,
-        "name": "ДелениеГоризонтальных",
-        "synonym": "Деление горизонтальных"
-      },
-      {
-        "order": 1,
-        "name": "ДелениеВертикальных",
-        "synonym": "Деление вертикальных"
-      },
-      {
-        "order": 2,
-        "name": "КрестВСтык",
-        "synonym": "Крест в стык"
-      },
-      {
-        "order": 3,
-        "name": "КрестПересечение",
-        "synonym": "Крест пересечение"
-      }
-    ],
-    "cutting_optimization_types": [
-      {
-        "order": 0,
-        "name": "Нет",
-        "synonym": "Нет"
-      },
-      {
-        "order": 1,
-        "name": "РасчетНарезки",
-        "synonym": "Расчет нарезки"
-      },
-      {
-        "order": 2,
-        "name": "НельзяВращатьПереворачивать",
-        "synonym": "Нельзя вращать переворачивать"
-      },
-      {
-        "order": 3,
-        "name": "ТолькоНомераЯчеек",
-        "synonym": "Только номера ячеек"
-      }
-    ],
-    "open_types": [
-      {
-        "order": 0,
-        "name": "Глухое",
-        "synonym": "Глухое"
-      },
-      {
-        "order": 1,
-        "name": "Поворотное",
-        "synonym": "Поворотное"
-      },
-      {
-        "order": 2,
-        "name": "Откидное",
-        "synonym": "Откидное"
-      },
-      {
-        "order": 3,
-        "name": "ПоворотноОткидное",
-        "synonym": "Поворотно-откидное"
-      },
-      {
-        "order": 4,
-        "name": "Раздвижное",
-        "synonym": "Раздвижное"
-      },
-      {
-        "order": 5,
-        "name": "Неподвижное",
-        "synonym": "Неподвижное"
-      }
-    ],
-    "elm_types": [
-      {
-        "order": 0,
-        "name": "Рама",
-        "synonym": "Рама"
-      },
-      {
-        "order": 1,
-        "name": "Створка",
-        "synonym": "Створка"
-      },
-      {
-        "order": 2,
-        "name": "Импост",
-        "synonym": "Импост"
-      },
-      {
-        "order": 3,
-        "name": "Штульп",
-        "synonym": "Штульп"
-      },
-      {
-        "order": 4,
-        "name": "Стекло",
-        "synonym": "Стекло - стеклопакет"
-      },
-      {
-        "order": 5,
-        "name": "Заполнение",
-        "synonym": "Заполнение - сэндвич"
-      },
-      {
-        "order": 6,
-        "name": "Раскладка",
-        "synonym": "Раскладка - фальшпереплет"
-      },
-      {
-        "order": 7,
-        "name": "Текст",
-        "synonym": "Текст"
-      },
-      {
-        "order": 8,
-        "name": "Линия",
-        "synonym": "Линия"
-      },
-      {
-        "order": 9,
-        "name": "Размер",
-        "synonym": "Размер"
-      },
-      {
-        "order": 10,
-        "name": "Добор",
-        "synonym": "Доборный проф."
-      },
-      {
-        "order": 11,
-        "name": "Соединитель",
-        "synonym": "Соединит. профиль"
-      },
-      {
-        "order": 12,
-        "name": "Москитка",
-        "synonym": "Москитн. сетка"
-      },
-      {
-        "order": 13,
-        "name": "Фурнитура",
-        "synonym": "Фурнитура"
-      },
-      {
-        "order": 14,
-        "name": "Макрос",
-        "synonym": "Макрос обр центра"
-      },
-      {
-        "order": 15,
-        "name": "Подоконник",
-        "synonym": "Подоконник"
-      },
-      {
-        "order": 16,
-        "name": "Водоотлив",
-        "synonym": "Водоотлив"
-      },
-      {
-        "order": 17,
-        "name": "ОшибкаКритическая",
-        "synonym": "Ошибка критическая"
-      },
-      {
-        "order": 18,
-        "name": "ОшибкаИнфо",
-        "synonym": "Ошибка инфо"
-      },
-      {
-        "order": 19,
-        "name": "Визуализация",
-        "synonym": "Визуализация"
-      },
-      {
-        "order": 20,
-        "name": "Прочее",
-        "synonym": "Прочее"
-      },
-      {
-        "order": 21,
-        "name": "Продукция",
-        "synonym": "Продукция"
-      },
-      {
-        "order": 22,
-        "name": "Доставка",
-        "synonym": "Доставка"
-      },
-      {
-        "order": 23,
-        "name": "РаботыЦеха",
-        "synonym": "Работы цеха"
-      },
-      {
-        "order": 24,
-        "name": "РаботыМонтажа",
-        "synonym": "Работы монтажа"
-      },
-      {
-        "order": 25,
-        "name": "Монтаж",
-        "synonym": "Монтаж"
-      },
-      {
-        "order": 26,
-        "name": "Уплотнение",
-        "synonym": "Уплотнение"
-      },
-      {
-        "order": 27,
-        "name": "Арматура",
-        "synonym": "Армирование"
-      },
-      {
-        "order": 28,
-        "name": "Штапик",
-        "synonym": "Штапик"
-      },
-      {
-        "order": 29,
-        "name": "Порог",
-        "synonym": "Порог"
-      },
-      {
-        "order": 30,
-        "name": "Подставочник",
-        "synonym": "Подставочн. профиль"
-      }
-    ],
-    "positions": [
-      {
-        "order": 0,
-        "name": "Любое",
-        "synonym": "Любое"
-      },
-      {
-        "order": 1,
-        "name": "Верх",
-        "synonym": "Верх"
-      },
-      {
-        "order": 2,
-        "name": "Низ",
-        "synonym": "Низ"
-      },
-      {
-        "order": 3,
-        "name": "Лев",
-        "synonym": "Лев"
-      },
-      {
-        "order": 4,
-        "name": "Прав",
-        "synonym": "Прав"
-      },
-      {
-        "order": 5,
-        "name": "ЦентрВертикаль",
-        "synonym": "Центр вертикаль"
-      },
-      {
-        "order": 6,
-        "name": "ЦентрГоризонталь",
-        "synonym": "Центр горизонталь"
-      },
-      {
-        "order": 7,
-        "name": "Центр",
-        "synonym": "Центр"
-      },
-      {
-        "order": 8,
-        "name": "ЛевВерх",
-        "synonym": "Лев верх"
-      },
-      {
-        "order": 9,
-        "name": "ЛевНиз",
-        "synonym": "Лев низ"
-      },
-      {
-        "order": 10,
-        "name": "ПравВерх",
-        "synonym": "Прав верх"
-      },
-      {
-        "order": 11,
-        "name": "ПравНиз",
-        "synonym": "Прав низ"
-      }
-    ],
-    "gender": [
-      {
-        "order": 0,
-        "name": "Мужской",
-        "synonym": "Мужской"
-      },
-      {
-        "order": 1,
-        "name": "Женский",
-        "synonym": "Женский"
-      }
-    ],
-    "buyers_order_states": [
-      {
-        "order": 0,
-        "name": "ОжидаетсяСогласование",
-        "synonym": "Ожидается согласование"
-      },
-      {
-        "order": 1,
-        "name": "ОжидаетсяАвансДоОбеспечения",
-        "synonym": "Ожидается аванс (до обеспечения)"
-      },
-      {
-        "order": 2,
-        "name": "ГотовКОбеспечению",
-        "synonym": "Готов к обеспечению"
-      },
-      {
-        "order": 3,
-        "name": "ОжидаетсяПредоплатаДоОтгрузки",
-        "synonym": "Ожидается предоплата (до отгрузки)"
-      },
-      {
-        "order": 4,
-        "name": "ОжидаетсяОбеспечение",
-        "synonym": "Ожидается обеспечение"
-      },
-      {
-        "order": 5,
-        "name": "ГотовКОтгрузке",
-        "synonym": "Готов к отгрузке"
-      },
-      {
-        "order": 6,
-        "name": "ВПроцессеОтгрузки",
-        "synonym": "В процессе отгрузки"
-      },
-      {
-        "order": 7,
-        "name": "ОжидаетсяОплатаПослеОтгрузки",
-        "synonym": "Ожидается оплата (после отгрузки)"
-      },
-      {
-        "order": 8,
-        "name": "ГотовКЗакрытию",
-        "synonym": "Готов к закрытию"
-      },
-      {
-        "order": 9,
-        "name": "Закрыт",
-        "synonym": "Закрыт"
-      }
-    ],
     "vat_rates": [
       {
         "order": 0,
@@ -866,6 +643,23 @@
         "order": 7,
         "name": "НДС20_120",
         "synonym": "20% / 120%"
+      }
+    ],
+    "cnn_sides": [
+      {
+        "order": 0,
+        "name": "Изнутри",
+        "synonym": "Изнутри"
+      },
+      {
+        "order": 1,
+        "name": "Снаружи",
+        "synonym": "Снаружи"
+      },
+      {
+        "order": 2,
+        "name": "Любая",
+        "synonym": "Любая"
       }
     ],
     "inserts_types": [
@@ -911,26 +705,31 @@
       },
       {
         "order": 8,
+        "name": "Водоотлив",
+        "synonym": "Водоотлив"
+      },
+      {
+        "order": 9,
         "name": "Стеклопакет",
         "synonym": "Стеклопакет"
       },
       {
-        "order": 9,
+        "order": 10,
         "name": "ТиповойСтеклопакет",
         "synonym": "Типовой стеклопакет"
       },
       {
-        "order": 10,
+        "order": 11,
         "name": "Раскладка",
         "synonym": "Раскладка"
       },
       {
-        "order": 11,
+        "order": 12,
         "name": "Набор",
         "synonym": "Набор"
       },
       {
-        "order": 12,
+        "order": 13,
         "name": "Монтаж",
         "synonym": "Монтаж"
       }
@@ -950,6 +749,28 @@
         "order": 2,
         "name": "Газ",
         "synonym": "Газ"
+      }
+    ],
+    "lay_split_types": [
+      {
+        "order": 0,
+        "name": "ДелениеГоризонтальных",
+        "synonym": "Деление горизонтальных"
+      },
+      {
+        "order": 1,
+        "name": "ДелениеВертикальных",
+        "synonym": "Деление вертикальных"
+      },
+      {
+        "order": 2,
+        "name": "КрестВСтык",
+        "synonym": "Крест в стык"
+      },
+      {
+        "order": 3,
+        "name": "КрестПересечение",
+        "synonym": "Крест пересечение"
       }
     ],
     "contact_information_types": [
@@ -1004,6 +825,60 @@
         "order": 2,
         "name": "Работа",
         "synonym": "Работа, техоперация"
+      }
+    ],
+    "cutting_optimization_types": [
+      {
+        "order": 0,
+        "name": "Нет",
+        "synonym": "Нет"
+      },
+      {
+        "order": 1,
+        "name": "РасчетНарезки",
+        "synonym": "Расчет нарезки"
+      },
+      {
+        "order": 2,
+        "name": "НельзяВращатьПереворачивать",
+        "synonym": "Нельзя вращать переворачивать"
+      },
+      {
+        "order": 3,
+        "name": "ТолькоНомераЯчеек",
+        "synonym": "Только номера ячеек"
+      }
+    ],
+    "open_types": [
+      {
+        "order": 0,
+        "name": "Глухое",
+        "synonym": "Глухое"
+      },
+      {
+        "order": 1,
+        "name": "Поворотное",
+        "synonym": "Поворотное"
+      },
+      {
+        "order": 2,
+        "name": "Откидное",
+        "synonym": "Откидное"
+      },
+      {
+        "order": 3,
+        "name": "ПоворотноОткидное",
+        "synonym": "Поворотно-откидное"
+      },
+      {
+        "order": 4,
+        "name": "Раздвижное",
+        "synonym": "Раздвижное"
+      },
+      {
+        "order": 5,
+        "name": "Неподвижное",
+        "synonym": "Неподвижное"
       }
     ],
     "sz_line_types": [
@@ -1092,6 +967,163 @@
         "synonym": "Продукция"
       }
     ],
+    "elm_types": [
+      {
+        "order": 0,
+        "name": "Рама",
+        "synonym": "Рама"
+      },
+      {
+        "order": 1,
+        "name": "Створка",
+        "synonym": "Створка"
+      },
+      {
+        "order": 2,
+        "name": "Импост",
+        "synonym": "Импост"
+      },
+      {
+        "order": 3,
+        "name": "Штульп",
+        "synonym": "Штульп"
+      },
+      {
+        "order": 4,
+        "name": "Стекло",
+        "synonym": "Стекло - стеклопакет"
+      },
+      {
+        "order": 5,
+        "name": "Заполнение",
+        "synonym": "Заполнение - сэндвич"
+      },
+      {
+        "order": 6,
+        "name": "Раскладка",
+        "synonym": "Раскладка - фальшпереплет"
+      },
+      {
+        "order": 7,
+        "name": "Текст",
+        "synonym": "Текст"
+      },
+      {
+        "order": 8,
+        "name": "Линия",
+        "synonym": "Линия"
+      },
+      {
+        "order": 9,
+        "name": "Размер",
+        "synonym": "Размер"
+      },
+      {
+        "order": 10,
+        "name": "Добор",
+        "synonym": "Доборный проф."
+      },
+      {
+        "order": 11,
+        "name": "Соединитель",
+        "synonym": "Соединит. профиль"
+      },
+      {
+        "order": 12,
+        "name": "Водоотлив",
+        "synonym": "Водоотлив"
+      },
+      {
+        "order": 13,
+        "name": "Москитка",
+        "synonym": "Москитн. сетка"
+      },
+      {
+        "order": 14,
+        "name": "Фурнитура",
+        "synonym": "Фурнитура"
+      },
+      {
+        "order": 15,
+        "name": "Макрос",
+        "synonym": "Макрос обр центра"
+      },
+      {
+        "order": 16,
+        "name": "Подоконник",
+        "synonym": "Подоконник"
+      },
+      {
+        "order": 17,
+        "name": "ОшибкаКритическая",
+        "synonym": "Ошибка критическая"
+      },
+      {
+        "order": 18,
+        "name": "ОшибкаИнфо",
+        "synonym": "Ошибка инфо"
+      },
+      {
+        "order": 19,
+        "name": "Визуализация",
+        "synonym": "Визуализация"
+      },
+      {
+        "order": 20,
+        "name": "Прочее",
+        "synonym": "Прочее"
+      },
+      {
+        "order": 21,
+        "name": "Продукция",
+        "synonym": "Продукция"
+      },
+      {
+        "order": 22,
+        "name": "Доставка",
+        "synonym": "Доставка"
+      },
+      {
+        "order": 23,
+        "name": "РаботыЦеха",
+        "synonym": "Работы цеха"
+      },
+      {
+        "order": 24,
+        "name": "РаботыМонтажа",
+        "synonym": "Работы монтажа"
+      },
+      {
+        "order": 25,
+        "name": "Монтаж",
+        "synonym": "Монтаж"
+      },
+      {
+        "order": 26,
+        "name": "Уплотнение",
+        "synonym": "Уплотнение"
+      },
+      {
+        "order": 27,
+        "name": "Арматура",
+        "synonym": "Армирование"
+      },
+      {
+        "order": 28,
+        "name": "Штапик",
+        "synonym": "Штапик"
+      },
+      {
+        "order": 29,
+        "name": "Порог",
+        "synonym": "Порог"
+      },
+      {
+        "order": 30,
+        "name": "Подставочник",
+        "synonym": "Подставочн. профиль"
+      }
+    ],
     "planning_phases": [
       {
         "order": 0,
@@ -1124,7 +1156,7 @@
   },
   "cat": {
     "params_links": {
-      "name": "пзСвязиПараметров",
+      "name": "СвязиПараметров",
       "splitted": true,
       "synonym": "Связи параметров",
       "illustration": "Подчиненные параметры",
@@ -1285,6 +1317,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -1538,8 +1571,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "hide": true
+      "cachable": "doc_ram"
     },
     "organization_bank_accounts": {
       "name": "БанковскиеСчетаОрганизаций",
@@ -1672,8 +1704,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "hide": true
+      "cachable": "ram"
     },
     "property_values_hierarchy": {
       "name": "ЗначенияСвойствОбъектовИерархия",
@@ -1761,8 +1792,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "banks_qualifier": {
       "name": "КлассификаторБанковРФ",
@@ -1881,8 +1911,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "hide": true
+      "cachable": "ram"
     },
     "destinations": {
       "name": "НаборыДополнительныхРеквизитовИСведений",
@@ -2015,8 +2044,7 @@
           }
         }
       },
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "countries": {
       "name": "СтраныМира",
@@ -2081,8 +2109,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "formulas": {
       "name": "Формулы",
@@ -2219,11 +2246,50 @@
               "choice_groups_elm": "elm",
               "type": {
                 "types": [
+                  "cat.nom_groups",
+                  "cat.production_params",
+                  "cat.inserts",
+                  "cat.price_groups",
+                  "cat.currencies",
+                  "enm.open_directions",
+                  "cat.projects",
+                  "cat.individuals",
+                  "cat.users",
+                  "cat.delivery_areas",
+                  "cat.color_price_groups",
+                  "cat.elm_visualization",
+                  "cat.property_values_hierarchy",
+                  "cat.formulas",
+                  "cat.delivery_directions",
+                  "cat.property_values",
+                  "boolean",
+                  "cat.divisions",
+                  "enm.align_types",
+                  "cat.parameters_keys",
+                  "cat.partners",
+                  "cat.nonstandard_attributes",
                   "string",
-                  "cch.properties"
+                  "enm.sz_line_types",
+                  "cat.organizations",
+                  "date",
+                  "cat.units",
+                  "number",
+                  "enm.planning_detailing",
+                  "cat.work_shifts",
+                  "cat.cashboxes",
+                  "cat.nom",
+                  "cat.cnns",
+                  "cat.furns",
+                  "enm.vat_rates",
+                  "cat.stores",
+                  "cch.properties",
+                  "cat.clrs"
                 ],
-                "str_len": 50,
-                "is_ref": true
+                "is_ref": true,
+                "str_len": 1024,
+                "date_part": "date_time",
+                "digits": 15,
+                "fraction_figits": 3
               }
             },
             "value": {
@@ -2287,6 +2353,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -2528,8 +2595,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "contact_information_kinds": {
       "name": "ВидыКонтактнойИнформации",
@@ -2615,8 +2681,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "nom_kinds": {
       "name": "ВидыНоменклатуры",
@@ -2696,8 +2761,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "contracts": {
       "name": "ДоговорыКонтрагентов",
@@ -3008,7 +3072,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram"
+      "cachable": "doc_ram"
     },
     "nom_units": {
       "name": "ЕдиницыИзмерения",
@@ -3211,8 +3275,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "meta_ids": {
       "name": "ИдентификаторыОбъектовМетаданных",
@@ -3363,8 +3426,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "doc_ram",
-      "grouping": "array"
+      "cachable": "doc_ram"
     },
     "units": {
       "name": "КлассификаторЕдиницИзмерения",
@@ -3853,6 +3915,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -3877,7 +3940,7 @@
           }
         }
       },
-      "cachable": "ram"
+      "cachable": "doc_ram"
     },
     "nom": {
       "name": "Номенклатура",
@@ -4415,6 +4478,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -4875,6 +4939,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -4899,8 +4964,7 @@
           }
         }
       },
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "inserts": {
       "name": "Вставки",
@@ -4919,6 +4983,17 @@
       "main_presentation_name": true,
       "code_length": 9,
       "fields": {
+        "article": {
+          "synonym": "Артикул ",
+          "multiline_mode": false,
+          "tooltip": "Для формулы",
+          "type": {
+            "types": [
+              "string"
+            ],
+            "str_len": 100
+          }
+        },
         "insert_type": {
           "synonym": "Тип вставки",
           "multiline_mode": false,
@@ -4934,7 +5009,8 @@
                 "Контур",
                 "Изделие",
                 "Подоконник",
-                "Откос"
+                "Откос",
+                "Водоотлив"
               ]
             }
           ],
@@ -5461,7 +5537,7 @@
             "step": {
               "synonym": "Шаг",
               "multiline_mode": false,
-              "tooltip": "Шаг (по умолчанию, в горизонтальном направлении)",
+              "tooltip": "Шаг (расчет по точкам)",
               "type": {
                 "types": [
                   "number"
@@ -5497,7 +5573,7 @@
             "do_center": {
               "synonym": "↔",
               "multiline_mode": false,
-              "tooltip": "Положение поперечин от центра",
+              "tooltip": "Положение от края или от центра",
               "type": {
                 "types": [
                   "boolean"
@@ -5689,6 +5765,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -5751,6 +5828,30 @@
               "string"
             ],
             "str_len": 0
+          }
+        },
+        "sorting_field": {
+          "synonym": "Порядок",
+          "multiline_mode": false,
+          "tooltip": "Используется для упорядочивания",
+          "type": {
+            "types": [
+              "number"
+            ],
+            "digits": 5,
+            "fraction_figits": 0
+          }
+        },
+        "applying": {
+          "synonym": "Применение",
+          "multiline_mode": false,
+          "tooltip": "",
+          "choice_groups_elm": "elm",
+          "type": {
+            "types": [
+              "enm.parameters_keys_applying"
+            ],
+            "is_ref": true
           }
         },
         "predefined_name": {
@@ -5903,6 +6004,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -5926,7 +6028,7 @@
           }
         }
       },
-      "cachable": "ram"
+      "cachable": "doc_ram"
     },
     "production_params": {
       "name": "пзПараметрыПродукции",
@@ -5997,16 +6099,6 @@
             ],
             "digits": 6,
             "fraction_figits": 0
-          }
-        },
-        "is_drainage": {
-          "synonym": "Это водоотлив",
-          "multiline_mode": false,
-          "tooltip": "Не используется в текущей версии",
-          "type": {
-            "types": [
-              "boolean"
-            ]
           }
         },
         "allow_open_cnn": {
@@ -6080,12 +6172,13 @@
                     "Створка",
                     "Импост",
                     "Штульп",
-                    "Стекло",
                     "Заполнение",
                     "Раскладка",
                     "Добор",
                     "Соединитель",
-                    "Москитка"
+                    "Москитка",
+                    "Водоотлив",
+                    "Стекло"
                   ]
                 }
               ],
@@ -6244,6 +6337,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -6335,6 +6429,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -6446,6 +6541,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -6628,8 +6724,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "cnns": {
       "name": "пзСоединения",
@@ -7348,6 +7443,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -7749,13 +7845,23 @@
             "handle_height_base": {
               "synonym": "Выс. ручк.",
               "multiline_mode": false,
-              "tooltip": "Высота ручки по умолчению.\n>0: фиксированная высота\n=0: Высоту задаёт оператор\n-1: Ручка по центру, но можно редактировать\n-2: Ручка по центру, нельзя редактировать",
+              "tooltip": "Высота ручки по умолчению.\n>0: фиксированная высота\n=0: Высоту задаёт оператор\n<0: Ручка по центру",
               "type": {
                 "types": [
                   "number"
                 ],
                 "digits": 6,
                 "fraction_figits": 0
+              }
+            },
+            "fix_ruch": {
+              "synonym": "Высота ручки фиксирована",
+              "multiline_mode": false,
+              "tooltip": "Запрещено изменять высоту ручки",
+              "type": {
+                "types": [
+                  "boolean"
+                ]
               }
             },
             "handle_height_min": {
@@ -7909,6 +8015,16 @@
                   "enm.transfer_operations_options"
                 ],
                 "is_ref": true
+              }
+            },
+            "overmeasure": {
+              "synonym": "Припуск",
+              "multiline_mode": false,
+              "tooltip": "Учитывать припуск длины элемента (например, на сварку)",
+              "type": {
+                "types": [
+                  "boolean"
+                ]
               }
             },
             "is_main_specification_row": {
@@ -8107,6 +8223,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -8340,8 +8457,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "color_price_groups": {
       "name": "ЦветоЦеновыеГруппы",
@@ -8436,8 +8552,7 @@
           }
         }
       },
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "divisions": {
       "name": "Подразделения",
@@ -8583,6 +8698,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -8606,8 +8722,7 @@
           }
         }
       },
-      "cachable": "doc_ram",
-      "grouping": "array"
+      "cachable": "doc_ram"
     },
     "users": {
       "name": "Пользователи",
@@ -8733,11 +8848,12 @@
           "synonym": "Суффикс CouchDB",
           "multiline_mode": false,
           "tooltip": "Для разделения данных в CouchDB",
+          "mandatory": true,
           "type": {
             "types": [
               "string"
             ],
-            "str_len": 6
+            "str_len": 4
           }
         },
         "direct": {
@@ -8835,6 +8951,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -9018,6 +9135,7 @@
                 "types": [
                   "cat.individuals",
                   "cat.users",
+                  "cat.nom_prices_types",
                   "cat.divisions",
                   "cat.partners",
                   "cat.organizations",
@@ -9244,6 +9362,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -9267,8 +9386,7 @@
           }
         }
       },
-      "cachable": "doc",
-      "grouping": "array"
+      "cachable": "doc"
     },
     "stores": {
       "name": "Склады",
@@ -9413,6 +9531,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -9436,8 +9555,7 @@
           }
         }
       },
-      "cachable": "doc_ram",
-      "grouping": "array"
+      "cachable": "doc_ram"
     },
     "work_shifts": {
       "name": "Смены",
@@ -9499,8 +9617,7 @@
           }
         }
       },
-      "cachable": "doc",
-      "grouping": "array"
+      "cachable": "doc"
     },
     "cash_flow_articles": {
       "name": "СтатьиДвиженияДенежныхСредств",
@@ -9566,8 +9683,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "doc",
-      "grouping": "array"
+      "cachable": "doc"
     },
     "nom_prices_types": {
       "name": "ТипыЦенНоменклатуры",
@@ -9665,8 +9781,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "doc_ram"
     },
     "individuals": {
       "name": "ФизическиеЛица",
@@ -10047,8 +10162,7 @@
           }
         }
       },
-      "cachable": "ram",
-      "hide": true
+      "cachable": "ram"
     },
     "characteristics": {
       "name": "ХарактеристикиНоменклатуры",
@@ -10198,6 +10312,30 @@
             "is_ref": true
           }
         },
+        "base_block": {
+          "synonym": "Типовой блок",
+          "multiline_mode": false,
+          "tooltip": "",
+          "choice_groups_elm": "elm",
+          "type": {
+            "types": [
+              "cat.characteristics"
+            ],
+            "is_ref": true
+          }
+        },
+        "sys": {
+          "synonym": "Система",
+          "multiline_mode": false,
+          "tooltip": "",
+          "choice_groups_elm": "elm",
+          "type": {
+            "types": [
+              "cat.production_params"
+            ],
+            "is_ref": true
+          }
+        },
         "note": {
           "synonym": "Комментарий",
           "multiline_mode": false,
@@ -10217,18 +10355,6 @@
           "type": {
             "types": [
               "cat.partners"
-            ],
-            "is_ref": true
-          }
-        },
-        "sys": {
-          "synonym": "Система",
-          "multiline_mode": false,
-          "tooltip": "",
-          "choice_groups_elm": "elm",
-          "type": {
-            "types": [
-              "cat.production_params"
             ],
             "is_ref": true
           }
@@ -10850,6 +10976,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -11084,6 +11211,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -11516,8 +11644,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "nom_groups": {
       "name": "ГруппыФинансовогоУчетаНоменклатуры",
@@ -11572,8 +11699,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "ram",
-      "grouping": "array"
+      "cachable": "ram"
     },
     "insert_bind": {
       "name": "ПривязкиВставок",
@@ -11592,21 +11718,6 @@
       "main_presentation_name": true,
       "code_length": 9,
       "fields": {
-        "inset": {
-          "synonym": "Вставка",
-          "multiline_mode": false,
-          "tooltip": "",
-          "choice_groups_elm": "elm",
-          "mandatory": true,
-          "type": {
-            "types": [
-              "cat.inserts",
-              "cat.formulas",
-              "cat.furns"
-            ],
-            "is_ref": true
-          }
-        },
         "key": {
           "synonym": "Ключ",
           "multiline_mode": false,
@@ -11653,9 +11764,66 @@
               "synonym": "Номенклатура",
               "multiline_mode": false,
               "tooltip": "",
+              "mandatory": true,
               "type": {
                 "types": [
+                  "cat.production_params",
                   "cat.nom"
+                ],
+                "is_ref": true
+              }
+            }
+          }
+        },
+        "inserts": {
+          "name": "Вставки",
+          "synonym": "Вставки",
+          "tooltip": "Дополнительные вставки в изделие и контуры",
+          "fields": {
+            "inset": {
+              "synonym": "Вставка",
+              "multiline_mode": false,
+              "tooltip": "",
+              "choice_params": [
+                {
+                  "name": "insert_type",
+                  "path": [
+                    "МоскитнаяСетка",
+                    "Контур",
+                    "Изделие",
+                    "Водоотлив",
+                    "Откос",
+                    "Подоконник"
+                  ]
+                }
+              ],
+              "choice_groups_elm": "elm",
+              "mandatory": true,
+              "type": {
+                "types": [
+                  "cat.inserts"
+                ],
+                "is_ref": true
+              }
+            },
+            "elm_type": {
+              "synonym": "Контур",
+              "multiline_mode": false,
+              "tooltip": "",
+              "choice_params": [
+                {
+                  "name": "ref",
+                  "path": [
+                    "Рама",
+                    "Створка",
+                    "Продукция"
+                  ]
+                }
+              ],
+              "choice_groups_elm": "elm",
+              "type": {
+                "types": [
+                  "enm.elm_types"
                 ],
                 "is_ref": true
               }
@@ -11721,7 +11889,7 @@
             ]
           }
         },
-        "Упаковка": {
+        "packing": {
           "synonym": "Упаковка",
           "multiline_mode": false,
           "tooltip": "Дополнительная услуга",
@@ -11744,8 +11912,7 @@
         }
       },
       "tabular_sections": {},
-      "cachable": "doc",
-      "grouping": "array"
+      "cachable": "doc"
     },
     "delivery_directions": {
       "name": "НаправленияДоставки",
@@ -11798,8 +11965,7 @@
           }
         }
       },
-      "cachable": "doc",
-      "grouping": "array"
+      "cachable": "doc"
     }
   },
   "doc": {
@@ -11888,8 +12054,7 @@
           }
         }
       },
-      "cachable": "remote",
-      "hide": true
+      "cachable": "remote"
     },
     "purchase": {
       "name": "ПоступлениеТоваровУслуг",
@@ -12402,6 +12567,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -12425,8 +12591,7 @@
           }
         }
       },
-      "cachable": "remote",
-      "hide": true
+      "cachable": "remote"
     },
     "work_centers_task": {
       "name": "НарядРЦ",
@@ -13937,6 +14102,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -14191,8 +14357,7 @@
           }
         }
       },
-      "cachable": "doc",
-      "hide": true
+      "cachable": "doc"
     },
     "credit_card_order": {
       "name": "ОплатаОтПокупателяПлатежнойКартой",
@@ -14430,6 +14595,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -14453,8 +14619,7 @@
           }
         }
       },
-      "cachable": "remote",
-      "hide": true
+      "cachable": "remote"
     },
     "work_centers_performance": {
       "name": "МощностиРЦ",
@@ -14800,6 +14965,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -14823,8 +14989,7 @@
           }
         }
       },
-      "cachable": "remote",
-      "hide": true
+      "cachable": "remote"
     },
     "credit_bank_order": {
       "name": "ПлатежноеПоручениеИсходящее",
@@ -15062,6 +15227,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -15085,8 +15251,7 @@
           }
         }
       },
-      "cachable": "remote",
-      "hide": true
+      "cachable": "remote"
     },
     "debit_cash_order": {
       "name": "ПриходныйКассовыйОрдер",
@@ -15348,6 +15513,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -15371,8 +15537,7 @@
           }
         }
       },
-      "cachable": "remote",
-      "hide": true
+      "cachable": "remote"
     },
     "credit_cash_order": {
       "name": "РасходныйКассовыйОрдер",
@@ -15634,6 +15799,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -15657,8 +15823,7 @@
           }
         }
       },
-      "cachable": "remote",
-      "hide": true
+      "cachable": "remote"
     },
     "selling": {
       "name": "РеализацияТоваровУслуг",
@@ -16136,6 +16301,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -16292,18 +16458,6 @@
                 ],
                 "digits": 15,
                 "fraction_figits": 4
-              }
-            },
-            "currency": {
-              "synonym": "Валюта",
-              "multiline_mode": false,
-              "tooltip": "",
-              "choice_groups_elm": "elm",
-              "type": {
-                "types": [
-                  "cat.currencies"
-                ],
-                "is_ref": true
               }
             }
           }
@@ -16686,9 +16840,7 @@
           }
         }
       },
-      "cachable": "doc",
-      "grouping": "record",
-      "hide": true
+      "cachable": "doc"
     },
     "currency_courses": {
       "name": "КурсыВалют",
@@ -16750,8 +16902,7 @@
         }
       },
       "attributes": {},
-      "cachable": "ram",
-      "grouping": "record"
+      "cachable": "ram"
     },
     "margin_coefficients": {
       "name": "пзМаржинальныеКоэффициентыИСкидки",
@@ -17003,8 +17154,7 @@
           }
         }
       },
-      "cachable": "ram",
-      "grouping": "record"
+      "cachable": "doc_ram"
     }
   },
   "areg": {},
@@ -17125,9 +17275,7 @@
             }
           }
         }
-      },
-      "cachable": "e1cib",
-      "hide": true
+      }
     },
     "buyers_order": {
       "name": "ЗаказПокупателя",
@@ -17529,6 +17677,7 @@
                   "cat.furns",
                   "enm.vat_rates",
                   "cat.stores",
+                  "cch.properties",
                   "cat.clrs"
                 ],
                 "is_ref": true,
@@ -18123,9 +18272,7 @@
             }
           }
         }
-      },
-      "cachable": "e1cib",
-      "hide": true
+      }
     },
     "builder_lay_impost": {
       "name": "builder_lay_impost",
@@ -18327,9 +18474,7 @@
           }
         }
       },
-      "tabular_sections": {},
-      "cachable": "e1cib",
-      "hide": true
+      "tabular_sections": {}
     },
     "builder_pen": {
       "name": "builder_pen",
@@ -18356,7 +18501,8 @@
                 "Импост",
                 "Раскладка",
                 "Добор",
-                "Соединитель"
+                "Соединитель",
+                "Водоотлив"
               ]
             }
           ],
@@ -18413,9 +18559,7 @@
           }
         }
       },
-      "tabular_sections": {},
-      "cachable": "e1cib",
-      "hide": true
+      "tabular_sections": {}
     },
     "builder_text": {
       "name": "builder_text",
@@ -18535,9 +18679,7 @@
           }
         }
       },
-      "tabular_sections": {},
-      "cachable": "e1cib",
-      "hide": true
+      "tabular_sections": {}
     }
   },
   "rep": {
@@ -18940,8 +19082,7 @@
             }
           }
         }
-      },
-      "cachable": "e1cib"
+      }
     }
   },
   "cch": {
@@ -19203,10 +19344,20 @@
       "main_presentation_name": true,
       "code_length": 0,
       "fields": {
+        "shown": {
+          "synonym": "Виден",
+          "multiline_mode": false,
+          "tooltip": "Настройка видимости дополнительного реквизита",
+          "type": {
+            "types": [
+              "boolean"
+            ]
+          }
+        },
         "sorting_field": {
           "synonym": "Реквизит доп упорядочивания",
           "multiline_mode": false,
-          "tooltip": "Используется для упорядочивания (служебный)",
+          "tooltip": "Используется для сортировки в списках свойств (служебный)",
           "type": {
             "types": [
               "number"
@@ -19237,16 +19388,6 @@
             ]
           }
         },
-        "shown": {
-          "synonym": "Виден",
-          "multiline_mode": false,
-          "tooltip": "Настройка видимости дополнительного реквизита",
-          "type": {
-            "types": [
-              "boolean"
-            ]
-          }
-        },
         "list": {
           "synonym": "Список",
           "multiline_mode": false,
@@ -19257,6 +19398,16 @@
             ],
             "digits": 1,
             "fraction_figits": 0
+          }
+        },
+        "mandatory": {
+          "synonym": "Заполнять обязательно",
+          "multiline_mode": false,
+          "tooltip": "Настройка проверки заполненности дополнительного реквизита",
+          "type": {
+            "types": [
+              "boolean"
+            ]
           }
         },
         "note": {
@@ -19293,10 +19444,10 @@
             "str_len": 0
           }
         },
-        "is_extra_property": {
-          "synonym": "Это дополнительное сведение",
+        "include_to_name": {
+          "synonym": "Включать в наименование",
           "multiline_mode": false,
-          "tooltip": "Свойство является дополнительным сведением, а не дополнительным реквизитом",
+          "tooltip": "Добавлять значение параметра в наименование продукции",
           "type": {
             "types": [
               "boolean"
@@ -19315,20 +19466,20 @@
             "str_len": 75
           }
         },
-        "mandatory": {
-          "synonym": "Заполнять обязательно",
+        "is_extra_property": {
+          "synonym": "Это дополнительное сведение",
           "multiline_mode": false,
-          "tooltip": "Настройка проверки заполненности дополнительного реквизита",
+          "tooltip": "Свойство является дополнительным сведением, а не дополнительным реквизитом",
           "type": {
             "types": [
               "boolean"
             ]
           }
         },
-        "include_to_name": {
-          "synonym": "Включать в наименование",
+        "include_to_description": {
+          "synonym": "Включать в описание",
           "multiline_mode": false,
-          "tooltip": "",
+          "tooltip": "Добавлять имя и значение параметра в строку описания продукции",
           "type": {
             "types": [
               "boolean"
@@ -19389,6 +19540,7 @@
               "cat.furns",
               "enm.vat_rates",
               "cat.stores",
+              "cch.properties",
               "cat.clrs"
             ],
             "is_ref": true,
@@ -19536,6 +19688,7 @@
                   "enm.cnn_types",
                   "cat.nom",
                   "enm.obj_delivery_states",
+                  "enm.parameters_keys_applying",
                   "cat.cnns",
                   "cat.furns",
                   "enm.inserts_glass_types",
@@ -19606,6 +19759,9 @@
     "ВариантУкорочения",
     "ВариантыАтрибутовВставок",
     "ВариантыКрепленияИмпостов",
+    "ВариантыПереносаОпераций",
+    "ВариантыСмещений",
+    "ВариантыУкорочений",
     "ВариантыУравнивания",
     "ВводПоСтроке",
     "ВедениеВзаиморасчетов",
@@ -19634,10 +19790,12 @@
     "ВидыЗатрат",
     "ВидыКонтактнойИнформации",
     "ВидыНоменклатуры",
+    "ВидыПолейФормы",
     "ВидыРабочихЦентров",
     "ВидыТранспортныхСредств",
     "Визуализация",
     "ВключатьВНаименование",
+    "ВключатьВОписание",
     "Владелец",
     "ВладелецДополнительныхЗначений",
     "Владельцы",
@@ -19653,6 +19811,7 @@
     "ВыборГруппИЭлементов",
     "Выполнена",
     "ВыпуклаяДуга",
+    "ВыравниваниеТекста",
     "Высота",
     "ВысотаМакс",
     "ВысотаМин",
@@ -19743,7 +19902,6 @@
     "ИнтеграцияВидыСравнений",
     "ИнтеграцияКешСсылок",
     "ИнтеграцияНастройкиОтчетовИСписков",
-    "ИнтеграцияПраваПользователей",
     "ИнтеграцияСостоянияТранспорта",
     "ИнтеграцияТипВыгрузки",
     "ИнтеграцияТипКеширования",
@@ -19838,7 +19996,9 @@
     "НаименованиеСокращенное",
     "НалогообложениеНДС",
     "Направление",
+    "НаправлениеОткрывания",
     "НаправленияДоставки",
+    "НаправленияСортировки",
     "НаПроем",
     "НарядРЦ",
     "НастройкиОткрывания",
@@ -19846,8 +20006,6 @@
     "НаценкаВнешн",
     "Недействителен",
     "НеполноеОткрывание",
-    "НеРаботаетВремяНачала",
-    "НеРаботаетВремяОкончания",
     "Нестандарт",
     "Номенклатура",
     "Номенклатура1",
@@ -19904,24 +20062,10 @@
     "ПарныйРаскрой",
     "Период",
     "ПериодыСмены",
-    "пзВариантыПереносаОпераций",
-    "пзВариантыСмещений",
-    "пзВариантыУкорочений",
     "пзВизуализацияЭлементов",
-    "пзВыравниваниеТекста",
     "пзМаржинальныеКоэффициентыИСкидки",
-    "пзНаправлениеОткрывания",
     "пзПараметрыПродукции",
-    "пзСвязиПараметров",
     "пзСоединения",
-    "пзСпособыРасчетаКоличества",
-    "пзСпособыРасчетаУгла",
-    "пзСпособыУстановкиСпецификации",
-    "пзСторонаСоединения",
-    "пзТипыДеленияРаскладки",
-    "пзТипыОптимизацийРаскроя",
-    "пзТипыОткрывания",
-    "пзТипыЭлементов",
     "пзФурнитура",
     "пзЦвета",
     "Планирование",
@@ -19948,6 +20092,7 @@
     "Положение",
     "ПоложениеСтворокПоИмпостам",
     "ПоложениеЭлемента",
+    "ПоложенияЗаголовка",
     "Получатель",
     "ПолФизическихЛиц",
     "Пользователи",
@@ -19971,6 +20116,8 @@
     "Привязки",
     "ПривязкиВставок",
     "ПризнакиНестандартов",
+    "Применение",
+    "ПримененияКлючейПараметров",
     "Принудительно",
     "Приоритет",
     "Припуск",
@@ -20026,6 +20173,7 @@
     "СВИФТБИК",
     "Свойство",
     "Связи",
+    "СвязиПараметров",
     "СвязиПараметровВыбора",
     "СвязьПоТипу",
     "Сделка",
@@ -20070,18 +20218,20 @@
     "СпособРасчетаКоличества",
     "СпособРасчетаУгла",
     "СпособУстановкиКурса",
+    "СпособыРасчетаКоличества",
+    "СпособыРасчетаУгла",
     "СпособыУстановкиКурсаВалюты",
+    "СпособыУстановкиСпецификации",
     "СПоставщиком",
     "СрокДействия",
     "Ссылка",
     "СтавкаНДС",
     "СтавкиНДС",
     "СтандартнаяВысотаРучки",
+    "СтандартныйПериод",
     "Старт",
     "Стартован",
-    "СтатусМатериальныхЗатрат",
     "СтатусыЗаказов",
-    "СтатусыМатериальныхЗатратНаПроизводство",
     "СтатьиДвиженияДенежныхСредств",
     "СтатьиЗатрат",
     "СтатьяДвиженияДенежныхСредств",
@@ -20094,6 +20244,7 @@
     "Сторона2",
     "СторонаСоединения",
     "СторонаЭлемента",
+    "СтороныСоединений",
     "Страна",
     "СтраныМира",
     "СтраховойНомерПФР",
@@ -20140,10 +20291,13 @@
     "ТипЦенСебестоимость",
     "ТипыВставок",
     "ТипыВставокСтеклопакета",
+    "ТипыДеленияРаскладки",
     "ТипыДенежныхСредств",
     "ТипыКонтактнойИнформации",
     "ТипыНалогообложенияНДС",
     "ТипыНоменклатуры",
+    "ТипыОптимизацийРаскроя",
+    "ТипыОткрывания",
     "ТипыРазмерныхЛиний",
     "ТипыСобытий",
     "ТипыСоединений",
@@ -20151,6 +20305,7 @@
     "ТипыСтруктурныхЕдиниц",
     "ТипыСчетов",
     "ТипыЦенНоменклатуры",
+    "ТипыЭлементов",
     "ТипЭлемента",
     "Товары",
     "Толщина",
@@ -20173,6 +20328,7 @@
     "Узел2",
     "Укорочение",
     "УкорочениеПоКонтуру",
+    "Упаковка",
     "Управленческий",
     "Условие",
     "УсловныхИзделий",
@@ -20195,7 +20351,6 @@
     "Формулы",
     "Фурнитура",
     "ФурнитураЦвет",
-    "ХарактерЗатрат",
     "Характеристика",
     "ХарактеристикаАксессуаров",
     "ХарактеристикаНоменклатуры",
@@ -20236,7 +20391,6 @@
     "Элементы",
     "Эскиз",
     "ЭтоАксессуар",
-    "ЭтоВодоотлив",
     "ЭтоГруппа",
     "ЭтоДополнительноеСведение",
     "ЭтоНабор",
@@ -20296,6 +20450,9 @@
     "contraction_option",
     "inset_attrs_options",
     "impost_mount_options",
+    "transfer_operations_options",
+    "offset_options",
+    "contraction_options",
     "align_types",
     "input_by_string",
     "mutual_settlements",
@@ -20324,10 +20481,12 @@
     "costs_kinds",
     "contact_information_kinds",
     "nom_kinds",
+    "data_field_kinds",
     "work_center_kinds",
     "motor_vehicle_kinds",
     "visualization",
     "include_to_name",
+    "include_to_description",
     "owner",
     "extra_values_owner",
     "owners",
@@ -20343,6 +20502,7 @@
     "choice_groups_elm",
     "completed",
     "arc_available",
+    "text_aligns",
     "height",
     "hmax",
     "hmin",
@@ -20433,7 +20593,6 @@
     "comparison_types",
     "integration_links_cache",
     "scheme_settings",
-    "users_acl",
     "obj_delivery_states",
     "unload_type",
     "caching_type",
@@ -20528,7 +20687,9 @@
     "name_short",
     "vat",
     "direction",
+    "open_directions",
     "delivery_directions",
+    "sort_directions",
     "on_aperture",
     "work_centers_task",
     "open_tunes",
@@ -20536,8 +20697,6 @@
     "extra_charge_external",
     "invalid",
     "partial_opening",
-    "not_work_begin_time",
-    "not_work_end_time",
     "nonstandard",
     "nom",
     "nom1",
@@ -20594,24 +20753,10 @@
     "double_cut",
     "period",
     "work_shift_periodes",
-    "transfer_operations_options",
-    "offset_options",
-    "contraction_options",
     "elm_visualization",
-    "text_aligns",
     "margin_coefficients",
-    "open_directions",
     "production_params",
-    "params_links",
     "cnns",
-    "count_calculating_ways",
-    "angle_calculating_ways",
-    "specification_installation_methods",
-    "cnn_sides",
-    "lay_split_types",
-    "cutting_optimization_types",
-    "open_types",
-    "elm_types",
     "furns",
     "clrs",
     "planning",
@@ -20638,6 +20783,7 @@
     "pos",
     "flap_pos_by_impost",
     "positions",
+    "label_positions",
     "recipient",
     "gender",
     "users",
@@ -20661,6 +20807,8 @@
     "bindings",
     "insert_bind",
     "nonstandard_attributes",
+    "applying",
+    "parameters_keys_applying",
     "forcibly",
     "priority",
     "overmeasure",
@@ -20716,6 +20864,7 @@
     "swift",
     "property",
     "links",
+    "params_links",
     "choice_links",
     "choice_type",
     "trans",
@@ -20760,18 +20909,20 @@
     "count_calc_method",
     "angle_calc_method",
     "course_installation_method",
+    "count_calculating_ways",
+    "angle_calculating_ways",
     "course_installation_methods",
+    "specification_installation_methods",
     "with_supplier",
     "validity",
     "ref",
     "vat_rate",
     "vat_rates",
     "handle_height_base",
+    "standard_period",
     "start",
     "started",
-    "costs_material_feed",
     "invoice_conditions",
-    "costs_material_feeds",
     "cash_flow_articles",
     "cost_items",
     "cash_flow_article",
@@ -20784,6 +20935,7 @@
     "sd2",
     "cnn_side",
     "elm_side",
+    "cnn_sides",
     "country",
     "countries",
     "pfr_number",
@@ -20830,10 +20982,13 @@
     "price_type_first_cost",
     "inserts_types",
     "inserts_glass_types",
+    "lay_split_types",
     "cash_flow_types",
     "contact_information_types",
     "vat_types",
     "nom_types",
+    "cutting_optimization_types",
+    "open_types",
     "sz_line_types",
     "event_types",
     "cnn_types",
@@ -20841,6 +20996,7 @@
     "structural_unit_types",
     "account_types",
     "nom_prices_types",
+    "elm_types",
     "elm_type",
     "goods",
     "thickness",
@@ -20863,6 +21019,7 @@
     "node2",
     "contraction",
     "contraction_by_contour",
+    "packing",
     "managerial",
     "condition",
     "condition_products",
@@ -20885,7 +21042,6 @@
     "formulas",
     "furn",
     "clr_furn",
-    "costs_character",
     "characteristic",
     "accessory_characteristic",
     "nom_characteristic",
@@ -20926,7 +21082,6 @@
     "elmnts",
     "outline",
     "is_accessory",
-    "is_drainage",
     "is_folder",
     "is_extra_property",
     "is_set",

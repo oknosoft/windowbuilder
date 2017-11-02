@@ -18,12 +18,6 @@ module.exports = function settings(prm = {}) {
       password: '1gNjzYQKBlcD',
     }],
 
-    // если понадобится обратиться к 1С, будем использовать irest
-    irest_enabled: true,
-
-    // расположение rest-сервиса 1c по умолчанию
-    rest_path: '',
-
     // расположение couchdb для сайта
     couch_path: "/couchdb/wb_",
     //couch_path: "https://light.oknosoft.ru/couchdb/wb_",
@@ -42,6 +36,10 @@ module.exports = function settings(prm = {}) {
 
     // объявляем номер демо-зоны
     zone_demo: 1,
+
+    // если use_meta === false, не используем базу meta в рантайме
+    // см.: https://github.com/oknosoft/metadata.js/issues/255
+    use_meta: false,
 
     // размер вложений
     attachment_max_size: 2000000,

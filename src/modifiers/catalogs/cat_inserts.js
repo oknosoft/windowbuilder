@@ -372,7 +372,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
         // если строка спецификации не добавлена на предыдущем шаге, делаем это сейчас
         row_spec = new_spec_row({row_spec, elm, row_base: row_ins_spec, origin, spec, ox});
       }
-      // для вставок в профиль способ расчета количество не учитывается
+      // для вставок в профиль способ расчета количества не учитывается
       else if(profile_items.indexOf(_row.elm_type) != -1 || row_ins_spec.count_calc_method == ДляЭлемента){
         calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
       }
@@ -402,6 +402,18 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
             if(this.check_restrictions(row_ins_spec, row_prm, true)){
               row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
+              // при расчете по периметру, выполняем формулу для каждого ребра периметра
+              if(!row_ins_spec.formula.empty()){
+                const qty = row_ins_spec.formula.execute({
+                  ox: ox,
+                  elm: rib.profile || rib,
+                  cnstr: len_angl && len_angl.cnstr || 0,
+                  inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
+                  row_ins: row_ins_spec,
+                  row_spec: row_spec,
+                  len: rib.len
+                });
+              }
               calc_qty_len(row_spec, row_ins_spec, rib.len);
               calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
             }
@@ -474,6 +486,9 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
           });
           if(row_ins_spec.count_calc_method == ПоФормуле){
             row_spec.qty = qty;
+          }
+          else if(row_ins_spec.formula.condition_formula && !qty){
+            row_spec.qty = 0;
           }
         }
         calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);

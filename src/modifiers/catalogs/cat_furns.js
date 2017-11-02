@@ -150,9 +150,9 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
     afurn_set.push(this.ref);
 
-    this.selection_params.each((row) => aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param));
+    this.selection_params.each((row) => {aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param)});
 
-    this.specification.each((row) => row.nom instanceof $p.CatFurns && row.nom.add_furn_prm(aprm, afurn_set));
+    this.specification.each((row) => {row.nom instanceof $p.CatFurns && row.nom.add_furn_prm(aprm, afurn_set)});
 
     return aprm;
 
@@ -308,7 +308,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
         if(row_furn.quantity){
           const row_spec = res.add(row_furn);
           row_spec.origin = this;
-          if(!row_furn.formula.empty()){
+          if(!row_furn.formula.empty() && !row_furn.formula.condition_formula){
             row_furn.formula.execute({ox, contour, row_furn, row_spec});
           }
         }
@@ -331,10 +331,16 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
    * @param cache {Object}
    */
   check_restrictions(contour, cache) {
-    const {elm, dop, handle_height_min, handle_height_max} = this;
+    const {elm, dop, handle_height_min, handle_height_max, formula} = this;
     const {direction, h_ruch, cnstr} = contour;
 
+    // проверка по высоте ручки
     if(h_ruch < handle_height_min || (handle_height_max && h_ruch > handle_height_max)){
+      return false;
+    }
+
+    // проверка по формуле
+    if(!cache.ignore_formulas && !formula.empty() && formula.condition_formula && !formula.execute({ox: cache.ox, contour, row_furn: this})) {
       return false;
     }
 
