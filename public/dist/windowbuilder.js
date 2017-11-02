@@ -3761,7 +3761,7 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   }
 
-  update_handle_height(cache) {
+  update_handle_height(cache, from_setter) {
 
     const {furn, _row, project} = this;
     const {furn_set, handle_side} = furn;
@@ -3819,7 +3819,10 @@ class Contour extends AbstractFilling(paper.Layer) {
       }
     });
 
-    project.notify(this, 'update', {h_ruch: true});
+    if(handle_height && !from_setter && _row.h_ruch != handle_height){
+      _row.h_ruch = handle_height;
+      project._dp._manager.emit('update', this, {h_ruch: true});
+    }
     return handle_height;
   }
 
@@ -3836,7 +3839,7 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (old_fix_ruch == -3) {
         _row.fix_ruch = -1;
       }
-      const h_ruch = this.update_handle_height();
+      const h_ruch = this.update_handle_height(null, true);
       if(h_ruch && (old_fix_ruch != -3 || v == 0)){
         _row.h_ruch = h_ruch;
       }
@@ -3851,8 +3854,8 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
     else {
       _row.h_ruch = 0;
-      project.notify(this, 'update', {h_ruch: true});
     }
+    project._dp._manager.emit('update', this, {h_ruch: true});
   }
 
   get side_count() {
