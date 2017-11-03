@@ -42,9 +42,6 @@ import CalcOrderList from '../CalcOrderList';
 class AppRoot extends Component {
 
   static propTypes = {
-    history: PropTypes.shape({
-      push: PropTypes.func.isRequired,
-    }).isRequired,
     handleOffline: PropTypes.func.isRequired,
     handleNavigate: PropTypes.func.isRequired,
     handleIfaceState: PropTypes.func.isRequired,
@@ -84,7 +81,7 @@ class AppRoot extends Component {
     }
 
     // если это первый запуск или couch_direct и offline, переходим на страницу login
-    if(!path_log_in && ((data_empty === true && !user.try_log_in) || (couch_direct && !user.logged_in))) {
+    if(!path_log_in && ((data_empty === true && !user.try_log_in && !user.logged_in) || (couch_direct && offline))) {
       props.handleNavigate('/login');
       res = false;
     }
