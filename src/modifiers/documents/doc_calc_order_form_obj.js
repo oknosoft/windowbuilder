@@ -684,8 +684,9 @@
     }
 
     function rsvg_click(ref, dbl) {
-      o.production.find_rows({characteristic: ref}, (row) => {
-        wnd.elmnts.grids.production.selectRow(row.row - 1, dbl === 0);
+      const {production} = wnd.elmnts.grids;
+      production && o.production.find_rows({characteristic: ref}, (row) => {
+        production.selectRow(row.row - 1, dbl === 0);
         dbl && open_builder();
         return false;
       });
@@ -695,12 +696,12 @@
      * добавляет строку материала
      */
     function add_material() {
-      const row = o.create_product_row({grid: wnd.elmnts.grids.production}).row - 1;
+      const {production} = wnd.elmnts.grids;
+      const row = o.create_product_row({grid: production}).row - 1;
       setTimeout(() => {
-        const grid = wnd.elmnts.grids.production;
-        grid.selectRow(row);
-        grid.selectCell(row, grid.getColIndexById('nom'), false, true, true);
-        grid.cells().open_selection();
+        production.selectRow(row);
+        production.selectCell(row, production.getColIndexById('nom'), false, true, true);
+        production.cells().open_selection();
       });
     }
 
