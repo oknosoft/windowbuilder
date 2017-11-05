@@ -3084,11 +3084,11 @@ class Pricing {
     }
   }
 
-  by_range(startkey) {
+  by_range(startkey, step = 0) {
 
     return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
       {
-        limit: 5000,
+        limit: 600,
         include_docs: false,
         startkey: startkey || [''],
         endkey: ['\ufff0'],
@@ -3097,8 +3097,10 @@ class Pricing {
       })
       .then((res) => {
         this.build_cache(res.rows);
-        if (res.rows.length == 5000) {
-          return this.by_range(res.rows[res.rows.length - 1].key);
+        step += 1;
+        $p.adapters.pouch.emit('nom_prices', step);
+        if (res.rows.length == 600) {
+          return this.by_range(res.rows[res.rows.length - 1].key, step);
         }
       });
   }

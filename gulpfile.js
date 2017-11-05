@@ -10,7 +10,6 @@ const gulp = require('gulp'),
   strip = require('gulp-strip-comments'),
 	rename = require('gulp-rename'),
 	resources = require('./scripts/resource-concat.js'),
-	prebuild = require('./scripts/prebuild.js'),
 	umd = require('gulp-umd'),
   wrap = require("gulp-wrap"),
   uglify = require('gulp-uglify');
@@ -22,7 +21,6 @@ gulp.task('build-iface', function(){
 	return gulp.src([
 	  //'./dist/worker.js',
     //'./src/metadata/init.js',
-		//'./data/prebuild.js',
 		'./data/merged_wb_templates.js',
 		'./src/modifiers/**/*.js',
 		'./src/widgets/*.js',

@@ -5,9 +5,13 @@
  *
  * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
  */
-module.exports = function settings(prm = {}) {
+module.exports = function settings(prm) {
 
-  Object.assign(prm, {
+  if(!prm){
+    prm = {};
+  };
+
+  return Object.assign(prm, {
 
     // разделитель для localStorage
     local_storage_prefix: 'wb_',
@@ -41,7 +45,7 @@ module.exports = function settings(prm = {}) {
     // см.: https://github.com/oknosoft/metadata.js/issues/255
     use_meta: false,
 
-    // размер вложений
+    // размер вложений 2Mb
     attachment_max_size: 2000000,
 
     // разрешаем сохранение пароля
@@ -54,7 +58,5 @@ module.exports = function settings(prm = {}) {
     use_google_geo: 'AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM',
 
   });
-
-  return prm;
 
 };

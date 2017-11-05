@@ -8,8 +8,11 @@ import {routerMiddleware} from 'react-router-redux';
 // асинхронные действия
 import thunk from 'redux-thunk';
 
-// события pouchdb
+// стандартные события pouchdb и метаданных
 import {metaMiddleware} from 'metadata-redux';
+
+// дополнительные события pouchdb
+import {customPouchMiddleware} from './reducers/pouchdb';
 
 // Create a history of your choosing (we're using a browser history in this case)
 export const history = createHistory();
@@ -21,7 +24,7 @@ export default function configureStore(preloadedState) {
     preloadedState,
     compose(
       // add middleware for intercepting and dispatching async and navigation actions
-      applyMiddleware(thunk, routerMiddleware(history), metaMiddleware($p)),
+      applyMiddleware(thunk, routerMiddleware(history), metaMiddleware($p), customPouchMiddleware($p)),
 
       /**
        * Conditionally add the Redux DevTools extension enhancer
