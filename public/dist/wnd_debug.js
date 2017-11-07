@@ -1123,7 +1123,7 @@ $p.CatElm_visualization.prototype.__define({
 	draw: {
 		value: function (elm, layer, offset) {
 
-		  const {CompoundPath} = elm.project._scope;
+		  const {CompoundPath, constructor} = elm.project._scope;
 
 			let subpath;
 
@@ -1157,36 +1157,42 @@ $p.CatElm_visualization.prototype.__define({
 					opacity: elm.opacity
 				});
 
-				var angle_hor;
-				if(elm.is_linear() || offset < 0)
-					angle_hor = elm.generatrix.getTangentAt(0).angle;
-				else if(offset > elm.generatrix.length)
-					angle_hor = elm.generatrix.getTangentAt(elm.generatrix.length).angle;
-				else
-					angle_hor = elm.generatrix.getTangentAt(offset).angle;
+				if(elm instanceof constructor.Filling) {
+          subpath.position = elm.bounds.topLeft.add([20,10]);
+        }
+        else {
 
-				if((this.rotate != -1 || elm.orientation == $p.enm.orientations.Горизонтальная) && angle_hor != this.angle_hor){
-					subpath.rotation = angle_hor - this.angle_hor;
-				}
+          var angle_hor;
+          if(elm.is_linear() || offset < 0)
+            angle_hor = elm.generatrix.getTangentAt(0).angle;
+          else if(offset > elm.generatrix.length)
+            angle_hor = elm.generatrix.getTangentAt(elm.generatrix.length).angle;
+          else
+            angle_hor = elm.generatrix.getTangentAt(offset).angle;
 
-				offset += elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
+          if((this.rotate != -1 || elm.orientation == $p.enm.orientations.Горизонтальная) && angle_hor != this.angle_hor){
+            subpath.rotation = angle_hor - this.angle_hor;
+          }
 
-				const p0 = elm.generatrix.getPointAt(offset > elm.generatrix.length ? elm.generatrix.length : offset || 0);
+          offset += elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
 
-				if(this.elm_side == -1){
-          const p1 = elm.rays.inner.getNearestPoint(p0);
-          const p2 = elm.rays.outer.getNearestPoint(p0);
+          const p0 = elm.generatrix.getPointAt(offset > elm.generatrix.length ? elm.generatrix.length : offset || 0);
 
-					subpath.position = p1.add(p2).divide(2);
+          if(this.elm_side == -1){
+            const p1 = elm.rays.inner.getNearestPoint(p0);
+            const p2 = elm.rays.outer.getNearestPoint(p0);
 
-				}else if(!this.elm_side){
-					subpath.position = elm.rays.inner.getNearestPoint(p0);
+            subpath.position = p1.add(p2).divide(2);
 
-				}else{
-					subpath.position = elm.rays.outer.getNearestPoint(p0);
-				}
+          }else if(!this.elm_side){
+            subpath.position = elm.rays.inner.getNearestPoint(p0);
+
+          }else{
+            subpath.position = elm.rays.outer.getNearestPoint(p0);
+          }
+        }
+
 			}
-
 		}
 	}
 
@@ -3078,11 +3084,11 @@ class Pricing {
     }
   }
 
-  by_range(startkey) {
+  by_range(startkey, step = 0) {
 
     return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
       {
-        limit: 5000,
+        limit: 600,
         include_docs: false,
         startkey: startkey || [''],
         endkey: ['\ufff0'],
@@ -3091,8 +3097,10 @@ class Pricing {
       })
       .then((res) => {
         this.build_cache(res.rows);
-        if (res.rows.length == 5000) {
-          return this.by_range(res.rows[res.rows.length - 1].key);
+        step += 1;
+        $p.adapters.pouch.emit('nom_prices', step);
+        if (res.rows.length == 600) {
+          return this.by_range(res.rows[res.rows.length - 1].key, step);
         }
       });
   }
@@ -4958,6 +4966,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
       ДоговорСрокДействия: moment(contract.validity).format('L'),
       ЗаказНомер: this.number_doc,
+      Примечание: this.note,
+      НомерВнутренний: this.number_internal,
       Контрагент: this.partner.presentation,
       КонтрагентОписание: this.partner.long_presentation,
       КонтрагентДокумент: '',
@@ -5137,6 +5147,10 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Цвет: characteristic.clr.name,
       Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
       Площадь: row.s,
+      Длинна: row.len,
+      Ширина: row.width,
+      ВсегоПлощадь: row.s*row.quantity,
+      Примечание: row.note,
       Номенклатура: nom.name_full || nom.name,
       Характеристика: characteristic.name,
       Заполнения: '',
@@ -6321,20 +6335,21 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
     }
 
     function rsvg_click(ref, dbl) {
-      o.production.find_rows({characteristic: ref}, (row) => {
-        wnd.elmnts.grids.production.selectRow(row.row - 1, dbl === 0);
+      const {production} = wnd.elmnts.grids;
+      production && o.production.find_rows({characteristic: ref}, (row) => {
+        production.selectRow(row.row - 1, dbl === 0);
         dbl && open_builder();
         return false;
       });
     }
 
     function add_material() {
-      const row = o.create_product_row({grid: wnd.elmnts.grids.production}).row - 1;
+      const {production} = wnd.elmnts.grids;
+      const row = o.create_product_row({grid: production}).row - 1;
       setTimeout(() => {
-        const grid = wnd.elmnts.grids.production;
-        grid.selectRow(row);
-        grid.selectCell(row, grid.getColIndexById('nom'), false, true, true);
-        grid.cells().open_selection();
+        production.selectRow(row);
+        production.selectCell(row, production.getColIndexById('nom'), false, true, true);
+        production.cells().open_selection();
       });
     }
 

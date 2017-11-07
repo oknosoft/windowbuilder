@@ -34,7 +34,7 @@ import MetaTreePage from '../MetaTreePage';
 // логин и свойства подключения
 import FrmLogin from 'metadata-react/FrmLogin';
 
-import withNavigateAndMeta from 'metadata-redux/src/withNavigateAndMeta';
+import {withNavigateAndMeta} from 'metadata-redux';
 
 import Builder from '../Builder';
 import CalcOrderList from '../CalcOrderList';
@@ -42,9 +42,6 @@ import CalcOrderList from '../CalcOrderList';
 class AppRoot extends Component {
 
   static propTypes = {
-    history: PropTypes.shape({
-      push: PropTypes.func.isRequired,
-    }).isRequired,
     handleOffline: PropTypes.func.isRequired,
     handleNavigate: PropTypes.func.isRequired,
     handleIfaceState: PropTypes.func.isRequired,
@@ -84,7 +81,7 @@ class AppRoot extends Component {
     }
 
     // если это первый запуск или couch_direct и offline, переходим на страницу login
-    if(!path_log_in && ((data_empty === true && !user.try_log_in) || (couch_direct && !user.logged_in))) {
+    if(!path_log_in && ((data_empty === true && !user.try_log_in && !user.logged_in) || (couch_direct && offline))) {
       props.handleNavigate('/login');
       res = false;
     }
@@ -116,7 +113,7 @@ class AppRoot extends Component {
 
   render() {
     const {props} = this;
-    const {snack, alert, doc_ram_loaded} = props;
+    const {snack, alert, doc_ram_loaded, nom_prices_step} = props;
 
     return (
       <div>
@@ -125,7 +122,7 @@ class AppRoot extends Component {
           (!props.path_log_in && !props.complete_loaded) ?
             <DumbScreen
               title={doc_ram_loaded ? 'Подготовка данных в памяти...' : 'Загрузка из IndexedDB...'}
-              page={{text: doc_ram_loaded ? 'Цены и характеристики...' : 'Почти готово...'}}
+              page={{text: doc_ram_loaded ? `Цены и характеристики${nom_prices_step ? ` (такт №${nom_prices_step})` : ''}...` : 'Почти готово...'}}
               top={92}/>
             :
             <Switch>

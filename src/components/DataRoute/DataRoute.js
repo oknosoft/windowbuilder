@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {Switch, Route} from 'react-router';
 
 import WindowSizer from 'metadata-react/WindowSize';
-import withObj from 'metadata-redux/src/withObj';
+import {withObj} from 'metadata-redux';
 
 import DataList from 'metadata-react/DataList';
 import DataObj from '../DataObjPage';

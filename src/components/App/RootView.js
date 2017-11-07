@@ -4,7 +4,7 @@ import {ConnectedRouter as Router} from 'react-router-redux';
 import {Route} from 'react-router';
 
 // статусы "загружено и т.д." в ствойствах компонента
-import withMeta from 'metadata-redux/src/withMeta';
+import {withMeta} from 'metadata-redux';
 
 // заставка "загрузка занных"
 import DumbScreen from '../DumbScreen/DumbScreen';
@@ -46,7 +46,7 @@ class RootView extends Component {
     }
 
     // если это первый запуск или couch_direct и offline, переходим на страницу login
-    if (!path_log_in && ((data_empty === true && !user.try_log_in) || (couch_direct && offline))) {
+    if(!path_log_in && ((data_empty === true && !user.try_log_in && !user.logged_in) || (couch_direct && offline))) {
       history.push('/login');
       res = false;
     }

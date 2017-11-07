@@ -13,7 +13,7 @@ $p.CatElm_visualization.prototype.__define({
 	draw: {
 		value: function (elm, layer, offset) {
 
-		  const {CompoundPath} = elm.project._scope;
+		  const {CompoundPath, constructor} = elm.project._scope;
 
 			let subpath;
 
@@ -47,40 +47,46 @@ $p.CatElm_visualization.prototype.__define({
 					opacity: elm.opacity
 				});
 
-				// угол касательной
-				var angle_hor;
-				if(elm.is_linear() || offset < 0)
-					angle_hor = elm.generatrix.getTangentAt(0).angle;
-				else if(offset > elm.generatrix.length)
-					angle_hor = elm.generatrix.getTangentAt(elm.generatrix.length).angle;
-				else
-					angle_hor = elm.generatrix.getTangentAt(offset).angle;
+				if(elm instanceof constructor.Filling) {
+          subpath.position = elm.bounds.topLeft.add([20,10]);
+        }
+        else {
 
-				if((this.rotate != -1 || elm.orientation == $p.enm.orientations.Горизонтальная) && angle_hor != this.angle_hor){
-					subpath.rotation = angle_hor - this.angle_hor;
-				}
+          // угол касательной
+          var angle_hor;
+          if(elm.is_linear() || offset < 0)
+            angle_hor = elm.generatrix.getTangentAt(0).angle;
+          else if(offset > elm.generatrix.length)
+            angle_hor = elm.generatrix.getTangentAt(elm.generatrix.length).angle;
+          else
+            angle_hor = elm.generatrix.getTangentAt(offset).angle;
 
-				offset += elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
+          if((this.rotate != -1 || elm.orientation == $p.enm.orientations.Горизонтальная) && angle_hor != this.angle_hor){
+            subpath.rotation = angle_hor - this.angle_hor;
+          }
 
-				const p0 = elm.generatrix.getPointAt(offset > elm.generatrix.length ? elm.generatrix.length : offset || 0);
+          offset += elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
 
-				if(this.elm_side == -1){
-					// в середине элемента
-          const p1 = elm.rays.inner.getNearestPoint(p0);
-          const p2 = elm.rays.outer.getNearestPoint(p0);
+          const p0 = elm.generatrix.getPointAt(offset > elm.generatrix.length ? elm.generatrix.length : offset || 0);
 
-					subpath.position = p1.add(p2).divide(2);
+          if(this.elm_side == -1){
+            // в середине элемента
+            const p1 = elm.rays.inner.getNearestPoint(p0);
+            const p2 = elm.rays.outer.getNearestPoint(p0);
 
-				}else if(!this.elm_side){
-					// изнутри
-					subpath.position = elm.rays.inner.getNearestPoint(p0);
+            subpath.position = p1.add(p2).divide(2);
 
-				}else{
-					// снаружи
-					subpath.position = elm.rays.outer.getNearestPoint(p0);
-				}
+          }else if(!this.elm_side){
+            // изнутри
+            subpath.position = elm.rays.inner.getNearestPoint(p0);
+
+          }else{
+            // снаружи
+            subpath.position = elm.rays.outer.getNearestPoint(p0);
+          }
+        }
+
 			}
-
 		}
 	}
 

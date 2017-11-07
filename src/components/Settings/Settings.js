@@ -13,8 +13,7 @@ import {DialogActions} from 'material-ui/Dialog';
 import Confirm from 'metadata-react/Confirm';
 import withStyles from 'metadata-react/styles/paper600';
 
-import withIface from 'metadata-redux/src/withIface';
-import withPrm from 'metadata-redux/src/withPrm';
+import {withIface, withPrm} from 'metadata-redux';
 
 import compose from 'recompose/compose';
 
