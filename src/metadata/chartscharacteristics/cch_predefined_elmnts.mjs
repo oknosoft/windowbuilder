@@ -7,11 +7,11 @@
  * @module cch_predefined_elmnts
  */
 
-(function($p){
+export default function ($p) {
 
   const {job_prm, adapters, cch, doc} = $p;
 
-	// Подписываемся на событие окончания загрузки локальных данных
+  // Подписываемся на событие окончания загрузки локальных данных
   adapters.pouch.once('pouch_doc_ram_loaded', () => {
 
     // читаем элементы из pouchdb и создаём свойства
@@ -21,26 +21,26 @@
         const parents = {};
 
         rows.forEach((row) => {
-          if(row.is_folder && row.synonym){
-            var ref = row._id.split("|")[1];
+          if(row.is_folder && row.synonym) {
+            const ref = row._id.split('|')[1];
             parents[ref] = row.synonym;
-            !job_prm[row.synonym] && job_prm.__define(row.synonym, { value: {} });
+            !job_prm[row.synonym] && job_prm.__define(row.synonym, {value: {}});
           }
 
         });
 
         rows.forEach((row) => {
 
-          if(!row.is_folder && row.synonym && parents[row.parent] && !job_prm[parents[row.parent]][row.synonym]){
+          if(!row.is_folder && row.synonym && parents[row.parent] && !job_prm[parents[row.parent]][row.synonym]) {
 
             let _mgr;
 
-            if(row.type.is_ref){
-              const tnames = row.type.types[0].split(".");
-              _mgr = $p[tnames[0]][tnames[1]]
+            if(row.type.is_ref) {
+              const tnames = row.type.types[0].split('.');
+              _mgr = $p[tnames[0]][tnames[1]];
             }
 
-            if(row.list == -1){
+            if(row.list == -1) {
 
               job_prm[parents[row.parent]].__define(row.synonym, {
                 value: (() => {
@@ -53,25 +53,26 @@
               });
 
             }
-            else if(row.list){
+            else if(row.list) {
 
               job_prm[parents[row.parent]].__define(row.synonym, {
                 value: row.elmnts.map((row) => {
-                  if(_mgr){
+                  if(_mgr) {
                     const value = _mgr.get(row.value, false, false);
-                    if(!$p.utils.is_empty_guid(row.elm)){
+                    if(!$p.utils.is_empty_guid(row.elm)) {
                       value._formula = row.elm;
                     }
                     return value;
-                  }else{
+                  }
+                  else {
                     return row.value;
                   }
                 })
               });
             }
-            else{
+            else {
 
-              if(job_prm[parents[row.parent]].hasOwnProperty(row.synonym)){
+              if(job_prm[parents[row.parent]].hasOwnProperty(row.synonym)) {
                 delete job_prm[parents[row.parent]][row.synonym];
               }
 
@@ -89,12 +90,12 @@
         // дополним автовычисляемыми свойствами
         let prm = job_prm.properties.width;
         const {calculated} = job_prm.properties;
-        if(prm && calculated.indexOf(prm) == -1){
+        if(prm && calculated.indexOf(prm) == -1) {
           calculated.push(prm);
           prm._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.width || 0};
         }
         prm = job_prm.properties.length;
-        if(prm && calculated.indexOf(prm) == -1){
+        if(prm && calculated.indexOf(prm) == -1) {
           calculated.push(prm);
           prm._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.len || 0};
         }
@@ -103,108 +104,108 @@
         setTimeout(doc.calc_order.load_templates.bind(doc.calc_order), 1000);
 
         // даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-        setTimeout(() => $p.md.emit("predefined_elmnts_inited"), 100);
+        setTimeout(() => $p.md.emit('predefined_elmnts_inited'), 100);
 
       });
 
   });
 
-	const _mgr = cch.predefined_elmnts;
+  const _mgr = cch.predefined_elmnts;
 
 
-	/**
-	 * Переопределяем геттер значения
-	 *
-	 * @property value
-	 * @override
-	 * @type {*}
-	 */
-	delete $p.CchPredefined_elmnts.prototype.value;
-	$p.CchPredefined_elmnts.prototype.__define({
+  /**
+   * Переопределяем геттер значения
+   *
+   * @property value
+   * @override
+   * @type {*}
+   */
+  delete $p.CchPredefined_elmnts.prototype.value;
+  $p.CchPredefined_elmnts.prototype.__define({
 
-		value: {
-			get: function () {
+    value: {
+      get: function () {
 
-				const mf = this.type;
-				const res = this._obj ? this._obj.value : "";
-				let mgr, ref;
+        const mf = this.type;
+        const res = this._obj ? this._obj.value : '';
 
-				if(this._obj.is_folder){
-          return "";
+        if(this._obj.is_folder) {
+          return '';
         }
-				if(typeof res == "object"){
+        if(typeof res == 'object') {
           return res;
         }
-				else if(mf.is_ref){
-					if(mf.digits && typeof res === "number"){
+        else if(mf.is_ref) {
+          if(mf.digits && typeof res === 'number') {
             return res;
           }
-					if(mf.hasOwnProperty("str_len") && !$p.utils.is_guid(res)){
+          if(mf.hasOwnProperty('str_len') && !$p.utils.is_guid(res)) {
             return res;
           }
-					if(mgr = $p.md.value_mgr(this._obj, "value", mf)){
-						if($p.utils.is_data_mgr(mgr)){
+          const mgr = $p.md.value_mgr(this._obj, 'value', mf);
+          if(mgr) {
+            if($p.utils.is_data_mgr(mgr)) {
               return mgr.get(res, false);
             }
-						else{
+            else {
               return $p.utils.fetch_type(res, mgr);
             }
-					}
-					if(res){
-						console.log(["value", mf, this._obj]);
-						return null;
-					}
-				}
-				else if(mf.date_part){
+          }
+          if(res) {
+            $p.record_log(['value', mf, this._obj]);
+            return null;
+          }
+        }
+        else if(mf.date_part) {
           return $p.utils.fix_date(this._obj.value, true);
         }
-        else if(mf.digits){
-          return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty("str_len"));
+        else if(mf.digits) {
+          return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty('str_len'));
         }
-        else if(mf.types[0]=="boolean"){
+        else if(mf.types[0] == 'boolean') {
           return $p.utils.fix_boolean(this._obj.value);
         }
-				else{
-          return this._obj.value || "";
+        else {
+          return this._obj.value || '';
         }
 
-				return this.characteristic.clr;
-			},
+        return this.characteristic.clr;
+      },
 
-			set: function (v) {
+      set: function (v) {
 
-				if(this._obj.value === v){
+        if(this._obj.value === v) {
           return;
         }
 
-        _mgr.emit_async('update', this, {value: this._obj.value})
-				this._obj.value = v.valueOf();
-				this._data._modified = true;
-			}
-		}
-	});
+        _mgr.emit_async('update', this, {value: this._obj.value});
+        this._obj.value = v.valueOf();
+        this._data._modified = true;
+      }
+    }
+  });
 
-	/**
-	 * ### Форма элемента
-	 *
-	 * @method form_obj
-	 * @override
-	 * @param pwnd
-	 * @param attr
-	 * @returns {*}
-	 */
-	_mgr.form_obj = function(pwnd, attr){
+  /**
+   * ### Форма элемента
+   *
+   * @method form_obj
+   * @override
+   * @param pwnd
+   * @param attr
+   * @returns {*}
+   */
+  // _mgr.form_obj = function (pwnd, attr) {
+  //
+  //   let o, wnd;
+  //
+  //   return this.constructor.prototype.form_obj.call(this, pwnd, attr)
+  //     .then((res) => {
+  //       if(res) {
+  //         o = res.o;
+  //         wnd = res.wnd;
+  //         return res;
+  //       }
+  //     });
+  // };
 
-		let o, wnd;
-
-		return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-			.then((res) => {
-				if(res){
-					o = res.o;
-					wnd = res.wnd;
-					return res;
-				}
-			});
-	}
-
-})($p);
+}
