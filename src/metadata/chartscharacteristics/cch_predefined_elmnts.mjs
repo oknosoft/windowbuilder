@@ -101,7 +101,7 @@ export default function ($p) {
         }
 
         // рассчеты, помеченные, как шаблоны, загрузим в память заранее
-        setTimeout(doc.calc_order.load_templates.bind(doc.calc_order), 1000);
+        doc.calc_order.load_templates && setTimeout(doc.calc_order.load_templates.bind(doc.calc_order), 1000);
 
         // даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
         setTimeout(() => $p.md.emit('predefined_elmnts_inited'), 100);
