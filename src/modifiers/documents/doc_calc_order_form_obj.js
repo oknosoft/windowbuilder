@@ -311,6 +311,10 @@
         new CalcOrderFormProductList(wnd, o);
         break;
 
+      case 'btn_additions':
+        $p.dp.buyers_order.open_additions(o, handlers);
+        break;
+
       case 'btn_add_material':
         add_material();
         break;
@@ -671,6 +675,9 @@
 
     }
 
+    /**
+     * Открывает форму спецификации текущей строки
+     */
     function open_spec() {
       const selId = production_get_sel_index();
       if(selId != undefined) {

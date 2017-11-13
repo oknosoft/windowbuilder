@@ -2,42 +2,24 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {Switch, Route} from 'react-router';
 
-// сообщения в верхней части страницы (например, обновить после первого запуска)
-import Snackbar from 'material-ui/Snackbar';
-import Button from 'material-ui/Button';
-
-// диалог сообщения пользователю
-import Dialog, {DialogActions, DialogContent, DialogContentText, DialogTitle} from 'material-ui/Dialog';
-
-// навигация
-import Header from 'metadata-react/Header';
-import items from './menu_items'; // массив элементов меню
-
-// заставка "загрузка занных"
-import DumbScreen from '../DumbScreen';
-
-// вложенный маршрутизатор страниц с данными
-import DataRoute from '../DataRoute';
-
-// информация о программе
-import AboutPage from '../About';
-
-// настройки
-import Settings from '../Settings';
-
-// 404
-import NotFoundPage from '../NotFoundPage';
-
-// дерево метаданных
-import MetaTreePage from '../MetaTreePage';
-
-// логин и свойства подключения
-import FrmLogin from 'metadata-react/FrmLogin';
+import Snack from 'metadata-react/App/Snack';       // сообщения в верхней части страницы (например, обновить после первого запуска)
+import Alert from 'metadata-react/App/Alert';       // диалог сообщения пользователю
+import Confirm from 'metadata-react/App/Confirm';   // диалог вопросов пользователю (да, нет)
+import FrmLogin from 'metadata-react/FrmLogin';     // логин и свойства подключения
+import NeedAuth from 'metadata-react/App/NeedAuth'; // страница "необхлдима авторизация"
+import Header from 'metadata-react/Header';         // навигация
+import DumbScreen from '../DumbScreen';             // заставка "загрузка занных"
+import DataRoute from '../DataRoute';               // вложенный маршрутизатор страниц с данными
+import AboutPage from '../About';                   // информация о программе
+import Settings from '../Settings';                 // настройки
+import NotFoundPage from '../NotFoundPage';         // 404
+import MetaTreePage from '../MetaTreePage';         // дерево метаданных
 
 import {withNavigateAndMeta} from 'metadata-redux';
-
 import Builder from '../Builder';
 import CalcOrderList from '../CalcOrderList';
+
+import items, {item_props} from './menu_items';                   // массив элементов меню
 
 class AppRoot extends Component {
 
@@ -51,36 +33,44 @@ class AppRoot extends Component {
   constructor(props, context) {
     super(props, context);
     this.handleAlertClose = this.handleDialogClose.bind(this, 'alert');
+    const iprops = item_props();
+    this.state = {
+      need_meta: !!iprops.need_meta,
+      need_user: !!iprops.need_user,
+    };
   }
 
-  shouldComponentUpdate(props) {
-    const {user, data_empty, couch_direct, offline, alert, path_log_in} = props;
+  shouldComponentUpdate(props, {need_user, need_meta}) {
+    const {meta_loaded, user, offline} = props;
+    const iprops = item_props();
     let res = true;
 
+    if(need_user != !!iprops.need_user) {
+      this.setState({need_user: !!iprops.need_user});
+      res = false;
+    }
+
+    if(need_meta != !!iprops.need_meta) {
+      this.setState({need_meta: !!iprops.need_meta});
+      res = false;
+    }
+
     // если есть сохранённый пароль и online, пытаемся авторизоваться
-    if(!user.logged_in && user.has_login && !user.try_log_in && !offline) {
+    if(meta_loaded && !user.logged_in && user.has_login && !user.try_log_in && !offline) {
       props.handleLogin();
-      res = false;
-    }
-
-    // если это первый запуск или couch_direct и offline, переходим на страницу login
-    if(!path_log_in && ((data_empty === true && !user.try_log_in && !user.logged_in) || (couch_direct && offline))) {
-      props.handleNavigate('/login');
-      res = false;
-    }
-
-    if(res && user.log_error && (!alert || !alert.open)) {
-      props.handleIfaceState({component: '', name: 'alert', value: {open: true, title: $p.msg.login.title, text: user.log_error}});
-      props.handleLogOut();
       res = false;
     }
 
     return res;
   }
 
-  handleReset = () => {
-    const {handleNavigate, first_run, snack} = this.props;
-    if(first_run || (snack && snack.reset)) {
+  handleDialogClose(name) {
+    this.props.handleIfaceState({component: '', name, value: {open: false}});
+  }
+
+  handleReset(reset) {
+    const {handleNavigate, first_run} = this.props;
+    if(first_run || reset) {
       $p.eve && ($p.eve.redirect = true);
       location.replace('/');
     }
@@ -89,26 +79,33 @@ class AppRoot extends Component {
     }
   }
 
-  handleDialogClose(name) {
-    this.props.handleIfaceState({component: '', name, value: {open: false}});
-  }
-
-
   render() {
-    const {props} = this;
-    const {snack, alert, doc_ram_loaded, nom_prices_step} = props;
+    const {props, state} = this;
+    const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, user, couch_direct, offline, title} = props;
 
-    return (
-      <div>
-        <Header items={items} {...props} />
-        {
-          (!props.path_log_in && !props.complete_loaded) ?
+    return [
+
+      <Header key="header" items={items} {...props} />,
+
+      // основной контент или заставка загрузки или приглашение к авторизации
+      meta_loaded && state.need_user && ((!user.try_log_in && !user.logged_in) || (couch_direct && offline)) ?
+        <NeedAuth
+          key="auth"
+          handleNavigate={props.handleNavigate}
+          handleIfaceState={props.handleIfaceState}
+          title={title}
+          offline={couch_direct && offline}
+        />
+        :
+        (
+          (!props.path_log_in && ((state.need_meta && !meta_loaded) || (state.need_user && !props.complete_loaded))) ?
             <DumbScreen
+              key="dumb"
               title={doc_ram_loaded ? 'Подготовка данных в памяти...' : 'Загрузка из IndexedDB...'}
               page={{text: doc_ram_loaded ? `Цены и характеристики${nom_prices_step ? ` (такт №${nom_prices_step})` : ''}...` : 'Почти готово...'}}
               top={92}/>
             :
-            <Switch>
+            <Switch key="switch">
               <Route exact path="/" component={CalcOrderList}/>
               <Route path="/builder/:ref([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})" component={Builder} />
               <Route path="/:area(doc|cat|ireg|cch|rep).:name" component={DataRoute} />
@@ -118,38 +115,23 @@ class AppRoot extends Component {
               <Route path="/settings" component={Settings} />
               <Route component={NotFoundPage} />
             </Switch>
-        }
+        ),
 
-        {((snack && snack.open) || (props.first_run && doc_ram_loaded)) && <Snackbar
-          anchorOrigin={{vertical: 'top', horizontal: 'center'}}
-          open
-          message={snack && snack.open ? snack.message : 'Требуется перезагрузить страницу после первой синхронизации данных'}
-          action={<Button
-            color="accent"
-            onClick={snack && snack.open && !snack.reset ? this.handleDialogClose.bind(this, 'snack') : this.handleReset}
-          >Выполнить</Button>}
-        />}
+      // всплывающтй snackbar оповещений пользователя
+      ((snack && snack.open) || (props.first_run && doc_ram_loaded)) &&
+      <Snack
+        key="snack"
+        snack={snack}
+        handleClose={snack && snack.open && !snack.reset ? this.handleDialogClose.bind(this, 'snack') : () => this.handleReset(snack && snack.reset)}
+      />,
 
-        {
-          alert && alert.open && <Dialog open onRequestClose={this.handleAlertClose}>
-            <DialogTitle>
-              {alert.title}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                {alert.text}
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={this.handleAlertClose} color="primary">
-                Ок
-              </Button>
-            </DialogActions>
-          </Dialog>
-        }
+      // диалог сообщений пользователю
+      alert && alert.open && <Alert key="alert" open text={alert.text} title={alert.title} handleOk={this.handleAlertClose}/>,
 
-      </div>
-    );
+      // диалог вопросов пользователю (да, нет)
+      confirm && confirm.open && <Confirm key="confirm" open text={confirm.text} title={confirm.title} handleOk={confirm.handleOk} handleCancel={confirm.handleCancel}/>,
+
+    ];
   }
 }
 

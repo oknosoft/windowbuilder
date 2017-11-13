@@ -68,7 +68,8 @@ class DhtmlxCell extends Component {
     this.checkSizes(nextProps);
     const {onProps} = this.handlers;
     onProps && onProps(nextProps);
-    return false;
+    const {match, dialog} = nextProps;
+    return !!(match && dialog && match.params.ref === dialog.ref) || !!(this.props.dialog && !dialog);
   }
 
   onReize() {
@@ -102,6 +103,7 @@ class DhtmlxCell extends Component {
 DhtmlxCell.propTypes = {
   handleIfaceState: PropTypes.func.isRequired,
   handleNavigate: PropTypes.func.isRequired,
+  dialog: PropTypes.object,
 };
 
 export default DhtmlxCell;
