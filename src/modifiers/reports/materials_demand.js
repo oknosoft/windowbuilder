@@ -595,7 +595,7 @@
               rows.push({
                 use: true,
                 characteristic: row.characteristic,
-                qty: row.qty,
+                qty: row.quantity,
               })
               if (row.characteristic.is_new()) {
                 refs.push(row.characteristic.ref)

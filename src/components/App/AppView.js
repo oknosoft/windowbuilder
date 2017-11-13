@@ -42,7 +42,6 @@ import CalcOrderList from '../CalcOrderList';
 class AppRoot extends Component {
 
   static propTypes = {
-    handleOffline: PropTypes.func.isRequired,
     handleNavigate: PropTypes.func.isRequired,
     handleIfaceState: PropTypes.func.isRequired,
     first_run: PropTypes.bool.isRequired,
@@ -52,22 +51,6 @@ class AppRoot extends Component {
   constructor(props, context) {
     super(props, context);
     this.handleAlertClose = this.handleDialogClose.bind(this, 'alert');
-  }
-
-  componentDidMount() {
-    const {handleOffline} = this.props;
-    this._online = handleOffline.bind(this, false);
-    this._offline = handleOffline.bind(this, true);
-    window.addEventListener('online', this._online, false);
-    window.addEventListener('offline', this._offline, false);
-    // window.addEventListener('error', event => {
-    //   $p.record_log({class: 'info', note: `ошибка перехвачена: ${event.error.toString()}`, obj: event.error})
-    // });
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('online', this._online);
-    window.removeEventListener('offline', this._offline);
   }
 
   shouldComponentUpdate(props) {

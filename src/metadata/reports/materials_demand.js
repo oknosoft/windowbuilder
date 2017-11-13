@@ -9,7 +9,7 @@ import RepParams from '../../components/RepMaterialsDemand/RepParams';
 
 export default function ($p) {
 
-  const {characteristics, nom, nom_kinds, clrs} = $p.cat;
+  const {characteristics} = $p.cat;
 
   /**
    * Класс-компонент формы отчета
@@ -91,7 +91,7 @@ export default function ($p) {
     return Promise.all(aobjs)
 
     // получаем массив объектов заказов и вложенных характеристик
-      .then((ares) => {
+      .then(() => {
 
         arefs.length = 0;
         aobjs.length = 0;
