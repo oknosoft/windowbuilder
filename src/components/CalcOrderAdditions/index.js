@@ -1,3 +1,3 @@
-import CalcOrderAdditions from './CalcOrderAdditions';
+import CalcOrderAdditions from './Additions';
 
 export default CalcOrderAdditions;

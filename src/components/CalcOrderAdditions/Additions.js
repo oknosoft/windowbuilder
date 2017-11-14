@@ -11,23 +11,16 @@ import Button from 'material-ui/Button';
 import Dialog, {
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
 } from 'material-ui/Dialog';
-import Items from './Items'
+import AdditionsGroups from './AdditionsGroups';
 import connect from './connect';
 
 class CalcOrderAdditions extends Component {
 
-  constructor(props, context) {
-    super(props, context);
-    this.dp = $p.dp.buyers_order.create();
-    this.dp.calc_order = $p.doc.calc_order.by_ref[props.dialog.ref];
-  }
-
   render() {
 
-    const {classes, fullScreen, handleCancel, handleOk } = this.props;
+    const {classes, fullScreen, handleCancel, handleOk, dialog } = this.props;
 
     return <Dialog
       open
@@ -37,7 +30,7 @@ class CalcOrderAdditions extends Component {
     >
       <DialogTitle>Аксессуары и услуги</DialogTitle>
       <DialogContent>
-        <Items />
+        <AdditionsGroups dialog={dialog}/>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCancel} color="primary">Отмена</Button>
@@ -50,6 +43,7 @@ class CalcOrderAdditions extends Component {
 
 CalcOrderAdditions.propTypes = {
   classes: PropTypes.object.isRequired,
+  dialog: PropTypes.object.isRequired,
   handlers: PropTypes.object.isRequired,
   fullScreen: PropTypes.bool.isRequired,
   handleOk: PropTypes.func.isRequired,
