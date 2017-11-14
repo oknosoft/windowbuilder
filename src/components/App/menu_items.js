@@ -199,7 +199,7 @@ export function item_props(path) {
   }
   // здесь можно переопределить нужность meta и авторизованности для корневой страницы
   let res = with_recursion(path, items);
-  if(!res && path.match(/\/(doc|cat|ireg|cch|rep)\./)){
+  if(!res && (path.match(/\/(doc|cat|ireg|cch|rep)\./) || path.match(/\/builder\//))){
     res = {need_meta: true, need_user: true};
   }
   return res || {};

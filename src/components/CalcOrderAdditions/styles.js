@@ -12,6 +12,16 @@ const styles = theme => ({
     minWidth: 800,
     maxHeight: 'calc(100vh - 100px)',
   },
+  entered: {
+    minHeight: 180,
+  },
+  secondary: {
+    marginTop: -theme.spacing.unit * 1.5,
+  },
+  listitem: {
+    paddingTop: theme.spacing.unit,
+    paddingBottom: theme.spacing.unit,
+  }
 });
 
 export default withStyles(styles);

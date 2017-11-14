@@ -7,7 +7,8 @@
 
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import { FormGroup } from 'material-ui/Form';
+import {FormGroup} from 'material-ui/Form';
+import TabularSection from 'metadata-react/TabularSection';
 
 export default class AdditionsItem extends Component {
 
@@ -16,9 +17,9 @@ export default class AdditionsItem extends Component {
   }
 
   render() {
-    return <FormGroup row>
-      {this.render_row()}
-    </FormGroup>
+    const {group, dp} = this.props;
+
+    return <TabularSection _obj={dp} _tabular="production" minHeight={180}/>;
   }
 
 }

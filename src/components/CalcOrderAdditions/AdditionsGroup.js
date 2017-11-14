@@ -7,12 +7,14 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import {ListItem, ListItemText} from 'material-ui/List';
+import {ListItem, ListItemSecondaryAction, ListItemText} from 'material-ui/List';
 import Checkbox from 'material-ui/Checkbox';
 import Divider from 'material-ui/Divider';
+import Collapse from 'material-ui/transitions/Collapse';
+import withStyles from './styles';
 
 
-export default class AdditionsGroup extends React.Component {
+class AdditionsGroup extends React.Component {
 
   constructor(props) {
     super(props);
@@ -25,36 +27,32 @@ export default class AdditionsGroup extends React.Component {
     });
   };
 
-  renderRows(Row) {
-    return Row && <Row />;
-  }
-
   render() {
 
-    const {Row, group} = this.props;
+    const {Row, group, dp, classes} = this.props;
     const {checked} = this.state;
     const {ref, presentation} = group;
+    const style = {flex: 'initial'};
+    if(checked) {
+      style.minHeight = 180;
+      style.maxHeight = 320;
+    }
 
-    return [
-      <ListItem
-        key={`l${ref}`}
-        onClick={this.handleToggle}
-      >
-        <Checkbox
-          checked={checked}
-          tabIndex={-1}
-          disableRipple
-        />
+    return <div style={style}>
+      <ListItem disableGutters className={classes.listitem} onClick={this.handleToggle}>
+        <Checkbox checked={checked} tabIndex={-1} disableRipple/>
         <ListItemText primary={presentation}/>
+        <ListItemSecondaryAction>1 шт</ListItemSecondaryAction>
+      </ListItem>
 
-      </ListItem>,
+      <Collapse in={checked} timeout={50} classes={{entered: classes.entered}}>
+        {!Row && <p key={`p${ref}`}>{`свойства ${presentation}`}</p>}
+        {Row && <Row group={group} dp={dp}/>}
+      </Collapse>
 
-      checked && <p key={`p${ref}`}>{`свойства ${presentation}`}</p>,
+      {!checked && !Row && <Divider key={`d${ref}`}/>}
 
-      checked && this.renderRows(Row),
-
-      <Divider key={`d${ref}`}/>,
-    ];
+    </div>;
   }
 
 }
@@ -63,4 +61,5 @@ AdditionsGroup.propTypes = {
   group: PropTypes.object.isRequired,
 };
 
+export default withStyles(AdditionsGroup);
 

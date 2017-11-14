@@ -30,30 +30,9 @@ class AppRoot extends Component {
     snack: PropTypes.object,
   };
 
-  constructor(props, context) {
-    super(props, context);
-    this.handleAlertClose = this.handleDialogClose.bind(this, 'alert');
-    const iprops = item_props();
-    this.state = {
-      need_meta: !!iprops.need_meta,
-      need_user: !!iprops.need_user,
-    };
-  }
-
-  shouldComponentUpdate(props, {need_user, need_meta}) {
+  shouldComponentUpdate(props) {
     const {meta_loaded, user, offline} = props;
-    const iprops = item_props();
     let res = true;
-
-    if(need_user != !!iprops.need_user) {
-      this.setState({need_user: !!iprops.need_user});
-      res = false;
-    }
-
-    if(need_meta != !!iprops.need_meta) {
-      this.setState({need_meta: !!iprops.need_meta});
-      res = false;
-    }
 
     // если есть сохранённый пароль и online, пытаемся авторизоваться
     if(meta_loaded && !user.logged_in && user.has_login && !user.try_log_in && !offline) {
@@ -80,15 +59,16 @@ class AppRoot extends Component {
   }
 
   render() {
-    const {props, state} = this;
+    const {props} = this;
     const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, user, couch_direct, offline, title} = props;
+    const iprops = item_props();
 
     return [
 
       <Header key="header" items={items} {...props} />,
 
       // основной контент или заставка загрузки или приглашение к авторизации
-      meta_loaded && state.need_user && ((!user.try_log_in && !user.logged_in) || (couch_direct && offline)) ?
+      meta_loaded && iprops.need_user && ((!user.try_log_in && !user.logged_in) || (couch_direct && offline)) ?
         <NeedAuth
           key="auth"
           handleNavigate={props.handleNavigate}
@@ -98,7 +78,7 @@ class AppRoot extends Component {
         />
         :
         (
-          (!props.path_log_in && ((state.need_meta && !meta_loaded) || (state.need_user && !props.complete_loaded))) ?
+          (!props.path_log_in && ((iprops.need_meta && !meta_loaded) || (iprops.need_user && !props.complete_loaded))) ?
             <DumbScreen
               key="dumb"
               title={doc_ram_loaded ? 'Подготовка данных в памяти...' : 'Загрузка из IndexedDB...'}
@@ -126,7 +106,7 @@ class AppRoot extends Component {
       />,
 
       // диалог сообщений пользователю
-      alert && alert.open && <Alert key="alert" open text={alert.text} title={alert.title} handleOk={this.handleAlertClose}/>,
+      alert && alert.open && <Alert key="alert" open text={alert.text} title={alert.title} handleOk={this.handleDialogClose.bind(this, 'alert')}/>,
 
       // диалог вопросов пользователю (да, нет)
       confirm && confirm.open && <Confirm key="confirm" open text={confirm.text} title={confirm.title} handleOk={confirm.handleOk} handleCancel={confirm.handleCancel}/>,
