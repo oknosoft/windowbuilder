@@ -12,6 +12,7 @@ import AdditionsItem from './AdditionsItem';
 
 export default class AdditionsItemSill extends AdditionsItem {
 
+
   render_row() {
     return '345';
   }

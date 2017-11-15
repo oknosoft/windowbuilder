@@ -12,6 +12,12 @@ import TabularSection from 'metadata-react/TabularSection';
 
 export default class AdditionsItem extends Component {
 
+  state = {scheme: null};
+
+  find_scheme() {
+    $p.cat.scheme_settings.get_scheme(_obj._manager.class_name + '.' + _tabular).then(this.handleSchemeChange)
+  }
+
   render_row() {
     return '123';
   }

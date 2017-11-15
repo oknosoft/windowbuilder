@@ -13,8 +13,19 @@ import compose from 'recompose/compose';
 
 const mapStateToProps = (state, props) => {
   return {
+    handleCalck() {
+      props.handlers.handleIfaceState({
+        component: 'DataObjPage',
+        name: 'dialog',
+        value: null,
+      });
+    },
     handleOk() {
-
+      props.handlers.handleIfaceState({
+        component: 'DataObjPage',
+        name: 'dialog',
+        value: null,
+      });
     },
     handleCancel() {
       props.handlers.handleIfaceState({

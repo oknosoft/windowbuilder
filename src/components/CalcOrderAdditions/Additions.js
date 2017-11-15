@@ -20,7 +20,7 @@ class CalcOrderAdditions extends Component {
 
   render() {
 
-    const {classes, fullScreen, handleCancel, handleOk, dialog } = this.props;
+    const {classes, fullScreen, handleCancel, handleCalck, handleOk, dialog } = this.props;
 
     return <Dialog
       open
@@ -33,8 +33,10 @@ class CalcOrderAdditions extends Component {
         <AdditionsGroups dialog={dialog}/>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleCancel} color="primary">Отмена</Button>
-        <Button onClick={handleOk} color="primary">Ок</Button>
+        <Button onClick={handleOk} color="primary">Рассчитать и закрыть</Button>
+        <Button onClick={handleCalck} color="primary">Рассчитать</Button>
+        <Button onClick={handleCancel} color="primary">Закрыть</Button>
+
       </DialogActions>
     </Dialog>;
 
@@ -47,6 +49,7 @@ CalcOrderAdditions.propTypes = {
   handlers: PropTypes.object.isRequired,
   fullScreen: PropTypes.bool.isRequired,
   handleOk: PropTypes.func.isRequired,
+  handleCalck: PropTypes.func.isRequired,
   handleCancel: PropTypes.func.isRequired,
 };
 
