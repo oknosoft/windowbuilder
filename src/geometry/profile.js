@@ -469,6 +469,46 @@ class ProfileItem extends GeneratrixElement {
   }
 
   /**
+   * ### Минимальный радиус, высисляемый по кривизне элемента
+   * для прямых = 0
+   */
+  get rmin() {
+    const {generatrix} = this;
+    if(!generatrix.hasHandles()){
+      return 0;
+    }
+    const {length} = generatrix;
+    let max = 0;
+    for(let pos = 0; pos < length; pos += length / 8){
+      const curv = Math.abs(generatrix.getCurvatureAt(pos));
+      if(curv > max){
+        max = curv;
+      }
+    }
+    return max === 0 ? 0 : 1 / max;
+  }
+
+  /**
+   * ### Максимальный радиус, высисляемый по кривизне элемента
+   * для прямых = 0
+   */
+  get rmax() {
+    const {generatrix} = this;
+    if(!generatrix.hasHandles()){
+      return 0;
+    }
+    const {length} = generatrix;
+    let min = Infinity;
+    for(let pos = 0; pos < length; pos += length / 8){
+      const curv = Math.abs(generatrix.getCurvatureAt(pos));
+      if(curv < min){
+        min = curv;
+      }
+    }
+    return min === 0 ? 0 : 1 / min;
+  }
+
+  /**
    * ### Направление дуги сегмента профиля против часовой стрелки
    *
    * @property arc_ccw
