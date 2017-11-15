@@ -3747,6 +3747,10 @@ class ProductsBuilding {
       return;
     }
 
+    if(row_spec.totqty1 && row_spec.totqty) {
+      return;
+    }
+
     if(!angle_calc_method_next) {
       angle_calc_method_next = angle_calc_method_prev;
     }

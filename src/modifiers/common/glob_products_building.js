@@ -881,6 +881,11 @@ class ProductsBuilding {
       return;
     }
 
+    // если свойства уже рассчитаны в формуле, пересчет не выполняем
+    if(row_spec.totqty1 && row_spec.totqty) {
+      return;
+    }
+
     //TODO: учесть angle_calc_method
     if(!angle_calc_method_next) {
       angle_calc_method_next = angle_calc_method_prev;
