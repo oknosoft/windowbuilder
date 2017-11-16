@@ -14,18 +14,28 @@ export default class AdditionsItem extends Component {
 
   state = {scheme: null};
 
-  find_scheme() {
-    $p.cat.scheme_settings.get_scheme(_obj._manager.class_name + '.' + _tabular).then(this.handleSchemeChange)
-  }
-
   render_row() {
     return '123';
   }
 
   render() {
-    const {group, dp} = this.props;
+    const {dp, meta, scheme, tref, minHeight} = this.props;
 
-    return <TabularSection _obj={dp} _tabular="production" minHeight={180}/>;
+    return <TabularSection
+      ref={tref}
+      _obj={dp}
+      _meta={meta}
+      _tabular="production"
+      scheme={scheme}
+      minHeight={minHeight}
+      hideToolbar
+    />;
   }
 
 }
+
+AdditionsItem.propTypes = {
+  dp: PropTypes.object.isRequired,
+  group: PropTypes.object.isRequired,
+  scheme: PropTypes.object.isRequired,
+};

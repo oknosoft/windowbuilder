@@ -13,7 +13,7 @@ const styles = theme => ({
     maxHeight: 'calc(100vh - 100px)',
   },
   entered: {
-    minHeight: 180,
+    minHeight: 120,
   },
   secondary: {
     marginTop: -theme.spacing.unit * 1.5,

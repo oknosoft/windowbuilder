@@ -10,25 +10,17 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import List, {ListItem, ListItemText} from 'material-ui/List';
 import AdditionsGroup from './AdditionsGroup';
+import {alasql_schemas, fill_data} from './connect';
 
-import ItemSill from './AdditionsItemSill';
-
-const alasql_schemas = $p.wsql.alasql.compile('select * from cat_scheme_settings where obj="dp.buyers_order.production"');
 
 export default class AdditionsGroups extends React.Component {
 
   constructor(props, context) {
     super(props, context);
-    const {Подоконник, Водоотлив, МоскитнаяСетка, Откос, Монтаж} = $p.enm.inserts_types;
-    this.items = [Подоконник, Водоотлив, МоскитнаяСетка, Откос, Монтаж];
-    this.dp = $p.dp.buyers_order.create();
-    this.dp.calc_order = $p.doc.calc_order.by_ref[props.dialog.ref];
-    this.components = new Map([
-      [Подоконник, ItemSill],
-    ]);
-    this.state = {schemas: null};
+    fill_data.call(this, props.dialog.ref);
   }
 
+  // заполняет соответствие схем и типов вставок в state компонента
   fill_schemas(docs = []) {
     const schemas = new Map();
     const {scheme_settings} = $p.cat;
@@ -57,15 +49,20 @@ export default class AdditionsGroups extends React.Component {
   render() {
     const {items, components, dp} = this;
     const {schemas} = this.state;
+
     return <List>
       {schemas ?
-        items.map(group => <AdditionsGroup
-          key={`${group.ref}`}
-          dp={dp}
-          group={group}
-          Row={components.get(group)}
-          scheme={schemas.get(group)}
-        />)
+        items.map(group => {
+          const cmp = components.get(group);
+          return <AdditionsGroup
+            key={`${group.ref}`}
+            dp={dp}
+            group={group}
+            {...cmp}
+            scheme={schemas.get(group)}
+          />
+
+        })
         :
         <ListItem>
           <ListItemText primary="Чтение настроек компоновки..."/>
