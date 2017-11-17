@@ -10,7 +10,7 @@ import Button from 'material-ui/Button';
 import Switch from 'material-ui/Switch';
 import {DialogActions} from 'material-ui/Dialog';
 
-import Confirm from 'metadata-react/Confirm';
+import Confirm from 'metadata-react/App/Confirm';
 import withStyles from 'metadata-react/styles/paper600';
 
 import {withIface, withPrm} from 'metadata-redux';

@@ -436,7 +436,8 @@ class Filling extends AbstractFilling(BuilderElement) {
    * Признак прямоугольности
    */
   get is_rectangular() {
-    return this.profiles.length === 4 && !this._attr.path.hasHandles();
+    const {profiles, path} = this;
+    return profiles.length === 4 && !path.hasHandles() && !profiles.some(({profile}) => !(Math.abs(profile.angle_hor % 90) < 0.2));
   }
 
   get generatrix() {

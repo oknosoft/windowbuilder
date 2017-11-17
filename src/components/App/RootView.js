@@ -12,8 +12,7 @@ import DumbScreen from '../DumbScreen/DumbScreen';
 // корневые контейнеры
 import AppView from './AppView';
 
-import browser_compatible from 'metadata-react/BrowserCompatibility/browser_compatible';
-import BrowserCompatibility from 'metadata-react/BrowserCompatibility';
+import BrowserCompatibility, {browser_compatible} from 'metadata-react/App/BrowserCompatibility';
 
 // тема для material-ui
 import {MuiThemeProvider} from 'material-ui/styles';
@@ -76,7 +75,7 @@ class RootView extends Component {
               <Route component={AppView}/>
             </Router>)
           :
-          (<BrowserCompatibility/>)
+          <BrowserCompatibility/>
       }
     </MuiThemeProvider>;
   }

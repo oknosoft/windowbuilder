@@ -6,6 +6,7 @@
     <item type="button" id="btn_add_builder" text="&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt; Изделие построителя" />
     <item type="button" id="btn_add_product" text="&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Продукцию или услугу" />
     <item type="button" id="btn_add_material" text="&lt;i class='fa fa-cube fa-fw'&gt;&lt;/i&gt; Материал" />
+    <item type="button" id="btn_additions" text="&lt;i class='fa fa-cart-plus fa-fw'&gt;&lt;/i&gt; Аксессуары и услуги" />
     <item type="button" id="btn_clone" text="&lt;i class='fa fa-clone fa-fw'&gt;&lt;/i&gt; Скопировать изделие" />
   </item>
 

@@ -45,10 +45,15 @@ class DataObjPage extends DhtmlxCell {
   }
 
   render() {
-    return <div>
-      <Prompt when message={this.prompt.bind(this)} />
-      <div ref={el => this.el = el}/>
-    </div>;
+    const {match, dialog} = this.props;
+    const Dialog = dialog && match.params.ref === dialog.ref && dialog.Component;
+    return [
+      <Prompt key="prompt" when message={this.prompt.bind(this)} />,
+
+      <div key="el" ref={el => this.el = el}/>,
+
+      Dialog && <Dialog key="dialog" handlers={this.handlers} dialog={dialog} owner={this} />
+    ];
   }
 
 }
