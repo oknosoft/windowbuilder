@@ -24,20 +24,20 @@ export default class AdditionsGroups extends React.Component {
   fill_schemas(docs = []) {
     const schemas = new Map();
     const {scheme_settings} = $p.cat;
-    for(const doc of docs){
-      for(const item of this.items){
-        if(doc.name == item.name){
+    for (const doc of docs) {
+      for (const item of this.items) {
+        if(doc.name == item.name) {
           schemas.set(item, scheme_settings.get(doc));
           break;
         }
       }
     }
-    this.setState({schemas})
+    this.setState({schemas});
   }
 
   componentDidMount() {
     const schemas = alasql_schemas();
-    if(schemas.length){
+    if(schemas.length) {
       return this.fill_schemas(schemas);
     }
     $p.cat.scheme_settings.find_schemas('dp.buyers_order.production')
@@ -60,7 +60,7 @@ export default class AdditionsGroups extends React.Component {
             group={group}
             {...cmp}
             scheme={schemas.get(group)}
-          />
+          />;
 
         })
         :

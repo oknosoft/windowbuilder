@@ -34,7 +34,7 @@ export function fill_data(ref) {
   this.dp.calc_order.production.find_rows({ordn: $p.utils.blank.guid}, (row) => {
     const {characteristic} = row;
     const {insert_type} = characteristic.origin;
-    if(!characteristic.empty() && !characteristic.origin.empty() && items.indexOf(insert_type) != -1){
+    if(!characteristic.empty() && !characteristic.origin.empty() && items.indexOf(insert_type) != -1) {
       production.add({
         characteristic,
         inset: characteristic.origin,
@@ -45,7 +45,7 @@ export function fill_data(ref) {
         note: row.note,
       });
       const cmp = components.get(insert_type);
-      if(cmp){
+      if(cmp) {
         // счетчик строк данного типа
         cmp.count++;
         // индивидуальные метаданные для отбора по типу вставки
@@ -55,10 +55,10 @@ export function fill_data(ref) {
         }
       }
     }
-  })
+  });
 }
 
-function mapStateToProps (state, props) {
+function mapStateToProps(state, props) {
   return {
     handleCalck() {
       props.handlers.handleIfaceState({
@@ -84,14 +84,12 @@ function mapStateToProps (state, props) {
   };
 };
 
-function mapDispatchToProps(dispatch) {
-  return {
-
-  };
-}
+// function mapDispatchToProps(dispatch) {
+//   return {};
+// }
 
 export default compose(
   withStyles,
   withMobileDialog(),
-  connect(mapStateToProps, mapDispatchToProps),
+  connect(mapStateToProps /*, mapDispatchToProps */),
 );

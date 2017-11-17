@@ -28,6 +28,11 @@ class DataRoute extends Component {
     const {match, handlers, windowHeight, windowWidth} = this.props;
     const {area, name} = match.params;
     const _mgr = $p[area][name];
+
+    if(!_mgr) {
+      return <NotFoundPage/>;
+    }
+
     const _acl = $p.current_user.get_acl(_mgr.class_name);
 
     const sizes = {
