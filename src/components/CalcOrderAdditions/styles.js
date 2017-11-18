@@ -8,7 +8,7 @@
 import {withStyles} from 'material-ui/styles';
 
 const styles = theme => ({
-  dialog: {
+  paper: {
     minWidth: 800,
     maxHeight: 'calc(100vh - 100px)',
   },

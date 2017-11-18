@@ -7,7 +7,6 @@
 
 import {connect} from 'react-redux';
 import withStyles from './styles';
-import {withMobileDialog} from 'material-ui/Dialog';
 import compose from 'recompose/compose';
 
 import ItemSill from './AdditionsItemSill';
@@ -90,6 +89,5 @@ function mapStateToProps(state, props) {
 
 export default compose(
   withStyles,
-  withMobileDialog(),
   connect(mapStateToProps /*, mapDispatchToProps */),
 );
