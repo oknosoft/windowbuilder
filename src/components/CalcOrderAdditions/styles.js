@@ -9,8 +9,8 @@ import {withStyles} from 'material-ui/styles';
 
 const styles = theme => ({
   paper: {
-    minWidth: 800,
-    maxHeight: 'calc(100vh - 100px)',
+    minWidth: 880,
+    maxHeight: 'calc(100vh - 80px)',
   },
   entered: {
     minHeight: 120,

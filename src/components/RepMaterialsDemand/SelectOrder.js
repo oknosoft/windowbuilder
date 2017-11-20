@@ -48,7 +48,7 @@ export default class SelectOrder extends Component {
             _mgr={$p.doc.calc_order}
             _acl={props._acl}
             handlers={{handleSelect}}
-            selection_mode
+            selectionMode
             denyAddDel
             //show_variants
             show_search

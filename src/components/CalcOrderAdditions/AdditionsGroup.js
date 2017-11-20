@@ -42,7 +42,7 @@ class AdditionsGroup extends React.Component {
   render() {
 
     const {props, state: {count}, handleAdd, handleRemove} = this;
-    const {Renderer, group, dp, classes, scheme} = props;
+    const {Renderer, group, dp, classes, scheme, meta} = props;
     const {ref, presentation} = group;
     const style = {flex: 'initial'};
     if(count) {
@@ -58,15 +58,17 @@ class AdditionsGroup extends React.Component {
         <ListItemSecondaryAction className={classes.secondary}>{count ? `${count} шт` : ''}</ListItemSecondaryAction>
       </ListItem>
 
-      <Collapse in={!!count} timeout={50} classes={{entered: classes.entered}} style={{height: style.minHeight + 35}}>
-        {!Renderer && <p key={`p${ref}`}>{`свойства ${presentation}`}</p>}
-        {Renderer && <Renderer
-          tref={(el) => this.tabular = el}
-          minHeight={style.minHeight}
-          dp={dp}
-          group={group}
-          scheme={scheme}
-        />}
+      <Collapse in={!!count} timeout={100} classes={{entered: classes.entered}}>
+        <div style={{height: style.minHeight + 35}}>
+          <Renderer
+            tref={(el) => this.tabular = el}
+            minHeight={style.minHeight}
+            dp={dp}
+            group={group}
+            scheme={scheme}
+            meta={meta}
+          />
+        </div>
       </Collapse>
 
       {!count && <Divider key={`d${ref}`}/>}
