@@ -61,6 +61,13 @@ export function fill_data(ref) {
   });
 }
 
+export function find_inset(insert_type) {
+  if(!this._inset){
+    this._inset = $p.cat.inserts.find({available: true, insert_type});
+  }
+  return this._inset;
+}
+
 function mapStateToProps(state, props) {
   return {
     handleCalck() {
