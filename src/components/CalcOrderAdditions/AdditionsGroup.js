@@ -8,9 +8,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {ListItem, ListItemSecondaryAction, ListItemText} from 'material-ui/List';
-import IconButton from "material-ui/IconButton";
-import AddIcon from "material-ui-icons/AddCircleOutline";
-import RemoveIcon from "material-ui-icons/Delete";
+import IconButton from 'material-ui/IconButton';
+import AddIcon from 'material-ui-icons/AddCircleOutline';
+import RemoveIcon from 'material-ui-icons/Delete';
 import Divider from 'material-ui/Divider';
 import Collapse from 'material-ui/transitions/Collapse';
 import withStyles from './styles';
@@ -28,21 +28,21 @@ class AdditionsGroup extends React.Component {
     this.setState({
       count: this.state.count + 1,
     });
-  }
+  };
 
   handleRemove = () => {
     this.tabular && this.tabular.handleRemove();
-    if(this.state.count){
+    if(this.state.count) {
       this.setState({
         count: this.state.count - 1,
       });
     }
-  }
+  };
 
   render() {
 
     const {props, state: {count}, handleAdd, handleRemove} = this;
-    const {Renderer, group, dp, classes, scheme} = props;
+    const {Renderer, group, dp, classes, scheme, meta} = props;
     const {ref, presentation} = group;
     const style = {flex: 'initial'};
     if(count) {
@@ -52,21 +52,23 @@ class AdditionsGroup extends React.Component {
 
     return <div style={style}>
       <ListItem disableGutters className={classes.listitem}>
-        <IconButton title="Добавить строку" onClick={handleAdd}><AddIcon /></IconButton>
-        <IconButton title="Удалить строку" disabled={!count} onClick={handleRemove}><RemoveIcon /></IconButton>
+        <IconButton title="Добавить строку" onClick={handleAdd}><AddIcon/></IconButton>
+        <IconButton title="Удалить строку" disabled={!count} onClick={handleRemove}><RemoveIcon/></IconButton>
         <ListItemText primary={presentation}/>
         <ListItemSecondaryAction className={classes.secondary}>{count ? `${count} шт` : ''}</ListItemSecondaryAction>
       </ListItem>
 
-      <Collapse in={!!count} timeout={50} classes={{entered: classes.entered}} style={{height: style.minHeight + 35}}>
-        {!Renderer && <p key={`p${ref}`}>{`свойства ${presentation}`}</p>}
-        {Renderer && <Renderer
-          tref={(el) => this.tabular = el}
-          minHeight={style.minHeight}
-          dp={dp}
-          group={group}
-          scheme={scheme}
-        />}
+      <Collapse in={!!count} timeout={100} classes={{entered: classes.entered}}>
+        <div style={{height: style.minHeight + 35}}>
+          <Renderer
+            tref={(el) => this.tabular = el}
+            minHeight={style.minHeight}
+            dp={dp}
+            group={group}
+            scheme={scheme}
+            meta={meta}
+          />
+        </div>
       </Collapse>
 
       {!count && <Divider key={`d${ref}`}/>}
@@ -80,6 +82,7 @@ AdditionsGroup.propTypes = {
   dp: PropTypes.object.isRequired,
   group: PropTypes.object.isRequired,
   scheme: PropTypes.object.isRequired,
+  count: PropTypes.number.isRequired,
   Renderer: PropTypes.func,
 };
 

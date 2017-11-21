@@ -308,7 +308,7 @@
         break;
 
       case 'btn_add_product':
-        new CalcOrderFormProductList(wnd, o);
+        $p.dp.buyers_order.open_product_list(wnd, o);
         break;
 
       case 'btn_additions':

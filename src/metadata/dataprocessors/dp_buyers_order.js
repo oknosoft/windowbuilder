@@ -56,9 +56,9 @@ export default function ($p) {
 
     // TODO пробежать по всем строкам ниже удаляемой и заменить elm в параметрах
     del_row(row) {
-      // if(row._owner.name === 'production') {
-      //
-      // }
+      if(row._owner.name === 'production') {
+        return;
+      }
     }
   };
 
@@ -66,9 +66,9 @@ export default function ($p) {
   $p.DpBuyers_orderCharges_discountsRow = class DpBuyers_orderCharges_discountsRow extends $p.DpBuyers_orderCharges_discountsRow {
 
     // при изменении реквизита
-    value_change(field, type, value, no_extra_charge) {
+    value_change(field, type, value) {
       if(field == 'discount_percent') {
-        const {_obj, _owner, nom_kind, discount_percent} = this;
+        const {_owner, nom_kind} = this;
         const {_mode, _calc_order} = _owner._owner;
         _calc_order.production.forEach((row) => {
           if(row.nom.nom_kind == nom_kind) {
@@ -94,7 +94,7 @@ export default function ($p) {
       }
 
       if(field == 'inset') {
-        const {_obj, _owner, row} = this;
+        const {_owner, row} = this;
         if(this.inset != value) {
           this.inset = value;
           const {product_params} = _owner._owner;
