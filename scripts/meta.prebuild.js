@@ -268,7 +268,7 @@ function obj_constructor_text(_m, category, name, categoties) {
 
   if(managerText){
     text += managerText;
-    text += `\n$p.${category}.create('${name}', ${extModule.manager.name});\n`;
+    text += `\n$p.${category}.create('${name}', ${extModule.manager.name}, true);\n`;
   }
   else{
     text += `$p.${category}.create('${name}');\n`;
