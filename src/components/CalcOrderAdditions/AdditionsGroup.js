@@ -60,6 +60,31 @@ class AdditionsGroup extends React.Component {
     }
   };
 
+  onRowUpdated = (e, row) => {
+    if(e && e.updated.hasOwnProperty('inset')){
+      const {meta} = this.props;
+      $p.cat.clrs.selection_exclude_service(meta.fields.clr, row.inset);
+      if(!row.clr.empty()){
+        const filter = meta.fields.clr.choice_params.filter(({name}) =>  name === 'ref');
+        if(filter.length) {
+          if(filter[0].path.in && !filter[0].path.in.some(v => v == row.clr)){
+            row.clr = filter[0].path.in[0];
+          }
+        }
+      }
+    }
+    this.forceUpdate();
+  }
+
+  onCellSelected = (e) => {
+    const {props, tabular} = this;
+    const {meta} = props;
+    if(tabular && tabular.state._columns && tabular.state._columns[e.idx].key == 'clr'){
+      const row = tabular.rowGetter(e.rowIdx);
+      $p.cat.clrs.selection_exclude_service(meta.fields.clr, row.inset);
+    }
+  }
+
   render() {
 
     const {props, state: {count}, handleAdd, handleRemove} = this;
@@ -83,8 +108,9 @@ class AdditionsGroup extends React.Component {
         <ListItemSecondaryAction className={classes.secondary}>{count ? `${pieces()} шт` : ''}</ListItemSecondaryAction>
       </ListItem>
 
+
       <Collapse in={!!count} timeout={100} classes={{entered: classes.entered}}>
-        <div style={{height: style.minHeight + 35}}>
+        <div style={{height: (style.minHeight || 0) + 35}}>
           <Renderer
             tref={(el) => this.tabular = el}
             minHeight={style.minHeight}
@@ -92,7 +118,8 @@ class AdditionsGroup extends React.Component {
             group={group}
             scheme={scheme}
             meta={meta}
-            onRowUpdated={() => this.forceUpdate()}
+            onRowUpdated={this.onRowUpdated}
+            onCellSelected={this.onCellSelected}
           />
         </div>
       </Collapse>

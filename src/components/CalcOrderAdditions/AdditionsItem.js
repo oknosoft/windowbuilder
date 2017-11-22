@@ -13,7 +13,7 @@ import TabularSection from 'metadata-react/TabularSection';
 export default class AdditionsItem extends Component {
 
   render() {
-    const {dp, meta, scheme, tref, onRowUpdated, minHeight} = this.props;
+    const {dp, meta, scheme, tref, onRowUpdated, onCellSelected, minHeight} = this.props;
 
     return <TabularSection
       ref={tref}
@@ -22,6 +22,7 @@ export default class AdditionsItem extends Component {
       _tabular="production"
       scheme={scheme}
       onRowUpdated={onRowUpdated}
+      onCellSelected={onCellSelected}
       minHeight={minHeight}
       hideToolbar
     />;
@@ -35,5 +36,6 @@ AdditionsItem.propTypes = {
   meta: PropTypes.object.isRequired,
   tref: PropTypes.func.isRequired,
   onRowUpdated: PropTypes.func.isRequired,
+  onCellSelected: PropTypes.func.isRequired,
   minHeight: PropTypes.number,
 };
