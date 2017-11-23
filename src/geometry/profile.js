@@ -1764,16 +1764,25 @@ class Profile extends ProfileItem {
 
   constructor(attr) {
 
+    const fromCoordinates = !!attr.row;
+
     super(attr);
 
     if(this.parent) {
+      const {project, observer} = this;
 
       // Подключаем наблюдателя за событиями контура с именем _consts.move_points_
-      this.observer = this.observer.bind(this);
-      this.project._scope.eve.on(consts.move_points, this.observer);
+      this.observer = observer.bind(this);
+      project._scope.eve.on(consts.move_points, this.observer);
 
       // Информируем контур о том, что у него появился новый ребёнок
       this.layer.on_insert_elm(this);
+
+      // ищем и добавляем доборные профили
+      if(fromCoordinates){
+        const {cnstr, elm} = attr.row;
+        project.ox.coordinates.find_rows({cnstr, parent: {in: [elm, -elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => new ProfileAddl({row, parent: this}));
+      }
     }
 
   }

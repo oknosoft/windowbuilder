@@ -2383,28 +2383,18 @@ class Contour extends AbstractFilling(paper.Layer) {
       this._row.cnstr = constructions.aggregate([], ['cnstr'], 'MAX') + 1;
     }
 
-    if (this.cnstr) {
+    const {cnstr} = this;
+    if (cnstr) {
 
       const {coordinates} = this.project.ox;
 
-      coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => {
-        const profile = new Profile({row: row, parent: this});
-        coordinates.find_rows({cnstr: row.cnstr, parent: {in: [row.elm, -row.elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => {
-          new ProfileAddl({row: row, parent: profile});
-        });
-      });
+      coordinates.find_rows({cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => new Profile({row, parent: this}));
 
-      coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.glasses}}, (row) => {
-        new Filling({row: row, parent: this});
-      });
+      coordinates.find_rows({cnstr, elm_type: {in: $p.enm.elm_types.glasses}}, (row) => new Filling({row, parent: this}));
 
-      coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Водоотлив}, (row) => {
-        new Sectional({row: row, parent: this});
-      });
+      coordinates.find_rows({cnstr, elm_type: $p.enm.elm_types.Водоотлив}, (row) => new Sectional({row, parent: this}));
 
-      coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, (row) => {
-        new FreeText({row: row, parent: this.l_text});
-      });
+      coordinates.find_rows({cnstr, elm_type: $p.enm.elm_types.Текст}, (row) => new FreeText({row, parent: this.l_text}));
     }
 
   }
@@ -7811,14 +7801,22 @@ class Profile extends ProfileItem {
 
   constructor(attr) {
 
+    const fromCoordinates = !!attr.row;
+
     super(attr);
 
     if(this.parent) {
+      const {project, observer} = this;
 
-      this.observer = this.observer.bind(this);
-      this.project._scope.eve.on(consts.move_points, this.observer);
+      this.observer = observer.bind(this);
+      project._scope.eve.on(consts.move_points, this.observer);
 
       this.layer.on_insert_elm(this);
+
+      if(fromCoordinates){
+        const {cnstr, elm} = attr.row;
+        project.ox.coordinates.find_rows({cnstr, parent: {in: [elm, -elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => new ProfileAddl({row, parent: this}));
+      }
     }
 
   }
@@ -8167,21 +8165,30 @@ class ProfileAddl extends ProfileItem {
 
   constructor(attr) {
 
+    const fromCoordinates = !!attr.row;
+
     super(attr);
 
-    this._attr.generatrix.strokeWidth = 0;
+    const {project, _attr, _row} = this;
 
-    if(!attr.side && this._row.parent < 0){
+    _attr.generatrix.strokeWidth = 0;
+
+    if(!attr.side && _row.parent < 0){
       attr.side = "outer";
     }
 
-    this._attr.side = attr.side || "inner";
+    _attr.side = attr.side || "inner";
 
-    if(!this._row.parent){
-      this._row.parent = this.parent.elm;
+    if(!_row.parent){
+      _row.parent = this.parent.elm;
       if(this.outer){
-        this._row.parent = -this._row.parent;
+        _row.parent = -_row.parent;
       }
+    }
+
+    if(fromCoordinates){
+      const {cnstr, elm} = attr.row;
+      project.ox.coordinates.find_rows({cnstr, parent: {in: [elm, -elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => new ProfileAddl({row, parent: this}));
     }
 
   }
