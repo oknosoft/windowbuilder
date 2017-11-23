@@ -2925,14 +2925,15 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   remove() {
-    const {children, _row} = this;
+    const {children, _row, cnstr} = this;
     while (children.length) {
       children[0].remove();
     }
 
     if (_row) {
       const {ox} = this.project;
-      ox.coordinates.find_rows({cnstr: this.cnstr}).forEach((row) => ox.coordinates.del(row._row));
+      ox.coordinates.clear({cnstr});
+      ox.params.clear({cnstr});
 
       if (ox === _row._owner._owner) {
         _row._owner.del(_row);
