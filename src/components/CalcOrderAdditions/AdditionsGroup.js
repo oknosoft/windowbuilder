@@ -135,6 +135,7 @@ AdditionsGroup.propTypes = {
   dp: PropTypes.object.isRequired,
   group: PropTypes.object.isRequired,
   scheme: PropTypes.object.isRequired,
+  meta: PropTypes.object.isRequired,
   count: PropTypes.number.isRequired,
   Renderer: PropTypes.func,
 };

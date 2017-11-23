@@ -33,7 +33,7 @@ class FreeText extends paper.PointText {
       this._row = attr.row;
     }
     else{
-      this._row = attr.row = attr.parent.project.ox.coordinates.add();
+      this._row = attr.row = this.project.ox.coordinates.add();
     }
 
     const {_row} = this;
@@ -43,7 +43,7 @@ class FreeText extends paper.PointText {
     }
 
     if(!_row.elm){
-      _row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+      _row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
     }
 
     if(attr.point){
@@ -115,7 +115,7 @@ class FreeText extends paper.PointText {
    */
   move_points(point) {
     this.point = point;
-    project.notify(this, 'update', {x: true, y: true});
+    this.project.notify(this, 'update', {x: true, y: true});
   }
 
   /**
