@@ -166,7 +166,8 @@ class Pricing {
     // Рез = Новый Структура("КМарж, КМаржМин, КМаржВнутр, Скидка, СкидкаВнешн, НаценкаВнешн, ТипЦенСебестоимость, ТипЦенПрайс, ТипЦенВнутр,
     // 				|Формула, ФормулаПродажа, ФормулаВнутр, ФормулаВнешн",
     // 				1.9, 1.2, 1.5, 0, 10, 0, ТипЦенПоУмолчанию, ТипЦенПоУмолчанию, ТипЦенПоУмолчанию, "", "", "",);
-    const empty_formula = $p.cat.formulas.get();
+    const {utils, job_prm, enm, ireg, cat} = $p;
+    const empty_formula = cat.formulas.get();
 
     prm.price_type = {
       marginality: 1.9,
@@ -175,9 +176,9 @@ class Pricing {
       discount: 0,
       discount_external: 10,
       extra_charge_external: 0,
-      price_type_first_cost: $p.job_prm.pricing.price_type_first_cost,
-      price_type_sale: $p.job_prm.pricing.price_type_sale,
-      price_type_internal: $p.job_prm.pricing.price_type_first_cost,
+      price_type_first_cost: job_prm.pricing.price_type_first_cost,
+      price_type_sale: job_prm.pricing.price_type_sale,
+      price_type_internal: job_prm.pricing.price_type_first_cost,
       formula: empty_formula,
       sale_formula: empty_formula,
       internal_formula: empty_formula,
@@ -189,10 +190,11 @@ class Pricing {
     const {partner} = calc_order_row._owner._owner;
     const filter = nom.price_group.empty() ?
         {price_group: nom.price_group} :
-        {price_group: {in: [nom.price_group, $p.cat.price_groups.get()]}};
+        {price_group: {in: [nom.price_group, cat.price_groups.get()]}};
     const ares = [];
 
-    $p.ireg.margin_coefficients.find_rows(filter, (row) => {
+
+    ireg.margin_coefficients.find_rows(filter, (row) => {
 
       // фильтруем по параметрам
       let ok = true;
@@ -202,11 +204,11 @@ class Pricing {
           const {property} = row_prm;
           // для вычисляемых параметров выполняем формулу
           if(property.is_calculated){
-            ok = property.check_compare(property.calculated_value({calc_order_row}), property.extract_value(row_prm), row_prm.comparison_type);
+            ok = utils.check_compare(property.calculated_value({calc_order_row}), property.extract_value(row_prm), row_prm.comparison_type, enm.comparison_types);
           }
           // заглушка для совместимости с УПзП
           else if(property.empty()){
-            const vpartner = $p.cat.partners.get(row_prm._obj.value, false, true);
+            const vpartner = cat.partners.get(row_prm._obj.value, false, true);
             if(vpartner && !vpartner.empty()){
               ok = vpartner == partner;
             }
@@ -222,7 +224,7 @@ class Pricing {
               return false;
             });
             if(finded){
-              ok = property.check_compare(finded.value, property.extract_value(row_prm), row_prm.comparison_type);
+              ok = utils.check_compare(finded.value, property.extract_value(row_prm), row_prm.comparison_type, enm.comparison_types);
             }
             else{
               ok = false;
@@ -265,7 +267,7 @@ class Pricing {
 
     // если для контрагента установлена индивидуальная наценка, подмешиваем её в prm
     partner.extra_fields.find_rows({
-      property: $p.job_prm.pricing.dealer_surcharge
+      property: job_prm.pricing.dealer_surcharge
     }, (row) => {
       const val = parseFloat(row.value);
       if(val){
