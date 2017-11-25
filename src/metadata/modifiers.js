@@ -16,8 +16,10 @@ import reports from './reports';
 import dataprocessors from './dataprocessors';
 //
 // общие модули
-import common from './common';
+import common from './common/index';
 
+// обработчик экспорта в dxf
+import export_dxf from '../openjscad/export_dxf';
 
 export default function ($p) {
   // catalogs($p);
@@ -26,4 +28,5 @@ export default function ($p) {
   reports($p);
   dataprocessors($p);
   common($p);
+  export_dxf($p);
 }

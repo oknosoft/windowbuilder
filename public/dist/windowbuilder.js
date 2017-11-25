@@ -1031,96 +1031,101 @@ class Editor extends paper.PaperScope {
       buttons: [
 
         {name: 'save_close', text: '&nbsp;<i class="fa fa-floppy-o fa-fw"></i>', tooltip: 'Рассчитать, записать и закрыть', float: 'left', width: '34px'},
-        {name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>&nbsp;', tooltip: 'Рассчитать и записать данные', float: 'left'},
+        {name: 'calck', text: '<i class="fa fa-calculator fa-fw"></i>', tooltip: 'Рассчитать и записать данные', float: 'left'},
 
-        {name: 'sep_0', text: '', float: 'left'},
         {name: 'stamp',  css: 'tb_stamp', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
 
-        {name: 'sep_1', text: '', float: 'left'},
         {name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
         {name: 'paste', text: '<i class="fa fa-clipboard fa-fw"></i>', tooltip: 'Вставить', float: 'left'},
         {name: 'paste_prop', text: '<i class="fa fa-paint-brush fa-fw"></i>', tooltip: 'Применить скопированные свойства', float: 'left'},
 
-        {name: 'sep_2', text: '', float: 'left'},
         {name: 'back', text: '<i class="fa fa-undo fa-fw"></i>', tooltip: 'Шаг назад', float: 'left'},
         {name: 'rewind', text: '<i class="fa fa-repeat fa-fw"></i>', tooltip: 'Шаг вперед', float: 'left'},
 
-        {name: 'sep_3', text: '', float: 'left'},
         {name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
+        {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left'},
 
         {name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
 
 
       ], onclick: function (name) {
-        switch(name) {
+        switch (name) {
 
-          case 'save_close':
-            if(_editor.project)
-              _editor.project.save_coordinates({save: true, close: true});
-            break;
+        case 'save_close':
+          if(_editor.project) {
+            _editor.project.save_coordinates({save: true, close: true});
+          }
+          break;
 
-          case 'close':
-            _editor.close()
-            break;
+        case 'close':
+          _editor.close();
+          break;
 
-          case 'calck':
-            if(_editor.project)
-              _editor.project.save_coordinates({save: true});
-            break;
+        case 'calck':
+          if(_editor.project) {
+            _editor.project.save_coordinates({save: true});
+          }
+          break;
 
-          case 'stamp':
-            _editor.load_stamp();
-            break;
+        case 'stamp':
+          _editor.load_stamp();
+          break;
 
-          case 'new_stv':
-            var fillings = _editor.project.getItems({class: Filling, selected: true});
-            if(fillings.length)
-              fillings[0].create_leaf();
-            break;
+        case 'new_stv':
+          var fillings = _editor.project.getItems({class: Filling, selected: true});
+          if(fillings.length) {
+            fillings[0].create_leaf();
+          }
+          break;
 
-          case 'back':
-            _editor._undo.back();
-            break;
+        case 'back':
+          _editor._undo.back();
+          break;
 
-          case 'rewind':
-            _editor._undo.rewind();
-            break;
+        case 'rewind':
+          _editor._undo.rewind();
+          break;
 
-          case 'copy':
-            break;
+        case 'copy':
+          break;
 
-          case 'paste':
-            break;
+        case 'paste':
+          break;
 
-          case 'paste_prop':
-            $p.msg.show_msg(name);
-            break;
+        case 'paste_prop':
+          $p.msg.show_msg(name);
+          break;
 
-          case 'open_spec':
-            _editor.project.ox.form_obj();
-            break;
+        case 'open_spec':
+          _editor.project.ox.form_obj();
+          break;
 
-          case 'square':
-            $p.msg.show_msg(name);
-            break;
+        case 'dxf':
+          $p.md.emit('dxf', _editor.project);
+          break;
 
-          case 'triangle1':
-            $p.msg.show_msg(name);
-            break;
+        case 'square':
+          $p.msg.show_msg(name);
+          break;
 
-          case 'triangle3':
-            $p.msg.show_msg(name);
-            break;
+        case 'triangle1':
+          $p.msg.show_msg(name);
+          break;
 
-          case 'triangle3':
-            $p.msg.show_msg(name);
-            break;
+        case 'triangle3':
+          $p.msg.show_msg(name);
+          break;
 
-          default:
-            $p.msg.show_msg(name);
-            break;
+        case 'triangle3':
+          $p.msg.show_msg(name);
+          break;
+
+        default:
+          $p.msg.show_msg(name);
+          break;
         }
-      }});
+      }
+    });
 
     this.tb_top.buttons.paste.classList.add("disabledbutton");
     this.tb_top.buttons.paste_prop.classList.add("disabledbutton");
@@ -9573,10 +9578,12 @@ class Scheme extends paper.Project {
   }
 
   draw_visualization() {
-    for (let contour of this.contours) {
-      contour.draw_visualization();
+    if(this.view){
+      for (let contour of this.contours) {
+        contour.draw_visualization();
+      }
+      this.view.update();
     }
-    this.view.update();
   }
 
   default_inset(attr) {

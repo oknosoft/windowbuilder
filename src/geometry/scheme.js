@@ -1069,10 +1069,12 @@ class Scheme extends paper.Project {
    * Перерисовавает визуализацию контуров изделия
    */
   draw_visualization() {
-    for (let contour of this.contours) {
-      contour.draw_visualization();
+    if(this.view){
+      for (let contour of this.contours) {
+        contour.draw_visualization();
+      }
+      this.view.update();
     }
-    this.view.update();
   }
 
   /**
