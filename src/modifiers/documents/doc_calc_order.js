@@ -727,11 +727,13 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    */
   create_product_row({row_spec, elm, len_angl, params, create, grid}) {
 
-    const row = this.production.add({
-      qty: 1,
-      quantity: 1,
-      discount_percent_internal: $p.wsql.get_user_param('discount_percent_internal', 'number')
-    });
+    const row = row_spec instanceof $p.DpBuyers_orderProductionRow && !row_spec.characteristic.empty() && row_spec.characteristic.calc_order === this ?
+      row_spec.characteristic.calc_order_row :
+      this.production.add({
+        qty: 1,
+        quantity: 1,
+        discount_percent_internal: $p.wsql.get_user_param('discount_percent_internal', 'number')
+      });
 
     if(grid) {
       this.production.sync_grid(grid);
@@ -742,19 +744,25 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       return row;
     }
 
-    // ищем объект продукции в RAM
+    // ищем объект продукции в RAM или берём из строки заказа
     const mgr = $p.cat.characteristics;
     let cx;
-    mgr.find_rows({calc_order: this, product: row.row}, (ox) => {
+    function fill_cx(ox) {
       for (let ts in mgr.metadata().tabular_sections) {
         ox[ts].clear();
       }
       ox.leading_elm = 0;
       ox.leading_product = '';
       cx = Promise.resolve(ox);
-    });
+    }
+    if(row.characteristic.empty()){
+      mgr.find_rows({calc_order: this, product: row.row}, fill_cx);
+    }
+    else{
+      fill_cx(row.characteristic);
+    }
 
-    // объект продукции создаём, но из базы не читаем и пока не записываем
+    // если не нашли в RAM, создаём объект продукции, но из базы не читаем и пока не записываем
     return (cx || mgr.create({
       ref: $p.utils.generate_guid(),
       calc_order: this,
@@ -801,7 +809,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   }
 
   /**
-   * Создаёт продукции заказа по массиву строк и параметров
+   * ### Создаёт продукции заказа по массиву строк и параметров
+   * если в dp.production заполнены уникальные характеристики - перезаполняет их, а новые не создаёт
    * @method process_add_product_list
    * @param dp {DpBuyers_order} - экземпляр обработки с заполненными табличными частями
    */
@@ -875,7 +884,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
               return row_spec.len;
             },
           };
-          // создаём строку заказа с уникальной харктеристикой
+          // создаём или получаем строку заказа с уникальной харктеристикой
           row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
           row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
 

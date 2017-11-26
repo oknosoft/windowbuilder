@@ -4507,11 +4507,13 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   create_product_row({row_spec, elm, len_angl, params, create, grid}) {
 
-    const row = this.production.add({
-      qty: 1,
-      quantity: 1,
-      discount_percent_internal: $p.wsql.get_user_param('discount_percent_internal', 'number')
-    });
+    const row = row_spec instanceof $p.DpBuyers_orderProductionRow && !row_spec.characteristic.empty() && row_spec.characteristic.calc_order === this ?
+      row_spec.characteristic.calc_order_row :
+      this.production.add({
+        qty: 1,
+        quantity: 1,
+        discount_percent_internal: $p.wsql.get_user_param('discount_percent_internal', 'number')
+      });
 
     if(grid) {
       this.production.sync_grid(grid);
@@ -4524,14 +4526,20 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     const mgr = $p.cat.characteristics;
     let cx;
-    mgr.find_rows({calc_order: this, product: row.row}, (ox) => {
+    function fill_cx(ox) {
       for (let ts in mgr.metadata().tabular_sections) {
         ox[ts].clear();
       }
       ox.leading_elm = 0;
       ox.leading_product = '';
       cx = Promise.resolve(ox);
-    });
+    }
+    if(row.characteristic.empty()){
+      mgr.find_rows({calc_order: this, product: row.row}, fill_cx);
+    }
+    else{
+      fill_cx(row.characteristic);
+    }
 
     return (cx || mgr.create({
       ref: $p.utils.generate_guid(),
@@ -5195,7 +5203,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'btn_additions':
-        $p.dp.buyers_order.open_additions(o, handlers);
+        $p.dp.buyers_order.open_additions(wnd, o, handlers);
         break;
 
       case 'btn_add_material':

@@ -44,18 +44,29 @@ class AdditionsGroup extends React.Component {
   };
 
   handleRemove = () => {
-    const {tabular, state} = this;
+    const {props, tabular, state} = this;
     if(tabular){
       const {selected} = tabular._grid.state;
       const row = tabular.rowGetter(selected && selected.hasOwnProperty('rowIdx') ? selected.rowIdx : 0);
       if(row){
-        tabular.state._tabular.del(row);
+        const {calc_order_row} = row.characteristic;
+        row._owner.del(row);
         tabular.forceUpdate();
         if(state.count) {
           this.setState({
             count: state.count - 1,
           });
         }
+        if(calc_order_row){
+          calc_order_row._owner.del(calc_order_row);
+        }
+      }
+      else{
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Укажите строку для удаления (${props.group})`,
+          title: 'Удаление строки'
+        });
       }
     }
   };
@@ -92,7 +103,7 @@ class AdditionsGroup extends React.Component {
     const {ref, presentation} = group;
     const style = {flex: 'initial'};
     if(count) {
-      style.minHeight = 120 + (33 * (count - 1));
+      style.minHeight = 80 + (33 * (count - 1));
       style.maxHeight = 320;
     }
 
@@ -104,10 +115,9 @@ class AdditionsGroup extends React.Component {
       <ListItem disableGutters className={classes.listitem}>
         <IconButton title="Добавить строку" onClick={handleAdd}><AddIcon/></IconButton>
         <IconButton title="Удалить строку" disabled={!count} onClick={handleRemove}><RemoveIcon/></IconButton>
-        <ListItemText primary={presentation}/>
+        <ListItemText classes={count ? {text: classes.groupTitle} : {}} primary={presentation}/>
         <ListItemSecondaryAction className={classes.secondary}>{count ? `${pieces()} шт` : ''}</ListItemSecondaryAction>
       </ListItem>
-
 
       <Collapse in={!!count} timeout={100} classes={{entered: classes.entered}}>
         <div style={{height: (style.minHeight || 0) + 35}}>
