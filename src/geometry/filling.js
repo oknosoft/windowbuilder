@@ -455,6 +455,7 @@ class Filling extends AbstractFilling(BuilderElement) {
   set path(attr) {
     let {_attr, path} = this;
 
+    // чистим старый путь
     if(path){
       path.removeSegments();
     }
@@ -462,7 +463,15 @@ class Filling extends AbstractFilling(BuilderElement) {
       path = _attr.path = new paper.Path({parent: this});
     }
 
-    _attr._profiles = [];
+    // чистим старые сегменты
+    if(Array.isArray(_attr._profiles)){
+      _attr._profiles.length = 0;
+    }
+    else{
+      _attr._profiles = [];
+    }
+
+    let needPurge;
 
     if(attr instanceof paper.Path){
       path.addSegments(attr.segments);
@@ -507,7 +516,17 @@ class Filling extends AbstractFilling(BuilderElement) {
         path.addSegments(curr.sub_path.segments);
         ["anext","pb","pe"].forEach((prop) => { delete curr[prop] });
         _attr._profiles.push(curr);
+
+        if(!needPurge){
+          needPurge = Math.abs(curr.angle_hor % 90) < 0.2
+        }
       }
+    }
+
+    if(needPurge || path.hasHandles()) {
+      const delta = 2;
+      const toRemove = [];
+      let prev;
     }
 
     if(path.segments.length && !path.closed){

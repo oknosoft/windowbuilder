@@ -32,7 +32,7 @@ export function exec_dxf (scheme, jscad) {
   if(glasses.length){
     lscript = 'CAG.fromPoints([';
     const path = glasses[0].path.clone(false);
-    path.flatten(0.7);
+    path.flatten(0.5);
     let prev;
     path.segments.forEach(({point}) => {
       if(prev && prev.getDistance(point) < 2){

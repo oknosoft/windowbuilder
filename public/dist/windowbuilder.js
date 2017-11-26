@@ -5551,7 +5551,14 @@ class Filling extends AbstractFilling(BuilderElement) {
       path = _attr.path = new paper.Path({parent: this});
     }
 
-    _attr._profiles = [];
+    if(Array.isArray(_attr._profiles)){
+      _attr._profiles.length = 0;
+    }
+    else{
+      _attr._profiles = [];
+    }
+
+    let needPurge;
 
     if(attr instanceof paper.Path){
       path.addSegments(attr.segments);
@@ -5593,7 +5600,17 @@ class Filling extends AbstractFilling(BuilderElement) {
         path.addSegments(curr.sub_path.segments);
         ["anext","pb","pe"].forEach((prop) => { delete curr[prop] });
         _attr._profiles.push(curr);
+
+        if(!needPurge){
+          needPurge = Math.abs(curr.angle_hor % 90) < 0.2
+        }
       }
+    }
+
+    if(needPurge || path.hasHandles()) {
+      const delta = 2;
+      const toRemove = [];
+      let prev;
     }
 
     if(path.segments.length && !path.closed){
@@ -6166,12 +6183,10 @@ Object.defineProperties(paper.Path.prototype, {
           tmp._reversed = true;
         }
         else{
-          let loc1 = this.getLocationOf(point1);
-          let loc2 = this.getLocationOf(point2);
-          if(!loc1)
-            loc1 = this.getNearestLocation(point1);
-          if(!loc2)
-            loc2 = this.getNearestLocation(point2);
+          const loc1 = this.getLocationOf(point1) || this.getNearestLocation(point1);
+          const loc2 = this.getLocationOf(point2) || this.getNearestLocation(point2);
+          const offset1 = loc1.offset;
+          const offset2 = loc2.offset;
 
           if(this.is_linear()){
             tmp = new paper.Path({
@@ -6180,27 +6195,31 @@ Object.defineProperties(paper.Path.prototype, {
             });
           }
           else{
-            const step = (loc2.offset - loc1.offset) * 0.02;
+            const step = (offset2 - offset1) * 0.02;
 
             tmp = new paper.Path({
-              segments: [point1],
+              segments: [loc1.point],
               insert: false
             });
 
             if(step < 0){
               tmp._reversed = true;
-              for(var i = loc1.offset; i>=loc2.offset; i+=step)
+              for(let i = offset1 + step; i > offset2; i+= step){
                 tmp.add(this.getPointAt(i));
-            }else if(step > 0){
-              for(var i = loc1.offset; i<=loc2.offset; i+=step)
-                tmp.add(this.getPointAt(i));
+              }
             }
-            tmp.add(point2);
+            else if(step > 0){
+              for(let i = offset1 + step; i < offset2; i+= step){
+                tmp.add(this.getPointAt(i));
+              }
+            }
+            tmp.add(loc2.point);
             tmp.simplify(0.8);
           }
 
-          if(loc1.offset > loc2.offset)
+          if(offset1 > offset2){
             tmp._reversed = true;
+          }
         }
 
         return tmp;
@@ -6210,20 +6229,27 @@ Object.defineProperties(paper.Path.prototype, {
     equidistant: {
       value: function (delta, elong) {
 
-        var normal = this.getNormalAt(0),
-          res = new paper.Path({
+        let normal = this.getNormalAt(0);
+        const res = new paper.Path({
             segments: [this.firstSegment.point.add(normal.multiply(delta))],
             insert: false
           });
 
         if(this.is_linear()) {
           res.add(this.lastSegment.point.add(normal.multiply(delta)));
+        }
+        else{
 
-        }else{
+          if(this.firstSegment.handleIn.length){
+            res.firstSegment.handleIn = this.firstSegment.handleIn.clone();
+          }
+          if(this.firstSegment.handleOut.length){
+            res.firstSegment.handleOut = this.firstSegment.handleOut.clone();
+          }
 
-          var len = this.length, step = len * 0.02, point;
+          let len = this.length, step = len * 0.02, point;
 
-          for(var i = step; i<=len; i+=step) {
+          for(let i = step; i < len; i += step) {
             point = this.getPointAt(i);
             if(!point)
               continue;
@@ -6233,6 +6259,13 @@ Object.defineProperties(paper.Path.prototype, {
 
           normal = this.getNormalAt(len);
           res.add(this.lastSegment.point.add(normal.multiply(delta)));
+
+          if(this.lastSegment.handleIn.length){
+            res.lastSegment.handleIn = this.lastSegment.handleIn.clone();
+          }
+          if(this.lastSegment.handleOut.length){
+            res.lastSegment.handleOut = this.lastSegment.handleOut.clone();
+          }
 
           res.simplify(0.8);
         }
@@ -6245,13 +6278,15 @@ Object.defineProperties(paper.Path.prototype, {
       value: function (delta) {
 
         if(delta){
-          let tangent = this.getTangentAt(0);
           if(this.is_linear()) {
+            let tangent = this.getTangentAt(0);
             this.firstSegment.point = this.firstSegment.point.add(tangent.multiply(-delta));
             this.lastSegment.point = this.lastSegment.point.add(tangent.multiply(delta));
           }else{
+            const {length} = this;
+            let tangent = this.getTangentAt(length * 0.01);
             this.insert(0, this.firstSegment.point.add(tangent.multiply(-delta)));
-            tangent = this.getTangentAt(this.length);
+            tangent = this.getTangentAt(length * 0.99);
             this.add(this.lastSegment.point.add(tangent.multiply(delta)));
           }
         }
