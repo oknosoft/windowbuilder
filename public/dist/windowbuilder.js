@@ -9030,7 +9030,7 @@ class Scheme extends paper.Project {
 
   }
 
-  load(id) {
+  load(id, from_service) {
     const {_attr} = this;
     const _scheme = this;
 
@@ -9096,7 +9096,16 @@ class Scheme extends paper.Project {
             .then(() => {
               if(_scheme.ox.coordinates.count()) {
                 if(_scheme.ox.specification.count()) {
-                  setTimeout(() => _scheme.draw_visualization(), 100);
+                  if(from_service){
+                    Promise.resolve().then(() => {
+                      _scheme.draw_visualization();
+                      _scheme.zoom_fit();
+                      resolve();
+                    })
+                  }
+                  else{
+                    setTimeout(() => _scheme.draw_visualization(), 100);
+                  }
                 }
                 else {
                   $p.products_building.recalc(_scheme, {});
@@ -9107,11 +9116,10 @@ class Scheme extends paper.Project {
               }
               delete _attr._snapshot;
 
-              resolve();
+              (!from_service || !_scheme.ox.specification.count()) && resolve();
             });
         });
       });
-
     }
 
     _attr._loading = true;
