@@ -48,7 +48,7 @@ export function customPouchMiddleware({adapters}) {
         // TODO: здесь можно подписаться на online-offline, rotate и т.д.
 
       }
-      return next(action);
+      return next && action && next(action);
     };
   };
 }

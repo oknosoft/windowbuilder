@@ -32,21 +32,31 @@ class ProfileAddl extends ProfileItem {
 
   constructor(attr) {
 
+    const fromCoordinates = !!attr.row;
+
     super(attr);
 
-    this._attr.generatrix.strokeWidth = 0;
+    const {project, _attr, _row} = this;
 
-    if(!attr.side && this._row.parent < 0){
+    _attr.generatrix.strokeWidth = 0;
+
+    if(!attr.side && _row.parent < 0){
       attr.side = "outer";
     }
 
-    this._attr.side = attr.side || "inner";
+    _attr.side = attr.side || "inner";
 
-    if(!this._row.parent){
-      this._row.parent = this.parent.elm;
+    if(!_row.parent){
+      _row.parent = this.parent.elm;
       if(this.outer){
-        this._row.parent = -this._row.parent;
+        _row.parent = -_row.parent;
       }
+    }
+
+    // ищем и добавляем доборы к доборам
+    if(fromCoordinates){
+      const {cnstr, elm} = attr.row;
+      project.ox.coordinates.find_rows({cnstr, parent: {in: [elm, -elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => new ProfileAddl({row, parent: this}));
     }
 
   }

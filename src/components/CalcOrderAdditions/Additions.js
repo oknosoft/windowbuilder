@@ -14,9 +14,21 @@ import connect from './connect';
 
 class CalcOrderAdditions extends Component {
 
+  constructor(props, context) {
+    super(props, context);
+    const {handleCancel, handleCalck} = props;
+    this.handleCancel = handleCancel.bind(this);
+    this.handleCalck = handleCalck.bind(this);
+  }
+
+  handleOk = () => {
+    this.handleCalck().then(this.handleCancel);
+  };
+
   render() {
 
-    const {classes, handleCancel, handleCalck, handleOk, dialog } = this.props;
+    const {handleCancel, handleCalck, handleOk, props} = this;
+    const {classes, dialog} = props;
 
     return <Dialog
       open
@@ -29,7 +41,7 @@ class CalcOrderAdditions extends Component {
         <Button key="cancel" onClick={handleCancel} color="primary">Закрыть</Button>
       ]}
     >
-      <AdditionsGroups dialog={dialog}/>
+      <AdditionsGroups ref={(el) => this.additions = el} dialog={dialog}/>
     </Dialog>;
 
   }
@@ -39,7 +51,6 @@ CalcOrderAdditions.propTypes = {
   classes: PropTypes.object.isRequired,
   dialog: PropTypes.object.isRequired,
   handlers: PropTypes.object.isRequired,
-  handleOk: PropTypes.func.isRequired,
   handleCalck: PropTypes.func.isRequired,
   handleCancel: PropTypes.func.isRequired,
 };

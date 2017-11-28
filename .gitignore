@@ -6,14 +6,7 @@
 
 # Exclude compiled files
 build/
-data/11.js
-data/_design.json
-data/imgs/
-data/mango.js
-data/merged_wb_templates.js
-data/merged_wb_tips.js
-data/sync.json
-data/tsconfig.json
+data/
 dist/windowbuilder.css
 dist/windowbuilder.js
 dist/wnd_debug.js

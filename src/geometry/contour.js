@@ -108,32 +108,22 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
 
     // добавляем элементы контура
-    if (this.cnstr) {
+    const {cnstr} = this;
+    if (cnstr) {
 
       const {coordinates} = this.project.ox;
 
       // профили и доборы
-      coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => {
-        const profile = new Profile({row: row, parent: this});
-        coordinates.find_rows({cnstr: row.cnstr, parent: {in: [row.elm, -row.elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => {
-          new ProfileAddl({row: row, parent: profile});
-        });
-      });
+      coordinates.find_rows({cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => new Profile({row, parent: this}));
 
       // заполнения
-      coordinates.find_rows({cnstr: this.cnstr, elm_type: {in: $p.enm.elm_types.glasses}}, (row) => {
-        new Filling({row: row, parent: this});
-      });
+      coordinates.find_rows({cnstr, elm_type: {in: $p.enm.elm_types.glasses}}, (row) => new Filling({row, parent: this}));
 
       // разрезы
-      coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Водоотлив}, (row) => {
-        new Sectional({row: row, parent: this});
-      });
+      coordinates.find_rows({cnstr, elm_type: $p.enm.elm_types.Водоотлив}, (row) => new Sectional({row, parent: this}));
 
       // остальные элементы (текст)
-      coordinates.find_rows({cnstr: this.cnstr, elm_type: $p.enm.elm_types.Текст}, (row) => {
-        new FreeText({row: row, parent: this.l_text});
-      });
+      coordinates.find_rows({cnstr, elm_type: $p.enm.elm_types.Текст}, (row) => new FreeText({row, parent: this.l_text}));
     }
 
   }
@@ -766,14 +756,15 @@ class Contour extends AbstractFilling(paper.Layer) {
    */
   remove() {
     //удаляем детей
-    const {children, _row} = this;
+    const {children, _row, cnstr} = this;
     while (children.length) {
       children[0].remove();
     }
 
     if (_row) {
       const {ox} = this.project;
-      ox.coordinates.find_rows({cnstr: this.cnstr}).forEach((row) => ox.coordinates.del(row._row));
+      ox.coordinates.clear({cnstr});
+      ox.params.clear({cnstr});
 
       // удаляем себя
       if (ox === _row._owner._owner) {

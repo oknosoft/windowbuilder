@@ -8,6 +8,8 @@
  * @module dp_builder_pen
  */
 
+/* global paper, $p */
+
 export default function ($p) {
 
   $p.dp.builder_pen.on({

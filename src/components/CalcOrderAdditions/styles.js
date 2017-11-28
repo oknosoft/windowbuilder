@@ -18,6 +18,9 @@ const styles = theme => ({
   secondary: {
     marginTop: -theme.spacing.unit * 1.5,
   },
+  groupTitle: {
+    fontWeight: 'bold',
+  },
   listitem: {
     paddingTop: theme.spacing.unit,
     paddingBottom: theme.spacing.unit,

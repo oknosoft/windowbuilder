@@ -125,52 +125,6 @@ export default function ($p) {
       }
     },
 
-    check_compare: {
-      value: function (left, right, comparison_type) {
-        const {ne, gt, gte, lt, lte, nin, inh, ninh} = $p.enm.comparison_types;
-        switch (comparison_type) {
-        case ne:
-          return left != right;
-        case gt:
-          return left > right;
-        case gte:
-          return left >= right;
-        case lt:
-          return left < right;
-        case lte:
-          return left <= right;
-        case nin:
-          if(Array.isArray(left) && !Array.isArray(right)) {
-            return left.indexOf(right) == -1;
-          }
-          else if(!Array.isArray(left) && Array.isArray(right)) {
-            return right.indexOf(left) == -1;
-          }
-          else if(!Array.isArray(left) && !Array.isArray(right)) {
-            return right != left;
-          }
-          break;
-        case $p.enm.comparison_types.in:
-          if(Array.isArray(left) && !Array.isArray(right)) {
-            return left.indexOf(right) != -1;
-          }
-          else if(!Array.isArray(left) && Array.isArray(right)) {
-            return right.indexOf(left) != -1;
-          }
-          else if(!Array.isArray(left) && !Array.isArray(right)) {
-            return left == right;
-          }
-          break;
-        case inh:
-          return $p.utils.is_data_obj(left) ? left._hierarchy(right) : left == right;
-        case ninh:
-          return $p.utils.is_data_obj(left) ? !left._hierarchy(right) : left != right;
-        default:
-          return left == right;
-        }
-      }
-    },
-
     /**
      * ### Проверяет условие в строке отбора
      */
@@ -178,6 +132,7 @@ export default function ($p) {
       value: function ({row_spec, prm_row, elm, cnstr, origin, ox, calc_order}) {
 
         const {is_calculated} = this;
+        const {utils, enm: {comparison_types}} = $p;
 
         // значение параметра
         const val = is_calculated ? this.calculated_value({
@@ -191,14 +146,14 @@ export default function ($p) {
         let ok = false;
 
         // если сравнение на равенство - решаем в лоб, если вычисляемый параметр типа массив - выясняем вхождение значения в параметр
-        if(ox && !Array.isArray(val) && (prm_row.comparison_type.empty() || prm_row.comparison_type == $p.enm.comparison_types.eq)) {
+        if(ox && !Array.isArray(val) && (prm_row.comparison_type.empty() || prm_row.comparison_type == comparison_types.eq)) {
           if(is_calculated) {
             ok = val == prm_row.value;
           }
           else {
             ox.params.find_rows({
               cnstr: cnstr || 0,
-              inset: (typeof origin !== 'number' && origin) || $p.utils.blank.guid,
+              inset: (typeof origin !== 'number' && origin) || utils.blank.guid,
               param: this,
               value: val
             }, () => {
@@ -210,17 +165,17 @@ export default function ($p) {
         // вычисляемый параметр - его значение уже рассчитано формулой (val) - сравниваем со значением в строке ограничений
         else if(is_calculated) {
           const value = this.extract_value(prm_row);
-          ok = this.check_compare(val, value, prm_row.comparison_type);
+          ok = utils.check_compare(val, value, prm_row.comparison_type, comparison_types);
         }
         // параметр явно указан в табчасти параметров изделия
         else {
           ox.params.find_rows({
             cnstr: cnstr || 0,
-            inset: (typeof origin !== 'number' && origin) || $p.utils.blank.guid,
+            inset: (typeof origin !== 'number' && origin) || utils.blank.guid,
             param: this
           }, ({value}) => {
             // value - значение из строки параметра текущей продукции, val - знаяение из параметров отбора
-            ok = this.check_compare(value, val, prm_row.comparison_type);
+            ok = utils.check_compare(value, val, prm_row.comparison_type, comparison_types);
             return false;
           });
         }

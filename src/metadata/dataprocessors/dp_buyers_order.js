@@ -111,13 +111,14 @@ export default function ($p) {
   };
 
   // форма допов и услуг
-  $p.dp.buyers_order.open_additions = function (o, handlers) {
+  $p.dp.buyers_order.open_additions = function (wnd, o, handlers) {
 
     handlers.handleIfaceState({
       component: 'DataObjPage',
       name: 'dialog',
       value: {
         ref: o.ref,
+        wnd: wnd,
         Component: CalcOrderAdditions
       },
     });

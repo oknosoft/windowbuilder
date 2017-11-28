@@ -312,7 +312,7 @@
         break;
 
       case 'btn_additions':
-        $p.dp.buyers_order.open_additions(o, handlers);
+        $p.dp.buyers_order.open_additions(wnd, o, handlers);
         break;
 
       case 'btn_add_material':

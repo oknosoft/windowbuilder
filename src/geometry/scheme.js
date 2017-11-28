@@ -297,9 +297,10 @@ class Scheme extends paper.Project {
    *
    * @method load
    * @param id {String|CatObj} - идентификатор или объект продукции
+   * @param from_service {Boolean} - вызов произведен из сервиса, визуализацию перерисовываем сразу и делаем дополнительный zoom_fit
    * @async
    */
-  load(id) {
+  load(id, from_service) {
     const {_attr} = this;
     const _scheme = this;
 
@@ -384,8 +385,17 @@ class Scheme extends paper.Project {
           ((_scheme.ox.base_block.empty() || !_scheme.ox.base_block.is_new()) ? Promise.resolve() : _scheme.ox.base_block.load())
             .then(() => {
               if(_scheme.ox.coordinates.count()) {
-                if(_scheme.ox.specification.count()) {
-                  setTimeout(() => _scheme.draw_visualization(), 100);
+                if(_scheme.ox.specification.count() || from_service) {
+                  if(from_service){
+                    Promise.resolve().then(() => {
+                      _scheme.draw_visualization();
+                      _scheme.zoom_fit();
+                      resolve();
+                    })
+                  }
+                  else{
+                    setTimeout(() => _scheme.draw_visualization(), 100);
+                  }
                 }
                 else {
                   // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет
@@ -393,15 +403,19 @@ class Scheme extends paper.Project {
                 }
               }
               else {
-                paper.load_stamp && paper.load_stamp();
+                if(from_service){
+                  resolve();
+                }
+                else{
+                  paper.load_stamp && paper.load_stamp();
+                }
               }
               delete _attr._snapshot;
 
-              resolve();
+              (!from_service || !_scheme.ox.specification.count()) && resolve();
             });
         });
       });
-
     }
 
     _attr._loading = true;
@@ -1069,10 +1083,12 @@ class Scheme extends paper.Project {
    * Перерисовавает визуализацию контуров изделия
    */
   draw_visualization() {
-    for (let contour of this.contours) {
-      contour.draw_visualization();
+    if(this.view){
+      for (let contour of this.contours) {
+        contour.draw_visualization();
+      }
+      this.view.update();
     }
-    this.view.update();
   }
 
   /**

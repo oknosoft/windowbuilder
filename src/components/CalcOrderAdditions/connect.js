@@ -34,7 +34,7 @@ export function fill_data(ref) {
 
   const {production} = dp;
   const _meta = dp._metadata('production');
-  for(const item of items){
+  for (const item of items) {
     const cmp = components.get(item);
     // индивидуальные метаданные для отбора по типу вставки
     cmp.meta = _meta._clone();
@@ -61,21 +61,22 @@ export function fill_data(ref) {
   });
 }
 
+export function find_inset(insert_type) {
+  if(!this._inset) {
+    this._inset = $p.cat.inserts.find({available: true, insert_type});
+  }
+  return this._inset;
+}
+
 function mapStateToProps(state, props) {
   return {
     handleCalck() {
-      props.handlers.handleIfaceState({
-        component: 'DataObjPage',
-        name: 'dialog',
-        value: null,
-      });
-    },
-    handleOk() {
-      props.handlers.handleIfaceState({
-        component: 'DataObjPage',
-        name: 'dialog',
-        value: null,
-      });
+      const {dp} = this.additions;
+      return dp.calc_order.process_add_product_list(dp)
+        .then(ax => Promise.all(ax))
+        .then(ax => {
+          dp.calc_order.production.sync_grid(props.dialog.wnd.elmnts.grids.production);
+        });
     },
     handleCancel() {
       props.handlers.handleIfaceState({
