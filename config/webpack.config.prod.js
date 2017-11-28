@@ -153,7 +153,7 @@ module.exports = {
               path.resolve(paths.appNodeModules, './metadata-react'),
               //path.resolve(paths.appNodeModules, './metadata-redux'),
             ],
-            exclude: [/\\metadata\\/],
+            exclude: [/\\metadata\\/,/\/metadata\//],
             loader: require.resolve('babel-loader'),
             options: {
 
