@@ -264,7 +264,7 @@
       return res;
     },
 
-    // деструктор
+    // форма настроек отчета
     form_obj(pwnd, attr) {
 
       this._data._modified = false;
@@ -384,6 +384,7 @@
 
       return wnd;
     },
+
 
     draw_production(cell) {
       return cell.attachTabular({
@@ -554,62 +555,6 @@
         grids.composition = this.draw_composition(tabs.cells("composition"));
         grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
       }
-    },
-
-    /**
-     * Дополняет табчасть продукциями выбранного заказа
-     * @param row
-     * @param _mgr
-     * @return {Promise.<TResult>}
-     */
-    fill_by_order(row, _mgr) {
-
-      let pdoc;
-
-      if(!row || !row._id){
-        if(this.calc_order.empty()){
-          return;
-        }
-        if(this.calc_order.is_new()){
-          pdoc = this.calc_order.load();
-        }
-        else{
-          pdoc = Promise.resolve(this.calc_order);
-        }
-      }
-      else{
-        const ids = row._id.split('|');
-        if (ids.length < 2) {
-          return
-        }
-        pdoc = _mgr.get(ids[1], 'promise');
-      }
-
-      return pdoc
-        .then((doc) => {
-          //this.production.clear()
-          const rows = []
-          const refs = []
-          doc.production.forEach((row) => {
-            if (!row.characteristic.empty()) {
-              rows.push({
-                use: true,
-                characteristic: row.characteristic,
-                qty: row.quantity,
-              })
-              if (row.characteristic.is_new()) {
-                refs.push(row.characteristic.ref)
-              }
-            }
-          })
-
-          return ($p.adapters ? $p.adapters.pouch.load_array($p.cat.characteristics, refs) : $p.cat.characteristics.pouch_load_array(refs))
-            .then(() => rows)
-        })
-        .then((rows) => {
-          this.production.load(rows)
-          return rows
-        })
     },
 
   });

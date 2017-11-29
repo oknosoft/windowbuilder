@@ -203,6 +203,60 @@ export default function ($p) {
       });
   };
 
+  /**
+   * Дополняет табчасть продукциями выбранного заказа
+   * @param row
+   * @return {Promise.<TResult>}
+   */
+  $p.RepMaterials_demand.prototype.fill_by_order = function (row) {
+
+    let pdoc;
+
+    if(!row || !row._id) {
+      if(this.calc_order.empty()) {
+        return;
+      }
+      if(this.calc_order.is_new()) {
+        pdoc = this.calc_order.load();
+      }
+      else {
+        pdoc = Promise.resolve(this.calc_order);
+      }
+    }
+    else {
+      const ids = row._id.split('|');
+      if(ids.length < 2) {
+        return;
+      }
+      pdoc = $p.doc.calc_order.get(ids[1], 'promise');
+    }
+
+    return pdoc
+      .then((doc) => {
+        //this.production.clear()
+        const rows = [];
+        const refs = [];
+        doc.production.forEach((row) => {
+          if(!row.characteristic.empty()) {
+            rows.push({
+              use: true,
+              characteristic: row.characteristic,
+              qty: row.quantity,
+            });
+            if(row.characteristic.is_new()) {
+              refs.push(row.characteristic.ref);
+            }
+          }
+        });
+
+        return $p.adapters.pouch.load_array($p.cat.characteristics, refs).then(() => rows);
+      })
+      .then((rows) => {
+        this.production.load(rows);
+        return rows;
+      });
+  };
+
 }
 
 

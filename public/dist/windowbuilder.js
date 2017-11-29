@@ -9095,7 +9095,7 @@ class Scheme extends paper.Project {
           ((_scheme.ox.base_block.empty() || !_scheme.ox.base_block.is_new()) ? Promise.resolve() : _scheme.ox.base_block.load())
             .then(() => {
               if(_scheme.ox.coordinates.count()) {
-                if(_scheme.ox.specification.count()) {
+                if(_scheme.ox.specification.count() || from_service) {
                   if(from_service){
                     Promise.resolve().then(() => {
                       _scheme.draw_visualization();
@@ -9112,7 +9112,12 @@ class Scheme extends paper.Project {
                 }
               }
               else {
-                paper.load_stamp && paper.load_stamp();
+                if(from_service){
+                  resolve();
+                }
+                else{
+                  paper.load_stamp && paper.load_stamp();
+                }
               }
               delete _attr._snapshot;
 
