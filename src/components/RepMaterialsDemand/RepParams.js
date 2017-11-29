@@ -1,3 +1,7 @@
+/**
+ * Индивидуальная форма настроек отчета
+ */
+
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 

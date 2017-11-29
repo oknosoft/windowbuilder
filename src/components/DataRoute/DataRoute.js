@@ -52,9 +52,9 @@ class DataRoute extends Component {
       return <Component _mgr={_mgr} _acl={_acl} handlers={handlers} {...props} {...sizes}  />;
     };
 
-    if(match.params.area === 'rep') {
+    if(area === 'rep') {
       const Component = _mgr.FrmObj || FrmReport;
-      return <Component _mgr={_mgr} _acl={_acl} match={match} {...sizes} />;
+      return <Component _mgr={_mgr} _acl={_acl} match={match} location={this.props.location} {...sizes} />;
     }
 
     return <Switch>

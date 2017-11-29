@@ -6,6 +6,7 @@
  */
 
 import RepParams from '../../components/RepMaterialsDemand/RepParams';
+import Report from '../../components/RepMaterialsDemand/Report';
 
 export default function ($p) {
 
@@ -15,7 +16,7 @@ export default function ($p) {
    * Класс-компонент формы отчета
    * в отчете materials_demand используется типовая форма
    */
-  //$p.rep.materials_demand.FrmObj = class Report extends Component{};
+  $p.rep.materials_demand.FrmObj = Report;
 
   /**
    * Класс-компонент панели параметров отчета
