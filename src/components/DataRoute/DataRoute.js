@@ -15,6 +15,7 @@ class DataRoute extends Component {
 
   static propTypes = {
     match: PropTypes.object.isRequired,
+    location: PropTypes.object.isRequired,
     windowHeight: PropTypes.number.isRequired,
     windowWidth: PropTypes.number.isRequired,
     handlers: PropTypes.object.isRequired,

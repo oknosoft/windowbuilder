@@ -6231,7 +6231,7 @@ $p.DocSelling.prototype.before_save = function () {
           const dimentions = [], resources = [];
           scheme.columns('ts').forEach(fld => {
             const {key} = fld
-            if ($p.RepMaterials_demand.resources.indexOf(key) != -1) {
+            if (this.resources.indexOf(key) != -1) {
               resources.push(key)
             } else {
               dimentions.push(key)
@@ -6300,31 +6300,6 @@ $p.DocSelling.prototype.before_save = function () {
         }
 
       })
-    },
-
-    material(row) {
-
-      const {nom, characteristic, len, width} = row;
-
-      let res = nom.name;
-
-      if (!characteristic.empty()) {
-        res += ' ' + characteristic.presentation;
-      }
-
-      if (len && width)
-        row.sz = (1000 * len).toFixed(0) + "x" + (1000 * width).toFixed(0);
-      else if (len)
-        row.sz = + (1000 * len).toFixed(0);
-      else if (width)
-        row.sz = + (1000 * width).toFixed(0);
-
-      row.nom_kind = nom.nom_kind;
-      row.grouping = nom.grouping;
-      row.article = nom.article;
-      row.material = res;
-
-      return res;
     },
 
     form_obj(pwnd, attr) {
@@ -6602,11 +6577,6 @@ $p.DocSelling.prototype.before_save = function () {
       }
     },
 
-  });
-
-  Object.assign($p.RepMaterials_demand, {
-
-    resources: ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'],
   });
 
 })($p);

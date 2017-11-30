@@ -3,12 +3,21 @@
  */
 
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import Button from 'material-ui/Button';
 import Menu, {MenuItem} from 'material-ui/Menu';
 import FrmReport from 'metadata-react/FrmReport';
 import {withIface} from 'metadata-redux';
 
 class RepMaterialsDemand extends Component {
+
+  static propTypes = {
+    _obj: PropTypes.object,
+    _mgr: PropTypes.object.isRequired,
+    location: PropTypes.object.isRequired,
+    handleNavigate: PropTypes.func,
+
+  };
 
   constructor(props, context) {
     super(props, context);
@@ -29,7 +38,7 @@ class RepMaterialsDemand extends Component {
         .then(() => {
           this._report && this._report.forceUpdate();
         })
-        .catch((err) => {
+        .catch(() => {
           return null;
         });
     }
@@ -53,7 +62,7 @@ class RepMaterialsDemand extends Component {
   }
 
   ToolbarExt = () => {
-    const {props, state, _obj} = this;
+    const {state, _obj} = this;
     let res = '';
     _obj.production.forEach(({characteristic}) => {
       if(res.indexOf(characteristic.calc_order.number_doc) == -1){
