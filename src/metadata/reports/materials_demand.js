@@ -71,12 +71,8 @@ export default function ($p) {
       value: function () {
 
         const {specification, production, constructor, scheme, resources, _manager} = this;
-
-        const _columns = scheme.rx_columns({
-          mode: 'ts',
-          fields: _manager.metadata(_manager._tabular).fields,
-          _obj: this
-        });
+        const meta = _manager.metadata(_manager._tabular || 'data').fields;
+        const _columns = scheme.rx_columns({_obj: this, mode: 'ts', fields: meta});
 
         const arefs = [], aobjs = [],
           spec_flds = Object.keys(characteristics.metadata('specification').fields),
@@ -183,7 +179,7 @@ export default function ($p) {
               }
             });
 
-            // фильтруем результат
+            // фильтруем результат с учетом разыменования и видов сравнения
             scheme.filter(specification, '', true);
 
             // округляем числовые поля
@@ -194,7 +190,8 @@ export default function ($p) {
               }
             });
 
-            // сворачиваем результат и сохраняем его в specification._rows
+            // сворачиваем результат и сохраняем его в ._rows
+
             const dims = scheme.dims();
             const ress = [];
             _columns.forEach(({key}) => {
@@ -207,86 +204,124 @@ export default function ($p) {
               }
             });
 
-            // группируем по схеме
+          // группируем по схеме
 
-            // TODO сейчас поддержана только первая запись иерархии
+          // TODO сейчас поддержана только первая запись иерархии
 
-            // TODO сейчас нет понятия детальных записей - всё сворачивается по измерениям
+          // TODO сейчас нет понятия детальных записей - всё сворачивается по измерениям
 
-            // TODO сейчас набор полей не поддержан в интерфейсе, но решаем сразу для группировки по нескольким полям
-            const grouping = scheme.dims();
-            if(grouping.length) {
-              // строка полей группировки без пустых полей
-              const dflds = dims.filter(v => v).map(v => '`' + v + '`').join(', ');
+          // TODO сейчас набор полей не поддержан в интерфейсе, но решаем сразу для группировки по нескольким полям
+          const grouping = scheme.dims();
+          if(grouping.length) {
+            // строка полей группировки без пустых полей
+            const dflds = dims.filter(v => v).map(v => '`' + v + '`').join(', ');
 
-              // TODO в группировке может потребоваться разыменовать поля
+            // TODO в группировке может потребоваться разыменовать поля
 
-              // TODO итоги надо считать не по всем русурсам
+            // TODO итоги надо считать не по всем русурсам
 
-              // TODO итоги надо считать с учетом формулы
+            // TODO итоги надо считать с учетом формулы
 
-              const sql = `select ${ress.map(res => `sum(${res}) as ${res}`).join(', ')
-                } ${dflds ? ((ress.length ? ', ' : '') + dflds) : ''} from ? ${dflds ? 'group by ROLLUP(' + dflds + ')' : ''}`;
+            const sql = `select ${ress.map(res => `sum(${res}) as ${res}`).join(', ')
+              } ${dflds ? ((ress.length ? ', ' : '') + dflds) : ''} from ? ${dflds ? 'group by ROLLUP(' + dflds + ')' : ''}`;
 
-              // TODO еще, в alasql есть ROLLUP, CUBE и GROUPING SETS (аналог 1С-ного ИТОГИ) - можно задействовать
-              const res = $p.wsql.alasql(sql, [specification._obj]);
+            // TODO еще, в alasql есть ROLLUP, CUBE и GROUPING SETS - сейчас используем ROLLUP
+            const res = $p.wsql.alasql(sql, [specification._obj]);
 
-              // складываем результат в иерархическую структуру
-              const levels = [];
-              let index = 0;
-              for (const row of res) {
+            // складываем результат в иерархическую структуру
+            const stack = []; // здесь храним родительские строки
+            const col0 = _columns[0];
+            const {is_data_obj, is_data_mgr, moment} = $p.utils;
+            let prevLevel;    // предыдущий уровень группировки
+            let index = 0;    // счетчик количества строк + id строки результирующего набора
+
+            const cast_field = function (row, gdim, force) {
+
+              const mgr = _manager.value_mgr(row, gdim, meta[gdim].type);
+              const val = is_data_mgr(mgr) ? mgr.get(row[gdim]) : row[gdim];
+
+              if(_columns.some(v => v.key === gdim)){
+                row[gdim] = val;
+              }
+              else if(force){
+                row[col0.key] = _manager.value_mgr(row, col0.key, meta[col0.key].type) ?
+                  is_data_obj(val) ? val : {presentation: val instanceof Date ? moment(val).format(moment._masks[meta[gdim].type.date_part]) : val }
+                  :
+                  is_data_obj(val) ? val.toString() : val;
+              }
+            }
+
+            for(let i = 0; i < res.length; i++) {
+              const row = res[i];
+
+              if(i === 0){
+                if(!grouping[0]){
+                  row.row = (index++).toString();
+                  row.children = [];
+                  specification._rows.push(row);
+                  stack.push(row);
+                  row[col0.key] = col0._meta.type.is_ref ? {presentation: 'Σ'} : 'Σ';
+                }
+                else{
+                  stack.push({children: specification._rows});
+                }
+              }
+              else {
+                // варианты:
+                // - это подуровень группировки: добавляем к родителю, добавляем в stack, level растёт
+                // - это очередная строка того же уровня: добавляем к родителю, level без изменений
+                // - это следующее значение родителя: меняем в стеке, level без изменений
+                // - этот уровень не нужен в результирующем наборе - пропускаем
+                const level = stack.length - 1;
+                const parent = stack[level];
+                if(!prevLevel) {
+                  prevLevel = level;
+                }
+
+                // по числу не-null в измерениях, определяем уровень
+                let lvl = 0;
+                for(const group of dims){
+                  row[group] !== null && lvl++;
+                }
+
+                // если такой уровень не нужен - пропускаем
+                if(lvl > grouping.length && lvl < dims.length) {
+                  prevLevel = lvl;
+                  continue;
+                }
 
                 row.row = (index++).toString();
 
-                // является ли строка группировкой?
-                const is_group = dims.some(v => row[v] === null);
-                const parent_group = {};
-                const parent_dims = [];
-                is_group && dims.forEach(v => {
-                  if(row[v] !== null) {
-                    parent_dims.push(v);
-                    parent_group[v] = row[v];
-                  }
-                });
-
-                // ищем подходящего родителя
-                let parent;
-                for (const level of levels) {
-                  if(is_group) {
-                    const lim = parent_dims.length - 1;
-                    if(parent_dims.every((v, i) => (level[v] instanceof Date && row[v] instanceof Date ?
-                        level[v].valueOf() === row[v].valueOf() : level[v] === row[v]) || i === lim)) {
-                      parent = level;
-                    }
-                    // если мы группировка, добавляем себя в levels
-                    row.children = [];
-                    levels.push(row);
-                    break;
-                  }
-                  else {
-                    const lim = dims.length - 1;
-                    if(dims.every((v, i) => level[v] === row[v] || i === lim)) {
-                      parent = level;
-                      break;
-                    }
-                  }
-                }
-                if(parent) {
+                if(lvl > level && lvl < dims.length){
                   parent.children.push(row);
+                  row.children = [];
+                  stack.push(row);
+                  cast_field(row, grouping[stack.length - 2], true);
+                }
+                else if(lvl < prevLevel) {
+                  stack.pop();
+                  stack[stack.length - 1].children.push(row);
+                  row.children = [];
+                  stack.push(row);
+                  cast_field(row, grouping[stack.length - 2], true);
                 }
                 else {
-                  if(!levels.length) {
-                    row.children = [];
-                    levels.push(row);
+                  parent.children.push(row);
+                  for(const gdim of dims){
+                    cast_field(row, gdim);
                   }
                 }
-              }
 
-              specification._rows.push(levels[0]);
+                prevLevel = lvl;
+              }
+            }
+
+
               specification._rows._count = index;
 
-              // TODO для ссылочных полей надо выполнить приведение типов, т.к в alasql возвращает guid`s вместо объектов
-              this.cast(specification._rows, 0, dims);
+
+              // выполняем для ссылочных полей приведение типов
+              //this.cast(specification._rows, 0, dims);
 
             }
             else {
@@ -320,7 +355,7 @@ export default function ($p) {
               row[dim] = meta[dim].type.is_ref ? {presentation: 'Σ'} : 'Σ';
             }
             else{
-              const gdim = dims[level - 1];
+              const gdim = dims[level];
               const mgr = this._manager.value_mgr(row, gdim, meta[gdim].type);
               const val = utils.is_data_mgr(mgr) ? mgr.get(row[gdim]) : row[gdim];
               row[dim] = this._manager.value_mgr(row, dim, meta[dim].type) ?
