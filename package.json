@@ -26,15 +26,14 @@
   "homepage": "http://light.oknosoft.ru/",
   "dependencies": {
     "@jscad/openjscad": "^1.4.0",
-    "dataframe": "^2.0.1",
     "dxf-writer": "^1.0.5",
-    "metadata-abstract-ui": "^2.0.16-beta.41",
-    "metadata-core": "^2.0.16-beta.41",
-    "metadata-dhtmlx": "^2.0.16-beta.41",
-    "metadata-external": "^2.0.16-beta.41",
-    "metadata-pouchdb": "^2.0.16-beta.41",
-    "metadata-react": "^2.0.16-beta.41",
-    "metadata-redux": "^2.0.16-beta.41",
+    "metadata-abstract-ui": "^2.0.16-beta.42",
+    "metadata-core": "^2.0.16-beta.42",
+    "metadata-dhtmlx": "^2.0.16-beta.42",
+    "metadata-external": "^2.0.16-beta.42",
+    "metadata-pouchdb": "^2.0.16-beta.42",
+    "metadata-react": "^2.0.16-beta.42",
+    "metadata-redux": "^2.0.16-beta.42",
     "paper-jsdom-canvas": "^0.11.5"
   },
   "devDependencies": {
