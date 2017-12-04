@@ -8275,7 +8275,7 @@ class ProfileAddl extends ProfileItem {
         }
 
         if(with_addl){
-          elm.getItems({class: ProfileAddl}).forEach((addl) => {
+          elm.getItems({class: ProfileAddl, parent: elm}).forEach((addl) => {
             check_distance(addl, with_addl);
           });
         }
