@@ -44,6 +44,26 @@ class RepMaterialsDemand extends Component {
     }
   }
 
+  calcOrders(first) {
+    let res = first ? {} : '';
+    this._obj.production.forEach(({characteristic: {calc_order}}) => {
+      if(!calc_order.empty()){
+        if(first){
+          res.ref = calc_order.ref;
+          res.state = calc_order.state;
+          return false;
+        }
+        else if(res.indexOf(calc_order.number_doc) == -1){
+          if(res){
+            res += ', ';
+          }
+          res += calc_order.number_doc;
+        }
+      }
+    });
+    return res;
+  }
+
   handleMenuOpen = (event) => {
     this.setState({menuOpen: true, anchorEl: event.currentTarget}, () => this._report && this._report.forceUpdate());
   };
@@ -54,24 +74,24 @@ class RepMaterialsDemand extends Component {
 
   handleList = () => {
     //this.props.handleNavigate(`/${_mgr.class_name}/list${_obj ? '/?ref=' + _obj.ref : ''}`);
-    this.props.handleNavigate(`/`);
+    const {ref, state} = this.calcOrders(true);
+    if(ref && state){
+      this.props.handleNavigate(`/?ref=${ref}&state_filter=${state}`);
+    }
+    else{
+      this.props.handleNavigate(`/`);
+    }
   }
 
   handleObj = () => {
-    this.props.handleNavigate(`/doc.calc_order/list`);
+    const {ref} = this.calcOrders(true);
+    this.props.handleNavigate(`/doc.calc_order/${ref || 'list'}`);
   }
 
   ToolbarExt = () => {
-    const {state, _obj} = this;
-    let res = '';
-    _obj.production.forEach(({characteristic}) => {
-      if(res.indexOf(characteristic.calc_order.number_doc) == -1){
-        if(res){
-          res += ', ';
-        }
-        res += characteristic.calc_order.number_doc;
-      }
-    });
+    const {state} = this;
+    const res = this.calcOrders();
+
     return [
       <Button key="go" dense onClick={this.handleMenuOpen} style={{alignSelf: 'center'}}>{res || 'Перейти'}</Button>,
       <Menu
