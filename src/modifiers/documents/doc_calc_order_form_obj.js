@@ -221,6 +221,10 @@
           wnd = res.wnd;
           wnd.prompt = prompt;
           wnd.close_confirmed = true;
+          if(handlers){
+            wnd.handleNavigate = handlers.handleNavigate;
+            wnd.handleIfaceState = handlers.handleIfaceState;
+          }
 
           rsvg_reload();
           o._manager.on('svgs', rsvg_reload);

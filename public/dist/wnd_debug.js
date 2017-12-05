@@ -1228,16 +1228,16 @@ $p.adapters.pouch.once('pouch_data_loaded', () => {
 $p.CatFormulas.prototype.__define({
 
 	execute: {
-		value: function (obj) {
+		value: function (obj, attr) {
 
 			if(!this._data._formula && this.formula){
 			  try{
           if(this.async){
             const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-            this._data._formula = (new AsyncFunction("obj,$p", this.formula)).bind(this);
+            this._data._formula = (new AsyncFunction("obj,$p,attr", this.formula)).bind(this);
           }
           else{
-            this._data._formula = (new Function("obj,$p", this.formula)).bind(this);
+            this._data._formula = (new Function("obj,$p,attr", this.formula)).bind(this);
           }
         }
         catch(err){
@@ -1259,13 +1259,13 @@ $p.CatFormulas.prototype.__define({
           return Promise.resolve();
         }
 
-				return _formula(obj, $p)
+				return _formula(obj, $p, attr)
 
 					.then((doc) => doc instanceof $p.SpreadsheetDocument && doc.print());
 
 			}
 			else{
-        return _formula && _formula(obj, $p)
+        return _formula && _formula(obj, $p, attr)
       }
 
 		}
@@ -2529,2768 +2529,6 @@ $p.CatProduction_params.prototype.__define({
 	}
 
 });
-
-
-
-$p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
-
-$p.doc.calc_order._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
-
-$p.doc.calc_order.build_search = function (tmp, obj) {
-
-  const {number_internal, client_of_dealer, partner, note} = obj;
-
-  tmp.search = (obj.number_doc +
-    (number_internal ? ' ' + number_internal : '') +
-    (client_of_dealer ? ' ' + client_of_dealer : '') +
-    (partner.name ? ' ' + partner.name : '') +
-    (note ? ' ' + note : '')).toLowerCase();
-};
-
-$p.doc.calc_order.load_templates = async function () {
-
-  if(!$p.job_prm.builder) {
-    $p.job_prm.builder = {};
-  }
-  if(!$p.job_prm.builder.base_block) {
-    $p.job_prm.builder.base_block = [];
-  }
-  if(!$p.job_prm.pricing) {
-    $p.job_prm.pricing = {};
-  }
-
-  $p.cat.production_params.forEach((o) => {
-    if(!o.is_folder) {
-      o.base_blocks.forEach((row) => {
-        if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1) {
-          $p.job_prm.builder.base_block.push(row.calc_order);
-        }
-      });
-    }
-  });
-
-  const refs = [];
-  for (let o of $p.job_prm.builder.base_block) {
-    refs.push(o.ref);
-    if(refs.length > 9) {
-      await $p.doc.calc_order.pouch_load_array(refs);
-      refs.length = 0;
-    }
-  }
-  return refs.length ? $p.doc.calc_order.pouch_load_array(refs) : undefined;
-
-};
-
-$p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
-
-
-  after_create() {
-
-    const {enm, cat, current_user, DocCalc_order} = $p;
-    const {acl_objs} = current_user;
-
-    acl_objs.find_rows({by_default: true, type: cat.organizations.class_name}, (row) => {
-      this.organization = row.acl_obj;
-      return false;
-    });
-
-    DocCalc_order.set_department.call(this);
-
-    acl_objs.find_rows({by_default: true, type: cat.partners.class_name}, (row) => {
-      this.partner = row.acl_obj;
-      return false;
-    });
-
-    this.contract = cat.contracts.by_partner_and_org(this.partner, this.organization);
-
-    this.manager = current_user;
-
-    this.obj_delivery_state = enm.obj_delivery_states.Черновик;
-
-    return this.new_number_doc();
-
-  }
-
-  before_save() {
-
-    const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
-
-    let doc_amount = 0,
-      amount_internal = 0;
-
-    if(this.posted) {
-      if(this.obj_delivery_state == Отклонен || this.obj_delivery_state == Отозван || this.obj_delivery_state == Шаблон) {
-        $p.msg.show_msg && $p.msg.show_msg({
-          type: 'alert-warning',
-          text: 'Нельзя провести заказ со статусом<br/>"Отклонён", "Отозван" или "Шаблон"',
-          title: this.presentation
-        });
-        return false;
-      }
-      else if(this.obj_delivery_state != Подтвержден) {
-        this.obj_delivery_state = Подтвержден;
-      }
-    }
-    else if(this.obj_delivery_state == Подтвержден) {
-      this.obj_delivery_state = Отправлен;
-    }
-
-    if(this.obj_delivery_state == Шаблон) {
-      this.department = $p.utils.blank.guid;
-    }
-    else if(this.department.empty()) {
-      $p.msg.show_msg && $p.msg.show_msg({
-        type: 'alert-warning',
-        text: 'Не заполнен реквизит "офис продаж" (подразделение)',
-        title: this.presentation
-      });
-      return false;
-    }
-
-    this.production.forEach((row) => {
-
-      doc_amount += row.amount;
-      amount_internal += row.amount_internal;
-
-    });
-
-    const {rounding} = this;
-
-    this.doc_amount = doc_amount.round(rounding);
-    this.amount_internal = amount_internal.round(rounding);
-    this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
-
-    const {_obj, obj_delivery_state, category} = this;
-
-    if(obj_delivery_state == 'Шаблон') {
-      _obj.state = 'template';
-    }
-    else if(category == 'service') {
-      _obj.state = 'service';
-    }
-    else if(category == 'complaints') {
-      _obj.state = 'complaints';
-    }
-    else if(obj_delivery_state == 'Отправлен') {
-      _obj.state = 'sent';
-    }
-    else if(obj_delivery_state == 'Отклонен') {
-      _obj.state = 'declined';
-    }
-    else if(obj_delivery_state == 'Подтвержден') {
-      _obj.state = 'confirmed';
-    }
-    else if(obj_delivery_state == 'Архив') {
-      _obj.state = 'zarchive';
-    }
-    else {
-      _obj.state = 'draft';
-    }
-
-    this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
-      .then(({rows}) => {
-        const deleted = [];
-        for (const {id} of rows) {
-          const ref = id.substr(20);
-          if(this.production.find_rows({characteristic: ref}).length) {
-            continue;
-          }
-          deleted.push($p.cat.characteristics.get(ref, 'promise')
-            .then((ox) => !ox._deleted && ox.mark_deleted(true)));
-        }
-        return Promise.all(deleted);
-      })
-      .then((res) => {
-        res.length && this._manager.emit_async('svgs', this);
-      })
-      .catch((err) => null);
-
-  }
-
-  value_change(field, type, value) {
-    if(field == 'organization') {
-      this.new_number_doc();
-      if(this.contract.organization != value) {
-        this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
-      }
-    }
-    else if(field == 'partner' && this.contract.owner != value) {
-      this.contract = $p.cat.contracts.by_partner_and_org(value, this.organization);
-    }
-    this._manager.emit_add_fields(this, ['contract']);
-
-  }
-
-
-  get doc_currency() {
-    const currency = this.contract.settlements_currency;
-    return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
-  }
-
-  set doc_currency(v) {
-
-  }
-
-  get rounding() {
-    const {pricing} = $p.job_prm;
-    if(!pricing.hasOwnProperty('rounding')) {
-      const parts = this.doc_currency.parameters_russian_recipe.split(',');
-      pricing.rounding = parseInt(parts[parts.length - 1]);
-      if(isNaN(pricing.rounding)) {
-        pricing.rounding = 2;
-      }
-    }
-    return pricing.rounding;
-  }
-
-  get contract() {
-    return this._getter('contract');
-  }
-
-  set contract(v) {
-    this._setter('contract', v);
-    this.vat_consider = this.contract.vat_consider;
-    this.vat_included = this.contract.vat_included;
-  }
-
-  dispatching_totals() {
-    var options = {
-      reduce: true,
-      limit: 10000,
-      group: true,
-      keys: []
-    };
-    this.production.forEach(function (row) {
-      if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
-        options.keys.push([row.characteristic.ref, '305e374b-3aa9-11e6-bf30-82cf9717e145', 1, 0]);
-      }
-    });
-
-    return $p.wsql.pouch.remote.doc.query('server/dispatching', options)
-      .then(function (result) {
-        var res = {};
-        result.rows.forEach(function (row) {
-          if(row.value.plan) {
-            row.value.plan = moment(row.value.plan).format('L');
-          }
-          if(row.value.fact) {
-            row.value.fact = moment(row.value.fact).format('L');
-          }
-          res[row.key[0]] = row.value;
-        });
-        return res;
-      });
-  }
-
-  print_data() {
-    const {organization, bank_account, contract, manager} = this;
-    const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
-    const get_imgs = [];
-    const {contact_information_kinds} = $p.cat;
-
-    const res = {
-      АдресДоставки: this.shipping_address,
-      ВалютаДокумента: this.doc_currency.presentation,
-      ДатаЗаказаФорматD: moment(this.date).format('L'),
-      ДатаЗаказаФорматDD: moment(this.date).format('LL'),
-      ДатаТекущаяФорматD: moment().format('L'),
-      ДатаТекущаяФорматDD: moment().format('LL'),
-      ДоговорДатаФорматD: moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format('L'),
-      ДоговорДатаФорматDD: moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format('LL'),
-      ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
-      ДоговорСрокДействия: moment(contract.validity).format('L'),
-      ЗаказНомер: this.number_doc,
-      Примечание: this.note,
-      НомерВнутренний: this.number_internal,
-      Контрагент: this.partner.presentation,
-      КонтрагентОписание: this.partner.long_presentation,
-      КонтрагентДокумент: '',
-      КонтрагентКЛДолжность: '',
-      КонтрагентКЛДолжностьРП: '',
-      КонтрагентКЛИмя: '',
-      КонтрагентКЛИмяРП: '',
-      КонтрагентКЛК: '',
-      КонтрагентКЛОснованиеРП: '',
-      КонтрагентКЛОтчество: '',
-      КонтрагентКЛОтчествоРП: '',
-      КонтрагентКЛФамилия: '',
-      КонтрагентКЛФамилияРП: '',
-      КонтрагентЮрФизЛицо: '',
-      КратностьВзаиморасчетов: this.settlements_multiplicity,
-      КурсВзаиморасчетов: this.settlements_course,
-      ЛистКомплектацииГруппы: '',
-      ЛистКомплектацииСтроки: '',
-      Организация: organization.presentation,
-      ОрганизацияГород: organization.contact_information._obj.reduce((val, row) => val || row.city, '') || 'Москва',
-      ОрганизацияАдрес: organization.contact_information._obj.reduce((val, row) => {
-        if(row.kind == contact_information_kinds.predefined('ЮрАдресОрганизации') && row.presentation) {
-          return row.presentation;
-        }
-        else if(val) {
-          return val;
-        }
-        else if(row.presentation && (
-            row.kind == contact_information_kinds.predefined('ФактАдресОрганизации') ||
-            row.kind == contact_information_kinds.predefined('ПочтовыйАдресОрганизации')
-          )) {
-          return row.presentation;
-        }
-      }, ''),
-      ОрганизацияТелефон: organization.contact_information._obj.reduce((val, row) => {
-        if(row.kind == contact_information_kinds.predefined('ТелефонОрганизации') && row.presentation) {
-          return row.presentation;
-        }
-        else if(val) {
-          return val;
-        }
-        else if(row.kind == contact_information_kinds.predefined('ФаксОрганизации') && row.presentation) {
-          return row.presentation;
-        }
-      }, ''),
-      ОрганизацияБанкБИК: our_bank_account.bank.id,
-      ОрганизацияБанкГород: our_bank_account.bank.city,
-      ОрганизацияБанкКоррСчет: our_bank_account.bank.correspondent_account,
-      ОрганизацияБанкНаименование: our_bank_account.bank.name,
-      ОрганизацияБанкНомерСчета: our_bank_account.account_number,
-      ОрганизацияИндивидуальныйПредприниматель: organization.individual_entrepreneur.presentation,
-      ОрганизацияИНН: organization.inn,
-      ОрганизацияКПП: organization.kpp,
-      ОрганизацияСвидетельствоДатаВыдачи: organization.certificate_date_issue,
-      ОрганизацияСвидетельствоКодОргана: organization.certificate_authority_code,
-      ОрганизацияСвидетельствоНаименованиеОргана: organization.certificate_authority_name,
-      ОрганизацияСвидетельствоСерияНомер: organization.certificate_series_number,
-      ОрганизацияЮрФизЛицо: organization.individual_legal.presentation,
-      ПродукцияЭскизы: {},
-      Проект: this.project.presentation,
-      СистемыПрофилей: this.sys_profile,
-      СистемыФурнитуры: this.sys_furn,
-      Сотрудник: manager.presentation,
-      СотрудникДолжность: manager.individual_person.Должность || 'менеджер',
-      СотрудникДолжностьРП: manager.individual_person.ДолжностьРП,
-      СотрудникИмя: manager.individual_person.Имя,
-      СотрудникИмяРП: manager.individual_person.ИмяРП,
-      СотрудникОснованиеРП: manager.individual_person.ОснованиеРП,
-      СотрудникОтчество: manager.individual_person.Отчество,
-      СотрудникОтчествоРП: manager.individual_person.ОтчествоРП,
-      СотрудникФамилия: manager.individual_person.Фамилия,
-      СотрудникФамилияРП: manager.individual_person.ФамилияРП,
-      СотрудникФИО: manager.individual_person.Фамилия +
-      (manager.individual_person.Имя ? ' ' + manager.individual_person.Имя[1].toUpperCase() + '.' : '' ) +
-      (manager.individual_person.Отчество ? ' ' + manager.individual_person.Отчество[1].toUpperCase() + '.' : ''),
-      СотрудникФИОРП: manager.individual_person.ФамилияРП + ' ' + manager.individual_person.ИмяРП + ' ' + manager.individual_person.ОтчествоРП,
-      СуммаДокумента: this.doc_amount.toFixed(2),
-      СуммаДокументаПрописью: this.doc_amount.in_words(),
-      СуммаДокументаБезСкидки: this.production._obj.reduce(function (val, row) {
-        return val + row.quantity * row.price;
-      }, 0).toFixed(2),
-      СуммаСкидки: this.production._obj.reduce(function (val, row) {
-        return val + row.discount;
-      }, 0).toFixed(2),
-      СуммаНДС: this.production._obj.reduce(function (val, row) {
-        return val + row.vat_amount;
-      }, 0).toFixed(2),
-      ТекстНДС: this.vat_consider ? (this.vat_included ? 'В том числе НДС 18%' : 'НДС 18% (сверху)') : 'Без НДС',
-      ТелефонПоАдресуДоставки: this.phone,
-      СуммаВключаетНДС: contract.vat_included,
-      УчитыватьНДС: contract.vat_consider,
-      ВсегоНаименований: this.production.count(),
-      ВсегоИзделий: 0,
-      ВсегоПлощадьИзделий: 0,
-      Продукция: [],
-      НомерВнутр: this.number_internal,
-      КлиентДилера: this.client_of_dealer,
-      Комментарий: this.note,
-    };
-
-
-    this.extra_fields.forEach((row) => {
-      res['Свойство' + row.property.name.replace(/\s/g, '')] = row.value.presentation || row.value;
-    });
-
-    res.МонтажДоставкаСамовывоз = !this.shipping_address ? 'Самовывоз' : 'Монтаж по адресу: ' + this.shipping_address;
-
-    for (let key in organization._attachments) {
-      if(key.indexOf('logo') != -1) {
-        get_imgs.push(organization.get_attachment(key)
-          .then((blob) => {
-            return $p.utils.blob_as_text(blob, blob.type.indexOf('svg') == -1 ? 'data_url' : '');
-          })
-          .then((data_url) => {
-            res.ОрганизацияЛоготип = data_url;
-          })
-          .catch($p.record_log));
-        break;
-      }
-    }
-
-    this.production.forEach((row) => {
-
-      if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
-
-        res.Продукция.push(this.row_description(row));
-
-        res.ВсегоИзделий += row.quantity;
-        res.ВсегоПлощадьИзделий += row.quantity * row.s;
-
-        get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, 'svg')
-          .then((blob) => $p.utils.blob_as_text(blob))
-          .then((svg_text) => {
-            res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
-          })
-          .catch((err) => err && err.status != 404 && $p.record_log(err))
-        );
-      }
-    });
-    res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
-
-    return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-      .then(() => $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
-      .then(() => {
-
-        const svg = document.createElement('SVG');
-        svg.innerHTML = '<g />';
-        const qrcode = new QRCode(svg, {
-          text: 'http://www.oknosoft.ru/zd/',
-          width: 100,
-          height: 100,
-          colorDark: '#000000',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H,
-          useSVG: true
-        });
-        res.qrcode = svg.innerHTML;
-
-        return res;
-      });
-  }
-
-  row_description(row) {
-
-    if(!(row instanceof $p.DocCalc_orderProductionRow) && row.characteristic) {
-      this.production.find_rows({characteristic: row.characteristic}, (prow) => {
-        row = prow;
-        return false;
-      });
-    }
-    const {characteristic, nom} = row;
-    const res = {
-      ref: characteristic.ref,
-      НомерСтроки: row.row,
-      Количество: row.quantity,
-      Ед: row.unit.name || 'шт',
-      Цвет: characteristic.clr.name,
-      Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
-      Площадь: row.s,
-      Длинна: row.len,
-      Ширина: row.width,
-      ВсегоПлощадь: row.s*row.quantity,
-      Примечание: row.note,
-      Номенклатура: nom.name_full || nom.name,
-      Характеристика: characteristic.name,
-      Заполнения: '',
-      Фурнитура: '',
-      Параметры: [],
-      Цена: row.price,
-      ЦенаВнутр: row.price_internal,
-      СкидкаПроцент: row.discount_percent,
-      СкидкаПроцентВнутр: row.discount_percent_internal,
-      Скидка: row.discount.round(2),
-      Сумма: row.amount.round(2),
-      СуммаВнутр: row.amount_internal.round(2)
-    };
-
-    characteristic.glasses.forEach((row) => {
-      const {name} = row.nom;
-      if(res.Заполнения.indexOf(name) == -1) {
-        if(res.Заполнения) {
-          res.Заполнения += ', ';
-        }
-        res.Заполнения += name;
-      }
-    });
-
-    characteristic.constructions.forEach((row) => {
-      const {name} = row.furn;
-      if(name && res.Фурнитура.indexOf(name) == -1) {
-        if(res.Фурнитура) {
-          res.Фурнитура += ', ';
-        }
-        res.Фурнитура += name;
-      }
-    });
-
-    const params = new Map();
-    characteristic.params.forEach((row) => {
-      if(row.param.include_to_description) {
-        params.set(row.param, row.value);
-      }
-    });
-    for (let [param, value] of params) {
-      res.Параметры.push({
-        param: param.presentation,
-        value: value.presentation || value
-      });
-    }
-
-    return res;
-  }
-
-  fill_plan() {
-
-    this.planning.clear();
-
-    const url = ($p.wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
-
-    const post_data = this._obj._clone();
-    post_data.characteristics = {};
-
-    this.load_production()
-      .then((prod) => {
-        for (const cx of prod) {
-          post_data.characteristics[cx.ref] = cx._obj._clone();
-        }
-      })
-      .then(() => {
-        const headers = new Headers();
-        headers.append('Accept', 'application/json');
-        headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
-          $p.wsql.get_user_param('user_name') + ':' + $p.aes.Ctr.decrypt($p.wsql.get_user_param('user_pwd'))))));
-        const suffix = $p.current_user.suffix || $p.wsql.get_user_param('couch_suffix', 'string');
-        if(suffix){
-          headers.append('suffix', suffix);
-        }
-        fetch(url, {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify(post_data)
-        })
-          .then(response => response.json())
-          .then(json => console.log(json))
-          .catch(err => {
-            $p.msg.show_msg({
-              type: "alert-warning",
-              text: err.message,
-              title: "Сервис планирования"
-            });
-            $p.record_log(err);
-          });
-      });
-
-  }
-
-  get is_read_only() {
-    const {obj_delivery_state, posted, _deleted} = this;
-    const {Черновик, Шаблон, Отозван} = $p.enm.obj_delivery_states;
-    let ro = false;
-    if(obj_delivery_state == Шаблон) {
-      ro = !$p.current_user.role_available('ИзменениеТехнологическойНСИ');
-    }
-    else if(posted || _deleted) {
-      ro = !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
-    }
-    else if(!obj_delivery_state.empty()) {
-      ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван;
-    }
-    return ro;
-  }
-
-  load_production(forse) {
-    const prod = [];
-    const mgr = $p.cat.characteristics;
-    this.production.forEach((row) => {
-      const {nom, characteristic} = row;
-      if(!characteristic.empty() && (forse || characteristic.is_new()) && !nom.is_procedure && !nom.is_accessory) {
-        prod.push(characteristic.ref);
-      }
-    });
-    return mgr.adapter.load_array(mgr, prod)
-      .then(() => {
-        prod.length = 0;
-        this.production.forEach((row) => {
-          const {nom, characteristic} = row;
-          if(!characteristic.empty() && !nom.is_procedure && !nom.is_accessory) {
-            prod.push(characteristic);
-          }
-        });
-        return prod;
-      });
-  }
-
-  characteristic_saved(scheme, sattr) {
-    const {ox, _dp} = scheme;
-    const row = ox.calc_order_row;
-
-    if(!row || ox.calc_order != this) {
-      return;
-    }
-
-
-    row._data._loading = true;
-    row.nom = ox.owner;
-    row.note = _dp.note;
-    row.quantity = _dp.quantity || 1;
-    row.len = ox.x;
-    row.width = ox.y;
-    row.s = ox.s;
-    row.discount_percent = _dp.discount_percent;
-    row.discount_percent_internal = _dp.discount_percent_internal;
-    if(row.unit.owner != row.nom) {
-      row.unit = row.nom.storage_unit;
-    }
-    row._data._loading = false;
-  }
-
-  create_product_row({row_spec, elm, len_angl, params, create, grid}) {
-
-    const row = row_spec instanceof $p.DpBuyers_orderProductionRow && !row_spec.characteristic.empty() && row_spec.characteristic.calc_order === this ?
-      row_spec.characteristic.calc_order_row :
-      this.production.add({
-        qty: 1,
-        quantity: 1,
-        discount_percent_internal: $p.wsql.get_user_param('discount_percent_internal', 'number')
-      });
-
-    if(grid) {
-      this.production.sync_grid(grid);
-      grid.selectRowById(row.row);
-    }
-
-    if(!create) {
-      return row;
-    }
-
-    const mgr = $p.cat.characteristics;
-    let cx;
-    function fill_cx(ox) {
-      for (let ts in mgr.metadata().tabular_sections) {
-        ox[ts].clear();
-      }
-      ox.leading_elm = 0;
-      ox.leading_product = '';
-      cx = Promise.resolve(ox);
-    }
-    if(row.characteristic.empty()){
-      mgr.find_rows({calc_order: this, product: row.row}, fill_cx);
-    }
-    else{
-      fill_cx(row.characteristic);
-    }
-
-    return (cx || mgr.create({
-      ref: $p.utils.generate_guid(),
-      calc_order: this,
-      product: row.row
-    }, true))
-      .then((ox) => {
-        if(row_spec instanceof $p.DpBuyers_orderProductionRow) {
-          ox.owner = row_spec.inset.nom(elm, true);
-          ox.origin = row_spec.inset;
-          ox.x = row_spec.len;
-          ox.y = row_spec.height;
-          ox.z = row_spec.depth;
-          ox.s = row_spec.s;
-          ox.clr = row_spec.clr;
-          ox.note = row_spec.note;
-
-          if(params) {
-            params.find_rows({elm: row_spec.row}, (prow) => {
-              ox.params.add(prow, true).inset = row_spec.inset;
-            });
-          }
-        }
-
-        Object.assign(row._obj, {
-          characteristic: ox.ref,
-          nom: ox.owner.ref,
-          unit: ox.owner.storage_unit.ref,
-          len: ox.x,
-          width: ox.y,
-          s: ox.s,
-          qty: (row_spec && row_spec.quantity) || 1,
-          quantity: (row_spec && row_spec.quantity) || 1,
-          note: ox.note,
-        });
-
-        ox.name = ox.prod_name();
-
-        return this.is_new() && !$p.wsql.alasql.utils.isNode ? this.save().then(() => row) : row;
-      });
-
-  }
-
-  process_add_product_list(dp) {
-
-    return new Promise(async (resolve, reject) => {
-
-      const ax = [];
-
-      for (let i = 0; i < dp.production.count(); i++) {
-        const row_spec = dp.production.get(i);
-        let row_prod;
-
-        if(row_spec.inset.empty()) {
-          row_prod = this.production.add(row_spec);
-          row_prod.unit = row_prod.nom.storage_unit;
-          if(!row_spec.clr.empty()) {
-            $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
-              if(ox.clr == row_spec.clr) {
-                row_prod.characteristic = ox;
-                return false;
-              }
-            });
-          }
-        }
-        else {
-          const len_angl = {
-            angle: 0,
-            alp1: 0,
-            alp2: 0,
-            len: row_spec.len,
-            origin: row_spec.inset,
-            cnstr: 0
-          };
-          const elm = {
-            elm: 0,
-            angle_hor: 0,
-            get _row() {
-              return this;
-            },
-            get clr() {
-              return row_spec.clr;
-            },
-            get len() {
-              return row_spec.len;
-            },
-            get height() {
-              return row_spec.height;
-            },
-            get depth() {
-              return row_spec.depth;
-            },
-            get s() {
-              return row_spec.s;
-            },
-            get perimeter() {
-              return [{len: row_spec.len, angle: 0}, {len: row_spec.height, angle: 90}];
-            },
-            get x1() {
-              return 0;
-            },
-            get y1() {
-              return 0;
-            },
-            get x2() {
-              return row_spec.height;
-            },
-            get y2() {
-              return row_spec.len;
-            },
-          };
-          row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
-          row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
-
-          row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
-        }
-
-        [].push.apply(ax, $p.spec_building.specification_adjustment({
-          calc_order_row: row_prod,
-          spec: row_prod.characteristic.specification,
-          save: true,
-        }, true));
-
-      }
-
-      resolve(ax);
-
-    });
-  }
-
-  static set_department() {
-    const department = $p.wsql.get_user_param('current_department');
-    if(department) {
-      this.department = department;
-    }
-    const {current_user, cat} = $p;
-    if(this.department.empty() || this.department.is_new()) {
-      current_user.acl_objs && current_user.acl_objs.find_rows({by_default: true, type: cat.divisions.class_name}, (row) => {
-        if(this.department != row.acl_obj) {
-          this.department = row.acl_obj;
-        }
-        return false;
-      });
-    }
-  }
-
-};
-
-$p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocCalc_orderProductionRow {
-
-  value_change(field, type, value, no_extra_charge) {
-
-    let {_obj, _owner, nom, characteristic, unit} = this;
-    let recalc;
-    const {rounding} = _owner._owner;
-
-    if(field == 'nom' || field == 'characteristic' || field == 'quantity') {
-
-      _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
-
-      nom = this.nom;
-      characteristic = this.characteristic;
-
-      if(!characteristic.empty()) {
-        if(!characteristic.calc_order.empty() && characteristic.owner != nom) {
-          characteristic.owner = nom;
-        }
-        else if(characteristic.owner != nom) {
-          _obj.characteristic = $p.utils.blank.guid;
-          characteristic = this.characteristic;
-        }
-      }
-
-      if(unit.owner != nom) {
-        _obj.unit = nom.storage_unit.ref;
-      }
-
-      const fake_prm = {
-        calc_order_row: this,
-        spec: characteristic.specification
-      };
-      const {price} = _obj;
-      $p.pricing.price_type(fake_prm);
-      $p.pricing.calc_first_cost(fake_prm);
-      $p.pricing.calc_amount(fake_prm);
-      if(price && !_obj.price) {
-        _obj.price = price;
-        recalc = true;
-      }
-    }
-
-    if('price_internal,quantity,discount_percent_internal'.indexOf(field) != -1 || recalc) {
-
-      if(!recalc) {
-        _obj[field] = parseFloat(value);
-      }
-
-      isNaN(_obj.price) && (_obj.price = 0);
-      isNaN(_obj.price_internal) && (_obj.price_internal = 0);
-      isNaN(_obj.discount_percent) && (_obj.discount_percent = 0);
-      isNaN(_obj.discount_percent_internal) && (_obj.discount_percent_internal = 0);
-
-      _obj.amount = (_obj.price * ((100 - _obj.discount_percent) / 100) * _obj.quantity).round(rounding);
-
-      if(!no_extra_charge) {
-        const prm = {calc_order_row: this};
-        let extra_charge = $p.wsql.get_user_param('surcharge_internal', 'number');
-
-        if(!$p.current_user.partners_uids.length || !extra_charge) {
-          $p.pricing.price_type(prm);
-          extra_charge = prm.price_type.extra_charge_external;
-        }
-
-        if(field != 'price_internal' && extra_charge && _obj.price) {
-          _obj.price_internal = (_obj.price * (100 - _obj.discount_percent) / 100 * (100 + extra_charge) / 100).round(rounding);
-        }
-      }
-
-      _obj.amount_internal = (_obj.price_internal * ((100 - _obj.discount_percent_internal) / 100) * _obj.quantity).round(rounding);
-
-      const doc = _owner._owner;
-      if(doc.vat_consider) {
-        const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
-        _obj.vat_rate = (nom.vat_rate.empty() ? НДС18 : nom.vat_rate).ref;
-        switch (this.vat_rate) {
-        case НДС18:
-        case НДС18_118:
-          _obj.vat_amount = (_obj.amount * 18 / 118).round(2);
-          break;
-        case НДС10:
-        case НДС10_110:
-          _obj.vat_amount = (_obj.amount * 10 / 110).round(2);
-          break;
-        case НДС20:
-        case НДС20_120:
-          _obj.vat_amount = (_obj.amount * 20 / 120).round(2);
-          break;
-        case НДС0:
-        case БезНДС:
-        case '_':
-        case '':
-          _obj.vat_amount = 0;
-          break;
-        }
-        if(!doc.vat_included) {
-          _obj.amount = (_obj.amount + _obj.vat_amount).round(2);
-        }
-      }
-      else {
-        _obj.vat_rate = '';
-        _obj.vat_amount = 0;
-      }
-
-      const amount = _owner.aggregate([], ['amount', 'amount_internal']);
-      amount.doc_amount = amount.amount.round(rounding);
-      amount.amount_internal = amount.amount_internal.round(rounding);
-      delete amount.amount;
-      Object.assign(doc, amount);
-      doc._manager.emit_async('update', doc, amount);
-
-
-      return false;
-    }
-  }
-
-};
-
-
-
-
-$p.doc.calc_order.form_list = function(pwnd, attr, handlers){
-
-	if(!attr){
-		attr = {
-			hide_header: true,
-			date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
-			date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
-			on_new: (o) => {
-        handlers.handleNavigate(`/${this.class_name}/${o.ref}`);
-			},
-			on_edit: (_mgr, rId) => {
-        handlers.handleNavigate(`/${_mgr.class_name}/${rId}`);
-			}
-		};
-	}
-
-  return this.pouch_db.getIndexes()
-    .then(({indexes}) => {
-      attr._index = {
-        ddoc: "mango_calc_order",
-        fields: ["department", "state", "date", "search"],
-        name: 'list',
-        type: 'json',
-      };
-      if(!indexes.some(({ddoc}) => ddoc && ddoc.indexOf(attr._index.ddoc) != -1)){
-        return this.pouch_db.createIndex(attr._index);
-      }
-    })
-    .then(() => {
-      return new Promise((resolve, reject) => {
-
-        attr.on_create = (wnd) => {
-
-          const {elmnts} = wnd;
-
-          wnd.dep_listener = (obj, fields) => {
-            if(obj == dp && fields.department){
-              elmnts.filter.call_event();
-              $p.wsql.set_user_param("current_department", dp.department.ref);
-            }
-          }
-
-          if(handlers){
-            const {custom_selection} = elmnts.filter;
-            custom_selection._state = handlers.props.state_filter;
-            handlers.onProps = (props) => {
-              if(custom_selection._state != props.state_filter){
-                custom_selection._state = props.state_filter;
-                elmnts.filter.call_event();
-              }
-            }
-          }
-
-          const dp = $p.dp.builder_price.create();
-          const pos = elmnts.toolbar.getPosition("input_filter");
-          const txt_id = `txt_${dhx4.newId()}`;
-          elmnts.toolbar.addText(txt_id, pos, "");
-          const txt_div = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + txt_id].obj;
-          const dep = new $p.iface.OCombo({
-            parent: txt_div,
-            obj: dp,
-            field: "department",
-            width: 180,
-            hide_frm: true,
-          });
-          txt_div.style.border = "1px solid #ccc";
-          txt_div.style.borderRadius = "3px";
-          txt_div.style.padding = "3px 2px 1px 2px";
-          txt_div.style.margin = "1px 5px 1px 1px";
-          dep.DOMelem_input.placeholder = "Подразделение";
-
-          dp._manager.on('update', wnd.dep_listener);
-
-          const set_department = $p.DocCalc_order.set_department.bind(dp);
-          set_department();
-          if(!$p.wsql.get_user_param('couch_direct')){
-            $p.md.once('user_log_in', set_department);
-          }
-
-          elmnts.filter.custom_selection.__define({
-            department: {
-              get: function () {
-                const {department} = dp;
-                return this._state == 'template' ? {$eq: $p.utils.blank.guid} : {$eq: department.ref};
-              },
-              enumerable: true
-            },
-            state: {
-              get: function(){
-                return this._state == 'all' ? {$in: 'draft,sent,confirmed,declined,service,complaints,template,zarchive'.split(',')} : {$eq: this._state};
-              },
-              enumerable: true
-            }
-          });
-          elmnts.filter.custom_selection._index = attr._index;
-
-          elmnts.status_bar = wnd.attachStatusBar();
-          elmnts.svgs = new $p.iface.OSvgs(wnd, elmnts.status_bar,
-            (ref, dbl) => {
-              dbl && handlers.handleNavigate(`/builder/${ref}`);
-            });
-          elmnts.grid.attachEvent("onRowSelect", (rid) => elmnts.svgs.reload(rid));
-
-          wnd.attachEvent("onClose", (win) => {
-            dep && dep.unload();
-            return true;
-          });
-
-          attr.on_close = () => {
-            elmnts.svgs && elmnts.svgs.unload();
-            dep && dep.unload();
-          }
-
-
-          resolve(wnd);
-        }
-
-        return this.mango_selection(pwnd, attr);
-
-      });
-    });
-
-};
-
-
-
-(function ($p) {
-
-  const _mgr = $p.doc.calc_order;
-  let _meta_patched;
-
-  _mgr.form_obj = function (pwnd, attr, handlers) {
-
-    let o, wnd;
-
-    if(!_meta_patched) {
-      (function (source, user) {
-        if($p.wsql.get_user_param('hide_price_dealer')) {
-          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
-          source.widths = '40,200,*,220,0,70,70,70,70,40,70,70,70,0,0,0';
-          source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,0,0,0';
-        }
-        else if($p.wsql.get_user_param('hide_price_manufacturer')) {
-          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма';
-          source.widths = '40,200,*,220,0,70,70,70,70,40,0,0,0,70,70,70';
-          source.min_widths = '30,200,220,150,0,70,40,70,70,70,0,0,0,70,70,70';
-        }
-        else {
-          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
-          source.widths = '40,200,*,220,0,70,70,70,70,40,70,70,70,70,70,70';
-          source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70';
-        }
-
-        if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен')) {
-          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro';
-        }
-        else if(user.role_available('РедактированиеСкидок')) {
-          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro';
-        }
-        else {
-          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro';
-        }
-
-        _meta_patched = true;
-
-      })($p.doc.calc_order.metadata().form.obj.tabular_sections.production, $p.current_user);
-    }
-
-    attr.draw_tabular_sections = (o, wnd, tabular_init) => {
-
-      const refs = [];
-      o.production.each((row) => {
-        if(!$p.utils.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new()) {
-          refs.push(row._obj.characteristic);
-        }
-      });
-      $p.cat.characteristics.pouch_load_array(refs)
-        .then(() => {
-
-          const footer = {
-            columns: ",,,,#stat_total,,,#stat_s,,,,,#stat_total,,,#stat_total",
-            _in_header_stat_s: function(tag,index,data){
-              const calck=function(){
-                let sum=0;
-                o.production.each((row) => {
-                  sum += row.s * row.quantity;
-                });
-                return sum.toFixed(2);
-              }
-              this._stat_in_header(tag,calck,index,data);
-            }
-          }
-
-          tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
-          const {production} = wnd.elmnts.grids;
-          production.disable_sorting = true;
-          production.attachEvent('onRowSelect', (id, ind) => {
-            const row = o.production.get(id - 1);
-            wnd.elmnts.svgs.select(row.characteristic.ref);
-          });
-          production.attachEvent('onEditCell', (stage,rId,cInd,nValue,oValue,fake) => {
-            if(stage == 2 && fake !== true){
-              if(production._edit_timer){
-                clearTimeout(production._edit_timer);
-              }
-              production._edit_timer = setTimeout(() => {
-                if(wnd && wnd.elmnts){
-                  production.callEvent('onEditCell', [2, 0, 7, null, null, true]);
-                  production.callEvent('onEditCell', [2, 0, 12, null, null, true]);
-                  production.callEvent('onEditCell', [2, 0, 15, null, null, true]);
-                }
-              }, 300);
-            }
-          });
-
-          let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
-          toolbar.addSpacer('btn_delete');
-          toolbar.attachEvent('onclick', toolbar_click);
-
-          tabular_init('planning');
-          toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
-          toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
-          toolbar.attachEvent('onclick', toolbar_click);
-
-          set_editable(o, wnd);
-
-        });
-
-      wnd.elmnts.statusbar = wnd.attachStatusBar();
-      wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar, rsvg_click);
-    };
-
-    attr.draw_pg_header = (o, wnd) => {
-
-      function layout_resize_finish() {
-        setTimeout(() => {
-          if(wnd.elmnts && wnd.elmnts.layout_header && wnd.elmnts.layout_header.setSizes) {
-            wnd.elmnts.layout_header.setSizes();
-            wnd.elmnts.pg_left.objBox.style.width = '100%';
-            wnd.elmnts.pg_right.objBox.style.width = '100%';
-          }
-        }, 200);
-      }
-
-      wnd.elmnts.layout_header = wnd.elmnts.tabs.tab_header.attachLayout('3U');
-
-      wnd.elmnts.layout_header.attachEvent('onResizeFinish', layout_resize_finish);
-
-      wnd.elmnts.layout_header.attachEvent('onPanelResizeFinish', layout_resize_finish);
-
-      wnd.elmnts.cell_left = wnd.elmnts.layout_header.cells('a');
-      wnd.elmnts.cell_left.hideHeader();
-      wnd.elmnts.pg_left = wnd.elmnts.cell_left.attachHeadFields({
-        obj: o,
-        pwnd: wnd,
-        read_only: wnd.elmnts.ro,
-        oxml: {
-          ' ': [{id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro', txt: o.number_doc},
-            {id: 'date', path: 'o.date', synonym: 'Дата', type: 'ro', txt: moment(o.date).format(moment._masks.date_time)},
-            'number_internal'
-          ],
-          'Контактная информация': ['partner', 'client_of_dealer', 'phone',
-            {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr', txt: o['shipping_address']}
-          ],
-          'Дополнительные реквизиты': ['obj_delivery_state', 'category']
-        }
-      });
-
-
-      wnd.elmnts.cell_right = wnd.elmnts.layout_header.cells('b');
-      wnd.elmnts.cell_right.hideHeader();
-      wnd.elmnts.pg_right = wnd.elmnts.cell_right.attachHeadFields({
-        obj: o,
-        pwnd: wnd,
-        read_only: wnd.elmnts.ro,
-        oxml: {
-          'Налоги': ['vat_consider', 'vat_included'],
-          'Аналитика': ['project',
-            {id: 'organization', path: 'o.organization', synonym: 'Организация', type: 'refc'},
-            {id: 'contract', path: 'o.contract', synonym: 'Договор', type: 'refc'},
-            {id: 'bank_account', path: 'o.bank_account', synonym: 'Счет организации', type: 'refc'},
-            {id: 'department', path: 'o.department', synonym: 'Офис продаж', type: 'refc'},
-            {id: 'warehouse', path: 'o.warehouse', synonym: 'Склад отгрузки', type: 'refc'},
-          ],
-          'Итоги': [{id: 'doc_currency', path: 'o.doc_currency', synonym: 'Валюта документа', type: 'ro', txt: o['doc_currency'].presentation},
-            {id: 'doc_amount', path: 'o.doc_amount', synonym: 'Сумма', type: 'ron', txt: o['doc_amount']},
-            {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма внутр', type: 'ron', txt: o['amount_internal']}]
-        }
-      });
-
-      wnd.elmnts.cell_note = wnd.elmnts.layout_header.cells('c');
-      wnd.elmnts.cell_note.hideHeader();
-      wnd.elmnts.cell_note.setHeight(100);
-      wnd.elmnts.cell_note.attachHTMLString('<textarea placeholder=\'Комментарий к заказу\' class=\'textarea_editor\'>' + o.note + '</textarea>');
-
-    };
-
-    attr.toolbar_struct = $p.injected_data['toolbar_calc_order_obj.xml'];
-
-    attr.toolbar_click = toolbar_click;
-
-    attr.on_close = frm_close;
-
-    return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-      .then((res) => {
-        if(res) {
-          o = res.o;
-          wnd = res.wnd;
-          wnd.prompt = prompt;
-          wnd.close_confirmed = true;
-
-          rsvg_reload();
-          o._manager.on('svgs', rsvg_reload);
-
-          const search = $p.job_prm.parse_url_str(location.search);
-          if(search.ref) {
-            setTimeout(() => {
-              wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
-              rsvg_click(search.ref, 0);
-            }, 200);
-          };
-
-          return res;
-        }
-      });
-
-    function prompt(loc) {
-      if(loc.pathname.match(/builder/)) {
-        return true;
-      }
-      return (o && o._modified) ? `${o.presentation} изменён.\n\nЗакрыть без сохранения?` : true;
-    }
-
-    function close() {
-      if(o && o._obj) {
-        const {ref, state} = o._obj;
-        handlers.handleNavigate(`/?ref=${ref}&state_filter=${state || 'draft'}`);
-      }
-      else {
-        handlers.handleNavigate(`/`);
-      }
-      $p.doc.calc_order.off('svgs', rsvg_reload);
-    }
-
-    function toolbar_click(btn_id) {
-
-      switch (btn_id) {
-
-      case 'btn_sent':
-        save('sent');
-        break;
-
-      case 'btn_save':
-        save('save');
-        break;
-
-      case 'btn_save_close':
-        save('close');
-        break;
-
-      case 'btn_retrieve':
-        save('retrieve');
-        break;
-
-      case 'btn_post':
-        save('post');
-        break;
-
-      case 'btn_unpost':
-        save('unpost');
-        break;
-
-      case 'btn_fill_plan':
-        o.fill_plan();
-        break;
-
-      case 'btn_close':
-        close();
-        break;
-
-      case 'btn_add_builder':
-        open_builder(true);
-        break;
-
-      case 'btn_clone':
-        open_builder('clone');
-        break;
-
-      case 'btn_add_product':
-        $p.dp.buyers_order.open_product_list(wnd, o);
-        break;
-
-      case 'btn_additions':
-        $p.dp.buyers_order.open_additions(wnd, o, handlers);
-        break;
-
-      case 'btn_add_material':
-        add_material();
-        break;
-
-      case 'btn_edit':
-        open_builder();
-        break;
-
-      case 'btn_spec':
-        open_spec();
-        break;
-
-      case 'btn_discount':
-        show_discount();
-        break;
-
-      case 'btn_calendar':
-        calendar_new_event();
-        break;
-
-      case 'btn_go_connection':
-        go_connection();
-        break;
-      }
-
-      if(btn_id.substr(0, 4) == 'prn_') {
-        _mgr.print(o, btn_id, wnd);
-      }
-    }
-
-    function calendar_new_event() {
-      $p.msg.show_not_implemented();
-    }
-
-    function go_connection() {
-      $p.msg.show_not_implemented();
-    }
-
-    function show_discount() {
-
-      if(!wnd.elmnts.discount) {
-        wnd.elmnts.discount = $p.dp.buyers_order.create();
-      }
-      refill_discount(wnd.elmnts.discount);
-
-      const discount = $p.iface.dat_blank(null, {
-        width: 300,
-        height: 220,
-        allow_close: true,
-        allow_minmax: false,
-        caption: 'Скидки по группам'
-      });
-      discount.setModal(true);
-
-      discount.attachTabular({
-        obj: wnd.elmnts.discount,
-        ts: 'charges_discounts',
-        reorder: false,
-        disable_add_del: true,
-        toolbar_struct: $p.injected_data['toolbar_discounts.xml'],
-        ts_captions: {
-          'fields': ['nom_kind', 'discount_percent'],
-          'headers': 'Группа,Скидка',
-          'widths': '*,80',
-          'min_widths': '120,70',
-          'aligns': '',
-          'sortings': 'na,na',
-          'types': 'ro,calck'
-        },
-      });
-      const toolbar = discount.getAttachedToolbar();
-      toolbar.attachEvent('onclick', (btn) => {
-        wnd.elmnts.discount._mode = btn;
-        refill_discount(wnd.elmnts.discount);
-        toolbar.setItemText('bs', toolbar.getListOptionText('bs', btn));
-      });
-      if(wnd.elmnts.discount._disable_internal) {
-        toolbar.disableListOption('bs', 'discount_percent');
-      }
-      toolbar.setItemText('bs', toolbar.getListOptionText('bs', wnd.elmnts.discount._mode));
-    }
-
-    function refill_discount(dp) {
-
-      if(!dp._mode) {
-        dp._disable_internal = !$p.current_user.role_available('РедактированиеСкидок');
-        dp._mode = dp._disable_internal ? 'discount_percent_internal' : 'discount_percent';
-        dp._calc_order = o;
-      }
-
-      const {charges_discounts} = dp;
-      const groups = new Set();
-      dp._data._loading = true;
-      charges_discounts.clear();
-      o.production.forEach((row) => {
-        const group = {nom_kind: row.nom.nom_kind};
-        if(!groups.has(group.nom_kind)) {
-          groups.add(group.nom_kind);
-          charges_discounts.add(group);
-        }
-        charges_discounts.find_rows(group, (sub) => {
-          const percent = row[dp._mode];
-          if(percent > sub.discount_percent) {
-            sub.discount_percent = percent;
-          }
-        });
-      });
-      dp._data._loading = false;
-      dp._manager.emit_async('rows', dp, {'charges_discounts': true});
-    }
-
-
-
-    function production_get_sel_index() {
-      var selId = wnd.elmnts.grids.production.getSelectedRowId();
-      if(selId && !isNaN(Number(selId))) {
-        return Number(selId) - 1;
-      }
-
-      $p.msg.show_msg({
-        type: 'alert-warning',
-        text: $p.msg.no_selected_row.replace('%1', 'Продукция'),
-        title: o.presentation
-      });
-    }
-
-    function save(action) {
-
-      function do_save(post) {
-
-        if(!wnd.elmnts.ro) {
-          o.note = wnd.elmnts.cell_note.cell.querySelector('textarea').value.replace(/&nbsp;/g, ' ').replace(/<.*?>/g, '').replace(/&.{2,6};/g, '');
-          wnd.elmnts.pg_left.selectRow(0);
-        }
-
-        o.save(post)
-          .then(function () {
-            if(action == 'sent' || action == 'close') {
-              close();
-            }
-            else {
-              wnd.set_text();
-              set_editable(o, wnd);
-            }
-
-          })
-          .catch($p.record_log);
-      }
-
-      switch (action) {
-      case 'sent':
-        dhtmlx.confirm({
-          title: $p.msg.order_sent_title,
-          text: $p.msg.order_sent_message,
-          cancel: $p.msg.cancel,
-          callback: function (btn) {
-            if(btn) {
-              o.obj_delivery_state = $p.enm.obj_delivery_states.Отправлен;
-              do_save();
-            }
-          }
-        });
-        break;
-
-      case 'retrieve':
-        o.obj_delivery_state = $p.enm.obj_delivery_states.Отозван;
-        do_save();
-        break;
-
-      case 'post':
-        do_save(true);
-        break;
-
-      case 'unpost':
-        do_save(false);
-        break;
-
-      default:
-        do_save();
-      }
-    }
-
-    function frm_close() {
-
-      if(o && o._modified) {
-        if(o.is_new()) {
-          o.unload();
-        }
-        else if(!location.pathname.match(/builder/)) {
-          setTimeout(o.load.bind(o), 100);
-        }
-      }
-
-      ['vault', 'vault_pop', 'discount', 'svgs', 'layout_header'].forEach((elm) => {
-        wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
-      });
-
-      return true;
-    }
-
-    function set_editable(o, wnd) {
-
-      const {pg_left, pg_right, frm_toolbar, grids, tabs} = wnd.elmnts;
-
-      pg_right.cells('vat_consider', 1).setDisabled(true);
-      pg_right.cells('vat_included', 1).setDisabled(true);
-
-      const ro = wnd.elmnts.ro = o.is_read_only;
-
-      const retrieve_enabed = !o._deleted &&
-        (o.obj_delivery_state == $p.enm.obj_delivery_states.Отправлен || o.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен);
-
-      grids.production.setEditable(!ro);
-      grids.planning.setEditable(!ro);
-      pg_left.setEditable(!ro);
-      pg_right.setEditable(!ro);
-
-      if(!$p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
-        frm_toolbar.hideItem('btn_post');
-        frm_toolbar.hideItem('btn_unpost');
-      }
-
-      if(!$p.current_user.role_available('ИзменениеТехнологическойНСИ') && !$p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
-        pg_left.cells('obj_delivery_state', 1).setDisabled(true);
-      }
-
-      if(ro) {
-        frm_toolbar.disableItem('btn_sent');
-        frm_toolbar.disableItem('btn_save');
-        let toolbar;
-        const disable = (itemId) => toolbar.disableItem(itemId);
-        toolbar = tabs.tab_production.getAttachedToolbar();
-        toolbar.forEachItem(disable);
-        toolbar = tabs.tab_planning.getAttachedToolbar();
-        toolbar.forEachItem(disable);
-      }
-      else {
-        if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон) {
-          frm_toolbar.disableItem('btn_sent');
-        }
-        else {
-          frm_toolbar.enableItem('btn_sent');
-        }
-        frm_toolbar.enableItem('btn_save');
-        let toolbar;
-        const enable = (itemId) => toolbar.enableItem(itemId);
-        toolbar = tabs.tab_production.getAttachedToolbar();
-        toolbar.forEachItem(enable);
-        toolbar = tabs.tab_planning.getAttachedToolbar();
-        toolbar.forEachItem(enable);
-      }
-      if(retrieve_enabed) {
-        frm_toolbar.enableListOption('bs_more', 'btn_retrieve');
-      }
-      else {
-        frm_toolbar.disableListOption('bs_more', 'btn_retrieve');
-      }
-    }
-
-    function not_production() {
-      $p.msg.show_msg({
-        title: $p.msg.bld_title,
-        type: 'alert-error',
-        text: $p.msg.bld_not_product
-      });
-    }
-
-    function open_builder(create_new) {
-      var selId;
-
-      if(create_new == 'clone') {
-        const selId = production_get_sel_index();
-        if(selId == undefined) {
-          not_production();
-        }
-        else {
-          const row = o.production.get(selId);
-          if(row) {
-            const {owner, calc_order} = row.characteristic;
-            if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
-              not_production();
-            }
-            else if(row.characteristic.coordinates.count()) {
-              o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
-                .then(({characteristic}) => {
-                  characteristic._mixin(row.characteristic._obj, null,
-                    ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'note', 'partner'], true);
-                  handlers.handleNavigate(`/builder/${characteristic.ref}`);
-                });
-            }
-            else {
-              not_production();
-            }
-          }
-        }
-
-      }
-      else if(create_new) {
-        o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
-          .then((row) => {
-            handlers.handleNavigate(`/builder/${row.characteristic.ref}`);
-          });
-      }
-      else {
-        const selId = production_get_sel_index();
-        if(selId != undefined) {
-          const row = o.production.get(selId);
-          if(row) {
-            const {owner, calc_order} = row.characteristic;
-            if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
-              not_production();
-            }
-            else if(row.characteristic.coordinates.count() == 0) {
-              if(row.characteristic.leading_product.calc_order == calc_order) {
-                handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}`);
-              }
-            }
-            else {
-              handlers.handleNavigate(`/builder/${row.characteristic.ref}`);
-            }
-          }
-        }
-      }
-
-    }
-
-    function open_spec() {
-      const selId = production_get_sel_index();
-      if(selId != undefined) {
-        const row = o.production.get(selId);
-        row && !row.characteristic.empty() && row.characteristic.form_obj().then((w) => w.wnd.maximize());
-      }
-    }
-
-    function rsvg_reload() {
-      o && wnd && wnd.elmnts && wnd.elmnts.svgs && wnd.elmnts.svgs.reload(o);
-    }
-
-    function rsvg_click(ref, dbl) {
-      const {production} = wnd.elmnts.grids;
-      production && o.production.find_rows({characteristic: ref}, (row) => {
-        production.selectRow(row.row - 1, dbl === 0);
-        dbl && open_builder();
-        return false;
-      });
-    }
-
-    function add_material() {
-      const {production} = wnd.elmnts.grids;
-      const row = o.create_product_row({grid: production}).row - 1;
-      setTimeout(() => {
-        production.selectRow(row);
-        production.selectCell(row, production.getColIndexById('nom'), false, true, true);
-        production.cells().open_selection();
-      });
-    }
-
-  };
-
-})($p);
-
-
-
-$p.doc.calc_order.form_selection = function(pwnd, attr){
-
-	const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
-
-	wnd.elmnts.filter.custom_selection._view = { get value() { return '' } };
-	wnd.elmnts.filter.custom_selection._key = { get value() { return '' } };
-
-	wnd.do_not_maximize = true;
-	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar,
-    (ref, dbl) => {
-	  if(dbl){
-      wnd && wnd.close();
-      return pwnd.on_select && pwnd.on_select({_block: ref});
-    }
-    });
-	wnd.elmnts.grid.attachEvent("onRowSelect", (rid) => wnd.elmnts.svgs.reload(rid));
-
-
-	setTimeout(() => {
-		wnd.setDimension(900, 580);
-		wnd.centerOnScreen();
-	})
-
-	return wnd;
-};
-
-
-
-$p.doc.calc_order.__define({
-
-	rep_invoice_execution: {
-		value: function (rep) {
-
-			var query_options = {
-					reduce: true,
-					limit: 10000,
-					group: true,
-					group_level: 3
-				},
-				res = {
-					data: [],
-					readOnly: true,
-					colWidths: [180, 180, 200, 100, 100, 100, 100, 100],
-					colHeaders: ['Контрагент', 'Организация', 'Заказ', 'Сумма', 'Оплачено', 'Долг', 'Отгружено', 'Отгрузить'],
-					columns: [
-						{type: 'text'},
-						{type: 'text'},
-						{type: 'text'},
-						{type: 'numeric', format: '0 0.00'},
-						{type: 'numeric', format: '0 0.00'},
-						{type: 'numeric', format: '0 0.00'},
-						{type: 'numeric', format: '0 0.00'},
-						{type: 'numeric', format: '0 0.00'}
-					],
-					wordWrap: false
-				};
-
-			if(!$p.current_user.role_available("СогласованиеРасчетовЗаказов")){
-				query_options.startkey = [$p.current_user.partners_uids[0],""];
-				query_options.endkey = [$p.current_user.partners_uids[0],"\ufff0"];
-			}
-
-			return $p.wsql.pouch.remote.doc.query("server/invoice_execution", query_options)
-
-				.then(function (data) {
-
-					var total = {
-						invoice: 0,
-						pay: 0,
-						total_pay: 0,
-						shipment:0,
-						total_shipment:0
-					};
-
-					if(data.rows){
-
-						data.rows.forEach(function (row) {
-
-							if(!row.value.total_pay && !row.value.total_shipment)
-								return;
-
-							res.data.push([
-								$p.cat.partners.get(row.key[0]).presentation,
-								$p.cat.organizations.get(row.key[1]).presentation,
-								row.key[2],
-								row.value.invoice,
-								row.value.pay,
-								row.value.total_pay,
-								row.value.shipment,
-								row.value.total_shipment]);
-
-							total.invoice+= row.value.invoice;
-							total.pay+=row.value.pay;
-							total.total_pay+=row.value.total_pay;
-							total.shipment+=row.value.shipment;
-							total.total_shipment+=row.value.total_shipment;
-						});
-
-						res.data.push([
-							"Итого:",
-							"",
-							"",
-							total.invoice,
-							total.pay,
-							total.total_pay,
-							total.shipment,
-							total.total_shipment]);
-
-						res.mergeCells= [
-							{row: res.data.length-1, col: 0, rowspan: 1, colspan: 3}
-						]
-					}
-
-					rep.requery(res);
-
-					return res;
-				});
-		}
-	},
-
-	rep_planing: {
-		value: function (rep, attr) {
-
-			var date_from = $p.utils.date_add_day(new Date(), -1, true),
-				date_till = $p.utils.date_add_day(date_from, 7, true),
-				query_options = {
-					reduce: true,
-					limit: 10000,
-					group: true,
-					group_level: 5,
-					startkey: [date_from.getFullYear(), date_from.getMonth()+1, date_from.getDate(), ""],
-					endkey: [date_till.getFullYear(), date_till.getMonth()+1, date_till.getDate(),"\ufff0"]
-				},
-				res = {
-					data: [],
-					readOnly: true,
-					wordWrap: false
-				};
-
-
-
-			return $p.wsql.pouch.remote.doc.query("server/planning", query_options)
-
-				.then(function (data) {
-
-
-					if(data.rows){
-
-						var include_detales = $p.current_user.role_available("СогласованиеРасчетовЗаказов");
-
-						data.rows.forEach(function (row) {
-
-							if(!include_detales){
-
-							}
-
-							res.data.push([
-								new Date(row.key[0], row.key[1]-1, row.key[2]),
-								$p.cat.parameters_keys.get(row.key[3]),
-								row.value.debit,
-								row.value.credit,
-								row.value.total
-							]);
-						});
-
-					}
-
-					rep.requery(res);
-
-					return res;
-				});
-
-		}
-	}
-
-});
-
-
-$p.DocCredit_card_order.prototype.before_save = function () {
-  this.doc_amount = this.payment_details.aggregate([], 'amount');
-};
-
-
-$p.DocDebit_bank_order.prototype.before_save = function () {
-  this.doc_amount = this.payment_details.aggregate([], 'amount');
-};
-
-
-$p.DocDebit_cash_order.prototype.before_save = function () {
-  this.doc_amount = this.payment_details.aggregate([], 'amount');
-};
-
-
-
-$p.doc.nom_prices_setup.metadata().tabular_sections.goods.fields.nom_characteristic._option_list_local = true;
-
-$p.DocNom_prices_setup.prototype.after_create = function () {
-  return this.new_number_doc();
-};
-
-$p.DocNom_prices_setup.prototype.add_row = function (row) {
-  if (row._owner.name === 'goods') {
-    const {price_type} = row._owner._owner;
-    row.price_type = price_type;
-    row.currency = price_type.price_currency;
-  }
-};
-
-$p.DocNom_prices_setup.prototype.before_save = function () {
-  let aggr = this.goods.aggregate(['nom', 'nom_characteristic', 'price_type'], ['price'], 'COUNT', true),
-    err;
-  if (aggr.some((row) => {
-      if (row.price > 1) {
-        err = row;
-        return row.price > 1;
-      }
-    })) {
-    $p.msg.show_msg({
-      type: 'alert-warning',
-      text: '<table style=\'text-align: left; width: 100%;\'><tr><td>Номенклатура</td><td>' + $p.cat.nom.get(err.nom).presentation + '</td></tr>' +
-      '<tr><td>Характеристика</td><td>' + $p.cat.characteristics.get(err.nom_characteristic).presentation + '</td></tr>' +
-      '<tr><td>Тип цен</td><td>' + $p.cat.nom_prices_types.get(err.price_type).presentation + '</td></tr></table>',
-      title: 'Дубли строк',
-    });
-
-    return false;
-  }
-};
-
-$p.on('tabular_paste', (clip) => {
-
-  if (clip.grid && clip.obj && clip.obj._manager == $p.doc.nom_prices_setup) {
-
-    var rows = [];
-
-    clip.data.split('\n').map(function (row) {
-      return row.split('\t');
-    }).forEach(function (row) {
-
-      if (row.length != 3)
-        return;
-
-      var nom = $p.cat.nom.by_name(row[0]);
-      if (nom.empty())
-        nom = $p.cat.nom.by_id(row[0]);
-      if (nom.empty())
-        nom = $p.cat.nom.find({article: row[0]});
-      if (!nom || nom.empty())
-        return;
-
-      var characteristic = '';
-      if (row[1]) {
-        characteristic = $p.cat.characteristics.find({owner: nom, name: row[1]});
-        if (!characteristic || characteristic.empty())
-          characteristic = $p.cat.characteristics.find({owner: nom, name: {like: row[1]}});
-      }
-
-      rows.push({
-        nom: nom,
-        nom_characteristic: characteristic,
-        price: parseFloat(row[2].replace(',', '.')),
-        price_type: clip.obj.price_type,
-      });
-    });
-
-    if (rows.length) {
-
-      clip.grid.editStop();
-
-      var first = clip.obj.goods.get(parseInt(clip.grid.getSelectedRowId()) - 1);
-
-      rows.forEach(function (row) {
-        if (first) {
-          first._mixin(row);
-          first = null;
-        } else
-          clip.obj.goods.add(row);
-      });
-
-      clip.obj.goods.sync_grid(clip.grid);
-
-      clip.e.preventDefault();
-      return $p.iface.cancel_bubble(e);
-    }
-  }
-
-});
-
-
-
-$p.DocSelling.prototype.before_save = function () {
-  this.doc_amount = this.goods.aggregate([], 'amount') + this.services.aggregate([], 'amount');
-};
-
-
-
-
-(function(_mgr){
-
-
-	_mgr.acn = {
-
-	  cache: {},
-
-    get ii() {
-      return this.cache.ii || ( this.cache.ii = [_mgr.Наложение] );
-    },
-
-    get i() {
-      return this.cache.i || ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
-    },
-
-    get a() {
-      return this.cache.a
-        || ( this.cache.a = [
-          _mgr.УгловоеДиагональное,
-          _mgr.УгловоеКВертикальной,
-          _mgr.УгловоеКГоризонтальной,
-          _mgr.КрестВСтык] );
-    },
-
-    get t() {
-      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное, _mgr.КрестВСтык] );
-    },
-
-	};
-
-
-	Object.defineProperties(_mgr, {
-	  ad: {
-	    get: function () {
-        return _mgr.УгловоеДиагональное;
-      }
-    },
-    av: {
-      get: function () {
-        return _mgr.УгловоеКВертикальной;
-      }
-    },
-    ah: {
-      get: function () {
-        return _mgr.УгловоеКГоризонтальной;
-      }
-    },
-    t: {
-      get: function () {
-        return _mgr.ТОбразное;
-      }
-    },
-    ii: {
-      get: function () {
-        return _mgr.Наложение;
-      }
-    },
-    i: {
-      get: function () {
-        return _mgr.НезамкнутыйКонтур;
-      }
-    },
-    xt: {
-      get: function () {
-        return _mgr.КрестПересечение;
-      }
-    },
-    xx: {
-      get: function () {
-        return _mgr.КрестВСтык;
-      }
-    },
-
-  });
-
-})($p.enm.cnn_types);
-
-
-(function(_mgr){
-
-	const cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			}
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			}
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			}
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			}
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			}
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			}
-		}
-
-	});
-
-
-})($p.enm.elm_types);
-
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
-
-
-(($p) => {
-
-  Object.assign($p.RepMaterials_demand.prototype, {
-
-    print_data() {
-      return this.calc_order.print_data().then((order) => {
-        return this.calculate012()
-          .then((specification) => {
-
-            return Object.assign(order, {specification, _grouping: this.scheme.dimensions})
-          })
-      })
-    },
-
-    calculate012() {
-
-      const {specification, production, scheme, discard, _manager} = this;
-      const arefs = [];
-      const aobjs = [];
-      const spec_flds = Object.keys($p.cat.characteristics.metadata('specification').fields);
-      const rspec_flds = Object.keys(_manager.metadata('specification').fields);
-
-      production.each((row) => {
-        if(!row.use){
-          return;
-        }
-        if (!row.characteristic.empty() && row.characteristic.is_new() && arefs.indexOf(row.characteristic.ref) == -1) {
-          arefs.push(row.characteristic.ref)
-          aobjs.push(row.characteristic.load())
-        }
-      })
-
-      specification.clear();
-      if (!specification._rows) {
-        specification._rows = []
-      } else {
-        specification._rows.length = 0;
-      }
-
-      return Promise.all(aobjs)
-
-        .then((ares) => {
-
-          arefs.length = 0;
-          aobjs.length = 0;
-
-          production.each((row) => {
-            if(!row.use){
-              return;
-            }
-            if (!row.characteristic.empty() && !row.characteristic.calc_order.empty()
-              && row.characteristic.calc_order.is_new() && arefs.indexOf(row.characteristic.calc_order.ref) == -1) {
-              arefs.push(row.characteristic.calc_order.ref)
-              aobjs.push(row.characteristic.calc_order.load())
-            }
-            row.characteristic.specification.each((sprow) => {
-              if (!sprow.characteristic.empty() && sprow.characteristic.is_new() && arefs.indexOf(sprow.characteristic.ref) == -1) {
-                arefs.push(sprow.characteristic.ref)
-                aobjs.push(sprow.characteristic.load())
-              }
-            })
-          });
-
-          return Promise.all(aobjs)
-
-        })
-
-        .then(() => {
-
-          const prows = {};
-
-          const selection = [];
-          scheme.selection.forEach((row) => {
-            if(row.use){
-              selection.push(row)
-            }
-          })
-
-          production.each((row) => {
-            if(!row.use){
-              return;
-            }
-            if (!row.characteristic.empty()) {
-              row.characteristic.specification.each((sprow) => {
-
-                if(discard(sprow, selection)){
-                  return;
-                }
-
-                let resrow = {};
-                spec_flds.forEach(fld => {
-                  if (rspec_flds.indexOf(fld) != -1) {
-                    resrow[fld] = sprow[fld]
-                  }
-                });
-                resrow = specification.add(resrow)
-
-                resrow.qty = resrow.qty * row.qty;
-                resrow.totqty = resrow.totqty * row.qty;
-                resrow.totqty1 = resrow.totqty1 * row.qty;
-                resrow.amount = resrow.amount * row.qty;
-                resrow.amount_marged = resrow.amount_marged * row.qty;
-
-
-                if (resrow.elm > 0) {
-                  resrow.cnstr = row.characteristic.coordinates.find_rows({elm: resrow.elm})[0].cnstr;
-                }
-                else if (resrow.elm < 0) {
-                  resrow.cnstr = -resrow.elm;
-                }
-
-                resrow.calc_order = row.characteristic;
-
-                if (!prows[row.characteristic.ref]) {
-                  prows[row.characteristic.ref] = row.characteristic.calc_order.production.find_rows({characteristic: row.characteristic});
-                  if (prows[row.characteristic.ref].length) {
-                    prows[row.characteristic.ref] = prows[row.characteristic.ref][0].row
-                  }
-                  else {
-                    prows[row.characteristic.ref] = 1
-                  }
-                }
-                resrow.product = prows[row.characteristic.ref];
-
-                this.material(resrow);
-
-              })
-            }
-          })
-
-          const dimentions = [], resources = [];
-          scheme.columns('ts').forEach(fld => {
-            const {key} = fld
-            if ($p.RepMaterials_demand.resources.indexOf(key) != -1) {
-              resources.push(key)
-            } else {
-              dimentions.push(key)
-            }
-          })
-          specification.group_by(dimentions, resources);
-          specification.forEach((row) => {
-
-            row.qty = row.qty.round(3);
-            row.totqty = row.totqty.round(3);
-            row.totqty1 = row.totqty1.round(3);
-            row.price = row.price.round(3);
-            row.amount = row.amount.round(3);
-            row.amount_marged = row.amount_marged.round(3);
-
-            specification._rows.push(row);
-          })
-          return specification._rows;
-        })
-    },
-
-    generate() {
-
-      return this.print_data().then((data) => {
-
-        const doc = new $p.SpreadsheetDocument(void(0), {fill_template: this.on_fill_template.bind(this)});
-
-        this.scheme.composition.find_rows({use: true}, (row) => {
-          doc.append(this.templates(row.field), data);
-        });
-
-        return doc;
-      })
-    },
-
-    discard(row, selection) {
-      return selection.some((srow) => {
-
-        const left = srow.left_value.split('.');
-        let left_value = row[left[0]];
-        for(let i = 1; i < left.length; i++){
-          left_value = left_value[left[i]];
-        }
-
-        const {comparison_type, right_value} = srow;
-        const {comparison_types} = $p.enm;
-
-        switch (comparison_type) {
-        case comparison_types.eq:
-          return left_value != right_value;
-
-        case comparison_types.ne:
-          return left_value == right_value;
-
-        case comparison_types.lt:
-          return !(left_value < right_value);
-
-        case comparison_types.gt:
-          return !(left_value > right_value);
-
-        case comparison_types.in:
-          return !left_value || right_value.indexOf(left_value.toString()) == -1;
-
-        case comparison_types.nin:
-          return right_value.indexOf(left_value.toString()) != -1;
-        }
-
-      })
-    },
-
-    material(row) {
-
-      const {nom, characteristic, len, width} = row;
-
-      let res = nom.name;
-
-      if (!characteristic.empty()) {
-        res += ' ' + characteristic.presentation;
-      }
-
-      if (len && width)
-        row.sz = (1000 * len).toFixed(0) + "x" + (1000 * width).toFixed(0);
-      else if (len)
-        row.sz = + (1000 * len).toFixed(0);
-      else if (width)
-        row.sz = + (1000 * width).toFixed(0);
-
-      row.nom_kind = nom.nom_kind;
-      row.grouping = nom.grouping;
-      row.article = nom.article;
-      row.material = res;
-
-      return res;
-    },
-
-    form_obj(pwnd, attr) {
-
-      this._data._modified = false;
-
-      const {calc_order, _manager} = this;
-
-      this.wnd = this.draw_tabs($p.iface.dat_blank(null, {
-        width: 720,
-        height: 400,
-        modal: true,
-        center: true,
-        pwnd: pwnd,
-        allow_close: true,
-        allow_minmax: true,
-        caption: `<b>${calc_order.presentation}</b>`
-      }));
-      const {elmnts} = this.wnd;
-
-      elmnts.grids.production = this.draw_production(elmnts.tabs.cells("prod"));
-
-
-      this.listener = this.listener.bind(this);
-      this._manager.on('update', this.listener);
-
-      this.wnd.attachEvent("onClose", () => {
-        this._manager.off('update', this.listener);
-        elmnts.scheme.unload && elmnts.scheme.unload();
-        for(let grid in elmnts.grids){
-          elmnts.grids[grid].unload && elmnts.grids[grid].unload()
-        }
-        return true;
-      });
-
-      $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
-        .then((scheme) => {
-          this.scheme = scheme;
-        });
-
-      this.fill_by_order();
-
-      return Promise.resolve({wnd: this.wnd, o: this});
-
-    },
-
-    draw_tabs(wnd) {
-
-      const items = [
-        {id: "info", type: "text", text: "Вариант настроек:"},
-        {id: "scheme", type: "text", text: "<div style='width: 300px; margin-top: -2px;' name='scheme'></div>"}
-      ];
-      if($p.current_user.role_available("ИзменениеТехнологическойНСИ")){
-        items.push(
-          {id: "save", type: "button", text: "<i class='fa fa-floppy-o fa-fw'></i>", title: 'Сохранить вариант'},
-          {id: "sep", type: "separator"},
-          {id: "saveas", type: "button", text: "<i class='fa fa-plus-square fa-fw'></i>", title: 'Сохранить как...'});
-      }
-      items.push(
-        {id: "sp", type: "spacer"},
-        {id: "print", type: "button", text: "<i class='fa fa-print fa-fw'></i>", title: 'Печать отчета'});
-
-      wnd.attachToolbar({
-        items: items,
-        onClick: (name) => {
-          if(this.scheme.empty()){
-            return $p.msg.show_msg({
-              type: "alert-warning",
-              text: "Не выбран вариант настроек",
-              title: $p.msg.main_title
-            });
-          }
-          if(name == 'print'){
-            this.generate().then((doc) => doc.print());
-          }
-          else if(name == 'save'){
-            this.scheme.save().then((scheme) => scheme.set_default());
-          }
-          else if(name == 'saveas'){
-            $p.iface.query_value(this.scheme.name.replace(/[0-9]/g, '') + Math.floor(10 + Math.random() * 21), 'Укажите название варианта')
-              .then((name) => {
-                const proto = this.scheme._obj._clone();
-                delete proto.ref;
-                proto.name = name;
-                return this.scheme._manager.create(proto);
-              })
-              .then((scheme) => scheme.save())
-              .then((scheme) => this.scheme = scheme.set_default())
-              .catch((err) => null);
-          }
-        }
-      })
-
-      wnd.elmnts.scheme = new $p.iface.OCombo({
-        parent: wnd.cell.querySelector('[name=scheme]'),
-        obj: this,
-        field: "scheme",
-        width: 280
-      });
-
-      wnd.elmnts.tabs = wnd.attachTabbar({
-        arrows_mode: "auto",
-        tabs: [
-          {id: "prod", text: "Продукция", active:  true},
-          {id: "composition", text: "Состав"},
-          {id: "columns", text: "Колонки"},
-          {id: "selection", text: "Отбор"},
-          {id: "dimensions", text: "Группировка"},
-        ]
-      });
-
-      return wnd;
-    },
-
-    draw_production(cell) {
-      return cell.attachTabular({
-        obj: this,
-        ts: "production",
-        ts_captions: {
-          "fields":["use","characteristic","qty"],
-          "headers":",Продукция,Штук",
-          "widths":"40,*,150",
-          "min_widths":"40,200,120",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ref,calck"
-        }
-      })
-    },
-
-    draw_columns(cell) {
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "fields",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","field","caption"],
-          "headers":",Поле,Заголовок",
-          "widths":"40,200,*",
-          "min_widths":"40,200,200",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ed,ed"
-        }
-      });
-    },
-
-    draw_composition(cell) {
-      this.composition_parts();
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "composition",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","field","definition"],
-          "headers":",Элемент,Описание",
-          "widths":"40,160,*",
-          "min_widths":"40,120,200",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ed,ed"
-        }
-      });
-    },
-
-    draw_selection(cell) {
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "selection",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","left_value","comparison_type","right_value"],
-          "headers":",Левое значение,Вид сравнения,Правое значение",
-          "widths":"40,200,100,*",
-          "min_widths":"40,200,100,200",
-          "aligns":"",
-          "sortings":"na,na,na,na",
-          "types":"ch,ed,ref,ed"
-        }
-      });
-    },
-
-    draw_dimensions(cell) {
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "dimensions",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","parent","field"],
-          "headers":",Таблица,Поле",
-          "widths":"40,200,*",
-          "min_widths":"40,200,200",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ed,ed"
-        }
-      });
-    },
-
-    composition_parts(refill) {
-      const {composition} = this.scheme;
-      if(!composition.count()){
-        refill = true;
-      }
-      if(refill){
-        this.templates().forEach((template, index) => {
-          const {attributes} = template;
-          composition.add({
-            field: attributes.id ? attributes.id.value : index,
-            kind: attributes.kind ? attributes.kind.value : 'obj',
-            definition: attributes.definition ? attributes.definition.value : 'Описание отсутствует',
-          })
-        });
-      }
-    },
-
-    templates(name) {
-
-      const {children} = this.formula._template.content;
-
-      if(name){
-        return children.namedItem(name);
-      }
-      const res = [];
-      for(let i = 0; i < children.length; i++){
-        res.push(children.item(i))
-      }
-      return res;
-    },
-
-    on_fill_template(template, data) {
-
-      if(template.attributes.tabular && template.attributes.tabular.value == "specification"){
-        const specification = data.specification.map((row) => {
-          return {
-            product: row.product,
-            grouping: row.grouping,
-            Номенклатура: row.nom.article + ' ' + row.nom.name + (!row.clr.empty() && !row.clr.predefined_name ? ' ' + row.clr.name : ''),
-            Размеры: row.sz,
-            Количество: row.qty.toFixed(),
-            Угол1: row.alp1,
-            Угол2: row.alp2,
-          }
-        });
-        return {specification, _grouping: data._grouping}
-      }
-      else if(template.attributes.tabular && template.attributes.tabular.value == "production"){
-        const production = [];
-        this.production.find_rows({use: true}, (row) => {
-          production.push(Object.assign(
-            this.calc_order.row_description(row),
-            data.ПродукцияЭскизы[row.characteristic.ref] ?
-              {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)} : {}
-          ))
-        });
-        return Object.assign({}, data, {production});
-      }
-      return data;
-    },
-
-    listener(obj, fields) {
-      if(obj === this && fields.hasOwnProperty('scheme') && this.wnd && this.wnd.elmnts){
-        const {grids, tabs} = this.wnd.elmnts;
-
-        grids.columns && grids.columns.unload && grids.columns.unload();
-        grids.selection && grids.selection.unload && grids.selection.unload();
-        grids.composition && grids.composition.unload && grids.composition.unload();
-        grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
-
-        grids.columns = this.draw_columns(tabs.cells("columns"));
-        grids.selection = this.draw_selection(tabs.cells("selection"));
-        grids.composition = this.draw_composition(tabs.cells("composition"));
-        grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
-      }
-    },
-
-    fill_by_order(row, _mgr) {
-
-      let pdoc;
-
-      if(!row || !row._id){
-        if(this.calc_order.empty()){
-          return;
-        }
-        if(this.calc_order.is_new()){
-          pdoc = this.calc_order.load();
-        }
-        else{
-          pdoc = Promise.resolve(this.calc_order);
-        }
-      }
-      else{
-        const ids = row._id.split('|');
-        if (ids.length < 2) {
-          return
-        }
-        pdoc = _mgr.get(ids[1], 'promise');
-      }
-
-      return pdoc
-        .then((doc) => {
-          const rows = []
-          const refs = []
-          doc.production.forEach((row) => {
-            if (!row.characteristic.empty()) {
-              rows.push({
-                use: true,
-                characteristic: row.characteristic,
-                qty: row.quantity,
-              })
-              if (row.characteristic.is_new()) {
-                refs.push(row.characteristic.ref)
-              }
-            }
-          })
-
-          return ($p.adapters ? $p.adapters.pouch.load_array($p.cat.characteristics, refs) : $p.cat.characteristics.pouch_load_array(refs))
-            .then(() => rows)
-        })
-        .then((rows) => {
-          this.production.load(rows)
-          return rows
-        })
-    },
-
-  });
-
-  Object.assign($p.RepMaterials_demand, {
-
-    resources: ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'],
-  });
-
-})($p);
-
-
-
-
 
 
 
@@ -6656,6 +3894,2697 @@ $p.spec_building = new SpecBuilding($p);
     }
 	}
 })($p.classes.DataManager);
+
+
+$p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
+
+$p.doc.calc_order._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
+
+$p.doc.calc_order.build_search = function (tmp, obj) {
+
+  const {number_internal, client_of_dealer, partner, note} = obj;
+
+  tmp.search = (obj.number_doc +
+    (number_internal ? ' ' + number_internal : '') +
+    (client_of_dealer ? ' ' + client_of_dealer : '') +
+    (partner.name ? ' ' + partner.name : '') +
+    (note ? ' ' + note : '')).toLowerCase();
+};
+
+$p.doc.calc_order.load_templates = async function () {
+
+  if(!$p.job_prm.builder) {
+    $p.job_prm.builder = {};
+  }
+  if(!$p.job_prm.builder.base_block) {
+    $p.job_prm.builder.base_block = [];
+  }
+  if(!$p.job_prm.pricing) {
+    $p.job_prm.pricing = {};
+  }
+
+  $p.cat.production_params.forEach((o) => {
+    if(!o.is_folder) {
+      o.base_blocks.forEach((row) => {
+        if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1) {
+          $p.job_prm.builder.base_block.push(row.calc_order);
+        }
+      });
+    }
+  });
+
+  const refs = [];
+  for (let o of $p.job_prm.builder.base_block) {
+    refs.push(o.ref);
+    if(refs.length > 9) {
+      await $p.doc.calc_order.pouch_load_array(refs);
+      refs.length = 0;
+    }
+  }
+  return refs.length ? $p.doc.calc_order.pouch_load_array(refs) : undefined;
+
+};
+
+$p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
+
+
+  after_create() {
+
+    const {enm, cat, current_user, DocCalc_order} = $p;
+    const {acl_objs} = current_user;
+
+    acl_objs.find_rows({by_default: true, type: cat.organizations.class_name}, (row) => {
+      this.organization = row.acl_obj;
+      return false;
+    });
+
+    DocCalc_order.set_department.call(this);
+
+    acl_objs.find_rows({by_default: true, type: cat.partners.class_name}, (row) => {
+      this.partner = row.acl_obj;
+      return false;
+    });
+
+    this.contract = cat.contracts.by_partner_and_org(this.partner, this.organization);
+
+    this.manager = current_user;
+
+    this.obj_delivery_state = enm.obj_delivery_states.Черновик;
+
+    return this.new_number_doc();
+
+  }
+
+  before_save() {
+
+    const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
+
+    let doc_amount = 0,
+      amount_internal = 0;
+
+    if(this.posted) {
+      if(this.obj_delivery_state == Отклонен || this.obj_delivery_state == Отозван || this.obj_delivery_state == Шаблон) {
+        $p.msg.show_msg && $p.msg.show_msg({
+          type: 'alert-warning',
+          text: 'Нельзя провести заказ со статусом<br/>"Отклонён", "Отозван" или "Шаблон"',
+          title: this.presentation
+        });
+        return false;
+      }
+      else if(this.obj_delivery_state != Подтвержден) {
+        this.obj_delivery_state = Подтвержден;
+      }
+    }
+    else if(this.obj_delivery_state == Подтвержден) {
+      this.obj_delivery_state = Отправлен;
+    }
+
+    if(this.obj_delivery_state == Шаблон) {
+      this.department = $p.utils.blank.guid;
+    }
+    else if(this.department.empty()) {
+      $p.msg.show_msg && $p.msg.show_msg({
+        type: 'alert-warning',
+        text: 'Не заполнен реквизит "офис продаж" (подразделение)',
+        title: this.presentation
+      });
+      return false;
+    }
+
+    this.production.forEach((row) => {
+
+      doc_amount += row.amount;
+      amount_internal += row.amount_internal;
+
+    });
+
+    const {rounding} = this;
+
+    this.doc_amount = doc_amount.round(rounding);
+    this.amount_internal = amount_internal.round(rounding);
+    this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
+
+    const {_obj, obj_delivery_state, category} = this;
+
+    if(obj_delivery_state == 'Шаблон') {
+      _obj.state = 'template';
+    }
+    else if(category == 'service') {
+      _obj.state = 'service';
+    }
+    else if(category == 'complaints') {
+      _obj.state = 'complaints';
+    }
+    else if(obj_delivery_state == 'Отправлен') {
+      _obj.state = 'sent';
+    }
+    else if(obj_delivery_state == 'Отклонен') {
+      _obj.state = 'declined';
+    }
+    else if(obj_delivery_state == 'Подтвержден') {
+      _obj.state = 'confirmed';
+    }
+    else if(obj_delivery_state == 'Архив') {
+      _obj.state = 'zarchive';
+    }
+    else {
+      _obj.state = 'draft';
+    }
+
+    this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
+      .then(({rows}) => {
+        const deleted = [];
+        for (const {id} of rows) {
+          const ref = id.substr(20);
+          if(this.production.find_rows({characteristic: ref}).length) {
+            continue;
+          }
+          deleted.push($p.cat.characteristics.get(ref, 'promise')
+            .then((ox) => !ox._deleted && ox.mark_deleted(true)));
+        }
+        return Promise.all(deleted);
+      })
+      .then((res) => {
+        res.length && this._manager.emit_async('svgs', this);
+      })
+      .catch((err) => null);
+
+  }
+
+  value_change(field, type, value) {
+    if(field == 'organization') {
+      this.new_number_doc();
+      if(this.contract.organization != value) {
+        this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
+      }
+    }
+    else if(field == 'partner' && this.contract.owner != value) {
+      this.contract = $p.cat.contracts.by_partner_and_org(value, this.organization);
+    }
+    this._manager.emit_add_fields(this, ['contract']);
+
+  }
+
+
+  get doc_currency() {
+    const currency = this.contract.settlements_currency;
+    return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
+  }
+
+  set doc_currency(v) {
+
+  }
+
+  get rounding() {
+    const {pricing} = $p.job_prm;
+    if(!pricing.hasOwnProperty('rounding')) {
+      const parts = this.doc_currency.parameters_russian_recipe.split(',');
+      pricing.rounding = parseInt(parts[parts.length - 1]);
+      if(isNaN(pricing.rounding)) {
+        pricing.rounding = 2;
+      }
+    }
+    return pricing.rounding;
+  }
+
+  get contract() {
+    return this._getter('contract');
+  }
+
+  set contract(v) {
+    this._setter('contract', v);
+    this.vat_consider = this.contract.vat_consider;
+    this.vat_included = this.contract.vat_included;
+  }
+
+  dispatching_totals() {
+    var options = {
+      reduce: true,
+      limit: 10000,
+      group: true,
+      keys: []
+    };
+    this.production.forEach(function (row) {
+      if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
+        options.keys.push([row.characteristic.ref, '305e374b-3aa9-11e6-bf30-82cf9717e145', 1, 0]);
+      }
+    });
+
+    return $p.wsql.pouch.remote.doc.query('server/dispatching', options)
+      .then(function (result) {
+        var res = {};
+        result.rows.forEach(function (row) {
+          if(row.value.plan) {
+            row.value.plan = moment(row.value.plan).format('L');
+          }
+          if(row.value.fact) {
+            row.value.fact = moment(row.value.fact).format('L');
+          }
+          res[row.key[0]] = row.value;
+        });
+        return res;
+      });
+  }
+
+  print_data() {
+    const {organization, bank_account, contract, manager} = this;
+    const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
+    const get_imgs = [];
+    const {contact_information_kinds} = $p.cat;
+
+    const res = {
+      АдресДоставки: this.shipping_address,
+      ВалютаДокумента: this.doc_currency.presentation,
+      ДатаЗаказаФорматD: moment(this.date).format('L'),
+      ДатаЗаказаФорматDD: moment(this.date).format('LL'),
+      ДатаТекущаяФорматD: moment().format('L'),
+      ДатаТекущаяФорматDD: moment().format('LL'),
+      ДоговорДатаФорматD: moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format('L'),
+      ДоговорДатаФорматDD: moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format('LL'),
+      ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
+      ДоговорСрокДействия: moment(contract.validity).format('L'),
+      ЗаказНомер: this.number_doc,
+      Примечание: this.note,
+      НомерВнутренний: this.number_internal,
+      Контрагент: this.partner.presentation,
+      КонтрагентОписание: this.partner.long_presentation,
+      КонтрагентДокумент: '',
+      КонтрагентКЛДолжность: '',
+      КонтрагентКЛДолжностьРП: '',
+      КонтрагентКЛИмя: '',
+      КонтрагентКЛИмяРП: '',
+      КонтрагентКЛК: '',
+      КонтрагентКЛОснованиеРП: '',
+      КонтрагентКЛОтчество: '',
+      КонтрагентКЛОтчествоРП: '',
+      КонтрагентКЛФамилия: '',
+      КонтрагентКЛФамилияРП: '',
+      КонтрагентЮрФизЛицо: '',
+      КратностьВзаиморасчетов: this.settlements_multiplicity,
+      КурсВзаиморасчетов: this.settlements_course,
+      ЛистКомплектацииГруппы: '',
+      ЛистКомплектацииСтроки: '',
+      Организация: organization.presentation,
+      ОрганизацияГород: organization.contact_information._obj.reduce((val, row) => val || row.city, '') || 'Москва',
+      ОрганизацияАдрес: organization.contact_information._obj.reduce((val, row) => {
+        if(row.kind == contact_information_kinds.predefined('ЮрАдресОрганизации') && row.presentation) {
+          return row.presentation;
+        }
+        else if(val) {
+          return val;
+        }
+        else if(row.presentation && (
+            row.kind == contact_information_kinds.predefined('ФактАдресОрганизации') ||
+            row.kind == contact_information_kinds.predefined('ПочтовыйАдресОрганизации')
+          )) {
+          return row.presentation;
+        }
+      }, ''),
+      ОрганизацияТелефон: organization.contact_information._obj.reduce((val, row) => {
+        if(row.kind == contact_information_kinds.predefined('ТелефонОрганизации') && row.presentation) {
+          return row.presentation;
+        }
+        else if(val) {
+          return val;
+        }
+        else if(row.kind == contact_information_kinds.predefined('ФаксОрганизации') && row.presentation) {
+          return row.presentation;
+        }
+      }, ''),
+      ОрганизацияБанкБИК: our_bank_account.bank.id,
+      ОрганизацияБанкГород: our_bank_account.bank.city,
+      ОрганизацияБанкКоррСчет: our_bank_account.bank.correspondent_account,
+      ОрганизацияБанкНаименование: our_bank_account.bank.name,
+      ОрганизацияБанкНомерСчета: our_bank_account.account_number,
+      ОрганизацияИндивидуальныйПредприниматель: organization.individual_entrepreneur.presentation,
+      ОрганизацияИНН: organization.inn,
+      ОрганизацияКПП: organization.kpp,
+      ОрганизацияСвидетельствоДатаВыдачи: organization.certificate_date_issue,
+      ОрганизацияСвидетельствоКодОргана: organization.certificate_authority_code,
+      ОрганизацияСвидетельствоНаименованиеОргана: organization.certificate_authority_name,
+      ОрганизацияСвидетельствоСерияНомер: organization.certificate_series_number,
+      ОрганизацияЮрФизЛицо: organization.individual_legal.presentation,
+      ПродукцияЭскизы: {},
+      Проект: this.project.presentation,
+      СистемыПрофилей: this.sys_profile,
+      СистемыФурнитуры: this.sys_furn,
+      Сотрудник: manager.presentation,
+      СотрудникДолжность: manager.individual_person.Должность || 'менеджер',
+      СотрудникДолжностьРП: manager.individual_person.ДолжностьРП,
+      СотрудникИмя: manager.individual_person.Имя,
+      СотрудникИмяРП: manager.individual_person.ИмяРП,
+      СотрудникОснованиеРП: manager.individual_person.ОснованиеРП,
+      СотрудникОтчество: manager.individual_person.Отчество,
+      СотрудникОтчествоРП: manager.individual_person.ОтчествоРП,
+      СотрудникФамилия: manager.individual_person.Фамилия,
+      СотрудникФамилияРП: manager.individual_person.ФамилияРП,
+      СотрудникФИО: manager.individual_person.Фамилия +
+      (manager.individual_person.Имя ? ' ' + manager.individual_person.Имя[1].toUpperCase() + '.' : '' ) +
+      (manager.individual_person.Отчество ? ' ' + manager.individual_person.Отчество[1].toUpperCase() + '.' : ''),
+      СотрудникФИОРП: manager.individual_person.ФамилияРП + ' ' + manager.individual_person.ИмяРП + ' ' + manager.individual_person.ОтчествоРП,
+      СуммаДокумента: this.doc_amount.toFixed(2),
+      СуммаДокументаПрописью: this.doc_amount.in_words(),
+      СуммаДокументаБезСкидки: this.production._obj.reduce(function (val, row) {
+        return val + row.quantity * row.price;
+      }, 0).toFixed(2),
+      СуммаСкидки: this.production._obj.reduce(function (val, row) {
+        return val + row.discount;
+      }, 0).toFixed(2),
+      СуммаНДС: this.production._obj.reduce(function (val, row) {
+        return val + row.vat_amount;
+      }, 0).toFixed(2),
+      ТекстНДС: this.vat_consider ? (this.vat_included ? 'В том числе НДС 18%' : 'НДС 18% (сверху)') : 'Без НДС',
+      ТелефонПоАдресуДоставки: this.phone,
+      СуммаВключаетНДС: contract.vat_included,
+      УчитыватьНДС: contract.vat_consider,
+      ВсегоНаименований: this.production.count(),
+      ВсегоИзделий: 0,
+      ВсегоПлощадьИзделий: 0,
+      Продукция: [],
+      НомерВнутр: this.number_internal,
+      КлиентДилера: this.client_of_dealer,
+      Комментарий: this.note,
+    };
+
+
+    this.extra_fields.forEach((row) => {
+      res['Свойство' + row.property.name.replace(/\s/g, '')] = row.value.presentation || row.value;
+    });
+
+    res.МонтажДоставкаСамовывоз = !this.shipping_address ? 'Самовывоз' : 'Монтаж по адресу: ' + this.shipping_address;
+
+    for (let key in organization._attachments) {
+      if(key.indexOf('logo') != -1) {
+        get_imgs.push(organization.get_attachment(key)
+          .then((blob) => {
+            return $p.utils.blob_as_text(blob, blob.type.indexOf('svg') == -1 ? 'data_url' : '');
+          })
+          .then((data_url) => {
+            res.ОрганизацияЛоготип = data_url;
+          })
+          .catch($p.record_log));
+        break;
+      }
+    }
+
+    this.production.forEach((row) => {
+
+      if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
+
+        res.Продукция.push(this.row_description(row));
+
+        res.ВсегоИзделий += row.quantity;
+        res.ВсегоПлощадьИзделий += row.quantity * row.s;
+
+        get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, 'svg')
+          .then((blob) => $p.utils.blob_as_text(blob))
+          .then((svg_text) => {
+            res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
+          })
+          .catch((err) => err && err.status != 404 && $p.record_log(err))
+        );
+      }
+    });
+    res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
+
+    return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
+      .then(() => $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
+      .then(() => {
+
+        const svg = document.createElement('SVG');
+        svg.innerHTML = '<g />';
+        const qrcode = new QRCode(svg, {
+          text: 'http://www.oknosoft.ru/zd/',
+          width: 100,
+          height: 100,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H,
+          useSVG: true
+        });
+        res.qrcode = svg.innerHTML;
+
+        return res;
+      });
+  }
+
+  row_description(row) {
+
+    if(!(row instanceof $p.DocCalc_orderProductionRow) && row.characteristic) {
+      this.production.find_rows({characteristic: row.characteristic}, (prow) => {
+        row = prow;
+        return false;
+      });
+    }
+    const {characteristic, nom} = row;
+    const res = {
+      ref: characteristic.ref,
+      НомерСтроки: row.row,
+      Количество: row.quantity,
+      Ед: row.unit.name || 'шт',
+      Цвет: characteristic.clr.name,
+      Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
+      Площадь: row.s,
+      Длинна: row.len,
+      Ширина: row.width,
+      ВсегоПлощадь: row.s*row.quantity,
+      Примечание: row.note,
+      Номенклатура: nom.name_full || nom.name,
+      Характеристика: characteristic.name,
+      Заполнения: '',
+      Фурнитура: '',
+      Параметры: [],
+      Цена: row.price,
+      ЦенаВнутр: row.price_internal,
+      СкидкаПроцент: row.discount_percent,
+      СкидкаПроцентВнутр: row.discount_percent_internal,
+      Скидка: row.discount.round(2),
+      Сумма: row.amount.round(2),
+      СуммаВнутр: row.amount_internal.round(2)
+    };
+
+    characteristic.glasses.forEach((row) => {
+      const {name} = row.nom;
+      if(res.Заполнения.indexOf(name) == -1) {
+        if(res.Заполнения) {
+          res.Заполнения += ', ';
+        }
+        res.Заполнения += name;
+      }
+    });
+
+    characteristic.constructions.forEach((row) => {
+      const {name} = row.furn;
+      if(name && res.Фурнитура.indexOf(name) == -1) {
+        if(res.Фурнитура) {
+          res.Фурнитура += ', ';
+        }
+        res.Фурнитура += name;
+      }
+    });
+
+    const params = new Map();
+    characteristic.params.forEach((row) => {
+      if(row.param.include_to_description) {
+        params.set(row.param, row.value);
+      }
+    });
+    for (let [param, value] of params) {
+      res.Параметры.push({
+        param: param.presentation,
+        value: value.presentation || value
+      });
+    }
+
+    return res;
+  }
+
+  fill_plan() {
+
+    this.planning.clear();
+
+    const url = ($p.wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
+
+    const post_data = this._obj._clone();
+    post_data.characteristics = {};
+
+    this.load_production()
+      .then((prod) => {
+        for (const cx of prod) {
+          post_data.characteristics[cx.ref] = cx._obj._clone();
+        }
+      })
+      .then(() => {
+        const headers = new Headers();
+        headers.append('Accept', 'application/json');
+        headers.append('Content-Type', 'application/json');
+        headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
+          $p.wsql.get_user_param('user_name') + ':' + $p.aes.Ctr.decrypt($p.wsql.get_user_param('user_pwd'))))));
+        const suffix = $p.current_user.suffix || $p.wsql.get_user_param('couch_suffix', 'string');
+        if(suffix){
+          headers.append('suffix', suffix);
+        }
+        fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(post_data)
+        })
+          .then(response => response.json())
+          .then(json => console.log(json))
+          .catch(err => {
+            $p.msg.show_msg({
+              type: "alert-warning",
+              text: err.message,
+              title: "Сервис планирования"
+            });
+            $p.record_log(err);
+          });
+      });
+
+  }
+
+  get is_read_only() {
+    const {obj_delivery_state, posted, _deleted} = this;
+    const {Черновик, Шаблон, Отозван} = $p.enm.obj_delivery_states;
+    let ro = false;
+    if(obj_delivery_state == Шаблон) {
+      ro = !$p.current_user.role_available('ИзменениеТехнологическойНСИ');
+    }
+    else if(posted || _deleted) {
+      ro = !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
+    }
+    else if(!obj_delivery_state.empty()) {
+      ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван;
+    }
+    return ro;
+  }
+
+  load_production(forse) {
+    const prod = [];
+    const mgr = $p.cat.characteristics;
+    this.production.forEach((row) => {
+      const {nom, characteristic} = row;
+      if(!characteristic.empty() && (forse || characteristic.is_new()) && !nom.is_procedure && !nom.is_accessory) {
+        prod.push(characteristic.ref);
+      }
+    });
+    return mgr.adapter.load_array(mgr, prod)
+      .then(() => {
+        prod.length = 0;
+        this.production.forEach((row) => {
+          const {nom, characteristic} = row;
+          if(!characteristic.empty() && !nom.is_procedure && !nom.is_accessory) {
+            prod.push(characteristic);
+          }
+        });
+        return prod;
+      });
+  }
+
+  characteristic_saved(scheme, sattr) {
+    const {ox, _dp} = scheme;
+    const row = ox.calc_order_row;
+
+    if(!row || ox.calc_order != this) {
+      return;
+    }
+
+
+    row._data._loading = true;
+    row.nom = ox.owner;
+    row.note = _dp.note;
+    row.quantity = _dp.quantity || 1;
+    row.len = ox.x;
+    row.width = ox.y;
+    row.s = ox.s;
+    row.discount_percent = _dp.discount_percent;
+    row.discount_percent_internal = _dp.discount_percent_internal;
+    if(row.unit.owner != row.nom) {
+      row.unit = row.nom.storage_unit;
+    }
+    row._data._loading = false;
+  }
+
+  create_product_row({row_spec, elm, len_angl, params, create, grid}) {
+
+    const row = row_spec instanceof $p.DpBuyers_orderProductionRow && !row_spec.characteristic.empty() && row_spec.characteristic.calc_order === this ?
+      row_spec.characteristic.calc_order_row :
+      this.production.add({
+        qty: 1,
+        quantity: 1,
+        discount_percent_internal: $p.wsql.get_user_param('discount_percent_internal', 'number')
+      });
+
+    if(grid) {
+      this.production.sync_grid(grid);
+      grid.selectRowById(row.row);
+    }
+
+    if(!create) {
+      return row;
+    }
+
+    const mgr = $p.cat.characteristics;
+    let cx;
+    function fill_cx(ox) {
+      for (let ts in mgr.metadata().tabular_sections) {
+        ox[ts].clear();
+      }
+      ox.leading_elm = 0;
+      ox.leading_product = '';
+      cx = Promise.resolve(ox);
+    }
+    if(row.characteristic.empty()){
+      mgr.find_rows({calc_order: this, product: row.row}, fill_cx);
+    }
+    else{
+      fill_cx(row.characteristic);
+    }
+
+    return (cx || mgr.create({
+      ref: $p.utils.generate_guid(),
+      calc_order: this,
+      product: row.row
+    }, true))
+      .then((ox) => {
+        if(row_spec instanceof $p.DpBuyers_orderProductionRow) {
+          ox.owner = row_spec.inset.nom(elm, true);
+          ox.origin = row_spec.inset;
+          ox.x = row_spec.len;
+          ox.y = row_spec.height;
+          ox.z = row_spec.depth;
+          ox.s = row_spec.s;
+          ox.clr = row_spec.clr;
+          ox.note = row_spec.note;
+
+          if(params) {
+            params.find_rows({elm: row_spec.row}, (prow) => {
+              ox.params.add(prow, true).inset = row_spec.inset;
+            });
+          }
+        }
+
+        Object.assign(row._obj, {
+          characteristic: ox.ref,
+          nom: ox.owner.ref,
+          unit: ox.owner.storage_unit.ref,
+          len: ox.x,
+          width: ox.y,
+          s: ox.s,
+          qty: (row_spec && row_spec.quantity) || 1,
+          quantity: (row_spec && row_spec.quantity) || 1,
+          note: ox.note,
+        });
+
+        ox.name = ox.prod_name();
+
+        return this.is_new() && !$p.wsql.alasql.utils.isNode ? this.save().then(() => row) : row;
+      });
+
+  }
+
+  process_add_product_list(dp) {
+
+    return new Promise(async (resolve, reject) => {
+
+      const ax = [];
+
+      for (let i = 0; i < dp.production.count(); i++) {
+        const row_spec = dp.production.get(i);
+        let row_prod;
+
+        if(row_spec.inset.empty()) {
+          row_prod = this.production.add(row_spec);
+          row_prod.unit = row_prod.nom.storage_unit;
+          if(!row_spec.clr.empty()) {
+            $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
+              if(ox.clr == row_spec.clr) {
+                row_prod.characteristic = ox;
+                return false;
+              }
+            });
+          }
+        }
+        else {
+          const len_angl = {
+            angle: 0,
+            alp1: 0,
+            alp2: 0,
+            len: row_spec.len,
+            origin: row_spec.inset,
+            cnstr: 0
+          };
+          const elm = {
+            elm: 0,
+            angle_hor: 0,
+            get _row() {
+              return this;
+            },
+            get clr() {
+              return row_spec.clr;
+            },
+            get len() {
+              return row_spec.len;
+            },
+            get height() {
+              return row_spec.height;
+            },
+            get depth() {
+              return row_spec.depth;
+            },
+            get s() {
+              return row_spec.s;
+            },
+            get perimeter() {
+              return [{len: row_spec.len, angle: 0}, {len: row_spec.height, angle: 90}];
+            },
+            get x1() {
+              return 0;
+            },
+            get y1() {
+              return 0;
+            },
+            get x2() {
+              return row_spec.height;
+            },
+            get y2() {
+              return row_spec.len;
+            },
+          };
+          row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
+          row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+
+          row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+        }
+
+        [].push.apply(ax, $p.spec_building.specification_adjustment({
+          calc_order_row: row_prod,
+          spec: row_prod.characteristic.specification,
+          save: true,
+        }, true));
+
+      }
+
+      resolve(ax);
+
+    });
+  }
+
+  static set_department() {
+    const department = $p.wsql.get_user_param('current_department');
+    if(department) {
+      this.department = department;
+    }
+    const {current_user, cat} = $p;
+    if(this.department.empty() || this.department.is_new()) {
+      current_user.acl_objs && current_user.acl_objs.find_rows({by_default: true, type: cat.divisions.class_name}, (row) => {
+        if(this.department != row.acl_obj) {
+          this.department = row.acl_obj;
+        }
+        return false;
+      });
+    }
+  }
+
+};
+
+$p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocCalc_orderProductionRow {
+
+  value_change(field, type, value, no_extra_charge) {
+
+    let {_obj, _owner, nom, characteristic, unit} = this;
+    let recalc;
+    const {rounding} = _owner._owner;
+
+    if(field == 'nom' || field == 'characteristic' || field == 'quantity') {
+
+      _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
+
+      nom = this.nom;
+      characteristic = this.characteristic;
+
+      if(!characteristic.empty()) {
+        if(!characteristic.calc_order.empty() && characteristic.owner != nom) {
+          characteristic.owner = nom;
+        }
+        else if(characteristic.owner != nom) {
+          _obj.characteristic = $p.utils.blank.guid;
+          characteristic = this.characteristic;
+        }
+      }
+
+      if(unit.owner != nom) {
+        _obj.unit = nom.storage_unit.ref;
+      }
+
+      const fake_prm = {
+        calc_order_row: this,
+        spec: characteristic.specification
+      };
+      const {price} = _obj;
+      $p.pricing.price_type(fake_prm);
+      $p.pricing.calc_first_cost(fake_prm);
+      $p.pricing.calc_amount(fake_prm);
+      if(price && !_obj.price) {
+        _obj.price = price;
+        recalc = true;
+      }
+    }
+
+    if('price_internal,quantity,discount_percent_internal'.indexOf(field) != -1 || recalc) {
+
+      if(!recalc) {
+        _obj[field] = parseFloat(value);
+      }
+
+      isNaN(_obj.price) && (_obj.price = 0);
+      isNaN(_obj.price_internal) && (_obj.price_internal = 0);
+      isNaN(_obj.discount_percent) && (_obj.discount_percent = 0);
+      isNaN(_obj.discount_percent_internal) && (_obj.discount_percent_internal = 0);
+
+      _obj.amount = (_obj.price * ((100 - _obj.discount_percent) / 100) * _obj.quantity).round(rounding);
+
+      if(!no_extra_charge) {
+        const prm = {calc_order_row: this};
+        let extra_charge = $p.wsql.get_user_param('surcharge_internal', 'number');
+
+        if(!$p.current_user.partners_uids.length || !extra_charge) {
+          $p.pricing.price_type(prm);
+          extra_charge = prm.price_type.extra_charge_external;
+        }
+
+        if(field != 'price_internal' && extra_charge && _obj.price) {
+          _obj.price_internal = (_obj.price * (100 - _obj.discount_percent) / 100 * (100 + extra_charge) / 100).round(rounding);
+        }
+      }
+
+      _obj.amount_internal = (_obj.price_internal * ((100 - _obj.discount_percent_internal) / 100) * _obj.quantity).round(rounding);
+
+      const doc = _owner._owner;
+      if(doc.vat_consider) {
+        const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
+        _obj.vat_rate = (nom.vat_rate.empty() ? НДС18 : nom.vat_rate).ref;
+        switch (this.vat_rate) {
+        case НДС18:
+        case НДС18_118:
+          _obj.vat_amount = (_obj.amount * 18 / 118).round(2);
+          break;
+        case НДС10:
+        case НДС10_110:
+          _obj.vat_amount = (_obj.amount * 10 / 110).round(2);
+          break;
+        case НДС20:
+        case НДС20_120:
+          _obj.vat_amount = (_obj.amount * 20 / 120).round(2);
+          break;
+        case НДС0:
+        case БезНДС:
+        case '_':
+        case '':
+          _obj.vat_amount = 0;
+          break;
+        }
+        if(!doc.vat_included) {
+          _obj.amount = (_obj.amount + _obj.vat_amount).round(2);
+        }
+      }
+      else {
+        _obj.vat_rate = '';
+        _obj.vat_amount = 0;
+      }
+
+      const amount = _owner.aggregate([], ['amount', 'amount_internal']);
+      amount.doc_amount = amount.amount.round(rounding);
+      amount.amount_internal = amount.amount_internal.round(rounding);
+      delete amount.amount;
+      Object.assign(doc, amount);
+      doc._manager.emit_async('update', doc, amount);
+
+
+      return false;
+    }
+  }
+
+};
+
+
+
+
+$p.doc.calc_order.form_list = function(pwnd, attr, handlers){
+
+	if(!attr){
+		attr = {
+			hide_header: true,
+			date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
+			date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
+			on_new: (o) => {
+        handlers.handleNavigate(`/${this.class_name}/${o.ref}`);
+			},
+			on_edit: (_mgr, rId) => {
+        handlers.handleNavigate(`/${_mgr.class_name}/${rId}`);
+			}
+		};
+	}
+
+  return this.pouch_db.getIndexes()
+    .then(({indexes}) => {
+      attr._index = {
+        ddoc: "mango_calc_order",
+        fields: ["department", "state", "date", "search"],
+        name: 'list',
+        type: 'json',
+      };
+      if(!indexes.some(({ddoc}) => ddoc && ddoc.indexOf(attr._index.ddoc) != -1)){
+        return this.pouch_db.createIndex(attr._index);
+      }
+    })
+    .then(() => {
+      return new Promise((resolve, reject) => {
+
+        attr.on_create = (wnd) => {
+
+          const {elmnts} = wnd;
+
+          wnd.dep_listener = (obj, fields) => {
+            if(obj == dp && fields.department){
+              elmnts.filter.call_event();
+              $p.wsql.set_user_param("current_department", dp.department.ref);
+            }
+          }
+
+          if(handlers){
+            const {custom_selection} = elmnts.filter;
+            custom_selection._state = handlers.props.state_filter;
+            handlers.onProps = (props) => {
+              if(custom_selection._state != props.state_filter){
+                custom_selection._state = props.state_filter;
+                elmnts.filter.call_event();
+              }
+            }
+
+            wnd.handleNavigate = handlers.handleNavigate;
+            wnd.handleIfaceState = handlers.handleIfaceState;
+          }
+
+          const dp = $p.dp.builder_price.create();
+          const pos = elmnts.toolbar.getPosition("input_filter");
+          const txt_id = `txt_${dhx4.newId()}`;
+          elmnts.toolbar.addText(txt_id, pos, "");
+          const txt_div = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + txt_id].obj;
+          const dep = new $p.iface.OCombo({
+            parent: txt_div,
+            obj: dp,
+            field: "department",
+            width: 180,
+            hide_frm: true,
+          });
+          txt_div.style.border = "1px solid #ccc";
+          txt_div.style.borderRadius = "3px";
+          txt_div.style.padding = "3px 2px 1px 2px";
+          txt_div.style.margin = "1px 5px 1px 1px";
+          dep.DOMelem_input.placeholder = "Подразделение";
+
+          dp._manager.on('update', wnd.dep_listener);
+
+          const set_department = $p.DocCalc_order.set_department.bind(dp);
+          set_department();
+          if(!$p.wsql.get_user_param('couch_direct')){
+            $p.md.once('user_log_in', set_department);
+          }
+
+          elmnts.filter.custom_selection.__define({
+            department: {
+              get: function () {
+                const {department} = dp;
+                return this._state == 'template' ? {$eq: $p.utils.blank.guid} : {$eq: department.ref};
+              },
+              enumerable: true
+            },
+            state: {
+              get: function(){
+                return this._state == 'all' ? {$in: 'draft,sent,confirmed,declined,service,complaints,template,zarchive'.split(',')} : {$eq: this._state};
+              },
+              enumerable: true
+            }
+          });
+          elmnts.filter.custom_selection._index = attr._index;
+
+          elmnts.status_bar = wnd.attachStatusBar();
+          elmnts.svgs = new $p.iface.OSvgs(wnd, elmnts.status_bar,
+            (ref, dbl) => {
+              dbl && handlers.handleNavigate(`/builder/${ref}`);
+            });
+          elmnts.grid.attachEvent("onRowSelect", (rid) => elmnts.svgs.reload(rid));
+
+          wnd.attachEvent("onClose", (win) => {
+            dep && dep.unload();
+            return true;
+          });
+
+          attr.on_close = () => {
+            elmnts.svgs && elmnts.svgs.unload();
+            dep && dep.unload();
+          }
+
+
+          resolve(wnd);
+        }
+
+        return this.mango_selection(pwnd, attr);
+
+      });
+    });
+
+};
+
+
+
+(function ($p) {
+
+  const _mgr = $p.doc.calc_order;
+  let _meta_patched;
+
+  _mgr.form_obj = function (pwnd, attr, handlers) {
+
+    let o, wnd;
+
+    if(!_meta_patched) {
+      (function (source, user) {
+        if($p.wsql.get_user_param('hide_price_dealer')) {
+          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
+          source.widths = '40,200,*,220,0,70,70,70,70,40,70,70,70,0,0,0';
+          source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,0,0,0';
+        }
+        else if($p.wsql.get_user_param('hide_price_manufacturer')) {
+          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма';
+          source.widths = '40,200,*,220,0,70,70,70,70,40,0,0,0,70,70,70';
+          source.min_widths = '30,200,220,150,0,70,40,70,70,70,0,0,0,70,70,70';
+        }
+        else {
+          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
+          source.widths = '40,200,*,220,0,70,70,70,70,40,70,70,70,70,70,70';
+          source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70';
+        }
+
+        if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен')) {
+          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro';
+        }
+        else if(user.role_available('РедактированиеСкидок')) {
+          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro';
+        }
+        else {
+          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro';
+        }
+
+        _meta_patched = true;
+
+      })($p.doc.calc_order.metadata().form.obj.tabular_sections.production, $p.current_user);
+    }
+
+    attr.draw_tabular_sections = (o, wnd, tabular_init) => {
+
+      const refs = [];
+      o.production.each((row) => {
+        if(!$p.utils.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new()) {
+          refs.push(row._obj.characteristic);
+        }
+      });
+      $p.cat.characteristics.pouch_load_array(refs)
+        .then(() => {
+
+          const footer = {
+            columns: ",,,,#stat_total,,,#stat_s,,,,,#stat_total,,,#stat_total",
+            _in_header_stat_s: function(tag,index,data){
+              const calck=function(){
+                let sum=0;
+                o.production.each((row) => {
+                  sum += row.s * row.quantity;
+                });
+                return sum.toFixed(2);
+              }
+              this._stat_in_header(tag,calck,index,data);
+            }
+          }
+
+          tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
+          const {production} = wnd.elmnts.grids;
+          production.disable_sorting = true;
+          production.attachEvent('onRowSelect', (id, ind) => {
+            const row = o.production.get(id - 1);
+            wnd.elmnts.svgs.select(row.characteristic.ref);
+          });
+          production.attachEvent('onEditCell', (stage,rId,cInd,nValue,oValue,fake) => {
+            if(stage == 2 && fake !== true){
+              if(production._edit_timer){
+                clearTimeout(production._edit_timer);
+              }
+              production._edit_timer = setTimeout(() => {
+                if(wnd && wnd.elmnts){
+                  production.callEvent('onEditCell', [2, 0, 7, null, null, true]);
+                  production.callEvent('onEditCell', [2, 0, 12, null, null, true]);
+                  production.callEvent('onEditCell', [2, 0, 15, null, null, true]);
+                }
+              }, 300);
+            }
+          });
+
+          let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
+          toolbar.addSpacer('btn_delete');
+          toolbar.attachEvent('onclick', toolbar_click);
+
+          tabular_init('planning');
+          toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
+          toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
+          toolbar.attachEvent('onclick', toolbar_click);
+
+          set_editable(o, wnd);
+
+        });
+
+      wnd.elmnts.statusbar = wnd.attachStatusBar();
+      wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar, rsvg_click);
+    };
+
+    attr.draw_pg_header = (o, wnd) => {
+
+      function layout_resize_finish() {
+        setTimeout(() => {
+          if(wnd.elmnts && wnd.elmnts.layout_header && wnd.elmnts.layout_header.setSizes) {
+            wnd.elmnts.layout_header.setSizes();
+            wnd.elmnts.pg_left.objBox.style.width = '100%';
+            wnd.elmnts.pg_right.objBox.style.width = '100%';
+          }
+        }, 200);
+      }
+
+      wnd.elmnts.layout_header = wnd.elmnts.tabs.tab_header.attachLayout('3U');
+
+      wnd.elmnts.layout_header.attachEvent('onResizeFinish', layout_resize_finish);
+
+      wnd.elmnts.layout_header.attachEvent('onPanelResizeFinish', layout_resize_finish);
+
+      wnd.elmnts.cell_left = wnd.elmnts.layout_header.cells('a');
+      wnd.elmnts.cell_left.hideHeader();
+      wnd.elmnts.pg_left = wnd.elmnts.cell_left.attachHeadFields({
+        obj: o,
+        pwnd: wnd,
+        read_only: wnd.elmnts.ro,
+        oxml: {
+          ' ': [{id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro', txt: o.number_doc},
+            {id: 'date', path: 'o.date', synonym: 'Дата', type: 'ro', txt: moment(o.date).format(moment._masks.date_time)},
+            'number_internal'
+          ],
+          'Контактная информация': ['partner', 'client_of_dealer', 'phone',
+            {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr', txt: o['shipping_address']}
+          ],
+          'Дополнительные реквизиты': ['obj_delivery_state', 'category']
+        }
+      });
+
+
+      wnd.elmnts.cell_right = wnd.elmnts.layout_header.cells('b');
+      wnd.elmnts.cell_right.hideHeader();
+      wnd.elmnts.pg_right = wnd.elmnts.cell_right.attachHeadFields({
+        obj: o,
+        pwnd: wnd,
+        read_only: wnd.elmnts.ro,
+        oxml: {
+          'Налоги': ['vat_consider', 'vat_included'],
+          'Аналитика': ['project',
+            {id: 'organization', path: 'o.organization', synonym: 'Организация', type: 'refc'},
+            {id: 'contract', path: 'o.contract', synonym: 'Договор', type: 'refc'},
+            {id: 'bank_account', path: 'o.bank_account', synonym: 'Счет организации', type: 'refc'},
+            {id: 'department', path: 'o.department', synonym: 'Офис продаж', type: 'refc'},
+            {id: 'warehouse', path: 'o.warehouse', synonym: 'Склад отгрузки', type: 'refc'},
+          ],
+          'Итоги': [{id: 'doc_currency', path: 'o.doc_currency', synonym: 'Валюта документа', type: 'ro', txt: o['doc_currency'].presentation},
+            {id: 'doc_amount', path: 'o.doc_amount', synonym: 'Сумма', type: 'ron', txt: o['doc_amount']},
+            {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма внутр', type: 'ron', txt: o['amount_internal']}]
+        }
+      });
+
+      wnd.elmnts.cell_note = wnd.elmnts.layout_header.cells('c');
+      wnd.elmnts.cell_note.hideHeader();
+      wnd.elmnts.cell_note.setHeight(100);
+      wnd.elmnts.cell_note.attachHTMLString('<textarea placeholder=\'Комментарий к заказу\' class=\'textarea_editor\'>' + o.note + '</textarea>');
+
+    };
+
+    attr.toolbar_struct = $p.injected_data['toolbar_calc_order_obj.xml'];
+
+    attr.toolbar_click = toolbar_click;
+
+    attr.on_close = frm_close;
+
+    return this.constructor.prototype.form_obj.call(this, pwnd, attr)
+      .then((res) => {
+        if(res) {
+          o = res.o;
+          wnd = res.wnd;
+          wnd.prompt = prompt;
+          wnd.close_confirmed = true;
+          if(handlers){
+            wnd.handleNavigate = handlers.handleNavigate;
+            wnd.handleIfaceState = handlers.handleIfaceState;
+          }
+
+          rsvg_reload();
+          o._manager.on('svgs', rsvg_reload);
+
+          const search = $p.job_prm.parse_url_str(location.search);
+          if(search.ref) {
+            setTimeout(() => {
+              wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
+              rsvg_click(search.ref, 0);
+            }, 200);
+          };
+
+          return res;
+        }
+      });
+
+    function prompt(loc) {
+      if(loc.pathname.match(/builder/)) {
+        return true;
+      }
+      return (o && o._modified) ? `${o.presentation} изменён.\n\nЗакрыть без сохранения?` : true;
+    }
+
+    function close() {
+      if(o && o._obj) {
+        const {ref, state} = o._obj;
+        handlers.handleNavigate(`/?ref=${ref}&state_filter=${state || 'draft'}`);
+      }
+      else {
+        handlers.handleNavigate(`/`);
+      }
+      $p.doc.calc_order.off('svgs', rsvg_reload);
+    }
+
+    function toolbar_click(btn_id) {
+
+      switch (btn_id) {
+
+      case 'btn_sent':
+        save('sent');
+        break;
+
+      case 'btn_save':
+        save('save');
+        break;
+
+      case 'btn_save_close':
+        save('close');
+        break;
+
+      case 'btn_retrieve':
+        save('retrieve');
+        break;
+
+      case 'btn_post':
+        save('post');
+        break;
+
+      case 'btn_unpost':
+        save('unpost');
+        break;
+
+      case 'btn_fill_plan':
+        o.fill_plan();
+        break;
+
+      case 'btn_close':
+        close();
+        break;
+
+      case 'btn_add_builder':
+        open_builder(true);
+        break;
+
+      case 'btn_clone':
+        open_builder('clone');
+        break;
+
+      case 'btn_add_product':
+        $p.dp.buyers_order.open_product_list(wnd, o);
+        break;
+
+      case 'btn_additions':
+        $p.dp.buyers_order.open_additions(wnd, o, handlers);
+        break;
+
+      case 'btn_add_material':
+        add_material();
+        break;
+
+      case 'btn_edit':
+        open_builder();
+        break;
+
+      case 'btn_spec':
+        open_spec();
+        break;
+
+      case 'btn_discount':
+        show_discount();
+        break;
+
+      case 'btn_calendar':
+        calendar_new_event();
+        break;
+
+      case 'btn_go_connection':
+        go_connection();
+        break;
+      }
+
+      if(btn_id.substr(0, 4) == 'prn_') {
+        _mgr.print(o, btn_id, wnd);
+      }
+    }
+
+    function calendar_new_event() {
+      $p.msg.show_not_implemented();
+    }
+
+    function go_connection() {
+      $p.msg.show_not_implemented();
+    }
+
+    function show_discount() {
+
+      if(!wnd.elmnts.discount) {
+        wnd.elmnts.discount = $p.dp.buyers_order.create();
+      }
+      refill_discount(wnd.elmnts.discount);
+
+      const discount = $p.iface.dat_blank(null, {
+        width: 300,
+        height: 220,
+        allow_close: true,
+        allow_minmax: false,
+        caption: 'Скидки по группам'
+      });
+      discount.setModal(true);
+
+      discount.attachTabular({
+        obj: wnd.elmnts.discount,
+        ts: 'charges_discounts',
+        reorder: false,
+        disable_add_del: true,
+        toolbar_struct: $p.injected_data['toolbar_discounts.xml'],
+        ts_captions: {
+          'fields': ['nom_kind', 'discount_percent'],
+          'headers': 'Группа,Скидка',
+          'widths': '*,80',
+          'min_widths': '120,70',
+          'aligns': '',
+          'sortings': 'na,na',
+          'types': 'ro,calck'
+        },
+      });
+      const toolbar = discount.getAttachedToolbar();
+      toolbar.attachEvent('onclick', (btn) => {
+        wnd.elmnts.discount._mode = btn;
+        refill_discount(wnd.elmnts.discount);
+        toolbar.setItemText('bs', toolbar.getListOptionText('bs', btn));
+      });
+      if(wnd.elmnts.discount._disable_internal) {
+        toolbar.disableListOption('bs', 'discount_percent');
+      }
+      toolbar.setItemText('bs', toolbar.getListOptionText('bs', wnd.elmnts.discount._mode));
+    }
+
+    function refill_discount(dp) {
+
+      if(!dp._mode) {
+        dp._disable_internal = !$p.current_user.role_available('РедактированиеСкидок');
+        dp._mode = dp._disable_internal ? 'discount_percent_internal' : 'discount_percent';
+        dp._calc_order = o;
+      }
+
+      const {charges_discounts} = dp;
+      const groups = new Set();
+      dp._data._loading = true;
+      charges_discounts.clear();
+      o.production.forEach((row) => {
+        const group = {nom_kind: row.nom.nom_kind};
+        if(!groups.has(group.nom_kind)) {
+          groups.add(group.nom_kind);
+          charges_discounts.add(group);
+        }
+        charges_discounts.find_rows(group, (sub) => {
+          const percent = row[dp._mode];
+          if(percent > sub.discount_percent) {
+            sub.discount_percent = percent;
+          }
+        });
+      });
+      dp._data._loading = false;
+      dp._manager.emit_async('rows', dp, {'charges_discounts': true});
+    }
+
+
+
+    function production_get_sel_index() {
+      var selId = wnd.elmnts.grids.production.getSelectedRowId();
+      if(selId && !isNaN(Number(selId))) {
+        return Number(selId) - 1;
+      }
+
+      $p.msg.show_msg({
+        type: 'alert-warning',
+        text: $p.msg.no_selected_row.replace('%1', 'Продукция'),
+        title: o.presentation
+      });
+    }
+
+    function save(action) {
+
+      function do_save(post) {
+
+        if(!wnd.elmnts.ro) {
+          o.note = wnd.elmnts.cell_note.cell.querySelector('textarea').value.replace(/&nbsp;/g, ' ').replace(/<.*?>/g, '').replace(/&.{2,6};/g, '');
+          wnd.elmnts.pg_left.selectRow(0);
+        }
+
+        o.save(post)
+          .then(function () {
+            if(action == 'sent' || action == 'close') {
+              close();
+            }
+            else {
+              wnd.set_text();
+              set_editable(o, wnd);
+            }
+
+          })
+          .catch($p.record_log);
+      }
+
+      switch (action) {
+      case 'sent':
+        dhtmlx.confirm({
+          title: $p.msg.order_sent_title,
+          text: $p.msg.order_sent_message,
+          cancel: $p.msg.cancel,
+          callback: function (btn) {
+            if(btn) {
+              o.obj_delivery_state = $p.enm.obj_delivery_states.Отправлен;
+              do_save();
+            }
+          }
+        });
+        break;
+
+      case 'retrieve':
+        o.obj_delivery_state = $p.enm.obj_delivery_states.Отозван;
+        do_save();
+        break;
+
+      case 'post':
+        do_save(true);
+        break;
+
+      case 'unpost':
+        do_save(false);
+        break;
+
+      default:
+        do_save();
+      }
+    }
+
+    function frm_close() {
+
+      if(o && o._modified) {
+        if(o.is_new()) {
+          o.unload();
+        }
+        else if(!location.pathname.match(/builder/)) {
+          setTimeout(o.load.bind(o), 100);
+        }
+      }
+
+      ['vault', 'vault_pop', 'discount', 'svgs', 'layout_header'].forEach((elm) => {
+        wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
+      });
+
+      return true;
+    }
+
+    function set_editable(o, wnd) {
+
+      const {pg_left, pg_right, frm_toolbar, grids, tabs} = wnd.elmnts;
+
+      pg_right.cells('vat_consider', 1).setDisabled(true);
+      pg_right.cells('vat_included', 1).setDisabled(true);
+
+      const ro = wnd.elmnts.ro = o.is_read_only;
+
+      const retrieve_enabed = !o._deleted &&
+        (o.obj_delivery_state == $p.enm.obj_delivery_states.Отправлен || o.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен);
+
+      grids.production.setEditable(!ro);
+      grids.planning.setEditable(!ro);
+      pg_left.setEditable(!ro);
+      pg_right.setEditable(!ro);
+
+      if(!$p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
+        frm_toolbar.hideItem('btn_post');
+        frm_toolbar.hideItem('btn_unpost');
+      }
+
+      if(!$p.current_user.role_available('ИзменениеТехнологическойНСИ') && !$p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
+        pg_left.cells('obj_delivery_state', 1).setDisabled(true);
+      }
+
+      if(ro) {
+        frm_toolbar.disableItem('btn_sent');
+        frm_toolbar.disableItem('btn_save');
+        let toolbar;
+        const disable = (itemId) => toolbar.disableItem(itemId);
+        toolbar = tabs.tab_production.getAttachedToolbar();
+        toolbar.forEachItem(disable);
+        toolbar = tabs.tab_planning.getAttachedToolbar();
+        toolbar.forEachItem(disable);
+      }
+      else {
+        if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон) {
+          frm_toolbar.disableItem('btn_sent');
+        }
+        else {
+          frm_toolbar.enableItem('btn_sent');
+        }
+        frm_toolbar.enableItem('btn_save');
+        let toolbar;
+        const enable = (itemId) => toolbar.enableItem(itemId);
+        toolbar = tabs.tab_production.getAttachedToolbar();
+        toolbar.forEachItem(enable);
+        toolbar = tabs.tab_planning.getAttachedToolbar();
+        toolbar.forEachItem(enable);
+      }
+      if(retrieve_enabed) {
+        frm_toolbar.enableListOption('bs_more', 'btn_retrieve');
+      }
+      else {
+        frm_toolbar.disableListOption('bs_more', 'btn_retrieve');
+      }
+    }
+
+    function not_production() {
+      $p.msg.show_msg({
+        title: $p.msg.bld_title,
+        type: 'alert-error',
+        text: $p.msg.bld_not_product
+      });
+    }
+
+    function open_builder(create_new) {
+      var selId;
+
+      if(create_new == 'clone') {
+        const selId = production_get_sel_index();
+        if(selId == undefined) {
+          not_production();
+        }
+        else {
+          const row = o.production.get(selId);
+          if(row) {
+            const {owner, calc_order} = row.characteristic;
+            if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
+              not_production();
+            }
+            else if(row.characteristic.coordinates.count()) {
+              o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
+                .then(({characteristic}) => {
+                  characteristic._mixin(row.characteristic._obj, null,
+                    ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'note', 'partner'], true);
+                  handlers.handleNavigate(`/builder/${characteristic.ref}`);
+                });
+            }
+            else {
+              not_production();
+            }
+          }
+        }
+
+      }
+      else if(create_new) {
+        o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
+          .then((row) => {
+            handlers.handleNavigate(`/builder/${row.characteristic.ref}`);
+          });
+      }
+      else {
+        const selId = production_get_sel_index();
+        if(selId != undefined) {
+          const row = o.production.get(selId);
+          if(row) {
+            const {owner, calc_order} = row.characteristic;
+            if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
+              not_production();
+            }
+            else if(row.characteristic.coordinates.count() == 0) {
+              if(row.characteristic.leading_product.calc_order == calc_order) {
+                handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}`);
+              }
+            }
+            else {
+              handlers.handleNavigate(`/builder/${row.characteristic.ref}`);
+            }
+          }
+        }
+      }
+
+    }
+
+    function open_spec() {
+      const selId = production_get_sel_index();
+      if(selId != undefined) {
+        const row = o.production.get(selId);
+        row && !row.characteristic.empty() && row.characteristic.form_obj().then((w) => w.wnd.maximize());
+      }
+    }
+
+    function rsvg_reload() {
+      o && wnd && wnd.elmnts && wnd.elmnts.svgs && wnd.elmnts.svgs.reload(o);
+    }
+
+    function rsvg_click(ref, dbl) {
+      const {production} = wnd.elmnts.grids;
+      production && o.production.find_rows({characteristic: ref}, (row) => {
+        production.selectRow(row.row - 1, dbl === 0);
+        dbl && open_builder();
+        return false;
+      });
+    }
+
+    function add_material() {
+      const {production} = wnd.elmnts.grids;
+      const row = o.create_product_row({grid: production}).row - 1;
+      setTimeout(() => {
+        production.selectRow(row);
+        production.selectCell(row, production.getColIndexById('nom'), false, true, true);
+        production.cells().open_selection();
+      });
+    }
+
+  };
+
+})($p);
+
+
+
+$p.doc.calc_order.form_selection = function(pwnd, attr){
+
+	const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
+
+	wnd.elmnts.filter.custom_selection._view = { get value() { return '' } };
+	wnd.elmnts.filter.custom_selection._key = { get value() { return '' } };
+
+	wnd.do_not_maximize = true;
+	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar,
+    (ref, dbl) => {
+	  if(dbl){
+      wnd && wnd.close();
+      return pwnd.on_select && pwnd.on_select({_block: ref});
+    }
+    });
+	wnd.elmnts.grid.attachEvent("onRowSelect", (rid) => wnd.elmnts.svgs.reload(rid));
+
+
+	setTimeout(() => {
+		wnd.setDimension(900, 580);
+		wnd.centerOnScreen();
+	})
+
+	return wnd;
+};
+
+
+
+$p.doc.calc_order.__define({
+
+	rep_invoice_execution: {
+		value: function (rep) {
+
+			var query_options = {
+					reduce: true,
+					limit: 10000,
+					group: true,
+					group_level: 3
+				},
+				res = {
+					data: [],
+					readOnly: true,
+					colWidths: [180, 180, 200, 100, 100, 100, 100, 100],
+					colHeaders: ['Контрагент', 'Организация', 'Заказ', 'Сумма', 'Оплачено', 'Долг', 'Отгружено', 'Отгрузить'],
+					columns: [
+						{type: 'text'},
+						{type: 'text'},
+						{type: 'text'},
+						{type: 'numeric', format: '0 0.00'},
+						{type: 'numeric', format: '0 0.00'},
+						{type: 'numeric', format: '0 0.00'},
+						{type: 'numeric', format: '0 0.00'},
+						{type: 'numeric', format: '0 0.00'}
+					],
+					wordWrap: false
+				};
+
+			if(!$p.current_user.role_available("СогласованиеРасчетовЗаказов")){
+				query_options.startkey = [$p.current_user.partners_uids[0],""];
+				query_options.endkey = [$p.current_user.partners_uids[0],"\ufff0"];
+			}
+
+			return $p.wsql.pouch.remote.doc.query("server/invoice_execution", query_options)
+
+				.then(function (data) {
+
+					var total = {
+						invoice: 0,
+						pay: 0,
+						total_pay: 0,
+						shipment:0,
+						total_shipment:0
+					};
+
+					if(data.rows){
+
+						data.rows.forEach(function (row) {
+
+							if(!row.value.total_pay && !row.value.total_shipment)
+								return;
+
+							res.data.push([
+								$p.cat.partners.get(row.key[0]).presentation,
+								$p.cat.organizations.get(row.key[1]).presentation,
+								row.key[2],
+								row.value.invoice,
+								row.value.pay,
+								row.value.total_pay,
+								row.value.shipment,
+								row.value.total_shipment]);
+
+							total.invoice+= row.value.invoice;
+							total.pay+=row.value.pay;
+							total.total_pay+=row.value.total_pay;
+							total.shipment+=row.value.shipment;
+							total.total_shipment+=row.value.total_shipment;
+						});
+
+						res.data.push([
+							"Итого:",
+							"",
+							"",
+							total.invoice,
+							total.pay,
+							total.total_pay,
+							total.shipment,
+							total.total_shipment]);
+
+						res.mergeCells= [
+							{row: res.data.length-1, col: 0, rowspan: 1, colspan: 3}
+						]
+					}
+
+					rep.requery(res);
+
+					return res;
+				});
+		}
+	},
+
+	rep_planing: {
+		value: function (rep, attr) {
+
+			var date_from = $p.utils.date_add_day(new Date(), -1, true),
+				date_till = $p.utils.date_add_day(date_from, 7, true),
+				query_options = {
+					reduce: true,
+					limit: 10000,
+					group: true,
+					group_level: 5,
+					startkey: [date_from.getFullYear(), date_from.getMonth()+1, date_from.getDate(), ""],
+					endkey: [date_till.getFullYear(), date_till.getMonth()+1, date_till.getDate(),"\ufff0"]
+				},
+				res = {
+					data: [],
+					readOnly: true,
+					wordWrap: false
+				};
+
+
+
+			return $p.wsql.pouch.remote.doc.query("server/planning", query_options)
+
+				.then(function (data) {
+
+
+					if(data.rows){
+
+						var include_detales = $p.current_user.role_available("СогласованиеРасчетовЗаказов");
+
+						data.rows.forEach(function (row) {
+
+							if(!include_detales){
+
+							}
+
+							res.data.push([
+								new Date(row.key[0], row.key[1]-1, row.key[2]),
+								$p.cat.parameters_keys.get(row.key[3]),
+								row.value.debit,
+								row.value.credit,
+								row.value.total
+							]);
+						});
+
+					}
+
+					rep.requery(res);
+
+					return res;
+				});
+
+		}
+	}
+
+});
+
+
+$p.DocCredit_card_order.prototype.before_save = function () {
+  this.doc_amount = this.payment_details.aggregate([], 'amount');
+};
+
+
+$p.DocDebit_bank_order.prototype.before_save = function () {
+  this.doc_amount = this.payment_details.aggregate([], 'amount');
+};
+
+
+$p.DocDebit_cash_order.prototype.before_save = function () {
+  this.doc_amount = this.payment_details.aggregate([], 'amount');
+};
+
+
+
+$p.doc.nom_prices_setup.metadata().tabular_sections.goods.fields.nom_characteristic._option_list_local = true;
+
+$p.DocNom_prices_setup.prototype.after_create = function () {
+  return this.new_number_doc();
+};
+
+$p.DocNom_prices_setup.prototype.add_row = function (row) {
+  if (row._owner.name === 'goods') {
+    const {price_type} = row._owner._owner;
+    row.price_type = price_type;
+    row.currency = price_type.price_currency;
+  }
+};
+
+$p.DocNom_prices_setup.prototype.before_save = function () {
+  let aggr = this.goods.aggregate(['nom', 'nom_characteristic', 'price_type'], ['price'], 'COUNT', true),
+    err;
+  if (aggr.some((row) => {
+      if (row.price > 1) {
+        err = row;
+        return row.price > 1;
+      }
+    })) {
+    $p.msg.show_msg({
+      type: 'alert-warning',
+      text: '<table style=\'text-align: left; width: 100%;\'><tr><td>Номенклатура</td><td>' + $p.cat.nom.get(err.nom).presentation + '</td></tr>' +
+      '<tr><td>Характеристика</td><td>' + $p.cat.characteristics.get(err.nom_characteristic).presentation + '</td></tr>' +
+      '<tr><td>Тип цен</td><td>' + $p.cat.nom_prices_types.get(err.price_type).presentation + '</td></tr></table>',
+      title: 'Дубли строк',
+    });
+
+    return false;
+  }
+};
+
+$p.on('tabular_paste', (clip) => {
+
+  if (clip.grid && clip.obj && clip.obj._manager == $p.doc.nom_prices_setup) {
+
+    var rows = [];
+
+    clip.data.split('\n').map(function (row) {
+      return row.split('\t');
+    }).forEach(function (row) {
+
+      if (row.length != 3)
+        return;
+
+      var nom = $p.cat.nom.by_name(row[0]);
+      if (nom.empty())
+        nom = $p.cat.nom.by_id(row[0]);
+      if (nom.empty())
+        nom = $p.cat.nom.find({article: row[0]});
+      if (!nom || nom.empty())
+        return;
+
+      var characteristic = '';
+      if (row[1]) {
+        characteristic = $p.cat.characteristics.find({owner: nom, name: row[1]});
+        if (!characteristic || characteristic.empty())
+          characteristic = $p.cat.characteristics.find({owner: nom, name: {like: row[1]}});
+      }
+
+      rows.push({
+        nom: nom,
+        nom_characteristic: characteristic,
+        price: parseFloat(row[2].replace(',', '.')),
+        price_type: clip.obj.price_type,
+      });
+    });
+
+    if (rows.length) {
+
+      clip.grid.editStop();
+
+      var first = clip.obj.goods.get(parseInt(clip.grid.getSelectedRowId()) - 1);
+
+      rows.forEach(function (row) {
+        if (first) {
+          first._mixin(row);
+          first = null;
+        } else
+          clip.obj.goods.add(row);
+      });
+
+      clip.obj.goods.sync_grid(clip.grid);
+
+      clip.e.preventDefault();
+      return $p.iface.cancel_bubble(e);
+    }
+  }
+
+});
+
+
+
+$p.DocSelling.prototype.before_save = function () {
+  this.doc_amount = this.goods.aggregate([], 'amount') + this.services.aggregate([], 'amount');
+};
+
+
+
+
+(function(_mgr){
+
+
+	_mgr.acn = {
+
+	  cache: {},
+
+    get ii() {
+      return this.cache.ii || ( this.cache.ii = [_mgr.Наложение] );
+    },
+
+    get i() {
+      return this.cache.i || ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
+    },
+
+    get a() {
+      return this.cache.a
+        || ( this.cache.a = [
+          _mgr.УгловоеДиагональное,
+          _mgr.УгловоеКВертикальной,
+          _mgr.УгловоеКГоризонтальной,
+          _mgr.КрестВСтык] );
+    },
+
+    get t() {
+      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное, _mgr.КрестВСтык] );
+    },
+
+	};
+
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get: function () {
+        return _mgr.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get: function () {
+        return _mgr.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get: function () {
+        return _mgr.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get: function () {
+        return _mgr.ТОбразное;
+      }
+    },
+    ii: {
+      get: function () {
+        return _mgr.Наложение;
+      }
+    },
+    i: {
+      get: function () {
+        return _mgr.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get: function () {
+        return _mgr.КрестПересечение;
+      }
+    },
+    xx: {
+      get: function () {
+        return _mgr.КрестВСтык;
+      }
+    },
+
+  });
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
+			}
+		}
+
+
+	});
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
+
+
+(($p) => {
+
+  Object.assign($p.RepMaterials_demand.prototype, {
+
+    print_data() {
+      return this.calc_order.print_data().then((order) => {
+        return this.calculate012()
+          .then((specification) => {
+
+            return Object.assign(order, {specification, _grouping: this.scheme.dimensions})
+          })
+      })
+    },
+
+    calculate012() {
+
+      const {specification, production, scheme, discard, _manager} = this;
+      const arefs = [];
+      const aobjs = [];
+      const spec_flds = Object.keys($p.cat.characteristics.metadata('specification').fields);
+      const rspec_flds = Object.keys(_manager.metadata('specification').fields);
+
+      production.each((row) => {
+        if(!row.use){
+          return;
+        }
+        if (!row.characteristic.empty() && row.characteristic.is_new() && arefs.indexOf(row.characteristic.ref) == -1) {
+          arefs.push(row.characteristic.ref)
+          aobjs.push(row.characteristic.load())
+        }
+      })
+
+      specification.clear();
+      if (!specification._rows) {
+        specification._rows = []
+      } else {
+        specification._rows.length = 0;
+      }
+
+      return Promise.all(aobjs)
+
+        .then((ares) => {
+
+          arefs.length = 0;
+          aobjs.length = 0;
+
+          production.each((row) => {
+            if(!row.use){
+              return;
+            }
+            if (!row.characteristic.empty() && !row.characteristic.calc_order.empty()
+              && row.characteristic.calc_order.is_new() && arefs.indexOf(row.characteristic.calc_order.ref) == -1) {
+              arefs.push(row.characteristic.calc_order.ref)
+              aobjs.push(row.characteristic.calc_order.load())
+            }
+            row.characteristic.specification.each((sprow) => {
+              if (!sprow.characteristic.empty() && sprow.characteristic.is_new() && arefs.indexOf(sprow.characteristic.ref) == -1) {
+                arefs.push(sprow.characteristic.ref)
+                aobjs.push(sprow.characteristic.load())
+              }
+            })
+          });
+
+          return Promise.all(aobjs)
+
+        })
+
+        .then(() => {
+
+          const prows = {};
+
+          const selection = [];
+          scheme.selection.forEach((row) => {
+            if(row.use){
+              selection.push(row)
+            }
+          })
+
+          production.each((row) => {
+            if(!row.use){
+              return;
+            }
+            if (!row.characteristic.empty()) {
+              row.characteristic.specification.each((sprow) => {
+
+                if(discard(sprow, selection)){
+                  return;
+                }
+
+                let resrow = {};
+                spec_flds.forEach(fld => {
+                  if (rspec_flds.indexOf(fld) != -1) {
+                    resrow[fld] = sprow[fld]
+                  }
+                });
+                resrow = specification.add(resrow)
+
+                resrow.qty = resrow.qty * row.qty;
+                resrow.totqty = resrow.totqty * row.qty;
+                resrow.totqty1 = resrow.totqty1 * row.qty;
+                resrow.amount = resrow.amount * row.qty;
+                resrow.amount_marged = resrow.amount_marged * row.qty;
+
+
+                if (resrow.elm > 0) {
+                  resrow.cnstr = row.characteristic.coordinates.find_rows({elm: resrow.elm})[0].cnstr;
+                }
+                else if (resrow.elm < 0) {
+                  resrow.cnstr = -resrow.elm;
+                }
+
+                resrow.calc_order = row.characteristic;
+
+                if (!prows[row.characteristic.ref]) {
+                  prows[row.characteristic.ref] = row.characteristic.calc_order.production.find_rows({characteristic: row.characteristic});
+                  if (prows[row.characteristic.ref].length) {
+                    prows[row.characteristic.ref] = prows[row.characteristic.ref][0].row
+                  }
+                  else {
+                    prows[row.characteristic.ref] = 1
+                  }
+                }
+                resrow.product = prows[row.characteristic.ref];
+
+                this.material(resrow);
+
+              })
+            }
+          })
+
+          const dimentions = [], resources = [];
+          scheme.columns('ts').forEach(fld => {
+            const {key} = fld
+            if (this.resources.indexOf(key) != -1) {
+              resources.push(key)
+            } else {
+              dimentions.push(key)
+            }
+          })
+          specification.group_by(dimentions, resources);
+          specification.forEach((row) => {
+
+            row.qty = row.qty.round(3);
+            row.totqty = row.totqty.round(3);
+            row.totqty1 = row.totqty1.round(3);
+            row.price = row.price.round(3);
+            row.amount = row.amount.round(3);
+            row.amount_marged = row.amount_marged.round(3);
+
+            specification._rows.push(row);
+          })
+          return specification._rows;
+        })
+    },
+
+    generate() {
+
+      return this.print_data().then((data) => {
+
+        const doc = new $p.SpreadsheetDocument(void(0), {fill_template: this.on_fill_template.bind(this)});
+
+        this.scheme.composition.find_rows({use: true}, (row) => {
+          doc.append(this.templates(row.field), data);
+        });
+
+        return doc;
+      })
+    },
+
+    discard(row, selection) {
+      return selection.some((srow) => {
+
+        const left = srow.left_value.split('.');
+        let left_value = row[left[0]];
+        for(let i = 1; i < left.length; i++){
+          left_value = left_value[left[i]];
+        }
+
+        const {comparison_type, right_value} = srow;
+        const {comparison_types} = $p.enm;
+
+        switch (comparison_type) {
+        case comparison_types.eq:
+          return left_value != right_value;
+
+        case comparison_types.ne:
+          return left_value == right_value;
+
+        case comparison_types.lt:
+          return !(left_value < right_value);
+
+        case comparison_types.gt:
+          return !(left_value > right_value);
+
+        case comparison_types.in:
+          return !left_value || right_value.indexOf(left_value.toString()) == -1;
+
+        case comparison_types.nin:
+          return right_value.indexOf(left_value.toString()) != -1;
+        }
+
+      })
+    },
+
+    form_obj(pwnd, attr) {
+
+      this._data._modified = false;
+
+      const {calc_order, _manager} = this;
+
+      this.wnd = this.draw_tabs($p.iface.dat_blank(null, {
+        width: 720,
+        height: 400,
+        modal: true,
+        center: true,
+        pwnd: pwnd,
+        allow_close: true,
+        allow_minmax: true,
+        caption: `<b>${calc_order.presentation}</b>`
+      }));
+      const {elmnts} = this.wnd;
+
+      elmnts.grids.production = this.draw_production(elmnts.tabs.cells("prod"));
+
+
+      this.listener = this.listener.bind(this);
+      this._manager.on('update', this.listener);
+
+      this.wnd.attachEvent("onClose", () => {
+        this._manager.off('update', this.listener);
+        elmnts.scheme.unload && elmnts.scheme.unload();
+        for(let grid in elmnts.grids){
+          elmnts.grids[grid].unload && elmnts.grids[grid].unload()
+        }
+        return true;
+      });
+
+      $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
+        .then((scheme) => {
+          this.scheme = scheme;
+        });
+
+      this.fill_by_order();
+
+      return Promise.resolve({wnd: this.wnd, o: this});
+
+    },
+
+    draw_tabs(wnd) {
+
+      const items = [
+        {id: "info", type: "text", text: "Вариант настроек:"},
+        {id: "scheme", type: "text", text: "<div style='width: 300px; margin-top: -2px;' name='scheme'></div>"}
+      ];
+      if($p.current_user.role_available("ИзменениеТехнологическойНСИ")){
+        items.push(
+          {id: "save", type: "button", text: "<i class='fa fa-floppy-o fa-fw'></i>", title: 'Сохранить вариант'},
+          {id: "sep", type: "separator"},
+          {id: "saveas", type: "button", text: "<i class='fa fa-plus-square fa-fw'></i>", title: 'Сохранить как...'});
+      }
+      items.push(
+        {id: "sp", type: "spacer"},
+        {id: "print", type: "button", text: "<i class='fa fa-print fa-fw'></i>", title: 'Печать отчета'});
+
+      wnd.attachToolbar({
+        items: items,
+        onClick: (name) => {
+          if(this.scheme.empty()){
+            return $p.msg.show_msg({
+              type: "alert-warning",
+              text: "Не выбран вариант настроек",
+              title: $p.msg.main_title
+            });
+          }
+          if(name == 'print'){
+            this.generate().then((doc) => doc.print());
+          }
+          else if(name == 'save'){
+            this.scheme.save().then((scheme) => scheme.set_default());
+          }
+          else if(name == 'saveas'){
+            $p.iface.query_value(this.scheme.name.replace(/[0-9]/g, '') + Math.floor(10 + Math.random() * 21), 'Укажите название варианта')
+              .then((name) => {
+                const proto = this.scheme._obj._clone();
+                delete proto.ref;
+                proto.name = name;
+                return this.scheme._manager.create(proto);
+              })
+              .then((scheme) => scheme.save())
+              .then((scheme) => this.scheme = scheme.set_default())
+              .catch((err) => null);
+          }
+        }
+      })
+
+      wnd.elmnts.scheme = new $p.iface.OCombo({
+        parent: wnd.cell.querySelector('[name=scheme]'),
+        obj: this,
+        field: "scheme",
+        width: 280
+      });
+
+      wnd.elmnts.tabs = wnd.attachTabbar({
+        arrows_mode: "auto",
+        tabs: [
+          {id: "prod", text: "Продукция", active:  true},
+          {id: "composition", text: "Состав"},
+          {id: "columns", text: "Колонки"},
+          {id: "selection", text: "Отбор"},
+          {id: "dimensions", text: "Группировка"},
+        ]
+      });
+
+      return wnd;
+    },
+
+
+    draw_production(cell) {
+      return cell.attachTabular({
+        obj: this,
+        ts: "production",
+        ts_captions: {
+          "fields":["use","characteristic","qty"],
+          "headers":",Продукция,Штук",
+          "widths":"40,*,150",
+          "min_widths":"40,200,120",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ref,calck"
+        }
+      })
+    },
+
+    draw_columns(cell) {
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "fields",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","field","caption"],
+          "headers":",Поле,Заголовок",
+          "widths":"40,200,*",
+          "min_widths":"40,200,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
+        }
+      });
+    },
+
+    draw_composition(cell) {
+      this.composition_parts();
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "composition",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","field","definition"],
+          "headers":",Элемент,Описание",
+          "widths":"40,160,*",
+          "min_widths":"40,120,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
+        }
+      });
+    },
+
+    draw_selection(cell) {
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "selection",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","left_value","comparison_type","right_value"],
+          "headers":",Левое значение,Вид сравнения,Правое значение",
+          "widths":"40,200,100,*",
+          "min_widths":"40,200,100,200",
+          "aligns":"",
+          "sortings":"na,na,na,na",
+          "types":"ch,ed,ref,ed"
+        }
+      });
+    },
+
+    draw_dimensions(cell) {
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "dimensions",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","parent","field"],
+          "headers":",Таблица,Поле",
+          "widths":"40,200,*",
+          "min_widths":"40,200,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
+        }
+      });
+    },
+
+    composition_parts(refill) {
+      const {composition} = this.scheme;
+      if(!composition.count()){
+        refill = true;
+      }
+      if(refill){
+        this.templates().forEach((template, index) => {
+          const {attributes} = template;
+          composition.add({
+            field: attributes.id ? attributes.id.value : index,
+            kind: attributes.kind ? attributes.kind.value : 'obj',
+            definition: attributes.definition ? attributes.definition.value : 'Описание отсутствует',
+          })
+        });
+      }
+    },
+
+    templates(name) {
+
+      const {children} = this.formula._template.content;
+
+      if(name){
+        return children.namedItem(name);
+      }
+      const res = [];
+      for(let i = 0; i < children.length; i++){
+        res.push(children.item(i))
+      }
+      return res;
+    },
+
+    on_fill_template(template, data) {
+
+      if(template.attributes.tabular && template.attributes.tabular.value == "specification"){
+        const specification = data.specification.map((row) => {
+          return {
+            product: row.product,
+            grouping: row.grouping,
+            Номенклатура: row.nom.article + ' ' + row.nom.name + (!row.clr.empty() && !row.clr.predefined_name ? ' ' + row.clr.name : ''),
+            Размеры: row.sz,
+            Количество: row.qty.toFixed(),
+            Угол1: row.alp1,
+            Угол2: row.alp2,
+          }
+        });
+        return {specification, _grouping: data._grouping}
+      }
+      else if(template.attributes.tabular && template.attributes.tabular.value == "production"){
+        const production = [];
+        this.production.find_rows({use: true}, (row) => {
+          production.push(Object.assign(
+            this.calc_order.row_description(row),
+            data.ПродукцияЭскизы[row.characteristic.ref] ?
+              {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)} : {}
+          ))
+        });
+        return Object.assign({}, data, {production});
+      }
+      return data;
+    },
+
+    listener(obj, fields) {
+      if(obj === this && fields.hasOwnProperty('scheme') && this.wnd && this.wnd.elmnts){
+        const {grids, tabs} = this.wnd.elmnts;
+
+        grids.columns && grids.columns.unload && grids.columns.unload();
+        grids.selection && grids.selection.unload && grids.selection.unload();
+        grids.composition && grids.composition.unload && grids.composition.unload();
+        grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
+
+        grids.columns = this.draw_columns(tabs.cells("columns"));
+        grids.selection = this.draw_selection(tabs.cells("selection"));
+        grids.composition = this.draw_composition(tabs.cells("composition"));
+        grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
+      }
+    },
+
+  });
+
+})($p);
+
+
+
+
+
 
 
 function eXcell_rsvg(cell){ 

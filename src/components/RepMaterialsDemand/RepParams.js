@@ -1,8 +1,11 @@
+/**
+ * Индивидуальная форма настроек отчета
+ */
+
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
 import Toolbar from 'material-ui/Toolbar';
-import Typography from 'material-ui/Typography';
 import IconButton from 'material-ui/IconButton';
 import AddIcon from 'material-ui-icons/AddCircleOutline';
 import RemoveIcon from 'material-ui-icons/Delete';
@@ -26,14 +29,11 @@ class SettingsToolbar extends Component {
 
     return (
 
-      <Toolbar className={classes.bar}>
+      <Toolbar disableGutters className={classes.bar}>
         <IconButton title="Добавить строку" onClick={handleAdd}><AddIcon/></IconButton>
         <IconButton title="Удалить строку" onClick={handleRemove}><RemoveIcon/></IconButton>
-
-        <Typography type="title" color="inherit" className={classes.flex}> </Typography>
-
+        <IconButton key="sep1" disabled>|</IconButton>
         <SelectOrder handleSelect={handleCustom}/>
-
       </Toolbar>
     );
   }
@@ -49,8 +49,8 @@ export default class RepParams extends Component {
     _obj: PropTypes.object.isRequired,
   };
 
-  handleCustom = (row, _mgr) => {
-    this.props._obj.fill_by_order(row, _mgr)
+  handleCustom = (row) => {
+    this.props._obj.fill_by_order(row)
       .then(() => {
         this.production.forceUpdate();
       });
