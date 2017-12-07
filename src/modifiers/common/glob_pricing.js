@@ -77,7 +77,7 @@ class Pricing {
    */
   by_range(startkey, step = 0) {
 
-    return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
+    return $p.doc.nom_prices_setup.pouch_db.query('doc/doc_nom_prices_setup_slice_last',
       {
         limit: 600,
         include_docs: false,
