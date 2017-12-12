@@ -624,7 +624,14 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         })
           .then(response => response.json())
           // заполняем табчасть
-          .then(json => console.log(json))
+          .then(json => {
+            if (json.rows) {
+              this.planning.load(json.rows)
+            }
+            else{
+              console.log(json)
+            }
+          })
           .catch(err => {
             $p.msg.show_msg({
               type: "alert-warning",
