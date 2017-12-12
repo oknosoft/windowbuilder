@@ -752,8 +752,11 @@ class Editor extends paper.PaperScope {
    *
    * @param [cnstr] {Number} - номер элемента или контура
    */
-  glass_inserts(elm){
-    new GlassInserts(elm || this.project.selected_elm)
+  glass_inserts(glasses){
+    if(!Array.isArray(glasses)){
+      glasses = this.project.selected_glasses();
+    }
+    return new GlassInserts(glasses);
   }
 
   /**

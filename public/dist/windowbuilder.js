@@ -1464,8 +1464,11 @@ class Editor extends paper.PaperScope {
     return rect;
   }
 
-  glass_inserts(elm){
-    new GlassInserts(elm || this.project.selected_elm)
+  glass_inserts(glasses){
+    if(!Array.isArray(glasses)){
+      glasses = this.project.selected_glasses();
+    }
+    return new GlassInserts(glasses);
   }
 
   additional_inserts(cnstr, cell){
@@ -1975,9 +1978,9 @@ $p.Editor = Editor;
 
 class GlassInserts {
 
-  constructor(elm) {
+  constructor(glasses) {
 
-    this.elm = elm;
+    const elm = glasses.length && glasses[0];
 
     if(!(elm instanceof Filling)){
       return $p.msg.show_msg({
@@ -1986,6 +1989,9 @@ class GlassInserts {
         title: $p.msg.glass_spec
       });
     }
+
+    this.elm = elm;
+    this.glasses = glasses;
 
     const {project} = elm;
 
@@ -2024,8 +2030,22 @@ class GlassInserts {
 
   onclose() {
     const {grids} = this.wnd.elmnts;
-    const {elm} = this;
+    const {elm, glasses} = this;
     grids.inserts && grids.inserts.editStop();
+
+    for(let i = 1; i < glasses.length; i++) {
+      const selm = glasses[i];
+      const {glass_specification} = elm.project.ox;
+      glass_specification.clear({elm: selm.elm});
+      glass_specification.find_rows({elm: elm.elm}, (row) => {
+        glass_specification.add({
+          elm: selm.elm,
+          inset: row.inset,
+          clr: row.clr
+        })
+      })
+    }
+
     elm.project.register_change(true);
     elm._manager.emit_async('update', elm, {inset: true});
     return true;
@@ -2036,11 +2056,13 @@ class GlassInserts {
       const {project, inset, elm} = this.elm;
       project.ox.glass_specification.clear({elm: elm});
       inset.specification.forEach((row) => {
-        project.ox.glass_specification.add({
-          elm: elm,
-          inset: row.nom,
-          clr: row.clr
-        })
+        if(row.nom instanceof $p.CatInserts){
+          project.ox.glass_specification.add({
+            elm: elm,
+            inset: row.nom,
+            clr: row.clr
+          })
+        }
       });
     }
   }
@@ -5461,24 +5483,45 @@ class Filling extends AbstractFilling(BuilderElement) {
   }
 
   set_inset(v, ignore_select) {
-    if(!ignore_select && this.project.selectedItems.length > 1){
 
-      const {glass_specification} = this.project.ox;
-      const proto = glass_specification.find_rows({elm: this.elm});
+    const inset = $p.cat.inserts.get(v);
 
-      this.project.selected_glasses().forEach((elm) => {
-        if(elm !== this){
-          elm.set_inset(v, true);
-          glass_specification.clear({elm: elm.elm});
+    if(!ignore_select){
+      const {project, elm, clr} = this;
+      const {glass_specification} = project.ox;
+      const proto = glass_specification.find_rows({elm});
+
+      if(!inset.clr_group.empty() && inset.clr_group.clr_conformity.count() && !inset.clr_group.clr_conformity._obj.some((row) => row.clr1 == clr)) {
+        this.clr = inset.clr_group.clr_conformity.get(0).clr1;
+      }
+
+      if(proto.length) {
+        glass_specification.clear({elm});
+        proto.length = 0;
+        inset.specification.forEach((row) => {
+          if(row.nom instanceof $p.CatInserts){
+            proto.push(glass_specification.add({
+              elm,
+              inset: row.nom,
+              clr: row.clr,
+            }))
+          }
+        });
+      }
+
+      project.selected_glasses().forEach((selm) => {
+        if(selm !== this){
+          selm.set_inset(inset, true);
+          glass_specification.clear({elm: selm.elm});
           proto.forEach((row) => glass_specification.add({
-            elm: elm.elm,
+            elm: selm.elm,
             inset: row.inset,
             clr: row.clr,
           }));
         }
       });
     }
-    super.set_inset(v);
+    super.set_inset(inset);
   }
 
   set_clr(v, ignore_select) {

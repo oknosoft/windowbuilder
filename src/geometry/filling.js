@@ -337,26 +337,50 @@ class Filling extends AbstractFilling(BuilderElement) {
    * @param [ignore_select] {Boolean}
    */
   set_inset(v, ignore_select) {
-    if(!ignore_select && this.project.selectedItems.length > 1){
 
-      const {glass_specification} = this.project.ox;
-      const proto = glass_specification.find_rows({elm: this.elm});
+    const inset = $p.cat.inserts.get(v);
 
-      this.project.selected_glasses().forEach((elm) => {
-        if(elm !== this){
+    if(!ignore_select){
+      const {project, elm, clr} = this;
+      const {glass_specification} = project.ox;
+      const proto = glass_specification.find_rows({elm});
+
+      // проверим доступность цветов
+      if(!inset.clr_group.empty() && inset.clr_group.clr_conformity.count() && !inset.clr_group.clr_conformity._obj.some((row) => row.clr1 == clr)) {
+        this.clr = inset.clr_group.clr_conformity.get(0).clr1;
+      }
+
+      // если для заполнение определён состав - корректируем
+      if(proto.length) {
+        glass_specification.clear({elm});
+        proto.length = 0;
+        inset.specification.forEach((row) => {
+          if(row.nom instanceof $p.CatInserts){
+            proto.push(glass_specification.add({
+              elm,
+              inset: row.nom,
+              clr: row.clr,
+            }))
+          }
+        });
+      }
+
+      // транслируем изменения на остальные выделенные заполнения
+      project.selected_glasses().forEach((selm) => {
+        if(selm !== this){
           // копируем вставку
-          elm.set_inset(v, true);
+          selm.set_inset(inset, true);
           // копируем состав заполнения
-          glass_specification.clear({elm: elm.elm});
+          glass_specification.clear({elm: selm.elm});
           proto.forEach((row) => glass_specification.add({
-            elm: elm.elm,
+            elm: selm.elm,
             inset: row.inset,
             clr: row.clr,
           }));
         }
       });
     }
-    super.set_inset(v);
+    super.set_inset(inset);
   }
 
   /**
