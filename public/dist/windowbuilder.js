@@ -6123,7 +6123,30 @@ class GeneratrixElement extends BuilderElement {
         }
 
         if(cnn_point && cnn_point.cnn_types == $p.enm.cnn_types.acn.t && (segm.point == this.b || segm.point == this.e)){
-          segm.point = cnn_point.point;
+          if(cnn_point.point.is_nearest(free_point, 0)){
+            segm.point = cnn_point.point;
+          }
+          else{
+            const ppath = (cnn_point.profile.nearest(true) ? cnn_point.profile.rays.outer : cnn_point.profile.generatrix).clone({insert: false});
+            const {bounds} = ppath;
+            if(Math.abs(delta.y) < consts.epsilon){
+              const ray = new paper.Path({
+                insert: false,
+                segments: [[free_point.x, bounds.top], [free_point.x, bounds.bottom]]
+              });
+              segm.point = ppath.intersect_point(ray, free_point, true) || free_point;
+            }
+            else if(Math.abs(delta.x) < consts.epsilon){
+              const ray = new paper.Path({
+                insert: false,
+                segments: [[bounds.left, free_point.y], [bounds.right, free_point.y]]
+              });
+              segm.point = ppath.intersect_point(ray, free_point, true) || free_point;
+            }
+            else {
+              segm.point = free_point;
+            }
+          }
         }
         else{
           segm.point = free_point;
@@ -6161,6 +6184,17 @@ class GeneratrixElement extends BuilderElement {
     }
 
     return other;
+  }
+
+  do_sub_bind(profile, node) {
+    const ppath = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).clone({insert: false});
+    let mpoint = ppath.getNearestPoint(this[node]);
+    if(!mpoint.is_nearest(this[node], 0)) {
+      const gen = this.generatrix.clone({insert: false}).elongation(1000);
+      mpoint = ppath.intersect_point(gen, mpoint, true);
+      this[node] = mpoint;
+      return true;
+    }
   }
 
 }
@@ -8142,28 +8176,28 @@ class Profile extends ProfileItem {
     return res;
   }
 
-  do_bind(p, bcnn, ecnn, moved) {
+  do_bind(profile, bcnn, ecnn, moved) {
 
     let moved_fact;
 
-    if(p instanceof ProfileConnective) {
-      const gen = p.generatrix.clone({insert: false}).elongation(1000);
+    if(profile instanceof ProfileConnective) {
+      const gen = profile.generatrix.clone({insert: false}).elongation(1000);
       this._attr._rays.clear();
       this.b = gen.getNearestPoint(this.b);
       this.e = gen.getNearestPoint(this.e);
       moved_fact = true;
     }
     else {
-      if(bcnn.cnn && bcnn.profile == p) {
+      if(bcnn.cnn && bcnn.profile == profile) {
         if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type) != -1) {
-          if(!this.b.is_nearest(p.e, 0)) {
+          if(!this.b.is_nearest(profile.e, 0)) {
             if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
               if(paper.Key.isDown('control')) {
                 console.log('control');
               }
               else {
-                if(this.b.getDistance(p.e, true) < consts.sticking2) {
-                  this.b = p.e;
+                if(this.b.getDistance(profile.e, true) < consts.sticking2) {
+                  this.b = profile.e;
                 }
                 moved_fact = true;
               }
@@ -8174,26 +8208,21 @@ class Profile extends ProfileItem {
             }
           }
         }
-        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type) != -1) {
-          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
-          if(!mpoint.is_nearest(this.b, 0)) {
-            this.b = mpoint;
-            moved_fact = true;
-          }
+        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'b')) {
+          moved_fact = true;
         }
-
       }
 
-      if(ecnn.cnn && ecnn.profile == p) {
+      if(ecnn.cnn && ecnn.profile == profile) {
         if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type) != -1) {
-          if(!this.e.is_nearest(p.b, 0)) {
+          if(!this.e.is_nearest(profile.b, 0)) {
             if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
               if(paper.Key.isDown('control')) {
                 console.log('control');
               }
               else {
-                if(this.e.getDistance(p.b, true) < consts.sticking2) {
-                  this.e = p.b;
+                if(this.e.getDistance(profile.b, true) < consts.sticking2) {
+                  this.e = profile.b;
                 }
                 moved_fact = true;
               }
@@ -8204,12 +8233,8 @@ class Profile extends ProfileItem {
             }
           }
         }
-        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type) != -1) {
-          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
-          if(!mpoint.is_nearest(this.e, 0)) {
-            this.e = mpoint;
-            moved_fact = true;
-          }
+        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'e')) {
+          moved_fact = true;
         }
       }
     }
