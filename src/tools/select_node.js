@@ -438,30 +438,30 @@ class ToolSelectNode extends ToolElement {
     }
   }
 
-  hitTest(event) {
+  hitTest({point}) {
 
     const hitSize = 6;
     const {project} = this._scope;
     this.hitItem = null;
 
-    if (event.point) {
+    if (point) {
 
       // отдаём предпочтение выделенным ранее элементам
-      this.hitItem = project.hitTest(event.point, {selected: true, fill: true, tolerance: hitSize});
+      this.hitItem = project.hitTest(point, {selected: true, fill: true, tolerance: hitSize});
 
       // во вторую очередь - тем элементам, которые не скрыты
       if (!this.hitItem){
-        this.hitItem = project.hitTest(event.point, {fill: true, visible: true, tolerance: hitSize});
+        this.hitItem = project.hitTest(point, {fill: true, visible: true, tolerance: hitSize});
       }
 
       // Hit test selected handles
-      let hit = project.hitTest(event.point, {selected: true, handles: true, tolerance: hitSize});
+      let hit = project.hitTest(point, {selected: true, handles: true, tolerance: hitSize});
       if (hit){
         this.hitItem = hit;
       }
 
       // Hit test points
-      hit = project.hitPoints(event.point, 16, true);
+      hit = project.hitPoints(point, 16, true);
 
       if (hit) {
         if (hit.item.parent instanceof ProfileItem) {
@@ -483,7 +483,7 @@ class ToolSelectNode extends ToolElement {
           // размерные линии сами разберутся со своими курсорами
         }
         else if (hitItem.item instanceof paper.PointText) {
-          paper.canvas_cursor('cursor-text');     // указатель с черным Т
+          !(hitItem.item instanceof EditableText) && paper.canvas_cursor('cursor-text');     // указатель с черным Т
         }
         else if (hitItem.item.selected) {
           paper.canvas_cursor('cursor-arrow-small');
@@ -503,7 +503,7 @@ class ToolSelectNode extends ToolElement {
     }
     else {
       // возможно, выделен разрез
-      const hit = project.hitTest(event.point, {stroke: true, visible: true, tolerance: 16});
+      const hit = project.hitTest(point, {stroke: true, visible: true, tolerance: 16});
       if (hit && hit.item.parent instanceof Sectional){
         this.hitItem = hit;
         paper.canvas_cursor('cursor-arrow-white-shape');

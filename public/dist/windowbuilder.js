@@ -10051,6 +10051,144 @@ class Scheme extends paper.Project {
 }
 
 
+class EditableText extends paper.PointText {
+
+  constructor(props) {
+    props.justification = 'center';
+    super(props);
+    this._edit = null;
+    this._owner = props._owner;
+
+    this.on({
+      mouseenter: this.mouseenter,
+      mouseleave: this.mouseleave,
+      click: this.click,
+    })
+  }
+
+  mouseenter(event) {
+    paper.canvas_cursor('cursor-arrow-ruler-light');
+  }
+
+  mouseleave(event) {
+    paper.canvas_cursor('cursor-arrow-white');
+  }
+
+  click(event) {
+    if(!this._edit) {
+      const {view, bounds} = this;
+      const point = view.projectToView(bounds.topLeft);
+      const edit = this._edit = document.createElement('INPUT');
+      view.element.parentNode.appendChild(edit);
+      edit.style = `left: ${point.x.toFixed()}px; top: ${point.y.toFixed()}px; width: 80px; border: none; position: absolute;`;
+      edit.onblur = () => setTimeout(() => this.edit_remove());
+      edit.onkeydown = this.edit_keydown.bind(this);
+      edit.value = this.content.replace(/\D$/, '');
+      setTimeout(() => {
+        edit.focus();
+        edit.select();
+      });
+    }
+  }
+
+  edit_keydown(event) {
+    switch (event.code) {
+    case 'Escape':
+    case 'Tab':
+      return this.edit_remove();
+    case 'Enter':
+    case 'NumpadEnter':
+      this.apply(parseFloat(this._edit.value));
+      return this.edit_remove();
+    case 'Digit0':
+    case 'Digit1':
+    case 'Digit2':
+    case 'Digit3':
+    case 'Digit4':
+    case 'Digit5':
+    case 'Digit6':
+    case 'Digit7':
+    case 'Digit8':
+    case 'Digit9':
+    case 'Numpad0':
+    case 'Numpad1':
+    case 'Numpad2':
+    case 'Numpad3':
+    case 'Numpad4':
+    case 'Numpad5':
+    case 'Numpad6':
+    case 'Numpad7':
+    case 'Numpad8':
+    case 'Numpad9':
+    case '.':
+    case 'Period':
+    case 'NumpadDecimal':
+    case 'ArrowRight':
+    case 'ArrowLeft':
+    case 'Delete':
+    case 'Backspace':
+      break;
+    case 'Comma':
+    case ',':
+      event.code = '.';
+      break;
+    default:
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+  }
+
+  edit_remove() {
+    if(this._edit){
+      this._edit.parentNode && this._edit.parentNode.removeChild(this._edit);
+      this._edit = null;
+    }
+  }
+
+  remove() {
+    this.edit_remove();
+    super.remove();
+  }
+}
+
+class AngleText extends EditableText {
+
+  constructor(props) {
+    props.fillColor = 'blue';
+    super(props);
+  }
+
+  apply(value) {
+
+  }
+}
+
+class LenText extends EditableText {
+
+  constructor(props) {
+    props.fillColor = 'black';
+    super(props);
+  }
+
+  apply(value) {
+    const {path, segment1, segment2, length} = this._owner;
+    const {parent} = path;
+    const {zoom} = parent._attr;
+    const delta = segment1.curve.getTangentAtTime(1).multiply(value * zoom - length);
+    let start;
+    for(const segment of path.segments) {
+      if(segment === segment2) {
+        start = true;
+      }
+      if(start) {
+        segment.point = segment.point.add(delta);
+      }
+    }
+    parent.project.register_change(true);
+  }
+}
+
 class Sectional extends GeneratrixElement {
 
   initialize(attr) {
@@ -10110,20 +10248,18 @@ class Sectional extends GeneratrixElement {
     }
 
     for(let i = 1; i < segments.length - 1; i++){
-      this.draw_angle(i, radius);
+      this.draw_angle(i);
     }
 
     for(let curve of curves){
       const loc = curve.getLocationAtTime(0.5);
       const normal = loc.normal.normalize(radius);
-      children.push(new paper.PointText({
+      children.push(new LenText({
         point: loc.point.add(normal).add([0, normal.y < 0 ? 0 : normal.y / 2]),
         content: (curve.length / zoom).toFixed(0),
-        fillColor: 'black',
         fontSize: radius,
-        justification: 'center',
-        guide: true,
         parent: layer,
+        _owner: curve
       }));
     }
 
@@ -10164,14 +10300,13 @@ class Sectional extends GeneratrixElement {
       parent: layer,
     }));
 
-    children.push(new paper.PointText({
-      point: center.add(end.multiply(angle < 40 ? 3 : 2).add([0, -end.y / 2])),
+    children.push(new AngleText({
+      point: center.add(end.multiply(-2.2)), 
       content: angle.toFixed(0) + '°',
-      fillColor: 'black',
       fontSize: radius,
-      justification: 'center',
-      guide: true,
       parent: layer,
+      _owner: this,
+      _ind: ind,
     }));
 
   }
@@ -13660,26 +13795,26 @@ class ToolSelectNode extends ToolElement {
     }
   }
 
-  hitTest(event) {
+  hitTest({point}) {
 
     const hitSize = 6;
     const {project} = this._scope;
     this.hitItem = null;
 
-    if (event.point) {
+    if (point) {
 
-      this.hitItem = project.hitTest(event.point, {selected: true, fill: true, tolerance: hitSize});
+      this.hitItem = project.hitTest(point, {selected: true, fill: true, tolerance: hitSize});
 
       if (!this.hitItem){
-        this.hitItem = project.hitTest(event.point, {fill: true, visible: true, tolerance: hitSize});
+        this.hitItem = project.hitTest(point, {fill: true, visible: true, tolerance: hitSize});
       }
 
-      let hit = project.hitTest(event.point, {selected: true, handles: true, tolerance: hitSize});
+      let hit = project.hitTest(point, {selected: true, handles: true, tolerance: hitSize});
       if (hit){
         this.hitItem = hit;
       }
 
-      hit = project.hitPoints(event.point, 16, true);
+      hit = project.hitPoints(point, 16, true);
 
       if (hit) {
         if (hit.item.parent instanceof ProfileItem) {
@@ -13700,7 +13835,7 @@ class ToolSelectNode extends ToolElement {
         if (hitItem.item.parent instanceof DimensionLine) {
         }
         else if (hitItem.item instanceof paper.PointText) {
-          paper.canvas_cursor('cursor-text');     
+          !(hitItem.item instanceof EditableText) && paper.canvas_cursor('cursor-text');     
         }
         else if (hitItem.item.selected) {
           paper.canvas_cursor('cursor-arrow-small');
@@ -13719,7 +13854,7 @@ class ToolSelectNode extends ToolElement {
       }
     }
     else {
-      const hit = project.hitTest(event.point, {stroke: true, visible: true, tolerance: 16});
+      const hit = project.hitTest(point, {stroke: true, visible: true, tolerance: 16});
       if (hit && hit.item.parent instanceof Sectional){
         this.hitItem = hit;
         paper.canvas_cursor('cursor-arrow-white-shape');

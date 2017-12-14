@@ -9,6 +9,144 @@
  * @submodule sectional
  */
 
+class EditableText extends paper.PointText {
+
+  constructor(props) {
+    props.justification = 'center';
+    super(props);
+    this._edit = null;
+    this._owner = props._owner;
+
+    this.on({
+      mouseenter: this.mouseenter,
+      mouseleave: this.mouseleave,
+      click: this.click,
+    })
+  }
+
+  mouseenter(event) {
+    paper.canvas_cursor('cursor-arrow-ruler-light');
+  }
+
+  mouseleave(event) {
+    paper.canvas_cursor('cursor-arrow-white');
+  }
+
+  click(event) {
+    if(!this._edit) {
+      const {view, bounds} = this;
+      const point = view.projectToView(bounds.topLeft);
+      const edit = this._edit = document.createElement('INPUT');
+      view.element.parentNode.appendChild(edit);
+      edit.style = `left: ${point.x.toFixed()}px; top: ${point.y.toFixed()}px; width: 80px; border: none; position: absolute;`;
+      edit.onblur = () => setTimeout(() => this.edit_remove());
+      edit.onkeydown = this.edit_keydown.bind(this);
+      edit.value = this.content.replace(/\D$/, '');
+      setTimeout(() => {
+        edit.focus();
+        edit.select();
+      });
+    }
+  }
+
+  edit_keydown(event) {
+    switch (event.code) {
+    case 'Escape':
+    case 'Tab':
+      return this.edit_remove();
+    case 'Enter':
+    case 'NumpadEnter':
+      this.apply(parseFloat(this._edit.value));
+      return this.edit_remove();
+    case 'Digit0':
+    case 'Digit1':
+    case 'Digit2':
+    case 'Digit3':
+    case 'Digit4':
+    case 'Digit5':
+    case 'Digit6':
+    case 'Digit7':
+    case 'Digit8':
+    case 'Digit9':
+    case 'Numpad0':
+    case 'Numpad1':
+    case 'Numpad2':
+    case 'Numpad3':
+    case 'Numpad4':
+    case 'Numpad5':
+    case 'Numpad6':
+    case 'Numpad7':
+    case 'Numpad8':
+    case 'Numpad9':
+    case '.':
+    case 'Period':
+    case 'NumpadDecimal':
+    case 'ArrowRight':
+    case 'ArrowLeft':
+    case 'Delete':
+    case 'Backspace':
+      break;
+    case 'Comma':
+    case ',':
+      event.code = '.';
+      break;
+    default:
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+  }
+
+  edit_remove() {
+    if(this._edit){
+      this._edit.parentNode && this._edit.parentNode.removeChild(this._edit);
+      this._edit = null;
+    }
+  }
+
+  remove() {
+    this.edit_remove();
+    super.remove();
+  }
+}
+
+class AngleText extends EditableText {
+
+  constructor(props) {
+    props.fillColor = 'blue';
+    super(props);
+  }
+
+  apply(value) {
+
+  }
+}
+
+class LenText extends EditableText {
+
+  constructor(props) {
+    props.fillColor = 'black';
+    super(props);
+  }
+
+  apply(value) {
+    const {path, segment1, segment2, length} = this._owner;
+    const {parent} = path;
+    const {zoom} = parent._attr;
+    const delta = segment1.curve.getTangentAtTime(1).multiply(value * zoom - length);
+    let start;
+    for(const segment of path.segments) {
+      if(segment === segment2) {
+        start = true;
+      }
+      if(start) {
+        segment.point = segment.point.add(delta);
+      }
+    }
+    parent.project.register_change(true);
+  }
+}
+
 /**
  * Вид в разрезе. например, водоотливы
  * @param attr {Object} - объект со свойствами создаваемого элемента
@@ -64,7 +202,6 @@ class Sectional extends GeneratrixElement {
     _attr.generatrix.strokeScaling = false;
 
     this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
-    //_attr.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
     this.addChild(_attr.generatrix);
 
@@ -89,21 +226,19 @@ class Sectional extends GeneratrixElement {
 
     // рисуем углы
     for(let i = 1; i < segments.length - 1; i++){
-      this.draw_angle(i, radius);
+      this.draw_angle(i);
     }
 
     // рисуем длины
     for(let curve of curves){
       const loc = curve.getLocationAtTime(0.5);
       const normal = loc.normal.normalize(radius);
-      children.push(new paper.PointText({
+      children.push(new LenText({
         point: loc.point.add(normal).add([0, normal.y < 0 ? 0 : normal.y / 2]),
         content: (curve.length / zoom).toFixed(0),
-        fillColor: 'black',
         fontSize: radius,
-        justification: 'center',
-        guide: true,
         parent: layer,
+        _owner: curve
       }));
     }
 
@@ -149,14 +284,13 @@ class Sectional extends GeneratrixElement {
     }));
 
     // Angle Label
-    children.push(new paper.PointText({
-      point: center.add(end.multiply(angle < 40 ? 3 : 2).add([0, -end.y / 2])),
+    children.push(new AngleText({
+      point: center.add(end.multiply(-2.2)), //.add([0, -end.y / 2])
       content: angle.toFixed(0) + '°',
-      fillColor: 'black',
       fontSize: radius,
-      justification: 'center',
-      guide: true,
       parent: layer,
+      _owner: this,
+      _ind: ind,
     }));
 
   }
