@@ -10080,7 +10080,7 @@ class EditableText extends paper.PointText {
       const point = view.projectToView(bounds.topLeft);
       const edit = this._edit = document.createElement('INPUT');
       view.element.parentNode.appendChild(edit);
-      edit.style = `left: ${point.x.toFixed()}px; top: ${point.y.toFixed()}px; width: 80px; border: none; position: absolute;`;
+      edit.style = `left: ${(point.x - 8).toFixed()}px; top: ${(point.y - 4).toFixed()}px; width: 80px; border: none; position: absolute;`;
       edit.onblur = () => setTimeout(() => this.edit_remove());
       edit.onkeydown = this.edit_keydown.bind(this);
       edit.value = this.content.replace(/\D$/, '');
@@ -10157,9 +10157,42 @@ class AngleText extends EditableText {
   constructor(props) {
     props.fillColor = 'blue';
     super(props);
+    this._ind = props._ind;
   }
 
   apply(value) {
+
+    const {project, generatrix, _attr} = this._owner;
+    const {zoom} = _attr;
+    const {curves, segments} = generatrix;
+    const c1 = curves[this._ind - 1];
+    const c2 = curves[this._ind];
+    const loc1 = c1.getLocationAtTime(0.9);
+    const loc2 = c2.getLocationAtTime(0.1);
+    const center = c1.point2;
+    let angle = loc2.tangent.angle - loc1.tangent.negate().angle;
+    if(angle < 0){
+      angle += 360;
+    }
+    const invert = angle > 180;
+    if(invert){
+      angle = 360 - angle;
+    }
+    const ray0 = new paper.Point([c2.point2.x - c2.point1.x, c2.point2.y - c2.point1.y]);
+    const ray1 = ray0.clone();
+    ray1.angle += invert ? angle - value : value - angle;
+    const delta = ray1.subtract(ray0);
+
+    let start;
+    for(const segment of segments) {
+      if(segment.point.equals(c2.point2)) {
+        start = true;
+      }
+      if(start) {
+        segment.point = segment.point.add(delta);
+      }
+    }
+    project.register_change(true);
 
   }
 }
@@ -10173,11 +10206,11 @@ class LenText extends EditableText {
 
   apply(value) {
     const {path, segment1, segment2, length} = this._owner;
-    const {parent} = path;
-    const {zoom} = parent._attr;
+    const {parent: {_attr, project}, segments} = path;
+    const {zoom} = _attr;
     const delta = segment1.curve.getTangentAtTime(1).multiply(value * zoom - length);
     let start;
-    for(const segment of path.segments) {
+    for(const segment of segments) {
       if(segment === segment2) {
         start = true;
       }
@@ -10185,7 +10218,7 @@ class LenText extends EditableText {
         segment.point = segment.point.add(delta);
       }
     }
-    parent.project.register_change(true);
+    project.register_change(true);
   }
 }
 
