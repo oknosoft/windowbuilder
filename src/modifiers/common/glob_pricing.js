@@ -52,7 +52,7 @@ class Pricing {
       }
       const onom = nom.get(key[0], false, true);
       if (!onom || !onom._data){
-        return;
+        continue;
       }
       if (!onom._data._price){
         onom._data._price = {};

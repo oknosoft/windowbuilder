@@ -10080,7 +10080,7 @@ class EditableText extends paper.PointText {
       const point = view.projectToView(bounds.topLeft);
       const edit = this._edit = document.createElement('INPUT');
       view.element.parentNode.appendChild(edit);
-      edit.style = `left: ${(point.x - 8).toFixed()}px; top: ${(point.y - 4).toFixed()}px; width: 80px; border: none; position: absolute;`;
+      edit.style = `left: ${(point.x - 4).toFixed()}px; top: ${(point.y - 4).toFixed()}px; width: 60px; border: none; position: absolute;`;
       edit.onblur = () => setTimeout(() => this.edit_remove());
       edit.onkeydown = this.edit_keydown.bind(this);
       edit.value = this.content.replace(/\D$/, '');
