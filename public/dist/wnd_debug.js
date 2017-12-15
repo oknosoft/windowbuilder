@@ -2560,13 +2560,20 @@ class Pricing {
 
   build_cache(rows) {
     const {nom, currencies} = $p.cat;
+    const note = 'Индекс цен номенклатуры';
     for(const {key, value} of rows){
       if(!Array.isArray(value)){
-        return setTimeout(() => $p.iface.do_reload('', 'Индекс цен номенклатуры'), 1000);
+        return setTimeout(() => $p.iface.do_reload('', note), 1000);
       }
       const onom = nom.get(key[0], false, true);
       if (!onom || !onom._data){
-        return;
+        $p.record_log({
+          class: 'error',
+          nom: key[0],
+          note,
+          value
+        });
+        continue;
       }
       if (!onom._data._price){
         onom._data._price = {};
