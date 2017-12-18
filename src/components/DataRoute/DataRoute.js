@@ -15,6 +15,7 @@ class DataRoute extends Component {
 
   static propTypes = {
     match: PropTypes.object.isRequired,
+    location: PropTypes.object.isRequired,
     windowHeight: PropTypes.number.isRequired,
     windowWidth: PropTypes.number.isRequired,
     handlers: PropTypes.object.isRequired,
@@ -52,9 +53,9 @@ class DataRoute extends Component {
       return <Component _mgr={_mgr} _acl={_acl} handlers={handlers} {...props} {...sizes}  />;
     };
 
-    if(match.params.area === 'rep') {
+    if(area === 'rep') {
       const Component = _mgr.FrmObj || FrmReport;
-      return <Component _mgr={_mgr} _acl={_acl} match={match} {...sizes} />;
+      return <Component _mgr={_mgr} _acl={_acl} match={match} location={this.props.location} {...sizes} />;
     }
 
     return <Switch>

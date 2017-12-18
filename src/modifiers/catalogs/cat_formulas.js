@@ -41,17 +41,17 @@ $p.adapters.pouch.once('pouch_data_loaded', () => {
 $p.CatFormulas.prototype.__define({
 
 	execute: {
-		value: function (obj) {
+		value: function (obj, attr) {
 
 			// создаём функцию из текста формулы
 			if(!this._data._formula && this.formula){
 			  try{
           if(this.async){
             const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-            this._data._formula = (new AsyncFunction("obj,$p", this.formula)).bind(this);
+            this._data._formula = (new AsyncFunction("obj,$p,attr", this.formula)).bind(this);
           }
           else{
-            this._data._formula = (new Function("obj,$p", this.formula)).bind(this);
+            this._data._formula = (new Function("obj,$p,attr", this.formula)).bind(this);
           }
         }
         catch(err){
@@ -74,14 +74,14 @@ $p.CatFormulas.prototype.__define({
         }
 
 				// получаем HTMLDivElement с отчетом
-				return _formula(obj, $p)
+				return _formula(obj, $p, attr)
 
 				  // показываем отчет в отдельном окне
 					.then((doc) => doc instanceof $p.SpreadsheetDocument && doc.print());
 
 			}
 			else{
-        return _formula && _formula(obj, $p)
+        return _formula && _formula(obj, $p, attr)
       }
 
 		}

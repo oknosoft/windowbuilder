@@ -199,7 +199,33 @@ class GeneratrixElement extends BuilderElement {
         }
 
         if(cnn_point && cnn_point.cnn_types == $p.enm.cnn_types.acn.t && (segm.point == this.b || segm.point == this.e)){
-          segm.point = cnn_point.point;
+          if(cnn_point.point.is_nearest(free_point, 0)){
+            segm.point = cnn_point.point;
+          }
+          else{
+            // при сдвигах примыканий к наклонным элементам, ищем точку на луче
+            const ppath = (cnn_point.profile.nearest(true) ? cnn_point.profile.rays.outer : cnn_point.profile.generatrix).clone({insert: false});
+            const {bounds} = ppath;
+            if(Math.abs(delta.y) < consts.epsilon){
+              // режем вертикальным лучом
+              const ray = new paper.Path({
+                insert: false,
+                segments: [[free_point.x, bounds.top], [free_point.x, bounds.bottom]]
+              });
+              segm.point = ppath.intersect_point(ray, free_point, true) || free_point;
+            }
+            else if(Math.abs(delta.x) < consts.epsilon){
+              // режем горизонтальным лучом
+              const ray = new paper.Path({
+                insert: false,
+                segments: [[bounds.left, free_point.y], [bounds.right, free_point.y]]
+              });
+              segm.point = ppath.intersect_point(ray, free_point, true) || free_point;
+            }
+            else {
+              segm.point = free_point;
+            }
+          }
         }
         else{
           segm.point = free_point;
@@ -240,6 +266,20 @@ class GeneratrixElement extends BuilderElement {
     }
 
     return other;
+  }
+
+  /**
+   * Вспомогательная функция do_bind, привязка импостов
+   */
+  do_sub_bind(profile, node) {
+    const ppath = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).clone({insert: false});
+    let mpoint = ppath.getNearestPoint(this[node]);
+    if(!mpoint.is_nearest(this[node], 0)) {
+      const gen = this.generatrix.clone({insert: false}).elongation(1000);
+      mpoint = ppath.intersect_point(gen, mpoint, true);
+      this[node] = mpoint;
+      return true;
+    }
   }
 
 }

@@ -2084,29 +2084,29 @@ class Profile extends ProfileItem {
   /**
    * Вспомогательная функция обсервера, выполняет привязку узлов
    */
-  do_bind(p, bcnn, ecnn, moved) {
+  do_bind(profile, bcnn, ecnn, moved) {
 
     let moved_fact;
 
-    if(p instanceof ProfileConnective) {
-      const gen = p.generatrix.clone({insert: false}).elongation(1000);
+    if(profile instanceof ProfileConnective) {
+      const gen = profile.generatrix.clone({insert: false}).elongation(1000);
       this._attr._rays.clear();
       this.b = gen.getNearestPoint(this.b);
       this.e = gen.getNearestPoint(this.e);
       moved_fact = true;
     }
     else {
-      if(bcnn.cnn && bcnn.profile == p) {
+      if(bcnn.cnn && bcnn.profile == profile) {
         // обрабатываем угол
         if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type) != -1) {
-          if(!this.b.is_nearest(p.e, 0)) {
+          if(!this.b.is_nearest(profile.e, 0)) {
             if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
               if(paper.Key.isDown('control')) {
                 console.log('control');
               }
               else {
-                if(this.b.getDistance(p.e, true) < consts.sticking2) {
-                  this.b = p.e;
+                if(this.b.getDistance(profile.e, true) < consts.sticking2) {
+                  this.b = profile.e;
                 }
                 moved_fact = true;
               }
@@ -2119,28 +2119,22 @@ class Profile extends ProfileItem {
           }
         }
         // обрабатываем T
-        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type) != -1) {
-          // импосты в створках и все остальные импосты
-          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
-          if(!mpoint.is_nearest(this.b, 0)) {
-            this.b = mpoint;
-            moved_fact = true;
-          }
+        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'b')) {
+          moved_fact = true;
         }
-
       }
 
-      if(ecnn.cnn && ecnn.profile == p) {
+      if(ecnn.cnn && ecnn.profile == profile) {
         // обрабатываем угол
         if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type) != -1) {
-          if(!this.e.is_nearest(p.b, 0)) {
+          if(!this.e.is_nearest(profile.b, 0)) {
             if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
               if(paper.Key.isDown('control')) {
                 console.log('control');
               }
               else {
-                if(this.e.getDistance(p.b, true) < consts.sticking2) {
-                  this.e = p.b;
+                if(this.e.getDistance(profile.b, true) < consts.sticking2) {
+                  this.e = profile.b;
                 }
                 moved_fact = true;
               }
@@ -2153,13 +2147,8 @@ class Profile extends ProfileItem {
           }
         }
         // обрабатываем T
-        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type) != -1) {
-          // импосты в створках и все остальные импосты
-          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
-          if(!mpoint.is_nearest(this.e, 0)) {
-            this.e = mpoint;
-            moved_fact = true;
-          }
+        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'e')) {
+          moved_fact = true;
         }
       }
     }

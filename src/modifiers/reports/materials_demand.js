@@ -160,7 +160,7 @@
           const dimentions = [], resources = [];
           scheme.columns('ts').forEach(fld => {
             const {key} = fld
-            if ($p.RepMaterials_demand.resources.indexOf(key) != -1) {
+            if (this.resources.indexOf(key) != -1) {
               resources.push(key)
             } else {
               dimentions.push(key)
@@ -238,33 +238,7 @@
       })
     },
 
-    // подмешивает в наименование материала характеристику и размеры
-    material(row) {
-
-      const {nom, characteristic, len, width} = row;
-
-      let res = nom.name;
-
-      if (!characteristic.empty()) {
-        res += ' ' + characteristic.presentation;
-      }
-
-      if (len && width)
-        row.sz = (1000 * len).toFixed(0) + "x" + (1000 * width).toFixed(0);
-      else if (len)
-        row.sz = + (1000 * len).toFixed(0);
-      else if (width)
-        row.sz = + (1000 * width).toFixed(0);
-
-      row.nom_kind = nom.nom_kind;
-      row.grouping = nom.grouping;
-      row.article = nom.article;
-      row.material = res;
-
-      return res;
-    },
-
-    // деструктор
+    // форма настроек отчета
     form_obj(pwnd, attr) {
 
       this._data._modified = false;
@@ -384,6 +358,7 @@
 
       return wnd;
     },
+
 
     draw_production(cell) {
       return cell.attachTabular({
@@ -556,69 +531,6 @@
       }
     },
 
-    /**
-     * Дополняет табчасть продукциями выбранного заказа
-     * @param row
-     * @param _mgr
-     * @return {Promise.<TResult>}
-     */
-    fill_by_order(row, _mgr) {
-
-      let pdoc;
-
-      if(!row || !row._id){
-        if(this.calc_order.empty()){
-          return;
-        }
-        if(this.calc_order.is_new()){
-          pdoc = this.calc_order.load();
-        }
-        else{
-          pdoc = Promise.resolve(this.calc_order);
-        }
-      }
-      else{
-        const ids = row._id.split('|');
-        if (ids.length < 2) {
-          return
-        }
-        pdoc = _mgr.get(ids[1], 'promise');
-      }
-
-      return pdoc
-        .then((doc) => {
-          //this.production.clear()
-          const rows = []
-          const refs = []
-          doc.production.forEach((row) => {
-            if (!row.characteristic.empty()) {
-              rows.push({
-                use: true,
-                characteristic: row.characteristic,
-                qty: row.quantity,
-              })
-              if (row.characteristic.is_new()) {
-                refs.push(row.characteristic.ref)
-              }
-            }
-          })
-
-          return ($p.adapters ? $p.adapters.pouch.load_array($p.cat.characteristics, refs) : $p.cat.characteristics.pouch_load_array(refs))
-            .then(() => rows)
-        })
-        .then((rows) => {
-          this.production.load(rows)
-          return rows
-        })
-    },
-
-  });
-
-  // реализуем статические свойства и методы
-  Object.assign($p.RepMaterials_demand, {
-
-    // список ресурсов по умолчанию
-    resources: ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'],
   });
 
 })($p);

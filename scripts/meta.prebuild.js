@@ -198,7 +198,7 @@ function obj_constructor_text(_m, category, name, categoties) {
     text = '\n/**\n* ### ' + $p.msg.meta[category] + ' ' + meta.name,
     f, props = '';
 
-  const filename = dir && path.resolve(__dirname, `../src/metadata/${dir}/${category}_${name}.mjs`);
+  const filename = dir && path.resolve(__dirname, `../src/metadata/${dir}/${category}_${name}.js`);
   const extModule = dir && fs.existsSync(filename) && require(filename);
 
   const extender = extModule && extModule.extender && extModule.extender.toString();

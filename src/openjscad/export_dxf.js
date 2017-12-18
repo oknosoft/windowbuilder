@@ -5,8 +5,9 @@
 
 export default function ($p) {
   $p.md.on('dxf', (scheme) => {
-    import('@jscad/openjscad')
-      .then((jscad) => import('./exec_dxf')
+    //import('@jscad/openjscad')
+    import('dxf-writer/src/Drawing')
+      .then((jscad) => import('./exec_js_dxf')
         .then(({exec_dxf}) => exec_dxf(scheme, jscad)));
   });
 }

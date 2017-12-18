@@ -1464,8 +1464,11 @@ class Editor extends paper.PaperScope {
     return rect;
   }
 
-  glass_inserts(elm){
-    new GlassInserts(elm || this.project.selected_elm)
+  glass_inserts(glasses){
+    if(!Array.isArray(glasses)){
+      glasses = this.project.selected_glasses();
+    }
+    return new GlassInserts(glasses);
   }
 
   additional_inserts(cnstr, cell){
@@ -1975,9 +1978,9 @@ $p.Editor = Editor;
 
 class GlassInserts {
 
-  constructor(elm) {
+  constructor(glasses) {
 
-    this.elm = elm;
+    const elm = glasses.length && glasses[0];
 
     if(!(elm instanceof Filling)){
       return $p.msg.show_msg({
@@ -1986,6 +1989,9 @@ class GlassInserts {
         title: $p.msg.glass_spec
       });
     }
+
+    this.elm = elm;
+    this.glasses = glasses;
 
     const {project} = elm;
 
@@ -2024,8 +2030,22 @@ class GlassInserts {
 
   onclose() {
     const {grids} = this.wnd.elmnts;
-    const {elm} = this;
+    const {elm, glasses} = this;
     grids.inserts && grids.inserts.editStop();
+
+    for(let i = 1; i < glasses.length; i++) {
+      const selm = glasses[i];
+      const {glass_specification} = elm.project.ox;
+      glass_specification.clear({elm: selm.elm});
+      glass_specification.find_rows({elm: elm.elm}, (row) => {
+        glass_specification.add({
+          elm: selm.elm,
+          inset: row.inset,
+          clr: row.clr
+        })
+      })
+    }
+
     elm.project.register_change(true);
     elm._manager.emit_async('update', elm, {inset: true});
     return true;
@@ -2036,11 +2056,13 @@ class GlassInserts {
       const {project, inset, elm} = this.elm;
       project.ox.glass_specification.clear({elm: elm});
       inset.specification.forEach((row) => {
-        project.ox.glass_specification.add({
-          elm: elm,
-          inset: row.nom,
-          clr: row.clr
-        })
+        if(row.nom instanceof $p.CatInserts){
+          project.ox.glass_specification.add({
+            elm: elm,
+            inset: row.nom,
+            clr: row.clr
+          })
+        }
       });
     }
   }
@@ -5461,24 +5483,45 @@ class Filling extends AbstractFilling(BuilderElement) {
   }
 
   set_inset(v, ignore_select) {
-    if(!ignore_select && this.project.selectedItems.length > 1){
 
-      const {glass_specification} = this.project.ox;
-      const proto = glass_specification.find_rows({elm: this.elm});
+    const inset = $p.cat.inserts.get(v);
 
-      this.project.selected_glasses().forEach((elm) => {
-        if(elm !== this){
-          elm.set_inset(v, true);
-          glass_specification.clear({elm: elm.elm});
+    if(!ignore_select){
+      const {project, elm, clr} = this;
+      const {glass_specification} = project.ox;
+      const proto = glass_specification.find_rows({elm});
+
+      if(!inset.clr_group.empty() && inset.clr_group.clr_conformity.count() && !inset.clr_group.clr_conformity._obj.some((row) => row.clr1 == clr)) {
+        this.clr = inset.clr_group.clr_conformity.get(0).clr1;
+      }
+
+      if(proto.length) {
+        glass_specification.clear({elm});
+        proto.length = 0;
+        inset.specification.forEach((row) => {
+          if(row.nom instanceof $p.CatInserts){
+            proto.push(glass_specification.add({
+              elm,
+              inset: row.nom,
+              clr: row.clr,
+            }))
+          }
+        });
+      }
+
+      project.selected_glasses().forEach((selm) => {
+        if(selm !== this){
+          selm.set_inset(inset, true);
+          glass_specification.clear({elm: selm.elm});
           proto.forEach((row) => glass_specification.add({
-            elm: elm.elm,
+            elm: selm.elm,
             inset: row.inset,
             clr: row.clr,
           }));
         }
       });
     }
-    super.set_inset(v);
+    super.set_inset(inset);
   }
 
   set_clr(v, ignore_select) {
@@ -6080,7 +6123,30 @@ class GeneratrixElement extends BuilderElement {
         }
 
         if(cnn_point && cnn_point.cnn_types == $p.enm.cnn_types.acn.t && (segm.point == this.b || segm.point == this.e)){
-          segm.point = cnn_point.point;
+          if(cnn_point.point.is_nearest(free_point, 0)){
+            segm.point = cnn_point.point;
+          }
+          else{
+            const ppath = (cnn_point.profile.nearest(true) ? cnn_point.profile.rays.outer : cnn_point.profile.generatrix).clone({insert: false});
+            const {bounds} = ppath;
+            if(Math.abs(delta.y) < consts.epsilon){
+              const ray = new paper.Path({
+                insert: false,
+                segments: [[free_point.x, bounds.top], [free_point.x, bounds.bottom]]
+              });
+              segm.point = ppath.intersect_point(ray, free_point, true) || free_point;
+            }
+            else if(Math.abs(delta.x) < consts.epsilon){
+              const ray = new paper.Path({
+                insert: false,
+                segments: [[bounds.left, free_point.y], [bounds.right, free_point.y]]
+              });
+              segm.point = ppath.intersect_point(ray, free_point, true) || free_point;
+            }
+            else {
+              segm.point = free_point;
+            }
+          }
         }
         else{
           segm.point = free_point;
@@ -6118,6 +6184,17 @@ class GeneratrixElement extends BuilderElement {
     }
 
     return other;
+  }
+
+  do_sub_bind(profile, node) {
+    const ppath = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).clone({insert: false});
+    let mpoint = ppath.getNearestPoint(this[node]);
+    if(!mpoint.is_nearest(this[node], 0)) {
+      const gen = this.generatrix.clone({insert: false}).elongation(1000);
+      mpoint = ppath.intersect_point(gen, mpoint, true);
+      this[node] = mpoint;
+      return true;
+    }
   }
 
 }
@@ -8099,28 +8176,28 @@ class Profile extends ProfileItem {
     return res;
   }
 
-  do_bind(p, bcnn, ecnn, moved) {
+  do_bind(profile, bcnn, ecnn, moved) {
 
     let moved_fact;
 
-    if(p instanceof ProfileConnective) {
-      const gen = p.generatrix.clone({insert: false}).elongation(1000);
+    if(profile instanceof ProfileConnective) {
+      const gen = profile.generatrix.clone({insert: false}).elongation(1000);
       this._attr._rays.clear();
       this.b = gen.getNearestPoint(this.b);
       this.e = gen.getNearestPoint(this.e);
       moved_fact = true;
     }
     else {
-      if(bcnn.cnn && bcnn.profile == p) {
+      if(bcnn.cnn && bcnn.profile == profile) {
         if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type) != -1) {
-          if(!this.b.is_nearest(p.e, 0)) {
+          if(!this.b.is_nearest(profile.e, 0)) {
             if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
               if(paper.Key.isDown('control')) {
                 console.log('control');
               }
               else {
-                if(this.b.getDistance(p.e, true) < consts.sticking2) {
-                  this.b = p.e;
+                if(this.b.getDistance(profile.e, true) < consts.sticking2) {
+                  this.b = profile.e;
                 }
                 moved_fact = true;
               }
@@ -8131,26 +8208,21 @@ class Profile extends ProfileItem {
             }
           }
         }
-        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type) != -1) {
-          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.b);
-          if(!mpoint.is_nearest(this.b, 0)) {
-            this.b = mpoint;
-            moved_fact = true;
-          }
+        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'b')) {
+          moved_fact = true;
         }
-
       }
 
-      if(ecnn.cnn && ecnn.profile == p) {
+      if(ecnn.cnn && ecnn.profile == profile) {
         if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type) != -1) {
-          if(!this.e.is_nearest(p.b, 0)) {
+          if(!this.e.is_nearest(profile.b, 0)) {
             if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
               if(paper.Key.isDown('control')) {
                 console.log('control');
               }
               else {
-                if(this.e.getDistance(p.b, true) < consts.sticking2) {
-                  this.e = p.b;
+                if(this.e.getDistance(profile.b, true) < consts.sticking2) {
+                  this.e = profile.b;
                 }
                 moved_fact = true;
               }
@@ -8161,12 +8233,8 @@ class Profile extends ProfileItem {
             }
           }
         }
-        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type) != -1) {
-          const mpoint = (p.nearest(true) ? p.rays.outer : p.generatrix).getNearestPoint(this.e);
-          if(!mpoint.is_nearest(this.e, 0)) {
-            this.e = mpoint;
-            moved_fact = true;
-          }
+        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'e')) {
+          moved_fact = true;
         }
       }
     }
@@ -8275,7 +8343,7 @@ class ProfileAddl extends ProfileItem {
         }
 
         if(with_addl){
-          elm.getItems({class: ProfileAddl}).forEach((addl) => {
+          elm.getItems({class: ProfileAddl, parent: elm}).forEach((addl) => {
             check_distance(addl, with_addl);
           });
         }
@@ -9095,7 +9163,7 @@ class Scheme extends paper.Project {
           ((_scheme.ox.base_block.empty() || !_scheme.ox.base_block.is_new()) ? Promise.resolve() : _scheme.ox.base_block.load())
             .then(() => {
               if(_scheme.ox.coordinates.count()) {
-                if(_scheme.ox.specification.count()) {
+                if(_scheme.ox.specification.count() || from_service) {
                   if(from_service){
                     Promise.resolve().then(() => {
                       _scheme.draw_visualization();
@@ -9112,7 +9180,12 @@ class Scheme extends paper.Project {
                 }
               }
               else {
-                paper.load_stamp && paper.load_stamp();
+                if(from_service){
+                  resolve();
+                }
+                else{
+                  paper.load_stamp && paper.load_stamp();
+                }
               }
               delete _attr._snapshot;
 
@@ -9978,6 +10051,177 @@ class Scheme extends paper.Project {
 }
 
 
+class EditableText extends paper.PointText {
+
+  constructor(props) {
+    props.justification = 'center';
+    super(props);
+    this._edit = null;
+    this._owner = props._owner;
+
+    this.on({
+      mouseenter: this.mouseenter,
+      mouseleave: this.mouseleave,
+      click: this.click,
+    })
+  }
+
+  mouseenter(event) {
+    paper.canvas_cursor('cursor-arrow-ruler-light');
+  }
+
+  mouseleave(event) {
+    paper.canvas_cursor('cursor-arrow-white');
+  }
+
+  click(event) {
+    if(!this._edit) {
+      const {view, bounds} = this;
+      const point = view.projectToView(bounds.topLeft);
+      const edit = this._edit = document.createElement('INPUT');
+      view.element.parentNode.appendChild(edit);
+      edit.style = `left: ${(point.x - 4).toFixed()}px; top: ${(point.y).toFixed()}px; width: 60px; border: none; position: absolute;`;
+      edit.onblur = () => setTimeout(() => this.edit_remove());
+      edit.onkeydown = this.edit_keydown.bind(this);
+      edit.value = this.content.replace(/\D$/, '');
+      setTimeout(() => {
+        edit.focus();
+        edit.select();
+      });
+    }
+  }
+
+  edit_keydown(event) {
+    switch (event.code) {
+    case 'Escape':
+    case 'Tab':
+      return this.edit_remove();
+    case 'Enter':
+    case 'NumpadEnter':
+      this.apply(parseFloat(this._edit.value));
+      return this.edit_remove();
+    case 'Digit0':
+    case 'Digit1':
+    case 'Digit2':
+    case 'Digit3':
+    case 'Digit4':
+    case 'Digit5':
+    case 'Digit6':
+    case 'Digit7':
+    case 'Digit8':
+    case 'Digit9':
+    case 'Numpad0':
+    case 'Numpad1':
+    case 'Numpad2':
+    case 'Numpad3':
+    case 'Numpad4':
+    case 'Numpad5':
+    case 'Numpad6':
+    case 'Numpad7':
+    case 'Numpad8':
+    case 'Numpad9':
+    case '.':
+    case 'Period':
+    case 'NumpadDecimal':
+    case 'ArrowRight':
+    case 'ArrowLeft':
+    case 'Delete':
+    case 'Backspace':
+      break;
+    case 'Comma':
+    case ',':
+      event.code = '.';
+      break;
+    default:
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+  }
+
+  edit_remove() {
+    if(this._edit){
+      this._edit.parentNode && this._edit.parentNode.removeChild(this._edit);
+      this._edit = null;
+    }
+  }
+
+  remove() {
+    this.edit_remove();
+    super.remove();
+  }
+}
+
+class AngleText extends EditableText {
+
+  constructor(props) {
+    props.fillColor = 'blue';
+    super(props);
+    this._ind = props._ind;
+  }
+
+  apply(value) {
+
+    const {project, generatrix, _attr} = this._owner;
+    const {zoom} = _attr;
+    const {curves, segments} = generatrix;
+    const c1 = curves[this._ind - 1];
+    const c2 = curves[this._ind];
+    const loc1 = c1.getLocationAtTime(0.9);
+    const loc2 = c2.getLocationAtTime(0.1);
+    const center = c1.point2;
+    let angle = loc2.tangent.angle - loc1.tangent.negate().angle;
+    if(angle < 0){
+      angle += 360;
+    }
+    const invert = angle > 180;
+    if(invert){
+      angle = 360 - angle;
+    }
+    const ray0 = new paper.Point([c2.point2.x - c2.point1.x, c2.point2.y - c2.point1.y]);
+    const ray1 = ray0.clone();
+    ray1.angle += invert ? angle - value : value - angle;
+    const delta = ray1.subtract(ray0);
+
+    let start;
+    for(const segment of segments) {
+      if(segment.point.equals(c2.point2)) {
+        start = true;
+      }
+      if(start) {
+        segment.point = segment.point.add(delta);
+      }
+    }
+    project.register_change(true);
+
+  }
+}
+
+class LenText extends EditableText {
+
+  constructor(props) {
+    props.fillColor = 'black';
+    super(props);
+  }
+
+  apply(value) {
+    const {path, segment1, segment2, length} = this._owner;
+    const {parent: {_attr, project}, segments} = path;
+    const {zoom} = _attr;
+    const delta = segment1.curve.getTangentAtTime(1).multiply(value * zoom - length);
+    let start;
+    for(const segment of segments) {
+      if(segment === segment2) {
+        start = true;
+      }
+      if(start) {
+        segment.point = segment.point.add(delta);
+      }
+    }
+    project.register_change(true);
+  }
+}
+
 class Sectional extends GeneratrixElement {
 
   initialize(attr) {
@@ -10037,20 +10281,18 @@ class Sectional extends GeneratrixElement {
     }
 
     for(let i = 1; i < segments.length - 1; i++){
-      this.draw_angle(i, radius);
+      this.draw_angle(i);
     }
 
     for(let curve of curves){
       const loc = curve.getLocationAtTime(0.5);
       const normal = loc.normal.normalize(radius);
-      children.push(new paper.PointText({
+      children.push(new LenText({
         point: loc.point.add(normal).add([0, normal.y < 0 ? 0 : normal.y / 2]),
         content: (curve.length / zoom).toFixed(0),
-        fillColor: 'black',
         fontSize: radius,
-        justification: 'center',
-        guide: true,
         parent: layer,
+        _owner: curve
       }));
     }
 
@@ -10091,14 +10333,13 @@ class Sectional extends GeneratrixElement {
       parent: layer,
     }));
 
-    children.push(new paper.PointText({
-      point: center.add(end.multiply(angle < 40 ? 3 : 2).add([0, -end.y / 2])),
+    children.push(new AngleText({
+      point: center.add(end.multiply(-2.2)), 
       content: angle.toFixed(0) + '°',
-      fillColor: 'black',
       fontSize: radius,
-      justification: 'center',
-      guide: true,
       parent: layer,
+      _owner: this,
+      _ind: ind,
     }));
 
   }
@@ -13587,26 +13828,26 @@ class ToolSelectNode extends ToolElement {
     }
   }
 
-  hitTest(event) {
+  hitTest({point}) {
 
     const hitSize = 6;
     const {project} = this._scope;
     this.hitItem = null;
 
-    if (event.point) {
+    if (point) {
 
-      this.hitItem = project.hitTest(event.point, {selected: true, fill: true, tolerance: hitSize});
+      this.hitItem = project.hitTest(point, {selected: true, fill: true, tolerance: hitSize});
 
       if (!this.hitItem){
-        this.hitItem = project.hitTest(event.point, {fill: true, visible: true, tolerance: hitSize});
+        this.hitItem = project.hitTest(point, {fill: true, visible: true, tolerance: hitSize});
       }
 
-      let hit = project.hitTest(event.point, {selected: true, handles: true, tolerance: hitSize});
+      let hit = project.hitTest(point, {selected: true, handles: true, tolerance: hitSize});
       if (hit){
         this.hitItem = hit;
       }
 
-      hit = project.hitPoints(event.point, 16, true);
+      hit = project.hitPoints(point, 16, true);
 
       if (hit) {
         if (hit.item.parent instanceof ProfileItem) {
@@ -13627,7 +13868,7 @@ class ToolSelectNode extends ToolElement {
         if (hitItem.item.parent instanceof DimensionLine) {
         }
         else if (hitItem.item instanceof paper.PointText) {
-          paper.canvas_cursor('cursor-text');     
+          !(hitItem.item instanceof EditableText) && paper.canvas_cursor('cursor-text');     
         }
         else if (hitItem.item.selected) {
           paper.canvas_cursor('cursor-arrow-small');
@@ -13646,7 +13887,7 @@ class ToolSelectNode extends ToolElement {
       }
     }
     else {
-      const hit = project.hitTest(event.point, {stroke: true, visible: true, tolerance: 16});
+      const hit = project.hitTest(point, {stroke: true, visible: true, tolerance: 16});
       if (hit && hit.item.parent instanceof Sectional){
         this.hitItem = hit;
         paper.canvas_cursor('cursor-arrow-white-shape');

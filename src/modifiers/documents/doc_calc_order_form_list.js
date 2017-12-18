@@ -16,11 +16,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 			date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
 			on_new: (o) => {
         handlers.handleNavigate(`/${this.class_name}/${o.ref}`);
-			  //$p.iface.set_hash(this.class_name, o.ref, "doc");
 			},
 			on_edit: (_mgr, rId) => {
         handlers.handleNavigate(`/${_mgr.class_name}/${rId}`);
-				//$p.iface.set_hash(_mgr.class_name, rId, "doc");
 			}
 		};
 	}
@@ -61,6 +59,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                 elmnts.filter.call_event();
               }
             }
+
+            wnd.handleNavigate = handlers.handleNavigate;
+            wnd.handleIfaceState = handlers.handleIfaceState;
           }
 
           // добавляем отбор по подразделению

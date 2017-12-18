@@ -10,7 +10,10 @@
 
 function fake(obj) {
 
-	var templates = this._template.content.children,
+
+
+
+  var templates = this._template.content.children,
 		doc = new $p.SpreadsheetDocument(),
 		print_data;
 

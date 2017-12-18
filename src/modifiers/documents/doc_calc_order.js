@@ -64,6 +64,8 @@ $p.doc.calc_order.load_templates = async function () {
   //$p.job_prm.builder.base_block.forEach((o) => o.load());
 };
 
+
+
 // свойства и методы объекта
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
@@ -624,7 +626,14 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         })
           .then(response => response.json())
           // заполняем табчасть
-          .then(json => console.log(json))
+          .then(json => {
+            if (json.rows) {
+              this.planning.load(json.rows)
+            }
+            else{
+              console.log(json)
+            }
+          })
           .catch(err => {
             $p.msg.show_msg({
               type: "alert-warning",
@@ -776,7 +785,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           ox.x = row_spec.len;
           ox.y = row_spec.height;
           ox.z = row_spec.depth;
-          ox.s = row_spec.s;
+          ox.s = row_spec.s || row_spec.len * row_spec.height / 1000000;
           ox.clr = row_spec.clr;
           ox.note = row_spec.note;
 
@@ -839,51 +848,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         }
         else {
           // рассчитываем спецификацию по текущей вставке
-          const len_angl = {
-            angle: 0,
-            alp1: 0,
-            alp2: 0,
-            len: row_spec.len,
-            origin: row_spec.inset,
-            cnstr: 0
-          };
-          const elm = {
-            elm: 0,
-            angle_hor: 0,
-            get _row() {
-              return this;
-            },
-            get clr() {
-              return row_spec.clr;
-            },
-            get len() {
-              return row_spec.len;
-            },
-            get height() {
-              return row_spec.height;
-            },
-            get depth() {
-              return row_spec.depth;
-            },
-            get s() {
-              return row_spec.s;
-            },
-            get perimeter() {
-              return [{len: row_spec.len, angle: 0}, {len: row_spec.height, angle: 90}];
-            },
-            get x1() {
-              return 0;
-            },
-            get y1() {
-              return 0;
-            },
-            get x2() {
-              return row_spec.height;
-            },
-            get y2() {
-              return row_spec.len;
-            },
-          };
+          const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
+          const elm = new $p.DocCalc_order.FakeElm(row_spec);
           // создаём или получаем строку заказа с уникальной харктеристикой
           row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
           row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
@@ -928,19 +894,107 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
 };
 
+$p.DocCalc_order.FakeElm = class FakeElm {
+
+  constructor(row_spec) {
+    this.row_spec = row_spec;
+  }
+
+  get elm() {
+    return 0;
+  }
+
+  get angle_hor() {
+    return 0;
+  }
+
+  get _row() {
+    return this;
+  }
+
+  get clr() {
+    return this.row_spec.clr;
+  }
+
+  get len() {
+    return this.row_spec.len;
+  }
+
+  get height() {
+    const {height, width} = this.row_spec;
+    return height === undefined ? width : height;
+  }
+
+  get depth() {
+    return this.row_spec.depth || 0;
+  }
+
+  get s() {
+    return this.row_spec.s;
+  }
+
+  get perimeter() {
+    const {len, height, width} = this.row_spec;
+    return [{len, angle: 0}, {len: height === undefined ? width : height, angle: 90}];
+  }
+
+  get x1() {
+    return 0;
+  }
+
+  get y1() {
+    return 0;
+  }
+
+  get x2() {
+    return this.height;
+  }
+
+  get y2() {
+    return this.len;
+  }
+
+}
+
+$p.DocCalc_order.FakeLenAngl = class FakeLenAngl {
+
+  constructor({len, inset}) {
+    this.len = len;
+    this.origin = inset;
+  }
+
+  get angle() {
+    return 0;
+  }
+
+  get alp1() {
+    return 0;
+  }
+
+  get alp2() {
+    return 0;
+  }
+
+  get cnstr() {
+    return 0;
+  }
+
+}
+
 // свойства и методы табчасти продукции
 $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocCalc_orderProductionRow {
 
   // при изменении реквизита
-  value_change(field, type, value, no_extra_charge) {
+  value_change(field, type, value, no_extra_charge, rows) {
 
     let {_obj, _owner, nom, characteristic, unit} = this;
     let recalc;
     const {rounding} = _owner._owner;
+    const rfield = $p.DocCalc_orderProductionRow.rfields[field];
 
-    if(field == 'nom' || field == 'characteristic' || field == 'quantity') {
+    if(rfield) {
 
-      _obj[field] = field == 'quantity' ? parseFloat(value) : '' + value;
+      _obj[field] = rfield === 'n' ? parseFloat(value) : '' + value;
 
       nom = this.nom;
       characteristic = this.characteristic;
@@ -961,6 +1015,18 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         _obj.unit = nom.storage_unit.ref;
       }
 
+      // если это следящая вставка, рассчитаем спецификацию
+      if(!characteristic.origin.empty() && characteristic.origin.slave && (!rows || !rows.has(this))) {
+        characteristic.specification.clear();
+        characteristic.x = this.len;
+        characteristic.y = this.width;
+        characteristic.s = this.s || this.len * this.width / 1000000;
+        const len_angl = new $p.DocCalc_order.FakeLenAngl({len: this.len, inset: characteristic.origin});
+        const elm = new $p.DocCalc_order.FakeElm(this);
+        characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
+        recalc = true;
+      }
+
       // рассчитаем цены
       const fake_prm = {
         calc_order_row: this,
@@ -976,7 +1042,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       }
     }
 
-    if('price_internal,quantity,discount_percent_internal'.indexOf(field) != -1 || recalc) {
+    if($p.DocCalc_orderProductionRow.pfields.indexOf(field) != -1 || recalc) {
 
       if(!recalc) {
         _obj[field] = parseFloat(value);
@@ -1048,6 +1114,17 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       Object.assign(doc, amount);
       doc._manager.emit_async('update', doc, amount);
 
+      // пересчитываем спецификации и цены в следящих вставках
+      if(!rows){
+        rows = new Set([this]);
+        _owner.forEach((row) => {
+          if(!rows.has(row) && !row.characteristic.origin.empty() && row.characteristic.origin.slave) {
+            row.value_change('quantity', 'update', row.quantity, no_extra_charge, rows);
+            rows.add(row);
+          }
+        })
+      }
+
       // TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation
 
       return false;
@@ -1055,4 +1132,15 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
   }
 
 };
+
+$p.DocCalc_orderProductionRow.rfields = {
+  nom: 's',
+  characteristic: 's',
+  quantity: 'n',
+  len: 'n',
+  width: 'n',
+  s: 'n',
+};
+
+$p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percent_internal';
 
