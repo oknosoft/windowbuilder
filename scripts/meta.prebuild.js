@@ -201,13 +201,14 @@ function obj_constructor_text(_m, category, name, categoties) {
   const filename = dir && path.resolve(__dirname, `../src/metadata/${dir}/${category}_${name}.js`);
   const extModule = dir && fs.existsSync(filename) && require(filename);
 
-  const extender = extModule && extModule.extender && extModule.extender.toString();
+  const extender = extModule && extModule[fn_name] && extModule[fn_name].toString();
   const extText = extender && extender.substring(extender.indexOf('{') + 1, extender.lastIndexOf('}') - 1);
 
   const substitute = extModule && extModule.substitute && extModule.substitute.toString();
   const substituteText = substitute && substitute.substring(substitute.indexOf('{') + 3, substitute.lastIndexOf('}'));
 
-  const managerText = extModule && extModule.manager && extModule.manager.toString();
+  const managerName = `${fn_name}Manager`;
+  const managerText = extModule && extModule[managerName] && extModule[managerName].toString();
 
 
   text += '\n* ' + (meta.illustration || meta.synonym);
@@ -267,8 +268,8 @@ function obj_constructor_text(_m, category, name, categoties) {
   }
 
   if(managerText){
-    text += managerText;
-    text += `\n$p.${category}.create('${name}', ${extModule.manager.name}, true);\n`;
+    text += managerText.replace('extends Object', 'extends CatManager');
+    text += `\n$p.${category}.create('${name}', ${managerName}, ${extModule[managerName]._freeze ? 'true' : 'false'});\n`;
   }
   else{
     text += `$p.${category}.create('${name}');\n`;

@@ -202,8 +202,15 @@
 
 			  setTimeout(() => {
           const l = [];
+          const {base_block, branch_filter: {sys}} = $p.job_prm.builder;
 
-          $p.job_prm.builder.base_block.forEach(({note, presentation, ref}) => {
+          base_block.forEach(({note, presentation, ref, production}) => {
+            if(sys && sys.length && production.count()) {
+              const {characteristic} = production.get(0);
+              if(!sys.some((filter) => characteristic.sys._hierarchy(filter))){
+                return;
+              }
+            }
             if(selection.presentation && selection.presentation.like){
               if(note.toLowerCase().match(selection.presentation.like.toLowerCase()) ||
                 presentation.toLowerCase().match(selection.presentation.like.toLowerCase())){
@@ -228,7 +235,7 @@
 
           resolve(l);
 
-        }, $p.job_prm.builder.base_block ? 0 : 1000)
+        }, $p.job_prm.builder.base_block ? 0 : 1000);
 			})
 		});
 		wnd.elmnts.filter.custom_selection.calc_order.getBase().style.border = "none";

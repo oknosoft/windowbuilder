@@ -485,8 +485,15 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 
 			  setTimeout(() => {
           const l = [];
+          const {base_block, branch_filter: {sys}} = $p.job_prm.builder;
 
-          $p.job_prm.builder.base_block.forEach(({note, presentation, ref}) => {
+          base_block.forEach(({note, presentation, ref, production}) => {
+            if(sys && sys.length && production.count()) {
+              const {characteristic} = production.get(0);
+              if(!sys.some((filter) => characteristic.sys._hierarchy(filter))){
+                return;
+              }
+            }
             if(selection.presentation && selection.presentation.like){
               if(note.toLowerCase().match(selection.presentation.like.toLowerCase()) ||
                 presentation.toLowerCase().match(selection.presentation.like.toLowerCase())){
@@ -511,7 +518,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 
           resolve(l);
 
-        }, $p.job_prm.builder.base_block ? 0 : 1000)
+        }, $p.job_prm.builder.base_block ? 0 : 1000);
 			})
 		});
 		wnd.elmnts.filter.custom_selection.calc_order.getBase().style.border = "none";
@@ -2805,7 +2812,7 @@ class Pricing {
   calc_amount (prm) {
 
     const {calc_order_row, price_type} = prm;
-    const price_cost = $p.job_prm.pricing.marginality_in_spec ?
+    const price_cost = $p.job_prm.pricing.marginality_in_spec && prm.spec.count() ?
       prm.spec.aggregate([], ["amount_marged"]) :
       this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
 
@@ -3930,25 +3937,36 @@ $p.doc.calc_order.load_templates = async function () {
     $p.job_prm.pricing = {};
   }
 
+  const {base_block} = $p.job_prm.builder;
   $p.cat.production_params.forEach((o) => {
     if(!o.is_folder) {
       o.base_blocks.forEach((row) => {
-        if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1) {
-          $p.job_prm.builder.base_block.push(row.calc_order);
+        if(base_block.indexOf(row.calc_order) == -1) {
+          base_block.push(row.calc_order);
         }
       });
     }
   });
 
   const refs = [];
-  for (let o of $p.job_prm.builder.base_block) {
+  for (let o of base_block) {
     refs.push(o.ref);
     if(refs.length > 9) {
       await $p.doc.calc_order.pouch_load_array(refs);
       refs.length = 0;
     }
   }
-  return refs.length ? $p.doc.calc_order.pouch_load_array(refs) : undefined;
+  if(refs.length) {
+    await $p.doc.calc_order.pouch_load_array(refs);
+  }
+
+  refs.length = 0;
+  base_block.forEach(({production}) => {
+    if(production.count()) {
+      refs.push(production.get(0).characteristic.ref);
+    }
+  });
+  return $p.cat.characteristics.pouch_load_array(refs);
 
 };
 

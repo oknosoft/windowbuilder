@@ -40,11 +40,12 @@ $p.doc.calc_order.load_templates = async function () {
   }
 
   // дополним base_block шаблонами из систем профилей
+  const {base_block} = $p.job_prm.builder;
   $p.cat.production_params.forEach((o) => {
     if(!o.is_folder) {
       o.base_blocks.forEach((row) => {
-        if($p.job_prm.builder.base_block.indexOf(row.calc_order) == -1) {
-          $p.job_prm.builder.base_block.push(row.calc_order);
+        if(base_block.indexOf(row.calc_order) == -1) {
+          base_block.push(row.calc_order);
         }
       });
     }
@@ -52,16 +53,26 @@ $p.doc.calc_order.load_templates = async function () {
 
   // загрузим шаблоны пачками по 10 документов
   const refs = [];
-  for (let o of $p.job_prm.builder.base_block) {
+  for (let o of base_block) {
     refs.push(o.ref);
     if(refs.length > 9) {
       await $p.doc.calc_order.pouch_load_array(refs);
       refs.length = 0;
     }
   }
-  return refs.length ? $p.doc.calc_order.pouch_load_array(refs) : undefined;
+  if(refs.length) {
+    await $p.doc.calc_order.pouch_load_array(refs);
+  }
 
-  //$p.job_prm.builder.base_block.forEach((o) => o.load());
+  // загружаем характеристики из первых строк шаблонов - нужны для фильтра по системам
+  refs.length = 0;
+  base_block.forEach(({production}) => {
+    if(production.count()) {
+      refs.push(production.get(0).characteristic.ref);
+    }
+  });
+  return $p.cat.characteristics.pouch_load_array(refs);
+
 };
 
 
