@@ -36,7 +36,11 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
 
             // применяем
             if(branch_filter.furn.length) {
-
+              const mf = $p.cat.characteristics.metadata('constructions').fields.furn;
+              mf.choice_params.push({
+                name: "ref",
+                path: {inh: branch_filter.furn}
+              });
             }
             if(branch_filter.sys.length) {
               const mf = $p.dp.buyers_order.metadata().fields.sys;
