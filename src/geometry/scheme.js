@@ -1219,6 +1219,7 @@ class Scheme extends paper.Project {
    */
   check_distance(element, profile, res, point, check_only) {
     const {allow_open_cnn} = this._dp.sys;
+    const {acn} = $p.enm.cnn_types;
 
     let distance, gp, cnns, addls,
       bind_node = typeof check_only == 'string' && check_only.indexOf('node') != -1,
@@ -1231,17 +1232,18 @@ class Scheme extends paper.Project {
       if((distance = element[node].getDistance(point)) < (allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)) {
 
         if(typeof res.distance == 'number' && res.distance < distance) {
+          res.profile = element;
+          res.profile_point = node;
           return 1;
         }
 
-        //if(profile && (!res.cnn || $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1)){
         if(profile && !res.cnn) {
 
           // а есть ли подходящее?
-          cnns = $p.cat.cnns.nom_cnn(element, profile, $p.enm.cnn_types.acn.a);
+          cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
           if(!cnns.length) {
             if(!element.is_collinear(profile)) {
-              cnns = $p.cat.cnns.nom_cnn(profile, element, $p.enm.cnn_types.acn.t);
+              cnns = $p.cat.cnns.nom_cnn(profile, element, acn.t);
             }
             if(!cnns.length) {
               return 1;
@@ -1253,29 +1255,32 @@ class Scheme extends paper.Project {
           // если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
         }
-        else if(res.cnn && $p.enm.cnn_types.acn.a.indexOf(res.cnn.cnn_type) == -1) {
+        else if(res.cnn && acn.a.indexOf(res.cnn.cnn_type) == -1) {
           return 1;
         }
 
         res.point = bind_node ? element[node] : point;
         res.distance = distance;
         res.profile = element;
-        if(cnns && cnns.length && $p.enm.cnn_types.acn.t.indexOf(cnns[0].cnn_type) != -1) {
+        if(cnns && cnns.length && acn.t.indexOf(cnns[0].cnn_type) != -1) {
           res.profile_point = '';
-          res.cnn_types = $p.enm.cnn_types.acn.t;
+          res.cnn_types = acn.t;
           if(!res.cnn) {
             res.cnn = cnns[0];
           }
         }
         else {
           res.profile_point = node;
-          res.cnn_types = $p.enm.cnn_types.acn.a;
+          res.cnn_types = acn.a;
         }
 
         return 2;
       }
 
     }
+
+    const b = res.profile_point === 'b' ? 'b' : 'e';
+    const e = b === 'b' ? 'e' : 'b';
 
     if(element === profile) {
       if(profile.is_linear()) {
@@ -1286,10 +1291,13 @@ class Scheme extends paper.Project {
 
       }
       return;
-
     }
     // если мы находимся в окрестности начала соседнего элемента
-    else if((node_distance = check_node_distance('b')) || (node_distance = check_node_distance('e'))) {
+    else if((node_distance = check_node_distance(b)) || (node_distance = check_node_distance(e))) {
+      if(res.cnn_types !== acn.a && res.profile_point){
+        res.cnn_types = acn.a;
+        res.distance = distance;
+      }
       return node_distance == 2 ? false : void(0);
     }
 
@@ -1306,7 +1314,7 @@ class Scheme extends paper.Project {
     // 		res.distance = distance;
     // 		res.point = gp;
     // 		res.profile = addl;
-    // 		res.cnn_types = $p.enm.cnn_types.acn.t;
+    // 		res.cnn_types = acn.t;
     // 	}
     // });
     // if(res.distance < ((res.is_t || !res.is_l)  ? consts.sticking : consts.sticking_l)){
@@ -1330,7 +1338,7 @@ class Scheme extends paper.Project {
           res.distance = distance;
         }
         res.profile = element;
-        res.cnn_types = $p.enm.cnn_types.acn.t;
+        res.cnn_types = acn.t;
       }
       if(bind_generatrix) {
         return false;

@@ -1240,7 +1240,7 @@ class ProfileItem extends GeneratrixElement {
     const _profile = this;
     const {_corns} = _attr;
 
-    let prays, normal;
+    let normal;
 
     // ищет точку пересечения открытых путей
     // если указан индекс, заполняет точку в массиве _corns. иначе - возвращает расстояние от узла до пересечения
@@ -1274,15 +1274,10 @@ class ProfileItem extends GeneratrixElement {
     }
 
     // если пересечение в узлах, используем лучи профиля
-    if(cnn_point.profile instanceof ProfileItem) {
-      prays = cnn_point.profile.rays;
-    }
-    else if(cnn_point.profile instanceof Filling) {
-      prays = {
-        inner: cnn_point.profile.path,
-        outer: cnn_point.profile.path
-      };
-    }
+    const prays = cnn_point.profile instanceof ProfileItem ?
+      cnn_point.profile.rays :
+      (cnn_point.profile instanceof Filling ? {inner: cnn_point.profile.path, outer: cnn_point.profile.path} : undefined);
+
 
     const {cnn_type} = cnn_point.cnn || {};
     // импосты рисуем с учетом стороны примыкания
@@ -1315,38 +1310,57 @@ class ProfileItem extends GeneratrixElement {
         }
       }
     }
-    // для соединения крест в стык, отступаем ширину профиля
+    // крест в стык
     else if(cnn_type == $p.enm.cnn_types.xx) {
-      const width = this.width * 0.7;
-      const l = profile_point == 'b' ? width : generatrix.length - width;
-      const p = generatrix.getPointAt(l);
-      const n = generatrix.getNormalAt(l).normalize(width);
-      const np = new paper.Path({
-        insert: false,
-        segments: [p.subtract(n), p.add(n)],
-      });
-      if(profile_point == 'b') {
-        intersect_point(np, rays.outer, 1);
-        intersect_point(np, rays.inner, 4);
+
+      // для раскладок, отступаем ширину профиля
+      if(cnn_point.profile instanceof Onlay) {
+        const width = this.width * 0.7;
+        const l = profile_point == 'b' ? width : generatrix.length - width;
+        const p = generatrix.getPointAt(l);
+        const n = generatrix.getNormalAt(l).normalize(width);
+        const np = new paper.Path({
+          insert: false,
+          segments: [p.subtract(n), p.add(n)],
+        });
+        if(profile_point == 'b') {
+          intersect_point(np, rays.outer, 1);
+          intersect_point(np, rays.inner, 4);
+        }
+        else if(profile_point == 'e') {
+          intersect_point(np, rays.outer, 2);
+          intersect_point(np, rays.inner, 3);
+        }
       }
-      else if(profile_point == 'e') {
-        intersect_point(np, rays.outer, 2);
-        intersect_point(np, rays.inner, 3);
+      else {
+        // получаем второй примыкающий профиль
+        const cnn_point2 = cnn_point.profile.cnn_point(cnn_point.profile_point);
+        const profile2 = cnn_point2 && cnn_point2.profile;
+        if(profile2) {
+          const prays2 = profile2 && profile2.rays;
+          const pt1 = intersect_point(prays.inner, rays.outer);
+          const pt2 = intersect_point(prays.inner, rays.inner);
+          const pt3 = intersect_point(prays2.inner, rays.outer);
+          const pt4 = intersect_point(prays2.inner, rays.inner);
+
+          if(profile_point == 'b') {
+            intersect_point(prays2.inner, prays.inner, 5);
+            pt1 > pt3 ? intersect_point(prays.inner, rays.outer, 1) : intersect_point(prays2.inner, rays.outer, 1);
+            pt2 > pt4 ? intersect_point(prays.inner, rays.inner, 4) : intersect_point(prays2.inner, rays.inner, 4);
+          }
+          else if(profile_point == 'e') {
+            pt1 > pt3 ? intersect_point(prays.inner, rays.outer, 2) : intersect_point(prays2.inner, rays.outer, 2);
+            pt2 > pt4 ? intersect_point(prays.inner, rays.inner, 3) : intersect_point(prays2.inner, rays.inner, 3);
+            intersect_point(prays2.inner, prays.inner, 6);
+          }
+
+        }
       }
+
     }
     // соединение с пустотой
     else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == $p.enm.cnn_types.i) {
-      if(profile_point == 'b') {
-        normal = this.generatrix.firstCurve.getNormalAt(0, true);
-        _corns[1] = this.b.add(normal.normalize(this.d1));
-        _corns[4] = this.b.add(normal.normalize(this.d2));
-
-      }
-      else if(profile_point == 'e') {
-        normal = this.generatrix.lastCurve.getNormalAt(1, true);
-        _corns[2] = this.e.add(normal.normalize(this.d1));
-        _corns[3] = this.e.add(normal.normalize(this.d2));
-      }
+      // точки рассчитаются автоматически, как для ненайденных
     }
     // угловое диагональное
     else if(cnn_type == $p.enm.cnn_types.ad) {
@@ -1563,10 +1577,13 @@ class ProfileItem extends GeneratrixElement {
     path.removeSegments();
 
     // TODO отказаться от повторного пересчета и задействовать клоны rays-ов
+    this.corns(5) && path.add(this.corns(5));
     path.add(this.corns(1));
 
     if(generatrix.is_linear()) {
-      path.add(this.corns(2), this.corns(3));
+      path.add(this.corns(2));
+      this.corns(6) && path.add(this.corns(6));
+      path.add(this.corns(3));
     }
     else {
 
@@ -1581,7 +1598,7 @@ class ProfileItem extends GeneratrixElement {
       tpath.simplify(0.8);
       path.join(tpath);
       path.add(this.corns(2));
-
+      this.corns(6) && path.add(this.corns(6));
       path.add(this.corns(3));
 
       tpath = new paper.Path({insert: false});
@@ -2032,33 +2049,22 @@ class Profile extends ProfileItem {
     // TODO вместо полного перебора профилей контура, реализовать анализ текущего соединения и успокоиться, если соединение корректно
     res.clear();
     if(this.parent) {
-      const {profiles} = this.parent;
       const {allow_open_cnn} = this.project._dp.sys;
       const ares = [];
 
-      for (let i = 0; i < profiles.length; i++) {
-        if(this.check_distance(profiles[i], res, point, false) === false || (res.distance < ((res.is_t || !res.is_l) ? consts.sticking : consts.sticking_l))) {
-
-          // для простых систем разрывы профиля не анализируем
-          // if(!allow_open_cnn){
-          //   if(res.profile == profile && res.profile_point == profile_point){
-          //     if(cnn && !cnn.empty() && res.cnn != cnn){
-          //       res.cnn = cnn;
-          //     }
-          //   }
-          //   return res;
-          // }
-
+      for(const profile of this.parent.profiles) {
+        if(this.check_distance(profile, res, point, false) === false || (res.distance < ((res.is_t || !res.is_l) ? consts.sticking : consts.sticking_l))) {
           ares.push({
             profile_point: res.profile_point,
-            profile: res.profile,
+            profile: profile,
             cnn_types: res.cnn_types,
             point: res.point
           });
+          res.clear();
         }
       }
 
-      if(ares.length == 1) {
+      if(ares.length === 1) {
         res._mixin(ares[0]);
       }
       // если в точке сходятся 3 и более профиля, ищем тот, который смотрит на нас под максимально прямым углом

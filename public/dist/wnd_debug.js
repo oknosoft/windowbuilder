@@ -5986,75 +5986,62 @@ $p.DocSelling.prototype.before_save = function () {
 
 (function(_mgr){
 
-
-	_mgr.acn = {
-
-	  cache: {},
-
-    get ii() {
-      return this.cache.ii || ( this.cache.ii = [_mgr.Наложение] );
-    },
-
-    get i() {
-      return this.cache.i || ( this.cache.i = [_mgr.НезамкнутыйКонтур] );
-    },
-
-    get a() {
-      return this.cache.a
-        || ( this.cache.a = [
-          _mgr.УгловоеДиагональное,
-          _mgr.УгловоеКВертикальной,
-          _mgr.УгловоеКГоризонтальной,
-          _mgr.КрестВСтык] );
-    },
-
-    get t() {
-      return this.cache.t || ( this.cache.t = [_mgr.ТОбразное, _mgr.КрестВСтык] );
-    },
-
+	const acn = {
+    ii: [_mgr.Наложение],
+    i: [_mgr.НезамкнутыйКонтур],
+    a: [
+      _mgr.УгловоеДиагональное,
+      _mgr.УгловоеКВертикальной,
+      _mgr.УгловоеКГоризонтальной,
+      _mgr.КрестВСтык],
+    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
 	};
 
 
 	Object.defineProperties(_mgr, {
 	  ad: {
 	    get: function () {
-        return _mgr.УгловоеДиагональное;
+        return this.УгловоеДиагональное;
       }
     },
     av: {
       get: function () {
-        return _mgr.УгловоеКВертикальной;
+        return this.УгловоеКВертикальной;
       }
     },
     ah: {
       get: function () {
-        return _mgr.УгловоеКГоризонтальной;
+        return this.УгловоеКГоризонтальной;
       }
     },
     t: {
       get: function () {
-        return _mgr.ТОбразное;
+        return this.ТОбразное;
       }
     },
     ii: {
       get: function () {
-        return _mgr.Наложение;
+        return this.Наложение;
       }
     },
     i: {
       get: function () {
-        return _mgr.НезамкнутыйКонтур;
+        return this.НезамкнутыйКонтур;
       }
     },
     xt: {
       get: function () {
-        return _mgr.КрестПересечение;
+        return this.КрестПересечение;
       }
     },
     xx: {
       get: function () {
-        return _mgr.КрестВСтык;
+        return this.КрестВСтык;
       }
+    },
+
+    acn: {
+      value: acn
     },
 
   });
