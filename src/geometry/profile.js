@@ -1010,7 +1010,7 @@ class ProfileItem extends GeneratrixElement {
     if(!rays) {
       rays = this.rays;
     }
-    if(!rays || !interior) {
+    if(!rays || !interior || !rays.inner.length || ! rays.outer.length) {
       return $p.enm.cnn_sides.Изнутри;
     }
     return rays.inner.getNearestPoint(interior).getDistance(interior, true) <
@@ -1278,8 +1278,9 @@ class ProfileItem extends GeneratrixElement {
       (cnn_point.profile instanceof Filling ? {inner: cnn_point.profile.path, outer: cnn_point.profile.path} : undefined);
 
     const {cnn_type} = cnn_point.cnn || {};
+    const {cnn_types} = $p.enm;
     // импосты рисуем с учетом стороны примыкания
-    if(cnn_point.is_t) {
+    if(cnn_point.is_t || (cnn_type == cnn_types.xx && !cnn_point.profile_point)) {
 
       // при необходимости, перерисовываем ведущий элемент
       !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
@@ -1309,7 +1310,7 @@ class ProfileItem extends GeneratrixElement {
       }
     }
     // крест в стык
-    else if(cnn_type == $p.enm.cnn_types.xx) {
+    else if(cnn_type == cnn_types.xx) {
 
       // для раскладок, отступаем ширину профиля
       if(cnn_point.profile instanceof Onlay) {
@@ -1366,7 +1367,7 @@ class ProfileItem extends GeneratrixElement {
 
     }
     // соединение с пустотой
-    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == $p.enm.cnn_types.i) {
+    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == cnn_types.i) {
       // точки рассчитаются автоматически, как для ненайденных
       if(profile_point == 'b') {
         delete _corns[1];
@@ -1378,7 +1379,7 @@ class ProfileItem extends GeneratrixElement {
       }
     }
     // угловое диагональное
-    else if(cnn_type == $p.enm.cnn_types.ad) {
+    else if(cnn_type == cnn_types.ad) {
       if(profile_point == 'b') {
         intersect_point(prays.outer, rays.outer, 1);
         intersect_point(prays.inner, rays.inner, 4);
@@ -1390,7 +1391,7 @@ class ProfileItem extends GeneratrixElement {
 
     }
     // угловое к вертикальной
-    else if(cnn_type == $p.enm.cnn_types.av) {
+    else if(cnn_type == cnn_types.av) {
       if(this.orientation == $p.enm.orientations.vert) {
         if(profile_point == 'b') {
           intersect_point(prays.outer, rays.outer, 1);
@@ -1416,7 +1417,7 @@ class ProfileItem extends GeneratrixElement {
       }
     }
     // угловое к горизонтальной
-    else if(cnn_type == $p.enm.cnn_types.ah) {
+    else if(cnn_type == cnn_types.ah) {
       if(this.orientation == $p.enm.orientations.vert) {
         if(profile_point == 'b') {
           intersect_point(prays.inner, rays.outer, 1);

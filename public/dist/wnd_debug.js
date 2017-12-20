@@ -485,12 +485,12 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 
 			  setTimeout(() => {
           const l = [];
-          const {base_block, branch_filter: {sys}} = $p.job_prm.builder;
+          const {base_block, branch_filter} = $p.job_prm.builder;
 
           base_block.forEach(({note, presentation, ref, production}) => {
-            if(sys && sys.length && production.count()) {
+            if(branch_filter && branch_filter.sys && branch_filter.sys.length && production.count()) {
               const {characteristic} = production.get(0);
-              if(!sys.some((filter) => characteristic.sys._hierarchy(filter))){
+              if(!branch_filter.sys.some((filter) => characteristic.sys._hierarchy(filter))){
                 return;
               }
             }

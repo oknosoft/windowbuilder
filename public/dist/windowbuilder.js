@@ -2400,11 +2400,13 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     this._attr = {};
 
+    const {ox, l_connective} = this.project;
+
     if (attr.row) {
       this._row = attr.row;
     }
     else {
-      const {constructions} = this.project.ox;
+      const {constructions} = ox;
       this._row = constructions.add({parent: attr.parent ? attr.parent.cnstr : 0});
       this._row.cnstr = constructions.aggregate([], ['cnstr'], 'MAX') + 1;
     }
@@ -2412,7 +2414,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     const {cnstr} = this;
     if (cnstr) {
 
-      const {coordinates} = this.project.ox;
+      const {coordinates} = ox;
 
       coordinates.find_rows({cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => new Profile({row, parent: this}));
 
@@ -2422,6 +2424,8 @@ class Contour extends AbstractFilling(paper.Layer) {
 
       coordinates.find_rows({cnstr, elm_type: $p.enm.elm_types.Текст}, (row) => new FreeText({row, parent: this.l_text}));
     }
+
+    l_connective.bringToFront();
 
   }
 
@@ -5389,6 +5393,10 @@ class Filling extends AbstractFilling(BuilderElement) {
     return $p.enm.cnn_sides.Изнутри;
   }
 
+  nearest() {
+    return null;
+  }
+
   select_node(v) {
     let point, segm, delta = Infinity;
     if(v === "b"){
@@ -7321,7 +7329,7 @@ class ProfileItem extends GeneratrixElement {
     if(!rays) {
       rays = this.rays;
     }
-    if(!rays || !interior) {
+    if(!rays || !interior || !rays.inner.length || ! rays.outer.length) {
       return $p.enm.cnn_sides.Изнутри;
     }
     return rays.inner.getNearestPoint(interior).getDistance(interior, true) <
@@ -7539,7 +7547,8 @@ class ProfileItem extends GeneratrixElement {
       (cnn_point.profile instanceof Filling ? {inner: cnn_point.profile.path, outer: cnn_point.profile.path} : undefined);
 
     const {cnn_type} = cnn_point.cnn || {};
-    if(cnn_point.is_t) {
+    const {cnn_types} = $p.enm;
+    if(cnn_point.is_t || (cnn_type == cnn_types.xx && !cnn_point.profile_point)) {
 
       !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
 
@@ -7564,7 +7573,7 @@ class ProfileItem extends GeneratrixElement {
         }
       }
     }
-    else if(cnn_type == $p.enm.cnn_types.xx) {
+    else if(cnn_type == cnn_types.xx) {
 
       if(cnn_point.profile instanceof Onlay) {
         const width = this.width * 0.7;
@@ -7618,7 +7627,7 @@ class ProfileItem extends GeneratrixElement {
       }
 
     }
-    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == $p.enm.cnn_types.i) {
+    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == cnn_types.i) {
       if(profile_point == 'b') {
         delete _corns[1];
         delete _corns[4];
@@ -7628,7 +7637,7 @@ class ProfileItem extends GeneratrixElement {
         delete _corns[3];
       }
     }
-    else if(cnn_type == $p.enm.cnn_types.ad) {
+    else if(cnn_type == cnn_types.ad) {
       if(profile_point == 'b') {
         intersect_point(prays.outer, rays.outer, 1);
         intersect_point(prays.inner, rays.inner, 4);
@@ -7639,7 +7648,7 @@ class ProfileItem extends GeneratrixElement {
       }
 
     }
-    else if(cnn_type == $p.enm.cnn_types.av) {
+    else if(cnn_type == cnn_types.av) {
       if(this.orientation == $p.enm.orientations.vert) {
         if(profile_point == 'b') {
           intersect_point(prays.outer, rays.outer, 1);
@@ -7664,7 +7673,7 @@ class ProfileItem extends GeneratrixElement {
         cnn_point.err = 'orientation';
       }
     }
-    else if(cnn_type == $p.enm.cnn_types.ah) {
+    else if(cnn_type == cnn_types.ah) {
       if(this.orientation == $p.enm.orientations.vert) {
         if(profile_point == 'b') {
           intersect_point(prays.inner, rays.outer, 1);
@@ -8644,11 +8653,14 @@ class ConnectiveLayer extends paper.Layer {
   }
 
   save_coordinates() {
-    this.children.forEach((elm) => elm.save_coordinates());
+    this.children.forEach((elm) => elm.save_coordinates && elm.save_coordinates());
   }
 
   glasses() {
     return [];
+  }
+
+  notify(obj, type = 'update') {
   }
 }
 
@@ -8662,6 +8674,7 @@ class BaseLine extends ProfileItem {
     this.parent = this.project.l_connective;
     Object.assign(this.generatrix, {
       strokeColor: 'brown',
+      fillColor: new paper.Color(1, 0.1),
       strokeScaling: false,
       strokeWidth: 2,
       dashOffset: 4,
@@ -12234,7 +12247,7 @@ class ToolPen extends ToolElement {
 
   layer_activated(contour, virt) {
     const {_attr} = this._scope.project;
-    if(!virt && !project._attr._loading && !project._attr._snapshot){
+    if(!virt && !_attr._loading && !_attr._snapshot){
       this.decorate_layers();
     }
   }
@@ -12487,7 +12500,7 @@ class ToolPen extends ToolElement {
 
       if(this.mode){
 
-        var delta = event.point.subtract(this.point1),
+        let delta = event.point.subtract(this.point1),
           dragIn = false,
           dragOut = false,
           invert = false,

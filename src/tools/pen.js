@@ -351,7 +351,7 @@ class ToolPen extends ToolElement {
 
   layer_activated(contour, virt) {
     const {_attr} = this._scope.project;
-    if(!virt && !project._attr._loading && !project._attr._snapshot){
+    if(!virt && !_attr._loading && !_attr._snapshot){
       this.decorate_layers();
     }
   }
@@ -615,7 +615,7 @@ class ToolPen extends ToolElement {
 
       if(this.mode){
 
-        var delta = event.point.subtract(this.point1),
+        let delta = event.point.subtract(this.point1),
           dragIn = false,
           dragOut = false,
           invert = false,

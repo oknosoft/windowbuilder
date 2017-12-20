@@ -97,12 +97,14 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     this._attr = {};
 
+    const {ox, l_connective} = this.project;
+
     // строка в таблице конструкций
     if (attr.row) {
       this._row = attr.row;
     }
     else {
-      const {constructions} = this.project.ox;
+      const {constructions} = ox;
       this._row = constructions.add({parent: attr.parent ? attr.parent.cnstr : 0});
       this._row.cnstr = constructions.aggregate([], ['cnstr'], 'MAX') + 1;
     }
@@ -111,7 +113,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     const {cnstr} = this;
     if (cnstr) {
 
-      const {coordinates} = this.project.ox;
+      const {coordinates} = ox;
 
       // профили и доборы
       coordinates.find_rows({cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => new Profile({row, parent: this}));
@@ -125,6 +127,8 @@ class Contour extends AbstractFilling(paper.Layer) {
       // остальные элементы (текст)
       coordinates.find_rows({cnstr, elm_type: $p.enm.elm_types.Текст}, (row) => new FreeText({row, parent: this.l_text}));
     }
+
+    l_connective.bringToFront();
 
   }
 

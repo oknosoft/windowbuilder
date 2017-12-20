@@ -231,6 +231,13 @@ class Filling extends AbstractFilling(BuilderElement) {
     return $p.enm.cnn_sides.Изнутри;
   }
 
+  /**
+   * Примыкающий внешний элемент - для заполнений всегда null
+   */
+  nearest() {
+    return null;
+  }
+
   select_node(v) {
     let point, segm, delta = Infinity;
     if(v === "b"){

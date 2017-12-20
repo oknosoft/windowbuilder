@@ -32,6 +32,7 @@ class BaseLine extends ProfileItem {
     this.parent = this.project.l_connective;
     Object.assign(this.generatrix, {
       strokeColor: 'brown',
+      fillColor: new paper.Color(1, 0.1),
       strokeScaling: false,
       strokeWidth: 2,
       dashOffset: 4,

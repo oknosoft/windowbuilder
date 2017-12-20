@@ -205,11 +205,19 @@ class ConnectiveLayer extends paper.Layer {
   }
 
   save_coordinates() {
-    this.children.forEach((elm) => elm.save_coordinates());
+    this.children.forEach((elm) => elm.save_coordinates && elm.save_coordinates());
   }
 
   glasses() {
     return [];
+  }
+
+  /**
+   * Формирует оповещение для тех, кто следит за this._noti
+   * @param obj
+   */
+  notify(obj, type = 'update') {
+    //Contour.prototype.notify.call(this, obj, type);
   }
 }
 
