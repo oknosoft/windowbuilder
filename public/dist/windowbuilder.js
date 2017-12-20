@@ -6209,7 +6209,7 @@ class GeneratrixElement extends BuilderElement {
 
 Object.defineProperties(paper.Path.prototype, {
 
-    getDirectedAngle: {
+  getDirectedAngle: {
       value: function (point) {
         var np = this.getNearestPoint(point),
           offset = this.getOffsetOf(np);
@@ -6217,7 +6217,7 @@ Object.defineProperties(paper.Path.prototype, {
       }
     },
 
-    angle_to: {
+  angle_to: {
       value : function(other, point, interior, round){
         const p1 = this.getNearestPoint(point),
           p2 = other.getNearestPoint(point),
@@ -6235,7 +6235,7 @@ Object.defineProperties(paper.Path.prototype, {
       enumerable : false
     },
 
-    is_linear: {
+  is_linear: {
       value: function () {
         if(this.curves.length == 1 && this.firstCurve.isLinear())
           return true;
@@ -6254,7 +6254,7 @@ Object.defineProperties(paper.Path.prototype, {
       }
     },
 
-    get_subpath: {
+  get_subpath: {
       value: function (point1, point2) {
         let tmp;
 
@@ -6310,7 +6310,7 @@ Object.defineProperties(paper.Path.prototype, {
       }
     },
 
-    equidistant: {
+  equidistant: {
       value: function (delta, elong) {
 
         let normal = this.getNormalAt(0);
@@ -6358,7 +6358,7 @@ Object.defineProperties(paper.Path.prototype, {
       }
     },
 
-    elongation: {
+  elongation: {
       value: function (delta) {
 
         if(delta){
@@ -6378,7 +6378,7 @@ Object.defineProperties(paper.Path.prototype, {
       }
     },
 
-    intersect_point: {
+  intersect_point: {
       value: function (path, point, elongate) {
         const intersections = this.getIntersections(path);
         let delta = Infinity, tdelta, tpoint;
@@ -6434,9 +6434,43 @@ Object.defineProperties(paper.Path.prototype, {
 
         }
       }
-    }
+    },
 
-  });
+  rmin: {
+    value: function() {
+      if(!this.hasHandles()){
+        return 0;
+      }
+      const {length} = this;
+      let max = 0;
+      for(let pos = 0; pos < length; pos += length / 8){
+        const curv = Math.abs(this.getCurvatureAt(pos));
+        if(curv > max){
+          max = curv;
+        }
+      }
+      return max === 0 ? 0 : 1 / max;
+    }
+  },
+
+  rmax: {
+    value: function() {
+      if(!this.hasHandles()){
+        return 0;
+      }
+      const {length} = this;
+      let min = Infinity;
+      for(let pos = 0; pos < length; pos += length / 8){
+        const curv = Math.abs(this.getCurvatureAt(pos));
+        if(curv < min){
+          min = curv;
+        }
+      }
+      return min === 0 ? 0 : 1 / min;
+    }
+  },
+
+});
 
 
 Object.defineProperties(paper.Point.prototype, {
@@ -6560,7 +6594,7 @@ Object.defineProperties(paper.Point.prototype, {
         }
       });
     }
-  }
+  },
 
 });
 
@@ -6894,35 +6928,11 @@ class ProfileItem extends GeneratrixElement {
   }
 
   get rmin() {
-    const {generatrix} = this;
-    if(!generatrix.hasHandles()){
-      return 0;
-    }
-    const {length} = generatrix;
-    let max = 0;
-    for(let pos = 0; pos < length; pos += length / 8){
-      const curv = Math.abs(generatrix.getCurvatureAt(pos));
-      if(curv > max){
-        max = curv;
-      }
-    }
-    return max === 0 ? 0 : 1 / max;
+    return this.generatrix.rmin();
   }
 
   get rmax() {
-    const {generatrix} = this;
-    if(!generatrix.hasHandles()){
-      return 0;
-    }
-    const {length} = generatrix;
-    let min = Infinity;
-    for(let pos = 0; pos < length; pos += length / 8){
-      const curv = Math.abs(generatrix.getCurvatureAt(pos));
-      if(curv < min){
-        min = curv;
-      }
-    }
-    return min === 0 ? 0 : 1 / min;
+    return this.generatrix.rmax();
   }
 
   get arc_ccw() {

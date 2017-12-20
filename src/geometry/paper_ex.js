@@ -13,12 +13,12 @@
  */
 Object.defineProperties(paper.Path.prototype, {
 
-    /**
+  /**
      * Вычисляет направленный угол в точке пути
      * @param point
      * @return {number}
      */
-    getDirectedAngle: {
+  getDirectedAngle: {
       value: function (point) {
         var np = this.getNearestPoint(point),
           offset = this.getOffsetOf(np);
@@ -26,10 +26,10 @@ Object.defineProperties(paper.Path.prototype, {
       }
     },
 
-    /**
+  /**
      * Угол по отношению к соседнему пути _other_ в точке _point_
      */
-    angle_to: {
+  angle_to: {
       value : function(other, point, interior, round){
         const p1 = this.getNearestPoint(point),
           p2 = other.getNearestPoint(point),
@@ -47,11 +47,11 @@ Object.defineProperties(paper.Path.prototype, {
       enumerable : false
     },
 
-    /**
+  /**
      * Выясняет, является ли путь прямым
      * @return {Boolean}
      */
-    is_linear: {
+  is_linear: {
       value: function () {
         // если в пути единственная кривая и она прямая - путь прямой
         if(this.curves.length == 1 && this.firstCurve.isLinear())
@@ -73,13 +73,13 @@ Object.defineProperties(paper.Path.prototype, {
       }
     },
 
-    /**
+  /**
      * возвращает фрагмент пути между точками
      * @param point1 {paper.Point}
      * @param point2 {paper.Point}
      * @return {paper.Path}
      */
-    get_subpath: {
+  get_subpath: {
       value: function (point1, point2) {
         let tmp;
 
@@ -137,13 +137,13 @@ Object.defineProperties(paper.Path.prototype, {
       }
     },
 
-    /**
+  /**
      * возвращает путь, равноотстоящий от текущего пути
      * @param delta {number} - расстояние, на которое будет смещен новый путь
      * @param elong {number} - удлинение нового пути с каждого конца
      * @return {paper.Path}
      */
-    equidistant: {
+  equidistant: {
       value: function (delta, elong) {
 
         let normal = this.getNormalAt(0);
@@ -194,10 +194,10 @@ Object.defineProperties(paper.Path.prototype, {
       }
     },
 
-    /**
+  /**
      * Удлиняет путь касательными в начальной и конечной точках
      */
-    elongation: {
+  elongation: {
       value: function (delta) {
 
         if(delta){
@@ -217,7 +217,7 @@ Object.defineProperties(paper.Path.prototype, {
       }
     },
 
-    /**
+  /**
      * Находит координату пересечения путей в окрестности точки
      * @method intersect_point
      * @for Path
@@ -226,7 +226,7 @@ Object.defineProperties(paper.Path.prototype, {
      * @param elongate {Boolean} - если истина, пути будут продолжены до пересечения
      * @return point {paper.Point}
      */
-    intersect_point: {
+  intersect_point: {
       value: function (path, point, elongate) {
         const intersections = this.getIntersections(path);
         let delta = Infinity, tdelta, tpoint;
@@ -284,9 +284,51 @@ Object.defineProperties(paper.Path.prototype, {
 
         }
       }
-    }
+    },
 
-  });
+  /**
+   * ### Минимальный радиус, высисляемый по кривизне пути
+   * для прямых = 0
+   */
+  rmin: {
+    value: function() {
+      if(!this.hasHandles()){
+        return 0;
+      }
+      const {length} = this;
+      let max = 0;
+      for(let pos = 0; pos < length; pos += length / 8){
+        const curv = Math.abs(this.getCurvatureAt(pos));
+        if(curv > max){
+          max = curv;
+        }
+      }
+      return max === 0 ? 0 : 1 / max;
+    }
+  },
+
+  /**
+   * ### Максимальный радиус, высисляемый по кривизне пути
+   * для прямых = 0
+   */
+  rmax: {
+    value: function() {
+      if(!this.hasHandles()){
+        return 0;
+      }
+      const {length} = this;
+      let min = Infinity;
+      for(let pos = 0; pos < length; pos += length / 8){
+        const curv = Math.abs(this.getCurvatureAt(pos));
+        if(curv < min){
+          min = curv;
+        }
+      }
+      return min === 0 ? 0 : 1 / min;
+    }
+  },
+
+});
 
 
 Object.defineProperties(paper.Point.prototype, {
@@ -459,7 +501,7 @@ Object.defineProperties(paper.Point.prototype, {
         }
       });
     }
-  }
+  },
 
 });
 
