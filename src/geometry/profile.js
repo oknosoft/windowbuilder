@@ -948,8 +948,7 @@ class ProfileItem extends GeneratrixElement {
         _attr.generatrix = new paper.Path(first_point);
         if(_row.r) {
           _attr.generatrix.arcTo(
-            first_point.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2,
-              _row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
+            first_point.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2, _row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
         }
         else {
           _attr.generatrix.lineTo([_row.x2, h - _row.y2]);
@@ -1278,7 +1277,6 @@ class ProfileItem extends GeneratrixElement {
       cnn_point.profile.rays :
       (cnn_point.profile instanceof Filling ? {inner: cnn_point.profile.path, outer: cnn_point.profile.path} : undefined);
 
-
     const {cnn_type} = cnn_point.cnn || {};
     // импосты рисуем с учетом стороны примыкания
     if(cnn_point.is_t) {
@@ -1353,7 +1351,16 @@ class ProfileItem extends GeneratrixElement {
             pt2 > pt4 ? intersect_point(prays.inner, rays.inner, 3) : intersect_point(prays2.inner, rays.inner, 3);
             intersect_point(prays2.inner, prays.inner, 6);
           }
-
+        }
+        else{
+          if(profile_point == 'b') {
+            delete _corns[1];
+            delete _corns[4];
+          }
+          else if(profile_point == 'e') {
+            delete _corns[2];
+            delete _corns[3];
+          }
         }
       }
 
@@ -1361,13 +1368,20 @@ class ProfileItem extends GeneratrixElement {
     // соединение с пустотой
     else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == $p.enm.cnn_types.i) {
       // точки рассчитаются автоматически, как для ненайденных
+      if(profile_point == 'b') {
+        delete _corns[1];
+        delete _corns[4];
+      }
+      else if(profile_point == 'e') {
+        delete _corns[2];
+        delete _corns[3];
+      }
     }
     // угловое диагональное
     else if(cnn_type == $p.enm.cnn_types.ad) {
       if(profile_point == 'b') {
         intersect_point(prays.outer, rays.outer, 1);
         intersect_point(prays.inner, rays.inner, 4);
-
       }
       else if(profile_point == 'e') {
         intersect_point(prays.outer, rays.outer, 2);
@@ -1381,7 +1395,6 @@ class ProfileItem extends GeneratrixElement {
         if(profile_point == 'b') {
           intersect_point(prays.outer, rays.outer, 1);
           intersect_point(prays.outer, rays.inner, 4);
-
         }
         else if(profile_point == 'e') {
           intersect_point(prays.outer, rays.outer, 2);
@@ -1392,7 +1405,6 @@ class ProfileItem extends GeneratrixElement {
         if(profile_point == 'b') {
           intersect_point(prays.inner, rays.outer, 1);
           intersect_point(prays.inner, rays.inner, 4);
-
         }
         else if(profile_point == 'e') {
           intersect_point(prays.inner, rays.outer, 2);
@@ -1409,7 +1421,6 @@ class ProfileItem extends GeneratrixElement {
         if(profile_point == 'b') {
           intersect_point(prays.inner, rays.outer, 1);
           intersect_point(prays.inner, rays.inner, 4);
-
         }
         else if(profile_point == 'e') {
           intersect_point(prays.inner, rays.outer, 2);
@@ -1420,7 +1431,6 @@ class ProfileItem extends GeneratrixElement {
         if(profile_point == 'b') {
           intersect_point(prays.outer, rays.outer, 1);
           intersect_point(prays.outer, rays.inner, 4);
-
         }
         else if(profile_point == 'e') {
           intersect_point(prays.outer, rays.outer, 2);

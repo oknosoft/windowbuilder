@@ -1003,7 +1003,7 @@ class Editor extends paper.PaperScope {
 
     this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
 
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '320px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '2px', name: 'left', height: '294px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -1015,8 +1015,7 @@ class Editor extends paper.PaperScope {
         {name: 'cut', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
         {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
-        {name: 'line', css: 'tb_line', tooltip: 'Произвольная линия'},
-        {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'}
+        {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
       ],
       onclick: (name) => _editor.select_tool(name),
       on_popup: (popup, bdiv) => {
@@ -1637,7 +1636,7 @@ class Editor extends paper.PaperScope {
 
       if(changed || profiles.length > 1){
         profiles.forEach(({layer}) => contours.indexOf(layer) == -1 && contours.push(layer));
-        contours.forEach(({l_dimensions}) => l_dimensions.clear());
+        contours.forEach(({l_dimensions}) => l_dimensions && l_dimensions.clear());
       }
 
       if(name != 'delete' && profiles.length > 1){
@@ -7274,8 +7273,7 @@ class ProfileItem extends GeneratrixElement {
         _attr.generatrix = new paper.Path(first_point);
         if(_row.r) {
           _attr.generatrix.arcTo(
-            first_point.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2,
-              _row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
+            first_point.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2, _row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
         }
         else {
           _attr.generatrix.lineTo([_row.x2, h - _row.y2]);
@@ -7540,7 +7538,6 @@ class ProfileItem extends GeneratrixElement {
       cnn_point.profile.rays :
       (cnn_point.profile instanceof Filling ? {inner: cnn_point.profile.path, outer: cnn_point.profile.path} : undefined);
 
-
     const {cnn_type} = cnn_point.cnn || {};
     if(cnn_point.is_t) {
 
@@ -7607,18 +7604,34 @@ class ProfileItem extends GeneratrixElement {
             pt2 > pt4 ? intersect_point(prays.inner, rays.inner, 3) : intersect_point(prays2.inner, rays.inner, 3);
             intersect_point(prays2.inner, prays.inner, 6);
           }
-
+        }
+        else{
+          if(profile_point == 'b') {
+            delete _corns[1];
+            delete _corns[4];
+          }
+          else if(profile_point == 'e') {
+            delete _corns[2];
+            delete _corns[3];
+          }
         }
       }
 
     }
     else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == $p.enm.cnn_types.i) {
+      if(profile_point == 'b') {
+        delete _corns[1];
+        delete _corns[4];
+      }
+      else if(profile_point == 'e') {
+        delete _corns[2];
+        delete _corns[3];
+      }
     }
     else if(cnn_type == $p.enm.cnn_types.ad) {
       if(profile_point == 'b') {
         intersect_point(prays.outer, rays.outer, 1);
         intersect_point(prays.inner, rays.inner, 4);
-
       }
       else if(profile_point == 'e') {
         intersect_point(prays.outer, rays.outer, 2);
@@ -7631,7 +7644,6 @@ class ProfileItem extends GeneratrixElement {
         if(profile_point == 'b') {
           intersect_point(prays.outer, rays.outer, 1);
           intersect_point(prays.outer, rays.inner, 4);
-
         }
         else if(profile_point == 'e') {
           intersect_point(prays.outer, rays.outer, 2);
@@ -7642,7 +7654,6 @@ class ProfileItem extends GeneratrixElement {
         if(profile_point == 'b') {
           intersect_point(prays.inner, rays.outer, 1);
           intersect_point(prays.inner, rays.inner, 4);
-
         }
         else if(profile_point == 'e') {
           intersect_point(prays.inner, rays.outer, 2);
@@ -7658,7 +7669,6 @@ class ProfileItem extends GeneratrixElement {
         if(profile_point == 'b') {
           intersect_point(prays.inner, rays.outer, 1);
           intersect_point(prays.inner, rays.inner, 4);
-
         }
         else if(profile_point == 'e') {
           intersect_point(prays.inner, rays.outer, 2);
@@ -7669,7 +7679,6 @@ class ProfileItem extends GeneratrixElement {
         if(profile_point == 'b') {
           intersect_point(prays.outer, rays.outer, 1);
           intersect_point(prays.outer, rays.inner, 4);
-
         }
         else if(profile_point == 'e') {
           intersect_point(prays.outer, rays.outer, 2);
@@ -8561,11 +8570,11 @@ class ProfileConnective extends ProfileItem {
 
     this.project.contours.forEach((contour) => {
       contour.profiles.forEach((profile) => {
-        if(profile.nearest(true) == this){
-          res.push(profile)
+        if(profile.nearest(true) === this){
+          res.push(profile);
         }
-      })
-    })
+      });
+    });
 
     return res;
 
@@ -8581,8 +8590,7 @@ class ProfileConnective extends ProfileItem {
       return;
     }
 
-    const {_row, rays, project, generatrix} = this;
-    const {cnns} = project.connections;
+    const {_row, generatrix} = this;
 
     _row.x1 = this.x1;
     _row.y1 = this.y1;
@@ -8614,16 +8622,16 @@ class ProfileConnective extends ProfileItem {
     this.joined_nearests().forEach((np) => {
       const {_attr} = np;
       if(_attr._rays){
-        _attr._rays.clear()
+        _attr._rays.clear();
       }
       if(_attr._nearest){
-        _attr._nearest = null
+        _attr._nearest = null;
       }
       if(_attr._nearest_cnn){
-        _attr._nearest_cnn = null
+        _attr._nearest_cnn = null;
       }
     });
-    super.remove()
+    super.remove();
   }
 
 }
@@ -8632,11 +8640,11 @@ class ProfileConnective extends ProfileItem {
 class ConnectiveLayer extends paper.Layer {
 
   redraw() {
-    this.children.forEach((elm) => elm.redraw())
+    this.children.forEach((elm) => elm.redraw());
   }
 
   save_coordinates() {
-    this.children.forEach((elm) => elm.save_coordinates())
+    this.children.forEach((elm) => elm.save_coordinates());
   }
 
   glasses() {
@@ -8645,6 +8653,119 @@ class ConnectiveLayer extends paper.Layer {
 }
 
 Editor.ProfileConnective = ProfileConnective;
+
+
+class BaseLine extends ProfileItem {
+
+  constructor(attr) {
+    super(attr);
+    this.parent = this.project.l_connective;
+    Object.assign(this.generatrix, {
+      strokeColor: 'brown',
+      strokeScaling: false,
+      strokeWidth: 2,
+      dashOffset: 4,
+      dashArray: [4, 4],
+    })
+  }
+
+  get d0() {
+    return 0;
+  }
+
+  get d1() {
+    return 0;
+  }
+
+  get d2() {
+    return 0;
+  }
+
+  get path() {
+    return this.generatrix;
+  }
+  set path(v) {
+  }
+
+  setSelection(selection) {
+    paper.Item.prototype.setSelection.call(this, selection);
+  }
+
+  get oxml() {
+    return BaseLine.oxml;
+  }
+
+  get elm_type() {
+    return $p.enm.elm_types.Линия;
+  }
+
+  get length() {
+    return this.generatrix.length;
+  }
+
+  nearest() {
+    return null;
+  }
+
+  joined_nearests() {
+
+    const res = [];
+
+    this.project.contours.forEach((contour) => {
+      contour.profiles.forEach((profile) => {
+        if(profile.nearest(true) === this){
+          res.push(profile);
+        }
+      });
+    });
+
+    return res;
+
+  }
+
+  joined_imposts(check_only) {
+    const tinner = [];
+    const touter = [];
+    return check_only ? false : {inner: tinner, outer: touter};
+  }
+
+  save_coordinates() {
+
+    if(!this._attr.generatrix){
+      return;
+    }
+
+    const {_row} = this;
+
+    _row.x1 = this.x1;
+    _row.y1 = this.y1;
+    _row.x2 = this.x2;
+    _row.y2 = this.y2;
+    _row.path_data = this.generatrix.pathData;
+    _row.parent = this.parent.elm;
+    _row.len = this.length;
+    _row.angle_hor = this.angle_hor;
+    _row.elm_type = this.elm_type;
+  }
+
+  cnn_point(node) {
+    return this.rays[node];
+  }
+
+  redraw() {
+
+  }
+
+}
+
+BaseLine.oxml = {
+  ' ': [
+    {id: 'info', path: 'o.info', type: 'ro'},
+  ],
+  'Начало': ['x1', 'y1'],
+  'Конец': ['x2', 'y2']
+};
+
 
 
 class Onlay extends ProfileItem {
@@ -9140,7 +9261,14 @@ class Scheme extends paper.Project {
         size: [o.x, o.y]
       });
 
-      o.coordinates.find_rows({elm_type: $p.enm.elm_types.Соединитель}, (row) => new ProfileConnective({row: row}));
+      o.coordinates.forEach((row) => {
+        if(row.elm_type === $p.enm.elm_types.Соединитель) {
+          new ProfileConnective({row});
+        }
+        else if(row.elm_type === $p.enm.elm_types.Линия) {
+          new BaseLine({row});
+        }
+      })
       o = null;
 
       load_contour(null);
@@ -12235,7 +12363,8 @@ class ToolPen extends ToolElement {
         return;
       }
 
-      if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+      switch (this.profile.elm_type) {
+      case $p.enm.elm_types.Раскладка:
         paper.project.activeLayer.glasses(false, true).some((glass) => {
           if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
             new Onlay({
@@ -12247,11 +12376,17 @@ class ToolPen extends ToolElement {
             return true;
           }
         });
-      }
-      else if(this.profile.elm_type == $p.enm.elm_types.Водоотлив){
+        break;
+
+      case $p.enm.elm_types.Водоотлив:
         this.last_profile = new Sectional({generatrix: this.path, proto: this.profile});
-      }
-      else{
+        break;
+
+      case $p.enm.elm_types.Линия:
+        this.last_profile = new BaseLine({generatrix: this.path, proto: this.profile});
+        break;
+
+      default:
         this.last_profile = new Profile({generatrix: this.path, proto: this.profile});
       }
 

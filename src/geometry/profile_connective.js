@@ -106,11 +106,11 @@ class ProfileConnective extends ProfileItem {
 
     this.project.contours.forEach((contour) => {
       contour.profiles.forEach((profile) => {
-        if(profile.nearest(true) == this){
-          res.push(profile)
+        if(profile.nearest(true) === this){
+          res.push(profile);
         }
-      })
-    })
+      });
+    });
 
     return res;
 
@@ -135,8 +135,7 @@ class ProfileConnective extends ProfileItem {
       return;
     }
 
-    const {_row, rays, project, generatrix} = this;
-    const {cnns} = project.connections;
+    const {_row, generatrix} = this;
 
     _row.x1 = this.x1;
     _row.y1 = this.y1;
@@ -176,16 +175,16 @@ class ProfileConnective extends ProfileItem {
     this.joined_nearests().forEach((np) => {
       const {_attr} = np;
       if(_attr._rays){
-        _attr._rays.clear()
+        _attr._rays.clear();
       }
       if(_attr._nearest){
-        _attr._nearest = null
+        _attr._nearest = null;
       }
       if(_attr._nearest_cnn){
-        _attr._nearest_cnn = null
+        _attr._nearest_cnn = null;
       }
     });
-    super.remove()
+    super.remove();
   }
 
 }
@@ -202,11 +201,11 @@ class ProfileConnective extends ProfileItem {
 class ConnectiveLayer extends paper.Layer {
 
   redraw() {
-    this.children.forEach((elm) => elm.redraw())
+    this.children.forEach((elm) => elm.redraw());
   }
 
   save_coordinates() {
-    this.children.forEach((elm) => elm.save_coordinates())
+    this.children.forEach((elm) => elm.save_coordinates());
   }
 
   glasses() {

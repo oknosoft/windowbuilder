@@ -158,15 +158,6 @@ class PenControls {
         modifiers: {}
       });
       setTimeout(() => {
-        // if(this._tool.mode == 'create' && this._tool.path){
-        //   setTimeout(() => {
-        //     if(this._tool.last_profile){
-        //       this.mousemove({point: this._tool.last_profile.e}, true);
-        //       this._tool.last_profile = null;
-        //       create_click();
-        //     }
-        //   }, 50);
-        // }
         this._tool.emit("mouseup", {
           point: this.point,
           modifiers: {}
@@ -494,7 +485,8 @@ class ToolPen extends ToolElement {
         return;
       }
 
-      if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+      switch (this.profile.elm_type) {
+      case $p.enm.elm_types.Раскладка:
         // находим заполнение под линией
         paper.project.activeLayer.glasses(false, true).some((glass) => {
           if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
@@ -507,12 +499,19 @@ class ToolPen extends ToolElement {
             return true;
           }
         });
-      }
-      else if(this.profile.elm_type == $p.enm.elm_types.Водоотлив){
+        break;
+
+      case $p.enm.elm_types.Водоотлив:
         // рисуем разрез
         this.last_profile = new Sectional({generatrix: this.path, proto: this.profile});
-      }
-      else{
+        break;
+
+      case $p.enm.elm_types.Линия:
+        // рисуем линию
+        this.last_profile = new BaseLine({generatrix: this.path, proto: this.profile});
+        break;
+
+      default:
         // рисуем профиль
         this.last_profile = new Profile({generatrix: this.path, proto: this.profile});
       }

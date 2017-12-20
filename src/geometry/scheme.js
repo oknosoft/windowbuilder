@@ -341,8 +341,15 @@ class Scheme extends paper.Project {
         size: [o.x, o.y]
       });
 
-      // первым делом создаём соединители
-      o.coordinates.find_rows({elm_type: $p.enm.elm_types.Соединитель}, (row) => new ProfileConnective({row: row}));
+      // первым делом создаём соединители и опорные линии
+      o.coordinates.forEach((row) => {
+        if(row.elm_type === $p.enm.elm_types.Соединитель) {
+          new ProfileConnective({row});
+        }
+        else if(row.elm_type === $p.enm.elm_types.Линия) {
+          new BaseLine({row});
+        }
+      })
       o = null;
 
       // создаём семейство конструкций
