@@ -46,13 +46,20 @@ class Pricing {
 
   build_cache(rows) {
     const {nom, currencies} = $p.cat;
+    const note = 'Индекс цен номенклатуры';
     for(const {key, value} of rows){
       if(!Array.isArray(value)){
-        return setTimeout(() => $p.iface.do_reload('', 'Индекс цен номенклатуры'), 1000);
+        return setTimeout(() => $p.iface.do_reload('', note), 1000);
       }
       const onom = nom.get(key[0], false, true);
       if (!onom || !onom._data){
-        return;
+        $p.record_log({
+          class: 'error',
+          nom: key[0],
+          note,
+          value
+        });
+        continue;
       }
       if (!onom._data._price){
         onom._data._price = {};
@@ -77,7 +84,7 @@ class Pricing {
    */
   by_range(startkey, step = 0) {
 
-    return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
+    return $p.doc.nom_prices_setup.pouch_db.query('doc/doc_nom_prices_setup_slice_last',
       {
         limit: 600,
         include_docs: false,
@@ -341,7 +348,7 @@ class Pricing {
   calc_amount (prm) {
 
     const {calc_order_row, price_type} = prm;
-    const price_cost = $p.job_prm.pricing.marginality_in_spec ?
+    const price_cost = $p.job_prm.pricing.marginality_in_spec && prm.spec.count() ?
       prm.spec.aggregate([], ["amount_marged"]) :
       this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
 

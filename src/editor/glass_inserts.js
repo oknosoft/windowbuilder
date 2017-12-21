@@ -1,9 +1,9 @@
 
 class GlassInserts {
 
-  constructor(elm) {
+  constructor(glasses) {
 
-    this.elm = elm;
+    const elm = glasses.length && glasses[0];
 
     if(!(elm instanceof Filling)){
       return $p.msg.show_msg({
@@ -12,6 +12,9 @@ class GlassInserts {
         title: $p.msg.glass_spec
       });
     }
+
+    this.elm = elm;
+    this.glasses = glasses;
 
     const {project} = elm;
 
@@ -50,8 +53,23 @@ class GlassInserts {
 
   onclose() {
     const {grids} = this.wnd.elmnts;
-    const {elm} = this;
+    const {elm, glasses} = this;
     grids.inserts && grids.inserts.editStop();
+
+    // распространим изменения на все выделенные заполнения
+    for(let i = 1; i < glasses.length; i++) {
+      const selm = glasses[i];
+      const {glass_specification} = elm.project.ox;
+      glass_specification.clear({elm: selm.elm});
+      glass_specification.find_rows({elm: elm.elm}, (row) => {
+        glass_specification.add({
+          elm: selm.elm,
+          inset: row.inset,
+          clr: row.clr
+        })
+      })
+    }
+
     elm.project.register_change(true);
     elm._manager.emit_async('update', elm, {inset: true});
     return true;
@@ -62,11 +80,13 @@ class GlassInserts {
       const {project, inset, elm} = this.elm;
       project.ox.glass_specification.clear({elm: elm});
       inset.specification.forEach((row) => {
-        project.ox.glass_specification.add({
-          elm: elm,
-          inset: row.nom,
-          clr: row.clr
-        })
+        if(row.nom instanceof $p.CatInserts){
+          project.ox.glass_specification.add({
+            elm: elm,
+            inset: row.nom,
+            clr: row.clr
+          })
+        }
       });
     }
   }

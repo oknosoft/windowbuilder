@@ -11,7 +11,7 @@ function reset_replace(prm) {
       location.replace(prm.host);
     }, 1000);
   };
-  const do_replace = destroy_ram && destroy_ram ?
+  const do_replace = destroy_ram ?
     () => destroy_ram()
       .then(destroy_doc)
       .catch(destroy_doc)

@@ -6,9 +6,8 @@
  * @module cat_users_acl
  */
 
-class CatManager {};
 
-exports.manager = class CatUsersManager extends CatManager {
+exports.CatUsersManager = class CatUsersManager extends Object {
 
   // при загрузке пользователей, морозим объект, чтобы его невозможно было изменить из интерфейса
   load_array(aattr, forse) {
@@ -45,5 +44,6 @@ exports.manager = class CatUsersManager extends CatManager {
 
 }
 
-//exports.extender = () => ({});
-//exports.substitute = () => ({});
+exports.CatUsersManager._freeze = true;
+
+//exports.CatUsers = class CatUsers {};

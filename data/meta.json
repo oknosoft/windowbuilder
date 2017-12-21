@@ -1,6 +1,6 @@
 ﻿{
   "_id": "meta",
-  "_rev": "151-d1e67a71fa3cbc530830f429fec00ab6",
+  "_rev": "11-6e404b62132f67268cf9736bd9c307b7",
   "enm": {
     "inset_attrs_options": [
       {
@@ -259,67 +259,20 @@
         "synonym": "Шаблон"
       }
     ],
-    "caching_type": [
-      {
-        "order": 0,
-        "name": "ram",
-        "synonym": "ram"
-      },
-      {
-        "order": 1,
-        "name": "doc",
-        "synonym": "doc"
-      },
-      {
-        "order": 2,
-        "name": "doc_remote",
-        "synonym": "doc_remote"
-      },
-      {
-        "order": 3,
-        "name": "doc_ram",
-        "synonym": "doc_ram"
-      },
-      {
-        "order": 4,
-        "name": "remote",
-        "synonym": "remote"
-      },
-      {
-        "order": 5,
-        "name": "user",
-        "synonym": "user"
-      },
-      {
-        "order": 6,
-        "name": "meta",
-        "synonym": "meta"
-      },
-      {
-        "order": 7,
-        "name": "e1cib",
-        "synonym": "e1cib"
-      },
-      {
-        "order": 8,
-        "name": "pgsql",
-        "synonym": "pgsql"
-      }
-    ],
     "order_categories": [
       {
         "order": 0,
-        "name": "РасчетЗаказ",
+        "name": "order",
         "synonym": "Расчет заказ"
       },
       {
         "order": 1,
-        "name": "Сервис",
+        "name": "service",
         "synonym": "Сервис"
       },
       {
         "order": 2,
-        "name": "Рекламация",
+        "name": "complaints",
         "synonym": "Рекламация"
       }
     ],
@@ -473,6 +426,11 @@
         "order": 3,
         "name": "Ценообразование",
         "synonym": "Ценообразование"
+      },
+      {
+        "order": 4,
+        "name": "ПараметрВыбора",
+        "synonym": "Параметр выбора"
       }
     ],
     "buyers_order_states": [
@@ -710,28 +668,33 @@
       },
       {
         "order": 9,
+        "name": "Монтаж",
+        "synonym": "Монтаж"
+      },
+      {
+        "order": 10,
+        "name": "Доставка",
+        "synonym": "Доставка"
+      },
+      {
+        "order": 11,
         "name": "Стеклопакет",
         "synonym": "Стеклопакет"
       },
       {
-        "order": 10,
+        "order": 12,
         "name": "ТиповойСтеклопакет",
         "synonym": "Типовой стеклопакет"
       },
       {
-        "order": 11,
+        "order": 13,
         "name": "Раскладка",
         "synonym": "Раскладка"
       },
       {
-        "order": 12,
+        "order": 14,
         "name": "Набор",
         "synonym": "Набор"
-      },
-      {
-        "order": 13,
-        "name": "Монтаж",
-        "synonym": "Монтаж"
       }
     ],
     "inserts_glass_types": [
@@ -1127,17 +1090,17 @@
     "planning_phases": [
       {
         "order": 0,
-        "name": "План",
+        "name": "plan",
         "synonym": "План"
       },
       {
         "order": 1,
-        "name": "Запуск",
+        "name": "run",
         "synonym": "Запуск"
       },
       {
         "order": 2,
-        "name": "Готовность",
+        "name": "ready",
         "synonym": "Готовность"
       }
     ],
@@ -1219,7 +1182,7 @@
         "zone": {
           "synonym": "Область",
           "multiline_mode": false,
-          "tooltip": "",
+          "tooltip": "Разделитель (префикс) данных",
           "type": {
             "types": [
               "number"
@@ -2188,6 +2151,18 @@
             "str_len": 0
           }
         },
+        "sorting_field": {
+          "synonym": "Порядок",
+          "multiline_mode": false,
+          "tooltip": "Используется для упорядочивания (служебный)",
+          "type": {
+            "types": [
+              "number"
+            ],
+            "digits": 6,
+            "fraction_figits": 0
+          }
+        },
         "async": {
           "synonym": "Асинхронный режим",
           "multiline_mode": false,
@@ -2198,10 +2173,20 @@
             ]
           }
         },
+        "disabled": {
+          "synonym": "Отключена",
+          "multiline_mode": false,
+          "tooltip": "Имеет смысл только для печатных форм и модификаторов",
+          "type": {
+            "types": [
+              "boolean"
+            ]
+          }
+        },
         "zone": {
           "synonym": "Область",
           "multiline_mode": false,
-          "tooltip": "",
+          "tooltip": "Разделитель (префикс) данных",
           "type": {
             "types": [
               "number"
@@ -2307,7 +2292,6 @@
                   ]
                 }
               ],
-              "choice_groups_elm": "elm",
               "choice_type": {
                 "path": [
                   "params",
@@ -2517,6 +2501,201 @@
       "tabular_sections": {},
       "cachable": "ram"
     },
+    "branches": {
+      "name": "ИнтеграцияОтделыАбонентов",
+      "splitted": true,
+      "synonym": "Отделы абонентов",
+      "illustration": "",
+      "obj_presentation": "",
+      "list_presentation": "",
+      "input_by_string": [
+        "name"
+      ],
+      "hierarchical": true,
+      "has_owners": true,
+      "group_hierarchy": false,
+      "main_presentation_name": true,
+      "code_length": 0,
+      "fields": {
+        "suffix": {
+          "synonym": "Суффикс CouchDB",
+          "multiline_mode": false,
+          "tooltip": "Для разделения данных в CouchDB",
+          "mandatory": true,
+          "type": {
+            "types": [
+              "string"
+            ],
+            "str_len": 4
+          }
+        },
+        "direct": {
+          "synonym": "Direct",
+          "multiline_mode": false,
+          "tooltip": "Использовать прямое подключение к CouchDB без кеширования в браузере",
+          "type": {
+            "types": [
+              "boolean"
+            ]
+          }
+        },
+        "use": {
+          "synonym": "Используется",
+          "multiline_mode": false,
+          "tooltip": "Использовать данный отдел при создании баз и пользователей",
+          "type": {
+            "types": [
+              "boolean"
+            ]
+          }
+        },
+        "parent": {
+          "synonym": "Ведущий отдел",
+          "multiline_mode": false,
+          "tooltip": "Заполняется в случае иерархической репликации",
+          "choice_links": [
+            {
+              "name": [
+                "selection",
+                "owner"
+              ],
+              "path": [
+                "owner"
+              ]
+            }
+          ],
+          "type": {
+            "types": [
+              "cat.branches"
+            ],
+            "is_ref": true
+          }
+        }
+      },
+      "tabular_sections": {
+        "organizations": {
+          "name": "Организации",
+          "synonym": "Организации",
+          "tooltip": "Организации, у которых дилер может заказывать продукцию и услуги",
+          "fields": {
+            "acl_obj": {
+              "synonym": "Объект доступа",
+              "multiline_mode": false,
+              "tooltip": "",
+              "type": {
+                "types": [
+                  "cat.organizations"
+                ],
+                "is_ref": true
+              }
+            },
+            "by_default": {
+              "synonym": "По умолчанию",
+              "multiline_mode": false,
+              "tooltip": "",
+              "type": {
+                "types": [
+                  "boolean"
+                ]
+              }
+            }
+          }
+        },
+        "partners": {
+          "name": "Контрагенты",
+          "synonym": "Контрагенты",
+          "tooltip": "Юридические лица дилера, от имени которых он оформляет заказы",
+          "fields": {
+            "acl_obj": {
+              "synonym": "Объект доступа",
+              "multiline_mode": false,
+              "tooltip": "",
+              "type": {
+                "types": [
+                  "cat.partners"
+                ],
+                "is_ref": true
+              }
+            },
+            "by_default": {
+              "synonym": "По умолчанию",
+              "multiline_mode": false,
+              "tooltip": "",
+              "type": {
+                "types": [
+                  "boolean"
+                ]
+              }
+            }
+          }
+        },
+        "divisions": {
+          "name": "Подразделения",
+          "synonym": "Подразделения",
+          "tooltip": "Подразделения, к данным которых, дилеру предоставлен доступ",
+          "fields": {
+            "acl_obj": {
+              "synonym": "Объект доступа",
+              "multiline_mode": false,
+              "tooltip": "",
+              "type": {
+                "types": [
+                  "cat.divisions"
+                ],
+                "is_ref": true
+              }
+            },
+            "by_default": {
+              "synonym": "По умолчанию",
+              "multiline_mode": false,
+              "tooltip": "",
+              "type": {
+                "types": [
+                  "boolean"
+                ]
+              }
+            }
+          }
+        },
+        "price_types": {
+          "name": "ТипыЦен",
+          "synonym": "Типы цен",
+          "tooltip": "Типы цен, привязанные к дилеру",
+          "fields": {
+            "acl_obj": {
+              "synonym": "Объект доступа",
+              "multiline_mode": false,
+              "tooltip": "",
+              "type": {
+                "types": [
+                  "cat.nom_prices_types"
+                ],
+                "is_ref": true
+              }
+            }
+          }
+        },
+        "keys": {
+          "name": "Ключи",
+          "synonym": "Ключи",
+          "tooltip": "Ключи параметров, привязанные к дилеру",
+          "fields": {
+            "acl_obj": {
+              "synonym": "Объект доступа",
+              "multiline_mode": false,
+              "tooltip": "",
+              "type": {
+                "types": [
+                  "cat.parameters_keys"
+                ],
+                "is_ref": true
+              }
+            }
+          }
+        }
+      },
+      "cachable": "doc"
+    },
     "currencies": {
       "name": "Валюты",
       "splitted": true,
@@ -2613,6 +2792,16 @@
       "main_presentation_name": true,
       "code_length": 0,
       "fields": {
+        "mandatory_fields": {
+          "synonym": "Обязательное заполнение",
+          "multiline_mode": false,
+          "tooltip": "Вид контактной информации обязателен к заполнению",
+          "type": {
+            "types": [
+              "boolean"
+            ]
+          }
+        },
         "type": {
           "synonym": "Тип",
           "multiline_mode": false,
@@ -2624,37 +2813,6 @@
               "enm.contact_information_types"
             ],
             "is_ref": true
-          }
-        },
-        "ВидПоляДругое": {
-          "synonym": "Вид поля другое",
-          "multiline_mode": false,
-          "tooltip": "Внешний вид поля другое на форме",
-          "type": {
-            "types": [
-              "string"
-            ],
-            "str_len": 20
-          }
-        },
-        "Используется": {
-          "synonym": "Используется",
-          "multiline_mode": false,
-          "tooltip": "Вид контактной информации используется",
-          "type": {
-            "types": [
-              "boolean"
-            ]
-          }
-        },
-        "mandatory_fields": {
-          "synonym": "Обязательное заполнение",
-          "multiline_mode": false,
-          "tooltip": "Вид контактной информации обязателен к заполнению",
-          "type": {
-            "types": [
-              "boolean"
-            ]
           }
         },
         "predefined_name": {
@@ -4269,6 +4427,16 @@
           "synonym": "Заказной",
           "multiline_mode": false,
           "tooltip": "Если эта номенклатура есть в спецификации - изделие имеет заказные материалы, на которые должен обратить внимание ОМТС",
+          "type": {
+            "types": [
+              "boolean"
+            ]
+          }
+        },
+        "packing": {
+          "synonym": "Упаковка",
+          "multiline_mode": false,
+          "tooltip": "Если эта номенклатура есть в спецификации - изделию требуется упаковка",
           "type": {
             "types": [
               "boolean"
@@ -8583,10 +8751,10 @@
             "is_ref": true
           }
         },
-        "sorting": {
+        "sorting_field": {
           "synonym": "Порядок",
           "multiline_mode": false,
-          "tooltip": "",
+          "tooltip": "Используется для упорядочивания (служебный)",
           "type": {
             "types": [
               "number"
@@ -8740,17 +8908,14 @@
       "main_presentation_name": true,
       "code_length": 0,
       "fields": {
-        "user_ib_uid": {
-          "synonym": "Идентификатор пользователя ИБ",
+        "invalid": {
+          "synonym": "Недействителен",
           "multiline_mode": false,
-          "tooltip": "Уникальный идентификатор пользователя информационной базы, с которым сопоставлен этот элемент справочника.",
-          "choice_groups_elm": "elm",
+          "tooltip": "Пользователь больше не работает в программе, но сведения о нем сохранены.\nНедействительные пользователи скрываются из всех списков\nпри выборе или подборе в документах и других местах программы.",
           "type": {
             "types": [
-              "string"
-            ],
-            "str_len": 36,
-            "str_fix": true
+              "boolean"
+            ]
           }
         },
         "department": {
@@ -8788,6 +8953,29 @@
             "str_len": 0
           }
         },
+        "ancillary": {
+          "synonym": "Служебный",
+          "multiline_mode": false,
+          "tooltip": "Неразделенный или разделенный служебный пользователь, права к которому устанавливаются непосредственно и программно.",
+          "type": {
+            "types": [
+              "boolean"
+            ]
+          }
+        },
+        "user_ib_uid": {
+          "synonym": "Идентификатор пользователя ИБ",
+          "multiline_mode": false,
+          "tooltip": "Уникальный идентификатор пользователя информационной базы, с которым сопоставлен этот элемент справочника.",
+          "choice_groups_elm": "elm",
+          "type": {
+            "types": [
+              "string"
+            ],
+            "str_len": 36,
+            "str_fix": true
+          }
+        },
         "user_fresh_uid": {
           "synonym": "Идентификатор пользователя сервиса",
           "multiline_mode": false,
@@ -8799,26 +8987,6 @@
             ],
             "str_len": 36,
             "str_fix": true
-          }
-        },
-        "invalid": {
-          "synonym": "Недействителен",
-          "multiline_mode": false,
-          "tooltip": "Пользователь больше не работает в программе, но сведения о нем сохранены.\nНедействительные пользователи скрываются из всех списков\nпри выборе или подборе в документах и других местах программы.",
-          "type": {
-            "types": [
-              "boolean"
-            ]
-          }
-        },
-        "ancillary": {
-          "synonym": "Служебный",
-          "multiline_mode": false,
-          "tooltip": "Неразделенный или разделенный служебный пользователь, права к которому устанавливаются непосредственно и программно.",
-          "type": {
-            "types": [
-              "boolean"
-            ]
           }
         },
         "id": {
@@ -8844,6 +9012,28 @@
             "str_len": 2
           }
         },
+        "branch": {
+          "synonym": "Отдел",
+          "multiline_mode": false,
+          "tooltip": "",
+          "choice_groups_elm": "elm",
+          "type": {
+            "types": [
+              "cat.branches"
+            ],
+            "is_ref": true
+          }
+        },
+        "push_only": {
+          "synonym": "Только push репликация",
+          "multiline_mode": false,
+          "tooltip": "Синхронизировать браузерную базу doc только в одну сторону - от пользователя",
+          "type": {
+            "types": [
+              "boolean"
+            ]
+          }
+        },
         "suffix": {
           "synonym": "Суффикс CouchDB",
           "multiline_mode": false,
@@ -8864,17 +9054,6 @@
             "types": [
               "boolean"
             ]
-          }
-        },
-        "predefined_name": {
-          "synonym": "",
-          "multiline_mode": false,
-          "tooltip": "",
-          "type": {
-            "types": [
-              "string"
-            ],
-            "str_len": 256
           }
         }
       },
@@ -9644,7 +9823,7 @@
             "types": [
               "string"
             ],
-            "str_len": 0
+            "str_len": 1024
           }
         },
         "sorting_field": {
@@ -9655,7 +9834,7 @@
             "types": [
               "number"
             ],
-            "digits": 5,
+            "digits": 6,
             "fraction_figits": 0
           }
         },
@@ -11733,7 +11912,7 @@
         "zone": {
           "synonym": "Область",
           "multiline_mode": false,
-          "tooltip": "",
+          "tooltip": "Разделитель (префикс) данных",
           "type": {
             "types": [
               "number"
@@ -12054,7 +12233,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     },
     "purchase": {
       "name": "ПоступлениеТоваровУслуг",
@@ -12591,7 +12770,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     },
     "work_centers_task": {
       "name": "НарядРЦ",
@@ -12609,6 +12788,54 @@
       "main_presentation_name": false,
       "code_length": 11,
       "fields": {
+        "key": {
+          "synonym": "Ключ",
+          "multiline_mode": false,
+          "tooltip": "Участок или станок в подразделении производства",
+          "choice_params": [
+            {
+              "name": "applying",
+              "path": "РабочийЦентр"
+            }
+          ],
+          "choice_groups_elm": "elm",
+          "type": {
+            "types": [
+              "cat.parameters_keys"
+            ],
+            "is_ref": true
+          }
+        },
+        "recipient": {
+          "synonym": "Получатель",
+          "multiline_mode": false,
+          "tooltip": "СГП или следующий передел",
+          "choice_params": [
+            {
+              "name": "applying",
+              "path": "РабочийЦентр"
+            }
+          ],
+          "choice_groups_elm": "elm",
+          "type": {
+            "types": [
+              "cat.parameters_keys"
+            ],
+            "is_ref": true
+          }
+        },
+        "biz_cuts": {
+          "synonym": "Деловая обрезь",
+          "multiline_mode": false,
+          "tooltip": "0 - не учитывать\n1 - учитывать\n2 - только исходящую\n3 - только входящую",
+          "type": {
+            "types": [
+              "number"
+            ],
+            "digits": 1,
+            "fraction_figits": 0
+          }
+        },
         "responsible": {
           "synonym": "Ответственный",
           "multiline_mode": false,
@@ -12617,18 +12844,6 @@
           "type": {
             "types": [
               "cat.users"
-            ],
-            "is_ref": true
-          }
-        },
-        "key": {
-          "synonym": "Ключ",
-          "multiline_mode": false,
-          "tooltip": "Участок или станок в подразделении производства",
-          "choice_groups_elm": "elm",
-          "type": {
-            "types": [
-              "cat.parameters_keys"
             ],
             "is_ref": true
           }
@@ -12642,30 +12857,6 @@
               "string"
             ],
             "str_len": 0
-          }
-        },
-        "recipient": {
-          "synonym": "Получатель",
-          "multiline_mode": false,
-          "tooltip": "СГП или следующий передел",
-          "choice_groups_elm": "elm",
-          "type": {
-            "types": [
-              "cat.parameters_keys"
-            ],
-            "is_ref": true
-          }
-        },
-        "ДеловаяОбрезь": {
-          "synonym": "Деловая обрезь",
-          "multiline_mode": false,
-          "tooltip": "0 - не учитывать\n1 - учитывать\n2 - только исходящую\n3 - только входящую",
-          "type": {
-            "types": [
-              "number"
-            ],
-            "digits": 1,
-            "fraction_figits": 0
           }
         }
       },
@@ -12725,7 +12916,7 @@
             }
           }
         },
-        "Потребность": {
+        "demand": {
           "name": "Потребность",
           "synonym": "Потребность",
           "tooltip": "",
@@ -12789,7 +12980,7 @@
                     "owner"
                   ],
                   "path": [
-                    "Потребность",
+                    "demand",
                     "НоменклатураСП"
                   ]
                 }
@@ -12825,7 +13016,7 @@
                     "owner"
                   ],
                   "path": [
-                    "Потребность",
+                    "demand",
                     "nom"
                   ]
                 }
@@ -13280,7 +13471,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     },
     "calc_order": {
       "name": "Расчет",
@@ -14275,7 +14466,7 @@
             "date": {
               "synonym": "Дата",
               "multiline_mode": false,
-              "tooltip": "Плановая дата доставки или готовности",
+              "tooltip": "Плановая дата доставки или начала операции",
               "type": {
                 "types": [
                   "date"
@@ -14345,7 +14536,7 @@
             "performance": {
               "synonym": "Мощность",
               "multiline_mode": false,
-              "tooltip": "",
+              "tooltip": "Трудоемкость или время операции",
               "type": {
                 "types": [
                   "number"
@@ -14619,7 +14810,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     },
     "work_centers_performance": {
       "name": "МощностиРЦ",
@@ -14727,7 +14918,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     },
     "debit_bank_order": {
       "name": "ПлатежноеПоручениеВходящее",
@@ -14989,7 +15180,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     },
     "credit_bank_order": {
       "name": "ПлатежноеПоручениеИсходящее",
@@ -15251,7 +15442,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     },
     "debit_cash_order": {
       "name": "ПриходныйКассовыйОрдер",
@@ -15537,7 +15728,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     },
     "credit_cash_order": {
       "name": "РасходныйКассовыйОрдер",
@@ -15823,7 +16014,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     },
     "selling": {
       "name": "РеализацияТоваровУслуг",
@@ -16325,7 +16516,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     },
     "nom_prices_setup": {
       "name": "УстановкаЦенНоменклатуры",
@@ -16497,6 +16688,15 @@
           "synonym": "Ключ",
           "multiline_mode": false,
           "tooltip": "",
+          "choice_params": [
+            {
+              "name": "applying",
+              "path": [
+                "НаправлениеДоставки",
+                "РабочийЦентр"
+              ]
+            }
+          ],
           "choice_groups_elm": "elm",
           "type": {
             "types": [
@@ -16517,8 +16717,8 @@
             "is_ref": true
           }
         },
-        "calc_order": {
-          "synonym": "Расчет",
+        "trans": {
+          "synonym": "Сделка",
           "multiline_mode": false,
           "tooltip": "",
           "choice_groups_elm": "elm",
@@ -16706,7 +16906,7 @@
           }
         }
       },
-      "cachable": "remote"
+      "cachable": "doc"
     }
   },
   "ireg": {
@@ -17716,7 +17916,9 @@
                     "МоскитнаяСетка",
                     "Подоконник",
                     "Откос",
-                    "Заполнение"
+                    "Заполнение",
+                    "Монтаж",
+                    "Доставка"
                   ]
                 },
                 {
@@ -18271,6 +18473,38 @@
               }
             }
           }
+        },
+        "charges_discounts": {
+          "name": "СкидкиНаценки",
+          "synonym": "Скидки наценки",
+          "tooltip": "",
+          "fields": {
+            "nom_kind": {
+              "synonym": "Группа",
+              "multiline_mode": false,
+              "tooltip": "",
+              "choice_groups_elm": "elm",
+              "mandatory": true,
+              "type": {
+                "types": [
+                  "cat.nom_kinds"
+                ],
+                "is_ref": true
+              }
+            },
+            "discount_percent": {
+              "synonym": "Скидка %",
+              "multiline_mode": false,
+              "tooltip": "",
+              "type": {
+                "types": [
+                  "number"
+                ],
+                "digits": 5,
+                "fraction_figits": 2
+              }
+            }
+          }
         }
       }
     },
@@ -18776,6 +19010,18 @@
                 "is_ref": true
               }
             },
+            "elm": {
+              "synonym": "Элемент",
+              "multiline_mode": false,
+              "tooltip": "№ элемента",
+              "type": {
+                "types": [
+                  "number"
+                ],
+                "digits": 6,
+                "fraction_figits": 0
+              }
+            },
             "qty": {
               "synonym": "Количество, шт",
               "multiline_mode": false,
@@ -19180,7 +19426,7 @@
         "zone": {
           "synonym": "Область",
           "multiline_mode": false,
-          "tooltip": "",
+          "tooltip": "Разделитель (префикс) данных",
           "type": {
             "types": [
               "number"
@@ -19355,14 +19601,14 @@
           }
         },
         "sorting_field": {
-          "synonym": "Реквизит доп упорядочивания",
+          "synonym": "Порядок",
           "multiline_mode": false,
-          "tooltip": "Используется для сортировки в списках свойств (служебный)",
+          "tooltip": "Используется для упорядочивания (служебный)",
           "type": {
             "types": [
               "number"
             ],
-            "digits": 5,
+            "digits": 6,
             "fraction_figits": 0
           }
         },
@@ -19388,6 +19634,26 @@
             ]
           }
         },
+        "mandatory": {
+          "synonym": "Заполнять обязательно",
+          "multiline_mode": false,
+          "tooltip": "Настройка проверки заполненности дополнительного реквизита",
+          "type": {
+            "types": [
+              "boolean"
+            ]
+          }
+        },
+        "include_to_name": {
+          "synonym": "Включать в наименование",
+          "multiline_mode": false,
+          "tooltip": "Добавлять значение параметра в наименование продукции",
+          "type": {
+            "types": [
+              "boolean"
+            ]
+          }
+        },
         "list": {
           "synonym": "Список",
           "multiline_mode": false,
@@ -19400,14 +19666,16 @@
             "fraction_figits": 0
           }
         },
-        "mandatory": {
-          "synonym": "Заполнять обязательно",
+        "caption": {
+          "synonym": "Наименование",
           "multiline_mode": false,
-          "tooltip": "Настройка проверки заполненности дополнительного реквизита",
+          "tooltip": "Краткое представление свойства, которое\nвыводится в формах редактирования его значения",
+          "mandatory": true,
           "type": {
             "types": [
-              "boolean"
-            ]
+              "string"
+            ],
+            "str_len": 75
           }
         },
         "note": {
@@ -19442,28 +19710,6 @@
               "string"
             ],
             "str_len": 0
-          }
-        },
-        "include_to_name": {
-          "synonym": "Включать в наименование",
-          "multiline_mode": false,
-          "tooltip": "Добавлять значение параметра в наименование продукции",
-          "type": {
-            "types": [
-              "boolean"
-            ]
-          }
-        },
-        "caption": {
-          "synonym": "Наименование",
-          "multiline_mode": false,
-          "tooltip": "Краткое представление свойства, которое\nвыводится в формах редактирования его значения",
-          "mandatory": true,
-          "type": {
-            "types": [
-              "string"
-            ],
-            "str_len": 75
           }
         },
         "is_extra_property": {
@@ -19601,7 +19847,6 @@
               "type": {
                 "types": [
                   "cat.ПапкиЭлектронныхПисем",
-                  "enm.caching_type",
                   "doc.work_centers_performance",
                   "enm.contact_information_types",
                   "enm.individual_legal",
@@ -19682,6 +19927,7 @@
                   "enm.impost_mount_options",
                   "doc.calc_order",
                   "enm.positions",
+                  "cat.branches",
                   "doc.credit_bank_order",
                   "cat.cashboxes",
                   "enm.open_types",
@@ -19837,6 +20083,7 @@
     "ДатаСобытия",
     "ДебетКредит",
     "Действие",
+    "ДеловаяОбрезь",
     "ДержатьРезервБезОплатыОграниченноеВремя",
     "ДетализацияПланирования",
     "ДеятельностьПрекращена",
@@ -19902,6 +20149,7 @@
     "ИнтеграцияВидыСравнений",
     "ИнтеграцияКешСсылок",
     "ИнтеграцияНастройкиОтчетовИСписков",
+    "ИнтеграцияОтделыАбонентов",
     "ИнтеграцияСостоянияТранспорта",
     "ИнтеграцияТипВыгрузки",
     "ИнтеграцияТипКеширования",
@@ -19921,6 +20169,7 @@
     "КлассификаторЕдиницИзмерения",
     "КлиентДилера",
     "Ключ",
+    "Ключи",
     "КлючиПараметров",
     "КМарж",
     "КМаржВнутр",
@@ -20049,6 +20298,7 @@
     "ОсьПоворота",
     "Отбор",
     "Ответственный",
+    "Отдел",
     "ОтражатьВБухгалтерскомУчете",
     "ОтражатьВНалоговомУчете",
     "Отступы",
@@ -20103,6 +20353,7 @@
     "Поставщик",
     "ПоступлениеТоваровУслуг",
     "ПоСчетам",
+    "Потребность",
     "ПоУмолчанию",
     "Пояснение",
     "Предоплата",
@@ -20129,7 +20380,6 @@
     "Происхождение",
     "Пропорции",
     "Процент",
-    "ПроцентАвтоматическихСкидок",
     "ПроцентПредоплаты",
     "ПроцентСкидкиНаценки",
     "ПроцентСкидкиНаценкиВнутр",
@@ -20304,6 +20554,7 @@
     "ТипыСтрокВЗаказ",
     "ТипыСтруктурныхЕдиниц",
     "ТипыСчетов",
+    "ТипыЦен",
     "ТипыЦенНоменклатуры",
     "ТипыЭлементов",
     "ТипЭлемента",
@@ -20528,6 +20779,7 @@
     "event_date",
     "debit_credit",
     "action",
+    "biz_cuts",
     "check_days_without_pay",
     "planning_detailing",
     "activity_ceased",
@@ -20593,6 +20845,7 @@
     "comparison_types",
     "integration_links_cache",
     "scheme_settings",
+    "branches",
     "obj_delivery_states",
     "unload_type",
     "caching_type",
@@ -20612,6 +20865,7 @@
     "units",
     "client_of_dealer",
     "key",
+    "keys",
     "parameters_keys",
     "marginality",
     "marginality_internal",
@@ -20740,6 +20994,7 @@
     "rotation_axis",
     "selection",
     "responsible",
+    "branch",
     "accounting_reflect",
     "tax_accounting_reflect",
     "offsets",
@@ -20794,6 +21049,7 @@
     "is_supplier",
     "purchase",
     "by_invoices",
+    "demand",
     "by_default",
     "illustration",
     "prepayment",
@@ -20820,7 +21076,6 @@
     "origin",
     "proportions",
     "rate",
-    "discount_percent_automatic",
     "prepayment_percent",
     "discount_percent",
     "discount_percent_internal",
@@ -20995,6 +21250,7 @@
     "specification_order_row_types",
     "structural_unit_types",
     "account_types",
+    "price_types",
     "nom_prices_types",
     "elm_types",
     "elm_type",

@@ -153,7 +153,7 @@ class Editor extends paper.PaperScope {
      * @type OTooolBar
      * @private
      */
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '16px', left: '3px', name: 'left', height: '320px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '2px', name: 'left', height: '294px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -165,8 +165,7 @@ class Editor extends paper.PaperScope {
         {name: 'cut', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
         {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
-        {name: 'line', css: 'tb_line', tooltip: 'Произвольная линия'},
-        {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'}
+        {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
       ],
       onclick: (name) => _editor.select_tool(name),
       on_popup: (popup, bdiv) => {
@@ -752,8 +751,11 @@ class Editor extends paper.PaperScope {
    *
    * @param [cnstr] {Number} - номер элемента или контура
    */
-  glass_inserts(elm){
-    new GlassInserts(elm || this.project.selected_elm)
+  glass_inserts(glasses){
+    if(!Array.isArray(glasses)){
+      glasses = this.project.selected_glasses();
+    }
+    return new GlassInserts(glasses);
   }
 
   /**
@@ -941,7 +943,7 @@ class Editor extends paper.PaperScope {
       // прочищаем размерные линии
       if(changed || profiles.length > 1){
         profiles.forEach(({layer}) => contours.indexOf(layer) == -1 && contours.push(layer));
-        contours.forEach(({l_dimensions}) => l_dimensions.clear());
+        contours.forEach(({l_dimensions}) => l_dimensions && l_dimensions.clear());
       }
 
       // если выделено несколько, запланируем групповое выравнивание
