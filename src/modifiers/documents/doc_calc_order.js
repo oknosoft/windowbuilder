@@ -366,6 +366,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       КонтрагентКЛОтчествоРП: '',
       КонтрагентКЛФамилия: '',
       КонтрагентКЛФамилияРП: '',
+      КонтрагентИНН: this.partner.inn,
+      КонтрагентКПП: this.partner.kpp,
       КонтрагентЮрФизЛицо: '',
       КратностьВзаиморасчетов: this.settlements_multiplicity,
       КурсВзаиморасчетов: this.settlements_course,
@@ -1154,4 +1156,3 @@ $p.DocCalc_orderProductionRow.rfields = {
 };
 
 $p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percent_internal';
-
