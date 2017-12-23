@@ -204,18 +204,22 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
    * @return {CatCharacteristics}
    */
   find_create_cx(elm, origin) {
-    const {_manager, ref, calc_order, params, inserts} = this;
-    if(!_manager._find_cx_sql) {
-      _manager._find_cx_sql = $p.wsql.alasql.compile('select top 1 ref from cat_characteristics where leading_product = ? and leading_elm = ? and origin = ?');
-    }
-    const aref = _manager._find_cx_sql([ref, elm, origin]);
-    const cx = aref.length ? $p.cat.characteristics.get(aref[0].ref, false) :
-      $p.cat.characteristics.create({
+    const {_manager, calc_order, params, inserts} = this;
+    let cx;
+    _manager.find_rows({leading_product: this, leading_elm: elm, origin}, (obj) => {
+      if(!obj._deleted) {
+        cx = obj;
+        return false;
+      }
+    });
+    if(!cx) {
+      cx = $p.cat.characteristics.create({
         calc_order: calc_order,
         leading_product: this,
         leading_elm: elm,
         origin: origin
       }, false, true)._set_loaded();
+    }
 
     // переносим в cx параметры
     const {length, width} = $p.job_prm.properties;

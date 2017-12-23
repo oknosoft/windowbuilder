@@ -332,7 +332,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    * Возвращает данные для печати
    */
   print_data() {
-    const {organization, bank_account, contract, manager} = this;
+    const {organization, bank_account, partner, contract, manager} = this;
     const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
     const get_imgs = [];
     const {contact_information_kinds} = $p.cat;
@@ -353,8 +353,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       //Примечание (комментарий) к расчету  и внутренний номер расчет-заказа
       Примечание: this.note,
       НомерВнутренний: this.number_internal,
-      Контрагент: this.partner.presentation,
-      КонтрагентОписание: this.partner.long_presentation,
+      Контрагент: partner.presentation,
+      КонтрагентОписание: partner.long_presentation,
       КонтрагентДокумент: '',
       КонтрагентКЛДолжность: '',
       КонтрагентКЛДолжностьРП: '',
@@ -366,8 +366,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       КонтрагентКЛОтчествоРП: '',
       КонтрагентКЛФамилия: '',
       КонтрагентКЛФамилияРП: '',
-      КонтрагентИНН: this.partner.inn,
-      КонтрагентКПП: this.partner.kpp,
+      КонтрагентИНН: partner.inn,
+      КонтрагентКПП: partner.kpp,
       КонтрагентЮрФизЛицо: '',
       КратностьВзаиморасчетов: this.settlements_multiplicity,
       КурсВзаиморасчетов: this.settlements_course,
@@ -433,15 +433,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       СотрудникФИОРП: manager.individual_person.ФамилияРП + ' ' + manager.individual_person.ИмяРП + ' ' + manager.individual_person.ОтчествоРП,
       СуммаДокумента: this.doc_amount.toFixed(2),
       СуммаДокументаПрописью: this.doc_amount.in_words(),
-      СуммаДокументаБезСкидки: this.production._obj.reduce(function (val, row) {
-        return val + row.quantity * row.price;
-      }, 0).toFixed(2),
-      СуммаСкидки: this.production._obj.reduce(function (val, row) {
-        return val + row.discount;
-      }, 0).toFixed(2),
-      СуммаНДС: this.production._obj.reduce(function (val, row) {
-        return val + row.vat_amount;
-      }, 0).toFixed(2),
+      СуммаДокументаБезСкидки: this.production._obj.reduce((val, row) => val + row.quantity * row.price, 0).toFixed(2),
+      СуммаСкидки: this.production._obj.reduce((val, row) => val + row.discount, 0).toFixed(2),
+      СуммаНДС: this.production._obj.reduce((val, row) => val + row.vat_amount, 0).toFixed(2),
       ТекстНДС: this.vat_consider ? (this.vat_included ? 'В том числе НДС 18%' : 'НДС 18% (сверху)') : 'Без НДС',
       ТелефонПоАдресуДоставки: this.phone,
       СуммаВключаетНДС: contract.vat_included,
@@ -770,17 +764,21 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     const mgr = $p.cat.characteristics;
     let cx;
     function fill_cx(ox) {
+      if(ox._deleted){
+        return;
+      }
       for (let ts in mgr.metadata().tabular_sections) {
         ox[ts].clear();
       }
       ox.leading_elm = 0;
       ox.leading_product = '';
       cx = Promise.resolve(ox);
+      return false;
     }
     if(row.characteristic.empty()){
       mgr.find_rows({calc_order: this, product: row.row}, fill_cx);
     }
-    else{
+    else if(!row.characteristic._deleted){
       fill_cx(row.characteristic);
     }
 
