@@ -996,11 +996,11 @@ $p.DocCalc_order.FakeLenAngl = class FakeLenAngl {
 $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocCalc_orderProductionRow {
 
   // при изменении реквизита
-  value_change(field, type, value, no_extra_charge, rows) {
+  value_change(field, type, value, no_extra_charge) {
 
     let {_obj, _owner, nom, characteristic, unit} = this;
     let recalc;
-    const {rounding} = _owner._owner;
+    const {rounding, _slave_recalc} = _owner._owner;
     const rfield = $p.DocCalc_orderProductionRow.rfields[field];
 
     if(rfield) {
@@ -1027,7 +1027,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       }
 
       // если это следящая вставка, рассчитаем спецификацию
-      if(!characteristic.origin.empty() && characteristic.origin.slave && (!rows || !rows.has(this))) {
+      if(!characteristic.origin.empty() && characteristic.origin.slave) {
         characteristic.specification.clear();
         characteristic.x = this.len;
         characteristic.y = this.width;
@@ -1126,14 +1126,14 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       doc._manager.emit_async('update', doc, amount);
 
       // пересчитываем спецификации и цены в следящих вставках
-      if(!rows){
-        rows = new Set([this]);
+      if(!_slave_recalc){
+        _owner._owner._slave_recalc = true;
         _owner.forEach((row) => {
-          if(!rows.has(row) && !row.characteristic.origin.empty() && row.characteristic.origin.slave) {
-            row.value_change('quantity', 'update', row.quantity, no_extra_charge, rows);
-            rows.add(row);
+          if(row !== this && !row.characteristic.origin.empty() && row.characteristic.origin.slave) {
+            row.value_change('quantity', 'update', row.quantity, no_extra_charge);
           }
-        })
+        });
+        _owner._owner._slave_recalc = false;
       }
 
       // TODO: учесть валюту документа, которая может отличаться от валюты упр. учета и решить вопрос с amount_operation

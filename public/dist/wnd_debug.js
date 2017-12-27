@@ -312,6 +312,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 };
 
 
+
 (function($p){
 
 	const _mgr = $p.cat.characteristics;
@@ -446,7 +447,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 						if(!attr.filter || presentation.toLowerCase().match(attr.filter.toLowerCase()))
 							crefs.push({
 								ref: o.ref,
-								presentation: presentation,
+                presentation:   '<div style="white-space:normal"> ' + presentation + ' </div>',
 								svg: o._attachments ? o._attachments.svg : ""
 							});
 					});
@@ -1212,24 +1213,28 @@ $p.CatElm_visualization.prototype.__define({
 
 $p.adapters.pouch.once('pouch_data_loaded', () => {
   const {formulas} = $p.cat;
-  formulas.pouch_find_rows({ _top: 500, _skip: 0 })
+  formulas.pouch_find_rows({_top: 500, _skip: 0})
     .then((rows) => {
-    const parents = [formulas.predefined("printing_plates"), formulas.predefined("modifiers")];
-    const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);
-    filtered.sort((a, b) => a.sorting_field - b.sorting_field).forEach((formula) => {
-        if(formula.parent == parents[0]){
-          formula.params.find_rows({param: "destination"}, (dest) => {
+      const parents = [formulas.predefined('printing_plates'), formulas.predefined('modifiers')];
+      const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);
+      filtered.sort((a, b) => a.sorting_field - b.sorting_field).forEach((formula) => {
+        if(formula.parent == parents[0]) {
+          formula.params.find_rows({param: 'destination'}, (dest) => {
             const dmgr = $p.md.mgr_by_class_name(dest.value);
-            if(dmgr){
-              if(!dmgr._printing_plates){
+            if(dmgr) {
+              if(!dmgr._printing_plates) {
                 dmgr._printing_plates = {};
               }
               dmgr._printing_plates[`prn_${formula.ref}`] = formula;
             }
-          })
+          });
         }
         else {
-          formula.execute();
+          try {
+            formula.execute();
+          }
+          catch (err) {
+          }
         }
       });
     });
@@ -4772,11 +4777,11 @@ $p.DocCalc_order.FakeLenAngl = class FakeLenAngl {
 
 $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocCalc_orderProductionRow {
 
-  value_change(field, type, value, no_extra_charge, rows) {
+  value_change(field, type, value, no_extra_charge) {
 
     let {_obj, _owner, nom, characteristic, unit} = this;
     let recalc;
-    const {rounding} = _owner._owner;
+    const {rounding, _slave_recalc} = _owner._owner;
     const rfield = $p.DocCalc_orderProductionRow.rfields[field];
 
     if(rfield) {
@@ -4800,7 +4805,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         _obj.unit = nom.storage_unit.ref;
       }
 
-      if(!characteristic.origin.empty() && characteristic.origin.slave && (!rows || !rows.has(this))) {
+      if(!characteristic.origin.empty() && characteristic.origin.slave) {
         characteristic.specification.clear();
         characteristic.x = this.len;
         characteristic.y = this.width;
@@ -4894,14 +4899,14 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       Object.assign(doc, amount);
       doc._manager.emit_async('update', doc, amount);
 
-      if(!rows){
-        rows = new Set([this]);
+      if(!_slave_recalc){
+        _owner._owner._slave_recalc = true;
         _owner.forEach((row) => {
-          if(!rows.has(row) && !row.characteristic.origin.empty() && row.characteristic.origin.slave) {
-            row.value_change('quantity', 'update', row.quantity, no_extra_charge, rows);
-            rows.add(row);
+          if(row !== this && !row.characteristic.origin.empty() && row.characteristic.origin.slave) {
+            row.value_change('quantity', 'update', row.quantity, no_extra_charge);
           }
-        })
+        });
+        _owner._owner._slave_recalc = false;
       }
 
 
