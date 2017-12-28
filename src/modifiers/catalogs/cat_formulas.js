@@ -12,26 +12,30 @@
 $p.adapters.pouch.once('pouch_data_loaded', () => {
   // читаем элементы из pouchdb и создаём формулы
   const {formulas} = $p.cat;
-  formulas.pouch_find_rows({ _top: 500, _skip: 0 })
+  formulas.pouch_find_rows({_top: 500, _skip: 0})
     .then((rows) => {
-    const parents = [formulas.predefined("printing_plates"), formulas.predefined("modifiers")];
-    const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);
-    filtered.sort((a, b) => a.sorting_field - b.sorting_field).forEach((formula) => {
+      const parents = [formulas.predefined('printing_plates'), formulas.predefined('modifiers')];
+      const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);
+      filtered.sort((a, b) => a.sorting_field - b.sorting_field).forEach((formula) => {
         // формируем списки печатных форм и внешних обработок
-        if(formula.parent == parents[0]){
-          formula.params.find_rows({param: "destination"}, (dest) => {
+        if(formula.parent == parents[0]) {
+          formula.params.find_rows({param: 'destination'}, (dest) => {
             const dmgr = $p.md.mgr_by_class_name(dest.value);
-            if(dmgr){
-              if(!dmgr._printing_plates){
+            if(dmgr) {
+              if(!dmgr._printing_plates) {
                 dmgr._printing_plates = {};
               }
               dmgr._printing_plates[`prn_${formula.ref}`] = formula;
             }
-          })
+          });
         }
         else {
           // выполняем модификаторы
-          formula.execute();
+          try {
+            formula.execute();
+          }
+          catch (err) {
+          }
         }
       });
     });
