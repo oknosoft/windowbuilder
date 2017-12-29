@@ -8,73 +8,76 @@
  * @module doc_calc_order
  */
 
-// переопределяем формирование списка выбора
-$p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
+(function (_mgr) {
 
-// переопределяем объекты назначения дополнительных реквизитов
-$p.doc.calc_order._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
+  // переопределяем формирование списка выбора
+  _mgr.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
 
-// индивидуальная строка поиска
-$p.doc.calc_order.build_search = function (tmp, obj) {
+  // переопределяем объекты назначения дополнительных реквизитов
+  _mgr._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
 
-  const {number_internal, client_of_dealer, partner, note} = obj;
+  // индивидуальная строка поиска
+  _mgr.build_search = function (tmp, obj) {
 
-  tmp.search = (obj.number_doc +
-    (number_internal ? ' ' + number_internal : '') +
-    (client_of_dealer ? ' ' + client_of_dealer : '') +
-    (partner.name ? ' ' + partner.name : '') +
-    (note ? ' ' + note : '')).toLowerCase();
-};
+    const {number_internal, client_of_dealer, partner, note} = obj;
 
-// метод загрузки шаблонов
-$p.doc.calc_order.load_templates = async function () {
+    tmp.search = (obj.number_doc +
+      (number_internal ? ' ' + number_internal : '') +
+      (client_of_dealer ? ' ' + client_of_dealer : '') +
+      (partner.name ? ' ' + partner.name : '') +
+      (note ? ' ' + note : '')).toLowerCase();
+  };
 
-  if(!$p.job_prm.builder) {
-    $p.job_prm.builder = {};
-  }
-  if(!$p.job_prm.builder.base_block) {
-    $p.job_prm.builder.base_block = [];
-  }
-  if(!$p.job_prm.pricing) {
-    $p.job_prm.pricing = {};
-  }
+  // метод загрузки шаблонов
+  _mgr.load_templates = async function () {
 
-  // дополним base_block шаблонами из систем профилей
-  const {base_block} = $p.job_prm.builder;
-  $p.cat.production_params.forEach((o) => {
-    if(!o.is_folder) {
-      o.base_blocks.forEach((row) => {
-        if(base_block.indexOf(row.calc_order) == -1) {
-          base_block.push(row.calc_order);
-        }
-      });
+    if(!$p.job_prm.builder) {
+      $p.job_prm.builder = {};
     }
-  });
-
-  // загрузим шаблоны пачками по 10 документов
-  const refs = [];
-  for (let o of base_block) {
-    refs.push(o.ref);
-    if(refs.length > 9) {
-      await $p.doc.calc_order.pouch_load_array(refs);
-      refs.length = 0;
+    if(!$p.job_prm.builder.base_block) {
+      $p.job_prm.builder.base_block = [];
     }
-  }
-  if(refs.length) {
-    await $p.doc.calc_order.pouch_load_array(refs);
-  }
-
-  // загружаем характеристики из первых строк шаблонов - нужны для фильтра по системам
-  refs.length = 0;
-  base_block.forEach(({production}) => {
-    if(production.count()) {
-      refs.push(production.get(0).characteristic.ref);
+    if(!$p.job_prm.pricing) {
+      $p.job_prm.pricing = {};
     }
-  });
-  return $p.cat.characteristics.pouch_load_array(refs);
 
-};
+    // дополним base_block шаблонами из систем профилей
+    const {base_block} = $p.job_prm.builder;
+    $p.cat.production_params.forEach((o) => {
+      if(!o.is_folder) {
+        o.base_blocks.forEach((row) => {
+          if(base_block.indexOf(row.calc_order) == -1) {
+            base_block.push(row.calc_order);
+          }
+        });
+      }
+    });
 
+    // загрузим шаблоны пачками по 10 документов
+    const refs = [];
+    for (let o of base_block) {
+      refs.push(o.ref);
+      if(refs.length > 9) {
+        await _mgr.adapter.load_array(_mgr, refs);
+        refs.length = 0;
+      }
+    }
+    if(refs.length) {
+      await _mgr.adapter.load_array(_mgr, refs);
+    }
+
+    // загружаем характеристики из первых строк шаблонов - нужны для фильтра по системам
+    refs.length = 0;
+    base_block.forEach(({production}) => {
+      if(production.count()) {
+        refs.push(production.get(0).characteristic.ref);
+      }
+    });
+    return $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs);
+
+  };
+
+})($p.doc.calc_order);
 
 
 // свойства и методы объекта

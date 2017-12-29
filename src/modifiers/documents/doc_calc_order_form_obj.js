@@ -64,7 +64,7 @@
           refs.push(row._obj.characteristic);
         }
       });
-      $p.cat.characteristics.pouch_load_array(refs)
+      $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs)
         .then(() => {
 
           const footer = {

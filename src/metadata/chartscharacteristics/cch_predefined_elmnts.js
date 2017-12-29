@@ -10,12 +10,13 @@
 export default function ($p) {
 
   const {job_prm, adapters, cch, doc} = $p;
+  const _mgr = cch.predefined_elmnts;
 
   // Подписываемся на событие окончания загрузки локальных данных
   adapters.pouch.once('pouch_doc_ram_loaded', () => {
 
     // читаем элементы из pouchdb и создаём свойства
-    cch.predefined_elmnts.pouch_find_rows({_raw: true, _top: 500, _skip: 0})
+    _mgr.adapter.find_rows(_mgr, {_raw: true, _top: 500, _skip: 0})
       .then((rows) => {
 
         const parents = {};
@@ -110,8 +111,6 @@ export default function ($p) {
 
   });
 
-  const _mgr = cch.predefined_elmnts;
-
 
   /**
    * Переопределяем геттер значения
@@ -184,28 +183,5 @@ export default function ($p) {
       }
     }
   });
-
-  /**
-   * ### Форма элемента
-   *
-   * @method form_obj
-   * @override
-   * @param pwnd
-   * @param attr
-   * @returns {*}
-   */
-  // _mgr.form_obj = function (pwnd, attr) {
-  //
-  //   let o, wnd;
-  //
-  //   return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-  //     .then((res) => {
-  //       if(res) {
-  //         o = res.o;
-  //         wnd = res.wnd;
-  //         return res;
-  //       }
-  //     });
-  // };
 
 }

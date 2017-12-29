@@ -12,7 +12,8 @@
 
 // при старте приложения, загружаем в ОЗУ обычные характеристики (без ссылок на заказы)
 $p.md.once('predefined_elmnts_inited', () => {
-  $p.cat.characteristics.pouch_load_view('doc/nom_characteristics')
+  const _mgr = $p.cat.characteristics;
+  _mgr.adapter.load_view(_mgr, 'doc/nom_characteristics')
     // и корректируем метаданные формы спецификации с учетом ролей пользователя
     .then(() => {
     const {current_user} = $p;
@@ -23,7 +24,7 @@ $p.md.once('predefined_elmnts_inited', () => {
         )) {
         return;
       };
-      $p.cat.characteristics.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
+      _mgr.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
     })
 });
 
