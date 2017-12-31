@@ -45,10 +45,6 @@ $p.wsql.init((prm) => {
   // по умолчанию, обращаемся к зоне 0
   prm.zone = config.zone;
 
-  // расположение 1C
-  if (config.rest_path)
-    prm.rest_path = config.rest_path;
-
   // расположение couchdb
   prm.couch_path = config.couch_local;
 
@@ -60,7 +56,7 @@ $p.wsql.init((prm) => {
 
   let _m;
 
-  debug('Читаем описание метаданных из CouchDB');
+  debug(`Читаем описание метаданных из CouchDB ${config.couch_local}`);
   return db.info()
     .then((info) => {
     debug(`Подключение к ${info.host}`);
@@ -240,7 +236,7 @@ function obj_constructor_text(_m, category, name, categoties) {
     text += `get ${ts}(){return this._getter_ts('${ts}')}\nset ${ts}(v){this._setter_ts('${ts}',v)}\n`;
   }
 
-  // если описан расширитель, дополняем
+  // если описан расширитель объекта, дополняем
   if(extText){
     text += extText;
   }
@@ -267,6 +263,7 @@ function obj_constructor_text(_m, category, name, categoties) {
 
   }
 
+  // если описан расширитель менеджера, дополняем
   if(managerText){
     text += managerText.replace('extends Object', 'extends CatManager');
     text += `\n$p.${category}.create('${name}', ${managerName}, ${extModule[managerName]._freeze ? 'true' : 'false'});\n`;
