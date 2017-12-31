@@ -22,7 +22,6 @@ class Settings extends Component {
   static propTypes = {
     zone: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),             // обработчик добавления объекта
     couch_path: PropTypes.string,          // обработчик удаления строки
-    couch_suffix: PropTypes.string,
     couch_direct: PropTypes.bool,
     enable_save_pwd: PropTypes.bool,
     handleSetPrm: PropTypes.func.isRequired,
@@ -32,7 +31,7 @@ class Settings extends Component {
 
   constructor(props) {
     super(props);
-    const {zone, couch_path, enable_save_pwd, couch_suffix, couch_direct} = props;
+    const {zone, couch_path, enable_save_pwd, couch_direct} = props;
 
     let hide_price;
     if($p.wsql.get_user_param('hide_price_dealer')) {
@@ -49,7 +48,7 @@ class Settings extends Component {
     let discount_percent_internal = $p.wsql.get_user_param('discount_percent_internal', 'number');
     let surcharge_disabled = false;
 
-    if($p.current_user.partners_uids.length) {
+    if($p.current_user && $p.current_user.partners_uids.length) {
 
       // если заданы параметры для текущего пользователя - используем их
       if(!surcharge_internal) {
@@ -74,7 +73,7 @@ class Settings extends Component {
     }
 
     this.state = {
-      zone, couch_path, couch_suffix, enable_save_pwd, couch_direct, hide_price,
+      zone, couch_path, enable_save_pwd, couch_direct, hide_price,
       confirm_reset: false, surcharge_internal, discount_percent_internal, surcharge_disabled
     };
   }
@@ -140,7 +139,7 @@ class Settings extends Component {
   render() {
     const {classes} = this.props;
     const {
-      zone, couch_path, enable_save_pwd, couch_suffix, couch_direct, confirm_reset, hide_price,
+      zone, couch_path, enable_save_pwd, couch_direct, confirm_reset, hide_price,
       surcharge_internal, discount_percent_internal, surcharge_disabled
     } = this.state;
 
@@ -166,15 +165,6 @@ class Settings extends Component {
           helperText="Значение разделителя данных"
           onChange={this.valueToState('zone')}
           value={zone}/>
-
-        <TextField
-          fullWidth
-          margin="dense"
-          label="Суффикс пользователя"
-          InputProps={{placeholder: 'couch_suffix'}}
-          helperText="Назначается дилеру при регистрации"
-          onChange={this.valueToState('couch_suffix')}
-          value={couch_suffix}/>
 
         <FormGroup>
           <FormControl>
