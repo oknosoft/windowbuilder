@@ -89,16 +89,17 @@ export default function ($p) {
       .then(() => {
 
         // дополним автовычисляемыми свойствами
-        let prm = job_prm.properties.width;
-        const {calculated} = job_prm.properties;
-        if(prm && calculated.indexOf(prm) == -1) {
-          calculated.push(prm);
-          prm._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.width || 0};
-        }
-        prm = job_prm.properties.length;
-        if(prm && calculated.indexOf(prm) == -1) {
-          calculated.push(prm);
-          prm._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.len || 0};
+        const {properties} = job_prm;
+        if(properties) {
+          const {calculated, width, length} = properties;
+          if(width && calculated.indexOf(width) == -1) {
+            calculated.push(width);
+            width._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.width || 0};
+          }
+          if(length && calculated.indexOf(length) == -1) {
+            calculated.push(length);
+            length._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.len || 0};
+          }
         }
 
         // рассчеты, помеченные, как шаблоны, загрузим в память заранее
