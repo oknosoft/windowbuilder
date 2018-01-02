@@ -95,9 +95,9 @@ class Pricing {
       })
       .then((res) => {
         this.build_cache(res.rows);
-        step += 1;
+        step++;
         $p.adapters.pouch.emit('nom_prices', step);
-        if (res.rows.length == 600) {
+        if (res.rows.length === 600) {
           return this.by_range(res.rows[res.rows.length - 1].key, step);
         }
       });

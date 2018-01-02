@@ -2620,9 +2620,9 @@ class Pricing {
       })
       .then((res) => {
         this.build_cache(res.rows);
-        step += 1;
+        step++;
         $p.adapters.pouch.emit('nom_prices', step);
-        if (res.rows.length == 600) {
+        if (res.rows.length === 600) {
           return this.by_range(res.rows[res.rows.length - 1].key, step);
         }
       });
@@ -4455,7 +4455,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         headers.append('Content-Type', 'application/json');
         headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
           $p.wsql.get_user_param('user_name') + ':' + $p.aes.Ctr.decrypt($p.wsql.get_user_param('user_pwd'))))));
-        const suffix = $p.current_user.suffix || $p.wsql.get_user_param('couch_suffix', 'string');
+        const {suffix} = $p.current_user;
         if(suffix){
           headers.append('suffix', suffix);
         }
