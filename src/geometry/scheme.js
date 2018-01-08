@@ -683,7 +683,7 @@ class Scheme extends paper.Project {
     const layers = [];
     const profiles = new Set;
 
-    const {auto_align} = this;
+    const {auto_align, _dp} = this;
 
     for (const item of this.selectedItems) {
       const {parent, layer} = item;
@@ -736,6 +736,8 @@ class Scheme extends paper.Project {
 
     // при необходимости двигаем импосты
     other.length && this.do_align(auto_align, profiles);
+
+    _dp._manager.emit_async('update', {}, {x1: true, x2: true, y1: true, y2: true, a1: true, a2: true, cnn1: true, cnn2: true, info: true});
 
     // TODO: возможно, здесь надо подвигать примыкающие контуры
   }
