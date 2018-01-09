@@ -4185,11 +4185,11 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       });
   }
 
-  print_data() {
+  print_data(attr = {}) {
     const {organization, bank_account, partner, contract, manager} = this;
     const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
     const get_imgs = [];
-    const {contact_information_kinds} = $p.cat;
+    const {cat: {contact_information_kinds, characteristics}, utils: {blank, blob_as_text}} = $p;
 
     const res = {
       АдресДоставки: this.shipping_address,
@@ -4198,8 +4198,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ДатаЗаказаФорматDD: moment(this.date).format('LL'),
       ДатаТекущаяФорматD: moment().format('L'),
       ДатаТекущаяФорматDD: moment().format('LL'),
-      ДоговорДатаФорматD: moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format('L'),
-      ДоговорДатаФорматDD: moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format('LL'),
+      ДоговорДатаФорматD: moment(contract.date.valueOf() == blank.date.valueOf() ? this.date : contract.date).format('L'),
+      ДоговорДатаФорматDD: moment(contract.date.valueOf() == blank.date.valueOf() ? this.date : contract.date).format('LL'),
       ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
       ДоговорСрокДействия: moment(contract.validity).format('L'),
       ЗаказНомер: this.number_doc,
@@ -4296,6 +4296,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ВсегоИзделий: 0,
       ВсегоПлощадьИзделий: 0,
       Продукция: [],
+      Аксессуары: [],
       НомерВнутр: this.number_internal,
       КлиентДилера: this.client_of_dealer,
       Комментарий: this.note,
@@ -4312,7 +4313,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       if(key.indexOf('logo') != -1) {
         get_imgs.push(organization.get_attachment(key)
           .then((blob) => {
-            return $p.utils.blob_as_text(blob, blob.type.indexOf('svg') == -1 ? 'data_url' : '');
+            return blob_as_text(blob, blob.type.indexOf('svg') == -1 ? 'data_url' : '');
           })
           .then((data_url) => {
             res.ОрганизацияЛоготип = data_url;
@@ -4323,7 +4324,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
 
     this.production.forEach((row) => {
-
       if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
 
         res.Продукция.push(this.row_description(row));
@@ -4331,13 +4331,19 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         res.ВсегоИзделий += row.quantity;
         res.ВсегоПлощадьИзделий += row.quantity * row.s;
 
-        get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, 'svg')
-          .then((blob) => $p.utils.blob_as_text(blob))
-          .then((svg_text) => {
-            res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
-          })
-          .catch((err) => err && err.status != 404 && $p.record_log(err))
-        );
+        if(attr.sizes === false) {
+
+        }
+        else {
+          get_imgs.push(characteristics.get_attachment(row.characteristic.ref, 'svg')
+            .then(blob_as_text)
+            .then((svg_text) => res.ПродукцияЭскизы[row.characteristic.ref] = svg_text)
+            .catch((err) => err && err.status != 404 && $p.record_log(err))
+          );
+        }
+      }
+      else if(!row.nom.is_procedure && !row.nom.is_service && row.nom.is_accessory) {
+        res.Аксессуары.push(this.row_description(row));
       }
     });
     res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
@@ -4438,7 +4444,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     this.planning.clear();
 
-    const url = ($p.wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
+    const {wsql, aes, current_user: {suffix}, msg} = $p;
+    const url = (wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
 
     const post_data = this._obj._clone();
     post_data.characteristics = {};
@@ -4454,8 +4461,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         headers.append('Accept', 'application/json');
         headers.append('Content-Type', 'application/json');
         headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
-          $p.wsql.get_user_param('user_name') + ':' + $p.aes.Ctr.decrypt($p.wsql.get_user_param('user_pwd'))))));
-        const {suffix} = $p.current_user;
+          wsql.get_user_param('user_name') + ':' + aes.Ctr.decrypt(wsql.get_user_param('user_pwd'))))));
         if(suffix){
           headers.append('suffix', suffix);
         }
@@ -4474,7 +4480,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
             }
           })
           .catch(err => {
-            $p.msg.show_msg({
+            msg.show_msg({
               type: "alert-warning",
               text: err.message,
               title: "Сервис планирования"
@@ -4503,18 +4509,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   load_production(forse) {
     const prod = [];
-    const mgr = $p.cat.characteristics;
-    this.production.forEach((row) => {
-      const {nom, characteristic} = row;
+    const {characteristics} = $p.cat;
+    this.production.forEach(({nom, characteristic}) => {
       if(!characteristic.empty() && (forse || characteristic.is_new()) && !nom.is_procedure && !nom.is_accessory) {
         prod.push(characteristic.ref);
       }
     });
-    return mgr.adapter.load_array(mgr, prod)
+    return characteristics.adapter.load_array(characteristics, prod)
       .then(() => {
         prod.length = 0;
-        this.production.forEach((row) => {
-          const {nom, characteristic} = row;
+        this.production.forEach(({nom, characteristic}) => {
           if(!characteristic.empty() && !nom.is_procedure && !nom.is_accessory) {
             prod.push(characteristic);
           }
