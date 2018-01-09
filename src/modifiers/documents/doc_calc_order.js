@@ -334,7 +334,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   /**
    * Возвращает данные для печати
    */
-  print_data() {
+  print_data(attr = {}) {
     const {organization, bank_account, partner, contract, manager} = this;
     const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
     const get_imgs = [];
@@ -479,7 +479,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     // получаем эскизы продукций, параллельно накапливаем количество и площадь изделий
     this.production.forEach((row) => {
-
       if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
 
         res.Продукция.push(this.row_description(row));
@@ -487,14 +486,21 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         res.ВсегоИзделий += row.quantity;
         res.ВсегоПлощадьИзделий += row.quantity * row.s;
 
-        get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, 'svg')
-          .then((blob) => $p.utils.blob_as_text(blob))
-          .then((svg_text) => {
-            res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
-          })
-          .catch((err) => err && err.status != 404 && $p.record_log(err))
-        );
-      }else if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && row.nom.is_accessory) {
+        // если запросили эскиз без размерных линий или с иными параметрами...
+        if(attr.sizes === false) {
+
+        }
+        else {
+          get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, 'svg')
+            .then((blob) => $p.utils.blob_as_text(blob))
+            .then((svg_text) => {
+              res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
+            })
+            .catch((err) => err && err.status != 404 && $p.record_log(err))
+          );
+        }
+      }
+      else if(!row.nom.is_procedure && !row.nom.is_service && row.nom.is_accessory) {
         res.Аксессуары.push(this.row_description(row));
       }
     });
