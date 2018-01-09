@@ -447,6 +447,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ВсегоИзделий: 0,
       ВсегоПлощадьИзделий: 0,
       Продукция: [],
+      Аксессуары: [],
       НомерВнутр: this.number_internal,
       КлиентДилера: this.client_of_dealer,
       Комментарий: this.note,
@@ -493,6 +494,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           })
           .catch((err) => err && err.status != 404 && $p.record_log(err))
         );
+      }else if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && row.nom.is_accessory) {
+        res.Аксессуары.push(this.row_description(row));
       }
     });
     res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
