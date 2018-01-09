@@ -5092,14 +5092,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70';
         }
 
-        if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен')) {
+        if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен') || user.role_available('РедактированиеСкидок')) {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro';
         }
-        else if(user.role_available('РедактированиеСкидок')) {
-          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro';
-        }
         else {
-          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro';
+          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,calck,ro,calck,calck,ro';
         }
 
         _meta_patched = true;
@@ -5135,10 +5132,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
           const {production} = wnd.elmnts.grids;
           production.disable_sorting = true;
-          production.attachEvent('onRowSelect', (id, ind) => {
-            const row = o.production.get(id - 1);
-            wnd.elmnts.svgs.select(row.characteristic.ref);
-          });
+          production.attachEvent('onRowSelect', production_select);
           production.attachEvent('onEditCell', (stage,rId,cInd,nValue,oValue,fake) => {
             if(stage == 2 && fake !== true){
               if(production._edit_timer){
@@ -5285,6 +5279,36 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         handlers.handleNavigate(`/`);
       }
       $p.doc.calc_order.off('svgs', rsvg_reload);
+    }
+
+    function production_select(id, ind) {
+      const row = o.production.get(id - 1);
+      const {svgs, grids: {production}} = wnd.elmnts;
+      wnd.elmnts.svgs.select(row.characteristic.ref);
+
+      if(production.columnIds[ind] === 'price') {
+        const {current_user, CatParameters_keys, utils, enm: {comparison_types, parameters_keys_applying}} = $p;
+        if(current_user.role_available('СогласованиеРасчетовЗаказов') || current_user.role_available('РедактированиеЦен')) {
+          production.cells(id, ind).setDisabled(false);
+        }
+        else {
+          const {nom} = row;
+          let disabled = true;
+          current_user.acl_objs.forEach(({acl_obj}) => {
+            if(acl_obj instanceof CatParameters_keys && acl_obj.applying == parameters_keys_applying.Ценообразование) {
+              acl_obj.params.forEach(({value, comparison_type}) => {
+                if(utils.check_compare(nom, value, comparison_type, comparison_types)) {
+                  return disabled = false;
+                }
+              });
+              if(!disabled) {
+                return disabled;
+              }
+            }
+          });
+          production.cells(id, ind).setDisabled(disabled);
+        }
+      }
     }
 
     function toolbar_click(btn_id) {

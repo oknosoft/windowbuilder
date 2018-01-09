@@ -35,7 +35,7 @@ export function exec_dxf (scheme, Drawing) {
   }
 
   function export_contour(layer) {
-    d.addLayer(`l_${layer.cnstr}`, Drawing.ACI.LAYER, 'CONTINOUS');
+    d.addLayer(`l_${layer.cnstr}`, Drawing.ACI.LAYER, 'CONTINUOUS');
     d.setActiveLayer(`l_${layer.cnstr}`);
 
     // for(const glass of layer.glasses(false, true)) {

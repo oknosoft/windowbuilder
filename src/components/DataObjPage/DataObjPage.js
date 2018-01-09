@@ -38,10 +38,11 @@ class DataObjPage extends DhtmlxCell {
    * @return {*}
    */
   prompt(loc) {
-    if(loc.pathname.match(/builder/)){
+    const {prompt} = this.cell;
+    if(!prompt || loc.pathname.match(/builder/)){
       return true;
     }
-    return this.cell.prompt(loc);
+    return prompt(loc);
   }
 
   render() {
