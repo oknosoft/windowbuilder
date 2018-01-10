@@ -128,6 +128,12 @@ const items = [
         need_user: true,
       },
       {
+        text: 'Оплата картой',
+        navigate: '/doc.credit_card_order/list',
+        need_meta: true,
+        need_user: true,
+      },
+      {
         text: 'Банк приход',
         navigate: '/doc.debit_bank_order/list',
         need_meta: true,
@@ -179,25 +185,25 @@ const items = [
       },
       {
         text: 'Исполнение заказов',
-        navigate: '/rep.materials_demand/main',
+        navigate: '/rep.invoice_execution/main',
         need_meta: true,
         need_user: true,
       },
       {
         text: 'Денежные средства',
-        navigate: '/rep.materials_demand/main',
+        navigate: '/rep.cash/main',
         need_meta: true,
         need_user: true,
       },
       {
         text: 'Товары на складах',
-        navigate: '/rep.materials_demand/main',
+        navigate: '/rep.goods/main',
         need_meta: true,
         need_user: true,
       },
       {
         text: 'Продажи',
-        navigate: '/rep.materials_demand/main',
+        navigate: '/rep.selling/main',
         need_meta: true,
         need_user: true,
       },
