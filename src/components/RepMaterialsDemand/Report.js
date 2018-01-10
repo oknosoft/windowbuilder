@@ -98,7 +98,7 @@ class RepMaterialsDemand extends Component {
         key="menu"
         anchorEl={state.anchorEl}
         open={state.menuOpen}
-        onRequestClose={this.handleMenuClose}
+        onClose={this.handleMenuClose}
       >
         <MenuItem onClick={this.handleObj}>В форму заказа</MenuItem>
         <MenuItem onClick={this.handleList}>В форму списка заказов</MenuItem>
