@@ -34,7 +34,7 @@ class CalcOrderAdditions extends Component {
       open
       classes={{paper: classes.paper}}
       title="Аксессуары и услуги"
-      onRequestClose={handleCancel}
+      onClose={handleCancel}
       actions={[
         <Button key="ok" onClick={handleOk} color="primary">Рассчитать и закрыть</Button>,
         <Button key="calck" onClick={handleCalck} color="primary">Рассчитать</Button>,
