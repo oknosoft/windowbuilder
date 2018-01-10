@@ -13,6 +13,9 @@ exports.CatUsersManager = class CatUsersManager extends Object {
   load_array(aattr, forse) {
     const res = [];
     for (let aobj of aattr) {
+      if(this.by_ref[aobj.ref]) {
+        continue;
+      }
       if(!aobj.acl_objs) {
         aobj.acl_objs = [];
       }

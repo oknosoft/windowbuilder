@@ -50,9 +50,7 @@ $p.wsql.init((prm) => {
 
 }, ($p) => {
 
-  const db = new MetaEngine.classes.PouchDB(config.couch_local + 'meta', {
-    skip_setup: true,
-  });
+  const db = new MetaEngine.classes.PouchDB(config.couch_local + 'meta', {skip_setup: true});
 
   let _m;
 
