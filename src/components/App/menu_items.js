@@ -1,12 +1,13 @@
 import React from 'react';
 
 import IconInbox from 'material-ui-icons/Inbox';
-import IconList from 'material-ui-icons/List';
+//import IconList from 'material-ui-icons/List';
 import IconHelp from 'material-ui-icons/Help';
 import IconInfo from 'material-ui-icons/Info';
 import IconPerson from 'material-ui-icons/Person';
 import IconSettings from 'material-ui-icons/Settings';
 import IconBusinessCenter from 'material-ui-icons/BusinessCenter';
+import IconReceipt from 'material-ui-icons/Receipt';
 
 import IconDrafts from 'material-ui-icons/Edit';
 import IconSend from 'material-ui-icons/Send';
@@ -109,6 +110,68 @@ const items = [
     ],
   },
   {
+    text: 'Документы',
+    icon: <IconReceipt/>,
+    open: true,
+    id: 'docs',
+    items: [
+      {
+        text: 'Касса приход',
+        navigate: '/doc.debit_cash_order/list',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Касса расход',
+        navigate: '/doc.credit_cash_order/list',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Оплата картой',
+        navigate: '/doc.credit_card_order/list',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Банк приход',
+        navigate: '/doc.debit_bank_order/list',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Банк расход',
+        navigate: '/doc.credit_bank_order/list',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Поступление товаров услуг',
+        navigate: '/doc.purchase/list',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Реализация товаров услуг',
+        navigate: '/doc.selling/list',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Событие планирования',
+        navigate: '/doc.planning_event/list',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Задание на производство',
+        navigate: '/doc.work_centers_task/list',
+        need_meta: true,
+        need_user: true,
+      },
+    ],
+  },
+  {
     text: 'Отчеты',
     icon: <IconInbox/>,
     open: false,
@@ -117,7 +180,36 @@ const items = [
       {
         text: 'Анализ спецификации',
         navigate: '/rep.materials_demand/main',
-        icon: <IconList/>,
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Исполнение заказов',
+        navigate: '/rep.invoice_execution/main',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Денежные средства',
+        navigate: '/rep.cash/main',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Товары на складах',
+        navigate: '/rep.goods/main',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Продажи',
+        navigate: '/rep.selling/main',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Взаиморасчеты',
+        navigate: '/rep.materials_demand/main',
         need_meta: true,
         need_user: true,
       },

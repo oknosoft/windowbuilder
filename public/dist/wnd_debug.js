@@ -10,7 +10,8 @@
 $p.injected_data._mixin({"toolbar_calc_order_production.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_grp_add\" text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку заказа\" openAll=\"true\" >\n    <item type=\"button\" id=\"btn_add_builder\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt; Изделие построителя\" />\n    <item type=\"button\" id=\"btn_add_product\" text=\"&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Продукцию или услугу\" />\n    <item type=\"button\" id=\"btn_add_material\" text=\"&lt;i class='fa fa-cube fa-fw'&gt;&lt;/i&gt; Материал\" />\n    <item type=\"button\" id=\"btn_additions\" text=\"&lt;i class='fa fa-cart-plus fa-fw'&gt;&lt;/i&gt; Аксессуары и услуги\" />\n    <item type=\"button\" id=\"btn_clone\" text=\"&lt;i class='fa fa-clone fa-fw'&gt;&lt;/i&gt; Скопировать изделие\" />\n  </item>\n\n  <item type=\"button\" id=\"btn_edit\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt;\" title=\"Редактировать изделие построителя\" />\n  <item type=\"button\" id=\"btn_spec\" text=\"&lt;i class='fa fa-table fa-fw'&gt;&lt;/i&gt;\" title=\"Открыть спецификацию изделия\" />\n  <item type=\"button\" id=\"btn_delete\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Удалить строку заказа\" />\n  <item type=\"button\" id=\"btn_discount\" text=\"&lt;i class='fa fa-percent fa-fw'&gt;&lt;/i&gt;\" title=\"Скидки по типам строк заказа\"/>\n  <item id=\"sep1\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_calc_order_obj.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_save_close\" text=\"&lt;i class='fa fa-caret-square-o-down fa-fw'&gt;&lt;/i&gt;\" title=\"Записать и закрыть\"/>\r\n    <item type=\"button\" id=\"btn_save\" text=\"&lt;i class='fa fa-floppy-o fa-fw'&gt;&lt;/i&gt;\" title=\"Записать\"/>\r\n    <item type=\"button\" id=\"btn_sent\" text=\"&lt;i class='fa fa-paper-plane-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отправить заказ\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Провести документ\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"&lt;i class='fa fa-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отмена проведения\" />\r\n\r\n    <item type=\"button\" id=\"btn_files\" text=\"&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;\" title=\"Присоединенные файлы\"/>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt;\" title=\"Печать\" openAll=\"true\">\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_message\" enabled=\"false\" text=\"Сообщение\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\" >\r\n        <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\" />\r\n    </item>\r\n\r\n    <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;\"  title=\"Дополнительно\" openAll=\"true\">\r\n        <item type=\"button\"     id=\"btn_retrieve\"    text=\"&lt;i class='fa fa-undo fa-fw'&gt;&lt;/i&gt; Отозвать\" title=\"Отозвать заказ\" />\r\n        <item type=\"separator\"  id=\"sep_export\" />\r\n        <item type=\"button\" id=\"btn_import\" text=\"&lt;i class='fa fa-upload fa-fw'&gt;&lt;/i&gt; Загрузить из файла\" />\r\n        <item type=\"button\" id=\"btn_export\" text=\"&lt;i class='fa fa-download fa-fw'&gt;&lt;/i&gt; Выгрузить в файл\" />\r\n    </item>\r\n\r\n    <item id=\"sep_close_1\" type=\"separator\"/>\r\n    <item type=\"button\" id=\"btn_close\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Закрыть форму\"/>\r\n    <item id=\"sep_close_2\" type=\"separator\"/>\r\n\r\n</toolbar>","toolbar_product_list.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"btn_ok\"   type=\"button\"   text=\"&lt;b&gt;Рассчитать и закрыть&lt;/b&gt;\" title=\"Рассчитать, записать и закрыть\"  />\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item id=\"btn_xls\"  type=\"button\"\ttext=\"Загрузить из XLS\" title=\"Загрузить список продукции из файла xls\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"buttonSelect\" id=\"bs_print\" enabled=\"false\" text=\"\" title=\"\" openAll=\"true\">\r\n    </item>\r\n\r\n</toolbar>","toolbar_characteristics_specification.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_origin\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt; Происхождение\" title=\"Ссылка на настройки\" />\n  <item id=\"sp\" type=\"spacer\"/>\n\n  <item id=\"input_filter\" type=\"buttonInput\" width=\"200\" title=\"Поиск по подстроке\" />\n\n  <item id=\"sep2\" type=\"separator\"/>\n  <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt;\"  title=\"Экспорт\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_csv\" text=\"&lt;i class='fa fa-file-text-o fa-fw'&gt;&lt;/i&gt; Скопировать в CSV\" />\n    <item type=\"button\" id=\"btn_json\" text=\"&lt;i class='fa fa-file-code-o fa-fw'&gt;&lt;/i&gt; Скопировать в JSON\" />\n    <item type=\"button\" id=\"btn_xls\" text=\"&lt;i class='fa fa-file-excel-o fa-fw'&gt;&lt;/i&gt; Выгрузить в XLS\" />\n  </item>\n</toolbar>\n","toolbar_glass_inserts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"btn_add\" type=\"button\"  text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку\"  />\n  <item id=\"btn_delete\" type=\"button\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\"  title=\"Удалить строку\" />\n  <item id=\"btn_up\" type=\"button\" text=\"&lt;i class='fa fa-arrow-up fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вверх\" />\n  <item id=\"btn_down\" type=\"button\" text=\"&lt;i class='fa fa-arrow-down fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вниз\" />\n  <item id=\"sep1\" type=\"separator\"/>\n  <item id=\"btn_inset\" type=\"button\" text=\"&lt;i class='fa fa-plug fa-fw'&gt;&lt;/i&gt;\"  title=\"Заполнить по вставке\" />\n</toolbar>\n","toolbar_discounts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item type=\"buttonSelect\"   id=\"bs\"  text=\"Скидки производителя\"  title=\"Режим\" openAll=\"true\">\n    <item type=\"button\" id=\"discount_percent\" text=\"Скидки производителя\" />\n    <item type=\"button\" id=\"discount_percent_internal\" text=\"Скидки дилера\" />\n  </item>\n</toolbar>\n","form_auth.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<items>\n<item type=\"settings\" position=\"label-left\" labelWidth=\"80\" inputWidth=\"180\" noteWidth=\"180\"/>\n<item type=\"fieldset\" name=\"data\" inputWidth=\"auto\" label=\"Авторизация\">\n\n  <item type=\"radio\" name=\"type\" labelWidth=\"auto\" position=\"label-right\" checked=\"true\" value=\"guest\" label=\"Гостевой (демо) режим\">\n    <item type=\"select\" name=\"guest\" label=\"Роль\">\n      <option value=\"Дилер\" label=\"Дилер\"/>\n    </item>\n  </item>\n\n  <item type=\"radio\" name=\"type\" labelWidth=\"auto\" position=\"label-right\" value=\"auth\" label=\"Есть учетная запись\">\n    <item type=\"input\" value=\"\" name=\"login\" label=\"Логин\" validate=\"NotEmpty\" />\n    <item type=\"password\" value=\"\" name=\"password\" label=\"Пароль\" validate=\"NotEmpty\" />\n  </item>\n\n  <item type=\"button\" value=\"Войти\" name=\"submit\"/>\n\n  <item type=\"template\" name=\"text_options\" className=\"order_dealer_options\" inputWidth=\"170\"\n        value=\"&lt;a href='#' onclick='$p.iface.open_settings();' title='Страница настроек программы' &gt; &lt;i class='fa fa-cog fa-lg'&gt;&lt;/i&gt; Настройки &lt;/a&gt; &lt;a href='https://github.com/oknosoft/windowbuilder/issues' target='_blank' style='margin-left: 9px;' title='Задать вопрос через форму обратной связи' &gt; &lt;i class='fa fa-question-circle fa-lg'&gt;&lt;/i&gt; Вопрос &lt;/a&gt;\"  />\n\n</item>\n</items>\n","tree_balance.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"doc.debit_cash_order\" text=\"Приходный кассовый ордер\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.credit_card_order\" text=\"Оплата от покупателя платежной картой\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.debit_bank_order\" text=\"Платежное поручение входящее\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.selling\" text=\"Реализация товаров и услуг\"><icons file=\"icon_1c_doc\" /></item>\r\n</tree>\r\n","tree_events.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.stores\" text=\"Склады\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.divisions\" text=\"Подразделения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"doc.work_centers_performance\" select=\"1\" text=\"Мощности рабочих центров\"><icons file=\"icon_1c_doc\" /></item>\r\n    <!--\r\n    <item id=\"doc.planning_event\" text=\"Событие планирования\"><icons file=\"icon_1c_doc\" /></item>\r\n    -->\r\n</tree>\r\n","tree_filteres.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<tree id=\"0\">\n    <item id=\"draft\" text=\"Черновики\" select=\"1\" tooltip=\"Предварительные расчеты\"><icons file=\"fa-pencil\" /></item>\n    <item id=\"sent\" text=\"Отправлено\" tooltip=\"Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в 'черновики')\"><icons file=\"fa-paper-plane-o\" /></item>\n    <item id=\"confirmed\" text=\"Согласовано\" tooltip=\"Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером\"><icons file=\"fa-thumbs-o-up\" /></item>\n    <item id=\"declined\" text=\"Отклонено\" tooltip=\"Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации\"><icons file=\"fa-thumbs-o-down\" /></item>\n\n    <!--item id=\"execution\" text=\"Долги\" tooltip=\"Оплата, отгрузка\"><icons file=\"fa-money\" /></item>\n    <item id=\"plan\" text=\"План\" tooltip=\"Согласованы, но еще не запущены в работу\"><icons file=\"fa-calendar-check-o\" /></item>\n    <item id=\"underway\" text=\"В работе\" tooltip=\"Включены в задания на производство, но еще не изготовлены\"><icons file=\"fa-industry\" /></item>\n    <item id=\"manufactured\" text=\"Изготовлено\" tooltip=\"Изготовлены, но еще не отгружены\"><icons file=\"fa-gavel\" /></item>\n    <item id=\"executed\" text=\"Исполнено\" tooltip=\"Отгружены клиенту\"><icons file=\"fa-truck\" /></item -->\n\n    <item id=\"service\" text=\"Сервис\" tooltip=\"Сервисное обслуживание\"><icons file=\"fa-medkit\" /></item>\n    <item id=\"complaints\" text=\"Рекламации\" tooltip=\"Жалобы и рекламации\"><icons file=\"fa-frown-o\" /></item>\n\n    <item id=\"template\" text=\"Шаблоны\" tooltip=\"Типовые блоки\"><icons file=\"fa-puzzle-piece\" /></item>\n    <item id=\"zarchive\" text=\"Архив\" tooltip=\"Старые заказы\"><icons file=\"fa-archive\" /></item>\n    <item id=\"all\" text=\"Все\" tooltip=\"Отключить фильтрацию\"><icons file=\"fa-expand\" /></item>\n</tree>\n","tree_industry.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.nom_kinds\" text=\"Виды номенклатуры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_groups\" text=\"Номенклатурные группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom\" text=\"Номенклатура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.production_params\" text=\"Параметры продукции\" select=\"1\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.cnns\" text=\"Соединения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.inserts\" text=\"Вставки\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.furns\" text=\"Фурнитура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.clrs\" text=\"Цвета\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.color_price_groups\" text=\"Цвето-ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.params_links\" text=\"Связи параметров\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.elm_visualization\" text=\"Визуализация элементов\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.insert_bind\" text=\"Привязки вставок\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.formulas\" text=\"Формулы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cch.properties\" text=\"Дополнительные реквизиты\"><icons file=\"icon_1c_cch\" /></item>\r\n</tree>\r\n","tree_price.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.users\" text=\"Пользователи\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.individuals\" text=\"Физические лица\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.organizations\" text=\"Организации\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.partners\" text=\"Контрагенты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.contracts\" text=\"Договоры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_prices_types\" text=\"Виды цен\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.price_groups\" text=\"Ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.currencies\" text=\"Валюты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"ireg.currency_courses\" text=\"Курсы валют\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"ireg.margin_coefficients\" text=\"Маржинальные коэффициенты\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"doc.nom_prices_setup\" text=\"Установка цен номенклатуры\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"cch.predefined_elmnts\" text=\"Константы и списки\"><icons file=\"icon_1c_cch\" /></item>\r\n\r\n</tree>\r\n","view_blank.html":"<!DOCTYPE html>\r\n<html lang=\"ru\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"/>\r\n    <title>Документ</title>\r\n    <style>\r\n\r\n        html {\r\n            width: 100%;\r\n            height: 100%;\r\n            margin: 0;\r\n            padding: 0;\r\n            overflow: auto;\r\n\r\n        }\r\n        body {\r\n            width: 210mm;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n            overflow: hidden;\r\n            color: rgb(48, 57, 66);\r\n            font-family: Arial, sans-serif;\r\n            font-size: 11pt;\r\n            text-rendering: optimizeLegibility;\r\n        }\r\n\r\n        /* Таблица */\r\n        table.border {\r\n            border-collapse: collapse; border: 1px solid;\r\n        }\r\n        table.border > tbody > tr > td,\r\n        table.border > tr > td,\r\n        table.border th{\r\n            border: 1px solid;\r\n        }\r\n        .noborder{\r\n            border: none;\r\n        }\r\n\r\n        /* Многоуровневый список */\r\n        ol {\r\n            counter-reset: li;\r\n            list-style: none;\r\n            padding: 0;\r\n        }\r\n        li {\r\n            margin-top: 8px;\r\n        }\r\n        li:before {\r\n            counter-increment: li;\r\n            content: counters(li,\".\") \".\";\r\n            padding-right: 8px;\r\n        }\r\n        li.flex {\r\n            display: flex;\r\n            text-align: left;\r\n            list-style-position: outside;\r\n            font-weight: normal;\r\n        }\r\n\r\n        .container {\r\n            width: 100%;\r\n            position: relative;\r\n        }\r\n\r\n        .margin-top-20 {\r\n            margin-top: 20px;\r\n        }\r\n\r\n        .column-50-percent {\r\n            width: 48%;\r\n            min-width: 40%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .column-30-percent {\r\n            width: 31%;\r\n            min-width: 30%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .block-left {\r\n            display: block;\r\n            float: left;\r\n        }\r\n\r\n        .block-center {\r\n            display: block;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n        }\r\n\r\n        .block-right {\r\n            display: block;\r\n            float: right;\r\n        }\r\n\r\n        .list-center {\r\n            text-align: center;\r\n            list-style-position: inside;\r\n            font-weight: bold;\r\n        }\r\n\r\n        .clear-both {\r\n            clear: both;\r\n        }\r\n\r\n        .small {\r\n            font-size: small;\r\n        }\r\n\r\n        .text-center {\r\n            text-align: center;\r\n        }\r\n\r\n        .text-justify {\r\n            text-align: justify;\r\n        }\r\n\r\n        .text-right {\r\n            text-align: right;\r\n        }\r\n\r\n        .muted-color {\r\n            color: #636773;\r\n        }\r\n\r\n        .accent-color {\r\n            color: #f30000;\r\n        }\r\n\r\n        .note {\r\n            background: #eaf3f8;\r\n            color: #2980b9;\r\n            font-style: italic;\r\n            padding: 12px 20px;\r\n        }\r\n\r\n        .note:before {\r\n            content: 'Замечание: ';\r\n            font-weight: 500;\r\n        }\r\n        *, *:before, *:after {\r\n            box-sizing: inherit;\r\n        }\r\n\r\n    </style>\r\n</head>\r\n<body>\r\n\r\n</body>\r\n</html>","view_settings.html":"<div class=\"md_column1300\">\r\n\r\n    <div class=\"md_column320\" name=\"form1\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n    <div class=\"md_column320\" name=\"form2\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n</div>"});
 
 $p.md.once('predefined_elmnts_inited', () => {
-  $p.cat.characteristics.pouch_load_view('doc/nom_characteristics')
+  const _mgr = $p.cat.characteristics;
+  _mgr.adapter.load_view(_mgr, 'doc/nom_characteristics')
     .then(() => {
     const {current_user} = $p;
       if(current_user && (
@@ -20,7 +21,7 @@ $p.md.once('predefined_elmnts_inited', () => {
         )) {
         return;
       };
-      $p.cat.characteristics.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
+      _mgr.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
     })
 });
 
@@ -312,7 +313,6 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 };
 
 
-
 (function($p){
 
 	const _mgr = $p.cat.characteristics;
@@ -430,7 +430,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 							}
 						}
 					});
-					return crefs.length ? _mgr.pouch_load_array(crefs, true) : crefs;
+					return crefs.length ? _mgr.adapter.load_array(_mgr, crefs, true) : crefs;
 				})
 				.then(() => {
 
@@ -1213,7 +1213,7 @@ $p.CatElm_visualization.prototype.__define({
 
 $p.adapters.pouch.once('pouch_data_loaded', () => {
   const {formulas} = $p.cat;
-  formulas.pouch_find_rows({_top: 500, _skip: 0})
+  formulas.adapter.find_rows(formulas, {_top: 500, _skip: 0})
     .then((rows) => {
       const parents = [formulas.predefined('printing_plates'), formulas.predefined('modifiers')];
       const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);
@@ -2620,9 +2620,9 @@ class Pricing {
       })
       .then((res) => {
         this.build_cache(res.rows);
-        step += 1;
+        step++;
         $p.adapters.pouch.emit('nom_prices', step);
-        if (res.rows.length == 600) {
+        if (res.rows.length === 600) {
           return this.by_range(res.rows[res.rows.length - 1].key, step);
         }
       });
@@ -3919,66 +3919,69 @@ $p.spec_building = new SpecBuilding($p);
 })($p.classes.DataManager);
 
 
-$p.doc.calc_order.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
+(function (_mgr) {
 
-$p.doc.calc_order._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
+  _mgr.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
 
-$p.doc.calc_order.build_search = function (tmp, obj) {
+  _mgr._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
 
-  const {number_internal, client_of_dealer, partner, note} = obj;
+  _mgr.build_search = function (tmp, obj) {
 
-  tmp.search = (obj.number_doc +
-    (number_internal ? ' ' + number_internal : '') +
-    (client_of_dealer ? ' ' + client_of_dealer : '') +
-    (partner.name ? ' ' + partner.name : '') +
-    (note ? ' ' + note : '')).toLowerCase();
-};
+    const {number_internal, client_of_dealer, partner, note} = obj;
 
-$p.doc.calc_order.load_templates = async function () {
+    tmp.search = (obj.number_doc +
+      (number_internal ? ' ' + number_internal : '') +
+      (client_of_dealer ? ' ' + client_of_dealer : '') +
+      (partner.name ? ' ' + partner.name : '') +
+      (note ? ' ' + note : '')).toLowerCase();
+  };
 
-  if(!$p.job_prm.builder) {
-    $p.job_prm.builder = {};
-  }
-  if(!$p.job_prm.builder.base_block) {
-    $p.job_prm.builder.base_block = [];
-  }
-  if(!$p.job_prm.pricing) {
-    $p.job_prm.pricing = {};
-  }
+  _mgr.load_templates = async function () {
 
-  const {base_block} = $p.job_prm.builder;
-  $p.cat.production_params.forEach((o) => {
-    if(!o.is_folder) {
-      o.base_blocks.forEach((row) => {
-        if(base_block.indexOf(row.calc_order) == -1) {
-          base_block.push(row.calc_order);
-        }
-      });
+    if(!$p.job_prm.builder) {
+      $p.job_prm.builder = {};
     }
-  });
-
-  const refs = [];
-  for (let o of base_block) {
-    refs.push(o.ref);
-    if(refs.length > 9) {
-      await $p.doc.calc_order.pouch_load_array(refs);
-      refs.length = 0;
+    if(!$p.job_prm.builder.base_block) {
+      $p.job_prm.builder.base_block = [];
     }
-  }
-  if(refs.length) {
-    await $p.doc.calc_order.pouch_load_array(refs);
-  }
-
-  refs.length = 0;
-  base_block.forEach(({production}) => {
-    if(production.count()) {
-      refs.push(production.get(0).characteristic.ref);
+    if(!$p.job_prm.pricing) {
+      $p.job_prm.pricing = {};
     }
-  });
-  return $p.cat.characteristics.pouch_load_array(refs);
 
-};
+    const {base_block} = $p.job_prm.builder;
+    $p.cat.production_params.forEach((o) => {
+      if(!o.is_folder) {
+        o.base_blocks.forEach((row) => {
+          if(base_block.indexOf(row.calc_order) == -1) {
+            base_block.push(row.calc_order);
+          }
+        });
+      }
+    });
 
+    const refs = [];
+    for (let o of base_block) {
+      refs.push(o.ref);
+      if(refs.length > 9) {
+        await _mgr.adapter.load_array(_mgr, refs);
+        refs.length = 0;
+      }
+    }
+    if(refs.length) {
+      await _mgr.adapter.load_array(_mgr, refs);
+    }
+
+    refs.length = 0;
+    base_block.forEach(({production}) => {
+      if(production.count()) {
+        refs.push(production.get(0).characteristic.ref);
+      }
+    });
+    return $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs);
+
+  };
+
+})($p.doc.calc_order);
 
 
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
@@ -4182,11 +4185,11 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       });
   }
 
-  print_data() {
+  print_data(attr = {}) {
     const {organization, bank_account, partner, contract, manager} = this;
     const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
     const get_imgs = [];
-    const {contact_information_kinds} = $p.cat;
+    const {cat: {contact_information_kinds, characteristics}, utils: {blank, blob_as_text}} = $p;
 
     const res = {
       АдресДоставки: this.shipping_address,
@@ -4195,8 +4198,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ДатаЗаказаФорматDD: moment(this.date).format('LL'),
       ДатаТекущаяФорматD: moment().format('L'),
       ДатаТекущаяФорматDD: moment().format('LL'),
-      ДоговорДатаФорматD: moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format('L'),
-      ДоговорДатаФорматDD: moment(contract.date.valueOf() == $p.utils.blank.date.valueOf() ? this.date : contract.date).format('LL'),
+      ДоговорДатаФорматD: moment(contract.date.valueOf() == blank.date.valueOf() ? this.date : contract.date).format('L'),
+      ДоговорДатаФорматDD: moment(contract.date.valueOf() == blank.date.valueOf() ? this.date : contract.date).format('LL'),
       ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
       ДоговорСрокДействия: moment(contract.validity).format('L'),
       ЗаказНомер: this.number_doc,
@@ -4293,6 +4296,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ВсегоИзделий: 0,
       ВсегоПлощадьИзделий: 0,
       Продукция: [],
+      Аксессуары: [],
       НомерВнутр: this.number_internal,
       КлиентДилера: this.client_of_dealer,
       Комментарий: this.note,
@@ -4309,7 +4313,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       if(key.indexOf('logo') != -1) {
         get_imgs.push(organization.get_attachment(key)
           .then((blob) => {
-            return $p.utils.blob_as_text(blob, blob.type.indexOf('svg') == -1 ? 'data_url' : '');
+            return blob_as_text(blob, blob.type.indexOf('svg') == -1 ? 'data_url' : '');
           })
           .then((data_url) => {
             res.ОрганизацияЛоготип = data_url;
@@ -4320,7 +4324,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
 
     this.production.forEach((row) => {
-
       if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
 
         res.Продукция.push(this.row_description(row));
@@ -4328,13 +4331,19 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         res.ВсегоИзделий += row.quantity;
         res.ВсегоПлощадьИзделий += row.quantity * row.s;
 
-        get_imgs.push($p.cat.characteristics.get_attachment(row.characteristic.ref, 'svg')
-          .then((blob) => $p.utils.blob_as_text(blob))
-          .then((svg_text) => {
-            res.ПродукцияЭскизы[row.characteristic.ref] = svg_text;
-          })
-          .catch((err) => err && err.status != 404 && $p.record_log(err))
-        );
+        if(attr.sizes === false) {
+
+        }
+        else {
+          get_imgs.push(characteristics.get_attachment(row.characteristic.ref, 'svg')
+            .then(blob_as_text)
+            .then((svg_text) => res.ПродукцияЭскизы[row.characteristic.ref] = svg_text)
+            .catch((err) => err && err.status != 404 && $p.record_log(err))
+          );
+        }
+      }
+      else if(!row.nom.is_procedure && !row.nom.is_service && row.nom.is_accessory) {
+        res.Аксессуары.push(this.row_description(row));
       }
     });
     res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
@@ -4435,7 +4444,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     this.planning.clear();
 
-    const url = ($p.wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
+    const {wsql, aes, current_user: {suffix}, msg} = $p;
+    const url = (wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
 
     const post_data = this._obj._clone();
     post_data.characteristics = {};
@@ -4451,8 +4461,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         headers.append('Accept', 'application/json');
         headers.append('Content-Type', 'application/json');
         headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
-          $p.wsql.get_user_param('user_name') + ':' + $p.aes.Ctr.decrypt($p.wsql.get_user_param('user_pwd'))))));
-        const suffix = $p.current_user.suffix || $p.wsql.get_user_param('couch_suffix', 'string');
+          wsql.get_user_param('user_name') + ':' + aes.Ctr.decrypt(wsql.get_user_param('user_pwd'))))));
         if(suffix){
           headers.append('suffix', suffix);
         }
@@ -4471,7 +4480,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
             }
           })
           .catch(err => {
-            $p.msg.show_msg({
+            msg.show_msg({
               type: "alert-warning",
               text: err.message,
               title: "Сервис планирования"
@@ -4500,18 +4509,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   load_production(forse) {
     const prod = [];
-    const mgr = $p.cat.characteristics;
-    this.production.forEach((row) => {
-      const {nom, characteristic} = row;
+    const {characteristics} = $p.cat;
+    this.production.forEach(({nom, characteristic}) => {
       if(!characteristic.empty() && (forse || characteristic.is_new()) && !nom.is_procedure && !nom.is_accessory) {
         prod.push(characteristic.ref);
       }
     });
-    return mgr.adapter.load_array(mgr, prod)
+    return characteristics.adapter.load_array(characteristics, prod)
       .then(() => {
         prod.length = 0;
-        this.production.forEach((row) => {
-          const {nom, characteristic} = row;
+        this.production.forEach(({nom, characteristic}) => {
           if(!characteristic.empty() && !nom.is_procedure && !nom.is_accessory) {
             prod.push(characteristic);
           }
@@ -4934,8 +4941,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 	if(!attr){
 		attr = {
 			hide_header: true,
-			date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
-			date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
+			date_from: moment().subtract(2, 'month').toDate(),
+			date_till: moment().add(1, 'month').toDate(),
 			on_new: (o) => {
         handlers.handleNavigate(`/${this.class_name}/${o.ref}`);
 			},
@@ -5085,14 +5092,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70';
         }
 
-        if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен')) {
+        if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен') || user.role_available('РедактированиеСкидок')) {
           source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro';
         }
-        else if(user.role_available('РедактированиеСкидок')) {
-          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,ro,ro,calck,calck,ro';
-        }
         else {
-          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,ro,ro,calck,calck,ro';
+          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,calck,ro,calck,calck,ro';
         }
 
         _meta_patched = true;
@@ -5108,7 +5112,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           refs.push(row._obj.characteristic);
         }
       });
-      $p.cat.characteristics.pouch_load_array(refs)
+      $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs)
         .then(() => {
 
           const footer = {
@@ -5128,10 +5132,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
           const {production} = wnd.elmnts.grids;
           production.disable_sorting = true;
-          production.attachEvent('onRowSelect', (id, ind) => {
-            const row = o.production.get(id - 1);
-            wnd.elmnts.svgs.select(row.characteristic.ref);
-          });
+          production.attachEvent('onRowSelect', production_select);
           production.attachEvent('onEditCell', (stage,rId,cInd,nValue,oValue,fake) => {
             if(stage == 2 && fake !== true){
               if(production._edit_timer){
@@ -5278,6 +5279,36 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         handlers.handleNavigate(`/`);
       }
       $p.doc.calc_order.off('svgs', rsvg_reload);
+    }
+
+    function production_select(id, ind) {
+      const row = o.production.get(id - 1);
+      const {svgs, grids: {production}} = wnd.elmnts;
+      wnd.elmnts.svgs.select(row.characteristic.ref);
+
+      if(production.columnIds[ind] === 'price') {
+        const {current_user, CatParameters_keys, utils, enm: {comparison_types, parameters_keys_applying}} = $p;
+        if(current_user.role_available('СогласованиеРасчетовЗаказов') || current_user.role_available('РедактированиеЦен')) {
+          production.cells(id, ind).setDisabled(false);
+        }
+        else {
+          const {nom} = row;
+          let disabled = true;
+          current_user.acl_objs.forEach(({acl_obj}) => {
+            if(acl_obj instanceof CatParameters_keys && acl_obj.applying == parameters_keys_applying.Ценообразование) {
+              acl_obj.params.forEach(({value, comparison_type}) => {
+                if(utils.check_compare(nom, value, comparison_type, comparison_types)) {
+                  return disabled = false;
+                }
+              });
+              if(!disabled) {
+                return disabled;
+              }
+            }
+          });
+          production.cells(id, ind).setDisabled(disabled);
+        }
+      }
     }
 
     function toolbar_click(btn_id) {

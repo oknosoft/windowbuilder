@@ -327,7 +327,9 @@ class BuilderElement extends paper.Group {
         cnn3: cnn3,
         arc_h: arc_h,
         r: _xfields.r,
-        arc_ccw: _xfields.arc_ccw
+        arc_ccw: _xfields.arc_ccw,
+        a1: Object.assign({}, _xfields.x1, {synonym: "Угол1"}),
+        a2: Object.assign({}, _xfields.x1, {synonym: "Угол2"}),
       }
     };
   }
@@ -468,12 +470,12 @@ class BuilderElement extends paper.Group {
         obj: this,
         oxml: this.oxml
       });
-      this._attr._grid.attachEvent("onRowSelect", function(id){
-        if(["x1","y1","cnn1"].indexOf(id) != -1){
-          this._obj.select_node("b");
+      this._attr._grid.attachEvent('onRowSelect', function (id) {
+        if(['x1', 'y1', 'a1', 'cnn1'].indexOf(id) != -1) {
+          this._obj.select_node('b');
         }
-        else if(["x2","y2","cnn2"].indexOf(id) != -1){
-          this._obj.select_node("e");
+        else if(['x2', 'y2', 'a2', 'cnn2'].indexOf(id) != -1) {
+          this._obj.select_node('e');
         }
       });
     }

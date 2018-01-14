@@ -12,7 +12,7 @@
 $p.adapters.pouch.once('pouch_data_loaded', () => {
   // читаем элементы из pouchdb и создаём формулы
   const {formulas} = $p.cat;
-  formulas.pouch_find_rows({_top: 500, _skip: 0})
+  formulas.adapter.find_rows(formulas, {_top: 500, _skip: 0})
     .then((rows) => {
       const parents = [formulas.predefined('printing_plates'), formulas.predefined('modifiers')];
       const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);

@@ -12,8 +12,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 	if(!attr){
 		attr = {
 			hide_header: true,
-			date_from: new Date((new Date()).getFullYear().toFixed() + "-01-01"),
-			date_till: new Date((new Date()).getFullYear().toFixed() + "-12-31"),
+			date_from: moment().subtract(2, 'month').toDate(),
+			date_till: moment().add(1, 'month').toDate(),
 			on_new: (o) => {
         handlers.handleNavigate(`/${this.class_name}/${o.ref}`);
 			},

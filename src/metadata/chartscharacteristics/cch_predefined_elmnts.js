@@ -10,12 +10,13 @@
 export default function ($p) {
 
   const {job_prm, adapters, cch, doc} = $p;
+  const _mgr = cch.predefined_elmnts;
 
   // Подписываемся на событие окончания загрузки локальных данных
   adapters.pouch.once('pouch_doc_ram_loaded', () => {
 
     // читаем элементы из pouchdb и создаём свойства
-    cch.predefined_elmnts.pouch_find_rows({_raw: true, _top: 500, _skip: 0})
+    _mgr.adapter.find_rows(_mgr, {_raw: true, _top: 500, _skip: 0})
       .then((rows) => {
 
         const parents = {};
@@ -88,16 +89,17 @@ export default function ($p) {
       .then(() => {
 
         // дополним автовычисляемыми свойствами
-        let prm = job_prm.properties.width;
-        const {calculated} = job_prm.properties;
-        if(prm && calculated.indexOf(prm) == -1) {
-          calculated.push(prm);
-          prm._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.width || 0};
-        }
-        prm = job_prm.properties.length;
-        if(prm && calculated.indexOf(prm) == -1) {
-          calculated.push(prm);
-          prm._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.len || 0};
+        const {properties} = job_prm;
+        if(properties) {
+          const {calculated, width, length} = properties;
+          if(width && calculated.indexOf(width) == -1) {
+            calculated.push(width);
+            width._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.width || 0};
+          }
+          if(length && calculated.indexOf(length) == -1) {
+            calculated.push(length);
+            length._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.len || 0};
+          }
         }
 
         // рассчеты, помеченные, как шаблоны, загрузим в память заранее
@@ -109,8 +111,6 @@ export default function ($p) {
       });
 
   });
-
-  const _mgr = cch.predefined_elmnts;
 
 
   /**
@@ -184,28 +184,5 @@ export default function ($p) {
       }
     }
   });
-
-  /**
-   * ### Форма элемента
-   *
-   * @method form_obj
-   * @override
-   * @param pwnd
-   * @param attr
-   * @returns {*}
-   */
-  // _mgr.form_obj = function (pwnd, attr) {
-  //
-  //   let o, wnd;
-  //
-  //   return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-  //     .then((res) => {
-  //       if(res) {
-  //         o = res.o;
-  //         wnd = res.wnd;
-  //         return res;
-  //       }
-  //     });
-  // };
 
 }

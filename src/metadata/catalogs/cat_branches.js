@@ -11,7 +11,7 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
 
     // после загрузки данных, надо настроить отборы в метаданных полей рисовалки
     $p.adapters.pouch.once("pouch_complete_loaded", () => {
-      if($p.job_prm.properties && !$p.current_user.branch.empty() && $p.job_prm.builder) {
+      if($p.job_prm.properties && $p.current_user && !$p.current_user.branch.empty() && $p.job_prm.builder) {
 
         const {ПараметрВыбора} = $p.enm.parameters_keys_applying;
         const {furn, sys} = $p.job_prm.properties;

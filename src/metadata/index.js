@@ -34,8 +34,8 @@ export function init(dispatch) {
       meta_init($p);
 
       // сообщяем адаптерам пути, суффиксы и префиксы
-      const {wsql, job_prm, adapters} = $p;
-      adapters.pouch.init(wsql, job_prm);
+      const {wsql, job_prm, adapters: {pouch}} = $p;
+      pouch.init(wsql, job_prm);
 
       // читаем paperjs и deep-diff
       return $p.load_script('/dist/paperjs-deep-diff.min.js', 'script');
@@ -57,7 +57,9 @@ export function init(dispatch) {
       dispatch(metaActions.META_LOADED($p));
 
       // читаем локальные данные в ОЗУ
-      return $p.adapters.pouch.load_data();
+      const {adapters: {pouch}} = $p;
+      return pouch.load_data()
+        .then(() => pouch.attach_refresher());
 
     })
     .catch($p && $p.record_log);

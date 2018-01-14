@@ -4962,7 +4962,9 @@ class BuilderElement extends paper.Group {
         cnn3: cnn3,
         arc_h: arc_h,
         r: _xfields.r,
-        arc_ccw: _xfields.arc_ccw
+        arc_ccw: _xfields.arc_ccw,
+        a1: Object.assign({}, _xfields.x1, {synonym: "Угол1"}),
+        a2: Object.assign({}, _xfields.x1, {synonym: "Угол2"}),
       }
     };
   }
@@ -5067,12 +5069,12 @@ class BuilderElement extends paper.Group {
         obj: this,
         oxml: this.oxml
       });
-      this._attr._grid.attachEvent("onRowSelect", function(id){
-        if(["x1","y1","cnn1"].indexOf(id) != -1){
-          this._obj.select_node("b");
+      this._attr._grid.attachEvent('onRowSelect', function (id) {
+        if(['x1', 'y1', 'a1', 'cnn1'].indexOf(id) != -1) {
+          this._obj.select_node('b');
         }
-        else if(["x2","y2","cnn2"].indexOf(id) != -1){
-          this._obj.select_node("e");
+        else if(['x2', 'y2', 'a2', 'cnn2'].indexOf(id) != -1) {
+          this._obj.select_node('e');
         }
       });
     }
@@ -6909,6 +6911,41 @@ class ProfileItem extends GeneratrixElement {
     }
   }
 
+  angle_at(p) {
+    const {profile, point} = this.cnn_point(p);
+    if(!profile || !point) {
+      return 90;
+    }
+    const g1 = this.generatrix;
+    const g2 = profile.generatrix;
+    let offset1 = g1.getOffsetOf(g1.getNearestPoint(point)),
+      offset2 = g2.getOffsetOf(g2.getNearestPoint(point));
+    if(offset1 < 10){
+      offset1 = 10;
+    }
+    else if(Math.abs(offset1 - g1.length) < 10){
+      offset1 = g1.length - 10;
+    }
+    if(offset2 < 10){
+      offset2 = 10;
+    }
+    else if(Math.abs(offset2 - g2.length) < 10){
+      offset2 = g2.length - 10;
+    }
+    const t1 = g1.getTangentAt(offset1);
+    const t2 = g2.getTangentAt(offset2);
+    const a = t2.negate().getDirectedAngle(t1).round(1);
+    return a > 180 ? a - 180 : (a < 0 ? -a : a);
+  }
+
+  get a1() {
+    return this.angle_at('b');
+  }
+
+  get a2() {
+    return this.angle_at('e');
+  }
+
   get info() {
     return '№' + this.elm + ' α:' + this.angle_hor.toFixed(0) + '° l:' + this.length.toFixed(0);
   }
@@ -7036,8 +7073,8 @@ class ProfileItem extends GeneratrixElement {
         'inset',
         'clr'
       ],
-      'Начало': ['x1', 'y1', 'cnn1'],
-      'Конец': ['x2', 'y2', 'cnn2']
+      'Начало': ['x1','y1','a1','cnn1'],
+      'Конец': ['x2','y2','a2','cnn2']
     };
     if(this.selected_cnn_ii()) {
       oxml['Примыкание'] = ['cnn3'];
@@ -9551,7 +9588,7 @@ class Scheme extends paper.Project {
     const layers = [];
     const profiles = new Set;
 
-    const {auto_align} = this;
+    const {auto_align, _dp} = this;
 
     for (const item of this.selectedItems) {
       const {parent, layer} = item;
@@ -9599,6 +9636,8 @@ class Scheme extends paper.Project {
     }
 
     other.length && this.do_align(auto_align, profiles);
+
+    _dp._manager.emit_async('update', {}, {x1: true, x2: true, y1: true, y2: true, a1: true, a2: true, cnn1: true, cnn2: true, info: true});
 
   }
 

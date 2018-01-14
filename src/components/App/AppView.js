@@ -63,12 +63,17 @@ class AppRoot extends Component {
     const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, user, couch_direct, offline, title} = props;
     const iprops = item_props();
 
+    let need_auth = meta_loaded && iprops.need_user && ((!user.try_log_in && !user.logged_in) || (couch_direct && offline));
+    if(need_auth && !couch_direct && $p.current_user && $p.current_user.name == user.name) {
+      need_auth = false;
+    }
+
     return [
 
       <Header key="header" items={items} {...props} />,
 
       // основной контент или заставка загрузки или приглашение к авторизации
-      meta_loaded && iprops.need_user && ((!user.try_log_in && !user.logged_in) || (couch_direct && offline)) ?
+      need_auth ?
         <NeedAuth
           key="auth"
           handleNavigate={props.handleNavigate}
