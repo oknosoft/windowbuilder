@@ -2,7 +2,7 @@
  * Аналог УПзП-шного __ПостроительИзделийСервер__
  *
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * @module  glob_products_building
  * Created 26.05.2015

@@ -1,7 +1,7 @@
 ﻿/**
  * Расширения объектов paper.js
  *
- * &copy; http://www.oknosoft.ru 2014-2017
+ * &copy; http://www.oknosoft.ru 2014-2018
  * @author	Evgeniy Malyarov
  *
  * @module geometry

@@ -1,7 +1,7 @@
 /**
  * ### Код печатной формы договора
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * Created 17.04.2016
  *

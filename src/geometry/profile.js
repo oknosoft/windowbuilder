@@ -1,6 +1,6 @@
 /**
  * Created 24.07.2015<br />
- * &copy; http://www.oknosoft.ru 2014-2017
+ * &copy; http://www.oknosoft.ru 2014-2018
  * @author  Evgeniy Malyarov
  *
  * @module geometry

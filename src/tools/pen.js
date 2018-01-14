@@ -1,7 +1,7 @@
 /**
  * ### Добавление (рисование) профилей
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * Created 25.08.2015
  *
