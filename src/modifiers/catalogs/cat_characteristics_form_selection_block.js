@@ -1,7 +1,7 @@
 /**
  * ### Форма выбора типового блока
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * @module cat_characteristics_form_selection_block
  *

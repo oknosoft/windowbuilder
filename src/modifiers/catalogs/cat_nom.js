@@ -1,7 +1,7 @@
 /**
  * Дополнительные методы справочника Номенклатура
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  * @module cat_nom
  * Created 23.12.2015
  */

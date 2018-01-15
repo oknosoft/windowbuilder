@@ -1,6 +1,6 @@
 /**
  * Составной тип в поле trans документов оплаты и отгрузки
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * @module glob_value_mgr
  *
