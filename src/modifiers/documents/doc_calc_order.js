@@ -421,6 +421,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       СистемыПрофилей: this.sys_profile,
       СистемыФурнитуры: this.sys_furn,
       Сотрудник: manager.presentation,
+      СотрудникКомментарий: manager.note,
       СотрудникДолжность: manager.individual_person.Должность || 'менеджер',
       СотрудникДолжностьРП: manager.individual_person.ДолжностьРП,
       СотрудникИмя: manager.individual_person.Имя,
