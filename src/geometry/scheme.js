@@ -1512,7 +1512,6 @@ class Scheme extends paper.Project {
           check_corns(addl);
         }
       }
-      ;
     }
 
     // if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
@@ -1550,10 +1549,10 @@ class Scheme extends paper.Project {
    * учитываются узлы всех путей, в том числе и не выделенных
    */
   deselect_all_points(with_items) {
-    this.getItems({class: paper.Path}).forEach(function (item) {
-      item.segments.forEach(function (s) {
-        if(s.selected) {
-          s.selected = false;
+    this.getItems({class: paper.Path}).forEach((item) => {
+      item.segments.forEach((segm) => {
+        if(segm.selected) {
+          segm.selected = false;
         }
       });
       if(with_items && item.selected) {

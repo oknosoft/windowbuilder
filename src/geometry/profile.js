@@ -256,6 +256,7 @@ class ProfileRays {
     if(with_cnn) {
       this.b.clear();
       this.e.clear();
+      this.parent._attr._corns.length = 0;
     }
   }
 
