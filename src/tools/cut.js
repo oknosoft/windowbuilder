@@ -69,7 +69,7 @@ class ToolCut extends paper.Tool {
         // находим профили импоста и углов
         for(const elm of nodes) {
           const cnn_point = elm.profile.cnn_point(elm.point);
-          if(cnn_point && cnn_point.cnn && cnn_point.cnn.cnn_type == $p.enm.cnn_types.КрестВСтык) {
+          if(cnn_point && cnn_point.is_x) {
             this.split_angle(elm, nodes);
             break;
           }

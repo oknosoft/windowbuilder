@@ -27,22 +27,23 @@ class CnnPoint {
    * L для примыкающих рассматривается, как Т
    */
   get is_t() {
+    const {cnn} = this;
     // если это угол, то точно не T
-    if(!this.cnn || this.cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное) {
+    if(!cnn || cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное) {
       return false;
     }
 
     // если это Ʇ, или † то без вариантов T
-    if(this.cnn.cnn_type == $p.enm.cnn_types.ТОбразное) {
+    if(cnn.cnn_type == $p.enm.cnn_types.ТОбразное) {
       return true;
     }
 
     // если это Ꞁ или └─, то может быть T в разрыв - проверяем
-    if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной && this.parent.orientation != $p.enm.orientations.vert) {
+    if(cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной && this.parent.orientation != $p.enm.orientations.vert) {
       return true;
     }
 
-    if(this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной && this.parent.orientation != $p.enm.orientations.hor) {
+    if(cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной && this.parent.orientation != $p.enm.orientations.hor) {
       return true;
     }
 
@@ -62,9 +63,9 @@ class CnnPoint {
    * Соединения Т всегда L-образные
    */
   get is_l() {
-    return this.is_t ||
-      !!(this.cnn && (this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной ||
-        this.cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной));
+    const {cnn} = this;
+    const {УгловоеКВертикальной, УгловоеКГоризонтальной} = $p.enm.cnn_types;
+    return this.is_t || !!(cnn && (cnn.cnn_type === УгловоеКВертикальной || cnn.cnn_type === УгловоеКГоризонтальной));
   }
 
   /**
@@ -72,6 +73,14 @@ class CnnPoint {
    */
   get is_i() {
     return !this.profile && !this.is_cut;
+  }
+
+  /**
+   * Проверяет, является ли соединение в точке соединением крест в стык
+   */
+  get is_x() {
+    const {cnn} = this;
+    return cnn && cnn.cnn_type === $p.enm.cnn_types.КрестВСтык;
   }
 
   /**
@@ -1739,13 +1748,29 @@ class ProfileItem extends GeneratrixElement {
       profile = profile.parent;
     }
 
-    if(
-      (t.b.is_nearest(point, true) && t.cnn_point('b').profile == profile) ||
-      (t.e.is_nearest(point, true) && t.cnn_point('e').profile == profile) ||
-      (profile.b.is_nearest(point, true) && profile.cnn_point('b').profile == t) ||
-      (profile.e.is_nearest(point, true) && profile.cnn_point('e').profile == t)
-    ) {
-      return true;
+    if(t.b.is_nearest(point, true)) {
+      const c = t.cnn_point('b');
+      if((!c.is_x && c.profile == profile) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+        return true;
+      }
+    }
+    else if(t.e.is_nearest(point, true)) {
+      const c = t.cnn_point('e');
+      if((!c.is_x && c.profile == profile) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+        return true;
+      }
+    }
+    else if(profile.b.is_nearest(point, true)) {
+      const c = profile.cnn_point('b');
+      if((!c.is_x && c.profile == t) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+        return true;
+      }
+    }
+    else if(profile.e.is_nearest(point, true)) {
+      const c = profile.cnn_point('e');
+      if((!c.is_x && c.profile == t) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+        return true;
+      }
     }
     else {
       return false;
