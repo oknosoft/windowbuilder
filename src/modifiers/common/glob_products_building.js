@@ -746,6 +746,9 @@ class ProductsBuilding {
             // console.profileEnd();
 
           })
+          .then(() => setTimeout(() => {
+            ox.calc_order._modified && ox.calc_order.save();
+          }, 1000))
           .catch((ox) => {
 
             // console.timeEnd("save");

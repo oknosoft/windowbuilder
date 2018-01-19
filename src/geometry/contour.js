@@ -20,14 +20,11 @@
 class GlassSegment {
 
   constructor(profile, b, e, outer) {
-
     this.profile = profile;
     this.b = b.clone();
     this.e = e.clone();
-    this.outer = !!outer;
-
+    this.outer = outer;
     this.segment();
-
   }
 
   segment() {
@@ -512,6 +509,15 @@ class Contour extends AbstractFilling(paper.Layer) {
       return 0;
     }
 
+    function push_new(profile, b, e, outer = false) {
+      for(const segm of nodes) {
+        if(segm.profile === profile && segm.b.equals(b) && segm.e.equals(e) && segm.outer == outer){
+          return;
+        }
+      }
+      nodes.push(new GlassSegment(profile, b, e, outer));
+    }
+
     // для всех профилей контура
     this.profiles.forEach((p) => {
 
@@ -532,15 +538,15 @@ class Contour extends AbstractFilling(paper.Layer) {
         ip.inner.sort(sort);
 
         if (!pb.is_i && !pbg.is_nearest(ip.inner[0].point)) {
-          nodes.push(new GlassSegment(p, pbg, ip.inner[0].point));
+          push_new(p, pbg, ip.inner[0].point);
         }
 
         for (let i = 1; i < ip.inner.length; i++) {
-          nodes.push(new GlassSegment(p, ip.inner[i - 1].point, ip.inner[i].point));
+          push_new(p, ip.inner[i - 1].point, ip.inner[i].point);
         }
 
         if (!pe.is_i && !ip.inner[ip.inner.length - 1].point.is_nearest(peg)) {
-          nodes.push(new GlassSegment(p, ip.inner[ip.inner.length - 1].point, peg));
+          push_new(p, ip.inner[ip.inner.length - 1].point, peg);
         }
 
       }
@@ -549,30 +555,33 @@ class Contour extends AbstractFilling(paper.Layer) {
         ip.outer.sort(sort);
 
         if (!pb.is_i && !ip.outer[0].point.is_nearest(pbg)) {
-          nodes.push(new GlassSegment(p, ip.outer[0].point, pbg, true));
+          push_new(p, ip.outer[0].point, pbg, true);
         }
 
         for (let i = 1; i < ip.outer.length; i++) {
-          nodes.push(new GlassSegment(p, ip.outer[i].point, ip.outer[i - 1].point, true));
+          push_new(p, ip.outer[i].point, ip.outer[i - 1].point, true);
         }
 
         if (!pe.is_i && !peg.is_nearest(ip.outer[ip.outer.length - 1].point)) {
-          nodes.push(new GlassSegment(p, peg, ip.outer[ip.outer.length - 1].point, true));
+          push_new(p, peg, ip.outer[ip.outer.length - 1].point, true);
         }
       }
 
       // добавляем, если нет соединений с пустотой
       if (!ip.inner.length) {
         if (!pb.is_i && !pe.is_i) {
-          nodes.push(new GlassSegment(p, pbg, peg));
+          push_new(p, pbg, peg);
         }
       }
 
       // для импостов добавляем сегмент в обратном направлении
       if (!ip.outer.length && (pb.is_cut || pe.is_cut || pb.is_t || pe.is_t)) {
         if (!pb.is_i && !pe.is_i) {
-          nodes.push(new GlassSegment(p, peg, pbg, true));
+          push_new(p, peg, pbg, true);
         }
+      }
+      else if(pb.is_x || pe.is_x) {
+        push_new(p, peg, pbg, true);
       }
 
     });
