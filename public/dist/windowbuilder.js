@@ -2372,6 +2372,17 @@ class GlassSegment {
   }
 }
 
+class PointMap extends Map {
+
+  byPoint(point) {
+    for(const [key, value] of this) {
+      if(point.is_nearest(key)) {
+        return value.length > 2 && value;
+      }
+    }
+  }
+}
+
 class Contour extends AbstractFilling(paper.Layer) {
 
   constructor(attr) {
@@ -2471,6 +2482,7 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   get glass_contours() {
     const segments = this.glass_segments;
+    const nodes = this.count_nodes();
     const res = [];
     let curr, acurr;
 
@@ -2480,7 +2492,7 @@ class Contour extends AbstractFilling(paper.Layer) {
         segments.forEach((segm) => {
           if (segm == curr || segm.profile == curr.profile)
             return;
-          if (curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b)) {
+          if (curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b, nodes)) {
 
             if (segments.length < 3 || curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
               curr.anext.push(segm);
@@ -2838,6 +2850,32 @@ class Contour extends AbstractFilling(paper.Layer) {
     return nodes;
   }
 
+  count_nodes() {
+    const nodes = new PointMap();
+    this.profiles.forEach((profile) => {
+      const {b, e} = profile;
+      let findedb;
+      let findede;
+      for(const [key, value] of nodes) {
+        if (b.is_nearest(key)) {
+          value.push({profile, point: 'b'})
+          findedb = true;
+        }
+        if (e.is_nearest(key)) {
+          value.push({profile, point: 'e'})
+          findede = true;
+        }
+      }
+      if (!findedb) {
+        nodes.set(b.clone(), [{profile, point: 'b'}]);
+      }
+      if (!findede) {
+        nodes.set(e.clone(), [{profile, point: 'e'}]);
+      }
+    });
+    return nodes;
+  }
+
 
   notify(obj, type = 'update') {
     if (obj.type) {
@@ -2853,6 +2891,7 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   get outer_profiles() {
     const {profiles} = this;
+    const nodes = this.count_nodes();
     const to_remove = [];
     const res = [];
 
@@ -2867,9 +2906,9 @@ class Contour extends AbstractFilling(paper.Layer) {
       for (let j = 0; j < profiles.length; j++) {
         if (profiles[j] == elm)
           continue;
-        if (!findedb && elm.has_cnn(profiles[j], elm.b) && elm.b.is_nearest(profiles[j].e))
+        if (!findedb && elm.has_cnn(profiles[j], elm.b, nodes) && elm.b.is_nearest(profiles[j].e))
           findedb = true;
-        if (!findede && elm.has_cnn(profiles[j], elm.e) && elm.e.is_nearest(profiles[j].b))
+        if (!findede && elm.has_cnn(profiles[j], elm.e, nodes) && elm.e.is_nearest(profiles[j].b))
           findede = true;
       }
       if (!findedb || !findede)
@@ -6658,10 +6697,10 @@ class CnnPoint {
 
   clear() {
     if(this.profile_point) {
-      delete this.profile_point;
+      this.profile_point = '';
     }
     if(this.is_cut) {
-      delete this.is_cut;
+      this.is_cut = false;
     }
     this.profile = null;
     this.err = null;
@@ -6670,6 +6709,10 @@ class CnnPoint {
     if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.i) {
       this.cnn = null;
     }
+    const {_corns} = this._parent._attr;
+    if(_corns.length > 5) {
+      _corns.length = 5;
+    };
   }
 
   get err() {
@@ -6788,7 +6831,6 @@ class ProfileRays {
     if(with_cnn) {
       this.b.clear();
       this.e.clear();
-      this.parent._attr._corns.length = 0;
     }
   }
 
@@ -7943,9 +7985,10 @@ class ProfileItem extends GeneratrixElement {
     }
   }
 
-  has_cnn(profile, point) {
+  has_cnn(profile, point, nodes) {
 
     let t = this;
+    let node;
 
     while (t.parent instanceof ProfileItem) {
       t = t.parent;
@@ -7957,31 +8000,58 @@ class ProfileItem extends GeneratrixElement {
 
     if(t.b.is_nearest(point, true)) {
       const c = t.cnn_point('b');
-      if((!c.is_x && c.profile == profile) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+      if(c.profile === profile) {
+        if(node = nodes.byPoint(point)){
+
+        }
         return true;
       }
     }
-    else if(t.e.is_nearest(point, true)) {
+    if(t.e.is_nearest(point, true)) {
       const c = t.cnn_point('e');
-      if((!c.is_x && c.profile == profile) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+      if(c.profile === profile) {
+        if(node = nodes.byPoint(point)){
+          const angles = new Map();
+          const tangent = t.generatrix.getTangentAt(t.generatrix.length);
+          for(const elm of node) {
+            if(elm.profile === t) {
+              continue;
+            }
+            const {generatrix} = elm.profile;
+            const offset = generatrix.getOffsetOf(generatrix.getNearestPoint(point));
+            const tangent2 = generatrix.getTangentAt(offset);
+            angles.set(elm.profile, tangent.getDirectedAngle(tangent2));
+          }
+          const angle = angles.get(profile);
+          for(const [key, value] of angles) {
+            if(key !== profile && value > angle) {
+              return false;
+            }
+          }
+        }
         return true;
       }
     }
-    else if(profile.b.is_nearest(point, true)) {
+    if(profile.b.is_nearest(point, true)) {
       const c = profile.cnn_point('b');
-      if((!c.is_x && c.profile == t) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+      if(c.profile == t) {
+        if(node = nodes.byPoint(point)){
+
+        }
         return true;
       }
     }
-    else if(profile.e.is_nearest(point, true)) {
+    if(profile.e.is_nearest(point, true)) {
       const c = profile.cnn_point('e');
-      if((!c.is_x && c.profile == t) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+      if(c.profile == t) {
+        if(node = nodes.byPoint(point)){
+
+        }
         return true;
       }
     }
-    else {
-      return false;
-    }
+
+    return false;
   }
 
   check_distance(element, res, point, check_only) {
@@ -10889,60 +10959,62 @@ class ToolCut extends paper.Tool {
 
   on_activate() {
     const {project, tb_left} = this._scope;
-    const {profiles} = project.activeLayer;
     const previous = tb_left.get_selected();
 
-    let selected = {};
-    for(const {generatrix} of profiles) {
-      if(generatrix.firstSegment.selected) {
-        if(selected.profile) {
-          selected.break = true;
-          break;
-        }
-        selected.profile = generatrix.parent;
-        selected.point = 'b';
-      };
-      if(generatrix.lastSegment.selected) {
-        if(selected.profile) {
-          selected.break = true;
-          break;
-        }
-        selected.profile = generatrix.parent;
-        selected.point = 'e';
-      };
-    }
-
-    if(selected.profile && !selected.break) {
-      const point = selected.profile[selected.point];
-      const nodes = [selected];
-
-      for(const profile of profiles) {
-        if(profile !== selected.profile) {
-          if(profile.b.is_nearest(point, true)) {
-            nodes.push({profile, point: 'b'});
-          }
-          if(profile.e.is_nearest(point, true)) {
-            nodes.push({profile, point: 'e'});
-          }
-        }
-      }
-
-      if(nodes.length === 3) {
-
-        for(const elm of nodes) {
-          const cnn_point = elm.profile.cnn_point(elm.point);
-          if(cnn_point && cnn_point.is_x) {
-            this.split_angle(elm, nodes);
+    Promise.resolve().then(() => {
+      const {profiles} = project.activeLayer;
+      let selected = {};
+      for(const {generatrix} of profiles) {
+        if(generatrix.firstSegment.selected) {
+          if(selected.profile) {
+            selected.break = true;
             break;
           }
-          else if(cnn_point && cnn_point.cnn && cnn_point.cnn.cnn_type == $p.enm.cnn_types.ТОбразное) {
-            this.merge_angle(elm, nodes);
+          selected.profile = generatrix.parent;
+          selected.point = 'b';
+        };
+        if(generatrix.lastSegment.selected) {
+          if(selected.profile) {
+            selected.break = true;
             break;
+          }
+          selected.profile = generatrix.parent;
+          selected.point = 'e';
+        };
+      }
+
+      if(selected.profile && !selected.break) {
+        const point = selected.profile[selected.point];
+        const nodes = [selected];
+
+        for(const profile of profiles) {
+          if(profile !== selected.profile) {
+            if(profile.b.is_nearest(point, true)) {
+              nodes.push({profile, point: 'b'});
+            }
+            if(profile.e.is_nearest(point, true)) {
+              nodes.push({profile, point: 'e'});
+            }
           }
         }
 
+        if(nodes.length === 3) {
+
+          for(const elm of nodes) {
+            const cnn_point = elm.profile.cnn_point(elm.point);
+            if(cnn_point && cnn_point.is_x) {
+              this.split_angle(elm, nodes);
+              break;
+            }
+            else if(cnn_point && cnn_point.cnn && cnn_point.cnn.cnn_type == $p.enm.cnn_types.ТОбразное) {
+              this.merge_angle(elm, nodes);
+              break;
+            }
+          }
+
+        }
       }
-    }
+    });
 
     if(previous) {
       return this._scope.select_tool(previous.replace('left_', ''));
@@ -10973,16 +11045,20 @@ class ToolCut extends paper.Tool {
       }
 
       const {rays, project} = impost.profile;
-      if(rays[impost.point].cnn != cnn || rays[impost.point].profile != profile) {
-        rays[impost.point].cnn = cnn;
-        rays[impost.point].profile = profile;
+      const ray = rays[impost.point];
+      if(ray.cnn != cnn || ray.profile != profile) {
+        ray.clear();
+        ray.cnn = cnn;
+        ray.profile = profile;
         project.register_change();
       }
     }
     else {
+      const p1 = impost.profile ? impost.profile.inset.presentation : '...';
+      const p2 = profile ? profile.inset.presentation : '...';
       $p.msg.show_msg({
         type: 'alert-info',
-        text: `Не найдено соединение 'Крест в стык' для профилей ${impost.profile.inset.presentation} и ${profile.profile.inset.presentation}`,
+        text: `Не найдено соединение 'Крест в стык' для профилей ${p1} и ${p2}`,
         title: 'Соединение Т в угол'
       });
     }
@@ -11008,14 +11084,18 @@ class ToolCut extends paper.Tool {
       impost.profile[impost.point] = point === profile.b ? profile.generatrix.getPointAt(100) : profile.generatrix.getPointAt(profile.generatrix.length - 100);
 
       const {rays, project} = impost.profile;
-      rays[impost.point].cnn = cnn;
-      rays[impost.point].profile = profile;
+      const ray = rays[impost.point];
+      ray.clear();
+      ray.cnn = cnn;
+      ray.profile = profile;
       project.register_change();
     }
     else {
+      const p1 = impost.profile ? impost.profile.inset.presentation : '...';
+      const p2 = profile ? profile.inset.presentation : '...';
       $p.msg.show_msg({
         type: 'alert-info',
-        text: `Не найдено соединение Т для профилей ${impost.profile.inset.presentation} и ${profile.profile.inset.presentation}`,
+        text: `Не найдено соединение Т для профилей ${p1} и ${p2}`,
         title: 'Соединение Т из угла'
       });
     }

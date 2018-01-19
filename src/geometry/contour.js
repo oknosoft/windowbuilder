@@ -76,6 +76,17 @@ class GlassSegment {
   }
 }
 
+class PointMap extends Map {
+
+  byPoint(point) {
+    for(const [key, value] of this) {
+      if(point.is_nearest(key)) {
+        return value.length > 2 && value;
+      }
+    }
+  }
+}
+
 /**
  * ### Контур (слой) изделия
  * Унаследован от  [paper.Layer](http://paperjs.org/reference/layer/)
@@ -215,6 +226,7 @@ class Contour extends AbstractFilling(paper.Layer) {
    */
   get glass_contours() {
     const segments = this.glass_segments;
+    const nodes = this.count_nodes();
     const res = [];
     let curr, acurr;
 
@@ -227,7 +239,7 @@ class Contour extends AbstractFilling(paper.Layer) {
             return;
           // если конец нашего совпадает с началом следующего...
           // и если существует соединение нашего со следующим
-          if (curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b)) {
+          if (curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b, nodes)) {
 
             if (segments.length < 3 || curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
               curr.anext.push(segm);
@@ -635,6 +647,36 @@ class Contour extends AbstractFilling(paper.Layer) {
     return nodes;
   }
 
+  /**
+   * Рассчитывает количество профилей в узлах
+   * @return {Map<any, any>}
+   */
+  count_nodes() {
+    const nodes = new PointMap();
+    this.profiles.forEach((profile) => {
+      const {b, e} = profile;
+      let findedb;
+      let findede;
+      for(const [key, value] of nodes) {
+        if (b.is_nearest(key)) {
+          value.push({profile, point: 'b'})
+          findedb = true;
+        }
+        if (e.is_nearest(key)) {
+          value.push({profile, point: 'e'})
+          findede = true;
+        }
+      }
+      if (!findedb) {
+        nodes.set(b.clone(), [{profile, point: 'b'}]);
+      }
+      if (!findede) {
+        nodes.set(e.clone(), [{profile, point: 'e'}]);
+      }
+    });
+    return nodes;
+  }
+
 
   /**
    * Формирует оповещение для тех, кто следит за this._noti
@@ -663,6 +705,7 @@ class Contour extends AbstractFilling(paper.Layer) {
   get outer_profiles() {
     // сначала получим все профили
     const {profiles} = this;
+    const nodes = this.count_nodes();
     const to_remove = [];
     const res = [];
 
@@ -678,9 +721,9 @@ class Contour extends AbstractFilling(paper.Layer) {
       for (let j = 0; j < profiles.length; j++) {
         if (profiles[j] == elm)
           continue;
-        if (!findedb && elm.has_cnn(profiles[j], elm.b) && elm.b.is_nearest(profiles[j].e))
+        if (!findedb && elm.has_cnn(profiles[j], elm.b, nodes) && elm.b.is_nearest(profiles[j].e))
           findedb = true;
-        if (!findede && elm.has_cnn(profiles[j], elm.e) && elm.e.is_nearest(profiles[j].b))
+        if (!findede && elm.has_cnn(profiles[j], elm.e, nodes) && elm.e.is_nearest(profiles[j].b))
           findede = true;
       }
       if (!findedb || !findede)

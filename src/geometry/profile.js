@@ -101,10 +101,10 @@ class CnnPoint {
 
   clear() {
     if(this.profile_point) {
-      delete this.profile_point;
+      this.profile_point = '';
     }
     if(this.is_cut) {
-      delete this.is_cut;
+      this.is_cut = false;
     }
     this.profile = null;
     this.err = null;
@@ -113,6 +113,10 @@ class CnnPoint {
     if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.i) {
       this.cnn = null;
     }
+    const {_corns} = this._parent._attr;
+    if(_corns.length > 5) {
+      _corns.length = 5;
+    };
   }
 
   /**
@@ -265,7 +269,6 @@ class ProfileRays {
     if(with_cnn) {
       this.b.clear();
       this.e.clear();
-      this.parent._attr._corns.length = 0;
     }
   }
 
@@ -1736,9 +1739,10 @@ class ProfileItem extends GeneratrixElement {
   /**
    * Выясняет, имеет ли текущий профиль соединение с `profile` в окрестности точки `point`
    */
-  has_cnn(profile, point) {
+  has_cnn(profile, point, nodes) {
 
     let t = this;
+    let node;
 
     while (t.parent instanceof ProfileItem) {
       t = t.parent;
@@ -1750,31 +1754,60 @@ class ProfileItem extends GeneratrixElement {
 
     if(t.b.is_nearest(point, true)) {
       const c = t.cnn_point('b');
-      if((!c.is_x && c.profile == profile) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+      if(c.profile === profile) {
+        if(node = nodes.byPoint(point)){
+
+        }
         return true;
       }
     }
-    else if(t.e.is_nearest(point, true)) {
+    if(t.e.is_nearest(point, true)) {
       const c = t.cnn_point('e');
-      if((!c.is_x && c.profile == profile) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+      if(c.profile === profile) {
+        if(node = nodes.byPoint(point)){
+          const angles = new Map();
+          const tangent = t.generatrix.getTangentAt(t.generatrix.length);
+          for(const elm of node) {
+            if(elm.profile === t) {
+              continue;
+            }
+            //curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0
+            // сравним углы между образующими в точке
+            const {generatrix} = elm.profile;
+            const offset = generatrix.getOffsetOf(generatrix.getNearestPoint(point));
+            const tangent2 = generatrix.getTangentAt(offset);
+            angles.set(elm.profile, tangent.getDirectedAngle(tangent2));
+          }
+          const angle = angles.get(profile);
+          for(const [key, value] of angles) {
+            if(key !== profile && value > angle) {
+              return false;
+            }
+          }
+        }
         return true;
       }
     }
-    else if(profile.b.is_nearest(point, true)) {
+    if(profile.b.is_nearest(point, true)) {
       const c = profile.cnn_point('b');
-      if((!c.is_x && c.profile == t) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+      if(c.profile == t) {
+        if(node = nodes.byPoint(point)){
+
+        }
         return true;
       }
     }
-    else if(profile.e.is_nearest(point, true)) {
+    if(profile.e.is_nearest(point, true)) {
       const c = profile.cnn_point('e');
-      if((!c.is_x && c.profile == t) || (c.is_x && point.is_nearest(c.profile[c.profile_point], true))) {
+      if(c.profile == t) {
+        if(node = nodes.byPoint(point)){
+
+        }
         return true;
       }
     }
-    else {
-      return false;
-    }
+
+    return false;
   }
 
   /**
