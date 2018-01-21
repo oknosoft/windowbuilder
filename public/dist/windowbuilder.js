@@ -2365,29 +2365,32 @@ class GlassSegment {
       tangent = tangent.negate();
     }
 
-    const angles = new Map();
+    const angles = [];
     for(const elm of node) {
       if(elm.profile === curr_profile) {
         continue;
       }
       const {generatrix} = elm.profile;
       const ppoint = generatrix.getNearestPoint(point);
-      const offset = generatrix.getOffsetOf(ppoint);
-      let tangent2 = generatrix.getTangentAt(offset);
+      const poffset = generatrix.getOffsetOf(ppoint);
+      const ptangent = generatrix.getTangentAt(poffset);
       for(const segm of segments) {
-        if(segm.profile === elm.profile && (offset === 0 ? segm.e : segm.b).is_nearest(ppoint, true) && segm.outer) {
-          tangent2 = tangent2.negate();
-          break;
+        if(segm.profile === elm.profile && segm.b.is_nearest(ppoint, true)) {
+          angles.push({profile: elm.profile, angle: tangent.getDirectedAngle(segm.outer ? ptangent.negate() : ptangent)});
         }
       }
-      angles.set(elm.profile, tangent.getDirectedAngle(tangent2));
     }
-    const angle = angles.get(segm_profile);
+    let angle;
+    for(const elm of angles) {
+      if(elm.profile === segm_profile && (!angle || elm.angle > angle)) {
+        angle = elm.angle;
+      }
+    }
     if(angle < 0) {
       return true;
     }
-    for(const [key, value] of angles) {
-      if(key !== segm_profile && value > angle) {
+    for(const elm of angles) {
+      if(elm.profile !== segm_profile && elm.angle > angle) {
         return true;
       }
     }
