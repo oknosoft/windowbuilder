@@ -2353,6 +2353,106 @@ class GlassSegment {
 
   }
 
+  break_by_angle(nodes, segments, point, offset, curr_profile, segm_profile) {
+
+    const node = nodes.byPoint(point);
+    if(!node) {
+      return false;
+    }
+
+    let tangent = curr_profile.generatrix.getTangentAt(offset);
+    if(this.outer) {
+      tangent = tangent.negate();
+    }
+
+    const angles = new Map();
+    for(const elm of node) {
+      if(elm.profile === curr_profile) {
+        continue;
+      }
+      const {generatrix} = elm.profile;
+      const ppoint = generatrix.getNearestPoint(point);
+      const offset = generatrix.getOffsetOf(ppoint);
+      let tangent2 = generatrix.getTangentAt(offset);
+      for(const segm of segments) {
+        if(segm.profile === elm.profile && (offset === 0 ? segm.e : segm.b).is_nearest(ppoint, true) && segm.outer) {
+          tangent2 = tangent2.negate();
+          break;
+        }
+      }
+      angles.set(elm.profile, tangent.getDirectedAngle(tangent2));
+    }
+    const angle = angles.get(segm_profile);
+    if(angle < 0) {
+      return true;
+    }
+    for(const [key, value] of angles) {
+      if(key !== segm_profile && value > angle) {
+        return true;
+      }
+    }
+  }
+
+  has_cnn(segm, nodes, segments) {
+
+    const point = segm.b;
+    if(!this.e.is_nearest(point)) {
+      return false;
+    }
+
+    let curr_profile = this.profile;
+    let segm_profile = segm.profile;
+    while (curr_profile.parent instanceof ProfileItem) {
+      curr_profile = curr_profile.parent;
+    }
+    while (segm_profile.parent instanceof ProfileItem) {
+      segm_profile = segm_profile.parent;
+    }
+
+    if(curr_profile.b.is_nearest(point, true)) {
+      const by_angle = this.break_by_angle(nodes, segments, point, 0, curr_profile, segm_profile);
+      if(by_angle) {
+        return false;
+      }
+      else if(by_angle === undefined || curr_profile.cnn_point('b').profile === segm_profile) {
+        return true;
+      }
+    }
+
+    if(curr_profile.e.is_nearest(point, true)) {
+      const by_angle = this.break_by_angle(nodes, segments, point, curr_profile.generatrix.length, curr_profile, segm_profile);
+      if(by_angle) {
+        return false;
+      }
+      else if(by_angle === undefined || curr_profile.cnn_point('e').profile === segm_profile) {
+        return true;
+      }
+    }
+
+    if(segm_profile.b.is_nearest(point, true)) {
+      const by_angle = segm.break_by_angle(nodes, segments, point, 0, segm_profile, curr_profile)
+      if(by_angle) {
+        return false;
+      }
+      else if(by_angle === undefined || segm_profile.cnn_point('b').profile == curr_profile) {
+        return true;
+      }
+    }
+
+    if(segm_profile.e.is_nearest(point, true)) {
+      const by_angle = segm.break_by_angle(nodes, segments, point, segm_profile.generatrix.length, segm_profile, curr_profile);
+      if(by_angle) {
+        return false;
+      }
+      else if(by_angle === undefined || segm_profile.cnn_point('e').profile == curr_profile) {
+        return true;
+      }
+    }
+
+    return false;
+
+  }
+
   get _sub() {
     const {sub_path} = this;
     return {
@@ -2492,7 +2592,7 @@ class Contour extends AbstractFilling(paper.Layer) {
         segments.forEach((segm) => {
           if (segm == curr || segm.profile == curr.profile)
             return;
-          if (curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b, nodes)) {
+          if (curr.has_cnn(segm, nodes, segments)) {
 
             if (segments.length < 3 || curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
               curr.anext.push(segm);
@@ -2891,7 +2991,6 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   get outer_profiles() {
     const {profiles} = this;
-    const nodes = this.count_nodes();
     const to_remove = [];
     const res = [];
 
@@ -2906,13 +3005,14 @@ class Contour extends AbstractFilling(paper.Layer) {
       for (let j = 0; j < profiles.length; j++) {
         if (profiles[j] == elm)
           continue;
-        if (!findedb && elm.has_cnn(profiles[j], elm.b, nodes) && elm.b.is_nearest(profiles[j].e))
+        if (!findedb && elm.has_cnn(profiles[j], elm.b) && elm.b.is_nearest(profiles[j].e))
           findedb = true;
-        if (!findede && elm.has_cnn(profiles[j], elm.e, nodes) && elm.e.is_nearest(profiles[j].b))
+        if (!findede && elm.has_cnn(profiles[j], elm.e) && elm.e.is_nearest(profiles[j].b))
           findede = true;
       }
-      if (!findedb || !findede)
+      if (!findedb || !findede){
         to_remove.push(elm);
+      }
     }
     for (let i = 0; i < profiles.length; i++) {
       const elm = profiles[i];
@@ -7985,70 +8085,23 @@ class ProfileItem extends GeneratrixElement {
     }
   }
 
-  has_cnn(profile, point, nodes) {
+  has_cnn(profile, point) {
 
     let t = this;
-    let node;
-
     while (t.parent instanceof ProfileItem) {
       t = t.parent;
     }
-
     while (profile.parent instanceof ProfileItem) {
       profile = profile.parent;
     }
 
-    if(t.b.is_nearest(point, true)) {
-      const c = t.cnn_point('b');
-      if(c.profile === profile) {
-        if(node = nodes.byPoint(point)){
-
-        }
-        return true;
-      }
-    }
-    if(t.e.is_nearest(point, true)) {
-      const c = t.cnn_point('e');
-      if(c.profile === profile) {
-        if(node = nodes.byPoint(point)){
-          const angles = new Map();
-          const tangent = t.generatrix.getTangentAt(t.generatrix.length);
-          for(const elm of node) {
-            if(elm.profile === t) {
-              continue;
-            }
-            const {generatrix} = elm.profile;
-            const offset = generatrix.getOffsetOf(generatrix.getNearestPoint(point));
-            const tangent2 = generatrix.getTangentAt(offset);
-            angles.set(elm.profile, tangent.getDirectedAngle(tangent2));
-          }
-          const angle = angles.get(profile);
-          for(const [key, value] of angles) {
-            if(key !== profile && value > angle) {
-              return false;
-            }
-          }
-        }
-        return true;
-      }
-    }
-    if(profile.b.is_nearest(point, true)) {
-      const c = profile.cnn_point('b');
-      if(c.profile == t) {
-        if(node = nodes.byPoint(point)){
-
-        }
-        return true;
-      }
-    }
-    if(profile.e.is_nearest(point, true)) {
-      const c = profile.cnn_point('e');
-      if(c.profile == t) {
-        if(node = nodes.byPoint(point)){
-
-        }
-        return true;
-      }
+    if(
+      (t.b.is_nearest(point, true) && t.cnn_point('b').profile == profile) ||
+      (t.e.is_nearest(point, true) && t.cnn_point('e').profile == profile) ||
+      (profile.b.is_nearest(point, true) && profile.cnn_point('b').profile == t) ||
+      (profile.e.is_nearest(point, true) && profile.cnn_point('e').profile == t)
+    ) {
+      return true;
     }
 
     return false;

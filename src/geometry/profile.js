@@ -1739,72 +1739,23 @@ class ProfileItem extends GeneratrixElement {
   /**
    * Выясняет, имеет ли текущий профиль соединение с `profile` в окрестности точки `point`
    */
-  has_cnn(profile, point, nodes) {
+  has_cnn(profile, point) {
 
     let t = this;
-    let node;
-
     while (t.parent instanceof ProfileItem) {
       t = t.parent;
     }
-
     while (profile.parent instanceof ProfileItem) {
       profile = profile.parent;
     }
 
-    if(t.b.is_nearest(point, true)) {
-      const c = t.cnn_point('b');
-      if(c.profile === profile) {
-        if(node = nodes.byPoint(point)){
-
-        }
-        return true;
-      }
-    }
-    if(t.e.is_nearest(point, true)) {
-      const c = t.cnn_point('e');
-      if(c.profile === profile) {
-        if(node = nodes.byPoint(point)){
-          const angles = new Map();
-          const tangent = t.generatrix.getTangentAt(t.generatrix.length);
-          for(const elm of node) {
-            if(elm.profile === t) {
-              continue;
-            }
-            //curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0
-            // сравним углы между образующими в точке
-            const {generatrix} = elm.profile;
-            const offset = generatrix.getOffsetOf(generatrix.getNearestPoint(point));
-            const tangent2 = generatrix.getTangentAt(offset);
-            angles.set(elm.profile, tangent.getDirectedAngle(tangent2));
-          }
-          const angle = angles.get(profile);
-          for(const [key, value] of angles) {
-            if(key !== profile && value > angle) {
-              return false;
-            }
-          }
-        }
-        return true;
-      }
-    }
-    if(profile.b.is_nearest(point, true)) {
-      const c = profile.cnn_point('b');
-      if(c.profile == t) {
-        if(node = nodes.byPoint(point)){
-
-        }
-        return true;
-      }
-    }
-    if(profile.e.is_nearest(point, true)) {
-      const c = profile.cnn_point('e');
-      if(c.profile == t) {
-        if(node = nodes.byPoint(point)){
-
-        }
-        return true;
-      }
+    if(
+      (t.b.is_nearest(point, true) && t.cnn_point('b').profile == profile) ||
+      (t.e.is_nearest(point, true) && t.cnn_point('e').profile == profile) ||
+      (profile.b.is_nearest(point, true) && profile.cnn_point('b').profile == t) ||
+      (profile.e.is_nearest(point, true) && profile.cnn_point('e').profile == t)
+    ) {
+      return true;
     }
 
     return false;
