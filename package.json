@@ -1,6 +1,6 @@
 {
   "name": "windowbuilder",
-  "version": "2.0.236",
+  "version": "2.0.237",
   "description": "Order dealer for windows and stained glass",
   "repository": {
     "type": "git",
@@ -27,13 +27,13 @@
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
     "dxf-writer": "^1.0.8",
-    "metadata-abstract-ui": "^2.0.16-beta.46",
-    "metadata-core": "^2.0.16-beta.46",
-    "metadata-dhtmlx": "^2.0.16-beta.46",
-    "metadata-external": "^2.0.16-beta.46",
-    "metadata-pouchdb": "^2.0.16-beta.46",
-    "metadata-react": "^2.0.16-beta.46",
-    "metadata-redux": "^2.0.16-beta.46",
+    "metadata-abstract-ui": "^2.0.16-beta.47",
+    "metadata-core": "^2.0.16-beta.47",
+    "metadata-dhtmlx": "^2.0.16-beta.47",
+    "metadata-external": "^2.0.16-beta.47",
+    "metadata-pouchdb": "^2.0.16-beta.47",
+    "metadata-react": "^2.0.16-beta.47",
+    "metadata-redux": "^2.0.16-beta.47",
     "paper-jsdom-canvas": "^0.11.5"
   },
   "devDependencies": {
