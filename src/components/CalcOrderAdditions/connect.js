@@ -10,84 +10,11 @@ import withStyles from './styles';
 import compose from 'recompose/compose';
 
 import AdditionsItem from './AdditionsItem';
+const {ItemData} = $p.cat.inserts;
 
 // компилированный запрос для поиска настроек в ОЗУ
 export const alasql_schemas = $p.wsql.alasql.compile('select * from cat_scheme_settings where obj="dp.buyers_order.production"');
 
-// подписываемся на событие после загрузки из pouchdb-ram и готовности предопределенных
-$p.md.once('predefined_elmnts_inited', () => {
-  $p.cat.scheme_settings.find_schemas('dp.buyers_order.production');
-});
-
-
-class ItemData {
-  constructor(item, Renderer = AdditionsItem) {
-
-    this.Renderer = Renderer;
-    this.count = 0;
-
-    // индивидуальные классы строк
-    class ItemRow extends $p.DpBuyers_orderProductionRow {
-    }
-
-    this.Row = ItemRow;
-
-    // получаем возможные параметры вставок данного типа
-    const prms = new Set();
-    $p.cat.inserts.find_rows({available: true, insert_type: item}, (inset) => {
-      inset.used_params.forEach((param) => {
-        !param.is_calculated && prms.add(param);
-      });
-      inset.specification.forEach(({nom}) => {
-        const {used_params} = nom;
-        used_params && used_params.forEach((param) => {
-          !param.is_calculated && prms.add(param);
-        });
-      });
-    });
-
-    // индивидуальные метаданные строк
-    const meta = $p.dp.buyers_order.metadata('production');
-    this.meta = meta._clone();
-
-    // отбор по типу вставки
-    this.meta.fields.inset.choice_params[0].path = item;
-
-    for (const param of prms) {
-
-      // корректируем схему
-      $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
-        if(!scheme.fields.find({field: param.ref})) {
-          scheme.fields.add({
-            field: param.ref,
-            caption: param.caption,
-            use: true,
-          });
-        }
-      });
-
-      // корректируем метаданные
-      const mf = this.meta.fields[param.ref] = {
-        synonym: param.caption,
-        type: param.type,
-      };
-      if(param.type.types.some(type => type === 'cat.property_values')) {
-        mf.choice_params = [{name: 'owner', path: param}];
-      }
-
-      // корректируем класс строки
-      Object.defineProperty(ItemRow.prototype, param.ref, {
-        get: function () {
-          return this._getter(param.ref);
-        },
-        set: function (v) {
-          this._setter(param.ref, v);
-        }
-      });
-    }
-
-  }
-}
 
 // заполняет компонент данными
 export function fill_data(ref) {
@@ -97,18 +24,18 @@ export function fill_data(ref) {
   const dp = this.dp = $p.dp.buyers_order.create();
   dp.calc_order = $p.doc.calc_order.by_ref[ref];
   const components = this.components = new Map([
-    [Подоконник, new ItemData(Подоконник)],
-    [Водоотлив, new ItemData(Водоотлив)],
-    [МоскитнаяСетка, new ItemData(МоскитнаяСетка)],
-    [Откос, new ItemData(Откос)],
-    [Профиль, new ItemData(Профиль)],
-    [Монтаж, new ItemData(Монтаж)],
-    [Доставка, new ItemData(Доставка)],
-    [Набор, new ItemData(Набор)],
+    [Подоконник, new ItemData(Подоконник, AdditionsItem)],
+    [Водоотлив, new ItemData(Водоотлив, AdditionsItem)],
+    [МоскитнаяСетка, new ItemData(МоскитнаяСетка, AdditionsItem)],
+    [Откос, new ItemData(Откос, AdditionsItem)],
+    [Профиль, new ItemData(Профиль, AdditionsItem)],
+    [Монтаж, new ItemData(Монтаж, AdditionsItem)],
+    [Доставка, new ItemData(Доставка, AdditionsItem)],
+    [Набор, new ItemData(Набор, AdditionsItem)],
   ]);
 
   const {production} = dp;
-  const meta = dp._metadata('production');
+
   // фильтруем по пустой ведущей продукции
   dp.calc_order.production.find_rows({ordn: $p.utils.blank.guid}, (row) => {
     const {characteristic} = row;

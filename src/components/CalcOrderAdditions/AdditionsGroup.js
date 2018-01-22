@@ -28,7 +28,7 @@ class AdditionsGroup extends React.Component {
     const {tabular, props} = this;
     const inset = find_inset.call(this, props.group);
     if(inset && tabular) {
-      tabular.state._tabular.add({inset, quantity: 1}, false, props.Row);
+      tabular.state._tabular.add({inset, quantity: 1}, false, props.ProductionRow);
       tabular.forceUpdate();
       this.setState({
         count: this.state.count + 1,

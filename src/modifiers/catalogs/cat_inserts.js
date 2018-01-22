@@ -1,3 +1,4 @@
+
 /**
  * Дополнительные методы справочника Вставки
  *
@@ -7,6 +8,11 @@
  * @module cat_inserts
  */
 
+// подписываемся на событие после загрузки из pouchdb-ram и готовности предопределенных
+$p.md.once('predefined_elmnts_inited', () => {
+  $p.cat.scheme_settings.find_schemas('dp.buyers_order.production');
+});
+
 $p.cat.inserts.__define({
 
 	_inserts_types_filling: {
@@ -14,6 +20,92 @@ $p.cat.inserts.__define({
 			$p.enm.inserts_types.Заполнение
 		]
 	},
+
+  ItemData: {
+    value: class ItemData {
+      constructor(item, Renderer) {
+
+        this.Renderer = Renderer;
+        this.count = 0;
+
+        // индивидуальные классы строк
+        class ItemRow extends $p.DpBuyers_orderProductionRow {
+        }
+
+        this.ProductionRow = ItemRow;
+
+        // получаем возможные параметры вставок данного типа
+        const prms = new Set();
+        $p.cat.inserts.find_rows({available: true, insert_type: item}, (inset) => {
+          inset.used_params.forEach((param) => {
+            !param.is_calculated && prms.add(param);
+          });
+          inset.specification.forEach(({nom}) => {
+            const {used_params} = nom;
+            used_params && used_params.forEach((param) => {
+              !param.is_calculated && prms.add(param);
+            });
+          });
+        });
+
+        // индивидуальные метаданные строк
+        const meta = $p.dp.buyers_order.metadata('production');
+        this.meta = meta._clone();
+
+        // отбор по типу вставки
+        this.meta.fields.inset.choice_params[0].path = item;
+
+        const changed = new Set();
+
+        for (const param of prms) {
+
+          // корректируем схему
+          $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
+            if(!scheme.fields.find({field: param.ref})) {
+              // добавляем строку с новым полем
+              const row = scheme.fields.add({
+                field: param.ref,
+                caption: param.caption,
+                use: true,
+              });
+              const note = scheme.fields.find({field: 'note'});
+              note && scheme.fields.swap(row, note);
+
+              changed.add(scheme);
+            }
+          });
+
+          // корректируем метаданные
+          const mf = this.meta.fields[param.ref] = {
+            synonym: param.caption,
+            type: param.type,
+          };
+          if(param.type.types.some(type => type === 'cat.property_values')) {
+            mf.choice_params = [{name: 'owner', path: param}];
+          }
+
+          // корректируем класс строки
+          Object.defineProperty(ItemRow.prototype, param.ref, {
+            get: function () {
+              const {product_params} = this._owner._owner;
+              const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
+              return row.value;
+            },
+            set: function (v) {
+              const {product_params} = this._owner._owner;
+              const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
+              row.value = v;
+            }
+          });
+        }
+
+        for(const scheme of changed) {
+          scheme.save();
+        }
+
+      }
+    }
+  },
 
 	by_thickness: {
 		value: function (min, max) {
