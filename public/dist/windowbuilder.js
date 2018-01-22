@@ -11051,10 +11051,14 @@ class ToolCut extends paper.Tool {
             if(profile.e.is_nearest(point, true)) {
               nodes.push({profile, point: 'e'});
             }
+            const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
+            if(px.is_nearest(point, true)) {
+              nodes.push({profile, point: 't'});
+            }
           }
         }
 
-        if(nodes.length === 3) {
+        if(nodes.length >= 3) {
 
           for(const elm of nodes) {
             const cnn_point = elm.profile.cnn_point(elm.point);
@@ -11062,7 +11066,7 @@ class ToolCut extends paper.Tool {
               this.split_angle(elm, nodes);
               break;
             }
-            else if(cnn_point && cnn_point.cnn && cnn_point.cnn.cnn_type == $p.enm.cnn_types.ТОбразное) {
+            else if(cnn_point && cnn_point.is_t) {
               this.merge_angle(elm, nodes);
               break;
             }
@@ -11081,12 +11085,13 @@ class ToolCut extends paper.Tool {
 
     let point, profile, cnn;
     nodes.some((elm) => {
-      if(elm !== impost) {
+      if(elm !== impost && elm.point !== 't') {
         profile = elm.profile;
-        point = profile[elm.point];
+        point = profile.nearest(true) ? (profile.corns(elm.point === 'b' ? 1 : 2)) : profile[elm.point];
         const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.КрестВСтык]);
         if(cnns.length) {
           cnn = cnns[0];
+          return true;
         }
       }
     });
@@ -11094,10 +11099,9 @@ class ToolCut extends paper.Tool {
     if(cnn && !cnn.empty()) {
 
       for (const elm of nodes) {
-        if(!point.equals(elm.profile[elm.point])) {
+        if((elm.profile === impost || !elm.profile.nearest(true)) && elm.point !== 't' && !point.equals(elm.profile[elm.point])) {
           elm.profile[elm.point] = point;
-        }
-        ;
+        };
       }
 
       const {rays, project} = impost.profile;
@@ -11125,12 +11129,20 @@ class ToolCut extends paper.Tool {
 
     let point, profile, cnn;
     nodes.some((elm) => {
-      if(elm !== impost) {
+      if(elm !== impost && elm.point !== 't') {
         profile = elm.profile;
-        point = profile[elm.point];
+        if(profile.nearest(true)) {
+          const {outer} = profile.rays
+          const offset = elm.point === 'b' ? outer.getOffsetOf(profile.corns(1)) + 100 : outer.getOffsetOf(profile.corns(2)) - 100;
+          point = outer.getPointAt(offset);
+        }
+        else {
+          point = profile[elm.point];
+        }
         const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.ТОбразное]);
         if(cnns.length) {
           cnn = cnns[0];
+          return true;
         }
       }
     });
