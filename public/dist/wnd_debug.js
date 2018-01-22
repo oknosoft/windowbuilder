@@ -1634,6 +1634,11 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
 })($p);
 
 
+
+$p.md.once('predefined_elmnts_inited', () => {
+  $p.cat.scheme_settings.find_schemas('dp.buyers_order.production');
+});
+
 $p.cat.inserts.__define({
 
 	_inserts_types_filling: {
@@ -1641,6 +1646,84 @@ $p.cat.inserts.__define({
 			$p.enm.inserts_types.Заполнение
 		]
 	},
+
+  ItemData: {
+    value: class ItemData {
+      constructor(item, Renderer) {
+
+        this.Renderer = Renderer;
+        this.count = 0;
+
+        class ItemRow extends $p.DpBuyers_orderProductionRow {
+        }
+
+        this.ProductionRow = ItemRow;
+
+        const prms = new Set();
+        $p.cat.inserts.find_rows({available: true, insert_type: item}, (inset) => {
+          inset.used_params.forEach((param) => {
+            !param.is_calculated && prms.add(param);
+          });
+          inset.specification.forEach(({nom}) => {
+            const {used_params} = nom;
+            used_params && used_params.forEach((param) => {
+              !param.is_calculated && prms.add(param);
+            });
+          });
+        });
+
+        const meta = $p.dp.buyers_order.metadata('production');
+        this.meta = meta._clone();
+
+        this.meta.fields.inset.choice_params[0].path = item;
+
+        const changed = new Set();
+
+        for (const param of prms) {
+
+          $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
+            if(!scheme.fields.find({field: param.ref})) {
+              const row = scheme.fields.add({
+                field: param.ref,
+                caption: param.caption,
+                use: true,
+              });
+              const note = scheme.fields.find({field: 'note'});
+              note && scheme.fields.swap(row, note);
+
+              changed.add(scheme);
+            }
+          });
+
+          const mf = this.meta.fields[param.ref] = {
+            synonym: param.caption,
+            type: param.type,
+          };
+          if(param.type.types.some(type => type === 'cat.property_values')) {
+            mf.choice_params = [{name: 'owner', path: param}];
+          }
+
+          Object.defineProperty(ItemRow.prototype, param.ref, {
+            get: function () {
+              const {product_params} = this._owner._owner;
+              const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
+              return row.value;
+            },
+            set: function (v) {
+              const {product_params} = this._owner._owner;
+              const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
+              row.value = v;
+            }
+          });
+        }
+
+        for(const scheme of changed) {
+          scheme.save();
+        }
+
+      }
+    }
+  },
 
 	by_thickness: {
 		value: function (min, max) {
@@ -1885,7 +1968,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
       }
     }
 
-    this.specification.each((row) => {
+    this.specification.forEach((row) => {
 
       if(!check_restrictions(row, elm, insert_type == Профиль, len_angl)){
         return;
@@ -2092,9 +2175,9 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
 
   get used_params() {
     const res = [];
-    this.selection_params.each((row) => {
-      if(!row.param.empty() && res.indexOf(row.param) == -1){
-        res.push(row.param)
+    this.selection_params.forEach(({param}) => {
+      if(!param.empty() && res.indexOf(param) == -1){
+        res.push(param)
       }
     });
     return res;
@@ -3916,218 +3999,6 @@ $p.spec_building = new SpecBuilding($p);
     }
 	}
 })($p.classes.DataManager);
-
-
-(function(_mgr){
-
-	const acn = {
-    ii: [_mgr.Наложение],
-    i: [_mgr.НезамкнутыйКонтур],
-    a: [
-      _mgr.УгловоеДиагональное,
-      _mgr.УгловоеКВертикальной,
-      _mgr.УгловоеКГоризонтальной,
-      _mgr.КрестВСтык],
-    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
-	};
-
-
-	Object.defineProperties(_mgr, {
-	  ad: {
-	    get: function () {
-        return this.УгловоеДиагональное;
-      }
-    },
-    av: {
-      get: function () {
-        return this.УгловоеКВертикальной;
-      }
-    },
-    ah: {
-      get: function () {
-        return this.УгловоеКГоризонтальной;
-      }
-    },
-    t: {
-      get: function () {
-        return this.ТОбразное;
-      }
-    },
-    ii: {
-      get: function () {
-        return this.Наложение;
-      }
-    },
-    i: {
-      get: function () {
-        return this.НезамкнутыйКонтур;
-      }
-    },
-    xt: {
-      get: function () {
-        return this.КрестПересечение;
-      }
-    },
-    xx: {
-      get: function () {
-        return this.КрестВСтык;
-      }
-    },
-
-    acn: {
-      value: acn
-    },
-
-  });
-
-})($p.enm.cnn_types);
-
-
-(function(_mgr){
-
-	const cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			}
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			}
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			}
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			}
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			}
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			}
-		}
-
-	});
-
-
-})($p.enm.elm_types);
-
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
 
 
 (function (_mgr) {
@@ -6237,6 +6108,218 @@ $p.DocSelling.prototype.before_save = function () {
 };
 
 
+
+
+(function(_mgr){
+
+	const acn = {
+    ii: [_mgr.Наложение],
+    i: [_mgr.НезамкнутыйКонтур],
+    a: [
+      _mgr.УгловоеДиагональное,
+      _mgr.УгловоеКВертикальной,
+      _mgr.УгловоеКГоризонтальной,
+      _mgr.КрестВСтык],
+    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
+	};
+
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get: function () {
+        return this.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get: function () {
+        return this.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get: function () {
+        return this.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get: function () {
+        return this.ТОбразное;
+      }
+    },
+    ii: {
+      get: function () {
+        return this.Наложение;
+      }
+    },
+    i: {
+      get: function () {
+        return this.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get: function () {
+        return this.КрестПересечение;
+      }
+    },
+    xx: {
+      get: function () {
+        return this.КрестВСтык;
+      }
+    },
+
+    acn: {
+      value: acn
+    },
+
+  });
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
+			}
+		}
+
+
+	});
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
 
 
 (($p) => {
