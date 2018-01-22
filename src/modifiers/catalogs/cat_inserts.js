@@ -293,7 +293,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
       }
     }
 
-    this.specification.each((row) => {
+    this.specification.forEach((row) => {
 
       // Проверяем ограничения строки вставки
       if(!check_restrictions(row, elm, insert_type == Профиль, len_angl)){
@@ -529,9 +529,9 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
    */
   get used_params() {
     const res = [];
-    this.selection_params.each((row) => {
-      if(!row.param.empty() && res.indexOf(row.param) == -1){
-        res.push(row.param)
+    this.selection_params.forEach(({param}) => {
+      if(!param.empty() && res.indexOf(param) == -1){
+        res.push(param)
       }
     });
     return res;
