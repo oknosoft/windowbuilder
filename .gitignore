@@ -13,7 +13,10 @@ dist/wnd_debug.js
 dist/worker.js
 doc/out/
 lib/
-/public/dist/dhtmlx_debug.js
+public/dist/dhtmlx_debug.js
+public/dist/windowbuilder.js
+public/dist/windowbuilder.css
+public/dist/wnd_debug.js
 src/metadata-ui
 src/templates/imgs
 src/templates/printing_plates/20160408/
