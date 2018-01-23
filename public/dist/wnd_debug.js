@@ -1764,14 +1764,29 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
   nom(elm, strict) {
 
     const {_data} = this;
-    if(!strict && _data.nom){
+
+    if(!strict && !elm && _data.nom) {
       return _data.nom;
     }
 
     const main_rows = [];
     let _nom;
 
-    this.specification.find_rows({is_main_elm: true}, (row) => main_rows.push(row));
+    const {check_params} = ProductsBuilding;
+
+    this.specification.find_rows({is_main_elm: true}, (row) => {
+      if(elm && !check_params({
+          params: this.selection_params,
+          ox: elm.project.ox,
+          elm: elm,
+          row_spec: row,
+          cnstr: 0,
+          origin: 0,
+        })) {
+        return;
+      }
+      main_rows.push(row)
+    });
 
     if(!main_rows.length && !strict && this.specification.count()){
       main_rows.push(this.specification.get(0))
@@ -1903,15 +1918,14 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
         if(!elm.joined_imposts(true)){
           return false;
         }
-
-      }else if(row.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
+      }
+      else if(row.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
         if(elm.joined_imposts(true)){
           return false;
         }
       }
       is_tabular = false;
     }
-
 
     if(!is_tabular || by_perimetr || row.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
       if(row.lmin > len || (row.lmax < len && row.lmax > 0)){
@@ -4685,7 +4699,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }, true))
       .then((ox) => {
         if(row_spec instanceof $p.DpBuyers_orderProductionRow) {
-          ox.owner = row_spec.inset.nom(elm, true);
+          ox.owner = row_spec.inset.nom(elm);
           ox.origin = row_spec.inset;
           ox.x = row_spec.len;
           ox.y = row_spec.height;

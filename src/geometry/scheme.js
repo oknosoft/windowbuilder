@@ -1186,33 +1186,29 @@ class Scheme extends paper.Project {
   check_inset(attr) {
     const inset = attr.inset ? attr.inset : attr.elm.inset;
     const elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type;
-    const nom = inset.nom();
     const rows = [];
 
-    // если номенклатура пустая, выходим без проверки
-    if(!nom || nom.empty()) {
-      return inset;
-    }
-
     // получаем список вставок с той же номенклатурой, что и наша
-    this._dp.sys.elmnts.each(function (row) {
-      if((elm_type ? row.elm_type == elm_type : true) && row.nom.nom() == nom) {
+    let finded;
+    this._dp.sys.elmnts.forEach((row) => {
+      if((elm_type ? row.elm_type == elm_type : true)) {
+        if(row.nom === inset) {
+          finded = true;
+          return false;
+        }
         rows.push(row);
       }
     });
 
     // TODO: отфильтровать по положению attr.pos
 
-    // если в списке есть наша, возвращаем её, иначе - первую из списка
-    for (var i = 0; i < rows.length; i++) {
-      if(rows[i].nom == inset) {
-        return inset;
-      }
+    if(finded) {
+      return inset;
     }
-
     if(rows.length) {
       return rows[0].nom;
     }
+
   }
 
   /**
