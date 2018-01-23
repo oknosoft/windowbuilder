@@ -224,7 +224,7 @@ class Editor extends paper.PaperScope {
 
         case 'calck':
           if(_editor.project) {
-            _editor.project.save_coordinates({save: true});
+            _editor.project.save_coordinates({save: true, snapshot: true});
           }
           break;
 
