@@ -75,7 +75,7 @@ class BuilderElement extends paper.Group {
     }
 
     if(this._row.elm_type.empty() && !this.inset.empty()){
-      this._row.elm_type = this.inset.nom().elm_type;
+      this._row.elm_type = this.nom.elm_type;
     }
 
     this.project.register_change();
@@ -360,9 +360,8 @@ class BuilderElement extends paper.Group {
 
   // виртуальная ссылка
   get ref() {
-    const {inset} = this;
-    const nom = inset.nom(this);
-    return nom && !nom.empty() ? nom.ref : inset.ref;
+    const {nom} = this;
+    return nom && !nom.empty() ? nom.ref : this.inset.ref;
   }
 
   // ширина

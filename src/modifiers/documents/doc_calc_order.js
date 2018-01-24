@@ -804,7 +804,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       .then((ox) => {
         // если указана строка-генератор, заполняем реквизиты
         if(row_spec instanceof $p.DpBuyers_orderProductionRow) {
-          ox.owner = row_spec.inset.nom(elm, true);
+          ox.owner = row_spec.inset.nom(elm);
           ox.origin = row_spec.inset;
           ox.x = row_spec.len;
           ox.y = row_spec.height;

@@ -4868,7 +4868,7 @@ class BuilderElement extends paper.Group {
     }
 
     if(this._row.elm_type.empty() && !this.inset.empty()){
-      this._row.elm_type = this.inset.nom().elm_type;
+      this._row.elm_type = this.nom.elm_type;
     }
 
     this.project.register_change();
@@ -5120,9 +5120,8 @@ class BuilderElement extends paper.Group {
   }
 
   get ref() {
-    const {inset} = this;
-    const nom = inset.nom(this);
-    return nom && !nom.empty() ? nom.ref : inset.ref;
+    const {nom} = this;
+    return nom && !nom.empty() ? nom.ref : this.inset.ref;
   }
 
   get width() {
@@ -10110,29 +10109,27 @@ class Scheme extends paper.Project {
   check_inset(attr) {
     const inset = attr.inset ? attr.inset : attr.elm.inset;
     const elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type;
-    const nom = inset.nom();
     const rows = [];
 
-    if(!nom || nom.empty()) {
-      return inset;
-    }
-
-    this._dp.sys.elmnts.each(function (row) {
-      if((elm_type ? row.elm_type == elm_type : true) && row.nom.nom() == nom) {
+    let finded;
+    this._dp.sys.elmnts.forEach((row) => {
+      if((elm_type ? row.elm_type == elm_type : true)) {
+        if(row.nom === inset) {
+          finded = true;
+          return false;
+        }
         rows.push(row);
       }
     });
 
 
-    for (var i = 0; i < rows.length; i++) {
-      if(rows[i].nom == inset) {
-        return inset;
-      }
+    if(finded) {
+      return inset;
     }
-
     if(rows.length) {
       return rows[0].nom;
     }
+
   }
 
   check_distance(element, profile, res, point, check_only) {
