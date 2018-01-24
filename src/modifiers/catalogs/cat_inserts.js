@@ -168,7 +168,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
           elm: elm,
           row_spec: row,
           cnstr: 0,
-          origin: 0,
+          origin: elm.fake_origin || 0,
         })) {
         return;
       }
