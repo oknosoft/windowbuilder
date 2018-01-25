@@ -804,6 +804,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       .then((ox) => {
         // если указана строка-генератор, заполняем реквизиты
         if(row_spec instanceof $p.DpBuyers_orderProductionRow) {
+
+          if(params) {
+            params.find_rows({elm: row_spec.row}, (prow) => {
+              ox.params.add(prow, true).inset = row_spec.inset;
+            });
+          }
+
+          elm.project = {ox};
+          elm.fake_origin = row_spec.inset;
+
           ox.owner = row_spec.inset.nom(elm);
           ox.origin = row_spec.inset;
           ox.x = row_spec.len;
@@ -813,11 +823,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           ox.clr = row_spec.clr;
           ox.note = row_spec.note;
 
-          if(params) {
-            params.find_rows({elm: row_spec.row}, (prow) => {
-              ox.params.add(prow, true).inset = row_spec.inset;
-            });
-          }
         }
 
         // устанавливаем свойства в строке заказа

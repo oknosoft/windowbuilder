@@ -1990,9 +1990,10 @@ class Profile extends ProfileItem {
     // точки, в которых сходятся более 2 профилей
     const candidates = {b: [], e: []};
 
+    const {Снаружи} = $p.enm.cnn_sides;
     const add_impost = (ip, curr, point) => {
       const res = {point: generatrix.getNearestPoint(point), profile: curr};
-      if(this.cnn_side(curr, ip, rays) === $p.enm.cnn_sides.Снаружи) {
+      if(this.cnn_side(curr, ip, rays) === Снаружи) {
         touter.push(res);
       }
       else {
@@ -2026,7 +2027,7 @@ class Profile extends ProfileItem {
     ['b', 'e'].forEach((node) => {
       if(candidates[node].length > 1) {
         candidates[node].some((ip) => {
-          if(this.cnn_side(null, ip, rays) == $p.enm.cnn_sides.Снаружи) {
+          if(this.cnn_side(null, ip, rays) === Снаружи) {
             this.cnn_point(node).is_cut = true;
             return true;
           }

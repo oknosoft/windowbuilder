@@ -385,13 +385,13 @@ class Contour extends AbstractFilling(paper.Layer) {
     // рекурсивно получает следующий сегмент, пока не уткнётся в текущий
     function go_go(segm) {
       const anext = find_next(segm);
-      for (let i = 0; i < anext.length; i++) {
-        if (anext[i] == curr) {
+      for (const next of anext) {
+        if (next === curr) {
           return anext;
         }
-        else if (acurr.every((el) => el != anext[i])) {
-          acurr.push(anext[i]);
-          return go_go(anext[i]);
+        else if (acurr.every((el) => el !== next)) {
+          acurr.push(next);
+          return go_go(next);
         }
       }
     }
@@ -654,6 +654,9 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
 
     function push_new(profile, b, e, outer = false) {
+      if(b.is_nearest(e, 0)){
+        return;
+      }
       for(const segm of nodes) {
         if(segm.profile === profile && segm.b.equals(b) && segm.e.equals(e) && segm.outer == outer){
           return;

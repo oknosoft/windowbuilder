@@ -1223,7 +1223,7 @@ class Scheme extends paper.Project {
    * @returns {Boolean|undefined}
    */
   check_distance(element, profile, res, point, check_only) {
-    const {allow_open_cnn} = this._dp.sys;
+    //const {allow_open_cnn} = this._dp.sys;
     const {acn} = $p.enm.cnn_types;
 
     let distance, gp, cnns, addls,
@@ -1234,7 +1234,8 @@ class Scheme extends paper.Project {
     // Проверяет дистанцию в окрестности начала или конца соседнего элемента
     function check_node_distance(node) {
 
-      if((distance = element[node].getDistance(point)) < (allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)) {
+      // allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)
+      if((distance = element[node].getDistance(point)) < parseFloat(consts.sticking_l)) {
 
         if(typeof res.distance == 'number' && res.distance < distance) {
           res.profile = element;

@@ -22,15 +22,20 @@ $p.cat.contracts.__define({
 	},
 
 	by_partner_and_org: {
-		value: function (partner, organization, contract_kind) {
-			if(!contract_kind)
-				contract_kind = $p.enm.contract_kinds.СПокупателем;
-			var res = this.find_rows({owner: partner, organization: organization, contract_kind: contract_kind});
-			res.sort(function (a, b) {
-				return a.date > b.date;
-			});
-			return res.length ? res[0] : this.get();
-		}
+    value: function (partner, organization, contract_kind = $p.enm.contract_kinds.СПокупателем) {
+
+      const {main_contract} = $p.cat.partners.get(partner);
+
+      //Если у контрагента есть основной договор, и он подходит по виду договора и организации,
+      // возвращаем его, не бегая по массиву
+      if(main_contract && main_contract.contract_kind == contract_kind && main_contract.organization == organization){
+        return main_contract;
+      }
+
+      const res = this.find_rows({owner: partner, organization: organization, contract_kind: contract_kind});
+      res.sort((a, b) => a.date > b.date);
+      return res.length ? res[0] : this.get();
+    }
 	}
 
 

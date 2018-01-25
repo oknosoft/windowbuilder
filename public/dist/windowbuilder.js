@@ -2608,13 +2608,13 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     function go_go(segm) {
       const anext = find_next(segm);
-      for (let i = 0; i < anext.length; i++) {
-        if (anext[i] == curr) {
+      for (const next of anext) {
+        if (next === curr) {
           return anext;
         }
-        else if (acurr.every((el) => el != anext[i])) {
-          acurr.push(anext[i]);
-          return go_go(anext[i]);
+        else if (acurr.every((el) => el !== next)) {
+          acurr.push(next);
+          return go_go(next);
         }
       }
     }
@@ -2842,6 +2842,9 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
 
     function push_new(profile, b, e, outer = false) {
+      if(b.is_nearest(e, 0)){
+        return;
+      }
       for(const segm of nodes) {
         if(segm.profile === profile && segm.b.equals(b) && segm.e.equals(e) && segm.outer == outer){
           return;
@@ -8281,9 +8284,10 @@ class Profile extends ProfileItem {
 
     const candidates = {b: [], e: []};
 
+    const {Снаружи} = $p.enm.cnn_sides;
     const add_impost = (ip, curr, point) => {
       const res = {point: generatrix.getNearestPoint(point), profile: curr};
-      if(this.cnn_side(curr, ip, rays) === $p.enm.cnn_sides.Снаружи) {
+      if(this.cnn_side(curr, ip, rays) === Снаружи) {
         touter.push(res);
       }
       else {
@@ -8316,7 +8320,7 @@ class Profile extends ProfileItem {
     ['b', 'e'].forEach((node) => {
       if(candidates[node].length > 1) {
         candidates[node].some((ip) => {
-          if(this.cnn_side(null, ip, rays) == $p.enm.cnn_sides.Снаружи) {
+          if(this.cnn_side(null, ip, rays) === Снаружи) {
             this.cnn_point(node).is_cut = true;
             return true;
           }
@@ -10133,7 +10137,6 @@ class Scheme extends paper.Project {
   }
 
   check_distance(element, profile, res, point, check_only) {
-    const {allow_open_cnn} = this._dp.sys;
     const {acn} = $p.enm.cnn_types;
 
     let distance, gp, cnns, addls,
@@ -10143,7 +10146,7 @@ class Scheme extends paper.Project {
 
     function check_node_distance(node) {
 
-      if((distance = element[node].getDistance(point)) < (allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)) {
+      if((distance = element[node].getDistance(point)) < parseFloat(consts.sticking_l)) {
 
         if(typeof res.distance == 'number' && res.distance < distance) {
           res.profile = element;
