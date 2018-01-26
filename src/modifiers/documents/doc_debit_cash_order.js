@@ -1,6 +1,6 @@
 /**
  * ### Модуль менеджера и документа _Приходный кассовый ордер_
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * @module doc_debit_cash_order
  *

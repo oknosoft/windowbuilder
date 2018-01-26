@@ -32,6 +32,7 @@ class CalcOrderAdditions extends Component {
 
     return <Dialog
       open
+      initFullScreen
       classes={{paper: classes.paper}}
       title="Аксессуары и услуги"
       onClose={handleCancel}

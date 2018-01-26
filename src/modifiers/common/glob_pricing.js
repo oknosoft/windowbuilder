@@ -2,7 +2,7 @@
  * ### Модуль Ценообразование
  * Аналог УПзП-шного __ЦенообразованиеСервер__
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  * @module  glob_pricing
  */
 
@@ -352,13 +352,6 @@ class Pricing {
       prm.spec.aggregate([], ["amount_marged"]) :
       this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
 
-    let extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
-
-    // если пересчет выполняется менеджером, используем наценку по умолчанию
-    if(!$p.current_user.partners_uids.length || !extra_charge){
-      extra_charge = price_type.extra_charge_external;
-    }
-
     // цена продажи
     if(price_cost){
       calc_order_row.price = price_cost.round(2);
@@ -372,13 +365,16 @@ class Pricing {
       calc_order_row.price * ((100 - calc_order_row.discount_percent)/100) / calc_order_row.first_cost : 0;
 
 
-    // TODO: Рассчитаем цену и сумму ВНУТР или ДИЛЕРСКУЮ цену и скидку
-    if(extra_charge){
-      calc_order_row.price_internal = (calc_order_row.price *
-      (100 - calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
-
-      // TODO: учесть формулу
+    // Рассчитаем цену и сумму ВНУТР или ДИЛЕРСКУЮ цену и скидку
+    let extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
+    // если пересчет выполняется менеджером, используем наценку по умолчанию
+    if(!$p.current_user.partners_uids.length || !extra_charge){
+      extra_charge = price_type.extra_charge_external || 0;
     }
+
+    // TODO: учесть формулу
+    calc_order_row.price_internal = (calc_order_row.price *
+      (100 - calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
 
     // Эмулируем событие окончания редактирования, чтобы единообразно пересчитать строку табчасти
     !prm.hand_start && calc_order_row.value_change("price", {}, calc_order_row.price, true);

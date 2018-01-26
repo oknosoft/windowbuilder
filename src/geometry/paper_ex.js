@@ -1,7 +1,7 @@
 ﻿/**
  * Расширения объектов paper.js
  *
- * &copy; http://www.oknosoft.ru 2014-2017
+ * &copy; http://www.oknosoft.ru 2014-2018
  * @author	Evgeniy Malyarov
  *
  * @module geometry
@@ -72,6 +72,18 @@ Object.defineProperties(paper.Path.prototype, {
         return true;
       }
     },
+
+  /**
+   * Выясняет, расположена ли точка в окрестности пути
+   * @param point {paper.Point}
+   * @param [sticking] {Boolean|Number}
+   * @return {Boolean}
+   */
+  is_nearest: {
+    value: function (point, sticking) {
+      return point.is_nearest(this.getNearestPoint(point), sticking);
+    }
+  },
 
   /**
      * возвращает фрагмент пути между точками

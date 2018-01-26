@@ -1,7 +1,7 @@
 /**
  * ### Виртуальный инструмент - прототип для инструментов _select_node_ и _select_elm_
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * Created 12.03.2016
  *

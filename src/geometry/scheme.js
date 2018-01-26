@@ -1,6 +1,6 @@
 /**
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * Created 24.07.2015
  *
@@ -1186,33 +1186,29 @@ class Scheme extends paper.Project {
   check_inset(attr) {
     const inset = attr.inset ? attr.inset : attr.elm.inset;
     const elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type;
-    const nom = inset.nom();
     const rows = [];
 
-    // если номенклатура пустая, выходим без проверки
-    if(!nom || nom.empty()) {
-      return inset;
-    }
-
     // получаем список вставок с той же номенклатурой, что и наша
-    this._dp.sys.elmnts.each(function (row) {
-      if((elm_type ? row.elm_type == elm_type : true) && row.nom.nom() == nom) {
+    let finded;
+    this._dp.sys.elmnts.forEach((row) => {
+      if((elm_type ? row.elm_type == elm_type : true)) {
+        if(row.nom === inset) {
+          finded = true;
+          return false;
+        }
         rows.push(row);
       }
     });
 
     // TODO: отфильтровать по положению attr.pos
 
-    // если в списке есть наша, возвращаем её, иначе - первую из списка
-    for (var i = 0; i < rows.length; i++) {
-      if(rows[i].nom == inset) {
-        return inset;
-      }
+    if(finded) {
+      return inset;
     }
-
     if(rows.length) {
       return rows[0].nom;
     }
+
   }
 
   /**
@@ -1227,7 +1223,7 @@ class Scheme extends paper.Project {
    * @returns {Boolean|undefined}
    */
   check_distance(element, profile, res, point, check_only) {
-    const {allow_open_cnn} = this._dp.sys;
+    //const {allow_open_cnn} = this._dp.sys;
     const {acn} = $p.enm.cnn_types;
 
     let distance, gp, cnns, addls,
@@ -1238,7 +1234,8 @@ class Scheme extends paper.Project {
     // Проверяет дистанцию в окрестности начала или конца соседнего элемента
     function check_node_distance(node) {
 
-      if((distance = element[node].getDistance(point)) < (allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)) {
+      // allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)
+      if((distance = element[node].getDistance(point)) < parseFloat(consts.sticking_l)) {
 
         if(typeof res.distance == 'number' && res.distance < distance) {
           res.profile = element;
@@ -1512,7 +1509,6 @@ class Scheme extends paper.Project {
           check_corns(addl);
         }
       }
-      ;
     }
 
     // if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
@@ -1550,10 +1546,10 @@ class Scheme extends paper.Project {
    * учитываются узлы всех путей, в том числе и не выделенных
    */
   deselect_all_points(with_items) {
-    this.getItems({class: paper.Path}).forEach(function (item) {
-      item.segments.forEach(function (s) {
-        if(s.selected) {
-          s.selected = false;
+    this.getItems({class: paper.Path}).forEach((item) => {
+      item.segments.forEach((segm) => {
+        if(segm.selected) {
+          segm.selected = false;
         }
       });
       if(with_items && item.selected) {

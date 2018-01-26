@@ -2,7 +2,7 @@
  * Ячейка грида для отображения картинки svg и компонент,
  * получающий и отображающий галерею эскизов объекта данных
  *
- * &copy; http://www.oknosoft.ru 2014-2015
+ * &copy; http://www.oknosoft.ru 2014-2018
  * @author	Evgeniy Malyarov
  *
  * @module  widgets

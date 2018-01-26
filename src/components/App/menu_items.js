@@ -209,7 +209,7 @@ const items = [
       },
       {
         text: 'Взаиморасчеты',
-        navigate: '/rep.materials_demand/main',
+        navigate: '/rep.mutual_settlements/main',
         need_meta: true,
         need_user: true,
       },

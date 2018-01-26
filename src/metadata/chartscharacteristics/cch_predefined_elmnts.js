@@ -2,19 +2,16 @@
  * ### Дополнительные методы ПВХ Предопределенные элементы
  * Предопределенные элементы - аналог констант для хранения ссылочных и списочных настроек приложения
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
- *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  * @module cch_predefined_elmnts
  */
 
 export default function ($p) {
 
-  const {job_prm, adapters, cch, doc} = $p;
-  const _mgr = cch.predefined_elmnts;
+  const {job_prm, adapters, doc, cch: {predefined_elmnts: _mgr}, utils, md} = $p;
 
   // Подписываемся на событие окончания загрузки локальных данных
   adapters.pouch.once('pouch_doc_ram_loaded', () => {
-
     // читаем элементы из pouchdb и создаём свойства
     _mgr.adapter.find_rows(_mgr, {_raw: true, _top: 500, _skip: 0})
       .then((rows) => {
@@ -27,11 +24,9 @@ export default function ($p) {
             parents[ref] = row.synonym;
             !job_prm[row.synonym] && job_prm.__define(row.synonym, {value: {}});
           }
-
         });
 
         rows.forEach((row) => {
-
           if(!row.is_folder && row.synonym && parents[row.parent] && !job_prm[parents[row.parent]][row.synonym]) {
 
             let _mgr;
@@ -106,7 +101,7 @@ export default function ($p) {
         doc.calc_order.load_templates && setTimeout(doc.calc_order.load_templates.bind(doc.calc_order), 1000);
 
         // даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-        setTimeout(() => $p.md.emit('predefined_elmnts_inited'), 100);
+        setTimeout(() => md.emit('predefined_elmnts_inited'), 100);
 
       });
 
@@ -139,16 +134,16 @@ export default function ($p) {
           if(mf.digits && typeof res === 'number') {
             return res;
           }
-          if(mf.hasOwnProperty('str_len') && !$p.utils.is_guid(res)) {
+          if(mf.hasOwnProperty('str_len') && !utils.is_guid(res)) {
             return res;
           }
-          const mgr = $p.md.value_mgr(this._obj, 'value', mf);
+          const mgr = md.value_mgr(this._obj, 'value', mf);
           if(mgr) {
-            if($p.utils.is_data_mgr(mgr)) {
+            if(utils.is_data_mgr(mgr)) {
               return mgr.get(res, false);
             }
             else {
-              return $p.utils.fetch_type(res, mgr);
+              return utils.fetch_type(res, mgr);
             }
           }
           if(res) {
@@ -157,13 +152,13 @@ export default function ($p) {
           }
         }
         else if(mf.date_part) {
-          return $p.utils.fix_date(this._obj.value, true);
+          return utils.fix_date(this._obj.value, true);
         }
         else if(mf.digits) {
-          return $p.utils.fix_number(this._obj.value, !mf.hasOwnProperty('str_len'));
+          return utils.fix_number(this._obj.value, !mf.hasOwnProperty('str_len'));
         }
         else if(mf.types[0] == 'boolean') {
-          return $p.utils.fix_boolean(this._obj.value);
+          return utils.fix_boolean(this._obj.value);
         }
         else {
           return this._obj.value || '';

@@ -1,7 +1,7 @@
 /**
  * ### Контур (слой) изделия
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * Created 24.07.2015
  *
@@ -20,16 +20,16 @@
 class GlassSegment {
 
   constructor(profile, b, e, outer) {
-
     this.profile = profile;
     this.b = b.clone();
     this.e = e.clone();
-    this.outer = !!outer;
-
+    this.outer = outer;
     this.segment();
-
   }
 
+  /**
+   * часть конструктора оформлена отдельным методом из-за рекурсии
+   */
   segment() {
 
     let gen;
@@ -60,6 +60,135 @@ class GlassSegment {
 
   }
 
+  /**
+   * Проверяет наличие соединения по углам в узле
+   * @param nodes
+   * @param tangent
+   * @param curr_profile
+   * @param segm_profile
+   * @return {boolean}
+   */
+  break_by_angle(nodes, segments, point, offset, curr_profile, segm_profile) {
+
+    const node = nodes.byPoint(point);
+    if(!node) {
+      return false;
+    }
+
+    let tangent = curr_profile.generatrix.getTangentAt(offset);
+    if(this.outer) {
+      tangent = tangent.negate();
+    }
+
+    const angles = [];
+    for(const elm of node) {
+      if(elm.profile === curr_profile) {
+        continue;
+      }
+      // сравним углы между образующими в точке
+      const {generatrix} = elm.profile;
+      const ppoint = generatrix.getNearestPoint(point);
+      const poffset = generatrix.getOffsetOf(ppoint);
+      const ptangent = generatrix.getTangentAt(poffset);
+      for(const segm of segments) {
+        //if(segm.profile === elm.profile && (offset === 0 ? segm.e : segm.b).is_nearest(ppoint, true))
+        if(segm.profile === elm.profile && segm.b.is_nearest(ppoint, true)) {
+          angles.push({profile: elm.profile, angle: tangent.getDirectedAngle(segm.outer ? ptangent.negate() : ptangent)});
+        }
+      }
+    }
+    let angle;
+    for(const elm of angles) {
+      if(elm.profile === segm_profile && (!angle || elm.angle > angle)) {
+        angle = elm.angle;
+      }
+    }
+    if(angle < 0) {
+      return true;
+    }
+    for(const elm of angles) {
+      if(elm.profile !== segm_profile && elm.angle > angle) {
+        return true;
+      }
+    }
+  }
+
+  /**
+   * Выясныет, есть ли у текущего сегмента соединение с соседним
+   * @param segm
+   * @param point
+   * @param nodes
+   */
+  has_cnn(segm, nodes, segments) {
+
+    // если узлы не совпадают - дальше не смотрим
+    const point = segm.b;
+    if(!this.e.is_nearest(point)) {
+      return false;
+    }
+
+    // идём вверх по доборным профилям
+    let curr_profile = this.profile;
+    let segm_profile = segm.profile;
+    while (curr_profile.parent instanceof ProfileItem) {
+      curr_profile = curr_profile.parent;
+    }
+    while (segm_profile.parent instanceof ProfileItem) {
+      segm_profile = segm_profile.parent;
+    }
+
+    if(curr_profile.b.is_nearest(point, true)) {
+      // проверяем для узла с несколькими профилями
+      const by_angle = this.break_by_angle(nodes, segments, point, 0, curr_profile, segm_profile);
+      if(by_angle) {
+        return false;
+      }
+      // проверяем для обычного узла
+      else if(by_angle === undefined || curr_profile.cnn_point('b').profile === segm_profile) {
+        return true;
+      }
+    }
+
+    if(curr_profile.e.is_nearest(point, true)) {
+      // проверяем для узла с несколькими профилями
+      const by_angle = this.break_by_angle(nodes, segments, point, curr_profile.generatrix.length, curr_profile, segm_profile);
+      if(by_angle) {
+        return false;
+      }
+      // проверяем для обычного узла
+      else if(by_angle === undefined || curr_profile.cnn_point('e').profile === segm_profile) {
+        return true;
+      }
+    }
+
+    if(segm_profile.b.is_nearest(point, true)) {
+      // проверяем для узла с несколькими профилями
+      const by_angle = segm.break_by_angle(nodes, segments, point, 0, segm_profile, curr_profile)
+      if(by_angle) {
+        return false;
+      }
+      // проверяем для обычного узла
+      else if(by_angle === undefined || segm_profile.cnn_point('b').profile == curr_profile) {
+        return true;
+      }
+    }
+
+    if(segm_profile.e.is_nearest(point, true)) {
+      // проверяем для узла с несколькими профилями
+      const by_angle = segm.break_by_angle(nodes, segments, point, segm_profile.generatrix.length, segm_profile, curr_profile);
+      if(by_angle) {
+        return false;
+      }
+      // проверяем для обычного узла
+      else if(by_angle === undefined || segm_profile.cnn_point('e').profile == curr_profile) {
+        return true;
+      }
+    }
+
+    return false;
+
+  }
+
   get _sub() {
     const {sub_path} = this;
     return {
@@ -76,6 +205,17 @@ class GlassSegment {
         sub_path && (sub_path.lastSegment.point = v);
       },
     };
+  }
+}
+
+class PointMap extends Map {
+
+  byPoint(point) {
+    for(const [key, value] of this) {
+      if(point.is_nearest(key)) {
+        return value.length > 2 && value;
+      }
+    }
   }
 }
 
@@ -218,6 +358,7 @@ class Contour extends AbstractFilling(paper.Layer) {
    */
   get glass_contours() {
     const segments = this.glass_segments;
+    const nodes = this.count_nodes();
     const res = [];
     let curr, acurr;
 
@@ -230,7 +371,7 @@ class Contour extends AbstractFilling(paper.Layer) {
             return;
           // если конец нашего совпадает с началом следующего...
           // и если существует соединение нашего со следующим
-          if (curr.e.is_nearest(segm.b) && curr.profile.has_cnn(segm.profile, segm.b)) {
+          if (curr.has_cnn(segm, nodes, segments)) {
 
             if (segments.length < 3 || curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
               curr.anext.push(segm);
@@ -244,13 +385,13 @@ class Contour extends AbstractFilling(paper.Layer) {
     // рекурсивно получает следующий сегмент, пока не уткнётся в текущий
     function go_go(segm) {
       const anext = find_next(segm);
-      for (let i = 0; i < anext.length; i++) {
-        if (anext[i] == curr) {
+      for (const next of anext) {
+        if (next === curr) {
           return anext;
         }
-        else if (acurr.every((el) => el != anext[i])) {
-          acurr.push(anext[i]);
-          return go_go(anext[i]);
+        else if (acurr.every((el) => el !== next)) {
+          acurr.push(next);
+          return go_go(next);
         }
       }
     }
@@ -512,6 +653,18 @@ class Contour extends AbstractFilling(paper.Layer) {
       return 0;
     }
 
+    function push_new(profile, b, e, outer = false) {
+      if(b.is_nearest(e, 0)){
+        return;
+      }
+      for(const segm of nodes) {
+        if(segm.profile === profile && segm.b.equals(b) && segm.e.equals(e) && segm.outer == outer){
+          return;
+        }
+      }
+      nodes.push(new GlassSegment(profile, b, e, outer));
+    }
+
     // для всех профилей контура
     this.profiles.forEach((p) => {
 
@@ -532,15 +685,15 @@ class Contour extends AbstractFilling(paper.Layer) {
         ip.inner.sort(sort);
 
         if (!pb.is_i && !pbg.is_nearest(ip.inner[0].point)) {
-          nodes.push(new GlassSegment(p, pbg, ip.inner[0].point));
+          push_new(p, pbg, ip.inner[0].point);
         }
 
         for (let i = 1; i < ip.inner.length; i++) {
-          nodes.push(new GlassSegment(p, ip.inner[i - 1].point, ip.inner[i].point));
+          push_new(p, ip.inner[i - 1].point, ip.inner[i].point);
         }
 
         if (!pe.is_i && !ip.inner[ip.inner.length - 1].point.is_nearest(peg)) {
-          nodes.push(new GlassSegment(p, ip.inner[ip.inner.length - 1].point, peg));
+          push_new(p, ip.inner[ip.inner.length - 1].point, peg);
         }
 
       }
@@ -549,30 +702,33 @@ class Contour extends AbstractFilling(paper.Layer) {
         ip.outer.sort(sort);
 
         if (!pb.is_i && !ip.outer[0].point.is_nearest(pbg)) {
-          nodes.push(new GlassSegment(p, ip.outer[0].point, pbg, true));
+          push_new(p, ip.outer[0].point, pbg, true);
         }
 
         for (let i = 1; i < ip.outer.length; i++) {
-          nodes.push(new GlassSegment(p, ip.outer[i].point, ip.outer[i - 1].point, true));
+          push_new(p, ip.outer[i].point, ip.outer[i - 1].point, true);
         }
 
         if (!pe.is_i && !peg.is_nearest(ip.outer[ip.outer.length - 1].point)) {
-          nodes.push(new GlassSegment(p, peg, ip.outer[ip.outer.length - 1].point, true));
+          push_new(p, peg, ip.outer[ip.outer.length - 1].point, true);
         }
       }
 
       // добавляем, если нет соединений с пустотой
       if (!ip.inner.length) {
         if (!pb.is_i && !pe.is_i) {
-          nodes.push(new GlassSegment(p, pbg, peg));
+          push_new(p, pbg, peg);
         }
       }
 
       // для импостов добавляем сегмент в обратном направлении
       if (!ip.outer.length && (pb.is_cut || pe.is_cut || pb.is_t || pe.is_t)) {
         if (!pb.is_i && !pe.is_i) {
-          nodes.push(new GlassSegment(p, peg, pbg, true));
+          push_new(p, peg, pbg, true);
         }
+      }
+      else if(pb.is_x || pe.is_x) {
+        push_new(p, peg, pbg, true);
       }
 
     });
@@ -626,6 +782,36 @@ class Contour extends AbstractFilling(paper.Layer) {
     return nodes;
   }
 
+  /**
+   * Рассчитывает количество профилей в узлах
+   * @return {Map<any, any>}
+   */
+  count_nodes() {
+    const nodes = new PointMap();
+    this.profiles.forEach((profile) => {
+      const {b, e} = profile;
+      let findedb;
+      let findede;
+      for(const [key, value] of nodes) {
+        if (b.is_nearest(key)) {
+          value.push({profile, point: 'b'})
+          findedb = true;
+        }
+        if (e.is_nearest(key)) {
+          value.push({profile, point: 'e'})
+          findede = true;
+        }
+      }
+      if (!findedb) {
+        nodes.set(b.clone(), [{profile, point: 'b'}]);
+      }
+      if (!findede) {
+        nodes.set(e.clone(), [{profile, point: 'e'}]);
+      }
+    });
+    return nodes;
+  }
+
 
   /**
    * Формирует оповещение для тех, кто следит за this._noti
@@ -674,8 +860,9 @@ class Contour extends AbstractFilling(paper.Layer) {
         if (!findede && elm.has_cnn(profiles[j], elm.e) && elm.e.is_nearest(profiles[j].b))
           findede = true;
       }
-      if (!findedb || !findede)
+      if (!findedb || !findede){
         to_remove.push(elm);
+      }
     }
     for (let i = 0; i < profiles.length; i++) {
       const elm = profiles[i];

@@ -15,10 +15,7 @@ import {alasql_schemas, fill_data} from './connect';
 
 export default class AdditionsGroups extends React.Component {
 
-  constructor(props, context) {
-    super(props, context);
-    fill_data.call(this, props.dialog.ref);
-  }
+  state = {schemas: null};
 
   // заполняет соответствие схем и типов вставок в state компонента
   fill_schemas(docs = []) {
@@ -35,20 +32,17 @@ export default class AdditionsGroups extends React.Component {
     this.setState({schemas});
   }
 
+  componentWillMount() {
+    fill_data.call(this, this.props.dialog.ref);
+  }
+
   componentDidMount() {
-    const schemas = alasql_schemas();
-    if(schemas.length) {
-      return this.fill_schemas(schemas);
-    }
-    $p.cat.scheme_settings.find_schemas('dp.buyers_order.production')
-      .then((schemas) => {
-        this.fill_schemas(schemas);
-      });
+    this.fill_schemas(alasql_schemas());
   }
 
   render() {
     const {items, components, dp} = this;
-    const {schemas} = this.state;
+    const {schemas} = this.state || {};
 
     return <List>
       {schemas ?

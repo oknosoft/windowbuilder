@@ -333,24 +333,7 @@ class Editor extends paper.PaperScope {
      * @menuorder 53
      * @tooltip Масштаб в экран
      */
-    new function ZoomFit() {
-
-      const tool = new paper.Tool();
-      tool.options = {name: 'zoom_fit'};
-      tool.on({
-        activate: function () {
-          _editor.project.zoom_fit();
-
-          const previous = _editor.tb_left.get_selected();
-
-          if(previous){
-            return _editor.select_tool(previous.replace("left_", ""));
-          }
-        }
-      });
-
-      return tool;
-    };
+    new ZoomFit();
 
     /**
      * Свойства и перемещение узлов элемента

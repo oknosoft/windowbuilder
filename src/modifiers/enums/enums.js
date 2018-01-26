@@ -1,7 +1,7 @@
 /**
  * ### Модификаторы перечислений
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * @module enmums
  *

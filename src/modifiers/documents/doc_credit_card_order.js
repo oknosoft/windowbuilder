@@ -1,6 +1,6 @@
 /**
  * ### Модуль менеджера и документа _Оплата платежной картой_
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  *
  * @module doc_credit_card_order
  *
