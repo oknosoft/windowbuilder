@@ -7767,10 +7767,20 @@ class ProfileItem extends GeneratrixElement {
       cnn_point.point && this.layer.profiles.forEach((profile) => {
         if(profile !== this){
           if(cnn_point.point.is_nearest(profile.b, true)) {
-            profile.cnn_point('b').profile !== this && nodes.add(profile);
+            const cp = profile.cnn_point('b').profile;
+            if(cp !== this) {
+              if(cp !== cnn_point.profile || cnn_point.profile.cnn_side(this) === cnn_point.profile.cnn_side(profile)) {
+                nodes.add(profile);
+              }
+            }
           }
           else if(cnn_point.point.is_nearest(profile.e, true)) {
-            profile.cnn_point('e').profile !== this && nodes.add(profile);
+            const cp = profile.cnn_point('e').profile;
+            if(cp !== this) {
+              if(cp !== cnn_point.profile || cnn_point.profile.cnn_side(this) === cnn_point.profile.cnn_side(profile)) {
+                nodes.add(profile);
+              }
+            }
           }
           else if(profile.generatrix.is_nearest(cnn_point.point, true)) {
             nodes.add(profile);
@@ -7785,7 +7795,7 @@ class ProfileItem extends GeneratrixElement {
 
       const side = cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи ? 'outer' : 'inner';
 
-      if(profile2 && false) {
+      if(profile2) {
         const interior = generatrix.getPointAt(generatrix.length/2)
         const prays2 = profile2 && profile2.rays;
         const side2 = profile2.cnn_side(this, null, prays2) === $p.enm.cnn_sides.Снаружи ? 'outer' : 'inner';
