@@ -74,6 +74,18 @@ Object.defineProperties(paper.Path.prototype, {
     },
 
   /**
+   * Выясняет, расположена ли точка в окрестности пути
+   * @param point {paper.Point}
+   * @param [sticking] {Boolean|Number}
+   * @return {Boolean}
+   */
+  is_nearest: {
+    value: function (point, sticking) {
+      return point.is_nearest(this.getNearestPoint(point), sticking);
+    }
+  },
+
+  /**
      * возвращает фрагмент пути между точками
      * @param point1 {paper.Point}
      * @param point2 {paper.Point}

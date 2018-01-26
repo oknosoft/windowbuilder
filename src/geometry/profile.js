@@ -1269,11 +1269,10 @@ class ProfileItem extends GeneratrixElement {
     const _profile = this;
     const {_corns} = _attr;
 
-    let normal;
 
     // ищет точку пересечения открытых путей
     // если указан индекс, заполняет точку в массиве _corns. иначе - возвращает расстояние от узла до пересечения
-    function intersect_point(path1, path2, index) {
+    function intersect_point(path1, path2, index, ipoint = cnn_point.point) {
       const intersections = path1.getIntersections(path2);
       let delta = Infinity, tdelta, point, tpoint;
 
@@ -1282,12 +1281,12 @@ class ProfileItem extends GeneratrixElement {
           _corns[index] = intersections[0].point;
         }
         else {
-          return intersections[0].point.getDistance(cnn_point.point, true);
+          return intersections[0].point.getDistance(ipoint, true);
         }
       }
       else if(intersections.length > 1) {
         intersections.forEach((o) => {
-          tdelta = o.point.getDistance(cnn_point.point, true);
+          tdelta = o.point.getDistance(ipoint, true);
           if(tdelta < delta) {
             delta = tdelta;
             point = o.point;
@@ -1315,29 +1314,65 @@ class ProfileItem extends GeneratrixElement {
       // при необходимости, перерисовываем ведущий элемент
       !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
 
-      // для Т-соединений сначала определяем, изнутри или снаружи находится наш профиль
-      if(profile_point == 'b') {
-        // в зависимости от стороны соединения
-        if(cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи) {
-          intersect_point(prays.outer, rays.outer, 1);
-          intersect_point(prays.outer, rays.inner, 4);
+      const nodes = new Set();
+      let profile2;
+      cnn_point.point && this.layer.profiles.forEach((profile) => {
+        if(profile !== this){
+          if(cnn_point.point.is_nearest(profile.b, true)) {
+            profile.cnn_point('b').profile !== this && nodes.add(profile);
+          }
+          else if(cnn_point.point.is_nearest(profile.e, true)) {
+            profile.cnn_point('e').profile !== this && nodes.add(profile);
+          }
+          else if(profile.generatrix.is_nearest(cnn_point.point, true)) {
+            nodes.add(profile);
+          }
         }
-        else {
-          intersect_point(prays.inner, rays.outer, 1);
-          intersect_point(prays.inner, rays.inner, 4);
+      });
+      // убираем из nodes тех, кто соединяется с нами в корестности cnn_point.point
+      nodes.forEach((p2) => {
+        if(p2 !== cnn_point.profile) {
+          profile2 = p2;
+        }
+      });
+
+      const side = cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи ? 'outer' : 'inner';
+
+      if(profile2) {
+        const interior = generatrix.getPointAt(generatrix.length/2)
+        const prays2 = profile2 && profile2.rays;
+        const side2 = profile2.cnn_side(this, null, prays2) === $p.enm.cnn_sides.Снаружи ? 'outer' : 'inner';
+        const pt1 = intersect_point(prays[side], rays.outer, 0, interior);
+        const pt2 = intersect_point(prays[side], rays.inner, 0, interior);
+        const pt3 = intersect_point(prays2[side2], rays.outer, 0, interior);
+        const pt4 = intersect_point(prays2[side2], rays.inner, 0, interior);
+        //const pt5 = intersect_point(prays2[side2], prays[side], 0, interior);
+
+        if(profile_point == 'b') {
+          intersect_point(prays2[side2], prays[side], 5);
+          pt1 < pt3 ? intersect_point(prays[side], rays.outer, 1) : intersect_point(prays2[side2], rays.outer, 1);
+          pt2 < pt4 ? intersect_point(prays[side], rays.inner, 4) : intersect_point(prays2[side2], rays.inner, 4);
+        }
+        else if(profile_point == 'e') {
+          pt1 < pt3 ? intersect_point(prays[side], rays.outer, 2) : intersect_point(prays2[side2], rays.outer, 2);
+          pt2 < pt4 ? intersect_point(prays[side], rays.inner, 3) : intersect_point(prays2[side2], rays.inner, 3);
+          intersect_point(prays2[side2], prays[side], 6);
         }
       }
-      else if(profile_point == 'e') {
-        // в зависимости от стороны соединения
-        if(cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи) {
-          intersect_point(prays.outer, rays.outer, 2);
-          intersect_point(prays.outer, rays.inner, 3);
+      else {
+        // для Т-соединений сначала определяем, изнутри или снаружи находится наш профиль
+        if(profile_point == 'b') {
+          // в зависимости от стороны соединения
+          intersect_point(prays[side], rays.outer, 1);
+          intersect_point(prays[side], rays.inner, 4);
         }
-        else {
-          intersect_point(prays.inner, rays.outer, 2);
-          intersect_point(prays.inner, rays.inner, 3);
+        else if(profile_point == 'e') {
+          // в зависимости от стороны соединения
+          intersect_point(prays[side], rays.outer, 2);
+          intersect_point(prays[side], rays.inner, 3);
         }
       }
+
     }
     // крест в стык
     else if(cnn_type == cnn_types.xx) {
@@ -1563,8 +1598,8 @@ class ProfileItem extends GeneratrixElement {
    * @return Boolean
    */
   is_nearest(p) {
-    return (this.b.is_nearest(p.b, true) || this.generatrix.getNearestPoint(p.b).is_nearest(p.b)) &&
-      (this.e.is_nearest(p.e, true) || this.generatrix.getNearestPoint(p.e).is_nearest(p.e));
+    return (this.b.is_nearest(p.b, true) || this.generatrix.is_nearest(p.b)) &&
+      (this.e.is_nearest(p.e, true) || this.generatrix.is_nearest(p.e));
   }
 
   /**
@@ -1920,19 +1955,19 @@ class Profile extends ProfileItem {
       }
       const {generatrix} = elm;
       let is_nearest = [];
-      if(generatrix.getNearestPoint(b).is_nearest(b)) {
+      if(generatrix.is_nearest(b)) {
         is_nearest.push(b);
       }
-      if(generatrix.getNearestPoint(e).is_nearest(e)) {
+      if(generatrix.is_nearest(e)) {
         is_nearest.push(e);
       }
       if(is_nearest.length < 2 && elm instanceof ProfileConnective) {
-        if(this.generatrix.getNearestPoint(elm.b).is_nearest(elm.b)) {
+        if(this.generatrix.is_nearest(elm.b)) {
           if(is_nearest.every((point) => !point.is_nearest(elm.b))) {
             is_nearest.push(elm.b);
           }
         }
-        if(this.generatrix.getNearestPoint(elm.e).is_nearest(elm.e)) {
+        if(this.generatrix.is_nearest(elm.e)) {
           if(is_nearest.every((point) => !point.is_nearest(elm.e))) {
             is_nearest.push(elm.e);
           }
