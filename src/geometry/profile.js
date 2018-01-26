@@ -1338,7 +1338,7 @@ class ProfileItem extends GeneratrixElement {
 
       const side = cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи ? 'outer' : 'inner';
 
-      if(profile2) {
+      if(profile2 && false) {
         const interior = generatrix.getPointAt(generatrix.length/2)
         const prays2 = profile2 && profile2.rays;
         const side2 = profile2.cnn_side(this, null, prays2) === $p.enm.cnn_sides.Снаружи ? 'outer' : 'inner';
@@ -1346,7 +1346,6 @@ class ProfileItem extends GeneratrixElement {
         const pt2 = intersect_point(prays[side], rays.inner, 0, interior);
         const pt3 = intersect_point(prays2[side2], rays.outer, 0, interior);
         const pt4 = intersect_point(prays2[side2], rays.inner, 0, interior);
-        //const pt5 = intersect_point(prays2[side2], prays[side], 0, interior);
 
         if(profile_point == 'b') {
           intersect_point(prays2[side2], prays[side], 5);
