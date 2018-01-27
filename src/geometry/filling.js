@@ -565,6 +565,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
 
     path.reduce();
+
   }
 
   // возвращает текущие (ранее установленные) узлы заполнения

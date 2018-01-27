@@ -1135,6 +1135,9 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (err) {
         elm.fill_error();
       }
+      else if(elm.path.is_self_intersected()) {
+        elm.fill_error();
+      }
       else {
         elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
       }

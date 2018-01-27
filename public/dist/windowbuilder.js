@@ -3239,6 +3239,9 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (err) {
         elm.fill_error();
       }
+      else if(elm.path.is_self_intersected()) {
+        elm.fill_error();
+      }
       else {
         elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
       }
@@ -5818,6 +5821,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
 
     path.reduce();
+
   }
 
   get nodes() {
@@ -6360,12 +6364,36 @@ class GeneratrixElement extends BuilderElement {
 Object.defineProperties(paper.Path.prototype, {
 
   getDirectedAngle: {
-      value: function (point) {
-        var np = this.getNearestPoint(point),
-          offset = this.getOffsetOf(np);
-        return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
-      }
-    },
+    value: function (point) {
+      const np = this.getNearestPoint(point),
+        offset = this.getOffsetOf(np);
+      return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
+    }
+  },
+
+  is_self_intersected: {
+    value: function () {
+      const {curves} = this;
+      return curves.some((crv1, i1) => {
+        return curves.some((crv2, i2) => {
+          const intersections = crv1.getIntersections(crv2);
+          if(intersections.length) {
+            if(intersections.length > 1) {
+              return true;
+            }
+            const {point} = intersections[0];
+            if(crv2.point1.is_nearest(crv1.point2, 0) && point.is_nearest(crv1.point2, 0)) {
+              return false;
+            }
+            if(crv1.point1.is_nearest(crv2.point2, 0) && point.is_nearest(crv1.point1, 0)) {
+              return false;
+            }
+            return true;
+          };
+        })
+      })
+    }
+  },
 
   angle_to: {
       value : function(other, point, interior, round){
@@ -6591,6 +6619,15 @@ Object.defineProperties(paper.Path.prototype, {
         }
       }
     },
+
+  point_pos: {
+    value: function (point, interior) {
+      const np = this.getNearestPoint(interior);
+      const offset = this.getOffsetOf(np);
+      const line = new paper.Line(np, np.add(this.getTangentAt(offset)));
+      return line.getSide(point, true);
+    }
+  },
 
   rmin: {
     value: function() {
@@ -7805,24 +7842,32 @@ class ProfileItem extends GeneratrixElement {
         const pt4 = intersect_point(prays2[side2], rays.inner, 0, interior);
 
         if(profile_point == 'b') {
-          intersect_point(prays2[side2], prays[side], 5);
           pt1 < pt3 ? intersect_point(prays[side], rays.outer, 1) : intersect_point(prays2[side2], rays.outer, 1);
           pt2 < pt4 ? intersect_point(prays[side], rays.inner, 4) : intersect_point(prays2[side2], rays.inner, 4);
+          intersect_point(prays2[side2], prays[side], 5);
+          if(rays.inner.point_pos(_corns[5]) >= 0 || rays.outer.point_pos(_corns[5]) >= 0) {
+            delete _corns[5];
+          }
         }
         else if(profile_point == 'e') {
           pt1 < pt3 ? intersect_point(prays[side], rays.outer, 2) : intersect_point(prays2[side2], rays.outer, 2);
           pt2 < pt4 ? intersect_point(prays[side], rays.inner, 3) : intersect_point(prays2[side2], rays.inner, 3);
           intersect_point(prays2[side2], prays[side], 6);
+          if(rays.inner.point_pos(_corns[6]) >= 0 || rays.outer.point_pos(_corns[6]) >= 0) {
+            delete _corns[6];
+          }
         }
       }
       else {
         if(profile_point == 'b') {
           intersect_point(prays[side], rays.outer, 1);
           intersect_point(prays[side], rays.inner, 4);
+          delete _corns[5];
         }
         else if(profile_point == 'e') {
           intersect_point(prays[side], rays.outer, 2);
           intersect_point(prays[side], rays.inner, 3);
+          delete _corns[6];
         }
       }
 

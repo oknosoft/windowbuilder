@@ -1339,7 +1339,7 @@ class ProfileItem extends GeneratrixElement {
           }
         }
       });
-      // убираем из nodes тех, кто соединяется с нами в корестности cnn_point.point
+      // убираем из nodes тех, кто соединяется с нами в окрестности cnn_point.point
       nodes.forEach((p2) => {
         if(p2 !== cnn_point.profile) {
           profile2 = p2;
@@ -1358,14 +1358,20 @@ class ProfileItem extends GeneratrixElement {
         const pt4 = intersect_point(prays2[side2], rays.inner, 0, interior);
 
         if(profile_point == 'b') {
-          intersect_point(prays2[side2], prays[side], 5);
           pt1 < pt3 ? intersect_point(prays[side], rays.outer, 1) : intersect_point(prays2[side2], rays.outer, 1);
           pt2 < pt4 ? intersect_point(prays[side], rays.inner, 4) : intersect_point(prays2[side2], rays.inner, 4);
+          intersect_point(prays2[side2], prays[side], 5);
+          if(rays.inner.point_pos(_corns[5]) >= 0 || rays.outer.point_pos(_corns[5]) >= 0) {
+            delete _corns[5];
+          }
         }
         else if(profile_point == 'e') {
           pt1 < pt3 ? intersect_point(prays[side], rays.outer, 2) : intersect_point(prays2[side2], rays.outer, 2);
           pt2 < pt4 ? intersect_point(prays[side], rays.inner, 3) : intersect_point(prays2[side2], rays.inner, 3);
           intersect_point(prays2[side2], prays[side], 6);
+          if(rays.inner.point_pos(_corns[6]) >= 0 || rays.outer.point_pos(_corns[6]) >= 0) {
+            delete _corns[6];
+          }
         }
       }
       else {
@@ -1374,11 +1380,13 @@ class ProfileItem extends GeneratrixElement {
           // в зависимости от стороны соединения
           intersect_point(prays[side], rays.outer, 1);
           intersect_point(prays[side], rays.inner, 4);
+          delete _corns[5];
         }
         else if(profile_point == 'e') {
           // в зависимости от стороны соединения
           intersect_point(prays[side], rays.outer, 2);
           intersect_point(prays[side], rays.inner, 3);
+          delete _corns[6];
         }
       }
 

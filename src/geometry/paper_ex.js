@@ -19,12 +19,36 @@ Object.defineProperties(paper.Path.prototype, {
      * @return {number}
      */
   getDirectedAngle: {
-      value: function (point) {
-        var np = this.getNearestPoint(point),
-          offset = this.getOffsetOf(np);
-        return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
-      }
-    },
+    value: function (point) {
+      const np = this.getNearestPoint(point),
+        offset = this.getOffsetOf(np);
+      return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
+    }
+  },
+
+  is_self_intersected: {
+    value: function () {
+      const {curves} = this;
+      return curves.some((crv1, i1) => {
+        return curves.some((crv2, i2) => {
+          const intersections = crv1.getIntersections(crv2);
+          if(intersections.length) {
+            if(intersections.length > 1) {
+              return true;
+            }
+            const {point} = intersections[0];
+            if(crv2.point1.is_nearest(crv1.point2, 0) && point.is_nearest(crv1.point2, 0)) {
+              return false;
+            }
+            if(crv1.point1.is_nearest(crv2.point2, 0) && point.is_nearest(crv1.point1, 0)) {
+              return false;
+            }
+            return true;
+          };
+        })
+      })
+    }
+  },
 
   /**
      * Угол по отношению к соседнему пути _other_ в точке _point_
@@ -297,6 +321,18 @@ Object.defineProperties(paper.Path.prototype, {
         }
       }
     },
+
+  /**
+   * Определяет положение точки относительно пути в окрестности interior
+   */
+  point_pos: {
+    value: function (point, interior) {
+      const np = this.getNearestPoint(interior);
+      const offset = this.getOffsetOf(np);
+      const line = new paper.Line(np, np.add(this.getTangentAt(offset)));
+      return line.getSide(point, true);
+    }
+  },
 
   /**
    * ### Минимальный радиус, высисляемый по кривизне пути
