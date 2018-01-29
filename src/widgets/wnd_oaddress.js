@@ -703,6 +703,13 @@ class eXcell_addr extends eXcell {
   }
 
   ti_keydown(e) {
+    if(e.keyCode === 8 || e.keyCode === 46){          // по {del} и {bs} очищаем значение
+      const {obj} = this.grid.get_cell_field();
+      obj.shipping_address = '';
+      obj.address_fields = '';
+      this.grid.editStop();
+      return $p.iface.cancel_bubble(e);
+    }
     return eXcell_ocombo.prototype.input_keydown(e, this);
   }
 
