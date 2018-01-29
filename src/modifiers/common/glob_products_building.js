@@ -952,6 +952,9 @@ class ProductsBuilding {
 
 }
 
+if(typeof global !== 'undefined'){
+  global.ProductsBuilding = ProductsBuilding;
+}
 $p.ProductsBuilding = ProductsBuilding;
 $p.products_building = new ProductsBuilding(true);
 
