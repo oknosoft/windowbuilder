@@ -1639,7 +1639,7 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
 
 
 $p.md.once('predefined_elmnts_inited', () => {
-  $p.cat.scheme_settings.find_schemas('dp.buyers_order.production');
+  $p.cat.scheme_settings && $p.cat.scheme_settings.find_schemas('dp.buyers_order.production');
 });
 
 $p.cat.inserts.__define({
@@ -3894,6 +3894,9 @@ class ProductsBuilding {
 
 }
 
+if(typeof global !== 'undefined'){
+  global.ProductsBuilding = ProductsBuilding;
+}
 $p.ProductsBuilding = ProductsBuilding;
 $p.products_building = new ProductsBuilding(true);
 
@@ -4012,6 +4015,218 @@ $p.spec_building = new SpecBuilding($p);
     }
 	}
 })($p.classes.DataManager);
+
+
+(function(_mgr){
+
+	const acn = {
+    ii: [_mgr.Наложение],
+    i: [_mgr.НезамкнутыйКонтур],
+    a: [
+      _mgr.УгловоеДиагональное,
+      _mgr.УгловоеКВертикальной,
+      _mgr.УгловоеКГоризонтальной,
+      _mgr.КрестВСтык],
+    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
+	};
+
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get: function () {
+        return this.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get: function () {
+        return this.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get: function () {
+        return this.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get: function () {
+        return this.ТОбразное;
+      }
+    },
+    ii: {
+      get: function () {
+        return this.Наложение;
+      }
+    },
+    i: {
+      get: function () {
+        return this.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get: function () {
+        return this.КрестПересечение;
+      }
+    },
+    xx: {
+      get: function () {
+        return this.КрестВСтык;
+      }
+    },
+
+    acn: {
+      value: acn
+    },
+
+  });
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
+			}
+		}
+
+
+	});
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
 
 
 (function (_mgr) {
@@ -4185,6 +4400,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       _obj.state = 'draft';
     }
 
+    this.product_rows(true);
+
     this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
       .then(({rows}) => {
         const deleted = [];
@@ -4219,6 +4436,11 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   }
 
+  after_del_row(name) {
+    name === 'production' && this.product_rows();
+    return this;
+  }
+
 
   get doc_currency() {
     const currency = this.contract.settlements_currency;
@@ -4244,11 +4466,24 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   get contract() {
     return this._getter('contract');
   }
-
   set contract(v) {
     this._setter('contract', v);
     this.vat_consider = this.contract.vat_consider;
     this.vat_included = this.contract.vat_included;
+  }
+
+  product_rows(save) {
+    this.production.forEach(({row, characteristic}) => {
+      if(!characteristic.empty() && !characteristic.is_new() && characteristic.calc_order === this && characteristic.product !== row) {
+        characteristic.product = row;
+        if(save) {
+          characteristic.save();
+        }
+        else{
+          characteristic.name = characteristic.prod_name();
+        }
+      }
+    });
   }
 
   dispatching_totals() {
@@ -4611,7 +4846,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     const prod = [];
     const {characteristics} = $p.cat;
     this.production.forEach(({nom, characteristic}) => {
-      if(!characteristic.empty() && (forse || characteristic.is_new()) && !nom.is_procedure && !nom.is_accessory) {
+      if(!characteristic.empty() && (forse || characteristic.is_new())) {
         prod.push(characteristic.ref);
       }
     });
@@ -4619,8 +4854,10 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       .then(() => {
         prod.length = 0;
         this.production.forEach(({nom, characteristic}) => {
-          if(!characteristic.empty() && !nom.is_procedure && !nom.is_accessory) {
-            prod.push(characteristic);
+          if(!characteristic.empty()) {
+            if((!nom.is_procedure && !nom.is_accessory) || characteristic.specification.count() || characteristic.constructions.count() || characteristic.coordinates.count()){
+              prod.push(characteristic);
+            }
           }
         });
         return prod;
@@ -4684,10 +4921,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       cx = Promise.resolve(ox);
       return false;
     }
-    if(row.characteristic.empty()){
-      mgr.find_rows({calc_order: this, product: row.row}, fill_cx);
-    }
-    else if(!row.characteristic._deleted){
+    if(!row.characteristic.empty() && !row.characteristic._deleted){
       fill_cx(row.characteristic);
     }
 
@@ -6126,218 +6360,6 @@ $p.DocSelling.prototype.before_save = function () {
 };
 
 
-
-
-(function(_mgr){
-
-	const acn = {
-    ii: [_mgr.Наложение],
-    i: [_mgr.НезамкнутыйКонтур],
-    a: [
-      _mgr.УгловоеДиагональное,
-      _mgr.УгловоеКВертикальной,
-      _mgr.УгловоеКГоризонтальной,
-      _mgr.КрестВСтык],
-    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
-	};
-
-
-	Object.defineProperties(_mgr, {
-	  ad: {
-	    get: function () {
-        return this.УгловоеДиагональное;
-      }
-    },
-    av: {
-      get: function () {
-        return this.УгловоеКВертикальной;
-      }
-    },
-    ah: {
-      get: function () {
-        return this.УгловоеКГоризонтальной;
-      }
-    },
-    t: {
-      get: function () {
-        return this.ТОбразное;
-      }
-    },
-    ii: {
-      get: function () {
-        return this.Наложение;
-      }
-    },
-    i: {
-      get: function () {
-        return this.НезамкнутыйКонтур;
-      }
-    },
-    xt: {
-      get: function () {
-        return this.КрестПересечение;
-      }
-    },
-    xx: {
-      get: function () {
-        return this.КрестВСтык;
-      }
-    },
-
-    acn: {
-      value: acn
-    },
-
-  });
-
-})($p.enm.cnn_types);
-
-
-(function(_mgr){
-
-	const cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			}
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			}
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			}
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			}
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			}
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			}
-		}
-
-	});
-
-
-})($p.enm.elm_types);
-
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
 
 
 (($p) => {

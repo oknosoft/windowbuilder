@@ -58,6 +58,7 @@
     "extract-text-webpack-plugin": "3.0.2",
     "file-loader": "^1.1.6",
     "fs-extra": "^5.0.0",
+    "glob": "^7.1.2",
     "gulp": "^3.9",
     "gulp-base64": "^0.1",
     "gulp-concat": "^2.6",
@@ -89,7 +90,7 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
+    "build": "node scripts/build.js && node scripts/appcache.js",
     "test": "node scripts/test.js --env=jsdom",
     "lint": "eslint .",
     "meta:prebuild": "node scripts/meta.prebuild.js",

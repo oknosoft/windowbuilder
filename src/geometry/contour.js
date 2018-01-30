@@ -1282,7 +1282,7 @@ class Contour extends AbstractFilling(paper.Layer) {
       return;
     }
     // указатели на параметры длина и ширина
-    const {length, width} = $p.job_prm.properties;
+    const {length, width} = properties;
 
     ox.inserts.find_rows({cnstr}, (row) => {
       if (row.inset.insert_type == $p.enm.inserts_types.Подоконник) {
