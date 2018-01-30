@@ -90,8 +90,7 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
-    "appcache": "node scripts/appcache.js",
+    "build": "node scripts/build.js && node scripts/appcache.js",
     "test": "node scripts/test.js --env=jsdom",
     "lint": "eslint .",
     "meta:prebuild": "node scripts/meta.prebuild.js",
