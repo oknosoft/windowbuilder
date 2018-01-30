@@ -88,7 +88,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
    * Рассчитывает наименование продукции
    */
   prod_name(short) {
-    const {calc_order_row, calc_order, leading_product, sys, clr} = this;
+    const {calc_order_row, calc_order, leading_product, sys, clr, origin} = this;
     let name = '';
 
     if(calc_order_row) {
@@ -123,10 +123,12 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
         name += ':' + leading_product.calc_order_row.row.pad();
       }
 
-      // добавляем название системы
+      // добавляем название системы или вставки
       if(!sys.empty()) {
         name += '/' + sys.name;
-      }
+    } else if(!origin.empty()) {
+        name += '/' + origin.name;
+    }
 
       if(!short) {
 
@@ -311,6 +313,3 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
     }
   }
 }
-
-
-
