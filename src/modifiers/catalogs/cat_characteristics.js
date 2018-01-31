@@ -126,9 +126,10 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       // добавляем название системы или вставки
       if(!sys.empty()) {
         name += '/' + sys.name;
-    } else if(!origin.empty()) {
+      }
+      else if(!origin.empty()) {
         name += '/' + origin.name;
-    }
+      }
 
       if(!short) {
 

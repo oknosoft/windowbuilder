@@ -71,7 +71,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
   }
 
   prod_name(short) {
-    const {calc_order_row, calc_order, leading_product, sys, clr} = this;
+    const {calc_order_row, calc_order, leading_product, sys, clr, origin} = this;
     let name = '';
 
     if(calc_order_row) {
@@ -106,6 +106,9 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
       if(!sys.empty()) {
         name += '/' + sys.name;
+      }
+      else if(!origin.empty()) {
+        name += '/' + origin.name;
       }
 
       if(!short) {
@@ -266,9 +269,6 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
     }
   }
 }
-
-
-
 
 $p.cat.characteristics.form_obj = function (pwnd, attr) {
 
@@ -2080,18 +2080,16 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
             if(this.check_restrictions(row_ins_spec, row_prm, true)){
               row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
-              if(!row_ins_spec.formula.empty()){
-                const qty = row_ins_spec.formula.execute({
-                  ox: ox,
-                  elm: rib.profile || rib,
-                  cnstr: len_angl && len_angl.cnstr || 0,
-                  inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
-                  row_ins: row_ins_spec,
-                  row_spec: row_spec,
-                  len: rib.len
-                });
-              }
-              calc_qty_len(row_spec, row_ins_spec, rib.len);
+              const qty = !row_ins_spec.formula.empty() && row_ins_spec.formula.execute({
+                ox: ox,
+                elm: rib.profile || rib,
+                cnstr: len_angl && len_angl.cnstr || 0,
+                inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
+                row_ins: row_ins_spec,
+                row_spec: row_spec,
+                len: rib.len
+              });
+              !qty && calc_qty_len(row_spec, row_ins_spec, rib.len);
               calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
             }
             row_spec = null;

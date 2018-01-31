@@ -7,7 +7,8 @@ CACHE:
 
 # Заголовок и библиотеки
 # ./
-
+https://fonts.googleapis.com/css?family=Roboto
+/static/media/fontawesome-webfont.af7ae505.woff2
 
 # All other resources (e.g. sites) require the user to be online.
 NETWORK:
