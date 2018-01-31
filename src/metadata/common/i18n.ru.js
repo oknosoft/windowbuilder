@@ -54,6 +54,14 @@ export default function ($p) {
     ruler_inner: 'По внутренним линиям',
     ruler_outer: 'По внешним линиям',
 
+    show_not_implemented: function () {
+      this.show_msg({
+        type: 'alert-warning',
+        text: this.not_implemented,
+        title: this.main_title
+      });
+    },
+
   });
 }
 

@@ -1,35 +1,39 @@
 <?xml version="1.0" encoding='utf-8'?>
 <toolbar>
-    <item id="sep0" type="separator"/>
-    <item type="button" id="btn_save_close" text="&lt;i class='fa fa-caret-square-o-down fa-fw'&gt;&lt;/i&gt;" title="Записать и закрыть"/>
-    <item type="button" id="btn_save" text="&lt;i class='fa fa-floppy-o fa-fw'&gt;&lt;/i&gt;" title="Записать"/>
-    <item type="button" id="btn_sent" text="&lt;i class='fa fa-paper-plane-o fa-fw'&gt;&lt;/i&gt;" title="Отправить заказ" />
+  <item id="sep0" type="separator"/>
+  <item type="button" id="btn_save_close" text="&lt;i class='fa fa-caret-square-o-down fa-fw'&gt;&lt;/i&gt;" title="Записать и закрыть"/>
+  <item type="button" id="btn_save" text="&lt;i class='fa fa-floppy-o fa-fw'&gt;&lt;/i&gt;" title="Записать"/>
+  <item type="button" id="btn_sent" text="&lt;i class='fa fa-paper-plane-o fa-fw'&gt;&lt;/i&gt;" title="Отправить заказ"/>
 
-    <item type="button" id="btn_post" enabled="false" text="&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt;" title="Провести документ" />
-    <item type="button" id="btn_unpost" enabled="false" text="&lt;i class='fa fa-square-o fa-fw'&gt;&lt;/i&gt;" title="Отмена проведения" />
+  <item type="button" id="btn_post" enabled="false" text="&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt;" title="Провести документ"/>
+  <item type="button" id="btn_unpost" enabled="false" text="&lt;i class='fa fa-square-o fa-fw'&gt;&lt;/i&gt;" title="Отмена проведения"/>
 
-    <item type="button" id="btn_files" text="&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;" title="Присоединенные файлы"/>
+  <item type="button" id="btn_files" text="&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;" title="Присоединенные файлы"/>
 
-    <item type="buttonSelect" id="bs_print" text="&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt;" title="Печать" openAll="true">
-    </item>
+  <item type="buttonSelect" id="bs_print" text="&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt;" title="Печать" openAll="true">
+  </item>
 
-    <item type="buttonSelect" id="bs_create_by_virtue" text="&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;" title="Создать на основании" openAll="true" >
-        <item type="button" id="btn_message" enabled="false" text="Сообщение" />
-    </item>
+  <item type="buttonSelect" id="bs_create_by_virtue" text="&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;" title="Создать на основании" openAll="true">
+    <item type="button" id="planning_event" enabled="false" text="Событие"/>
+    <item type="button" id="calc_order" text="Расчет"/>
+    <item type="button" id="debit_cash_order" enabled="false" text="Наличная оплата"/>
+    <item type="button" id="credit_card_order" enabled="false" text="Оплата картой"/>
+    <item type="button" id="selling" enabled="false" text="Реализация товаров услуг"/>
+  </item>
 
-    <item type="buttonSelect" id="bs_go_to" text="&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;" title="Перейти" openAll="true" >
-        <item type="button" id="btn_go_connection" enabled="false" text="Связи" />
-    </item>
+  <item type="buttonSelect" id="bs_go_to" text="&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;" title="Перейти" openAll="true">
+    <item type="button" id="btn_go_connection" enabled="false" text="Связи"/>
+  </item>
 
-    <item type="buttonSelect"   id="bs_more"  text="&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;"  title="Дополнительно" openAll="true">
-        <item type="button"     id="btn_retrieve"    text="&lt;i class='fa fa-undo fa-fw'&gt;&lt;/i&gt; Отозвать" title="Отозвать заказ" />
-        <item type="separator"  id="sep_export" />
-        <item type="button" id="btn_import" text="&lt;i class='fa fa-upload fa-fw'&gt;&lt;/i&gt; Загрузить из файла" />
-        <item type="button" id="btn_export" text="&lt;i class='fa fa-download fa-fw'&gt;&lt;/i&gt; Выгрузить в файл" />
-    </item>
+  <item type="buttonSelect" id="bs_more" text="&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;" title="Дополнительно" openAll="true">
+    <item type="button" id="btn_retrieve" text="&lt;i class='fa fa-undo fa-fw'&gt;&lt;/i&gt; Отозвать" title="Отозвать заказ"/>
+    <item type="separator" id="sep_export"/>
+    <item type="button" id="btn_import" text="&lt;i class='fa fa-upload fa-fw'&gt;&lt;/i&gt; Загрузить из файла"/>
+    <item type="button" id="btn_export" text="&lt;i class='fa fa-download fa-fw'&gt;&lt;/i&gt; Выгрузить в файл"/>
+  </item>
 
-    <item id="sep_close_1" type="separator"/>
-    <item type="button" id="btn_close" text="&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;" title="Закрыть форму"/>
-    <item id="sep_close_2" type="separator"/>
+  <item id="sep_close_1" type="separator"/>
+  <item type="button" id="btn_close" text="&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;" title="Закрыть форму"/>
+  <item id="sep_close_2" type="separator"/>
 
 </toolbar>

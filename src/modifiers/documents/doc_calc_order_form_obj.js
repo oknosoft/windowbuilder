@@ -372,6 +372,10 @@
       case 'btn_go_connection':
         go_connection();
         break;
+
+      case 'calc_order':
+        go_connection();
+        break;
       }
 
       if(btn_id.substr(0, 4) == 'prn_') {
