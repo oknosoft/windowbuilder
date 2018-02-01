@@ -303,7 +303,13 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
    */
   get builder_props() {
     const defaults = $p.CatCharacteristics.builder_props_defaults;
-    const props = JSON.parse(this._obj.builder_props || '{}');
+    let props;
+    try {
+      props = JSON.parse(this._obj.builder_props || '{}');
+    }
+    catch(e) {
+      props = {};
+    }
     for(const prop in defaults){
       if(!props.hasOwnProperty(prop)) {
         props[prop] = defaults[prop];
