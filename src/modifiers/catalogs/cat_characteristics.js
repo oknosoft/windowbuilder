@@ -297,6 +297,56 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
     return this.owner;
   }
+
+  /**
+   * Дополнительные свойства изделия для рисовалки
+   */
+  get builder_props() {
+    const defaults = $p.CatCharacteristics.builder_props_defaults;
+    const props = JSON.parse(this._obj.builder_props || '{}');
+    for(const prop in defaults){
+      if(!props.hasOwnProperty(prop)) {
+        props[prop] = defaults[prop];
+      }
+    }
+    return props;
+  }
+  set builder_props(v) {
+    const {_obj, _data} = this;
+    if(this.empty()) {
+      return;
+    }
+    const name = 'builder_props';
+    if(_data && _data._loading) {
+      _obj[name] = v;
+      return;
+    }
+    let _modified;
+    if(typeof _obj[name] !== 'string'){
+      _obj[name] = JSON.stringify($p.CatCharacteristics.builder_props_defaults);
+      _modified = true;
+    }
+    const props = JSON.parse(_obj[name]);
+    for(const prop in v){
+      if(props[prop] !== v[prop]) {
+        props[prop] = v[prop];
+        _modified = true;
+      }
+    }
+    if(_modified) {
+      _obj[name] = JSON.stringify(props);
+      this.__notify(name);
+    }
+  }
+
+};
+
+$p.CatCharacteristics.builder_props_defaults = {
+  auto_lines: true,
+  custom_lines: true,
+  cnns: true,
+  visualization: true,
+  txts: true
 };
 
 // при изменении реквизита табчасти вставок

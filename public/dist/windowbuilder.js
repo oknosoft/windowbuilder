@@ -12,7 +12,7 @@
 
 class SchemeLayers {
 
-  constructor(cell, set_text, eve) {
+  constructor(cell, set_text, editor) {
 
     this._cell = cell;
     this._set_text = set_text;
@@ -32,20 +32,26 @@ class SchemeLayers {
     });
 
     this.tree.attachEvent("onCheck", (id, state) => {
-      const contour = paper.project.getItem({cnstr: Number(id)});
-      if(contour){
-        contour.hidden = !state;
+      const cnstr = Number(id);
+      if(cnstr) {
+        const contour = editor.project.getItem({cnstr});
+        if(contour){
+          contour.hidden = !state;
+        }
       }
-      paper.project.register_update();
+      else {
+        editor.project.ox.builder_props = {[id]: state};
+      }
+      editor.project.register_update();
     });
 
     this.tree.attachEvent("onSelect", (id, mode) => {
       if(!mode){
         return;
       }
-      const contour = paper.project.getItem({cnstr: Number(id)});
+      const contour = editor.project.getItem({cnstr: Number(id)});
       if(contour){
-        if(contour.project.activeLayer != contour){
+        if(editor.project.activeLayer != contour){
           contour.activate(true);
         }
         set_text(this.layer_text(contour));
@@ -55,7 +61,8 @@ class SchemeLayers {
     this.listener = this.listener.bind(this);
     this.layer_activated = this.layer_activated.bind(this);
     this.contour_redrawed = this.contour_redrawed.bind(this);
-    this.eve = eve.on({
+    this.editor = editor;
+    this.eve = editor.eve.on({
       layer_activated: this.layer_activated,
       contour_redrawed: this.contour_redrawed,
       rows: this.listener,
@@ -101,23 +108,30 @@ class SchemeLayers {
   }
 
   listener(obj, fields) {
-    if (this.tree && this.tree.clearAll && fields.constructions){
+    const {tree} = this;
+    if (tree && tree.clearAll && fields.constructions){
 
-      this.tree.clearAll();
+      tree.clearAll();
       paper.project.contours.forEach((layer) => {
         this.load_layer(layer);
-        this.tree.openItem(layer.cnstr);
-
+        tree.openItem(layer.cnstr);
       });
 
-      this.tree.addItem("l_dimensions", "Размерные линии", 0);
+      tree.addItem("auto_lines", "Авторазмерные линии", 0);
+      tree.addItem("custom_lines", "Доп. размерные линии", 0);
 
-      this.tree.addItem("l_connective", "Соединители", 0);
+      tree.addItem("cnns", "Соединители", 0);
 
-      this.tree.addItem("l_visualization", "Визуализация доп. элементов", 0);
+      tree.addItem("visualization", "Визуализация доп. элементов", 0);
 
-      this.tree.addItem("l_text", "Комментарии", 0);
+      tree.addItem("txts", "Комментарии", 0);
 
+      const {builder_props} = this.editor.project.ox;
+      for(const prop in builder_props) {
+        if(builder_props[prop]) {
+          tree.checkItem(prop);
+        }
+      }
     }
   }
 
@@ -568,7 +582,7 @@ class EditorAccordion {
     this.tree_layers = new SchemeLayers(this._layers, (text) => {
       this._stv._toolbar.setItemText("info", text);
       _editor.additional_inserts('contour', this.tree_layers.layout.cells('b'));
-    }, _editor.eve);
+    }, _editor);
 
     this._stv = this.tabbar.cells('stv');
     this._stv._toolbar = this._stv.attachToolbar({
