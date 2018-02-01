@@ -5168,7 +5168,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           const dp = $p.dp.builder_price.create();
           const pos = elmnts.toolbar.getPosition('input_filter');
 
-          elmnts.toolbar.addButtonTwoState('by_number', pos, 'N=');
+          elmnts.toolbar.addButtonTwoState('by_number', pos, '<i class="fa fa-key fa-fw"></i>');
           if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
             elmnts.toolbar.setItemState('by_number', true);
           }
