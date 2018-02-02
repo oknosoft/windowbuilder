@@ -1764,12 +1764,12 @@
                 "quantity",
                 "note"
               ],
-              "headers": "№,Продукция,Цвет,Длина,Высота,Глубина,Площадь,Колич.,Комментарий",
-              "widths": "40,*,120,80,75,75,75,75,*",
-              "min_widths": "30,200,100,70,70,70,70,70,80",
-              "aligns": "center,left,left,right,right,right,right,right,left",
-              "sortings": "na,na,na,na,na,na,na,na,na",
-              "types": "cntr,ref,ref,calck,calck,calck,calck,calck,txt"
+              "headers": "№,Продукция,Цвет,Длина,Ширина,Площадь,Колич.,Комментарий",
+              "widths": "40,*,120,80,75,75,75,*",
+              "min_widths": "30,200,100,70,70,70,70,80",
+              "aligns": "center,left,left,right,right,right,right,left",
+              "sortings": "na,na,na,na,na,na,na,na",
+              "types": "cntr,ref,ref,calck,calck,calck,calck,txt"
             },
             "inserts": {
               "fields": [
