@@ -1266,7 +1266,7 @@ class Editor extends paper.PaperScope {
 
       dhtmlxEvent(_canvas, "mousewheel", (evt) => {
 
-        if (evt.shiftKey || evt.ctrlKey) {
+        if (evt.shiftKey || evt.altKey) {
           if(evt.shiftKey && !evt.deltaX){
             _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
           }
@@ -1275,7 +1275,7 @@ class Editor extends paper.PaperScope {
           }
           return evt.preventDefault();
         }
-        else if (evt.altKey) {
+        else if (evt.ctrlKey) {
           const mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
           const viewPosition = _editor.view.viewToProject(mousePosition);
           const _ref1 = this.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
@@ -2647,18 +2647,6 @@ class Contour extends AbstractFilling(paper.Layer) {
           segments.splice(ind, 1);
         }
       });
-    }
-
-    for(const gl of res) {
-      const remove = [];
-      for(const segm of gl) {
-        if(segm.b.is_nearest(segm.e, true)){
-          remove.push(segm);
-        }
-      }
-      for(const segm of remove) {
-        gl.splice(gl.indexOf(segm), 1);
-      }
     }
 
     return res;
@@ -5781,7 +5769,7 @@ class Filling extends AbstractFilling(BuilderElement) {
       path.addSegments(attr.segments);
     }
     else if(Array.isArray(attr)){
-      const {length} = attr;
+      let {length} = attr;
       const {connections} = this.project;
       let prev, curr, next, sub_path;
       for(let i=0; i<length; i++ ){
@@ -5796,7 +5784,7 @@ class Filling extends AbstractFilling(BuilderElement) {
           (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
 
       }
-      for(let i=0; i<length; i++ ){
+      for (let i = 0; i < length; i++) {
         prev = i === 0 ? attr[length-1] : attr[i-1];
         curr = attr[i];
         next = i === length-1 ? attr[0] : attr[i+1];
@@ -5812,7 +5800,21 @@ class Filling extends AbstractFilling(BuilderElement) {
         }
         curr.sub_path = curr.sub_path.get_subpath(curr.pb, curr.pe);
       }
-      for(let i=0; i<length; i++ ){
+
+      const remove = [];
+      for (let i = 0; i < length; i++) {
+        prev = i === 0 ? attr[length-1] : attr[i-1];
+        next = i === length-1 ? attr[0] : attr[i+1];
+        if(prev.sub_path.getCrossings(next.sub_path).length){
+          remove.push(attr[i]);
+        }
+      }
+      for(const segm of remove) {
+        attr.splice(attr.indexOf(segm), 1);
+        length--;
+      }
+
+      for (let i = 0; i < length; i++) {
         curr = attr[i];
         path.addSegments(curr.sub_path.segments);
         ["anext","pb","pe"].forEach((prop) => { delete curr[prop] });

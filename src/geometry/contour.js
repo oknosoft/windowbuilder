@@ -413,19 +413,6 @@ class Contour extends AbstractFilling(paper.Layer) {
       });
     }
 
-    // прочищаем
-    for(const gl of res) {
-      const remove = [];
-      for(const segm of gl) {
-        if(segm.b.is_nearest(segm.e, true)){
-          remove.push(segm);
-        }
-      }
-      for(const segm of remove) {
-        gl.splice(gl.indexOf(segm), 1);
-      }
-    }
-
     return res;
   }
 
