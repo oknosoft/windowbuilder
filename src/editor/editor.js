@@ -477,7 +477,7 @@ class Editor extends paper.PaperScope {
 
       dhtmlxEvent(_canvas, "mousewheel", (evt) => {
 
-        if (evt.shiftKey || evt.ctrlKey) {
+        if (evt.shiftKey || evt.altKey) {
           if(evt.shiftKey && !evt.deltaX){
             _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
           }
@@ -486,7 +486,7 @@ class Editor extends paper.PaperScope {
           }
           return evt.preventDefault();
         }
-        else if (evt.altKey) {
+        else if (evt.ctrlKey) {
           const mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
           const viewPosition = _editor.view.viewToProject(mousePosition);
           const _ref1 = this.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
