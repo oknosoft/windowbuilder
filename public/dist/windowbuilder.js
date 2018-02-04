@@ -1026,7 +1026,16 @@ class Editor extends paper.PaperScope {
         {name: 'pen', css: 'tb_cursor-pen-freehand', tooltip: 'Добавить профиль'},
         {name: 'lay_impost', css: 'tb_cursor-lay-impost', tooltip: 'Вставить раскладку или импосты'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
-        {name: 'cut', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
+        {name: 'fx', text: '<i class="fa fa-magic fa-fw"></i>', tooltip: 'Действия', sub:
+            {
+              width: '120px',
+              height:'28px',
+              align: 'hor',
+              buttons: [
+                {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
+                {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>1</sub></small>', tooltip: 'Импост по 0-штапику'}
+                ],
+            }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
         {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
@@ -1316,12 +1325,19 @@ class Editor extends paper.PaperScope {
   }
 
   select_tool(name) {
-    this.tools.some((tool) => {
-      if(tool.options.name == name){
-        tool.activate();
-        return true;
-      }
-    })
+
+    switch (name) {
+    case 'm1':
+      this.project.magnetism.m1();
+      break;
+    default:
+      this.tools.some((tool) => {
+        if(tool.options.name == name){
+          tool.activate();
+          return true;
+        }
+      })
+    }
   }
 
   open(ox) {
@@ -5810,8 +5826,7 @@ class Filling extends AbstractFilling(BuilderElement) {
           remove.push(attr[i]);
           prev.sub_path.splitAt(crossings[0]);
           const nloc = next.sub_path.getLocationOf(crossings[0].point);
-          const npath = next.sub_path.splitAt(nloc);
-          next.sub_path = npath;
+          next.sub_path = next.sub_path.splitAt(nloc);
         }
       }
       for(const segm of remove) {
@@ -6377,6 +6392,43 @@ class GeneratrixElement extends BuilderElement {
       this[node] = mpoint;
       return true;
     }
+  }
+
+}
+
+
+class Magnetism {
+
+  constructor(scheme) {
+    this.scheme = scheme;
+  }
+
+  get selected() {
+    const {profiles} = this.scheme.activeLayer;
+    const selected = {profiles};
+    for(const {generatrix} of profiles) {
+      if(generatrix.firstSegment.selected) {
+        if(selected.profile) {
+          selected.break = true;
+          break;
+        }
+        selected.profile = generatrix.parent;
+        selected.point = 'b';
+      };
+      if(generatrix.lastSegment.selected) {
+        if(selected.profile) {
+          selected.break = true;
+          break;
+        }
+        selected.profile = generatrix.parent;
+        selected.point = 'e';
+      };
+    }
+    return selected;
+  }
+
+  m1() {
+    console.log('m1');
   }
 
 }
@@ -9447,6 +9499,7 @@ class Scheme extends paper.Project {
 
     };
 
+    this.magnetism = new Magnetism(this);
 
     this.redraw = () => {
 
@@ -11145,32 +11198,28 @@ class ToolCut extends paper.Tool {
     const previous = tb_left.get_selected();
 
     Promise.resolve().then(() => {
-      const {profiles} = project.activeLayer;
-      let selected = {};
-      for(const {generatrix} of profiles) {
-        if(generatrix.firstSegment.selected) {
-          if(selected.profile) {
-            selected.break = true;
-            break;
-          }
-          selected.profile = generatrix.parent;
-          selected.point = 'b';
-        };
-        if(generatrix.lastSegment.selected) {
-          if(selected.profile) {
-            selected.break = true;
-            break;
-          }
-          selected.profile = generatrix.parent;
-          selected.point = 'e';
-        };
-      }
 
-      if(selected.profile && !selected.break) {
+      const {selected} = project.magnetism;
+
+      if(selected.break) {
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Выделено более одного узла`,
+          title: 'Соединение Т в угол'
+        });
+      }
+      else if(!selected.profile) {
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Не выделено ни одного узла профиля`,
+          title: 'Соединение Т в угол'
+        });
+      }
+      else {
         const point = selected.profile[selected.point];
         const nodes = [selected];
 
-        for(const profile of profiles) {
+        for(const profile of selected.profiles) {
           if(profile !== selected.profile) {
             if(profile.b.is_nearest(point, true)) {
               nodes.push({profile, point: 'b'});
@@ -12623,27 +12672,30 @@ class ToolPen extends ToolElement {
       height: '28px',
       class_name: "",
       name: 'tb_mode',
-      buttons: [
-        {name: 'standard_form', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить типовую форму', float: 'left',
-          sub: {
-            width: '62px',
-            height:'206px',
-            buttons: [
-              {name: 'square', img: 'square.png', float: 'left'},
-              {name: 'triangle1', img: 'triangle1.png', float: 'right'},
-              {name: 'triangle2', img: 'triangle2.png', float: 'left'},
-              {name: 'triangle3', img: 'triangle3.png', float: 'right'},
-              {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-              {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
-              {name: 'circle',    img: 'circle.png', float: 'left'},
-              {name: 'arc1',      img: 'arc1.png', float: 'right'},
-              {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-              {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
-              {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
-              {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
-              {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-              {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
-        },
+      buttons: [{
+        name: 'standard_form',
+        text: '<i class="fa fa-file-image-o fa-fw"></i>',
+        tooltip: 'Добавить типовую форму',
+        float: 'left',
+        sub: {
+          width: '62px',
+          height:'206px',
+          buttons: [
+            {name: 'square', img: 'square.png', float: 'left'},
+            {name: 'triangle1', img: 'triangle1.png', float: 'right'},
+            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
+            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
+            {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
+            {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
+            {name: 'circle',    img: 'circle.png', float: 'left'},
+            {name: 'arc1',      img: 'arc1.png', float: 'right'},
+            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
+            {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
+            {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
+            {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
+            {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
+            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
+            },
       ],
       image_path: "/imgs/",
       onclick: (name) => this.standard_form(name)

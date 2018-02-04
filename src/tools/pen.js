@@ -295,27 +295,30 @@ class ToolPen extends ToolElement {
       height: '28px',
       class_name: "",
       name: 'tb_mode',
-      buttons: [
-        {name: 'standard_form', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить типовую форму', float: 'left',
-          sub: {
-            width: '62px',
-            height:'206px',
-            buttons: [
-              {name: 'square', img: 'square.png', float: 'left'},
-              {name: 'triangle1', img: 'triangle1.png', float: 'right'},
-              {name: 'triangle2', img: 'triangle2.png', float: 'left'},
-              {name: 'triangle3', img: 'triangle3.png', float: 'right'},
-              {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-              {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
-              {name: 'circle',    img: 'circle.png', float: 'left'},
-              {name: 'arc1',      img: 'arc1.png', float: 'right'},
-              {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-              {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
-              {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
-              {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
-              {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-              {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
-        },
+      buttons: [{
+        name: 'standard_form',
+        text: '<i class="fa fa-file-image-o fa-fw"></i>',
+        tooltip: 'Добавить типовую форму',
+        float: 'left',
+        sub: {
+          width: '62px',
+          height:'206px',
+          buttons: [
+            {name: 'square', img: 'square.png', float: 'left'},
+            {name: 'triangle1', img: 'triangle1.png', float: 'right'},
+            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
+            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
+            {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
+            {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
+            {name: 'circle',    img: 'circle.png', float: 'left'},
+            {name: 'arc1',      img: 'arc1.png', float: 'right'},
+            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
+            {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
+            {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
+            {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
+            {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
+            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
+            },
       ],
       image_path: "/imgs/",
       onclick: (name) => this.standard_form(name)

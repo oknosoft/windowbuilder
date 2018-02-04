@@ -552,8 +552,7 @@ class Filling extends AbstractFilling(BuilderElement) {
           remove.push(attr[i]);
           prev.sub_path.splitAt(crossings[0]);
           const nloc = next.sub_path.getLocationOf(crossings[0].point);
-          const npath = next.sub_path.splitAt(nloc);
-          next.sub_path = npath;
+          next.sub_path = next.sub_path.splitAt(nloc);
         }
       }
       for(const segm of remove) {
