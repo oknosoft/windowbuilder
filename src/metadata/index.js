@@ -14,8 +14,9 @@ import $p from 'metadata-dhtmlx';
 
 // подключаем react-специфичные методы
 import plugin_react from 'metadata-react/plugin';
-
 plugin_react.constructor.call($p);
+
+import reset_cache from './reset_cache';
 
 global.$p = $p;
 
@@ -36,6 +37,7 @@ export function init(dispatch) {
       // сообщяем адаптерам пути, суффиксы и префиксы
       const {wsql, job_prm, adapters: {pouch}} = $p;
       pouch.init(wsql, job_prm);
+      reset_cache(pouch);
 
       // читаем paperjs и deep-diff
       return $p.load_script('/dist/paperjs-deep-diff.min.js', 'script');
