@@ -349,9 +349,11 @@ class SchemeProps {
     this._reflect_id = 0;
     const {_obj} = this;
     const {project} = paper;
-    _obj.len = project.bounds.width.round(0);
-    _obj.height = project.bounds.height.round(0);
-    _obj.s = project.area;
+    if(project && _obj) {
+      _obj.len = project.bounds.width.round(0);
+      _obj.height = project.bounds.height.round(0);
+      _obj.s = project.area;
+    }
   }
 
   attach(_obj) {
