@@ -2232,8 +2232,10 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
         _data.thickness = nom.thickness;
       }
       else{
-        this.specification.forEach((row) => {
-          _data.thickness += row.nom.thickness;
+        this.specification.forEach(({nom}) => {
+          if(nom) {
+            _data.thickness += nom.thickness;
+          }
         });
       }
     }
