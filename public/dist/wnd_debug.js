@@ -2142,7 +2142,14 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
                 row_spec: row_spec,
                 len: rib.len
               });
-              !qty && calc_qty_len(row_spec, row_ins_spec, rib.len);
+              if(qty) {
+                if(!row_spec.qty) {
+                  row_spec.qty = qty;
+                }
+              }
+              else {
+                calc_qty_len(row_spec, row_ins_spec, rib.len);
+              }
               calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
             }
             row_spec = null;
