@@ -548,11 +548,13 @@ class Filling extends AbstractFilling(BuilderElement) {
         prev = i === 0 ? attr[length-1] : attr[i-1];
         next = i === length-1 ? attr[0] : attr[i+1];
         const crossings =  prev.sub_path.getCrossings(next.sub_path);
-        if(crossings.length && (prev.e.is_nearest(crossings[0].point, true) || next.b.is_nearest(crossings[0].point, true))){
-          remove.push(attr[i]);
-          prev.sub_path.splitAt(crossings[0]);
-          const nloc = next.sub_path.getLocationOf(crossings[0].point);
-          next.sub_path = next.sub_path.splitAt(nloc);
+        if(crossings.length){
+          if((prev.e.getDistance(crossings[0].point) < prev.profile.width * 2) ||  (next.b.getDistance(crossings[0].point) < next.profile.width * 2)) {
+            remove.push(attr[i]);
+            prev.sub_path.splitAt(crossings[0]);
+            const nloc = next.sub_path.getLocationOf(crossings[0].point);
+            next.sub_path = next.sub_path.splitAt(nloc);
+          }
         }
       }
       for(const segm of remove) {
