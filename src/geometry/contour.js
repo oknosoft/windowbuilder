@@ -1990,9 +1990,10 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (set_handle_height(row)) {
         return false;
       }
-      if (row.is_set_row) {
+      const {nom} = row;
+      if (nom && row.is_set_row) {
         let ok = false;
-        row.nom.get_spec(this, cache, true).each((sub_row) => {
+        nom.get_spec(this, cache, true).each((sub_row) => {
           if (set_handle_height(sub_row)) {
             return !(ok = true);
           }

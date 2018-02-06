@@ -277,7 +277,8 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
           // в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
           if(dop_row.is_set_row){
-            dop_row.nom.get_spec(contour, cache).each((sub_row) => {
+            const {nom} = dop_row;
+            nom && nom.get_spec(contour, cache).each((sub_row) => {
               if(sub_row.is_procedure_row){
                 res.add(sub_row);
               }
@@ -294,7 +295,8 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
       // в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
       if(row_furn.is_set_row){
-        row_furn.nom.get_spec(contour, cache, exclude_dop).each((sub_row) => {
+        const {nom} = row_furn;
+        nom && nom.get_spec(contour, cache, exclude_dop).each((sub_row) => {
           if(sub_row.is_procedure_row){
             res.add(sub_row);
           }
@@ -382,11 +384,11 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
   }
 
   get nom() {
-    return this._getter('nom')
+    return this._getter('nom') || this._getter('nom_set');
   }
-  set nom (v) {
-    if(v !== ""){
-      this._setter('nom', v)
+  set nom(v) {
+    if(v !== '') {
+      this._setter('nom', v);
     }
   }
 
