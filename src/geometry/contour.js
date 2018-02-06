@@ -1122,6 +1122,9 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (err) {
         elm.fill_error();
       }
+      else if(elm.path.is_self_intersected()) {
+        elm.fill_error();
+      }
       else {
         elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
       }
@@ -1266,7 +1269,7 @@ class Contour extends AbstractFilling(paper.Layer) {
       return;
     }
     // указатели на параметры длина и ширина
-    const {length, width} = $p.job_prm.properties;
+    const {length, width} = properties;
 
     ox.inserts.find_rows({cnstr}, (row) => {
       if (row.inset.insert_type == $p.enm.inserts_types.Подоконник) {

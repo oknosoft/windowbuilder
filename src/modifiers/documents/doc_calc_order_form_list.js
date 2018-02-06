@@ -53,6 +53,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           if(handlers){
             const {custom_selection} = elmnts.filter;
             custom_selection._state = handlers.props.state_filter;
+            custom_selection.class_name = 'doc.calc_order';
             handlers.onProps = (props) => {
               if(custom_selection._state != props.state_filter){
                 custom_selection._state = props.state_filter;
@@ -66,22 +67,34 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
           // добавляем отбор по подразделению
           const dp = $p.dp.builder_price.create();
-          const pos = elmnts.toolbar.getPosition("input_filter");
+          const pos = elmnts.toolbar.getPosition('input_filter');
+
+          // кнопка поиска по номеру
+          elmnts.toolbar.addButtonTwoState('by_number', pos, '<i class="fa fa-key fa-fw"></i>');
+          if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
+            elmnts.toolbar.setItemState('by_number', true);
+          }
+          elmnts.toolbar.setItemToolTip('by_number', 'Режим поиска с учетом либо без учета статуса и подразделения');
+          elmnts.toolbar.attachEvent('onStateChange', (id, state) => {
+            $p.wsql.set_user_param('calc_order_by_number', state);
+            elmnts.filter.call_event();
+          });
+
           const txt_id = `txt_${dhx4.newId()}`;
-          elmnts.toolbar.addText(txt_id, pos, "");
+          elmnts.toolbar.addText(txt_id, pos, '');
           const txt_div = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + txt_id].obj;
           const dep = new $p.iface.OCombo({
             parent: txt_div,
             obj: dp,
-            field: "department",
+            field: 'department',
             width: 180,
             hide_frm: true,
           });
-          txt_div.style.border = "1px solid #ccc";
-          txt_div.style.borderRadius = "3px";
-          txt_div.style.padding = "3px 2px 1px 2px";
-          txt_div.style.margin = "1px 5px 1px 1px";
-          dep.DOMelem_input.placeholder = "Подразделение";
+          txt_div.style.border = '1px solid #ccc';
+          txt_div.style.borderRadius = '3px';
+          txt_div.style.padding = '3px 2px 1px 2px';
+          txt_div.style.margin = '1px 5px 1px 1px';
+          dep.DOMelem_input.placeholder = 'Подразделение';
 
           dp._manager.on('update', wnd.dep_listener);
 
@@ -112,9 +125,38 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                 return this._state == 'all' ? {$in: 'draft,sent,confirmed,declined,service,complaints,template,zarchive'.split(',')} : {$eq: this._state};
               },
               enumerable: true
-            }
+            },
+
+            // sort может зависеть от ...
+            _sort: {
+              get: function () {
+                if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
+                  const flt = elmnts.filter.get_filter();
+                  if(flt.filter.length > 5) {
+                    return [{class_name: 'desc'}, {date: 'desc'}, {search: 'desc'}];
+                  }
+                }
+                return [{department: 'desc'}, {state: 'desc'}, {date: 'desc'}];
+              }
+            },
+
+            // индекс может зависеть от ...
+            _index: {
+              get: function () {
+                if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
+                  const flt = elmnts.filter.get_filter();
+                  if(flt.filter.length > 5) {
+                    return {
+                      ddoc: 'mango',
+                      fields: ['class_name', 'date', 'search']
+                    };
+                  }
+                }
+                return attr._index;
+              }
+            },
+
           });
-          elmnts.filter.custom_selection._index = attr._index;
 
           // картинка заказа в статусбаре
           elmnts.status_bar = wnd.attachStatusBar();
@@ -123,9 +165,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               //dbl && $p.iface.set_hash("cat.characteristics", ref, "builder")
               dbl && handlers.handleNavigate(`/builder/${ref}`);
             });
-          elmnts.grid.attachEvent("onRowSelect", (rid) => elmnts.svgs.reload(rid));
+          elmnts.grid.attachEvent('onRowSelect', (rid) => elmnts.svgs.reload(rid));
 
-          wnd.attachEvent("onClose", (win) => {
+          wnd.attachEvent('onClose', (win) => {
             dep && dep.unload();
             return true;
           });
@@ -149,8 +191,34 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           //   this.frm_unload(on_create);
           // }
 
+
+          /**
+           * обработчик нажатия кнопок командных панелей
+           */
+          attr.toolbar_click = function toolbar_click(btn_id) {
+            switch (btn_id) {
+            case 'calc_order':
+              const rId = wnd.elmnts.grid.getSelectedRowId();
+              if(rId) {
+                $p.msg.show_not_implemented();
+              }
+              else {
+                $p.msg.show_msg({
+                  type: 'alert-warning',
+                  text: $p.msg.no_selected_row.replace('%1', ''),
+                  title: $p.msg.main_title
+                });
+              }
+              break;
+            }
+          }
+
           resolve(wnd);
         }
+
+        attr.toolbar_struct = $p.injected_data['toolbar_calc_order_selection.xml'];
+
+
 
         return this.mango_selection(pwnd, attr);
 

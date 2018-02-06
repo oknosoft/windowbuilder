@@ -214,7 +214,13 @@ function obj_constructor_text(_m, category, name, categoties) {
   // реквизиты по метаданным
   if (meta.fields) {
     for (f in meta.fields) {
-      text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n`;
+      if(category === 'cch' && f === 'type') {
+        text += `get type(){const {type} = this._obj; return typeof type === 'object' ? type : {types: []}}
+        set type(v){this._obj.type = typeof v === 'object' ? v : {types: []}}\n`;
+      }
+      else {
+        text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n`;
+      }
     }
   }
   else {

@@ -34,14 +34,21 @@ export function fill_data(ref) {
     [Набор, new ItemData(Набор, AdditionsItem)],
   ]);
 
-  const {production} = dp;
+  const {production, product_params} = dp;
 
   // фильтруем по пустой ведущей продукции
   dp.calc_order.production.find_rows({ordn: $p.utils.blank.guid}, (row) => {
     const {characteristic} = row;
     const {insert_type} = characteristic.origin;
+    const cmp = components.get(insert_type);
     // фильтруем по типу вставки
     if(!characteristic.empty() && !characteristic.origin.empty() && items.indexOf(insert_type) != -1) {
+      // добавляем параметры
+      const elm = production.count() + 1;
+      characteristic.params.forEach(({param, value}) => {
+        product_params.add({elm, param, value});
+      });
+      // добавляем строку продукции
       production.add({
         characteristic,
         inset: characteristic.origin,
@@ -50,9 +57,9 @@ export function fill_data(ref) {
         height: row.width,
         quantity: row.quantity,
         note: row.note,
-      });
+      }, false, cmp.ProductionRow);
       // счетчик строк данного типа
-      components.get(insert_type).count++;
+      cmp.count++;
     }
   });
 }

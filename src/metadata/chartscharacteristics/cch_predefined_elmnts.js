@@ -45,7 +45,8 @@ export default function ($p) {
                     res[row.elm] = _mgr ? _mgr.get(row.value, false, false) : row.value;
                   });
                   return res;
-                })()
+                })(),
+                enumerable: true
               });
 
             }
@@ -63,7 +64,8 @@ export default function ($p) {
                   else {
                     return row.value;
                   }
-                })
+                }),
+                enumerable: true
               });
             }
             else {
@@ -74,7 +76,8 @@ export default function ($p) {
 
               job_prm[parents[row.parent]].__define(row.synonym, {
                 value: _mgr ? _mgr.get(row.value, false, false) : row.value,
-                configurable: true
+                configurable: true,
+                enumerable: true
               });
             }
 

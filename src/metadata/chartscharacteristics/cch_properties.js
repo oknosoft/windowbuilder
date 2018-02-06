@@ -198,7 +198,7 @@ export default function ($p) {
           try {
             const arr = JSON.parse(txt_row);
             const {types} = this.type;
-            if(types.length == 1) {
+            if(types && types.length == 1) {
               const mgr = $p.md.mgr_by_class_name(types[0]);
               return arr.map((ref) => mgr.get(ref, false));
             }

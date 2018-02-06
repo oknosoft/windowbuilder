@@ -27,34 +27,30 @@ class ToolCut extends paper.Tool {
     const previous = tb_left.get_selected();
 
     Promise.resolve().then(() => {
-      const {profiles} = project.activeLayer;
-      // получаем массив выделенных узлов
-      let selected = {};
-      for(const {generatrix} of profiles) {
-        if(generatrix.firstSegment.selected) {
-          if(selected.profile) {
-            selected.break = true;
-            break;
-          }
-          selected.profile = generatrix.parent;
-          selected.point = 'b';
-        };
-        if(generatrix.lastSegment.selected) {
-          if(selected.profile) {
-            selected.break = true;
-            break;
-          }
-          selected.profile = generatrix.parent;
-          selected.point = 'e';
-        };
-      }
 
-      if(selected.profile && !selected.break) {
+      // получаем выделенные узлы
+      const {selected} = project.magnetism;
+
+      if(selected.break) {
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Выделено более одного узла`,
+          title: 'Соединение Т в угол'
+        });
+      }
+      else if(!selected.profile) {
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Не выделено ни одного узла профиля`,
+          title: 'Соединение Т в угол'
+        });
+      }
+      else {
         const point = selected.profile[selected.point];
         const nodes = [selected];
 
         // рассмотрим вариант с углом...
-        for(const profile of profiles) {
+        for(const profile of selected.profiles) {
           if(profile !== selected.profile) {
             if(profile.b.is_nearest(point, true)) {
               nodes.push({profile, point: 'b'});

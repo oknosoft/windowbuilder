@@ -78,6 +78,7 @@ gulp.task('injected-templates', function(){
 	return gulp.src([
 		'./src/templates/xml/toolbar_calc_order_production.xml',
 		'./src/templates/xml/toolbar_calc_order_obj.xml',
+    './src/templates/xml/toolbar_calc_order_selection.xml',
 		'./src/templates/xml/toolbar_product_list.xml',
     './src/templates/xml/toolbar_characteristics_specification.xml',
     './src/templates/xml/toolbar_glass_inserts.xml',

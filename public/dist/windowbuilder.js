@@ -12,7 +12,7 @@
 
 class SchemeLayers {
 
-  constructor(cell, set_text, eve) {
+  constructor(cell, set_text, editor) {
 
     this._cell = cell;
     this._set_text = set_text;
@@ -32,20 +32,26 @@ class SchemeLayers {
     });
 
     this.tree.attachEvent("onCheck", (id, state) => {
-      const contour = paper.project.getItem({cnstr: Number(id)});
-      if(contour){
-        contour.hidden = !state;
+      const cnstr = Number(id);
+      if(cnstr) {
+        const contour = editor.project.getItem({cnstr});
+        if(contour){
+          contour.hidden = !state;
+        }
       }
-      paper.project.register_update();
+      else {
+        editor.project.ox.builder_props = {[id]: state};
+      }
+      editor.project.register_update();
     });
 
     this.tree.attachEvent("onSelect", (id, mode) => {
       if(!mode){
         return;
       }
-      const contour = paper.project.getItem({cnstr: Number(id)});
+      const contour = editor.project.getItem({cnstr: Number(id)});
       if(contour){
-        if(contour.project.activeLayer != contour){
+        if(editor.project.activeLayer != contour){
           contour.activate(true);
         }
         set_text(this.layer_text(contour));
@@ -55,7 +61,8 @@ class SchemeLayers {
     this.listener = this.listener.bind(this);
     this.layer_activated = this.layer_activated.bind(this);
     this.contour_redrawed = this.contour_redrawed.bind(this);
-    this.eve = eve.on({
+    this.editor = editor;
+    this.eve = editor.eve.on({
       layer_activated: this.layer_activated,
       contour_redrawed: this.contour_redrawed,
       rows: this.listener,
@@ -101,23 +108,30 @@ class SchemeLayers {
   }
 
   listener(obj, fields) {
-    if (this.tree && this.tree.clearAll && fields.constructions){
+    const {tree} = this;
+    if (tree && tree.clearAll && fields.constructions){
 
-      this.tree.clearAll();
+      tree.clearAll();
       paper.project.contours.forEach((layer) => {
         this.load_layer(layer);
-        this.tree.openItem(layer.cnstr);
-
+        tree.openItem(layer.cnstr);
       });
 
-      this.tree.addItem("l_dimensions", "Размерные линии", 0);
+      tree.addItem("auto_lines", "Авторазмерные линии", 0);
+      tree.addItem("custom_lines", "Доп. размерные линии", 0);
 
-      this.tree.addItem("l_connective", "Соединители", 0);
+      tree.addItem("cnns", "Соединители", 0);
 
-      this.tree.addItem("l_visualization", "Визуализация доп. элементов", 0);
+      tree.addItem("visualization", "Визуализация доп. элементов", 0);
 
-      this.tree.addItem("l_text", "Комментарии", 0);
+      tree.addItem("txts", "Комментарии", 0);
 
+      const {builder_props} = this.editor.project.ox;
+      for(const prop in builder_props) {
+        if(builder_props[prop]) {
+          tree.checkItem(prop);
+        }
+      }
     }
   }
 
@@ -335,9 +349,11 @@ class SchemeProps {
     this._reflect_id = 0;
     const {_obj} = this;
     const {project} = paper;
-    _obj.len = project.bounds.width.round(0);
-    _obj.height = project.bounds.height.round(0);
-    _obj.s = project.area;
+    if(project && _obj) {
+      _obj.len = project.bounds.width.round(0);
+      _obj.height = project.bounds.height.round(0);
+      _obj.s = project.area;
+    }
   }
 
   attach(_obj) {
@@ -568,7 +584,7 @@ class EditorAccordion {
     this.tree_layers = new SchemeLayers(this._layers, (text) => {
       this._stv._toolbar.setItemText("info", text);
       _editor.additional_inserts('contour', this.tree_layers.layout.cells('b'));
-    }, _editor.eve);
+    }, _editor);
 
     this._stv = this.tabbar.cells('stv');
     this._stv._toolbar = this._stv.attachToolbar({
@@ -1012,7 +1028,16 @@ class Editor extends paper.PaperScope {
         {name: 'pen', css: 'tb_cursor-pen-freehand', tooltip: 'Добавить профиль'},
         {name: 'lay_impost', css: 'tb_cursor-lay-impost', tooltip: 'Вставить раскладку или импосты'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
-        {name: 'cut', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
+        {name: 'fx', text: '<i class="fa fa-magic fa-fw"></i>', tooltip: 'Действия', sub:
+            {
+              width: '120px',
+              height:'28px',
+              align: 'hor',
+              buttons: [
+                {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
+                {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>1</sub></small>', tooltip: 'Импост по 0-штапику'}
+                ],
+            }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
         {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
@@ -1252,7 +1277,7 @@ class Editor extends paper.PaperScope {
 
       dhtmlxEvent(_canvas, "mousewheel", (evt) => {
 
-        if (evt.shiftKey || evt.ctrlKey) {
+        if (evt.shiftKey || evt.altKey) {
           if(evt.shiftKey && !evt.deltaX){
             _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
           }
@@ -1261,7 +1286,7 @@ class Editor extends paper.PaperScope {
           }
           return evt.preventDefault();
         }
-        else if (evt.altKey) {
+        else if (evt.ctrlKey) {
           const mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
           const viewPosition = _editor.view.viewToProject(mousePosition);
           const _ref1 = this.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
@@ -1302,12 +1327,19 @@ class Editor extends paper.PaperScope {
   }
 
   select_tool(name) {
-    this.tools.some((tool) => {
-      if(tool.options.name == name){
-        tool.activate();
-        return true;
-      }
-    })
+
+    switch (name) {
+    case 'm1':
+      this.project.magnetism.m1();
+      break;
+    default:
+      this.tools.some((tool) => {
+        if(tool.options.name == name){
+          tool.activate();
+          return true;
+        }
+      })
+    }
   }
 
   open(ox) {
@@ -3227,6 +3259,9 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (err) {
         elm.fill_error();
       }
+      else if(elm.path.is_self_intersected()) {
+        elm.fill_error();
+      }
       else {
         elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
       }
@@ -3356,7 +3391,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     if (!properties) {
       return;
     }
-    const {length, width} = $p.job_prm.properties;
+    const {length, width} = properties;
 
     ox.inserts.find_rows({cnstr}, (row) => {
       if (row.inset.insert_type == $p.enm.inserts_types.Подоконник) {
@@ -5752,7 +5787,7 @@ class Filling extends AbstractFilling(BuilderElement) {
       path.addSegments(attr.segments);
     }
     else if(Array.isArray(attr)){
-      const {length} = attr;
+      let {length} = attr;
       const {connections} = this.project;
       let prev, curr, next, sub_path;
       for(let i=0; i<length; i++ ){
@@ -5767,7 +5802,7 @@ class Filling extends AbstractFilling(BuilderElement) {
           (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
 
       }
-      for(let i=0; i<length; i++ ){
+      for (let i = 0; i < length; i++) {
         prev = i === 0 ? attr[length-1] : attr[i-1];
         curr = attr[i];
         next = i === length-1 ? attr[0] : attr[i+1];
@@ -5783,7 +5818,25 @@ class Filling extends AbstractFilling(BuilderElement) {
         }
         curr.sub_path = curr.sub_path.get_subpath(curr.pb, curr.pe);
       }
-      for(let i=0; i<length; i++ ){
+
+      const remove = [];
+      for (let i = 0; i < length; i++) {
+        prev = i === 0 ? attr[length-1] : attr[i-1];
+        next = i === length-1 ? attr[0] : attr[i+1];
+        const crossings =  prev.sub_path.getCrossings(next.sub_path);
+        if(crossings.length && (prev.e.is_nearest(crossings[0].point, true) || next.b.is_nearest(crossings[0].point, true))){
+          remove.push(attr[i]);
+          prev.sub_path.splitAt(crossings[0]);
+          const nloc = next.sub_path.getLocationOf(crossings[0].point);
+          next.sub_path = next.sub_path.splitAt(nloc);
+        }
+      }
+      for(const segm of remove) {
+        attr.splice(attr.indexOf(segm), 1);
+        length--;
+      }
+
+      for (let i = 0; i < length; i++) {
         curr = attr[i];
         path.addSegments(curr.sub_path.segments);
         ["anext","pb","pe"].forEach((prop) => { delete curr[prop] });
@@ -5806,6 +5859,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
 
     path.reduce();
+
   }
 
   get nodes() {
@@ -6345,15 +6399,76 @@ class GeneratrixElement extends BuilderElement {
 }
 
 
+class Magnetism {
+
+  constructor(scheme) {
+    this.scheme = scheme;
+  }
+
+  get selected() {
+    const {profiles} = this.scheme.activeLayer;
+    const selected = {profiles};
+    for(const {generatrix} of profiles) {
+      if(generatrix.firstSegment.selected) {
+        if(selected.profile) {
+          selected.break = true;
+          break;
+        }
+        selected.profile = generatrix.parent;
+        selected.point = 'b';
+      };
+      if(generatrix.lastSegment.selected) {
+        if(selected.profile) {
+          selected.break = true;
+          break;
+        }
+        selected.profile = generatrix.parent;
+        selected.point = 'e';
+      };
+    }
+    return selected;
+  }
+
+  m1() {
+    console.log('m1');
+  }
+
+}
+
+
 Object.defineProperties(paper.Path.prototype, {
 
   getDirectedAngle: {
-      value: function (point) {
-        var np = this.getNearestPoint(point),
-          offset = this.getOffsetOf(np);
-        return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
-      }
-    },
+    value: function (point) {
+      const np = this.getNearestPoint(point),
+        offset = this.getOffsetOf(np);
+      return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
+    }
+  },
+
+  is_self_intersected: {
+    value: function () {
+      const {curves} = this;
+      return curves.some((crv1, i1) => {
+        return curves.some((crv2, i2) => {
+          const intersections = crv1.getIntersections(crv2);
+          if(intersections.length) {
+            if(intersections.length > 1) {
+              return true;
+            }
+            const {point} = intersections[0];
+            if(crv2.point1.is_nearest(crv1.point2, 0) && point.is_nearest(crv1.point2, 0)) {
+              return false;
+            }
+            if(crv1.point1.is_nearest(crv2.point2, 0) && point.is_nearest(crv1.point1, 0)) {
+              return false;
+            }
+            return true;
+          };
+        })
+      })
+    }
+  },
 
   angle_to: {
       value : function(other, point, interior, round){
@@ -6579,6 +6694,15 @@ Object.defineProperties(paper.Path.prototype, {
         }
       }
     },
+
+  point_pos: {
+    value: function (point, interior) {
+      const np = this.getNearestPoint(interior);
+      const offset = this.getOffsetOf(np);
+      const line = new paper.Line(np, np.add(this.getTangentAt(offset)));
+      return line.getSide(point, true);
+    }
+  },
 
   rmin: {
     value: function() {
@@ -7755,10 +7879,20 @@ class ProfileItem extends GeneratrixElement {
       cnn_point.point && this.layer.profiles.forEach((profile) => {
         if(profile !== this){
           if(cnn_point.point.is_nearest(profile.b, true)) {
-            profile.cnn_point('b').profile !== this && nodes.add(profile);
+            const cp = profile.cnn_point('b').profile;
+            if(cp !== this) {
+              if(cp !== cnn_point.profile || cnn_point.profile.cnn_side(this) === cnn_point.profile.cnn_side(profile)) {
+                nodes.add(profile);
+              }
+            }
           }
           else if(cnn_point.point.is_nearest(profile.e, true)) {
-            profile.cnn_point('e').profile !== this && nodes.add(profile);
+            const cp = profile.cnn_point('e').profile;
+            if(cp !== this) {
+              if(cp !== cnn_point.profile || cnn_point.profile.cnn_side(this) === cnn_point.profile.cnn_side(profile)) {
+                nodes.add(profile);
+              }
+            }
           }
           else if(profile.generatrix.is_nearest(cnn_point.point, true)) {
             nodes.add(profile);
@@ -7783,24 +7917,32 @@ class ProfileItem extends GeneratrixElement {
         const pt4 = intersect_point(prays2[side2], rays.inner, 0, interior);
 
         if(profile_point == 'b') {
-          intersect_point(prays2[side2], prays[side], 5);
           pt1 < pt3 ? intersect_point(prays[side], rays.outer, 1) : intersect_point(prays2[side2], rays.outer, 1);
           pt2 < pt4 ? intersect_point(prays[side], rays.inner, 4) : intersect_point(prays2[side2], rays.inner, 4);
+          intersect_point(prays2[side2], prays[side], 5);
+          if(rays.inner.point_pos(_corns[5]) >= 0 || rays.outer.point_pos(_corns[5]) >= 0) {
+            delete _corns[5];
+          }
         }
         else if(profile_point == 'e') {
           pt1 < pt3 ? intersect_point(prays[side], rays.outer, 2) : intersect_point(prays2[side2], rays.outer, 2);
           pt2 < pt4 ? intersect_point(prays[side], rays.inner, 3) : intersect_point(prays2[side2], rays.inner, 3);
           intersect_point(prays2[side2], prays[side], 6);
+          if(rays.inner.point_pos(_corns[6]) >= 0 || rays.outer.point_pos(_corns[6]) >= 0) {
+            delete _corns[6];
+          }
         }
       }
       else {
         if(profile_point == 'b') {
           intersect_point(prays[side], rays.outer, 1);
           intersect_point(prays[side], rays.inner, 4);
+          delete _corns[5];
         }
         else if(profile_point == 'e') {
           intersect_point(prays[side], rays.outer, 2);
           intersect_point(prays[side], rays.inner, 3);
+          delete _corns[6];
         }
       }
 
@@ -9359,6 +9501,7 @@ class Scheme extends paper.Project {
 
     };
 
+    this.magnetism = new Magnetism(this);
 
     this.redraw = () => {
 
@@ -11057,32 +11200,28 @@ class ToolCut extends paper.Tool {
     const previous = tb_left.get_selected();
 
     Promise.resolve().then(() => {
-      const {profiles} = project.activeLayer;
-      let selected = {};
-      for(const {generatrix} of profiles) {
-        if(generatrix.firstSegment.selected) {
-          if(selected.profile) {
-            selected.break = true;
-            break;
-          }
-          selected.profile = generatrix.parent;
-          selected.point = 'b';
-        };
-        if(generatrix.lastSegment.selected) {
-          if(selected.profile) {
-            selected.break = true;
-            break;
-          }
-          selected.profile = generatrix.parent;
-          selected.point = 'e';
-        };
-      }
 
-      if(selected.profile && !selected.break) {
+      const {selected} = project.magnetism;
+
+      if(selected.break) {
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Выделено более одного узла`,
+          title: 'Соединение Т в угол'
+        });
+      }
+      else if(!selected.profile) {
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Не выделено ни одного узла профиля`,
+          title: 'Соединение Т в угол'
+        });
+      }
+      else {
         const point = selected.profile[selected.point];
         const nodes = [selected];
 
-        for(const profile of profiles) {
+        for(const profile of selected.profiles) {
           if(profile !== selected.profile) {
             if(profile.b.is_nearest(point, true)) {
               nodes.push({profile, point: 'b'});
@@ -12535,27 +12674,30 @@ class ToolPen extends ToolElement {
       height: '28px',
       class_name: "",
       name: 'tb_mode',
-      buttons: [
-        {name: 'standard_form', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить типовую форму', float: 'left',
-          sub: {
-            width: '62px',
-            height:'206px',
-            buttons: [
-              {name: 'square', img: 'square.png', float: 'left'},
-              {name: 'triangle1', img: 'triangle1.png', float: 'right'},
-              {name: 'triangle2', img: 'triangle2.png', float: 'left'},
-              {name: 'triangle3', img: 'triangle3.png', float: 'right'},
-              {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-              {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
-              {name: 'circle',    img: 'circle.png', float: 'left'},
-              {name: 'arc1',      img: 'arc1.png', float: 'right'},
-              {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-              {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
-              {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
-              {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
-              {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-              {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
-        },
+      buttons: [{
+        name: 'standard_form',
+        text: '<i class="fa fa-file-image-o fa-fw"></i>',
+        tooltip: 'Добавить типовую форму',
+        float: 'left',
+        sub: {
+          width: '62px',
+          height:'206px',
+          buttons: [
+            {name: 'square', img: 'square.png', float: 'left'},
+            {name: 'triangle1', img: 'triangle1.png', float: 'right'},
+            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
+            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
+            {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
+            {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
+            {name: 'circle',    img: 'circle.png', float: 'left'},
+            {name: 'arc1',      img: 'arc1.png', float: 'right'},
+            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
+            {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
+            {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
+            {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
+            {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
+            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
+            },
       ],
       image_path: "/imgs/",
       onclick: (name) => this.standard_form(name)

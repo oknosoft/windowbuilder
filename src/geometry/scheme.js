@@ -140,6 +140,7 @@ class Scheme extends paper.Project {
 
     };
 
+    this.magnetism = new Magnetism(this);
 
     /**
      * Перерисовывает все контуры изделия. Не занимается биндингом.

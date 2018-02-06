@@ -162,7 +162,16 @@ class Editor extends paper.PaperScope {
         {name: 'pen', css: 'tb_cursor-pen-freehand', tooltip: 'Добавить профиль'},
         {name: 'lay_impost', css: 'tb_cursor-lay-impost', tooltip: 'Вставить раскладку или импосты'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
-        {name: 'cut', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
+        {name: 'fx', text: '<i class="fa fa-magic fa-fw"></i>', tooltip: 'Действия', sub:
+            {
+              width: '120px',
+              height:'28px',
+              align: 'hor',
+              buttons: [
+                {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
+                {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>1</sub></small>', tooltip: 'Импост по 0-штапику'}
+                ],
+            }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
         {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
@@ -477,7 +486,7 @@ class Editor extends paper.PaperScope {
 
       dhtmlxEvent(_canvas, "mousewheel", (evt) => {
 
-        if (evt.shiftKey || evt.ctrlKey) {
+        if (evt.shiftKey || evt.altKey) {
           if(evt.shiftKey && !evt.deltaX){
             _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
           }
@@ -486,7 +495,7 @@ class Editor extends paper.PaperScope {
           }
           return evt.preventDefault();
         }
-        else if (evt.altKey) {
+        else if (evt.ctrlKey) {
           const mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
           const viewPosition = _editor.view.viewToProject(mousePosition);
           const _ref1 = this.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
@@ -543,12 +552,19 @@ class Editor extends paper.PaperScope {
    * @param name {String} - имя инструмента
    */
   select_tool(name) {
-    this.tools.some((tool) => {
-      if(tool.options.name == name){
-        tool.activate();
-        return true;
-      }
-    })
+
+    switch (name) {
+    case 'm1':
+      this.project.magnetism.m1();
+      break;
+    default:
+      this.tools.some((tool) => {
+        if(tool.options.name == name){
+          tool.activate();
+          return true;
+        }
+      })
+    }
   }
 
   /**
