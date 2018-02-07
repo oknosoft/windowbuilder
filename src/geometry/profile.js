@@ -998,9 +998,7 @@ class ProfileItem extends GeneratrixElement {
     _attr.path.strokeColor = 'black';
     _attr.path.strokeWidth = 1;
     _attr.path.strokeScaling = false;
-
     this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
-    //_attr.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
     this.addChild(_attr.path);
     this.addChild(_attr.generatrix);

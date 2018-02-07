@@ -443,12 +443,14 @@ class BuilderElement extends paper.Group {
    * @param [ignore_select] {Boolean}
    */
   set_clr(v, ignore_select) {
-    this._row.clr = v;
+    if(this._row.clr != v) {
+      this._row.clr = v;
+      this.project.register_change();
+    }
     // цвет элементу присваиваем только если он уже нарисован
     if(this.path instanceof paper.Path){
       this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
     }
-    this.project.register_change();
   }
 
   /**

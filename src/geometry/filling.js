@@ -353,8 +353,18 @@ class Filling extends AbstractFilling(BuilderElement) {
       const proto = glass_specification.find_rows({elm});
 
       // проверим доступность цветов
-      if(!inset.clr_group.empty() && inset.clr_group.clr_conformity.count() && !inset.clr_group.clr_conformity._obj.some((row) => row.clr1 == clr)) {
-        this.clr = inset.clr_group.clr_conformity.get(0).clr1;
+      if(!inset.clr_group.empty() && inset.clr_group.clr_conformity.count() &&
+          !inset.clr_group.clr_conformity._obj.some((row) => row.clr1 == clr || row.clr1 == clr.parent)) {
+        const {clr1} = inset.clr_group.clr_conformity.get(0);
+        if(clr1.is_folder) {
+          $p.cat.clrs.find_rows({parent: clr1}, (v) => {
+            this.clr = v;
+            return false;
+          });
+        }
+        else {
+          this.clr = clr1;
+        }
       }
 
       // если для заполнение определён состав - корректируем

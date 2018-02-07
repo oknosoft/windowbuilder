@@ -5223,11 +5223,13 @@ class BuilderElement extends paper.Group {
   }
 
   set_clr(v, ignore_select) {
-    this._row.clr = v;
+    if(this._row.clr != v) {
+      this._row.clr = v;
+      this.project.register_change();
+    }
     if(this.path instanceof paper.Path){
       this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
     }
-    this.project.register_change();
   }
 
   t_parent(be) {
@@ -5672,8 +5674,18 @@ class Filling extends AbstractFilling(BuilderElement) {
       const {glass_specification} = project.ox;
       const proto = glass_specification.find_rows({elm});
 
-      if(!inset.clr_group.empty() && inset.clr_group.clr_conformity.count() && !inset.clr_group.clr_conformity._obj.some((row) => row.clr1 == clr)) {
-        this.clr = inset.clr_group.clr_conformity.get(0).clr1;
+      if(!inset.clr_group.empty() && inset.clr_group.clr_conformity.count() &&
+          !inset.clr_group.clr_conformity._obj.some((row) => row.clr1 == clr || row.clr1 == clr.parent)) {
+        const {clr1} = inset.clr_group.clr_conformity.get(0);
+        if(clr1.is_folder) {
+          $p.cat.clrs.find_rows({parent: clr1}, (v) => {
+            this.clr = clr1;
+            return false;
+          });
+        }
+        else {
+          this.clr = clr1;
+        }
       }
 
       if(proto.length) {
@@ -7625,7 +7637,6 @@ class ProfileItem extends GeneratrixElement {
     _attr.path.strokeColor = 'black';
     _attr.path.strokeWidth = 1;
     _attr.path.strokeScaling = false;
-
     this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
 
     this.addChild(_attr.path);
@@ -10800,7 +10811,6 @@ class Sectional extends GeneratrixElement {
     _attr.generatrix.strokeColor = 'black';
     _attr.generatrix.strokeWidth = 1;
     _attr.generatrix.strokeScaling = false;
-
     this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
 
     this.addChild(_attr.generatrix);
