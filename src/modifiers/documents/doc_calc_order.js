@@ -443,6 +443,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ОрганизацияСвидетельствоНаименованиеОргана: organization.certificate_authority_name,
       ОрганизацияСвидетельствоСерияНомер: organization.certificate_series_number,
       ОрганизацияЮрФизЛицо: organization.individual_legal.presentation,
+      Офис: this.department.presentation,
       ПродукцияЭскизы: {},
       Проект: this.project.presentation,
       СистемыПрофилей: this.sys_profile,
