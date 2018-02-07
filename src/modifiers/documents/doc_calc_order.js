@@ -460,8 +460,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       СотрудникФамилия: individual_person.Фамилия,
       СотрудникФамилияРП: individual_person.ФамилияРП,
       СотрудникФИО: individual_person.Фамилия +
-      (individual_person.Имя ? ' ' + individual_person.Имя[1].toUpperCase() + '.' : '' ) +
-      (individual_person.Отчество ? ' ' + individual_person.Отчество[1].toUpperCase() + '.' : ''),
+      (individual_person.Имя ? ' ' + individual_person.Имя[0].toUpperCase() + '.' : '' ) +
+      (individual_person.Отчество ? ' ' + individual_person.Отчество[0].toUpperCase() + '.' : ''),
       СотрудникФИОРП: individual_person.ФамилияРП + ' ' + individual_person.ИмяРП + ' ' + individual_person.ОтчествоРП,
       СуммаДокумента: this.doc_amount.toFixed(2),
       СуммаДокументаПрописью: this.doc_amount.in_words(),
