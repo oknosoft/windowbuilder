@@ -380,8 +380,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
       ДоговорСрокДействия: moment(contract.validity).format('L'),
       ЗаказНомер: this.number_doc,
-      //Примечание (комментарий) к расчету  и внутренний номер расчет-заказа
-      Примечание: this.note,
       НомерВнутренний: this.number_internal,
       Контрагент: partner.presentation,
       КонтрагентОписание: partner.long_presentation,
