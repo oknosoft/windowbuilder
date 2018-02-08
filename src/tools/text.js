@@ -52,7 +52,7 @@ class ToolText extends ToolElement {
         this.text = null;
         this.changed = false;
 
-        paper.project.deselectAll();
+        this.project.deselectAll();
         this.mouseStartPos = event.point.clone();
 
         if (this.hitItem) {
@@ -116,20 +116,17 @@ class ToolText extends ToolElement {
       },
 
       keydown: function(event) {
-        var selected, i, text;
+
         if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
-          if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+          if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1){
             return;
+          }
 
-          selected = paper.project.selectedItems;
-          for (i = 0; i < selected.length; i++) {
-            text = selected[i];
+          for (const text of  this.project.selectedItems) {
             if(text instanceof FreeText){
               text.text = "";
-              setTimeout(function () {
-                paper.view.update();
-              }, 100);
+              setTimeout(() => paper.view.update(), 100);
             }
           }
 
@@ -143,26 +140,31 @@ class ToolText extends ToolElement {
 
   hitTest(event) {
     const hitSize = 6;
+    const {project} = this;
 
     // хит над текстом обрабатываем особо
-    this.hitItem = paper.project.hitTest(event.point, { class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize });
-    if(!this.hitItem){
-      this.hitItem = paper.project.hitTest(event.point, { fill: true, stroke: false, tolerance: hitSize });
+    this.hitItem = project.hitTest(event.point, {class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize});
+    if(!this.hitItem) {
+      this.hitItem = project.hitTest(event.point, {fill: true, stroke: false, tolerance: hitSize});
     }
-    if(!this.hitItem){
-      const hit = paper.project.hitTest(event.point, { fill: false, stroke: true, tolerance: hitSize });
-      if(hit && hit.item.parent instanceof Sectional){
+    if(!this.hitItem) {
+      const hit = project.hitTest(event.point, {fill: false, stroke: true, tolerance: hitSize});
+      if(hit && hit.item.parent instanceof Sectional) {
         this.hitItem = hit;
       }
     }
 
-    if (this.hitItem){
-      if(this.hitItem.item instanceof paper.PointText)
+    if(this.hitItem) {
+      if(this.hitItem.item instanceof paper.PointText) {
         paper.canvas_cursor('cursor-text');     // указатель с черным Т
-      else
+      }
+      else {
         paper.canvas_cursor('cursor-text-add'); // указатель с серым Т
-    } else
+      }
+    }
+    else {
       paper.canvas_cursor('cursor-text-select');  // указатель с вопросом
+    }
 
     return true;
   }

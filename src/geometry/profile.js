@@ -1314,7 +1314,7 @@ class ProfileItem extends GeneratrixElement {
 
       const nodes = new Set();
       let profile2;
-      cnn_point.point && this.layer.profiles.forEach((profile) => {
+      cnn_point.point && !(this instanceof Onlay) && this.layer.profiles.forEach((profile) => {
         if(profile !== this){
           if(cnn_point.point.is_nearest(profile.b, true)) {
             const cp = profile.cnn_point('b').profile;

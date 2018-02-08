@@ -5679,7 +5679,7 @@ class Filling extends AbstractFilling(BuilderElement) {
         const {clr1} = inset.clr_group.clr_conformity.get(0);
         if(clr1.is_folder) {
           $p.cat.clrs.find_rows({parent: clr1}, (v) => {
-            this.clr = clr1;
+            this.clr = v;
             return false;
           });
         }
@@ -7890,7 +7890,7 @@ class ProfileItem extends GeneratrixElement {
 
       const nodes = new Set();
       let profile2;
-      cnn_point.point && this.layer.profiles.forEach((profile) => {
+      cnn_point.point && !(this instanceof Onlay) && this.layer.profiles.forEach((profile) => {
         if(profile !== this){
           if(cnn_point.point.is_nearest(profile.b, true)) {
             const cp = profile.cnn_point('b').profile;
@@ -11028,6 +11028,11 @@ class ToolElement extends paper.Tool {
   get eve() {
     return this._scope.eve;
   }
+
+  get project() {
+    return this._scope.project;
+  }
+
 }
 
 
@@ -12472,7 +12477,7 @@ class PenControls {
     paper._wrapper.appendChild(_cont);
     _cont.className = "pen_cont";
 
-    paper.project.view.on('mousemove', this.mousemove);
+    tool.project.view.on('mousemove', this.mousemove);
 
     _cont.innerHTML = "<table><tr><td>x:</td><td><input type='number' name='x' /></td><td>y:</td><td><input type='number' name='y' /></td></tr>" +
       "<tr><td>l:</td><td><input type='number' name='l' /></td><td>α:</td><td><input type='number' name='a' /></td></tr>" +
@@ -12494,7 +12499,7 @@ class PenControls {
   }
 
   get point(){
-    const bounds = paper.project.bounds,
+    const {bounds} = this._tool.project,
       x = parseFloat(this._x.value || 0) + (bounds ? bounds.x : 0),
       y = (bounds ? (bounds.height + bounds.y) : 0) - parseFloat(this._y.value || 0);
     return new paper.Point([x, y]);
@@ -12514,13 +12519,12 @@ class PenControls {
 
   mousemove(event, ignore_pos) {
 
-    const {_scope, profile} = this._tool;
+    const {project: {bounds, view}, profile} = this._tool;
 
     if(!profile){
       return;
     }
 
-    const {bounds, view} = _scope.project;
     const pos = ignore_pos || view.projectToView(event.point);
 
     const {elm_type} = profile;
@@ -12577,8 +12581,9 @@ class PenControls {
   }
 
   unload() {
-    paper.project.view.off('mousemove', this.mousemove);
-    paper._wrapper.removeChild(this._cont);
+    const {_scope} = this._tool;
+    _scope.project.view.off('mousemove', this.mousemove);
+    _scope._wrapper.removeChild(this._cont);
     this._cont = null;
   }
 
@@ -12629,41 +12634,42 @@ class ToolPen extends ToolElement {
 
   tool_wnd() {
 
-    this.sys = paper.project._dp.sys;
-
     this.profile = $p.dp.builder_pen.create();
+
+    const {project, profile} = this;
+    this.sys = project._dp.sys;
 
     $p.wsql.restore_options("editor", this.options);
     this.options.wnd.on_close = this.on_close;
 
     ["elm_type","inset","bind_generatrix","bind_node"].forEach((prop) => {
       if(prop == "bind_generatrix" || prop == "bind_node" || this.options.wnd[prop]){
-        this.profile[prop] = this.options.wnd[prop];
+        profile[prop] = this.options.wnd[prop];
       }
     });
 
-    if((this.profile.elm_type.empty() || this.profile.elm_type == $p.enm.elm_types.Рама) &&
-      paper.project.activeLayer instanceof Contour && paper.project.activeLayer.profiles.length) {
-      this.profile.elm_type = $p.enm.elm_types.Импост;
+    if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Рама) &&
+      project.activeLayer instanceof Contour && project.activeLayer.profiles.length) {
+      profile.elm_type = $p.enm.elm_types.Импост;
     }
-    else if((this.profile.elm_type.empty() || this.profile.elm_type == $p.enm.elm_types.Импост) &&
-      paper.project.activeLayer instanceof Contour && !paper.project.activeLayer.profiles.length) {
-      this.profile.elm_type = $p.enm.elm_types.Рама;
+    else if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Импост) &&
+      project.activeLayer instanceof Contour && !project.activeLayer.profiles.length) {
+      profile.elm_type = $p.enm.elm_types.Рама;
     }
 
-    $p.dp.builder_pen.emit("value_change", {field: "elm_type"}, this.profile);
+    $p.dp.builder_pen.emit("value_change", {field: "elm_type"}, profile);
 
-    this.profile.clr = paper.project.clr;
+    profile.clr = project.clr;
 
-    this.profile._metadata('inset').choice_links = [{
+    profile._metadata('inset').choice_links = [{
       name: ["selection",	"ref"],
       path: [(o, f) => {
           if($p.utils.is_data_obj(o)){
-            return this.profile.rama_impost.indexOf(o) != -1;
+            return profile.rama_impost.indexOf(o) != -1;
           }
           else{
             let refs = "";
-            this.profile.rama_impost.forEach((o) => {
+            profile.rama_impost.forEach((o) => {
               if(refs){
                 refs += ", ";
               }
@@ -12674,11 +12680,11 @@ class ToolPen extends ToolElement {
         }]
     }];
 
-    $p.cat.clrs.selection_exclude_service(this.profile._metadata('clr'), this.sys);
+    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this.sys);
 
     this.wnd = $p.iface.dat_blank(paper._dxw, this.options.wnd);
     this._grid = this.wnd.attachHeadFields({
-      obj: this.profile
+      obj: profile
     });
 
     this.wnd.tb_mode = new $p.iface.OTooolBar({
@@ -12721,8 +12727,8 @@ class ToolPen extends ToolElement {
     const wnd_options = this.wnd.wnd_options;
     this.wnd.wnd_options = (opt) => {
       wnd_options.call(this.wnd, opt);
-      opt.bind_generatrix = this.profile.bind_generatrix;
-      opt.bind_node = this.profile.bind_node;
+      opt.bind_generatrix = profile.bind_generatrix;
+      opt.bind_node = profile.bind_node;
     }
   }
 
@@ -12742,7 +12748,7 @@ class ToolPen extends ToolElement {
   }
 
   layer_activated(contour, virt) {
-    const {_attr} = this._scope.project;
+    const {_attr} = this.project;
     if(!virt && !_attr._loading && !_attr._snapshot){
       this.decorate_layers();
     }
@@ -12783,10 +12789,11 @@ class ToolPen extends ToolElement {
 
     if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
-      if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+      if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1){
         return;
+      }
 
-      paper.project.selectedItems.forEach((path) => {
+      this.project.selectedItems.forEach((path) => {
         if(path.parent instanceof ProfileItem){
           path = path.parent;
           path.removeChildren();
@@ -12812,7 +12819,7 @@ class ToolPen extends ToolElement {
   }
 
   on_mousedown(event) {
-    paper.project.deselectAll();
+    this.project.deselectAll();
 
     if(event.event && event.event.which && event.event.which > 1){
       return this.on_keydown({key: 'escape'});
@@ -12837,7 +12844,7 @@ class ToolPen extends ToolElement {
 
   on_mouseup(event) {
 
-    paper.canvas_cursor('cursor-pen-freehand');
+    this._scope.canvas_cursor('cursor-pen-freehand');
 
     if(event.event && event.event.which && event.event.which > 1){
       return this.on_keydown({key: 'escape'});
@@ -12874,7 +12881,7 @@ class ToolPen extends ToolElement {
 
       switch (this.profile.elm_type) {
       case $p.enm.elm_types.Раскладка:
-        paper.project.activeLayer.glasses(false, true).some((glass) => {
+        this.project.activeLayer.glasses(false, true).some((glass) => {
           if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
             new Onlay({
               generatrix: this.path,
@@ -12914,23 +12921,24 @@ class ToolPen extends ToolElement {
     else if (this.hitItem && this.hitItem.item && (event.modifiers.shift || event.modifiers.control || event.modifiers.option)) {
 
       let item = this.hitItem.item.parent;
-      if (event.modifiers.space && item.nearest && item.nearest()) {
+      if(event.modifiers.space && item.nearest && item.nearest()) {
         item = item.nearest();
       }
 
-      if (event.modifiers.shift) {
+      if(event.modifiers.shift) {
         item.selected = !item.selected;
-      } else {
-        paper.project.deselectAll();
+      }
+      else {
+        this.project.deselectAll();
         item.selected = true;
       }
 
-      if(item instanceof ProfileItem && item.isInserted()){
+      if(item instanceof ProfileItem && item.isInserted()) {
         item.attache_wnd(paper._acc.elm);
         whas_select = true;
         this._controls.blur();
-
-      }else if(item instanceof Filling && item.visible){
+      }
+      else if(item instanceof Filling && item.visible) {
         item.attache_wnd(paper._acc.elm);
         whas_select = true;
         this._controls.blur();
@@ -12970,6 +12978,9 @@ class ToolPen extends ToolElement {
   }
 
   on_mousemove(event) {
+
+    const {project} = this;
+
     this.hitTest(event);
 
     if(this.addl_hit){
@@ -13065,7 +13076,7 @@ class ToolPen extends ToolElement {
 
               if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
-                res = Onlay.prototype.bind_node(this.path.firstSegment.point, paper.project.activeLayer.glasses(false, true));
+                res = Onlay.prototype.bind_node(this.path.firstSegment.point, project.activeLayer.glasses(false, true));
                 if(res.binded){
                   this.path.firstSegment.point = this.point1 = res.point;
                 }
@@ -13074,17 +13085,17 @@ class ToolPen extends ToolElement {
               else if(this.profile.elm_type == $p.enm.elm_types.Импост){
 
                 res = {distance: Infinity};
-                paper.project.activeLayer.profiles.some((element) => {
+                project.activeLayer.profiles.some((element) => {
 
                   if(element.children.some((addl) => {
-                      if(addl instanceof ProfileAddl && paper.project.check_distance(addl, null, res, this.path.firstSegment.point, bind) === false){
+                      if(addl instanceof ProfileAddl && project.check_distance(addl, null, res, this.path.firstSegment.point, bind) === false){
                         this.path.firstSegment.point = this.point1 = res.point;
                         return true;
                       }
                     })){
                     return true;
 
-                  }else if (paper.project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
+                  }else if (project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
                     this.path.firstSegment.point = this.point1 = res.point;
                     return true;
                   }
@@ -13096,7 +13107,7 @@ class ToolPen extends ToolElement {
 
             if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
-              res = Onlay.prototype.bind_node(this.path.lastSegment.point, paper.project.activeLayer.glasses(false, true));
+              res = Onlay.prototype.bind_node(this.path.lastSegment.point, project.activeLayer.glasses(false, true));
               if(res.binded)
                 this.path.lastSegment.point = res.point;
 
@@ -13104,17 +13115,17 @@ class ToolPen extends ToolElement {
             else if(this.profile.elm_type == $p.enm.elm_types.Импост){
 
               res = {distance: Infinity};
-              paper.project.activeLayer.profiles.some((element) => {
+              project.activeLayer.profiles.some((element) => {
 
                 if(element.children.some((addl) => {
-                    if(addl instanceof ProfileAddl && paper.project.check_distance(addl, null, res, this.path.lastSegment.point, bind) === false){
+                    if(addl instanceof ProfileAddl && project.check_distance(addl, null, res, this.path.lastSegment.point, bind) === false){
                       this.path.lastSegment.point = res.point;
                       return true;
                     }
                   })){
                   return true;
 
-                }else if (paper.project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
+                }else if (project.check_distance(element, null, res, this.path.lastSegment.point, bind) === false ){
                   this.path.lastSegment.point = res.point;
                   return true;
                 }
@@ -13142,7 +13153,7 @@ class ToolPen extends ToolElement {
       }
 
       if(event.className != "ToolEvent"){
-        paper.project.register_update();
+        project.register_update();
       }
     }
   }
@@ -13209,12 +13220,12 @@ class ToolPen extends ToolElement {
     const hitSize = 16;
 
     if (event.point){
-      this.hitItem = paper.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+      this.hitItem = this.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
     }
 
     if (this.hitItem) {
 
-      if(this.hitItem.item.layer == paper.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+      if(this.hitItem.item.layer == this.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
 
         const hit = {
           point: this.hitItem.point,
@@ -13257,7 +13268,7 @@ class ToolPen extends ToolElement {
 
     } else {
 
-      this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      this.hitItem = this.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
       paper.canvas_cursor('cursor-pen-freehand');
     }
 
@@ -13266,7 +13277,7 @@ class ToolPen extends ToolElement {
   hitTest_connective(event) {
 
     const hitSize = 16;
-    const {project} = this._scope;
+    const {project} = this;
     const rootLayer = project.rootLayer();
 
     if (event.point){
@@ -13302,7 +13313,7 @@ class ToolPen extends ToolElement {
 
     }
     else {
-      this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      this.hitItem = project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
       paper.canvas_cursor('cursor-pen-freehand');
     }
   }
@@ -13323,11 +13334,11 @@ class ToolPen extends ToolElement {
       const hitSize = 6;
 
       if (event.point){
-        this.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
+        this.hitItem = this.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
       }
 
       if(!this.hitItem){
-        this.hitItem = paper.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+        this.hitItem = this.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
       }
 
       if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
@@ -13351,8 +13362,8 @@ class ToolPen extends ToolElement {
     }
 
     if(this['add_' + name]){
-      this['add_' + name](paper.project.bounds);
-      paper.project.zoom_fit();
+      this['add_' + name](this.project.bounds);
+      this.project.zoom_fit();
     }
     else{
       $p.msg.show_not_implemented();
@@ -13362,58 +13373,57 @@ class ToolPen extends ToolElement {
 
   add_sequence(points) {
     points.forEach((segments) => {
-      new Profile({generatrix: new paper.Path({
-        strokeColor: 'black',
-        segments: segments
-      }), proto: this.profile});
-    })
+      new Profile({
+        generatrix: new paper.Path({
+          strokeColor: 'black',
+          segments: segments
+        }), proto: this.profile
+      });
+    });
   }
 
   add_square(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
-      [point, point.add([0,-1000])],
-      [point.add([0,-1000]), point.add([1000,-1000])],
-      [point.add([1000,-1000]), point.add([1000,0])],
-      [point.add([1000,0]), point]
-    ])
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
   }
 
   add_triangle1(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
-      [point, point.add([0,-1000])],
-      [point.add([0,-1000]), point.add([1000,0])],
-      [point.add([1000,0]), point]
-    ])
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
   }
 
   add_triangle2(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
-      [point, point.add([1000,-1000])],
-      [point.add([1000,-1000]), point.add([1000,0])],
-      [point.add([1000,0]), point]
-    ])
+      [point, point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
   }
 
   add_triangle3(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
-      [point, point.add([1000,-1000])],
-      [point.add([1000,-1000]), point.add([2000,0])],
-      [point.add([2000,0]), point]
-    ])
+      [point, point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([2000, 0])],
+      [point.add([2000, 0]), point]
+    ]);
   }
 
-  decorate_layers(reset){
-
-    const active = paper.project.activeLayer;
-
-    paper.project.getItems({class: Contour}).forEach((l) => {
-      l.opacity = (l == active || reset) ? 1 : 0.5;
-    })
-
+  decorate_layers(reset) {
+    const {activeLayer} = this.project;
+    this.project.getItems({class: Contour}).forEach((l) => {
+      l.opacity = (l == activeLayer || reset) ? 1 : 0.5;
+    });
   }
 
 }
@@ -14605,7 +14615,7 @@ class ToolText extends ToolElement {
         this.text = null;
         this.changed = false;
 
-        paper.project.deselectAll();
+        this.project.deselectAll();
         this.mouseStartPos = event.point.clone();
 
         if (this.hitItem) {
@@ -14667,20 +14677,17 @@ class ToolText extends ToolElement {
       },
 
       keydown: function(event) {
-        var selected, i, text;
+
         if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
-          if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+          if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1){
             return;
+          }
 
-          selected = paper.project.selectedItems;
-          for (i = 0; i < selected.length; i++) {
-            text = selected[i];
+          for (const text of  this.project.selectedItems) {
             if(text instanceof FreeText){
               text.text = "";
-              setTimeout(function () {
-                paper.view.update();
-              }, 100);
+              setTimeout(() => paper.view.update(), 100);
             }
           }
 
@@ -14694,25 +14701,30 @@ class ToolText extends ToolElement {
 
   hitTest(event) {
     const hitSize = 6;
+    const {project} = this;
 
-    this.hitItem = paper.project.hitTest(event.point, { class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize });
-    if(!this.hitItem){
-      this.hitItem = paper.project.hitTest(event.point, { fill: true, stroke: false, tolerance: hitSize });
+    this.hitItem = project.hitTest(event.point, {class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize});
+    if(!this.hitItem) {
+      this.hitItem = project.hitTest(event.point, {fill: true, stroke: false, tolerance: hitSize});
     }
-    if(!this.hitItem){
-      const hit = paper.project.hitTest(event.point, { fill: false, stroke: true, tolerance: hitSize });
-      if(hit && hit.item.parent instanceof Sectional){
+    if(!this.hitItem) {
+      const hit = project.hitTest(event.point, {fill: false, stroke: true, tolerance: hitSize});
+      if(hit && hit.item.parent instanceof Sectional) {
         this.hitItem = hit;
       }
     }
 
-    if (this.hitItem){
-      if(this.hitItem.item instanceof paper.PointText)
+    if(this.hitItem) {
+      if(this.hitItem.item instanceof paper.PointText) {
         paper.canvas_cursor('cursor-text');     
-      else
+      }
+      else {
         paper.canvas_cursor('cursor-text-add'); 
-    } else
+      }
+    }
+    else {
       paper.canvas_cursor('cursor-text-select');  
+    }
 
     return true;
   }
