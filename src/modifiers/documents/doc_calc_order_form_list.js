@@ -17,8 +17,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 			on_new: (o) => {
         handlers.handleNavigate(`/${this.class_name}/${o.ref}`);
 			},
-			on_edit: (_mgr, rId) => {
-        handlers.handleNavigate(`/${_mgr.class_name}/${rId}`);
+			on_edit: (_mgr, ref) => {
+        handlers.handleNavigate(`/${_mgr.class_name}/${ref}`);
 			}
 		};
 	}
@@ -26,8 +26,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
   return this.pouch_db.getIndexes()
     .then(({indexes}) => {
       attr._index = {
-        ddoc: "mango_calc_order",
-        fields: ["department", "state", "date", "search"],
+        ddoc: 'mango_calc_order',
+        fields: ['department', 'state', 'date', 'search'],
         name: 'list',
         type: 'json',
       };
@@ -45,7 +45,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           wnd.dep_listener = (obj, fields) => {
             if(obj == dp && fields.department){
               elmnts.filter.call_event();
-              $p.wsql.set_user_param("current_department", dp.department.ref);
+              $p.wsql.set_user_param('current_department', dp.department.ref);
             }
           }
 
@@ -198,9 +198,15 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           attr.toolbar_click = function toolbar_click(btn_id) {
             switch (btn_id) {
             case 'calc_order':
-              const rId = wnd.elmnts.grid.getSelectedRowId();
-              if(rId) {
-                $p.msg.show_not_implemented();
+              const ref = wnd.elmnts.grid.getSelectedRowId();
+              if(ref) {
+                const {calc_order} = $p.doc;
+                calc_order.clone(ref)
+                  .then((doc) => {
+                    handlers.handleNavigate(`/${calc_order.class_name}/${doc.ref}`);
+                  })
+                  .catch($p.record_log);
+                ;
               }
               else {
                 $p.msg.show_msg({

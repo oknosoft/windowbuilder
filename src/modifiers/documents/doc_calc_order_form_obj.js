@@ -374,7 +374,7 @@
         break;
 
       case 'calc_order':
-        go_connection();
+        clone_calc_order(o);
         break;
       }
 
@@ -395,6 +395,31 @@
      */
     function go_connection() {
       $p.msg.show_not_implemented();
+    }
+
+    /**
+     * копирует заказ
+     * @param o
+     * @return {undefined}
+     */
+    function clone_calc_order(o) {
+      const {_manager} = o;
+      if(o._modified) {
+        return $p.msg.show_msg({
+          title: o.presentation,
+          type: 'alert-warning',
+          text: 'Документ изменён.<br />Перед созданием копии сохраните заказ'
+        });
+      };
+      handlers.handleNavigate(`/login`);
+      _manager.clone(o)
+        .then((doc) => {
+          handlers.handleNavigate(`/${_manager.class_name}/${doc.ref}`);
+        })
+        .catch((err) => {
+          $p.record_log(err);
+          handlers.handleNavigate(`/`);
+        });
     }
 
     /**
@@ -670,7 +695,7 @@
                 .then(({characteristic}) => {
                   // заполняем продукцию копией данных текущей строки
                   characteristic._mixin(row.characteristic._obj, null,
-                    ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'note', 'partner'], true);
+                    'ref,name,calc_order,product,leading_product,leading_elm,origin,note,partner'.split(','), true);
                   handlers.handleNavigate(`/builder/${characteristic.ref}`);
                 });
             }

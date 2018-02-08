@@ -77,6 +77,51 @@
 
   };
 
+  // копирует заказ, возвращает промис с новым заказом
+  _mgr.clone = async function(src) {
+    if(typeof src === 'string') {
+      src = await _mgr.get(src, 'promise');
+    }
+    await src.load_production();
+    // создаём заказ
+    const {organization, partner, contract, ...others} = src._obj;
+    const dst = await _mgr.create({date: new Date(), organization, partner, contract});
+    dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
+    // заполняем продукцию и сохраненные эскизы
+    const map = new Map();
+    const aatt = [];
+    const db = _mgr.adapter.db(_mgr);
+    src.production.forEach((row) => {
+      const prow = Object.assign({}, row._obj);
+      if(row.characteristic.calc_order === src) {
+        const cx = prow.characteristic = $p.cat.characteristics.create({calc_order: dst.ref}, false, true);
+        cx._mixin(row.characteristic._obj, null, 'ref,name,calc_order,timestamp'.split(','), true);
+        cx._data._modified = true;
+        cx._data._is_new = true;
+        map.set(row.characteristic, cx);
+        if(row.characteristic._attachments) {
+          aatt.push(db.getAttachment(`cat.characteristics|${row.characteristic.ref}`, 'svg')
+            .then((att) => cx._obj._attachments = {svg: {content_type: 'image/svg+xml', data: att}})
+            .catch((err) => null));
+        }
+      }
+      dst.production.add(prow);
+    });
+
+    // дожидаемся вложений
+    await Promise.all(aatt);
+
+    // обновляем leading_product
+    dst.production.forEach((row) => {
+      const cx = map.get(row.ordn);
+      if(cx) {
+        row.ordn = row.characteristic.leading_product = cx;
+      }
+    });
+    dst._data.before_save_sync = true;
+    return dst.save();
+  }
+
 })($p.doc.calc_order);
 
 
@@ -223,11 +268,11 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
 
     // номера изделий в характеристиках
-    this.product_rows(true);
+    const rows_saver = this.product_rows(true);
 
     // пометим на удаление неиспользуемые характеристики
     // этот кусок не влияет на возвращаемое before_save значение и выполняется асинхронно
-    this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
+    const res = this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
       .then(({rows}) => {
         const deleted = [];
         for (const {id} of rows) {
@@ -245,11 +290,18 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       })
       .catch((err) => null);
 
+    if(this._data.before_save_sync) {
+      return res
+        .then(() => rows_saver)
+        .then(() => this);
+    }
+
   }
 
   // при изменении реквизита
   value_change(field, type, value) {
     if(field == 'organization') {
+      this.organization = value;
       this.new_number_doc();
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
@@ -311,17 +363,23 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    * @param save
    */
   product_rows(save) {
+    const res = [];
     this.production.forEach(({row, characteristic}) => {
-      if(!characteristic.empty() && !characteristic.is_new() && characteristic.calc_order === this && characteristic.product !== row) {
-        characteristic.product = row;
-        if(save) {
-          characteristic.save();
-        }
-        else{
-          characteristic.name = characteristic.prod_name();
+      if(!characteristic.empty() && characteristic.calc_order === this){
+        if(characteristic.product !== row || characteristic.partner !== this.partner || characteristic._modified) {
+          characteristic.product = row;
+          if(save) {
+            res.push(characteristic.save());
+          }
+          else{
+            characteristic.name = characteristic.prod_name();
+          }
         }
       }
     });
+    if(save) {
+      return Promise.all(res);
+    }
   }
 
   /**
