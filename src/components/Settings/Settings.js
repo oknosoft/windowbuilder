@@ -146,7 +146,7 @@ class Settings extends Component {
     return (
       <Paper className={classes.root} elevation={4}>
 
-        <Typography type="title" style={{paddingTop: 16}}>Подключение к базе данных</Typography>
+        <Typography variant="title" style={{paddingTop: 16}}>Подключение к базе данных</Typography>
 
         <TextField
           fullWidth
@@ -188,7 +188,7 @@ class Settings extends Component {
           </FormControl>
         </FormGroup>
 
-        <Typography type="title" style={{paddingTop: 16}}>Колонки цен</Typography>
+        <Typography variant="title" style={{paddingTop: 16}}>Колонки цен</Typography>
         <Typography>Настройка видимости колонок в документе &quot;Расчет&quot; и графическом построителе</Typography>
 
         <RadioGroup
@@ -202,7 +202,7 @@ class Settings extends Component {
 
         </RadioGroup>
 
-        <Typography type="title" style={{paddingTop: 16}}>Наценки и скидки</Typography>
+        <Typography variant="title" style={{paddingTop: 16}}>Наценки и скидки</Typography>
         <Typography>Значения наценки и скидки по умолчанию, которые дилер предоставляет своим (конечным) покупателям</Typography>
 
         <TextField
@@ -228,8 +228,8 @@ class Settings extends Component {
         />
 
         <DialogActions style={{marginBottom: 0, marginRight: 0}}>
-          <Button dense className={classes.button} onClick={this.handleSetPrm}>Сохранить настройки</Button>
-          <Button dense className={classes.button} onClick={this.openConfirm}>Сбросить данные</Button>
+          <Button size="small" className={classes.button} onClick={this.handleSetPrm}>Сохранить настройки</Button>
+          <Button size="small" className={classes.button} onClick={this.openConfirm}>Сбросить данные</Button>
         </DialogActions>
 
         <Confirm

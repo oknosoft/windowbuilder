@@ -93,7 +93,7 @@ class RepMaterialsDemand extends Component {
     const res = this.calcOrders();
 
     return [
-      <Button key="go" dense onClick={this.handleMenuOpen} style={{alignSelf: 'center'}}>{res || 'Перейти'}</Button>,
+      <Button key="go" size="small" onClick={this.handleMenuOpen} style={{alignSelf: 'center'}}>{res || 'Перейти'}</Button>,
       <Menu
         key="menu"
         anchorEl={state.anchorEl}
