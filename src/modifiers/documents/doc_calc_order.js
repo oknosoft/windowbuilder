@@ -365,14 +365,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   product_rows(save) {
     const res = [];
     this.production.forEach(({row, characteristic}) => {
-      if(!characteristic.empty() && characteristic.calc_order === this){
+      if(!characteristic.empty() && characteristic.calc_order === this) {
         if(characteristic.product !== row || characteristic.partner !== this.partner || characteristic._modified) {
           characteristic.product = row;
-          if(save) {
-            res.push(characteristic.save());
-          }
-          else{
-            characteristic.name = characteristic.prod_name();
+          if(!characteristic.owner.empty()) {
+            if(save) {
+              res.push(characteristic.save());
+            }
+            else {
+              characteristic.name = characteristic.prod_name();
+            }
           }
         }
       }

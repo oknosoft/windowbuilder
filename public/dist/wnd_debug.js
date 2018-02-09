@@ -4375,11 +4375,13 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       if(!characteristic.empty() && characteristic.calc_order === this){
         if(characteristic.product !== row || characteristic.partner !== this.partner || characteristic._modified) {
           characteristic.product = row;
-          if(save) {
-            res.push(characteristic.save());
-          }
-          else{
-            characteristic.name = characteristic.prod_name();
+          if(!characteristic.owner.empty()) {
+            if(save) {
+              res.push(characteristic.save());
+            }
+            else {
+              characteristic.name = characteristic.prod_name();
+            }
           }
         }
       }
