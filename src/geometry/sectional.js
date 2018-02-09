@@ -233,7 +233,6 @@ class Sectional extends GeneratrixElement {
     _attr.generatrix.strokeColor = 'black';
     _attr.generatrix.strokeWidth = 1;
     _attr.generatrix.strokeScaling = false;
-
     this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
 
     this.addChild(_attr.generatrix);

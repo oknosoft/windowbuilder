@@ -106,5 +106,10 @@ class ToolElement extends paper.Tool {
   get eve() {
     return this._scope.eve;
   }
+
+  get project() {
+    return this._scope.project;
+  }
+
 }
 

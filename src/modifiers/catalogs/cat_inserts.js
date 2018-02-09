@@ -520,7 +520,14 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
                 len: rib.len
               });
               // если формула не вернула значение, устанавливаем qty_len стандартным способом
-              !qty && calc_qty_len(row_spec, row_ins_spec, rib.len);
+              if(qty) {
+                if(!row_spec.qty) {
+                  row_spec.qty = qty;
+                }
+              }
+              else {
+                calc_qty_len(row_spec, row_ins_spec, rib.len);
+              }
               calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
             }
             row_spec = null;
@@ -619,8 +626,10 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
         _data.thickness = nom.thickness;
       }
       else{
-        this.specification.forEach((row) => {
-          _data.thickness += row.nom.thickness;
+        this.specification.forEach(({nom}) => {
+          if(nom) {
+            _data.thickness += nom.thickness;
+          }
         });
       }
     }

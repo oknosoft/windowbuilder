@@ -1577,7 +1577,8 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
           }
 
           if(dop_row.is_set_row){
-            dop_row.nom.get_spec(contour, cache).each((sub_row) => {
+            const {nom} = dop_row;
+            nom && nom.get_spec(contour, cache).each((sub_row) => {
               if(sub_row.is_procedure_row){
                 res.add(sub_row);
               }
@@ -1593,7 +1594,8 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
       }
 
       if(row_furn.is_set_row){
-        row_furn.nom.get_spec(contour, cache, exclude_dop).each((sub_row) => {
+        const {nom} = row_furn;
+        nom && nom.get_spec(contour, cache, exclude_dop).each((sub_row) => {
           if(sub_row.is_procedure_row){
             res.add(sub_row);
           }
@@ -1667,11 +1669,11 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
   }
 
   get nom() {
-    return this._getter('nom')
+    return this._getter('nom') || this._getter('nom_set');
   }
-  set nom (v) {
-    if(v !== ""){
-      this._setter('nom', v)
+  set nom(v) {
+    if(v !== '') {
+      this._setter('nom', v);
     }
   }
 
@@ -2142,7 +2144,14 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
                 row_spec: row_spec,
                 len: rib.len
               });
-              !qty && calc_qty_len(row_spec, row_ins_spec, rib.len);
+              if(qty) {
+                if(!row_spec.qty) {
+                  row_spec.qty = qty;
+                }
+              }
+              else {
+                calc_qty_len(row_spec, row_ins_spec, rib.len);
+              }
               calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
             }
             row_spec = null;
@@ -2232,8 +2241,10 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
         _data.thickness = nom.thickness;
       }
       else{
-        this.specification.forEach((row) => {
-          _data.thickness += row.nom.thickness;
+        this.specification.forEach(({nom}) => {
+          if(nom) {
+            _data.thickness += nom.thickness;
+          }
         });
       }
     }
@@ -4130,6 +4141,46 @@ $p.spec_building = new SpecBuilding($p);
 
   };
 
+  _mgr.clone = async function(src) {
+    if(typeof src === 'string') {
+      src = await _mgr.get(src, 'promise');
+    }
+    await src.load_production();
+    const {organization, partner, contract, ...others} = src._obj;
+    const dst = await _mgr.create({date: new Date(), organization, partner, contract});
+    dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
+    const map = new Map();
+    const aatt = [];
+    const db = _mgr.adapter.db(_mgr);
+    src.production.forEach((row) => {
+      const prow = Object.assign({}, row._obj);
+      if(row.characteristic.calc_order === src) {
+        const cx = prow.characteristic = $p.cat.characteristics.create({calc_order: dst.ref}, false, true);
+        cx._mixin(row.characteristic._obj, null, 'ref,name,calc_order,timestamp'.split(','), true);
+        cx._data._modified = true;
+        cx._data._is_new = true;
+        map.set(row.characteristic, cx);
+        if(row.characteristic._attachments) {
+          aatt.push(db.getAttachment(`cat.characteristics|${row.characteristic.ref}`, 'svg')
+            .then((att) => cx._obj._attachments = {svg: {content_type: 'image/svg+xml', data: att}})
+            .catch((err) => null));
+        }
+      }
+      dst.production.add(prow);
+    });
+
+    await Promise.all(aatt);
+
+    dst.production.forEach((row) => {
+      const cx = map.get(row.ordn);
+      if(cx) {
+        row.ordn = row.characteristic.leading_product = cx;
+      }
+    });
+    dst._data.before_save_sync = true;
+    return dst.save();
+  }
+
 })($p.doc.calc_order);
 
 
@@ -4239,9 +4290,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       _obj.state = 'draft';
     }
 
-    this.product_rows(true);
+    const rows_saver = this.product_rows(true);
 
-    this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
+    const res = this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
       .then(({rows}) => {
         const deleted = [];
         for (const {id} of rows) {
@@ -4259,10 +4310,17 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       })
       .catch((err) => null);
 
+    if(this._data.before_save_sync) {
+      return res
+        .then(() => rows_saver)
+        .then(() => this);
+    }
+
   }
 
   value_change(field, type, value) {
     if(field == 'organization') {
+      this.organization = value;
       this.new_number_doc();
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
@@ -4312,17 +4370,23 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   }
 
   product_rows(save) {
+    const res = [];
     this.production.forEach(({row, characteristic}) => {
-      if(!characteristic.empty() && !characteristic.is_new() && characteristic.calc_order === this && characteristic.product !== row) {
-        characteristic.product = row;
-        if(save) {
-          characteristic.save();
-        }
-        else{
-          characteristic.name = characteristic.prod_name();
+      if(!characteristic.empty() && characteristic.calc_order === this){
+        if(characteristic.product !== row || characteristic.partner !== this.partner || characteristic._modified) {
+          characteristic.product = row;
+          if(save) {
+            res.push(characteristic.save());
+          }
+          else{
+            characteristic.name = characteristic.prod_name();
+          }
         }
       }
     });
+    if(save) {
+      return Promise.all(res);
+    }
   }
 
   dispatching_totals() {
@@ -4373,8 +4437,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
       ДоговорСрокДействия: moment(contract.validity).format('L'),
       ЗаказНомер: this.number_doc,
-      Примечание: this.note,
-      НомерВнутренний: this.number_internal,
       Контрагент: partner.presentation,
       КонтрагентОписание: partner.long_presentation,
       КонтрагентДокумент: '',
@@ -4435,6 +4497,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ОрганизацияСвидетельствоНаименованиеОргана: organization.certificate_authority_name,
       ОрганизацияСвидетельствоСерияНомер: organization.certificate_series_number,
       ОрганизацияЮрФизЛицо: organization.individual_legal.presentation,
+      Офис: this.department.presentation,
       ПродукцияЭскизы: {},
       Проект: this.project.presentation,
       СистемыПрофилей: this.sys_profile,
@@ -4451,8 +4514,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       СотрудникФамилия: individual_person.Фамилия,
       СотрудникФамилияРП: individual_person.ФамилияРП,
       СотрудникФИО: individual_person.Фамилия +
-      (individual_person.Имя ? ' ' + individual_person.Имя[1].toUpperCase() + '.' : '' ) +
-      (individual_person.Отчество ? ' ' + individual_person.Отчество[1].toUpperCase() + '.' : ''),
+      (individual_person.Имя ? ' ' + individual_person.Имя[0].toUpperCase() + '.' : '' ) +
+      (individual_person.Отчество ? ' ' + individual_person.Отчество[0].toUpperCase() + '.' : ''),
       СотрудникФИОРП: individual_person.ФамилияРП + ' ' + individual_person.ИмяРП + ' ' + individual_person.ОтчествоРП,
       СуммаДокумента: this.doc_amount.toFixed(2),
       СуммаДокументаПрописью: this.doc_amount.in_words(),
@@ -5124,8 +5187,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 			on_new: (o) => {
         handlers.handleNavigate(`/${this.class_name}/${o.ref}`);
 			},
-			on_edit: (_mgr, rId) => {
-        handlers.handleNavigate(`/${_mgr.class_name}/${rId}`);
+			on_edit: (_mgr, ref) => {
+        handlers.handleNavigate(`/${_mgr.class_name}/${ref}`);
 			}
 		};
 	}
@@ -5133,8 +5196,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
   return this.pouch_db.getIndexes()
     .then(({indexes}) => {
       attr._index = {
-        ddoc: "mango_calc_order",
-        fields: ["department", "state", "date", "search"],
+        ddoc: 'mango_calc_order',
+        fields: ['department', 'state', 'date', 'search'],
         name: 'list',
         type: 'json',
       };
@@ -5152,7 +5215,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           wnd.dep_listener = (obj, fields) => {
             if(obj == dp && fields.department){
               elmnts.filter.call_event();
-              $p.wsql.set_user_param("current_department", dp.department.ref);
+              $p.wsql.set_user_param('current_department', dp.department.ref);
             }
           }
 
@@ -5274,9 +5337,15 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           attr.toolbar_click = function toolbar_click(btn_id) {
             switch (btn_id) {
             case 'calc_order':
-              const rId = wnd.elmnts.grid.getSelectedRowId();
-              if(rId) {
-                $p.msg.show_not_implemented();
+              const ref = wnd.elmnts.grid.getSelectedRowId();
+              if(ref) {
+                const {calc_order} = $p.doc;
+                calc_order.clone(ref)
+                  .then((doc) => {
+                    handlers.handleNavigate(`/${calc_order.class_name}/${doc.ref}`);
+                  })
+                  .catch($p.record_log);
+                ;
               }
               else {
                 $p.msg.show_msg({
@@ -5628,7 +5697,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'calc_order':
-        go_connection();
+        clone_calc_order(o);
         break;
       }
 
@@ -5643,6 +5712,26 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     function go_connection() {
       $p.msg.show_not_implemented();
+    }
+
+    function clone_calc_order(o) {
+      const {_manager} = o;
+      if(o._modified) {
+        return $p.msg.show_msg({
+          title: o.presentation,
+          type: 'alert-warning',
+          text: 'Документ изменён.<br />Перед созданием копии сохраните заказ'
+        });
+      };
+      handlers.handleNavigate(`/login`);
+      _manager.clone(o)
+        .then((doc) => {
+          handlers.handleNavigate(`/${_manager.class_name}/${doc.ref}`);
+        })
+        .catch((err) => {
+          $p.record_log(err);
+          handlers.handleNavigate(`/`);
+        });
     }
 
     function show_discount() {
@@ -5893,7 +5982,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
                 .then(({characteristic}) => {
                   characteristic._mixin(row.characteristic._obj, null,
-                    ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'note', 'partner'], true);
+                    'ref,name,calc_order,product,leading_product,leading_elm,origin,note,partner'.split(','), true);
                   handlers.handleNavigate(`/builder/${characteristic.ref}`);
                 });
             }
@@ -7107,13 +7196,13 @@ class OSvgs {
           let _obj = stack.pop();
           const db = $p.adapters.pouch.local.doc;
           db.query('svgs', {
-            startkey: [typeof _obj == "string" ? _obj : _obj.ref, 0],
-            endkey: [typeof _obj == "string" ? _obj : _obj.ref, 10e9]
+            startkey: [typeof _obj == 'string' ? _obj : _obj.ref, 0],
+            endkey: [typeof _obj == 'string' ? _obj : _obj.ref, 10e9]
           })
             .then((res) => {
               const aatt = [];
               for(const {id} of res.rows){
-                aatt.push(db.getAttachment(id, "svg")
+                aatt.push(db.getAttachment(id, 'svg')
                   .then((att) => ({ref: id.substr(20), att: att}))
                   .catch((err) => {}));
               };

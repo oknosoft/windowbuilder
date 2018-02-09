@@ -998,9 +998,7 @@ class ProfileItem extends GeneratrixElement {
     _attr.path.strokeColor = 'black';
     _attr.path.strokeWidth = 1;
     _attr.path.strokeScaling = false;
-
     this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
-    //_attr.path.fillColor = new paper.Color(0.96, 0.98, 0.94, 0.96);
 
     this.addChild(_attr.path);
     this.addChild(_attr.generatrix);
@@ -1316,7 +1314,7 @@ class ProfileItem extends GeneratrixElement {
 
       const nodes = new Set();
       let profile2;
-      cnn_point.point && this.layer.profiles.forEach((profile) => {
+      cnn_point.point && !(this instanceof Onlay) && this.layer.profiles.forEach((profile) => {
         if(profile !== this){
           if(cnn_point.point.is_nearest(profile.b, true)) {
             const cp = profile.cnn_point('b').profile;
