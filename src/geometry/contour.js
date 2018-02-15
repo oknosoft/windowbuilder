@@ -1796,14 +1796,14 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   }
 
-  refresh_prm_links() {
+  refresh_prm_links(root) {
 
     const {cnstr} = this;
     let notify;
 
     // пробегаем по всем строкам
     this.params.find_rows({
-      cnstr: cnstr || -9999,
+      cnstr: root ? 0 : cnstr || -9999,
       inset: $p.utils.blank.guid,
       hide: {not: true},
     }, (prow) => {

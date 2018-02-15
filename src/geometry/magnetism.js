@@ -96,30 +96,18 @@ class Magnetism {
         });
       }
       else {
-        const res = this.short_glass(selected.profile[selected.point]);
+        const spoint = selected.profile[selected.point];
+        const res = this.short_glass(spoint);
         if(res) {
           // находим штапик, связанный с этим ребром
           const {segm, glass} = res;
           const {Штапик} = $p.enm.elm_types;
-          let dl, cl;
-          segm.cnn.specification.forEach((row) => {
-            if(row.nom.elm_type = Штапик) {
-              dl = row.sz;
-              return false;
-            }
-          });
+          let cl, negate;
           this.scheme.ox.cnn_elmnts.find_rows({elm1: glass.elm, elm2: segm.profile.elm}, (row) => {
             cl = row.aperture_len;
           });
 
-          if(!dl) {
-            $p.msg.show_msg({
-              type: 'alert-info',
-              text: `Не найдено штапиков в спецификации соединения ${segm.cnn.name}`,
-              title: 'Магнит 0-штапик'
-            });
-          }
-          else if(!cl) {
+          if(!cl) {
             $p.msg.show_msg({
               type: 'alert-info',
               text: `Не найдена строка соединения короткого ребра с профилем`,
@@ -129,13 +117,19 @@ class Magnetism {
           else {
             const cnn = selected.profile.cnn_point(selected.point);
             const {profile} = cnn;
-            const point = profile.generatrix.getNearestPoint(selected.profile[selected.point]);
+            const point = profile.generatrix.getNearestPoint(spoint);
             const offset = profile.generatrix.getOffsetOf(point);
             let tangent = profile.generatrix.getTangentAt(offset);
-            if(profile.e.getDistance(point) > profile.b.getDistance(point)) {
+            if(Math.abs(segm.sub_path.getTangentAt(0).angle - tangent.angle) < 90) {
+              negate = !negate;
+            }
+            if(segm.b.getDistance(spoint) > segm.e.getDistance(spoint)) {
+              negate = !negate;
+            }
+            if(!negate) {
               tangent = tangent.negate();
             }
-            selected.profile.move_points(tangent.multiply(cl + dl));
+            selected.profile.move_points(tangent.multiply(cl));
           }
         }
         else {

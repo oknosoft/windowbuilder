@@ -155,14 +155,18 @@ class Scheme extends paper.Project {
       }
 
       _changes.length = 0;
+      const {contours} = _scheme;
 
-      if(_scheme.contours.length) {
+      if(contours.length) {
 
         // перерисовываем соединительные профили
         _scheme.l_connective.redraw();
 
+        // обновляем связи параметров изделия
+        contours[0].refresh_prm_links(true);
+
         // перерисовываем все контуры
-        for (let contour of _scheme.contours) {
+        for (let contour of contours) {
           contour.redraw();
           if(_changes.length && typeof requestAnimationFrame == 'function') {
             return;
@@ -171,7 +175,7 @@ class Scheme extends paper.Project {
 
         // если перерисованы все контуры, перерисовываем их размерные линии
         _attr._bounds = null;
-        _scheme.contours.forEach((l) => {
+        contours.forEach((l) => {
           l.contours.forEach((l) => {
             l.save_coordinates(true);
             l.refresh_prm_links();

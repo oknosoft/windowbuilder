@@ -388,33 +388,34 @@ class SchemeProps {
 
     this._grid && this._grid.destructor && this._grid.destructor();
 
-    const is_dialer = !$p.current_user.role_available("СогласованиеРасчетовЗаказов") && !$p.current_user.role_available("РедактированиеСкидок");
+    const is_dialer = !$p.current_user.role_available('СогласованиеРасчетовЗаказов') && !$p.current_user.role_available('РедактированиеСкидок');
     const oxml = {
-      "Свойства": ["sys","clr",
-        {id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
-        {id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
-        {id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro"}
+      'Свойства': ['sys', 'clr',
+        {id: 'len', path: 'o.len', synonym: 'Ширина, мм', type: 'ro'},
+        {id: 'height', path: 'o.height', synonym: 'Высота, мм', type: 'ro'},
+        {id: 's', path: 'o.s', synonym: 'Площадь, м²', type: 'ro'}
       ]
     };
 
-    if($p.wsql.get_user_param("hide_price_dealer")){
-      oxml["Строка заказа"] = [
-        "quantity",
-        {id: "price", path: "o.price", synonym: "Цена", type: "ro"},
-        {id: "discount_percent", path: "o.discount_percent", synonym: "Скидка %", type: is_dialer ? "ro" : "calck"},
-        {id: "amount", path: "o.amount", synonym: "Сумма", type: "ro"},
-        "note"
+    if($p.wsql.get_user_param('hide_price_dealer')) {
+      oxml['Строка заказа'] = [
+        'quantity',
+        {id: 'price', path: 'o.price', synonym: 'Цена', type: 'ro'},
+        {id: 'discount_percent', path: 'o.discount_percent', synonym: 'Скидка %', type: is_dialer ? 'ro' : 'calck'},
+        {id: 'amount', path: 'o.amount', synonym: 'Сумма', type: 'ro'},
+        'note'
       ];
-    }else{
-      oxml["Строка заказа"] = [
-        "quantity",
-        {id: "price_internal", path: "o.price_internal", synonym: "Цена дилера", type: "ro"},
-        {id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка дил %", type: "calck"},
-        {id: "amount_internal", path: "o.amount_internal", synonym: "Сумма дилера", type: "ro"},
-        {id: "price", path: "o.price", synonym: "Цена пост", type: "ro"},
-        {id: "discount_percent", path: "o.discount_percent", synonym: "Скидка пост %", type: is_dialer ? "ro" : "calck"},
-        {id: "amount", path: "o.amount", synonym: "Сумма пост", type: "ro"},
-        "note"
+    }
+    else {
+      oxml['Строка заказа'] = [
+        'quantity',
+        {id: 'price_internal', path: 'o.price_internal', synonym: 'Цена дилера', type: 'ro'},
+        {id: 'discount_percent_internal', path: 'o.discount_percent_internal', synonym: 'Скидка дил %', type: 'calck'},
+        {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма дилера', type: 'ro'},
+        {id: 'price', path: 'o.price', synonym: 'Цена пост', type: 'ro'},
+        {id: 'discount_percent', path: 'o.discount_percent', synonym: 'Скидка пост %', type: is_dialer ? 'ro' : 'calck'},
+        {id: 'amount', path: 'o.amount', synonym: 'Сумма пост', type: 'ro'},
+        'note'
       ];
     }
 
