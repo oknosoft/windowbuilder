@@ -3639,7 +3639,7 @@ class ProductsBuilding {
 
         };
 
-        cnn_add_spec(curr.cnn, curr.profile, len_angl);
+        (len_angl.len > this.sticking_l / 2) && cnn_add_spec(curr.cnn, curr.profile, len_angl);
 
       }
 
@@ -5502,14 +5502,15 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         pwnd: wnd,
         read_only: wnd.elmnts.ro,
         oxml: {
-          ' ': [{id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro', txt: o.number_doc},
+          ' ': [{id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro'},
             {id: 'date', path: 'o.date', synonym: 'Дата', type: 'ro', txt: moment(o.date).format(moment._masks.date_time)},
             'number_internal'
           ],
           'Контактная информация': ['partner', 'client_of_dealer', 'phone',
-            {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr', txt: o['shipping_address']}
+            {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr'}
           ],
-          'Дополнительные реквизиты': ['obj_delivery_state', 'category']
+          'Дополнительные реквизиты': ['obj_delivery_state', 'category',
+            {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'}, 'leading_manager']
         }
       });
 

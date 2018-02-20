@@ -116,6 +116,22 @@ class AppRoot extends Component {
       // диалог вопросов пользователю (да, нет)
       confirm && confirm.open && <Confirm key="confirm" open text={confirm.text} title={confirm.title} handleOk={confirm.handleOk} handleCancel={confirm.handleCancel}/>,
 
+      // обрыв связи
+      couch_direct && user.logged_in && !offline && props.complete_loaded && !props.sync_started &&
+      <Snack
+        key="break"
+        snack={{
+          open: true,
+          message: 'Потеряна связь с сервером, ждём восстановления...',
+          button: 'Подробнее'}}
+        handleClose={() => {
+          props.handleIfaceState({
+            component: '',
+            name: 'alert',
+            value: {open: true, title: 'Интернет-соединение', text: 'Можно будет продолжить работу после восстановления связи'}});
+        }}
+      />,
+
     ];
   }
 }

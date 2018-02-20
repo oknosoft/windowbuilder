@@ -1,6 +1,6 @@
 {
   "_id": "meta_patch",
-  "_rev": "1-e876d59c4a0b747e6b4d85bffad97593",
+  "_rev": "4-dea2fbb2a3e3fd13337c99457887e489",
   "enm": {},
   "cat": {
     "nom": {
@@ -1016,6 +1016,7 @@
             "number_internal",
             "partner",
             "client_of_dealer",
+            "manager",
             "doc_amount",
             "obj_delivery_state",
             "note"
@@ -1060,6 +1061,14 @@
               "align": "left",
               "sort": "na",
               "caption": "Клиент"
+            },
+            {
+              "id": "manager",
+              "width": "180",
+              "type": "ro",
+              "align": "left",
+              "sort": "na",
+              "caption": "Автор"
             },
             {
               "id": "doc_amount",
