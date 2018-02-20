@@ -368,33 +368,34 @@ class SchemeProps {
 
     this._grid && this._grid.destructor && this._grid.destructor();
 
-    const is_dialer = !$p.current_user.role_available("СогласованиеРасчетовЗаказов") && !$p.current_user.role_available("РедактированиеСкидок");
+    const is_dialer = !$p.current_user.role_available('СогласованиеРасчетовЗаказов') && !$p.current_user.role_available('РедактированиеСкидок');
     const oxml = {
-      "Свойства": ["sys","clr",
-        {id: "len", path: "o.len", synonym: "Ширина, мм", type: "ro"},
-        {id: "height", path: "o.height", synonym: "Высота, мм", type: "ro"},
-        {id: "s", path: "o.s", synonym: "Площадь, м²", type: "ro"}
+      'Свойства': ['sys', 'clr',
+        {id: 'len', path: 'o.len', synonym: 'Ширина, мм', type: 'ro'},
+        {id: 'height', path: 'o.height', synonym: 'Высота, мм', type: 'ro'},
+        {id: 's', path: 'o.s', synonym: 'Площадь, м²', type: 'ro'}
       ]
     };
 
-    if($p.wsql.get_user_param("hide_price_dealer")){
-      oxml["Строка заказа"] = [
-        "quantity",
-        {id: "price", path: "o.price", synonym: "Цена", type: "ro"},
-        {id: "discount_percent", path: "o.discount_percent", synonym: "Скидка %", type: is_dialer ? "ro" : "calck"},
-        {id: "amount", path: "o.amount", synonym: "Сумма", type: "ro"},
-        "note"
+    if($p.wsql.get_user_param('hide_price_dealer')) {
+      oxml['Строка заказа'] = [
+        'quantity',
+        {id: 'price', path: 'o.price', synonym: 'Цена', type: 'ro'},
+        {id: 'discount_percent', path: 'o.discount_percent', synonym: 'Скидка %', type: is_dialer ? 'ro' : 'calck'},
+        {id: 'amount', path: 'o.amount', synonym: 'Сумма', type: 'ro'},
+        'note'
       ];
-    }else{
-      oxml["Строка заказа"] = [
-        "quantity",
-        {id: "price_internal", path: "o.price_internal", synonym: "Цена дилера", type: "ro"},
-        {id: "discount_percent_internal", path: "o.discount_percent_internal", synonym: "Скидка дил %", type: "calck"},
-        {id: "amount_internal", path: "o.amount_internal", synonym: "Сумма дилера", type: "ro"},
-        {id: "price", path: "o.price", synonym: "Цена пост", type: "ro"},
-        {id: "discount_percent", path: "o.discount_percent", synonym: "Скидка пост %", type: is_dialer ? "ro" : "calck"},
-        {id: "amount", path: "o.amount", synonym: "Сумма пост", type: "ro"},
-        "note"
+    }
+    else {
+      oxml['Строка заказа'] = [
+        'quantity',
+        {id: 'price_internal', path: 'o.price_internal', synonym: 'Цена дилера', type: 'ro'},
+        {id: 'discount_percent_internal', path: 'o.discount_percent_internal', synonym: 'Скидка дил %', type: 'calck'},
+        {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма дилера', type: 'ro'},
+        {id: 'price', path: 'o.price', synonym: 'Цена пост', type: 'ro'},
+        {id: 'discount_percent', path: 'o.discount_percent', synonym: 'Скидка пост %', type: is_dialer ? 'ro' : 'calck'},
+        {id: 'amount', path: 'o.amount', synonym: 'Сумма пост', type: 'ro'},
+        'note'
       ];
     }
 
@@ -3840,13 +3841,13 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   }
 
-  refresh_prm_links() {
+  refresh_prm_links(root) {
 
     const {cnstr} = this;
     let notify;
 
     this.params.find_rows({
-      cnstr: cnstr || -9999,
+      cnstr: root ? 0 : cnstr || -9999,
       inset: $p.utils.blank.guid,
       hide: {not: true},
     }, (prow) => {
@@ -6444,8 +6445,110 @@ class Magnetism {
     return selected;
   }
 
+  filter(selected) {
+    const point = selected.profile[selected.point];
+    const nodes = [selected];
+
+    for(const profile of selected.profiles) {
+      if(profile !== selected.profile) {
+        if(profile.b.is_nearest(point, true)) {
+          nodes.push({profile, point: 'b'});
+        }
+        if(profile.e.is_nearest(point, true)) {
+          nodes.push({profile, point: 'e'});
+        }
+        const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
+        if(px.is_nearest(point, true)) {
+          nodes.push({profile, point: 't'});
+        }
+      }
+    }
+    return nodes;
+  }
+
+  short_glass(point) {
+    for(const glass of this.scheme.activeLayer.glasses(false, true)){
+      for(const segm of glass.outer_profiles) {
+        if((segm.b.is_nearest(point) || segm.e.is_nearest(point)) &&
+          segm.sub_path && segm.sub_path.length < consts.sticking) {
+          return {segm, glass};
+        }
+      }
+    };
+  }
+
   m1() {
-    console.log('m1');
+
+    const {tb_left} = this.scheme._scope;
+    const previous = tb_left && tb_left.get_selected();
+
+    Promise.resolve().then(() => {
+
+      const {selected} = this;
+
+      if(selected.break) {
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Выделено более одного узла`,
+          title: 'Магнит 0-штапик'
+        });
+      }
+      else if(!selected.profile) {
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Не выделено ни одного узла профиля`,
+          title: 'Магнит 0-штапик'
+        });
+      }
+      else {
+        const spoint = selected.profile[selected.point];
+        const res = this.short_glass(spoint);
+        if(res) {
+          const {segm, glass} = res;
+          const {Штапик} = $p.enm.elm_types;
+          let cl, negate;
+          this.scheme.ox.cnn_elmnts.find_rows({elm1: glass.elm, elm2: segm.profile.elm}, (row) => {
+            cl = row.aperture_len;
+          });
+
+          if(!cl) {
+            $p.msg.show_msg({
+              type: 'alert-info',
+              text: `Не найдена строка соединения короткого ребра с профилем`,
+              title: 'Магнит 0-штапик'
+            });
+          }
+          else {
+            const cnn = selected.profile.cnn_point(selected.point);
+            const {profile} = cnn;
+            const point = profile.generatrix.getNearestPoint(spoint);
+            const offset = profile.generatrix.getOffsetOf(point);
+            let tangent = profile.generatrix.getTangentAt(offset);
+            if(Math.abs(segm.sub_path.getTangentAt(0).angle - tangent.angle) < 90) {
+              negate = !negate;
+            }
+            if(segm.b.getDistance(spoint) > segm.e.getDistance(spoint)) {
+              negate = !negate;
+            }
+            if(!negate) {
+              tangent = tangent.negate();
+            }
+            selected.profile.move_points(tangent.multiply(cl));
+          }
+        }
+        else {
+          $p.msg.show_msg({
+            type: 'alert-info',
+            text: `Не найдено коротких сегментов заполнений<br />в окрестности выделенной точки`,
+            title: 'Магнит 0-штапик'
+          });
+        }
+      }
+    });
+
+    if(previous) {
+      return this.scheme._scope.select_tool(previous.replace('left_', ''));
+    }
   }
 
 }
@@ -9526,12 +9629,15 @@ class Scheme extends paper.Project {
       }
 
       _changes.length = 0;
+      const {contours} = _scheme;
 
-      if(_scheme.contours.length) {
+      if(contours.length) {
 
         _scheme.l_connective.redraw();
 
-        for (let contour of _scheme.contours) {
+        contours[0].refresh_prm_links(true);
+
+        for (let contour of contours) {
           contour.redraw();
           if(_changes.length && typeof requestAnimationFrame == 'function') {
             return;
@@ -9539,7 +9645,7 @@ class Scheme extends paper.Project {
         }
 
         _attr._bounds = null;
-        _scheme.contours.forEach((l) => {
+        contours.forEach((l) => {
           l.contours.forEach((l) => {
             l.save_coordinates(true);
             l.refresh_prm_links();
@@ -11236,23 +11342,8 @@ class ToolCut extends paper.Tool {
         });
       }
       else {
-        const point = selected.profile[selected.point];
-        const nodes = [selected];
 
-        for(const profile of selected.profiles) {
-          if(profile !== selected.profile) {
-            if(profile.b.is_nearest(point, true)) {
-              nodes.push({profile, point: 'b'});
-            }
-            if(profile.e.is_nearest(point, true)) {
-              nodes.push({profile, point: 'e'});
-            }
-            const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
-            if(px.is_nearest(point, true)) {
-              nodes.push({profile, point: 't'});
-            }
-          }
-        }
+        const nodes = project.magnetism.filter(selected);
 
         if(nodes.length >= 3) {
 

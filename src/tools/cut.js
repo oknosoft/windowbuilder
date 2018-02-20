@@ -46,24 +46,8 @@ class ToolCut extends paper.Tool {
         });
       }
       else {
-        const point = selected.profile[selected.point];
-        const nodes = [selected];
 
-        // рассмотрим вариант с углом...
-        for(const profile of selected.profiles) {
-          if(profile !== selected.profile) {
-            if(profile.b.is_nearest(point, true)) {
-              nodes.push({profile, point: 'b'});
-            }
-            if(profile.e.is_nearest(point, true)) {
-              nodes.push({profile, point: 'e'});
-            }
-            const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
-            if(px.is_nearest(point, true)) {
-              nodes.push({profile, point: 't'});
-            }
-          }
-        }
+        const nodes = project.magnetism.filter(selected);
 
         if(nodes.length >= 3) {
 

@@ -1657,8 +1657,9 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
         }
         else {
           const elm = contour.profile_by_furn_side(row.side, cache);
-          len = elm._row.len - 2 * elm.nom.sizefurn;
+          len = elm ? (elm._row.len - 2 * elm.nom.sizefurn) : 0;
         }
+        len = len.round(0);
         if (len < row.lmin || len > row.lmax) {
           return res = false;
         }
@@ -4372,14 +4373,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   product_rows(save) {
     const res = [];
     this.production.forEach(({row, characteristic}) => {
-      if(!characteristic.empty() && characteristic.calc_order === this){
+      if(!characteristic.empty() && characteristic.calc_order === this) {
         if(characteristic.product !== row || characteristic.partner !== this.partner || characteristic._modified) {
           characteristic.product = row;
-          if(save) {
-            res.push(characteristic.save());
-          }
-          else{
-            characteristic.name = characteristic.prod_name();
+          if(!characteristic.owner.empty()) {
+            if(save) {
+              res.push(characteristic.save());
+            }
+            else {
+              characteristic.name = characteristic.prod_name();
+            }
           }
         }
       }

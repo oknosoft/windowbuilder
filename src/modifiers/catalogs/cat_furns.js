@@ -372,8 +372,9 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
         }
         else {
           const elm = contour.profile_by_furn_side(row.side, cache);
-          len = elm._row.len - 2 * elm.nom.sizefurn;
+          len = elm ? (elm._row.len - 2 * elm.nom.sizefurn) : 0;
         }
+        len = len.round(0);
         if (len < row.lmin || len > row.lmax) {
           return res = false;
         }
