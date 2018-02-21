@@ -46,51 +46,12 @@ $p.cat.inserts.__define({
     value: class ItemData {
       constructor(item, Renderer) {
 
+        this.item = item;
         this.Renderer = Renderer;
         this.count = 0;
-        const that = this;
 
         // индивидуальные классы строк
         class ItemRow extends $p.DpBuyers_orderProductionRow {
-
-          // при изменении реквизита, корректируем метаданные полей свойств через связи параметров выбора
-          value_change(field, type, value) {
-
-            if(field !== 'inset') {
-              return;
-            }
-
-            // получаем возможные параметры вставок данного типа
-            for (const param of $p.cat.inserts._prms_by_type(item)) {
-
-              // находим схему
-              $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
-                scheme.fields.find_rows({field: param.ref}, row => {
-                  if(!row.use) {
-                    return;
-                  }
-
-                  // корректируем метаданные
-                  const mf = that.meta.fields[param.ref];
-                  if(mf){
-                    // удаляем все связи, кроме владельца
-                    if(mf.choice_params) {
-                      const adel = new Set();
-                      for(const choice of mf.choice_params) {
-                        if(choice.name !== 'owner' && choice.path !== param) {
-                          adel.add(choice);
-                        }
-                      }
-                    }
-                    // находим связи параметров
-
-                  }
-
-                });
-              });
-
-            }
-          }
         }
 
         this.ProductionRow = ItemRow;
@@ -161,6 +122,35 @@ $p.cat.inserts.__define({
           }
         }
 
+      }
+
+      // корректирует метаданные полей свойств через связи параметров выбора
+      tune(prm) {
+        // находим схему
+        $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: this.item.name}, (scheme) => {
+          scheme.fields.find_rows({field: prm}, row => {
+            if(!row.use) {
+              return;
+            }
+
+            // корректируем метаданные
+            const mf = this.meta.fields[prm];
+            if(mf){
+              // удаляем все связи, кроме владельца
+              if(mf.choice_params) {
+                const adel = new Set();
+                for(const choice of mf.choice_params) {
+                  if(choice.name !== 'owner' && choice.path != prm) {
+                    adel.add(choice);
+                  }
+                }
+              }
+              // находим связи параметров
+
+            }
+
+          });
+        });
       }
     }
   },
