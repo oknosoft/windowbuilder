@@ -21,32 +21,79 @@ $p.cat.inserts.__define({
 		]
 	},
 
+  /**
+   * возвращает возможные параметры вставок данного типа
+   */
+  _prms_by_type: {
+	  value: function (insert_type) {
+      const prms = new Set();
+      this.find_rows({available: true, insert_type}, (inset) => {
+        inset.used_params.forEach((param) => {
+          !param.is_calculated && prms.add(param);
+        });
+        inset.specification.forEach(({nom}) => {
+          const {used_params} = nom;
+          used_params && used_params.forEach((param) => {
+            !param.is_calculated && prms.add(param);
+          });
+        });
+      });
+      return prms;
+    }
+  },
+
   ItemData: {
     value: class ItemData {
       constructor(item, Renderer) {
 
         this.Renderer = Renderer;
         this.count = 0;
+        const that = this;
 
         // индивидуальные классы строк
         class ItemRow extends $p.DpBuyers_orderProductionRow {
+
+          // при изменении реквизита, корректируем метаданные полей свойств через связи параметров выбора
+          value_change(field, type, value) {
+
+            if(field !== 'inset') {
+              return;
+            }
+
+            // получаем возможные параметры вставок данного типа
+            for (const param of $p.cat.inserts._prms_by_type(item)) {
+
+              // находим схему
+              $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
+                scheme.fields.find_rows({field: param.ref}, row => {
+                  if(!row.use) {
+                    return;
+                  }
+
+                  // корректируем метаданные
+                  const mf = that.meta.fields[param.ref];
+                  if(mf){
+                    // удаляем все связи, кроме владельца
+                    if(mf.choice_params) {
+                      const adel = new Set();
+                      for(const choice of mf.choice_params) {
+                        if(choice.name !== 'owner' && choice.path !== param) {
+                          adel.add(choice);
+                        }
+                      }
+                    }
+                    // находим связи параметров
+
+                  }
+
+                });
+              });
+
+            }
+          }
         }
 
         this.ProductionRow = ItemRow;
-
-        // получаем возможные параметры вставок данного типа
-        const prms = new Set();
-        $p.cat.inserts.find_rows({available: true, insert_type: item}, (inset) => {
-          inset.used_params.forEach((param) => {
-            !param.is_calculated && prms.add(param);
-          });
-          inset.specification.forEach(({nom}) => {
-            const {used_params} = nom;
-            used_params && used_params.forEach((param) => {
-              !param.is_calculated && prms.add(param);
-            });
-          });
-        });
 
         // индивидуальные метаданные строк
         const meta = $p.dp.buyers_order.metadata('production');
@@ -57,7 +104,8 @@ $p.cat.inserts.__define({
 
         const changed = new Set();
 
-        for (const param of prms) {
+        // получаем возможные параметры вставок данного типа
+        for (const param of $p.cat.inserts._prms_by_type(item)) {
 
           // корректируем схему
           $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {

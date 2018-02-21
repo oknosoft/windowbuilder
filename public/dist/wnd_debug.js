@@ -1706,6 +1706,24 @@ $p.cat.inserts.__define({
 		]
 	},
 
+  _prms_by_type: {
+	  value: function (insert_type) {
+      const prms = new Set();
+      this.find_rows({available: true, insert_type}, (inset) => {
+        inset.used_params.forEach((param) => {
+          !param.is_calculated && prms.add(param);
+        });
+        inset.specification.forEach(({nom}) => {
+          const {used_params} = nom;
+          used_params && used_params.forEach((param) => {
+            !param.is_calculated && prms.add(param);
+          });
+        });
+      });
+      return prms;
+    }
+  },
+
   ItemData: {
     value: class ItemData {
       constructor(item, Renderer) {
@@ -1714,22 +1732,42 @@ $p.cat.inserts.__define({
         this.count = 0;
 
         class ItemRow extends $p.DpBuyers_orderProductionRow {
+
+          value_change(field, type, value) {
+
+            if(field !== 'inset') {
+              return;
+            }
+
+            for (const param of $p.cat.inserts._prms_by_type(item)) {
+
+              $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
+                scheme.fields.find_rows({field: param.ref}, row => {
+                  if(!row.use) {
+                    return;
+                  }
+
+                  const mf = this._metadata(param.ref);
+                  if(mf){
+                    if(mf.choice_params) {
+                      const adel = new Set();
+                      for(const choice of mf.choice_params) {
+                        if(choice.name !== 'owner' && choice.path !== param) {
+                          adel.add(choice);
+                        }
+                      }
+                    }
+
+                  }
+
+                });
+              });
+
+            }
+          }
         }
 
         this.ProductionRow = ItemRow;
-
-        const prms = new Set();
-        $p.cat.inserts.find_rows({available: true, insert_type: item}, (inset) => {
-          inset.used_params.forEach((param) => {
-            !param.is_calculated && prms.add(param);
-          });
-          inset.specification.forEach(({nom}) => {
-            const {used_params} = nom;
-            used_params && used_params.forEach((param) => {
-              !param.is_calculated && prms.add(param);
-            });
-          });
-        });
 
         const meta = $p.dp.buyers_order.metadata('production');
         this.meta = meta._clone();
@@ -1738,7 +1776,7 @@ $p.cat.inserts.__define({
 
         const changed = new Set();
 
-        for (const param of prms) {
+        for (const param of $p.cat.inserts._prms_by_type(item)) {
 
           $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
             if(!scheme.fields.find({field: param.ref})) {
@@ -4090,6 +4128,218 @@ $p.spec_building = new SpecBuilding($p);
 })($p.classes.DataManager);
 
 
+(function(_mgr){
+
+	const acn = {
+    ii: [_mgr.Наложение],
+    i: [_mgr.НезамкнутыйКонтур],
+    a: [
+      _mgr.УгловоеДиагональное,
+      _mgr.УгловоеКВертикальной,
+      _mgr.УгловоеКГоризонтальной,
+      _mgr.КрестВСтык],
+    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
+	};
+
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get: function () {
+        return this.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get: function () {
+        return this.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get: function () {
+        return this.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get: function () {
+        return this.ТОбразное;
+      }
+    },
+    ii: {
+      get: function () {
+        return this.Наложение;
+      }
+    },
+    i: {
+      get: function () {
+        return this.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get: function () {
+        return this.КрестПересечение;
+      }
+    },
+    xx: {
+      get: function () {
+        return this.КрестВСтык;
+      }
+    },
+
+    acn: {
+      value: acn
+    },
+
+  });
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
+			}
+		}
+
+
+	});
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
+
+
 (function (_mgr) {
 
   _mgr.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
@@ -6368,218 +6618,6 @@ $p.DocSelling.prototype.before_save = function () {
 };
 
 
-
-
-(function(_mgr){
-
-	const acn = {
-    ii: [_mgr.Наложение],
-    i: [_mgr.НезамкнутыйКонтур],
-    a: [
-      _mgr.УгловоеДиагональное,
-      _mgr.УгловоеКВертикальной,
-      _mgr.УгловоеКГоризонтальной,
-      _mgr.КрестВСтык],
-    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
-	};
-
-
-	Object.defineProperties(_mgr, {
-	  ad: {
-	    get: function () {
-        return this.УгловоеДиагональное;
-      }
-    },
-    av: {
-      get: function () {
-        return this.УгловоеКВертикальной;
-      }
-    },
-    ah: {
-      get: function () {
-        return this.УгловоеКГоризонтальной;
-      }
-    },
-    t: {
-      get: function () {
-        return this.ТОбразное;
-      }
-    },
-    ii: {
-      get: function () {
-        return this.Наложение;
-      }
-    },
-    i: {
-      get: function () {
-        return this.НезамкнутыйКонтур;
-      }
-    },
-    xt: {
-      get: function () {
-        return this.КрестПересечение;
-      }
-    },
-    xx: {
-      get: function () {
-        return this.КрестВСтык;
-      }
-    },
-
-    acn: {
-      value: acn
-    },
-
-  });
-
-})($p.enm.cnn_types);
-
-
-(function(_mgr){
-
-	const cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			}
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			}
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			}
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			}
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			}
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			}
-		}
-
-	});
-
-
-})($p.enm.elm_types);
-
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
 
 
 (($p) => {
