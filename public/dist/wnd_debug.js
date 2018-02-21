@@ -1777,7 +1777,17 @@ $p.cat.inserts.__define({
         }
 
         for(const scheme of changed) {
-          scheme.save();
+          const {doc} = $p.adapters.pouch.local;
+          if(doc.adapter === 'http' && !scheme.user) {
+            doc.getSession().then(({userCtx}) => {
+              if(userCtx.roles.indexOf('doc_full') !== -1) {
+                scheme.save();
+              }
+            })
+          }
+          else {
+            scheme.save();
+          }
         }
 
       }
@@ -3639,7 +3649,7 @@ class ProductsBuilding {
 
         };
 
-        (len_angl.len > this.sticking_l / 2) && cnn_add_spec(curr.cnn, curr.profile, len_angl);
+        (len_angl.len > 3) && cnn_add_spec(curr.cnn, curr.profile, len_angl);
 
       }
 

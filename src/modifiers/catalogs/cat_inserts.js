@@ -100,7 +100,17 @@ $p.cat.inserts.__define({
         }
 
         for(const scheme of changed) {
-          scheme.save();
+          const {doc} = $p.adapters.pouch.local;
+          if(doc.adapter === 'http' && !scheme.user) {
+            doc.getSession().then(({userCtx}) => {
+              if(userCtx.roles.indexOf('doc_full') !== -1) {
+                scheme.save();
+              }
+            })
+          }
+          else {
+            scheme.save();
+          }
         }
 
       }

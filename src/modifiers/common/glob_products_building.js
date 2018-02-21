@@ -549,7 +549,7 @@ class ProductsBuilding {
         };
 
         // добавляем спецификацию соединения рёбер заполнения с профилем
-        (len_angl.len > this.sticking_l / 2) && cnn_add_spec(curr.cnn, curr.profile, len_angl);
+        (len_angl.len > 3) && cnn_add_spec(curr.cnn, curr.profile, len_angl);
 
       }
 

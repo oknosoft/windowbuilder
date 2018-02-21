@@ -104,7 +104,7 @@ class AdditionsGroup extends React.Component {
     const style = {flex: 'initial'};
     if(count) {
       style.minHeight = 80 + (33 * (count - 1));
-      style.maxHeight = 320;
+      //style.maxHeight = 320;
     }
 
     function pieces() {
