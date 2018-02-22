@@ -6538,6 +6538,18 @@ $p.DocSelling.prototype.before_save = function () {
 })($p.enm.elm_types);
 
 
+
+
+
+(function(_mgr){
+
+  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
+
+
+})($p.enm.inserts_types);
+
+
+
 (function($p){
 
 	$p.enm.open_types.__define({
