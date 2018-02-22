@@ -172,17 +172,27 @@ class ProfileConnective extends ProfileItem {
    * @method remove
    */
   remove() {
-    this.joined_nearests().forEach((np) => {
-      const {_attr} = np;
-      if(_attr._rays){
-        _attr._rays.clear();
+    this.joined_nearests().forEach((rama) => {
+
+      const {inner, outer} = rama.joined_imposts();
+      for (const {profile} of inner.concat(outer)) {
+        profile.rays.clear();
       }
+      for (const {_attr, elm} of rama.joined_nearests()) {
+        _attr._rays && _attr._rays.clear();
+      }
+
+      const {_attr, layer} = rama;
+      _attr._rays && _attr._rays.clear();
       if(_attr._nearest){
         _attr._nearest = null;
       }
       if(_attr._nearest_cnn){
         _attr._nearest_cnn = null;
       }
+
+      layer && layer.notify && layer.notify({profiles: [rama], points: []}, consts.move_points);
+
     });
     super.remove();
   }

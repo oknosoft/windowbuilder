@@ -7866,9 +7866,9 @@ class ProfileItem extends GeneratrixElement {
           }
         }
 
-        const imposts = this.joined_imposts();
+        const {inner, outer} = this.joined_imposts();
         const elm2 = this.elm;
-        for (const {profile} of imposts.inner.concat(imposts.outer)) {
+        for (const {profile} of inner.concat(outer)) {
           const {b, e} = profile.rays;
           b.profile == this && b.clear(true);
           e.profile == this && e.clear(true);
@@ -8514,7 +8514,14 @@ class Profile extends ProfileItem {
       if(!(elm instanceof Profile || elm instanceof ProfileConnective) || !elm.isInserted()) {
         return;
       }
-      const {generatrix} = elm;
+      let {generatrix} = elm;
+      if(elm.elm_type === $p.enm.elm_types.Импост) {
+        const pb = elm.cnn_point('b').profile;
+        const pe = elm.cnn_point('e').profile;
+        if(pb && pb.nearest(true) || pe && pe.nearest(true)) {
+          generatrix = generatrix.clone({insert: false}).elongation(90);
+        }
+      }
       let is_nearest = [];
       if(generatrix.is_nearest(b)) {
         is_nearest.push(b);
@@ -9117,17 +9124,27 @@ class ProfileConnective extends ProfileItem {
   }
 
   remove() {
-    this.joined_nearests().forEach((np) => {
-      const {_attr} = np;
-      if(_attr._rays){
-        _attr._rays.clear();
+    this.joined_nearests().forEach((rama) => {
+
+      const {inner, outer} = rama.joined_imposts();
+      for (const {profile} of inner.concat(outer)) {
+        profile.rays.clear();
       }
+      for (const {_attr, elm} of rama.joined_nearests()) {
+        _attr._rays && _attr._rays.clear();
+      }
+
+      const {_attr, layer} = rama;
+      _attr._rays && _attr._rays.clear();
       if(_attr._nearest){
         _attr._nearest = null;
       }
       if(_attr._nearest_cnn){
         _attr._nearest_cnn = null;
       }
+
+      layer && layer.notify && layer.notify({profiles: [rama], points: []}, consts.move_points);
+
     });
     super.remove();
   }
@@ -10161,7 +10178,7 @@ class Scheme extends paper.Project {
         obx._obj, null, ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'base_block', 'note', 'partner'], true);
 
       if(!is_snapshot) {
-        ox.base_block = obx.base_block.empty() ? obx : obx.base_block;
+        ox.base_block = (obx.base_block.empty() || obx.base_block.calc_order.obj_delivery_state === $p.enm.obj_delivery_states.Шаблон) ? obx : obx.base_block;
       }
 
       this.load(ox);
@@ -10205,7 +10222,7 @@ class Scheme extends paper.Project {
 
     const layers = new Set();
     for (const profile of profiles) {
-      layers.add(profile.layer);
+      profile.layer.fillings && layers.add(profile.layer);
     }
 
     if(this._attr._align_timer) {
@@ -12961,7 +12978,18 @@ class ToolPen extends ToolElement {
           proto: this.profile,
           parent: this.addl_hit.profile,
         });
-        connective.joined_nearests().forEach((p) => p.rays.clear());
+        connective.joined_nearests().forEach((rama) => {
+          const {inner, outer} = rama.joined_imposts();
+          for (const {profile} of inner.concat(outer)) {
+            profile.rays.clear();
+          }
+          for (const {_attr, elm} of rama.joined_nearests()) {
+            _attr._rays && _attr._rays.clear();
+          }
+          const {_attr, layer} = rama;
+          _attr._rays && _attr._rays.clear();
+          layer && layer.notify && layer.notify({profiles: [rama], points: []}, consts.move_points);
+        });
       }
     }
     else if(this.mode == 'create' && this.path) {

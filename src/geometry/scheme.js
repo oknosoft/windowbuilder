@@ -854,7 +854,7 @@ class Scheme extends paper.Project {
 
       // сохраняем ссылку на типовой блок
       if(!is_snapshot) {
-        ox.base_block = obx.base_block.empty() ? obx : obx.base_block;
+        ox.base_block = (obx.base_block.empty() || obx.base_block.calc_order.obj_delivery_state === $p.enm.obj_delivery_states.Шаблон) ? obx : obx.base_block;
       }
 
       this.load(ox);
@@ -907,7 +907,7 @@ class Scheme extends paper.Project {
     // получаем слои, в которых двигались элементы
     const layers = new Set();
     for (const profile of profiles) {
-      layers.add(profile.layer);
+      profile.layer.fillings && layers.add(profile.layer);
     }
 
     if(this._attr._align_timer) {
