@@ -46,12 +46,47 @@ $p.cat.inserts.__define({
     value: class ItemData {
       constructor(item, Renderer) {
 
-        this.item = item;
         this.Renderer = Renderer;
         this.count = 0;
 
         // индивидуальные классы строк
         class ItemRow extends $p.DpBuyers_orderProductionRow {
+
+          // корректирует метаданные полей свойств через связи параметров выбора
+          tune(ref, mf, column) {
+
+            const {inset} = this;
+            const prm = $p.cch.properties.get(ref);
+
+            // удаляем все связи, кроме владельца
+            if(mf.choice_params) {
+              const adel = new Set();
+              for(const choice of mf.choice_params) {
+                if(choice.name !== 'owner' && choice.path != prm) {
+                  adel.add(choice);
+                }
+              }
+              for(const choice of adel) {
+                mf.choice_params.splice(mf.choice_params.indexOf(choice), 1);
+              }
+            }
+
+            // если параметр не используется в текущей вставке, делаем ячейку readonly
+            const prms = new Set();
+            inset.used_params.forEach((param) => {
+              !param.is_calculated && prms.add(param);
+            });
+            inset.specification.forEach(({nom}) => {
+              const {used_params} = nom;
+              used_params && used_params.forEach((param) => {
+                !param.is_calculated && prms.add(param);
+              });
+            });
+            mf.read_only = !prms.has(prm);
+
+            // находим связи параметров
+          }
+
         }
 
         this.ProductionRow = ItemRow;
@@ -124,34 +159,6 @@ $p.cat.inserts.__define({
 
       }
 
-      // корректирует метаданные полей свойств через связи параметров выбора
-      tune(prm) {
-        // находим схему
-        $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: this.item.name}, (scheme) => {
-          scheme.fields.find_rows({field: prm}, row => {
-            if(!row.use) {
-              return;
-            }
-
-            // корректируем метаданные
-            const mf = this.meta.fields[prm];
-            if(mf){
-              // удаляем все связи, кроме владельца
-              if(mf.choice_params) {
-                const adel = new Set();
-                for(const choice of mf.choice_params) {
-                  if(choice.name !== 'owner' && choice.path != prm) {
-                    adel.add(choice);
-                  }
-                }
-              }
-              // находим связи параметров
-
-            }
-
-          });
-        });
-      }
     }
   },
 
