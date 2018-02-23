@@ -21,7 +21,12 @@ class Pricing {
     $p.md.once("predefined_elmnts_inited", () => {
 
       // грузим в ram цены номенклатуры
-      this.by_range()
+
+      // сначала, пытаемся из local
+      this.by_local()
+        .then((loc) => {
+          return !loc && this.by_range();
+        })
         .then(() => {
           // излучаем событие "можно открывать формы"
           $p.adapters.pouch.emit('pouch_complete_loaded');
@@ -75,6 +80,54 @@ class Pricing {
         price: v.price
       }));
     }
+  }
+
+  build_cache_local(prices) {
+
+    const {nom, currencies} = $p.cat;
+    const note = 'Индекс цен номенклатуры';
+    const date = new Date('2010-01-01');
+
+    for(const ref in prices) {
+      if(ref[0] === '_') {
+        continue;
+      }
+      const onom = nom.get(ref, false, true);
+      const value = prices[ref];
+
+      if (!onom || !onom._data){
+        $p.record_log({
+          class: 'error',
+          nom: ref,
+          note,
+          value
+        });
+        continue;
+      }
+      onom._data._price = value;
+
+      for(const cref in value){
+        for(const pref in value[cref]) {
+          const price = value[cref][pref][0];
+          price.date = date;
+          price.currency = currencies.get(price.currency);
+        }
+      }
+    }
+  }
+
+  by_local(step = 0) {
+    const {pouch} = $p.adapters;
+    return pouch.local.doc.get(`_local/price_${step}`)
+      .then((prices) => {
+        this.build_cache_local(prices);
+        step++;
+        pouch.emit('nom_prices', step);
+        return this.by_local(step);
+      })
+      .catch((err) => {
+        return step !== 0;
+      });
   }
 
   /**
