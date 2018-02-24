@@ -60,7 +60,7 @@ class AppRoot extends Component {
 
   render() {
     const {props} = this;
-    const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, user, couch_direct, offline, title} = props;
+    const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, page, user, couch_direct, offline, title} = props;
     const iprops = item_props();
 
     let need_auth = meta_loaded && iprops.need_user && ((!user.try_log_in && !user.logged_in) || (couch_direct && offline));
@@ -87,7 +87,7 @@ class AppRoot extends Component {
             <DumbScreen
               key="dumb"
               title={doc_ram_loaded ? 'Подготовка данных в памяти...' : 'Загрузка из IndexedDB...'}
-              page={{text: doc_ram_loaded ? `Цены и характеристики${nom_prices_step ? ` (такт №${nom_prices_step})` : ''}...` : 'Почти готово...'}}
+              page={{text: doc_ram_loaded ? `Цены и характеристики${nom_prices_step ? ` (такт №${nom_prices_step})` : ''}...` : `${(page && page.synonym) || 'Почти готово'}...`}}
               top={92}/>
             :
             <Switch key="switch">
