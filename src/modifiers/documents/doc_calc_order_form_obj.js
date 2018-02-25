@@ -629,6 +629,7 @@
       if(ro) {
         frm_toolbar.disableItem('btn_sent');
         frm_toolbar.disableItem('btn_save');
+        frm_toolbar.disableItem('btn_save_close');
         let toolbar;
         const disable = (itemId) => toolbar.disableItem(itemId);
         toolbar = tabs.tab_production.getAttachedToolbar();
@@ -645,6 +646,7 @@
           frm_toolbar.enableItem('btn_sent');
         }
         frm_toolbar.enableItem('btn_save');
+        frm_toolbar.enableItem('btn_save_close');
         let toolbar;
         const enable = (itemId) => toolbar.enableItem(itemId);
         toolbar = tabs.tab_production.getAttachedToolbar();

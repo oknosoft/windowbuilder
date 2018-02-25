@@ -356,11 +356,12 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
   };
 
   return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-    .then(function (res) {
+    .then((res) => {
       if(res) {
         o = res.o;
         wnd = res.wnd;
-        return res;
+        return o.load_production()
+          .then(() => res);
       }
     });
 };
@@ -2825,7 +2826,7 @@ class Pricing {
     const date = new Date('2010-01-01');
 
     for(const ref in prices) {
-      if(ref[0] === '_') {
+      if(ref[0] === '_' || ref === 'remote_rev') {
         continue;
       }
       const onom = nom.get(ref, false, true);
@@ -2852,13 +2853,60 @@ class Pricing {
     }
   }
 
+  sync_local(pouch, step = 0) {
+    return pouch.remote.doc.get(`_local/price_${step}`)
+      .then((remote) => {
+        return pouch.local.doc.get(`_local/price_${step}`)
+          .then((local) => local.remote_rev)
+          .catch(() => null)
+          .then((rev) => {
+            this.build_cache_local(remote);
+
+            if(rev !== remote._rev) {
+              remote.remote_rev = remote._rev;
+              if(!rev) {
+                delete remote._rev;
+              }
+              pouch.local.doc.put(remote);
+            }
+
+            return this.sync_local(pouch, ++step);
+          })
+      })
+      .catch((err) => {
+        if(step !== 0) {
+          pouch.local.doc.get(`_local/price_${step}`)
+            .then((local) => pouch.local.doc.remove(local))
+            .catch(() => null);
+          return true;
+        }
+      });
+  }
+
   by_local(step = 0) {
     const {pouch} = $p.adapters;
-    return pouch.local.doc.get(`_local/price_${step}`)
+
+    const pre = step === 0 && pouch.local.doc.adapter !== 'http' && $p.adapters.pouch.authorized ?
+      pouch.remote.doc.info()
+        .then(() => this.sync_local(pouch))
+        .catch((err) => null)
+      :
+      Promise.resolve();
+
+    return pre.then((loaded) => {
+      if(loaded) {
+        return loaded;
+      }
+      else {
+        return pouch.local.doc.get(`_local/price_${step}`)
+      }
+    })
       .then((prices) => {
+        if(prices === true) {
+          return prices;
+        }
         this.build_cache_local(prices);
-        step++;
-        pouch.emit('nom_prices', step);
+        pouch.emit('nom_prices', ++step);
         return this.by_local(step);
       })
       .catch((err) => {
@@ -2879,11 +2927,13 @@ class Pricing {
       })
       .then((res) => {
         this.build_cache(res.rows);
-        step++;
-        $p.adapters.pouch.emit('nom_prices', step);
+        $p.adapters.pouch.emit('nom_prices', ++step);
         if (res.rows.length === 600) {
           return this.by_range(res.rows[res.rows.length - 1].key, step);
         }
+      })
+      .catch((err) => {
+        $p.record_log(err);
       });
   }
 
@@ -3874,13 +3924,21 @@ class ProductsBuilding {
       if(attr.save) {
 
 
-        ox.save(undefined, undefined, {
-          svg: {
-            content_type: 'image/svg+xml',
-            data: new Blob([scheme.get_svg()], {type: 'image/svg+xml'})
-          }
-        })
-          .then(() => {
+        let saver;
+        if($p.job_prm.use_svgs) {
+          ox.save(undefined, undefined, {
+            svg: {
+              content_type: 'image/svg+xml',
+              data: new Blob([scheme.get_svg()], {type: 'image/svg+xml'})
+            }
+          });
+        }
+        else {
+          ox.svg = scheme.get_svg();
+          saver = ox.save();
+        }
+
+        saver.then(() => {
             $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
             delete scheme._attr._saving;
             ox.calc_order.characteristic_saved(scheme, attr);
@@ -4660,53 +4718,63 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       }
     }
 
-    this.production.forEach((row) => {
-      if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
+    return this.load_production().then(() => {
 
-        res.Продукция.push(this.row_description(row));
+      this.production.forEach((row) => {
+        if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
 
-        res.ВсегоИзделий += row.quantity;
-        res.ВсегоПлощадьИзделий += row.quantity * row.s;
+          res.Продукция.push(this.row_description(row));
 
-        if(attr.sizes === false) {
+          res.ВсегоИзделий += row.quantity;
+          res.ВсегоПлощадьИзделий += row.quantity * row.s;
 
+          if(attr.sizes === false) {
+
+          }
+          else {
+            if($p.job_prm.use_svgs) {
+              get_imgs.push(characteristics.get_attachment(row.characteristic.ref, 'svg')
+                .then(blob_as_text)
+                .then((svg_text) => res.ПродукцияЭскизы[row.characteristic.ref] = svg_text)
+                .catch((err) => err && err.status != 404 && $p.record_log(err))
+              );
+            }
+            else if(row.characteristic.svg) {
+              res.ПродукцияЭскизы[row.characteristic.ref] = row.characteristic.svg;
+            }
+          }
         }
-        else {
-          get_imgs.push(characteristics.get_attachment(row.characteristic.ref, 'svg')
-            .then(blob_as_text)
-            .then((svg_text) => res.ПродукцияЭскизы[row.characteristic.ref] = svg_text)
-            .catch((err) => err && err.status != 404 && $p.record_log(err))
-          );
+        else if(!row.nom.is_procedure && !row.nom.is_service && row.nom.is_accessory) {
+          res.Аксессуары.push(this.row_description(row));
         }
-      }
-      else if(!row.nom.is_procedure && !row.nom.is_service && row.nom.is_accessory) {
-        res.Аксессуары.push(this.row_description(row));
-      }
-      else if(!row.nom.is_procedure && row.nom.is_service && !row.nom.is_accessory) {
-        res.Услуги.push(this.row_description(row));
-      }
-    });
-    res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
-
-    return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-      .then(() => $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
-      .then(() => {
-
-        const svg = document.createElement('SVG');
-        svg.innerHTML = '<g />';
-        const qrcode = new QRCode(svg, {
-          text: 'http://www.oknosoft.ru/zd/',
-          width: 100,
-          height: 100,
-          colorDark: '#000000',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H,
-          useSVG: true
-        });
-        res.qrcode = svg.innerHTML;
-
-        return res;
+        else if(!row.nom.is_procedure && row.nom.is_service && !row.nom.is_accessory) {
+          res.Услуги.push(this.row_description(row));
+        }
       });
+      res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
+
+      return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
+        .then(() => $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
+        .then(() => {
+
+          const svg = document.createElement('SVG');
+          svg.innerHTML = '<g />';
+          const qrcode = new QRCode(svg, {
+            text: 'http://www.oknosoft.ru/zd/',
+            width: 100,
+            height: 100,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H,
+            useSVG: true
+          });
+          res.qrcode = svg.innerHTML;
+
+          return res;
+        });
+
+    });
+
   }
 
   row_description(row) {
@@ -6029,6 +6097,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       if(ro) {
         frm_toolbar.disableItem('btn_sent');
         frm_toolbar.disableItem('btn_save');
+        frm_toolbar.disableItem('btn_save_close');
         let toolbar;
         const disable = (itemId) => toolbar.disableItem(itemId);
         toolbar = tabs.tab_production.getAttachedToolbar();
@@ -6044,6 +6113,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           frm_toolbar.enableItem('btn_sent');
         }
         frm_toolbar.enableItem('btn_save');
+        frm_toolbar.enableItem('btn_save_close');
         let toolbar;
         const enable = (itemId) => toolbar.enableItem(itemId);
         toolbar = tabs.tab_production.getAttachedToolbar();
@@ -7203,6 +7273,7 @@ class OSvgs {
       handler: handler,
     });
 
+    this.draw_svgs = this.draw_svgs.bind(this);
 
     const {pics_area} = this;
     pics_area.className = 'svgs-area';
@@ -7309,31 +7380,70 @@ class OSvgs {
 
           let _obj = stack.pop();
           const db = $p.adapters.pouch.local.doc;
-          db.query('svgs', {
-            startkey: [typeof _obj == 'string' ? _obj : _obj.ref, 0],
-            endkey: [typeof _obj == 'string' ? _obj : _obj.ref, 10e9]
-          })
-            .then((res) => {
-              const aatt = [];
-              for(const {id} of res.rows){
-                aatt.push(db.getAttachment(id, 'svg')
-                  .then((att) => ({ref: id.substr(20), att: att}))
-                  .catch((err) => {}));
-              };
-              return Promise.all(aatt);
-            })
-            .then((res) => {
-              const aatt = [];
-              res.forEach(({ref, att}) => {
-                if(att instanceof Blob && att.size)
-                  aatt.push($p.utils.blob_as_text(att)
-                    .then((svg) => ({ref, svg})));
-              });
-              return Promise.all(aatt);
-            })
-            .then(this.draw_svgs.bind(this))
-            .catch($p.record_log);
 
+          if($p.job_prm.use_svgs) {
+            db.query('svgs', {
+              startkey: [typeof _obj == 'string' ? _obj : _obj.ref, 0],
+              endkey: [typeof _obj == 'string' ? _obj : _obj.ref, 10e9]
+            })
+              .then((res) => {
+                const aatt = [];
+                for(const {id} of res.rows){
+                  aatt.push(db.getAttachment(id, 'svg')
+                    .then((att) => ({ref: id.substr(20), att: att}))
+                    .catch((err) => {}));
+                };
+                return Promise.all(aatt);
+              })
+              .then((res) => {
+                const aatt = [];
+                res.forEach(({ref, att}) => {
+                  if(att instanceof Blob && att.size)
+                    aatt.push($p.utils.blob_as_text(att)
+                      .then((svg) => ({ref, svg})));
+                });
+                return Promise.all(aatt);
+              })
+              .then(this.draw_svgs)
+              .catch($p.record_log);
+          }
+          else {
+            const keys = [];
+            if(typeof _obj == 'string') {
+              const {doc} = $p.adapters.pouch.local;
+              doc.find({
+                selector: {_id: `doc.calc_order|${_obj}`},
+                fields: ['production'],
+                limit: 1
+              })
+                .then(({docs}) => {
+                  docs.length && docs[0].production.forEach(({characteristic}) => {
+                    !$p.utils.is_empty_guid(characteristic) && keys.push(`cat.characteristics|${characteristic}`);
+                  });
+                  return keys.length ? doc.allDocs({keys, limit: keys.length, include_docs: true}) : {rows: keys};
+                })
+                .then(({rows}) => {
+                  const adel = [];
+                  rows.forEach(({id, doc}) => {
+                    if(doc && doc.svg) {
+                      const ind = keys.indexOf(id);
+                      keys[ind] = {ref: id.substr(20), svg: doc.svg};
+                    }
+                  });
+                  return keys.filter((v) => v.svg);
+                })
+                .then(this.draw_svgs)
+                .catch($p.record_log)
+            }
+            else {
+              _obj.production.forEach(({characteristic: {ref, svg}}) => {
+                if(svg) {
+                  keys.push({ref, svg});
+                }
+              });
+              this.draw_svgs(keys);
+            }
+          }
           stack.length = 0;
         }
       }, 300);

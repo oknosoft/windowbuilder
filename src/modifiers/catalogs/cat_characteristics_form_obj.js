@@ -33,11 +33,12 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
   };
 
   return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-    .then(function (res) {
+    .then((res) => {
       if(res) {
         o = res.o;
         wnd = res.wnd;
-        return res;
+        return o.load_production()
+          .then(() => res);
       }
     });
 };

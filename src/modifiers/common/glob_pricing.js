@@ -89,7 +89,7 @@ class Pricing {
     const date = new Date('2010-01-01');
 
     for(const ref in prices) {
-      if(ref[0] === '_') {
+      if(ref[0] === '_' || ref === 'remote_rev') {
         continue;
       }
       const onom = nom.get(ref, false, true);
@@ -116,13 +116,65 @@ class Pricing {
     }
   }
 
+  // если оффлайн и есть доступ к серверу
+  sync_local(pouch, step = 0) {
+    return pouch.remote.doc.get(`_local/price_${step}`)
+      .then((remote) => {
+        return pouch.local.doc.get(`_local/price_${step}`)
+          .then((local) => local.remote_rev)
+          .catch(() => null)
+          .then((rev) => {
+            // грузим цены из remote
+            this.build_cache_local(remote);
+
+            // если версия local отличается от remote - обновляем
+            if(rev !== remote._rev) {
+              remote.remote_rev = remote._rev;
+              if(!rev) {
+                delete remote._rev;
+              }
+              pouch.local.doc.put(remote);
+            }
+
+            return this.sync_local(pouch, ++step);
+          })
+      })
+      .catch((err) => {
+        if(step !== 0) {
+          pouch.local.doc.get(`_local/price_${step}`)
+            .then((local) => pouch.local.doc.remove(local))
+            .catch(() => null);
+          return true;
+        }
+      });
+  }
+
+  // из локальной базы или direct
   by_local(step = 0) {
     const {pouch} = $p.adapters;
-    return pouch.local.doc.get(`_local/price_${step}`)
+
+    // если мы в idb, но подключены к серверу, тянем цены оттуда
+    const pre = step === 0 && pouch.local.doc.adapter !== 'http' && $p.adapters.pouch.authorized ?
+      pouch.remote.doc.info()
+        .then(() => this.sync_local(pouch))
+        .catch((err) => null)
+      :
+      Promise.resolve();
+
+    return pre.then((loaded) => {
+      if(loaded) {
+        return loaded;
+      }
+      else {
+        return pouch.local.doc.get(`_local/price_${step}`)
+      }
+    })
       .then((prices) => {
+        if(prices === true) {
+          return prices;
+        }
         this.build_cache_local(prices);
-        step++;
-        pouch.emit('nom_prices', step);
+        pouch.emit('nom_prices', ++step);
         return this.by_local(step);
       })
       .catch((err) => {
@@ -148,11 +200,13 @@ class Pricing {
       })
       .then((res) => {
         this.build_cache(res.rows);
-        step++;
-        $p.adapters.pouch.emit('nom_prices', step);
+        $p.adapters.pouch.emit('nom_prices', ++step);
         if (res.rows.length === 600) {
           return this.by_range(res.rows[res.rows.length - 1].key, step);
         }
+      })
+      .catch((err) => {
+        $p.record_log(err);
       });
   }
 
