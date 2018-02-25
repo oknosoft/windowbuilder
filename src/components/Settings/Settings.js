@@ -20,8 +20,9 @@ import compose from 'recompose/compose';
 class Settings extends Component {
 
   static propTypes = {
-    zone: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),             // обработчик добавления объекта
-    couch_path: PropTypes.string,          // обработчик удаления строки
+    zone: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    couch_path: PropTypes.string,
+    title: PropTypes.string,
     couch_direct: PropTypes.bool,
     enable_save_pwd: PropTypes.bool,
     handleSetPrm: PropTypes.func.isRequired,

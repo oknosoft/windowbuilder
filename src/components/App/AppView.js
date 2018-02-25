@@ -25,6 +25,7 @@ class AppRoot extends Component {
 
   static propTypes = {
     handleNavigate: PropTypes.func.isRequired,
+    handleLogin: PropTypes.func.isRequired,
     handleIfaceState: PropTypes.func.isRequired,
     first_run: PropTypes.bool.isRequired,
     snack: PropTypes.object,
