@@ -216,21 +216,24 @@
           wnd = res.wnd;
           wnd.prompt = prompt;
           wnd.close_confirmed = true;
-          if(handlers){
+          if(handlers) {
             wnd.handleNavigate = handlers.handleNavigate;
             wnd.handleIfaceState = handlers.handleIfaceState;
           }
 
-          rsvg_reload();
-          o._manager.on('svgs', rsvg_reload);
+          o.load_production()
+            .then(() => {
+              rsvg_reload();
+              o._manager.on('svgs', rsvg_reload);
 
-          const search = $p.job_prm.parse_url_str(location.search);
-          if(search.ref) {
-            setTimeout(() => {
-              wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
-              rsvg_click(search.ref, 0);
-            }, 200);
-          };
+              const search = $p.job_prm.parse_url_str(location.search);
+              if(search.ref) {
+                setTimeout(() => {
+                  wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
+                  rsvg_click(search.ref, 0);
+                }, 200);
+              };
+            });
 
           return res;
         }

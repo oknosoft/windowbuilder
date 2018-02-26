@@ -195,13 +195,9 @@ class OSvgs {
             const keys = [];
             if(typeof _obj == 'string') {
               const {doc} = $p.adapters.pouch.local;
-              doc.find({
-                selector: {_id: `doc.calc_order|${_obj}`},
-                fields: ['production'],
-                limit: 1
-              })
-                .then(({docs}) => {
-                  docs.length && docs[0].production.forEach(({characteristic}) => {
+              doc.get(`doc.calc_order|${_obj}`)
+                .then(({production}) => {
+                  production && production.forEach(({characteristic}) => {
                     !$p.utils.is_empty_guid(characteristic) && keys.push(`cat.characteristics|${characteristic}`);
                   });
                   return keys.length ? doc.allDocs({keys, limit: keys.length, include_docs: true}) : {rows: keys};

@@ -60,6 +60,7 @@ function move_svgs() {
     .then((res) => {
       // Для продукций заказа получаем вложения
       const aatt = [];
+      debug(res.total_rows);
       for(const {id} of res.rows){
         aatt.push(db.getAttachment(id, 'svg')
           .then((att) => ({ref: id, att: att}))
@@ -70,23 +71,25 @@ function move_svgs() {
     .then((res) => {
       const aatt = [];
       for(const {ref, att} of res) {
-        if(att instanceof Blob && att.size) {
+        if(att instanceof Buffer && att.length /* att instanceof Blob && att.size */) {
           aatt.push(db.get(ref)
-            .then((obj) => $p.utils.blob_as_text(att)
-              .then((svg) => {
-                obj.svg = svg;
-                delete obj._attachments;
-                return db.put(obj);
-              })
-              .catch((err) => {}))
-            .catch((err) => {}));
+            .then((obj) => {
+              /* $p.utils.blob_as_text(att) */
+              obj.svg = att.toString();
+              delete obj._attachments;
+              return db.put(obj);
+            })
+            .catch((err) => {
+              debug(err);
+            })
+          );
         }
       }
       return Promise.all(aatt)
         .then(() => {
           if(aatt.length === 100) {
             return new Promise((resolve, reject) => {
-              setTimeout(() => resolve(move_svgs()), 10000);
+              setTimeout(() => resolve(move_svgs()), 5000);
             });
           }
         });

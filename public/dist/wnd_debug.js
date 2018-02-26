@@ -360,8 +360,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
       if(res) {
         o = res.o;
         wnd = res.wnd;
-        return o.load_production()
-          .then(() => res);
+        return res;
       }
     });
 };
@@ -5729,16 +5728,19 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             wnd.handleIfaceState = handlers.handleIfaceState;
           }
 
-          rsvg_reload();
-          o._manager.on('svgs', rsvg_reload);
+          o.load_production()
+            .then(() => {
+              rsvg_reload();
+              o._manager.on('svgs', rsvg_reload);
 
-          const search = $p.job_prm.parse_url_str(location.search);
-          if(search.ref) {
-            setTimeout(() => {
-              wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
-              rsvg_click(search.ref, 0);
-            }, 200);
-          };
+              const search = $p.job_prm.parse_url_str(location.search);
+              if(search.ref) {
+                setTimeout(() => {
+                  wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
+                  rsvg_click(search.ref, 0);
+                }, 200);
+              };
+            });
 
           return res;
         }
@@ -7411,13 +7413,9 @@ class OSvgs {
             const keys = [];
             if(typeof _obj == 'string') {
               const {doc} = $p.adapters.pouch.local;
-              doc.find({
-                selector: {_id: `doc.calc_order|${_obj}`},
-                fields: ['production'],
-                limit: 1
-              })
-                .then(({docs}) => {
-                  docs.length && docs[0].production.forEach(({characteristic}) => {
+              doc.get(`doc.calc_order|${_obj}`)
+                .then(({production}) => {
+                  production && production.forEach(({characteristic}) => {
                     !$p.utils.is_empty_guid(characteristic) && keys.push(`cat.characteristics|${characteristic}`);
                   });
                   return keys.length ? doc.allDocs({keys, limit: keys.length, include_docs: true}) : {rows: keys};

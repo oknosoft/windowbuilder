@@ -37,8 +37,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
       if(res) {
         o = res.o;
         wnd = res.wnd;
-        return o.load_production()
-          .then(() => res);
+        return res;
       }
     });
 };
