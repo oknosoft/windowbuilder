@@ -1762,8 +1762,21 @@ $p.cat.inserts.__define({
             });
             mf.read_only = !prms.has(prm);
 
-          }
+            const links = prm.params_links({grid: {selection: {}}, obj: this});
+            const hide = links.some((link) => link.hide);
+            if(hide && !mf.read_only) {
+              mf.read_only = true;
+            }
 
+            if(links.length) {
+              const filter = {}
+              prm.filter_params_links(filter, null, links);
+              filter.ref && mf.choice_params.push({
+                name: 'ref',
+                path: filter.ref,
+              });
+            }
+          }
         }
 
         this.ProductionRow = ItemRow;
@@ -5723,7 +5736,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           wnd = res.wnd;
           wnd.prompt = prompt;
           wnd.close_confirmed = true;
-          if(handlers){
+          if(handlers) {
             wnd.handleNavigate = handlers.handleNavigate;
             wnd.handleIfaceState = handlers.handleIfaceState;
           }
