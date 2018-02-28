@@ -151,15 +151,23 @@
         pwnd: wnd,
         read_only: wnd.elmnts.ro,
         oxml: {
-          ' ': [{id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro'},
+          ' ': [
+            {id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro'},
             {id: 'date', path: 'o.date', synonym: 'Дата', type: 'ro', txt: moment(o.date).format(moment._masks.date_time)},
             'number_internal'
           ],
-          'Контактная информация': ['partner', 'client_of_dealer', 'phone',
+          'Контактная информация': [
+            'partner',
+            {id: 'client_of_dealer', path: 'o.client_of_dealer', synonym: 'Клиент дилера', type: 'client'},
+            'phone',
             {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr'}
           ],
-          'Дополнительные реквизиты': ['obj_delivery_state', 'category',
-            {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'}, 'leading_manager']
+          'Дополнительные реквизиты': [
+            'obj_delivery_state',
+            'category',
+            {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'},
+            'leading_manager'
+          ]
         }
       });
 

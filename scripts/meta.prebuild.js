@@ -1,6 +1,6 @@
 /**
  * ### Модуль сборки *.js по описанию метаданных
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2017
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
  * @module  metadata-prebuild
  */
 
@@ -148,7 +148,7 @@ function create_modules(_m) {
       cat: {mgr: 'CatManager', proto: 'CatObj', dir: 'catalogs'},
       bp: {mgr: 'BusinessProcessManager', proto: 'BusinessProcessObj'},
       tsk: {mgr: 'TaskManager', proto: 'TaskObj'},
-      doc: {mgr: 'DocManager', proto: 'DocObj'},
+      doc: {mgr: 'DocManager', proto: 'DocObj', dir: 'documents'},
       ireg: {mgr: 'InfoRegManager', proto: 'RegisterRow'},
       areg: {mgr: 'AccumRegManager', proto: 'RegisterRow'},
       dp: {mgr: 'DataProcessorsManager', proto: 'DataProcessorObj'},
@@ -269,7 +269,7 @@ function obj_constructor_text(_m, category, name, categoties) {
 
   // если описан расширитель менеджера, дополняем
   if(managerText){
-    text += managerText.replace('extends Object', 'extends CatManager');
+    text += managerText.replace('extends Object', `extends ${mgr}`);
     text += `\n$p.${category}.create('${name}', ${managerName}, ${extModule[managerName]._freeze ? 'true' : 'false'});\n`;
   }
   else{

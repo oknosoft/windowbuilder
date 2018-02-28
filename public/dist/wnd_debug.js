@@ -4250,111 +4250,6 @@ $p.spec_building = new SpecBuilding($p);
 })($p.classes.DataManager);
 
 
-(function (_mgr) {
-
-  _mgr.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
-
-  _mgr._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
-
-  _mgr.build_search = function (tmp, obj) {
-
-    const {number_internal, client_of_dealer, partner, note} = obj;
-
-    tmp.search = (obj.number_doc +
-      (number_internal ? ' ' + number_internal : '') +
-      (client_of_dealer ? ' ' + client_of_dealer : '') +
-      (partner.name ? ' ' + partner.name : '') +
-      (note ? ' ' + note : '')).toLowerCase();
-  };
-
-  _mgr.load_templates = async function () {
-
-    if(!$p.job_prm.builder) {
-      $p.job_prm.builder = {};
-    }
-    if(!$p.job_prm.builder.base_block) {
-      $p.job_prm.builder.base_block = [];
-    }
-    if(!$p.job_prm.pricing) {
-      $p.job_prm.pricing = {};
-    }
-
-    const {base_block} = $p.job_prm.builder;
-    $p.cat.production_params.forEach((o) => {
-      if(!o.is_folder) {
-        o.base_blocks.forEach((row) => {
-          if(base_block.indexOf(row.calc_order) == -1) {
-            base_block.push(row.calc_order);
-          }
-        });
-      }
-    });
-
-    const refs = [];
-    for (let o of base_block) {
-      refs.push(o.ref);
-      if(refs.length > 9) {
-        await _mgr.adapter.load_array(_mgr, refs);
-        refs.length = 0;
-      }
-    }
-    if(refs.length) {
-      await _mgr.adapter.load_array(_mgr, refs);
-    }
-
-    refs.length = 0;
-    base_block.forEach(({production}) => {
-      if(production.count()) {
-        refs.push(production.get(0).characteristic.ref);
-      }
-    });
-    return $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs);
-
-  };
-
-  _mgr.clone = async function(src) {
-    if(typeof src === 'string') {
-      src = await _mgr.get(src, 'promise');
-    }
-    await src.load_production();
-    const {organization, partner, contract, ...others} = src._obj;
-    const dst = await _mgr.create({date: new Date(), organization, partner, contract});
-    dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
-    const map = new Map();
-    const aatt = [];
-    const db = _mgr.adapter.db(_mgr);
-    src.production.forEach((row) => {
-      const prow = Object.assign({}, row._obj);
-      if(row.characteristic.calc_order === src) {
-        const cx = prow.characteristic = $p.cat.characteristics.create({calc_order: dst.ref}, false, true);
-        cx._mixin(row.characteristic._obj, null, 'ref,name,calc_order,timestamp'.split(','), true);
-        cx._data._modified = true;
-        cx._data._is_new = true;
-        map.set(row.characteristic, cx);
-        if(row.characteristic._attachments) {
-          aatt.push(db.getAttachment(`cat.characteristics|${row.characteristic.ref}`, 'svg')
-            .then((att) => cx._obj._attachments = {svg: {content_type: 'image/svg+xml', data: att}})
-            .catch((err) => null));
-        }
-      }
-      dst.production.add(prow);
-    });
-
-    await Promise.all(aatt);
-
-    dst.production.forEach((row) => {
-      const cx = map.get(row.ordn);
-      if(cx) {
-        row.ordn = row.characteristic.leading_product = cx;
-      }
-    });
-    dst._data.before_save_sync = true;
-    return dst.save();
-  }
-
-})($p.doc.calc_order);
-
-
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
 
@@ -5682,15 +5577,23 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         pwnd: wnd,
         read_only: wnd.elmnts.ro,
         oxml: {
-          ' ': [{id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro'},
+          ' ': [
+            {id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro'},
             {id: 'date', path: 'o.date', synonym: 'Дата', type: 'ro', txt: moment(o.date).format(moment._masks.date_time)},
             'number_internal'
           ],
-          'Контактная информация': ['partner', 'client_of_dealer', 'phone',
+          'Контактная информация': [
+            'partner',
+            {id: 'client_of_dealer', path: 'o.client_of_dealer', synonym: 'Клиент дилера', type: 'client'},
+            'phone',
             {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr'}
           ],
-          'Дополнительные реквизиты': ['obj_delivery_state', 'category',
-            {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'}, 'leading_manager']
+          'Дополнительные реквизиты': [
+            'obj_delivery_state',
+            'category',
+            {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'},
+            'leading_manager'
+          ]
         }
       });
 
@@ -6274,6 +6177,181 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
 	return wnd;
 };
 
+
+
+((_mgr) => {
+
+  const {form, tabular_sections} = _mgr.metadata()
+  tabular_sections.production.fields.characteristic._option_list_local = true;
+
+  form.client_of_dealer = {
+    fields: {
+      surname: {
+        synonym: 'Фамилия',
+        mandatory: true,
+        type: {types: ['string'], str_len: 50}
+      },
+      name: {
+        synonym: 'Имя',
+        mandatory: true,
+        type: {types: ['string'], str_len: 50}
+      },
+      patronymic: {
+        synonym: 'Отчество',
+        type: {types: ['string'], str_len: 50}
+      },
+      passport_serial_number: {
+        synonym: 'Серия и номер паспорта',
+        tooltip: 'Серия и номер через пробел',
+        type: {types: ['string'], str_len: 20}
+      },
+      passport_date: {
+        synonym: 'Дата выдачи паспорта',
+        type: {types: ['date'], date_part: 'date'}
+      },
+      note: {
+        synonym: 'Дополнительно',
+        multiline_mode: true,
+        type: {types: ['string'], str_len: 0}
+      }
+    },
+    obj: {
+      items: [
+        {
+          element: 'DataField',
+          fld: 'surname',
+        },
+        {
+          element: 'DataField',
+          fld: 'name',
+        },
+        {
+          element: 'DataField',
+          fld: 'patronymic',
+        },
+        {
+          element: 'DataField',
+          fld: 'passport_serial_number',
+        },
+        {
+          element: 'DataField',
+          fld: 'passport_date',
+        },
+        {
+          element: 'DataField',
+          fld: 'note',
+        },
+      ]
+    },
+    selection: {
+      indexes: [
+        {
+          mango: false,
+          name: ''
+        }
+      ]
+    }
+  };
+
+  _mgr._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
+
+  _mgr.build_search = function (tmp, obj) {
+
+    const {number_internal, client_of_dealer, partner, note} = obj;
+
+    tmp.search = (obj.number_doc +
+      (number_internal ? ' ' + number_internal : '') +
+      (client_of_dealer ? ' ' + client_of_dealer : '') +
+      (partner.name ? ' ' + partner.name : '') +
+      (note ? ' ' + note : '')).toLowerCase();
+  };
+
+  _mgr.load_templates = async function () {
+
+    if(!$p.job_prm.builder) {
+      $p.job_prm.builder = {};
+    }
+    if(!$p.job_prm.builder.base_block) {
+      $p.job_prm.builder.base_block = [];
+    }
+    if(!$p.job_prm.pricing) {
+      $p.job_prm.pricing = {};
+    }
+
+    const {base_block} = $p.job_prm.builder;
+    $p.cat.production_params.forEach((o) => {
+      if(!o.is_folder) {
+        o.base_blocks.forEach((row) => {
+          if(base_block.indexOf(row.calc_order) == -1) {
+            base_block.push(row.calc_order);
+          }
+        });
+      }
+    });
+
+    const refs = [];
+    for (let o of base_block) {
+      refs.push(o.ref);
+      if(refs.length > 9) {
+        await _mgr.adapter.load_array(_mgr, refs);
+        refs.length = 0;
+      }
+    }
+    if(refs.length) {
+      await _mgr.adapter.load_array(_mgr, refs);
+    }
+
+    refs.length = 0;
+    base_block.forEach(({production}) => {
+      if(production.count()) {
+        refs.push(production.get(0).characteristic.ref);
+      }
+    });
+    return $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs);
+
+  };
+
+  _mgr.clone = async function(src) {
+    if(typeof src === 'string') {
+      src = await _mgr.get(src, 'promise');
+    }
+    await src.load_production();
+    const {organization, partner, contract, ...others} = src._obj;
+    const dst = await _mgr.create({date: new Date(), organization, partner, contract});
+    dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
+    const map = new Map();
+    const aatt = [];
+    const db = _mgr.adapter.db(_mgr);
+    src.production.forEach((row) => {
+      const prow = Object.assign({}, row._obj);
+      if(row.characteristic.calc_order === src) {
+        const cx = prow.characteristic = $p.cat.characteristics.create({calc_order: dst.ref}, false, true);
+        cx._mixin(row.characteristic._obj, null, 'ref,name,calc_order,timestamp'.split(','), true);
+        cx._data._modified = true;
+        cx._data._is_new = true;
+        map.set(row.characteristic, cx);
+        if(row.characteristic._attachments) {
+          aatt.push(db.getAttachment(`cat.characteristics|${row.characteristic.ref}`, 'svg')
+            .then((att) => cx._obj._attachments = {svg: {content_type: 'image/svg+xml', data: att}})
+            .catch((err) => null));
+        }
+      }
+      dst.production.add(prow);
+    });
+
+    await Promise.all(aatt);
+
+    dst.production.forEach((row) => {
+      const cx = map.get(row.ordn);
+      if(cx) {
+        row.ordn = row.characteristic.leading_product = cx;
+      }
+    });
+    dst._data.before_save_sync = true;
+    return dst.save();
+  }
+
+})($p.doc.calc_order);
 
 
 $p.doc.calc_order.__define({
@@ -7489,6 +7567,110 @@ class OSvgs {
 }
 
 $p.iface.OSvgs = OSvgs;
+
+
+
+class eXcell_client extends eXcell {
+
+  constructor(cell) {
+
+    if (!cell){
+      return;
+    }
+
+    super(cell);
+
+    this.cell = cell;
+    this.open_selection = this.open_selection.bind(this);
+    this.edit = eXcell_client.prototype.edit.bind(this);
+    this.detach = eXcell_client.prototype.detach.bind(this);
+
+  }
+
+  get grid() {
+    return this.cell.parentNode.grid;
+  }
+
+  ti_keydown(e) {
+    const {keyCode} = e;
+    const {grid} = this;
+    if(keyCode === 46) {
+      this.setValue({})
+      grid.editStop();
+      return $p.iface.cancel_bubble(e);
+    }
+    else if(keyCode === 9) {
+      const {cell: {firstChild}} = this;
+      firstChild.childNodes[0].value += '\u00A0';
+      return $p.iface.cancel_bubble(e);
+    }
+    else if(keyCode === 13) {
+      grid.editStop();
+      return $p.iface.cancel_bubble(e);
+    }
+    else if(keyCode === 115) {
+      return this.open_selection(e);
+    }
+    else if(keyCode === 113) {
+      return this.open_obj(e);
+    }
+  }
+
+  open_selection(e) {
+    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
+    $p.msg.show_not_implemented();
+    return $p.iface.cancel_bubble(e);
+  }
+
+  open_obj(e) {
+    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
+    $p.msg.show_not_implemented();
+    return $p.iface.cancel_bubble(e);
+  }
+
+  setValue(val) {
+    const v = this.grid.get_cell_field();
+    if(v && v.field && v.obj[v.field] !== val) {
+      v.obj[v.field] = val;
+    }
+    this.setCValue(val);
+  }
+
+  getValue() {
+    const {cell: {firstChild}} = this;
+    if(firstChild && firstChild.childNodes.length) {
+      return firstChild.childNodes[0].value;
+    }
+    else {
+      const v = this.grid.get_cell_field();
+      return v && v.field ? v.obj[v.field] : '';
+    }
+
+  }
+
+  edit() {
+
+    this.val = this.getValue();		
+    this.cell.innerHTML = '<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_field21">&nbsp;</div></div>';
+
+    const {cell: {firstChild}, val} = this;
+    const ti = firstChild.childNodes[0];
+    ti.value = val;
+    ti.onclick = $p.iface.cancel_bubble;		
+    ti.focus();
+    ti.onkeydown = this.ti_keydown.bind(this);
+    firstChild.childNodes[1].onclick = this.open_selection;
+  };
+
+  detach() {
+    const val = this.getValue();
+    val !== null && this.setValue(val);
+    return !$p.utils.is_equal(this.val, this.getValue());				
+  }
+
+}
+window.eXcell_client = eXcell_client;
+
 
 
 class WndAddressData {
