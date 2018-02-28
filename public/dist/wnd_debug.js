@@ -2863,15 +2863,18 @@ class Pricing {
     return pouch.remote.doc.get(`_local/price_${step}`)
       .then((remote) => {
         return pouch.local.doc.get(`_local/price_${step}`)
-          .then((local) => local.remote_rev)
-          .catch(() => null)
-          .then((rev) => {
+          .then((local) => local)
+          .catch(() => {})
+          .then((local) => {
             this.build_cache_local(remote);
 
-            if(rev !== remote._rev) {
+            if(local.remote_rev !== remote._rev) {
               remote.remote_rev = remote._rev;
-              if(!rev) {
+              if(!local._rev) {
                 delete remote._rev;
+              }
+              else {
+                remote._rev = local._rev;
               }
               pouch.local.doc.put(remote);
             }
