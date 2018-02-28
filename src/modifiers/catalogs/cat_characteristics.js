@@ -13,7 +13,12 @@
 // при старте приложения, загружаем в ОЗУ обычные характеристики (без ссылок на заказы)
 $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
-  _mgr.adapter.load_view(_mgr, 'doc/nom_characteristics')
+  _mgr.adapter.load_view(_mgr, 'linked', {
+    limit: 1000,
+    include_docs: true,
+    startkey: [$p.utils.blank.guid, 'cat.characteristics'],
+    endkey: [$p.utils.blank.guid, 'cat.characteristics\u0fff']
+  })
     // и корректируем метаданные формы спецификации с учетом ролей пользователя
     .then(() => {
     const {current_user} = $p;

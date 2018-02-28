@@ -11,7 +11,12 @@ $p.injected_data._mixin({"toolbar_calc_order_production.xml":"<?xml version=\"1.
 
 $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
-  _mgr.adapter.load_view(_mgr, 'doc/nom_characteristics')
+  _mgr.adapter.load_view(_mgr, 'linked', {
+    limit: 1000,
+    include_docs: true,
+    startkey: [$p.utils.blank.guid, 'cat.characteristics'],
+    endkey: [$p.utils.blank.guid, 'cat.characteristics\u0fff']
+  })
     .then(() => {
     const {current_user} = $p;
       if(current_user && (
@@ -4347,7 +4352,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     const rows_saver = this.product_rows(true);
 
-    const res = this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
+    const res = this._manager.pouch_db.query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
       .then(({rows}) => {
         const deleted = [];
         for (const {id} of rows) {
