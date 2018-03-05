@@ -39,6 +39,9 @@ export function init(dispatch) {
       pouch.init(wsql, job_prm);
       reset_cache(pouch);
 
+      // шрифт Roboto грузим асинхронно
+      $p.load_script('https://fonts.googleapis.com/css?family=Roboto', 'link');
+
       // читаем paperjs и deep-diff
       return $p.load_script('/dist/paperjs-deep-diff.min.js', 'script');
     })
