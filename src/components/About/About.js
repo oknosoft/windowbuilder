@@ -105,6 +105,8 @@ class About extends Component {
 
 About.propTypes = {
   classes: PropTypes.object.isRequired,
+  title: PropTypes.string,
+  handleIfaceState: PropTypes.func.isRequired,
 };
 
 export default withStyles(styleSheet)(withIface(About));

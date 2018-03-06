@@ -21,7 +21,12 @@ class Pricing {
     $p.md.once("predefined_elmnts_inited", () => {
 
       // грузим в ram цены номенклатуры
-      this.by_range()
+
+      // сначала, пытаемся из local
+      this.by_local()
+        .then((loc) => {
+          return !loc && this.by_range();
+        })
         .then(() => {
           // излучаем событие "можно открывать формы"
           $p.adapters.pouch.emit('pouch_complete_loaded');
@@ -77,6 +82,109 @@ class Pricing {
     }
   }
 
+  build_cache_local(prices) {
+
+    const {nom, currencies} = $p.cat;
+    const note = 'Индекс цен номенклатуры';
+    const date = new Date('2010-01-01');
+
+    for(const ref in prices) {
+      if(ref[0] === '_' || ref === 'remote_rev') {
+        continue;
+      }
+      const onom = nom.get(ref, false, true);
+      const value = prices[ref];
+
+      if (!onom || !onom._data){
+        $p.record_log({
+          class: 'error',
+          nom: ref,
+          note,
+          value
+        });
+        continue;
+      }
+      onom._data._price = value;
+
+      for(const cref in value){
+        for(const pref in value[cref]) {
+          const price = value[cref][pref][0];
+          price.date = date;
+          price.currency = currencies.get(price.currency);
+        }
+      }
+    }
+  }
+
+  // если оффлайн и есть доступ к серверу
+  sync_local(pouch, step = 0) {
+    return pouch.remote.doc.get(`_local/price_${step}`)
+      .then((remote) => {
+        return pouch.local.doc.get(`_local/price_${step}`)
+          .then((local) => local)
+          .catch(() => {})
+          .then((local) => {
+            // грузим цены из remote
+            this.build_cache_local(remote);
+
+            // если версия local отличается от remote - обновляем
+            if(local.remote_rev !== remote._rev) {
+              remote.remote_rev = remote._rev;
+              if(!local._rev) {
+                delete remote._rev;
+              }
+              else {
+                remote._rev = local._rev;
+              }
+              pouch.local.doc.put(remote);
+            }
+
+            return this.sync_local(pouch, ++step);
+          })
+      })
+      .catch((err) => {
+        if(step !== 0) {
+          pouch.local.doc.get(`_local/price_${step}`)
+            .then((local) => pouch.local.doc.remove(local))
+            .catch(() => null);
+          return true;
+        }
+      });
+  }
+
+  // из локальной базы или direct
+  by_local(step = 0) {
+    const {pouch} = $p.adapters;
+
+    // если мы в idb, но подключены к серверу, тянем цены оттуда
+    const pre = step === 0 && pouch.local.doc.adapter !== 'http' && $p.adapters.pouch.authorized ?
+      pouch.remote.doc.info()
+        .then(() => this.sync_local(pouch))
+        .catch((err) => null)
+      :
+      Promise.resolve();
+
+    return pre.then((loaded) => {
+      if(loaded) {
+        return loaded;
+      }
+      else {
+        return pouch.local.doc.get(`_local/price_${step}`)
+      }
+    })
+      .then((prices) => {
+        if(prices === true) {
+          return prices;
+        }
+        this.build_cache_local(prices);
+        pouch.emit('nom_prices', ++step);
+        return this.by_local(step);
+      })
+      .catch((err) => {
+        return step !== 0;
+      });
+  }
+
   /**
    * Перестраивает кеш цен номенклатуры по длинному ключу
    * @param startkey
@@ -95,11 +203,13 @@ class Pricing {
       })
       .then((res) => {
         this.build_cache(res.rows);
-        step++;
-        $p.adapters.pouch.emit('nom_prices', step);
+        $p.adapters.pouch.emit('nom_prices', ++step);
         if (res.rows.length === 600) {
           return this.by_range(res.rows[res.rows.length - 1].key, step);
         }
+      })
+      .catch((err) => {
+        $p.record_log(err);
       });
   }
 

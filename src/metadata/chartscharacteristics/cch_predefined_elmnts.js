@@ -103,8 +103,12 @@ export default function ($p) {
         // рассчеты, помеченные, как шаблоны, загрузим в память заранее
         doc.calc_order.load_templates && setTimeout(doc.calc_order.load_templates.bind(doc.calc_order), 1000);
 
+
         // даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-        setTimeout(() => md.emit('predefined_elmnts_inited'), 100);
+        setTimeout(() => $p.adapters.pouch.local.doc.get('_design/svgs')
+          .then(() => $p.job_prm.use_svgs = true)
+          .catch(() => $p.job_prm.use_svgs = false)
+          .then(() => md.emit('predefined_elmnts_inited')), 100);
 
       });
 

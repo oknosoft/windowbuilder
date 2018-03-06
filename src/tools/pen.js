@@ -481,7 +481,18 @@ class ToolPen extends ToolElement {
           proto: this.profile,
           parent: this.addl_hit.profile,
         });
-        connective.joined_nearests().forEach((p) => p.rays.clear());
+        connective.joined_nearests().forEach((rama) => {
+          const {inner, outer} = rama.joined_imposts();
+          for (const {profile} of inner.concat(outer)) {
+            profile.rays.clear();
+          }
+          for (const {_attr, elm} of rama.joined_nearests()) {
+            _attr._rays && _attr._rays.clear();
+          }
+          const {_attr, layer} = rama;
+          _attr._rays && _attr._rays.clear();
+          layer && layer.notify && layer.notify({profiles: [rama], points: []}, consts.move_points);
+        });
       }
     }
     else if(this.mode == 'create' && this.path) {

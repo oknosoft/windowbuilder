@@ -11,7 +11,12 @@ $p.injected_data._mixin({"toolbar_calc_order_production.xml":"<?xml version=\"1.
 
 $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
-  _mgr.adapter.load_view(_mgr, 'doc/nom_characteristics')
+  _mgr.adapter.load_view(_mgr, 'linked', {
+    limit: 1000,
+    include_docs: true,
+    startkey: [$p.utils.blank.guid, 'cat.characteristics'],
+    endkey: [$p.utils.blank.guid, 'cat.characteristics\u0fff']
+  })
     .then(() => {
     const {current_user} = $p;
       if(current_user && (
@@ -356,7 +361,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
   };
 
   return this.constructor.prototype.form_obj.call(this, pwnd, attr)
-    .then(function (res) {
+    .then((res) => {
       if(res) {
         o = res.o;
         wnd = res.wnd;
@@ -376,16 +381,16 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 	  constructor(_mgr) {
 
 	    this._obj = {
-        calc_order: $p.wsql.get_user_param("template_block_calc_order")
+        calc_order: $p.wsql.get_user_param('template_block_calc_order')
       }
 
       this._meta = Object.assign(_mgr.metadata()._clone(), {
         form: {
           selection: {
-            fields: ["presentation","svg"],
+            fields: ['presentation', 'svg'],
             cols: [
-              {"id": "presentation", "width": "320", "type": "ro", "align": "left", "sort": "na", "caption": "Наименование"},
-              {"id": "svg", "width": "*", "type": "rsvg", "align": "left", "sort": "na", "caption": "Эскиз"}
+              {id: 'presentation', width: '320', type: 'ro', align: 'left', sort: 'na', caption: 'Наименование'},
+              {id: 'svg', width: '*', type: 'rsvg', align: 'left', sort: 'na', caption: 'Эскиз'}
             ]
           }
         }
@@ -400,12 +405,12 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
     get _manager() {
 	    return {
         value_mgr: $p.md.value_mgr,
-        class_name: "dp.fake"
+        class_name: 'dp.fake'
       }
     }
 
     get calc_order() {
-      return $p.CatCharacteristics.prototype._getter.call(this, "calc_order");
+      return $p.CatCharacteristics.prototype._getter.call(this, 'calc_order');
     }
     set calc_order(v) {
 
@@ -425,8 +430,8 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
       }
 
       if(!$p.utils.is_empty_guid(_obj.calc_order) &&
-        $p.wsql.get_user_param("template_block_calc_order") != _obj.calc_order){
-        $p.wsql.set_user_param("template_block_calc_order", _obj.calc_order);
+        $p.wsql.get_user_param('template_block_calc_order') != _obj.calc_order) {
+        $p.wsql.set_user_param('template_block_calc_order', _obj.calc_order);
       }
     }
 
@@ -446,7 +451,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 			});
 		}
 
-		attr.initial_value = $p.wsql.get_user_param("template_block_initial_value");
+    attr.initial_value = $p.wsql.get_user_param('template_block_initial_value');
 
 		attr.metadata = selection_block._meta;
 
@@ -454,32 +459,30 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 			const ares = [], crefs = [];
 			let calc_order;
 
-			attr.selection.some((o) => {
-				if(Object.keys(o).indexOf("calc_order") != -1){
-					calc_order = o.calc_order;
-					return true;
-				}
-			});
+      attr.selection.some((o) => {
+        if(Object.keys(o).indexOf('calc_order') != -1) {
+          calc_order = o.calc_order;
+          return true;
+        }
+      });
 
 			return $p.doc.calc_order.get(calc_order, true, true)
 				.then((o) => {
 
-					o.production.each((row) => {
-						if(!row.characteristic.empty()){
-							if(row.characteristic.is_new()){
-                crefs.push(row.characteristic.ref);
+					o.production.forEach(({characteristic}) => {
+						if(!characteristic.empty()){
+							if(characteristic.is_new()){
+                crefs.push(characteristic.ref);
               }
 							else{
-								if(!row.characteristic.calc_order.empty() && row.characteristic.coordinates.count()){
-									if(row.characteristic._attachments &&
-										row.characteristic._attachments.svg &&
-										!row.characteristic._attachments.svg.stub){
-                    ares.push(row.characteristic);
+                if(!characteristic.calc_order.empty() && characteristic.coordinates.count()) {
+                  if(characteristic.svg) {
+                    ares.push(characteristic);
                   }
-									else{
-                    crefs.push(row.characteristic.ref);
+                  else {
+                    crefs.push(characteristic.ref);
                   }
-								}
+                }
 							}
 						}
 					});
@@ -496,24 +499,15 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 
 					crefs.length = 0;
 					ares.forEach((o) => {
-            const presentation = ((o.calc_order_row && o.calc_order_row.note) || o.note || o.name) + "<br />" + o.owner.name;
+            const presentation = ((o.calc_order_row && o.calc_order_row.note) || o.note || o.name) + '<br />' + o.owner.name;
 						if(!attr.filter || presentation.toLowerCase().match(attr.filter.toLowerCase()))
 							crefs.push({
 								ref: o.ref,
                 presentation:   '<div style="white-space:normal"> ' + presentation + ' </div>',
-								svg: o._attachments ? o._attachments.svg : ""
+								svg: o.svg || ''
 							});
 					});
 
-					ares.length = 0;
-					crefs.forEach((o) => {
-						if(o.svg && o.svg.data){
-							ares.push($p.utils.blob_as_text(o.svg.data)
-								.then(function (svg) {
-									o.svg = svg;
-								}))
-						}
-					});
 					return Promise.all(ares);
 
 				})
@@ -720,26 +714,31 @@ $p.cat.clrs.__define({
 
         if(btn_id=="btn_select" && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
 
-          const ares = $p.wsql.alasql("select top 1 ref from ? where clr_in = ? and clr_out = ? and (not ref = ?)",
-            [$p.cat.clrs.alatable, eclr.clr_in.ref, eclr.clr_out.ref, $p.utils.blank.guid]);
-
-          if(ares.length){
-            pwnd.on_select.call(pwnd, $p.cat.clrs.get(ares[0]));
+          if(eclr.clr_in == eclr.clr_out) {
+            pwnd.on_select.call(pwnd, eclr.clr_in);
           }
-          else{
-            $p.cat.clrs.create({
-              clr_in: eclr.clr_in,
-              clr_out: eclr.clr_out,
-              name: eclr.clr_in.name + " \\ " + eclr.clr_out.name,
-              parent: $p.job_prm.builder.composite_clr_folder
-            })
-              .then((obj) => obj.register_on_server())
-              .then((obj) => pwnd.on_select.call(pwnd, obj))
-              .catch((err) => $p.msg.show_msg({
-                type: "alert-warning",
-                text: "Недостаточно прав для добавления составного цвета",
-                title: "Составной цвет"
-              }));
+          else {
+            const ares = $p.wsql.alasql("select top 1 ref from cat_clrs where clr_in = ? and clr_out = ? and (not ref = ?)",
+              [eclr.clr_in.ref, eclr.clr_out.ref, $p.utils.blank.guid]);
+
+            if(ares.length){
+              pwnd.on_select.call(pwnd, $p.cat.clrs.get(ares[0]));
+            }
+            else{
+              $p.cat.clrs.create({
+                clr_in: eclr.clr_in,
+                clr_out: eclr.clr_out,
+                name: eclr.clr_in.name + " \\ " + eclr.clr_out.name,
+                parent: $p.job_prm.builder.composite_clr_folder
+              })
+                .then((obj) => obj.register_on_server())
+                .then((obj) => pwnd.on_select.call(pwnd, obj))
+                .catch((err) => $p.msg.show_msg({
+                  type: 'alert-warning',
+                  text: 'Недостаточно прав для добавления составного цвета',
+                  title: 'Составной цвет'
+                }));
+            }
           }
 
           wnd.close();
@@ -805,37 +804,42 @@ $p.cat.clrs.__define({
 					eclr.clr_in = $p.utils.blank.guid;
 					eclr.clr_out = $p.utils.blank.guid;
 
-					const clr_in = new $p.iface.OCombo({
-						parent: tb_filter.div.obj,
-						obj: eclr,
-						field: "clr_in",
-						width: 150,
-						hide_frm: true,
-						get_option_list: get_option_list
-					});
-					const clr_out = new $p.iface.OCombo({
-						parent: tb_filter.div.obj,
-						obj: eclr,
-						field: "clr_out",
-						width: 150,
-						hide_frm: true,
-						get_option_list: get_option_list
-					});
+          const clr_in = new $p.iface.OCombo({
+            parent: tb_filter.div.obj,
+            obj: eclr,
+            field: 'clr_in',
+            width: 160,
+            hide_frm: true,
+            get_option_list: get_option_list
+          });
+          const clr_out = new $p.iface.OCombo({
+            parent: tb_filter.div.obj,
+            obj: eclr,
+            field: 'clr_out',
+            width: 160,
+            hide_frm: true,
+            get_option_list: get_option_list
+          });
 
-					clr_in.DOMelem.style.float = "left";
-					clr_in.DOMelem_input.placeholder = "Цвет изнутри";
-					clr_out.DOMelem_input.placeholder = "Цвет снаружи";
+          const clr_in_title = document.createElement('DIV');
+          clr_in_title.innerHTML = 'Со стороны петель';
+          clr_in_title.style = 'position: absolute;top: -4px;padding-left: 2px;font-size: small;color: gray;';
+          tb_filter.div.obj.appendChild(clr_in_title);
 
-					clr_in.attachEvent("onChange", tb_filter.call_event);
-					clr_out.attachEvent("onChange", tb_filter.call_event);
-					clr_in.attachEvent("onClose", tb_filter.call_event);
-					clr_out.attachEvent("onClose", tb_filter.call_event);
+          clr_in.DOMelem.style.float = 'left';
+          clr_in.DOMelem_input.placeholder = 'Цвет изнутри';
+          clr_out.DOMelem_input.placeholder = 'Цвет снаружи';
 
-          wnd.elmnts.toolbar.hideItem("btn_new");
-          wnd.elmnts.toolbar.hideItem("btn_edit");
-          wnd.elmnts.toolbar.hideItem("btn_delete");
+          clr_in.attachEvent('onChange', tb_filter.call_event);
+          clr_out.attachEvent('onChange', tb_filter.call_event);
+          clr_in.attachEvent('onClose', tb_filter.call_event);
+          clr_out.attachEvent('onClose', tb_filter.call_event);
 
-          wnd.elmnts.toolbar.setItemText("btn_select", "<b>Выбрать или создать</b>");
+          wnd.elmnts.toolbar.hideItem('btn_new');
+          wnd.elmnts.toolbar.hideItem('btn_edit');
+          wnd.elmnts.toolbar.hideItem('btn_delete');
+
+          wnd.elmnts.toolbar.setItemText('btn_select', '<b>Выбрать или создать</b>');
 
 					return wnd;
 
@@ -1706,6 +1710,24 @@ $p.cat.inserts.__define({
 		]
 	},
 
+  _prms_by_type: {
+	  value: function (insert_type) {
+      const prms = new Set();
+      this.find_rows({available: true, insert_type}, (inset) => {
+        inset.used_params.forEach((param) => {
+          !param.is_calculated && prms.add(param);
+        });
+        inset.specification.forEach(({nom}) => {
+          const {used_params} = nom;
+          used_params && used_params.forEach((param) => {
+            !param.is_calculated && prms.add(param);
+          });
+        });
+      });
+      return prms;
+    }
+  },
+
   ItemData: {
     value: class ItemData {
       constructor(item, Renderer) {
@@ -1714,22 +1736,54 @@ $p.cat.inserts.__define({
         this.count = 0;
 
         class ItemRow extends $p.DpBuyers_orderProductionRow {
+
+          tune(ref, mf, column) {
+
+            const {inset} = this;
+            const prm = $p.cch.properties.get(ref);
+
+            if(mf.choice_params) {
+              const adel = new Set();
+              for(const choice of mf.choice_params) {
+                if(choice.name !== 'owner' && choice.path != prm) {
+                  adel.add(choice);
+                }
+              }
+              for(const choice of adel) {
+                mf.choice_params.splice(mf.choice_params.indexOf(choice), 1);
+              }
+            }
+
+            const prms = new Set();
+            inset.used_params.forEach((param) => {
+              !param.is_calculated && prms.add(param);
+            });
+            inset.specification.forEach(({nom}) => {
+              const {used_params} = nom;
+              used_params && used_params.forEach((param) => {
+                !param.is_calculated && prms.add(param);
+              });
+            });
+            mf.read_only = !prms.has(prm);
+
+            const links = prm.params_links({grid: {selection: {}}, obj: this});
+            const hide = links.some((link) => link.hide);
+            if(hide && !mf.read_only) {
+              mf.read_only = true;
+            }
+
+            if(links.length) {
+              const filter = {}
+              prm.filter_params_links(filter, null, links);
+              filter.ref && mf.choice_params.push({
+                name: 'ref',
+                path: filter.ref,
+              });
+            }
+          }
         }
 
         this.ProductionRow = ItemRow;
-
-        const prms = new Set();
-        $p.cat.inserts.find_rows({available: true, insert_type: item}, (inset) => {
-          inset.used_params.forEach((param) => {
-            !param.is_calculated && prms.add(param);
-          });
-          inset.specification.forEach(({nom}) => {
-            const {used_params} = nom;
-            used_params && used_params.forEach((param) => {
-              !param.is_calculated && prms.add(param);
-            });
-          });
-        });
 
         const meta = $p.dp.buyers_order.metadata('production');
         this.meta = meta._clone();
@@ -1738,7 +1792,7 @@ $p.cat.inserts.__define({
 
         const changed = new Set();
 
-        for (const param of prms) {
+        for (const param of $p.cat.inserts._prms_by_type(item)) {
 
           $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
             if(!scheme.fields.find({field: param.ref})) {
@@ -1777,10 +1831,21 @@ $p.cat.inserts.__define({
         }
 
         for(const scheme of changed) {
-          scheme.save();
+          const {doc} = $p.adapters.pouch.local;
+          if(doc.adapter === 'http' && !scheme.user) {
+            doc.getSession().then(({userCtx}) => {
+              if(userCtx.roles.indexOf('doc_full') !== -1) {
+                scheme.save();
+              }
+            })
+          }
+          else {
+            scheme.save();
+          }
         }
 
       }
+
     }
   },
 
@@ -2713,7 +2778,11 @@ class Pricing {
 
     $p.md.once("predefined_elmnts_inited", () => {
 
-      this.by_range()
+
+      this.by_local()
+        .then((loc) => {
+          return !loc && this.by_range();
+        })
         .then(() => {
           $p.adapters.pouch.emit('pouch_complete_loaded');
           $p.doc.nom_prices_setup.pouch_db.changes({
@@ -2766,6 +2835,104 @@ class Pricing {
     }
   }
 
+  build_cache_local(prices) {
+
+    const {nom, currencies} = $p.cat;
+    const note = 'Индекс цен номенклатуры';
+    const date = new Date('2010-01-01');
+
+    for(const ref in prices) {
+      if(ref[0] === '_' || ref === 'remote_rev') {
+        continue;
+      }
+      const onom = nom.get(ref, false, true);
+      const value = prices[ref];
+
+      if (!onom || !onom._data){
+        $p.record_log({
+          class: 'error',
+          nom: ref,
+          note,
+          value
+        });
+        continue;
+      }
+      onom._data._price = value;
+
+      for(const cref in value){
+        for(const pref in value[cref]) {
+          const price = value[cref][pref][0];
+          price.date = date;
+          price.currency = currencies.get(price.currency);
+        }
+      }
+    }
+  }
+
+  sync_local(pouch, step = 0) {
+    return pouch.remote.doc.get(`_local/price_${step}`)
+      .then((remote) => {
+        return pouch.local.doc.get(`_local/price_${step}`)
+          .then((local) => local)
+          .catch(() => {})
+          .then((local) => {
+            this.build_cache_local(remote);
+
+            if(local.remote_rev !== remote._rev) {
+              remote.remote_rev = remote._rev;
+              if(!local._rev) {
+                delete remote._rev;
+              }
+              else {
+                remote._rev = local._rev;
+              }
+              pouch.local.doc.put(remote);
+            }
+
+            return this.sync_local(pouch, ++step);
+          })
+      })
+      .catch((err) => {
+        if(step !== 0) {
+          pouch.local.doc.get(`_local/price_${step}`)
+            .then((local) => pouch.local.doc.remove(local))
+            .catch(() => null);
+          return true;
+        }
+      });
+  }
+
+  by_local(step = 0) {
+    const {pouch} = $p.adapters;
+
+    const pre = step === 0 && pouch.local.doc.adapter !== 'http' && $p.adapters.pouch.authorized ?
+      pouch.remote.doc.info()
+        .then(() => this.sync_local(pouch))
+        .catch((err) => null)
+      :
+      Promise.resolve();
+
+    return pre.then((loaded) => {
+      if(loaded) {
+        return loaded;
+      }
+      else {
+        return pouch.local.doc.get(`_local/price_${step}`)
+      }
+    })
+      .then((prices) => {
+        if(prices === true) {
+          return prices;
+        }
+        this.build_cache_local(prices);
+        pouch.emit('nom_prices', ++step);
+        return this.by_local(step);
+      })
+      .catch((err) => {
+        return step !== 0;
+      });
+  }
+
   by_range(startkey, step = 0) {
 
     return $p.doc.nom_prices_setup.pouch_db.query('doc/doc_nom_prices_setup_slice_last',
@@ -2779,11 +2946,13 @@ class Pricing {
       })
       .then((res) => {
         this.build_cache(res.rows);
-        step++;
-        $p.adapters.pouch.emit('nom_prices', step);
+        $p.adapters.pouch.emit('nom_prices', ++step);
         if (res.rows.length === 600) {
           return this.by_range(res.rows[res.rows.length - 1].key, step);
         }
+      })
+      .catch((err) => {
+        $p.record_log(err);
       });
   }
 
@@ -3639,7 +3808,7 @@ class ProductsBuilding {
 
         };
 
-        cnn_add_spec(curr.cnn, curr.profile, len_angl);
+        (len_angl.len > 3) && cnn_add_spec(curr.cnn, curr.profile, len_angl);
 
       }
 
@@ -3774,13 +3943,21 @@ class ProductsBuilding {
       if(attr.save) {
 
 
-        ox.save(undefined, undefined, {
-          svg: {
-            content_type: 'image/svg+xml',
-            data: new Blob([scheme.get_svg()], {type: 'image/svg+xml'})
-          }
-        })
-          .then(() => {
+        let saver;
+        if($p.job_prm.use_svgs) {
+          ox.save(undefined, undefined, {
+            svg: {
+              content_type: 'image/svg+xml',
+              data: new Blob([scheme.get_svg()], {type: 'image/svg+xml'})
+            }
+          });
+        }
+        else {
+          ox.svg = scheme.get_svg();
+          saver = ox.save();
+        }
+
+        saver.then(() => {
             $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
             delete scheme._attr._saving;
             ox.calc_order.characteristic_saved(scheme, attr);
@@ -4080,111 +4257,6 @@ $p.spec_building = new SpecBuilding($p);
 })($p.classes.DataManager);
 
 
-(function (_mgr) {
-
-  _mgr.metadata().tabular_sections.production.fields.characteristic._option_list_local = true;
-
-  _mgr._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
-
-  _mgr.build_search = function (tmp, obj) {
-
-    const {number_internal, client_of_dealer, partner, note} = obj;
-
-    tmp.search = (obj.number_doc +
-      (number_internal ? ' ' + number_internal : '') +
-      (client_of_dealer ? ' ' + client_of_dealer : '') +
-      (partner.name ? ' ' + partner.name : '') +
-      (note ? ' ' + note : '')).toLowerCase();
-  };
-
-  _mgr.load_templates = async function () {
-
-    if(!$p.job_prm.builder) {
-      $p.job_prm.builder = {};
-    }
-    if(!$p.job_prm.builder.base_block) {
-      $p.job_prm.builder.base_block = [];
-    }
-    if(!$p.job_prm.pricing) {
-      $p.job_prm.pricing = {};
-    }
-
-    const {base_block} = $p.job_prm.builder;
-    $p.cat.production_params.forEach((o) => {
-      if(!o.is_folder) {
-        o.base_blocks.forEach((row) => {
-          if(base_block.indexOf(row.calc_order) == -1) {
-            base_block.push(row.calc_order);
-          }
-        });
-      }
-    });
-
-    const refs = [];
-    for (let o of base_block) {
-      refs.push(o.ref);
-      if(refs.length > 9) {
-        await _mgr.adapter.load_array(_mgr, refs);
-        refs.length = 0;
-      }
-    }
-    if(refs.length) {
-      await _mgr.adapter.load_array(_mgr, refs);
-    }
-
-    refs.length = 0;
-    base_block.forEach(({production}) => {
-      if(production.count()) {
-        refs.push(production.get(0).characteristic.ref);
-      }
-    });
-    return $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs);
-
-  };
-
-  _mgr.clone = async function(src) {
-    if(typeof src === 'string') {
-      src = await _mgr.get(src, 'promise');
-    }
-    await src.load_production();
-    const {organization, partner, contract, ...others} = src._obj;
-    const dst = await _mgr.create({date: new Date(), organization, partner, contract});
-    dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
-    const map = new Map();
-    const aatt = [];
-    const db = _mgr.adapter.db(_mgr);
-    src.production.forEach((row) => {
-      const prow = Object.assign({}, row._obj);
-      if(row.characteristic.calc_order === src) {
-        const cx = prow.characteristic = $p.cat.characteristics.create({calc_order: dst.ref}, false, true);
-        cx._mixin(row.characteristic._obj, null, 'ref,name,calc_order,timestamp'.split(','), true);
-        cx._data._modified = true;
-        cx._data._is_new = true;
-        map.set(row.characteristic, cx);
-        if(row.characteristic._attachments) {
-          aatt.push(db.getAttachment(`cat.characteristics|${row.characteristic.ref}`, 'svg')
-            .then((att) => cx._obj._attachments = {svg: {content_type: 'image/svg+xml', data: att}})
-            .catch((err) => null));
-        }
-      }
-      dst.production.add(prow);
-    });
-
-    await Promise.all(aatt);
-
-    dst.production.forEach((row) => {
-      const cx = map.get(row.ordn);
-      if(cx) {
-        row.ordn = row.characteristic.leading_product = cx;
-      }
-    });
-    dst._data.before_save_sync = true;
-    return dst.save();
-  }
-
-})($p.doc.calc_order);
-
-
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
 
@@ -4293,7 +4365,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     const rows_saver = this.product_rows(true);
 
-    const res = this._manager.pouch_db.query('svgs', {startkey: [this.ref, 0], endkey: [this.ref, 10e9]})
+    const res = this._manager.pouch_db.query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
       .then(({rows}) => {
         const deleted = [];
         for (const {id} of rows) {
@@ -4560,53 +4632,63 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       }
     }
 
-    this.production.forEach((row) => {
-      if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
+    return this.load_production().then(() => {
 
-        res.Продукция.push(this.row_description(row));
+      this.production.forEach((row) => {
+        if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
 
-        res.ВсегоИзделий += row.quantity;
-        res.ВсегоПлощадьИзделий += row.quantity * row.s;
+          res.Продукция.push(this.row_description(row));
 
-        if(attr.sizes === false) {
+          res.ВсегоИзделий += row.quantity;
+          res.ВсегоПлощадьИзделий += row.quantity * row.s;
 
+          if(attr.sizes === false) {
+
+          }
+          else {
+            if($p.job_prm.use_svgs) {
+              get_imgs.push(characteristics.get_attachment(row.characteristic.ref, 'svg')
+                .then(blob_as_text)
+                .then((svg_text) => res.ПродукцияЭскизы[row.characteristic.ref] = svg_text)
+                .catch((err) => err && err.status != 404 && $p.record_log(err))
+              );
+            }
+            else if(row.characteristic.svg) {
+              res.ПродукцияЭскизы[row.characteristic.ref] = row.characteristic.svg;
+            }
+          }
         }
-        else {
-          get_imgs.push(characteristics.get_attachment(row.characteristic.ref, 'svg')
-            .then(blob_as_text)
-            .then((svg_text) => res.ПродукцияЭскизы[row.characteristic.ref] = svg_text)
-            .catch((err) => err && err.status != 404 && $p.record_log(err))
-          );
+        else if(!row.nom.is_procedure && !row.nom.is_service && row.nom.is_accessory) {
+          res.Аксессуары.push(this.row_description(row));
         }
-      }
-      else if(!row.nom.is_procedure && !row.nom.is_service && row.nom.is_accessory) {
-        res.Аксессуары.push(this.row_description(row));
-      }
-      else if(!row.nom.is_procedure && row.nom.is_service && !row.nom.is_accessory) {
-        res.Услуги.push(this.row_description(row));
-      }
-    });
-    res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
-
-    return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-      .then(() => $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
-      .then(() => {
-
-        const svg = document.createElement('SVG');
-        svg.innerHTML = '<g />';
-        const qrcode = new QRCode(svg, {
-          text: 'http://www.oknosoft.ru/zd/',
-          width: 100,
-          height: 100,
-          colorDark: '#000000',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H,
-          useSVG: true
-        });
-        res.qrcode = svg.innerHTML;
-
-        return res;
+        else if(!row.nom.is_procedure && row.nom.is_service && !row.nom.is_accessory) {
+          res.Услуги.push(this.row_description(row));
+        }
       });
+      res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
+
+      return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
+        .then(() => $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
+        .then(() => {
+
+          const svg = document.createElement('SVG');
+          svg.innerHTML = '<g />';
+          const qrcode = new QRCode(svg, {
+            text: 'http://www.oknosoft.ru/zd/',
+            width: 100,
+            height: 100,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H,
+            useSVG: true
+          });
+          res.qrcode = svg.innerHTML;
+
+          return res;
+        });
+
+    });
+
   }
 
   row_description(row) {
@@ -5502,14 +5584,23 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         pwnd: wnd,
         read_only: wnd.elmnts.ro,
         oxml: {
-          ' ': [{id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro', txt: o.number_doc},
+          ' ': [
+            {id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro'},
             {id: 'date', path: 'o.date', synonym: 'Дата', type: 'ro', txt: moment(o.date).format(moment._masks.date_time)},
             'number_internal'
           ],
-          'Контактная информация': ['partner', 'client_of_dealer', 'phone',
-            {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr', txt: o['shipping_address']}
+          'Контактная информация': [
+            'partner',
+            {id: 'client_of_dealer', path: 'o.client_of_dealer', synonym: 'Клиент дилера', type: 'client'},
+            'phone',
+            {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr'}
           ],
-          'Дополнительные реквизиты': ['obj_delivery_state', 'category']
+          'Дополнительные реквизиты': [
+            'obj_delivery_state',
+            'category',
+            {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'},
+            'leading_manager'
+          ]
         }
       });
 
@@ -5555,21 +5646,24 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           wnd = res.wnd;
           wnd.prompt = prompt;
           wnd.close_confirmed = true;
-          if(handlers){
+          if(handlers) {
             wnd.handleNavigate = handlers.handleNavigate;
             wnd.handleIfaceState = handlers.handleIfaceState;
           }
 
-          rsvg_reload();
-          o._manager.on('svgs', rsvg_reload);
+          o.load_production()
+            .then(() => {
+              rsvg_reload();
+              o._manager.on('svgs', rsvg_reload);
 
-          const search = $p.job_prm.parse_url_str(location.search);
-          if(search.ref) {
-            setTimeout(() => {
-              wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
-              rsvg_click(search.ref, 0);
-            }, 200);
-          };
+              const search = $p.job_prm.parse_url_str(location.search);
+              if(search.ref) {
+                setTimeout(() => {
+                  wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
+                  rsvg_click(search.ref, 0);
+                }, 200);
+              };
+            });
 
           return res;
         }
@@ -5928,6 +6022,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       if(ro) {
         frm_toolbar.disableItem('btn_sent');
         frm_toolbar.disableItem('btn_save');
+        frm_toolbar.disableItem('btn_save_close');
         let toolbar;
         const disable = (itemId) => toolbar.disableItem(itemId);
         toolbar = tabs.tab_production.getAttachedToolbar();
@@ -5943,6 +6038,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           frm_toolbar.enableItem('btn_sent');
         }
         frm_toolbar.enableItem('btn_save');
+        frm_toolbar.enableItem('btn_save_close');
         let toolbar;
         const enable = (itemId) => toolbar.enableItem(itemId);
         toolbar = tabs.tab_production.getAttachedToolbar();
@@ -6088,6 +6184,181 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
 	return wnd;
 };
 
+
+
+((_mgr) => {
+
+  const {form, tabular_sections} = _mgr.metadata()
+  tabular_sections.production.fields.characteristic._option_list_local = true;
+
+  form.client_of_dealer = {
+    fields: {
+      surname: {
+        synonym: 'Фамилия',
+        mandatory: true,
+        type: {types: ['string'], str_len: 50}
+      },
+      name: {
+        synonym: 'Имя',
+        mandatory: true,
+        type: {types: ['string'], str_len: 50}
+      },
+      patronymic: {
+        synonym: 'Отчество',
+        type: {types: ['string'], str_len: 50}
+      },
+      passport_serial_number: {
+        synonym: 'Серия и номер паспорта',
+        tooltip: 'Серия и номер через пробел',
+        type: {types: ['string'], str_len: 20}
+      },
+      passport_date: {
+        synonym: 'Дата выдачи паспорта',
+        type: {types: ['date'], date_part: 'date'}
+      },
+      note: {
+        synonym: 'Дополнительно',
+        multiline_mode: true,
+        type: {types: ['string'], str_len: 0}
+      }
+    },
+    obj: {
+      items: [
+        {
+          element: 'DataField',
+          fld: 'surname',
+        },
+        {
+          element: 'DataField',
+          fld: 'name',
+        },
+        {
+          element: 'DataField',
+          fld: 'patronymic',
+        },
+        {
+          element: 'DataField',
+          fld: 'passport_serial_number',
+        },
+        {
+          element: 'DataField',
+          fld: 'passport_date',
+        },
+        {
+          element: 'DataField',
+          fld: 'note',
+        },
+      ]
+    },
+    selection: {
+      indexes: [
+        {
+          mango: false,
+          name: ''
+        }
+      ]
+    }
+  };
+
+  _mgr._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
+
+  _mgr.build_search = function (tmp, obj) {
+
+    const {number_internal, client_of_dealer, partner, note} = obj;
+
+    tmp.search = (obj.number_doc +
+      (number_internal ? ' ' + number_internal : '') +
+      (client_of_dealer ? ' ' + client_of_dealer : '') +
+      (partner.name ? ' ' + partner.name : '') +
+      (note ? ' ' + note : '')).toLowerCase();
+  };
+
+  _mgr.load_templates = async function () {
+
+    if(!$p.job_prm.builder) {
+      $p.job_prm.builder = {};
+    }
+    if(!$p.job_prm.builder.base_block) {
+      $p.job_prm.builder.base_block = [];
+    }
+    if(!$p.job_prm.pricing) {
+      $p.job_prm.pricing = {};
+    }
+
+    const {base_block} = $p.job_prm.builder;
+    $p.cat.production_params.forEach((o) => {
+      if(!o.is_folder) {
+        o.base_blocks.forEach((row) => {
+          if(base_block.indexOf(row.calc_order) == -1) {
+            base_block.push(row.calc_order);
+          }
+        });
+      }
+    });
+
+    const refs = [];
+    for (let o of base_block) {
+      refs.push(o.ref);
+      if(refs.length > 9) {
+        await _mgr.adapter.load_array(_mgr, refs);
+        refs.length = 0;
+      }
+    }
+    if(refs.length) {
+      await _mgr.adapter.load_array(_mgr, refs);
+    }
+
+    refs.length = 0;
+    base_block.forEach(({production}) => {
+      if(production.count()) {
+        refs.push(production.get(0).characteristic.ref);
+      }
+    });
+    return $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs);
+
+  };
+
+  _mgr.clone = async function(src) {
+    if(typeof src === 'string') {
+      src = await _mgr.get(src, 'promise');
+    }
+    await src.load_production();
+    const {organization, partner, contract, ...others} = src._obj;
+    const dst = await _mgr.create({date: new Date(), organization, partner, contract});
+    dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
+    const map = new Map();
+    const aatt = [];
+    const db = _mgr.adapter.db(_mgr);
+    src.production.forEach((row) => {
+      const prow = Object.assign({}, row._obj);
+      if(row.characteristic.calc_order === src) {
+        const cx = prow.characteristic = $p.cat.characteristics.create({calc_order: dst.ref}, false, true);
+        cx._mixin(row.characteristic._obj, null, 'ref,name,calc_order,timestamp'.split(','), true);
+        cx._data._modified = true;
+        cx._data._is_new = true;
+        map.set(row.characteristic, cx);
+        if(row.characteristic._attachments) {
+          aatt.push(db.getAttachment(`cat.characteristics|${row.characteristic.ref}`, 'svg')
+            .then((att) => cx._obj._attachments = {svg: {content_type: 'image/svg+xml', data: att}})
+            .catch((err) => null));
+        }
+      }
+      dst.production.add(prow);
+    });
+
+    await Promise.all(aatt);
+
+    dst.production.forEach((row) => {
+      const cx = map.get(row.ordn);
+      if(cx) {
+        row.ordn = row.characteristic.leading_product = cx;
+      }
+    });
+    dst._data.before_save_sync = true;
+    return dst.save();
+  }
+
+})($p.doc.calc_order);
 
 
 $p.doc.calc_order.__define({
@@ -6487,6 +6758,16 @@ $p.DocSelling.prototype.before_save = function () {
 
 
 })($p.enm.elm_types);
+
+
+
+(function(_mgr){
+
+  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
+
+
+})($p.enm.inserts_types);
+
 
 
 (function($p){
@@ -7092,6 +7373,7 @@ class OSvgs {
       handler: handler,
     });
 
+    this.draw_svgs = this.draw_svgs.bind(this);
 
     const {pics_area} = this;
     pics_area.className = 'svgs-area';
@@ -7198,31 +7480,66 @@ class OSvgs {
 
           let _obj = stack.pop();
           const db = $p.adapters.pouch.local.doc;
-          db.query('svgs', {
-            startkey: [typeof _obj == 'string' ? _obj : _obj.ref, 0],
-            endkey: [typeof _obj == 'string' ? _obj : _obj.ref, 10e9]
-          })
-            .then((res) => {
-              const aatt = [];
-              for(const {id} of res.rows){
-                aatt.push(db.getAttachment(id, 'svg')
-                  .then((att) => ({ref: id.substr(20), att: att}))
-                  .catch((err) => {}));
-              };
-              return Promise.all(aatt);
-            })
-            .then((res) => {
-              const aatt = [];
-              res.forEach(({ref, att}) => {
-                if(att instanceof Blob && att.size)
-                  aatt.push($p.utils.blob_as_text(att)
-                    .then((svg) => ({ref, svg})));
-              });
-              return Promise.all(aatt);
-            })
-            .then(this.draw_svgs.bind(this))
-            .catch($p.record_log);
 
+          if($p.job_prm.use_svgs) {
+            db.query('svgs', {
+              startkey: [typeof _obj == 'string' ? _obj : _obj.ref, 0],
+              endkey: [typeof _obj == 'string' ? _obj : _obj.ref, 10e9]
+            })
+              .then((res) => {
+                const aatt = [];
+                for(const {id} of res.rows){
+                  aatt.push(db.getAttachment(id, 'svg')
+                    .then((att) => ({ref: id.substr(20), att: att}))
+                    .catch((err) => {}));
+                };
+                return Promise.all(aatt);
+              })
+              .then((res) => {
+                const aatt = [];
+                res.forEach(({ref, att}) => {
+                  if(att instanceof Blob && att.size)
+                    aatt.push($p.utils.blob_as_text(att)
+                      .then((svg) => ({ref, svg})));
+                });
+                return Promise.all(aatt);
+              })
+              .then(this.draw_svgs)
+              .catch($p.record_log);
+          }
+          else {
+            const keys = [];
+            if(typeof _obj == 'string') {
+              const {doc} = $p.adapters.pouch.local;
+              doc.get(`doc.calc_order|${_obj}`)
+                .then(({production}) => {
+                  production && production.forEach(({characteristic}) => {
+                    !$p.utils.is_empty_guid(characteristic) && keys.push(`cat.characteristics|${characteristic}`);
+                  });
+                  return keys.length ? doc.allDocs({keys, limit: keys.length, include_docs: true}) : {rows: keys};
+                })
+                .then(({rows}) => {
+                  const adel = [];
+                  rows.forEach(({id, doc}) => {
+                    if(doc && doc.svg) {
+                      const ind = keys.indexOf(id);
+                      keys[ind] = {ref: id.substr(20), svg: doc.svg};
+                    }
+                  });
+                  return keys.filter((v) => v.svg);
+                })
+                .then(this.draw_svgs)
+                .catch($p.record_log)
+            }
+            else {
+              _obj.production.forEach(({characteristic: {ref, svg}}) => {
+                if(svg) {
+                  keys.push({ref, svg});
+                }
+              });
+              this.draw_svgs(keys);
+            }
+          }
           stack.length = 0;
         }
       }, 300);
@@ -7257,6 +7574,110 @@ class OSvgs {
 }
 
 $p.iface.OSvgs = OSvgs;
+
+
+
+class eXcell_client extends eXcell {
+
+  constructor(cell) {
+
+    if (!cell){
+      return;
+    }
+
+    super(cell);
+
+    this.cell = cell;
+    this.open_selection = this.open_selection.bind(this);
+    this.edit = eXcell_client.prototype.edit.bind(this);
+    this.detach = eXcell_client.prototype.detach.bind(this);
+
+  }
+
+  get grid() {
+    return this.cell.parentNode.grid;
+  }
+
+  ti_keydown(e) {
+    const {keyCode} = e;
+    const {grid} = this;
+    if(keyCode === 46) {
+      this.setValue({})
+      grid.editStop();
+      return $p.iface.cancel_bubble(e);
+    }
+    else if(keyCode === 9) {
+      const {cell: {firstChild}} = this;
+      firstChild.childNodes[0].value += '\u00A0';
+      return $p.iface.cancel_bubble(e);
+    }
+    else if(keyCode === 13) {
+      grid.editStop();
+      return $p.iface.cancel_bubble(e);
+    }
+    else if(keyCode === 115) {
+      return this.open_selection(e);
+    }
+    else if(keyCode === 113) {
+      return this.open_obj(e);
+    }
+  }
+
+  open_selection(e) {
+    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
+    $p.msg.show_not_implemented();
+    return $p.iface.cancel_bubble(e);
+  }
+
+  open_obj(e) {
+    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
+    $p.msg.show_not_implemented();
+    return $p.iface.cancel_bubble(e);
+  }
+
+  setValue(val) {
+    const v = this.grid.get_cell_field();
+    if(v && v.field && v.obj[v.field] !== val) {
+      v.obj[v.field] = val;
+    }
+    this.setCValue(val);
+  }
+
+  getValue() {
+    const {cell: {firstChild}} = this;
+    if(firstChild && firstChild.childNodes.length) {
+      return firstChild.childNodes[0].value;
+    }
+    else {
+      const v = this.grid.get_cell_field();
+      return v && v.field ? v.obj[v.field] : '';
+    }
+
+  }
+
+  edit() {
+
+    this.val = this.getValue();		
+    this.cell.innerHTML = '<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_field21">&nbsp;</div></div>';
+
+    const {cell: {firstChild}, val} = this;
+    const ti = firstChild.childNodes[0];
+    ti.value = val;
+    ti.onclick = $p.iface.cancel_bubble;		
+    ti.focus();
+    ti.onkeydown = this.ti_keydown.bind(this);
+    firstChild.childNodes[1].onclick = this.open_selection;
+  };
+
+  detach() {
+    const val = this.getValue();
+    val !== null && this.setValue(val);
+    return !$p.utils.is_equal(this.val, this.getValue());				
+  }
+
+}
+window.eXcell_client = eXcell_client;
+
 
 
 class WndAddressData {

@@ -162,29 +162,35 @@ $p.cat.clrs.__define({
         // если указаны оба цвета
         if(btn_id=="btn_select" && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
 
-          // ищем в справочнике цветов
-          const ares = $p.wsql.alasql("select top 1 ref from ? where clr_in = ? and clr_out = ? and (not ref = ?)",
-            [$p.cat.clrs.alatable, eclr.clr_in.ref, eclr.clr_out.ref, $p.utils.blank.guid]);
-
-          // если не нашли - создаём
-          if(ares.length){
-            pwnd.on_select.call(pwnd, $p.cat.clrs.get(ares[0]));
+          // если цвета изнутри и снаружи одинаковы, возвращаем первый
+          if(eclr.clr_in == eclr.clr_out) {
+            pwnd.on_select.call(pwnd, eclr.clr_in);
           }
-          else{
-            $p.cat.clrs.create({
-              clr_in: eclr.clr_in,
-              clr_out: eclr.clr_out,
-              name: eclr.clr_in.name + " \\ " + eclr.clr_out.name,
-              parent: $p.job_prm.builder.composite_clr_folder
-            })
-            // регистрируем цвет в couchdb
-              .then((obj) => obj.register_on_server())
-              .then((obj) => pwnd.on_select.call(pwnd, obj))
-              .catch((err) => $p.msg.show_msg({
-                type: "alert-warning",
-                text: "Недостаточно прав для добавления составного цвета",
-                title: "Составной цвет"
-              }));
+          else {
+            // ищем в справочнике цветов
+            const ares = $p.wsql.alasql("select top 1 ref from cat_clrs where clr_in = ? and clr_out = ? and (not ref = ?)",
+              [eclr.clr_in.ref, eclr.clr_out.ref, $p.utils.blank.guid]);
+
+            // если не нашли - создаём
+            if(ares.length){
+              pwnd.on_select.call(pwnd, $p.cat.clrs.get(ares[0]));
+            }
+            else{
+              $p.cat.clrs.create({
+                clr_in: eclr.clr_in,
+                clr_out: eclr.clr_out,
+                name: eclr.clr_in.name + " \\ " + eclr.clr_out.name,
+                parent: $p.job_prm.builder.composite_clr_folder
+              })
+              // регистрируем цвет в couchdb
+                .then((obj) => obj.register_on_server())
+                .then((obj) => pwnd.on_select.call(pwnd, obj))
+                .catch((err) => $p.msg.show_msg({
+                  type: 'alert-warning',
+                  text: 'Недостаточно прав для добавления составного цвета',
+                  title: 'Составной цвет'
+                }));
+            }
           }
 
           wnd.close();
@@ -250,39 +256,44 @@ $p.cat.clrs.__define({
 					eclr.clr_in = $p.utils.blank.guid;
 					eclr.clr_out = $p.utils.blank.guid;
 
-					// Создаём элементы управления
-					const clr_in = new $p.iface.OCombo({
-						parent: tb_filter.div.obj,
-						obj: eclr,
-						field: "clr_in",
-						width: 150,
-						hide_frm: true,
-						get_option_list: get_option_list
-					});
-					const clr_out = new $p.iface.OCombo({
-						parent: tb_filter.div.obj,
-						obj: eclr,
-						field: "clr_out",
-						width: 150,
-						hide_frm: true,
-						get_option_list: get_option_list
-					});
+          // Создаём элементы управления
+          const clr_in = new $p.iface.OCombo({
+            parent: tb_filter.div.obj,
+            obj: eclr,
+            field: 'clr_in',
+            width: 160,
+            hide_frm: true,
+            get_option_list: get_option_list
+          });
+          const clr_out = new $p.iface.OCombo({
+            parent: tb_filter.div.obj,
+            obj: eclr,
+            field: 'clr_out',
+            width: 160,
+            hide_frm: true,
+            get_option_list: get_option_list
+          });
 
-					clr_in.DOMelem.style.float = "left";
-					clr_in.DOMelem_input.placeholder = "Цвет изнутри";
-					clr_out.DOMelem_input.placeholder = "Цвет снаружи";
+          const clr_in_title = document.createElement('DIV');
+          clr_in_title.innerHTML = 'Со стороны петель';
+          clr_in_title.style = 'position: absolute;top: -4px;padding-left: 2px;font-size: small;color: gray;';
+          tb_filter.div.obj.appendChild(clr_in_title);
 
-					clr_in.attachEvent("onChange", tb_filter.call_event);
-					clr_out.attachEvent("onChange", tb_filter.call_event);
-					clr_in.attachEvent("onClose", tb_filter.call_event);
-					clr_out.attachEvent("onClose", tb_filter.call_event);
+          clr_in.DOMelem.style.float = 'left';
+          clr_in.DOMelem_input.placeholder = 'Цвет изнутри';
+          clr_out.DOMelem_input.placeholder = 'Цвет снаружи';
 
-					// гасим кнопки управления
-          wnd.elmnts.toolbar.hideItem("btn_new");
-          wnd.elmnts.toolbar.hideItem("btn_edit");
-          wnd.elmnts.toolbar.hideItem("btn_delete");
+          clr_in.attachEvent('onChange', tb_filter.call_event);
+          clr_out.attachEvent('onChange', tb_filter.call_event);
+          clr_in.attachEvent('onClose', tb_filter.call_event);
+          clr_out.attachEvent('onClose', tb_filter.call_event);
 
-          wnd.elmnts.toolbar.setItemText("btn_select", "<b>Выбрать или создать</b>");
+          // гасим кнопки управления
+          wnd.elmnts.toolbar.hideItem('btn_new');
+          wnd.elmnts.toolbar.hideItem('btn_edit');
+          wnd.elmnts.toolbar.hideItem('btn_delete');
+
+          wnd.elmnts.toolbar.setItemText('btn_select', '<b>Выбрать или создать</b>');
 
 					return wnd;
 

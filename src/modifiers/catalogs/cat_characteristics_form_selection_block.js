@@ -18,16 +18,16 @@
 	  constructor(_mgr) {
 
 	    this._obj = {
-        calc_order: $p.wsql.get_user_param("template_block_calc_order")
+        calc_order: $p.wsql.get_user_param('template_block_calc_order')
       }
 
       this._meta = Object.assign(_mgr.metadata()._clone(), {
         form: {
           selection: {
-            fields: ["presentation","svg"],
+            fields: ['presentation', 'svg'],
             cols: [
-              {"id": "presentation", "width": "320", "type": "ro", "align": "left", "sort": "na", "caption": "Наименование"},
-              {"id": "svg", "width": "*", "type": "rsvg", "align": "left", "sort": "na", "caption": "Эскиз"}
+              {id: 'presentation', width: '320', type: 'ro', align: 'left', sort: 'na', caption: 'Наименование'},
+              {id: 'svg', width: '*', type: 'rsvg', align: 'left', sort: 'na', caption: 'Эскиз'}
             ]
           }
         }
@@ -43,12 +43,12 @@
     get _manager() {
 	    return {
         value_mgr: $p.md.value_mgr,
-        class_name: "dp.fake"
+        class_name: 'dp.fake'
       }
     }
 
     get calc_order() {
-      return $p.CatCharacteristics.prototype._getter.call(this, "calc_order");
+      return $p.CatCharacteristics.prototype._getter.call(this, 'calc_order');
     }
     set calc_order(v) {
 
@@ -69,8 +69,8 @@
       }
 
       if(!$p.utils.is_empty_guid(_obj.calc_order) &&
-        $p.wsql.get_user_param("template_block_calc_order") != _obj.calc_order){
-        $p.wsql.set_user_param("template_block_calc_order", _obj.calc_order);
+        $p.wsql.get_user_param('template_block_calc_order') != _obj.calc_order) {
+        $p.wsql.set_user_param('template_block_calc_order', _obj.calc_order);
       }
     }
 
@@ -93,7 +93,7 @@
 		}
 
 		// начальное значение - выбранные в предыдущий раз типовой блок
-		attr.initial_value = $p.wsql.get_user_param("template_block_initial_value");
+    attr.initial_value = $p.wsql.get_user_param('template_block_initial_value');
 
 		// подсовываем типовой форме списка изменённые метаданные
 		attr.metadata = selection_block._meta;
@@ -104,35 +104,33 @@
 			let calc_order;
 
 			// получаем ссылку на расчет из отбора
-			attr.selection.some((o) => {
-				if(Object.keys(o).indexOf("calc_order") != -1){
-					calc_order = o.calc_order;
-					return true;
-				}
-			});
+      attr.selection.some((o) => {
+        if(Object.keys(o).indexOf('calc_order') != -1) {
+          calc_order = o.calc_order;
+          return true;
+        }
+      });
 
 			// получаем документ расчет
 			return $p.doc.calc_order.get(calc_order, true, true)
 				.then((o) => {
 
 					// получаем массив ссылок на характеристики в табчасти продукции
-					o.production.each((row) => {
-						if(!row.characteristic.empty()){
-							if(row.characteristic.is_new()){
-                crefs.push(row.characteristic.ref);
+					o.production.forEach(({characteristic}) => {
+						if(!characteristic.empty()){
+							if(characteristic.is_new()){
+                crefs.push(characteristic.ref);
               }
 							else{
 								// если это характеристика продукции - добавляем
-								if(!row.characteristic.calc_order.empty() && row.characteristic.coordinates.count()){
-									if(row.characteristic._attachments &&
-										row.characteristic._attachments.svg &&
-										!row.characteristic._attachments.svg.stub){
-                    ares.push(row.characteristic);
+                if(!characteristic.calc_order.empty() && characteristic.coordinates.count()) {
+                  if(characteristic.svg) {
+                    ares.push(characteristic);
                   }
-									else{
-                    crefs.push(row.characteristic.ref);
+                  else {
+                    crefs.push(characteristic.ref);
                   }
-								}
+                }
 							}
 						}
 					});
@@ -151,25 +149,15 @@
 					// фильтруем по подстроке
 					crefs.length = 0;
 					ares.forEach((o) => {
-            const presentation = ((o.calc_order_row && o.calc_order_row.note) || o.note || o.name) + "<br />" + o.owner.name;
+            const presentation = ((o.calc_order_row && o.calc_order_row.note) || o.note || o.name) + '<br />' + o.owner.name;
 						if(!attr.filter || presentation.toLowerCase().match(attr.filter.toLowerCase()))
 							crefs.push({
 								ref: o.ref,
                 presentation:   '<div style="white-space:normal"> ' + presentation + ' </div>',
-								svg: o._attachments ? o._attachments.svg : ""
+								svg: o.svg || ''
 							});
 					});
 
-					// догружаем изображения
-					ares.length = 0;
-					crefs.forEach((o) => {
-						if(o.svg && o.svg.data){
-							ares.push($p.utils.blob_as_text(o.svg.data)
-								.then(function (svg) {
-									o.svg = svg;
-								}))
-						}
-					});
 					return Promise.all(ares);
 
 				})

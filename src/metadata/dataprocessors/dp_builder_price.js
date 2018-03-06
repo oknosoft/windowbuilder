@@ -44,37 +44,35 @@ export default function ($p) {
           'types': 'ro,ro,dhxCalendar,ro,ro'
         };
 
-        return $p.wsql.pouch.local.doc.query('doc/doc_nom_prices_setup_slice_last', {
-          limit: 1000,
-          include_docs: false,
-          reduce: false,
-          startkey: [nom.ref, ''],
-          endkey: [nom.ref, '\ufff0']
-        })
-          .then((data) => {
-            if(data && data.rows) {
-              data.rows.forEach((row) => {
+        const {_price} = nom._data;
+        if(_price) {
+          for(const cref in _price) {
+            _price[cref];
+            for(const tref in _price[cref]) {
+              for(const row of _price[cref][tref]) {
                 goods.add({
-                  nom_characteristic: row.key[1],
-                  price_type: row.key[2],
-                  date: row.value.date,
-                  price: row.value.price,
-                  currency: row.value.currency
+                  nom_characteristic: cref,
+                  price_type: tref,
+                  date: row.date,
+                  price: row.price,
+                  currency: row.currency
                 });
-              });
-
-              goods.sort(['price_type', 'nom_characteristic', 'date']);
-
-              wnd.elmnts.grids.goods = wnd.attachTabular({
-                obj: this,
-                ts: 'goods',
-                pwnd: wnd,
-                ts_captions: ts_captions
-              });
-              wnd.detachToolbar();
+              }
             }
-          });
+          }
+        }
 
+        goods.sort(['price_type', 'nom_characteristic', 'date']);
+
+        wnd.elmnts.grids.goods = wnd.attachTabular({
+          obj: this,
+          ts: 'goods',
+          pwnd: wnd,
+          ts_captions: ts_captions
+        });
+        wnd.detachToolbar();
+
+        return Promise.resolve();
       }
     }
   });

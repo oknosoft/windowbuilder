@@ -19,20 +19,11 @@ export const alasql_schemas = $p.wsql.alasql.compile('select * from cat_scheme_s
 // заполняет компонент данными
 export function fill_data(ref) {
 
-  const {Подоконник, Водоотлив, МоскитнаяСетка, Откос, Профиль, Монтаж, Доставка, Набор} = $p.enm.inserts_types;
-  const items = this.items = [Подоконник, Водоотлив, МоскитнаяСетка, Откос, Профиль, Монтаж, Доставка, Набор];
+  const items = this.items = $p.enm.inserts_types.additions_groups;
   const dp = this.dp = $p.dp.buyers_order.create();
   dp.calc_order = $p.doc.calc_order.by_ref[ref];
-  const components = this.components = new Map([
-    [Подоконник, new ItemData(Подоконник, AdditionsItem)],
-    [Водоотлив, new ItemData(Водоотлив, AdditionsItem)],
-    [МоскитнаяСетка, new ItemData(МоскитнаяСетка, AdditionsItem)],
-    [Откос, new ItemData(Откос, AdditionsItem)],
-    [Профиль, new ItemData(Профиль, AdditionsItem)],
-    [Монтаж, new ItemData(Монтаж, AdditionsItem)],
-    [Доставка, new ItemData(Доставка, AdditionsItem)],
-    [Набор, new ItemData(Набор, AdditionsItem)],
-  ]);
+  const components = this.components = new Map();
+  items.forEach(v => components.set(v, new ItemData(v, AdditionsItem)));
 
   const {production, product_params} = dp;
 

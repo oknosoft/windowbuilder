@@ -1146,9 +1146,9 @@ class ProfileItem extends GeneratrixElement {
         }
 
         // прибиваем соединения примыкающих к текущему импостов
-        const imposts = this.joined_imposts();
+        const {inner, outer} = this.joined_imposts();
         const elm2 = this.elm;
-        for (const {profile} of imposts.inner.concat(imposts.outer)) {
+        for (const {profile} of inner.concat(outer)) {
           const {b, e} = profile.rays;
           b.profile == this && b.clear(true);
           e.profile == this && e.clear(true);
@@ -1968,7 +1968,14 @@ class Profile extends ProfileItem {
       if(!(elm instanceof Profile || elm instanceof ProfileConnective) || !elm.isInserted()) {
         return;
       }
-      const {generatrix} = elm;
+      let {generatrix} = elm;
+      if(elm.elm_type === $p.enm.elm_types.Импост) {
+        const pb = elm.cnn_point('b').profile;
+        const pe = elm.cnn_point('e').profile;
+        if(pb && pb.nearest(true) || pe && pe.nearest(true)) {
+          generatrix = generatrix.clone({insert: false}).elongation(90);
+        }
+      }
       let is_nearest = [];
       if(generatrix.is_nearest(b)) {
         is_nearest.push(b);

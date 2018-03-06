@@ -289,9 +289,12 @@ export default function ($p) {
      * @param attr {Object} - атрибуты OCombo
      */
     filter_params_links: {
-      value: function (filter, attr) {
+      value: function (filter, attr, links) {
         // для всех отфильтрованных связей параметров
-        this.params_links(attr).forEach((link) => {
+        if(!links) {
+          links = this.params_links(attr);
+        }
+        links.forEach((link) => {
           // если ключ найден в параметрах, добавляем фильтр
           if(!filter.ref) {
             filter.ref = {in: []};

@@ -25,6 +25,7 @@ class AppRoot extends Component {
 
   static propTypes = {
     handleNavigate: PropTypes.func.isRequired,
+    handleLogin: PropTypes.func.isRequired,
     handleIfaceState: PropTypes.func.isRequired,
     first_run: PropTypes.bool.isRequired,
     snack: PropTypes.object,
@@ -60,7 +61,7 @@ class AppRoot extends Component {
 
   render() {
     const {props} = this;
-    const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, user, couch_direct, offline, title} = props;
+    const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, page, user, couch_direct, offline, title} = props;
     const iprops = item_props();
 
     let need_auth = meta_loaded && iprops.need_user && ((!user.try_log_in && !user.logged_in) || (couch_direct && offline));
@@ -87,7 +88,7 @@ class AppRoot extends Component {
             <DumbScreen
               key="dumb"
               title={doc_ram_loaded ? 'Подготовка данных в памяти...' : 'Загрузка из IndexedDB...'}
-              page={{text: doc_ram_loaded ? `Цены и характеристики${nom_prices_step ? ` (такт №${nom_prices_step})` : ''}...` : 'Почти готово...'}}
+              page={{text: doc_ram_loaded ? `Цены и характеристики${nom_prices_step ? ` (такт №${nom_prices_step})` : ''}...` : `${(page && page.synonym) || 'Почти готово'}...`}}
               top={92}/>
             :
             <Switch key="switch">
@@ -115,6 +116,22 @@ class AppRoot extends Component {
 
       // диалог вопросов пользователю (да, нет)
       confirm && confirm.open && <Confirm key="confirm" open text={confirm.text} title={confirm.title} handleOk={confirm.handleOk} handleCancel={confirm.handleCancel}/>,
+
+      // обрыв связи
+      couch_direct && user.logged_in && !offline && props.complete_loaded && !props.sync_started &&
+      <Snack
+        key="break"
+        snack={{
+          open: true,
+          message: 'Потеряна связь с сервером, ждём восстановления...',
+          button: 'Подробнее'}}
+        handleClose={() => {
+          props.handleIfaceState({
+            component: '',
+            name: 'alert',
+            value: {open: true, title: 'Интернет-соединение', text: 'Можно будет продолжить работу после восстановления связи'}});
+        }}
+      />,
 
     ];
   }

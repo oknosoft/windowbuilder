@@ -88,11 +88,19 @@ class AdditionsGroup extends React.Component {
   }
 
   onCellSelected = (e) => {
-    const {props, tabular} = this;
-    const {meta} = props;
-    if(tabular && tabular.state._columns && tabular.state._columns[e.idx].key == 'clr'){
+    const {props: {meta}, tabular} = this;
+    if(tabular && tabular.state._columns){
+      const column = tabular.state._columns[e.idx];
+      const {key} = column;
       const row = tabular.rowGetter(e.rowIdx);
-      $p.cat.clrs.selection_exclude_service(meta.fields.clr, row.inset);
+      const mf = meta.fields[key];
+      if(key === 'clr') {
+        $p.cat.clrs.selection_exclude_service(mf, row.inset);
+      }
+      else if($p.utils.is_guid(key)) {
+        row.tune(key, mf, column);
+      }
+
     }
   }
 
@@ -104,7 +112,7 @@ class AdditionsGroup extends React.Component {
     const style = {flex: 'initial'};
     if(count) {
       style.minHeight = 80 + (33 * (count - 1));
-      style.maxHeight = 320;
+      //style.maxHeight = 320;
     }
 
     function pieces() {
