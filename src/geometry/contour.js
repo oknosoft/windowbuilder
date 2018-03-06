@@ -283,6 +283,30 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
   }
 
+  /**
+   * ### Габаритная площадь контура
+   */
+  get area() {
+    return (this.bounds.area/1e6).round(3);
+  }
+
+  /**
+   * ### Площядь контура с учетом наклонов-изгибов профиля
+   * Получаем, как сумму площадей всех заполнений и профилей контура
+   * Вычисления тяжелые, но в общем случае, с учетом незамкнутых контуров и соединений с пустотой, короче не сделать
+   */
+  get form_area() {
+    let upath;
+    this.glasses(false, true).concat(this.profiles).forEach(({path}) => {
+      if(upath) {
+        upath = upath.unite(path, {insert: false});
+      }
+      else {
+        upath = path.clone({insert: false});
+      }
+    });
+    return (upath.area/1e6).round(3);
+  }
 
   /**
    * указатель на фурнитуру
