@@ -464,7 +464,7 @@ class Filling extends AbstractFilling(BuilderElement) {
   }
 
   /**
-   * Площядь заполнения с учетом наклонов-изгибов сегментов
+   * площадь заполнения с учетом наклонов-изгибов сегментов
    * @return {number}
    */
   get form_area() {
