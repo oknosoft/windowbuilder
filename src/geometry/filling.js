@@ -125,7 +125,7 @@ class Filling extends AbstractFilling(BuilderElement) {
       formula: this.formula(),
       width: bounds.width,
       height: bounds.height,
-      s: this.s,
+      s: this.area,
       is_rectangular: this.is_rectangular,
       is_sandwich: nom.elm_type == $p.enm.elm_types.Заполнение,
       thickness: this.thickness,
@@ -454,12 +454,21 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
   }
 
+
   /**
-   * Площадь заполнения
+   * Габаритная площадь заполнения
    * @return {number}
    */
-  get s() {
-    return this.bounds.width * this.bounds.height / 1000000;
+  get area() {
+    return (this.bounds.area / 1e6).round(5);
+  }
+
+  /**
+   * Площядь заполнения с учетом наклонов-изгибов сегментов
+   * @return {number}
+   */
+  get form_area() {
+    return (this.path.area/1e6).round(5);
   }
 
   /**

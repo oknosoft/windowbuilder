@@ -98,17 +98,39 @@ export default function ($p) {
         if(this.inset != value) {
           this.inset = value;
           const {product_params} = _owner._owner;
+          const defaults = this.inset.product_params;
           product_params.clear({elm: row});
-          this.inset.used_params.forEach((param) => product_params.add({
-            elm: row,
-            param: param
-          }));
+          this.inset.used_params.forEach((param) => {
+            const prow = product_params.add({elm: row, param: param});
+
+            // подстановка умолчаний для параметра
+            defaults.find_rows({param}, (drow) => {
+              prow.value = drow.value;
+            });
+
+            // подстановка умолчаний для цвета
+            const {pclrs} = $p.DpBuyers_orderProductionRow;
+            if(!pclrs.size) {
+              pclrs.add($p.job_prm.properties.clr_inset);
+              pclrs.add($p.job_prm.properties.clr_elm);
+              pclrs.add($p.job_prm.properties.clr_product);
+            }
+            defaults.forEach((drow) => {
+              if(pclrs.has(drow.param)) {
+                this.clr = drow.value;
+                return false;
+              }
+            });
+
+          });
           this._manager.emit_async('rows', _owner._owner, {product_params: true});
         }
       }
     }
 
   };
+
+  $p.DpBuyers_orderProductionRow.pclrs = new Set();
 
   // форма допов и услуг
   $p.dp.buyers_order.open_additions = function (wnd, o, handlers) {

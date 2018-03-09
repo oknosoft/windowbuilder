@@ -958,15 +958,27 @@ class Scheme extends paper.Project {
   }
 
   /**
-   * ### Площадь изделия
-   * TODO: переделать с учетом пустот, наклонов и криволинейностей
+   * ### Габаритная площадь изделия
+   * Сумма габаритных площадей рамных контуров
    *
    * @property area
    * @type Number
    * @final
    */
   get area() {
-    return (this.bounds.width * this.bounds.height / 1000000).round(3);
+    return this.contours.reduce((sum, {area}) => sum + area, 0);
+  }
+
+  /**
+   * ### Площадь изделия с учетом наклонов-изгибов профиля
+   * Сумма площадей рамных контуров
+   *
+   * @property area
+   * @type Number
+   * @final
+   */
+  get form_area() {
+    return this.contours.reduce((sum, {form_area}) => sum + form_area, 0);
   }
 
   /**
