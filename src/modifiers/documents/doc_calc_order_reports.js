@@ -45,7 +45,7 @@ $p.doc.calc_order.__define({
 				query_options.endkey = [$p.current_user.partners_uids[0],"\ufff0"];
 			}
 
-			return $p.wsql.pouch.remote.doc.query("server/invoice_execution", query_options)
+			return $p.adapters.pouch.remote.doc.query("server/invoice_execution", query_options)
 
 				.then(function (data) {
 
@@ -108,14 +108,14 @@ $p.doc.calc_order.__define({
 
 			var date_from = $p.utils.date_add_day(new Date(), -1, true),
 				date_till = $p.utils.date_add_day(date_from, 7, true),
-				query_options = {
-					reduce: true,
-					limit: 10000,
-					group: true,
-					group_level: 5,
-					startkey: [date_from.getFullYear(), date_from.getMonth()+1, date_from.getDate(), ""],
-					endkey: [date_till.getFullYear(), date_till.getMonth()+1, date_till.getDate(),"\ufff0"]
-				},
+        query_options = {
+          reduce: true,
+          limit: 10000,
+          group: true,
+          group_level: 5,
+          startkey: [date_from.getFullYear(), date_from.getMonth() + 1, date_from.getDate(), ''],
+          endkey: [date_till.getFullYear(), date_till.getMonth() + 1, date_till.getDate(), '\ufff0']
+        },
 				res = {
 					data: [],
 					readOnly: true,
@@ -123,9 +123,7 @@ $p.doc.calc_order.__define({
 					//minSpareRows: 1
 				};
 
-
-
-			return $p.wsql.pouch.remote.doc.query("server/planning", query_options)
+      return $p.adapters.pouch.remote.doc.query('server/planning', query_options)
 
 				.then(function (data) {
 

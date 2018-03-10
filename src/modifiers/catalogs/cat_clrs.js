@@ -323,12 +323,8 @@ $p.CatClrs = class CatClrs extends $p.CatClrs {
 
   // записывает элемент цвета на сервере
   register_on_server() {
-    return $p.wsql.pouch.save_obj(this, {
-      db: $p.wsql.pouch.remote.ram
-    })
-      .then(function (obj) {
-        return obj.save();
-      })
+    const {pouch} = $p.adapters;
+    return pouch.save_obj(this, {db: pouch.remote.ram});
   }
 
   // возвращает стороны, на которых цвет

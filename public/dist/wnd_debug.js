@@ -865,12 +865,8 @@ $p.cat.clrs.__define({
 $p.CatClrs = class CatClrs extends $p.CatClrs {
 
   register_on_server() {
-    return $p.wsql.pouch.save_obj(this, {
-      db: $p.wsql.pouch.remote.ram
-    })
-      .then(function (obj) {
-        return obj.save();
-      })
+    const {pouch} = $p.adapters;
+    return pouch.save_obj(this, {db: pouch.remote.ram});
   }
 
   get sides() {
@@ -3255,7 +3251,8 @@ class Pricing {
         "ireg.margin_coefficients"
       ];
 
-      $p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
+      const {pouch} = $p.adapters;
+      pouch.local.ram.replicate.to(pouch.remote.ram, {
         filter: (doc) => mgrs.indexOf(doc._id.split("|")[0]) != -1
       })
         .on('change', (info) => {
@@ -3316,8 +3313,8 @@ class Pricing {
         "cch.predefined_elmnts"
 
       ];
-
-      $p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
+      const {pouch} = $p.adapters;
+      pouch.local.ram.replicate.to(pouch.remote.ram, {
         filter: (doc) => mgrs.indexOf(doc._id.split("|")[0]) != -1
       })
         .on('change', (info) => {
@@ -4471,23 +4468,22 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       group: true,
       keys: []
     };
-    this.production.forEach(function (row) {
-      if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
-        options.keys.push([row.characteristic.ref, '305e374b-3aa9-11e6-bf30-82cf9717e145', 1, 0]);
+    this.production.forEach(({nom, characteristic}) => {
+      if(!characteristic.empty() && !nom.is_procedure && !nom.is_service && !nom.is_accessory) {
+        options.keys.push([characteristic.ref, '305e374b-3aa9-11e6-bf30-82cf9717e145', 1, 0]);
       }
     });
-
-    return $p.wsql.pouch.remote.doc.query('server/dispatching', options)
-      .then(function (result) {
-        var res = {};
-        result.rows.forEach(function (row) {
-          if(row.value.plan) {
-            row.value.plan = moment(row.value.plan).format('L');
+    return $p.adapters.pouch.remote.doc.query('server/dispatching', options)
+      .then(function ({rows}) {
+        const res = {};
+        rows && rows.forEach(function ({key, value}) {
+          if(value.plan) {
+            value.plan = moment(value.plan).format('L');
           }
-          if(row.value.fact) {
-            row.value.fact = moment(row.value.fact).format('L');
+          if(value.fact) {
+            value.fact = moment(value.fact).format('L');
           }
-          res[row.key[0]] = row.value;
+          res[key[0]] = value;
         });
         return res;
       });
@@ -6395,7 +6391,7 @@ $p.doc.calc_order.__define({
 				query_options.endkey = [$p.current_user.partners_uids[0],"\ufff0"];
 			}
 
-			return $p.wsql.pouch.remote.doc.query("server/invoice_execution", query_options)
+			return $p.adapters.pouch.remote.doc.query("server/invoice_execution", query_options)
 
 				.then(function (data) {
 
@@ -6458,23 +6454,21 @@ $p.doc.calc_order.__define({
 
 			var date_from = $p.utils.date_add_day(new Date(), -1, true),
 				date_till = $p.utils.date_add_day(date_from, 7, true),
-				query_options = {
-					reduce: true,
-					limit: 10000,
-					group: true,
-					group_level: 5,
-					startkey: [date_from.getFullYear(), date_from.getMonth()+1, date_from.getDate(), ""],
-					endkey: [date_till.getFullYear(), date_till.getMonth()+1, date_till.getDate(),"\ufff0"]
-				},
+        query_options = {
+          reduce: true,
+          limit: 10000,
+          group: true,
+          group_level: 5,
+          startkey: [date_from.getFullYear(), date_from.getMonth() + 1, date_from.getDate(), ''],
+          endkey: [date_till.getFullYear(), date_till.getMonth() + 1, date_till.getDate(), '\ufff0']
+        },
 				res = {
 					data: [],
 					readOnly: true,
 					wordWrap: false
 				};
 
-
-
-			return $p.wsql.pouch.remote.doc.query("server/planning", query_options)
+      return $p.adapters.pouch.remote.doc.query('server/planning', query_options)
 
 				.then(function (data) {
 
@@ -6628,228 +6622,6 @@ $p.DocSelling.prototype.before_save = function () {
 };
 
 
-
-
-(function(_mgr){
-
-	const acn = {
-    ii: [_mgr.Наложение],
-    i: [_mgr.НезамкнутыйКонтур],
-    a: [
-      _mgr.УгловоеДиагональное,
-      _mgr.УгловоеКВертикальной,
-      _mgr.УгловоеКГоризонтальной,
-      _mgr.КрестВСтык],
-    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
-	};
-
-
-	Object.defineProperties(_mgr, {
-	  ad: {
-	    get: function () {
-        return this.УгловоеДиагональное;
-      }
-    },
-    av: {
-      get: function () {
-        return this.УгловоеКВертикальной;
-      }
-    },
-    ah: {
-      get: function () {
-        return this.УгловоеКГоризонтальной;
-      }
-    },
-    t: {
-      get: function () {
-        return this.ТОбразное;
-      }
-    },
-    ii: {
-      get: function () {
-        return this.Наложение;
-      }
-    },
-    i: {
-      get: function () {
-        return this.НезамкнутыйКонтур;
-      }
-    },
-    xt: {
-      get: function () {
-        return this.КрестПересечение;
-      }
-    },
-    xx: {
-      get: function () {
-        return this.КрестВСтык;
-      }
-    },
-
-    acn: {
-      value: acn
-    },
-
-  });
-
-})($p.enm.cnn_types);
-
-
-(function(_mgr){
-
-	const cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get : function(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			}
-		},
-
-		profile_items: {
-			get : function(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			}
-		},
-
-		rama_impost: {
-			get : function(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			}
-		},
-
-		impost_lay: {
-			get : function(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			}
-		},
-
-		stvs: {
-			get : function(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			}
-		},
-
-		glasses: {
-			get : function(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			}
-		}
-
-	});
-
-
-})($p.enm.elm_types);
-
-
-
-(function(_mgr){
-
-  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
-
-
-})($p.enm.inserts_types);
-
-
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value: function (v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get: function () {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get: function () {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get: function () {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get: function () {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get: function () {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get: function () {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get: function () {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get: function () {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
 
 
 (($p) => {
@@ -7339,6 +7111,228 @@ $p.DocSelling.prototype.before_save = function () {
 
 
 
+
+
+(function(_mgr){
+
+	const acn = {
+    ii: [_mgr.Наложение],
+    i: [_mgr.НезамкнутыйКонтур],
+    a: [
+      _mgr.УгловоеДиагональное,
+      _mgr.УгловоеКВертикальной,
+      _mgr.УгловоеКГоризонтальной,
+      _mgr.КрестВСтык],
+    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
+	};
+
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get: function () {
+        return this.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get: function () {
+        return this.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get: function () {
+        return this.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get: function () {
+        return this.ТОбразное;
+      }
+    },
+    ii: {
+      get: function () {
+        return this.Наложение;
+      }
+    },
+    i: {
+      get: function () {
+        return this.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get: function () {
+        return this.КрестПересечение;
+      }
+    },
+    xx: {
+      get: function () {
+        return this.КрестВСтык;
+      }
+    },
+
+    acn: {
+      value: acn
+    },
+
+  });
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get : function(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get : function(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get : function(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get : function(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get : function(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get : function(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+
+(function(_mgr){
+
+  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
+
+
+})($p.enm.inserts_types);
+
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+		is_opening: {
+			value: function (v) {
+
+				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
+					return false;
+
+				return true;
+
+			}
+		}
+
+
+	});
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get: function () {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get: function () {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get: function () {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get: function () {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get: function () {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get: function () {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get: function () {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get: function () {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
 
 
 function eXcell_rsvg(cell){ 
