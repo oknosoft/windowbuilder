@@ -78,9 +78,9 @@ class eXcell_client extends eXcell {
   /**
    * Устанавливает текст в ячейке. например, this.setCValue("<input type='button' value='"+val+"'>",val);
    */
-  setValue(val) {
+  setValue(val, fld) {
     const v = this.grid.get_cell_field();
-    if(v && v.field && v.obj[v.field] !== val) {
+    if(v && v.field && (!fld || v.field === fld) && v.obj[v.field] !== val) {
       v.obj[v.field] = val;
     }
     this.setCValue(val);

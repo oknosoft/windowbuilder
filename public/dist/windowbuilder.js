@@ -10280,11 +10280,11 @@ class Scheme extends paper.Project {
   }
 
   get area() {
-    return this.contours.reduce((sum, {area}) => sum + area, 0);
+    return this.contours.reduce((sum, {area}) => sum + area, 0).round(3);
   }
 
   get form_area() {
-    return this.contours.reduce((sum, {form_area}) => sum + form_area, 0);
+    return this.contours.reduce((sum, {form_area}) => sum + form_area, 0).round(3);
   }
 
   get clr() {
