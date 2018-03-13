@@ -582,7 +582,8 @@ class Pricing {
         "ireg.margin_coefficients"
       ];
 
-      $p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
+      const {pouch} = $p.adapters;
+      pouch.local.ram.replicate.to(pouch.remote.ram, {
         filter: (doc) => mgrs.indexOf(doc._id.split("|")[0]) != -1
       })
         .on('change', (info) => {
@@ -647,8 +648,8 @@ class Pricing {
         "cch.predefined_elmnts"
 
       ];
-
-      $p.wsql.pouch.local.ram.replicate.to($p.wsql.pouch.remote.ram, {
+      const {pouch} = $p.adapters;
+      pouch.local.ram.replicate.to(pouch.remote.ram, {
         filter: (doc) => mgrs.indexOf(doc._id.split("|")[0]) != -1
       })
         .on('change', (info) => {

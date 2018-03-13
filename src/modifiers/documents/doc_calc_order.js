@@ -278,23 +278,22 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       group: true,
       keys: []
     };
-    this.production.forEach(function (row) {
-      if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
-        options.keys.push([row.characteristic.ref, '305e374b-3aa9-11e6-bf30-82cf9717e145', 1, 0]);
+    this.production.forEach(({nom, characteristic}) => {
+      if(!characteristic.empty() && !nom.is_procedure && !nom.is_service && !nom.is_accessory) {
+        options.keys.push([characteristic.ref, '305e374b-3aa9-11e6-bf30-82cf9717e145', 1, 0]);
       }
     });
-
-    return $p.wsql.pouch.remote.doc.query('server/dispatching', options)
-      .then(function (result) {
-        var res = {};
-        result.rows.forEach(function (row) {
-          if(row.value.plan) {
-            row.value.plan = moment(row.value.plan).format('L');
+    return $p.adapters.pouch.remote.doc.query('server/dispatching', options)
+      .then(function ({rows}) {
+        const res = {};
+        rows && rows.forEach(function ({key, value}) {
+          if(value.plan) {
+            value.plan = moment(value.plan).format('L');
           }
-          if(row.value.fact) {
-            row.value.fact = moment(row.value.fact).format('L');
+          if(value.fact) {
+            value.fact = moment(value.fact).format('L');
           }
-          res[row.key[0]] = row.value;
+          res[key[0]] = value;
         });
         return res;
       });
