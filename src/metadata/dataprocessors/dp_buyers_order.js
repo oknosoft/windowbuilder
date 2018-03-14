@@ -130,36 +130,6 @@ export default function ($p) {
 
   $p.DpBuyers_orderProductionRow.pclrs = new Set();
 
-  // форма допов и услуг
-  $p.dp.buyers_order.open_additions = function (wnd, o, handlers) {
-
-    import('../../components/CalcOrderAdditions')
-      .then((module) => handlers.handleIfaceState({
-        component: 'DataObjPage',
-        name: 'dialog',
-        value: {
-          ref: o.ref,
-          wnd: wnd,
-          Component: module.default
-        },
-      }));
-  };
-
-  // форма клиента дилера
-  $p.dp.buyers_order.open_client_of_dealer = function (wnd, o, handlers) {
-
-    import('../../components/ClientOfDealer')
-      .then((module) => handlers.handleIfaceState({
-        component: 'DataObjPage',
-        name: 'dialog',
-        value: {
-          ref: o.ref,
-          wnd: wnd,
-          Component: module.default
-        },
-      }));
-  };
-
   // вызов формы подключаемого react компонента из dhtmlx
   $p.dp.buyers_order.open_component = function (wnd, o, handlers, component) {
 

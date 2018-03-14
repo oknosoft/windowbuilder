@@ -361,7 +361,7 @@
         break;
 
       case 'btn_additions':
-        $p.dp.buyers_order.open_additions(wnd, o, handlers);
+        $p.dp.buyers_order.open_component(wnd, o, handlers, 'CalcOrderAdditions');
         break;
 
       case 'btn_add_material':
