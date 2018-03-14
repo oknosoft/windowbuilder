@@ -22,6 +22,7 @@ class eXcell_client extends eXcell {
 
     this.cell = cell;
     this.open_selection = this.open_selection.bind(this);
+    this.open_obj = this.open_obj.bind(this);
     this.edit = eXcell_client.prototype.edit.bind(this);
     this.detach = eXcell_client.prototype.detach.bind(this);
 
@@ -32,46 +33,42 @@ class eXcell_client extends eXcell {
   }
 
   ti_keydown(e) {
-    const {keyCode} = e;
+    const {code, ctrlKey} = e;
     const {grid} = this;
     // по {del} очищаем значение
-    if(keyCode === 46) {
-      this.setValue({})
+    if(code === 'Delete') {
+      this.setValue('')
       grid.editStop();
       return $p.iface.cancel_bubble(e);
     }
     // по {tab} добавляем неразрывный пробел
-    else if(keyCode === 9) {
+    else if(code === 'Tab') {
       const {cell: {firstChild}} = this;
       firstChild.childNodes[0].value += '\u00A0';
       return $p.iface.cancel_bubble(e);
     }
     // по {enter} заканчиваем редактирование
-    else if(keyCode === 13) {
+    else if(code === 'Enter') {
       grid.editStop();
       return $p.iface.cancel_bubble(e);
     }
     // по {F4} открываем форму списка
-    else if(keyCode === 115) {
+    else if(code === 'F4' || (ctrlKey && code === 'KeyF')) {
       return this.open_selection(e);
     }
     // по {F2} открываем форму объекта
-    else if(keyCode === 113) {
+    else if(code === 'F2') {
       return this.open_obj(e);
     }
   }
 
   open_selection(e) {
-    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
-    //new WndAddress(source);
-    $p.msg.show_not_implemented();
+    this.grid.xcell_action && this.grid.xcell_action('ClientOfDealerSearch');
     return $p.iface.cancel_bubble(e);
   }
 
   open_obj(e) {
-    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
-    //new WndAddress(source);
-    $p.msg.show_not_implemented();
+    this.grid.xcell_action && this.grid.xcell_action('ClientOfDealer');
     return $p.iface.cancel_bubble(e);
   }
 
@@ -115,7 +112,7 @@ class eXcell_client extends eXcell {
     ti.onclick = $p.iface.cancel_bubble;		//blocks onclick event
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
-    firstChild.childNodes[1].onclick = this.open_selection;
+    firstChild.childNodes[1].onclick = this.open_obj;
   };
 
   /**

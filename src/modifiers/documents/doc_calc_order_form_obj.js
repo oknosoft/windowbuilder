@@ -170,6 +170,9 @@
           ]
         }
       });
+      wnd.elmnts.pg_left.xcell_action = function (component) {
+        $p.dp.buyers_order.open_component(wnd, o, handlers, component);
+      }
 
       /**
        *  правая колонка шапки документа

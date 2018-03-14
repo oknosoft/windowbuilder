@@ -5599,6 +5599,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           ]
         }
       });
+      wnd.elmnts.pg_left.xcell_action = function (component) {
+        $p.dp.buyers_order.open_component(wnd, o, handlers, component);
+      }
 
 
       wnd.elmnts.cell_right = wnd.elmnts.layout_header.cells('b');
@@ -6354,7 +6357,8 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
     return dst.save();
   }
 
-})($p.doc.calc_order);
+
+  })($p.doc.calc_order);
 
 
 $p.doc.calc_order.__define({
@@ -7583,6 +7587,7 @@ class eXcell_client extends eXcell {
 
     this.cell = cell;
     this.open_selection = this.open_selection.bind(this);
+    this.open_obj = this.open_obj.bind(this);
     this.edit = eXcell_client.prototype.edit.bind(this);
     this.detach = eXcell_client.prototype.detach.bind(this);
 
@@ -7593,39 +7598,37 @@ class eXcell_client extends eXcell {
   }
 
   ti_keydown(e) {
-    const {keyCode} = e;
+    const {code, ctrlKey} = e;
     const {grid} = this;
-    if(keyCode === 46) {
-      this.setValue({})
+    if(code === 'Delete') {
+      this.setValue('')
       grid.editStop();
       return $p.iface.cancel_bubble(e);
     }
-    else if(keyCode === 9) {
+    else if(code === 'Tab') {
       const {cell: {firstChild}} = this;
       firstChild.childNodes[0].value += '\u00A0';
       return $p.iface.cancel_bubble(e);
     }
-    else if(keyCode === 13) {
+    else if(code === 'Enter') {
       grid.editStop();
       return $p.iface.cancel_bubble(e);
     }
-    else if(keyCode === 115) {
+    else if(code === 'F4' || (ctrlKey && code === 'KeyF')) {
       return this.open_selection(e);
     }
-    else if(keyCode === 113) {
+    else if(code === 'F2') {
       return this.open_obj(e);
     }
   }
 
   open_selection(e) {
-    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
-    $p.msg.show_not_implemented();
+    this.grid.xcell_action && this.grid.xcell_action('ClientOfDealerSearch');
     return $p.iface.cancel_bubble(e);
   }
 
   open_obj(e) {
-    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
-    $p.msg.show_not_implemented();
+    this.grid.xcell_action && this.grid.xcell_action('ClientOfDealer');
     return $p.iface.cancel_bubble(e);
   }
 
@@ -7660,7 +7663,7 @@ class eXcell_client extends eXcell {
     ti.onclick = $p.iface.cancel_bubble;		
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
-    firstChild.childNodes[1].onclick = this.open_selection;
+    firstChild.childNodes[1].onclick = this.open_obj;
   };
 
   detach() {
