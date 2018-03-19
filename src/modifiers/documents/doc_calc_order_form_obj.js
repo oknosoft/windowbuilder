@@ -170,6 +170,9 @@
           ]
         }
       });
+      wnd.elmnts.pg_left.xcell_action = function (component) {
+        $p.dp.buyers_order.open_component(wnd, o, handlers, component);
+      }
 
       /**
        *  правая колонка шапки документа
@@ -358,7 +361,7 @@
         break;
 
       case 'btn_additions':
-        $p.dp.buyers_order.open_additions(wnd, o, handlers);
+        $p.dp.buyers_order.open_component(wnd, o, handlers, 'CalcOrderAdditions');
         break;
 
       case 'btn_add_material':

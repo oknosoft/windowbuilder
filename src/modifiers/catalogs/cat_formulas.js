@@ -8,40 +8,6 @@
  *
  */
 
-// обработчик события после загрузки данных в озу
-$p.adapters.pouch.once('pouch_data_loaded', () => {
-  // читаем элементы из pouchdb и создаём формулы
-  const {formulas} = $p.cat;
-  formulas.adapter.find_rows(formulas, {_top: 500, _skip: 0})
-    .then((rows) => {
-      const parents = [formulas.predefined('printing_plates'), formulas.predefined('modifiers')];
-      const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);
-      filtered.sort((a, b) => a.sorting_field - b.sorting_field).forEach((formula) => {
-        // формируем списки печатных форм и внешних обработок
-        if(formula.parent == parents[0]) {
-          formula.params.find_rows({param: 'destination'}, (dest) => {
-            const dmgr = $p.md.mgr_by_class_name(dest.value);
-            if(dmgr) {
-              if(!dmgr._printing_plates) {
-                dmgr._printing_plates = {};
-              }
-              dmgr._printing_plates[`prn_${formula.ref}`] = formula;
-            }
-          });
-        }
-        else {
-          // выполняем модификаторы
-          try {
-            formula.execute();
-          }
-          catch (err) {
-          }
-        }
-      });
-    });
-});
-
-
 $p.CatFormulas.prototype.__define({
 
 	execute: {

@@ -8,8 +8,6 @@
  * @module dp_buyers_order
  */
 
-import CalcOrderAdditions from '../../components/CalcOrderAdditions';
-
 export default function ($p) {
 
   // переопределяем свойства цвет и система - они будут псевдонимами свойств текущей характеристики
@@ -132,18 +130,30 @@ export default function ($p) {
 
   $p.DpBuyers_orderProductionRow.pclrs = new Set();
 
-  // форма допов и услуг
-  $p.dp.buyers_order.open_additions = function (wnd, o, handlers) {
+  // вызов формы подключаемого react компонента из dhtmlx
+  $p.dp.buyers_order.open_component = function (wnd, o, handlers, component) {
 
-    handlers.handleIfaceState({
-      component: 'DataObjPage',
-      name: 'dialog',
-      value: {
-        ref: o.ref,
-        wnd: wnd,
-        Component: CalcOrderAdditions
-      },
-    });
+    let imodule;
+    switch (component){
+    case 'ClientOfDealer':
+      imodule = import('../../components/ClientOfDealer');
+      break;
+    case 'ClientOfDealerSearch':
+      imodule = import('../../components/ClientOfDealerSearch');
+      break;
+    case 'CalcOrderAdditions':
+      imodule = import('../../components/CalcOrderAdditions');
+      break;
+    }
+    imodule.then((module) => handlers.handleIfaceState({
+        component: 'DataObjPage',
+        name: 'dialog',
+        value: {
+          ref: o.ref,
+          wnd: wnd,
+          Component: module.default
+        },
+      }));
   };
 
 }

@@ -1263,36 +1263,6 @@ $p.CatElm_visualization.prototype.__define({
 });
 
 
-$p.adapters.pouch.once('pouch_data_loaded', () => {
-  const {formulas} = $p.cat;
-  formulas.adapter.find_rows(formulas, {_top: 500, _skip: 0})
-    .then((rows) => {
-      const parents = [formulas.predefined('printing_plates'), formulas.predefined('modifiers')];
-      const filtered = rows.filter(v => !v.disabled && parents.indexOf(v.parent) !== -1);
-      filtered.sort((a, b) => a.sorting_field - b.sorting_field).forEach((formula) => {
-        if(formula.parent == parents[0]) {
-          formula.params.find_rows({param: 'destination'}, (dest) => {
-            const dmgr = $p.md.mgr_by_class_name(dest.value);
-            if(dmgr) {
-              if(!dmgr._printing_plates) {
-                dmgr._printing_plates = {};
-              }
-              dmgr._printing_plates[`prn_${formula.ref}`] = formula;
-            }
-          });
-        }
-        else {
-          try {
-            formula.execute();
-          }
-          catch (err) {
-          }
-        }
-      });
-    });
-});
-
-
 $p.CatFormulas.prototype.__define({
 
 	execute: {
@@ -5599,6 +5569,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           ]
         }
       });
+      wnd.elmnts.pg_left.xcell_action = function (component) {
+        $p.dp.buyers_order.open_component(wnd, o, handlers, component);
+      }
 
 
       wnd.elmnts.cell_right = wnd.elmnts.layout_header.cells('b');
@@ -5762,7 +5735,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'btn_additions':
-        $p.dp.buyers_order.open_additions(wnd, o, handlers);
+        $p.dp.buyers_order.open_component(wnd, o, handlers, 'CalcOrderAdditions');
         break;
 
       case 'btn_add_material':
@@ -6354,7 +6327,8 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
     return dst.save();
   }
 
-})($p.doc.calc_order);
+
+  })($p.doc.calc_order);
 
 
 $p.doc.calc_order.__define({
@@ -7583,6 +7557,7 @@ class eXcell_client extends eXcell {
 
     this.cell = cell;
     this.open_selection = this.open_selection.bind(this);
+    this.open_obj = this.open_obj.bind(this);
     this.edit = eXcell_client.prototype.edit.bind(this);
     this.detach = eXcell_client.prototype.detach.bind(this);
 
@@ -7593,45 +7568,43 @@ class eXcell_client extends eXcell {
   }
 
   ti_keydown(e) {
-    const {keyCode} = e;
+    const {code, ctrlKey} = e;
     const {grid} = this;
-    if(keyCode === 46) {
-      this.setValue({})
+    if(code === 'Delete') {
+      this.setValue('')
       grid.editStop();
       return $p.iface.cancel_bubble(e);
     }
-    else if(keyCode === 9) {
+    else if(code === 'Tab') {
       const {cell: {firstChild}} = this;
       firstChild.childNodes[0].value += '\u00A0';
       return $p.iface.cancel_bubble(e);
     }
-    else if(keyCode === 13) {
+    else if(code === 'Enter') {
       grid.editStop();
       return $p.iface.cancel_bubble(e);
     }
-    else if(keyCode === 115) {
+    else if(code === 'F4' || (ctrlKey && code === 'KeyF')) {
       return this.open_selection(e);
     }
-    else if(keyCode === 113) {
+    else if(code === 'F2') {
       return this.open_obj(e);
     }
   }
 
   open_selection(e) {
-    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
-    $p.msg.show_not_implemented();
+    this.grid.xcell_action && this.grid.xcell_action('ClientOfDealerSearch');
     return $p.iface.cancel_bubble(e);
   }
 
   open_obj(e) {
-    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
-    $p.msg.show_not_implemented();
+    this.grid.xcell_action && this.grid.xcell_action('ClientOfDealer');
     return $p.iface.cancel_bubble(e);
   }
 
-  setValue(val) {
+  setValue(val, fld) {
     const v = this.grid.get_cell_field();
-    if(v && v.field && v.obj[v.field] !== val) {
+    if(v && v.field && (!fld || v.field === fld) && v.obj[v.field] !== val) {
       v.obj[v.field] = val;
     }
     this.setCValue(val);
@@ -7660,7 +7633,7 @@ class eXcell_client extends eXcell {
     ti.onclick = $p.iface.cancel_bubble;		
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
-    firstChild.childNodes[1].onclick = this.open_selection;
+    firstChild.childNodes[1].onclick = this.open_obj;
   };
 
   detach() {
