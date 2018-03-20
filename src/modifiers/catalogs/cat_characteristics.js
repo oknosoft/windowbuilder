@@ -14,7 +14,7 @@
 $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
   _mgr.adapter.load_view(_mgr, 'linked', {
-    limit: 1000,
+    limit: 10000,
     include_docs: true,
     startkey: [$p.utils.blank.guid, 'cat.characteristics'],
     endkey: [$p.utils.blank.guid, 'cat.characteristics\u0fff']
