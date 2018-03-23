@@ -146,9 +146,11 @@ class Scheme extends paper.Project {
      * Перерисовывает все контуры изделия. Не занимается биндингом.
      * Предполагается, что взаимное перемещение профилей уже обработано
      */
-    this.redraw = (from_service) => {
+    this.redraw = () => {
 
-      _attr._opened && !from_service && requestAnimationFrame(_scheme.redraw);
+      const isBrowser = typeof requestAnimationFrame === 'function';
+
+      _attr._opened && isBrowser && requestAnimationFrame(_scheme.redraw);
 
       if(!_attr._opened || _attr._saving || !_changes.length) {
         return;
@@ -163,12 +165,12 @@ class Scheme extends paper.Project {
         _scheme.l_connective.redraw();
 
         // обновляем связи параметров изделия
-        !from_service && contours[0].refresh_prm_links(true);
+        isBrowser && contours[0].refresh_prm_links(true);
 
         // перерисовываем все контуры
         for (let contour of contours) {
           contour.redraw();
-          if(_changes.length && !from_service) {
+          if(_changes.length) {
             return;
           }
         }
@@ -178,7 +180,7 @@ class Scheme extends paper.Project {
         contours.forEach(({contours, l_dimensions}) => {
           contours.forEach((l) => {
             l.save_coordinates(true);
-            !from_service && l.refresh_prm_links();
+            isBrowser && l.refresh_prm_links();
           });
           l_dimensions.redraw();
         });
