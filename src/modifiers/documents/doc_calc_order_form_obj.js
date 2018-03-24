@@ -364,6 +364,10 @@
         $p.dp.buyers_order.open_component(wnd, o, handlers, 'CalcOrderAdditions');
         break;
 
+      case 'btn_share':
+        $p.dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: btn_id}, handlers, 'PushUtils');
+        break;
+
       case 'btn_add_material':
         add_material();
         break;

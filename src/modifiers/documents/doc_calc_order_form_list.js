@@ -197,6 +197,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
            */
           attr.toolbar_click = function toolbar_click(btn_id) {
             switch (btn_id) {
+
             case 'calc_order':
               const ref = wnd.elmnts.grid.getSelectedRowId();
               if(ref) {
@@ -216,6 +217,17 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                 });
               }
               break;
+
+            case 'btn_templates':
+            case 'btn_download':
+            case 'btn_share':
+            case 'btn_inbox':
+              $p.dp.buyers_order.open_component(wnd, {
+                ref: wnd.elmnts.grid.getSelectedRowId(),
+                cmd: btn_id
+              }, handlers, 'PushUtils', 'CalcOrderList');
+              break;
+
             }
           }
 

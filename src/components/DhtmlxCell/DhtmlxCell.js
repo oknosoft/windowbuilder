@@ -69,7 +69,7 @@ class DhtmlxCell extends Component {
     const {onProps} = this.handlers;
     onProps && onProps(nextProps);
     const {match, dialog} = nextProps;
-    return !!(match && dialog && match.params.ref === dialog.ref) || !!(this.props.dialog && !dialog);
+    return !!(dialog && match && (!match.params.ref || match.params.ref === dialog.ref)) || !!(this.props.dialog && !dialog);
   }
 
   onReize() {

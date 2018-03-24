@@ -131,7 +131,7 @@ export default function ($p) {
   $p.DpBuyers_orderProductionRow.pclrs = new Set();
 
   // вызов формы подключаемого react компонента из dhtmlx
-  $p.dp.buyers_order.open_component = function (wnd, o, handlers, component) {
+  $p.dp.buyers_order.open_component = function (wnd, o, handlers, component, area = 'DataObjPage') {
 
     let imodule;
     switch (component){
@@ -141,15 +141,19 @@ export default function ($p) {
     case 'ClientOfDealerSearch':
       imodule = import('../../components/ClientOfDealerSearch');
       break;
+    case 'PushUtils':
+      imodule = import('../../components/PushUtils');
+      break;
     case 'CalcOrderAdditions':
       imodule = import('../../components/CalcOrderAdditions');
       break;
     }
     imodule.then((module) => handlers.handleIfaceState({
-        component: 'DataObjPage',
+        component: area,
         name: 'dialog',
         value: {
           ref: o.ref,
+          cmd: o.cmd,
           wnd: wnd,
           Component: module.default
         },

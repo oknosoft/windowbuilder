@@ -20,7 +20,8 @@ class DumbScreen extends Component {
       <div className="description">
         <h1 itemProp="name">Окнософт: Заказ дилера</h1>
         <p>Категория: <span itemProp="applicationSubCategory">CRM, CAD, E-Commerce</span></p>
-        <p>Платформа: <i className="fa fa-chrome" aria-hidden="true"></i> браузер Chrome для <span itemProp="operatingSystem">Windows 8, 10 | Android | Mac | iOS</span>
+        <p>Платформа: <i className="fa fa-chrome" aria-hidden="true"></i> браузер Chrome для <span
+          itemProp="operatingSystem">Windows 8, 10 | Android | Mac | iOS</span>
         </p>
         <div itemProp="description">
           <p>Заказ дилера - это веб-сервис компании <a href="http://www.oknosoft.ru/" title="Программы для оконных заводов и дилеров"
