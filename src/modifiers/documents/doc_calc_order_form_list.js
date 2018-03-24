@@ -59,6 +59,14 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                 custom_selection._state = props.state_filter;
                 elmnts.filter.call_event();
               }
+              if(elmnts.toolbar) {
+                if(custom_selection._state === 'draft') {
+                  elmnts.toolbar.enableItem('btn_delete');
+                }
+                else {
+                  elmnts.toolbar.disableItem('btn_delete');
+                }
+              }
             }
 
             wnd.handleNavigate = handlers.handleNavigate;
