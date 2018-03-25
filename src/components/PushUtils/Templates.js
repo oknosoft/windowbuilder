@@ -76,7 +76,9 @@ class Templates extends Component {
         for (const {production} of docs) {
           if(production) {
             for (const row of production) {
-              keys.push(`cat.characteristics|${row.characteristic}`);
+              if(row.characteristic && row.characteristic !== $p.utils.blank.guid) {
+                keys.push(`cat.characteristics|${row.characteristic}`);
+              }
             }
           }
         }
@@ -91,6 +93,10 @@ class Templates extends Component {
         const ldoc = res[0].rows;
         const diff = [];
         for(const rdoc of res[1].rows) {
+          if(!rdoc.value) {
+            // TODO: обработать удаление
+            continue;
+          }
           if(!ldoc.some((doc) => {
               return !doc.error && doc.id === rdoc.id && doc.value.rev === rdoc.value.rev;
             })) {
@@ -119,13 +125,14 @@ class Templates extends Component {
         return difs;
       })
       .then((difs) => {
+        // редуцируем
         return difs.rows.reduce((sum, keys, index) => {
           return sum.then(() => {
             this.setState({step: `Обработано ${index * 100} из ${difs.length} характеристик продукций`});
             return remote.doc.allDocs({include_docs: true, keys})
               .then(({rows}) => {
                 const deleted = rows.filter((v) => !v.doc);
-                return local.doc.bulkDocs(rows.filter((v) => v.doc).map((v) => v.doc), {new_edits: false});
+                return local.doc.bulkDocs(rows.filter((v) => v.doc && !v.doc._attachments).map((v) => v.doc), {new_edits: false});
               });
           });
         }, Promise.resolve());
@@ -155,8 +162,8 @@ class Templates extends Component {
     if (completed > 100) {
       this.setState({ completed: 0, buffer: 10 });
     } else {
-      const diff = Math.random() * 10;
-      const diff2 = Math.random() * 10;
+      const diff = Math.random() * 5;
+      const diff2 = Math.random() * 5;
       this.setState({ completed: completed + diff, buffer: completed + diff + diff2 });
     }
   };
@@ -180,6 +187,7 @@ class Templates extends Component {
 
 Templates.propTypes = {
   dialog: PropTypes.object.isRequired,
+  handleCancel: PropTypes.func.isRequired,
 };
 
 export default Templates;
