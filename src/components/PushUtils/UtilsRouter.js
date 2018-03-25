@@ -76,7 +76,7 @@ class UtilsRouter extends Component {
     }
 
     if(Component) {
-      return <Component {...this.props} />;
+      return <Component {...this.props} handleCancel={this.handleCancel} />;
     }
 
     return <div>Подготовка данных...</div>;
@@ -84,7 +84,7 @@ class UtilsRouter extends Component {
 
   render() {
 
-    const {handleCancel, handleOk, props: {classes, dialog}, state: {title}} = this;
+    const {handleCancel, props: {classes}, state: {title}} = this;
 
     return <Dialog
       open

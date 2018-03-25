@@ -9,6 +9,7 @@
 
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
+import { LinearProgress } from 'material-ui/Progress';
 
 class Templates extends Component {
 
@@ -19,74 +20,68 @@ class Templates extends Component {
       step: 'Подготовка данных...',
       docs: null,
       prods: null,
+      completed: 0,
+      buffer: 10,
     };
+    this.timer = 0;
   }
 
   componentDidMount() {
     // получаем локальные и серверные шаблоны
-    const {local, remote} = $p.adapters.pouch;
+    const {local, remote, authorized} = $p.adapters.pouch;
 
     if(local.doc === remote.doc) {
       this.setState({error: `В режиме 'direct', синхронизация шаблонов не требуется`});
       return;
     }
 
-    this.setState({step: 'Сравниваем версии шаблонов в локальной базе и на сервере'});
+    if(!authorized) {
+      this.setState({error: `Пользователь должен быть авторизован на сервере`});
+      return;
+    }
 
-    Promise.all([
-      local.doc.find({
-        selector: {department: $p.utils.blank.guid, state: 'template'},
-        fields: ['_id', '_rev'],
-        limit: 1000,
-      }),
-      remote.doc.find({
-        selector: {department: $p.utils.blank.guid, state: 'template'},
-        fields: ['_id', '_rev'],
-        limit: 1000,
-      }),
-    ])
-      .then((res) => {
-        const ldoc = res[0].docs;
-        const diff = [];
-        for(const rdoc of res[1].docs) {
-          if(!ldoc.some((doc) => {
-            return doc._id === rdoc._id && doc._rev === rdoc._rev;
-            })) {
-            diff.push(rdoc);
-          }
-        }
-        return {ldoc, diff};
+    this.timer = setInterval(this.progress, 700);
+
+    this.setState({step: 'Синхронизируем базовые справочники...'});
+    return new Promise((resolve, reject) => {
+
+      const sync = local.doc.replicate.from(remote.doc, {
+        batch_size: 200,
+        batches_limit: 6,
+        retry: true,
+        filter: 'auth/push_only',
+        query_params: {user: authorized}
       })
-      .then(({ldoc, diff}) => {
-        if(diff.length) {
-          this.setState({step: 'Получаем документы шаблонов с сервера'});
-          return remote.doc.allDocs({
-            include_docs: true,
-            keys: diff.map((v) => v._id)
-          })
-            .then(({rows}) => {
-              return local.doc.bulkDocs(rows.map(({doc}) => doc), {new_edits: false});
-            })
-            .then((res) => {
-              const keys = ldoc.map((v) => v._id);
-              diff.forEach((dif) => {
-                keys.indexOf(dif._id) === -1 && keys.push(dif._id);
-              });
-              return local.doc.allDocs({include_docs: true, keys});
-            });
-        }
-        else {
-          return local.doc.allDocs({include_docs: true, keys: ldoc.map((v) => v._id)});
-        }
+        .on('error', (err) => {
+          reject(err);
       })
-      .then(({rows}) => {
-        this.setState({step: 'Сравниваем версии характеристик продукций'});
+        .on('complete', () => {
+          sync.cancel();
+          sync.removeAllListeners();
+          resolve();
+        });
+
+    })
+      .then(() => {
+        this.setState({step: 'Получаем документы шаблонов из локальной базы...', completed: 0, buffer: 10});
+        return local.doc.find({
+          selector: {department: $p.utils.blank.guid, state: 'template'},
+          fields: ['_id', 'production'],
+          limit: 1000,
+        });
+      })
+      .then(({docs}) => {
+
         const keys = [];
-        for (const {doc} of rows) {
-          for (const row of doc.production) {
-            keys.push(`cat.characteristics|${row.characteristic}`);
+        for (const {production} of docs) {
+          if(production) {
+            for (const row of production) {
+              keys.push(`cat.characteristics|${row.characteristic}`);
+            }
           }
         }
+
+        this.setState({step: 'Сравниваем версии характеристик продукций...', completed: 0, buffer: 10});
         return Promise.all([
           local.doc.allDocs({keys}),
           remote.doc.allDocs({keys}),
@@ -107,7 +102,7 @@ class Templates extends Component {
           length: diff.length,
           rows: []
         };
-        this.setState({step: `Найдено ${difs.length} отличий в характеристиках`});
+        this.setState({step: `Найдено ${difs.length} отличий в характеристиках`, completed: 0, buffer: 10});
         let rows = [];
         for(const dif of diff) {
           if(rows.length < 100) {
@@ -131,9 +126,19 @@ class Templates extends Component {
               .then(({rows}) => {
                 const deleted = rows.filter((v) => !v.doc);
                 return local.doc.bulkDocs(rows.filter((v) => v.doc).map((v) => v.doc), {new_edits: false});
-              })
+              });
           });
         }, Promise.resolve());
+      })
+      .then(() => {
+        if(this.timer) {
+          clearInterval(this.timer);
+          this.timer = 0;
+        };
+        this.setState({error: 'Обработка завершена'});
+        setTimeout(() => {
+          this.props.handleCancel();
+        }, 2000);
       })
       .catch((err) => {
         this.setState({error: err.message || 'Ошибка синхронизации шаблонов'});
@@ -141,12 +146,35 @@ class Templates extends Component {
 
   }
 
+  componentWillUnmount() {
+    this.timer && clearInterval(this.timer);
+  }
+
+  progress = () => {
+    const { completed } = this.state;
+    if (completed > 100) {
+      this.setState({ completed: 0, buffer: 10 });
+    } else {
+      const diff = Math.random() * 10;
+      const diff2 = Math.random() * 10;
+      this.setState({ completed: completed + diff, buffer: completed + diff + diff2 });
+    }
+  };
+
   render() {
-    const {error, step, docs, prods} = this.state;
+    const {error, step, completed, buffer} = this.state;
+
     if(error) {
       return <div>{error}</div>;
     }
-    return <div>{step}</div>;
+
+    return [
+      <div key="progress" style={{flexGrow: 1}}>
+        <LinearProgress color="secondary" variant="buffer" value={completed} valueBuffer={buffer} />
+        <br />
+      </div>,
+      <div key="text">{step}</div>
+    ];
   }
 }
 
