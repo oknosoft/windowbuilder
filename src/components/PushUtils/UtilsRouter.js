@@ -56,7 +56,7 @@ class UtilsRouter extends Component {
         });
       })
       .catch((err) => {
-        this.setState({err});
+        this.setState({error: err.message || 'Ошибка доступа к базе doc'});
       });
   }
 

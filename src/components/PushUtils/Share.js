@@ -67,7 +67,7 @@ class Share extends Component {
                 this.setState({doc, users});
               })
               .catch((err) => {
-                this.setState({err});
+                this.setState({error: err.message || `Ошибка доступа к _local/inbox_`});
               });
           }
         });
@@ -104,11 +104,11 @@ class Share extends Component {
         }
         return doc.put(rdoc);
       })
-      .then((rdoc) => {
+      .then(() => {
         this.forceUpdate();
       })
       .catch((err) => {
-        this.setState({error: `Не удалось записать ${map._id}`});
+        this.setState({error: err.message || `Не удалось записать ${map._id}`});
       });
   };
 

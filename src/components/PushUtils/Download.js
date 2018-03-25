@@ -31,7 +31,7 @@ class Download extends Component {
     const {moment} = $p.utils;
 
     if(local.doc === remote.doc) {
-      this.setState({error: `В режиме 'direct', синхронизация шаблонов не требуется`});
+      this.setState({error: `В режиме 'direct', синхронизация заказов не требуется`});
       return;
     }
 
@@ -56,7 +56,7 @@ class Download extends Component {
     })
       .then(({docs}) => {
         this.setState({step: 'Сравниваем версии заказов local и remote...', completed: 0, buffer: 10});
-        const keys = docs.filter((v) => v.state !== 'template').map((v) => v._id)
+        const keys = docs.filter((v) => v.state !== 'template').map((v) => v._id);
         return remote.doc.allDocs({keys})
           .then(({rows}) => {
             const diff = [];
@@ -78,11 +78,11 @@ class Download extends Component {
       .then(({ldoc, diff}) => {
         if(diff.length) {
           this.setState({step: 'Получаем объекты заказов с сервера...', completed: 0, buffer: 10});
-          return remote.doc.allDocs({include_docs: true, keys: diff})
+          return remote.doc.allDocs({include_docs: true, attachments: true, keys: diff})
             .then(({rows}) => {
-              return local.doc.bulkDocs(rows.filter((v) => v.doc && !v.doc._attachments).map(({doc}) => doc), {new_edits: false});
+              return local.doc.bulkDocs(rows.filter((v) => v.doc).map(({doc}) => doc), {new_edits: false});
             })
-            .then((res) => {
+            .then(() => {
               return local.doc.allDocs({include_docs: true, keys: ldoc});
             });
         }
@@ -149,13 +149,19 @@ class Download extends Component {
             this.setState({step: `Обработано ${index * 100} из ${difs.length} характеристик продукций`});
             return remote.doc.allDocs({include_docs: true, keys})
               .then(({rows}) => {
-                const deleted = rows.filter((v) => !v.doc);
+                // const deleted = rows.filter((v) => !v.doc);
                 return local.doc.bulkDocs(rows.filter((v) => v.doc && !v.doc._attachments).map((v) => v.doc), {new_edits: false});
               });
           });
         }, Promise.resolve());
       })
       .then(() => {
+        this.setState({step: `Перестраиваем индексы...`, completed: 0, buffer: 10});
+        $p.adapters.pouch.on('rebuild_indexes', this.on_index);
+        return $p.adapters.pouch.rebuild_indexes('doc');
+      })
+      .then(() => {
+        $p.adapters.pouch.off('rebuild_indexes', this.on_index);
         if(this.timer) {
           clearInterval(this.timer);
           this.timer = 0;
@@ -166,9 +172,13 @@ class Download extends Component {
         }, 2000);
       })
       .catch((err) => {
-        this.setState({error: err.message || 'Ошибка синхронизации шаблонов'});
+        this.setState({error: err.message || 'Ошибка синхронизации заказов'});
       });
 
+  }
+
+  on_index = (info) => {
+    this.setState({step: `Перестраиваем индекс ${info.index}...`});
   }
 
   componentWillUnmount() {

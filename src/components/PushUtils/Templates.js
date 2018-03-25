@@ -129,19 +129,25 @@ class Templates extends Component {
         return difs.rows.reduce((sum, keys, index) => {
           return sum.then(() => {
             this.setState({step: `Обработано ${index * 100} из ${difs.length} характеристик продукций`});
-            return remote.doc.allDocs({include_docs: true, keys})
+            return remote.doc.allDocs({include_docs: true, attachments: true, keys})
               .then(({rows}) => {
-                const deleted = rows.filter((v) => !v.doc);
-                return local.doc.bulkDocs(rows.filter((v) => v.doc && !v.doc._attachments).map((v) => v.doc), {new_edits: false});
+                //const deleted = rows.filter((v) => !v.doc);
+                return local.doc.bulkDocs(rows.filter((v) => v.doc).map((v) => v.doc), {new_edits: false});
               });
           });
         }, Promise.resolve());
       })
       .then(() => {
+        this.setState({step: `Перестраиваем индексы...`, completed: 0, buffer: 10});
+        $p.adapters.pouch.on('rebuild_indexes', this.on_index);
+        return $p.adapters.pouch.rebuild_indexes('doc');
+      })
+      .then(() => {
+        $p.adapters.pouch.off('rebuild_indexes', this.on_index);
         if(this.timer) {
           clearInterval(this.timer);
           this.timer = 0;
-        };
+        }
         this.setState({error: 'Обработка завершена'});
         setTimeout(() => {
           this.props.handleCancel();
@@ -151,6 +157,10 @@ class Templates extends Component {
         this.setState({error: err.message || 'Ошибка синхронизации шаблонов'});
       });
 
+  }
+
+  on_index = (info) => {
+    this.setState({step: `Перестраиваем индекс ${info.index}...`});
   }
 
   componentWillUnmount() {

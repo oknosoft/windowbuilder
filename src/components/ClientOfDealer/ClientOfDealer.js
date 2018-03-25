@@ -27,7 +27,7 @@ class ClientOfDealer extends Component {
   render() {
 
     const {handleCancel, handleOk, props} = this;
-    const {classes, dialog} = props;
+    const {classes} = props;
 
     return <Dialog
       open
