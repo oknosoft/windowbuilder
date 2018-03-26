@@ -6,28 +6,15 @@
  * Created by Evgeniy Malyarov on 24.03.2018.
  */
 
-import React from 'react';
 import PropTypes from 'prop-types';
 import Progress from './Progress';
 
 class Download extends Progress {
 
-  componentDidMount() {
+  init() {
 
-    const {local, remote, authorized} = $p.adapters.pouch;
+    const {local} = $p.adapters.pouch;
     const {moment} = $p.utils;
-
-    if(local.doc === remote.doc) {
-      this.setState({error: `В режиме 'direct', синхронизация заказов не требуется`});
-      return;
-    }
-
-    if(!authorized) {
-      this.setState({error: `Пользователь должен быть авторизован на сервере`});
-      return;
-    }
-
-    this.timer = setInterval(this.progress, 700);
 
     this.setState({step: 'Получаем массив заказов текущей базы...'});
     local.doc.find({
@@ -43,14 +30,14 @@ class Download extends Progress {
     })
       .then(({docs}) => {
         const keys = docs.filter((v) => v.state !== 'template').map((v) => v._id);
-        return this.props.sync_orders.call(this, docs, keys);
+        return this.sync_orders(docs, keys);
       })
       .then(({rows}) => {
         const docs = rows.filter((v) => v.doc).map((v) => v.doc);
-        return this.props.sync_products.call(this, docs);
+        return this.sync_products(docs);
       })
       .then(() => {
-        return this.props.rebuild_indexes.call(this);
+        return this.rebuild_indexes();
       })
       .catch((err) => {
         this.setState({error: err.message || 'Ошибка синхронизации заказов'});
@@ -63,7 +50,6 @@ class Download extends Progress {
 Download.propTypes = {
   dialog: PropTypes.object.isRequired,
   handleCancel: PropTypes.func.isRequired,
-  sync_orders: PropTypes.func.isRequired,
 };
 
 export default Download;

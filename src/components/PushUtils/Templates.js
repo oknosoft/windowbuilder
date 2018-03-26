@@ -7,27 +7,14 @@
  * Created by Evgeniy Malyarov on 24.03.2018.
  */
 
-import React from 'react';
 import PropTypes from 'prop-types';
 import Progress from './Progress';
 
 class Templates extends Progress {
 
-  componentDidMount() {
+  init() {
     // получаем локальные и серверные шаблоны
     const {local, remote, authorized} = $p.adapters.pouch;
-
-    if(local.doc === remote.doc) {
-      this.setState({error: `В режиме 'direct', синхронизация шаблонов не требуется`});
-      return;
-    }
-
-    if(!authorized) {
-      this.setState({error: `Пользователь должен быть авторизован на сервере`});
-      return;
-    }
-
-    this.timer = setInterval(this.progress, 700);
 
     this.setState({step: 'Синхронизируем базовые справочники...'});
     return new Promise((resolve, reject) => {
@@ -58,10 +45,10 @@ class Templates extends Progress {
         });
       })
       .then(({docs}) => {
-        return this.props.sync_products.call(this, docs);
+        return this.sync_products(docs);
       })
       .then(() => {
-        return this.props.rebuild_indexes.call(this);
+        return this.rebuild_indexes();
       })
       .catch((err) => {
         this.setState({error: err.message || 'Ошибка синхронизации шаблонов'});
