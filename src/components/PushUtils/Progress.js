@@ -65,7 +65,8 @@ class Progress extends Component {
         for(const rdoc of rows) {
           if(rdoc.value){
             if(!docs.some((doc) => {
-                return doc._id === rdoc.id && doc._rev === rdoc.value.rev;
+                return doc.key && doc.value ?
+                  doc.id === rdoc.id && doc.value.rev === rdoc.value.rev : doc._id === rdoc.id && doc._rev === rdoc.value.rev;
               })) {
               diff.push(rdoc.id);
             }

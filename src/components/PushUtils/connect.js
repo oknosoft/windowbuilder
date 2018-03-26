@@ -29,6 +29,9 @@ function mapStateToProps(state, props) {
           value: null,
         });
       }
+    },
+    handleOpen(ref) {
+      props.handlers.handleNavigate(`/doc.calc_order/${ref.replace('doc.calc_order|', '')}`);
     }
   };
 }
