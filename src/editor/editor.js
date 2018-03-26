@@ -330,6 +330,9 @@ class Editor extends paper.PaperScope {
     this.on_del_row = this.on_del_row.bind(this);
     $p.cat.characteristics.on("del_row", this.on_del_row);
 
+    // Обработчик события проверки заполненности реквизитов
+    this.on_alert = this.on_alert.bind(this);
+    $p.on('alert', this.on_alert);
 
     // Создаём инструменты
 
@@ -1247,6 +1250,21 @@ class Editor extends paper.PaperScope {
     this.eve.emit('keydown', ev);
   }
 
+  /**
+   * Обработчик события проверки заполненности реквизитов
+   */
+  on_alert(ev) {
+    if(ev.obj === this.project.ox) {
+      if(ev.row) {
+        const {inset} = ev.row;
+        if(inset && !inset.empty()) {
+          ev.text += `<br/>вставка "${inset.name}"`;
+        }
+      }
+      $p.msg.show_msg(ev);
+    }
+  }
+
   clear_selection_bounds() {
     if (this._selectionBoundsShape) {
       this._selectionBoundsShape.remove();
@@ -1290,11 +1308,12 @@ class Editor extends paper.PaperScope {
    * @for Editor
    */
   unload() {
-    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project, on_keydown, on_del_row} = this;
+    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project} = this;
 
     eve.removeAllListeners();
-    $p.cat.characteristics.off("del_row", on_del_row);
-    document.body.removeEventListener('keydown', on_keydown);
+    $p.cat.characteristics.off('del_row', this.on_del_row);
+    $p.off('alert', this.on_alert);
+    document.body.removeEventListener('keydown', this.on_keydown);
 
     if(tool && tool._callbacks.deactivate.length){
       tool._callbacks.deactivate[0].call(tool);
