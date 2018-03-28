@@ -585,7 +585,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 $p.cat.clrs.__define({
 
   by_predefined: {
-    value: function (clr, clr_elm, clr_sch, elm, spec) {
+    value(clr, clr_elm, clr_sch, elm, spec) {
 
       const {predefined_name} = clr;
       if(predefined_name) {
@@ -633,7 +633,7 @@ $p.cat.clrs.__define({
   },
 
   inverted: {
-    value: function(clr){
+    value(clr){
       if(clr.clr_in == clr.clr_out || clr.clr_in.empty() || clr.clr_out.empty()){
         return clr;
       }
@@ -644,7 +644,7 @@ $p.cat.clrs.__define({
   },
 
 	selection_exclude_service: {
-		value: function (mf, sys) {
+		value(mf, sys) {
 
 			if(mf.choice_params)
 				mf.choice_params.length = 0;
@@ -705,7 +705,7 @@ $p.cat.clrs.__define({
 	},
 
 	form_selection: {
-		value: function (pwnd, attr) {
+		value(pwnd, attr) {
 
 		  const eclr = this.get();
 
@@ -775,7 +775,7 @@ $p.cat.clrs.__define({
 
 					tb_filter.__define({
 						get_filter: {
-							value: () => {
+							value() {
 								const res = {
 									selection: []
 								};
@@ -849,7 +849,7 @@ $p.cat.clrs.__define({
 	},
 
 	sync_grid: {
-		value: function(attr, grid) {
+		value(attr, grid) {
 
 			if(attr.action == "get_selection" && attr.selection && attr.selection.some(function (v) {
 				return v.hasOwnProperty("clr_in") || v.hasOwnProperty("clr_out");
@@ -899,7 +899,7 @@ $p.cat.cnns.__define({
   },
 
   sql_selection_list_flds: {
-    value: function(initial_value){
+    value(initial_value){
       return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.name as presentation, _k_.synonym as cnn_type," +
         " case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_cnns AS _t_" +
         " left outer join enm_cnn_types as _k_ on _k_.ref = _t_.cnn_type %3 %4 LIMIT 300";
@@ -907,7 +907,7 @@ $p.cat.cnns.__define({
   },
 
   nom_cnn: {
-    value: function(nom1, nom2, cnn_types, ign_side, is_outer){
+    value(nom1, nom2, cnn_types, ign_side, is_outer){
 
       const {ProfileItem, BuilderElement, Filling} = $p.Editor;
       const {Вертикальная} = $p.enm.orientations
@@ -1003,7 +1003,7 @@ $p.cat.cnns.__define({
   },
 
   elm_cnn: {
-    value: function(elm1, elm2, cnn_types, curr_cnn, ign_side, is_outer){
+    value(elm1, elm2, cnn_types, curr_cnn, ign_side, is_outer){
 
       if(curr_cnn && cnn_types && (cnn_types.indexOf(curr_cnn.cnn_type) != -1) && (cnn_types != $p.enm.cnn_types.acn.ii)){
 
@@ -1069,7 +1069,7 @@ $p.cat.cnns.__define({
 $p.CatCnns.prototype.__define({
 
 	main_row: {
-		value: function (elm) {
+		value(elm) {
 
 			var ares, nom = elm.nom;
 
@@ -1100,7 +1100,7 @@ $p.CatCnns.prototype.__define({
 	},
 
 	check_nom2: {
-		value: function (nom) {
+		value(nom) {
 			var ref = $p.utils.is_data_obj(nom) ? nom.ref : nom;
 			return this.cnn_elmnts._obj.some(function (row) {
 				return row.nom == ref;
@@ -1114,7 +1114,7 @@ $p.CatCnns.prototype.__define({
 $p.cat.contracts.__define({
 
 	sql_selection_list_flds: {
-		value: function(initial_value){
+		value(initial_value){
 			return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.name as presentation, _k_.synonym as contract_kind, _m_.synonym as mutual_settlements, _o_.name as organization, _p_.name as partner," +
 				" case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_contracts AS _t_" +
 				" left outer join cat_organizations as _o_ on _o_.ref = _t_.organization" +
@@ -1125,7 +1125,7 @@ $p.cat.contracts.__define({
 	},
 
 	by_partner_and_org: {
-    value: function (partner, organization, contract_kind = $p.enm.contract_kinds.СПокупателем) {
+    value(partner, organization, contract_kind = $p.enm.contract_kinds.СПокупателем) {
 
       const {main_contract} = $p.cat.partners.get(partner);
 
@@ -1147,7 +1147,7 @@ $p.cat.contracts.__define({
 
 Object.defineProperties($p.cat.divisions, {
   get_option_list: {
-    value: function (selection, val) {
+    value(selection, val) {
       const list = [];
       $p.current_user.acl_objs.find_rows({type: "cat.divisions"}, ({acl_obj}) => {
         if(acl_obj && list.indexOf(acl_obj) == -1){
@@ -1186,7 +1186,7 @@ Object.defineProperties($p.cat.divisions, {
 $p.CatElm_visualization.prototype.__define({
 
 	draw: {
-		value: function (elm, layer, offset) {
+		value(elm, layer, offset) {
 
 		  const {CompoundPath, constructor} = elm.project._scope;
 
@@ -1267,7 +1267,7 @@ $p.CatElm_visualization.prototype.__define({
 $p.CatFormulas.prototype.__define({
 
 	execute: {
-		value: function (obj, attr) {
+		value(obj, attr) {
 
 			if(!this._data._formula && this.formula){
 			  try{
@@ -1311,7 +1311,7 @@ $p.CatFormulas.prototype.__define({
 	},
 
 	_template: {
-		get: function () {
+		get() {
 			if(!this._data._template){
         this._data._template = new $p.SpreadsheetDocument(this.template);
       }
@@ -1324,7 +1324,7 @@ $p.CatFormulas.prototype.__define({
 Object.defineProperties($p.cat.furns, {
 
   sql_selection_list_flds: {
-    value: function(initial_value){
+    value(initial_value){
       return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.parent, case when _t_.is_folder then '' else _t_.id end as id, _t_.name as presentation, _k_.synonym as open_type, \
 					 case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_furns AS _t_ \
 					 left outer join enm_open_types as _k_ on _k_.ref = _t_.open_type %3 %4 LIMIT 300";
@@ -1332,7 +1332,7 @@ Object.defineProperties($p.cat.furns, {
   },
 
   get_option_list: {
-    value: function (selection, val) {
+    value(selection, val) {
 
       const {characteristic, sys} = paper.project._dp;
       const {furn} = $p.job_prm.properties;
@@ -1678,7 +1678,7 @@ $p.cat.inserts.__define({
 	},
 
   _prms_by_type: {
-	  value: function (insert_type) {
+	  value(insert_type) {
       const prms = new Set();
       this.find_rows({available: true, insert_type}, (inset) => {
         inset.used_params.forEach((param) => {
@@ -1784,12 +1784,12 @@ $p.cat.inserts.__define({
           }
 
           Object.defineProperty(ItemRow.prototype, param.ref, {
-            get: function () {
+            get() {
               const {product_params} = this._owner._owner;
               const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
               return row.value;
             },
-            set: function (v) {
+            set(v) {
               const {product_params} = this._owner._owner;
               const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
               row.value = v;
@@ -1817,7 +1817,7 @@ $p.cat.inserts.__define({
   },
 
 	by_thickness: {
-		value: function (min, max) {
+		value(min, max) {
 
 			if(!this._by_thickness){
 				this._by_thickness = {};
@@ -1841,7 +1841,7 @@ $p.cat.inserts.__define({
 	},
 
   sql_selection_list_flds: {
-	  value: function (initial_value) {
+	  value(initial_value) {
       return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.name as presentation, _k_.synonym as insert_type," +
         " case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_inserts AS _t_" +
         " left outer join enm_inserts_types as _k_ on _k_.ref = _t_.insert_type %3 %4 LIMIT 300";
@@ -2302,7 +2302,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
 $p.cat.insert_bind.__define({
 
   insets: {
-    value: function (ox) {
+    value(ox) {
       const {sys, owner} = ox;
       const res = [];
       this.forEach((o) => {
@@ -2328,7 +2328,7 @@ $p.cat.insert_bind.__define({
 $p.cat.nom.__define({
 
 	sql_selection_list_flds: {
-		value: function(initial_value){
+		value(initial_value){
 			return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.article, _t_.name as presentation, _u_.name as nom_unit, _k_.name as nom_kind, _t_.thickness," +
 				" case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_nom AS _t_" +
 				" left outer join cat_units as _u_ on _u_.ref = _t_.base_unit" +
@@ -2337,7 +2337,7 @@ $p.cat.nom.__define({
 	},
 
 	sql_selection_where_flds: {
-		value: function(filter){
+		value(filter){
 			return " OR _t_.article LIKE '" + filter + "' OR _t_.id LIKE '" + filter + "' OR _t_.name LIKE '" + filter + "'";
 		}
 	}
@@ -2346,7 +2346,7 @@ $p.cat.nom.__define({
 $p.CatNom.prototype.__define({
 
 	_price: {
-		value: function (attr) {
+		value(attr) {
 
       let price = 0, currency, start_date = $p.utils.blank.date;
 
@@ -2458,7 +2458,7 @@ $p.CatNom.prototype.__define({
 	},
 
   grouping: {
-	  get: function () {
+	  get() {
       if(!this.hasOwnProperty('_grouping')){
         this.extra_fields.find_rows({property: $p.job_prm.properties.grouping}, (row) => {
           this._grouping = row.value.name;
@@ -2469,15 +2469,15 @@ $p.CatNom.prototype.__define({
   },
 
   presentation: {
-    get : function(){
+    get(){
       return this.name + (this.article ? ' ' + this.article : '');
     },
-    set : function(v){
+    set(v){
     }
   },
 
   by_clr_key: {
-    value: function (clr) {
+    value(clr) {
 
       if(this.clr == clr){
         return this;
@@ -2523,7 +2523,7 @@ $p.CatNom.prototype.__define({
 $p.cat.partners.__define({
 
 	sql_selection_where_flds: {
-		value: function(filter){
+		value(filter){
 			return " OR inn LIKE '" + filter + "' OR name_full LIKE '" + filter + "' OR name LIKE '" + filter + "'";
 		}
 	}
@@ -2532,7 +2532,7 @@ $p.cat.partners.__define({
 $p.CatPartners.prototype.__define({
 
 	addr: {
-		get: function () {
+		get() {
 
 			return this.contact_information._obj.reduce(function (val, row) {
 
@@ -2554,7 +2554,7 @@ $p.CatPartners.prototype.__define({
 	},
 
 	phone: {
-		get: function () {
+		get() {
 
 			return this.contact_information._obj.reduce(function (val, row) {
 
@@ -2572,23 +2572,22 @@ $p.CatPartners.prototype.__define({
 	},
 
 	long_presentation: {
-		get: function () {
-			var res = this.name_full || this.name,
-				addr = this.addr,
-				phone = this.phone;
+		get() {
+		  const {addr, phone, inn, kpp} = this;
+			let res = this.name_full || this.name;
 
-			if(this.inn)
-				res+= ", ИНН" + this.inn;
-
-			if(this.kpp)
-				res+= ", КПП" + this.kpp;
-
-			if(addr)
-				res+= ", " + addr;
-
-			if(phone)
-				res+= ", " + phone;
-
+			if(inn){
+        res+= ", ИНН" + inn;
+      }
+			if(kpp){
+        res+= ", КПП" + kpp;
+      }
+			if(addr){
+        res+= ", " + addr;
+      }
+			if(phone){
+        res+= ", " + phone;
+      }
 			return res;
 		}
 	}
@@ -2626,7 +2625,7 @@ $p.cat.production_params.__define({
 $p.CatProduction_params.prototype.__define({
 
 	noms: {
-		get: function(){
+		get(){
 			var __noms = [];
 			this.elmnts._obj.forEach(function(row){
 				if(!$p.utils.is_empty_guid(row.nom) && __noms.indexOf(row.nom) == -1)
@@ -2637,7 +2636,7 @@ $p.CatProduction_params.prototype.__define({
 	},
 
 	inserts: {
-		value: function(elm_types, by_default){
+		value(elm_types, by_default){
 			var __noms = [];
 			if(!elm_types)
 				elm_types = $p.enm.elm_types.rama_impost;
@@ -2682,7 +2681,7 @@ $p.CatProduction_params.prototype.__define({
 	},
 
 	refill_prm: {
-		value: function (ox, cnstr = 0) {
+		value(ox, cnstr = 0) {
 
 			const prm_ts = !cnstr ? this.product_params : this.furn_params;
 			const adel = [];
@@ -5333,21 +5332,21 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
           elmnts.filter.custom_selection.__define({
             department: {
-              get: function () {
+              get() {
                 const {department} = dp;
                 return this._state == 'template' ? {$eq: $p.utils.blank.guid} : {$eq: department.ref};
               },
               enumerable: true
             },
             state: {
-              get: function(){
+              get(){
                 return this._state == 'all' ? {$in: 'draft,sent,confirmed,declined,service,complaints,template,zarchive'.split(',')} : {$eq: this._state};
               },
               enumerable: true
             },
 
             _sort: {
-              get: function () {
+              get() {
                 if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
                   const flt = elmnts.filter.get_filter();
                   if(flt.filter.length > 5) {
@@ -5359,7 +5358,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             },
 
             _index: {
-              get: function () {
+              get() {
                 if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
                   const flt = elmnts.filter.get_filter();
                   if(flt.filter.length > 5) {
@@ -5590,8 +5589,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           ]
         }
       });
-      wnd.elmnts.pg_left.xcell_action = function (component) {
-        $p.dp.buyers_order.open_component(wnd, o, handlers, component);
+      wnd.elmnts.pg_left.xcell_action = function (component, fld) {
+        $p.dp.buyers_order.open_component(wnd, {
+          ref: o.ref,
+          cmd: fld,
+          _mgr: _mgr,
+        }, handlers, component);
       }
 
 
@@ -6182,7 +6185,7 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
 
 ((_mgr) => {
 
-  const {form, tabular_sections} = _mgr.metadata()
+  const {form, tabular_sections} = _mgr.metadata();
   tabular_sections.production.fields.characteristic._option_list_local = true;
 
   form.client_of_dealer = {
@@ -6208,7 +6211,7 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
       },
       passport_date: {
         synonym: 'Дата выдачи паспорта',
-        type: {types: ['date'], date_part: 'date'}
+        type: {types: ['string'], str_len: 20}
       },
       note: {
         synonym: 'Дополнительно',
@@ -6219,29 +6222,45 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
     obj: {
       items: [
         {
-          element: 'DataField',
-          fld: 'surname',
-        },
-        {
-          element: 'DataField',
-          fld: 'name',
-        },
-        {
-          element: 'DataField',
-          fld: 'patronymic',
-        },
-        {
-          element: 'DataField',
-          fld: 'passport_serial_number',
-        },
-        {
-          element: 'DataField',
-          fld: 'passport_date',
-        },
-        {
-          element: 'DataField',
-          fld: 'note',
-        },
+          element: 'FormGroup',
+          row: true,
+          items: [
+            {
+              element: 'FormGroup',
+              items: [
+                {
+                  element: 'DataField',
+                  fld: 'surname',
+                },
+                {
+                  element: 'DataField',
+                  fld: 'name',
+                },
+                {
+                  element: 'DataField',
+                  fld: 'patronymic',
+                },
+              ]
+            },
+            {
+              element: 'FormGroup',
+              items: [
+                {
+                  element: 'DataField',
+                  fld: 'passport_serial_number',
+                },
+                {
+                  element: 'DataField',
+                  fld: 'passport_date',
+                },
+                {
+                  element: 'DataField',
+                  fld: 'note',
+                },
+              ]
+            }
+          ]
+        }
       ]
     },
     selection: {
@@ -6353,13 +6372,13 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
   }
 
 
-  })($p.doc.calc_order);
+})($p.doc.calc_order);
 
 
 $p.doc.calc_order.__define({
 
 	rep_invoice_execution: {
-		value: function (rep) {
+		value(rep) {
 
 			var query_options = {
 					reduce: true,
@@ -6449,7 +6468,7 @@ $p.doc.calc_order.__define({
 	},
 
 	rep_planing: {
-		value: function (rep, attr) {
+		value(rep, attr) {
 
 			var date_from = $p.utils.date_add_day(new Date(), -1, true),
 				date_till = $p.utils.date_add_day(date_from, 7, true),
@@ -6639,42 +6658,42 @@ $p.DocSelling.prototype.before_save = function () {
 
 	Object.defineProperties(_mgr, {
 	  ad: {
-	    get: function () {
+	    get() {
         return this.УгловоеДиагональное;
       }
     },
     av: {
-      get: function () {
+      get() {
         return this.УгловоеКВертикальной;
       }
     },
     ah: {
-      get: function () {
+      get() {
         return this.УгловоеКГоризонтальной;
       }
     },
     t: {
-      get: function () {
+      get() {
         return this.ТОбразное;
       }
     },
     ii: {
-      get: function () {
+      get() {
         return this.Наложение;
       }
     },
     i: {
-      get: function () {
+      get() {
         return this.НезамкнутыйКонтур;
       }
     },
     xt: {
-      get: function () {
+      get() {
         return this.КрестПересечение;
       }
     },
     xx: {
-      get: function () {
+      get() {
         return this.КрестВСтык;
       }
     },
@@ -6695,7 +6714,7 @@ $p.DocSelling.prototype.before_save = function () {
 	_mgr.__define({
 
 		profiles: {
-			get : function(){
+			get(){
 				return cache.profiles
 					|| ( cache.profiles = [
 						_mgr.Рама,
@@ -6706,7 +6725,7 @@ $p.DocSelling.prototype.before_save = function () {
 		},
 
 		profile_items: {
-			get : function(){
+			get(){
 				return cache.profile_items
 					|| ( cache.profile_items = [
 						_mgr.Рама,
@@ -6721,27 +6740,27 @@ $p.DocSelling.prototype.before_save = function () {
 		},
 
 		rama_impost: {
-			get : function(){
+			get(){
 				return cache.rama_impost
 					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
 			}
 		},
 
 		impost_lay: {
-			get : function(){
+			get(){
 				return cache.impost_lay
 					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
 			}
 		},
 
 		stvs: {
-			get : function(){
+			get(){
 				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
 			}
 		},
 
 		glasses: {
-			get : function(){
+			get(){
 				return cache.glasses
 					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
 			}
@@ -6768,7 +6787,7 @@ $p.DocSelling.prototype.before_save = function () {
 	$p.enm.open_types.__define({
 
 		is_opening: {
-			value: function (v) {
+			value(v) {
 
 				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
 					return false;
@@ -6784,19 +6803,19 @@ $p.DocSelling.prototype.before_save = function () {
 	$p.enm.orientations.__define({
 
 		hor: {
-			get: function () {
+			get() {
 				return this.Горизонтальная;
 			}
 		},
 
 		vert: {
-			get: function () {
+			get() {
 				return this.Вертикальная;
 			}
 		},
 
 		incline: {
-			get: function () {
+			get() {
 				return this.Наклонная;
 			}
 		}
@@ -6805,37 +6824,37 @@ $p.DocSelling.prototype.before_save = function () {
 	$p.enm.positions.__define({
 
 		left: {
-			get: function () {
+			get() {
 				return this.Лев;
 			}
 		},
 
 		right: {
-			get: function () {
+			get() {
 				return this.Прав;
 			}
 		},
 
 		top: {
-			get: function () {
+			get() {
 				return this.Верх;
 			}
 		},
 
 		bottom: {
-			get: function () {
+			get() {
 				return this.Низ;
 			}
 		},
 
 		hor: {
-			get: function () {
+			get() {
 				return this.ЦентрГоризонталь;
 			}
 		},
 
 		vert: {
-			get: function () {
+			get() {
 				return this.ЦентрВертикаль;
 			}
 		}
@@ -7618,12 +7637,20 @@ class eXcell_client extends eXcell {
   }
 
   open_selection(e) {
-    this.grid.xcell_action && this.grid.xcell_action('ClientOfDealerSearch');
+    const v = this.grid.get_cell_field();
+    if(v && v.field) {
+      v.obj[v.field] = this.getValue();
+      this.grid.xcell_action && this.grid.xcell_action('ClientOfDealerSearch', v.field);
+    }
     return $p.iface.cancel_bubble(e);
   }
 
   open_obj(e) {
-    this.grid.xcell_action && this.grid.xcell_action('ClientOfDealer');
+    const v = this.grid.get_cell_field();
+    if(v && v.field) {
+      v.obj[v.field] = this.getValue();
+      this.grid.xcell_action && this.grid.xcell_action('ClientOfDealer', v.field);
+    }
     return $p.iface.cancel_bubble(e);
   }
 

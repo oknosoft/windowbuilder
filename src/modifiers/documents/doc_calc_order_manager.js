@@ -11,7 +11,7 @@
 ((_mgr) => {
 
   // переопределяем формирование списка выбора
-  const {form, tabular_sections} = _mgr.metadata()
+  const {form, tabular_sections} = _mgr.metadata();
   tabular_sections.production.fields.characteristic._option_list_local = true;
 
   // структура дополнительных форм, связанных с реквизитами
@@ -40,7 +40,7 @@
       },
       passport_date: {
         synonym: 'Дата выдачи паспорта',
-        type: {types: ['date'], date_part: 'date'}
+        type: {types: ['string'], str_len: 20}
       },
       note: {
         synonym: 'Дополнительно',
@@ -52,29 +52,45 @@
     obj: {
       items: [
         {
-          element: 'DataField',
-          fld: 'surname',
-        },
-        {
-          element: 'DataField',
-          fld: 'name',
-        },
-        {
-          element: 'DataField',
-          fld: 'patronymic',
-        },
-        {
-          element: 'DataField',
-          fld: 'passport_serial_number',
-        },
-        {
-          element: 'DataField',
-          fld: 'passport_date',
-        },
-        {
-          element: 'DataField',
-          fld: 'note',
-        },
+          element: 'FormGroup',
+          row: true,
+          items: [
+            {
+              element: 'FormGroup',
+              items: [
+                {
+                  element: 'DataField',
+                  fld: 'surname',
+                },
+                {
+                  element: 'DataField',
+                  fld: 'name',
+                },
+                {
+                  element: 'DataField',
+                  fld: 'patronymic',
+                },
+              ]
+            },
+            {
+              element: 'FormGroup',
+              items: [
+                {
+                  element: 'DataField',
+                  fld: 'passport_serial_number',
+                },
+                {
+                  element: 'DataField',
+                  fld: 'passport_date',
+                },
+                {
+                  element: 'DataField',
+                  fld: 'note',
+                },
+              ]
+            }
+          ]
+        }
       ]
     },
     // форма выбора
@@ -196,6 +212,6 @@
     dst._data.before_save_sync = true;
     return dst.save();
   }
-  
+
 
 })($p.doc.calc_order);
