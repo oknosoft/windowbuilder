@@ -28,8 +28,11 @@ class AdditionsGroup extends React.Component {
     const {tabular, props} = this;
     const inset = find_inset.call(this, props.group);
     if(inset && tabular) {
-      tabular.state._tabular.add({inset, quantity: 1}, false, props.ProductionRow);
-      tabular.forceUpdate();
+      const {_data} = tabular.state._tabular._owner;
+      _data._loading = true;
+      const row = tabular.state._tabular.add({inset, quantity: 1}, false, props.ProductionRow);
+      _data._loading = false;
+      row.value_change('inset', 'force', row.inset);
       this.setState({
         count: this.state.count + 1,
       });
@@ -80,11 +83,11 @@ class AdditionsGroup extends React.Component {
         if(filter.length) {
           if(filter[0].path.in && !filter[0].path.in.some(v => v == row.clr)){
             row.clr = filter[0].path.in[0];
+            this.forceUpdate();
           }
         }
       }
     }
-    this.forceUpdate();
   }
 
   onCellSelected = (e) => {

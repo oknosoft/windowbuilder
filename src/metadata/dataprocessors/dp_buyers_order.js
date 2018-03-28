@@ -93,7 +93,7 @@ export default function ($p) {
 
       if(field == 'inset') {
         const {_owner, row} = this;
-        if(this.inset != value) {
+        if(this.inset != value || type === 'force') {
           this.inset = value;
           const {product_params} = _owner._owner;
           const defaults = this.inset.product_params;
