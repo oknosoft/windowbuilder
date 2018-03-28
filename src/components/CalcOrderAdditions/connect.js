@@ -28,6 +28,7 @@ export function fill_data(ref) {
   const {production, product_params} = dp;
 
   // фильтруем по пустой ведущей продукции
+  dp._data._loading = true;
   dp.calc_order.production.find_rows({ordn: $p.utils.blank.guid}, (row) => {
     const {characteristic} = row;
     const {insert_type} = characteristic.origin;
@@ -53,6 +54,7 @@ export function fill_data(ref) {
       cmp.count++;
     }
   });
+  dp._data._loading = false;
 }
 
 export function find_inset(insert_type) {
