@@ -154,6 +154,7 @@ export default function ($p) {
         value: {
           ref: o.ref,
           cmd: o.cmd,
+          _mgr: o._mgr,
           wnd: wnd,
           Component: module.default
         },

@@ -115,7 +115,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           // настраиваем фильтр для списка заказов
           elmnts.filter.custom_selection.__define({
             department: {
-              get: function () {
+              get() {
                 const {department} = dp;
                 return this._state == 'template' ? {$eq: $p.utils.blank.guid} : {$eq: department.ref};
                 // const depts = [];
@@ -129,7 +129,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               enumerable: true
             },
             state: {
-              get: function(){
+              get(){
                 return this._state == 'all' ? {$in: 'draft,sent,confirmed,declined,service,complaints,template,zarchive'.split(',')} : {$eq: this._state};
               },
               enumerable: true
@@ -137,7 +137,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
             // sort может зависеть от ...
             _sort: {
-              get: function () {
+              get() {
                 if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
                   const flt = elmnts.filter.get_filter();
                   if(flt.filter.length > 5) {
@@ -150,7 +150,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
             // индекс может зависеть от ...
             _index: {
-              get: function () {
+              get() {
                 if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
                   const flt = elmnts.filter.get_filter();
                   if(flt.filter.length > 5) {

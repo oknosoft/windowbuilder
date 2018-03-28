@@ -33,7 +33,7 @@ export default function ($p) {
 
     // подмешивает в наименование материала характеристику и размеры
     material: {
-      value: function(row) {
+      value(row) {
 
         const {nom, characteristic, len, width} = row;
 
@@ -68,7 +68,7 @@ export default function ($p) {
      * @return {Promise.<TResult>}
      */
     calculate: {
-      value: function () {
+      value() {
 
         const {specification, production, scheme, _manager} = this;
         const arefs = [], aobjs = [],
@@ -192,7 +192,7 @@ export default function ($p) {
      * @return {Promise.<TResult>}
      */
     fill_by_order: {
-      value: function (row) {
+      value(row) {
 
         let pdoc;
 
@@ -245,7 +245,7 @@ export default function ($p) {
     // ресурсы по умолчанию
     // TODO: сделать признак в метаданных
     resources: {
-      get: function () {
+      get() {
         return ['qty', 'totqty', 'totqty1', 'amount', 'amount_marged'];
       }
     }

@@ -50,7 +50,7 @@ $p.CatProduction_params.prototype.__define({
 	 * @for Production_params
 	 */
 	noms: {
-		get: function(){
+		get(){
 			var __noms = [];
 			this.elmnts._obj.forEach(function(row){
 				if(!$p.utils.is_empty_guid(row.nom) && __noms.indexOf(row.nom) == -1)
@@ -69,7 +69,7 @@ $p.CatProduction_params.prototype.__define({
 	 * @return Array.<_cat.inserts>
 	 */
 	inserts: {
-		value: function(elm_types, by_default){
+		value(elm_types, by_default){
 			var __noms = [];
 			if(!elm_types)
 				elm_types = $p.enm.elm_types.rama_impost;
@@ -120,7 +120,7 @@ $p.CatProduction_params.prototype.__define({
 	 * @param cnstr {Nomber} - номер конструкции. Если 0 - перезаполняем параметры изделия, иначе - фурнитуры
 	 */
 	refill_prm: {
-		value: function (ox, cnstr = 0) {
+		value(ox, cnstr = 0) {
 
 			const prm_ts = !cnstr ? this.product_params : this.furn_params;
 			const adel = [];

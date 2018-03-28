@@ -11,7 +11,7 @@
 $p.CatElm_visualization.prototype.__define({
 
 	draw: {
-		value: function (elm, layer, offset) {
+		value(elm, layer, offset) {
 
 		  const {CompoundPath, constructor} = elm.project._scope;
 

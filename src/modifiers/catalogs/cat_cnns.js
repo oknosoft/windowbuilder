@@ -13,7 +13,7 @@ $p.cat.cnns.__define({
   },
 
   sql_selection_list_flds: {
-    value: function(initial_value){
+    value(initial_value){
       return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.name as presentation, _k_.synonym as cnn_type," +
         " case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_cnns AS _t_" +
         " left outer join enm_cnn_types as _k_ on _k_.ref = _t_.cnn_type %3 %4 LIMIT 300";
@@ -31,7 +31,7 @@ $p.cat.cnns.__define({
    * @return {Array}
    */
   nom_cnn: {
-    value: function(nom1, nom2, cnn_types, ign_side, is_outer){
+    value(nom1, nom2, cnn_types, ign_side, is_outer){
 
       const {ProfileItem, BuilderElement, Filling} = $p.Editor;
       const {Вертикальная} = $p.enm.orientations
@@ -140,7 +140,7 @@ $p.cat.cnns.__define({
    * @param [is_outer] {Boolean}
    */
   elm_cnn: {
-    value: function(elm1, elm2, cnn_types, curr_cnn, ign_side, is_outer){
+    value(elm1, elm2, cnn_types, curr_cnn, ign_side, is_outer){
 
       // если установленное ранее соединение проходит по типу и стороне, нового не ищем
       if(curr_cnn && cnn_types && (cnn_types.indexOf(curr_cnn.cnn_type) != -1) && (cnn_types != $p.enm.cnn_types.acn.ii)){
@@ -214,7 +214,7 @@ $p.CatCnns.prototype.__define({
 	 * Возвращает основную строку спецификации соединения между элементами
 	 */
 	main_row: {
-		value: function (elm) {
+		value(elm) {
 
 			var ares, nom = elm.nom;
 
@@ -250,7 +250,7 @@ $p.CatCnns.prototype.__define({
 	 * Проверяет, есть ли nom в колонке nom2 соединяемых элементов
 	 */
 	check_nom2: {
-		value: function (nom) {
+		value(nom) {
 			var ref = $p.utils.is_data_obj(nom) ? nom.ref : nom;
 			return this.cnn_elmnts._obj.some(function (row) {
 				return row.nom == ref;

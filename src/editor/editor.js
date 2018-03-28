@@ -51,7 +51,7 @@ class Editor extends paper.PaperScope {
      * @private
      */
     this.__define('_pwnd', {
-      get: function () {
+      get() {
         return pwnd;
       }
     });

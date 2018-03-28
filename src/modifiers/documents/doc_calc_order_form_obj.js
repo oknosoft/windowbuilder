@@ -170,8 +170,12 @@
           ]
         }
       });
-      wnd.elmnts.pg_left.xcell_action = function (component) {
-        $p.dp.buyers_order.open_component(wnd, o, handlers, component);
+      wnd.elmnts.pg_left.xcell_action = function (component, fld) {
+        $p.dp.buyers_order.open_component(wnd, {
+          ref: o.ref,
+          cmd: fld,
+          _mgr: _mgr,
+        }, handlers, component);
       }
 
       /**

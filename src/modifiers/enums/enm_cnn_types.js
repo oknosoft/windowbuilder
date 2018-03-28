@@ -28,42 +28,42 @@
 	 */
 	Object.defineProperties(_mgr, {
 	  ad: {
-	    get: function () {
+	    get() {
         return this.УгловоеДиагональное;
       }
     },
     av: {
-      get: function () {
+      get() {
         return this.УгловоеКВертикальной;
       }
     },
     ah: {
-      get: function () {
+      get() {
         return this.УгловоеКГоризонтальной;
       }
     },
     t: {
-      get: function () {
+      get() {
         return this.ТОбразное;
       }
     },
     ii: {
-      get: function () {
+      get() {
         return this.Наложение;
       }
     },
     i: {
-      get: function () {
+      get() {
         return this.НезамкнутыйКонтур;
       }
     },
     xt: {
-      get: function () {
+      get() {
         return this.КрестПересечение;
       }
     },
     xx: {
-      get: function () {
+      get() {
         return this.КрестВСтык;
       }
     },
