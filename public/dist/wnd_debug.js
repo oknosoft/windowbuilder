@@ -1685,10 +1685,12 @@ $p.cat.inserts.__define({
           !param.is_calculated && prms.add(param);
         });
         inset.specification.forEach(({nom}) => {
-          const {used_params} = nom;
-          used_params && used_params.forEach((param) => {
-            !param.is_calculated && prms.add(param);
-          });
+          if(nom){
+            const {used_params} = nom;
+            used_params && used_params.forEach((param) => {
+              !param.is_calculated && prms.add(param);
+            });
+          }
         });
       });
       return prms;
@@ -1726,10 +1728,12 @@ $p.cat.inserts.__define({
               !param.is_calculated && prms.add(param);
             });
             inset.specification.forEach(({nom}) => {
-              const {used_params} = nom;
-              used_params && used_params.forEach((param) => {
-                !param.is_calculated && prms.add(param);
-              });
+              if(nom){
+                const {used_params} = nom;
+                used_params && used_params.forEach((param) => {
+                  !param.is_calculated && prms.add(param);
+                });
+              }
             });
             mf.read_only = !prms.has(prm);
 
@@ -4280,14 +4284,25 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     if(this.obj_delivery_state == Шаблон) {
       this.department = $p.utils.blank.guid;
+      this.partner = $p.utils.blank.guid;
     }
-    else if(this.department.empty()) {
-      $p.msg.show_msg && $p.msg.show_msg({
-        type: 'alert-warning',
-        text: 'Не заполнен реквизит "офис продаж" (подразделение)',
-        title: this.presentation
-      });
-      return false;
+    else {
+      if(this.department.empty()) {
+        $p.msg.show_msg && $p.msg.show_msg({
+          type: 'alert-warning',
+          text: 'Не заполнен реквизит "офис продаж" (подразделение)',
+          title: this.presentation
+        });
+        return false;
+      }
+      if(this.partner.empty()) {
+        $p.msg.show_msg && $p.msg.show_msg({
+          type: 'alert-warning',
+          text: 'Не указан контрагент (дилер)',
+          title: this.presentation
+        });
+        return false;
+      }
     }
 
     this.production.forEach((row) => {
