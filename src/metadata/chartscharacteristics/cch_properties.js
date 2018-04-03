@@ -19,7 +19,7 @@ export default function ($p) {
      * @return {Boolean}
      */
     check_mandatory: {
-      value: function (prms, title) {
+      value(prms, title) {
 
         var t, row;
 
@@ -48,7 +48,7 @@ export default function ($p) {
      * @return {Array}
      */
     slist: {
-      value: function (prop, ret_mgr) {
+      value(prop, ret_mgr) {
 
         var res = [], rt, at, pmgr, op = this.get(prop);
 
@@ -97,7 +97,7 @@ export default function ($p) {
      * @type Boolean
      */
     is_calculated: {
-      get: function () {
+      get() {
         return ($p.job_prm.properties.calculated || []).indexOf(this) != -1;
       }
     },
@@ -110,7 +110,7 @@ export default function ($p) {
      * @param [obj.ox]
      */
     calculated_value: {
-      value: function (obj) {
+      value(obj) {
         if(!this._calculated_value) {
           if(this._formula) {
             this._calculated_value = $p.cat.formulas.get(this._formula);
@@ -127,7 +127,7 @@ export default function ($p) {
      * ### Проверяет условие в строке отбора
      */
     check_condition: {
-      value: function ({row_spec, prm_row, elm, cnstr, origin, ox, calc_order}) {
+      value({row_spec, prm_row, elm, cnstr, origin, ox, calc_order}) {
 
         const {is_calculated} = this;
         const {utils, enm: {comparison_types}} = $p;
@@ -185,7 +185,7 @@ export default function ($p) {
      * Извлекает значение параметра с учетом вычисляемости
      */
     extract_value: {
-      value: function ({comparison_type, txt_row, value}) {
+      value({comparison_type, txt_row, value}) {
 
         switch (comparison_type) {
 
@@ -218,7 +218,7 @@ export default function ($p) {
      * Возвращает массив связей текущего параметра
      */
     params_links: {
-      value: function (attr) {
+      value(attr) {
 
         // первым делом, выясняем, есть ли ограничитель на текущий параметр
         if(!this.hasOwnProperty('_params_links')) {
@@ -249,7 +249,7 @@ export default function ($p) {
      * Проверяет и при необходимости перезаполняет или устанваливает умолчание value в prow
      */
     linked_values: {
-      value: function (links, prow) {
+      value(links, prow) {
         const values = [];
         let changed;
         // собираем все доступные значения в одном массиве
@@ -289,7 +289,7 @@ export default function ($p) {
      * @param attr {Object} - атрибуты OCombo
      */
     filter_params_links: {
-      value: function (filter, attr, links) {
+      value(filter, attr, links) {
         // для всех отфильтрованных связей параметров
         if(!links) {
           links = this.params_links(attr);

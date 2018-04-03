@@ -25,17 +25,19 @@ $p.cat.inserts.__define({
    * возвращает возможные параметры вставок данного типа
    */
   _prms_by_type: {
-	  value: function (insert_type) {
+	  value(insert_type) {
       const prms = new Set();
       this.find_rows({available: true, insert_type}, (inset) => {
         inset.used_params.forEach((param) => {
           !param.is_calculated && prms.add(param);
         });
         inset.specification.forEach(({nom}) => {
-          const {used_params} = nom;
-          used_params && used_params.forEach((param) => {
-            !param.is_calculated && prms.add(param);
-          });
+          if(nom){
+            const {used_params} = nom;
+            used_params && used_params.forEach((param) => {
+              !param.is_calculated && prms.add(param);
+            });
+          }
         });
       });
       return prms;
@@ -77,10 +79,12 @@ $p.cat.inserts.__define({
               !param.is_calculated && prms.add(param);
             });
             inset.specification.forEach(({nom}) => {
-              const {used_params} = nom;
-              used_params && used_params.forEach((param) => {
-                !param.is_calculated && prms.add(param);
-              });
+              if(nom){
+                const {used_params} = nom;
+                used_params && used_params.forEach((param) => {
+                  !param.is_calculated && prms.add(param);
+                });
+              }
             });
             mf.read_only = !prms.has(prm);
 
@@ -146,12 +150,12 @@ $p.cat.inserts.__define({
 
           // корректируем класс строки
           Object.defineProperty(ItemRow.prototype, param.ref, {
-            get: function () {
+            get() {
               const {product_params} = this._owner._owner;
               const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
               return row.value;
             },
-            set: function (v) {
+            set(v) {
               const {product_params} = this._owner._owner;
               const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
               row.value = v;
@@ -179,7 +183,7 @@ $p.cat.inserts.__define({
   },
 
 	by_thickness: {
-		value: function (min, max) {
+		value(min, max) {
 
 			if(!this._by_thickness){
 				this._by_thickness = {};
@@ -203,7 +207,7 @@ $p.cat.inserts.__define({
 	},
 
   sql_selection_list_flds: {
-	  value: function (initial_value) {
+	  value(initial_value) {
       return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.name as presentation, _k_.synonym as insert_type," +
         " case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_inserts AS _t_" +
         " left outer join enm_inserts_types as _k_ on _k_.ref = _t_.insert_type %3 %4 LIMIT 300";

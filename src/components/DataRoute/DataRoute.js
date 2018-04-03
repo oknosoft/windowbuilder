@@ -59,7 +59,8 @@ class DataRoute extends Component {
     }
 
     return <Switch>
-      <Route path={`${match.url}/:ref([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})`} render={(props) => wraper(DataObj, props, 'obj')}/>
+      <Route path={`${match.url}/:ref([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})`}
+             render={(props) => wraper(DataObj, props, 'obj')}/>
       <Route path={`${match.url}/list`} render={(props) => wraper(DataList, props, 'list')}/>
       <Route path={`${match.url}/meta`} render={(props) => wraper(MetaObjPage, props)}/>
       <Route component={NotFoundPage}/>

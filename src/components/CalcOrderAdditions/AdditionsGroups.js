@@ -15,7 +15,12 @@ import {alasql_schemas, fill_data} from './connect';
 
 export default class AdditionsGroups extends React.Component {
 
-  state = {schemas: null};
+  constructor(props, context) {
+    super(props, context);
+
+    this.state = {schemas: null};
+    this.groups = new Map();
+  }
 
   // заполняет соответствие схем и типов вставок в state компонента
   fill_schemas(docs = []) {
@@ -23,7 +28,7 @@ export default class AdditionsGroups extends React.Component {
     const {scheme_settings} = $p.cat;
     for (const doc of docs) {
       for (const item of this.items) {
-        if(doc.name == item.name) {
+        if(item && doc.name == item.name) {
           schemas.set(item, scheme_settings.get(doc));
           break;
         }
@@ -38,6 +43,19 @@ export default class AdditionsGroups extends React.Component {
 
   componentDidMount() {
     this.fill_schemas(alasql_schemas());
+    $p.dp.buyers_order.on('update', this.inset_change);
+  }
+
+  componentWillUnmount() {
+    $p.dp.buyers_order.off('update', this.inset_change);
+  }
+
+  inset_change = (obj, fields) => {
+    const {groups, dp} = this;
+    if(fields && fields.inset && obj._owner == dp.production) {
+      const group = groups.get(obj.inset.insert_type);
+      group && group.forceUpdate();
+    }
   }
 
   render() {
@@ -47,9 +65,13 @@ export default class AdditionsGroups extends React.Component {
     return <List>
       {schemas ?
         items.map(group => {
+          if(!group) {
+            return null;
+          }
           const cmp = components.get(group);
           return <AdditionsGroup
             key={`${group.ref}`}
+            ref={el => this.groups.set(group, el)}
             dp={dp}
             group={group}
             {...cmp}

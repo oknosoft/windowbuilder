@@ -11,7 +11,7 @@ export default function ($p) {
   $p.DpBuilder_price.prototype.__define({
 
     form_obj: {
-      value: function (pwnd) {
+      value(pwnd) {
 
         const {nom, goods, _manager} = this;
 

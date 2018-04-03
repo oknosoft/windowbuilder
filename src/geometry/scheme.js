@@ -148,7 +148,9 @@ class Scheme extends paper.Project {
      */
     this.redraw = () => {
 
-      _attr._opened && typeof requestAnimationFrame == 'function' && requestAnimationFrame(_scheme.redraw);
+      const isBrowser = typeof requestAnimationFrame === 'function';
+
+      _attr._opened && isBrowser && requestAnimationFrame(_scheme.redraw);
 
       if(!_attr._opened || _attr._saving || !_changes.length) {
         return;
@@ -163,24 +165,24 @@ class Scheme extends paper.Project {
         _scheme.l_connective.redraw();
 
         // обновляем связи параметров изделия
-        contours[0].refresh_prm_links(true);
+        isBrowser && contours[0].refresh_prm_links(true);
 
         // перерисовываем все контуры
         for (let contour of contours) {
           contour.redraw();
-          if(_changes.length && typeof requestAnimationFrame == 'function') {
+          if(_changes.length) {
             return;
           }
         }
 
         // если перерисованы все контуры, перерисовываем их размерные линии
         _attr._bounds = null;
-        contours.forEach((l) => {
-          l.contours.forEach((l) => {
+        contours.forEach(({contours, l_dimensions}) => {
+          contours.forEach((l) => {
             l.save_coordinates(true);
-            l.refresh_prm_links();
+            isBrowser && l.refresh_prm_links();
           });
-          l.l_dimensions.redraw();
+          l_dimensions.redraw();
         });
 
         // перерисовываем габаритные размерные линии изделия
@@ -212,7 +214,7 @@ class Scheme extends paper.Project {
   }
 
   set ox(v) {
-    const {_dp, _attr, _papam_listener} = this;
+    const {_dp, _attr, _scope, _papam_listener} = this;
     let setted;
 
     // пытаемся отключить обсервер от табчасти
@@ -227,6 +229,8 @@ class Scheme extends paper.Project {
     _dp.len = ox.x;
     _dp.height = ox.y;
     _dp.s = ox.s;
+    _dp.sys = ox.sys;
+    _dp.clr = ox.clr;
 
     // устанавливаем строку заказа
     _attr._calc_order_row = ox.calc_order_row;
@@ -241,29 +245,27 @@ class Scheme extends paper.Project {
 
 
     // устанавливаем в _dp систему профилей
-    if(ox.empty()) {
-      _dp.sys = '';
-    }
-    // для пустой номенклатуры, ставим предыдущую выбранную систему
-    else if(ox.owner.empty()) {
-      _dp.sys = $p.wsql.get_user_param('editor_last_sys');
-      setted = !_dp.sys.empty();
-    }
-    // иначе, ищем первую подходящую систему
-    else if(_dp.sys.empty()) {
-      $p.cat.production_params.find_rows({is_folder: false}, (o) => {
-        if(setted) {
-          return false;
-        }
-        o.production.find_rows({nom: ox.owner}, () => {
-          _dp.sys = o;
-          setted = true;
-          return false;
+    if(_dp.sys.empty()) {
+      if(ox.owner.empty()) {
+        _dp.sys = $p.wsql.get_user_param('editor_last_sys');
+        setted = !_dp.sys.empty();
+      }
+      // иначе, ищем первую подходящую систему
+      else {
+        $p.cat.production_params.find_rows({is_folder: false}, (o) => {
+          if(setted) {
+            return false;
+          }
+          o.production.find_rows({nom: ox.owner}, () => {
+            _dp.sys = o;
+            setted = true;
+            return false;
+          });
         });
-      });
+      }
     }
 
-    // пересчитываем параметры изделия при установке системы
+    // пересчитываем параметры изделия, если изменилась система
     if(setted) {
       _dp.sys.refill_prm(ox);
     }
@@ -275,7 +277,7 @@ class Scheme extends paper.Project {
 
     // оповещаем о новых слоях и свойствах изделия
     if(!_attr._silent) {
-      this._scope.eve.emit_async('rows', ox, {constructions: true});
+      _scope.eve.emit_async('rows', ox, {constructions: true});
       _dp._manager.emit_async('rows', _dp, {extra_fields: true});
 
       // начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
@@ -361,7 +363,7 @@ class Scheme extends paper.Project {
       load_contour(null);
 
       // перерисовываем каркас
-      _scheme.redraw();
+      _scheme.redraw(from_service);
 
       // запускаем таймер, чтобы нарисовать размерные линии и визуализацию
       return new Promise((resolve, reject) => {

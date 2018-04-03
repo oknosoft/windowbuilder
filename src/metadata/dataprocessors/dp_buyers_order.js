@@ -93,7 +93,7 @@ export default function ($p) {
 
       if(field == 'inset') {
         const {_owner, row} = this;
-        if(this.inset != value) {
+        if(this.inset != value || type === 'force') {
           this.inset = value;
           const {product_params} = _owner._owner;
           const defaults = this.inset.product_params;
@@ -131,7 +131,7 @@ export default function ($p) {
   $p.DpBuyers_orderProductionRow.pclrs = new Set();
 
   // вызов формы подключаемого react компонента из dhtmlx
-  $p.dp.buyers_order.open_component = function (wnd, o, handlers, component) {
+  $p.dp.buyers_order.open_component = function (wnd, o, handlers, component, area = 'DataObjPage') {
 
     let imodule;
     switch (component){
@@ -141,15 +141,20 @@ export default function ($p) {
     case 'ClientOfDealerSearch':
       imodule = import('../../components/ClientOfDealerSearch');
       break;
+    case 'PushUtils':
+      imodule = import('../../components/PushUtils');
+      break;
     case 'CalcOrderAdditions':
       imodule = import('../../components/CalcOrderAdditions');
       break;
     }
     imodule.then((module) => handlers.handleIfaceState({
-        component: 'DataObjPage',
+        component: area,
         name: 'dialog',
         value: {
           ref: o.ref,
+          cmd: o.cmd,
+          _mgr: o._mgr,
           wnd: wnd,
           Component: module.default
         },

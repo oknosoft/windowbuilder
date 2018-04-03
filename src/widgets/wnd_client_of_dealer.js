@@ -63,12 +63,20 @@ class eXcell_client extends eXcell {
   }
 
   open_selection(e) {
-    this.grid.xcell_action && this.grid.xcell_action('ClientOfDealerSearch');
+    const v = this.grid.get_cell_field();
+    if(v && v.field) {
+      v.obj[v.field] = this.getValue();
+      this.grid.xcell_action && this.grid.xcell_action('ClientOfDealerSearch', v.field);
+    }
     return $p.iface.cancel_bubble(e);
   }
 
   open_obj(e) {
-    this.grid.xcell_action && this.grid.xcell_action('ClientOfDealer');
+    const v = this.grid.get_cell_field();
+    if(v && v.field) {
+      v.obj[v.field] = this.getValue();
+      this.grid.xcell_action && this.grid.xcell_action('ClientOfDealer', v.field);
+    }
     return $p.iface.cancel_bubble(e);
   }
 

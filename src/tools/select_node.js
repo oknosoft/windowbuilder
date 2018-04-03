@@ -305,28 +305,26 @@ class ToolSelectNode extends ToolElement {
 
         const {project} = this._scope;
         const {key, modifiers} = event;
-
-        let j, path, segment, index, point, handle;
-
         const step = modifiers.shift ? 1 : 10;
+        let j, path, segment, index, point, handle;
 
         if (key == '+' || key == 'insert') {
 
-
           for(let path of project.selectedItems){
-            // при зажатом ctrl или alt добавляем элемент иначе - узел
+            // при зажатом space добавляем элемент иначе - узел
             if (modifiers.space) {
               if(path.parent instanceof Profile){
 
-                const cnn_point = path.parent.cnn_point("e");
-                if(cnn_point && cnn_point.profile){
-                  cnn_point.profile.rays.clear();
+                const cnn_point = path.parent.cnn_point('e');
+                cnn_point && cnn_point.profile && cnn_point.profile.rays.clear(true);
+                path.parent.rays.clear(true);
+                if(path.hasOwnProperty('insert')) {
+                  delete path.insert;
                 }
-                path.parent.rays.clear();
 
                 point = path.getPointAt(path.length * 0.5);
                 const newpath = path.split(path.length * 0.5);
-                path.lastSegment.point = path.lastSegment.point.add(paper.Point.random());
+                path.lastSegment.point = path.lastSegment.point.add(newpath.getNormalAt(0));
                 newpath.firstSegment.point = path.lastSegment.point;
                 new Profile({generatrix: newpath, proto: path.parent});
               }

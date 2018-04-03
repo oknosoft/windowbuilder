@@ -1310,7 +1310,23 @@ class ProfileItem extends GeneratrixElement {
     if(cnn_point.is_t || (cnn_type == cnn_types.xx && !cnn_point.profile_point)) {
 
       // при необходимости, перерисовываем ведущий элемент
-      !cnn_point.profile.path.segments.length && cnn_point.profile.redraw();
+      if(!cnn_point.profile.path.segments.length) {
+        const {_attr, row} = cnn_point.profile;
+        if(_attr.force_redraw) {
+          if(cnn_point.profile.row.path_data) {
+            cnn_point.profile.path.pathData = cnn_point.profile.row.path_data;
+            _attr.force_redraw = false;
+          }
+          else {
+            throw new Error('cycle redraw');
+          }
+        }
+        else {
+          _attr.force_redraw = true;
+          cnn_point.profile.redraw();
+          _attr.force_redraw = false;
+        }
+      }
 
       const nodes = new Set();
       let profile2;

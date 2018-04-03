@@ -16,7 +16,7 @@
 	$p.enm.open_types.__define({
 
 		is_opening: {
-			value: function (v) {
+			value(v) {
 
 				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
 					return false;
@@ -74,19 +74,19 @@
 	$p.enm.orientations.__define({
 
 		hor: {
-			get: function () {
+			get() {
 				return this.Горизонтальная;
 			}
 		},
 
 		vert: {
-			get: function () {
+			get() {
 				return this.Вертикальная;
 			}
 		},
 
 		incline: {
-			get: function () {
+			get() {
 				return this.Наклонная;
 			}
 		}
@@ -98,37 +98,37 @@
 	$p.enm.positions.__define({
 
 		left: {
-			get: function () {
+			get() {
 				return this.Лев;
 			}
 		},
 
 		right: {
-			get: function () {
+			get() {
 				return this.Прав;
 			}
 		},
 
 		top: {
-			get: function () {
+			get() {
 				return this.Верх;
 			}
 		},
 
 		bottom: {
-			get: function () {
+			get() {
 				return this.Низ;
 			}
 		},
 
 		hor: {
-			get: function () {
+			get() {
 				return this.ЦентрГоризонталь;
 			}
 		},
 
 		vert: {
-			get: function () {
+			get() {
 				return this.ЦентрВертикаль;
 			}
 		}

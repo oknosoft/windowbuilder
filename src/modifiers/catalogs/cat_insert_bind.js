@@ -10,7 +10,7 @@ $p.cat.insert_bind.__define({
    * Возвращает массив допвставок с привязками к изделию или слою
    */
   insets: {
-    value: function (ox) {
+    value(ox) {
       const {sys, owner} = ox;
       const res = [];
       this.forEach((o) => {

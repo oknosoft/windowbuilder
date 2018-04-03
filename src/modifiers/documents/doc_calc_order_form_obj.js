@@ -39,10 +39,10 @@
         }
 
         if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен') || user.role_available('РедактированиеСкидок')) {
-          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,calck,calck,ro,calck,calck,ro';
+          source.types = 'cntr,ref,ref,txt,ro,ro,ro,ro,calck,ref,calck,calck,ro,calck,calck,ro';
         }
         else {
-          source.types = 'cntr,ref,ref,txt,ro,calck,calck,calck,calck,ref,ro,calck,ro,calck,calck,ro';
+          source.types = 'cntr,ref,ref,txt,ro,ro,ro,ro,calck,ref,ro,calck,ro,calck,calck,ro';
         }
 
         _meta_patched = true;
@@ -170,8 +170,12 @@
           ]
         }
       });
-      wnd.elmnts.pg_left.xcell_action = function (component) {
-        $p.dp.buyers_order.open_component(wnd, o, handlers, component);
+      wnd.elmnts.pg_left.xcell_action = function (component, fld) {
+        $p.dp.buyers_order.open_component(wnd, {
+          ref: o.ref,
+          cmd: fld,
+          _mgr: _mgr,
+        }, handlers, component);
       }
 
       /**
@@ -362,6 +366,10 @@
 
       case 'btn_additions':
         $p.dp.buyers_order.open_component(wnd, o, handlers, 'CalcOrderAdditions');
+        break;
+
+      case 'btn_share':
+        $p.dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: btn_id}, handlers, 'PushUtils');
         break;
 
       case 'btn_add_material':

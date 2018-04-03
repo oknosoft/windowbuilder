@@ -17,7 +17,7 @@
 	_mgr.__define({
 
 		profiles: {
-			get : function(){
+			get(){
 				return cache.profiles
 					|| ( cache.profiles = [
 						_mgr.Рама,
@@ -28,7 +28,7 @@
 		},
 
 		profile_items: {
-			get : function(){
+			get(){
 				return cache.profile_items
 					|| ( cache.profile_items = [
 						_mgr.Рама,
@@ -43,27 +43,27 @@
 		},
 
 		rama_impost: {
-			get : function(){
+			get(){
 				return cache.rama_impost
 					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
 			}
 		},
 
 		impost_lay: {
-			get : function(){
+			get(){
 				return cache.impost_lay
 					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
 			}
 		},
 
 		stvs: {
-			get : function(){
+			get(){
 				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
 			}
 		},
 
 		glasses: {
-			get : function(){
+			get(){
 				return cache.glasses
 					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
 			}

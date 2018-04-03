@@ -1,4 +1,4 @@
-// import React, {Component} from 'react';
+import React from 'react';
 // import PropTypes from 'prop-types';
 import DhtmlxCell from '../DhtmlxCell';
 import WindowSizer from 'metadata-react/WindowSize';
@@ -25,12 +25,18 @@ class CalcOrderList extends DhtmlxCell {
   }
 
   componentWillUnmount() {
-    //$p.off('hash_route', this.hash_route);
     const {cell} = this;
-    if (cell && cell.close) {
-      cell.close();
-    }
+    cell && cell.close && cell.close();
     super.componentWillUnmount();
+  }
+
+  render() {
+    const {dialog} = this.props;
+    const Dialog = dialog && dialog.Component;
+    return [
+      <div key="el" ref={el => this.el = el}/>,
+      Dialog && <Dialog key="dialog" handlers={this.handlers} dialog={dialog} owner={this} />
+    ];
   }
 
 }

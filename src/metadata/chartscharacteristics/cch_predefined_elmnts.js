@@ -126,7 +126,7 @@ export default function ($p) {
   $p.CchPredefined_elmnts.prototype.__define({
 
     value: {
-      get: function () {
+      get () {
 
         const mf = this.type;
         const res = this._obj ? this._obj.value : '';
@@ -174,7 +174,7 @@ export default function ($p) {
         return this.characteristic.clr;
       },
 
-      set: function (v) {
+      set(v) {
 
         if(this._obj.value === v) {
           return;

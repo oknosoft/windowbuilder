@@ -12,7 +12,7 @@
 $p.doc.calc_order.__define({
 
 	rep_invoice_execution: {
-		value: function (rep) {
+		value(rep) {
 
 			var query_options = {
 					reduce: true,
@@ -104,7 +104,7 @@ $p.doc.calc_order.__define({
 	},
 
 	rep_planing: {
-		value: function (rep, attr) {
+		value(rep, attr) {
 
 			var date_from = $p.utils.date_add_day(new Date(), -1, true),
 				date_till = $p.utils.date_add_day(date_from, 7, true),

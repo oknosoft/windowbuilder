@@ -88,7 +88,8 @@ class AppRoot extends Component {
             <DumbScreen
               key="dumb"
               title={doc_ram_loaded ? 'Подготовка данных в памяти...' : 'Загрузка из IndexedDB...'}
-              page={{text: doc_ram_loaded ? `Цены и характеристики${nom_prices_step ? ` (такт №${nom_prices_step})` : ''}...` : `${(page && page.synonym) || 'Почти готово'}...`}}
+              page={{text: doc_ram_loaded ? `Цены и характеристики${nom_prices_step ? ` (такт №${nom_prices_step})` : ''}...` :
+                  `${(page && page.synonym) || 'Почти готово'}...`}}
               top={92}/>
             :
             <Switch key="switch">
@@ -115,7 +116,8 @@ class AppRoot extends Component {
       alert && alert.open && <Alert key="alert" open text={alert.text} title={alert.title} handleOk={this.handleDialogClose.bind(this, 'alert')}/>,
 
       // диалог вопросов пользователю (да, нет)
-      confirm && confirm.open && <Confirm key="confirm" open text={confirm.text} title={confirm.title} handleOk={confirm.handleOk} handleCancel={confirm.handleCancel}/>,
+      confirm && confirm.open && <Confirm key="confirm" open text={confirm.text} title={confirm.title}
+                                          handleOk={confirm.handleOk} handleCancel={confirm.handleCancel}/>,
 
       // обрыв связи
       couch_direct && user.logged_in && !offline && props.complete_loaded && !props.sync_started &&

@@ -19,7 +19,7 @@ Object.defineProperties(paper.Path.prototype, {
      * @return {number}
      */
   getDirectedAngle: {
-    value: function (point) {
+    value(point) {
       const np = this.getNearestPoint(point),
         offset = this.getOffsetOf(np);
       return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
@@ -27,7 +27,7 @@ Object.defineProperties(paper.Path.prototype, {
   },
 
   is_self_intersected: {
-    value: function () {
+    value() {
       const {curves} = this;
       return curves.some((crv1, i1) => {
         return curves.some((crv2, i2) => {
@@ -76,7 +76,7 @@ Object.defineProperties(paper.Path.prototype, {
      * @return {Boolean}
      */
   is_linear: {
-      value: function () {
+      value() {
         // если в пути единственная кривая и она прямая - путь прямой
         if(this.curves.length == 1 && this.firstCurve.isLinear())
           return true;
@@ -104,7 +104,7 @@ Object.defineProperties(paper.Path.prototype, {
    * @return {Boolean}
    */
   is_nearest: {
-    value: function (point, sticking) {
+    value(point, sticking) {
       return point.is_nearest(this.getNearestPoint(point), sticking);
     }
   },
@@ -116,7 +116,7 @@ Object.defineProperties(paper.Path.prototype, {
      * @return {paper.Path}
      */
   get_subpath: {
-      value: function (point1, point2) {
+      value(point1, point2) {
         let tmp;
 
         if(!this.length || (point1.is_nearest(this.firstSegment.point) && point2.is_nearest(this.lastSegment.point))){
@@ -180,7 +180,7 @@ Object.defineProperties(paper.Path.prototype, {
      * @return {paper.Path}
      */
   equidistant: {
-      value: function (delta, elong) {
+      value(delta, elong) {
 
         let normal = this.getNormalAt(0);
         const res = new paper.Path({
@@ -234,7 +234,7 @@ Object.defineProperties(paper.Path.prototype, {
      * Удлиняет путь касательными в начальной и конечной точках
      */
   elongation: {
-      value: function (delta) {
+      value(delta) {
 
         if(delta){
           if(this.is_linear()) {
@@ -263,7 +263,7 @@ Object.defineProperties(paper.Path.prototype, {
      * @return point {paper.Point}
      */
   intersect_point: {
-      value: function (path, point, elongate) {
+      value(path, point, elongate) {
         const intersections = this.getIntersections(path);
         let delta = Infinity, tdelta, tpoint;
 
@@ -326,7 +326,7 @@ Object.defineProperties(paper.Path.prototype, {
    * Определяет положение точки относительно пути в окрестности interior
    */
   point_pos: {
-    value: function (point, interior) {
+    value(point, interior) {
       const np = this.getNearestPoint(interior);
       const offset = this.getOffsetOf(np);
       const line = new paper.Line(np, np.add(this.getTangentAt(offset)));
@@ -339,7 +339,7 @@ Object.defineProperties(paper.Path.prototype, {
    * для прямых = 0
    */
   rmin: {
-    value: function() {
+    value() {
       if(!this.hasHandles()){
         return 0;
       }
@@ -360,7 +360,7 @@ Object.defineProperties(paper.Path.prototype, {
    * для прямых = 0
    */
   rmax: {
-    value: function() {
+    value() {
       if(!this.hasHandles()){
         return 0;
       }
@@ -388,7 +388,7 @@ Object.defineProperties(paper.Point.prototype, {
 	 * @return {Boolean}
 	 */
 	is_nearest: {
-		value: function (point, sticking) {
+		value(point, sticking) {
 		  if(sticking === 0){
         return Math.abs(this.x - point.x) < consts.epsilon && Math.abs(this.y - point.y) < consts.epsilon;
       }
@@ -405,7 +405,7 @@ Object.defineProperties(paper.Point.prototype, {
 	 * @return {number}
 	 */
 	point_pos: {
-		value: function(x1,y1, x2,y2){
+		value(x1,y1, x2,y2){
 			if (Math.abs(x1-x2) < 0.2){
 				// вертикаль  >0 - справа, <0 - слева,=0 - на линии
 				return (this.x-x1)*(y1-y2);
@@ -431,7 +431,7 @@ Object.defineProperties(paper.Point.prototype, {
 	 * @return {Point}
 	 */
 	arc_cntr: {
-		value: function(x1,y1, x2,y2, r0, ccw){
+		value(x1,y1, x2,y2, r0, ccw){
 			var a,b,p,r,q,yy1,xx1,yy2,xx2;
 			if(ccw){
 				var tmpx=x1, tmpy=y1;
@@ -478,7 +478,7 @@ Object.defineProperties(paper.Point.prototype, {
 	 * @return {{x: number, y: number}}
 	 */
 	arc_point: {
-		value: function(x1,y1, x2,y2, r, arc_ccw, more_180){
+		value(x1,y1, x2,y2, r, arc_ccw, more_180){
 			const point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
 			if (r>0){
 				let dx = x1-x2, dy = y1-y2, dr = r*r-(dx*dx+dy*dy)/4, l, h, centr;
@@ -505,7 +505,7 @@ Object.defineProperties(paper.Point.prototype, {
    * Рассчитывает радиус окружности по двум точкам и высоте
    */
   arc_r: {
-	  value: function (x1,y1,x2,y2,h) {
+	  value(x1,y1,x2,y2,h) {
       if (!h){
         return 0;
       }
@@ -522,7 +522,7 @@ Object.defineProperties(paper.Point.prototype, {
 	 * @return {paper.Point}
 	 */
 	snap_to_angle: {
-		value: function(snapAngle) {
+		value(snapAngle) {
 
 			if(!snapAngle){
         snapAngle = Math.PI*2/8;
@@ -540,7 +540,7 @@ Object.defineProperties(paper.Point.prototype, {
 	},
 
   bind_to_nodes: {
-	  value: function (sticking) {
+	  value(sticking) {
       return paper.project.activeLayer.nodes.some((point) => {
         if(point.is_nearest(this, sticking)){
           this.x = point.x;

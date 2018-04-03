@@ -18,7 +18,7 @@ $p.cat.clrs.__define({
 	 * @return {*}
 	 */
   by_predefined: {
-    value: function (clr, clr_elm, clr_sch, elm, spec) {
+    value(clr, clr_elm, clr_sch, elm, spec) {
 
       const {predefined_name} = clr;
       if(predefined_name) {
@@ -71,7 +71,7 @@ $p.cat.clrs.__define({
    * @param clr {CatClrs} - исходный цвет
    */
   inverted: {
-    value: function(clr){
+    value(clr){
       if(clr.clr_in == clr.clr_out || clr.clr_in.empty() || clr.clr_out.empty()){
         return clr;
       }
@@ -87,7 +87,7 @@ $p.cat.clrs.__define({
 	 * @param mf {Object} - описание метаданных поля
 	 */
 	selection_exclude_service: {
-		value: function (mf, sys) {
+		value(mf, sys) {
 
 			if(mf.choice_params)
 				mf.choice_params.length = 0;
@@ -151,7 +151,7 @@ $p.cat.clrs.__define({
 	 * Форма выбора с фильтром по двум цветам, создающая при необходимости составной цвет
 	 */
 	form_selection: {
-		value: function (pwnd, attr) {
+		value(pwnd, attr) {
 
 		  const eclr = this.get();
 
@@ -226,7 +226,7 @@ $p.cat.clrs.__define({
 
 					tb_filter.__define({
 						get_filter: {
-							value: () => {
+							value() {
 								const res = {
 									selection: []
 								};
@@ -305,7 +305,7 @@ $p.cat.clrs.__define({
 	 * Изменяем алгоритм построения формы списка. Игнорируем иерархию, если указаны цвета изнутри или снаружи
 	 */
 	sync_grid: {
-		value: function(attr, grid) {
+		value(attr, grid) {
 
 			if(attr.action == "get_selection" && attr.selection && attr.selection.some(function (v) {
 				return v.hasOwnProperty("clr_in") || v.hasOwnProperty("clr_out");

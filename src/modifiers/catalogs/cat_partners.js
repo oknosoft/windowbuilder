@@ -9,7 +9,7 @@
 $p.cat.partners.__define({
 
 	sql_selection_where_flds: {
-		value: function(filter){
+		value(filter){
 			return " OR inn LIKE '" + filter + "' OR name_full LIKE '" + filter + "' OR name LIKE '" + filter + "'";
 		}
 	}
@@ -18,7 +18,7 @@ $p.cat.partners.__define({
 $p.CatPartners.prototype.__define({
 
 	addr: {
-		get: function () {
+		get() {
 
 			return this.contact_information._obj.reduce(function (val, row) {
 
@@ -40,7 +40,7 @@ $p.CatPartners.prototype.__define({
 	},
 
 	phone: {
-		get: function () {
+		get() {
 
 			return this.contact_information._obj.reduce(function (val, row) {
 
@@ -59,23 +59,22 @@ $p.CatPartners.prototype.__define({
 
 	// полное наименование с телефоном, адресом и банковским счетом
 	long_presentation: {
-		get: function () {
-			var res = this.name_full || this.name,
-				addr = this.addr,
-				phone = this.phone;
+		get() {
+		  const {addr, phone, inn, kpp} = this;
+			let res = this.name_full || this.name;
 
-			if(this.inn)
-				res+= ", ИНН" + this.inn;
-
-			if(this.kpp)
-				res+= ", КПП" + this.kpp;
-
-			if(addr)
-				res+= ", " + addr;
-
-			if(phone)
-				res+= ", " + phone;
-
+			if(inn){
+        res+= ", ИНН" + inn;
+      }
+			if(kpp){
+        res+= ", КПП" + kpp;
+      }
+			if(addr){
+        res+= ", " + addr;
+      }
+			if(phone){
+        res+= ", " + phone;
+      }
 			return res;
 		}
 	}

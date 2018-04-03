@@ -11,7 +11,7 @@
 $p.cat.contracts.__define({
 
 	sql_selection_list_flds: {
-		value: function(initial_value){
+		value(initial_value){
 			return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.name as presentation, _k_.synonym as contract_kind, _m_.synonym as mutual_settlements, _o_.name as organization, _p_.name as partner," +
 				" case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_contracts AS _t_" +
 				" left outer join cat_organizations as _o_ on _o_.ref = _t_.organization" +
@@ -22,7 +22,7 @@ $p.cat.contracts.__define({
 	},
 
 	by_partner_and_org: {
-    value: function (partner, organization, contract_kind = $p.enm.contract_kinds.СПокупателем) {
+    value(partner, organization, contract_kind = $p.enm.contract_kinds.СПокупателем) {
 
       const {main_contract} = $p.cat.partners.get(partner);
 

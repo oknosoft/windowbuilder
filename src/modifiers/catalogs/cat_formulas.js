@@ -11,7 +11,7 @@
 $p.CatFormulas.prototype.__define({
 
 	execute: {
-		value: function (obj, attr) {
+		value(obj, attr) {
 
 			// создаём функцию из текста формулы
 			if(!this._data._formula && this.formula){
@@ -58,7 +58,7 @@ $p.CatFormulas.prototype.__define({
 	},
 
 	_template: {
-		get: function () {
+		get() {
 			if(!this._data._template){
         this._data._template = new $p.SpreadsheetDocument(this.template);
       }
