@@ -28,22 +28,30 @@ class Pricing {
           return !loc && this.by_range();
         })
         .then(() => {
+          const {pouch} = $p.adapters;
           // излучаем событие "можно открывать формы"
-          $p.adapters.pouch.emit('pouch_complete_loaded');
+          pouch.emit('pouch_complete_loaded');
+
           // следим за изменениями документа установки цен, чтобы при необходимости обновить кеш
-          $p.doc.nom_prices_setup.pouch_db.changes({
-            since: 'now',
-            live: true,
-            include_docs: true,
-            selector: {class_name: {$in: ['doc.nom_prices_setup', 'cat.formulas']}}
-          }).on('change', (change) => {
-            // формируем новый
-            if(change.doc.class_name == 'doc.nom_prices_setup'){
-              setTimeout(() => {
-                this.by_doc(change.doc)
-              }, 1000);
-            }
-          });
+          if(pouch.local.doc === pouch.remote.doc) {
+            pouch.local.doc.changes({
+              since: 'now',
+              live: true,
+              include_docs: true,
+              selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order', 'cat.formulas']}}
+            }).on('change', (change) => {
+              // формируем новый
+              if(change.doc.class_name == 'doc.nom_prices_setup'){
+                setTimeout(() => {
+                  this.by_doc(change.doc)
+                }, 1000);
+              }
+              else if(change.doc.class_name == 'doc.calc_order'){
+                pouch.load_changes({docs: [change.doc], update_only: true});
+              }
+            });
+          }
+
         })
     });
 

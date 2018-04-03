@@ -335,7 +335,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       return;
     }
     let _modified;
-    if(typeof _obj[name] !== 'string'){
+    if(!_obj[name] || typeof _obj[name] !== 'string'){
       _obj[name] = JSON.stringify($p.CatCharacteristics.builder_props_defaults);
       _modified = true;
     }
