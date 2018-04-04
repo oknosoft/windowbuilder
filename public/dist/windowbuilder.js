@@ -11826,11 +11826,20 @@ class ToolLayImpost extends ToolElement {
 
         const layer = this.hitItem ? this.hitItem.layer : paper.project.activeLayer;
         const lgeneratics = layer.profiles.map((p) => {
-          const {generatrix, elm_type, rays} = p;
+          const {generatrix, elm_type, rays, addls} = p;
           const res = {
             inner: elm_type === $p.enm.elm_types.Импост ? generatrix : rays.inner,
             gen: p.nearest() ? rays.outer : generatrix,
           };
+          if(addls.length) {
+            if(elm_type === $p.enm.elm_types.Импост) {
+
+            }
+            else {
+              res.inner = addls[0].rays.inner;
+              res.gen = addls[0].rays.outer;
+            }
+          }
           return res;
         });
         const nprofiles = [];
