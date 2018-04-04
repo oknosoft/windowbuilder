@@ -969,7 +969,19 @@ function Clipbrd(_editor) {
 
 
 
-class Editor extends paper.PaperScope {
+class EditorInvisible extends paper.PaperScope {
+
+  constructor() {
+
+    super();
+
+    this.eve = new (Object.getPrototypeOf($p.md.constructor))();
+  }
+
+}
+
+
+class Editor extends EditorInvisible {
 
   constructor(pwnd, handlers){
 
@@ -986,8 +998,6 @@ class Editor extends paper.PaperScope {
         return pwnd;
       }
     });
-
-    this.eve = new (Object.getPrototypeOf($p.md.constructor))();
 
     this._layout = pwnd.attachLayout({
       pattern: "2U",
@@ -11815,7 +11825,18 @@ class ToolLayImpost extends ToolElement {
         this.check_layer();
 
         const layer = this.hitItem ? this.hitItem.layer : paper.project.activeLayer;
-        const lgeneratics = layer.profiles.map((p) => p.nearest() ? p.rays.outer : p.generatrix);
+        const lgeneratics = layer.profiles.map((p) => {
+          const {generatrix, elm_type, rays} = p;
+          const res = {
+            inner: elm_type === $p.enm.elm_types.Импост ? generatrix : rays.inner,
+            gen: generatrix,
+          };
+          while (p.nearest()) {
+            res.gen = p.rays.outer;
+            p = p.nearest();
+          }
+          return res;
+        });
         const nprofiles = [];
 
         function n1(p) {
@@ -11926,16 +11947,20 @@ class ToolLayImpost extends ToolElement {
             let correctedp1 = false,
               correctedp2 = false;
 
-            for (let gen of lgeneratics) {
-              let np = gen.getNearestPoint(p.b);
-              if (!correctedp1 && np.getDistance(p.b) < consts.sticking) {
-                correctedp1 = true;
-                p.b = np;
+            for (let {gen, inner} of lgeneratics) {
+              if (!correctedp1) {
+                const np = inner.getNearestPoint(p.b);
+                if(np.getDistance(p.b) < consts.sticking) {
+                  correctedp1 = true;
+                  p.b = inner === gen ? np : gen.getNearestPoint(p.b);
+                }
               }
-              np = gen.getNearestPoint(p.e);
-              if (!correctedp2 && np.getDistance(p.e) < consts.sticking) {
-                correctedp2 = true;
-                p.e = np;
+              if (!correctedp2) {
+                const np = inner.getNearestPoint(p.e);
+                if (np.getDistance(p.e) < consts.sticking) {
+                  correctedp2 = true;
+                  p.e = inner === gen ? np : gen.getNearestPoint(p.e);
+                }
               }
             }
 

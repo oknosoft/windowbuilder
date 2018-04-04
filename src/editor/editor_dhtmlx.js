@@ -30,7 +30,7 @@
  * @menuorder 10
  * @tooltip Графический редактор
  */
-class Editor extends paper.PaperScope {
+class Editor extends EditorInvisible {
 
   constructor(pwnd, handlers){
 
@@ -55,11 +55,6 @@ class Editor extends paper.PaperScope {
         return pwnd;
       }
     });
-
-    /**
-     * Собственный излучатель событий для уменьшения утечек памяти
-     */
-    this.eve = new (Object.getPrototypeOf($p.md.constructor))();
 
     /**
      * ### Разбивка на канвас и аккордион
