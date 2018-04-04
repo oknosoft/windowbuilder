@@ -282,12 +282,12 @@ class ToolLayImpost extends ToolElement {
           const {generatrix, elm_type, rays} = p;
           const res = {
             inner: elm_type === $p.enm.elm_types.Импост ? generatrix : rays.inner,
-            gen: generatrix,
+            gen: p.nearest() ? rays.outer : generatrix,
           };
-          while (p.nearest()) {
-            res.gen = p.rays.outer;
-            p = p.nearest();
-          }
+          // while (p.nearest()) {
+          //   res.gen = p.rays.outer;
+          //   p = p.nearest();
+          // }
           return res;
         });
         const nprofiles = [];
