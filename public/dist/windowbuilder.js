@@ -8038,7 +8038,11 @@ class ProfileItem extends GeneratrixElement {
       if(!cnn_point.profile.path.segments.length) {
         const {_attr, row} = cnn_point.profile;
         if(_attr.force_redraw) {
-          if(cnn_point.profile.row.path_data) {
+          if(cnn_point.profile.generatrix && cnn_point.profile.generatrix.segments.length) {
+            cnn_point.profile.path.addSegments(cnn_point.profile.generatrix.segments);
+            _attr.force_redraw = false;
+          }
+          else if(cnn_point.profile.row && cnn_point.profile.row.path_data) {
             cnn_point.profile.path.pathData = cnn_point.profile.row.path_data;
             _attr.force_redraw = false;
           }
@@ -10542,7 +10546,7 @@ class Scheme extends paper.Project {
           return 1;
         }
 
-        if(profile && !res.cnn) {
+        if(profile && (!res.cnn || res.cnn.empty())) {
 
           cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
           if(!cnns.length) {

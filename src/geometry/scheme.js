@@ -1262,7 +1262,7 @@ class Scheme extends paper.Project {
           return 1;
         }
 
-        if(profile && !res.cnn) {
+        if(profile && (!res.cnn || res.cnn.empty())) {
 
           // а есть ли подходящее?
           cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);

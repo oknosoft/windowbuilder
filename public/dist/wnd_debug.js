@@ -939,7 +939,7 @@ $p.cat.cnns.__define({
         }
       }
 
-      const ref1 = nom1.ref;
+      const ref1 = nom1.ref; 
       const ref2 = onom2.ref;
 
       if(!is_i){
