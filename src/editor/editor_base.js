@@ -53,6 +53,9 @@ class EditorInvisible extends paper.PaperScope {
     _canvas.width = 480;
     this.setup(_canvas);
     new Scheme(_canvas, this, true);
+    if(!(this.projects[0] instanceof Scheme)) {
+      this.projects[0].remove();
+    }
   }
 
 }

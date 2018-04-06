@@ -1257,7 +1257,7 @@ class Editor extends EditorInvisible {
       });
 
       if(this.project.getItems({class: Profile}).some((p) => {
-        return (p.angle_hor % 90) > 0.1;
+        return (p.angle_hor % 90) > 0.02;
       })){
         this._ortpos.style.display = '';
       }
@@ -1269,7 +1269,7 @@ class Editor extends EditorInvisible {
 
   show_ortpos(hide) {
     for (const elm of this.project.getItems({class: Profile})) {
-      if((elm.angle_hor % 90) > 0.1) {
+      if((elm.angle_hor % 90) > 0.02) {
         if(hide) {
           elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
         }
