@@ -47,14 +47,14 @@ class ToolPan extends ToolElement {
           this.mouseStartPos = event.point;
         }
         else{
-          this.mouseStartPos = event.point.subtract(paper.view.center);
+          this.mouseStartPos = event.point.subtract(this._scope.view.center);
         }
         this.mode = '';
         if (event.modifiers.control || event.modifiers.option) {
           this.mode = 'zoom';
         }
         else {
-          paper.canvas_cursor('cursor-hand-grab');
+          this._scope.canvas_cursor('cursor-hand-grab');
           this.mode = 'pan';
         }
       },
@@ -149,11 +149,11 @@ class ToolPan extends ToolElement {
   hitTest(event) {
 
     if (event.modifiers.control) {
-      paper.canvas_cursor('cursor-zoom-in');
+      this._scope.canvas_cursor('cursor-zoom-in');
     } else if (event.modifiers.option) {
-      paper.canvas_cursor('cursor-zoom-out');
+      this._scope.canvas_cursor('cursor-zoom-out');
     } else {
-      paper.canvas_cursor('cursor-hand');
+      this._scope.canvas_cursor('cursor-hand');
     }
 
     return true;

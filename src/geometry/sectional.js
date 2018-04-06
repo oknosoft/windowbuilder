@@ -387,4 +387,4 @@ class Sectional extends GeneratrixElement {
   }
 }
 
-Editor.Sectional = Sectional;
+EditorInvisible.Sectional = Sectional;

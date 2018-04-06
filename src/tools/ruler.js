@@ -35,7 +35,7 @@ class RulerWnd {
     this.options = options;
 
     this.tool = tool;
-    const wnd = this.wnd = $p.iface.dat_blank(paper._dxw, options.wnd);
+    const wnd = this.wnd = $p.iface.dat_blank(this._scope._dxw, options.wnd);
 
     this.on_keydown = this.on_keydown.bind(this);
     this.on_button_click = this.on_button_click.bind(this);
@@ -150,9 +150,9 @@ class RulerWnd {
 
   on_button_click(ev) {
 
-    const {wnd, tool, size} = this;
+    const {wnd, tool, size, project} = this;
 
-    if (!paper.project.selectedItems.some((path) => {
+    if (!project.selectedItems.some((path) => {
         if (path.parent instanceof DimensionLineCustom) {
 
           switch (ev.currentTarget.name) {
@@ -219,7 +219,7 @@ class RulerWnd {
             return;
           }
 
-          paper.project.selectedItems.some((path) => {
+          this.project.selectedItems.some((path) => {
             if (path.parent instanceof DimensionLineCustom) {
               path.parent.remove();
               return true;
@@ -260,7 +260,7 @@ class RulerWnd {
         $p.wsql.save_options('editor', this.options);
       }
       else {
-        setTimeout(() => paper.tools[1].activate());
+        setTimeout(() => this._scope.tools[1].activate());
       }
       delete this.options;
     }
@@ -337,7 +337,7 @@ class ToolRuler extends ToolElement {
 
         this.on_activate('cursor-arrow-ruler-light');
 
-        paper.project.deselectAll();
+        this.project.deselectAll();
         this.wnd = new RulerWnd(this.options, this);
       },
 
@@ -488,7 +488,7 @@ class ToolRuler extends ToolElement {
           if (event.event && event.event.target && ['textarea', 'input'].indexOf(event.event.target.tagName.toLowerCase()) != -1)
             return;
 
-          paper.project.selectedItems.some((path) => {
+          this.project.selectedItems.some((path) => {
             if (path.parent instanceof DimensionLineCustom) {
               path.parent.remove();
               return true;
@@ -516,11 +516,11 @@ class ToolRuler extends ToolElement {
 
       // если режим - расстояние между элементами, ловим профили, а точнее - заливку путей
       if (!this.mode) {
-        this.hitItem = paper.project.hitTest(event.point, {fill: true, tolerance: 10});
+        this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: 10});
       }
       else {
         // Hit test points
-        const hit = paper.project.hitPoints(event.point, 16);
+        const hit = this.project.hitPoints(event.point, 16);
         if (hit && hit.item.parent instanceof ProfileItem) {
           this.hitItem = hit;
         }
@@ -529,16 +529,16 @@ class ToolRuler extends ToolElement {
 
     if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
       if (this.mode) {
-        paper.canvas_cursor('cursor-arrow-white-point');
+        this._scope.canvas_cursor('cursor-arrow-white-point');
         this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
       }
     }
     else {
       if (this.mode) {
-        paper.canvas_cursor('cursor-text-select');
+        this._scope.canvas_cursor('cursor-text-select');
       }
       else {
-        paper.canvas_cursor('cursor-arrow-ruler-light');
+        this._scope.canvas_cursor('cursor-arrow-ruler-light');
       }
       this.hitItem = null;
     }
@@ -563,7 +563,7 @@ class ToolRuler extends ToolElement {
   reset_selected() {
 
     this.remove_path();
-    paper.project.deselectAll();
+    this.project.deselectAll();
     this.selected.a.length = 0;
     this.selected.b.length = 0;
     if (this.mode > 2) {
@@ -606,7 +606,7 @@ class ToolRuler extends ToolElement {
 
     }
     else {
-      paper.project.deselectAll();
+      this.project.deselectAll();
       this.selected.a.length = 0;
       this.selected.b.length = 0;
       this.selected.a.push(item);
@@ -622,7 +622,7 @@ class ToolRuler extends ToolElement {
   }
 
   set mode(v) {
-    paper.project.deselectAll();
+    this.project.deselectAll();
     this.options.mode = parseInt(v);
   }
 
@@ -646,17 +646,21 @@ class ToolRuler extends ToolElement {
     }, 0) / (this.selected.b.length);
     let delta = Math.abs(pos2 - pos1);
 
-    if (xy == 'x') {
-      if (event.name == 'right')
+    if(xy == 'x') {
+      if(event.name == 'right') {
         delta = new paper.Point(event.size - delta, 0);
-      else
+      }
+      else {
         delta = new paper.Point(delta - event.size, 0);
-
-    } else {
-      if (event.name == 'bottom')
+      }
+    }
+    else {
+      if(event.name == 'bottom') {
         delta = new paper.Point(0, event.size - delta);
-      else
+      }
+      else {
         delta = new paper.Point(0, delta - event.size);
+      }
     }
 
     if (delta.length) {
@@ -665,11 +669,12 @@ class ToolRuler extends ToolElement {
 
       // TODO: запомнить ruler_line и восстановить после перемещения
 
-      paper.project.deselectAll();
+      this.project.deselectAll();
 
-      if (event.name == 'right' || event.name == 'bottom') {
+      if(event.name == 'right' || event.name == 'bottom') {
         to_move = pos1 < pos2 ? this.selected.b : this.selected.a;
-      } else {
+      }
+      else {
         to_move = pos1 < pos2 ? this.selected.a : this.selected.b;
       }
 
@@ -677,13 +682,11 @@ class ToolRuler extends ToolElement {
         p.generatrix.segments.forEach((segm) => segm.selected = true);
       });
 
-      paper.project.move_points(delta);
+      this.project.move_points(delta);
 
       setTimeout(() => {
-        paper.project.deselectAll();
-        // this.selected.a.forEach((p) => p.path.selected = true);
-        // this.selected.b.forEach((p) => p.path.selected = true);
-        paper.project.register_update();
+        this.project.deselectAll();
+        this.project.register_update();
       }, 200);
     }
 

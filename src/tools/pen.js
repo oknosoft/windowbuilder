@@ -689,7 +689,7 @@ class ToolPen extends ToolElement {
             // при отжатом shift пытаемся привязать точку к узлам или кратно 45
             let bpoint = this.point1.add(delta);
             if(!event.modifiers.shift) {
-              if(!bpoint.bind_to_nodes(true)){
+              if(!bpoint.bind_to_nodes(true, project)){
                 bpoint = this.point1.add(delta.snap_to_angle());
               }
             }

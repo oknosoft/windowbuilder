@@ -150,7 +150,7 @@ class Scheme extends paper.Project {
 
       const isBrowser = typeof requestAnimationFrame === 'function';
 
-      _attr._opened && isBrowser && requestAnimationFrame(_scheme.redraw);
+      _attr._opened && !_attr._silent && isBrowser && requestAnimationFrame(_scheme.redraw);
 
       if(!_attr._opened || _attr._saving || !_changes.length) {
         return;
@@ -378,11 +378,13 @@ class Scheme extends paper.Project {
           _attr._bounds = null;
           _scheme.zoom_fit();
 
+          const {_scope} = _scheme;
+
           // заставляем UndoRedo сделать начальный снапшот, одновременно, обновляем заголовок
           if(!_attr._snapshot) {
-            _scheme._scope._undo.clear();
-            _scheme._scope._undo.save_snapshot(_scheme);
-            _scheme._scope.set_text();
+            _scope._undo.clear();
+            _scope._undo.save_snapshot(_scheme);
+            _scope.set_text();
           }
 
           // регистрируем изменение, чтобы отрисовались размерные линии
@@ -421,7 +423,7 @@ class Scheme extends paper.Project {
                   resolve();
                 }
                 else{
-                  paper.load_stamp && paper.load_stamp();
+                  _scope.load_stamp && _scope.load_stamp();
                 }
               }
               delete _attr._snapshot;

@@ -108,11 +108,12 @@ class SchemeLayers {
   }
 
   listener(obj, fields) {
-    const {tree} = this;
+    const {tree, editor} = this;
+
     if (tree && tree.clearAll && fields.constructions){
 
       tree.clearAll();
-      paper.project.contours.forEach((layer) => {
+      editor.project.contours.forEach((layer) => {
         this.load_layer(layer);
         tree.openItem(layer.cnstr);
       });
@@ -136,21 +137,22 @@ class SchemeLayers {
   }
 
   drop_layer() {
-    let cnstr = this.tree.getSelectedId(), l;
+    const {tree, editor: {project}} = this;
+    let cnstr = tree.getSelectedId(), l;
     if(cnstr){
-      l = paper.project.getItem({cnstr: Number(cnstr)});
+      l = project.getItem({cnstr: Number(cnstr)});
     }
-    else if(l = paper.project.activeLayer){
+    else if(l = project.activeLayer){
       cnstr = l.cnstr;
     }
     if(cnstr && l){
-      this.tree.deleteItem(cnstr);
+      tree.deleteItem(cnstr);
       cnstr = l.parent ? l.parent.cnstr : 0;
       l.remove();
       setTimeout(() => {
-        paper.project.zoom_fit();
+        project.zoom_fit();
         if(cnstr){
-          this.tree.selectItem(cnstr);
+          tree.selectItem(cnstr);
         }
       }, 100);
     }
@@ -175,13 +177,14 @@ class SchemeLayers {
 
 class StvProps {
 
-  constructor(cell, eve) {
+  constructor(cell, editor) {
     this.layout = cell;
+    this.editor = editor;
     this.attach = this.attach.bind(this);
     this.reload = this.reload.bind(this);
     this.on_refresh_prm_links = this.on_refresh_prm_links.bind(this);
 
-    this.eve = eve.on({
+    this.eve = editor.eve.on({
       layer_activated: this.attach,
       furn_changed: this.reload,
       refresh_prm_links: this.on_refresh_prm_links,
@@ -247,7 +250,7 @@ class StvProps {
   on_prm_change(field, value, realy_changed) {
 
     const pnames = field && field.split('|');
-    const {_grid} = this;
+    const {_grid, editor} = this;
 
     if(!field || !_grid || pnames.length < 2){
       return;
@@ -281,7 +284,7 @@ class StvProps {
       }
 
       if(links.length && param.linked_values(links, prow)){
-        paper.project.register_change();
+        editor.project.register_change();
         _grid._obj._manager.emit_async('update', prow, {value: prow._obj.value});
       }
 
@@ -313,15 +316,16 @@ class StvProps {
 
 class SchemeProps {
 
-  constructor(cell, eve) {
+  constructor(cell, editor) {
 
     this.layout = cell;
+    this.editor = editor;
 
     this.reflect_changes = this.reflect_changes.bind(this);
     this.contour_redrawed = this.contour_redrawed.bind(this);
     this.scheme_snapshot = this.scheme_snapshot.bind(this);
 
-    this.eve = eve.on({
+    this.eve = editor.eve.on({
       contour_redrawed: this.contour_redrawed,
       scheme_snapshot: this.scheme_snapshot,
     });
@@ -336,9 +340,9 @@ class SchemeProps {
   }
 
   scheme_snapshot(scheme, attr) {
-    const {_obj, _reflect_id} = this;
+    const {_obj, _reflect_id, editor: {project}} = this;
     const {_calc_order_row} = scheme._attr;
-    if(_obj && scheme == paper.project && !attr.clipboard && _calc_order_row){
+    if(_obj && scheme === project && !attr.clipboard && _calc_order_row){
       ["price_internal","amount_internal","price","amount"].forEach((fld) => {
         _obj[fld] = _calc_order_row[fld];
       });
@@ -347,8 +351,7 @@ class SchemeProps {
 
   reflect_changes() {
     this._reflect_id = 0;
-    const {_obj} = this;
-    const {project} = paper;
+    const {_obj, editor: {project}} = this;
     if(project && _obj) {
       _obj.len = project.bounds.width.round(0);
       _obj.height = project.bounds.height.round(0);
@@ -623,7 +626,7 @@ class EditorAccordion {
         return false;
       }
     });
-    this.stv = new StvProps(this._stv, _editor.eve);
+    this.stv = new StvProps(this._stv, _editor);
 
     this._prod = this.tabbar.cells('prod');
     this._prod._toolbar = this._prod.attachToolbar();
@@ -661,7 +664,7 @@ class EditorAccordion {
         return false;
       }
     });
-    this.props = new SchemeProps(this._prod, _editor.eve);
+    this.props = new SchemeProps(this._prod, _editor);
 
 
   }
@@ -975,10 +978,32 @@ class EditorInvisible extends paper.PaperScope {
 
     super();
 
+    this._undo = {
+      clear() {},
+      save_snapshot() {},
+    };
+
     this.eve = new (Object.getPrototypeOf($p.md.constructor))();
   }
 
+  elm(num) {
+    return this.project.getItem({class: BuilderElement, elm: num});
+  }
+
+  set_text() {
+  }
+
+  create_scheme() {
+    const _canvas = document.createElement('CANVAS');
+    _canvas.height = 480;
+    _canvas.width = 480;
+    this.setup(_canvas);
+    new Scheme(_canvas, this, true);
+  }
+
 }
+
+$p.EditorInvisible = EditorInvisible;
 
 
 class Editor extends EditorInvisible {
@@ -1414,10 +1439,6 @@ class Editor extends EditorInvisible {
     while(selected = deselect.pop()){
       selected.selected = false;
     }
-  }
-
-  elm(num) {
-    return this.project.getItem({class: BuilderElement, elm: num});
   }
 
   capture_selection_state() {
@@ -4174,7 +4195,7 @@ class Contour extends AbstractFilling(paper.Layer) {
 
 }
 
-Editor.Contour = Contour;
+EditorInvisible.Contour = Contour;
 
 
 
@@ -5425,7 +5446,7 @@ class BuilderElement extends paper.Group {
 }
 
 
-Editor.BuilderElement = BuilderElement;
+EditorInvisible.BuilderElement = BuilderElement;
 
 
 
@@ -6062,7 +6083,7 @@ class Filling extends AbstractFilling(BuilderElement) {
 
 }
 
-Editor.Filling = Filling;
+EditorInvisible.Filling = Filling;
 
 
 class FreeText extends paper.PointText {
@@ -7017,8 +7038,8 @@ Object.defineProperties(paper.Point.prototype, {
 	},
 
   bind_to_nodes: {
-	  value(sticking) {
-      return paper.project.activeLayer.nodes.some((point) => {
+	  value(sticking, {activeLayer}) {
+      return activeLayer && activeLayer.nodes.some((point) => {
         if(point.is_nearest(this, sticking)){
           this.x = point.x;
           this.y = point.y;
@@ -8856,8 +8877,8 @@ class Profile extends ProfileItem {
   }
 }
 
-Editor.Profile = Profile;
-Editor.ProfileItem = ProfileItem;
+EditorInvisible.Profile = Profile;
+EditorInvisible.ProfileItem = ProfileItem;
 
 
 
@@ -9236,7 +9257,7 @@ class ConnectiveLayer extends paper.Layer {
   }
 }
 
-Editor.ProfileConnective = ProfileConnective;
+EditorInvisible.ProfileConnective = ProfileConnective;
 
 
 class BaseLine extends ProfileItem {
@@ -9707,7 +9728,7 @@ class Scheme extends paper.Project {
 
       const isBrowser = typeof requestAnimationFrame === 'function';
 
-      _attr._opened && isBrowser && requestAnimationFrame(_scheme.redraw);
+      _attr._opened && !_attr._silent && isBrowser && requestAnimationFrame(_scheme.redraw);
 
       if(!_attr._opened || _attr._saving || !_changes.length) {
         return;
@@ -9878,10 +9899,12 @@ class Scheme extends paper.Project {
           _attr._bounds = null;
           _scheme.zoom_fit();
 
+          const {_scope} = _scheme;
+
           if(!_attr._snapshot) {
-            _scheme._scope._undo.clear();
-            _scheme._scope._undo.save_snapshot(_scheme);
-            _scheme._scope.set_text();
+            _scope._undo.clear();
+            _scope._undo.save_snapshot(_scheme);
+            _scope.set_text();
           }
 
           _scheme.register_change(true);
@@ -9916,7 +9939,7 @@ class Scheme extends paper.Project {
                   resolve();
                 }
                 else{
-                  paper.load_stamp && paper.load_stamp();
+                  _scope.load_stamp && _scope.load_stamp();
                 }
               }
               delete _attr._snapshot;
@@ -11126,7 +11149,7 @@ class Sectional extends GeneratrixElement {
   }
 }
 
-Editor.Sectional = Sectional;
+EditorInvisible.Sectional = Sectional;
 
 
 const consts = new function Settings(){
@@ -11217,7 +11240,7 @@ class ToolElement extends paper.Tool {
   }
 
   on_close(wnd) {
-    wnd && wnd.cell && setTimeout(() => paper.tools[1].activate());
+    wnd && wnd.cell && setTimeout(() => this._scope.tools[1].activate());
     return true;
   }
 
@@ -11255,7 +11278,7 @@ class ToolArc extends ToolElement{
       },
 
       deactivate: function() {
-        paper.hide_selection_bounds();
+        this._scope.hide_selection_bounds();
       },
 
       mousedown: function(event) {
@@ -11281,8 +11304,8 @@ class ToolArc extends ToolElement{
             r = this.mode;
             this.mode = null;
 
-
-          }else if(event.modifiers.space){
+          }
+          else if(event.modifiers.space){
 
             e = this.mode.lastSegment.point;
             r = this.mode;
@@ -11297,25 +11320,26 @@ class ToolArc extends ToolElement{
             r.selected = true;
             r.layer.notify({profiles: [r.parent], points: []}, consts.move_points);
 
-          } else {
-            paper.project.deselectAll();
+          }
+          else {
+            this.project.deselectAll();
 
             r = this.mode;
             r.selected = true;
-            paper.project.deselect_all_points();
+            this.project.deselect_all_points();
             this.mouseStartPos = event.point.clone();
-            this.originalContent = paper.capture_selection_state();
+            this.originalContent = this._scope.capture_selection_state();
 
           }
 
           setTimeout(() => {
             r.layer.redraw();
-            r.parent.attache_wnd(paper._acc.elm);
+            r.parent.attache_wnd(this._scope._acc.elm);
             this.eve.emit("layer_activated", r.layer);
           }, 10);
 
         }else{
-          paper.project.deselectAll();
+          this.project.deselectAll();
         }
       },
 
@@ -11324,7 +11348,7 @@ class ToolArc extends ToolElement{
         var item = this.hitItem ? this.hitItem.item : null;
 
         if(item instanceof Filling && item.visible){
-          item.attache_wnd(paper._acc.elm);
+          item.attache_wnd(this._scope._acc.elm);
           item.selected = true;
 
           if(item.selected && item.layer){
@@ -11335,7 +11359,7 @@ class ToolArc extends ToolElement{
         if (this.mode && this.changed) {
         }
 
-        paper.canvas_cursor('cursor-arc-arrow');
+        this._scope.canvas_cursor('cursor-arc-arrow');
 
       },
 
@@ -11344,7 +11368,7 @@ class ToolArc extends ToolElement{
 
           this.changed = true;
 
-          paper.canvas_cursor('cursor-arrow-small');
+          this._scope.canvas_cursor('cursor-arrow-small');
 
           this.do_arc(this.mode, event.point);
 
@@ -11361,15 +11385,18 @@ class ToolArc extends ToolElement{
   }
 
   do_arc(element, point){
-    var end = element.lastSegment.point.clone();
+    const end = element.lastSegment.point.clone();
     element.removeSegments(1);
 
-    try{
+    try {
       element.arcTo(point, end);
-    }catch (e){	}
+    }
+    catch (e) {
+    }
 
-    if(!element.curves.length)
+    if(!element.curves.length) {
       element.lineTo(end);
+    }
 
     element.parent.rays.clear();
     element.selected = true;
@@ -11379,19 +11406,22 @@ class ToolArc extends ToolElement{
 
   hitTest(event) {
 
-    var hitSize = 6;
+    const hitSize = 6;
     this.hitItem = null;
 
-    if (event.point)
-      this.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
-    if(!this.hitItem)
-      this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+    if(event.point) {
+      this.hitItem = this.project.hitTest(event.point, {fill: true, stroke: true, selected: true, tolerance: hitSize});
+    }
+    if(!this.hitItem) {
+      this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
+    }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+    if(this.hitItem && this.hitItem.item.parent instanceof ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
-      paper.canvas_cursor('cursor-arc');
-    } else {
-      paper.canvas_cursor('cursor-arc-arrow');
+      this._scope.canvas_cursor('cursor-arc');
+    }
+    else {
+      this._scope.canvas_cursor('cursor-arc-arrow');
     }
 
     return true;
@@ -11637,7 +11667,7 @@ class ToolLayImpost extends ToolElement {
       }
 
       if (profile.clr.empty()) {
-        profile.clr = paper.project.clr;
+        profile.clr = this.project.clr;
       }
 
       tool.choice_links_clr();
@@ -11662,8 +11692,7 @@ class ToolLayImpost extends ToolElement {
         }],
       }];
 
-
-      tool.wnd = $p.iface.dat_blank(paper._dxw, tool.options.wnd);
+      tool.wnd = $p.iface.dat_blank(this._scope._dxw, tool.options.wnd);
       tool._grid = tool.wnd.attachHeadFields({
         obj: profile,
       });
@@ -11802,7 +11831,7 @@ class ToolLayImpost extends ToolElement {
 
       deactivate: function () {
 
-        paper.clear_selection_bounds();
+        this._scope.clear_selection_bounds();
 
         this.paths.forEach(function (p) {
           p.remove();
@@ -11814,9 +11843,9 @@ class ToolLayImpost extends ToolElement {
 
       mouseup: function (event) {
 
-        paper.canvas_cursor('cursor-arrow-lay');
+        this._scope.canvas_cursor('cursor-arrow-lay');
 
-        const {profile} = this;
+        const {profile, project} = this;
 
         if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
           return;
@@ -11828,7 +11857,7 @@ class ToolLayImpost extends ToolElement {
 
         this.check_layer();
 
-        const layer = this.hitItem ? this.hitItem.layer : paper.project.activeLayer;
+        const layer = this.hitItem ? this.hitItem.layer : this.project.activeLayer;
         const lgeneratics = layer.profiles.map((p) => {
           const {generatrix, elm_type, rays, addls} = p;
           const res = {
@@ -11861,7 +11890,7 @@ class ToolLayImpost extends ToolElement {
           const nom = inset.nom();
           const rows = [];
 
-          paper.project._dp.sys.elmnts.each((row) => {
+          project._dp.sys.elmnts.each((row) => {
             if (row.nom.nom() == nom) {
               rows.push(row);
             }
@@ -12068,7 +12097,7 @@ class ToolLayImpost extends ToolElement {
 
         if (!this.hitItem)
           setTimeout(() => {
-            paper.tools[1].activate();
+            this._scope.tools[1].activate();
           }, 100);
 
       },
@@ -12099,7 +12128,7 @@ class ToolLayImpost extends ToolElement {
             closed: true,
           });
           bounds = gen.bounds;
-          paper.project.zoom_fit(paper.project.strokeBounds.unite(bounds));
+          this.project.zoom_fit(this.project.strokeBounds.unite(bounds));
 
         }
         else
@@ -12119,8 +12148,9 @@ class ToolLayImpost extends ToolElement {
           if (base < tool.paths.length) {
             path = tool.paths[base];
             path.fillColor = clr;
-            if (!path.isInserted())
-              path.parent = tool.hitItem ? tool.hitItem.layer : paper.project.activeLayer;
+            if(!path.isInserted()) {
+              path.parent = tool.hitItem ? tool.hitItem.layer : this.project.activeLayer;
+            }
           }
           else {
             path = new paper.Path({
@@ -12396,15 +12426,16 @@ class ToolLayImpost extends ToolElement {
 
     this.hitItem = null;
 
-    if (event.point)
-      this.hitItem = paper.project.hitTest(event.point, {fill: true, class: paper.Path});
+    if(event.point) {
+      this.hitItem = this.project.hitTest(event.point, {fill: true, class: paper.Path});
+    }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof Filling) {
-      paper.canvas_cursor('cursor-lay-impost');
+    if(this.hitItem && this.hitItem.item.parent instanceof Filling) {
+      this._scope.canvas_cursor('cursor-lay-impost');
       this.hitItem = this.hitItem.item.parent;
-
-    } else {
-      paper.canvas_cursor('cursor-arrow-lay');
+    }
+    else {
+      this._scope.canvas_cursor('cursor-arrow-lay');
       this.hitItem = null;
     }
 
@@ -12523,14 +12554,14 @@ class ToolPan extends ToolElement {
           this.mouseStartPos = event.point;
         }
         else{
-          this.mouseStartPos = event.point.subtract(paper.view.center);
+          this.mouseStartPos = event.point.subtract(this._scope.view.center);
         }
         this.mode = '';
         if (event.modifiers.control || event.modifiers.option) {
           this.mode = 'zoom';
         }
         else {
-          paper.canvas_cursor('cursor-hand-grab');
+          this._scope.canvas_cursor('cursor-hand-grab');
           this.mode = 'pan';
         }
       },
@@ -12622,11 +12653,11 @@ class ToolPan extends ToolElement {
   hitTest(event) {
 
     if (event.modifiers.control) {
-      paper.canvas_cursor('cursor-zoom-in');
+      this._scope.canvas_cursor('cursor-zoom-in');
     } else if (event.modifiers.option) {
-      paper.canvas_cursor('cursor-zoom-out');
+      this._scope.canvas_cursor('cursor-zoom-out');
     } else {
-      paper.canvas_cursor('cursor-hand');
+      this._scope.canvas_cursor('cursor-hand');
     }
 
     return true;
@@ -13276,7 +13307,7 @@ class ToolPen extends ToolElement {
 
             let bpoint = this.point1.add(delta);
             if(!event.modifiers.shift) {
-              if(!bpoint.bind_to_nodes(true)){
+              if(!bpoint.bind_to_nodes(true, project)){
                 bpoint = this.point1.add(delta.snap_to_angle());
               }
             }
@@ -13670,7 +13701,7 @@ class RulerWnd {
     this.options = options;
 
     this.tool = tool;
-    const wnd = this.wnd = $p.iface.dat_blank(paper._dxw, options.wnd);
+    const wnd = this.wnd = $p.iface.dat_blank(this._scope._dxw, options.wnd);
 
     this.on_keydown = this.on_keydown.bind(this);
     this.on_button_click = this.on_button_click.bind(this);
@@ -13784,9 +13815,9 @@ class RulerWnd {
 
   on_button_click(ev) {
 
-    const {wnd, tool, size} = this;
+    const {wnd, tool, size, project} = this;
 
-    if (!paper.project.selectedItems.some((path) => {
+    if (!project.selectedItems.some((path) => {
         if (path.parent instanceof DimensionLineCustom) {
 
           switch (ev.currentTarget.name) {
@@ -13853,7 +13884,7 @@ class RulerWnd {
             return;
           }
 
-          paper.project.selectedItems.some((path) => {
+          this.project.selectedItems.some((path) => {
             if (path.parent instanceof DimensionLineCustom) {
               path.parent.remove();
               return true;
@@ -13893,7 +13924,7 @@ class RulerWnd {
         $p.wsql.save_options('editor', this.options);
       }
       else {
-        setTimeout(() => paper.tools[1].activate());
+        setTimeout(() => this._scope.tools[1].activate());
       }
       delete this.options;
     }
@@ -13958,7 +13989,7 @@ class ToolRuler extends ToolElement {
 
         this.on_activate('cursor-arrow-ruler-light');
 
-        paper.project.deselectAll();
+        this.project.deselectAll();
         this.wnd = new RulerWnd(this.options, this);
       },
 
@@ -14097,7 +14128,7 @@ class ToolRuler extends ToolElement {
           if (event.event && event.event.target && ['textarea', 'input'].indexOf(event.event.target.tagName.toLowerCase()) != -1)
             return;
 
-          paper.project.selectedItems.some((path) => {
+          this.project.selectedItems.some((path) => {
             if (path.parent instanceof DimensionLineCustom) {
               path.parent.remove();
               return true;
@@ -14123,10 +14154,10 @@ class ToolRuler extends ToolElement {
     if (event.point) {
 
       if (!this.mode) {
-        this.hitItem = paper.project.hitTest(event.point, {fill: true, tolerance: 10});
+        this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: 10});
       }
       else {
-        const hit = paper.project.hitPoints(event.point, 16);
+        const hit = this.project.hitPoints(event.point, 16);
         if (hit && hit.item.parent instanceof ProfileItem) {
           this.hitItem = hit;
         }
@@ -14135,16 +14166,16 @@ class ToolRuler extends ToolElement {
 
     if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
       if (this.mode) {
-        paper.canvas_cursor('cursor-arrow-white-point');
+        this._scope.canvas_cursor('cursor-arrow-white-point');
         this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
       }
     }
     else {
       if (this.mode) {
-        paper.canvas_cursor('cursor-text-select');
+        this._scope.canvas_cursor('cursor-text-select');
       }
       else {
-        paper.canvas_cursor('cursor-arrow-ruler-light');
+        this._scope.canvas_cursor('cursor-arrow-ruler-light');
       }
       this.hitItem = null;
     }
@@ -14169,7 +14200,7 @@ class ToolRuler extends ToolElement {
   reset_selected() {
 
     this.remove_path();
-    paper.project.deselectAll();
+    this.project.deselectAll();
     this.selected.a.length = 0;
     this.selected.b.length = 0;
     if (this.mode > 2) {
@@ -14212,7 +14243,7 @@ class ToolRuler extends ToolElement {
 
     }
     else {
-      paper.project.deselectAll();
+      this.project.deselectAll();
       this.selected.a.length = 0;
       this.selected.b.length = 0;
       this.selected.a.push(item);
@@ -14227,7 +14258,7 @@ class ToolRuler extends ToolElement {
   }
 
   set mode(v) {
-    paper.project.deselectAll();
+    this.project.deselectAll();
     this.options.mode = parseInt(v);
   }
 
@@ -14249,17 +14280,21 @@ class ToolRuler extends ToolElement {
     }, 0) / (this.selected.b.length);
     let delta = Math.abs(pos2 - pos1);
 
-    if (xy == 'x') {
-      if (event.name == 'right')
+    if(xy == 'x') {
+      if(event.name == 'right') {
         delta = new paper.Point(event.size - delta, 0);
-      else
+      }
+      else {
         delta = new paper.Point(delta - event.size, 0);
-
-    } else {
-      if (event.name == 'bottom')
+      }
+    }
+    else {
+      if(event.name == 'bottom') {
         delta = new paper.Point(0, event.size - delta);
-      else
+      }
+      else {
         delta = new paper.Point(0, delta - event.size);
+      }
     }
 
     if (delta.length) {
@@ -14267,11 +14302,12 @@ class ToolRuler extends ToolElement {
       let to_move;
 
 
-      paper.project.deselectAll();
+      this.project.deselectAll();
 
-      if (event.name == 'right' || event.name == 'bottom') {
+      if(event.name == 'right' || event.name == 'bottom') {
         to_move = pos1 < pos2 ? this.selected.b : this.selected.a;
-      } else {
+      }
+      else {
         to_move = pos1 < pos2 ? this.selected.a : this.selected.b;
       }
 
@@ -14279,11 +14315,11 @@ class ToolRuler extends ToolElement {
         p.generatrix.segments.forEach((segm) => segm.selected = true);
       });
 
-      paper.project.move_points(delta);
+      this.project.move_points(delta);
 
       setTimeout(() => {
-        paper.project.deselectAll();
-        paper.project.register_update();
+        this.project.deselectAll();
+        this.project.register_update();
       }, 200);
     }
 
@@ -14351,7 +14387,7 @@ class ToolSelectNode extends ToolElement {
       },
 
       deactivate: function() {
-        paper.clear_selection_bounds();
+        this._scope.clear_selection_bounds();
         if(this.profile){
           this.profile.detache_wnd();
           delete this.profile;
@@ -14392,7 +14428,7 @@ class ToolSelectNode extends ToolElement {
               this.mode = consts.move_shapes;
               project.deselect_all_points();
               this.mouseStartPos = event.point.clone();
-              this.originalContent = paper.capture_selection_state();
+              this.originalContent = this._scope.capture_selection_state();
 
               if(item.layer){
                 this.eve.emit("layer_activated", item.layer);
@@ -14413,7 +14449,7 @@ class ToolSelectNode extends ToolElement {
             if (this.hitItem.segment.selected) {
               this.mode = consts.move_points;
               this.mouseStartPos = event.point.clone();
-              this.originalContent = paper.capture_selection_state();
+              this.originalContent = this._scope.capture_selection_state();
             }
           }
           else if (this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
@@ -14429,7 +14465,7 @@ class ToolSelectNode extends ToolElement {
             this.profile = item;
           }
 
-          paper.clear_selection_bounds();
+          this._scope.clear_selection_bounds();
 
         } else {
           this.mouseStartPos = event.point.clone();
@@ -14449,17 +14485,17 @@ class ToolSelectNode extends ToolElement {
 
         if (this.mode == consts.move_shapes) {
           if (this.changed) {
-            paper.clear_selection_bounds();
+            this._scope.clear_selection_bounds();
           }
         }
         else if (this.mode == consts.move_points) {
           if (this.changed) {
-            paper.clear_selection_bounds();
+            this._scope.clear_selection_bounds();
           }
         }
         else if (this.mode == consts.move_handle) {
           if (this.changed) {
-            paper.clear_selection_bounds();
+            this._scope.clear_selection_bounds();
           }
         }
         else if (this.mode == 'box-select') {
@@ -14473,7 +14509,7 @@ class ToolSelectNode extends ToolElement {
           if (event.modifiers.control) {
 
             const profiles = [];
-            paper.paths_intersecting_rect(box).forEach((path) => {
+            this._scope.paths_intersecting_rect(box).forEach((path) => {
               if(path.parent instanceof ProfileItem){
                 if(profiles.indexOf(path.parent) == -1){
                   profiles.push(path.parent);
@@ -14488,7 +14524,7 @@ class ToolSelectNode extends ToolElement {
           }
           else {
 
-            const selectedSegments = paper.segments_in_rect(box);
+            const selectedSegments = this._scope.segments_in_rect(box);
             if (selectedSegments.length > 0) {
               for (let i = 0; i < selectedSegments.length; i++) {
                 selectedSegments[i].selected = !selectedSegments[i].selected;
@@ -14496,7 +14532,7 @@ class ToolSelectNode extends ToolElement {
             }
             else {
               const profiles = [];
-              paper.paths_intersecting_rect(box).forEach((path) => {
+              this._scope.paths_intersecting_rect(box).forEach((path) => {
                 if(path.parent instanceof ProfileItem){
                   if(profiles.indexOf(path.parent) == -1){
                     profiles.push(path.parent);
@@ -14511,45 +14547,45 @@ class ToolSelectNode extends ToolElement {
           }
         }
 
-        paper.clear_selection_bounds();
+        this._scope.clear_selection_bounds();
 
         if (this.hitItem) {
           if (this.hitItem.item.selected || (this.hitItem.item.parent && this.hitItem.item.parent.selected)) {
-            paper.canvas_cursor('cursor-arrow-small');
+            this._scope.canvas_cursor('cursor-arrow-small');
           }
           else {
-            paper.canvas_cursor('cursor-arrow-white-shape');
+            this._scope.canvas_cursor('cursor-arrow-white-shape');
           }
         }
       },
 
       mousedrag: function(event) {
 
-        const {project} = this._scope;
+        const {project} = this;
 
         this.changed = true;
 
         if (this.mode == consts.move_shapes) {
-          paper.canvas_cursor('cursor-arrow-small');
+          this._scope.canvas_cursor('cursor-arrow-small');
 
           let delta = event.point.subtract(this.mouseStartPos);
           if (!event.modifiers.shift){
             delta = delta.snap_to_angle(Math.PI*2/4);
           }
-          paper.restore_selection_state(this.originalContent);
+          this._scope.restore_selection_state(this.originalContent);
           project.move_points(delta, true);
-          paper.clear_selection_bounds();
+          this._scope.clear_selection_bounds();
         }
         else if (this.mode == consts.move_points) {
-          paper.canvas_cursor('cursor-arrow-small');
+          this._scope.canvas_cursor('cursor-arrow-small');
 
           let delta = event.point.subtract(this.mouseStartPos);
           if(!event.modifiers.shift) {
             delta = delta.snap_to_angle(Math.PI*2/4);
           }
-          paper.restore_selection_state(this.originalContent);
+          this._scope.restore_selection_state(this.originalContent);
           project.move_points(delta);
-          paper.purge_selection();
+          this._scope.purge_selection();
         }
         else if (this.mode == consts.move_handle) {
 
@@ -14576,10 +14612,10 @@ class ToolSelectNode extends ToolElement {
           noti.profiles[0].rays.clear();
           noti.profiles[0].layer.notify(noti);
 
-          paper.purge_selection();
+          this._scope.purge_selection();
         }
         else if (this.mode == 'box-select') {
-          paper.drag_rect(this.mouseStartPos, event.point);
+          this._scope.drag_rect(this.mouseStartPos, event.point);
         }
       },
 
@@ -14757,21 +14793,21 @@ class ToolSelectNode extends ToolElement {
         if (hitItem.item.parent instanceof DimensionLine) {
         }
         else if (hitItem.item instanceof paper.PointText) {
-          !(hitItem.item instanceof EditableText) && paper.canvas_cursor('cursor-text');     
+          !(hitItem.item instanceof EditableText) && this._scope.canvas_cursor('cursor-text');     
         }
         else if (hitItem.item.selected) {
-          paper.canvas_cursor('cursor-arrow-small');
+          this._scope.canvas_cursor('cursor-arrow-small');
         }
         else {
-          paper.canvas_cursor('cursor-arrow-white-shape');
+          this._scope.canvas_cursor('cursor-arrow-white-shape');
         }
       }
       else if (hitItem.type == 'segment' || hitItem.type == 'handle-in' || hitItem.type == 'handle-out') {
         if (hitItem.segment.selected) {
-          paper.canvas_cursor('cursor-arrow-small-point');
+          this._scope.canvas_cursor('cursor-arrow-small-point');
         }
         else {
-          paper.canvas_cursor('cursor-arrow-white-point');
+          this._scope.canvas_cursor('cursor-arrow-white-point');
         }
       }
     }
@@ -14779,10 +14815,10 @@ class ToolSelectNode extends ToolElement {
       const hit = project.hitTest(point, {stroke: true, visible: true, tolerance: 16});
       if (hit && hit.item.parent instanceof Sectional){
         this.hitItem = hit;
-        paper.canvas_cursor('cursor-arrow-white-shape');
+        this._scope.canvas_cursor('cursor-arrow-white-shape');
       }
       else{
-        paper.canvas_cursor('cursor-arrow-white');
+        this._scope.canvas_cursor('cursor-arrow-white');
       }
     }
 
@@ -14821,7 +14857,7 @@ class ToolText extends ToolElement {
       },
 
       deactivate: function() {
-        paper.hide_selection_bounds();
+        this._scope.hide_selection_bounds();
         this.detache_wnd();
       },
 
@@ -14851,7 +14887,7 @@ class ToolText extends ToolElement {
 
           if(!this.wnd || !this.wnd.elmnts){
             $p.wsql.restore_options("editor", this.options);
-            this.wnd = $p.iface.dat_blank(paper._dxw, this.options.wnd);
+            this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
             this._grid = this.wnd.attachHeadFields({
               obj: this.text
             });
@@ -14869,7 +14905,7 @@ class ToolText extends ToolElement {
         if (this.mode && this.changed) {
         }
 
-        paper.canvas_cursor('cursor-arrow-lay');
+        this._scope.canvas_cursor('cursor-arrow-lay');
 
       },
 
@@ -14901,7 +14937,7 @@ class ToolText extends ToolElement {
           for (const text of  this.project.selectedItems) {
             if(text instanceof FreeText){
               text.text = "";
-              setTimeout(() => paper.view.update(), 100);
+              setTimeout(() => this._scope.view.update(), 100);
             }
           }
 
@@ -14930,14 +14966,14 @@ class ToolText extends ToolElement {
 
     if(this.hitItem) {
       if(this.hitItem.item instanceof paper.PointText) {
-        paper.canvas_cursor('cursor-text');     
+        this._scope.canvas_cursor('cursor-text');     
       }
       else {
-        paper.canvas_cursor('cursor-text-add'); 
+        this._scope.canvas_cursor('cursor-text-add'); 
       }
     }
     else {
-      paper.canvas_cursor('cursor-text-select');  
+      this._scope.canvas_cursor('cursor-text-select');  
     }
 
     return true;

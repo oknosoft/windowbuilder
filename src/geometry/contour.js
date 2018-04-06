@@ -2193,5 +2193,5 @@ class Contour extends AbstractFilling(paper.Layer) {
  * @for MetaEngine
  * @type function
  */
-Editor.Contour = Contour;
+EditorInvisible.Contour = Contour;
 

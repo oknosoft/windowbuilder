@@ -650,14 +650,6 @@ class Editor extends EditorInvisible {
     }
   }
 
-  /**
-   * Возвращает элемент по номеру
-   * @param num
-   */
-  elm(num) {
-    return this.project.getItem({class: BuilderElement, elm: num});
-  }
-
   // Returns serialized contents of selected items.
   capture_selection_state() {
 

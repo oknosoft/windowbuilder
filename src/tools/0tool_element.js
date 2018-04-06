@@ -99,7 +99,7 @@ class ToolElement extends paper.Tool {
   }
 
   on_close(wnd) {
-    wnd && wnd.cell && setTimeout(() => paper.tools[1].activate());
+    wnd && wnd.cell && setTimeout(() => this._scope.tools[1].activate());
     return true;
   }
 

@@ -39,7 +39,7 @@ class ToolArc extends ToolElement{
       },
 
       deactivate: function() {
-        paper.hide_selection_bounds();
+        this._scope.hide_selection_bounds();
       },
 
       mousedown: function(event) {
@@ -67,9 +67,9 @@ class ToolArc extends ToolElement{
             r = this.mode;
             this.mode = null;
 
-
-          }else if(event.modifiers.space){
-            // при зажатом space удаляем кривизну
+          }
+          // при зажатом space удаляем кривизну
+          else if(event.modifiers.space){
 
             e = this.mode.lastSegment.point;
             r = this.mode;
@@ -84,26 +84,27 @@ class ToolArc extends ToolElement{
             r.selected = true;
             r.layer.notify({profiles: [r.parent], points: []}, consts.move_points);
 
-          } else {
-            paper.project.deselectAll();
+          }
+          else {
+            this.project.deselectAll();
 
             r = this.mode;
             r.selected = true;
-            paper.project.deselect_all_points();
+            this.project.deselect_all_points();
             this.mouseStartPos = event.point.clone();
-            this.originalContent = paper.capture_selection_state();
+            this.originalContent = this._scope.capture_selection_state();
 
           }
 
           setTimeout(() => {
             r.layer.redraw();
-            r.parent.attache_wnd(paper._acc.elm);
+            r.parent.attache_wnd(this._scope._acc.elm);
             this.eve.emit("layer_activated", r.layer);
           }, 10);
 
         }else{
           //tool.detache_wnd();
-          paper.project.deselectAll();
+          this.project.deselectAll();
         }
       },
 
@@ -112,7 +113,7 @@ class ToolArc extends ToolElement{
         var item = this.hitItem ? this.hitItem.item : null;
 
         if(item instanceof Filling && item.visible){
-          item.attache_wnd(paper._acc.elm);
+          item.attache_wnd(this._scope._acc.elm);
           item.selected = true;
 
           if(item.selected && item.layer){
@@ -122,10 +123,10 @@ class ToolArc extends ToolElement{
 
         if (this.mode && this.changed) {
           //undo.snapshot("Move Shapes");
-          //paper.project.redraw();
+          //this.project.redraw();
         }
 
-        paper.canvas_cursor('cursor-arc-arrow');
+        this._scope.canvas_cursor('cursor-arc-arrow');
 
       },
 
@@ -134,7 +135,7 @@ class ToolArc extends ToolElement{
 
           this.changed = true;
 
-          paper.canvas_cursor('cursor-arrow-small');
+          this._scope.canvas_cursor('cursor-arrow-small');
 
           this.do_arc(this.mode, event.point);
 
@@ -152,15 +153,18 @@ class ToolArc extends ToolElement{
   }
 
   do_arc(element, point){
-    var end = element.lastSegment.point.clone();
+    const end = element.lastSegment.point.clone();
     element.removeSegments(1);
 
-    try{
+    try {
       element.arcTo(point, end);
-    }catch (e){	}
+    }
+    catch (e) {
+    }
 
-    if(!element.curves.length)
+    if(!element.curves.length) {
       element.lineTo(end);
+    }
 
     element.parent.rays.clear();
     element.selected = true;
@@ -170,19 +174,22 @@ class ToolArc extends ToolElement{
 
   hitTest(event) {
 
-    var hitSize = 6;
+    const hitSize = 6;
     this.hitItem = null;
 
-    if (event.point)
-      this.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
-    if(!this.hitItem)
-      this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+    if(event.point) {
+      this.hitItem = this.project.hitTest(event.point, {fill: true, stroke: true, selected: true, tolerance: hitSize});
+    }
+    if(!this.hitItem) {
+      this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
+    }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+    if(this.hitItem && this.hitItem.item.parent instanceof ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
-      paper.canvas_cursor('cursor-arc');
-    } else {
-      paper.canvas_cursor('cursor-arc-arrow');
+      this._scope.canvas_cursor('cursor-arc');
+    }
+    else {
+      this._scope.canvas_cursor('cursor-arc-arrow');
     }
 
     return true;

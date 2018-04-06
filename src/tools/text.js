@@ -44,7 +44,7 @@ class ToolText extends ToolElement {
       },
 
       deactivate: function() {
-        paper.hide_selection_bounds();
+        this._scope.hide_selection_bounds();
         this.detache_wnd();
       },
 
@@ -75,7 +75,7 @@ class ToolText extends ToolElement {
           // включить диалог свойст текстового элемента
           if(!this.wnd || !this.wnd.elmnts){
             $p.wsql.restore_options("editor", this.options);
-            this.wnd = $p.iface.dat_blank(paper._dxw, this.options.wnd);
+            this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
             this._grid = this.wnd.attachHeadFields({
               obj: this.text
             });
@@ -94,7 +94,7 @@ class ToolText extends ToolElement {
           //undo.snapshot("Move Shapes");
         }
 
-        paper.canvas_cursor('cursor-arrow-lay');
+        this._scope.canvas_cursor('cursor-arrow-lay');
 
       },
 
@@ -126,7 +126,7 @@ class ToolText extends ToolElement {
           for (const text of  this.project.selectedItems) {
             if(text instanceof FreeText){
               text.text = "";
-              setTimeout(() => paper.view.update(), 100);
+              setTimeout(() => this._scope.view.update(), 100);
             }
           }
 
@@ -156,14 +156,14 @@ class ToolText extends ToolElement {
 
     if(this.hitItem) {
       if(this.hitItem.item instanceof paper.PointText) {
-        paper.canvas_cursor('cursor-text');     // указатель с черным Т
+        this._scope.canvas_cursor('cursor-text');     // указатель с черным Т
       }
       else {
-        paper.canvas_cursor('cursor-text-add'); // указатель с серым Т
+        this._scope.canvas_cursor('cursor-text-add'); // указатель с серым Т
       }
     }
     else {
-      paper.canvas_cursor('cursor-text-select');  // указатель с вопросом
+      this._scope.canvas_cursor('cursor-text-select');  // указатель с вопросом
     }
 
     return true;

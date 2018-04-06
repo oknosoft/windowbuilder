@@ -2305,5 +2305,5 @@ class Profile extends ProfileItem {
   }
 }
 
-Editor.Profile = Profile;
-Editor.ProfileItem = ProfileItem;
+EditorInvisible.Profile = Profile;
+EditorInvisible.ProfileItem = ProfileItem;
