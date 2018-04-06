@@ -521,6 +521,11 @@ class ToolLayImpost extends ToolElement {
           p.cnn_point('b');
           p.cnn_point('e');
         });
+        // и еще раз пересчитываем соединения, т.к. на предыдущем шаге могла измениться геометрия соседей
+        nprofiles.forEach((p) => {
+          p.cnn_point('b');
+          p.cnn_point('e');
+        });
 
         if (!this.hitItem)
           setTimeout(() => {

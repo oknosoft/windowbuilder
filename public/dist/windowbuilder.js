@@ -12061,6 +12061,10 @@ class ToolLayImpost extends ToolElement {
           p.cnn_point('b');
           p.cnn_point('e');
         });
+        nprofiles.forEach((p) => {
+          p.cnn_point('b');
+          p.cnn_point('e');
+        });
 
         if (!this.hitItem)
           setTimeout(() => {
