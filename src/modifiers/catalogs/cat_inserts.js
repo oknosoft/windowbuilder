@@ -724,6 +724,11 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
         res.push(param)
       }
     });
+    this.product_params.forEach(({param}) => {
+      if(!param.empty() && res.indexOf(param) == -1){
+        res.push(param)
+      }
+    });
     return res;
   }
 
