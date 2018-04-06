@@ -352,6 +352,50 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     }
   }
 
+  /**
+   * Пересчитывает изделие по тем же правилам, что и визуальная рисовалка
+   * @param attr
+   * @param editor
+   */
+  recalc(attr = {}, editor) {
+
+    // сначала, получаем объект заказа и продукции заказа в озу, т.к. пересчет изделия может приводить к пересчету соседних продукций
+
+    // загружаем изделие в редактор
+    if(!editor) {
+      editor = $p.products_building.editor_invisible;
+    }
+    const {project} = editor;
+
+    // выполняем пересчет
+
+  }
+
+  /**
+   * Рисует изделие или фрагмент изделия в Buffer в соответствии с параметрами attr
+   * @param attr
+   * @param editor
+   */
+  draw(attr = {}, editor) {
+
+    // загружаем изделие в редактор
+    if(!editor) {
+      editor = $p.products_building.editor_invisible;
+    }
+    const {project} = editor;
+    return project.load(this)
+      .then(() => {
+
+        // формируем эскиз(ы) в соответствии с attr
+        if(attr.svg) {
+          return project.get_svg(attr);
+        }
+      })
+
+  }
+
+
+
 };
 
 $p.CatCharacteristics.builder_props_defaults = {

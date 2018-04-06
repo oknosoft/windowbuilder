@@ -308,6 +308,35 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     }
   }
 
+  recalc(attr = {}, editor) {
+
+
+    if(!editor) {
+      editor = $p.products_building.editor_invisible;
+    }
+    const {project} = editor;
+
+
+  }
+
+  draw(attr = {}, editor) {
+
+    if(!editor) {
+      editor = $p.products_building.editor_invisible;
+    }
+    const {project} = editor;
+    return project.load(this)
+      .then(() => {
+
+        if(attr.svg) {
+          return project.get_svg(attr);
+        }
+      })
+
+  }
+
+
+
 };
 
 $p.CatCharacteristics.builder_props_defaults = {
@@ -3359,6 +3388,8 @@ class ProductsBuilding {
       glass_specification,
       params;
 
+    this._editor_invisible = null;
+
 
     function cnn_row(elm1, elm2) {
       let res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
@@ -3971,6 +4002,14 @@ class ProductsBuilding {
 
     };
 
+  }
+
+  get editor_invisible() {
+    if(!this._editor_invisible) {
+      this._editor_invisible = new $p.EditorInvisible();
+      this._editor_invisible.create_scheme();
+    }
+    return this._editor_invisible;
   }
 
   static check_params({params, row_spec, elm, cnstr, origin, ox}) {

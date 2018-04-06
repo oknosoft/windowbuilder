@@ -21,6 +21,8 @@ class ProductsBuilding {
       glass_specification,
       params;
 
+    this._editor_invisible = null;
+
 
     /**
      * СтрокаСоединений
@@ -778,6 +780,14 @@ class ProductsBuilding {
 
     };
 
+  }
+
+  get editor_invisible() {
+    if(!this._editor_invisible) {
+      this._editor_invisible = new $p.EditorInvisible();
+      this._editor_invisible.create_scheme();
+    }
+    return this._editor_invisible;
   }
 
   /**

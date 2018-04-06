@@ -984,6 +984,8 @@ class EditorInvisible extends paper.PaperScope {
     };
 
     this.eve = new (Object.getPrototypeOf($p.md.constructor))();
+
+    consts.tune_paper(this.settings);
   }
 
   elm(num) {
@@ -1015,8 +1017,6 @@ class Editor extends EditorInvisible {
     const _editor = this;
 
     this.activate();
-
-    consts.tune_paper(this.settings);
 
     this.__define('_pwnd', {
       get() {
@@ -1255,6 +1255,31 @@ class Editor extends EditorInvisible {
         name: 'title',
         value: title,
       });
+
+      if(this.project.getItems({class: Profile}).some((p) => {
+        return (p.angle_hor % 90) > 0.1;
+      })){
+        this._ortpos.style.display = '';
+      }
+      else {
+        this._ortpos.style.display = 'none';
+      };
+    }
+  }
+
+  show_ortpos(hide) {
+    for (const elm of this.project.getItems({class: Profile})) {
+      if((elm.angle_hor % 90) > 0.1) {
+        if(hide) {
+          elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+        }
+        else {
+          elm.path.fillColor = '#fcc';
+        }
+      }
+    }
+    if(!hide) {
+      setTimeout(() => this.show_ortpos(true), 1300);
     }
   }
 
@@ -1291,14 +1316,22 @@ class Editor extends EditorInvisible {
 
     const _mousepos = document.createElement('div');
     _editor._wrapper.appendChild(_mousepos);
-    _mousepos.className = "mousepos";
+    _mousepos.className = 'mousepos';
     _scheme.view.on('mousemove', (event) => {
       const {bounds} = _scheme;
-      if(bounds){
-        _mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
-          " y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
+      if(bounds) {
+        _mousepos.innerHTML = 'x:' + (event.point.x - bounds.x).toFixed(0) +
+          ' y:' + (bounds.height + bounds.y - event.point.y).toFixed(0);
       }
     });
+
+    this._ortpos = document.createElement('div');
+    _editor._wrapper.appendChild(this._ortpos);
+    this._ortpos.className = 'ortpos';
+    this._ortpos.innerHTML = '<i class="fa fa-crosshairs" aria-hidden="true"></i>';
+    this._ortpos.setAttribute('title', 'Есть наклонные элементы');
+    this._ortpos.style.display = 'none';
+    this._ortpos.onclick = () => this.show_ortpos();
 
     new function StableZoom(){
 

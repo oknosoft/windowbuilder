@@ -25,6 +25,8 @@ class EditorInvisible extends paper.PaperScope {
      * Собственный излучатель событий для уменьшения утечек памяти
      */
     this.eve = new (Object.getPrototypeOf($p.md.constructor))();
+
+    consts.tune_paper(this.settings);
   }
 
   /**
