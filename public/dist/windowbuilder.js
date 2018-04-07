@@ -1001,6 +1001,9 @@ class EditorInvisible extends paper.PaperScope {
     _canvas.width = 480;
     this.setup(_canvas);
     new Scheme(_canvas, this, true);
+    if(!(this.projects[0] instanceof Scheme)) {
+      this.projects[0].remove();
+    }
   }
 
 }
@@ -4617,7 +4620,7 @@ class DimensionLine extends paper.Group {
   }
 
   _mouseenter() {
-    paper.canvas_cursor('cursor-arrow-ruler');
+    this.project._scope.canvas_cursor('cursor-arrow-ruler');
   }
 
   _mouseleave() {
@@ -4936,17 +4939,18 @@ class DimensionLineCustom extends DimensionLine {
 
   _click(event) {
     event.stop();
-    if(paper.tool instanceof ToolRuler){
+    if(this.project._scope.tool instanceof ToolRuler){
       this.selected = true;
     }
   }
 
   _mouseenter() {
-    if(paper.tool instanceof ToolRuler){
-      paper.canvas_cursor('cursor-arrow-ruler');
+    const {_scope} = this.project;
+    if(_scope.tool instanceof ToolRuler){
+      _scope.canvas_cursor('cursor-arrow-ruler');
     }
     else{
-      paper.canvas_cursor('cursor-arrow-ruler-dis');
+      _scope.canvas_cursor('cursor-arrow-ruler-dis');
     }
   }
 
@@ -10866,11 +10870,11 @@ class EditableText extends paper.PointText {
   }
 
   mouseenter(event) {
-    paper.canvas_cursor('cursor-arrow-ruler-light');
+    this.project._scope.canvas_cursor('cursor-arrow-ruler-light');
   }
 
   mouseleave(event) {
-    paper.canvas_cursor('cursor-arrow-white');
+    this.project._scope.canvas_cursor('cursor-arrow-white');
   }
 
   click(event) {
@@ -12743,7 +12747,7 @@ class PenControls {
       }
     }
 
-    paper._wrapper.appendChild(_cont);
+    this._scope._wrapper.appendChild(_cont);
     _cont.className = "pen_cont";
 
     tool.project.view.on('mousemove', this.mousemove);
@@ -12951,7 +12955,7 @@ class ToolPen extends ToolElement {
 
     $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this.sys);
 
-    this.wnd = $p.iface.dat_blank(paper._dxw, this.options.wnd);
+    this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
     this._grid = this.wnd.attachHeadFields({
       obj: profile
     });
@@ -13032,7 +13036,7 @@ class ToolPen extends ToolElement {
   }
 
   on_deactivate() {
-    paper.clear_selection_bounds();
+    this._scope.clear_selection_bounds();
 
     this.eve.off("scheme_changed", this.scheme_changed);
     this.eve.off("layer_activated", this.layer_activated);
@@ -13214,12 +13218,12 @@ class ToolPen extends ToolElement {
       }
 
       if(item instanceof ProfileItem && item.isInserted()) {
-        item.attache_wnd(paper._acc.elm);
+        item.attache_wnd(this._scope._acc.elm);
         whas_select = true;
         this._controls.blur();
       }
       else if(item instanceof Filling && item.visible) {
-        item.attache_wnd(paper._acc.elm);
+        item.attache_wnd(this._scope._acc.elm);
         whas_select = true;
         this._controls.blur();
       }
@@ -13498,14 +13502,15 @@ class ToolPen extends ToolElement {
   hitTest_addl(event) {
 
     const hitSize = 16;
+    const {project, _scope} = this;
 
     if (event.point){
-      this.hitItem = this.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+      this.hitItem = project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
     }
 
     if (this.hitItem) {
 
-      if(this.hitItem.item.layer == this.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+      if(this.hitItem.item.layer == project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
 
         const hit = {
           point: this.hitItem.point,
@@ -13535,7 +13540,7 @@ class ToolPen extends ToolElement {
 
         if(hit.glass){
           this.addl_hit = hit;
-          paper.canvas_cursor('cursor-pen-adjust');
+          _scope.canvas_cursor('cursor-pen-adjust');
         }
 
       }
@@ -13543,13 +13548,13 @@ class ToolPen extends ToolElement {
 
 
       }else{
-        paper.canvas_cursor('cursor-pen-freehand');
+        _scope.canvas_cursor('cursor-pen-freehand');
       }
 
     } else {
 
-      this.hitItem = this.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
-      paper.canvas_cursor('cursor-pen-freehand');
+      this.hitItem = project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      _scope.canvas_cursor('cursor-pen-freehand');
     }
 
   }
@@ -13557,7 +13562,7 @@ class ToolPen extends ToolElement {
   hitTest_connective(event) {
 
     const hitSize = 16;
-    const {project} = this;
+    const {project, _scope} = this;
     const rootLayer = project.rootLayer();
 
     if (event.point){
@@ -13583,18 +13588,18 @@ class ToolPen extends ToolElement {
 
         if(hit.side == "outer"){
           this.addl_hit = hit;
-          paper.canvas_cursor('cursor-pen-adjust');
+          _scope.canvas_cursor('cursor-pen-adjust');
         }
 
       }
       else{
-        paper.canvas_cursor('cursor-pen-freehand');
+        _scope.canvas_cursor('cursor-pen-freehand');
       }
 
     }
     else {
       this.hitItem = project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
-      paper.canvas_cursor('cursor-pen-freehand');
+      _scope.canvas_cursor('cursor-pen-freehand');
     }
   }
 
@@ -13623,10 +13628,10 @@ class ToolPen extends ToolElement {
 
       if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
         && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
-        paper.canvas_cursor('cursor-pen-adjust');
+        this._scope.canvas_cursor('cursor-pen-adjust');
       }
       else {
-        paper.canvas_cursor('cursor-pen-freehand');
+        this._scope.canvas_cursor('cursor-pen-freehand');
       }
     }
 

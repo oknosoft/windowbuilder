@@ -25,11 +25,11 @@ class EditableText extends paper.PointText {
   }
 
   mouseenter(event) {
-    paper.canvas_cursor('cursor-arrow-ruler-light');
+    this.project._scope.canvas_cursor('cursor-arrow-ruler-light');
   }
 
   mouseleave(event) {
-    paper.canvas_cursor('cursor-arrow-white');
+    this.project._scope.canvas_cursor('cursor-arrow-white');
   }
 
   click(event) {

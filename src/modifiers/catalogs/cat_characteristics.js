@@ -383,13 +383,17 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       editor = $p.products_building.editor_invisible;
     }
     const {project} = editor;
-    return project.load(this)
+    return project.load(this, true)
       .then(() => {
 
         // формируем эскиз(ы) в соответствии с attr
         if(attr.svg) {
           return project.get_svg(attr);
         }
+      })
+      .then((img) => {
+        project.ox = '';
+        return img;
       })
 
   }

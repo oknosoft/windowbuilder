@@ -36,7 +36,7 @@ class ToolCut extends ToolElement{
       },
 
       deactivate: function() {
-        paper.hide_selection_bounds();
+        this._scope.hide_selection_bounds();
       },
 
       mouseup: function(event) {
@@ -52,10 +52,10 @@ class ToolCut extends ToolElement{
 
         if (this.mode && this.changed) {
           //undo.snapshot("Move Shapes");
-          //paper.project.redraw();
+          //this.project.redraw();
         }
 
-        paper.canvas_cursor('cursor-arrow-cut');
+        this._scope.canvas_cursor('cursor-arrow-cut');
 
       },
 
@@ -81,16 +81,16 @@ class ToolCut extends ToolElement{
     this.hitItem = null;
 
     if (event.point)
-      this.hitItem = paper.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
+      this.hitItem = this.project.hitTest(event.point, { fill:true, stroke:true, selected: true, tolerance: hitSize });
     if(!this.hitItem)
-      this.hitItem = paper.project.hitTest(event.point, { fill:true, tolerance: hitSize });
+      this.hitItem = this.project.hitTest(event.point, { fill:true, tolerance: hitSize });
 
     if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
-      paper.canvas_cursor('cursor-arrow-do-cut');
+      this._scope.canvas_cursor('cursor-arrow-do-cut');
     }
     else {
-      paper.canvas_cursor('cursor-arrow-cut');
+      this._scope.canvas_cursor('cursor-arrow-cut');
     }
 
     return true;
