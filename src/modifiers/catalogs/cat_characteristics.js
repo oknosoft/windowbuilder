@@ -366,8 +366,17 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       editor = $p.products_building.editor_invisible;
     }
     const {project} = editor;
+    return project.load(this, true)
+      .then(() => {
 
-    // выполняем пересчет
+        // выполняем пересчет
+        project.save_coordinates({save: true, close: true});
+
+      })
+      .then(() => {
+        project.ox = '';
+        return this;
+      });
 
   }
 
@@ -378,6 +387,10 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
    */
   draw(attr = {}, editor) {
 
+    const ref = $p.utils.snake_ref(this.ref);
+    const res = attr.res || {};
+    res[ref] = {imgs: {}};
+
     // загружаем изделие в редактор
     if(!editor) {
       editor = $p.products_building.editor_invisible;
@@ -387,18 +400,34 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       .then(() => {
 
         // формируем эскиз(ы) в соответствии с attr
-        if(attr.svg) {
+        if(attr.glasses) {
+          const {_obj: {glasses, coordinates}} = this;
+          res[ref].glasses = glasses;
+          this.glasses.forEach((row) => {
+            const glass = project.draw_fragment({elm: row.elm});
+            // подтянем формулу стеклопакета
+            if(attr.format === 'png') {
+              res[ref].imgs[`g${row.elm}`] = project.view.element.toDataURL('image/png').substr(22);
+            }
+            else {
+              res[ref].imgs[`g${row.elm}`] = project.get_svg(attr);
+            }
+            if(glass){
+              row.formula = glass.formula(true);
+              glass.visible = false;
+            }
+          });
+          return res;
+        }
+        else if(attr.format === 'svg') {
           return project.get_svg(attr);
         }
       })
-      .then((img) => {
+      .then((res) => {
         project.ox = '';
-        return img;
-      })
-
+        return res;
+      });
   }
-
-
 
 };
 

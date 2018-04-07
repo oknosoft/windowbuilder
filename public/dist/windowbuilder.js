@@ -11220,6 +11220,11 @@ const consts = new function Settings(){
 
 class ToolElement extends paper.Tool {
 
+  constructor() {
+    super();
+    this.on_close = this.on_close.bind(this);
+  }
+
   resetHot(type, event, mode) {
 
   }
@@ -11704,7 +11709,7 @@ class ToolLayImpost extends ToolElement {
       }
 
       if (profile.clr.empty()) {
-        profile.clr = this.project.clr;
+        profile.clr = tool.project.clr;
       }
 
       tool.choice_links_clr();
@@ -11729,7 +11734,7 @@ class ToolLayImpost extends ToolElement {
         }],
       }];
 
-      tool.wnd = $p.iface.dat_blank(this._scope._dxw, tool.options.wnd);
+      tool.wnd = $p.iface.dat_blank(tool._scope._dxw, tool.options.wnd);
       tool._grid = tool.wnd.attachHeadFields({
         obj: profile,
       });
@@ -12747,7 +12752,7 @@ class PenControls {
       }
     }
 
-    this._scope._wrapper.appendChild(_cont);
+    tool._scope._wrapper.appendChild(_cont);
     _cont.className = "pen_cont";
 
     tool.project.view.on('mousemove', this.mousemove);
@@ -13739,7 +13744,7 @@ class RulerWnd {
     this.options = options;
 
     this.tool = tool;
-    const wnd = this.wnd = $p.iface.dat_blank(this._scope._dxw, options.wnd);
+    const wnd = this.wnd = $p.iface.dat_blank((tool._scope || tool.project._scope)._dxw, options.wnd);
 
     this.on_keydown = this.on_keydown.bind(this);
     this.on_button_click = this.on_button_click.bind(this);
@@ -13962,7 +13967,7 @@ class RulerWnd {
         $p.wsql.save_options('editor', this.options);
       }
       else {
-        setTimeout(() => this._scope.tools[1].activate());
+        setTimeout(() => tool._scope.tools[1].activate());
       }
       delete this.options;
     }

@@ -83,7 +83,7 @@ class ToolLayImpost extends ToolElement {
 
       // цвет по умолчанию
       if (profile.clr.empty()) {
-        profile.clr = this.project.clr;
+        profile.clr = tool.project.clr;
       }
 
       // параметры отбора для выбора цвета
@@ -110,7 +110,7 @@ class ToolLayImpost extends ToolElement {
         }],
       }];
 
-      tool.wnd = $p.iface.dat_blank(this._scope._dxw, tool.options.wnd);
+      tool.wnd = $p.iface.dat_blank(tool._scope._dxw, tool.options.wnd);
       tool._grid = tool.wnd.attachHeadFields({
         obj: profile,
       });

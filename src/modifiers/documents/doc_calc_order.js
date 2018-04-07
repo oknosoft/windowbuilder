@@ -889,6 +889,41 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   }
 
   /**
+   * Пересчитывает все изделия заказа по тем же правилам, что и визуальная рисовалка
+   * @param attr
+   * @param editor
+   */
+  recalc(attr = {}, editor) {
+
+    // сначала, получаем массив продукций в озу
+
+    // при необходимости, создаём редактор
+    if(!editor) {
+      editor = $p.products_building.editor_invisible;
+    }
+    const {project} = editor;
+    return Promise.resolve();
+
+  }
+
+  /**
+   * Рисует изделия или фрагмент изделий заказа в Buffer в соответствии с параметрами attr
+   * @param attr
+   * @param editor
+   */
+  draw(attr = {}, editor) {
+
+    // сначала, получаем массив продукций в озу
+
+    // при необходимости, создаём редактор
+    if(!editor) {
+      editor = $p.products_building.editor_invisible;
+    }
+    const {project} = editor;
+    return Promise.resolve();
+  }
+
+  /**
    * Устанавливает подразделение по умолчанию
    */
   static set_department() {

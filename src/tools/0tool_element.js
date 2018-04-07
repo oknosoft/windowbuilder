@@ -18,6 +18,11 @@
  */
 class ToolElement extends paper.Tool {
 
+  constructor() {
+    super();
+    this.on_close = this.on_close.bind(this);
+  }
+
   resetHot(type, event, mode) {
 
   }

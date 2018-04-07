@@ -59,7 +59,7 @@ class PenControls {
       }
     }
 
-    this._scope._wrapper.appendChild(_cont);
+    tool._scope._wrapper.appendChild(_cont);
     _cont.className = "pen_cont";
 
     tool.project.view.on('mousemove', this.mousemove);

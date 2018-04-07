@@ -35,7 +35,7 @@ class RulerWnd {
     this.options = options;
 
     this.tool = tool;
-    const wnd = this.wnd = $p.iface.dat_blank(this._scope._dxw, options.wnd);
+    const wnd = this.wnd = $p.iface.dat_blank((tool._scope || tool.project._scope)._dxw, options.wnd);
 
     this.on_keydown = this.on_keydown.bind(this);
     this.on_button_click = this.on_button_click.bind(this);
@@ -260,7 +260,7 @@ class RulerWnd {
         $p.wsql.save_options('editor', this.options);
       }
       else {
-        setTimeout(() => this._scope.tools[1].activate());
+        setTimeout(() => tool._scope.tools[1].activate());
       }
       delete this.options;
     }

@@ -8,6 +8,9 @@
     <item type="button" id="btn_add_material" text="&lt;i class='fa fa-cube fa-fw'&gt;&lt;/i&gt; Материал" />
     <item type="button" id="btn_additions" text="&lt;i class='fa fa-cart-plus fa-fw'&gt;&lt;/i&gt; Аксессуары и услуги" />
     <item type="button" id="btn_clone" text="&lt;i class='fa fa-clone fa-fw'&gt;&lt;/i&gt; Скопировать изделие" />
+    <item id="sep_prod" type="separator"/>
+    <item type="button" id="btn_recalc_row" text="&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать строку" />
+    <item type="button" id="btn_recalc_doc" text="&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать заказ" />
   </item>
 
   <item type="button" id="btn_edit" text="&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt;" title="Редактировать изделие построителя" />
