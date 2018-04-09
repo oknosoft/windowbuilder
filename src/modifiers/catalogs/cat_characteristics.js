@@ -363,18 +363,19 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
     // загружаем изделие в редактор
     if(!editor) {
-      editor = $p.products_building.editor_invisible;
+      editor = new $p.EditorInvisible();
     }
-    const {project} = editor;
+    const project = editor.create_scheme();
     return project.load(this, true)
       .then(() => {
 
         // выполняем пересчет
-        project.save_coordinates({save: true, close: true});
+        project.save_coordinates({save: true, svg: false});
 
       })
       .then(() => {
         project.ox = '';
+        project.remove();
         return this;
       });
 
@@ -393,9 +394,9 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
     // загружаем изделие в редактор
     if(!editor) {
-      editor = $p.products_building.editor_invisible;
+      editor = new $p.EditorInvisible();
     }
-    const {project} = editor;
+    const project = editor.create_scheme();
     return project.load(this, true)
       .then(() => {
 
@@ -425,6 +426,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       })
       .then((res) => {
         project.ox = '';
+        project.remove();
         return res;
       });
   }

@@ -48,14 +48,17 @@ class EditorInvisible extends paper.PaperScope {
    * @param format
    */
   create_scheme() {
-    const _canvas = document.createElement('CANVAS');
-    _canvas.height = 480;
-    _canvas.width = 480;
-    this.setup(_canvas);
-    new Scheme(_canvas, this, true);
-    if(!(this.projects[0] instanceof Scheme)) {
+    if(!this._canvas) {
+      this._canvas = document.createElement('CANVAS');
+      this._canvas.height = 480;
+      this._canvas.width = 480;
+      this.setup(this._canvas);
+    }
+    const scheme = new Scheme(this._canvas, this, true);
+    if(this.projects.lengrh && !(this.projects[0] instanceof Scheme)) {
       this.projects[0].remove();
     }
+    return scheme;
   }
 
 }

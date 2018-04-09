@@ -312,17 +312,18 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
 
     if(!editor) {
-      editor = $p.products_building.editor_invisible;
+      editor = new $p.EditorInvisible();
     }
-    const {project} = editor;
+    const project = editor.create_scheme();
     return project.load(this, true)
       .then(() => {
 
-        project.save_coordinates({save: true, close: true});
+        project.save_coordinates({save: true, svg: false});
 
       })
       .then(() => {
         project.ox = '';
+        project.remove();
         return this;
       });
 
@@ -335,9 +336,9 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     res[ref] = {imgs: {}};
 
     if(!editor) {
-      editor = $p.products_building.editor_invisible;
+      editor = new $p.EditorInvisible();
     }
-    const {project} = editor;
+    const project = editor.create_scheme();
     return project.load(this, true)
       .then(() => {
 
@@ -365,6 +366,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       })
       .then((res) => {
         project.ox = '';
+        project.remove();
         return res;
       });
   }
@@ -3420,7 +3422,6 @@ class ProductsBuilding {
       glass_specification,
       params;
 
-    this._editor_invisible = null;
 
 
     function cnn_row(elm1, elm2) {
@@ -4000,21 +4001,20 @@ class ProductsBuilding {
           });
         }
         else {
-          ox.svg = scheme.get_svg();
+          if(attr.svg !== false) {
+            ox.svg = scheme.get_svg();
+          }
           saver = ox.save();
         }
 
         saver.then(() => {
-            $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
-            delete scheme._attr._saving;
-            ox.calc_order.characteristic_saved(scheme, attr);
-            scheme._scope.eve.emit('characteristic_saved', scheme, attr);
+          attr.svg !== false && $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
+          delete scheme._attr._saving;
+          ox.calc_order.characteristic_saved(scheme, attr);
+          scheme._scope && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
 
-
-          })
-          .then(() => setTimeout(() => {
-            ox.calc_order._modified && ox.calc_order.save();
-          }, 1000))
+        })
+          .then(() => scheme._scope && setTimeout(() => ox.calc_order._modified && ox.calc_order.save(), 1000))
           .catch((ox) => {
 
 
@@ -4036,13 +4036,6 @@ class ProductsBuilding {
 
   }
 
-  get editor_invisible() {
-    if(!this._editor_invisible) {
-      this._editor_invisible = new $p.EditorInvisible();
-      this._editor_invisible.create_scheme();
-    }
-    return this._editor_invisible;
-  }
 
   static check_params({params, row_spec, elm, cnstr, origin, ox}) {
 

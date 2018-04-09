@@ -150,7 +150,7 @@ class Scheme extends paper.Project {
 
       const isBrowser = typeof requestAnimationFrame === 'function';
 
-      _attr._opened && !_attr._silent && isBrowser && requestAnimationFrame(_scheme.redraw);
+      _attr._opened && !_attr._silent && _scheme._scope && isBrowser && requestAnimationFrame(_scheme.redraw);
 
       if(!_attr._opened || _attr._saving || !_changes.length) {
         return;
@@ -631,7 +631,7 @@ class Scheme extends paper.Project {
    */
   clear() {
     const {_attr} = this;
-    const pnames = '_bounds,_update_timer,_loading,_snapshot';
+    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent';
     for (let fld in _attr) {
       if(!pnames.match(fld)) {
         delete _attr[fld];

@@ -1295,11 +1295,13 @@ class Editor extends EditorInvisible {
   }
 
   hide_selection_bounds() {
-    if (this._drawSelectionBounds > 0)
+    if(this._drawSelectionBounds > 0) {
       this._drawSelectionBounds--;
-    if (this._drawSelectionBounds == 0) {
-      if (this._selectionBoundsShape)
+    }
+    if(this._drawSelectionBounds == 0) {
+      if(this._selectionBoundsShape) {
         this._selectionBoundsShape.visible = false;
+      }
     }
   }
 

@@ -996,14 +996,17 @@ class EditorInvisible extends paper.PaperScope {
   }
 
   create_scheme() {
-    const _canvas = document.createElement('CANVAS');
-    _canvas.height = 480;
-    _canvas.width = 480;
-    this.setup(_canvas);
-    new Scheme(_canvas, this, true);
-    if(!(this.projects[0] instanceof Scheme)) {
+    if(!this._canvas) {
+      this._canvas = document.createElement('CANVAS');
+      this._canvas.height = 480;
+      this._canvas.width = 480;
+      this.setup(this._canvas);
+    }
+    const scheme = new Scheme(this._canvas, this, true);
+    if(this.projects.lengrh && !(this.projects[0] instanceof Scheme)) {
       this.projects[0].remove();
     }
+    return scheme;
   }
 
 }
@@ -2016,11 +2019,13 @@ class Editor extends EditorInvisible {
   }
 
   hide_selection_bounds() {
-    if (this._drawSelectionBounds > 0)
+    if(this._drawSelectionBounds > 0) {
       this._drawSelectionBounds--;
-    if (this._drawSelectionBounds == 0) {
-      if (this._selectionBoundsShape)
+    }
+    if(this._drawSelectionBounds == 0) {
+      if(this._selectionBoundsShape) {
         this._selectionBoundsShape.visible = false;
+      }
     }
   }
 
@@ -9765,7 +9770,7 @@ class Scheme extends paper.Project {
 
       const isBrowser = typeof requestAnimationFrame === 'function';
 
-      _attr._opened && !_attr._silent && isBrowser && requestAnimationFrame(_scheme.redraw);
+      _attr._opened && !_attr._silent && _scheme._scope && isBrowser && requestAnimationFrame(_scheme.redraw);
 
       if(!_attr._opened || _attr._saving || !_changes.length) {
         return;
@@ -10129,7 +10134,7 @@ class Scheme extends paper.Project {
 
   clear() {
     const {_attr} = this;
-    const pnames = '_bounds,_update_timer,_loading,_snapshot';
+    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent';
     for (let fld in _attr) {
       if(!pnames.match(fld)) {
         delete _attr[fld];
