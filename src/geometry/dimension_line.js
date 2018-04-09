@@ -95,7 +95,7 @@ class DimensionLine extends paper.Group {
   }
 
   _mouseenter() {
-    paper.canvas_cursor('cursor-arrow-ruler');
+    this.project._scope.canvas_cursor('cursor-arrow-ruler');
   }
 
   _mouseleave() {
@@ -447,17 +447,18 @@ class DimensionLineCustom extends DimensionLine {
 
   _click(event) {
     event.stop();
-    if(paper.tool instanceof ToolRuler){
+    if(this.project._scope.tool instanceof ToolRuler){
       this.selected = true;
     }
   }
 
   _mouseenter() {
-    if(paper.tool instanceof ToolRuler){
-      paper.canvas_cursor('cursor-arrow-ruler');
+    const {_scope} = this.project;
+    if(_scope.tool instanceof ToolRuler){
+      _scope.canvas_cursor('cursor-arrow-ruler');
     }
     else{
-      paper.canvas_cursor('cursor-arrow-ruler-dis');
+      _scope.canvas_cursor('cursor-arrow-ruler-dis');
     }
   }
 

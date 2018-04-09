@@ -335,7 +335,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       return;
     }
     let _modified;
-    if(typeof _obj[name] !== 'string'){
+    if(!_obj[name] || typeof _obj[name] !== 'string'){
       _obj[name] = JSON.stringify($p.CatCharacteristics.builder_props_defaults);
       _modified = true;
     }
@@ -350,6 +350,85 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       _obj[name] = JSON.stringify(props);
       this.__notify(name);
     }
+  }
+
+  /**
+   * Пересчитывает изделие по тем же правилам, что и визуальная рисовалка
+   * @param attr
+   * @param editor
+   */
+  recalc(attr = {}, editor) {
+
+    // сначала, получаем объект заказа и продукции заказа в озу, т.к. пересчет изделия может приводить к пересчету соседних продукций
+
+    // загружаем изделие в редактор
+    if(!editor) {
+      editor = new $p.EditorInvisible();
+    }
+    const project = editor.create_scheme();
+    return project.load(this, true)
+      .then(() => {
+
+        // выполняем пересчет
+        project.save_coordinates({save: true, svg: false});
+
+      })
+      .then(() => {
+        project.ox = '';
+        project.remove();
+        return this;
+      });
+
+  }
+
+  /**
+   * Рисует изделие или фрагмент изделия в Buffer в соответствии с параметрами attr
+   * @param attr
+   * @param editor
+   */
+  draw(attr = {}, editor) {
+
+    const ref = $p.utils.snake_ref(this.ref);
+    const res = attr.res || {};
+    res[ref] = {imgs: {}};
+
+    // загружаем изделие в редактор
+    if(!editor) {
+      editor = new $p.EditorInvisible();
+    }
+    const project = editor.create_scheme();
+    return project.load(this, true)
+      .then(() => {
+
+        // формируем эскиз(ы) в соответствии с attr
+        if(attr.glasses) {
+          const {_obj: {glasses, coordinates}} = this;
+          res[ref].glasses = glasses;
+          this.glasses.forEach((row) => {
+            const glass = project.draw_fragment({elm: row.elm});
+            // подтянем формулу стеклопакета
+            if(attr.format === 'png') {
+              res[ref].imgs[`g${row.elm}`] = project.view.element.toDataURL('image/png').substr(22);
+            }
+            else {
+              res[ref].imgs[`g${row.elm}`] = project.get_svg(attr);
+            }
+            if(glass){
+              row.formula = glass.formula(true);
+              glass.visible = false;
+            }
+          });
+          return res;
+        }
+        else if(attr.format === 'svg') {
+          return project.get_svg(attr);
+        }
+      })
+      .then((res) => {
+        project.ox = '';
+        project.remove();
+        return res;
+      });
   }
 
 };

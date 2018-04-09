@@ -231,4 +231,4 @@ class ConnectiveLayer extends paper.Layer {
   }
 }
 
-Editor.ProfileConnective = ProfileConnective;
+EditorInvisible.ProfileConnective = ProfileConnective;

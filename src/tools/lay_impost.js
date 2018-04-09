@@ -83,7 +83,7 @@ class ToolLayImpost extends ToolElement {
 
       // цвет по умолчанию
       if (profile.clr.empty()) {
-        profile.clr = paper.project.clr;
+        profile.clr = tool.project.clr;
       }
 
       // параметры отбора для выбора цвета
@@ -110,8 +110,7 @@ class ToolLayImpost extends ToolElement {
         }],
       }];
 
-
-      tool.wnd = $p.iface.dat_blank(paper._dxw, tool.options.wnd);
+      tool.wnd = $p.iface.dat_blank(tool._scope._dxw, tool.options.wnd);
       tool._grid = tool.wnd.attachHeadFields({
         obj: profile,
       });
@@ -251,7 +250,7 @@ class ToolLayImpost extends ToolElement {
 
       deactivate: function () {
 
-        paper.clear_selection_bounds();
+        this._scope.clear_selection_bounds();
 
         this.paths.forEach(function (p) {
           p.remove();
@@ -263,9 +262,9 @@ class ToolLayImpost extends ToolElement {
 
       mouseup: function (event) {
 
-        paper.canvas_cursor('cursor-arrow-lay');
+        this._scope.canvas_cursor('cursor-arrow-lay');
 
-        const {profile} = this;
+        const {profile, project} = this;
 
         if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
           return;
@@ -277,8 +276,28 @@ class ToolLayImpost extends ToolElement {
 
         this.check_layer();
 
-        const layer = this.hitItem ? this.hitItem.layer : paper.project.activeLayer;
-        const lgeneratics = layer.profiles.map((p) => p.nearest() ? p.rays.outer : p.generatrix);
+        const layer = this.hitItem ? this.hitItem.layer : this.project.activeLayer;
+        const lgeneratics = layer.profiles.map((p) => {
+          const {generatrix, elm_type, rays, addls} = p;
+          const res = {
+            inner: elm_type === $p.enm.elm_types.Импост ? generatrix : rays.inner,
+            gen: p.nearest() ? rays.outer : generatrix,
+          };
+          if(addls.length) {
+            if(elm_type === $p.enm.elm_types.Импост) {
+
+            }
+            else {
+              res.inner = addls[0].rays.inner;
+              res.gen = addls[0].rays.outer;
+            }
+          }
+          // while (p.nearest()) {
+          //   res.gen = p.rays.outer;
+          //   p = p.nearest();
+          // }
+          return res;
+        });
         const nprofiles = [];
 
         function n1(p) {
@@ -294,7 +313,7 @@ class ToolLayImpost extends ToolElement {
           const nom = inset.nom();
           const rows = [];
 
-          paper.project._dp.sys.elmnts.each((row) => {
+          project._dp.sys.elmnts.each((row) => {
             if (row.nom.nom() == nom) {
               rows.push(row);
             }
@@ -392,16 +411,20 @@ class ToolLayImpost extends ToolElement {
               correctedp2 = false;
 
             // пытаемся вязать к профилям контура
-            for (let gen of lgeneratics) {
-              let np = gen.getNearestPoint(p.b);
-              if (!correctedp1 && np.getDistance(p.b) < consts.sticking) {
-                correctedp1 = true;
-                p.b = np;
+            for (let {gen, inner} of lgeneratics) {
+              if (!correctedp1) {
+                const np = inner.getNearestPoint(p.b);
+                if(np.getDistance(p.b) < consts.sticking) {
+                  correctedp1 = true;
+                  p.b = inner === gen ? np : gen.getNearestPoint(p.b);
+                }
               }
-              np = gen.getNearestPoint(p.e);
-              if (!correctedp2 && np.getDistance(p.e) < consts.sticking) {
-                correctedp2 = true;
-                p.e = np;
+              if (!correctedp2) {
+                const np = inner.getNearestPoint(p.e);
+                if (np.getDistance(p.e) < consts.sticking) {
+                  correctedp2 = true;
+                  p.e = inner === gen ? np : gen.getNearestPoint(p.e);
+                }
               }
             }
 
@@ -497,10 +520,15 @@ class ToolLayImpost extends ToolElement {
           p.cnn_point('b');
           p.cnn_point('e');
         });
+        // и еще раз пересчитываем соединения, т.к. на предыдущем шаге могла измениться геометрия соседей
+        nprofiles.forEach((p) => {
+          p.cnn_point('b');
+          p.cnn_point('e');
+        });
 
         if (!this.hitItem)
           setTimeout(() => {
-            paper.tools[1].activate();
+            this._scope.tools[1].activate();
           }, 100);
 
       },
@@ -531,7 +559,7 @@ class ToolLayImpost extends ToolElement {
             closed: true,
           });
           bounds = gen.bounds;
-          paper.project.zoom_fit(paper.project.strokeBounds.unite(bounds));
+          this.project.zoom_fit(this.project.strokeBounds.unite(bounds));
 
         }
         else
@@ -551,8 +579,9 @@ class ToolLayImpost extends ToolElement {
           if (base < tool.paths.length) {
             path = tool.paths[base];
             path.fillColor = clr;
-            if (!path.isInserted())
-              path.parent = tool.hitItem ? tool.hitItem.layer : paper.project.activeLayer;
+            if(!path.isInserted()) {
+              path.parent = tool.hitItem ? tool.hitItem.layer : this.project.activeLayer;
+            }
           }
           else {
             path = new paper.Path({
@@ -831,15 +860,16 @@ class ToolLayImpost extends ToolElement {
     this.hitItem = null;
 
     // Hit test items.
-    if (event.point)
-      this.hitItem = paper.project.hitTest(event.point, {fill: true, class: paper.Path});
+    if(event.point) {
+      this.hitItem = this.project.hitTest(event.point, {fill: true, class: paper.Path});
+    }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof Filling) {
-      paper.canvas_cursor('cursor-lay-impost');
+    if(this.hitItem && this.hitItem.item.parent instanceof Filling) {
+      this._scope.canvas_cursor('cursor-lay-impost');
       this.hitItem = this.hitItem.item.parent;
-
-    } else {
-      paper.canvas_cursor('cursor-arrow-lay');
+    }
+    else {
+      this._scope.canvas_cursor('cursor-arrow-lay');
       this.hitItem = null;
     }
 

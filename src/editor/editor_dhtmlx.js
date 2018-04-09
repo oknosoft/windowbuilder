@@ -30,7 +30,7 @@
  * @menuorder 10
  * @tooltip Графический редактор
  */
-class Editor extends paper.PaperScope {
+class Editor extends EditorInvisible {
 
   constructor(pwnd, handlers){
 
@@ -39,8 +39,6 @@ class Editor extends paper.PaperScope {
     const _editor = this;
 
     this.activate();
-
-    consts.tune_paper(this.settings);
 
     /**
      * ### Ячейка родительского окна, в которой размещен редактор
@@ -55,11 +53,6 @@ class Editor extends paper.PaperScope {
         return pwnd;
       }
     });
-
-    /**
-     * Собственный излучатель событий для уменьшения утечек памяти
-     */
-    this.eve = new (Object.getPrototypeOf($p.md.constructor))();
 
     /**
      * ### Разбивка на канвас и аккордион
@@ -410,6 +403,32 @@ class Editor extends paper.PaperScope {
         name: 'title',
         value: title,
       });
+
+      // проверяем ортогональность
+      if(this.project.getItems({class: Profile}).some((p) => {
+        return (p.angle_hor % 90) > 0.02;
+      })){
+        this._ortpos.style.display = '';
+      }
+      else {
+        this._ortpos.style.display = 'none';
+      };
+    }
+  }
+
+  show_ortpos(hide) {
+    for (const elm of this.project.getItems({class: Profile})) {
+      if((elm.angle_hor % 90) > 0.02) {
+        if(hide) {
+          elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+        }
+        else {
+          elm.path.fillColor = '#fcc';
+        }
+      }
+    }
+    if(!hide) {
+      setTimeout(() => this.show_ortpos(true), 1300);
     }
   }
 
@@ -461,14 +480,25 @@ class Editor extends paper.PaperScope {
      */
     const _mousepos = document.createElement('div');
     _editor._wrapper.appendChild(_mousepos);
-    _mousepos.className = "mousepos";
+    _mousepos.className = 'mousepos';
     _scheme.view.on('mousemove', (event) => {
       const {bounds} = _scheme;
-      if(bounds){
-        _mousepos.innerHTML = "x:" + (event.point.x - bounds.x).toFixed(0) +
-          " y:" + (bounds.height + bounds.y - event.point.y).toFixed(0);
+      if(bounds) {
+        _mousepos.innerHTML = 'x:' + (event.point.x - bounds.x).toFixed(0) +
+          ' y:' + (bounds.height + bounds.y - event.point.y).toFixed(0);
       }
     });
+
+    /**
+     * Подписываемся на событие окончания расчета, чтобы нарисовать индикатор трапеции
+     */
+    this._ortpos = document.createElement('div');
+    _editor._wrapper.appendChild(this._ortpos);
+    this._ortpos.className = 'ortpos';
+    this._ortpos.innerHTML = '<i class="fa fa-crosshairs" aria-hidden="true"></i>';
+    this._ortpos.setAttribute('title', 'Есть наклонные элементы');
+    this._ortpos.style.display = 'none';
+    this._ortpos.onclick = () => this.show_ortpos();
 
     /**
      * Объект для реализации функций масштабирования
@@ -653,14 +683,6 @@ class Editor extends paper.PaperScope {
     while(selected = deselect.pop()){
       selected.selected = false;
     }
-  }
-
-  /**
-   * Возвращает элемент по номеру
-   * @param num
-   */
-  elm(num) {
-    return this.project.getItem({class: BuilderElement, elm: num});
   }
 
   // Returns serialized contents of selected items.
@@ -1273,11 +1295,13 @@ class Editor extends paper.PaperScope {
   }
 
   hide_selection_bounds() {
-    if (this._drawSelectionBounds > 0)
+    if(this._drawSelectionBounds > 0) {
       this._drawSelectionBounds--;
-    if (this._drawSelectionBounds == 0) {
-      if (this._selectionBoundsShape)
+    }
+    if(this._drawSelectionBounds == 0) {
+      if(this._selectionBoundsShape) {
         this._selectionBoundsShape.visible = false;
+      }
     }
   }
 

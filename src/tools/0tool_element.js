@@ -18,6 +18,11 @@
  */
 class ToolElement extends paper.Tool {
 
+  constructor() {
+    super();
+    this.on_close = this.on_close.bind(this);
+  }
+
   resetHot(type, event, mode) {
 
   }
@@ -99,7 +104,7 @@ class ToolElement extends paper.Tool {
   }
 
   on_close(wnd) {
-    wnd && wnd.cell && setTimeout(() => paper.tools[1].activate());
+    wnd && wnd.cell && setTimeout(() => this._scope.tools[1].activate());
     return true;
   }
 

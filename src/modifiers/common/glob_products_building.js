@@ -21,6 +21,8 @@ class ProductsBuilding {
       glass_specification,
       params;
 
+    //this._editor_invisible = null;
+
 
     /**
      * СтрокаСоединений
@@ -740,23 +742,22 @@ class ProductsBuilding {
           });
         }
         else {
-          ox.svg = scheme.get_svg();
+          if(attr.svg !== false) {
+            ox.svg = scheme.get_svg();
+          }
           saver = ox.save();
         }
 
         saver.then(() => {
-            $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
-            delete scheme._attr._saving;
-            ox.calc_order.characteristic_saved(scheme, attr);
-            scheme._scope.eve.emit('characteristic_saved', scheme, attr);
+          attr.svg !== false && $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
+          delete scheme._attr._saving;
+          ox.calc_order.characteristic_saved(scheme, attr);
+          scheme._scope && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
 
-            // console.timeEnd("save");
-            // console.profileEnd();
-
-          })
-          .then(() => setTimeout(() => {
-            ox.calc_order._modified && ox.calc_order.save();
-          }, 1000))
+          // console.timeEnd("save");
+          // console.profileEnd();
+        })
+          .then(() => scheme._scope && setTimeout(() => ox.calc_order._modified && ox.calc_order.save(), 1000))
           .catch((ox) => {
 
             // console.timeEnd("save");
@@ -779,6 +780,13 @@ class ProductsBuilding {
     };
 
   }
+
+  // get editor_invisible() {
+  //   if(!this._editor_invisible) {
+  //     this._editor_invisible = new $p.EditorInvisible();
+  //   }
+  //   return this._editor_invisible;
+  // }
 
   /**
    * Проверяет соответствие параметров отбора параметрам изделия

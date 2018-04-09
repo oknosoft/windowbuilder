@@ -627,5 +627,5 @@ class BuilderElement extends paper.Group {
 }
 
 
-Editor.BuilderElement = BuilderElement;
+EditorInvisible.BuilderElement = BuilderElement;
 

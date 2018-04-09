@@ -49,7 +49,7 @@ class ToolSelectNode extends ToolElement {
       },
 
       deactivate: function() {
-        paper.clear_selection_bounds();
+        this._scope.clear_selection_bounds();
         if(this.profile){
           this.profile.detache_wnd();
           delete this.profile;
@@ -91,7 +91,7 @@ class ToolSelectNode extends ToolElement {
               this.mode = consts.move_shapes;
               project.deselect_all_points();
               this.mouseStartPos = event.point.clone();
-              this.originalContent = paper.capture_selection_state();
+              this.originalContent = this._scope.capture_selection_state();
 
               if(item.layer){
                 this.eve.emit("layer_activated", item.layer);
@@ -112,7 +112,7 @@ class ToolSelectNode extends ToolElement {
             if (this.hitItem.segment.selected) {
               this.mode = consts.move_points;
               this.mouseStartPos = event.point.clone();
-              this.originalContent = paper.capture_selection_state();
+              this.originalContent = this._scope.capture_selection_state();
             }
           }
           else if (this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
@@ -138,7 +138,7 @@ class ToolSelectNode extends ToolElement {
             this.profile = item;
           }
 
-          paper.clear_selection_bounds();
+          this._scope.clear_selection_bounds();
 
         } else {
           // Clicked on and empty area, engage box select.
@@ -159,19 +159,19 @@ class ToolSelectNode extends ToolElement {
 
         if (this.mode == consts.move_shapes) {
           if (this.changed) {
-            paper.clear_selection_bounds();
+            this._scope.clear_selection_bounds();
             //undo.snapshot("Move Shapes");
           }
         }
         else if (this.mode == consts.move_points) {
           if (this.changed) {
-            paper.clear_selection_bounds();
+            this._scope.clear_selection_bounds();
             //undo.snapshot("Move Points");
           }
         }
         else if (this.mode == consts.move_handle) {
           if (this.changed) {
-            paper.clear_selection_bounds();
+            this._scope.clear_selection_bounds();
             //undo.snapshot("Move Handle");
           }
         }
@@ -187,7 +187,7 @@ class ToolSelectNode extends ToolElement {
           if (event.modifiers.control) {
 
             const profiles = [];
-            paper.paths_intersecting_rect(box).forEach((path) => {
+            this._scope.paths_intersecting_rect(box).forEach((path) => {
               if(path.parent instanceof ProfileItem){
                 if(profiles.indexOf(path.parent) == -1){
                   profiles.push(path.parent);
@@ -202,7 +202,7 @@ class ToolSelectNode extends ToolElement {
           }
           else {
 
-            const selectedSegments = paper.segments_in_rect(box);
+            const selectedSegments = this._scope.segments_in_rect(box);
             if (selectedSegments.length > 0) {
               for (let i = 0; i < selectedSegments.length; i++) {
                 selectedSegments[i].selected = !selectedSegments[i].selected;
@@ -210,7 +210,7 @@ class ToolSelectNode extends ToolElement {
             }
             else {
               const profiles = [];
-              paper.paths_intersecting_rect(box).forEach((path) => {
+              this._scope.paths_intersecting_rect(box).forEach((path) => {
                 if(path.parent instanceof ProfileItem){
                   if(profiles.indexOf(path.parent) == -1){
                     profiles.push(path.parent);
@@ -225,45 +225,45 @@ class ToolSelectNode extends ToolElement {
           }
         }
 
-        paper.clear_selection_bounds();
+        this._scope.clear_selection_bounds();
 
         if (this.hitItem) {
           if (this.hitItem.item.selected || (this.hitItem.item.parent && this.hitItem.item.parent.selected)) {
-            paper.canvas_cursor('cursor-arrow-small');
+            this._scope.canvas_cursor('cursor-arrow-small');
           }
           else {
-            paper.canvas_cursor('cursor-arrow-white-shape');
+            this._scope.canvas_cursor('cursor-arrow-white-shape');
           }
         }
       },
 
       mousedrag: function(event) {
 
-        const {project} = this._scope;
+        const {project} = this;
 
         this.changed = true;
 
         if (this.mode == consts.move_shapes) {
-          paper.canvas_cursor('cursor-arrow-small');
+          this._scope.canvas_cursor('cursor-arrow-small');
 
           let delta = event.point.subtract(this.mouseStartPos);
           if (!event.modifiers.shift){
             delta = delta.snap_to_angle(Math.PI*2/4);
           }
-          paper.restore_selection_state(this.originalContent);
+          this._scope.restore_selection_state(this.originalContent);
           project.move_points(delta, true);
-          paper.clear_selection_bounds();
+          this._scope.clear_selection_bounds();
         }
         else if (this.mode == consts.move_points) {
-          paper.canvas_cursor('cursor-arrow-small');
+          this._scope.canvas_cursor('cursor-arrow-small');
 
           let delta = event.point.subtract(this.mouseStartPos);
           if(!event.modifiers.shift) {
             delta = delta.snap_to_angle(Math.PI*2/4);
           }
-          paper.restore_selection_state(this.originalContent);
+          this._scope.restore_selection_state(this.originalContent);
           project.move_points(delta);
-          paper.purge_selection();
+          this._scope.purge_selection();
         }
         else if (this.mode == consts.move_handle) {
 
@@ -290,10 +290,10 @@ class ToolSelectNode extends ToolElement {
           noti.profiles[0].rays.clear();
           noti.profiles[0].layer.notify(noti);
 
-          paper.purge_selection();
+          this._scope.purge_selection();
         }
         else if (this.mode == 'box-select') {
-          paper.drag_rect(this.mouseStartPos, event.point);
+          this._scope.drag_rect(this.mouseStartPos, event.point);
         }
       },
 
@@ -481,21 +481,21 @@ class ToolSelectNode extends ToolElement {
           // размерные линии сами разберутся со своими курсорами
         }
         else if (hitItem.item instanceof paper.PointText) {
-          !(hitItem.item instanceof EditableText) && paper.canvas_cursor('cursor-text');     // указатель с черным Т
+          !(hitItem.item instanceof EditableText) && this._scope.canvas_cursor('cursor-text');     // указатель с черным Т
         }
         else if (hitItem.item.selected) {
-          paper.canvas_cursor('cursor-arrow-small');
+          this._scope.canvas_cursor('cursor-arrow-small');
         }
         else {
-          paper.canvas_cursor('cursor-arrow-white-shape');
+          this._scope.canvas_cursor('cursor-arrow-white-shape');
         }
       }
       else if (hitItem.type == 'segment' || hitItem.type == 'handle-in' || hitItem.type == 'handle-out') {
         if (hitItem.segment.selected) {
-          paper.canvas_cursor('cursor-arrow-small-point');
+          this._scope.canvas_cursor('cursor-arrow-small-point');
         }
         else {
-          paper.canvas_cursor('cursor-arrow-white-point');
+          this._scope.canvas_cursor('cursor-arrow-white-point');
         }
       }
     }
@@ -504,10 +504,10 @@ class ToolSelectNode extends ToolElement {
       const hit = project.hitTest(point, {stroke: true, visible: true, tolerance: 16});
       if (hit && hit.item.parent instanceof Sectional){
         this.hitItem = hit;
-        paper.canvas_cursor('cursor-arrow-white-shape');
+        this._scope.canvas_cursor('cursor-arrow-white-shape');
       }
       else{
-        paper.canvas_cursor('cursor-arrow-white');
+        this._scope.canvas_cursor('cursor-arrow-white');
       }
     }
 

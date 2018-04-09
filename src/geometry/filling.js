@@ -777,4 +777,4 @@ class Filling extends AbstractFilling(BuilderElement) {
 
 }
 
-Editor.Filling = Filling;
+EditorInvisible.Filling = Filling;

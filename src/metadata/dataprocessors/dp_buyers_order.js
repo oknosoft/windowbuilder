@@ -109,9 +109,10 @@ export default function ($p) {
             // подстановка умолчаний для цвета
             const {pclrs} = $p.DpBuyers_orderProductionRow;
             if(!pclrs.size) {
-              pclrs.add($p.job_prm.properties.clr_inset);
-              pclrs.add($p.job_prm.properties.clr_elm);
-              pclrs.add($p.job_prm.properties.clr_product);
+              const {properties} = $p.job_prm;
+              pclrs.add(properties.clr_inset);
+              pclrs.add(properties.clr_elm);
+              pclrs.add(properties.clr_product);
             }
             defaults.forEach((drow) => {
               if(pclrs.has(drow.param)) {

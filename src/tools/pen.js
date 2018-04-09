@@ -59,7 +59,7 @@ class PenControls {
       }
     }
 
-    paper._wrapper.appendChild(_cont);
+    tool._scope._wrapper.appendChild(_cont);
     _cont.className = "pen_cont";
 
     tool.project.view.on('mousemove', this.mousemove);
@@ -284,7 +284,7 @@ class ToolPen extends ToolElement {
     // дополняем свойства поля цвет отбором по служебным цветам
     $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this.sys);
 
-    this.wnd = $p.iface.dat_blank(paper._dxw, this.options.wnd);
+    this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
     this._grid = this.wnd.attachHeadFields({
       obj: profile
     });
@@ -369,7 +369,7 @@ class ToolPen extends ToolElement {
   }
 
   on_deactivate() {
-    paper.clear_selection_bounds();
+    this._scope.clear_selection_bounds();
 
     this.eve.off("scheme_changed", this.scheme_changed);
     this.eve.off("layer_activated", this.layer_activated);
@@ -561,12 +561,12 @@ class ToolPen extends ToolElement {
 
       // TODO: Выделяем элемент, если он подходящего типа
       if(item instanceof ProfileItem && item.isInserted()) {
-        item.attache_wnd(paper._acc.elm);
+        item.attache_wnd(this._scope._acc.elm);
         whas_select = true;
         this._controls.blur();
       }
       else if(item instanceof Filling && item.visible) {
-        item.attache_wnd(paper._acc.elm);
+        item.attache_wnd(this._scope._acc.elm);
         whas_select = true;
         this._controls.blur();
       }
@@ -689,7 +689,7 @@ class ToolPen extends ToolElement {
             // при отжатом shift пытаемся привязать точку к узлам или кратно 45
             let bpoint = this.point1.add(delta);
             if(!event.modifiers.shift) {
-              if(!bpoint.bind_to_nodes(true)){
+              if(!bpoint.bind_to_nodes(true, project)){
                 bpoint = this.point1.add(delta.snap_to_angle());
               }
             }
@@ -861,14 +861,15 @@ class ToolPen extends ToolElement {
   hitTest_addl(event) {
 
     const hitSize = 16;
+    const {project, _scope} = this;
 
     if (event.point){
-      this.hitItem = this.project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+      this.hitItem = project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
     }
 
     if (this.hitItem) {
 
-      if(this.hitItem.item.layer == this.project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+      if(this.hitItem.item.layer == project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
         // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
 
         const hit = {
@@ -901,7 +902,7 @@ class ToolPen extends ToolElement {
 
         if(hit.glass){
           this.addl_hit = hit;
-          paper.canvas_cursor('cursor-pen-adjust');
+          _scope.canvas_cursor('cursor-pen-adjust');
         }
 
       }
@@ -909,16 +910,16 @@ class ToolPen extends ToolElement {
         // для заполнения, ищем ребро и примыкающий профиль
 
         // this.addl_hit = this.hitItem;
-        // paper.canvas_cursor('cursor-pen-adjust');
+        // _scope.canvas_cursor('cursor-pen-adjust');
 
       }else{
-        paper.canvas_cursor('cursor-pen-freehand');
+        _scope.canvas_cursor('cursor-pen-freehand');
       }
 
     } else {
 
-      this.hitItem = this.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
-      paper.canvas_cursor('cursor-pen-freehand');
+      this.hitItem = project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      _scope.canvas_cursor('cursor-pen-freehand');
     }
 
   }
@@ -926,7 +927,7 @@ class ToolPen extends ToolElement {
   hitTest_connective(event) {
 
     const hitSize = 16;
-    const {project} = this;
+    const {project, _scope} = this;
     const rootLayer = project.rootLayer();
 
     if (event.point){
@@ -955,18 +956,18 @@ class ToolPen extends ToolElement {
         // для соединителей, нас интересуют только внешние рёбра
         if(hit.side == "outer"){
           this.addl_hit = hit;
-          paper.canvas_cursor('cursor-pen-adjust');
+          _scope.canvas_cursor('cursor-pen-adjust');
         }
 
       }
       else{
-        paper.canvas_cursor('cursor-pen-freehand');
+        _scope.canvas_cursor('cursor-pen-freehand');
       }
 
     }
     else {
       this.hitItem = project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
-      paper.canvas_cursor('cursor-pen-freehand');
+      _scope.canvas_cursor('cursor-pen-freehand');
     }
   }
 
@@ -995,10 +996,10 @@ class ToolPen extends ToolElement {
 
       if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
         && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
-        paper.canvas_cursor('cursor-pen-adjust');
+        this._scope.canvas_cursor('cursor-pen-adjust');
       }
       else {
-        paper.canvas_cursor('cursor-pen-freehand');
+        this._scope.canvas_cursor('cursor-pen-freehand');
       }
     }
 

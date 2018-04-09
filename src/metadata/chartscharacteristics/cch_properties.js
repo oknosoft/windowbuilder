@@ -65,19 +65,13 @@ export default function ($p) {
                 }
 
                 if(pmgr.class_name == 'enm.open_directions') {
-                  pmgr.get_option_list().forEach(function (v) {
-                    if(v.value && v.value != $p.enm.tso.folding) {
-                      res.push(v);
-                    }
-                  });
+                  pmgr.get_option_list().forEach((v) => v.value && v.value != $p.enm.tso.folding && res.push(v));
                 }
                 else if(pmgr.class_name.indexOf('enm.') != -1 || !pmgr.metadata().has_owners) {
                   res = pmgr.get_option_list();
                 }
                 else {
-                  pmgr.find_rows({owner: prop}, function (v) {
-                    res.push({value: v.ref, text: v.presentation});
-                  });
+                  pmgr.find_rows({owner: prop}, (v) => res.push({value: v.ref, text: v.presentation}));
                 }
               }
             }

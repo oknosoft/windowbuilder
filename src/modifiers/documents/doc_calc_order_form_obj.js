@@ -380,6 +380,14 @@
         open_builder();
         break;
 
+      case 'btn_recalc_row':
+        recalc('row');
+        break;
+
+      case 'btn_recalc_doc':
+        recalc('doc');
+        break;
+
       case 'btn_spec':
         open_spec();
         break;
@@ -696,11 +704,51 @@
     }
 
     /**
+     * Пересчитывает строку или весь заказ
+     * @param [mode] {String} - если 'row' - пересчет строки
+     */
+    function recalc(mode) {
+      if(mode == 'row') {
+        const selId = production_get_sel_index();
+        if(selId == undefined) {
+          return not_production();
+        }
+        const row = o.production.get(selId);
+        if(row) {
+          const {owner, calc_order} = row.characteristic;
+          let ox;
+          if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
+            return not_production();
+          }
+          else if(row.characteristic.coordinates.count() == 0) {
+            // возможно, это подчиненная продукция
+            if(row.characteristic.leading_product.calc_order == calc_order) {
+              ox = row.characteristic.leading_product;
+            }
+          }
+          else {
+            ox = row.characteristic;
+          }
+          ox && ox.recalc()
+            .catch((err) => {
+              $p.msg.show_msg({
+                title: $p.msg.bld_title,
+                type: 'alert-error',
+                text: ee.stack || ee.message
+              });
+            });
+        }
+      }
+      else {
+        $p.msg.show_not_implemented();
+      }
+    }
+
+    /**
      * ОткрытьПостроитель()
      * @param [create_new] {Boolean} - создавать новое изделие или открывать в текущей строке
      */
     function open_builder(create_new) {
-      var selId;
 
       if(create_new == 'clone') {
         const selId = production_get_sel_index();

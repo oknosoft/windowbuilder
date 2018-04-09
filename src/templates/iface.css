@@ -76,6 +76,17 @@
 	padding: 0px 4px;
 }
 
+.ortpos {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  background: rgba(255,255,255,.8);
+  transform: rotate(15deg);
+  padding: 0px 4px;
+  font-size: larger;
+  cursor: help;
+}
+
 .pen_cont {
 	position: absolute;
 	font-size: 90%;

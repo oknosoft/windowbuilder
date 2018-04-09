@@ -109,12 +109,13 @@ class SchemeLayers {
   }
 
   listener(obj, fields) {
-    const {tree} = this;
+    const {tree, editor} = this;
+
     if (tree && tree.clearAll && fields.constructions){
 
       // добавляем слои изделия
       tree.clearAll();
-      paper.project.contours.forEach((layer) => {
+      editor.project.contours.forEach((layer) => {
         this.load_layer(layer);
         tree.openItem(layer.cnstr);
       });
@@ -142,21 +143,22 @@ class SchemeLayers {
   }
 
   drop_layer() {
-    let cnstr = this.tree.getSelectedId(), l;
+    const {tree, editor: {project}} = this;
+    let cnstr = tree.getSelectedId(), l;
     if(cnstr){
-      l = paper.project.getItem({cnstr: Number(cnstr)});
+      l = project.getItem({cnstr: Number(cnstr)});
     }
-    else if(l = paper.project.activeLayer){
+    else if(l = project.activeLayer){
       cnstr = l.cnstr;
     }
     if(cnstr && l){
-      this.tree.deleteItem(cnstr);
+      tree.deleteItem(cnstr);
       cnstr = l.parent ? l.parent.cnstr : 0;
       l.remove();
       setTimeout(() => {
-        paper.project.zoom_fit();
+        project.zoom_fit();
         if(cnstr){
-          this.tree.selectItem(cnstr);
+          tree.selectItem(cnstr);
         }
       }, 100);
     }
@@ -181,13 +183,14 @@ class SchemeLayers {
 
 class StvProps {
 
-  constructor(cell, eve) {
+  constructor(cell, editor) {
     this.layout = cell;
+    this.editor = editor;
     this.attach = this.attach.bind(this);
     this.reload = this.reload.bind(this);
     this.on_refresh_prm_links = this.on_refresh_prm_links.bind(this);
 
-    this.eve = eve.on({
+    this.eve = editor.eve.on({
       layer_activated: this.attach,
       furn_changed: this.reload,
       refresh_prm_links: this.on_refresh_prm_links,
@@ -262,7 +265,7 @@ class StvProps {
   on_prm_change(field, value, realy_changed) {
 
     const pnames = field && field.split('|');
-    const {_grid} = this;
+    const {_grid, editor} = this;
 
     if(!field || !_grid || pnames.length < 2){
       return;
@@ -298,7 +301,7 @@ class StvProps {
 
       // проверим вхождение значения в доступные и при необходимости изменим
       if(links.length && param.linked_values(links, prow)){
-        paper.project.register_change();
+        editor.project.register_change();
         _grid._obj._manager.emit_async('update', prow, {value: prow._obj.value});
       }
 
@@ -330,15 +333,16 @@ class StvProps {
 
 class SchemeProps {
 
-  constructor(cell, eve) {
+  constructor(cell, editor) {
 
     this.layout = cell;
+    this.editor = editor;
 
     this.reflect_changes = this.reflect_changes.bind(this);
     this.contour_redrawed = this.contour_redrawed.bind(this);
     this.scheme_snapshot = this.scheme_snapshot.bind(this);
 
-    this.eve = eve.on({
+    this.eve = editor.eve.on({
       // начинаем следить за изменениями размеров при перерисовке контуров
       contour_redrawed: this.contour_redrawed,
       // при готовности снапшота, обновляем суммы и цены
@@ -355,9 +359,9 @@ class SchemeProps {
   }
 
   scheme_snapshot(scheme, attr) {
-    const {_obj, _reflect_id} = this;
+    const {_obj, _reflect_id, editor: {project}} = this;
     const {_calc_order_row} = scheme._attr;
-    if(_obj && scheme == paper.project && !attr.clipboard && _calc_order_row){
+    if(_obj && scheme === project && !attr.clipboard && _calc_order_row){
       ["price_internal","amount_internal","price","amount"].forEach((fld) => {
         _obj[fld] = _calc_order_row[fld];
       });
@@ -366,8 +370,7 @@ class SchemeProps {
 
   reflect_changes() {
     this._reflect_id = 0;
-    const {_obj} = this;
-    const {project} = paper;
+    const {_obj, editor: {project}} = this;
     if(project && _obj) {
       _obj.len = project.bounds.width.round(0);
       _obj.height = project.bounds.height.round(0);
@@ -656,7 +659,7 @@ class EditorAccordion {
         return false;
       }
     });
-    this.stv = new StvProps(this._stv, _editor.eve);
+    this.stv = new StvProps(this._stv, _editor);
 
     /**
      * свойства изделия
@@ -698,7 +701,7 @@ class EditorAccordion {
         return false;
       }
     });
-    this.props = new SchemeProps(this._prod, _editor.eve);
+    this.props = new SchemeProps(this._prod, _editor);
 
     /**
      * журнал событий

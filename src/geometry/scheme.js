@@ -150,7 +150,7 @@ class Scheme extends paper.Project {
 
       const isBrowser = typeof requestAnimationFrame === 'function';
 
-      _attr._opened && isBrowser && requestAnimationFrame(_scheme.redraw);
+      _attr._opened && !_attr._silent && _scheme._scope && isBrowser && requestAnimationFrame(_scheme.redraw);
 
       if(!_attr._opened || _attr._saving || !_changes.length) {
         return;
@@ -378,11 +378,13 @@ class Scheme extends paper.Project {
           _attr._bounds = null;
           _scheme.zoom_fit();
 
+          const {_scope} = _scheme;
+
           // заставляем UndoRedo сделать начальный снапшот, одновременно, обновляем заголовок
           if(!_attr._snapshot) {
-            _scheme._scope._undo.clear();
-            _scheme._scope._undo.save_snapshot(_scheme);
-            _scheme._scope.set_text();
+            _scope._undo.clear();
+            _scope._undo.save_snapshot(_scheme);
+            _scope.set_text();
           }
 
           // регистрируем изменение, чтобы отрисовались размерные линии
@@ -421,7 +423,7 @@ class Scheme extends paper.Project {
                   resolve();
                 }
                 else{
-                  paper.load_stamp && paper.load_stamp();
+                  _scope.load_stamp && _scope.load_stamp();
                 }
               }
               delete _attr._snapshot;
@@ -629,7 +631,7 @@ class Scheme extends paper.Project {
    */
   clear() {
     const {_attr} = this;
-    const pnames = '_bounds,_update_timer,_loading,_snapshot';
+    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent';
     for (let fld in _attr) {
       if(!pnames.match(fld)) {
         delete _attr[fld];
@@ -1262,7 +1264,7 @@ class Scheme extends paper.Project {
           return 1;
         }
 
-        if(profile && !res.cnn) {
+        if(profile && (!res.cnn || res.cnn.empty())) {
 
           // а есть ли подходящее?
           cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
