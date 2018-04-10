@@ -734,7 +734,7 @@
               $p.msg.show_msg({
                 title: $p.msg.bld_title,
                 type: 'alert-error',
-                text: ee.stack || ee.message
+                text: err.stack || err.message
               });
             });
         }

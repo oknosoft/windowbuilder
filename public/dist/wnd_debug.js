@@ -311,7 +311,8 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
   recalc(attr = {}, editor) {
 
 
-    if(!editor) {
+    const remove = !editor;
+    if(remove) {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
@@ -323,7 +324,12 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       })
       .then(() => {
         project.ox = '';
-        project.remove();
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.remove();
+        }
         return this;
       });
 
@@ -335,7 +341,8 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     const res = attr.res || {};
     res[ref] = {imgs: {}};
 
-    if(!editor) {
+    const remove = !editor;
+    if(remove) {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
@@ -366,7 +373,12 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       })
       .then((res) => {
         project.ox = '';
-        project.remove();
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.remove();
+        }
         return res;
       });
   }
@@ -6206,7 +6218,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               $p.msg.show_msg({
                 title: $p.msg.bld_title,
                 type: 'alert-error',
-                text: ee.stack || ee.message
+                text: err.stack || err.message
               });
             });
         }

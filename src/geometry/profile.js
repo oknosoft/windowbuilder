@@ -194,7 +194,7 @@ class CnnPoint {
     this._err = [];
 
     // строка в таблице соединений
-    this._row = _parent.project.connections.cnns.find({elm1: _parent.elm, node1: _node});
+    this._row = _parent.project.cnns.find({elm1: _parent.elm, node1: _node});
 
     // примыкающий профиль
     this._profile;
@@ -861,7 +861,7 @@ class ProfileItem extends GeneratrixElement {
       return;
     }
 
-    const cnns = project.connections.cnns;
+    const {cnns} = project;
     const b = rays.b;
     const e = rays.e;
     const row_b = cnns.add({
@@ -1128,7 +1128,7 @@ class ProfileItem extends GeneratrixElement {
         // прибиваем соединения в точках b и e
         const b = this.cnn_point('b');
         const e = this.cnn_point('e');
-        const {cnns} = project.connections;
+        const {cnns} = project;
 
         if(b.profile && b.profile_point == 'e') {
           const {_rays} = b.profile._attr;
@@ -2019,7 +2019,7 @@ class Profile extends ProfileItem {
       if(is_nearest.length > 1) {
         if(!ign_cnn) {
           if(!_nearest_cnn) {
-            _nearest_cnn = project.connections.elm_cnn(this, elm);
+            _nearest_cnn = project.elm_cnn(this, elm);
           }
           _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, false, Math.abs(elm.angle_hor - this.angle_hor) > 60);
         }

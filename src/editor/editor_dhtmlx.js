@@ -1332,9 +1332,9 @@ class Editor extends EditorInvisible {
    * @for Editor
    */
   unload() {
-    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project} = this;
+    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, project} = this;
 
-    eve.removeAllListeners();
+
     $p.cat.characteristics.off('del_row', this.on_del_row);
     $p.off('alert', this.on_alert);
     document.body.removeEventListener('keydown', this.on_keydown);
@@ -1342,10 +1342,7 @@ class Editor extends EditorInvisible {
     if(tool && tool._callbacks.deactivate.length){
       tool._callbacks.deactivate[0].call(tool);
     }
-    for(const fld in tools){
-      tools[fld] && tools[fld].remove && tools[fld].remove();
-      tools[fld] = null;
-    }
+
     _acc.unload();
     _undo.unload();
     tb_left.unload();
@@ -1353,9 +1350,9 @@ class Editor extends EditorInvisible {
     project.unload();
     _pwnd.detachAllEvents();
     _pwnd.detachObject(true);
-    for(const fld in this){
-      delete this[fld];
-    }
+
+    super.unload();
+
   }
 
 };

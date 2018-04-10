@@ -41,104 +41,10 @@ class Scheme extends paper.Project {
     // массив с моментами времени изменений изделия
     const _changes = this._ch = [];
 
-    // наблюдатель за изменениями свойств изделия
-    this._dp_listener = (obj, fields) => {
-
-      if(_attr._loading || _attr._snapshot || obj != this._dp) {
-        return;
-      }
-
-      const scheme_changed_names = ['clr', 'sys'];
-      const row_changed_names = ['quantity', 'discount_percent', 'discount_percent_internal'];
-
-      if(fields.hasOwnProperty('clr') || fields.hasOwnProperty('sys')) {
-        // информируем мир об изменениях
-        _scheme.notify(_scheme, 'scheme_changed');
-      }
-
-      if(fields.hasOwnProperty('clr')) {
-        _scheme.ox.clr = obj.clr;
-        _scheme.getItems({class: ProfileItem}).forEach((p) => {
-          if(!(p instanceof Onlay)) {
-            p.clr = obj.clr;
-          }
-        });
-      }
-
-      if(fields.hasOwnProperty('sys') && !obj.sys.empty()) {
-
-        obj.sys.refill_prm(_scheme.ox);
-
-        // обновляем свойства изделия и створки
-        _editor.eve.emit_async('rows', _scheme.ox, {extra_fields: true, params: true});
-
-        // информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
-        for (const contour of _scheme.contours) {
-          contour.on_sys_changed();
-        }
-
-        if(obj.sys != $p.wsql.get_user_param('editor_last_sys')) {
-          $p.wsql.set_user_param('editor_last_sys', obj.sys.ref);
-        }
-
-        if(_scheme.ox.clr.empty()) {
-          _scheme.ox.clr = obj.sys.default_clr;
-        }
-
-        _scheme.register_change(true);
-      }
-
-      for (const name of row_changed_names) {
-        if(_attr._calc_order_row && fields.hasOwnProperty(name)) {
-          _attr._calc_order_row[name] = obj[name];
-          _scheme.register_change(true);
-        }
-      }
-
-    };
-
     /**
      * Объект обработки с табличными частями
      */
     this._dp = $p.dp.buyers_order.create();
-
-    // наблюдатель за изменениями параметров створки
-    this._papam_listener = (obj, fields) => {
-      if(_attr._loading || _attr._snapshot) {
-        return;
-      }
-      const {characteristic} = this._dp;
-      if(obj._owner === characteristic.params || (obj === characteristic && fields.hasOwnProperty('params'))) {
-        _scheme.register_change();
-      }
-    };
-
-
-    /**
-     * Менеджер соединений изделия
-     * Хранит информацию о соединениях элементов и предоставляет методы для поиска-манипуляции
-     * @property connections
-     * @type Connections
-     */
-    this.connections = {
-
-      get cnns() {
-        return _scheme.ox.cnn_elmnts;
-      },
-
-      elm_cnn(elm1, elm2) {
-        let res;
-        this.cnns.find_rows({
-          elm1: elm1.elm,
-          elm2: elm2.elm
-        }, (row) => {
-          res = row.cnn;
-          return false;
-        });
-        return res;
-      }
-
-    };
 
     this.magnetism = new Magnetism(this);
 
@@ -200,8 +106,114 @@ class Scheme extends paper.Project {
 
     // начинаем следить за _dp, чтобы обработать изменения цвета и параметров
     if(!_attr._silent) {
+      // наблюдатель за изменениями свойств изделия
+      this._dp_listener = this._dp_listener.bind(this);
       this._dp._manager.on('update', this._dp_listener);
     }
+  }
+
+  /**
+   * наблюдатель за изменениями свойств изделия
+   * @param obj
+   * @param fields
+   * @private
+   */
+  _dp_listener(obj, fields) {
+
+    const {_attr, ox} = this;
+
+    if(_attr._loading || _attr._snapshot || obj != this._dp) {
+      return;
+    }
+
+    const scheme_changed_names = ['clr', 'sys'];
+    const row_changed_names = ['quantity', 'discount_percent', 'discount_percent_internal'];
+
+    if(fields.hasOwnProperty('clr') || fields.hasOwnProperty('sys')) {
+      // информируем мир об изменениях
+      this.notify(this, 'scheme_changed');
+    }
+
+    if(fields.hasOwnProperty('clr')) {
+      ox.clr = obj.clr;
+      this.getItems({class: ProfileItem}).forEach((p) => {
+        if(!(p instanceof Onlay)) {
+          p.clr = obj.clr;
+        }
+      });
+    }
+
+    if(fields.hasOwnProperty('sys') && !obj.sys.empty()) {
+
+      obj.sys.refill_prm(ox);
+
+      // обновляем свойства изделия и створки
+      _editor.eve.emit_async('rows', ox, {extra_fields: true, params: true});
+
+      // информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
+      for (const contour of this.contours) {
+        contour.on_sys_changed();
+      }
+
+      if(obj.sys != $p.wsql.get_user_param('editor_last_sys')) {
+        $p.wsql.set_user_param('editor_last_sys', obj.sys.ref);
+      }
+
+      if(ox.clr.empty()) {
+        ox.clr = obj.sys.default_clr;
+      }
+
+      this.register_change(true);
+    }
+
+    for (const name of row_changed_names) {
+      if(_attr._calc_order_row && fields.hasOwnProperty(name)) {
+        _attr._calc_order_row[name] = obj[name];
+        this.register_change(true);
+      }
+    }
+
+  }
+
+  /**
+   * наблюдатель за изменениями параметров створки
+   * @param obj
+   * @param fields
+   * @private
+   */
+  _papam_listener(obj, fields) {
+    const {_attr, ox} = this;
+    if(_attr._loading || _attr._snapshot) {
+      return;
+    }
+    if(obj._owner === ox.params || (obj === ox && fields.hasOwnProperty('params'))) {
+      this.register_change();
+    }
+  }
+
+  /**
+   * Возвращает соединение между элементами
+   * @param elm1
+   * @param elm2
+   * @return {*}
+   */
+  elm_cnn(elm1, elm2) {
+    let res;
+    this.cnns.find_rows({
+      elm1: elm1.elm,
+      elm2: elm2.elm
+    }, (row) => {
+      res = row.cnn;
+      return false;
+    });
+    return res;
+  }
+
+  /**
+   * Алиас к табчасти соединений текущей продукции
+   */
+  get cnns() {
+    return this.ox.cnn_elmnts;
   }
 
   /**
@@ -214,12 +226,17 @@ class Scheme extends paper.Project {
   }
 
   set ox(v) {
-    const {_dp, _attr, _scope, _papam_listener} = this;
+    const {_dp, _attr, _scope} = this;
     let setted;
 
     // пытаемся отключить обсервер от табчасти
-    !_attr._silent && _dp.characteristic._manager.off('update', _papam_listener);
-    !_attr._silent && _dp.characteristic._manager.off('rows', _papam_listener);
+    if(!_attr._silent) {
+      if(!this.hasOwnProperty('_papam_listener')){
+        this._papam_listener = this._papam_listener.bind(this);
+      }
+      _dp.characteristic._manager.off('update', this._papam_listener);
+      _dp.characteristic._manager.off('rows', this._papam_listener);
+    }
 
     // устанавливаем в _dp характеристику
     _dp.characteristic = v;
@@ -282,8 +299,8 @@ class Scheme extends paper.Project {
 
       // начинаем следить за ox, чтобы обработать изменения параметров фурнитуры
       _dp.characteristic._manager.on({
-        update: _papam_listener,
-        rows: _papam_listener,
+        update: this._papam_listener,
+        rows: this._papam_listener,
       });
     }
 
@@ -645,7 +662,7 @@ class Scheme extends paper.Project {
    * Деструктор
    */
   unload() {
-    const {_dp, _attr, _papam_listener, _dp_listener, _calc_order_row} = this;
+    const {_dp, _attr, _calc_order_row} = this;
     const pnames = '_loading,_saving';
     for (let fld in _attr) {
       if(pnames.match(fld)) {
@@ -655,13 +672,18 @@ class Scheme extends paper.Project {
         delete _attr[fld];
       }
     }
-    //this.clear(_attr);
 
-    _dp._manager.off('update', _dp_listener);
+    if(this.hasOwnProperty('_dp_listener')){
+      _dp._manager.off('update', this._dp_listener);
+      this._dp_listener = null;
+    }
 
     const ox = _dp.characteristic;
-    ox._manager.off('update', _papam_listener);
-    ox._manager.off('rows', _papam_listener);
+    if(this.hasOwnProperty('_papam_listener')){
+      ox._manager.off('update', this._papam_listener);
+      ox._manager.off('rows', this._papam_listener);
+      this._papam_listener = null;
+    }
     if(ox && ox._modified) {
       if(ox.is_new()) {
         if(_calc_order_row) {
@@ -675,9 +697,6 @@ class Scheme extends paper.Project {
     }
 
     this.remove();
-    for (let fld in _attr) {
-      delete _attr[fld];
-    }
   }
 
   /**

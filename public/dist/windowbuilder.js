@@ -1002,11 +1002,30 @@ class EditorInvisible extends paper.PaperScope {
       this._canvas.width = 480;
       this.setup(this._canvas);
     }
-    const scheme = new Scheme(this._canvas, this, true);
     if(this.projects.lengrh && !(this.projects[0] instanceof Scheme)) {
       this.projects[0].remove();
     }
-    return scheme;
+    return new Scheme(this._canvas, this, true);
+  }
+
+  unload() {
+    this.eve.removeAllListeners();
+    const arr = this.projects.concat(this.tools);
+    while (arr.length) {
+      const elm = arr[0];
+      if(elm.unload) {
+        elm.unload();
+      }
+      else if(elm.remove) {
+        elm.remove();
+      }
+      arr.splice(0, 1);
+    }
+    for(let i in EditorInvisible._scopes) {
+      if(EditorInvisible._scopes[i] === this) {
+        delete EditorInvisible._scopes[i];
+      }
+    }
   }
 
 }
@@ -2046,9 +2065,9 @@ class Editor extends EditorInvisible {
   }
 
   unload() {
-    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project} = this;
+    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, project} = this;
 
-    eve.removeAllListeners();
+
     $p.cat.characteristics.off('del_row', this.on_del_row);
     $p.off('alert', this.on_alert);
     document.body.removeEventListener('keydown', this.on_keydown);
@@ -2056,10 +2075,7 @@ class Editor extends EditorInvisible {
     if(tool && tool._callbacks.deactivate.length){
       tool._callbacks.deactivate[0].call(tool);
     }
-    for(const fld in tools){
-      tools[fld] && tools[fld].remove && tools[fld].remove();
-      tools[fld] = null;
-    }
+
     _acc.unload();
     _undo.unload();
     tb_left.unload();
@@ -2067,9 +2083,9 @@ class Editor extends EditorInvisible {
     project.unload();
     _pwnd.detachAllEvents();
     _pwnd.detachObject(true);
-    for(const fld in this){
-      delete this[fld];
-    }
+
+    super.unload();
+
   }
 
 };
@@ -5376,7 +5392,7 @@ class BuilderElement extends paper.Group {
   selected_cnn_ii() {
     const {project, elm} = this;
     const sel = project.getSelectedItems();
-    const {cnns} = project.connections;
+    const {cnns} = project;
     const items = [];
     let res;
 
@@ -5578,7 +5594,7 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     const {_row, project, profiles, bounds, imposts, nom} = this;
     const h = project.bounds.height + project.bounds.y;
-    const cnns = project.connections.cnns;
+    const {cnns} = project;
     const length = profiles.length;
 
     project.ox.glasses.add({
@@ -5654,7 +5670,7 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     const {project} = this;
 
-    project.connections.cnns.clear({elm1: this.elm});
+    project.cnns.clear({elm1: this.elm});
 
     const contour = new Contour( {parent: this.parent});
 
@@ -5911,7 +5927,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
     else if(Array.isArray(attr)){
       let {length} = attr;
-      const {connections} = this.project;
       let prev, curr, next, sub_path;
       for(let i=0; i<length; i++ ){
         curr = attr[i];
@@ -5919,7 +5934,7 @@ class Filling extends AbstractFilling(BuilderElement) {
         sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e);
 
         curr.cnn = $p.cat.cnns.elm_cnn(this, curr.profile, $p.enm.cnn_types.acn.ii,
-          curr.cnn || connections.elm_cnn(this, curr.profile), false, curr.outer);
+          curr.cnn || this.project.elm_cnn(this, curr.profile), false, curr.outer);
 
         curr.sub_path = sub_path.equidistant(
           (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
@@ -7237,7 +7252,7 @@ class CnnPoint {
 
     this._err = [];
 
-    this._row = _parent.project.connections.cnns.find({elm1: _parent.elm, node1: _node});
+    this._row = _parent.project.cnns.find({elm1: _parent.elm, node1: _node});
 
     this._profile;
 
@@ -7726,7 +7741,7 @@ class ProfileItem extends GeneratrixElement {
       return;
     }
 
-    const cnns = project.connections.cnns;
+    const {cnns} = project;
     const b = rays.b;
     const e = rays.e;
     const row_b = cnns.add({
@@ -7958,7 +7973,7 @@ class ProfileItem extends GeneratrixElement {
 
         const b = this.cnn_point('b');
         const e = this.cnn_point('e');
-        const {cnns} = project.connections;
+        const {cnns} = project;
 
         if(b.profile && b.profile_point == 'e') {
           const {_rays} = b.profile._attr;
@@ -8674,7 +8689,7 @@ class Profile extends ProfileItem {
       if(is_nearest.length > 1) {
         if(!ign_cnn) {
           if(!_nearest_cnn) {
-            _nearest_cnn = project.connections.elm_cnn(this, elm);
+            _nearest_cnn = project.elm_cnn(this, elm);
           }
           _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, false, Math.abs(elm.angle_hor - this.angle_hor) > 60);
         }
@@ -8971,7 +8986,7 @@ class ProfileAddl extends ProfileItem {
 
   nearest() {
     const {_attr, parent, project} = this;
-    const _nearest_cnn = _attr._nearest_cnn || project.connections.elm_cnn(this, parent);
+    const _nearest_cnn = _attr._nearest_cnn || project.elm_cnn(this, parent);
     _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, parent, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
     return parent;
   }
@@ -9492,7 +9507,7 @@ class Onlay extends ProfileItem {
     }
 
     const {_row, project, rays, generatrix} = this;
-    const {cnns} = project.connections;
+    const {cnns} = project;
     const {b, e} = rays;
     const row_b = cnns.add({
       elm1: _row.elm,
@@ -9679,90 +9694,7 @@ class Scheme extends paper.Project {
 
     const _changes = this._ch = [];
 
-    this._dp_listener = (obj, fields) => {
-
-      if(_attr._loading || _attr._snapshot || obj != this._dp) {
-        return;
-      }
-
-      const scheme_changed_names = ['clr', 'sys'];
-      const row_changed_names = ['quantity', 'discount_percent', 'discount_percent_internal'];
-
-      if(fields.hasOwnProperty('clr') || fields.hasOwnProperty('sys')) {
-        _scheme.notify(_scheme, 'scheme_changed');
-      }
-
-      if(fields.hasOwnProperty('clr')) {
-        _scheme.ox.clr = obj.clr;
-        _scheme.getItems({class: ProfileItem}).forEach((p) => {
-          if(!(p instanceof Onlay)) {
-            p.clr = obj.clr;
-          }
-        });
-      }
-
-      if(fields.hasOwnProperty('sys') && !obj.sys.empty()) {
-
-        obj.sys.refill_prm(_scheme.ox);
-
-        _editor.eve.emit_async('rows', _scheme.ox, {extra_fields: true, params: true});
-
-        for (const contour of _scheme.contours) {
-          contour.on_sys_changed();
-        }
-
-        if(obj.sys != $p.wsql.get_user_param('editor_last_sys')) {
-          $p.wsql.set_user_param('editor_last_sys', obj.sys.ref);
-        }
-
-        if(_scheme.ox.clr.empty()) {
-          _scheme.ox.clr = obj.sys.default_clr;
-        }
-
-        _scheme.register_change(true);
-      }
-
-      for (const name of row_changed_names) {
-        if(_attr._calc_order_row && fields.hasOwnProperty(name)) {
-          _attr._calc_order_row[name] = obj[name];
-          _scheme.register_change(true);
-        }
-      }
-
-    };
-
     this._dp = $p.dp.buyers_order.create();
-
-    this._papam_listener = (obj, fields) => {
-      if(_attr._loading || _attr._snapshot) {
-        return;
-      }
-      const {characteristic} = this._dp;
-      if(obj._owner === characteristic.params || (obj === characteristic && fields.hasOwnProperty('params'))) {
-        _scheme.register_change();
-      }
-    };
-
-
-    this.connections = {
-
-      get cnns() {
-        return _scheme.ox.cnn_elmnts;
-      },
-
-      elm_cnn(elm1, elm2) {
-        let res;
-        this.cnns.find_rows({
-          elm1: elm1.elm,
-          elm2: elm2.elm
-        }, (row) => {
-          res = row.cnn;
-          return false;
-        });
-        return res;
-      }
-
-    };
 
     this.magnetism = new Magnetism(this);
 
@@ -9813,8 +9745,89 @@ class Scheme extends paper.Project {
     };
 
     if(!_attr._silent) {
+      this._dp_listener = this._dp_listener.bind(this);
       this._dp._manager.on('update', this._dp_listener);
     }
+  }
+
+  _dp_listener(obj, fields) {
+
+    const {_attr, ox} = this;
+
+    if(_attr._loading || _attr._snapshot || obj != this._dp) {
+      return;
+    }
+
+    const scheme_changed_names = ['clr', 'sys'];
+    const row_changed_names = ['quantity', 'discount_percent', 'discount_percent_internal'];
+
+    if(fields.hasOwnProperty('clr') || fields.hasOwnProperty('sys')) {
+      this.notify(this, 'scheme_changed');
+    }
+
+    if(fields.hasOwnProperty('clr')) {
+      ox.clr = obj.clr;
+      this.getItems({class: ProfileItem}).forEach((p) => {
+        if(!(p instanceof Onlay)) {
+          p.clr = obj.clr;
+        }
+      });
+    }
+
+    if(fields.hasOwnProperty('sys') && !obj.sys.empty()) {
+
+      obj.sys.refill_prm(ox);
+
+      _editor.eve.emit_async('rows', ox, {extra_fields: true, params: true});
+
+      for (const contour of this.contours) {
+        contour.on_sys_changed();
+      }
+
+      if(obj.sys != $p.wsql.get_user_param('editor_last_sys')) {
+        $p.wsql.set_user_param('editor_last_sys', obj.sys.ref);
+      }
+
+      if(ox.clr.empty()) {
+        ox.clr = obj.sys.default_clr;
+      }
+
+      this.register_change(true);
+    }
+
+    for (const name of row_changed_names) {
+      if(_attr._calc_order_row && fields.hasOwnProperty(name)) {
+        _attr._calc_order_row[name] = obj[name];
+        this.register_change(true);
+      }
+    }
+
+  }
+
+  _papam_listener(obj, fields) {
+    const {_attr, ox} = this;
+    if(_attr._loading || _attr._snapshot) {
+      return;
+    }
+    if(obj._owner === ox.params || (obj === ox && fields.hasOwnProperty('params'))) {
+      this.register_change();
+    }
+  }
+
+  elm_cnn(elm1, elm2) {
+    let res;
+    this.cnns.find_rows({
+      elm1: elm1.elm,
+      elm2: elm2.elm
+    }, (row) => {
+      res = row.cnn;
+      return false;
+    });
+    return res;
+  }
+
+  get cnns() {
+    return this.ox.cnn_elmnts;
   }
 
   get ox() {
@@ -9822,11 +9835,16 @@ class Scheme extends paper.Project {
   }
 
   set ox(v) {
-    const {_dp, _attr, _scope, _papam_listener} = this;
+    const {_dp, _attr, _scope} = this;
     let setted;
 
-    !_attr._silent && _dp.characteristic._manager.off('update', _papam_listener);
-    !_attr._silent && _dp.characteristic._manager.off('rows', _papam_listener);
+    if(!_attr._silent) {
+      if(!this.hasOwnProperty('_papam_listener')){
+        this._papam_listener = this._papam_listener.bind(this);
+      }
+      _dp.characteristic._manager.off('update', this._papam_listener);
+      _dp.characteristic._manager.off('rows', this._papam_listener);
+    }
 
     _dp.characteristic = v;
 
@@ -9879,8 +9897,8 @@ class Scheme extends paper.Project {
       _dp._manager.emit_async('rows', _dp, {extra_fields: true});
 
       _dp.characteristic._manager.on({
-        update: _papam_listener,
-        rows: _papam_listener,
+        update: this._papam_listener,
+        rows: this._papam_listener,
       });
     }
 
@@ -10145,7 +10163,7 @@ class Scheme extends paper.Project {
   }
 
   unload() {
-    const {_dp, _attr, _papam_listener, _dp_listener, _calc_order_row} = this;
+    const {_dp, _attr, _calc_order_row} = this;
     const pnames = '_loading,_saving';
     for (let fld in _attr) {
       if(pnames.match(fld)) {
@@ -10156,11 +10174,17 @@ class Scheme extends paper.Project {
       }
     }
 
-    _dp._manager.off('update', _dp_listener);
+    if(this.hasOwnProperty('_dp_listener')){
+      _dp._manager.off('update', this._dp_listener);
+      this._dp_listener = null;
+    }
 
     const ox = _dp.characteristic;
-    ox._manager.off('update', _papam_listener);
-    ox._manager.off('rows', _papam_listener);
+    if(this.hasOwnProperty('_papam_listener')){
+      ox._manager.off('update', this._papam_listener);
+      ox._manager.off('rows', this._papam_listener);
+      this._papam_listener = null;
+    }
     if(ox && ox._modified) {
       if(ox.is_new()) {
         if(_calc_order_row) {
@@ -10174,9 +10198,6 @@ class Scheme extends paper.Project {
     }
 
     this.remove();
-    for (let fld in _attr) {
-      delete _attr[fld];
-    }
   }
 
   move_points(delta, all_points) {
@@ -13863,9 +13884,9 @@ class RulerWnd {
 
   on_button_click(ev) {
 
-    const {wnd, tool, size, project} = this;
+    const {wnd, tool, size} = this;
 
-    if (!project.selectedItems.some((path) => {
+    if (!tool.project.selectedItems.some((path) => {
         if (path.parent instanceof DimensionLineCustom) {
 
           switch (ev.currentTarget.name) {

@@ -150,9 +150,9 @@ class RulerWnd {
 
   on_button_click(ev) {
 
-    const {wnd, tool, size, project} = this;
+    const {wnd, tool, size} = this;
 
-    if (!project.selectedItems.some((path) => {
+    if (!tool.project.selectedItems.some((path) => {
         if (path.parent instanceof DimensionLineCustom) {
 
           switch (ev.currentTarget.name) {

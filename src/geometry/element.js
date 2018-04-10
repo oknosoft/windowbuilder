@@ -505,7 +505,7 @@ class BuilderElement extends paper.Group {
   selected_cnn_ii() {
     const {project, elm} = this;
     const sel = project.getSelectedItems();
-    const {cnns} = project.connections;
+    const {cnns} = project;
     const items = [];
     let res;
 

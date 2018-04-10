@@ -362,7 +362,8 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     // сначала, получаем объект заказа и продукции заказа в озу, т.к. пересчет изделия может приводить к пересчету соседних продукций
 
     // загружаем изделие в редактор
-    if(!editor) {
+    const remove = !editor;
+    if(remove) {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
@@ -375,7 +376,12 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       })
       .then(() => {
         project.ox = '';
-        project.remove();
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.remove();
+        }
         return this;
       });
 
@@ -393,7 +399,8 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     res[ref] = {imgs: {}};
 
     // загружаем изделие в редактор
-    if(!editor) {
+    const remove = !editor;
+    if(remove) {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
@@ -426,7 +433,12 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       })
       .then((res) => {
         project.ox = '';
-        project.remove();
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.remove();
+        }
         return res;
       });
   }

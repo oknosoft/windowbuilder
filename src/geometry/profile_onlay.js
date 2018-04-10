@@ -122,7 +122,7 @@ class Onlay extends ProfileItem {
     }
 
     const {_row, project, rays, generatrix} = this;
-    const {cnns} = project.connections;
+    const {cnns} = project;
     const {b, e} = rays;
     const row_b = cnns.add({
       elm1: _row.elm,
