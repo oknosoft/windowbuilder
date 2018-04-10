@@ -5075,12 +5075,59 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   recalc(attr = {}, editor) {
 
-
-    if(!editor) {
-      editor = $p.products_building.editor_invisible;
+    const remove = !editor;
+    if(remove) {
+      editor = new $p.EditorInvisible();
     }
-    const {project} = editor;
-    return Promise.resolve();
+    const project = editor.create_scheme();
+    let res = Promise.resolve();
+
+    return this.load_production()
+      .then((prod) => {
+        this.production.forEach((row) => {
+          const {characteristic} = row;
+          if(characteristic.empty() || characteristic.calc_order !== this) {
+            row.value_change('quantity', '', row.quantity);
+          }
+          else if(characteristic.coordinates.count()) {
+            res = res.then(() => {
+              return project.load(characteristic, true).then(() => {
+                project.save_coordinates({save: true, svg: false});
+              });
+            });
+          }
+          else if(characteristic.leading_product.calc_order === this) {
+            return;
+          }
+          else {
+            if(!characteristic.origin.empty() && !characteristic.origin.slave) {
+              characteristic.specification.clear();
+              const len_angl = new $p.DocCalc_order.FakeLenAngl({len: row.len, inset: characteristic.origin});
+              const elm = new $p.DocCalc_order.FakeElm(row);
+              characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
+              res = res.then(() => {
+                return characteristic.save().then(() => {
+                  row.value_change('quantity', '', row.quantity);
+                });
+              });
+            }
+            else {
+              row.value_change('quantity', '', row.quantity);
+            }
+          }
+        });
+        return res;
+      })
+      .then(() => {
+        project.ox = '';
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.remove();
+        }
+        return this;
+      });
 
   }
 
@@ -6224,7 +6271,14 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
       }
       else {
-        $p.msg.show_not_implemented();
+        o.recalc()
+          .catch((err) => {
+            $p.msg.show_msg({
+              title: $p.msg.bld_title,
+              type: 'alert-error',
+              text: err.stack || err.message
+            });
+          });
       }
     }
 

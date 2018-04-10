@@ -740,7 +740,14 @@
         }
       }
       else {
-        $p.msg.show_not_implemented();
+        o.recalc()
+          .catch((err) => {
+            $p.msg.show_msg({
+              title: $p.msg.bld_title,
+              type: 'alert-error',
+              text: err.stack || err.message
+            });
+          });
       }
     }
 
