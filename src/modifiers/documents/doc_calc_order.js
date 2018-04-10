@@ -901,7 +901,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
-    let res = Promise.resolve();
+    let tmp = Promise.resolve();
 
     // получаем массив продукций в озу
     return this.load_production()
@@ -915,7 +915,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           }
           else if(characteristic.coordinates.count()) {
             // это изделие рисовалки
-            res = res.then(() => {
+            tmp = tmp.then(() => {
               return project.load(characteristic, true).then(() => {
                 // выполняем пересчет
                 project.save_coordinates({save: true, svg: false});
@@ -932,7 +932,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
               const len_angl = new $p.DocCalc_order.FakeLenAngl({len: row.len, inset: characteristic.origin});
               const elm = new $p.DocCalc_order.FakeElm(row);
               characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
-              res = res.then(() => {
+              tmp = tmp.then(() => {
                 return characteristic.save().then(() => {
                   // выполняем пересчет
                   row.value_change('quantity', '', row.quantity);
@@ -944,7 +944,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
             }
           }
         });
-        return res;
+        return tmp;
       })
       .then(() => {
         project.ox = '';
@@ -966,14 +966,28 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    */
   draw(attr = {}, editor) {
 
-    // сначала, получаем массив продукций в озу
-
     // при необходимости, создаём редактор
-    if(!editor) {
-      editor = $p.products_building.editor_invisible;
+    const remove = !editor;
+    if(remove) {
+      editor = new $p.EditorInvisible();
     }
-    const {project} = editor;
-    return Promise.resolve();
+    const project = editor.create_scheme();
+
+    attr.res = {number_doc: this.number_doc};
+
+    let tmp = Promise.resolve();
+
+    // получаем массив продукций в озу
+    return this.load_production()
+      .then((prod) => {
+        for(let ox of prod){
+          if(ox.coordinates.count()) {
+            tmp = tmp.then(() => ox.draw(attr, editor));
+          }
+        }
+        return tmp;
+      });
+
   }
 
   /**

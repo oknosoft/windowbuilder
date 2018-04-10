@@ -849,7 +849,6 @@ class Scheme extends paper.Project {
     svg.setAttribute('width', bounds.width);
     svg.setAttribute('height', bounds.height);
     svg.querySelector('g').removeAttribute('transform');
-    //svg.querySelector("g").setAttribute("transform", "scale(1)");
 
     return svg.outerHTML;
   }
