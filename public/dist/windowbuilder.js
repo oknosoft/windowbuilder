@@ -9752,7 +9752,7 @@ class Scheme extends paper.Project {
 
   _dp_listener(obj, fields) {
 
-    const {_attr, ox} = this;
+    const {_attr, ox, _scope} = this;
 
     if(_attr._loading || _attr._snapshot || obj != this._dp) {
       return;
@@ -9778,7 +9778,7 @@ class Scheme extends paper.Project {
 
       obj.sys.refill_prm(ox);
 
-      _editor.eve.emit_async('rows', ox, {extra_fields: true, params: true});
+      _scope.eve.emit_async('rows', ox, {extra_fields: true, params: true});
 
       for (const contour of this.contours) {
         contour.on_sys_changed();
