@@ -121,7 +121,7 @@ class RulerWnd {
     this.input = this.table[1].childNodes[1];
     this.input.grid = {
       editStop: (v) => {
-        tool.eve.emit('sizes_wnd', {
+        tool.sizes_wnd({
           wnd: wnd,
           name: 'size_change',
           size: this.size,
@@ -172,8 +172,7 @@ class RulerWnd {
           return true;
         }
       })) {
-
-      tool.eve.emit('sizes_wnd', {
+      tool.sizes_wnd({
         wnd: wnd,
         name: ev.currentTarget.name,
         size: size,
@@ -246,7 +245,7 @@ class RulerWnd {
 
     tool.eve.off('keydown', this.on_keydown);
 
-    tool.eve.emit('sizes_wnd', {
+    tool.sizes_wnd({
       wnd: wnd,
       name: 'close',
       size: size,
@@ -503,8 +502,6 @@ class ToolRuler extends ToolElement {
       },
     });
 
-    this._sizes_wnd = this._sizes_wnd.bind(this);
-    this.eve.on('sizes_wnd', this._sizes_wnd);
   }
 
   hitTest(event) {
@@ -692,7 +689,7 @@ class ToolRuler extends ToolElement {
 
   }
 
-  _sizes_wnd(event) {
+  sizes_wnd(event) {
 
     if (this.wnd && event.wnd == this.wnd.wnd) {
 

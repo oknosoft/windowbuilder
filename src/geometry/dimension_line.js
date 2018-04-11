@@ -79,9 +79,6 @@ class DimensionLine extends paper.Group {
       click: this._click
     });
 
-    this._sizes_wnd = this._sizes_wnd.bind(this);
-    this.eve.on("sizes_wnd", this._sizes_wnd);
-
   }
 
   // виртуальные метаданные для автоформ
@@ -186,7 +183,7 @@ class DimensionLine extends paper.Group {
 
   }
 
-  _sizes_wnd(event) {
+  sizes_wnd(event) {
 
     if(this.wnd && event.wnd == this.wnd.wnd){
 
@@ -374,7 +371,6 @@ class DimensionLine extends paper.Group {
    * @method remove
    */
   remove() {
-    this.eve.off("sizes_wnd", this._sizes_wnd);
     if(this._row){
       this._row._owner.del(this._row);
       this._row = null;
