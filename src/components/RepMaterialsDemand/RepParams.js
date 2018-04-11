@@ -7,8 +7,8 @@ import PropTypes from 'prop-types';
 
 import Toolbar from 'material-ui/Toolbar';
 import IconButton from 'material-ui/IconButton';
-import AddIcon from 'material-ui-icons/AddCircleOutline';
-import RemoveIcon from 'material-ui-icons/Delete';
+import AddIcon from '@material-ui/icons/AddCircleOutline';
+import RemoveIcon from '@material-ui/icons/Delete';
 import TabularSection from 'metadata-react/TabularSection';
 import SelectOrder from './SelectOrder';
 

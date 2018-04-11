@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
 import IconButton from 'material-ui/IconButton';
-import IconWork from 'material-ui-icons/Work';
+import IconWork from '@material-ui/icons/Work';
 import DnR from 'metadata-react/DnR/Dialog';
 import DataList from 'metadata-react/DataList';
 

@@ -1,23 +1,23 @@
 import React from 'react';
 
-import IconInbox from 'material-ui-icons/Inbox';
-//import IconList from 'material-ui-icons/List';
-import IconHelp from 'material-ui-icons/Help';
-import IconInfo from 'material-ui-icons/Info';
-import IconPerson from 'material-ui-icons/Person';
-import IconSettings from 'material-ui-icons/Settings';
-import IconBusinessCenter from 'material-ui-icons/BusinessCenter';
-import IconReceipt from 'material-ui-icons/Receipt';
+import IconInbox from '@material-ui/icons/Inbox';
+//import IconList from '@material-ui/icons/List';
+import IconHelp from '@material-ui/icons/Help';
+import IconInfo from '@material-ui/icons/Info';
+import IconPerson from '@material-ui/icons/Person';
+import IconSettings from '@material-ui/icons/Settings';
+import IconBusinessCenter from '@material-ui/icons/BusinessCenter';
+import IconReceipt from '@material-ui/icons/Receipt';
 
-import IconDrafts from 'material-ui-icons/Edit';
-import IconSend from 'material-ui-icons/Send';
-import IconConfitmed from 'material-ui-icons/ThumbUp';
-import IconDeclined from 'material-ui-icons/ThumbDown';
-import IconService from 'material-ui-icons/Build';
-import IconComplaints from 'material-ui-icons/BugReport';
-import IconPuzzle from 'material-ui-icons/Extension';
-import IconFileDownload from 'material-ui-icons/FileDownload';
-import IconFileShuffle from 'material-ui-icons/Shuffle';
+import IconDrafts from '@material-ui/icons/Edit';
+import IconSend from '@material-ui/icons/Send';
+import IconConfitmed from '@material-ui/icons/ThumbUp';
+import IconDeclined from '@material-ui/icons/ThumbDown';
+import IconService from '@material-ui/icons/Build';
+import IconComplaints from '@material-ui/icons/BugReport';
+import IconPuzzle from '@material-ui/icons/Extension';
+import IconFileDownload from '@material-ui/icons/FileDownload';
+import IconFileShuffle from '@material-ui/icons/Shuffle';
 
 const items = [
   {
