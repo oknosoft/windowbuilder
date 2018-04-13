@@ -7310,8 +7310,8 @@ class ProfileRays {
   recalc() {
 
     const {parent} = this;
-    const path = parent.generatrix;
-    const len = path.length;
+    const gen = parent.generatrix;
+    const len = gen.length;
 
     this.clear();
 
@@ -7323,16 +7323,16 @@ class ProfileRays {
     const ds = 3 * width;
     const step = len * 0.02;
 
-    let point_b = path.firstSegment.point,
-      tangent_b = path.getTangentAt(0),
-      normal_b = path.getNormalAt(0),
-      point_e = path.lastSegment.point,
+    let point_b = gen.firstSegment.point,
+      tangent_b = gen.getTangentAt(0),
+      normal_b = gen.getNormalAt(0),
+      point_e = gen.lastSegment.point,
       tangent_e, normal_e;
 
     this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
     this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
 
-    if(path.is_linear()) {
+    if(gen.is_linear()) {
       this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
       this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
     }
@@ -7341,26 +7341,21 @@ class ProfileRays {
       this.outer.add(point_b.add(normal_b.multiply(d1)));
       this.inner.add(point_b.add(normal_b.multiply(d2)));
 
-      for (let i = step; i <= len; i += step) {
-        point_b = path.getPointAt(i);
-        if(!point_b) {
-          continue;
-        }
-        normal_b = path.getNormalAt(i);
+      for (let i = step; i < len; i += step) {
+        point_b = gen.getPointAt(i);
+        normal_b = gen.getNormalAt(i);
         this.outer.add(point_b.add(normal_b.normalize(d1)));
         this.inner.add(point_b.add(normal_b.normalize(d2)));
       }
 
-      normal_e = path.getNormalAt(len);
+      normal_e = gen.getNormalAt(len);
       this.outer.add(point_e.add(normal_e.multiply(d1)));
       this.inner.add(point_e.add(normal_e.multiply(d2)));
 
-      tangent_e = path.getTangentAt(len);
+      tangent_e = gen.getTangentAt(len);
       this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
       this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
 
-      this.outer.simplify(0.8);
-      this.inner.simplify(0.8);
     }
 
     this.inner.reverse();
