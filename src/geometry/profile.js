@@ -324,8 +324,6 @@ class ProfileRays {
       this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
       this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
 
-      // this.outer.simplify(0.4);
-      // this.inner.simplify(0.4);
     }
 
     this.inner.reverse();

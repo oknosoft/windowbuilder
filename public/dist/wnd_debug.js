@@ -6297,17 +6297,22 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           else {
             ox = row.characteristic;
           }
-          ox && ox.recalc()
-            .catch((err) => {
-              $p.msg.show_msg({
-                title: $p.msg.bld_title,
-                type: 'alert-error',
-                text: err.stack || err.message
-              });
-            });
+          if(ox) {
+            wnd.progressOn();
+            ox.recalc()
+              .catch((err) => {
+                $p.msg.show_msg({
+                  title: $p.msg.bld_title,
+                  type: 'alert-error',
+                  text: err.stack || err.message
+                });
+              })
+              .then(() => wnd.progressOff());
+          }
         }
       }
       else {
+        wnd.progressOn();
         o.recalc()
           .catch((err) => {
             $p.msg.show_msg({
@@ -6315,7 +6320,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               type: 'alert-error',
               text: err.stack || err.message
             });
-          });
+          })
+          .then(() => wnd.progressOff());
       }
     }
 
