@@ -2733,14 +2733,32 @@ $p.CatProduction_params.prototype.__define({
 
 	noms: {
 		get(){
-			var __noms = [];
-			this.elmnts._obj.forEach(function(row){
-				if(!$p.utils.is_empty_guid(row.nom) && __noms.indexOf(row.nom) == -1)
-					__noms.push(row.nom);
-			});
-			return __noms;
+			const noms = [];
+			this.elmnts._obj.forEach(({nom}) => !$p.utils.is_empty_guid(nom) && noms.indexOf(nom) == -1 && noms.push(nom));
+			return noms;
 		}
 	},
+
+  furns: {
+    value(ox){
+      const {furn} = $p.job_prm.properties;
+      const {furns} = $p.cat;
+      const list = [];
+      if(furn){
+        const links = furn.params_links({
+          grid: {selection: {cnstr: 0}},
+          obj: {_owner: {_owner: ox}}
+        });
+        if(links.length){
+          links.forEach((link) => link.values._obj.forEach(({value, by_default, forcibly}) => {
+            const v = furns.get(value);
+            v && list.push({furn: v, by_default, forcibly});
+          }));
+        }
+      }
+      return list;
+    }
+  },
 
 	inserts: {
 		value(elm_types, by_default){
@@ -2836,7 +2854,49 @@ $p.CatProduction_params.prototype.__define({
 				ox.sys = this;
 				ox.owner = ox.prod_nom;
 
-				ox.constructions.forEach((row) => !row.furn.empty() && ox.sys.refill_prm(ox, row.cnstr))
+        const furns = this.furns(ox);
+
+				ox.constructions.forEach((row) => {
+          if(!row.furn.empty()) {
+            let changed;
+            if(furns.length) {
+              if(furns.some((frow) => {
+                if(frow.forcibly) {
+                  row.furn = frow.furn;
+                  return changed = true;
+                }
+              })) {
+                ;
+              }
+              else if(furns.some((frow) => row.furn === frow.furn)) {
+                ;
+              }
+              else if(furns.some((frow) => {
+                if(frow.by_default) {
+                  row.furn = frow.furn;
+                  return changed = true;
+                }
+              })) {
+                ;
+              }
+              else {
+                row.furn = furns[0].furn;
+                changed = true;
+              }
+            }
+
+            if(changed) {
+              const contour = paper.project && paper.project.getItem({cnstr: row.cnstr});
+              if(contour) {
+                row.furn.refill_prm(contour);
+                contour.notify(contour, 'furn_changed');
+              }
+              else {
+                ox.sys.refill_prm(ox, row.cnstr);
+              }
+            }
+          }
+        });
 			}
 		}
 	}
