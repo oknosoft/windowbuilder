@@ -1095,8 +1095,9 @@ class Editor extends EditorInvisible {
               height:'28px',
               align: 'hor',
               buttons: [
-                {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
-                {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>1</sub></small>', tooltip: 'Импост по 0-штапику'}
+                {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разрыв-объединение T'},
+                {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>1</sub></small>', tooltip: 'Импост по 0-штапику'},
+                {name: 'm2', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>2</sub></small>', tooltip: 'T в угол'},
                 ],
             }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
@@ -1428,13 +1429,27 @@ class Editor extends EditorInvisible {
     case 'm1':
       this.project.magnetism.m1();
       break;
+
+    case 'm2':
+      this.tools.some((tool) => {
+        if(tool.options.name == 'cut'){
+          tool.activate();
+          return true;
+        }
+      });
+      break;
+
+    case 'cut':
+      $p.msg.show_not_implemented();
+      break;
+
     default:
       this.tools.some((tool) => {
         if(tool.options.name == name){
           tool.activate();
           return true;
         }
-      })
+      });
     }
   }
 
@@ -6588,10 +6603,14 @@ class Magnetism {
 
   short_glass(point) {
     for(const glass of this.scheme.activeLayer.glasses(false, true)){
-      for(const segm of glass.outer_profiles) {
+      const len = glass.outer_profiles.length - 1;
+      for(let i = 0; i <= len; i++) {
+        const segm = glass.outer_profiles[i];
         if((segm.b.is_nearest(point) || segm.e.is_nearest(point)) &&
           segm.sub_path && segm.sub_path.length < consts.sticking) {
-          return {segm, glass};
+          const prev = i === 0 ? glass.outer_profiles[len] : glass.outer_profiles[i - 1];
+          const next = i === len ? glass.outer_profiles[0] : glass.outer_profiles[i + 1];
+          return {segm, prev, next, glass};
         }
       }
     };
@@ -6624,37 +6643,55 @@ class Magnetism {
         const spoint = selected.profile[selected.point];
         const res = this.short_glass(spoint);
         if(res) {
-          const {segm, glass} = res;
-          const {Штапик} = $p.enm.elm_types;
+          const {segm, prev, next, glass} = res;
+
           let cl, negate;
-          this.scheme.ox.cnn_elmnts.find_rows({elm1: glass.elm, elm2: segm.profile.elm}, (row) => {
+          this.scheme.cnns.find_rows({elm1: glass.elm, elm2: segm.profile.elm}, (row) => {
             cl = row.aperture_len;
           });
 
           if(!cl) {
-            $p.msg.show_msg({
+            return $p.msg.show_msg({
               type: 'alert-info',
-              text: `Не найдена строка соединения короткого ребра с профилем`,
+              text: `Не найдена строка соединения короткого ребра заполнения с профилем`,
               title: 'Магнит 0-штапик'
             });
           }
-          else {
-            const cnn = selected.profile.cnn_point(selected.point);
-            const {profile} = cnn;
-            const point = profile.generatrix.getNearestPoint(spoint);
-            const offset = profile.generatrix.getOffsetOf(point);
-            let tangent = profile.generatrix.getTangentAt(offset);
-            if(Math.abs(segm.sub_path.getTangentAt(0).angle - tangent.angle) < 90) {
-              negate = !negate;
-            }
-            if(segm.b.getDistance(spoint) > segm.e.getDistance(spoint)) {
-              negate = !negate;
-            }
-            if(!negate) {
-              tangent = tangent.negate();
-            }
-            selected.profile.move_points(tangent.multiply(cl));
+
+          let pNext, pOur;
+          if(prev.profile === selected.profile){
+            pNext = next;
+            pOur = prev;
           }
+          else if(next.profile === selected.profile) {
+            pNext = prev;
+            pOur = next;
+          }
+          else {
+            return $p.msg.show_msg({
+              type: 'alert-info',
+              text: `Выделен неподходящий сегмент профиля`,
+              title: 'Магнит 0-штапик'
+            });
+          }
+
+          if(!pNext.profile.nom.sizefaltz || !segm.profile.nom.sizefaltz || !pOur.profile.nom.sizefaltz) {
+            return $p.msg.show_msg({
+              type: 'alert-info',
+              text: `Не задан размер фальца примыкающих профилей`,
+              title: 'Магнит 0-штапик'
+            });
+          }
+
+          const rSegm = (segm.outer ? segm.profile.rays.outer : segm.profile.rays.inner).equidistant(-segm.profile.nom.sizefaltz);
+          const rNext = (pNext.outer ? pNext.profile.rays.outer : pNext.profile.rays.inner).equidistant(-pNext.profile.nom.sizefaltz);
+          const rOur = (pOur.outer ? pOur.profile.rays.outer : pOur.profile.rays.inner).equidistant(-pOur.profile.nom.sizefaltz);
+
+          const p0 = rSegm.intersect_point(rNext, selected.point);
+          const p1 = rSegm.intersect_point(rOur, selected.point);
+          const delta = p0.subtract(p1);
+          selected.profile.move_points(delta, true);
+
         }
         else {
           $p.msg.show_msg({
