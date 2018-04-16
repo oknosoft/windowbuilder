@@ -1526,9 +1526,10 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
     });
 
     const adel = [];
-    fprms.find_rows({cnstr: cnstr}, (row) => {
-      if(aprm.indexOf(row.param) == -1)
+    fprms.find_rows({cnstr: cnstr, inset: $p.utils.blank.guid}, (row) => {
+      if(aprm.indexOf(row.param) == -1){
         adel.push(row);
+      }
     });
     adel.forEach((row) => fprms.del(row, true));
 
