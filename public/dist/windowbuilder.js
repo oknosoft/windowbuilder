@@ -5227,7 +5227,7 @@ class BuilderElement extends paper.Group {
           if (cnn_ii.elm instanceof Filling) {
             nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
           }
-          else if (cnn_ii.elm_type == $p.enm.elm_types.Створка && this.elm_type != $p.enm.elm_types.Створка) {
+          else if (cnn_ii.elm.elm_type == $p.enm.elm_types.Створка && this.elm_type != $p.enm.elm_types.Створка) {
             nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
           }
           else {
@@ -8719,7 +8719,16 @@ class Profile extends ProfileItem {
           if(!_nearest_cnn) {
             _nearest_cnn = project.elm_cnn(this, elm);
           }
-          _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, false, Math.abs(elm.angle_hor - this.angle_hor) > 60);
+          let outer;
+          if(elm.is_linear()) {
+            outer = Math.abs(elm.angle_hor - this.angle_hor) > 60;
+          }
+          else {
+            const ob = generatrix.getOffsetOf(generatrix.getNearestPoint(b));
+            const oe = generatrix.getOffsetOf(generatrix.getNearestPoint(e));
+            outer = ob > oe;
+          }
+          _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, false, outer);
         }
         _attr._nearest = elm;
         return true;
