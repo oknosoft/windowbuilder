@@ -161,8 +161,9 @@ class Editor extends EditorInvisible {
               height:'28px',
               align: 'hor',
               buttons: [
-                {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разрыв T-соединения'},
-                {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>1</sub></small>', tooltip: 'Импост по 0-штапику'}
+                {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разрыв-объединение T'},
+                {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>1</sub></small>', tooltip: 'Импост по 0-штапику'},
+                {name: 'm2', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>2</sub></small>', tooltip: 'T в угол'},
                 ],
             }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
@@ -590,13 +591,27 @@ class Editor extends EditorInvisible {
     case 'm1':
       this.project.magnetism.m1();
       break;
+
+    case 'm2':
+      this.tools.some((tool) => {
+        if(tool.options.name == 'cut'){
+          tool.activate();
+          return true;
+        }
+      });
+      break;
+
+    case 'cut':
+      $p.msg.show_not_implemented();
+      break;
+
     default:
       this.tools.some((tool) => {
         if(tool.options.name == name){
           tool.activate();
           return true;
         }
-      })
+      });
     }
   }
 
@@ -1332,9 +1347,9 @@ class Editor extends EditorInvisible {
    * @for Editor
    */
   unload() {
-    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, eve, project} = this;
+    const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, project} = this;
 
-    eve.removeAllListeners();
+
     $p.cat.characteristics.off('del_row', this.on_del_row);
     $p.off('alert', this.on_alert);
     document.body.removeEventListener('keydown', this.on_keydown);
@@ -1342,10 +1357,7 @@ class Editor extends EditorInvisible {
     if(tool && tool._callbacks.deactivate.length){
       tool._callbacks.deactivate[0].call(tool);
     }
-    for(const fld in tools){
-      tools[fld] && tools[fld].remove && tools[fld].remove();
-      tools[fld] = null;
-    }
+
     _acc.unload();
     _undo.unload();
     tb_left.unload();
@@ -1353,9 +1365,9 @@ class Editor extends EditorInvisible {
     project.unload();
     _pwnd.detachAllEvents();
     _pwnd.detachObject(true);
-    for(const fld in this){
-      delete this[fld];
-    }
+
+    super.unload();
+
   }
 
 };

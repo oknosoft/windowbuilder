@@ -194,7 +194,7 @@ class CnnPoint {
     this._err = [];
 
     // строка в таблице соединений
-    this._row = _parent.project.connections.cnns.find({elm1: _parent.elm, node1: _node});
+    this._row = _parent.project.cnns.find({elm1: _parent.elm, node1: _node});
 
     // примыкающий профиль
     this._profile;
@@ -275,8 +275,8 @@ class ProfileRays {
   recalc() {
 
     const {parent} = this;
-    const path = parent.generatrix;
-    const len = path.length;
+    const gen = parent.generatrix;
+    const len = gen.length;
 
     this.clear();
 
@@ -289,10 +289,10 @@ class ProfileRays {
     const step = len * 0.02;
 
     // первая точка эквидистанты. аппроксимируется касательной на участке (from < начала пути)
-    let point_b = path.firstSegment.point,
-      tangent_b = path.getTangentAt(0),
-      normal_b = path.getNormalAt(0),
-      point_e = path.lastSegment.point,
+    let point_b = gen.firstSegment.point,
+      tangent_b = gen.getTangentAt(0),
+      normal_b = gen.getNormalAt(0),
+      point_e = gen.lastSegment.point,
       tangent_e, normal_e;
 
     // добавляем первые точки путей
@@ -300,7 +300,7 @@ class ProfileRays {
     this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
 
     // для прямого пути, строим в один проход
-    if(path.is_linear()) {
+    if(gen.is_linear()) {
       this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
       this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
     }
@@ -309,26 +309,21 @@ class ProfileRays {
       this.outer.add(point_b.add(normal_b.multiply(d1)));
       this.inner.add(point_b.add(normal_b.multiply(d2)));
 
-      for (let i = step; i <= len; i += step) {
-        point_b = path.getPointAt(i);
-        if(!point_b) {
-          continue;
-        }
-        normal_b = path.getNormalAt(i);
+      for (let i = step; i < len; i += step) {
+        point_b = gen.getPointAt(i);
+        normal_b = gen.getNormalAt(i);
         this.outer.add(point_b.add(normal_b.normalize(d1)));
         this.inner.add(point_b.add(normal_b.normalize(d2)));
       }
 
-      normal_e = path.getNormalAt(len);
+      normal_e = gen.getNormalAt(len);
       this.outer.add(point_e.add(normal_e.multiply(d1)));
       this.inner.add(point_e.add(normal_e.multiply(d2)));
 
-      tangent_e = path.getTangentAt(len);
+      tangent_e = gen.getTangentAt(len);
       this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
       this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
 
-      this.outer.simplify(0.8);
-      this.inner.simplify(0.8);
     }
 
     this.inner.reverse();
@@ -861,7 +856,7 @@ class ProfileItem extends GeneratrixElement {
       return;
     }
 
-    const cnns = project.connections.cnns;
+    const {cnns} = project;
     const b = rays.b;
     const e = rays.e;
     const row_b = cnns.add({
@@ -1128,7 +1123,7 @@ class ProfileItem extends GeneratrixElement {
         // прибиваем соединения в точках b и e
         const b = this.cnn_point('b');
         const e = this.cnn_point('e');
-        const {cnns} = project.connections;
+        const {cnns} = project;
 
         if(b.profile && b.profile_point == 'e') {
           const {_rays} = b.profile._attr;
@@ -2019,9 +2014,19 @@ class Profile extends ProfileItem {
       if(is_nearest.length > 1) {
         if(!ign_cnn) {
           if(!_nearest_cnn) {
-            _nearest_cnn = project.connections.elm_cnn(this, elm);
+            _nearest_cnn = project.elm_cnn(this, elm);
           }
-          _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, false, Math.abs(elm.angle_hor - this.angle_hor) > 60);
+          // выясним сторону соединения
+          let outer;
+          if(elm.is_linear()) {
+            outer = Math.abs(elm.angle_hor - this.angle_hor) > 60;
+          }
+          else {
+            const ob = generatrix.getOffsetOf(generatrix.getNearestPoint(b));
+            const oe = generatrix.getOffsetOf(generatrix.getNearestPoint(e));
+            outer = ob > oe;
+          }
+          _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, false, outer);
         }
         _attr._nearest = elm;
         return true;

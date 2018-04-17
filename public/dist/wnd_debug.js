@@ -311,7 +311,8 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
   recalc(attr = {}, editor) {
 
 
-    if(!editor) {
+    const remove = !editor;
+    if(remove) {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
@@ -323,7 +324,12 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       })
       .then(() => {
         project.ox = '';
-        project.remove();
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.unload();
+        }
         return this;
       });
 
@@ -335,17 +341,27 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     const res = attr.res || {};
     res[ref] = {imgs: {}};
 
-    if(!editor) {
+    const remove = !editor;
+    if(remove) {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
     return project.load(this, true)
       .then(() => {
-
-        if(attr.glasses) {
-          const {_obj: {glasses, coordinates}} = this;
-          res[ref].glasses = glasses;
-          this.glasses.forEach((row) => {
+        const {_obj: {glasses, constructions, coordinates}} = this;
+        if(attr.elm) {
+          project.draw_fragment({elm: attr.elm});
+          const num = attr.elm > 0 ? `g${attr.elm}` : `l${attr.elm}`;
+          if(attr.format === 'png') {
+            res[ref].imgs[num] = project.view.element.toDataURL('image/png').substr(22);
+          }
+          else {
+            res[ref].imgs[num] = project.get_svg(attr);
+          }
+        }
+        else if(attr.glasses) {
+          res[ref].glasses = glasses.map((glass) => Object.assign({}, glass));
+          res[ref].glasses.forEach((row) => {
             const glass = project.draw_fragment({elm: row.elm});
             if(attr.format === 'png') {
               res[ref].imgs[`g${row.elm}`] = project.view.element.toDataURL('image/png').substr(22);
@@ -354,19 +370,38 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
               res[ref].imgs[`g${row.elm}`] = project.get_svg(attr);
             }
             if(glass){
-              row.formula = glass.formula(true);
+              row.formula_long = glass.formula(true);
               glass.visible = false;
             }
           });
           return res;
         }
-        else if(attr.format === 'svg') {
-          return project.get_svg(attr);
+        else {
+          if(attr.format === 'png') {
+            res[ref].imgs[`l0`] = project.view.element.toDataURL('image/png').substr(22);
+          }
+          else {
+            res[ref].imgs[`l0`] = project.get_svg(attr);
+          }
+          constructions.forEach(({cnstr}) => {
+            project.draw_fragment({elm: -cnstr});
+            if(attr.format === 'png') {
+              res[ref].imgs[`l${cnstr}`] = project.view.element.toDataURL('image/png').substr(22);
+            }
+            else {
+              res[ref].imgs[`l${cnstr}`] = project.get_svg(attr);
+            }
+          });
         }
       })
       .then((res) => {
         project.ox = '';
-        project.remove();
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.unload();
+        }
         return res;
       });
   }
@@ -1491,9 +1526,10 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
     });
 
     const adel = [];
-    fprms.find_rows({cnstr: cnstr}, (row) => {
-      if(aprm.indexOf(row.param) == -1)
+    fprms.find_rows({cnstr: cnstr, inset: $p.utils.blank.guid}, (row) => {
+      if(aprm.indexOf(row.param) == -1){
         adel.push(row);
+      }
     });
     adel.forEach((row) => fprms.del(row, true));
 
@@ -2698,14 +2734,32 @@ $p.CatProduction_params.prototype.__define({
 
 	noms: {
 		get(){
-			var __noms = [];
-			this.elmnts._obj.forEach(function(row){
-				if(!$p.utils.is_empty_guid(row.nom) && __noms.indexOf(row.nom) == -1)
-					__noms.push(row.nom);
-			});
-			return __noms;
+			const noms = [];
+			this.elmnts._obj.forEach(({nom}) => !$p.utils.is_empty_guid(nom) && noms.indexOf(nom) == -1 && noms.push(nom));
+			return noms;
 		}
 	},
+
+  furns: {
+    value(ox){
+      const {furn} = $p.job_prm.properties;
+      const {furns} = $p.cat;
+      const list = [];
+      if(furn){
+        const links = furn.params_links({
+          grid: {selection: {cnstr: 0}},
+          obj: {_owner: {_owner: ox}}
+        });
+        if(links.length){
+          links.forEach((link) => link.values._obj.forEach(({value, by_default, forcibly}) => {
+            const v = furns.get(value);
+            v && list.push({furn: v, by_default, forcibly});
+          }));
+        }
+      }
+      return list;
+    }
+  },
 
 	inserts: {
 		value(elm_types, by_default){
@@ -2801,7 +2855,49 @@ $p.CatProduction_params.prototype.__define({
 				ox.sys = this;
 				ox.owner = ox.prod_nom;
 
-				ox.constructions.forEach((row) => !row.furn.empty() && ox.sys.refill_prm(ox, row.cnstr))
+        const furns = this.furns(ox);
+
+				ox.constructions.forEach((row) => {
+          if(!row.furn.empty()) {
+            let changed;
+            if(furns.length) {
+              if(furns.some((frow) => {
+                if(frow.forcibly) {
+                  row.furn = frow.furn;
+                  return changed = true;
+                }
+              })) {
+                ;
+              }
+              else if(furns.some((frow) => row.furn === frow.furn)) {
+                ;
+              }
+              else if(furns.some((frow) => {
+                if(frow.by_default) {
+                  row.furn = frow.furn;
+                  return changed = true;
+                }
+              })) {
+                ;
+              }
+              else {
+                row.furn = furns[0].furn;
+                changed = true;
+              }
+            }
+
+            if(changed) {
+              const contour = paper.project && paper.project.getItem({cnstr: row.cnstr});
+              if(contour) {
+                row.furn.refill_prm(contour);
+                contour.notify(contour, 'furn_changed');
+              }
+              else {
+                ox.sys.refill_prm(ox, row.cnstr);
+              }
+            }
+          }
+        });
 			}
 		}
 	}
@@ -5063,23 +5159,84 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   recalc(attr = {}, editor) {
 
-
-    if(!editor) {
-      editor = $p.products_building.editor_invisible;
+    const remove = !editor;
+    if(remove) {
+      editor = new $p.EditorInvisible();
     }
-    const {project} = editor;
-    return Promise.resolve();
+    const project = editor.create_scheme();
+    let tmp = Promise.resolve();
+
+    return this.load_production()
+      .then((prod) => {
+        this.production.forEach((row) => {
+          const {characteristic} = row;
+          if(characteristic.empty() || characteristic.calc_order !== this) {
+            row.value_change('quantity', '', row.quantity);
+          }
+          else if(characteristic.coordinates.count()) {
+            tmp = tmp.then(() => {
+              return project.load(characteristic, true).then(() => {
+                project.save_coordinates({save: true, svg: false});
+              });
+            });
+          }
+          else if(characteristic.leading_product.calc_order === this) {
+            return;
+          }
+          else {
+            if(!characteristic.origin.empty() && !characteristic.origin.slave) {
+              characteristic.specification.clear();
+              const len_angl = new $p.DocCalc_order.FakeLenAngl({len: row.len, inset: characteristic.origin});
+              const elm = new $p.DocCalc_order.FakeElm(row);
+              characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
+              tmp = tmp.then(() => {
+                return characteristic.save().then(() => {
+                  row.value_change('quantity', '', row.quantity);
+                });
+              });
+            }
+            else {
+              row.value_change('quantity', '', row.quantity);
+            }
+          }
+        });
+        return tmp;
+      })
+      .then(() => {
+        project.ox = '';
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.remove();
+        }
+        return this;
+      });
 
   }
 
   draw(attr = {}, editor) {
 
-
-    if(!editor) {
-      editor = $p.products_building.editor_invisible;
+    const remove = !editor;
+    if(remove) {
+      editor = new $p.EditorInvisible();
     }
-    const {project} = editor;
-    return Promise.resolve();
+    const project = editor.create_scheme();
+
+    attr.res = {number_doc: this.number_doc};
+
+    let tmp = Promise.resolve();
+
+    return this.load_production()
+      .then((prod) => {
+        for(let ox of prod){
+          if(ox.coordinates.count()) {
+            tmp = tmp.then(() => ox.draw(attr, editor));
+          }
+        }
+        return tmp;
+      });
+
   }
 
   static set_department() {
@@ -6201,18 +6358,31 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           else {
             ox = row.characteristic;
           }
-          ox && ox.recalc()
-            .catch((err) => {
-              $p.msg.show_msg({
-                title: $p.msg.bld_title,
-                type: 'alert-error',
-                text: ee.stack || ee.message
-              });
-            });
+          if(ox) {
+            wnd.progressOn();
+            ox.recalc()
+              .catch((err) => {
+                $p.msg.show_msg({
+                  title: $p.msg.bld_title,
+                  type: 'alert-error',
+                  text: err.stack || err.message
+                });
+              })
+              .then(() => wnd.progressOff());
+          }
         }
       }
       else {
-        $p.msg.show_not_implemented();
+        wnd.progressOn();
+        o.recalc()
+          .catch((err) => {
+            $p.msg.show_msg({
+              title: $p.msg.bld_title,
+              type: 'alert-error',
+              text: err.stack || err.message
+            });
+          })
+          .then(() => wnd.progressOff());
       }
     }
 

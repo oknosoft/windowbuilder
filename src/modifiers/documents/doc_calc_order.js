@@ -895,14 +895,67 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    */
   recalc(attr = {}, editor) {
 
-    // сначала, получаем массив продукций в озу
-
     // при необходимости, создаём редактор
-    if(!editor) {
-      editor = $p.products_building.editor_invisible;
+    const remove = !editor;
+    if(remove) {
+      editor = new $p.EditorInvisible();
     }
-    const {project} = editor;
-    return Promise.resolve();
+    const project = editor.create_scheme();
+    let tmp = Promise.resolve();
+
+    // получаем массив продукций в озу
+    return this.load_production()
+      .then((prod) => {
+        // бежим по табчасти, если продукция, пересчитываем в рисовалке, если материал или paramrtric - пересчитываем строку
+        this.production.forEach((row) => {
+          const {characteristic} = row;
+          if(characteristic.empty() || characteristic.calc_order !== this) {
+            // это материал
+            row.value_change('quantity', '', row.quantity);
+          }
+          else if(characteristic.coordinates.count()) {
+            // это изделие рисовалки
+            tmp = tmp.then(() => {
+              return project.load(characteristic, true).then(() => {
+                // выполняем пересчет
+                project.save_coordinates({save: true, svg: false});
+              });
+            });
+          }
+          else if(characteristic.leading_product.calc_order === this) {
+            return;
+          }
+          else {
+            if(!characteristic.origin.empty() && !characteristic.origin.slave) {
+              // это paramrtric
+              characteristic.specification.clear();
+              const len_angl = new $p.DocCalc_order.FakeLenAngl({len: row.len, inset: characteristic.origin});
+              const elm = new $p.DocCalc_order.FakeElm(row);
+              characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
+              tmp = tmp.then(() => {
+                return characteristic.save().then(() => {
+                  // выполняем пересчет
+                  row.value_change('quantity', '', row.quantity);
+                });
+              });
+            }
+            else {
+              row.value_change('quantity', '', row.quantity);
+            }
+          }
+        });
+        return tmp;
+      })
+      .then(() => {
+        project.ox = '';
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.remove();
+        }
+        return this;
+      });
 
   }
 
@@ -913,14 +966,28 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    */
   draw(attr = {}, editor) {
 
-    // сначала, получаем массив продукций в озу
-
     // при необходимости, создаём редактор
-    if(!editor) {
-      editor = $p.products_building.editor_invisible;
+    const remove = !editor;
+    if(remove) {
+      editor = new $p.EditorInvisible();
     }
-    const {project} = editor;
-    return Promise.resolve();
+    const project = editor.create_scheme();
+
+    attr.res = {number_doc: this.number_doc};
+
+    let tmp = Promise.resolve();
+
+    // получаем массив продукций в озу
+    return this.load_production()
+      .then((prod) => {
+        for(let ox of prod){
+          if(ox.coordinates.count()) {
+            tmp = tmp.then(() => ox.draw(attr, editor));
+          }
+        }
+        return tmp;
+      });
+
   }
 
   /**

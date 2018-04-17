@@ -115,7 +115,7 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     const {_row, project, profiles, bounds, imposts, nom} = this;
     const h = project.bounds.height + project.bounds.y;
-    const cnns = project.connections.cnns;
+    const {cnns} = project;
     const length = profiles.length;
 
     // строка в таблице заполнений продукции
@@ -202,7 +202,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {project} = this;
 
     // прибиваем соединения текущего заполнения
-    project.connections.cnns.clear({elm1: this.elm});
+    project.cnns.clear({elm1: this.elm});
 
     // создаём пустой новый слой
     const contour = new Contour( {parent: this.parent});
@@ -528,7 +528,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
     else if(Array.isArray(attr)){
       let {length} = attr;
-      const {connections} = this.project;
       let prev, curr, next, sub_path;
       // получам эквидистанты сегментов, смещенные на размер соединения
       for(let i=0; i<length; i++ ){
@@ -537,7 +536,7 @@ class Filling extends AbstractFilling(BuilderElement) {
         sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e);
 
         curr.cnn = $p.cat.cnns.elm_cnn(this, curr.profile, $p.enm.cnn_types.acn.ii,
-          curr.cnn || connections.elm_cnn(this, curr.profile), false, curr.outer);
+          curr.cnn || this.project.elm_cnn(this, curr.profile), false, curr.outer);
 
         curr.sub_path = sub_path.equidistant(
           (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);

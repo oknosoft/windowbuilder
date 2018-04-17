@@ -362,7 +362,8 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     // сначала, получаем объект заказа и продукции заказа в озу, т.к. пересчет изделия может приводить к пересчету соседних продукций
 
     // загружаем изделие в редактор
-    if(!editor) {
+    const remove = !editor;
+    if(remove) {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
@@ -375,7 +376,12 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       })
       .then(() => {
         project.ox = '';
-        project.remove();
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.unload();
+        }
         return this;
       });
 
@@ -393,18 +399,28 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     res[ref] = {imgs: {}};
 
     // загружаем изделие в редактор
-    if(!editor) {
+    const remove = !editor;
+    if(remove) {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
     return project.load(this, true)
       .then(() => {
-
+        const {_obj: {glasses, constructions, coordinates}} = this;
         // формируем эскиз(ы) в соответствии с attr
-        if(attr.glasses) {
-          const {_obj: {glasses, coordinates}} = this;
-          res[ref].glasses = glasses;
-          this.glasses.forEach((row) => {
+        if(attr.elm) {
+          project.draw_fragment({elm: attr.elm});
+          const num = attr.elm > 0 ? `g${attr.elm}` : `l${attr.elm}`;
+          if(attr.format === 'png') {
+            res[ref].imgs[num] = project.view.element.toDataURL('image/png').substr(22);
+          }
+          else {
+            res[ref].imgs[num] = project.get_svg(attr);
+          }
+        }
+        else if(attr.glasses) {
+          res[ref].glasses = glasses.map((glass) => Object.assign({}, glass));
+          res[ref].glasses.forEach((row) => {
             const glass = project.draw_fragment({elm: row.elm});
             // подтянем формулу стеклопакета
             if(attr.format === 'png') {
@@ -414,19 +430,38 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
               res[ref].imgs[`g${row.elm}`] = project.get_svg(attr);
             }
             if(glass){
-              row.formula = glass.formula(true);
+              row.formula_long = glass.formula(true);
               glass.visible = false;
             }
           });
           return res;
         }
-        else if(attr.format === 'svg') {
-          return project.get_svg(attr);
+        else {
+          if(attr.format === 'png') {
+            res[ref].imgs[`l0`] = project.view.element.toDataURL('image/png').substr(22);
+          }
+          else {
+            res[ref].imgs[`l0`] = project.get_svg(attr);
+          }
+          constructions.forEach(({cnstr}) => {
+            project.draw_fragment({elm: -cnstr});
+            if(attr.format === 'png') {
+              res[ref].imgs[`l${cnstr}`] = project.view.element.toDataURL('image/png').substr(22);
+            }
+            else {
+              res[ref].imgs[`l${cnstr}`] = project.get_svg(attr);
+            }
+          });
         }
       })
       .then((res) => {
         project.ox = '';
-        project.remove();
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.unload();
+        }
         return res;
       });
   }

@@ -54,11 +54,30 @@ class EditorInvisible extends paper.PaperScope {
       this._canvas.width = 480;
       this.setup(this._canvas);
     }
-    const scheme = new Scheme(this._canvas, this, true);
     if(this.projects.lengrh && !(this.projects[0] instanceof Scheme)) {
       this.projects[0].remove();
     }
-    return scheme;
+    return new Scheme(this._canvas, this, true);
+  }
+
+  unload() {
+    this.eve.removeAllListeners();
+    const arr = this.projects.concat(this.tools);
+    while (arr.length) {
+      const elm = arr[0];
+      if(elm.unload) {
+        elm.unload();
+      }
+      else if(elm.remove) {
+        elm.remove();
+      }
+      arr.splice(0, 1);
+    }
+    for(let i in EditorInvisible._scopes) {
+      if(EditorInvisible._scopes[i] === this) {
+        delete EditorInvisible._scopes[i];
+      }
+    }
   }
 
 }

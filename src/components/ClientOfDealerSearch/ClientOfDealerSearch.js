@@ -11,7 +11,7 @@ import Button from 'material-ui/Button';
 import Dialog from 'metadata-react/App/Dialog';
 import Input, { InputAdornment } from 'material-ui/Input';
 import IconButton from 'material-ui/IconButton';
-import IconSearch from 'material-ui-icons/Search';
+import IconSearch from '@material-ui/icons/Search';
 import connect from './connect';
 
 class ClientOfDealerSearch extends Component {

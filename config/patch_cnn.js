@@ -37,6 +37,7 @@ export const predefined = {
   'aribaz.': {zone: 2, host: "https://aribaz.oknosoft.ru/"},
   'eco.': {zone: 21, host: "https://eco.oknosoft.ru/"},
   'ecookna.': {zone: 21, host: "https://zakaz.ecookna.ru/"},
+  'rusokon.': {zone: 19, host: "https://rusokon.oknosoft.ru/"},
   'tmk.': {zone: 23, host: "https://tmk-online.ru/"},
   'crystallit.': {zone: 25, host: "https://crystallit.oknosoft.ru/"},
   'okna-stolicy.': {zone: 22, host: "https://okna-stolicy.oknosoft.ru/"},

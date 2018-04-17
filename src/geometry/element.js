@@ -286,7 +286,7 @@ class BuilderElement extends paper.Group {
           if (cnn_ii.elm instanceof Filling) {
             nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
           }
-          else if (cnn_ii.elm_type == $p.enm.elm_types.Створка && this.elm_type != $p.enm.elm_types.Створка) {
+          else if (cnn_ii.elm.elm_type == $p.enm.elm_types.Створка && this.elm_type != $p.enm.elm_types.Створка) {
             nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
           }
           else {
@@ -505,7 +505,7 @@ class BuilderElement extends paper.Group {
   selected_cnn_ii() {
     const {project, elm} = this;
     const sel = project.getSelectedItems();
-    const {cnns} = project.connections;
+    const {cnns} = project;
     const items = [];
     let res;
 
