@@ -480,8 +480,28 @@ $p.CatCharacteristics.builder_props_defaults = {
 $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, value) {
   // для вложенных вставок перезаполняем параметры
   if(field == 'inset') {
-    if(value != this.inset){
+    if (value != this.inset) {
       const {_owner} = this._owner;
+
+      //Проверяем дубли вставок (их не должно быть, иначе параметры перезаписываются)
+      if (value != $p.utils.blank.guid) {
+        const ts = this._owner;
+        const {cnstr} = this;
+
+        const res = ts.find_rows({cnstr, inset: value, row: {'not': this.row}});
+
+        if (res.length) {
+          $p.md.emit('alert', {
+            obj: _owner,
+            row: this,
+            title: $p.msg.data_error,
+            type: 'alert-error',
+            text: 'Нельзя добавлять две одинаковые вставки в один контур'
+          });
+          return false;
+        }
+      }
+
       // удаляем параметры старой вставки
       !this.inset.empty() && _owner.params.clear({inset: this.inset, cnstr: this.cnstr});
       // устанавливаем значение новой вставки
