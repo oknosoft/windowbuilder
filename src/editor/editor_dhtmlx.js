@@ -173,8 +173,8 @@ class Editor extends EditorInvisible {
       onclick: (name) => _editor.select_tool(name),
       on_popup: (popup, bdiv) => {
         popup.show(dhx4.absLeft(bdiv), 0, bdiv.offsetWidth, _editor._wrapper.offsetHeight);
-        popup.p.style.top = (dhx4.absTop(bdiv) - 20) + "px";
-        popup.p.querySelector(".dhx_popup_arrow").style.top = "20px";
+        popup.p.style.top = (dhx4.absTop(bdiv) - 20) + 'px';
+        popup.p.querySelector('.dhx_popup_arrow').style.top = '20px';
       }
     });
 
@@ -293,13 +293,12 @@ class Editor extends EditorInvisible {
       }
     });
 
-    this.tb_top.buttons.paste.classList.add("disabledbutton");
-    this.tb_top.buttons.paste_prop.classList.add("disabledbutton");
+    this.tb_top.buttons.paste.classList.add('disabledbutton');
+    this.tb_top.buttons.paste_prop.classList.add('disabledbutton');
 
-    this._layout.base.style.backgroundColor = "#f5f5f5";
-    //_editor._layout.base.parentNode.parentNode.style.top = "0px";
-    this.tb_top.cell.style.background = "transparent";
-    this.tb_top.cell.style.boxShadow = "none";
+    this._layout.base.style.backgroundColor = '#f5f5f5';
+    this.tb_top.cell.style.background = 'transparent';
+    this.tb_top.cell.style.boxShadow = 'none';
 
     /**
      * слушаем события клавиатуры
@@ -308,17 +307,17 @@ class Editor extends EditorInvisible {
     document.body.addEventListener('keydown', this.on_keydown, false);
 
     // Обработчик события после записи характеристики. Если в параметрах укзано закрыть - закрываем форму
-    this.eve.on("characteristic_saved", (scheme, attr) => {
-      if(attr.close){
+    this.eve.on('characteristic_saved', (scheme, attr) => {
+      if(attr.close) {
         this.close();
       }
-      else{
+      else {
         this.set_text();
       }
     });
 
     // При изменениях изделия обновляем текст заголовка окна
-    this.eve.on("coordinates_calculated", this.set_text.bind(this));
+    this.eve.on('coordinates_calculated', this.set_text.bind(this));
 
     // Обработчик события при удалении строки некой табчасти продукции
     this.on_del_row = this.on_del_row.bind(this);

@@ -482,14 +482,11 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
   if(field == 'inset') {
     if (value != this.inset) {
       const {_owner} = this._owner;
+      const {cnstr} = this;
 
       //Проверяем дубли вставок (их не должно быть, иначе параметры перезаписываются)
       if (value != $p.utils.blank.guid) {
-        const ts = this._owner;
-        const {cnstr} = this;
-
-        const res = ts.find_rows({cnstr, inset: value, row: {'not': this.row}});
-
+        const res = _owner.params.find_rows({cnstr, inset: value, row: {not: this.row}});
         if (res.length) {
           $p.md.emit('alert', {
             obj: _owner,
@@ -503,11 +500,13 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
       }
 
       // удаляем параметры старой вставки
-      !this.inset.empty() && _owner.params.clear({inset: this.inset, cnstr: this.cnstr});
+      !this.inset.empty() && _owner.params.clear({inset: this.inset, cnstr});
+
       // устанавливаем значение новой вставки
       this._obj.inset = value;
+
       // заполняем параметры по умолчанию
-      _owner.add_inset_params(this.inset, this.cnstr);
+      _owner.add_inset_params(this.inset, cnstr);
     }
   }
 }
