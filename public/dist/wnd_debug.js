@@ -418,11 +418,29 @@ $p.CatCharacteristics.builder_props_defaults = {
 
 $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, value) {
   if(field == 'inset') {
-    if(value != this.inset){
+    if (value != this.inset) {
       const {_owner} = this._owner;
-      !this.inset.empty() && _owner.params.clear({inset: this.inset, cnstr: this.cnstr});
+      const {cnstr} = this;
+
+      if (value != $p.utils.blank.guid) {
+        const res = _owner.params.find_rows({cnstr, inset: value, row: {not: this.row}});
+        if (res.length) {
+          $p.md.emit('alert', {
+            obj: _owner,
+            row: this,
+            title: $p.msg.data_error,
+            type: 'alert-error',
+            text: 'Нельзя добавлять две одинаковые вставки в один контур'
+          });
+          return false;
+        }
+      }
+
+      !this.inset.empty() && _owner.params.clear({inset: this.inset, cnstr});
+
       this._obj.inset = value;
-      _owner.add_inset_params(this.inset, this.cnstr);
+
+      _owner.add_inset_params(this.inset, cnstr);
     }
   }
 }
