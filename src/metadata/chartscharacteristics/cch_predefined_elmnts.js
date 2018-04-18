@@ -105,10 +105,7 @@ export default function ($p) {
 
 
         // даём возможность завершиться другим обработчикам, подписанным на _pouch_load_data_loaded_
-        setTimeout(() => $p.adapters.pouch.local.doc.get('_design/svgs')
-          .then(() => $p.job_prm.use_svgs = true)
-          .catch(() => $p.job_prm.use_svgs = false)
-          .then(() => md.emit('predefined_elmnts_inited')), 100);
+        setTimeout(() => md.emit('predefined_elmnts_inited'), 100);
 
       });
 
