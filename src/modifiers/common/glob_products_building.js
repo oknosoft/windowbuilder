@@ -734,7 +734,7 @@ class ProductsBuilding {
         // сохраняем картинку вместе с изделием
         let saver;
         if($p.job_prm.use_svgs) {
-          ox.save(undefined, undefined, {
+          saver = ox.save(undefined, undefined, {
             svg: {
               content_type: 'image/svg+xml',
               data: new Blob([scheme.get_svg()], {type: 'image/svg+xml'})
