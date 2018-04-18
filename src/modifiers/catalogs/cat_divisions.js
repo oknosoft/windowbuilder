@@ -38,6 +38,7 @@ Object.defineProperties($p.cat.divisions, {
         return 0;
       })
       return Promise.resolve(l);
-    }
+    },
+    writable: true
   }
 });
