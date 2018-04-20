@@ -732,23 +732,11 @@ class ProductsBuilding {
         // console.profile();
 
         // сохраняем картинку вместе с изделием
-        let saver;
-        if($p.job_prm.use_svgs) {
-          saver = ox.save(undefined, undefined, {
-            svg: {
-              content_type: 'image/svg+xml',
-              data: new Blob([scheme.get_svg()], {type: 'image/svg+xml'})
-            }
-          });
-        }
-        else {
-          if(attr.svg !== false) {
-            ox.svg = scheme.get_svg();
-          }
-          saver = ox.save();
+        if(attr.svg !== false) {
+          ox.svg = scheme.get_svg();
         }
 
-        saver.then(() => {
+        ox.save().then(() => {
           attr.svg !== false && $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
           delete scheme._attr._saving;
           ox.calc_order.characteristic_saved(scheme, attr);
@@ -780,13 +768,6 @@ class ProductsBuilding {
     };
 
   }
-
-  // get editor_invisible() {
-  //   if(!this._editor_invisible) {
-  //     this._editor_invisible = new $p.EditorInvisible();
-  //   }
-  //   return this._editor_invisible;
-  // }
 
   /**
    * Проверяет соответствие параметров отбора параметрам изделия

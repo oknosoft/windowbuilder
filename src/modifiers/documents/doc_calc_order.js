@@ -472,14 +472,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
           }
           else {
-            if($p.job_prm.use_svgs) {
-              get_imgs.push(characteristics.get_attachment(row.characteristic.ref, 'svg')
-                .then(blob_as_text)
-                .then((svg_text) => res.ПродукцияЭскизы[row.characteristic.ref] = svg_text)
-                .catch((err) => err && err.status != 404 && $p.record_log(err))
-              );
-            }
-            else if(row.characteristic.svg) {
+            if(row.characteristic.svg) {
               res.ПродукцияЭскизы[row.characteristic.ref] = row.characteristic.svg;
             }
           }

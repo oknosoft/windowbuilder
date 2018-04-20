@@ -163,66 +163,36 @@ class OSvgs {
           let _obj = stack.pop();
           const db = $p.adapters.pouch.local.doc;
 
-          if($p.job_prm.use_svgs) {
-            db.query('svgs', {
-              startkey: [typeof _obj == 'string' ? _obj : _obj.ref, 0],
-              endkey: [typeof _obj == 'string' ? _obj : _obj.ref, 10e9]
-            })
-              .then((res) => {
-                // Для продукций заказа получаем вложения
-                const aatt = [];
-                for(const {id} of res.rows){
-                  aatt.push(db.getAttachment(id, 'svg')
-                    .then((att) => ({ref: id.substr(20), att: att}))
-                    .catch((err) => {}));
-                };
-                return Promise.all(aatt);
-              })
-              .then((res) => {
-                // Извлекаем из блоба svg-текст эскизов
-                const aatt = [];
-                res.forEach(({ref, att}) => {
-                  if(att instanceof Blob && att.size)
-                    aatt.push($p.utils.blob_as_text(att)
-                      .then((svg) => ({ref, svg})));
+          const keys = [];
+          if(typeof _obj == 'string') {
+            const {doc} = $p.adapters.pouch.local;
+            doc.get(`doc.calc_order|${_obj}`)
+              .then(({production}) => {
+                production && production.forEach(({characteristic}) => {
+                  !$p.utils.is_empty_guid(characteristic) && keys.push(`cat.characteristics|${characteristic}`);
                 });
-                return Promise.all(aatt);
+                return keys.length ? doc.allDocs({keys, limit: keys.length, include_docs: true}) : {rows: keys};
+              })
+              .then(({rows}) => {
+                const adel = [];
+                rows.forEach(({id, doc}) => {
+                  if(doc && doc.svg) {
+                    const ind = keys.indexOf(id);
+                    keys[ind] = {ref: id.substr(20), svg: doc.svg};
+                  }
+                });
+                return keys.filter((v) => v.svg);
               })
               .then(this.draw_svgs)
-              .catch($p.record_log);
+              .catch($p.record_log)
           }
           else {
-            const keys = [];
-            if(typeof _obj == 'string') {
-              const {doc} = $p.adapters.pouch.local;
-              doc.get(`doc.calc_order|${_obj}`)
-                .then(({production}) => {
-                  production && production.forEach(({characteristic}) => {
-                    !$p.utils.is_empty_guid(characteristic) && keys.push(`cat.characteristics|${characteristic}`);
-                  });
-                  return keys.length ? doc.allDocs({keys, limit: keys.length, include_docs: true}) : {rows: keys};
-                })
-                .then(({rows}) => {
-                  const adel = [];
-                  rows.forEach(({id, doc}) => {
-                    if(doc && doc.svg) {
-                      const ind = keys.indexOf(id);
-                      keys[ind] = {ref: id.substr(20), svg: doc.svg};
-                    }
-                  });
-                  return keys.filter((v) => v.svg);
-                })
-                .then(this.draw_svgs)
-                .catch($p.record_log)
-            }
-            else {
-              _obj.production.forEach(({characteristic: {ref, svg}}) => {
-                if(svg) {
-                  keys.push({ref, svg});
-                }
-              });
-              this.draw_svgs(keys);
-            }
+            _obj.production.forEach(({characteristic: {ref, svg}}) => {
+              if(svg) {
+                keys.push({ref, svg});
+              }
+            });
+            this.draw_svgs(keys);
           }
           stack.length = 0;
         }
