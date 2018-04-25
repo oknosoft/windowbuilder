@@ -616,7 +616,7 @@ class Scheme extends paper.Project {
    * @property strokeBounds
    */
   get strokeBounds() {
-    let bounds = new paper.Rectangle();
+    let bounds = this.l_dimensions.strokeBounds;
     this.contours.forEach((l) => bounds = bounds.unite(l.strokeBounds));
     return bounds;
   }
@@ -810,24 +810,37 @@ class Scheme extends paper.Project {
    *
    * @method zoom_fit
    */
-  zoom_fit(bounds) {
+  zoom_fit(bounds, isNode) {
 
     if(!bounds) {
       bounds = this.strokeBounds;
     }
 
-    const height = (bounds.height < 1000 ? 1000 : bounds.height) + 320;
-    const width = (bounds.width < 1000 ? 1000 : bounds.width) + 320;
-    let shift;
-
-    if(bounds) {
-      const {view} = this;
-      view.zoom = Math.min((view.viewSize.height - 40) / height, (view.viewSize.width - 40) / width);
-      shift = (view.viewSize.width - bounds.width * view.zoom) / 2;
-      if(shift < 180) {
-        shift = 0;
+    if (bounds) {
+      if(!isNode) {
+        isNode = $p.wsql.alasql.utils.isNode;
       }
-      view.center = bounds.center.add([shift, 60]);
+      const space = isNode ? 160 : 320;
+      const min = 900;
+      let {width, height, center} = bounds;
+      if (width < min) {
+        width = min;
+      }
+      if (height < min) {
+        height = min;
+      }
+      width += space;
+      height += space;
+      const {view} = this;
+      view.zoom = Math.min(view.viewSize.height / height, view.viewSize.width / width);
+      const dx = view.viewSize.width - width * view.zoom;
+      if(isNode) {
+        const dy = view.viewSize.height - height * view.zoom;
+        view.center = center.add([dx, -dy]);
+      }
+      else {
+        view.center = center.add([dx, 50]);
+      }
     }
   }
 

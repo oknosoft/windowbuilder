@@ -3344,21 +3344,7 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   zoom_fit() {
-    const {strokeBounds, view} = this;
-    if (strokeBounds) {
-      let {width, height, center} = strokeBounds;
-      if (width < 800) {
-        width = 800;
-      }
-      if (height < 800) {
-        height = 800;
-      }
-      width += 120;
-      height += 120;
-      view.zoom = Math.min(view.viewSize.height / height, view.viewSize.width / width);
-      const shift = (view.viewSize.width - width * view.zoom);
-      view.center = center.add([shift, 40]);
-    }
+    this.project.zoom_fit.call(this, null, true);
   }
 
   draw_cnn_errors() {
@@ -3469,6 +3455,7 @@ class Contour extends AbstractFilling(paper.Layer) {
         new paper.PointText({
           parent: props.parent,
           fillColor: 'black',
+          fontFamily: 'Mipgost',
           fontSize: consts.elm_font_size,
           guide: true,
           content: row.inset.presentation,
@@ -4633,8 +4620,9 @@ class DimensionLine extends paper.Group {
       parent: this,
       name: 'text',
       justification: 'center',
+      fontFamily: 'Mipgost',
       fillColor: 'black',
-      fontSize: 72});
+      fontSize: consts.font_size});
 
     this.on({
       mouseenter: this._mouseenter,
@@ -4823,7 +4811,7 @@ class DimensionLine extends paper.Group {
 
     children.text.content = length.toFixed(0);
     children.text.rotation = e.subtract(b).angle;
-    children.text.point = bs.add(es).divide(2);
+    children.text.position = bs.add(es).divide(2).subtract(normal.normalize(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.5 : 2)));
   }
 
   get path() {
@@ -5753,6 +5741,7 @@ class Filling extends AbstractFilling(BuilderElement) {
       _attr._text = new paper.PointText({
         parent: this,
         fillColor: 'black',
+        fontFamily: 'Mipgost',
         fontSize: elm_font_size,
         guide: true,
       });
@@ -6161,6 +6150,7 @@ class FreeText extends paper.PointText {
     if(!attr.fontSize){
       attr.fontSize = consts.font_size;
     }
+    attr.fontFamily = 'Mipgost';
 
     super(attr);
 
@@ -10167,7 +10157,7 @@ class Scheme extends paper.Project {
   }
 
   get strokeBounds() {
-    let bounds = new paper.Rectangle();
+    let bounds = this.l_dimensions.strokeBounds;
     this.contours.forEach((l) => bounds = bounds.unite(l.strokeBounds));
     return bounds;
   }
@@ -10322,24 +10312,37 @@ class Scheme extends paper.Project {
 
   }
 
-  zoom_fit(bounds) {
+  zoom_fit(bounds, isNode) {
 
     if(!bounds) {
       bounds = this.strokeBounds;
     }
 
-    const height = (bounds.height < 1000 ? 1000 : bounds.height) + 320;
-    const width = (bounds.width < 1000 ? 1000 : bounds.width) + 320;
-    let shift;
-
-    if(bounds) {
-      const {view} = this;
-      view.zoom = Math.min((view.viewSize.height - 40) / height, (view.viewSize.width - 40) / width);
-      shift = (view.viewSize.width - bounds.width * view.zoom) / 2;
-      if(shift < 180) {
-        shift = 0;
+    if (bounds) {
+      if(!isNode) {
+        isNode = $p.wsql.alasql.utils.isNode;
       }
-      view.center = bounds.center.add([shift, 60]);
+      const space = isNode ? 160 : 320;
+      const min = 900;
+      let {width, height, center} = bounds;
+      if (width < min) {
+        width = min;
+      }
+      if (height < min) {
+        height = min;
+      }
+      width += space;
+      height += space;
+      const {view} = this;
+      view.zoom = Math.min(view.viewSize.height / height, view.viewSize.width / width);
+      const dx = view.viewSize.width - width * view.zoom;
+      if(isNode) {
+        const dy = view.viewSize.height - height * view.zoom;
+        view.center = center.add([dx, -dy]);
+      }
+      else {
+        view.center = center.add([dx, 50]);
+      }
     }
   }
 
@@ -10921,6 +10924,7 @@ class EditableText extends paper.PointText {
 
   constructor(props) {
     props.justification = 'center';
+    props.fontFamily = 'Mipgost';
     super(props);
     this._edit = null;
     this._owner = props._owner;
@@ -11264,8 +11268,13 @@ const consts = new function Settings(){
 		this.sticking_l = builder.sticking_l || 9;
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = builder.font_size || 60;
-    this.elm_font_size = builder.elm_font_size || 40;
+		this.font_size = builder.font_size || 80;
+    this.elm_font_size = builder.elm_font_size || 60;
+
+    if($p.wsql.alasql.utils.isNode) {
+      this.font_size *= 1.2;
+      this.elm_font_size *= 1.2;
+    }
 
 		this.orientation_delta = builder.orientation_delta || 30;
 

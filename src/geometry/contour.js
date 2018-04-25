@@ -1092,21 +1092,7 @@ class Contour extends AbstractFilling(paper.Layer) {
    * @method zoom_fit
    */
   zoom_fit() {
-    const {strokeBounds, view} = this;
-    if (strokeBounds) {
-      let {width, height, center} = strokeBounds;
-      if (width < 800) {
-        width = 800;
-      }
-      if (height < 800) {
-        height = 800;
-      }
-      width += 120;
-      height += 120;
-      view.zoom = Math.min(view.viewSize.height / height, view.viewSize.width / width);
-      const shift = (view.viewSize.width - width * view.zoom);
-      view.center = center.add([shift, 40]);
-    }
+    this.project.zoom_fit.call(this, null, true);
   }
 
   /**
@@ -1231,6 +1217,7 @@ class Contour extends AbstractFilling(paper.Layer) {
         new paper.PointText({
           parent: props.parent,
           fillColor: 'black',
+          fontFamily: 'Mipgost',
           fontSize: consts.elm_font_size,
           guide: true,
           content: row.inset.presentation,

@@ -13,6 +13,7 @@ class EditableText extends paper.PointText {
 
   constructor(props) {
     props.justification = 'center';
+    props.fontFamily = 'Mipgost';
     super(props);
     this._edit = null;
     this._owner = props._owner;

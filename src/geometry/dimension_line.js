@@ -70,8 +70,9 @@ class DimensionLine extends paper.Group {
       parent: this,
       name: 'text',
       justification: 'center',
+      fontFamily: 'Mipgost',
       fillColor: 'black',
-      fontSize: 72});
+      fontSize: consts.font_size});
 
     this.on({
       mouseenter: this._mouseenter,
@@ -266,7 +267,7 @@ class DimensionLine extends paper.Group {
 
     children.text.content = length.toFixed(0);
     children.text.rotation = e.subtract(b).angle;
-    children.text.point = bs.add(es).divide(2);
+    children.text.position = bs.add(es).divide(2).subtract(normal.normalize(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.5 : 2)));
   }
 
   get path() {

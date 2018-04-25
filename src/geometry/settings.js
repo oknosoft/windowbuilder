@@ -31,8 +31,13 @@ const consts = new function Settings(){
 		this.sticking_l = builder.sticking_l || 9;
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = builder.font_size || 60;
-    this.elm_font_size = builder.elm_font_size || 40;
+		this.font_size = builder.font_size || 72;
+    this.elm_font_size = builder.elm_font_size || 52;
+
+    if($p.wsql.alasql.utils.isNode) {
+      this.font_size *= 1.2;
+      this.elm_font_size *= 1.2;
+    }
 
 		// в пределах этого угла, считаем элемент вертикальным или горизонтальным
 		this.orientation_delta = builder.orientation_delta || 30;
