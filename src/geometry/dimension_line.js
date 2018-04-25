@@ -267,7 +267,7 @@ class DimensionLine extends paper.Group {
 
     children.text.content = length.toFixed(0);
     children.text.rotation = e.subtract(b).angle;
-    children.text.position = bs.add(es).divide(2).subtract(normal.normalize(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.5 : 2)));
+    children.text.position = bs.add(es).divide(2).subtract(normal.normalize(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
   }
 
   get path() {
