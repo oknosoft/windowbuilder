@@ -4811,7 +4811,7 @@ class DimensionLine extends paper.Group {
 
     children.text.content = length.toFixed(0);
     children.text.rotation = e.subtract(b).angle;
-    children.text.position = bs.add(es).divide(2).subtract(normal.normalize(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.5 : 2)));
+    children.text.position = bs.add(es).divide(2).subtract(normal.normalize(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
   }
 
   get path() {
@@ -11268,8 +11268,8 @@ const consts = new function Settings(){
 		this.sticking_l = builder.sticking_l || 9;
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = builder.font_size || 80;
-    this.elm_font_size = builder.elm_font_size || 60;
+		this.font_size = builder.font_size || 72;
+    this.elm_font_size = builder.elm_font_size || 52;
 
     if($p.wsql.alasql.utils.isNode) {
       this.font_size *= 1.2;
