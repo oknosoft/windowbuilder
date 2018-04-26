@@ -745,7 +745,7 @@ class ProductsBuilding {
           // console.timeEnd("save");
           // console.profileEnd();
         })
-          .then(() => scheme._scope && setTimeout(() => ox.calc_order._modified && ox.calc_order.save(), 1000))
+          .then(() => (scheme._scope || attr.close) && setTimeout(() => ox.calc_order._modified && ox.calc_order.save(), 1000))
           .catch((ox) => {
 
             // console.timeEnd("save");
