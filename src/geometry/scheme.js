@@ -960,7 +960,7 @@ class Scheme extends paper.Project {
           glasses.indexOf(filling) == -1 && glasses.push(filling);
         }
       }
-      this._scope.do_glass_align('width', glasses);
+      this._scope.glass_align('width', glasses);
 
       if(auto_align == $p.enm.align_types.ПоЗаполнениям) {
 
