@@ -1316,7 +1316,7 @@ $p.CatElm_visualization.prototype.__define({
 	draw: {
 		value(elm, layer, offset) {
 
-		  const {CompoundPath, constructor} = elm.project._scope;
+		  const {CompoundPath, PointText, constructor} = elm.project._scope;
 
 			let subpath;
 
@@ -1325,30 +1325,41 @@ $p.CatElm_visualization.prototype.__define({
 				const attr = JSON.parse(this.svg_path);
 
 				if(attr.method == "subpath_outer"){
-
 					subpath = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2)).equidistant(attr.offset || 10);
-
 					subpath.parent = layer._by_spec;
 					subpath.strokeWidth = attr.strokeWidth || 4;
 					subpath.strokeColor = attr.strokeColor || 'red';
 					subpath.strokeCap = attr.strokeCap || 'round';
-					if(attr.dashArray)
-						subpath.dashArray = attr.dashArray
-
+					if(attr.dashArray){
+            subpath.dashArray = attr.dashArray
+          }
 				}
-
 			}
 			else if(this.svg_path){
 
-				subpath = new CompoundPath({
-					pathData: this.svg_path,
-					parent: layer._by_spec,
-					strokeColor: 'black',
-					fillColor: 'white',
-					strokeScaling: false,
-					pivot: [0, 0],
-					opacity: elm.opacity
-				});
+        if(this.mode === 1) {
+          const {fontSize, ...attr} = JSON.parse(this.attributes || '{}');
+          subpath = new PointText(Object.assign({
+            parent: layer._by_spec,
+            fillColor: 'black',
+            fontFamily: 'Mipgost',
+            fontSize: fontSize || 60,
+            guide: true,
+            content: this.svg_path,
+          }, attr));
+        }
+        else {
+          subpath = new CompoundPath({
+            pathData: this.svg_path,
+            parent: layer._by_spec,
+            strokeColor: 'black',
+            fillColor: elm.constructor.clr_by_clr.call(elm, elm._row.clr, false),
+            strokeScaling: false,
+            guide: true,
+            pivot: [0, 0],
+            opacity: elm.opacity
+          });
+        }
 
 				if(elm instanceof constructor.Filling) {
           subpath.position = elm.bounds.topLeft.add([20,10]);
