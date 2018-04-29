@@ -16,20 +16,31 @@ class RulerWnd {
 
   constructor(options, tool) {
 
+    const init = {
+      name: 'sizes',
+      wnd: {
+        caption: 'Размеры и сдвиг',
+        width: 290,
+        height: 290,
+        modal: true,
+      },
+    };
+
     if (!options) {
-      options = {
-        name: 'sizes',
-        wnd: {
-          caption: 'Размеры и сдвиг',
-          height: 200,
-          modal: true,
-        },
-      };
+      options = Object.assign({}, init);
     }
     options.wnd.allow_close = true;
     $p.wsql.restore_options('editor', options);
     if (options.mode > 2) {
       options.mode = 2;
+    }
+    if(tool instanceof ToolRuler) {
+      if(options.wnd.width < init.wnd.width) {
+        options.wnd.width = init.wnd.width;
+      }
+      if(options.wnd.height < init.wnd.height) {
+        options.wnd.height = init.wnd.height;
+      }
     }
     options.wnd.on_close = this.on_close.bind(this);
     this.options = options;
@@ -60,8 +71,6 @@ class RulerWnd {
       {name: 'right', css: 'tb_align_hor', tooltip: $p.msg.align_set_right}).onclick = this.on_button_click;
     $p.iface.add_button(this.table[2].childNodes[1], null,
       {name: 'bottom', css: 'tb_align_vert', tooltip: $p.msg.align_set_bottom}).onclick = this.on_button_click;
-
-    wnd.attachObject(div);
 
     if (tool instanceof ToolRuler) {
 
@@ -116,6 +125,31 @@ class RulerWnd {
       wnd.tb_mode.buttons[tool.mode].classList.add('muted');
       wnd.tb_mode.buttons[tool.base_line].classList.add('muted');
       wnd.tb_mode.cell.style.backgroundColor = '#f5f5f5';
+
+      // создаём экземпляр обработки
+      this.dp = $p.dp.builder_size.create();
+      this.dp.align = $p.enm.text_aligns.center;
+
+      this.layout = wnd.attachLayout({
+        pattern: '2E',
+        cells: [
+          {id: 'a', text: 'Размер', header: false, height: 120, fix_size: [null, true]},
+          {id: 'b', text: 'Свойства', header: false},
+        ],
+        offsets: {top: 0, right: 0, bottom: 0, left: 0}
+      });
+      this.layout.cells('a').cell.lastChild.style.border = 'none';
+      this.layout.cells('a').attachObject(div);
+      this.grid = this.layout.cells('b').attachHeadFields({
+        obj: this.dp,
+        read_only: true,
+        oxml: {
+          ' ': ['fix_angle', 'angle', 'align', 'offset', 'hide_c1', 'hide_c2', 'hide_line']
+        }
+      });
+    }
+    else {
+      wnd.attachObject(div);
     }
 
     this.input = this.table[1].childNodes[1];
@@ -218,7 +252,7 @@ class RulerWnd {
             return;
           }
 
-          this.project.selectedItems.some((path) => {
+          tool.project.selectedItems.some((path) => {
             if (path.parent instanceof DimensionLineCustom) {
               path.parent.remove();
               return true;
@@ -284,6 +318,24 @@ class RulerWnd {
 
   set size(v) {
     this.input.firstChild.value = parseFloat(v).round(1);
+  }
+
+  attach(line) {
+    if(line.selected) {
+      this.dp.angle = line.angle;
+      this.dp.fix_angle = line.fix_angle;
+      this.dp.align = line.align;
+      this.dp.value_change = function(f, mf, v) {
+        line[f] = v;
+      }
+    }
+    else {
+      delete this.dp.value_change;
+      this.dp.angle = 0;
+      this.dp.fix_angle = false;
+      this.dp.align = $p.enm.text_aligns.center;
+    }
+    this.grid.setEditable(line.selected);
   }
 }
 

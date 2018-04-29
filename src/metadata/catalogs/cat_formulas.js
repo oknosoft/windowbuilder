@@ -59,7 +59,8 @@ exports.CatFormulas = class CatFormulas extends Object {
 
   execute(obj, attr) {
 
-    const {_owner: {$p}, _data} = this;
+    const {_manager, _data} = this;
+    const {$p} = _manager._owner;
 
     // создаём функцию из текста формулы
     if(!_data._formula && this.formula){
@@ -80,7 +81,7 @@ exports.CatFormulas = class CatFormulas extends Object {
 
     const {_formula} = _data;
 
-    if(this.parent == $p.cat.formulas.predefined("printing_plates")){
+    if(this.parent == _manager.predefined("printing_plates")){
 
       if(!_formula){
         $p.msg.show_msg({
@@ -105,9 +106,9 @@ exports.CatFormulas = class CatFormulas extends Object {
   }
 
   get _template() {
-    const {_data, _owner} = this;
+    const {_data} = this;
     if(!_data._template){
-      _data._template = new _owner.$p.SpreadsheetDocument(this.template);
+      _data._template = new this._manager._owner.$p.SpreadsheetDocument(this.template);
     }
     return _data._template;
   }

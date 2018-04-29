@@ -41,13 +41,16 @@ class DimensionLine extends paper.Group {
         attr.elm2 = this.project.getItem({elm: attr.elm2});
       }
     }
-
-    _attr.pos = attr.pos;
-    _attr.elm1 = attr.elm1;
-    _attr.elm2 = attr.elm2 || _attr.elm1;
-    _attr.p1 = attr.p1 || "b";
-    _attr.p2 = attr.p2 || "e";
-    _attr.offset = attr.offset;
+    if(!attr.elm2) {
+      attr.elm2 = attr.elm1;
+    }
+    if(!attr.p1) {
+      attr.p1 = 'b';
+    }
+    if(!attr.p2) {
+      attr.p2 = 'e';
+    }
+    Object.assign(_attr, attr);
 
     if(attr.impost){
       _attr.impost = true;
@@ -184,6 +187,10 @@ class DimensionLine extends paper.Group {
 
   }
 
+  /**
+   * Обрабатывает сообщение окна размеров
+   * @param event
+   */
   sizes_wnd(event) {
 
     if(this.wnd && event.wnd == this.wnd.wnd){
@@ -267,7 +274,7 @@ class DimensionLine extends paper.Group {
 
     children.text.content = length.toFixed(0);
     children.text.rotation = e.subtract(b).angle;
-    children.text.position = bs.add(es).divide(2).subtract(normal.normalize(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+    children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
   }
 
   get path() {
@@ -335,14 +342,6 @@ class DimensionLine extends paper.Group {
   }
   set size(v) {
     this.children.text.content = parseFloat(v).round(1);
-  }
-
-  // угол к горизонту в направлении размера
-  get angle() {
-    return 0;
-  }
-  set angle(v) {
-
   }
 
   // расположение относительно контура $p.enm.pos
@@ -432,19 +431,45 @@ class DimensionLineCustom extends DimensionLine {
     _row.elm_type = elm_type;
 
     // сериализованные данные
-    _row.path_data = JSON.stringify({
+    const path_data = {
       pos: pos,
       elm1: _attr.elm1.elm,
       elm2: _attr.elm2.elm,
       p1: _attr.p1,
       p2: _attr.p2,
       offset: offset
-    });
+    };
+    if(_attr.fix_angle) {
+      path_data.fix_angle = true;
+      path_data.angle = _attr.angle;
+    }
+    if(_attr.align === $p.enm.text_aligns.left || _attr.align === $p.enm.text_aligns.right) {
+      path_data.align = _attr.align;
+    }
+    if(_attr.hide_c1) {
+      path_data.hide_c1 = true;
+    }
+    if(_attr.hide_c2) {
+      path_data.hide_c2 = true;
+    }
+    if(_attr.hide_line) {
+      path_data.hide_line = true;
+    }
+    _row.path_data = JSON.stringify(path_data);
   }
 
+  // выделяем подключаем окно к свойствам
+  setSelection(selection) {
+    super.setSelection(selection);
+    const {tool} = this.project._scope;
+    tool instanceof ToolRuler && tool.wnd.attach(this);
+  }
+
+  // выделяем только при активном инструменте
   _click(event) {
     event.stop();
-    if(this.project._scope.tool instanceof ToolRuler){
+    const {tool} = this.project._scope;
+    if(tool instanceof ToolRuler){
       this.selected = true;
     }
   }
@@ -459,6 +484,45 @@ class DimensionLineCustom extends DimensionLine {
     }
   }
 
+  // угол к горизонту в направлении размера
+  get angle() {
+    if(this.fix_angle) {
+      return this._attr.angle || 0;
+    }
+    const {firstSegment, lastSegment} = this.path;
+    return lastSegment.point.subtract(firstSegment.point).angle.round(1);
+  }
+  set angle(v) {
+    this._attr.angle = parseFloat(v).round(1);
+  }
 
+
+  // использование фикс угла
+  get fix_angle() {
+    return !!this._attr.fix_angle;
+  }
+  set fix_angle(v) {
+    this._attr.fix_angle = v;
+  }
+
+  // расположение надписи
+  get align() {
+    return (!this._attr.align || this._attr.align == '_') ? $p.enm.text_aligns.center : this._attr.align;
+  }
+  set align(v) {
+    this._attr.align = v;
+  }
+
+  redraw() {
+    // если угол не задан, рисуем стандартную линию
+    if(this.fix_angle) {
+      // рисум линию под требуемым углом из точки 1
+      // ищем на линии ближайшую от точки 2
+      // рисуем остатки, смещаем на offset
+    }
+    else {
+      super.redraw();
+    }
+  }
 }
 

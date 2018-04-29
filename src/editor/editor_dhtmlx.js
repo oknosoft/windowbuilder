@@ -63,18 +63,18 @@ class Editor extends EditorInvisible {
      * @private
      */
     this._layout = pwnd.attachLayout({
-      pattern: "2U",
+      pattern: '2U',
       cells: [{
-        id: "a",
-        text: "Изделие",
+        id: 'a',
+        text: 'Изделие',
         header: false
       }, {
-        id: "b",
-        text: "Инструменты",
-        collapsed_text: "Инструменты",
+        id: 'b',
+        text: 'Инструменты',
+        collapsed_text: 'Инструменты',
         width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 440 : 260
       }],
-      offsets: { top: 28, right: 0, bottom: 0, left: 0}
+      offsets: {top: 28, right: 0, bottom: 0, left: 0}
     })
 
     /**
