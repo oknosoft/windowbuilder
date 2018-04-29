@@ -931,6 +931,7 @@ class Scheme extends paper.Project {
 
   /**
    * ### Уравнивает геометрически или по заполнениям
+   * сюда попадаем из move_points, когда меняем габариты
    * @param auto_align
    */
   do_align(auto_align, profiles) {
@@ -962,9 +963,10 @@ class Scheme extends paper.Project {
       }
       this._scope.glass_align('width', glasses);
 
-      if(auto_align == $p.enm.align_types.ПоЗаполнениям) {
-
-      }
+      // TODO: понять, что хотел автор
+      // if(auto_align == $p.enm.align_types.ПоЗаполнениям) {
+      //
+      // }
     }, 100);
 
   }
