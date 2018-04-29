@@ -62,38 +62,38 @@ $p.CatElm_visualization.prototype.__define({
           subpath.position = elm.bounds.topLeft.add([20,10]);
         }
         else {
-
+          const {generatrix, rays: {inner, outer}} = elm;
           // угол касательной
-          var angle_hor;
+          let angle_hor;
           if(elm.is_linear() || offset < 0)
-            angle_hor = elm.generatrix.getTangentAt(0).angle;
-          else if(offset > elm.generatrix.length)
-            angle_hor = elm.generatrix.getTangentAt(elm.generatrix.length).angle;
+            angle_hor = generatrix.getTangentAt(0).angle;
+          else if(offset > generatrix.length)
+            angle_hor = generatrix.getTangentAt(generatrix.length).angle;
           else
-            angle_hor = elm.generatrix.getTangentAt(offset).angle;
+            angle_hor = generatrix.getTangentAt(offset).angle;
 
           if((this.rotate != -1 || elm.orientation == $p.enm.orientations.Горизонтальная) && angle_hor != this.angle_hor){
             subpath.rotation = angle_hor - this.angle_hor;
           }
 
-          offset += elm.generatrix.getOffsetOf(elm.generatrix.getNearestPoint(elm.corns(1)));
+          offset += generatrix.getOffsetOf(generatrix.getNearestPoint(elm.corns(1)));
 
-          const p0 = elm.generatrix.getPointAt(offset > elm.generatrix.length ? elm.generatrix.length : offset || 0);
+          const p0 = generatrix.getPointAt(offset > generatrix.length ? generatrix.length : offset || 0);
 
           if(this.elm_side == -1){
             // в середине элемента
-            const p1 = elm.rays.inner.getNearestPoint(p0);
-            const p2 = elm.rays.outer.getNearestPoint(p0);
+            const p1 = inner.getNearestPoint(p0);
+            const p2 = outer.getNearestPoint(p0);
 
             subpath.position = p1.add(p2).divide(2);
 
           }else if(!this.elm_side){
             // изнутри
-            subpath.position = elm.rays.inner.getNearestPoint(p0);
+            subpath.position = inner.getNearestPoint(p0);
 
           }else{
             // снаружи
-            subpath.position = elm.rays.outer.getNearestPoint(p0);
+            subpath.position = outer.getNearestPoint(p0);
           }
         }
 
