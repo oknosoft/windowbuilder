@@ -494,6 +494,7 @@ class DimensionLineCustom extends DimensionLine {
   }
   set angle(v) {
     this._attr.angle = parseFloat(v).round(1);
+    this.project.register_change(true);
   }
 
 
@@ -503,6 +504,7 @@ class DimensionLineCustom extends DimensionLine {
   }
   set fix_angle(v) {
     this._attr.fix_angle = v;
+    this.project.register_change(true);
   }
 
   // расположение надписи
@@ -511,18 +513,57 @@ class DimensionLineCustom extends DimensionLine {
   }
   set align(v) {
     this._attr.align = v;
+    this.project.register_change(true);
   }
 
-  redraw() {
+  get path() {
     // если угол не задан, рисуем стандартную линию
+    const path = super.path;
     if(this.fix_angle) {
       // рисум линию под требуемым углом из точки 1
       // ищем на линии ближайшую от точки 2
       // рисуем остатки, смещаем на offset
+
+      const {children, _attr} = this;
+      if(!children.length){
+        return;
+      }
+      let b = typeof _attr.p1 == "number" ? _attr.elm1.corns(_attr.p1) : _attr.elm1[_attr.p1];
+      let e = typeof _attr.p2 == "number" ? _attr.elm2.corns(_attr.p2) : _attr.elm2[_attr.p2];
+      // если точки профиля еще не нарисованы - выходим
+      if(!b || !e){
+        return;
+      }
+
+      // дельта
+      const d = e.subtract(b);
+      // касательная
+      const t = d.clone();
+      t.angle = this.angle;
+      // путь по углу
+      const path = new paper.Path({ insert: false, segments: [b, b.add(t)] });
+      // удлиненный путь
+      path.lastSegment.point.add(t.multiply(10000));
+      // обрезаем ближайшей точкой к 'e'
+      path.lastSegment.point = path.getNearestPoint(e);
+      path.offset = 0;
+      return path;
     }
     else {
-      super.redraw();
+      return super.path;
     }
   }
+
+  // redraw() {
+  //   // если угол не задан, рисуем стандартную линию
+  //   if(this.fix_angle) {
+  //     // рисум линию под требуемым углом из точки 1
+  //     // ищем на линии ближайшую от точки 2
+  //     // рисуем остатки, смещаем на offset
+  //   }
+  //   else {
+  //     super.redraw();
+  //   }
+  // }
 }
 

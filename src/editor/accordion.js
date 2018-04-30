@@ -40,6 +40,7 @@ class SchemeLayers {
       }
       else {
         editor.project.ox.builder_props = {[id]: state};
+        editor.project.register_change(true);
       }
       editor.project.register_update();
     });

@@ -307,6 +307,14 @@ class Scheme extends paper.Project {
   }
 
   /**
+   * ### Допсвойства, например, скрыть размерные линии
+   * при рендеринге может переопределяться или объединяться с параметрами рендеринга
+   */
+  get builder_props() {
+    return this.ox.builder_props;
+  }
+
+  /**
    * ### Читает изделие по ссылке или объекту продукции
    * Выполняет следующую последовательность действий:
    * - Если передана ссылка, получает объект из базы данных
@@ -1087,9 +1095,9 @@ class Scheme extends paper.Project {
    */
   draw_sizes() {
 
-    const {bounds, l_dimensions} = this;
+    const {bounds, l_dimensions, builder_props} = this;
 
-    if(bounds) {
+    if(bounds && builder_props.auto_lines) {
 
       if(!l_dimensions.bottom) {
         l_dimensions.bottom = new DimensionLine({

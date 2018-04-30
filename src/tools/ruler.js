@@ -145,7 +145,8 @@ class RulerWnd {
         read_only: true,
         oxml: {
           ' ': ['fix_angle', 'angle', 'align', 'offset', 'hide_c1', 'hide_c2', 'hide_line']
-        }
+        },
+        widths: '60,40',
       });
     }
     else {
@@ -194,11 +195,13 @@ class RulerWnd {
             case 'left':
             case 'bottom':
               path.parent.offset -= 20;
+              this.dp.offset = path.parent.offset;
               break;
 
             case 'top':
             case 'right':
               path.parent.offset += 20;
+              this.dp.offset = path.parent.offset;
               break;
 
           }
@@ -206,12 +209,7 @@ class RulerWnd {
           return true;
         }
       })) {
-      tool.sizes_wnd({
-        wnd: wnd,
-        name: ev.currentTarget.name,
-        size: size,
-        tool: tool,
-      });
+      tool.sizes_wnd({wnd, size, tool, name: ev.currentTarget.name});
     }
   }
 
@@ -325,6 +323,7 @@ class RulerWnd {
       this.dp.angle = line.angle;
       this.dp.fix_angle = line.fix_angle;
       this.dp.align = line.align;
+      this.dp.offset = line.offset;
       this.dp.value_change = function(f, mf, v) {
         line[f] = v;
       }
@@ -334,6 +333,7 @@ class RulerWnd {
       this.dp.angle = 0;
       this.dp.fix_angle = false;
       this.dp.align = $p.enm.text_aligns.center;
+      this.dp.offset = 0;
     }
     this.grid.setEditable(line.selected);
   }

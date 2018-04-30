@@ -41,6 +41,7 @@ class SchemeLayers {
       }
       else {
         editor.project.ox.builder_props = {[id]: state};
+        editor.project.register_change(true);
       }
       editor.project.register_update();
     });
@@ -4342,10 +4343,10 @@ class DimensionDrawer extends paper.Group {
 
   redraw(forse) {
 
-    const {parent} = this;
+    const {parent, project: {builder_props}} = this;
     const {contours, bounds} = parent;
 
-    if(forse) {
+    if(forse || !builder_props.auto_lines) {
       this.clear();
     }
 
@@ -4353,7 +4354,7 @@ class DimensionDrawer extends paper.Group {
       chld.l_dimensions.redraw();
     }
 
-    if(!parent.parent || forse) {
+    if(builder_props.auto_lines && (!parent.parent || forse)) {
 
       const by_side = parent.profiles_by_side();
       if(!Object.keys(by_side).length) {
@@ -5025,6 +5026,7 @@ class DimensionLineCustom extends DimensionLine {
   }
   set angle(v) {
     this._attr.angle = parseFloat(v).round(1);
+    this.project.register_change(true);
   }
 
 
@@ -5033,6 +5035,7 @@ class DimensionLineCustom extends DimensionLine {
   }
   set fix_angle(v) {
     this._attr.fix_angle = v;
+    this.project.register_change(true);
   }
 
   get align() {
@@ -5040,15 +5043,37 @@ class DimensionLineCustom extends DimensionLine {
   }
   set align(v) {
     this._attr.align = v;
+    this.project.register_change(true);
   }
 
-  redraw() {
+  get path() {
+    const path = super.path;
     if(this.fix_angle) {
+
+      const {children, _attr} = this;
+      if(!children.length){
+        return;
+      }
+      let b = typeof _attr.p1 == "number" ? _attr.elm1.corns(_attr.p1) : _attr.elm1[_attr.p1];
+      let e = typeof _attr.p2 == "number" ? _attr.elm2.corns(_attr.p2) : _attr.elm2[_attr.p2];
+      if(!b || !e){
+        return;
+      }
+
+      const d = e.subtract(b);
+      const t = d.clone();
+      t.angle = this.angle;
+      const path = new paper.Path({ insert: false, segments: [b, b.add(t)] });
+      path.lastSegment.point.add(t.multiply(10000));
+      path.lastSegment.point = path.getNearestPoint(e);
+      path.offset = 0;
+      return path;
     }
     else {
-      super.redraw();
+      return super.path;
     }
   }
+
 }
 
 
@@ -10005,6 +10030,10 @@ class Scheme extends paper.Project {
 
   }
 
+  get builder_props() {
+    return this.ox.builder_props;
+  }
+
   load(id, from_service) {
     const {_attr} = this;
     const _scheme = this;
@@ -10574,9 +10603,9 @@ class Scheme extends paper.Project {
 
   draw_sizes() {
 
-    const {bounds, l_dimensions} = this;
+    const {bounds, l_dimensions, builder_props} = this;
 
-    if(bounds) {
+    if(bounds && builder_props.auto_lines) {
 
       if(!l_dimensions.bottom) {
         l_dimensions.bottom = new DimensionLine({
@@ -13999,7 +14028,8 @@ class RulerWnd {
         read_only: true,
         oxml: {
           ' ': ['fix_angle', 'angle', 'align', 'offset', 'hide_c1', 'hide_c2', 'hide_line']
-        }
+        },
+        widths: '60,40',
       });
     }
     else {
@@ -14048,11 +14078,13 @@ class RulerWnd {
             case 'left':
             case 'bottom':
               path.parent.offset -= 20;
+              this.dp.offset = path.parent.offset;
               break;
 
             case 'top':
             case 'right':
               path.parent.offset += 20;
+              this.dp.offset = path.parent.offset;
               break;
 
           }
@@ -14060,12 +14092,7 @@ class RulerWnd {
           return true;
         }
       })) {
-      tool.sizes_wnd({
-        wnd: wnd,
-        name: ev.currentTarget.name,
-        size: size,
-        tool: tool,
-      });
+      tool.sizes_wnd({wnd, size, tool, name: ev.currentTarget.name});
     }
   }
 
@@ -14178,6 +14205,7 @@ class RulerWnd {
       this.dp.angle = line.angle;
       this.dp.fix_angle = line.fix_angle;
       this.dp.align = line.align;
+      this.dp.offset = line.offset;
       this.dp.value_change = function(f, mf, v) {
         line[f] = v;
       }
@@ -14187,6 +14215,7 @@ class RulerWnd {
       this.dp.angle = 0;
       this.dp.fix_angle = false;
       this.dp.align = $p.enm.text_aligns.center;
+      this.dp.offset = 0;
     }
     this.grid.setEditable(line.selected);
   }
