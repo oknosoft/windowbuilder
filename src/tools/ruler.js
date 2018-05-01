@@ -458,6 +458,7 @@ class ToolRuler extends ToolElement {
                 p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(0),
                 parent: parent.layer.l_dimensions,
               });
+              this.project.register_change(true);
             }
 
           }
@@ -493,7 +494,7 @@ class ToolRuler extends ToolElement {
                   parent: this.hitPoint.profile.layer.l_dimensions,
                 });
 
-                this.hitPoint.profile.project.register_change(true);
+                this.project.register_change(true);
                 this.reset_selected();
 
               }

@@ -236,8 +236,10 @@ class DimensionLine extends paper.Group {
     const b = path.firstSegment.point;
     const e = path.lastSegment.point;
     const normal = path.getNormalAt(0).multiply(this.offset + path.offset);
-    const bs = b.add(normal.multiply(0.8));
-    const es = e.add(normal.multiply(0.8));
+    const nl = normal.length;
+    const ns = nl > 30 ? normal.normalize(nl - 20) : normal;
+    const bs = b.add(ns);
+    const es = e.add(ns);
 
     if(children.callout1.segments.length){
       children.callout1.firstSegment.point = b;
@@ -563,11 +565,7 @@ class DimensionLineCustom extends DimensionLine {
     this.project.register_change(true);
   }
 
-
-
   get path() {
-    // если угол не задан, рисуем стандартную линию
-    const path = super.path;
     if(this.fix_angle) {
       // рисум линию под требуемым углом из точки 1
       // ищем на линии ближайшую от точки 2
@@ -590,7 +588,7 @@ class DimensionLineCustom extends DimensionLine {
       const t = d.clone();
       t.angle = this.angle;
       // путь по углу
-      const path = new paper.Path({ insert: false, segments: [b, b.add(t)] });
+      const path = new paper.Path({insert: false, segments: [b, b.add(t)]});
       // удлиненный путь
       path.lastSegment.point.add(t.multiply(10000));
       // обрезаем ближайшей точкой к 'e'
@@ -599,6 +597,7 @@ class DimensionLineCustom extends DimensionLine {
       return path;
     }
     else {
+      // если угол не задан, рисуем стандартную линию
       return super.path;
     }
   }

@@ -4802,8 +4802,10 @@ class DimensionLine extends paper.Group {
     const b = path.firstSegment.point;
     const e = path.lastSegment.point;
     const normal = path.getNormalAt(0).multiply(this.offset + path.offset);
-    const bs = b.add(normal.multiply(0.8));
-    const es = e.add(normal.multiply(0.8));
+    const nl = normal.length;
+    const ns = nl > 30 ? normal.normalize(nl - 20) : normal;
+    const bs = b.add(ns);
+    const es = e.add(ns);
 
     if(children.callout1.segments.length){
       children.callout1.firstSegment.point = b;
@@ -5093,10 +5095,7 @@ class DimensionLineCustom extends DimensionLine {
     this.project.register_change(true);
   }
 
-
-
   get path() {
-    const path = super.path;
     if(this.fix_angle) {
 
       const {children, _attr} = this;
@@ -5112,7 +5111,7 @@ class DimensionLineCustom extends DimensionLine {
       const d = e.subtract(b);
       const t = d.clone();
       t.angle = this.angle;
-      const path = new paper.Path({ insert: false, segments: [b, b.add(t)] });
+      const path = new paper.Path({insert: false, segments: [b, b.add(t)]});
       path.lastSegment.point.add(t.multiply(10000));
       path.lastSegment.point = path.getNearestPoint(e);
       path.offset = 0;
@@ -5130,6 +5129,74 @@ class DimensionRadius extends DimensionLineCustom {
 
   get elm_type() {
     return $p.enm.elm_types.Радиус;
+  }
+
+  get path() {
+
+    const {children, _attr} = this;
+    if(!children.length){
+      return;
+    }
+    const {path} = _attr.elm1;
+    if(!path){
+      return;
+    }
+
+    let b = path.getPointAt(_attr.p1);
+    const n = path.getNormalAt(_attr.p1).normalize(100);
+    const res = new paper.Path({insert: false, segments: [b, b.add(n)]});
+    res.offset = 0;
+    return res;
+  }
+
+  redraw() {
+    const {children, _attr, path, align} = this;
+    if(!path){
+      this.visible = false;
+      return;
+    }
+    this.visible = true;
+
+    const b = path.firstSegment.point;
+    const e = path.lastSegment.point;
+    const c = path.getPointAt(50);
+    const n = path.getNormalAt(0).multiply(10);
+    const c1 = c.add(n);
+    const c2 = c.subtract(n);
+
+    if(children.callout1.segments.length){
+      children.callout1.firstSegment.point = b;
+      children.callout1.lastSegment.point = c1;
+    }
+    else{
+      children.callout1.addSegments([b, c1]);
+    }
+
+    if(children.callout2.segments.length){
+      children.callout2.firstSegment.point = b;
+      children.callout2.lastSegment.point = c2;
+    }
+    else{
+      children.callout2.addSegments([b, c2]);
+    }
+
+    if(children.scale.segments.length){
+      children.scale.firstSegment.point = b;
+      children.scale.lastSegment.point = e;
+    }
+    else{
+      children.scale.addSegments([b, e]);
+    }
+
+    const {generatrix} = _attr.elm1;
+    const np = generatrix.getNearestPoint(b);
+    const curv = Math.abs(generatrix.getCurvatureAt(generatrix.getOffsetOf(np)));
+    if(curv) {
+      children.text.content = `R${(1 / curv).round(-1)}`;
+      children.text.rotation = e.subtract(b).angle;
+      children.text.justification = 'left';
+    }
+    children.text.position = e.add(path.getTangentAt(0).multiply(consts.font_size * 1.4));
   }
 
 }
@@ -14381,6 +14448,7 @@ class ToolRuler extends ToolElement {
                 p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(0),
                 parent: parent.layer.l_dimensions,
               });
+              this.project.register_change(true);
             }
 
           }
@@ -14413,7 +14481,7 @@ class ToolRuler extends ToolElement {
                   parent: this.hitPoint.profile.layer.l_dimensions,
                 });
 
-                this.hitPoint.profile.project.register_change(true);
+                this.project.register_change(true);
                 this.reset_selected();
 
               }
