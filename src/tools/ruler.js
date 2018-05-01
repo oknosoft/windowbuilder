@@ -21,7 +21,7 @@ class RulerWnd {
       wnd: {
         caption: 'Размеры и сдвиг',
         width: 290,
-        height: 290,
+        height: 320,
         modal: true,
       },
     };

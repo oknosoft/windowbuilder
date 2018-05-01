@@ -474,7 +474,7 @@ class DimensionLineCustom extends DimensionLine {
    * @method save_coordinates
    */
   save_coordinates() {
-    const {_row, _attr, elm_type, pos, offset, size} = this;
+    const {_row, _attr, elm_type, pos, offset, size, align} = this;
 
     // сохраняем размер
     _row.len = size;
@@ -495,8 +495,8 @@ class DimensionLineCustom extends DimensionLine {
       path_data.fix_angle = true;
       path_data.angle = _attr.angle;
     }
-    if(_attr.align === $p.enm.text_aligns.left || _attr.align === $p.enm.text_aligns.right) {
-      path_data.align = _attr.align;
+    if(align == $p.enm.text_aligns.left || align == $p.enm.text_aligns.right) {
+      path_data.align = align.ref || align;
     }
     if(_attr.hide_c1) {
       path_data.hide_c1 = true;
