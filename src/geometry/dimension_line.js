@@ -1,8 +1,6 @@
 /**
  * ### Размерные линии на эскизе
  *
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
- *
  * Created 21.08.2015
  *
  * @module geometry
@@ -79,7 +77,6 @@ class DimensionLine extends paper.Group {
 
     this.on({
       mouseenter: this._mouseenter,
-      mouseleave: this._mouseleave,
       click: this._click
     });
 
@@ -87,20 +84,16 @@ class DimensionLine extends paper.Group {
 
   // виртуальные метаданные для автоформ
   _metadata() {
-    return $p.dp.builder_text.metadata();
+    return $p.dp.builder_size.metadata();
   }
 
   // виртуальный датаменеджер для автоформ
   get _manager() {
-    return $p.dp.builder_text;
+    return $p.dp.builder_size;
   }
 
   _mouseenter() {
     this.project._scope.canvas_cursor('cursor-arrow-ruler');
-  }
-
-  _mouseleave() {
-    //paper.canvas_cursor('cursor-arrow-white');
   }
 
   _click(event) {
@@ -223,12 +216,10 @@ class DimensionLine extends paper.Group {
 
   redraw() {
 
-    const {children} = this;
+    const {children, path, align} = this;
     if(!children.length){
       return;
     }
-
-    const {path} = this;
     if(!path){
       this.visible = false;
       return;
@@ -272,9 +263,26 @@ class DimensionLine extends paper.Group {
       children.scale.addSegments([bs, es]);
     }
 
+    children.callout1.visible = !this.hide_c1;
+    children.callout2.visible = !this.hide_c2;
+    children.scale.visible = !this.hide_line;
+
     children.text.content = length.toFixed(0);
     children.text.rotation = e.subtract(b).angle;
-    children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+    children.text.justification = align.ref;
+    if(align == $p.enm.text_aligns.left) {
+      children.text.position = bs
+        .add(path.getTangentAt(0).multiply(consts.font_size))
+        .add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+    }
+    else if(align == $p.enm.text_aligns.right) {
+      children.text.position = es
+        .add(path.getTangentAt(0).multiply(-consts.font_size))
+        .add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+    }
+    else {
+      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+    }
   }
 
   get path() {
@@ -363,6 +371,48 @@ class DimensionLine extends paper.Group {
       this._attr.offset = offset;
       this.project.register_change(true);
     }
+  }
+
+  // расположение надписи
+  get align() {
+    return (!this._attr.align || this._attr.align == '_') ? $p.enm.text_aligns.center : this._attr.align;
+  }
+  set align(v) {
+    this._attr.align = v;
+    this.redraw();
+  }
+
+  // сокрытие первой выноски
+  get hide_c1() {
+    return !!this._attr.hide_c1;
+  }
+  set hide_c1(v) {
+    const {children, hide_c1, _attr} = this
+    _attr.hide_c1 = v;
+    v && children.callout1.setSelection(false);
+    this.redraw();
+  }
+
+  // сокрытие второй выноски
+  get hide_c2() {
+    return !!this._attr.hide_c2;
+  }
+  set hide_c2(v) {
+    const {children, hide_c2, _attr} = this
+    _attr.hide_c2 = v;
+    v && children.callout2.setSelection(false);
+    this.redraw();
+  }
+
+  // сокрытие линии
+  get hide_line() {
+    return !!this._attr.hide_line;
+  }
+  set hide_line(v) {
+    const {children, hide_line, _attr} = this
+    _attr.hide_line = v;
+    v && children.scale.setSelection(false);
+    this.redraw();
   }
 
   /**
@@ -461,7 +511,13 @@ class DimensionLineCustom extends DimensionLine {
   // выделяем подключаем окно к свойствам
   setSelection(selection) {
     super.setSelection(selection);
-    const {tool} = this.project._scope;
+    const {project, children, hide_c1, hide_c2, hide_line} = this
+    const {tool} = project._scope;
+    if(selection) {
+      hide_c1 && children.callout1.setSelection(false);
+      hide_c2 && children.callout2.setSelection(false);
+      hide_line && children.scale.setSelection(false);
+    }
     tool instanceof ToolRuler && tool.wnd.attach(this);
   }
 
@@ -507,14 +563,7 @@ class DimensionLineCustom extends DimensionLine {
     this.project.register_change(true);
   }
 
-  // расположение надписи
-  get align() {
-    return (!this._attr.align || this._attr.align == '_') ? $p.enm.text_aligns.center : this._attr.align;
-  }
-  set align(v) {
-    this._attr.align = v;
-    this.project.register_change(true);
-  }
+
 
   get path() {
     // если угол не задан, рисуем стандартную линию
@@ -553,17 +602,5 @@ class DimensionLineCustom extends DimensionLine {
       return super.path;
     }
   }
-
-  // redraw() {
-  //   // если угол не задан, рисуем стандартную линию
-  //   if(this.fix_angle) {
-  //     // рисум линию под требуемым углом из точки 1
-  //     // ищем на линии ближайшую от точки 2
-  //     // рисуем остатки, смещаем на offset
-  //   }
-  //   else {
-  //     super.redraw();
-  //   }
-  // }
 }
 

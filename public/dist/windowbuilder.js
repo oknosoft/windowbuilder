@@ -4652,25 +4652,21 @@ class DimensionLine extends paper.Group {
 
     this.on({
       mouseenter: this._mouseenter,
-      mouseleave: this._mouseleave,
       click: this._click
     });
 
   }
 
   _metadata() {
-    return $p.dp.builder_text.metadata();
+    return $p.dp.builder_size.metadata();
   }
 
   get _manager() {
-    return $p.dp.builder_text;
+    return $p.dp.builder_size;
   }
 
   _mouseenter() {
     this.project._scope.canvas_cursor('cursor-arrow-ruler');
-  }
-
-  _mouseleave() {
   }
 
   _click(event) {
@@ -4787,12 +4783,10 @@ class DimensionLine extends paper.Group {
 
   redraw() {
 
-    const {children} = this;
+    const {children, path, align} = this;
     if(!children.length){
       return;
     }
-
-    const {path} = this;
     if(!path){
       this.visible = false;
       return;
@@ -4835,9 +4829,26 @@ class DimensionLine extends paper.Group {
       children.scale.addSegments([bs, es]);
     }
 
+    children.callout1.visible = !this.hide_c1;
+    children.callout2.visible = !this.hide_c2;
+    children.scale.visible = !this.hide_line;
+
     children.text.content = length.toFixed(0);
     children.text.rotation = e.subtract(b).angle;
-    children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+    children.text.justification = align.ref;
+    if(align == $p.enm.text_aligns.left) {
+      children.text.position = bs
+        .add(path.getTangentAt(0).multiply(consts.font_size))
+        .add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+    }
+    else if(align == $p.enm.text_aligns.right) {
+      children.text.position = es
+        .add(path.getTangentAt(0).multiply(-consts.font_size))
+        .add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+    }
+    else {
+      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+    }
   }
 
   get path() {
@@ -4924,6 +4935,44 @@ class DimensionLine extends paper.Group {
     }
   }
 
+  get align() {
+    return (!this._attr.align || this._attr.align == '_') ? $p.enm.text_aligns.center : this._attr.align;
+  }
+  set align(v) {
+    this._attr.align = v;
+    this.redraw();
+  }
+
+  get hide_c1() {
+    return !!this._attr.hide_c1;
+  }
+  set hide_c1(v) {
+    const {children, hide_c1, _attr} = this
+    _attr.hide_c1 = v;
+    v && children.callout1.setSelection(false);
+    this.redraw();
+  }
+
+  get hide_c2() {
+    return !!this._attr.hide_c2;
+  }
+  set hide_c2(v) {
+    const {children, hide_c2, _attr} = this
+    _attr.hide_c2 = v;
+    v && children.callout2.setSelection(false);
+    this.redraw();
+  }
+
+  get hide_line() {
+    return !!this._attr.hide_line;
+  }
+  set hide_line(v) {
+    const {children, hide_line, _attr} = this
+    _attr.hide_line = v;
+    v && children.scale.setSelection(false);
+    this.redraw();
+  }
+
   remove() {
     if(this._row){
       this._row._owner.del(this._row);
@@ -4995,7 +5044,13 @@ class DimensionLineCustom extends DimensionLine {
 
   setSelection(selection) {
     super.setSelection(selection);
-    const {tool} = this.project._scope;
+    const {project, children, hide_c1, hide_c2, hide_line} = this
+    const {tool} = project._scope;
+    if(selection) {
+      hide_c1 && children.callout1.setSelection(false);
+      hide_c2 && children.callout2.setSelection(false);
+      hide_line && children.scale.setSelection(false);
+    }
     tool instanceof ToolRuler && tool.wnd.attach(this);
   }
 
@@ -5038,13 +5093,7 @@ class DimensionLineCustom extends DimensionLine {
     this.project.register_change(true);
   }
 
-  get align() {
-    return (!this._attr.align || this._attr.align == '_') ? $p.enm.text_aligns.center : this._attr.align;
-  }
-  set align(v) {
-    this._attr.align = v;
-    this.project.register_change(true);
-  }
+
 
   get path() {
     const path = super.path;
@@ -5073,9 +5122,17 @@ class DimensionLineCustom extends DimensionLine {
       return super.path;
     }
   }
-
 }
 
+
+
+class DimensionRadius extends DimensionLineCustom {
+
+  get elm_type() {
+    return $p.enm.elm_types.Радиус;
+  }
+
+}
 
 
 
@@ -10034,25 +10091,27 @@ class Scheme extends paper.Project {
     return this.ox.builder_props;
   }
 
+  load_dimension_lines() {
+    const {Размер, Радиус} = $p.enm.elm_types;
+    this.ox.coordinates.find_rows({elm_type: {in: [Размер, Радиус]}}, (row) => {
+      const layer = this.getItem({cnstr: row.cnstr});
+      const Constructor = row.elm_type === Размер ? DimensionLineCustom : DimensionRadius;
+      layer && new Constructor({
+        parent: layer.l_dimensions,
+        row: row
+      });
+    });
+  }
+
+  load_contour(parent) {
+    this.ox.constructions.find_rows({parent: parent ? parent.cnstr : 0}, (row) => {
+      this.load_contour(new Contour({parent: parent, row: row}));
+    });
+  }
+
   load(id, from_service) {
     const {_attr} = this;
     const _scheme = this;
-
-    function load_contour(parent) {
-      _scheme.ox.constructions.find_rows({parent: parent ? parent.cnstr : 0}, (row) => {
-        load_contour(new Contour({parent: parent, row: row}));
-      });
-    }
-
-    function load_dimension_lines() {
-      _scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, (row) => {
-        const layer = _scheme.getItem({cnstr: row.cnstr});
-        layer && new DimensionLineCustom({
-          parent: layer.l_dimensions,
-          row: row
-        });
-      });
-    }
 
     function load_object(o) {
 
@@ -10074,7 +10133,7 @@ class Scheme extends paper.Project {
       })
       o = null;
 
-      load_contour(null);
+      _scheme.load_contour(null);
 
       _scheme.redraw(from_service);
 
@@ -10082,7 +10141,7 @@ class Scheme extends paper.Project {
 
         _attr._bounds = null;
 
-        load_dimension_lines();
+        _scheme.load_dimension_lines();
 
         setTimeout(() => {
 
@@ -13971,6 +14030,7 @@ class RulerWnd {
           {name: '0', img: 'ruler_elm.png', tooltip: $p.msg.ruler_elm, float: 'left'},
           {name: '1', img: 'ruler_node.png', tooltip: $p.msg.ruler_node, float: 'left'},
           {name: '2', img: 'ruler_arrow.png', tooltip: $p.msg.ruler_new_line, float: 'left'},
+          {name: '4', css: 'tb_cursor-arc-r', tooltip: $p.msg.ruler_arc, float: 'left'},
 
           {name: 'sep_0', text: '', float: 'left'},
           {name: 'base', img: 'ruler_base.png', tooltip: $p.msg.ruler_base, float: 'left'},
@@ -13979,10 +14039,10 @@ class RulerWnd {
         ],
         image_path: '/imgs/',
         onclick: (name) => {
+          const names = ['0', '1', '2', '4'];
+          if (names.indexOf(name) != -1) {
 
-          if (['0', '1', '2'].indexOf(name) != -1) {
-
-            ['0', '1', '2'].forEach((btn) => {
+            names.forEach((btn) => {
               if (btn != name) {
                 wnd.tb_mode.buttons[btn] && wnd.tb_mode.buttons[btn].classList.remove('muted');
               }
@@ -14206,6 +14266,9 @@ class RulerWnd {
       this.dp.fix_angle = line.fix_angle;
       this.dp.align = line.align;
       this.dp.offset = line.offset;
+      this.dp.hide_c1 = line.hide_c1;
+      this.dp.hide_c2 = line.hide_c2;
+      this.dp.hide_line = line.hide_line;
       this.dp.value_change = function(f, mf, v) {
         line[f] = v;
       }
@@ -14301,6 +14364,26 @@ class ToolRuler extends ToolElement {
             this.add_hit_point(event);
 
           }
+          else if (this.mode == 4 && this.hitPoint) {
+
+            const {parent} = this.hitItem.item;
+
+            if(parent.is_linear()) {
+              $p.msg.show_msg({
+                type: 'alert-info',
+                text: `Выделен прямой элемент`,
+                title: 'Размерная линия радиуса'
+              });
+            }
+            else {
+              new DimensionRadius({
+                elm1: parent,
+                p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(0),
+                parent: parent.layer.l_dimensions,
+              });
+            }
+
+          }
           else {
 
             if (this.hitPoint) {
@@ -14346,7 +14429,6 @@ class ToolRuler extends ToolElement {
 
       mouseup: function (event) {
 
-
       },
 
       mousedrag: function (event) {
@@ -14359,7 +14441,7 @@ class ToolRuler extends ToolElement {
 
         const {mode, path} = this;
 
-        if (mode == 3 && path) {
+        if (mode === 3 && path) {
 
           if (path.segments.length == 4) {
             path.removeSegments(1, 3, true);
@@ -14385,6 +14467,19 @@ class ToolRuler extends ToolElement {
 
           } else {
             this.path_text.visible = false;
+          }
+        }
+        else if(mode === 4 && this.hitPoint) {
+          if (!this.path) {
+            this.path = new paper.Path.Circle({
+              center: this.hitPoint,
+              radius: 20,
+              fillColor: new paper.Color(0, 0, 1, 0.5),
+              guide: true,
+            });
+          }
+          else {
+            this.path.position = this.hitPoint;
           }
         }
 
@@ -14423,6 +14518,9 @@ class ToolRuler extends ToolElement {
       if (!this.mode) {
         this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: 10});
       }
+      if (this.mode === 4) {
+        this.hitItem = this.project.hitTest(event.point, {stroke: true, tolerance: 20});
+      }
       else {
         const hit = this.project.hitPoints(event.point, 16);
         if (hit && hit.item.parent instanceof ProfileItem) {
@@ -14434,12 +14532,20 @@ class ToolRuler extends ToolElement {
     if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
       if (this.mode) {
         this._scope.canvas_cursor('cursor-arrow-white-point');
-        this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
+        if (this.mode === 4) {
+          this.hitPoint = this.hitItem.item.getNearestPoint(event.point);
+        }
+        else {
+          this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
+        }
       }
     }
     else {
       if (this.mode) {
         this._scope.canvas_cursor('cursor-text-select');
+        if (this.mode === 4) {
+          this.remove_path();
+        }
       }
       else {
         this._scope.canvas_cursor('cursor-arrow-ruler-light');

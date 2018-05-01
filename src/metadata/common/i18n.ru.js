@@ -50,6 +50,7 @@ export default function ($p) {
     ruler_elm: 'Расстояние между элементами',
     ruler_node: 'Расстояние между узлами',
     ruler_new_line: 'Добавить размерную линию',
+    ruler_arc: 'Добавить линию радиуса',
 
     ruler_base: 'По опорным линиям',
     ruler_inner: 'По внутренним линиям',

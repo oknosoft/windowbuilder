@@ -86,6 +86,7 @@ class RulerWnd {
           {name: '0', img: 'ruler_elm.png', tooltip: $p.msg.ruler_elm, float: 'left'},
           {name: '1', img: 'ruler_node.png', tooltip: $p.msg.ruler_node, float: 'left'},
           {name: '2', img: 'ruler_arrow.png', tooltip: $p.msg.ruler_new_line, float: 'left'},
+          {name: '4', css: 'tb_cursor-arc-r', tooltip: $p.msg.ruler_arc, float: 'left'},
 
           {name: 'sep_0', text: '', float: 'left'},
           {name: 'base', img: 'ruler_base.png', tooltip: $p.msg.ruler_base, float: 'left'},
@@ -94,10 +95,10 @@ class RulerWnd {
         ],
         image_path: '/imgs/',
         onclick: (name) => {
+          const names = ['0', '1', '2', '4'];
+          if (names.indexOf(name) != -1) {
 
-          if (['0', '1', '2'].indexOf(name) != -1) {
-
-            ['0', '1', '2'].forEach((btn) => {
+            names.forEach((btn) => {
               if (btn != name) {
                 wnd.tb_mode.buttons[btn] && wnd.tb_mode.buttons[btn].classList.remove('muted');
               }
@@ -324,6 +325,9 @@ class RulerWnd {
       this.dp.fix_angle = line.fix_angle;
       this.dp.align = line.align;
       this.dp.offset = line.offset;
+      this.dp.hide_c1 = line.hide_c1;
+      this.dp.hide_c2 = line.hide_c2;
+      this.dp.hide_line = line.hide_line;
       this.dp.value_change = function(f, mf, v) {
         line[f] = v;
       }
@@ -435,6 +439,28 @@ class ToolRuler extends ToolElement {
             this.add_hit_point(event);
 
           }
+          // mode == 4 - это радиус элемента
+          else if (this.mode == 4 && this.hitPoint) {
+
+            const {parent} = this.hitItem.item;
+
+            if(parent.is_linear()) {
+              $p.msg.show_msg({
+                type: 'alert-info',
+                text: `Выделен прямой элемент`,
+                title: 'Размерная линия радиуса'
+              });
+            }
+            else {
+              // создаём размерную линию
+              new DimensionRadius({
+                elm1: parent,
+                p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(0),
+                parent: parent.layer.l_dimensions,
+              });
+            }
+
+          }
           // mode > 1 - это размерная линия
           else {
 
@@ -484,7 +510,6 @@ class ToolRuler extends ToolElement {
 
       mouseup: function (event) {
 
-
       },
 
       mousedrag: function (event) {
@@ -497,7 +522,7 @@ class ToolRuler extends ToolElement {
 
         const {mode, path} = this;
 
-        if (mode == 3 && path) {
+        if (mode === 3 && path) {
 
           if (path.segments.length == 4) {
             path.removeSegments(1, 3, true);
@@ -526,6 +551,19 @@ class ToolRuler extends ToolElement {
 
           } else {
             this.path_text.visible = false;
+          }
+        }
+        else if(mode === 4 && this.hitPoint) {
+          if (!this.path) {
+            this.path = new paper.Path.Circle({
+              center: this.hitPoint,
+              radius: 20,
+              fillColor: new paper.Color(0, 0, 1, 0.5),
+              guide: true,
+            });
+          }
+          else {
+            this.path.position = this.hitPoint;
           }
         }
 
@@ -567,6 +605,9 @@ class ToolRuler extends ToolElement {
       if (!this.mode) {
         this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: 10});
       }
+      if (this.mode === 4) {
+        this.hitItem = this.project.hitTest(event.point, {stroke: true, tolerance: 20});
+      }
       else {
         // Hit test points
         const hit = this.project.hitPoints(event.point, 16);
@@ -579,12 +620,20 @@ class ToolRuler extends ToolElement {
     if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
       if (this.mode) {
         this._scope.canvas_cursor('cursor-arrow-white-point');
-        this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
+        if (this.mode === 4) {
+          this.hitPoint = this.hitItem.item.getNearestPoint(event.point);
+        }
+        else {
+          this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
+        }
       }
     }
     else {
       if (this.mode) {
         this._scope.canvas_cursor('cursor-text-select');
+        if (this.mode === 4) {
+          this.remove_path();
+        }
       }
       else {
         this._scope.canvas_cursor('cursor-arrow-ruler-light');

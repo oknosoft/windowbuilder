@@ -315,6 +315,34 @@ class Scheme extends paper.Project {
   }
 
   /**
+   * Загружает пользовательские размерные линии
+   * Этот код нельзя выполнить внутри load_contour, т.к. линия может ссылаться на элементы разных контуров
+   */
+  load_dimension_lines() {
+    const {Размер, Радиус} = $p.enm.elm_types;
+    this.ox.coordinates.find_rows({elm_type: {in: [Размер, Радиус]}}, (row) => {
+      const layer = this.getItem({cnstr: row.cnstr});
+      const Constructor = row.elm_type === Размер ? DimensionLineCustom : DimensionRadius;
+      layer && new Constructor({
+        parent: layer.l_dimensions,
+        row: row
+      });
+    });
+  }
+
+  /**
+   * Рекурсивно создаёт контуры изделия
+   * @param [parent] {Contour}
+   */
+  load_contour(parent) {
+    // создаём семейство конструкций
+    this.ox.constructions.find_rows({parent: parent ? parent.cnstr : 0}, (row) => {
+      // и вложенные створки
+      this.load_contour(new Contour({parent: parent, row: row}));
+    });
+  }
+
+  /**
    * ### Читает изделие по ссылке или объекту продукции
    * Выполняет следующую последовательность действий:
    * - Если передана ссылка, получает объект из базы данных
@@ -335,32 +363,6 @@ class Scheme extends paper.Project {
   load(id, from_service) {
     const {_attr} = this;
     const _scheme = this;
-
-    /**
-     * Рекурсивно создаёт контуры изделия
-     * @param [parent] {Contour}
-     */
-    function load_contour(parent) {
-      // создаём семейство конструкций
-      _scheme.ox.constructions.find_rows({parent: parent ? parent.cnstr : 0}, (row) => {
-        // и вложенные створки
-        load_contour(new Contour({parent: parent, row: row}));
-      });
-    }
-
-    /**
-     * Загружает пользовательские размерные линии
-     * Этот код нельзя выполнить внутри load_contour, т.к. линия может ссылаться на элементы разных контуров
-     */
-    function load_dimension_lines() {
-      _scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, (row) => {
-        const layer = _scheme.getItem({cnstr: row.cnstr});
-        layer && new DimensionLineCustom({
-          parent: layer.l_dimensions,
-          row: row
-        });
-      });
-    }
 
     function load_object(o) {
 
@@ -385,7 +387,7 @@ class Scheme extends paper.Project {
       o = null;
 
       // создаём семейство конструкций
-      load_contour(null);
+      _scheme.load_contour(null);
 
       // перерисовываем каркас
       _scheme.redraw(from_service);
@@ -396,7 +398,7 @@ class Scheme extends paper.Project {
         _attr._bounds = null;
 
         // згружаем пользовательские размерные линии
-        load_dimension_lines();
+        _scheme.load_dimension_lines();
 
         setTimeout(() => {
 
