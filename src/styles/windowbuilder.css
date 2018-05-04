@@ -1,3 +1,10 @@
+@font-face {
+  font-family: 'Mipgost';
+  src: url('./mipgost.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* курсоры построителя*/
 .cursor-pen-freehand    { cursor: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAP9JREFUeNqslGERhCAQhV3n/hOBCEYgghGIYAQiGIEIRjCCEYxAhD1Wlxt0QMXjzazIUz+XRRcQsamqFBB3U/kQTxkhUkCplCJz8dH5mMn7B2joHh5J2kfP8GIgLdEx0EVLHnyMb4Cal4s86ujawHU9J2CvgOs0TRuQx/UGSLUdc8BeSom8w9tIc65f0BzNJb9Q5ICztfYApDlDgjqO8KI+V8NOCIHOuQOQ5uRf7XAOaI0xGBQyJZFP10uBTmuNKZHPn1ARkAq8xFlG2S1v/5TfLgcldvkWCNsB4NQXdrEPJQ3mE/sRpDn58LR7tdF57iEoaYdtU1lQu2NXz/ArwACWfVX9m9icQQAAAABJRU5ErkJggg==) 5 2, default; }
 .cursor-lay-impost      { cursor: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAEZJREFUeNpi/P//PwM1ARMyh5GREavppIgzMVAZjEADGUGxjCvQSQFAcxjhBiLHGkwCPTaJFR+N5dFYHo1lomN5UBsIEGAAmfE4E5ZkLNYAAAAASUVORK5CYII=) 7 7, default; }

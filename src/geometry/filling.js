@@ -291,6 +291,7 @@ class Filling extends AbstractFilling(BuilderElement) {
       _attr._text = new paper.PointText({
         parent: this,
         fillColor: 'black',
+        fontFamily: 'Mipgost',
         fontSize: elm_font_size,
         guide: true,
       });

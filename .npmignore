@@ -10,3 +10,5 @@ public
 scripts
 zarchive
 
+/package-lock.json
+*.log

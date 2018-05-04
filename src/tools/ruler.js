@@ -16,20 +16,31 @@ class RulerWnd {
 
   constructor(options, tool) {
 
+    const init = {
+      name: 'sizes',
+      wnd: {
+        caption: 'Размеры и сдвиг',
+        width: 290,
+        height: 320,
+        modal: true,
+      },
+    };
+
     if (!options) {
-      options = {
-        name: 'sizes',
-        wnd: {
-          caption: 'Размеры и сдвиг',
-          height: 200,
-          modal: true,
-        },
-      };
+      options = Object.assign({}, init);
     }
     options.wnd.allow_close = true;
     $p.wsql.restore_options('editor', options);
     if (options.mode > 2) {
       options.mode = 2;
+    }
+    if(tool instanceof ToolRuler) {
+      if(options.wnd.width < init.wnd.width) {
+        options.wnd.width = init.wnd.width;
+      }
+      if(options.wnd.height < init.wnd.height) {
+        options.wnd.height = init.wnd.height;
+      }
     }
     options.wnd.on_close = this.on_close.bind(this);
     this.options = options;
@@ -61,8 +72,6 @@ class RulerWnd {
     $p.iface.add_button(this.table[2].childNodes[1], null,
       {name: 'bottom', css: 'tb_align_vert', tooltip: $p.msg.align_set_bottom}).onclick = this.on_button_click;
 
-    wnd.attachObject(div);
-
     if (tool instanceof ToolRuler) {
 
       div.style.marginTop = '22px';
@@ -77,6 +86,7 @@ class RulerWnd {
           {name: '0', img: 'ruler_elm.png', tooltip: $p.msg.ruler_elm, float: 'left'},
           {name: '1', img: 'ruler_node.png', tooltip: $p.msg.ruler_node, float: 'left'},
           {name: '2', img: 'ruler_arrow.png', tooltip: $p.msg.ruler_new_line, float: 'left'},
+          {name: '4', css: 'tb_cursor-arc-r', tooltip: $p.msg.ruler_arc, float: 'left'},
 
           {name: 'sep_0', text: '', float: 'left'},
           {name: 'base', img: 'ruler_base.png', tooltip: $p.msg.ruler_base, float: 'left'},
@@ -85,10 +95,10 @@ class RulerWnd {
         ],
         image_path: '/imgs/',
         onclick: (name) => {
+          const names = ['0', '1', '2', '4'];
+          if (names.indexOf(name) != -1) {
 
-          if (['0', '1', '2'].indexOf(name) != -1) {
-
-            ['0', '1', '2'].forEach((btn) => {
+            names.forEach((btn) => {
               if (btn != name) {
                 wnd.tb_mode.buttons[btn] && wnd.tb_mode.buttons[btn].classList.remove('muted');
               }
@@ -116,6 +126,32 @@ class RulerWnd {
       wnd.tb_mode.buttons[tool.mode].classList.add('muted');
       wnd.tb_mode.buttons[tool.base_line].classList.add('muted');
       wnd.tb_mode.cell.style.backgroundColor = '#f5f5f5';
+
+      // создаём экземпляр обработки
+      this.dp = $p.dp.builder_size.create();
+      this.dp.align = $p.enm.text_aligns.center;
+
+      this.layout = wnd.attachLayout({
+        pattern: '2E',
+        cells: [
+          {id: 'a', text: 'Размер', header: false, height: 120, fix_size: [null, true]},
+          {id: 'b', text: 'Свойства', header: false},
+        ],
+        offsets: {top: 0, right: 0, bottom: 0, left: 0}
+      });
+      this.layout.cells('a').cell.lastChild.style.border = 'none';
+      this.layout.cells('a').attachObject(div);
+      this.grid = this.layout.cells('b').attachHeadFields({
+        obj: this.dp,
+        read_only: true,
+        oxml: {
+          ' ': ['fix_angle', 'angle', 'align', 'offset', 'hide_c1', 'hide_c2', 'hide_line']
+        },
+        widths: '60,40',
+      });
+    }
+    else {
+      wnd.attachObject(div);
     }
 
     this.input = this.table[1].childNodes[1];
@@ -160,11 +196,13 @@ class RulerWnd {
             case 'left':
             case 'bottom':
               path.parent.offset -= 20;
+              this.dp.offset = path.parent.offset;
               break;
 
             case 'top':
             case 'right':
               path.parent.offset += 20;
+              this.dp.offset = path.parent.offset;
               break;
 
           }
@@ -172,12 +210,7 @@ class RulerWnd {
           return true;
         }
       })) {
-      tool.sizes_wnd({
-        wnd: wnd,
-        name: ev.currentTarget.name,
-        size: size,
-        tool: tool,
-      });
+      tool.sizes_wnd({wnd, size, tool, name: ev.currentTarget.name});
     }
   }
 
@@ -218,7 +251,7 @@ class RulerWnd {
             return;
           }
 
-          this.project.selectedItems.some((path) => {
+          tool.project.selectedItems.some((path) => {
             if (path.parent instanceof DimensionLineCustom) {
               path.parent.remove();
               return true;
@@ -284,6 +317,29 @@ class RulerWnd {
 
   set size(v) {
     this.input.firstChild.value = parseFloat(v).round(1);
+  }
+
+  attach(line) {
+    if(line.selected) {
+      this.dp.angle = line.angle;
+      this.dp.fix_angle = line.fix_angle;
+      this.dp.align = line.align;
+      this.dp.offset = line.offset;
+      this.dp.hide_c1 = line.hide_c1;
+      this.dp.hide_c2 = line.hide_c2;
+      this.dp.hide_line = line.hide_line;
+      this.dp.value_change = function(f, mf, v) {
+        line[f] = v;
+      }
+    }
+    else {
+      delete this.dp.value_change;
+      this.dp.angle = 0;
+      this.dp.fix_angle = false;
+      this.dp.align = $p.enm.text_aligns.center;
+      this.dp.offset = 0;
+    }
+    this.grid.setEditable(line.selected);
   }
 }
 
@@ -383,6 +439,29 @@ class ToolRuler extends ToolElement {
             this.add_hit_point(event);
 
           }
+          // mode == 4 - это радиус элемента
+          else if (this.mode == 4 && this.hitPoint) {
+
+            const {parent} = this.hitItem.item;
+
+            if(parent.is_linear()) {
+              $p.msg.show_msg({
+                type: 'alert-info',
+                text: `Выделен прямой элемент`,
+                title: 'Размерная линия радиуса'
+              });
+            }
+            else {
+              // создаём размерную линию
+              new DimensionRadius({
+                elm1: parent,
+                p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(0),
+                parent: parent.layer.l_dimensions,
+              });
+              this.project.register_change(true);
+            }
+
+          }
           // mode > 1 - это размерная линия
           else {
 
@@ -415,7 +494,7 @@ class ToolRuler extends ToolElement {
                   parent: this.hitPoint.profile.layer.l_dimensions,
                 });
 
-                this.hitPoint.profile.project.register_change(true);
+                this.project.register_change(true);
                 this.reset_selected();
 
               }
@@ -432,7 +511,6 @@ class ToolRuler extends ToolElement {
 
       mouseup: function (event) {
 
-
       },
 
       mousedrag: function (event) {
@@ -445,7 +523,7 @@ class ToolRuler extends ToolElement {
 
         const {mode, path} = this;
 
-        if (mode == 3 && path) {
+        if (mode === 3 && path) {
 
           if (path.segments.length == 4) {
             path.removeSegments(1, 3, true);
@@ -474,6 +552,19 @@ class ToolRuler extends ToolElement {
 
           } else {
             this.path_text.visible = false;
+          }
+        }
+        else if(mode === 4 && this.hitPoint) {
+          if (!this.path) {
+            this.path = new paper.Path.Circle({
+              center: this.hitPoint,
+              radius: 20,
+              fillColor: new paper.Color(0, 0, 1, 0.5),
+              guide: true,
+            });
+          }
+          else {
+            this.path.position = this.hitPoint;
           }
         }
 
@@ -515,6 +606,9 @@ class ToolRuler extends ToolElement {
       if (!this.mode) {
         this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: 10});
       }
+      if (this.mode === 4) {
+        this.hitItem = this.project.hitTest(event.point, {stroke: true, tolerance: 20});
+      }
       else {
         // Hit test points
         const hit = this.project.hitPoints(event.point, 16);
@@ -527,12 +621,20 @@ class ToolRuler extends ToolElement {
     if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
       if (this.mode) {
         this._scope.canvas_cursor('cursor-arrow-white-point');
-        this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
+        if (this.mode === 4) {
+          this.hitPoint = this.hitItem.item.getNearestPoint(event.point);
+        }
+        else {
+          this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
+        }
       }
     }
     else {
       if (this.mode) {
         this._scope.canvas_cursor('cursor-text-select');
+        if (this.mode === 4) {
+          this.remove_path();
+        }
       }
       else {
         this._scope.canvas_cursor('cursor-arrow-ruler-light');

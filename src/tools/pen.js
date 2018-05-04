@@ -90,16 +90,20 @@ class PenControls {
     return new paper.Point([x, y]);
   }
 
-  blur(){
-    var focused = document.activeElement;
-    if(focused == this._x)
+  blur() {
+    const focused = document.activeElement;
+    if(focused == this._x) {
       this._x.blur();
-    else if(focused == this._y)
+    }
+    else if(focused == this._y) {
       this._y.blur();
-    else if(focused == this._l)
+    }
+    else if(focused == this._l) {
       this._l.blur();
-    else if(focused == this._a)
+    }
+    else if(focused == this._a) {
       this._a.blur();
+    }
   }
 
   mousemove(event, ignore_pos) {
@@ -153,11 +157,11 @@ class PenControls {
 
   create_click() {
     setTimeout(() => {
-      this._tool.emit("mousedown", {
+      this._tool.emit('mousedown', {
         modifiers: {}
       });
       setTimeout(() => {
-        this._tool.emit("mouseup", {
+        this._tool.emit('mouseup', {
           point: this.point,
           modifiers: {}
         });
@@ -188,20 +192,20 @@ class ToolPen extends ToolElement {
 
   constructor() {
 
-    super()
+    super();
 
     Object.assign(this, {
       options: {
         name: 'pen',
         wnd: {
-          caption: "Новый сегмент профиля",
+          caption: 'Новый сегмент профиля',
           width: 320,
           height: 240,
           allow_close: true,
           bind_generatrix: true,
           bind_node: false,
-          inset: "",
-          clr: ""
+          inset: '',
+          clr: ''
         }
       },
       point1: new paper.Point(),
@@ -210,7 +214,7 @@ class ToolPen extends ToolElement {
       hitItem: null,
       originalContent: null,
       start_binded: false,
-    })
+    });
 
     this.on({
       activate: this.on_activate,
@@ -236,11 +240,11 @@ class ToolPen extends ToolElement {
     this.sys = project._dp.sys;
 
     // восстанавливаем сохранённые параметры
-    $p.wsql.restore_options("editor", this.options);
+    $p.wsql.restore_options('editor', this.options);
     this.options.wnd.on_close = this.on_close;
 
-    ["elm_type","inset","bind_generatrix","bind_node"].forEach((prop) => {
-      if(prop == "bind_generatrix" || prop == "bind_node" || this.options.wnd[prop]){
+    ['elm_type', 'inset', 'bind_generatrix', 'bind_node'].forEach((prop) => {
+      if(prop == 'bind_generatrix' || prop == 'bind_node' || this.options.wnd[prop]) {
         profile[prop] = this.options.wnd[prop];
       }
     });
@@ -256,27 +260,27 @@ class ToolPen extends ToolElement {
     }
 
     // вставку по умолчанию получаем эмулируя событие изменения типа элемента
-    $p.dp.builder_pen.emit("value_change", {field: "elm_type"}, profile);
+    $p.dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
     // цвет по умолчанию
     profile.clr = project.clr;
 
     // параметры отбора для выбора вставок
     profile._metadata('inset').choice_links = [{
-      name: ["selection",	"ref"],
+      name: ['selection', 'ref'],
       path: [(o, f) => {
           if($p.utils.is_data_obj(o)){
             return profile.rama_impost.indexOf(o) != -1;
           }
           else{
-            let refs = "";
+            let refs = '';
             profile.rama_impost.forEach((o) => {
-              if(refs){
-                refs += ", ";
+              if(refs) {
+                refs += ', ';
               }
-              refs += "'" + o.ref + "'";
+              refs += `'${o.ref}'`;
             });
-            return "_t_.ref in (" + refs + ")";
+            return '_t_.ref in (' + refs + ')';
           }
         }]
     }];
@@ -294,7 +298,7 @@ class ToolPen extends ToolElement {
       wrapper: this.wnd.cell,
       width: '100%',
       height: '28px',
-      class_name: "",
+      class_name: '',
       name: 'tb_mode',
       buttons: [{
         name: 'standard_form',
@@ -321,11 +325,11 @@ class ToolPen extends ToolElement {
             {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
             },
       ],
-      image_path: "/imgs/",
+      image_path: '/imgs/',
       onclick: (name) => this.standard_form(name)
     });
-    this.wnd.tb_mode.cell.style.backgroundColor = "#f5f5f5";
-    this.wnd.cell.firstChild.style.marginTop = "22px";
+    this.wnd.tb_mode.cell.style.backgroundColor = '#f5f5f5';
+    this.wnd.cell.firstChild.style.marginTop = '22px';
 
     // подмешиваем в метод wnd_options() установку доппараметров
     const wnd_options = this.wnd.wnd_options;

@@ -95,10 +95,10 @@ class DimensionDrawer extends paper.Group {
    */
   redraw(forse) {
 
-    const {parent} = this;
+    const {parent, project: {builder_props}} = this;
     const {contours, bounds} = parent;
 
-    if(forse) {
+    if(forse || !builder_props.auto_lines) {
       this.clear();
     }
 
@@ -108,7 +108,7 @@ class DimensionDrawer extends paper.Group {
     }
 
     // для внешних контуров строим авторазмерные линии
-    if(!parent.parent || forse) {
+    if(builder_props.auto_lines && (!parent.parent || forse)) {
 
       const by_side = parent.profiles_by_side();
       if(!Object.keys(by_side).length) {

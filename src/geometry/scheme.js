@@ -307,6 +307,42 @@ class Scheme extends paper.Project {
   }
 
   /**
+   * ### Допсвойства, например, скрыть размерные линии
+   * при рендеринге может переопределяться или объединяться с параметрами рендеринга
+   */
+  get builder_props() {
+    return this.ox.builder_props;
+  }
+
+  /**
+   * Загружает пользовательские размерные линии
+   * Этот код нельзя выполнить внутри load_contour, т.к. линия может ссылаться на элементы разных контуров
+   */
+  load_dimension_lines() {
+    const {Размер, Радиус} = $p.enm.elm_types;
+    this.ox.coordinates.find_rows({elm_type: {in: [Размер, Радиус]}}, (row) => {
+      const layer = this.getItem({cnstr: row.cnstr});
+      const Constructor = row.elm_type === Размер ? DimensionLineCustom : DimensionRadius;
+      layer && new Constructor({
+        parent: layer.l_dimensions,
+        row: row
+      });
+    });
+  }
+
+  /**
+   * Рекурсивно создаёт контуры изделия
+   * @param [parent] {Contour}
+   */
+  load_contour(parent) {
+    // создаём семейство конструкций
+    this.ox.constructions.find_rows({parent: parent ? parent.cnstr : 0}, (row) => {
+      // и вложенные створки
+      this.load_contour(new Contour({parent: parent, row: row}));
+    });
+  }
+
+  /**
    * ### Читает изделие по ссылке или объекту продукции
    * Выполняет следующую последовательность действий:
    * - Если передана ссылка, получает объект из базы данных
@@ -327,32 +363,6 @@ class Scheme extends paper.Project {
   load(id, from_service) {
     const {_attr} = this;
     const _scheme = this;
-
-    /**
-     * Рекурсивно создаёт контуры изделия
-     * @param [parent] {Contour}
-     */
-    function load_contour(parent) {
-      // создаём семейство конструкций
-      _scheme.ox.constructions.find_rows({parent: parent ? parent.cnstr : 0}, (row) => {
-        // и вложенные створки
-        load_contour(new Contour({parent: parent, row: row}));
-      });
-    }
-
-    /**
-     * Загружает пользовательские размерные линии
-     * Этот код нельзя выполнить внутри load_contour, т.к. линия может ссылаться на элементы разных контуров
-     */
-    function load_dimension_lines() {
-      _scheme.ox.coordinates.find_rows({elm_type: $p.enm.elm_types.Размер}, (row) => {
-        const layer = _scheme.getItem({cnstr: row.cnstr});
-        layer && new DimensionLineCustom({
-          parent: layer.l_dimensions,
-          row: row
-        });
-      });
-    }
 
     function load_object(o) {
 
@@ -377,7 +387,7 @@ class Scheme extends paper.Project {
       o = null;
 
       // создаём семейство конструкций
-      load_contour(null);
+      _scheme.load_contour(null);
 
       // перерисовываем каркас
       _scheme.redraw(from_service);
@@ -388,7 +398,7 @@ class Scheme extends paper.Project {
         _attr._bounds = null;
 
         // згружаем пользовательские размерные линии
-        load_dimension_lines();
+        _scheme.load_dimension_lines();
 
         setTimeout(() => {
 
@@ -616,7 +626,7 @@ class Scheme extends paper.Project {
    * @property strokeBounds
    */
   get strokeBounds() {
-    let bounds = new paper.Rectangle();
+    let bounds = this.l_dimensions.strokeBounds;
     this.contours.forEach((l) => bounds = bounds.unite(l.strokeBounds));
     return bounds;
   }
@@ -810,24 +820,37 @@ class Scheme extends paper.Project {
    *
    * @method zoom_fit
    */
-  zoom_fit(bounds) {
+  zoom_fit(bounds, isNode) {
 
     if(!bounds) {
       bounds = this.strokeBounds;
     }
 
-    const height = (bounds.height < 1000 ? 1000 : bounds.height) + 320;
-    const width = (bounds.width < 1000 ? 1000 : bounds.width) + 320;
-    let shift;
-
-    if(bounds) {
-      const {view} = this;
-      view.zoom = Math.min((view.viewSize.height - 40) / height, (view.viewSize.width - 40) / width);
-      shift = (view.viewSize.width - bounds.width * view.zoom) / 2;
-      if(shift < 180) {
-        shift = 0;
+    if (bounds) {
+      if(!isNode) {
+        isNode = $p.wsql.alasql.utils.isNode;
       }
-      view.center = bounds.center.add([shift, 60]);
+      const space = isNode ? 160 : 320;
+      const min = 900;
+      let {width, height, center} = bounds;
+      if (width < min) {
+        width = min;
+      }
+      if (height < min) {
+        height = min;
+      }
+      width += space;
+      height += space;
+      const {view} = this;
+      view.zoom = Math.min(view.viewSize.height / height, view.viewSize.width / width);
+      const dx = view.viewSize.width - width * view.zoom;
+      if(isNode) {
+        const dy = view.viewSize.height - height * view.zoom;
+        view.center = center.add([dx, -dy]);
+      }
+      else {
+        view.center = center.add([dx, 50]);
+      }
     }
   }
 
@@ -918,6 +941,7 @@ class Scheme extends paper.Project {
 
   /**
    * ### Уравнивает геометрически или по заполнениям
+   * сюда попадаем из move_points, когда меняем габариты
    * @param auto_align
    */
   do_align(auto_align, profiles) {
@@ -947,11 +971,12 @@ class Scheme extends paper.Project {
           glasses.indexOf(filling) == -1 && glasses.push(filling);
         }
       }
-      this._scope.do_glass_align('width', glasses);
+      this._scope.glass_align('width', glasses);
 
-      if(auto_align == $p.enm.align_types.ПоЗаполнениям) {
-
-      }
+      // TODO: понять, что хотел автор
+      // if(auto_align == $p.enm.align_types.ПоЗаполнениям) {
+      //
+      // }
     }, 100);
 
   }
@@ -1072,9 +1097,9 @@ class Scheme extends paper.Project {
    */
   draw_sizes() {
 
-    const {bounds, l_dimensions} = this;
+    const {bounds, l_dimensions, builder_props} = this;
 
-    if(bounds) {
+    if(bounds && builder_props.auto_lines) {
 
       if(!l_dimensions.bottom) {
         l_dimensions.bottom = new DimensionLine({

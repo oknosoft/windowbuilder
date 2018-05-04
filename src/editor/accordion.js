@@ -40,6 +40,7 @@ class SchemeLayers {
       }
       else {
         editor.project.ox.builder_props = {[id]: state};
+        editor.project.register_change(true);
       }
       editor.project.register_update();
     });
@@ -76,18 +77,41 @@ class SchemeLayers {
   }
 
   layer_activated(contour) {
-    if(contour && contour.cnstr && this.tree && this.tree.getSelectedId && contour.cnstr != this.tree.getSelectedId()){
-      if(this.tree.items[contour.cnstr]){
-        this.tree.selectItem(contour.cnstr);
+    const {tree} = this;
+    if(contour && contour.cnstr && tree && tree.getSelectedId && contour.cnstr != tree.getSelectedId()){
+      // если выделено несколько створок, переносим выделение на раму
+      const layers = [];
+      const {project} = this.editor;
+      for(const elm of project.getSelectedItems()) {
+        elm.layer instanceof Contour && layers.indexOf(elm.layer) === -1 && layers.push(elm.layer);
+      }
+      if(layers.length > 1) {
+        const parents = [];
+        for(const elm of layers) {
+          let parent = elm.parent;
+          while (parent && parent.parent) {
+            parent = parent.parent;
+          }
+          if(!parent) {
+            parent = elm;
+          }
+          contour = parent;
+          break;
+        }
+      }
+
+      if(tree.items[contour.cnstr]){
+        tree.selectItem(contour.cnstr);
         this._set_text(this.layer_text(contour));
       }
     };
   }
 
   contour_redrawed(contour, bounds) {
-    if(this.tree && this.tree.setItemText){
+    const {tree} = this;
+    if(tree && tree.setItemText){
       const text = this.layer_text(contour, bounds);
-      this.tree.setItemText(contour.cnstr, text);
+      tree.setItemText(contour.cnstr, text);
       if(contour.project.activeLayer == contour){
         this._set_text(text);
       };
