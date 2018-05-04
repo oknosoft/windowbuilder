@@ -78,9 +78,7 @@ class DimensionRadius extends DimensionLineCustom {
       children.scale.addSegments([b, e]);
     }
 
-    const {generatrix} = _attr.elm1;
-    const np = generatrix.getNearestPoint(b);
-    const curv = Math.abs(generatrix.getCurvatureAt(generatrix.getOffsetOf(np)));
+    const curv = Math.abs(_attr.elm1.path.getCurvatureAt(_attr.p1));
     if(curv) {
       children.text.content = `R${(1 / curv).round(-1)}`;
       children.text.rotation = e.subtract(b).angle;

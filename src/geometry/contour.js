@@ -1979,7 +1979,7 @@ class Contour extends AbstractFilling(paper.Layer) {
         // если fix_ruch - устанавливаем по центру
         if (fix_ruch || _row.fix_ruch != -3) {
           _row.fix_ruch = fix_ruch ? -2 : -1;
-          return handle_height = (len / 2).round(0);
+          return handle_height = (len / 2).round();
         }
       }
       else if (handle_height_base > 0) {

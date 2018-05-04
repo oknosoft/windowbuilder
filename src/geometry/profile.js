@@ -879,6 +879,16 @@ class ProfileItem extends GeneratrixElement {
     _row.path_data = generatrix.pathData;
     _row.nom = this.nom;
 
+    // радиус, как дань традиции
+    const rmin = generatrix.rmin();
+    if(rmin) {
+      // записываем среднее значение, дельту не анализируем
+      // если овал или несколько перегибов, мы это увидим в path_data
+      _row.r = ((rmin + generatrix.rmax()) / 2).round();
+    }
+    else {
+      _row.r = 0;
+    }
 
     // добавляем припуски соединений
     _row.len = this.length.round(1);

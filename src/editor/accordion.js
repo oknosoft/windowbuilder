@@ -396,8 +396,8 @@ class SchemeProps {
     this._reflect_id = 0;
     const {_obj, editor: {project}} = this;
     if(project && _obj) {
-      _obj.len = project.bounds.width.round(0);
-      _obj.height = project.bounds.height.round(0);
+      _obj.len = project.bounds.width.round();
+      _obj.height = project.bounds.height.round();
       _obj.s = project.area;
     }
   }

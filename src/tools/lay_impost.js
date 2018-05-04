@@ -348,7 +348,7 @@ class ToolLayImpost extends ToolElement {
             ares.forEach((p) => {
               if (ares[0][name] == p[name]) {
 
-                let angle = n2(p.profile).subtract(n1(p.profile)).angle.round(0);
+                let angle = n2(p.profile).subtract(n1(p.profile)).angle.round();
 
                 if (angle < 0) {
                   angle += 360;
@@ -566,9 +566,9 @@ class ToolLayImpost extends ToolElement {
           return;
 
         var stepy = profile.step_by_y || (profile.elm_by_y && bounds.height / (profile.elm_by_y + ((hit || profile.elm_by_y < 2) ? 1 : -1))),
-          county = profile.elm_by_y > 0 ? profile.elm_by_y.round(0) : Math.round(bounds.height / stepy) - 1,
+          county = profile.elm_by_y > 0 ? profile.elm_by_y.round() : Math.round(bounds.height / stepy) - 1,
           stepx = profile.step_by_x || (profile.elm_by_x && bounds.width / (profile.elm_by_x + ((hit || profile.elm_by_x < 2) ? 1 : -1))),
-          countx = profile.elm_by_x > 0 ? profile.elm_by_x.round(0) : Math.round(bounds.width / stepx) - 1,
+          countx = profile.elm_by_x > 0 ? profile.elm_by_x.round() : Math.round(bounds.width / stepx) - 1,
           w2x = profile.inset_by_x.nom().width / 2,
           w2y = profile.inset_by_y.nom().width / 2,
           clr = BuilderElement.clr_by_clr(profile.clr, false),
