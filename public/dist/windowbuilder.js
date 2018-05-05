@@ -3329,6 +3329,9 @@ class Contour extends AbstractFilling(paper.Layer) {
           }
         }
       });
+      this.sectionals.forEach((sectional) => {
+        _attr._bounds = _attr._bounds ? _attr._bounds.unite(sectional.bounds) : sectional.bounds;
+      });
 
       if (!_attr._bounds) {
         _attr._bounds = new paper.Rectangle();
