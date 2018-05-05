@@ -2999,8 +2999,7 @@ class Pricing {
     return pouch.remote.doc.get(`_local/price_${step}`)
       .then((remote) => {
         return pouch.local.doc.get(`_local/price_${step}`)
-          .then((local) => local)
-          .catch(() => {})
+          .catch(() => ({}))
           .then((local) => {
             this.build_cache_local(remote);
 
