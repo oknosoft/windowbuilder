@@ -1139,7 +1139,13 @@ class Contour extends AbstractFilling(paper.Layer) {
         elm.fill_error();
       }
       else {
-        elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+        const {form_area, inset: {smin, smax}} = elm;
+        if((smin && smin > form_area) || (smax && smax < form_area)) {
+          elm.fill_error();
+        }
+        else {
+          elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+        }
       }
     });
 
