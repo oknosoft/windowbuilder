@@ -1146,7 +1146,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     // ошибки соединений профиля
     this.profiles.forEach((elm) => {
       const {_corns, _rays} = elm._attr;
-      // ошибки угловых соединений
+      // ошибки угловых (торцевых) соединений
       _rays.b.check_err(err_attrs);
       _rays.e.check_err(err_attrs);
       // ошибки примыкающих соединений
