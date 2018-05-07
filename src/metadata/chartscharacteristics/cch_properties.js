@@ -220,20 +220,39 @@ export default function ($p) {
         }
 
         return this._params_links.filter((link) => {
-          let ok = true;
-          // для всех записей ключа параметров
-          link.master.params.forEach((row) => {
-            // выполнение условия рассчитывает объект CchProperties
-            ok = row.property.check_condition({
-              cnstr: attr.grid.selection.cnstr,
-              ox: attr.obj._owner._owner,
-              prm_row: row,
-              elm: attr.obj,
+          //use_master бывает 0 - один ведущий, 1 - несколько ведущих через И, 2 - несколько ведущих через ИЛИ
+          const use_master = link.use_master || 0;
+          let ok = true && use_master < 2;
+          //в зависимости от use_master у нас массив либо из одного, либо из нескольких ключей ведущиъ для проверки
+          const arr = !use_master ? [{key:link.master}] : link.leadings;
+
+          arr.forEach((row_key) => {
+            let ok_key = true;
+            // для всех записей ключа параметров
+            row_key.key.params.forEach((row) => {
+              // выполнение условия рассчитывает объект CchProperties
+              ok_key = row.property.check_condition({
+                cnstr: attr.grid.selection.cnstr,
+                ox: attr.obj._owner._owner,
+                prm_row: row,
+                elm: attr.obj,
+              });
+              //Если строка условия в ключе не выполняется, то дальше проверять его условия смысла нет
+              if (!ok_key) {
+                return false;
+              }
             });
-            if(!ok) {
+            //Для проверки через ИЛИ логика накопительная - надо проверить все ключи до единого
+            if (use_master == 2){
+              ok = ok || ok_key;
+            }
+            //Для проверки через И достаточно найти один неподходящий ключ, чтобы остановиться и признать связь неподходящей
+            else if (!ok_key){
+              ok = false;
               return false;
             }
           });
+          //Конечный возврат в функцию фильтрации массива связей
           return ok;
         });
       }
