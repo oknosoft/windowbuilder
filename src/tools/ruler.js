@@ -455,7 +455,7 @@ class ToolRuler extends ToolElement {
               // создаём размерную линию
               new DimensionRadius({
                 elm1: parent,
-                p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(0),
+                p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(),
                 parent: parent.layer.l_dimensions,
               });
               this.project.register_change(true);

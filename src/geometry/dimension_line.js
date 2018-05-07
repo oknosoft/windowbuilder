@@ -368,7 +368,7 @@ class DimensionLine extends paper.Group {
     return this._attr.offset || 90;
   }
   set offset(v) {
-    const offset = (parseInt(v) || 90).round(0);
+    const offset = (parseInt(v) || 90).round();
     if(this._attr.offset != offset){
       this._attr.offset = offset;
       this.project.register_change(true);

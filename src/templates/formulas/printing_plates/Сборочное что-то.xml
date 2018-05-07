@@ -19,13 +19,13 @@
 			<v8:Формула>var templates = this._template.content.children,
 		doc = new $p.SpreadsheetDocument(),
 		print_data;
-// в temlplate у нас лежит структура html документа 
-// doc - Табличный документ 
-// print_data - относится к документу, откуда мы адресуем печатную форму - т.е. к doc.calc_order 
+// в temlplate у нас лежит структура html документа
+// doc - Табличный документ
+// print_data - относится к документу, откуда мы адресуем печатную форму - т.е. к doc.calc_order
 // описан в документе doc_calc_order в котором уже есть функция print_data
 // на будущее - print_data формуирует JSON объекты.
 // т.к. им пофигу какими быть, то им присвоили рускоязычные названия,
-// например #Контрагент# - которому соответсвует некоторые вычисляемое значение. 
+// например #Контрагент# - которому соответсвует некоторые вычисляемое значение.
 // Так же я могу в процедуре создать json объект и обращаться к нему по имени свойства, которое должно быть отправлено на печать
 // т.е. я могу прям здесь создать допустим некоторый #Материал#, сложить в него все что захочу.
 // А при использовании процедуры put (doc.put) - вывести json объекты в html документ
@@ -51,7 +51,7 @@
 				//row.name = nom.name,
 				cx = $p.utils.is_empty_guid(row.characteristic) ? "" : " " + $p.cat.nom.get(row.characteristic, false, true),
 				len = (row.len + (row.qty + 1) * nom.saw_width).round(2);
-			//завершаем создание переменных точкой с запятой. 
+			//завершаем создание переменных точкой с запятой.
 			//Как вариант мы можем создать JSON объект, описав его свойства.
 
 				//row_data = {
@@ -60,8 +60,8 @@
 				//};
 
 			//Если спецификация относится к заданному типу элементов - профили.
-			//indexOf - вернет номер элемента, если отличен от -1, то он присутствует. 
-			//profiles - перечисляет типы элементов которые нам необходимо вывести в таблицу 
+			//indexOf - вернет номер элемента, если отличен от -1, то он присутствует.
+			//profiles - перечисляет типы элементов которые нам необходимо вывести в таблицу
 			//if(profiles.indexOf(nom.elm_type.ref) != -1){
 			if(profiles.indexOf(nom.grouping) != -1){
 //				var rows = $p.wsql.alasql("select article, len, alp1, alp2, sum(qty) as qty from ? " +
@@ -86,8 +86,8 @@
 
 					rows.forEach(function (line) {
 						line.qty = quantity;//row.qty * quantity;
-						//line.len = (row.len * 1000 / line.qty).round(0);
-						line.len = (line.len * 1000).round(0);
+						//line.len = (row.len * 1000 / line.qty).round();
+						line.len = (line.len * 1000).round();
 						line.article = row.article;
 						line.alp1;
 						line.alp2;
@@ -97,7 +97,7 @@
 							&lt;td align='center'&gt;#len#&lt;/td&gt;
 							&lt;td align='center'&gt;#alp1#&lt;/td&gt;
 							&lt;td align='center'&gt;#alp2#&lt;/td&gt;
-							&lt;td align='center'&gt;#qty#&lt;/td&gt; `;	
+							&lt;td align='center'&gt;#qty#&lt;/td&gt; `;
 
 						table_row.innerHTML = dhx4.template(table_row.innerHTML, line);
 						table_div.appendChild(table_row);
@@ -133,7 +133,7 @@
 				cx = $p.utils.is_empty_guid(row.characteristic) ? "" : " " + $p.cat.nom.get(row.characteristic, false, true);
 
 				//len = (row.len + (row.qty + 1) * nom.saw_width).round(2);
-			//завершаем создание переменных точкой с запятой. 
+			//завершаем создание переменных точкой с запятой.
 			//Как вариант мы можем создать JSON объект, описав его свойства.
 				//row_data = {
 				//	Материал: "&lt;b&gt;" + (nom.article || nom.name) + " " + cx + "&lt;/b&gt; &lt;span style='float: right;'&gt;" +
@@ -141,8 +141,8 @@
 				//};
 
 			//Если спецификация относится к заданному типу элементов - профили.
-			//indexOf - вернет номер элемента, если отличен от -1, то он присутствует. 
-			//findings - перечисляет типы элементов которые нам необходимо вывести в таблицу 
+			//indexOf - вернет номер элемента, если отличен от -1, то он присутствует.
+			//findings - перечисляет типы элементов которые нам необходимо вывести в таблицу
 			if(findings.indexOf(nom.grouping) != -1){
 				var rows = $p.wsql.alasql("select len, sum(qty) as qty from ? " +
 						"where nom = ? and characteristic = ? group by len order by len desc",
@@ -163,14 +163,14 @@
 
 					// rows.forEach(function (line) {
 					// 	line.qty = row.qty * quantity;
-					// 	line.len = (row.len * 1000 / line.qty).round(0);
+					// 	line.len = (row.len * 1000 / line.qty).round();
 					// 	line.article = row.article;
 					// 	line.alp1;
 					// 	line.alp2;
 					// 	var table_row = document.createElement("TR");
 					// 		table_row.innerHTML=`&lt;td align='center' colspan='2'&gt; &lt;/td&gt;
 					// 		 &lt;!-- &lt;td align='center'&gt;#article#&lt;/td&gt; --&gt;
-					// 		&lt;td align='center'&gt;#qty#&lt;/td&gt; `;	
+					// 		&lt;td align='center'&gt;#qty#&lt;/td&gt; `;
 
 					// 	table_row.innerHTML = dhx4.template(table_row.innerHTML, line);
 					// 	table_div.appendChild(table_row);
@@ -206,7 +206,7 @@
 				cx = $p.utils.is_empty_guid(row.characteristic) ? "" : " " + $p.cat.nom.get(row.characteristic, false, true);
 
 				//len = (row.len + (row.qty + 1) * nom.saw_width).round(2);
-			//завершаем создание переменных точкой с запятой. 
+			//завершаем создание переменных точкой с запятой.
 			//Как вариант мы можем создать JSON объект, описав его свойства.
 				//row_data = {
 				//	Материал: "&lt;b&gt;" + (nom.article || nom.name) + " " + cx + "&lt;/b&gt; &lt;span style='float: right;'&gt;" +
@@ -214,8 +214,8 @@
 				//};
 
 			//Если спецификация относится к заданному типу элементов - профили.
-			//indexOf - вернет номер элемента, если отличен от -1, то он присутствует. 
-			//findings - перечисляет типы элементов которые нам необходимо вывести в таблицу 
+			//indexOf - вернет номер элемента, если отличен от -1, то он присутствует.
+			//findings - перечисляет типы элементов которые нам необходимо вывести в таблицу
 			if(findings.indexOf(nom.grouping) != -1){
 				var rows = $p.wsql.alasql("select len, sum(qty) as qty from ? " +
 						"where nom = ? and characteristic = ? group by len order by len desc",
@@ -243,7 +243,7 @@
 					// 	var table_row = document.createElement("TR");
 					// 		table_row.innerHTML=`&lt;td align='center' colspan='2'&gt; &lt;/td&gt;
 					// 		 &lt;!-- &lt;td align='center'&gt;#article#&lt;/td&gt; --&gt;
-					// 		&lt;td align='center'&gt;#qty#&lt;/td&gt; `;	
+					// 		&lt;td align='center'&gt;#qty#&lt;/td&gt; `;
 
 					// 	table_row.innerHTML = dhx4.template(table_row.innerHTML, line);
 					// 	table_div.appendChild(table_row);
@@ -329,16 +329,16 @@
     .then((print_data) =&gt; {
 
 		var orignal_template_product = templates;
-		
+
 		obj.production.forEach((row) =&gt; {
-			
+
 			//tpl_product = templates.product;
-			
-			//Создаем новый элемент. Без этого tpl_product будет перенесен как Child, соотв не сделает копию, а поменяет 
+
+			//Создаем новый элемент. Без этого tpl_product будет перенесен как Child, соотв не сделает копию, а поменяет
 			//сслыки, в результате мы запортим шаблон.
 			var tpl_product = document.createElement('div');
 				tpl_product = templates.product;
-			
+
 			//var tpl_product = orignal_template_product.product;
 
 			// выводим эскизы и описания продукций
@@ -360,7 +360,7 @@
 			//doc.put(tpl_sketch_picture.innerHTML, tpl_sketch_picture.attributes);
 			//doc.put(tpl_sketch_info.innerHTML, tpl_sketch_info.attributes);
 			//doc.put(tpl_order_info.innerHTML, tpl_order_info.attributes);
-				
+
 			var tpl_profile = tpl_product.children.table_profile.children[0].children[1];
 				tpl_profile.innerHTML = "";
 			// табличная часть профилей
@@ -375,7 +375,7 @@
 				tpl_zaklad.innerHTML = "";
 			// табличная часть закладных
 			draw_zaklad(row.characteristic, tpl_zaklad, row.quantity);
-			
+
 			var tpl_buffer = tpl_product.children.table_buffer.children[0].children[1];
 				tpl_buffer.innerHTML = "";
 			// табличная часть фурнитуры
@@ -402,10 +402,10 @@
 &lt;!-- Эскиз изделия + строка с и информацией --&gt;
 &lt;!-- TODO На будущее скомпоновать сюда таблицу --&gt;
   &lt;div id='sketch_product' class ='container'
- style="clear: both; padding: 4pt; border-top: gainsboro 1px dashed; margin-top: 4pt;"&gt;  
+ style="clear: both; padding: 4pt; border-top: gainsboro 1px dashed; margin-top: 4pt;"&gt;
 &lt;!-- style="clear: both; padding: 4pt; margin-top: 4pt;"&gt; --&gt;
 
-      &lt;div id = 'sketch_picture' class ='container' 
+      &lt;div id = 'sketch_picture' class ='container'
         style = "
           margin: 0 auto;
           padding:5px ;
@@ -418,11 +418,11 @@
         "&gt;
           эскиз
       &lt;/div&gt;
-      
+
       &lt;div id = 'sketch_info' class ='container' style = "align:center"&gt;
         Профиль: #СистемыПрофилей# &lt;br /&gt;
         Фурнитура: #СистемыФурнитуры#
-      &lt;/div&gt;     
+      &lt;/div&gt;
 
       &lt;div id='order_info' class='container' style = "align:center"&gt;
         &lt;div style="font-size: 12pt; float: center; padding:4pt; clear: both"&gt;

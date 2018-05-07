@@ -344,8 +344,9 @@ Object.defineProperties(paper.Path.prototype, {
         return 0;
       }
       const {length} = this;
+      const step = length / 9;
       let max = 0;
-      for(let pos = 0; pos < length; pos += length / 8){
+      for(let pos = 0; pos < length; pos += step){
         const curv = Math.abs(this.getCurvatureAt(pos));
         if(curv > max){
           max = curv;
@@ -365,8 +366,9 @@ Object.defineProperties(paper.Path.prototype, {
         return 0;
       }
       const {length} = this;
+      const step = length / 9;
       let min = Infinity;
-      for(let pos = 0; pos < length; pos += length / 8){
+      for(let pos = 0; pos < length; pos += step){
         const curv = Math.abs(this.getCurvatureAt(pos));
         if(curv < min){
           min = curv;

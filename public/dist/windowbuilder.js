@@ -376,8 +376,8 @@ class SchemeProps {
     this._reflect_id = 0;
     const {_obj, editor: {project}} = this;
     if(project && _obj) {
-      _obj.len = project.bounds.width.round(0);
-      _obj.height = project.bounds.height.round(0);
+      _obj.len = project.bounds.width.round();
+      _obj.height = project.bounds.height.round();
       _obj.s = project.area;
     }
   }
@@ -3329,6 +3329,9 @@ class Contour extends AbstractFilling(paper.Layer) {
           }
         }
       });
+      this.sectionals.forEach((sectional) => {
+        _attr._bounds = _attr._bounds ? _attr._bounds.unite(sectional.bounds) : sectional.bounds;
+      });
 
       if (!_attr._bounds) {
         _attr._bounds = new paper.Rectangle();
@@ -3407,7 +3410,13 @@ class Contour extends AbstractFilling(paper.Layer) {
         elm.fill_error();
       }
       else {
-        elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+        const {form_area, inset: {smin, smax}} = elm;
+        if((smin && smin > form_area) || (smax && smax < form_area)) {
+          elm.fill_error();
+        }
+        else {
+          elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+        }
       }
     });
 
@@ -4125,7 +4134,7 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (handle_height_base < 0) {
         if (fix_ruch || _row.fix_ruch != -3) {
           _row.fix_ruch = fix_ruch ? -2 : -1;
-          return handle_height = (len / 2).round(0);
+          return handle_height = (len / 2).round();
         }
       }
       else if (handle_height_base > 0) {
@@ -4364,23 +4373,23 @@ class DimensionDrawer extends paper.Group {
 
       const ihor = [
         {
-          point: bounds.top.round(0),
+          point: bounds.top.round(),
           elm: by_side.top,
           p: by_side.top.b.y < by_side.top.e.y ? 'b' : 'e'
         },
         {
-          point: bounds.bottom.round(0),
+          point: bounds.bottom.round(),
           elm: by_side.bottom,
           p: by_side.bottom.b.y < by_side.bottom.e.y ? 'b' : 'e'
         }];
       const ivert = [
         {
-          point: bounds.left.round(0),
+          point: bounds.left.round(),
           elm: by_side.left,
           p: by_side.left.b.x > by_side.left.e.x ? 'b' : 'e'
         },
         {
-          point: bounds.right.round(0),
+          point: bounds.right.round(),
           elm: by_side.right,
           p: by_side.right.b.x > by_side.right.e.x ? 'b' : 'e'
         }];
@@ -4394,30 +4403,30 @@ class DimensionDrawer extends paper.Group {
         const eb = our ? (elm instanceof GlassSegment ? elm._sub.b : elm.b) : elm.rays.b.npoint;
         const ee = our ? (elm instanceof GlassSegment ? elm._sub.e : elm.e) : elm.rays.e.npoint;
 
-        if(ihor.every((v) => v.point != eb.y.round(0))) {
+        if(ihor.every((v) => v.point != eb.y.round())) {
           ihor.push({
-            point: eb.y.round(0),
+            point: eb.y.round(),
             elm: elm,
             p: 'b'
           });
         }
-        if(ihor.every((v) => v.point != ee.y.round(0))) {
+        if(ihor.every((v) => v.point != ee.y.round())) {
           ihor.push({
-            point: ee.y.round(0),
+            point: ee.y.round(),
             elm: elm,
             p: 'e'
           });
         }
-        if(ivert.every((v) => v.point != eb.x.round(0))) {
+        if(ivert.every((v) => v.point != eb.x.round())) {
           ivert.push({
-            point: eb.x.round(0),
+            point: eb.x.round(),
             elm: elm,
             p: 'b'
           });
         }
-        if(ivert.every((v) => v.point != ee.x.round(0))) {
+        if(ivert.every((v) => v.point != ee.x.round())) {
           ivert.push({
-            point: ee.x.round(0),
+            point: ee.x.round(),
             elm: elm,
             p: 'e'
           });
@@ -4930,7 +4939,7 @@ class DimensionLine extends paper.Group {
     return this._attr.offset || 90;
   }
   set offset(v) {
-    const offset = (parseInt(v) || 90).round(0);
+    const offset = (parseInt(v) || 90).round();
     if(this._attr.offset != offset){
       this._attr.offset = offset;
       this.project.register_change(true);
@@ -5188,9 +5197,7 @@ class DimensionRadius extends DimensionLineCustom {
       children.scale.addSegments([b, e]);
     }
 
-    const {generatrix} = _attr.elm1;
-    const np = generatrix.getNearestPoint(b);
-    const curv = Math.abs(generatrix.getCurvatureAt(generatrix.getOffsetOf(np)));
+    const curv = Math.abs(_attr.elm1.path.getCurvatureAt(_attr.p1));
     if(curv) {
       children.text.content = `R${(1 / curv).round(-1)}`;
       children.text.rotation = e.subtract(b).angle;
@@ -7198,8 +7205,9 @@ Object.defineProperties(paper.Path.prototype, {
         return 0;
       }
       const {length} = this;
+      const step = length / 9;
       let max = 0;
-      for(let pos = 0; pos < length; pos += length / 8){
+      for(let pos = 0; pos < length; pos += step){
         const curv = Math.abs(this.getCurvatureAt(pos));
         if(curv > max){
           max = curv;
@@ -7215,8 +7223,9 @@ Object.defineProperties(paper.Path.prototype, {
         return 0;
       }
       const {length} = this;
+      const step = length / 9;
       let min = Infinity;
-      for(let pos = 0; pos < length; pos += length / 8){
+      for(let pos = 0; pos < length; pos += step){
         const curv = Math.abs(this.getCurvatureAt(pos));
         if(curv < min){
           min = curv;
@@ -7455,7 +7464,13 @@ class CnnPoint {
     const {_node, _parent, cnn} = this;
     const {_corns, _rays} = _parent._attr;
     const len = _node == 'b' ? _corns[1].getDistance(_corns[4]) : _corns[2].getDistance(_corns[3]);
-    if(!cnn || (cnn.lmin > 0 && cnn.lmin > len) || (cnn.lmax > 0 && cnn.lmax < len)) {
+    const angle = _parent.angle_at(_node);
+    if(!cnn ||
+      (cnn.lmin && cnn.lmin > len) ||
+      (cnn.lmax && cnn.lmax < len) ||
+      (cnn.amin && cnn.amin > angle) ||
+      (cnn.amax && cnn.amax < angle)
+    ) {
       if(style) {
         Object.assign(new paper.Path.Circle({
           center: _node == 'b' ? _corns[4].add(_corns[1]).divide(2) : _corns[2].add(_corns[3]).divide(2),
@@ -8005,6 +8020,13 @@ class ProfileItem extends GeneratrixElement {
     _row.path_data = generatrix.pathData;
     _row.nom = this.nom;
 
+    const rmin = generatrix.rmin();
+    if(rmin) {
+      _row.r = ((rmin + generatrix.rmax()) / 2).round();
+    }
+    else {
+      _row.r = 0;
+    }
 
     _row.len = this.length.round(1);
 
@@ -12264,7 +12286,7 @@ class ToolLayImpost extends ToolElement {
             ares.forEach((p) => {
               if (ares[0][name] == p[name]) {
 
-                let angle = n2(p.profile).subtract(n1(p.profile)).angle.round(0);
+                let angle = n2(p.profile).subtract(n1(p.profile)).angle.round();
 
                 if (angle < 0) {
                   angle += 360;
@@ -12475,9 +12497,9 @@ class ToolLayImpost extends ToolElement {
           return;
 
         var stepy = profile.step_by_y || (profile.elm_by_y && bounds.height / (profile.elm_by_y + ((hit || profile.elm_by_y < 2) ? 1 : -1))),
-          county = profile.elm_by_y > 0 ? profile.elm_by_y.round(0) : Math.round(bounds.height / stepy) - 1,
+          county = profile.elm_by_y > 0 ? profile.elm_by_y.round() : Math.round(bounds.height / stepy) - 1,
           stepx = profile.step_by_x || (profile.elm_by_x && bounds.width / (profile.elm_by_x + ((hit || profile.elm_by_x < 2) ? 1 : -1))),
-          countx = profile.elm_by_x > 0 ? profile.elm_by_x.round(0) : Math.round(bounds.width / stepx) - 1,
+          countx = profile.elm_by_x > 0 ? profile.elm_by_x.round() : Math.round(bounds.width / stepx) - 1,
           w2x = profile.inset_by_x.nom().width / 2,
           w2y = profile.inset_by_y.nom().width / 2,
           clr = BuilderElement.clr_by_clr(profile.clr, false),
@@ -14445,7 +14467,7 @@ class ToolRuler extends ToolElement {
             else {
               new DimensionRadius({
                 elm1: parent,
-                p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(0),
+                p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(),
                 parent: parent.layer.l_dimensions,
               });
               this.project.register_change(true);

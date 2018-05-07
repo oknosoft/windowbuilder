@@ -144,7 +144,13 @@ class CnnPoint {
     const {_node, _parent, cnn} = this;
     const {_corns, _rays} = _parent._attr;
     const len = _node == 'b' ? _corns[1].getDistance(_corns[4]) : _corns[2].getDistance(_corns[3]);
-    if(!cnn || (cnn.lmin > 0 && cnn.lmin > len) || (cnn.lmax > 0 && cnn.lmax < len)) {
+    const angle = _parent.angle_at(_node);
+    if(!cnn ||
+      (cnn.lmin && cnn.lmin > len) ||
+      (cnn.lmax && cnn.lmax < len) ||
+      (cnn.amin && cnn.amin > angle) ||
+      (cnn.amax && cnn.amax < angle)
+    ) {
       if(style) {
         Object.assign(new paper.Path.Circle({
           center: _node == 'b' ? _corns[4].add(_corns[1]).divide(2) : _corns[2].add(_corns[3]).divide(2),
@@ -879,6 +885,16 @@ class ProfileItem extends GeneratrixElement {
     _row.path_data = generatrix.pathData;
     _row.nom = this.nom;
 
+    // радиус, как дань традиции
+    const rmin = generatrix.rmin();
+    if(rmin) {
+      // записываем среднее значение, дельту не анализируем
+      // если овал или несколько перегибов, мы это увидим в path_data
+      _row.r = ((rmin + generatrix.rmax()) / 2).round();
+    }
+    else {
+      _row.r = 0;
+    }
 
     // добавляем припуски соединений
     _row.len = this.length.round(1);

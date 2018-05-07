@@ -120,23 +120,23 @@ class DimensionDrawer extends paper.Group {
       // получаем все профили контура, делим их на вертикальные и горизонтальные
       const ihor = [
         {
-          point: bounds.top.round(0),
+          point: bounds.top.round(),
           elm: by_side.top,
           p: by_side.top.b.y < by_side.top.e.y ? 'b' : 'e'
         },
         {
-          point: bounds.bottom.round(0),
+          point: bounds.bottom.round(),
           elm: by_side.bottom,
           p: by_side.bottom.b.y < by_side.bottom.e.y ? 'b' : 'e'
         }];
       const ivert = [
         {
-          point: bounds.left.round(0),
+          point: bounds.left.round(),
           elm: by_side.left,
           p: by_side.left.b.x > by_side.left.e.x ? 'b' : 'e'
         },
         {
-          point: bounds.right.round(0),
+          point: bounds.right.round(),
           elm: by_side.right,
           p: by_side.right.b.x > by_side.right.e.x ? 'b' : 'e'
         }];
@@ -152,30 +152,30 @@ class DimensionDrawer extends paper.Group {
         const eb = our ? (elm instanceof GlassSegment ? elm._sub.b : elm.b) : elm.rays.b.npoint;
         const ee = our ? (elm instanceof GlassSegment ? elm._sub.e : elm.e) : elm.rays.e.npoint;
 
-        if(ihor.every((v) => v.point != eb.y.round(0))) {
+        if(ihor.every((v) => v.point != eb.y.round())) {
           ihor.push({
-            point: eb.y.round(0),
+            point: eb.y.round(),
             elm: elm,
             p: 'b'
           });
         }
-        if(ihor.every((v) => v.point != ee.y.round(0))) {
+        if(ihor.every((v) => v.point != ee.y.round())) {
           ihor.push({
-            point: ee.y.round(0),
+            point: ee.y.round(),
             elm: elm,
             p: 'e'
           });
         }
-        if(ivert.every((v) => v.point != eb.x.round(0))) {
+        if(ivert.every((v) => v.point != eb.x.round())) {
           ivert.push({
-            point: eb.x.round(0),
+            point: eb.x.round(),
             elm: elm,
             p: 'b'
           });
         }
-        if(ivert.every((v) => v.point != ee.x.round(0))) {
+        if(ivert.every((v) => v.point != ee.x.round())) {
           ivert.push({
-            point: ee.x.round(0),
+            point: ee.x.round(),
             elm: elm,
             p: 'e'
           });

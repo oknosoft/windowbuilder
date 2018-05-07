@@ -53,7 +53,7 @@ function fake(obj) {
 
 				rows.forEach(function (row) {
 					var table_row = document.createElement("TR");
-					row.len = (row.len * 1000).round(0);
+					row.len = (row.len * 1000).round();
 					row.qty = row.qty * quantity;
 					table_row.innerHTML = dhx4.template(tpl_table_row_cut.innerHTML, row);
 					table_table.appendChild(table_row);
