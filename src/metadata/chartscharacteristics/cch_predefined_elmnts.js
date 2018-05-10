@@ -54,6 +54,10 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
     const parent = job_prm[parents[row.parent.valueOf()]];
     const _mgr = row.type.is_ref && md.mgr_by_class_name(row.type.types[0]);
 
+    if(parent && parent.hasOwnProperty(row.synonym)) {
+      delete parent[row.synonym];
+    }
+
     if(row.list == -1) {
 
       parent.__define(row.synonym, {
@@ -64,6 +68,7 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
           });
           return res;
         })(),
+        configurable: true,
         enumerable: true
       });
 
@@ -83,20 +88,23 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
             return row.value;
           }
         }),
+        configurable: true,
         enumerable: true
       });
     }
-    else {
-
-      if(parent.hasOwnProperty(row.synonym)) {
-        delete parent[row.synonym];
-      }
+    else if(parent) {
 
       parent.__define(row.synonym, {
         value: _mgr ? _mgr.get(row.value, false, false) : row.value,
         configurable: true,
         enumerable: true
       });
+    }
+    else {
+      $p.record_log({
+        class: 'error',
+        note: `no parent for ${row.synonym}`,
+      })
     }
   }
 
