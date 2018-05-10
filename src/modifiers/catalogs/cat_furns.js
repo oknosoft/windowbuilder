@@ -115,7 +115,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
           if(row.forcibly || forcibly){
             prm_row.value = row.value;
           }
-          prm_row.hide = row.hide || param.is_calculated;
+          prm_row.hide = row.hide || (param.is_calculated && !param.show_calculated);
           return false;
         }
       });

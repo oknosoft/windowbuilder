@@ -80,7 +80,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     });
 
     inset.used_params.forEach((param) => {
-      if(!param.is_calculated && params.indexOf(param) == -1) {
+      if((!param.is_calculated || param.show_calculated) && params.indexOf(param) == -1) {
         ts_params.add({
           cnstr: cnstr,
           inset: blank_inset || inset,

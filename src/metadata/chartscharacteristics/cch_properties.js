@@ -96,6 +96,12 @@ export default function ($p) {
       }
     },
 
+    show_calculated: {
+      get() {
+        return ($p.job_prm.properties.show_calculated || []).indexOf(this) != -1;
+      }
+    },
+
     /**
      * ### Рассчитывает значение вычисляемого параметра
      * @param obj {Object}
