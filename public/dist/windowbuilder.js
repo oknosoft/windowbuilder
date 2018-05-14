@@ -3496,8 +3496,7 @@ class Contour extends AbstractFilling(paper.Layer) {
 
         if (imposts) {
           const {offsets, do_center, step} = imposts;
-
-          function add_impost(y) {
+          const add_impost = function (y) {
             const impost = Object.assign(new paper.Path({
               insert: false,
               segments: [[bounds.left, y], [bounds.right, y]],
@@ -3996,11 +3995,11 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   refresh_prm_links(root) {
 
-    const {cnstr} = this;
+    const cnstr = root ? 0 : this.cnstr || -9999;
     let notify;
 
     this.params.find_rows({
-      cnstr: root ? 0 : cnstr || -9999,
+      cnstr,
       inset: $p.utils.blank.guid,
       hide: {not: true},
     }, (prow) => {
@@ -4010,14 +4009,17 @@ class Contour extends AbstractFilling(paper.Layer) {
 
       if (links.length && param.linked_values(links, prow)) {
         notify = true;
-        prow._manager.emit_async('update', prow, {value: prow._obj.value});
       }
       if (!notify) {
         notify = hide;
       }
     });
 
-    notify && this.notify(this, 'refresh_prm_links');
+    if(notify) {
+      this.notify(this, 'refresh_prm_links');
+      const {_dp} = this.project;
+      _dp._manager.emit_async('rows', _dp, {extra_fields: true});
+    };
 
   }
 

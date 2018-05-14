@@ -194,57 +194,55 @@ class CchPredefined_elmntsManager extends ChartOfCharacteristicManager {
     const parent = job_prm[parents[row.parent.valueOf()]];
     const _mgr = row.type.is_ref && md.mgr_by_class_name(row.type.types[0]);
 
-    if(parent && parent.hasOwnProperty(row.synonym)) {
-      delete parent[row.synonym];
-    }
+    if(parent) {
+      if(parent.hasOwnProperty(row.synonym)) {
+        delete parent[row.synonym];
+      }
 
-    if(row.list == -1) {
-
-      parent.__define(row.synonym, {
-        value: (() => {
-          const res = {};
-          row.elmnts.forEach((row) => {
-            res[row.elm.valueOf()] = _mgr ? _mgr.get(row.value, false, false) : row.value;
-          });
-          return res;
-        })(),
-        configurable: true,
-        enumerable: true
-      });
-
-    }
-    else if(row.list) {
-
-      parent.__define(row.synonym, {
-        value: (row.elmnts._obj || row.elmnts).map((row) => {
-          if(_mgr) {
-            const value = _mgr.get(row.value, false, false);
-            if(!utils.is_empty_guid(row.elm)) {
-              value._formula = row.elm;
+      if(row.list == -1) {
+        parent.__define(row.synonym, {
+          value: (() => {
+            const res = {};
+            row.elmnts.forEach((row) => {
+              res[row.elm.valueOf()] = _mgr ? _mgr.get(row.value, false, false) : row.value;
+            });
+            return res;
+          })(),
+          configurable: true,
+          enumerable: true
+        });
+      }
+      else if(row.list) {
+        parent.__define(row.synonym, {
+          value: (row.elmnts._obj || row.elmnts).map((row) => {
+            if(_mgr) {
+              const value = _mgr.get(row.value, false, false);
+              if(!utils.is_empty_guid(row.elm)) {
+                value._formula = row.elm;
+              }
+              return value;
             }
-            return value;
-          }
-          else {
-            return row.value;
-          }
-        }),
-        configurable: true,
-        enumerable: true
-      });
-    }
-    else if(parent) {
-
-      parent.__define(row.synonym, {
-        value: _mgr ? _mgr.get(row.value, false, false) : row.value,
-        configurable: true,
-        enumerable: true
-      });
+            else {
+              return row.value;
+            }
+          }),
+          configurable: true,
+          enumerable: true
+        });
+      }
+      else {
+        parent.__define(row.synonym, {
+          value: _mgr ? _mgr.get(row.value, false, false) : row.value,
+          configurable: true,
+          enumerable: true
+        });
+      }
     }
     else {
       $p.record_log({
         class: 'error',
         note: `no parent for ${row.synonym}`,
-      })
+      });
     }
   }
 
