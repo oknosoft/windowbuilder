@@ -35,12 +35,12 @@ $p.CatElm_visualization.prototype.__define({
 			else if(this.svg_path){
 
         if(this.mode === 1) {
-          const {fontSize, ...attr} = JSON.parse(this.attributes || '{}');
+          const attr = JSON.parse(this.attributes || '{}');
           subpath = new PointText(Object.assign({
             parent: layer._by_spec,
             fillColor: 'black',
             fontFamily: 'Mipgost',
-            fontSize: fontSize || 60,
+            fontSize: attr.fontSize || 60,
             guide: true,
             content: this.svg_path,
           }, attr));
