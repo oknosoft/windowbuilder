@@ -6909,8 +6909,8 @@ class Magnetism {
           const rNext = (pNext.outer ? pNext.profile.rays.outer : pNext.profile.rays.inner).equidistant(-pNext.profile.nom.sizefaltz);
           const rOur = (pOur.outer ? pOur.profile.rays.outer : pOur.profile.rays.inner).equidistant(-pOur.profile.nom.sizefaltz);
 
-          const p0 = rSegm.intersect_point(rNext, selected.point);
-          const p1 = rSegm.intersect_point(rOur, selected.point);
+          const p1 = rSegm.intersect_point(rOur, spoint);
+          const p0 = rSegm.intersect_point(rNext, p1);
           const delta = p0.subtract(p1);
           selected.profile.move_points(delta, true);
 
@@ -6986,23 +6986,26 @@ Object.defineProperties(paper.Path.prototype, {
     },
 
   is_linear: {
-      value() {
-        if(this.curves.length == 1 && this.firstCurve.isLinear())
-          return true;
-        else if(this.hasHandles())
-          return false;
-        else{
-          var curves = this.curves,
-            da = curves[0].point1.getDirectedAngle(curves[0].point2), dc;
-          for(var i = 1; i < curves.lenght; i++){
-            dc = curves[i].point1.getDirectedAngle(curves[i].point2);
-            if(Math.abs(dc - da) > consts.epsilon)
-              return false;
-          }
-        }
+    value() {
+      if(this.curves.length == 1 && this.firstCurve.isLinear()) {
         return true;
       }
-    },
+      else if(this.hasHandles()) {
+        return false;
+      }
+      else {
+        let curves = this.curves,
+          da = curves[0].point1.getDirectedAngle(curves[0].point2), dc;
+        for (let i = 1; i < curves.length; i++) {
+          dc = curves[i].point1.getDirectedAngle(curves[i].point2);
+          if(Math.abs(dc - da) > consts.epsilon) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+  },
 
   is_nearest: {
     value(point, sticking) {
@@ -7264,40 +7267,46 @@ Object.defineProperties(paper.Point.prototype, {
 	},
 
 	arc_cntr: {
-		value(x1,y1, x2,y2, r0, ccw){
-			var a,b,p,r,q,yy1,xx1,yy2,xx2;
-			if(ccw){
-				var tmpx=x1, tmpy=y1;
-				x1=x2; y1=y2; x2=tmpx; y2=tmpy;
-			}
-			if (x1!=x2){
-				a=(x1*x1 - x2*x2 - y2*y2 + y1*y1)/(2*(x1-x2));
-				b=((y2-y1)/(x1-x2));
-				p=b*b+ 1;
-				r=-2*((x1-a)*b+y1);
-				q=(x1-a)*(x1-a) - r0*r0 + y1*y1;
-				yy1=(-r + Math.sqrt(r*r - 4*p*q))/(2*p);
-				xx1=a+b*yy1;
-				yy2=(-r - Math.sqrt(r*r - 4*p*q))/(2*p);
-				xx2=a+b*yy2;
-			} else{
-				a=(y1*y1 - y2*y2 - x2*x2 + x1*x1)/(2*(y1-y2));
-				b=((x2-x1)/(y1-y2));
-				p=b*b+ 1;
-				r=-2*((y1-a)*b+x1);
-				q=(y1-a)*(y1-a) - r0*r0 + x1*x1;
-				xx1=(-r - Math.sqrt(r*r - 4*p*q))/(2*p);
-				yy1=a+b*xx1;
-				xx2=(-r + Math.sqrt(r*r - 4*p*q))/(2*p);
-				yy2=a+b*xx2;
-			}
+    value(x1, y1, x2, y2, r0, ccw) {
+      let a, b, p, r, q, yy1, xx1, yy2, xx2;
+      if(ccw) {
+        const tmpx = x1, tmpy = y1;
+        x1 = x2;
+        y1 = y2;
+        x2 = tmpx;
+        y2 = tmpy;
+      }
+      if(x1 != x2) {
+        a = (x1 * x1 - x2 * x2 - y2 * y2 + y1 * y1) / (2 * (x1 - x2));
+        b = ((y2 - y1) / (x1 - x2));
+        p = b * b + 1;
+        r = -2 * ((x1 - a) * b + y1);
+        q = (x1 - a) * (x1 - a) - r0 * r0 + y1 * y1;
+        yy1 = (-r + Math.sqrt(r * r - 4 * p * q)) / (2 * p);
+        xx1 = a + b * yy1;
+        yy2 = (-r - Math.sqrt(r * r - 4 * p * q)) / (2 * p);
+        xx2 = a + b * yy2;
+      }
+      else {
+        a = (y1 * y1 - y2 * y2 - x2 * x2 + x1 * x1) / (2 * (y1 - y2));
+        b = ((x2 - x1) / (y1 - y2));
+        p = b * b + 1;
+        r = -2 * ((y1 - a) * b + x1);
+        q = (y1 - a) * (y1 - a) - r0 * r0 + x1 * x1;
+        xx1 = (-r - Math.sqrt(r * r - 4 * p * q)) / (2 * p);
+        yy1 = a + b * xx1;
+        xx2 = (-r + Math.sqrt(r * r - 4 * p * q)) / (2 * p);
+        yy2 = a + b * xx2;
+      }
 
-			if (new paper.Point(xx1,yy1).point_pos(x1,y1, x2,y2)>0)
-				return {x: xx1, y: yy1};
-			else
-				return {x: xx2, y: yy2}
-		}
-	},
+      if(new paper.Point(xx1, yy1).point_pos(x1, y1, x2, y2) > 0) {
+        return {x: xx1, y: yy1};
+      }
+      else {
+        return {x: xx2, y: yy2}
+      }
+    }
+  },
 
 	arc_point: {
 		value(x1,y1, x2,y2, r, arc_ccw, more_180){

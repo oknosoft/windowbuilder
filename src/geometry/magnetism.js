@@ -157,8 +157,8 @@ class Magnetism {
           const rNext = (pNext.outer ? pNext.profile.rays.outer : pNext.profile.rays.inner).equidistant(-pNext.profile.nom.sizefaltz);
           const rOur = (pOur.outer ? pOur.profile.rays.outer : pOur.profile.rays.inner).equidistant(-pOur.profile.nom.sizefaltz);
 
-          const p0 = rSegm.intersect_point(rNext, selected.point);
-          const p1 = rSegm.intersect_point(rOur, selected.point);
+          const p1 = rSegm.intersect_point(rOur, spoint);
+          const p0 = rSegm.intersect_point(rNext, p1);
           const delta = p0.subtract(p1);
           selected.profile.move_points(delta, true);
 
