@@ -1833,6 +1833,7 @@ class Contour extends AbstractFilling(paper.Layer) {
       // проверим вхождение значения в доступные и при необходимости изменим
       if (links.length && param.linked_values(links, prow)) {
         notify = true;
+        !root && prow._manager.emit_async('update', prow, {value: prow._obj.value});
       }
       if (!notify) {
         notify = hide;
@@ -1843,7 +1844,12 @@ class Contour extends AbstractFilling(paper.Layer) {
     if(notify) {
       this.notify(this, 'refresh_prm_links');
       const {_dp} = this.project;
-      _dp._manager.emit_async('rows', _dp, {extra_fields: true});
+      if(root) {
+        _dp._manager.emit_async('rows', _dp, {extra_fields: true});
+      }
+      // else {
+      //   _dp._manager.emit_async('rows', this, {params: true});
+      // }
     };
 
   }
