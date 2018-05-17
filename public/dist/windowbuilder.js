@@ -265,8 +265,8 @@ class StvProps {
 
   on_refresh_prm_links(contour) {
     const {_grid} = this;
-    if(_grid && contour == _grid._obj){
-      this.on_prm_change('0|0', null, true);
+    if(_grid && contour === _grid._obj){
+      this.reload();
     }
   }
 
@@ -4009,7 +4009,6 @@ class Contour extends AbstractFilling(paper.Layer) {
 
       if (links.length && param.linked_values(links, prow)) {
         notify = true;
-        !root && prow._manager.emit_async('update', prow, {value: prow._obj.value});
       }
       if (!notify) {
         notify = hide;
@@ -4018,8 +4017,8 @@ class Contour extends AbstractFilling(paper.Layer) {
 
     if(notify) {
       this.notify(this, 'refresh_prm_links');
-      const {_dp} = this.project;
       if(root) {
+        const {_dp} = this.project;
         _dp._manager.emit_async('rows', _dp, {extra_fields: true});
       }
     };
