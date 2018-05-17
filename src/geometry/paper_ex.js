@@ -77,19 +77,20 @@ Object.defineProperties(paper.Path.prototype, {
      */
   is_linear: {
     value() {
+      const {curves, firstCurve} = this;
       // если в пути единственная кривая и она прямая - путь прямой
-      if(this.curves.length == 1 && this.firstCurve.isLinear()) {
+      if(curves.length == 1 && firstCurve.isLinear()) {
         return true;
-      }// если в пути есть искривления, путь кривой
+      }
+      // если в пути есть искривления, путь кривой
       else if(this.hasHandles()) {
         return false;
       }
       else {
         // если у всех кривых пути одинаковые направленные углы - путь прямой
-        let curves = this.curves,
-          da = curves[0].point1.getDirectedAngle(curves[0].point2), dc;
+        const da = firstCurve.point1.getDirectedAngle(firstCurve.point2);
         for (let i = 1; i < curves.length; i++) {
-          dc = curves[i].point1.getDirectedAngle(curves[i].point2);
+          const dc = curves[i].point1.getDirectedAngle(curves[i].point2);
           if(Math.abs(dc - da) > consts.epsilon) {
             return false;
           }

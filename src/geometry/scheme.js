@@ -849,7 +849,7 @@ class Scheme extends paper.Project {
         view.center = center.add([dx, -dy]);
       }
       else {
-        view.center = center.add([dx, 50]);
+        view.center = center.add([dx / 2, 50]);
       }
     }
   }
