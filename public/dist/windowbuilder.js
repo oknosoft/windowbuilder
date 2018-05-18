@@ -6911,9 +6911,15 @@ class Magnetism {
           const rNext = (pNext.outer ? pNext.profile.rays.outer : pNext.profile.rays.inner).equidistant(-pNext.profile.nom.sizefaltz);
           const rOur = (pOur.outer ? pOur.profile.rays.outer : pOur.profile.rays.inner).equidistant(-pOur.profile.nom.sizefaltz);
 
-          const p1 = rSegm.intersect_point(rOur, spoint);
-          const p0 = rSegm.intersect_point(rNext, p1);
-          const delta = p0.subtract(p1);
+          const ps = rSegm.intersect_point(rOur, spoint);
+          const be = ps.getDistance(segm.profile.b) > ps.getDistance(segm.profile.e) ? 'e' : 'b';
+          const da = rSegm.angle_to(rNext, segm.profile[be]);
+
+          let p0 = rSegm.intersect_point(rNext, ps);
+          if(!p0 || da < 4) {
+            p0 = rNext.getNearestPoint(segm.profile[be]);
+          }
+          const delta = p0.subtract(ps);
           selected.profile.move_points(delta, true);
 
         }
@@ -7677,11 +7683,11 @@ class ProfileItem extends GeneratrixElement {
   }
 
   set cnn1(v) {
-    const {rays, project} = this;
+    const {rays} = this;
     const cnn = $p.cat.cnns.get(v);
     if(rays.b.cnn != cnn) {
       rays.b.cnn = cnn;
-      project.register_change();
+      this.project.register_change();
     }
   }
 
@@ -7690,11 +7696,11 @@ class ProfileItem extends GeneratrixElement {
   }
 
   set cnn2(v) {
-    const {rays, project} = this;
+    const {rays} = this;
     const cnn = $p.cat.cnns.get(v);
     if(rays.e.cnn != cnn) {
       rays.e.cnn = cnn;
-      project.register_change();
+      this.project.register_change();
     }
   }
 
@@ -7742,12 +7748,12 @@ class ProfileItem extends GeneratrixElement {
   }
 
   set r(v) {
-    const {_row, _attr, project} = this;
+    const {_row, _attr} = this;
     if(_row.r != v) {
       _attr._rays.clear();
       _row.r = v;
       this.set_generatrix_radius();
-      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
+      this.project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -7764,12 +7770,12 @@ class ProfileItem extends GeneratrixElement {
   }
 
   set arc_ccw(v) {
-    const {_row, _attr, project} = this;
+    const {_row, _attr} = this;
     if(_row.arc_ccw != v) {
       _attr._rays.clear();
       _row.arc_ccw = v;
       this.set_generatrix_radius();
-      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
+      this.project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -7796,7 +7802,7 @@ class ProfileItem extends GeneratrixElement {
       }
       _row.r = b.arc_r(b.x, b.y, e.x, e.y, v);
       this.set_generatrix_radius(v);
-      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
+      this.project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -8004,13 +8010,12 @@ class ProfileItem extends GeneratrixElement {
 
   save_coordinates() {
 
-    const {_attr, _row, rays, generatrix, project} = this;
+    const {_attr, _row, rays, generatrix, project: {cnns}} = this;
 
     if(!generatrix) {
       return;
     }
 
-    const {cnns} = project;
     const b = rays.b;
     const e = rays.e;
     const row_b = cnns.add({
@@ -8177,7 +8182,7 @@ class ProfileItem extends GeneratrixElement {
   }
 
   set_generatrix_radius(height) {
-    const {generatrix, _row, layer, project, selected} = this;
+    const {generatrix, _row, layer, selected} = this;
     const b = generatrix.firstSegment.point.clone();
     const e = generatrix.lastSegment.point.clone();
     const min_radius = b.getDistance(e) / 2;
