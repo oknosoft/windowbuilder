@@ -48,13 +48,13 @@ class Scheme extends paper.Project {
 
     this.magnetism = new Magnetism(this);
 
+    const isBrowser = typeof requestAnimationFrame === 'function';
+
     /**
      * Перерисовывает все контуры изделия. Не занимается биндингом.
      * Предполагается, что взаимное перемещение профилей уже обработано
      */
     this.redraw = () => {
-
-      const isBrowser = typeof requestAnimationFrame === 'function';
 
       _attr._opened && !_attr._silent && _scheme._scope && isBrowser && requestAnimationFrame(_scheme.redraw);
 
@@ -768,7 +768,7 @@ class Scheme extends paper.Project {
         }
       }
       else if(item instanceof Filling) {
-        item.purge_path();
+        item.purge_paths();
       }
     }
 

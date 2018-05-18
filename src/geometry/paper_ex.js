@@ -26,27 +26,52 @@ Object.defineProperties(paper.Path.prototype, {
     }
   },
 
-  is_self_intersected: {
-    value() {
+  /**
+   * Возвращает массив самопересечений
+   * @param first
+   * @return {Array}
+   */
+  self_intersections: {
+    value(first) {
       const {curves} = this;
-      return curves.some((crv1, i1) => {
+      const res = [];
+      curves.some((crv1, i1) => {
         return curves.some((crv2, i2) => {
+          if(i2 <= i1) {
+            return;
+          }
           const intersections = crv1.getIntersections(crv2);
           if(intersections.length) {
-            if(intersections.length > 1) {
-              return true;
-            }
             const {point} = intersections[0];
+            if(intersections.length > 1) {
+              res.push({crv1, crv2, point});
+              if(first) {
+                return true;
+              }
+            }
             if(crv2.point1.is_nearest(crv1.point2, 0) && point.is_nearest(crv1.point2, 0)) {
-              return false;
+              return;
             }
             if(crv1.point1.is_nearest(crv2.point2, 0) && point.is_nearest(crv1.point1, 0)) {
-              return false;
+              return;
             }
-            return true;
-          };
-        })
-      })
+            res.push({crv1, crv2, point});
+            if(first) {
+              return true;
+            }
+          }
+        });
+      });
+      return res;
+    }
+  },
+
+  /**
+   * Является ли путь самопересекающимся
+   */
+  is_self_intersected: {
+    value() {
+      return this.self_intersections(true).length > 0;
     }
   },
 

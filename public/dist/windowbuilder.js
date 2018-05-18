@@ -5969,7 +5969,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     path.visible = true;
     imposts.forEach((elm) => elm.redraw());
 
-    this.purge_path();
+    this.purge_paths();
 
     if(!_attr._text){
       _attr._text = new paper.PointText({
@@ -6083,10 +6083,10 @@ class Filling extends AbstractFilling(BuilderElement) {
     super.set_clr(v);
   }
 
-  purge_path() {
+  purge_paths() {
     const paths = this.children.filter((child) => child instanceof paper.Path);
     const {path} = this;
-    paths.forEach((p) => p != path && p.remove());
+    paths.forEach((p) => p !== path && p.remove());
   }
 
   fill_error() {
@@ -6154,8 +6154,6 @@ class Filling extends AbstractFilling(BuilderElement) {
       _attr._profiles = [];
     }
 
-    let needPurge;
-
     if(attr instanceof paper.Path){
       path.addSegments(attr.segments);
     }
@@ -6215,23 +6213,43 @@ class Filling extends AbstractFilling(BuilderElement) {
         path.addSegments(curr.sub_path.segments);
         ["anext","pb","pe"].forEach((prop) => { delete curr[prop] });
         _attr._profiles.push(curr);
-
-        if(!needPurge){
-          needPurge = Math.abs(curr.angle_hor % 90) < 0.2
-        }
       }
-    }
-
-    if(needPurge || path.hasHandles()) {
-      const delta = 2;
-      const toRemove = [];
-      let prev;
     }
 
     if(path.segments.length && !path.closed){
       path.closePath(true);
     }
 
+    const intersections = path.self_intersections();
+    if(intersections.length) {
+      const {curves, segments} = path;
+      for(const {crv1, crv2, point} of intersections) {
+
+        const loc1 = crv1.getLocationOf(point);
+        const loc2 = crv2.getLocationOf(point);
+        const offset1 = loc2.offset - loc1.offset;
+        const offset2 = loc1.offset + path.length - loc2.offset;
+
+        crv1.divideAt(loc1);
+        crv2.divideAt(loc2);
+
+        if(offset2 < offset1) {
+          const ind = segments.indexOf(crv2.segment2) + 1;
+          while (ind < segments.length) {
+            path.removeSegment(ind);
+          }
+          while (path.firstSegment !== crv1.segment2) {
+            path.removeSegment(0);
+          }
+        }
+        else {
+          const ind = segments.indexOf(crv1.segment2);
+          while (segments[ind] !== crv2.segment1) {
+            path.removeSegment(ind);
+          }
+        }
+      }
+    }
     path.reduce();
 
   }
@@ -6951,27 +6969,44 @@ Object.defineProperties(paper.Path.prototype, {
     }
   },
 
-  is_self_intersected: {
-    value() {
+  self_intersections: {
+    value(first) {
       const {curves} = this;
-      return curves.some((crv1, i1) => {
+      const res = [];
+      curves.some((crv1, i1) => {
         return curves.some((crv2, i2) => {
+          if(i2 <= i1) {
+            return;
+          }
           const intersections = crv1.getIntersections(crv2);
           if(intersections.length) {
-            if(intersections.length > 1) {
-              return true;
-            }
             const {point} = intersections[0];
+            if(intersections.length > 1) {
+              res.push({crv1, crv2, point});
+              if(first) {
+                return true;
+              }
+            }
             if(crv2.point1.is_nearest(crv1.point2, 0) && point.is_nearest(crv1.point2, 0)) {
-              return false;
+              return;
             }
             if(crv1.point1.is_nearest(crv2.point2, 0) && point.is_nearest(crv1.point1, 0)) {
-              return false;
+              return;
             }
-            return true;
-          };
-        })
-      })
+            res.push({crv1, crv2, point});
+            if(first) {
+              return true;
+            }
+          }
+        });
+      });
+      return res;
+    }
+  },
+
+  is_self_intersected: {
+    value() {
+      return this.self_intersections(true).length > 0;
     }
   },
 
@@ -9988,9 +10023,9 @@ class Scheme extends paper.Project {
 
     this.magnetism = new Magnetism(this);
 
-    this.redraw = () => {
+    const isBrowser = typeof requestAnimationFrame === 'function';
 
-      const isBrowser = typeof requestAnimationFrame === 'function';
+    this.redraw = () => {
 
       _attr._opened && !_attr._silent && _scheme._scope && isBrowser && requestAnimationFrame(_scheme.redraw);
 
@@ -10545,7 +10580,7 @@ class Scheme extends paper.Project {
         }
       }
       else if(item instanceof Filling) {
-        item.purge_path();
+        item.purge_paths();
       }
     }
 
