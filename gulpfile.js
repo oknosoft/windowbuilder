@@ -39,6 +39,23 @@ gulp.task('build-iface', function(){
     // .pipe(gulp.dest('./dist'))
 });
 
+// Cборка библиотеки для использования снаружи
+gulp.task('build-drawer', function () {
+  return gulp.src([
+    './src/editor/editor_base.js',
+    './src/geometry/*.js',
+    './src/modifiers/common/*.js'
+  ])
+    .pipe(concat('drawer.js'))
+    .pipe(strip())
+    .pipe(umd({
+      exports: function (file) {
+        return 'EditorInvisible';
+      }
+    }))
+    .pipe(gulp.dest('./public/dist'));
+});
+
 // Cборка библиотеки рисовалки
 gulp.task('build-lib', function(){
 	return gulp.src([

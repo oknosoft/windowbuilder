@@ -1055,7 +1055,7 @@ $p.cat.cnns.__define({
         }
       }
 
-      const ref1 = nom1.ref; 
+      const ref1 = nom1.ref;
       const ref2 = onom2.ref;
 
       if(!is_i){
@@ -2885,7 +2885,6 @@ class Pricing {
   constructor($p) {
 
     $p.md.once("predefined_elmnts_inited", () => {
-
 
       this.by_local()
         .then((loc) => {
@@ -7641,13 +7640,13 @@ $p.DocSelling.prototype.before_save = function () {
 
 
 
-function eXcell_rsvg(cell){ 
-	if (cell){                
+function eXcell_rsvg(cell){
+	if (cell){
 		this.cell = cell;
 		this.grid = this.cell.parentNode.grid;
 	}
-	this.edit = function(){};  
-	this.isDisabled = function(){ return true; }; 
+	this.edit = function(){};
+	this.isDisabled = function(){ return true; };
 	this.setValue=function(val){
 		this.cell.style.padding = "2px 4px";
 		this.setCValue(val ? $p.iface.scale_svg(val, 120, 0) : "нет эскиза");
@@ -7936,13 +7935,13 @@ class eXcell_client extends eXcell {
 
   edit() {
 
-    this.val = this.getValue();		
+    this.val = this.getValue();
     this.cell.innerHTML = '<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_field21">&nbsp;</div></div>';
 
     const {cell: {firstChild}, val} = this;
     const ti = firstChild.childNodes[0];
     ti.value = val;
-    ti.onclick = $p.iface.cancel_bubble;		
+    ti.onclick = $p.iface.cancel_bubble;
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
     firstChild.childNodes[1].onclick = this.open_obj;
@@ -7951,7 +7950,7 @@ class eXcell_client extends eXcell {
   detach() {
     const val = this.getValue();
     val !== null && this.setValue(val);
-    return !$p.utils.is_equal(this.val, this.getValue());				
+    return !$p.utils.is_equal(this.val, this.getValue());
   }
 
 }
@@ -8605,7 +8604,7 @@ class eXcell_addr extends eXcell {
   }
 
   ti_keydown(e) {
-    if(e.keyCode === 8 || e.keyCode === 46){          
+    if(e.keyCode === 8 || e.keyCode === 46){
       const {obj} = this.grid.get_cell_field();
       obj.shipping_address = '';
       obj.address_fields = '';
@@ -8632,13 +8631,13 @@ class eXcell_addr extends eXcell {
 
   edit() {
 
-    this.val = this.getValue();		
+    this.val = this.getValue();
     this.cell.innerHTML = '<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_field21">&nbsp;</div></div>';
 
     const td = this.cell.firstChild;
     const ti = td.childNodes[0];
     ti.value = this.val;
-    ti.onclick = $p.iface.cancel_bubble;		
+    ti.onclick = $p.iface.cancel_bubble;
     ti.readOnly = true;
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
@@ -8647,7 +8646,7 @@ class eXcell_addr extends eXcell {
 
   detach() {
     this.setValue(this.getValue());
-    return !$p.utils.is_equal(this.val, this.getValue());				
+    return !$p.utils.is_equal(this.val, this.getValue());
   }
 
 }
