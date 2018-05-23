@@ -2376,8 +2376,10 @@ class DimensionLine extends paper.Group {
 
   _click(event) {
     event.stop();
-    this.wnd = new RulerWnd(null, this);
-    this.wnd.size = this.size;
+    if(typeof RulerWnd === 'function') {
+      this.wnd = new RulerWnd(null, this);
+      this.wnd.size = this.size;
+    }
   }
 
   _move_points(event, xy) {
@@ -7732,7 +7734,7 @@ class Scheme extends paper.Project {
 
         _scheme.l_connective.redraw();
 
-        isBrowser && contours[0].refresh_prm_links(true);
+        isBrowser && !_attr._silent && contours[0].refresh_prm_links(true);
 
         for (let contour of contours) {
           contour.redraw();
