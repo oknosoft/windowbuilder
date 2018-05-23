@@ -10781,5 +10781,3932 @@ $p.spec_building = new SpecBuilding($p);
 	}
 })($p.classes.DataManager);
 
+
+(function(_mgr){
+
+	const acn = {
+    ii: [_mgr.Наложение],
+    i: [_mgr.НезамкнутыйКонтур],
+    a: [
+      _mgr.УгловоеДиагональное,
+      _mgr.УгловоеКВертикальной,
+      _mgr.УгловоеКГоризонтальной,
+      _mgr.КрестВСтык],
+    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
+	};
+
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get() {
+        return this.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get() {
+        return this.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get() {
+        return this.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get() {
+        return this.ТОбразное;
+      }
+    },
+    ii: {
+      get() {
+        return this.Наложение;
+      }
+    },
+    i: {
+      get() {
+        return this.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get() {
+        return this.КрестПересечение;
+      }
+    },
+    xx: {
+      get() {
+        return this.КрестВСтык;
+      }
+    },
+
+    acn: {
+      value: acn
+    },
+
+  });
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+
+(function(_mgr){
+
+  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
+
+
+})($p.enm.inserts_types);
+
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+    is_opening: {
+      value(v) {
+        if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное) {
+          return false;
+        }
+        return true;
+      }
+    }
+
+  });
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get() {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get() {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get() {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get() {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get() {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get() {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get() {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get() {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get() {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
+
+
+$p.md.once('predefined_elmnts_inited', () => {
+  const _mgr = $p.cat.characteristics;
+
+  _mgr.adapter.load_view(_mgr, 'linked', {
+    limit: 10000,
+    include_docs: true,
+    startkey: [$p.utils.blank.guid, 'cat.characteristics'],
+    endkey: [$p.utils.blank.guid, 'cat.characteristics\u0fff']
+  })
+    .then(() => {
+      const {current_user} = $p;
+      if(current_user && (
+          current_user.role_available('СогласованиеРасчетовЗаказов') ||
+          current_user.role_available('ИзменениеТехнологическойНСИ') ||
+          current_user.role_available('РедактированиеЦен')
+        )) {
+        return;
+      };
+      _mgr.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
+    })
+});
+
+$p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
+
+  before_save(attr) {
+
+    const {prod_nom, calc_order, _data} = this;
+
+    if(calc_order.is_read_only) {
+      _data._err = {
+        title: 'Права доступа',
+        type: 'alert-error',
+        text: `Запрещено изменять заказ в статусе ${calc_order.obj_delivery_state}`
+      };
+      return false;
+    }
+
+    const name = this.prod_name();
+    if(name) {
+      this.name = name;
+    }
+
+    this.partner = calc_order.partner;
+
+  }
+
+  add_inset_params(inset, cnstr, blank_inset) {
+    const ts_params = this.params;
+    const params = [];
+
+    ts_params.find_rows({cnstr: cnstr, inset: blank_inset || inset}, (row) => {
+      params.indexOf(row.param) === -1 && params.push(row.param);
+      return row.param;
+    });
+
+    inset.used_params.forEach((param) => {
+      if((!param.is_calculated || param.show_calculated) && params.indexOf(param) == -1) {
+        ts_params.add({
+          cnstr: cnstr,
+          inset: blank_inset || inset,
+          param: param
+        });
+        params.push(param);
+      }
+    });
+  }
+
+  prod_name(short) {
+    const {calc_order_row, calc_order, leading_product, sys, clr, origin} = this;
+    let name = '';
+
+    if(calc_order_row) {
+
+      if(calc_order.number_internal) {
+        name = calc_order.number_internal.trim();
+      }
+      else {
+        let num0 = calc_order.number_doc, part = '';
+        for (let i = 0; i < num0.length; i++) {
+          if(isNaN(parseInt(num0[i]))) {
+            name += num0[i];
+          }
+          else {
+            break;
+          }
+        }
+        for (let i = num0.length - 1; i > 0; i--) {
+          if(isNaN(parseInt(num0[i]))) {
+            break;
+          }
+          part = num0[i] + part;
+        }
+        name += parseInt(part || 0).toFixed(0);
+      }
+
+      name += '/' + calc_order_row.row.pad();
+
+      if(!leading_product.empty()) {
+        name += ':' + leading_product.calc_order_row.row.pad();
+      }
+
+      if(!sys.empty()) {
+        name += '/' + sys.name;
+      }
+      else if(!origin.empty()) {
+        name += '/' + origin.name;
+      }
+
+      if(!short) {
+
+        if(!clr.empty()) {
+          name += '/' + this.clr.name;
+        }
+
+        if(this.x && this.y) {
+          name += '/' + this.x.toFixed(0) + 'x' + this.y.toFixed(0);
+        }
+        else if(this.x) {
+          name += '/' + this.x.toFixed(0);
+        }
+        else if(this.y) {
+          name += '/' + this.y.toFixed(0);
+        }
+
+        if(this.z) {
+          if(this.x || this.y) {
+            name += 'x' + this.z.toFixed(0);
+          }
+          else {
+            name += '/' + this.z.toFixed(0);
+          }
+        }
+
+        if(this.s) {
+          name += '/S:' + this.s.toFixed(3);
+        }
+
+        let sprm = '';
+        this.params.find_rows({cnstr: 0}, (row) => {
+          if(row.param.include_to_name && sprm.indexOf(String(row.value)) == -1) {
+            sprm && (sprm += ';');
+            sprm += String(row.value);
+          }
+        });
+        if(sprm) {
+          name += '|' + sprm;
+        }
+      }
+    }
+    return name;
+  }
+
+  open_origin(row_id) {
+    try {
+      let {origin} = this.specification.get(row_id);
+      if(typeof origin == 'number') {
+        origin = this.cnn_elmnts.get(origin - 1).cnn;
+      }
+      if(origin.is_new()) {
+        return $p.msg.show_msg({
+          type: 'alert-warning',
+          text: `Пустая ссылка на настройки в строке №${row_id + 1}`,
+          title: o.presentation
+        });
+      }
+      origin.form_obj();
+    }
+    catch (err) {
+      $p.record_log(err);
+    }
+  }
+
+  find_create_cx(elm, origin) {
+    const {_manager, calc_order, params, inserts} = this;
+    let cx;
+    _manager.find_rows({leading_product: this, leading_elm: elm, origin}, (obj) => {
+      if(!obj._deleted) {
+        cx = obj;
+        return false;
+      }
+    });
+    if(!cx) {
+      cx = $p.cat.characteristics.create({
+        calc_order: calc_order,
+        leading_product: this,
+        leading_elm: elm,
+        origin: origin
+      }, false, true)._set_loaded();
+    }
+
+    const {length, width} = $p.job_prm.properties;
+    cx.params.clear();
+    params.find_rows({cnstr: -elm, inset: origin}, (row) => {
+      if(row.param != length && row.param != width) {
+        cx.params.add({param: row.param, value: row.value});
+      }
+    });
+    inserts.find_rows({cnstr: -elm, inset: origin}, (row) => {
+      cx.clr = row.clr;
+    });
+    cx.name = cx.prod_name();
+    return cx;
+  }
+
+  get calc_order_row() {
+    let _calc_order_row;
+    this.calc_order.production.find_rows({characteristic: this}, (_row) => {
+      _calc_order_row = _row;
+      return false;
+    });
+    return _calc_order_row;
+  }
+
+  get prod_nom() {
+    if(!this.sys.empty()) {
+
+      var setted,
+        param = this.params;
+
+      if(this.sys.production.count() == 1) {
+        this.owner = this.sys.production.get(0).nom;
+
+      }
+      else if(this.sys.production.count() > 1) {
+        this.sys.production.each((row) => {
+
+          if(setted) {
+            return false;
+          }
+
+          if(row.param && !row.param.empty()) {
+            param.find_rows({cnstr: 0, param: row.param, value: row.value}, () => {
+              setted = true;
+              param._owner.owner = row.nom;
+              return false;
+            });
+          }
+
+        });
+        if(!setted) {
+          this.sys.production.find_rows({param: $p.utils.blank.guid}, (row) => {
+            setted = true;
+            param._owner.owner = row.nom;
+            return false;
+          });
+        }
+        if(!setted) {
+          this.owner = this.sys.production.get(0).nom;
+        }
+      }
+    }
+
+    return this.owner;
+  }
+
+  get builder_props() {
+    const defaults = $p.CatCharacteristics.builder_props_defaults;
+    let props;
+    try {
+      props = JSON.parse(this._obj.builder_props || '{}');
+    }
+    catch(e) {
+      props = {};
+    }
+    for(const prop in defaults){
+      if(!props.hasOwnProperty(prop)) {
+        props[prop] = defaults[prop];
+      }
+    }
+    return props;
+  }
+  set builder_props(v) {
+    const {_obj, _data} = this;
+    if(this.empty()) {
+      return;
+    }
+    const name = 'builder_props';
+    if(_data && _data._loading) {
+      _obj[name] = v;
+      return;
+    }
+    let _modified;
+    if(!_obj[name] || typeof _obj[name] !== 'string'){
+      _obj[name] = JSON.stringify($p.CatCharacteristics.builder_props_defaults);
+      _modified = true;
+    }
+    const props = JSON.parse(_obj[name]);
+    for(const prop in v){
+      if(props[prop] !== v[prop]) {
+        props[prop] = v[prop];
+        _modified = true;
+      }
+    }
+    if(_modified) {
+      _obj[name] = JSON.stringify(props);
+      this.__notify(name);
+    }
+  }
+
+  recalc(attr = {}, editor) {
+
+
+    const remove = !editor;
+    if(remove) {
+      editor = new $p.EditorInvisible();
+    }
+    const project = editor.create_scheme();
+    return project.load(this, true)
+      .then(() => {
+
+        project.save_coordinates({save: true, svg: false});
+
+      })
+      .then(() => {
+        project.ox = '';
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.unload();
+        }
+        return this;
+      });
+
+  }
+
+  draw(attr = {}, editor) {
+
+    const ref = $p.utils.snake_ref(this.ref);
+    const res = attr.res || {};
+    res[ref] = {imgs: {}};
+
+    const remove = !editor;
+    if(remove) {
+      editor = new $p.EditorInvisible();
+    }
+    const project = editor.create_scheme();
+    return project.load(this, true)
+      .then(() => {
+        const {_obj: {glasses, constructions, coordinates}} = this;
+        if(attr.elm) {
+          project.draw_fragment({elm: attr.elm});
+          const num = attr.elm > 0 ? `g${attr.elm}` : `l${attr.elm}`;
+          if(attr.format === 'png') {
+            res[ref].imgs[num] = project.view.element.toDataURL('image/png').substr(22);
+          }
+          else {
+            res[ref].imgs[num] = project.get_svg(attr);
+          }
+        }
+        else if(attr.glasses) {
+          res[ref].glasses = glasses.map((glass) => Object.assign({}, glass));
+          res[ref].glasses.forEach((row) => {
+            const glass = project.draw_fragment({elm: row.elm});
+            if(attr.format === 'png') {
+              res[ref].imgs[`g${row.elm}`] = project.view.element.toDataURL('image/png').substr(22);
+            }
+            else {
+              res[ref].imgs[`g${row.elm}`] = project.get_svg(attr);
+            }
+            if(glass){
+              row.formula_long = glass.formula(true);
+              glass.visible = false;
+            }
+          });
+          return res;
+        }
+        else {
+          if(attr.format === 'png') {
+            res[ref].imgs[`l0`] = project.view.element.toDataURL('image/png').substr(22);
+          }
+          else {
+            res[ref].imgs[`l0`] = project.get_svg(attr);
+          }
+          constructions.forEach(({cnstr}) => {
+            project.draw_fragment({elm: -cnstr});
+            if(attr.format === 'png') {
+              res[ref].imgs[`l${cnstr}`] = project.view.element.toDataURL('image/png').substr(22);
+            }
+            else {
+              res[ref].imgs[`l${cnstr}`] = project.get_svg(attr);
+            }
+          });
+        }
+      })
+      .then((res) => {
+        project.ox = '';
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.unload();
+        }
+        return res;
+      });
+  }
+
+};
+
+$p.CatCharacteristics.builder_props_defaults = {
+  auto_lines: true,
+  custom_lines: true,
+  cnns: true,
+  visualization: true,
+  txts: true
+};
+
+$p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, value) {
+  if(field == 'inset') {
+    if (value != this.inset) {
+      const {_owner} = this._owner;
+      const {cnstr} = this;
+
+      if (value != $p.utils.blank.guid) {
+        const res = _owner.params.find_rows({cnstr, inset: value, row: {not: this.row}});
+        if (res.length) {
+          $p.md.emit('alert', {
+            obj: _owner,
+            row: this,
+            title: $p.msg.data_error,
+            type: 'alert-error',
+            text: 'Нельзя добавлять две одинаковые вставки в один контур'
+          });
+          return false;
+        }
+      }
+
+      !this.inset.empty() && _owner.params.clear({inset: this.inset, cnstr});
+
+      this._obj.inset = value;
+
+      _owner.add_inset_params(this.inset, cnstr);
+    }
+  }
+}
+
+
+$p.cat.clrs.__define({
+
+  by_predefined: {
+    value(clr, clr_elm, clr_sch, elm, spec) {
+
+      const {predefined_name} = clr;
+      if(predefined_name) {
+        switch (predefined_name) {
+        case 'КакЭлемент':
+          return clr_elm;
+        case 'КакИзделие':
+          return clr_sch;
+        case 'КакЭлементСнаружи':
+          return clr_elm.clr_out.empty() ? clr_elm : clr_elm.clr_out;
+        case 'КакЭлементИзнутри':
+          return clr_elm.clr_in.empty() ? clr_elm : clr_elm.clr_in;
+        case 'КакИзделиеСнаружи':
+          return clr_sch.clr_out.empty() ? clr_sch : clr_sch.clr_out;
+        case 'КакИзделиеИзнутри':
+          return clr_sch.clr_in.empty() ? clr_sch : clr_sch.clr_in;
+        case 'КакЭлементИнверсный':
+          return this.inverted(clr_elm);
+        case 'КакИзделиеИнверсный':
+          return this.inverted(clr_sch);
+        case 'БезЦвета':
+          return this.get();
+        case 'КакВедущий':
+        case 'КакВедущийИзнутри':
+        case 'КакВедущийСнаружи':
+        case 'КакВедущийИнверсный':
+          const sub_clr = this.predefined(predefined_name.replace('КакВедущий', 'КакЭлемент'));
+          const t_parent = elm && elm.t_parent();
+          if(!elm || elm === t_parent){
+            return this.by_predefined(sub_clr,  clr_elm);
+          }
+          let finded = false;
+          spec && spec.find_rows({elm: t_parent.elm, nom: t_parent.nom}, (row) => {
+            finded = this.by_predefined(sub_clr,  row.clr);
+            return false;
+          });
+          return finded || clr_elm;
+
+        default :
+          return clr_elm;
+        }
+      }
+      return clr.empty() ? clr_elm : clr;
+    }
+  },
+
+  inverted: {
+    value(clr){
+      if(clr.clr_in == clr.clr_out || clr.clr_in.empty() || clr.clr_out.empty()){
+        return clr;
+      }
+      const ares = $p.wsql.alasql("select top 1 ref from ? where clr_in = ? and clr_out = ? and (not ref = ?)",
+        [this.alatable, clr.clr_out.ref, clr.clr_in.ref, $p.utils.blank.guid]);
+      return ares.length ? this.get(ares[0]) : clr
+    }
+  },
+
+	selection_exclude_service: {
+		value(mf, sys) {
+
+			if(mf.choice_params)
+				mf.choice_params.length = 0;
+			else
+				mf.choice_params = [];
+
+			mf.choice_params.push({
+				name: "parent",
+				path: {not: $p.cat.clrs.predefined("СЛУЖЕБНЫЕ")}
+			});
+
+			if(sys){
+				mf.choice_params.push({
+					name: "ref",
+					get path(){
+            const res = [];
+						let clr_group, elm;
+
+						function add_by_clr(clr) {
+              if(clr instanceof $p.CatClrs){
+                const {ref} = clr;
+                if(clr.is_folder){
+                  $p.cat.clrs.alatable.forEach((row) => row.parent == ref && res.push(row.ref))
+                }
+                else{
+                  res.push(ref)
+                }
+              }
+              else if(clr instanceof $p.CatColor_price_groups){
+                clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1))
+              }
+            }
+
+						if(sys instanceof $p.Editor.BuilderElement){
+							clr_group = sys.inset.clr_group;
+							if(clr_group.empty() && !(sys instanceof $p.Editor.Filling)){
+                clr_group = sys.project._dp.sys.clr_group;
+              }
+						}
+						else if(sys instanceof $p.classes.DataProcessorObj){
+							clr_group = sys.sys.clr_group;
+						}
+						else{
+							clr_group = sys.clr_group;
+						}
+
+						if(clr_group.empty() || !clr_group.clr_conformity.count()){
+              return {not: ''};
+						}
+						else{
+              add_by_clr(clr_group)
+						}
+						return {in: res};
+					}
+				});
+			}
+		}
+	},
+
+	form_selection: {
+		value(pwnd, attr) {
+
+		  const eclr = this.get();
+
+			attr.hide_filter = true;
+
+      attr.toolbar_click = function (btn_id, wnd){
+
+        if(btn_id=="btn_select" && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
+
+          if(eclr.clr_in == eclr.clr_out) {
+            pwnd.on_select.call(pwnd, eclr.clr_in);
+          }
+          else {
+            const ares = $p.wsql.alasql("select top 1 ref from cat_clrs where clr_in = ? and clr_out = ? and (not ref = ?)",
+              [eclr.clr_in.ref, eclr.clr_out.ref, $p.utils.blank.guid]);
+
+            if(ares.length){
+              pwnd.on_select.call(pwnd, $p.cat.clrs.get(ares[0]));
+            }
+            else{
+              $p.cat.clrs.create({
+                clr_in: eclr.clr_in,
+                clr_out: eclr.clr_out,
+                name: eclr.clr_in.name + " \\ " + eclr.clr_out.name,
+                parent: $p.job_prm.builder.composite_clr_folder
+              })
+                .then((obj) => obj.register_on_server())
+                .then((obj) => pwnd.on_select.call(pwnd, obj))
+                .catch((err) => $p.msg.show_msg({
+                  type: 'alert-warning',
+                  text: 'Недостаточно прав для добавления составного цвета',
+                  title: 'Составной цвет'
+                }));
+            }
+          }
+
+          wnd.close();
+          return false;
+        }
+      }
+
+      const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
+
+			function get_option_list(selection, val) {
+
+				selection.clr_in = $p.utils.blank.guid;
+				selection.clr_out = $p.utils.blank.guid;
+
+				if(attr.selection){
+					attr.selection.some((sel) => {
+						for(var key in sel){
+							if(key == "ref"){
+								selection.ref = sel.ref;
+								return true;
+							}
+						}
+					});
+				}
+
+				return this.constructor.prototype.get_option_list.call(this, selection, val);
+			}
+
+			return (wnd instanceof Promise ? wnd : Promise.resolve(wnd))
+				.then((wnd) => {
+
+					const tb_filter = wnd.elmnts.filter;
+
+					tb_filter.__define({
+						get_filter: {
+							value() {
+								const res = {
+									selection: []
+								};
+								if(clr_in.getSelectedValue())
+									res.selection.push({clr_in: clr_in.getSelectedValue()});
+								if(clr_out.getSelectedValue())
+									res.selection.push({clr_out: clr_out.getSelectedValue()});
+								if(res.selection.length)
+									res.hide_tree = true;
+								return res;
+							}
+						}
+					});
+
+					wnd.attachEvent("onClose", () => {
+
+						clr_in.unload();
+						clr_out.unload();
+
+						eclr.clr_in = $p.utils.blank.guid;
+						eclr.clr_out = $p.utils.blank.guid;
+
+						return true;
+					});
+
+
+					eclr.clr_in = $p.utils.blank.guid;
+					eclr.clr_out = $p.utils.blank.guid;
+
+          const clr_in = new $p.iface.OCombo({
+            parent: tb_filter.div.obj,
+            obj: eclr,
+            field: 'clr_in',
+            width: 160,
+            hide_frm: true,
+            get_option_list: get_option_list
+          });
+          const clr_out = new $p.iface.OCombo({
+            parent: tb_filter.div.obj,
+            obj: eclr,
+            field: 'clr_out',
+            width: 160,
+            hide_frm: true,
+            get_option_list: get_option_list
+          });
+
+          const clr_in_title = document.createElement('DIV');
+          clr_in_title.innerHTML = 'Со стороны петель';
+          clr_in_title.style = 'position: absolute;top: -4px;padding-left: 2px;font-size: small;color: gray;';
+          tb_filter.div.obj.appendChild(clr_in_title);
+
+          clr_in.DOMelem.style.float = 'left';
+          clr_in.DOMelem_input.placeholder = 'Цвет изнутри';
+          clr_out.DOMelem_input.placeholder = 'Цвет снаружи';
+
+          clr_in.attachEvent('onChange', tb_filter.call_event);
+          clr_out.attachEvent('onChange', tb_filter.call_event);
+          clr_in.attachEvent('onClose', tb_filter.call_event);
+          clr_out.attachEvent('onClose', tb_filter.call_event);
+
+          wnd.elmnts.toolbar.hideItem('btn_new');
+          wnd.elmnts.toolbar.hideItem('btn_edit');
+          wnd.elmnts.toolbar.hideItem('btn_delete');
+
+          wnd.elmnts.toolbar.setItemText('btn_select', '<b>Выбрать или создать</b>');
+
+					return wnd;
+
+				})
+		}
+	},
+
+	sync_grid: {
+		value(attr, grid) {
+
+			if(attr.action == "get_selection" && attr.selection && attr.selection.some(function (v) {
+				return v.hasOwnProperty("clr_in") || v.hasOwnProperty("clr_out");
+				})){
+				delete attr.parent;
+				delete attr.initial_value;
+			}
+
+			return $p.classes.DataManager.prototype.sync_grid.call(this, attr, grid);
+		}
+	}
+});
+
+$p.CatClrs = class CatClrs extends $p.CatClrs {
+
+  register_on_server() {
+    const {pouch} = $p.adapters;
+    return pouch.save_obj(this, {db: pouch.remote.ram});
+  }
+
+  get sides() {
+    const res = {is_in: false, is_out: false};
+    if(!this.empty() && !this.predefined_name){
+      if(this.clr_in.empty() && this.clr_out.empty()){
+        res.is_in = res.is_out = true;
+      }
+      else{
+        if(!this.clr_in.empty() && !this.clr_in.predefined_name){
+          res.is_in = true;
+        }
+        if(!this.clr_out.empty() && !this.clr_out.predefined_name){
+          res.is_out = true;
+        }
+      }
+    }
+    return res;
+  }
+};
+
+
+
+
+$p.cat.cnns.__define({
+
+  _nomcache: {
+    value: {}
+  },
+
+  sql_selection_list_flds: {
+    value(initial_value){
+      return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.name as presentation, _k_.synonym as cnn_type," +
+        " case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_cnns AS _t_" +
+        " left outer join enm_cnn_types as _k_ on _k_.ref = _t_.cnn_type %3 %4 LIMIT 300";
+    }
+  },
+
+  nom_cnn: {
+    value(nom1, nom2, cnn_types, ign_side, is_outer){
+
+      const {ProfileItem, BuilderElement, Filling} = $p.Editor;
+      const {Вертикальная} = $p.enm.orientations
+
+      if(nom1 instanceof ProfileItem && nom2 instanceof ProfileItem &&
+        cnn_types && cnn_types.indexOf($p.enm.cnn_types.УгловоеДиагональное) != -1 &&
+        nom1.orientation != Вертикальная && nom2.orientation == Вертикальная ){
+        return this.nom_cnn(nom2, nom1, cnn_types);
+      }
+
+      const side = is_outer ? $p.enm.cnn_sides.Снаружи :
+        (!ign_side && nom1 instanceof ProfileItem && nom2 instanceof ProfileItem && nom2.cnn_side(nom1));
+
+      let onom2, a1, a2, thickness1, thickness2, is_i = false, art1glass = false, art2glass = false;
+
+      if(!nom2 || ($p.utils.is_data_obj(nom2) && nom2.empty())){
+        is_i = true;
+        onom2 = nom2 = $p.cat.nom.get();
+      }
+      else{
+        if(nom2 instanceof BuilderElement){
+          onom2 = nom2.nom;
+        }
+        else if($p.utils.is_data_obj(nom2)){
+          onom2 = nom2;
+        }
+        else{
+          onom2 = $p.cat.nom.get(nom2);
+        }
+      }
+
+      const ref1 = nom1.ref; 
+      const ref2 = onom2.ref;
+
+      if(!is_i){
+        if(nom1 instanceof Filling){
+          art1glass = true;
+          thickness1 = nom1.thickness;
+        }
+        else if(nom2 instanceof Filling){
+          art2glass = true;
+          thickness2 = nom2.thickness;
+        }
+      }
+
+      if(!this._nomcache[ref1]){
+        this._nomcache[ref1] = {};
+      }
+      a1 = this._nomcache[ref1];
+      if(!a1[ref2]){
+        a2 = (a1[ref2] = []);
+        this.each((cnn) => {
+          let is_nom1 = art1glass ? (cnn.art1glass && thickness1 >= cnn.tmin && thickness1 <= cnn.tmax && cnn.cnn_type == $p.enm.cnn_types.Наложение) : false,
+            is_nom2 = art2glass ? (cnn.art2glass && thickness2 >= cnn.tmin && thickness2 <= cnn.tmax) : false;
+
+          cnn.cnn_elmnts.each((row) => {
+            if(is_nom1 && is_nom2){
+              return false;
+            }
+            is_nom1 = is_nom1 || (row.nom1 == ref1 && (row.nom2.empty() || row.nom2 == onom2));
+            is_nom2 = is_nom2 || (row.nom2 == onom2 && (row.nom1.empty() || row.nom1 == ref1));
+          });
+          if(is_nom1 && is_nom2){
+            a2.push(cnn);
+          }
+        });
+      }
+
+      if(cnn_types){
+        const types = Array.isArray(cnn_types) ? cnn_types : (
+            $p.enm.cnn_types.acn.a.indexOf(cnn_types) != -1 ? $p.enm.cnn_types.acn.a : [cnn_types]
+          );
+        return a1[ref2].filter((cnn) => {
+          if(types.indexOf(cnn.cnn_type) != -1){
+            if(!side){
+              return true
+            }
+            if(cnn.sd1 == $p.enm.cnn_sides.Изнутри){
+              return side == $p.enm.cnn_sides.Изнутри;
+            }
+            else if(cnn.sd1 == $p.enm.cnn_sides.Снаружи){
+              return side == $p.enm.cnn_sides.Снаружи;
+            }
+            else{
+              return true;
+            }
+          }
+        });
+      }
+
+      return a1[ref2];
+    }
+  },
+
+  elm_cnn: {
+    value(elm1, elm2, cnn_types, curr_cnn, ign_side, is_outer){
+
+      if(curr_cnn && cnn_types && (cnn_types.indexOf(curr_cnn.cnn_type) != -1) && (cnn_types != $p.enm.cnn_types.acn.ii)){
+
+
+        if(!ign_side && curr_cnn.sd1 == $p.enm.cnn_sides.Изнутри){
+          if(typeof is_outer == 'boolean'){
+            if(!is_outer){
+              return curr_cnn;
+            }
+          }
+          else{
+            if(elm2.cnn_side(elm1) == $p.enm.cnn_sides.Изнутри){
+              return curr_cnn;
+            }
+          }
+        }
+        else if(!ign_side && curr_cnn.sd1 == $p.enm.cnn_sides.Снаружи){
+          if(is_outer || elm2.cnn_side(elm1) == $p.enm.cnn_sides.Снаружи)
+            return curr_cnn;
+        }
+        else{
+          return curr_cnn;
+        }
+      }
+
+      const cnns = this.nom_cnn(elm1, elm2, cnn_types, ign_side, is_outer);
+
+      if(cnns.length){
+        const sides = [$p.enm.cnn_sides.Изнутри, $p.enm.cnn_sides.Снаружи];
+        if(cnns.length > 1){
+          cnns.sort((a, b) => {
+            if(sides.indexOf(a.sd1) != -1 && sides.indexOf(b.sd1) == -1){
+              return 1;
+            }
+            if(sides.indexOf(b.sd1) != -1 && sides.indexOf(a.sd1) == -1){
+              return -1;
+            }
+            if (a.priority > b.priority) {
+              return -1;
+            }
+            if (a.priority < b.priority) {
+              return 1;
+            }
+            if (a.name > b.name) {
+              return -1;
+            }
+            if (a.name < b.name) {
+              return 1;
+            }
+            return 0;
+          });
+        }
+        return cnns[0];
+      }
+      else{
+
+      }
+    }
+  },
+
+})
+
+$p.CatCnns.prototype.__define({
+
+	main_row: {
+		value(elm) {
+
+			var ares, nom = elm.nom;
+
+			if($p.enm.cnn_types.acn.a.indexOf(this.cnn_type) != -1){
+
+				var art12 = elm.orientation == $p.enm.orientations.Вертикальная ? $p.job_prm.nom.art1 : $p.job_prm.nom.art2;
+
+				ares = this.specification.find_rows({nom: art12});
+				if(ares.length)
+					return ares[0]._row;
+			}
+
+			if(this.cnn_elmnts.find_rows({nom1: nom}).length){
+				ares = this.specification.find_rows({nom: $p.job_prm.nom.art1});
+				if(ares.length)
+					return ares[0]._row;
+			}
+			if(this.cnn_elmnts.find_rows({nom2: nom}).length){
+				ares = this.specification.find_rows({nom: $p.job_prm.nom.art2});
+				if(ares.length)
+					return ares[0]._row;
+			}
+			ares = this.specification.find_rows({nom: nom});
+			if(ares.length)
+				return ares[0]._row;
+
+		}
+	},
+
+	check_nom2: {
+		value(nom) {
+			var ref = $p.utils.is_data_obj(nom) ? nom.ref : nom;
+			return this.cnn_elmnts._obj.some(function (row) {
+				return row.nom == ref;
+			})
+		}
+	}
+
+});
+
+
+$p.cat.contracts.__define({
+
+	sql_selection_list_flds: {
+		value(initial_value){
+			return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.name as presentation, _k_.synonym as contract_kind, _m_.synonym as mutual_settlements, _o_.name as organization, _p_.name as partner," +
+				" case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_contracts AS _t_" +
+				" left outer join cat_organizations as _o_ on _o_.ref = _t_.organization" +
+				" left outer join cat_partners as _p_ on _p_.ref = _t_.owner" +
+				" left outer join enm_mutual_contract_settlements as _m_ on _m_.ref = _t_.mutual_settlements" +
+				" left outer join enm_contract_kinds as _k_ on _k_.ref = _t_.contract_kind %3 %4 LIMIT 300";
+		}
+	},
+
+	by_partner_and_org: {
+    value(partner, organization, contract_kind = $p.enm.contract_kinds.СПокупателем) {
+
+      const {main_contract} = $p.cat.partners.get(partner);
+
+      if(main_contract && main_contract.contract_kind == contract_kind && main_contract.organization == organization){
+        return main_contract;
+      }
+
+      const res = this.find_rows({owner: partner, organization: organization, contract_kind: contract_kind});
+      res.sort((a, b) => a.date > b.date);
+      return res.length ? res[0] : this.get();
+    }
+	}
+
+
+});
+
+
+
+
+
+Object.defineProperties($p.cat.divisions, {
+  get_option_list: {
+    value(selection, val) {
+      const list = [];
+      $p.current_user.acl_objs.find_rows({type: "cat.divisions"}, ({acl_obj}) => {
+        if(acl_obj && list.indexOf(acl_obj) == -1){
+          list.push(acl_obj);
+          acl_obj._children().forEach((o) => list.indexOf(o) == -1 && list.push(o));
+        }
+      });
+      if(!list.length){
+        return this.constructor.prototype.get_option_list.call(this, selection, val);
+      }
+
+      function check(v){
+        if($p.utils.is_equal(v.value, val))
+          v.selected = true;
+        return v;
+      }
+
+      const l = [];
+      $p.utils._find_rows.call(this, list, selection, (v) => l.push(check({text: v.presentation, value: v.ref})));
+
+      l.sort(function(a, b) {
+        if (a.text < b.text){
+          return -1;
+        }
+        else if (a.text > b.text){
+          return 1;
+        }
+        return 0;
+      })
+      return Promise.resolve(l);
+    },
+    writable: true
+  }
+});
+
+
+$p.CatElm_visualization.prototype.__define({
+
+	draw: {
+		value(elm, layer, offset) {
+
+		  const {CompoundPath, PointText, constructor} = elm.project._scope;
+
+			let subpath;
+
+			if(this.svg_path.indexOf('{"method":') == 0){
+
+				const attr = JSON.parse(this.svg_path);
+
+				if(attr.method == "subpath_outer"){
+					subpath = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2)).equidistant(attr.offset || 10);
+					subpath.parent = layer._by_spec;
+					subpath.strokeWidth = attr.strokeWidth || 4;
+					subpath.strokeColor = attr.strokeColor || 'red';
+					subpath.strokeCap = attr.strokeCap || 'round';
+					if(attr.dashArray){
+            subpath.dashArray = attr.dashArray
+          }
+				}
+			}
+			else if(this.svg_path){
+
+        if(this.mode === 1) {
+          const attr = JSON.parse(this.attributes || '{}');
+          subpath = new PointText(Object.assign({
+            parent: layer._by_spec,
+            fillColor: 'black',
+            fontFamily: 'Mipgost',
+            fontSize: attr.fontSize || 60,
+            guide: true,
+            content: this.svg_path,
+          }, attr));
+        }
+        else {
+          subpath = new CompoundPath({
+            pathData: this.svg_path,
+            parent: layer._by_spec,
+            strokeColor: 'black',
+            fillColor: elm.constructor.clr_by_clr.call(elm, elm._row.clr, false),
+            strokeScaling: false,
+            guide: true,
+            pivot: [0, 0],
+            opacity: elm.opacity
+          });
+        }
+
+				if(elm instanceof constructor.Filling) {
+          subpath.position = elm.bounds.topLeft.add([20,10]);
+        }
+        else {
+          const {generatrix, rays: {inner, outer}} = elm;
+          let angle_hor;
+          if(elm.is_linear() || offset < 0)
+            angle_hor = generatrix.getTangentAt(0).angle;
+          else if(offset > generatrix.length)
+            angle_hor = generatrix.getTangentAt(generatrix.length).angle;
+          else
+            angle_hor = generatrix.getTangentAt(offset).angle;
+
+          if((this.rotate != -1 || elm.orientation == $p.enm.orientations.Горизонтальная) && angle_hor != this.angle_hor){
+            subpath.rotation = angle_hor - this.angle_hor;
+          }
+
+          offset += generatrix.getOffsetOf(generatrix.getNearestPoint(elm.corns(1)));
+
+          const p0 = generatrix.getPointAt(offset > generatrix.length ? generatrix.length : offset || 0);
+
+          if(this.elm_side == -1){
+            const p1 = inner.getNearestPoint(p0);
+            const p2 = outer.getNearestPoint(p0);
+
+            subpath.position = p1.add(p2).divide(2);
+
+          }else if(!this.elm_side){
+            subpath.position = inner.getNearestPoint(p0);
+
+          }else{
+            subpath.position = outer.getNearestPoint(p0);
+          }
+        }
+
+			}
+		}
+	}
+
+});
+
+
+Object.defineProperties($p.cat.furns, {
+
+  sql_selection_list_flds: {
+    value(initial_value){
+      return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.parent, case when _t_.is_folder then '' else _t_.id end as id, _t_.name as presentation, _k_.synonym as open_type, \
+					 case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_furns AS _t_ \
+					 left outer join enm_open_types as _k_ on _k_.ref = _t_.open_type %3 %4 LIMIT 300";
+    }
+  },
+
+  get_option_list: {
+    value(selection, val) {
+
+      const {characteristic, sys} = paper.project._dp;
+      const {furn} = $p.job_prm.properties;
+
+      if(furn && sys && !sys.empty()){
+
+        const links = furn.params_links({
+          grid: {selection: {cnstr: 0}},
+          obj: {_owner: {_owner: characteristic}}
+        });
+
+        if(links.length){
+          const list = [];
+          links.forEach((link) => link.values.forEach((row) => list.push(this.get(row._obj.value))));
+
+          function check(v){
+            if($p.utils.is_equal(v.value, val))
+              v.selected = true;
+            return v;
+          }
+
+          const l = [];
+          $p.utils._find_rows.call(this, list, selection, (v) => l.push(check({text: v.presentation, value: v.ref})));
+
+          l.sort((a, b) => {
+            if (a.text < b.text){
+              return -1;
+            }
+            else if (a.text > b.text){
+              return 1;
+            }
+            return 0;
+          });
+          return Promise.resolve(l);
+        }
+      }
+      return this.constructor.prototype.get_option_list.call(this, selection, val);
+    },
+    configurable: true
+  }
+
+});
+
+$p.CatFurns = class CatFurns extends $p.CatFurns {
+
+  refill_prm({project, furn, cnstr}) {
+
+    const fprms = project.ox.params;
+    const {direction} = $p.job_prm.properties;
+
+    const aprm = furn.furn_set.add_furn_prm();
+    aprm.sort((a, b) => {
+      if (a.presentation > b.presentation) {
+        return 1;
+      }
+      if (a.presentation < b.presentation) {
+        return -1;
+      }
+      return 0;
+    });
+
+    aprm.forEach((v) => {
+
+      if(v == direction){
+        return;
+      }
+
+      let prm_row, forcibly = true;
+      fprms.find_rows({param: v, cnstr: cnstr}, (row) => {
+        prm_row = row;
+        return forcibly = false;
+      });
+      if(!prm_row){
+        prm_row = fprms.add({param: v, cnstr: cnstr}, true);
+      }
+
+      const {param} = prm_row;
+      project._dp.sys.furn_params.each((row) => {
+        if(row.param == param){
+          if(row.forcibly || forcibly){
+            prm_row.value = row.value;
+          }
+          prm_row.hide = row.hide || (param.is_calculated && !param.show_calculated);
+          return false;
+        }
+      });
+
+      param.linked_values(param.params_links({
+        grid: {selection: {cnstr: cnstr}},
+        obj: {_owner: {_owner: project.ox}}
+      }), prm_row);
+
+    });
+
+    const adel = [];
+    fprms.find_rows({cnstr: cnstr, inset: $p.utils.blank.guid}, (row) => {
+      if(aprm.indexOf(row.param) == -1){
+        adel.push(row);
+      }
+    });
+    adel.forEach((row) => fprms.del(row, true));
+
+  }
+
+  add_furn_prm(aprm = [], afurn_set = []) {
+
+    if(afurn_set.indexOf(this.ref)!=-1){
+      return;
+    }
+
+    afurn_set.push(this.ref);
+
+    this.selection_params.each((row) => {aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param)});
+
+    this.specification.each((row) => {row.nom instanceof $p.CatFurns && row.nom.add_furn_prm(aprm, afurn_set)});
+
+    return aprm;
+
+  }
+
+  get_spec(contour, cache, exclude_dop) {
+
+    const res = $p.dp.buyers_order.create().specification;
+    const {ox} = contour.project;
+    const {НаПримыкающий} = $p.enm.transfer_operations_options;
+
+    this.specification.find_rows({dop: 0}, (row_furn) => {
+
+      if(!row_furn.check_restrictions(contour, cache)){
+        return;
+      }
+
+      if(!exclude_dop){
+        this.specification.find_rows({is_main_specification_row: false, elm: row_furn.elm}, (dop_row) => {
+
+          if(!dop_row.check_restrictions(contour, cache)){
+            return;
+          }
+
+          if(dop_row.is_procedure_row){
+
+            const invert = contour.direction == $p.enm.open_directions.Правое;
+            const elm = contour.profile_by_furn_side(dop_row.side, cache);
+            const {len} = elm._row;
+            const {sizefurn} = elm.nom;
+            const dx1 = $p.job_prm.builder.add_d ? sizefurn : 0;
+            const faltz = len - 2 * sizefurn;
+
+            let invert_nearest = false, coordin = 0;
+
+            if(dop_row.offset_option == $p.enm.offset_options.Формула){
+              if(!dop_row.formula.empty()){
+                coordin = dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx1, faltz, invert, dop_row});
+              }
+            }
+            else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
+              coordin = faltz + dop_row.contraction;
+            }
+            else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
+              const {generatrix} = elm;
+              const hor = contour.handle_line(elm);
+              coordin = generatrix.getOffsetOf(generatrix.intersect_point(hor)) -
+                generatrix.getOffsetOf(generatrix.getNearestPoint(elm.corns(1))) +
+                (invert ? dop_row.contraction : -dop_row.contraction);
+            }
+            else if(dop_row.offset_option == $p.enm.offset_options.ОтСередины){
+              coordin = len / 2 + (invert ? dop_row.contraction : -dop_row.contraction);
+            }
+            else{
+              if(invert){
+                if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+                  coordin = dop_row.contraction;
+                }
+                else{
+                  coordin = len - dop_row.contraction;
+                }
+              }
+              else{
+                if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+                  coordin = len - dop_row.contraction;
+                }
+                else{
+                  coordin = dop_row.contraction;
+                }
+              }
+            }
+
+            const procedure_row = res.add(dop_row);
+            procedure_row.origin = this;
+            procedure_row.handle_height_max = contour.cnstr;
+            if(dop_row.transfer_option == НаПримыкающий){
+              const nearest = elm.nearest();
+              const {outer} = elm.rays;
+              const nouter = nearest.rays.outer;
+              const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
+              procedure_row.handle_height_min = nearest.elm;
+              procedure_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
+              if(dop_row.overmeasure){
+                procedure_row.coefficient +=  nearest.dx0;
+              }
+            }
+            else{
+              procedure_row.handle_height_min = elm.elm;
+              procedure_row.coefficient = coordin;
+              if(dop_row.overmeasure){
+                procedure_row.coefficient +=  elm.dx0;
+              }
+            }
+
+            return;
+          }
+          else if(!dop_row.quantity){
+            return;
+          }
+
+          if(dop_row.is_set_row){
+            const {nom} = dop_row;
+            nom && nom.get_spec(contour, cache).each((sub_row) => {
+              if(sub_row.is_procedure_row){
+                res.add(sub_row);
+              }
+              else if(sub_row.quantity) {
+                res.add(sub_row).quantity = (row_furn.quantity || 1) * (dop_row.quantity || 1) * sub_row.quantity;
+              }
+            });
+          }
+          else{
+            res.add(dop_row).origin = this;
+          }
+        });
+      }
+
+      if(row_furn.is_set_row){
+        const {nom} = row_furn;
+        nom && nom.get_spec(contour, cache, exclude_dop).each((sub_row) => {
+          if(sub_row.is_procedure_row){
+            res.add(sub_row);
+          }
+          else if(!sub_row.quantity){
+            return;
+          }
+          res.add(sub_row).quantity = (row_furn.quantity || 1) * sub_row.quantity;
+        });
+      }
+      else{
+        if(row_furn.quantity){
+          const row_spec = res.add(row_furn);
+          row_spec.origin = this;
+          if(!row_furn.formula.empty() && !row_furn.formula.condition_formula){
+            row_furn.formula.execute({ox, contour, row_furn, row_spec});
+          }
+        }
+      }
+    });
+
+    return res;
+  }
+
+};
+
+$p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurnsSpecificationRow {
+
+  check_restrictions(contour, cache) {
+    const {elm, dop, handle_height_min, handle_height_max, formula} = this;
+    const {direction, h_ruch, cnstr} = contour;
+
+    if(h_ruch < handle_height_min || (handle_height_max && h_ruch > handle_height_max)){
+      return false;
+    }
+
+    if(!cache.ignore_formulas && !formula.empty() && formula.condition_formula && !formula.execute({ox: cache.ox, contour, row_furn: this})) {
+      return false;
+    }
+
+    const {selection_params, specification_restrictions} = this._owner._owner;
+    const prop_direction = $p.job_prm.properties.direction;
+
+    let res = true;
+
+    selection_params.find_rows({elm, dop}, (prm_row) => {
+      const ok = (prop_direction == prm_row.param) ?
+        direction == prm_row.value : prm_row.param.check_condition({row_spec: this, prm_row, cnstr, ox: cache.ox});
+      if(!ok){
+        return res = false;
+      }
+    });
+
+    if(res) {
+
+      specification_restrictions.find_rows({elm, dop}, (row) => {
+        let len;
+        if (contour.is_rectangular) {
+          len = (row.side == 1 || row.side == 3) ? cache.w : cache.h;
+        }
+        else {
+          const elm = contour.profile_by_furn_side(row.side, cache);
+          len = elm ? (elm._row.len - 2 * elm.nom.sizefurn) : 0;
+        }
+        len = len.round();
+        if (len < row.lmin || len > row.lmax) {
+          return res = false;
+        }
+      });
+    }
+
+    return res;
+  }
+
+  get nom() {
+    return this._getter('nom') || this._getter('nom_set');
+  }
+  set nom(v) {
+    if(v !== '') {
+      this._setter('nom', v);
+    }
+  }
+
+  get nom_set() {
+    return this.nom;
+  }
+  set nom_set (v) {
+    this.nom = v;
+  }
+
+};
+
+(({md}) => {
+  const {fields} = md.get("cat.furns").tabular_sections.specification;
+  fields.nom_set = fields.nom;
+})($p);
+
+
+$p.cat.insert_bind.__define({
+
+  insets: {
+    value(ox) {
+      const {sys, owner} = ox;
+      const res = [];
+      this.forEach((o) => {
+        o.production.forEach((row) => {
+          const {nom} = row;
+          if(sys._hierarchy(nom) || owner._hierarchy(nom)){
+            o.inserts.forEach(({inset, elm_type}) => {
+              if(!res.some((irow) => irow.inset == inset &&  irow.elm_type == elm_type)){
+                res.push({inset, elm_type});
+              }
+            });
+          }
+        })
+      })
+      return res;
+    }
+  }
+
+});
+
+
+
+
+$p.md.once('predefined_elmnts_inited', () => {
+  $p.cat.scheme_settings && $p.cat.scheme_settings.find_schemas('dp.buyers_order.production');
+});
+
+$p.cat.inserts.__define({
+
+	_inserts_types_filling: {
+		value: [
+			$p.enm.inserts_types.Заполнение
+		]
+	},
+
+  _prms_by_type: {
+	  value(insert_type) {
+      const prms = new Set();
+      this.find_rows({available: true, insert_type}, (inset) => {
+        inset.used_params.forEach((param) => {
+          !param.is_calculated && prms.add(param);
+        });
+        inset.specification.forEach(({nom}) => {
+          if(nom){
+            const {used_params} = nom;
+            used_params && used_params.forEach((param) => {
+              !param.is_calculated && prms.add(param);
+            });
+          }
+        });
+      });
+      return prms;
+    }
+  },
+
+  ItemData: {
+    value: class ItemData {
+      constructor(item, Renderer) {
+
+        this.Renderer = Renderer;
+        this.count = 0;
+
+        class ItemRow extends $p.DpBuyers_orderProductionRow {
+
+          tune(ref, mf, column) {
+
+            const {inset} = this;
+            const prm = $p.cch.properties.get(ref);
+
+            if(mf.choice_params) {
+              const adel = new Set();
+              for(const choice of mf.choice_params) {
+                if(choice.name !== 'owner' && choice.path != prm) {
+                  adel.add(choice);
+                }
+              }
+              for(const choice of adel) {
+                mf.choice_params.splice(mf.choice_params.indexOf(choice), 1);
+              }
+            }
+
+            const prms = new Set();
+            inset.used_params.forEach((param) => {
+              !param.is_calculated && prms.add(param);
+            });
+            inset.specification.forEach(({nom}) => {
+              if(nom){
+                const {used_params} = nom;
+                used_params && used_params.forEach((param) => {
+                  !param.is_calculated && prms.add(param);
+                });
+              }
+            });
+            mf.read_only = !prms.has(prm);
+
+            const links = prm.params_links({grid: {selection: {}}, obj: this});
+            const hide = links.some((link) => link.hide);
+            if(hide && !mf.read_only) {
+              mf.read_only = true;
+            }
+
+            if(links.length) {
+              const filter = {}
+              prm.filter_params_links(filter, null, links);
+              filter.ref && mf.choice_params.push({
+                name: 'ref',
+                path: filter.ref,
+              });
+            }
+          }
+        }
+
+        this.ProductionRow = ItemRow;
+
+        const meta = $p.dp.buyers_order.metadata('production');
+        this.meta = meta._clone();
+
+        this.meta.fields.inset.choice_params[0].path = item;
+
+        const changed = new Set();
+
+        for (const param of $p.cat.inserts._prms_by_type(item)) {
+
+          $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
+            if(!scheme.fields.find({field: param.ref})) {
+              const row = scheme.fields.add({
+                field: param.ref,
+                caption: param.caption,
+                use: true,
+              });
+              const note = scheme.fields.find({field: 'note'});
+              note && scheme.fields.swap(row, note);
+
+              changed.add(scheme);
+            }
+          });
+
+          const mf = this.meta.fields[param.ref] = {
+            synonym: param.caption,
+            type: param.type,
+          };
+          if(param.type.types.some(type => type === 'cat.property_values')) {
+            mf.choice_params = [{name: 'owner', path: param}];
+          }
+
+          Object.defineProperty(ItemRow.prototype, param.ref, {
+            get() {
+              const {product_params} = this._owner._owner;
+              const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
+              return row.value;
+            },
+            set(v) {
+              const {product_params} = this._owner._owner;
+              const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
+              row.value = v;
+            }
+          });
+        }
+
+        for(const scheme of changed) {
+          const {doc} = $p.adapters.pouch.local;
+          if(doc.adapter === 'http' && !scheme.user) {
+            doc.getSession().then(({userCtx}) => {
+              if(userCtx.roles.indexOf('doc_full') !== -1) {
+                scheme.save();
+              }
+            })
+          }
+          else {
+            scheme.save();
+          }
+        }
+
+      }
+
+    }
+  },
+
+	by_thickness: {
+		value(min, max) {
+
+			if(!this._by_thickness){
+				this._by_thickness = {};
+				this.find_rows({insert_type: {in: this._inserts_types_filling}}, (ins) => {
+					if(ins.thickness > 0){
+						if(!this._by_thickness[ins.thickness])
+							this._by_thickness[ins.thickness] = [];
+						this._by_thickness[ins.thickness].push(ins);
+					}
+				});
+			}
+
+			const res = [];
+			for(let thickness in this._by_thickness){
+				if(parseFloat(thickness) >= min && parseFloat(thickness) <= max)
+					Array.prototype.push.apply(res, this._by_thickness[thickness]);
+			}
+			return res;
+
+		}
+	},
+
+  sql_selection_list_flds: {
+	  value(initial_value) {
+      return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.name as presentation, _k_.synonym as insert_type," +
+        " case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_inserts AS _t_" +
+        " left outer join enm_inserts_types as _k_ on _k_.ref = _t_.insert_type %3 %4 LIMIT 300";
+    }
+  }
+
+});
+
+$p.CatInserts = class CatInserts extends $p.CatInserts {
+
+  nom(elm, strict) {
+
+    const {_data} = this;
+
+    if(!strict && !elm && _data.nom) {
+      return _data.nom;
+    }
+
+    const main_rows = [];
+    let _nom;
+
+    const {check_params} = ProductsBuilding;
+
+    this.specification.find_rows({is_main_elm: true}, (row) => {
+      if(elm && !check_params({
+          params: this.selection_params,
+          ox: elm.project.ox,
+          elm: elm,
+          row_spec: row,
+          cnstr: 0,
+          origin: elm.fake_origin || 0,
+        })) {
+        return;
+      }
+      main_rows.push(row)
+    });
+
+    if(!main_rows.length && !strict && this.specification.count()){
+      main_rows.push(this.specification.get(0))
+    }
+
+    if(main_rows.length && main_rows[0].nom instanceof $p.CatInserts){
+      if(main_rows[0].nom == this){
+        _nom = $p.cat.nom.get()
+      }
+      else{
+        _nom = main_rows[0].nom.nom(elm, strict)
+      }
+    }
+    else if(main_rows.length){
+      if(elm && !main_rows[0].formula.empty()){
+        try{
+          _nom = main_rows[0].formula.execute({elm});
+          if(!_nom){
+            _nom = main_rows[0].nom
+          }
+        }catch(e){
+          _nom = main_rows[0].nom
+        }
+      }
+      else{
+        _nom = main_rows[0].nom
+      }
+    }
+    else{
+      _nom = $p.cat.nom.get()
+    }
+
+    if(main_rows.length < 2){
+      _data.nom = typeof _nom == 'string' ? $p.cat.nom.get(_nom) : _nom;
+    }
+    else{
+      _data.nom = _nom;
+    }
+
+    return _data.nom;
+  }
+
+  contour_attrs(contour) {
+
+    const main_rows = [];
+    const res = {calc_order: contour.project.ox.calc_order};
+
+    this.specification.find_rows({is_main_elm: true}, (row) => {
+      main_rows.push(row);
+      return false;
+    });
+
+    if(main_rows.length){
+      const irow = main_rows[0],
+        sizes = {},
+        sz_keys = {},
+        sz_prms = ['length', 'width', 'thickness'].map((name) => {
+          const prm = $p.job_prm.properties[name];
+          sz_keys[prm.ref] = name;
+          return prm;
+        });
+
+      res.owner = irow.nom instanceof $p.CatInserts ? irow.nom.nom() : irow.nom;
+
+      contour.project.ox.params.find_rows({
+        cnstr: contour.cnstr,
+        inset: this,
+        param: {in: sz_prms}
+      }, (row) => {
+        sizes[sz_keys[row.param.ref]] = row.value
+      });
+
+      if(Object.keys(sizes).length > 0){
+        res.x = sizes.length ? (sizes.length + irow.sz) * (irow.coefficient * 1000 || 1) : 0;
+        res.y = sizes.width ? (sizes.width + irow.sz) * (irow.coefficient * 1000 || 1) : 0;
+        res.s = ((res.x * res.y) / 1000000).round(3);
+        res.z = sizes.thickness * (irow.coefficient * 1000 || 1);
+      }
+      else{
+        if(irow.count_calc_method == $p.enm.count_calculating_ways.ПоФормуле && !irow.formula.empty()){
+          irow.formula.execute({
+            ox: contour.project.ox,
+            contour: contour,
+            inset: this,
+            row_ins: irow,
+            res: res
+          });
+        }
+        if(irow.count_calc_method == $p.enm.count_calculating_ways.ПоПлощади && this.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
+          const bounds = contour.bounds_inner(irow.sz);
+          res.x = bounds.width.round(1);
+          res.y = bounds.height.round(1);
+          res.s = ((res.x * res.y) / 1000000).round(3);
+        }
+        else{
+          res.x = contour.w + irow.sz;
+          res.y = contour.h + irow.sz;
+          res.s = ((res.x * res.y) / 1000000).round(3);
+        }
+      }
+    }
+
+    return res;
+
+  }
+
+  check_restrictions(row, elm, by_perimetr, len_angl) {
+
+    const {_row} = elm;
+    const len = len_angl ? len_angl.len : _row.len;
+    const is_linear = elm.is_linear ? elm.is_linear() : true;
+    let is_tabular = true;
+
+    if(row.smin > _row.s || (_row.s && row.smax && row.smax < _row.s)){
+      return false;
+    }
+
+    if(row.is_main_elm && !row.quantity){
+      return false;
+    }
+
+    if((row.for_direct_profile_only > 0 && !is_linear) || (row.for_direct_profile_only < 0 && is_linear)){
+      return false;
+    }
+
+    if($p.utils.is_data_obj(row)){
+
+      if(row.impost_fixation == $p.enm.impost_mount_options.ДолжныБытьКрепленияИмпостов){
+        if(!elm.joined_imposts(true)){
+          return false;
+        }
+      }
+      else if(row.impost_fixation == $p.enm.impost_mount_options.НетКрепленийИмпостовИРам){
+        if(elm.joined_imposts(true)){
+          return false;
+        }
+      }
+      is_tabular = false;
+    }
+
+    if(!is_tabular || by_perimetr || row.count_calc_method != $p.enm.count_calculating_ways.ПоПериметру){
+      if(row.lmin > len || (row.lmax < len && row.lmax > 0)){
+        return false;
+      }
+      if(row.ahmin > _row.angle_hor || row.ahmax < _row.angle_hor){
+        return false;
+      }
+    }
+
+
+    return true;
+  }
+
+  filtered_spec({elm, is_high_level_call, len_angl, own_row, ox}) {
+
+    const res = [];
+
+    if(this.empty()){
+      return res;
+    }
+
+    function fake_row(row) {
+      if(row._metadata){
+        const res = {};
+        for(let fld in row._metadata().fields){
+          res[fld] = row[fld];
+        }
+        return res;
+      }
+      else{
+        return Object.assign({}, row);
+      }
+    }
+
+    const {insert_type, check_restrictions} = this;
+    const {Профиль, Заполнение} = $p.enm.inserts_types;
+    const {check_params} = ProductsBuilding;
+
+    if(is_high_level_call && (insert_type == Заполнение)){
+
+      const glass_rows = [];
+      ox.glass_specification.find_rows({elm: elm.elm}, (row) => {
+        glass_rows.push(row);
+      });
+
+      if(glass_rows.length){
+        glass_rows.forEach((row) => {
+          row.inset.filtered_spec({elm, len_angl, ox}).forEach((row) => {
+            res.push(row);
+          });
+        });
+        return res;
+      }
+    }
+
+    this.specification.forEach((row) => {
+
+      if(!check_restrictions(row, elm, insert_type == Профиль, len_angl)){
+        return;
+      }
+
+      if(own_row && row.clr.empty() && !own_row.clr.empty()){
+        row = fake_row(row);
+        row.clr = own_row.clr;
+      }
+      if(!check_params({
+          params: this.selection_params,
+          ox: ox,
+          elm: elm,
+          row_spec: row,
+          cnstr: len_angl && len_angl.cnstr,
+          origin: len_angl && len_angl.origin,
+        })){
+        return;
+      }
+
+      if(row.nom instanceof $p.CatInserts){
+        row.nom.filtered_spec({elm, len_angl, ox, own_row: own_row || row}).forEach((subrow) => {
+          const fakerow = fake_row(subrow);
+          fakerow.quantity = (subrow.quantity || 1) * (row.quantity || 1);
+          fakerow.coefficient = (subrow.coefficient || 1) * (row.coefficient || 1);
+          fakerow._origin = row.nom;
+          if(fakerow.clr.empty()){
+            fakerow.clr = row.clr;
+          }
+          res.push(fakerow);
+        });
+      }
+      else{
+        res.push(row);
+      }
+
+    });
+
+    return res;
+  }
+
+  calculate_spec({elm, len_angl, ox, spec}) {
+
+    const {_row} = elm;
+    const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади} = $p.enm.count_calculating_ways;
+    const {profile_items} = $p.enm.elm_types;
+    const {new_spec_row, calc_qty_len, calc_count_area_mass} = ProductsBuilding;
+
+    if(!spec){
+      spec = ox.specification;
+    }
+
+    this.filtered_spec({elm, is_high_level_call: true, len_angl, ox}).forEach((row_ins_spec) => {
+
+      const origin = row_ins_spec._origin || this;
+
+      let row_spec;
+
+      if((row_ins_spec.count_calc_method != ПоПериметру && row_ins_spec.count_calc_method != ПоШагам) || profile_items.indexOf(_row.elm_type) != -1){
+        row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
+      }
+
+      if(row_ins_spec.count_calc_method == ПоФормуле && !row_ins_spec.formula.empty()){
+        row_spec = new_spec_row({row_spec, elm, row_base: row_ins_spec, origin, spec, ox});
+      }
+      else if(profile_items.indexOf(_row.elm_type) != -1 || row_ins_spec.count_calc_method == ДляЭлемента){
+        calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
+      }
+      else{
+
+        if(row_ins_spec.count_calc_method == ПоПлощади){
+          row_spec.qty = row_ins_spec.quantity;
+          if(this.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
+            const bounds = elm.layer.bounds_inner(row_ins_spec.sz);
+            row_spec.len = bounds.height * (row_ins_spec.coefficient || 0.001);
+            row_spec.width = bounds.width * (row_ins_spec.coefficient || 0.001);
+            row_spec.s = (row_spec.len * row_spec.width).round(3);
+          }
+          else{
+            row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+            row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+            row_spec.s = _row.s;
+          }
+        }
+        else if(row_ins_spec.count_calc_method == ПоПериметру){
+          const row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
+          const perimeter = elm.perimeter ? elm.perimeter : (
+            this.insert_type == $p.enm.inserts_types.МоскитнаяСетка ? elm.layer.perimeter_inner(row_ins_spec.sz) : elm.layer.perimeter
+          )
+          perimeter.forEach((rib) => {
+            row_prm._row._mixin(rib);
+            row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
+            if(this.check_restrictions(row_ins_spec, row_prm, true)){
+              row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
+              const qty = !row_ins_spec.formula.empty() && row_ins_spec.formula.execute({
+                ox: ox,
+                elm: rib.profile || rib,
+                cnstr: len_angl && len_angl.cnstr || 0,
+                inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
+                row_ins: row_ins_spec,
+                row_spec: row_spec,
+                len: rib.len
+              });
+              if(qty) {
+                if(!row_spec.qty) {
+                  row_spec.qty = qty;
+                }
+              }
+              else {
+                calc_qty_len(row_spec, row_ins_spec, rib.len);
+              }
+              calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
+            }
+            row_spec = null;
+          });
+
+        }
+        else if(row_ins_spec.count_calc_method == ПоШагам){
+
+          const bounds = this.insert_type == $p.enm.inserts_types.МоскитнаяСетка ?
+            elm.layer.bounds_inner(row_ins_spec.sz) : {height: _row.y2 - _row.y1, width: _row.x2 - _row.x1};
+
+          const h = (!row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.height : bounds.width);
+          const w = !row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.width : bounds.height;
+          if(row_ins_spec.step){
+            let qty = 0;
+            let pos;
+            if(row_ins_spec.do_center && h >= row_ins_spec.step ){
+              pos = h / 2;
+              if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                qty++;
+              }
+              for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
+                pos = h / 2 + i * row_ins_spec.step;
+                if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                  qty++;
+                }
+                pos = h / 2 - i * row_ins_spec.step;
+                if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                  qty++;
+                }
+              }
+            }
+            else{
+              for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
+                pos = i * row_ins_spec.step;
+                if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                  qty++;
+                }
+              }
+            }
+
+            if(qty){
+              row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
+              calc_qty_len(row_spec, row_ins_spec, w);
+              row_spec.qty *= qty;
+              calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
+            }
+            row_spec = null;
+          }
+        }
+        else{
+          throw new Error("count_calc_method: " + row_ins_spec.count_calc_method);
+        }
+      }
+
+      if(row_spec){
+        if(!row_ins_spec.formula.empty()){
+          const qty = row_ins_spec.formula.execute({
+            ox: ox,
+            elm: elm,
+            cnstr: len_angl && len_angl.cnstr || 0,
+            inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
+            row_ins: row_ins_spec,
+            row_spec: row_spec,
+            len: len_angl ? len_angl.len : _row.len
+          });
+          if(row_ins_spec.count_calc_method == ПоФормуле){
+            row_spec.qty = qty;
+          }
+          else if(row_ins_spec.formula.condition_formula && !qty){
+            row_spec.qty = 0;
+          }
+        }
+        calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
+      }
+    })
+  }
+
+  get thickness() {
+
+    const {_data} = this;
+
+    if(!_data.hasOwnProperty("thickness")){
+      _data.thickness = 0;
+      const nom = this.nom(null, true);
+      if(nom && !nom.empty()){
+        _data.thickness = nom.thickness;
+      }
+      else{
+        this.specification.forEach(({nom}) => {
+          if(nom) {
+            _data.thickness += nom.thickness;
+          }
+        });
+      }
+    }
+
+    return _data.thickness;
+  }
+
+  get used_params() {
+    const res = [];
+    this.selection_params.forEach(({param}) => {
+      if(!param.empty() && res.indexOf(param) == -1){
+        res.push(param)
+      }
+    });
+    this.product_params.forEach(({param}) => {
+      if(!param.empty() && res.indexOf(param) == -1){
+        res.push(param)
+      }
+    });
+    return res;
+  }
+
+}
+
+
+
+$p.cat.nom.__define({
+
+	sql_selection_list_flds: {
+		value(initial_value){
+			return "SELECT _t_.ref, _t_.`_deleted`, _t_.is_folder, _t_.id, _t_.article, _t_.name as presentation, _u_.name as nom_unit, _k_.name as nom_kind, _t_.thickness," +
+				" case when _t_.ref = '" + initial_value + "' then 0 else 1 end as is_initial_value FROM cat_nom AS _t_" +
+				" left outer join cat_units as _u_ on _u_.ref = _t_.base_unit" +
+				" left outer join cat_nom_kinds as _k_ on _k_.ref = _t_.nom_kind %3 %4 LIMIT 300";
+		}
+	},
+
+	sql_selection_where_flds: {
+		value(filter){
+			return " OR _t_.article LIKE '" + filter + "' OR _t_.id LIKE '" + filter + "' OR _t_.name LIKE '" + filter + "'";
+		}
+	}
+});
+
+$p.CatNom.prototype.__define({
+
+	_price: {
+		value(attr) {
+
+      let price = 0, currency, start_date = $p.utils.blank.date;
+
+			if(!attr){
+        attr = {};
+      }
+
+			if(!attr.price_type){
+        attr.price_type = $p.job_prm.pricing.price_type_sale;
+      }
+			else if($p.utils.is_data_obj(attr.price_type)){
+        attr.price_type = attr.price_type.ref;
+      }
+
+      const {_price} = this._data;
+      const {x, y, z, clr, ref, calc_order} = (attr.characteristic || {});
+
+			if(!attr.characteristic){
+        attr.characteristic = $p.utils.blank.guid;
+      }
+			else if($p.utils.is_data_obj(attr.characteristic)){
+        attr.characteristic = ref;
+        if(!calc_order.empty()){
+          const tmp = [];
+          const {by_ref} = $p.cat.characteristics;
+          for(let clrx in _price) {
+            const cx = by_ref[clrx];
+            if(cx && cx.clr == clr){
+              if(_price[clrx][attr.price_type]){
+                if(cx.x && x && cx.x - x < -10){
+                  continue;
+                }
+                if(cx.y && y && cx.y - y < -10){
+                  continue;
+                }
+                tmp.push({
+                  cx,
+                  rate: (cx.x && x ? Math.abs(cx.x - x) : 0) + (cx.y && y ? Math.abs(cx.y - y) : 0) + (cx.z && z && cx.z == z ? 1 : 0)
+                })
+              }
+            }
+          }
+          if(tmp.length){
+            tmp.sort((a, b) => a.rate - b.rate);
+            attr.characteristic = tmp[0].cx.ref;
+          }
+        }
+			}
+			if(!attr.date){
+        attr.date = new Date();
+      }
+
+			if(_price){
+				if(_price[attr.characteristic]){
+					if(_price[attr.characteristic][attr.price_type]){
+            _price[attr.characteristic][attr.price_type].forEach((row) => {
+							if(row.date > start_date && row.date <= attr.date){
+								price = row.price;
+								currency = row.currency;
+                start_date = row.date;
+							}
+						})
+					}
+				}
+				else if(attr.clr){
+          const {by_ref} = $p.cat.characteristics;
+				  for(let clrx in _price){
+            const cx = by_ref[clrx];
+            if(cx && cx.clr == attr.clr){
+              if(_price[clrx][attr.price_type]){
+                _price[clrx][attr.price_type].forEach((row) => {
+                  if(row.date > start_date && row.date <= attr.date){
+                    price = row.price;
+                    currency = row.currency;
+                    start_date = row.date;
+                  }
+                })
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if(attr.formula){
+
+        if(!price && _price && _price[$p.utils.blank.guid]){
+          if(_price[$p.utils.blank.guid][attr.price_type]){
+            _price[$p.utils.blank.guid][attr.price_type].forEach((row) => {
+              if(row.date > start_date && row.date <= attr.date){
+                price = row.price;
+                currency = row.currency;
+                start_date = row.date;
+              }
+            })
+          }
+        }
+        price = attr.formula.execute({
+          nom: this,
+          characteristic: $p.cat.characteristics.get(attr.characteristic, false),
+          date: attr.date,
+          price, currency, x, y, z, clr, calc_order,
+        })
+      }
+
+			return $p.pricing.from_currency_to_currency(price, attr.date, currency, attr.currency);
+
+		}
+	},
+
+  grouping: {
+	  get() {
+      if(!this.hasOwnProperty('_grouping')){
+        this.extra_fields.find_rows({property: $p.job_prm.properties.grouping}, (row) => {
+          this._grouping = row.value.name;
+        })
+      }
+      return this._grouping || '';
+    }
+  },
+
+  presentation: {
+    get(){
+      return this.name + (this.article ? ' ' + this.article : '');
+    },
+    set(v){
+    }
+  },
+
+  by_clr_key: {
+    value(clr) {
+
+      if(this.clr == clr){
+        return this;
+      }
+      if(!this._clr_keys){
+        this._clr_keys = new Map();
+      }
+      const {_clr_keys} = this;
+      if(_clr_keys.has(clr)){
+        return _clr_keys.get(clr);
+      }
+      if(_clr_keys.size){
+        return this;
+      }
+
+      const clr_key = $p.job_prm.properties.clr_key && $p.job_prm.properties.clr_key.ref;
+      let clr_value;
+      this.extra_fields.find_rows({property: $p.job_prm.properties.clr_key}, (row) => clr_value = row.value);
+      if(!clr_value){
+        return this;
+      }
+
+      this._manager.alatable.forEach((nom) => {
+        nom.extra_fields && nom.extra_fields.some((row) => {
+          row.property === clr_key && row.value === clr_value &&
+            _clr_keys.set($p.cat.clrs.get(nom.clr), $p.cat.nom.get(nom.ref));
+        })
+      });
+
+      if(_clr_keys.has(clr)){
+        return _clr_keys.get(clr);
+      }
+      if(!_clr_keys.size){
+        _clr_keys.set(0, 0);
+      }
+      return this;
+    }
+  }
+
+});
+
+
+$p.cat.partners.__define({
+
+	sql_selection_where_flds: {
+		value(filter){
+			return " OR inn LIKE '" + filter + "' OR name_full LIKE '" + filter + "' OR name LIKE '" + filter + "'";
+		}
+	}
+});
+
+$p.CatPartners.prototype.__define({
+
+	addr: {
+		get() {
+
+			return this.contact_information._obj.reduce(function (val, row) {
+
+				if(row.kind == $p.cat.contact_information_kinds.predefined("ЮрАдресКонтрагента") && row.presentation)
+					return row.presentation;
+
+				else if(val)
+					return val;
+
+				else if(row.presentation && (
+						row.kind == $p.cat.contact_information_kinds.predefined("ФактАдресКонтрагента") ||
+						row.kind == $p.cat.contact_information_kinds.predefined("ПочтовыйАдресКонтрагента")
+					))
+					return row.presentation;
+
+			}, "")
+
+		}
+	},
+
+	phone: {
+		get() {
+
+			return this.contact_information._obj.reduce(function (val, row) {
+
+				if(row.kind == $p.cat.contact_information_kinds.predefined("ТелефонКонтрагента") && row.presentation)
+					return row.presentation;
+
+				else if(val)
+					return val;
+
+				else if(row.kind == $p.cat.contact_information_kinds.predefined("ТелефонКонтрагентаМобильный") && row.presentation)
+					return row.presentation;
+
+			}, "")
+		}
+	},
+
+	long_presentation: {
+		get() {
+		  const {addr, phone, inn, kpp} = this;
+			let res = this.name_full || this.name;
+
+			if(inn){
+        res+= ", ИНН" + inn;
+      }
+			if(kpp){
+        res+= ", КПП" + kpp;
+      }
+			if(addr){
+        res+= ", " + addr;
+      }
+			if(phone){
+        res+= ", " + phone;
+      }
+			return res;
+		}
+	}
+});
+
+
+$p.cat.production_params.__define({
+
+	slist: function(prop, is_furn){
+		var res = [], rt, at, pmgr,
+			op = this.get(prop);
+
+		if(op && op.type.is_ref){
+			for(rt in op.type.types)
+				if(op.type.types[rt].indexOf(".") > -1){
+					at = op.type.types[rt].split(".");
+					pmgr = $p[at[0]][at[1]];
+					if(pmgr){
+						if(pmgr.class_name=="enm.open_directions")
+							pmgr.each(function(v){
+								if(v.name!=$p.enm.tso.folding)
+									res.push({value: v.ref, text: v.synonym});
+							});
+						else
+							pmgr.find_rows({owner: prop}, function(v){
+								res.push({value: v.ref, text: v.presentation});
+							});
+					}
+				}
+		}
+		return res;
+	}
+});
+
+$p.CatProduction_params.prototype.__define({
+
+	noms: {
+		get(){
+			const noms = [];
+			this.elmnts._obj.forEach(({nom}) => !$p.utils.is_empty_guid(nom) && noms.indexOf(nom) == -1 && noms.push(nom));
+			return noms;
+		}
+	},
+
+  furns: {
+    value(ox){
+      const {furn} = $p.job_prm.properties;
+      const {furns} = $p.cat;
+      const list = [];
+      if(furn){
+        const links = furn.params_links({
+          grid: {selection: {cnstr: 0}},
+          obj: {_owner: {_owner: ox}}
+        });
+        if(links.length){
+          links.forEach((link) => link.values._obj.forEach(({value, by_default, forcibly}) => {
+            const v = furns.get(value);
+            v && list.push({furn: v, by_default, forcibly});
+          }));
+        }
+      }
+      return list;
+    }
+  },
+
+	inserts: {
+		value(elm_types, by_default){
+			var __noms = [];
+			if(!elm_types)
+				elm_types = $p.enm.elm_types.rama_impost;
+
+			else if(typeof elm_types == "string")
+				elm_types = $p.enm.elm_types[elm_types];
+
+			else if(!Array.isArray(elm_types))
+				elm_types = [elm_types];
+
+			this.elmnts.each((row) => {
+				if(!row.nom.empty() && elm_types.indexOf(row.elm_type) != -1 &&
+					(by_default == "rows" || !__noms.some((e) => row.nom == e.nom)))
+					__noms.push(row);
+			});
+
+			if(by_default == "rows")
+				return __noms;
+
+			__noms.sort(function (a, b) {
+
+				if(by_default){
+
+					if (a.by_default && !b.by_default)
+						return -1;
+					else if (!a.by_default && b.by_default)
+						return 1;
+					else
+						return 0;
+
+				}else{
+					if (a.nom.name < b.nom.name)
+						return -1;
+					else if (a.nom.name > b.nom.name)
+						return 1;
+					else
+						return 0;
+				}
+			});
+			return __noms.map((e) => e.nom);
+		}
+	},
+
+	refill_prm: {
+		value(ox, cnstr = 0) {
+
+			const prm_ts = !cnstr ? this.product_params : this.furn_params;
+			const adel = [];
+			const auto_align = ox.calc_order.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон && $p.job_prm.properties.auto_align;
+			const {params} = ox;
+
+			function add_prm(default_row) {
+        let row;
+        params.find_rows({cnstr: cnstr, param: default_row.param}, (_row) => {
+          row = _row;
+          return false;
+        });
+
+        if(!row){
+          if(cnstr){
+            return;
+          }
+          row = params.add({cnstr: cnstr, param: default_row.param, value: default_row.value});
+        }
+
+        if(row.hide != default_row.hide){
+          row.hide = default_row.hide;
+        }
+
+        if(default_row.forcibly && row.value != default_row.value){
+          row.value = default_row.value;
+        }
+      }
+
+			if(!cnstr){
+        params.find_rows({cnstr: cnstr}, (row) => {
+				  const {param} = row;
+					if(param !== auto_align && prm_ts.find_rows({param}).length == 0){
+            adel.push(row);
+          }
+				});
+				adel.forEach((row) => params.del(row));
+			}
+
+			prm_ts.forEach(add_prm);
+
+      !cnstr && auto_align && add_prm({param: auto_align, value: '', hide: false});
+
+			if(!cnstr){
+				ox.sys = this;
+				ox.owner = ox.prod_nom;
+
+        const furns = this.furns(ox);
+
+				ox.constructions.forEach((row) => {
+          if(!row.furn.empty()) {
+            let changed;
+            if(furns.length) {
+              if(furns.some((frow) => {
+                if(frow.forcibly) {
+                  row.furn = frow.furn;
+                  return changed = true;
+                }
+              })) {
+                ;
+              }
+              else if(furns.some((frow) => row.furn === frow.furn)) {
+                ;
+              }
+              else if(furns.some((frow) => {
+                if(frow.by_default) {
+                  row.furn = frow.furn;
+                  return changed = true;
+                }
+              })) {
+                ;
+              }
+              else {
+                row.furn = furns[0].furn;
+                changed = true;
+              }
+            }
+
+            if(changed) {
+              const contour = paper.project && paper.project.getItem({cnstr: row.cnstr});
+              if(contour) {
+                row.furn.refill_prm(contour);
+                contour.notify(contour, 'furn_changed');
+              }
+              else {
+                ox.sys.refill_prm(ox, row.cnstr);
+              }
+            }
+          }
+        });
+			}
+		}
+	}
+
+});
+
+
+
+$p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
+
+
+  after_create() {
+
+    const {enm, cat, current_user, DocCalc_order} = $p;
+    const {acl_objs} = current_user;
+
+    acl_objs.find_rows({by_default: true, type: cat.organizations.class_name}, (row) => {
+      this.organization = row.acl_obj;
+      return false;
+    });
+
+    DocCalc_order.set_department.call(this);
+
+    acl_objs.find_rows({by_default: true, type: cat.partners.class_name}, (row) => {
+      this.partner = row.acl_obj;
+      return false;
+    });
+
+    this.contract = cat.contracts.by_partner_and_org(this.partner, this.organization);
+
+    this.manager = current_user;
+
+    this.obj_delivery_state = enm.obj_delivery_states.Черновик;
+
+    return this.new_number_doc();
+
+  }
+
+  before_save() {
+
+    const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
+
+    let doc_amount = 0,
+      amount_internal = 0;
+
+    if(this.posted) {
+      if(this.obj_delivery_state == Отклонен || this.obj_delivery_state == Отозван || this.obj_delivery_state == Шаблон) {
+        $p.msg.show_msg && $p.msg.show_msg({
+          type: 'alert-warning',
+          text: 'Нельзя провести заказ со статусом<br/>"Отклонён", "Отозван" или "Шаблон"',
+          title: this.presentation
+        });
+        return false;
+      }
+      else if(this.obj_delivery_state != Подтвержден) {
+        this.obj_delivery_state = Подтвержден;
+      }
+    }
+    else if(this.obj_delivery_state == Подтвержден) {
+      this.obj_delivery_state = Отправлен;
+    }
+
+    if(this.obj_delivery_state == Шаблон) {
+      this.department = $p.utils.blank.guid;
+      this.partner = $p.utils.blank.guid;
+    }
+    else {
+      if(this.department.empty()) {
+        $p.msg.show_msg && $p.msg.show_msg({
+          type: 'alert-warning',
+          text: 'Не заполнен реквизит "офис продаж" (подразделение)',
+          title: this.presentation
+        });
+        return false;
+      }
+      if(this.partner.empty()) {
+        $p.msg.show_msg && $p.msg.show_msg({
+          type: 'alert-warning',
+          text: 'Не указан контрагент (дилер)',
+          title: this.presentation
+        });
+        return false;
+      }
+    }
+
+    this.production.forEach((row) => {
+
+      doc_amount += row.amount;
+      amount_internal += row.amount_internal;
+
+    });
+
+    const {rounding} = this;
+
+    this.doc_amount = doc_amount.round(rounding);
+    this.amount_internal = amount_internal.round(rounding);
+    this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
+
+    const {_obj, obj_delivery_state, category} = this;
+
+    if(obj_delivery_state == 'Шаблон') {
+      _obj.state = 'template';
+    }
+    else if(category == 'service') {
+      _obj.state = 'service';
+    }
+    else if(category == 'complaints') {
+      _obj.state = 'complaints';
+    }
+    else if(obj_delivery_state == 'Отправлен') {
+      _obj.state = 'sent';
+    }
+    else if(obj_delivery_state == 'Отклонен') {
+      _obj.state = 'declined';
+    }
+    else if(obj_delivery_state == 'Подтвержден') {
+      _obj.state = 'confirmed';
+    }
+    else if(obj_delivery_state == 'Архив') {
+      _obj.state = 'zarchive';
+    }
+    else {
+      _obj.state = 'draft';
+    }
+
+    const rows_saver = this.product_rows(true);
+
+    const res = this._manager.pouch_db.query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
+      .then(({rows}) => {
+        const deleted = [];
+        for (const {id} of rows) {
+          const ref = id.substr(20);
+          if(this.production.find_rows({characteristic: ref}).length) {
+            continue;
+          }
+          deleted.push($p.cat.characteristics.get(ref, 'promise')
+            .then((ox) => !ox._deleted && ox.mark_deleted(true)));
+        }
+        return Promise.all(deleted);
+      })
+      .then((res) => {
+        res.length && this._manager.emit_async('svgs', this);
+      })
+      .catch((err) => null);
+
+    if(this._data.before_save_sync) {
+      return res
+        .then(() => rows_saver)
+        .then(() => this);
+    }
+
+  }
+
+  value_change(field, type, value) {
+    if(field == 'organization') {
+      this.organization = value;
+      this.new_number_doc();
+      if(this.contract.organization != value) {
+        this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
+      }
+    }
+    else if(field == 'partner' && this.contract.owner != value) {
+      this.contract = $p.cat.contracts.by_partner_and_org(value, this.organization);
+    }
+    this._manager.emit_add_fields(this, ['contract']);
+
+  }
+
+  after_del_row(name) {
+    name === 'production' && this.product_rows();
+    return this;
+  }
+
+
+  get doc_currency() {
+    const currency = this.contract.settlements_currency;
+    return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
+  }
+
+  set doc_currency(v) {
+
+  }
+
+  get rounding() {
+    const {pricing} = $p.job_prm;
+    if(!pricing.hasOwnProperty('rounding')) {
+      const parts = this.doc_currency.parameters_russian_recipe.split(',');
+      pricing.rounding = parseInt(parts[parts.length - 1]);
+      if(isNaN(pricing.rounding)) {
+        pricing.rounding = 2;
+      }
+    }
+    return pricing.rounding;
+  }
+
+  get contract() {
+    return this._getter('contract');
+  }
+  set contract(v) {
+    this._setter('contract', v);
+    this.vat_consider = this.contract.vat_consider;
+    this.vat_included = this.contract.vat_included;
+  }
+
+  product_rows(save) {
+    const res = [];
+    this.production.forEach(({row, characteristic}) => {
+      if(!characteristic.empty() && characteristic.calc_order === this) {
+        if(characteristic.product !== row || characteristic.partner !== this.partner || characteristic._modified) {
+          characteristic.product = row;
+          if(!characteristic.owner.empty()) {
+            if(save) {
+              res.push(characteristic.save());
+            }
+            else {
+              characteristic.name = characteristic.prod_name();
+            }
+          }
+        }
+      }
+    });
+    if(save) {
+      return Promise.all(res);
+    }
+  }
+
+  dispatching_totals() {
+    var options = {
+      reduce: true,
+      limit: 10000,
+      group: true,
+      keys: []
+    };
+    this.production.forEach(({nom, characteristic}) => {
+      if(!characteristic.empty() && !nom.is_procedure && !nom.is_service && !nom.is_accessory) {
+        options.keys.push([characteristic.ref, '305e374b-3aa9-11e6-bf30-82cf9717e145', 1, 0]);
+      }
+    });
+    return $p.adapters.pouch.remote.doc.query('server/dispatching', options)
+      .then(function ({rows}) {
+        const res = {};
+        rows && rows.forEach(function ({key, value}) {
+          if(value.plan) {
+            value.plan = moment(value.plan).format('L');
+          }
+          if(value.fact) {
+            value.fact = moment(value.fact).format('L');
+          }
+          res[key[0]] = value;
+        });
+        return res;
+      });
+  }
+
+  print_data(attr = {}) {
+    const {organization, bank_account, partner, contract, manager} = this;
+    const {individual_person} = manager;
+    const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
+    const get_imgs = [];
+    const {cat: {contact_information_kinds, characteristics}, utils: {blank, blob_as_text}} = $p;
+
+    const res = {
+      АдресДоставки: this.shipping_address,
+      ВалютаДокумента: this.doc_currency.presentation,
+      ДатаЗаказаФорматD: moment(this.date).format('L'),
+      ДатаЗаказаФорматDD: moment(this.date).format('LL'),
+      ДатаТекущаяФорматD: moment().format('L'),
+      ДатаТекущаяФорматDD: moment().format('LL'),
+      ДоговорДатаФорматD: moment(contract.date.valueOf() == blank.date.valueOf() ? this.date : contract.date).format('L'),
+      ДоговорДатаФорматDD: moment(contract.date.valueOf() == blank.date.valueOf() ? this.date : contract.date).format('LL'),
+      ДоговорНомер: contract.number_doc ? contract.number_doc : this.number_doc,
+      ДоговорСрокДействия: moment(contract.validity).format('L'),
+      ЗаказНомер: this.number_doc,
+      Контрагент: partner.presentation,
+      КонтрагентОписание: partner.long_presentation,
+      КонтрагентДокумент: '',
+      КонтрагентКЛДолжность: '',
+      КонтрагентКЛДолжностьРП: '',
+      КонтрагентКЛИмя: '',
+      КонтрагентКЛИмяРП: '',
+      КонтрагентКЛК: '',
+      КонтрагентКЛОснованиеРП: '',
+      КонтрагентКЛОтчество: '',
+      КонтрагентКЛОтчествоРП: '',
+      КонтрагентКЛФамилия: '',
+      КонтрагентКЛФамилияРП: '',
+      КонтрагентИНН: partner.inn,
+      КонтрагентКПП: partner.kpp,
+      КонтрагентЮрФизЛицо: '',
+      КратностьВзаиморасчетов: this.settlements_multiplicity,
+      КурсВзаиморасчетов: this.settlements_course,
+      ЛистКомплектацииГруппы: '',
+      ЛистКомплектацииСтроки: '',
+      Организация: organization.presentation,
+      ОрганизацияГород: organization.contact_information._obj.reduce((val, row) => val || row.city, '') || 'Москва',
+      ОрганизацияАдрес: organization.contact_information._obj.reduce((val, row) => {
+        if(row.kind == contact_information_kinds.predefined('ЮрАдресОрганизации') && row.presentation) {
+          return row.presentation;
+        }
+        else if(val) {
+          return val;
+        }
+        else if(row.presentation && (
+            row.kind == contact_information_kinds.predefined('ФактАдресОрганизации') ||
+            row.kind == contact_information_kinds.predefined('ПочтовыйАдресОрганизации')
+          )) {
+          return row.presentation;
+        }
+      }, ''),
+      ОрганизацияТелефон: organization.contact_information._obj.reduce((val, row) => {
+        if(row.kind == contact_information_kinds.predefined('ТелефонОрганизации') && row.presentation) {
+          return row.presentation;
+        }
+        else if(val) {
+          return val;
+        }
+        else if(row.kind == contact_information_kinds.predefined('ФаксОрганизации') && row.presentation) {
+          return row.presentation;
+        }
+      }, ''),
+      ОрганизацияБанкБИК: our_bank_account.bank.id,
+      ОрганизацияБанкГород: our_bank_account.bank.city,
+      ОрганизацияБанкКоррСчет: our_bank_account.bank.correspondent_account,
+      ОрганизацияБанкНаименование: our_bank_account.bank.name,
+      ОрганизацияБанкНомерСчета: our_bank_account.account_number,
+      ОрганизацияИндивидуальныйПредприниматель: organization.individual_entrepreneur.presentation,
+      ОрганизацияИНН: organization.inn,
+      ОрганизацияКПП: organization.kpp,
+      ОрганизацияСвидетельствоДатаВыдачи: organization.certificate_date_issue,
+      ОрганизацияСвидетельствоКодОргана: organization.certificate_authority_code,
+      ОрганизацияСвидетельствоНаименованиеОргана: organization.certificate_authority_name,
+      ОрганизацияСвидетельствоСерияНомер: organization.certificate_series_number,
+      ОрганизацияЮрФизЛицо: organization.individual_legal.presentation,
+      Офис: this.department.presentation,
+      ПродукцияЭскизы: {},
+      Проект: this.project.presentation,
+      СистемыПрофилей: this.sys_profile,
+      СистемыФурнитуры: this.sys_furn,
+      Сотрудник: manager.presentation,
+      СотрудникКомментарий: manager.note,
+      СотрудникДолжность: individual_person.Должность || 'менеджер',
+      СотрудникДолжностьРП: individual_person.ДолжностьРП,
+      СотрудникИмя: individual_person.Имя,
+      СотрудникИмяРП: individual_person.ИмяРП,
+      СотрудникОснованиеРП: individual_person.ОснованиеРП,
+      СотрудникОтчество: individual_person.Отчество,
+      СотрудникОтчествоРП: individual_person.ОтчествоРП,
+      СотрудникФамилия: individual_person.Фамилия,
+      СотрудникФамилияРП: individual_person.ФамилияРП,
+      СотрудникФИО: individual_person.Фамилия +
+      (individual_person.Имя ? ' ' + individual_person.Имя[0].toUpperCase() + '.' : '' ) +
+      (individual_person.Отчество ? ' ' + individual_person.Отчество[0].toUpperCase() + '.' : ''),
+      СотрудникФИОРП: individual_person.ФамилияРП + ' ' + individual_person.ИмяРП + ' ' + individual_person.ОтчествоРП,
+      СуммаДокумента: this.doc_amount.toFixed(2),
+      СуммаДокументаПрописью: this.doc_amount.in_words(),
+      СуммаДокументаБезСкидки: this.production._obj.reduce((val, row) => val + row.quantity * row.price, 0).toFixed(2),
+      СуммаСкидки: this.production._obj.reduce((val, row) => val + row.discount, 0).toFixed(2),
+      СуммаНДС: this.production._obj.reduce((val, row) => val + row.vat_amount, 0).toFixed(2),
+      ТекстНДС: this.vat_consider ? (this.vat_included ? 'В том числе НДС 18%' : 'НДС 18% (сверху)') : 'Без НДС',
+      ТелефонПоАдресуДоставки: this.phone,
+      СуммаВключаетНДС: contract.vat_included,
+      УчитыватьНДС: contract.vat_consider,
+      ВсегоНаименований: this.production.count(),
+      ВсегоИзделий: 0,
+      ВсегоПлощадьИзделий: 0,
+      Продукция: [],
+      Аксессуары: [],
+      Услуги: [],
+      НомерВнутр: this.number_internal,
+      КлиентДилера: this.client_of_dealer,
+      Комментарий: this.note,
+    };
+
+    this.extra_fields.forEach((row) => {
+      res['Свойство' + row.property.name.replace(/\s/g, '')] = row.value.presentation || row.value;
+    });
+
+    res.МонтажДоставкаСамовывоз = !this.shipping_address ? 'Самовывоз' : 'Монтаж по адресу: ' + this.shipping_address;
+
+    for (let key in organization._attachments) {
+      if(key.indexOf('logo') != -1) {
+        get_imgs.push(organization.get_attachment(key)
+          .then((blob) => {
+            return blob_as_text(blob, blob.type.indexOf('svg') == -1 ? 'data_url' : '');
+          })
+          .then((data_url) => {
+            res.ОрганизацияЛоготип = data_url;
+          })
+          .catch($p.record_log));
+        break;
+      }
+    }
+
+    return this.load_production().then(() => {
+
+      this.production.forEach((row) => {
+        if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
+
+          res.Продукция.push(this.row_description(row));
+
+          res.ВсегоИзделий += row.quantity;
+          res.ВсегоПлощадьИзделий += row.quantity * row.s;
+
+          if(attr.sizes === false) {
+
+          }
+          else {
+            if(row.characteristic.svg) {
+              res.ПродукцияЭскизы[row.characteristic.ref] = row.characteristic.svg;
+            }
+          }
+        }
+        else if(!row.nom.is_procedure && !row.nom.is_service && row.nom.is_accessory) {
+          res.Аксессуары.push(this.row_description(row));
+        }
+        else if(!row.nom.is_procedure && row.nom.is_service && !row.nom.is_accessory) {
+          res.Услуги.push(this.row_description(row));
+        }
+      });
+      res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
+
+      return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
+        .then(() => $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
+        .then(() => {
+
+          const svg = document.createElement('SVG');
+          svg.innerHTML = '<g />';
+          const qrcode = new QRCode(svg, {
+            text: 'http://www.oknosoft.ru/zd/',
+            width: 100,
+            height: 100,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H,
+            useSVG: true
+          });
+          res.qrcode = svg.innerHTML;
+
+          return res;
+        });
+
+    });
+
+  }
+
+  row_description(row) {
+
+    if(!(row instanceof $p.DocCalc_orderProductionRow) && row.characteristic) {
+      this.production.find_rows({characteristic: row.characteristic}, (prow) => {
+        row = prow;
+        return false;
+      });
+    }
+    const {characteristic, nom} = row;
+    const res = {
+      ref: characteristic.ref,
+      НомерСтроки: row.row,
+      Количество: row.quantity,
+      Ед: row.unit.name || 'шт',
+      Цвет: characteristic.clr.name,
+      Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
+      Площадь: row.s,
+      Длинна: row.len,
+      Ширина: row.width,
+      ВсегоПлощадь: row.s * row.quantity,
+      Примечание: row.note,
+      Номенклатура: nom.name_full || nom.name,
+      Характеристика: characteristic.name,
+      Заполнения: '',
+      Фурнитура: '',
+      Параметры: [],
+      Цена: row.price,
+      ЦенаВнутр: row.price_internal,
+      СкидкаПроцент: row.discount_percent,
+      СкидкаПроцентВнутр: row.discount_percent_internal,
+      Скидка: row.discount.round(2),
+      Сумма: row.amount.round(2),
+      СуммаВнутр: row.amount_internal.round(2)
+    };
+
+    characteristic.glasses.forEach((row) => {
+      const {name} = row.nom;
+      if(res.Заполнения.indexOf(name) == -1) {
+        if(res.Заполнения) {
+          res.Заполнения += ', ';
+        }
+        res.Заполнения += name;
+      }
+    });
+
+    characteristic.constructions.forEach((row) => {
+      const {name} = row.furn;
+      if(name && res.Фурнитура.indexOf(name) == -1) {
+        if(res.Фурнитура) {
+          res.Фурнитура += ', ';
+        }
+        res.Фурнитура += name;
+      }
+    });
+
+    const params = new Map();
+    characteristic.params.forEach((row) => {
+      if(row.param.include_to_description) {
+        params.set(row.param, row.value);
+      }
+    });
+    for (let [param, value] of params) {
+      res.Параметры.push({
+        param: param.presentation,
+        value: value.presentation || value
+      });
+    }
+
+    return res;
+  }
+
+  fill_plan() {
+
+    this.planning.clear();
+
+    const {wsql, aes, current_user: {suffix}, msg} = $p;
+    const url = (wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
+
+    const post_data = this._obj._clone();
+    post_data.characteristics = {};
+
+    this.load_production()
+      .then((prod) => {
+        for (const cx of prod) {
+          post_data.characteristics[cx.ref] = cx._obj._clone();
+        }
+      })
+      .then(() => {
+        const headers = new Headers();
+        headers.append('Accept', 'application/json');
+        headers.append('Content-Type', 'application/json');
+        headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
+          wsql.get_user_param('user_name') + ':' + aes.Ctr.decrypt(wsql.get_user_param('user_pwd'))))));
+        if(suffix){
+          headers.append('suffix', suffix);
+        }
+        fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(post_data)
+        })
+          .then(response => response.json())
+          .then(json => {
+            if (json.rows) {
+              this.planning.load(json.rows)
+            }
+            else{
+              console.log(json)
+            }
+          })
+          .catch(err => {
+            msg.show_msg({
+              type: "alert-warning",
+              text: err.message,
+              title: "Сервис планирования"
+            });
+            $p.record_log(err);
+          });
+      });
+
+  }
+
+  get is_read_only() {
+    const {obj_delivery_state, posted, _deleted} = this;
+    const {Черновик, Шаблон, Отозван} = $p.enm.obj_delivery_states;
+    let ro = false;
+    if(obj_delivery_state == Шаблон) {
+      ro = !$p.current_user.role_available('ИзменениеТехнологическойНСИ');
+    }
+    else if(posted || _deleted) {
+      ro = !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
+    }
+    else if(!obj_delivery_state.empty()) {
+      ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван;
+    }
+    return ro;
+  }
+
+  load_production(forse) {
+    const prod = [];
+    const {characteristics} = $p.cat;
+    this.production.forEach(({nom, characteristic}) => {
+      if(!characteristic.empty() && (forse || characteristic.is_new())) {
+        prod.push(characteristic.ref);
+      }
+    });
+    return characteristics.adapter.load_array(characteristics, prod)
+      .then(() => {
+        prod.length = 0;
+        this.production.forEach(({nom, characteristic}) => {
+          if(!characteristic.empty()) {
+            if((!nom.is_procedure && !nom.is_accessory) || characteristic.specification.count() || characteristic.constructions.count() || characteristic.coordinates.count()){
+              prod.push(characteristic);
+            }
+          }
+        });
+        return prod;
+      });
+  }
+
+  characteristic_saved(scheme, sattr) {
+    const {ox, _dp} = scheme;
+    const row = ox.calc_order_row;
+
+    if(!row || ox.calc_order != this) {
+      return;
+    }
+
+
+    row._data._loading = true;
+    row.nom = ox.owner;
+    row.note = _dp.note;
+    row.quantity = _dp.quantity || 1;
+    row.len = ox.x;
+    row.width = ox.y;
+    row.s = ox.s;
+    row.discount_percent = _dp.discount_percent;
+    row.discount_percent_internal = _dp.discount_percent_internal;
+    if(row.unit.owner != row.nom) {
+      row.unit = row.nom.storage_unit;
+    }
+    row._data._loading = false;
+  }
+
+  create_product_row({row_spec, elm, len_angl, params, create, grid}) {
+
+    const row = row_spec instanceof $p.DpBuyers_orderProductionRow && !row_spec.characteristic.empty() && row_spec.characteristic.calc_order === this ?
+      row_spec.characteristic.calc_order_row :
+      this.production.add({
+        qty: 1,
+        quantity: 1,
+        discount_percent_internal: $p.wsql.get_user_param('discount_percent_internal', 'number')
+      });
+
+    if(grid) {
+      this.production.sync_grid(grid);
+      grid.selectRowById(row.row);
+    }
+
+    if(!create) {
+      return row;
+    }
+
+    const mgr = $p.cat.characteristics;
+    let cx;
+    function fill_cx(ox) {
+      if(ox._deleted){
+        return;
+      }
+      for (let ts in mgr.metadata().tabular_sections) {
+        ox[ts].clear();
+      }
+      ox.leading_elm = 0;
+      ox.leading_product = '';
+      cx = Promise.resolve(ox);
+      return false;
+    }
+    if(!row.characteristic.empty() && !row.characteristic._deleted){
+      fill_cx(row.characteristic);
+    }
+
+    return (cx || mgr.create({
+      ref: $p.utils.generate_guid(),
+      calc_order: this,
+      product: row.row
+    }, true))
+      .then((ox) => {
+        if(row_spec instanceof $p.DpBuyers_orderProductionRow) {
+
+          if(params) {
+            params.find_rows({elm: row_spec.row}, (prow) => {
+              ox.params.add(prow, true).inset = row_spec.inset;
+            });
+          }
+
+          elm.project = {ox};
+          elm.fake_origin = row_spec.inset;
+
+          ox.owner = row_spec.inset.nom(elm);
+          ox.origin = row_spec.inset;
+          ox.x = row_spec.len;
+          ox.y = row_spec.height;
+          ox.z = row_spec.depth;
+          ox.s = row_spec.s || row_spec.len * row_spec.height / 1000000;
+          ox.clr = row_spec.clr;
+          ox.note = row_spec.note;
+
+        }
+
+        Object.assign(row._obj, {
+          characteristic: ox.ref,
+          nom: ox.owner.ref,
+          unit: ox.owner.storage_unit.ref,
+          len: ox.x,
+          width: ox.y,
+          s: ox.s,
+          qty: (row_spec && row_spec.quantity) || 1,
+          quantity: (row_spec && row_spec.quantity) || 1,
+          note: ox.note,
+        });
+
+        ox.name = ox.prod_name();
+
+        return this.is_new() && !$p.wsql.alasql.utils.isNode ? this.save().then(() => row) : row;
+      });
+
+  }
+
+  process_add_product_list(dp) {
+
+    return new Promise(async (resolve, reject) => {
+
+      const ax = [];
+
+      for (let i = 0; i < dp.production.count(); i++) {
+        const row_spec = dp.production.get(i);
+        let row_prod;
+
+        if(row_spec.inset.empty()) {
+          row_prod = this.production.add(row_spec);
+          row_prod.unit = row_prod.nom.storage_unit;
+          if(!row_spec.clr.empty()) {
+            $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
+              if(ox.clr == row_spec.clr) {
+                row_prod.characteristic = ox;
+                return false;
+              }
+            });
+          }
+        }
+        else {
+          const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
+          const elm = new $p.DocCalc_order.FakeElm(row_spec);
+          row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
+          row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+
+          row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+        }
+
+        [].push.apply(ax, $p.spec_building.specification_adjustment({
+          calc_order_row: row_prod,
+          spec: row_prod.characteristic.specification,
+          save: true,
+        }, true));
+
+      }
+
+      resolve(ax);
+
+    });
+  }
+
+  recalc(attr = {}, editor) {
+
+    const remove = !editor;
+    if(remove) {
+      editor = new $p.EditorInvisible();
+    }
+    const project = editor.create_scheme();
+    let tmp = Promise.resolve();
+
+    return this.load_production()
+      .then((prod) => {
+        this.production.forEach((row) => {
+          const {characteristic} = row;
+          if(characteristic.empty() || characteristic.calc_order !== this) {
+            row.value_change('quantity', '', row.quantity);
+          }
+          else if(characteristic.coordinates.count()) {
+            tmp = tmp.then(() => {
+              return project.load(characteristic, true).then(() => {
+                project.save_coordinates({save: true, svg: false});
+              });
+            });
+          }
+          else if(characteristic.leading_product.calc_order === this) {
+            return;
+          }
+          else {
+            if(!characteristic.origin.empty() && !characteristic.origin.slave) {
+              characteristic.specification.clear();
+              const len_angl = new $p.DocCalc_order.FakeLenAngl({len: row.len, inset: characteristic.origin});
+              const elm = new $p.DocCalc_order.FakeElm(row);
+              characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
+              tmp = tmp.then(() => {
+                return characteristic.save().then(() => {
+                  row.value_change('quantity', '', row.quantity);
+                });
+              });
+            }
+            else {
+              row.value_change('quantity', '', row.quantity);
+            }
+          }
+        });
+        return tmp;
+      })
+      .then(() => {
+        project.ox = '';
+        if(remove) {
+          editor.unload();
+        }
+        else {
+          project.remove();
+        }
+        return this;
+      });
+
+  }
+
+  draw(attr = {}, editor) {
+
+    const remove = !editor;
+    if(remove) {
+      editor = new $p.EditorInvisible();
+    }
+    const project = editor.create_scheme();
+
+    attr.res = {number_doc: this.number_doc};
+
+    let tmp = Promise.resolve();
+
+    return this.load_production()
+      .then((prod) => {
+        for(let ox of prod){
+          if(ox.coordinates.count()) {
+            tmp = tmp.then(() => ox.draw(attr, editor));
+          }
+        }
+        return tmp;
+      });
+
+  }
+
+  static set_department() {
+    const department = $p.wsql.get_user_param('current_department');
+    if(department) {
+      this.department = department;
+    }
+    const {current_user, cat} = $p;
+    if(this.department.empty() || this.department.is_new()) {
+      current_user.acl_objs && current_user.acl_objs.find_rows({by_default: true, type: cat.divisions.class_name}, (row) => {
+        if(this.department != row.acl_obj) {
+          this.department = row.acl_obj;
+        }
+        return false;
+      });
+    }
+  }
+
+};
+
+$p.DocCalc_order.FakeElm = class FakeElm {
+
+  constructor(row_spec) {
+    this.row_spec = row_spec;
+  }
+
+  get elm() {
+    return 0;
+  }
+
+  get angle_hor() {
+    return 0;
+  }
+
+  get _row() {
+    return this;
+  }
+
+  get clr() {
+    return this.row_spec.clr;
+  }
+
+  get len() {
+    return this.row_spec.len;
+  }
+
+  get height() {
+    const {height, width} = this.row_spec;
+    return height === undefined ? width : height;
+  }
+
+  get depth() {
+    return this.row_spec.depth || 0;
+  }
+
+  get s() {
+    return this.row_spec.s;
+  }
+
+  get perimeter() {
+    const {len, height, width} = this.row_spec;
+    return [{len, angle: 0}, {len: height === undefined ? width : height, angle: 90}];
+  }
+
+  get x1() {
+    return 0;
+  }
+
+  get y1() {
+    return 0;
+  }
+
+  get x2() {
+    return this.height;
+  }
+
+  get y2() {
+    return this.len;
+  }
+
+}
+
+$p.DocCalc_order.FakeLenAngl = class FakeLenAngl {
+
+  constructor({len, inset}) {
+    this.len = len;
+    this.origin = inset;
+  }
+
+  get angle() {
+    return 0;
+  }
+
+  get alp1() {
+    return 0;
+  }
+
+  get alp2() {
+    return 0;
+  }
+
+  get cnstr() {
+    return 0;
+  }
+
+}
+
+$p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocCalc_orderProductionRow {
+
+  value_change(field, type, value, no_extra_charge) {
+
+    let {_obj, _owner, nom, characteristic, unit} = this;
+    let recalc;
+    const {rounding, _slave_recalc} = _owner._owner;
+    const rfield = $p.DocCalc_orderProductionRow.rfields[field];
+
+    if(rfield) {
+
+      _obj[field] = rfield === 'n' ? parseFloat(value) : '' + value;
+
+      nom = this.nom;
+      characteristic = this.characteristic;
+
+      if(!characteristic.empty()) {
+        if(!characteristic.calc_order.empty() && characteristic.owner != nom) {
+          characteristic.owner = nom;
+        }
+        else if(characteristic.owner != nom) {
+          _obj.characteristic = $p.utils.blank.guid;
+          characteristic = this.characteristic;
+        }
+      }
+
+      if(unit.owner != nom) {
+        _obj.unit = nom.storage_unit.ref;
+      }
+
+      if(!characteristic.origin.empty() && characteristic.origin.slave) {
+        characteristic.specification.clear();
+        characteristic.x = this.len;
+        characteristic.y = this.width;
+        characteristic.s = this.s || this.len * this.width / 1000000;
+        const len_angl = new $p.DocCalc_order.FakeLenAngl({len: this.len, inset: characteristic.origin});
+        const elm = new $p.DocCalc_order.FakeElm(this);
+        characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
+        recalc = true;
+      }
+
+      const fake_prm = {
+        calc_order_row: this,
+        spec: characteristic.specification
+      };
+      const {price} = _obj;
+      $p.pricing.price_type(fake_prm);
+      $p.pricing.calc_first_cost(fake_prm);
+      $p.pricing.calc_amount(fake_prm);
+      if(price && !_obj.price) {
+        _obj.price = price;
+        recalc = true;
+      }
+    }
+
+    if($p.DocCalc_orderProductionRow.pfields.indexOf(field) != -1 || recalc) {
+
+      if(!recalc) {
+        _obj[field] = parseFloat(value);
+      }
+
+      isNaN(_obj.price) && (_obj.price = 0);
+      isNaN(_obj.price_internal) && (_obj.price_internal = 0);
+      isNaN(_obj.discount_percent) && (_obj.discount_percent = 0);
+      isNaN(_obj.discount_percent_internal) && (_obj.discount_percent_internal = 0);
+
+      _obj.amount = (_obj.price * ((100 - _obj.discount_percent) / 100) * _obj.quantity).round(rounding);
+
+      if(!no_extra_charge) {
+        const prm = {calc_order_row: this};
+        let extra_charge = $p.wsql.get_user_param('surcharge_internal', 'number');
+
+        if(!$p.current_user.partners_uids.length || !extra_charge) {
+          $p.pricing.price_type(prm);
+          extra_charge = prm.price_type.extra_charge_external;
+        }
+
+        if(field != 'price_internal' && extra_charge && _obj.price) {
+          _obj.price_internal = (_obj.price * (100 - _obj.discount_percent) / 100 * (100 + extra_charge) / 100).round(rounding);
+        }
+      }
+
+      _obj.amount_internal = (_obj.price_internal * ((100 - _obj.discount_percent_internal) / 100) * _obj.quantity).round(rounding);
+
+      const doc = _owner._owner;
+      if(doc.vat_consider) {
+        const {НДС18, НДС18_118, НДС10, НДС10_110, НДС20, НДС20_120, НДС0, БезНДС} = $p.enm.vat_rates;
+        _obj.vat_rate = (nom.vat_rate.empty() ? НДС18 : nom.vat_rate).ref;
+        switch (this.vat_rate) {
+        case НДС18:
+        case НДС18_118:
+          _obj.vat_amount = (_obj.amount * 18 / 118).round(2);
+          break;
+        case НДС10:
+        case НДС10_110:
+          _obj.vat_amount = (_obj.amount * 10 / 110).round(2);
+          break;
+        case НДС20:
+        case НДС20_120:
+          _obj.vat_amount = (_obj.amount * 20 / 120).round(2);
+          break;
+        case НДС0:
+        case БезНДС:
+        case '_':
+        case '':
+          _obj.vat_amount = 0;
+          break;
+        }
+        if(!doc.vat_included) {
+          _obj.amount = (_obj.amount + _obj.vat_amount).round(2);
+        }
+      }
+      else {
+        _obj.vat_rate = '';
+        _obj.vat_amount = 0;
+      }
+
+      const amount = _owner.aggregate([], ['amount', 'amount_internal']);
+      amount.doc_amount = amount.amount.round(rounding);
+      amount.amount_internal = amount.amount_internal.round(rounding);
+      delete amount.amount;
+      Object.assign(doc, amount);
+      doc._manager.emit_async('update', doc, amount);
+
+      if(!_slave_recalc){
+        _owner._owner._slave_recalc = true;
+        _owner.forEach((row) => {
+          if(row !== this && !row.characteristic.origin.empty() && row.characteristic.origin.slave) {
+            row.value_change('quantity', 'update', row.quantity, no_extra_charge);
+          }
+        });
+        _owner._owner._slave_recalc = false;
+      }
+
+
+      return false;
+    }
+  }
+
+};
+
+$p.DocCalc_orderProductionRow.rfields = {
+  nom: 's',
+  characteristic: 's',
+  quantity: 'n',
+  len: 'n',
+  width: 'n',
+  s: 'n',
+};
+
+$p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percent_internal';
+
 return EditorInvisible;
 }));
