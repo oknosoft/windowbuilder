@@ -1055,7 +1055,7 @@ $p.cat.cnns.__define({
         }
       }
 
-      const ref1 = nom1.ref;
+      const ref1 = nom1.ref; 
       const ref2 = onom2.ref;
 
       if(!is_i){
@@ -1332,7 +1332,7 @@ $p.CatElm_visualization.prototype.__define({
           subpath = new PointText(Object.assign({
             parent: layer._by_spec,
             fillColor: 'black',
-            fontFamily: 'Mipgost',
+            fontFamily: consts.font_family,
             fontSize: attr.fontSize || 60,
             guide: true,
             content: this.svg_path,
@@ -2886,6 +2886,7 @@ class Pricing {
 
     $p.md.once("predefined_elmnts_inited", () => {
 
+
       this.by_local()
         .then((loc) => {
           return !loc && this.by_range();
@@ -4376,6 +4377,225 @@ $p.spec_building = new SpecBuilding($p);
     }
 	}
 })($p.classes.DataManager);
+
+
+(function(_mgr){
+
+	const acn = {
+    ii: [_mgr.Наложение],
+    i: [_mgr.НезамкнутыйКонтур],
+    a: [
+      _mgr.УгловоеДиагональное,
+      _mgr.УгловоеКВертикальной,
+      _mgr.УгловоеКГоризонтальной,
+      _mgr.КрестВСтык],
+    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
+	};
+
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get() {
+        return this.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get() {
+        return this.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get() {
+        return this.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get() {
+        return this.ТОбразное;
+      }
+    },
+    ii: {
+      get() {
+        return this.Наложение;
+      }
+    },
+    i: {
+      get() {
+        return this.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get() {
+        return this.КрестПересечение;
+      }
+    },
+    xx: {
+      get() {
+        return this.КрестВСтык;
+      }
+    },
+
+    acn: {
+      value: acn
+    },
+
+  });
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+
+(function(_mgr){
+
+  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
+
+
+})($p.enm.inserts_types);
+
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+    is_opening: {
+      value(v) {
+        if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное) {
+          return false;
+        }
+        return true;
+      }
+    }
+
+  });
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get() {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get() {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get() {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get() {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get() {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get() {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get() {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get() {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get() {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
 
 
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
@@ -6929,228 +7149,6 @@ $p.DocSelling.prototype.before_save = function () {
 
 
 
-(function(_mgr){
-
-	const acn = {
-    ii: [_mgr.Наложение],
-    i: [_mgr.НезамкнутыйКонтур],
-    a: [
-      _mgr.УгловоеДиагональное,
-      _mgr.УгловоеКВертикальной,
-      _mgr.УгловоеКГоризонтальной,
-      _mgr.КрестВСтык],
-    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
-	};
-
-
-	Object.defineProperties(_mgr, {
-	  ad: {
-	    get() {
-        return this.УгловоеДиагональное;
-      }
-    },
-    av: {
-      get() {
-        return this.УгловоеКВертикальной;
-      }
-    },
-    ah: {
-      get() {
-        return this.УгловоеКГоризонтальной;
-      }
-    },
-    t: {
-      get() {
-        return this.ТОбразное;
-      }
-    },
-    ii: {
-      get() {
-        return this.Наложение;
-      }
-    },
-    i: {
-      get() {
-        return this.НезамкнутыйКонтур;
-      }
-    },
-    xt: {
-      get() {
-        return this.КрестПересечение;
-      }
-    },
-    xx: {
-      get() {
-        return this.КрестВСтык;
-      }
-    },
-
-    acn: {
-      value: acn
-    },
-
-  });
-
-})($p.enm.cnn_types);
-
-
-(function(_mgr){
-
-	const cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			}
-		},
-
-		profile_items: {
-			get(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			}
-		},
-
-		rama_impost: {
-			get(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			}
-		},
-
-		impost_lay: {
-			get(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			}
-		},
-
-		stvs: {
-			get(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			}
-		},
-
-		glasses: {
-			get(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			}
-		}
-
-	});
-
-
-})($p.enm.elm_types);
-
-
-
-(function(_mgr){
-
-  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
-
-
-})($p.enm.inserts_types);
-
-
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-		is_opening: {
-			value(v) {
-
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-
-	});
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get() {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get() {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get() {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get() {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get() {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get() {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get() {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get() {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get() {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
-
-
 (($p) => {
 
   Object.assign($p.RepMaterials_demand.prototype, {
@@ -7640,13 +7638,13 @@ $p.DocSelling.prototype.before_save = function () {
 
 
 
-function eXcell_rsvg(cell){
-	if (cell){
+function eXcell_rsvg(cell){ 
+	if (cell){                
 		this.cell = cell;
 		this.grid = this.cell.parentNode.grid;
 	}
-	this.edit = function(){};
-	this.isDisabled = function(){ return true; };
+	this.edit = function(){};  
+	this.isDisabled = function(){ return true; }; 
 	this.setValue=function(val){
 		this.cell.style.padding = "2px 4px";
 		this.setCValue(val ? $p.iface.scale_svg(val, 120, 0) : "нет эскиза");
@@ -7935,13 +7933,13 @@ class eXcell_client extends eXcell {
 
   edit() {
 
-    this.val = this.getValue();
+    this.val = this.getValue();		
     this.cell.innerHTML = '<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_field21">&nbsp;</div></div>';
 
     const {cell: {firstChild}, val} = this;
     const ti = firstChild.childNodes[0];
     ti.value = val;
-    ti.onclick = $p.iface.cancel_bubble;
+    ti.onclick = $p.iface.cancel_bubble;		
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
     firstChild.childNodes[1].onclick = this.open_obj;
@@ -7950,7 +7948,7 @@ class eXcell_client extends eXcell {
   detach() {
     const val = this.getValue();
     val !== null && this.setValue(val);
-    return !$p.utils.is_equal(this.val, this.getValue());
+    return !$p.utils.is_equal(this.val, this.getValue());				
   }
 
 }
@@ -8604,7 +8602,7 @@ class eXcell_addr extends eXcell {
   }
 
   ti_keydown(e) {
-    if(e.keyCode === 8 || e.keyCode === 46){
+    if(e.keyCode === 8 || e.keyCode === 46){          
       const {obj} = this.grid.get_cell_field();
       obj.shipping_address = '';
       obj.address_fields = '';
@@ -8631,13 +8629,13 @@ class eXcell_addr extends eXcell {
 
   edit() {
 
-    this.val = this.getValue();
+    this.val = this.getValue();		
     this.cell.innerHTML = '<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_field21">&nbsp;</div></div>';
 
     const td = this.cell.firstChild;
     const ti = td.childNodes[0];
     ti.value = this.val;
-    ti.onclick = $p.iface.cancel_bubble;
+    ti.onclick = $p.iface.cancel_bubble;		
     ti.readOnly = true;
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
@@ -8646,7 +8644,7 @@ class eXcell_addr extends eXcell {
 
   detach() {
     this.setValue(this.getValue());
-    return !$p.utils.is_equal(this.val, this.getValue());
+    return !$p.utils.is_equal(this.val, this.getValue());				
   }
 
 }

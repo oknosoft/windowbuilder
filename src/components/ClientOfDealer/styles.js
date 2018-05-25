@@ -5,7 +5,7 @@
  * Created by Evgeniy Malyarov on 14.03.2018.
  */
 
-import {withStyles} from 'material-ui/styles';
+import withStyles from '@material-ui/core/styles/withStyles';
 
 const styles = theme => ({
   paper: {

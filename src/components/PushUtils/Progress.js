@@ -8,7 +8,7 @@
 
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import { LinearProgress } from 'material-ui/Progress';
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 class Progress extends Component {
 

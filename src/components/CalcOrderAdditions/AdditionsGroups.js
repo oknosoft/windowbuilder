@@ -8,7 +8,9 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import List, {ListItem, ListItemText} from 'material-ui/List';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
 import AdditionsGroup from './AdditionsGroup';
 import {alasql_schemas, fill_data} from './connect';
 
@@ -37,11 +39,8 @@ export default class AdditionsGroups extends React.Component {
     this.setState({schemas});
   }
 
-  componentWillMount() {
-    fill_data.call(this, this.props.dialog.ref);
-  }
-
   componentDidMount() {
+    fill_data.call(this, this.props.dialog.ref);
     this.fill_schemas(alasql_schemas());
     $p.dp.buyers_order.on('update', this.inset_change);
   }

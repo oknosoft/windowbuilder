@@ -9,9 +9,11 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
-import List, { ListItem, ListItemText } from 'material-ui/List';
-import Checkbox from 'material-ui/Checkbox';
-import Typography from 'material-ui/Typography';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import Checkbox from '@material-ui/core/Checkbox';
+import Typography from '@material-ui/core/Typography';
 
 class Share extends Component {
 

@@ -11,8 +11,7 @@ const gulp = require('gulp'),
 	rename = require('gulp-rename'),
 	resources = require('./scripts/resource-concat.js'),
 	umd = require('gulp-umd'),
-  wrap = require("gulp-wrap"),
-  uglify = require('gulp-uglify');
+  wrap = require("gulp-wrap");
 
 module.exports = gulp;
 
@@ -42,6 +41,7 @@ gulp.task('build-iface', function(){
 // Cборка библиотеки для использования снаружи
 gulp.task('build-drawer', function () {
   return gulp.src([
+    './src/editor/consts.js',
     './src/editor/editor_base.js',
     './src/geometry/*.js',
     './src/modifiers/common/*.js',
@@ -74,7 +74,7 @@ gulp.task('build-drawer', function () {
 gulp.task('build-lib', function(){
 	return gulp.src([
 		'./src/editor/*.js',
-		'./src/geometry/*.js',
+    './src/geometry/*.js',
 		'./src/tools/*.js',
 		'./data/merged_wb_tips.js'
 	])

@@ -15,7 +15,7 @@ import AppView from './AppView';
 import BrowserCompatibility, {browser_compatible} from 'metadata-react/App/BrowserCompatibility';
 
 // тема для material-ui
-import {MuiThemeProvider} from 'material-ui/styles';
+import {MuiThemeProvider} from '@material-ui/core/styles';
 import theme from '../../styles/muiTheme';
 
 class RootView extends Component {

@@ -8,6 +8,42 @@
   }
 }(this, function() {
 
+const consts = {
+
+	tune_paper(settings) {
+
+	  const builder = $p.job_prm.builder || {};
+
+		if(builder.handle_size) {
+      settings.handleSize = builder.handle_size;
+    }
+
+		this.sticking = builder.sticking || 90;
+		this.sticking_l = builder.sticking_l || 9;
+		this.sticking0 = this.sticking / 2;
+		this.sticking2 = this.sticking * this.sticking;
+		this.font_size = builder.font_size || 80;
+    this.font_family = builder.font_family || 'GOST type B';
+    this.elm_font_size = builder.elm_font_size || 52;
+
+    if($p.wsql.alasql.utils.isNode) {
+      this.font_size *= 1.2;
+      this.elm_font_size *= 1.2;
+    }
+
+		this.orientation_delta = builder.orientation_delta || 30;
+
+
+	},
+
+  epsilon: 0.01,
+	move_points: 'move_points',
+	move_handle: 'move_handle',
+	move_shapes: 'move-shapes',
+
+};
+
+
 class EditorInvisible extends paper.PaperScope {
 
   constructor() {
@@ -1179,7 +1215,7 @@ class Contour extends AbstractFilling(paper.Layer) {
         new paper.PointText({
           parent: props.parent,
           fillColor: 'black',
-          fontFamily: 'Mipgost',
+          fontFamily: consts.font_family,
           fontSize: consts.elm_font_size,
           guide: true,
           content: row.inset.presentation,
@@ -2049,7 +2085,6 @@ class DimensionDrawer extends paper.Group {
   redraw(forse) {
 
     const {parent, project: {builder_props}} = this;
-    const {contours, bounds} = parent;
 
     if(forse || !builder_props.auto_lines) {
       this.clear();
@@ -2061,34 +2096,10 @@ class DimensionDrawer extends paper.Group {
 
     if(builder_props.auto_lines && (!parent.parent || forse)) {
 
-      const by_side = parent.profiles_by_side();
+      const {ihor, ivert, by_side} = this.imposts();
       if(!Object.keys(by_side).length) {
         return this.clear();
       }
-
-
-      const ihor = [
-        {
-          point: bounds.top.round(),
-          elm: by_side.top,
-          p: by_side.top.b.y < by_side.top.e.y ? 'b' : 'e'
-        },
-        {
-          point: bounds.bottom.round(),
-          elm: by_side.bottom,
-          p: by_side.bottom.b.y < by_side.bottom.e.y ? 'b' : 'e'
-        }];
-      const ivert = [
-        {
-          point: bounds.left.round(),
-          elm: by_side.left,
-          p: by_side.left.b.x > by_side.left.e.x ? 'b' : 'e'
-        },
-        {
-          point: bounds.right.round(),
-          elm: by_side.right,
-          p: by_side.right.b.x > by_side.right.e.x ? 'b' : 'e'
-        }];
 
       const profiles = new Set(parent.profiles);
       parent.imposts.forEach((elm) => elm.visible && profiles.add(elm));
@@ -2158,6 +2169,57 @@ class DimensionDrawer extends paper.Group {
       this.by_contour(ihor, ivert, forse);
 
     }
+
+    for (let dl of this.children) {
+      dl.redraw && dl.redraw();
+    }
+
+  }
+
+  draw_by_imposts() {
+
+    const {parent, project: {builder_props}} = this;
+
+    this.clear();
+
+    let index = 0;
+    for (let elm of parent.profiles) {
+
+      const {inner, outer} = elm.joined_imposts();
+      const {generatrix, angle_hor} = elm;
+      const invert = angle_hor > 135 && angle_hor < 315;
+      for(const impost of inner.concat(outer)) {
+        const {point, profile: {rays, nom}} = impost;
+        const pi = generatrix.intersect_point(rays.inner, point);
+        const po = generatrix.intersect_point(rays.outer, point);
+        const dx = generatrix.getOffsetOf(point);
+        const dxi = generatrix.getOffsetOf(pi);
+        const dxo = generatrix.getOffsetOf(po);
+        let dx1, dx2;
+        if(dx > dxi) {
+          dx1 = dxi + nom.sizefaltz;
+          dx2 = dxo - nom.sizefaltz;
+        }
+        else {
+          dx1 = dxo + nom.sizefaltz;
+          dx2 = dxi - nom.sizefaltz;
+        }
+
+        this.ihor[`i${++index}`] = new DimensionLineImpost({
+          elm1: elm,
+          elm2: elm,
+          p1: invert ? dx : 'b',
+          p2: invert ? 'b' : dx,
+          dx1,
+          dx2,
+          parent: this,
+          offset: invert ? -150 : 150,
+        });
+
+      }
+    }
+
+    this.by_contour([], [], true);
 
     for (let dl of this.children) {
       dl.redraw && dl.redraw();
@@ -2282,6 +2344,40 @@ class DimensionDrawer extends paper.Group {
     }
   }
 
+  imposts() {
+
+    const {parent} = this;
+    const {bounds} = parent;
+
+    const by_side = parent.profiles_by_side();
+
+
+    const ihor = [
+      {
+        point: bounds.top.round(),
+        elm: by_side.top,
+        p: by_side.top.b.y < by_side.top.e.y ? 'b' : 'e'
+      },
+      {
+        point: bounds.bottom.round(),
+        elm: by_side.bottom,
+        p: by_side.bottom.b.y < by_side.bottom.e.y ? 'b' : 'e'
+      }];
+    const ivert = [
+      {
+        point: bounds.left.round(),
+        elm: by_side.left,
+        p: by_side.left.b.x > by_side.left.e.x ? 'b' : 'e'
+      },
+      {
+        point: bounds.right.round(),
+        elm: by_side.right,
+        p: by_side.right.b.x > by_side.right.e.x ? 'b' : 'e'
+      }];
+
+    return {ihor, ivert, by_side};
+  }
+
   get owner_bounds() {
     return this.parent.bounds;
   }
@@ -2298,6 +2394,8 @@ class DimensionDrawer extends paper.Group {
     return this._ivert || (this._ivert = new DimensionGroup());
   }
 }
+
+EditorInvisible.DimensionDrawer = DimensionDrawer;
 
 
 
@@ -2331,10 +2429,6 @@ class DimensionLine extends paper.Group {
     }
     Object.assign(_attr, attr);
 
-    if(attr.impost){
-      _attr.impost = true;
-    }
-
     if(attr.contour){
       _attr.contour = true;
     }
@@ -2351,7 +2445,7 @@ class DimensionLine extends paper.Group {
       parent: this,
       name: 'text',
       justification: 'center',
-      fontFamily: 'Mipgost',
+      fontFamily: consts.font_family,
       fillColor: 'black',
       fontSize: consts.font_size});
 
@@ -2619,7 +2713,7 @@ class DimensionLine extends paper.Group {
   }
 
   get size() {
-    return parseFloat(this.children.text.content) || 0;
+    return (this.children.text && parseFloat(this.children.text.content)) || 0;
   }
   set size(v) {
     this.children.text.content = parseFloat(v).round(1);
@@ -2830,6 +2924,140 @@ class DimensionLineCustom extends DimensionLine {
   }
 }
 
+EditorInvisible.DimensionLine = DimensionLine;
+EditorInvisible.DimensionLineCustom = DimensionLineCustom;
+
+
+
+class DimensionLineImpost extends DimensionLineCustom {
+
+  constructor(attr) {
+
+    attr.row = {
+      cnstr: 1,
+      elm: 1,
+      _owner: {
+        del() {}
+      }
+    }
+
+    super(attr);
+
+    new paper.PointText({
+      parent: this,
+      name: 'dx1',
+      justification: 'center',
+      fontFamily: consts.font_family,
+      fillColor: 'black',
+      fontSize: consts.font_size});
+
+    new paper.PointText({
+      parent: this,
+      name: 'dx2',
+      justification: 'center',
+      fontFamily: consts.font_family,
+      fillColor: 'black',
+      fontSize: consts.font_size});
+
+  }
+
+  get path() {
+
+
+    const {children, _attr: {elm1, p1, p2, dx1, dx2}} = this;
+    if(!children.length){
+      return;
+    }
+    const {generatrix} = elm1;
+
+    let b = generatrix.getPointAt(typeof p1 == 'number' ? dx2 : dx1);
+    let e = generatrix.getPointAt(typeof p1 == 'number' ? dx1 : dx2);
+    if(!b || !e){
+      return;
+    }
+    const path = new paper.Path({insert: false, segments: [b, e]});
+    path.offset = 0;
+    return path;
+  }
+
+  redraw() {
+
+    const {children, path, offset, _attr: {p1, p2, dx1, dx2}} = this;
+    if(!children.length){
+      return;
+    }
+    if(!path){
+      this.visible = false;
+      return;
+    }
+
+    this.visible = true;
+
+    const b = path.firstSegment.point;
+    const e = path.lastSegment.point;
+    const normal = path.getNormalAt(0).multiply(offset + path.offset);
+    const tangent = path.getTangentAt(0);
+    const ns = normal.normalize(normal.length - 20);
+    const bs = b.add(ns);
+    const es = e.add(ns);
+
+    if(children.callout1.segments.length){
+      children.callout1.firstSegment.point = b;
+      children.callout1.lastSegment.point = b.add(normal);
+    }
+    else{
+      children.callout1.addSegments([b, b.add(normal)]);
+    }
+
+    if(children.callout2.segments.length){
+      children.callout2.firstSegment.point = e;
+      children.callout2.lastSegment.point = e.add(normal);
+    }
+    else{
+      children.callout2.addSegments([e, e.add(normal)]);
+    }
+
+    if(children.scale.segments.length){
+      children.scale.firstSegment.point = bs;
+      children.scale.lastSegment.point = es;
+    }
+    else{
+      children.scale.addSegments([bs, es]);
+    }
+    children.scale.elongation(200);
+
+    children.text.rotation = children.dx1.rotation = children.dx2.rotation = 0;
+    children.text.content = (typeof p1 == 'number' ? p1 : p2).toFixed(0);
+    children.dx1.content = (dx1).toFixed(0);
+    children.dx2.content = (dx2).toFixed(0);
+    const bdx1 = children.dx1.bounds;
+    const bdx2 = children.dx2.bounds;
+    if(offset > 0) {
+      children.dx1.justification = 'left';
+      children.dx2.justification = 'right';
+      children.dx1.position = bs
+        .add(tangent.normalize(-Math.sign(offset) * ((consts.font_size + bdx1.width) / 2)))
+        .add(normal.normalize(-consts.font_size * 0.6));
+      children.dx2.position = es
+        .add(tangent.normalize(Math.sign(offset) * ((consts.font_size + bdx1.width) / 2)))
+        .add(normal.normalize(-consts.font_size * 0.6));
+    }
+    else {
+      children.dx1.justification = 'right';
+      children.dx2.justification = 'left';
+      children.dx1.position = es
+        .add(tangent.normalize(-Math.sign(offset) * ((consts.font_size + bdx1.width) / 2)))
+        .add(normal.normalize(-consts.font_size * 0.6));
+      children.dx2.position = bs
+        .add(tangent.normalize(Math.sign(offset) * ((consts.font_size + bdx1.width) / 2)))
+        .add(normal.normalize(-consts.font_size * 0.6));
+    }
+    children.text.rotation = children.dx1.rotation = children.dx2.rotation = e.subtract(b).angle;
+
+    children.text.position = bs.add(es).divide(2).add(normal.normalize(consts.font_size * 0.8));
+  }
+
+}
 
 
 class DimensionRadius extends DimensionLineCustom {
@@ -3669,7 +3897,7 @@ class Filling extends AbstractFilling(BuilderElement) {
       _attr._text = new paper.PointText({
         parent: this,
         fillColor: 'black',
-        fontFamily: 'Mipgost',
+        fontFamily: consts.font_family,
         fontSize: elm_font_size,
         guide: true,
       });
@@ -4096,7 +4324,7 @@ class FreeText extends paper.PointText {
     if(!attr.fontSize){
       attr.fontSize = consts.font_size;
     }
-    attr.fontFamily = 'Mipgost';
+    attr.fontFamily = consts.font_family;
 
     super(attr);
 
@@ -6485,7 +6713,7 @@ class ProfileItem extends GeneratrixElement {
   corns(corn) {
     const {_corns} = this._attr;
     if(typeof corn == 'number') {
-      return _corns[corn];
+      return corn < 10 ? _corns[corn] : this.generatrix.getPointAt(corn);
     }
     else if(corn instanceof paper.Point) {
 
@@ -8036,9 +8264,7 @@ class Scheme extends paper.Project {
     }
 
     _attr._loading = true;
-    if(id != this.ox) {
-      this.ox = null;
-    }
+    this.ox = null;
     this.clear();
 
     if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new()) {
@@ -8919,7 +9145,7 @@ class EditableText extends paper.PointText {
 
   constructor(props) {
     props.justification = 'center';
-    props.fontFamily = 'Mipgost';
+    props.fontFamily = consts.font_family;
     super(props);
     this._edit = null;
     this._owner = props._owner;
@@ -9249,40 +9475,6 @@ class Sectional extends GeneratrixElement {
 }
 
 EditorInvisible.Sectional = Sectional;
-
-
-const consts = new function Settings(){
-
-	this.tune_paper = function (settings) {
-
-	  const builder = $p.job_prm.builder || {};
-
-		settings.handleSize = builder.handle_size;
-
-		this.sticking = builder.sticking || 90;
-		this.sticking_l = builder.sticking_l || 9;
-		this.sticking0 = this.sticking / 2;
-		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = builder.font_size || 72;
-    this.elm_font_size = builder.elm_font_size || 52;
-
-    if($p.wsql.alasql.utils.isNode) {
-      this.font_size *= 1.2;
-      this.elm_font_size *= 1.2;
-    }
-
-		this.orientation_delta = builder.orientation_delta || 30;
-
-
-	}.bind(this);
-
-
-  this.epsilon = 0.01;
-	this.move_points = 'move_points';
-	this.move_handle = 'move_handle';
-	this.move_shapes = 'move-shapes';
-
-};
 
 
 class Pricing {
@@ -12074,7 +12266,7 @@ $p.CatElm_visualization.prototype.__define({
           subpath = new PointText(Object.assign({
             parent: layer._by_spec,
             fillColor: 'black',
-            fontFamily: 'Mipgost',
+            fontFamily: consts.font_family,
             fontSize: attr.fontSize || 60,
             guide: true,
             content: this.svg_path,
