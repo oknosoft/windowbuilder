@@ -26,7 +26,7 @@ class FreeText extends paper.PointText {
     if(!attr.fontSize){
       attr.fontSize = consts.font_size;
     }
-    attr.fontFamily = 'Mipgost';
+    attr.fontFamily = consts.font_family;
 
     super(attr);
 

@@ -1759,7 +1759,7 @@ class ProfileItem extends GeneratrixElement {
   corns(corn) {
     const {_corns} = this._attr;
     if(typeof corn == 'number') {
-      return _corns[corn];
+      return corn < 10 ? _corns[corn] : this.generatrix.getPointAt(corn);
     }
     else if(corn instanceof paper.Point) {
 

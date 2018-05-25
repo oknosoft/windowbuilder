@@ -96,7 +96,6 @@ class DimensionDrawer extends paper.Group {
   redraw(forse) {
 
     const {parent, project: {builder_props}} = this;
-    const {contours, bounds} = parent;
 
     if(forse || !builder_props.auto_lines) {
       this.clear();
@@ -110,36 +109,10 @@ class DimensionDrawer extends paper.Group {
     // для внешних контуров строим авторазмерные линии
     if(builder_props.auto_lines && (!parent.parent || forse)) {
 
-      const by_side = parent.profiles_by_side();
+      const {ihor, ivert, by_side} = this.imposts();
       if(!Object.keys(by_side).length) {
         return this.clear();
       }
-
-      // сначала, строим размерные линии импостов
-
-      // получаем все профили контура, делим их на вертикальные и горизонтальные
-      const ihor = [
-        {
-          point: bounds.top.round(),
-          elm: by_side.top,
-          p: by_side.top.b.y < by_side.top.e.y ? 'b' : 'e'
-        },
-        {
-          point: bounds.bottom.round(),
-          elm: by_side.bottom,
-          p: by_side.bottom.b.y < by_side.bottom.e.y ? 'b' : 'e'
-        }];
-      const ivert = [
-        {
-          point: bounds.left.round(),
-          elm: by_side.left,
-          p: by_side.left.b.x > by_side.left.e.x ? 'b' : 'e'
-        },
-        {
-          point: bounds.right.round(),
-          elm: by_side.right,
-          p: by_side.right.b.x > by_side.right.e.x ? 'b' : 'e'
-        }];
 
       // подмешиваем импосты вложенных контуров
       const profiles = new Set(parent.profiles);
@@ -214,6 +187,64 @@ class DimensionDrawer extends paper.Group {
       this.by_contour(ihor, ivert, forse);
 
     }
+
+    // перерисовываем размерные линии текущего контура
+    for (let dl of this.children) {
+      dl.redraw && dl.redraw();
+    }
+
+  }
+
+  /**
+   * Формирует пользовательские линии по импостам
+   */
+  draw_by_imposts() {
+
+    const {parent, project: {builder_props}} = this;
+
+    this.clear();
+
+    // для всех палок контура
+    // если на палке есть импосты, добавляем точки
+    let index = 0;
+    for (let elm of parent.profiles) {
+
+      const {inner, outer} = elm.joined_imposts();
+      const {generatrix, angle_hor} = elm;
+      const invert = angle_hor > 135 && angle_hor < 315;
+      for(const impost of inner.concat(outer)) {
+        const {point, profile: {rays, nom}} = impost;
+        const pi = generatrix.intersect_point(rays.inner, point);
+        const po = generatrix.intersect_point(rays.outer, point);
+        const dx = generatrix.getOffsetOf(point);
+        const dxi = generatrix.getOffsetOf(pi);
+        const dxo = generatrix.getOffsetOf(po);
+        let dx1, dx2;
+        if(dx > dxi) {
+          dx1 = dxi + nom.sizefaltz;
+          dx2 = dxo - nom.sizefaltz;
+        }
+        else {
+          dx1 = dxo + nom.sizefaltz;
+          dx2 = dxi - nom.sizefaltz;
+        }
+
+        this.ihor[`i${++index}`] = new DimensionLineImpost({
+          elm1: elm,
+          elm2: elm,
+          p1: invert ? dx : 'b',
+          p2: invert ? 'b' : dx,
+          dx1,
+          dx2,
+          parent: this,
+          offset: invert ? -150 : 150,
+        });
+
+      }
+    }
+
+    // далее - размерные линии контура
+    this.by_contour([], [], true);
 
     // перерисовываем размерные линии текущего контура
     for (let dl of this.children) {
@@ -345,6 +376,42 @@ class DimensionDrawer extends paper.Group {
     }
   }
 
+  imposts() {
+
+    const {parent} = this;
+    const {bounds} = parent;
+
+    const by_side = parent.profiles_by_side();
+
+    // сначала, строим размерные линии импостов
+
+    // получаем все профили контура, делим их на вертикальные и горизонтальные
+    const ihor = [
+      {
+        point: bounds.top.round(),
+        elm: by_side.top,
+        p: by_side.top.b.y < by_side.top.e.y ? 'b' : 'e'
+      },
+      {
+        point: bounds.bottom.round(),
+        elm: by_side.bottom,
+        p: by_side.bottom.b.y < by_side.bottom.e.y ? 'b' : 'e'
+      }];
+    const ivert = [
+      {
+        point: bounds.left.round(),
+        elm: by_side.left,
+        p: by_side.left.b.x > by_side.left.e.x ? 'b' : 'e'
+      },
+      {
+        point: bounds.right.round(),
+        elm: by_side.right,
+        p: by_side.right.b.x > by_side.right.e.x ? 'b' : 'e'
+      }];
+
+    return {ihor, ivert, by_side};
+  }
+
   get owner_bounds() {
     return this.parent.bounds;
   }
@@ -361,3 +428,5 @@ class DimensionDrawer extends paper.Group {
     return this._ivert || (this._ivert = new DimensionGroup());
   }
 }
+
+EditorInvisible.DimensionDrawer = DimensionDrawer;

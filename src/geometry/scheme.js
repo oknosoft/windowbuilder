@@ -71,7 +71,7 @@ class Scheme extends paper.Project {
         _scheme.l_connective.redraw();
 
         // обновляем связи параметров изделия
-        isBrowser && contours[0].refresh_prm_links(true);
+        isBrowser && !_attr._silent && contours[0].refresh_prm_links(true);
 
         // перерисовываем все контуры
         for (let contour of contours) {
@@ -462,9 +462,7 @@ class Scheme extends paper.Project {
     }
 
     _attr._loading = true;
-    if(id != this.ox) {
-      this.ox = null;
-    }
+    this.ox = null;
     this.clear();
 
     if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new()) {

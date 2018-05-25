@@ -1226,7 +1226,7 @@ class Contour extends AbstractFilling(paper.Layer) {
         new paper.PointText({
           parent: props.parent,
           fillColor: 'black',
-          fontFamily: 'Mipgost',
+          fontFamily: consts.font_family,
           fontSize: consts.elm_font_size,
           guide: true,
           content: row.inset.presentation,
