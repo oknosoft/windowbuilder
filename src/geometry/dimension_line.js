@@ -518,21 +518,22 @@ class DimensionLineCustom extends DimensionLine {
       hide_c2 && children.callout2.setSelection(false);
       hide_line && children.scale.setSelection(false);
     }
-    tool instanceof ToolRuler && tool.wnd.attach(this);
+    typeof ToolRuler === 'function' && tool instanceof ToolRuler && tool.wnd.attach(this);
   }
 
   // выделяем только при активном инструменте
   _click(event) {
     event.stop();
     const {tool} = this.project._scope;
-    if(tool instanceof ToolRuler){
+    if(tool && typeof ToolRuler === 'function' && tool instanceof ToolRuler){
       this.selected = true;
     }
   }
 
   _mouseenter() {
     const {_scope} = this.project;
-    if(_scope.tool instanceof ToolRuler){
+    const {tool} = _scope;
+    if(tool && typeof ToolRuler === 'function' && tool instanceof ToolRuler){
       _scope.canvas_cursor('cursor-arrow-ruler');
     }
     else{

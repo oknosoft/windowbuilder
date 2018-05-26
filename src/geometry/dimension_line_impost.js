@@ -62,7 +62,7 @@ class DimensionLineImpost extends DimensionLineCustom {
 
   redraw() {
 
-    const {children, path, offset, _attr: {p1, p2, dx1, dx2}} = this;
+    const {children, path, offset, _attr: {p1, p2, dx1, dx2, outer}} = this;
     if(!children.length){
       return;
     }
@@ -75,7 +75,7 @@ class DimensionLineImpost extends DimensionLineCustom {
 
     const b = path.firstSegment.point;
     const e = path.lastSegment.point;
-    const normal = path.getNormalAt(0).multiply(offset + path.offset);
+    const normal = path.getNormalAt(0).multiply((outer ? -1 : 1) * (offset + path.offset));
     const tangent = path.getTangentAt(0);
     const ns = normal.normalize(normal.length - 20);
     const bs = b.add(ns);

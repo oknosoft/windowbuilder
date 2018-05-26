@@ -2187,8 +2187,14 @@ class DimensionDrawer extends paper.Group {
 
       const {inner, outer} = elm.joined_imposts();
       const {generatrix, angle_hor} = elm;
-      const invert = angle_hor > 135 && angle_hor < 315;
-      for(const impost of inner.concat(outer)) {
+      generatrix.visible = false;
+      const imposts = inner.concat(outer);
+      if(!imposts.length) {
+        continue;
+      }
+      elm.mark_direction();
+      let invert = angle_hor > 135 && angle_hor < 315;
+      for(const impost of imposts) {
         const {point, profile: {rays, nom}} = impost;
         const pi = generatrix.intersect_point(rays.inner, point);
         const po = generatrix.intersect_point(rays.outer, point);
@@ -2214,6 +2220,7 @@ class DimensionDrawer extends paper.Group {
           dx2,
           parent: this,
           offset: invert ? -150 : 150,
+          outer: outer.indexOf(impost) !== -1,
         });
 
       }
@@ -2854,20 +2861,21 @@ class DimensionLineCustom extends DimensionLine {
       hide_c2 && children.callout2.setSelection(false);
       hide_line && children.scale.setSelection(false);
     }
-    tool instanceof ToolRuler && tool.wnd.attach(this);
+    typeof ToolRuler === 'function' && tool instanceof ToolRuler && tool.wnd.attach(this);
   }
 
   _click(event) {
     event.stop();
     const {tool} = this.project._scope;
-    if(tool instanceof ToolRuler){
+    if(tool && typeof ToolRuler === 'function' && tool instanceof ToolRuler){
       this.selected = true;
     }
   }
 
   _mouseenter() {
     const {_scope} = this.project;
-    if(_scope.tool instanceof ToolRuler){
+    const {tool} = _scope;
+    if(tool && typeof ToolRuler === 'function' && tool instanceof ToolRuler){
       _scope.canvas_cursor('cursor-arrow-ruler');
     }
     else{
@@ -2982,7 +2990,7 @@ class DimensionLineImpost extends DimensionLineCustom {
 
   redraw() {
 
-    const {children, path, offset, _attr: {p1, p2, dx1, dx2}} = this;
+    const {children, path, offset, _attr: {p1, p2, dx1, dx2, outer}} = this;
     if(!children.length){
       return;
     }
@@ -2995,7 +3003,7 @@ class DimensionLineImpost extends DimensionLineCustom {
 
     const b = path.firstSegment.point;
     const e = path.lastSegment.point;
-    const normal = path.getNormalAt(0).multiply(offset + path.offset);
+    const normal = path.getNormalAt(0).multiply((outer ? -1 : 1) * (offset + path.offset));
     const tangent = path.getTangentAt(0);
     const ns = normal.normalize(normal.length - 20);
     const bs = b.add(ns);
@@ -6709,6 +6717,31 @@ class ProfileItem extends GeneratrixElement {
     return this;
   }
 
+  mark_direction() {
+    const {generatrix, rays: {inner, outer}} = this;
+    const gb = generatrix.getPointAt(130);
+    const ge = generatrix.getPointAt(230);
+    const ib = inner.getNearestPoint(gb);
+    const ie = inner.getNearestPoint(ge);
+    const ob = outer.getNearestPoint(gb);
+    const oe = outer.getNearestPoint(ge);
+
+    const b = ib.add(ob).divide(2);
+    const e = ie.add(oe).divide(2);
+    const c = b.add(e).divide(2);
+    const n = e.subtract(b).rotate(90).normalize(10);
+    const c1 = c.add(n);
+    const c2 = c.subtract(n);
+
+    const path = new paper.Path({
+      parent: this,
+      segments: [b, e, c1, c2, e],
+      strokeColor: 'darkblue',
+      strokeCap: 'round',
+      strokeWidth: 2,
+      strokeScaling: false,
+    })
+  }
 
   corns(corn) {
     const {_corns} = this._attr;

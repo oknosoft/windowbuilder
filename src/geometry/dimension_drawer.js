@@ -211,8 +211,14 @@ class DimensionDrawer extends paper.Group {
 
       const {inner, outer} = elm.joined_imposts();
       const {generatrix, angle_hor} = elm;
-      const invert = angle_hor > 135 && angle_hor < 315;
-      for(const impost of inner.concat(outer)) {
+      generatrix.visible = false;
+      const imposts = inner.concat(outer);
+      if(!imposts.length) {
+        continue;
+      }
+      elm.mark_direction();
+      let invert = angle_hor > 135 && angle_hor < 315;
+      for(const impost of imposts) {
         const {point, profile: {rays, nom}} = impost;
         const pi = generatrix.intersect_point(rays.inner, point);
         const po = generatrix.intersect_point(rays.outer, point);
@@ -238,6 +244,7 @@ class DimensionDrawer extends paper.Group {
           dx2,
           parent: this,
           offset: invert ? -150 : 150,
+          outer: outer.indexOf(impost) !== -1,
         });
 
       }
