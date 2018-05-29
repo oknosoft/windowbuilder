@@ -52,6 +52,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   before_save() {
 
     const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
+    //Для шаблонов, отклоненных и отозванных проверки выполнять не будем, чтобы возвращалось всегда true
+    //при этом, просто сразу вернуть true не можем, т.к. надо часть кода выполнить - например, сумму документа пересчитать
+    const must_be_saved = [Подтвержден, Отправлен].indexOf(this.obj_delivery_state) == -1;
 
     let doc_amount = 0,
       amount_internal = 0;
@@ -86,7 +89,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           text: 'Не заполнен реквизит "офис продаж" (подразделение)',
           title: this.presentation
         });
-        return false;
+        return false || must_be_saved;
       }
       if(this.partner.empty()) {
         $p.msg.show_msg && $p.msg.show_msg({
@@ -94,7 +97,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           text: 'Не указан контрагент (дилер)',
           title: this.presentation
         });
-        return false;
+        return false || must_be_saved;
       }
     }
 
