@@ -7,12 +7,14 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import {ListItem, ListItemSecondaryAction, ListItemText} from 'material-ui/List';
-import IconButton from 'material-ui/IconButton';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
+import ListItemText from '@material-ui/core/ListItemText';
+import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/Delete';
-import Divider from 'material-ui/Divider';
-import Collapse from 'material-ui/transitions/Collapse';
+import Divider from '@material-ui/core/Divider';
+import Collapse from '@material-ui/core/Collapse';
 import {find_inset} from './connect';
 import withStyles from './styles';
 

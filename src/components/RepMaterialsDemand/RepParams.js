@@ -5,8 +5,8 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
-import Toolbar from 'material-ui/Toolbar';
-import IconButton from 'material-ui/IconButton';
+import Toolbar from '@material-ui/core/Toolbar';
+import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/Delete';
 import TabularSection from 'metadata-react/TabularSection';

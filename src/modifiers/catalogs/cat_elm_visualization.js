@@ -39,7 +39,7 @@ $p.CatElm_visualization.prototype.__define({
           subpath = new PointText(Object.assign({
             parent: layer._by_spec,
             fillColor: 'black',
-            fontFamily: 'Mipgost',
+            fontFamily: consts.font_family,
             fontSize: attr.fontSize || 60,
             guide: true,
             content: this.svg_path,

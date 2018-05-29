@@ -26,27 +26,52 @@ Object.defineProperties(paper.Path.prototype, {
     }
   },
 
-  is_self_intersected: {
-    value() {
+  /**
+   * Возвращает массив самопересечений
+   * @param first
+   * @return {Array}
+   */
+  self_intersections: {
+    value(first) {
       const {curves} = this;
-      return curves.some((crv1, i1) => {
+      const res = [];
+      curves.some((crv1, i1) => {
         return curves.some((crv2, i2) => {
+          if(i2 <= i1) {
+            return;
+          }
           const intersections = crv1.getIntersections(crv2);
           if(intersections.length) {
-            if(intersections.length > 1) {
-              return true;
-            }
             const {point} = intersections[0];
+            if(intersections.length > 1) {
+              res.push({crv1, crv2, point});
+              if(first) {
+                return true;
+              }
+            }
             if(crv2.point1.is_nearest(crv1.point2, 0) && point.is_nearest(crv1.point2, 0)) {
-              return false;
+              return;
             }
             if(crv1.point1.is_nearest(crv2.point2, 0) && point.is_nearest(crv1.point1, 0)) {
-              return false;
+              return;
             }
-            return true;
-          };
-        })
-      })
+            res.push({crv1, crv2, point});
+            if(first) {
+              return true;
+            }
+          }
+        });
+      });
+      return res;
+    }
+  },
+
+  /**
+   * Является ли путь самопересекающимся
+   */
+  is_self_intersected: {
+    value() {
+      return this.self_intersections(true).length > 0;
     }
   },
 
@@ -76,26 +101,29 @@ Object.defineProperties(paper.Path.prototype, {
      * @return {Boolean}
      */
   is_linear: {
-      value() {
-        // если в пути единственная кривая и она прямая - путь прямой
-        if(this.curves.length == 1 && this.firstCurve.isLinear())
-          return true;
-        // если в пути есть искривления, путь кривой
-        else if(this.hasHandles())
-          return false;
-        else{
-          // если у всех кривых пути одинаковые направленные углы - путь прямой
-          var curves = this.curves,
-            da = curves[0].point1.getDirectedAngle(curves[0].point2), dc;
-          for(var i = 1; i < curves.lenght; i++){
-            dc = curves[i].point1.getDirectedAngle(curves[i].point2);
-            if(Math.abs(dc - da) > consts.epsilon)
-              return false;
-          }
-        }
+    value() {
+      const {curves, firstCurve} = this;
+      // если в пути единственная кривая и она прямая - путь прямой
+      if(curves.length == 1 && firstCurve.isLinear()) {
         return true;
       }
-    },
+      // если в пути есть искривления, путь кривой
+      else if(this.hasHandles()) {
+        return false;
+      }
+      else {
+        // если у всех кривых пути одинаковые направленные углы - путь прямой
+        const da = firstCurve.point1.getDirectedAngle(firstCurve.point2);
+        for (let i = 1; i < curves.length; i++) {
+          const dc = curves[i].point1.getDirectedAngle(curves[i].point2);
+          if(Math.abs(dc - da) > consts.epsilon) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+  },
 
   /**
    * Выясняет, расположена ли точка в окрестности пути
@@ -433,40 +461,46 @@ Object.defineProperties(paper.Point.prototype, {
 	 * @return {Point}
 	 */
 	arc_cntr: {
-		value(x1,y1, x2,y2, r0, ccw){
-			var a,b,p,r,q,yy1,xx1,yy2,xx2;
-			if(ccw){
-				var tmpx=x1, tmpy=y1;
-				x1=x2; y1=y2; x2=tmpx; y2=tmpy;
-			}
-			if (x1!=x2){
-				a=(x1*x1 - x2*x2 - y2*y2 + y1*y1)/(2*(x1-x2));
-				b=((y2-y1)/(x1-x2));
-				p=b*b+ 1;
-				r=-2*((x1-a)*b+y1);
-				q=(x1-a)*(x1-a) - r0*r0 + y1*y1;
-				yy1=(-r + Math.sqrt(r*r - 4*p*q))/(2*p);
-				xx1=a+b*yy1;
-				yy2=(-r - Math.sqrt(r*r - 4*p*q))/(2*p);
-				xx2=a+b*yy2;
-			} else{
-				a=(y1*y1 - y2*y2 - x2*x2 + x1*x1)/(2*(y1-y2));
-				b=((x2-x1)/(y1-y2));
-				p=b*b+ 1;
-				r=-2*((y1-a)*b+x1);
-				q=(y1-a)*(y1-a) - r0*r0 + x1*x1;
-				xx1=(-r - Math.sqrt(r*r - 4*p*q))/(2*p);
-				yy1=a+b*xx1;
-				xx2=(-r + Math.sqrt(r*r - 4*p*q))/(2*p);
-				yy2=a+b*xx2;
-			}
+    value(x1, y1, x2, y2, r0, ccw) {
+      let a, b, p, r, q, yy1, xx1, yy2, xx2;
+      if(ccw) {
+        const tmpx = x1, tmpy = y1;
+        x1 = x2;
+        y1 = y2;
+        x2 = tmpx;
+        y2 = tmpy;
+      }
+      if(x1 != x2) {
+        a = (x1 * x1 - x2 * x2 - y2 * y2 + y1 * y1) / (2 * (x1 - x2));
+        b = ((y2 - y1) / (x1 - x2));
+        p = b * b + 1;
+        r = -2 * ((x1 - a) * b + y1);
+        q = (x1 - a) * (x1 - a) - r0 * r0 + y1 * y1;
+        yy1 = (-r + Math.sqrt(r * r - 4 * p * q)) / (2 * p);
+        xx1 = a + b * yy1;
+        yy2 = (-r - Math.sqrt(r * r - 4 * p * q)) / (2 * p);
+        xx2 = a + b * yy2;
+      }
+      else {
+        a = (y1 * y1 - y2 * y2 - x2 * x2 + x1 * x1) / (2 * (y1 - y2));
+        b = ((x2 - x1) / (y1 - y2));
+        p = b * b + 1;
+        r = -2 * ((y1 - a) * b + x1);
+        q = (y1 - a) * (y1 - a) - r0 * r0 + x1 * x1;
+        xx1 = (-r - Math.sqrt(r * r - 4 * p * q)) / (2 * p);
+        yy1 = a + b * xx1;
+        xx2 = (-r + Math.sqrt(r * r - 4 * p * q)) / (2 * p);
+        yy2 = a + b * xx2;
+      }
 
-			if (new paper.Point(xx1,yy1).point_pos(x1,y1, x2,y2)>0)
-				return {x: xx1, y: yy1};
-			else
-				return {x: xx2, y: yy2}
-		}
-	},
+      if(new paper.Point(xx1, yy1).point_pos(x1, y1, x2, y2) > 0) {
+        return {x: xx1, y: yy1};
+      }
+      else {
+        return {x: xx2, y: yy2}
+      }
+    }
+  },
 
 	/**
 	 * ### Рассчитывает координаты точки, лежащей на окружности

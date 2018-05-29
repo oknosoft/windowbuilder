@@ -292,7 +292,7 @@ class RulerWnd {
         $p.wsql.save_options('editor', this.options);
       }
       else {
-        setTimeout(() => tool._scope.tools[1].activate());
+        setTimeout(() => tool._scope && tool._scope.tools[1].activate());
       }
       delete this.options;
     }

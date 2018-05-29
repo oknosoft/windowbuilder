@@ -9,8 +9,10 @@
 import React from 'react';
 import Progress from './Progress';
 import PropTypes from 'prop-types';
-import { LinearProgress } from 'material-ui/Progress';
-import List, { ListItem, ListItemText } from 'material-ui/List';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
 
 class Inbox extends Progress {
 

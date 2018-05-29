@@ -7,10 +7,11 @@
 
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import Button from 'material-ui/Button';
+import Button from '@material-ui/core/Button';
 import Dialog from 'metadata-react/App/Dialog';
-import Input, { InputAdornment } from 'material-ui/Input';
-import IconButton from 'material-ui/IconButton';
+import Input from '@material-ui/core/Input';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import IconButton from '@material-ui/core/IconButton';
 import IconSearch from '@material-ui/icons/Search';
 import connect from './connect';
 

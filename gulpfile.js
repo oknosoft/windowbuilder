@@ -11,8 +11,7 @@ const gulp = require('gulp'),
 	rename = require('gulp-rename'),
 	resources = require('./scripts/resource-concat.js'),
 	umd = require('gulp-umd'),
-  wrap = require("gulp-wrap"),
-  uglify = require('gulp-uglify');
+  wrap = require("gulp-wrap");
 
 module.exports = gulp;
 
@@ -39,11 +38,43 @@ gulp.task('build-iface', function(){
     // .pipe(gulp.dest('./dist'))
 });
 
+// Cборка библиотеки для использования снаружи
+gulp.task('build-drawer', function () {
+  return gulp.src([
+    './src/editor/consts.js',
+    './src/editor/editor_base.js',
+    './src/geometry/*.js',
+    './src/modifiers/common/*.js',
+    './src/modifiers/enums/*.js',
+    './src/modifiers/catalogs/cat_characteristics.js',
+    './src/modifiers/catalogs/cat_clrs.js',
+    './src/modifiers/catalogs/cat_cnns.js',
+    './src/modifiers/catalogs/cat_contracts.js',
+    './src/modifiers/catalogs/cat_divisions.js',
+    './src/modifiers/catalogs/cat_elm_visualization.js',
+    './src/modifiers/catalogs/cat_furns.js',
+    './src/modifiers/catalogs/cat_insert_bind.js',
+    './src/modifiers/catalogs/cat_inserts.js',
+    './src/modifiers/catalogs/cat_nom.js',
+    './src/modifiers/catalogs/cat_partners.js',
+    './src/modifiers/catalogs/cat_production_params.js',
+    './src/modifiers/documents/doc_calc_order.js',
+  ])
+    .pipe(concat('drawer.js'))
+    .pipe(strip())
+    .pipe(umd({
+      exports: function (file) {
+        return 'EditorInvisible';
+      }
+    }))
+    .pipe(gulp.dest('./public/dist'));
+});
+
 // Cборка библиотеки рисовалки
 gulp.task('build-lib', function(){
 	return gulp.src([
 		'./src/editor/*.js',
-		'./src/geometry/*.js',
+    './src/geometry/*.js',
 		'./src/tools/*.js',
 		'./data/merged_wb_tips.js'
 	])

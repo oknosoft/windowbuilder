@@ -422,11 +422,11 @@ class ProfileItem extends GeneratrixElement {
   }
 
   set cnn1(v) {
-    const {rays, project} = this;
+    const {rays} = this;
     const cnn = $p.cat.cnns.get(v);
     if(rays.b.cnn != cnn) {
       rays.b.cnn = cnn;
-      project.register_change();
+      this.project.register_change();
     }
   }
 
@@ -442,11 +442,11 @@ class ProfileItem extends GeneratrixElement {
   }
 
   set cnn2(v) {
-    const {rays, project} = this;
+    const {rays} = this;
     const cnn = $p.cat.cnns.get(v);
     if(rays.e.cnn != cnn) {
       rays.e.cnn = cnn;
-      project.register_change();
+      this.project.register_change();
     }
   }
 
@@ -514,12 +514,12 @@ class ProfileItem extends GeneratrixElement {
   }
 
   set r(v) {
-    const {_row, _attr, project} = this;
+    const {_row, _attr} = this;
     if(_row.r != v) {
       _attr._rays.clear();
       _row.r = v;
       this.set_generatrix_radius();
-      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
+      this.project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -550,12 +550,12 @@ class ProfileItem extends GeneratrixElement {
   }
 
   set arc_ccw(v) {
-    const {_row, _attr, project} = this;
+    const {_row, _attr} = this;
     if(_row.arc_ccw != v) {
       _attr._rays.clear();
       _row.arc_ccw = v;
       this.set_generatrix_radius();
-      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
+      this.project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -588,7 +588,7 @@ class ProfileItem extends GeneratrixElement {
       }
       _row.r = b.arc_r(b.x, b.y, e.x, e.y, v);
       this.set_generatrix_radius(v);
-      project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
+      this.project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
     }
   }
 
@@ -856,13 +856,12 @@ class ProfileItem extends GeneratrixElement {
    */
   save_coordinates() {
 
-    const {_attr, _row, rays, generatrix, project} = this;
+    const {_attr, _row, rays, generatrix, project: {cnns}} = this;
 
     if(!generatrix) {
       return;
     }
 
-    const {cnns} = project;
     const b = rays.b;
     const e = rays.e;
     const row_b = cnns.add({
@@ -1060,7 +1059,7 @@ class ProfileItem extends GeneratrixElement {
    * Искривляет образующую в соответствии с радиусом
    */
   set_generatrix_radius(height) {
-    const {generatrix, _row, layer, project, selected} = this;
+    const {generatrix, _row, layer, selected} = this;
     const b = generatrix.firstSegment.point.clone();
     const e = generatrix.lastSegment.point.clone();
     const min_radius = b.getDistance(e) / 2;
@@ -1749,6 +1748,34 @@ class ProfileItem extends GeneratrixElement {
     return this;
   }
 
+  /**
+   * рисует стрелочку направления элемента
+   */
+  mark_direction() {
+    const {generatrix, rays: {inner, outer}} = this;
+    const gb = generatrix.getPointAt(130);
+    const ge = generatrix.getPointAt(230);
+    const ib = inner.getNearestPoint(gb);
+    const ie = inner.getNearestPoint(ge);
+    const ob = outer.getNearestPoint(gb);
+    const oe = outer.getNearestPoint(ge);
+
+    const b = ib.add(ob).divide(2);
+    const e = ie.add(oe).divide(2);
+    const c = b.add(e).divide(2);
+    const n = e.subtract(b).rotate(90).normalize(10);
+    const c1 = c.add(n);
+    const c2 = c.subtract(n);
+
+    const path = new paper.Path({
+      parent: this,
+      segments: [b, e, c1, c2, e],
+      strokeColor: 'darkblue',
+      strokeCap: 'round',
+      strokeWidth: 2,
+      strokeScaling: false,
+    })
+  }
 
   /**
    * ### Координаты вершин (cornx1...corny4)
@@ -1760,7 +1787,7 @@ class ProfileItem extends GeneratrixElement {
   corns(corn) {
     const {_corns} = this._attr;
     if(typeof corn == 'number') {
-      return _corns[corn];
+      return corn < 10 ? _corns[corn] : this.generatrix.getPointAt(corn);
     }
     else if(corn instanceof paper.Point) {
 

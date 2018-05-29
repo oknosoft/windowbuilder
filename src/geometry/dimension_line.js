@@ -50,10 +50,6 @@ class DimensionLine extends paper.Group {
     }
     Object.assign(_attr, attr);
 
-    if(attr.impost){
-      _attr.impost = true;
-    }
-
     if(attr.contour){
       _attr.contour = true;
     }
@@ -71,7 +67,7 @@ class DimensionLine extends paper.Group {
       parent: this,
       name: 'text',
       justification: 'center',
-      fontFamily: 'Mipgost',
+      fontFamily: consts.font_family,
       fillColor: 'black',
       fontSize: consts.font_size});
 
@@ -98,8 +94,10 @@ class DimensionLine extends paper.Group {
 
   _click(event) {
     event.stop();
-    this.wnd = new RulerWnd(null, this);
-    this.wnd.size = this.size;
+    if(typeof RulerWnd === 'function') {
+      this.wnd = new RulerWnd(null, this);
+      this.wnd.size = this.size;
+    }
   }
 
   _move_points(event, xy) {
@@ -348,7 +346,7 @@ class DimensionLine extends paper.Group {
 
   // размер
   get size() {
-    return parseFloat(this.children.text.content) || 0;
+    return (this.children.text && parseFloat(this.children.text.content)) || 0;
   }
   set size(v) {
     this.children.text.content = parseFloat(v).round(1);
@@ -520,21 +518,22 @@ class DimensionLineCustom extends DimensionLine {
       hide_c2 && children.callout2.setSelection(false);
       hide_line && children.scale.setSelection(false);
     }
-    tool instanceof ToolRuler && tool.wnd.attach(this);
+    typeof ToolRuler === 'function' && tool instanceof ToolRuler && tool.wnd.attach(this);
   }
 
   // выделяем только при активном инструменте
   _click(event) {
     event.stop();
     const {tool} = this.project._scope;
-    if(tool instanceof ToolRuler){
+    if(tool && typeof ToolRuler === 'function' && tool instanceof ToolRuler){
       this.selected = true;
     }
   }
 
   _mouseenter() {
     const {_scope} = this.project;
-    if(_scope.tool instanceof ToolRuler){
+    const {tool} = _scope;
+    if(tool && typeof ToolRuler === 'function' && tool instanceof ToolRuler){
       _scope.canvas_cursor('cursor-arrow-ruler');
     }
     else{
@@ -603,3 +602,5 @@ class DimensionLineCustom extends DimensionLine {
   }
 }
 
+EditorInvisible.DimensionLine = DimensionLine;
+EditorInvisible.DimensionLineCustom = DimensionLineCustom;

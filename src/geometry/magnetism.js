@@ -157,9 +157,16 @@ class Magnetism {
           const rNext = (pNext.outer ? pNext.profile.rays.outer : pNext.profile.rays.inner).equidistant(-pNext.profile.nom.sizefaltz);
           const rOur = (pOur.outer ? pOur.profile.rays.outer : pOur.profile.rays.inner).equidistant(-pOur.profile.nom.sizefaltz);
 
-          const p0 = rSegm.intersect_point(rNext, selected.point);
-          const p1 = rSegm.intersect_point(rOur, selected.point);
-          const delta = p0.subtract(p1);
+          const ps = rSegm.intersect_point(rOur, spoint);
+          // если next является почти продолжением segm (арка), точку соединения ищем иначе
+          const be = ps.getDistance(segm.profile.b) > ps.getDistance(segm.profile.e) ? 'e' : 'b';
+          const da = rSegm.angle_to(rNext, segm.profile[be]);
+
+          let p0 = rSegm.intersect_point(rNext, ps);
+          if(!p0 || da < 4) {
+            p0 = rNext.getNearestPoint(segm.profile[be]);
+          }
+          const delta = p0.subtract(ps);
           selected.profile.move_points(delta, true);
 
         }

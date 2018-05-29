@@ -15,58 +15,16 @@
 	 */
 	$p.enm.open_types.__define({
 
-		is_opening: {
-			value(v) {
+    is_opening: {
+      value(v) {
+        if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное) {
+          return false;
+        }
+        return true;
+      }
+    }
 
-				if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное)
-					return false;
-
-				return true;
-
-			}
-		}
-
-		/*
-		 ,
-
-		 rotary: {
-		 get: function () {
-		 return this.Поворотное;
-		 }
-		 },
-
-		 folding: {
-		 get: function () {
-		 return this.Откидное;
-		 }
-		 },
-
-		 rotary_folding: {
-		 get: function () {
-		 return this.ПоворотноОткидное;
-		 }
-		 },
-
-		 deaf: {
-		 get: function () {
-		 return this.Глухое;
-		 }
-		 },
-
-		 sliding: {
-		 get: function () {
-		 return this.Раздвижное;
-		 }
-		 },
-
-		 fixed: {
-		 get: function () {
-		 return this.Неподвижное;
-		 }
-		 }
-		 */
-
-	});
+  });
 
 	/**
 	 * Дополнительные методы перечисления Ориентация

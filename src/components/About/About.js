@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import withStyles from 'material-ui/styles/withStyles';
-import Grid from 'material-ui/Grid';
+import withStyles from '@material-ui/core/styles/withStyles';
+import Grid from '@material-ui/core/Grid';
 
 import {withIface} from 'metadata-redux';
 
@@ -117,8 +117,8 @@ class About extends Component {
 
             <h3><i className="fa fa-question-circle"></i> Вопросы</h3>
             <p>Если обнаружили ошибку, пожалуйста, <a href="https://github.com/oknosoft/windowbuilder/issues/new" target="_blank"
-              rel="noopener noreferrer">зарегистрируйте вопрос в GitHub</a> или <a href="http://www.oknosoft.ru/metadata/#page-118" target="_blank"
-              rel="noopener noreferrer">свяжитесь с разработчиком</a> напрямую<br /></p>
+              rel="noopener noreferrer">зарегистрируйте вопрос в GitHub</a> или <a href="mailto:info@oknosoft.ru?subject=windowbuilder">
+              свяжитесь с разработчиком</a> напрямую<br /></p>
 
           </Grid>
         </Grid>

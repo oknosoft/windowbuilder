@@ -7,11 +7,11 @@
 
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import Button from 'material-ui/Button';
+import Button from '@material-ui/core/Button';
 import Dialog from 'metadata-react/App/Dialog';
 import connect from './connect';
 
-import {FormGroup} from 'material-ui/Form';
+import FormGroup from '@material-ui/core/FormGroup';
 import DataField from 'metadata-react/DataField';
 
 class ClientOfDealer extends Component {

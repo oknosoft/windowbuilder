@@ -4,6 +4,12 @@
   font-weight: normal;
   font-style: normal;
 }
+@font-face {
+  font-family: 'GOST type B';
+  src: url('./gost_b.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
 
 .md_column320 {
 	width: 48%;

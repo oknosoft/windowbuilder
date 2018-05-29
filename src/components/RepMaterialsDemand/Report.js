@@ -4,8 +4,9 @@
 
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import Button from 'material-ui/Button';
-import Menu, {MenuItem} from 'material-ui/Menu';
+import Button from '@material-ui/core/Button';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
 import FrmReport from 'metadata-react/FrmReport';
 import {withIface} from 'metadata-redux';
 

@@ -7,7 +7,7 @@
 
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-//import {FormGroup} from 'material-ui/Form';
+//import {FormGroup} from '@material-ui/core/Form';
 import TabularSection from 'metadata-react/TabularSection';
 
 export default class AdditionsItem extends Component {

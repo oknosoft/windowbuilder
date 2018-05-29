@@ -38,7 +38,7 @@ class Pricing {
               since: 'now',
               live: true,
               include_docs: true,
-              selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order', 'cat.formulas']}}
+              selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
             }).on('change', (change) => {
               // формируем новый
               if(change.doc.class_name == 'doc.nom_prices_setup'){

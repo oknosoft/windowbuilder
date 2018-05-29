@@ -1,14 +1,18 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
-import Paper from 'material-ui/Paper';
-import Typography from 'material-ui/Typography';
-import Radio, {RadioGroup} from 'material-ui/Radio';
-import {FormGroup, FormHelperText, FormControl, FormControlLabel} from 'material-ui/Form';
-import TextField from 'material-ui/TextField';
-import Button from 'material-ui/Button';
-import Switch from 'material-ui/Switch';
-import {DialogActions} from 'material-ui/Dialog';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import FormGroup from '@material-ui/core/FormGroup';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import FormControl from '@material-ui/core/FormControl';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
+import Switch from '@material-ui/core/Switch';
+import DialogActions from '@material-ui/core/DialogActions';
 
 import Confirm from 'metadata-react/App/Confirm';
 import withStyles from 'metadata-react/styles/paper600';

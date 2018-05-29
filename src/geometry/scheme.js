@@ -48,13 +48,13 @@ class Scheme extends paper.Project {
 
     this.magnetism = new Magnetism(this);
 
+    const isBrowser = typeof requestAnimationFrame === 'function';
+
     /**
      * Перерисовывает все контуры изделия. Не занимается биндингом.
      * Предполагается, что взаимное перемещение профилей уже обработано
      */
     this.redraw = () => {
-
-      const isBrowser = typeof requestAnimationFrame === 'function';
 
       _attr._opened && !_attr._silent && _scheme._scope && isBrowser && requestAnimationFrame(_scheme.redraw);
 
@@ -71,7 +71,7 @@ class Scheme extends paper.Project {
         _scheme.l_connective.redraw();
 
         // обновляем связи параметров изделия
-        isBrowser && contours[0].refresh_prm_links(true);
+        isBrowser && !_attr._silent && contours[0].refresh_prm_links(true);
 
         // перерисовываем все контуры
         for (let contour of contours) {
@@ -462,9 +462,7 @@ class Scheme extends paper.Project {
     }
 
     _attr._loading = true;
-    if(id != this.ox) {
-      this.ox = null;
-    }
+    this.ox = null;
     this.clear();
 
     if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new()) {
@@ -768,7 +766,7 @@ class Scheme extends paper.Project {
         }
       }
       else if(item instanceof Filling) {
-        item.purge_path();
+        item.purge_paths();
       }
     }
 
@@ -849,7 +847,7 @@ class Scheme extends paper.Project {
         view.center = center.add([dx, -dy]);
       }
       else {
-        view.center = center.add([dx, 50]);
+        view.center = center.add([dx / 2, 50]);
       }
     }
   }

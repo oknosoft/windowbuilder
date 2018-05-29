@@ -297,7 +297,7 @@ class Editor extends EditorInvisible {
     this.tb_top.buttons.paste_prop.classList.add('disabledbutton');
 
     this._layout.base.style.backgroundColor = '#f5f5f5';
-    this.tb_top.cell.style.background = 'transparent';
+    this.tb_top.cell.style.background = '#fff';
     this.tb_top.cell.style.boxShadow = 'none';
 
     /**

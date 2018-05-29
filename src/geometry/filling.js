@@ -284,14 +284,14 @@ class Filling extends AbstractFilling(BuilderElement) {
     imposts.forEach((elm) => elm.redraw());
 
     // прочистим пути
-    this.purge_path();
+    this.purge_paths();
 
     // если текст не создан - добавляем
     if(!_attr._text){
       _attr._text = new paper.PointText({
         parent: this,
         fillColor: 'black',
-        fontFamily: 'Mipgost',
+        fontFamily: consts.font_family,
         fontSize: elm_font_size,
         guide: true,
       });
@@ -420,10 +420,10 @@ class Filling extends AbstractFilling(BuilderElement) {
   /**
    * Прочищает паразитные пути
    */
-  purge_path() {
+  purge_paths() {
     const paths = this.children.filter((child) => child instanceof paper.Path);
     const {path} = this;
-    paths.forEach((p) => p != path && p.remove());
+    paths.forEach((p) => p !== path && p.remove());
   }
 
   fill_error() {
@@ -522,8 +522,6 @@ class Filling extends AbstractFilling(BuilderElement) {
       _attr._profiles = [];
     }
 
-    let needPurge;
-
     if(attr instanceof paper.Path){
       path.addSegments(attr.segments);
     }
@@ -587,23 +585,44 @@ class Filling extends AbstractFilling(BuilderElement) {
         path.addSegments(curr.sub_path.segments);
         ["anext","pb","pe"].forEach((prop) => { delete curr[prop] });
         _attr._profiles.push(curr);
-
-        if(!needPurge){
-          needPurge = Math.abs(curr.angle_hor % 90) < 0.2
-        }
       }
-    }
-
-    if(needPurge || path.hasHandles()) {
-      const delta = 2;
-      const toRemove = [];
-      let prev;
     }
 
     if(path.segments.length && !path.closed){
       path.closePath(true);
     }
 
+    // прочищаем самопересечения
+    const intersections = path.self_intersections();
+    if(intersections.length) {
+      const {curves, segments} = path;
+      for(const {crv1, crv2, point} of intersections) {
+
+        const loc1 = crv1.getLocationOf(point);
+        const loc2 = crv2.getLocationOf(point);
+        const offset1 = loc2.offset - loc1.offset;
+        const offset2 = loc1.offset + path.length - loc2.offset;
+
+        crv1.divideAt(loc1);
+        crv2.divideAt(loc2);
+
+        if(offset2 < offset1) {
+          const ind = segments.indexOf(crv2.segment2) + 1;
+          while (ind < segments.length) {
+            path.removeSegment(ind);
+          }
+          while (path.firstSegment !== crv1.segment2) {
+            path.removeSegment(0);
+          }
+        }
+        else {
+          const ind = segments.indexOf(crv1.segment2);
+          while (segments[ind] !== crv2.segment1) {
+            path.removeSegment(ind);
+          }
+        }
+      }
+    }
     path.reduce();
 
   }

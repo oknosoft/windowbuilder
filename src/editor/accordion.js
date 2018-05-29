@@ -275,8 +275,8 @@ class StvProps {
 
   on_refresh_prm_links(contour) {
     const {_grid} = this;
-    if(_grid && contour == _grid._obj){
-      this.on_prm_change('0|0', null, true);
+    if(_grid && contour === _grid._obj){
+      this.reload();
     }
   }
 
