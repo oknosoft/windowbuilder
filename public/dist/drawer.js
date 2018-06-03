@@ -26,6 +26,16 @@ const consts = {
     this.font_family = builder.font_family || 'GOST type B';
     this.elm_font_size = builder.elm_font_size || 52;
 
+    if(!builder.font_family) {
+      builder.font_family = this.font_family;
+    }
+    if(!builder.font_size) {
+      builder.font_size = this.font_size;
+    }
+    if(!builder.elm_font_size) {
+      builder.elm_font_size = this.elm_font_size;
+    }
+
     if($p.wsql.alasql.utils.isNode) {
       this.font_size *= 1.2;
       this.elm_font_size *= 1.2;
@@ -12286,7 +12296,7 @@ $p.CatElm_visualization.prototype.__define({
           subpath = new PointText(Object.assign({
             parent: layer._by_spec,
             fillColor: 'black',
-            fontFamily: consts.font_family,
+            fontFamily: $p.job_prm.builder.font_family,
             fontSize: attr.fontSize || 60,
             guide: true,
             content: this.svg_path,
