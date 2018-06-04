@@ -4263,13 +4263,13 @@ class Contour extends AbstractFilling(paper.Layer) {
   get w() {
     const {is_rectangular, bounds} = this;
     const {left, right} = this.profiles_by_side();
-    return bounds ? bounds.width - left.nom.sizefurn - right.nom.sizefurn : 0;
+    return bounds && left && right ? bounds.width - left.nom.sizefurn - right.nom.sizefurn : 0;
   }
 
   get h() {
     const {is_rectangular, bounds} = this;
     const {top, bottom} = this.profiles_by_side();
-    return bounds ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
+    return bounds && top && bottom ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
   }
 
   get l_text() {
