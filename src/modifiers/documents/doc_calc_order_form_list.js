@@ -26,7 +26,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
   return new Promise((resolve, reject) => {
 
     attr._index = {
-      ddoc: 'mango_calc_order/list',
+      ddoc: ['mango_calc_order', 'list'],
       fields: ['department', 'state', 'date', 'search']
     };
 
