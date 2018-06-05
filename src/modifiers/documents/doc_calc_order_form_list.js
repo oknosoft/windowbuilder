@@ -147,7 +147,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               const flt = elmnts.filter.get_filter();
               if(flt.filter.length > 5) {
                 return {
-                  ddoc: 'mango/search',
+                  ddoc: ['mango', 'search'],
                   fields: ['class_name', 'date', 'search']
                 };
               }
