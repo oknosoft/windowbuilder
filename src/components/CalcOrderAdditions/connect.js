@@ -59,7 +59,7 @@ export function fill_data(ref) {
 
 export function find_inset(insert_type) {
   if(!this._inset) {
-    this._inset = $p.cat.inserts.find({available: true, insert_type});
+    this._inset = $p.cat.inserts.find({available: true, insert_type, priority: '1'});
   }
   return this._inset;
 }
