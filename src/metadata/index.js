@@ -63,8 +63,8 @@ export function init(dispatch) {
 
       // читаем локальные данные в ОЗУ
       const {adapters: {pouch}} = $p;
-      return pouch.load_data()
-        .then(() => pouch.attach_refresher());
+      return pouch.load_data();
+        //.then(() => pouch.attach_refresher());
 
     })
     .catch($p && $p.record_log);
