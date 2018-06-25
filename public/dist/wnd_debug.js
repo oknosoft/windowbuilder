@@ -5877,7 +5877,14 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             wnd.handleIfaceState = handlers.handleIfaceState;
           }
 
-          o.load_production()
+          (o._data._reload ? o.load() : Promise.resolve())
+            .then(() => {
+              if(o._data._reload) {
+                delete o._data._reload;
+                _mgr.emit_async('rows', o, {'production': true});
+              }
+              return o.load_production();
+            })
             .then(() => {
               rsvg_reload();
               o._manager.on('svgs', rsvg_reload);
@@ -5889,6 +5896,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                   rsvg_click(search.ref, 0);
                 }, 200);
               };
+            })
+            .catch(() => {
+              delete o._data._reload;
             });
 
           return res;
