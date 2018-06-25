@@ -1013,6 +1013,16 @@ const consts = {
     this.font_family = builder.font_family || 'GOST type B';
     this.elm_font_size = builder.elm_font_size || 52;
 
+    if(!builder.font_family) {
+      builder.font_family = this.font_family;
+    }
+    if(!builder.font_size) {
+      builder.font_size = this.font_size;
+    }
+    if(!builder.elm_font_size) {
+      builder.elm_font_size = this.elm_font_size;
+    }
+
     if($p.wsql.alasql.utils.isNode) {
       this.font_size *= 1.2;
       this.elm_font_size *= 1.2;
@@ -4253,13 +4263,13 @@ class Contour extends AbstractFilling(paper.Layer) {
   get w() {
     const {is_rectangular, bounds} = this;
     const {left, right} = this.profiles_by_side();
-    return bounds ? bounds.width - left.nom.sizefurn - right.nom.sizefurn : 0;
+    return bounds && left && right ? bounds.width - left.nom.sizefurn - right.nom.sizefurn : 0;
   }
 
   get h() {
     const {is_rectangular, bounds} = this;
     const {top, bottom} = this.profiles_by_side();
-    return bounds ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
+    return bounds && top && bottom ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
   }
 
   get l_text() {
@@ -6460,33 +6470,20 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     const intersections = path.self_intersections();
     if(intersections.length) {
+
       const {curves, segments} = path;
-      for(const {crv1, crv2, point} of intersections) {
-
-        const loc1 = crv1.getLocationOf(point);
-        const loc2 = crv2.getLocationOf(point);
-        const offset1 = loc2.offset - loc1.offset;
-        const offset2 = loc1.offset + path.length - loc2.offset;
-
-        crv1.divideAt(loc1);
-        crv2.divideAt(loc2);
-
-        if(offset2 < offset1) {
-          const ind = segments.indexOf(crv2.segment2) + 1;
-          while (ind < segments.length) {
-            path.removeSegment(ind);
-          }
-          while (path.firstSegment !== crv1.segment2) {
-            path.removeSegment(0);
-          }
-        }
-        else {
-          const ind = segments.indexOf(crv1.segment2);
-          while (segments[ind] !== crv2.segment1) {
-            path.removeSegment(ind);
-          }
+      const purge = new Set();
+      for(const {point} of intersections) {
+        for(const rib of attr) {
+          rib._sub.b.is_nearest(point, true) && rib._sub.e.is_nearest(point, true) && purge.add(rib);
         }
       }
+      purge.forEach((rib) => {
+        const ind = attr.indexOf(rib);
+        attr.splice(ind, 1);
+      });
+
+      return this.path = attr;
     }
     path.reduce();
 

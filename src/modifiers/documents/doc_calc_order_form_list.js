@@ -26,7 +26,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
   return new Promise((resolve, reject) => {
 
     attr._index = {
-      ddoc: 'mango_calc_order/list',
+      ddoc: ['mango_calc_order', 'list'],
       fields: ['department', 'state', 'date', 'search']
     };
 
@@ -147,7 +147,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               const flt = elmnts.filter.get_filter();
               if(flt.filter.length > 5) {
                 return {
-                  ddoc: 'mango/search',
+                  ddoc: ['mango', 'search'],
                   fields: ['class_name', 'date', 'search']
                 };
               }
