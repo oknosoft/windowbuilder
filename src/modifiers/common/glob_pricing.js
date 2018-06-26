@@ -431,7 +431,7 @@ class Pricing {
         if(marginality_in_spec){
           fake_row.nom = nom;
           const tmp_price = this.nom_price(nom, characteristic, prm.price_type.price_type_sale, prm, fake_row);
-          _obj.amount_marged = (tmp_price ? tmp_price : _obj.price) * _obj.totqty1;
+          _obj.amount_marged = tmp_price * _obj.totqty1;
         }
 
       });

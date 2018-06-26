@@ -18,8 +18,14 @@ class Builder extends DhtmlxCell {
     //$p.off('hash_route', this.hash_route);
     const {cell, _editor} = this;
     if(_editor){
+      const {ox} = _editor.project;
       _editor.unload();
       delete this._editor;
+
+      // если закрыли без сохранения характеристики - восстанавливаем заказ из базы
+      if(ox._modified && ox.calc_order._modified) {
+        ox.calc_order._data._reload = true;
+      }
     }
     cell.detachObject(true);
     super.componentWillUnmount();

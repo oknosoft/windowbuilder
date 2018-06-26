@@ -1265,6 +1265,7 @@ class Editor extends EditorInvisible {
     }
     else{
       _attr._align_counter = 0;
+      this.project.contours.forEach((l) => l.redraw());
     }
   }
 
