@@ -144,11 +144,11 @@
       }
     });
 
-    // загрузим шаблоны пачками по 10 документов
+    // загрузим шаблоны пачками по 20 документов
     const refs = [];
     for (let o of base_block) {
       refs.push(o.ref);
-      if(refs.length > 9) {
+      if(refs.length > 19) {
         await _mgr.adapter.load_array(_mgr, refs);
         refs.length = 0;
       }
