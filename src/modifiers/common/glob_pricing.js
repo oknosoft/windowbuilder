@@ -68,9 +68,8 @@ class Pricing {
       if (!onom || !onom._data){
         $p.record_log({
           class: 'error',
-          nom: key[0],
           note,
-          value
+          obj: {nom: key[0], value}
         });
         continue;
       }
@@ -106,9 +105,8 @@ class Pricing {
       if (!onom || !onom._data){
         $p.record_log({
           class: 'error',
-          nom: ref,
           note,
-          value
+          obj: {nom: key[0], value}
         });
         continue;
       }
@@ -292,6 +290,7 @@ class Pricing {
     // 				1.9, 1.2, 1.5, 0, 10, 0, ТипЦенПоУмолчанию, ТипЦенПоУмолчанию, ТипЦенПоУмолчанию, "", "", "",);
     const {utils, job_prm, enm, ireg, cat} = $p;
     const empty_formula = cat.formulas.get();
+    const empty_price_type = cat.nom_prices_types.get();
 
     prm.price_type = {
       marginality: 1.9,
@@ -300,9 +299,9 @@ class Pricing {
       discount: 0,
       discount_external: 10,
       extra_charge_external: 0,
-      price_type_first_cost: job_prm.pricing.price_type_first_cost,
-      price_type_sale: job_prm.pricing.price_type_sale,
-      price_type_internal: job_prm.pricing.price_type_first_cost,
+      price_type_first_cost: empty_price_type,
+      price_type_sale: empty_price_type,
+      price_type_internal: empty_price_type,
       formula: empty_formula,
       sale_formula: empty_formula,
       internal_formula: empty_formula,
@@ -465,7 +464,8 @@ class Pricing {
   calc_amount (prm) {
 
     const {calc_order_row, price_type} = prm;
-    const price_cost = $p.job_prm.pricing.marginality_in_spec && prm.spec.count() ?
+    const {marginality_in_spec} = $p.job_prm.pricing;
+    const price_cost = marginality_in_spec && prm.spec.count() ?
       prm.spec.aggregate([], ["amount_marged"]) :
       this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
 
@@ -474,7 +474,7 @@ class Pricing {
       calc_order_row.price = price_cost.round(2);
     }
     else{
-      calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(2);
+      calc_order_row.price = marginality_in_spec ? 0 : (calc_order_row.first_cost * price_type.marginality).round(2);
     }
 
     // КМарж в строке расчета

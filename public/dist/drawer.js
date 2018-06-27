@@ -9742,6 +9742,7 @@ class Pricing {
 
     const {utils, job_prm, enm, ireg, cat} = $p;
     const empty_formula = cat.formulas.get();
+    const empty_price_type = cat.nom_prices_types.get();
 
     prm.price_type = {
       marginality: 1.9,
@@ -9750,9 +9751,9 @@ class Pricing {
       discount: 0,
       discount_external: 10,
       extra_charge_external: 0,
-      price_type_first_cost: job_prm.pricing.price_type_first_cost,
-      price_type_sale: job_prm.pricing.price_type_sale,
-      price_type_internal: job_prm.pricing.price_type_first_cost,
+      price_type_first_cost: empty_price_type,
+      price_type_sale: empty_price_type,
+      price_type_internal: empty_price_type,
       formula: empty_formula,
       sale_formula: empty_formula,
       internal_formula: empty_formula,
@@ -9891,7 +9892,8 @@ class Pricing {
   calc_amount (prm) {
 
     const {calc_order_row, price_type} = prm;
-    const price_cost = $p.job_prm.pricing.marginality_in_spec && prm.spec.count() ?
+    const {marginality_in_spec} = $p.job_prm.pricing;
+    const price_cost = marginality_in_spec && prm.spec.count() ?
       prm.spec.aggregate([], ["amount_marged"]) :
       this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
 
@@ -9899,7 +9901,7 @@ class Pricing {
       calc_order_row.price = price_cost.round(2);
     }
     else{
-      calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(2);
+      calc_order_row.price = marginality_in_spec ? 0 : (calc_order_row.first_cost * price_type.marginality).round(2);
     }
 
     calc_order_row.marginality = calc_order_row.first_cost ?
@@ -13400,82 +13402,84 @@ $p.CatNom.prototype.__define({
         attr = {};
       }
 
-			if(!attr.price_type){
-        attr.price_type = $p.job_prm.pricing.price_type_sale;
-      }
-			else if($p.utils.is_data_obj(attr.price_type)){
-        attr.price_type = attr.price_type.ref;
-      }
+			if(attr.price_type){
 
-      const {_price} = this._data;
-      const {x, y, z, clr, ref, calc_order} = (attr.characteristic || {});
-
-			if(!attr.characteristic){
-        attr.characteristic = $p.utils.blank.guid;
-      }
-			else if($p.utils.is_data_obj(attr.characteristic)){
-        attr.characteristic = ref;
-        if(!calc_order.empty()){
-          const tmp = [];
-          const {by_ref} = $p.cat.characteristics;
-          for(let clrx in _price) {
-            const cx = by_ref[clrx];
-            if(cx && cx.clr == clr){
-              if(_price[clrx][attr.price_type]){
-                if(cx.x && x && cx.x - x < -10){
-                  continue;
-                }
-                if(cx.y && y && cx.y - y < -10){
-                  continue;
-                }
-                tmp.push({
-                  cx,
-                  rate: (cx.x && x ? Math.abs(cx.x - x) : 0) + (cx.y && y ? Math.abs(cx.y - y) : 0) + (cx.z && z && cx.z == z ? 1 : 0)
-                })
-              }
-            }
-          }
-          if(tmp.length){
-            tmp.sort((a, b) => a.rate - b.rate);
-            attr.characteristic = tmp[0].cx.ref;
-          }
+        if($p.utils.is_data_obj(attr.price_type)){
+          attr.price_type = attr.price_type.ref;
         }
-			}
-			if(!attr.date){
-        attr.date = new Date();
-      }
 
-			if(_price){
-				if(_price[attr.characteristic]){
-					if(_price[attr.characteristic][attr.price_type]){
-            _price[attr.characteristic][attr.price_type].forEach((row) => {
-							if(row.date > start_date && row.date <= attr.date){
-								price = row.price;
-								currency = row.currency;
-                start_date = row.date;
-							}
-						})
-					}
-				}
-				else if(attr.clr){
-          const {by_ref} = $p.cat.characteristics;
-				  for(let clrx in _price){
-            const cx = by_ref[clrx];
-            if(cx && cx.clr == attr.clr){
-              if(_price[clrx][attr.price_type]){
-                _price[clrx][attr.price_type].forEach((row) => {
-                  if(row.date > start_date && row.date <= attr.date){
-                    price = row.price;
-                    currency = row.currency;
-                    start_date = row.date;
+        const {_price} = this._data;
+        const {x, y, z, clr, ref, calc_order} = (attr.characteristic || {});
+
+        if(!attr.characteristic){
+          attr.characteristic = $p.utils.blank.guid;
+        }
+        else if($p.utils.is_data_obj(attr.characteristic)){
+          attr.characteristic = ref;
+          if(!calc_order.empty()){
+            const tmp = [];
+            const {by_ref} = $p.cat.characteristics;
+            for(let clrx in _price) {
+              const cx = by_ref[clrx];
+              if(cx && cx.clr == clr){
+                if(_price[clrx][attr.price_type]){
+                  if(cx.x && x && cx.x - x < -10){
+                    continue;
                   }
-                })
-                break;
+                  if(cx.y && y && cx.y - y < -10){
+                    continue;
+                  }
+                  tmp.push({
+                    cx,
+                    rate: (cx.x && x ? Math.abs(cx.x - x) : 0) + (cx.y && y ? Math.abs(cx.y - y) : 0) + (cx.z && z && cx.z == z ? 1 : 0)
+                  })
+                }
+              }
+            }
+            if(tmp.length){
+              tmp.sort((a, b) => a.rate - b.rate);
+              attr.characteristic = tmp[0].cx.ref;
+            }
+          }
+        }
+        if(!attr.date){
+          attr.date = new Date();
+        }
+
+        if(_price){
+          if(_price[attr.characteristic]){
+            if(_price[attr.characteristic][attr.price_type]){
+              _price[attr.characteristic][attr.price_type].forEach((row) => {
+                if(row.date > start_date && row.date <= attr.date){
+                  price = row.price;
+                  currency = row.currency;
+                  start_date = row.date;
+                }
+              })
+            }
+          }
+          else if(attr.clr){
+            const {by_ref} = $p.cat.characteristics;
+            for(let clrx in _price){
+              const cx = by_ref[clrx];
+              if(cx && cx.clr == attr.clr){
+                if(_price[clrx][attr.price_type]){
+                  _price[clrx][attr.price_type].forEach((row) => {
+                    if(row.date > start_date && row.date <= attr.date){
+                      price = row.price;
+                      currency = row.currency;
+                      start_date = row.date;
+                    }
+                  })
+                  break;
+                }
               }
             }
           }
         }
+
       }
+
 
       if(attr.formula){
 
@@ -13498,7 +13502,7 @@ $p.CatNom.prototype.__define({
         })
       }
 
-			return $p.pricing.from_currency_to_currency(price, attr.date, currency, attr.currency);
+			return currency ? $p.pricing.from_currency_to_currency(price, attr.date, currency, attr.currency) : price;
 
 		}
 	},
