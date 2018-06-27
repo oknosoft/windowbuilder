@@ -18,12 +18,9 @@ module.exports = gulp;
 // Cборка проекта
 gulp.task('build-iface', function(){
 	return gulp.src([
-	  //'./dist/worker.js',
-    //'./src/metadata/init.js',
 		'./data/merged_wb_templates.js',
 		'./src/modifiers/**/*.js',
 		'./src/widgets/*.js',
-		//'./src/wnd_main.js'
 	])
 		.pipe(concat('wnd_debug.js'))
     .pipe(strip())
