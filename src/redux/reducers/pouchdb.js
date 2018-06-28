@@ -10,10 +10,16 @@ import {metaReducer} from 'metadata-redux';
 
 // имя события
 const NOM_PRICES = 'NOM_PRICES';
+const REPL_STEP = 'REPL_STEP';
 
 // структура обработчиков
 const handlers = {
   [NOM_PRICES]: (state, action) => Object.assign({}, state, {nom_prices_step: action.payload}),
+  [REPL_STEP]: (state, action) => {
+    const repl = Object.assign({}, state.repl);
+    repl[action.payload.db] = action.payload;
+    return Object.assign({}, state, {repl});
+  },
 };
 
 /**
@@ -39,9 +45,15 @@ export function customPouchMiddleware({adapters}) {
       if(!attached) {
         attached = true;
         adapters.pouch.on({
+
           nom_prices: (step) => dispatch({
             type: NOM_PRICES,
             payload: step,
+          }),
+
+          repl_state: (info) => dispatch({
+            type: REPL_STEP,
+            payload: info,
           }),
         });
 

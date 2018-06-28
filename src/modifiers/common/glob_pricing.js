@@ -197,7 +197,7 @@ class Pricing {
    */
   by_range(startkey, step = 0) {
 
-    return $p.doc.nom_prices_setup.pouch_db.query('doc/doc_nom_prices_setup_slice_last',
+    return $p.adapters.pouch.local.templates.query('doc/doc_nom_prices_setup_slice_last',
       {
         limit: 600,
         include_docs: false,
@@ -225,7 +225,7 @@ class Pricing {
    */
   by_doc(doc) {
     const keys = doc.goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
-    return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
+    return $p.adapters.pouch.local.templates.query("doc/doc_nom_prices_setup_slice_last",
       {
         include_docs: false,
         keys: keys,

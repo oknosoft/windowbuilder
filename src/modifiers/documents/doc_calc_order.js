@@ -678,13 +678,14 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    */
   load_production(forse) {
     const prod = [];
-    const {characteristics} = $p.cat;
+    const {cat: {characteristics}, enm: {obj_delivery_states}} = $p;
     this.production.forEach(({nom, characteristic}) => {
       if(!characteristic.empty() && (forse || characteristic.is_new())) {
         prod.push(characteristic.ref);
       }
     });
-    return characteristics.adapter.load_array(characteristics, prod)
+    return characteristics.adapter.load_array(characteristics, prod, false,
+        this.obj_delivery_state == obj_delivery_states.Шаблон && characteristics.adapter.local.templates)
       .then(() => {
         prod.length = 0;
         this.production.forEach(({nom, characteristic}) => {

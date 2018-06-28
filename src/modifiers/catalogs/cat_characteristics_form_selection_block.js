@@ -134,7 +134,7 @@
 							}
 						}
 					});
-					return crefs.length ? _mgr.adapter.load_array(_mgr, crefs, true) : crefs;
+					return crefs.length ? _mgr.adapter.load_array(_mgr, crefs, true, _mgr.adapter.local.templates) : crefs;
 				})
 				.then(() => {
 

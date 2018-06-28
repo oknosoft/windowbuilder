@@ -61,7 +61,9 @@
           refs.push(row._obj.characteristic);
         }
       });
-      $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs)
+      const {cat: {characteristics}, enm: {obj_delivery_states}} = $p;
+      characteristics.adapter.load_array(characteristics, refs, false,
+          o.obj_delivery_state == obj_delivery_states.Шаблон && characteristics.adapter.local.templates)
         .then(() => {
 
           const footer = {

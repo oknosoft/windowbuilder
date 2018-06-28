@@ -149,12 +149,12 @@
     for (let o of base_block) {
       refs.push(o.ref);
       if(refs.length > 19) {
-        await _mgr.adapter.load_array(_mgr, refs);
+        await _mgr.adapter.load_array(_mgr, refs, false, _mgr.adapter.local.templates);
         refs.length = 0;
       }
     }
     if(refs.length) {
-      await _mgr.adapter.load_array(_mgr, refs);
+      await _mgr.adapter.load_array(_mgr, refs, false, _mgr.adapter.local.templates);
     }
 
     // загружаем характеристики из первых строк шаблонов - нужны для фильтра по системам
@@ -164,7 +164,7 @@
         refs.push(production.get(0).characteristic.ref);
       }
     });
-    return $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs);
+    return _mgr.adapter.load_array($p.cat.characteristics, refs, false, _mgr.adapter.local.templates);
 
   };
 
