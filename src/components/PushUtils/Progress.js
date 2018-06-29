@@ -203,8 +203,8 @@ class Progress extends Component {
     if (completed > 100) {
       this.setState({ completed: 0, buffer: 10 });
     } else {
-      const diff = Math.random() * 5;
-      const diff2 = Math.random() * 5;
+      const diff = Math.random() * 2;
+      const diff2 = Math.random() * 6;
       this.setState({ completed: completed + diff, buffer: completed + diff + diff2 });
     }
   };

@@ -20,13 +20,12 @@ class DumbScreen extends Component {
 
   render() {
 
-    let {title, page, top, first_run, repl} = this.props;
+    let {title, page, top, first_run, repl, splash} = this.props;
     const over = page && page.limit * page.page > page.total_rows;
-    const {splash} = $p.job_prm;
+
     if(!title) {
       title = (first_run || over) ? 'Первый запуск требует дополнительного времени...' : 'Загрузка модулей...';
     }
-
 
     const footer = page ? (over ?
       <div>{`Такт №${page.page}, загружено ${page.total_rows} объектов - чтение изменений `} <i className="fa fa-spinner fa-pulse"></i></div>
@@ -74,6 +73,7 @@ DumbScreen.propTypes = {
   bottom: PropTypes.string,
   page: PropTypes.object,
   repl: PropTypes.object,
+  splash: PropTypes.object,
 };
 
 export default DumbScreen;

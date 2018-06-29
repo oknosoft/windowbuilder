@@ -7,7 +7,15 @@ import settings from '../../config/app.settings';
 import {patch_prm, patch_cnn} from '../../config/patch_cnn';
 
 // генератор события META_LOADED для redux
-import {metaActions} from 'metadata-redux';
+import {addMiddleware} from 'redux-dynamic-middlewares';
+// стандартные события pouchdb и метаданных
+import {metaActions, metaMiddleware} from 'metadata-redux';
+// дополнительные события pouchdb
+import {customPouchMiddleware} from '../redux/reducers/pouchdb';
+
+// читаем скрипт инициализации метаданных, полученный в результате выполнения meta:prebuild
+import meta_init from './init';
+import modifiers from './modifiers';
 
 // загружаем metadata.transition и экспортируем $p глобально
 import $p from 'metadata-dhtmlx';
@@ -24,50 +32,53 @@ global.$p = $p;
 $p.wsql.init(patch_prm(settings));
 patch_cnn();
 
+// выполняем скрипт инициализации метаданных
+meta_init($p);
+
+// шрифт Roboto грузим асинхронно
+$p.load_script('https://fonts.googleapis.com/css?family=Roboto:300,400,500', 'link');
+
 // скрипт инициализации в привязке к store приложения
-export function init(dispatch) {
+export function init(store) {
 
-  // читаем скрипт инициализации метаданных, полученный в результате выполнения meta:prebuild
-  return import('./init')
-    .then((meta_init) => {
+  try {
+    const {dispatch} = store;
 
-      // выполняем скрипт инициализации метаданных
-      meta_init($p);
+    // подключаем metaMiddleware
+    addMiddleware(metaMiddleware($p));
+    addMiddleware(customPouchMiddleware($p));
 
-      // сообщяем адаптерам пути, суффиксы и префиксы
-      const {wsql, job_prm, adapters: {pouch}} = $p;
-      pouch.init(wsql, job_prm);
-      reset_cache(pouch);
+    // сообщяем адаптерам пути, суффиксы и префиксы
+    const {wsql, job_prm, adapters: {pouch}} = $p;
+    pouch.init(wsql, job_prm);
+    reset_cache(pouch);
 
-      // шрифт Roboto грузим асинхронно
-      $p.load_script('https://fonts.googleapis.com/css?family=Roboto:300,400,500', 'link');
+    // читаем paperjs и deep-diff
+    $p.load_script('/dist/paperjs-deep-diff.min.js', 'script')
 
-      // читаем paperjs и deep-diff
-      return $p.load_script('/dist/paperjs-deep-diff.min.js', 'script');
-    })
-    // читаем скрипт рисовалки
-    .then(() => $p.load_script('/dist/windowbuilder.js', 'script'))
+      // читаем скрипт рисовалки
+      .then(() => $p.load_script('/dist/windowbuilder.js', 'script'))
 
-    // читаем скрипт расчетной части построителя
-    .then(() => $p.load_script('/dist/wnd_debug.js', 'script'))
+      // читаем скрипт расчетной части построителя
+      .then(() => $p.load_script('/dist/wnd_debug.js', 'script'))
 
-    // читаем скрипты модификаторов DataObj`s и DataManager`s
-    .then(() => import('./modifiers'))
-    .then((modifiers) => {
+      // читаем скрипты модификаторов DataObj`s и DataManager`s
+      .then(() => {
 
-      // выполняем модификаторы
-      modifiers.default($p);
+        // выполняем модификаторы
+        modifiers($p);
 
-      // информируем хранилище о готовности MetaEngine
-      dispatch(metaActions.META_LOADED($p));
+        // информируем хранилище о готовности MetaEngine
+        dispatch(metaActions.META_LOADED($p));
 
-      // читаем локальные данные в ОЗУ
-      const {adapters: {pouch}} = $p;
-      return pouch.load_data();
-        //.then(() => pouch.attach_refresher());
+        // читаем локальные данные в ОЗУ
+        return pouch.load_data();
 
-    })
-    .catch($p && $p.record_log);
+      });
+  }
+  catch (err) {
+    $p && $p.record_log(err);
+  }
 }
 
 

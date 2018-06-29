@@ -6,7 +6,7 @@
  * @module doc_calc_order
  */
 
-(({adapters: {pouch}, classes, cat, doc, job_prm, md, pricing}) => {
+(({adapters: {pouch}, classes, cat, doc, job_prm, md, pricing, utils}) => {
 
   const _mgr = doc.calc_order;
   const proto_get = _mgr.constructor.prototype.get;
@@ -16,42 +16,110 @@
     return proto_get.apply(this, arguments)
   }
 
-  // освежает содержимое локальной базы doc
+  // начальная загрузка локальной базы templates из файлов
+  function from_files(start) {
+    if(!start) {
+      return Promise.resolve()
+    }
+    const db = pouch.local.templates;
+    return fetch('/templates/00000.json')
+      .then((res) => res.json())
+      .then((info) => {
+        return db.get('stamp')
+          .then((doc) => {
+            if(doc.stamp === info.stamp) {
+              return false;
+            }
+            info._rev = doc._rev;
+            return info;
+          })
+          .catch(() => info);
+      })
+      .then((info) => {
+        if(info) {
+          return (db.load ? Promise.resolve() : utils.load_script('/dist/pouchdb.load.js', 'script'))
+            .then(() => info);
+        }
+      })
+      .then((info) => {
+        if(info) {
+          const {origin} = location;
+          let series = Promise.resolve();
+
+          const msg = {db: 'templates', ok: true, docs_read: 0, pending: info.doc_count, start_time: new Date().toISOString()}
+          pouch.emit_async('repl_state', msg);
+
+          const opt = {
+            proxy: pouch.remote.templates.name,
+            checkpoints: 'target',
+            auth: pouch.remote.templates.__opts.auth
+          };
+
+          for(let i = 1; i <= info.files; i++) {
+            series = series.then(() => {
+              return db.load(`${origin}/templates/${i.pad(5)}.json`, opt);
+            })
+              .then((step) => {
+                if(i % 2) {
+                  msg.docs_read = (info.doc_count * i / info.files).round();
+                  msg.pending = info.doc_count - msg.docs_read;
+                  pouch.emit_async('repl_state', msg);
+                }
+              });
+          }
+          return series
+            .then(() => {
+              info._id = 'stamp';
+              return db.put(info);
+            })
+            .then(() => info);
+        }
+      })
+      .catch(() => null);
+  }
+
+  // освежает содержимое локальной базы templates
   function refresh_doc(start) {
     if(pouch.local.templates && pouch.remote.templates) {
-      return pouch.local.templates.replicate.from(pouch.remote.templates,
-        {
-          batch_size: 300,
-          batches_limit: 3,
-        })
-        .on('change', (info) => {
-          info.db = 'templates';
-          pouch.emit_async('repl_state', info);
-          if(!start && info.ok) {
-            for(const {doc} of info.docs) {
-              if(doc.class_name === 'doc.nom_prices_setup') {
-                setTimeout(pricing.by_doc.bind(pricing, doc), 1000);
+      return from_files(start)
+        .then((top) => {
+          return pouch.local.templates.replicate.from(pouch.remote.templates,
+            {
+              batch_size: 300,
+              batches_limit: 3,
+            })
+            .on('change', (info) => {
+              info.db = 'templates';
+              if(top) {
+                info.docs_read = top.doc_count - info.pending;
               }
-            }
-          }
-        })
-        .then((info) => {
-          // doc_write_failures: 0
-          // docs_read: 8573
-          // docs_written: 8573
-          // end_time: '2018-06-28T20:15:25'
-          // errors: []
-          // last_seq: '8573'
-          // ok: true
-          // start_time: '2018-06-28T20:13:55'
-          // status: 'complete'
-          info.db = 'templates';
-          pouch.emit_async('repl_state', info);
-        })
-        .catch((err) => {
-          err.result.db = 'templates';
-          pouch.emit_async('repl_state', err.result);
-          $p.record_log(err);
+              pouch.emit_async('repl_state', info);
+              if(!start && info.ok) {
+                for(const {doc} of info.docs) {
+                  if(doc.class_name === 'doc.nom_prices_setup') {
+                    setTimeout(pricing.by_doc.bind(pricing, doc), 1000);
+                  }
+                }
+              }
+            })
+            .then((info) => {
+              // doc_write_failures: 0
+              // docs_read: 8573
+              // docs_written: 8573
+              // end_time: '2018-06-28T20:15:25'
+              // errors: []
+              // last_seq: '8573'
+              // ok: true
+              // start_time: '2018-06-28T20:13:55'
+              // status: 'complete'
+              info.db = 'templates';
+              pouch.emit_async('repl_state', info);
+            })
+            .catch((err) => {
+              err.result.db = 'templates';
+              pouch.emit_async('repl_state', err.result);
+              $p.record_log(err);
+            });
         });
     }
     else {
