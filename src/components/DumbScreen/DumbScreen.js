@@ -1,15 +1,33 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
+import Repl from './Repl';
 
 class DumbScreen extends Component {
 
+  renderRepl(footer) {
+    let {repl} = this.props;
+    const res = [];
+    for (const dbs in repl) {
+      if(!repl[dbs].end_time) {
+        res.push(<Repl key={dbs} info={repl[dbs]}/>);
+      }
+    }
+    if(!res.length && footer) {
+      res.push(<div key="footer">{footer}</div>);
+    }
+    return res;
+  }
+
   render() {
 
-    let {title, page, top, first_run} = this.props;
+    let {title, page, top, first_run, repl} = this.props;
     const over = page && page.limit * page.page > page.total_rows;
+    const {splash} = $p.job_prm;
     if(!title) {
       title = (first_run || over) ? 'Первый запуск требует дополнительного времени...' : 'Загрузка модулей...';
     }
+
+
     const footer = page ? (over ?
       <div>{`Такт №${page.page}, загружено ${page.total_rows} объектов - чтение изменений `} <i className="fa fa-spinner fa-pulse"></i></div>
       :
@@ -35,8 +53,10 @@ class DumbScreen extends Component {
         </div>
       </div>
 
-      <div style={{position: 'absolute', bottom: '-24px'}}>{title}</div>
-      {page && <div style={{position: 'absolute', bottom: '-52px'}}>{footer}</div>}
+      <div style={{paddingTop: '30px'}}>
+        <div>{title}</div>
+        {this.renderRepl(page && footer)}
+      </div>
 
     </div>;
   }
@@ -53,6 +73,7 @@ DumbScreen.propTypes = {
   current: PropTypes.string,
   bottom: PropTypes.string,
   page: PropTypes.object,
+  repl: PropTypes.object,
 };
 
 export default DumbScreen;

@@ -41,7 +41,7 @@ class Progress extends Component {
 
     this.timer = setInterval(this.progress, 700);
 
-    this.init();
+    this.init && this.init();
 
   }
 
