@@ -6829,7 +6829,7 @@ $p.doc.calc_order.__define({
 });
 
 
-(({adapters: {pouch}, classes, cat, doc}) => {
+(({adapters: {pouch}, classes, cat, doc, job_prm, md, pricing}) => {
 
   const _mgr = doc.calc_order;
   const proto_get = _mgr.constructor.prototype.get;
@@ -6838,7 +6838,7 @@ $p.doc.calc_order.__define({
     return proto_get.apply(this, arguments)
   }
 
-  function refresh_doc() {
+  function refresh_doc(start) {
     if(pouch.local.templates && pouch.remote.templates) {
       return pouch.local.templates.replicate.from(pouch.remote.templates,
         {
@@ -6848,6 +6848,13 @@ $p.doc.calc_order.__define({
         .on('change', (info) => {
           info.db = 'templates';
           pouch.emit_async('repl_state', info);
+          if(!start && info.ok) {
+            for(const {doc} of info.docs) {
+              if(doc.class_name === 'doc.nom_prices_setup') {
+                setTimeout(pricing.by_doc.bind(pricing, doc), 1000);
+              }
+            }
+          }
         })
         .then((info) => {
           info.db = 'templates';
@@ -6864,9 +6871,31 @@ $p.doc.calc_order.__define({
     }
   }
 
+  function patch_cachable() {
+    const names = [
+      "cat.parameters_keys",
+      "cat.stores",
+      "cat.delivery_directions",
+      "cat.cash_flow_articles",
+      "cat.nonstandard_attributes",
+      "cat.projects",
+      "cat.nom_prices_types",
+      "doc.nom_prices_setup"
+    ];
+    for(const name of names) {
+      const meta = md.get(name);
+      if(meta.cachable.match(/_ram$/)) {
+        meta.cachable = 'templates_ram';
+      }
+      else {
+        meta.cachable = 'templates';
+      }
+    }
+  }
+
   function on_log_in() {
 
-    if(!pouch.props._suffix) {
+    if(!pouch.props._suffix || !job_prm.templates) {
       !pouch.local.templates && pouch.local.__define('templates', {
         get() {
           return pouch.remote.doc;
@@ -6875,6 +6904,9 @@ $p.doc.calc_order.__define({
         enumerable: false
       });
       return Promise.resolve();
+    }
+    else {
+      patch_cachable();
     }
 
     const {__opts} = pouch.remote.ram;
@@ -6896,7 +6928,7 @@ $p.doc.calc_order.__define({
     else {
       pouch.local.templates = new classes.PouchDB('templates', {adapter: 'idb', auto_compaction: true, revs_limit: 3});
       setInterval(refresh_doc, 600000);
-      return refresh_doc();
+      return refresh_doc(true);
     }
 
   }

@@ -1009,9 +1009,9 @@ const consts = {
 		this.sticking_l = builder.sticking_l || 9;
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = builder.font_size || 80;
+		this.font_size = builder.font_size || 90;
     this.font_family = builder.font_family || 'GOST type B';
-    this.elm_font_size = builder.elm_font_size || 52;
+    this.elm_font_size = builder.elm_font_size || 60;
 
     if(!builder.font_family) {
       builder.font_family = this.font_family;
@@ -11668,7 +11668,7 @@ class Sectional extends GeneratrixElement {
     _attr.children = [];
 
     _attr.zoom = 5;
-    _attr.radius = 40;
+    _attr.radius = 50;
 
     if(attr.generatrix) {
       _attr.generatrix = attr.generatrix;
@@ -11719,7 +11719,7 @@ class Sectional extends GeneratrixElement {
       children.push(new LenText({
         point: loc.point.add(normal).add([0, normal.y < 0 ? 0 : normal.y / 2]),
         content: (curve.length / zoom).toFixed(0),
-        fontSize: radius,
+        fontSize: radius * 1.4,
         parent: layer,
         _owner: curve
       }));
@@ -11765,7 +11765,7 @@ class Sectional extends GeneratrixElement {
     children.push(new AngleText({
       point: center.add(end.multiply(-2.2)), 
       content: angle.toFixed(0) + '°',
-      fontSize: radius,
+      fontSize: radius * 1.4,
       parent: layer,
       _owner: this,
       _ind: ind,

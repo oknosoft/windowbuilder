@@ -22,9 +22,9 @@ const consts = {
 		this.sticking_l = builder.sticking_l || 9;
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = builder.font_size || 80;
+		this.font_size = builder.font_size || 90;
     this.font_family = builder.font_family || 'GOST type B';
-    this.elm_font_size = builder.elm_font_size || 52;
+    this.elm_font_size = builder.elm_font_size || 70;
 
     if(!builder.font_family) {
       builder.font_family = this.font_family;
@@ -9556,9 +9556,8 @@ class Pricing {
       if (!onom || !onom._data){
         $p.record_log({
           class: 'error',
-          nom: key[0],
           note,
-          value
+          obj: {nom: key[0], value}
         });
         continue;
       }
@@ -9594,9 +9593,8 @@ class Pricing {
       if (!onom || !onom._data){
         $p.record_log({
           class: 'error',
-          nom: ref,
           note,
-          value
+          obj: {nom: key[0], value}
         });
         continue;
       }
@@ -9677,7 +9675,7 @@ class Pricing {
 
   by_range(startkey, step = 0) {
 
-    return $p.doc.nom_prices_setup.pouch_db.query('doc/doc_nom_prices_setup_slice_last',
+    return $p.adapters.pouch.local.templates.query('doc/doc_nom_prices_setup_slice_last',
       {
         limit: 600,
         include_docs: false,
@@ -9700,7 +9698,7 @@ class Pricing {
 
   by_doc(doc) {
     const keys = doc.goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
-    return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
+    return $p.adapters.pouch.local.templates.query("doc/doc_nom_prices_setup_slice_last",
       {
         include_docs: false,
         keys: keys,
@@ -13396,10 +13394,12 @@ $p.CatNom.prototype.__define({
 	_price: {
 		value(attr) {
 
-      let price = 0, currency, start_date = $p.utils.blank.date;
+      let price = 0,
+        currency = $p.job_prm.pricing.main_currency,
+        start_date = $p.utils.blank.date;
 
 			if(!attr){
-        attr = {};
+        attr = {currency};
       }
 
 			if(attr.price_type){
@@ -13502,7 +13502,7 @@ $p.CatNom.prototype.__define({
         })
       }
 
-			return currency ? $p.pricing.from_currency_to_currency(price, attr.date, currency, attr.currency) : price;
+			return $p.pricing.from_currency_to_currency(price, attr.date, currency, attr.currency);
 
 		}
 	},
@@ -14426,13 +14426,14 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   load_production(forse) {
     const prod = [];
-    const {characteristics} = $p.cat;
+    const {cat: {characteristics}, enm: {obj_delivery_states}} = $p;
     this.production.forEach(({nom, characteristic}) => {
       if(!characteristic.empty() && (forse || characteristic.is_new())) {
         prod.push(characteristic.ref);
       }
     });
-    return characteristics.adapter.load_array(characteristics, prod)
+    return characteristics.adapter.load_array(characteristics, prod, false,
+        this.obj_delivery_state == obj_delivery_states.Шаблон && characteristics.adapter.local.templates)
       .then(() => {
         prod.length = 0;
         this.production.forEach(({nom, characteristic}) => {
