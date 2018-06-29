@@ -33,9 +33,9 @@ const consts = {
 		this.sticking_l = builder.sticking_l || 9;
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = builder.font_size || 80;
+		this.font_size = builder.font_size || 90;
     this.font_family = builder.font_family || 'GOST type B';
-    this.elm_font_size = builder.elm_font_size || 52;
+    this.elm_font_size = builder.elm_font_size || 60;
 
     if(!builder.font_family) {
       builder.font_family = this.font_family;
