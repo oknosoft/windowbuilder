@@ -47,6 +47,11 @@ class Pricing {
                 }, 1000);
               }
               else if(change.doc.class_name == 'doc.calc_order'){
+                const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
+                const user = pouch.authorized || $p.wsql.get_user_param('user_name');
+                if(!doc || user === change.doc.timestamp.user){
+                  return;
+                }
                 pouch.load_changes({docs: [change.doc], update_only: true});
               }
             });
