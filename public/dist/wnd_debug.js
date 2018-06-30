@@ -7000,7 +7000,10 @@ $p.doc.calc_order.__define({
     else {
       pouch.local.templates = new classes.PouchDB('templates', {adapter: 'idb', auto_compaction: true, revs_limit: 3});
       setInterval(refresh_doc, 600000);
-      return refresh_doc(true);
+      return refresh_doc(true)
+        .then(() => {
+          return pouch.rebuild_indexes('templates');
+        });
     }
 
   }

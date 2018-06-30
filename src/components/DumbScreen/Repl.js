@@ -7,13 +7,9 @@ class Repl extends Progress {
 
   render() {
     const {state: {completed, buffer}, props: {info}} = this;
-    const percent = info.docs_read * 100 /(info.docs_read + info.pending);
+    const percent = !info.index && info.docs_read * 100 /(info.docs_read + info.pending);
 
-    setTimeout(() => {
-      if(completed !== percent) {
-        this.setState({ completed: percent });
-      }
-    }, 300);
+    percent && completed !== percent && this.setState({completed: percent});
 
     const syn = {
       templates: 'Шаблоны',
@@ -25,7 +21,8 @@ class Repl extends Progress {
       <div key="progress" style={{flexGrow: 1, marginTop: 8}}>
         <LinearProgress color="secondary" variant="buffer" value={completed} valueBuffer={buffer} />
       </div>,
-      <div key="text">{`${syn[info.db]}: прочитано ${info.docs_read} из ${info.docs_read + info.pending}, ${percent.toFixed()}%`}</div>
+      !info.index && <div key="text">{`${syn[info.db]}: прочитано ${info.docs_read} из ${info.docs_read + info.pending}, ${percent.toFixed()}%`}</div>,
+      info.index && <div key="text">{`${syn[info.db]}: строим индекс ${info.index}`}</div>,
     ];
   }
 

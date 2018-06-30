@@ -11,6 +11,9 @@ const styleSheet = {
     marginLeft: 12,
     marginRight: 16,
   },
+  fn: {
+    fontWeight: 400,
+  }
 };
 
 class About extends Component {
@@ -41,7 +44,7 @@ class About extends Component {
           <Grid item md={1} lg={2} xl={3} />
           <Grid item xs={12} sm={12} md={11} lg={10} xl={8}>
 
-            <h1>Окнософт: Заказ дилера</h1>
+            <h1 className={classes.fn}>Окнософт: Заказ дилера</h1>
             <p>Заказ дилера - это веб-приложение, разработанное компанией <a
               href="http://www.oknosoft.ru/" target="_blank" rel="noopener noreferrer">Окнософт</a> на базе фреймворка <a
               href="http://www.oknosoft.ru/metadata/" target="_blank" rel="noopener noreferrer">Metadata.js</a><br />
@@ -51,7 +54,7 @@ class About extends Component {
               <br />
             </p>
 
-            <h3>Назначение и возможности</h3>
+            <h3 className={classes.fn}>Назначение и возможности</h3>
             <ul>
               <li>Построение и редактирование эскизов изделий в графическом 2D редакторе</li>
               <li>Экстремальная поддержка нестандартных изделий (многоугольники, сложные перегибы профиля)</li>
@@ -63,7 +66,7 @@ class About extends Component {
 
             <p>Использованы следующие библиотеки и инструменты:</p>
 
-            <h3>Серверная часть</h3>
+            <h3 className={classes.fn}>Серверная часть</h3>
             <ul>
               <li><a href="http://couchdb.apache.org/" target="_blank"
                      rel="noopener noreferrer">CouchDB</a>, NoSQL база данных с поддержкой master-master репликации</li>
@@ -77,7 +80,7 @@ class About extends Component {
             */}
             </ul>
 
-            <h3>Управление данными в памяти браузера</h3>
+            <h3 className={classes.fn}>Управление данными в памяти браузера</h3>
             <ul>
               <li><a href="http://www.oknosoft.ru/metadata/" target="_blank"
                      rel="noopener noreferrer">Metadata.js</a>, движок ссылочной типизации для браузера и Node.js</li>
@@ -91,7 +94,7 @@ class About extends Component {
                      rel="noopener noreferrer">Redux</a>, диспетчер состояния веб-приложения</li>
             </ul>
 
-            <h3>UI библиотеки и компоненты интерфейса</h3>
+            <h3 className={classes.fn}>UI библиотеки и компоненты интерфейса</h3>
             <ul>
               <li><a href="http://paperjs.org/" target="_blank"
                      rel="noopener noreferrer">Paper.js</a>, фреймворк векторной графики для HTML5 Canvas</li>
@@ -115,8 +118,12 @@ class About extends Component {
                      rel="noopener noreferrer">fontawesome</a>, набор шрифтовых иконок</li>
             </ul>
 
-            <h3><i className="fa fa-question-circle"></i> Вопросы</h3>
-            <p>Если обнаружили ошибку, пожалуйста, <a href="https://github.com/oknosoft/windowbuilder/issues/new" target="_blank"
+            <h3 className={classes.fn}>Благодарность</h3>
+            <p><i className="fa fa-thumbs-o-up"></i> Нашему генеральному спонсору, ЗСК «Гласспром» (<a href="https://www.ecookna.ru/partnerstvo/stante-dilerom/" target="_blank"
+                                                      rel="noopener noreferrer">Экоокна</a>)</p>
+
+            <h3 className={classes.fn}>Вопросы</h3>
+            <p><i className="fa fa-question-circle"></i> Если обнаружили ошибку, пожалуйста, <a href="https://github.com/oknosoft/windowbuilder/issues/new" target="_blank"
               rel="noopener noreferrer">зарегистрируйте вопрос в GitHub</a> или <a href="mailto:info@oknosoft.ru?subject=windowbuilder">
               свяжитесь с разработчиком</a> напрямую<br /></p>
 
