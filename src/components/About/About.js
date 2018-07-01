@@ -119,11 +119,14 @@ class About extends Component {
             </ul>
 
             <h3 className={classes.fn}>Благодарность</h3>
-            <p><i className="fa fa-thumbs-o-up"></i> Нашему генеральному спонсору, ЗСК «Гласспром» (<a href="https://www.ecookna.ru/partnerstvo/stante-dilerom/" target="_blank"
+            <p><i className="fa fa-thumbs-o-up">
+
+            </i> Нашему генеральному спонсору, ЗСК «Гласспром» (<a href="https://www.ecookna.ru/partnerstvo/stante-dilerom/" target="_blank"
                                                       rel="noopener noreferrer">Экоокна</a>)</p>
 
             <h3 className={classes.fn}>Вопросы</h3>
-            <p><i className="fa fa-question-circle"></i> Если обнаружили ошибку, пожалуйста, <a href="https://github.com/oknosoft/windowbuilder/issues/new" target="_blank"
+            <p><i className="fa fa-question-circle"></i> Если обнаружили ошибку, пожалуйста, <a
+              href="https://github.com/oknosoft/windowbuilder/issues/new" target="_blank"
               rel="noopener noreferrer">зарегистрируйте вопрос в GitHub</a> или <a href="mailto:info@oknosoft.ru?subject=windowbuilder">
               свяжитесь с разработчиком</a> напрямую<br /></p>
 

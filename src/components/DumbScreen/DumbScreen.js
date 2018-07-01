@@ -55,8 +55,9 @@ class DumbScreen extends Component {
             itemProp="operatingSystem">Windows 8, 10 | Android | Mac | iOS</span>
           </p>,
           <div key="description" itemProp="description">
-            <p>Заказ дилера - это веб-сервис компании <a href="http://www.oknosoft.ru/" title="Программы для оконных заводов и дилеров"
-                                                         target="_blank" rel="noopener noreferrer">Окнософт</a>, предназначенный для:</p>
+            <p>Веб-сервис <a href="https://business-programming.ru/articles/implementation_of_the_windowbuilder"
+                             title="Программы для оконных заводов и дилеров"
+                             target="_blank" rel="noopener noreferrer">Заказ дилера</a>, предназначен для:</p>
             <ul>
               <li>Расчета геометрии, спецификации и стоимости оконных и витражных конструкций (ПВХ, Дерево, Алюминий)</li>
               <li>Aвтоматизации работы менеджеров и дилеров</li>
