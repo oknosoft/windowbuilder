@@ -218,7 +218,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           }
           break;
 
-        case 'btn_templates':
         case 'btn_download':
         case 'btn_share':
         case 'btn_inbox':

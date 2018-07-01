@@ -18,71 +18,14 @@
 
   // начальная загрузка локальной базы templates из файлов
   function from_files(start) {
-    if(!start) {
-      return Promise.resolve()
-    }
-    const db = pouch.local.templates;
-    return fetch('/templates/00000.json')
-      .then((res) => res.json())
-      .then((info) => {
-        return db.get('stamp')
-          .then((doc) => {
-            if(doc.stamp === info.stamp) {
-              return false;
-            }
-            info._rev = doc._rev;
-            return info;
-          })
-          .catch(() => info);
-      })
-      .then((info) => {
-        if(info) {
-          return (db.load ? Promise.resolve() : utils.load_script('/dist/pouchdb.load.js', 'script'))
-            .then(() => info);
-        }
-      })
-      .then((info) => {
-        if(info) {
-          const {origin} = location;
-          let series = Promise.resolve();
-
-          const msg = {db: 'templates', ok: true, docs_read: 0, pending: info.doc_count, start_time: new Date().toISOString()}
-          pouch.emit_async('repl_state', msg);
-
-          const opt = {
-            proxy: pouch.remote.templates.name,
-            checkpoints: 'target',
-            auth: pouch.remote.templates.__opts.auth
-          };
-
-          for(let i = 1; i <= info.files; i++) {
-            series = series.then(() => {
-              return db.load(`${origin}/templates/${i.pad(5)}.json`, opt);
-            })
-              .then((step) => {
-                if(i % 2) {
-                  msg.docs_read = (info.doc_count * i / info.files).round();
-                  msg.pending = info.doc_count - msg.docs_read;
-                  pouch.emit_async('repl_state', msg);
-                }
-              });
-          }
-          return series
-            .then(() => {
-              info._id = 'stamp';
-              return db.put(info);
-            })
-            .then(() => info);
-        }
-      })
-      .catch(() => null);
+    return start ? pouch.from_files(pouch.local.templates, pouch.remote.templates) : Promise.resolve();
   }
 
   // освежает содержимое локальной базы templates
   function refresh_doc(start) {
     if(pouch.local.templates && pouch.remote.templates) {
       return from_files(start)
-        .then((top) => {
+        .then((rres) => {
           return pouch.local.templates.replicate.from(pouch.remote.templates,
             {
               batch_size: 300,
@@ -90,9 +33,6 @@
             })
             .on('change', (info) => {
               info.db = 'templates';
-              if(top) {
-                info.docs_read = top.doc_count - info.pending;
-              }
               pouch.emit_async('repl_state', info);
               if(!start && info.ok) {
                 for(const {doc} of info.docs) {
@@ -114,6 +54,7 @@
               // status: 'complete'
               info.db = 'templates';
               pouch.emit_async('repl_state', info);
+              return rres;
             })
             .catch((err) => {
               err.result.db = 'templates';
@@ -173,7 +114,7 @@
 
 
     // переопределяем геттеры
-    _mgr.get = template_get;
+    //_mgr.get = template_get;
 
     // если автономный режим - подключаем refresher
     if(pouch.props.direct) {
@@ -189,8 +130,8 @@
       pouch.local.templates = new classes.PouchDB('templates', {adapter: 'idb', auto_compaction: true, revs_limit: 3});
       setInterval(refresh_doc, 600000);
       return refresh_doc(true)
-        .then(() => {
-          return pouch.rebuild_indexes('templates');
+        .then((rres) => {
+          return typeof rres === 'number' && pouch.rebuild_indexes('templates');
         });
     }
 
@@ -198,7 +139,7 @@
 
   // обработчик события
   function user_log_out() {
-    _mgr.get = proto_get;
+    //_mgr.get = proto_get;
     if(pouch.local.templates && !pouch.local.hasOwnProperty('templates')) {
       delete pouch.local.templates;
     }

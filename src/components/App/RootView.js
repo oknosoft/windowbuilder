@@ -60,10 +60,11 @@ class RootView extends Component {
   render() {
 
     const {props, state} = this;
-    const {meta_loaded, data_empty, data_loaded, history, repl} = props;
+    const {meta_loaded, data_empty, data_loaded, complete_loaded, history, repl} = props;
     let show_dumb = !meta_loaded ||
       (data_empty === undefined) ||
       (data_empty === false && !data_loaded);
+    // && !complete_loaded
     if(!show_dumb && repl) {
       for(const dbs in repl) {
         const info = repl[dbs];

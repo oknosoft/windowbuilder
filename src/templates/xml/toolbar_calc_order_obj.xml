@@ -32,7 +32,6 @@
 
     <!--item type="button" id="btn_import" text="&lt;i class='fa fa-upload fa-fw'&gt;&lt;/i&gt; Загрузить из файла"/>
     <item type="button" id="btn_export" text="&lt;i class='fa fa-download fa-fw'&gt;&lt;/i&gt; Выгрузить в файл"/>
-    <item id="btn_templates" type="button" text="&lt;i class='fa fa-puzzle-piece fa-fw'&gt;&lt;/i&gt; Загрузить шаблоны"/>
     <item id="btn_download" type="button" text="&lt;i class='fa fa-cloud-download fa-fw'&gt;&lt;/i&gt; Обновить из облака"/>
     <item id="btn_share" type="button" text="&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику"/>
     <item id="btn_inbox" type="button" text="&lt;i class='fa fa-inbox fa-fw'&gt;&lt;/i&gt; Входящие заказы"/-->

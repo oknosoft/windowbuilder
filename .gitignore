@@ -27,3 +27,4 @@ package-lock.json
 nodemon.json
 *.log
 /public/templates/
+/public/ram/

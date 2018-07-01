@@ -29,7 +29,6 @@
   <item type="buttonSelect" id="bs_more" text="&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;" title="Дополнительно" openAll="true">
     <item id="btn_requery" type="button" text="&lt;i class='fa fa-refresh fa-fw'&gt;&lt;/i&gt; Обновить список"/>
     <item id="sep_requery" type="separator"/>
-    <item id="btn_templates" type="button" text="&lt;i class='fa fa-puzzle-piece fa-fw'&gt;&lt;/i&gt; Загрузить шаблоны"/>
     <item id="btn_download" type="button" text="&lt;i class='fa fa-cloud-download fa-fw'&gt;&lt;/i&gt; Обновить из облака"/>
     <item id="btn_share" type="button" text="&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику"/>
     <item id="btn_inbox" type="button" text="&lt;i class='fa fa-inbox fa-fw'&gt;&lt;/i&gt; Входящие заказы"/>

@@ -179,7 +179,7 @@ class Progress extends Component {
     this.setState({step: `Перестраиваем индексы...`, completed: 0, buffer: 10});
     $p.adapters.pouch.on('rebuild_indexes', this.on_index);
 
-    return $p.adapters.pouch.rebuild_indexes(dbid)
+    return $p.adapters.pouch.rebuild_indexes(dbid, true)
       .then(() => {
         $p.adapters.pouch.off('rebuild_indexes', this.on_index);
         if(this.timer) {
