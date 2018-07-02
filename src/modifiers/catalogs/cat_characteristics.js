@@ -434,7 +434,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
               glass.visible = false;
             }
           });
-          return res;
         }
         else {
           if(attr.format === 'png') {
@@ -452,10 +451,9 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
               res[ref].imgs[`l${cnstr}`] = project.get_svg(attr);
             }
           });
-          return res;
         }
       })
-      .then((res) => {
+      .then(() => {
         project.ox = '';
         if(remove) {
           editor.unload();
