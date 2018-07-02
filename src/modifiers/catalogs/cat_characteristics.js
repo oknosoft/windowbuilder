@@ -452,6 +452,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
               res[ref].imgs[`l${cnstr}`] = project.get_svg(attr);
             }
           });
+          return res;
         }
       })
       .then((res) => {
