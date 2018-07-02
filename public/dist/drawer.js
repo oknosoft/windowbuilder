@@ -24,7 +24,7 @@ const consts = {
 		this.sticking2 = this.sticking * this.sticking;
 		this.font_size = builder.font_size || 90;
     this.font_family = builder.font_family || 'GOST type B';
-    this.elm_font_size = builder.elm_font_size || 70;
+    this.elm_font_size = builder.elm_font_size || 60;
 
     if(!builder.font_family) {
       builder.font_family = this.font_family;
@@ -9359,7 +9359,7 @@ class Sectional extends GeneratrixElement {
     _attr.children = [];
 
     _attr.zoom = 5;
-    _attr.radius = 40;
+    _attr.radius = 50;
 
     if(attr.generatrix) {
       _attr.generatrix = attr.generatrix;
@@ -9410,7 +9410,7 @@ class Sectional extends GeneratrixElement {
       children.push(new LenText({
         point: loc.point.add(normal).add([0, normal.y < 0 ? 0 : normal.y / 2]),
         content: (curve.length / zoom).toFixed(0),
-        fontSize: radius,
+        fontSize: radius * 1.4,
         parent: layer,
         _owner: curve
       }));
@@ -9456,7 +9456,7 @@ class Sectional extends GeneratrixElement {
     children.push(new AngleText({
       point: center.add(end.multiply(-2.2)), 
       content: angle.toFixed(0) + '°',
-      fontSize: radius,
+      fontSize: radius * 1.4,
       parent: layer,
       _owner: this,
       _ind: ind,
@@ -9535,6 +9535,11 @@ class Pricing {
                 }, 1000);
               }
               else if(change.doc.class_name == 'doc.calc_order'){
+                const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
+                const user = pouch.authorized || $p.wsql.get_user_param('user_name');
+                if(!doc || user === change.doc.timestamp.user){
+                  return;
+                }
                 pouch.load_changes({docs: [change.doc], update_only: true});
               }
             });

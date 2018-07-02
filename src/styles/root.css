@@ -31,7 +31,7 @@ html, body, input, textarea, select, button {
 .description {
   padding-left: 120px;
   font-size: 67%;
-  line-height: 100%;
+  line-height: 120%;
   color: #555;
 }
 .description p, .description ul, .description h1 {
