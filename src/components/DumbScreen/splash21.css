@@ -5,3 +5,8 @@
   padding-left: 76px!important;
   padding-top: 50px;
 }
+@media (max-width: 640px) {
+  .description {
+    padding-left: 38px!important;
+  }
+}

@@ -12,7 +12,7 @@ const styleSheet = {
     marginRight: 16,
   },
   fn: {
-    fontWeight: 400,
+    fontWeight: 500,
   }
 };
 
