@@ -11595,7 +11595,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
               glass.visible = false;
             }
           });
-          return res;
         }
         else {
           if(attr.format === 'png') {
@@ -11615,7 +11614,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
           });
         }
       })
-      .then((res) => {
+      .then(() => {
         project.ox = '';
         if(remove) {
           editor.unload();

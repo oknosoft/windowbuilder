@@ -120,8 +120,7 @@ class About extends Component {
 
             <h3 className={classes.fn}>Благодарность</h3>
             <p><i className="fa fa-thumbs-o-up">
-
-            </i> Нашему генеральному спонсору, ЗСК «Гласспром» (<a href="https://www.ecookna.ru/partnerstvo/stante-dilerom/" target="_blank"
+            </i> Нашему спонсору, ЗСК «Гласспром» (<a href="https://www.ecookna.ru/partnerstvo/stante-dilerom/" target="_blank"
                                                       rel="noopener noreferrer">Экоокна</a>)</p>
 
             <h3 className={classes.fn}>Вопросы</h3>
