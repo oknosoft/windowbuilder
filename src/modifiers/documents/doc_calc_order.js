@@ -534,7 +534,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
       Площадь: row.s,
       //Отдельно размеры, общая площадь позиции и комментарий к позиции
-      Длинна: row.len,
+      Длина: row.len,
       Ширина: row.width,
       ВсегоПлощадь: row.s * row.quantity,
       Примечание: row.note,
