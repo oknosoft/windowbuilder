@@ -81,12 +81,7 @@
     ];
     for(const name of names) {
       const meta = md.get(name);
-      if(meta.cachable.match(/_ram$/)) {
-        meta.cachable = 'templates_ram';
-      }
-      else {
-        meta.cachable = 'templates';
-      }
+      meta.cachable = meta.cachable.replace(/^doc/, 'templates');
     }
   }
 

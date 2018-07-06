@@ -46,7 +46,7 @@ class DumbScreen extends Component {
       page.text || `Такт №${page.page}, загружено ${Math.min(page.page * page.limit, page.total_rows)} из ${page.total_rows} объектов`)
       : '';
 
-    return <div className='splash' style={{marginTop: top, opacity: splash ? 1 : 0.2}}>
+    return <div className='splash' style={{marginTop: top, opacity: splash ? 1 : 0.15}}>
       <div className="description">
         {[
           (!splash || splash.title) && <h1 key="name" itemProp="name">Заказ дилера</h1>,
