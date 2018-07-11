@@ -22,11 +22,11 @@ let appcache = `CACHE MANIFEST
 CACHE:
 
 ./
-https://fonts.googleapis.com/css?family=Roboto`;
+https://fonts.googleapis.com/css?family=Roboto:300,400,500`;
 
 glob('./build/**/*', function(err, files) {
   for(const name of files){
-    if(name.match(/\.(js|json|html|css|png|ico|jpg|gif|woff2)$/)){
+    if(name.match(/\.(js|json|html|css|png|ico|jpg|gif|woff2)$/) && !name.match(/\/(ram|templates)\//)){
       appcache += `\n${name.replace('./build', '')}`;
     }
   };
