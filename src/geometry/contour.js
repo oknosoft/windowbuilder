@@ -764,9 +764,9 @@ class Contour extends AbstractFilling(paper.Layer) {
    * Признак прямоугольности
    */
   get is_rectangular() {
-    return (this.side_count === 4) && !this.profiles.some(profile => {
-      return !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 0.2);
-    });
+    const {Импост} = $p.enm.elm_types;
+    const outer = this.profiles.filter((v) => v.elm_type != Импост);
+    return outer.length === 4 && !outer.some(profile => !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 0.2));
   }
 
   move(delta) {
@@ -2079,7 +2079,10 @@ class Contour extends AbstractFilling(paper.Layer) {
    * TODO: строго говоря, количество сторон != количеству палок
    */
   get side_count() {
-    return this.profiles.length;
+    const {Импост} = $p.enm.elm_types;
+    let res = 0;
+    this.profiles.forEach((v) => v.elm_type != Импост && res++);
+    return res;
   }
 
   /**
