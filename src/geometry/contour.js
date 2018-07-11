@@ -764,7 +764,7 @@ class Contour extends AbstractFilling(paper.Layer) {
    * Признак прямоугольности
    */
   get is_rectangular() {
-    return (this.side_count != 4) || !this.profiles.some((profile) => {
+    return (this.side_count === 4) && !this.profiles.some(profile => {
       return !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 0.2);
     });
   }
@@ -2194,4 +2194,3 @@ class Contour extends AbstractFilling(paper.Layer) {
  * @type function
  */
 EditorInvisible.Contour = Contour;
-
