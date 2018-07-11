@@ -169,19 +169,14 @@
 		// создаём форму списка
 		wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
-		wnd.elmnts.toolbar.hideItem("btn_new");
-		wnd.elmnts.toolbar.hideItem("btn_edit");
-		wnd.elmnts.toolbar.hideItem("btn_delete");
+		const {toolbar, filter} = wnd.elmnts;
+    'btn_new,btn_edit,btn_delete,bs_print,bs_create_by_virtue,bs_go_to'.split(',').forEach(name => toolbar.hideItem(name));
 
 		// добавляем элемент управления фильтра по расчету
-		wnd.elmnts.filter.add_filter({
-			text: "Расчет",
-			name: "calc_order"
-		});
-    const fdiv = wnd.elmnts.filter.custom_selection.calc_order.parentNode;
+    const fdiv = filter.add_filter({text: 'Расчет', name: 'calc_order'}).custom_selection.calc_order.parentNode;
 		fdiv.removeChild(fdiv.firstChild);
 
-		wnd.elmnts.filter.custom_selection.calc_order = new $p.iface.OCombo({
+    filter.custom_selection.calc_order = new $p.iface.OCombo({
 			parent: fdiv,
 			obj: selection_block,
 			field: "calc_order",
@@ -226,7 +221,7 @@
         }, $p.job_prm.builder.base_block ? 0 : 1000);
 			})
 		});
-		wnd.elmnts.filter.custom_selection.calc_order.getBase().style.border = "none";
+    filter.custom_selection.calc_order.getBase().style.border = "none";
 
 		return wnd;
 	};

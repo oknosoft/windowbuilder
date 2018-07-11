@@ -2076,7 +2076,6 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   /**
    * Количество сторон контура
-   * TODO: строго говоря, количество сторон != количеству палок
    */
   get side_count() {
     const {Импост} = $p.enm.elm_types;

@@ -847,9 +847,9 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   get is_rectangular() {
-    return (this.side_count != 4) || !this.profiles.some((profile) => {
-      return !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 0.2);
-    });
+    const {Импост} = $p.enm.elm_types;
+    const outer = this.profiles.filter((v) => v.elm_type != Импост);
+    return outer.length === 4 && !outer.some(profile => !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 0.2));
   }
 
   move(delta) {
@@ -1949,7 +1949,10 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   get side_count() {
-    return this.profiles.length;
+    const {Импост} = $p.enm.elm_types;
+    let res = 0;
+    this.profiles.forEach((v) => v.elm_type != Импост && res++);
+    return res;
   }
 
   get w() {
@@ -2029,7 +2032,6 @@ class Contour extends AbstractFilling(paper.Layer) {
 }
 
 EditorInvisible.Contour = Contour;
-
 
 
 class DimensionGroup {
@@ -13852,6 +13854,7 @@ $p.CatProduction_params.prototype.__define({
 
 
 
+
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
 
@@ -14019,6 +14022,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   }
 
 
+
   get doc_currency() {
     const currency = this.contract.settlements_currency;
     return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
@@ -14040,6 +14044,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     return pricing.rounding;
   }
 
+
   get contract() {
     return this._getter('contract');
   }
@@ -14048,6 +14053,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     this.vat_consider = this.contract.vat_consider;
     this.vat_included = this.contract.vat_included;
   }
+
 
   product_rows(save) {
     const res = [];
@@ -14070,6 +14076,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       return Promise.all(res);
     }
   }
+
 
   dispatching_totals() {
     var options = {
@@ -14098,6 +14105,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         return res;
       });
   }
+
 
   print_data(attr = {}) {
     const {organization, bank_account, partner, contract, manager} = this;
@@ -14290,6 +14298,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   }
 
+
   row_description(row) {
 
     if(!(row instanceof $p.DocCalc_orderProductionRow) && row.characteristic) {
@@ -14307,7 +14316,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Цвет: characteristic.clr.name,
       Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
       Площадь: row.s,
-      Длинна: row.len,
+      Длина: row.len,
       Ширина: row.width,
       ВсегоПлощадь: row.s * row.quantity,
       Примечание: row.note,
@@ -14361,6 +14370,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     return res;
   }
 
+
   fill_plan() {
 
     this.planning.clear();
@@ -14412,6 +14422,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   }
 
+
   get is_read_only() {
     const {obj_delivery_state, posted, _deleted} = this;
     const {Черновик, Шаблон, Отозван} = $p.enm.obj_delivery_states;
@@ -14427,6 +14438,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
     return ro;
   }
+
 
   load_production(forse) {
     const prod = [];
@@ -14451,6 +14463,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       });
   }
 
+
   characteristic_saved(scheme, sattr) {
     const {ox, _dp} = scheme;
     const row = ox.calc_order_row;
@@ -14474,6 +14487,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
     row._data._loading = false;
   }
+
 
   create_product_row({row_spec, elm, len_angl, params, create, grid}) {
 
@@ -14559,6 +14573,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   }
 
+
   process_add_product_list(dp) {
 
     return new Promise(async (resolve, reject) => {
@@ -14602,6 +14617,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     });
   }
+
 
   recalc(attr = {}, editor) {
 
@@ -14661,6 +14677,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   }
 
+
   draw(attr = {}, editor) {
 
     const remove = !editor;
@@ -14684,6 +14701,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       });
 
   }
+
 
   static set_department() {
     const department = $p.wsql.get_user_param('current_department');
