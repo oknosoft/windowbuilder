@@ -26,7 +26,7 @@ https://fonts.googleapis.com/css?family=Roboto:300,400,500`;
 
 glob('./build/**/*', function(err, files) {
   for(const name of files){
-    if(name.match(/\.(js|json|html|css|png|ico|jpg|gif|woff2)$/) && !name.match(/\/(ram|templates)\//)){
+    if(name.match(/\.(js|json|html|css|scss|png|ico|jpg|gif|woff|woff2|ttf)$/) && !name.match(/\/(ram|templates)\//)){
       appcache += `\n${name.replace('./build', '')}`;
     }
   };
