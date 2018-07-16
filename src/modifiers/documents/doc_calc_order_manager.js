@@ -180,8 +180,9 @@
     dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
     // заполняем продукцию и сохраненные эскизы
     const map = new Map();
-    const aatt = [];
     const db = _mgr.adapter.db(_mgr);
+
+    // создаём характеристики и заполняем данными исходного заказа
     src.production.forEach((row) => {
       const prow = Object.assign({}, row._obj);
       if(row.characteristic.calc_order === src) {
@@ -190,17 +191,9 @@
         cx._data._modified = true;
         cx._data._is_new = true;
         map.set(row.characteristic, cx);
-        if(row.characteristic._attachments) {
-          aatt.push(db.getAttachment(`cat.characteristics|${row.characteristic.ref}`, 'svg')
-            .then((att) => cx._obj._attachments = {svg: {content_type: 'image/svg+xml', data: att}})
-            .catch((err) => null));
-        }
       }
       dst.production.add(prow);
     });
-
-    // дожидаемся вложений
-    await Promise.all(aatt);
 
     // обновляем leading_product
     dst.production.forEach((row) => {
