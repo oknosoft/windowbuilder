@@ -111,7 +111,7 @@ class Pricing {
         $p.record_log({
           class: 'error',
           note,
-          obj: {nom: key[0], value}
+          obj: {nom: ref, value}
         });
         continue;
       }
@@ -129,9 +129,9 @@ class Pricing {
 
   // если оффлайн и есть доступ к серверу
   sync_local(pouch, step = 0) {
-    return pouch.remote.doc.get(`_local/price_${step}`)
+    return pouch.remote.templates.get(`_local/price_${step}`)
       .then((remote) => {
-        return pouch.local.doc.get(`_local/price_${step}`)
+        return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
             // грузим цены из remote
@@ -146,7 +146,7 @@ class Pricing {
               else {
                 remote._rev = local._rev;
               }
-              pouch.local.doc.put(remote);
+              pouch.local.templates.put(remote);
             }
 
             return this.sync_local(pouch, ++step);
@@ -154,8 +154,8 @@ class Pricing {
       })
       .catch((err) => {
         if(step !== 0) {
-          pouch.local.doc.get(`_local/price_${step}`)
-            .then((local) => pouch.local.doc.remove(local))
+          pouch.local.templates.get(`_local/price_${step}`)
+            .then((local) => pouch.local.templates.remove(local))
             .catch(() => null);
           return true;
         }
@@ -167,8 +167,8 @@ class Pricing {
     const {pouch} = $p.adapters;
 
     // если мы в idb, но подключены к серверу, тянем цены оттуда
-    const pre = step === 0 && pouch.local.doc.adapter !== 'http' && $p.adapters.pouch.authorized ?
-      pouch.remote.doc.info()
+    const pre = step === 0 && pouch.local.templates.adapter !== 'http' && pouch.authorized ?
+      pouch.remote.templates.info()
         .then(() => this.sync_local(pouch))
         .catch((err) => null)
       :
@@ -179,7 +179,7 @@ class Pricing {
         return loaded;
       }
       else {
-        return pouch.local.doc.get(`_local/price_${step}`)
+        return pouch.local.templates.get(`_local/price_${step}`)
       }
     })
       .then((prices) => {
