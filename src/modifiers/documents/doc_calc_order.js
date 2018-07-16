@@ -44,7 +44,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     this.obj_delivery_state = enm.obj_delivery_states.Черновик;
 
     //Номер документа
-    return this.new_number_doc();
+    return this.number_doc ? Promise.resolve(this) : this.new_number_doc();
 
   }
 
@@ -203,9 +203,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   value_change(field, type, value) {
     if(field == 'organization') {
       this.organization = value;
-      this.new_number_doc();
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
+        this.new_number_doc();
       }
     }
     else if(field == 'partner' && this.contract.owner != value) {

@@ -85,10 +85,7 @@
     }
   }
 
-  // обработчик события
-  function on_log_in() {
-
-    // для корневой базы ничего делать не надо
+  function direct_templates() {
     if(!pouch.props._suffix || !job_prm.templates) {
       !pouch.local.templates && pouch.local.__define('templates', {
         get() {
@@ -97,7 +94,16 @@
         configurable: true,
         enumerable: false
       });
-      return Promise.resolve();
+    }
+    return Promise.resolve();
+  }
+
+  // обработчик события
+  function on_log_in() {
+
+    // для корневой базы ничего делать не надо
+    if(!pouch.props._suffix || !job_prm.templates) {
+      return direct_templates();
     }
     else {
       patch_cachable();
@@ -141,5 +147,7 @@
   }
 
   pouch.on({on_log_in, user_log_out});
+
+  pouch.once('pouch_doc_ram_loaded', direct_templates);
 
 })($p);

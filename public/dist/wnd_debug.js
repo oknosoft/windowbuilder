@@ -2880,45 +2880,53 @@ $p.CatProduction_params.prototype.__define({
 
 class Pricing {
 
-  constructor($p) {
+  constructor({md, adapters}) {
 
-    $p.md.once("predefined_elmnts_inited", () => {
-
-
-      this.by_local()
-        .then((loc) => {
-          return !loc && this.by_range();
-        })
-        .then(() => {
-          const {pouch} = $p.adapters;
-          pouch.emit('pouch_complete_loaded');
-
-          if(pouch.local.doc === pouch.remote.doc) {
-            pouch.local.doc.changes({
-              since: 'now',
-              live: true,
-              include_docs: true,
-              selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
-            }).on('change', (change) => {
-              if(change.doc.class_name == 'doc.nom_prices_setup'){
-                setTimeout(() => {
-                  this.by_doc(change.doc)
-                }, 1000);
-              }
-              else if(change.doc.class_name == 'doc.calc_order'){
-                const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
-                const user = pouch.authorized || $p.wsql.get_user_param('user_name');
-                if(!doc || user === change.doc.timestamp.user){
-                  return;
-                }
-                pouch.load_changes({docs: [change.doc], update_only: true});
-              }
-            });
-          }
-
-        })
+    md.once('predefined_elmnts_inited', () => {
+      const {pouch} = adapters;
+      if(pouch.local.templates) {
+        this.load_prices();
+      }
+      else {
+        pouch.once('on_log_in', () => this.load_prices());
+      }
     });
 
+  }
+
+  load_prices() {
+
+    return this.by_local()
+      .then((loc) => {
+        return !loc && this.by_range();
+      })
+      .then(() => {
+        const {pouch} = $p.adapters;
+        pouch.emit('pouch_complete_loaded');
+
+        if(pouch.local.doc === pouch.remote.doc) {
+          pouch.local.doc.changes({
+            since: 'now',
+            live: true,
+            include_docs: true,
+            selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
+          }).on('change', (change) => {
+            if(change.doc.class_name == 'doc.nom_prices_setup'){
+              setTimeout(() => {
+                this.by_doc(change.doc)
+              }, 1000);
+            }
+            else if(change.doc.class_name == 'doc.calc_order'){
+              const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
+              const user = pouch.authorized || $p.wsql.get_user_param('user_name');
+              if(!doc || user === change.doc.timestamp.user){
+                return;
+              }
+              pouch.load_changes({docs: [change.doc], update_only: true});
+            }
+          });
+        }
+      });
   }
 
   build_cache(rows) {
@@ -4382,6 +4390,225 @@ $p.spec_building = new SpecBuilding($p);
 })($p.classes.DataManager);
 
 
+(function(_mgr){
+
+	const acn = {
+    ii: [_mgr.Наложение],
+    i: [_mgr.НезамкнутыйКонтур],
+    a: [
+      _mgr.УгловоеДиагональное,
+      _mgr.УгловоеКВертикальной,
+      _mgr.УгловоеКГоризонтальной,
+      _mgr.КрестВСтык],
+    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
+	};
+
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get() {
+        return this.УгловоеДиагональное;
+      }
+    },
+    av: {
+      get() {
+        return this.УгловоеКВертикальной;
+      }
+    },
+    ah: {
+      get() {
+        return this.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get() {
+        return this.ТОбразное;
+      }
+    },
+    ii: {
+      get() {
+        return this.Наложение;
+      }
+    },
+    i: {
+      get() {
+        return this.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get() {
+        return this.КрестПересечение;
+      }
+    },
+    xx: {
+      get() {
+        return this.КрестВСтык;
+      }
+    },
+
+    acn: {
+      value: acn
+    },
+
+  });
+
+})($p.enm.cnn_types);
+
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+
+(function(_mgr){
+
+  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
+
+
+})($p.enm.inserts_types);
+
+
+
+(function($p){
+
+	$p.enm.open_types.__define({
+
+    is_opening: {
+      value(v) {
+        if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное) {
+          return false;
+        }
+        return true;
+      }
+    }
+
+  });
+
+	$p.enm.orientations.__define({
+
+		hor: {
+			get() {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get() {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get() {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	$p.enm.positions.__define({
+
+		left: {
+			get() {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get() {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get() {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get() {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get() {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get() {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
+
+
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
 
@@ -4408,7 +4635,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     this.obj_delivery_state = enm.obj_delivery_states.Черновик;
 
-    return this.new_number_doc();
+    return this.number_doc ? Promise.resolve(this) : this.new_number_doc();
 
   }
 
@@ -4535,9 +4762,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   value_change(field, type, value) {
     if(field == 'organization') {
       this.organization = value;
-      this.new_number_doc();
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
+        this.new_number_doc();
       }
     }
     else if(field == 'partner' && this.contract.owner != value) {
@@ -6609,9 +6836,10 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
     const {base_block} = $p.job_prm.builder;
     $p.cat.production_params.forEach((o) => {
       if(!o.is_folder) {
-        o.base_blocks.forEach((row) => {
-          if(base_block.indexOf(row.calc_order) == -1) {
-            base_block.push(row.calc_order);
+        o.base_blocks.forEach(({_obj}) => {
+          const calc_order = _mgr.get(_obj.calc_order, false, false);
+          if(base_block.indexOf(calc_order) == -1) {
+            base_block.push(calc_order);
           }
         });
       }
@@ -6891,8 +7119,7 @@ $p.doc.calc_order.__define({
     }
   }
 
-  function on_log_in() {
-
+  function direct_templates() {
     if(!pouch.props._suffix || !job_prm.templates) {
       !pouch.local.templates && pouch.local.__define('templates', {
         get() {
@@ -6901,7 +7128,14 @@ $p.doc.calc_order.__define({
         configurable: true,
         enumerable: false
       });
-      return Promise.resolve();
+    }
+    return Promise.resolve();
+  }
+
+  function on_log_in() {
+
+    if(!pouch.props._suffix || !job_prm.templates) {
+      return direct_templates();
     }
     else {
       patch_cachable();
@@ -6940,6 +7174,8 @@ $p.doc.calc_order.__define({
   }
 
   pouch.on({on_log_in, user_log_out});
+
+  pouch.once('pouch_doc_ram_loaded', direct_templates);
 
 })($p);
 
@@ -7061,225 +7297,6 @@ $p.DocSelling.prototype.before_save = function () {
 };
 
 
-
-
-(function(_mgr){
-
-	const acn = {
-    ii: [_mgr.Наложение],
-    i: [_mgr.НезамкнутыйКонтур],
-    a: [
-      _mgr.УгловоеДиагональное,
-      _mgr.УгловоеКВертикальной,
-      _mgr.УгловоеКГоризонтальной,
-      _mgr.КрестВСтык],
-    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
-	};
-
-
-	Object.defineProperties(_mgr, {
-	  ad: {
-	    get() {
-        return this.УгловоеДиагональное;
-      }
-    },
-    av: {
-      get() {
-        return this.УгловоеКВертикальной;
-      }
-    },
-    ah: {
-      get() {
-        return this.УгловоеКГоризонтальной;
-      }
-    },
-    t: {
-      get() {
-        return this.ТОбразное;
-      }
-    },
-    ii: {
-      get() {
-        return this.Наложение;
-      }
-    },
-    i: {
-      get() {
-        return this.НезамкнутыйКонтур;
-      }
-    },
-    xt: {
-      get() {
-        return this.КрестПересечение;
-      }
-    },
-    xx: {
-      get() {
-        return this.КрестВСтык;
-      }
-    },
-
-    acn: {
-      value: acn
-    },
-
-  });
-
-})($p.enm.cnn_types);
-
-
-(function(_mgr){
-
-	const cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			}
-		},
-
-		profile_items: {
-			get(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			}
-		},
-
-		rama_impost: {
-			get(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			}
-		},
-
-		impost_lay: {
-			get(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			}
-		},
-
-		stvs: {
-			get(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			}
-		},
-
-		glasses: {
-			get(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			}
-		}
-
-	});
-
-
-})($p.enm.elm_types);
-
-
-
-(function(_mgr){
-
-  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
-
-
-})($p.enm.inserts_types);
-
-
-
-(function($p){
-
-	$p.enm.open_types.__define({
-
-    is_opening: {
-      value(v) {
-        if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное) {
-          return false;
-        }
-        return true;
-      }
-    }
-
-  });
-
-	$p.enm.orientations.__define({
-
-		hor: {
-			get() {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get() {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get() {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	$p.enm.positions.__define({
-
-		left: {
-			get() {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get() {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get() {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get() {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get() {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get() {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
 
 
 (($p) => {

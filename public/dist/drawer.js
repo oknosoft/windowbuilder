@@ -9511,45 +9511,53 @@ EditorInvisible.Sectional = Sectional;
 
 class Pricing {
 
-  constructor($p) {
+  constructor({md, adapters}) {
 
-    $p.md.once("predefined_elmnts_inited", () => {
-
-
-      this.by_local()
-        .then((loc) => {
-          return !loc && this.by_range();
-        })
-        .then(() => {
-          const {pouch} = $p.adapters;
-          pouch.emit('pouch_complete_loaded');
-
-          if(pouch.local.doc === pouch.remote.doc) {
-            pouch.local.doc.changes({
-              since: 'now',
-              live: true,
-              include_docs: true,
-              selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
-            }).on('change', (change) => {
-              if(change.doc.class_name == 'doc.nom_prices_setup'){
-                setTimeout(() => {
-                  this.by_doc(change.doc)
-                }, 1000);
-              }
-              else if(change.doc.class_name == 'doc.calc_order'){
-                const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
-                const user = pouch.authorized || $p.wsql.get_user_param('user_name');
-                if(!doc || user === change.doc.timestamp.user){
-                  return;
-                }
-                pouch.load_changes({docs: [change.doc], update_only: true});
-              }
-            });
-          }
-
-        })
+    md.once('predefined_elmnts_inited', () => {
+      const {pouch} = adapters;
+      if(pouch.local.templates) {
+        this.load_prices();
+      }
+      else {
+        pouch.once('on_log_in', () => this.load_prices());
+      }
     });
 
+  }
+
+  load_prices() {
+
+    return this.by_local()
+      .then((loc) => {
+        return !loc && this.by_range();
+      })
+      .then(() => {
+        const {pouch} = $p.adapters;
+        pouch.emit('pouch_complete_loaded');
+
+        if(pouch.local.doc === pouch.remote.doc) {
+          pouch.local.doc.changes({
+            since: 'now',
+            live: true,
+            include_docs: true,
+            selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
+          }).on('change', (change) => {
+            if(change.doc.class_name == 'doc.nom_prices_setup'){
+              setTimeout(() => {
+                this.by_doc(change.doc)
+              }, 1000);
+            }
+            else if(change.doc.class_name == 'doc.calc_order'){
+              const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
+              const user = pouch.authorized || $p.wsql.get_user_param('user_name');
+              if(!doc || user === change.doc.timestamp.user){
+                return;
+              }
+              pouch.load_changes({docs: [change.doc], update_only: true});
+            }
+          });
+        }
+      });
   }
 
   build_cache(rows) {
@@ -13880,7 +13888,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     this.obj_delivery_state = enm.obj_delivery_states.Черновик;
 
-    return this.new_number_doc();
+    return this.number_doc ? Promise.resolve(this) : this.new_number_doc();
 
   }
 
@@ -14007,9 +14015,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   value_change(field, type, value) {
     if(field == 'organization') {
       this.organization = value;
-      this.new_number_doc();
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
+        this.new_number_doc();
       }
     }
     else if(field == 'partner' && this.contract.owner != value) {
