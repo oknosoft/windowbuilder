@@ -169,21 +169,25 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     // пометим на удаление неиспользуемые характеристики
     // этот кусок не влияет на возвращаемое before_save значение и выполняется асинхронно
-    const res = this._manager.pouch_db.query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
+    const res = this._manager.pouch_db
+      .query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
       .then(({rows}) => {
-        const deleted = [];
+        let res = Promise.resolve();
+        let deleted = 0;
         for (const {id} of rows) {
           const ref = id.substr(20);
           if(this.production.find_rows({characteristic: ref}).length) {
             continue;
           }
-          deleted.push($p.cat.characteristics.get(ref, 'promise')
-            .then((ox) => !ox._deleted && ox.mark_deleted(true)));
+          deleted ++;
+          res = res
+            .then(() => $p.cat.characteristics.get(ref, 'promise'))
+            .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true)));
         }
-        return Promise.all(deleted);
+        return res.then(() => deleted);
       })
       .then((res) => {
-        res.length && this._manager.emit_async('svgs', this);
+        res && this._manager.emit_async('svgs', this);
       })
       .catch((err) => null);
 
@@ -261,7 +265,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    * @param save
    */
   product_rows(save) {
-    const res = [];
+    let res = Promise.resolve();
     this.production.forEach(({row, characteristic}) => {
       if(!characteristic.empty() && characteristic.calc_order === this) {
         if(characteristic.product !== row || characteristic._modified ||
@@ -276,7 +280,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
           if(!characteristic.owner.empty()) {
             if(save) {
-              res.push(characteristic.save());
+              res = res.then(() => characteristic.save());
             }
             else {
               characteristic.name = characteristic.prod_name();
@@ -285,9 +289,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         }
       }
     });
-    if(save) {
-      return Promise.all(res);
-    }
+    return res;
   }
 
   /**
