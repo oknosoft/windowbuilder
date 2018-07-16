@@ -9601,7 +9601,7 @@ class Pricing {
         $p.record_log({
           class: 'error',
           note,
-          obj: {nom: key[0], value}
+          obj: {nom: ref, value}
         });
         continue;
       }
@@ -9618,9 +9618,9 @@ class Pricing {
   }
 
   sync_local(pouch, step = 0) {
-    return pouch.remote.doc.get(`_local/price_${step}`)
+    return pouch.remote.templates.get(`_local/price_${step}`)
       .then((remote) => {
-        return pouch.local.doc.get(`_local/price_${step}`)
+        return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
             this.build_cache_local(remote);
@@ -9633,7 +9633,7 @@ class Pricing {
               else {
                 remote._rev = local._rev;
               }
-              pouch.local.doc.put(remote);
+              pouch.local.templates.put(remote);
             }
 
             return this.sync_local(pouch, ++step);
@@ -9641,8 +9641,8 @@ class Pricing {
       })
       .catch((err) => {
         if(step !== 0) {
-          pouch.local.doc.get(`_local/price_${step}`)
-            .then((local) => pouch.local.doc.remove(local))
+          pouch.local.templates.get(`_local/price_${step}`)
+            .then((local) => pouch.local.templates.remove(local))
             .catch(() => null);
           return true;
         }
@@ -9652,8 +9652,8 @@ class Pricing {
   by_local(step = 0) {
     const {pouch} = $p.adapters;
 
-    const pre = step === 0 && pouch.local.doc.adapter !== 'http' && $p.adapters.pouch.authorized ?
-      pouch.remote.doc.info()
+    const pre = step === 0 && pouch.local.templates.adapter !== 'http' && pouch.authorized ?
+      pouch.remote.templates.info()
         .then(() => this.sync_local(pouch))
         .catch((err) => null)
       :
@@ -9664,7 +9664,7 @@ class Pricing {
         return loaded;
       }
       else {
-        return pouch.local.doc.get(`_local/price_${step}`)
+        return pouch.local.templates.get(`_local/price_${step}`)
       }
     })
       .then((prices) => {
@@ -13854,7 +13854,6 @@ $p.CatProduction_params.prototype.__define({
 
 
 
-
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
 
@@ -13975,21 +13974,25 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     const rows_saver = this.product_rows(true);
 
-    const res = this._manager.pouch_db.query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
+    const res = this._manager.pouch_db
+      .query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
       .then(({rows}) => {
-        const deleted = [];
+        let res = Promise.resolve();
+        let deleted = 0;
         for (const {id} of rows) {
           const ref = id.substr(20);
           if(this.production.find_rows({characteristic: ref}).length) {
             continue;
           }
-          deleted.push($p.cat.characteristics.get(ref, 'promise')
-            .then((ox) => !ox._deleted && ox.mark_deleted(true)));
+          deleted ++;
+          res = res
+            .then(() => $p.cat.characteristics.get(ref, 'promise'))
+            .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true)));
         }
-        return Promise.all(deleted);
+        return res.then(() => deleted);
       })
       .then((res) => {
-        res.length && this._manager.emit_async('svgs', this);
+        res && this._manager.emit_async('svgs', this);
       })
       .catch((err) => null);
 
@@ -14022,7 +14025,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   }
 
 
-
   get doc_currency() {
     const currency = this.contract.settlements_currency;
     return currency.empty() ? $p.job_prm.pricing.main_currency : currency;
@@ -14044,7 +14046,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     return pricing.rounding;
   }
 
-
   get contract() {
     return this._getter('contract');
   }
@@ -14054,16 +14055,23 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     this.vat_included = this.contract.vat_included;
   }
 
-
   product_rows(save) {
-    const res = [];
+    let res = Promise.resolve();
     this.production.forEach(({row, characteristic}) => {
       if(!characteristic.empty() && characteristic.calc_order === this) {
-        if(characteristic.product !== row || characteristic.partner !== this.partner || characteristic._modified) {
+        if(characteristic.product !== row || characteristic._modified ||
+          characteristic.partner !== this.partner ||
+          characteristic.obj_delivery_state !== this.obj_delivery_state ||
+          characteristic.department !== this.department) {
+
           characteristic.product = row;
+          characteristic.obj_delivery_state = this.obj_delivery_state;
+          characteristic.partner = this.partner;
+          characteristic.department = this.department;
+
           if(!characteristic.owner.empty()) {
             if(save) {
-              res.push(characteristic.save());
+              res = res.then(() => characteristic.save());
             }
             else {
               characteristic.name = characteristic.prod_name();
@@ -14072,11 +14080,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         }
       }
     });
-    if(save) {
-      return Promise.all(res);
-    }
+    return res;
   }
-
 
   dispatching_totals() {
     var options = {
@@ -14105,7 +14110,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         return res;
       });
   }
-
 
   print_data(attr = {}) {
     const {organization, bank_account, partner, contract, manager} = this;
@@ -14298,7 +14302,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   }
 
-
   row_description(row) {
 
     if(!(row instanceof $p.DocCalc_orderProductionRow) && row.characteristic) {
@@ -14370,7 +14373,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     return res;
   }
 
-
   fill_plan() {
 
     this.planning.clear();
@@ -14422,7 +14424,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   }
 
-
   get is_read_only() {
     const {obj_delivery_state, posted, _deleted} = this;
     const {Черновик, Шаблон, Отозван} = $p.enm.obj_delivery_states;
@@ -14438,7 +14439,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
     return ro;
   }
-
 
   load_production(forse) {
     const prod = [];
@@ -14463,7 +14463,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       });
   }
 
-
   characteristic_saved(scheme, sattr) {
     const {ox, _dp} = scheme;
     const row = ox.calc_order_row;
@@ -14487,7 +14486,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
     row._data._loading = false;
   }
-
 
   create_product_row({row_spec, elm, len_angl, params, create, grid}) {
 
@@ -14573,7 +14571,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   }
 
-
   process_add_product_list(dp) {
 
     return new Promise(async (resolve, reject) => {
@@ -14617,7 +14614,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     });
   }
-
 
   recalc(attr = {}, editor) {
 
@@ -14677,7 +14673,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   }
 
-
   draw(attr = {}, editor) {
 
     const remove = !editor;
@@ -14701,7 +14696,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       });
 
   }
-
 
   static set_department() {
     const department = $p.wsql.get_user_param('current_department');
