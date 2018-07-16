@@ -182,7 +182,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           deleted ++;
           res = res
             .then(() => $p.cat.characteristics.get(ref, 'promise'))
-            .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true)));
+            .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true));
         }
         return res.then(() => deleted);
       })
