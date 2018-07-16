@@ -256,15 +256,24 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   }
 
   /**
-   * Пересчитывает номера изделий в продукциях
+   * Пересчитывает номера изделий в продукциях,
+   * обновляет контрагента, состояние транспорта и подразделение
    * @param save
    */
   product_rows(save) {
     const res = [];
     this.production.forEach(({row, characteristic}) => {
       if(!characteristic.empty() && characteristic.calc_order === this) {
-        if(characteristic.product !== row || characteristic.partner !== this.partner || characteristic._modified) {
+        if(characteristic.product !== row || characteristic._modified ||
+          characteristic.partner !== this.partner ||
+          characteristic.obj_delivery_state !== this.obj_delivery_state ||
+          characteristic.department !== this.department) {
+
           characteristic.product = row;
+          characteristic.obj_delivery_state = this.obj_delivery_state;
+          characteristic.partner = this.partner;
+          characteristic.department = this.department;
+
           if(!characteristic.owner.empty()) {
             if(save) {
               res.push(characteristic.save());
