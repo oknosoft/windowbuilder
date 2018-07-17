@@ -68,11 +68,10 @@
         wnd.elmnts.filter.call_event();
       }
 
-      const {utils, enm, wsql} = $p;
-      if(!utils.is_empty_guid(_obj.calc_order) &&
-          v.obj_delivery_state !== enm.obj_delivery_states.Шаблон &&
-          wsql.get_user_param('template_block_calc_order') != _obj.calc_order) {
-        wsql.set_user_param('template_block_calc_order', _obj.calc_order);
+      const {utils, enm, wsql, doc} = $p;
+      if(!utils.is_empty_guid(_obj.calc_order) && wsql.get_user_param('template_block_calc_order') != _obj.calc_order) {
+        const tmp = doc.calc_order.by_ref[_obj.calc_order];
+        tmp && tmp.obj_delivery_state === enm.obj_delivery_states.Шаблон && wsql.set_user_param('template_block_calc_order', _obj.calc_order);
       }
     }
 
