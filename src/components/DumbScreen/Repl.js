@@ -21,8 +21,10 @@ class Repl extends Progress {
       <div key="progress" style={{flexGrow: 1, marginTop: 8}}>
         <LinearProgress color="secondary" variant="buffer" value={completed} valueBuffer={buffer} />
       </div>,
-      !info.index && <div key="text">{`${syn[info.db]}: прочитано ${info.docs_read} из ${info.docs_read + info.pending}, ${percent.toFixed()}%`}</div>,
-      info.index && <div key="text">{`${syn[info.db]}: строим индекс ${info.index}`}</div>,
+      !info.index &&
+        <div key="text">{`${syn[info.db]}: прочитано ${info.docs_read} из ${info.docs_read + info.pending}, ${percent.toFixed()}%`}</div>,
+      info.index &&
+        <div key="text">{`${syn[info.db]}: строим индекс ${info.index}`}</div>,
     ];
   }
 

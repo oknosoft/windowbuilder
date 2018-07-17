@@ -603,7 +603,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
 							}
 						}
 					});
-					return crefs.length ? _mgr.adapter.load_array(_mgr, crefs, true, _mgr.adapter.local.templates) : crefs;
+					return crefs.length ? _mgr.adapter.load_array(_mgr, crefs, false, _mgr.adapter.local.templates) : crefs;
 				})
 				.then(() => {
 

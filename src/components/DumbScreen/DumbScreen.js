@@ -20,7 +20,7 @@ class DumbScreen extends Component {
 
   render() {
 
-    let {title, page, top, first_run, repl} = this.props;
+    let {title, page, top, first_run} = this.props;
     const over = page && page.limit * page.page > page.total_rows;
 
     if(!title) {
