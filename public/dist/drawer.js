@@ -4172,12 +4172,14 @@ class Filling extends AbstractFilling(BuilderElement) {
           rib._sub.b.is_nearest(point, true) && rib._sub.e.is_nearest(point, true) && purge.add(rib);
         }
       }
-      purge.forEach((rib) => {
-        const ind = attr.indexOf(rib);
-        attr.splice(ind, 1);
-      });
+      if(purge.size) {
+        purge.forEach((rib) => {
+          const ind = attr.indexOf(rib);
+          attr.splice(ind, 1);
+        });
 
-      return this.path = attr;
+        return this.path = attr;
+      }
     }
     path.reduce();
 
