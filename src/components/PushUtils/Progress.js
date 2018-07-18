@@ -188,7 +188,12 @@ class Progress extends Component {
         }
         this.setState({error: 'Обработка завершена'});
         setTimeout(() => {
-          this.props.handleCancel();
+          const {props} = this;
+          props.handleCancel();
+          if(props.dialog && props.dialog.wnd) {
+            const {elmnts} = props.dialog.wnd;
+            elmnts && elmnts.filter && elmnts.filter.call_event();
+          }
         }, 2000);
       });
 
