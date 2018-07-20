@@ -1691,29 +1691,27 @@ class Contour extends AbstractFilling(paper.Layer) {
   perimeter_inner(size) {
     // накопим в res пути внутренних рёбер профилей
     const {center} = this.bounds;
-    const res = this.outer_profiles.map((curr) => {
+    const res = this.outer_profiles.map(curr => {
       const profile = curr.profile || curr.elm;
       const {inner, outer} = profile.rays;
-      const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true) ?
-        inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) : outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
-      const tmp = {
+      const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true)
+        ? inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e))
+        : outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
+      let { angle } = curr.e.subtract(curr.b);
+      angle = angle < 0 ? angle + 360 : angle;
+      return {
         profile,
         sub_path,
-        angle: curr.e.subtract(curr.b).angle,
+        angle,
         b: curr.b,
         e: curr.e,
       };
-      if (tmp.angle < 0) {
-        tmp.angle += 360;
-      }
-      ;
-      return tmp;
     });
     const ubound = res.length - 1;
     return res.map((curr, index) => {
       let sub_path = curr.sub_path.equidistant(size);
       const prev = !index ? res[ubound] : res[index - 1];
-      const next = (index == ubound) ? res[0] : res[index + 1];
+      const next = (index === ubound) ? res[0] : res[index + 1];
       const b = sub_path.intersect_point(prev.sub_path.equidistant(size), curr.b, true);
       const e = sub_path.intersect_point(next.sub_path.equidistant(size), curr.e, true);
       if (b && e) {

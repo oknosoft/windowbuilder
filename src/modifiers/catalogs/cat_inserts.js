@@ -579,11 +579,11 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
           const perimeter = elm.perimeter ? elm.perimeter : (
             this.insert_type == $p.enm.inserts_types.МоскитнаяСетка ? elm.layer.perimeter_inner(row_ins_spec.sz) : elm.layer.perimeter
           )
-          perimeter.forEach((rib) => {
+          perimeter.forEach(rib => {
             row_prm._row._mixin(rib);
             row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
             if(this.check_restrictions(row_ins_spec, row_prm, true)){
-              row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
+              row_spec = new_spec_row({ elm, row_base: row_ins_spec, origin, spec, ox });
               // при расчете по периметру, выполняем формулу для каждого ребра периметра
               const qty = !row_ins_spec.formula.empty() && row_ins_spec.formula.execute({
                 ox: ox,
@@ -592,6 +592,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
                 inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
                 row_ins: row_ins_spec,
                 row_spec: row_spec,
+                angle: rib.angle,
                 len: rib.len
               });
               // если формула не вернула значение, устанавливаем qty_len стандартным способом
@@ -733,4 +734,3 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
   }
 
 }
-
