@@ -1,5 +1,6 @@
 // подгрузим стили асинхронно
 import('font-awesome/css/font-awesome.min.css');
+import('./styles/roboto/font.css');
 import './styles/root.css';
 
 import React, {Component} from "react";

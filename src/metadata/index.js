@@ -35,9 +35,6 @@ patch_cnn();
 // выполняем скрипт инициализации метаданных
 meta_init($p);
 
-// шрифт Roboto грузим асинхронно
-$p.load_script('https://fonts.googleapis.com/css?family=Roboto:300,400,500', 'link');
-
 // скрипт инициализации в привязке к store приложения
 export function init(store) {
 
