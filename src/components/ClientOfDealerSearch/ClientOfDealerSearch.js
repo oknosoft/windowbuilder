@@ -19,18 +19,42 @@ class ClientOfDealerSearch extends Component {
 
   constructor(props, context) {
     super(props, context);
-    const {handleCancel, handleCalck} = props;
-    this.handleCancel = handleCancel.bind(this);
-    this.handleCalck = handleCalck.bind(this);
-    this.state = {search: ''};
+    this.handleCancel = props.handleCancel.bind(this);
+    this.handleCalck = props.handleCalck.bind(this);
+    this.state = {search: '', rows: []};
+    this._timer = 0;
   }
 
   handleOk = () => {
     this.handleCalck().then(this.handleCancel);
   };
 
-  handleChange = prop => event => {
-    this.setState({ [prop]: event.target.value });
+  doSearch = () => {
+    const search = this.state.search.toLowerCase();
+    if(search.length < 2) {
+      return this.setState({rows: []});
+    }
+    $p.adapters.pouch.local.doc.query('client_of_dealer', {
+      startkey: search,
+      endkey: search + '\u0fff',
+      limit: 200,
+    })
+      .then(({rows}) => {
+        rows = 0;
+      })
+      .catch((err) => {
+        $p.msg.show_msg({
+          type: "alert-warning",
+          text: `${err.name}<br/>${err.message}`,
+          title: $p.msg.main_title
+        });
+      });
+  }
+
+  handleChange = (event) => {
+    this.setState({search: event.target.value});
+    clearTimeout(this._timer);
+    this._timer = setTimeout(this.doSearch, 750);
   };
 
   render() {
@@ -51,7 +75,7 @@ class ClientOfDealerSearch extends Component {
     >
       <Input
         value={this.state.search}
-        onChange={this.handleChange('search')}
+        onChange={this.handleChange}
         endAdornment={
           <InputAdornment position="end">
             <IconButton>
