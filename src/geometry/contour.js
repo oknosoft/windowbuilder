@@ -1705,10 +1705,6 @@ class Contour extends AbstractFilling(paper.Layer) {
         b: curr.b,
         e: curr.e,
       };
-      if (tmp.angle < 0) {
-        tmp.angle += 360;
-      }
-      ;
       return tmp;
     });
     const ubound = res.length - 1;
