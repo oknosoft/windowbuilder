@@ -3996,20 +3996,15 @@ class Contour extends AbstractFilling(paper.Layer) {
       const {inner, outer} = profile.rays;
       const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true) ?
         inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) : outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
-      let angle = curr.e.subtract(curr.b).round(1);
+      let angle = curr.e.subtract(curr.b).angle.round(1);
       if(angle < 0) angle += 360;
-      const tmp = {
+      return {
         profile,
         sub_path,
         angle,
         b: curr.b,
         e: curr.e,
       };
-      if (tmp.angle < 0) {
-        tmp.angle += 360;
-      }
-      ;
-      return tmp;
     });
     const ubound = res.length - 1;
     return res.map((curr, index) => {
