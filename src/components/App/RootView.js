@@ -39,10 +39,10 @@ class RootView extends Component {
     }
 
     // если есть сохранённый пароль и online, пытаемся авторизоваться
-    if (!user.logged_in && user.has_login && !user.try_log_in && !offline) {
-      handleLogin();
-      res = false;
-    }
+    // if (!user.logged_in && !user.stop_log_in && user.has_login && !user.try_log_in && !offline) {
+    //   handleLogin();
+    //   res = false;
+    // }
 
     // если это первый запуск или couch_direct и offline, переходим на страницу login
     if(!path_log_in && ((data_empty === true && !user.try_log_in && !user.logged_in) || (couch_direct && offline))) {

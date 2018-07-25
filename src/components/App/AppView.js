@@ -31,19 +31,6 @@ class AppRoot extends Component {
     snack: PropTypes.object,
   };
 
-  shouldComponentUpdate(props) {
-    const {meta_loaded, user, offline} = props;
-    let res = true;
-
-    // если есть сохранённый пароль и online, пытаемся авторизоваться
-    if(meta_loaded && !user.logged_in && user.has_login && !user.try_log_in && !offline) {
-      props.handleLogin();
-      res = false;
-    }
-
-    return res;
-  }
-
   handleDialogClose(name) {
     this.props.handleIfaceState({component: '', name, value: {open: false}});
   }
