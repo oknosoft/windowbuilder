@@ -21,8 +21,7 @@ let appcache = `CACHE MANIFEST
 # Additional resources to cache
 CACHE:
 
-./
-https://fonts.googleapis.com/css?family=Roboto:300,400,500`;
+./`;
 
 glob('./build/**/*', function(err, files) {
   for(const name of files){
