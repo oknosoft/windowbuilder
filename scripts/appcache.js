@@ -21,7 +21,9 @@ let appcache = `CACHE MANIFEST
 # Additional resources to cache
 CACHE:
 
-./`;
+./
+https://cdn.jsdelivr.net/jszip/2/jszip.min.js
+https://cdn.jsdelivr.net/combine/gh/open-xml-templating/docxtemplater-build@3.1.5/build/docxtemplater-latest.min.js,gh/open-xml-templating/docxtemplater-image-module-build@3.0.2/build/docxtemplater-image-module-latest.min.js`;
 
 glob('./build/**/*', function(err, files) {
   for(const name of files){
