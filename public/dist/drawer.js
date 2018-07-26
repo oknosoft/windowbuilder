@@ -13893,11 +13893,11 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   before_save() {
 
-    const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
+    const {
+      obj_delivery_states: {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен},
+      elm_types: {ОшибкаКритическая, ОшибкаИнфо},
+    } = $p.enm;
     const must_be_saved = [Подтвержден, Отправлен].indexOf(this.obj_delivery_state) == -1;
-
-    let doc_amount = 0,
-      amount_internal = 0;
 
     if(this.posted) {
       if(this.obj_delivery_state == Отклонен || this.obj_delivery_state == Отозван || this.obj_delivery_state == Шаблон) {
@@ -13939,17 +13939,27 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       }
     }
 
-    this.production.forEach((row) => {
-
-      doc_amount += row.amount;
-      amount_internal += row.amount_internal;
-
+    let doc_amount = 0, internal = 0;
+    const errors = this._data.errors = new Map();
+    this.production.forEach(({amount, amount_internal, characteristic}) => {
+      doc_amount += amount;
+      internal += amount_internal;
+      characteristic.specification.forEach(({nom}) => {
+        if([ОшибкаКритическая, ОшибкаИнфо].indexOf(nom.elm_type) !== -1) {
+          if(!errors.has(characteristic)){
+            errors.set(characteristic, new Set());
+          }
+          if(!errors.has(nom.elm_type)){
+            errors.set(nom.elm_type, new Set());
+          }
+          errors.get(characteristic).add(nom);
+          errors.get(nom.elm_type).add(nom);
+        }
+      });
     });
-
     const {rounding} = this;
-
     this.doc_amount = doc_amount.round(rounding);
-    this.amount_internal = amount_internal.round(rounding);
+    this.amount_internal = internal.round(rounding);
     this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
 
     const {_obj, obj_delivery_state, category} = this;

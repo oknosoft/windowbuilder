@@ -29,7 +29,7 @@ class RootView extends Component {
   }
 
   shouldComponentUpdate(props, state) {
-    const {user, data_empty, couch_direct, offline, history, handleLogin} = props;
+    const {user, data_empty, couch_direct, offline, history} = props;
     const {path_log_in} = state;
     let res = true;
 
@@ -37,12 +37,6 @@ class RootView extends Component {
       this.setState({path_log_in: this.isPathLogIn()});
       res = false;
     }
-
-    // если есть сохранённый пароль и online, пытаемся авторизоваться
-    // if (!user.logged_in && !user.stop_log_in && user.has_login && !user.try_log_in && !offline) {
-    //   handleLogin();
-    //   res = false;
-    // }
 
     // если это первый запуск или couch_direct и offline, переходим на страницу login
     if(!path_log_in && ((data_empty === true && !user.try_log_in && !user.logged_in) || (couch_direct && offline))) {
