@@ -983,7 +983,7 @@ class CatFormulasManager extends CatManager {
   }
 
   load_formulas() {
-    const {md} = this._owner.$p;
+    const {md, utils} = this._owner.$p;
     const parents = [this.predefined('printing_plates'), this.predefined('modifiers')];
     const filtered = [];
     this.forEach((v) => {
@@ -1005,7 +1005,7 @@ class CatFormulasManager extends CatManager {
       else {
         // выполняем модификаторы
         try {
-          formula.execute();
+          utils.cron(formula.execute());
         }
         catch (err) {
         }
