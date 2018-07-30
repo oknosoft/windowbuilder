@@ -39,6 +39,9 @@ patch_cnn();
 // выполняем скрипт инициализации метаданных
 meta_init($p);
 
+// запускаем проверку единственности экземпляра
+$p.utils.single_instance_checker.init();
+
 // скрипт инициализации в привязке к store приложения
 export function init(store) {
 
@@ -75,7 +78,10 @@ export function init(store) {
         // читаем локальные данные в ОЗУ
         return pouch.load_data();
 
-      });
+      })
+      .catch((err) => {
+        $p.record_log(err);
+      })
   }
   catch (err) {
     $p && $p.record_log(err);

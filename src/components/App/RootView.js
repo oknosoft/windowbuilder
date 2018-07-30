@@ -13,6 +13,7 @@ import DumbScreen from '../DumbScreen/DumbScreen';
 import AppView from './AppView';
 
 import BrowserCompatibility, {browser_compatible} from 'metadata-react/App/BrowserCompatibility';
+import SecondInstance from 'metadata-react/App/SecondInstance';
 
 // тема для material-ui
 import {MuiThemeProvider} from '@material-ui/core/styles';
@@ -54,7 +55,7 @@ class RootView extends Component {
   render() {
 
     const {props, state} = this;
-    const {meta_loaded, data_empty, data_loaded, history, repl} = props;
+    const {meta_loaded, data_empty, data_loaded, history, repl, second_instance} = props;
     let show_dumb = !meta_loaded ||
       (data_empty === undefined) ||
       (data_empty === false && !data_loaded);
@@ -70,7 +71,13 @@ class RootView extends Component {
 
     return <MuiThemeProvider theme={theme}>
       {
-        state.browser_compatible ?
+        second_instance ?
+        (
+          <SecondInstance/>
+        )
+          :
+        (
+            state.browser_compatible ?
           (show_dumb ?
             <DumbScreen {...props} />
             :
@@ -79,6 +86,7 @@ class RootView extends Component {
             </Router>)
           :
           <BrowserCompatibility/>
+        )
       }
     </MuiThemeProvider>;
   }
