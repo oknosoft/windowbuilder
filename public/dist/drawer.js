@@ -22,9 +22,9 @@ const consts = {
 		this.sticking_l = builder.sticking_l || 9;
 		this.sticking0 = this.sticking / 2;
 		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = builder.font_size || 80;
+		this.font_size = builder.font_size || 90;
     this.font_family = builder.font_family || 'GOST type B';
-    this.elm_font_size = builder.elm_font_size || 52;
+    this.elm_font_size = builder.elm_font_size || 60;
 
     if(!builder.font_family) {
       builder.font_family = this.font_family;
@@ -847,9 +847,9 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   get is_rectangular() {
-    return (this.side_count != 4) || !this.profiles.some((profile) => {
-      return !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 0.2);
-    });
+    const {Импост} = $p.enm.elm_types;
+    const outer = this.profiles.filter((v) => v.elm_type != Импост);
+    return outer.length === 4 && !outer.some(profile => !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 0.2));
   }
 
   move(delta) {
@@ -1642,18 +1642,15 @@ class Contour extends AbstractFilling(paper.Layer) {
       const {inner, outer} = profile.rays;
       const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true) ?
         inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) : outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
-      const tmp = {
+      let angle = curr.e.subtract(curr.b).angle.round(1);
+      if(angle < 0) angle += 360;
+      return {
         profile,
         sub_path,
-        angle: curr.e.subtract(curr.b).angle,
+        angle,
         b: curr.b,
         e: curr.e,
       };
-      if (tmp.angle < 0) {
-        tmp.angle += 360;
-      }
-      ;
-      return tmp;
     });
     const ubound = res.length - 1;
     return res.map((curr, index) => {
@@ -1949,7 +1946,10 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   get side_count() {
-    return this.profiles.length;
+    const {Импост} = $p.enm.elm_types;
+    let res = 0;
+    this.profiles.forEach((v) => v.elm_type != Импост && res++);
+    return res;
   }
 
   get w() {
@@ -2029,7 +2029,6 @@ class Contour extends AbstractFilling(paper.Layer) {
 }
 
 EditorInvisible.Contour = Contour;
-
 
 
 class DimensionGroup {
@@ -4170,12 +4169,14 @@ class Filling extends AbstractFilling(BuilderElement) {
           rib._sub.b.is_nearest(point, true) && rib._sub.e.is_nearest(point, true) && purge.add(rib);
         }
       }
-      purge.forEach((rib) => {
-        const ind = attr.indexOf(rib);
-        attr.splice(ind, 1);
-      });
+      if(purge.size) {
+        purge.forEach((rib) => {
+          const ind = attr.indexOf(rib);
+          attr.splice(ind, 1);
+        });
 
-      return this.path = attr;
+        return this.path = attr;
+      }
     }
     path.reduce();
 
@@ -9359,7 +9360,7 @@ class Sectional extends GeneratrixElement {
     _attr.children = [];
 
     _attr.zoom = 5;
-    _attr.radius = 40;
+    _attr.radius = 50;
 
     if(attr.generatrix) {
       _attr.generatrix = attr.generatrix;
@@ -9410,7 +9411,7 @@ class Sectional extends GeneratrixElement {
       children.push(new LenText({
         point: loc.point.add(normal).add([0, normal.y < 0 ? 0 : normal.y / 2]),
         content: (curve.length / zoom).toFixed(0),
-        fontSize: radius,
+        fontSize: radius * 1.4,
         parent: layer,
         _owner: curve
       }));
@@ -9456,7 +9457,7 @@ class Sectional extends GeneratrixElement {
     children.push(new AngleText({
       point: center.add(end.multiply(-2.2)), 
       content: angle.toFixed(0) + '°',
-      fontSize: radius,
+      fontSize: radius * 1.4,
       parent: layer,
       _owner: this,
       _ind: ind,
@@ -9509,40 +9510,53 @@ EditorInvisible.Sectional = Sectional;
 
 class Pricing {
 
-  constructor($p) {
+  constructor({md, adapters}) {
 
-    $p.md.once("predefined_elmnts_inited", () => {
-
-
-      this.by_local()
-        .then((loc) => {
-          return !loc && this.by_range();
-        })
-        .then(() => {
-          const {pouch} = $p.adapters;
-          pouch.emit('pouch_complete_loaded');
-
-          if(pouch.local.doc === pouch.remote.doc) {
-            pouch.local.doc.changes({
-              since: 'now',
-              live: true,
-              include_docs: true,
-              selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
-            }).on('change', (change) => {
-              if(change.doc.class_name == 'doc.nom_prices_setup'){
-                setTimeout(() => {
-                  this.by_doc(change.doc)
-                }, 1000);
-              }
-              else if(change.doc.class_name == 'doc.calc_order'){
-                pouch.load_changes({docs: [change.doc], update_only: true});
-              }
-            });
-          }
-
-        })
+    md.once('predefined_elmnts_inited', () => {
+      const {pouch} = adapters;
+      if(pouch.local.templates) {
+        this.load_prices();
+      }
+      else {
+        pouch.once('on_log_in', () => this.load_prices());
+      }
     });
 
+  }
+
+  load_prices() {
+
+    return this.by_local()
+      .then((loc) => {
+        return !loc && this.by_range();
+      })
+      .then(() => {
+        const {pouch} = $p.adapters;
+        pouch.emit('pouch_complete_loaded');
+
+        if(pouch.local.doc === pouch.remote.doc) {
+          pouch.local.doc.changes({
+            since: 'now',
+            live: true,
+            include_docs: true,
+            selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
+          }).on('change', (change) => {
+            if(change.doc.class_name == 'doc.nom_prices_setup'){
+              setTimeout(() => {
+                this.by_doc(change.doc)
+              }, 1000);
+            }
+            else if(change.doc.class_name == 'doc.calc_order'){
+              const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
+              const user = pouch.authorized || $p.wsql.get_user_param('user_name');
+              if(!doc || user === change.doc.timestamp.user){
+                return;
+              }
+              pouch.load_changes({docs: [change.doc], update_only: true});
+            }
+          });
+        }
+      });
   }
 
   build_cache(rows) {
@@ -9556,9 +9570,8 @@ class Pricing {
       if (!onom || !onom._data){
         $p.record_log({
           class: 'error',
-          nom: key[0],
           note,
-          value
+          obj: {nom: key[0], value}
         });
         continue;
       }
@@ -9594,9 +9607,8 @@ class Pricing {
       if (!onom || !onom._data){
         $p.record_log({
           class: 'error',
-          nom: ref,
           note,
-          value
+          obj: {nom: ref, value}
         });
         continue;
       }
@@ -9613,9 +9625,9 @@ class Pricing {
   }
 
   sync_local(pouch, step = 0) {
-    return pouch.remote.doc.get(`_local/price_${step}`)
+    return pouch.remote.templates.get(`_local/price_${step}`)
       .then((remote) => {
-        return pouch.local.doc.get(`_local/price_${step}`)
+        return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
             this.build_cache_local(remote);
@@ -9628,7 +9640,7 @@ class Pricing {
               else {
                 remote._rev = local._rev;
               }
-              pouch.local.doc.put(remote);
+              pouch.local.templates.put(remote);
             }
 
             return this.sync_local(pouch, ++step);
@@ -9636,8 +9648,8 @@ class Pricing {
       })
       .catch((err) => {
         if(step !== 0) {
-          pouch.local.doc.get(`_local/price_${step}`)
-            .then((local) => pouch.local.doc.remove(local))
+          pouch.local.templates.get(`_local/price_${step}`)
+            .then((local) => pouch.local.templates.remove(local))
             .catch(() => null);
           return true;
         }
@@ -9647,8 +9659,8 @@ class Pricing {
   by_local(step = 0) {
     const {pouch} = $p.adapters;
 
-    const pre = step === 0 && pouch.local.doc.adapter !== 'http' && $p.adapters.pouch.authorized ?
-      pouch.remote.doc.info()
+    const pre = step === 0 && pouch.local.templates.adapter !== 'http' && pouch.authorized ?
+      pouch.remote.templates.info()
         .then(() => this.sync_local(pouch))
         .catch((err) => null)
       :
@@ -9659,7 +9671,7 @@ class Pricing {
         return loaded;
       }
       else {
-        return pouch.local.doc.get(`_local/price_${step}`)
+        return pouch.local.templates.get(`_local/price_${step}`)
       }
     })
       .then((prices) => {
@@ -9677,7 +9689,7 @@ class Pricing {
 
   by_range(startkey, step = 0) {
 
-    return $p.doc.nom_prices_setup.pouch_db.query('doc/doc_nom_prices_setup_slice_last',
+    return $p.adapters.pouch.local.templates.query('doc/doc_nom_prices_setup_slice_last',
       {
         limit: 600,
         include_docs: false,
@@ -9700,7 +9712,7 @@ class Pricing {
 
   by_doc(doc) {
     const keys = doc.goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
-    return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
+    return $p.adapters.pouch.local.templates.query("doc/doc_nom_prices_setup_slice_last",
       {
         include_docs: false,
         keys: keys,
@@ -9742,6 +9754,7 @@ class Pricing {
 
     const {utils, job_prm, enm, ireg, cat} = $p;
     const empty_formula = cat.formulas.get();
+    const empty_price_type = cat.nom_prices_types.get();
 
     prm.price_type = {
       marginality: 1.9,
@@ -9750,9 +9763,9 @@ class Pricing {
       discount: 0,
       discount_external: 10,
       extra_charge_external: 0,
-      price_type_first_cost: job_prm.pricing.price_type_first_cost,
-      price_type_sale: job_prm.pricing.price_type_sale,
-      price_type_internal: job_prm.pricing.price_type_first_cost,
+      price_type_first_cost: empty_price_type,
+      price_type_sale: empty_price_type,
+      price_type_internal: empty_price_type,
       formula: empty_formula,
       sale_formula: empty_formula,
       internal_formula: empty_formula,
@@ -9891,7 +9904,8 @@ class Pricing {
   calc_amount (prm) {
 
     const {calc_order_row, price_type} = prm;
-    const price_cost = $p.job_prm.pricing.marginality_in_spec && prm.spec.count() ?
+    const {marginality_in_spec} = $p.job_prm.pricing;
+    const price_cost = marginality_in_spec && prm.spec.count() ?
       prm.spec.aggregate([], ["amount_marged"]) :
       this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
 
@@ -9899,7 +9913,7 @@ class Pricing {
       calc_order_row.price = price_cost.round(2);
     }
     else{
-      calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(2);
+      calc_order_row.price = marginality_in_spec ? 0 : (calc_order_row.first_cost * price_type.marginality).round(2);
     }
 
     calc_order_row.marginality = calc_order_row.first_cost ?
@@ -10105,7 +10119,6 @@ class Pricing {
 $p.pricing = new Pricing($p);
 
 
-
 class ProductsBuilding {
 
   constructor(listen) {
@@ -10121,7 +10134,6 @@ class ProductsBuilding {
 
 
 
-
     function cnn_row(elm1, elm2) {
       let res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
       if(res.length) {
@@ -10133,7 +10145,6 @@ class ProductsBuilding {
       }
       return 0;
     }
-
 
     function cnn_need_add_spec(cnn, elm1, elm2, point) {
       if(cnn && cnn.cnn_type == $p.enm.cnn_types.xx) {
@@ -10154,7 +10165,6 @@ class ProductsBuilding {
       added_cnn_spec[elm1] = elm2;
       return true;
     }
-
 
 
     function cnn_add_spec(cnn, elm, len_angl, cnn_other) {
@@ -10233,7 +10243,6 @@ class ProductsBuilding {
       });
     }
 
-
     function cnn_filter_spec(cnn, elm, len_angl) {
 
       const res = [];
@@ -10284,7 +10293,6 @@ class ProductsBuilding {
     }
 
 
-
     function furn_spec(contour) {
 
       if(!contour.parent) {
@@ -10319,7 +10327,6 @@ class ProductsBuilding {
       });
     }
 
-
     function furn_check_opening_restrictions(contour, cache) {
 
       let ok = true;
@@ -10342,7 +10349,6 @@ class ProductsBuilding {
     }
 
 
-
     function cnn_spec_nearest(elm) {
       const nearest = elm.nearest();
       if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm._attr._nearest_cnn) {
@@ -10355,7 +10361,6 @@ class ProductsBuilding {
         });
       }
     }
-
 
     function base_spec_profile(elm) {
 
@@ -10495,7 +10500,6 @@ class ProductsBuilding {
 
     }
 
-
     function base_spec_sectional(elm) {
 
       const {_row, _attr, inset, layer} = elm;
@@ -10531,7 +10535,6 @@ class ProductsBuilding {
       spec = spec_tmp;
 
     }
-
 
     function base_spec_glass(elm) {
 
@@ -10580,7 +10583,6 @@ class ProductsBuilding {
     }
 
 
-
     function inset_contour_spec(contour) {
 
       const spec_tmp = spec;
@@ -10613,7 +10615,6 @@ class ProductsBuilding {
 
       spec = spec_tmp;
     }
-
 
     function base_spec(scheme) {
 
@@ -10657,7 +10658,6 @@ class ProductsBuilding {
       });
 
     }
-
 
     this.recalc = function (scheme, attr) {
 
@@ -10734,7 +10734,6 @@ class ProductsBuilding {
 
   }
 
-
   static check_params({params, row_spec, elm, cnstr, origin, ox}) {
 
     let ok = true;
@@ -10748,7 +10747,6 @@ class ProductsBuilding {
 
     return ok;
   }
-
 
   static new_spec_row({row_spec, elm, row_base, nom, origin, spec, ox}) {
     if(!row_spec) {
@@ -10772,7 +10770,6 @@ class ProductsBuilding {
     }
     return row_spec;
   }
-
 
   static calc_qty_len(row_spec, row_base, len) {
 
@@ -10806,7 +10803,6 @@ class ProductsBuilding {
       row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
     }
   }
-
 
   static calc_count_area_mass(row_spec, spec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2) {
 
@@ -11590,7 +11586,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
               glass.visible = false;
             }
           });
-          return res;
         }
         else {
           if(attr.format === 'png') {
@@ -11610,7 +11605,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
           });
         }
       })
-      .then((res) => {
+      .then(() => {
         project.ox = '';
         if(remove) {
           editor.unload();
@@ -13394,88 +13389,92 @@ $p.CatNom.prototype.__define({
 	_price: {
 		value(attr) {
 
-      let price = 0, currency, start_date = $p.utils.blank.date;
+      let price = 0,
+        currency = $p.job_prm.pricing.main_currency,
+        start_date = $p.utils.blank.date;
 
 			if(!attr){
-        attr = {};
+        attr = {currency};
       }
 
-			if(!attr.price_type){
-        attr.price_type = $p.job_prm.pricing.price_type_sale;
-      }
-			else if($p.utils.is_data_obj(attr.price_type)){
-        attr.price_type = attr.price_type.ref;
-      }
+			if(attr.price_type){
 
-      const {_price} = this._data;
-      const {x, y, z, clr, ref, calc_order} = (attr.characteristic || {});
-
-			if(!attr.characteristic){
-        attr.characteristic = $p.utils.blank.guid;
-      }
-			else if($p.utils.is_data_obj(attr.characteristic)){
-        attr.characteristic = ref;
-        if(!calc_order.empty()){
-          const tmp = [];
-          const {by_ref} = $p.cat.characteristics;
-          for(let clrx in _price) {
-            const cx = by_ref[clrx];
-            if(cx && cx.clr == clr){
-              if(_price[clrx][attr.price_type]){
-                if(cx.x && x && cx.x - x < -10){
-                  continue;
-                }
-                if(cx.y && y && cx.y - y < -10){
-                  continue;
-                }
-                tmp.push({
-                  cx,
-                  rate: (cx.x && x ? Math.abs(cx.x - x) : 0) + (cx.y && y ? Math.abs(cx.y - y) : 0) + (cx.z && z && cx.z == z ? 1 : 0)
-                })
-              }
-            }
-          }
-          if(tmp.length){
-            tmp.sort((a, b) => a.rate - b.rate);
-            attr.characteristic = tmp[0].cx.ref;
-          }
+        if($p.utils.is_data_obj(attr.price_type)){
+          attr.price_type = attr.price_type.ref;
         }
-			}
-			if(!attr.date){
-        attr.date = new Date();
-      }
 
-			if(_price){
-				if(_price[attr.characteristic]){
-					if(_price[attr.characteristic][attr.price_type]){
-            _price[attr.characteristic][attr.price_type].forEach((row) => {
-							if(row.date > start_date && row.date <= attr.date){
-								price = row.price;
-								currency = row.currency;
-                start_date = row.date;
-							}
-						})
-					}
-				}
-				else if(attr.clr){
-          const {by_ref} = $p.cat.characteristics;
-				  for(let clrx in _price){
-            const cx = by_ref[clrx];
-            if(cx && cx.clr == attr.clr){
-              if(_price[clrx][attr.price_type]){
-                _price[clrx][attr.price_type].forEach((row) => {
-                  if(row.date > start_date && row.date <= attr.date){
-                    price = row.price;
-                    currency = row.currency;
-                    start_date = row.date;
+        const {_price} = this._data;
+        const {x, y, z, clr, ref, calc_order} = (attr.characteristic || {});
+
+        if(!attr.characteristic){
+          attr.characteristic = $p.utils.blank.guid;
+        }
+        else if($p.utils.is_data_obj(attr.characteristic)){
+          attr.characteristic = ref;
+          if(!calc_order.empty()){
+            const tmp = [];
+            const {by_ref} = $p.cat.characteristics;
+            for(let clrx in _price) {
+              const cx = by_ref[clrx];
+              if(cx && cx.clr == clr){
+                if(_price[clrx][attr.price_type]){
+                  if(cx.x && x && cx.x - x < -10){
+                    continue;
                   }
-                })
-                break;
+                  if(cx.y && y && cx.y - y < -10){
+                    continue;
+                  }
+                  tmp.push({
+                    cx,
+                    rate: (cx.x && x ? Math.abs(cx.x - x) : 0) + (cx.y && y ? Math.abs(cx.y - y) : 0) + (cx.z && z && cx.z == z ? 1 : 0)
+                  })
+                }
+              }
+            }
+            if(tmp.length){
+              tmp.sort((a, b) => a.rate - b.rate);
+              attr.characteristic = tmp[0].cx.ref;
+            }
+          }
+        }
+        if(!attr.date){
+          attr.date = new Date();
+        }
+
+        if(_price){
+          if(_price[attr.characteristic]){
+            if(_price[attr.characteristic][attr.price_type]){
+              _price[attr.characteristic][attr.price_type].forEach((row) => {
+                if(row.date > start_date && row.date <= attr.date){
+                  price = row.price;
+                  currency = row.currency;
+                  start_date = row.date;
+                }
+              })
+            }
+          }
+          else if(attr.clr){
+            const {by_ref} = $p.cat.characteristics;
+            for(let clrx in _price){
+              const cx = by_ref[clrx];
+              if(cx && cx.clr == attr.clr){
+                if(_price[clrx][attr.price_type]){
+                  _price[clrx][attr.price_type].forEach((row) => {
+                    if(row.date > start_date && row.date <= attr.date){
+                      price = row.price;
+                      currency = row.currency;
+                      start_date = row.date;
+                    }
+                  })
+                  break;
+                }
               }
             }
           }
         }
+
       }
+
 
       if(attr.formula){
 
@@ -13870,17 +13869,17 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     this.obj_delivery_state = enm.obj_delivery_states.Черновик;
 
-    return this.new_number_doc();
+    return this.number_doc ? Promise.resolve(this) : this.new_number_doc();
 
   }
 
   before_save() {
 
-    const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
+    const {
+      obj_delivery_states: {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен},
+      elm_types: {ОшибкаКритическая, ОшибкаИнфо},
+    } = $p.enm;
     const must_be_saved = [Подтвержден, Отправлен].indexOf(this.obj_delivery_state) == -1;
-
-    let doc_amount = 0,
-      amount_internal = 0;
 
     if(this.posted) {
       if(this.obj_delivery_state == Отклонен || this.obj_delivery_state == Отозван || this.obj_delivery_state == Шаблон) {
@@ -13922,17 +13921,27 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       }
     }
 
-    this.production.forEach((row) => {
-
-      doc_amount += row.amount;
-      amount_internal += row.amount_internal;
-
+    let doc_amount = 0, internal = 0;
+    const errors = this._data.errors = new Map();
+    this.production.forEach(({amount, amount_internal, characteristic}) => {
+      doc_amount += amount;
+      internal += amount_internal;
+      characteristic.specification.forEach(({nom}) => {
+        if([ОшибкаКритическая, ОшибкаИнфо].indexOf(nom.elm_type) !== -1) {
+          if(!errors.has(characteristic)){
+            errors.set(characteristic, new Set());
+          }
+          if(!errors.has(nom.elm_type)){
+            errors.set(nom.elm_type, new Set());
+          }
+          errors.get(characteristic).add(nom);
+          errors.get(nom.elm_type).add(nom);
+        }
+      });
     });
-
     const {rounding} = this;
-
     this.doc_amount = doc_amount.round(rounding);
-    this.amount_internal = amount_internal.round(rounding);
+    this.amount_internal = internal.round(rounding);
     this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
 
     const {_obj, obj_delivery_state, category} = this;
@@ -13964,21 +13973,25 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     const rows_saver = this.product_rows(true);
 
-    const res = this._manager.pouch_db.query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
+    const res = this._manager.pouch_db
+      .query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
       .then(({rows}) => {
-        const deleted = [];
+        let res = Promise.resolve();
+        let deleted = 0;
         for (const {id} of rows) {
           const ref = id.substr(20);
           if(this.production.find_rows({characteristic: ref}).length) {
             continue;
           }
-          deleted.push($p.cat.characteristics.get(ref, 'promise')
-            .then((ox) => !ox._deleted && ox.mark_deleted(true)));
+          deleted ++;
+          res = res
+            .then(() => $p.cat.characteristics.get(ref, 'promise'))
+            .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true));
         }
-        return Promise.all(deleted);
+        return res.then(() => deleted);
       })
       .then((res) => {
-        res.length && this._manager.emit_async('svgs', this);
+        res && this._manager.emit_async('svgs', this);
       })
       .catch((err) => null);
 
@@ -13993,9 +14006,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   value_change(field, type, value) {
     if(field == 'organization') {
       this.organization = value;
-      this.new_number_doc();
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
+        this.new_number_doc();
       }
     }
     else if(field == 'partner' && this.contract.owner != value) {
@@ -14042,14 +14055,22 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   }
 
   product_rows(save) {
-    const res = [];
+    let res = Promise.resolve();
     this.production.forEach(({row, characteristic}) => {
       if(!characteristic.empty() && characteristic.calc_order === this) {
-        if(characteristic.product !== row || characteristic.partner !== this.partner || characteristic._modified) {
+        if(characteristic.product !== row || characteristic._modified ||
+          characteristic.partner !== this.partner ||
+          characteristic.obj_delivery_state !== this.obj_delivery_state ||
+          characteristic.department !== this.department) {
+
           characteristic.product = row;
+          characteristic.obj_delivery_state = this.obj_delivery_state;
+          characteristic.partner = this.partner;
+          characteristic.department = this.department;
+
           if(!characteristic.owner.empty()) {
             if(save) {
-              res.push(characteristic.save());
+              res = res.then(() => characteristic.save());
             }
             else {
               characteristic.name = characteristic.prod_name();
@@ -14058,9 +14079,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         }
       }
     });
-    if(save) {
-      return Promise.all(res);
-    }
+    return res;
   }
 
   dispatching_totals() {
@@ -14299,7 +14318,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Цвет: characteristic.clr.name,
       Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
       Площадь: row.s,
-      Длинна: row.len,
+      Длина: row.len,
       Ширина: row.width,
       ВсегоПлощадь: row.s * row.quantity,
       Примечание: row.note,
@@ -14422,13 +14441,14 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   load_production(forse) {
     const prod = [];
-    const {characteristics} = $p.cat;
+    const {cat: {characteristics}, enm: {obj_delivery_states}} = $p;
     this.production.forEach(({nom, characteristic}) => {
       if(!characteristic.empty() && (forse || characteristic.is_new())) {
         prod.push(characteristic.ref);
       }
     });
-    return characteristics.adapter.load_array(characteristics, prod)
+    return characteristics.adapter.load_array(characteristics, prod, false,
+        this.obj_delivery_state == obj_delivery_states.Шаблон && characteristics.adapter.local.templates)
       .then(() => {
         prod.length = 0;
         this.production.forEach(({nom, characteristic}) => {

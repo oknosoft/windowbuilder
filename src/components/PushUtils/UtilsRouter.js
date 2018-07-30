@@ -13,7 +13,6 @@ import connect from './connect';
 import Download from './Download';
 import Inbox from './Inbox';
 import Share from './Share';
-import Templates from './Templates';
 
 class UtilsRouter extends Component {
 
@@ -36,9 +35,6 @@ class UtilsRouter extends Component {
       .then((info) => {
         this.setState({info}, () => {
           switch (this.props.dialog.cmd) {
-          case 'btn_templates':
-            this.setState({Component: Templates, title: 'Загрузка шаблонов'});
-            break;
 
           case 'btn_download':
             this.setState({Component: Download, title: 'Обновление заказов из облака'});

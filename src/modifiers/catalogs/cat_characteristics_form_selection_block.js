@@ -68,9 +68,10 @@
         wnd.elmnts.filter.call_event();
       }
 
-      if(!$p.utils.is_empty_guid(_obj.calc_order) &&
-        $p.wsql.get_user_param('template_block_calc_order') != _obj.calc_order) {
-        $p.wsql.set_user_param('template_block_calc_order', _obj.calc_order);
+      const {utils, enm, wsql, doc} = $p;
+      if(!utils.is_empty_guid(_obj.calc_order) && wsql.get_user_param('template_block_calc_order') != _obj.calc_order) {
+        const tmp = doc.calc_order.by_ref[_obj.calc_order];
+        tmp && tmp.obj_delivery_state === enm.obj_delivery_states.Шаблон && wsql.set_user_param('template_block_calc_order', _obj.calc_order);
       }
     }
 
@@ -134,7 +135,7 @@
 							}
 						}
 					});
-					return crefs.length ? _mgr.adapter.load_array(_mgr, crefs, true) : crefs;
+					return crefs.length ? _mgr.adapter.load_array(_mgr, crefs, false, _mgr.adapter.local.templates) : crefs;
 				})
 				.then(() => {
 
@@ -169,19 +170,14 @@
 		// создаём форму списка
 		wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
-		wnd.elmnts.toolbar.hideItem("btn_new");
-		wnd.elmnts.toolbar.hideItem("btn_edit");
-		wnd.elmnts.toolbar.hideItem("btn_delete");
+		const {toolbar, filter} = wnd.elmnts;
+    'btn_new,btn_edit,btn_delete,bs_print,bs_create_by_virtue,bs_go_to'.split(',').forEach(name => toolbar.hideItem(name));
 
 		// добавляем элемент управления фильтра по расчету
-		wnd.elmnts.filter.add_filter({
-			text: "Расчет",
-			name: "calc_order"
-		});
-    const fdiv = wnd.elmnts.filter.custom_selection.calc_order.parentNode;
+    const fdiv = filter.add_filter({text: 'Расчет', name: 'calc_order'}).custom_selection.calc_order.parentNode;
 		fdiv.removeChild(fdiv.firstChild);
 
-		wnd.elmnts.filter.custom_selection.calc_order = new $p.iface.OCombo({
+    filter.custom_selection.calc_order = new $p.iface.OCombo({
 			parent: fdiv,
 			obj: selection_block,
 			field: "calc_order",
@@ -226,7 +222,7 @@
         }, $p.job_prm.builder.base_block ? 0 : 1000);
 			})
 		});
-		wnd.elmnts.filter.custom_selection.calc_order.getBase().style.border = "none";
+    filter.custom_selection.calc_order.getBase().style.border = "none";
 
 		return wnd;
 	};

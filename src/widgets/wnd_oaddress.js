@@ -503,48 +503,7 @@ class WndAddress {
       v.street = (res["Улица"] || "");
     }
 
-    return new Promise(function(resolve, reject){
-
-      if(!$p.ipinfo)
-        $p.ipinfo = new IPInfo();
-
-      if(window.google && window.google.maps){
-        return resolve();
-      }
-
-      $p.load_script("https://maps.google.com/maps/api/js?key=" + $p.job_prm.use_google_geo + "&callback=$p.ipinfo.location_callback", "script", function(){});
-
-      let google_ready = $p.eve.attachEvent("geo_google_ready", () => {
-
-        if(watch_dog)
-          clearTimeout(watch_dog);
-
-        if(google_ready){
-          $p.eve.detachEvent(google_ready);
-          google_ready = null;
-          resolve();
-        }
-      });
-
-      // Если Google не ответил - информируем об ошибке и продолжаем
-      let watch_dog = setTimeout(() => {
-
-        if(google_ready){
-          $p.eve.detachEvent(google_ready);
-          google_ready = null;
-        }
-        $p.msg.show_msg({
-          type: "alert-warning",
-          text: $p.msg.error_geocoding + " Google",
-          title: $p.msg.main_title
-        });
-
-        reject();
-
-      }, 10000);
-
-
-    })
+    return $p.ipinfo.google_ready()
       .then(() => {
 
         // если есть координаты $p.ipinfo, используем их, иначе - Москва

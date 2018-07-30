@@ -1253,7 +1253,7 @@ class Editor extends EditorInvisible {
     if(!_attr._align_counter){
       _attr._align_counter = 1;
     }
-    if(_attr._align_counter > 12){
+    if(_attr._align_counter > 24){
       _attr._align_counter = 0;
       return
     }

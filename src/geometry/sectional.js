@@ -208,7 +208,7 @@ class Sectional extends GeneratrixElement {
     _attr.children = [];
 
     _attr.zoom = 5;
-    _attr.radius = 40;
+    _attr.radius = 50;
 
     if(attr.generatrix) {
       _attr.generatrix = attr.generatrix;
@@ -269,7 +269,7 @@ class Sectional extends GeneratrixElement {
       children.push(new LenText({
         point: loc.point.add(normal).add([0, normal.y < 0 ? 0 : normal.y / 2]),
         content: (curve.length / zoom).toFixed(0),
-        fontSize: radius,
+        fontSize: radius * 1.4,
         parent: layer,
         _owner: curve
       }));
@@ -320,7 +320,7 @@ class Sectional extends GeneratrixElement {
     children.push(new AngleText({
       point: center.add(end.multiply(-2.2)), //.add([0, -end.y / 2])
       content: angle.toFixed(0) + '°',
-      fontSize: radius,
+      fontSize: radius * 1.4,
       parent: layer,
       _owner: this,
       _ind: ind,

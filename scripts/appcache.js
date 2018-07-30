@@ -22,11 +22,12 @@ let appcache = `CACHE MANIFEST
 CACHE:
 
 ./
-https://fonts.googleapis.com/css?family=Roboto`;
+https://cdn.jsdelivr.net/jszip/2/jszip.min.js
+https://cdn.jsdelivr.net/combine/gh/open-xml-templating/docxtemplater-build@3.1.5/build/docxtemplater-latest.min.js,gh/open-xml-templating/docxtemplater-image-module-build@3.0.2/build/docxtemplater-image-module-latest.min.js`;
 
 glob('./build/**/*', function(err, files) {
   for(const name of files){
-    if(name.match(/\.(js|json|html|css|png|ico|jpg|gif|woff2)$/)){
+    if(name.match(/\.(js|json|html|css|scss|png|ico|jpg|gif|woff|woff2|ttf)$/) && !name.match(/\/(ram|templates)\//)){
       appcache += `\n${name.replace('./build', '')}`;
     }
   };

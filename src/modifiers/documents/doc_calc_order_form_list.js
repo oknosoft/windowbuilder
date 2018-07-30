@@ -70,15 +70,15 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       const pos = elmnts.toolbar.getPosition('input_filter');
 
       // кнопка поиска по номеру
-      elmnts.toolbar.addButtonTwoState('by_number', pos, '<i class="fa fa-key fa-fw"></i>');
-      if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
-        elmnts.toolbar.setItemState('by_number', true);
-      }
-      elmnts.toolbar.setItemToolTip('by_number', 'Режим поиска с учетом либо без учета статуса и подразделения');
-      elmnts.toolbar.attachEvent('onStateChange', (id, state) => {
-        $p.wsql.set_user_param('calc_order_by_number', state);
-        elmnts.filter.call_event();
-      });
+      // elmnts.toolbar.addButtonTwoState('by_number', pos, '<i class="fa fa-key fa-fw"></i>');
+      // if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
+      //   elmnts.toolbar.setItemState('by_number', true);
+      // }
+      // elmnts.toolbar.setItemToolTip('by_number', 'Режим поиска с учетом либо без учета статуса и подразделения');
+      // elmnts.toolbar.attachEvent('onStateChange', (id, state) => {
+      //   $p.wsql.set_user_param('calc_order_by_number', state);
+      //   elmnts.filter.call_event();
+      // });
 
       const txt_id = `txt_${dhx4.newId()}`;
       elmnts.toolbar.addText(txt_id, pos, '');
@@ -105,6 +105,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
 
       // настраиваем фильтр для списка заказов
+      elmnts.filter.disable_timer = true;
       elmnts.filter.custom_selection.__define({
         department: {
           get() {
@@ -130,12 +131,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         // sort может зависеть от ...
         _sort: {
           get() {
-            if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
-              const flt = elmnts.filter.get_filter();
-              if(flt.filter.length > 5) {
-                return [{class_name: 'desc'}, {date: 'desc'}, {search: 'desc'}];
-              }
-            }
+            // if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
+            //   const flt = elmnts.filter.get_filter();
+            //   if(flt.filter.length > 5) {
+            //     return [{class_name: 'desc'}, {date: 'desc'}, {search: 'desc'}];
+            //   }
+            // }
             return [{department: 'desc'}, {state: 'desc'}, {date: 'desc'}];
           }
         },
@@ -143,14 +144,23 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         // индекс может зависеть от ...
         _index: {
           get() {
-            if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
-              const flt = elmnts.filter.get_filter();
-              if(flt.filter.length > 5) {
-                return {
-                  ddoc: ['mango', 'search'],
-                  fields: ['class_name', 'date', 'search']
-                };
-              }
+            const {filter, date_till} = elmnts.filter.get_filter();
+            // строку, в которой 11 символов, из которых не менее 6 числа, считаем номером
+            if(filter.length === 11 && filter.replace(/\D/g, '').length > 5) {
+              const {doc} = $p.adapters.pouch.local;
+              return doc.query('doc/number_doc', {
+                include_docs: true,
+                key: ['doc.calc_order', date_till.getFullYear(), filter]
+              })
+                .then(({rows}) => {
+                  return rows.length ? {rows} : doc.query('doc/number_doc', {
+                    include_docs: true,
+                    key: ['doc.calc_order', date_till.getFullYear() - 1, filter]
+                  })
+                })
+                .then(({rows}) => {
+                  return {docs: rows.map((v) => v.doc)};
+                });
             }
             return attr._index;
           }
@@ -218,7 +228,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           }
           break;
 
-        case 'btn_templates':
         case 'btn_download':
         case 'btn_share':
         case 'btn_inbox':

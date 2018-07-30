@@ -15,46 +15,59 @@
  */
 class Pricing {
 
-  constructor($p) {
+  constructor({md, adapters}) {
 
     // подписываемся на событие после загрузки из pouchdb-ram и готовности предопределенных
-    $p.md.once("predefined_elmnts_inited", () => {
-
-      // грузим в ram цены номенклатуры
-
-      // сначала, пытаемся из local
-      this.by_local()
-        .then((loc) => {
-          return !loc && this.by_range();
-        })
-        .then(() => {
-          const {pouch} = $p.adapters;
-          // излучаем событие "можно открывать формы"
-          pouch.emit('pouch_complete_loaded');
-
-          // следим за изменениями документа установки цен, чтобы при необходимости обновить кеш
-          if(pouch.local.doc === pouch.remote.doc) {
-            pouch.local.doc.changes({
-              since: 'now',
-              live: true,
-              include_docs: true,
-              selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
-            }).on('change', (change) => {
-              // формируем новый
-              if(change.doc.class_name == 'doc.nom_prices_setup'){
-                setTimeout(() => {
-                  this.by_doc(change.doc)
-                }, 1000);
-              }
-              else if(change.doc.class_name == 'doc.calc_order'){
-                pouch.load_changes({docs: [change.doc], update_only: true});
-              }
-            });
-          }
-
-        })
+    md.once('predefined_elmnts_inited', () => {
+      const {pouch} = adapters;
+      if(pouch.local.templates) {
+        this.load_prices();
+      }
+      else {
+        pouch.once('on_log_in', () => this.load_prices());
+      }
     });
 
+  }
+
+  // грузит в ram цены номенклатуры
+  load_prices() {
+
+    // сначала, пытаемся из local
+    return this.by_local()
+      .then((loc) => {
+        return !loc && this.by_range();
+      })
+      .then(() => {
+        const {pouch} = $p.adapters;
+        // излучаем событие "можно открывать формы"
+        pouch.emit('pouch_complete_loaded');
+
+        // следим за изменениями документа установки цен, чтобы при необходимости обновить кеш
+        if(pouch.local.doc === pouch.remote.doc) {
+          pouch.local.doc.changes({
+            since: 'now',
+            live: true,
+            include_docs: true,
+            selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
+          }).on('change', (change) => {
+            // формируем новый
+            if(change.doc.class_name == 'doc.nom_prices_setup'){
+              setTimeout(() => {
+                this.by_doc(change.doc)
+              }, 1000);
+            }
+            else if(change.doc.class_name == 'doc.calc_order'){
+              const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
+              const user = pouch.authorized || $p.wsql.get_user_param('user_name');
+              if(!doc || user === change.doc.timestamp.user){
+                return;
+              }
+              pouch.load_changes({docs: [change.doc], update_only: true});
+            }
+          });
+        }
+      });
   }
 
   build_cache(rows) {
@@ -68,9 +81,8 @@ class Pricing {
       if (!onom || !onom._data){
         $p.record_log({
           class: 'error',
-          nom: key[0],
           note,
-          value
+          obj: {nom: key[0], value}
         });
         continue;
       }
@@ -106,9 +118,8 @@ class Pricing {
       if (!onom || !onom._data){
         $p.record_log({
           class: 'error',
-          nom: ref,
           note,
-          value
+          obj: {nom: ref, value}
         });
         continue;
       }
@@ -126,9 +137,9 @@ class Pricing {
 
   // если оффлайн и есть доступ к серверу
   sync_local(pouch, step = 0) {
-    return pouch.remote.doc.get(`_local/price_${step}`)
+    return pouch.remote.templates.get(`_local/price_${step}`)
       .then((remote) => {
-        return pouch.local.doc.get(`_local/price_${step}`)
+        return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
             // грузим цены из remote
@@ -143,7 +154,7 @@ class Pricing {
               else {
                 remote._rev = local._rev;
               }
-              pouch.local.doc.put(remote);
+              pouch.local.templates.put(remote);
             }
 
             return this.sync_local(pouch, ++step);
@@ -151,8 +162,8 @@ class Pricing {
       })
       .catch((err) => {
         if(step !== 0) {
-          pouch.local.doc.get(`_local/price_${step}`)
-            .then((local) => pouch.local.doc.remove(local))
+          pouch.local.templates.get(`_local/price_${step}`)
+            .then((local) => pouch.local.templates.remove(local))
             .catch(() => null);
           return true;
         }
@@ -164,8 +175,8 @@ class Pricing {
     const {pouch} = $p.adapters;
 
     // если мы в idb, но подключены к серверу, тянем цены оттуда
-    const pre = step === 0 && pouch.local.doc.adapter !== 'http' && $p.adapters.pouch.authorized ?
-      pouch.remote.doc.info()
+    const pre = step === 0 && pouch.local.templates.adapter !== 'http' && pouch.authorized ?
+      pouch.remote.templates.info()
         .then(() => this.sync_local(pouch))
         .catch((err) => null)
       :
@@ -176,7 +187,7 @@ class Pricing {
         return loaded;
       }
       else {
-        return pouch.local.doc.get(`_local/price_${step}`)
+        return pouch.local.templates.get(`_local/price_${step}`)
       }
     })
       .then((prices) => {
@@ -199,7 +210,7 @@ class Pricing {
    */
   by_range(startkey, step = 0) {
 
-    return $p.doc.nom_prices_setup.pouch_db.query('doc/doc_nom_prices_setup_slice_last',
+    return $p.adapters.pouch.local.templates.query('doc/doc_nom_prices_setup_slice_last',
       {
         limit: 600,
         include_docs: false,
@@ -227,7 +238,7 @@ class Pricing {
    */
   by_doc(doc) {
     const keys = doc.goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
-    return $p.doc.nom_prices_setup.pouch_db.query("doc/doc_nom_prices_setup_slice_last",
+    return $p.adapters.pouch.local.templates.query("doc/doc_nom_prices_setup_slice_last",
       {
         include_docs: false,
         keys: keys,
@@ -292,6 +303,7 @@ class Pricing {
     // 				1.9, 1.2, 1.5, 0, 10, 0, ТипЦенПоУмолчанию, ТипЦенПоУмолчанию, ТипЦенПоУмолчанию, "", "", "",);
     const {utils, job_prm, enm, ireg, cat} = $p;
     const empty_formula = cat.formulas.get();
+    const empty_price_type = cat.nom_prices_types.get();
 
     prm.price_type = {
       marginality: 1.9,
@@ -300,9 +312,9 @@ class Pricing {
       discount: 0,
       discount_external: 10,
       extra_charge_external: 0,
-      price_type_first_cost: job_prm.pricing.price_type_first_cost,
-      price_type_sale: job_prm.pricing.price_type_sale,
-      price_type_internal: job_prm.pricing.price_type_first_cost,
+      price_type_first_cost: empty_price_type,
+      price_type_sale: empty_price_type,
+      price_type_internal: empty_price_type,
       formula: empty_formula,
       sale_formula: empty_formula,
       internal_formula: empty_formula,
@@ -465,7 +477,8 @@ class Pricing {
   calc_amount (prm) {
 
     const {calc_order_row, price_type} = prm;
-    const price_cost = $p.job_prm.pricing.marginality_in_spec && prm.spec.count() ?
+    const {marginality_in_spec} = $p.job_prm.pricing;
+    const price_cost = marginality_in_spec && prm.spec.count() ?
       prm.spec.aggregate([], ["amount_marged"]) :
       this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
 
@@ -474,7 +487,7 @@ class Pricing {
       calc_order_row.price = price_cost.round(2);
     }
     else{
-      calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(2);
+      calc_order_row.price = marginality_in_spec ? 0 : (calc_order_row.first_cost * price_type.marginality).round(2);
     }
 
     // КМарж в строке расчета

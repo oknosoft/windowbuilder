@@ -5,7 +5,7 @@ import IconInbox from '@material-ui/icons/Inbox';
 import IconHelp from '@material-ui/icons/Help';
 import IconInfo from '@material-ui/icons/Info';
 import IconPerson from '@material-ui/icons/Person';
-import IconSettings from '@material-ui/icons/Settings';
+import IconSettings from '@material-ui/icons/PermDataSetting';
 import IconBusinessCenter from '@material-ui/icons/BusinessCenter';
 import IconReceipt from '@material-ui/icons/Receipt';
 
@@ -16,7 +16,7 @@ import IconDeclined from '@material-ui/icons/ThumbDown';
 import IconService from '@material-ui/icons/Build';
 import IconComplaints from '@material-ui/icons/BugReport';
 import IconPuzzle from '@material-ui/icons/Extension';
-import IconFileDownload from '@material-ui/icons/FileDownload';
+import IconFileDownload from '@material-ui/icons/CloudDownload';
 import IconFileShuffle from '@material-ui/icons/Shuffle';
 
 const items = [
@@ -228,7 +228,10 @@ const items = [
   },
   {
     text: 'Справка',
-    navigate: '/help',
+    navigate: function () {
+      this.props.handleClose();
+      window.open('https://github.com/oknosoft/windowbuilder/wiki');
+    },
     icon: <IconHelp/>
   },
   {

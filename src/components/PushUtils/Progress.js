@@ -41,7 +41,7 @@ class Progress extends Component {
 
     this.timer = setInterval(this.progress, 700);
 
-    this.init();
+    this.init && this.init();
 
   }
 
@@ -174,12 +174,12 @@ class Progress extends Component {
   /**
    * Перестраивает индексы
    */
-  rebuild_indexes() {
+  rebuild_indexes(dbid = 'doc') {
 
     this.setState({step: `Перестраиваем индексы...`, completed: 0, buffer: 10});
     $p.adapters.pouch.on('rebuild_indexes', this.on_index);
 
-    return $p.adapters.pouch.rebuild_indexes('doc')
+    return $p.adapters.pouch.rebuild_indexes(dbid, true)
       .then(() => {
         $p.adapters.pouch.off('rebuild_indexes', this.on_index);
         if(this.timer) {
@@ -188,7 +188,12 @@ class Progress extends Component {
         }
         this.setState({error: 'Обработка завершена'});
         setTimeout(() => {
-          this.props.handleCancel();
+          const {props} = this;
+          props.handleCancel();
+          if(props.dialog && props.dialog.wnd) {
+            const {elmnts} = props.dialog.wnd;
+            elmnts && elmnts.filter && elmnts.filter.call_event();
+          }
         }, 2000);
       });
 
@@ -203,8 +208,8 @@ class Progress extends Component {
     if (completed > 100) {
       this.setState({ completed: 0, buffer: 10 });
     } else {
-      const diff = Math.random() * 5;
-      const diff2 = Math.random() * 5;
+      const diff = Math.random() * 2;
+      const diff2 = Math.random() * 6;
       this.setState({ completed: completed + diff, buffer: completed + diff + diff2 });
     }
   };

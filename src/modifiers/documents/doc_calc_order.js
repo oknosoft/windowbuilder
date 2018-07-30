@@ -44,20 +44,20 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     this.obj_delivery_state = enm.obj_delivery_states.Черновик;
 
     //Номер документа
-    return this.new_number_doc();
+    return this.number_doc ? Promise.resolve(this) : this.new_number_doc();
 
   }
 
   // перед записью надо присвоить номер для нового и рассчитать итоги
   before_save() {
 
-    const {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен} = $p.enm.obj_delivery_states;
+    const {
+      obj_delivery_states: {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен},
+      elm_types: {ОшибкаКритическая, ОшибкаИнфо},
+    } = $p.enm;
     //Для шаблонов, отклоненных и отозванных проверки выполнять не будем, чтобы возвращалось всегда true
     //при этом, просто сразу вернуть true не можем, т.к. надо часть кода выполнить - например, сумму документа пересчитать
     const must_be_saved = [Подтвержден, Отправлен].indexOf(this.obj_delivery_state) == -1;
-
-    let doc_amount = 0,
-      amount_internal = 0;
 
     // если установлен признак проведения, проверим состояние транспорта
     if(this.posted) {
@@ -101,39 +101,29 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       }
     }
 
-    this.production.forEach((row) => {
-
-      doc_amount += row.amount;
-      amount_internal += row.amount_internal;
-
-      // if(!row.characteristic.calc_order.empty()) {
-      //   const name = row.nom.article || row.nom.nom_group.name || row.nom.id.substr(0, 3);
-      //   if(sys_profile.indexOf(name) == -1) {
-      //     if(sys_profile) {
-      //       sys_profile += ' ';
-      //     }
-      //     sys_profile += name;
-      //   }
-      //
-      //   row.characteristic.constructions.forEach((row) => {
-      //   	if(row.parent && !row.furn.empty()){
-      //   		const name = row.furn.name_short || row.furn.name;
-      //   		if(sys_furn.indexOf(name) == -1){
-      //   			if(sys_furn)
-      //   				sys_furn += " ";
-      //   			sys_furn += name;
-      //   		}
-      //   	}
-      //   });
-      // }
+    // рассчитаем итоговые суммы документа и проверим наличие обычных и критических ошибок
+    let doc_amount = 0, internal = 0;
+    const errors = this._data.errors = new Map();
+    this.production.forEach(({amount, amount_internal, characteristic}) => {
+      doc_amount += amount;
+      internal += amount_internal;
+      characteristic.specification.forEach(({nom}) => {
+        if([ОшибкаКритическая, ОшибкаИнфо].indexOf(nom.elm_type) !== -1) {
+          if(!errors.has(characteristic)){
+            errors.set(characteristic, new Set());
+          }
+          if(!errors.has(nom.elm_type)){
+            errors.set(nom.elm_type, new Set());
+          }
+          // накапливаем ошибки в разрезе критичности и в разрезе продукций - отдельные массивы
+          errors.get(characteristic).add(nom);
+          errors.get(nom.elm_type).add(nom);
+        }
+      });
     });
-
     const {rounding} = this;
-
     this.doc_amount = doc_amount.round(rounding);
-    this.amount_internal = amount_internal.round(rounding);
-    //this.sys_profile = sys_profile;
-    //this.sys_furn = sys_furn;
+    this.amount_internal = internal.round(rounding);
     this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
 
     const {_obj, obj_delivery_state, category} = this;
@@ -169,21 +159,25 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     // пометим на удаление неиспользуемые характеристики
     // этот кусок не влияет на возвращаемое before_save значение и выполняется асинхронно
-    const res = this._manager.pouch_db.query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
+    const res = this._manager.pouch_db
+      .query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
       .then(({rows}) => {
-        const deleted = [];
+        let res = Promise.resolve();
+        let deleted = 0;
         for (const {id} of rows) {
           const ref = id.substr(20);
           if(this.production.find_rows({characteristic: ref}).length) {
             continue;
           }
-          deleted.push($p.cat.characteristics.get(ref, 'promise')
-            .then((ox) => !ox._deleted && ox.mark_deleted(true)));
+          deleted ++;
+          res = res
+            .then(() => $p.cat.characteristics.get(ref, 'promise'))
+            .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true));
         }
-        return Promise.all(deleted);
+        return res.then(() => deleted);
       })
       .then((res) => {
-        res.length && this._manager.emit_async('svgs', this);
+        res && this._manager.emit_async('svgs', this);
       })
       .catch((err) => null);
 
@@ -199,9 +193,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   value_change(field, type, value) {
     if(field == 'organization') {
       this.organization = value;
-      this.new_number_doc();
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
+        this.new_number_doc();
       }
     }
     else if(field == 'partner' && this.contract.owner != value) {
@@ -256,18 +250,27 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   }
 
   /**
-   * Пересчитывает номера изделий в продукциях
+   * Пересчитывает номера изделий в продукциях,
+   * обновляет контрагента, состояние транспорта и подразделение
    * @param save
    */
   product_rows(save) {
-    const res = [];
+    let res = Promise.resolve();
     this.production.forEach(({row, characteristic}) => {
       if(!characteristic.empty() && characteristic.calc_order === this) {
-        if(characteristic.product !== row || characteristic.partner !== this.partner || characteristic._modified) {
+        if(characteristic.product !== row || characteristic._modified ||
+          characteristic.partner !== this.partner ||
+          characteristic.obj_delivery_state !== this.obj_delivery_state ||
+          characteristic.department !== this.department) {
+
           characteristic.product = row;
+          characteristic.obj_delivery_state = this.obj_delivery_state;
+          characteristic.partner = this.partner;
+          characteristic.department = this.department;
+
           if(!characteristic.owner.empty()) {
             if(save) {
-              res.push(characteristic.save());
+              res = res.then(() => characteristic.save());
             }
             else {
               characteristic.name = characteristic.prod_name();
@@ -276,9 +279,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         }
       }
     });
-    if(save) {
-      return Promise.all(res);
-    }
+    return res;
   }
 
   /**
@@ -534,7 +535,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
       Площадь: row.s,
       //Отдельно размеры, общая площадь позиции и комментарий к позиции
-      Длинна: row.len,
+      Длина: row.len,
       Ширина: row.width,
       ВсегоПлощадь: row.s * row.quantity,
       Примечание: row.note,
@@ -678,13 +679,14 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    */
   load_production(forse) {
     const prod = [];
-    const {characteristics} = $p.cat;
+    const {cat: {characteristics}, enm: {obj_delivery_states}} = $p;
     this.production.forEach(({nom, characteristic}) => {
       if(!characteristic.empty() && (forse || characteristic.is_new())) {
         prod.push(characteristic.ref);
       }
     });
-    return characteristics.adapter.load_array(characteristics, prod)
+    return characteristics.adapter.load_array(characteristics, prod, false,
+        this.obj_delivery_state == obj_delivery_states.Шаблон && characteristics.adapter.local.templates)
       .then(() => {
         prod.length = 0;
         this.production.forEach(({nom, characteristic}) => {

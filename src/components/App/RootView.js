@@ -29,18 +29,12 @@ class RootView extends Component {
   }
 
   shouldComponentUpdate(props, state) {
-    const {user, data_empty, couch_direct, offline, history, handleLogin} = props;
+    const {user, data_empty, couch_direct, offline, history} = props;
     const {path_log_in} = state;
     let res = true;
 
     if (path_log_in != this.isPathLogIn()) {
       this.setState({path_log_in: this.isPathLogIn()});
-      res = false;
-    }
-
-    // если есть сохранённый пароль и online, пытаемся авторизоваться
-    if (!user.logged_in && user.has_login && !user.try_log_in && !offline) {
-      handleLogin();
       res = false;
     }
 
@@ -60,10 +54,19 @@ class RootView extends Component {
   render() {
 
     const {props, state} = this;
-    const {meta_loaded, data_empty, data_loaded, history} = props;
-    const show_dumb = !meta_loaded ||
+    const {meta_loaded, data_empty, data_loaded, history, repl} = props;
+    let show_dumb = !meta_loaded ||
       (data_empty === undefined) ||
       (data_empty === false && !data_loaded);
+
+    if(!show_dumb && repl) {
+      for(const dbs in repl) {
+        const info = repl[dbs];
+        if(info.ok && !info.end_time) {
+          show_dumb = true;
+        }
+      }
+    }
 
     return <MuiThemeProvider theme={theme}>
       {

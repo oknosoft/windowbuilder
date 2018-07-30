@@ -136,25 +136,26 @@
     const {base_block} = $p.job_prm.builder;
     $p.cat.production_params.forEach((o) => {
       if(!o.is_folder) {
-        o.base_blocks.forEach((row) => {
-          if(base_block.indexOf(row.calc_order) == -1) {
-            base_block.push(row.calc_order);
+        o.base_blocks.forEach(({_obj}) => {
+          const calc_order = _mgr.get(_obj.calc_order, false, false);
+          if(base_block.indexOf(calc_order) == -1) {
+            base_block.push(calc_order);
           }
         });
       }
     });
 
-    // загрузим шаблоны пачками по 10 документов
+    // загрузим шаблоны пачками по 20 документов
     const refs = [];
     for (let o of base_block) {
       refs.push(o.ref);
-      if(refs.length > 9) {
-        await _mgr.adapter.load_array(_mgr, refs);
+      if(refs.length > 19) {
+        await _mgr.adapter.load_array(_mgr, refs, false, _mgr.adapter.local.templates);
         refs.length = 0;
       }
     }
     if(refs.length) {
-      await _mgr.adapter.load_array(_mgr, refs);
+      await _mgr.adapter.load_array(_mgr, refs, false, _mgr.adapter.local.templates);
     }
 
     // загружаем характеристики из первых строк шаблонов - нужны для фильтра по системам
@@ -164,7 +165,7 @@
         refs.push(production.get(0).characteristic.ref);
       }
     });
-    return $p.cat.characteristics.adapter.load_array($p.cat.characteristics, refs);
+    return _mgr.adapter.load_array($p.cat.characteristics, refs, false, _mgr.adapter.local.templates);
 
   };
 
@@ -180,8 +181,9 @@
     dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
     // заполняем продукцию и сохраненные эскизы
     const map = new Map();
-    const aatt = [];
     const db = _mgr.adapter.db(_mgr);
+
+    // создаём характеристики и заполняем данными исходного заказа
     src.production.forEach((row) => {
       const prow = Object.assign({}, row._obj);
       if(row.characteristic.calc_order === src) {
@@ -190,17 +192,9 @@
         cx._data._modified = true;
         cx._data._is_new = true;
         map.set(row.characteristic, cx);
-        if(row.characteristic._attachments) {
-          aatt.push(db.getAttachment(`cat.characteristics|${row.characteristic.ref}`, 'svg')
-            .then((att) => cx._obj._attachments = {svg: {content_type: 'image/svg+xml', data: att}})
-            .catch((err) => null));
-        }
       }
       dst.production.add(prow);
     });
-
-    // дожидаемся вложений
-    await Promise.all(aatt);
 
     // обновляем leading_product
     dst.production.forEach((row) => {

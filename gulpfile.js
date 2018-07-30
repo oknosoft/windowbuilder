@@ -18,12 +18,9 @@ module.exports = gulp;
 // Cборка проекта
 gulp.task('build-iface', function(){
 	return gulp.src([
-	  //'./dist/worker.js',
-    //'./src/metadata/init.js',
 		'./data/merged_wb_templates.js',
 		'./src/modifiers/**/*.js',
 		'./src/widgets/*.js',
-		//'./src/wnd_main.js'
 	])
 		.pipe(concat('wnd_debug.js'))
     .pipe(strip())
@@ -127,12 +124,12 @@ gulp.task('injected-templates', function(){
 // Сборка css
 gulp.task('css-base64', function () {
 	return gulp.src([
+    './src/templates/iface.css',
 		'./src/templates/cursors/cursors.css',
 		'./src/templates/buttons20.css',
-		'./src/templates/iface.css'
 	])
 		.pipe(base64())
 		.pipe(concat('windowbuilder.css'))
-		.pipe(gulp.dest('./public/dist'))
+		.pipe(gulp.dest('./src/styles'))
 });
 

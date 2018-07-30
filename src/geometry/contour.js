@@ -764,9 +764,9 @@ class Contour extends AbstractFilling(paper.Layer) {
    * Признак прямоугольности
    */
   get is_rectangular() {
-    return (this.side_count != 4) || !this.profiles.some((profile) => {
-      return !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 0.2);
-    });
+    const {Импост} = $p.enm.elm_types;
+    const outer = this.profiles.filter((v) => v.elm_type != Импост);
+    return outer.length === 4 && !outer.some(profile => !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 0.2));
   }
 
   move(delta) {
@@ -1696,18 +1696,15 @@ class Contour extends AbstractFilling(paper.Layer) {
       const {inner, outer} = profile.rays;
       const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true) ?
         inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) : outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
-      const tmp = {
+      let angle = curr.e.subtract(curr.b).angle.round(1);
+      if(angle < 0) angle += 360;
+      return {
         profile,
         sub_path,
-        angle: curr.e.subtract(curr.b).angle,
+        angle,
         b: curr.b,
         e: curr.e,
       };
-      if (tmp.angle < 0) {
-        tmp.angle += 360;
-      }
-      ;
-      return tmp;
     });
     const ubound = res.length - 1;
     return res.map((curr, index) => {
@@ -2076,10 +2073,12 @@ class Contour extends AbstractFilling(paper.Layer) {
 
   /**
    * Количество сторон контура
-   * TODO: строго говоря, количество сторон != количеству палок
    */
   get side_count() {
-    return this.profiles.length;
+    const {Импост} = $p.enm.elm_types;
+    let res = 0;
+    this.profiles.forEach((v) => v.elm_type != Импост && res++);
+    return res;
   }
 
   /**
@@ -2194,4 +2193,3 @@ class Contour extends AbstractFilling(paper.Layer) {
  * @type function
  */
 EditorInvisible.Contour = Contour;
-
