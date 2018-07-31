@@ -20,6 +20,11 @@ import modifiers from './modifiers';
 // загружаем metadata.transition и экспортируем $p глобально
 import $p from 'metadata-dhtmlx';
 
+if (process.env.NODE_ENV === 'development') {
+  import('pouchdb-debug')
+    .then((module) => $p.classes.PouchDB.plugin(module.default));
+}
+
 // подключаем react-специфичные методы
 import plugin_react from 'metadata-react/plugin';
 plugin_react.constructor.call($p);
@@ -81,7 +86,7 @@ export function init(store) {
       })
       .catch((err) => {
         $p.record_log(err);
-      })
+      });
   }
   catch (err) {
     $p && $p.record_log(err);
