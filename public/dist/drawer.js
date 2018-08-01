@@ -11477,26 +11477,30 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
   }
 
   get builder_props() {
-    const defaults = $p.CatCharacteristics.builder_props_defaults;
-    let props;
+    const defaults = this.constructor.builder_props_defaults;
+    const props = {};
+    let tmp;
     try {
-      props = JSON.parse(this._obj.builder_props || '{}');
+      tmp = JSON.parse(this._obj.builder_props || '{}');
     }
     catch(e) {
-      props = {};
+      tmp = props;
     }
     for(const prop in defaults){
-      if(!props.hasOwnProperty(prop)) {
+      if(tmp.hasOwnProperty(prop)) {
+        props[prop] = !!tmp[prop];
+      }
+      else {
         props[prop] = defaults[prop];
       }
     }
     return props;
   }
   set builder_props(v) {
-    const {_obj, _data} = this;
     if(this.empty()) {
       return;
     }
+    const {_obj, _data} = this;
     const name = 'builder_props';
     if(_data && _data._loading) {
       _obj[name] = v;
@@ -11504,10 +11508,10 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     }
     let _modified;
     if(!_obj[name] || typeof _obj[name] !== 'string'){
-      _obj[name] = JSON.stringify($p.CatCharacteristics.builder_props_defaults);
+      _obj[name] = JSON.stringify(this.constructor.builder_props_defaults);
       _modified = true;
     }
-    const props = JSON.parse(_obj[name]);
+    const props = this.builder_props;
     for(const prop in v){
       if(props[prop] !== v[prop]) {
         props[prop] = v[prop];
