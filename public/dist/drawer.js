@@ -13855,6 +13855,11 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   after_create() {
 
     const {enm, cat, current_user, DocCalc_order} = $p;
+
+    if(!current_user) {
+      return Promise.resolve(this);
+    }
+
     const {acl_objs} = current_user;
 
     acl_objs.find_rows({by_default: true, type: cat.organizations.class_name}, (row) => {
