@@ -9171,6 +9171,8 @@ class Scheme extends paper.Project {
 
 }
 
+EditorInvisible.Scheme = Scheme;
+
 
 class EditableText extends paper.PointText {
 
