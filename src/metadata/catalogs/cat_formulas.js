@@ -38,7 +38,7 @@ exports.CatFormulasManager = class CatFormulasManager extends Object {
       else {
         // выполняем модификаторы
         try {
-          utils.cron(formula.execute());
+          utils.cron ? utils.cron(formula.execute()) : formula.execute();
         }
         catch (err) {
         }
