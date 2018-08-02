@@ -13407,15 +13407,14 @@ $p.CatNom.prototype.__define({
 			if(!attr){
         attr = {currency};
       }
+      const {_price} = this._data;
+      const {x, y, z, clr, ref, calc_order} = (attr.characteristic || {});
 
 			if(attr.price_type){
 
         if($p.utils.is_data_obj(attr.price_type)){
           attr.price_type = attr.price_type.ref;
         }
-
-        const {_price} = this._data;
-        const {x, y, z, clr, ref, calc_order} = (attr.characteristic || {});
 
         if(!attr.characteristic){
           attr.characteristic = $p.utils.blank.guid;
@@ -13483,7 +13482,6 @@ $p.CatNom.prototype.__define({
             }
           }
         }
-
       }
 
 
