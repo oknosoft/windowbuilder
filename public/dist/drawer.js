@@ -9516,7 +9516,7 @@ class Pricing {
 
     md.once('predefined_elmnts_inited', () => {
       const {pouch} = adapters;
-      if(pouch.local.templates) {
+      if(pouch.local.templates || pouch.props.user_node) {
         this.load_prices();
       }
       else {
@@ -9541,12 +9541,10 @@ class Pricing {
             since: 'now',
             live: true,
             include_docs: true,
-            selector: {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
+            selector: pouch.props.user_node ? {class_name: 'doc.nom_prices_setup'} : {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
           }).on('change', (change) => {
             if(change.doc.class_name == 'doc.nom_prices_setup'){
-              setTimeout(() => {
-                this.by_doc(change.doc)
-              }, 1000);
+              setTimeout(() => this.by_doc(change.doc), 500);
             }
             else if(change.doc.class_name == 'doc.calc_order'){
               const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
