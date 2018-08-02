@@ -172,6 +172,10 @@ class Pricing {
   by_local(step = 0) {
     const {pouch} = $p.adapters;
 
+    if(!pouch.local.templates) {
+      return Promise.resolve(false);
+    }
+
     // если мы в idb, но подключены к серверу, тянем цены оттуда
     const pre = step === 0 && pouch.local.templates.adapter !== 'http' && pouch.authorized ?
       pouch.remote.templates.info()
@@ -208,7 +212,10 @@ class Pricing {
    */
   by_range(startkey, step = 0) {
 
-    return $p.adapters.pouch.local.templates.query('doc/doc_nom_prices_setup_slice_last',
+    const {pouch} = $p.adapters;
+    const {templates, doc} = pouch.local;
+
+    return (templates || doc).query('doc/doc_nom_prices_setup_slice_last',
       {
         limit: 600,
         include_docs: false,
@@ -219,7 +226,7 @@ class Pricing {
       })
       .then((res) => {
         this.build_cache(res.rows);
-        $p.adapters.pouch.emit('nom_prices', ++step);
+        pouch.emit('nom_prices', ++step);
         if (res.rows.length === 600) {
           return this.by_range(res.rows[res.rows.length - 1].key, step);
         }
