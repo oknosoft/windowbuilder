@@ -25,9 +25,11 @@
     <!--jquery from jsdelivr-->
     <script src="//cdn.jsdelivr.net/jquery/2.2.3/jquery.min.js"></script>
 
-    <!-- UItoTop jQuery Plugin 1.2 | Matt Varone | http://www.mattvarone.com/web-design/uitotop-jquery-plugin
-    <script src="js/move-top.js"></script>
-    -->
+	<!-- maps.yandex.ru -->
+	<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+
+	<!-- карта дилеров -->
+	<script src="js/map.js"></script>
 
     <!-- jQuery EasIng v1.1.2 - шевеление элементов -->
     <script src="js/easing.js"></script>
@@ -74,10 +76,10 @@
     </div>
 
     <!-- banner-section -->
-    <div class="banner wow fadeInUp" id="home" data-wow-delay="0.4s">
+    <div class="banner">
         <div class="container">
             <div class="banner-info text-center">
-                <h2 class="wow bounceInLeft" data-wow-delay="0.4s">Программа расчета окон, заказы и совместная работа<br />Комплексное решение для вашей команды и ваших задач</h2>
+                <h2 class="wow bounceInLeft" data-wow-delay="0.1s">Программа для оконных заводов и их дилеров<br />Комплексное решение для вашей команды и ваших задач</h2>
             </div>
             <div class="header-bottom" style="width: 90%; margin: auto">
                 <div class="right-grid-1">
@@ -109,9 +111,20 @@
     <!-- content-section -->
     <div class="content">
 
+		<!-- map -->
+		<div class="happy-clients" id="clients">
+			<div class="container">
+				<div class="happy-clients-head text-center">
+					<h2>Активные пользователи</h2>
+				</div>
+				<div id="map" />
+			</div>
+		</div>
+
+		<!-- possibilites -->
         <div class="service-section" id="service">
             <div class="container">
-                <div class="service-section-head wow fadeInRight" data-wow-delay="0.4s">
+                <div class="service-section-head">
                     <h2 class="text-center">Сервис <i>Заказ дилера</i> — это единое пространство,<br />где команды совместно работают<br />над общими задачами</h2>
 
                     <h3>Возможности программы</h3>
@@ -119,7 +132,7 @@
                 <div class="service-section-grids">
 
                     <div class="col-md-12 service-grid">
-                        <div class="service-section-grid wow bounceIn" data-wow-delay="0.4s">
+                        <div class="service-section-grid">
                             <div class="icon">
                                 <i class="s7"></i>
                             </div>
@@ -142,7 +155,7 @@
                     </div>
 
                     <div class="col-md-6 service-grid">
-                        <div class="service-section-grid wow bounceIn" data-wow-delay="0.4s">
+                        <div class="service-section-grid">
                             <div class="icon">
                                 <i class="s1"></i>
                             </div>
@@ -154,7 +167,7 @@
                             </div>
                             <div class="clearfix"></div>
                         </div>
-                        <div class="service-section-grid wow bounceIn" data-wow-delay="0.4s">
+                        <div class="service-section-grid">
                             <div class="icon">
                                 <i class="s2"></i>
                             </div>
@@ -166,7 +179,7 @@
                             </div>
                             <div class="clearfix"></div>
                         </div>
-                        <div class="service-section-grid wow bounceIn" data-wow-delay="0.4s">
+                        <div class="service-section-grid">
                             <div class="icon">
                                 <i class="s3"></i>
                             </div>
@@ -180,7 +193,7 @@
                         </div>
                     </div>
                     <div class="col-md-6 service-grid">
-                        <div class="service-section-grid wow bounceIn" data-wow-delay="0.4s">
+                        <div class="service-section-grid">
                             <div class="icon">
                                 <i class="s4"></i>
                             </div>
@@ -191,27 +204,24 @@
                             </div>
                             <div class="clearfix"></div>
                         </div>
-                        <div class="service-section-grid wow bounceIn" data-wow-delay="0.4s">
+                        <div class="service-section-grid">
                             <div class="icon">
                                 <i class="s5"></i>
                             </div>
                             <div class="icon-text">
-                                <h4>Реактивный обмен данными</h4>
+                                <h4>Надёжный обмен данными</h4>
                                 <p>Сервис построен по принципу offline-first. Для расчета изделия и оформления заказа, не требуется соединение с Интернет.
                                     Перебои связи и даже аварии на сервере - не страшны. Данные автоматически синхронизируются при восстановлении подключения</p>
                             </div>
                             <div class="clearfix"></div>
                         </div>
-                        <div class="service-section-grid wow bounceIn" data-wow-delay="0.4s">
+                        <div class="service-section-grid">
                             <div class="icon">
                                 <i class="s6"></i>
                             </div>
                             <div class="icon-text">
                                 <h4>Прозрачные и конкурентные цены</h4>
-                                <p>Стоимость сервиса определяется, в основном, нашими затратами на хостинг и администрирование серверов.
-                                    Вы платите только за фактически потреблённые мощности (примерно, как посекундная тарификация в сотовой связи).
-                                    Система формирует подробный отчет по трафику и количеству прочитанных и записанных объектов каждым пользователем</p>
-
+                                <p>За 10 тыс. руб. в месяц, вы получаете готовые рабочие места менеджеров и личные кабинеты самообслуживания дилеров с поодержкой автономного режима и моментальным обменом заказами</p>
                             </div>
                             <div class="clearfix"></div>
                         </div>
@@ -223,13 +233,13 @@
 
         <div class="work-section" id="video">
             <div class="container text-center">
-                <div class="service-section-head wow fadeInRight" data-wow-delay="0.4s">
+                <div class="service-section-head">
                     <h3 class="text-center">Видеоролики</h3>
                 </div>
                 <iframe class="youtube" src="https://www.youtube.com/embed/NZBJWOHdDlw?list=PLiVLBB_TTj5mQXHOzodkzP3duImksxVgB" frameborder="0" allowfullscreen></iframe>
 
                 <div class="col-md-12 service-grid text-left">
-                    <div class="service-section-grid wow bounceIn" data-wow-delay="0.7s">
+                    <div class="service-section-grid">
                         <div class="icon">
                             <i class="s7"></i>
                         </div>
@@ -260,45 +270,32 @@
 
         <div class="price-section" id="pricing">
             <div class="container">
-                <div class="price-section-head wow fadeInLeft" data-wow-delay="0.4s">
+                <div class="price-section-head">
                     <h3 class="text-center">Выберите тариф</h3>
                     <p>Наш сервис подойдёт как малым гаражным производствам, так и крупным оконным заводам</p>
                 </div>
                 <div class="price-section-grids">
-                    <div class="col-md-4 price-value text-center wow fadeInLeft" data-wow-delay="0.3s">
-                        <div class="price-section-grid">
-                            <h5>Начальный</h5>
-                            <h3>0 <i class="fa fa-rub" aria-hidden="true"></i></h3>
-                            <p>Бесплатно</p>
-                            <ul>
-                                <li>1 Пользователь</li>
-                                <li>До 200 операций записи<br />в месяц</li>
-                                <li></li>
-                            </ul>
-                            <a href="#contact">Подключить</a>
-                        </div>
-                    </div>
-                    <div class="col-md-4 price-value text-center wow fadeInUp" data-wow-delay="0.6s">
+                    <div class="col-md-6 price-value text-center wow fadeInUp" data-wow-delay="0.3s">
                         <div class="price-section-grid">
                             <h5>Стандарт</h5>
-                            <h3>5 <i class="fa fa-rub" aria-hidden="true"></i></h3>
-                            <p>За каждую операцию записи</p>
-                            <ul>
-                                <li>Число пользователей не ограничено</li>
-                                <li>Оплата только за использованные ресурсы сервера</li>
-                                <li></li>
-                            </ul>
+							<h3>10 000 <i class="fa fa-rub" aria-hidden="true"></i></h3>
+							<p>В месяц</p>
+							<ul>
+								<li>50 дилеров</li>
+								<li>До 100 изделий в день</li>
+								<li>Синхронизация с 1С</li>
+							</ul>
                             <a href="#contact">Подключить</a>
                         </div>
                     </div>
-                    <div class="col-md-4 price-value text-center wow fadeInRight" data-wow-delay="0.4s">
+                    <div class="col-md-6 price-value text-center wow fadeInRight" data-wow-delay="0.1s">
                         <div class="price-section-grid">
                             <h5>Премиум</h5>
-                            <h3>24 000 <i class="fa fa-rub" aria-hidden="true"></i></h3>
+                            <h3>30 000 <i class="fa fa-rub" aria-hidden="true"></i></h3>
                             <p>В месяц</p>
                             <ul>
-                                <li>200 дилеров</li>
-                                <li>До 500 изделий в день</li>
+                                <li>300 дилеров</li>
+                                <li>До 600 изделий в день</li>
                                 <li>Синхронизация с 1С</li>
                             </ul>
                             <a href="#contact">Подключить</a>
@@ -312,7 +309,7 @@
 
         <div class="work-section" id="work">
             <div class="container">
-                <div class="work-section-head wow fadeInRight" data-wow-delay="0.4s">
+                <div class="work-section-head wow fadeInRight" data-wow-delay="0.2s">
                     <h3 class="text-center" >Как это работает</h3>
                     <p>Под капотом <i>Заказа дилера</i> крутятся современные javascript библиотеки с открытым исходным кодом и поддержкой огромного сообщества разработчиков. Мы не изобретаем велосипедов, а используем лучшие и надёжные технологии обработки данных:</p>
                     <ul>
@@ -326,7 +323,7 @@
                     </ul>
 
                 </div>
-                <div class="work-section-grids text-center wow fadeInUp" data-wow-delay="0.4s">
+                <div class="work-section-grids text-center wow fadeInUp" data-wow-delay="0.2s">
                     <div class="col-md-3 work-section-grid">
                         <i class="ear-phones"></i>
                         <h4>Первое подключение</h4>
@@ -335,21 +332,21 @@
                         <p>Обрывы связи и перебои в работе сервера не страшны - программа умеет работать автономно</p>
                         <span class="arrow1"><img src="images/arrow1.png" alt="" /></span>
                     </div>
-                    <div class="col-md-3 work-section-grid wow fadeInUp" data-wow-delay="0.6s">
+                    <div class="col-md-3 work-section-grid wow fadeInUp" data-wow-delay="0.3s">
                         <i class="lock"></i>
                         <h4>Построение изделий</h4>
                         <p>Эскиз формируется в графическом редакторе. Типовые блоки избавляют от рутинных операций рисования стандартных изделий</p>
                         <p>Расчет спецификации и стоимости выполняется по координатам и правилам, заданным в технологических справочниках и документах установки цен</p>
                         <span class="arrow2"><img src="images/arrow2.png" alt="" /></span>
                     </div>
-                    <div class="col-md-3 work-section-grid wow fadeInUp" data-wow-delay="0.8s">
+                    <div class="col-md-3 work-section-grid wow fadeInUp" data-wow-delay="0.4s">
                         <i class="cloud"></i>
                         <h4>Согласование заказа</h4>
                         <p>В зависимости от требований CRM, сервис предлагает гибкие инструменты для согласования состава и стоимости заказа как между конечным покупателем и дилером, так и между дилером и заводом</p>
                         <p>Заказ может иметь любые дополнительные реквизиты и статусы, что упрощает контроль и планирование</p>
                         <span class="arrow1"><img src="images/arrow1.png" alt="" /></span>
                     </div>
-                    <div class="col-md-3 work-section-grid wow fadeInUp" data-wow-delay="0.10s">
+                    <div class="col-md-3 work-section-grid wow fadeInUp" data-wow-delay="0.1s">
                         <i class="done"></i>
                         <h4>Оплата и производство</h4>
                         <p>Заказчику доступна как сложная математика с оптимизацией раскроя, безбумажкой и станками с ЧПУ,
@@ -360,7 +357,7 @@
                 </div>
 
                 <div class="col-md-12 service-grid text-left">
-                    <div class="service-section-grid wow bounceIn" data-wow-delay="0.7s">
+                    <div class="service-section-grid">
                         <div class="icon">
                             <i class="s7"></i>
                         </div>
@@ -377,64 +374,11 @@
             </div>
         </div>
 
-
-        <div class="happy-clients hidden" id="clients">
-            <div class="container">
-                <div class="happy-clients-head text-center wow fadeInRight" data-wow-delay="0.4s">
-                    <h3>Happy Clients</h3>
-                    <p>We are explain who is using our business solutions</p>
-                </div>
-                <div class="happy-clients-grids">
-                    <div class="col-md-6 happy-clients-grid wow bounceIn" data-wow-delay="0.4s">
-                        <div class="client">
-                            <img src="" alt="" />
-                        </div>
-                        <div class="client-info">
-                            <p><img src="images/open-quatation.jpg" class="open" alt="" />Окна века<img src="images/close-quatation.jpg" class="closeq" alt="" /></p>
-                            <h4><a href="#">Darwin Michle, </a>Project manager</h4>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="col-md-6 happy-clients-grid span_66 wow bounceIn" data-wow-delay="0.4s">
-                        <div class="client">
-                            <img src="" alt="" />
-                        </div>
-                        <div class="client-info">
-                            <p><img src="images/open-quatation.jpg" class="open" alt="" />Тиграл<img src="images/close-quatation.jpg" class="closeq" alt="" /></p>
-                            <h4><a href="#">Madam Elisabath, </a>Creative Director</h4>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="col-md-6 happy-clients-grid wow bounceIn" data-wow-delay="0.4s">
-                        <div class="client">
-                            <img src="" alt="" />
-                        </div>
-                        <div class="client-info">
-                            <p><img src="images/open-quatation.jpg" class="open" alt="" />Планета свет<img src="images/close-quatation.jpg" class="closeq" alt="" /></p>
-                            <h4><a href="#">Clips arter, </a>Lipsum directer</h4>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="col-md-6 happy-clients-grid span_66 wow bounceIn" data-wow-delay="0.4s">
-                        <div class="client">
-                            <img src="" alt="" />
-                        </div>
-                        <div class="client-info">
-                            <p><img src="images/open-quatation.jpg" class="open" alt="" />Бимакс<img src="images/close-quatation.jpg" class="closeq" alt="" /></p>
-                            <h4><a href="#">zam cristafr,  </a>manager</h4>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
-            </div>
-        </div>
-
         <div class="contact-section" id="contact">
 
             <div class="container">
 
-                <div class="contact-section-head text-center wow fadeInLeft" data-wow-delay="0.4s">
+                <div class="contact-section-head text-center wow fadeInLeft" data-wow-delay="0.1s">
                     <h3>Обратная связь</h3>
                     <div class="col-md-offset-1 col-md-pull-3 primary">
 
@@ -456,8 +400,8 @@
     <!-- footer-section -->
     <div class="footer">
         <div class="container">
-            <div class="copyright text-center wow bounceInLeft" data-wow-delay="0.4s">
-                <p>Copyright &copy; <a href="http://www.oknosoft.ru">Oknosoft</a> 2014 - 2016 All rights reserved</p>
+            <div class="copyright text-center">
+                <p>Copyright &copy; <a href="http://www.oknosoft.ru">Oknosoft</a> 2014 - 2018 All rights reserved</p>
             </div>
         </div>
     </div>

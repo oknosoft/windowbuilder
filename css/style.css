@@ -319,12 +319,12 @@ i.s7 {
 /* service-section */
 
 .service-section {
-	padding:8em 0 0 0;
+	padding: 0;
 }
 .service-section-head h2 {
 	color:#394b50;
 	font-size:3.5em;
-	padding: 2em 0;
+	padding: 1em 0;
 }
 .service-section-head h3 {
 	color:#394b50;
@@ -463,7 +463,7 @@ i.s7 {
 	-ms-border-radius: 4px;
 	padding:4em 2em 5em 2em;
 	background:#fff;
-	width:32.888%;
+	/*width:32.888%;*/
 	float:left;
 	margin-right:0.6%;
 	margin-top:1em;
@@ -578,17 +578,29 @@ a.work:hover {
 	float:left;
 	width: 69%;
 }
-.happy-clients {
-	background:#ffc155;
-	padding:7em 0;
+
+#map {
+	height: 80vh;
 }
-.happy-clients-head h3 {
-	color: #fff;
-	font-size: 2.2em;
-	font-weight: 600;
+.customControl {
+	background-color: #fff;
+	padding: 10px;
+	border-radius: 3px;
+	max-width: 220px;
+	box-shadow: 0 0 10px rgba(0,0,0,0.5);
+	opacity: 0.9;
+}
+
+.happy-clients {
+	padding:8em 0 0 0;
+}
+.happy-clients-head h2 {
+	color:#394b50;
+	font-size:3.5em;
+	padding: 1em 0 0 0;
 }
 .happy-clients-head p {
-	color: #fff;
+	color:#394b50;
 	font-size: 1.2em;
 	font-weight: 500;
 }
@@ -964,9 +976,6 @@ span.locate img {
 		width: 82%;
 		margin-top: 0.7em;
 	}
-	.service-section {
-		padding: 4em 0 0 0;
-	}
 	.service-section-grid h4 {
 		font-size: 1.1em;
 		margin-bottom: 0.5em;
@@ -1323,9 +1332,6 @@ span.locate img {
 	.banner {
 		padding-bottom: 12em;
 		margin-bottom: 6em;
-	}
-	.service-section {
-		padding: 3em 0;
 	}
 	.service-section-head h3, .price-section-head h3, .work-section-head h3, .happy-clients-head h3, .contact-section-head h3, .about_right h3 {
 		font-size: 1.6em;
