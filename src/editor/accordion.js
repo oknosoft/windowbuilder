@@ -133,35 +133,31 @@ class SchemeLayers {
   }
 
   listener(obj, fields) {
-    const {tree, editor} = this;
+    const {tree, editor: {project}} = this;
 
-    if (tree && tree.clearAll && fields.constructions){
+    if(tree && tree.clearAll && fields.constructions) {
 
       // добавляем слои изделия
       tree.clearAll();
-      editor.project.contours.forEach((layer) => {
+      project.contours.forEach((layer) => {
         this.load_layer(layer);
         tree.openItem(layer.cnstr);
       });
 
-      // служебный слой размеров
-      tree.addItem("auto_lines", "Авторазмерные линии", 0);
-      tree.addItem("custom_lines", "Доп. размерные линии", 0);
+      const props = {
+        auto_lines: 'Авторазмерные линии',
+        custom_lines: 'Доп. размерные линии',
+        cnns: 'Соединители',
+        visualization: 'Визуализация доп. элементов',
+        txts: 'Комментарии',
+      };
+      for (const prop in props) {
+        tree.addItem(prop, props[prop], 0);
+      }
 
-      // служебный слой соединителей
-      tree.addItem("cnns", "Соединители", 0);
-
-      // служебный слой визуализации
-      tree.addItem("visualization", "Визуализация доп. элементов", 0);
-
-      // служебный слой текстовых комментариев
-      tree.addItem("txts", "Комментарии", 0);
-
-      const {builder_props} = this.editor.project.ox;
-      for(const prop in builder_props) {
-        if(builder_props[prop]) {
-          tree.checkItem(prop);
-        }
+      const {builder_props} = project.ox;
+      for (const prop in builder_props) {
+        props[prop] && builder_props[prop] && tree.checkItem(prop);
       }
     }
   }

@@ -22,7 +22,7 @@ class Repl extends Progress {
         <LinearProgress color="secondary" variant="buffer" value={completed} valueBuffer={buffer} />
       </div>,
       !info.index &&
-        <div key="text">{`${syn[info.db]}: прочитано ${info.docs_read} из ${info.docs_read + info.pending}, ${percent.toFixed()}%`}</div>,
+        <div key="text">{`${syn[info.db]}: прочитано ${info.docs_read} из ${info.docs_read + info.pending} (${percent.toFixed()}%)`}</div>,
       info.index &&
         <div key="text">{`${syn[info.db]}: строим индекс ${info.index}`}</div>,
     ];

@@ -20,6 +20,11 @@ import modifiers from './modifiers';
 // загружаем metadata.transition и экспортируем $p глобально
 import $p from 'metadata-dhtmlx';
 
+if (process.env.NODE_ENV === 'development') {
+  import('pouchdb-debug')
+    .then((module) => $p.classes.PouchDB.plugin(module.default));
+}
+
 // подключаем react-специфичные методы
 import plugin_react from 'metadata-react/plugin';
 plugin_react.constructor.call($p);
@@ -38,6 +43,9 @@ patch_cnn();
 
 // выполняем скрипт инициализации метаданных
 meta_init($p);
+
+// запускаем проверку единственности экземпляра
+$p.utils.single_instance_checker.init();
 
 // скрипт инициализации в привязке к store приложения
 export function init(store) {
@@ -75,6 +83,9 @@ export function init(store) {
         // читаем локальные данные в ОЗУ
         return pouch.load_data();
 
+      })
+      .catch((err) => {
+        $p.record_log(err);
       });
   }
   catch (err) {
