@@ -1,0 +1,30 @@
+[
+  {
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [55.560014, 38.259885]
+    },
+    "properties": {
+      "balloonContentHeader": "<small>Деревянные окна</small>",
+      "balloonContentBody": "<a href='http://aribaz.ru/' target='_blank'>Завод Арибаз</a><br/>ИНН:5040084060<br/>Телефон: +7 (495) 741-86-82",
+      "balloonContentFooter": "<strong>Арибаз</strong> Раменское",
+      "clusterCaption": "ул. Михалевича, д. 131",
+      "hintContent": "<strong>Арибаз</strong>Раменское, ул. Михалевича, д. 131"
+    }
+  },
+  {
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [55.701557, 37.422427]
+    },
+    "properties": {
+      "balloonContentHeader": "<small>Деревянные окна</small>",
+      "balloonContentBody": "<a href='http://aribaz.ru/' target='_blank'>Завод Арибаз</a><br/>ИНН:5040084060<br/>Телефон: +7 (495) 741-86-82",
+      "balloonContentFooter": "<strong>Арибаз</strong> шоурум Москва",
+      "clusterCaption": "ул. Рябиновая, 41, к.1, стр.6",
+      "hintContent": "<strong>Шоурум</strong>Москва ул. Рябиновая, 41, к.1, стр.6"
+    }
+  }
+]

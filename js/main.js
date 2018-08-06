@@ -187,5 +187,3 @@ $(document).ready(function($) {
 	// $().UItoTop({ easingType: 'easeOutQuart' });
 
 });
-
-new WOW().init();

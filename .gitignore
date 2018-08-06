@@ -1,0 +1,11 @@
+# Editor files
+.idea
+.vscode
+
+# npm files
+node_modules
+package-lock.json
+*.log
+
+# Exclude compiled files
+/index.js.map

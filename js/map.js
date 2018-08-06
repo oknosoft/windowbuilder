@@ -17,25 +17,80 @@ function init () {
       center: [55.76, 37.64],
       zoom: 6,
       controls: ['zoomControl', 'fullscreenControl']
-    }, {
-      searchControlProvider: 'yandex#search'
-    }),
-    objectManager = new ymaps.ObjectManager({
+    });
+
+  var objectManager = new ymaps.ObjectManager({
       // Чтобы метки начали кластеризоваться, выставляем опцию.
       clusterize: true,
       // ObjectManager принимает те же опции, что и кластеризатор.
       gridSize: 48,
       clusterDisableClickZoom: true
-    }),
-    // Создаем собственный класс.
-    CustomControlClass = function (options) {
-      CustomControlClass.superclass.constructor.call(this, options);
-      this._$content = null;
-      this._geocoderDeferred = null;
-    };
+    });
 
-  // Наследуем CustomControlClass от collection.Item.
-  ymaps.util.augment(CustomControlClass, ymaps.collection.Item, {
+  var collection = {
+    type: 'FeatureCollection',
+    features: []
+  };
+
+  function aribaz(cb) {
+
+    $.ajax({
+      url: 'js/aribaz.json'
+    }).done(function (data) {
+      for (var i = 0; i < data.length; i++) {
+        collection.features.push(data[i]);
+      }
+      cb();
+    });
+
+  }
+
+  function tmk(cb) {
+
+    $.ajax({
+      url: 'js/tmk.json'
+    }).done(function (data) {
+      for (var i = 0; i < data.length; i++) {
+        var curr = {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [55.831903, 37.411961]
+            },
+            properties: {
+              balloonContentHeader: '',
+              balloonContentBody: '',
+              balloonContentFooter: '',
+              clusterCaption: '',
+              hintContent: '<strong>Текст  <s>подсказки</s></strong>'
+            }
+          },
+          elm = data[i];
+        curr.geometry.coordinates = elm.coords.replace(/\s/g, '').split(',').map(function (v) { return parseFloat(v) });
+        curr.properties.clusterCaption = elm.address.replace('на ', '');
+        curr.properties.balloonContentHeader = '<small>' + curr.properties.clusterCaption + '</small>';
+        curr.properties.hintContent = '<strong>ТМК</strong> ' + elm.city + ' ' + curr.properties.clusterCaption;
+        curr.properties.balloonContentFooter = '<strong>ТМК</strong> ' + elm.city;
+        curr.properties.balloonContentBody = 'Телефон:' + elm.phone;
+
+        curr.geometry.coordinates.length === 2 && collection.features.push(curr);
+      }
+      cb();
+    });
+  }
+
+  function eco(cb) {
+    cb();
+  }
+
+  // Создаем собственный класс.
+  function CustomControlClass(options) {
+    CustomControlClass.superclass.constructor.call(this, options);
+    this._$content = null;
+    this._geocoderDeferred = null;
+  }
+
+  var customControlProps = {
 
     onAddToMap: function (map) {
       CustomControlClass.superclass.onAddToMap.call(this, map);
@@ -53,8 +108,8 @@ function init () {
     },
 
     _onGetChildElement: function (parentDomContainer) {
-      // Создаем HTML-элемент с текстом.
-      this._$content = $('<div class="customControl"><b>264 организации<br/>500 пользователей</b></div>').appendTo(parentDomContainer);
+      // Создаем HTML-элемент с текстом. // 1224 пользователей
+      this._$content = $('<div class="customControl"><b>266 организаций (дилеры и филиалы)<br/>416 пользователей</b></div>').appendTo(parentDomContainer);
       // this._mapEventGroup = this.getMap().events.group();
       // // Запрашиваем данные после изменения положения карты.
       // this._mapEventGroup.add('boundschange', this._createRequest, this);
@@ -87,7 +142,10 @@ function init () {
     //     this._$content.text(geoObjectData.metaDataProperty.GeocoderMetaData.text);
     //   }
     // }
-  });
+  }
+
+  // Наследуем CustomControlClass от collection.Item.
+  ymaps.util.augment(CustomControlClass, ymaps.collection.Item, customControlProps);
 
   var customControl = new CustomControlClass();
   myMap.controls.add(customControl, {
@@ -104,43 +162,15 @@ function init () {
   objectManager.clusters.options.set('preset', 'islands#greenClusterIcons');
   myMap.geoObjects.add(objectManager);
 
-  var collection = {
-    type: 'FeatureCollection',
-    features: []
-    };
-
-  $.ajax({
-    url: "js/tmk.json"
-  }).done(function(data) {
-    for(var i=0; i<data.length; i++) {
-      var curr = {
-          type: 'Feature',
-          id: 0,
-          geometry: {
-            type: 'Point',
-            coordinates: [55.831903, 37.411961]
-          },
-          properties: {
-            balloonContentHeader: '',
-            balloonContentBody: '<p>Ваше имя: <input name="login"></p><p><em>Телефон в формате 2xxx-xxx:</em>  <input></p><p><input type="submit" value="Отправить"></p>',
-            balloonContentFooter: '',
-            clusterCaption: '<strong><s>Еще</s> одна</strong> метка',
-            hintContent: '<strong>Текст  <s>подсказки</s></strong>'
-          }
-        },
-        elm = data[i];
-      curr.id = i;
-      curr.geometry.coordinates = elm.coords.replace(/\s/g, '').split(',').map(function (v) { return parseFloat(v) });
-      curr.properties.clusterCaption = elm.address.replace('на ', '');
-      curr.properties.balloonContentHeader = '<small>' + curr.properties.clusterCaption + '</small>';
-      curr.properties.hintContent = '<strong>ТМК</strong> ' + elm.city + ' ' + curr.properties.clusterCaption;
-      curr.properties.balloonContentFooter = '<strong>ТМК</strong> ' + elm.city;
-      curr.properties.balloonContentBody = 'Телефон:' + elm.phone;
 
 
-      curr.geometry.coordinates.length === 2 && collection.features.push(curr);
-    }
-    objectManager.add(collection);
+  tmk(function () {
+    aribaz(function () {
+      eco(function () {
+        objectManager.add(collection);
+      });
+    });
   });
+
 
 }
