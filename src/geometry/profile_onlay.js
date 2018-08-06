@@ -27,6 +27,16 @@
  */
 class Onlay extends ProfileItem {
 
+  constructor(attr) {
+    super(attr);
+    // Подключаем наблюдателя за событиями контура с именем _consts.move_points_
+    if(this.parent) {
+      const {project: {_scope}, observer} = this;
+      this.observer = observer.bind(this);
+      _scope.eve.on(consts.move_points, this.observer);
+    }
+  }
+
   /**
    * Расстояние от узла до опорной линии, для соединителей и раскладок == 0
    * @property d0

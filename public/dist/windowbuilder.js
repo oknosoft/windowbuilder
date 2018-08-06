@@ -8472,15 +8472,93 @@ class ProfileItem extends GeneratrixElement {
   observer(an) {
     const {profiles} = an;
     if(profiles) {
+      let binded;
       if(profiles.indexOf(this) == -1) {
-        profiles.forEach((p) => {
-          this.do_bind(p, this.cnn_point('b'), this.cnn_point('e'), an);
-        });
-        profiles.push(this);
+        for(const profile of profiles) {
+          if(profile instanceof Onlay && !(this instanceof Onlay)) {
+            continue;
+          }
+          binded = true;
+          this.do_bind(profile, this.cnn_point('b'), this.cnn_point('e'), an);
+        }
+        binded && profiles.push(this);
       }
     }
     else if(an instanceof Profile || an instanceof ProfileConnective) {
       this.do_bind(an, this.cnn_point('b'), this.cnn_point('e'));
+    }
+  }
+
+  do_bind(profile, bcnn, ecnn, moved) {
+
+    let moved_fact;
+
+    if(profile instanceof ProfileConnective) {
+      const gen = profile.generatrix.clone({insert: false}).elongation(1000);
+      this._attr._rays.clear();
+      this.b = gen.getNearestPoint(this.b);
+      this.e = gen.getNearestPoint(this.e);
+      moved_fact = true;
+    }
+    else {
+      if(bcnn.cnn && bcnn.profile == profile) {
+        if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type) != -1) {
+          if(!this.b.is_nearest(profile.e, 0)) {
+            if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
+              if(paper.Key.isDown('control')) {
+                console.log('control');
+              }
+              else {
+                if(this.b.getDistance(profile.e, true) < consts.sticking2) {
+                  this.b = profile.e;
+                }
+                moved_fact = true;
+              }
+            }
+            else {
+              bcnn.clear();
+              this._attr._rays.clear();
+            }
+          }
+        }
+        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'b')) {
+          moved_fact = true;
+        }
+      }
+
+      if(ecnn.cnn && ecnn.profile == profile) {
+        if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type) != -1) {
+          if(!this.e.is_nearest(profile.b, 0)) {
+            if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
+              if(paper.Key.isDown('control')) {
+                console.log('control');
+              }
+              else {
+                if(this.e.getDistance(profile.b, true) < consts.sticking2) {
+                  this.e = profile.b;
+                }
+                moved_fact = true;
+              }
+            }
+            else {
+              ecnn.clear();
+              this._attr._rays.clear();
+            }
+          }
+        }
+        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'e')) {
+          moved_fact = true;
+        }
+      }
+    }
+
+    if(moved && moved_fact) {
+      const imposts = this.joined_imposts();
+      imposts.inner.concat(imposts.outer).forEach((impost) => {
+        if(moved.profiles.indexOf(impost) == -1) {
+          impost.profile.observer(this);
+        }
+      });
     }
   }
 
@@ -9210,16 +9288,16 @@ class Profile extends ProfileItem {
     super(attr);
 
     if(this.parent) {
-      const {project, observer} = this;
+      const {project: {_scope, ox}, observer} = this;
 
       this.observer = observer.bind(this);
-      project._scope.eve.on(consts.move_points, this.observer);
+      _scope.eve.on(consts.move_points, this.observer);
 
       this.layer.on_insert_elm(this);
 
       if(fromCoordinates){
         const {cnstr, elm} = attr.row;
-        project.ox.coordinates.find_rows({cnstr, parent: {in: [elm, -elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => new ProfileAddl({row, parent: this}));
+        ox.coordinates.find_rows({cnstr, parent: {in: [elm, -elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => new ProfileAddl({row, parent: this}));
       }
     }
 
@@ -9476,79 +9554,6 @@ class Profile extends ProfileItem {
     }
 
     return res;
-  }
-
-  do_bind(profile, bcnn, ecnn, moved) {
-
-    let moved_fact;
-
-    if(profile instanceof ProfileConnective) {
-      const gen = profile.generatrix.clone({insert: false}).elongation(1000);
-      this._attr._rays.clear();
-      this.b = gen.getNearestPoint(this.b);
-      this.e = gen.getNearestPoint(this.e);
-      moved_fact = true;
-    }
-    else {
-      if(bcnn.cnn && bcnn.profile == profile) {
-        if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type) != -1) {
-          if(!this.b.is_nearest(profile.e, 0)) {
-            if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
-              if(paper.Key.isDown('control')) {
-                console.log('control');
-              }
-              else {
-                if(this.b.getDistance(profile.e, true) < consts.sticking2) {
-                  this.b = profile.e;
-                }
-                moved_fact = true;
-              }
-            }
-            else {
-              bcnn.clear();
-              this._attr._rays.clear();
-            }
-          }
-        }
-        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'b')) {
-          moved_fact = true;
-        }
-      }
-
-      if(ecnn.cnn && ecnn.profile == profile) {
-        if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type) != -1) {
-          if(!this.e.is_nearest(profile.b, 0)) {
-            if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
-              if(paper.Key.isDown('control')) {
-                console.log('control');
-              }
-              else {
-                if(this.e.getDistance(profile.b, true) < consts.sticking2) {
-                  this.e = profile.b;
-                }
-                moved_fact = true;
-              }
-            }
-            else {
-              ecnn.clear();
-              this._attr._rays.clear();
-            }
-          }
-        }
-        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'e')) {
-          moved_fact = true;
-        }
-      }
-    }
-
-    if(moved && moved_fact) {
-      const imposts = this.joined_imposts();
-      imposts.inner.concat(imposts.outer).forEach((impost) => {
-        if(moved.profiles.indexOf(impost) == -1) {
-          impost.profile.observer(this);
-        }
-      });
-    }
   }
 
   t_parent(be) {
@@ -10064,6 +10069,15 @@ BaseLine.oxml = {
 
 
 class Onlay extends ProfileItem {
+
+  constructor(attr) {
+    super(attr);
+    if(this.parent) {
+      const {project: {_scope}, observer} = this;
+      this.observer = observer.bind(this);
+      _scope.eve.on(consts.move_points, this.observer);
+    }
+  }
 
   get d0() {
     return 0;
