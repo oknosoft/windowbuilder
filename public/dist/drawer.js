@@ -10366,7 +10366,7 @@ class ProductsBuilding {
         const len = elm._row.len - prev.nom.sizefurn - next.nom.sizefurn;
 
         const angle = direction == $p.enm.open_directions.Правое ?
-          next.generatrix.angle_to(elm.generatrix, elm.b) :
+          elm.generatrix.angle_to(prev.generatrix, elm.e) :
           prev.generatrix.angle_to(elm.generatrix, elm.b);
 
         const {lmin, lmax, amin, amax} = row;
