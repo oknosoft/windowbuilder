@@ -3001,7 +3001,6 @@ class Pricing {
         return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
-            this.build_cache_local(remote);
 
             if(local.remote_rev !== remote._rev) {
               remote.remote_rev = remote._rev;
@@ -3011,8 +3010,10 @@ class Pricing {
               else {
                 remote._rev = local._rev;
               }
-              pouch.local.templates.put(remote);
+              pouch.local.templates.put(remote._clone());
             }
+
+            this.build_cache_local(remote);
 
             return this.sync_local(pouch, ++step);
           })

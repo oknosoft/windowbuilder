@@ -140,8 +140,6 @@ class Pricing {
         return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
-            // грузим цены из remote
-            this.build_cache_local(remote);
 
             // если версия local отличается от remote - обновляем
             if(local.remote_rev !== remote._rev) {
@@ -152,8 +150,11 @@ class Pricing {
               else {
                 remote._rev = local._rev;
               }
-              pouch.local.templates.put(remote);
+              pouch.local.templates.put(remote._clone());
             }
+
+            // грузим цены из remote
+            this.build_cache_local(remote);
 
             return this.sync_local(pouch, ++step);
           })
