@@ -10354,17 +10354,19 @@ class ProductsBuilding {
       let ok = true;
       const {new_spec_row} = ProductsBuilding;
 
+      if(contour.side_count !== contour.furn.side_count) {
+        return ok = false;
+      }
 
       contour.furn.open_tunes.each((row) => {
         const elm = contour.profile_by_furn_side(row.side, cache);
         const len = elm._row.len - 2 * elm.nom.sizefurn;
-
-
-        if(len < row.lmin || len > row.lmax || (!elm.is_linear() && !row.arc_available)) {
+        const {angle_hor: angle} = elm;
+        const {lmin, lmax, amin, amax} = row;
+        if(len < lmin || len > lmax || angle < amin || angle > amax || (!elm.is_linear() && !row.arc_available)) {
           new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: contour.furn, spec, ox});
           ok = false;
         }
-
       });
 
       return ok;
@@ -10906,7 +10908,6 @@ if(typeof global !== 'undefined'){
 }
 $p.ProductsBuilding = ProductsBuilding;
 $p.products_building = new ProductsBuilding(true);
-
 
 
 class SpecBuilding {
