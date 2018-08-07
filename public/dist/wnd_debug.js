@@ -3710,18 +3710,25 @@ class ProductsBuilding {
 
       let ok = true;
       const {new_spec_row} = ProductsBuilding;
+      const {side_count, furn, direction} = contour;
 
-      if(contour.side_count !== contour.furn.side_count) {
+      if(side_count !== furn.side_count) {
         return ok = false;
       }
 
-      contour.furn.open_tunes.each((row) => {
+      furn.open_tunes.each((row) => {
         const elm = contour.profile_by_furn_side(row.side, cache);
-        const len = elm._row.len - 2 * elm.nom.sizefurn;
-        const {angle_hor: angle} = elm;
+        const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
+        const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
+        const len = elm._row.len - prev.nom.sizefurn - next.nom.sizefurn;
+
+        const angle = direction == $p.enm.open_directions.Правое ?
+          next.generatrix.angle_to(elm.generatrix, elm.b) :
+          prev.generatrix.angle_to(elm.generatrix, elm.b);
+
         const {lmin, lmax, amin, amax} = row;
-        if(len < lmin || len > lmax || angle < amin || angle > amax || (!elm.is_linear() && !row.arc_available)) {
-          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: contour.furn, spec, ox});
+        if(len < lmin || len > lmax || angle < amin || (angle > amax && amax > 0) || (!elm.is_linear() && !row.arc_available)) {
+          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: furn, spec, ox});
           ok = false;
         }
       });
