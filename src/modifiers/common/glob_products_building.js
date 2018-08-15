@@ -275,10 +275,11 @@ class ProductsBuilding {
       const {side_count, furn, direction} = contour;
 
       // проверяем количество сторон фурнитуры
-      if(furn.side_count !== 0 && side_count !== furn.side_count) {
+      if(furn.side_count && side_count !== furn.side_count) {
         // Визуализируем все стороны
+        const row_base = {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error};
         contour.profiles.forEach(elm => {
-          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: furn, spec, ox});
+          new_spec_row({elm, row_base, origin: furn, spec, ox});
         });
         return ok = false;
       }
