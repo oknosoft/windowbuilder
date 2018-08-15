@@ -539,7 +539,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
       spec = ox.specification;
     }
 
-    this.filtered_spec({elm, is_high_level_call: true, len_angl, ox}).forEach((row_ins_spec) => {
+    this.filtered_spec({elm, is_high_level_call: true, len_angl, ox, clr}).forEach((row_ins_spec) => {
 
       const origin = row_ins_spec._origin || this;
 
@@ -670,6 +670,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
             row_ins: row_ins_spec,
             row_spec: row_spec,
+            clr,
             len: len_angl ? len_angl.len : _row.len
           });
           if(row_ins_spec.count_calc_method == ПоФормуле){
@@ -733,4 +734,3 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
   }
 
 }
-
