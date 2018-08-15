@@ -1695,6 +1695,15 @@ class Contour extends AbstractFilling(paper.Layer) {
     return this.children.filter((elm) => elm instanceof Sectional);
   }
 
+  get onlays() {
+    const res = [];
+    this.fillings.forEach((filling) => {
+      filling.children.forEach((elm) => elm instanceof Onlay && res.push(elm));
+    })
+    return res;
+  }
+
+
   redraw(on_redrawed) {
 
     if (!this.visible) {
@@ -9107,7 +9116,7 @@ class Scheme extends paper.Project {
     return res;
   }
 
-  hitPoints(point, tolerance, selected_first) {
+  hitPoints(point, tolerance, selected_first, with_onlays) {
     let item, hit;
     let dist = Infinity;
 
@@ -9135,6 +9144,11 @@ class Scheme extends paper.Project {
         check_corns(elm);
         for (let addl of elm.addls) {
           check_corns(addl);
+        }
+      }
+      if(with_onlays) {
+        for (let elm of this.activeLayer.onlays) {
+          check_corns(elm);
         }
       }
     }

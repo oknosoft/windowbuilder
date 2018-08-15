@@ -611,7 +611,7 @@ class ToolRuler extends ToolElement {
       }
       else {
         // Hit test points
-        const hit = this.project.hitPoints(event.point, 16);
+        const hit = this.project.hitPoints(event.point, 16, false, true);
         if (hit && hit.item.parent instanceof ProfileItem) {
           this.hitItem = hit;
         }

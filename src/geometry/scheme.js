@@ -1539,7 +1539,7 @@ class Scheme extends paper.Project {
    * @param point {paper.Point}
    * @returns {*}
    */
-  hitPoints(point, tolerance, selected_first) {
+  hitPoints(point, tolerance, selected_first, with_onlays) {
     let item, hit;
     let dist = Infinity;
 
@@ -1571,21 +1571,13 @@ class Scheme extends paper.Project {
           check_corns(addl);
         }
       }
+      if(with_onlays) {
+        for (let elm of this.activeLayer.onlays) {
+          check_corns(elm);
+        }
+      }
     }
 
-    // if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
-    //   item = hit.item;
-    //   // если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
-    //   if((item.parent.b && item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
-    //     (item.parent.rays.b.is_t || item.parent.rays.b.is_i))
-    //     || (item.parent.e && item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
-    //     (item.parent.rays.e.is_t || item.parent.rays.e.is_i))){
-    //     return hit;
-    //   }
-    //
-    //   item.layer.parent.profiles.some((item) => hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 }));
-    //   //item.selected = false;
-    // }
     return hit;
   }
 
