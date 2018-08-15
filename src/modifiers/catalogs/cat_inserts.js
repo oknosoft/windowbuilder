@@ -604,6 +604,8 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
                 calc_qty_len(row_spec, row_ins_spec, rib.len);
               }
               calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
+              // получаем номенклатуру по ключу цветового аналога
+              row_spec.nom = row_spec.nom.by_clr_key && row_spec.nom.by_clr_key(clr && clr !== row_spec.clr ? clr : row_spec.clr);
             }
             row_spec = null;
           });
@@ -649,6 +651,8 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
               calc_qty_len(row_spec, row_ins_spec, w);
               row_spec.qty *= qty;
               calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
+              // получаем номенклатуру по ключу цветового аналога
+              row_spec.nom = row_spec.nom.by_clr_key && row_spec.nom.by_clr_key(clr && clr !== row_spec.clr ? clr : row_spec.clr);
             }
             row_spec = null;
           }
@@ -679,6 +683,8 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
           }
         }
         calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
+        // получаем номенклатуру по ключу цветового аналога
+        row_spec.nom = row_spec.nom.by_clr_key && row_spec.nom.by_clr_key(clr && clr !== row_spec.clr ? clr : row_spec.clr);
       }
     })
   }
