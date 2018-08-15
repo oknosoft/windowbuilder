@@ -528,7 +528,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
    * @param ox {CatCharacteristics}
    * @param spec {TabularSection}
    */
-  calculate_spec({elm, len_angl, ox, spec}) {
+  calculate_spec({elm, len_angl, ox, spec, clr}) {
 
     const {_row} = elm;
     const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади} = $p.enm.count_calculating_ways;
@@ -616,8 +616,6 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
 
           const h = (!row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.height : bounds.width);
           const w = !row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.width : bounds.height;
-          // (row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьШагиВторогоНаправления ||
-          // row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление)
           if(row_ins_spec.step){
             let qty = 0;
             let pos;
