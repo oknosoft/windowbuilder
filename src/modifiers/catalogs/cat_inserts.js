@@ -592,6 +592,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
                 inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
                 row_ins: row_ins_spec,
                 row_spec: row_spec,
+                clr,
                 len: rib.len
               });
               // если формула не вернула значение, устанавливаем qty_len стандартным способом
