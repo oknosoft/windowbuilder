@@ -38,9 +38,37 @@ class ClientOfDealerSearch extends Component {
       startkey: search,
       endkey: search + '\u0fff',
       limit: 200,
+      reduce: false,
     })
       .then(({rows}) => {
-        rows = 0;
+        // сворачиваем
+        const res = {};
+        for(const {value} of rows) {
+          const id = `${value[2]} ${value[1]}`;
+          if(!res[value[0]]){
+            res[value[0]] = [id];
+          }
+          else {
+            const row = res[value[0]];
+            row.indexOf(id) === -1 && row.push(id);
+          }
+        }
+        rows.length = 0;
+        for(const name in res) {
+          rows.push({name, orders: res[name]});
+        }
+        rows.sort((a, b) => {
+          if (a.name < b.name){
+            return -1;
+          }
+          else if (a.name > b.name){
+            return 1;
+          }
+          else{
+            return 0;
+          }
+        });
+        this.setState({rows});
       })
       .catch((err) => {
         $p.msg.show_msg({
