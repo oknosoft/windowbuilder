@@ -9,11 +9,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import MenuList from '@material-ui/core/MenuList';
-import List from '@material-ui/core/List';
 import MenuItem from '@material-ui/core/MenuItem';
 import ListItemText from '@material-ui/core/ListItemText';
 
-export default function ({rows, classes, onClick}) {
+export default function ClientList ({rows, classes, onClick}) {
   return <MenuList>
     {
       rows.length ?
@@ -27,5 +26,11 @@ export default function ({rows, classes, onClick}) {
         :
         <MenuItem>Записи не найдены</MenuItem>
     }
-  </MenuList>
+  </MenuList>;
 }
+
+ClientList.propTypes = {
+  classes: PropTypes.object.isRequired,
+  rows: PropTypes.array.isRequired,
+  onClick: PropTypes.func.isRequired,
+};

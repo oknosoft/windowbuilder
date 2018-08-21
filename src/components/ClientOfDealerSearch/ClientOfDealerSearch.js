@@ -15,7 +15,6 @@ import IconButton from '@material-ui/core/IconButton';
 import IconSearch from '@material-ui/icons/Search';
 import connect from './connect';
 import List from './List';
-import SelectOrder from '../RepMaterialsDemand/SelectOrder';
 
 class ClientOfDealerSearch extends Component {
 
@@ -84,6 +83,7 @@ ClientOfDealerSearch.propTypes = {
   handlers: PropTypes.object.isRequired,
   handleCalck: PropTypes.func.isRequired,
   handleCancel: PropTypes.func.isRequired,
+  searchOrders: PropTypes.func.isRequired,
 };
 
 export default connect(ClientOfDealerSearch);
