@@ -12,8 +12,14 @@ const styles = theme => ({
     minWidth: 880,
     maxHeight: 'calc(100vh - 80px)',
   },
-  entered: {
-    minHeight: 120,
+  search: {
+    minWidth: 280,
+  },
+  left: {
+    paddingLeft: 0,
+  },
+  bar: {
+
   },
   secondary: {
     marginTop: -theme.spacing.unit * 1.5,

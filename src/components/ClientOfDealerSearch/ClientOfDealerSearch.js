@@ -14,6 +14,8 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import IconButton from '@material-ui/core/IconButton';
 import IconSearch from '@material-ui/icons/Search';
 import connect from './connect';
+import List from './List';
+import SelectOrder from '../RepMaterialsDemand/SelectOrder';
 
 class ClientOfDealerSearch extends Component {
 
@@ -25,51 +27,9 @@ class ClientOfDealerSearch extends Component {
     this._timer = 0;
   }
 
-  handleOk = () => {
-    this.handleCalck().then(this.handleCancel);
-  };
-
   doSearch = () => {
-    const search = this.state.search.toLowerCase();
-    if(search.length < 2) {
-      return this.setState({rows: []});
-    }
-    $p.adapters.pouch.local.doc.query('client_of_dealer', {
-      startkey: search,
-      endkey: search + '\u0fff',
-      limit: 200,
-      reduce: false,
-    })
-      .then(({rows}) => {
-        // сворачиваем
-        const res = {};
-        for(const {value} of rows) {
-          const id = `${value[2]} ${value[1]}`;
-          if(!res[value[0]]){
-            res[value[0]] = [id];
-          }
-          else {
-            const row = res[value[0]];
-            row.indexOf(id) === -1 && row.push(id);
-          }
-        }
-        rows.length = 0;
-        for(const name in res) {
-          rows.push({name, orders: res[name]});
-        }
-        rows.sort((a, b) => {
-          if (a.name < b.name){
-            return -1;
-          }
-          else if (a.name > b.name){
-            return 1;
-          }
-          else{
-            return 0;
-          }
-        });
-        this.setState({rows});
-      })
+    this.props.searchOrders(this.state.search.toLowerCase())
+      .then((rows) => this.setState({rows}))
       .catch((err) => {
         $p.msg.show_msg({
           type: "alert-warning",
@@ -87,23 +47,18 @@ class ClientOfDealerSearch extends Component {
 
   render() {
 
-    const {handleCancel, handleOk, props} = this;
+    const {handleCancel, handleCalck, props, state} = this;
     const {classes} = props;
 
     return <Dialog
       open
       initFullScreen
       classes={{paper: classes.paper}}
-      title="Поиск клиента"
-      onClose={handleCancel}
-      actions={[
-        <Button key="ok" onClick={handleOk} color="primary">Выбрать</Button>,
-        <Button key="cancel" onClick={handleCancel} color="primary">Закрыть</Button>
-      ]}
-    >
-      <Input
+      title={<Input
         value={this.state.search}
         onChange={this.handleChange}
+        placeholder="Введите текст для поиска"
+        className={classes.search}
         endAdornment={
           <InputAdornment position="end">
             <IconButton>
@@ -111,8 +66,13 @@ class ClientOfDealerSearch extends Component {
             </IconButton>
           </InputAdornment>
         }
-      />
-      <div>Не реализовано в текущей версии</div>
+      />}
+      onClose={handleCancel}
+      actions={[
+        <Button key="cancel" onClick={handleCancel} color="primary">Закрыть</Button>
+      ]}
+    >
+      <List classes={classes} rows={state.rows} onClick={handleCalck}/>
     </Dialog>;
 
   }
