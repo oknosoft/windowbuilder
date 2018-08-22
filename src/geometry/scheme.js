@@ -311,7 +311,8 @@ class Scheme extends paper.Project {
    * при рендеринге может переопределяться или объединяться с параметрами рендеринга
    */
   get builder_props() {
-    return this.ox.builder_props;
+    const {ox, _attr} = this;
+    return _attr._builder_props || ox.builder_props;
   }
 
   /**
@@ -383,7 +384,16 @@ class Scheme extends paper.Project {
         else if(row.elm_type === $p.enm.elm_types.Линия) {
           new BaseLine({row});
         }
-      })
+      });
+
+      // если указаны внешние builder_props, установим их для текущего проекта
+      if(typeof from_service === 'object') {
+        _attr._builder_props = Object.assign({}, o.constructor.builder_props_defaults, from_service);
+      }
+      else {
+        delete _attr._builder_props;
+      }
+
       o = null;
 
       // создаём семейство конструкций

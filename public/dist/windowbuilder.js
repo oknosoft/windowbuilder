@@ -10560,7 +10560,8 @@ class Scheme extends paper.Project {
   }
 
   get builder_props() {
-    return this.ox.builder_props;
+    const {ox, _attr} = this;
+    return _attr._builder_props || ox.builder_props;
   }
 
   load_dimension_lines() {
@@ -10602,7 +10603,15 @@ class Scheme extends paper.Project {
         else if(row.elm_type === $p.enm.elm_types.Линия) {
           new BaseLine({row});
         }
-      })
+      });
+
+      if(typeof from_service === 'object') {
+        _attr._builder_props = Object.assign({}, o.constructor.builder_props_defaults, from_service);
+      }
+      else {
+        delete _attr._builder_props;
+      }
+
       o = null;
 
       _scheme.load_contour(null);
