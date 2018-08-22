@@ -8103,7 +8103,7 @@ class eXcell_client extends eXcell {
   edit() {
 
     this.val = this.getValue();		
-    this.cell.innerHTML = '<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_field21">&nbsp;</div></div>';
+    this.cell.innerHTML = `<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_ofrm21">&nbsp;</div><div class="ref_field21">&nbsp;</div></div>`;
 
     const {cell: {firstChild}, val} = this;
     const ti = firstChild.childNodes[0];
@@ -8112,6 +8112,7 @@ class eXcell_client extends eXcell {
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
     firstChild.childNodes[1].onclick = this.open_obj;
+    firstChild.childNodes[2].onclick = this.open_selection;
   };
 
   detach() {
