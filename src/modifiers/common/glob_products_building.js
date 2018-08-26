@@ -345,8 +345,8 @@ class ProductsBuilding {
 
       const prev = b.profile;
       const next = e.profile;
-      const row_cnn_prev = b.cnn.main_row(elm);
-      const row_cnn_next = e.cnn.main_row(elm);
+      const row_cnn_prev = b.cnn && b.cnn.main_row(elm);
+      const row_cnn_next = e.cnn && e.cnn.main_row(elm);
       const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
 
       let row_spec;

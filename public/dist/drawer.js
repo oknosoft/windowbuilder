@@ -10213,7 +10213,6 @@ class Pricing {
 $p.pricing = new Pricing($p);
 
 
-
 class ProductsBuilding {
 
   constructor(listen) {
@@ -10229,7 +10228,6 @@ class ProductsBuilding {
 
 
 
-
     function cnn_row(elm1, elm2) {
       let res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
       if(res.length) {
@@ -10241,7 +10239,6 @@ class ProductsBuilding {
       }
       return 0;
     }
-
 
     function cnn_need_add_spec(cnn, elm1, elm2, point) {
       if(cnn && cnn.cnn_type == $p.enm.cnn_types.xx) {
@@ -10262,7 +10259,6 @@ class ProductsBuilding {
       added_cnn_spec[elm1] = elm2;
       return true;
     }
-
 
 
     function cnn_add_spec(cnn, elm, len_angl, cnn_other) {
@@ -10341,7 +10337,6 @@ class ProductsBuilding {
       });
     }
 
-
     function cnn_filter_spec(cnn, elm, len_angl) {
 
       const res = [];
@@ -10392,7 +10387,6 @@ class ProductsBuilding {
     }
 
 
-
     function furn_spec(contour) {
 
       if(!contour.parent) {
@@ -10426,7 +10420,6 @@ class ProductsBuilding {
         }
       });
     }
-
 
     function furn_check_opening_restrictions(contour, cache) {
 
@@ -10463,7 +10456,6 @@ class ProductsBuilding {
     }
 
 
-
     function cnn_spec_nearest(elm) {
       const nearest = elm.nearest();
       if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm._attr._nearest_cnn) {
@@ -10476,7 +10468,6 @@ class ProductsBuilding {
         });
       }
     }
-
 
     function base_spec_profile(elm) {
 
@@ -10496,8 +10487,8 @@ class ProductsBuilding {
 
       const prev = b.profile;
       const next = e.profile;
-      const row_cnn_prev = b.cnn.main_row(elm);
-      const row_cnn_next = e.cnn.main_row(elm);
+      const row_cnn_prev = b.cnn && b.cnn.main_row(elm);
+      const row_cnn_next = e.cnn && e.cnn.main_row(elm);
       const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
 
       let row_spec;
@@ -10616,7 +10607,6 @@ class ProductsBuilding {
 
     }
 
-
     function base_spec_sectional(elm) {
 
       const {_row, _attr, inset, layer} = elm;
@@ -10652,7 +10642,6 @@ class ProductsBuilding {
       spec = spec_tmp;
 
     }
-
 
     function base_spec_glass(elm) {
 
@@ -10701,7 +10690,6 @@ class ProductsBuilding {
     }
 
 
-
     function inset_contour_spec(contour) {
 
       const spec_tmp = spec;
@@ -10734,7 +10722,6 @@ class ProductsBuilding {
 
       spec = spec_tmp;
     }
-
 
     function base_spec(scheme) {
 
@@ -10778,7 +10765,6 @@ class ProductsBuilding {
       });
 
     }
-
 
     this.recalc = function (scheme, attr) {
 
@@ -10855,7 +10841,6 @@ class ProductsBuilding {
 
   }
 
-
   static check_params({params, row_spec, elm, cnstr, origin, ox}) {
 
     let ok = true;
@@ -10869,7 +10854,6 @@ class ProductsBuilding {
 
     return ok;
   }
-
 
   static new_spec_row({row_spec, elm, row_base, nom, origin, spec, ox}) {
     if(!row_spec) {
@@ -10893,7 +10877,6 @@ class ProductsBuilding {
     }
     return row_spec;
   }
-
 
   static calc_qty_len(row_spec, row_base, len) {
 
@@ -10927,7 +10910,6 @@ class ProductsBuilding {
       row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
     }
   }
-
 
   static calc_count_area_mass(row_spec, spec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2) {
 
@@ -12782,16 +12764,28 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
     if(res) {
 
       specification_restrictions.find_rows({elm, dop}, (row) => {
-        let len;
-        if (contour.is_rectangular) {
-          len = (row.side == 1 || row.side == 3) ? cache.w : cache.h;
+        const {lmin, lmax, amin, amax, side, for_direct_profile_only} = row;
+        const elm = contour.profile_by_furn_side(side, cache);
+
+        if(for_direct_profile_only === -1 && elm.is_linear()) {
+          return res = false;
         }
-        else {
-          const elm = contour.profile_by_furn_side(row.side, cache);
-          len = elm ? (elm._row.len - 2 * elm.nom.sizefurn) : 0;
+        if(for_direct_profile_only === 1 && !elm.is_linear()) {
+          return res = false;
         }
-        len = len.round();
-        if (len < row.lmin || len > row.lmax) {
+
+        const { side_count } = contour;
+        const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
+        const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
+        const len = (elm._row.len - prev.nom.sizefurn - next.nom.sizefurn).round();
+        if (len < lmin || len > lmax) {
+          return res = false;
+        }
+
+        const angle = direction == $p.enm.open_directions.Правое ?
+          elm.generatrix.angle_to(prev.generatrix, elm.e) :
+          prev.generatrix.angle_to(elm.generatrix, elm.b);
+        if (angle < amin || angle > amax) {
           return res = false;
         }
       });

@@ -369,30 +369,28 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
       specification_restrictions.find_rows({elm, dop}, (row) => {
         const {lmin, lmax, amin, amax, side, for_direct_profile_only} = row;
         const elm = contour.profile_by_furn_side(side, cache);
+
         // Проверка кривизны
-        if (for_direct_profile_only !== 0) {
-          if (for_direct_profile_only === -1 && elm.r === 0) {
-            return res = false;
-          }
-          if (for_direct_profile_only === 1 && elm.r !== 0)
-          {
-            return res = false;
-          }
+        if(for_direct_profile_only === -1 && elm.is_linear()) {
+          return res = false;
+        }
+        if(for_direct_profile_only === 1 && !elm.is_linear()) {
+          return res = false;
         }
 
+        // Проверка длины
         const { side_count } = contour;
         const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
         const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
         const len = (elm._row.len - prev.nom.sizefurn - next.nom.sizefurn).round();
-        // Проверка длины
         if (len < lmin || len > lmax) {
           return res = false;
         }
-    
+
+        // Проверка угла
         const angle = direction == $p.enm.open_directions.Правое ?
           elm.generatrix.angle_to(prev.generatrix, elm.e) :
           prev.generatrix.angle_to(elm.generatrix, elm.b);
-        // Проверка угла
         if (angle < amin || angle > amax) {
           return res = false;
         }
