@@ -275,7 +275,7 @@ class ProductsBuilding {
       const {side_count, furn, direction} = contour;
 
       // проверяем количество сторон фурнитуры
-      if(furn.side_count && side_count !== furn.side_count) {
+      if(furn.open_type !== $p.enm.open_types.Глухое && furn.side_count && side_count !== furn.side_count) {
         // Визуализируем все стороны
         const row_base = {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error};
         contour.profiles.forEach(elm => {
