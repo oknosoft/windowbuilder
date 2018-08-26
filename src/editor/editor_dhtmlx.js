@@ -857,12 +857,12 @@ class Editor extends EditorInvisible {
     // если "все", получаем все профили активного или родительского контура
     if(name == "all"){
 
-      if(this.glass_align()){
-        return
+      if(this.glass_align()) {
+        return;
       }
 
-      if (this.lay_impost_align()) {
-        return
+      if(this.lay_impost_align()) {
+        return;
       }
 
       // получаем текущий внешний контур
@@ -1293,13 +1293,13 @@ class Editor extends EditorInvisible {
     }
 
     // проверяем наличие раскладки у заполнения
-    if (glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
-      return
+    if(glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
+      return;
     }
 
     // выясняем направление, в котором уравнивать
-    if(name === 'auto'){
-      name = 'width'
+    if(name === 'auto') {
+      name = 'width';
     }
 
     // собираем в массиве shift все импосты подходящего направления, остальные помещаем в neighbors
@@ -1438,12 +1438,12 @@ class Editor extends EditorInvisible {
    */
   lay_impost_align(name = 'auto', glass) {
     // выравниваем по длине
-    if (name != 'height' && !this.do_lay_impost_align('width', glass)) {
-      return
+    if(name != 'height' && !this.do_lay_impost_align('width', glass)) {
+      return;
     }
     // выравниваем по высоте
-    if (name != 'width' && !this.do_lay_impost_align('height', glass)) {
-      return
+    if(name != 'width' && !this.do_lay_impost_align('height', glass)) {
+      return;
     }
 
     // перерисовываем контуры

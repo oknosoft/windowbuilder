@@ -665,14 +665,15 @@ class Filling extends AbstractFilling(BuilderElement) {
    * Массив с рёбрами периметра по внутренней стороне профилей
    * @return {Array}
    */
-  perimeter_inner(size) {
+  perimeter_inner(size = 0) {
     // накопим в res пути внутренних рёбер профилей
     const {center} = this.bounds;
     const res = this.outer_profiles.map((curr) => {
       const profile = curr.profile || curr.elm;
       const {inner, outer} = profile.rays;
       const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true) ?
-        inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) : outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
+        inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) :
+        outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
       let angle = curr.e.subtract(curr.b).angle.round(1);
       if(angle < 0) angle += 360;
       return {
@@ -707,10 +708,10 @@ class Filling extends AbstractFilling(BuilderElement) {
    * @param size
    * @return {Rectangle}
    */
-  bounds_light(size) {
+  bounds_light(size = 0) {
     const path = new paper.Path({insert: false});
-    for (let curr of this.perimeter_inner(size)) {
-      path.addSegments(curr.sub_path.segments);
+    for (const {sub_path} of this.perimeter_inner(size)) {
+      path.addSegments(sub_path.segments);
     }
     if (path.segments.length && !path.closed) {
       path.closePath(true);

@@ -1102,8 +1102,6 @@ class EditorInvisible extends paper.PaperScope {
 $p.EditorInvisible = EditorInvisible;
 
 
-
-
 class Editor extends EditorInvisible {
 
   constructor(pwnd, handlers){
@@ -1114,13 +1112,11 @@ class Editor extends EditorInvisible {
 
     this.activate();
 
-
     this.__define('_pwnd', {
       get() {
         return pwnd;
       }
     });
-
 
     this._layout = pwnd.attachLayout({
       pattern: '2U',
@@ -1137,7 +1133,6 @@ class Editor extends EditorInvisible {
       offsets: {top: 28, right: 0, bottom: 0, left: 0}
     })
 
-
     this._wrapper = document.createElement('div');
 
     this._layout.cells("a").attachObject(_editor._wrapper);
@@ -1148,16 +1143,11 @@ class Editor extends EditorInvisible {
     this._drawSelectionBounds = 0;
 
 
-
-
     this._keybrd = new Keybrd(this);
-
 
     this._undo = new UndoRedo(this);
 
-
     this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
-
 
     this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '2px', name: 'left', height: '294px',
       image_path: '/imgs/',
@@ -1190,7 +1180,6 @@ class Editor extends EditorInvisible {
         popup.p.querySelector('.dhx_popup_arrow').style.top = '20px';
       }
     });
-
 
     this.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
       image_path: '/imgs/',
@@ -1300,7 +1289,6 @@ class Editor extends EditorInvisible {
     this.tb_top.cell.style.background = '#fff';
     this.tb_top.cell.style.boxShadow = 'none';
 
-
     this.on_keydown = this.on_keydown.bind(this);
     document.body.addEventListener('keydown', this.on_keydown, false);
 
@@ -1322,30 +1310,21 @@ class Editor extends EditorInvisible {
     $p.on('alert', this.on_alert);
 
 
-
     new ZoomFit();
-
 
     new ToolSelectNode();
 
-
     new ToolPan();
-
 
     new ToolArc();
 
-
     new ToolCut();
-
 
     new ToolPen();
 
-
     new ToolLayImpost();
 
-
     new ToolText();
-
 
     new ToolRuler();
 
@@ -1399,7 +1378,6 @@ class Editor extends EditorInvisible {
     }
   }
 
-
   get _dxw() {
     return this._layout.dhxWins;
   }
@@ -1420,7 +1398,6 @@ class Editor extends EditorInvisible {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
     };
 
-
     _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
@@ -1431,7 +1408,6 @@ class Editor extends EditorInvisible {
     }
 
     pwnd_resize_finish();
-
 
     const _mousepos = document.createElement('div');
     _editor._wrapper.appendChild(_mousepos);
@@ -1444,7 +1420,6 @@ class Editor extends EditorInvisible {
       }
     });
 
-
     this._ortpos = document.createElement('div');
     _editor._wrapper.appendChild(this._ortpos);
     this._ortpos.className = 'ortpos';
@@ -1452,7 +1427,6 @@ class Editor extends EditorInvisible {
     this._ortpos.setAttribute('title', 'Есть наклонные элементы');
     this._ortpos.style.display = 'none';
     this._ortpos.onclick = () => this.show_ortpos();
-
 
     new function StableZoom(){
 
@@ -1505,7 +1479,6 @@ class Editor extends EditorInvisible {
     _editor._acc.attach(_editor.project._dp);
   }
 
-
   canvas_cursor(name) {
     this.projects.forEach((_scheme) => {
       for(let i=0; i<_scheme.view.element.classList.length; i++){
@@ -1518,7 +1491,6 @@ class Editor extends EditorInvisible {
       _scheme.view.element.classList.add(name);
     })
   }
-
 
   select_tool(name) {
 
@@ -1550,11 +1522,9 @@ class Editor extends EditorInvisible {
     }
   }
 
-
   open(ox) {
     ox && this.project.load(ox);
   }
-
 
   load_stamp(confirmed){
 
@@ -1572,7 +1542,6 @@ class Editor extends EditorInvisible {
       on_select: this.project.load_stamp.bind(this.project)
     });
   }
-
 
   segments_in_rect(rect) {
     var segments = [];
@@ -1643,7 +1612,6 @@ class Editor extends EditorInvisible {
     })
   }
 
-
   paths_intersecting_rect(rect) {
 
     const paths = [];
@@ -1660,7 +1628,6 @@ class Editor extends EditorInvisible {
 
     return paths;
   }
-
 
   drag_rect(p1, p2) {
     const {view} = this;
@@ -1687,7 +1654,6 @@ class Editor extends EditorInvisible {
     return rect;
   }
 
-
   glass_inserts(glasses){
     if(!Array.isArray(glasses)){
       glasses = this.project.selected_glasses();
@@ -1695,11 +1661,9 @@ class Editor extends EditorInvisible {
     return new GlassInserts(glasses);
   }
 
-
   additional_inserts(cnstr, cell){
     new AdditionalInserts(cnstr, this.project, cell)
   }
-
 
   profile_radius(){
 
@@ -1737,13 +1701,16 @@ class Editor extends EditorInvisible {
     }
   }
 
-
   profile_align(name){
 
     if(name == "all"){
 
-      if(this.glass_align()){
-        return
+      if(this.glass_align()) {
+        return;
+      }
+
+      if(this.lay_impost_align()) {
+        return;
       }
 
       const layer = this.project.rootLayer();
@@ -1884,7 +1851,6 @@ class Editor extends EditorInvisible {
 
   }
 
-
   profile_group_align(name, profiles) {
 
     let	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
@@ -1940,7 +1906,6 @@ class Editor extends EditorInvisible {
     });
 
   }
-
 
   do_glass_align(name = 'auto', glasses) {
 
@@ -2100,7 +2065,6 @@ class Editor extends EditorInvisible {
     return res;
   }
 
-
   glass_align(name = 'auto', glasses) {
 
     const shift = this.do_glass_align(name, glasses);
@@ -2128,6 +2092,140 @@ class Editor extends EditorInvisible {
     }
   }
 
+  do_lay_impost_align(name = 'auto', glass) {
+
+    const {project, Point} = this;
+
+    if (!glass) {
+      const glasses = project.selected_glasses();
+      if (glasses.length != 1)
+        return
+      glass = glasses[0];
+    }
+
+    if(glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
+      return;
+    }
+
+    if(name === 'auto') {
+      name = 'width';
+    }
+
+    const orientation = name === 'width' ? $p.enm.orientations.vert : $p.enm.orientations.hor;
+    const neighbors = [];
+    const shift = glass.imposts.filter(impost => {
+      const vert = (impost.angle_hor > 45 && impost.angle_hor <= 135) || (impost.angle_hor > 225 && impost.angle_hor <= 315);
+      const passed = impost.orientation == orientation
+        || (orientation === $p.enm.orientations.vert && vert)
+        || (orientation === $p.enm.orientations.hor && !vert);
+      if (!passed) {
+        neighbors.push(impost);
+      }
+      return passed;
+    });
+
+    function get_nearest_link(link, src, pt) {
+      const index = src.findIndex(elm => elm.b.is_nearest(pt) || elm.e.is_nearest(pt));
+      if (index !== -1) {
+        const impost = src[index];
+        src.splice(index, 1);
+        link.push(impost);
+        get_nearest_link(link, src, impost.b);
+        get_nearest_link(link, src, impost.e);
+      }
+    }
+
+    const tmp = Array.from(shift);
+    const links = [];
+    while (tmp.length) {
+      const link = [];
+      get_nearest_link(link, tmp, tmp[0].b);
+      if (link.length) {
+        links.push(link);
+      }
+    }
+    links.sort((a, b) => {
+      return orientation === $p.enm.orientations.vert ? (a[0].b._x - b[0].b._x) : (a[0].b._y - b[0].b._y);
+    });
+
+    const widthNom = shift[0].nom.width;
+    const bounds = glass.bounds_light(0);
+
+    function get_delta(dist, pt) {
+      return orientation === $p.enm.orientations.vert
+        ? (bounds.x + dist - pt._x)
+        : (bounds.y + dist - pt._y);
+    }
+
+    const width = (orientation === $p.enm.orientations.vert ? bounds.width : bounds.height) / links.length;
+    const step = ((orientation === $p.enm.orientations.vert ? bounds.width : bounds.height) - widthNom * links.length) / (links.length + 1);
+    let pos = 0;
+    for (let i = 0; i < links.length; i++) {
+      pos += step + widthNom / (pos === 0 ? 2 : 1);
+
+      for (const impost of links[i]) {
+        let nbs = [];
+        for (const nb of neighbors) {
+          if (nb.b.is_nearest(impost.b) || nb.b.is_nearest(impost.e)) {
+            nbs.push({
+              impost: nb,
+              point: 'b'
+            });
+          }
+          if (nb.e.is_nearest(impost.b) || nb.e.is_nearest(impost.e)) {
+            nbs.push({
+              impost: nb,
+              point: 'e'
+            });
+          }
+        }
+
+        let delta = get_delta(pos, impost.b);
+        impost.select_node("b");
+        impost.move_points(new Point(orientation === $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
+        project.deselectAll();
+
+        delta = get_delta(pos, impost.e);
+        impost.select_node("e");
+        impost.move_points(new Point(orientation === $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
+        project.deselectAll();
+
+        impost.generatrix.segments.forEach(segm => {
+          if (segm.point === impost.b || segm.point === impost.e) {
+            return;
+          }
+          delta = get_delta(pos, segm.point);
+          segm.point = segm.point.add(delta);
+        });
+
+        nbs.forEach(node => {
+          delta = get_delta(pos, node.impost[node.point]);
+          node.impost.select_node(node.point);
+          node.impost.move_points(new Point(orientation == $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
+          project.deselectAll();
+        });
+      }
+    }
+
+    if (!glass.selected) {
+      glass.selected = true;
+    }
+
+    return true;
+  }
+
+  lay_impost_align(name = 'auto', glass) {
+    if(name != 'height' && !this.do_lay_impost_align('width', glass)) {
+      return;
+    }
+    if(name != 'width' && !this.do_lay_impost_align('height', glass)) {
+      return;
+    }
+
+    this.project.contours.forEach(l => l.redraw());
+
+    return true;
+  }
 
   on_del_row({grid, tabular_section}) {
     if(tabular_section == 'inserts'){
@@ -2143,7 +2241,6 @@ class Editor extends EditorInvisible {
   on_keydown(ev) {
     this.eve.emit('keydown', ev);
   }
-
 
   on_alert(ev) {
     if(ev.obj === this.project.ox) {
@@ -2175,7 +2272,6 @@ class Editor extends EditorInvisible {
     }
   }
 
-
   prompt(loc) {
     const {ox} = this.project;
     return (ox && ox._modified) ? `Изделие ${ox.prod_name(true)} изменено.\n\nЗакрыть без сохранения?` : true;
@@ -2191,7 +2287,6 @@ class Editor extends EditorInvisible {
       this.handlers.handleNavigate(`/`);
     }
   }
-
 
   unload() {
     const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, project} = this;
@@ -2218,7 +2313,6 @@ class Editor extends EditorInvisible {
   }
 
 };
-
 
 
 $p.Editor = Editor;
@@ -2521,7 +2615,7 @@ const AbstractFilling = (superclass) => class extends superclass {
           return true;
         }
       })
-    }
+    };
 
     if (profiles.length) {
       profiles.forEach((profile) => {
@@ -2576,7 +2670,7 @@ const AbstractFilling = (superclass) => class extends superclass {
     return bounds;
   }
 
-}
+};
 
 
 
@@ -6579,6 +6673,55 @@ class Filling extends AbstractFilling(BuilderElement) {
   get bounds() {
     const {path} = this;
     return path ? path.bounds : new paper.Rectangle();
+  }
+
+  perimeter_inner(size = 0) {
+    const {center} = this.bounds;
+    const res = this.outer_profiles.map((curr) => {
+      const profile = curr.profile || curr.elm;
+      const {inner, outer} = profile.rays;
+      const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true) ?
+        inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) :
+        outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
+      let angle = curr.e.subtract(curr.b).angle.round(1);
+      if(angle < 0) angle += 360;
+      return {
+        profile,
+        sub_path,
+        angle,
+        b: curr.b,
+        e: curr.e,
+      };
+    });
+    const ubound = res.length - 1;
+    return res.map((curr, index) => {
+      let sub_path = curr.sub_path.equidistant(size);
+      const prev = !index ? res[ubound] : res[index - 1];
+      const next = (index == ubound) ? res[0] : res[index + 1];
+      const b = sub_path.intersect_point(prev.sub_path.equidistant(size), curr.b, true);
+      const e = sub_path.intersect_point(next.sub_path.equidistant(size), curr.e, true);
+      if (b && e) {
+        sub_path = sub_path.get_subpath(b, e);
+      }
+      return {
+        profile: curr.profile,
+        angle: curr.angle,
+        len: sub_path.length,
+        sub_path,
+      };
+    });
+  }
+
+  bounds_light(size = 0) {
+    const path = new paper.Path({insert: false});
+    for (const {sub_path} of this.perimeter_inner(size)) {
+      path.addSegments(sub_path.segments);
+    }
+    if (path.segments.length && !path.closed) {
+      path.closePath(true);
+    }
+    path.reduce();
+    return path.bounds;
   }
 
   get x1() {
