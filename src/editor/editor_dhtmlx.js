@@ -861,6 +861,10 @@ class Editor extends EditorInvisible {
         return
       }
 
+      if (this.lay_impost_align()) {
+        return
+      }
+
       // получаем текущий внешний контур
       const layer = this.project.rootLayer();
 
@@ -1267,6 +1271,185 @@ class Editor extends EditorInvisible {
       _attr._align_counter = 0;
       this.project.contours.forEach((l) => l.redraw());
     }
+  }
+
+  /**
+   * ### Смещает раскладку по световому проему, с учетом толщины раскладки
+   * возвращает истину в случае успеха
+   * @param name
+   * @param glass
+   * @return {Boolean}
+   */
+  do_lay_impost_align(name = 'auto', glass) {
+
+    const {project, Point} = this;
+
+    // выбираем заполнение, если не выбрано
+    if (!glass) {
+      const glasses = project.selected_glasses();
+      if (glasses.length != 1)
+        return
+      glass = glasses[0];
+    }
+
+    // проверяем наличие раскладки у заполнения
+    if (glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
+      return
+    }
+
+    // выясняем направление, в котором уравнивать
+    if(name === 'auto'){
+      name = 'width'
+    }
+
+    // собираем в массиве shift все импосты подходящего направления, остальные помещаем в neighbors
+    const orientation = name === 'width' ? $p.enm.orientations.vert : $p.enm.orientations.hor;
+    const neighbors = [];
+    const shift = glass.imposts.filter(impost => {
+      // отрезаем плохую ориентацию, учитываем наклонные импосты
+      const vert = (impost.angle_hor > 45 && impost.angle_hor <= 135) || (impost.angle_hor > 225 && impost.angle_hor <= 315);
+      const passed = impost.orientation == orientation
+        || (orientation === $p.enm.orientations.vert && vert)
+        || (orientation === $p.enm.orientations.hor && !vert);
+      if (!passed) {
+        neighbors.push(impost);
+      }
+      return passed;
+    });
+
+    // получение близжайших связанных импостов
+    function get_nearest_link(link, src, pt) {
+      // поиск близжайшего импоста к точке
+      const index = src.findIndex(elm => elm.b.is_nearest(pt) || elm.e.is_nearest(pt));
+      if (index !== -1) {
+        // запоминаем импост
+        const impost = src[index];
+        // удаляем импост из доступных импостов
+        src.splice(index, 1);
+        // добавляем импост в связь
+        link.push(impost);
+        // получаем близжайшие импосты
+        get_nearest_link(link, src, impost.b);
+        get_nearest_link(link, src, impost.e);
+      }
+    }
+
+    // группируем импосты для сдвига
+    const tmp = Array.from(shift);
+    const links = [];
+    while (tmp.length) {
+      const link = [];
+      get_nearest_link(link, tmp, tmp[0].b);
+      if (link.length) {
+        links.push(link);
+      }
+    }
+    // сортируем группы по возрастанию координат начальной точки первого импоста в связи
+    links.sort((a, b) => {
+      return orientation === $p.enm.orientations.vert ? (a[0].b._x - b[0].b._x) : (a[0].b._y - b[0].b._y);
+    });
+
+    // извлекаем ширину раскладки из номенклатуры первого импоста
+    const widthNom = shift[0].nom.width;
+    // определяем границы светового проема
+    const bounds = glass.bounds_light(0);
+
+    // вычисление смещения
+    function get_delta(dist, pt) {
+      return orientation === $p.enm.orientations.vert
+        ? (bounds.x + dist - pt._x)
+        : (bounds.y + dist - pt._y);
+    }
+
+    // получаем ширину строки или столбца
+    const width = (orientation === $p.enm.orientations.vert ? bounds.width : bounds.height) / links.length;
+    // получаем шаг между осями накладок без учета ширины элементов раскладки
+    const step = ((orientation === $p.enm.orientations.vert ? bounds.width : bounds.height) - widthNom * links.length) / (links.length + 1);
+    // накопительная переменная
+    let pos = 0;
+    // двигаем строки или столбцы
+    for (let i = 0; i < links.length; i++) {
+      // рассчитываем расположение осевой линии импоста с учетом предыдущей
+      pos += step + widthNom / (pos === 0 ? 2 : 1);
+
+      for (const impost of links[i]) {
+        // собираем соседние узлы для сдвига
+        let nbs = [];
+        for (const nb of neighbors) {
+          if (nb.b.is_nearest(impost.b) || nb.b.is_nearest(impost.e)) {
+            nbs.push({
+              impost: nb,
+              point: 'b'
+            });
+          }
+          if (nb.e.is_nearest(impost.b) || nb.e.is_nearest(impost.e)) {
+            nbs.push({
+              impost: nb,
+              point: 'e'
+            });
+          }
+        }
+        
+        // двигаем начальную точку
+        let delta = get_delta(pos, impost.b);
+        impost.select_node("b");
+        impost.move_points(new Point(orientation === $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
+        project.deselectAll();
+        
+        // двигаем конечную точку
+        delta = get_delta(pos, impost.e);
+        impost.select_node("e");
+        impost.move_points(new Point(orientation === $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
+        project.deselectAll();
+
+        // двигаем промежуточные точки импоста
+        impost.generatrix.segments.forEach(segm => {
+          if (segm.point === impost.b || segm.point === impost.e) {
+            return;
+          }
+          delta = get_delta(pos, segm.point);
+          segm.point = segm.point.add(delta);
+        });
+
+        // двигаем соседние узлы
+        nbs.forEach(node => {
+          delta = get_delta(pos, node.impost[node.point]);
+          node.impost.select_node(node.point);
+          node.impost.move_points(new Point(orientation == $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
+          project.deselectAll();
+        });
+      }
+    }
+
+    // возвращаем выделение заполнения
+    if (!glass.selected) {
+      glass.selected = true;
+    }
+
+    return true;
+  }
+
+  /**
+   * ### Уравнивание раскладки по световому проему
+   * выполняет смещение по ширине и высоте
+   * @param name
+   * @param glass
+   * @return {Boolean}
+   */
+  lay_impost_align(name = 'auto', glass) {
+    // выравниваем по длине
+    if (name != 'height' && !this.do_lay_impost_align('width', glass)) {
+      return
+    }
+    // выравниваем по высоте
+    if (name != 'width' && !this.do_lay_impost_align('height', glass)) {
+      return
+    }
+
+    // перерисовываем контуры
+    this.project.contours.forEach(l => l.redraw());
+
+    return true;
   }
 
   /**
