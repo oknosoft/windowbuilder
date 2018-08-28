@@ -80,6 +80,9 @@ class EditorInvisible extends paper.PaperScope {
     }
   }
 
+  static draw_scheme(ox) {
+
+  }
 }
 
 /**

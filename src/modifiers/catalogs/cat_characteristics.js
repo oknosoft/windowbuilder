@@ -408,7 +408,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
-    return project.load(this, true)
+    return project.load(this, attr.builder_props || true)
       .then(() => {
         const {_obj: {glasses, constructions, coordinates}} = this;
         // формируем эскиз(ы) в соответствии с attr
@@ -446,15 +446,17 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
           else {
             res[ref].imgs[`l0`] = project.get_svg(attr);
           }
-          constructions.forEach(({cnstr}) => {
-            project.draw_fragment({elm: -cnstr});
-            if(attr.format === 'png') {
-              res[ref].imgs[`l${cnstr}`] = project.view.element.toDataURL('image/png').substr(22);
-            }
-            else {
-              res[ref].imgs[`l${cnstr}`] = project.get_svg(attr);
-            }
-          });
+          if(attr.glasses !== false) {
+            constructions.forEach(({cnstr}) => {
+              project.draw_fragment({elm: -cnstr});
+              if(attr.format === 'png') {
+                res[ref].imgs[`l${cnstr}`] = project.view.element.toDataURL('image/png').substr(22);
+              }
+              else {
+                res[ref].imgs[`l${cnstr}`] = project.get_svg(attr);
+              }
+            });
+          }
         }
       })
       .then(() => {

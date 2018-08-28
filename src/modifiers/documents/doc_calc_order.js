@@ -327,7 +327,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     const {individual_person} = manager;
     const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
     const get_imgs = [];
-    const {cat: {contact_information_kinds, characteristics}, utils: {blank, blob_as_text}} = $p;
+    const {cat: {contact_information_kinds, characteristics}, utils: {blank, blob_as_text, snake_ref}} = $p;
 
     // заполняем res теми данными, которые доступны синхронно
     const res = {
@@ -468,6 +468,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     return this.load_production().then(() => {
 
       // получаем эскизы продукций, параллельно накапливаем количество и площадь изделий
+      let editor, imgs = Promise.resolve();
+      const builder_props = attr.builder_props && Object.assign({}, $p.CatCharacteristics.builder_props_defaults, attr.builder_props);
       this.production.forEach((row) => {
         if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
 
@@ -477,8 +479,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           res.ВсегоПлощадьИзделий += row.quantity * row.s;
 
           // если запросили эскиз без размерных линий или с иными параметрами...
-          if(attr.sizes === false) {
-
+          if(builder_props) {
+            if(!editor) {
+              editor = new $p.EditorInvisible();
+            }
+            imgs = imgs.then(() => {
+              return row.characteristic.draw(attr, editor)
+                .then((img) => {
+                  res.ПродукцияЭскизы[row.characteristic.ref] = img[snake_ref(row.characteristic.ref)].imgs.l0;
+                });
+            });
           }
           else {
             if(row.characteristic.svg) {
@@ -495,25 +505,28 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       });
       res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
-      return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-        .then(() => !window.QRCode && $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
-        .then(() => {
+      return imgs.then(() => {
+        editor && editor.unload();
+        return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
+          .then(() => !window.QRCode && $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
+          .then(() => {
 
-          const svg = document.createElement('SVG');
-          svg.innerHTML = '<g />';
-          const qrcode = new QRCode(svg, {
-            text: 'http://www.oknosoft.ru/zd/',
-            width: 100,
-            height: 100,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H,
-            useSVG: true
+            const svg = document.createElement('SVG');
+            svg.innerHTML = '<g />';
+            const qrcode = new QRCode(svg, {
+              text: 'http://www.oknosoft.ru/zd/',
+              width: 100,
+              height: 100,
+              colorDark: '#000000',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.H,
+              useSVG: true
+            });
+            res.qrcode = svg.innerHTML;
+
+            return res;
           });
-          res.qrcode = svg.innerHTML;
-
-          return res;
-        });
+      });
 
     });
 
