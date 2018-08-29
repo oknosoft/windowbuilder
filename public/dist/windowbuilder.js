@@ -1102,6 +1102,8 @@ class EditorInvisible extends paper.PaperScope {
 $p.EditorInvisible = EditorInvisible;
 
 
+
+
 class Editor extends EditorInvisible {
 
   constructor(pwnd, handlers){
@@ -1112,11 +1114,13 @@ class Editor extends EditorInvisible {
 
     this.activate();
 
+
     this.__define('_pwnd', {
       get() {
         return pwnd;
       }
     });
+
 
     this._layout = pwnd.attachLayout({
       pattern: '2U',
@@ -1133,6 +1137,7 @@ class Editor extends EditorInvisible {
       offsets: {top: 28, right: 0, bottom: 0, left: 0}
     })
 
+
     this._wrapper = document.createElement('div');
 
     this._layout.cells("a").attachObject(_editor._wrapper);
@@ -1143,11 +1148,16 @@ class Editor extends EditorInvisible {
     this._drawSelectionBounds = 0;
 
 
+
+
     this._keybrd = new Keybrd(this);
+
 
     this._undo = new UndoRedo(this);
 
+
     this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
+
 
     this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '2px', name: 'left', height: '294px',
       image_path: '/imgs/',
@@ -1180,6 +1190,7 @@ class Editor extends EditorInvisible {
         popup.p.querySelector('.dhx_popup_arrow').style.top = '20px';
       }
     });
+
 
     this.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
       image_path: '/imgs/',
@@ -1289,6 +1300,7 @@ class Editor extends EditorInvisible {
     this.tb_top.cell.style.background = '#fff';
     this.tb_top.cell.style.boxShadow = 'none';
 
+
     this.on_keydown = this.on_keydown.bind(this);
     document.body.addEventListener('keydown', this.on_keydown, false);
 
@@ -1310,21 +1322,30 @@ class Editor extends EditorInvisible {
     $p.on('alert', this.on_alert);
 
 
+
     new ZoomFit();
+
 
     new ToolSelectNode();
 
+
     new ToolPan();
+
 
     new ToolArc();
 
+
     new ToolCut();
+
 
     new ToolPen();
 
+
     new ToolLayImpost();
 
+
     new ToolText();
+
 
     new ToolRuler();
 
@@ -1378,6 +1399,7 @@ class Editor extends EditorInvisible {
     }
   }
 
+
   get _dxw() {
     return this._layout.dhxWins;
   }
@@ -1398,6 +1420,7 @@ class Editor extends EditorInvisible {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
     };
 
+
     _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
@@ -1408,6 +1431,7 @@ class Editor extends EditorInvisible {
     }
 
     pwnd_resize_finish();
+
 
     const _mousepos = document.createElement('div');
     _editor._wrapper.appendChild(_mousepos);
@@ -1420,6 +1444,7 @@ class Editor extends EditorInvisible {
       }
     });
 
+
     this._ortpos = document.createElement('div');
     _editor._wrapper.appendChild(this._ortpos);
     this._ortpos.className = 'ortpos';
@@ -1427,6 +1452,7 @@ class Editor extends EditorInvisible {
     this._ortpos.setAttribute('title', 'Есть наклонные элементы');
     this._ortpos.style.display = 'none';
     this._ortpos.onclick = () => this.show_ortpos();
+
 
     new function StableZoom(){
 
@@ -1479,6 +1505,7 @@ class Editor extends EditorInvisible {
     _editor._acc.attach(_editor.project._dp);
   }
 
+
   canvas_cursor(name) {
     this.projects.forEach((_scheme) => {
       for(let i=0; i<_scheme.view.element.classList.length; i++){
@@ -1491,6 +1518,7 @@ class Editor extends EditorInvisible {
       _scheme.view.element.classList.add(name);
     })
   }
+
 
   select_tool(name) {
 
@@ -1522,9 +1550,11 @@ class Editor extends EditorInvisible {
     }
   }
 
+
   open(ox) {
     ox && this.project.load(ox);
   }
+
 
   load_stamp(confirmed){
 
@@ -1542,6 +1572,7 @@ class Editor extends EditorInvisible {
       on_select: this.project.load_stamp.bind(this.project)
     });
   }
+
 
   segments_in_rect(rect) {
     var segments = [];
@@ -1612,6 +1643,7 @@ class Editor extends EditorInvisible {
     })
   }
 
+
   paths_intersecting_rect(rect) {
 
     const paths = [];
@@ -1628,6 +1660,7 @@ class Editor extends EditorInvisible {
 
     return paths;
   }
+
 
   drag_rect(p1, p2) {
     const {view} = this;
@@ -1654,6 +1687,7 @@ class Editor extends EditorInvisible {
     return rect;
   }
 
+
   glass_inserts(glasses){
     if(!Array.isArray(glasses)){
       glasses = this.project.selected_glasses();
@@ -1661,9 +1695,11 @@ class Editor extends EditorInvisible {
     return new GlassInserts(glasses);
   }
 
+
   additional_inserts(cnstr, cell){
     new AdditionalInserts(cnstr, this.project, cell)
   }
+
 
   profile_radius(){
 
@@ -1700,6 +1736,7 @@ class Editor extends EditorInvisible {
       });
     }
   }
+
 
   profile_align(name){
 
@@ -1851,6 +1888,7 @@ class Editor extends EditorInvisible {
 
   }
 
+
   profile_group_align(name, profiles) {
 
     let	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
@@ -1906,6 +1944,7 @@ class Editor extends EditorInvisible {
     });
 
   }
+
 
   do_glass_align(name = 'auto', glasses) {
 
@@ -2065,6 +2104,7 @@ class Editor extends EditorInvisible {
     return res;
   }
 
+
   glass_align(name = 'auto', glasses) {
 
     const shift = this.do_glass_align(name, glasses);
@@ -2092,6 +2132,7 @@ class Editor extends EditorInvisible {
     }
   }
 
+
   do_lay_impost_align(name = 'auto', glass) {
 
     const {project, Point} = this;
@@ -2103,7 +2144,7 @@ class Editor extends EditorInvisible {
       glass = glasses[0];
     }
 
-    if(glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
+    if(!glass.imposts.length || glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
       return;
     }
 
@@ -2160,10 +2201,10 @@ class Editor extends EditorInvisible {
     const width = (orientation === $p.enm.orientations.vert ? bounds.width : bounds.height) / links.length;
     const step = ((orientation === $p.enm.orientations.vert ? bounds.width : bounds.height) - widthNom * links.length) / (links.length + 1);
     let pos = 0;
-    for (let i = 0; i < links.length; i++) {
+    for (const link of links) {
       pos += step + widthNom / (pos === 0 ? 2 : 1);
 
-      for (const impost of links[i]) {
+      for (const impost of link) {
         let nbs = [];
         for (const nb of neighbors) {
           if (nb.b.is_nearest(impost.b) || nb.b.is_nearest(impost.e)) {
@@ -2214,6 +2255,7 @@ class Editor extends EditorInvisible {
     return true;
   }
 
+
   lay_impost_align(name = 'auto', glass) {
     if(name != 'height' && !this.do_lay_impost_align('width', glass)) {
       return;
@@ -2226,6 +2268,7 @@ class Editor extends EditorInvisible {
 
     return true;
   }
+
 
   on_del_row({grid, tabular_section}) {
     if(tabular_section == 'inserts'){
@@ -2241,6 +2284,7 @@ class Editor extends EditorInvisible {
   on_keydown(ev) {
     this.eve.emit('keydown', ev);
   }
+
 
   on_alert(ev) {
     if(ev.obj === this.project.ox) {
@@ -2272,6 +2316,7 @@ class Editor extends EditorInvisible {
     }
   }
 
+
   prompt(loc) {
     const {ox} = this.project;
     return (ox && ox._modified) ? `Изделие ${ox.prod_name(true)} изменено.\n\nЗакрыть без сохранения?` : true;
@@ -2287,6 +2332,7 @@ class Editor extends EditorInvisible {
       this.handlers.handleNavigate(`/`);
     }
   }
+
 
   unload() {
     const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, project} = this;
@@ -2313,6 +2359,7 @@ class Editor extends EditorInvisible {
   }
 
 };
+
 
 
 $p.Editor = Editor;
