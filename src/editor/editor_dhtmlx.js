@@ -1293,7 +1293,7 @@ class Editor extends EditorInvisible {
     }
 
     // проверяем наличие раскладки у заполнения
-    if(glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
+    if(!glass.imposts.length || glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
       return;
     }
 
@@ -1368,11 +1368,11 @@ class Editor extends EditorInvisible {
     // накопительная переменная
     let pos = 0;
     // двигаем строки или столбцы
-    for (let i = 0; i < links.length; i++) {
+    for (const link of links) {
       // рассчитываем расположение осевой линии импоста с учетом предыдущей
       pos += step + widthNom / (pos === 0 ? 2 : 1);
 
-      for (const impost of links[i]) {
+      for (const impost of link) {
         // собираем соседние узлы для сдвига
         let nbs = [];
         for (const nb of neighbors) {
