@@ -1293,8 +1293,10 @@ class Editor extends EditorInvisible {
     }
 
     // проверяем наличие раскладки у заполнения
-    if(!glass.imposts.length || glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
-      return;
+    if (!(glass instanceof Filling)
+      || !glass.imposts.length
+      || glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
+        return;
     }
 
     // выясняем направление, в котором уравнивать
@@ -1361,6 +1363,22 @@ class Editor extends EditorInvisible {
         : (bounds.y + dist - pt._y);
     }
 
+    // сбрасывает выделение с точек раскладки
+    function deselect_onlay_points() {
+      project.getItems({class: paper.Path}).forEach((item) => {
+        if (!(item.parent instanceof Onlay))
+          return;
+        item.segments.forEach((segm) => {
+          if(segm.selected) {
+            segm.selected = false;
+          }
+        });
+        if(item.selected) {
+          item.selected = false;
+        }
+      });
+    }
+
     // получаем ширину строки или столбца
     const width = (orientation === $p.enm.orientations.vert ? bounds.width : bounds.height) / links.length;
     // получаем шаг между осями накладок без учета ширины элементов раскладки
@@ -1394,13 +1412,13 @@ class Editor extends EditorInvisible {
         let delta = get_delta(pos, impost.b);
         impost.select_node("b");
         impost.move_points(new Point(orientation === $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
-        project.deselectAll();
+        deselect_onlay_points();
         
         // двигаем конечную точку
         delta = get_delta(pos, impost.e);
         impost.select_node("e");
         impost.move_points(new Point(orientation === $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
-        project.deselectAll();
+        deselect_onlay_points();
 
         // двигаем промежуточные точки импоста
         impost.generatrix.segments.forEach(segm => {
@@ -1416,14 +1434,9 @@ class Editor extends EditorInvisible {
           delta = get_delta(pos, node.impost[node.point]);
           node.impost.select_node(node.point);
           node.impost.move_points(new Point(orientation == $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
-          project.deselectAll();
+          deselect_onlay_points();
         });
       }
-    }
-
-    // возвращаем выделение заполнения
-    if (!glass.selected) {
-      glass.selected = true;
     }
 
     return true;
