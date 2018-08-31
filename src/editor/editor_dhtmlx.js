@@ -1285,10 +1285,11 @@ class Editor extends EditorInvisible {
     const {project, Point} = this;
 
     // выбираем заполнение, если не выбрано
-    if (!glass) {
+    if(!glass) {
       const glasses = project.selected_glasses();
-      if (glasses.length != 1)
-        return
+      if(glasses.length != 1) {
+        return;
+      }
       glass = glasses[0];
     }
 
@@ -1319,7 +1320,7 @@ class Editor extends EditorInvisible {
       return passed;
     });
 
-    // получение близжайших связанных импостов
+    // получение ближайших связанных импостов
     function get_nearest_link(link, src, pt) {
       // поиск близжайшего импоста к точке
       const index = src.findIndex(elm => elm.b.is_nearest(pt) || elm.e.is_nearest(pt));
@@ -1363,22 +1364,6 @@ class Editor extends EditorInvisible {
         : (bounds.y + dist - pt._y);
     }
 
-    // сбрасывает выделение с точек раскладки
-    function deselect_onlay_points() {
-      project.getItems({class: paper.Path}).forEach((item) => {
-        if (!(item.parent instanceof Onlay))
-          return;
-        item.segments.forEach((segm) => {
-          if(segm.selected) {
-            segm.selected = false;
-          }
-        });
-        if(item.selected) {
-          item.selected = false;
-        }
-      });
-    }
-
     // получаем ширину строки или столбца
     const width = (orientation === $p.enm.orientations.vert ? bounds.width : bounds.height) / links.length;
     // получаем шаг между осями накладок без учета ширины элементов раскладки
@@ -1412,13 +1397,13 @@ class Editor extends EditorInvisible {
         let delta = get_delta(pos, impost.b);
         impost.select_node("b");
         impost.move_points(new Point(orientation === $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
-        deselect_onlay_points();
+        glass.deselect_onlay_points();
         
         // двигаем конечную точку
         delta = get_delta(pos, impost.e);
         impost.select_node("e");
         impost.move_points(new Point(orientation === $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
-        deselect_onlay_points();
+        glass.deselect_onlay_points();
 
         // двигаем промежуточные точки импоста
         impost.generatrix.segments.forEach(segm => {
@@ -1434,7 +1419,7 @@ class Editor extends EditorInvisible {
           delta = get_delta(pos, node.impost[node.point]);
           node.impost.select_node(node.point);
           node.impost.move_points(new Point(orientation == $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
-          deselect_onlay_points();
+          glass.deselect_onlay_points();
         });
       }
     }

@@ -4046,12 +4046,46 @@ class Filling extends AbstractFilling(BuilderElement) {
     });
   }
 
-  get profiles() {
-    return this._attr._profiles || [];
+  formula(by_art) {
+    let res;
+    this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+      let {name, article} = row.inset;
+      const aname = row.inset.name.split(' ');
+      if(by_art && article){
+        name = article;
+      }
+      else if(aname.length){
+        name = aname[0];
+      }
+      if(!res){
+        res = name;
+      }
+      else{
+        res += (by_art ? '*' : 'x') + name;
+      }
+    });
+    return res || (by_art ? this.inset.article || this.inset.name : this.inset.name);
+  }
+
+  deselect_onlay_points() {
+    for(const {generatrix} of this.imposts) {
+      generatrix.segments.forEach((segm) => {
+        if(segm.selected) {
+          segm.selected = false;
+        }
+      });
+      if(generatrix.selected) {
+        generatrix.selected = false;
+      }
+    }
   }
 
   get imposts() {
     return this.getItems({class: Onlay});
+  }
+
+  get profiles() {
+    return this._attr._profiles || [];
   }
 
   remove_onlays() {
@@ -4321,27 +4355,6 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   get default_clr_str() {
     return "#def,#d0ddff,#eff";
-  }
-
-  formula(by_art) {
-    let res;
-    this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
-      let {name, article} = row.inset;
-      const aname = row.inset.name.split(' ');
-      if(by_art && article){
-        name = article;
-      }
-      else if(aname.length){
-        name = aname[0];
-      }
-      if(!res){
-        res = name;
-      }
-      else{
-        res += (by_art ? '*' : 'x') + name;
-      }
-    });
-    return res || (by_art ? this.inset.article || this.inset.name : this.inset.name);
   }
 
   get ref() {
