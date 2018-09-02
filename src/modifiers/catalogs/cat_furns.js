@@ -167,7 +167,8 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
    */
   get_spec(contour, cache, exclude_dop) {
 
-    const res = $p.dp.buyers_order.create().specification;
+    // тихий режим для спецификации
+    const res = $p.dp.buyers_order.create({specification: []}, true).specification;
     const {ox} = contour.project;
     const {НаПримыкающий} = $p.enm.transfer_operations_options;
 
