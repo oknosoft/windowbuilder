@@ -749,8 +749,8 @@ class Scheme extends paper.Project {
         }
         else if(!parent.nearest || !parent.nearest()) {
 
-          // автоуравнивание $p.enm.align_types.Геометрически
-          if(auto_align && parent.elm_type == $p.enm.elm_types.Импост) {
+          // автоуравнивание $p.enm.align_types.Геометрически для импостов внешнего слоя
+          if(auto_align && parent.elm_type === $p.enm.elm_types.Импост && !parent.layer.layer) {
             continue;
           }
 

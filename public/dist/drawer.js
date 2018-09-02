@@ -8601,7 +8601,7 @@ class Scheme extends paper.Project {
         }
         else if(!parent.nearest || !parent.nearest()) {
 
-          if(auto_align && parent.elm_type == $p.enm.elm_types.Импост) {
+          if(auto_align && parent.elm_type === $p.enm.elm_types.Импост && !parent.layer.layer) {
             continue;
           }
 
