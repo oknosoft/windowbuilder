@@ -14476,6 +14476,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Ширина: row.width,
       ВсегоПлощадь: row.s * row.quantity,
       Примечание: row.note,
+      Комментарий: row.note,
+      СистемаПрофилей: characteristic.sys.presentation,
       Номенклатура: nom.name_full || nom.name,
       Характеристика: characteristic.name,
       Заполнения: '',
