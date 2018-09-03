@@ -1320,6 +1320,11 @@ class Editor extends EditorInvisible {
       return passed;
     });
 
+    // выходим, если отсутствуют импосты подходящего направления
+    if (!shift.length) {
+      return;
+    }
+
     // получение ближайших связанных импостов
     function get_nearest_link(link, src, pt) {
       // поиск близжайшего импоста к точке
