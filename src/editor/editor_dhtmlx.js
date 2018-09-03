@@ -1441,11 +1441,10 @@ class Editor extends EditorInvisible {
    */
   lay_impost_align(name = 'auto', glass) {
     // выравниваем по длине
-    if(name != 'height' && !this.do_lay_impost_align('width', glass)) {
-      return;
-    }
+    const width = (name === 'auto' || name === 'width') && this.do_lay_impost_align('width', glass);
     // выравниваем по высоте
-    if(name != 'width' && !this.do_lay_impost_align('height', glass)) {
+    const height = (name === 'auto' ||  name === 'height') && this.do_lay_impost_align('height', glass);
+    if (!width && !height) {
       return;
     }
 
