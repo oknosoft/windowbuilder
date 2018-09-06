@@ -207,7 +207,7 @@ class Editor extends EditorInvisible {
         //{name: 'sep_3', text: '', float: 'left'},
         {name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
         //{name: 'sep_4', text: '', float: 'left'},
-        {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left'},
+        {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left', width: '30px'},
 
         {name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
 
