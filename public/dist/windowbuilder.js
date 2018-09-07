@@ -7482,7 +7482,7 @@ Object.defineProperties(paper.Path.prototype, {
   is_linear: {
     value() {
       const {curves, firstCurve} = this;
-      if(curves.length == 1 && firstCurve.isLinear()) {
+      if(curves.length === 1 && firstCurve.isLinear()) {
         return true;
       }
       else if(this.hasHandles()) {
@@ -7636,7 +7636,7 @@ Object.defineProperties(paper.Path.prototype, {
         const intersections = this.getIntersections(path);
         let delta = Infinity, tdelta, tpoint;
 
-        if(intersections.length == 1){
+        if(intersections.length === 1){
           return intersections[0].point;
         }
         else if(intersections.length > 1){
@@ -7734,6 +7734,48 @@ Object.defineProperties(paper.Path.prototype, {
     }
   },
 
+  grid_points: {
+    value({step, angle, reverse, point, offset = 100}) {
+      let {firstSegment: {point: b}, lastSegment: {point: e}} = this;
+      if(reverse) {
+        [b, e] = [e, b];
+      }
+      const vector = new paper.Path({
+        segments: [b, e],
+        insert: false
+      });
+      const vangle = e.subtract(b).angle;
+      if(angle === undefined) {
+        angle = vangle;
+      }
+      else {
+        ;
+      }
+
+      let n0 = vector.getNormalAt(0).multiply(offset);
+      vector.firstSegment.point = vector.firstSegment.point.subtract(n0);
+      vector.lastSegment.point = vector.lastSegment.point.subtract(n0);
+      n0 = n0.normalize(10000);
+
+      const res = [];
+      for (let x = 0; x < vector.length; x += step) {
+        const tpoint = vector.getPointAt(x);
+        const tpath = new paper.Path({
+          segments: [tpoint.subtract(n0), tpoint.add(n0)],
+          insert: false
+        });
+        const intersections = this.getIntersections(tpath);
+        if(intersections.length) {
+          const d1 = tpath.getOffsetOf(tpoint);
+          const d2 = tpath.getOffsetOf(intersections[0].point);
+          res.push({x: x.round(1), y: (d2 - d1).round(1)});
+        }
+      }
+
+      return res;
+    }
+  }
+
 });
 
 
@@ -7797,7 +7839,7 @@ Object.defineProperties(paper.Point.prototype, {
         return {x: xx1, y: yy1};
       }
       else {
-        return {x: xx2, y: yy2}
+        return {x: xx2, y: yy2};
       }
     }
   },
@@ -12415,19 +12457,14 @@ class ToolCoordinates extends ToolElement{
 
   refresh_coordinates() {
     const {coordinates} = this.dp;
-    const {path_kind} = $p.enm;
     coordinates.clear();
-    switch (this.dp.path) {
-    case path_kind.generatrix:
-      coordinates.add(this.profile.b);
-      coordinates.add(this.profile.e);
-      break;
-    case path_kind.inner:
-    case path_kind.outer:
-      coordinates.add(this.profile._attr.ruler_line_path.firstSegment.point);
-      coordinates.add(this.profile._attr.ruler_line_path.lastSegment.point);
-      break;
-    }
+    const points = this.path.grid_points({
+      step: this.dp.step,
+      angle: this.dp.angle,
+      reverse: this.dp.bind === $p.enm.bind_coordinates.e,
+      point: this.bind_point.position,
+    });
+    points.forEach((point) => coordinates.add(point));
   }
 
   create_wnd() {
@@ -12492,36 +12529,40 @@ class ToolCoordinates extends ToolElement{
   }
 
   select_path() {
+    const {path_kind} = $p.enm;
+
     this.profile.selected = false;
     this.profile.ruler_line_select(this.dp.path.valueOf());
+
+    switch (this.dp.path) {
+    case path_kind.generatrix:
+      this.path = this.profile.generatrix;
+      break;
+    case path_kind.inner:
+    case path_kind.outer:
+      this.path = this.profile._attr.ruler_line_path;
+      break;
+    }
+
     this.select_bind();
   }
 
   select_bind() {
+    const {bind_coordinates} = $p.enm;
     let point;
-    if(this.dp.bind == 'product') {
+    switch (this.dp.bind) {
+    case bind_coordinates.b:
+      point = this.path.b;
+      break;
+    case bind_coordinates.e:
+      point = this.path.e;
+      break;
+    case bind_coordinates.product:
       point = this.project.bounds.bottomLeft;
-    }
-    else if(this.dp.bind == 'contour') {
+      break;
+    case bind_coordinates.contour:
       point = this.profile.layer.bounds.bottomLeft;
-    }
-    else {
-      switch (`${this.dp.bind.valueOf()}_${this.dp.path.valueOf()}`) {
-      case 'b_generatrix':
-        point = this.profile.b;
-        break;
-      case 'e_generatrix':
-        point = this.profile.e;
-        break;
-      case 'b_inner':
-      case 'b_outer':
-        point = this.profile._attr.ruler_line_path.firstSegment.point;
-        break;
-      case 'e_inner':
-      case 'e_outer':
-        point = this.profile._attr.ruler_line_path.lastSegment.point;
-        break;
-      }
+      break;
     }
 
     if(!this.bind_point) {
