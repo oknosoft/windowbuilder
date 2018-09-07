@@ -297,9 +297,7 @@ class ToolSelectNode extends ToolElement {
         }
       },
 
-      mousemove: function(event) {
-        this.hitTest(event);
-      },
+      mousemove: this.hitTest,
 
       keydown: function(event) {
 

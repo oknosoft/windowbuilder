@@ -50,6 +50,9 @@ class ToolElement extends paper.Tool {
       }
 
       if (this.wnd.wnd_options) {
+        if(!this.options.wnd){
+          this.options.wnd = {};
+        }
         this.wnd.wnd_options(this.options.wnd);
         $p.wsql.save_options("editor", this.options);
         this.wnd.close();

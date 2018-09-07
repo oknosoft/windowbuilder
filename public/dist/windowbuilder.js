@@ -1102,8 +1102,6 @@ class EditorInvisible extends paper.PaperScope {
 $p.EditorInvisible = EditorInvisible;
 
 
-
-
 class Editor extends EditorInvisible {
 
   constructor(pwnd, handlers){
@@ -1114,13 +1112,11 @@ class Editor extends EditorInvisible {
 
     this.activate();
 
-
     this.__define('_pwnd', {
       get() {
         return pwnd;
       }
     });
-
 
     this._layout = pwnd.attachLayout({
       pattern: '2U',
@@ -1137,7 +1133,6 @@ class Editor extends EditorInvisible {
       offsets: {top: 28, right: 0, bottom: 0, left: 0}
     })
 
-
     this._wrapper = document.createElement('div');
 
     this._layout.cells("a").attachObject(_editor._wrapper);
@@ -1148,16 +1143,11 @@ class Editor extends EditorInvisible {
     this._drawSelectionBounds = 0;
 
 
-
-
     this._keybrd = new Keybrd(this);
-
 
     this._undo = new UndoRedo(this);
 
-
     this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
-
 
     this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '2px', name: 'left', height: '294px',
       image_path: '/imgs/',
@@ -1191,7 +1181,6 @@ class Editor extends EditorInvisible {
       }
     });
 
-
     this.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
       image_path: '/imgs/',
       buttons: [
@@ -1209,7 +1198,7 @@ class Editor extends EditorInvisible {
         {name: 'rewind', text: '<i class="fa fa-repeat fa-fw"></i>', tooltip: 'Шаг вперед', float: 'left'},
 
         {name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
-        {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left'},
+        {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left', width: '30px'},
 
         {name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
 
@@ -1300,7 +1289,6 @@ class Editor extends EditorInvisible {
     this.tb_top.cell.style.background = '#fff';
     this.tb_top.cell.style.boxShadow = 'none';
 
-
     this.on_keydown = this.on_keydown.bind(this);
     document.body.addEventListener('keydown', this.on_keydown, false);
 
@@ -1322,32 +1310,25 @@ class Editor extends EditorInvisible {
     $p.on('alert', this.on_alert);
 
 
-
     new ZoomFit();
-
 
     new ToolSelectNode();
 
-
     new ToolPan();
-
 
     new ToolArc();
 
-
     new ToolCut();
-
 
     new ToolPen();
 
-
     new ToolLayImpost();
-
 
     new ToolText();
 
-
     new ToolRuler();
+
+    new ToolCoordinates();
 
     this.tools[1].activate();
 
@@ -1399,7 +1380,6 @@ class Editor extends EditorInvisible {
     }
   }
 
-
   get _dxw() {
     return this._layout.dhxWins;
   }
@@ -1420,7 +1400,6 @@ class Editor extends EditorInvisible {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
     };
 
-
     _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
@@ -1431,7 +1410,6 @@ class Editor extends EditorInvisible {
     }
 
     pwnd_resize_finish();
-
 
     const _mousepos = document.createElement('div');
     _editor._wrapper.appendChild(_mousepos);
@@ -1444,7 +1422,6 @@ class Editor extends EditorInvisible {
       }
     });
 
-
     this._ortpos = document.createElement('div');
     _editor._wrapper.appendChild(this._ortpos);
     this._ortpos.className = 'ortpos';
@@ -1452,7 +1429,6 @@ class Editor extends EditorInvisible {
     this._ortpos.setAttribute('title', 'Есть наклонные элементы');
     this._ortpos.style.display = 'none';
     this._ortpos.onclick = () => this.show_ortpos();
-
 
     new function StableZoom(){
 
@@ -1505,7 +1481,6 @@ class Editor extends EditorInvisible {
     _editor._acc.attach(_editor.project._dp);
   }
 
-
   canvas_cursor(name) {
     this.projects.forEach((_scheme) => {
       for(let i=0; i<_scheme.view.element.classList.length; i++){
@@ -1518,7 +1493,6 @@ class Editor extends EditorInvisible {
       _scheme.view.element.classList.add(name);
     })
   }
-
 
   select_tool(name) {
 
@@ -1550,11 +1524,9 @@ class Editor extends EditorInvisible {
     }
   }
 
-
   open(ox) {
     ox && this.project.load(ox);
   }
-
 
   load_stamp(confirmed){
 
@@ -1572,7 +1544,6 @@ class Editor extends EditorInvisible {
       on_select: this.project.load_stamp.bind(this.project)
     });
   }
-
 
   segments_in_rect(rect) {
     var segments = [];
@@ -1643,7 +1614,6 @@ class Editor extends EditorInvisible {
     })
   }
 
-
   paths_intersecting_rect(rect) {
 
     const paths = [];
@@ -1660,7 +1630,6 @@ class Editor extends EditorInvisible {
 
     return paths;
   }
-
 
   drag_rect(p1, p2) {
     const {view} = this;
@@ -1687,7 +1656,6 @@ class Editor extends EditorInvisible {
     return rect;
   }
 
-
   glass_inserts(glasses){
     if(!Array.isArray(glasses)){
       glasses = this.project.selected_glasses();
@@ -1695,11 +1663,9 @@ class Editor extends EditorInvisible {
     return new GlassInserts(glasses);
   }
 
-
   additional_inserts(cnstr, cell){
     new AdditionalInserts(cnstr, this.project, cell)
   }
-
 
   profile_radius(){
 
@@ -1736,7 +1702,6 @@ class Editor extends EditorInvisible {
       });
     }
   }
-
 
   profile_align(name){
 
@@ -1888,7 +1853,6 @@ class Editor extends EditorInvisible {
 
   }
 
-
   profile_group_align(name, profiles) {
 
     let	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
@@ -1944,7 +1908,6 @@ class Editor extends EditorInvisible {
     });
 
   }
-
 
   do_glass_align(name = 'auto', glasses) {
 
@@ -2104,7 +2067,6 @@ class Editor extends EditorInvisible {
     return res;
   }
 
-
   glass_align(name = 'auto', glasses) {
 
     const shift = this.do_glass_align(name, glasses);
@@ -2131,7 +2093,6 @@ class Editor extends EditorInvisible {
       this.project.contours.forEach((l) => l.redraw());
     }
   }
-
 
   do_lay_impost_align(name = 'auto', glass) {
 
@@ -2258,7 +2219,6 @@ class Editor extends EditorInvisible {
     return true;
   }
 
-
   lay_impost_align(name = 'auto', glass) {
     const width = (name === 'auto' || name === 'width') && this.do_lay_impost_align('width', glass);
     const height = (name === 'auto' ||  name === 'height') && this.do_lay_impost_align('height', glass);
@@ -2270,7 +2230,6 @@ class Editor extends EditorInvisible {
 
     return true;
   }
-
 
   on_del_row({grid, tabular_section}) {
     if(tabular_section == 'inserts'){
@@ -2286,7 +2245,6 @@ class Editor extends EditorInvisible {
   on_keydown(ev) {
     this.eve.emit('keydown', ev);
   }
-
 
   on_alert(ev) {
     if(ev.obj === this.project.ox) {
@@ -2318,7 +2276,6 @@ class Editor extends EditorInvisible {
     }
   }
 
-
   prompt(loc) {
     const {ox} = this.project;
     return (ox && ox._modified) ? `Изделие ${ox.prod_name(true)} изменено.\n\nЗакрыть без сохранения?` : true;
@@ -2334,7 +2291,6 @@ class Editor extends EditorInvisible {
       this.handlers.handleNavigate(`/`);
     }
   }
-
 
   unload() {
     const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, project} = this;
@@ -2361,7 +2317,6 @@ class Editor extends EditorInvisible {
   }
 
 };
-
 
 
 $p.Editor = Editor;
@@ -12131,6 +12086,9 @@ class ToolElement extends paper.Tool {
       }
 
       if (this.wnd.wnd_options) {
+        if(!this.options.wnd){
+          this.options.wnd = {};
+        }
         this.wnd.wnd_options(this.options.wnd);
         $p.wsql.save_options("editor", this.options);
         this.wnd.close();
@@ -12306,9 +12264,7 @@ class ToolArc extends ToolElement{
         }
       },
 
-      mousemove: function(event) {
-        this.hitTest(event);
-      }
+      mousemove: this.hitTest
 
     })
 
@@ -12357,6 +12313,186 @@ class ToolArc extends ToolElement{
     return true;
   }
 
+}
+
+
+
+class ToolCoordinates extends ToolElement{
+
+  constructor() {
+
+    super()
+
+    Object.assign(this, {
+      options: {
+        name: 'grid',
+        wnd: {
+          caption: "Таблица координат",
+          width: 290,
+          height: 320
+        },
+      },
+      profile: null,
+      bind_point: null,
+      hitItem: null,
+      originalContent: null,
+      changed: false,
+    });
+
+    this.on({
+
+      activate: function() {
+        this.on_activate('cursor-text-select');
+        if(!this.dp) {
+          this.dp = $p.dp.builder_coordinates.create(ToolCoordinates.defaultProps);
+        }
+        this.dp._manager.on({
+          update: this.dp_update.bind(this),
+          rows: this.dp_rows.bind(this),
+        });
+      },
+
+      deactivate: function() {
+        this.dp._manager.off();
+        this.detache_wnd();
+      },
+
+      mousedown: this.mousedown,
+
+      mouseup: function(event) {
+
+
+        this._scope.canvas_cursor('cursor-text-select');
+
+      },
+
+      mousemove: this.hitTest
+
+    })
+
+  }
+
+  hitTest(event) {
+
+    const hitSize = 6;
+    this.hitItem = null;
+
+    if(event.point) {
+      this.hitItem = this.project.hitTest(event.point, {fill: true, stroke: true, selected: true, tolerance: hitSize});
+    }
+    if(!this.hitItem) {
+      this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
+    }
+
+    if(this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+      && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
+      this._scope.canvas_cursor('cursor-arrow-lay');
+    }
+    else {
+      this.hitItem = null;
+      this._scope.canvas_cursor('cursor-text-select');
+    }
+
+    return true;
+  }
+
+
+  mousedown(event) {
+    this.project.deselectAll();
+
+    if(this.hitItem) {
+      this.profile = this.hitItem.item.parent;
+      this.select_path();
+
+      if(!this.wnd || !this.wnd.elmnts) {
+        $p.wsql.restore_options('editor', this.options);
+        this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
+        this._grid = this.wnd.attachHeadFields({
+          obj: this.dp
+        });
+      }
+      else {
+        this._grid.attach({obj: this.dp});
+      }
+
+    }
+    else {
+      this.detache_wnd();
+    }
+  }
+
+  detache_wnd() {
+    super.detache_wnd();
+    if(this.bind_point) {
+      this.bind_point.remove();
+      this.bind_point = null;
+    }
+  }
+
+  select_path() {
+    this.profile.selected = false;
+    this.profile.ruler_line_select(this.dp.path.valueOf());
+    this.select_bind();
+  }
+
+  select_bind() {
+    let point;
+    if(this.dp.bind == 'product') {
+      point = this.project.bounds.bottomLeft;
+    }
+    else if(this.dp.bind == 'contour') {
+      point = this.profile.layer.bounds.bottomLeft;
+    }
+    else {
+      switch (`${this.dp.bind.valueOf()}_${this.dp.path.valueOf()}`) {
+      case 'b_generatrix':
+        point = this.profile.b;
+        break;
+      case 'e_generatrix':
+        point = this.profile.e;
+        break;
+      case 'b_inner':
+      case 'b_outer':
+        point = this.profile._attr.ruler_line_path.firstSegment.point;
+        break;
+      case 'e_inner':
+      case 'e_outer':
+        point = this.profile._attr.ruler_line_path.lastSegment.point;
+        break;
+      }
+    }
+
+    if(!this.bind_point) {
+      this.bind_point = new paper.Path.Circle({
+        center: point,
+        radius: 28,
+        fillColor: new paper.Color(0, 0.7, 0, 0.7),
+        guide: true,
+      });
+    }
+    else {
+      this.bind_point.position = point;
+    }
+  }
+
+  dp_update(dp, fields) {
+    if('path' in fields) {
+      this.select_path();
+    }
+    else if('bind' in fields) {
+      this.select_bind();
+    }
+  }
+
+  dp_rows(dp, fields) {
+
+  }
+}
+
+ToolCoordinates.defaultProps = {
+  bind: 'b',
+  path: 'generatrix',
+  step: 200,
 }
 
 
@@ -13564,9 +13700,7 @@ class ToolPan extends ToolElement {
         }
       },
 
-      mousemove: function(event) {
-        this.hitTest(event);
-      },
+      mousemove: this.hitTest,
 
       keydown: function(event) {
         const rootLayer = this._scope.project.rootLayer();
@@ -15670,9 +15804,7 @@ class ToolSelectNode extends ToolElement {
         }
       },
 
-      mousemove: function(event) {
-        this.hitTest(event);
-      },
+      mousemove: this.hitTest,
 
       keydown: function(event) {
 
@@ -15919,13 +16051,14 @@ class ToolText extends ToolElement {
         this.project.deselectAll();
         this.mouseStartPos = event.point.clone();
 
-        if (this.hitItem) {
+        if(this.hitItem) {
 
-          if(this.hitItem.item instanceof paper.PointText){
+          if(this.hitItem.item instanceof paper.PointText) {
             this.text = this.hitItem.item;
             this.text.selected = true;
 
-          }else {
+          }
+          else {
             this.text = new FreeText({
               parent: this.hitItem.item.layer.l_text,
               point: this.mouseStartPos,
@@ -15936,18 +16069,21 @@ class ToolText extends ToolElement {
 
           this.textStartPos = this.text.point;
 
-          if(!this.wnd || !this.wnd.elmnts){
-            $p.wsql.restore_options("editor", this.options);
+          if(!this.wnd || !this.wnd.elmnts) {
+            $p.wsql.restore_options('editor', this.options);
             this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
             this._grid = this.wnd.attachHeadFields({
               obj: this.text
             });
-          }else{
-            this._grid.attach({obj: this.text})
+          }
+          else {
+            this._grid.attach({obj: this.text});
           }
 
-        }else
+        }
+        else {
           this.detache_wnd();
+        }
 
       },
 
@@ -15973,9 +16109,7 @@ class ToolText extends ToolElement {
 
       },
 
-      mousemove: function(event) {
-        this.hitTest(event);
-      },
+      mousemove: this.hitTest,
 
       keydown: function(event) {
 

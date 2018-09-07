@@ -380,6 +380,11 @@ class Editor extends EditorInvisible {
      */
     new ToolRuler();
 
+    /**
+     * Таблица координат
+     */
+    new ToolCoordinates();
+
     this.tools[1].activate();
 
 

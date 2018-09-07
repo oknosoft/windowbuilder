@@ -55,13 +55,14 @@ class ToolText extends ToolElement {
         this.project.deselectAll();
         this.mouseStartPos = event.point.clone();
 
-        if (this.hitItem) {
+        if(this.hitItem) {
 
-          if(this.hitItem.item instanceof paper.PointText){
+          if(this.hitItem.item instanceof paper.PointText) {
             this.text = this.hitItem.item;
             this.text.selected = true;
 
-          }else {
+          }
+          else {
             this.text = new FreeText({
               parent: this.hitItem.item.layer.l_text,
               point: this.mouseStartPos,
@@ -73,18 +74,21 @@ class ToolText extends ToolElement {
           this.textStartPos = this.text.point;
 
           // включить диалог свойст текстового элемента
-          if(!this.wnd || !this.wnd.elmnts){
-            $p.wsql.restore_options("editor", this.options);
+          if(!this.wnd || !this.wnd.elmnts) {
+            $p.wsql.restore_options('editor', this.options);
             this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
             this._grid = this.wnd.attachHeadFields({
               obj: this.text
             });
-          }else{
-            this._grid.attach({obj: this.text})
+          }
+          else {
+            this._grid.attach({obj: this.text});
           }
 
-        }else
+        }
+        else {
           this.detache_wnd();
+        }
 
       },
 
@@ -111,9 +115,7 @@ class ToolText extends ToolElement {
 
       },
 
-      mousemove: function(event) {
-        this.hitTest(event);
-      },
+      mousemove: this.hitTest,
 
       keydown: function(event) {
 

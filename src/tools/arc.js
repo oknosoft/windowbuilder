@@ -144,9 +144,7 @@ class ToolArc extends ToolElement{
         }
       },
 
-      mousemove: function(event) {
-        this.hitTest(event);
-      }
+      mousemove: this.hitTest
 
     })
 
