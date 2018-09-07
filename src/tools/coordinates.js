@@ -27,8 +27,8 @@ class ToolCoordinates extends ToolElement{
         name: 'grid',
         wnd: {
           caption: "Таблица координат",
-          width: 290,
-          height: 320
+          width: 300,
+          height: 400
         },
       },
       profile: null,
@@ -38,6 +38,9 @@ class ToolCoordinates extends ToolElement{
       changed: false,
     });
 
+    this.dp_update = this.dp_update.bind(this);
+    this.dp_rows = this.dp_rows.bind(this);
+
     this.on({
 
       activate: function() {
@@ -45,16 +48,9 @@ class ToolCoordinates extends ToolElement{
         if(!this.dp) {
           this.dp = $p.dp.builder_coordinates.create(ToolCoordinates.defaultProps);
         }
-        this.dp._manager.on({
-          update: this.dp_update.bind(this),
-          rows: this.dp_rows.bind(this),
-        });
       },
 
-      deactivate: function() {
-        this.dp._manager.off();
-        this.detache_wnd();
-      },
+      deactivate: this.detache_wnd,
 
       mousedown: this.mousedown,
 
@@ -105,14 +101,10 @@ class ToolCoordinates extends ToolElement{
 
       // включить диалог свойст текстового элемента
       if(!this.wnd || !this.wnd.elmnts) {
-        $p.wsql.restore_options('editor', this.options);
-        this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
-        this._grid = this.wnd.attachHeadFields({
-          obj: this.dp
-        });
+        this.create_wnd();
       }
       else {
-        this._grid.attach({obj: this.dp});
+        this.refresh_coordinates();
       }
 
     }
@@ -121,8 +113,78 @@ class ToolCoordinates extends ToolElement{
     }
   }
 
+  refresh_coordinates() {
+    const {coordinates} = this.dp;
+    const {path_kind} = $p.enm;
+    coordinates.clear();
+    switch (this.dp.path) {
+    case path_kind.generatrix:
+      coordinates.add(this.profile.b);
+      coordinates.add(this.profile.e);
+      break;
+    case path_kind.inner:
+    case path_kind.outer:
+      coordinates.add(this.profile._attr.ruler_line_path.firstSegment.point);
+      coordinates.add(this.profile._attr.ruler_line_path.lastSegment.point);
+      break;
+    }
+  }
+
+  create_wnd() {
+
+    $p.wsql.restore_options('editor', this.options);
+    this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
+    this._layout = this.wnd.attachLayout({
+      pattern: '2E',
+      cells: [
+        {id: 'a', text: 'Шапка', header: false, height: 120, fix_size: [null, true]},
+        {id: 'b', text: 'Координаты', header: false},
+      ],
+      offsets: {top: 0, right: 0, bottom: 0, left: 0}
+    });
+
+
+    this._head = this._layout.cells('a').attachHeadFields({
+      obj: this.dp
+    });
+
+    this._grid = this._layout.cells('b').attachTabular({
+      obj: this.dp,
+      ts: 'coordinates',
+      reorder: false,
+    });
+    const toolbar = this._layout.cells('b').getAttachedToolbar();
+    toolbar.forEachItem((name) => {
+      ['btn_add', 'btn_delete'].indexOf(name) == -1 && toolbar.removeItem(name);
+    });
+
+    this._layout.cells('a').cell.firstChild.style.border = 'none';
+    this._layout.cells('a').cell.lastChild.style.border = 'none';
+    const {cell} = this._layout.cells('b');
+    cell.firstChild.style.border = 'none';
+    cell.lastChild.style.border = 'none';
+    const cell_tb = cell.querySelector('.dhx_cell_toolbar_def');
+    cell_tb.style.padding = 0;
+    cell_tb.lastChild.style.paddingLeft = 0;
+
+    this._layout.setSizes();
+
+    this.refresh_coordinates();
+
+    this.dp._manager.on({
+      update: this.dp_update,
+      rows: this.dp_rows,
+    });
+
+
+  }
+
   detache_wnd() {
     super.detache_wnd();
+    this.dp._manager.off({
+      update: this.dp_update,
+      rows: this.dp_rows,
+    });
     if(this.bind_point) {
       this.bind_point.remove();
       this.bind_point = null;
