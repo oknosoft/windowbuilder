@@ -4791,6 +4791,103 @@ class GeneratrixElement extends BuilderElement {
 }
 
 
+class GridCoordinates extends paper.Group {
+
+  constructor() {
+    super({visible: false});
+    this.parent = this.project.l_dimensions;
+
+    const points_color = new paper.Color(0, 0.7, 0, 0.9);
+    const lines_color = new paper.Color(0, 0, 0.7);
+
+    this._attr = {
+      lines_color,
+      points_color,
+      line: new paper.Path({
+        parent: this,
+        strokeColor: lines_color,
+        strokeWidth: 3,
+        strokeScaling: false,
+      }),
+      point: new paper.Path.Circle({
+        parent: this,
+        guide: true,
+        radius: 26,
+        fillColor: points_color,
+      }),
+      lines: new paper.Group({
+        parent: this,
+        guide: true,
+        strokeColor: lines_color,
+        strokeScaling: false
+      }),
+    };
+
+  }
+
+  get path() {
+    return this._attr.path;
+  }
+  set path(v) {
+    this._attr.path = v;
+  }
+
+  get bind() {
+    return this._attr.bind;
+  }
+  set bind(v) {
+    this._attr.bind = v;
+    const {point, path} = this._attr;
+    switch (v) {
+    case 'b':
+      point.position = path.firstSegment.point;
+      break;
+    case 'e':
+      point.position = path.lastSegment.point;
+      break;
+    case 'product':
+      point.position = this.project.bounds.bottomLeft;
+      break;
+    case 'contour':
+      point.position = path.layer.bounds.bottomLeft;
+      break;
+    }
+  }
+
+  get step() {
+    return this._attr.step;
+  }
+  set step(v) {
+    this._attr.step = v;
+  }
+
+  get angle() {
+    return this._attr.angle;
+  }
+  set angle(v) {
+    this._attr.angle = v;
+  }
+
+  get offset() {
+    return this._attr.offset;
+  }
+  set offset(v) {
+    this._attr.offset = v;
+  }
+
+  grid_points() {
+    return this._attr.path.grid_points({
+      step: this.step,
+      offset: this.offset,
+      angle: this.angle,
+      reverse: this.bind === 'e',
+    });
+  }
+
+
+}
+
+
 class Magnetism {
 
   constructor(scheme) {
@@ -5030,7 +5127,7 @@ Object.defineProperties(paper.Path.prototype, {
   is_linear: {
     value() {
       const {curves, firstCurve} = this;
-      if(curves.length == 1 && firstCurve.isLinear()) {
+      if(curves.length === 1 && firstCurve.isLinear()) {
         return true;
       }
       else if(this.hasHandles()) {
@@ -5184,7 +5281,7 @@ Object.defineProperties(paper.Path.prototype, {
         const intersections = this.getIntersections(path);
         let delta = Infinity, tdelta, tpoint;
 
-        if(intersections.length == 1){
+        if(intersections.length === 1){
           return intersections[0].point;
         }
         else if(intersections.length > 1){
@@ -5282,6 +5379,48 @@ Object.defineProperties(paper.Path.prototype, {
     }
   },
 
+  grid_points: {
+    value({step, angle, reverse, point, offset = 100}) {
+      let {firstSegment: {point: b}, lastSegment: {point: e}} = this;
+      if(reverse) {
+        [b, e] = [e, b];
+      }
+      const vector = new paper.Path({
+        segments: [b, e],
+        insert: false
+      });
+      const vangle = e.subtract(b).angle;
+      if(angle === undefined) {
+        angle = vangle;
+      }
+      else {
+        ;
+      }
+
+      let n0 = vector.getNormalAt(0).multiply(offset);
+      vector.firstSegment.point = vector.firstSegment.point.subtract(n0);
+      vector.lastSegment.point = vector.lastSegment.point.subtract(n0);
+      n0 = n0.normalize(10000);
+
+      const res = [];
+      for (let x = 0; x < vector.length; x += step) {
+        const tpoint = vector.getPointAt(x);
+        const tpath = new paper.Path({
+          segments: [tpoint.subtract(n0), tpoint.add(n0)],
+          insert: false
+        });
+        const intersections = this.getIntersections(tpath);
+        if(intersections.length) {
+          const d1 = tpath.getOffsetOf(tpoint);
+          const d2 = tpath.getOffsetOf(intersections[0].point);
+          res.push({x: x.round(1), y: (d2 - d1).round(1)});
+        }
+      }
+
+      return res;
+    }
+  }
+
 });
 
 
@@ -5345,7 +5484,7 @@ Object.defineProperties(paper.Point.prototype, {
         return {x: xx1, y: yy1};
       }
       else {
-        return {x: xx2, y: yy2}
+        return {x: xx2, y: yy2};
       }
     }
   },

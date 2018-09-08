@@ -1,5 +1,5 @@
 /**
- * ### Таблица координат
+ * ### Инструмент "Таблица координат"
  *
  * Created 07.09.2018
  *
@@ -7,8 +7,10 @@
  * @submodule tool_coordinates
  */
 
+
+
 /**
- * ### Таблица координат
+ * ### Инструмент "Таблица координат"
  *
  * @class ToolCoordinates
  * @extends ToolElement
@@ -32,7 +34,6 @@ class ToolCoordinates extends ToolElement{
         },
       },
       profile: null,
-      bind_point: null,
       hitItem: null,
       originalContent: null,
       changed: false,
@@ -97,15 +98,13 @@ class ToolCoordinates extends ToolElement{
 
     if(this.hitItem) {
       this.profile = this.hitItem.item.parent;
-      this.select_path();
 
       // включить диалог свойст текстового элемента
       if(!this.wnd || !this.wnd.elmnts) {
         this.create_wnd();
       }
-      else {
-        this.refresh_coordinates();
-      }
+
+      this.select_path();
 
     }
     else {
@@ -116,13 +115,7 @@ class ToolCoordinates extends ToolElement{
   refresh_coordinates() {
     const {coordinates} = this.dp;
     coordinates.clear();
-    const points = this.path.grid_points({
-      step: this.dp.step,
-      angle: this.dp.angle,
-      reverse: this.dp.bind === $p.enm.bind_coordinates.e,
-      point: this.bind_point.position,
-      //offset = 200
-    });
+    const points = this.grid.grid_points();
     points.forEach((point) => coordinates.add(point));
   }
 
@@ -165,14 +158,22 @@ class ToolCoordinates extends ToolElement{
 
     this._layout.setSizes();
 
-    this.refresh_coordinates();
-
     this.dp._manager.on({
       update: this.dp_update,
       rows: this.dp_rows,
     });
 
-
+    if(this.grid){
+      this.grid.visible = true;
+    }
+    else {
+      this.grid = new GridCoordinates({
+        step: this.dp.step,
+        offset: this.dp.offset,
+        angle: this.dp.angle,
+        bind: this.dp.bind.valueOf(),
+      });
+    }
   }
 
   detache_wnd() {
@@ -181,9 +182,9 @@ class ToolCoordinates extends ToolElement{
       update: this.dp_update,
       rows: this.dp_rows,
     });
-    if(this.bind_point) {
-      this.bind_point.remove();
-      this.bind_point = null;
+    if(this.grid) {
+      this.grid.remove();
+      this.grid = null;
     }
   }
 
@@ -195,54 +196,27 @@ class ToolCoordinates extends ToolElement{
 
     switch (this.dp.path) {
     case path_kind.generatrix:
-      this.path = this.profile.generatrix;
+      this.grid.path = this.profile.generatrix;
       break;
     case path_kind.inner:
     case path_kind.outer:
-      this.path = this.profile._attr.ruler_line_path;
+      this.grid.path = this.profile._attr.ruler_line_path;
       break;
     }
-
-    this.select_bind();
-  }
-
-  select_bind() {
-    const {bind_coordinates} = $p.enm;
-    let point;
-    switch (this.dp.bind) {
-    case bind_coordinates.b:
-      point = this.path.b;
-      break;
-    case bind_coordinates.e:
-      point = this.path.e;
-      break;
-    case bind_coordinates.product:
-      point = this.project.bounds.bottomLeft;
-      break;
-    case bind_coordinates.contour:
-      point = this.profile.layer.bounds.bottomLeft;
-      break;
-    }
-
-    if(!this.bind_point) {
-      this.bind_point = new paper.Path.Circle({
-        center: point,
-        radius: 28,
-        fillColor: new paper.Color(0, 0.7, 0, 0.7),
-        guide: true,
-      });
-    }
-    else {
-      this.bind_point.position = point;
-    }
+    this.refresh_coordinates();
   }
 
   dp_update(dp, fields) {
     if('path' in fields) {
       this.select_path();
     }
-    else if('bind' in fields) {
-      this.select_bind();
+    if('bind' in fields) {
+      this.grid.bind = this.dp.bind.valueOf();
+      this.refresh_coordinates();
+    }
+    if('offset' in fields) {
+      this.grid.offset = this.dp.offset;
+      this.refresh_coordinates();
     }
   }
 
@@ -255,5 +229,6 @@ ToolCoordinates.defaultProps = {
   bind: 'b',
   path: 'generatrix',
   step: 200,
+  offset: 200,
 }
 

@@ -7243,6 +7243,135 @@ class GeneratrixElement extends BuilderElement {
 }
 
 
+class GridCoordinates extends paper.Group {
+
+  constructor(attr) {
+    super();
+    this.parent = this.project.l_dimensions;
+
+    const points_color = new paper.Color(0, 0.7, 0, 0.9);
+    const lines_color = new paper.Color(0, 0, 0.7);
+
+    this._attr = {
+      lines_color,
+      points_color,
+      step: attr.step,
+      offset: attr.offset,
+      angle: attr.angle,
+      bind: attr.bind,
+      line: new paper.Path({
+        parent: this,
+        strokeColor: lines_color,
+        strokeWidth: 2,
+        strokeScaling: false,
+      }),
+      point: new paper.Path.Circle({
+        parent: this,
+        guide: true,
+        radius: 28,
+        fillColor: points_color,
+      }),
+      lines: new paper.Group({
+        parent: this,
+        guide: true,
+        strokeColor: lines_color,
+        strokeScaling: false
+      }),
+    };
+
+  }
+
+  get path() {
+    return this._attr.path;
+  }
+  set path(v) {
+    this._attr.path = v;
+    this.set_line();
+    this.set_bind();
+  }
+
+  set_line() {
+    const {bind, offset, path, line} = this._attr;
+    let {firstSegment: {point: b}, lastSegment: {point: e}} = path;
+    if(bind === 'e') {
+      [b, e] = [e, b];
+    }
+    if(line.segments.length) {
+      line.segments[0].point = b;
+      line.segments[1].point = e;
+    }
+    else {
+      line.addSegments([b, e]);
+    }
+
+    const n0 = line.getNormalAt(0).multiply(offset);
+    line.firstSegment.point = line.firstSegment.point.subtract(n0);
+    line.lastSegment.point = line.lastSegment.point.subtract(n0);
+  }
+
+  set_bind() {
+    const {point, path, bind} = this._attr;
+    switch (bind) {
+    case 'b':
+      point.position = path.firstSegment.point;
+      break;
+    case 'e':
+      point.position = path.lastSegment.point;
+      break;
+    case 'product':
+      point.position = this.project.bounds.bottomLeft;
+      break;
+    case 'contour':
+      point.position = path.layer.bounds.bottomLeft;
+      break;
+    }
+  }
+
+  get bind() {
+    return this._attr.bind;
+  }
+  set bind(v) {
+    this._attr.bind = v;
+    this.set_bind();
+    this.set_line();
+  }
+
+  get step() {
+    return this._attr.step;
+  }
+  set step(v) {
+    this._attr.step = v;
+  }
+
+  get angle() {
+    return this._attr.angle;
+  }
+  set angle(v) {
+    this._attr.angle = v;
+    this.set_line();
+  }
+
+  get offset() {
+    return this._attr.offset;
+  }
+  set offset(v) {
+    this._attr.offset = v;
+    this.set_line();
+  }
+
+  grid_points() {
+    return this._attr.path.grid_points({
+      step: this.step,
+      offset: this.offset,
+      angle: this.angle,
+      reverse: this.bind === 'e',
+    });
+  }
+
+
+}
+
+
 class Magnetism {
 
   constructor(scheme) {
@@ -12359,6 +12488,8 @@ class ToolArc extends ToolElement{
 
 
 
+
+
 class ToolCoordinates extends ToolElement{
 
   constructor() {
@@ -12375,7 +12506,6 @@ class ToolCoordinates extends ToolElement{
         },
       },
       profile: null,
-      bind_point: null,
       hitItem: null,
       originalContent: null,
       changed: false,
@@ -12440,14 +12570,12 @@ class ToolCoordinates extends ToolElement{
 
     if(this.hitItem) {
       this.profile = this.hitItem.item.parent;
-      this.select_path();
 
       if(!this.wnd || !this.wnd.elmnts) {
         this.create_wnd();
       }
-      else {
-        this.refresh_coordinates();
-      }
+
+      this.select_path();
 
     }
     else {
@@ -12458,12 +12586,7 @@ class ToolCoordinates extends ToolElement{
   refresh_coordinates() {
     const {coordinates} = this.dp;
     coordinates.clear();
-    const points = this.path.grid_points({
-      step: this.dp.step,
-      angle: this.dp.angle,
-      reverse: this.dp.bind === $p.enm.bind_coordinates.e,
-      point: this.bind_point.position,
-    });
+    const points = this.grid.grid_points();
     points.forEach((point) => coordinates.add(point));
   }
 
@@ -12506,14 +12629,22 @@ class ToolCoordinates extends ToolElement{
 
     this._layout.setSizes();
 
-    this.refresh_coordinates();
-
     this.dp._manager.on({
       update: this.dp_update,
       rows: this.dp_rows,
     });
 
-
+    if(this.grid){
+      this.grid.visible = true;
+    }
+    else {
+      this.grid = new GridCoordinates({
+        step: this.dp.step,
+        offset: this.dp.offset,
+        angle: this.dp.angle,
+        bind: this.dp.bind.valueOf(),
+      });
+    }
   }
 
   detache_wnd() {
@@ -12522,9 +12653,9 @@ class ToolCoordinates extends ToolElement{
       update: this.dp_update,
       rows: this.dp_rows,
     });
-    if(this.bind_point) {
-      this.bind_point.remove();
-      this.bind_point = null;
+    if(this.grid) {
+      this.grid.remove();
+      this.grid = null;
     }
   }
 
@@ -12536,54 +12667,27 @@ class ToolCoordinates extends ToolElement{
 
     switch (this.dp.path) {
     case path_kind.generatrix:
-      this.path = this.profile.generatrix;
+      this.grid.path = this.profile.generatrix;
       break;
     case path_kind.inner:
     case path_kind.outer:
-      this.path = this.profile._attr.ruler_line_path;
+      this.grid.path = this.profile._attr.ruler_line_path;
       break;
     }
-
-    this.select_bind();
-  }
-
-  select_bind() {
-    const {bind_coordinates} = $p.enm;
-    let point;
-    switch (this.dp.bind) {
-    case bind_coordinates.b:
-      point = this.path.b;
-      break;
-    case bind_coordinates.e:
-      point = this.path.e;
-      break;
-    case bind_coordinates.product:
-      point = this.project.bounds.bottomLeft;
-      break;
-    case bind_coordinates.contour:
-      point = this.profile.layer.bounds.bottomLeft;
-      break;
-    }
-
-    if(!this.bind_point) {
-      this.bind_point = new paper.Path.Circle({
-        center: point,
-        radius: 28,
-        fillColor: new paper.Color(0, 0.7, 0, 0.7),
-        guide: true,
-      });
-    }
-    else {
-      this.bind_point.position = point;
-    }
+    this.refresh_coordinates();
   }
 
   dp_update(dp, fields) {
     if('path' in fields) {
       this.select_path();
     }
-    else if('bind' in fields) {
-      this.select_bind();
+    if('bind' in fields) {
+      this.grid.bind = this.dp.bind.valueOf();
+      this.refresh_coordinates();
+    }
+    if('offset' in fields) {
+      this.grid.offset = this.dp.offset;
+      this.refresh_coordinates();
     }
   }
 
@@ -12596,6 +12700,7 @@ ToolCoordinates.defaultProps = {
   bind: 'b',
   path: 'generatrix',
   step: 200,
+  offset: 200,
 }
 
 
