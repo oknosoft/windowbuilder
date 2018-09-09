@@ -406,54 +406,6 @@ Object.defineProperties(paper.Path.prototype, {
     }
   },
 
-  /**
-   * ### Возвращает массив точек
-   */
-  grid_points: {
-    value({step, angle, reverse, point, offset = 100}) {
-      let {firstSegment: {point: b}, lastSegment: {point: e}} = this;
-      if(reverse) {
-        [b, e] = [e, b];
-      }
-      const vector = new paper.Path({
-        segments: [b, e],
-        insert: false
-      });
-      const vangle = e.subtract(b).angle;
-      // если угол не указан, получаем из вектора
-      if(angle === undefined) {
-        angle = vangle;
-      }
-      else {
-        ;
-      }
-
-      // смещаем вектор
-      let n0 = vector.getNormalAt(0).multiply(offset);
-      vector.firstSegment.point = vector.firstSegment.point.subtract(n0);
-      vector.lastSegment.point = vector.lastSegment.point.subtract(n0);
-      n0 = n0.normalize(10000);
-
-      // ползём
-      const res = [];
-      for (let x = 0; x < vector.length; x += step) {
-        const tpoint = vector.getPointAt(x);
-        const tpath = new paper.Path({
-          segments: [tpoint.subtract(n0), tpoint.add(n0)],
-          insert: false
-        });
-        const intersections = this.getIntersections(tpath);
-        if(intersections.length) {
-          const d1 = tpath.getOffsetOf(tpoint);
-          const d2 = tpath.getOffsetOf(intersections[0].point);
-          res.push({x: x.round(1), y: (d2 - d1).round(1)});
-        }
-      }
-
-      return res;
-    }
-  }
-
 });
 
 

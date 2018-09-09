@@ -7249,8 +7249,8 @@ class GridCoordinates extends paper.Group {
     super();
     this.parent = this.project.l_dimensions;
 
-    const points_color = new paper.Color(0, 0.7, 0, 0.9);
-    const lines_color = new paper.Color(0, 0, 0.7);
+    const points_color = new paper.Color(0, 0.7, 0, 0.8);
+    const lines_color = new paper.Color(0, 0, 0.7, 0.8);
 
     this._attr = {
       lines_color,
@@ -7261,14 +7261,14 @@ class GridCoordinates extends paper.Group {
       bind: attr.bind,
       line: new paper.Path({
         parent: this,
-        strokeColor: lines_color,
+        strokeColor: new paper.Color(0, 0, 0.7),
         strokeWidth: 2,
         strokeScaling: false,
       }),
       point: new paper.Path.Circle({
         parent: this,
         guide: true,
-        radius: 28,
+        radius: 22,
         fillColor: points_color,
       }),
       lines: new paper.Group({
@@ -7291,7 +7291,7 @@ class GridCoordinates extends paper.Group {
   }
 
   set_line() {
-    const {bind, offset, path, line} = this._attr;
+    const {bind, offset, path, line, angle} = this._attr;
     let {firstSegment: {point: b}, lastSegment: {point: e}} = path;
     if(bind === 'e') {
       [b, e] = [e, b];
@@ -7303,6 +7303,8 @@ class GridCoordinates extends paper.Group {
     else {
       line.addSegments([b, e]);
     }
+
+    const langle = e.subtract(b).angle;
 
     const n0 = line.getNormalAt(0).multiply(offset);
     line.firstSegment.point = line.firstSegment.point.subtract(n0);
@@ -7360,12 +7362,70 @@ class GridCoordinates extends paper.Group {
   }
 
   grid_points() {
-    return this._attr.path.grid_points({
-      step: this.step,
-      offset: this.offset,
-      angle: this.angle,
-      reverse: this.bind === 'e',
-    });
+    const {path, line, lines, lines_color, step, point: {position}} = this._attr;
+    const res = [];
+
+    function add(tpath, x, tpoint, point) {
+
+      if(position.getDistance(point) > 20) {
+        new paper.Path.Circle({
+          parent: lines,
+          guide: true,
+          radius: 22,
+          center: point,
+          fillColor: lines_color,
+        });
+      }
+
+      new paper.Path({
+        parent: lines,
+        guide: true,
+        strokeColor: lines_color,
+        strokeScaling: false,
+        segments: [tpoint, point],
+      })
+
+      const d1 = tpath.getOffsetOf(tpoint);
+      const d2 = tpath.getOffsetOf(point);
+      res.push({x: x.round(1), y: (d2 - d1).round(1)});
+    }
+
+    lines.removeChildren();
+
+
+    const n0 = line.getNormalAt(0).multiply(10000);
+    let do_break;
+    let prev;
+    for (let x = 0; x < line.length + step; x += step) {
+      if(x >= line.length) {
+        if(do_break) {
+          break;
+        }
+        do_break = true;
+        x = line.length;
+      }
+      if(prev && (x - prev) < (step / 4)) {
+        break;
+      }
+      prev = x;
+      const tpoint = x < line.length ? line.getPointAt(x) : line.lastSegment.point;
+      const tpath = new paper.Path({
+        segments: [tpoint.subtract(n0), tpoint.add(n0)],
+        insert: false
+      });
+      const intersections = path.getIntersections(tpath);
+      if(intersections.length) {
+        add(tpath, x, tpoint, intersections[0].point);
+      }
+      else if(x === 0) {
+        add(tpath, x, tpoint, path.firstSegment.point);
+      }
+      else if(x === line.length) {
+        add(tpath, x, tpoint, path.lastSegment.point);
+      }
+    }
+
+    return res;
   }
 
 
@@ -7862,48 +7922,6 @@ Object.defineProperties(paper.Path.prototype, {
       return min === 0 ? 0 : 1 / min;
     }
   },
-
-  grid_points: {
-    value({step, angle, reverse, point, offset = 100}) {
-      let {firstSegment: {point: b}, lastSegment: {point: e}} = this;
-      if(reverse) {
-        [b, e] = [e, b];
-      }
-      const vector = new paper.Path({
-        segments: [b, e],
-        insert: false
-      });
-      const vangle = e.subtract(b).angle;
-      if(angle === undefined) {
-        angle = vangle;
-      }
-      else {
-        ;
-      }
-
-      let n0 = vector.getNormalAt(0).multiply(offset);
-      vector.firstSegment.point = vector.firstSegment.point.subtract(n0);
-      vector.lastSegment.point = vector.lastSegment.point.subtract(n0);
-      n0 = n0.normalize(10000);
-
-      const res = [];
-      for (let x = 0; x < vector.length; x += step) {
-        const tpoint = vector.getPointAt(x);
-        const tpath = new paper.Path({
-          segments: [tpoint.subtract(n0), tpoint.add(n0)],
-          insert: false
-        });
-        const intersections = this.getIntersections(tpath);
-        if(intersections.length) {
-          const d1 = tpath.getOffsetOf(tpoint);
-          const d2 = tpath.getOffsetOf(intersections[0].point);
-          res.push({x: x.round(1), y: (d2 - d1).round(1)});
-        }
-      }
-
-      return res;
-    }
-  }
 
 });
 
@@ -12661,19 +12679,25 @@ class ToolCoordinates extends ToolElement{
 
   select_path() {
     const {path_kind} = $p.enm;
-
     this.profile.selected = false;
-    this.profile.ruler_line_select(this.dp.path.valueOf());
 
-    switch (this.dp.path) {
-    case path_kind.generatrix:
-      this.grid.path = this.profile.generatrix;
-      break;
-    case path_kind.inner:
-    case path_kind.outer:
-      this.grid.path = this.profile._attr.ruler_line_path;
-      break;
+    let path = (this.dp.path === path_kind.generatrix ? this.profile.generatrix : this.profile.rays[this.dp.path.valueOf()])
+      .clone({insert: false});
+    const {interiorPoint} = path;
+    const pts = [];
+    for(let i = 1; i < 5; i++) {
+      const pt = path.getNearestPoint(this.profile.corns(i));
+      pts.push(path.getOffsetOf(pt));
     }
+    pts.sort((a, b) => a - b);
+    if(pts[3] < path.length){
+      path.split(pts[3]);
+    }
+    if(pts[0]){
+      path = path.split(pts[0]);
+    }
+
+    this.grid.path = path;
     this.refresh_coordinates();
   }
 

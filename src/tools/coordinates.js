@@ -188,21 +188,30 @@ class ToolCoordinates extends ToolElement{
     }
   }
 
+  // получает путь, с точками которого будем работать
   select_path() {
     const {path_kind} = $p.enm;
-
     this.profile.selected = false;
-    this.profile.ruler_line_select(this.dp.path.valueOf());
 
-    switch (this.dp.path) {
-    case path_kind.generatrix:
-      this.grid.path = this.profile.generatrix;
-      break;
-    case path_kind.inner:
-    case path_kind.outer:
-      this.grid.path = this.profile._attr.ruler_line_path;
-      break;
+    // заготовка пути
+    let path = (this.dp.path === path_kind.generatrix ? this.profile.generatrix : this.profile.rays[this.dp.path.valueOf()])
+      .clone({insert: false});
+    // находим проекции точек профиля на путь, ищем наиболее удаленные
+    const {interiorPoint} = path;
+    const pts = [];
+    for(let i = 1; i < 5; i++) {
+      const pt = path.getNearestPoint(this.profile.corns(i));
+      pts.push(path.getOffsetOf(pt));
     }
+    pts.sort((a, b) => a - b);
+    if(pts[3] < path.length){
+      path.split(pts[3]);
+    }
+    if(pts[0]){
+      path = path.split(pts[0]);
+    }
+
+    this.grid.path = path;
     this.refresh_coordinates();
   }
 
