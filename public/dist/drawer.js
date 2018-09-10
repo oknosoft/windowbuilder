@@ -4793,26 +4793,30 @@ class GeneratrixElement extends BuilderElement {
 
 class GridCoordinates extends paper.Group {
 
-  constructor() {
-    super({visible: false});
+  constructor(attr) {
+    super();
     this.parent = this.project.l_dimensions;
 
-    const points_color = new paper.Color(0, 0.7, 0, 0.9);
-    const lines_color = new paper.Color(0, 0, 0.7);
+    const points_color = new paper.Color(0, 0.7, 0, 0.8);
+    const lines_color = new paper.Color(0, 0, 0.7, 0.8);
 
     this._attr = {
       lines_color,
       points_color,
+      step: attr.step,
+      offset: attr.offset,
+      angle: attr.angle,
+      bind: attr.bind,
       line: new paper.Path({
         parent: this,
-        strokeColor: lines_color,
-        strokeWidth: 3,
+        strokeColor: new paper.Color(0, 0, 0.7),
+        strokeWidth: 2,
         strokeScaling: false,
       }),
       point: new paper.Path.Circle({
         parent: this,
         guide: true,
-        radius: 26,
+        radius: 22,
         fillColor: points_color,
       }),
       lines: new paper.Group({
@@ -4830,15 +4834,34 @@ class GridCoordinates extends paper.Group {
   }
   set path(v) {
     this._attr.path = v;
+    this.set_line();
+    this.set_bind();
   }
 
-  get bind() {
-    return this._attr.bind;
+  set_line() {
+    const {bind, offset, path, line, angle} = this._attr;
+    let {firstSegment: {point: b}, lastSegment: {point: e}} = path;
+    if(bind === 'e') {
+      [b, e] = [e, b];
+    }
+    if(line.segments.length) {
+      line.segments[0].point = b;
+      line.segments[1].point = e;
+    }
+    else {
+      line.addSegments([b, e]);
+    }
+
+    const langle = e.subtract(b).angle;
+
+    const n0 = line.getNormalAt(0).multiply(offset);
+    line.firstSegment.point = line.firstSegment.point.subtract(n0);
+    line.lastSegment.point = line.lastSegment.point.subtract(n0);
   }
-  set bind(v) {
-    this._attr.bind = v;
-    const {point, path} = this._attr;
-    switch (v) {
+
+  set_bind() {
+    const {point, path, bind} = this._attr;
+    switch (bind) {
     case 'b':
       point.position = path.firstSegment.point;
       break;
@@ -4854,6 +4877,15 @@ class GridCoordinates extends paper.Group {
     }
   }
 
+  get bind() {
+    return this._attr.bind;
+  }
+  set bind(v) {
+    this._attr.bind = v;
+    this.set_bind();
+    this.set_line();
+  }
+
   get step() {
     return this._attr.step;
   }
@@ -4866,6 +4898,7 @@ class GridCoordinates extends paper.Group {
   }
   set angle(v) {
     this._attr.angle = v;
+    this.set_line();
   }
 
   get offset() {
@@ -4873,15 +4906,74 @@ class GridCoordinates extends paper.Group {
   }
   set offset(v) {
     this._attr.offset = v;
+    this.set_line();
   }
 
   grid_points() {
-    return this._attr.path.grid_points({
-      step: this.step,
-      offset: this.offset,
-      angle: this.angle,
-      reverse: this.bind === 'e',
-    });
+    const {path, line, lines, lines_color, step, point: {position}} = this._attr;
+    const res = [];
+
+    function add(tpath, x, tpoint, point) {
+
+      if(position.getDistance(point) > 20) {
+        new paper.Path.Circle({
+          parent: lines,
+          guide: true,
+          radius: 22,
+          center: point,
+          fillColor: lines_color,
+        });
+      }
+
+      new paper.Path({
+        parent: lines,
+        guide: true,
+        strokeColor: lines_color,
+        strokeScaling: false,
+        segments: [tpoint, point],
+      })
+
+      const d1 = tpath.getOffsetOf(tpoint);
+      const d2 = tpath.getOffsetOf(point);
+      res.push({x: x.round(1), y: (d2 - d1).round(1)});
+    }
+
+    lines.removeChildren();
+
+
+    const n0 = line.getNormalAt(0).multiply(10000);
+    let do_break;
+    let prev;
+    for (let x = 0; x < line.length + step; x += step) {
+      if(x >= line.length) {
+        if(do_break) {
+          break;
+        }
+        do_break = true;
+        x = line.length;
+      }
+      if(prev && (x - prev) < (step / 4)) {
+        break;
+      }
+      prev = x;
+      const tpoint = x < line.length ? line.getPointAt(x) : line.lastSegment.point;
+      const tpath = new paper.Path({
+        segments: [tpoint.subtract(n0), tpoint.add(n0)],
+        insert: false
+      });
+      const intersections = path.getIntersections(tpath);
+      if(intersections.length) {
+        add(tpath, x, tpoint, intersections[0].point);
+      }
+      else if(x === 0) {
+        add(tpath, x, tpoint, path.firstSegment.point);
+      }
+      else if(x === line.length) {
+        add(tpath, x, tpoint, path.lastSegment.point);
+      }
+    }
+
+    return res;
   }
 
 
@@ -5378,48 +5470,6 @@ Object.defineProperties(paper.Path.prototype, {
       return min === 0 ? 0 : 1 / min;
     }
   },
-
-  grid_points: {
-    value({step, angle, reverse, point, offset = 100}) {
-      let {firstSegment: {point: b}, lastSegment: {point: e}} = this;
-      if(reverse) {
-        [b, e] = [e, b];
-      }
-      const vector = new paper.Path({
-        segments: [b, e],
-        insert: false
-      });
-      const vangle = e.subtract(b).angle;
-      if(angle === undefined) {
-        angle = vangle;
-      }
-      else {
-        ;
-      }
-
-      let n0 = vector.getNormalAt(0).multiply(offset);
-      vector.firstSegment.point = vector.firstSegment.point.subtract(n0);
-      vector.lastSegment.point = vector.lastSegment.point.subtract(n0);
-      n0 = n0.normalize(10000);
-
-      const res = [];
-      for (let x = 0; x < vector.length; x += step) {
-        const tpoint = vector.getPointAt(x);
-        const tpath = new paper.Path({
-          segments: [tpoint.subtract(n0), tpoint.add(n0)],
-          insert: false
-        });
-        const intersections = this.getIntersections(tpath);
-        if(intersections.length) {
-          const d1 = tpath.getOffsetOf(tpoint);
-          const d2 = tpath.getOffsetOf(intersections[0].point);
-          res.push({x: x.round(1), y: (d2 - d1).round(1)});
-        }
-      }
-
-      return res;
-    }
-  }
 
 });
 

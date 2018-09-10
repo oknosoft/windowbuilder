@@ -50,8 +50,9 @@ class GridCoordinates extends paper.Group {
   }
   set path(v) {
     this._attr.path = v;
-    this.set_line();
+    this._attr.angle = 0;
     this.set_bind();
+    this.set_line();
   }
 
   set_line() {
@@ -69,7 +70,28 @@ class GridCoordinates extends paper.Group {
     }
 
     // повернём линию при необходимости
-    const langle = e.subtract(b).angle;
+    const langle = e.subtract(b).angle.round(2);
+    let dangle = Infinity;
+    if(angle) {
+      for(const a of [angle, angle - 180, angle + 180]) {
+        if(Math.abs(a - langle) < Math.abs(dangle)) {
+          dangle = a - langle;
+        }
+      }
+    }
+    else {
+      for(let a = -180; a <= 180; a += 45) {
+        if(Math.abs(a - langle) < Math.abs(dangle)) {
+          dangle = a - langle;
+        }
+      }
+    }
+    if(dangle) {
+      line.rotate(dangle);
+      line.elongation(1000);
+      line.firstSegment.point = line.getNearestPoint(b);
+      line.lastSegment.point = line.getNearestPoint(e);
+    }
 
     const n0 = line.getNormalAt(0).multiply(offset);
     line.firstSegment.point = line.firstSegment.point.subtract(n0);
@@ -108,14 +130,17 @@ class GridCoordinates extends paper.Group {
   }
   set step(v) {
     this._attr.step = v;
+    this.set_line();
   }
 
   get angle() {
     return this._attr.angle;
   }
   set angle(v) {
-    this._attr.angle = v;
-    this.set_line();
+    if(this._attr.angle !== v) {
+      this._attr.angle = v;
+      this.set_line();
+    }
   }
 
   get offset() {
@@ -126,9 +151,16 @@ class GridCoordinates extends paper.Group {
     this.set_line();
   }
 
+  /**
+   * Возвращает точки пути, попутно, добавляя визуализацию
+   * @return {Array}
+   */
   grid_points() {
-    const {path, line, lines, lines_color, step, point: {position}} = this._attr;
+    const {path, line, lines, lines_color, step, bind, point: {position}} = this._attr;
     const res = [];
+    const n0 = line.getNormalAt(0).multiply(10000);
+    let do_break;
+    let prev;
 
     function add(tpath, x, tpoint, point) {
 
@@ -157,10 +189,6 @@ class GridCoordinates extends paper.Group {
 
     lines.removeChildren();
 
-
-    const n0 = line.getNormalAt(0).multiply(10000);
-    let do_break;
-    let prev;
     for (let x = 0; x < line.length + step; x += step) {
       if(x >= line.length) {
         if(do_break) {
@@ -183,10 +211,10 @@ class GridCoordinates extends paper.Group {
         add(tpath, x, tpoint, intersections[0].point);
       }
       else if(x === 0) {
-        add(tpath, x, tpoint, path.firstSegment.point);
+        add(tpath, x, tpoint, bind === 'e' ? path.lastSegment.point : path.firstSegment.point);
       }
       else if(x === line.length) {
-        add(tpath, x, tpoint, path.lastSegment.point);
+        add(tpath, x, tpoint, bind === 'e' ? path.firstSegment.point : path.lastSegment.point);
       }
     }
 

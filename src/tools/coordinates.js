@@ -97,15 +97,15 @@ class ToolCoordinates extends ToolElement{
     this.project.deselectAll();
 
     if(this.hitItem) {
-      this.profile = this.hitItem.item.parent;
+      if(this.profile !== this.hitItem.item.parent) {
+        this.profile = this.hitItem.item.parent;
 
-      // включить диалог свойст текстового элемента
-      if(!this.wnd || !this.wnd.elmnts) {
-        this.create_wnd();
+        // включить диалог свойств текстового элемента
+        if(!this.wnd || !this.wnd.elmnts) {
+          this.create_wnd();
+        }
+        this.select_path();
       }
-
-      this.select_path();
-
     }
     else {
       this.detache_wnd();
@@ -212,6 +212,7 @@ class ToolCoordinates extends ToolElement{
     }
 
     this.grid.path = path;
+    this.dp.step_angle = 0;
     this.refresh_coordinates();
   }
 
@@ -225,6 +226,19 @@ class ToolCoordinates extends ToolElement{
     }
     if('offset' in fields) {
       this.grid.offset = this.dp.offset;
+      this.refresh_coordinates();
+    }
+    if('step' in fields) {
+      if(this.dp.step <= 0) {
+        this.dp.step = 100;
+      }
+      else {
+        this.grid.step = this.dp.step;
+        this.refresh_coordinates();
+      }
+    }
+    if('step_angle' in fields) {
+      this.grid.angle = this.dp.step_angle;
       this.refresh_coordinates();
     }
   }
