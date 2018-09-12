@@ -8843,7 +8843,8 @@ class Scheme extends paper.Project {
     }
 
     if(other.length) {
-      Math.abs(delta.x) > 1 ? this.do_align(auto_align, profiles) : setTimeout(this.register_change.bind(this, true), 50);
+      profiles.forEach(({rays}) => rays.clear());
+      Math.abs(delta.x) > 1 ? this.do_align(auto_align, profiles);
     }
 
     _dp._manager.emit_async('update', {}, {x1: true, x2: true, y1: true, y2: true, a1: true, a2: true, cnn1: true, cnn2: true, info: true});
