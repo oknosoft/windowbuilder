@@ -133,3 +133,12 @@ gulp.task('css-base64', function () {
 		.pipe(gulp.dest('./src/styles'))
 });
 
+gulp.task('css-bottls', function () {
+  return gulp.src([
+    './src/styles/bottls/b.css',
+  ])
+    .pipe(base64())
+    .pipe(rename('b64.css'))
+    .pipe(gulp.dest('./src/styles/bottls'))
+});
+
