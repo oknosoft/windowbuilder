@@ -8814,7 +8814,7 @@ class Scheme extends paper.Project {
         }
         else if(!parent.nearest || !parent.nearest()) {
 
-          if(auto_align && parent.elm_type === $p.enm.elm_types.Импост && !parent.layer.layer) {
+          if(auto_align && parent.elm_type === $p.enm.elm_types.Импост && !parent.layer.layer && Math.abs(delta.x) > 1) {
             continue;
           }
 
@@ -8842,10 +8842,7 @@ class Scheme extends paper.Project {
       }
     }
 
-    if(other.length) {
-      profiles.forEach(({rays}) => rays.clear());
-      Math.abs(delta.x) > 1 ? this.do_align(auto_align, profiles);
-    }
+    other.length && Math.abs(delta.x) > 1 && this.do_align(auto_align, profiles);
 
     _dp._manager.emit_async('update', {}, {x1: true, x2: true, y1: true, y2: true, a1: true, a2: true, cnn1: true, cnn2: true, info: true});
 
