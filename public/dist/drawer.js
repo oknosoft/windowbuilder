@@ -25,6 +25,7 @@ const consts = {
 		this.font_size = builder.font_size || 90;
     this.font_family = builder.font_family || 'GOST type B';
     this.elm_font_size = builder.elm_font_size || 60;
+    this.cutoff = builder.cutoff || 1300; 
 
     if(!builder.font_family) {
       builder.font_family = this.font_family;
@@ -2375,7 +2376,9 @@ class DimensionDrawer extends paper.Group {
     const {bounds} = parent;
 
     const by_side = parent.profiles_by_side();
-
+    if(!Object.keys(by_side).length) {
+      return {ihor: [], ivert: [], by_side: {}};
+    }
 
     const ihor = [
       {
@@ -2470,15 +2473,22 @@ class DimensionLine extends paper.Group {
       parent: this,
       name: 'text',
       justification: 'center',
-      fontFamily: consts.font_family,
       fillColor: 'black',
-      fontSize: consts.font_size});
+      fontFamily: consts.font_family,
+      fontSize: this._font_size()});
 
     this.on({
       mouseenter: this._mouseenter,
       click: this._click
     });
 
+  }
+
+  _font_size() {
+    const {width, height} = this.project.bounds;
+    const {cutoff, font_size} = consts;
+    const size = Math.max(width - cutoff, height - cutoff) / 60;
+    return font_size + (size > 0 ? size : 0);
   }
 
   _metadata() {
@@ -2664,18 +2674,21 @@ class DimensionLine extends paper.Group {
     children.text.content = length.toFixed(0);
     children.text.rotation = e.subtract(b).angle;
     children.text.justification = align.ref;
+
+    const font_size = this._font_size();
+    children.text.fontSize = font_size;
     if(align == $p.enm.text_aligns.left) {
       children.text.position = bs
-        .add(path.getTangentAt(0).multiply(consts.font_size))
-        .add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+        .add(path.getTangentAt(0).multiply(font_size))
+        .add(path.getNormalAt(0).multiply(font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
     }
     else if(align == $p.enm.text_aligns.right) {
       children.text.position = es
-        .add(path.getTangentAt(0).multiply(-consts.font_size))
-        .add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+        .add(path.getTangentAt(0).multiply(-font_size))
+        .add(path.getNormalAt(0).multiply(font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
     }
     else {
-      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
     }
   }
 
@@ -9707,8 +9720,8 @@ class Sectional extends GeneratrixElement {
   }
 
   redraw() {
-    const {layer, generatrix, _attr} = this;
-    const {children, zoom, radius} = _attr;
+    const {layer, generatrix, _attr, radius} = this;
+    const {children, zoom} = _attr;
     const {segments, curves} = generatrix;
 
     for(let child of children){
@@ -9736,8 +9749,8 @@ class Sectional extends GeneratrixElement {
   }
 
   draw_angle(ind) {
-    const {layer, generatrix, _attr} = this;
-    const {children, zoom, radius} = _attr;
+    const {layer, generatrix, _attr, radius} = this;
+    let {children, zoom} = _attr;
     const {curves} = generatrix;
     const c1 = curves[ind - 1];
     const c2 = curves[ind];
@@ -9751,6 +9764,8 @@ class Sectional extends GeneratrixElement {
     if(angle > 180){
       angle = 360 - angle;
     }
+
+
 
     if (c1.length < radius || c2.length < radius || 180 - angle < 1){
       return;
@@ -9816,6 +9831,16 @@ class Sectional extends GeneratrixElement {
 
   get elm_type() {
     return $p.enm.elm_types.Водоотлив;
+  }
+
+  get radius() {
+    let {generatrix, radius} = this._attr;
+    const {height, width} = generatrix.bounds;
+    const size = Math.max(width - consts.cutoff, height - consts.cutoff);
+    if(size > 0) {
+      radius += size / 60;
+    }
+    return radius;
   }
 }
 

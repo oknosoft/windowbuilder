@@ -389,9 +389,11 @@ class DimensionDrawer extends paper.Group {
     const {bounds} = parent;
 
     const by_side = parent.profiles_by_side();
+    if(!Object.keys(by_side).length) {
+      return {ihor: [], ivert: [], by_side: {}};
+    }
 
     // сначала, строим размерные линии импостов
-
     // получаем все профили контура, делим их на вертикальные и горизонтальные
     const ihor = [
       {
