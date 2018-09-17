@@ -4860,7 +4860,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       return imgs.then(() => {
         editor && editor.unload();
         return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-          .then(() => !window.QRCode && $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
+          .then(() => typeof QRCode === 'undefined' && $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
           .then(() => {
 
             const svg = document.createElement('SVG');
