@@ -13502,7 +13502,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
 
       if(glass_rows.length){
         glass_rows.forEach((row) => {
-          row.inset.filtered_spec({elm, len_angl, ox}).forEach((row) => {
+          row.inset.filtered_spec({elm, len_angl, ox, own_row: {clr: row.clr}}).forEach((row) => {
             res.push(row);
           });
         });

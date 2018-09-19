@@ -467,7 +467,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
       // если спецификация верхнего уровня задана в изделии, используем её, параллельно формируем формулу
       if(glass_rows.length){
         glass_rows.forEach((row) => {
-          row.inset.filtered_spec({elm, len_angl, ox}).forEach((row) => {
+          row.inset.filtered_spec({elm, len_angl, ox, own_row: {clr: row.clr}}).forEach((row) => {
             res.push(row);
           });
         });
