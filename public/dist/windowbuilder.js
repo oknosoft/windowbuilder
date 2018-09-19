@@ -12970,6 +12970,8 @@ class ZoomFit extends paper.Tool {
 }
 
 
+
+
 class ToolLayImpost extends ToolElement {
 
   constructor() {
@@ -13602,6 +13604,8 @@ class ToolLayImpost extends ToolElement {
           clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1));
         }
       }
+
+      add_by_clr(profile.clr);
 
       if (inset_by_x.clr_group.empty() && inset_by_y.clr_group.empty()) {
         add_by_clr(sys.clr_group);

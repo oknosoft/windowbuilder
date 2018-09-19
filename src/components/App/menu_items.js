@@ -5,7 +5,7 @@ import IconInbox from '@material-ui/icons/Inbox';
 import IconHelp from '@material-ui/icons/Help';
 import IconInfo from '@material-ui/icons/Info';
 import IconPerson from '@material-ui/icons/Person';
-import IconSettings from 'metadata-react/styles/Setting';
+import IconSettings from '@material-ui/icons/Settings';
 import IconBusinessCenter from '@material-ui/icons/BusinessCenter';
 import IconReceipt from '@material-ui/icons/Receipt';
 
