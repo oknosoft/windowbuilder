@@ -669,6 +669,9 @@ class ToolLayImpost extends ToolElement {
         }
       }
 
+      // цвет по умолчанию
+      add_by_clr(profile.clr);
+
       if (inset_by_x.clr_group.empty() && inset_by_y.clr_group.empty()) {
         add_by_clr(sys.clr_group);
       }
