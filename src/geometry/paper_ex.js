@@ -20,8 +20,11 @@ Object.defineProperties(paper.Path.prototype, {
      */
   getDirectedAngle: {
     value(point) {
-      const np = this.getNearestPoint(point),
-        offset = this.getOffsetOf(np);
+      if(!point) {
+        point = this.interiorPoint;
+      }
+      const np = this.getNearestPoint(point);
+      const offset = this.getOffsetOf(np);
       return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
     }
   },

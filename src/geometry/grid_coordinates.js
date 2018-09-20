@@ -13,12 +13,14 @@ class GridCoordinates extends paper.Group {
     this.parent = this.project.l_dimensions;
 
     const points_color = new paper.Color(0, 0.7, 0, 0.8);
+    const sel_color = new paper.Color(0.1, 0.4, 0, 0.9);
     const lines_color = new paper.Color(0, 0, 0.7, 0.8);
 
     // создаём детей
     this._attr = {
       lines_color,
       points_color,
+      sel_color,
       step: attr.step,
       offset: attr.offset,
       angle: attr.angle,
@@ -155,8 +157,8 @@ class GridCoordinates extends paper.Group {
    * Возвращает точки пути, попутно, добавляя визуализацию
    * @return {Array}
    */
-  grid_points() {
-    const {path, line, lines, lines_color, step, bind, point: {position}} = this._attr;
+  grid_points(sel_x) {
+    const {path, line, lines, lines_color, sel_color, step, bind, point: {position}} = this._attr;
     const res = [];
     const n0 = line.getNormalAt(0).multiply(10000);
     let do_break;
@@ -164,8 +166,10 @@ class GridCoordinates extends paper.Group {
 
     function add(tpath, x, tpoint, point) {
 
+      let pt;
+
       if(position.getDistance(point) > 20) {
-        new paper.Path.Circle({
+        pt = new paper.Path.Circle({
           parent: lines,
           guide: true,
           radius: 22,
@@ -174,7 +178,7 @@ class GridCoordinates extends paper.Group {
         });
       }
 
-      new paper.Path({
+      const pth = new paper.Path({
         parent: lines,
         guide: true,
         strokeColor: lines_color,
@@ -185,10 +189,18 @@ class GridCoordinates extends paper.Group {
       const d1 = tpath.getOffsetOf(tpoint);
       const d2 = tpath.getOffsetOf(point);
       res.push({x: x.round(1), y: (d2 - d1).round(1)});
+
+      if(Math.abs(x - sel_x) < 10) {
+        if(pt) {
+          pt.fillColor = sel_color;
+        }
+        pth.strokeColor = sel_color;
+      }
     }
 
     lines.removeChildren();
 
+    // движемся по пути и вычисляем расстояние
     for (let x = 0; x < line.length + step; x += step) {
       if(x >= line.length) {
         if(do_break) {
@@ -210,16 +222,15 @@ class GridCoordinates extends paper.Group {
       if(intersections.length) {
         add(tpath, x, tpoint, intersections[0].point);
       }
-      else if(x === 0) {
+      else if(x < step / 2) {
         add(tpath, x, tpoint, bind === 'e' ? path.lastSegment.point : path.firstSegment.point);
       }
-      else if(x === line.length) {
+      else if(x > line.length - step / 2) {
         add(tpath, x, tpoint, bind === 'e' ? path.firstSegment.point : path.lastSegment.point);
       }
     }
 
     return res;
   }
-
 
 }

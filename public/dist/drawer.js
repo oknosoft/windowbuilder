@@ -3242,14 +3242,18 @@ class BuilderElement extends paper.Group {
   set generatrix(attr) {
 
     const {_attr} = this;
-    _attr.generatrix.removeSegments();
+    const {generatrix} = _attr;
+    generatrix.removeSegments();
 
     if(this.hasOwnProperty('rays')){
       this.rays.clear();
     }
 
+    if(attr instanceof paper.Path){
+      generatrix.addSegments(attr.segments);
+    }
     if(Array.isArray(attr)){
-      _attr.generatrix.addSegments(attr);
+      generatrix.addSegments(attr);
     }
     else if(attr.proto &&  attr.p1 &&  attr.p2){
 
@@ -3273,7 +3277,7 @@ class BuilderElement extends paper.Group {
         tpath.split(d2);
       }
 
-      _attr.generatrix.remove();
+      generatrix.remove();
       _attr.generatrix = tpath;
       _attr.generatrix.parent = this;
 
@@ -4811,11 +4815,13 @@ class GridCoordinates extends paper.Group {
     this.parent = this.project.l_dimensions;
 
     const points_color = new paper.Color(0, 0.7, 0, 0.8);
+    const sel_color = new paper.Color(0.1, 0.4, 0, 0.9);
     const lines_color = new paper.Color(0, 0, 0.7, 0.8);
 
     this._attr = {
       lines_color,
       points_color,
+      sel_color,
       step: attr.step,
       offset: attr.offset,
       angle: attr.angle,
@@ -4947,8 +4953,8 @@ class GridCoordinates extends paper.Group {
     this.set_line();
   }
 
-  grid_points() {
-    const {path, line, lines, lines_color, step, bind, point: {position}} = this._attr;
+  grid_points(sel_x) {
+    const {path, line, lines, lines_color, sel_color, step, bind, point: {position}} = this._attr;
     const res = [];
     const n0 = line.getNormalAt(0).multiply(10000);
     let do_break;
@@ -4956,8 +4962,10 @@ class GridCoordinates extends paper.Group {
 
     function add(tpath, x, tpoint, point) {
 
+      let pt;
+
       if(position.getDistance(point) > 20) {
-        new paper.Path.Circle({
+        pt = new paper.Path.Circle({
           parent: lines,
           guide: true,
           radius: 22,
@@ -4966,7 +4974,7 @@ class GridCoordinates extends paper.Group {
         });
       }
 
-      new paper.Path({
+      const pth = new paper.Path({
         parent: lines,
         guide: true,
         strokeColor: lines_color,
@@ -4977,6 +4985,13 @@ class GridCoordinates extends paper.Group {
       const d1 = tpath.getOffsetOf(tpoint);
       const d2 = tpath.getOffsetOf(point);
       res.push({x: x.round(1), y: (d2 - d1).round(1)});
+
+      if(Math.abs(x - sel_x) < 10) {
+        if(pt) {
+          pt.fillColor = sel_color;
+        }
+        pth.strokeColor = sel_color;
+      }
     }
 
     lines.removeChildren();
@@ -5012,7 +5027,6 @@ class GridCoordinates extends paper.Group {
 
     return res;
   }
-
 
 }
 
@@ -5188,8 +5202,11 @@ Object.defineProperties(paper.Path.prototype, {
 
   getDirectedAngle: {
     value(point) {
-      const np = this.getNearestPoint(point),
-        offset = this.getOffsetOf(np);
+      if(!point) {
+        point = this.interiorPoint;
+      }
+      const np = this.getNearestPoint(point);
+      const offset = this.getOffsetOf(np);
       return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
     }
   },

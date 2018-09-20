@@ -5694,14 +5694,16 @@ class BuilderElement extends paper.Group {
   set generatrix(attr) {
 
     const {_attr} = this;
-    _attr.generatrix.removeSegments();
+    const {generatrix} = _attr;
+    generatrix.removeSegments();
 
-    if(this.hasOwnProperty('rays')){
-      this.rays.clear();
+    this.rays && this.rays.clear();
+
+    if(attr instanceof paper.Path){
+      generatrix.addSegments(attr.segments);
     }
-
     if(Array.isArray(attr)){
-      _attr.generatrix.addSegments(attr);
+      generatrix.addSegments(attr);
     }
     else if(attr.proto &&  attr.p1 &&  attr.p2){
 
@@ -5725,7 +5727,7 @@ class BuilderElement extends paper.Group {
         tpath.split(d2);
       }
 
-      _attr.generatrix.remove();
+      generatrix.remove();
       _attr.generatrix = tpath;
       _attr.generatrix.parent = this;
 
@@ -7263,11 +7265,13 @@ class GridCoordinates extends paper.Group {
     this.parent = this.project.l_dimensions;
 
     const points_color = new paper.Color(0, 0.7, 0, 0.8);
+    const sel_color = new paper.Color(0.1, 0.4, 0, 0.9);
     const lines_color = new paper.Color(0, 0, 0.7, 0.8);
 
     this._attr = {
       lines_color,
       points_color,
+      sel_color,
       step: attr.step,
       offset: attr.offset,
       angle: attr.angle,
@@ -7399,8 +7403,8 @@ class GridCoordinates extends paper.Group {
     this.set_line();
   }
 
-  grid_points() {
-    const {path, line, lines, lines_color, step, bind, point: {position}} = this._attr;
+  grid_points(sel_x) {
+    const {path, line, lines, lines_color, sel_color, step, bind, point: {position}} = this._attr;
     const res = [];
     const n0 = line.getNormalAt(0).multiply(10000);
     let do_break;
@@ -7408,8 +7412,10 @@ class GridCoordinates extends paper.Group {
 
     function add(tpath, x, tpoint, point) {
 
+      let pt;
+
       if(position.getDistance(point) > 20) {
-        new paper.Path.Circle({
+        pt = new paper.Path.Circle({
           parent: lines,
           guide: true,
           radius: 22,
@@ -7418,7 +7424,7 @@ class GridCoordinates extends paper.Group {
         });
       }
 
-      new paper.Path({
+      const pth = new paper.Path({
         parent: lines,
         guide: true,
         strokeColor: lines_color,
@@ -7429,6 +7435,13 @@ class GridCoordinates extends paper.Group {
       const d1 = tpath.getOffsetOf(tpoint);
       const d2 = tpath.getOffsetOf(point);
       res.push({x: x.round(1), y: (d2 - d1).round(1)});
+
+      if(Math.abs(x - sel_x) < 10) {
+        if(pt) {
+          pt.fillColor = sel_color;
+        }
+        pth.strokeColor = sel_color;
+      }
     }
 
     lines.removeChildren();
@@ -7454,17 +7467,16 @@ class GridCoordinates extends paper.Group {
       if(intersections.length) {
         add(tpath, x, tpoint, intersections[0].point);
       }
-      else if(x === 0) {
+      else if(x < step / 2) {
         add(tpath, x, tpoint, bind === 'e' ? path.lastSegment.point : path.firstSegment.point);
       }
-      else if(x === line.length) {
+      else if(x > line.length - step / 2) {
         add(tpath, x, tpoint, bind === 'e' ? path.firstSegment.point : path.lastSegment.point);
       }
     }
 
     return res;
   }
-
 
 }
 
@@ -7640,8 +7652,11 @@ Object.defineProperties(paper.Path.prototype, {
 
   getDirectedAngle: {
     value(point) {
-      const np = this.getNearestPoint(point),
-        offset = this.getOffsetOf(np);
+      if(!point) {
+        point = this.interiorPoint;
+      }
+      const np = this.getNearestPoint(point);
+      const offset = this.getOffsetOf(np);
       return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
     }
   },
@@ -12568,8 +12583,8 @@ class ToolCoordinates extends ToolElement{
         name: 'grid',
         wnd: {
           caption: "Таблица координат",
-          width: 300,
-          height: 400
+          width: 290,
+          height: 340
         },
       },
       profile: null,
@@ -12579,7 +12594,6 @@ class ToolCoordinates extends ToolElement{
     });
 
     this.dp_update = this.dp_update.bind(this);
-    this.dp_rows = this.dp_rows.bind(this);
 
     this.on({
 
@@ -12679,27 +12693,23 @@ class ToolCoordinates extends ToolElement{
       obj: this.dp,
       ts: 'coordinates',
       reorder: false,
+      disable_add_del: true,
     });
-    const toolbar = this._layout.cells('b').getAttachedToolbar();
-    toolbar.forEachItem((name) => {
-      ['btn_add', 'btn_delete'].indexOf(name) == -1 && toolbar.removeItem(name);
+    this._grid.attachEvent("onRowSelect", (id) => {
+      const row = this.dp.coordinates.get(id-1);
+      this.grid && row && this.grid.grid_points(row.x);
     });
+    this._layout.cells('b').detachToolbar();
 
     this._layout.cells('a').cell.firstChild.style.border = 'none';
     this._layout.cells('a').cell.lastChild.style.border = 'none';
     const {cell} = this._layout.cells('b');
     cell.firstChild.style.border = 'none';
     cell.lastChild.style.border = 'none';
-    const cell_tb = cell.querySelector('.dhx_cell_toolbar_def');
-    cell_tb.style.padding = 0;
-    cell_tb.lastChild.style.paddingLeft = 0;
 
     this._layout.setSizes();
 
-    this.dp._manager.on({
-      update: this.dp_update,
-      rows: this.dp_rows,
-    });
+    this.dp._manager.on({update: this.dp_update});
 
     if(this.grid){
       this.grid.visible = true;
@@ -12716,10 +12726,7 @@ class ToolCoordinates extends ToolElement{
 
   detache_wnd() {
     super.detache_wnd();
-    this.dp._manager.off({
-      update: this.dp_update,
-      rows: this.dp_rows,
-    });
+    this.dp._manager.off({update: this.dp_update});
     if(this.grid) {
       this.grid.remove();
       this.grid = null;
@@ -12751,36 +12758,125 @@ class ToolCoordinates extends ToolElement{
     this.refresh_coordinates();
   }
 
+  move_points(id) {
+
+    const {profile, grid, dp, project} = this;
+    const {generatrix} = profile;
+
+    const {bind, offset, path, line, lines, step} = this.grid._attr;
+    const segments = [];
+
+    function add(tpath, x, y, tpoint, point) {
+      const d1 = tpath.getOffsetOf(tpoint);
+      const p1 = tpath.getPointAt(d1 + y);
+      const delta = p1.subtract(point);
+
+      const intersections = generatrix.getIntersections(tpath);
+      if(intersections.length) {
+        segments.push(intersections[0].point.add(delta));
+      }
+      else if(x < step / 2) {
+        segments.push((bind === 'e' ? generatrix.lastSegment.point : generatrix.firstSegment.point).add(delta));
+      }
+      else if(x > line.length - step / 2) {
+        segments.push((bind === 'e' ? generatrix.firstSegment.point : generatrix.lastSegment.point).add(delta));
+      }
+    }
+
+    const n0 = line.getNormalAt(0).multiply(10000);
+    dp.coordinates.forEach(({x, y}) => {
+      const tpoint = x < line.length ? line.getPointAt(x) : line.lastSegment.point;
+      const tpath = new paper.Path({
+        segments: [tpoint.subtract(n0), tpoint.add(n0)],
+        insert: false
+      });
+      const intersections = path.getIntersections(tpath);
+      if(intersections.length) {
+        add(tpath, x, y, tpoint, intersections[0].point);
+      }
+      else if(x < step / 2) {
+        add(tpath, x, y, tpoint, bind === 'e' ? path.lastSegment.point : path.firstSegment.point);
+      }
+      else if(x > line.length - step / 2) {
+        add(tpath, x, y, tpoint, bind === 'e' ? path.firstSegment.point : path.lastSegment.point);
+      }
+    });
+
+    if(id === 0) {
+      const segment = bind === 'e' ? generatrix.lastSegment : generatrix.firstSegment;
+      const delta = segments[0].subtract(segment.point);
+      segment.selected = true;
+      profile.move_points(delta);
+    }
+    else if(id === segments.length - 1) {
+      const segment = bind === 'e' ? path.firstSegment : path.lastSegment;
+      const delta = segments[id].subtract(segment.point);
+      segment.selected = true;
+      profile.move_points(delta);
+    }
+    else {
+      const pth = new paper.Path({
+        insert: false,
+        guide: true,
+        strokeColor: 'red',
+        strokeScaling: false,
+        strokeWidth: 2,
+        segments
+      });
+
+      pth.smooth({ type: 'catmull-rom',  factor: 0.5 });
+      if(pth.firstSegment.point.getDistance(generatrix.firstSegment.point) > pth.firstSegment.point.getDistance(generatrix.lastSegment.point)){
+        pth.reverse();
+      }
+
+      profile.generatrix = pth;
+      project.register_change(true);
+    }
+
+    this.select_path();
+  }
+
   dp_update(dp, fields) {
+
     if('path' in fields) {
       this.select_path();
     }
     if('bind' in fields) {
-      this.grid.bind = this.dp.bind.valueOf();
+      this.grid.bind = dp.bind.valueOf();
       this.refresh_coordinates();
     }
     if('offset' in fields) {
-      this.grid.offset = this.dp.offset;
+      this.grid.offset = dp.offset;
       this.refresh_coordinates();
     }
     if('step' in fields) {
-      if(this.dp.step <= 0) {
-        this.dp.step = 100;
+      if(dp.step <= 0) {
+        dp.step = 100;
       }
       else {
-        this.grid.step = this.dp.step;
+        this.grid.step = dp.step;
         this.refresh_coordinates();
       }
     }
     if('step_angle' in fields) {
-      this.grid.angle = this.dp.step_angle;
+      this.grid.angle = dp.step_angle;
       this.refresh_coordinates();
+    }
+    if('y' in fields) {
+      const id = this._grid.getSelectedRowId();
+      if(id) {
+        this.move_points(parseInt(id, 10) - 1);
+      }
+    }
+    if('x' in fields) {
+      const id = this._grid.getSelectedRowId();
+      if(id) {
+        this.refresh_coordinates();
+        setTimeout(() => this._grid.selectRowById(id, false, true, true), 200);
+      }
     }
   }
 
-  dp_rows(dp, fields) {
-
-  }
 }
 
 ToolCoordinates.defaultProps = {

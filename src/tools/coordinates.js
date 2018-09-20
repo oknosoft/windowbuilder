@@ -29,8 +29,8 @@ class ToolCoordinates extends ToolElement{
         name: 'grid',
         wnd: {
           caption: "Таблица координат",
-          width: 300,
-          height: 400
+          width: 290,
+          height: 340
         },
       },
       profile: null,
@@ -40,7 +40,6 @@ class ToolCoordinates extends ToolElement{
     });
 
     this.dp_update = this.dp_update.bind(this);
-    this.dp_rows = this.dp_rows.bind(this);
 
     this.on({
 
@@ -141,27 +140,23 @@ class ToolCoordinates extends ToolElement{
       obj: this.dp,
       ts: 'coordinates',
       reorder: false,
+      disable_add_del: true,
     });
-    const toolbar = this._layout.cells('b').getAttachedToolbar();
-    toolbar.forEachItem((name) => {
-      ['btn_add', 'btn_delete'].indexOf(name) == -1 && toolbar.removeItem(name);
+    this._grid.attachEvent("onRowSelect", (id) => {
+      const row = this.dp.coordinates.get(id-1);
+      this.grid && row && this.grid.grid_points(row.x);
     });
+    this._layout.cells('b').detachToolbar();
 
     this._layout.cells('a').cell.firstChild.style.border = 'none';
     this._layout.cells('a').cell.lastChild.style.border = 'none';
     const {cell} = this._layout.cells('b');
     cell.firstChild.style.border = 'none';
     cell.lastChild.style.border = 'none';
-    const cell_tb = cell.querySelector('.dhx_cell_toolbar_def');
-    cell_tb.style.padding = 0;
-    cell_tb.lastChild.style.paddingLeft = 0;
 
     this._layout.setSizes();
 
-    this.dp._manager.on({
-      update: this.dp_update,
-      rows: this.dp_rows,
-    });
+    this.dp._manager.on({update: this.dp_update});
 
     if(this.grid){
       this.grid.visible = true;
@@ -178,10 +173,7 @@ class ToolCoordinates extends ToolElement{
 
   detache_wnd() {
     super.detache_wnd();
-    this.dp._manager.off({
-      update: this.dp_update,
-      rows: this.dp_rows,
-    });
+    this.dp._manager.off({update: this.dp_update});
     if(this.grid) {
       this.grid.remove();
       this.grid = null;
@@ -216,36 +208,132 @@ class ToolCoordinates extends ToolElement{
     this.refresh_coordinates();
   }
 
+  // смещает (добавляет) точки пути
+  move_points(id) {
+
+    const {profile, grid, dp, project} = this;
+    const {generatrix} = profile;
+
+    // строим таблицу новых точек образующей через дельты от текущего пути
+    const {bind, offset, path, line, lines, step} = this.grid._attr;
+    const segments = [];
+
+    function add(tpath, x, y, tpoint, point) {
+      const d1 = tpath.getOffsetOf(tpoint);
+      const p1 = tpath.getPointAt(d1 + y);
+      const delta = p1.subtract(point);
+
+      const intersections = generatrix.getIntersections(tpath);
+      if(intersections.length) {
+        segments.push(intersections[0].point.add(delta));
+      }
+      else if(x < step / 2) {
+        segments.push((bind === 'e' ? generatrix.lastSegment.point : generatrix.firstSegment.point).add(delta));
+      }
+      else if(x > line.length - step / 2) {
+        segments.push((bind === 'e' ? generatrix.firstSegment.point : generatrix.lastSegment.point).add(delta));
+      }
+    }
+
+    // движемся массиву координат и создаём точки
+    const n0 = line.getNormalAt(0).multiply(10000);
+    dp.coordinates.forEach(({x, y}) => {
+      const tpoint = x < line.length ? line.getPointAt(x) : line.lastSegment.point;
+      const tpath = new paper.Path({
+        segments: [tpoint.subtract(n0), tpoint.add(n0)],
+        insert: false
+      });
+      const intersections = path.getIntersections(tpath);
+      if(intersections.length) {
+        add(tpath, x, y, tpoint, intersections[0].point);
+      }
+      else if(x < step / 2) {
+        add(tpath, x, y, tpoint, bind === 'e' ? path.lastSegment.point : path.firstSegment.point);
+      }
+      else if(x > line.length - step / 2) {
+        add(tpath, x, y, tpoint, bind === 'e' ? path.firstSegment.point : path.lastSegment.point);
+      }
+    });
+
+    // начальную и конечную точки двигаем особо
+    if(id === 0) {
+      const segment = bind === 'e' ? generatrix.lastSegment : generatrix.firstSegment;
+      const delta = segments[0].subtract(segment.point);
+      segment.selected = true;
+      profile.move_points(delta);
+    }
+    else if(id === segments.length - 1) {
+      const segment = bind === 'e' ? path.firstSegment : path.lastSegment;
+      const delta = segments[id].subtract(segment.point);
+      segment.selected = true;
+      profile.move_points(delta);
+    }
+    else {
+      const pth = new paper.Path({
+        insert: false,
+        guide: true,
+        strokeColor: 'red',
+        strokeScaling: false,
+        strokeWidth: 2,
+        segments
+      });
+
+      pth.smooth({ type: 'catmull-rom',  factor: 0.5 });
+      if(pth.firstSegment.point.getDistance(generatrix.firstSegment.point) > pth.firstSegment.point.getDistance(generatrix.lastSegment.point)){
+        pth.reverse();
+      }
+
+      profile.generatrix = pth;
+      project.register_change(true);
+    }
+
+    this.select_path();
+  }
+
+  // обработчик события при изменении полей обработки
   dp_update(dp, fields) {
+    //if(this.dp !== dp) return;
+
     if('path' in fields) {
       this.select_path();
     }
     if('bind' in fields) {
-      this.grid.bind = this.dp.bind.valueOf();
+      this.grid.bind = dp.bind.valueOf();
       this.refresh_coordinates();
     }
     if('offset' in fields) {
-      this.grid.offset = this.dp.offset;
+      this.grid.offset = dp.offset;
       this.refresh_coordinates();
     }
     if('step' in fields) {
-      if(this.dp.step <= 0) {
-        this.dp.step = 100;
+      if(dp.step <= 0) {
+        dp.step = 100;
       }
       else {
-        this.grid.step = this.dp.step;
+        this.grid.step = dp.step;
         this.refresh_coordinates();
       }
     }
     if('step_angle' in fields) {
-      this.grid.angle = this.dp.step_angle;
+      this.grid.angle = dp.step_angle;
       this.refresh_coordinates();
+    }
+    if('y' in fields) {
+      const id = this._grid.getSelectedRowId();
+      if(id) {
+        this.move_points(parseInt(id, 10) - 1);
+      }
+    }
+    if('x' in fields) {
+      // отменяем редактирование
+      const id = this._grid.getSelectedRowId();
+      if(id) {
+        this.refresh_coordinates();
+        setTimeout(() => this._grid.selectRowById(id, false, true, true), 200);
+      }
     }
   }
 
-  dp_rows(dp, fields) {
-
-  }
 }
 
 ToolCoordinates.defaultProps = {
