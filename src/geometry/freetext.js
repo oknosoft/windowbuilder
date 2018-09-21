@@ -166,11 +166,18 @@ class FreeText extends paper.PointText {
 
   // размер шрифта
   get font_size() {
-    return this.fontSize || consts.font_size;
+    return this._fontSize || consts.font_size;
   }
   set font_size(v) {
-    this.fontSize = v;
+    this._fontSize = v;
+    this.fontSize = this._font_size();
     this.project.register_update();
+  }
+
+  _font_size() {
+    const { x, y } = this._row._owner._owner;
+    const size = (Math.max(x, y) - consts.cutoff) / 15;
+    return '' + (parseInt(this._fontSize || consts.font_size) + size);
   }
 
   // жирность шрифта
