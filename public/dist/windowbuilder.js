@@ -6871,7 +6871,7 @@ class FreeText extends paper.PointText {
         const {width, height} = attr.parent.project.bounds;
         const {cutoff, font_size} = consts;
         const size = Math.max(width - cutoff, height - cutoff) / 60;
-        attr.fontSize += (size > 0 ? size : 0);
+        attr.fontSize += (size > 0 ? size : 0).round();
       }
     }
     attr.fontFamily = consts.font_family;
