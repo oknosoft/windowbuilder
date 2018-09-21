@@ -3245,9 +3245,7 @@ class BuilderElement extends paper.Group {
     const {generatrix} = _attr;
     generatrix.removeSegments();
 
-    if(this.hasOwnProperty('rays')){
-      this.rays.clear();
-    }
+    this.rays && this.rays.clear();
 
     if(attr instanceof paper.Path){
       generatrix.addSegments(attr.segments);
@@ -5017,10 +5015,10 @@ class GridCoordinates extends paper.Group {
       if(intersections.length) {
         add(tpath, x, tpoint, intersections[0].point);
       }
-      else if(x === 0) {
+      else if(x < step / 2) {
         add(tpath, x, tpoint, bind === 'e' ? path.lastSegment.point : path.firstSegment.point);
       }
-      else if(x === line.length) {
+      else if(x > line.length - step / 2) {
         add(tpath, x, tpoint, bind === 'e' ? path.firstSegment.point : path.lastSegment.point);
       }
     }

@@ -217,21 +217,28 @@ class ToolCoordinates extends ToolElement{
     // строим таблицу новых точек образующей через дельты от текущего пути
     const {bind, offset, path, line, lines, step} = this.grid._attr;
     const segments = [];
+    let reverce = path.firstSegment.point.getDistance(generatrix.firstSegment.point) >
+      path.firstSegment.point.getDistance(generatrix.lastSegment.point);
+    if(bind === 'e') {
+      reverce = !reverce;
+    }
 
     function add(tpath, x, y, tpoint, point) {
       const d1 = tpath.getOffsetOf(tpoint);
       const p1 = tpath.getPointAt(d1 + y);
       const delta = p1.subtract(point);
 
-      const intersections = generatrix.getIntersections(tpath);
-      if(intersections.length) {
-        segments.push(intersections[0].point.add(delta));
-      }
-      else if(x < step / 2) {
-        segments.push((bind === 'e' ? generatrix.lastSegment.point : generatrix.firstSegment.point).add(delta));
+      if(x < step / 2) {
+        segments.push((reverce ? generatrix.lastSegment.point : generatrix.firstSegment.point).add(delta));
       }
       else if(x > line.length - step / 2) {
-        segments.push((bind === 'e' ? generatrix.firstSegment.point : generatrix.lastSegment.point).add(delta));
+        segments.push((reverce ? generatrix.firstSegment.point : generatrix.lastSegment.point).add(delta));
+      }
+      else {
+        const intersections = generatrix.getIntersections(tpath);
+        if(intersections.length) {
+          segments.push(intersections[0].point.add(delta));
+        }
       }
     }
 
@@ -257,13 +264,13 @@ class ToolCoordinates extends ToolElement{
 
     // начальную и конечную точки двигаем особо
     if(id === 0) {
-      const segment = bind === 'e' ? generatrix.lastSegment : generatrix.firstSegment;
+      const segment = reverce ? generatrix.lastSegment : generatrix.firstSegment;
       const delta = segments[0].subtract(segment.point);
       segment.selected = true;
       profile.move_points(delta);
     }
     else if(id === segments.length - 1) {
-      const segment = bind === 'e' ? path.firstSegment : path.lastSegment;
+      const segment = reverce ? path.firstSegment : path.lastSegment;
       const delta = segments[id].subtract(segment.point);
       segment.selected = true;
       profile.move_points(delta);
@@ -279,15 +286,15 @@ class ToolCoordinates extends ToolElement{
       });
 
       pth.smooth({ type: 'catmull-rom',  factor: 0.5 });
-      if(pth.firstSegment.point.getDistance(generatrix.firstSegment.point) > pth.firstSegment.point.getDistance(generatrix.lastSegment.point)){
-        pth.reverse();
-      }
+      pth.simplify(0.8);
+      reverce && pth.reverse();
 
       profile.generatrix = pth;
       project.register_change(true);
     }
 
     this.select_path();
+    setTimeout(() => this._grid.selectCell(id, 2), 200);
   }
 
   // обработчик события при изменении полей обработки
@@ -329,7 +336,7 @@ class ToolCoordinates extends ToolElement{
       const id = this._grid.getSelectedRowId();
       if(id) {
         this.refresh_coordinates();
-        setTimeout(() => this._grid.selectRowById(id, false, true, true), 200);
+        setTimeout(() => this._grid.selectCell(parseInt(id, 10) - 1, 2), 200);
       }
     }
   }
