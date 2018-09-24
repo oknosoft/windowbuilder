@@ -17,6 +17,7 @@ import MDNRComponent from 'metadata-react/common/MDNRComponent';
 import LoadingMessage from 'metadata-react/DumbLoader/LoadingMessage';
 import DataObjToolbar from 'metadata-react/FrmObj/DataObjToolbar';
 import DataField from 'metadata-react/DataField';
+import TabularSection from 'metadata-react/TabularSection';
 
 import withStyles from 'metadata-react/styles/paper600';
 import {withIface} from 'metadata-redux';
@@ -116,13 +117,6 @@ class FrmObj extends MDNRComponent {
     return ltitle;
   }
 
-  editorStyles(el) {
-    const content = el && el.querySelector('.react-markdown--slate-content');
-    if(content) {
-      content.style.minHeight = '140px';
-    }
-  }
-
 
   renderFields(_obj, classes) {
     return (
@@ -144,7 +138,7 @@ class FrmObj extends MDNRComponent {
 
   render() {
     const {
-      props: {_mgr, classes, handleIfaceState},
+      props: {_mgr, classes, handleIfaceState, height},
       state: {_obj, _meta, index},
       context, _handlers} = this;
     const toolbar_props = Object.assign({
@@ -173,9 +167,15 @@ class FrmObj extends MDNRComponent {
 
         index === 0 && this.renderFields(_obj, classes),
 
-        index === 1 && (
-            <LoadingMessage key="loading" />
-        ),
+        index === 1 && <TabularSection key="planning" _obj={_obj} _tabular="planning" minHeight={height - 48}/>,
+
+        index === 2 && <TabularSection key="demand" _obj={_obj} _tabular="demand" minHeight={height - 48}/>,
+
+        index === 3 && <TabularSection key="cuts_in" _obj={_obj} _tabular="cuts" minHeight={height - 48}/>,
+
+        index === 4 && <TabularSection key="сutting" _obj={_obj} _tabular="сutting" minHeight={height - 48}/>,
+
+        index === 5 && <TabularSection key="cuts_out" _obj={_obj} _tabular="cuts" minHeight={height - 48}/>,
 
       ]
       :
