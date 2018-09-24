@@ -3,8 +3,8 @@
 // // модификаторы справочников
 // import catalogs from './catalogs';
 //
-// // модификаторы документов
-// import documents from './documents';
+// модификаторы документов
+import documents from './documents';
 //
 // модификаторы планов видов характеристик
 //import chartscharacteristics from './chartscharacteristics';
@@ -29,4 +29,5 @@ export default function ($p) {
   dataprocessors($p);
   common($p);
   export_dxf($p);
+  documents($p);
 }
