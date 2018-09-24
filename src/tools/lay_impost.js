@@ -670,7 +670,7 @@ class ToolLayImpost extends ToolElement {
       }
 
       // цвет по умолчанию
-      if (this.profile.elm_type != $p.enm.elm_types.Раскладка) {
+      if (profile.elm_type != $p.enm.elm_types.Раскладка) {
         add_by_clr(profile.clr);
       }
 
