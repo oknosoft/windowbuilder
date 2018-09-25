@@ -298,7 +298,9 @@ $p.cat.clrs.__define({
 					return wnd;
 
 				})
-		}
+    },
+    configurable: true,
+    writable: true
 	},
 
 	/**
