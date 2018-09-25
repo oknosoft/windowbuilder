@@ -24,19 +24,15 @@ import {withIface} from 'metadata-redux';
 
 const htitle = 'Задание на производство';
 const description = 'Раскрой, потребность в материалах, файлы для станков';
+const schemas = {
+  planning: 'c864d895-ac50-42be-8760-203cc46d208f',
+  demand: 'dab2c503-a426-4bf5-f083-fe6f1c64fbe5',
+  cuts_in: '187f9a40-94fc-4ad2-ee4c-26341b816ade',
+  сutting: '4fe15a0f-a6c2-442e-d8bb-7204c3085c4e',
+  cuts_out: '8fca797a-4e1c-4f8b-b0aa-1965b5e5e7db',
+};
 
 class FrmObj extends MDNRComponent {
-
-  static propTypes = {
-    _mgr: PropTypes.object,             // DataManager, с которым будет связан компонент
-    _acl: PropTypes.string,             // Права на чтение-изменение
-    _meta: PropTypes.object,            // Здесь можно переопределить метаданные
-    _layout: PropTypes.object,          // Состав и расположение полей, если не задано - рисуем типовую форму
-
-    read_only: PropTypes.object,        // Элемент только для чтения
-
-    handlers: PropTypes.object.isRequired, // обработчики редактирования объекта
-  };
 
   constructor(props, context) {
     super(props, context);
@@ -50,11 +46,25 @@ class FrmObj extends MDNRComponent {
       _meta: _meta || _mgr.metadata(),
       _obj: null,
       index: 0,
+      schemas_ready: typeof schemas.planning === 'object',
     };
   }
 
   componentDidMount() {
-    const {_mgr, match} = this.props;
+    const {props: {_mgr, match}, state} = this;
+
+    if(!state.schemas_ready) {
+      const {scheme_settings} = $p.cat;
+      const {adapter} = scheme_settings;
+      adapter.load_array(scheme_settings, Object.keys(schemas).map((ref) => schemas[ref]), false, adapter.local.templates)
+        .then(() => {
+          for(const ts in schemas) {
+            schemas[ts] = scheme_settings.get(schemas[ts]);
+          }
+          this.setState({schemas_ready: true});
+        });
+    }
+
     _mgr.get(match.params.ref, 'promise').then((_obj) => {
       this.setState({_obj}, () => this.shouldComponentUpdate(this.props));
     });
@@ -139,7 +149,7 @@ class FrmObj extends MDNRComponent {
   render() {
     const {
       props: {_mgr, classes, handleIfaceState, height},
-      state: {_obj, _meta, index},
+      state: {_obj, _meta, index, schemas_ready},
       context, _handlers} = this;
     const toolbar_props = Object.assign({
       closeButton: !context.dnr,
@@ -148,6 +158,7 @@ class FrmObj extends MDNRComponent {
       postable: !!(_meta.posted || _mgr.metadata('posted')),
       deletable: false,
     }, _handlers);
+    const h = height - 48;
 
     return _obj ? [
         <Helmet key="helmet" title={htitle}>
@@ -167,20 +178,33 @@ class FrmObj extends MDNRComponent {
 
         index === 0 && this.renderFields(_obj, classes),
 
-        index === 1 && <TabularSection key="planning" _obj={_obj} _tabular="planning" minHeight={height - 48}/>,
+        index !== 0 && !schemas_ready && <LoadingMessage />,
 
-        index === 2 && <TabularSection key="demand" _obj={_obj} _tabular="demand" minHeight={height - 48}/>,
+        index === 1 && schemas_ready && <TabularSection key="planning" _obj={_obj} _tabular="planning" minHeight={h} scheme={schemas.planning}/>,
 
-        index === 3 && <TabularSection key="cuts_in" _obj={_obj} _tabular="cuts" minHeight={height - 48}/>,
+        index === 2 && schemas_ready && <TabularSection key="demand" _obj={_obj} _tabular="demand" minHeight={h} scheme={schemas.demand}/>,
 
-        index === 4 && <TabularSection key="сutting" _obj={_obj} _tabular="сutting" minHeight={height - 48}/>,
+        index === 3 && schemas_ready && <TabularSection key="cuts_in" _obj={_obj} _tabular="cuts" minHeight={h} scheme={schemas.cuts_in}/>,
 
-        index === 5 && <TabularSection key="cuts_out" _obj={_obj} _tabular="cuts" minHeight={height - 48}/>,
+        index === 4 && schemas_ready && <TabularSection key="сutting" _obj={_obj} _tabular="сutting" minHeight={h} scheme={schemas.сutting}/>,
+
+        index === 5 && schemas_ready && <TabularSection key="cuts_out" _obj={_obj} _tabular="cuts" minHeight={h} scheme={schemas.cuts_out}/>,
 
       ]
       :
       <LoadingMessage />;
   }
 }
+
+FrmObj.propTypes = {
+  _mgr: PropTypes.object,             // DataManager, с которым будет связан компонент
+  _acl: PropTypes.string,             // Права на чтение-изменение
+  _meta: PropTypes.object,            // Здесь можно переопределить метаданные
+  _layout: PropTypes.object,          // Состав и расположение полей, если не задано - рисуем типовую форму
+
+  read_only: PropTypes.object,        // Элемент только для чтения
+
+  handlers: PropTypes.object.isRequired, // обработчики редактирования объекта
+};
 
 export default withStyles(withIface(FrmObj));
