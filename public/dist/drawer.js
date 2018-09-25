@@ -12304,7 +12304,8 @@ $p.cat.clrs.__define({
 					return wnd;
 
 				})
-		}
+    },
+    configurable: true,
 	},
 
 	sync_grid: {

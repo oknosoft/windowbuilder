@@ -50,7 +50,7 @@ export default class SelectOrder extends Component {
             handlers={{handleSelect}}
             selectionMode
             denyAddDel
-            //show_variants
+            show_variants
             show_search
           />
         </DnR>}

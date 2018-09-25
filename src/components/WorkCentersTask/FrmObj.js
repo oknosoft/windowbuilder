@@ -12,6 +12,7 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Helmet from 'react-helmet';
 import FormGroup from '@material-ui/core/FormGroup';
+import IconButton from '@material-ui/core/IconButton';
 
 import MDNRComponent from 'metadata-react/common/MDNRComponent';
 import LoadingMessage from 'metadata-react/DumbLoader/LoadingMessage';
@@ -21,6 +22,7 @@ import TabularSection from 'metadata-react/TabularSection';
 
 import withStyles from 'metadata-react/styles/paper600';
 import {withIface} from 'metadata-redux';
+import SelectOrder from '../RepMaterialsDemand/SelectOrder';
 
 const htitle = 'Задание на производство';
 const description = 'Раскрой, потребность в материалах, файлы для станков';
@@ -81,6 +83,12 @@ class FrmObj extends MDNRComponent {
     if(obj === this.state._obj) {
       this.shouldComponentUpdate(this.props);
     }
+  }
+
+  handleOrder = (row) => {
+    const {_obj} = this.state;
+    _obj && _obj.fill_by_orders([row])
+      .then(() => this.forceUpdate());
   }
 
   handleSave() {
@@ -180,7 +188,17 @@ class FrmObj extends MDNRComponent {
 
         index !== 0 && !schemas_ready && <LoadingMessage />,
 
-        index === 1 && schemas_ready && <TabularSection key="planning" _obj={_obj} _tabular="planning" minHeight={h} scheme={schemas.planning}/>,
+        index === 1 && schemas_ready && <TabularSection
+          key="planning"
+          _obj={_obj}
+          _tabular="planning"
+          minHeight={h}
+          scheme={schemas.planning}
+          btns={[
+            <IconButton key="a_sep1" disabled>|</IconButton>,
+            <SelectOrder key="a_ord" handleSelect={this.handleOrder}/>,
+          ]}
+        />,
 
         index === 2 && schemas_ready && <TabularSection key="demand" _obj={_obj} _tabular="demand" minHeight={h} scheme={schemas.demand}/>,
 
