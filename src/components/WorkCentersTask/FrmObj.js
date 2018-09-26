@@ -14,7 +14,7 @@ import Helmet from 'react-helmet';
 import FormGroup from '@material-ui/core/FormGroup';
 import IconButton from '@material-ui/core/IconButton';
 
-import MDNRComponent from 'metadata-react/common/MDNRComponent';
+import DataObj from 'metadata-react/FrmObj/DataObj';
 import LoadingMessage from 'metadata-react/DumbLoader/LoadingMessage';
 import DataObjToolbar from 'metadata-react/FrmObj/DataObjToolbar';
 import DataField from 'metadata-react/DataField';
@@ -23,6 +23,10 @@ import TabularSection from 'metadata-react/TabularSection';
 import withStyles from 'metadata-react/styles/paper600';
 import {withIface} from 'metadata-redux';
 import SelectOrder from '../RepMaterialsDemand/SelectOrder';
+import MenuFillCutting from './MenuFillCutting';
+
+import IconEvent from '@material-ui/icons/Event';
+
 
 const htitle = 'Задание на производство';
 const description = 'Раскрой, потребность в материалах, файлы для станков';
@@ -30,32 +34,31 @@ const schemas = {
   planning: 'c864d895-ac50-42be-8760-203cc46d208f',
   demand: 'dab2c503-a426-4bf5-f083-fe6f1c64fbe5',
   cuts_in: '187f9a40-94fc-4ad2-ee4c-26341b816ade',
-  сutting: '4fe15a0f-a6c2-442e-d8bb-7204c3085c4e',
+  cutting: '4fe15a0f-a6c2-442e-d8bb-7204c3085c4e',
   cuts_out: '8fca797a-4e1c-4f8b-b0aa-1965b5e5e7db',
 };
 
-class FrmObj extends MDNRComponent {
+class FrmObj extends DataObj {
 
   constructor(props, context) {
     super(props, context);
-    const {_mgr, _meta} = props;
-    this._handlers = {
-      handleSave: this.handleSave.bind(this),
-      handleClose: this.handleClose.bind(this),
-      handleMarkDeleted: this.handleMarkDeleted.bind(this),
-    };
-    this.state = {
-      _meta: _meta || _mgr.metadata(),
-      _obj: null,
-      index: 0,
-      schemas_ready: typeof schemas.planning === 'object',
-    };
+    this.state.index = 0;
+    this.state.schemas_ready = typeof schemas.planning === 'object';
   }
 
   componentDidMount() {
-    const {props: {_mgr, match}, state} = this;
+    const {_mgr, match} = this.props;
 
-    if(!state.schemas_ready) {
+    _mgr.get(match.params.ref, 'promise')
+      .then((_obj) => {
+        this.setState({_obj}, () => this.shouldComponentUpdate(this.props));
+        return _obj.load_production();
+      })
+      .then((prods) => prods.length && this.forceUpdate());
+
+    _mgr.on('update', this.onDataChange);
+
+    if(!this.state.schemas_ready) {
       const {scheme_settings} = $p.cat;
       const {adapter} = scheme_settings;
       adapter.load_array(scheme_settings, Object.keys(schemas).map((ref) => schemas[ref]), false, adapter.local.templates)
@@ -66,23 +69,6 @@ class FrmObj extends MDNRComponent {
           this.setState({schemas_ready: true});
         });
     }
-
-    _mgr.get(match.params.ref, 'promise').then((_obj) => {
-      this.setState({_obj}, () => this.shouldComponentUpdate(this.props));
-    });
-
-    _mgr.on('update', this.onDataChange);
-  }
-
-  componentWillUnmount() {
-    this.props._mgr.off('update', this.onDataChange);
-  }
-
-  /* eslint-disable-next-line*/
-  onDataChange = (obj, fields) => {
-    if(obj === this.state._obj) {
-      this.shouldComponentUpdate(this.props);
-    }
   }
 
   handleOrder = (row) => {
@@ -91,50 +77,11 @@ class FrmObj extends MDNRComponent {
       .then(() => this.forceUpdate());
   }
 
-  handleSave() {
-    //this.props.handleSave(this.state._obj);
+  handleFillCutting = (opts) => {
     const {_obj} = this.state;
-    _obj && _obj.save()
-      .then(() => this.shouldComponentUpdate(this.props))
-      .catch((err) => {
-        // показываем диалог
-        this.props.handleIfaceState({
-          component: '',
-          name: 'alert',
-          value: {open: true, title: _obj.presentation, text: err.reason || err.message}
-        });
-      });
+    _obj && _obj.fill_cutting(opts)
+      .then(() => this.forceUpdate());
   }
-
-
-  handleMarkDeleted() {
-
-  }
-
-  handleClose() {
-    const {handlers, _mgr} = this.props;
-    const {_obj} = this.state;
-    handlers.handleNavigate(`/${_mgr.class_name}/list${_obj ? '/?ref=' + _obj.ref : ''}`);
-  }
-
-  handleValueChange(_fld) {
-    return (event, value) => {
-      const {_obj, handlers} = this.props;
-      const old_value = _obj[_fld];
-      _obj[_fld] = (value || (event && event.target ? event.target.value : ''));
-      handlers.handleValueChange(_fld, old_value);
-    };
-  }
-
-  get ltitle() {
-    const {_meta, _obj} = this.state;
-    let ltitle = (_obj && _obj.presentation) || _meta.obj_presentation || _meta.synonym;
-    if(_obj && _obj._modified && ltitle[ltitle.length - 1] !== '*') {
-      ltitle += ' *';
-    }
-    return ltitle;
-  }
-
 
   renderFields(_obj, classes) {
     return (
@@ -194,19 +141,55 @@ class FrmObj extends MDNRComponent {
           _tabular="planning"
           minHeight={h}
           scheme={schemas.planning}
+          denyReorder
           btns={[
             <IconButton key="a_sep1" disabled>|</IconButton>,
             <SelectOrder key="a_ord" handleSelect={this.handleOrder}/>,
+            <IconButton key="a_plan" title="Заполнить по плану" onClick={this.handleOrder}>
+              <IconEvent/>
+            </IconButton>
           ]}
         />,
 
-        index === 2 && schemas_ready && <TabularSection key="demand" _obj={_obj} _tabular="demand" minHeight={h} scheme={schemas.demand}/>,
+        index === 2 && schemas_ready && <TabularSection
+          key="demand"
+          _obj={_obj}
+          _tabular="demand"
+          minHeight={h}
+          scheme={schemas.demand}
+          denyReorder
+        />,
 
-        index === 3 && schemas_ready && <TabularSection key="cuts_in" _obj={_obj} _tabular="cuts" minHeight={h} scheme={schemas.cuts_in}/>,
+        index === 3 && schemas_ready && <TabularSection
+          key="cuts_in"
+          _obj={_obj}
+          _tabular="cuts"
+          minHeight={h}
+          scheme={schemas.cuts_in}
+          denyReorder
+        />,
 
-        index === 4 && schemas_ready && <TabularSection key="сutting" _obj={_obj} _tabular="сutting" minHeight={h} scheme={schemas.сutting}/>,
+        index === 4 && schemas_ready && <TabularSection
+          key="cutting"
+          _obj={_obj}
+          _tabular="cutting"
+          minHeight={h}
+          scheme={schemas.cutting}
+          denyReorder
+          btns={[
+            <IconButton key="a_sep1" disabled>|</IconButton>,
+            <MenuFillCutting key="a_fill_cut" handleFillCutting={this.handleFillCutting}/>,
+          ]}
+        />,
 
-        index === 5 && schemas_ready && <TabularSection key="cuts_out" _obj={_obj} _tabular="cuts" minHeight={h} scheme={schemas.cuts_out}/>,
+        index === 5 && schemas_ready && <TabularSection
+          key="cuts_out"
+          _obj={_obj}
+          _tabular="cuts"
+          minHeight={h}
+          scheme={schemas.cuts_out}
+          denyReorder
+        />,
 
       ]
       :
@@ -218,7 +201,6 @@ FrmObj.propTypes = {
   _mgr: PropTypes.object,             // DataManager, с которым будет связан компонент
   _acl: PropTypes.string,             // Права на чтение-изменение
   _meta: PropTypes.object,            // Здесь можно переопределить метаданные
-  _layout: PropTypes.object,          // Состав и расположение полей, если не задано - рисуем типовую форму
 
   read_only: PropTypes.object,        // Элемент только для чтения
 
