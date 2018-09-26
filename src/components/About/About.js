@@ -18,8 +18,16 @@ const styleSheet = {
 
 class About extends Component {
 
+  state = {build: ''};
+
   componentDidMount() {
     this.shouldComponentUpdate(this.props);
+    fetch('/build.json')
+      .then(response => response.json())
+      .then(json => {
+        this.setState(json);
+      })
+      .catch(() => null);
   }
 
   shouldComponentUpdate({handleIfaceState, title}) {
@@ -36,7 +44,7 @@ class About extends Component {
   }
 
   render() {
-    const {classes} = this.props;
+    const {props: {classes}, state: {build}} = this;
 
     return (
       <div className={classes.root}>
@@ -45,6 +53,7 @@ class About extends Component {
           <Grid item xs={12} sm={12} md={11} lg={10} xl={8}>
 
             <h1 className={classes.fn}>Окнософт: Заказ дилера</h1>
+            {build && <p>Версия: <i>{build}</i></p>}
             <p>Заказ дилера - это веб-приложение, разработанное компанией <a
               href="http://www.oknosoft.ru/" target="_blank" rel="noopener noreferrer">Окнософт</a> на базе фреймворка <a
               href="http://www.oknosoft.ru/metadata/" target="_blank" rel="noopener noreferrer">Metadata.js</a><br />
