@@ -26,6 +26,7 @@ import SelectOrder from '../RepMaterialsDemand/SelectOrder';
 import MenuFillCutting from './MenuFillCutting';
 
 import IconEvent from '@material-ui/icons/Event';
+import IconRotate from '@material-ui/icons/RotateRight';
 
 
 const htitle = 'Задание на производство';
@@ -75,13 +76,27 @@ class FrmObj extends DataObj {
     const {_obj} = this.state;
     _obj && _obj.fill_by_orders([row])
       .then(() => this.forceUpdate());
-  }
+  };
 
   handleFillCutting = (opts) => {
     const {_obj} = this.state;
     _obj && _obj.fill_cutting(opts)
       .then(() => this.forceUpdate());
-  }
+  };
+
+  handleOptimize = (opts) => {
+    const {_obj} = this.state;
+    _obj && _obj.optimize({
+      onStep: this.handleOnStep,
+    })
+      .then(() => this.forceUpdate());
+  };
+
+  // вызывается из раскроя
+  handleOnStep = (status) => {
+
+  };
+
 
   renderFields(_obj, classes) {
     return (
@@ -179,6 +194,9 @@ class FrmObj extends DataObj {
           btns={[
             <IconButton key="a_sep1" disabled>|</IconButton>,
             <MenuFillCutting key="a_fill_cut" handleFillCutting={this.handleFillCutting}/>,
+            <IconButton key="a_run" title="Оптимизировать раскрой" onClick={this.handleOptimize}>
+              <IconRotate/>
+            </IconButton>,
           ]}
         />,
 

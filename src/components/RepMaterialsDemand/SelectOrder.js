@@ -3,10 +3,21 @@ import PropTypes from 'prop-types';
 
 import IconButton from '@material-ui/core/IconButton';
 import IconWork from '@material-ui/icons/Work';
-import DnR from 'metadata-react/DnR/Dialog';
+//import Dialog from 'metadata-react/DnR/Dialog';
+import Dialog from 'metadata-react/App/Dialog';
 import DataList from 'metadata-react/DataList';
+import AutoSizer from 'react-virtualized/dist/es/AutoSizer';
 
-export default class SelectOrder extends Component {
+import withStyles from '@material-ui/core/styles/withStyles';
+
+const styles = theme => ({
+  large: {
+    minWidth: 960,
+    maxHeight: 'calc(100vh - 80px)',
+  },
+});
+
+class SelectOrder extends Component {
 
   static propTypes = {
     handleSelect: PropTypes.func.isRequired,
@@ -36,15 +47,23 @@ export default class SelectOrder extends Component {
 
   render() {
 
-    const {handleSelect, handleRequestClose, props, state} = this;
+    const {handleSelect, props, state} = this;
 
     return (
       <div>
         <IconButton title="Заполнить по заказу" onClick={this.handleTouchTap}>
           <IconWork/>
         </IconButton>
-        {state.open && <DnR title="Заполнить по заказу" onClose={handleRequestClose}>
+        {state.open && <Dialog
+          open
+          noSpace
+          //initFullScreen
+          classes={{paper: props.classes.large}}
+          title="Заполнить по заказу"
+          onClose={this.handleRequestClose}
+        >
           <DataList
+            height={480}
             _mgr={$p.doc.calc_order}
             _acl={props._acl}
             handlers={{handleSelect}}
@@ -53,8 +72,10 @@ export default class SelectOrder extends Component {
             //show_variants
             show_search
           />
-        </DnR>}
+        </Dialog>}
       </div>
     );
   }
 }
+
+export default withStyles(styles)(SelectOrder);

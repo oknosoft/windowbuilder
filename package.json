@@ -27,6 +27,7 @@
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
     "dxf-writer": "^1.1.0",
+    "genetic-cutting": "github:oknosoft/genetic-cutting",
     "metadata-abstract-ui": "2.0.17-beta.8",
     "metadata-core": "2.0.17-beta.8",
     "metadata-dhtmlx": "2.0.17-beta.8",
@@ -51,7 +52,7 @@
     "eslint-config-react-app": "^2.1.0",
     "eslint-loader": "^2.1.1",
     "eslint-plugin-babel": "^5.2.0",
-    "eslint-plugin-flowtype": "^2.50.1",
+    "eslint-plugin-flowtype": "^2.50.2",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.1.1",
     "eslint-plugin-react": "^7.11.1",

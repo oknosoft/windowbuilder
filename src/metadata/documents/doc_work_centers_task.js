@@ -8,8 +8,9 @@ import FrmObj from '../../components/WorkCentersTask/FrmObj';
 
 export default function ({
                            DocWork_centers_task,
+                           DocWork_centers_taskCutsRow,
                            cat: {characteristics},
-                           enm: {cutting_optimization_types},
+                           enm: {cutting_optimization_types, debit_credit_kinds},
                            doc: {work_centers_task, calc_order},
                            utils,
                          }) {
@@ -20,10 +21,21 @@ export default function ({
   // модифицируем класс документа
   Object.assign(DocWork_centers_task.prototype, {
 
+    // значения по умолчанию при создании документа
     after_create() {
       this.date = new Date();
       this.responsible = $p.current_user;
       return this;
+    },
+
+    // значения по умолчанию при добавлении строки
+    add_row(row) {
+      if(row instanceof DocWork_centers_taskCutsRow) {
+        if(!row.stick) {
+          const {_obj} = row._owner;
+          row._obj.stick = 1 + (_obj.length ? Math.max.apply(null, _obj.map(({stick}) => stick)) : 0);
+        }
+      }
     },
 
     /**
@@ -148,7 +160,128 @@ export default function ({
      * @return {Promise<void>}
      */
     optimize(opts) {
-      return Promise.resolve();
+      return import('genetic-cutting')
+        .then((Cutting) => {
+          const fragments = new Map();
+          this.cutting.forEach((row) => {
+            if(!fragments.has(row.nom)) {
+              fragments.set(row.nom, new Map());
+            }
+            const nom = fragments.get(row.nom);
+            if(!nom.has(row.characteristic)) {
+              nom.set(row.characteristic, []);
+            }
+            const characteristic = nom.get(row.characteristic);
+            characteristic.push(row);
+          });
+
+          let queue = Promise.resolve();
+          fragments.forEach((characteristics, nom) => {
+            for(const [characteristic, rows] of characteristics) {
+
+              queue = queue.then(() => this.optimize_fragment(new Cutting('1D'), rows, opts.onStep));
+            }
+          });
+        });
+    },
+
+    /**
+     * Выполняет оптимизацию фрагмента (номенклатура+характеристика+тип)
+     * @param opts
+     * @return {Promise<void>}
+     */
+    optimize_fragment(cutting, rows, onStep) {
+
+      return new Promise((resolve, reject) => {
+
+        const doc = this;
+        const workpieces = [];
+        const cut_row = rows[0];
+        if(cut_row) {
+          this.cuts.find_rows({
+            record_kind: debit_credit_kinds.credit,
+            nom: cut_row.nom,
+            characteristic: cut_row.characteristic,
+          }, (row) => {
+            workpieces.push(row);
+          });
+        }
+
+        const config = {
+          iterations: 3000,
+          size: 200,
+          crossover: 0.2,
+          mutation: 0.3,
+          random: 0.1,
+          skip: 60,
+          webWorkers: true,
+        };
+        const userData = {
+          products: rows.map((row) => row.len),
+          workpieces: workpieces.map((row) => row.len),
+          knifewidth: 6,
+          overmeasure: 0,
+          sticklength: cut_row.nom.len || 6000,
+          wrongsnipmin: 0,
+          wrongsnipmax: 0,
+          usefulscrap: 600,
+        };
+        cutting.genetic.notification = function(pop, generation, stats, isFinished) {
+
+          if(!generation) {
+            return;
+          }
+
+          // текущий результат
+          const decision = Object.assign({
+            cut_row,
+            userData,
+            cuts: workpieces,
+            progress: generation / this.configuration.iterations
+          }, this.fitness(pop[0].entity, true));
+
+          // обновляем интерфейс
+          onStep(decision);
+
+          if(isFinished) {
+            // обновляем документ
+            doc.push_cut_result(decision);
+            resolve();
+          }
+
+        };
+
+        cutting.evolve(config, userData);
+
+      });
+    },
+
+    /**
+     * помещает результат раскроя в документ
+     */
+    push_cut_result(decision) {
+      // сначала добавляем заготовки
+      for(let i = 0; i < decision.workpieces.length; i++) {
+        if(!decision.cuts[i]) {
+          decision.cuts.push(this.cuts.add({
+            record_kind: debit_credit_kinds.credit,
+            nom: decision.cut_row.nom,
+            characteristic: decision.cut_row.characteristic,
+            len: decision.userData.sticklength,
+            quantity: 1,
+          }));
+        }
+        if(!decision.workpieces[i] > decision.userData.usefulscrap) {
+          this.cuts.add({
+            record_kind: debit_credit_kinds.debit,
+            nom: decision.cut_row.nom,
+            characteristic: decision.cut_row.characteristic,
+            len: decision.workpieces[i],
+            quantity: 1,
+          });
+        }
+      }
+
     }
 
   });
