@@ -8,7 +8,6 @@
 
 import PropTypes from 'prop-types';
 import AbstractProgress from './AbstractProgress';
-import LinearProgress from '@material-ui/core/LinearProgress';
 
 class Progress extends AbstractProgress {
 

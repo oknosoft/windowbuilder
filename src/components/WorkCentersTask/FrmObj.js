@@ -41,6 +41,10 @@ const schemas = {
   cuts_out: '8fca797a-4e1c-4f8b-b0aa-1965b5e5e7db',
 };
 
+function Space({classes, children}) {
+  return [<div key="space" className={classes.fullFlex} />, ...children];
+}
+
 class FrmObj extends DataObj {
 
   constructor(props, context) {
@@ -138,7 +142,7 @@ class FrmObj extends DataObj {
     const {
       props: {_mgr, classes, height},
       state: {_obj, _meta, index, schemas_ready, run, statuses},
-      context, _handlers} = this;
+      _handlers} = this;
     const toolbar_props = Object.assign({
       posted: _obj && _obj.posted,
       deleted: _obj && _obj.deleted,
@@ -159,11 +163,12 @@ class FrmObj extends DataObj {
           <Tab label="Обрезь вход"/>
           <Tab label="Раскрой"/>
           <Tab label="Обрезь выход"/>
-          <div style={{flex: 1}}/>
-          <MenuPrint _obj={_obj}/>
-          <IconButton title="Закрыть форму" onClick={_handlers.handleClose}>
-            <IconClose/>
-          </IconButton>
+          <Space classes={classes}>
+            <MenuPrint key="fprint" _obj={_obj}/>
+            <IconButton key="fclose" title="Закрыть форму" onClick={_handlers.handleClose}>
+              <IconClose/>
+            </IconButton>
+          </Space>
         </Tabs>,
 
         index === 0 && <DataObjToolbar key="toolbar" {...toolbar_props} />,
@@ -231,7 +236,7 @@ class FrmObj extends DataObj {
           denyReorder
         />,
 
-        run && <ProgressDialog statuses={statuses} />,
+        run && <ProgressDialog key="statuses" statuses={statuses} />,
 
       ]
       :

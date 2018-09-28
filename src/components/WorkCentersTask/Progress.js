@@ -8,7 +8,6 @@
 
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import LinearProgress from '@material-ui/core/LinearProgress';
 
@@ -32,7 +31,7 @@ class Progress extends Component {
 
 
     return <div className={classes.bottom}>
-      <ListItemText primary={nom.name}/>
+      <ListItemText primary={`${nom.name}${characteristic.empty() ? '' : ' ' + characteristic.name}`}/>
       <LinearProgress color="secondary" variant="buffer" value={completed} valueBuffer={buffer}/>
       <ListItemText
         secondary={`${(products_len / 1000).toFixed(1)}м, ${rows.length}шт, Заготовок: ${
@@ -45,6 +44,7 @@ class Progress extends Component {
 
 Progress.propTypes = {
   status: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 export default withStyles(styles)(Progress);
