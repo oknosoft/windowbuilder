@@ -15,6 +15,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import IconButton from '@material-ui/core/IconButton';
 import IconEvent from '@material-ui/icons/Event';
 import IconRotate from '@material-ui/icons/RotateRight';
+import IconClose from '@material-ui/icons/Close';
 
 import DataObj from 'metadata-react/FrmObj/DataObj';
 import LoadingMessage from 'metadata-react/DumbLoader/LoadingMessage';
@@ -27,6 +28,7 @@ import {withIface} from 'metadata-redux';
 import SelectOrder from '../RepMaterialsDemand/SelectOrder';
 
 import MenuFillCutting from './MenuFillCutting';
+import MenuPrint from './MenuPrint';
 import ProgressDialog from './ProgressDialog';
 
 const htitle = 'Задание на производство';
@@ -138,7 +140,6 @@ class FrmObj extends DataObj {
       state: {_obj, _meta, index, schemas_ready, run, statuses},
       context, _handlers} = this;
     const toolbar_props = Object.assign({
-      closeButton: !context.dnr,
       posted: _obj && _obj.posted,
       deleted: _obj && _obj.deleted,
       postable: !!(_meta.posted || _mgr.metadata('posted')),
@@ -152,12 +153,17 @@ class FrmObj extends DataObj {
         </Helmet>,
 
         <Tabs key="tabs" value={index} onChange={(event, index) => this.setState({index})}>
-          <Tab label="Реквизиты"/>
-          <Tab label="Планирование"/>
+          <Tab label="Шапка"/>
+          <Tab label="План"/>
           <Tab label="Материалы"/>
           <Tab label="Обрезь вход"/>
           <Tab label="Раскрой"/>
           <Tab label="Обрезь выход"/>
+          <div style={{flex: 1}}/>
+          <MenuPrint _obj={_obj}/>
+          <IconButton title="Закрыть форму" onClick={_handlers.handleClose}>
+            <IconClose/>
+          </IconButton>
         </Tabs>,
 
         index === 0 && <DataObjToolbar key="toolbar" {...toolbar_props} />,

@@ -26,16 +26,17 @@ const styles = (theme) => ({
 class Progress extends Component {
 
   render() {
-    const {status: {nom, characteristic, progress, rows, cuts, products_len, workpieces_len, scraps_percent}, classes} = this.props;
+    const {status: {nom, characteristic, progress, rows, workpieces, products_len, workpieces_len, scraps_percent}, classes} = this.props;
     const completed = progress * 100;
     const buffer = completed + Math.random() * 6;
+
 
     return <div className={classes.bottom}>
       <ListItemText primary={nom.name}/>
       <LinearProgress color="secondary" variant="buffer" value={completed} valueBuffer={buffer}/>
       <ListItemText
         secondary={`${(products_len / 1000).toFixed(1)}м, ${rows.length}шт, Заготовок: ${
-          (workpieces_len / 1000).toFixed(1)}м, ${cuts.length}шт, Обрезь: ${scraps_percent.toFixed(0)}%`}
+          (workpieces_len / 1000).toFixed(1)}м, ${workpieces.length}шт, Обрезь: ${scraps_percent.toFixed(0)}%`}
         className={classes.noPadding}
       />
     </div>;
