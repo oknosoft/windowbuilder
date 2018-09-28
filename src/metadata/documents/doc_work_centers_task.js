@@ -4,7 +4,7 @@
  * @module work_centers_task
  */
 
-import FrmObj from '../../components/WorkCentersTask/FrmObj';
+import FrmObj from '../../components/WorkCentersTask';
 
 export default function ({
                            DocWork_centers_task,
@@ -198,6 +198,7 @@ export default function ({
         const workpieces = [];
         const cut_row = rows[0];
         if(cut_row) {
+          // ищем запись в расходе - её туда могли положить руками, либо подтянулось из остатков
           this.cuts.find_rows({
             record_kind: debit_credit_kinds.credit,
             nom: cut_row.nom,
@@ -269,7 +270,7 @@ export default function ({
             nom: decision.cut_row.nom,
             characteristic: decision.cut_row.characteristic,
             len: decision.userData.sticklength,
-            quantity: 1,
+            quantity: decision.userData.sticklength / 1000,
           }));
         }
         if(decision.workpieces[i] > decision.userData.usefulscrap) {
@@ -278,7 +279,8 @@ export default function ({
             nom: decision.cut_row.nom,
             characteristic: decision.cut_row.characteristic,
             len: decision.workpieces[i],
-            quantity: 1,
+            quantity: decision.workpieces[i] / 1000,
+            stick: decision.cuts[decision.cuts.length - 1].stick,
           });
         }
       }
