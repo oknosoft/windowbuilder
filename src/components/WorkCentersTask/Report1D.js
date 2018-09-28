@@ -13,7 +13,7 @@ export default function Report1D(props) {
 
 // рисует шапку
 function Head(props) {
-  return <Typography variant="display1">Head</Typography>
+  return <Typography variant="display1">Head</Typography>;
 }
 
 // рисует таблицу по номенклатуре
