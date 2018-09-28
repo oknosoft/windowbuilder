@@ -6,16 +6,6 @@ import IconWork from '@material-ui/icons/Work';
 //import Dialog from 'metadata-react/DnR/Dialog';
 import Dialog from 'metadata-react/App/Dialog';
 import DataList from 'metadata-react/DataList';
-import AutoSizer from 'react-virtualized/dist/es/AutoSizer';
-
-import withStyles from '@material-ui/core/styles/withStyles';
-
-const styles = theme => ({
-  large: {
-    minWidth: 960,
-    maxHeight: 'calc(100vh - 80px)',
-  },
-});
 
 class SelectOrder extends Component {
 
@@ -57,8 +47,8 @@ class SelectOrder extends Component {
         {state.open && <Dialog
           open
           noSpace
+          large
           //initFullScreen
-          classes={{paper: props.classes.large}}
           title="Заполнить по заказу"
           onClose={this.handleRequestClose}
         >
@@ -78,4 +68,4 @@ class SelectOrder extends Component {
   }
 }
 
-export default withStyles(styles)(SelectOrder);
+export default SelectOrder;

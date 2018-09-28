@@ -176,12 +176,12 @@ export default function ({
           });
 
           let queue = Promise.resolve();
-          fragments.forEach((characteristics, nom) => {
+          fragments.forEach((characteristics) => {
             for(const [characteristic, rows] of characteristics) {
-
               queue = queue.then(() => this.optimize_fragment(new Cutting('1D'), rows, opts.onStep));
             }
           });
+          return queue;
         });
     },
 
@@ -237,7 +237,8 @@ export default function ({
             cut_row,
             userData,
             cuts: workpieces,
-            progress: generation / this.configuration.iterations
+            rows,
+            progress: isFinished ? 1 : generation / this.configuration.iterations
           }, this.fitness(pop[0].entity, true));
 
           // обновляем интерфейс
@@ -271,7 +272,7 @@ export default function ({
             quantity: 1,
           }));
         }
-        if(!decision.workpieces[i] > decision.userData.usefulscrap) {
+        if(decision.workpieces[i] > decision.userData.usefulscrap) {
           this.cuts.add({
             record_kind: debit_credit_kinds.debit,
             nom: decision.cut_row.nom,
@@ -280,6 +281,11 @@ export default function ({
             quantity: 1,
           });
         }
+      }
+
+      // проставляем номера палок в раскрое
+      for(let i = 0; i < decision.res.length; i++) {
+        decision.rows[i].stick = decision.cuts[decision.res[i]].stick;
       }
 
     }

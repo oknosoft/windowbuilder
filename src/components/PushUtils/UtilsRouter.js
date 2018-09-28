@@ -80,12 +80,12 @@ class UtilsRouter extends Component {
 
   render() {
 
-    const {handleCancel, props: {classes}, state: {title}} = this;
+    const {handleCancel, state: {title}} = this;
 
     return <Dialog
       open
       initFullScreen
-      classes={{paper: classes.paper}}
+      large
       title={title}
       onClose={handleCancel}
       actions={[
@@ -99,7 +99,6 @@ class UtilsRouter extends Component {
 }
 
 UtilsRouter.propTypes = {
-  classes: PropTypes.object.isRequired,
   dialog: PropTypes.object.isRequired,
   handlers: PropTypes.object.isRequired,
   handleCalck: PropTypes.func.isRequired,

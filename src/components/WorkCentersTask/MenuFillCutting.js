@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -73,5 +74,10 @@ class MenuFillCutting extends React.Component {
     );
   }
 }
+
+MenuFillCutting.propTypes = {
+  handleFillCutting: PropTypes.func.isRequired,
+};
+
 
 export default MenuFillCutting;

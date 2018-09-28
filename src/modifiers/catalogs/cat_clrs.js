@@ -300,6 +300,7 @@ $p.cat.clrs.__define({
 				})
     },
     configurable: true,
+    writable: true,
 	},
 
 	/**

@@ -28,12 +28,12 @@ class CalcOrderAdditions extends Component {
   render() {
 
     const {handleCancel, handleCalck, handleOk, props} = this;
-    const {classes, dialog} = props;
+    const {dialog} = props;
 
     return <Dialog
       open
       initFullScreen
-      classes={{paper: classes.paper}}
+      large
       title="Аксессуары и услуги"
       onClose={handleCancel}
       actions={[
@@ -49,7 +49,6 @@ class CalcOrderAdditions extends Component {
 }
 
 CalcOrderAdditions.propTypes = {
-  classes: PropTypes.object.isRequired,
   dialog: PropTypes.object.isRequired,
   handlers: PropTypes.object.isRequired,
   handleCalck: PropTypes.func.isRequired,

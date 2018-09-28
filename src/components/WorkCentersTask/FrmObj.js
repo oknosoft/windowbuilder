@@ -13,6 +13,8 @@ import Tab from '@material-ui/core/Tab';
 import Helmet from 'react-helmet';
 import FormGroup from '@material-ui/core/FormGroup';
 import IconButton from '@material-ui/core/IconButton';
+import IconEvent from '@material-ui/icons/Event';
+import IconRotate from '@material-ui/icons/RotateRight';
 
 import DataObj from 'metadata-react/FrmObj/DataObj';
 import LoadingMessage from 'metadata-react/DumbLoader/LoadingMessage';
@@ -23,11 +25,9 @@ import TabularSection from 'metadata-react/TabularSection';
 import withStyles from 'metadata-react/styles/paper600';
 import {withIface} from 'metadata-redux';
 import SelectOrder from '../RepMaterialsDemand/SelectOrder';
+
 import MenuFillCutting from './MenuFillCutting';
-
-import IconEvent from '@material-ui/icons/Event';
-import IconRotate from '@material-ui/icons/RotateRight';
-
+import ProgressDialog from './ProgressDialog';
 
 const htitle = 'Задание на производство';
 const description = 'Раскрой, потребность в материалах, файлы для станков';
@@ -45,6 +45,8 @@ class FrmObj extends DataObj {
     super(props, context);
     this.state.index = 0;
     this.state.schemas_ready = typeof schemas.planning === 'object';
+    this.state.statuses = [];
+    this.state.run = false;
   }
 
   componentDidMount() {
@@ -84,17 +86,31 @@ class FrmObj extends DataObj {
       .then(() => this.forceUpdate());
   };
 
-  handleOptimize = (opts) => {
+  handleOptimize = (opts = {}) => {
     const {_obj} = this.state;
-    _obj && _obj.optimize({
-      onStep: this.handleOnStep,
-    })
-      .then(() => this.forceUpdate());
+    opts.onStep = this.handleOnStep;
+    this.setState({statuses: [], run: true});
+    _obj && _obj.optimize(opts)
+      .then(() => this.setState({run: false}));
   };
 
   // вызывается из раскроя
   handleOnStep = (status) => {
+    const {nom, characteristic} = status.cut_row;
+    const statuses = this.state.statuses._clone();
+    let row;
+    if(!statuses.some((elm) => {
+      if(elm.nom === nom && elm.characteristic === characteristic) {
+        row = elm;
+        return true;
+      }
+    })) {
+      row = {nom, characteristic};
+      statuses.push(row);
+    }
+    Object.assign(row, status);
 
+    this.setState({statuses});
   };
 
 
@@ -118,8 +134,8 @@ class FrmObj extends DataObj {
 
   render() {
     const {
-      props: {_mgr, classes, handleIfaceState, height},
-      state: {_obj, _meta, index, schemas_ready},
+      props: {_mgr, classes, height},
+      state: {_obj, _meta, index, schemas_ready, run, statuses},
       context, _handlers} = this;
     const toolbar_props = Object.assign({
       closeButton: !context.dnr,
@@ -208,6 +224,8 @@ class FrmObj extends DataObj {
           scheme={schemas.cuts_out}
           denyReorder
         />,
+
+        run && <ProgressDialog statuses={statuses} />,
 
       ]
       :

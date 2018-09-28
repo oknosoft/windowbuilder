@@ -79,12 +79,12 @@ class ClientOfDealer extends Component {
 
   render() {
 
-    const {handleCancel, handleOk, meta, props: {classes}} = this;
+    const {handleCancel, handleOk, meta} = this;
 
     return <Dialog
       open
       initFullScreen
-      classes={{paper: classes.paper}}
+      large
       title="Реквизиты клиента"
       onClose={handleCancel}
       actions={[
@@ -99,7 +99,6 @@ class ClientOfDealer extends Component {
 }
 
 ClientOfDealer.propTypes = {
-  classes: PropTypes.object.isRequired,
   dialog: PropTypes.object.isRequired,
   handlers: PropTypes.object.isRequired,
   handleCalck: PropTypes.func.isRequired,

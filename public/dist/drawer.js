@@ -11520,9 +11520,22 @@ $p.spec_building = new SpecBuilding($p);
 
 
 
-(function($p){
+(function({enm}){
 
-	$p.enm.open_types.__define({
+  enm.debit_credit_kinds.__define({
+    debit: {
+      get() {
+        return this.Приход;
+      }
+    },
+    credit: {
+      get() {
+        return this.Расход;
+      }
+    },
+  });
+
+	enm.open_types.__define({
 
     is_opening: {
       value(v) {
@@ -11535,7 +11548,7 @@ $p.spec_building = new SpecBuilding($p);
 
   });
 
-	$p.enm.orientations.__define({
+	enm.orientations.__define({
 
 		hor: {
 			get() {
@@ -11556,7 +11569,7 @@ $p.spec_building = new SpecBuilding($p);
 		}
 	});
 
-	$p.enm.positions.__define({
+	enm.positions.__define({
 
 		left: {
 			get() {
@@ -12306,6 +12319,7 @@ $p.cat.clrs.__define({
 				})
     },
     configurable: true,
+    writable: true,
 	},
 
 	sync_grid: {

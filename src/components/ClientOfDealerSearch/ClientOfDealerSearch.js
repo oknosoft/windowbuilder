@@ -52,7 +52,7 @@ class ClientOfDealerSearch extends Component {
     return <Dialog
       open
       initFullScreen
-      classes={{paper: classes.paper}}
+      large
       title={<Input
         value={this.state.search}
         onChange={this.handleChange}
