@@ -25,8 +25,8 @@ import TabularSection from 'metadata-react/TabularSection';
 
 import withStyles from 'metadata-react/styles/paper600';
 import {withIface} from 'metadata-redux';
-import SelectOrder from '../RepMaterialsDemand/SelectOrder';
 
+import SelectOrder from '../RepMaterialsDemand/SelectOrder';
 import MenuFillCutting from './MenuFillCutting';
 import MenuPrint from './MenuPrint';
 import ProgressDialog from './ProgressDialog';
@@ -84,6 +84,13 @@ class FrmObj extends DataObj {
     const {_obj} = this.state;
     _obj && _obj.fill_by_orders([row])
       .then(() => this.forceUpdate());
+  };
+
+  handlePlan = () => {
+    this.props.handleIfaceState({
+      component: '',
+      name: 'alert',
+      value: {open: true, title: 'Заполнить по плану', text: 'Сервис планирования не подключен'}});
   };
 
   handleFillCutting = (opts) => {
@@ -187,7 +194,7 @@ class FrmObj extends DataObj {
           btns={[
             <IconButton key="a_sep1" disabled>|</IconButton>,
             <SelectOrder key="a_ord" handleSelect={this.handleOrder}/>,
-            <IconButton key="a_plan" title="Заполнить по плану" onClick={this.handleOrder}>
+            <IconButton key="a_plan" title="Заполнить по плану" onClick={this.handlePlan}>
               <IconEvent/>
             </IconButton>
           ]}

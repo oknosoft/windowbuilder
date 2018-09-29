@@ -91,7 +91,15 @@ export default function ({
       this.planning.forEach(({obj}) => {
         obj.is_new() && refs.indexOf(obj.ref) === -1 && refs.push(obj.ref);
       });
-      return characteristics.adapter.load_array(characteristics, refs);
+      return characteristics.adapter.load_array(characteristics, refs)
+        .then(() => {
+          refs.length = 0;
+          this.planning.forEach(({obj}) => {
+            const {calc_order} = obj;
+            calc_order.is_new() && refs.indexOf(calc_order.ref) === -1 && refs.push(calc_order.ref);
+          });
+          return calc_order.adapter.load_array(calc_order, refs)
+        });
     },
 
     /**

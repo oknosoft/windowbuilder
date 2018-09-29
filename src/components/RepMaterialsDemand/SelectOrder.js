@@ -41,7 +41,7 @@ class SelectOrder extends Component {
 
     return (
       <div>
-        <IconButton title="Заполнить по заказу" onClick={this.handleTouchTap}>
+        <IconButton title="Добавить из заказа" onClick={this.handleTouchTap}>
           <IconWork/>
         </IconButton>
         {state.open && <Dialog
@@ -49,7 +49,7 @@ class SelectOrder extends Component {
           noSpace
           large
           //initFullScreen
-          title="Заполнить по заказу"
+          title="Добавить из заказа"
           onClose={this.handleRequestClose}
         >
           <DataList

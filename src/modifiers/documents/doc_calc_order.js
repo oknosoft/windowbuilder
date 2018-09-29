@@ -196,14 +196,14 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   // при изменении реквизита
   value_change(field, type, value) {
-    if(field == 'organization') {
+    if(field === 'organization') {
       this.organization = value;
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
         this.new_number_doc();
       }
     }
-    else if(field == 'partner' && this.contract.owner != value) {
+    else if(field === 'partner' && this.contract.owner != value) {
       this.contract = $p.cat.contracts.by_partner_and_org(value, this.organization);
     }
     // если изменение инициировано человеком, дополним список изменённых полей

@@ -1,9 +1,3 @@
-import Lazy from 'metadata-react/DumbLoader/Lazy';
+import UtilsRouter from './UtilsRouter';
 
-export default class UtilsRouter extends Lazy {
-
-  componentDidMount() {
-    import('./UtilsRouter')
-      .then((module) => this.setState({Component: module.default}));
-  }
-}
+export default UtilsRouter;
