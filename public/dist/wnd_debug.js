@@ -2936,7 +2936,7 @@ class Pricing {
             }
             else if(change.doc.class_name == calc_order.class_name){
               if(pouch.props.user_node) {
-               return calc_order.emit('change', change);
+               return calc_order.emit('change', change.doc);
               }
               const doc = calc_order.by_ref[change.id.substr(15)];
               const user = pouch.authorized || wsql.get_user_param('user_name');
