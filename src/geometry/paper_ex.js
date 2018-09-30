@@ -517,27 +517,29 @@ Object.defineProperties(paper.Point.prototype, {
 	 * @return {{x: number, y: number}}
 	 */
 	arc_point: {
-		value(x1,y1, x2,y2, r, arc_ccw, more_180){
+    value(x1, y1, x2, y2, r, arc_ccw, more_180) {
       const point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
-			if (r>0){
-				let dx = x1-x2, dy = y1-y2, dr = r*r-(dx*dx+dy*dy)/4, l, h, centr;
-				if(dr >= 0){
-          centr = this.arc_cntr(x1,y1, x2,y2, r, arc_ccw);
-					dx = point.x - centr.x;
-					dy = point.y - centr.y;	// т.к. Y перевернут
-					l = Math.sqrt(dx*dx + dy*dy);
+      if(r > 0) {
+        let dx = x1 - x2, dy = y1 - y2, dr = r * r - (dx * dx + dy * dy) / 4, l, h;
+        if(dr >= 0) {
+          const centr = this.arc_cntr(x1, y1, x2, y2, r, arc_ccw);
+          dx = point.x - centr.x;
+          dy = point.y - centr.y;	// т.к. Y перевернут
+          l = Math.sqrt(dx * dx + dy * dy);
 
-					if(more_180)
-						h = r+Math.sqrt(dr);
-					else
-						h = r-Math.sqrt(dr);
+          if(more_180) {
+            h = r + Math.sqrt(dr);
+          }
+          else {
+            h = r - Math.sqrt(dr);
+          }
 
-					point.x += dx*h/l;
-          point.y += dy*h/l;
-				}
-			}
-			return point;
-		}
+          point.x += dx * h / l;
+          point.y += dy * h / l;
+        }
+      }
+      return point;
+    }
 	},
 
   /**
