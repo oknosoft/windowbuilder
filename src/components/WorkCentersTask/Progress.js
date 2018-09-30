@@ -25,7 +25,10 @@ const styles = (theme) => ({
 class Progress extends Component {
 
   render() {
-    const {status: {nom, characteristic, progress, rows, workpieces, products_len, workpieces_len, scraps_percent}, classes} = this.props;
+    const {
+      status: {nom, characteristic, progress, rows, workpieces, products_len, workpieces_len, scraps_percent, scraps_len, userData: {usefulscrap}},
+      classes,
+    } = this.props;
     const completed = progress * 100;
     const buffer = completed + Math.random() * 6;
 
@@ -35,7 +38,9 @@ class Progress extends Component {
       <LinearProgress color="secondary" variant="buffer" value={completed} valueBuffer={buffer}/>
       <ListItemText
         secondary={`${(products_len / 1000).toFixed(1)}м, ${rows.length}шт, Заготовок: ${
-          (workpieces_len / 1000).toFixed(1)}м, ${workpieces.length}шт, Обрезь: ${scraps_percent.toFixed(0)}%`}
+          (workpieces_len / 1000).toFixed(1)}м, ${workpieces.length}шт, Обрезь: ${
+          (scraps_len / 1000).toFixed(1)}м, ${workpieces.reduce((sum, val) => val > usefulscrap ? sum + 1 : sum, 0)}шт, Отходы: ${
+          ((workpieces_len - products_len - scraps_len) / 1000).toFixed(1)}м, ${scraps_percent.toFixed(1)}%`}
         className={classes.noPadding}
       />
     </div>;

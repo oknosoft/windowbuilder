@@ -43,7 +43,7 @@ class ProgressDialog extends Component {
 }
 
 ProgressDialog.propTypes = {
-  statuses: PropTypes.object.isRequired,
+  statuses: PropTypes.array.isRequired,
 };
 
 export default ProgressDialog;
