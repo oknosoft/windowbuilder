@@ -34,6 +34,34 @@ class SelectOrder extends Component {
     this.props.handleSelect(row, _mgr);
   };
 
+  find_rows = (selector) => {
+    const {remote, props} = $p.adapters.pouch;
+    const {username, password} = remote.doc.__opts.auth;
+
+    const headers = new Headers();
+    headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(username + ':' + password))));
+    headers.append('suffix', props._suffix || '0');
+    const url = location.host.includes('localhost') ? 'http://localhost:3030/r/_find' : '/r/_find';
+    const opts = {
+      method: 'post',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify(selector)
+    }
+    if(location.host.includes('localhost')) {
+      opts.mode = 'cors';
+    }
+
+    return fetch(url, opts)
+      .then((res) => res.json())
+      .then((data) => {
+        return data.docs.map((doc) => {
+          doc.ref = doc._id.split('|')[1];
+          delete doc._id;
+          return doc;
+        });
+      });
+  };
 
   render() {
 
@@ -57,6 +85,7 @@ class SelectOrder extends Component {
             _mgr={$p.doc.calc_order}
             _acl={props._acl}
             handlers={{handleSelect}}
+            find_rows={this.find_rows}
             selectionMode
             denyAddDel
             //show_variants

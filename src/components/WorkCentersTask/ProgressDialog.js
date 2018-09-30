@@ -42,4 +42,8 @@ class ProgressDialog extends Component {
   }
 }
 
+ProgressDialog.propTypes = {
+  statuses: PropTypes.object.isRequired,
+};
+
 export default ProgressDialog;

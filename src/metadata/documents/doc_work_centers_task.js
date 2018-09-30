@@ -98,7 +98,7 @@ export default function ({
             const {calc_order} = obj;
             calc_order.is_new() && refs.indexOf(calc_order.ref) === -1 && refs.push(calc_order.ref);
           });
-          return calc_order.adapter.load_array(calc_order, refs)
+          return calc_order.adapter.load_array(calc_order, refs);
         });
     },
 

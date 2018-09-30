@@ -638,8 +638,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       // выполняем запрос к сервису
       .then(() => {
         const headers = new Headers();
-        headers.append('Accept', 'application/json');
-        headers.append('Content-Type', 'application/json');
         headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
           wsql.get_user_param('user_name') + ':' + aes.Ctr.decrypt(wsql.get_user_param('user_pwd'))))));
         if(suffix){
