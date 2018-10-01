@@ -29,9 +29,9 @@ export default function ({
     },
 
     // значения по умолчанию при добавлении строки
-    add_row(row) {
+    add_row(row, attr) {
       if(row instanceof DocWork_centers_taskCutsRow) {
-        if(!row.stick) {
+        if(!row.stick && (!attr || !attr.stick)) {
           const {_obj} = row._owner;
           row._obj.stick = 1 + (_obj.length ? Math.max.apply(null, _obj.map(({stick}) => stick)) : 0);
         }
@@ -163,6 +163,25 @@ export default function ({
     },
 
     /**
+     * Возвращает свёрнутую структуру номенклатур и характеристик раскроя
+     */
+    fragments() {
+      const res = new Map();
+      this.cutting.forEach((row) => {
+        if(!res.has(row.nom)) {
+          res.set(row.nom, new Map());
+        }
+        const nom = res.get(row.nom);
+        if(!nom.has(row.characteristic)) {
+          nom.set(row.characteristic, []);
+        }
+        const characteristic = nom.get(row.characteristic);
+        characteristic.push(row);
+      });
+      return res;
+    },
+
+    /**
      * Выполняет оптимизацию раскроя
      * @param opts
      * @return {Promise<void>}
@@ -170,18 +189,7 @@ export default function ({
     optimize(opts) {
       return import('genetic-cutting')
         .then((Cutting) => {
-          const fragments = new Map();
-          this.cutting.forEach((row) => {
-            if(!fragments.has(row.nom)) {
-              fragments.set(row.nom, new Map());
-            }
-            const nom = fragments.get(row.nom);
-            if(!nom.has(row.characteristic)) {
-              nom.set(row.characteristic, []);
-            }
-            const characteristic = nom.get(row.characteristic);
-            characteristic.push(row);
-          });
+          const fragments = this.fragments();
 
           let queue = Promise.resolve();
           fragments.forEach((characteristics) => {
@@ -228,12 +236,12 @@ export default function ({
         const userData = {
           products: rows.map((row) => row.len),
           workpieces: workpieces.map((row) => row.len),
-          knifewidth: 6,
           overmeasure: 0,
-          sticklength: cut_row.nom.len || 6000,
           wrongsnipmin: 0,
           wrongsnipmax: 0,
-          usefulscrap: 600,
+          sticklength: cut_row.nom.len || 6000,
+          knifewidth: cut_row.nom.knifewidth || 7,
+          usefulscrap: cut_row.nom.usefulscrap || 600,
         };
         cutting.genetic.notification = function(pop, generation, stats, isFinished) {
 
@@ -272,14 +280,16 @@ export default function ({
     push_cut_result(decision) {
       // сначала добавляем заготовки
       for(let i = 0; i < decision.workpieces.length; i++) {
-        if(!decision.cuts[i]) {
-          decision.cuts.push(this.cuts.add({
+        let workpiece = decision.cuts[i];
+        if(!workpiece) {
+          workpiece = this.cuts.add({
             record_kind: debit_credit_kinds.credit,
             nom: decision.cut_row.nom,
             characteristic: decision.cut_row.characteristic,
             len: decision.userData.sticklength,
             quantity: decision.userData.sticklength / 1000,
-          }));
+          });
+          decision.cuts.push(workpiece);
         }
         if(decision.workpieces[i] > decision.userData.usefulscrap) {
           this.cuts.add({
@@ -288,7 +298,7 @@ export default function ({
             characteristic: decision.cut_row.characteristic,
             len: decision.workpieces[i],
             quantity: decision.workpieces[i] / 1000,
-            stick: decision.cuts[decision.cuts.length - 1].stick,
+            stick: workpiece.stick,
           });
         }
       }

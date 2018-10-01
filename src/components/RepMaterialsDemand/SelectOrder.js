@@ -47,7 +47,7 @@ class SelectOrder extends Component {
       credentials: 'include',
       headers,
       body: JSON.stringify(selector)
-    }
+    };
     if(location.host.includes('localhost')) {
       opts.mode = 'cors';
     }

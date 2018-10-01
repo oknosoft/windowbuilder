@@ -24,6 +24,15 @@ const styles = theme => ({
   row: {
     height: 'inherit',
   },
+  nom: {
+    marginTop: theme.spacing.unit * 2,
+  },
+  data: {
+    marginBottom: theme.spacing.unit * 2,
+  },
+  canvas: {
+    width: "100%",
+  }
 });
 
 export default withStyles(styles);
