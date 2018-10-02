@@ -902,8 +902,9 @@ class Scheme extends paper.Project {
       this.clear();
 
       // переприсваиваем номенклатуру, цвет и размеры
-      ox._mixin(is_snapshot ? obx :
-        obx._obj, null, ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'base_block', 'note', 'partner'], true);
+      const src = Object.assign({_not_set_loaded: true}, is_snapshot ? obx : obx._obj);
+      ox._mixin(src, null,
+        'ref,name,calc_order,product,leading_product,leading_elm,origin,base_block,note,partner,_not_set_loaded,_rev'.split(','), true);
 
       // сохраняем ссылку на типовой блок
       if(!is_snapshot) {

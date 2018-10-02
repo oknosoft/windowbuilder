@@ -11419,8 +11419,9 @@ class Scheme extends paper.Project {
 
       this.clear();
 
-      ox._mixin(is_snapshot ? obx :
-        obx._obj, null, ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'base_block', 'note', 'partner'], true);
+      const src = Object.assign({_not_set_loaded: true}, is_snapshot ? obx : obx._obj);
+      ox._mixin(src, null,
+        'ref,name,calc_order,product,leading_product,leading_elm,origin,base_block,note,partner,_not_set_loaded,_rev'.split(','), true);
 
       if(!is_snapshot) {
         ox.base_block = (obx.base_block.empty() || obx.base_block.calc_order.obj_delivery_state === $p.enm.obj_delivery_states.Шаблон) ? obx : obx.base_block;
