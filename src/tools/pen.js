@@ -239,6 +239,9 @@ class ToolPen extends ToolElement {
     const {project, profile} = this;
     this.sys = project._dp.sys;
 
+    profile.elm_type_change = this.elm_type_change.bind(this);
+    profile._manager.on('update', profile.elm_type_change);
+
     // восстанавливаем сохранённые параметры
     $p.wsql.restore_options('editor', this.options);
     this.options.wnd.on_close = this.on_close;
@@ -265,6 +268,9 @@ class ToolPen extends ToolElement {
     // цвет по умолчанию
     profile.clr = project.clr;
 
+    // параметры отбора для выбора цвета
+    this.choice_links_clr();
+
     // параметры отбора для выбора вставок
     profile._metadata('inset').choice_links = [{
       name: ['selection', 'ref'],
@@ -284,9 +290,6 @@ class ToolPen extends ToolElement {
           }
         }]
     }];
-
-    // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this.sys);
 
     this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
     this._grid = this.wnd.attachHeadFields({
@@ -1009,6 +1012,81 @@ class ToolPen extends ToolElement {
 
     return true;
   }
+
+  detache_wnd() {
+    const {profile} = this;
+    if (profile) {
+      profile._manager.off('update', profile.elm_type_change);
+      delete profile.elm_type_change;
+    }
+    ToolElement.prototype.detache_wnd.call(this);
+  }
+
+  // возвращает конкатенацию ограничений цвета всех вставок текущего типа
+  elm_type_clrs(profile, sys) {
+    if (!profile._elm_type_clrs) {
+      const {inset} = profile;
+      profile._elm_type_clrs = [];
+
+      let clr_group, elm;
+
+      function add_by_clr(clr) {
+        if (clr instanceof $p.CatClrs) {
+          const {ref} = clr;
+          if (clr.is_folder) {
+            $p.cat.clrs.alatable.forEach((row) => row.parent == ref && profile._elm_type_clrs.push(row.ref));
+          }
+          else {
+            profile._elm_type_clrs.push(ref);
+          }
+        }
+        else if (clr instanceof $p.CatColor_price_groups) {
+          clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1));
+        }
+      }
+
+      // цвет по умолчанию
+      add_by_clr(profile.clr);
+
+      if (inset.clr_group.empty()) {
+        add_by_clr(sys.clr_group);
+      }
+      else {
+        add_by_clr(inset.clr_group);
+      }
+    }
+    if (profile._elm_type_clrs.length && profile._elm_type_clrs.indexOf(profile.clr.ref) == -1) {
+      profile.clr = profile._elm_type_clrs[0];
+    }
+    return profile._elm_type_clrs;
+  }
+
+  // при изменении типа элемента, чистим отбор по цвету
+  elm_type_change(obj, fields) {
+    if (fields.hasOwnProperty('inset') || fields.hasOwnProperty('elm_type')) {
+      const {profile, sys} = this;
+      delete profile._elm_type_clrs;
+      this.elm_type_clrs(profile, sys);
+    }
+  }
+
+  choice_links_clr() {
+
+    const {profile, sys, elm_type_clrs} = this;
+
+    // дополняем свойства поля цвет отбором по служебным цветам
+    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'));
+
+    profile._metadata('clr').choice_params.push({
+      name: 'ref',
+      get path() {
+        const res = elm_type_clrs(profile, sys);
+        return res.length ? {in: res} : {not: ''};
+      },
+    });
+
+  }
+  
 
 
 
