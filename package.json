@@ -24,6 +24,7 @@
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
   "homepage": "http://light.oknosoft.ru/",
+  "proxy": "http://localhost:3030/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
     "dxf-writer": "^1.1.0",

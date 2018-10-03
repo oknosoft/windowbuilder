@@ -38,28 +38,39 @@ class SelectOrder extends Component {
     const {remote, props} = $p.adapters.pouch;
     const {username, password} = remote.doc.__opts.auth;
 
+    selector.sort = [{date: 'desc'}];
+
     const headers = new Headers();
     headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(username + ':' + password))));
     headers.append('suffix', props._suffix || '0');
-    const url = location.host.includes('localhost') ? 'http://localhost:3030/r/_find' : '/r/_find';
     const opts = {
       method: 'post',
       credentials: 'include',
       headers,
       body: JSON.stringify(selector)
     };
-    if(location.host.includes('localhost')) {
-      opts.mode = 'cors';
-    }
+    // if(location.host.includes('localhost')) {
+    //   opts.mode = 'cors';
+    // }
 
-    return fetch(url, opts)
-      .then((res) => res.json())
+    return fetch('/r/_find', opts)
+      .then((res) => {
+        if(res.status <= 201) {
+          return res.json();
+        }
+        else {
+          return res.text()
+            .then((text) => {
+              throw new Error(`${res.statusText}: ${text}`);
+            });
+        }
+      })
       .then((data) => {
-        return data.docs.map((doc) => {
+        data.docs.forEach((doc) => {
           doc.ref = doc._id.split('|')[1];
           delete doc._id;
-          return doc;
         });
+        return data;
       });
   };
 
@@ -84,6 +95,7 @@ class SelectOrder extends Component {
             height={480}
             _mgr={$p.doc.calc_order}
             _acl={props._acl}
+            _ref="f931f450-f42c-4ae5-f7d6-a9553605b4ea"
             handlers={{handleSelect}}
             find_rows={this.find_rows}
             selectionMode
