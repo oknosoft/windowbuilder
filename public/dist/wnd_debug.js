@@ -4125,16 +4125,29 @@ class ProductsBuilding {
           scheme._scope && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
 
         })
-          .then(() => (scheme._scope || attr.close) && setTimeout(() => ox.calc_order._modified && ox.calc_order.save(), 1000))
-          .catch((ox) => {
+          .then(() => {
+            if(scheme._scope || attr.close) {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => ox.calc_order._modified && ox.calc_order.save()
+                  .then(resolve)
+                  .catch(reject), 1000);
+              });
+            }
+          })
+          .catch((err) => {
 
 
-            $p.record_log(ox);
+            $p.record_log(err);
             delete scheme._attr._saving;
+
+            let text = err.message || err;
             if(ox._data && ox._data._err) {
-              $p.msg.show_msg(ox._data._err);
+              text += `\n${ox._data._err}`;
               delete ox._data._err;
             }
+
+            $p.md.emit('alert', {type: 'alert-error', obj: ox, text});
+
           });
       }
       else {
@@ -6488,7 +6501,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             }
 
           })
-          .catch($p.record_log);
+          .catch((err) => {
+            $p.msg.show_msg({
+              type: 'alert-warning',
+              text: err.message || err,
+              title: o.presentation
+            });
+          });
       }
 
       switch (action) {

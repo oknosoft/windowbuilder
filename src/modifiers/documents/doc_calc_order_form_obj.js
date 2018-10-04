@@ -580,7 +580,13 @@
             }
 
           })
-          .catch($p.record_log);
+          .catch((err) => {
+            $p.msg.show_msg({
+              type: 'alert-warning',
+              text: err.message || err,
+              title: o.presentation
+            });
+          });
       }
 
       switch (action) {
