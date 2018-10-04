@@ -153,7 +153,7 @@ class V1D extends paper.Project {
 }
 
 // рисует результат раскроя
-function Visualization({classes, status}) {
+function Visualization({status, classes}) {
   return <canvas className={classes.canvas} ref={(canvas) => {
     if(canvas) {
       const scheme = new V1D(canvas);
@@ -162,6 +162,21 @@ function Visualization({classes, status}) {
     }
   }}/>;
 }
+
+NomTable.propTypes = {
+  _obj: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
+};
+
+Head.propTypes = {
+  _obj: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
+};
+
+Visualization.propTypes = {
+  status: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
+};
 
 
 export default withStyles(Report1D);
