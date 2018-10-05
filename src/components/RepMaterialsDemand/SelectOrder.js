@@ -49,9 +49,6 @@ class SelectOrder extends Component {
       headers,
       body: JSON.stringify(selector)
     };
-    // if(location.host.includes('localhost')) {
-    //   opts.mode = 'cors';
-    // }
 
     return fetch('/r/_find', opts)
       .then((res) => {
@@ -95,7 +92,6 @@ class SelectOrder extends Component {
             height={480}
             _mgr={$p.doc.calc_order}
             _acl={props._acl}
-            _ref="f931f450-f42c-4ae5-f7d6-a9553605b4ea"
             handlers={{handleSelect}}
             find_rows={this.find_rows}
             selectionMode

@@ -14,6 +14,9 @@ import DataList from 'metadata-react/DataList';
 import WindowSizer from 'metadata-react/WindowSize';
 import {withObj} from 'metadata-redux';
 
+import qs from 'qs';
+
+
 class CalcOrderList extends Component {
 
   constructor(props, context) {
@@ -41,9 +44,6 @@ class CalcOrderList extends Component {
       headers,
       body: JSON.stringify(selector)
     };
-    // if(location.host.includes('localhost')) {
-    //   opts.mode = 'cors';
-    // }
 
     return fetch('/r/_find', opts)
       .then((res) => {
@@ -68,7 +68,7 @@ class CalcOrderList extends Component {
 
   render() {
 
-    const {props: {windowHeight, windowWidth, handlers}, state} = this;
+    const {props: {windowHeight, windowWidth, handlers, location}, state} = this;
 
     const sizes = {
       windowHeight,
@@ -77,12 +77,13 @@ class CalcOrderList extends Component {
       width: windowWidth > 800 ? windowWidth - (windowHeight < 480 ? 20 : 0) : 800
     };
 
+    const prm = qs.parse(location.search.replace('?',''));
+
     return (
       <DataList
-        //height={480}
         _mgr={$p.doc.calc_order}
         _acl={'e'}
-        _ref="9b599e9c-d504-4fcf-a00a-a1c5976e9e32"
+        _ref={prm.ref}
         handlers={handlers}
         find_rows={this.find_rows}
         //selectionMode
@@ -96,7 +97,7 @@ class CalcOrderList extends Component {
 }
 
 CalcOrderList.propTypes = {
-  handleSelect: PropTypes.func.isRequired,
+  handlers: PropTypes.object.isRequired,
 };
 
 
