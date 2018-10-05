@@ -1,46 +1,104 @@
-import React from 'react';
-// import PropTypes from 'prop-types';
-import DhtmlxCell from '../DhtmlxCell';
+/**
+ * Форма списка документа Расчет
+ *
+ * @module CalcOrderList
+ *
+ * Created by Evgeniy Malyarov on 05.10.2018.
+ */
+
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+
+import IconButton from '@material-ui/core/IconButton';
+import DataList from 'metadata-react/DataList';
 import WindowSizer from 'metadata-react/WindowSize';
-import {withIface} from 'metadata-redux';
-import {set_state_and_title} from '../App/menu_items';
+import {withObj} from 'metadata-redux';
 
-class CalcOrderList extends DhtmlxCell {
+class CalcOrderList extends Component {
 
-  componentDidMount() {
-
-    let {location, state_filter, handleIfaceState} = this.props;
-    const search = $p.job_prm.parse_url_str(location.search);
-    if (search.state_filter && search.state_filter != state_filter) {
-      state_filter = search.state_filter;
-    }
-    else if (!state_filter) {
-      state_filter = 'draft';
-    }
-    set_state_and_title(state_filter, handleIfaceState);
-
-    super.componentDidMount();
-    const {cell, handlers} = this;
-    $p.doc.calc_order.form_list(cell, null, handlers);
+  constructor(props, context) {
+    super(props, context);
+    //this.state = {open: false};
   }
 
-  componentWillUnmount() {
-    const {cell} = this;
-    cell && cell.close && cell.close();
-    super.componentWillUnmount();
-  }
+  handleSelect = (row, _mgr) => {
+    this.handleRequestClose();
+    this.props.handleSelect(row, _mgr);
+  };
+
+  find_rows = (selector) => {
+    const {remote, props} = $p.adapters.pouch;
+    const {username, password} = remote.doc.__opts.auth;
+
+    selector.sort = [{date: 'desc'}];
+
+    const headers = new Headers();
+    headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(username + ':' + password))));
+    headers.append('suffix', props._suffix || '0');
+    const opts = {
+      method: 'post',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify(selector)
+    };
+    // if(location.host.includes('localhost')) {
+    //   opts.mode = 'cors';
+    // }
+
+    return fetch('/r/_find', opts)
+      .then((res) => {
+        if(res.status <= 201) {
+          return res.json();
+        }
+        else {
+          return res.text()
+            .then((text) => {
+              throw new Error(`${res.statusText}: ${text}`);
+            });
+        }
+      })
+      .then((data) => {
+        data.docs.forEach((doc) => {
+          doc.ref = doc._id.split('|')[1];
+          delete doc._id;
+        });
+        return data;
+      });
+  };
 
   render() {
-    const {dialog} = this.props;
-    const Dialog = dialog && dialog.Component;
-    return [
-      <div key="el" ref={el => this.el = el}/>,
-      Dialog && <Dialog key="dialog" handlers={this.handlers} dialog={dialog} owner={this} />
-    ];
-  }
 
+    const {props: {windowHeight, windowWidth, handlers}, state} = this;
+
+    const sizes = {
+      windowHeight,
+      windowWidth,
+      height: windowHeight > 480 ? windowHeight - 52 : 428,
+      width: windowWidth > 800 ? windowWidth - (windowHeight < 480 ? 20 : 0) : 800
+    };
+
+    return (
+      <DataList
+        //height={480}
+        _mgr={$p.doc.calc_order}
+        _acl={'e'}
+        _ref="9b599e9c-d504-4fcf-a00a-a1c5976e9e32"
+        handlers={handlers}
+        find_rows={this.find_rows}
+        //selectionMode
+        //denyAddDel
+        show_variants
+        show_search
+        {...sizes}
+      />
+    );
+  }
 }
 
-export default WindowSizer(withIface(CalcOrderList));
+CalcOrderList.propTypes = {
+  handleSelect: PropTypes.func.isRequired,
+};
 
+
+export default WindowSizer(withObj(CalcOrderList));
 
