@@ -13,8 +13,8 @@ import IconButton from '@material-ui/core/IconButton';
 import DataList from 'metadata-react/DataList';
 import WindowSizer from 'metadata-react/WindowSize';
 import {withObj} from 'metadata-redux';
-
 import qs from 'qs';
+import Statuses, {statuses} from './Statuses';
 
 
 class CalcOrderList extends Component {
@@ -90,6 +90,7 @@ class CalcOrderList extends Component {
         //denyAddDel
         show_variants
         show_search
+        btns={<Statuses/>}
         {...sizes}
       />
     );
