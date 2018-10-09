@@ -274,7 +274,8 @@ class DimensionLine extends paper.Group {
     children.callout2.visible = !this.hide_c2;
     children.scale.visible = !this.hide_line;
 
-    children.text.content = length.toFixed(0);
+    const digits = parseInt((length - Math.round(length)) * 10, 10) != 0 ? 1 : 0;
+    children.text.content =  length.toFixed(digits);
     children.text.rotation = e.subtract(b).angle;
     children.text.justification = align.ref;
 
