@@ -1468,7 +1468,7 @@ class Editor extends EditorInvisible {
     if(tabular_section == 'inserts'){
       const {project} = this;
       const {obj} = grid.get_cell_field() || {};
-      if(obj && obj._owner._owner == project.ox && obj.inset.ref !== $p.utils.blank.guid){
+      if(obj && obj._owner._owner == project.ox && !obj.inset.empty()){
         project.ox.params.clear({cnstr: obj.cnstr, inset: obj.inset});
         project.register_change();
       }
