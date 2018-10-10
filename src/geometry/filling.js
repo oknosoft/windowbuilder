@@ -278,31 +278,53 @@ class Filling extends AbstractFilling(BuilderElement) {
     this.sendToBack();
 
     const {path, imposts, _attr, is_rectangular} = this;
-    const {elm_font_size} = consts;
-
+    const {elm_font_size, font_family} = consts;
+    
     path.visible = true;
     imposts.forEach((elm) => elm.redraw());
-
+    
     // прочистим пути
     this.purge_paths();
-
+    
     // если текст не создан - добавляем
     if(!_attr._text){
       _attr._text = new paper.PointText({
         parent: this,
         fillColor: 'black',
-        fontFamily: consts.font_family,
+        fontFamily: font_family,
         fontSize: elm_font_size,
         guide: true,
       });
     }
+
+    // Вычисляем ориентацию и размер шрифта
+    const {bounds} = path;
+    const horizontal = bounds.width * 1.5 > bounds.height;
+    const bigSide = horizontal ? bounds.width : bounds.height;
+    const smallSide = !horizontal ? bounds.width : bounds.height;
+    const turn = smallSide < 1000 ? !horizontal : false;
+    let font_size = bigSide < 1000
+      ? Math.round(elm_font_size * bigSide / 1000)
+      : elm_font_size;
+
+    _attr._text.content = this.formula();
     _attr._text.visible = is_rectangular;
+    _attr._text.fontSize = font_size;
+
+    // Корректируем размер шрифта
+    const {bounds: textBounds} = _attr._text;
+    while(font_size < 60 && Math.max(textBounds.width, textBounds.height) + 6 * font_size < bigSide){
+      font_size += 2;
+      _attr._text.fontSize = font_size > 60 ? 60 : font_size;
+    }
 
     if(is_rectangular){
-      const {bounds} = path;
-      _attr._text.content = this.formula();
-      _attr._text.point = bounds.bottomLeft.add([elm_font_size * 0.6, -elm_font_size]);
-      if(_attr._text.bounds.width > (bounds.width - 2 * elm_font_size)){
+      _attr._text.point = turn
+        ? bounds.bottomRight.add([-font_size, -font_size * 0.6])
+        : bounds.bottomLeft.add([font_size * 0.6, -font_size]);
+      _attr._text.rotation = turn ? 270 : 0;
+      // От этого можно избавиться
+      if(textBounds.width > (bigSide - 2 * font_size)){
         const atext = _attr._text.content.split(' ');
         if(atext.length > 1){
           _attr._text.content = '';
@@ -314,7 +336,7 @@ class Filling extends AbstractFilling(BuilderElement) {
               _attr._text.content += ((index === atext.length - 1) ? '\n' : ' ') + text;
             }
           })
-          _attr._text.point.y -= elm_font_size;
+          _attr._text.point.y -= font_size;
         }
       }
     }
