@@ -13,7 +13,7 @@ import PropTypes from 'prop-types';
 import IconButton from '@material-ui/core/IconButton';
 import SelectTags from 'metadata-react/DataField/SelectTags';
 
-import IconBusinessCenter from '@material-ui/icons/BusinessCenter';
+import WorkOutline from '@material-ui/icons/WorkOutline';
 import IconDrafts from '@material-ui/icons/Edit';
 import IconSend from '@material-ui/icons/Send';
 import IconConfitmed from '@material-ui/icons/ThumbUp';
@@ -33,7 +33,7 @@ class Statuses extends React.Component {
       onClick={() => null}
       title="Фильтр по статусам"
     >
-      <IconContents />
+      <WorkOutline />
     </IconButton>
   }
 

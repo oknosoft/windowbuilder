@@ -723,13 +723,6 @@ class EditorAccordion {
     });
     this.props = new SchemeProps(this._prod, _editor);
 
-    /**
-     * журнал событий
-     */
-    // this.log = $p.ireg.log.form_list(this.tabbar.cells('log'), {
-    //   hide_header: true,
-    //   hide_text: true
-    // });
 
   }
 

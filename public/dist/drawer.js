@@ -11697,6 +11697,11 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
         params.push(param);
       }
     });
+
+    ts_params.find_rows({cnstr: cnstr, inset: blank_inset || inset}, (row) => {
+      const links = row.param.params_links({grid: {selection: {cnstr}}, obj: row});
+      row.hide = links.some((link) => link.hide);
+    });
   }
 
   prod_name(short) {

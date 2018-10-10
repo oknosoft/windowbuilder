@@ -66,7 +66,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
   }
 
   /**
-   * Добавляет параметры вставки
+   * Добавляет параметры вставки, пересчитывает признак hide
    * @param inset
    * @param cnstr
    */
@@ -88,6 +88,11 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
         });
         params.push(param);
       }
+    });
+
+    ts_params.find_rows({cnstr: cnstr, inset: blank_inset || inset}, (row) => {
+      const links = row.param.params_links({grid: {selection: {cnstr}}, obj: row});
+      row.hide = links.some((link) => link.hide);
     });
   }
 
