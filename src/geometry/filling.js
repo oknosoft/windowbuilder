@@ -302,9 +302,9 @@ class Filling extends AbstractFilling(BuilderElement) {
     const horizontal = bounds.width * 1.5 > bounds.height;
     const bigSide = horizontal ? bounds.width : bounds.height;
     const smallSide = !horizontal ? bounds.width : bounds.height;
-    const turn = smallSide < 600 ? !horizontal : false;
-    let font_size = bigSide < 600
-      ? Math.round(text_font_size * bigSide / 600)
+    const turn = smallSide < 460 ? !horizontal : false;
+    let font_size = bigSide < 460
+      ? Math.round(text_font_size * bigSide / 460)
       : text_font_size;
     _attr._text.content = this.formula();
     _attr._text.visible = is_rectangular;
