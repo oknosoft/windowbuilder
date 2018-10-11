@@ -279,7 +279,7 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     const {path, imposts, _attr, is_rectangular} = this;
     const {elm_font_size, font_family} = consts;
-    
+    const text_font_size = elm_font_size * (2 / 3);
     path.visible = true;
     imposts.forEach((elm) => elm.redraw());
     
@@ -292,7 +292,7 @@ class Filling extends AbstractFilling(BuilderElement) {
         parent: this,
         fillColor: 'black',
         fontFamily: font_family,
-        fontSize: elm_font_size,
+        fontSize: text_font_size,
         guide: true,
       });
     }
@@ -302,20 +302,19 @@ class Filling extends AbstractFilling(BuilderElement) {
     const horizontal = bounds.width * 1.5 > bounds.height;
     const bigSide = horizontal ? bounds.width : bounds.height;
     const smallSide = !horizontal ? bounds.width : bounds.height;
-    const turn = smallSide < 1000 ? !horizontal : false;
-    let font_size = bigSide < 1000
-      ? Math.round(elm_font_size * bigSide / 1000)
-      : elm_font_size;
-
+    const turn = smallSide < 600 ? !horizontal : false;
+    let font_size = bigSide < 600
+      ? Math.round(text_font_size * bigSide / 600)
+      : text_font_size;
     _attr._text.content = this.formula();
     _attr._text.visible = is_rectangular;
     _attr._text.fontSize = font_size;
 
     // Корректируем размер шрифта
     const {bounds: textBounds} = _attr._text;
-    while(font_size < 60 && Math.max(textBounds.width, textBounds.height) + 6 * font_size < bigSide){
+    while(font_size < text_font_size && Math.max(textBounds.width, textBounds.height) + 6 * font_size < bigSide){
       font_size += 2;
-      _attr._text.fontSize = font_size > 60 ? 60 : font_size;
+      _attr._text.fontSize = font_size > text_font_size ? text_font_size : font_size;
     }
 
     if(is_rectangular){
