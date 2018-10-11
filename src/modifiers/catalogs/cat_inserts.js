@@ -72,6 +72,9 @@ $p.cat.inserts.__define({
                 mf.choice_params.splice(mf.choice_params.indexOf(choice), 1);
               }
             }
+            else {
+              mf.choice_params = [];
+            }
 
             // если параметр не используется в текущей вставке, делаем ячейку readonly
             const prms = new Set();

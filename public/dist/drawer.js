@@ -13265,6 +13265,9 @@ $p.cat.inserts.__define({
                 mf.choice_params.splice(mf.choice_params.indexOf(choice), 1);
               }
             }
+            else {
+              mf.choice_params = [];
+            }
 
             const prms = new Set();
             inset.used_params.forEach((param) => {
