@@ -127,7 +127,7 @@ class Share extends Component {
     }
 
     return [
-        <Typography key="doc" variant="subheading" gutterBottom>{doc.presentation}</Typography>,
+        <Typography variant="subtitle1" key="doc" gutterBottom>{doc.presentation}</Typography>,
         <List key="list">
           {Array.from(users.keys()).map(value => (
             <ListItem

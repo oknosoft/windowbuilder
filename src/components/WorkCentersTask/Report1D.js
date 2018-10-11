@@ -27,13 +27,13 @@ function Head({_obj, classes}) {
       <Table classes={{cell: classes.cell}}>
         <TableBody>
           <TableRow className={classes.row}>
-            <TableCell><Typography variant="subheading">Участок</Typography></TableCell>
+            <TableCell><Typography variant="subtitle1">Участок</Typography></TableCell>
             <TableCell>{_obj.key.presentation}</TableCell>
-            <TableCell><Typography variant="subheading">Получатель</Typography></TableCell>
+            <TableCell><Typography variant="subtitle1">Получатель</Typography></TableCell>
             <TableCell>{_obj.recipient.presentation}</TableCell>
           </TableRow>
           <TableRow className={classes.row}>
-            <TableCell><Typography variant="subheading">Заказы</Typography></TableCell>
+            <TableCell><Typography variant="subtitle1">Заказы</Typography></TableCell>
             <TableCell colSpan={3}>{Array.from(orders).map((v) => v.number_doc).sort().join(', ')}</TableCell>
           </TableRow>
         </TableBody>
@@ -80,8 +80,8 @@ function NomTable({_obj, classes}) {
       };
 
       res.push(<div key={`${nom.ref}-${characteristic.ref}`} className={classes.nom}>
-        <Typography variant="title">{nom.name + (characteristic.empty() ? '' : ` ${characteristic.name}`)}</Typography>
-        <Typography variant="subheading">{stat(status)}</Typography>
+        <Typography variant="h6">{nom.name + (characteristic.empty() ? '' : ` ${characteristic.name}`)}</Typography>
+        <Typography variant="subtitle1">{stat(status)}</Typography>
         <Visualization classes={classes} status={status}/>
       </div>);
     }

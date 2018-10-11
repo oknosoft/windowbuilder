@@ -6164,6 +6164,8 @@ EditorInvisible.BuilderElement = BuilderElement;
 
 
 
+
+
 class Filling extends AbstractFilling(BuilderElement) {
 
   constructor(attr) {
@@ -6244,6 +6246,7 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   }
 
+
   save_coordinates() {
 
     const {_row, project, profiles, bounds, imposts, nom} = this;
@@ -6320,6 +6323,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     imposts.forEach((curr) => curr.save_coordinates());
   }
 
+
   create_leaf() {
 
     const {project} = this;
@@ -6340,9 +6344,11 @@ class Filling extends AbstractFilling(BuilderElement) {
     contour.activate();
   }
 
+
   cnn_side() {
     return $p.enm.cnn_sides.Изнутри;
   }
+
 
   nearest() {
     return null;
@@ -6380,14 +6386,15 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
   }
 
+
   redraw() {
 
     this.sendToBack();
 
     const {path, imposts, _attr, is_rectangular} = this;
-    const {elm_font_size} = consts;
+    const {elm_font_size, font_family} = consts;
 
-    path.visible = true;
+        path.visible = true;
     imposts.forEach((elm) => elm.redraw());
 
     this.purge_paths();
@@ -6396,18 +6403,37 @@ class Filling extends AbstractFilling(BuilderElement) {
       _attr._text = new paper.PointText({
         parent: this,
         fillColor: 'black',
-        fontFamily: consts.font_family,
+        fontFamily: font_family,
         fontSize: elm_font_size,
         guide: true,
       });
     }
+
+    const {bounds} = path;
+    const horizontal = bounds.width * 1.5 > bounds.height;
+    const bigSide = horizontal ? bounds.width : bounds.height;
+    const smallSide = !horizontal ? bounds.width : bounds.height;
+    const turn = smallSide < 1000 ? !horizontal : false;
+    let font_size = bigSide < 1000
+      ? Math.round(elm_font_size * bigSide / 1000)
+      : elm_font_size;
+
+    _attr._text.content = this.formula();
     _attr._text.visible = is_rectangular;
+    _attr._text.fontSize = font_size;
+
+    const {bounds: textBounds} = _attr._text;
+    while(font_size < 60 && Math.max(textBounds.width, textBounds.height) + 6 * font_size < bigSide){
+      font_size += 2;
+      _attr._text.fontSize = font_size > 60 ? 60 : font_size;
+    }
 
     if(is_rectangular){
-      const {bounds} = path;
-      _attr._text.content = this.formula();
-      _attr._text.point = bounds.bottomLeft.add([elm_font_size * 0.6, -elm_font_size]);
-      if(_attr._text.bounds.width > (bounds.width - 2 * elm_font_size)){
+      _attr._text.point = turn
+        ? bounds.bottomRight.add([-font_size, -font_size * 0.6])
+        : bounds.bottomLeft.add([font_size * 0.6, -font_size]);
+      _attr._text.rotation = turn ? 270 : 0;
+      if(textBounds.width > (bigSide - 2 * font_size)){
         const atext = _attr._text.content.split(' ');
         if(atext.length > 1){
           _attr._text.content = '';
@@ -6419,7 +6445,7 @@ class Filling extends AbstractFilling(BuilderElement) {
               _attr._text.content += ((index === atext.length - 1) ? '\n' : ' ') + text;
             }
           })
-          _attr._text.point.y -= elm_font_size;
+          _attr._text.point.y -= font_size;
         }
       }
     }
@@ -6427,6 +6453,7 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     }
   }
+
 
   draw_fragment() {
     const {l_dimensions, layer, path} = this;
@@ -6440,6 +6467,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     l_dimensions.redraw(true);
     layer.zoom_fit();
   }
+
 
   set_inset(v, ignore_select) {
 
@@ -6493,6 +6521,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     super.set_inset(inset);
   }
 
+
   set_clr(v, ignore_select) {
     if(!ignore_select && this.project.selectedItems.length > 1){
       this.project.selected_glasses().forEach((elm) => {
@@ -6503,6 +6532,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
     super.set_clr(v);
   }
+
 
   purge_paths() {
     const paths = this.children.filter((child) => child instanceof paper.Path);
@@ -6518,6 +6548,7 @@ class Filling extends AbstractFilling(BuilderElement) {
       destination: path.bounds.topRight
     });
   }
+
 
   formula(by_art) {
     let res;
@@ -6540,6 +6571,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     return res || (by_art ? this.inset.article || this.inset.name : this.inset.name);
   }
 
+
   deselect_onlay_points() {
     for(const {generatrix} of this.imposts) {
       generatrix.segments.forEach((segm) => {
@@ -6553,6 +6585,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
   }
 
+
   get imposts() {
     return this.getItems({class: Onlay});
   }
@@ -6561,6 +6594,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     return this._attr._profiles || [];
   }
 
+
   remove_onlays() {
     for(let onlay of this.imposts){
       onlay.remove();
@@ -6568,17 +6602,21 @@ class Filling extends AbstractFilling(BuilderElement) {
   }
 
 
+
   get area() {
     return (this.bounds.area / 1e6).round(5);
   }
+
 
   get form_area() {
     return (this.path.area/1e6).round(5);
   }
 
+
   interiorPoint() {
     return this.path.interiorPoint;
   }
+
 
   get is_rectangular() {
     const {profiles, path} = this;
@@ -6588,6 +6626,7 @@ class Filling extends AbstractFilling(BuilderElement) {
   get generatrix() {
     return this.path;
   }
+
 
   get path() {
     return this._attr.path;
@@ -6709,9 +6748,11 @@ class Filling extends AbstractFilling(BuilderElement) {
     return res;
   }
 
+
   get outer_profiles() {
     return this.profiles;
   }
+
 
   get perimeter() {
     const res = [];
@@ -6733,6 +6774,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {path} = this;
     return path ? path.bounds : new paper.Rectangle();
   }
+
 
   perimeter_inner(size = 0) {
     const {center} = this.bounds;
@@ -6771,6 +6813,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     });
   }
 
+
   bounds_light(size = 0) {
     const path = new paper.Path({insert: false});
     for (const {sub_path} of this.perimeter_inner(size)) {
@@ -6783,26 +6826,32 @@ class Filling extends AbstractFilling(BuilderElement) {
     return path.bounds;
   }
 
+
   get x1() {
     return (this.bounds.left - this.project.bounds.x).round(1);
   }
+
 
   get x2() {
     return (this.bounds.right - this.project.bounds.x).round(1);
   }
 
+
   get y1() {
     return (this.project.bounds.height + this.project.bounds.y - this.bounds.bottom).round(1);
   }
+
 
   get y2() {
     return (this.project.bounds.height + this.project.bounds.y - this.bounds.top).round(1);
   }
 
+
   get info() {
     const {elm, bounds, thickness} = this;
     return "№" + elm + " w:" + bounds.width.toFixed(0) + " h:" + bounds.height.toFixed(0) + " z:" + thickness.toFixed(0);
   }
+
 
   get oxml() {
     const oxml = {
