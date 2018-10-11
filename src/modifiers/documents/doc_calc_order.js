@@ -806,10 +806,26 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       .then((ox) => {
         // если указана строка-генератор, заполняем реквизиты
         if(row_spec instanceof $p.DpBuyers_orderProductionRow) {
+          
+          // добавляем параметр в характеристику, если используется в текущей вставке
+          const prms = new Set();
+          row_spec.inset.used_params.forEach((param) => {
+            !param.is_calculated && prms.add(param);
+          });
+          row_spec.inset.specification.forEach(({nom}) => {
+            if(nom){
+              const {used_params} = nom;
+              used_params && used_params.forEach((param) => {
+                !param.is_calculated && prms.add(param);
+              });
+            }
+          });
 
           if(params) {
             params.find_rows({elm: row_spec.row}, (prow) => {
-              ox.params.add(prow, true).inset = row_spec.inset;
+              if (prms.has(prow.param)) {
+                ox.params.add(prow, true).inset = row_spec.inset;
+              }
             });
           }
 
