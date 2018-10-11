@@ -71,6 +71,8 @@ $p.cat.inserts.__define({
               for(const choice of adel) {
                 mf.choice_params.splice(mf.choice_params.indexOf(choice), 1);
               }
+            } else {
+              mf.choice_params = [];
             }
 
             // если параметр не используется в текущей вставке, делаем ячейку readonly
