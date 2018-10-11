@@ -221,7 +221,7 @@ class DimensionLine extends paper.Group {
 
   redraw() {
 
-    const {children, path, align} = this;
+    const {children, path, align, project: {builder_props}} = this;
     if(!children.length){
       return;
     }
@@ -274,7 +274,7 @@ class DimensionLine extends paper.Group {
     children.callout2.visible = !this.hide_c2;
     children.scale.visible = !this.hide_line;
 
-    children.text.content = length.toFixed(0);
+    children.text.content = length.round(builder_props.rounding).toString();
     children.text.rotation = e.subtract(b).angle;
     children.text.justification = align.ref;
 

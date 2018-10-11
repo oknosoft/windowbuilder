@@ -5077,7 +5077,7 @@ class DimensionLine extends paper.Group {
 
   redraw() {
 
-    const {children, path, align} = this;
+    const {children, path, align, project: {builder_props}} = this;
     if(!children.length){
       return;
     }
@@ -5129,7 +5129,7 @@ class DimensionLine extends paper.Group {
     children.callout2.visible = !this.hide_c2;
     children.scale.visible = !this.hide_line;
 
-    children.text.content = length.toFixed(0);
+    children.text.content = length.round(builder_props.rounding).toString();
     children.text.rotation = e.subtract(b).angle;
     children.text.justification = align.ref;
 
@@ -6406,9 +6406,9 @@ class Filling extends AbstractFilling(BuilderElement) {
     const horizontal = bounds.width * 1.5 > bounds.height;
     const bigSide = horizontal ? bounds.width : bounds.height;
     const smallSide = !horizontal ? bounds.width : bounds.height;
-    const turn = smallSide < 460 ? !horizontal : false;
-    let font_size = bigSide < 460
-      ? Math.round(text_font_size * bigSide / 460)
+    const turn = smallSide < 490 ? !horizontal : false;
+    let font_size = bigSide < 490
+      ? Math.round(text_font_size * bigSide / 490)
       : text_font_size;
     _attr._text.content = this.formula();
     _attr._text.visible = is_rectangular;

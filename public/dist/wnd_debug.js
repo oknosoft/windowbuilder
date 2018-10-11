@@ -281,7 +281,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     }
     for(const prop in defaults){
       if(tmp.hasOwnProperty(prop)) {
-        props[prop] = !!tmp[prop];
+        props[prop] = typeof tmp[prop] === 'number' ? tmp[prop] : !!tmp[prop];
       }
       else {
         props[prop] = defaults[prop];
@@ -423,7 +423,8 @@ $p.CatCharacteristics.builder_props_defaults = {
   custom_lines: true,
   cnns: true,
   visualization: true,
-  txts: true
+  txts: true,
+  rounding: 0,
 };
 
 $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, value) {
