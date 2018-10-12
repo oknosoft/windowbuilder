@@ -279,19 +279,20 @@ class DimensionLine extends paper.Group {
     children.text.justification = align.ref;
 
     const font_size = this._font_size();
+    const {isNode} = $p.wsql.alasql.utils;
     children.text.fontSize = font_size;
     if(align == $p.enm.text_aligns.left) {
       children.text.position = bs
         .add(path.getTangentAt(0).multiply(font_size))
-        .add(path.getNormalAt(0).multiply(font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
     }
     else if(align == $p.enm.text_aligns.right) {
       children.text.position = es
         .add(path.getTangentAt(0).multiply(-font_size))
-        .add(path.getNormalAt(0).multiply(font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
     }
     else {
-      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
     }
   }
 
