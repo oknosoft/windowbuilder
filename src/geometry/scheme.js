@@ -136,9 +136,9 @@ class Scheme extends paper.Project {
 
     if(fields.hasOwnProperty('clr')) {
       ox.clr = obj.clr;
-      this.getItems({class: ProfileItem}).forEach((p) => {
-        if(!(p instanceof Onlay)) {
-          p.clr = obj.clr;
+      this.getItems({class: BuilderElement}).forEach((elm) => {
+        if(!(elm instanceof Onlay) && !(elm instanceof Filling)) {
+          elm.clr = obj.clr;
         }
       });
     }
