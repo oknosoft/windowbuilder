@@ -279,7 +279,8 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     const {path, imposts, _attr, is_rectangular} = this;
     const {elm_font_size, font_family} = consts;
-    const text_font_size = elm_font_size * (2 / 3);
+    const fontSize = elm_font_size * (2 / 3);
+    const maxTextWidth = 490;
     path.visible = true;
     imposts.forEach((elm) => elm.redraw());
     
@@ -292,52 +293,28 @@ class Filling extends AbstractFilling(BuilderElement) {
         parent: this,
         fillColor: 'black',
         fontFamily: font_family,
-        fontSize: text_font_size,
+        fontSize,
         guide: true,
       });
     }
 
-    // Вычисляем ориентацию и размер шрифта
+    // Задаем надпись формулы
     const {bounds} = path;
-    const horizontal = bounds.width * 1.5 > bounds.height;
-    const bigSide = horizontal ? bounds.width : bounds.height;
-    const smallSide = !horizontal ? bounds.width : bounds.height;
-    const turn = smallSide < 490 ? !horizontal : false;
-    let font_size = bigSide < 490
-      ? Math.round(text_font_size * bigSide / 490)
-      : text_font_size;
+    let turn = bounds.width * 1.5 < bounds.height;
     _attr._text.content = this.formula();
     _attr._text.visible = is_rectangular;
-    _attr._text.fontSize = font_size;
 
-    // Корректируем размер шрифта
-    const {bounds: textBounds} = _attr._text;
-    while(font_size < text_font_size && Math.max(textBounds.width, textBounds.height) + 6 * font_size < bigSide){
-      font_size += 2;
-      _attr._text.fontSize = font_size > text_font_size ? text_font_size : font_size;
-    }
+    const textBounds = bounds.scale(0.9);
+    textBounds.width = textBounds.width > maxTextWidth ? maxTextWidth : textBounds.width;
+    textBounds.height = textBounds.height > maxTextWidth ? maxTextWidth : textBounds.height;
+
+    _attr._text.fitBounds(textBounds);
 
     if(is_rectangular){
       _attr._text.point = turn
-        ? bounds.bottomRight.add([-font_size, -font_size * 0.6])
-        : bounds.bottomLeft.add([font_size * 0.6, -font_size]);
+        ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])
+        : bounds.bottomLeft.add([fontSize * 0.6, -fontSize]);
       _attr._text.rotation = turn ? 270 : 0;
-      // От этого можно избавиться
-      if(textBounds.width > (bigSide - 2 * font_size)){
-        const atext = _attr._text.content.split(' ');
-        if(atext.length > 1){
-          _attr._text.content = '';
-          atext.forEach((text, index) => {
-            if(!_attr._text.content){
-              _attr._text.content = text;
-            }
-            else{
-              _attr._text.content += ((index === atext.length - 1) ? '\n' : ' ') + text;
-            }
-          })
-          _attr._text.point.y -= font_size;
-        }
-      }
     }
     else{
 
