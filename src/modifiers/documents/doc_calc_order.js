@@ -873,52 +873,57 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    */
   process_add_product_list(dp) {
 
-    return new Promise(async (resolve, reject) => {
+    let res = Promise.resolve();
+    const ax = [];
 
-      const ax = [];
+    for (let i = 0; i < dp.production.count(); i++) {
+      const row_spec = dp.production.get(i);
+      let row_prod;
 
-      for (let i = 0; i < dp.production.count(); i++) {
-        const row_spec = dp.production.get(i);
-        let row_prod;
-
-        if(row_spec.inset.empty()) {
-          row_prod = this.production.add(row_spec);
-          row_prod.unit = row_prod.nom.storage_unit;
-          if(!row_spec.clr.empty()) {
-            // ищем цветовую характеристику
-            $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
-              if(ox.clr == row_spec.clr) {
-                row_prod.characteristic = ox;
-                return false;
-              }
-            });
-          }
+      if(row_spec.inset.empty()) {
+        row_prod = this.production.add(row_spec);
+        row_prod.unit = row_prod.nom.storage_unit;
+        if(!row_spec.clr.empty()) {
+          // ищем цветовую характеристику
+          $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
+            if(ox.clr == row_spec.clr) {
+              row_prod.characteristic = ox;
+              return false;
+            }
+          });
         }
-        else {
-          // рассчитываем спецификацию по текущей вставке
-          const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
-          const elm = new $p.DocCalc_order.FakeElm(row_spec);
-          // создаём или получаем строку заказа с уникальной харктеристикой
-          row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
-          row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+        res = res.then(() => row_prod);
+      }
+      else {
+        // рассчитываем спецификацию по текущей вставке
+        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
+        const elm = new $p.DocCalc_order.FakeElm(row_spec);
+        // создаём или получаем строку заказа с уникальной харктеристикой
+        res = res
+          .then(() => this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true}))
+          .then((row_prod) => {
+            // рассчитываем спецификацию
+            row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+            // сворачиваем
+            row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+            return row_prod;
+          });
+      }
 
-          // сворачиваем
-          row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
-        }
-
-        // производим дополнительную корректировку спецификации и рассчитываем цены
-        [].push.apply(ax, $p.spec_building.specification_adjustment({
+      // производим дополнительную корректировку спецификации и рассчитываем цены
+      res = res.then((row_prod) => {
+        return Promise.all($p.spec_building.specification_adjustment({
           //scheme: scheme,
           calc_order_row: row_prod,
           spec: row_prod.characteristic.specification,
           save: true,
-        }, true));
+        }, true))
+          .then((tx) => [].push.apply(ax, tx));
+      });
 
-      }
+    }
 
-      resolve(ax);
-
-    });
+    return res.then(() => ax);
   }
 
   /**

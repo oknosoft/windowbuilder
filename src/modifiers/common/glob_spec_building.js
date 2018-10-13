@@ -27,6 +27,7 @@ class SpecBuilding {
 
   /**
    * Аналог УПзП-шного РассчитатьСпецификацию_ПривязкиВставок
+   * Синхронный метод, но возвращает массив промисов
    * @param attr {Object}
    * @param with_price {Boolean}
    */
@@ -100,7 +101,7 @@ class SpecBuilding {
       row.qty = calc_order_row.qty;
       row.quantity = calc_order_row.quantity;
 
-      save && ax.push(cx.save().catch($p.record_log));
+      save && ax.push(cx.save());
       order_rows.set(cx, row);
     });
     if(order_rows.size){
@@ -116,7 +117,7 @@ class SpecBuilding {
     }
 
     if(save && !attr.scheme && (ox.is_new() || ox._modified)){
-      ax.push(ox.save().catch($p.record_log));
+      ax.push(ox.save());
     }
 
     return ax;

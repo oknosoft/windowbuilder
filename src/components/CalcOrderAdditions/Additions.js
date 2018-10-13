@@ -18,17 +18,31 @@ class CalcOrderAdditions extends Component {
     super(props, context);
     const {handleCancel, handleCalck} = props;
     this.handleCancel = handleCancel.bind(this);
-    this.handleCalck = handleCalck.bind(this);
+    this.state = {msg: null};
   }
 
   handleOk = () => {
-    this.handleCalck().then(this.handleCancel);
+    this.props.handleCalck.call(this)
+      .then(this.handleCancel)
+      .catch((err) => {
+        this.setState({msg: err.msg || err.message});
+      });
+  };
+
+  handleCalck = () => {
+    this.props.handleCalck.call(this)
+      .catch((err) => {
+        this.setState({msg: err.msg});
+      });
+  };
+
+  handleErrClose = () => {
+    this.setState({msg: null})
   };
 
   render() {
 
-    const {handleCancel, handleCalck, handleOk, props} = this;
-    const {dialog} = props;
+    const {handleCancel, handleCalck, handleOk, handleErrClose, props: {dialog}, state: {msg}} = this;
 
     return <Dialog
       open
@@ -43,6 +57,17 @@ class CalcOrderAdditions extends Component {
       ]}
     >
       <AdditionsGroups ref={(el) => this.additions = el} dialog={dialog}/>
+      {msg && <Dialog
+        open
+        title={msg.title || 'Ошибка при записи'}
+        onClose={handleErrClose}
+        actions={[
+          <Button key="ok" onClick={handleErrClose} color="primary">Ок</Button>,
+        ]}
+      >
+        {msg.obj && <div>{msg.obj.name}</div>}
+        {msg.text || msg}
+      </Dialog>}
     </Dialog>;
 
   }
