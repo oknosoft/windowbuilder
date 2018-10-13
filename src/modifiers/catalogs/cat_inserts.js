@@ -92,22 +92,24 @@ $p.cat.inserts.__define({
             mf.read_only = !prms.has(prm);
 
             // находим связи параметров
-            const links = prm.params_links({grid: {selection: {}}, obj: this});
-            const hide = links.some((link) => link.hide);
-            if(hide && !mf.read_only) {
-              mf.read_only = true;
-            }
+            if(!mf.read_only) {
+              const links = prm.params_links({grid: {selection: {}}, obj: this});
+              const hide = links.some((link) => link.hide);
+              if(hide && !mf.read_only) {
+                mf.read_only = true;
+              }
 
-            // проверим вхождение значения в доступные и при необходимости изменим
-            if(links.length) {
-              // TODO: подумать про установку умолчаний
-              //prm.linked_values(links, this);
-              const filter = {}
-              prm.filter_params_links(filter, null, links);
-              filter.ref && mf.choice_params.push({
-                name: 'ref',
-                path: filter.ref,
-              });
+              // проверим вхождение значения в доступные и при необходимости изменим
+              if(links.length) {
+                // TODO: подумать про установку умолчаний
+                //prm.linked_values(links, this);
+                const filter = {}
+                prm.filter_params_links(filter, null, links);
+                filter.ref && mf.choice_params.push({
+                  name: 'ref',
+                  path: filter.ref,
+                });
+              }
             }
           }
         }
