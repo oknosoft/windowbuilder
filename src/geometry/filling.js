@@ -295,6 +295,7 @@ class Filling extends AbstractFilling(BuilderElement) {
         fontFamily: font_family,
         fontSize,
         guide: true,
+        visible: true,
       });
     }
 
@@ -302,22 +303,31 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {bounds} = path;
     let turn = bounds.width * 1.5 < bounds.height;
     _attr._text.content = this.formula();
-    _attr._text.visible = is_rectangular;
 
     const textBounds = bounds.scale(0.9);
     textBounds.width = textBounds.width > maxTextWidth ? maxTextWidth : textBounds.width;
     textBounds.height = textBounds.height > maxTextWidth ? maxTextWidth : textBounds.height;
 
-    _attr._text.fitBounds(textBounds);
-
     if(is_rectangular){
+      _attr._text.fitBounds(textBounds);
       _attr._text.point = turn
         ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])
         : bounds.bottomLeft.add([fontSize * 0.6, -fontSize]);
       _attr._text.rotation = turn ? 270 : 0;
     }
     else{
-
+      _attr._text.fitBounds(textBounds.scale(0.8));
+      // Поиск самой длинной кривой пути
+      const maxCurve = path.curves.reduce((curv, item) => item.length > curv.length ? item : curv, path.curves[0]);
+      const {angle, angleInRadians} = maxCurve.line.vector;
+      const {PI} = Math;
+      _attr._text.rotation = angle;
+      _attr._text.point = maxCurve.point1.add([Math.cos(angleInRadians + PI / 4) * 100, Math.sin(angleInRadians + PI / 4) * 100]);
+      // Перевернуть с головы на ноги
+      if(Math.abs(angle) > 90 && Math.abs(angle) < 180){
+        _attr._text.point = _attr._text.bounds.rightCenter;
+        _attr._text.rotation += 180;
+      }
     }
   }
 
