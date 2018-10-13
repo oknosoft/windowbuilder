@@ -2676,19 +2676,20 @@ class DimensionLine extends paper.Group {
     children.text.justification = align.ref;
 
     const font_size = this._font_size();
+    const {isNode} = $p.wsql.alasql.utils;
     children.text.fontSize = font_size;
     if(align == $p.enm.text_aligns.left) {
       children.text.position = bs
         .add(path.getTangentAt(0).multiply(font_size))
-        .add(path.getNormalAt(0).multiply(font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
     }
     else if(align == $p.enm.text_aligns.right) {
       children.text.position = es
         .add(path.getTangentAt(0).multiply(-font_size))
-        .add(path.getNormalAt(0).multiply(font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
     }
     else {
-      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
     }
   }
 
@@ -8307,6 +8308,8 @@ class Onlay extends ProfileItem {
 
 
 
+
+
 class Scheme extends paper.Project {
 
   constructor(_canvas, _editor, _silent) {
@@ -8324,11 +8327,13 @@ class Scheme extends paper.Project {
 
     const _changes = this._ch = [];
 
+
     this._dp = $p.dp.buyers_order.create();
 
     this.magnetism = new Magnetism(this);
 
     const isBrowser = typeof requestAnimationFrame === 'function';
+
 
     this.redraw = () => {
 
@@ -8380,6 +8385,7 @@ class Scheme extends paper.Project {
     }
   }
 
+
   _dp_listener(obj, fields) {
 
     const {_attr, ox, _scope} = this;
@@ -8397,9 +8403,9 @@ class Scheme extends paper.Project {
 
     if(fields.hasOwnProperty('clr')) {
       ox.clr = obj.clr;
-      this.getItems({class: ProfileItem}).forEach((p) => {
-        if(!(p instanceof Onlay)) {
-          p.clr = obj.clr;
+      this.getItems({class: BuilderElement}).forEach((elm) => {
+        if(!(elm instanceof Onlay) && !(elm instanceof Filling)) {
+          elm.clr = obj.clr;
         }
       });
     }
@@ -8434,6 +8440,7 @@ class Scheme extends paper.Project {
 
   }
 
+
   _papam_listener(obj, fields) {
     const {_attr, ox} = this;
     if(_attr._loading || _attr._snapshot) {
@@ -8443,6 +8450,7 @@ class Scheme extends paper.Project {
       this.register_change();
     }
   }
+
 
   elm_cnn(elm1, elm2) {
     let res;
@@ -8456,9 +8464,11 @@ class Scheme extends paper.Project {
     return res;
   }
 
+
   get cnns() {
     return this.ox.cnn_elmnts;
   }
+
 
   get ox() {
     return this._dp.characteristic;
@@ -8534,10 +8544,12 @@ class Scheme extends paper.Project {
 
   }
 
+
   get builder_props() {
     const {ox, _attr} = this;
     return _attr._builder_props || ox.builder_props;
   }
+
 
   load_dimension_lines() {
     const {Размер, Радиус} = $p.enm.elm_types;
@@ -8551,11 +8563,13 @@ class Scheme extends paper.Project {
     });
   }
 
+
   load_contour(parent) {
     this.ox.constructions.find_rows({parent: parent ? parent.cnstr : 0}, (row) => {
       this.load_contour(new Contour({parent: parent, row: row}));
     });
   }
+
 
   load(id, from_service) {
     const {_attr} = this;
@@ -8671,6 +8685,7 @@ class Scheme extends paper.Project {
     }
   }
 
+
   draw_fragment(attr) {
 
     const {l_dimensions, l_connective} = this;
@@ -8701,9 +8716,11 @@ class Scheme extends paper.Project {
     return elm;
   }
 
+
   has_changes() {
     return this._ch.length > 0;
   }
+
 
   register_update() {
     const {_attr} = this;
@@ -8715,6 +8732,7 @@ class Scheme extends paper.Project {
       _attr._update_timer = 0;
     }, 100);
   }
+
 
   register_change(with_update) {
 
@@ -8738,6 +8756,7 @@ class Scheme extends paper.Project {
     }
   }
 
+
   get bounds() {
     const {_attr} = this;
     if(!_attr._bounds) {
@@ -8752,6 +8771,7 @@ class Scheme extends paper.Project {
     }
     return _attr._bounds;
   }
+
 
   get dimension_bounds() {
     let {bounds} = this;
@@ -8772,11 +8792,13 @@ class Scheme extends paper.Project {
     return bounds;
   }
 
+
   get strokeBounds() {
     let bounds = this.l_dimensions.strokeBounds;
     this.contours.forEach((l) => bounds = bounds.unite(l.strokeBounds));
     return bounds;
   }
+
 
   get _calc_order_row() {
     const {_attr, ox} = this;
@@ -8786,12 +8808,14 @@ class Scheme extends paper.Project {
     return _attr._calc_order_row;
   }
 
+
   notify(obj, type = 'update', fields) {
     if(obj.type) {
       type = obj.type;
     }
     this._scope.eve.emit_async(type, obj, fields);
   }
+
 
   clear() {
     const {_attr} = this;
@@ -8804,6 +8828,7 @@ class Scheme extends paper.Project {
 
     super.clear();
   }
+
 
   unload() {
     const {_dp, _attr, _calc_order_row} = this;
@@ -8842,6 +8867,7 @@ class Scheme extends paper.Project {
 
     this.remove();
   }
+
 
   move_points(delta, all_points) {
 
@@ -8902,6 +8928,7 @@ class Scheme extends paper.Project {
 
   }
 
+
   save_coordinates(attr) {
 
     const {_attr, bounds, ox} = this;
@@ -8927,6 +8954,7 @@ class Scheme extends paper.Project {
     $p.products_building.recalc(this, attr);
 
   }
+
 
   zoom_fit(bounds, isNode) {
 
@@ -8962,6 +8990,7 @@ class Scheme extends paper.Project {
     }
   }
 
+
   get_svg(attr) {
     this.deselectAll();
 
@@ -8976,6 +9005,7 @@ class Scheme extends paper.Project {
 
     return svg.outerHTML;
   }
+
 
   load_stamp(obx, is_snapshot) {
 
@@ -9009,6 +9039,7 @@ class Scheme extends paper.Project {
     }
   }
 
+
   get auto_align() {
     const {calc_order, base_block} = this.ox;
     const {Шаблон} = $p.enm.obj_delivery_states;
@@ -9025,6 +9056,7 @@ class Scheme extends paper.Project {
       return align && align != '_' && align;
     }
   }
+
 
   do_align(auto_align, profiles) {
 
@@ -9057,23 +9089,28 @@ class Scheme extends paper.Project {
 
   }
 
+
   resize_canvas(w, h) {
     const {viewSize} = this.view;
     viewSize.width = w;
     viewSize.height = h;
   }
 
+
   get contours() {
     return this.layers.filter((l) => l instanceof Contour);
   }
+
 
   get area() {
     return this.contours.reduce((sum, {area}) => sum + area, 0).round(3);
   }
 
+
   get form_area() {
     return this.contours.reduce((sum, {form_area}) => sum + form_area, 0).round(3);
   }
+
 
   get clr() {
     return this.ox.clr;
@@ -9082,6 +9119,7 @@ class Scheme extends paper.Project {
   set clr(v) {
     this.ox.clr = v;
   }
+
 
   get l_dimensions() {
     const {activeLayer, _attr} = this;
@@ -9099,6 +9137,7 @@ class Scheme extends paper.Project {
     return _attr.l_dimensions;
   }
 
+
   get l_connective() {
     const {activeLayer, _attr} = this;
 
@@ -9114,6 +9153,7 @@ class Scheme extends paper.Project {
 
     return _attr.l_connective;
   }
+
 
   draw_sizes() {
 
@@ -9171,6 +9211,7 @@ class Scheme extends paper.Project {
     }
   }
 
+
   draw_visualization() {
     if(this.view){
       for (let contour of this.contours) {
@@ -9179,6 +9220,7 @@ class Scheme extends paper.Project {
       this.view.update();
     }
   }
+
 
   default_inset(attr) {
 
@@ -9242,6 +9284,7 @@ class Scheme extends paper.Project {
     return inset;
   }
 
+
   check_inset(attr) {
     const inset = attr.inset ? attr.inset : attr.elm.inset;
     const elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type;
@@ -9267,6 +9310,7 @@ class Scheme extends paper.Project {
     }
 
   }
+
 
   check_distance(element, profile, res, point, check_only) {
     const {acn} = $p.enm.cnn_types;
@@ -9371,9 +9415,11 @@ class Scheme extends paper.Project {
     }
   }
 
+
   default_clr(attr) {
     return this.ox.clr;
   }
+
 
   get default_furn() {
     var sys = this._dp.sys,
@@ -9398,6 +9444,7 @@ class Scheme extends paper.Project {
     }
     return res;
   }
+
 
   selected_profiles(all) {
     const res = [];
@@ -9425,6 +9472,7 @@ class Scheme extends paper.Project {
     return res;
   }
 
+
   selected_glasses() {
     const res = [];
 
@@ -9441,6 +9489,7 @@ class Scheme extends paper.Project {
     return res;
   }
 
+
   get selected_elm() {
     let res;
     this.selectedItems.some((item) => {
@@ -9454,6 +9503,7 @@ class Scheme extends paper.Project {
     });
     return res;
   }
+
 
   hitPoints(point, tolerance, selected_first, with_onlays) {
     let item, hit;
@@ -9495,6 +9545,7 @@ class Scheme extends paper.Project {
     return hit;
   }
 
+
   rootLayer(layer) {
     if(!layer) {
       layer = this.activeLayer;
@@ -9504,6 +9555,7 @@ class Scheme extends paper.Project {
     }
     return layer;
   }
+
 
   deselect_all_points(with_items) {
     this.getItems({class: paper.Path}).forEach((item) => {
@@ -9518,6 +9570,7 @@ class Scheme extends paper.Project {
     });
   }
 
+
   get perimeter() {
     let res = [],
       contours = this.contours,
@@ -9531,6 +9584,7 @@ class Scheme extends paper.Project {
 
     return res;
   }
+
 
   get glasses() {
     return this.getItems({class: Filling});
@@ -11376,7 +11430,7 @@ class SpecBuilding {
       row.qty = calc_order_row.qty;
       row.quantity = calc_order_row.quantity;
 
-      save && ax.push(cx.save().catch($p.record_log));
+      save && ax.push(cx.save());
       order_rows.set(cx, row);
     });
     if(order_rows.size){
@@ -11390,7 +11444,7 @@ class SpecBuilding {
     }
 
     if(save && !attr.scheme && (ox.is_new() || ox._modified)){
-      ax.push(ox.save().catch($p.record_log));
+      ax.push(ox.save());
     }
 
     return ax;
@@ -15007,8 +15061,23 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         if(row_spec instanceof $p.DpBuyers_orderProductionRow) {
 
           if(params) {
+
+            const used_params = new Set();
+            row_spec.inset.used_params.forEach((param) => {
+              !param.is_calculated && used_params.add(param);
+            });
+            row_spec.inset.specification.forEach(({nom}) => {
+              if(nom instanceof $p.CatInserts){
+                nom.used_params.forEach((param) => {
+                  !param.is_calculated && used_params.add(param);
+                });
+              }
+            });
+
             params.find_rows({elm: row_spec.row}, (prow) => {
-              ox.params.add(prow, true).inset = row_spec.inset;
+              if(used_params.has(prow.param)) {
+                ox.params.add(prow, true).inset = row_spec.inset;
+              }
             });
           }
 
@@ -15047,46 +15116,50 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   process_add_product_list(dp) {
 
-    return new Promise(async (resolve, reject) => {
+    let res = Promise.resolve();
+    const ax = [];
 
-      const ax = [];
+    for (let i = 0; i < dp.production.count(); i++) {
+      const row_spec = dp.production.get(i);
+      let row_prod;
 
-      for (let i = 0; i < dp.production.count(); i++) {
-        const row_spec = dp.production.get(i);
-        let row_prod;
-
-        if(row_spec.inset.empty()) {
-          row_prod = this.production.add(row_spec);
-          row_prod.unit = row_prod.nom.storage_unit;
-          if(!row_spec.clr.empty()) {
-            $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
-              if(ox.clr == row_spec.clr) {
-                row_prod.characteristic = ox;
-                return false;
-              }
-            });
-          }
+      if(row_spec.inset.empty()) {
+        row_prod = this.production.add(row_spec);
+        row_prod.unit = row_prod.nom.storage_unit;
+        if(!row_spec.clr.empty()) {
+          $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
+            if(ox.clr == row_spec.clr) {
+              row_prod.characteristic = ox;
+              return false;
+            }
+          });
         }
-        else {
-          const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
-          const elm = new $p.DocCalc_order.FakeElm(row_spec);
-          row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
-          row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+        res = res.then(() => row_prod);
+      }
+      else {
+        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
+        const elm = new $p.DocCalc_order.FakeElm(row_spec);
+        res = res
+          .then(() => this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true}))
+          .then((row_prod) => {
+            row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+            row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+            return row_prod;
+          });
+      }
 
-          row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
-        }
-
-        [].push.apply(ax, $p.spec_building.specification_adjustment({
+      res = res.then((row_prod) => {
+        return Promise.all($p.spec_building.specification_adjustment({
           calc_order_row: row_prod,
           spec: row_prod.characteristic.specification,
           save: true,
-        }, true));
+        }, true))
+          .then((tx) => [].push.apply(ax, tx));
+      });
 
-      }
+    }
 
-      resolve(ax);
-
-    });
+    return res.then(() => ax);
   }
 
   recalc(attr = {}, editor) {
