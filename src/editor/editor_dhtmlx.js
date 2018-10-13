@@ -1483,6 +1483,9 @@ class Editor extends EditorInvisible {
    * Обработчик события проверки заполненности реквизитов
    */
   on_alert(ev) {
+    if(ev._shown) {
+      return;
+    }
     if(ev.obj === this.project.ox) {
       if(ev.row) {
         const {inset} = ev.row;
@@ -1490,6 +1493,7 @@ class Editor extends EditorInvisible {
           ev.text += `<br/>вставка "${inset.name}"`;
         }
       }
+      ev._shown = true;
       $p.msg.show_msg(ev);
     }
   }

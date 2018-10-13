@@ -772,6 +772,10 @@ class ProductsBuilding {
             // console.timeEnd("save");
             // console.profileEnd();
 
+            if(err.msg && err.msg._shown) {
+              return;
+            }
+
             $p.record_log(err);
             delete scheme._attr._saving;
 
