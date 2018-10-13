@@ -11205,12 +11205,13 @@ class ProductsBuilding {
               return;
             }
 
-            if(ox._data._err) {
-              return $p.md.emit('alert', ox._data._err);
-            }
-
             let text = err.message || err;
             if(ox._data && ox._data._err) {
+              if(typeof ox._data._err === 'object') {
+                $p.md.emit('alert', Object.assign({obj: ox}, ox._data._err));
+                delete ox._data._err;
+                return;
+              }
               text += `\n${ox._data._err}`;
               delete ox._data._err;
             }
