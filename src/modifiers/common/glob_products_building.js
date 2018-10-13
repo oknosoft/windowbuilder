@@ -772,15 +772,19 @@ class ProductsBuilding {
             // console.timeEnd("save");
             // console.profileEnd();
 
+            delete scheme._attr._saving;
+
             if(err.msg && err.msg._shown) {
               return;
             }
 
-            $p.record_log(err);
-            delete scheme._attr._saving;
-
             let text = err.message || err;
             if(ox._data && ox._data._err) {
+              if(typeof ox._data._err === 'object') {
+                $p.md.emit('alert', Object.assign({obj: ox}, ox._data._err));
+                delete ox._data._err;
+                return;
+              }
               text += `\n${ox._data._err}`;
               delete ox._data._err;
             }

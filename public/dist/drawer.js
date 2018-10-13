@@ -11199,12 +11199,15 @@ class ProductsBuilding {
           .catch((err) => {
 
 
+            delete scheme._attr._saving;
+
             if(err.msg && err.msg._shown) {
               return;
             }
 
-            $p.record_log(err);
-            delete scheme._attr._saving;
+            if(ox._data._err) {
+              return $p.md.emit('alert', ox._data._err);
+            }
 
             let text = err.message || err;
             if(ox._data && ox._data._err) {
