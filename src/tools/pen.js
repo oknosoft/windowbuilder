@@ -286,7 +286,7 @@ class ToolPen extends ToolElement {
     }];
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this.sys);
+    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this);
 
     this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
     this._grid = this.wnd.attachHeadFields({

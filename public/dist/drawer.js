@@ -12241,12 +12241,14 @@ $p.cat.clrs.__define({
 	selection_exclude_service: {
 		value(mf, sys) {
 
-			if(mf.choice_params)
-				mf.choice_params.length = 0;
-			else
-				mf.choice_params = [];
+      if(mf.choice_params) {
+        mf.choice_params.length = 0;
+      }
+      else {
+        mf.choice_params = [];
+      }
 
-			mf.choice_params.push({
+      mf.choice_params.push({
 				name: "parent",
 				path: {not: $p.cat.clrs.predefined("СЛУЖЕБНЫЕ")}
 			});
@@ -12282,6 +12284,11 @@ $p.cat.clrs.__define({
 						else if(sys instanceof $p.classes.DataProcessorObj){
 							clr_group = sys.sys.clr_group;
 						}
+            else if(sys.hasOwnProperty('sys') && sys.hasOwnProperty('profile') && && sys.profile.hasOwnProperty('inset')) {
+              const sclr_group = sys.sys.clr_group;
+              const iclr_group = sys.profile.inset.clr_group;
+              clr_group = iclr_group.empty() ? sclr_group : iclr_group;
+            }
 						else{
 							clr_group = sys.clr_group;
 						}
