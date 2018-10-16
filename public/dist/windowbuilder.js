@@ -6417,7 +6417,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
 
     const {bounds} = path;
-    let turn = bounds.width * 1.5 < bounds.height;
     _attr._text.content = this.formula();
 
     const textBounds = bounds.scale(0.9);
@@ -6425,6 +6424,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     textBounds.height = textBounds.height > maxTextWidth ? maxTextWidth : textBounds.height;
 
     if(is_rectangular){
+      const turn = textBounds.width * 1.5 < textBounds.height;
       _attr._text.fitBounds(textBounds);
       _attr._text.point = turn
         ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])

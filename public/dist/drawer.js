@@ -3955,7 +3955,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
 
     const {bounds} = path;
-    let turn = bounds.width * 1.5 < bounds.height;
     _attr._text.content = this.formula();
 
     const textBounds = bounds.scale(0.9);
@@ -3963,6 +3962,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     textBounds.height = textBounds.height > maxTextWidth ? maxTextWidth : textBounds.height;
 
     if(is_rectangular){
+      const turn = textBounds.width * 1.5 < textBounds.height;
       _attr._text.fitBounds(textBounds);
       _attr._text.point = turn
         ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])
@@ -12281,13 +12281,13 @@ $p.cat.clrs.__define({
                 clr_group = sys.project._dp.sys.clr_group;
               }
 						}
-						else if(sys instanceof $p.classes.DataProcessorObj){
-							clr_group = sys.sys.clr_group;
-						}
-            else if(sys.hasOwnProperty('sys') && sys.hasOwnProperty('profile') && && sys.profile.hasOwnProperty('inset')) {
+            else if(sys.hasOwnProperty('sys') && sys.hasOwnProperty('profile') && sys.profile.inset) {
               const sclr_group = sys.sys.clr_group;
               const iclr_group = sys.profile.inset.clr_group;
               clr_group = iclr_group.empty() ? sclr_group : iclr_group;
+            }
+            else if(sys.sys && sys.sys.clr_group){
+              clr_group = sys.sys.clr_group;
             }
 						else{
 							clr_group = sys.clr_group;
@@ -12296,9 +12296,7 @@ $p.cat.clrs.__define({
 						if(clr_group.empty() || !clr_group.clr_conformity.count()){
               return {not: ''};
 						}
-						else{
-              add_by_clr(clr_group)
-						}
+            add_by_clr(clr_group);
 						return {in: res};
 					}
 				});
