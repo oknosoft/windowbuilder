@@ -98,14 +98,20 @@ class AdditionsGroup extends React.Component {
       const column = tabular.state._columns[e.idx];
       const {key} = column;
       const row = tabular.rowGetter(e.rowIdx);
-      const mf = meta.fields[key];
+      const mf = meta.fields[key] || {
+        choice_params: [],
+        type: {
+          is_ref: true,
+          types: ["cat.property_values"],
+          _mgr: $p.cat.property_values,
+        }
+      };
       if(key === 'clr') {
         $p.cat.clrs.selection_exclude_service(mf, row.inset);
       }
       else if($p.utils.is_guid(key)) {
         row.tune(key, mf, column);
       }
-
     }
   }
 

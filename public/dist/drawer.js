@@ -14571,6 +14571,15 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     return this;
   }
 
+  unload() {
+    this.production.forEach(({characteristic}) => {
+      if(!characteristic.empty() && characteristic.calc_order === this) {
+        characteristic.unload();
+      }
+    });
+    return super.unload();
+  }
+
 
   get doc_currency() {
     const currency = this.contract.settlements_currency;
