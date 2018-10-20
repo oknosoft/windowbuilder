@@ -348,6 +348,10 @@
         save('retrieve');
         break;
 
+      case 'btn_reload':
+        reload();
+        break;
+
       case 'btn_post':
         save('post');
         break;
@@ -560,6 +564,18 @@
       });
     }
 
+    function reload() {
+      o && o.load()
+        .then(() => o.load_production(true))
+        .then(() => {
+          const {pg_left, pg_right, grids} = wnd.elmnts;
+          pg_left.reload();
+          pg_right.reload();
+          grids.production.selection = grids.production.selection;
+          wnd.set_text();
+        });
+    }
+
     function save(action) {
 
       function do_save(post) {
@@ -587,15 +603,7 @@
                 text: err.message + '<div style="text-align: left;padding-top: 16px;">Ваши правки потеряны, можно закрыть форму либо прочитать актуальную версию заказа с сервера</div>',
                 cancel: 'Прочитать',
                 callback: (btn) => {
-                  if(btn === false) {
-                    o.load()
-                      .then(() => {
-                        const {pg_left, pg_right, grids} = wnd.elmnts;
-                        pg_left.reload();
-                        pg_right.reload();
-                        grids.production.selection = grids.production.selection;
-                      });
-                  }
+                  btn === false && reload();
                 }
               });
             }
@@ -648,6 +656,7 @@
     function frm_close() {
 
       if(o && !location.pathname.match(/builder/)) {
+        // при закрыти формы не в рисовалку, выгружаем заказ и его продукции из памяти
         setTimeout(o.unload.bind(o), 200);
       }
 

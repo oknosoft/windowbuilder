@@ -22,9 +22,9 @@
     <item type="button" id="selling" enabled="false" text="Реализация товаров услуг"/>
   </item>
 
-  <item type="buttonSelect" id="bs_go_to" text="&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;" title="Перейти" openAll="true" >
+  <!--item type="buttonSelect" id="bs_go_to" text="&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;" title="Перейти" openAll="true" >
     <item type="button" id="btn_go_connection" enabled="false" text="Связи" />
-  </item>
+  </item-->
 
   <item type="buttonSelect" id="bs_more" text="&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;" title="Дополнительно" openAll="true">
     <item id="btn_requery" type="button" text="&lt;i class='fa fa-refresh fa-fw'&gt;&lt;/i&gt; Обновить список"/>

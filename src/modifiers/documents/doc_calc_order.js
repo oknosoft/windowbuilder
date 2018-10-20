@@ -217,6 +217,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     return this;
   }
 
+  // вместе с заказом выгружаем продукцию
+  unload() {
+    this.production.forEach(({characteristic}) => {
+      if(!characteristic.empty() && characteristic.calc_order === this) {
+        characteristic.unload();
+      }
+    });
+    return super.unload();
+  }
+
 
   /**
    * Возвращает валюту документа
