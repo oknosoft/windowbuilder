@@ -16,9 +16,9 @@ class CalcOrderAdditions extends Component {
 
   constructor(props, context) {
     super(props, context);
-    const {handleCancel, handleCalck} = props;
+    const {handleCancel} = props;
     this.handleCancel = handleCancel.bind(this);
-    this.state = {msg: null};
+    this.state = {msg: null, queryClose: false};
   }
 
   handleOk = () => {
@@ -37,22 +37,26 @@ class CalcOrderAdditions extends Component {
   };
 
   handleErrClose = () => {
-    this.setState({msg: null})
+    this.setState({msg: null, queryClose: false});
+  };
+
+  queryClose = () => {
+    this.setState({queryClose: true});
   };
 
   render() {
 
-    const {handleCancel, handleCalck, handleOk, handleErrClose, props: {dialog}, state: {msg}} = this;
+    const {handleCancel, handleErrClose, props: {dialog}, state: {msg, queryClose}} = this;
 
     return <Dialog
       open
       initFullScreen
       large
       title="Аксессуары и услуги"
-      onClose={handleCancel}
+      onClose={this.queryClose}
       actions={[
-        <Button key="ok" onClick={handleOk} color="primary">Рассчитать и закрыть</Button>,
-        <Button key="calck" onClick={handleCalck} color="primary">Рассчитать</Button>,
+        <Button key="ok" onClick={this.handleOk} color="primary">Рассчитать и закрыть</Button>,
+        <Button key="calck" onClick={this.handleCalck} color="primary">Рассчитать</Button>,
         <Button key="cancel" onClick={handleCancel} color="primary">Закрыть</Button>
       ]}
     >
@@ -67,6 +71,17 @@ class CalcOrderAdditions extends Component {
       >
         {msg.obj && <div>{msg.obj.name}</div>}
         {msg.text || msg}
+      </Dialog>}
+      {queryClose && <Dialog
+        open
+        title="Закрыть аксессуары и услуги?"
+        onClose={handleErrClose}
+        actions={[
+          <Button key="ok" onClick={handleCancel} color="primary">Ок</Button>,
+          <Button key="cancel" onClick={handleErrClose} color="primary">Отмена</Button>
+        ]}
+      >
+        Внесённые изменения будут потеряны
       </Dialog>}
     </Dialog>;
 
