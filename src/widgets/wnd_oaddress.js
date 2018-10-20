@@ -278,32 +278,34 @@ class WndAddress {
   delivery_area_changed(){
 
     const {v, wnd} = this;
+    const {delivery_area} = v;
 
     // получим город и район из "района доставки"
-    if(!v.delivery_area.empty()){
+    if(!delivery_area.empty()){
       v.street = "";
     }
 
-    if(v.delivery_area.region){
-      v.region = v.delivery_area.region;
+    if(delivery_area.region){
+      v.region = delivery_area.region;
     }
     else {
       v.region = "";
     }
     wnd.elmnts.toolbar.setItemText('txt_region', v.region);
 
-    if(v.delivery_area.city){
-      v.city = v.delivery_area.city;
+    if(delivery_area.city){
+      v.city = delivery_area.city;
       wnd.elmnts.pgrid.cells("city", 1).setValue(v.city);
     }
     else{
       v.city = "";
     }
 
-    if(v.delivery_area.latitude && v.delivery_area.longitude){
-      const LatLng = new google.maps.LatLng(v.delivery_area.latitude, v.delivery_area.longitude);
+    if(delivery_area.latitude && delivery_area.longitude){
+      const LatLng = new google.maps.LatLng(delivery_area.latitude, delivery_area.longitude);
       wnd.elmnts.map.setCenter(LatLng);
       v.marker.setPosition(LatLng);
+      this.refresh_coordinates(delivery_area.latitude, delivery_area.longitude);
     }
 
     this.refresh_grid();
