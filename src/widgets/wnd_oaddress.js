@@ -168,29 +168,49 @@ class WndAddress {
     elmnts.toolbar = wnd.attachToolbar({icons_path: dhtmlx.image_path + 'dhxtoolbar' + dhtmlx.skin_suffix()});
     elmnts.toolbar.loadStruct('<toolbar><item id="btn_select" type="button" title="Установить адрес" text="&lt;b&gt;Выбрать&lt;/b&gt;" /><item type="separator"  id="sep1"	/></toolbar>', function(){
 
-      this.attachEvent("onclick", toolbar_click);
+      this.attachEvent('onclick', toolbar_click);
 
       const delivery_area_id = `txt_${dhx4.newId()}`;
       this.addText(delivery_area_id);
-      this.addSeparator("sep2");
-      this.addText("txt_region");
+      this.addSeparator('sep2');
+      this.addText('txt_region');
 
       const txt_div = this.objPull[this.idPrefix + delivery_area_id].obj;
       const delivery_area = new $p.iface.OCombo({
         parent: txt_div,
         obj: obj,
-        field: "delivery_area",
+        field: 'delivery_area',
         width: 200,
         hide_frm: true,
       });
-      txt_div.style.border = "1px solid #ccc";
-      txt_div.style.borderRadius = "3px";
-      txt_div.style.padding = "3px 2px 1px 2px";
-      txt_div.style.margin = "1px 5px 1px 1px";
-      delivery_area.DOMelem_input.placeholder = "Район доставки";
+      txt_div.style.border = '1px solid #ccc';
+      txt_div.style.borderRadius = '3px';
+      txt_div.style.padding = '3px 2px 1px 2px';
+      txt_div.style.margin = '1px 5px 1px 1px';
+      delivery_area.DOMelem_input.placeholder = 'Район доставки';
+
+      this.addInput('coordinates');
+      this.setWidth('coordinates', 210);
+      this.cont.querySelector('.dhxtoolbar_float_left').style.width = '100%';
+      const coordinates = this.getInput('coordinates');
+      coordinates.parentElement.style.float = 'right';
+      coordinates.placeholder = 'Координаты';
 
       this.setItemText('txt_region', v.region);
 
+    });
+
+    elmnts.toolbar.attachEvent("onEnter", (id, value) => {
+      if(id === 'coordinates') {
+        const coordinates = this.assemble_lat_lng(value);
+        if(coordinates) {
+          const latLng = new google.maps.LatLng(coordinates.lat, coordinates.lng);
+          const {v, wnd} = this;
+          wnd.elmnts.map.setCenter(latLng);
+          v.marker.setPosition(latLng);
+          this.marker_dragend({latLng});
+        }
+      }
     });
 
     elmnts.cell_map = elmnts.layout.cells('c');
@@ -328,6 +348,49 @@ class WndAddress {
       (city ? (city + ", ") : "") +
       (region ? (region + ", ") : "") + country +
       (postal_code ? (", " + postal_code) : "");
+  }
+
+  /**
+   * Parse a string containing a latitude, longitude pair and return them as an object.
+   * @function toLatLng
+   * @param {String} Str
+   * @return {{lat: Number, lng: Number}}
+   */
+  assemble_lat_lng(str) {
+    //simple coordinates
+    const simpleMatches = [];
+    simpleMatches[0] = /^\s*?(-?[0-9]+\.?[0-9]+?)\s*\,\s*(-?[0-9]+\.?[0-9]+?)\s*$/.exec(str);
+    simpleMatches[2] = /^\s*?(-?[0-9]+[,.]?[0-9]+?)\s*;?\s*(-?[0-9]+[,.]?[0-9]+?)\s*$/.exec(str);
+    const simpleMatch = simpleMatches.find(match => match && match.length === 3);
+    //complex coordinates
+    const otherMatches = [];
+    otherMatches[0] = /^\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[WE]\s*$/.exec(str);
+    otherMatches[1] = /^\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[EW]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*$/.exec(str);
+    const otherMatch = otherMatches.find(match => match && match.length === 7);
+    if (simpleMatch) {
+      const lat = parseFloat(simpleMatch[1].replace(',', '.'));
+      const lng = parseFloat(simpleMatch[2].replace(',', '.'));
+
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+
+    } else if (otherMatch) {
+      const latDeg = parseFloat(otherMatch[1]);
+      const latMin = parseFloat(otherMatch[2]);
+      const latSec = parseFloat(otherMatch[3].replace(',', '.'));
+      const lngDeg = parseFloat(otherMatch[4]);
+      const lngMin = parseFloat(otherMatch[5]);
+      const lngSec = parseFloat(otherMatch[6].replace(',', '.'));
+
+      const lat = (latDeg + latMin / 60 + latSec / 3600) * (str.indexOf('S') !== -1 ? -1 : 1);
+      const lng = (lngDeg + lngMin / 60 + lngSec / 3600) * (str.indexOf('W') !== -1 ? -1 : 1);
+
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+    }
+
   }
 
   /**
