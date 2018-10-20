@@ -8313,7 +8313,8 @@ class WndAddress {
     this.pwnd = source.pwnd;
     this.grid = source.grid;
     this.v = new WndAddressData(this);
-    this.process_address_fields().then(() => this.frm_create());
+    this.process_address_fields()
+      .then(() => this.frm_create());
   }
 
   frm_create() {
@@ -8457,6 +8458,7 @@ class WndAddress {
         }
       }
     });
+    this.refresh_coordinates();
 
     elmnts.cell_map = elmnts.layout.cells('c');
     elmnts.cell_map.hideHeader();
@@ -8550,6 +8552,15 @@ class WndAddress {
     pgrid2.cells("flat", 1).setValue(flat);
   }
 
+  refresh_coordinates(latitude, longitude){
+    const {v, wnd} = this;
+    if(latitude && longitude) {
+      v.latitude = latitude;
+      v.longitude = longitude;
+    }
+    v.latitude && wnd && wnd.elmnts && wnd.elmnts.toolbar.setValue('coordinates', `${v.latitude.toFixed(8)} ${v.longitude.toFixed(8)}`);
+  }
+
   addr_changed() {
     const {v, wnd} = this;
     const zoom = v.street ? 15 : 12;
@@ -8563,9 +8574,8 @@ class WndAddress {
         const loc = results[0].geometry.location;
         wnd.elmnts.map.setCenter(loc);
         v.marker.setPosition(loc);
-        v.latitude = loc.lat();
-        v.longitude = loc.lng();
         v.postal_code = $p.ipinfo.components({}, results[0].address_components).postal_code || "";
+        this.refresh_coordinates(loc.lat(), loc.lng());
       }
     });
   }
@@ -8785,14 +8795,12 @@ class WndAddress {
           if(obj.shipping_address){
             this.do_geocoding((results, status) => {
               if (status == google.maps.GeocoderStatus.OK) {
-                v.latitude = results[0].geometry.location.lat();
-                v.longitude = results[0].geometry.location.lng();
+                this.refresh_coordinates(results[0].geometry.location.lat(), results[0].geometry.location.lng());
               }
             });
           }
           else if($p.ipinfo.latitude && $p.ipinfo.longitude ){
-            v.latitude = $p.ipinfo.latitude;
-            v.longitude = $p.ipinfo.longitude;
+            this.refresh_coordinates($p.ipinfo.latitude, $p.ipinfo.longitude);
           }
           else{
             v.latitude = 55.635924;
@@ -8835,8 +8843,7 @@ class WndAddress {
             wnd.elmnts.map.setCenter(e.latLng);
           }
 
-          v.latitude = e.latLng.lat();
-          v.longitude = e.latLng.lng();
+          this.refresh_coordinates(e.latLng.lat(), e.latLng.lng());
         }
       }
     });
