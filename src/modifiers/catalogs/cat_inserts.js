@@ -122,6 +122,7 @@ $p.cat.inserts.__define({
 
         // отбор по типу вставки
         this.meta.fields.inset.choice_params[0].path = item;
+        this.meta.fields.inset.disable_clear = true;
 
         const changed = new Set();
 

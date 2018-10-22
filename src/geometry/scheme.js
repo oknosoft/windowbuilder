@@ -781,9 +781,10 @@ class Scheme extends paper.Project {
     }
 
     // при необходимости двигаем импосты
-    if (other.length && Math.abs(delta.x) > 1) {
+    if(other.length && Math.abs(delta.x) > 1) {
       this.do_align(auto_align, profiles);
-    } else {
+    }
+    else {
       // иначе перерисовываем контуры
       setTimeout(() => {
         this.contours.forEach(l => l.redraw());
