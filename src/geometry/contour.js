@@ -1132,10 +1132,7 @@ class Contour extends AbstractFilling(paper.Layer) {
           err = true;
         }
       });
-      if (err) {
-        glass.fill_error();
-      }
-      else if(glass.path.is_self_intersected()) {
+      if (err || glass.path.is_self_intersected()) {
         glass.fill_error();
       }
       else {
@@ -1150,7 +1147,7 @@ class Contour extends AbstractFilling(paper.Layer) {
       // Ошибки соединений Onlay в этом заполнении
       glass.imposts.forEach(impost => {
         if(impost instanceof Onlay) {
-          const {b,e} = impost._attr._rays;
+          const {b, e} = impost._attr._rays;
           b.check_err(err_attrs);
           e.check_err(err_attrs);
         }

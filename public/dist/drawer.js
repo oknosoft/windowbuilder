@@ -1134,29 +1134,33 @@ class Contour extends AbstractFilling(paper.Layer) {
       parent: l_visualization._cnn,
     };
 
-    this.glasses(false, true).forEach((elm) => {
+    this.glasses(false, true).forEach(glass => {
       let err;
-      elm.profiles.forEach(({cnn, sub_path}) => {
+      glass.profiles.forEach(({cnn, sub_path}) => {
         if (!cnn) {
           Object.assign(sub_path, err_attrs);
           err = true;
         }
       });
-      if (err) {
-        elm.fill_error();
-      }
-      else if(elm.path.is_self_intersected()) {
-        elm.fill_error();
+      if (err || glass.path.is_self_intersected()) {
+        glass.fill_error();
       }
       else {
-        const {form_area, inset: {smin, smax}} = elm;
+        const {form_area, inset: {smin, smax}} = glass;
         if((smin && smin > form_area) || (smax && smax < form_area)) {
-          elm.fill_error();
+          glass.fill_error();
         }
         else {
-          elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+          glass.path.fillColor = BuilderElement.clr_by_clr.call(glass, glass._row.clr, false);
         }
       }
+      glass.imposts.forEach(impost => {
+        if(impost instanceof Onlay) {
+          const {b, e} = impost._attr._rays;
+          b.check_err(err_attrs);
+          e.check_err(err_attrs);
+        }
+      })
     });
 
     this.profiles.forEach((elm) => {
