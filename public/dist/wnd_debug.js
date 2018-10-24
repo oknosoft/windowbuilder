@@ -4585,35 +4585,31 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       _obj.state = 'draft';
     }
 
-    const rows_saver = this.product_rows(true);
-
-    const res = this._manager.pouch_db
-      .query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
-      .then(({rows}) => {
-        let res = Promise.resolve();
-        let deleted = 0;
-        for (const {id} of rows) {
-          const ref = id.substr(20);
-          if(this.production.find_rows({characteristic: ref}).length) {
-            continue;
-          }
-          deleted ++;
-          res = res
-            .then(() => $p.cat.characteristics.get(ref, 'promise'))
-            .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true));
-        }
-        return res.then(() => deleted);
+    return this.product_rows(true)
+      .then(() => {
+        return this._manager.pouch_db
+          .query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
+          .then(({rows}) => {
+            let res = Promise.resolve();
+            let deleted = 0;
+            for (const {id} of rows) {
+              const ref = id.substr(20);
+              if(this.production.find_rows({characteristic: ref}).length) {
+                continue;
+              }
+              deleted ++;
+              res = res
+                .then(() => $p.cat.characteristics.get(ref, 'promise'))
+                .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true));
+            }
+            return res.then(() => deleted);
+          })
+          .then((res) => {
+            res && this._manager.emit_async('svgs', this);
+          })
+          .catch((err) => null);
       })
-      .then((res) => {
-        res && this._manager.emit_async('svgs', this);
-      })
-      .catch((err) => null);
-
-    if(this._data.before_save_sync) {
-      return res
-        .then(() => rows_saver)
-        .then(() => this);
-    }
+      .then(() => this);
 
   }
 
@@ -5070,7 +5066,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ro = !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
     }
     else if(!obj_delivery_state.empty()) {
-      ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван;
+      ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван && !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
     }
     return ro;
   }
@@ -6823,7 +6819,7 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
         row.ordn = row.characteristic.leading_product = cx;
       }
     });
-    dst._data.before_save_sync = true;
+
     return dst.save();
   }
 
