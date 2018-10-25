@@ -673,23 +673,25 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
             $p.record_log(err);
           });
       });
-
   }
 
   /**
    * Выясняет, можно ли редактировать данный объект
    */
   get is_read_only() {
-    const {obj_delivery_state, posted, _deleted} = this;
-    const {Черновик, Шаблон, Отозван} = $p.enm.obj_delivery_states;
+    const {obj_delivery_state, posted, _data} = this;
+    const {Черновик, Шаблон, Отозван, Отправлен} = $p.enm.obj_delivery_states;
     let ro = false;
     // технолог может изменять шаблоны
     if(obj_delivery_state == Шаблон) {
       ro = !$p.current_user.role_available('ИзменениеТехнологическойНСИ');
     }
     // ведущий менеджер может изменять проведенные
-    else if(posted || _deleted) {
+    else if(posted || _data._deleted) {
       ro = !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
+    }
+    else if(obj_delivery_state == Отправлен) {
+      ro = !_data._saving_trans && !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
     }
     else if(!obj_delivery_state.empty()) {
       ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван && !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
