@@ -108,14 +108,16 @@ class BuilderElement extends paper.Group {
   set generatrix(attr) {
 
     const {_attr} = this;
-    _attr.generatrix.removeSegments();
+    const {generatrix} = _attr;
+    generatrix.removeSegments();
 
-    if(this.hasOwnProperty('rays')){
-      this.rays.clear();
+    this.rays && this.rays.clear();
+
+    if(attr instanceof paper.Path){
+      generatrix.addSegments(attr.segments);
     }
-
     if(Array.isArray(attr)){
-      _attr.generatrix.addSegments(attr);
+      generatrix.addSegments(attr);
     }
     else if(attr.proto &&  attr.p1 &&  attr.p2){
 
@@ -141,7 +143,7 @@ class BuilderElement extends paper.Group {
         tpath.split(d2);
       }
 
-      _attr.generatrix.remove();
+      generatrix.remove();
       _attr.generatrix = tpath;
       _attr.generatrix.parent = this;
 

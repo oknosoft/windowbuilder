@@ -38,6 +38,7 @@ class ToolLayImpost extends ToolElement {
       hitItem: null,
       paths: [],
       changed: false,
+      confirmed: true,
     });
 
     // подключает окно редактора
@@ -243,12 +244,12 @@ class ToolLayImpost extends ToolElement {
 
     this.on({
 
-      activate: function () {
+      activate() {
         this.on_activate('cursor-arrow-lay');
         tool_wnd();
       },
 
-      deactivate: function () {
+      deactivate() {
 
         this._scope.clear_selection_bounds();
 
@@ -260,286 +261,41 @@ class ToolLayImpost extends ToolElement {
         this.detache_wnd();
       },
 
-      mouseup: function (event) {
+      mouseup(event) {
 
         this._scope.canvas_cursor('cursor-arrow-lay');
 
-        const {profile, project} = this;
-
-        if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
-          return;
-        }
-
-        if (!this.hitItem && (profile.elm_type == $p.enm.elm_types.Раскладка || !profile.w || !profile.h)) {
-          return;
-        }
-
-        this.check_layer();
-
-        const layer = this.hitItem ? this.hitItem.layer : this.project.activeLayer;
-        const lgeneratics = layer.profiles.map((p) => {
-          const {generatrix, elm_type, rays, addls} = p;
-          const res = {
-            inner: elm_type === $p.enm.elm_types.Импост ? generatrix : rays.inner,
-            gen: p.nearest() ? rays.outer : generatrix,
-          };
-          if(addls.length) {
-            if(elm_type === $p.enm.elm_types.Импост) {
-
-            }
-            else {
-              res.inner = addls[0].rays.inner;
-              res.gen = addls[0].rays.outer;
-            }
-          }
-          // while (p.nearest()) {
-          //   res.gen = p.rays.outer;
-          //   p = p.nearest();
-          // }
-          return res;
-        });
-        const nprofiles = [];
-
-        function n1(p) {
-          return p.segments[0].point.add(p.segments[3].point).divide(2);
-        }
-
-        function n2(p) {
-          return p.segments[1].point.add(p.segments[2].point).divide(2);
-        }
-
-        function check_inset(inset, pos) {
-
-          const nom = inset.nom();
-          const rows = [];
-
-          project._dp.sys.elmnts.each((row) => {
-            if (row.nom.nom() == nom) {
-              rows.push(row);
+        // проверяем существование раскладки
+        if(this.profile.elm_type == $p.enm.elm_types.Раскладка && this.hitItem instanceof Filling && this.hitItem.imposts.length) {
+          // если существует, выводим подтверждающее сообщение на добавление
+          this.confirmed = false;
+          dhtmlx.confirm({
+            type: 'confirm',
+            text: 'Раскладка уже существует, добавить к имеющейся?',
+            title: $p.msg.glass_spec,
+            callback: result => {
+              // добавляем раскладку, в случае положительного результата
+              result && this.add_profiles();
+              this.confirmed = true;
             }
           });
-
-          for (let i = 0; i < rows.length; i++) {
-            if (rows[i].pos == pos) {
-              return rows[i].nom;
-            }
-          }
-
-          return inset;
         }
-
-        function rectification() {
-          // получаем таблицу расстояний профилей от рёбер габаритов
-          const ares = [];
-          const group = new paper.Group({insert: false});
-
-          function reverce(p) {
-            const s = p.segments.map(function (s) {
-              return s.point.clone();
-            });
-            p.removeSegments();
-            p.addSegments([s[1], s[0], s[3], s[2]]);
-          }
-
-          function by_side(name) {
-
-            ares.sort((a, b) => a[name] - b[name]);
-
-            ares.forEach((p) => {
-              if (ares[0][name] == p[name]) {
-
-                let angle = n2(p.profile).subtract(n1(p.profile)).angle.round();
-
-                if (angle < 0) {
-                  angle += 360;
-                }
-
-                if (name == 'left' && angle != 270) {
-                  reverce(p.profile);
-                } else if (name == 'top' && angle != 0) {
-                  reverce(p.profile);
-                } else if (name == 'right' && angle != 90) {
-                  reverce(p.profile);
-                } else if (name == 'bottom' && angle != 180) {
-                  reverce(p.profile);
-                }
-
-                if (name == 'left' || name == 'right') {
-                  p.profile._inset = check_inset(profile.inset_by_x, $p.enm.positions[name]);
-                }
-                else {
-                  p.profile._inset = check_inset(profile.inset_by_y, $p.enm.positions[name]);
-                }
-              }
-            });
-
-          }
-
-          tool.paths.forEach((p) => {
-            if (p.segments.length) {
-              p.parent = group;
-            }
-          });
-
-          const bounds = group.bounds;
-
-          group.children.forEach((p) => {
-            ares.push({
-              profile: p,
-              left: Math.abs(n1(p).x + n2(p).x - bounds.left * 2),
-              top: Math.abs(n1(p).y + n2(p).y - bounds.top * 2),
-              bottom: Math.abs(n1(p).y + n2(p).y - bounds.bottom * 2),
-              right: Math.abs(n1(p).x + n2(p).x - bounds.right * 2),
-            });
-          });
-
-          ['left', 'top', 'bottom', 'right'].forEach(by_side);
+        else {
+          // в остальных случаях, добавляем профили
+          this.add_profiles();
         }
-
-        // уточним направления путей для витража
-        if (!this.hitItem) {
-          rectification();
-        }
-
-        tool.paths.forEach((p) => {
-
-          let iter = 0, angle, proto = {clr: profile.clr};
-
-          function do_bind() {
-
-            let correctedp1 = false,
-              correctedp2 = false;
-
-            // пытаемся вязать к профилям контура
-            for (let {gen, inner} of lgeneratics) {
-              if (!correctedp1) {
-                const np = inner.getNearestPoint(p.b);
-                if(np.getDistance(p.b) < consts.sticking) {
-                  correctedp1 = true;
-                  p.b = inner === gen ? np : gen.getNearestPoint(p.b);
-                }
-              }
-              if (!correctedp2) {
-                const np = inner.getNearestPoint(p.e);
-                if (np.getDistance(p.e) < consts.sticking) {
-                  correctedp2 = true;
-                  p.e = inner === gen ? np : gen.getNearestPoint(p.e);
-                }
-              }
-            }
-
-            // если не привязалось - ищем точки на вновь добавленных профилях
-            if (profile.split != $p.enm.lay_split_types.КрестВСтык && (!correctedp1 || !correctedp2)) {
-              for (let profile of nprofiles) {
-                let np = profile.generatrix.getNearestPoint(p.b);
-                if (!correctedp1 && np.getDistance(p.b) < consts.sticking) {
-                  correctedp1 = true;
-                  p.b = np;
-                }
-                np = profile.generatrix.getNearestPoint(p.e);
-                if (!correctedp2 && np.getDistance(p.e) < consts.sticking) {
-                  correctedp2 = true;
-                  p.e = np;
-                }
-              }
-            }
-          }
-
-          p.remove();
-          if (p.segments.length) {
-
-            // в зависимости от наклона разные вставки
-            angle = p.e.subtract(p.b).angle;
-            if ((angle > -40 && angle < 40) || (angle > 180 - 40 && angle < 180 + 40)) {
-              proto.inset = p._inset || profile.inset_by_y;
-            } else {
-              proto.inset = p._inset || profile.inset_by_x;
-            }
-
-            if (profile.elm_type == $p.enm.elm_types.Раскладка) {
-
-              nprofiles.push(new Onlay({
-                generatrix: new paper.Path({
-                  segments: [p.b, p.e],
-                }),
-                parent: tool.hitItem,
-                proto: proto,
-              }));
-
-            }
-            else {
-
-              while (iter < 10) {
-
-                iter++;
-                do_bind();
-                angle = p.e.subtract(p.b).angle;
-                let delta = Math.abs(angle % 90);
-
-                if (delta > 45) {
-                  delta -= 90;
-                }
-                if (delta < 0.02) {
-                  break;
-                }
-                if (angle > 180) {
-                  angle -= 180;
-                }
-                else if (angle < 0) {
-                  angle += 180;
-                }
-
-                if ((angle > -40 && angle < 40) || (angle > 180 - 40 && angle < 180 + 40)) {
-                  p.b.y = p.e.y = (p.b.y + p.e.y) / 2;
-                }
-                else if ((angle > 90 - 40 && angle < 90 + 40) || (angle > 270 - 40 && angle < 270 + 40)) {
-                  p.b.x = p.e.x = (p.b.x + p.e.x) / 2;
-                }
-                else {
-                  break;
-                }
-              }
-
-              // создаём новые профили
-              if (p.e.getDistance(p.b) > proto.inset.nom().width) {
-                nprofiles.push(new Profile({
-                  generatrix: new paper.Path({
-                    segments: [p.b, p.e],
-                  }),
-                  parent: layer,
-                  proto: proto,
-                }));
-              }
-            }
-          }
-        });
-        tool.paths.length = 0;
-
-        // пытаемся выполнить привязку
-        nprofiles.forEach((p) => {
-          p.cnn_point('b');
-          p.cnn_point('e');
-        });
-        // и еще раз пересчитываем соединения, т.к. на предыдущем шаге могла измениться геометрия соседей
-        nprofiles.forEach((p) => {
-          p.cnn_point('b');
-          p.cnn_point('e');
-        });
-
-        if (!this.hitItem)
-          setTimeout(() => {
-            this._scope.tools[1].activate();
-          }, 100);
 
       },
 
-      mousemove: function (event) {
+      mousemove(event) {
+
+        if(!this.confirmed) {
+          return;
+        }
 
         this.hitTest(event);
 
-        this.paths.forEach((p) => {
-          p.removeSegments();
-        });
+        this.paths.forEach((p) => p.removeSegments());
 
         const {profile} = this;
         if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
@@ -913,6 +669,11 @@ class ToolLayImpost extends ToolElement {
         }
       }
 
+      // цвет по умолчанию
+      if (profile.elm_type != $p.enm.elm_types.Раскладка) {
+        add_by_clr(profile.clr);
+      }
+
       if (inset_by_x.clr_group.empty() && inset_by_y.clr_group.empty()) {
         add_by_clr(sys.clr_group);
       }
@@ -958,5 +719,269 @@ class ToolLayImpost extends ToolElement {
 
   }
 
+  add_profiles() {
+    const {profile, project} = this;
+
+    if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
+      return;
+    }
+
+    if (!this.hitItem && (profile.elm_type == $p.enm.elm_types.Раскладка || !profile.w || !profile.h)) {
+      return;
+    }
+
+    this.check_layer();
+
+    const layer = this.hitItem ? this.hitItem.layer : this.project.activeLayer;
+    const lgeneratics = layer.profiles.map((p) => {
+      const {generatrix, elm_type, rays, addls} = p;
+      const res = {
+        inner: elm_type === $p.enm.elm_types.Импост ? generatrix : rays.inner,
+        gen: p.nearest() ? rays.outer : generatrix,
+      };
+      if(addls.length) {
+        if(elm_type === $p.enm.elm_types.Импост) {
+
+        }
+        else {
+          res.inner = addls[0].rays.inner;
+          res.gen = addls[0].rays.outer;
+        }
+      }
+      return res;
+    });
+    const nprofiles = [];
+
+    function n1(p) {
+      return p.segments[0].point.add(p.segments[3].point).divide(2);
+    }
+
+    function n2(p) {
+      return p.segments[1].point.add(p.segments[2].point).divide(2);
+    }
+
+    function check_inset(inset, pos) {
+
+      const nom = inset.nom();
+      const rows = [];
+
+      project._dp.sys.elmnts.each((row) => {
+        if (row.nom.nom() == nom) {
+          rows.push(row);
+        }
+      });
+
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i].pos == pos) {
+          return rows[i].nom;
+        }
+      }
+
+      return inset;
+    }
+
+    function rectification() {
+      // получаем таблицу расстояний профилей от рёбер габаритов
+      const ares = [];
+      const group = new paper.Group({insert: false});
+
+      function reverce(p) {
+        const s = p.segments.map(function (s) {
+          return s.point.clone();
+        });
+        p.removeSegments();
+        p.addSegments([s[1], s[0], s[3], s[2]]);
+      }
+
+      function by_side(name) {
+
+        ares.sort((a, b) => a[name] - b[name]);
+
+        ares.forEach((p) => {
+          if (ares[0][name] == p[name]) {
+
+            let angle = n2(p.profile).subtract(n1(p.profile)).angle.round();
+
+            if (angle < 0) {
+              angle += 360;
+            }
+
+            if (name == 'left' && angle != 270) {
+              reverce(p.profile);
+            } else if (name == 'top' && angle != 0) {
+              reverce(p.profile);
+            } else if (name == 'right' && angle != 90) {
+              reverce(p.profile);
+            } else if (name == 'bottom' && angle != 180) {
+              reverce(p.profile);
+            }
+
+            if (name == 'left' || name == 'right') {
+              p.profile._inset = check_inset(profile.inset_by_x, $p.enm.positions[name]);
+            }
+            else {
+              p.profile._inset = check_inset(profile.inset_by_y, $p.enm.positions[name]);
+            }
+          }
+        });
+
+      }
+
+      this.paths.forEach((p) => {
+        if (p.segments.length) {
+          p.parent = group;
+        }
+      });
+
+      const bounds = group.bounds;
+
+      group.children.forEach((p) => {
+        ares.push({
+          profile: p,
+          left: Math.abs(n1(p).x + n2(p).x - bounds.left * 2),
+          top: Math.abs(n1(p).y + n2(p).y - bounds.top * 2),
+          bottom: Math.abs(n1(p).y + n2(p).y - bounds.bottom * 2),
+          right: Math.abs(n1(p).x + n2(p).x - bounds.right * 2),
+        });
+      });
+
+      ['left', 'top', 'bottom', 'right'].forEach(by_side);
+    }
+
+    // уточним направления путей для витража
+    if (!this.hitItem) {
+      rectification();
+    }
+
+    this.paths.forEach((p) => {
+
+      let iter = 0, angle, proto = {clr: profile.clr};
+
+      function do_bind() {
+
+        let correctedp1 = false,
+          correctedp2 = false;
+
+        // пытаемся вязать к профилям контура
+        for (let {gen, inner} of lgeneratics) {
+          if (!correctedp1) {
+            const np = inner.getNearestPoint(p.b);
+            if(np.getDistance(p.b) < consts.sticking) {
+              correctedp1 = true;
+              p.b = inner === gen ? np : gen.getNearestPoint(p.b);
+            }
+          }
+          if (!correctedp2) {
+            const np = inner.getNearestPoint(p.e);
+            if (np.getDistance(p.e) < consts.sticking) {
+              correctedp2 = true;
+              p.e = inner === gen ? np : gen.getNearestPoint(p.e);
+            }
+          }
+        }
+
+        // если не привязалось - ищем точки на вновь добавленных профилях
+        if (profile.split != $p.enm.lay_split_types.КрестВСтык && (!correctedp1 || !correctedp2)) {
+          for (let profile of nprofiles) {
+            let np = profile.generatrix.getNearestPoint(p.b);
+            if (!correctedp1 && np.getDistance(p.b) < consts.sticking) {
+              correctedp1 = true;
+              p.b = np;
+            }
+            np = profile.generatrix.getNearestPoint(p.e);
+            if (!correctedp2 && np.getDistance(p.e) < consts.sticking) {
+              correctedp2 = true;
+              p.e = np;
+            }
+          }
+        }
+      }
+
+      p.remove();
+      if (p.segments.length) {
+
+        // в зависимости от наклона разные вставки
+        angle = p.e.subtract(p.b).angle;
+        if ((angle > -40 && angle < 40) || (angle > 180 - 40 && angle < 180 + 40)) {
+          proto.inset = p._inset || profile.inset_by_y;
+        } else {
+          proto.inset = p._inset || profile.inset_by_x;
+        }
+
+        if (profile.elm_type == $p.enm.elm_types.Раскладка) {
+
+          nprofiles.push(new Onlay({
+            generatrix: new paper.Path({
+              segments: [p.b, p.e],
+            }),
+            parent: this.hitItem,
+            proto: proto,
+          }));
+
+        }
+        else {
+
+          while (iter < 10) {
+
+            iter++;
+            do_bind();
+            angle = p.e.subtract(p.b).angle;
+            let delta = Math.abs(angle % 90);
+
+            if (delta > 45) {
+              delta -= 90;
+            }
+            if (delta < 0.02) {
+              break;
+            }
+            if (angle > 180) {
+              angle -= 180;
+            }
+            else if (angle < 0) {
+              angle += 180;
+            }
+
+            if ((angle > -40 && angle < 40) || (angle > 180 - 40 && angle < 180 + 40)) {
+              p.b.y = p.e.y = (p.b.y + p.e.y) / 2;
+            }
+            else if ((angle > 90 - 40 && angle < 90 + 40) || (angle > 270 - 40 && angle < 270 + 40)) {
+              p.b.x = p.e.x = (p.b.x + p.e.x) / 2;
+            }
+            else {
+              break;
+            }
+          }
+
+          // создаём новые профили
+          if (p.e.getDistance(p.b) > proto.inset.nom().width) {
+            nprofiles.push(new Profile({
+              generatrix: new paper.Path({
+                segments: [p.b, p.e],
+              }),
+              parent: layer,
+              proto: proto,
+            }));
+          }
+        }
+      }
+    });
+    this.paths.length = 0;
+
+    // пытаемся выполнить привязку
+    nprofiles.forEach((p) => {
+      p.cnn_point('b');
+      p.cnn_point('e');
+    });
+    // и еще раз пересчитываем соединения, т.к. на предыдущем шаге могла измениться геометрия соседей
+    nprofiles.forEach((p) => {
+      p.cnn_point('b');
+      p.cnn_point('e');
+    });
+
+    if (!this.hitItem)
+      setTimeout(() => {
+        this._scope.tools[1].activate();
+      }, 100);
+  }
 }
 

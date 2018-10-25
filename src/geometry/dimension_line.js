@@ -67,15 +67,22 @@ class DimensionLine extends paper.Group {
       parent: this,
       name: 'text',
       justification: 'center',
-      fontFamily: consts.font_family,
       fillColor: 'black',
-      fontSize: consts.font_size});
+      fontFamily: consts.font_family,
+      fontSize: this._font_size()});
 
     this.on({
       mouseenter: this._mouseenter,
       click: this._click
     });
 
+  }
+
+  _font_size() {
+    const {width, height} = this.project.bounds;
+    const {cutoff, font_size} = consts;
+    const size = Math.max(width - cutoff, height - cutoff) / 60;
+    return font_size + (size > 0 ? size : 0);
   }
 
   // виртуальные метаданные для автоформ
@@ -214,7 +221,7 @@ class DimensionLine extends paper.Group {
 
   redraw() {
 
-    const {children, path, align} = this;
+    const {children, path, align, project: {builder_props}} = this;
     if(!children.length){
       return;
     }
@@ -267,21 +274,25 @@ class DimensionLine extends paper.Group {
     children.callout2.visible = !this.hide_c2;
     children.scale.visible = !this.hide_line;
 
-    children.text.content = length.toFixed(0);
+    children.text.content = length.round(builder_props.rounding).toString();
     children.text.rotation = e.subtract(b).angle;
     children.text.justification = align.ref;
+
+    const font_size = this._font_size();
+    const {isNode} = $p.wsql.alasql.utils;
+    children.text.fontSize = font_size;
     if(align == $p.enm.text_aligns.left) {
       children.text.position = bs
-        .add(path.getTangentAt(0).multiply(consts.font_size))
-        .add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+        .add(path.getTangentAt(0).multiply(font_size))
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
     }
     else if(align == $p.enm.text_aligns.right) {
       children.text.position = es
-        .add(path.getTangentAt(0).multiply(-consts.font_size))
-        .add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+        .add(path.getTangentAt(0).multiply(-font_size))
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
     }
     else {
-      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(consts.font_size / ($p.wsql.alasql.utils.isNode ? 1.3 : 2)));
+      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
     }
   }
 

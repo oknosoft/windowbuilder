@@ -167,7 +167,8 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
    */
   get_spec(contour, cache, exclude_dop) {
 
-    const res = $p.dp.buyers_order.create().specification;
+    // тихий режим для спецификации
+    const res = $p.dp.buyers_order.create({specification: []}, true).specification;
     const {ox} = contour.project;
     const {НаПримыкающий} = $p.enm.transfer_operations_options;
 
@@ -367,16 +368,31 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
     if(res) {
 
       specification_restrictions.find_rows({elm, dop}, (row) => {
-        let len;
-        if (contour.is_rectangular) {
-          len = (row.side == 1 || row.side == 3) ? cache.w : cache.h;
+        const {lmin, lmax, amin, amax, side, for_direct_profile_only} = row;
+        const elm = contour.profile_by_furn_side(side, cache);
+
+        // Проверка кривизны
+        if(for_direct_profile_only === -1 && elm.is_linear()) {
+          return res = false;
         }
-        else {
-          const elm = contour.profile_by_furn_side(row.side, cache);
-          len = elm ? (elm._row.len - 2 * elm.nom.sizefurn) : 0;
+        if(for_direct_profile_only === 1 && !elm.is_linear()) {
+          return res = false;
         }
-        len = len.round();
-        if (len < row.lmin || len > row.lmax) {
+
+        // Проверка длины
+        const { side_count } = contour;
+        const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
+        const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
+        const len = (elm._row.len - prev.nom.sizefurn - next.nom.sizefurn).round();
+        if (len < lmin || len > lmax) {
+          return res = false;
+        }
+
+        // Проверка угла
+        const angle = direction == $p.enm.open_directions.Правое ?
+          elm.generatrix.angle_to(prev.generatrix, elm.e) :
+          prev.generatrix.angle_to(elm.generatrix, elm.b);
+        if (angle < amin || angle > amax) {
           return res = false;
         }
       });

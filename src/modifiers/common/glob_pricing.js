@@ -39,7 +39,7 @@ class Pricing {
         return !loc && this.by_range();
       })
       .then(() => {
-        const {pouch} = $p.adapters;
+        const {adapters: {pouch}, doc: {calc_order}, wsql} = $p;
         // излучаем событие "можно открывать формы"
         pouch.emit('pouch_complete_loaded');
 
@@ -49,15 +49,18 @@ class Pricing {
             since: 'now',
             live: true,
             include_docs: true,
-            selector: pouch.props.user_node ? {class_name: 'doc.nom_prices_setup'} : {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
+            selector: {class_name: {$in: ['doc.nom_prices_setup', calc_order.class_name]}}
           }).on('change', (change) => {
             // формируем новый
             if(change.doc.class_name == 'doc.nom_prices_setup'){
               setTimeout(() => this.by_doc(change.doc), 500);
             }
-            else if(change.doc.class_name == 'doc.calc_order'){
-              const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
-              const user = pouch.authorized || $p.wsql.get_user_param('user_name');
+            else if(change.doc.class_name == calc_order.class_name){
+              if(pouch.props.user_node) {
+               return calc_order.emit('change', change.doc);
+              }
+              const doc = calc_order.by_ref[change.id.substr(15)];
+              const user = pouch.authorized || wsql.get_user_param('user_name');
               if(!doc || user === change.doc.timestamp.user){
                 return;
               }
@@ -140,8 +143,6 @@ class Pricing {
         return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
-            // грузим цены из remote
-            this.build_cache_local(remote);
 
             // если версия local отличается от remote - обновляем
             if(local.remote_rev !== remote._rev) {
@@ -152,8 +153,11 @@ class Pricing {
               else {
                 remote._rev = local._rev;
               }
-              pouch.local.templates.put(remote);
+              pouch.local.templates.put(remote._clone());
             }
+
+            // грузим цены из remote
+            this.build_cache_local(remote);
 
             return this.sync_local(pouch, ++step);
           })
@@ -241,9 +245,10 @@ class Pricing {
    * @param startkey
    * @return {Promise.<TResult>|*}
    */
-  by_doc(doc) {
-    const keys = doc.goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
-    return $p.adapters.pouch.local.templates.query("doc/doc_nom_prices_setup_slice_last",
+  by_doc({goods}) {
+    const keys = goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
+    const {templates, doc} = $p.adapters.pouch.local;
+    return (templates || doc).query("doc/doc_nom_prices_setup_slice_last",
       {
         include_docs: false,
         keys: keys,

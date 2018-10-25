@@ -110,9 +110,7 @@ class ToolPan extends ToolElement {
         }
       },
 
-      mousemove: function(event) {
-        this.hitTest(event);
-      },
+      mousemove: this.hitTest,
 
       keydown: function(event) {
         const rootLayer = this._scope.project.rootLayer();

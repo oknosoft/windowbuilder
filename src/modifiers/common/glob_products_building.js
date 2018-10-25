@@ -272,21 +272,34 @@ class ProductsBuilding {
 
       let ok = true;
       const {new_spec_row} = ProductsBuilding;
+      const {side_count, furn, direction} = contour;
 
-      // TODO: реализовать проверку по количеству сторон
+      // проверяем количество сторон фурнитуры
+      if(furn.open_type !== $p.enm.open_types.Глухое && furn.side_count && side_count !== furn.side_count) {
+        // Визуализируем все стороны
+        const row_base = {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error};
+        contour.profiles.forEach(elm => {
+          new_spec_row({elm, row_base, origin: furn, spec, ox});
+        });
+        return ok = false;
+      }
 
       // проверка геометрии
-      contour.furn.open_tunes.each((row) => {
+      furn.open_tunes.each((row) => {
         const elm = contour.profile_by_furn_side(row.side, cache);
-        const len = elm._row.len - 2 * elm.nom.sizefurn;
+        const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
+        const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
+        const len = elm._row.len - prev.nom.sizefurn - next.nom.sizefurn;
 
-        // angle_hor = elm.angle_hor; TODO: реализовать проверку углов
+        const angle = direction == $p.enm.open_directions.Правое ?
+          elm.generatrix.angle_to(prev.generatrix, elm.e) :
+          prev.generatrix.angle_to(elm.generatrix, elm.b);
 
-        if(len < row.lmin || len > row.lmax || (!elm.is_linear() && !row.arc_available)) {
-          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: contour.furn, spec, ox});
+        const {lmin, lmax, amin, amax} = row;
+        if(len < lmin || len > lmax || angle < amin || (angle > amax && amax > 0) || (!elm.is_linear() && !row.arc_available)) {
+          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: furn, spec, ox});
           ok = false;
         }
-
       });
 
       return ok;
@@ -332,8 +345,8 @@ class ProductsBuilding {
 
       const prev = b.profile;
       const next = e.profile;
-      const row_cnn_prev = b.cnn.main_row(elm);
-      const row_cnn_next = e.cnn.main_row(elm);
+      const row_cnn_prev = b.cnn && b.cnn.main_row(elm);
+      const row_cnn_next = e.cnn && e.cnn.main_row(elm);
       const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
 
       let row_spec;
@@ -567,7 +580,7 @@ class ProductsBuilding {
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
           $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
         }
-        inset.calculate_spec({elm, ox});
+        inset.calculate_spec({elm, ox, clr});
       });
     }
 
@@ -745,18 +758,39 @@ class ProductsBuilding {
           // console.timeEnd("save");
           // console.profileEnd();
         })
-          .then(() => (scheme._scope || attr.close) && setTimeout(() => ox.calc_order._modified && ox.calc_order.save(), 1000))
-          .catch((ox) => {
+          .then(() => {
+            if(scheme._scope || attr.close) {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => ox.calc_order._modified && ox.calc_order.save()
+                  .then(resolve)
+                  .catch(reject), 1000);
+              });
+            }
+          })
+          .catch((err) => {
 
             // console.timeEnd("save");
             // console.profileEnd();
 
-            $p.record_log(ox);
             delete scheme._attr._saving;
+
+            if(err.msg && err.msg._shown) {
+              return;
+            }
+
+            let text = err.message || err;
             if(ox._data && ox._data._err) {
-              $p.msg.show_msg(ox._data._err);
+              if(typeof ox._data._err === 'object') {
+                $p.md.emit('alert', Object.assign({obj: ox}, ox._data._err));
+                delete ox._data._err;
+                return;
+              }
+              text += `\n${ox._data._err}`;
               delete ox._data._err;
             }
+
+            $p.md.emit('alert', {type: 'alert-error', obj: ox, text});
+
           });
       }
       else {
@@ -954,4 +988,3 @@ if(typeof global !== 'undefined'){
 }
 $p.ProductsBuilding = ProductsBuilding;
 $p.products_building = new ProductsBuilding(true);
-

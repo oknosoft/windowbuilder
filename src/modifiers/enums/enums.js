@@ -8,12 +8,28 @@
  * Created 22.04.2016
  */
 
-(function($p){
+(function({enm}){
+
+  /**
+   * Синонимы в приход/расход
+   */
+  enm.debit_credit_kinds.__define({
+    debit: {
+      get() {
+        return this.Приход;
+      }
+    },
+    credit: {
+      get() {
+        return this.Расход;
+      }
+    },
+  });
 
 	/**
 	 * Дополнительные методы перечисления Типы открывания
 	 */
-	$p.enm.open_types.__define({
+	enm.open_types.__define({
 
     is_opening: {
       value(v) {
@@ -27,9 +43,9 @@
   });
 
 	/**
-	 * Дополнительные методы перечисления Ориентация
+	 * Синонимы в ориентации
 	 */
-	$p.enm.orientations.__define({
+	enm.orientations.__define({
 
 		hor: {
 			get() {
@@ -51,9 +67,9 @@
 	});
 
 	/**
-	 * Дополнительные методы перечисления ПоложениеЭлемента
+	 * Синонимы в ПоложенииЭлемента
 	 */
-	$p.enm.positions.__define({
+	enm.positions.__define({
 
 		left: {
 			get() {

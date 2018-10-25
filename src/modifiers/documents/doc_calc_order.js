@@ -160,50 +160,46 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
 
     // номера изделий в характеристиках
-    const rows_saver = this.product_rows(true);
-
+    return this.product_rows(true)
     // пометим на удаление неиспользуемые характеристики
     // этот кусок не влияет на возвращаемое before_save значение и выполняется асинхронно
-    const res = this._manager.pouch_db
-      .query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
-      .then(({rows}) => {
-        let res = Promise.resolve();
-        let deleted = 0;
-        for (const {id} of rows) {
-          const ref = id.substr(20);
-          if(this.production.find_rows({characteristic: ref}).length) {
-            continue;
-          }
-          deleted ++;
-          res = res
-            .then(() => $p.cat.characteristics.get(ref, 'promise'))
-            .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true));
-        }
-        return res.then(() => deleted);
+      .then(() => {
+        return this._manager.pouch_db
+          .query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
+          .then(({rows}) => {
+            let res = Promise.resolve();
+            let deleted = 0;
+            for (const {id} of rows) {
+              const ref = id.substr(20);
+              if(this.production.find_rows({characteristic: ref}).length) {
+                continue;
+              }
+              deleted ++;
+              res = res
+                .then(() => $p.cat.characteristics.get(ref, 'promise'))
+                .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true));
+            }
+            return res.then(() => deleted);
+          })
+          .then((res) => {
+            res && this._manager.emit_async('svgs', this);
+          })
+          .catch((err) => null);
       })
-      .then((res) => {
-        res && this._manager.emit_async('svgs', this);
-      })
-      .catch((err) => null);
-
-    if(this._data.before_save_sync) {
-      return res
-        .then(() => rows_saver)
-        .then(() => this);
-    }
+      .then(() => this);
 
   }
 
   // при изменении реквизита
   value_change(field, type, value) {
-    if(field == 'organization') {
+    if(field === 'organization') {
       this.organization = value;
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
         this.new_number_doc();
       }
     }
-    else if(field == 'partner' && this.contract.owner != value) {
+    else if(field === 'partner' && this.contract.owner != value) {
       this.contract = $p.cat.contracts.by_partner_and_org(value, this.organization);
     }
     // если изменение инициировано человеком, дополним список изменённых полей
@@ -215,6 +211,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   after_del_row(name) {
     name === 'production' && this.product_rows();
     return this;
+  }
+
+  // вместе с заказом выгружаем продукцию
+  unload() {
+    this.production.forEach(({characteristic}) => {
+      if(!characteristic.empty() && characteristic.calc_order === this) {
+        characteristic.unload();
+      }
+    });
+    return super.unload();
   }
 
 
@@ -327,7 +333,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     const {individual_person} = manager;
     const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
     const get_imgs = [];
-    const {cat: {contact_information_kinds, characteristics}, utils: {blank, blob_as_text}} = $p;
+    const {cat: {contact_information_kinds, characteristics}, utils: {blank, blob_as_text, snake_ref}} = $p;
 
     // заполняем res теми данными, которые доступны синхронно
     const res = {
@@ -468,6 +474,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     return this.load_production().then(() => {
 
       // получаем эскизы продукций, параллельно накапливаем количество и площадь изделий
+      let editor, imgs = Promise.resolve();
+      const builder_props = attr.builder_props && Object.assign({}, $p.CatCharacteristics.builder_props_defaults, attr.builder_props);
       this.production.forEach((row) => {
         if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
 
@@ -477,8 +485,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           res.ВсегоПлощадьИзделий += row.quantity * row.s;
 
           // если запросили эскиз без размерных линий или с иными параметрами...
-          if(attr.sizes === false) {
-
+          if(builder_props) {
+            if(!editor) {
+              editor = new $p.EditorInvisible();
+            }
+            imgs = imgs.then(() => {
+              return row.characteristic.draw(attr, editor)
+                .then((img) => {
+                  res.ПродукцияЭскизы[row.characteristic.ref] = img[snake_ref(row.characteristic.ref)].imgs.l0;
+                });
+            });
           }
           else {
             if(row.characteristic.svg) {
@@ -495,25 +511,28 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       });
       res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
-      return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-        .then(() => !window.QRCode && $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
-        .then(() => {
+      return imgs.then(() => {
+        editor && editor.unload();
+        return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
+          .then(() => typeof QRCode === 'undefined' && $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
+          .then(() => {
 
-          const svg = document.createElement('SVG');
-          svg.innerHTML = '<g />';
-          const qrcode = new QRCode(svg, {
-            text: 'http://www.oknosoft.ru/zd/',
-            width: 100,
-            height: 100,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H,
-            useSVG: true
+            const svg = document.createElement('SVG');
+            svg.innerHTML = '<g />';
+            const qrcode = new QRCode(svg, {
+              text: 'http://www.oknosoft.ru/zd/',
+              width: 100,
+              height: 100,
+              colorDark: '#000000',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.H,
+              useSVG: true
+            });
+            res.qrcode = svg.innerHTML;
+
+            return res;
           });
-          res.qrcode = svg.innerHTML;
-
-          return res;
-        });
+      });
 
     });
 
@@ -544,6 +563,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Ширина: row.width,
       ВсегоПлощадь: row.s * row.quantity,
       Примечание: row.note,
+      Комментарий: row.note,
+      СистемаПрофилей: characteristic.sys.presentation,
       Номенклатура: nom.name_full || nom.name,
       Характеристика: characteristic.name,
       Заполнения: '',
@@ -623,8 +644,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       // выполняем запрос к сервису
       .then(() => {
         const headers = new Headers();
-        headers.append('Accept', 'application/json');
-        headers.append('Content-Type', 'application/json');
         headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
           wsql.get_user_param('user_name') + ':' + aes.Ctr.decrypt(wsql.get_user_param('user_pwd'))))));
         if(suffix){
@@ -673,7 +692,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ro = !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
     }
     else if(!obj_delivery_state.empty()) {
-      ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван;
+      ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван && !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
     }
     return ro;
   }
@@ -795,8 +814,25 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         if(row_spec instanceof $p.DpBuyers_orderProductionRow) {
 
           if(params) {
+
+            // получаем набор параметров, используемых текущей вставкой
+            const used_params = new Set();
+            row_spec.inset.used_params.forEach((param) => {
+              !param.is_calculated && used_params.add(param);
+            });
+            row_spec.inset.specification.forEach(({nom}) => {
+              if(nom instanceof $p.CatInserts){
+                nom.used_params.forEach((param) => {
+                  !param.is_calculated && used_params.add(param);
+                });
+              }
+            });
+
+            // добавляем параметр в характеристику, если используется в текущей вставке
             params.find_rows({elm: row_spec.row}, (prow) => {
-              ox.params.add(prow, true).inset = row_spec.inset;
+              if(used_params.has(prow.param)) {
+                ox.params.add(prow, true).inset = row_spec.inset;
+              }
             });
           }
 
@@ -843,52 +879,57 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
    */
   process_add_product_list(dp) {
 
-    return new Promise(async (resolve, reject) => {
+    let res = Promise.resolve();
+    const ax = [];
 
-      const ax = [];
+    for (let i = 0; i < dp.production.count(); i++) {
+      const row_spec = dp.production.get(i);
+      let row_prod;
 
-      for (let i = 0; i < dp.production.count(); i++) {
-        const row_spec = dp.production.get(i);
-        let row_prod;
-
-        if(row_spec.inset.empty()) {
-          row_prod = this.production.add(row_spec);
-          row_prod.unit = row_prod.nom.storage_unit;
-          if(!row_spec.clr.empty()) {
-            // ищем цветовую характеристику
-            $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
-              if(ox.clr == row_spec.clr) {
-                row_prod.characteristic = ox;
-                return false;
-              }
-            });
-          }
+      if(row_spec.inset.empty()) {
+        row_prod = this.production.add(row_spec);
+        row_prod.unit = row_prod.nom.storage_unit;
+        if(!row_spec.clr.empty()) {
+          // ищем цветовую характеристику
+          $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
+            if(ox.clr == row_spec.clr) {
+              row_prod.characteristic = ox;
+              return false;
+            }
+          });
         }
-        else {
-          // рассчитываем спецификацию по текущей вставке
-          const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
-          const elm = new $p.DocCalc_order.FakeElm(row_spec);
-          // создаём или получаем строку заказа с уникальной харктеристикой
-          row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
-          row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+        res = res.then(() => row_prod);
+      }
+      else {
+        // рассчитываем спецификацию по текущей вставке
+        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
+        const elm = new $p.DocCalc_order.FakeElm(row_spec);
+        // создаём или получаем строку заказа с уникальной харктеристикой
+        res = res
+          .then(() => this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true}))
+          .then((row_prod) => {
+            // рассчитываем спецификацию
+            row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+            // сворачиваем
+            row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+            return row_prod;
+          });
+      }
 
-          // сворачиваем
-          row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
-        }
-
-        // производим дополнительную корректировку спецификации и рассчитываем цены
-        [].push.apply(ax, $p.spec_building.specification_adjustment({
+      // производим дополнительную корректировку спецификации и рассчитываем цены
+      res = res.then((row_prod) => {
+        return Promise.all($p.spec_building.specification_adjustment({
           //scheme: scheme,
           calc_order_row: row_prod,
           spec: row_prod.characteristic.specification,
           save: true,
-        }, true));
+        }, true))
+          .then((tx) => [].push.apply(ax, tx));
+      });
 
-      }
+    }
 
-      resolve(ax);
-
-    });
+    return res.then(() => ax);
   }
 
   /**

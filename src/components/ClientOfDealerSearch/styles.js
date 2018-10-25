@@ -8,12 +8,14 @@
 import withStyles from '@material-ui/core/styles/withStyles';
 
 const styles = theme => ({
-  paper: {
-    minWidth: 880,
-    maxHeight: 'calc(100vh - 80px)',
+  search: {
+    minWidth: 280,
   },
-  entered: {
-    minHeight: 120,
+  left: {
+    paddingLeft: 0,
+  },
+  bar: {
+
   },
   secondary: {
     marginTop: -theme.spacing.unit * 1.5,

@@ -7,7 +7,7 @@
     root.Wnd_debug = factory();
   }
 }(this, function() {
-$p.injected_data._mixin({"toolbar_calc_order_production.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_grp_add\" text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку заказа\" openAll=\"true\" >\n    <item type=\"button\" id=\"btn_add_builder\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt; Изделие построителя\" />\n    <item type=\"button\" id=\"btn_add_product\" text=\"&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Продукцию или услугу\" />\n    <item type=\"button\" id=\"btn_add_material\" text=\"&lt;i class='fa fa-cube fa-fw'&gt;&lt;/i&gt; Материал\" />\n    <item type=\"button\" id=\"btn_additions\" text=\"&lt;i class='fa fa-cart-plus fa-fw'&gt;&lt;/i&gt; Аксессуары и услуги\" />\n    <item type=\"button\" id=\"btn_clone\" text=\"&lt;i class='fa fa-clone fa-fw'&gt;&lt;/i&gt; Скопировать изделие\" />\n    <item id=\"sep_prod\" type=\"separator\"/>\n    <item type=\"button\" id=\"btn_recalc_row\" text=\"&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать строку\" />\n    <item type=\"button\" id=\"btn_recalc_doc\" text=\"&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать заказ\" />\n  </item>\n\n  <item type=\"button\" id=\"btn_edit\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt;\" title=\"Редактировать изделие построителя\" />\n  <item type=\"button\" id=\"btn_spec\" text=\"&lt;i class='fa fa-table fa-fw'&gt;&lt;/i&gt;\" title=\"Открыть спецификацию изделия\" />\n  <item type=\"button\" id=\"btn_delete\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Удалить строку заказа\" />\n  <item type=\"button\" id=\"btn_discount\" text=\"&lt;i class='fa fa-percent fa-fw'&gt;&lt;/i&gt;\" title=\"Скидки по типам строк заказа\"/>\n  <item id=\"sep1\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_calc_order_obj.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_save_close\" text=\"&lt;i class='fa fa-caret-square-o-down fa-fw'&gt;&lt;/i&gt;\" title=\"Записать и закрыть\"/>\n  <item type=\"button\" id=\"btn_save\" text=\"&lt;i class='fa fa-floppy-o fa-fw'&gt;&lt;/i&gt;\" title=\"Записать\"/>\n  <item type=\"button\" id=\"btn_sent\" text=\"&lt;i class='fa fa-paper-plane-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отправить заказ\"/>\n\n  <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Провести документ\"/>\n  <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"&lt;i class='fa fa-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отмена проведения\"/>\n\n  <item type=\"button\" id=\"btn_files\" text=\"&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;\" title=\"Присоединенные файлы\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt;\" title=\"Печать\" openAll=\"true\">\n  </item>\n\n  <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\">\n    <item type=\"button\" id=\"planning_event\" enabled=\"false\" text=\"Событие\"/>\n    <item type=\"button\" id=\"calc_order\" text=\"Расчет\"/>\n    <item type=\"button\" id=\"debit_cash_order\" enabled=\"false\" text=\"Наличная оплата\"/>\n    <item type=\"button\" id=\"credit_card_order\" enabled=\"false\" text=\"Оплата картой\"/>\n    <item type=\"button\" id=\"selling\" enabled=\"false\" text=\"Реализация товаров услуг\"/>\n  </item>\n\n  <item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\"/>\n  </item>\n\n  <item type=\"buttonSelect\" id=\"bs_more\" text=\"&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;\" title=\"Дополнительно\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_retrieve\" text=\"&lt;i class='fa fa-undo fa-fw'&gt;&lt;/i&gt; Отозвать\" title=\"Отозвать заказ\"/>\n    <item type=\"separator\" id=\"sep_export\"/>\n    <item id=\"btn_share\" type=\"button\" text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику\"/>\n\n    <!--item type=\"button\" id=\"btn_import\" text=\"&lt;i class='fa fa-upload fa-fw'&gt;&lt;/i&gt; Загрузить из файла\"/>\n    <item type=\"button\" id=\"btn_export\" text=\"&lt;i class='fa fa-download fa-fw'&gt;&lt;/i&gt; Выгрузить в файл\"/>\n    <item id=\"btn_download\" type=\"button\" text=\"&lt;i class='fa fa-cloud-download fa-fw'&gt;&lt;/i&gt; Обновить из облака\"/>\n    <item id=\"btn_share\" type=\"button\" text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику\"/>\n    <item id=\"btn_inbox\" type=\"button\" text=\"&lt;i class='fa fa-inbox fa-fw'&gt;&lt;/i&gt; Входящие заказы\"/-->\n  </item>\n\n  <item id=\"sep_close_1\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_close\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Закрыть форму\"/>\n  <item id=\"sep_close_2\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_calc_order_selection.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n\n  <item id=\"sep0\" type=\"separator\"/>\n\n  <item id=\"btn_select\" type=\"button\" title=\"Выбрать элемент списка\" text=\"&lt;b&gt;Выбрать&lt;/b&gt;\"/>\n\n  <item id=\"sep1\" type=\"separator\"/>\n  <item id=\"btn_new\" type=\"button\" text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Создать\"/>\n  <item id=\"btn_edit\" type=\"button\" text=\"&lt;i class='fa fa-pencil fa-fw'&gt;&lt;/i&gt;\" title=\"Изменить\"/>\n  <item id=\"btn_delete\" type=\"button\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Удалить\"/>\n  <item id=\"sep2\" type=\"separator\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt; Печать\" openAll=\"true\">\n  </item>\n\n  <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\">\n    <item type=\"button\" id=\"planning_event\" enabled=\"false\" text=\"Событие\"/>\n    <item type=\"button\" id=\"calc_order\" text=\"Расчет\"/>\n    <item type=\"button\" id=\"debit_cash_order\" enabled=\"false\" text=\"Наличная оплата\"/>\n    <item type=\"button\" id=\"credit_card_order\" enabled=\"false\" text=\"Оплата картой\"/>\n    <item type=\"button\" id=\"selling\" enabled=\"false\" text=\"Реализация товаров услуг\"/>\n  </item>\n\n  <item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\" >\n    <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\" />\n  </item>\n\n  <item type=\"buttonSelect\" id=\"bs_more\" text=\"&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;\" title=\"Дополнительно\" openAll=\"true\">\n    <item id=\"btn_requery\" type=\"button\" text=\"&lt;i class='fa fa-refresh fa-fw'&gt;&lt;/i&gt; Обновить список\"/>\n    <item id=\"sep_requery\" type=\"separator\"/>\n    <item id=\"btn_download\" type=\"button\" text=\"&lt;i class='fa fa-cloud-download fa-fw'&gt;&lt;/i&gt; Обновить из облака\"/>\n    <item id=\"btn_share\" type=\"button\" text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику\"/>\n    <item id=\"btn_inbox\" type=\"button\" text=\"&lt;i class='fa fa-inbox fa-fw'&gt;&lt;/i&gt; Входящие заказы\"/>\n    <item id=\"sep_export\" type=\"separator\"/>\n  </item>\n\n  <item id=\"sep3\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_product_list.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"btn_ok\"   type=\"button\"   text=\"&lt;b&gt;Рассчитать и закрыть&lt;/b&gt;\" title=\"Рассчитать, записать и закрыть\"  />\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item id=\"btn_xls\"  type=\"button\"\ttext=\"Загрузить из XLS\" title=\"Загрузить список продукции из файла xls\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"buttonSelect\" id=\"bs_print\" enabled=\"false\" text=\"\" title=\"\" openAll=\"true\">\r\n    </item>\r\n\r\n</toolbar>","toolbar_characteristics_specification.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_origin\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt; Происхождение\" title=\"Ссылка на настройки\" />\n  <item id=\"sp\" type=\"spacer\"/>\n\n  <item id=\"input_filter\" type=\"buttonInput\" width=\"200\" title=\"Поиск по подстроке\" />\n\n  <item id=\"sep2\" type=\"separator\"/>\n  <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt;\"  title=\"Экспорт\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_csv\" text=\"&lt;i class='fa fa-file-text-o fa-fw'&gt;&lt;/i&gt; Скопировать в CSV\" />\n    <item type=\"button\" id=\"btn_json\" text=\"&lt;i class='fa fa-file-code-o fa-fw'&gt;&lt;/i&gt; Скопировать в JSON\" />\n    <item type=\"button\" id=\"btn_xls\" text=\"&lt;i class='fa fa-file-excel-o fa-fw'&gt;&lt;/i&gt; Выгрузить в XLS\" />\n  </item>\n</toolbar>\n","toolbar_glass_inserts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"btn_add\" type=\"button\"  text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку\"  />\n  <item id=\"btn_delete\" type=\"button\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\"  title=\"Удалить строку\" />\n  <item id=\"btn_up\" type=\"button\" text=\"&lt;i class='fa fa-arrow-up fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вверх\" />\n  <item id=\"btn_down\" type=\"button\" text=\"&lt;i class='fa fa-arrow-down fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вниз\" />\n  <item id=\"sep1\" type=\"separator\"/>\n  <item id=\"btn_inset\" type=\"button\" text=\"&lt;i class='fa fa-plug fa-fw'&gt;&lt;/i&gt;\"  title=\"Заполнить по вставке\" />\n</toolbar>\n","toolbar_discounts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item type=\"buttonSelect\"   id=\"bs\"  text=\"Скидки производителя\"  title=\"Режим\" openAll=\"true\">\n    <item type=\"button\" id=\"discount_percent\" text=\"Скидки производителя\" />\n    <item type=\"button\" id=\"discount_percent_internal\" text=\"Скидки дилера\" />\n  </item>\n</toolbar>\n","form_auth.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<items>\n<item type=\"settings\" position=\"label-left\" labelWidth=\"80\" inputWidth=\"180\" noteWidth=\"180\"/>\n<item type=\"fieldset\" name=\"data\" inputWidth=\"auto\" label=\"Авторизация\">\n\n  <item type=\"radio\" name=\"type\" labelWidth=\"auto\" position=\"label-right\" checked=\"true\" value=\"guest\" label=\"Гостевой (демо) режим\">\n    <item type=\"select\" name=\"guest\" label=\"Роль\">\n      <option value=\"Дилер\" label=\"Дилер\"/>\n    </item>\n  </item>\n\n  <item type=\"radio\" name=\"type\" labelWidth=\"auto\" position=\"label-right\" value=\"auth\" label=\"Есть учетная запись\">\n    <item type=\"input\" value=\"\" name=\"login\" label=\"Логин\" validate=\"NotEmpty\" />\n    <item type=\"password\" value=\"\" name=\"password\" label=\"Пароль\" validate=\"NotEmpty\" />\n  </item>\n\n  <item type=\"button\" value=\"Войти\" name=\"submit\"/>\n\n  <item type=\"template\" name=\"text_options\" className=\"order_dealer_options\" inputWidth=\"170\"\n        value=\"&lt;a href='#' onclick='$p.iface.open_settings();' title='Страница настроек программы' &gt; &lt;i class='fa fa-cog fa-lg'&gt;&lt;/i&gt; Настройки &lt;/a&gt; &lt;a href='https://github.com/oknosoft/windowbuilder/issues' target='_blank' style='margin-left: 9px;' title='Задать вопрос через форму обратной связи' &gt; &lt;i class='fa fa-question-circle fa-lg'&gt;&lt;/i&gt; Вопрос &lt;/a&gt;\"  />\n\n</item>\n</items>\n","tree_balance.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"doc.debit_cash_order\" text=\"Приходный кассовый ордер\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.credit_card_order\" text=\"Оплата от покупателя платежной картой\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.debit_bank_order\" text=\"Платежное поручение входящее\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.selling\" text=\"Реализация товаров и услуг\"><icons file=\"icon_1c_doc\" /></item>\r\n</tree>\r\n","tree_events.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.stores\" text=\"Склады\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.divisions\" text=\"Подразделения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"doc.work_centers_performance\" select=\"1\" text=\"Мощности рабочих центров\"><icons file=\"icon_1c_doc\" /></item>\r\n    <!--\r\n    <item id=\"doc.planning_event\" text=\"Событие планирования\"><icons file=\"icon_1c_doc\" /></item>\r\n    -->\r\n</tree>\r\n","tree_filteres.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<tree id=\"0\">\n    <item id=\"draft\" text=\"Черновики\" select=\"1\" tooltip=\"Предварительные расчеты\"><icons file=\"fa-pencil\" /></item>\n    <item id=\"sent\" text=\"Отправлено\" tooltip=\"Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в 'черновики')\"><icons file=\"fa-paper-plane-o\" /></item>\n    <item id=\"confirmed\" text=\"Согласовано\" tooltip=\"Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером\"><icons file=\"fa-thumbs-o-up\" /></item>\n    <item id=\"declined\" text=\"Отклонено\" tooltip=\"Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации\"><icons file=\"fa-thumbs-o-down\" /></item>\n\n    <!--item id=\"execution\" text=\"Долги\" tooltip=\"Оплата, отгрузка\"><icons file=\"fa-money\" /></item>\n    <item id=\"plan\" text=\"План\" tooltip=\"Согласованы, но еще не запущены в работу\"><icons file=\"fa-calendar-check-o\" /></item>\n    <item id=\"underway\" text=\"В работе\" tooltip=\"Включены в задания на производство, но еще не изготовлены\"><icons file=\"fa-industry\" /></item>\n    <item id=\"manufactured\" text=\"Изготовлено\" tooltip=\"Изготовлены, но еще не отгружены\"><icons file=\"fa-gavel\" /></item>\n    <item id=\"executed\" text=\"Исполнено\" tooltip=\"Отгружены клиенту\"><icons file=\"fa-truck\" /></item -->\n\n    <item id=\"service\" text=\"Сервис\" tooltip=\"Сервисное обслуживание\"><icons file=\"fa-medkit\" /></item>\n    <item id=\"complaints\" text=\"Рекламации\" tooltip=\"Жалобы и рекламации\"><icons file=\"fa-frown-o\" /></item>\n\n    <item id=\"template\" text=\"Шаблоны\" tooltip=\"Типовые блоки\"><icons file=\"fa-puzzle-piece\" /></item>\n    <item id=\"zarchive\" text=\"Архив\" tooltip=\"Старые заказы\"><icons file=\"fa-archive\" /></item>\n    <item id=\"all\" text=\"Все\" tooltip=\"Отключить фильтрацию\"><icons file=\"fa-expand\" /></item>\n</tree>\n","tree_industry.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.nom_kinds\" text=\"Виды номенклатуры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_groups\" text=\"Номенклатурные группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom\" text=\"Номенклатура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.production_params\" text=\"Параметры продукции\" select=\"1\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.cnns\" text=\"Соединения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.inserts\" text=\"Вставки\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.furns\" text=\"Фурнитура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.clrs\" text=\"Цвета\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.color_price_groups\" text=\"Цвето-ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.params_links\" text=\"Связи параметров\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.elm_visualization\" text=\"Визуализация элементов\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.insert_bind\" text=\"Привязки вставок\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.formulas\" text=\"Формулы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cch.properties\" text=\"Дополнительные реквизиты\"><icons file=\"icon_1c_cch\" /></item>\r\n</tree>\r\n","tree_price.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.users\" text=\"Пользователи\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.individuals\" text=\"Физические лица\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.organizations\" text=\"Организации\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.partners\" text=\"Контрагенты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.contracts\" text=\"Договоры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_prices_types\" text=\"Виды цен\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.price_groups\" text=\"Ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.currencies\" text=\"Валюты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"ireg.currency_courses\" text=\"Курсы валют\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"ireg.margin_coefficients\" text=\"Маржинальные коэффициенты\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"doc.nom_prices_setup\" text=\"Установка цен номенклатуры\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"cch.predefined_elmnts\" text=\"Константы и списки\"><icons file=\"icon_1c_cch\" /></item>\r\n\r\n</tree>\r\n","view_blank.html":"<!DOCTYPE html>\r\n<html lang=\"ru\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"/>\r\n    <title>Документ</title>\r\n    <style>\r\n\r\n        html {\r\n            width: 100%;\r\n            height: 100%;\r\n            margin: 0;\r\n            padding: 0;\r\n            overflow: auto;\r\n\r\n        }\r\n        body {\r\n            width: 210mm;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n            overflow: hidden;\r\n            color: rgb(48, 57, 66);\r\n            font-family: Arial, sans-serif;\r\n            font-size: 11pt;\r\n            text-rendering: optimizeLegibility;\r\n        }\r\n\r\n        /* Таблица */\r\n        table.border {\r\n            border-collapse: collapse; border: 1px solid;\r\n        }\r\n        table.border > tbody > tr > td,\r\n        table.border > tr > td,\r\n        table.border th{\r\n            border: 1px solid;\r\n        }\r\n        .noborder{\r\n            border: none;\r\n        }\r\n\r\n        /* Многоуровневый список */\r\n        ol {\r\n            counter-reset: li;\r\n            list-style: none;\r\n            padding: 0;\r\n        }\r\n        li {\r\n            margin-top: 8px;\r\n        }\r\n        li:before {\r\n            counter-increment: li;\r\n            content: counters(li,\".\") \".\";\r\n            padding-right: 8px;\r\n        }\r\n        li.flex {\r\n            display: flex;\r\n            text-align: left;\r\n            list-style-position: outside;\r\n            font-weight: normal;\r\n        }\r\n\r\n        .container {\r\n            width: 100%;\r\n            position: relative;\r\n        }\r\n\r\n        .margin-top-20 {\r\n            margin-top: 20px;\r\n        }\r\n\r\n        .column-50-percent {\r\n            width: 48%;\r\n            min-width: 40%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .column-30-percent {\r\n            width: 31%;\r\n            min-width: 30%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .block-left {\r\n            display: block;\r\n            float: left;\r\n        }\r\n\r\n        .block-center {\r\n            display: block;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n        }\r\n\r\n        .block-right {\r\n            display: block;\r\n            float: right;\r\n        }\r\n\r\n        .list-center {\r\n            text-align: center;\r\n            list-style-position: inside;\r\n            font-weight: bold;\r\n        }\r\n\r\n        .clear-both {\r\n            clear: both;\r\n        }\r\n\r\n        .small {\r\n            font-size: small;\r\n        }\r\n\r\n        .text-center {\r\n            text-align: center;\r\n        }\r\n\r\n        .text-justify {\r\n            text-align: justify;\r\n        }\r\n\r\n        .text-right {\r\n            text-align: right;\r\n        }\r\n\r\n        .muted-color {\r\n            color: #636773;\r\n        }\r\n\r\n        .accent-color {\r\n            color: #f30000;\r\n        }\r\n\r\n        .note {\r\n            background: #eaf3f8;\r\n            color: #2980b9;\r\n            font-style: italic;\r\n            padding: 12px 20px;\r\n        }\r\n\r\n        .note:before {\r\n            content: 'Замечание: ';\r\n            font-weight: 500;\r\n        }\r\n        *, *:before, *:after {\r\n            box-sizing: inherit;\r\n        }\r\n\r\n    </style>\r\n</head>\r\n<body>\r\n\r\n</body>\r\n</html>","view_settings.html":"<div class=\"md_column1300\">\r\n\r\n    <div class=\"md_column320\" name=\"form1\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n    <div class=\"md_column320\" name=\"form2\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n</div>"});
+$p.injected_data._mixin({"toolbar_calc_order_production.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_grp_add\" text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку заказа\" openAll=\"true\" >\n    <item type=\"button\" id=\"btn_add_builder\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt; Изделие построителя\" />\n    <item type=\"button\" id=\"btn_add_product\" text=\"&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Продукцию или услугу\" />\n    <item type=\"button\" id=\"btn_add_material\" text=\"&lt;i class='fa fa-cube fa-fw'&gt;&lt;/i&gt; Материал\" />\n    <item type=\"button\" id=\"btn_additions\" text=\"&lt;i class='fa fa-cart-plus fa-fw'&gt;&lt;/i&gt; Аксессуары и услуги\" />\n    <item type=\"button\" id=\"btn_clone\" text=\"&lt;i class='fa fa-clone fa-fw'&gt;&lt;/i&gt; Скопировать изделие\" />\n    <item id=\"sep_prod\" type=\"separator\"/>\n    <item type=\"button\" id=\"btn_recalc_row\" text=\"&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать строку\" />\n    <item type=\"button\" id=\"btn_recalc_doc\" text=\"&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать заказ\" />\n  </item>\n\n  <item type=\"button\" id=\"btn_edit\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt;\" title=\"Редактировать изделие построителя\" />\n  <item type=\"button\" id=\"btn_spec\" text=\"&lt;i class='fa fa-table fa-fw'&gt;&lt;/i&gt;\" title=\"Открыть спецификацию изделия\" />\n  <item type=\"button\" id=\"btn_delete\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Удалить строку заказа\" />\n  <item type=\"button\" id=\"btn_discount\" text=\"&lt;i class='fa fa-percent fa-fw'&gt;&lt;/i&gt;\" title=\"Скидки по типам строк заказа\"/>\n  <item id=\"sep1\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_calc_order_obj.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_save_close\" text=\"&lt;i class='fa fa-caret-square-o-down fa-fw'&gt;&lt;/i&gt;\" title=\"Записать и закрыть\"/>\n  <item type=\"button\" id=\"btn_save\" text=\"&lt;i class='fa fa-floppy-o fa-fw'&gt;&lt;/i&gt;\" title=\"Записать\"/>\n  <item type=\"button\" id=\"btn_sent\" text=\"&lt;i class='fa fa-paper-plane-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отправить заказ\"/>\n\n  <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Провести документ\"/>\n  <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"&lt;i class='fa fa-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отмена проведения\"/>\n\n  <item type=\"button\" id=\"btn_files\" text=\"&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;\" title=\"Присоединенные файлы\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt;\" title=\"Печать\" openAll=\"true\">\n  </item>\n\n  <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\">\n    <item type=\"button\" id=\"planning_event\" enabled=\"false\" text=\"Событие\"/>\n    <item type=\"button\" id=\"calc_order\" text=\"Расчет\"/>\n    <item type=\"button\" id=\"debit_cash_order\" enabled=\"false\" text=\"Наличная оплата\"/>\n    <item type=\"button\" id=\"credit_card_order\" enabled=\"false\" text=\"Оплата картой\"/>\n    <item type=\"button\" id=\"selling\" enabled=\"false\" text=\"Реализация товаров услуг\"/>\n  </item>\n\n  <!--item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\"/>\n  </item-->\n\n  <item type=\"buttonSelect\" id=\"bs_more\" text=\"&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;\" title=\"Дополнительно\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_reload\" text=\"&lt;i class='fa fa-refresh fa-fw'&gt;&lt;/i&gt; Перечитать с сервера\"/>\n    <item type=\"separator\" id=\"sep_reload\"/>\n    <item type=\"button\" id=\"btn_retrieve\" text=\"&lt;i class='fa fa-undo fa-fw'&gt;&lt;/i&gt; Отозвать\" title=\"Отозвать заказ\"/>\n    <item type=\"separator\" id=\"sep_export\"/>\n    <item type=\"button\" id=\"btn_share\" text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику\"/>\n\n    <!--item type=\"button\" id=\"btn_import\" text=\"&lt;i class='fa fa-upload fa-fw'&gt;&lt;/i&gt; Загрузить из файла\"/>\n    <item type=\"button\" id=\"btn_export\" text=\"&lt;i class='fa fa-download fa-fw'&gt;&lt;/i&gt; Выгрузить в файл\"/>\n    <item id=\"btn_download\" type=\"button\" text=\"&lt;i class='fa fa-cloud-download fa-fw'&gt;&lt;/i&gt; Обновить из облака\"/>\n    <item id=\"btn_share\" type=\"button\" text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику\"/>\n    <item id=\"btn_inbox\" type=\"button\" text=\"&lt;i class='fa fa-inbox fa-fw'&gt;&lt;/i&gt; Входящие заказы\"/-->\n  </item>\n\n  <item id=\"sep_close_1\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_close\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Закрыть форму\"/>\n  <item id=\"sep_close_2\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_calc_order_selection.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n\n  <item id=\"sep0\" type=\"separator\"/>\n\n  <item id=\"btn_select\" type=\"button\" title=\"Выбрать элемент списка\" text=\"&lt;b&gt;Выбрать&lt;/b&gt;\"/>\n\n  <item id=\"sep1\" type=\"separator\"/>\n  <item id=\"btn_new\" type=\"button\" text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Создать\"/>\n  <item id=\"btn_edit\" type=\"button\" text=\"&lt;i class='fa fa-pencil fa-fw'&gt;&lt;/i&gt;\" title=\"Изменить\"/>\n  <item id=\"btn_delete\" type=\"button\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Удалить\"/>\n  <item id=\"sep2\" type=\"separator\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt; Печать\" openAll=\"true\">\n  </item>\n\n  <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\">\n    <item type=\"button\" id=\"planning_event\" enabled=\"false\" text=\"Событие\"/>\n    <item type=\"button\" id=\"calc_order\" text=\"Расчет\"/>\n    <item type=\"button\" id=\"debit_cash_order\" enabled=\"false\" text=\"Наличная оплата\"/>\n    <item type=\"button\" id=\"credit_card_order\" enabled=\"false\" text=\"Оплата картой\"/>\n    <item type=\"button\" id=\"selling\" enabled=\"false\" text=\"Реализация товаров услуг\"/>\n  </item>\n\n  <!--item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\" >\n    <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\" />\n  </item-->\n\n  <item type=\"buttonSelect\" id=\"bs_more\" text=\"&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;\" title=\"Дополнительно\" openAll=\"true\">\n    <item id=\"btn_requery\" type=\"button\" text=\"&lt;i class='fa fa-refresh fa-fw'&gt;&lt;/i&gt; Обновить список\"/>\n    <item id=\"sep_requery\" type=\"separator\"/>\n    <item id=\"btn_download\" type=\"button\" text=\"&lt;i class='fa fa-cloud-download fa-fw'&gt;&lt;/i&gt; Обновить из облака\"/>\n    <item id=\"btn_share\" type=\"button\" text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику\"/>\n    <item id=\"btn_inbox\" type=\"button\" text=\"&lt;i class='fa fa-inbox fa-fw'&gt;&lt;/i&gt; Входящие заказы\"/>\n    <item id=\"sep_export\" type=\"separator\"/>\n  </item>\n\n  <item id=\"sep3\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_product_list.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"btn_ok\"   type=\"button\"   text=\"&lt;b&gt;Рассчитать и закрыть&lt;/b&gt;\" title=\"Рассчитать, записать и закрыть\"  />\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item id=\"btn_xls\"  type=\"button\"\ttext=\"Загрузить из XLS\" title=\"Загрузить список продукции из файла xls\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"buttonSelect\" id=\"bs_print\" enabled=\"false\" text=\"\" title=\"\" openAll=\"true\">\r\n    </item>\r\n\r\n</toolbar>","toolbar_characteristics_specification.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_origin\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt; Происхождение\" title=\"Ссылка на настройки\" />\n  <item id=\"sp\" type=\"spacer\"/>\n\n  <item id=\"input_filter\" type=\"buttonInput\" width=\"200\" title=\"Поиск по подстроке\" />\n\n  <item id=\"sep2\" type=\"separator\"/>\n  <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt;\"  title=\"Экспорт\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_csv\" text=\"&lt;i class='fa fa-file-text-o fa-fw'&gt;&lt;/i&gt; Скопировать в CSV\" />\n    <item type=\"button\" id=\"btn_json\" text=\"&lt;i class='fa fa-file-code-o fa-fw'&gt;&lt;/i&gt; Скопировать в JSON\" />\n    <item type=\"button\" id=\"btn_xls\" text=\"&lt;i class='fa fa-file-excel-o fa-fw'&gt;&lt;/i&gt; Выгрузить в XLS\" />\n  </item>\n</toolbar>\n","toolbar_glass_inserts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"btn_add\" type=\"button\"  text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку\"  />\n  <item id=\"btn_delete\" type=\"button\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\"  title=\"Удалить строку\" />\n  <item id=\"btn_up\" type=\"button\" text=\"&lt;i class='fa fa-arrow-up fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вверх\" />\n  <item id=\"btn_down\" type=\"button\" text=\"&lt;i class='fa fa-arrow-down fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вниз\" />\n  <item id=\"sep1\" type=\"separator\"/>\n  <item id=\"btn_inset\" type=\"button\" text=\"&lt;i class='fa fa-plug fa-fw'&gt;&lt;/i&gt;\"  title=\"Заполнить по вставке\" />\n</toolbar>\n","toolbar_discounts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item type=\"buttonSelect\"   id=\"bs\"  text=\"Скидки производителя\"  title=\"Режим\" openAll=\"true\">\n    <item type=\"button\" id=\"discount_percent\" text=\"Скидки производителя\" />\n    <item type=\"button\" id=\"discount_percent_internal\" text=\"Скидки дилера\" />\n  </item>\n</toolbar>\n","form_auth.xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<items>\n<item type=\"settings\" position=\"label-left\" labelWidth=\"80\" inputWidth=\"180\" noteWidth=\"180\"/>\n<item type=\"fieldset\" name=\"data\" inputWidth=\"auto\" label=\"Авторизация\">\n\n  <item type=\"radio\" name=\"type\" labelWidth=\"auto\" position=\"label-right\" checked=\"true\" value=\"guest\" label=\"Гостевой (демо) режим\">\n    <item type=\"select\" name=\"guest\" label=\"Роль\">\n      <option value=\"Дилер\" label=\"Дилер\"/>\n    </item>\n  </item>\n\n  <item type=\"radio\" name=\"type\" labelWidth=\"auto\" position=\"label-right\" value=\"auth\" label=\"Есть учетная запись\">\n    <item type=\"input\" value=\"\" name=\"login\" label=\"Логин\" validate=\"NotEmpty\" />\n    <item type=\"password\" value=\"\" name=\"password\" label=\"Пароль\" validate=\"NotEmpty\" />\n  </item>\n\n  <item type=\"button\" value=\"Войти\" name=\"submit\"/>\n\n  <item type=\"template\" name=\"text_options\" className=\"order_dealer_options\" inputWidth=\"170\"\n        value=\"&lt;a href='#' onclick='$p.iface.open_settings();' title='Страница настроек программы' &gt; &lt;i class='fa fa-cog fa-lg'&gt;&lt;/i&gt; Настройки &lt;/a&gt; &lt;a href='https://github.com/oknosoft/windowbuilder/issues' target='_blank' style='margin-left: 9px;' title='Задать вопрос через форму обратной связи' &gt; &lt;i class='fa fa-question-circle fa-lg'&gt;&lt;/i&gt; Вопрос &lt;/a&gt;\"  />\n\n</item>\n</items>\n","tree_balance.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"doc.debit_cash_order\" text=\"Приходный кассовый ордер\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.credit_card_order\" text=\"Оплата от покупателя платежной картой\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.debit_bank_order\" text=\"Платежное поручение входящее\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.selling\" text=\"Реализация товаров и услуг\"><icons file=\"icon_1c_doc\" /></item>\r\n</tree>\r\n","tree_events.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.stores\" text=\"Склады\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.divisions\" text=\"Подразделения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"doc.work_centers_performance\" select=\"1\" text=\"Мощности рабочих центров\"><icons file=\"icon_1c_doc\" /></item>\r\n    <!--\r\n    <item id=\"doc.planning_event\" text=\"Событие планирования\"><icons file=\"icon_1c_doc\" /></item>\r\n    -->\r\n</tree>\r\n","tree_filteres.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<tree id=\"0\">\n    <item id=\"draft\" text=\"Черновики\" select=\"1\" tooltip=\"Предварительные расчеты\"><icons file=\"fa-pencil\" /></item>\n    <item id=\"sent\" text=\"Отправлено\" tooltip=\"Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в 'черновики')\"><icons file=\"fa-paper-plane-o\" /></item>\n    <item id=\"confirmed\" text=\"Согласовано\" tooltip=\"Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером\"><icons file=\"fa-thumbs-o-up\" /></item>\n    <item id=\"declined\" text=\"Отклонено\" tooltip=\"Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации\"><icons file=\"fa-thumbs-o-down\" /></item>\n\n    <!--item id=\"execution\" text=\"Долги\" tooltip=\"Оплата, отгрузка\"><icons file=\"fa-money\" /></item>\n    <item id=\"plan\" text=\"План\" tooltip=\"Согласованы, но еще не запущены в работу\"><icons file=\"fa-calendar-check-o\" /></item>\n    <item id=\"underway\" text=\"В работе\" tooltip=\"Включены в задания на производство, но еще не изготовлены\"><icons file=\"fa-industry\" /></item>\n    <item id=\"manufactured\" text=\"Изготовлено\" tooltip=\"Изготовлены, но еще не отгружены\"><icons file=\"fa-gavel\" /></item>\n    <item id=\"executed\" text=\"Исполнено\" tooltip=\"Отгружены клиенту\"><icons file=\"fa-truck\" /></item -->\n\n    <item id=\"service\" text=\"Сервис\" tooltip=\"Сервисное обслуживание\"><icons file=\"fa-medkit\" /></item>\n    <item id=\"complaints\" text=\"Рекламации\" tooltip=\"Жалобы и рекламации\"><icons file=\"fa-frown-o\" /></item>\n\n    <item id=\"template\" text=\"Шаблоны\" tooltip=\"Типовые блоки\"><icons file=\"fa-puzzle-piece\" /></item>\n    <item id=\"zarchive\" text=\"Архив\" tooltip=\"Старые заказы\"><icons file=\"fa-archive\" /></item>\n    <item id=\"all\" text=\"Все\" tooltip=\"Отключить фильтрацию\"><icons file=\"fa-expand\" /></item>\n</tree>\n","tree_industry.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.nom_kinds\" text=\"Виды номенклатуры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_groups\" text=\"Номенклатурные группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom\" text=\"Номенклатура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.production_params\" text=\"Параметры продукции\" select=\"1\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.cnns\" text=\"Соединения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.inserts\" text=\"Вставки\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.furns\" text=\"Фурнитура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.clrs\" text=\"Цвета\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.color_price_groups\" text=\"Цвето-ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.params_links\" text=\"Связи параметров\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.elm_visualization\" text=\"Визуализация элементов\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.insert_bind\" text=\"Привязки вставок\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.formulas\" text=\"Формулы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cch.properties\" text=\"Дополнительные реквизиты\"><icons file=\"icon_1c_cch\" /></item>\r\n</tree>\r\n","tree_price.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.users\" text=\"Пользователи\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.individuals\" text=\"Физические лица\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.organizations\" text=\"Организации\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.partners\" text=\"Контрагенты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.contracts\" text=\"Договоры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_prices_types\" text=\"Виды цен\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.price_groups\" text=\"Ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.currencies\" text=\"Валюты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"ireg.currency_courses\" text=\"Курсы валют\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"ireg.margin_coefficients\" text=\"Маржинальные коэффициенты\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"doc.nom_prices_setup\" text=\"Установка цен номенклатуры\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"cch.predefined_elmnts\" text=\"Константы и списки\"><icons file=\"icon_1c_cch\" /></item>\r\n\r\n</tree>\r\n","view_blank.html":"<!DOCTYPE html>\r\n<html lang=\"ru\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"/>\r\n    <title>Документ</title>\r\n    <style>\r\n\r\n        html {\r\n            width: 100%;\r\n            height: 100%;\r\n            margin: 0;\r\n            padding: 0;\r\n            overflow: auto;\r\n\r\n        }\r\n        body {\r\n            width: 210mm;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n            overflow: hidden;\r\n            color: rgb(48, 57, 66);\r\n            font-family: Arial, sans-serif;\r\n            font-size: 11pt;\r\n            text-rendering: optimizeLegibility;\r\n        }\r\n\r\n        /* Таблица */\r\n        table.border {\r\n            border-collapse: collapse; border: 1px solid;\r\n        }\r\n        table.border > tbody > tr > td,\r\n        table.border > tr > td,\r\n        table.border th{\r\n            border: 1px solid;\r\n        }\r\n        .noborder{\r\n            border: none;\r\n        }\r\n\r\n        /* Многоуровневый список */\r\n        ol {\r\n            counter-reset: li;\r\n            list-style: none;\r\n            padding: 0;\r\n        }\r\n        li {\r\n            margin-top: 8px;\r\n        }\r\n        li:before {\r\n            counter-increment: li;\r\n            content: counters(li,\".\") \".\";\r\n            padding-right: 8px;\r\n        }\r\n        li.flex {\r\n            display: flex;\r\n            text-align: left;\r\n            list-style-position: outside;\r\n            font-weight: normal;\r\n        }\r\n\r\n        .container {\r\n            width: 100%;\r\n            position: relative;\r\n        }\r\n\r\n        .margin-top-20 {\r\n            margin-top: 20px;\r\n        }\r\n\r\n        .column-50-percent {\r\n            width: 48%;\r\n            min-width: 40%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .column-30-percent {\r\n            width: 31%;\r\n            min-width: 30%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .block-left {\r\n            display: block;\r\n            float: left;\r\n        }\r\n\r\n        .block-center {\r\n            display: block;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n        }\r\n\r\n        .block-right {\r\n            display: block;\r\n            float: right;\r\n        }\r\n\r\n        .list-center {\r\n            text-align: center;\r\n            list-style-position: inside;\r\n            font-weight: bold;\r\n        }\r\n\r\n        .clear-both {\r\n            clear: both;\r\n        }\r\n\r\n        .small {\r\n            font-size: small;\r\n        }\r\n\r\n        .text-center {\r\n            text-align: center;\r\n        }\r\n\r\n        .text-justify {\r\n            text-align: justify;\r\n        }\r\n\r\n        .text-right {\r\n            text-align: right;\r\n        }\r\n\r\n        .muted-color {\r\n            color: #636773;\r\n        }\r\n\r\n        .accent-color {\r\n            color: #f30000;\r\n        }\r\n\r\n        .note {\r\n            background: #eaf3f8;\r\n            color: #2980b9;\r\n            font-style: italic;\r\n            padding: 12px 20px;\r\n        }\r\n\r\n        .note:before {\r\n            content: 'Замечание: ';\r\n            font-weight: 500;\r\n        }\r\n        *, *:before, *:after {\r\n            box-sizing: inherit;\r\n        }\r\n\r\n    </style>\r\n</head>\r\n<body>\r\n\r\n</body>\r\n</html>","view_settings.html":"<div class=\"md_column1300\">\r\n\r\n    <div class=\"md_column320\" name=\"form1\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n    <div class=\"md_column320\" name=\"form2\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n</div>"});
 
 $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
@@ -73,6 +73,11 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
         });
         params.push(param);
       }
+    });
+
+    ts_params.find_rows({cnstr: cnstr, inset: blank_inset || inset}, (row) => {
+      const links = row.param.params_links({grid: {selection: {cnstr}}, obj: row});
+      row.hide = links.some((link) => link.hide);
     });
   }
 
@@ -276,7 +281,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     }
     for(const prop in defaults){
       if(tmp.hasOwnProperty(prop)) {
-        props[prop] = !!tmp[prop];
+        props[prop] = typeof tmp[prop] === 'number' ? tmp[prop] : !!tmp[prop];
       }
       else {
         props[prop] = defaults[prop];
@@ -350,7 +355,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       editor = new $p.EditorInvisible();
     }
     const project = editor.create_scheme();
-    return project.load(this, true)
+    return project.load(this, attr.builder_props || true)
       .then(() => {
         const {_obj: {glasses, constructions, coordinates}} = this;
         if(attr.elm) {
@@ -386,15 +391,17 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
           else {
             res[ref].imgs[`l0`] = project.get_svg(attr);
           }
-          constructions.forEach(({cnstr}) => {
-            project.draw_fragment({elm: -cnstr});
-            if(attr.format === 'png') {
-              res[ref].imgs[`l${cnstr}`] = project.view.element.toDataURL('image/png').substr(22);
-            }
-            else {
-              res[ref].imgs[`l${cnstr}`] = project.get_svg(attr);
-            }
-          });
+          if(attr.glasses !== false) {
+            constructions.forEach(({cnstr}) => {
+              project.draw_fragment({elm: -cnstr});
+              if(attr.format === 'png') {
+                res[ref].imgs[`l${cnstr}`] = project.view.element.toDataURL('image/png').substr(22);
+              }
+              else {
+                res[ref].imgs[`l${cnstr}`] = project.get_svg(attr);
+              }
+            });
+          }
         }
       })
       .then(() => {
@@ -416,7 +423,8 @@ $p.CatCharacteristics.builder_props_defaults = {
   custom_lines: true,
   cnns: true,
   visualization: true,
-  txts: true
+  txts: true,
+  rounding: 0,
 };
 
 $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, value) {
@@ -761,12 +769,14 @@ $p.cat.clrs.__define({
 	selection_exclude_service: {
 		value(mf, sys) {
 
-			if(mf.choice_params)
-				mf.choice_params.length = 0;
-			else
-				mf.choice_params = [];
+      if(mf.choice_params) {
+        mf.choice_params.length = 0;
+      }
+      else {
+        mf.choice_params = [];
+      }
 
-			mf.choice_params.push({
+      mf.choice_params.push({
 				name: "parent",
 				path: {not: $p.cat.clrs.predefined("СЛУЖЕБНЫЕ")}
 			});
@@ -799,9 +809,14 @@ $p.cat.clrs.__define({
                 clr_group = sys.project._dp.sys.clr_group;
               }
 						}
-						else if(sys instanceof $p.classes.DataProcessorObj){
-							clr_group = sys.sys.clr_group;
-						}
+            else if(sys.hasOwnProperty('sys') && sys.hasOwnProperty('profile') && sys.profile.inset) {
+              const sclr_group = sys.sys.clr_group;
+              const iclr_group = sys.profile.inset.clr_group;
+              clr_group = iclr_group.empty() ? sclr_group : iclr_group;
+            }
+            else if(sys.sys && sys.sys.clr_group){
+              clr_group = sys.sys.clr_group;
+            }
 						else{
 							clr_group = sys.clr_group;
 						}
@@ -809,9 +824,7 @@ $p.cat.clrs.__define({
 						if(clr_group.empty() || !clr_group.clr_conformity.count()){
               return {not: ''};
 						}
-						else{
-              add_by_clr(clr_group)
-						}
+            add_by_clr(clr_group);
 						return {in: res};
 					}
 				});
@@ -960,7 +973,9 @@ $p.cat.clrs.__define({
 					return wnd;
 
 				})
-		}
+    },
+    configurable: true,
+    writable: true,
 	},
 
 	sync_grid: {
@@ -1526,7 +1541,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
   get_spec(contour, cache, exclude_dop) {
 
-    const res = $p.dp.buyers_order.create().specification;
+    const res = $p.dp.buyers_order.create({specification: []}, true).specification;
     const {ox} = contour.project;
     const {НаПримыкающий} = $p.enm.transfer_operations_options;
 
@@ -1694,16 +1709,28 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
     if(res) {
 
       specification_restrictions.find_rows({elm, dop}, (row) => {
-        let len;
-        if (contour.is_rectangular) {
-          len = (row.side == 1 || row.side == 3) ? cache.w : cache.h;
+        const {lmin, lmax, amin, amax, side, for_direct_profile_only} = row;
+        const elm = contour.profile_by_furn_side(side, cache);
+
+        if(for_direct_profile_only === -1 && elm.is_linear()) {
+          return res = false;
         }
-        else {
-          const elm = contour.profile_by_furn_side(row.side, cache);
-          len = elm ? (elm._row.len - 2 * elm.nom.sizefurn) : 0;
+        if(for_direct_profile_only === 1 && !elm.is_linear()) {
+          return res = false;
         }
-        len = len.round();
-        if (len < row.lmin || len > row.lmax) {
+
+        const { side_count } = contour;
+        const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
+        const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
+        const len = (elm._row.len - prev.nom.sizefurn - next.nom.sizefurn).round();
+        if (len < lmin || len > lmax) {
+          return res = false;
+        }
+
+        const angle = direction == $p.enm.open_directions.Правое ?
+          elm.generatrix.angle_to(prev.generatrix, elm.e) :
+          prev.generatrix.angle_to(elm.generatrix, elm.b);
+        if (angle < amin || angle > amax) {
           return res = false;
         }
       });
@@ -1794,6 +1821,9 @@ $p.cat.inserts.__define({
                 mf.choice_params.splice(mf.choice_params.indexOf(choice), 1);
               }
             }
+            else {
+              mf.choice_params = [];
+            }
 
             const prms = new Set();
             inset.used_params.forEach((param) => {
@@ -1809,19 +1839,21 @@ $p.cat.inserts.__define({
             });
             mf.read_only = !prms.has(prm);
 
-            const links = prm.params_links({grid: {selection: {}}, obj: this});
-            const hide = links.some((link) => link.hide);
-            if(hide && !mf.read_only) {
-              mf.read_only = true;
-            }
+            if(!mf.read_only) {
+              const links = prm.params_links({grid: {selection: {}}, obj: this});
+              const hide = links.some((link) => link.hide);
+              if(hide && !mf.read_only) {
+                mf.read_only = true;
+              }
 
-            if(links.length) {
-              const filter = {}
-              prm.filter_params_links(filter, null, links);
-              filter.ref && mf.choice_params.push({
-                name: 'ref',
-                path: filter.ref,
-              });
+              if(links.length) {
+                const filter = {}
+                prm.filter_params_links(filter, null, links);
+                filter.ref && mf.choice_params.push({
+                  name: 'ref',
+                  path: filter.ref,
+                });
+              }
             }
           }
         }
@@ -1832,6 +1864,7 @@ $p.cat.inserts.__define({
         this.meta = meta._clone();
 
         this.meta.fields.inset.choice_params[0].path = item;
+        this.meta.fields.inset.disable_clear = true;
 
         const changed = new Set();
 
@@ -2141,7 +2174,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
 
       if(glass_rows.length){
         glass_rows.forEach((row) => {
-          row.inset.filtered_spec({elm, len_angl, ox}).forEach((row) => {
+          row.inset.filtered_spec({elm, len_angl, ox, own_row: {clr: row.clr}}).forEach((row) => {
             res.push(row);
           });
         });
@@ -2191,7 +2224,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
     return res;
   }
 
-  calculate_spec({elm, len_angl, ox, spec}) {
+  calculate_spec({elm, len_angl, ox, spec, clr}) {
 
     const {_row} = elm;
     const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади} = $p.enm.count_calculating_ways;
@@ -2202,7 +2235,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
       spec = ox.specification;
     }
 
-    this.filtered_spec({elm, is_high_level_call: true, len_angl, ox}).forEach((row_ins_spec) => {
+    this.filtered_spec({elm, is_high_level_call: true, len_angl, ox, clr}).forEach((row_ins_spec) => {
 
       const origin = row_ins_spec._origin || this;
 
@@ -2251,6 +2284,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
                 inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
                 row_ins: row_ins_spec,
                 row_spec: row_spec,
+                clr,
                 len: rib.len
               });
               if(qty) {
@@ -2325,6 +2359,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
             row_ins: row_ins_spec,
             row_spec: row_spec,
+            clr,
             len: len_angl ? len_angl.len : _row.len
           });
           if(row_ins_spec.count_calc_method == ПоФормуле){
@@ -2377,7 +2412,6 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
   }
 
 }
-
 
 
 $p.cat.insert_bind.__define({
@@ -2904,7 +2938,7 @@ class Pricing {
         return !loc && this.by_range();
       })
       .then(() => {
-        const {pouch} = $p.adapters;
+        const {adapters: {pouch}, doc: {calc_order}, wsql} = $p;
         pouch.emit('pouch_complete_loaded');
 
         if(pouch.local.doc === pouch.remote.doc) {
@@ -2912,14 +2946,17 @@ class Pricing {
             since: 'now',
             live: true,
             include_docs: true,
-            selector: pouch.props.user_node ? {class_name: 'doc.nom_prices_setup'} : {class_name: {$in: ['doc.nom_prices_setup', 'doc.calc_order']}}
+            selector: {class_name: {$in: ['doc.nom_prices_setup', calc_order.class_name]}}
           }).on('change', (change) => {
             if(change.doc.class_name == 'doc.nom_prices_setup'){
               setTimeout(() => this.by_doc(change.doc), 500);
             }
-            else if(change.doc.class_name == 'doc.calc_order'){
-              const doc = $p.doc.calc_order.by_ref[change.id.substr(15)];
-              const user = pouch.authorized || $p.wsql.get_user_param('user_name');
+            else if(change.doc.class_name == calc_order.class_name){
+              if(pouch.props.user_node) {
+               return calc_order.emit('change', change.doc);
+              }
+              const doc = calc_order.by_ref[change.id.substr(15)];
+              const user = pouch.authorized || wsql.get_user_param('user_name');
               if(!doc || user === change.doc.timestamp.user){
                 return;
               }
@@ -3001,7 +3038,6 @@ class Pricing {
         return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
-            this.build_cache_local(remote);
 
             if(local.remote_rev !== remote._rev) {
               remote.remote_rev = remote._rev;
@@ -3011,8 +3047,10 @@ class Pricing {
               else {
                 remote._rev = local._rev;
               }
-              pouch.local.templates.put(remote);
+              pouch.local.templates.put(remote._clone());
             }
+
+            this.build_cache_local(remote);
 
             return this.sync_local(pouch, ++step);
           })
@@ -3088,9 +3126,10 @@ class Pricing {
       });
   }
 
-  by_doc(doc) {
-    const keys = doc.goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
-    return $p.adapters.pouch.local.templates.query("doc/doc_nom_prices_setup_slice_last",
+  by_doc({goods}) {
+    const keys = goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
+    const {templates, doc} = $p.adapters.pouch.local;
+    return (templates || doc).query("doc/doc_nom_prices_setup_slice_last",
       {
         include_docs: false,
         keys: keys,
@@ -3709,18 +3748,31 @@ class ProductsBuilding {
 
       let ok = true;
       const {new_spec_row} = ProductsBuilding;
+      const {side_count, furn, direction} = contour;
 
+      if(furn.open_type !== $p.enm.open_types.Глухое && furn.side_count && side_count !== furn.side_count) {
+        const row_base = {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error};
+        contour.profiles.forEach(elm => {
+          new_spec_row({elm, row_base, origin: furn, spec, ox});
+        });
+        return ok = false;
+      }
 
-      contour.furn.open_tunes.each((row) => {
+      furn.open_tunes.each((row) => {
         const elm = contour.profile_by_furn_side(row.side, cache);
-        const len = elm._row.len - 2 * elm.nom.sizefurn;
+        const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
+        const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
+        const len = elm._row.len - prev.nom.sizefurn - next.nom.sizefurn;
 
+        const angle = direction == $p.enm.open_directions.Правое ?
+          elm.generatrix.angle_to(prev.generatrix, elm.e) :
+          prev.generatrix.angle_to(elm.generatrix, elm.b);
 
-        if(len < row.lmin || len > row.lmax || (!elm.is_linear() && !row.arc_available)) {
-          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: contour.furn, spec, ox});
+        const {lmin, lmax, amin, amax} = row;
+        if(len < lmin || len > lmax || angle < amin || (angle > amax && amax > 0) || (!elm.is_linear() && !row.arc_available)) {
+          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: furn, spec, ox});
           ok = false;
         }
-
       });
 
       return ok;
@@ -3758,8 +3810,8 @@ class ProductsBuilding {
 
       const prev = b.profile;
       const next = e.profile;
-      const row_cnn_prev = b.cnn.main_row(elm);
-      const row_cnn_next = e.cnn.main_row(elm);
+      const row_cnn_prev = b.cnn && b.cnn.main_row(elm);
+      const row_cnn_next = e.cnn && e.cnn.main_row(elm);
       const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
 
       let row_spec;
@@ -3956,7 +4008,7 @@ class ProductsBuilding {
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
           $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
         }
-        inset.calculate_spec({elm, ox});
+        inset.calculate_spec({elm, ox, clr});
       });
     }
 
@@ -4090,16 +4142,37 @@ class ProductsBuilding {
           scheme._scope && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
 
         })
-          .then(() => (scheme._scope || attr.close) && setTimeout(() => ox.calc_order._modified && ox.calc_order.save(), 1000))
-          .catch((ox) => {
+          .then(() => {
+            if(scheme._scope || attr.close) {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => ox.calc_order._modified && ox.calc_order.save()
+                  .then(resolve)
+                  .catch(reject), 1000);
+              });
+            }
+          })
+          .catch((err) => {
 
 
-            $p.record_log(ox);
             delete scheme._attr._saving;
+
+            if(err.msg && err.msg._shown) {
+              return;
+            }
+
+            let text = err.message || err;
             if(ox._data && ox._data._err) {
-              $p.msg.show_msg(ox._data._err);
+              if(typeof ox._data._err === 'object') {
+                $p.md.emit('alert', Object.assign({obj: ox}, ox._data._err));
+                delete ox._data._err;
+                return;
+              }
+              text += `\n${ox._data._err}`;
               delete ox._data._err;
             }
+
+            $p.md.emit('alert', {type: 'alert-error', obj: ox, text});
+
           });
       }
       else {
@@ -4264,7 +4337,6 @@ $p.ProductsBuilding = ProductsBuilding;
 $p.products_building = new ProductsBuilding(true);
 
 
-
 class SpecBuilding {
 
   constructor($p) {
@@ -4338,7 +4410,7 @@ class SpecBuilding {
       row.qty = calc_order_row.qty;
       row.quantity = calc_order_row.quantity;
 
-      save && ax.push(cx.save().catch($p.record_log));
+      save && ax.push(cx.save());
       order_rows.set(cx, row);
     });
     if(order_rows.size){
@@ -4352,7 +4424,7 @@ class SpecBuilding {
     }
 
     if(save && !attr.scheme && (ox.is_new() || ox._modified)){
-      ax.push(ox.save().catch($p.record_log));
+      ax.push(ox.save());
     }
 
     return ax;
@@ -4513,47 +4585,43 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       _obj.state = 'draft';
     }
 
-    const rows_saver = this.product_rows(true);
-
-    const res = this._manager.pouch_db
-      .query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
-      .then(({rows}) => {
-        let res = Promise.resolve();
-        let deleted = 0;
-        for (const {id} of rows) {
-          const ref = id.substr(20);
-          if(this.production.find_rows({characteristic: ref}).length) {
-            continue;
-          }
-          deleted ++;
-          res = res
-            .then(() => $p.cat.characteristics.get(ref, 'promise'))
-            .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true));
-        }
-        return res.then(() => deleted);
+    return this.product_rows(true)
+      .then(() => {
+        return this._manager.pouch_db
+          .query('linked', {startkey: [this.ref, 'cat.characteristics'], endkey: [this.ref, 'cat.characteristics\u0fff']})
+          .then(({rows}) => {
+            let res = Promise.resolve();
+            let deleted = 0;
+            for (const {id} of rows) {
+              const ref = id.substr(20);
+              if(this.production.find_rows({characteristic: ref}).length) {
+                continue;
+              }
+              deleted ++;
+              res = res
+                .then(() => $p.cat.characteristics.get(ref, 'promise'))
+                .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true));
+            }
+            return res.then(() => deleted);
+          })
+          .then((res) => {
+            res && this._manager.emit_async('svgs', this);
+          })
+          .catch((err) => null);
       })
-      .then((res) => {
-        res && this._manager.emit_async('svgs', this);
-      })
-      .catch((err) => null);
-
-    if(this._data.before_save_sync) {
-      return res
-        .then(() => rows_saver)
-        .then(() => this);
-    }
+      .then(() => this);
 
   }
 
   value_change(field, type, value) {
-    if(field == 'organization') {
+    if(field === 'organization') {
       this.organization = value;
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
         this.new_number_doc();
       }
     }
-    else if(field == 'partner' && this.contract.owner != value) {
+    else if(field === 'partner' && this.contract.owner != value) {
       this.contract = $p.cat.contracts.by_partner_and_org(value, this.organization);
     }
     this._manager.emit_add_fields(this, ['contract']);
@@ -4563,6 +4631,15 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   after_del_row(name) {
     name === 'production' && this.product_rows();
     return this;
+  }
+
+  unload() {
+    this.production.forEach(({characteristic}) => {
+      if(!characteristic.empty() && characteristic.calc_order === this) {
+        characteristic.unload();
+      }
+    });
+    return super.unload();
   }
 
 
@@ -4657,7 +4734,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     const {individual_person} = manager;
     const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
     const get_imgs = [];
-    const {cat: {contact_information_kinds, characteristics}, utils: {blank, blob_as_text}} = $p;
+    const {cat: {contact_information_kinds, characteristics}, utils: {blank, blob_as_text, snake_ref}} = $p;
 
     const res = {
       АдресДоставки: this.shipping_address,
@@ -4793,6 +4870,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     return this.load_production().then(() => {
 
+      let editor, imgs = Promise.resolve();
+      const builder_props = attr.builder_props && Object.assign({}, $p.CatCharacteristics.builder_props_defaults, attr.builder_props);
       this.production.forEach((row) => {
         if(!row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
 
@@ -4801,8 +4880,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           res.ВсегоИзделий += row.quantity;
           res.ВсегоПлощадьИзделий += row.quantity * row.s;
 
-          if(attr.sizes === false) {
-
+          if(builder_props) {
+            if(!editor) {
+              editor = new $p.EditorInvisible();
+            }
+            imgs = imgs.then(() => {
+              return row.characteristic.draw(attr, editor)
+                .then((img) => {
+                  res.ПродукцияЭскизы[row.characteristic.ref] = img[snake_ref(row.characteristic.ref)].imgs.l0;
+                });
+            });
           }
           else {
             if(row.characteristic.svg) {
@@ -4819,25 +4906,28 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       });
       res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
-      return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
-        .then(() => !window.QRCode && $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
-        .then(() => {
+      return imgs.then(() => {
+        editor && editor.unload();
+        return (get_imgs.length ? Promise.all(get_imgs) : Promise.resolve([]))
+          .then(() => typeof QRCode === 'undefined' && $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script'))
+          .then(() => {
 
-          const svg = document.createElement('SVG');
-          svg.innerHTML = '<g />';
-          const qrcode = new QRCode(svg, {
-            text: 'http://www.oknosoft.ru/zd/',
-            width: 100,
-            height: 100,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H,
-            useSVG: true
+            const svg = document.createElement('SVG');
+            svg.innerHTML = '<g />';
+            const qrcode = new QRCode(svg, {
+              text: 'http://www.oknosoft.ru/zd/',
+              width: 100,
+              height: 100,
+              colorDark: '#000000',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.H,
+              useSVG: true
+            });
+            res.qrcode = svg.innerHTML;
+
+            return res;
           });
-          res.qrcode = svg.innerHTML;
-
-          return res;
-        });
+      });
 
     });
 
@@ -4864,6 +4954,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Ширина: row.width,
       ВсегоПлощадь: row.s * row.quantity,
       Примечание: row.note,
+      Комментарий: row.note,
+      СистемаПрофилей: characteristic.sys.presentation,
       Номенклатура: nom.name_full || nom.name,
       Характеристика: characteristic.name,
       Заполнения: '',
@@ -4932,8 +5024,6 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       })
       .then(() => {
         const headers = new Headers();
-        headers.append('Accept', 'application/json');
-        headers.append('Content-Type', 'application/json');
         headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(
           wsql.get_user_param('user_name') + ':' + aes.Ctr.decrypt(wsql.get_user_param('user_pwd'))))));
         if(suffix){
@@ -4976,7 +5066,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ro = !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
     }
     else if(!obj_delivery_state.empty()) {
-      ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван;
+      ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван && !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
     }
     return ro;
   }
@@ -5074,8 +5164,23 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         if(row_spec instanceof $p.DpBuyers_orderProductionRow) {
 
           if(params) {
+
+            const used_params = new Set();
+            row_spec.inset.used_params.forEach((param) => {
+              !param.is_calculated && used_params.add(param);
+            });
+            row_spec.inset.specification.forEach(({nom}) => {
+              if(nom instanceof $p.CatInserts){
+                nom.used_params.forEach((param) => {
+                  !param.is_calculated && used_params.add(param);
+                });
+              }
+            });
+
             params.find_rows({elm: row_spec.row}, (prow) => {
-              ox.params.add(prow, true).inset = row_spec.inset;
+              if(used_params.has(prow.param)) {
+                ox.params.add(prow, true).inset = row_spec.inset;
+              }
             });
           }
 
@@ -5114,46 +5219,50 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   process_add_product_list(dp) {
 
-    return new Promise(async (resolve, reject) => {
+    let res = Promise.resolve();
+    const ax = [];
 
-      const ax = [];
+    for (let i = 0; i < dp.production.count(); i++) {
+      const row_spec = dp.production.get(i);
+      let row_prod;
 
-      for (let i = 0; i < dp.production.count(); i++) {
-        const row_spec = dp.production.get(i);
-        let row_prod;
-
-        if(row_spec.inset.empty()) {
-          row_prod = this.production.add(row_spec);
-          row_prod.unit = row_prod.nom.storage_unit;
-          if(!row_spec.clr.empty()) {
-            $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
-              if(ox.clr == row_spec.clr) {
-                row_prod.characteristic = ox;
-                return false;
-              }
-            });
-          }
+      if(row_spec.inset.empty()) {
+        row_prod = this.production.add(row_spec);
+        row_prod.unit = row_prod.nom.storage_unit;
+        if(!row_spec.clr.empty()) {
+          $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
+            if(ox.clr == row_spec.clr) {
+              row_prod.characteristic = ox;
+              return false;
+            }
+          });
         }
-        else {
-          const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
-          const elm = new $p.DocCalc_order.FakeElm(row_spec);
-          row_prod = await this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true});
-          row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+        res = res.then(() => row_prod);
+      }
+      else {
+        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
+        const elm = new $p.DocCalc_order.FakeElm(row_spec);
+        res = res
+          .then(() => this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true}))
+          .then((row_prod) => {
+            row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+            row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+            return row_prod;
+          });
+      }
 
-          row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
-        }
-
-        [].push.apply(ax, $p.spec_building.specification_adjustment({
+      res = res.then((row_prod) => {
+        return Promise.all($p.spec_building.specification_adjustment({
           calc_order_row: row_prod,
           spec: row_prod.characteristic.specification,
           save: true,
-        }, true));
+        }, true))
+          .then((tx) => [].push.apply(ax, tx));
+      });
 
-      }
+    }
 
-      resolve(ax);
-
-    });
+    return res.then(() => ax);
   }
 
   recalc(attr = {}, editor) {
@@ -5995,6 +6104,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         save('retrieve');
         break;
 
+      case 'btn_reload':
+        reload();
+        break;
+
       case 'btn_post':
         save('post');
         break;
@@ -6189,6 +6302,18 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       });
     }
 
+    function reload() {
+      o && o.load()
+        .then(() => o.load_production(true))
+        .then(() => {
+          const {pg_left, pg_right, grids} = wnd.elmnts;
+          pg_left.reload();
+          pg_right.reload();
+          grids.production.selection = grids.production.selection;
+          wnd.set_text();
+        });
+    }
+
     function save(action) {
 
       function do_save(post) {
@@ -6199,7 +6324,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
 
         o.save(post)
-          .then(function () {
+          .then(() => {
             if(action == 'sent' || action == 'close') {
               close();
             }
@@ -6207,9 +6332,26 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               wnd.set_text();
               set_editable(o, wnd);
             }
-
           })
-          .catch($p.record_log);
+          .catch((err) => {
+            if(err._rev) {
+              dhtmlx.confirm({
+                title: o.presentation,
+                text: err.message + '<div style="text-align: left;padding-top: 16px;">Ваши правки потеряны, можно закрыть форму либо прочитать актуальную версию заказа с сервера</div>',
+                cancel: 'Прочитать',
+                callback: (btn) => {
+                  btn === false && reload();
+                }
+              });
+            }
+            else {
+              $p.msg.show_msg({
+                type: 'alert-warning',
+                text: err.message || err,
+                title: o.presentation
+              });
+            }
+          });
       }
 
       switch (action) {
@@ -6247,13 +6389,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     function frm_close() {
 
-      if(o && o._modified) {
-        if(o.is_new()) {
-          o.unload();
-        }
-        else if(!location.pathname.match(/builder/)) {
-          setTimeout(o.load.bind(o), 100);
-        }
+      if(o && !location.pathname.match(/builder/)) {
+        setTimeout(o.unload.bind(o), 200);
       }
 
       ['vault', 'vault_pop', 'discount', 'svgs', 'layout_header'].forEach((elm) => {
@@ -6682,7 +6819,7 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
         row.ordn = row.characteristic.leading_product = cx;
       }
     });
-    dst._data.before_save_sync = true;
+
     return dst.save();
   }
 
@@ -7225,9 +7362,22 @@ $p.DocSelling.prototype.before_save = function () {
 
 
 
-(function($p){
+(function({enm}){
 
-	$p.enm.open_types.__define({
+  enm.debit_credit_kinds.__define({
+    debit: {
+      get() {
+        return this.Приход;
+      }
+    },
+    credit: {
+      get() {
+        return this.Расход;
+      }
+    },
+  });
+
+	enm.open_types.__define({
 
     is_opening: {
       value(v) {
@@ -7240,7 +7390,7 @@ $p.DocSelling.prototype.before_save = function () {
 
   });
 
-	$p.enm.orientations.__define({
+	enm.orientations.__define({
 
 		hor: {
 			get() {
@@ -7261,7 +7411,7 @@ $p.DocSelling.prototype.before_save = function () {
 		}
 	});
 
-	$p.enm.positions.__define({
+	enm.positions.__define({
 
 		left: {
 			get() {
@@ -8089,7 +8239,7 @@ class eXcell_client extends eXcell {
   edit() {
 
     this.val = this.getValue();		
-    this.cell.innerHTML = '<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_field21">&nbsp;</div></div>';
+    this.cell.innerHTML = `<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_ofrm21">&nbsp;</div><div class="ref_field21">&nbsp;</div></div>`;
 
     const {cell: {firstChild}, val} = this;
     const ti = firstChild.childNodes[0];
@@ -8098,6 +8248,7 @@ class eXcell_client extends eXcell {
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
     firstChild.childNodes[1].onclick = this.open_obj;
+    firstChild.childNodes[2].onclick = this.open_selection;
   };
 
   detach() {
@@ -8159,7 +8310,8 @@ class WndAddress {
     this.pwnd = source.pwnd;
     this.grid = source.grid;
     this.v = new WndAddressData(this);
-    this.process_address_fields().then(() => this.frm_create());
+    this.process_address_fields()
+      .then(() => this.frm_create());
   }
 
   frm_create() {
@@ -8259,30 +8411,51 @@ class WndAddress {
     elmnts.toolbar = wnd.attachToolbar({icons_path: dhtmlx.image_path + 'dhxtoolbar' + dhtmlx.skin_suffix()});
     elmnts.toolbar.loadStruct('<toolbar><item id="btn_select" type="button" title="Установить адрес" text="&lt;b&gt;Выбрать&lt;/b&gt;" /><item type="separator"  id="sep1"	/></toolbar>', function(){
 
-      this.attachEvent("onclick", toolbar_click);
+      this.attachEvent('onclick', toolbar_click);
 
       const delivery_area_id = `txt_${dhx4.newId()}`;
       this.addText(delivery_area_id);
-      this.addSeparator("sep2");
-      this.addText("txt_region");
+      this.addSeparator('sep2');
+      this.addText('txt_region');
 
       const txt_div = this.objPull[this.idPrefix + delivery_area_id].obj;
       const delivery_area = new $p.iface.OCombo({
         parent: txt_div,
         obj: obj,
-        field: "delivery_area",
+        field: 'delivery_area',
         width: 200,
         hide_frm: true,
       });
-      txt_div.style.border = "1px solid #ccc";
-      txt_div.style.borderRadius = "3px";
-      txt_div.style.padding = "3px 2px 1px 2px";
-      txt_div.style.margin = "1px 5px 1px 1px";
-      delivery_area.DOMelem_input.placeholder = "Район доставки";
+      txt_div.style.border = '1px solid #ccc';
+      txt_div.style.borderRadius = '3px';
+      txt_div.style.padding = '3px 2px 1px 2px';
+      txt_div.style.margin = '1px 5px 1px 1px';
+      delivery_area.DOMelem_input.placeholder = 'Район доставки';
+
+      this.addInput('coordinates');
+      this.setWidth('coordinates', 210);
+      this.cont.querySelector('.dhxtoolbar_float_left').style.width = '100%';
+      const coordinates = this.getInput('coordinates');
+      coordinates.parentElement.style.float = 'right';
+      coordinates.placeholder = 'Координаты';
 
       this.setItemText('txt_region', v.region);
 
     });
+
+    elmnts.toolbar.attachEvent("onEnter", (id, value) => {
+      if(id === 'coordinates') {
+        const coordinates = this.assemble_lat_lng(value);
+        if(coordinates) {
+          const latLng = new google.maps.LatLng(coordinates.lat, coordinates.lng);
+          const {v, wnd} = this;
+          wnd.elmnts.map.setCenter(latLng);
+          v.marker.setPosition(latLng);
+          this.marker_dragend({latLng});
+        }
+      }
+    });
+    this.refresh_coordinates();
 
     elmnts.cell_map = elmnts.layout.cells('c');
     elmnts.cell_map.hideHeader();
@@ -8337,31 +8510,33 @@ class WndAddress {
   delivery_area_changed(){
 
     const {v, wnd} = this;
+    const {delivery_area} = v;
 
-    if(!v.delivery_area.empty()){
+    if(!delivery_area.empty()){
       v.street = "";
     }
 
-    if(v.delivery_area.region){
-      v.region = v.delivery_area.region;
+    if(delivery_area.region){
+      v.region = delivery_area.region;
     }
     else {
       v.region = "";
     }
     wnd.elmnts.toolbar.setItemText('txt_region', v.region);
 
-    if(v.delivery_area.city){
-      v.city = v.delivery_area.city;
+    if(delivery_area.city){
+      v.city = delivery_area.city;
       wnd.elmnts.pgrid.cells("city", 1).setValue(v.city);
     }
     else{
       v.city = "";
     }
 
-    if(v.delivery_area.latitude && v.delivery_area.longitude){
-      const LatLng = new google.maps.LatLng(v.delivery_area.latitude, v.delivery_area.longitude);
+    if(delivery_area.latitude && delivery_area.longitude){
+      const LatLng = new google.maps.LatLng(delivery_area.latitude, delivery_area.longitude);
       wnd.elmnts.map.setCenter(LatLng);
       v.marker.setPosition(LatLng);
+      this.refresh_coordinates(delivery_area.latitude, delivery_area.longitude);
     }
 
     this.refresh_grid();
@@ -8374,6 +8549,15 @@ class WndAddress {
     pgrid.cells("street", 1).setValue(street);
     pgrid2.cells("house", 1).setValue(house);
     pgrid2.cells("flat", 1).setValue(flat);
+  }
+
+  refresh_coordinates(latitude, longitude){
+    const {v, wnd} = this;
+    if(latitude && longitude) {
+      v.latitude = latitude;
+      v.longitude = longitude;
+    }
+    v.latitude && wnd && wnd.elmnts && wnd.elmnts.toolbar.setValue('coordinates', `${v.latitude.toFixed(8)} ${v.longitude.toFixed(8)}`);
   }
 
   addr_changed() {
@@ -8389,9 +8573,8 @@ class WndAddress {
         const loc = results[0].geometry.location;
         wnd.elmnts.map.setCenter(loc);
         v.marker.setPosition(loc);
-        v.latitude = loc.lat();
-        v.longitude = loc.lng();
         v.postal_code = $p.ipinfo.components({}, results[0].address_components).postal_code || "";
+        this.refresh_coordinates(loc.lat(), loc.lng());
       }
     });
   }
@@ -8404,6 +8587,41 @@ class WndAddress {
       (city ? (city + ", ") : "") +
       (region ? (region + ", ") : "") + country +
       (postal_code ? (", " + postal_code) : "");
+  }
+
+  assemble_lat_lng(str) {
+    const simpleMatches = [];
+    simpleMatches[0] = /^\s*?(-?[0-9]+\.?[0-9]+?)\s*\,\s*(-?[0-9]+\.?[0-9]+?)\s*$/.exec(str);
+    simpleMatches[2] = /^\s*?(-?[0-9]+[,.]?[0-9]+?)\s*;?\s*(-?[0-9]+[,.]?[0-9]+?)\s*$/.exec(str);
+    const simpleMatch = simpleMatches.find(match => match && match.length === 3);
+    const otherMatches = [];
+    otherMatches[0] = /^\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[WE]\s*$/.exec(str);
+    otherMatches[1] = /^\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[EW]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*$/.exec(str);
+    const otherMatch = otherMatches.find(match => match && match.length === 7);
+    if (simpleMatch) {
+      const lat = parseFloat(simpleMatch[1].replace(',', '.'));
+      const lng = parseFloat(simpleMatch[2].replace(',', '.'));
+
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+
+    } else if (otherMatch) {
+      const latDeg = parseFloat(otherMatch[1]);
+      const latMin = parseFloat(otherMatch[2]);
+      const latSec = parseFloat(otherMatch[3].replace(',', '.'));
+      const lngDeg = parseFloat(otherMatch[4]);
+      const lngMin = parseFloat(otherMatch[5]);
+      const lngSec = parseFloat(otherMatch[6].replace(',', '.'));
+
+      const lat = (latDeg + latMin / 60 + latSec / 3600) * (str.indexOf('S') !== -1 ? -1 : 1);
+      const lng = (lngDeg + lngMin / 60 + lngSec / 3600) * (str.indexOf('W') !== -1 ? -1 : 1);
+
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+    }
+
   }
 
   assemble_address_fields(){
@@ -8576,14 +8794,12 @@ class WndAddress {
           if(obj.shipping_address){
             this.do_geocoding((results, status) => {
               if (status == google.maps.GeocoderStatus.OK) {
-                v.latitude = results[0].geometry.location.lat();
-                v.longitude = results[0].geometry.location.lng();
+                this.refresh_coordinates(results[0].geometry.location.lat(), results[0].geometry.location.lng());
               }
             });
           }
           else if($p.ipinfo.latitude && $p.ipinfo.longitude ){
-            v.latitude = $p.ipinfo.latitude;
-            v.longitude = $p.ipinfo.longitude;
+            this.refresh_coordinates($p.ipinfo.latitude, $p.ipinfo.longitude);
           }
           else{
             v.latitude = 55.635924;
@@ -8626,8 +8842,7 @@ class WndAddress {
             wnd.elmnts.map.setCenter(e.latLng);
           }
 
-          v.latitude = e.latLng.lat();
-          v.longitude = e.latLng.lng();
+          this.refresh_coordinates(e.latLng.lat(), e.latLng.lng());
         }
       }
     });

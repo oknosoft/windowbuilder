@@ -136,15 +136,27 @@ exports.CchProperties = class CchProperties extends Object {
         ok = val == prm_row.value;
       }
       else {
-        ox.params.find_rows({
-          cnstr: cnstr || 0,
-          inset: (typeof origin !== 'number' && origin) || utils.blank.guid,
-          param: this,
-          value: val
-        }, () => {
-          ok = true;
-          return false;
-        });
+        if(ox.params) {
+          ox.params.find_rows({
+            cnstr: cnstr || 0,
+            inset: (typeof origin !== 'number' && origin) || utils.blank.guid,
+            param: this,
+            value: val
+          }, () => {
+            ok = true;
+            return false;
+          });
+        }
+        else if(ox.product_params) {
+          ox.product_params.find_rows({
+            elm: elm.elm || 0,
+            param: this,
+            value: val
+          }, () => {
+            ok = true;
+            return false;
+          });
+        }
       }
     }
     // вычисляемый параметр - его значение уже рассчитано формулой (val) - сравниваем со значением в строке ограничений
@@ -154,15 +166,27 @@ exports.CchProperties = class CchProperties extends Object {
     }
     // параметр явно указан в табчасти параметров изделия
     else {
-      ox.params.find_rows({
-        cnstr: cnstr || 0,
-        inset: (typeof origin !== 'number' && origin) || utils.blank.guid,
-        param: this
-      }, ({value}) => {
-        // value - значение из строки параметра текущей продукции, val - знаяение из параметров отбора
-        ok = utils.check_compare(value, val, prm_row.comparison_type, comparison_types);
-        return false;
-      });
+      if(ox.params) {
+        ox.params.find_rows({
+          cnstr: cnstr || 0,
+          inset: (typeof origin !== 'number' && origin) || utils.blank.guid,
+          param: this
+        }, ({value}) => {
+          // value - значение из строки параметра текущей продукции, val - знаяение из параметров отбора
+          ok = utils.check_compare(value, val, prm_row.comparison_type, comparison_types);
+          return false;
+        });
+      }
+      else if(ox.product_params) {
+        ox.product_params.find_rows({
+          elm: elm.elm || 0,
+          param: this
+        }, ({value}) => {
+          // value - значение из строки параметра текущей продукции, val - знаяение из параметров отбора
+          ok = utils.check_compare(value, val, prm_row.comparison_type, comparison_types);
+          return false;
+        });
+      }
     }
     return ok;
   }

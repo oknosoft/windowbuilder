@@ -278,48 +278,56 @@ class Filling extends AbstractFilling(BuilderElement) {
     this.sendToBack();
 
     const {path, imposts, _attr, is_rectangular} = this;
-    const {elm_font_size} = consts;
-
+    const {elm_font_size, font_family} = consts;
+    const fontSize = elm_font_size * (2 / 3);
+    const maxTextWidth = 490;
     path.visible = true;
     imposts.forEach((elm) => elm.redraw());
-
+    
     // прочистим пути
     this.purge_paths();
-
+    
     // если текст не создан - добавляем
     if(!_attr._text){
       _attr._text = new paper.PointText({
         parent: this,
         fillColor: 'black',
-        fontFamily: consts.font_family,
-        fontSize: elm_font_size,
+        fontFamily: font_family,
+        fontSize,
         guide: true,
+        visible: true,
       });
     }
-    _attr._text.visible = is_rectangular;
+
+    // Задаем надпись формулы
+    const {bounds} = path;
+    _attr._text.content = this.formula();
+
+    const textBounds = bounds.scale(0.9);
+    textBounds.width = textBounds.width > maxTextWidth ? maxTextWidth : textBounds.width;
+    textBounds.height = textBounds.height > maxTextWidth ? maxTextWidth : textBounds.height;
 
     if(is_rectangular){
-      const {bounds} = path;
-      _attr._text.content = this.formula();
-      _attr._text.point = bounds.bottomLeft.add([elm_font_size * 0.6, -elm_font_size]);
-      if(_attr._text.bounds.width > (bounds.width - 2 * elm_font_size)){
-        const atext = _attr._text.content.split(' ');
-        if(atext.length > 1){
-          _attr._text.content = '';
-          atext.forEach((text, index) => {
-            if(!_attr._text.content){
-              _attr._text.content = text;
-            }
-            else{
-              _attr._text.content += ((index === atext.length - 1) ? '\n' : ' ') + text;
-            }
-          })
-          _attr._text.point.y -= elm_font_size;
-        }
-      }
+      const turn = textBounds.width * 1.5 < textBounds.height;
+      _attr._text.fitBounds(textBounds);
+      _attr._text.point = turn
+        ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])
+        : bounds.bottomLeft.add([fontSize * 0.6, -fontSize]);
+      _attr._text.rotation = turn ? 270 : 0;
     }
     else{
-
+      _attr._text.fitBounds(textBounds.scale(0.8));
+      // Поиск самой длинной кривой пути
+      const maxCurve = path.curves.reduce((curv, item) => item.length > curv.length ? item : curv, path.curves[0]);
+      const {angle, angleInRadians} = maxCurve.line.vector;
+      const {PI} = Math;
+      _attr._text.rotation = angle;
+      _attr._text.point = maxCurve.point1.add([Math.cos(angleInRadians + PI / 4) * 100, Math.sin(angleInRadians + PI / 4) * 100]);
+      // Перевернуть с головы на ноги
+      if(Math.abs(angle) > 90 && Math.abs(angle) < 180){
+        _attr._text.point = _attr._text.bounds.rightCenter;
+        _attr._text.rotation += 180;
+      }
     }
   }
 
@@ -435,8 +443,45 @@ class Filling extends AbstractFilling(BuilderElement) {
     });
   }
 
-  get profiles() {
-    return this._attr._profiles || [];
+  /**
+   * Возвращает формулу (код состава) заполнения
+   * @type String
+   */
+  formula(by_art) {
+    let res;
+    this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+      let {name, article} = row.inset;
+      const aname = row.inset.name.split(' ');
+      if(by_art && article){
+        name = article;
+      }
+      else if(aname.length){
+        name = aname[0];
+      }
+      if(!res){
+        res = name;
+      }
+      else{
+        res += (by_art ? '*' : 'x') + name;
+      }
+    });
+    return res || (by_art ? this.inset.article || this.inset.name : this.inset.name);
+  }
+
+  /**
+   * сбрасывает выделение с точек раскладки
+   */
+  deselect_onlay_points() {
+    for(const {generatrix} of this.imposts) {
+      generatrix.segments.forEach((segm) => {
+        if(segm.selected) {
+          segm.selected = false;
+        }
+      });
+      if(generatrix.selected) {
+        generatrix.selected = false;
+      }
+    }
   }
 
   /**
@@ -444,6 +489,10 @@ class Filling extends AbstractFilling(BuilderElement) {
    */
   get imposts() {
     return this.getItems({class: Onlay});
+  }
+
+  get profiles() {
+    return this._attr._profiles || [];
   }
 
   /**
@@ -662,6 +711,65 @@ class Filling extends AbstractFilling(BuilderElement) {
   }
 
   /**
+   * Массив с рёбрами периметра по внутренней стороне профилей
+   * @return {Array}
+   */
+  perimeter_inner(size = 0) {
+    // накопим в res пути внутренних рёбер профилей
+    const {center} = this.bounds;
+    const res = this.outer_profiles.map((curr) => {
+      const profile = curr.profile || curr.elm;
+      const {inner, outer} = profile.rays;
+      const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true) ?
+        inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) :
+        outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
+      let angle = curr.e.subtract(curr.b).angle.round(1);
+      if(angle < 0) angle += 360;
+      return {
+        profile,
+        sub_path,
+        angle,
+        b: curr.b,
+        e: curr.e,
+      };
+    });
+    const ubound = res.length - 1;
+    return res.map((curr, index) => {
+      let sub_path = curr.sub_path.equidistant(size);
+      const prev = !index ? res[ubound] : res[index - 1];
+      const next = (index == ubound) ? res[0] : res[index + 1];
+      const b = sub_path.intersect_point(prev.sub_path.equidistant(size), curr.b, true);
+      const e = sub_path.intersect_point(next.sub_path.equidistant(size), curr.e, true);
+      if (b && e) {
+        sub_path = sub_path.get_subpath(b, e);
+      }
+      return {
+        profile: curr.profile,
+        angle: curr.angle,
+        len: sub_path.length,
+        sub_path,
+      };
+    });
+  }
+
+  /**
+   * Габариты по световому проему
+   * @param size
+   * @return {Rectangle}
+   */
+  bounds_light(size = 0) {
+    const path = new paper.Path({insert: false});
+    for (const {sub_path} of this.perimeter_inner(size)) {
+      path.addSegments(sub_path.segments);
+    }
+    if (path.segments.length && !path.closed) {
+      path.closePath(true);
+    }
+    path.reduce();
+    return path.bounds;
+  }
+
+  /**
    * Координата x левой границы (только для чтения)
    */
   get x1() {
@@ -724,31 +832,6 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   get default_clr_str() {
     return "#def,#d0ddff,#eff";
-  }
-
-  /**
-   * Возвращает формулу (код состава) заполнения
-   * @type String
-   */
-  formula(by_art) {
-    let res;
-    this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
-      let {name, article} = row.inset;
-      const aname = row.inset.name.split(' ');
-      if(by_art && article){
-        name = article;
-      }
-      else if(aname.length){
-        name = aname[0];
-      }
-      if(!res){
-        res = name;
-      }
-      else{
-        res += (by_art ? '*' : 'x') + name;
-      }
-    });
-    return res || (by_art ? this.inset.article || this.inset.name : this.inset.name);
   }
 
   // виртуальная ссылка для заполнений равна толщине

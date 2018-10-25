@@ -203,7 +203,7 @@
         row.ordn = row.characteristic.leading_product = cx;
       }
     });
-    dst._data.before_save_sync = true;
+
     return dst.save();
   }
 

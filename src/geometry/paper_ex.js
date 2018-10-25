@@ -20,8 +20,11 @@ Object.defineProperties(paper.Path.prototype, {
      */
   getDirectedAngle: {
     value(point) {
-      const np = this.getNearestPoint(point),
-        offset = this.getOffsetOf(np);
+      if(!point) {
+        point = this.interiorPoint;
+      }
+      const np = this.getNearestPoint(point);
+      const offset = this.getOffsetOf(np);
       return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
     }
   },
@@ -104,7 +107,7 @@ Object.defineProperties(paper.Path.prototype, {
     value() {
       const {curves, firstCurve} = this;
       // если в пути единственная кривая и она прямая - путь прямой
-      if(curves.length == 1 && firstCurve.isLinear()) {
+      if(curves.length === 1 && firstCurve.isLinear()) {
         return true;
       }
       // если в пути есть искривления, путь кривой
@@ -295,7 +298,7 @@ Object.defineProperties(paper.Path.prototype, {
         const intersections = this.getIntersections(path);
         let delta = Infinity, tdelta, tpoint;
 
-        if(intersections.length == 1){
+        if(intersections.length === 1){
           return intersections[0].point;
         }
         else if(intersections.length > 1){
@@ -497,7 +500,7 @@ Object.defineProperties(paper.Point.prototype, {
         return {x: xx1, y: yy1};
       }
       else {
-        return {x: xx2, y: yy2}
+        return {x: xx2, y: yy2};
       }
     }
   },
@@ -514,27 +517,29 @@ Object.defineProperties(paper.Point.prototype, {
 	 * @return {{x: number, y: number}}
 	 */
 	arc_point: {
-		value(x1,y1, x2,y2, r, arc_ccw, more_180){
-			const point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
-			if (r>0){
-				let dx = x1-x2, dy = y1-y2, dr = r*r-(dx*dx+dy*dy)/4, l, h, centr;
-				if(dr >= 0){
-					centr = this.arc_cntr(x1,y1, x2,y2, r, arc_ccw);
-					dx = centr.x - point.x;
-					dy = point.y - centr.y;	// т.к. Y перевернут
-					l = Math.sqrt(dx*dx + dy*dy);
+    value(x1, y1, x2, y2, r, arc_ccw, more_180) {
+      const point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
+      if(r > 0) {
+        let dx = x1 - x2, dy = y1 - y2, dr = r * r - (dx * dx + dy * dy) / 4, l, h;
+        if(dr >= 0) {
+          const centr = this.arc_cntr(x1, y1, x2, y2, r, arc_ccw);
+          dx = point.x - centr.x;
+          dy = point.y - centr.y;	// т.к. Y перевернут
+          l = Math.sqrt(dx * dx + dy * dy);
 
-					if(more_180)
-						h = r+Math.sqrt(dr);
-					else
-						h = r-Math.sqrt(dr);
+          if(more_180) {
+            h = r + Math.sqrt(dr);
+          }
+          else {
+            h = r - Math.sqrt(dr);
+          }
 
-					point.x += dx*h/l;
-					point.y += dy*h/l;
-				}
-			}
-			return point;
-		}
+          point.x += dx * h / l;
+          point.y += dy * h / l;
+        }
+      }
+      return point;
+    }
 	},
 
   /**

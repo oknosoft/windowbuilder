@@ -125,7 +125,11 @@ class AdditionalInserts {
     if(inserts){
       const row = inserts.get_cell_field();
       if(row && !row.obj.inset.empty()){
-        return {cnstr, inset: row.obj.inset}
+        return {
+          cnstr,
+          inset: row.obj.inset,
+          hide: {not: true},
+        }
       }
     }
     return {cnstr, inset: $p.utils.generate_guid()}
@@ -137,7 +141,9 @@ class AdditionalInserts {
       params.selection = this.get_selection();
       const row = inserts.get_cell_field();
       if(row && !row.obj.inset.empty()){
-        $p.cat.clrs.selection_exclude_service(this._fields.clr, row.obj.inset);
+        const {inset, _owner} = row.obj;
+        _owner._owner.add_inset_params(inset, params.selection.cnstr);
+        $p.cat.clrs.selection_exclude_service(this._fields.clr, inset);
       }
     }
   }

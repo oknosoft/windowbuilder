@@ -248,8 +248,8 @@ class Sectional extends GeneratrixElement {
    * @chainable
    */
   redraw() {
-    const {layer, generatrix, _attr} = this;
-    const {children, zoom, radius} = _attr;
+    const {layer, generatrix, _attr, radius} = this;
+    const {children, zoom} = _attr;
     const {segments, curves} = generatrix;
 
     // чистим углы и длины
@@ -284,8 +284,8 @@ class Sectional extends GeneratrixElement {
    * @param ind
    */
   draw_angle(ind) {
-    const {layer, generatrix, _attr} = this;
-    const {children, zoom, radius} = _attr;
+    const {layer, generatrix, _attr, radius} = this;
+    let {children, zoom} = _attr;
     const {curves} = generatrix;
     const c1 = curves[ind - 1];
     const c2 = curves[ind];
@@ -299,6 +299,9 @@ class Sectional extends GeneratrixElement {
     if(angle > 180){
       angle = 360 - angle;
     }
+
+    // радиус зависит от габаритов
+
 
     if (c1.length < radius || c2.length < radius || 180 - angle < 1){
       return;
@@ -385,6 +388,19 @@ class Sectional extends GeneratrixElement {
    */
   get elm_type() {
     return $p.enm.elm_types.Водоотлив;
+  }
+
+  /**
+   * радиус с учетом габаритов
+   */
+  get radius() {
+    let {generatrix, radius} = this._attr;
+    const {height, width} = generatrix.bounds;
+    const size = Math.max(width - consts.cutoff, height - consts.cutoff);
+    if(size > 0) {
+      radius += size / 60;
+    }
+    return radius;
   }
 }
 

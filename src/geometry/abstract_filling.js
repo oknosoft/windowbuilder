@@ -69,7 +69,7 @@ const AbstractFilling = (superclass) => class extends superclass {
           return true;
         }
       })
-    }
+    };
 
     if (profiles.length) {
       profiles.forEach((profile) => {
@@ -136,4 +136,4 @@ const AbstractFilling = (superclass) => class extends superclass {
     return bounds;
   }
 
-}
+};

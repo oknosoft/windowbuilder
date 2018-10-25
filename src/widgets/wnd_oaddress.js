@@ -59,7 +59,8 @@ class WndAddress {
     this.grid = source.grid;
     // реквизиты формы
     this.v = new WndAddressData(this);
-    this.process_address_fields().then(() => this.frm_create());
+    this.process_address_fields()
+      .then(() => this.frm_create());
   }
 
   /**
@@ -168,30 +169,51 @@ class WndAddress {
     elmnts.toolbar = wnd.attachToolbar({icons_path: dhtmlx.image_path + 'dhxtoolbar' + dhtmlx.skin_suffix()});
     elmnts.toolbar.loadStruct('<toolbar><item id="btn_select" type="button" title="Установить адрес" text="&lt;b&gt;Выбрать&lt;/b&gt;" /><item type="separator"  id="sep1"	/></toolbar>', function(){
 
-      this.attachEvent("onclick", toolbar_click);
+      this.attachEvent('onclick', toolbar_click);
 
       const delivery_area_id = `txt_${dhx4.newId()}`;
       this.addText(delivery_area_id);
-      this.addSeparator("sep2");
-      this.addText("txt_region");
+      this.addSeparator('sep2');
+      this.addText('txt_region');
 
       const txt_div = this.objPull[this.idPrefix + delivery_area_id].obj;
       const delivery_area = new $p.iface.OCombo({
         parent: txt_div,
         obj: obj,
-        field: "delivery_area",
+        field: 'delivery_area',
         width: 200,
         hide_frm: true,
       });
-      txt_div.style.border = "1px solid #ccc";
-      txt_div.style.borderRadius = "3px";
-      txt_div.style.padding = "3px 2px 1px 2px";
-      txt_div.style.margin = "1px 5px 1px 1px";
-      delivery_area.DOMelem_input.placeholder = "Район доставки";
+      txt_div.style.border = '1px solid #ccc';
+      txt_div.style.borderRadius = '3px';
+      txt_div.style.padding = '3px 2px 1px 2px';
+      txt_div.style.margin = '1px 5px 1px 1px';
+      delivery_area.DOMelem_input.placeholder = 'Район доставки';
+
+      this.addInput('coordinates');
+      this.setWidth('coordinates', 210);
+      this.cont.querySelector('.dhxtoolbar_float_left').style.width = '100%';
+      const coordinates = this.getInput('coordinates');
+      coordinates.parentElement.style.float = 'right';
+      coordinates.placeholder = 'Координаты';
 
       this.setItemText('txt_region', v.region);
 
     });
+
+    elmnts.toolbar.attachEvent("onEnter", (id, value) => {
+      if(id === 'coordinates') {
+        const coordinates = this.assemble_lat_lng(value);
+        if(coordinates) {
+          const latLng = new google.maps.LatLng(coordinates.lat, coordinates.lng);
+          const {v, wnd} = this;
+          wnd.elmnts.map.setCenter(latLng);
+          v.marker.setPosition(latLng);
+          this.marker_dragend({latLng});
+        }
+      }
+    });
+    this.refresh_coordinates();
 
     elmnts.cell_map = elmnts.layout.cells('c');
     elmnts.cell_map.hideHeader();
@@ -256,32 +278,34 @@ class WndAddress {
   delivery_area_changed(){
 
     const {v, wnd} = this;
+    const {delivery_area} = v;
 
     // получим город и район из "района доставки"
-    if(!v.delivery_area.empty()){
+    if(!delivery_area.empty()){
       v.street = "";
     }
 
-    if(v.delivery_area.region){
-      v.region = v.delivery_area.region;
+    if(delivery_area.region){
+      v.region = delivery_area.region;
     }
     else {
       v.region = "";
     }
     wnd.elmnts.toolbar.setItemText('txt_region', v.region);
 
-    if(v.delivery_area.city){
-      v.city = v.delivery_area.city;
+    if(delivery_area.city){
+      v.city = delivery_area.city;
       wnd.elmnts.pgrid.cells("city", 1).setValue(v.city);
     }
     else{
       v.city = "";
     }
 
-    if(v.delivery_area.latitude && v.delivery_area.longitude){
-      const LatLng = new google.maps.LatLng(v.delivery_area.latitude, v.delivery_area.longitude);
+    if(delivery_area.latitude && delivery_area.longitude){
+      const LatLng = new google.maps.LatLng(delivery_area.latitude, delivery_area.longitude);
       wnd.elmnts.map.setCenter(LatLng);
       v.marker.setPosition(LatLng);
+      this.refresh_coordinates(delivery_area.latitude, delivery_area.longitude);
     }
 
     this.refresh_grid();
@@ -294,6 +318,15 @@ class WndAddress {
     pgrid.cells("street", 1).setValue(street);
     pgrid2.cells("house", 1).setValue(house);
     pgrid2.cells("flat", 1).setValue(flat);
+  }
+
+  refresh_coordinates(latitude, longitude){
+    const {v, wnd} = this;
+    if(latitude && longitude) {
+      v.latitude = latitude;
+      v.longitude = longitude;
+    }
+    v.latitude && wnd && wnd.elmnts && wnd.elmnts.toolbar.setValue('coordinates', `${v.latitude.toFixed(8)} ${v.longitude.toFixed(8)}`);
   }
 
   addr_changed() {
@@ -309,9 +342,8 @@ class WndAddress {
         const loc = results[0].geometry.location;
         wnd.elmnts.map.setCenter(loc);
         v.marker.setPosition(loc);
-        v.latitude = loc.lat();
-        v.longitude = loc.lng();
         v.postal_code = $p.ipinfo.components({}, results[0].address_components).postal_code || "";
+        this.refresh_coordinates(loc.lat(), loc.lng());
       }
     });
   }
@@ -328,6 +360,49 @@ class WndAddress {
       (city ? (city + ", ") : "") +
       (region ? (region + ", ") : "") + country +
       (postal_code ? (", " + postal_code) : "");
+  }
+
+  /**
+   * Parse a string containing a latitude, longitude pair and return them as an object.
+   * @function toLatLng
+   * @param {String} Str
+   * @return {{lat: Number, lng: Number}}
+   */
+  assemble_lat_lng(str) {
+    //simple coordinates
+    const simpleMatches = [];
+    simpleMatches[0] = /^\s*?(-?[0-9]+\.?[0-9]+?)\s*\,\s*(-?[0-9]+\.?[0-9]+?)\s*$/.exec(str);
+    simpleMatches[2] = /^\s*?(-?[0-9]+[,.]?[0-9]+?)\s*;?\s*(-?[0-9]+[,.]?[0-9]+?)\s*$/.exec(str);
+    const simpleMatch = simpleMatches.find(match => match && match.length === 3);
+    //complex coordinates
+    const otherMatches = [];
+    otherMatches[0] = /^\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[WE]\s*$/.exec(str);
+    otherMatches[1] = /^\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[EW]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*$/.exec(str);
+    const otherMatch = otherMatches.find(match => match && match.length === 7);
+    if (simpleMatch) {
+      const lat = parseFloat(simpleMatch[1].replace(',', '.'));
+      const lng = parseFloat(simpleMatch[2].replace(',', '.'));
+
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+
+    } else if (otherMatch) {
+      const latDeg = parseFloat(otherMatch[1]);
+      const latMin = parseFloat(otherMatch[2]);
+      const latSec = parseFloat(otherMatch[3].replace(',', '.'));
+      const lngDeg = parseFloat(otherMatch[4]);
+      const lngMin = parseFloat(otherMatch[5]);
+      const lngSec = parseFloat(otherMatch[6].replace(',', '.'));
+
+      const lat = (latDeg + latMin / 60 + latSec / 3600) * (str.indexOf('S') !== -1 ? -1 : 1);
+      const lng = (lngDeg + lngMin / 60 + lngSec / 3600) * (str.indexOf('W') !== -1 ? -1 : 1);
+
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+    }
+
   }
 
   /**
@@ -513,14 +588,12 @@ class WndAddress {
             // если есть строка адреса, пытаемся геокодировать
             this.do_geocoding((results, status) => {
               if (status == google.maps.GeocoderStatus.OK) {
-                v.latitude = results[0].geometry.location.lat();
-                v.longitude = results[0].geometry.location.lng();
+                this.refresh_coordinates(results[0].geometry.location.lat(), results[0].geometry.location.lng());
               }
             });
           }
           else if($p.ipinfo.latitude && $p.ipinfo.longitude ){
-            v.latitude = $p.ipinfo.latitude;
-            v.longitude = $p.ipinfo.longitude;
+            this.refresh_coordinates($p.ipinfo.latitude, $p.ipinfo.longitude);
           }
           else{
             v.latitude = 55.635924;
@@ -563,8 +636,7 @@ class WndAddress {
             wnd.elmnts.map.setCenter(e.latLng);
           }
 
-          v.latitude = e.latLng.lat();
-          v.longitude = e.latLng.lng();
+          this.refresh_coordinates(e.latLng.lat(), e.latLng.lng());
         }
       }
     });

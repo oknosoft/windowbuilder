@@ -5,8 +5,7 @@
  * Created 07.11.2016
  */
 
-import RepParams from '../../components/RepMaterialsDemand/RepParams';
-import Report from '../../components/RepMaterialsDemand/Report';
+import {Report, RepParams} from '../../components/RepMaterialsDemand';
 
 export default function ($p) {
 

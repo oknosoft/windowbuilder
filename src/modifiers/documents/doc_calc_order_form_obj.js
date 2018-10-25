@@ -348,6 +348,10 @@
         save('retrieve');
         break;
 
+      case 'btn_reload':
+        reload();
+        break;
+
       case 'btn_post':
         save('post');
         break;
@@ -560,6 +564,18 @@
       });
     }
 
+    function reload() {
+      o && o.load()
+        .then(() => o.load_production(true))
+        .then(() => {
+          const {pg_left, pg_right, grids} = wnd.elmnts;
+          pg_left.reload();
+          pg_right.reload();
+          grids.production.selection = grids.production.selection;
+          wnd.set_text();
+        });
+    }
+
     function save(action) {
 
       function do_save(post) {
@@ -570,7 +586,7 @@
         }
 
         o.save(post)
-          .then(function () {
+          .then(() => {
             if(action == 'sent' || action == 'close') {
               close();
             }
@@ -578,9 +594,27 @@
               wnd.set_text();
               set_editable(o, wnd);
             }
-
           })
-          .catch($p.record_log);
+          .catch((err) => {
+            if(err._rev) {
+              // показать диалог и обработать возврат
+              dhtmlx.confirm({
+                title: o.presentation,
+                text: err.message + '<div style="text-align: left;padding-top: 16px;">Ваши правки потеряны, можно закрыть форму либо прочитать актуальную версию заказа с сервера</div>',
+                cancel: 'Прочитать',
+                callback: (btn) => {
+                  btn === false && reload();
+                }
+              });
+            }
+            else {
+              $p.msg.show_msg({
+                type: 'alert-warning',
+                text: err.message || err,
+                title: o.presentation
+              });
+            }
+          });
       }
 
       switch (action) {
@@ -621,13 +655,9 @@
 
     function frm_close() {
 
-      if(o && o._modified) {
-        if(o.is_new()) {
-          o.unload();
-        }
-        else if(!location.pathname.match(/builder/)) {
-          setTimeout(o.load.bind(o), 100);
-        }
+      if(o && !location.pathname.match(/builder/)) {
+        // при закрыти формы не в рисовалку, выгружаем заказ и его продукции из памяти
+        setTimeout(o.unload.bind(o), 200);
       }
 
       // выгружаем из памяти всплывающие окна скидки и связанных файлов

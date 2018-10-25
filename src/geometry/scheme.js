@@ -136,9 +136,9 @@ class Scheme extends paper.Project {
 
     if(fields.hasOwnProperty('clr')) {
       ox.clr = obj.clr;
-      this.getItems({class: ProfileItem}).forEach((p) => {
-        if(!(p instanceof Onlay)) {
-          p.clr = obj.clr;
+      this.getItems({class: BuilderElement}).forEach((elm) => {
+        if(!(elm instanceof Onlay) && !(elm instanceof Filling)) {
+          elm.clr = obj.clr;
         }
       });
     }
@@ -311,7 +311,8 @@ class Scheme extends paper.Project {
    * при рендеринге может переопределяться или объединяться с параметрами рендеринга
    */
   get builder_props() {
-    return this.ox.builder_props;
+    const {ox, _attr} = this;
+    return _attr._builder_props || ox.builder_props;
   }
 
   /**
@@ -383,7 +384,16 @@ class Scheme extends paper.Project {
         else if(row.elm_type === $p.enm.elm_types.Линия) {
           new BaseLine({row});
         }
-      })
+      });
+
+      // если указаны внешние builder_props, установим их для текущего проекта
+      if(typeof from_service === 'object') {
+        _attr._builder_props = Object.assign({}, o.constructor.builder_props_defaults, from_service);
+      }
+      else {
+        delete _attr._builder_props;
+      }
+
       o = null;
 
       // создаём семейство конструкций
@@ -739,8 +749,8 @@ class Scheme extends paper.Project {
         }
         else if(!parent.nearest || !parent.nearest()) {
 
-          // автоуравнивание $p.enm.align_types.Геометрически
-          if(auto_align && parent.elm_type == $p.enm.elm_types.Импост) {
+          // автоуравнивание $p.enm.align_types.Геометрически для импостов внешнего слоя
+          if(auto_align && parent.elm_type === $p.enm.elm_types.Импост && !parent.layer.layer && Math.abs(delta.x) > 1) {
             continue;
           }
 
@@ -771,7 +781,15 @@ class Scheme extends paper.Project {
     }
 
     // при необходимости двигаем импосты
-    other.length && this.do_align(auto_align, profiles);
+    if(other.length && Math.abs(delta.x) > 1) {
+      this.do_align(auto_align, profiles);
+    }
+    else {
+      // иначе перерисовываем контуры
+      setTimeout(() => {
+        this.contours.forEach(l => l.redraw());
+      }, 100);
+    }
 
     _dp._manager.emit_async('update', {}, {x1: true, x2: true, y1: true, y2: true, a1: true, a2: true, cnn1: true, cnn2: true, info: true});
 
@@ -892,8 +910,9 @@ class Scheme extends paper.Project {
       this.clear();
 
       // переприсваиваем номенклатуру, цвет и размеры
-      ox._mixin(is_snapshot ? obx :
-        obx._obj, null, ['ref', 'name', 'calc_order', 'product', 'leading_product', 'leading_elm', 'origin', 'base_block', 'note', 'partner'], true);
+      const src = Object.assign({_not_set_loaded: true}, is_snapshot ? obx : obx._obj);
+      ox._mixin(src, null,
+        'ref,name,calc_order,product,leading_product,leading_elm,origin,base_block,note,partner,_not_set_loaded,_rev'.split(','), true);
 
       // сохраняем ссылку на типовой блок
       if(!is_snapshot) {
@@ -1539,7 +1558,7 @@ class Scheme extends paper.Project {
    * @param point {paper.Point}
    * @returns {*}
    */
-  hitPoints(point, tolerance, selected_first) {
+  hitPoints(point, tolerance, selected_first, with_onlays) {
     let item, hit;
     let dist = Infinity;
 
@@ -1571,21 +1590,13 @@ class Scheme extends paper.Project {
           check_corns(addl);
         }
       }
+      if(with_onlays) {
+        for (let elm of this.activeLayer.onlays) {
+          check_corns(elm);
+        }
+      }
     }
 
-    // if(!tolerance && hit && hit.item.layer && hit.item.layer.parent){
-    //   item = hit.item;
-    //   // если соединение T - портить hit не надо, иначе - ищем во внешнем контуре
-    //   if((item.parent.b && item.parent.b.is_nearest(hit.point) && item.parent.rays.b &&
-    //     (item.parent.rays.b.is_t || item.parent.rays.b.is_i))
-    //     || (item.parent.e && item.parent.e.is_nearest(hit.point) && item.parent.rays.e &&
-    //     (item.parent.rays.e.is_t || item.parent.rays.e.is_i))){
-    //     return hit;
-    //   }
-    //
-    //   item.layer.parent.profiles.some((item) => hit = item.hitTest(point, { segments: true, tolerance: tolerance || 6 }));
-    //   //item.selected = false;
-    // }
     return hit;
   }
 

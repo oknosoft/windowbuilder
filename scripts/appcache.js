@@ -13,6 +13,18 @@ const fs = require('fs-extra');
 const glob = require('glob');
 
 const paths = require('../config/paths');
+const packageData = require('../package.json');
+const moment = require('moment');
+const build = `{"build": "v${packageData.version} (${packageData.dependencies['metadata-core']}), ${moment().format()}"}`;
+fs.writeFile(path.resolve(paths.appBuild + '/build.json').replace(/\\/g, '/'), build, 'utf8', function (err) {
+  if(err) {
+    console.log(err);
+    process.exit(1);
+  }
+  else {
+    console.log('Write build.json...');
+  }
+});
 
 
 let appcache = `CACHE MANIFEST
@@ -42,13 +54,13 @@ https://*
 `;
   // записываем результат
   fs.writeFile(path.resolve(paths.appBuild + '/cache.appcache').replace(/\\/g, '/'), appcache, 'utf8', function (err) {
-    if (err) {
-      console.log(err)
-      process.exit(1)
+    if(err) {
+      console.log(err);
+      process.exit(1);
     }
     else {
-      console.log('Write appcache...')
-      process.exit(0)
+      console.log('Write appcache...');
+      process.exit(0);
     }
   });
 });

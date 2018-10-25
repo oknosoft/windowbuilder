@@ -59,9 +59,7 @@ class ToolCut extends ToolElement{
 
       },
 
-      mousemove: function(event) {
-        this.hitTest(event);
-      }
+      mousemove: this.hitTest
 
     })
 

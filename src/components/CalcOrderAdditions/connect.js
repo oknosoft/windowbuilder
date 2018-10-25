@@ -70,7 +70,6 @@ function mapStateToProps(state, props) {
     handleCalck() {
       const {dp} = this.additions;
       return dp.calc_order.process_add_product_list(dp)
-        .then(ax => Promise.all(ax))
         .then(() => {
           dp.calc_order.production.sync_grid(props.dialog.wnd.elmnts.grids.production);
         });

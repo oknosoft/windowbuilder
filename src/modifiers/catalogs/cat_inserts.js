@@ -72,6 +72,9 @@ $p.cat.inserts.__define({
                 mf.choice_params.splice(mf.choice_params.indexOf(choice), 1);
               }
             }
+            else {
+              mf.choice_params = [];
+            }
 
             // если параметр не используется в текущей вставке, делаем ячейку readonly
             const prms = new Set();
@@ -89,22 +92,24 @@ $p.cat.inserts.__define({
             mf.read_only = !prms.has(prm);
 
             // находим связи параметров
-            const links = prm.params_links({grid: {selection: {}}, obj: this});
-            const hide = links.some((link) => link.hide);
-            if(hide && !mf.read_only) {
-              mf.read_only = true;
-            }
+            if(!mf.read_only) {
+              const links = prm.params_links({grid: {selection: {}}, obj: this});
+              const hide = links.some((link) => link.hide);
+              if(hide && !mf.read_only) {
+                mf.read_only = true;
+              }
 
-            // проверим вхождение значения в доступные и при необходимости изменим
-            if(links.length) {
-              // TODO: подумать про установку умолчаний
-              //prm.linked_values(links, this);
-              const filter = {}
-              prm.filter_params_links(filter, null, links);
-              filter.ref && mf.choice_params.push({
-                name: 'ref',
-                path: filter.ref,
-              });
+              // проверим вхождение значения в доступные и при необходимости изменим
+              if(links.length) {
+                // TODO: подумать про установку умолчаний
+                //prm.linked_values(links, this);
+                const filter = {}
+                prm.filter_params_links(filter, null, links);
+                filter.ref && mf.choice_params.push({
+                  name: 'ref',
+                  path: filter.ref,
+                });
+              }
             }
           }
         }
@@ -117,6 +122,7 @@ $p.cat.inserts.__define({
 
         // отбор по типу вставки
         this.meta.fields.inset.choice_params[0].path = item;
+        this.meta.fields.inset.disable_clear = true;
 
         const changed = new Set();
 
@@ -467,7 +473,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
       // если спецификация верхнего уровня задана в изделии, используем её, параллельно формируем формулу
       if(glass_rows.length){
         glass_rows.forEach((row) => {
-          row.inset.filtered_spec({elm, len_angl, ox}).forEach((row) => {
+          row.inset.filtered_spec({elm, len_angl, ox, own_row: {clr: row.clr}}).forEach((row) => {
             res.push(row);
           });
         });
@@ -528,7 +534,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
    * @param ox {CatCharacteristics}
    * @param spec {TabularSection}
    */
-  calculate_spec({elm, len_angl, ox, spec}) {
+  calculate_spec({elm, len_angl, ox, spec, clr}) {
 
     const {_row} = elm;
     const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади} = $p.enm.count_calculating_ways;
@@ -539,7 +545,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
       spec = ox.specification;
     }
 
-    this.filtered_spec({elm, is_high_level_call: true, len_angl, ox}).forEach((row_ins_spec) => {
+    this.filtered_spec({elm, is_high_level_call: true, len_angl, ox, clr}).forEach((row_ins_spec) => {
 
       const origin = row_ins_spec._origin || this;
 
@@ -592,6 +598,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
                 inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
                 row_ins: row_ins_spec,
                 row_spec: row_spec,
+                clr,
                 len: rib.len
               });
               // если формула не вернула значение, устанавливаем qty_len стандартным способом
@@ -616,8 +623,6 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
 
           const h = (!row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.height : bounds.width);
           const w = !row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.width : bounds.height;
-          // (row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьШагиВторогоНаправления ||
-          // row_ins_spec.attrs_option == $p.enm.inset_attrs_options.ОтключитьВтороеНаправление)
           if(row_ins_spec.step){
             let qty = 0;
             let pos;
@@ -670,6 +675,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
             row_ins: row_ins_spec,
             row_spec: row_spec,
+            clr,
             len: len_angl ? len_angl.len : _row.len
           });
           if(row_ins_spec.count_calc_method == ПоФормуле){
@@ -733,4 +739,3 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
   }
 
 }
-
