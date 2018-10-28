@@ -71,7 +71,7 @@ class BuilderElement extends paper.Group {
     }
 
     if(!this._row.elm){
-      this._row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+      this._row.elm = this.project.ox.coordinates._obj.reduce((max, row) => Math.max(max, row.elm), 0) + 1;
     }
 
     if(this._row.elm_type.empty() && !this.inset.empty()){
@@ -630,4 +630,3 @@ class BuilderElement extends paper.Group {
 
 
 EditorInvisible.BuilderElement = BuilderElement;
-
