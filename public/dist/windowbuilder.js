@@ -13950,7 +13950,7 @@ class ToolLayImpost extends ToolElement {
     }
 
     if (!this.hitItem) {
-      rectification();
+      rectification.bind(this)();
     }
 
     this.paths.forEach((p) => {
