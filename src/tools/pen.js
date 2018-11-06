@@ -307,7 +307,7 @@ class ToolPen extends ToolElement {
         float: 'left',
         sub: {
           width: '62px',
-          height:'206px',
+          height:'262px',
           buttons: [
             {name: 'square', img: 'square.png', float: 'left'},
             {name: 'triangle1', img: 'triangle1.png', float: 'right'},
@@ -322,7 +322,11 @@ class ToolPen extends ToolElement {
             {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
             {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
             {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
+            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'},
+            {name: 'trapeze7',  img: 'trapeze7.png', float: 'left'},
+            {name: 'trapeze8',  img: 'trapeze8.png', float: 'right'},
+            {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
+            {name: 'trapeze10',  img: 'trapeze10.png', float: 'right'}]}
             },
       ],
       image_path: '/imgs/',
@@ -1057,14 +1061,16 @@ class ToolPen extends ToolElement {
    * @param points {Array}
    */
   add_sequence(points) {
+    const profiles = [];
     points.forEach((segments) => {
-      new Profile({
+      profiles.push(new Profile({
         generatrix: new paper.Path({
           strokeColor: 'black',
           segments: segments
         }), proto: this.profile
-      });
+      }));
     });
+    return profiles;
   }
 
   /**
@@ -1118,9 +1124,225 @@ class ToolPen extends ToolElement {
     // находим правую нижнюю точку
     const point = bounds.bottomRight;
     this.add_sequence([
-      [point, point.add([1000, -1000])],
-      [point.add([1000, -1000]), point.add([2000, 0])],
-      [point.add([2000, 0]), point]
+      [point, point.add([500, -500])],
+      [point.add([500, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  /**
+   * Рисует semicircle1
+   * @param bounds
+   */
+  add_semicircle1(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[0].arc_h = 500;
+  }
+
+  /**
+   * Рисует semicircle2
+   * @param bounds
+   */
+  add_semicircle2(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[1].arc_h = 500;
+  }
+
+  /**
+   * Рисует circle
+   * @param bounds
+   */
+  add_circle(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[0].arc_h = 500;
+    profiles[1].arc_h = 500;
+  }
+
+  /**
+   * Рисует arc1
+   * @param bounds
+   */
+  add_arc1(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[1].arc_h = 500;
+  }
+
+  /**
+   * Рисует trapeze1
+   * @param bounds
+   */
+  add_trapeze1(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  /**
+   * Рисует trapeze2
+   * @param bounds
+   */
+  add_trapeze2(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -750])],
+      [point.add([0, -750]), point.add([250, -1000])],
+      [point.add([250, -1000]), point.add([750, -1000])],
+      [point.add([750, -1000]), point.add([1000, -750])],
+      [point.add([1000, -750]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  /**
+   * Рисует trapeze3
+   * @param bounds
+   */
+  add_trapeze3(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  /**
+   * Рисует trapeze4
+   * @param bounds
+   */
+  add_trapeze4(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  /**
+   * Рисует trapeze5
+   * @param bounds
+   */
+  add_trapeze5(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  /**
+   * Рисует trapeze6
+   * @param bounds
+   */
+  add_trapeze6(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  /**
+   * Рисует trapeze7
+   * @param bounds
+   */
+  add_trapeze7(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  /**
+   * Рисует trapeze8
+   * @param bounds
+   */
+  add_trapeze8(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  /**
+   * Рисует trapeze9
+   * @param bounds
+   */
+  add_trapeze9(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point.add([0, -500]), point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point.add([500, 0])],
+      [point.add([500, 0]), point.add([0, -500])]
+    ]);
+  }
+
+  /**
+   * Рисует trapeze10
+   * @param bounds
+   */
+  add_trapeze10(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([500, 0])],
+      [point.add([500, 0]), point]
     ]);
   }
 
