@@ -14220,8 +14220,6 @@ class ToolPan extends ToolElement {
 }
 
 
-
-
 class PenControls {
 
   constructor(tool) {
@@ -14386,7 +14384,6 @@ class PenControls {
 }
 
 
-
 class ToolPen extends ToolElement {
 
   constructor() {
@@ -14399,7 +14396,7 @@ class ToolPen extends ToolElement {
         wnd: {
           caption: 'Новый сегмент профиля',
           width: 320,
-          height: 240,
+          height: 320,
           allow_close: true,
           bind_generatrix: true,
           bind_node: false,
@@ -14496,25 +14493,25 @@ class ToolPen extends ToolElement {
         tooltip: 'Добавить типовую форму',
         float: 'left',
         sub: {
-          width: '62px',
-          height:'262px',
+          width: '90px',
+          height:'190px',
           buttons: [
             {name: 'square', img: 'square.png', float: 'left'},
-            {name: 'triangle1', img: 'triangle1.png', float: 'right'},
-            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
-            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
+            {name: 'triangle1', img: 'triangle1.png', float: 'left'},
+            {name: 'triangle2', img: 'triangle2.png', float: 'right'},
+            {name: 'triangle3', img: 'triangle3.png', float: 'left'},
             {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
             {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
             {name: 'circle',    img: 'circle.png', float: 'left'},
-            {name: 'arc1',      img: 'arc1.png', float: 'right'},
-            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-            {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
+            {name: 'arc1',      img: 'arc1.png', float: 'left'},
+            {name: 'trapeze1',  img: 'trapeze1.png', float: 'right'},
+            {name: 'trapeze2',  img: 'trapeze2.png', float: 'left'},
             {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
             {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
             {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'},
-            {name: 'trapeze7',  img: 'trapeze7.png', float: 'left'},
-            {name: 'trapeze8',  img: 'trapeze8.png', float: 'right'},
+            {name: 'trapeze6',  img: 'trapeze6.png', float: 'left'},
+            {name: 'trapeze7',  img: 'trapeze7.png', float: 'right'},
+            {name: 'trapeze8',  img: 'trapeze8.png', float: 'left'},
             {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
             {name: 'trapeze10',  img: 'trapeze10.png', float: 'right'}]}
             },
@@ -14524,6 +14521,15 @@ class ToolPen extends ToolElement {
     });
     this.wnd.tb_mode.cell.style.backgroundColor = '#f5f5f5';
     this.wnd.cell.firstChild.style.marginTop = '22px';
+    const {standard_form} = this.wnd.tb_mode.buttons;
+    const {onmouseover} = standard_form;
+    const wnddiv = this.wnd.cell.parentElement;
+    standard_form.onmouseover = function() {
+      if(wnddiv.style.transform) {
+        wnddiv.style.transform = '';
+      }
+      onmouseover.call(this);
+    };
 
     const wnd_options = this.wnd.wnd_options;
     this.wnd.wnd_options = (opt) => {
@@ -15168,23 +15174,15 @@ class ToolPen extends ToolElement {
 
 
 
-
   standard_form(name) {
-
-    if(name == 'standard_form'){
-      name = 'square'
-    }
-
-    if(this['add_' + name]){
+    if(this['add_' + name]) {
       this['add_' + name](this.project.bounds);
       this.project.zoom_fit();
     }
-    else{
-      $p.msg.show_not_implemented();
+    else {
+      name !== 'standard_form' && $p.msg.show_not_implemented();
     }
-
   }
-
 
   add_sequence(points) {
     const profiles = [];
@@ -15199,7 +15197,6 @@ class ToolPen extends ToolElement {
     return profiles;
   }
 
-
   add_square(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -15210,7 +15207,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_triangle1(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -15219,7 +15215,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_triangle2(bounds) {
     const point = bounds.bottomRight;
@@ -15230,7 +15225,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_triangle3(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -15239,7 +15233,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_semicircle1(bounds) {
     const point = bounds.bottomRight;
@@ -15250,7 +15243,6 @@ class ToolPen extends ToolElement {
     profiles[0].arc_h = 500;
   }
 
-
   add_semicircle2(bounds) {
     const point = bounds.bottomRight;
     const profiles = this.add_sequence([
@@ -15259,7 +15251,6 @@ class ToolPen extends ToolElement {
     ]);
     profiles[1].arc_h = 500;
   }
-
 
   add_circle(bounds) {
     const point = bounds.bottomRight;
@@ -15270,7 +15261,6 @@ class ToolPen extends ToolElement {
     profiles[0].arc_h = 500;
     profiles[1].arc_h = 500;
   }
-
 
   add_arc1(bounds) {
     const point = bounds.bottomRight;
@@ -15283,7 +15273,6 @@ class ToolPen extends ToolElement {
     profiles[1].arc_h = 500;
   }
 
-
   add_trapeze1(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -15294,7 +15283,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_trapeze2(bounds) {
     const point = bounds.bottomRight;
@@ -15308,7 +15296,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_trapeze3(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -15318,7 +15305,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_trapeze4(bounds) {
     const point = bounds.bottomRight;
@@ -15330,7 +15316,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_trapeze5(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -15341,7 +15326,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_trapeze6(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -15351,7 +15335,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_trapeze7(bounds) {
     const point = bounds.bottomRight;
@@ -15364,7 +15347,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_trapeze8(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -15375,7 +15357,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_trapeze9(bounds) {
     const point = bounds.bottomRight;
@@ -15388,7 +15369,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_trapeze10(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -15399,7 +15379,6 @@ class ToolPen extends ToolElement {
       [point.add([500, 0]), point]
     ]);
   }
-
 
   decorate_layers(reset) {
     const {activeLayer} = this.project;
