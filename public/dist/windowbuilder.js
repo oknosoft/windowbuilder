@@ -14220,6 +14220,8 @@ class ToolPan extends ToolElement {
 }
 
 
+
+
 class PenControls {
 
   constructor(tool) {
@@ -14384,6 +14386,7 @@ class PenControls {
 }
 
 
+
 class ToolPen extends ToolElement {
 
   constructor() {
@@ -14494,7 +14497,7 @@ class ToolPen extends ToolElement {
         float: 'left',
         sub: {
           width: '62px',
-          height:'206px',
+          height:'262px',
           buttons: [
             {name: 'square', img: 'square.png', float: 'left'},
             {name: 'triangle1', img: 'triangle1.png', float: 'right'},
@@ -14509,7 +14512,11 @@ class ToolPen extends ToolElement {
             {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
             {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
             {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
+            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'},
+            {name: 'trapeze7',  img: 'trapeze7.png', float: 'left'},
+            {name: 'trapeze8',  img: 'trapeze8.png', float: 'right'},
+            {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
+            {name: 'trapeze10',  img: 'trapeze10.png', float: 'right'}]}
             },
       ],
       image_path: '/imgs/',
@@ -15161,6 +15168,7 @@ class ToolPen extends ToolElement {
 
 
 
+
   standard_form(name) {
 
     if(name == 'standard_form'){
@@ -15177,16 +15185,20 @@ class ToolPen extends ToolElement {
 
   }
 
+
   add_sequence(points) {
+    const profiles = [];
     points.forEach((segments) => {
-      new Profile({
+      profiles.push(new Profile({
         generatrix: new paper.Path({
           strokeColor: 'black',
           segments: segments
         }), proto: this.profile
-      });
+      }));
     });
+    return profiles;
   }
+
 
   add_square(bounds) {
     const point = bounds.bottomRight;
@@ -15198,6 +15210,7 @@ class ToolPen extends ToolElement {
     ]);
   }
 
+
   add_triangle1(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -15206,6 +15219,7 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
+
 
   add_triangle2(bounds) {
     const point = bounds.bottomRight;
@@ -15216,14 +15230,176 @@ class ToolPen extends ToolElement {
     ]);
   }
 
+
   add_triangle3(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
-      [point, point.add([1000, -1000])],
-      [point.add([1000, -1000]), point.add([2000, 0])],
-      [point.add([2000, 0]), point]
+      [point, point.add([500, -500])],
+      [point.add([500, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
     ]);
   }
+
+
+  add_semicircle1(bounds) {
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[0].arc_h = 500;
+  }
+
+
+  add_semicircle2(bounds) {
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[1].arc_h = 500;
+  }
+
+
+  add_circle(bounds) {
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[0].arc_h = 500;
+    profiles[1].arc_h = 500;
+  }
+
+
+  add_arc1(bounds) {
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[1].arc_h = 500;
+  }
+
+
+  add_trapeze1(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+
+  add_trapeze2(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -750])],
+      [point.add([0, -750]), point.add([250, -1000])],
+      [point.add([250, -1000]), point.add([750, -1000])],
+      [point.add([750, -1000]), point.add([1000, -750])],
+      [point.add([1000, -750]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+
+  add_trapeze3(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+
+  add_trapeze4(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+
+  add_trapeze5(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+
+  add_trapeze6(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+
+  add_trapeze7(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+
+  add_trapeze8(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+
+  add_trapeze9(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point.add([0, -500]), point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point.add([500, 0])],
+      [point.add([500, 0]), point.add([0, -500])]
+    ]);
+  }
+
+
+  add_trapeze10(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([500, 0])],
+      [point.add([500, 0]), point]
+    ]);
+  }
+
 
   decorate_layers(reset) {
     const {activeLayer} = this.project;
