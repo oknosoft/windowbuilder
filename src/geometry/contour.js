@@ -1148,8 +1148,9 @@ class Contour extends AbstractFilling(paper.Layer) {
       glass.imposts.forEach(impost => {
         if(impost instanceof Onlay) {
           const {b, e} = impost._attr._rays;
-          b.check_err(err_attrs);
-          e.check_err(err_attrs);
+          const oerr_attrs = Object.assign({radius: 50}, err_attrs);
+          b.check_err(oerr_attrs);
+          e.check_err(oerr_attrs);
         }
       })
     });
