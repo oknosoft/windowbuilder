@@ -6391,9 +6391,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     function frm_close() {
 
-      if(o && !location.pathname.match(/builder/)) {
-        setTimeout(o.unload.bind(o), 200);
-      }
 
       ['vault', 'vault_pop', 'discount', 'svgs', 'layout_header'].forEach((elm) => {
         wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();

@@ -2696,7 +2696,7 @@ class DimensionLine extends paper.Group {
     else {
       children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
       if(length < 20) {
-        children.text.position = children.text.position.add(path.getTangentAt(0).multiply(font_size / 2));
+        children.text.position = children.text.position.add(path.getTangentAt(0).multiply(font_size / 3));
       }
     }
   }

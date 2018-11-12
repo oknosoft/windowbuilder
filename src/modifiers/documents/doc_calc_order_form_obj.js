@@ -655,10 +655,10 @@
 
     function frm_close() {
 
-      if(o && !location.pathname.match(/builder/)) {
-        // при закрыти формы не в рисовалку, выгружаем заказ и его продукции из памяти
-        setTimeout(o.unload.bind(o), 200);
-      }
+      // if(o && !location.pathname.match(/builder/)) {
+      //   // при закрыти формы не в рисовалку, выгружаем заказ и его продукции из памяти
+      //   setTimeout(o.unload.bind(o), 200);
+      // }
 
       // выгружаем из памяти всплывающие окна скидки и связанных файлов
       ['vault', 'vault_pop', 'discount', 'svgs', 'layout_header'].forEach((elm) => {
