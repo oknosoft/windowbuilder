@@ -1005,13 +1005,13 @@ class Contour extends AbstractFilling(paper.Layer) {
   _metadata(fld) {
 
     const {tabular_sections} = this.project.ox._metadata();
-    const _xfields = tabular_sections.constructions.fields;
+    const {fields} = tabular_sections.constructions;
 
-    return fld ? (_xfields[fld] || tabular_sections[fld]) : {
+    return fld ? (fields[fld] || tabular_sections[fld]) : {
       fields: {
-        furn: _xfields.furn,
-        direction: _xfields.direction,
-        h_ruch: _xfields.h_ruch,
+        furn: fields.furn,
+        direction: fields.direction,
+        h_ruch: fields.h_ruch,
       },
       tabular_sections: {
         params: tabular_sections.params,
@@ -1145,14 +1145,14 @@ class Contour extends AbstractFilling(paper.Layer) {
         }
       }
       // Ошибки соединений Onlay в этом заполнении
-      glass.imposts.forEach(impost => {
+      glass.imposts.forEach((impost) => {
         if(impost instanceof Onlay) {
           const {b, e} = impost._attr._rays;
           const oerr_attrs = Object.assign({radius: 50}, err_attrs);
           b.check_err(oerr_attrs);
           e.check_err(oerr_attrs);
         }
-      })
+      });
     });
 
     // ошибки соединений профиля
@@ -1175,7 +1175,7 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   /**
-   * Рисут визуализацию москитки
+   * Рисует визуализацию москитки
    */
   draw_mosquito() {
     const {l_visualization} = this;
@@ -1284,7 +1284,7 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   /**
-   * Рисут визуализацию подоконника
+   * Рисует визуализацию подоконника
    */
   draw_sill() {
     const {l_visualization, project, cnstr} = this;

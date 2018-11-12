@@ -1037,13 +1037,13 @@ class Contour extends AbstractFilling(paper.Layer) {
   _metadata(fld) {
 
     const {tabular_sections} = this.project.ox._metadata();
-    const _xfields = tabular_sections.constructions.fields;
+    const {fields} = tabular_sections.constructions;
 
-    return fld ? (_xfields[fld] || tabular_sections[fld]) : {
+    return fld ? (fields[fld] || tabular_sections[fld]) : {
       fields: {
-        furn: _xfields.furn,
-        direction: _xfields.direction,
-        h_ruch: _xfields.h_ruch,
+        furn: fields.furn,
+        direction: fields.direction,
+        h_ruch: fields.h_ruch,
       },
       tabular_sections: {
         params: tabular_sections.params,
@@ -1154,14 +1154,14 @@ class Contour extends AbstractFilling(paper.Layer) {
           glass.path.fillColor = BuilderElement.clr_by_clr.call(glass, glass._row.clr, false);
         }
       }
-      glass.imposts.forEach(impost => {
+      glass.imposts.forEach((impost) => {
         if(impost instanceof Onlay) {
           const {b, e} = impost._attr._rays;
           const oerr_attrs = Object.assign({radius: 50}, err_attrs);
           b.check_err(oerr_attrs);
           e.check_err(oerr_attrs);
         }
-      })
+      });
     });
 
     this.profiles.forEach((elm) => {
@@ -2634,7 +2634,7 @@ class DimensionLine extends paper.Group {
     }
 
     const length = path.length;
-    if(length < consts.sticking_l){
+    if(length < 1){
       this.visible = false;
       return;
     }
@@ -2695,6 +2695,9 @@ class DimensionLine extends paper.Group {
     }
     else {
       children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+      if(length < 20) {
+        children.text.position = children.text.position.add(path.getTangentAt(0).multiply(font_size / 2));
+      }
     }
   }
 
