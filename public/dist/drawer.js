@@ -8433,7 +8433,7 @@ class Scheme extends paper.Project {
 
     if(fields.hasOwnProperty('sys') && !obj.sys.empty()) {
 
-      obj.sys.refill_prm(ox);
+      obj.sys.refill_prm(ox, 0, true);
 
       _scope.eve.emit_async('rows', ox, {extra_fields: true, params: true});
 
@@ -14251,7 +14251,7 @@ $p.CatProduction_params.prototype.__define({
 	},
 
 	refill_prm: {
-		value(ox, cnstr = 0) {
+		value(ox, cnstr = 0, force) {
 
 			const prm_ts = !cnstr ? this.product_params : this.furn_params;
 			const adel = [];
@@ -14303,7 +14303,7 @@ $p.CatProduction_params.prototype.__define({
 
 				ox.constructions.forEach((row) => {
           if(!row.furn.empty()) {
-            let changed;
+            let changed = force;
             if(furns.length) {
               if(furns.some((frow) => {
                 if(frow.forcibly) {

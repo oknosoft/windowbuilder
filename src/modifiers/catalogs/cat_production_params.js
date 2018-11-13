@@ -145,7 +145,7 @@ $p.CatProduction_params.prototype.__define({
 	 * @param cnstr {Nomber} - номер конструкции. Если 0 - перезаполняем параметры изделия, иначе - фурнитуры
 	 */
 	refill_prm: {
-		value(ox, cnstr = 0) {
+		value(ox, cnstr = 0, force) {
 
 			const prm_ts = !cnstr ? this.product_params : this.furn_params;
 			const adel = [];
@@ -204,7 +204,7 @@ $p.CatProduction_params.prototype.__define({
 				// одновременно, перезаполним параметры фурнитуры
 				ox.constructions.forEach((row) => {
           if(!row.furn.empty()) {
-            let changed;
+            let changed = force;
             // если для системы через связи параметров ограничен список фурнитуры...
             if(furns.length) {
               if(furns.some((frow) => {

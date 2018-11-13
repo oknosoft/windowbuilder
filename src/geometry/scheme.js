@@ -145,7 +145,7 @@ class Scheme extends paper.Project {
 
     if(fields.hasOwnProperty('sys') && !obj.sys.empty()) {
 
-      obj.sys.refill_prm(ox);
+      obj.sys.refill_prm(ox, 0, true);
 
       // обновляем свойства изделия и створки
       _scope.eve.emit_async('rows', ox, {extra_fields: true, params: true});

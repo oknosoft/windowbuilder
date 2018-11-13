@@ -677,9 +677,10 @@
       pg_right.cells('vat_included', 1).setDisabled(true);
 
       const ro = wnd.elmnts.ro = o.is_read_only;
+      const {enm: {Отправлен, Отклонен, Шаблон}, current_user} = $p;
 
       const retrieve_enabed = !o._deleted &&
-        (o.obj_delivery_state == $p.enm.obj_delivery_states.Отправлен || o.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен);
+        (o.obj_delivery_state == Отправлен || o.obj_delivery_state == Отклонен);
 
       grids.production.setEditable(!ro);
       grids.planning.setEditable(!ro);
@@ -687,13 +688,13 @@
       pg_right.setEditable(!ro);
 
       // гасим кнопки проведения, если недоступна роль
-      if(!$p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
+      if(!current_user.role_available('СогласованиеРасчетовЗаказов')) {
         frm_toolbar.hideItem('btn_post');
         frm_toolbar.hideItem('btn_unpost');
       }
 
       // если не технологи и не менеджер - запрещаем менять статусы
-      if(!$p.current_user.role_available('ИзменениеТехнологическойНСИ') && !$p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
+      if(!current_user.role_available('ИзменениеТехнологическойНСИ') && !current_user.role_available('СогласованиеРасчетовЗаказов')) {
         pg_left.cells('obj_delivery_state', 1).setDisabled(true);
       }
 
@@ -711,7 +712,7 @@
       }
       else {
         // шаблоны никогда не надо отправлять
-        if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон) {
+        if(o.obj_delivery_state == Шаблон) {
           frm_toolbar.disableItem('btn_sent');
         }
         else {
@@ -738,10 +739,11 @@
      * показывает диалог с сообщением "это не продукция"
      */
     function not_production() {
-      $p.msg.show_msg({
-        title: $p.msg.bld_title,
+      const {msg} = $p;
+      msg.show_msg({
+        title: msg.bld_title,
         type: 'alert-error',
-        text: $p.msg.bld_not_product
+        text: msg.bld_not_product
       });
     }
 
