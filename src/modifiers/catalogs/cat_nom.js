@@ -25,6 +25,7 @@ $p.cat.nom.__define({
 	},
 
   load_array: {
+	  // если внутри номенклатуры завёрнуты единицы, вытаскиваем
     value(aattr, forse){
       const units = [];
       for(const row of aattr) {
