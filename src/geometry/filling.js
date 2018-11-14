@@ -280,7 +280,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {path, imposts, _attr, is_rectangular} = this;
     const {elm_font_size, font_family} = consts;
     const fontSize = elm_font_size * (2 / 3);
-    const maxTextWidth = 490;
+    const maxTextWidth = 600;
     path.visible = true;
     imposts.forEach((elm) => elm.redraw());
     
@@ -309,6 +309,12 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     if(is_rectangular){
       const turn = textBounds.width * 1.5 < textBounds.height;
+      if(turn){
+        textBounds.width = elm_font_size;
+      }
+      else{
+        textBounds.height = elm_font_size;
+      }
       _attr._text.fitBounds(textBounds);
       _attr._text.point = turn
         ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])
@@ -316,6 +322,7 @@ class Filling extends AbstractFilling(BuilderElement) {
       _attr._text.rotation = turn ? 270 : 0;
     }
     else{
+      textBounds.height = elm_font_size;
       _attr._text.fitBounds(textBounds.scale(0.8));
       // Поиск самой длинной кривой пути
       const maxCurve = path.curves.reduce((curv, item) => item.length > curv.length ? item : curv, path.curves[0]);
