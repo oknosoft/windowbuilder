@@ -235,6 +235,7 @@ class DimensionDrawer extends paper.Group {
           dx2 = dxi - nom.sizefaltz;
         }
 
+
         this.ihor[`i${++index}`] = new DimensionLineImpost({
           elm1: elm,
           elm2: elm,

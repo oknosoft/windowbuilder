@@ -41,7 +41,7 @@ global.$p = $p;
 $p.wsql.init(patch_prm(settings));
 patch_cnn();
 
-// выполняем скрипт инициализации метаданных
+// со скрипом инициализации метаданных, так же - не затягиваем
 meta_init($p);
 
 // запускаем проверку единственности экземпляра
@@ -51,6 +51,7 @@ $p.utils.single_instance_checker.init();
 export function init(store) {
 
   try {
+
     const {dispatch} = store;
 
     // подключаем metaMiddleware

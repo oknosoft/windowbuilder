@@ -10,7 +10,7 @@ const env = (process && process.env) || {};
 
 module.exports = function settings(prm) {
 
-  if(!prm){
+  if(!prm) {
     prm = {};
   };
 

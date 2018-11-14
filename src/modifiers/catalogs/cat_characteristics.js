@@ -485,6 +485,7 @@ $p.CatCharacteristics.builder_props_defaults = {
   visualization: true,
   txts: true,
   rounding: 0,
+  mosquito: true,
 };
 
 // при изменении реквизита табчасти вставок

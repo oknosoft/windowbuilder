@@ -425,6 +425,7 @@ $p.CatCharacteristics.builder_props_defaults = {
   visualization: true,
   txts: true,
   rounding: 0,
+  mosquito: true,
 };
 
 $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, value) {

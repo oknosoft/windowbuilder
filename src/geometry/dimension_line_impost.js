@@ -43,11 +43,10 @@ class DimensionLineImpost extends DimensionLineCustom {
 
     // рисум линию между точками dx1 и dx2 и смещаем на offset
 
-    const {children, _attr: {elm1, p1, p2, dx1, dx2}} = this;
+    const {children, _attr: {elm1: {generatrix}, p1, p2, dx1, dx2}} = this;
     if(!children.length){
       return;
     }
-    const {generatrix} = elm1;
 
     let b = generatrix.getPointAt(typeof p1 == 'number' ? dx2 : dx1);
     let e = generatrix.getPointAt(typeof p1 == 'number' ? dx1 : dx2);
@@ -62,7 +61,7 @@ class DimensionLineImpost extends DimensionLineCustom {
 
   redraw() {
 
-    const {children, path, offset, _attr: {p1, p2, dx1, dx2, outer}} = this;
+    const {children, path, offset, _attr: {elm1, p1, p2, dx1, dx2, outer}} = this;
     if(!children.length){
       return;
     }
@@ -80,6 +79,7 @@ class DimensionLineImpost extends DimensionLineCustom {
     const ns = normal.normalize(normal.length - 20);
     const bs = b.add(ns);
     const es = e.add(ns);
+    const offsetB = elm1.generatrix.getOffsetOf(elm1.generatrix.getNearestPoint(elm1.corns(1)));
 
     if(children.callout1.segments.length){
       children.callout1.firstSegment.point = b;
@@ -107,9 +107,9 @@ class DimensionLineImpost extends DimensionLineCustom {
     children.scale.elongation(200);
 
     children.text.rotation = children.dx1.rotation = children.dx2.rotation = 0;
-    children.text.content = (typeof p1 == 'number' ? p1 : p2).toFixed(0);
-    children.dx1.content = (dx1).toFixed(0);
-    children.dx2.content = (dx2).toFixed(0);
+    children.text.content = ((typeof p1 == 'number' ? p1 : p2) - offsetB).toFixed(0);
+    children.dx1.content = (dx1 - offsetB).toFixed(0);
+    children.dx2.content = (dx2 - offsetB).toFixed(0);
     const bdx1 = children.dx1.bounds;
     const bdx2 = children.dx2.bounds;
     if(offset > 0) {

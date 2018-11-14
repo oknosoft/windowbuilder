@@ -1178,8 +1178,11 @@ class Contour extends AbstractFilling(paper.Layer) {
    * Рисует визуализацию москитки
    */
   draw_mosquito() {
-    const {l_visualization} = this;
-    this.project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
+    const {l_visualization, project} = this;
+    if(project.builder_props.mosquito === false) {
+      return;
+    }
+    project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
       if (row.inset.insert_type == $p.enm.inserts_types.МоскитнаяСетка) {
         const props = {
           parent: new paper.Group({parent: l_visualization._by_insets}),
