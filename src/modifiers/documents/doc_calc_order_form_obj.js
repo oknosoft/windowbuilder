@@ -677,7 +677,7 @@
       pg_right.cells('vat_included', 1).setDisabled(true);
 
       const ro = wnd.elmnts.ro = o.is_read_only;
-      const {enm: {Отправлен, Отклонен, Шаблон}, current_user} = $p;
+      const {enm: {obj_delivery_states: {Отправлен, Отклонен, Шаблон}}, current_user} = $p;
 
       const retrieve_enabed = !o._deleted &&
         (o.obj_delivery_state == Отправлен || o.obj_delivery_state == Отклонен);

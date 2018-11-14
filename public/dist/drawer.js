@@ -14095,6 +14095,30 @@ $p.CatNom.prototype.__define({
       }
       return this;
     }
+  },
+
+  toJSON: {
+    value() {
+      const {_obj, ref} = this;
+      const {guid} = $p.utils.blank;
+      if(!_obj.units && !_obj.is_folder) {
+        _obj.units = '';
+        for(const unit of $p.cat.nom_units.alatable) {
+          if(unit.owner === ref) {
+            if(_obj.units) {
+              _obj.units += '\n';
+            }
+            _obj.units += `${unit.ref},${unit.id},${unit.name},${unit.qualifier_unit},${unit.heft},${unit.volume},${unit.coefficient},${unit.rounding_threshold}`;
+          }
+        }
+      }
+      for(const fld in _obj) {
+        if(_obj[fld] === guid) {
+          _obj[fld] = '';
+        }
+      }
+      return _obj;
+    }
   }
 
 });

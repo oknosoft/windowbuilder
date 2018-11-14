@@ -2660,6 +2660,30 @@ $p.CatNom.prototype.__define({
       }
       return this;
     }
+  },
+
+  toJSON: {
+    value() {
+      const {_obj, ref} = this;
+      const {guid} = $p.utils.blank;
+      if(!_obj.units && !_obj.is_folder) {
+        _obj.units = '';
+        for(const unit of $p.cat.nom_units.alatable) {
+          if(unit.owner === ref) {
+            if(_obj.units) {
+              _obj.units += '\n';
+            }
+            _obj.units += `${unit.ref},${unit.id},${unit.name},${unit.qualifier_unit},${unit.heft},${unit.volume},${unit.coefficient},${unit.rounding_threshold}`;
+          }
+        }
+      }
+      for(const fld in _obj) {
+        if(_obj[fld] === guid) {
+          _obj[fld] = '';
+        }
+      }
+      return _obj;
+    }
   }
 
 });
@@ -6435,7 +6459,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       pg_right.cells('vat_included', 1).setDisabled(true);
 
       const ro = wnd.elmnts.ro = o.is_read_only;
-      const {enm: {Отправлен, Отклонен, Шаблон}, current_user} = $p;
+      const {enm: {obj_delivery_states: {Отправлен, Отклонен, Шаблон}}, current_user} = $p;
 
       const retrieve_enabed = !o._deleted &&
         (o.obj_delivery_state == Отправлен || o.obj_delivery_state == Отклонен);
