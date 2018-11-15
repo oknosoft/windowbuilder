@@ -1839,7 +1839,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     this.params.find_rows({
       cnstr,
       inset: $p.utils.blank.guid,
-      hide: {not: true},
+      //hide: {not: true},
     }, (prow) => {
       const {param} = prow;
       const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
@@ -1849,8 +1849,9 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (links.length && param.linked_values(links, prow)) {
         notify = true;
       }
-      if (!notify) {
-        notify = hide;
+      if (prow.hide !== hide) {
+        prow.hide = hide;
+        notify = true;
       }
     });
 

@@ -152,9 +152,9 @@ $p.CatProduction_params.prototype.__define({
 			const auto_align = ox.calc_order.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон && $p.job_prm.properties.auto_align;
 			const {params} = ox;
 
-			function add_prm(default_row) {
+			function add_prm(proto) {
         let row;
-        params.find_rows({cnstr: cnstr, param: default_row.param}, (_row) => {
+        params.find_rows({cnstr: cnstr, param: proto.param}, (_row) => {
           row = _row;
           return false;
         });
@@ -164,15 +164,17 @@ $p.CatProduction_params.prototype.__define({
           if(cnstr){
             return;
           }
-          row = params.add({cnstr: cnstr, param: default_row.param, value: default_row.value});
+          row = params.add({cnstr: cnstr, param: proto.param, value: proto.value});
         }
 
-        if(row.hide != default_row.hide){
-          row.hide = default_row.hide;
+        const links = proto.param.params_links({grid: {selection: {cnstr}}, obj: row});
+        const hide = proto.hide || links.some((link) => link.hide);
+        if(row.hide != hide){
+          row.hide = hide;
         }
 
-        if(default_row.forcibly && row.value != default_row.value){
-          row.value = default_row.value;
+        if(proto.forcibly && row.value != proto.value){
+          row.value = proto.value;
         }
       }
 
