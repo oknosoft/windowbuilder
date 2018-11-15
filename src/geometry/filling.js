@@ -323,6 +323,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
     else{
       textBounds.height = elm_font_size;
+      _attr._text.rotation = 0;
       _attr._text.fitBounds(textBounds.scale(0.8));
       // Поиск самой длинной кривой пути
       const maxCurve = path.curves.reduce((curv, item) => item.length > curv.length ? item : curv, path.curves[0]);
