@@ -324,15 +324,16 @@ class Filling extends AbstractFilling(BuilderElement) {
     else{
       textBounds.height = elm_font_size;
       _attr._text.rotation = 0;
-      _attr._text.fitBounds(textBounds.scale(0.8));
+      _attr._text.fitBounds(textBounds);
       // Поиск самой длинной кривой пути
       const maxCurve = path.curves.reduce((curv, item) => item.length > curv.length ? item : curv, path.curves[0]);
       const {angle, angleInRadians} = maxCurve.line.vector;
       const {PI} = Math;
       _attr._text.rotation = angle;
-      _attr._text.point = maxCurve.point1.add([Math.cos(angleInRadians + PI / 4) * 100, Math.sin(angleInRadians + PI / 4) * 100]);
+      const biasPoint = new paper.Point(Math.cos(angleInRadians + PI / 4), Math.sin(angleInRadians + PI / 4)).multiply(3 * elm_font_size);
+      _attr._text.point = maxCurve.point1.add(biasPoint);
       // Перевернуть с головы на ноги
-      if(Math.abs(angle) > 90 && Math.abs(angle) < 180){
+      if(Math.abs(angle) >= 85 && Math.abs(angle) <= 185){
         _attr._text.point = _attr._text.bounds.rightCenter;
         _attr._text.rotation += 180;
       }
