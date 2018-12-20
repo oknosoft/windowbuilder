@@ -47,12 +47,46 @@ export function exec_dxf (scheme, Drawing) {
     }
   }
 
+  function iterate_contours(contour) {
+    const { contours } = contour;
+
+    export_contour(contour);
+
+    if (contours.length) {
+      contours.forEach(iterate_contours);
+    }
+  }
+
+  function export_glass(glass, withLay) {
+    // добавляем слой для заполнения
+    d.addLayer(`g_${glass.elm}`, Drawing.ACI.LAYER, 'CONTINUOUS');
+    d.setActiveLayer(`g_${glass.elm}`);
+    
+    export_path(glass);
+
+    if (withLay) {
+      // добавляем слой для раскладки
+      d.addLayer(`lay_${glass.elm}`, Drawing.ACI.LAYER, 'CONTINUOUS');
+      d.setActiveLayer(`lay_${glass.elm}`);
+
+      for (const impost of glass.imposts) {
+        export_path(impost);
+      }
+    }
+  }
+
   if(glasses.length){
-    export_path(glasses[0]);
+    export_glass(glasses[0], true);
     name += '-' + glasses[0].elm.pad(2);
   }
   else{
-    contours.forEach(export_contour);
+    // экспортируем контуры
+    contours.forEach(iterate_contours);
+
+    // экспортируем заполнения с раскладкой
+    for (const glass of scheme.glasses) {
+      export_glass(glass, true);
+    }
   }
 
 
