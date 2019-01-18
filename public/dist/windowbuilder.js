@@ -1927,22 +1927,33 @@ class Editor extends EditorInvisible {
       return
     }
 
-    let layer;
-    if(glasses.some((glass) => {
-        const gl = project.rootLayer(glass.layer);
-        if(!layer){
-          layer = gl;
+    let parent_layer;
+    if(glasses.some(({layer}) => {
+        const gl = layer.layer || layer;
+        if(!parent_layer){
+          parent_layer = gl;
         }
-        else if(layer != gl){
+        else if(parent_layer != gl){
+          return true;
+        }
+      })){
+      parent_layer = null;
+      if(glasses.some(({layer}) => {
+        const gl = project.rootLayer(layer);
+        if(!parent_layer){
+          parent_layer = gl;
+        }
+        else if(parent_layer != gl){
           $p.msg.show_msg({
             type: "alert-info",
             text: "Заполнения принадлежат разным рамным контурам",
             title: "Выравнивание"
           });
-          return true
+          return true;
         }
       })){
-      return;
+        return;
+      }
     }
 
     if(name == 'auto'){
@@ -1950,7 +1961,7 @@ class Editor extends EditorInvisible {
     }
 
     const orientation = name == 'width' ? $p.enm.orientations.vert : $p.enm.orientations.hor;
-    const shift = layer.profiles.filter((impost) => {
+    const shift = parent_layer.getItems({class: Profile}).filter((impost) => {
       const {b, e} = impost.rays;
       return impost.orientation == orientation && (b.is_tt || e.is_tt || b.is_i || e.is_i);
     });
@@ -3499,13 +3510,13 @@ class Contour extends AbstractFilling(paper.Layer) {
   _metadata(fld) {
 
     const {tabular_sections} = this.project.ox._metadata();
-    const _xfields = tabular_sections.constructions.fields;
+    const {fields} = tabular_sections.constructions;
 
-    return fld ? (_xfields[fld] || tabular_sections[fld]) : {
+    return fld ? (fields[fld] || tabular_sections[fld]) : {
       fields: {
-        furn: _xfields.furn,
-        direction: _xfields.direction,
-        h_ruch: _xfields.h_ruch,
+        furn: fields.furn,
+        direction: fields.direction,
+        h_ruch: fields.h_ruch,
       },
       tabular_sections: {
         params: tabular_sections.params,
@@ -3616,13 +3627,14 @@ class Contour extends AbstractFilling(paper.Layer) {
           glass.path.fillColor = BuilderElement.clr_by_clr.call(glass, glass._row.clr, false);
         }
       }
-      glass.imposts.forEach(impost => {
+      glass.imposts.forEach((impost) => {
         if(impost instanceof Onlay) {
           const {b, e} = impost._attr._rays;
-          b.check_err(err_attrs);
-          e.check_err(err_attrs);
+          const oerr_attrs = Object.assign({radius: 50}, err_attrs);
+          b.check_err(oerr_attrs);
+          e.check_err(oerr_attrs);
         }
-      })
+      });
     });
 
     this.profiles.forEach((elm) => {
@@ -3641,8 +3653,11 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   draw_mosquito() {
-    const {l_visualization} = this;
-    this.project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
+    const {l_visualization, project} = this;
+    if(project.builder_props.mosquito === false) {
+      return;
+    }
+    project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
       if (row.inset.insert_type == $p.enm.inserts_types.МоскитнаяСетка) {
         const props = {
           parent: new paper.Group({parent: l_visualization._by_insets}),
@@ -4212,7 +4227,6 @@ class Contour extends AbstractFilling(paper.Layer) {
     this.params.find_rows({
       cnstr,
       inset: $p.utils.blank.guid,
-      hide: {not: true},
     }, (prow) => {
       const {param} = prow;
       const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
@@ -4221,8 +4235,9 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (links.length && param.linked_values(links, prow)) {
         notify = true;
       }
-      if (!notify) {
-        notify = hide;
+      if (prow.hide !== hide) {
+        prow.hide = hide;
+        notify = true;
       }
     });
 
@@ -4696,6 +4711,7 @@ class DimensionDrawer extends paper.Group {
           dx2 = dxi - nom.sizefaltz;
         }
 
+
         this.ihor[`i${++index}`] = new DimensionLineImpost({
           elm1: elm,
           elm2: elm,
@@ -5095,7 +5111,7 @@ class DimensionLine extends paper.Group {
     }
 
     const length = path.length;
-    if(length < consts.sticking_l){
+    if(length < 1){
       this.visible = false;
       return;
     }
@@ -5156,6 +5172,9 @@ class DimensionLine extends paper.Group {
     }
     else {
       children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+      if(length < 20) {
+        children.text.position = children.text.position.add(path.getTangentAt(0).multiply(font_size / 3));
+      }
     }
   }
 
@@ -5470,11 +5489,10 @@ class DimensionLineImpost extends DimensionLineCustom {
   get path() {
 
 
-    const {children, _attr: {elm1, p1, p2, dx1, dx2}} = this;
+    const {children, _attr: {elm1: {generatrix}, p1, p2, dx1, dx2}} = this;
     if(!children.length){
       return;
     }
-    const {generatrix} = elm1;
 
     let b = generatrix.getPointAt(typeof p1 == 'number' ? dx2 : dx1);
     let e = generatrix.getPointAt(typeof p1 == 'number' ? dx1 : dx2);
@@ -5488,7 +5506,7 @@ class DimensionLineImpost extends DimensionLineCustom {
 
   redraw() {
 
-    const {children, path, offset, _attr: {p1, p2, dx1, dx2, outer}} = this;
+    const {children, path, offset, _attr: {elm1, p1, p2, dx1, dx2, outer}} = this;
     if(!children.length){
       return;
     }
@@ -5506,6 +5524,7 @@ class DimensionLineImpost extends DimensionLineCustom {
     const ns = normal.normalize(normal.length - 20);
     const bs = b.add(ns);
     const es = e.add(ns);
+    const offsetB = elm1.generatrix.getOffsetOf(elm1.generatrix.getNearestPoint(elm1.corns(1)));
 
     if(children.callout1.segments.length){
       children.callout1.firstSegment.point = b;
@@ -5533,9 +5552,9 @@ class DimensionLineImpost extends DimensionLineCustom {
     children.scale.elongation(200);
 
     children.text.rotation = children.dx1.rotation = children.dx2.rotation = 0;
-    children.text.content = (typeof p1 == 'number' ? p1 : p2).toFixed(0);
-    children.dx1.content = (dx1).toFixed(0);
-    children.dx2.content = (dx2).toFixed(0);
+    children.text.content = ((typeof p1 == 'number' ? p1 : p2) - offsetB).toFixed(0);
+    children.dx1.content = (dx1 - offsetB).toFixed(0);
+    children.dx2.content = (dx2 - offsetB).toFixed(0);
     const bdx1 = children.dx1.bounds;
     const bdx2 = children.dx2.bounds;
     if(offset > 0) {
@@ -6403,7 +6422,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {path, imposts, _attr, is_rectangular} = this;
     const {elm_font_size, font_family} = consts;
     const fontSize = elm_font_size * (2 / 3);
-    const maxTextWidth = 490;
+    const maxTextWidth = 600;
     path.visible = true;
     imposts.forEach((elm) => elm.redraw());
 
@@ -6429,6 +6448,12 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     if(is_rectangular){
       const turn = textBounds.width * 1.5 < textBounds.height;
+      if(turn){
+        textBounds.width = elm_font_size;
+      }
+      else{
+        textBounds.height = elm_font_size;
+      }
       _attr._text.fitBounds(textBounds);
       _attr._text.point = turn
         ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])
@@ -6436,13 +6461,16 @@ class Filling extends AbstractFilling(BuilderElement) {
       _attr._text.rotation = turn ? 270 : 0;
     }
     else{
-      _attr._text.fitBounds(textBounds.scale(0.8));
+      textBounds.height = elm_font_size;
+      _attr._text.rotation = 0;
+      _attr._text.fitBounds(textBounds);
       const maxCurve = path.curves.reduce((curv, item) => item.length > curv.length ? item : curv, path.curves[0]);
       const {angle, angleInRadians} = maxCurve.line.vector;
       const {PI} = Math;
       _attr._text.rotation = angle;
-      _attr._text.point = maxCurve.point1.add([Math.cos(angleInRadians + PI / 4) * 100, Math.sin(angleInRadians + PI / 4) * 100]);
-      if(Math.abs(angle) > 90 && Math.abs(angle) < 180){
+      const biasPoint = new paper.Point(Math.cos(angleInRadians + PI / 4), Math.sin(angleInRadians + PI / 4)).multiply(3 * elm_font_size);
+      _attr._text.point = maxCurve.point1.add(biasPoint);
+      if(Math.abs(angle) >= 85 && Math.abs(angle) <= 185){
         _attr._text.point = _attr._text.bounds.rightCenter;
         _attr._text.rotation += 180;
       }
@@ -8265,10 +8293,11 @@ class CnnPoint {
   }
 
   check_err(style) {
-    const {_node, _parent, cnn} = this;
+    const {_node, _parent} = this;
     const {_corns, _rays} = _parent._attr;
     const len = _node == 'b' ? _corns[1].getDistance(_corns[4]) : _corns[2].getDistance(_corns[3]);
     const angle = _parent.angle_at(_node);
+    const {cnn} = this;
     if(!cnn ||
       (cnn.lmin && cnn.lmin > len) ||
       (cnn.lmax && cnn.lmax < len) ||
@@ -8278,7 +8307,7 @@ class CnnPoint {
       if(style) {
         Object.assign(new paper.Path.Circle({
           center: _node == 'b' ? _corns[4].add(_corns[1]).divide(2) : _corns[2].add(_corns[3]).divide(2),
-          radius: 80,
+          radius: style.radius || 70,
         }), style);
       }
       else {
@@ -10890,7 +10919,7 @@ class Scheme extends paper.Project {
 
     if(fields.hasOwnProperty('sys') && !obj.sys.empty()) {
 
-      obj.sys.refill_prm(ox);
+      obj.sys.refill_prm(ox, 0, true);
 
       _scope.eve.emit_async('rows', ox, {extra_fields: true, params: true});
 
@@ -13950,7 +13979,7 @@ class ToolLayImpost extends ToolElement {
     }
 
     if (!this.hitItem) {
-      rectification();
+      rectification.bind(this)();
     }
 
     this.paths.forEach((p) => {
@@ -14396,7 +14425,7 @@ class ToolPen extends ToolElement {
         wnd: {
           caption: 'Новый сегмент профиля',
           width: 320,
-          height: 240,
+          height: 320,
           allow_close: true,
           bind_generatrix: true,
           bind_node: false,
@@ -14493,23 +14522,27 @@ class ToolPen extends ToolElement {
         tooltip: 'Добавить типовую форму',
         float: 'left',
         sub: {
-          width: '62px',
-          height:'206px',
+          width: '90px',
+          height:'190px',
           buttons: [
             {name: 'square', img: 'square.png', float: 'left'},
-            {name: 'triangle1', img: 'triangle1.png', float: 'right'},
-            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
-            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
+            {name: 'triangle1', img: 'triangle1.png', float: 'left'},
+            {name: 'triangle2', img: 'triangle2.png', float: 'right'},
+            {name: 'triangle3', img: 'triangle3.png', float: 'left'},
             {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
             {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
             {name: 'circle',    img: 'circle.png', float: 'left'},
-            {name: 'arc1',      img: 'arc1.png', float: 'right'},
-            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-            {name: 'trapeze2',  img: 'trapeze2.png', float: 'right'},
+            {name: 'arc1',      img: 'arc1.png', float: 'left'},
+            {name: 'trapeze1',  img: 'trapeze1.png', float: 'right'},
+            {name: 'trapeze2',  img: 'trapeze2.png', float: 'left'},
             {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
             {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
             {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'}]}
+            {name: 'trapeze6',  img: 'trapeze6.png', float: 'left'},
+            {name: 'trapeze7',  img: 'trapeze7.png', float: 'right'},
+            {name: 'trapeze8',  img: 'trapeze8.png', float: 'left'},
+            {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
+            {name: 'trapeze10',  img: 'trapeze10.png', float: 'right'}]}
             },
       ],
       image_path: '/imgs/',
@@ -14517,6 +14550,15 @@ class ToolPen extends ToolElement {
     });
     this.wnd.tb_mode.cell.style.backgroundColor = '#f5f5f5';
     this.wnd.cell.firstChild.style.marginTop = '22px';
+    const {standard_form} = this.wnd.tb_mode.buttons;
+    const {onmouseover} = standard_form;
+    const wnddiv = this.wnd.cell.parentElement;
+    standard_form.onmouseover = function() {
+      if(wnddiv.style.transform) {
+        wnddiv.style.transform = '';
+      }
+      onmouseover.call(this);
+    };
 
     const wnd_options = this.wnd.wnd_options;
     this.wnd.wnd_options = (opt) => {
@@ -15162,30 +15204,26 @@ class ToolPen extends ToolElement {
 
 
   standard_form(name) {
-
-    if(name == 'standard_form'){
-      name = 'square'
-    }
-
-    if(this['add_' + name]){
+    if(this['add_' + name]) {
       this['add_' + name](this.project.bounds);
       this.project.zoom_fit();
     }
-    else{
-      $p.msg.show_not_implemented();
+    else {
+      name !== 'standard_form' && $p.msg.show_not_implemented();
     }
-
   }
 
   add_sequence(points) {
+    const profiles = [];
     points.forEach((segments) => {
-      new Profile({
+      profiles.push(new Profile({
         generatrix: new paper.Path({
           strokeColor: 'black',
           segments: segments
         }), proto: this.profile
-      });
+      }));
     });
+    return profiles;
   }
 
   add_square(bounds) {
@@ -15219,9 +15257,155 @@ class ToolPen extends ToolElement {
   add_triangle3(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
-      [point, point.add([1000, -1000])],
-      [point.add([1000, -1000]), point.add([2000, 0])],
-      [point.add([2000, 0]), point]
+      [point, point.add([500, -500])],
+      [point.add([500, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  add_semicircle1(bounds) {
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[0].arc_h = 500;
+  }
+
+  add_semicircle2(bounds) {
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[1].arc_h = 500;
+  }
+
+  add_circle(bounds) {
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[0].arc_h = 500;
+    profiles[1].arc_h = 500;
+  }
+
+  add_arc1(bounds) {
+    const point = bounds.bottomRight;
+    const profiles = this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+    profiles[1].arc_h = 500;
+  }
+
+  add_trapeze1(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  add_trapeze2(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -750])],
+      [point.add([0, -750]), point.add([250, -1000])],
+      [point.add([250, -1000]), point.add([750, -1000])],
+      [point.add([750, -1000]), point.add([1000, -750])],
+      [point.add([1000, -750]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  add_trapeze3(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  add_trapeze4(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  add_trapeze5(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  add_trapeze6(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  add_trapeze7(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -500])],
+      [point.add([0, -500]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  add_trapeze8(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([500, -1000])],
+      [point.add([500, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([1000, 0])],
+      [point.add([1000, 0]), point]
+    ]);
+  }
+
+  add_trapeze9(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point.add([0, -500]), point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, 0])],
+      [point.add([1000, 0]), point.add([500, 0])],
+      [point.add([500, 0]), point.add([0, -500])]
+    ]);
+  }
+
+  add_trapeze10(bounds) {
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point, point.add([0, -1000])],
+      [point.add([0, -1000]), point.add([1000, -1000])],
+      [point.add([1000, -1000]), point.add([1000, -500])],
+      [point.add([1000, -500]), point.add([500, 0])],
+      [point.add([500, 0]), point]
     ]);
   }
 

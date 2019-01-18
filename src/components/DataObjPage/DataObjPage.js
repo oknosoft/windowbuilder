@@ -37,7 +37,7 @@ class DataObjPage extends DhtmlxCell {
    * @param loc
    * @return {*}
    */
-  prompt(loc) {
+  prompt = (loc) => {
     const {prompt} = this.cell;
     if(!prompt || loc.pathname.match(/builder/)){
       return true;
@@ -49,7 +49,7 @@ class DataObjPage extends DhtmlxCell {
     const {match, dialog} = this.props;
     const Dialog = dialog && match.params.ref === dialog.ref && dialog.Component;
     return [
-      <Prompt key="prompt" when message={this.prompt.bind(this)} />,
+      <Prompt key="prompt" when message={this.prompt} />,
 
       <div key="el" ref={el => this.el = el}/>,
 

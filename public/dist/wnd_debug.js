@@ -425,6 +425,7 @@ $p.CatCharacteristics.builder_props_defaults = {
   visualization: true,
   txts: true,
   rounding: 0,
+  mosquito: true,
 };
 
 $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, value) {
@@ -2455,7 +2456,35 @@ $p.cat.nom.__define({
 		value(filter){
 			return " OR _t_.article LIKE '" + filter + "' OR _t_.id LIKE '" + filter + "' OR _t_.name LIKE '" + filter + "'";
 		}
-	}
+	},
+
+  load_array: {
+    value(aattr, forse){
+      const units = [];
+      for(const row of aattr) {
+        if(row.units) {
+          row.units.split('\n').forEach((urow) => {
+            const uattr = urow.split(',');
+            units.push({
+              ref: uattr[0],
+              owner: row.ref,
+              id: uattr[1],
+              name: uattr[2],
+              qualifier_unit: uattr[3],
+              heft: parseFloat(uattr[4]),
+              volume: parseFloat(uattr[5]),
+              coefficient: parseFloat(uattr[6]),
+              rounding_threshold: parseFloat(uattr[7]),
+            });
+          });
+          delete row.units;
+        }
+      }
+      const res = this.constructor.prototype.load_array.call(this, aattr, forse);
+      units.length && $p.cat.nom_units.load_array(units, forse);
+      return res;
+    }
+  }
 });
 
 $p.CatNom.prototype.__define({
@@ -2631,6 +2660,30 @@ $p.CatNom.prototype.__define({
         _clr_keys.set(0, 0);
       }
       return this;
+    }
+  },
+
+  toJSON: {
+    value() {
+      const {_obj, ref} = this;
+      const {guid} = $p.utils.blank;
+      if(!_obj.units && !_obj.is_folder) {
+        _obj.units = '';
+        for(const unit of $p.cat.nom_units.alatable) {
+          if(unit.owner === ref) {
+            if(_obj.units) {
+              _obj.units += '\n';
+            }
+            _obj.units += `${unit.ref},${unit.id},${unit.name},${unit.qualifier_unit},${unit.heft},${unit.volume},${unit.coefficient},${unit.rounding_threshold}`;
+          }
+        }
+      }
+      for(const fld in _obj) {
+        if(_obj[fld] === guid) {
+          _obj[fld] = '';
+        }
+      }
+      return _obj;
     }
   }
 
@@ -2816,16 +2869,16 @@ $p.CatProduction_params.prototype.__define({
 	},
 
 	refill_prm: {
-		value(ox, cnstr = 0) {
+		value(ox, cnstr = 0, force) {
 
 			const prm_ts = !cnstr ? this.product_params : this.furn_params;
 			const adel = [];
 			const auto_align = ox.calc_order.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон && $p.job_prm.properties.auto_align;
 			const {params} = ox;
 
-			function add_prm(default_row) {
+			function add_prm(proto) {
         let row;
-        params.find_rows({cnstr: cnstr, param: default_row.param}, (_row) => {
+        params.find_rows({cnstr: cnstr, param: proto.param}, (_row) => {
           row = _row;
           return false;
         });
@@ -2834,15 +2887,17 @@ $p.CatProduction_params.prototype.__define({
           if(cnstr){
             return;
           }
-          row = params.add({cnstr: cnstr, param: default_row.param, value: default_row.value});
+          row = params.add({cnstr: cnstr, param: proto.param, value: proto.value});
         }
 
-        if(row.hide != default_row.hide){
-          row.hide = default_row.hide;
+        const links = proto.param.params_links({grid: {selection: {cnstr}}, obj: row});
+        const hide = proto.hide || links.some((link) => link.hide);
+        if(row.hide != hide){
+          row.hide = hide;
         }
 
-        if(default_row.forcibly && row.value != default_row.value){
-          row.value = default_row.value;
+        if(proto.forcibly && row.value != proto.value){
+          row.value = proto.value;
         }
       }
 
@@ -2868,7 +2923,7 @@ $p.CatProduction_params.prototype.__define({
 
 				ox.constructions.forEach((row) => {
           if(!row.furn.empty()) {
-            let changed;
+            let changed = force;
             if(furns.length) {
               if(furns.some((frow) => {
                 if(frow.forcibly) {
@@ -5052,18 +5107,20 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
             $p.record_log(err);
           });
       });
-
   }
 
   get is_read_only() {
-    const {obj_delivery_state, posted, _deleted} = this;
-    const {Черновик, Шаблон, Отозван} = $p.enm.obj_delivery_states;
+    const {obj_delivery_state, posted, _data} = this;
+    const {Черновик, Шаблон, Отозван, Отправлен} = $p.enm.obj_delivery_states;
     let ro = false;
     if(obj_delivery_state == Шаблон) {
       ro = !$p.current_user.role_available('ИзменениеТехнологическойНСИ');
     }
-    else if(posted || _deleted) {
+    else if(posted || _data._deleted) {
       ro = !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
+    }
+    else if(obj_delivery_state == Отправлен) {
+      ro = !_data._saving_trans && !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
     }
     else if(!obj_delivery_state.empty()) {
       ro = obj_delivery_state != Черновик && obj_delivery_state != Отозван && !$p.current_user.role_available('СогласованиеРасчетовЗаказов');
@@ -6389,9 +6446,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     function frm_close() {
 
-      if(o && !location.pathname.match(/builder/)) {
-        setTimeout(o.unload.bind(o), 200);
-      }
 
       ['vault', 'vault_pop', 'discount', 'svgs', 'layout_header'].forEach((elm) => {
         wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
@@ -6408,21 +6462,22 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       pg_right.cells('vat_included', 1).setDisabled(true);
 
       const ro = wnd.elmnts.ro = o.is_read_only;
+      const {enm: {obj_delivery_states: {Отправлен, Отклонен, Шаблон}}, current_user} = $p;
 
       const retrieve_enabed = !o._deleted &&
-        (o.obj_delivery_state == $p.enm.obj_delivery_states.Отправлен || o.obj_delivery_state == $p.enm.obj_delivery_states.Отклонен);
+        (o.obj_delivery_state == Отправлен || o.obj_delivery_state == Отклонен);
 
       grids.production.setEditable(!ro);
       grids.planning.setEditable(!ro);
       pg_left.setEditable(!ro);
       pg_right.setEditable(!ro);
 
-      if(!$p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
+      if(!current_user.role_available('СогласованиеРасчетовЗаказов')) {
         frm_toolbar.hideItem('btn_post');
         frm_toolbar.hideItem('btn_unpost');
       }
 
-      if(!$p.current_user.role_available('ИзменениеТехнологическойНСИ') && !$p.current_user.role_available('СогласованиеРасчетовЗаказов')) {
+      if(!current_user.role_available('ИзменениеТехнологическойНСИ') && !current_user.role_available('СогласованиеРасчетовЗаказов')) {
         pg_left.cells('obj_delivery_state', 1).setDisabled(true);
       }
 
@@ -6438,7 +6493,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         toolbar.forEachItem(disable);
       }
       else {
-        if(o.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон) {
+        if(o.obj_delivery_state == Шаблон) {
           frm_toolbar.disableItem('btn_sent');
         }
         else {
@@ -6462,10 +6517,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
     }
 
     function not_production() {
-      $p.msg.show_msg({
-        title: $p.msg.bld_title,
+      const {msg} = $p;
+      msg.show_msg({
+        title: msg.bld_title,
         type: 'alert-error',
-        text: $p.msg.bld_not_product
+        text: msg.bld_not_product
       });
     }
 

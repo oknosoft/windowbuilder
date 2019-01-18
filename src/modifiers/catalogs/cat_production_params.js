@@ -145,16 +145,16 @@ $p.CatProduction_params.prototype.__define({
 	 * @param cnstr {Nomber} - номер конструкции. Если 0 - перезаполняем параметры изделия, иначе - фурнитуры
 	 */
 	refill_prm: {
-		value(ox, cnstr = 0) {
+		value(ox, cnstr = 0, force) {
 
 			const prm_ts = !cnstr ? this.product_params : this.furn_params;
 			const adel = [];
 			const auto_align = ox.calc_order.obj_delivery_state == $p.enm.obj_delivery_states.Шаблон && $p.job_prm.properties.auto_align;
 			const {params} = ox;
 
-			function add_prm(default_row) {
+			function add_prm(proto) {
         let row;
-        params.find_rows({cnstr: cnstr, param: default_row.param}, (_row) => {
+        params.find_rows({cnstr: cnstr, param: proto.param}, (_row) => {
           row = _row;
           return false;
         });
@@ -164,15 +164,17 @@ $p.CatProduction_params.prototype.__define({
           if(cnstr){
             return;
           }
-          row = params.add({cnstr: cnstr, param: default_row.param, value: default_row.value});
+          row = params.add({cnstr: cnstr, param: proto.param, value: proto.value});
         }
 
-        if(row.hide != default_row.hide){
-          row.hide = default_row.hide;
+        const links = proto.param.params_links({grid: {selection: {cnstr}}, obj: row});
+        const hide = proto.hide || links.some((link) => link.hide);
+        if(row.hide != hide){
+          row.hide = hide;
         }
 
-        if(default_row.forcibly && row.value != default_row.value){
-          row.value = default_row.value;
+        if(proto.forcibly && row.value != proto.value){
+          row.value = proto.value;
         }
       }
 
@@ -204,7 +206,7 @@ $p.CatProduction_params.prototype.__define({
 				// одновременно, перезаполним параметры фурнитуры
 				ox.constructions.forEach((row) => {
           if(!row.furn.empty()) {
-            let changed;
+            let changed = force;
             // если для системы через связи параметров ограничен список фурнитуры...
             if(furns.length) {
               if(furns.some((frow) => {

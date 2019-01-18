@@ -22,7 +22,36 @@ $p.cat.nom.__define({
 		value(filter){
 			return " OR _t_.article LIKE '" + filter + "' OR _t_.id LIKE '" + filter + "' OR _t_.name LIKE '" + filter + "'";
 		}
-	}
+	},
+
+  load_array: {
+	  // если внутри номенклатуры завёрнуты единицы, вытаскиваем
+    value(aattr, forse){
+      const units = [];
+      for(const row of aattr) {
+        if(row.units) {
+          row.units.split('\n').forEach((urow) => {
+            const uattr = urow.split(',');
+            units.push({
+              ref: uattr[0],
+              owner: row.ref,
+              id: uattr[1],
+              name: uattr[2],
+              qualifier_unit: uattr[3],
+              heft: parseFloat(uattr[4]),
+              volume: parseFloat(uattr[5]),
+              coefficient: parseFloat(uattr[6]),
+              rounding_threshold: parseFloat(uattr[7]),
+            });
+          });
+          delete row.units;
+        }
+      }
+      const res = this.constructor.prototype.load_array.call(this, aattr, forse);
+      units.length && $p.cat.nom_units.load_array(units, forse);
+      return res;
+    }
+  }
 });
 
 // методы ценообразования в прототип номенклатуры
@@ -229,6 +258,31 @@ $p.CatNom.prototype.__define({
         _clr_keys.set(0, 0);
       }
       return this;
+    }
+  },
+
+  toJSON: {
+    // подмешиваем в итог единицы измерения
+    value() {
+      const {_obj, ref} = this;
+      const {guid} = $p.utils.blank;
+      if(!_obj.units && !_obj.is_folder) {
+        _obj.units = '';
+        for(const unit of $p.cat.nom_units.alatable) {
+          if(unit.owner === ref) {
+            if(_obj.units) {
+              _obj.units += '\n';
+            }
+            _obj.units += `${unit.ref},${unit.id},${unit.name},${unit.qualifier_unit},${unit.heft},${unit.volume},${unit.coefficient},${unit.rounding_threshold}`;
+          }
+        }
+      }
+      for(const fld in _obj) {
+        if(_obj[fld] === guid) {
+          _obj[fld] = '';
+        }
+      }
+      return _obj;
     }
   }
 

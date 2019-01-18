@@ -1005,13 +1005,13 @@ class Contour extends AbstractFilling(paper.Layer) {
   _metadata(fld) {
 
     const {tabular_sections} = this.project.ox._metadata();
-    const _xfields = tabular_sections.constructions.fields;
+    const {fields} = tabular_sections.constructions;
 
-    return fld ? (_xfields[fld] || tabular_sections[fld]) : {
+    return fld ? (fields[fld] || tabular_sections[fld]) : {
       fields: {
-        furn: _xfields.furn,
-        direction: _xfields.direction,
-        h_ruch: _xfields.h_ruch,
+        furn: fields.furn,
+        direction: fields.direction,
+        h_ruch: fields.h_ruch,
       },
       tabular_sections: {
         params: tabular_sections.params,
@@ -1145,13 +1145,14 @@ class Contour extends AbstractFilling(paper.Layer) {
         }
       }
       // Ошибки соединений Onlay в этом заполнении
-      glass.imposts.forEach(impost => {
+      glass.imposts.forEach((impost) => {
         if(impost instanceof Onlay) {
           const {b, e} = impost._attr._rays;
-          b.check_err(err_attrs);
-          e.check_err(err_attrs);
+          const oerr_attrs = Object.assign({radius: 50}, err_attrs);
+          b.check_err(oerr_attrs);
+          e.check_err(oerr_attrs);
         }
-      })
+      });
     });
 
     // ошибки соединений профиля
@@ -1174,11 +1175,14 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   /**
-   * Рисут визуализацию москитки
+   * Рисует визуализацию москитки
    */
   draw_mosquito() {
-    const {l_visualization} = this;
-    this.project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
+    const {l_visualization, project} = this;
+    if(project.builder_props.mosquito === false) {
+      return;
+    }
+    project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
       if (row.inset.insert_type == $p.enm.inserts_types.МоскитнаяСетка) {
         const props = {
           parent: new paper.Group({parent: l_visualization._by_insets}),
@@ -1283,7 +1287,7 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   /**
-   * Рисут визуализацию подоконника
+   * Рисует визуализацию подоконника
    */
   draw_sill() {
     const {l_visualization, project, cnstr} = this;
@@ -1835,7 +1839,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     this.params.find_rows({
       cnstr,
       inset: $p.utils.blank.guid,
-      hide: {not: true},
+      //hide: {not: true},
     }, (prow) => {
       const {param} = prow;
       const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
@@ -1845,8 +1849,9 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (links.length && param.linked_values(links, prow)) {
         notify = true;
       }
-      if (!notify) {
-        notify = hide;
+      if (prow.hide !== hide) {
+        prow.hide = hide;
+        notify = true;
       }
     });
 

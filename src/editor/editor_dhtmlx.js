@@ -1091,22 +1091,33 @@ class Editor extends EditorInvisible {
     }
 
     // получаем текущий внешний контур
-    let layer;
-    if(glasses.some((glass) => {
-        const gl = project.rootLayer(glass.layer);
-        if(!layer){
-          layer = gl;
+    let parent_layer;
+    if(glasses.some(({layer}) => {
+        const gl = layer.layer || layer;
+        if(!parent_layer){
+          parent_layer = gl;
         }
-        else if(layer != gl){
+        else if(parent_layer != gl){
+          return true;
+        }
+      })){
+      parent_layer = null;
+      if(glasses.some(({layer}) => {
+        const gl = project.rootLayer(layer);
+        if(!parent_layer){
+          parent_layer = gl;
+        }
+        else if(parent_layer != gl){
           $p.msg.show_msg({
             type: "alert-info",
             text: "Заполнения принадлежат разным рамным контурам",
             title: "Выравнивание"
           });
-          return true
+          return true;
         }
       })){
-      return;
+        return;
+      }
     }
 
     // выясняем направление, в котром уравнивать
@@ -1116,7 +1127,8 @@ class Editor extends EditorInvisible {
 
     // собираем в массиве shift все импосты подходящего направления
     const orientation = name == 'width' ? $p.enm.orientations.vert : $p.enm.orientations.hor;
-    const shift = layer.profiles.filter((impost) => {
+   // parent_layer.profiles
+    const shift = parent_layer.getItems({class: Profile}).filter((impost) => {
       const {b, e} = impost.rays;
       // отрезаем плохую ориентацию и неимпосты
       return impost.orientation == orientation && (b.is_tt || e.is_tt || b.is_i || e.is_i);

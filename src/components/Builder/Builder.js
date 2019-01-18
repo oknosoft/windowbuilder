@@ -36,13 +36,13 @@ class Builder extends DhtmlxCell {
    * @param loc
    * @return {*}
    */
-  prompt(loc) {
+  prompt = (loc) => {
     return this._editor.prompt(loc);
   }
 
   render() {
     return <div>
-      <Prompt when message={this.prompt.bind(this)} />
+      <Prompt when message={this.prompt} />
       <div ref={el => this.el = el}/>
     </div>;
   }

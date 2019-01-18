@@ -46,6 +46,10 @@ class AppRoot extends Component {
     }
   }
 
+  componentDidMount() {
+    $p.ui.dialogs.init({handleIfaceState: this.props.handleIfaceState});
+  }
+
   render() {
     const {props} = this;
     const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, page, user, couch_direct, offline, title} = props;
@@ -103,8 +107,7 @@ class AppRoot extends Component {
       alert && alert.open && <Alert key="alert" open text={alert.text} title={alert.title} handleOk={this.handleDialogClose.bind(this, 'alert')}/>,
 
       // диалог вопросов пользователю (да, нет)
-      confirm && confirm.open && <Confirm key="confirm" open text={confirm.text} title={confirm.title}
-                                          handleOk={confirm.handleOk} handleCancel={confirm.handleCancel}/>,
+      confirm && confirm.open && <Confirm key="confirm" open {...confirm}/>,
 
       // обрыв связи
       couch_direct && user.logged_in && !offline && props.complete_loaded && !props.sync_started &&

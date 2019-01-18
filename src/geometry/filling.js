@@ -280,7 +280,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {path, imposts, _attr, is_rectangular} = this;
     const {elm_font_size, font_family} = consts;
     const fontSize = elm_font_size * (2 / 3);
-    const maxTextWidth = 490;
+    const maxTextWidth = 600;
     path.visible = true;
     imposts.forEach((elm) => elm.redraw());
     
@@ -309,6 +309,12 @@ class Filling extends AbstractFilling(BuilderElement) {
 
     if(is_rectangular){
       const turn = textBounds.width * 1.5 < textBounds.height;
+      if(turn){
+        textBounds.width = elm_font_size;
+      }
+      else{
+        textBounds.height = elm_font_size;
+      }
       _attr._text.fitBounds(textBounds);
       _attr._text.point = turn
         ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])
@@ -316,15 +322,18 @@ class Filling extends AbstractFilling(BuilderElement) {
       _attr._text.rotation = turn ? 270 : 0;
     }
     else{
-      _attr._text.fitBounds(textBounds.scale(0.8));
+      textBounds.height = elm_font_size;
+      _attr._text.rotation = 0;
+      _attr._text.fitBounds(textBounds);
       // Поиск самой длинной кривой пути
       const maxCurve = path.curves.reduce((curv, item) => item.length > curv.length ? item : curv, path.curves[0]);
       const {angle, angleInRadians} = maxCurve.line.vector;
       const {PI} = Math;
       _attr._text.rotation = angle;
-      _attr._text.point = maxCurve.point1.add([Math.cos(angleInRadians + PI / 4) * 100, Math.sin(angleInRadians + PI / 4) * 100]);
+      const biasPoint = new paper.Point(Math.cos(angleInRadians + PI / 4), Math.sin(angleInRadians + PI / 4)).multiply(3 * elm_font_size);
+      _attr._text.point = maxCurve.point1.add(biasPoint);
       // Перевернуть с головы на ноги
-      if(Math.abs(angle) > 90 && Math.abs(angle) < 180){
+      if(Math.abs(angle) >= 85 && Math.abs(angle) <= 185){
         _attr._text.point = _attr._text.bounds.rightCenter;
         _attr._text.rotation += 180;
       }

@@ -850,7 +850,7 @@ class ToolLayImpost extends ToolElement {
 
     // уточним направления путей для витража
     if (!this.hitItem) {
-      rectification();
+      rectification.bind(this)();
     }
 
     this.paths.forEach((p) => {

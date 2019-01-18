@@ -13,7 +13,7 @@ import AdditionsItem from './AdditionsItem';
 const {ItemData} = $p.cat.inserts;
 
 // компилированный запрос для поиска настроек в ОЗУ
-export const alasql_schemas = $p.wsql.alasql.compile('select * from cat_scheme_settings where obj="dp.buyers_order.production"');
+export const alasql_schemas = $p.wsql.alasql.compile('select * from cat_scheme_settings where obj="dp.buyers_order.production" and user=""');
 
 
 // заполняет компонент данными

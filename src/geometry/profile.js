@@ -141,10 +141,11 @@ class CnnPoint {
    * @param style
    */
   check_err(style) {
-    const {_node, _parent, cnn} = this;
+    const {_node, _parent} = this;
     const {_corns, _rays} = _parent._attr;
     const len = _node == 'b' ? _corns[1].getDistance(_corns[4]) : _corns[2].getDistance(_corns[3]);
     const angle = _parent.angle_at(_node);
+    const {cnn} = this;
     if(!cnn ||
       (cnn.lmin && cnn.lmin > len) ||
       (cnn.lmax && cnn.lmax < len) ||
@@ -154,7 +155,7 @@ class CnnPoint {
       if(style) {
         Object.assign(new paper.Path.Circle({
           center: _node == 'b' ? _corns[4].add(_corns[1]).divide(2) : _corns[2].add(_corns[3]).divide(2),
-          radius: 80,
+          radius: style.radius || 70,
         }), style);
       }
       else {
