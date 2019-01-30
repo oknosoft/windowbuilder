@@ -9088,9 +9088,6 @@ class ProfileItem extends GeneratrixElement {
       _row.r = min_radius + 0.0001;
       full = true;
     }
-    if(height && height > min_radius) {
-      height = min_radius;
-    }
 
     if(selected) {
       this.selected = false;
@@ -9104,7 +9101,7 @@ class ProfileItem extends GeneratrixElement {
       if(full || height) {
         const start = b.add(e).divide(2);
         const vector = p.subtract(start);
-        vector.normalize(height || min_radius);
+        vector.length = (height || min_radius);
         p = start.add(vector);
       }
       generatrix.arcTo(p, e);
