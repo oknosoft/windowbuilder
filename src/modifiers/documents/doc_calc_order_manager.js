@@ -110,12 +110,13 @@
   // индивидуальная строка поиска
   _mgr.build_search = function (tmp, obj) {
 
-    const {number_internal, client_of_dealer, partner, note} = obj;
+    const {number_internal, client_of_dealer, partner, manager, note} = obj;
 
     tmp.search = (obj.number_doc +
       (number_internal ? ' ' + number_internal : '') +
       (client_of_dealer ? ' ' + client_of_dealer : '') +
       (partner.name ? ' ' + partner.name : '') +
+      (manager.name ? ' ' + manager.name : '') +
       (note ? ' ' + note : '')).toLowerCase();
   };
 
