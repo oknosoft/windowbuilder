@@ -53,6 +53,9 @@ const initialState = {
   },
   CalcOrderList: {
     state_filter: '',
+    filter_filter: '',
+    date_from_filter: '',
+    date_till_filter: ''
   },
   NavDrawer: {
     open: false,

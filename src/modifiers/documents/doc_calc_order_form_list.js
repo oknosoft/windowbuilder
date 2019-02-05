@@ -9,19 +9,41 @@
 
 $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
-	if(!attr){
-		attr = {
-			hide_header: true,
-			date_from: moment().subtract(2, 'month').toDate(),
-			date_till: moment().add(1, 'month').toDate(),
-			on_new: (o) => {
-        handlers.handleNavigate(`/${this.class_name}/${o.ref}`);
-			},
-			on_edit: (_mgr, ref) => {
-        handlers.handleNavigate(`/${_mgr.class_name}/${ref}`);
-			}
-		};
-	}
+  // сохраняет атрибуты
+  function store_attr(wnd) {
+    const {elmnts} = wnd;
+    const {filter, date_from, date_till} = elmnts.filter.get_filter();
+
+    handlers.handleIfaceState({
+      component: 'CalcOrderList',
+      name: 'date_from_filter',
+      value: date_from.toString()
+    });
+    handlers.handleIfaceState({
+      component: 'CalcOrderList',
+      name: 'date_till_filter',
+      value: date_till.toString()
+    });
+    handlers.handleIfaceState({
+      component: 'CalcOrderList',
+      name: 'filter_filter',
+      value: filter
+    });
+  }
+
+  attr = Object.assign({
+    hide_header: true,
+    date_from: moment().subtract(2, 'month').toDate(),
+    date_till: moment().add(1, 'month').toDate(),
+    on_new: (o) => {
+      store_attr(pwnd);
+      handlers.handleNavigate(`/${this.class_name}/${o.ref}`);
+    },
+    on_edit: (_mgr, ref) => {
+      store_attr(pwnd);
+      handlers.handleNavigate(`/${_mgr.class_name}/${ref}`);
+    }
+  }, attr || {});
 
   return new Promise((resolve, reject) => {
 
@@ -172,6 +194,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       elmnts.status_bar = wnd.attachStatusBar();
       elmnts.svgs = new $p.iface.OSvgs(wnd, elmnts.status_bar,
         (ref, dbl) => {
+          store_attr(wnd);
           //dbl && $p.iface.set_hash("cat.characteristics", ref, "builder")
           dbl && handlers.handleNavigate(`/builder/${ref}`);
         });
@@ -214,6 +237,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             const {calc_order} = $p.doc;
             calc_order.clone(ref)
               .then((doc) => {
+                store_attr(wnd);
                 handlers.handleNavigate(`/${calc_order.class_name}/${doc.ref}`);
               })
               .catch($p.record_log);
