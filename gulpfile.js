@@ -60,9 +60,10 @@ gulp.task('build-drawer', function () {
     .pipe(concat('drawer.js'))
     .pipe(strip())
     .pipe(umd({
-      exports: function (file) {
-        return 'EditorInvisible';
-      }
+      // exports: function (file) {
+      //   return 'EditorInvisible';
+      // },
+      templateSource: 'module.exports = function({$p, paper}) {<%= contents %>}',
     }))
     .pipe(gulp.dest('./public/dist'));
 });

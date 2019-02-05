@@ -1,13 +1,4 @@
-;(function(root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    define([], factory);
-  } else if (typeof exports === 'object') {
-    module.exports = factory();
-  } else {
-    root.Drawer = factory();
-  }
-}(this, function() {
-
+module.exports = function({$p, paper}) {
 const consts = {
 
 	tune_paper(settings) {
@@ -15568,6 +15559,4 @@ $p.DocCalc_orderProductionRow.rfields = {
 };
 
 $p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percent_internal';
-
-return EditorInvisible;
-}));
+}
