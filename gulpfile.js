@@ -47,7 +47,7 @@ gulp.task('build-drawer', function () {
     './src/modifiers/catalogs/cat_clrs.js',
     './src/modifiers/catalogs/cat_cnns.js',
     './src/modifiers/catalogs/cat_contracts.js',
-    './src/modifiers/catalogs/cat_divisions.js',
+    //'./src/modifiers/catalogs/cat_divisions.js',
     './src/modifiers/catalogs/cat_elm_visualization.js',
     './src/modifiers/catalogs/cat_furns.js',
     './src/modifiers/catalogs/cat_insert_bind.js',
