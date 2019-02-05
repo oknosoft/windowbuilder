@@ -63,7 +63,7 @@ gulp.task('build-drawer', function () {
       // exports: function (file) {
       //   return 'EditorInvisible';
       // },
-      templateSource: 'module.exports = function({$p, paper}) {<%= contents %>}',
+      templateSource: 'module.exports = function({$p, paper}) {<%= contents %> \nreturn EditorInvisible;\n}',
     }))
     .pipe(gulp.dest('./public/dist'));
 });

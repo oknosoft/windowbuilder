@@ -15518,4 +15518,6 @@ $p.DocCalc_orderProductionRow.rfields = {
 };
 
 $p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percent_internal';
+ 
+return EditorInvisible;
 }
