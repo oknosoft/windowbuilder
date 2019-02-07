@@ -5061,10 +5061,16 @@ class DimensionLine extends paper.Group {
           }
       });
       project.move_points(delta, false);
-      setTimeout(function () {
-        this.deselect_all_points(true);
-        this.register_update();
-      }.bind(project), 200);
+      if(project._attr._from_service) {
+        project.deselect_all_points(true);
+        project.register_update();
+      }
+      else {
+        setTimeout(function () {
+          this.deselect_all_points(true);
+          this.register_update();
+        }.bind(project), 200);
+      }
     }
 
   }
@@ -11166,6 +11172,14 @@ class Scheme extends paper.Project {
     }
 
     _attr._loading = true;
+
+    if(from_service) {
+      _attr._from_service = true;
+    }
+    else if(_attr._from_service) {
+      delete _attr._from_service;
+    }
+
     this.ox = null;
     this.clear();
 
