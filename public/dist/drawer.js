@@ -8834,7 +8834,7 @@ class Scheme extends paper.Project {
 
   clear() {
     const {_attr} = this;
-    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent';
+    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent,_from_service';
     for (let fld in _attr) {
       if(!pnames.match(fld)) {
         delete _attr[fld];
