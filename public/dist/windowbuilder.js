@@ -5169,15 +5169,15 @@ class DimensionLine extends paper.Group {
     if(align == $p.enm.text_aligns.left) {
       children.text.position = bs
         .add(path.getTangentAt(0).multiply(font_size))
-        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
     }
     else if(align == $p.enm.text_aligns.right) {
       children.text.position = es
         .add(path.getTangentAt(0).multiply(-font_size))
-        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
     }
     else {
-      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
       if(length < 20) {
         children.text.position = children.text.position.add(path.getTangentAt(0).multiply(font_size / 3));
       }
@@ -11176,9 +11176,6 @@ class Scheme extends paper.Project {
     if(from_service) {
       _attr._from_service = true;
     }
-    else if(_attr._from_service) {
-      delete _attr._from_service;
-    }
 
     this.ox = null;
     this.clear();
@@ -11319,7 +11316,7 @@ class Scheme extends paper.Project {
 
   clear() {
     const {_attr} = this;
-    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent';
+    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent,_from_service';
     for (let fld in _attr) {
       if(!pnames.match(fld)) {
         delete _attr[fld];
@@ -11423,10 +11420,8 @@ class Scheme extends paper.Project {
     if(other.length && Math.abs(delta.x) > 1) {
       this.do_align(auto_align, profiles);
     }
-    else {
-      setTimeout(() => {
-        this.contours.forEach(l => l.redraw());
-      }, 100);
+    else if(!this._attr._from_service) {
+      setTimeout(() => this.contours.forEach(l => l.redraw()), 70);
     }
 
     _dp._manager.emit_async('update', {}, {x1: true, x2: true, y1: true, y2: true, a1: true, a2: true, cnn1: true, cnn2: true, info: true});

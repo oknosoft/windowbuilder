@@ -789,11 +789,9 @@ class Scheme extends paper.Project {
     if(other.length && Math.abs(delta.x) > 1) {
       this.do_align(auto_align, profiles);
     }
-    else {
-      // иначе перерисовываем контуры
-      setTimeout(() => {
-        this.contours.forEach(l => l.redraw());
-      }, 100);
+    // иначе перерисовываем контуры
+    else if(!this._attr._from_service) {
+      setTimeout(() => this.contours.forEach(l => l.redraw()), 70);
     }
 
     _dp._manager.emit_async('update', {}, {x1: true, x2: true, y1: true, y2: true, a1: true, a2: true, cnn1: true, cnn2: true, info: true});
