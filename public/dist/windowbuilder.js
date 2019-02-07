@@ -11493,10 +11493,13 @@ class Scheme extends paper.Project {
     }
   }
 
-  get_svg(attr) {
+  get_svg(attr = {}) {
     this.deselectAll();
-
-    const svg = this.exportSVG();
+    const options = attr.export_options || {};
+    if(!options.precision) {
+      options.precision = 1;
+    }
+    const svg = this.exportSVG(options);
     const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
 
     svg.setAttribute('x', bounds.x);

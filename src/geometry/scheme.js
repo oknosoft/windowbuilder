@@ -476,9 +476,6 @@ class Scheme extends paper.Project {
     if(from_service) {
       _attr._from_service = true;
     }
-    else if(_attr._from_service) {
-      delete _attr._from_service;
-    }
 
     this.ox = null;
     this.clear();
@@ -885,10 +882,13 @@ class Scheme extends paper.Project {
    * @method get_svg
    * @param [attr] {Object} - указывает видимость слоёв и элементов, используется для формирования эскиза части изделия
    */
-  get_svg(attr) {
+  get_svg(attr = {}) {
     this.deselectAll();
-
-    const svg = this.exportSVG();
+    const options = attr.export_options || {};
+    if(!options.precision) {
+      options.precision = 1;
+    }
+    const svg = this.exportSVG(options);
     const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
 
     svg.setAttribute('x', bounds.x);
