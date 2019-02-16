@@ -380,7 +380,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       .then(() => {
 
         // выполняем пересчет
-        project.save_coordinates({save: true, svg: false});
+        project.save_coordinates(Object.assign({save: true, svg: false}, attr));
 
       })
       .then(() => {
