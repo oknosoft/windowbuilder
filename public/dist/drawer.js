@@ -11705,6 +11705,7 @@ $p.spec_building = new SpecBuilding($p);
 })($p);
 
 
+
 $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
 
@@ -11751,6 +11752,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
   }
 
+
   add_inset_params(inset, cnstr, blank_inset) {
     const ts_params = this.params;
     const params = [];
@@ -11776,6 +11778,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       row.hide = links.some((link) => link.hide);
     });
   }
+
 
   prod_name(short) {
     const {calc_order_row, calc_order, leading_product, sys, clr, origin} = this;
@@ -11862,6 +11865,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     return name;
   }
 
+
   open_origin(row_id) {
     try {
       let {origin} = this.specification.get(row_id);
@@ -11881,6 +11885,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       $p.record_log(err);
     }
   }
+
 
   find_create_cx(elm, origin) {
     const {_manager, calc_order, params, inserts} = this;
@@ -11914,6 +11919,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     return cx;
   }
 
+
   get calc_order_row() {
     let _calc_order_row;
     this.calc_order.production.find_rows({characteristic: this}, (_row) => {
@@ -11922,6 +11928,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     });
     return _calc_order_row;
   }
+
 
   get prod_nom() {
     if(!this.sys.empty()) {
@@ -11964,6 +11971,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
     return this.owner;
   }
+
 
   get builder_props() {
     const defaults = this.constructor.builder_props_defaults;
@@ -12013,6 +12021,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     }
   }
 
+
   recalc(attr = {}, editor) {
 
 
@@ -12024,7 +12033,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     return project.load(this, true)
       .then(() => {
 
-        project.save_coordinates({save: true, svg: false});
+        project.save_coordinates(Object.assign({save: true, svg: false}, attr));
 
       })
       .then(() => {
@@ -12039,6 +12048,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       });
 
   }
+
 
   draw(attr = {}, editor) {
 
