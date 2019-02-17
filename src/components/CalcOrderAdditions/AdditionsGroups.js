@@ -12,7 +12,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import AdditionsGroup from './AdditionsGroup';
-import {alasql_schemas, fill_data} from './connect';
+import {alasql_schemas, fill_data, find_inset} from './connect';
 
 
 export default class AdditionsGroups extends React.Component {
@@ -64,7 +64,7 @@ export default class AdditionsGroups extends React.Component {
     return <List>
       {schemas ?
         items.map(group => {
-          if(!group) {
+          if(!group || !find_inset.call({}, group)) {
             return null;
           }
           const cmp = components.get(group);

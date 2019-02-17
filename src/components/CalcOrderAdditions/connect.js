@@ -59,8 +59,11 @@ export function fill_data(ref) {
 
 export function find_inset(insert_type) {
   if(!this._inset) {
-    this._inset = $p.cat.inserts.find_rows({available: true, insert_type})
-      .reduce((curr, next) => curr.priority >= next.priority ? curr : next);
+    const inset = $p.cat.inserts.find_rows({available: true, insert_type})
+      .reduce((curr, next) => !curr.empty() && curr.priority >= next.priority ? curr : next, $p.cat.inserts.get());
+    if (!inset.empty()) {
+      this._inset = inset;
+    }
   }
   return this._inset;
 }
