@@ -2980,6 +2980,1543 @@ $p.CatProduction_params.prototype.__define({
 
 
 
+class Pricing {
+
+  constructor({md, adapters}) {
+
+    md.once('predefined_elmnts_inited', () => {
+      const {pouch} = adapters;
+      if(pouch.local.templates || pouch.props.user_node) {
+        this.load_prices();
+      }
+      else {
+        pouch.once('on_log_in', () => this.load_prices());
+      }
+    });
+
+  }
+
+  load_prices() {
+
+    return this.by_local()
+      .then((loc) => {
+        return !loc && this.by_range();
+      })
+      .then(() => {
+        const {adapters: {pouch}, doc: {calc_order}, wsql} = $p;
+        pouch.emit('pouch_complete_loaded');
+
+        if(pouch.local.doc === pouch.remote.doc) {
+          pouch.local.doc.changes({
+            since: 'now',
+            live: true,
+            include_docs: true,
+            selector: {class_name: {$in: ['doc.nom_prices_setup', calc_order.class_name]}}
+          }).on('change', (change) => {
+            if(change.doc.class_name == 'doc.nom_prices_setup'){
+              setTimeout(() => this.by_doc(change.doc), 500);
+            }
+            else if(change.doc.class_name == calc_order.class_name){
+              if(pouch.props.user_node) {
+               return calc_order.emit('change', change.doc);
+              }
+              const doc = calc_order.by_ref[change.id.substr(15)];
+              const user = pouch.authorized || wsql.get_user_param('user_name');
+              if(!doc || user === change.doc.timestamp.user){
+                return;
+              }
+              pouch.load_changes({docs: [change.doc], update_only: true});
+            }
+          });
+        }
+      });
+  }
+
+  build_cache(rows) {
+    const {nom, currencies} = $p.cat;
+    const note = 'Индекс цен номенклатуры';
+    for(const {key, value} of rows){
+      if(!Array.isArray(value)){
+        return setTimeout(() => $p.iface.do_reload('', note), 1000);
+      }
+      const onom = nom.get(key[0], false, true);
+      if (!onom || !onom._data){
+        $p.record_log({
+          class: 'error',
+          note,
+          obj: {nom: key[0], value}
+        });
+        continue;
+      }
+      if (!onom._data._price){
+        onom._data._price = {};
+      }
+      const {_price} = onom._data;
+
+      if (!_price[key[1]]){
+        _price[key[1]] = {};
+      }
+      _price[key[1]][key[2]] = value.map((v) => ({
+        date: new Date(v.date),
+        currency: currencies.get(v.currency),
+        price: v.price
+      }));
+    }
+  }
+
+  build_cache_local(prices) {
+
+    const {nom, currencies} = $p.cat;
+    const note = 'Индекс цен номенклатуры';
+    const date = new Date('2010-01-01');
+
+    for(const ref in prices) {
+      if(ref[0] === '_' || ref === 'remote_rev') {
+        continue;
+      }
+      const onom = nom.get(ref, false, true);
+      const value = prices[ref];
+
+      if (!onom || !onom._data){
+        $p.record_log({
+          class: 'error',
+          note,
+          obj: {nom: ref, value}
+        });
+        continue;
+      }
+      onom._data._price = value;
+
+      for(const cref in value){
+        for(const pref in value[cref]) {
+          const price = value[cref][pref][0];
+          price.date = date;
+          price.currency = currencies.get(price.currency);
+        }
+      }
+    }
+  }
+
+  sync_local(pouch, step = 0) {
+    return pouch.remote.templates.get(`_local/price_${step}`)
+      .then((remote) => {
+        return pouch.local.templates.get(`_local/price_${step}`)
+          .catch(() => ({}))
+          .then((local) => {
+
+            if(local.remote_rev !== remote._rev) {
+              remote.remote_rev = remote._rev;
+              if(!local._rev) {
+                delete remote._rev;
+              }
+              else {
+                remote._rev = local._rev;
+              }
+              pouch.local.templates.put(remote._clone());
+            }
+
+            this.build_cache_local(remote);
+
+            return this.sync_local(pouch, ++step);
+          })
+      })
+      .catch((err) => {
+        if(step !== 0) {
+          pouch.local.templates.get(`_local/price_${step}`)
+            .then((local) => pouch.local.templates.remove(local))
+            .catch(() => null);
+          return true;
+        }
+      });
+  }
+
+  by_local(step = 0) {
+    const {pouch} = $p.adapters;
+
+    if(!pouch.local.templates) {
+      return Promise.resolve(false);
+    }
+
+    const pre = step === 0 && pouch.local.templates.adapter !== 'http' && pouch.authorized ?
+      pouch.remote.templates.info()
+        .then(() => this.sync_local(pouch))
+        .catch((err) => null)
+      :
+      Promise.resolve();
+
+    return pre.then((loaded) => {
+      if(loaded) {
+        return loaded;
+      }
+      else {
+        return pouch.local.templates.get(`_local/price_${step}`)
+      }
+    })
+      .then((prices) => {
+        if(prices === true) {
+          return prices;
+        }
+        this.build_cache_local(prices);
+        pouch.emit('nom_prices', ++step);
+        return this.by_local(step);
+      })
+      .catch((err) => {
+        return step !== 0;
+      });
+  }
+
+  by_range(startkey, step = 0) {
+
+    const {pouch} = $p.adapters;
+    const {templates, doc} = pouch.local;
+
+    return (templates || doc).query('doc/doc_nom_prices_setup_slice_last',
+      {
+        limit: 600,
+        include_docs: false,
+        startkey: startkey || [''],
+        endkey: ['\ufff0'],
+        reduce: true,
+        group: true,
+      })
+      .then((res) => {
+        this.build_cache(res.rows);
+        pouch.emit('nom_prices', ++step);
+        if (res.rows.length === 600) {
+          return this.by_range(res.rows[res.rows.length - 1].key, step);
+        }
+      })
+      .catch((err) => {
+        $p.record_log(err);
+      });
+  }
+
+  by_doc({goods}) {
+    const keys = goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
+    const {templates, doc} = $p.adapters.pouch.local;
+    return (templates || doc).query("doc/doc_nom_prices_setup_slice_last",
+      {
+        include_docs: false,
+        keys: keys,
+        reduce: true,
+        group: true,
+      })
+      .then((res) => {
+        this.build_cache(res.rows);
+      });
+  }
+
+  nom_price(nom, characteristic, price_type, prm, row) {
+
+    if (row && prm) {
+      const {_owner} = prm.calc_order_row._owner,
+        price_prm = {
+          price_type: price_type,
+          characteristic: characteristic,
+          date: _owner.date,
+          currency: _owner.doc_currency
+        };
+
+      if (price_type == prm.price_type.price_type_first_cost && !prm.price_type.formula.empty()) {
+        price_prm.formula = prm.price_type.formula;
+      }
+      else if(price_type == prm.price_type.price_type_sale && !prm.price_type.sale_formula.empty()){
+        price_prm.formula = prm.price_type.sale_formula;
+      }
+      if(!characteristic.clr.empty()){
+        price_prm.clr = characteristic.clr;
+      }
+      row.price = nom._price(price_prm);
+
+      return row.price;
+    }
+  }
+
+  price_type(prm) {
+
+    const {utils, job_prm, enm, ireg, cat} = $p;
+    const empty_formula = cat.formulas.get();
+    const empty_price_type = cat.nom_prices_types.get();
+
+    prm.price_type = {
+      marginality: 1.9,
+      marginality_min: 1.2,
+      marginality_internal: 1.5,
+      discount: 0,
+      discount_external: 10,
+      extra_charge_external: 0,
+      price_type_first_cost: empty_price_type,
+      price_type_sale: empty_price_type,
+      price_type_internal: empty_price_type,
+      formula: empty_formula,
+      sale_formula: empty_formula,
+      internal_formula: empty_formula,
+      external_formula: empty_formula
+    };
+
+    const {calc_order_row} = prm;
+    const {nom, characteristic} = calc_order_row;
+    const {partner} = calc_order_row._owner._owner;
+    const filter = nom.price_group.empty() ?
+        {price_group: nom.price_group} :
+        {price_group: {in: [nom.price_group, cat.price_groups.get()]}};
+    const ares = [];
+
+
+    ireg.margin_coefficients.find_rows(filter, (row) => {
+
+      let ok = true;
+      if(!row.key.empty()){
+        row.key.params.forEach((row_prm) => {
+
+          const {property} = row_prm;
+          if(property.is_calculated){
+            ok = utils.check_compare(property.calculated_value({calc_order_row}), property.extract_value(row_prm), row_prm.comparison_type, enm.comparison_types);
+          }
+          else if(property.empty()){
+            const vpartner = cat.partners.get(row_prm._obj.value, false, true);
+            if(vpartner && !vpartner.empty()){
+              ok = vpartner == partner;
+            }
+          }
+          else{
+            let finded;
+            characteristic.params.find_rows({
+              cnstr: 0,
+              param: property
+            }, (row_x) => {
+              finded = row_x;
+              return false;
+            });
+            if(finded){
+              ok = utils.check_compare(finded.value, property.extract_value(row_prm), row_prm.comparison_type, enm.comparison_types);
+            }
+            else{
+              ok = false;
+            }
+          }
+          if(!ok){
+            return false;
+          }
+        })
+      }
+      if(ok){
+        ares.push(row);
+      }
+    });
+
+    if(ares.length){
+      ares.sort((a, b) => {
+
+        if ((!a.key.empty() && b.key.empty()) || (a.key.priority > b.key.priority)) {
+          return -1;
+        }
+        if ((a.key.empty() && !b.key.empty()) || (a.key.priority < b.key.priority)) {
+          return 1;
+        }
+
+        if (a.price_group.ref > b.price_group.ref) {
+          return -1;
+        }
+        if (a.price_group.ref < b.price_group.ref) {
+          return 1;
+        }
+
+        return 0;
+      });
+      Object.keys(prm.price_type).forEach((key) => {
+        prm.price_type[key] = ares[0][key];
+      });
+    }
+
+    partner.extra_fields.find_rows({
+      property: job_prm.pricing.dealer_surcharge
+    }, (row) => {
+      const val = parseFloat(row.value);
+      if(val){
+        prm.price_type.extra_charge_external = val;
+      }
+      return false;
+    });
+
+    return prm.price_type;
+  }
+
+  calc_first_cost(prm) {
+
+    const {marginality_in_spec} = $p.job_prm.pricing;
+    const fake_row = {};
+
+    if(!prm.spec)
+      return;
+
+    if(prm.spec.count()){
+      prm.spec.forEach((row) => {
+
+        const {_obj, nom, characteristic} = row;
+
+        this.nom_price(nom, characteristic, prm.price_type.price_type_first_cost, prm, _obj);
+        _obj.amount = _obj.price * _obj.totqty1;
+
+        if(marginality_in_spec){
+          fake_row.nom = nom;
+          const tmp_price = this.nom_price(nom, characteristic, prm.price_type.price_type_sale, prm, fake_row);
+          _obj.amount_marged = tmp_price * _obj.totqty1;
+        }
+
+      });
+      prm.calc_order_row.first_cost = prm.spec.aggregate([], ["amount"]).round(2);
+    }
+    else{
+      fake_row.nom = prm.calc_order_row.nom;
+      fake_row.characteristic = prm.calc_order_row.characteristic;
+      prm.calc_order_row.first_cost = this.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
+    }
+
+    prm.order_rows && prm.order_rows.forEach((value) => {
+      const fake_prm = {
+        spec: value.characteristic.specification,
+        calc_order_row: value
+      }
+      this.price_type(fake_prm);
+      this.calc_first_cost(fake_prm);
+    });
+  }
+
+  calc_amount (prm) {
+
+    const {calc_order_row, price_type} = prm;
+    const {marginality_in_spec} = $p.job_prm.pricing;
+    const price_cost = marginality_in_spec && prm.spec.count() ?
+      prm.spec.aggregate([], ["amount_marged"]) :
+      this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+
+    if(price_cost){
+      calc_order_row.price = price_cost.round(2);
+    }
+    else{
+      calc_order_row.price = marginality_in_spec ? 0 : (calc_order_row.first_cost * price_type.marginality).round(2);
+    }
+
+    calc_order_row.marginality = calc_order_row.first_cost ?
+      calc_order_row.price * ((100 - calc_order_row.discount_percent)/100) / calc_order_row.first_cost : 0;
+
+
+    let extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
+    if(!$p.current_user.partners_uids.length || !extra_charge){
+      extra_charge = price_type.extra_charge_external || 0;
+    }
+
+    calc_order_row.price_internal = (calc_order_row.price *
+      (100 - calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
+
+    !prm.hand_start && calc_order_row.value_change("price", {}, calc_order_row.price, true);
+
+    prm.order_rows && prm.order_rows.forEach((value) => {
+      const fake_prm = {
+        spec: value.characteristic.specification,
+        calc_order_row: value
+      }
+      this.price_type(fake_prm);
+      this.calc_amount(fake_prm);
+    });
+
+  }
+
+  from_currency_to_currency (amount, date, from, to) {
+
+    const {main_currency} = $p.job_prm.pricing;
+
+    if(!to || to.empty()){
+      to = main_currency;
+    }
+    if(!from || from.empty()){
+      from = main_currency;
+    }
+    if(from == to){
+      return amount;
+    }
+    if(!date){
+      date = new Date();
+    }
+    if(!this.cource_sql){
+      this.cource_sql = $p.wsql.alasql.compile("select top 1 * from `ireg_currency_courses` where `currency` = ? and `period` <= ? order by `period` desc");
+    }
+
+    let cfrom = {course: 1, multiplicity: 1},
+      cto = {course: 1, multiplicity: 1};
+    if(from != main_currency){
+      const tmp = this.cource_sql([from.ref, date]);
+      if(tmp.length)
+        cfrom = tmp[0];
+    }
+    if(to != main_currency){
+      const tmp = this.cource_sql([to.ref, date]);
+      if(tmp.length)
+        cto = tmp[0];
+    }
+
+    return (amount * cfrom.course / cfrom.multiplicity) * cto.multiplicity / cto.course;
+  }
+
+  cut_upload () {
+
+    if(!$p.current_user.role_available("СогласованиеРасчетовЗаказов") && !$p.current_user.role_available("ИзменениеТехнологическойНСИ")){
+      $p.msg.show_msg({
+        type: "alert-error",
+        text: $p.msg.error_low_acl,
+        title: $p.msg.error_rights
+      });
+      return true;
+    }
+
+    function upload_acc() {
+      const mgrs = [
+        "cat.users",
+        "cat.individuals",
+        "cat.organizations",
+        "cat.partners",
+        "cat.contracts",
+        "cat.currencies",
+        "cat.nom_prices_types",
+        "cat.price_groups",
+        "cat.cashboxes",
+        "cat.partner_bank_accounts",
+        "cat.organization_bank_accounts",
+        "cat.projects",
+        "cat.stores",
+        "cat.cash_flow_articles",
+        "cat.cost_items",
+        "cat.price_groups",
+        "cat.delivery_areas",
+        "ireg.currency_courses",
+        "ireg.margin_coefficients"
+      ];
+
+      const {pouch} = $p.adapters;
+      pouch.local.ram.replicate.to(pouch.remote.ram, {
+        filter: (doc) => mgrs.indexOf(doc._id.split("|")[0]) != -1
+      })
+        .on('change', (info) => {
+
+        })
+        .on('paused', (err) => {
+
+        })
+        .on('active', () => {
+
+        })
+        .on('denied', (err) => {
+          $p.msg.show_msg(err.reason);
+          $p.record_log(err);
+
+        })
+        .on('complete', (info) => {
+
+          if($p.current_user.role_available("ИзменениеТехнологическойНСИ"))
+            upload_tech();
+
+          else
+            $p.msg.show_msg({
+              type: "alert-info",
+              text: $p.msg.sync_complite,
+              title: $p.msg.sync_title
+            });
+
+        })
+        .on('error', (err) => {
+          $p.msg.show_msg(err.reason);
+          $p.record_log(err);
+
+        });
+    }
+
+    function upload_tech() {
+      const mgrs = [
+        "cat.units",
+        "cat.nom",
+        "cat.nom_groups",
+        "cat.nom_units",
+        "cat.nom_kinds",
+        "cat.elm_visualization",
+        "cat.destinations",
+        "cat.property_values",
+        "cat.property_values_hierarchy",
+        "cat.inserts",
+        "cat.insert_bind",
+        "cat.color_price_groups",
+        "cat.clrs",
+        "cat.furns",
+        "cat.cnns",
+        "cat.production_params",
+        "cat.parameters_keys",
+        "cat.formulas",
+        "cch.properties",
+        "cch.predefined_elmnts"
+
+      ];
+      const {pouch} = $p.adapters;
+      pouch.local.ram.replicate.to(pouch.remote.ram, {
+        filter: (doc) => mgrs.indexOf(doc._id.split("|")[0]) != -1
+      })
+        .on('change', (info) => {
+
+        })
+        .on('paused', (err) => {
+
+        })
+        .on('active', () => {
+
+        })
+        .on('denied', (err) => {
+          $p.msg.show_msg(err.reason);
+          $p.record_log(err);
+
+        })
+        .on('complete', (info) => {
+          $p.msg.show_msg({
+            type: "alert-info",
+            text: $p.msg.sync_complite,
+            title: $p.msg.sync_title
+          });
+
+        })
+        .on('error', (err) => {
+          $p.msg.show_msg(err.reason);
+          $p.record_log(err);
+
+        });
+    }
+
+    if($p.current_user.role_available("СогласованиеРасчетовЗаказов"))
+      upload_acc();
+    else
+      upload_tech();
+
+  }
+
+}
+
+
+$p.pricing = new Pricing($p);
+
+
+class ProductsBuilding {
+
+  constructor(listen) {
+
+    let added_cnn_spec,
+      ox,
+      spec,
+      constructions,
+      coordinates,
+      cnn_elmnts,
+      glass_specification,
+      params;
+
+
+
+    function cnn_row(elm1, elm2) {
+      let res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
+      if(res.length) {
+        return res[0].row;
+      }
+      res = cnn_elmnts.find_rows({elm1: elm2, elm2: elm1});
+      if(res.length) {
+        return res[0].row;
+      }
+      return 0;
+    }
+
+    function cnn_need_add_spec(cnn, elm1, elm2, point) {
+      if(cnn && cnn.cnn_type == $p.enm.cnn_types.xx) {
+        if(!added_cnn_spec.points) {
+          added_cnn_spec.points = [];
+        }
+        for (let p of added_cnn_spec.points) {
+          if(p.is_nearest(point, true)) {
+            return false;
+          }
+        }
+        added_cnn_spec.points.push(point);
+        return true;
+      }
+      else if(!cnn || !elm1 || !elm2 || added_cnn_spec[elm1] == elm2 || added_cnn_spec[elm2] == elm1) {
+        return false;
+      }
+      added_cnn_spec[elm1] = elm2;
+      return true;
+    }
+
+
+    function cnn_add_spec(cnn, elm, len_angl, cnn_other) {
+      if(!cnn) {
+        return;
+      }
+      const sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
+      const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
+
+      cnn_filter_spec(cnn, elm, len_angl).forEach((row_cnn_spec) => {
+
+        const {nom} = row_cnn_spec;
+
+        if(nom instanceof $p.CatInserts) {
+          if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)) {
+            const tmp_len_angl = len_angl._clone();
+            tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
+            nom.calculate_spec({elm, len_angl: tmp_len_angl, ox});
+          }
+          else {
+            nom.calculate_spec({elm, len_angl, ox});
+          }
+        }
+        else {
+
+          const row_spec = new_spec_row({row_base: row_cnn_spec, origin: len_angl.origin || cnn, elm, nom, spec, ox});
+
+          if(nom.is_pieces) {
+            if(!row_cnn_spec.coefficient) {
+              row_spec.qty = row_cnn_spec.quantity;
+            }
+            else {
+              row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
+                .round(nom.rounding_quantity);
+            }
+          }
+          else {
+            row_spec.qty = row_cnn_spec.quantity;
+
+            if(row_cnn_spec.sz || row_cnn_spec.coefficient) {
+              let sz = row_cnn_spec.sz, finded, qty;
+              if(cnn_other) {
+                cnn_other.specification.find_rows({nom}, (row) => {
+                  sz += row.sz;
+                  qty = row.quantity;
+                  return !(finded = true);
+                });
+              }
+              if(!finded) {
+                sz *= 2;
+              }
+              if(!row_spec.qty && finded && len_angl.art1) {
+                row_spec.qty = qty;
+              }
+              row_spec.len = (len_angl.len - sign * sz) * (row_cnn_spec.coefficient || 0.001);
+            }
+          }
+
+          if(!row_cnn_spec.formula.empty()) {
+            const qty = row_cnn_spec.formula.execute({
+              ox,
+              elm,
+              len_angl,
+              cnstr: 0,
+              inset: $p.utils.blank.guid,
+              row_cnn: row_cnn_spec,
+              row_spec: row_spec
+            });
+            if(row_cnn_spec.formula.condition_formula && !qty){
+              row_spec.qty = 0;
+            }
+          }
+          calc_count_area_mass(row_spec, spec, len_angl, row_cnn_spec.angle_calc_method);
+        }
+
+      });
+    }
+
+    function cnn_filter_spec(cnn, elm, len_angl) {
+
+      const res = [];
+      const {angle_hor} = elm;
+      const {art1, art2} = $p.job_prm.nom;
+      const {САртикулом1, САртикулом2} = $p.enm.specification_installation_methods;
+      const {check_params} = ProductsBuilding;
+
+      const {cnn_type, specification, selection_params} = cnn;
+      const {ii, xx, acn} = $p.enm.cnn_types;
+
+      specification.each((row) => {
+        const {nom} = row;
+        if(!nom || nom.empty() || nom == art1 || nom == art2) {
+          return;
+        }
+
+        if((row.for_direct_profile_only > 0 && !elm.is_linear()) ||
+          (row.for_direct_profile_only < 0 && elm.is_linear())) {
+          return;
+        }
+
+        if(cnn_type == ii) {
+          if(row.amin > angle_hor || row.amax < angle_hor || row.sz_min > len_angl.len || row.sz_max < len_angl.len) {
+            return;
+          }
+        }
+        else {
+          if(row.amin > len_angl.angle || row.amax < len_angl.angle) {
+            return;
+          }
+        }
+
+        if((row.set_specification == САртикулом1 && len_angl.art2) || (row.set_specification == САртикулом2 && len_angl.art1)) {
+          return;
+        }
+        if(len_angl.art2 && acn.a.indexOf(cnn_type) != -1 && row.set_specification != САртикулом2 && cnn_type != xx) {
+          return;
+        }
+
+        if(check_params({params: selection_params, row_spec: row, elm, ox})) {
+          res.push(row);
+        }
+
+      });
+
+      return res;
+    }
+
+
+    function furn_spec(contour) {
+
+      if(!contour.parent) {
+        return false;
+      }
+
+      const {furn_cache, furn} = contour;
+      const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
+
+      if(!furn_check_opening_restrictions(contour, furn_cache)) {
+        return;
+      }
+
+      contour.update_handle_height(furn_cache);
+
+      const blank_clr = $p.cat.clrs.get();
+      furn.furn_set.get_spec(contour, furn_cache).each((row) => {
+        const elm = {elm: -contour.cnstr, clr: blank_clr};
+        const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, spec, ox});
+
+        if(row.is_procedure_row) {
+          row_spec.elm = row.handle_height_min;
+          row_spec.len = row.coefficient / 1000;
+          row_spec.qty = 0;
+          row_spec.totqty = 1;
+          row_spec.totqty1 = 1;
+        }
+        else {
+          row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
+          calc_count_area_mass(row_spec, spec);
+        }
+      });
+    }
+
+    function furn_check_opening_restrictions(contour, cache) {
+
+      let ok = true;
+      const {new_spec_row} = ProductsBuilding;
+      const {side_count, furn, direction} = contour;
+
+      if(furn.open_type !== $p.enm.open_types.Глухое && furn.side_count && side_count !== furn.side_count) {
+        const row_base = {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error};
+        contour.profiles.forEach(elm => {
+          new_spec_row({elm, row_base, origin: furn, spec, ox});
+        });
+        return ok = false;
+      }
+
+      furn.open_tunes.each((row) => {
+        const elm = contour.profile_by_furn_side(row.side, cache);
+        const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
+        const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
+        const len = elm._row.len - prev.nom.sizefurn - next.nom.sizefurn;
+
+        const angle = direction == $p.enm.open_directions.Правое ?
+          elm.generatrix.angle_to(prev.generatrix, elm.e) :
+          prev.generatrix.angle_to(elm.generatrix, elm.b);
+
+        const {lmin, lmax, amin, amax} = row;
+        if(len < lmin || len > lmax || angle < amin || (angle > amax && amax > 0) || (!elm.is_linear() && !row.arc_available)) {
+          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: furn, spec, ox});
+          ok = false;
+        }
+      });
+
+      return ok;
+    }
+
+
+    function cnn_spec_nearest(elm) {
+      const nearest = elm.nearest();
+      if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm._attr._nearest_cnn) {
+        cnn_add_spec(elm._attr._nearest_cnn, elm, {
+          angle: 0,
+          alp1: 0,
+          alp2: 0,
+          len: elm._attr._len,
+          origin: cnn_row(elm.elm, nearest.elm)
+        });
+      }
+    }
+
+    function base_spec_profile(elm) {
+
+      const {_row, rays} = elm;
+
+      if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
+        return;
+      }
+
+      const {b, e} = rays;
+
+      if(!b.cnn || !e.cnn) {
+        return;
+      }
+      b.check_err();
+      e.check_err();
+
+      const prev = b.profile;
+      const next = e.profile;
+      const row_cnn_prev = b.cnn && b.cnn.main_row(elm);
+      const row_cnn_next = e.cnn && e.cnn.main_row(elm);
+      const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
+
+      let row_spec;
+
+      const row_cnn = row_cnn_prev || row_cnn_next;
+      if(row_cnn) {
+
+        row_spec = new_spec_row({elm, row_base: row_cnn, nom: _row.nom, origin: cnn_row(_row.elm, prev ? prev.elm : 0), spec, ox});
+        row_spec.qty = row_cnn.quantity;
+
+        const seam = $p.enm.angle_calculating_ways.СварнойШов;
+        const d45 = Math.sin(Math.PI / 4);
+        const dprev = row_cnn_prev ? (
+          row_cnn_prev.angle_calc_method == seam && _row.alp1 > 0 ? row_cnn_prev.sz * d45 / Math.sin(_row.alp1 / 180 * Math.PI) : row_cnn_prev.sz
+        ) : 0;
+        const dnext = row_cnn_next ? (
+          row_cnn_next.angle_calc_method == seam && _row.alp2 > 0 ? row_cnn_next.sz * d45 / Math.sin(_row.alp2 / 180 * Math.PI) : row_cnn_next.sz
+        ) : 0;
+
+        row_spec.len = (_row.len - dprev - dnext)
+          * ((row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
+
+        elm._attr._len = _row.len;
+        _row.len = (_row.len
+          - (!row_cnn_prev || row_cnn_prev.angle_calc_method == seam ? 0 : row_cnn_prev.sz)
+          - (!row_cnn_next || row_cnn_next.angle_calc_method == seam ? 0 : row_cnn_next.sz))
+          * 1000 * ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
+
+        if(!elm.is_linear()) {
+          row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
+        }
+
+        if(row_cnn_prev && !row_cnn_prev.formula.empty()) {
+          row_cnn_prev.formula.execute({
+            ox: ox,
+            elm: elm,
+            cnstr: 0,
+            inset: $p.utils.blank.guid,
+            row_cnn: row_cnn_prev,
+            row_spec: row_spec
+          });
+        }
+        else if(row_cnn_next && !row_cnn_next.formula.empty()) {
+          row_cnn_next.formula.execute({
+            ox: ox,
+            elm: elm,
+            cnstr: 0,
+            inset: $p.utils.blank.guid,
+            row_cnn: row_cnn_next,
+            row_spec: row_spec
+          });
+        }
+
+        const angle_calc_method_prev = row_cnn_prev ? row_cnn_prev.angle_calc_method : null;
+        const angle_calc_method_next = row_cnn_next ? row_cnn_next.angle_calc_method : null;
+        const {СоединениеПополам, Соединение} = $p.enm.angle_calculating_ways;
+        calc_count_area_mass(
+          row_spec,
+          spec,
+          _row,
+          angle_calc_method_prev,
+          angle_calc_method_next,
+          angle_calc_method_prev == СоединениеПополам || angle_calc_method_prev == Соединение ? prev.generatrix.angle_to(elm.generatrix, b.point) : 0,
+          angle_calc_method_next == СоединениеПополам || angle_calc_method_next == Соединение ? elm.generatrix.angle_to(next.generatrix, e.point) : 0
+        );
+      }
+
+      const len_angl = {
+        angle: 0,
+        alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
+        alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
+        len: row_spec ? row_spec.len * 1000 : _row.len,
+        art1: false,
+        art2: true
+      };
+      if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0, b.point)) {
+
+
+        len_angl.angle = len_angl.alp2;
+
+        if(b.cnn.cnn_type == $p.enm.cnn_types.t || b.cnn.cnn_type == $p.enm.cnn_types.i || b.cnn.cnn_type == $p.enm.cnn_types.xx) {
+          if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm, e.point)) {
+            cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
+          }
+        }
+        else {
+          cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
+        }
+
+        len_angl.angle = len_angl.alp1;
+        len_angl.art2 = false;
+        len_angl.art1 = true;
+        cnn_add_spec(b.cnn, elm, len_angl, e.cnn);
+      }
+
+      elm.inset.calculate_spec({elm, ox});
+
+      cnn_spec_nearest(elm);
+
+      elm.addls.forEach(base_spec_profile);
+
+      ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
+
+        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
+          $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
+        }
+
+        len_angl.origin = inset;
+        len_angl.angle = elm.angle_hor;
+        len_angl.cnstr = elm.layer.cnstr;
+        delete len_angl.art1;
+        delete len_angl.art2;
+        inset.calculate_spec({elm, len_angl, ox});
+
+      });
+
+    }
+
+    function base_spec_sectional(elm) {
+
+      const {_row, _attr, inset, layer} = elm;
+
+      if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
+        return;
+      }
+
+      const spec_tmp = spec;
+
+      inset.calculate_spec({elm, ox});
+
+      ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
+
+        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
+          const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(layer));
+          ox._order_rows.push(cx);
+          spec = cx.specification.clear();
+        }
+
+        const len_angl = {
+          angle: 0,
+          alp1: 0,
+          alp2: 0,
+          len: 0,
+          origin: inset,
+          cnstr: layer.cnstr
+        };
+        inset.calculate_spec({elm, len_angl, ox, spec});
+
+      });
+
+      spec = spec_tmp;
+
+    }
+
+    function base_spec_glass(elm) {
+
+      const {profiles, imposts, _row} = elm;
+
+      if(_row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
+        return;
+      }
+
+      const glength = profiles.length;
+
+      for (let i = 0; i < glength; i++) {
+        const curr = profiles[i];
+
+        if(curr.profile && curr.profile._row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
+          return;
+        }
+
+        const prev = (i == 0 ? profiles[glength - 1] : profiles[i - 1]).profile;
+        const next = (i == glength - 1 ? profiles[0] : profiles[i + 1]).profile;
+        const row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});
+
+        const len_angl = {
+          angle: 0,
+          alp1: prev.generatrix.angle_to(curr.profile.generatrix, curr.b, true),
+          alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
+          len: row_cnn.length ? row_cnn[0].aperture_len : 0,
+          origin: cnn_row(_row.elm, curr.profile.elm)
+
+        };
+
+        (len_angl.len > 3) && cnn_add_spec(curr.cnn, curr.profile, len_angl);
+
+      }
+
+      elm.inset.calculate_spec({elm, ox});
+
+      imposts.forEach(base_spec_profile);
+
+      ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
+        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
+          $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
+        }
+        inset.calculate_spec({elm, ox, clr});
+      });
+    }
+
+
+    function inset_contour_spec(contour) {
+
+      const spec_tmp = spec;
+
+      ox.inserts.find_rows({cnstr: contour.cnstr}, ({inset, clr}) => {
+
+        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
+          const cx = Object.assign(ox.find_create_cx(-contour.cnstr, inset.ref), inset.contour_attrs(contour));
+          ox._order_rows.push(cx);
+          spec = cx.specification.clear();
+        }
+
+        const elm = {
+          _row: {},
+          elm: 0,
+          clr: clr,
+          layer: contour,
+        };
+        const len_angl = {
+          angle: 0,
+          alp1: 0,
+          alp2: 0,
+          len: 0,
+          origin: inset,
+          cnstr: contour.cnstr
+        };
+        inset.calculate_spec({elm, len_angl, ox, spec});
+
+      });
+
+      spec = spec_tmp;
+    }
+
+    function base_spec(scheme) {
+
+      const {Contour, Filling, Sectional, Profile, ProfileConnective} = $p.Editor;
+
+      added_cnn_spec = {};
+
+      for (const contour of scheme.getItems({class: Contour})) {
+
+        for (const elm of contour.children) {
+          elm instanceof Profile && base_spec_profile(elm);
+        }
+
+        for (const elm of contour.children) {
+          if(elm instanceof Filling) {
+            base_spec_glass(elm);
+          }
+          else if(elm instanceof Sectional) {
+            base_spec_sectional(elm);
+          }
+        }
+
+        furn_spec(contour);
+
+        inset_contour_spec(contour);
+
+      }
+
+      for (const elm of scheme.l_connective.children) {
+        if(elm instanceof ProfileConnective) {
+          base_spec_profile(elm);
+        }
+      }
+
+      inset_contour_spec({
+        cnstr: 0,
+        project: scheme,
+        get perimeter() {
+          return this.project.perimeter;
+        }
+      });
+
+    }
+
+    this.recalc = function (scheme, attr) {
+
+
+
+      ox = scheme.ox;
+      spec = ox.specification;
+      constructions = ox.constructions;
+      coordinates = ox.coordinates;
+      cnn_elmnts = ox.cnn_elmnts;
+      glass_specification = ox.glass_specification;
+      params = ox.params;
+
+      spec.clear();
+
+      ox._order_rows = [];
+
+      base_spec(scheme);
+
+      spec.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+
+
+
+      scheme.draw_visualization();
+      scheme.notify(scheme, 'coordinates_calculated', attr);
+
+
+      if(ox.calc_order_row) {
+        $p.spec_building.specification_adjustment({
+          scheme: scheme,
+          calc_order_row: ox.calc_order_row,
+          spec: spec,
+          save: attr.save,
+        }, true);
+      }
+
+      if(attr.snapshot) {
+        scheme.notify(scheme, 'scheme_snapshot', attr);
+      }
+
+      if(attr.save) {
+
+
+        if(attr.svg !== false) {
+          ox.svg = scheme.get_svg();
+        }
+
+        ox.save().then(() => {
+          attr.svg !== false && $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
+          delete scheme._attr._saving;
+          ox.calc_order.characteristic_saved(scheme, attr);
+          scheme._scope && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
+
+        })
+          .then(() => {
+            if(scheme._scope || attr.close) {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => ox.calc_order._modified && ox.calc_order.save()
+                  .then(resolve)
+                  .catch(reject), 1000);
+              });
+            }
+          })
+          .catch((err) => {
+
+
+            delete scheme._attr._saving;
+
+            if(err.msg && err.msg._shown) {
+              return;
+            }
+
+            let text = err.message || err;
+            if(ox._data && ox._data._err) {
+              if(typeof ox._data._err === 'object') {
+                $p.md.emit('alert', Object.assign({obj: ox}, ox._data._err));
+                delete ox._data._err;
+                return;
+              }
+              text += `\n${ox._data._err}`;
+              delete ox._data._err;
+            }
+
+            $p.md.emit('alert', {type: 'alert-error', obj: ox, text});
+
+          });
+      }
+      else {
+        delete scheme._attr._saving;
+      }
+
+      ox._data._loading = false;
+
+    };
+
+  }
+
+  static check_params({params, row_spec, elm, cnstr, origin, ox}) {
+
+    let ok = true;
+
+    params.find_rows({elm: row_spec.elm}, (prm_row) => {
+      ok = prm_row.param.check_condition({row_spec, prm_row, elm, cnstr, origin, ox});
+      if(!ok) {
+        return false;
+      }
+    });
+
+    return ok;
+  }
+
+  static new_spec_row({row_spec, elm, row_base, nom, origin, spec, ox}) {
+    if(!row_spec) {
+      row_spec = spec.add();
+    }
+    row_spec.nom = nom || row_base.nom;
+    if(!row_spec.nom.visualization.empty()) {
+      row_spec.dop = -1;
+    }
+    else if(row_spec.nom.is_procedure) {
+      row_spec.dop = -2;
+    }
+    row_spec.characteristic = row_base.nom_characteristic;
+    if(!row_spec.characteristic.empty() && row_spec.characteristic.owner != row_spec.nom) {
+      row_spec.characteristic = $p.utils.blank.guid;
+    }
+    row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr, elm, spec);
+    row_spec.elm = elm.elm;
+    if(origin) {
+      row_spec.origin = origin;
+    }
+    return row_spec;
+  }
+
+  static calc_qty_len(row_spec, row_base, len) {
+
+    const {nom} = row_spec;
+
+    if(nom.cutting_optimization_type == $p.enm.cutting_optimization_types.Нет ||
+      nom.cutting_optimization_type.empty() || nom.is_pieces) {
+      if(!row_base.coefficient || !len) {
+        row_spec.qty = row_base.quantity;
+      }
+      else {
+        if(!nom.is_pieces) {
+          row_spec.qty = row_base.quantity;
+          row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
+          if(nom.rounding_quantity) {
+            row_spec.qty = (row_spec.qty * row_spec.len).round(nom.rounding_quantity);
+            row_spec.len = 0;
+          }
+          ;
+        }
+        else if(!nom.rounding_quantity) {
+          row_spec.qty = Math.round((len - row_base.sz) * row_base.coefficient * row_base.quantity - 0.5);
+        }
+        else {
+          row_spec.qty = ((len - row_base.sz) * row_base.coefficient * row_base.quantity).round(nom.rounding_quantity);
+        }
+      }
+    }
+    else {
+      row_spec.qty = row_base.quantity;
+      row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
+    }
+  }
+
+  static calc_count_area_mass(row_spec, spec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2) {
+
+    if(!row_spec.qty) {
+      if(row_spec.dop >= 0) {
+        spec.del(row_spec.row - 1, true);
+      }
+      return;
+    }
+
+    if(row_spec.totqty1 && row_spec.totqty) {
+      return;
+    }
+
+    if(!angle_calc_method_next) {
+      angle_calc_method_next = angle_calc_method_prev;
+    }
+
+    if(angle_calc_method_prev && !row_spec.nom.is_pieces) {
+
+      const {Основной, СварнойШов, СоединениеПополам, Соединение, _90} = $p.enm.angle_calculating_ways;
+
+      if((angle_calc_method_prev == Основной) || (angle_calc_method_prev == СварнойШов)) {
+        row_spec.alp1 = row_coord.alp1;
+      }
+      else if(angle_calc_method_prev == _90) {
+        row_spec.alp1 = 90;
+      }
+      else if(angle_calc_method_prev == СоединениеПополам) {
+        row_spec.alp1 = (alp1 || row_coord.alp1) / 2;
+      }
+      else if(angle_calc_method_prev == Соединение) {
+        row_spec.alp1 = (alp1 || row_coord.alp1);
+      }
+
+      if((angle_calc_method_next == Основной) || (angle_calc_method_next == СварнойШов)) {
+        row_spec.alp2 = row_coord.alp2;
+      }
+      else if(angle_calc_method_next == _90) {
+        row_spec.alp2 = 90;
+      }
+      else if(angle_calc_method_next == СоединениеПополам) {
+        row_spec.alp2 = (alp2 || row_coord.alp2) / 2;
+      }
+      else if(angle_calc_method_next == Соединение) {
+        row_spec.alp2 = (alp2 || row_coord.alp2);
+      }
+    }
+
+    if(row_spec.len) {
+      if(row_spec.width && !row_spec.s) {
+        row_spec.s = row_spec.len * row_spec.width;
+      }
+    }
+    else {
+      row_spec.s = 0;
+    }
+
+    if(row_spec.s) {
+      row_spec.totqty = row_spec.qty * row_spec.s;
+    }
+    else if(row_spec.len) {
+      row_spec.totqty = row_spec.qty * row_spec.len;
+    }
+    else {
+      row_spec.totqty = row_spec.qty;
+    }
+
+    row_spec.totqty1 = row_spec.totqty * row_spec.nom.loss_factor;
+
+    ['len', 'width', 's', 'qty', 'alp1', 'alp2'].forEach((fld) => row_spec[fld] = row_spec[fld].round(4));
+    ['totqty', 'totqty1'].forEach((fld) => row_spec[fld] = row_spec[fld].round(6));
+  }
+
+}
+
+if(typeof global !== 'undefined'){
+  global.ProductsBuilding = ProductsBuilding;
+}
+$p.ProductsBuilding = ProductsBuilding;
+$p.products_building = new ProductsBuilding(true);
+
+
+class SpecBuilding {
+
+  constructor($p) {
+
+  }
+
+  calc_row_spec (prm, cancel) {
+
+  }
+
+  specification_adjustment (attr, with_price) {
+
+    const {scheme, calc_order_row, spec, save} = attr;
+    const calc_order = calc_order_row._owner._owner;
+    const order_rows = new Map();
+    const adel = [];
+    const ox = calc_order_row.characteristic;
+    const nom = ox.empty() ? calc_order_row.nom : (calc_order_row.nom = ox.owner);
+
+    $p.pricing.price_type(attr);
+
+    spec.find_rows({ch: {in: [-1, -2]}}, (row) => adel.push(row));
+    adel.forEach((row) => spec.del(row, true));
+
+    $p.cat.insert_bind.insets(ox).forEach(({inset, elm_type}) => {
+
+      const elm = {
+        _row: {},
+        elm: 0,
+        get perimeter() {return scheme ? scheme.perimeter : []},
+        clr: ox.clr,
+        project: scheme,
+      };
+      const len_angl = {
+        angle: 0,
+        alp1: 0,
+        alp2: 0,
+        len: 0,
+        cnstr: 0,
+        origin: inset,
+      };
+      inset.calculate_spec({elm, len_angl, ox, spec});
+
+    });
+
+    if(!ox.empty()){
+      adel.length = 0;
+      calc_order.production.forEach((row) => {
+        if (row.ordn === ox){
+          if (ox._order_rows.indexOf(row.characteristic) === -1){
+            adel.push(row);
+          }
+          else {
+            order_rows.set(row.characteristic, row);
+          }
+        }
+      });
+      adel.forEach((row) => calc_order.production.del(row.row-1));
+    }
+
+    const ax = [];
+
+    ox._order_rows && ox._order_rows.forEach((cx) => {
+      const row = order_rows.get(cx) || calc_order.production.add({characteristic: cx});
+      row.nom = cx.owner;
+      row.unit = row.nom.storage_unit;
+      row.ordn = ox;
+      row.len = cx.x;
+      row.width = cx.y;
+      row.s = cx.s;
+      row.qty = calc_order_row.qty;
+      row.quantity = calc_order_row.quantity;
+
+      save && ax.push(cx.save());
+      order_rows.set(cx, row);
+    });
+    if(order_rows.size){
+      attr.order_rows = order_rows;
+    }
+
+    if(with_price){
+      $p.pricing.calc_first_cost(attr);
+
+      $p.pricing.calc_amount(attr);
+    }
+
+    if(save && !attr.scheme && (ox.is_new() || ox._modified)){
+      ax.push(ox.save());
+    }
+
+    return ax;
+  }
+
+}
+
+$p.spec_building = new SpecBuilding($p);
+
+
+(function ({prototype}) {
+  const {value_mgr} = prototype;
+  prototype.value_mgr = function(row, f, mf, array_enabled, v) {
+		const tmp = value_mgr.call(this, row, f, mf, array_enabled, v);
+		if(tmp){
+      return tmp;
+    }
+		if(f == 'trans'){
+      return $p.doc.calc_order;
+    }
+		else if(f == 'partner'){
+      return $p.cat.partners;
+    }
+	}
+})($p.classes.DataManager);
+
+
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
 
@@ -3752,16 +5289,15 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     let res = Promise.resolve();
     const ax = [];
 
-    for (let i = 0; i < dp.production.count(); i++) {
-      const row_spec = dp.production.get(i);
+    dp.production.forEach((row_dp) => {
       let row_prod;
 
-      if(row_spec.inset.empty()) {
-        row_prod = this.production.add(row_spec);
+      if(row_dp.inset.empty()) {
+        row_prod = this.production.add(row_dp);
         row_prod.unit = row_prod.nom.storage_unit;
-        if(!row_spec.clr.empty()) {
-          $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
-            if(ox.clr == row_spec.clr) {
+        if(!row_dp.clr.empty()) {
+          $p.cat.characteristics.find_rows({owner: row_dp.nom}, (ox) => {
+            if(ox.clr == row_dp.clr) {
               row_prod.characteristic = ox;
               return false;
             }
@@ -3770,13 +5306,14 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         res = res.then(() => row_prod);
       }
       else {
-        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
-        const elm = new $p.DocCalc_order.FakeElm(row_spec);
+        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_dp);
+        const elm = new $p.DocCalc_order.FakeElm(row_dp);
         res = res
-          .then(() => this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true}))
+          .then(() => this.create_product_row({row_spec: row_dp, elm, len_angl, params: dp.product_params, create: true}))
           .then((row_prod) => {
-            row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+            row_dp.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
             row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+            row_dp.characteristic = row_prod.characteristic;
             return row_prod;
           });
       }
@@ -3789,8 +5326,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         }, true))
           .then((tx) => [].push.apply(ax, tx));
       });
-
-    }
+    });
 
     return res.then(() => ax);
   }
@@ -5751,1541 +7287,236 @@ $p.DocSelling.prototype.before_save = function () {
 
 
 
-class Pricing {
+(function(_mgr){
 
-  constructor({md, adapters}) {
+	const acn = {
+    ii: [_mgr.Наложение],
+    i: [_mgr.НезамкнутыйКонтур],
+    a: [
+      _mgr.УгловоеДиагональное,
+      _mgr.УгловоеКВертикальной,
+      _mgr.УгловоеКГоризонтальной,
+      _mgr.КрестВСтык],
+    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
+	};
 
-    md.once('predefined_elmnts_inited', () => {
-      const {pouch} = adapters;
-      if(pouch.local.templates || pouch.props.user_node) {
-        this.load_prices();
+
+	Object.defineProperties(_mgr, {
+	  ad: {
+	    get() {
+        return this.УгловоеДиагональное;
       }
-      else {
-        pouch.once('on_log_in', () => this.load_prices());
+    },
+    av: {
+      get() {
+        return this.УгловоеКВертикальной;
       }
-    });
+    },
+    ah: {
+      get() {
+        return this.УгловоеКГоризонтальной;
+      }
+    },
+    t: {
+      get() {
+        return this.ТОбразное;
+      }
+    },
+    ii: {
+      get() {
+        return this.Наложение;
+      }
+    },
+    i: {
+      get() {
+        return this.НезамкнутыйКонтур;
+      }
+    },
+    xt: {
+      get() {
+        return this.КрестПересечение;
+      }
+    },
+    xx: {
+      get() {
+        return this.КрестВСтык;
+      }
+    },
 
-  }
+    acn: {
+      value: acn
+    },
 
-  load_prices() {
+  });
 
-    return this.by_local()
-      .then((loc) => {
-        return !loc && this.by_range();
-      })
-      .then(() => {
-        const {adapters: {pouch}, doc: {calc_order}, wsql} = $p;
-        pouch.emit('pouch_complete_loaded');
+})($p.enm.cnn_types);
 
-        if(pouch.local.doc === pouch.remote.doc) {
-          pouch.local.doc.changes({
-            since: 'now',
-            live: true,
-            include_docs: true,
-            selector: {class_name: {$in: ['doc.nom_prices_setup', calc_order.class_name]}}
-          }).on('change', (change) => {
-            if(change.doc.class_name == 'doc.nom_prices_setup'){
-              setTimeout(() => this.by_doc(change.doc), 500);
-            }
-            else if(change.doc.class_name == calc_order.class_name){
-              if(pouch.props.user_node) {
-               return calc_order.emit('change', change.doc);
-              }
-              const doc = calc_order.by_ref[change.id.substr(15)];
-              const user = pouch.authorized || wsql.get_user_param('user_name');
-              if(!doc || user === change.doc.timestamp.user){
-                return;
-              }
-              pouch.load_changes({docs: [change.doc], update_only: true});
-            }
-          });
+
+(function(_mgr){
+
+	const cache = {};
+
+	_mgr.__define({
+
+		profiles: {
+			get(){
+				return cache.profiles
+					|| ( cache.profiles = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп] );
+			}
+		},
+
+		profile_items: {
+			get(){
+				return cache.profile_items
+					|| ( cache.profile_items = [
+						_mgr.Рама,
+						_mgr.Створка,
+						_mgr.Импост,
+						_mgr.Штульп,
+						_mgr.Добор,
+						_mgr.Соединитель,
+						_mgr.Раскладка
+					] );
+			}
+		},
+
+		rama_impost: {
+			get(){
+				return cache.rama_impost
+					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
+			}
+		},
+
+		impost_lay: {
+			get(){
+				return cache.impost_lay
+					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
+			}
+		},
+
+		stvs: {
+			get(){
+				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
+			}
+		},
+
+		glasses: {
+			get(){
+				return cache.glasses
+					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
+			}
+		}
+
+	});
+
+
+})($p.enm.elm_types);
+
+
+
+(function(_mgr){
+
+  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
+
+
+})($p.enm.inserts_types);
+
+
+
+(function({enm}){
+
+  enm.debit_credit_kinds.__define({
+    debit: {
+      get() {
+        return this.Приход;
+      }
+    },
+    credit: {
+      get() {
+        return this.Расход;
+      }
+    },
+  });
+
+	enm.open_types.__define({
+
+    is_opening: {
+      value(v) {
+        if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное) {
+          return false;
         }
-      });
-  }
-
-  build_cache(rows) {
-    const {nom, currencies} = $p.cat;
-    const note = 'Индекс цен номенклатуры';
-    for(const {key, value} of rows){
-      if(!Array.isArray(value)){
-        return setTimeout(() => $p.iface.do_reload('', note), 1000);
-      }
-      const onom = nom.get(key[0], false, true);
-      if (!onom || !onom._data){
-        $p.record_log({
-          class: 'error',
-          note,
-          obj: {nom: key[0], value}
-        });
-        continue;
-      }
-      if (!onom._data._price){
-        onom._data._price = {};
-      }
-      const {_price} = onom._data;
-
-      if (!_price[key[1]]){
-        _price[key[1]] = {};
-      }
-      _price[key[1]][key[2]] = value.map((v) => ({
-        date: new Date(v.date),
-        currency: currencies.get(v.currency),
-        price: v.price
-      }));
-    }
-  }
-
-  build_cache_local(prices) {
-
-    const {nom, currencies} = $p.cat;
-    const note = 'Индекс цен номенклатуры';
-    const date = new Date('2010-01-01');
-
-    for(const ref in prices) {
-      if(ref[0] === '_' || ref === 'remote_rev') {
-        continue;
-      }
-      const onom = nom.get(ref, false, true);
-      const value = prices[ref];
-
-      if (!onom || !onom._data){
-        $p.record_log({
-          class: 'error',
-          note,
-          obj: {nom: ref, value}
-        });
-        continue;
-      }
-      onom._data._price = value;
-
-      for(const cref in value){
-        for(const pref in value[cref]) {
-          const price = value[cref][pref][0];
-          price.date = date;
-          price.currency = currencies.get(price.currency);
-        }
-      }
-    }
-  }
-
-  sync_local(pouch, step = 0) {
-    return pouch.remote.templates.get(`_local/price_${step}`)
-      .then((remote) => {
-        return pouch.local.templates.get(`_local/price_${step}`)
-          .catch(() => ({}))
-          .then((local) => {
-
-            if(local.remote_rev !== remote._rev) {
-              remote.remote_rev = remote._rev;
-              if(!local._rev) {
-                delete remote._rev;
-              }
-              else {
-                remote._rev = local._rev;
-              }
-              pouch.local.templates.put(remote._clone());
-            }
-
-            this.build_cache_local(remote);
-
-            return this.sync_local(pouch, ++step);
-          })
-      })
-      .catch((err) => {
-        if(step !== 0) {
-          pouch.local.templates.get(`_local/price_${step}`)
-            .then((local) => pouch.local.templates.remove(local))
-            .catch(() => null);
-          return true;
-        }
-      });
-  }
-
-  by_local(step = 0) {
-    const {pouch} = $p.adapters;
-
-    if(!pouch.local.templates) {
-      return Promise.resolve(false);
-    }
-
-    const pre = step === 0 && pouch.local.templates.adapter !== 'http' && pouch.authorized ?
-      pouch.remote.templates.info()
-        .then(() => this.sync_local(pouch))
-        .catch((err) => null)
-      :
-      Promise.resolve();
-
-    return pre.then((loaded) => {
-      if(loaded) {
-        return loaded;
-      }
-      else {
-        return pouch.local.templates.get(`_local/price_${step}`)
-      }
-    })
-      .then((prices) => {
-        if(prices === true) {
-          return prices;
-        }
-        this.build_cache_local(prices);
-        pouch.emit('nom_prices', ++step);
-        return this.by_local(step);
-      })
-      .catch((err) => {
-        return step !== 0;
-      });
-  }
-
-  by_range(startkey, step = 0) {
-
-    const {pouch} = $p.adapters;
-    const {templates, doc} = pouch.local;
-
-    return (templates || doc).query('doc/doc_nom_prices_setup_slice_last',
-      {
-        limit: 600,
-        include_docs: false,
-        startkey: startkey || [''],
-        endkey: ['\ufff0'],
-        reduce: true,
-        group: true,
-      })
-      .then((res) => {
-        this.build_cache(res.rows);
-        pouch.emit('nom_prices', ++step);
-        if (res.rows.length === 600) {
-          return this.by_range(res.rows[res.rows.length - 1].key, step);
-        }
-      })
-      .catch((err) => {
-        $p.record_log(err);
-      });
-  }
-
-  by_doc({goods}) {
-    const keys = goods.map(({nom, nom_characteristic, price_type}) => [nom, nom_characteristic, price_type]);
-    const {templates, doc} = $p.adapters.pouch.local;
-    return (templates || doc).query("doc/doc_nom_prices_setup_slice_last",
-      {
-        include_docs: false,
-        keys: keys,
-        reduce: true,
-        group: true,
-      })
-      .then((res) => {
-        this.build_cache(res.rows);
-      });
-  }
-
-  nom_price(nom, characteristic, price_type, prm, row) {
-
-    if (row && prm) {
-      const {_owner} = prm.calc_order_row._owner,
-        price_prm = {
-          price_type: price_type,
-          characteristic: characteristic,
-          date: _owner.date,
-          currency: _owner.doc_currency
-        };
-
-      if (price_type == prm.price_type.price_type_first_cost && !prm.price_type.formula.empty()) {
-        price_prm.formula = prm.price_type.formula;
-      }
-      else if(price_type == prm.price_type.price_type_sale && !prm.price_type.sale_formula.empty()){
-        price_prm.formula = prm.price_type.sale_formula;
-      }
-      if(!characteristic.clr.empty()){
-        price_prm.clr = characteristic.clr;
-      }
-      row.price = nom._price(price_prm);
-
-      return row.price;
-    }
-  }
-
-  price_type(prm) {
-
-    const {utils, job_prm, enm, ireg, cat} = $p;
-    const empty_formula = cat.formulas.get();
-    const empty_price_type = cat.nom_prices_types.get();
-
-    prm.price_type = {
-      marginality: 1.9,
-      marginality_min: 1.2,
-      marginality_internal: 1.5,
-      discount: 0,
-      discount_external: 10,
-      extra_charge_external: 0,
-      price_type_first_cost: empty_price_type,
-      price_type_sale: empty_price_type,
-      price_type_internal: empty_price_type,
-      formula: empty_formula,
-      sale_formula: empty_formula,
-      internal_formula: empty_formula,
-      external_formula: empty_formula
-    };
-
-    const {calc_order_row} = prm;
-    const {nom, characteristic} = calc_order_row;
-    const {partner} = calc_order_row._owner._owner;
-    const filter = nom.price_group.empty() ?
-        {price_group: nom.price_group} :
-        {price_group: {in: [nom.price_group, cat.price_groups.get()]}};
-    const ares = [];
-
-
-    ireg.margin_coefficients.find_rows(filter, (row) => {
-
-      let ok = true;
-      if(!row.key.empty()){
-        row.key.params.forEach((row_prm) => {
-
-          const {property} = row_prm;
-          if(property.is_calculated){
-            ok = utils.check_compare(property.calculated_value({calc_order_row}), property.extract_value(row_prm), row_prm.comparison_type, enm.comparison_types);
-          }
-          else if(property.empty()){
-            const vpartner = cat.partners.get(row_prm._obj.value, false, true);
-            if(vpartner && !vpartner.empty()){
-              ok = vpartner == partner;
-            }
-          }
-          else{
-            let finded;
-            characteristic.params.find_rows({
-              cnstr: 0,
-              param: property
-            }, (row_x) => {
-              finded = row_x;
-              return false;
-            });
-            if(finded){
-              ok = utils.check_compare(finded.value, property.extract_value(row_prm), row_prm.comparison_type, enm.comparison_types);
-            }
-            else{
-              ok = false;
-            }
-          }
-          if(!ok){
-            return false;
-          }
-        })
-      }
-      if(ok){
-        ares.push(row);
-      }
-    });
-
-    if(ares.length){
-      ares.sort((a, b) => {
-
-        if ((!a.key.empty() && b.key.empty()) || (a.key.priority > b.key.priority)) {
-          return -1;
-        }
-        if ((a.key.empty() && !b.key.empty()) || (a.key.priority < b.key.priority)) {
-          return 1;
-        }
-
-        if (a.price_group.ref > b.price_group.ref) {
-          return -1;
-        }
-        if (a.price_group.ref < b.price_group.ref) {
-          return 1;
-        }
-
-        return 0;
-      });
-      Object.keys(prm.price_type).forEach((key) => {
-        prm.price_type[key] = ares[0][key];
-      });
-    }
-
-    partner.extra_fields.find_rows({
-      property: job_prm.pricing.dealer_surcharge
-    }, (row) => {
-      const val = parseFloat(row.value);
-      if(val){
-        prm.price_type.extra_charge_external = val;
-      }
-      return false;
-    });
-
-    return prm.price_type;
-  }
-
-  calc_first_cost(prm) {
-
-    const {marginality_in_spec} = $p.job_prm.pricing;
-    const fake_row = {};
-
-    if(!prm.spec)
-      return;
-
-    if(prm.spec.count()){
-      prm.spec.forEach((row) => {
-
-        const {_obj, nom, characteristic} = row;
-
-        this.nom_price(nom, characteristic, prm.price_type.price_type_first_cost, prm, _obj);
-        _obj.amount = _obj.price * _obj.totqty1;
-
-        if(marginality_in_spec){
-          fake_row.nom = nom;
-          const tmp_price = this.nom_price(nom, characteristic, prm.price_type.price_type_sale, prm, fake_row);
-          _obj.amount_marged = tmp_price * _obj.totqty1;
-        }
-
-      });
-      prm.calc_order_row.first_cost = prm.spec.aggregate([], ["amount"]).round(2);
-    }
-    else{
-      fake_row.nom = prm.calc_order_row.nom;
-      fake_row.characteristic = prm.calc_order_row.characteristic;
-      prm.calc_order_row.first_cost = this.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
-    }
-
-    prm.order_rows && prm.order_rows.forEach((value) => {
-      const fake_prm = {
-        spec: value.characteristic.specification,
-        calc_order_row: value
-      }
-      this.price_type(fake_prm);
-      this.calc_first_cost(fake_prm);
-    });
-  }
-
-  calc_amount (prm) {
-
-    const {calc_order_row, price_type} = prm;
-    const {marginality_in_spec} = $p.job_prm.pricing;
-    const price_cost = marginality_in_spec && prm.spec.count() ?
-      prm.spec.aggregate([], ["amount_marged"]) :
-      this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
-
-    if(price_cost){
-      calc_order_row.price = price_cost.round(2);
-    }
-    else{
-      calc_order_row.price = marginality_in_spec ? 0 : (calc_order_row.first_cost * price_type.marginality).round(2);
-    }
-
-    calc_order_row.marginality = calc_order_row.first_cost ?
-      calc_order_row.price * ((100 - calc_order_row.discount_percent)/100) / calc_order_row.first_cost : 0;
-
-
-    let extra_charge = $p.wsql.get_user_param("surcharge_internal", "number");
-    if(!$p.current_user.partners_uids.length || !extra_charge){
-      extra_charge = price_type.extra_charge_external || 0;
-    }
-
-    calc_order_row.price_internal = (calc_order_row.price *
-      (100 - calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
-
-    !prm.hand_start && calc_order_row.value_change("price", {}, calc_order_row.price, true);
-
-    prm.order_rows && prm.order_rows.forEach((value) => {
-      const fake_prm = {
-        spec: value.characteristic.specification,
-        calc_order_row: value
-      }
-      this.price_type(fake_prm);
-      this.calc_amount(fake_prm);
-    });
-
-  }
-
-  from_currency_to_currency (amount, date, from, to) {
-
-    const {main_currency} = $p.job_prm.pricing;
-
-    if(!to || to.empty()){
-      to = main_currency;
-    }
-    if(!from || from.empty()){
-      from = main_currency;
-    }
-    if(from == to){
-      return amount;
-    }
-    if(!date){
-      date = new Date();
-    }
-    if(!this.cource_sql){
-      this.cource_sql = $p.wsql.alasql.compile("select top 1 * from `ireg_currency_courses` where `currency` = ? and `period` <= ? order by `period` desc");
-    }
-
-    let cfrom = {course: 1, multiplicity: 1},
-      cto = {course: 1, multiplicity: 1};
-    if(from != main_currency){
-      const tmp = this.cource_sql([from.ref, date]);
-      if(tmp.length)
-        cfrom = tmp[0];
-    }
-    if(to != main_currency){
-      const tmp = this.cource_sql([to.ref, date]);
-      if(tmp.length)
-        cto = tmp[0];
-    }
-
-    return (amount * cfrom.course / cfrom.multiplicity) * cto.multiplicity / cto.course;
-  }
-
-  cut_upload () {
-
-    if(!$p.current_user.role_available("СогласованиеРасчетовЗаказов") && !$p.current_user.role_available("ИзменениеТехнологическойНСИ")){
-      $p.msg.show_msg({
-        type: "alert-error",
-        text: $p.msg.error_low_acl,
-        title: $p.msg.error_rights
-      });
-      return true;
-    }
-
-    function upload_acc() {
-      const mgrs = [
-        "cat.users",
-        "cat.individuals",
-        "cat.organizations",
-        "cat.partners",
-        "cat.contracts",
-        "cat.currencies",
-        "cat.nom_prices_types",
-        "cat.price_groups",
-        "cat.cashboxes",
-        "cat.partner_bank_accounts",
-        "cat.organization_bank_accounts",
-        "cat.projects",
-        "cat.stores",
-        "cat.cash_flow_articles",
-        "cat.cost_items",
-        "cat.price_groups",
-        "cat.delivery_areas",
-        "ireg.currency_courses",
-        "ireg.margin_coefficients"
-      ];
-
-      const {pouch} = $p.adapters;
-      pouch.local.ram.replicate.to(pouch.remote.ram, {
-        filter: (doc) => mgrs.indexOf(doc._id.split("|")[0]) != -1
-      })
-        .on('change', (info) => {
-
-        })
-        .on('paused', (err) => {
-
-        })
-        .on('active', () => {
-
-        })
-        .on('denied', (err) => {
-          $p.msg.show_msg(err.reason);
-          $p.record_log(err);
-
-        })
-        .on('complete', (info) => {
-
-          if($p.current_user.role_available("ИзменениеТехнологическойНСИ"))
-            upload_tech();
-
-          else
-            $p.msg.show_msg({
-              type: "alert-info",
-              text: $p.msg.sync_complite,
-              title: $p.msg.sync_title
-            });
-
-        })
-        .on('error', (err) => {
-          $p.msg.show_msg(err.reason);
-          $p.record_log(err);
-
-        });
-    }
-
-    function upload_tech() {
-      const mgrs = [
-        "cat.units",
-        "cat.nom",
-        "cat.nom_groups",
-        "cat.nom_units",
-        "cat.nom_kinds",
-        "cat.elm_visualization",
-        "cat.destinations",
-        "cat.property_values",
-        "cat.property_values_hierarchy",
-        "cat.inserts",
-        "cat.insert_bind",
-        "cat.color_price_groups",
-        "cat.clrs",
-        "cat.furns",
-        "cat.cnns",
-        "cat.production_params",
-        "cat.parameters_keys",
-        "cat.formulas",
-        "cch.properties",
-        "cch.predefined_elmnts"
-
-      ];
-      const {pouch} = $p.adapters;
-      pouch.local.ram.replicate.to(pouch.remote.ram, {
-        filter: (doc) => mgrs.indexOf(doc._id.split("|")[0]) != -1
-      })
-        .on('change', (info) => {
-
-        })
-        .on('paused', (err) => {
-
-        })
-        .on('active', () => {
-
-        })
-        .on('denied', (err) => {
-          $p.msg.show_msg(err.reason);
-          $p.record_log(err);
-
-        })
-        .on('complete', (info) => {
-          $p.msg.show_msg({
-            type: "alert-info",
-            text: $p.msg.sync_complite,
-            title: $p.msg.sync_title
-          });
-
-        })
-        .on('error', (err) => {
-          $p.msg.show_msg(err.reason);
-          $p.record_log(err);
-
-        });
-    }
-
-    if($p.current_user.role_available("СогласованиеРасчетовЗаказов"))
-      upload_acc();
-    else
-      upload_tech();
-
-  }
-
-}
-
-
-$p.pricing = new Pricing($p);
-
-
-class ProductsBuilding {
-
-  constructor(listen) {
-
-    let added_cnn_spec,
-      ox,
-      spec,
-      constructions,
-      coordinates,
-      cnn_elmnts,
-      glass_specification,
-      params;
-
-
-
-    function cnn_row(elm1, elm2) {
-      let res = cnn_elmnts.find_rows({elm1: elm1, elm2: elm2});
-      if(res.length) {
-        return res[0].row;
-      }
-      res = cnn_elmnts.find_rows({elm1: elm2, elm2: elm1});
-      if(res.length) {
-        return res[0].row;
-      }
-      return 0;
-    }
-
-    function cnn_need_add_spec(cnn, elm1, elm2, point) {
-      if(cnn && cnn.cnn_type == $p.enm.cnn_types.xx) {
-        if(!added_cnn_spec.points) {
-          added_cnn_spec.points = [];
-        }
-        for (let p of added_cnn_spec.points) {
-          if(p.is_nearest(point, true)) {
-            return false;
-          }
-        }
-        added_cnn_spec.points.push(point);
         return true;
       }
-      else if(!cnn || !elm1 || !elm2 || added_cnn_spec[elm1] == elm2 || added_cnn_spec[elm2] == elm1) {
-        return false;
-      }
-      added_cnn_spec[elm1] = elm2;
-      return true;
     }
 
-
-    function cnn_add_spec(cnn, elm, len_angl, cnn_other) {
-      if(!cnn) {
-        return;
-      }
-      const sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
-      const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
-
-      cnn_filter_spec(cnn, elm, len_angl).forEach((row_cnn_spec) => {
-
-        const {nom} = row_cnn_spec;
-
-        if(nom instanceof $p.CatInserts) {
-          if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)) {
-            const tmp_len_angl = len_angl._clone();
-            tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
-            nom.calculate_spec({elm, len_angl: tmp_len_angl, ox});
-          }
-          else {
-            nom.calculate_spec({elm, len_angl, ox});
-          }
-        }
-        else {
-
-          const row_spec = new_spec_row({row_base: row_cnn_spec, origin: len_angl.origin || cnn, elm, nom, spec, ox});
-
-          if(nom.is_pieces) {
-            if(!row_cnn_spec.coefficient) {
-              row_spec.qty = row_cnn_spec.quantity;
-            }
-            else {
-              row_spec.qty = ((len_angl.len - sign * 2 * row_cnn_spec.sz) * row_cnn_spec.coefficient * row_cnn_spec.quantity - 0.5)
-                .round(nom.rounding_quantity);
-            }
-          }
-          else {
-            row_spec.qty = row_cnn_spec.quantity;
-
-            if(row_cnn_spec.sz || row_cnn_spec.coefficient) {
-              let sz = row_cnn_spec.sz, finded, qty;
-              if(cnn_other) {
-                cnn_other.specification.find_rows({nom}, (row) => {
-                  sz += row.sz;
-                  qty = row.quantity;
-                  return !(finded = true);
-                });
-              }
-              if(!finded) {
-                sz *= 2;
-              }
-              if(!row_spec.qty && finded && len_angl.art1) {
-                row_spec.qty = qty;
-              }
-              row_spec.len = (len_angl.len - sign * sz) * (row_cnn_spec.coefficient || 0.001);
-            }
-          }
-
-          if(!row_cnn_spec.formula.empty()) {
-            const qty = row_cnn_spec.formula.execute({
-              ox,
-              elm,
-              len_angl,
-              cnstr: 0,
-              inset: $p.utils.blank.guid,
-              row_cnn: row_cnn_spec,
-              row_spec: row_spec
-            });
-            if(row_cnn_spec.formula.condition_formula && !qty){
-              row_spec.qty = 0;
-            }
-          }
-          calc_count_area_mass(row_spec, spec, len_angl, row_cnn_spec.angle_calc_method);
-        }
-
-      });
-    }
-
-    function cnn_filter_spec(cnn, elm, len_angl) {
-
-      const res = [];
-      const {angle_hor} = elm;
-      const {art1, art2} = $p.job_prm.nom;
-      const {САртикулом1, САртикулом2} = $p.enm.specification_installation_methods;
-      const {check_params} = ProductsBuilding;
-
-      const {cnn_type, specification, selection_params} = cnn;
-      const {ii, xx, acn} = $p.enm.cnn_types;
-
-      specification.each((row) => {
-        const {nom} = row;
-        if(!nom || nom.empty() || nom == art1 || nom == art2) {
-          return;
-        }
-
-        if((row.for_direct_profile_only > 0 && !elm.is_linear()) ||
-          (row.for_direct_profile_only < 0 && elm.is_linear())) {
-          return;
-        }
-
-        if(cnn_type == ii) {
-          if(row.amin > angle_hor || row.amax < angle_hor || row.sz_min > len_angl.len || row.sz_max < len_angl.len) {
-            return;
-          }
-        }
-        else {
-          if(row.amin > len_angl.angle || row.amax < len_angl.angle) {
-            return;
-          }
-        }
-
-        if((row.set_specification == САртикулом1 && len_angl.art2) || (row.set_specification == САртикулом2 && len_angl.art1)) {
-          return;
-        }
-        if(len_angl.art2 && acn.a.indexOf(cnn_type) != -1 && row.set_specification != САртикулом2 && cnn_type != xx) {
-          return;
-        }
-
-        if(check_params({params: selection_params, row_spec: row, elm, ox})) {
-          res.push(row);
-        }
-
-      });
-
-      return res;
-    }
-
-
-    function furn_spec(contour) {
-
-      if(!contour.parent) {
-        return false;
-      }
-
-      const {furn_cache, furn} = contour;
-      const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
-
-      if(!furn_check_opening_restrictions(contour, furn_cache)) {
-        return;
-      }
-
-      contour.update_handle_height(furn_cache);
-
-      const blank_clr = $p.cat.clrs.get();
-      furn.furn_set.get_spec(contour, furn_cache).each((row) => {
-        const elm = {elm: -contour.cnstr, clr: blank_clr};
-        const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, spec, ox});
-
-        if(row.is_procedure_row) {
-          row_spec.elm = row.handle_height_min;
-          row_spec.len = row.coefficient / 1000;
-          row_spec.qty = 0;
-          row_spec.totqty = 1;
-          row_spec.totqty1 = 1;
-        }
-        else {
-          row_spec.qty = row.quantity * (!row.coefficient ? 1 : row.coefficient);
-          calc_count_area_mass(row_spec, spec);
-        }
-      });
-    }
-
-    function furn_check_opening_restrictions(contour, cache) {
-
-      let ok = true;
-      const {new_spec_row} = ProductsBuilding;
-      const {side_count, furn, direction} = contour;
-
-      if(furn.open_type !== $p.enm.open_types.Глухое && furn.side_count && side_count !== furn.side_count) {
-        const row_base = {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error};
-        contour.profiles.forEach(elm => {
-          new_spec_row({elm, row_base, origin: furn, spec, ox});
-        });
-        return ok = false;
-      }
-
-      furn.open_tunes.each((row) => {
-        const elm = contour.profile_by_furn_side(row.side, cache);
-        const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
-        const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
-        const len = elm._row.len - prev.nom.sizefurn - next.nom.sizefurn;
-
-        const angle = direction == $p.enm.open_directions.Правое ?
-          elm.generatrix.angle_to(prev.generatrix, elm.e) :
-          prev.generatrix.angle_to(elm.generatrix, elm.b);
-
-        const {lmin, lmax, amin, amax} = row;
-        if(len < lmin || len > lmax || angle < amin || (angle > amax && amax > 0) || (!elm.is_linear() && !row.arc_available)) {
-          new_spec_row({elm, row_base: {clr: $p.cat.clrs.get(), nom: $p.job_prm.nom.furn_error}, origin: furn, spec, ox});
-          ok = false;
-        }
-      });
-
-      return ok;
-    }
-
-
-    function cnn_spec_nearest(elm) {
-      const nearest = elm.nearest();
-      if(nearest && nearest._row.clr != $p.cat.clrs.predefined('НеВключатьВСпецификацию') && elm._attr._nearest_cnn) {
-        cnn_add_spec(elm._attr._nearest_cnn, elm, {
-          angle: 0,
-          alp1: 0,
-          alp2: 0,
-          len: elm._attr._len,
-          origin: cnn_row(elm.elm, nearest.elm)
-        });
-      }
-    }
-
-    function base_spec_profile(elm) {
-
-      const {_row, rays} = elm;
-
-      if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
-        return;
-      }
-
-      const {b, e} = rays;
-
-      if(!b.cnn || !e.cnn) {
-        return;
-      }
-      b.check_err();
-      e.check_err();
-
-      const prev = b.profile;
-      const next = e.profile;
-      const row_cnn_prev = b.cnn && b.cnn.main_row(elm);
-      const row_cnn_next = e.cnn && e.cnn.main_row(elm);
-      const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
-
-      let row_spec;
-
-      const row_cnn = row_cnn_prev || row_cnn_next;
-      if(row_cnn) {
-
-        row_spec = new_spec_row({elm, row_base: row_cnn, nom: _row.nom, origin: cnn_row(_row.elm, prev ? prev.elm : 0), spec, ox});
-        row_spec.qty = row_cnn.quantity;
-
-        const seam = $p.enm.angle_calculating_ways.СварнойШов;
-        const d45 = Math.sin(Math.PI / 4);
-        const dprev = row_cnn_prev ? (
-          row_cnn_prev.angle_calc_method == seam && _row.alp1 > 0 ? row_cnn_prev.sz * d45 / Math.sin(_row.alp1 / 180 * Math.PI) : row_cnn_prev.sz
-        ) : 0;
-        const dnext = row_cnn_next ? (
-          row_cnn_next.angle_calc_method == seam && _row.alp2 > 0 ? row_cnn_next.sz * d45 / Math.sin(_row.alp2 / 180 * Math.PI) : row_cnn_next.sz
-        ) : 0;
-
-        row_spec.len = (_row.len - dprev - dnext)
-          * ((row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
-
-        elm._attr._len = _row.len;
-        _row.len = (_row.len
-          - (!row_cnn_prev || row_cnn_prev.angle_calc_method == seam ? 0 : row_cnn_prev.sz)
-          - (!row_cnn_next || row_cnn_next.angle_calc_method == seam ? 0 : row_cnn_next.sz))
-          * 1000 * ( (row_cnn_prev ? row_cnn_prev.coefficient : 0.001) + (row_cnn_next ? row_cnn_next.coefficient : 0.001)) / 2;
-
-        if(!elm.is_linear()) {
-          row_spec.len = row_spec.len + _row.nom.arc_elongation / 1000;
-        }
-
-        if(row_cnn_prev && !row_cnn_prev.formula.empty()) {
-          row_cnn_prev.formula.execute({
-            ox: ox,
-            elm: elm,
-            cnstr: 0,
-            inset: $p.utils.blank.guid,
-            row_cnn: row_cnn_prev,
-            row_spec: row_spec
-          });
-        }
-        else if(row_cnn_next && !row_cnn_next.formula.empty()) {
-          row_cnn_next.formula.execute({
-            ox: ox,
-            elm: elm,
-            cnstr: 0,
-            inset: $p.utils.blank.guid,
-            row_cnn: row_cnn_next,
-            row_spec: row_spec
-          });
-        }
-
-        const angle_calc_method_prev = row_cnn_prev ? row_cnn_prev.angle_calc_method : null;
-        const angle_calc_method_next = row_cnn_next ? row_cnn_next.angle_calc_method : null;
-        const {СоединениеПополам, Соединение} = $p.enm.angle_calculating_ways;
-        calc_count_area_mass(
-          row_spec,
-          spec,
-          _row,
-          angle_calc_method_prev,
-          angle_calc_method_next,
-          angle_calc_method_prev == СоединениеПополам || angle_calc_method_prev == Соединение ? prev.generatrix.angle_to(elm.generatrix, b.point) : 0,
-          angle_calc_method_next == СоединениеПополам || angle_calc_method_next == Соединение ? elm.generatrix.angle_to(next.generatrix, e.point) : 0
-        );
-      }
-
-      const len_angl = {
-        angle: 0,
-        alp1: prev ? prev.generatrix.angle_to(elm.generatrix, elm.b, true) : 90,
-        alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
-        len: row_spec ? row_spec.len * 1000 : _row.len,
-        art1: false,
-        art2: true
-      };
-      if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0, b.point)) {
-
-
-        len_angl.angle = len_angl.alp2;
-
-        if(b.cnn.cnn_type == $p.enm.cnn_types.t || b.cnn.cnn_type == $p.enm.cnn_types.i || b.cnn.cnn_type == $p.enm.cnn_types.xx) {
-          if(cnn_need_add_spec(e.cnn, next ? next.elm : 0, _row.elm, e.point)) {
-            cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
-          }
-        }
-        else {
-          cnn_add_spec(e.cnn, elm, len_angl, b.cnn);
-        }
-
-        len_angl.angle = len_angl.alp1;
-        len_angl.art2 = false;
-        len_angl.art1 = true;
-        cnn_add_spec(b.cnn, elm, len_angl, e.cnn);
-      }
-
-      elm.inset.calculate_spec({elm, ox});
-
-      cnn_spec_nearest(elm);
-
-      elm.addls.forEach(base_spec_profile);
-
-      ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
-
-        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
-          $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
-        }
-
-        len_angl.origin = inset;
-        len_angl.angle = elm.angle_hor;
-        len_angl.cnstr = elm.layer.cnstr;
-        delete len_angl.art1;
-        delete len_angl.art2;
-        inset.calculate_spec({elm, len_angl, ox});
-
-      });
-
-    }
-
-    function base_spec_sectional(elm) {
-
-      const {_row, _attr, inset, layer} = elm;
-
-      if(_row.nom.empty() || _row.nom.is_service || _row.nom.is_procedure || _row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
-        return;
-      }
-
-      const spec_tmp = spec;
-
-      inset.calculate_spec({elm, ox});
-
-      ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
-
-        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
-          const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(layer));
-          ox._order_rows.push(cx);
-          spec = cx.specification.clear();
-        }
-
-        const len_angl = {
-          angle: 0,
-          alp1: 0,
-          alp2: 0,
-          len: 0,
-          origin: inset,
-          cnstr: layer.cnstr
-        };
-        inset.calculate_spec({elm, len_angl, ox, spec});
-
-      });
-
-      spec = spec_tmp;
-
-    }
-
-    function base_spec_glass(elm) {
-
-      const {profiles, imposts, _row} = elm;
-
-      if(_row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
-        return;
-      }
-
-      const glength = profiles.length;
-
-      for (let i = 0; i < glength; i++) {
-        const curr = profiles[i];
-
-        if(curr.profile && curr.profile._row.clr == $p.cat.clrs.predefined('НеВключатьВСпецификацию')) {
-          return;
-        }
-
-        const prev = (i == 0 ? profiles[glength - 1] : profiles[i - 1]).profile;
-        const next = (i == glength - 1 ? profiles[0] : profiles[i + 1]).profile;
-        const row_cnn = cnn_elmnts.find_rows({elm1: _row.elm, elm2: curr.profile.elm});
-
-        const len_angl = {
-          angle: 0,
-          alp1: prev.generatrix.angle_to(curr.profile.generatrix, curr.b, true),
-          alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
-          len: row_cnn.length ? row_cnn[0].aperture_len : 0,
-          origin: cnn_row(_row.elm, curr.profile.elm)
-
-        };
-
-        (len_angl.len > 3) && cnn_add_spec(curr.cnn, curr.profile, len_angl);
-
-      }
-
-      elm.inset.calculate_spec({elm, ox});
-
-      imposts.forEach(base_spec_profile);
-
-      ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
-        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
-          $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
-        }
-        inset.calculate_spec({elm, ox, clr});
-      });
-    }
-
-
-    function inset_contour_spec(contour) {
-
-      const spec_tmp = spec;
-
-      ox.inserts.find_rows({cnstr: contour.cnstr}, ({inset, clr}) => {
-
-        if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
-          const cx = Object.assign(ox.find_create_cx(-contour.cnstr, inset.ref), inset.contour_attrs(contour));
-          ox._order_rows.push(cx);
-          spec = cx.specification.clear();
-        }
-
-        const elm = {
-          _row: {},
-          elm: 0,
-          clr: clr,
-          layer: contour,
-        };
-        const len_angl = {
-          angle: 0,
-          alp1: 0,
-          alp2: 0,
-          len: 0,
-          origin: inset,
-          cnstr: contour.cnstr
-        };
-        inset.calculate_spec({elm, len_angl, ox, spec});
-
-      });
-
-      spec = spec_tmp;
-    }
-
-    function base_spec(scheme) {
-
-      const {Contour, Filling, Sectional, Profile, ProfileConnective} = $p.Editor;
-
-      added_cnn_spec = {};
-
-      for (const contour of scheme.getItems({class: Contour})) {
-
-        for (const elm of contour.children) {
-          elm instanceof Profile && base_spec_profile(elm);
-        }
-
-        for (const elm of contour.children) {
-          if(elm instanceof Filling) {
-            base_spec_glass(elm);
-          }
-          else if(elm instanceof Sectional) {
-            base_spec_sectional(elm);
-          }
-        }
-
-        furn_spec(contour);
-
-        inset_contour_spec(contour);
-
-      }
-
-      for (const elm of scheme.l_connective.children) {
-        if(elm instanceof ProfileConnective) {
-          base_spec_profile(elm);
-        }
-      }
-
-      inset_contour_spec({
-        cnstr: 0,
-        project: scheme,
-        get perimeter() {
-          return this.project.perimeter;
-        }
-      });
-
-    }
-
-    this.recalc = function (scheme, attr) {
-
-
-
-      ox = scheme.ox;
-      spec = ox.specification;
-      constructions = ox.constructions;
-      coordinates = ox.coordinates;
-      cnn_elmnts = ox.cnn_elmnts;
-      glass_specification = ox.glass_specification;
-      params = ox.params;
-
-      spec.clear();
-
-      ox._order_rows = [];
-
-      base_spec(scheme);
-
-      spec.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
-
-
-
-      scheme.draw_visualization();
-      scheme.notify(scheme, 'coordinates_calculated', attr);
-
-
-      if(ox.calc_order_row) {
-        $p.spec_building.specification_adjustment({
-          scheme: scheme,
-          calc_order_row: ox.calc_order_row,
-          spec: spec,
-          save: attr.save,
-        }, true);
-      }
-
-      if(attr.snapshot) {
-        scheme.notify(scheme, 'scheme_snapshot', attr);
-      }
-
-      if(attr.save) {
-
-
-        if(attr.svg !== false) {
-          ox.svg = scheme.get_svg();
-        }
-
-        ox.save().then(() => {
-          attr.svg !== false && $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
-          delete scheme._attr._saving;
-          ox.calc_order.characteristic_saved(scheme, attr);
-          scheme._scope && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
-
-        })
-          .then(() => {
-            if(scheme._scope || attr.close) {
-              return new Promise((resolve, reject) => {
-                setTimeout(() => ox.calc_order._modified && ox.calc_order.save()
-                  .then(resolve)
-                  .catch(reject), 1000);
-              });
-            }
-          })
-          .catch((err) => {
-
-
-            delete scheme._attr._saving;
-
-            if(err.msg && err.msg._shown) {
-              return;
-            }
-
-            let text = err.message || err;
-            if(ox._data && ox._data._err) {
-              if(typeof ox._data._err === 'object') {
-                $p.md.emit('alert', Object.assign({obj: ox}, ox._data._err));
-                delete ox._data._err;
-                return;
-              }
-              text += `\n${ox._data._err}`;
-              delete ox._data._err;
-            }
-
-            $p.md.emit('alert', {type: 'alert-error', obj: ox, text});
-
-          });
-      }
-      else {
-        delete scheme._attr._saving;
-      }
-
-      ox._data._loading = false;
-
-    };
-
-  }
-
-  static check_params({params, row_spec, elm, cnstr, origin, ox}) {
-
-    let ok = true;
-
-    params.find_rows({elm: row_spec.elm}, (prm_row) => {
-      ok = prm_row.param.check_condition({row_spec, prm_row, elm, cnstr, origin, ox});
-      if(!ok) {
-        return false;
-      }
-    });
-
-    return ok;
-  }
-
-  static new_spec_row({row_spec, elm, row_base, nom, origin, spec, ox}) {
-    if(!row_spec) {
-      row_spec = spec.add();
-    }
-    row_spec.nom = nom || row_base.nom;
-    if(!row_spec.nom.visualization.empty()) {
-      row_spec.dop = -1;
-    }
-    else if(row_spec.nom.is_procedure) {
-      row_spec.dop = -2;
-    }
-    row_spec.characteristic = row_base.nom_characteristic;
-    if(!row_spec.characteristic.empty() && row_spec.characteristic.owner != row_spec.nom) {
-      row_spec.characteristic = $p.utils.blank.guid;
-    }
-    row_spec.clr = $p.cat.clrs.by_predefined(row_base ? row_base.clr : elm.clr, elm.clr, ox.clr, elm, spec);
-    row_spec.elm = elm.elm;
-    if(origin) {
-      row_spec.origin = origin;
-    }
-    return row_spec;
-  }
-
-  static calc_qty_len(row_spec, row_base, len) {
-
-    const {nom} = row_spec;
-
-    if(nom.cutting_optimization_type == $p.enm.cutting_optimization_types.Нет ||
-      nom.cutting_optimization_type.empty() || nom.is_pieces) {
-      if(!row_base.coefficient || !len) {
-        row_spec.qty = row_base.quantity;
-      }
-      else {
-        if(!nom.is_pieces) {
-          row_spec.qty = row_base.quantity;
-          row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
-          if(nom.rounding_quantity) {
-            row_spec.qty = (row_spec.qty * row_spec.len).round(nom.rounding_quantity);
-            row_spec.len = 0;
-          }
-          ;
-        }
-        else if(!nom.rounding_quantity) {
-          row_spec.qty = Math.round((len - row_base.sz) * row_base.coefficient * row_base.quantity - 0.5);
-        }
-        else {
-          row_spec.qty = ((len - row_base.sz) * row_base.coefficient * row_base.quantity).round(nom.rounding_quantity);
-        }
-      }
-    }
-    else {
-      row_spec.qty = row_base.quantity;
-      row_spec.len = (len - row_base.sz) * (row_base.coefficient || 0.001);
-    }
-  }
-
-  static calc_count_area_mass(row_spec, spec, row_coord, angle_calc_method_prev, angle_calc_method_next, alp1, alp2) {
-
-    if(!row_spec.qty) {
-      if(row_spec.dop >= 0) {
-        spec.del(row_spec.row - 1, true);
-      }
-      return;
-    }
-
-    if(row_spec.totqty1 && row_spec.totqty) {
-      return;
-    }
-
-    if(!angle_calc_method_next) {
-      angle_calc_method_next = angle_calc_method_prev;
-    }
-
-    if(angle_calc_method_prev && !row_spec.nom.is_pieces) {
-
-      const {Основной, СварнойШов, СоединениеПополам, Соединение, _90} = $p.enm.angle_calculating_ways;
-
-      if((angle_calc_method_prev == Основной) || (angle_calc_method_prev == СварнойШов)) {
-        row_spec.alp1 = row_coord.alp1;
-      }
-      else if(angle_calc_method_prev == _90) {
-        row_spec.alp1 = 90;
-      }
-      else if(angle_calc_method_prev == СоединениеПополам) {
-        row_spec.alp1 = (alp1 || row_coord.alp1) / 2;
-      }
-      else if(angle_calc_method_prev == Соединение) {
-        row_spec.alp1 = (alp1 || row_coord.alp1);
-      }
-
-      if((angle_calc_method_next == Основной) || (angle_calc_method_next == СварнойШов)) {
-        row_spec.alp2 = row_coord.alp2;
-      }
-      else if(angle_calc_method_next == _90) {
-        row_spec.alp2 = 90;
-      }
-      else if(angle_calc_method_next == СоединениеПополам) {
-        row_spec.alp2 = (alp2 || row_coord.alp2) / 2;
-      }
-      else if(angle_calc_method_next == Соединение) {
-        row_spec.alp2 = (alp2 || row_coord.alp2);
-      }
-    }
-
-    if(row_spec.len) {
-      if(row_spec.width && !row_spec.s) {
-        row_spec.s = row_spec.len * row_spec.width;
-      }
-    }
-    else {
-      row_spec.s = 0;
-    }
-
-    if(row_spec.s) {
-      row_spec.totqty = row_spec.qty * row_spec.s;
-    }
-    else if(row_spec.len) {
-      row_spec.totqty = row_spec.qty * row_spec.len;
-    }
-    else {
-      row_spec.totqty = row_spec.qty;
-    }
-
-    row_spec.totqty1 = row_spec.totqty * row_spec.nom.loss_factor;
-
-    ['len', 'width', 's', 'qty', 'alp1', 'alp2'].forEach((fld) => row_spec[fld] = row_spec[fld].round(4));
-    ['totqty', 'totqty1'].forEach((fld) => row_spec[fld] = row_spec[fld].round(6));
-  }
-
-}
-
-if(typeof global !== 'undefined'){
-  global.ProductsBuilding = ProductsBuilding;
-}
-$p.ProductsBuilding = ProductsBuilding;
-$p.products_building = new ProductsBuilding(true);
-
-
-class SpecBuilding {
-
-  constructor($p) {
-
-  }
-
-  calc_row_spec (prm, cancel) {
-
-  }
-
-  specification_adjustment (attr, with_price) {
-
-    const {scheme, calc_order_row, spec, save} = attr;
-    const calc_order = calc_order_row._owner._owner;
-    const order_rows = new Map();
-    const adel = [];
-    const ox = calc_order_row.characteristic;
-    const nom = ox.empty() ? calc_order_row.nom : (calc_order_row.nom = ox.owner);
-
-    $p.pricing.price_type(attr);
-
-    spec.find_rows({ch: {in: [-1, -2]}}, (row) => adel.push(row));
-    adel.forEach((row) => spec.del(row, true));
-
-    $p.cat.insert_bind.insets(ox).forEach(({inset, elm_type}) => {
-
-      const elm = {
-        _row: {},
-        elm: 0,
-        get perimeter() {return scheme ? scheme.perimeter : []},
-        clr: ox.clr,
-        project: scheme,
-      };
-      const len_angl = {
-        angle: 0,
-        alp1: 0,
-        alp2: 0,
-        len: 0,
-        cnstr: 0,
-        origin: inset,
-      };
-      inset.calculate_spec({elm, len_angl, ox, spec});
-
-    });
-
-    if(!ox.empty()){
-      adel.length = 0;
-      calc_order.production.forEach((row) => {
-        if (row.ordn === ox){
-          if (ox._order_rows.indexOf(row.characteristic) === -1){
-            adel.push(row);
-          }
-          else {
-            order_rows.set(row.characteristic, row);
-          }
-        }
-      });
-      adel.forEach((row) => calc_order.production.del(row.row-1));
-    }
-
-    const ax = [];
-
-    ox._order_rows && ox._order_rows.forEach((cx) => {
-      const row = order_rows.get(cx) || calc_order.production.add({characteristic: cx});
-      row.nom = cx.owner;
-      row.unit = row.nom.storage_unit;
-      row.ordn = ox;
-      row.len = cx.x;
-      row.width = cx.y;
-      row.s = cx.s;
-      row.qty = calc_order_row.qty;
-      row.quantity = calc_order_row.quantity;
-
-      save && ax.push(cx.save());
-      order_rows.set(cx, row);
-    });
-    if(order_rows.size){
-      attr.order_rows = order_rows;
-    }
-
-    if(with_price){
-      $p.pricing.calc_first_cost(attr);
-
-      $p.pricing.calc_amount(attr);
-    }
-
-    if(save && !attr.scheme && (ox.is_new() || ox._modified)){
-      ax.push(ox.save());
-    }
-
-    return ax;
-  }
-
-}
-
-$p.spec_building = new SpecBuilding($p);
-
-
-(function ({prototype}) {
-  const {value_mgr} = prototype;
-  prototype.value_mgr = function(row, f, mf, array_enabled, v) {
-		const tmp = value_mgr.call(this, row, f, mf, array_enabled, v);
-		if(tmp){
-      return tmp;
-    }
-		if(f == 'trans'){
-      return $p.doc.calc_order;
-    }
-		else if(f == 'partner'){
-      return $p.cat.partners;
-    }
-	}
-})($p.classes.DataManager);
+  });
+
+	enm.orientations.__define({
+
+		hor: {
+			get() {
+				return this.Горизонтальная;
+			}
+		},
+
+		vert: {
+			get() {
+				return this.Вертикальная;
+			}
+		},
+
+		incline: {
+			get() {
+				return this.Наклонная;
+			}
+		}
+	});
+
+	enm.positions.__define({
+
+		left: {
+			get() {
+				return this.Лев;
+			}
+		},
+
+		right: {
+			get() {
+				return this.Прав;
+			}
+		},
+
+		top: {
+			get() {
+				return this.Верх;
+			}
+		},
+
+		bottom: {
+			get() {
+				return this.Низ;
+			}
+		},
+
+		hor: {
+			get() {
+				return this.ЦентрГоризонталь;
+			}
+		},
+
+		vert: {
+			get() {
+				return this.ЦентрВертикаль;
+			}
+		}
+	});
+
+
+})($p);
 
 
 (($p) => {
@@ -7775,238 +8006,6 @@ $p.spec_building = new SpecBuilding($p);
 
 
 
-
-
-(function(_mgr){
-
-	const acn = {
-    ii: [_mgr.Наложение],
-    i: [_mgr.НезамкнутыйКонтур],
-    a: [
-      _mgr.УгловоеДиагональное,
-      _mgr.УгловоеКВертикальной,
-      _mgr.УгловоеКГоризонтальной,
-      _mgr.КрестВСтык],
-    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
-	};
-
-
-	Object.defineProperties(_mgr, {
-	  ad: {
-	    get() {
-        return this.УгловоеДиагональное;
-      }
-    },
-    av: {
-      get() {
-        return this.УгловоеКВертикальной;
-      }
-    },
-    ah: {
-      get() {
-        return this.УгловоеКГоризонтальной;
-      }
-    },
-    t: {
-      get() {
-        return this.ТОбразное;
-      }
-    },
-    ii: {
-      get() {
-        return this.Наложение;
-      }
-    },
-    i: {
-      get() {
-        return this.НезамкнутыйКонтур;
-      }
-    },
-    xt: {
-      get() {
-        return this.КрестПересечение;
-      }
-    },
-    xx: {
-      get() {
-        return this.КрестВСтык;
-      }
-    },
-
-    acn: {
-      value: acn
-    },
-
-  });
-
-})($p.enm.cnn_types);
-
-
-(function(_mgr){
-
-	const cache = {};
-
-	_mgr.__define({
-
-		profiles: {
-			get(){
-				return cache.profiles
-					|| ( cache.profiles = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп] );
-			}
-		},
-
-		profile_items: {
-			get(){
-				return cache.profile_items
-					|| ( cache.profile_items = [
-						_mgr.Рама,
-						_mgr.Створка,
-						_mgr.Импост,
-						_mgr.Штульп,
-						_mgr.Добор,
-						_mgr.Соединитель,
-						_mgr.Раскладка
-					] );
-			}
-		},
-
-		rama_impost: {
-			get(){
-				return cache.rama_impost
-					|| ( cache.rama_impost = [ _mgr.Рама, _mgr.Импост] );
-			}
-		},
-
-		impost_lay: {
-			get(){
-				return cache.impost_lay
-					|| ( cache.impost_lay = [ _mgr.Импост, _mgr.Раскладка] );
-			}
-		},
-
-		stvs: {
-			get(){
-				return cache.stvs || ( cache.stvs = [_mgr.Створка] );
-			}
-		},
-
-		glasses: {
-			get(){
-				return cache.glasses
-					|| ( cache.glasses = [ _mgr.Стекло, _mgr.Заполнение] );
-			}
-		}
-
-	});
-
-
-})($p.enm.elm_types);
-
-
-
-(function(_mgr){
-
-  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
-
-
-})($p.enm.inserts_types);
-
-
-
-(function({enm}){
-
-  enm.debit_credit_kinds.__define({
-    debit: {
-      get() {
-        return this.Приход;
-      }
-    },
-    credit: {
-      get() {
-        return this.Расход;
-      }
-    },
-  });
-
-	enm.open_types.__define({
-
-    is_opening: {
-      value(v) {
-        if(!v || v.empty() || v == this.Глухое || v == this.Неподвижное) {
-          return false;
-        }
-        return true;
-      }
-    }
-
-  });
-
-	enm.orientations.__define({
-
-		hor: {
-			get() {
-				return this.Горизонтальная;
-			}
-		},
-
-		vert: {
-			get() {
-				return this.Вертикальная;
-			}
-		},
-
-		incline: {
-			get() {
-				return this.Наклонная;
-			}
-		}
-	});
-
-	enm.positions.__define({
-
-		left: {
-			get() {
-				return this.Лев;
-			}
-		},
-
-		right: {
-			get() {
-				return this.Прав;
-			}
-		},
-
-		top: {
-			get() {
-				return this.Верх;
-			}
-		},
-
-		bottom: {
-			get() {
-				return this.Низ;
-			}
-		},
-
-		hor: {
-			get() {
-				return this.ЦентрГоризонталь;
-			}
-		},
-
-		vert: {
-			get() {
-				return this.ЦентрВертикаль;
-			}
-		}
-	});
-
-
-})($p);
 
 
 function eXcell_rsvg(cell){ 

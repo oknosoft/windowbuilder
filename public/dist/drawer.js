@@ -15159,16 +15159,15 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     let res = Promise.resolve();
     const ax = [];
 
-    for (let i = 0; i < dp.production.count(); i++) {
-      const row_spec = dp.production.get(i);
+    dp.production.forEach((row_dp) => {
       let row_prod;
 
-      if(row_spec.inset.empty()) {
-        row_prod = this.production.add(row_spec);
+      if(row_dp.inset.empty()) {
+        row_prod = this.production.add(row_dp);
         row_prod.unit = row_prod.nom.storage_unit;
-        if(!row_spec.clr.empty()) {
-          $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
-            if(ox.clr == row_spec.clr) {
+        if(!row_dp.clr.empty()) {
+          $p.cat.characteristics.find_rows({owner: row_dp.nom}, (ox) => {
+            if(ox.clr == row_dp.clr) {
               row_prod.characteristic = ox;
               return false;
             }
@@ -15177,13 +15176,14 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         res = res.then(() => row_prod);
       }
       else {
-        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
-        const elm = new $p.DocCalc_order.FakeElm(row_spec);
+        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_dp);
+        const elm = new $p.DocCalc_order.FakeElm(row_dp);
         res = res
-          .then(() => this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true}))
+          .then(() => this.create_product_row({row_spec: row_dp, elm, len_angl, params: dp.product_params, create: true}))
           .then((row_prod) => {
-            row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+            row_dp.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
             row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+            row_dp.characteristic = row_prod.characteristic;
             return row_prod;
           });
       }
@@ -15196,8 +15196,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         }, true))
           .then((tx) => [].push.apply(ax, tx));
       });
-
-    }
+    });
 
     return res.then(() => ax);
   }
