@@ -11175,7 +11175,7 @@ class Scheme extends paper.Project {
     let elm;
     if(attr.elm > 0) {
       elm = this.getItem({class: BuilderElement, elm: attr.elm});
-      elm.draw_fragment && elm.draw_fragment();
+      elm && elm.draw_fragment && elm.draw_fragment();
     }
     else if(attr.elm < 0) {
       const cnstr = -attr.elm;
