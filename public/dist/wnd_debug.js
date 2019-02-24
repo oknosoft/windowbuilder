@@ -3100,6 +3100,12 @@ class Pricing {
   sync_local(pouch, step = 0) {
     return pouch.remote.templates.get(`_local/price_${step}`)
       .then((remote) => {
+
+        if(pouch.remote.templates === pouch.local.templates) {
+          this.build_cache_local(remote);
+          return this.sync_local(pouch, ++step);
+        }
+
         return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
@@ -3116,15 +3122,16 @@ class Pricing {
             }
 
             this.build_cache_local(remote);
-
             return this.sync_local(pouch, ++step);
           })
       })
       .catch((err) => {
         if(step !== 0) {
-          pouch.local.templates.get(`_local/price_${step}`)
-            .then((local) => pouch.local.templates.remove(local))
-            .catch(() => null);
+          if(pouch.remote.templates !== pouch.local.templates) {
+            pouch.local.templates.get(`_local/price_${step}`)
+              .then((local) => pouch.local.templates.remove(local))
+              .catch(() => null);
+          }
           return true;
         }
       });
