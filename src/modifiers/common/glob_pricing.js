@@ -117,11 +117,11 @@ class Pricing {
       const value = prices[ref];
 
       if (!onom || !onom._data){
-        $p.record_log({
-          class: 'error',
-          note,
-          obj: {nom: ref, value}
-        });
+        // $p.record_log({
+        //   class: 'error',
+        //   note,
+        //   obj: {nom: ref, value}
+        // });
         continue;
       }
       onom._data._price = value;
