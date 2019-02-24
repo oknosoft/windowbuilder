@@ -1045,7 +1045,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       this.department = department;
     }
     const {current_user, cat} = $p;
-    if(this.department.empty() || this.department.is_new()) {
+    if(current_user && this.department.empty() || this.department.is_new()) {
       current_user.acl_objs && current_user.acl_objs.find_rows({by_default: true, type: cat.divisions.class_name}, (row) => {
         if(this.department != row.acl_obj) {
           this.department = row.acl_obj;

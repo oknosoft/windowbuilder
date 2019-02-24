@@ -15260,7 +15260,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       this.department = department;
     }
     const {current_user, cat} = $p;
-    if(this.department.empty() || this.department.is_new()) {
+    if(current_user && this.department.empty() || this.department.is_new()) {
       current_user.acl_objs && current_user.acl_objs.find_rows({by_default: true, type: cat.divisions.class_name}, (row) => {
         if(this.department != row.acl_obj) {
           this.department = row.acl_obj;
@@ -15510,6 +15510,134 @@ $p.DocCalc_orderProductionRow.rfields = {
 };
 
 $p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percent_internal';
+
+
+(({adapters: {pouch}, classes, cat, doc, job_prm, md, pricing, utils}) => {
+
+  const _mgr = doc.calc_order;
+  const proto_get = _mgr.constructor.prototype.get;
+
+  function template_get(ref, do_not_create){
+    return proto_get.apply(this, arguments)
+  }
+
+  function from_files(start) {
+    return start ? pouch.from_files(pouch.local.templates, pouch.remote.templates) : Promise.resolve();
+  }
+
+  function refresh_doc(start) {
+    if(pouch.local.templates && pouch.remote.templates) {
+      return from_files(start)
+        .then((rres) => {
+          return pouch.local.templates.replicate.from(pouch.remote.templates,
+            {
+              batch_size: 300,
+              batches_limit: 3,
+            })
+            .on('change', (info) => {
+              info.db = 'templates';
+              pouch.emit_async('repl_state', info);
+              if(!start && info.ok) {
+                for(const {doc} of info.docs) {
+                  if(doc.class_name === 'doc.nom_prices_setup') {
+                    setTimeout(pricing.by_doc.bind(pricing, doc), 1000);
+                  }
+                }
+              }
+            })
+            .then((info) => {
+              info.db = 'templates';
+              pouch.emit_async('repl_state', info);
+              return rres;
+            })
+            .catch((err) => {
+              err.result.db = 'templates';
+              pouch.emit_async('repl_state', err.result);
+              $p.record_log(err);
+            });
+        });
+    }
+    else {
+      return Promise.resolve();
+    }
+  }
+
+  function patch_cachable() {
+    const names = [
+      "cat.parameters_keys",
+      "cat.stores",
+      "cat.delivery_directions",
+      "cat.cash_flow_articles",
+      "cat.nonstandard_attributes",
+      "cat.projects",
+      "cat.nom_prices_types",
+      "doc.nom_prices_setup"
+    ];
+    for(const name of names) {
+      const meta = md.get(name);
+      meta.cachable = meta.cachable.replace(/^doc/, 'templates');
+    }
+  }
+
+  function direct_templates() {
+    if(!pouch.props._suffix || !job_prm.templates) {
+      !pouch.local.templates && pouch.local.__define('templates', {
+        get() {
+          return pouch.remote.doc;
+        },
+        configurable: true,
+        enumerable: false
+      });
+    }
+    return Promise.resolve();
+  }
+
+  function on_log_in() {
+
+    if(!pouch.props._suffix || !job_prm.templates) {
+      return direct_templates();
+    }
+    else {
+      patch_cachable();
+    }
+
+    const {__opts} = pouch.remote.ram;
+    pouch.remote.templates = new classes.PouchDB(__opts.name.replace(/ram$/, 'templates'),
+      {skip_setup: true, adapter: 'http', auth: __opts.auth});
+
+
+
+    if(pouch.props.direct) {
+      !pouch.local.templates && pouch.local.__define('templates', {
+        get() {
+          return pouch.remote.templates;
+        },
+        configurable: true,
+        enumerable: false
+      });
+    }
+    else {
+      pouch.local.templates = new classes.PouchDB('templates', {adapter: 'idb', auto_compaction: true, revs_limit: 3});
+      setInterval(refresh_doc, 600000);
+      return refresh_doc(true)
+        .then((rres) => {
+          return typeof rres === 'number' && pouch.rebuild_indexes('templates');
+        });
+    }
+
+  }
+
+  function user_log_out() {
+    if(pouch.local.templates && !pouch.local.hasOwnProperty('templates')) {
+      delete pouch.local.templates;
+    }
+  }
+
+  pouch.on({on_log_in, user_log_out});
+
+  pouch.once('pouch_doc_ram_loaded', direct_templates);
+
+})($p);
  
 return EditorInvisible;
 }

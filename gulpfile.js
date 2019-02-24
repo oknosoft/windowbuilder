@@ -56,6 +56,7 @@ gulp.task('build-drawer', function () {
     './src/modifiers/catalogs/cat_partners.js',
     './src/modifiers/catalogs/cat_production_params.js',
     './src/modifiers/documents/doc_calc_order.js',
+    './src/modifiers/documents/doc_calc_order_templates.js',
   ])
     .pipe(concat('drawer.js'))
     .pipe(strip())
