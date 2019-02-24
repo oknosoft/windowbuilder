@@ -3131,7 +3131,7 @@ class Pricing {
   }
 
   by_local(step = 0) {
-    const {pouch, job_prm} = $p.adapters;
+    const {adapters: {pouch}, job_prm} = $p;
 
     if(!pouch.local.templates) {
       return Promise.resolve(false);
