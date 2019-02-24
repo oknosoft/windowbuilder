@@ -174,14 +174,14 @@ class Pricing {
 
   // из локальной базы или direct
   by_local(step = 0) {
-    const {pouch} = $p.adapters;
+    const {pouch, job_prm} = $p.adapters;
 
     if(!pouch.local.templates) {
       return Promise.resolve(false);
     }
 
     // если мы в idb, но подключены к серверу, тянем цены оттуда
-    const pre = step === 0 && pouch.local.templates.adapter !== 'http' && pouch.authorized ?
+    const pre = step === 0 && (pouch.local.templates.adapter !== 'http' || (job_prm.user_node && job_prm.user_node.templates)) && pouch.authorized ?
       pouch.remote.templates.info()
         .then(() => this.sync_local(pouch))
         .catch((err) => null)
