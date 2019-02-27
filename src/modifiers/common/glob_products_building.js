@@ -738,6 +738,11 @@ class ProductsBuilding {
         scheme.notify(scheme, 'scheme_snapshot', attr);
       }
 
+      function finish() {
+        delete scheme._attr._saving;
+        ox._data._loading = false;
+      }
+
       // информируем мир о записи продукции
       if(attr.save) {
 
@@ -749,9 +754,10 @@ class ProductsBuilding {
           ox.svg = scheme.get_svg();
         }
 
-        ox.save().then(() => {
+        return ox.save().then(() => {
           attr.svg !== false && $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
-          delete scheme._attr._saving;
+          finish();
+
           ox.calc_order.characteristic_saved(scheme, attr);
           scheme._scope && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
 
@@ -772,7 +778,7 @@ class ProductsBuilding {
             // console.timeEnd("save");
             // console.profileEnd();
 
-            delete scheme._attr._saving;
+            finish();
 
             if(err.msg && err.msg._shown) {
               return;
@@ -794,10 +800,8 @@ class ProductsBuilding {
           });
       }
       else {
-        delete scheme._attr._saving;
+        return Promise.resolve(finish());
       }
-
-      ox._data._loading = false;
 
     };
 

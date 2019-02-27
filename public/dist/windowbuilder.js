@@ -11421,7 +11421,7 @@ class Scheme extends paper.Project {
 
     this.l_connective.save_coordinates();
 
-    $p.products_building.recalc(this, attr);
+    return $p.products_building.recalc(this, attr);
 
   }
 

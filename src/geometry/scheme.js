@@ -829,7 +829,8 @@ class Scheme extends paper.Project {
     // вызываем метод save_coordinates в слое соединителей
     this.l_connective.save_coordinates();
 
-    $p.products_building.recalc(this, attr);
+    // пересчет спецификации и цен
+    return $p.products_building.recalc(this, attr);
 
   }
 
