@@ -765,7 +765,7 @@ class ProductsBuilding {
           // console.profileEnd();
         })
           .then(() => {
-            if(scheme._scope || attr.close) {
+            if(!scheme._attr._from_service && (scheme._scope || attr.close)) {
               return new Promise((resolve, reject) => {
                 setTimeout(() => ox.calc_order._modified && ox.calc_order.save()
                   .then(resolve)
