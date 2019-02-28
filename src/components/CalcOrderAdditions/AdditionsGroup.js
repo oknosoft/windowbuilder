@@ -50,12 +50,19 @@ class AdditionsGroup extends React.Component {
 
   handleRemove = () => {
     const {props, tabular, state} = this;
+    const {dp: {product_params}} = props;
     if(tabular){
       const {selected} = tabular._grid.state;
       const row = tabular.rowGetter(selected && selected.hasOwnProperty('rowIdx') ? selected.rowIdx : 0);
       if(row){
         const {calc_order_row} = row.characteristic;
         row._owner.del(row);
+        product_params.clear({elm: row.row});
+        product_params.forEach(param => {
+          if (param.elm > row.row) {
+            param.elm--;
+          }
+        });
         tabular.forceUpdate();
         if(state.count) {
           this.setState({
