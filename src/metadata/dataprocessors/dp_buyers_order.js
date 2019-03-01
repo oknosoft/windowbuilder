@@ -54,8 +54,16 @@ export default function ($p) {
 
     // TODO пробежать по всем строкам ниже удаляемой и заменить elm в параметрах
     del_row(row) {
-      if(row._owner.name === 'production') {
-        return;
+      const {_owner: {_owner, _name}} = row;
+      if(_name === 'production') {
+        // удаляем параметры текущей строки
+        _owner.product_params.clear({elm: row.row});
+        // корректируем elm в параметрах нижележащих строк
+        _owner.product_params.forEach(prm => {
+          if (prm.elm > row.row) {
+            prm.elm--;
+          }
+        });
       }
     }
   };
