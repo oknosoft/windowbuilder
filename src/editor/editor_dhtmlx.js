@@ -146,7 +146,7 @@ class Editor extends EditorInvisible {
      * @type OTooolBar
      * @private
      */
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '2px', name: 'left', height: '294px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '2px', name: 'left', height: '320px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -155,13 +155,13 @@ class Editor extends EditorInvisible {
         {name: 'pen', css: 'tb_cursor-pen-freehand', tooltip: 'Добавить профиль'},
         {name: 'lay_impost', css: 'tb_cursor-lay-impost', tooltip: 'Вставить раскладку или импосты'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
+        {name: 'cut', css: 'tb_cursor-cut', tooltip: 'Тип соединения'},
         {name: 'fx', text: '<i class="fa fa-magic fa-fw"></i>', tooltip: 'Действия', sub:
             {
-              width: '120px',
+              width: '70px',
               height:'28px',
               align: 'hor',
               buttons: [
-                {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разрыв-объединение T'},
                 {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>1</sub></small>', tooltip: 'Импост по 0-штапику'},
                 {name: 'm2', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>2</sub></small>', tooltip: 'T в угол'},
                 ],
@@ -359,6 +359,11 @@ class Editor extends EditorInvisible {
      * Разрыв импостов
      */
     new ToolCut();
+
+    /**
+     * T в углу
+     */
+    new ToolM2();
 
     /**
      * Добавление (рисование) профилей
@@ -594,19 +599,6 @@ class Editor extends EditorInvisible {
     switch (name) {
     case 'm1':
       this.project.magnetism.m1();
-      break;
-
-    case 'm2':
-      this.tools.some((tool) => {
-        if(tool.options.name == 'cut'){
-          tool.activate();
-          return true;
-        }
-      });
-      break;
-
-    case 'cut':
-      $p.msg.show_not_implemented();
       break;
 
     default:

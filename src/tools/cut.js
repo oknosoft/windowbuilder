@@ -6,7 +6,7 @@
  */
 
 /**
- * ### Манипуляции с арками (дуги правильных окружностей)
+ * ### Изменяет тип соединения
  *
  * @class ToolCut
  * @extends ToolElement
@@ -14,170 +14,124 @@
  * @menuorder 56
  * @tooltip Разрыв
  */
-class ToolCut extends paper.Tool {
+class ToolCut extends ToolElement{
 
   constructor() {
-    super();
-    this.options = {name: 'cut'};
-    this.on({activate: this.on_activate});
-  }
 
-  on_activate() {
-    const {project, tb_left} = this._scope;
-    const previous = tb_left.get_selected();
+    super()
 
-    Promise.resolve().then(() => {
+    Object.assign(this, {
+      options: {name: 'cut'},
+      mouseStartPos: new paper.Point(),
+      node: null,
+      hitItem: null,
+      cont: null,
+      square: null,
+    })
 
-      // получаем выделенные узлы
-      const {selected} = project.magnetism;
+    this.on({
 
-      if(selected.break) {
-        $p.msg.show_msg({
-          type: 'alert-info',
-          text: `Выделено более одного узла`,
-          title: 'Соединение Т в угол'
-        });
-      }
-      else if(!selected.profile) {
-        $p.msg.show_msg({
-          type: 'alert-info',
-          text: `Не выделено ни одного узла профиля`,
-          title: 'Соединение Т в угол'
-        });
-      }
-      else {
+      activate() {
+        this.on_activate('cursor-arrow-cut');
+      },
 
-        const nodes = project.magnetism.filter(selected);
+      deactivate() {
+        this.remove_cont();
+      },
 
-        if(nodes.length >= 3) {
+      keydown(event) {
+        if (event.key == 'escape') {
+          this.remove_cont();
+        }
+      },
 
-          // находим профили импоста и углов
-          for(const elm of nodes) {
-            const cnn_point = elm.profile.cnn_point(elm.point);
-            if(cnn_point && cnn_point.is_x) {
-              this.split_angle(elm, nodes);
-              break;
-            }
-            else if(cnn_point && cnn_point.is_t) {
-              this.merge_angle(elm, nodes);
-              break;
-            }
-          }
+      mouseup(event) {
+
+        if(this.node) {
 
         }
-      }
-    });
 
-    if(previous) {
-      return this._scope.select_tool(previous.replace('left_', ''));
+        this.remove_cont();
+        this._scope.canvas_cursor('cursor-arrow-cut');
+
+      },
+
+      mousemove: this.hitTest
+
+    })
+
+  }
+
+  create_cont(point) {
+    if(!this.cont) {
+      const pt = this.project.view.projectToView(point);
+      this.cont = new $p.iface.OTooolBar({
+        wrapper: this._scope._wrapper,
+        top: `${pt.y + 10}px`,
+        left: `${pt.x - 20}px`,
+        name: 'tb_cut',
+        height: '28px',
+        width: '60px',
+        buttons: [
+          {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Тип соединения'},
+          {name: 'text', float: 'left', css: 'tb_text', tooltip: 'Произвольный текст'},
+        ],
+        onclick: (name) => {
+
+        },
+      });
+
+      this.square = new paper.Path.Rectangle({
+        point: point.add([-50, -50]),
+        size: [100, 100],
+        strokeColor: 'blue',
+        strokeWidth: 3,
+        dashArray: [8, 8],
+      });
     }
+    this._scope.canvas_cursor('cursor-arrow-do-cut');
   }
 
-  // объединяет в Т-крест профили углового соединения
-  merge_angle(impost, nodes) {
+  remove_cont() {
+    this.cont && this.cont.unload();
+    this.square && this.square.remove();
+    this.node = null;
+    this.cont = null;
+    this.square = null;
+  }
 
-    // получаем координаты узла
-    let point, profile, cnn;
-    nodes.some((elm) => {
-      if(elm !== impost && elm.point !== 't') {
-        profile = elm.profile;
-        point = profile.nearest(true) ? (profile.corns(elm.point === 'b' ? 1 : 2)) : profile[elm.point];
-        const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.КрестВСтык]);
-        if(cnns.length) {
-          cnn = cnns[0];
-          return true;
-        }
-      }
-    });
+  do_cut(element, point){
 
-    // а есть ли вообще подходящее соединение
-    if(cnn && !cnn.empty()) {
+  }
 
-      // приводим координаты трёх профилей к одной точке
-      for (const elm of nodes) {
-        if((elm.profile === impost || !elm.profile.nearest(true)) && elm.point !== 't' && !point.equals(elm.profile[elm.point])) {
-          elm.profile[elm.point] = point;
-        };
-      }
+  do_uncut(element, point){
 
-      // изменяем тип соединения
-      const {rays, project} = impost.profile;
-      const ray = rays[impost.point];
-      if(ray.cnn != cnn || ray.profile != profile) {
-        ray.clear();
-        ray.cnn = cnn;
-        ray.profile = profile;
-        project.register_change();
+  }
+
+  hitTest(event) {
+
+    const hitSize = 30;
+    this.hitItem = null;
+
+    if (event.point) {
+      this.hitItem = this.project.hitTest(event.point, { ends: true, tolerance: hitSize });
+    }
+
+    if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
+      const p1 = this.hitItem.item.parent;
+      const {b, e} = p1;
+      const name = b.getDistance(event.point) < e.getDistance(event.point) ? 'b' : 'e';
+      const cnn = p1.rays[name];
+      if(cnn.point) {
+        this.node = {};
+        this.create_cont(cnn.point);
       }
     }
     else {
-      const p1 = impost.profile ? impost.profile.inset.presentation : '...';
-      const p2 = profile ? profile.inset.presentation : '...';
-      $p.msg.show_msg({
-        type: 'alert-info',
-        text: `Не найдено соединение 'Крест в стык' для профилей ${p1} и ${p2}`,
-        title: 'Соединение Т в угол'
-      });
+      this._scope.canvas_cursor('cursor-arrow-cut');
     }
 
-  }
-
-  // превращает Т-крест углового соединения в обычный угол и Т
-  split_angle(impost, nodes) {
-
-    // получаем координаты узла
-    let point, profile, cnn;
-    nodes.some((elm) => {
-      if(elm !== impost && elm.point !== 't') {
-        profile = elm.profile;
-        if(profile.nearest(true)) {
-          const {outer} = profile.rays
-          const offset = elm.point === 'b' ? outer.getOffsetOf(profile.corns(1)) + 100 : outer.getOffsetOf(profile.corns(2)) - 100;
-          point = outer.getPointAt(offset);
-        }
-        else {
-          point = profile[elm.point];
-        }
-        const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.ТОбразное]);
-        if(cnns.length) {
-          cnn = cnns[0];
-          return true;
-        }
-      }
-    });
-
-    // а есть ли вообще подходящее соединение
-    if(cnn && !cnn.empty()) {
-
-      // отодвигаем импост от угла
-      impost.profile[impost.point] = point === profile.b ? profile.generatrix.getPointAt(100) : profile.generatrix.getPointAt(profile.generatrix.length - 100);
-
-      // изменяем тип соединения
-      const {rays, project} = impost.profile;
-      const ray = rays[impost.point];
-      ray.clear();
-      ray.cnn = cnn;
-      ray.profile = profile;
-      project.register_change();
-    }
-    else {
-      const p1 = impost.profile ? impost.profile.inset.presentation : '...';
-      const p2 = profile ? profile.inset.presentation : '...';
-      $p.msg.show_msg({
-        type: 'alert-info',
-        text: `Не найдено соединение Т для профилей ${p1} и ${p2}`,
-        title: 'Соединение Т из угла'
-      });
-    }
-
-  }
-
-  merge_t() {
-
-  }
-
-  split_t() {
-
+    return true;
   }
 
 }
