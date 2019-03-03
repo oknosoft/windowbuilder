@@ -4219,7 +4219,15 @@ class Contour extends AbstractFilling(paper.Layer) {
     }, (prow) => {
       const {param} = prow;
       const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
-      const hide = param.is_calculated || links.some((link) => link.hide);
+      let hide = param.is_calculated;
+      if(!hide){
+        if(links.length) {
+          hide = links.some((link) => link.hide);
+        }
+        else {
+          hide = prow.hide;
+        }
+      };
 
       if (links.length && param.linked_values(links, prow)) {
         notify = true;
@@ -10858,7 +10866,7 @@ class Scheme extends paper.Project {
 
   _dp_listener(obj, fields) {
 
-    const {_attr, ox, _scope} = this;
+    const {_attr, ox} = this;
 
     if(_attr._loading || _attr._snapshot || obj != this._dp) {
       return;
@@ -10884,7 +10892,7 @@ class Scheme extends paper.Project {
 
       obj.sys.refill_prm(ox, 0, true);
 
-      _scope.eve.emit_async('rows', ox, {extra_fields: true, params: true});
+      obj._manager.emit_async('rows', obj, {extra_fields: true});
 
       for (const contour of this.contours) {
         contour.on_sys_changed();

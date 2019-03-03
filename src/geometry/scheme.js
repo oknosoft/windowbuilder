@@ -120,7 +120,7 @@ class Scheme extends paper.Project {
    */
   _dp_listener(obj, fields) {
 
-    const {_attr, ox, _scope} = this;
+    const {_attr, ox} = this;
 
     if(_attr._loading || _attr._snapshot || obj != this._dp) {
       return;
@@ -148,7 +148,7 @@ class Scheme extends paper.Project {
       obj.sys.refill_prm(ox, 0, true);
 
       // обновляем свойства изделия и створки
-      _scope.eve.emit_async('rows', ox, {extra_fields: true, params: true});
+      obj._manager.emit_async('rows', obj, {extra_fields: true});
 
       // информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
       for (const contour of this.contours) {
