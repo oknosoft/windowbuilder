@@ -7575,15 +7575,20 @@ class Magnetism {
 
     for(const profile of selected.profiles) {
       if(profile !== selected.profile) {
+        let pushed;
         if(profile.b.is_nearest(point, true)) {
           nodes.push({profile, point: 'b'});
+          pushed = true;
         }
         if(profile.e.is_nearest(point, true)) {
           nodes.push({profile, point: 'e'});
+          pushed = true;
         }
-        const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
-        if(px.is_nearest(point, true)) {
-          nodes.push({profile, point: 't'});
+        if(!pushed) {
+          const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
+          if(px.is_nearest(point, true)) {
+            nodes.push({profile, point: 't'});
+          }
         }
       }
     }
@@ -12976,7 +12981,7 @@ class ToolCut extends ToolElement{
     Object.assign(this, {
       options: {name: 'cut'},
       mouseStartPos: new paper.Point(),
-      node: null,
+      nodes: null,
       hitItem: null,
       cont: null,
       square: null,
@@ -12995,14 +13000,11 @@ class ToolCut extends ToolElement{
       keydown(event) {
         if (event.key == 'escape') {
           this.remove_cont();
+          this._scope.canvas_cursor('cursor-arrow-cut');
         }
       },
 
       mouseup(event) {
-
-        if(this.node) {
-
-        }
 
         this.remove_cont();
         this._scope.canvas_cursor('cursor-arrow-cut');
@@ -13015,23 +13017,55 @@ class ToolCut extends ToolElement{
 
   }
 
-  create_cont(point) {
-    if(!this.cont) {
+  create_cont() {
+    const {nodes} = this;
+    if(!this.cont && nodes.length) {
+      const point = nodes[0].profile[nodes[0].point];
       const pt = this.project.view.projectToView(point);
+
+      const buttons = [];
+      if(nodes.length > 2) {
+        buttons.push({name: 'cut', float: 'left', css: 'tb_cursor-cut tb_disable', tooltip: 'Разорвать Т'});
+        buttons.push({name: 'uncut', float: 'left', css: 'tb_cursor-uncut', tooltip: 'Объединить разрыв в Т'});
+      }
+      else if(nodes.some(({point}) => point === 't')) {
+        buttons.push({name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разорвать Т'});
+        buttons.push({name: 'uncut', float: 'left', css: 'tb_cursor-uncut tb_disable', tooltip: 'Объединить разрыв в Т'});
+      }
+      else {
+        buttons.push({name: 'diagonal', float: 'left', css: 'tb_cursor-diagonal', tooltip: 'Диагональное'});
+        buttons.push({name: 'vh', float: 'left', css: 'tb_cursor-vh', tooltip: 'Угловое к горизонтали'});
+        buttons.push({name: 'hv', float: 'left', css: 'tb_cursor-hv', tooltip: 'Угловое к вертикали'});
+      }
+      const types = new Set();
+      for(const {profile, point} of nodes) {
+        if(point === 'b' || point === 'e') {
+          const cnn = profile.rays[point];
+          for(const tcnn of $p.cat.cnns.nom_cnn(profile, cnn.profile, cnn.cnn_types)) {
+            types.add(tcnn.cnn_type);
+          }
+        }
+      }
+      for(const btn of buttons) {
+        if(!btn.css.includes('tb_disable')) {
+          if(btn.name === 'uncut' && !types.has($p.enm.cnn_types.t) ||
+            btn.name === 'vh' && !types.has($p.enm.cnn_types.ah) ||
+            btn.name === 'hv' && !types.has($p.enm.cnn_types.av) ||
+            btn.name === 'diagonal' && !types.has($p.enm.cnn_types.ad)
+          )
+          btn.css += ' tb_disable';
+        }
+      }
+
       this.cont = new $p.iface.OTooolBar({
         wrapper: this._scope._wrapper,
         top: `${pt.y + 10}px`,
         left: `${pt.x - 20}px`,
         name: 'tb_cut',
         height: '28px',
-        width: '60px',
-        buttons: [
-          {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Тип соединения'},
-          {name: 'text', float: 'left', css: 'tb_text', tooltip: 'Произвольный текст'},
-        ],
-        onclick: (name) => {
-
-        },
+        width: `${29 * buttons.length + 1}px`,
+        buttons,
+        onclick: this.tb_click.bind(this),
       });
 
       this.square = new paper.Path.Rectangle({
@@ -13042,15 +13076,19 @@ class ToolCut extends ToolElement{
         dashArray: [8, 8],
       });
     }
-    this._scope.canvas_cursor('cursor-arrow-do-cut');
+    this._scope.canvas_cursor('cursor-arrow-white');
   }
 
   remove_cont() {
     this.cont && this.cont.unload();
     this.square && this.square.remove();
-    this.node = null;
+    this.nodes = null;
     this.cont = null;
     this.square = null;
+  }
+
+  tb_click(name) {
+    $p.msg.show_not_implemented();
   }
 
   do_cut(element, point){
@@ -13059,6 +13097,26 @@ class ToolCut extends ToolElement{
 
   do_uncut(element, point){
 
+  }
+
+  nodes_different(nn) {
+    const {nodes} = this;
+    if(!nodes || nn.length !== nodes.length) {
+      return true;
+    }
+    for(const n1 in nodes) {
+      let ok;
+      for(const n2 in nn) {
+        if(n1.profile === n2.profile && n1.point === n2.point) {
+          ok = true;
+          break;
+        }
+      }
+      if(!ok) {
+        return false;
+      }
+    }
+    return true;
   }
 
   hitTest(event) {
@@ -13071,13 +13129,18 @@ class ToolCut extends ToolElement{
     }
 
     if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
-      const p1 = this.hitItem.item.parent;
-      const {b, e} = p1;
-      const name = b.getDistance(event.point) < e.getDistance(event.point) ? 'b' : 'e';
-      const cnn = p1.rays[name];
-      if(cnn.point) {
-        this.node = {};
-        this.create_cont(cnn.point);
+      const {activeLayer, magnetism} = this.project;
+      const profile = this.hitItem.item.parent;
+      if(profile.parent === activeLayer) {
+        const {profiles} = activeLayer;
+        const {b, e} = profile;
+        const selected = {profiles, profile, point: b.getDistance(event.point) < e.getDistance(event.point) ? 'b' : 'e'};
+        const nodes = magnetism.filter(selected);
+        if(this.nodes_different(nodes)) {
+          this.remove_cont();
+          this.nodes = nodes;
+          this.create_cont();
+        }
       }
     }
     else {

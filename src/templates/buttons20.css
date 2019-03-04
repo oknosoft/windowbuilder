@@ -17,9 +17,15 @@
 .tb_cursor-lay-impost { background-image: url(/imgs/cursor-lay-impost.png);}
 .tb_cursor-arc-r { background-image: url(/imgs/cursor-arc-r.png);}
 .tb_cursor-cut { background-image: url(/imgs/cursor-cut.png);}
+.tb_cursor-uncut { background-image: url(/imgs/cursor-uncut.png);}
+.tb_cursor-hv { background-image: url(/imgs/cursor-hv.png);}
+.tb_cursor-vh { background-image: url(/imgs/cursor-vh.png);}
+.tb_cursor-diagonal { background-image: url(/imgs/cursor-diagonal.png);}
 .tb_ruler_ui { background-image: url(/imgs/ruler_ui.png);}
 .tb_stamp { background-image: url(/imgs/stamp.png);}
 .tb_grid { background-image: url(/imgs/grid.png);}
 .tb_line { background-image: url(/imgs/line.png);}
 .tb_text { background-image: url(/imgs/text.png);}
+
+.tb_disable { pointer-events: none; opacity: 0.4}
 
