@@ -5104,15 +5104,20 @@ class Magnetism {
 
     for(const profile of selected.profiles) {
       if(profile !== selected.profile) {
+        let pushed;
         if(profile.b.is_nearest(point, true)) {
           nodes.push({profile, point: 'b'});
+          pushed = true;
         }
         if(profile.e.is_nearest(point, true)) {
           nodes.push({profile, point: 'e'});
+          pushed = true;
         }
-        const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
-        if(px.is_nearest(point, true)) {
-          nodes.push({profile, point: 't'});
+        if(!pushed) {
+          const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
+          if(px.is_nearest(point, true)) {
+            nodes.push({profile, point: 't'});
+          }
         }
       }
     }

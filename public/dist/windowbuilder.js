@@ -13041,7 +13041,8 @@ class ToolCut extends ToolElement{
       for(const {profile, point} of nodes) {
         if(point === 'b' || point === 'e') {
           const cnn = profile.rays[point];
-          for(const tcnn of $p.cat.cnns.nom_cnn(profile, cnn.profile, cnn.cnn_types)) {
+          const cnns = $p.cat.cnns.nom_cnn(profile, cnn.profile, nodes.length > 2 ? undefined : cnn.cnn_types);
+          for(const tcnn of cnns) {
             types.add(tcnn.cnn_type);
           }
         }
@@ -13052,8 +13053,16 @@ class ToolCut extends ToolElement{
             btn.name === 'vh' && !types.has($p.enm.cnn_types.ah) ||
             btn.name === 'hv' && !types.has($p.enm.cnn_types.av) ||
             btn.name === 'diagonal' && !types.has($p.enm.cnn_types.ad)
-          )
-          btn.css += ' tb_disable';
+          ){
+            btn.css += ' tb_disable';
+          }
+          else if(['diagonal', 'vh', 'hv'].includes(btn.name) && nodes.every(({profile, point}) => {
+            const {cnn} = profile.rays[point];
+            const type = btn.name === 'diagonal' ? $p.enm.cnn_types.ad : (btn.name === 'vh' ? $p.enm.cnn_types.ah : $p.enm.cnn_types.av);
+            return cnn && cnn.cnn_type === type;
+          })){
+            btn.css += ' tb_disable';
+          }
         }
       }
 
@@ -13088,15 +13097,172 @@ class ToolCut extends ToolElement{
   }
 
   tb_click(name) {
-    $p.msg.show_not_implemented();
+    const {nodes} = this;
+    if(!nodes) {
+      return;
+    }
+    if(['diagonal', 'vh', 'hv'].includes(name)) {
+      const type = name === 'diagonal' ? $p.enm.cnn_types.ad : (name === 'vh' ? $p.enm.cnn_types.ah : $p.enm.cnn_types.av);
+      for(const {profile, point} of nodes) {
+        if(point === 'b' || point === 'e') {
+          const cnn = profile.rays[point];
+          if(cnn.cnn.cnn_type !== type) {
+            const cnns = $p.cat.cnns.nom_cnn(profile, cnn.profile, [type]);
+            if(cnns.length) {
+              cnn.cnn = cnns[0];
+              this.project.register_change();
+            }
+          }
+        }
+      }
+    }
+    else if(name === 'cut') {
+      this.do_cut();
+    }
+    else if(name === 'uncut') {
+      this.do_uncut();
+    }
+    this.remove_cont();
   }
 
-  do_cut(element, point){
+  do_cut(){
+    let impost, rack;
+    for(const node of this.nodes) {
+      if(node.point === 'b' || node.point === 'e') {
+        impost = node;
+      }
+      else if(node.point === 't') {
+        rack = node;
+      }
+    }
+    if(!impost || !rack) {
+      return;
+    }
 
+
+    let cnn = rack.profile.cnn_point('e');
+    const base = cnn.cnn;
+    cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
+    cnn.clear(true);
+    impost.profile.rays[impost.point].clear(true);
+
+    const {generatrix} = rack.profile;
+    if(generatrix.hasOwnProperty('insert')) {
+      delete generatrix.insert;
+    }
+
+    const loc = generatrix.getNearestLocation(impost.profile[impost.point]);
+    const rack2 = new Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
+
+    cnn = rack2.cnn_point('e');
+    if(base && cnn && cnn.profile) {
+      if(!cnn.cnn || cnn.cnn.cnn_type !== base.cnn_type){
+        const cnns = $p.cat.cnns.nom_cnn(rack2, cnn.profile, [base.cnn_type]);
+        if(cnns.includes(base)) {
+          cnn.cnn = base;
+        }
+        else if(cnns.length) {
+          cnn.cnn = cnns[0];
+        }
+      }
+      cnn = cnn.profile.cnn_point(cnn.profile_point);
+      if(cnn.profile === rack2) {
+        const cnns = $p.cat.cnns.nom_cnn(cnn.parent, rack2, [base.cnn_type]);
+        if(cnns.includes(base)) {
+          cnn.cnn = base;
+        }
+        else if(cnns.length) {
+          cnn.cnn = cnns[0];
+        }
+      }
+    }
+
+    this.project.register_change();
   }
 
-  do_uncut(element, point){
+  do_uncut(){
+    const nodes = this.nodes.filter(({point}) => point === 'b' || point === 'e');
+    let impost, rack1, rack2;
+    for(const n1 of nodes) {
+      for(const n2 of nodes) {
+        if(n1 === n2) continue;
+        const angle = n1.profile.generatrix.angle_to(n2.profile.generatrix, n1.profile[n1.point]);
+        if(!rack1 && !rack2) {
+          if(angle < 20 || angle > 340) {
+            rack1 = n1;
+            rack2 = n2;
+          }
+        }
+        else if((angle > 70 && angle < 110) || (angle > 250 && angle < 290)) {
+          if(rack1 !== n1 && rack2 !== n1) {
+            impost = n1;
+          }
+          else if(rack1 !== n2 && rack2 !== n2) {
+            impost = n2;
+          }
+        }
+      }
+    }
+    if(!impost || !rack1 || !rack2) {
+      return;
+    }
 
+    rack1.profile.rays[rack1.point].clear(true);
+    impost.profile.rays[impost.point].clear(true);
+
+    const p2 = rack2.profile[rack2.point === 'b' ? 'e' : 'b'];
+    rack1.profile[rack1.point] = p2;
+
+    let base;
+    let cnn = rack2.profile.cnn_point('b');
+    if(rack2.point === 'e') {
+      base = cnn.cnn;
+    }
+    cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
+    cnn = rack2.profile.cnn_point('e');
+    if(rack2.point === 'b') {
+      base = cnn.cnn;
+    }
+    cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
+    const imposts = rack2.profile.joined_imposts();
+    for(const ji of imposts.inner.concat(imposts.outer)) {
+      cnn = ji.cnn_point('b');
+      if(cnn.profile === rack2.profile) {
+        cnn.clear(true);
+      }
+      cnn = ji.cnn_point('e');
+      if(cnn.profile === rack2.profile) {
+        cnn.clear(true);
+      }
+    }
+    rack2.profile.rays.clear(true);
+    rack2.profile.removeChildren();
+    rack2.profile.remove();
+
+    cnn = rack1.profile.cnn_point(rack1.point);
+    if(base && cnn && cnn.profile) {
+      if(!cnn.cnn || cnn.cnn.cnn_type !== base.cnn_type){
+        const cnns = $p.cat.cnns.nom_cnn(rack1.profile, cnn.profile, [base.cnn_type]);
+        if(cnns.includes(base)) {
+          cnn.cnn = base;
+        }
+        else if(cnns.length) {
+          cnn.cnn = cnns[0];
+        }
+        cnn = cnn.profile.cnn_point(cnn.profile_point);
+        if(cnn.profile === rack1.profile) {
+          const cnns = $p.cat.cnns.nom_cnn(cnn.parent, rack1.profile, [base.cnn_type]);
+          if(cnns.includes(base)) {
+            cnn.cnn = base;
+          }
+          else if(cnns.length) {
+            cnn.cnn = cnns[0];
+          }
+        }
+      }
+    }
+
+    this.project.register_change();
   }
 
   nodes_different(nn) {
