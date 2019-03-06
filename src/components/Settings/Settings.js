@@ -29,6 +29,7 @@ class Settings extends Component {
     title: PropTypes.string,
     couch_direct: PropTypes.bool,
     enable_save_pwd: PropTypes.bool,
+    ram_indexer: PropTypes.bool,
     handleSetPrm: PropTypes.func.isRequired,
     handleIfaceState: PropTypes.func.isRequired,
     classes: PropTypes.object,
@@ -36,7 +37,7 @@ class Settings extends Component {
 
   constructor(props) {
     super(props);
-    const {zone, couch_path, enable_save_pwd, couch_direct} = props;
+    const {zone, couch_path, enable_save_pwd, couch_direct, ram_indexer} = props;
 
     let hide_price;
     if($p.wsql.get_user_param('hide_price_dealer')) {
@@ -78,7 +79,7 @@ class Settings extends Component {
     }
 
     this.state = {
-      zone, couch_path, enable_save_pwd, couch_direct, hide_price,
+      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, hide_price,
       confirm_reset: false, surcharge_internal, discount_percent_internal, surcharge_disabled
     };
   }
@@ -144,7 +145,7 @@ class Settings extends Component {
   render() {
     const {classes} = this.props;
     const {
-      zone, couch_path, enable_save_pwd, couch_direct, confirm_reset, hide_price,
+      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, confirm_reset, hide_price,
       surcharge_internal, discount_percent_internal, surcharge_disabled
     } = this.state;
 
@@ -191,7 +192,19 @@ class Settings extends Component {
             />
             <FormHelperText style={{marginTop: -4}}>Не требовать повторного ввода пароля</FormHelperText>
           </FormControl>
+
+          <FormControl>
+            <FormControlLabel
+              control={<Switch
+                onChange={(event, checked) => this.setState({ram_indexer: checked})}
+                checked={ram_indexer}/>}
+              label="Использовать RamIndexer"
+            />
+            <FormHelperText style={{marginTop: -4}}>Новый источник данных для динсписков</FormHelperText>
+          </FormControl>
+
         </FormGroup>
+
 
         <Typography variant="h6" style={{paddingTop: 16}}>Колонки цен</Typography>
         <Typography>Настройка видимости колонок в документе &quot;Расчет&quot; и графическом построителе</Typography>

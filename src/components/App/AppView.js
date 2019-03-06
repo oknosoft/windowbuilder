@@ -17,7 +17,8 @@ import MetaTreePage from '../MetaTreePage';         // дерево метада
 
 import {withNavigateAndMeta} from 'metadata-redux';
 import Builder from '../Builder';
-import CalcOrderList from '../CalcOrderList';
+
+let CalcOrderList = DumbScreen;
 
 import items, {item_props} from './menu_items';                   // массив элементов меню
 
@@ -48,6 +49,22 @@ class AppRoot extends Component {
 
   componentDidMount() {
     $p.ui.dialogs.init({handleIfaceState: this.props.handleIfaceState});
+    let comp;
+    if($p.wsql.get_user_param('ram_indexer')) {
+      comp = import('../CalcOrderList/CalcOrderList.js');
+      const orders = items.splice(0, 1);
+      items[0].items.unshift({
+        text: 'Расчеты-заказы',
+        navigate: '/',
+        need_meta: true,
+        need_user: true,
+        icon: orders.icon,
+      });
+    }
+    else {
+     comp = import('../CalcOrderList/CalcOrderListDhtmlx');
+    }
+    comp.then((module) => CalcOrderList = module.default);
   }
 
   render() {
