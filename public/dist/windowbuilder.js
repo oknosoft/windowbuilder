@@ -4219,7 +4219,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     }, (prow) => {
       const {param} = prow;
       const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
-      let hide = param.is_calculated;
+      let hide = !param.show_calculated && param.is_calculated;
       if(!hide){
         if(links.length) {
           hide = links.some((link) => link.hide);
@@ -12985,6 +12985,7 @@ class ToolCut extends ToolElement{
       hitItem: null,
       cont: null,
       square: null,
+      profile: null,
     })
 
     this.on({
@@ -13005,6 +13006,23 @@ class ToolCut extends ToolElement{
       },
 
       mouseup(event) {
+
+        const hitItem = this.project.hitTest(event.point, {fill: true, stroke: false, segments: false});
+        if(hitItem && hitItem.item.parent instanceof Profile) {
+          let item = hitItem.item.parent;
+          if(event.modifiers.shift) {
+            item.selected = !item.selected;
+          }
+          else {
+            this.project.deselectAll();
+            item.selected = true;
+          }
+          item.attache_wnd(this._scope._acc.elm);
+          this.profile = item;
+        }
+        else {
+          this.profile = null;
+        }
 
         this.remove_cont();
         this._scope.canvas_cursor('cursor-arrow-cut');
@@ -13125,6 +13143,16 @@ class ToolCut extends ToolElement{
     this.remove_cont();
   }
 
+  deselect() {
+    const {project, profile} = this;
+    if(profile) {
+      profile.detache_wnd();
+      this.profile = null;
+    }
+    project.deselectAll();
+    project.register_change();
+  }
+
   do_cut(){
     let impost, rack;
     for(const node of this.nodes) {
@@ -13177,7 +13205,7 @@ class ToolCut extends ToolElement{
       }
     }
 
-    this.project.register_change();
+    this.deselect();
   }
 
   do_uncut(){
@@ -13262,7 +13290,7 @@ class ToolCut extends ToolElement{
       }
     }
 
-    this.project.register_change();
+    this.deselect();
   }
 
   nodes_different(nn) {

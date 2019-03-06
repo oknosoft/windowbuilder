@@ -27,6 +27,7 @@ class ToolCut extends ToolElement{
       hitItem: null,
       cont: null,
       square: null,
+      profile: null,
     })
 
     this.on({
@@ -47,6 +48,23 @@ class ToolCut extends ToolElement{
       },
 
       mouseup(event) {
+
+        const hitItem = this.project.hitTest(event.point, {fill: true, stroke: false, segments: false});
+        if(hitItem && hitItem.item.parent instanceof Profile) {
+          let item = hitItem.item.parent;
+          if(event.modifiers.shift) {
+            item.selected = !item.selected;
+          }
+          else {
+            this.project.deselectAll();
+            item.selected = true;
+          }
+          item.attache_wnd(this._scope._acc.elm);
+          this.profile = item;
+        }
+        else {
+          this.profile = null;
+        }
 
         this.remove_cont();
         this._scope.canvas_cursor('cursor-arrow-cut');
@@ -173,6 +191,16 @@ class ToolCut extends ToolElement{
     this.remove_cont();
   }
 
+  deselect() {
+    const {project, profile} = this;
+    if(profile) {
+      profile.detache_wnd();
+      this.profile = null;
+    }
+    project.deselectAll();
+    project.register_change();
+  }
+
   // делает разрыв и вставляет в него импост
   do_cut(){
     let impost, rack;
@@ -226,7 +254,7 @@ class ToolCut extends ToolElement{
       }
     }
 
-    this.project.register_change();
+    this.deselect();
   }
 
   // объединяет разрыв и делает Т
@@ -315,7 +343,7 @@ class ToolCut extends ToolElement{
       }
     }
 
-    this.project.register_change();
+    this.deselect();
   }
 
   nodes_different(nn) {

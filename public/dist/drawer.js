@@ -1748,7 +1748,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     }, (prow) => {
       const {param} = prow;
       const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
-      let hide = param.is_calculated;
+      let hide = !param.show_calculated && param.is_calculated;
       if(!hide){
         if(links.length) {
           hide = links.some((link) => link.hide);
