@@ -14,8 +14,6 @@ import DataList from 'metadata-react/DataList';
 import WindowSizer from 'metadata-react/WindowSize';
 import {withObj} from 'metadata-redux';
 import qs from 'qs';
-import Statuses, {statuses} from './Statuses';
-
 
 class CalcOrderList extends Component {
 
@@ -29,19 +27,20 @@ class CalcOrderList extends Component {
     this.props.handleSelect(row, _mgr);
   };
 
-  find_rows = (selector) => {
+  find_rows = (selector, scheme) => {
     const {remote, props} = $p.adapters.pouch;
     const {username, password} = remote.doc.__opts.auth;
 
+    scheme.append_selection(selector.selector);
     selector.sort = [{date: 'desc'}];
 
-    const headers = new Headers();
-    headers.append('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(username + ':' + password))));
-    headers.append('suffix', props._suffix || '0');
     const opts = {
       method: 'post',
       credentials: 'include',
-      headers,
+      headers: {
+        Authorization: `Basic ${btoa(unescape(encodeURIComponent(username + ':' + password)))}`,
+        suffix: props._suffix || '0'
+      },
       body: JSON.stringify(selector)
     };
 
@@ -88,9 +87,8 @@ class CalcOrderList extends Component {
         find_rows={this.find_rows}
         //selectionMode
         //denyAddDel
-        show_variants
+        //show_variants
         show_search
-        btns={<Statuses/>}
         {...sizes}
       />
     );
