@@ -21,6 +21,7 @@ class ClientOfDealer extends Component {
     const {handleCancel, handleCalck, dialog: {ref, cmd, _mgr}} = props;
     this.handleCancel = handleCancel.bind(this);
     this.handleCalck = handleCalck.bind(this);
+    this.state = {msg: null};
 
     this.obj = _mgr.by_ref[ref];
     const meta = this.meta = _mgr.metadata().form[cmd];
@@ -51,9 +52,25 @@ class ClientOfDealer extends Component {
   }
 
   handleOk = () => {
-    const {data, obj, props: {dialog}} = this;
+    const {data, obj, meta, fake_obj, props: {dialog}} = this;
+
+    // если не указаны обязательные реквизиты
+    for (var mf in meta.fields){
+      if (meta.fields[mf].mandatory && !fake_obj[mf]) {
+        this.setState({msg: {
+          title: $p.msg.mandatory_title,
+          text: $p.msg.mandatory_field.replace("%1", meta.fields[mf].synonym)
+        }});
+        return;
+      }
+    }
+
     obj[dialog.cmd] = data.join('\u00A0');
     this.handleCancel();
+  };
+
+  handleErrClose = () => {
+    this.setState({msg: null});
   };
 
   renderItems(items) {
@@ -79,7 +96,7 @@ class ClientOfDealer extends Component {
 
   render() {
 
-    const {handleCancel, handleOk, meta} = this;
+    const {handleCancel, handleOk, handleErrClose, meta, state: {msg}} = this;
 
     return <Dialog
       open
@@ -93,6 +110,17 @@ class ClientOfDealer extends Component {
       ]}
     >
       {this.renderItems(meta.obj.items)}
+      {msg && <Dialog
+        open
+        title={msg.title || 'Ошибка при записи'}
+        onClose={handleErrClose}
+        actions={[
+          <Button key="ok" onClick={handleErrClose} color="primary">Ок</Button>,
+        ]}
+      >
+        {msg.obj && <div>{msg.obj.name}</div>}
+        {msg.text || msg}
+      </Dialog>}
     </Dialog>;
 
   }
