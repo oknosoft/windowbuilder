@@ -166,7 +166,7 @@ $p.cat.clrs.__define({
       attr.toolbar_click = function (btn_id, wnd){
 
         // если указаны оба цвета
-        if(btn_id=="btn_select" && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
+        if(btn_id == 'btn_select' && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
 
           // если цвета изнутри и снаружи одинаковы, возвращаем первый
           if(eclr.clr_in == eclr.clr_out) {
@@ -185,7 +185,7 @@ $p.cat.clrs.__define({
               $p.cat.clrs.create({
                 clr_in: eclr.clr_in,
                 clr_out: eclr.clr_out,
-                name: eclr.clr_in.name + " \\ " + eclr.clr_out.name,
+                name: `${eclr.clr_in.name} \\ ${eclr.clr_out.name}`,
                 parent: $p.job_prm.builder.composite_clr_folder
               })
               // регистрируем цвет в couchdb
@@ -206,57 +206,57 @@ $p.cat.clrs.__define({
 
       const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
-			function get_option_list(selection, val) {
+      function get_option_list(selection, val) {
 
-				selection.clr_in = $p.utils.blank.guid;
-				selection.clr_out = $p.utils.blank.guid;
+        selection.clr_in = $p.utils.blank.guid;
+        selection.clr_out = $p.utils.blank.guid;
 
-				if(attr.selection){
-					attr.selection.some((sel) => {
-						for(var key in sel){
-							if(key == "ref"){
-								selection.ref = sel.ref;
-								return true;
-							}
-						}
-					});
-				}
+        if(attr.selection) {
+          attr.selection.some((sel) => {
+            for (var key in sel) {
+              if(key == 'ref') {
+                selection.ref = sel.ref;
+                return true;
+              }
+            }
+          });
+        }
 
-				return this.constructor.prototype.get_option_list.call(this, selection, val);
-			}
+        return this.constructor.prototype.get_option_list.call(this, selection, val);
+      }
 
 			return (wnd instanceof Promise ? wnd : Promise.resolve(wnd))
 				.then((wnd) => {
 
 					const tb_filter = wnd.elmnts.filter;
 
-					tb_filter.__define({
-						get_filter: {
-							value() {
-								const res = {
-									selection: []
-								};
-								if(clr_in.getSelectedValue())
-									res.selection.push({clr_in: clr_in.getSelectedValue()});
-								if(clr_out.getSelectedValue())
-									res.selection.push({clr_out: clr_out.getSelectedValue()});
-								if(res.selection.length)
-									res.hide_tree = true;
-								return res;
-							}
-						}
-					});
+          tb_filter.__define({
+            get_filter: {
+              value() {
+                const res = {
+                  selection: []
+                };
+                if(clr_in.getSelectedValue()) {
+                  res.selection.push({clr_in: clr_in.getSelectedValue()});
+                }
+                if(clr_out.getSelectedValue()) {
+                  res.selection.push({clr_out: clr_out.getSelectedValue()});
+                }
+                if(res.selection.length) {
+                  res.hide_tree = true;
+                }
+                return res;
+              }
+            }
+          });
 
-					wnd.attachEvent("onClose", () => {
-
-						clr_in.unload();
-						clr_out.unload();
-
-						eclr.clr_in = $p.utils.blank.guid;
-						eclr.clr_out = $p.utils.blank.guid;
-
-						return true;
-					});
+          wnd.attachEvent('onClose', () => {
+            clr_in.unload();
+            clr_out.unload();
+            eclr.clr_in = $p.utils.blank.guid;
+            eclr.clr_out = $p.utils.blank.guid;
+            return true;
+          });
 
 
 					eclr.clr_in = $p.utils.blank.guid;
@@ -331,6 +331,9 @@ $p.CatClrs = class CatClrs extends $p.CatClrs {
 
   // записывает элемент цвета на сервере
   register_on_server() {
+    if(this.parent !== $p.job_prm.builder.composite_clr_folder) {
+      return Promise.reject(new Error('composite_clr_folder'));
+    }
     const {pouch} = $p.adapters;
     return pouch.save_obj(this, {db: pouch.remote.ram});
   }
