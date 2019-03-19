@@ -56,7 +56,7 @@
        * получим задействованные в заказе объекты характеристик
        */
       const refs = [];
-      o.production.each((row) => {
+      o.production.forEach((row) => {
         if(!$p.utils.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new()) {
           refs.push(row._obj.characteristic);
         }
@@ -71,7 +71,7 @@
             _in_header_stat_s: function(tag,index,data){
               const calck=function(){
                 let sum=0;
-                o.production.each((row) => {
+                o.production.forEach((row) => {
                   sum += row.s * row.quantity;
                 });
                 return sum.toFixed(2);

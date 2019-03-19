@@ -279,7 +279,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
       }
       else if(this.sys.production.count() > 1) {
-        this.sys.production.each((row) => {
+        this.sys.production.forEach((row) => {
 
           if(setted) {
             return false;

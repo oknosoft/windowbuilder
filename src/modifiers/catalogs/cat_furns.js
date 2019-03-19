@@ -110,7 +110,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
       // умолчания и скрытость по табчасти системы
       const {param} = prm_row;
-      project._dp.sys.furn_params.each((row) => {
+      project._dp.sys.furn_params.forEach((row) => {
         if(row.param == param){
           if(row.forcibly || forcibly){
             prm_row.value = row.value;
@@ -151,9 +151,9 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
     afurn_set.push(this.ref);
 
-    this.selection_params.each((row) => {aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param)});
+    this.selection_params.forEach((row) => {aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param)});
 
-    this.specification.each((row) => {row.nom instanceof $p.CatFurns && row.nom.add_furn_prm(aprm, afurn_set)});
+    this.specification.forEach((row) => {row.nom instanceof $p.CatFurns && row.nom.add_furn_prm(aprm, afurn_set)});
 
     return aprm;
 
@@ -249,6 +249,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
             const procedure_row = res.add(dop_row);
             procedure_row.origin = this;
+            procedure_row.specify = row_furn.nom;
             procedure_row.handle_height_max = contour.cnstr;
             if(dop_row.transfer_option == НаПримыкающий){
               const nearest = elm.nearest();
@@ -280,7 +281,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
           // в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
           if(dop_row.is_set_row){
             const {nom} = dop_row;
-            nom && nom.get_spec(contour, cache).each((sub_row) => {
+            nom && nom.get_spec(contour, cache).forEach((sub_row) => {
               if(sub_row.is_procedure_row){
                 res.add(sub_row);
               }
@@ -290,7 +291,9 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
             });
           }
           else{
-            res.add(dop_row).origin = this;
+            const row_spec = res.add(dop_row);
+            row_spec.origin = this;
+            row_spec.specify = row_furn.nom;
           }
         });
       }
@@ -298,7 +301,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
       // в зависимости от типа строки, добавляем саму строку или её подчиненную спецификацию
       if(row_furn.is_set_row){
         const {nom} = row_furn;
-        nom && nom.get_spec(contour, cache, exclude_dop).each((sub_row) => {
+        nom && nom.get_spec(contour, cache, exclude_dop).forEach((sub_row) => {
           if(sub_row.is_procedure_row){
             res.add(sub_row);
           }

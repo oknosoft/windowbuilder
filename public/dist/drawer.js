@@ -10678,7 +10678,7 @@ class ProductsBuilding {
       const {cnn_type, specification, selection_params} = cnn;
       const {ii, xx, acn} = $p.enm.cnn_types;
 
-      specification.each((row) => {
+      specification.forEach((row) => {
         const {nom} = row;
         if(!nom || nom.empty() || nom == art1 || nom == art2) {
           return;
@@ -10733,7 +10733,7 @@ class ProductsBuilding {
       contour.update_handle_height(furn_cache);
 
       const blank_clr = $p.cat.clrs.get();
-      furn.furn_set.get_spec(contour, furn_cache).each((row) => {
+      furn.furn_set.get_spec(contour, furn_cache).forEach((row) => {
         const elm = {elm: -contour.cnstr, clr: blank_clr};
         const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, spec, ox});
 
@@ -10765,7 +10765,7 @@ class ProductsBuilding {
         return ok = false;
       }
 
-      furn.open_tunes.each((row) => {
+      furn.open_tunes.forEach((row) => {
         const elm = contour.profile_by_furn_side(row.side, cache);
         const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
         const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
@@ -11695,7 +11695,6 @@ $p.spec_building = new SpecBuilding($p);
 })($p);
 
 
-
 $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
 
@@ -11742,7 +11741,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
   }
 
-
   add_inset_params(inset, cnstr, blank_inset) {
     const ts_params = this.params;
     const params = [];
@@ -11768,7 +11766,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       row.hide = links.some((link) => link.hide);
     });
   }
-
 
   prod_name(short) {
     const {calc_order_row, calc_order, leading_product, sys, clr, origin} = this;
@@ -11855,7 +11852,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     return name;
   }
 
-
   open_origin(row_id) {
     try {
       let {origin} = this.specification.get(row_id);
@@ -11875,7 +11871,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       $p.record_log(err);
     }
   }
-
 
   find_create_cx(elm, origin) {
     const {_manager, calc_order, params, inserts} = this;
@@ -11909,7 +11904,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     return cx;
   }
 
-
   get calc_order_row() {
     let _calc_order_row;
     this.calc_order.production.find_rows({characteristic: this}, (_row) => {
@@ -11918,7 +11912,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     });
     return _calc_order_row;
   }
-
 
   get prod_nom() {
     if(!this.sys.empty()) {
@@ -11931,7 +11924,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
       }
       else if(this.sys.production.count() > 1) {
-        this.sys.production.each((row) => {
+        this.sys.production.forEach((row) => {
 
           if(setted) {
             return false;
@@ -11961,7 +11954,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
     return this.owner;
   }
-
 
   get builder_props() {
     const defaults = this.constructor.builder_props_defaults;
@@ -12011,7 +12003,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     }
   }
 
-
   recalc(attr = {}, editor) {
 
 
@@ -12038,7 +12029,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       });
 
   }
-
 
   draw(attr = {}, editor) {
 
@@ -12541,11 +12531,11 @@ $p.cat.cnns.__define({
       a1 = this._nomcache[ref1];
       if(!a1[ref2]){
         a2 = (a1[ref2] = []);
-        this.each((cnn) => {
+        this.forEach((cnn) => {
           let is_nom1 = art1glass ? (cnn.art1glass && thickness1 >= cnn.tmin && thickness1 <= cnn.tmax && cnn.cnn_type == $p.enm.cnn_types.Наложение) : false,
             is_nom2 = art2glass ? (cnn.art2glass && thickness2 >= cnn.tmin && thickness2 <= cnn.tmax) : false;
 
-          cnn.cnn_elmnts.each((row) => {
+          cnn.cnn_elmnts.forEach((row) => {
             if(is_nom1 && is_nom2){
               return false;
             }
@@ -12907,7 +12897,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
       }
 
       const {param} = prm_row;
-      project._dp.sys.furn_params.each((row) => {
+      project._dp.sys.furn_params.forEach((row) => {
         if(row.param == param){
           if(row.forcibly || forcibly){
             prm_row.value = row.value;
@@ -12942,9 +12932,9 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
     afurn_set.push(this.ref);
 
-    this.selection_params.each((row) => {aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param)});
+    this.selection_params.forEach((row) => {aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param)});
 
-    this.specification.each((row) => {row.nom instanceof $p.CatFurns && row.nom.add_furn_prm(aprm, afurn_set)});
+    this.specification.forEach((row) => {row.nom instanceof $p.CatFurns && row.nom.add_furn_prm(aprm, afurn_set)});
 
     return aprm;
 
@@ -13019,6 +13009,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
             const procedure_row = res.add(dop_row);
             procedure_row.origin = this;
+            procedure_row.specify = row_furn.nom;
             procedure_row.handle_height_max = contour.cnstr;
             if(dop_row.transfer_option == НаПримыкающий){
               const nearest = elm.nearest();
@@ -13047,7 +13038,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
           if(dop_row.is_set_row){
             const {nom} = dop_row;
-            nom && nom.get_spec(contour, cache).each((sub_row) => {
+            nom && nom.get_spec(contour, cache).forEach((sub_row) => {
               if(sub_row.is_procedure_row){
                 res.add(sub_row);
               }
@@ -13057,14 +13048,16 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
             });
           }
           else{
-            res.add(dop_row).origin = this;
+            const row_spec = res.add(dop_row);
+            row_spec.origin = this;
+            row_spec.specify = row_furn.nom;
           }
         });
       }
 
       if(row_furn.is_set_row){
         const {nom} = row_furn;
-        nom && nom.get_spec(contour, cache, exclude_dop).each((sub_row) => {
+        nom && nom.get_spec(contour, cache, exclude_dop).forEach((sub_row) => {
           if(sub_row.is_procedure_row){
             res.add(sub_row);
           }
@@ -14187,7 +14180,7 @@ $p.cat.production_params.__define({
 					pmgr = $p[at[0]][at[1]];
 					if(pmgr){
 						if(pmgr.class_name=="enm.open_directions")
-							pmgr.each(function(v){
+							pmgr.forEach(function(v){
 								if(v.name!=$p.enm.tso.folding)
 									res.push({value: v.ref, text: v.synonym});
 							});
@@ -14245,7 +14238,7 @@ $p.CatProduction_params.prototype.__define({
 			else if(!Array.isArray(elm_types))
 				elm_types = [elm_types];
 
-			this.elmnts.each((row) => {
+			this.elmnts.forEach((row) => {
 				if(!row.nom.empty() && elm_types.indexOf(row.elm_type) != -1 &&
 					(by_default == "rows" || !__noms.some((e) => row.nom == e.nom)))
 					__noms.push(row);

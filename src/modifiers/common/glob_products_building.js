@@ -175,7 +175,7 @@ class ProductsBuilding {
       const {cnn_type, specification, selection_params} = cnn;
       const {ii, xx, acn} = $p.enm.cnn_types;
 
-      specification.each((row) => {
+      specification.forEach((row) => {
         const {nom} = row;
         if(!nom || nom.empty() || nom == art1 || nom == art2) {
           return;
@@ -244,7 +244,7 @@ class ProductsBuilding {
 
       // получаем спецификацию фурнитуры и переносим её в спецификацию изделия
       const blank_clr = $p.cat.clrs.get();
-      furn.furn_set.get_spec(contour, furn_cache).each((row) => {
+      furn.furn_set.get_spec(contour, furn_cache).forEach((row) => {
         const elm = {elm: -contour.cnstr, clr: blank_clr};
         const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, spec, ox});
 
@@ -285,7 +285,7 @@ class ProductsBuilding {
       }
 
       // проверка геометрии
-      furn.open_tunes.each((row) => {
+      furn.open_tunes.forEach((row) => {
         const elm = contour.profile_by_furn_side(row.side, cache);
         const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
         const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);

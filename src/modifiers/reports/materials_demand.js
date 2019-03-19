@@ -36,7 +36,7 @@
       const rspec_flds = Object.keys(_manager.metadata('specification').fields);
 
       // получаем массив объектов продукций
-      production.each((row) => {
+      production.forEach((row) => {
         if(!row.use){
           return;
         }
@@ -62,7 +62,7 @@
           arefs.length = 0;
           aobjs.length = 0;
 
-          production.each((row) => {
+          production.forEach((row) => {
             if(!row.use){
               return;
             }
@@ -71,7 +71,7 @@
               arefs.push(row.characteristic.calc_order.ref)
               aobjs.push(row.characteristic.calc_order.load())
             }
-            row.characteristic.specification.each((sprow) => {
+            row.characteristic.specification.forEach((sprow) => {
               if (!sprow.characteristic.empty() && sprow.characteristic.is_new() && arefs.indexOf(sprow.characteristic.ref) == -1) {
                 arefs.push(sprow.characteristic.ref)
                 aobjs.push(sprow.characteristic.load())
@@ -97,12 +97,12 @@
           })
 
           // бежим по продукции и заполняем результат
-          production.each((row) => {
+          production.forEach((row) => {
             if(!row.use){
               return;
             }
             if (!row.characteristic.empty()) {
-              row.characteristic.specification.each((sprow) => {
+              row.characteristic.specification.forEach((sprow) => {
 
                 // фильтруем
                 if(discard(sprow, selection)){
